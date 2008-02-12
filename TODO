@@ -1,0 +1,72 @@
+update existing functions
+----------------
+p1, p2, recsec
+taper
+sacfilter->iirfilt
+sacsample->syncsr
+sacinterp->intrplt
+
+more functions
+------------------
+get poly (gpoly)
+rem poly (rpoly)
+get robust poly (grobpoly)
+rem robust poly (rrobpoly)
+detect glitches (gspikes)
+rem glitches (rspikes)
+detect offsets (goffsets)
+rem offsets (roffsets)
+
+x^n (pown)
+n^x (raisen)
+e^x (raisee)
+log_e x (loge)
+log_n x (logn)
+
+abs (abso)
+rms (rms)
+robust rms (robrms)
+
+fir deci (deci2)
+
+freq integration (fint)
+freq differentiation (fdif)
+
+select component (slctcmp)
+	- one component only
+	- files without cmp not returned
+	- iftype is ixy
+	- change ncmp if set
+select by header field (slcthdr)
+
+reverse (flip)
+
+rotate (turn)
+
+update plotting
+-----------------
+plot evenly spaced
+plot choose component
+one plot for them all
+picking
+deleting
+
+checkup script
+------------
+update min,max,men
+update npts,e
+
+fixdelta
+----------
+upgrade delta (round)
+
+adapt window and align
+-------------------------
+
+add readme (saclab.m)
+-------------------------
+	- features
+	- tutorials
+	- function list
+
+
