@@ -1,6 +1,5 @@
 update existing functions
 ----------------
-p1, p2, recsec
 taper
 sacfilter->iirfilt
 sacsample->syncsr
@@ -45,7 +44,6 @@ rotate (turn)
 
 update plotting
 -----------------
-plot evenly spaced
 plot choose component
 one plot for them all
 picking
@@ -68,6 +66,4 @@ add readme (saclab.m)
 	- features
 	- tutorials
 	- function list
-
-blah
 
