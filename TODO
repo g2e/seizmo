@@ -1,6 +1,6 @@
 update existing functions
 ----------------
-taper
+taper (add offset option)
 sacfilter->iirfilt
 sacsample->syncsr
 sacinterp->intrplt
