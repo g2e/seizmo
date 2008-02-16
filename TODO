@@ -1,9 +1,8 @@
 update existing functions
 ----------------
-taper (add offset option)
-sacfilter->iirfilt
 sacsample->syncsr
 sacinterp->intrplt
+
 
 more functions
 ------------------
@@ -31,35 +30,47 @@ fir deci (deci2)
 freq integration (fint)
 freq differentiation (fdif)
 
-select component (slctcmp)
+fetch record (frec)
+- by component
 	- one component only
 	- files without cmp not returned
 	- iftype is ixy
-	- change ncmp if set
-select by header field (slcthdr)
+- by header field/value
 
 reverse (flip)
 
-rotate (turn)
+fixdelta
 
-update plotting
+better multi-comp support (0.5.1)
+-------------------------------
+dataless sac (npts=0)
+combo,distro vs multi-comp
+header setup
+header function speedup?
+
+
+update plotting (0.5.2)
 -----------------
+spectral plotting
 plot choose component
 one plot for them all
 picking
 deleting
 
-checkup script
-------------
-update min,max,men
-update npts,e
 
-fixdelta
-----------
-upgrade delta (round)
+multi-file functions (0.5.3)
+---------------------------
+rotate (turn)
+add, subtr, mul, dvide records
+correlate
+beam
+stack
 
-adapt window and align
+
+gui for windowing and align (0.5.4?)
 -------------------------
+
+
 
 add readme (saclab.m)
 -------------------------
