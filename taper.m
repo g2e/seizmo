@@ -45,7 +45,7 @@ if(nargin<2 || isempty(type)); type='blackmanharris'; end
 if(nargin<3 || isempty(width)); width=0.05; end
 
 % check width
-if(width>1); error('taper halfwidth too big - use 0 to 0.5'); end
+if(width>1); error('taper halfwidth far too big - use 0 to 0.5'); end
 
 % make function handle
 type=str2func(type);
@@ -84,14 +84,18 @@ for i=1:length(data)
     if(nargin==4 && ~isempty(option)); taperedge=window(type,2*nwidth,option);
     else taperedge=window(type,2*nwidth); end
     
-    % expand to number of components
-    taperedge=taperedge(:,ones(ncmp,1));
+    % save class and convert to double precision
+    oclass=str2func(class(data(i).x));
+    data(i).x=double(data(i).x);
     
     % apply taper halfwidths separately
     data(i).x(1:nwidth,:)=...
-        data(i).x(1:nwidth,:).*taperedge(1:nwidth,:);
+        data(i).x(1:nwidth,:).*taperedge(1:nwidth,ones(ncmp,1));
     data(i).x(end-nwidth+1:end,:)=...
-        data(i).x(end-nwidth+1:end,:).*taperedge(end-nwidth+1:end,:);
+        data(i).x(end-nwidth+1:end,:).*taperedge(end-nwidth+1:end,ones(ncmp,1));
+    
+    % change class back
+    data(i).x=oclass(data(i).x);
     
     % adjust header
     data(i)=ch(data(i),'depmen',norm(mean(data(i).x)),...
