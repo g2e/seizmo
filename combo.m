@@ -1,4 +1,4 @@
-function [recmatrix,indices,store]=combo(data)
+function [recmatrix,indices,store,npts]=combo(data)
 %COMBO    Combines data records into a single numeric matrix
 %
 %    Description: Combines data records into one matrix (records are in

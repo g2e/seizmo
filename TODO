@@ -1,9 +1,3 @@
-update existing functions
-----------------
-sacsample->syncsr
-sacinterp->intrplt
-
-
 more functions
 ------------------
 get poly (gpoly)

@@ -327,22 +327,21 @@ function [data]=imprevfilt(data,fs,mirror)
 %   edge effects.  Works with multiple records.
 
 % combine records
-[recs,ind,store]=combo(data);
+[recs,ind,store,npts]=combo(data);
 recs=recs(end:-1:1,:);
-npts=size(recs,1);
 
 % mirror logical
 if(mirror)
     % prepend a mirror-flip of the series to limit edge effects
-    recs=filter(fs,[2*recs(ones(npts-1,1),:)-recs(npts:-1:2,:); recs]);
-    recs=recs(npts:2*npts-1,:);
+    recs=filter(fs,[2*recs(ones(end-1,1),:)-recs(end:-1:2,:); recs]);
+    recs=recs(fix(end/2)+1:end,:);
 else
     % straight forward filter
     recs=filter(fs,recs);
 end
 
 % distribute records back
-data=distro(data,recs(end:-1:1,:),ind,store);
+data=distro(data,recs(end:-1:1,:),ind,store,npts);
 
 end
 
@@ -353,21 +352,20 @@ function [data]=impfilt(data,fs,mirror)
 %   edge effects.  Works with multiple records.
 
 % combine records
-[recs,ind,store]=combo(data);
-npts=size(recs,1);
+[recs,ind,store,npts]=combo(data);
 
 % mirror logical
 if(mirror)
     % prepend a mirror-flip of the series to limit edge effects
-    recs=filter(fs,[2*recs(ones(npts-1,1),:)-recs(npts:-1:2,:); recs]);
-    recs=recs(npts:2*npts-1,:);
+    recs=filter(fs,[2*recs(ones(end-1,1),:)-recs(end:-1:2,:); recs]);
+    recs=recs(fix(end/2)+1:end,:);
 else
     % straight forward filter
     recs=filter(fs,recs);
 end
 
 % distribute records back
-data=distro(data,recs,ind,store);
+data=distro(data,recs,ind,store,npts);
 
 end
 

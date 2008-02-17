@@ -1,4 +1,4 @@
-function [data]=distro(data,recmatrix,indices,store)
+function [data]=distro(data,recmatrix,indices,store,npts)
 %DISTRO    Distributes a record matrix back to SAClab structure
 %
 %    Description: Imports data records that are in a recmatrix into a
@@ -10,7 +10,7 @@ function [data]=distro(data,recmatrix,indices,store)
 %    See also: combo
 
 % check input
-error(nargchk(4,4,nargin))
+error(nargchk(5,5,nargin))
 
 % check data structure
 if(~isstruct(data))
@@ -20,9 +20,6 @@ elseif(~isvector(data))
 elseif(~isfield(data,'version') || ~isfield(data,'head'))
     error('data structure does not have proper fields')
 end
-
-% get header info
-[npts]=gh(data,'npts');
 
 % loop through records
 for i=1:length(data)
