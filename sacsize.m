@@ -4,6 +4,9 @@ function [b]=sacsize(v,t,n,e,c)
 %    Usage:  bytes=sacsize(nvhdr,iftype,npts,leven)
 %            bytes=sacsize(nvhdr,iftype,npts,leven,ncmp)
 
+% check arguments
+error(nargchk(4,5,nargin));
+
 % header info
 h=sachi(v);
 
@@ -24,7 +27,7 @@ elseif(t==h.enum(1).val.ixy)
     m=m+1;
 elseif(t==h.enum(1).val.ixyz)
     m=m+1;
-elseif(isfield(h.enum(1).val,'incmp') && t==h.enum(1).val.incmp)
+elseif(nargin==5)
     if(c<1)
         warning('SAClab:ncmpBad','ncmp<1 not allowed for multi-component timeseries!');
         b=0; m=0;

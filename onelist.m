@@ -10,7 +10,7 @@ for i=1:nargin
     
     % char to cellstr then array to column vector
     varargin{i}=cellstr(varargin{i});
-    varargin{i}=varargin{i}(:)';
+    varargin{i}=varargin{i}(:).';
 end
 
 % concatinate arguments

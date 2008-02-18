@@ -31,8 +31,6 @@ function [data]=rdata(data)
 %
 %    Usage:    data=rdata(data)
 %
-%    By: Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
 %    See also: rh, rpdw, rsac, wsac, bsac, sachi, gh, lh, ch, wh, gv
 %              sacsize
 
@@ -62,6 +60,9 @@ j=0;
 
 % read loop
 for i=1:nrecs
+    % logical index of header info
+    v=data(i-j).version==vers;
+    
     % open file for reading
     fid=fopen(data(i-j).name,'r',data(i-j).endian);
     
@@ -79,13 +80,16 @@ for i=1:nrecs
     fseek(fid,0,'eof');
     bytes=ftell(fid);
     
-    % grab some header fields (no warnings about ncmp)
-    warning('off','SAClab:fieldInvalid');
-    [iftype,npts,leven,ncmp]=gh(data(i-j),'iftype','npts','leven','ncmp');
-    warning('on','SAClab:fieldInvalid');
+    % grab header fields to calc size
+    if(isfield(h(v).enum(1).val,'incmp') && iftype==h(v).enum(1).val.incmp)
+        [iftype,npts,leven,ncmp]=gh(data(i-j),'iftype','npts','leven','ncmp');
+        total=sacsize(data(i-j).version,iftype,npts,leven,ncmp);
+    else
+        [iftype,npts,leven]=gh(data(i-j),'iftype','npts','leven');
+        total=sacsize(data(i-j).version,iftype,npts,leven);
+    end
     
     % byte size check
-    total=sacsize(data(i-j).version,iftype,npts,leven,ncmp);
     if(bytes~=total)
         % inconsistent size
         fclose(fid);
@@ -96,9 +100,6 @@ for i=1:nrecs
         j=j+1;
         continue;
     end
-    
-    % logical index of header info
-    v=data(i-j).version==vers;
     
     % act by file type (any new filetypes will have to be added here)
     fseek(fid,h(v).data.startbyte,'bof');

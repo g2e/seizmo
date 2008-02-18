@@ -30,7 +30,7 @@ function [data]=rh(varargin)
 %    See also: rdata, rpdw, rsac, wsac, bsac, sachi, gh, lh, ch, wh, gv
 
 % compile file lists
-varargin=onelist(varargin);
+varargin=onelist(varargin{:});
 nfiles=length(varargin);
 
 % empty data if no files

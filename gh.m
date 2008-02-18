@@ -19,12 +19,10 @@ function [varargout]=gh(data,varargin)
 %     dt=gh(data,'DeLtA')
 %     [stla,stlo]=gh(data,'stla','STLO')
 %
-%    by Garrett Euler (2/2008)  ggeuler@wustl.edu
-%
 %    See also:  ch, lh, rh, wh, rpdw, rdata, rsac, bsac, wsac, sachp, gv
 
 % do nothing on no input
-if(nargin<1); return; end
+if(nargin<1); error('not enough input arguments'); end
 
 % check data structure
 if(~isstruct(data))
@@ -35,134 +33,116 @@ elseif(~isfield(data,'version') || ~isfield(data,'head'))
     error('data structure does not have proper fields')
 end
 
-% number of files
+% number of records
 nrecs=length(data);
 
-% headers setup
-vers=unique([data.version]);
+% recursive section (breaks up data so gh only deals with 1 header version)
+v=[data.version];
+vers=unique(v(:));
 nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
-end
-
-% warn if mixed versions
+sfill=repmat({'NaN'},nrecs,1);
+nfill=nan(nrecs,1);
 if(nver>1)
-    warning('SAClab:mixedVersions','Dataset has varying header versions!');
+    for i=1:nver
+        % does this work?
+        varargoutn=cell(1,nargin-1);
+        [varargoutn{:}]=gh(data(vers(i)==v),varargin{:});
+        % assign to varargout
+        for j=1:nargin-1
+            % preallocate by type
+            if(i==1)
+                if(iscellstr(varargoutn{j}))
+                    varargout{j}=sfill; type=1;
+                else
+                    varargout{j}=nfill; type=0;
+                end
+            end
+            % expand
+            in=size(varargoutn{j},2);
+            out=size(varargout{j},2);
+            if(in>out)
+                if(type)
+                    varargout{j}(:,out+1:in)=sfill(:,ones(1,in-out));
+                else
+                    varargout{j}(:,out+1:in)=nfill(:,ones(1,in-out));
+                end
+            end
+            % assign
+            varargout{j}(vers(i)==v,1:in)=varargoutn{j};
+        end
+    end
+    return;
 end
 
-% pull all header case (may fail if mixed versions!)
-if(nargin==1); varargout{1}=[data.head]; end
+% headers setup
+h=sachi(vers);
 
-% loop over given fields
-for i=1:length(varargin)
-    % initialize output
-    varargout{i}=[];
+% pull entire header
+head=[data.head];
+
+% push out entire header
+if(nargin==1); varargout{1}=head; return; end
+
+% loop over fields
+for i=1:nargin-1
+    % force field to be lowercase
+    gf=lower(varargin{i});
     
-    % force lowercase
-    f=lower(varargin{i});
-    
-    % determine field properties in each header version
-    valid=zeros(nver,1);
-    string=zeros(nver,1);
-    glen=ones(nver,1);
-    g=cell(nver,1);
-    group=zeros(nver,1);
-    for j=1:nver
-        % group?
-        if(isfield(h(j).grp,f))
-            g{j}=h(j).grp.(f).min:h(j).grp.(f).max;
-            group(j)=1; glen(j)=length(g{j});
-            ft=[f num2str(g{j}(1))]; % check if first is valid
-        else
-            ft=f;
-        end
-        
-        % string?
-        for k=1:length(h(j).stype)
-            for m=1:length(h(j).(h(j).stype{k}))
-                if(isfield(h(j).(h(j).stype{k})(m).pos,ft))
-                    string(j)=1; valid(j)=1;
-                end
-            end
-        end
-        
-        % numeric?
-        if(~valid(j))
-            for k=1:length(h(j).ntype)
-                for m=1:length(h(j).(h(j).ntype{k}))
-                    if(isfield(h(j).(h(j).ntype{k})(m).pos,ft))
-                        valid(j)=1;
-                    end
-                end
-            end
-        end
-        
-        % invalid
-        if(~valid(j))
-            warning('SAClab:fieldInvalid','Invalid field: %s',ft);
-        end
-        clear ft;
+    % check for group fields
+    group=0; glen=1;
+    if(isfield(h.grp,gf))
+        g=h.grp.(gf).min:h.grp.(gf).max;
+        group=1; glen=length(g);
     end
     
-    % mixing check
-    types=unique(string);
-    valids=unique(valid);
-    if(length(types)>1)
-        error('mixed output types for a field not allowed: %s',f);
-    end
-    if(length(valids)>1)
-        warning('SAClab:mixedValidity','Field has mixed validity: %s',f);
-    end
-    
-    % if totally invalid move to next otherwise get column size
-    if(length(valids)==1 && valids==0); continue;
-    else ncols=max(glen);
-    end
-    
-    % preallocate with zeros
-    if(types); varargout{i}=repmat({'0'},nrecs,ncols);
-    else varargout{i}=zeros(nrecs,ncols); % output is double precision
-    end
-    
-    % loop over records
-    for j=1:nrecs
-        % logical index of header info
-        v=data(j).version==vers;
+    % group field loop
+    for j=1:glen
+        % modify field if group
+        if(group); f=[gf num2str(g(j))];
+        else f=gf; end
         
-        % replace zeros with undefined
-        if(types); varargout{i}(j,:)=repmat({h(v).undef.stype},1,ncols);
-        else varargout{i}(j,:)=ones(1,ncols)*h(v).undef.ntype;
-        end
+        % pull header values
+        [val,type]=ph(head,h,f);
         
-        % loop over group fields
-        for k=1:glen(v)
-            % group field name
-            if(group(v)); gf=[f num2str(g{v}(k))];
-            else gf=f;
-            end
-            
-            % output by type
-            if(types)
-                for n=1:length(h(v).stype)
-                    for m=1:length(h(v).(h(v).stype{n}))
-                        if(isfield(h(v).(h(v).stype{n})(m).pos,gf))
-                            p=h(v).(h(v).stype{n})(m).pos.(gf);
-                            varargout{i}{j,k}=char(data(j).head(p(1):p(2)))';
-                        end
-                    end
-                end
+        % preallocate (did not know the type until now)
+        if(j==1)
+            if(type)
+                varargout{i}=repmat({'0'},nrecs,glen);
             else
-                for n=1:length(h(v).ntype)
-                    for m=1:length(h(v).(h(v).ntype{n}))
-                        if(isfield(h(v).(h(v).ntype{n})(m).pos,gf))
-                            varargout{i}(j,k)=data(j).head(h(v).(h(v).ntype{n})(m).pos.(gf));
-                        end
-                    end
-                end
+                varargout{i}=zeros(nrecs,glen);
             end
+        end
+        
+        % assign to varargout
+        varargout{i}(:,j)=val;
+    end
+end
+
+end
+
+function [head,type]=ph(head,h,f)
+%PH    Pull header values
+
+% output by type
+for n=1:length(h.stype)
+    for m=1:length(h.(h.stype{n}))
+        if(isfield(h.(h.stype{n})(m).pos,f))
+            p=h.(h.stype{n})(m).pos.(f);
+            head=cellstr(char(head(p(1):p(2),:).'));
+            type=1; return;
         end
     end
 end
+for n=1:length(h.ntype)
+    for m=1:length(h.(h.ntype{n}))
+        if(isfield(h.(h.ntype{n})(m).pos,f))
+            head=head(h.(h.ntype{n})(m).pos.(f),:).';
+            type=0; return;
+        end
+    end
+end
+
+% field not found
+error('SAClab:fieldInvalid','Invalid field: %s',f);
 
 end
