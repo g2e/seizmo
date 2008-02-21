@@ -1,5 +1,5 @@
 function [varargin]=onelist(varargin)
-%ONELIST    Compiles multiple char/cellstr arrays into one list
+%ONELIST    Compiles multiple char/cellstr arrays into a 1 column cellstr
 
 % check, organize, and compile char/cellstr arrays
 for i=1:nargin
@@ -14,6 +14,6 @@ for i=1:nargin
 end
 
 % concatinate arguments
-varargin=[varargin{:}]';
+varargin=[varargin{:}].';
 
 end

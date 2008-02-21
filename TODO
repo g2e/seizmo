@@ -1,4 +1,11 @@
-more functions
+current focus
+-----------------
+bug checks (build function test set)
+clean up structure checks (cut checks if calling ch,gh anyways)
+clean up class support
+clean up documentation
+
+more function ideas (0.5.?)
 ------------------
 get poly (gpoly)
 rem poly (rpoly)
@@ -18,6 +25,8 @@ log_n x (logn)
 abs (abso)
 rms (rms)
 robust rms (robrms)
+sign
+real
 
 fir deci (deci2)
 
@@ -33,13 +42,11 @@ fetch record (frec)
 
 reverse (flip)
 
-fixdelta
-
 better multi-comp support (0.5.1)
 -------------------------------
 dataless sac (npts=0)
 combo,distro vs multi-comp
-header setup
+finalize its header setup
 
 
 update plotting (0.5.2)
@@ -55,7 +62,7 @@ multi-file functions (0.5.3)
 ---------------------------
 rotate (turn)
 add, subtr, mul, dvide records
-correlate
+correlate (use mcxc!)
 beam
 stack
 

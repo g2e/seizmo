@@ -44,7 +44,6 @@ sfill=repmat({'NaN'},nrecs,1);
 nfill=nan(nrecs,1);
 if(nver>1)
     for i=1:nver
-        % does this work?
         varargoutn=cell(1,nargin-1);
         [varargoutn{:}]=gh(data(vers(i)==v),varargin{:});
         % assign to varargout

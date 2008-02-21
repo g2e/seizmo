@@ -7,6 +7,8 @@ function [data]=distro(data,recmatrix,indices,store,npts)
 %     This is only for evenly spaced timeseries/xy files.  Column 1 goes
 %     to data(1).x and so on.
 %
+%    Usage: [data]=distro(data,recmatrix,indices,store,npts)
+%
 %    See also: combo
 
 % check input

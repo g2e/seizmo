@@ -7,6 +7,8 @@ function [recmatrix,indices,store,npts]=combo(data)
 %     short term.  Look into using multi-component files for better 
 %     performance on large sets of records.
 %
+%    Usage: [recmatrix,indices,store,npts]=combo(data)
+%
 %    See also: distro
 
 % check input
@@ -34,7 +36,7 @@ for i=1:nrecs
     [npts(i),ncol(i)]=size(data(i).x);
 end
 
-% preallocate record matrix
+% preallocate record matrix (doubles)
 col2=cumsum(ncol); col=[1; col2+1];
 recmatrix=zeros(max(npts),col2(end));
 indices=zeros(1,col2(end));
