@@ -26,7 +26,8 @@ nrecs=length(data);
 % normalize data
 scale=ones(nrecs,1);
 for i=1:nrecs
-    scale(i)=max(sqrt(sum((double(data(i).x).^2).')));
+    scale(i)=max(sqrt(sum((double(data(i).x).^2).',2)));
 end
 
 end
+
