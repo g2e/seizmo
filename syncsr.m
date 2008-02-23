@@ -85,6 +85,7 @@ data=distro(data,recs,ind,store,nnpts);
 
 % update header
 data=ch(data,'delta',1/sr);
-data=checkup(data);
+data=chkhdr(data);
 
 end
+

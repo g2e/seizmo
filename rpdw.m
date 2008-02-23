@@ -9,8 +9,6 @@ function [data]=rpdw(data,ref1,offset1,ref2,offset2,fill,filler)
 %
 %    Usage: [data]=rpdw(data,ref1,offset1,ref2,offset2,fill,filler)
 %
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
 %    See also: cutim, rh, wh, ch, lh, gh, rsac, wsac, bsac, sachi, gv,
 %              rdata
 
@@ -92,7 +90,7 @@ else
 end
 
 % loop through each file
-destroy=zeros(nrecs,1);
+destroy=false(nrecs,1);
 for i=1:nrecs
     % header version index
     v=data(i).version==vers;

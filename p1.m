@@ -11,7 +11,7 @@ function [fh,sfh]=p1(data,xlimits,ylimits,ncols,fh)
 % 
 %    Usage:  [fh,sfh]=p1(data,xlim,ylim,ncols,fh)
 %
-%    See also:  p2, recsec
+%    See also:  p2, p3, recsec
 
 % check number of inputs
 error(nargchk(1,5,nargin))

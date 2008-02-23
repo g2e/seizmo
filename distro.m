@@ -1,11 +1,8 @@
 function [data]=distro(data,recmatrix,indices,store,npts)
 %DISTRO    Distributes a record matrix back to SAClab structure
 %
-%    Description: Imports data records that are in a recmatrix into a
-%     SAClab data structure.  Number of columns (records) in the record
-%     matrix must match up with the number of records in the structure.
-%     This is only for evenly spaced timeseries/xy files.  Column 1 goes
-%     to data(1).x and so on.
+%    Description: Imports data records that are in a record matrix back
+%     into a SAClab data structure.
 %
 %    Usage: [data]=distro(data,recmatrix,indices,store,npts)
 %
@@ -31,6 +28,7 @@ for i=1:length(data)
 end
 
 % updata header
-data=checkup(data);
+data=chkhdr(data);
 
 end
+

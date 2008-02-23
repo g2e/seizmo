@@ -6,8 +6,6 @@ function [data,scale]=nrm(data)
 %
 %    Usage: [data,scale]=nrm(data)
 %
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
 %    See also: mul
 
 % check nargin
@@ -31,7 +29,7 @@ scale=ones(nrecs,1);
 for i=1:nrecs
     oclass=str2func(class(data(i).x));
     data(i).x=double(data(i).x);
-    scale(i)=max(sqrt(sum(((data(i).x).^2).')));
+    scale(i)=max(sqrt(sum(((data(i).x).^2).',2)));
     data(i).x=oclass(data(i).x/scale(i));
     data(i)=ch(data(i),'depmax',norm(max(data(i).x)),...
         'depmin',-norm(min(data(i).x)),'depmen',norm(mean(data(i).x)));

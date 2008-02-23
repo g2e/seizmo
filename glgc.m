@@ -1,64 +1,48 @@
 function [varargout]=glgc(data,varargin)
-%GLGC    Get universal truth values of SAClab logic header field
+%GLGC    Get logic words from SAClab logic header field
 %
-%    Description: Returns 116 ('t') if logic field is true, 
-%                         102 ('f') if false and 
-%                         117 ('u') otherwise (undefined/unknown).
+%    Description: Returns cellstrings containing 'true' 'false' 'undefined'
+%     or 'unknown' corresponding to each field/value.
 %
-%    Usage: logic=glgc(data,'leven')
+%    Usage: [lgccellstr1,lgccellstr2,...]=glgc(data,'field1','field2',...)
 %
 %    Examples:
-%     to check if a record is evenly spaced
-%     if(116==glgc(data(1),'leven')); disp('evenly spaced'); end
+%     To check if all records are evenly spaced:
+%      if(all(strcmp(glgc(data,'leven'),'true'))) 
+%          disp('evenly spaced data')
+%      end
 %
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
-%    See also: gh
+%    See also: gh, genum, genumdesc
 
 % do nothing on no input
-if(nargin<1); return; end
+if(nargin<2); return; end
 
-% check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head'))
-    error('data structure does not have proper fields')
-end
+% preallocate output
+varnargin=length(varargin);
+nvarargout=cell(1,varnargin);
+varargout=nvarargout;
+[varargout{:}]=deal(cell(length(data),1));
 
-% number of files
-nrecs=length(data);
+% get header info
+[nvarargout{:}]=gh(data,varargin{:});
 
-% headers setup
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
-end
-
-% loop over fields
-for i=1:length(varargin)
-    % get header values
-    varargout{i}=gh(data,varargin{i});
-end
-
-% loop over records
-for i=1:nrecs
-    % header logical index
-    v=data(i).version==vers;
+% loop over versions
+v=[data.version];
+for i=unique(v)
+    % grab header setup
+    h=sachi(i);
+    
+    % indexing of data with this header version
+    ind=find(v==i);
     
     % loop over fields
     for j=1:length(varargin)
-        % check logic
-        if(varargout{j}(i)==h(v).true)
-            varargout{j}(i)=116; % 't'
-        elseif(varargout{j}(i)==h(v).false)
-            varargout{j}(i)=102; % 'f'
-        else
-            varargout{j}(i)=117; % 'u'
-        end
+        [varargout{j}{ind(nvarargout{j}(ind)==h.true)}]=deal('true');
+        [varargout{j}{ind(nvarargout{j}(ind)==h.false)}]=deal('false');
+        [varargout{j}{ind(nvarargout{j}(ind)==h.undef.ntype)}]=deal('undefined');
+        [varargout{j}{ind(nvarargout{j}(ind)~=h.true & ...
+            nvarargout{j}(ind)~=h.false & ...
+            nvarargout{j}(ind)~=h.undef.ntype)}]=deal('unknown');
     end
 end
 

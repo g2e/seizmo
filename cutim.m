@@ -44,8 +44,6 @@ function [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
 %     [data]=cutim(data,[],300,[],500);
 %      or explicitly
 %     [data]=cutim(data,'z',300,'z',500);
-%   
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
 %
 %    See also: rpdw
 
@@ -126,7 +124,7 @@ else
 end
 
 % loop through each file
-destroy=zeros(nrecs,1);
+destroy=false(nrecs,1);
 for i=1:nrecs
     % header version index
     v=data(i).version==vers;

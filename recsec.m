@@ -9,8 +9,8 @@ function [fh,lh]=recsec(data,xlimits,ylimits,scale,style,legend_ok,fh,sfh)
 %     legend logical (default is 0 - no legend), and the figure and subplot
 %     handles (to put recsec plot in a particular figure and subplot).  The
 %     legend can be edited and moved using the mouse. Default amplitude 
-%     scaling is 1 unit (degrees usually).  Default normalization style is 
-%     'record'.  Outputs are the figure and legend handles.
+%     scaling is 1/10th the total distance range.  Default normalization 
+%     style is 'record'.  Outputs are the figure and legend handles.
 %
 %    Usage:  [fh,lh]=recsec(data,xlim,ylim,scale,style,legend,fh,sfh)
 %
@@ -21,7 +21,7 @@ function [fh,lh]=recsec(data,xlimits,ylimits,scale,style,legend_ok,fh,sfh)
 %     including a legend
 %      recsec(data,[0 300],[100 150],3,'global',1)
 %
-%    See also:  p1, p2
+%    See also:  p1, p2, p3
 
 % check number of inputs
 error(nargchk(1,8,nargin))
@@ -72,7 +72,7 @@ for i=1:nver-1
 end
 
 % defaults
-if(nargin<4 || isempty(scale)); scale=1; end
+if(nargin<4 || isempty(scale)); scale=(max(gcarc)-min(gcarc))/10; end
 if(nargin<5 || isempty(style)); style='record'; end
 if(~any(strcmp(style,{'record' 'global'})))
     error('bad normalization style')

@@ -1,10 +1,10 @@
 function [data]=ch(data,varargin)
 %CH    Change SAClab headers
 %
-%    Description: Changes the specified header field(s) to the specified 
-%     value(s) for data in a SAClab structure.  The field variable must be
-%     a string corresponding to a valid header field.  Values may be scalar
-%     (assign same value to all) or a vector of length equal to the number
+%    Description: Changes the specified SAClab header field(s) to the
+%     specified value(s).  The field variable must be a string
+%     corresponding to a valid header field.  Values may be scalar
+%     (assigns same value to all) or vectors of length equal to the number
 %     of records.  Values may be contained in a numeric, char, or cell
 %     array.  Char arrays must be arranged as a column vector with one
 %     string value per row.  Cell arrays must have one value per cell.
@@ -14,11 +14,12 @@ function [data]=ch(data,varargin)
 %                               'field3',[value3a; value3b; ...])
 %
 %    Examples:
-%     data=ch(data,'DELTA',dt);
+%     data=ch(data,'DELTA',gh(data,'delta')*2);
 %     data=ch(data,'STLA',lats,'STLO',lons)
 %     data=ch(data,'KT0','sSKS');
 %
-%    See also:  lh, gh, rh, wh, rpdw, rdata, rsac, bsac, wsac, sachp, gv
+%    See also:  lh, gh, rh, wh, glgc, genum, genumdesc, 
+%               rpdw, rdata, rsac, bsac, wsac, sachi, gv
 
 % throw error if unpaired fields
 if (mod(nargin-1,2)); error('Unpaired Field/Value!'); end
@@ -31,6 +32,9 @@ elseif(~isvector(data))
 elseif(~isfield(data,'version') || ~isfield(data,'head'))
     error('data structure does not have proper fields')
 end
+
+% number of records
+nrecs=length(data);
 
 % recursive section (breaks up data so ch only deals with 1 header version)
 v=[data.version];
@@ -47,8 +51,16 @@ if(nver>1)
             if(isscalar(varargin{j}) || isempty(varargin{j}))
                 temp{j}=varargin{j};
             elseif(isvector(varargin{j}))
+                if(length(varargin{j})~=nrecs)
+                    error('Value vector for field %s not correct size',...
+                        varargin{j-1});
+                end
                 temp{j}=varargin{j}(vers(i)==v);
             else
+                if(size(varargin{j},1)~=nrecs)
+                    error('Value array for field %s not correct size',...
+                        varargin{j-1});
+                end
                 temp{j}=varargin{j}(vers(i)==v,:);
             end
         end
@@ -56,9 +68,6 @@ if(nver>1)
     end
     return;
 end
-
-% number of records
-nrecs=length(data);
 
 % headers setup
 h=sachi(vers);

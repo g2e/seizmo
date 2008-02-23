@@ -1,23 +1,21 @@
 function [data]=add(data,constant,cmp)
-%ADD    Adds a constant to SAClab data records
+%ADD    Add a constant to SAClab data records
 %
 %    Usage: [data]=add(data,constant,cmp)
 %
-%          - a scalar constant adds the value to all records
-%          - a vector of constants (length must be same as number of 
-%            records) allows adding different values to each record
+%          - a scalar constant applies the value to all records
+%          - a vector of constants (length must equal the number of 
+%            records) allows applying different values to each record
 %          - 'cmp' selects the dependent component to work on
 %            (default is 1)
-%
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
 %
 %    See also: subtr, mult, dvide
 
 % check nargin
-error(nargchk(1,3,nargin))
+error(nargchk(2,3,nargin))
 
 % no constant case
-if(nargin==1 || isempty(constant)); return; end
+if(isempty(constant)); return; end
 
 % default component
 if(nargin==2 || isempty(cmp)); cmp=1; end
@@ -35,13 +33,12 @@ end
 % number of records
 nrecs=length(data);
 
-% check constant size
-if(~isvector(constant) || ~any(length(constant)==[1 nrecs]))
-    error('constant must be a scalar or vector of length equal to number of records')
+% check constant
+if(~isnumeric(constant)); error('constant must be numeric');
+elseif(isscalar(constant)); constant=constant(ones(nrecs,1));
+elseif(~isvector(constant) || length(constant)~=nrecs)
+    error('constant vector length ~= # records')
 end
-
-% expand scalar constant
-if(length(constant)==1); constant=constant(ones(nrecs,1)); end
 
 % add constant and update header
 for i=1:nrecs

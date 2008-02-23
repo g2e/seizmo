@@ -12,9 +12,10 @@ function [data]=fixdelta(data)
 %     Double the precision of records and fix the delta intervals
 %      data=fixdelta(doubleit(data))
 %
-%    See also: doubleit, checkup
+%    See also: doubleit, chkhdr
 
 [n,d]=rat(gh(data,'delta'));
 data=ch(data,'delta',n./d);
 
 end
+

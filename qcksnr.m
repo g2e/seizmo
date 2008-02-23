@@ -18,8 +18,6 @@ function [snr]=qcksnr(data,reftimes,noswin,sigwin)
 %     Ptimes=pullarr(data,'P');
 %     snr=qcksnr(data,Ptimes,[-100 -20],[-20 40]);
 %
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
 %    See also: pullarr, cutim, gnrm
 
 % check nargin
@@ -36,8 +34,8 @@ elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
 end
 
 % get ratio of max amplitudes of windows
-snr=gnrm(cutim(data,'z',reftimes+noswin(:,1),'z',reftimes+noswin(:,2))) ./ ...
-gnrm(cutim(data,'z',reftimes+sigwin(:,1),'z',reftimes+sigwin(:,2)));
+snr=gnrm(cutim(data,'z',reftimes+sigwin(:,1),'z',reftimes+sigwin(:,2))) ./ ...
+gnrm(cutim(data,'z',reftimes+noswin(:,1),'z',reftimes+noswin(:,2)));
 snr=snr(:); % make column vector
 
 end

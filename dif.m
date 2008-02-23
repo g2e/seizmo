@@ -1,5 +1,5 @@
 function [data]=dif(data)
-%DIF    Differentiates SAClab data records using discrete differences
+%DIF    Differentiate SAClab data records using discrete differences
 %
 %    Description: Calculates and returns the derivative of each record
 %     using the differences between points as an approximation of the 
@@ -12,51 +12,38 @@ function [data]=dif(data)
 %
 %    Usage: [data]=dif(data);
 %
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
 %    See also: integrt, integrt2
 
 % check nargin
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
+if(~isfield(data,'x'))
     error('data structure does not have proper fields')
 end
 
 % retreive header info
-[delta,b,e,npts,leven]=gh(data,'delta','b','e','npts','leven');
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
-end
+leven=glgc(data,'leven');
+[delta,b,e,npts]=gh(data,'delta','b','e','npts');
 
 % take derivative and update header
 for i=1:length(data)
-    % header version
-    v=data(i).version==vers;
-    
     % save class and convert to double precision
     oclass=str2func(class(data(i).x));
     data(i).x=double(data(i).x);
     
     % evenly spaced?
-    if (leven(i)==h(v).true)
+    if(strcmp(leven(i),'true'))
         data(i).x=diff(data(i).x)/delta(i);
         b(i)=b(i)+delta(i)/2; e(i)=e(i)-delta(i)/2; npts(i)=npts(i)-1;
-    else
+    elseif(strcmp(leven(i),'false'))
         data(i).t=double(data(i).t);
         t=diff(data(i).t);
         data(i).x=diff(data(i).x)./t(:,ones(1,size(data(i).x,2)));
         data(i).t=oclass(data(i).t(1:npts-1)+t/2);
         npts(i)=npts(i)-1; b(i)=data(i).t(1); e(i)=data(i).t(end);
+    else
+        error('evenness of sample spacing unknown for record %d',i)
     end
     
     % change class back
@@ -69,3 +56,4 @@ for i=1:length(data)
 end
 
 end
+

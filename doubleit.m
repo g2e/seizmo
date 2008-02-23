@@ -25,27 +25,17 @@ end
 nrecs=length(data);
 
 % retreive header info
-[leven]=gh(data,'leven');
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
-end
+leven=glgc(data,'leven');
 
 % add zeros and update header
 for i=1:nrecs
-    % logical index of header
-    v=data(i).version==vers;
-    
     % double header and data
     data(i).head=double(data(i).head);
     data(i).x=double(data(i).x);
     
     % double time
-    if(leven(i)==h(v).false)
-        data(i).t=double(data(i).t);
-    end
+    if(~strcmp(leven(i),'true')); data(i).t=double(data(i).t); end
 end
 
 end
+

@@ -4,6 +4,9 @@ bug checks (build function test set)
 clean up structure checks (cut checks if calling ch,gh anyways)
 clean up class support
 clean up documentation
+global undefined values only
+fix ch (auto field type support)
+userwindow, usertaper, mcxc 
 
 more function ideas (0.5.?)
 ------------------
@@ -46,7 +49,7 @@ better multi-comp support (0.5.1)
 -------------------------------
 dataless sac (npts=0)
 combo,distro vs multi-comp
-finalize its header setup
+finalize ncmp header setup
 
 
 update plotting (0.5.2)

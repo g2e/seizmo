@@ -1,30 +1,31 @@
-function [fh,lh]=p2(data,xlimits,ylimits,legend_ok,fh,sfh) 
+function [fh,lh]=p2(data,xlimits,ylimits,legend_ok,norm,fh,sfh) 
 %P2    Overlay plot of SAClab data records
 %
 %    Description: Plots timeseries and xy records over one another in a
 %     plot.  Other record types are ignored.  Optional inputs are the x/y
-%     limits for the plot ([low high]), a legend logical (default is 0), 
-%     and the figure and subplot handles (to put p2 in a particular figure 
-%     and subplot).  The legend box can be moved by left-clicking on its
-%     box and dragging.  The legend labels can be graphically edited by 
-%     double-clicking on them.  Outputs are the figure and legend handles.
+%     limits for the plot ([low high]), a legend logical (default is 0), a
+%     normalization flag (default is 0), and the figure and subplot handles
+%     (to put p2 in a particular figure and subplot).  The legend box can 
+%     be moved by left-clicking on its box and dragging.  The legend labels
+%     can be graphically edited by double-clicking on them.  Outputs are 
+%     the figure and legend handles.
 %
-%    Usage:  [fh,lh]=p2(data,xlim,ylim,legend_ok,fh,sfh)
+%    Usage:  [fh,lh]=p2(data,xlim,ylim,legend_ok,norm,fh,sfh)
 %
 %    Examples:
-%     To plot the first 4 records in data without
+%     To overlay the first 4 records
 %      p2(data(1:4)) 
 %
-%     To plot the 5th and 8th records, limiting the x axis
+%     To overlay the 5th and 8th records from 0 to 300 seconds
 %      p2(data([5 8]),[0 300]) 
 %
 %     To plot all traces with a legend, without limiting the x/y axis
 %      p2(data,[],[],1)
 %
-%    See also:  p1, recsec
+%    See also:  p1, p3, recsec
 
 % check number of inputs
-error(nargchk(1,6,nargin))
+error(nargchk(1,7,nargin))
 
 % check data structure
 if(~isstruct(data))
@@ -45,8 +46,8 @@ tw='light'; % text weight
 lw=1;       % line width of record
 
 % initialize plot
-if(nargin<5 || isempty(fh) || fh<1); fh=figure;
-else figure(fh); if(nargin==6 && ~isempty(sfh)); subplot(sfh); end; end
+if(nargin<6 || isempty(fh) || fh<1); fh=figure;
+else figure(fh); if(nargin==7 && ~isempty(sfh)); subplot(sfh); end; end
 whitebg(bgc);
 set(gcf,'Name','P2 -- SAC Seismogram Plotting Utility', ...
     'NumberTitle','off','color',bgc,'Pointer','crosshair');
@@ -71,6 +72,10 @@ for i=1:nver-1
     h(i)=sachi(vers(i));
 end
 
+% normalization
+scaling=ones(nrecs,1);
+if(nargin>4 && norm); scaling=gnrm(data); end
+
 % loop through each file
 hold on
 plotted=false(nrecs,1);
@@ -86,7 +91,7 @@ for i=1:nrecs
     else time=data(i).t; end
     
     % plot series
-    plot(time,data(i).x,'color',colors(i,:),'linewidth',lw);
+    plot(time,data(i).x/scaling(i),'color',colors(i,:),'linewidth',lw);
     plotted(i)=1;
 end
 hold off
@@ -97,7 +102,7 @@ if(nargin>1 && ~isempty(xlimits)); axis auto; xlim(xlimits); end
 if(nargin>2 && ~isempty(ylimits)); ylim(ylimits); end
 
 % legend
-if(nargin>3 && legend_ok==1)
+if(nargin>3 && legend_ok)
     if(isfield(data,'name')); lh=legend(data(plotted).name,'location','best');
     else i=1:nrecs; lh=legend(strcat({'Record '},cellstr(num2str(i(plotted).')))); end
     set(lh,'interpreter','none')

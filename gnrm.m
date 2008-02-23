@@ -5,8 +5,6 @@ function [scale]=gnrm(data)
 %
 %    Usage: [scale]=gnrm(data)
 %
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
 %    See also: mul, nrm, gmed
 
 % check nargin

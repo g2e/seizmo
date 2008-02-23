@@ -25,8 +25,6 @@ function [data]=rh(varargin)
 %      files=dir();
 %      data=rh(files.name);
 %
-%    By: Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
 %    See also: rdata, rpdw, rsac, wsac, bsac, sachi, gh, lh, ch, wh, gv
 
 % compile file lists

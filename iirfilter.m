@@ -219,7 +219,7 @@ for i=1:ng
             if(nc==1)
                 if(~strcmpi(style,'cheby2'))
                     sc=pc*(1+tranbw);
-                    if(sc>1); sc=1; end
+                    if(sc>1); sc=0.9999; end
                 else
                     sc=pc;
                     pc=pc*(1/(1+tranbw));
@@ -233,7 +233,7 @@ for i=1:ng
             if(nc==1)
                 if(~strcmpi(style,'cheby2'))
                     sc=pc-(1-pc)*tranbw;
-                    if(sc<0); sc=0; end
+                    if(sc<0); sc=0.0001; end
                 else
                     sc=pc;
                     pc=sc+(1-sc)/(1/tranbw+1);
@@ -256,8 +256,8 @@ for i=1:ng
             if(~strcmpi(style,'cheby2'))
                 sc(1)=pc(1)-tranbw*w;
                 sc(2)=pc(2)+tranbw*w;
-                if(sc(1)<0); sc(1)=0; end
-                if(sc(2)>1); sc(2)=1; end
+                if(sc(1)<0); sc(1)=0.0001; end
+                if(sc(2)>1); sc(2)=0.9999; end
             else
                 sc=pc;
                 pc(1)=pc(1)+(1/(1/tranbw+2))*w;
@@ -270,7 +270,9 @@ for i=1:ng
         end
     
         % swap if stop/notch
-        [pc,sc]=swap(sc,pc);
+        if(strcmpi(type,{'stop'}))
+            [pc,sc]=swap(sc,pc);
+        end
     end
     
     % find filter order if needed

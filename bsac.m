@@ -1,5 +1,5 @@
 function [data]=bsac(varargin)
-%BSAC   Arrange timeseries into SAClab structure format
+%BSAC   Arrange timeseries into SAClab format
 %
 %    Description: Takes vectors of x-values and y-values and formats them 
 %     to be compatible with SAClab routines such as rsac, wsac, lh, gh, ch.
@@ -11,21 +11,16 @@ function [data]=bsac(varargin)
 %     information into a SAClab compatible structure and ultimately write
 %     to a SAC formatted binary file:
 %
-%     xarray=linspace(0,30,1000);
-%     yarray=sqrt(xarray);
-%     data=bsac(xarray,yarray);
-%     data.name='myfile';
-%     wsac(data);
+%      xarray=linspace(0,30,1000);
+%      yarray=sqrt(xarray);
+%      data=bsac(xarray,yarray);
+%      data.name='myfile';
+%      wsac(data);
 %
-%    by Michael Thorne (5/2004)   mthorne@asu.edu
-%       Garrett Euler  (2/2008)   ggeuler@wustl.edu
-%
-%    See also:  wsac, lh, ch, gh, rsac, sachp 
+%    See also:  wsac, lh, ch, gh, rsac, sachi 
 
 % check number of inputs
-if (mod(nargin,2))
-    error('Unpaired x/y vectors!')
-end
+if (mod(nargin,2)); error('Unpaired x/y vectors!'); end
 
 % preferred SAC/SAClab version
 pref=6;
@@ -33,22 +28,22 @@ pref=6;
 % get preferred header layout
 h=sachi(pref);
 
-% undefined numeric header
+% undefine numeric header
 undef=zeros(h.size,1,h.store);
 for i=1:length(h.ntype)
     for j=1:length(h.(h.ntype{i}))
-        undef(h.(h.ntype{i})(j).minpos:h.(h.ntype{i})(j).maxpos)=h.(h.ntype{i})(j).undef;
+        undef(h.(h.ntype{i})(j).minpos:h.(h.ntype{i})(j).maxpos)=h.undef.ntype;
     end
 end
 
-% undefined char header
+% undefine char header
 for i=1:length(h.stype)
     for j=1:length(h.(h.stype{i}))
         sfields=fieldnames(h.(h.stype{i})(j).pos);
         for k=1:length(sfields)
             m=h.(h.stype{i})(j).pos.(sfields{k});
-            n=m(2)-m(1)+1; o=length(h.(h.stype{i})(j).undef);
-            undef(m(1):m(2))=[h.(h.stype{i})(j).undef repmat(32,1,n-o)];
+            n=m(2)-m(1)+1; o=length(h.undef.stype);
+            undef(m(1):m(2))=[h.undef.stype repmat(32,1,n-o)];
         end
     end
 end
@@ -74,12 +69,8 @@ for i=1:2:nargin
         error('x and y series are not the same length')
     end
     
-    % ensure column vectors
-    varargin{i}=varargin{i}(:);
-    varargin{i+1}=varargin{i+1}(:);
-    
     % fill in dependent variable
-    data(j).x(:,1)=varargin{i+1};
+    data(j).x=varargin{i+1}(:);
     
     % fill in knowns/presets
     delta=(varargin{i}(end)-varargin{i}(1))/(npts-1);
@@ -93,10 +84,11 @@ for i=1:2:nargin
     
     % if timeseries is unevenly spaced add proper info
     if(abs(delta-(varargin{i}(2)-varargin{i}(1)))>eps)
-        data(j).t(:,1)=varargin{i};
+        data(j).t=varargin{i}(:);
         data(j)=ch(data(j),'leven',h.false,...
-            'odelta',varargin{i}(2)-varargin{i}(1));
+            'odelta',data(j).t(2)-data(j).t(1));
     end
 end
 
 end
+

@@ -1,11 +1,11 @@
 function [recmatrix,indices,store,npts]=combo(data)
-%COMBO    Combines data records into a single numeric matrix
+%COMBO    Combines data records into a single numeric record matrix
 %
 %    Description: Combines data records into one matrix (records are in
 %     separate columns).  Records are padded with zeros to have the same
 %     number of points.  This is for vectorizing heavy computations in the
 %     short term.  Look into using multi-component files for better 
-%     performance on large sets of records.
+%     performance from most functions when working on large datasets.
 %
 %    Usage: [recmatrix,indices,store,npts]=combo(data)
 %
@@ -48,3 +48,4 @@ for i=1:nrecs
 end
 
 end
+

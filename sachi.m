@@ -1,24 +1,14 @@
 function [varargout]=sachi(version)
-%SACHP    Returns SAC header information for read/modify/write operations
+%SACHI    Returns SAC header information for read/modify/write operations
 %
 %    Description: Provides all information necessary to read/modify/write 
 %     the specified version of a SAC file.
-%
-%    Limitations: Codes use only id, val, desc fields of enum(1).  No local
-%                 logic definitions - only global definitions.  
-%
-%                 There are global and local definitions of undef - gh uses
-%                 the globals to give an undefined value for undefined 
-%                 header fields.  So the global undef is only used for 
-%                 undefined fields - all defined fields use their local
-%                 undef.
 %    
 %    Usage:    valid_versions=sachi();
-%              headerinfo=sachi(version);
+%              header_info=sachi(version);
 %
-%    by Garrett Euler (2/2008)  ggeuler@wustl.edu
-%
-%    See also:  gv, rh, wh, ch, lh, gh, rpdw, rdata, rsac, bsac, wsac 
+%    See also:  gv, ch, lh, gh, glgc, genum, genumdesc,
+%               rh, rpdw, rdata, rsac, bsac, wh, wsac
 
 % check nargin
 error(nargchk(0,1,nargin))
@@ -72,7 +62,6 @@ if(any(version==[6 101 200 201]))
     header.real.bytesize=4;
     header.real.numfields=70;
     header.real.size=70;
-    header.real.undef=-12345;
     header.real.minpos=1;
     header.real.maxpos=70;
     header.real.pos=struct('delta',1,'depmin',2,'depmax',3,'scale',4,...
@@ -93,7 +82,6 @@ if(any(version==[6 101 200 201]))
     header.int.bytesize=4;
     header.int.numfields=15;
     header.int.size=15;
-    header.int.undef=-12345;
     header.int.minpos=71;
     header.int.maxpos=85;
     header.int.pos=struct('nzyear',71,...
@@ -106,7 +94,6 @@ if(any(version==[6 101 200 201]))
     header.enum.bytesize=4;
     header.enum.numfields=20;
     header.enum.size=20;
-    header.enum.undef=-12345;
     header.enum.minpos=86;
     header.enum.maxpos=105;
     header.enum.minval=0;
@@ -210,7 +197,6 @@ if(any(version==[6 101 200 201]))
     header.lgc.bytesize=4;
     header.lgc.numfields=5;
     header.lgc.size=5;
-    header.lgc.undef=-12345;
     header.lgc.minpos=106;
     header.lgc.maxpos=110;
     header.lgc.pos=struct('leven',106,'lpspol',107,'lovrok',108,...
@@ -221,7 +207,6 @@ if(any(version==[6 101 200 201]))
     header.char.bytesize=1;
     header.char.numfields=23;
     header.char.size=192;
-    header.char.undef='-12345';
     header.char.minpos=111;
     header.char.maxpos=302;
     header.char.pos=struct('kstnm',[111,118],'kevnm',[119,134],...
@@ -260,7 +245,6 @@ if(any(version==[6 101 200 201]))
         header.real(2).bytesize=8;
         header.real(2).numfields=35;
         header.real(2).size=35;
-        header.real(2).undef=-12345;
         header.real(2).minpos=36;
         header.real(2).maxpos=70;
         header.real(2).pos=struct('evla',36,'evlo',37,'evel',38,'evdp',39,...
@@ -277,7 +261,6 @@ if(any(version==[6 101 200 201]))
         header.real(1).bytesize=8;
         header.real(1).numfields=35;
         header.real(1).size=35;
-        %header.real(1).undef=-12345;
         %header.real(1).minpos=1;
         header.real(1).maxpos=35;
         header.real(1).pos=struct('delta',1,'depmin',2,'depmax',3,...
