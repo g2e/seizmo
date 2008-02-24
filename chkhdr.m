@@ -1,30 +1,34 @@
 function [data]=chkhdr(data)
-%CHKHDR    Check header field/values of SAClab records
+%CHKHDR    Check and update header field/values of SAClab records
 %
 %    Description: Currently just updates header fields 'depmin', 'depmax',
-%     'depmen', 'npts', and 'e'.
+%     'depmen', 'npts', and 'e' to reflect data records.  Field 'b' is
+%     also updated for uneven records.
 %
-%    See also: fixdelta
+%    See also:  ch, gh, glgc, fixdelta
 
 % check input
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
+if(~isfield(data,'x'))
     error('data structure does not have proper fields')
 end
+
+% get header info
+leven=glgc(data,'leven');
+t=strcmp(leven,'true');
+f=strcmp(leven,'false');
+if(~all(t & f)); error('leven logical needs to be set'); end
 
 % number of records
 nrecs=length(data);
 
-% loop through records
+% preallocate
 len=zeros(nrecs,1); depmax=zeros(nrecs,1);
 depmin=zeros(nrecs,1); depmen=zeros(nrecs,1);
+
+% loop over all records
 for i=1:length(data)
     len(i)=size(data(i).x,1);
     depmax(i)=norm(max(data(i).x));
@@ -32,9 +36,19 @@ for i=1:length(data)
     depmen(i)=norm(mean(data(i).x));
 end
 
-% get header and update
-[b,delta]=gh(data,'b','delta'); e=b+(len-1).*delta;
-data=ch(data,'depmax',depmax,'npts',len,'e',e,'depmin',depmin,'depmen',depmen);
+% work on uneven records
+for i=find(f)
+    tlen=size(data(i).t,1);
+    if(tlen~=len(i)); error('number of timing samples inconsistent with number of data samples for record %d',i); end
+    data(i)=ch(data(i),'b',data(i).t(1),'e',data(i).t(end));
+end 
+
+% work on even records
+[b,delta]=gh(data(t),'b','delta'); 
+data(t)=ch(data(t),'e',e=b+(len(t)-1).*delta);
+
+% update some header fields
+data=ch(data,'depmax',depmax,'npts',len,'depmin',depmin,'depmen',depmen);
 
 end
 

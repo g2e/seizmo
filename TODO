@@ -6,7 +6,6 @@ clean up class support
 clean up documentation
 global undefined values only
 fix ch (auto field type support)
-userwindow, usertaper, mcxc 
 
 more function ideas (0.5.?)
 ------------------
@@ -45,23 +44,16 @@ fetch record (frec)
 
 reverse (flip)
 
-better multi-comp support (0.5.1)
--------------------------------
-dataless sac (npts=0)
-combo,distro vs multi-comp
-finalize ncmp header setup
 
-
-update plotting (0.5.2)
+more plotting (0.5.1)
 -----------------
-spectral plotting
-plot choose component
-one plot for them all
+spectral plotting (pspec1, pspec2, pspec3)
+plot choose component (pcmp1, pcmp2, pcmp3)
 picking
 deleting
 
 
-multi-file functions (0.5.3)
+multi-file functions (0.5.2)
 ---------------------------
 rotate (turn)
 add, subtr, mul, dvide records
@@ -70,12 +62,24 @@ beam
 stack
 
 
-gui for windowing and align (0.5.4?)
+true guis (0.5.3)
 -------------------------
+window
+align
+pick
+delete
+
+header layout change (0.6.0)
+-------------------------------
+header partitioned by field type
+	- fixes current npts/nspts limitation
+	- requires significant rewriting of header access functions
+		- add dataless sac support (npts=0)
+		- finalize multi-component setup
+	- changing version becomes complicated again
 
 
-
-add readme (saclab.m)
+add readme (saclab.m) and examples (?.?.?)
 -------------------------
 	- features
 	- tutorials

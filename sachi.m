@@ -7,14 +7,15 @@ function [varargout]=sachi(version)
 %    Usage:    valid_versions=sachi();
 %              header_info=sachi(version);
 %
-%    See also:  gv, ch, lh, gh, glgc, genum, genumdesc,
-%               rh, rpdw, rdata, rsac, bsac, wh, wsac
+%    See also:  gv, ch, lh, gh, glgc, genum, genumdesc, doubleit,
+%               fixdelta, rh, rpdw, rdata, rsac, bsac, wh, wsac,
+%               chkhdr, sacsize
 
 % check nargin
 error(nargchk(0,1,nargin))
 
 % no args - return valid versions
-valid=[6 101 200 201];
+valid=[6 101 102 200 201 202];
 if(nargin==0)
     varargout{1}=valid;
     return;
@@ -26,7 +27,7 @@ if(~any(valid==version))
 end
 
 % SAC version 6 header setup
-if(any(version==[6 101 200 201]))
+if(any(version==[6 101 102 200 201 202]))
     header.version=6;
     header.numfields=133;
     header.size=302;
@@ -216,30 +217,93 @@ if(any(version==[6 101 200 201]))
         'kt9',[231,238],'kf',[239,246],'kuser0',[247,254],...
         'kuser1',[255,262],'kuser2',[263,270],'kcmpnm',[271,278],...
         'knetwk',[279,286],'kdatrd',[287,294],'kinst',[295,302]);
-
-    % SAClab version 101 header mod
-    if(any(version==[101 201]))
+    
+    
+    % SAClab version 101 header mod (npts/nspts become double ints)
+    % NOTE - SAClab stores header values in 
+    if(any(version==[101 102 201 202]))
         header.version=101;
         
-        % replace unused15 with ncmp (number of dependent components)
-        header.int.pos=rmfield(header.int.pos,'unused15');
-        header.int.pos.ncmp=85;
+        % change internal SAClab header storage type
+        header.store='double';
         
-        % iftype (cont)
+        % split v6 'single' int group into 3 (npts/nspts go double int)
+        %header.int(1).startbyte=280;
+        %header.int(1).store='int32';
+        %header.int(1).bytesize=4;
+        header.int(1).numfields=9;
+        header.int(1).size=9;
+        header.int(1).minpos=71;
+        header.int(1).maxpos=79;
+        header.int(1).pos=struct('nzyear',71,'nzjday',72,'nzhour',73,...
+            'nzmin',74,'nzsec',75,'nzmsec',76,'nvhdr',77,'norid',78,...
+            'nevid',79);
+        
+        header.int(2).startbyte=316;
+        header.int(2).store='int64';
+        header.int(2).bytesize=8;
+        header.int(2).numfields=2;
+        header.int(2).size=2;
+        header.int(2).minpos=80;
+        header.int(2).maxpos=81;
+        header.int(2).pos=struct('npts',80,'nspts',81);
+        
+        header.int(3).startbyte=332;
+        header.int(3).store='int32';
+        header.int(3).bytesize=4;
+        header.int(3).numfields=4;
+        header.int(3).size=4;
+        header.int(3).minpos=82;
+        header.int(3).maxpos=85;
+        header.int(3).pos=struct('nwfid',82,'nxsize',83,'nysize',84,...
+            'unused15',85);
+        
+        % push enum/logic in and char/data out
+        header.enum.startbyte=348;
+        header.lgc.startbyte=428;
+        header.char.startbyte=448;
+        header.data.startbyte=640;
+    end
+    
+    
+    % SAClab version 102 header mod (101 + multi-component support)
+    if(any(version==[102 202]))
+        header.version=102;
+        
+        % replace unused15 with ncmp (number of dependent components)
+        header.int(3).pos=rmfield(header.int(3).pos,'unused15');
+        header.int(3).pos.ncmp=85;
+        
+        % add new iftype enum
         header.enum.maxval=98;
         header.enum.id{99}='incmp';
         header.enum.val.incmp=98;
         header.enum.desc{99}='Multi-Component Time Series File';
     end
     
-    % SAClab version 200 header mod
-    if(any(version==[200 201]))
+    
+    % SAClab version 200 header mod (double reals, double data)
+    if(any(version==[200 201 202]))
         header.version=200;
         
-        % change matlab header storage type
+        % change internal SAClab header storage type
         header.store='double';
         
-        % split v6 'single' group to 2 'double' groups 
+        % split v6 'single' real group into 2 'double' real groups
+        %header.real(1).startbyte=0;
+        header.real(1).store='double';
+        header.real(1).bytesize=8;
+        header.real(1).numfields=35;
+        header.real(1).size=35;
+        %header.real(1).minpos=1;
+        header.real(1).maxpos=35;
+        header.real(1).pos=struct('delta',1,'depmin',2,'depmax',3,...
+            'scale',4,'odelta',5,'b',6,'e',7,'o',8,'a',9,'fmt',10,'t0',11,...
+            't1',12,'t2',13,'t3',14,'t4',15,'t5',16,'t6',17,'t7',18,...
+            't8',19,'t9',20,'f',21,'resp0',22,'resp1',23,'resp2',24,...
+            'resp3',25,'resp4',26,'resp5',27,'resp6',28,'resp7',29,...
+            'resp8',30,'resp9',31,'stla',32,'stlo',33,'stel',34,'stdp',35);
+        
         header.real(2).startbyte=440;
         header.real(2).store='double';
         header.real(2).bytesize=8;
@@ -256,32 +320,29 @@ if(any(version==[6 101 200 201]))
             'unused7',65,'unused8',66,'unused9',67,'unused10',68,...
             'unused11',69,'unused12',70);
         
-        %header.real(1).startbyte=0;
-        header.real(1).store='double';
-        header.real(1).bytesize=8;
-        header.real(1).numfields=35;
-        header.real(1).size=35;
-        %header.real(1).minpos=1;
-        header.real(1).maxpos=35;
-        header.real(1).pos=struct('delta',1,'depmin',2,'depmax',3,...
-            'scale',4,'odelta',5,'b',6,'e',7,'o',8,'a',9,'fmt',10,'t0',11,...
-            't1',12,'t2',13,'t3',14,'t4',15,'t5',16,'t6',17,'t7',18,...
-            't8',19,'t9',20,'f',21,'resp0',22,'resp1',23,'resp2',24,...
-            'resp3',25,'resp4',26,'resp5',27,'resp6',28,'resp7',29,...
-            'resp8',30,'resp9',31,'stla',32,'stlo',33,'stel',34,'stdp',35);
-        
-        % push 'char' group to end (following SAC layout)
+        % push char/data out 280 (keep char at end following SAC layout)
         header.char.startbyte=720;
+        header.data.startbyte=912;
         
         % change data storage
-        header.data.startbyte=912;
         header.data.store='double';
         header.data.bytesize=8;
     end
     
-    % SAClab version 201 header mod
-    if(version==201)
+    
+    % SAClab version 201 header mod (101+200)
+    if(any(version==[201 202]))
         header.version=201;
+        
+        % push out real(2)/char/data by 8 for 101 mod
+        header.real(2).startbyte=448;
+        header.char.startbyte=728;
+        header.data.startbyte=920;
+    end
+    
+    % SAClab version 202 header mod (101+102+200)
+    if(any(version==[202]))
+        header.version=202;
     end
 end
 

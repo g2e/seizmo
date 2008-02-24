@@ -7,9 +7,8 @@ function [version,endian]=gv(filename)
 %
 %    Usage:    [version,endian]=gv('filename')
 %
-%    by Garrett Euler (2/2008)  ggeuler@wustl.edu
-%
 %    See also:  ch, lh, gh, rh, wh, rpdw, rdata, rsac, bsac, wsac, sachi 
+%               doubleit, fixdelta, glgc, genum, genumdesc, sacsize
 
 % get valid versions
 valid=sachi();

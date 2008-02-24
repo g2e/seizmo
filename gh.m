@@ -19,7 +19,8 @@ function [varargout]=gh(data,varargin)
 %     dt=gh(data,'DeLtA')
 %     [stla,stlo]=gh(data,'stla','STLO')
 %
-%    See also:  ch, lh, rh, wh, rpdw, rdata, rsac, bsac, wsac, sachp, gv
+%    See also:  ch, lh, rh, wh, rpdw, rdata, rsac, bsac, wsac, sachi, gv
+%               doubleit, fixdelta, glgc, genum, genumdesc, sacsize
 
 % do nothing on no input
 if(nargin<1); error('not enough input arguments'); end
@@ -145,3 +146,4 @@ end
 error('SAClab:fieldInvalid','Invalid field: %s',f);
 
 end
+

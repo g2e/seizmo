@@ -18,8 +18,9 @@ function [data]=ch(data,varargin)
 %     data=ch(data,'STLA',lats,'STLO',lons)
 %     data=ch(data,'KT0','sSKS');
 %
-%    See also:  lh, gh, rh, wh, glgc, genum, genumdesc, 
-%               rpdw, rdata, rsac, bsac, wsac, sachi, gv
+%    See also:  lh, gh, rh, wh, glgc, genum, genumdesc, doubleit,
+%               fixdelta, rpdw, rdata, rsac, bsac, wsac, sachi, gv
+%               chkhdr, sacsize
 
 % throw error if unpaired fields
 if (mod(nargin-1,2)); error('Unpaired Field/Value!'); end
@@ -36,7 +37,9 @@ end
 % number of records
 nrecs=length(data);
 
-% recursive section (breaks up data so ch only deals with 1 header version)
+% recursive section
+%   breaks up dataset with multiple calls so that the
+%   rest of ch only deals with only one header version
 v=[data.version];
 vers=unique(v(:));
 nver=length(vers);
@@ -72,21 +75,6 @@ end
 % headers setup
 h=sachi(vers);
 
-% check header field types match up to what ch currently supports
-chtypes={'real' 'int' 'enum' 'lgc' 'char'};
-for j=1:length(chtypes)
-    if(~any(strcmp(h.types,chtypes{j})))
-        error('ch field type %s unsupported by header vers %d',...
-            chtypes{j},vers);
-    end
-end
-for j=1:length(h.types)
-    if(~any(strcmp(h.types{j},chtypes)))
-        error('Header version %d has unsupported field type %s',...
-            vers,h.types{j});
-    end
-end
-
 % pull entire header
 head=[data.head];
 
@@ -113,21 +101,29 @@ for i=1:2:(nargin-2)
     if(isscalar(varargin{i+1}))
         varargin{i+1}=varargin{i+1}(ones(nrecs,glen));
     elseif(isvector(varargin{i+1}))
-        len=length(varargin{i+1});
-        if(len==0)
-            continue;
-        elseif(len~=nrecs)
-            error('Value vector for field %s not correct size: %d ~= %d',...
-                varargin{i},len,nrecs);
-        end
         varargin{i+1}=varargin{i+1}(:);
+        sz=size(varargin{i+1});
+        len=prod(sz);
+        if(len==0); continue; end
+        % figure out group expansion
         if(group)
-            varargin{i+1}=varargin{i+1}(:,ones(glen,1));
+            % expand
+            if(len==nrecs)
+                varargin{i+1}=varargin{i+1}(:,ones(glen,1));
+            elseif(len==glen)
+                varargin{i+1}=varargin{i+1}(:,ones(nrecs,1)).';
+            else
+                error('Group value vector for field %s not correct size',varargin{i});
+            end
+        % check for correct length
+        elseif(len~=nrecs)
+            error('Value vector for field %s not correct size',varargin{i});
         end
+    % array
     else
         dim=size(varargin{i+1});
         if(dim(1)~=nrecs || dim(2)<glen)
-            error('Value array for field %s not correct size',varargin{i})
+            error('Group value array for field %s not correct size',varargin{i})
         end
     end
     
@@ -148,67 +144,82 @@ head=mat2cell(head,h.size,ones(1,nrecs));
 
 end
 
-function [head]=a2h(head,h,f,v)
-%A2H    Assign values to header field
 
-% input based on field type (any new types will have to added
-% to the header definition must be added here too)
-for m=1:length(h.real)
-    if(isfield(h.real(m).pos,f))
-        head(h.real(m).pos.(f),:)=cell2mat(v);
-        return;
-    end
-end
-for m=1:length(h.int)
-    if(isfield(h.int(m).pos,f))
-        head(h.int(m).pos.(f),:)=round(cell2mat(v));
-        return;
-    end
-end
+function [head]=a2h(head,h,f,v)
+%A2H    Subfunction that assigns values to header field
+
+% special treatment for enums
 for m=1:length(h.enum)
     if(isfield(h.enum(m).pos,f))
-        % string enum values (lookup enum)
+        % string id/desc enum values
         if(iscellstr(v))
-            % lookup only in enum(1)
+            % all are ids and are the same (quick)
             if(isfield(h.enum(1).val,v{1}) && length(unique(v))==1)
                 head(h.enum(m).pos.(f),:)=h.enum(1).val.(v{1});
-            elseif(all(isfield(h.enum(1).val,v)))
-                % non-vectorized
-                for n=1:length(v)
-                    head(h.enum(m).pos.(f),n)=h.enum(1).val.(v{n});
-                end
+            % not all are the same (slow)
             else
-                error('Some Enum IDs not valid for field %s',f)
+                for n=1:length(v)
+                    % check if string id
+                    if(isfield(h.enum(1).val,v{n}))
+                        head(h.enum(m).pos.(f),n)=h.enum(1).val.(v{n});
+                    else
+                        % check if description
+                        desc=strcmpi(v{n},h.enum(1).desc);
+                        if(any(desc))
+                            head(h.enum(m).pos.(f),n)=find(desc)-1;
+                        else
+                            warning('SAClab:enumBad','Enum String ID/Description Invalid for field %s',f);
+                        end
+                    end
+                end
             end
         % assume numeric cell array of enum values
         % (no check - breaks if mixed num/char cells)
-        else head(h.enum(m).pos.(f),:)=round(cell2mat(v));
+        else head(h.enum(m).pos.(f),:)=cell2mat(v);
         end
         return;
     end
 end
+
+% special treatment for logical words
 for m=1:length(h.lgc)
     if(isfield(h.lgc(m).pos,f))
-        v=cell2mat(v);
-        true=(v==h.true | v==116);
-        false=(v==h.false | v==102);
-        undef=(v==h.undef.ntype | v==117);
-        if(~all(true | false | undef))
-            error('Illogical values for logic field %s',f)
+        if(iscellstr(v))
+            % logic words (unknown => undefined here)
+            true=strncmp(v,'t',1);
+            false=strncmp(v,'f',1);
+            undef=strncmp(v,'u',1);
+            head(h.lgc(m).pos.(f),true)=h.true;
+            head(h.lgc(m).pos.(f),false)=h.false;
+            head(h.lgc(m).pos.(f),undef)=h.undef.ntype;
+        else
+            % logic numbers (unknown => unknown here)
+            head(h.lgc(m).pos.(f),:)=cell2mat(v);
         end
-        head(h.lgc(m).pos.(f),true)=h.true;
-        head(h.lgc(m).pos.(f),false)=h.false;
-        head(h.lgc(m).pos.(f),undef)=h.undef.ntype;
         return;
     end
 end
-for m=1:length(h.char)
-    if(isfield(h.char(m).pos,f))
-        n=h.char(m).pos.(f); 
-        o=n(2)-n(1)+1;
-        v=strnlen(v,o);
-        head(n(1):n(2),:)=char(v).';
-        return;
+
+% string types
+for n=1:length(h.stype)
+    for m=1:length(h.(h.stype{n}))
+        if(isfield(h.(h.stype{n})(m).pos,f))
+            p=h.(h.stype{n})(m).pos.(f);
+            o=p(2)-p(1)+1;
+            v=strnlen(v,o);
+            head(p(1):p(2),:)=char(v).';
+            return;
+        end
+    end
+end
+
+% remainder of numeric types
+for n=1:length(h.ntype)
+    for m=1:length(h.(h.ntype{n}))
+        if(isfield(h.(h.ntype{n})(m).pos,f))
+            head(h.(h.ntype{n})(m).pos.(f),:)=cell2mat(v);
+            return;
+        end
     end
 end
             

@@ -14,9 +14,7 @@ function []=lh(data,varargin)
 %     lh(data,'dEltA')
 %     lh(data,'StLA','stLo')
 %
-%    by Garrett Euler (2/2008)  ggeuler@wustl.edu
-%
-%    See also:  ch, gh, rh, wh, rpdw, rdata, rsac, bsac, wsac, sachp, gv
+%    See also:  ch, gh, rh, wh, rpdw, rdata, rsac, bsac, wsac, sachi, gv
 
 % do nothing on no input
 if(nargin<1); return; end

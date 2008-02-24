@@ -2,7 +2,7 @@ function [data]=bsac(varargin)
 %BSAC   Arrange timeseries into SAClab format
 %
 %    Description: Takes vectors of x-values and y-values and formats them 
-%     to be compatible with SAClab routines such as rsac, wsac, lh, gh, ch.
+%     to be compatible with SAClab routines such as rsac and wsac.
 %
 %    Usage:    saclab_struct=bsac(x_vec1,y_vec1,x_vec2,y_vec2...)
 %
@@ -17,7 +17,7 @@ function [data]=bsac(varargin)
 %      data.name='myfile';
 %      wsac(data);
 %
-%    See also:  wsac, lh, ch, gh, rsac, sachi 
+%    See also:  wsac, rsac
 
 % check number of inputs
 if (mod(nargin,2)); error('Unpaired x/y vectors!'); end

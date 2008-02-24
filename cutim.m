@@ -1,5 +1,5 @@
 function [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
-%CUTIM    Cut SAClab data (in memory)
+%CUTIM    Cut SAClab data in memory
 %
 %    Description: Cuts data windows from SAClab data records using the
 %     given cut parameters.  Windows that extend outside the timing of the 
@@ -51,11 +51,7 @@ function [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
 error(nargchk(1,7,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head'))
+if(~isfield(data,'x'))
     error('data structure does not have proper fields')
 end
 
@@ -89,13 +85,9 @@ elseif(~any(length(offset1)==[1 nrecs]) || ~any(length(offset2)==[1 nrecs]))
 end
 
 % grab spacing info
-[b,npts,delta,leven,iftype]=gh(data,'b','npts','delta','leven','iftype');
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
-end
+iftype=genumdesc(data,'iftype');
+leven=glgc(data,'leven');
+[b,npts,delta]=gh(data,'b','npts','delta');
 
 % expand scalar offsets
 if(length(offset1)==1)
@@ -130,18 +122,18 @@ for i=1:nrecs
     v=data(i).version==vers;
     
     % check for unsupported filetypes
-    if(iftype(i)==h(v).enum(1).val.ixyz)
+    if(strcmp(iftype(i),'General XYZ (3-D) file'))
         destroy(i)=1;
         warning('SAClab:illegalFiletype','Illegal operation on xyz file');
         continue;
-    elseif(iftype(i)==h(v).enum(1).val.irlim || iftype(i)==h(v).enum(1).val.iamph)
+    if(any(strcmp(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
         destroy(i)=1;
         warning('SAClab:illegalFiletype','Illegal operation on spectral file');
         continue;
     end
     
     % check if evenly spaced
-    if(leven(i)==h(v).true)
+    if(strcmp(leven(i),'true'))
         % calculate begin and end points
         if(~strcmpi(ref1,'n'))
             bp(i)=round((bt(i)-b(i))/delta(i))+1;
@@ -269,3 +261,4 @@ end
 data(destroy)=[];
 
 end
+
