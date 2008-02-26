@@ -10,9 +10,7 @@ function []=wsac(data)
 %
 %    Usage:    wsac(saclab_struct)
 %
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
-%    See also:  rsac, bsac, sachp, gv, rpdw, rh, wh, lh, ch, gh
+%    See also:  rsac, bsac, sachi, gv, rpdw, rh, wh, lh, ch, gh
 
 % check number of inputs
 error(nargchk(1,1,nargin))
@@ -38,12 +36,12 @@ end
 % loop over records
 for i=1:length(data)
     % logical index of header info
-    v=data(i).version==vers;
+    v=(data(i).version==vers);
     
     % open file for writing
     fid=fopen(data(i).name,'w',data(i).endian);
     
-    % fill header with zeros (so we can seek around)
+    % fill header with dummy bytes (so we can seek around)
     fseek(fid,0,'bof');
     fwrite(fid,zeros(h(v).data.startbyte,1),'char');
     

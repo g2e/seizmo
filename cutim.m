@@ -118,15 +118,12 @@ end
 % loop through each file
 destroy=false(nrecs,1);
 for i=1:nrecs
-    % header version index
-    v=data(i).version==vers;
-    
     % check for unsupported filetypes
     if(strcmp(iftype(i),'General XYZ (3-D) file'))
         destroy(i)=1;
         warning('SAClab:illegalFiletype','Illegal operation on xyz file');
         continue;
-    if(any(strcmp(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
+    elseif(any(strcmp(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
         destroy(i)=1;
         warning('SAClab:illegalFiletype','Illegal operation on spectral file');
         continue;

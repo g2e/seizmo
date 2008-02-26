@@ -19,7 +19,7 @@ end
 leven=glgc(data,'leven');
 t=strcmp(leven,'true');
 f=strcmp(leven,'false');
-if(~all(t & f)); error('leven logical needs to be set'); end
+if(~all(t | f)); error('leven logical needs to be set'); end
 
 % number of records
 nrecs=length(data);
@@ -37,7 +37,7 @@ for i=1:length(data)
 end
 
 % work on uneven records
-for i=find(f)
+for i=find(f).'
     tlen=size(data(i).t,1);
     if(tlen~=len(i)); error('number of timing samples inconsistent with number of data samples for record %d',i); end
     data(i)=ch(data(i),'b',data(i).t(1),'e',data(i).t(end));
@@ -45,7 +45,7 @@ end
 
 % work on even records
 [b,delta]=gh(data(t),'b','delta'); 
-data(t)=ch(data(t),'e',e=b+(len(t)-1).*delta);
+data(t)=ch(data(t),'e',b+(len(t)-1).*delta);
 
 % update some header fields
 data=ch(data,'depmax',depmax,'npts',len,'depmin',depmin,'depmen',depmen);

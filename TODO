@@ -1,11 +1,11 @@
 current focus
 -----------------
+rpdw (clear data before read in)
 bug checks (build function test set)
 clean up structure checks (cut checks if calling ch,gh anyways)
 clean up class support
 clean up documentation
 global undefined values only
-fix ch (auto field type support)
 
 more function ideas (0.5.?)
 ------------------

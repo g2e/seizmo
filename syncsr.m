@@ -81,11 +81,8 @@ recs=resample(recs,n,d);
 nnpts=floor((npts-1)*n/d)+1;
 
 % redistribute records
-data=distro(data,recs,ind,store,nnpts);
-
-% update header
 data=ch(data,'delta',1/sr);
-data=chkhdr(data);
+data=distro(data,recs,ind,store,nnpts);
 
 end
 

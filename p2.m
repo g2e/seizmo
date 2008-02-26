@@ -64,31 +64,26 @@ nrecs=length(data);
 colors=hsv(nrecs);
 
 % header info
-[b,npts,delta,leven,iftype]=gh(data,'b','npts','delta','leven','iftype');
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
-end
+iftype=genumdesc(data,'iftype');
+leven=glgc(data,'leven');
+[b,npts,delta]=gh(data,'b','npts','delta');
 
 % normalization
 scaling=ones(nrecs,1);
-if(nargin>4 && norm); scaling=gnrm(data); end
+if(nargin>4 && ~isempty(norm) && norm); scaling=gnrm(data); end
 
 % loop through each file
 hold on
 plotted=false(nrecs,1);
 for i=1:nrecs
-    % header version
-    v=data(i).version==vers;
-    
     % check if timeseries or xy (if not skip)
-    if(~any(iftype(i)==[h(v).enum(1).val.itime h(v).enum(1).val.ixy])); continue; end
+    if(~any(strcmp(iftype(i),{'Time Series File' 'General X vs Y file'}))); continue; end
     
     % get record timing
-    if(leven(i)==h(v).true); time=b(i)+(0:npts(i)-1).'*delta(i);
-    else time=data(i).t; end
+    if(strcmp(leven(i),'true')); time=b(i)+(0:npts(i)-1).'*delta(i);
+    elseif(strcmp(leven(i),'false')); time=data(i).t;
+    else error('sample spacing logical must be set');
+    end
     
     % plot series
     plot(time,data(i).x/scaling(i),'color',colors(i,:),'linewidth',lw);
@@ -102,7 +97,7 @@ if(nargin>1 && ~isempty(xlimits)); axis auto; xlim(xlimits); end
 if(nargin>2 && ~isempty(ylimits)); ylim(ylimits); end
 
 % legend
-if(nargin>3 && legend_ok)
+if(nargin>3 && ~isempty(legend_ok) && legend_ok)
     if(isfield(data,'name')); lh=legend(data(plotted).name,'location','best');
     else i=1:nrecs; lh=legend(strcat({'Record '},cellstr(num2str(i(plotted).')))); end
     set(lh,'interpreter','none')
