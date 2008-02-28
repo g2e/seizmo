@@ -15,14 +15,7 @@ function [recmatrix,indices,store,npts]=combo(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % number of records
 nrecs=length(data);

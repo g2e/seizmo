@@ -1,7 +1,7 @@
 function [data]=deci(data,factor)
-%DECI    Downsample SAClab data records by integer factor
+%DECI    Downsample seislab data records by integer factor
 %
-%    Description: Downsamples SAClab data records by an integer factor.  
+%    Description: Downsamples seislab data records by an integer factor.  
 %     Keep the factor below 13 to avoid problems with the anti-aliasing
 %     filter and numerical noise.  Cascades are allowed by supplying 
 %     a vector of factors.  Uses the Matlab function decimate (Signal 
@@ -21,17 +21,17 @@ function [data]=deci(data,factor)
 % check inputs
 error(nargchk(2,2,nargin))
 
+% check data structure
+error(seischk(data,'x'))
+
 % empty factor
 if(isempty(factor)); return; end
 
-% check data structure
-if(~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
-
 % check factor
-if(~isvector(factor) || factor<1 || any(fix(factor)~=factor))
-    error('factor must be a scalar/vector of positive integer(s)')
+if(~isnumeric(factor) || ~isvector(factor) || ...
+        any(factor<1) || any(fix(factor)~=factor))
+    error('seislab:deci:badInput',...
+        'factor must be a scalar/vector of positive integer(s)')
 end
 
 % number of factors
@@ -42,8 +42,8 @@ of=prod(factor);
 
 % check spacing
 if(any(~strcmp(glgc(data,'leven'),'true')))
-    error('SAClab:evenlySpacedOnly',...
-        'Illegal operation on unevenly spaced data');
+    error('seislab:deci:evenlySpacedOnly',...
+        'illegal operation on unevenly spaced data');
 end
 
 % header info

@@ -1,17 +1,16 @@
 function [varargout]=gh(data,varargin)
-%GH    Get SAClab header values
+%GH    Get seislab header values
 %
-%    Description: Gets specified header values from SAClab structure.  
+%    Description: Gets specified header values from seislab data structure.  
 %     Fields must be strings corresponding to a valid header field or a 
 %     valid group field (ie. t,kt,resp,user,kuser).  Values are returned 
 %     in numeric arrays or cell string arrays oriented as a column vectors
 %     with one value per cell.  One value array per field or group field.
 %     Calling with no fields will attempt to return all headers in a
-%     single numeric array (will crash for datasets with headers of
-%     mixed sizes).
+%     single numeric array.
 %    
-%    Usage:    [value_array1,...]=gh(saclab_struct,'field1',...
-%                                       'group_field1','field2')
+%    Usage:    [value_array1,...]=gh(seislab_struct,'field1',...
+%                                       'group_field1','field2',...)
 %
 %    Examples:
 %     head=gh(data)       % put all header variables in one numeric array
@@ -19,25 +18,22 @@ function [varargout]=gh(data,varargin)
 %     dt=gh(data,'DeLtA')
 %     [stla,stlo]=gh(data,'stla','STLO')
 %
-%    See also:  ch, lh, rh, wh, rpdw, rdata, rsac, bsac, wsac, sachi, gv
-%               doubleit, fixdelta, glgc, genum, genumdesc, sacsize
+%    See also:  ch, lh, rh, wh, glgc, genum, genumdesc
 
-% do nothing on no input
-if(nargin<1); error('not enough input arguments'); end
+% require at least one input
+if(nargin<1)
+    error('MATLAB:nargchk:notEnoughInputs','Not enough input arguments.')
+end
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data))
 
 % number of records
 nrecs=length(data);
 
-% recursive section (breaks up data so gh only deals with 1 header version)
+% recursive section
+%   breaks up dataset with multiple calls so that the
+%   rest of gh deals with only one header version
 v=[data.version];
 vers=unique(v(:));
 nver=length(vers);
@@ -75,7 +71,7 @@ if(nver>1)
 end
 
 % headers setup
-h=sachi(vers);
+h=seishi(vers);
 
 % pull entire header
 head=[data.head];
@@ -107,9 +103,9 @@ for i=1:nargin-1
         % preallocate (did not know the type until now)
         if(j==1)
             if(type)
-                varargout{i}=repmat({'0'},nrecs,glen);
+                varargout{i}=repmat({'NaN'},nrecs,glen);
             else
-                varargout{i}=zeros(nrecs,glen);
+                varargout{i}=nan(nrecs,glen);
             end
         end
         
@@ -143,7 +139,10 @@ for n=1:length(h.ntype)
 end
 
 % field not found
-error('SAClab:fieldInvalid','Invalid field: %s',f);
+warning('seislab:gh:fieldInvalid',...
+    '\nHeader Version: %d\nInvalid field: %s',h.version,f);
+head=nan;
+type=0;
 
 end
 

@@ -1,8 +1,8 @@
 function [data]=distro(data,recmatrix,indices,store,npts)
-%DISTRO    Distributes a record matrix back to SAClab structure
+%DISTRO    Distributes a record matrix back to seislab structure
 %
 %    Description: Imports data records that are in a record matrix back
-%     into a SAClab data structure.
+%     into a seislab data structure.
 %
 %    Usage: [data]=distro(data,recmatrix,indices,store,npts)
 %
@@ -12,13 +12,7 @@ function [data]=distro(data,recmatrix,indices,store,npts)
 error(nargchk(5,5,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data))
 
 % loop through records
 for i=1:length(data)

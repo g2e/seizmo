@@ -1,5 +1,5 @@
 function [data]=chkhdr(data)
-%CHKHDR    Check and update header field/values of SAClab records
+%CHKHDR    Check and update header field/values of seislab records
 %
 %    Description: Currently just updates header fields 'depmin', 'depmax',
 %     'depmen', 'npts', and 'e' to reflect data records.  Field 'b' is
@@ -11,15 +11,16 @@ function [data]=chkhdr(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % get header info
 leven=glgc(data,'leven');
 t=strcmp(leven,'true');
 f=strcmp(leven,'false');
-if(~all(t | f)); error('leven logical needs to be set'); end
+if(~all(t | f))
+    error('sieslab:chkhdr:levenBad',...
+        'logical field leven needs to be set'); 
+end
 
 % number of records
 nrecs=length(data);
@@ -39,7 +40,11 @@ end
 % work on uneven records
 for i=find(f).'
     tlen=size(data(i).t,1);
-    if(tlen~=len(i)); error('number of timing samples inconsistent with number of data samples for record %d',i); end
+    if(tlen~=len(i))
+        error('seislab:chkhdr:dataSizeInconsistent',...
+            ['number of samples in timing vector inconsistent with'...
+            'data size for record %d'],i);
+    end
     data(i)=ch(data(i),'b',data(i).t(1),'e',data(i).t(end));
 end 
 

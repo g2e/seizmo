@@ -1,21 +1,20 @@
 function [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
-%CUTIM    Cut SAClab data in memory
+%CUTIM    Cut seislab data records in memory
 %
-%    Description: Cuts data windows from SAClab data records using the
+%    Description: Cuts data windows from seislab data records using the
 %     given cut parameters.  Windows that extend outside the timing of the 
 %     data are pushed to the data bounds unless 'fill' is set to 1. In this
 %     case - and only for evenly spaced files - the window is padded with
-%     filler values (default is zero) to meet the window parameters.  If a 
-%     record ends up having no data the record is deleted from the data
-%     structure.
+%     filler values (default is zero) to meet the window parameters. If a
+%     record ends up having no data it is deleted from the data structure.
 %
 %     ref values can be one of the following:
-%        'z','n',header timing field (ref2 only: 'l')
+%        'z','n','some other header timing field', and for ref2 only: 'l'
 %
 %        'z' corresponds to the zero time of the record. 'n' indicates the 
 %        offset is the sample number (first sample is 1).  ref2 can also
 %        be 'l' which gives the window length in samples.  All header field
-%        references take offsets in seconds only.
+%        references (except 'n' and 'l') take offsets in seconds only.
 %
 %        If no ref value is given and an offset is, the ref is assumed as 
 %        'z' (zero).  Offsets default to 0 when not supplied.  If neither 
@@ -26,24 +25,25 @@ function [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
 %    Usage: [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
 %
 %    Examples:
-%     cut records starting from the 33rd sample for 400 samples
-%     [data]=cutim(data,'n',33,'l',400);
+%     cut a 400 sample window starting from the 33rd sample
+%       data=cutim(data,'n',33,'l',400);
 %
-%     cut out a 90 second window around the t0 time
-%     [data]=cutim(data,'t1',-30,'t1',60);
+%     cut out a 90s window around t1
+%       data=cutim(data,'t1',-30,'t1',60);
 %
-%     cut one hour after origin, padding records with zeros
-%     [data]=cutim(data,'o',0,'o',3600,1);
+%     cut one hour starting at the origin time, 
+%     and pad incomplete records with zeros
+%       data=cutim(data,'o',0,'o',3600,1);
 %
 %     cut first 300 seconds of records
-%     [data]=cutim(data,[],[],'b',300);
-%      or explicitly
-%     [data]=cutim(data,'b',0,'b',300);
+%       data=cutim(data,[],[],'b',300);
+%     or more explicitly
+%       data=cutim(data,'b',0,'b',300);
 %
 %     cut from 300 to 500 seconds relative to reference time
-%     [data]=cutim(data,[],300,[],500);
-%      or explicitly
-%     [data]=cutim(data,'z',300,'z',500);
+%       data=cutim(data,[],300,[],500);
+%     or explicitly
+%       data=cutim(data,'z',300,'z',500);
 %
 %    See also: rpdw
 
@@ -51,9 +51,7 @@ function [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
 error(nargchk(1,7,nargin))
 
 % check data structure
-if(~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % defaults
 if(nargin==1); return; end
@@ -76,12 +74,12 @@ nrecs=length(data);
 
 % cut parameter checks
 if(~ischar(ref1) || ~ischar(ref2))
-    error('references must be strings')
+    error('seislab:cutim:badInput','ref must be a string')
 elseif(~isnumeric(offset1) || ~isnumeric(offset2) || ...
         ~isvector(offset1) || ~isvector(offset2))
-    error('offsets must be a numeric vector')
+    error('seislab:cutim:badInput','offset must be a numeric vector')
 elseif(~any(length(offset1)==[1 nrecs]) || ~any(length(offset2)==[1 nrecs]))
-    error('offsets dimensions not correct')
+    error('seislab:cutim:badInputSize','offset dimensions not correct')
 end
 
 % grab spacing info
@@ -121,11 +119,14 @@ for i=1:nrecs
     % check for unsupported filetypes
     if(strcmp(iftype(i),'General XYZ (3-D) file'))
         destroy(i)=1;
-        warning('SAClab:illegalFiletype','Illegal operation on xyz file');
+        warning('seislab:cutim:illegalFiletype',...
+            'illegal operation on xyz file');
         continue;
-    elseif(any(strcmp(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
+    elseif(any(strcmp(iftype(i),{'Spectral File-Real/Imag'...
+            'Spectral File-Ampl/Phase'})))
         destroy(i)=1;
-        warning('SAClab:illegalFiletype','Illegal operation on spectral file');
+        warning('seislab:cutim:illegalFiletype',...
+            'illegal operation on spectral file');
         continue;
     end
     
@@ -154,7 +155,9 @@ for i=1:nrecs
         if(fill)
             % add filler
             cmp=size(data(i).x,2);
-            data(i).x=[ones(1-bp(i),cmp)*filler; data(i).x; ones(ep2-npts(i),cmp)*filler];
+            data(i).x=[ones(1-bp(i),cmp)*filler; 
+                        data(i).x; 
+                        ones(ep2-npts(i),cmp)*filler];
             
             % empty window - add to destroy list
             if(isempty(data(i).x))
@@ -165,7 +168,8 @@ for i=1:nrecs
             % fix header
             data(i)=ch(data(i),'b',b(i)+(bp(i)-1)*delta(i),...
                 'e',b(i)+(ep2-1)*delta(i),'npts',size(data(i).x,1),...
-                'depmen',norm(mean(data(i).x)),'depmin',-norm(min(data(i).x)),...
+                'depmen',norm(mean(data(i).x)),...
+                'depmin',-norm(min(data(i).x)),...
                 'depmax',norm(max(data(i).x)));
         else
             % empty window - add to destroy list
@@ -177,7 +181,8 @@ for i=1:nrecs
             % fix header
             data(i)=ch(data(i),'b',b(i)+(nbp-1)*delta(i),...
                 'e',b(i)+(nep-1)*delta(i),'npts',size(data(i).x,1),...
-                'depmen',norm(mean(data(i).x)),'depmin',-norm(min(data(i).x)),...
+                'depmen',norm(mean(data(i).x)),...
+                'depmin',-norm(min(data(i).x)),...
                 'depmax',norm(max(data(i).x)));
         end
     % unevenly spaced
@@ -247,7 +252,8 @@ for i=1:nrecs
         % fix header
         data(i)=ch(data(i),'b',data(i).t(1),...
             'e',data(i).t(end),'npts',size(data(i).x,1),...
-            'depmen',norm(mean(data(i).x)),'depmin',-norm(min(data(i).x)),...
+            'depmen',norm(mean(data(i).x)),...
+            'depmin',-norm(min(data(i).x)),...
             'depmax',norm(max(data(i).x)),...
             'delta',(data(i).t(end)-data(i).t(1))/(npts(i)-1),...
             'odelta',data(i).t(min([end 2]))-data(i).t(1));
@@ -258,4 +264,3 @@ end
 data(destroy)=[];
 
 end
-

@@ -1,10 +1,10 @@
 function [varargout]=genumdesc(data,varargin)
-%GENUMDESC    Get enum string description from SAClab enum header field
+%GENUMDESC    Get enum string description from seislab enum header field
 %
-%    Description: Returns cellstrings containing enum description strings 
+%    Description: Returns cellstring array containing enum desc strings 
 %     corresponding to each field/value.
 %
-%    Usage: [enumcellstr1,enumcellstr2,...]=genum(data,'field1','field2',...)
+%    Usage: [enumcellstr1,...]=genum(data,'field1',...)
 %
 %    Examples:
 %     To check if all records are timeseries:
@@ -14,8 +14,11 @@ function [varargout]=genumdesc(data,varargin)
 %
 %    See also: gh, glgc, genum
 
-% do nothing on no input
-if(nargin<2); return; end
+% require at least two inputs
+if(nargin<2)
+    error('MATLAB:nargchk:notEnoughInputs',...
+        'Not enough input arguments.')
+end
 
 % preallocate output
 varnargin=length(varargin);
@@ -30,7 +33,7 @@ varargout=nvarargout;
 v=[data.version];
 for i=unique(v)
     % grab header setup
-    h=sachi(i);
+    h=seishi(i);
     
     % indexing of data with this header version
     ind=find(v==i);

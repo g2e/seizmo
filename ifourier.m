@@ -1,70 +1,50 @@
 function [data]=ifourier(data)
-%IFOURIER    Converts spectral SAClab records to the time domain
+%IFOURIER    Converts spectral seislab records to the time domain
 %
-%    Description: Converts SAClab records from the frequency domain to the
+%    Description: Converts seislab records from the frequency domain to the
 %     time domain using the inverse fast fourier transform.  Output file
-%     type is 'itime' (timeseries file).
+%     type is timeseries file.
+%
+%    Note:
+%     - Assumes amplitudes for amplitude-phase spectral files follow the
+%       convention from seislab's fourier routine.  This adds a factor of
+%       1/npts to frequency amplitudes compared to SAC.
 %
 %    Usage: data=ifourier(data)
 %
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
-%    See also: fourier, selctcmp
+%    See also: fourier
 
 % check nargin
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % retreive header info
-[b,delta,sb,sdelta,nspts,leven,iftype]=gh(data,'b','delta','sb','sdelta','nspts','leven','iftype');
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
+leven=glgc(data,'leven');
+iftype=genumdesc(data,'iftype');
+[b,delta,sb,sdelta,npts,nspts]=...
+    gh(data,'b','delta','sb','sdelta','npts','nspts');
+e=sb+(nspts-1)*sdelta;
+
+% check leven,iftype
+if(any(~strcmp(leven,'true')))
+    error('seislab:fourier:illegalOperation',...
+        'illegal operation on unevenly spaced record')
+elseif(any(~strcmp(iftype,'Spectral File-Real/Imag'))...
+        && any(~strcmp(iftype,'Spectral File-Ampl/Phase')))
+    error('seislab:fourier:illegalOperation',...
+        'illegal filetype for this operation')
 end
 
 % loop through records
 for i=1:length(data)
-    % header version
-    v=data(i).version==vers;
-    
     % save class and convert to double precision
     oclass=str2func(class(data(i).x));
     data(i).x=double(data(i).x);
     
-    % number of components
-    ncmp=size(data(i).x);
-    
-    % check spacing and filetype
-    if(leven(i)~=h(v).true)
-        warning('SAClab:illegalOperation','Illegal operation on unevely spaced record %d',i);
-        continue;
-    elseif(iftype(i)==h(v).enum(1).val.ixyz)
-        warning('SAClab:illegalOperation','Illegal operation on xyz file: record %d',i);
-        continue;
-    elseif(iftype(i)==h(v).enum(1).val.itime || iftype(i)==h(v).enum(1).val.ixy)
-        warning('SAClab:illegalOperation','Illegal operation on timeseries/xy file: record %d',i);
-        continue;
-    elseif(isfield(h(v).enum(1).val,'incmp') && iftype(i)==h(v).enum(1).val.incmp)
-       warning('SAClab:illegalOperation','Illegal operation on multi-component file: record %d',i);
-        continue;
-    elseif(iftype(i)~=h(v).enum(1).val.irlim && iftype(i)~=h(v).enum(1).val.iamph)
-       warning( 'SAClab:illegalOperation','Illegal operation on record %d',i);
-       continue;
-    end
-    
     % turn back into time domain
-    if(iftype(i)==h(v).enum(1).val.irlim)
+    if(strcmp(iftype(i),'Spectral File-Real/Imag'))
         data(i).x=nspts(i)*real(ifft(complex(data(i).x(:,1),data(i).x(:,2))));
         data(i)=ch(data(i),'iftype','itime');
     else
@@ -74,11 +54,10 @@ for i=1:length(data)
     
     % truncate to original length and change class back
     data(i).x=oclass(data(i).x(1:nspts(i),:));
-    
-    % update header (note there is no field 'se')
-    data(i)=ch(data(i),'b',sb(i),'e',sb(i)+(nspts(i)-1)*sdelta(i),...
-        'delta',sdelta(i),'sb',b(i),'sdelta',delta(i),'nspts',ncmp(1),...
-        'npts',nspts(i));
 end
+
+% update header (note there is no field 'se')
+data=ch(data,'b',sb,'e',e,'delta',sdelta,'sb',b,'sdelta',delta,...
+    'nspts',npts,'npts',nspts);
 
 end

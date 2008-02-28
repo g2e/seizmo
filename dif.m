@@ -1,5 +1,5 @@
 function [data]=dif(data)
-%DIF    Differentiate SAClab data records using discrete differences
+%DIF    Differentiate seislab data records using discrete differences
 %
 %    Description: Calculates and returns the derivative of each record
 %     using the differences between points as an approximation of the 
@@ -7,8 +7,8 @@ function [data]=dif(data)
 %     the Matlab function diff.
 %
 %    Notes: 
-%       Timing is shifted to midpoints.
-%       Reduces npts by one.
+%     - Timing is shifted to midpoints.
+%     - Reduces npts by one.
 %
 %    Usage: [data]=dif(data);
 %
@@ -18,9 +18,7 @@ function [data]=dif(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % retreive header info
 leven=glgc(data,'leven');
@@ -43,7 +41,8 @@ for i=1:length(data)
         data(i).t=oclass(data(i).t(1:npts-1)+t/2);
         npts(i)=npts(i)-1; b(i)=data(i).t(1); e(i)=data(i).t(end);
     else
-        error('evenness of sample spacing unknown for record %d',i)
+        error('sieslab:dif:levenBad',...
+            'logical field leven needs to be set for record %d',i);
     end
     
     % change class back

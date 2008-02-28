@@ -1,45 +1,62 @@
 function [data]=ch(data,varargin)
-%CH    Change SAClab headers
+%CH    Change seislab data headers
 %
-%    Description: Changes the specified SAClab header field(s) to the
+%    Description: Changes the specified seislab header field(s) to the
 %     specified value(s).  The field variable must be a string
 %     corresponding to a valid header field.  Values may be scalar
 %     (assigns same value to all) or vectors of length equal to the number
 %     of records.  Values may be contained in a numeric, char, or cell
-%     array.  Char arrays must be arranged as a column vector with one
-%     string value per row.  Cell arrays must have one value per cell.
+%     arrays.  For group field assignment, value arrays should be arranged
+%     with each column corresponding to a specific field in the group. 
 %
-%    Usage:    new_struct=ch(saclab_struct,'group_field1',value1,...
+%    Note:
+%     Replication within fields in the group field case, will fail if the
+%     number of fields in the group equals the number of records in the
+%     dataset when there are multiple header versions in the dataset.  If
+%     you want every record in a dataset to have the same values for a
+%     group field, then replicate the values before input (see examples).
+%
+%    Usage:    new_struct=ch(seislab_struct,'group_field1',value1,...
 %                               'field2',{'value2a' 'value2b' ...},...
 %                               'field3',[value3a; value3b; ...])
 %
 %    Examples:
-%     data=ch(data,'DELTA',gh(data,'delta')*2);
-%     data=ch(data,'STLA',lats,'STLO',lons)
-%     data=ch(data,'KT0','sSKS');
+%      data=ch(data,'DELTA',gh(data,'delta')*2);
+%      data=ch(data,'STLA',lats,'STLO',lons)
+%      data=ch(data,'KT0','sSKS');
+%    
+%     The following has behavior dependent on number of header versions 
+%     in records 2-11 (see Note above):
 %
-%    See also:  lh, gh, rh, wh, glgc, genum, genumdesc, doubleit,
-%               fixdelta, rpdw, rdata, rsac, bsac, wsac, sachi, gv
-%               chkhdr, sacsize
+%      Copy 't' fields from record 1 to records 2 through 11:
+%      data=ch(data(2:11),'t',gh(data(1),'t'))
+%
+%     This will always work correctly:
+%
+%      t=gh(data(1),'t');
+%      data=ch(data(2:11),'t',t(ones(10,1),:));
+%
+%     Replication across fields will not have this problem:
+%
+%      Copy values in field 't0' to rest of 't' fields for each record:
+%         data=ch(data(1:10),'t',gh(data(1:10),'t0'))
+%
+%    See also:  lh, gh, rh, wh, glgc, genum, genumdesc
 
 % throw error if unpaired fields
-if (mod(nargin-1,2)); error('Unpaired Field/Value!'); end
+if (mod(nargin-1,2))
+    error('seislab:ch:badNargs','Unpaired Field/Value!')
+end
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data))
 
 % number of records
 nrecs=length(data);
 
 % recursive section
 %   breaks up dataset with multiple calls so that the
-%   rest of ch only deals with only one header version
+%   rest of ch deals with only one header version
 v=[data.version];
 vers=unique(v(:));
 nver=length(vers);
@@ -54,17 +71,24 @@ if(nver>1)
             if(isscalar(varargin{j}) || isempty(varargin{j}))
                 temp{j}=varargin{j};
             elseif(isvector(varargin{j}))
-                if(length(varargin{j})~=nrecs)
-                    error('Value vector for field %s not correct size',...
-                        varargin{j-1});
+                % dice up input if size is the same as the number of
+                % records, otherwise replicate for each ch call. This
+                % breaks group field replication when nrecs==ngfields.
+                if(length(varargin{j})==nrecs)
+                    temp{j}=varargin{j}(vers(i)==v);
+                else
+                    temp{j}=varargin{j};
                 end
-                temp{j}=varargin{j}(vers(i)==v);
             else
-                if(size(varargin{j},1)~=nrecs)
-                    error('Value array for field %s not correct size',...
+                % check and dice up input array
+                dim=size(varargin{j},1);
+                if(dim==nrecs)
+                    temp{j}=varargin{j}(vers(i)==v,:);
+                else
+                    error('seislab:ch:invalidInputSize',...
+                        'Value array for field %s not correct size',...
                         varargin{j-1});
                 end
-                temp{j}=varargin{j}(vers(i)==v,:);
             end
         end
         data(vers(i)==v)=ch(data(vers(i)==v),temp{:});
@@ -73,7 +97,7 @@ if(nver>1)
 end
 
 % headers setup
-h=sachi(vers);
+h=seishi(vers);
 
 % pull entire header
 head=[data.head];
@@ -102,8 +126,7 @@ for i=1:2:(nargin-2)
         varargin{i+1}=varargin{i+1}(ones(nrecs,glen));
     elseif(isvector(varargin{i+1}))
         varargin{i+1}=varargin{i+1}(:);
-        sz=size(varargin{i+1});
-        len=prod(sz);
+        len=numel(varargin{i+1});
         if(len==0); continue; end
         % figure out group expansion
         if(group)
@@ -113,17 +136,26 @@ for i=1:2:(nargin-2)
             elseif(len==glen)
                 varargin{i+1}=varargin{i+1}(:,ones(nrecs,1)).';
             else
-                error('Group value vector for field %s not correct size',varargin{i});
+                error('seislab:ch:invalidInputSize',...
+                    ['\nHeader Version: %d\n'...
+                    'Group value vector for field %s not correct size'],...
+                    h.version,varargin{i});
             end
         % check for correct length
         elseif(len~=nrecs)
-            error('Value vector for field %s not correct size',varargin{i});
+            error('seislab:ch:invalidInputSize',...
+                ['\nHeader Version: %d\n'...
+                'Value vector for field %s not correct size'],...
+                h.version,varargin{i});
         end
     % array
     else
         dim=size(varargin{i+1});
         if(dim(1)~=nrecs || dim(2)<glen)
-            error('Group value array for field %s not correct size',varargin{i})
+            error('seislab:ch:invalidInputSize',...
+                ['\nHeader Version: %d\n'...
+                'Group value array for field %s not correct size'],...
+                h.version,varargin{i})
         end
     end
     
@@ -168,7 +200,10 @@ for m=1:length(h.enum)
                         if(any(desc))
                             head(h.enum(m).pos.(f),n)=find(desc)-1;
                         else
-                            warning('SAClab:enumBad','Enum String ID/Description Invalid for field %s',f);
+                            warning('seislab:ch:enumBad',...
+                                ['\nHeader Version: %d\n'...
+                                'Enum ID/Desc Invalid for field %s'],...
+                                h.version,f);
                         end
                     end
                 end
@@ -224,6 +259,7 @@ for n=1:length(h.ntype)
 end
             
 % field not found
-warning('SAClab:fieldInvalid','Invalid field: %s',f);
+warning('seislab:ch:fieldInvalid',...
+    '\nHeader Version: %d\nInvalid field: %s',h.version,f);
 
 end

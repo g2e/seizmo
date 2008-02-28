@@ -1,17 +1,16 @@
 function [version,endian]=gv(filename)
-%GV    Get version and byte-order of SAC file
+%GV    Get version and byte-order of seislab file
 %
-%    Description: Automatically determines version and byte-order of a SAC
-%     file based on the validity of the header version field - a 32bit 
-%     signed integer occupying bytes 305 to 308).
+%    Description: Automatically determines version and byte-order of a
+%     seislab file.  Currently based on the validity of the header version 
+%     field - a 32bit signed integer occupying bytes 305 to 308).
 %
 %    Usage:    [version,endian]=gv('filename')
 %
-%    See also:  ch, lh, gh, rh, wh, rpdw, rdata, rsac, bsac, wsac, sachi 
-%               doubleit, fixdelta, glgc, genum, genumdesc, sacsize
+%    See also:  rh, wh, seishi, vvseis
 
 % get valid versions
-valid=sachi();
+valid=vvseis();
 
 % preset version/endian to invalid
 version=0; endian='';
@@ -21,7 +20,7 @@ fid=fopen(filename);
 
 % check for invalid fid (for directories etc)
 if(fid<0)
-    warning('SAClab:badFID','File not openable, %s',filename);
+    warning('seislab:gv:badFID','File not openable, %s',filename);
     return;
 end
 
@@ -31,7 +30,7 @@ try
 catch
     % seek failed
     fclose(fid);
-    warning('SAClab:fileTooShort','File too short, %s',filename);
+    warning('seislab:gv:fileTooShort','File too short, %s',filename);
     return;
 end
 
@@ -39,7 +38,7 @@ end
 if(feof(fid))
     % seeked to eof...
     fclose(fid);
-    warning('SAClab:fileTooShort','File too short, %s',filename);
+    warning('seislab:gv:fileTooShort','File too short, %s',filename);
     return;
 end
 
@@ -50,7 +49,7 @@ try
 catch
     % read version failed - close file and warn
     fclose(fid);
-    warning('SAClab:readVerFail',...
+    warning('seislab:gv:readVerFail',...
         'Unable to read header version of file, %s',filename);
     version=0;
     return;
@@ -60,7 +59,7 @@ end
 if(isempty(version))
     % read returned nothing...
     fclose(fid);
-    warning('SAClab:readVerFail',...
+    warning('seislab:gv:readVerFail',...
         'Unable to read header version of file, %s',filename);
     version=0;
     return;
@@ -73,7 +72,7 @@ elseif(~any(valid==version))
     catch
         % read version failed - close file and warn
         fclose(fid);
-        warning('SAClab:readVerFail',...
+        warning('seislab:gv:readVerFail',...
             'Unable to read header version of file, %s',filename);
         version=0;
         return;
@@ -83,7 +82,7 @@ elseif(~any(valid==version))
     if(~any(valid==version))
         % no good again - close file and warn
         fclose(fid);
-        warning('SAClab:versionUnknown',...
+        warning('seislab:gv:versionUnknown',...
             'Unknown header version for file, %s',filename);
         version=0;
         return;

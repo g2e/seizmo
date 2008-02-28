@@ -1,13 +1,13 @@
 function [data]=dvide(data,constant,cmp)
-%DVIDE    Divide SAClab data records by a constant
+%DVIDE    Divide seislab data records by a constant
 %
 %    Usage: [data]=dvide(data,constant,cmp)
 %
-%          - a scalar constant applies the value to all records
-%          - a vector of constants (length must equal the number of 
-%            records) allows applying different values to each record
-%          - 'cmp' selects the dependent component to work on
-%            (default is 1)
+%    Notes:
+%     - a scalar constant applies the value to all records
+%     - a vector of constants (length must equal the number of records)
+%       allows applying different values to each record
+%     - 'cmp' selects the dependent component to work on (default is 1)
 %
 %    See also: mult, add, subtr
 

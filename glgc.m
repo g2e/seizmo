@@ -1,8 +1,8 @@
 function [varargout]=glgc(data,varargin)
-%GLGC    Get logic words from SAClab logic header field
+%GLGC    Get logic words from seislab logic header field
 %
-%    Description: Returns cellstrings containing 'true' 'false' 'undefined'
-%     or 'unknown' corresponding to each field/value.
+%    Description: Returns cellstring array containing 'true' 'false'
+%     'undefined' or 'unknown' corresponding to each field/value.
 %
 %    Usage: [lgccellstr1,lgccellstr2,...]=glgc(data,'field1','field2',...)
 %
@@ -14,8 +14,11 @@ function [varargout]=glgc(data,varargin)
 %
 %    See also: gh, genum, genumdesc
 
-% do nothing on no input
-if(nargin<2); return; end
+% require at least two inputs
+if(nargin<2)
+    error('MATLAB:nargchk:notEnoughInputs',...
+        'Not enough input arguments.')
+end
 
 % preallocate output
 varnargin=length(varargin);
@@ -30,7 +33,7 @@ varargout=nvarargout;
 v=[data.version];
 for i=unique(v)
     % grab header setup
-    h=sachi(i);
+    h=seishi(i);
     
     % indexing of data with this header version
     ind=find(v==i);

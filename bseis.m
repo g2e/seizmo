@@ -1,32 +1,34 @@
-function [data]=bsac(varargin)
-%BSAC   Arrange timeseries into SAClab format
+function [data]=bseis(varargin)
+%BSEIS   Arrange timeseries into seislab format
 %
 %    Description: Takes vectors of x-values and y-values and formats them 
-%     to be compatible with SAClab routines such as rsac and wsac.
+%     to be compatible with seislab routines such as rseis and wseis.
 %
-%    Usage:    saclab_struct=bsac(x_vec1,y_vec1,x_vec2,y_vec2...)
+%    Usage:    seislab_struct=bseis(x_vec1,y_vec1,x_vec2,y_vec2...)
 %
 %    Examples:
 %     To create a square root function in Matlab and then convert the array
-%     information into a SAClab compatible structure and ultimately write
+%     information into a seislab compatible structure and ultimately write
 %     to a SAC formatted binary file:
 %
 %      xarray=linspace(0,30,1000);
 %      yarray=sqrt(xarray);
 %      data=bsac(xarray,yarray);
 %      data.name='myfile';
-%      wsac(data);
+%      wseis(data);
 %
-%    See also:  wsac, rsac
+%    See also:  wseis, rseis
 
 % check number of inputs
-if (mod(nargin,2)); error('Unpaired x/y vectors!'); end
+if (mod(nargin,2)) 
+    error('seislab:bseis:badNargs','Unpaired x/y vectors!')
+end
 
-% preferred SAC/SAClab version
+% preferred seislab header version
 pref=6;
 
 % get preferred header layout
-h=sachi(pref);
+h=seishi(pref);
 
 % undefine numeric header
 undef=zeros(h.size,1,h.store);
@@ -58,15 +60,18 @@ for i=1:2:nargin
     j=round((i+1)/2);
     
     % check vector lengths
-    if(~isvector(varargin{i}) || length(varargin{i})<2)
-        error('xarray is not a vector')
+    if(~isnumeric(varargin{i}) || ~isvector(varargin{i}))
+        error('seislab:bseis:badInput',...
+            'xarray must be a numeric vector: pair %d',j)
     end
-    if(~isvector(varargin{i+1}) || length(varargin{i+1})<2)
-        error('yarray is not a vector')
+    if(~isnumeric(varargin{i}) || ~isvector(varargin{i+1}))
+        error('seislab:bseis:badInput',...
+            'yarray must be a numeric vector: pair %d',j)
     end
     npts=length(varargin{i});
     if(npts~=length(varargin{i+1}))
-        error('x and y series are not the same length')
+        error('seislab:bseis:badInput',...
+            'x and y series are not the same length: pair %d',j)
     end
     
     % fill in dependent variable
@@ -80,13 +85,13 @@ for i=1:2:nargin
         'depmax',norm(max(data(j).x)),'depmen',norm(mean(data(j).x)),...
         'iftype','itime','leven',h.true,'lcalda',h.true,...
         'lovrok',h.true,'lpspol',h.false,'nvhdr',pref,...
-        'knetwk','SAClab');
+        'knetwk','seislab');
     
     % if timeseries is unevenly spaced add proper info
-    if(abs(delta-(varargin{i}(2)-varargin{i}(1)))>eps)
+    if(abs(delta-(varargin{i}(min([2 end]))-varargin{i}(1)))>eps)
         data(j).t=varargin{i}(:);
         data(j)=ch(data(j),'leven',h.false,...
-            'odelta',data(j).t(2)-data(j).t(1));
+            'odelta',data(j).t(min([2 end]))-data(j).t(1));
     end
 end
 

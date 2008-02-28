@@ -1,5 +1,5 @@
-function [data]=envelope(data,n)
-%ENVELOPE    Return envelope of SAClab data records
+function [data]=envelope(data,pp2)
+%ENVELOPE    Return envelope of seislab data records
 %
 %    Description: Returns the envelopes of the data records, which is the
 %     complex magnitude of a record's analytic signal.  Uses the Matlab 
@@ -12,25 +12,25 @@ function [data]=envelope(data,n)
 % check nargin
 error(nargchk(1,2,nargin))
 
-% default fft length to none (lets fft do it)
-if(nargin==1); n=[]; end
-
 % check data structure
-if(~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
+
+% default fft length to next power of 2 + 1
+if(nargin==1); pp2=1; end
 
 % check spacing
 if(any(~strcmp(glgc(data,'leven'),'true')))
-    error('SAClab:evenlySpacedOnly',...
+    error('seislab:envelope:evenlySpacedOnly',...
         'Illegal operation on unevenly spaced data');
 end
 
-% do operations individually
+% get envelopes
 for i=1:length(data)
+    len=size(data(i).x,1);
+    nfft=2^(nextpow2(len)+pp2);
     oclass=str2func(class(data(i).x));
-    data(i).x=abs(hilbert(double(data(i).x),n));
-    data(i).x=oclass(data(i).x);
+    data(i).x=abs(hilbert(double(data(i).x),nfft));
+    data(i).x=oclass(data(i).x(1:len,:));
     
     % update header
     data(i)=ch(data(i),'depmen',norm(mean(data(i).x)),...
@@ -38,4 +38,3 @@ for i=1:length(data)
 end
 
 end
-

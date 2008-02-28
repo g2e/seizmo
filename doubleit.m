@@ -1,5 +1,5 @@
 function [data]=doubleit(data)
-%DOUBLEIT    Change in memory SAClab data storage to double precision
+%DOUBLEIT    Change in memory seislab data storage to double precision
 %
 %    Description: Changes the data in memory to double precision.  This
 %     does not affect the storage type or version for files written from 
@@ -17,9 +17,7 @@ function [data]=doubleit(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % number of records
 nrecs=length(data);
