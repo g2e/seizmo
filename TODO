@@ -7,7 +7,6 @@ clean up class support
 clean up documentation
 global undefined values only
 saclab=>seislab
-rpdw,cutim (make slick variable input setup)
 
 more function ideas (0.5.?)
 ------------------

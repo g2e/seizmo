@@ -216,12 +216,12 @@ if(any(version==[6 101 102 200 201 202]))
         'knetwk',[279,286],'kdatrd',[287,294],'kinst',[295,302]);
     
     
-    % seislab version 101 header mod (npts/nspts become double ints)
+    % seislab version 101 header mod (npts/nspts become int64)
     % NOTE - seislab stores header values in 
-    if(any(version==[101 102 201 202]))
+    if(any(version==[101 201]))
         header.version=101;
         
-        % split v6 'single' int group into 3 (npts/nspts go double int)
+        % split v6 int32 group into 3
         %header.int(1).startbyte=280;
         %header.int(1).store='int32';
         %header.int(1).bytesize=4;
@@ -260,19 +260,13 @@ if(any(version==[6 101 102 200 201 202]))
     end
     
     
-    % seislab version 102 header mod (101 + multi-component support)
+    % seislab version 102 header mod (multi-component support)
     if(any(version==[102 202]))
         header.version=102;
         
         % replace unused15 with ncmp (number of dependent components)
-        header.int(3).pos=rmfield(header.int(3).pos,'unused15');
-        header.int(3).pos.ncmp=85;
-        
-        % add new iftype enum
-        header.enum.maxval=98;
-        header.enum.id{99}='incmp';
-        header.enum.val.incmp=98;
-        header.enum.desc{99}='Multi-Component Time Series File';
+        header.int.pos=rmfield(header.int.pos,'unused15');
+        header.int.pos.ncmp=85;
     end
     
     
@@ -322,16 +316,16 @@ if(any(version==[6 101 102 200 201 202]))
     
     
     % seislab version 201 header mod (101+200)
-    if(any(version==[201 202]))
+    if(any(version==201))
         header.version=201;
         
-        % push out real(2)/char/data by 8 for 101 mod
+        % push out real(2)/char/data by 8 to account for 101 mod
         header.real(2).startbyte=448;
         header.char.startbyte=728;
         header.data.startbyte=920;
     end
     
-    % seislab version 202 header mod (101+102+200)
+    % seislab version 202 header mod (102+200)
     if(any(version==202))
         header.version=202;
     end

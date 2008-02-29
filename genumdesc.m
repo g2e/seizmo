@@ -40,9 +40,12 @@ for i=unique(v)
     
     % loop over fields
     for j=1:length(varargin)
-        varargout{j}(ind)=h.enum(1).desc(nvarargout{j}(ind)+1);
+        undef=(nvarargout{j}(ind)==h.undef.ntype | ...
+            isnan(nvarargout{j}(ind)));
+        varargout{j}(ind(undef))={'NaN'};
+        varargout{j}(ind(~undef))=...
+            h.enum(1).desc(nvarargout{j}(ind(~undef))+1);
     end
 end
 
 end
-

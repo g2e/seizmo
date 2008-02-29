@@ -9,11 +9,11 @@ function [data]=bseis(varargin)
 %    Examples:
 %     To create a square root function in Matlab and then convert the array
 %     information into a seislab compatible structure and ultimately write
-%     to a SAC formatted binary file:
+%     to a formatted binary file:
 %
 %      xarray=linspace(0,30,1000);
 %      yarray=sqrt(xarray);
-%      data=bsac(xarray,yarray);
+%      data=bseis(xarray,yarray);
 %      data.name='myfile';
 %      wseis(data);
 %

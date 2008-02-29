@@ -50,7 +50,7 @@ if(isfield(SEISLAB,'GRIDIT')); gridit=SEISLAB.GRIDIT; end
 if(nargin<5 || isempty(fh) || fh<1); fh=figure;
 else figure(fh); end
 whitebg(bgc);
-set(gcf,'Name','P1 -- SAC Seismogram Plotting Utility', ...
+set(gcf,'Name','P1 -- Seismogram Plotting Utility', ...
     'NumberTitle','off','color',bgc,'Pointer','crosshair');
 
 % header info
@@ -60,12 +60,20 @@ iftype=genum(data,'iftype');
     gh(data,'t','kt','o','ko','a','ka','f','kf',...
     'b','delta','npts','gcarc');
 
+% check sample spacing logical
+tru=strcmp(leven,'true');
+f=strcmp(leven,'false');
+if(~all(tru | f))
+    error('sieslab:p1:levenBad',...
+        'logical field leven needs to be set'); 
+end
+
 % header structures (for determining if undefined)
 vers=unique([data.version]);
 nver=length(vers);
-h(nver)=sachi(vers(nver));
+h(nver)=seishi(vers(nver));
 for i=1:nver-1
-    h(i)=sachi(vers(i));
+    h(i)=seishi(vers(i));
 end
 
 % trim strings

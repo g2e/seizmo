@@ -1,12 +1,10 @@
 function [data]=rdrift(data)
-%RDRIFT    Remove mean and linear trend from SAClab data records
+%RDRIFT    Remove mean and linear trend from seislab data records
 %
 %    Description: Removes the mean and trend from records.  Uses the Matlab
 %     functions detrend or polyfit and polyval.
 %
 %    Usage:  [data]=rdrift(data)
-%
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
 %
 %    See also: rmean, rslope
 
@@ -14,35 +12,27 @@ function [data]=rdrift(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
-% grab timing info
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
+% header info
+leven=glgc(data,'leven');
+
+% check leven
+t=strcmp(leven,'true');
+f=strcmp(leven,'false');
+if(~all(t | f))
+    error('sieslab:rdrift:levenBad',...
+        'logical field leven needs to be set'); 
 end
-leven=gh(data,'leven');
 
 % remove trend and update header
 for i=1:length(data)
-    % header version
-    v=data(i).version==vers;
-    
     % save class and convert to double precision
     oclass=str2func(class(data(i).x));
     data(i).x=double(data(i).x);
     
     % act based on data spacing
-    if(leven(i)==h(v).true)
+    if(strcmp(leven(i),'true'))
         for j=1:size(data(i).x,2)
             data(i).x(:,j)=detrend(data(i).x(:,j));
         end

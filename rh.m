@@ -1,43 +1,42 @@
 function [data]=rh(varargin)
-%RH    Read SAC binary file headers
+%RH    Read binary seismic datafile header
 %
-%    Description: Reads in SAC (seismic analysis code) binary file headers
-%     into a SAClab structure.  Accepts character arrays of filenames (one
-%     filename per row) and/or cell arrays of filenames (one filename per
-%     cell).
+%    Description: Reads in binary seismic datafile headers into a seislab
+%     structure.  Accepts character arrays of filenames (one filename per 
+%     row) and/or cell arrays of filenames (one filename per cell).
 %
-%     Structure fields for all SAC files:
-%      data.head - header
-%      data.name - filename (may include path)
-%      data.endian - byte-order of file
-%      data.version - version of file
+%     Structure fields of output:
+%      head - contains header data
+%      name - filename (may include path)
+%      endian - byte-order of file (ieee-le or ieee-be)
+%      version - version of file
 %
-%    Usage:    saclab_struct=rh(['sacfile1'; 'sacfile2'; ...],...
-%                                 {'sacfile3' 'sacfile4' ...},...
-%                                 'sacfile5','sacfile6',...)
+%    Usage:    seislab_struct=rh(['seisfile1'; 'seisfile2'; ...],...
+%                                 {'seisfile3' 'seisfile4' ...},...
+%                                 'seisfile5','seisfile6',...)
 %
 %    Examples:
 %     data=rh('KATH.R');
 %     data=rh('SQRL.R','AAK.R');
 %     data=rh(cellarray1,chrarray1,chrarray2,cellarray2);
 %
-%     read in headers of SAC files from current directory
+%     read in headers of files in current directory
 %      files=dir();
 %      data=rh(files.name);
 %
-%    See also: rdata, rpdw, rsac, wsac, bsac, sachi, gh, lh, ch, wh, gv
+%    See also: rdata, rpdw, rseis, wseis, bseis, seishi, gv
 
 % compile file lists
 varargin=onelist(varargin{:});
 nfiles=length(varargin);
 
 % empty data if no files
-if(nfiles<1); data=[]; return; end
+if(nfiles<1); nfiles=[]; end
 
-% pre-allocating SAClab structure
+% pre-allocating seislab structure
 data(nfiles,1)=struct('name',[],'head',[],'endian',[],'version',[]);
 
-% initializing count of invalid SAC files
+% initializing count of invalid files
 j=0;
 
 % loop for each file
@@ -57,7 +56,8 @@ for i=1:nfiles
     
     % invalid fid check (non-existent file or directory)
     if(fid<0)
-        warning('SAClab:badFID','File not openable, %s',varargin{i});
+        warning('seislab:rh:badFID',...
+            'File not openable, %s',varargin{i});
         
         % jump to next file
         j=j+1;
@@ -65,9 +65,9 @@ for i=1:nfiles
     end
     
     % retrieve header setup
-    h=sachi(version);
+    h=seishi(version);
     
-    % file size
+    % get file size
     fseek(fid,0,'eof');
     bytes=ftell(fid);
     
@@ -75,7 +75,8 @@ for i=1:nfiles
     if(bytes<h.data.startbyte)
         % smaller than header size
         fclose(fid);
-        warning('SAClab:fileTooShort','File too short, %s',varargin{i});
+        warning('seislab:rh:fileTooShort',...
+            'File too short, %s',varargin{i});
         
         % jump to next file
         j=j+1;
@@ -88,7 +89,7 @@ for i=1:nfiles
     data(i-j).version=version;
     
     % preallocate header
-    data(i-j).head=zeros(h.size,1,h.store);
+    data(i-j).head=nan(h.size,1,h.store);
     
     % reading in header
     n=h.types;

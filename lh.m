@@ -28,9 +28,9 @@ error(seischk(data))
 % headers setup
 vers=unique([data.version]);
 nver=length(vers);
-h(nver)=sachi(vers(nver));
+h(nver)=seishi(vers(nver));
 for i=1:nver-1
-    h(i)=sachi(vers(i));
+    h(i)=seishi(vers(i));
 end
 
 % extra padding

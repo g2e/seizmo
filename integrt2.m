@@ -4,7 +4,7 @@ function [data]=integrt2(data)
 %    Description: Calculates and returns the integral of each record using
 %     a cumulative summation.  Assumes the given record is the discrete
 %     derivative at the midpoints of the to-be-found integrated record.  
-%     Basically it undoes the discrete differences operation of SAClab's 
+%     Basically it undoes the discrete differences operation of seislab's 
 %     dif function. 
 %
 %    Notes:
@@ -13,9 +13,10 @@ function [data]=integrt2(data)
 %       before the first midpoint).
 %     - integrt2(dif(data))~=data
 %     - rmean(integrt2(dif(data)))==rmean(data)
+%     - inexact on unevenly sampled records
 %
 %    Warning:
-%      If an unevenly spaced file is unable to satisfy the midpoint
+%      If an unevenly spaced record is unable to satisfy the midpoint
 %      assumption, a warning is issued and the record is integrated
 %      by calling integrt.  See integrt for more info.
 %

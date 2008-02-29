@@ -15,13 +15,13 @@ function [data]=intrpol8(data,sr,new_b,new_e,method)
 %
 %    Examples:
 %     interpolate at 5 sps using b and e header values
-%      data=sacinterp(data,5);  
+%      data=intrpol8(data,5);  
 %
 %     interpolate at 1 sps from 300 seconds to e
-%      data=sacinterp(data,1,300)
+%      data=intrpol8(data,1,300)
 %
 %     interpolate at 5 sps from 900 to 950 seconds using linear interp
-%      data_pdiff=sacinterp(data,5,900,950,'linear')
+%      data_pdiff=intrpol8(data,5,900,950,'linear')
 %
 %    See also: syncsr, deci, stretch, iirfilter
 

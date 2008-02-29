@@ -1,9 +1,7 @@
 function [data]=rmean(data)
-%RMEAN    Remove data mean from SAClab data records
+%RMEAN    Remove data mean from seislab data records
 %
-%    Usage:  [data]=rmean(data)
-%
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
+%    Usage:  data=rmean(data)
 %
 %    See also: rslope, rdrift
 
@@ -11,14 +9,7 @@ function [data]=rmean(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % remove mean and update header
 for i=1:length(data)

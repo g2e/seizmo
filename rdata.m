@@ -1,38 +1,36 @@
 function [data]=rdata(data)
-%RH    Read SAC binary file data
+%RH    Read binary seismic datafile data
 %
-%    Description: Reads all SAC (seismic analysis code) binary file data
-%     into a SAClab structure using the input SAClab structure header info.
+%    Description: Reads all binary seismic datafile data into a seislab
+%     structure using the info from the input seislab structure.
 %
-%     Fields for SAC timeseries files:
+%     Fields for timeseries files:
 %      data.x(:,1) - amplitudes
 %      data.t - times (if uneven spacing)
 %
-%     Fields for SAC spectral amp/phase files:
+%     Fields for spectral amp/phase files:
 %      data.x(:,1) - spectral amplitudes
 %      data.x(:,2) - spectral phase
 %
-%     Fields for SAC spectral real/imag files:
+%     Fields for spectral real/imag files:
 %      data.x(:,1) - spectral real
 %      data.x(:,2) - spectral imaginary
 %
-%     Fields for SAC general xy files:
+%     Fields for general xy files:
 %      data.x(:,1) - dependent component
 %      data.t - independent component (if uneven spacing)
 %
-%     Fields for SAC xyz grid files:
+%     Fields for xyz grid files:
 %      data.x(:,1) - matrix data (nodes evenly spaced; advances l2r,b2t)
 %     
-%     Fields for SAC n-component timeseries files:
-%      data.x(:,1) - 1st component
-%      data.x(:,2) - 2nd component
-%      data.x(:,n) - nth component
-%      data.t - times (if uneven spacing)
+%    Notes:
+%     - multi-component files will replicate the number of columns by the
+%       number of components.  So a three component spectral file will have
+%       six columns of data.
 %
 %    Usage:    data=rdata(data)
 %
-%    See also: rh, rpdw, rsac, wsac, bsac, sachi, gh, lh, ch, wh, gv
-%              sacsize
+%    See also: rh, rpdw, rseis, wseis, bseis, seishi, gv, seissize
 
 % check number of inputs
 error(nargchk(1,1,nargin))
@@ -40,18 +38,47 @@ error(nargchk(1,1,nargin))
 % check data structure
 error(seischk(data,'name','endian'))
 
+% clear data records if already there
+if(isfield(data,'x')); data=rmfield(data,'x'); end
+if(isfield(data,'t')); data=rmfield(data,'t'); end
+
 % number of records
 nrecs=length(data);
+
+% estimated filesize from header
+est_bytes=seissize(data);
+
+% header info
+leven=glgc(data,'leven');
+iftype=genumdesc(data,'iftype');
+warning('off','seislab:gh:fieldInvalid')
+[npts,ncmp]=gh(data,'npts','ncmp');
+warning('on','seislab:gh:fieldInvalid')
+
+% clean up and check ncmp
+ncmp(isnan(ncmp))=1;
+if(any(ncmp<1 | fix(ncmp)~=ncmp))
+    error('seislab:rdata:badNumCmp',...
+        'field ncmp must be a positive integer')
+end
+
+% check leven
+t=strcmp(leven,'true');
+f=strcmp(leven,'false');
+if(~all(t | f))
+    error('sieslab:rdata:levenBad',...
+        'logical field leven needs to be set'); 
+end
 
 % headers setup
 vers=unique([data.version]);
 nver=length(vers);
-h(nver)=sachi(vers(nver));
+h(nver)=seishi(vers(nver));
 for i=1:nver-1
-    h(i)=sachi(vers(i));
+    h(i)=seishi(vers(i));
 end
 
-% initializing count of invalid SAC files
+% initializing count of invalid files
 j=0;
 
 % read loop
@@ -77,20 +104,13 @@ for i=1:nrecs
     fseek(fid,0,'eof');
     bytes=ftell(fid);
     
-    % grab header fields to calc size
-    if(isfield(h(v).enum(1).val,'incmp') && iftype==h(v).enum(1).val.incmp)
-        [iftype,npts,leven,ncmp]=gh(data(i-j),'iftype','npts','leven','ncmp');
-        total=sacsize(data(i-j).version,iftype,npts,leven,ncmp);
-    else
-        [iftype,npts,leven]=gh(data(i-j),'iftype','npts','leven');
-        total=sacsize(data(i-j).version,iftype,npts,leven);
-    end
-    
     % byte size check
-    if(bytes~=total)
+    if(bytes~=est_bytes(i))
         % inconsistent size
         fclose(fid);
-        warning('SAClab:fileBadSize','File size wrong, %s',data(i-j).name);
+        warning('seislab:rdata:badFileSize',...
+            ['Filesize does not match header info\n'...
+            'File: %s'],data(i-j).name);
         
         % delete and jump to next file
         data(i-j)=[];
@@ -100,48 +120,48 @@ for i=1:nrecs
     
     % act by file type (any new filetypes will have to be added here)
     fseek(fid,h(v).data.startbyte,'bof');
-    if(iftype==h(v).enum(1).val.itime)
+    if(strcmp(iftype(i),'Time Series File'))
         % time series file - amplitude and time
-        data(i-j).x(:,1)=fread(fid,npts,['*' h(v).data.store]);
+        for k=1:ncmp(i)
+            data(i-j).x(:,k)=fread(fid,npts(i),['*' h(v).data.store]);
+        end
         
         % timing of amp data if uneven
-        if(leven==h(v).false)
-            data(i-j).t(:,1)=fread(fid,npts,['*' h(v).data.store]);
+        if(strcmp(leven(i),'false'))
+            data(i-j).t(:,1)=fread(fid,npts(i),['*' h(v).data.store]);
         end
-    elseif(iftype==h(v).enum(1).val.irlim)
+    elseif(strcmp(iftype(i),'Spectral File-Real/Imag'))
         % spectral file - real and imaginary
-        data(i-j).x(:,1)=fread(fid,npts,['*' h(v).data.store]);
-        data(i-j).x(:,2)=fread(fid,npts,['*' h(v).data.store]);
-    elseif(iftype==h(v).enum(1).val.iamph)
+        for k=1:ncmp(i)
+            data(i-j).x(:,2*k-1)=fread(fid,npts(i),['*' h(v).data.store]);
+            data(i-j).x(:,2*k)=fread(fid,npts(i),['*' h(v).data.store]);
+        end
+    elseif(strcmp(iftype(i),'Spectral File-Ampl/Phase'))
         % spectral file - amplitude and phase
-        data(i-j).x(:,1)=fread(fid,npts,['*' h(v).data.store]);
-        data(i-j).x(:,2)=fread(fid,npts,['*' h(v).data.store]);
-    elseif(iftype==h(v).enum(1).val.ixy)
+        for k=1:ncmp(i)
+            data(i-j).x(:,2*k-1)=fread(fid,npts(i),['*' h(v).data.store]);
+            data(i-j).x(:,2*k)=fread(fid,npts(i),['*' h(v).data.store]);
+        end
+    elseif(strcmp(iftype(i),'General X vs Y file'))
         % general x vs y data (x is 'dependent')
-        data(i-j).x(:,1)=fread(fid,npts,['*' h(v).data.store]);
+        for k=1:ncmp(i)
+            data(i-j).x(:,k)=fread(fid,npts(i),['*' h(v).data.store]);
+        end
         
         % independent data (if uneven)
-        if(leven==h(v).false)
-            data(i-j).t(:,1)=fread(fid,npts,['*' h(v).data.store]);
+        if(strcmp(leven(i),'false'))
+            data(i-j).t(:,1)=fread(fid,npts(i),['*' h(v).data.store]);
         end
-    elseif(iftype==h(v).enum(1).val.ixyz)
+    elseif(strcmp(iftype(i),'General XYZ (3-D) file'))
         % general xyz (3D) grid - nodes are evenly spaced
-        data(i-j).x(:,1)=fread(fid,npts,['*' h(v).data.store]);
-    elseif(isfield(h(v).enum(1).val,'incmp') ...
-            && iftype==h(v).enum(1).val.incmp)
-        % multi-component time series file
-        for k=1:ncmp
-            data(i-j).x(:,k)=fread(fid,npts,['*' h(v).data.store]);
-        end
-        
-        % independent data (if uneven)
-        if(leven==h(v).false)
-            data(i-j).t(:,1)=fread(fid,npts,['*' h(v).data.store]);
+        for k=1:ncmp(i)
+            data(i-j).x(:,k)=fread(fid,npts(i),['*' h(v).data.store]);
         end
     else
         % unknown filetype
         fclose(fid)
-        warning('SAClab:iftypeBad','Bad filetype code: %d',iftype);
+        warning('seislab:rdata:iftypeBad',...
+            'File: %s\nBad filetype: %s',data(i-j).name,iftype(i));
         
         % delete and jump to next file
         data(i-j)=[];
