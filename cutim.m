@@ -87,6 +87,14 @@ iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
 [b,npts,delta]=gh(data,'b','npts','delta');
 
+% check sample spacing logical
+t=strcmp(leven,'true');
+f=strcmp(leven,'false');
+if(~all(t | f))
+    error('sieslab:cutim:levenBad',...
+        'logical field leven needs to be set'); 
+end
+
 % expand scalar offsets
 if(length(offset1)==1)
     offset1=offset1(ones(nrecs,1));
@@ -130,7 +138,7 @@ for i=1:nrecs
         continue;
     end
     
-    % check if evenly spaced
+    % evenly spaced
     if(strcmp(leven(i),'true'))
         % calculate begin and end points
         if(~strcmpi(ref1,'n'))

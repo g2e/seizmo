@@ -1,5 +1,5 @@
 function [fh,lh]=p2(data,xlimits,ylimits,legend_ok,norm,fh,sfh) 
-%P2    Overlay plot of SAClab data records
+%P2    Overlay plot of seislab data records
 %
 %    Description: Plots timeseries and xy records over one another in a
 %     plot.  Other record types are ignored.  Optional inputs are the x/y
@@ -28,22 +28,34 @@ function [fh,lh]=p2(data,xlimits,ylimits,legend_ok,norm,fh,sfh)
 error(nargchk(1,7,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
-% default basic plotting parameters
-bgc='k';    % background color
-fgc='w';    % axis color
-ts=4;       % text size
-tn='times'; % text name
-tw='light'; % text weight
-lw=1;       % line width of record
+% plotting style defaults
+bgc='k';        % background color
+fgc='w';        % axis/text color
+ts=4;           % text size
+tn='times';     % text name
+tw='light';     % text weight
+lw=1;           % record line width
+%fw=3;           % flag width
+cmap='hsv';     % record colormap
+ticdir='out';   % tick direction
+ticlen=[0 0];   % tick length [2D 3D]
+gridit='on';    % grid parameter
+
+% allow access to plot styling using a global structure
+global SEISLAB
+if(isfield(SEISLAB,'BGCOLOR')); bgc=SEISLAB.BGCOLOR; end
+if(isfield(SEISLAB,'FGCOLOR')); fgc=SEISLAB.FGCOLOR; end
+if(isfield(SEISLAB,'FONTSIZE')); ts=SEISLAB.FONTSIZE; end
+if(isfield(SEISLAB,'FONTNAME')); tn=SEISLAB.FONTNAME; end
+if(isfield(SEISLAB,'FONTWEIGHT')); tw=SEISLAB.FONTWEIGHT; end
+if(isfield(SEISLAB,'TRACEWIDTH')); lw=SEISLAB.TRACEWIDTH; end
+%if(isfield(SEISLAB,'BARWIDTH')); fw=SEISLAB.BARWIDTH; end
+if(isfield(SEISLAB,'COLORMAP')); cmap=SEISLAB.COLORMAP; end
+if(isfield(SEISLAB,'TICKDIR')); ticdir=SEISLAB.TICKDIR; end
+if(isfield(SEISLAB,'TICKLEN')); ticlen=SEISLAB.TICKLEN; end
+if(isfield(SEISLAB,'GRIDIT')); gridit=SEISLAB.GRIDIT; end
 
 % initialize plot
 if(nargin<6 || isempty(fh) || fh<1); fh=figure;
@@ -52,21 +64,28 @@ whitebg(bgc);
 set(gcf,'Name','P2 -- SAC Seismogram Plotting Utility', ...
     'NumberTitle','off','color',bgc,'Pointer','crosshair');
 set(gca,'FontName',tn,'FontWeight',tw,'FontSize',ts,'box','on',...
-    'xcolor',fgc,'ycolor',fgc,'TickDir','out','ticklength',[0 0]);
-xlabel('Time (sec)');
-ylabel('Amplitude');
-grid on;
+    'xcolor',fgc,'ycolor',fgc,'TickDir',ticdir,'ticklength',ticlen);
+grid(gridit);
 
 % number of records
 nrecs=length(data);
 
 % record coloring
-colors=hsv(nrecs);
+cmap=str2func(cmap);
+colors=cmap(nrecs);
 
 % header info
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
 [b,npts,delta]=gh(data,'b','npts','delta');
+
+% check sample spacing logical
+t=strcmp(leven,'true');
+f=strcmp(leven,'false');
+if(~all(t | f))
+    error('sieslab:p2:levenBad',...
+        'logical field leven needs to be set'); 
+end
 
 % normalization
 scaling=ones(nrecs,1);
@@ -77,13 +96,14 @@ hold on
 plotted=false(nrecs,1);
 for i=1:nrecs
     % check if timeseries or xy (if not skip)
-    if(~any(strcmp(iftype(i),{'Time Series File' 'General X vs Y file'}))); continue; end
+    if(~any(strcmp(iftype(i),...
+            {'Time Series File' 'General X vs Y file'})))
+        continue; 
+    end
     
     % get record timing
     if(strcmp(leven(i),'true')); time=b(i)+(0:npts(i)-1).'*delta(i);
-    elseif(strcmp(leven(i),'false')); time=data(i).t;
-    else error('sample spacing logical must be set');
-    end
+    else time=data(i).t; end
     
     % plot series
     plot(time,data(i).x/scaling(i),'color',colors(i,:),'linewidth',lw);
@@ -98,10 +118,16 @@ if(nargin>2 && ~isempty(ylimits)); ylim(ylimits); end
 
 % legend
 if(nargin>3 && ~isempty(legend_ok) && legend_ok)
-    if(isfield(data,'name')); lh=legend(data(plotted).name,'location','best');
-    else i=1:nrecs; lh=legend(strcat({'Record '},cellstr(num2str(i(plotted).')))); end
+    if(isfield(data,'name'))
+        % filenames
+        lh=legend(data(plotted).name,'location','best');
+    else
+        % record indices
+        i=1:nrecs; 
+        lh=legend(strcat({'Record '},cellstr(num2str(i(plotted).')))); 
+    end
     set(lh,'interpreter','none')
-    set(lh,'fontsize',4)
+    set(lh,'fontsize',ts)
 end
 
 % title (total plotted / total records)

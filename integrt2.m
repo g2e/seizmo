@@ -33,6 +33,14 @@ error(seischk(data,'x'))
 leven=glgc(data,'leven');
 [b,e,npts,delta]=gh(data,'b','e','npts','delta');
 
+% check sample spacing logical
+t=strcmp(leven,'true');
+f=strcmp(leven,'false');
+if(~all(t | f))
+    error('sieslab:integrt2:levenBad',...
+        'logical field leven needs to be set'); 
+end
+
 % integrate and update header
 for i=1:length(data)
     % save class and convert to double precision
@@ -42,10 +50,11 @@ for i=1:length(data)
     % number of components
     ncmp=size(data(i).x,2);
     
-    % evenly spaced?
-    if (leven(i)==h(v).true)
+    % evenly spaced
+    if(strcmp(leven(i),'true'))
         data(i).x=[zeros(1,ncmp); delta(i)*cumsum(data(i).x)];
         b(i)=b(i)-delta(i)/2; e(i)=e(i)+delta(i)/2; npts(i)=npts(i)+1;
+    % unevenly spaced
     else
         % Assume each time point represents a midpoint between
         % the original time points - we want original times.

@@ -22,7 +22,8 @@ function [varargout]=gh(data,varargin)
 
 % require at least one input
 if(nargin<1)
-    error('MATLAB:nargchk:notEnoughInputs','Not enough input arguments.')
+    error('MATLAB:nargchk:notEnoughInputs',...
+        'Not enough input arguments.')
 end
 
 % check data structure

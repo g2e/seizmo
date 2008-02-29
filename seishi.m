@@ -3,6 +3,10 @@ function [header]=seishi(version)
 %
 %    Description: Provides all information necessary to read/modify/write 
 %     the specified version of a seislab file.
+%
+%    Notes:
+%     - currently all header values are stored as doubles in memory.  This
+%       limits accuracy for huge integers stored in fields of type int64.
 %    
 %    Usage:    header_info=seishi(version);
 %
@@ -24,7 +28,7 @@ if(any(version==[6 101 102 200 201 202]))
     header.version=6;
     header.numfields=133;
     header.size=302;
-    header.store='single';
+    header.store='double';
     
     header.data.startbyte=632;
     header.data.store='single';
@@ -217,9 +221,6 @@ if(any(version==[6 101 102 200 201 202]))
     if(any(version==[101 102 201 202]))
         header.version=101;
         
-        % change internal seislab header storage type
-        header.store='double';
-        
         % split v6 'single' int group into 3 (npts/nspts go double int)
         %header.int(1).startbyte=280;
         %header.int(1).store='int32';
@@ -278,9 +279,6 @@ if(any(version==[6 101 102 200 201 202]))
     % seislab version 200 header mod (double reals, double data)
     if(any(version==[200 201 202]))
         header.version=200;
-        
-        % change internal seislab header storage type
-        header.store='double';
         
         % split v6 'single' real group into 2 'double' real groups
         %header.real(1).startbyte=0;

@@ -21,25 +21,37 @@ function [fh]=p3(data,xlimits,ylimits,scale,style,label,fh,sfh)
 %    See also:  p1, p2, recsec
 
 % check number of inputs
-error(nargchk(1,7,nargin))
+error(nargchk(1,8,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
-% default basic plotting parameters
-bgc='k';    % background color
-fgc='w';    % axis color
-ts=4;       % text size
-tn='times'; % text name
-tw='light'; % text weight
-lw=1;       % line width of record
+% plotting style defaults
+bgc='k';        % background color
+fgc='w';        % axis/text color
+ts=4;           % text size
+tn='times';     % text name
+tw='light';     % text weight
+lw=1;           % record line width
+%fw=3;           % flag width
+cmap='hsv';     % record colormap
+ticdir='out';   % tick direction
+ticlen=[0 0];   % tick length [2D 3D]
+gridit='off';   % grid parameter
+
+% allow access to plot styling using a global structure
+global SEISLAB
+if(isfield(SEISLAB,'BGCOLOR')); bgc=SEISLAB.BGCOLOR; end
+if(isfield(SEISLAB,'FGCOLOR')); fgc=SEISLAB.FGCOLOR; end
+if(isfield(SEISLAB,'FONTSIZE')); ts=SEISLAB.FONTSIZE; end
+if(isfield(SEISLAB,'FONTNAME')); tn=SEISLAB.FONTNAME; end
+if(isfield(SEISLAB,'FONTWEIGHT')); tw=SEISLAB.FONTWEIGHT; end
+if(isfield(SEISLAB,'TRACEWIDTH')); lw=SEISLAB.TRACEWIDTH; end
+%if(isfield(SEISLAB,'BARWIDTH')); fw=SEISLAB.BARWIDTH; end
+if(isfield(SEISLAB,'COLORMAP')); cmap=SEISLAB.COLORMAP; end
+if(isfield(SEISLAB,'TICKDIR')); ticdir=SEISLAB.TICKDIR; end
+if(isfield(SEISLAB,'TICKLEN')); ticlen=SEISLAB.TICKLEN; end
+if(isfield(SEISLAB,'GRIDIT')); gridit=SEISLAB.GRIDIT; end
 
 % initialize plot
 if(nargin<7 || isempty(fh) || fh<1); fh=figure;
@@ -48,38 +60,37 @@ whitebg(bgc);
 set(gcf,'Name','P3 -- SAC Seismogram Plotting Utility', ...
     'NumberTitle','off','color',bgc,'Pointer','crosshair');
 set(gca,'FontName',tn,'FontWeight',tw,'FontSize',ts,'box','on',...
-    'xcolor',fgc,'ycolor',fgc,'TickDir','out','ticklength',[0 0]);
-xlabel('Time (sec)');
-ylabel('Record');
+    'xcolor',fgc,'ycolor',fgc,'TickDir',ticdir,'ticklength',ticlen);
+grid(gridit);
 
 % number of records
 nrecs=length(data);
 
-% defaults
+% check options
 if(nargin<4 || isempty(scale)); scale=nrecs/10; end
 if(nargin<5 || isempty(style)); style='record'; end
 if(~any(strcmp(style,{'record' 'global'})))
-    error('bad normalization style')
+    warning('seislab:p3:badInput','bad normalization style')
+    style='record';
 end
 
 % record coloring
-colors=hsv(nrecs);
+cmap=str2func(cmap);
+colors=cmap(nrecs);
 
 % header info
-[b,npts,delta,leven,iftype]=gh(data,'b','npts','delta','leven','iftype');
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
-end
+leven=glgc(data,'leven');
+iftype=genum(data,'iftype');
+[b,npts,delta]=gh(data,'b','npts','delta');
+
+% check filetype
+goodfiles=(strcmp(iftype,'itime') | strcmp(iftype,'ixy'));
+indices=find(goodfiles).';
 
 % find max amplitude for global style normalization
 if(strcmp(style,'global'));
     ampmax=0;
-    for i=1:nrecs
-        v=data(i).version==vers;
-        if(~any(iftype(i)==[h(v).enum(1).val.itime h(v).enum(1).val.ixy])); continue; end
+    for i=indices
         tmax=max(abs(data(i).x));
         if(tmax>ampmax); ampmax=tmax; end
     end
@@ -87,16 +98,9 @@ end
 
 % loop through each file
 hold on
-plotted=false(nrecs,1);
-for i=1:nrecs
-    % header version
-    v=data(i).version==vers;
-    
-    % check if timeseries or xy (if not skip)
-    if(~any(iftype(i)==[h(v).enum(1).val.itime h(v).enum(1).val.ixy])); continue; end
-    
+for i=indices
     % get record timing
-    if(leven(i)==h(v).true); time=b(i)+(0:npts(i)-1).'*delta(i);
+    if(strcmp(leven(i),'true')); time=(b(i)+(0:npts(i)-1)*delta(i)).';
     else time=data(i).t; end
     
     % get max amplitude for record style normalization
@@ -104,7 +108,6 @@ for i=1:nrecs
     
     % plot series
     plot(time,i+data(i).x*scale/ampmax,'color',colors(i,:),'linewidth',lw);
-    plotted(i)=1;
 end
 hold off
 
@@ -122,6 +125,6 @@ if(nargin>5 && label==1)
 end
 
 % title (total plotted / total records)
-title([num2str(nnz(plotted)) '/' num2str(nrecs) ' Records']);
+title([num2str(length(indices)) '/' num2str(nrecs) ' Records']);
 
 end

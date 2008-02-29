@@ -1,5 +1,5 @@
 function [fh,sfh]=p1(data,xlimits,ylimits,ncols,fh) 
-%P1    Plot SAClab data records in individual subplots
+%P1    Plot seislab data records in individual subplots
 %
 %    Description: Plots timeseries and xy records in individual subplots.
 %     Other filetypes are ignored (a space is left in the figure though).
@@ -17,23 +17,34 @@ function [fh,sfh]=p1(data,xlimits,ylimits,ncols,fh)
 error(nargchk(1,5,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
-% default basic plotting parameters
-bgc='k';    % background color
-fgc='w';    % axis color
-ts=4;       % text size
-tn='times'; % text name
-tw='light'; % text weight
-lw=1;       % line width of record
-fw=3;       % flag width
+% plotting style defaults
+bgc='k';        % background color
+fgc='w';        % axis/text color
+ts=4;           % text size
+tn='times';     % text name
+tw='light';     % text weight
+lw=1;           % record line width
+fw=3;           % flag width
+cmap='hsv';     % record colormap
+ticdir='out';   % tick direction
+ticlen=[0 0];   % tick length [2D 3D]
+gridit='on';    % grid parameter
+
+% allow access to plot styling using a global structure
+global SEISLAB
+if(isfield(SEISLAB,'BGCOLOR')); bgc=SEISLAB.BGCOLOR; end
+if(isfield(SEISLAB,'FGCOLOR')); fgc=SEISLAB.FGCOLOR; end
+if(isfield(SEISLAB,'FONTSIZE')); ts=SEISLAB.FONTSIZE; end
+if(isfield(SEISLAB,'FONTNAME')); tn=SEISLAB.FONTNAME; end
+if(isfield(SEISLAB,'FONTWEIGHT')); tw=SEISLAB.FONTWEIGHT; end
+if(isfield(SEISLAB,'TRACEWIDTH')); lw=SEISLAB.TRACEWIDTH; end
+if(isfield(SEISLAB,'BARWIDTH')); fw=SEISLAB.BARWIDTH; end
+if(isfield(SEISLAB,'COLORMAP')); cmap=SEISLAB.COLORMAP; end
+if(isfield(SEISLAB,'TICKDIR')); ticdir=SEISLAB.TICKDIR; end
+if(isfield(SEISLAB,'TICKLEN')); ticlen=SEISLAB.TICKLEN; end
+if(isfield(SEISLAB,'GRIDIT')); gridit=SEISLAB.GRIDIT; end
 
 % initialize plot
 if(nargin<5 || isempty(fh) || fh<1); fh=figure;
@@ -43,9 +54,13 @@ set(gcf,'Name','P1 -- SAC Seismogram Plotting Utility', ...
     'NumberTitle','off','color',bgc,'Pointer','crosshair');
 
 % header info
-[t,kt,o,ko,a,ka,f,kf,b,delta,npts,gcarc,leven,iftype]=...
-    gh(data,'t','kt','o','ko','a','ka','f','kf','b','delta','npts',...
-    'gcarc','leven','iftype');
+leven=glgc(data,'leven');
+iftype=genum(data,'iftype');
+[t,kt,o,ko,a,ka,f,kf,b,delta,npts,gcarc]=...
+    gh(data,'t','kt','o','ko','a','ka','f','kf',...
+    'b','delta','npts','gcarc');
+
+% header structures (for determining if undefined)
 vers=unique([data.version]);
 nver=length(vers);
 h(nver)=sachi(vers(nver));
@@ -63,13 +78,19 @@ kf=strtrim(kf);
 nrecs=length(data);
 
 % record coloring
-colors=hsv(nrecs);
+cmap=str2func(cmap);
+colors=cmap(nrecs);
 
 % default columns/rows
-if(nargin<4 || isempty(ncols)); ncols=fix(sqrt(nrecs)); nrows=ceil(nrecs/ncols);
-else nrows=ceil(nrecs/ncols); end
+if(nargin<4 || isempty(ncols))
+    ncols=fix(sqrt(nrecs)); 
+    nrows=ceil(nrecs/ncols);
+else
+    nrows=ceil(nrecs/ncols); 
+end
 
-% check user defined x/y limits (force into individual subplot control)
+% check user defined x/y limits
+% -> force into individual subplot control
 if(nargin>1 && ~isempty(xlimits))
     if(isvector(xlimits))
         xlimits=xlimits(:).';
@@ -102,18 +123,21 @@ for i=1:nrecs
     v=data(i).version==vers;
     
     % check if timeseries or xy (if not skip)
-    if(~any(iftype(i)==[h(v).enum(1).val.itime h(v).enum(1).val.ixy])); continue; end
+    if(~any(strcmp(iftype(i),{'itime' 'ixy'}))); continue; end
     
     % get record timing
-    if(leven(i)==h(v).true); time=b(i)+(0:npts(i)-1).'*delta(i);
-    else time=data(i).t; end
+    if(strcmp(leven(i),'true'))
+        time=b(i)+(0:npts(i)-1).'*delta(i);
+    else
+        time=data(i).t; 
+    end
     
     % focus to new subplot and draw record
     sfh(i)=subplot(nrows,ncols,i);
     plot(time,data(i).x,'color',colors(i,:),'linewidth',lw);
     set(gca,'FontName',tn,'FontWeight',tw,'FontSize',ts, ...
-        'xcolor',fgc,'ycolor',fgc, 'TickDir','out','ticklength',[0 0]);
-    grid on;
+        'xcolor',fgc,'ycolor',fgc, 'TickDir',ticdir,'ticklength',ticlen);
+    grid(gridit);
     
     % zooming
     axis tight;
@@ -125,7 +149,7 @@ for i=1:nrecs
     fxlimits=get(gca,'xlim');
     yrange=fylimits(2)-fylimits(1);
     xrange=fxlimits(2)-fxlimits(1);
-    ypad=0.05*yrange;  % these are simple - really you will have to
+    ypad=0.05*yrange;  % these are simplistic - really you will have to
     xpad=0.02*xrange;  % adjust these based on your font and plot size
     
     % plot origin flag (orange)
@@ -177,14 +201,17 @@ for i=1:nrecs
     % plot picks (yellow)
     for j=0:9
         if(t(i,j+1)~=h(v).undef.ntype)
-            plot([t(i,j+1) t(i,j+1)].',[fylimits(1)+ypad fylimits(2)-(1+mod(j,5))*ypad].',...
+            plot([t(i,j+1) t(i,j+1)].',...
+                [fylimits(1)+ypad fylimits(2)-(1+mod(j,5))*ypad].',...
                 'color','y','linewidth',fw)
             if(~strcmp(kt{i,j+1},h(v).undef.stype))
-                text(t(i,j+1)+xpad,fylimits(2)-(1+mod(j,5))*ypad,kt{i,j+1},'color','y', ...
+                text(t(i,j+1)+xpad,...
+                    fylimits(2)-(1+mod(j,5))*ypad,kt{i,j+1},'color','y',...
                     'fontname',tn,'fontweight',tw,'fontsize',ts,...
                     'verticalalignment','top','clipping','on');
             else
-                text(t(i,j+1)+xpad,fylimits(2)-(1+mod(j,5))*ypad,['t' num2str(j)],...
+                text(t(i,j+1)+xpad,...
+                    fylimits(2)-(1+mod(j,5))*ypad,['t' num2str(j)],...
                     'color','y','fontname',tn,'fontweight',tw,...
                     'verticalalignment','top','clipping','on',...
                     'fontsize',ts);
@@ -194,7 +221,8 @@ for i=1:nrecs
     
     % record name and degree distance
     if(isfield(data,'name') && ~isempty(data(i).name))
-        title([texlabel(data(i).name,'literal') '  -  ' num2str(gcarc(i)) '\circ'])
+        title([texlabel(data(i).name,'literal') ...
+            '  -  ' num2str(gcarc(i)) '\circ'])
     else title(['RECORD ' num2str(i) '  -  ' num2str(gcarc(i)) '\circ']); 
     end
     hold off

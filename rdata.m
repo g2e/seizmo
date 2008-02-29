@@ -64,7 +64,8 @@ for i=1:nrecs
     
     % invalid fid check (non-existent file or directory)
     if(fid<0)
-        warning('SAClab:badFID','File not openable, %s',data(i-j).name);
+        warning('seislab:rdata:badFID',...
+            'File not openable, %s',data(i-j).name);
         
         % delete and jump to next file
         data(i-j)=[];
