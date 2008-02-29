@@ -24,14 +24,7 @@ function [snr]=qcksnr(data,reftimes,noswin,sigwin)
 error(nargchk(4,4,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % get ratio of max amplitudes of windows
 snr=gnrm(cutim(data,'z',reftimes+sigwin(:,1),'z',reftimes+sigwin(:,2))) ./ ...

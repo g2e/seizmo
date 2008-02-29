@@ -1,5 +1,5 @@
 function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
-%IIRFILTER    Apply an IIR filter to SAClab data records
+%IIRFILTER    Apply an IIR filter to seislab data records
 %
 %    Description: Utilizing the set of supplied parameters IIR filters are
 %     built to the desired specs and implemented on the data records.
@@ -89,16 +89,16 @@ function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 %
 %    Examples:
 %      4th order lowpass butter filter with a passband corner of 10s
-%     [data]=sacfilter(data,'low','butter',1/10,4)
+%     [data]=iirfilter(data,'low','butter',1/10,4)
 %
 %      bandpass elliptic filter with corners of 15s and 12s using
 %      default stop corners and ripples to determine filter order
-%     [data]=sacfilter(data,'bandpass','ellip',[1/15 1/12])
+%     [data]=iirfilter(data,'bandpass','ellip',[1/15 1/12])
 %
 %      2 pass bandpass elliptic filter with stop corners 
 %      defined forcing order calc. 8th order is ignored but the
 %      supplied 3dB passband ripple is included in the order calc.
-%     [data]=sacfilter(data,'bandpass','ellip',[1/22 1/20 1/15 1/14],8,2,3)
+%     [data]=iirfilter(data,'bandpass','ellip',[1/22 1/20 1/15 1/14],8,2,3)
 %
 %
 %    Notes: For narrow band filters, PARTICULARLY AT LOW Hz, consider 
@@ -112,10 +112,10 @@ function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 %           Remember, length of the trace does not affect filter design,
 %           but the sampling frequency does.  
 %
-%           Edge effect limiting in filtering is done by 'mirroring' the 
-%           data record before filtering which serves as a pseudo-initial
-%           condition determination.  The cost is that of filtering a
-%           record twice as long.
+%           Edge effect limiting in filtering is done by 'mirror-flipping' 
+%           the data record before filtering as a pseudo-initial
+%           conditioning measure.  The cost is that of filtering a record
+%           twice as long.
 %
 %           This program will filter on any filetype.  The output for 
 %           unevenly spaced or xyz files will not be accurate though!
@@ -126,28 +126,21 @@ function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 error(nargchk(2,7,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % check filter
 if(~any(strcmpi(style,{'butter' 'cheby1' 'cheby2' 'ellip'})) || ...
    ~any(strcmpi(type,{'low' 'high' 'notch' 'stop' 'bandpass'})))
-        error('unknown filter')
+        error('seislab:iirfilter:badInput','unknown filter')
 end
 
 % built-in defaults
-auto=0;     % auto order det flag
-tranbw=1/3; % trans/passband width ratio
-mirror=1;   % mirror flag
-pr=3;       % passband attenuation (dB)
-sr=30;      % stopband attenuation (dB)
-dp=1;       % pass option
+auto=0;     % automatic order determination flag (off)
+tranbw=1/3; % transition band / pass band width ratio
+mirror=1;   % append mirror-flip flag (on)
+pr=3;       % passband attenuation (in dB)
+sr=30;      % stopband attenuation (in dB)
+dp=1;       % default pass option (forward pass only)
 
 % make delta groups
 delta=gh(data,'delta');
@@ -162,7 +155,9 @@ if(nargin==4 || isempty(order) || order==0); auto=1; end
 
 % check passes
 if(nargin<6 || isempty(passes)); passes=dp;
-elseif (~any(passes==[1 2 3 4])); error('1 or 2 passes only'); end
+elseif (~any(passes==[1 2 3 4]))
+    error('seislab:iirfilter:badInput','1 or 2 passes only')
+end
 
 % check ripple
 if(nargin==7 && ~isempty(ripple))
@@ -171,7 +166,8 @@ if(nargin==7 && ~isempty(ripple))
 
     % check for negative
     if(any(ripple<=0))
-        error('negative or zero ripple not allowed')
+        error('seislab:iirfilter:badInput',...
+            'negative or zero ripple not allowed')
     end
 
     % assigning ripple parameters
@@ -185,7 +181,8 @@ if(nargin==7 && ~isempty(ripple))
         sr=ripple(2);
         if(~strcmpi(style,'ellip')); auto=1; end
     else
-        error('too many ripple parameters')
+        error('seislab:iirfilter:badInput',...
+            'too many ripple parameters')
     end
 end
 
@@ -196,22 +193,30 @@ for i=1:ng
     nc=length(pc);
 
     % check corners
-    if(any(pc>=1)); error('corner(s) at/above nyquist');
-    elseif(any(pc<=0)); error('corner(s) at/below 0'); end
+    if(any(pc>=1))
+        error('seislab:iirfilter:badInput',...
+            'corner(s) at/above nyquist')
+    elseif(any(pc<=0))
+        error('seislab:iirfilter:badInput',...
+        'corner(s) at/below 0')
+    end
 
     % dangerously close warnings
     if(any(pc>0.85))
-        warning('SAClab:NyqClose','Corner close to Nyquist')
+        warning('seislab:iirfilter:nyqClose',...
+            'Corner close to Nyquist')
     end
     if(any(pc<0.001))
-        warning('SAClab:ZeroClose','Extreme low frequency corner')
+        warning('seislab:iirfilter:zeroClose',...
+            'Extreme low frequency corner')
     end
 
     % work on corners by type
     if(any(strcmpi(type,{'low' 'high'})))
         % check number of corners
         if(~any(nc==[1 2]))
-            error('incorrect number of corners defined')
+            error('seislab:iirfilter:badInput',...
+                'incorrect number of corners defined')
         end
     
         % setup corners
@@ -247,7 +252,8 @@ for i=1:ng
     else % stop/notch or bandpass
         % check number of corners
         if(~any(nc==[2 4]))
-            error('incorrect number of corners defined')
+            error('seislab:iirfilter:badInput',...
+                'incorrect number of corners defined')
         end
     
         % setup corners
@@ -324,7 +330,7 @@ end
 
 function [data]=imprevfilt(data,fs,mirror)
 %IMPREVFILT   Implements reverse pass filter
-%   Implements a filter design on SAClab data records and makes appropriate
+%   Implements a filter design on seislab data records and makes appropriate
 %   header updates.  Takes a mirror option which does pseudo-IC to limit 
 %   edge effects.  Works with multiple records.
 
@@ -349,7 +355,7 @@ end
 
 function [data]=impfilt(data,fs,mirror)
 %IMPFILT   Implements filter
-%   Implements a filter design on SAClab data records and makes appropriate
+%   Implements a filter design on seislab data records and makes appropriate
 %   header updates.  Takes a mirror option which does pseudo-IC to limit 
 %   edge effects.  Works with multiple records.
 

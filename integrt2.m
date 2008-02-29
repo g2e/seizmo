@@ -1,5 +1,5 @@
 function [data]=integrt2(data)
-%INTEGRT2    Integrates SAClab data records using discrete additions
+%INTEGRT2    Integrates seislab data records using discrete additions
 %
 %    Description: Calculates and returns the integral of each record using
 %     a cumulative summation.  Assumes the given record is the discrete
@@ -8,11 +8,11 @@ function [data]=integrt2(data)
 %     dif function. 
 %
 %    Notes:
-%      - Time shifts to midpoints.
-%      - Increases npts by 1 (first point is 0 and is one sample interval
-%          before the first midpoint).
-%      - integrt2(dif(data))~=data
-%      - rmean(integrt2(dif(data)))==rmean(data)
+%     - Time shifts to midpoints.
+%     - Increases npts by 1 (first point is 0 and is one sample interval
+%       before the first midpoint).
+%     - integrt2(dif(data))~=data
+%     - rmean(integrt2(dif(data)))==rmean(data)
 %
 %    Warning:
 %      If an unevenly spaced file is unable to satisfy the midpoint
@@ -21,37 +21,20 @@ function [data]=integrt2(data)
 %
 %    Usage: [data]=integrt2(data);
 %
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
-%
 %    See also: dif, integrt
 
 % check nargin
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % retreive header info
-[b,e,npts,delta,leven]=gh(data,'b','e','npts','delta','leven');
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
-end
+leven=glgc(data,'leven');
+[b,e,npts,delta]=gh(data,'b','e','npts','delta');
 
 % integrate and update header
 for i=1:length(data)
-    % header version
-    v=data(i).version==vers;
-    
     % save class and convert to double precision
     oclass=str2func(class(data(i).x));
     data(i).x=double(data(i).x);
@@ -82,7 +65,7 @@ for i=1:length(data)
         if(range<=0 || all((dt(2:end-1)-dt(1:end-2))>dt(3:end)) || ...
                 all(dt(1:end-2)<(dt(2:end-1)-dt(3:end))));
             % nope - trapezoidal rule
-            warning('SAClab:failedAssumption',...
+            warning('seislab:integrt2:failedAssumption',...
                 ['Midpoint assumption failed for record %d. \n'...
                 'Using the trapezoidal rule instead.'],i);
             data(i)=integrt(data(i));
@@ -105,7 +88,7 @@ for i=1:length(data)
         dto=diff(orig);
         if(min(dto)<=0)
             % non-monotonic - bail out, use trapezoidal rule
-            warning('SAClab:failedAssumption',...
+            warning('seislab:integrt2:failedAssumption',...
                 ['Midpoint assumption failed for record %d. \n'...
                 'Using the trapezoidal rule instead.'],i);
             data(i)=integrt(data(i));

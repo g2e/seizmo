@@ -34,15 +34,11 @@ function [data]=rdata(data)
 %    See also: rh, rpdw, rsac, wsac, bsac, sachi, gh, lh, ch, wh, gv
 %              sacsize
 
+% check number of inputs
+error(nargchk(1,1,nargin))
+
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'name') || ~isfield(data,'endian'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'name','endian'))
 
 % number of records
 nrecs=length(data);

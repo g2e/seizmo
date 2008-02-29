@@ -1,18 +1,16 @@
 function [data]=integrt(data)
-%INTEGRT    Integrates SAClab data records using the trapezoidal rule
+%INTEGRT    Integrates seislab data records using the trapezoidal rule
 %
 %    Description: Calculates and returns the integral of each record using
 %     the trapezoidal rule.  Works with unevenly spaced data.  Uses the 
 %     Matlab function cumtrapz.
 %
 %    Notes:
-%       No change to timing. 
-%       No change to npts.
-%       First point is 0.
+%     - No change to timing. 
+%     - No change to npts.
+%     - First point is 0.
 %
 %    Usage: [data]=integrt(data);
-%
-%    by Garrett Euler (2/2008)   ggeuler@wustl.edu
 %
 %    See also: dif, integrt2
 
@@ -20,35 +18,20 @@ function [data]=integrt(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % retreive header info
-[delta,leven]=gh(data,'delta','leven');
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=sachi(vers(nver));
-for i=1:nver-1
-    h(i)=sachi(vers(i));
-end
+leven=glgc(data,'leven');
+delta=gh(data,'delta');
 
 % integrate and update header
 for i=1:length(data)
-    % header version
-    v=data(i).version==vers;
-    
     % save class and convert to double precision
     oclass=str2func(class(data(i).x));
     data(i).x=double(data(i).x);
     
     % evenly spaced?
-    if (leven(i)==h(v).true)
+    if (strcmp(leven(i),'true'))
         data(i).x=delta(i)*cumtrapz(data(i).x);
     else
         data(i).x=cumtrapz(double(data(i).t),data(i).x);

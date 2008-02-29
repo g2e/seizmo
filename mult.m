@@ -1,34 +1,27 @@
 function [data]=mult(data,constant,cmp)
-%MULT    Multiply SAClab data records by a constant
+%MULT    Multiply seislab data records by a constant
 %
 %    Usage: [data]=mult(data,constant,cmp)
 %
-%          - a scalar constant applies the value to all records
-%          - a vector of constants (length must equal the number of 
-%            records) allows applying different values to each record
-%          - 'cmp' selects the dependent component to work on
-%            (default is 1)
+%    Notes:
+%     - a scalar constant applies the value to all records
+%     - a vector of constants (length must equal the number of records)
+%       allows applying different values to each record
+%     - 'cmp' selects the dependent component to work on (default is 1)
 %
-%    See also: dvide, add, subtr
+%    See also: subtr, add, dvide
 
 % check nargin
 error(nargchk(2,3,nargin))
+
+% check data structure
+error(seischk(data,'x'))
 
 % no constant case
 if(isempty(constant)); return; end
 
 % default component
 if(nargin==2 || isempty(cmp)); cmp=1; end
-
-% check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
 
 % number of records
 nrecs=length(data);
@@ -40,7 +33,7 @@ elseif(~isvector(constant) || length(constant)~=nrecs)
     error('constant vector length ~= # records')
 end
 
-% multiply by constant and update header
+% add constant and update header
 for i=1:nrecs
     oclass=str2func(class(data(i).x));
     data(i).x(:,cmp)=oclass(double(data(i).x(:,cmp))*constant(i));
