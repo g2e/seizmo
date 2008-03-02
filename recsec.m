@@ -77,7 +77,7 @@ colors=cmap(nrecs);
 
 % header info
 leven=glgc(data,'leven');
-iftype=genum(data,'iftype');
+iftype=genumdesc(data,'iftype');
 [b,npts,delta,gcarc]=gh(data,'b','npts','delta','gcarc');
 
 % defaults
@@ -89,7 +89,8 @@ if(~any(strcmp(style,{'record' 'global'})))
 end
 
 % check filetype
-goodfiles=(strcmp(iftype,'itime') | strcmp(iftype,'ixy'));
+goodfiles=(strcmp(iftype,'Time Series File') | ...
+    strcmp(iftype,'General X vs Y file'));
 indices=find(goodfiles).';
 
 % find max amplitude for global style normalization

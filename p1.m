@@ -55,7 +55,7 @@ set(gcf,'Name','P1 -- Seismogram Plotting Utility', ...
 
 % header info
 leven=glgc(data,'leven');
-iftype=genum(data,'iftype');
+iftype=genumdesc(data,'iftype');
 [t,kt,o,ko,a,ka,f,kf,b,delta,npts,gcarc]=...
     gh(data,'t','kt','o','ko','a','ka','f','kf',...
     'b','delta','npts','gcarc');
@@ -131,7 +131,10 @@ for i=1:nrecs
     v=data(i).version==vers;
     
     % check if timeseries or xy (if not skip)
-    if(~any(strcmp(iftype(i),{'itime' 'ixy'}))); continue; end
+    if(~any(strcmp(iftype(i),{'Time Series File' ...
+            'General X vs Y file'})))
+        continue; 
+    end
     
     % get record timing
     if(strcmp(leven(i),'true'))

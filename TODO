@@ -1,15 +1,44 @@
 current focus
 -----------------
 saclab=>seislab
-fourier/ifourier (multi-component support)
-rpdw (clear data before read in)
-bug checks (debug and build function testers?)
-clean up structure checks (use seischk)
+	- update all functions
+		- at stretch
+	- delete sachi
+bug checks
+	- function test scripts
+	- test data
+clean up structure checks
+	+ seischk
+	- make all functions use seischk
+		- at stretch
 clean up class support
+	+ header defined classes
+	+ doubleit, fixdelta
+	- check/update all functions
+		- at stretch
 clean up documentation
-global undefined values only
+	- seislab
+	- details
+global undefined values
+	+ each header has a string and numeric undefined value
+	+ NaN rather than undefined for unsupported fields
+	- check/update all functions
+		- at stretch
 add dataless support (npts==0)
+	+ rdata,rpdw,cutim support dataless input/output
+	- check/update all functions
+		- full set
 finalize multi-component setup
+	+ unused15->ncmp
+	+ gh now outputs nan when ncmp unsupported
+	- check/update all functions
+		- fourier/ifourier
+centralize plotting parameters
+	- function for defaults
+	+ global for changing on the fly
+clear data.t if uneven->even
+	- syncsr
+	- intrpol8
 
 
 more function ideas (0.5.?)

@@ -88,7 +88,16 @@ end
 % grab spacing info
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
-[b,npts,delta]=gh(data,'b','npts','delta');
+warning('off','seislab:gh:fieldInvalid')
+[b,npts,delta,ncmp]=gh(data,'b','npts','delta','ncmp');
+warning('on','seislab:gh:fieldInvalid')
+
+% clean up and check ncmp
+ncmp(isnan(ncmp))=1;
+if(any(ncmp<1 | fix(ncmp)~=ncmp))
+    error('seislab:rpdw:badNumCmp',...
+        'field ncmp must be a positive integer')
+end
 
 % check leven
 t=strcmp(leven,'true');
@@ -165,10 +174,9 @@ for i=1:nrecs
         % fill or no
         if(fill)
             % add filler
-            cmp=size(data(i).x,2);
-            data(i).x=[ones(1-bp(i),cmp)*filler; 
+            data(i).x=[ones(1-bp(i),ncmp(i))*filler; 
                         data(i).x; 
-                        ones(ep2-npts(i),cmp)*filler];
+                        ones(ep2-npts(i),ncmp(i))*filler];
             
             % empty window - add to destroy list
             if(isempty(data(i).x))
@@ -208,7 +216,7 @@ for i=1:nrecs
             temp=find(data(i).t>=bt(i),1);
             if(isempty(temp))
                 % empty window - add to destroy list
-                data(i).x=[]; data(i).t=[];
+                data(i).x=data(i).x([],:); data(i).t=[];
                 data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
                     'depmen',0,'depmin',0,'depmax',0,'odelta',0);
                 destroy(i)=true;
@@ -237,7 +245,7 @@ for i=1:nrecs
             temp=find(data(i).t<=et(i),1,'last');
             if(isempty(temp))
                 % empty window - add to destroy list
-                data(i).x=[]; data(i).t=[];
+                data(i).x=data(i).x([],:); data(i).t=[];
                 data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
                     'depmen',0,'depmin',0,'depmax',0,'odelta',0);
                 destroy(i)=true;

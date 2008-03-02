@@ -70,11 +70,11 @@ for i=1:length(data)
     if(strcmpi(format,'rlim'))
         data(i).x(:,2)=imag(data(i).x(:,1));
         data(i).x(:,1)=real(data(i).x(:,1));
-        data(i)=ch(data(i),'iftype','irlim');
+        data(i)=ch(data(i),'iftype','Spectral File-Real/Imag');
     else
         data(i).x(:,2)=angle(data(i).x(:,1));
         data(i).x(:,1)=2*abs(data(i).x(:,1));
-        data(i)=ch(data(i),'iftype','iamph');
+        data(i)=ch(data(i),'iftype','Spectral File-Ampl/Phase');
     end
     
     % change class back

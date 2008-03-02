@@ -46,10 +46,10 @@ for i=1:length(data)
     % turn back into time domain
     if(strcmp(iftype(i),'Spectral File-Real/Imag'))
         data(i).x=nspts(i)*real(ifft(complex(data(i).x(:,1),data(i).x(:,2))));
-        data(i)=ch(data(i),'iftype','itime');
+        data(i)=ch(data(i),'iftype','Time Series File');
     else
         data(i).x=nspts(i)/2*real(ifft(data(i).x(:,1).*exp(j*data(i).x(:,2))));
-        data(i)=ch(data(i),'iftype','itime');
+        data(i)=ch(data(i),'iftype','Time Series File');
     end
     
     % truncate to original length and change class back
