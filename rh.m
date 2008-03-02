@@ -36,10 +36,8 @@ if(nfiles<1); nfiles=[]; end
 % pre-allocating seislab structure
 data(nfiles,1)=struct('name',[],'head',[],'endian',[],'version',[]);
 
-% initializing count of invalid files
-j=0;
-
 % loop for each file
+destroy=false(nfiles,1);
 for i=1:nfiles
     % get version and byte-order
     [version,endian]=gv(varargin{i});
@@ -47,20 +45,19 @@ for i=1:nfiles
     % validity check
     if(version==0)
         % invalid - jump to next file
-        j=j+1;
+        destroy(i)=1;
         continue;
     end
     
     % open file for reading
     fid=fopen(varargin{i},'r',endian);
     
-    % invalid fid check (non-existent file or directory)
+    % fid check
     if(fid<0)
+        % non-existent file or directory
         warning('seislab:rh:badFID',...
             'File not openable, %s',varargin{i});
-        
-        % jump to next file
-        j=j+1;
+        destroy(i)=1;
         continue;
     end
     
@@ -77,26 +74,24 @@ for i=1:nfiles
         fclose(fid);
         warning('seislab:rh:fileTooShort',...
             'File too short, %s',varargin{i});
-        
-        % jump to next file
-        j=j+1;
+        destroy(i)=1;
         continue;
     end
     
     % save filename, byte-order, version
-    data(i-j).name=varargin{i};
-    data(i-j).endian=endian;
-    data(i-j).version=version;
+    data(i).name=varargin{i};
+    data(i).endian=endian;
+    data(i).version=version;
     
     % preallocate header
-    data(i-j).head=nan(h.size,1,h.store);
+    data(i).head=nan(h.size,1,h.store);
     
     % reading in header
     n=h.types;
     for m=1:length(n)
         for k=1:length(h.(n{m}))
             fseek(fid,h.(n{m})(k).startbyte,'bof');
-            data(i-j).head(h.(n{m})(k).minpos:h.(n{m})(k).maxpos)=...
+            data(i).head(h.(n{m})(k).minpos:h.(n{m})(k).maxpos)=...
                 fread(fid,h.(n{m})(k).size,h.(n{m})(k).store);
         end
     end
@@ -105,7 +100,7 @@ for i=1:nfiles
     fclose(fid);
 end
 
-% remove unused entries
-data(nfiles-j+1:nfiles)=[];
+% remove unread entries
+data(destroy)=[];
 
 end

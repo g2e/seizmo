@@ -1,4 +1,4 @@
-function [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
+function [data,destroy]=cutim(data,ref1,offset1,ref2,offset2,fill,filler,trim)
 %CUTIM    Cut seislab data records in memory
 %
 %    Description: Cuts data windows from seislab data records using the
@@ -6,7 +6,8 @@ function [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
 %     data are pushed to the data bounds unless 'fill' is set to 1. In this
 %     case - and only for evenly spaced files - the window is padded with
 %     filler values (default is zero) to meet the window parameters. If a
-%     record ends up having no data it is deleted from the data structure.
+%     record ends up having no data it is deleted from the data structure
+%     unless the trim parameter is set to false.
 %
 %     ref values can be one of the following:
 %        'z','n','some other header timing field', and for ref2 only: 'l'
@@ -22,7 +23,7 @@ function [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
 %        beginning and end - 'b',0 or 'e',0.  If both pairs are missing, no
 %        cut is done.
 %
-%    Usage: [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
+%    Usage: [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler,trim)
 %
 %    Examples:
 %     cut a 400 sample window starting from the 33rd sample
@@ -48,13 +49,14 @@ function [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler)
 %    See also: rpdw
 
 % input check
-error(nargchk(1,7,nargin))
+error(nargchk(1,8,nargin))
 
 % check data structure
 error(seischk(data,'x'))
 
 % defaults
 if(nargin==1); return; end
+if(nargin<8); trim=true; end
 if(nargin<7); filler=0; end
 if(nargin<6); fill=0; end
 if(nargin<5); offset2=0; end
@@ -68,6 +70,7 @@ if(isempty(offset1)); offset1=0; end
 if(isempty(offset2)); offset2=0; end
 if(isempty(fill)); fill=0; end
 if(isempty(filler)); filler=0; end
+if(isempty(trim)); trim=true; end
 
 % number of seismograms
 nrecs=length(data);
@@ -87,7 +90,7 @@ iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
 [b,npts,delta]=gh(data,'b','npts','delta');
 
-% check sample spacing logical
+% check leven
 t=strcmp(leven,'true');
 f=strcmp(leven,'false');
 if(~all(t | f))
@@ -126,13 +129,13 @@ destroy=false(nrecs,1);
 for i=1:nrecs
     % check for unsupported filetypes
     if(strcmp(iftype(i),'General XYZ (3-D) file'))
-        destroy(i)=1;
+        destroy(i)=true;
         warning('seislab:cutim:illegalFiletype',...
             'illegal operation on xyz file');
         continue;
     elseif(any(strcmp(iftype(i),{'Spectral File-Real/Imag'...
             'Spectral File-Ampl/Phase'})))
-        destroy(i)=1;
+        destroy(i)=true;
         warning('seislab:cutim:illegalFiletype',...
             'illegal operation on spectral file');
         continue;
@@ -169,7 +172,9 @@ for i=1:nrecs
             
             % empty window - add to destroy list
             if(isempty(data(i).x))
-                destroy(i)=1;
+                data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
+                    'depmen',0,'depmin',0,'depmax',0);
+                destroy(i)=true;
                 continue;
             end
             
@@ -182,7 +187,9 @@ for i=1:nrecs
         else
             % empty window - add to destroy list
             if(isempty(data(i).x))
-                destroy(i)=1;
+                data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
+                    'depmen',0,'depmin',0,'depmax',0);
+                destroy(i)=true;
                 continue;
             end
                     
@@ -201,7 +208,10 @@ for i=1:nrecs
             temp=find(data(i).t>=bt(i),1);
             if(isempty(temp))
                 % empty window - add to destroy list
-                destroy(i)=1;
+                data(i).x=[]; data(i).t=[];
+                data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
+                    'depmen',0,'depmin',0,'depmax',0,'odelta',0);
+                destroy(i)=true;
                 continue;
             elseif(temp>1)
                 temp2=temp-1;
@@ -227,7 +237,10 @@ for i=1:nrecs
             temp=find(data(i).t<=et(i),1,'last');
             if(isempty(temp))
                 % empty window - add to destroy list
-                destroy(i)=1;
+                data(i).x=[]; data(i).t=[];
+                data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
+                    'depmen',0,'depmin',0,'depmax',0,'odelta',0);
+                destroy(i)=true;
                 continue;
             elseif(temp<npts(i))
                 temp2=temp+1;
@@ -247,15 +260,17 @@ for i=1:nrecs
         nbp=max([bp(i) 1]);
         nep=min([ep2 npts(i)]);
         
-        % check if bp>ep
-        if(nbp>nep)
-            destroy(i)=1;
-            continue;
-        end
-        
         % cut
         data(i).x=data(i).x(nbp:nep,:);
         data(i).t=data(i).t(nbp:nep,1);
+        
+        % check if bp>ep
+        if(nbp>nep)
+            data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
+                'depmen',0,'depmin',0,'depmax',0,'odelta',0);
+            destroy(i)=true;
+            continue;
+        end
         
         % fix header
         data(i)=ch(data(i),'b',data(i).t(1),...
@@ -269,6 +284,6 @@ for i=1:nrecs
 end
 
 % destroy empty records
-data(destroy)=[];
+if(trim); data(destroy)=[]; end
 
 end

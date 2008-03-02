@@ -1,12 +1,16 @@
 current focus
 -----------------
+saclab=>seislab
+fourier/ifourier (multi-component support)
 rpdw (clear data before read in)
-bug checks (build function test set)
-clean up structure checks (cut checks if calling ch,gh anyways)
+bug checks (debug and build function testers?)
+clean up structure checks (use seischk)
 clean up class support
 clean up documentation
 global undefined values only
-saclab=>seislab
+add dataless support (npts==0)
+finalize multi-component setup
+
 
 more function ideas (0.5.?)
 ------------------
@@ -32,6 +36,7 @@ sign
 real
 
 fir deci (deci2)
+ - causal decimation!
 
 freq integration (fint)
 freq differentiation (fdif)
@@ -45,11 +50,17 @@ fetch record (frec)
 
 reverse (flip)
 
+get header definition (ghd)
+ - for cleaning up some low level functions
+ - inputs should contain necessary parent fields too
+ - allow structure output??
+
 
 more plotting (0.5.1)
 -----------------
 spectral plotting (pspec1, pspec2, pspec3)
 plot choose component (pcmp1, pcmp2, pcmp3)
+plot particle motion (multi-component)
 picking
 deleting
 
@@ -61,6 +72,7 @@ add, subtr, mul, dvide records
 correlate (use mcxc!)
 beam
 stack
+plot versus
 
 
 true guis (0.5.3)
@@ -70,19 +82,20 @@ align
 pick
 delete
 
-header layout change (0.6.0)
+
+header layout change (slated for 0.6.0)
 -------------------------------
 header partitioned by field type
-	- fixes current npts/nspts limitation
+	- fixes current int64 limitation
+	- improves memory usage
+	- requires reworked header (structure?)
 	- requires significant rewriting of header access functions
-		- add dataless sac support (npts=0)
-		- finalize multi-component setup
-	- changing version becomes complicated again
+	- changing version becomes complicated
 
 
-add readme (saclab.m) and examples (?.?.?)
+add readme (seislab.m) and examples (?.?.?)
 -------------------------
 	- features
 	- tutorials
-	- function list
+
 

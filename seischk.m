@@ -30,6 +30,9 @@ report=[];
 if(~isstruct(data))
     report.identifier='seislab:seischk:dataNotStruct';
     report.message='seislab data must be a structure';
+elseif(isempty(data))
+    report.identifier='seislab:seischk:dataEmpty';
+    report.message='seislab data structure must not be empty';
 elseif(~isvector(data))
     report.identifier='seislab:seischk:dataNotVector';
     report.message='seislab data structure must be a vector';
