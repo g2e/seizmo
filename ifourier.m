@@ -6,9 +6,9 @@ function [data]=ifourier(data)
 %     type is timeseries file.
 %
 %    Note:
-%     - Assumes amplitudes for amplitude-phase spectral files follow the
-%       convention from seislab's fourier routine.  This adds a factor of
-%       1/npts to frequency amplitudes compared to SAC.
+%     - Assumes amplitudes for spectral files follow the convention from 
+%       SAC/seislab's fourier routine.  There is a conversion factor of 
+%       npts*delta/2 between this and true spectral amplitudes.
 %
 %    Usage: data=ifourier(data)
 %
@@ -25,7 +25,7 @@ leven=glgc(data,'leven');
 iftype=genumdesc(data,'iftype');
 [b,delta,sb,sdelta,npts,nspts]=...
     gh(data,'b','delta','sb','sdelta','npts','nspts');
-e=sb+(nspts-1)*sdelta;
+e=sb+(nspts-1).*sdelta;
 
 % check leven,iftype
 if(any(~strcmp(leven,'true')))
@@ -45,10 +45,10 @@ for i=1:length(data)
     
     % turn back into time domain
     if(strcmp(iftype(i),'Spectral File-Real/Imag'))
-        data(i).x=nspts(i)*real(ifft(complex(data(i).x(:,1),data(i).x(:,2))));
+        data(i).x=1/sdelta(i)*ifft(complex(data(i).x(:,1:2:end),data(i).x(:,2:2:end)),'symmetric');
         data(i)=ch(data(i),'iftype','Time Series File');
     else
-        data(i).x=nspts(i)/2*real(ifft(data(i).x(:,1).*exp(j*data(i).x(:,2))));
+        data(i).x=1/sdelta(i)*ifft(data(i).x(:,1:2:end).*exp(j*data(i).x(:,2:2:end)),'symmetric');
         data(i)=ch(data(i),'iftype','Time Series File');
     end
     

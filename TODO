@@ -32,7 +32,7 @@ finalize multi-component setup
 	+ unused15->ncmp
 	+ gh now outputs nan when ncmp unsupported
 	- check/update all functions
-		- fourier/ifourier
+		+ fourier/ifourier
 centralize plotting parameters
 	- function for defaults
 	+ global for changing on the fly

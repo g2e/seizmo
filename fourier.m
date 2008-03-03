@@ -9,11 +9,13 @@ function [data]=fourier(data,format,pp2)
 %     pp2 input (fft length = 2^(nextpow2(len)+pp2) , default pp2=1).
 %
 %    Note:
-%     - Amplitudes in the 'amph' case will not match those from SAC.  The
-%       convention here is 1/npts times the SAC amplitudes.  This
-%       convention gives actual spectral amplitudes.
+%     - SAC (and thus seislab for sanity) stores amp/real/imag spectral 
+%       data in a raw form that first has to be scaled to give correct 
+%       amplitudes.  Divide records (except for phase!) by npts*delta/2 to 
+%       get accurate spectral information.  All seislab functions that work
+%       with fourier will expect that this scaling has NOT been applied.
 %
-%    Usage: data=fft(data,format,pp2)
+%    Usage: data=fourier(data,format,pp2)
 %
 %    See also: ifourier
 
@@ -57,23 +59,27 @@ for i=1:length(data)
     data(i).x=double(data(i).x);
     
     % number of datum/components
-    ncmp=size(data(i).x);
+    [len,ncmp]=size(data(i).x);
     
     % get frequency info
-    nspts=2^(nextpow2(ncmp(1))+pp2);
+    nspts=2^(nextpow2(len)+pp2);
     sb=0; se=1/(delta(i)*2); sdelta=2*se/nspts;
     
     % fft
-    data(i).x=fft(data(i).x,nspts)/ncmp(1);
+    data(i).x=delta(i)*fft(data(i).x,nspts);    % SAC compatible
+    %data(i).x=2*fft(data(i).x,nspts)/len;      % True amplitudes
+    
+    % expand data to make room for split
+    data(i).x(:,2:2:2*ncmp)=data(i).x;
     
     % split complex by desired filetype
     if(strcmpi(format,'rlim'))
-        data(i).x(:,2)=imag(data(i).x(:,1));
-        data(i).x(:,1)=real(data(i).x(:,1));
+        data(i).x(:,1:2:end)=real(data(i).x(:,2:2:end));
+        data(i).x(:,2:2:end)=imag(data(i).x(:,2:2:end));
         data(i)=ch(data(i),'iftype','Spectral File-Real/Imag');
     else
-        data(i).x(:,2)=angle(data(i).x(:,1));
-        data(i).x(:,1)=2*abs(data(i).x(:,1));
+        data(i).x(:,1:2:end)=abs(data(i).x(:,2:2:end));
+        data(i).x(:,2:2:end)=angle(data(i).x(:,2:2:end));
         data(i)=ch(data(i),'iftype','Spectral File-Ampl/Phase');
     end
     
@@ -82,7 +88,7 @@ for i=1:length(data)
     
     % update header (note there is no field 'se')
     data(i)=ch(data(i),'b',sb,'e',se,'delta',sdelta,'sb',b(i),...
-        'sdelta',delta(i),'nspts',ncmp(1),'npts',nspts);
+        'sdelta',delta(i),'nspts',len,'npts',nspts);
 end
 
 end

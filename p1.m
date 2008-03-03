@@ -62,8 +62,8 @@ iftype=genumdesc(data,'iftype');
 
 % check sample spacing logical
 tru=strcmp(leven,'true');
-f=strcmp(leven,'false');
-if(~all(tru | f))
+fals=strcmp(leven,'false');
+if(~all(tru | fals))
     error('sieslab:p1:levenBad',...
         'logical field leven needs to be set'); 
 end

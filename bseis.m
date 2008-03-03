@@ -88,7 +88,7 @@ for i=1:2:nargin
         'knetwk','seislab');
     
     % if timeseries is unevenly spaced add proper info
-    if(abs(delta-(varargin{i}(min([2 end]))-varargin{i}(1)))>eps)
+    if(abs(delta-(varargin{i}(min([2 end]))-varargin{i}(1)))>10*eps)
         data(j).t=varargin{i}(:);
         data(j)=ch(data(j),'leven','false',...
             'odelta',data(j).t(min([2 end]))-data(j).t(1));

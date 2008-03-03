@@ -106,11 +106,16 @@ for i=1:nrecs
     bytes=ftell(fid);
     
     % byte size check
-    if(bytes~=est_bytes(i))
-        % inconsistent size
+    if(bytes>est_bytes(i))
+        % size big enough but inconsistent - read anyways
+        warning('seislab:rdata:badFileSize',...
+            ['Filesize does not match header info (gt)\n'...
+            'File: %s'],data(i).name);
+    elseif(bytes<est_bytes(i))
+        % size to small - skip
         fclose(fid);
         warning('seislab:rdata:badFileSize',...
-            ['Filesize does not match header info\n'...
+            ['Filesize does not match header info (lt)\n'...
             'File: %s'],data(i).name);
         destroy(i)=1;
         continue;
