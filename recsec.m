@@ -83,7 +83,12 @@ iftype=genumdesc(data,'iftype');
 [b,npts,delta,gcarc]=gh(data,'b','npts','delta','gcarc');
 
 % defaults
-if(nargin<4 || isempty(scale)); scale=(max(gcarc)-min(gcarc))/10; end
+if(nargin<4 || isempty(scale))
+    scale=(max(gcarc)-min(gcarc))/10;
+    
+    % fix for no range case
+    if(scale==0); scale=1; end 
+end
 if(nargin<5 || isempty(style)); style='record'; end
 if(~any(strcmp(style,{'record' 'global'})))
     warning('SAClab:recsec:badInput','bad normalization style')

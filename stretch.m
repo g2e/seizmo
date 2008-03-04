@@ -67,7 +67,10 @@ for i=1:length(data)
             % stretch (filter length 4, cutoff freq is nyquist)
             temp=interp(temp,factor(k),4,1);
         end
-        save(:,j)=temp;
+        
+        % Matlab extrapolates past the end, so here
+        % we truncate the extrapolated values off
+        save(:,j)=temp(1:newlen,1);
     end
     
     % change class back

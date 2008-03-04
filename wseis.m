@@ -55,10 +55,11 @@ for i=1:length(data)
     
     % check fid
     if(fid<0)
-        % unopenable file for writing (directory?)
+        % unopenable file for writing (permissions/directory?)
         error('SAClab:wseis:badFID',...
             ['File not openable for writing '...
-            '(conflict with directory?):\n%s\n'],data(i).name);
+            '(permissions/conflict with directory?):\n%s\n'],...
+            data(i).name);
     end
     
     % fill header with dummy bytes (so we can seek around)
