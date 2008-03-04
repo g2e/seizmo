@@ -1,13 +1,16 @@
 function [data,destroy]=rpdw(data,ref1,offset1,ref2,offset2,fill,filler,trim)
-%RPDW    Read partial data window from binary seismic datafiles
+%RPDW    Read partial data window from binary seismic datafiles in SAClab
 %
-%    Description: Reads a partial data window from a binary seismic 
-%     datafile using the reference and offset parameters given.  This 
-%     provides a mechanism similar to the SAC 'cut' command to limit memory 
-%     usage.  Input parameters are exactly the same as the seislab 'cutim'
-%     command - for details on cutting read there.
+%    Description: Reads a partial data window from binary seismic datafiles
+%     into a SAClab structure using the windowing parameters supplied.  
+%     This provides a mechanism similar to the SAC 'cut' command to limit 
+%     memory/cpu usage related to reading in large datafiles.  Input 
+%     parameters are exactly the same as the SAClab 'cutim' command - for 
+%     details on cutting read there.
 %
 %    Usage: [data]=rpdw(data,ref1,offset1,ref2,offset2,fill,filler,trim)
+%
+%    Examples:
 %
 %    See also: cutim, rh, rdata, rseis, wh, wseis
 
@@ -35,43 +38,40 @@ if(isempty(fill)); fill=0; end
 if(isempty(filler)); filler=0; end
 if(isempty(trim)); trim=true; end
 
-% number of seismograms
+% number of records
 nrecs=length(data);
 
 % cut parameter checks
 if(~ischar(ref1) || ~ischar(ref2))
-    error('seislab:rpdw:badInput','ref must be a string')
+    error('SAClab:rpdw:badInput','ref must be a string')
 elseif(~isnumeric(offset1) || ~isnumeric(offset2) || ...
         ~isvector(offset1) || ~isvector(offset2))
-    error('seislab:rpdw:badInput','offset must be a numeric vector')
+    error('SAClab:rpdw:badInput','offset must be a numeric vector')
 elseif(~any(length(offset1)==[1 nrecs]) || ...
         ~any(length(offset2)==[1 nrecs]))
-    error('seislab:rpdw:badInputSize','offset dimensions not correct')
+    error('SAClab:rpdw:badInputSize','offset dimensions not correct')
 end
 
 % grab header info
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
-warning('off','seislab:gh:fieldInvalid')
+error(lgcchk('leven',leven))
+warning('off','SAClab:gh:fieldInvalid')
 [b,npts,delta,ncmp]=gh(data,'b','npts','delta','ncmp');
-warning('on','seislab:gh:fieldInvalid')
+warning('on','SAClab:gh:fieldInvalid')
 
 % clean up and check ncmp
 ncmp(isnan(ncmp))=1;
 if(any(ncmp<1 | fix(ncmp)~=ncmp))
-    error('seislab:rpdw:badNumCmp',...
+    error('SAClab:rpdw:badNumCmp',...
         'field ncmp must be a positive integer')
 end
 
-% check leven
-t=strcmp(leven,'true');
-f=strcmp(leven,'false');
-ti=find(t);
-fi=find(f);
-if(~all(t | f))
-    error('sieslab:rpdw:levenBad',...
-        'logical field leven needs to be set'); 
-end
+% indices based on leven
+tru=strcmp(leven,'true');
+fals=strcmp(leven,'false');
+trui=find(tru);
+falsi=find(fals);
 
 % expand scalar offsets
 if(length(offset1)==1)
@@ -111,30 +111,30 @@ end
 destroy=false(nrecs,1);
 
 % let rdata/cutim handle unevenly sampled records minus file deletion
-if(~isempty(fi))
-    [data(fi),destroy(fi)]=rdata(data(fi),false);
-    if(~isempty(fi(~destroy(fi))))
-        [data(fi(~destroy(fi))),destroy(fi(~destroy(fi)))]=...
-            cutim(data(fi(~destroy(fi))),ref1,offset1,ref2,offset2,...
+if(~isempty(falsi))
+    [data(falsi),destroy(falsi)]=rdata(data(falsi),false);
+    if(~isempty(falsi(~destroy(falsi))))
+        [data(falsi(~destroy(falsi))),destroy(falsi(~destroy(falsi)))]=...
+            cutim(data(falsi(~destroy(falsi))),ref1,offset1,ref2,offset2,...
             fill,filler,false);
     end
 end
 
 % loop through each file
-for i=ti.'
+for i=trui.'
     % header version index
     v=(data(i).version==vers);
     
     % check for unsupported filetypes
     if(strcmp(iftype(i),'General XYZ (3-D) file'))
         destroy(i)=true;
-        warning('seislab:cutim:illegalFiletype',...
+        warning('SAClab:rpdw:illegalFiletype',...
             'illegal operation on xyz file');
         continue;
     elseif(any(strcmp(iftype(i),{'Spectral File-Real/Imag'...
             'Spectral File-Ampl/Phase'})))
         destroy(i)=true;
-        warning('seislab:cutim:illegalFiletype',...
+        warning('SAClab:rpdw:illegalFiletype',...
             'illegal operation on spectral file');
         continue;
     end
@@ -161,7 +161,7 @@ for i=ti.'
     
     % check that it opened
     if(fid<0)
-        warning('seislab:rpdw:badFID',...
+        warning('SAClab:rpdw:badFID',...
             'File not openable, %s',data(i).name);
         destroy(i)=true;
         continue;
@@ -187,7 +187,7 @@ for i=ti.'
                 h(v).data.bytesize*((j-1)*npts(i)+nbp-1),'bof');
             data(i).x(:,j)=fread(fid,nnp,['*' h(v).data.store]);
         catch
-            warning('seislab:rpdw:readFailed',...
+            warning('SAClab:rpdw:readFailed',...
                 'Read in of data failed: %s',data(i).name);
             destroy(i)=true;
             break;

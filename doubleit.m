@@ -1,9 +1,9 @@
 function [data]=doubleit(data)
-%DOUBLEIT    Change in memory seislab data storage to double precision
+%DOUBLEIT    Change in memory SAClab data storage to double precision
 %
-%    Description: Changes the data in memory to double precision.  This
-%     does not affect the storage type or version for files written from 
-%     the data (that requires changing the header version).
+%    Description: Changes the SAClab data in memory to double precision.
+%     This does not affect the storage type or version for files written
+%     from the data (that requires changing the header version).
 %
 %    Usage: data=doubleit(data)
 %
@@ -24,6 +24,7 @@ nrecs=length(data);
 
 % retreive header info
 leven=glgc(data,'leven');
+error(lgcchk('leven',leven))
 
 % add zeros and update header
 for i=1:nrecs
@@ -32,8 +33,9 @@ for i=1:nrecs
     data(i).x=double(data(i).x);
     
     % double time
-    if(~strcmp(leven(i),'true')); data(i).t=double(data(i).t); end
+    if(strcmp(leven(i),'false'))
+        data(i).t=double(data(i).t);
+    end
 end
 
 end
-

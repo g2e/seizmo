@@ -1,7 +1,7 @@
 function [data]=fourier(data,format,pp2)
-%FOURIER    Converts time domain seislab records to the frequency domain
+%FOURIER    Converts time domain SAClab records to the frequency domain
 %
-%    Description: Converts seislab records from the time domain to the
+%    Description: Converts SAClab records from the time domain to the
 %     frequency domain using the fast fourier transform.  Following SAC
 %     formatting, an output choice between real-imaginary and amplitude-
 %     phase is allowed through the 'format' input ('amph' or 'rlim' only -
@@ -9,13 +9,15 @@ function [data]=fourier(data,format,pp2)
 %     pp2 input (fft length = 2^(nextpow2(len)+pp2) , default pp2=1).
 %
 %    Note:
-%     - SAC (and thus seislab for sanity) stores amp/real/imag spectral 
+%     - SAC (and thus SAClab for sanity) stores amp/real/imag spectral 
 %       data in a raw form that first has to be scaled to give correct 
 %       amplitudes.  Divide records (except for phase!) by npts*delta/2 to 
-%       get accurate spectral information.  All seislab functions that work
+%       get accurate spectral information.  All SAClab functions that work
 %       with fourier will expect that this scaling has NOT been applied.
 %
 %    Usage: data=fourier(data,format,pp2)
+%
+%    Examples:
 %
 %    See also: ifourier
 
@@ -31,10 +33,10 @@ if(nargin<2 || isempty(format)); format='amph'; end
 
 % check inputs
 if(~any(strcmpi(format,{'amph' 'rlim'})))
-    error('seislab:fourier:badInput','bad format string: %s',format)
+    error('SAClab:fourier:badInput','bad format string: %s',format)
 end
 if(~isnumeric(pp2) || ~isscalar(pp2) || fix(pp2)~=pp2)
-    error('seislab:fourier:badInput','pp2 must be a scalar integer')
+    error('SAClab:fourier:badInput','pp2 must be a scalar integer')
 end
 
 % retreive header info
@@ -44,11 +46,11 @@ iftype=genumdesc(data,'iftype');
 
 % check leven,iftype
 if(any(~strcmp(leven,'true')))
-    error('seislab:fourier:illegalOperation',...
+    error('SAClab:fourier:illegalOperation',...
         'illegal operation on unevenly spaced record')
 elseif(any(~strcmp(iftype,'Time Series File'))...
         && any(~strcmp(iftype,'General X vs Y file')))
-    error('seislab:fourier:illegalOperation',...
+    error('SAClab:fourier:illegalOperation',...
         'illegal filetype for this operation')
 end
 

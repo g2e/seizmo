@@ -1,16 +1,18 @@
 function [data]=ifourier(data)
-%IFOURIER    Converts spectral seislab records to the time domain
+%IFOURIER    Converts spectral SAClab records to the time domain
 %
-%    Description: Converts seislab records from the frequency domain to the
+%    Description: Converts SAClab records from the frequency domain to the
 %     time domain using the inverse fast fourier transform.  Output file
 %     type is timeseries file.
 %
 %    Note:
 %     - Assumes amplitudes for spectral files follow the convention from 
-%       SAC/seislab's fourier routine.  There is a conversion factor of 
+%       SAC/SAClab's fourier routine.  There is a conversion factor of 
 %       npts*delta/2 between this and true spectral amplitudes.
 %
 %    Usage: data=ifourier(data)
+%
+%    Examples:
 %
 %    See also: fourier
 
@@ -29,11 +31,11 @@ e=sb+(nspts-1).*sdelta;
 
 % check leven,iftype
 if(any(~strcmp(leven,'true')))
-    error('seislab:fourier:illegalOperation',...
+    error('SAClab:fourier:illegalOperation',...
         'illegal operation on unevenly spaced record')
 elseif(any(~strcmp(iftype,'Spectral File-Real/Imag'))...
         && any(~strcmp(iftype,'Spectral File-Ampl/Phase')))
-    error('seislab:fourier:illegalOperation',...
+    error('SAClab:fourier:illegalOperation',...
         'illegal filetype for this operation')
 end
 

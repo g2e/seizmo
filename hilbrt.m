@@ -1,11 +1,13 @@
 function [data]=hilbrt(data,pp2)
-%HILBRT    Return Hilbert transform of seislab data records
+%HILBRT    Return Hilbert transform of SAClab data records
 %
-%    Description: Calculates and returns the Hilbert transform of the data
-%     records.  Hilbert tranform adds a 90 degree phase shift to the data.
-%     Uses the Matlab function hilbert (Signal Processing Toolbox).
+%    Description: Calculates and returns the Hilbert transform of SAClab
+%     data records.  Hilbert tranform adds a 90 degree phase shift.  Uses
+%     the Matlab function hilbert (Signal Processing Toolbox).
 %
-%    Usage: [data]=hilbrt(data);
+%    Usage: [data]=hilbrt(data)
+%
+%    Examples:
 %
 %    See also: envelope
 
@@ -20,7 +22,7 @@ if(nargin==1); pp2=1; end
 
 % check spacing
 if(any(~strcmp(glgc(data,'leven'),'true')))
-    error('seislab:envelope:evenlySpacedOnly',...
+    error('SAClab:envelope:evenlySpacedOnly',...
         'Illegal operation on unevenly spaced data');
 end
 

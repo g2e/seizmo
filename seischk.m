@@ -1,20 +1,21 @@
 function [report]=seischk(data,varargin)
-%SEISCHK    Validate seislab data structure
+%SEISCHK    Validate SAClab data structure
 %
 %    Description: Returns an appropriate error message structure if the
-%     input variable fails certain seislab data structure requirements.
-%     Extra arguments must be strings corresponding to required fields in
-%     the seislab data structure ('head' and 'version' are pre-included).
-%     The structure contains the fields 'identifier' and 'message'.
+%     input variable fails certain SAClab data structure requirements.
+%     Extra arguments must be strings corresponding to additional required 
+%     fields in the SAClab data structure ('head' and 'version' are pre-
+%     included).  The structure contains the fields 'identifier' and 
+%     'message'.
 %
 %    Usage: error(seischk(data)) or warning(seischk(data))
 %           error(seischk(data,'requiredfield1','requiredfield2',...))
 %           warning(seischk(data,'requiredfield1','requiredfield2',...))
 %
 %    Examples:
-%     Writing out seislab files requires the names and byte-orders of the
+%     Writing out SAClab files requires the names and byte-orders of the
 %     output files be set, so to include the fields 'name' and 'endian' in 
-%     the check too:
+%     the check:
 %
 %           error(seischk(data,'endian','name'))
 %
@@ -28,14 +29,14 @@ function [report]=seischk(data,varargin)
 % check data structure
 report=[];
 if(~isstruct(data))
-    report.identifier='seislab:seischk:dataNotStruct';
-    report.message='seislab data must be a structure';
+    report.identifier='SAClab:seischk:dataNotStruct';
+    report.message='SAClab data must be a structure';
 elseif(isempty(data))
-    report.identifier='seislab:seischk:dataEmpty';
-    report.message='seislab data structure must not be empty';
+    report.identifier='SAClab:seischk:dataEmpty';
+    report.message='SAClab data structure must not be empty';
 elseif(~isvector(data))
-    report.identifier='seislab:seischk:dataNotVector';
-    report.message='seislab data structure must be a vector';
+    report.identifier='SAClab:seischk:dataNotVector';
+    report.message='SAClab data structure must be a vector';
 else
     reqfields=[{'head' 'version'} varargin];
     lgc=isfield(data,reqfields);
@@ -43,8 +44,8 @@ else
     % only complain about the first field not found
     i=find(~lgc,1);
     if(~isempty(i))
-        report.identifier='seislab:seischk:reqFieldNotFound';
-        report.message=sprintf('seislab data structure must have field ''%s''',reqfields{i});
+        report.identifier='SAClab:seischk:reqFieldNotFound';
+        report.message=sprintf('SAClab data structure must have field ''%s''',reqfields{i});
     end
 end
 

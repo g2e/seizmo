@@ -1,11 +1,13 @@
 function [med]=gmed(data)
-%GMED    Returns median of each seislab data record
+%GMED    Returns median of each SAClab data record
 %
-%    Description: Returns the median of each seislab data record.  Multi-
+%    Description: Returns the median of each SAClab data record.  Multi-
 %     component records return a median for each component.  Output is
 %     a cell array with one cell per record.
 %
 %    Usage: [medians]=gmed(data)
+%
+%    Examples:
 %
 %    See also: gnrm, rmean, subtr
 

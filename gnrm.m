@@ -1,9 +1,11 @@
 function [scale]=gnrm(data)
-%GNRM    Returns normalizers for seislab data records
+%GNRM    Returns normalizers for SAClab data records
 %
-%    Description: Returns the maximum amplitude of seislab data records.
+%    Description: Returns the maximum amplitude of SAClab data records.
 %
 %    Usage: [scale]=gnrm(data)
+%
+%    Examples:
 %
 %    See also: mul, nrm, gmed
 
@@ -23,4 +25,3 @@ for i=1:nrecs
 end
 
 end
-

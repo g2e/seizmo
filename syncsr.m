@@ -4,12 +4,13 @@ function [data]=syncsr(data,sr)
 %    Description: Resamples data records using Matlab's resample routine if
 %     possible, otherwise the problem is passed on to intrpol8.  Note that
 %     resample uses a cascade of fir filtering interpolations and 
-%     decimatations to get to the new rate.  This means that edge effects
-%     are an issue if the record is not demeaned/detrended/tapered.  This
-%     also means that aliasing is avoided.  In the case where resample 
-%     fails, the signal is pre-decimated and then interpolated to avoid
-%     aliasing.  Syncsr does not work correctly with unevenly sampled
-%     records (but will not check for them).
+%     decimatations to get to the new rate which will prevent aliasing but
+%     may introduce edge effects if the record is not demeaned/detrended/
+%     tapered.  If resample fails, the signal is passed to a simpler series
+%     of commands that pre-decimate and then interpolate (using intrpol8).
+%
+%    Notes:
+%     - Requires evenly sampled data
 %
 %    Usage:  [data]=syncsr(data,sr)
 %
@@ -23,20 +24,18 @@ function [data]=syncsr(data,sr)
 error(nargchk(2,2,nargin))
 
 % check data structure
-if(~isstruct(data))
-    error('input data is not a structure')
-elseif(~isvector(data))
-    error('data structure not a vector')
-elseif(~isfield(data,'version') || ~isfield(data,'head') || ...
-        ~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % check rate
-if(~isnumeric(sr) || ~isscalar(sr))
-    error('sample rate must be numeric scalar')
-elseif(sr<=0)
-    error('negative sample rate not allowed')
+if(~isnumeric(sr) || ~isscalar(sr) || sr<=0)
+    error('SAClab:syncsr:badInput',...
+        'sample rate must be a positive numeric scalar')
+end
+
+% require evenly sampled records only
+if(any(~strcmp(glgc(data,'leven'),'true')))
+    error('SAClab:syncsr:evenlySpacedOnly',...
+        'illegal operation on unevenly spaced data');
 end
 
 % make delta groups
@@ -85,4 +84,3 @@ data=ch(data,'delta',1/sr);
 data=distro(data,recs,ind,store,nnpts);
 
 end
-

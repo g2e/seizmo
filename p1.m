@@ -1,15 +1,17 @@
 function [fh,sfh]=p1(data,xlimits,ylimits,ncols,fh) 
-%P1    Plot seislab data records in individual subplots
+%P1    Plot SAClab data records in individual subplots
 %
-%    Description: Plots timeseries and xy records in individual subplots.
-%     Other filetypes are ignored (a space is left in the figure though).
-%     Flags for 'o','a','f','t(n)' are drawn if defined.  Labels are drawn
-%     for the flags using 'ko','ka','kf','kt(n)' if defined or the field
-%     name (o,a,f,t(n)).  Optional inputs are limits for x and y axis, the
-%     number of columns to use in the figure, and the figure handle. Output
-%     is the figure and subfigure handles.
+%    Description: Plots timeseries and xy SAClab records in individual
+%     subplots.  Other filetypes are ignored (a space is left in the figure
+%     though).  Flags for 'o','a','f','t(n)' are drawn if defined.  Labels
+%     are drawn for the flags using 'ko','ka','kf','kt(n)' if defined or
+%     the field name (o,a,f,t(n)).  Optional inputs are limits for x and y
+%     axis, the number of columns to use in the figure, and the figure
+%     handle.  Output is the figure and subfigure handles.
 % 
 %    Usage:  [fh,sfh]=p1(data,xlim,ylim,ncols,fh)
+%
+%    Examples:
 %
 %    See also:  p2, p3, recsec
 
@@ -33,18 +35,18 @@ ticlen=[0 0];   % tick length [2D 3D]
 gridit='on';    % grid parameter
 
 % allow access to plot styling using a global structure
-global SEISLAB
-if(isfield(SEISLAB,'BGCOLOR')); bgc=SEISLAB.BGCOLOR; end
-if(isfield(SEISLAB,'FGCOLOR')); fgc=SEISLAB.FGCOLOR; end
-if(isfield(SEISLAB,'FONTSIZE')); ts=SEISLAB.FONTSIZE; end
-if(isfield(SEISLAB,'FONTNAME')); tn=SEISLAB.FONTNAME; end
-if(isfield(SEISLAB,'FONTWEIGHT')); tw=SEISLAB.FONTWEIGHT; end
-if(isfield(SEISLAB,'TRACEWIDTH')); lw=SEISLAB.TRACEWIDTH; end
-if(isfield(SEISLAB,'BARWIDTH')); fw=SEISLAB.BARWIDTH; end
-if(isfield(SEISLAB,'COLORMAP')); cmap=SEISLAB.COLORMAP; end
-if(isfield(SEISLAB,'TICKDIR')); ticdir=SEISLAB.TICKDIR; end
-if(isfield(SEISLAB,'TICKLEN')); ticlen=SEISLAB.TICKLEN; end
-if(isfield(SEISLAB,'GRIDIT')); gridit=SEISLAB.GRIDIT; end
+global SAClab
+if(isfield(SAClab,'BGCOLOR')); bgc=SAClab.BGCOLOR; end
+if(isfield(SAClab,'FGCOLOR')); fgc=SAClab.FGCOLOR; end
+if(isfield(SAClab,'FONTSIZE')); ts=SAClab.FONTSIZE; end
+if(isfield(SAClab,'FONTNAME')); tn=SAClab.FONTNAME; end
+if(isfield(SAClab,'FONTWEIGHT')); tw=SAClab.FONTWEIGHT; end
+if(isfield(SAClab,'TRACEWIDTH')); lw=SAClab.TRACEWIDTH; end
+if(isfield(SAClab,'BARWIDTH')); fw=SAClab.BARWIDTH; end
+if(isfield(SAClab,'COLORMAP')); cmap=SAClab.COLORMAP; end
+if(isfield(SAClab,'TICKDIR')); ticdir=SAClab.TICKDIR; end
+if(isfield(SAClab,'TICKLEN')); ticlen=SAClab.TICKLEN; end
+if(isfield(SAClab,'GRIDIT')); gridit=SAClab.GRIDIT; end
 
 % initialize plot
 if(nargin<5 || isempty(fh) || fh<1); fh=figure;
@@ -55,18 +57,11 @@ set(gcf,'Name','P1 -- Seismogram Plotting Utility', ...
 
 % header info
 leven=glgc(data,'leven');
+error(lgcchk('leven',leven))
 iftype=genumdesc(data,'iftype');
 [t,kt,o,ko,a,ka,f,kf,b,delta,npts,gcarc]=...
     gh(data,'t','kt','o','ko','a','ka','f','kf',...
     'b','delta','npts','gcarc');
-
-% check sample spacing logical
-tru=strcmp(leven,'true');
-fals=strcmp(leven,'false');
-if(~all(tru | fals))
-    error('sieslab:p1:levenBad',...
-        'logical field leven needs to be set'); 
-end
 
 % header structures (for determining if undefined)
 vers=unique([data.version]);

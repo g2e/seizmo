@@ -1,7 +1,7 @@
 function [data,destroy]=cutim(data,ref1,offset1,ref2,offset2,fill,filler,trim)
-%CUTIM    Cut seislab data records in memory
+%CUTIM    Cut SAClab data records in memory
 %
-%    Description: Cuts data windows from seislab data records using the
+%    Description: Cuts data windows from SAClab data records using the
 %     given cut parameters.  Windows that extend outside the timing of the 
 %     data are pushed to the data bounds unless 'fill' is set to 1. In this
 %     case - and only for evenly spaced files - the window is padded with
@@ -72,39 +72,32 @@ if(isempty(fill)); fill=0; end
 if(isempty(filler)); filler=0; end
 if(isempty(trim)); trim=true; end
 
-% number of seismograms
+% number of records
 nrecs=length(data);
 
 % cut parameter checks
 if(~ischar(ref1) || ~ischar(ref2))
-    error('seislab:cutim:badInput','ref must be a string')
+    error('SAClab:cutim:badInput','ref must be a string')
 elseif(~isnumeric(offset1) || ~isnumeric(offset2) || ...
         ~isvector(offset1) || ~isvector(offset2))
-    error('seislab:cutim:badInput','offset must be a numeric vector')
+    error('SAClab:cutim:badInput','offset must be a numeric vector')
 elseif(~any(length(offset1)==[1 nrecs]) || ~any(length(offset2)==[1 nrecs]))
-    error('seislab:cutim:badInputSize','offset dimensions not correct')
+    error('SAClab:cutim:badInputSize','offset dimensions not correct')
 end
 
 % grab spacing info
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
-warning('off','seislab:gh:fieldInvalid')
+error(lgcchk('leven',leven))
+warning('off','SAClab:gh:fieldInvalid')
 [b,npts,delta,ncmp]=gh(data,'b','npts','delta','ncmp');
-warning('on','seislab:gh:fieldInvalid')
+warning('on','SAClab:gh:fieldInvalid')
 
 % clean up and check ncmp
 ncmp(isnan(ncmp))=1;
 if(any(ncmp<1 | fix(ncmp)~=ncmp))
-    error('seislab:rpdw:badNumCmp',...
+    error('SAClab:cutim:badNumCmp',...
         'field ncmp must be a positive integer')
-end
-
-% check leven
-t=strcmp(leven,'true');
-f=strcmp(leven,'false');
-if(~all(t | f))
-    error('sieslab:cutim:levenBad',...
-        'logical field leven needs to be set'); 
 end
 
 % expand scalar offsets
@@ -139,13 +132,13 @@ for i=1:nrecs
     % check for unsupported filetypes
     if(strcmp(iftype(i),'General XYZ (3-D) file'))
         destroy(i)=true;
-        warning('seislab:cutim:illegalFiletype',...
+        warning('SAClab:cutim:illegalFiletype',...
             'illegal operation on xyz file');
         continue;
     elseif(any(strcmp(iftype(i),{'Spectral File-Real/Imag'...
             'Spectral File-Ampl/Phase'})))
         destroy(i)=true;
-        warning('seislab:cutim:illegalFiletype',...
+        warning('SAClab:cutim:illegalFiletype',...
             'illegal operation on spectral file');
         continue;
     end

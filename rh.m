@@ -1,17 +1,17 @@
 function [data]=rh(varargin)
-%RH    Read binary seismic datafile header
+%RH    Read SAClab headers from binary seismic datafiles
 %
-%    Description: Reads in binary seismic datafile headers into a seislab
+%    Description: Reads headers from binary seismic datafiles into a SAClab
 %     structure.  Accepts character arrays of filenames (one filename per 
 %     row) and/or cell arrays of filenames (one filename per cell).
 %
-%     Structure fields of output:
+%     Fields of output SAClab structure:
 %      head - contains header data
 %      name - filename (may include path)
 %      endian - byte-order of file (ieee-le or ieee-be)
 %      version - version of file
 %
-%    Usage:    seislab_struct=rh(['seisfile1'; 'seisfile2'; ...],...
+%    Usage:    SAClab_struct=rh(['seisfile1'; 'seisfile2'; ...],...
 %                                 {'seisfile3' 'seisfile4' ...},...
 %                                 'seisfile5','seisfile6',...)
 %
@@ -20,11 +20,11 @@ function [data]=rh(varargin)
 %     data=rh('SQRL.R','AAK.R');
 %     data=rh(cellarray1,chrarray1,chrarray2,cellarray2);
 %
-%     read in headers of files in current directory
-%      files=dir();
-%      data=rh(files.name);
+%     Read in headers of all SAClab files in current directory:
+%      files=dir()
+%      data=rh(files.name)
 %
-%    See also: rdata, rpdw, rseis, wseis, bseis, seishi, gv
+%    See also: rdata, rpdw, rseis, wseis, wh, bseis, seishi, gv
 
 % compile file lists
 varargin=onelist(varargin{:});
@@ -33,7 +33,7 @@ nfiles=length(varargin);
 % empty data if no files
 if(nfiles<1); nfiles=[]; end
 
-% pre-allocating seislab structure
+% pre-allocating SAClab structure
 data(nfiles,1)=struct('name',[],'head',[],'endian',[],'version',[]);
 
 % loop for each file
@@ -45,7 +45,7 @@ for i=1:nfiles
     % validity check
     if(version==0)
         % invalid - jump to next file
-        destroy(i)=1;
+        destroy(i)=true;
         continue;
     end
     
@@ -55,9 +55,9 @@ for i=1:nfiles
     % fid check
     if(fid<0)
         % non-existent file or directory
-        warning('seislab:rh:badFID',...
+        warning('SAClab:rh:badFID',...
             'File not openable, %s',varargin{i});
-        destroy(i)=1;
+        destroy(i)=true;
         continue;
     end
     
@@ -72,9 +72,9 @@ for i=1:nfiles
     if(bytes<h.data.startbyte)
         % smaller than header size
         fclose(fid);
-        warning('seislab:rh:fileTooShort',...
+        warning('SAClab:rh:fileTooShort',...
             'File too short, %s',varargin{i});
-        destroy(i)=1;
+        destroy(i)=true;
         continue;
     end
     

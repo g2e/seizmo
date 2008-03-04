@@ -1,17 +1,18 @@
 function [data]=hsort(data,field,mode)
-%HSORT   Sort seislab records by a header field
+%HSORT   Sort SAClab records by a header field
 %
-%    Description: Sorts seislab data records according to a header field. 
+%    Description: Sorts SAClab data records according to a header field. 
 %     Mode is optional ('ascend' or 'descend' is allowed - 'ascend' is
 %     the default).  Also will sort by any field in data such as 'name',
 %     'version' and 'endian'.  Data fields 'head','x' and 't' are not
-%     allowed for sorting.  No group fields.  Uses Matlab function sort.
+%     allowed for sorting.  No header group fields.  Uses Matlab function
+%     sort.
 %
-%    Usage:  [data]=hsort(data,field,mode);
+%    Usage:  [data]=hsort(data,field,mode)
 %
-%    Example: 
+%    Examples: 
 %       sort as descending degree distance
-%       [data]=hsort(data,'gcarc','descend');
+%       [data]=hsort(data,'gcarc','descend')
 %
 %    See also: gh
 
@@ -27,7 +28,7 @@ if(nargin==2 || isempty(mode)); mode='ascend'; end
 % get field values (or filenames/byte-orders/versions)
 bad={'head' 'x' 't'};
 if(~ischar(field) || any(strcmpi(field,bad)))
-    error('seislab:hsort:badField','Field not allowed')
+    error('SAClab:hsort:badField','Field not allowed')
 elseif(isfield(data,field))
     if(isnumeric([data.(field)]))
         [values,indices]=sort([data.(field)]);
@@ -40,7 +41,7 @@ end
 
 % check indices size
 if(numel(indices)~=numel(data))
-    error('seislab:hsort:tooManyIndices','Too many output indices')
+    error('SAClab:hsort:tooManyIndices','Too many output indices')
 end
 
 % flip if descend mode

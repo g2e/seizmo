@@ -1,7 +1,9 @@
 function [data]=rmean(data)
-%RMEAN    Remove data mean from seislab data records
+%RMEAN    Remove data mean from SAClab data records
 %
 %    Usage:  data=rmean(data)
+%
+%    Examples:
 %
 %    See also: rslope, rdrift
 

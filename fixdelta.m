@@ -1,8 +1,8 @@
 function [data]=fixdelta(data)
-%FIXDELTA    Fix sample spacing for seislab data records
+%FIXDELTA    Fix sample spacing for SAClab data records
 %
-%    Description:  Fixes the sample spacing of data records to be the
-%     decimal equivalent of a fraction of 2 small integers.  This is
+%    Description:  Fixes the sample spacing of SAClab data records to be
+%     the decimal equivalent of a fraction of 2 small integers.  This is
 %     particularly useful for upgrading the sample spacing from single to
 %     double precision.
 %
@@ -18,4 +18,3 @@ function [data]=fixdelta(data)
 data=ch(data,'delta',n./d);
 
 end
-

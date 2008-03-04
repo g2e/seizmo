@@ -3,11 +3,13 @@ function [data]=subtr(data,constant,cmp)
 %
 %    Usage: [data]=subtr(data,constant,cmp)
 %
-%          - a scalar constant applies the value to all records
-%          - a vector of constants (length must equal the number of 
-%            records) allows applying different values to each record
-%          - 'cmp' selects the dependent component to work on
-%            (default is 1)
+%    Notes:
+%     - a scalar constant applies the value to all records
+%     - a vector of constants (length must equal the number of records)
+%       allows applying different values to each record
+%     - 'cmp' selects the dependent component to work on (default is 1)
+%
+%    Examples:
 %
 %    See also: add, mult, dvide
 

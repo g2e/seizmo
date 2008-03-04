@@ -1,5 +1,5 @@
 function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
-%IIRFILTER    Apply an IIR filter to seislab data records
+%IIRFILTER    Apply an IIR filter to SAClab data records
 %
 %    Description: Utilizing the set of supplied parameters IIR filters are
 %     built to the desired specs and implemented on the data records.
@@ -131,7 +131,7 @@ error(seischk(data,'x'))
 % check filter
 if(~any(strcmpi(style,{'butter' 'cheby1' 'cheby2' 'ellip'})) || ...
    ~any(strcmpi(type,{'low' 'high' 'notch' 'stop' 'bandpass'})))
-        error('seislab:iirfilter:badInput','unknown filter')
+        error('SAClab:iirfilter:badInput','unknown filter')
 end
 
 % built-in defaults
@@ -156,7 +156,7 @@ if(nargin==4 || isempty(order) || order==0); auto=1; end
 % check passes
 if(nargin<6 || isempty(passes)); passes=dp;
 elseif (~any(passes==[1 2 3 4]))
-    error('seislab:iirfilter:badInput','1 or 2 passes only')
+    error('SAClab:iirfilter:badInput','1 or 2 passes only')
 end
 
 % check ripple
@@ -166,7 +166,7 @@ if(nargin==7 && ~isempty(ripple))
 
     % check for negative
     if(any(ripple<=0))
-        error('seislab:iirfilter:badInput',...
+        error('SAClab:iirfilter:badInput',...
             'negative or zero ripple not allowed')
     end
 
@@ -181,7 +181,7 @@ if(nargin==7 && ~isempty(ripple))
         sr=ripple(2);
         if(~strcmpi(style,'ellip')); auto=1; end
     else
-        error('seislab:iirfilter:badInput',...
+        error('SAClab:iirfilter:badInput',...
             'too many ripple parameters')
     end
 end
@@ -194,20 +194,20 @@ for i=1:ng
 
     % check corners
     if(any(pc>=1))
-        error('seislab:iirfilter:badInput',...
+        error('SAClab:iirfilter:badInput',...
             'corner(s) at/above nyquist')
     elseif(any(pc<=0))
-        error('seislab:iirfilter:badInput',...
+        error('SAClab:iirfilter:badInput',...
         'corner(s) at/below 0')
     end
 
     % dangerously close warnings
     if(any(pc>0.85))
-        warning('seislab:iirfilter:nyqClose',...
+        warning('SAClab:iirfilter:nyqClose',...
             'Corner close to Nyquist')
     end
     if(any(pc<0.001))
-        warning('seislab:iirfilter:zeroClose',...
+        warning('SAClab:iirfilter:zeroClose',...
             'Extreme low frequency corner')
     end
 
@@ -215,7 +215,7 @@ for i=1:ng
     if(any(strcmpi(type,{'low' 'high'})))
         % check number of corners
         if(~any(nc==[1 2]))
-            error('seislab:iirfilter:badInput',...
+            error('SAClab:iirfilter:badInput',...
                 'incorrect number of corners defined')
         end
     
@@ -252,7 +252,7 @@ for i=1:ng
     else % stop/notch or bandpass
         % check number of corners
         if(~any(nc==[2 4]))
-            error('seislab:iirfilter:badInput',...
+            error('SAClab:iirfilter:badInput',...
                 'incorrect number of corners defined')
         end
     
@@ -330,7 +330,7 @@ end
 
 function [data]=imprevfilt(data,fs,mirror)
 %IMPREVFILT   Implements reverse pass filter
-%   Implements a filter design on seislab data records and makes appropriate
+%   Implements a filter design on SAClab data records and makes appropriate
 %   header updates.  Takes a mirror option which does pseudo-IC to limit 
 %   edge effects.  Works with multiple records.
 
@@ -355,7 +355,7 @@ end
 
 function [data]=impfilt(data,fs,mirror)
 %IMPFILT   Implements filter
-%   Implements a filter design on seislab data records and makes appropriate
+%   Implements a filter design on SAClab data records and makes appropriate
 %   header updates.  Takes a mirror option which does pseudo-IC to limit 
 %   edge effects.  Works with multiple records.
 
@@ -376,4 +376,3 @@ end
 data=distro(data,recs,ind,store,npts);
 
 end
-

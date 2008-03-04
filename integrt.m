@@ -1,16 +1,18 @@
 function [data]=integrt(data)
-%INTEGRT    Integrates seislab data records using the trapezoidal rule
+%INTEGRT    Integrates SAClab data records using the trapezoidal rule
 %
-%    Description: Calculates and returns the integral of each record using
-%     the trapezoidal rule.  Works with unevenly spaced data.  Uses the 
-%     Matlab function cumtrapz.
+%    Description: Calculates and returns the integral of SAClab data
+%     records using the trapezoidal rule.  Works with unevenly spaced data.
+%     Uses the Matlab function cumtrapz.
 %
 %    Notes:
 %     - No change to timing. 
 %     - No change to npts.
 %     - First point is 0.
 %
-%    Usage: [data]=integrt(data);
+%    Usage: [data]=integrt(data)
+%
+%    Examples:
 %
 %    See also: dif, integrt2
 
@@ -22,6 +24,7 @@ error(seischk(data,'x'))
 
 % retreive header info
 leven=glgc(data,'leven');
+error(lgcchk('leven',leven))
 delta=gh(data,'delta');
 
 % integrate and update header

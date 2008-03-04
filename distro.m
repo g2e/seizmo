@@ -1,10 +1,12 @@
 function [data]=distro(data,recmatrix,indices,store,npts)
-%DISTRO    Distributes a record matrix back to seislab structure
+%DISTRO    Distributes a record matrix back to SAClab structure
 %
-%    Description: Imports data records that are in a record matrix back
-%     into a seislab data structure.
+%    Description: Imports SAClab data records that are in a record matrix
+%     back into the SAClab data structure.
 %
 %    Usage: [data]=distro(data,recmatrix,indices,store,npts)
+%
+%    Examples:
 %
 %    See also: combo
 
@@ -25,4 +27,3 @@ end
 data=chkhdr(data);
 
 end
-

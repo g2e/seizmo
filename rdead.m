@@ -1,11 +1,13 @@
 function [data]=rdead(data)
-%RDEAD    Removes unvarying seislab data records
+%RDEAD    Removes constant SAClab data records
 %
 %    Description: Removes dead records that can cause problems in analysis
 %     and are not worth keeping.  Uses depmin/depmax so that records can be
 %     eliminated before reading in the data.
 %
 %    Usage:  [data]=rdead(data)
+%
+%    Examples:
 %
 %    See also: gh
 

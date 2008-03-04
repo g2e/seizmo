@@ -1,11 +1,13 @@
 function [data]=envelope(data,pp2)
-%ENVELOPE    Return envelope of seislab data records
+%ENVELOPE    Return envelopes of SAClab data records
 %
-%    Description: Returns the envelopes of the data records, which is the
-%     complex magnitude of a record's analytic signal.  Uses the Matlab 
-%     function hilbert (Signal Processing Toolbox).
+%    Description: Returns the envelopes of the SAClab data records (complex
+%     magnitude of a record's analytic signal).  Uses the Matlab function
+%     hilbert (Signal Processing Toolbox).
 %
-%    Usage: [data]=envelope(data);
+%    Usage: [data]=envelope(data)
+%
+%    Examples:
 %
 %    See also: hilbrt
 
@@ -20,7 +22,7 @@ if(nargin==1); pp2=1; end
 
 % check spacing
 if(any(~strcmp(glgc(data,'leven'),'true')))
-    error('seislab:envelope:evenlySpacedOnly',...
+    error('SAClab:envelope:evenlySpacedOnly',...
         'Illegal operation on unevenly spaced data');
 end
 

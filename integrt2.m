@@ -1,10 +1,10 @@
 function [data]=integrt2(data)
-%INTEGRT2    Integrates seislab data records using discrete additions
+%INTEGRT2    Integrates SAClab data records using discrete additions
 %
 %    Description: Calculates and returns the integral of each record using
 %     a cumulative summation.  Assumes the given record is the discrete
 %     derivative at the midpoints of the to-be-found integrated record.  
-%     Basically it undoes the discrete differences operation of seislab's 
+%     Basically it undoes the discrete differences operation of SAClab's 
 %     dif function. 
 %
 %    Notes:
@@ -20,7 +20,9 @@ function [data]=integrt2(data)
 %      assumption, a warning is issued and the record is integrated
 %      by calling integrt.  See integrt for more info.
 %
-%    Usage: [data]=integrt2(data);
+%    Usage: [data]=integrt2(data)
+%
+%    Examples:
 %
 %    See also: dif, integrt
 
@@ -32,15 +34,8 @@ error(seischk(data,'x'))
 
 % retreive header info
 leven=glgc(data,'leven');
+error(lgcchk('leven',leven))
 [b,e,npts,delta]=gh(data,'b','e','npts','delta');
-
-% check sample spacing logical
-t=strcmp(leven,'true');
-f=strcmp(leven,'false');
-if(~all(t | f))
-    error('sieslab:integrt2:levenBad',...
-        'logical field leven needs to be set'); 
-end
 
 % integrate and update header
 for i=1:length(data)
@@ -75,7 +70,7 @@ for i=1:length(data)
         if(range<=0 || all((dt(2:end-1)-dt(1:end-2))>dt(3:end)) || ...
                 all(dt(1:end-2)<(dt(2:end-1)-dt(3:end))));
             % nope - trapezoidal rule
-            warning('seislab:integrt2:failedAssumption',...
+            warning('SAClab:integrt2:failedAssumption',...
                 ['Midpoint assumption failed for record %d. \n'...
                 'Using the trapezoidal rule instead.'],i);
             data(i)=integrt(data(i));
@@ -98,7 +93,7 @@ for i=1:length(data)
         dto=diff(orig);
         if(min(dto)<=0)
             % non-monotonic - bail out, use trapezoidal rule
-            warning('seislab:integrt2:failedAssumption',...
+            warning('SAClab:integrt2:failedAssumption',...
                 ['Midpoint assumption failed for record %d. \n'...
                 'Using the trapezoidal rule instead.'],i);
             data(i)=integrt(data(i));

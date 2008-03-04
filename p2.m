@@ -1,14 +1,14 @@
 function [fh,lh]=p2(data,xlimits,ylimits,legend_ok,norm,fh,sfh) 
-%P2    Overlay plot of seislab data records
+%P2    Overlay plot of SAClab data records
 %
-%    Description: Plots timeseries and xy records over one another in a
-%     plot.  Other record types are ignored.  Optional inputs are the x/y
-%     limits for the plot ([low high]), a legend logical (default is 0), a
-%     normalization flag (default is 0), and the figure and subplot handles
-%     (to put p2 in a particular figure and subplot).  The legend box can 
-%     be moved by left-clicking on its box and dragging.  The legend labels
-%     can be graphically edited by double-clicking on them.  Outputs are 
-%     the figure and legend handles.
+%    Description: Plots timeseries and xy SAClab records over one another
+%     in a plot.  Other record types are ignored.  Optional inputs are the
+%     x/y limits for the plot ([low high]), a legend logical (default is
+%     false), a normalization flag (default is false), and the figure and 
+%     subplot handles (to put p2 in a particular figure and subplot).  The 
+%     legend box can be moved by left-clicking on its box and dragging.  
+%     The legend labels can be graphically edited by double-clicking on 
+%     them.  Outputs are the figure and legend handles.
 %
 %    Usage:  [fh,lh]=p2(data,xlim,ylim,legend_ok,norm,fh,sfh)
 %
@@ -44,18 +44,18 @@ ticlen=[0 0];   % tick length [2D 3D]
 gridit='on';    % grid parameter
 
 % allow access to plot styling using a global structure
-global SEISLAB
-if(isfield(SEISLAB,'BGCOLOR')); bgc=SEISLAB.BGCOLOR; end
-if(isfield(SEISLAB,'FGCOLOR')); fgc=SEISLAB.FGCOLOR; end
-if(isfield(SEISLAB,'FONTSIZE')); ts=SEISLAB.FONTSIZE; end
-if(isfield(SEISLAB,'FONTNAME')); tn=SEISLAB.FONTNAME; end
-if(isfield(SEISLAB,'FONTWEIGHT')); tw=SEISLAB.FONTWEIGHT; end
-if(isfield(SEISLAB,'TRACEWIDTH')); lw=SEISLAB.TRACEWIDTH; end
-%if(isfield(SEISLAB,'BARWIDTH')); fw=SEISLAB.BARWIDTH; end
-if(isfield(SEISLAB,'COLORMAP')); cmap=SEISLAB.COLORMAP; end
-if(isfield(SEISLAB,'TICKDIR')); ticdir=SEISLAB.TICKDIR; end
-if(isfield(SEISLAB,'TICKLEN')); ticlen=SEISLAB.TICKLEN; end
-if(isfield(SEISLAB,'GRIDIT')); gridit=SEISLAB.GRIDIT; end
+global SAClab
+if(isfield(SAClab,'BGCOLOR')); bgc=SAClab.BGCOLOR; end
+if(isfield(SAClab,'FGCOLOR')); fgc=SAClab.FGCOLOR; end
+if(isfield(SAClab,'FONTSIZE')); ts=SAClab.FONTSIZE; end
+if(isfield(SAClab,'FONTNAME')); tn=SAClab.FONTNAME; end
+if(isfield(SAClab,'FONTWEIGHT')); tw=SAClab.FONTWEIGHT; end
+if(isfield(SAClab,'TRACEWIDTH')); lw=SAClab.TRACEWIDTH; end
+%if(isfield(SAClab,'BARWIDTH')); fw=SAClab.BARWIDTH; end
+if(isfield(SAClab,'COLORMAP')); cmap=SAClab.COLORMAP; end
+if(isfield(SAClab,'TICKDIR')); ticdir=SAClab.TICKDIR; end
+if(isfield(SAClab,'TICKLEN')); ticlen=SAClab.TICKLEN; end
+if(isfield(SAClab,'GRIDIT')); gridit=SAClab.GRIDIT; end
 
 % initialize plot
 if(nargin<6 || isempty(fh) || fh<1); fh=figure;
@@ -77,15 +77,8 @@ colors=cmap(nrecs);
 % header info
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
+error(lgcchk('leven',leven))
 [b,npts,delta]=gh(data,'b','npts','delta');
-
-% check sample spacing logical
-t=strcmp(leven,'true');
-f=strcmp(leven,'false');
-if(~all(t | f))
-    error('sieslab:p2:levenBad',...
-        'logical field leven needs to be set'); 
-end
 
 % normalization
 scaling=ones(nrecs,1);

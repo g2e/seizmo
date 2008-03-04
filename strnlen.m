@@ -1,5 +1,15 @@
 function [A]=strnlen(A,n)
 %STRNLEN    Pad/truncate char/cellstr array to n character columns
+%
+%    Description: Pads or truncates character and cellstr elements to have
+%     n columns.  Padding is done with spaces.  Works recursively, so will
+%     accept nested cellstr arrays.  Does not modify array type.
+%
+%    Usage: A=strnlen(A,len)
+%
+%    Examples:
+%
+%    See also: strtrim, deblank, strjust
 
 error(nargchk(2,2,nargin))
 if(ischar(A))

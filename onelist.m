@@ -1,5 +1,15 @@
 function [varargin]=onelist(varargin)
-%ONELIST    Compiles multiple char/cellstr arrays into a 1 column cellstr
+%ONELIST    Compiles multiple char/cellstr arrays into a single column cellstr
+%
+%    Description:  Combines char/cellstr arrays into a single column
+%     cellstr array.  Useful for taking file lists in various formats and
+%     combining them into one easy to handle list.
+%
+%    Usage: list=onelist(list1,list2,...)
+%
+%    Examples:
+%
+%    See also: strnlen
 
 % check, organize, and compile char/cellstr arrays
 for i=1:nargin

@@ -1,14 +1,14 @@
 function [fh]=p3(data,xlimits,ylimits,scale,style,label,fh,sfh) 
-%P3   Plot evenly spaced record section
+%P3   Plot SAClab data records in an evenly spaced record section
 %
-%    Description: Plots timeseries and xy records spaced out evenly in the 
-%     same plot.  Other record types are ignored.  Optional inputs are the 
-%     x/y plot limits ([low high] - y-axis is record number), the amplitude
-%     scaling factor (in y-axis units), the style of normalization ('record'
-%     or 'global' - scale each record independently or as a group), the 
-%     label logical (y-axis ticks have record names for labels - default is
-%     0 which is off) and the figure and subplot handles (to put p3 plot in
-%     a particular figure and subplot). Default amplitude scaling is 1/10th
+%    Description: Plots timeseries and xy SAClab records spaced out evenly
+%     in the same plot.  Other record types are ignored.  Optional inputs
+%     are the x/y plot limits ([low high] - y-axis is record number), the
+%     amplitude scaling factor (in y-axis units), the style of normalizing
+%     ('record' or 'global' - scale each record separately or as a group),
+%     the label logical (label y-axis ticks with record names - default is
+%     false) and the figure and subplot handles (to put p3 plot in a
+%     particular figure and subplot). Default amplitude scaling is 1/10th
 %     the number of records.  Default normalization style is 'record'.  
 %     Output is the figure handle.
 %
@@ -17,6 +17,8 @@ function [fh]=p3(data,xlimits,ylimits,scale,style,label,fh,sfh)
 %    Notes:  The use of ylim is there but it really isn't useful as you can
 %            just select a specific range of data using data(a:b) to do the
 %            same thing.
+%
+%    Examples:
 %
 %    See also:  p1, p2, recsec
 
@@ -40,18 +42,18 @@ ticlen=[0 0];   % tick length [2D 3D]
 gridit='off';   % grid parameter
 
 % allow access to plot styling using a global structure
-global SEISLAB
-if(isfield(SEISLAB,'BGCOLOR')); bgc=SEISLAB.BGCOLOR; end
-if(isfield(SEISLAB,'FGCOLOR')); fgc=SEISLAB.FGCOLOR; end
-if(isfield(SEISLAB,'FONTSIZE')); ts=SEISLAB.FONTSIZE; end
-if(isfield(SEISLAB,'FONTNAME')); tn=SEISLAB.FONTNAME; end
-if(isfield(SEISLAB,'FONTWEIGHT')); tw=SEISLAB.FONTWEIGHT; end
-if(isfield(SEISLAB,'TRACEWIDTH')); lw=SEISLAB.TRACEWIDTH; end
-%if(isfield(SEISLAB,'BARWIDTH')); fw=SEISLAB.BARWIDTH; end
-if(isfield(SEISLAB,'COLORMAP')); cmap=SEISLAB.COLORMAP; end
-if(isfield(SEISLAB,'TICKDIR')); ticdir=SEISLAB.TICKDIR; end
-if(isfield(SEISLAB,'TICKLEN')); ticlen=SEISLAB.TICKLEN; end
-if(isfield(SEISLAB,'GRIDIT')); gridit=SEISLAB.GRIDIT; end
+global SAClab
+if(isfield(SAClab,'BGCOLOR')); bgc=SAClab.BGCOLOR; end
+if(isfield(SAClab,'FGCOLOR')); fgc=SAClab.FGCOLOR; end
+if(isfield(SAClab,'FONTSIZE')); ts=SAClab.FONTSIZE; end
+if(isfield(SAClab,'FONTNAME')); tn=SAClab.FONTNAME; end
+if(isfield(SAClab,'FONTWEIGHT')); tw=SAClab.FONTWEIGHT; end
+if(isfield(SAClab,'TRACEWIDTH')); lw=SAClab.TRACEWIDTH; end
+%if(isfield(SAClab,'BARWIDTH')); fw=SAClab.BARWIDTH; end
+if(isfield(SAClab,'COLORMAP')); cmap=SAClab.COLORMAP; end
+if(isfield(SAClab,'TICKDIR')); ticdir=SAClab.TICKDIR; end
+if(isfield(SAClab,'TICKLEN')); ticlen=SAClab.TICKLEN; end
+if(isfield(SAClab,'GRIDIT')); gridit=SAClab.GRIDIT; end
 
 % initialize plot
 if(nargin<7 || isempty(fh) || fh<1); fh=figure;
@@ -70,7 +72,7 @@ nrecs=length(data);
 if(nargin<4 || isempty(scale)); scale=nrecs/10; end
 if(nargin<5 || isempty(style)); style='record'; end
 if(~any(strcmp(style,{'record' 'global'})))
-    warning('seislab:p3:badInput','bad normalization style')
+    warning('SAClab:p3:badInput','bad normalization style')
     style='record';
 end
 
@@ -80,6 +82,7 @@ colors=cmap(nrecs);
 
 % header info
 leven=glgc(data,'leven');
+error(lgcchk('leven',leven))
 iftype=genumdesc(data,'iftype');
 [b,npts,delta]=gh(data,'b','npts','delta');
 

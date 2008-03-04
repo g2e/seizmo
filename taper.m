@@ -17,8 +17,8 @@ function [data]=taper(data,width,type,option)
 %
 %   Examples:
 %    Taper data with a gaussian that is applied to the first and last 10th
-%    of the record with an option selected that makes the gaussian taper
-%    represent a gaussian curve from peak out to 4 standard deviations
+%    of the record with options selected that makes the taper represent
+%    a gaussian curve from peak out to 4 standard deviations
 %      data=taper(data,0.1,'gausswin',4);
 %
 %    Default tapering - blackman-harris taper applied to the first and last
@@ -31,9 +31,7 @@ function [data]=taper(data,width,type,option)
 error(nargchk(1,4,nargin))
 
 % check data structure
-if(~isfield(data,'x'))
-    error('data structure does not have proper fields')
-end
+error(seischk(data,'x'))
 
 % defaults
 if(nargin<3 || isempty(type)); type='blackmanharris'; end
@@ -41,8 +39,13 @@ if(nargin<2 || isempty(width)); width=[0.05 0.05]; end
 
 % check width
 if(length(width)==1); width=[width width];
-elseif(length(width)~=2); error('too many taper halfwidth parameters'); end
-if(any(width>1)); error('taper halfwidth far too big - use 0 to 0.5'); end
+elseif(length(width)~=2)
+    error('SAClab:taper:badInput','too many taper halfwidth parameters')
+end
+if(any(width>1))
+    error('SAClab:taper:badInput',...
+        'taper halfwidth far too big - use 0 to 0.5')
+end
 
 % make function handle
 type=str2func(type);
@@ -51,11 +54,20 @@ type=str2func(type);
 leven=glgc(data,'leven');
 iftype=genumdesc(data,'iftype');
 
+% check sample spacing logical
+tru=strcmp(leven,'true');
+fals=strcmp(leven,'false');
+if(~all(tru | fals))
+    error('SAClab:taper:levenBad',...
+        'logical field leven needs to be set'); 
+end
+
 % work through each file
 for i=1:length(data)
     % check for unsupported filetypes
     if(strcmp(iftype(i),'General XYZ (3-D) file'))
-        warning('SAClab:illegalFiletype','Illegal operation on xyz file');
+        warning('SAClab:taper:illegalFiletype',...
+            'Illegal operation on xyz file');
         continue;
     end
     
@@ -67,13 +79,16 @@ for i=1:length(data)
     [npts,ncmp]=size(data(i).x);
     nwidth=ceil(width*npts);
     
-    % check if unevenly spaced
+    % unevenly spaced
     if(strcmp(leven(i),'false'))
         % make tapers
-        if(nargin==4 && ~isempty(option)); taperedge1=window(type,2*nwidth(1),option);
-        else taperedge1=window(type,2*nwidth(1)); end
-        if(nargin==4 && ~isempty(option)); taperedge2=window(type,2*nwidth(2),option);
-        else taperedge2=window(type,2*nwidth(2)); end
+        if(nargin==4 && ~isempty(option))
+            taperedge1=window(type,2*nwidth(1),option);
+            taperedge2=window(type,2*nwidth(2),option);
+        else
+            taperedge1=window(type,2*nwidth(1));
+            taperedge2=window(type,2*nwidth(2));
+        end
         
         % interpolate
         last1=find(data(i).t>data(i).t(1)+(data(i).t(end)-data(i).t(1))*width(1),1)-1;
@@ -86,18 +101,19 @@ for i=1:length(data)
         data(i).x(1:last1,:)=data(i).x(1:last1,:).*taper1(:,ones(ncmp,1));
         data(i).x(last2:end,:)=data(i).x(last2:end,:).*taper2(:,ones(ncmp,1));
     % evenly spaced
-    elseif(strcmp(leven(i),'true'))
-        % make taper
-        if(nargin==4 && ~isempty(option)); taperedge1=window(type,2*nwidth(1),option);
-        else taperedge1=window(type,2*nwidth(1)); end
-        if(nargin==4 && ~isempty(option)); taperedge2=window(type,2*nwidth(2),option);
-        else taperedge2=window(type,2*nwidth(2)); end
+    else
+        % make tapers
+        if(nargin==4 && ~isempty(option))
+            taperedge1=window(type,2*nwidth(1),option);
+            taperedge2=window(type,2*nwidth(2),option);
+        else
+            taperedge1=window(type,2*nwidth(1));
+            taperedge2=window(type,2*nwidth(2));
+        end
         
         % apply taper halfwidths separately
         data(i).x(1:nwidth(1),:)=data(i).x(1:nwidth(1),:).*taperedge1(1:nwidth(1),ones(ncmp,1));
         data(i).x(end-nwidth(2)+1:end,:)=data(i).x(end-nwidth(2)+1:end,:).*taperedge2(nwidth(2)+1:end,ones(ncmp,1));
-    else
-        error('sample spacing logical needs to be set for record %d',i)
     end
     
     % change class back

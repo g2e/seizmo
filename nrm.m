@@ -1,10 +1,12 @@
 function [data,scale]=nrm(data)
-%NRM    Normalizes seislab data records
+%NRM    Normalizes SAClab data records
 %
-%    Description: Normalizes the amplitudes of seislab data records to the
+%    Description: Normalizes the amplitudes of SAClab data records to the
 %     range of -1 to 1.  Second output contains the normalization factors.
 %
 %    Usage: [data,scale]=nrm(data)
+%
+%    Examples:
 %
 %    See also: mul, gnrm
 

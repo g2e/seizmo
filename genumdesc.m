@@ -1,8 +1,8 @@
 function [varargout]=genumdesc(data,varargin)
-%GENUMDESC    Get enum string description from seislab enum header field
+%GENUMDESC    Get enum string description from SAClab data header enum field
 %
 %    Description: Returns cellstring array containing enum desc strings 
-%     corresponding to each field/value.
+%     corresponding to values from the specified SAClab data field(s).
 %
 %    Usage: [enumcellstr1,...]=genum(data,'field1',...)
 %

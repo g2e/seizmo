@@ -1,14 +1,14 @@
 function [data]=bseis(varargin)
-%BSEIS   Arrange timeseries into seislab format
+%BSEIS   Arrange timeseries into SAClab format
 %
 %    Description: Takes vectors of x-values and y-values and formats them 
-%     to be compatible with seislab routines such as rseis and wseis.
+%     to be compatible with SAClab routines such as rseis and wseis.
 %
-%    Usage:    seislab_struct=bseis(x_vec1,y_vec1,x_vec2,y_vec2...)
+%    Usage:    SAClab_struct=bseis(x_vec1,y_vec1,x_vec2,y_vec2...)
 %
 %    Examples:
 %     To create a square root function in Matlab and then convert the array
-%     information into a seislab compatible structure and ultimately write
+%     information into a SAClab compatible structure and ultimately write
 %     to a formatted binary file:
 %
 %      xarray=linspace(0,30,1000);
@@ -21,10 +21,10 @@ function [data]=bseis(varargin)
 
 % check number of inputs
 if (mod(nargin,2)) 
-    error('seislab:bseis:badNargs','Unpaired x/y vectors!')
+    error('SAClab:bseis:badNargs','Unpaired x/y vectors!')
 end
 
-% preferred seislab header version
+% preferred SAClab header version
 pref=6;
 
 % get preferred header layout
@@ -50,8 +50,14 @@ for i=1:length(h.stype)
     end
 end
 
+% get this platform's native byte-order
+[platform,maxint,endian]=computer;
+clear platform maxint
+if(strcmpi(endian,'L')); endian='ieee-le';
+else endian='ieee-be'; end
+
 % create structure
-data(1:nargin/2,1)=struct('version',pref,'endian','ieee-le','name',[],...
+data(1:nargin/2,1)=struct('version',pref,'endian',endian,'name',[],...
     'head',undef,'x',[]);
 
 % loop for each pair
@@ -61,16 +67,16 @@ for i=1:2:nargin
     
     % check vector lengths
     if(~isnumeric(varargin{i}) || ~isvector(varargin{i}))
-        error('seislab:bseis:badInput',...
+        error('SAClab:bseis:badInput',...
             'xarray must be a numeric vector: pair %d',j)
     end
     if(~isnumeric(varargin{i}) || ~isvector(varargin{i+1}))
-        error('seislab:bseis:badInput',...
+        error('SAClab:bseis:badInput',...
             'yarray must be a numeric vector: pair %d',j)
     end
     npts=length(varargin{i});
     if(npts~=length(varargin{i+1}))
-        error('seislab:bseis:badInput',...
+        error('SAClab:bseis:badInput',...
             'x and y series are not the same length: pair %d',j)
     end
     
@@ -85,7 +91,7 @@ for i=1:2:nargin
         'depmax',norm(max(data(j).x)),'depmen',norm(mean(data(j).x)),...
         'iftype','Time Series File','leven','true','lcalda','true',...
         'lovrok','true','lpspol','false','nvhdr',pref,...
-        'knetwk','seislab');
+        'knetwk','SAClab');
     
     % if timeseries is unevenly spaced add proper info
     if(abs(delta-(varargin{i}(min([2 end]))-varargin{i}(1)))>10*eps)
@@ -96,4 +102,3 @@ for i=1:2:nargin
 end
 
 end
-

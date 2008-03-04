@@ -1,8 +1,9 @@
 function [varargout]=glgc(data,varargin)
-%GLGC    Get logic words from seislab logic header field
+%GLGC    Get logic words from SAClab logic header field
 %
 %    Description: Returns cellstring array containing 'true' 'false'
-%     'undefined' or 'unknown' corresponding to each field/value.
+%     'undefined' or 'unknown' corresponding to values from the specified 
+%     SAClab data field(s).
 %
 %    Usage: [lgccellstr1,lgccellstr2,...]=glgc(data,'field1','field2',...)
 %
@@ -50,4 +51,3 @@ for i=unique(v)
 end
 
 end
-

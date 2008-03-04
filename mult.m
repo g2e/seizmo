@@ -1,5 +1,5 @@
 function [data]=mult(data,constant,cmp)
-%MULT    Multiply seislab data records by a constant
+%MULT    Multiply SAClab data records by a constant
 %
 %    Usage: [data]=mult(data,constant,cmp)
 %
@@ -8,6 +8,8 @@ function [data]=mult(data,constant,cmp)
 %     - a vector of constants (length must equal the number of records)
 %       allows applying different values to each record
 %     - 'cmp' selects the dependent component to work on (default is 1)
+%
+%    Examples:
 %
 %    See also: subtr, add, dvide
 

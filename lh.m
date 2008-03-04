@@ -1,12 +1,12 @@
 function []=lh(data,varargin)
-%LH    List seislab headers
+%LH    List SAClab data headers
 %
-%    Description: List specified header field(s) and their value(s) in the
-%     seislab data structure in a manner similar to SAC's lh formating.
+%    Description: List specified header field(s) and their value(s) from a
+%     SAClab data structure in a manner similar to SAC's lh formating.
 %     Fields must be strings corresponding to a valid header field or a
 %     valid group field (ie. t,kt,resp,user,kuser).
 %
-%    Usage:    lh(seislab_struct,'field1','field2',...)
+%    Usage:    lh(SAClab_struct,'field1','field2',...)
 %
 %    Examples:
 %     lh(data)          % lists all header variables
@@ -165,7 +165,7 @@ for m=1:length(h.ntype)
 end
 
 % field not found
-warning('seislab:lh:fieldInvalid',...
+warning('SAClab:lh:fieldInvalid',...
     '\nHeader Version: %d\nInvalid field: %s',h.version,f);
 
 end

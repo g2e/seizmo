@@ -1,14 +1,20 @@
 function [header]=seishi(version)
-%SEISHI    Returns seislab header information structure
+%SEISHI    Returns SAClab definition structure
 %
 %    Description: Provides all information necessary to read/modify/write 
-%     the specified version of a seislab file.
+%     the specified version of a SAClab data record/file.
 %
 %    Notes:
-%     - currently all header values are stored as doubles in memory.  This
-%       limits accuracy for huge integers stored in fields of type int64.
+%     - Currently the definition is set so that all header data is stored 
+%       as doubles in memory.  This preserves accuracy, provides
+%       simplicity, and makes class-issues a lot less of a headache. 
+%       Memory usage suffers slightly (only minor as this applies to just
+%       the header storage).  Breaking the header into subfields would
+%       probably require more memory anyways due to overhead.
 %    
-%    Usage:    header_info=seishi(version);
+%    Usage:    header_info=seishi(version)
+%
+%    Examples:
 %
 %    See also:  seischk, isseis, vvseis
 
@@ -20,7 +26,7 @@ valid=vvseis();
 
 % check for invalid version
 if(~any(valid==version))
-    error('seislab:seishi:invalidVersion''Header version invalid: %d!',version)
+    error('SAClab:seishi:invalidVersion''Header version invalid: %d!',version)
 end
 
 % SAC version 6 header setup
@@ -216,8 +222,9 @@ if(any(version==[6 101 102 200 201 202]))
         'knetwk',[279,286],'kdatrd',[287,294],'kinst',[295,302]);
     
     
-    % seislab version 101 header mod (npts/nspts become int64)
-    % NOTE - seislab stores header values in 
+    % SAClab version 101 header mod (npts/nspts become int64)
+    % NOTE - SAClab stores header values in doubles so there may be
+    %        problems for records with a quadrillion points or so.
     if(any(version==[101 201]))
         header.version=101;
         
@@ -260,7 +267,7 @@ if(any(version==[6 101 102 200 201 202]))
     end
     
     
-    % seislab version 102 header mod (multi-component support)
+    % SAClab version 102 header mod (multi-component support)
     if(any(version==[102 202]))
         header.version=102;
         
@@ -270,7 +277,7 @@ if(any(version==[6 101 102 200 201 202]))
     end
     
     
-    % seislab version 200 header mod (double reals, double data)
+    % SAClab version 200 header mod (double reals, double data)
     if(any(version==[200 201 202]))
         header.version=200;
         
@@ -315,7 +322,7 @@ if(any(version==[6 101 102 200 201 202]))
     end
     
     
-    % seislab version 201 header mod (101+200)
+    % SAClab version 201 header mod (101+200)
     if(any(version==201))
         header.version=201;
         
@@ -325,7 +332,7 @@ if(any(version==[6 101 102 200 201 202]))
         header.data.startbyte=920;
     end
     
-    % seislab version 202 header mod (102+200)
+    % SAClab version 202 header mod (102+200)
     if(any(version==202))
         header.version=202;
     end

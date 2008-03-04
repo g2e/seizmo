@@ -1,16 +1,17 @@
 function [fh,lh]=recsec(data,xlimits,ylimits,scale,style,legend_ok,fh,sfh) 
-%RECSEC   Plot distance sorted record section
+%RECSEC   Plots SAClab data records in a distance spaced record section
 %
-%    Description: Plots timeseries and xy records spaced out by their 
+%    Description: Plots timeseries and xy SAClab records spaced out by the 
 %     'gcarc' header field.  Other record types are ignored.  Optional
 %     inputs are the x/y plot limits (y-axis is gcarc), the amplitude
 %     scaling factor in y-axis units, the style of normalization ('record'
 %     or 'global' - scale each record independently or as a group), the
-%     legend logical (default is 0 - no legend), and the figure and subplot
-%     handles (to put recsec plot in a particular figure and subplot).  The
-%     legend can be edited and moved using the mouse. Default amplitude 
-%     scaling is 1/10th the total distance range.  Default normalization 
-%     style is 'record'.  Outputs are the figure and legend handles.
+%     legend logical (default is false - no legend), and the figure and
+%     subplot handles (to put recsec plot in a particular figure and 
+%     subplot).  The legend can be edited and moved using the mouse. 
+%     Default amplitude scaling is 1/10th the total 'gcarc' range.  Default
+%     normalization style is 'record' (normalizes each independently).  
+%     Outputs are the figure and legend handles.
 %
 %    Usage:  [fh,lh]=recsec(data,xlim,ylim,scale,style,legend,fh,sfh)
 %
@@ -43,18 +44,18 @@ ticlen=[0 0];   % tick length [2D 3D]
 gridit='off';   % grid parameter
 
 % allow access to plot styling using a global structure
-global SEISLAB
-if(isfield(SEISLAB,'BGCOLOR')); bgc=SEISLAB.BGCOLOR; end
-if(isfield(SEISLAB,'FGCOLOR')); fgc=SEISLAB.FGCOLOR; end
-if(isfield(SEISLAB,'FONTSIZE')); ts=SEISLAB.FONTSIZE; end
-if(isfield(SEISLAB,'FONTNAME')); tn=SEISLAB.FONTNAME; end
-if(isfield(SEISLAB,'FONTWEIGHT')); tw=SEISLAB.FONTWEIGHT; end
-if(isfield(SEISLAB,'TRACEWIDTH')); lw=SEISLAB.TRACEWIDTH; end
-%if(isfield(SEISLAB,'BARWIDTH')); fw=SEISLAB.BARWIDTH; end
-if(isfield(SEISLAB,'COLORMAP')); cmap=SEISLAB.COLORMAP; end
-if(isfield(SEISLAB,'TICKDIR')); ticdir=SEISLAB.TICKDIR; end
-if(isfield(SEISLAB,'TICKLEN')); ticlen=SEISLAB.TICKLEN; end
-if(isfield(SEISLAB,'GRIDIT')); gridit=SEISLAB.GRIDIT; end
+global SAClab
+if(isfield(SAClab,'BGCOLOR')); bgc=SAClab.BGCOLOR; end
+if(isfield(SAClab,'FGCOLOR')); fgc=SAClab.FGCOLOR; end
+if(isfield(SAClab,'FONTSIZE')); ts=SAClab.FONTSIZE; end
+if(isfield(SAClab,'FONTNAME')); tn=SAClab.FONTNAME; end
+if(isfield(SAClab,'FONTWEIGHT')); tw=SAClab.FONTWEIGHT; end
+if(isfield(SAClab,'TRACEWIDTH')); lw=SAClab.TRACEWIDTH; end
+%if(isfield(SAClab,'BARWIDTH')); fw=SAClab.BARWIDTH; end
+if(isfield(SAClab,'COLORMAP')); cmap=SAClab.COLORMAP; end
+if(isfield(SAClab,'TICKDIR')); ticdir=SAClab.TICKDIR; end
+if(isfield(SAClab,'TICKLEN')); ticlen=SAClab.TICKLEN; end
+if(isfield(SAClab,'GRIDIT')); gridit=SAClab.GRIDIT; end
 
 % initialize plot
 if(nargin<7 || isempty(fh) || fh<1); fh=figure;
@@ -77,6 +78,7 @@ colors=cmap(nrecs);
 
 % header info
 leven=glgc(data,'leven');
+error(lgcchk('leven',leven))
 iftype=genumdesc(data,'iftype');
 [b,npts,delta,gcarc]=gh(data,'b','npts','delta','gcarc');
 
@@ -84,7 +86,7 @@ iftype=genumdesc(data,'iftype');
 if(nargin<4 || isempty(scale)); scale=(max(gcarc)-min(gcarc))/10; end
 if(nargin<5 || isempty(style)); style='record'; end
 if(~any(strcmp(style,{'record' 'global'})))
-    warning('seislab:recsec:badInput','bad normalization style')
+    warning('SAClab:recsec:badInput','bad normalization style')
     style='record';
 end
 
@@ -106,7 +108,7 @@ end
 hold on
 for i=indices
     % get record timing
-    if(strcmp(leven(i),'true')); time=b(i)+(0:npts(i)-1).'*delta(i);
+    if(strcmp(leven(i),'true')); time=(b(i)+(0:npts(i)-1)*delta(i)).';
     else time=data(i).t; end
     
     % get max amplitude for record style normalization

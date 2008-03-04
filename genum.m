@@ -1,8 +1,8 @@
 function [varargout]=genum(data,varargin)
-%GENUM    Get enum string id from seislab enum header field
+%GENUM    Get enum string id from SAClab data header enum field
 %
 %    Description: Returns cellstring array containing enum id strings 
-%     corresponding to each field/value.
+%     corresponding to values from the specified SAClab data field(s).
 %
 %    Usage: [enumcellstr1,...]=genum(data,'field1',...)
 %

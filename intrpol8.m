@@ -1,5 +1,5 @@
 function [data]=intrpol8(data,sr,new_b,new_e,method)
-%INTRPOL8    Interpolates seislab data records to a new sampling frequency
+%INTRPOL8    Interpolates SAClab data records to a new sampling frequency
 %
 %    Description: Interpolates data records to new sample rate sr using 
 %     Matlab's 'interp1' function.  As this is interpolation, edge effects 
@@ -31,8 +31,9 @@ error(nargchk(2,5,nargin))
 % check data structure
 error(seischk(data,'x'))
 
-% get begin, end, npts, and overwrite flag of data
+% get timing info
 leven=glgc(data,'leven');
+error(lgcchk('leven',leven))
 [b,e,npts,delta]=gh(data,'b','e','npts','delta');
 
 % defaults
@@ -46,23 +47,23 @@ nrecs=length(data);
 % check and expand inputs
 if(isscalar(new_b)); new_b(1:nrecs,1)=new_b;
 elseif(~isvector(new_b) || length(new_b)~=nrecs)
-    error('seislab:intrpol8:badInput','dimensions of new_b are bad')
+    error('SAClab:intrpol8:badInput','dimensions of new_b are bad')
 end
 if(isscalar(new_e)); new_e(1:nrecs,1)=new_e;
 elseif(~isvector(new_e) || length(new_e)~=nrecs)
-    error('seislab:intrpol8:badInput','dimensions of new_e are bad') 
+    error('SAClab:intrpol8:badInput','dimensions of new_e are bad') 
 end
 if(isscalar(sr)); sr(1:nrecs,1)=sr;
 elseif(~isvector(sr) || length(sr)~=nrecs)
-    error('seislab:intrpol8:badInput','dimensions of sr are bad') 
+    error('SAClab:intrpol8:badInput','dimensions of sr are bad') 
 end
 if(ischar(method)); method=cellstr(method); end
 if(~iscellstr(method))
-    error('seislab:intrpol8:badInput','method must be char/cellstr array')
+    error('SAClab:intrpol8:badInput','method must be char/cellstr array')
 end
 if(isscalar(method)); method=method(ones(nrecs,1),1);
 elseif(~isvector(method) || length(method)~=nrecs)
-    error('seislab:intrpol8:badInput','dimensions of method are bad')
+    error('SAClab:intrpol8:badInput','dimensions of method are bad')
 end
 
 % sampling interval
@@ -70,15 +71,18 @@ dt=1./sr;
 
 % looping for each file
 for i=1:nrecs
+    % save class and convert to double precision
+    oclass=str2func(class(data(i).x));
+    
     % make new timing array
     nt=(new_b(i):dt(i):new_e(i)).';
     
     % old timing of data
     if(strcmp(leven(i),'true')); ot=b(i)+(0:npts(i)-1).'*delta(i);
-    else ot=data(i).t; end
+    else ot=data(i).t; data(i).t=[]; end
     
-    % interpolate
-    data(i).x=interp1(ot,data(i).x,nt,method{i});
+    % interpolate and convert class back
+    data(i).x=oclass(interp1(double(ot),double(data(i).x),double(nt),method{i}));
     
     % update header
     data(i)=ch(data(i),'delta',dt(i),'b',nt(1),'e',nt(end),...

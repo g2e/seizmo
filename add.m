@@ -1,5 +1,5 @@
 function [data]=add(data,constant,cmp)
-%ADD    Add a constant to seislab data records
+%ADD    Add a constant to SAClab data records
 %
 %    Usage: [data]=add(data,constant,cmp)
 %
@@ -8,6 +8,8 @@ function [data]=add(data,constant,cmp)
 %     - a vector of constants (length must equal the number of records)
 %       allows applying different values to each record
 %     - 'cmp' selects the dependent component to work on (default is 1)
+%
+%    Examples:
 %
 %    See also: subtr, mult, dvide
 

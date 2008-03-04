@@ -1,15 +1,15 @@
 function [varargout]=gh(data,varargin)
-%GH    Get seislab header values
+%GH    Get SAClab data header values
 %
-%    Description: Gets specified header values from seislab data structure.  
-%     Fields must be strings corresponding to a valid header field or a 
-%     valid group field (ie. t,kt,resp,user,kuser).  Values are returned 
-%     in numeric arrays or cell string arrays oriented as a column vectors
-%     with one value per cell.  One value array per field or group field.
-%     Calling with no fields will attempt to return all headers in a
+%    Description: Gets specified header value(s) from a SAClab data  
+%     structure.  Fields must be strings corresponding to a valid header
+%     field or a valid group field (ie. t,kt,resp,user,kuser).  Values are
+%     returned in numeric arrays or cell string arrays oriented as column
+%     vectors with one value per cell.  One value array per field or group
+%     field. Calling with no fields will attempt to return all headers in a
 %     single numeric array.
 %    
-%    Usage:    [value_array1,...]=gh(seislab_struct,'field1',...
+%    Usage:    [value_array1,...]=gh(SAClab_struct,'field1',...
 %                                       'group_field1','field2',...)
 %
 %    Examples:
@@ -140,10 +140,9 @@ for n=1:length(h.ntype)
 end
 
 % field not found
-warning('seislab:gh:fieldInvalid',...
+warning('SAClab:gh:fieldInvalid',...
     '\nHeader Version: %d\nInvalid field: %s',h.version,f);
 head=nan;
 type=0;
 
 end
-

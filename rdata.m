@@ -1,37 +1,51 @@
 function [data,destroy]=rdata(data,trim)
-%RH    Read binary seismic datafile data
+%RDATA    Read SAClab data from binary seismic datafiles
 %
-%    Description: Reads all binary seismic datafile data into a seislab
-%     structure using the info from the input seislab structure. Optional
-%     logical parameter trim sets rdata to delete entries in data that had
-%     errors (default is true). Optional output destroy is the logical
-%     matrix indicating which records to remove.
+%    Description: Reads data from binary seismic datafiles into a SAClab
+%     structure using the info from the input SAClab data structure.
+%     Optional logical parameter trim sets rdata to delete entries in the
+%     structure that have errors (default is true). Optional output destroy
+%     is the logical matrix indicating which records had errors.
+%
+%     SAClab data structure setup:
+%
+%     Fields for all files:
+%      head - contains header data
+%      name - filename (may include path)
+%      endian - byte-order of file (ieee-le or ieee-be)
+%      version - version of datafile
 %
 %     Fields for timeseries files:
-%      data.x(:,1) - amplitudes
-%      data.t - times (if uneven spacing)
+%      x(:,1) - amplitudes
+%      t(:,1) - times (if uneven spacing)
 %
 %     Fields for spectral amp/phase files:
-%      data.x(:,1) - spectral amplitudes
-%      data.x(:,2) - spectral phase
+%      x(:,1) - spectral amplitudes
+%      x(:,2) - spectral phase
 %
 %     Fields for spectral real/imag files:
-%      data.x(:,1) - spectral real
-%      data.x(:,2) - spectral imaginary
+%      x(:,1) - spectral real
+%      x(:,2) - spectral imaginary
 %
 %     Fields for general xy files:
-%      data.x(:,1) - dependent component
-%      data.t - independent component (if uneven spacing)
+%      x(:,1) - dependent component
+%      t(:,1) - independent component (if uneven spacing)
 %
 %     Fields for xyz grid files:
-%      data.x(:,1) - matrix data (nodes evenly spaced; advances l2r,b2t)
+%      x(:,1) - matrix data (nodes evenly spaced; advances l2r,b2t)
 %     
 %    Notes:
-%     - multi-component files will replicate the number of columns by the
+%     - Multi-component files will replicate the number of columns by the
 %       number of components.  So a three component spectral file will have
-%       six columns total.
+%       six columns total in field x.  Components share the same timing.
 %
 %    Usage:    [data,destroy]=rdata(data,trim)
+%
+%    Examples:
+%     Read in headers, preform some operations, then read in data:
+%       data=rh(filelist)
+%       ...
+%       data=rdata(data)
 %
 %    See also: rh, rpdw, rseis, wseis, bseis, seishi, gv, seissize
 
@@ -55,24 +69,17 @@ est_bytes=seissize(data);
 
 % header info
 leven=glgc(data,'leven');
+error(lgcchk('leven',leven))
 iftype=genumdesc(data,'iftype');
-warning('off','seislab:gh:fieldInvalid')
+warning('off','SAClab:gh:fieldInvalid')
 [npts,ncmp]=gh(data,'npts','ncmp');
-warning('on','seislab:gh:fieldInvalid')
+warning('on','SAClab:gh:fieldInvalid')
 
 % clean up and check ncmp
 ncmp(isnan(ncmp))=1;
 if(any(ncmp<1 | fix(ncmp)~=ncmp))
-    error('seislab:rdata:badNumCmp',...
+    error('SAClab:rdata:badNumCmp',...
         'field ncmp must be a positive integer')
-end
-
-% check leven
-t=strcmp(leven,'true');
-f=strcmp(leven,'false');
-if(~all(t | f))
-    error('sieslab:rdata:levenBad',...
-        'logical field leven needs to be set'); 
 end
 
 % headers setup
@@ -95,9 +102,9 @@ for i=1:nrecs
     % fid check
     if(fid<0)
         % non-existent file or directory
-        warning('seislab:rdata:badFID',...
+        warning('SAClab:rdata:badFID',...
             'File not openable, %s',data(i).name);
-        destroy(i)=1;
+        destroy(i)=true;
         continue;
     end
     
@@ -108,24 +115,23 @@ for i=1:nrecs
     % byte size check
     if(bytes>est_bytes(i))
         % size big enough but inconsistent - read anyways
-        warning('seislab:rdata:badFileSize',...
+        warning('SAClab:rdata:badFileSize',...
             ['Filesize does not match header info (gt)\n'...
             'File: %s'],data(i).name);
     elseif(bytes<est_bytes(i))
         % size to small - skip
         fclose(fid);
-        warning('seislab:rdata:badFileSize',...
+        warning('SAClab:rdata:badFileSize',...
             ['Filesize does not match header info (lt)\n'...
             'File: %s'],data(i).name);
-        destroy(i)=1;
+        destroy(i)=true;
         continue;
     end
     
     % preallocate data record with NaNs, deallocate timing
-    data(i).x=nan(npts(i),ncmp(i),h(v).data.store);
-    data(i).t=[];
+    data(i).x=nan(npts(i),ncmp(i),h(v).data.store); data(i).t=[];
     
-    % skip if npts==0
+    % skip if npts==0 (dataless)
     if(npts(i)<1); fclose(fid); continue; end
     
     % act by file type (any new filetypes will have to be added here)
@@ -176,9 +182,9 @@ for i=1:nrecs
     else
         % unknown filetype
         fclose(fid)
-        warning('seislab:rdata:iftypeBad',...
+        warning('SAClab:rdata:iftypeBad',...
             'File: %s\nBad filetype: %s',data(i).name,iftype(i));
-        destroy(i)=1;
+        destroy(i)=true;
         continue;
     end
     
