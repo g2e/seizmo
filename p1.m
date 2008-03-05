@@ -22,38 +22,21 @@ error(nargchk(1,5,nargin))
 error(seischk(data,'x'))
 
 % plotting style defaults
-bgc='k';        % background color
-fgc='w';        % axis/text color
-ts=4;           % text size
-tn='times';     % text name
-tw='light';     % text weight
-lw=1;           % record line width
-fw=3;           % flag width
-cmap='hsv';     % record colormap
-ticdir='out';   % tick direction
-ticlen=[0 0];   % tick length [2D 3D]
-gridit='on';    % grid parameter
+P=pconf;
 
-% allow access to plot styling using a global structure
-global SAClab
-if(isfield(SAClab,'BGCOLOR')); bgc=SAClab.BGCOLOR; end
-if(isfield(SAClab,'FGCOLOR')); fgc=SAClab.FGCOLOR; end
-if(isfield(SAClab,'FONTSIZE')); ts=SAClab.FONTSIZE; end
-if(isfield(SAClab,'FONTNAME')); tn=SAClab.FONTNAME; end
-if(isfield(SAClab,'FONTWEIGHT')); tw=SAClab.FONTWEIGHT; end
-if(isfield(SAClab,'TRACEWIDTH')); lw=SAClab.TRACEWIDTH; end
-if(isfield(SAClab,'BARWIDTH')); fw=SAClab.BARWIDTH; end
-if(isfield(SAClab,'COLORMAP')); cmap=SAClab.COLORMAP; end
-if(isfield(SAClab,'TICKDIR')); ticdir=SAClab.TICKDIR; end
-if(isfield(SAClab,'TICKLEN')); ticlen=SAClab.TICKLEN; end
-if(isfield(SAClab,'GRIDIT')); gridit=SAClab.GRIDIT; end
+% allow access to plot styling using global SACLAB structure
+global SACLAB
+fields=fieldnames(P).';
+for i=fields; if(isfield(SACLAB,i)); P.(i{:})=SACLAB.(i{:}); end; end
 
 % initialize plot
 if(nargin<5 || isempty(fh) || fh<1); fh=figure;
 else figure(fh); end
-whitebg(bgc);
-set(gcf,'Name','P1 -- Seismogram Plotting Utility', ...
-    'NumberTitle','off','color',bgc,'Pointer','crosshair');
+whitebg(P.BGCOLOR);
+set(gcf,'Name',['P1 -- ' P.NAME],...
+    'NumberTitle',P.NUMBERTITLE,...
+    'color',P.BGCOLOR,...
+    'Pointer',P.POINTER);
 
 % header info
 leven=glgc(data,'leven');
@@ -81,7 +64,7 @@ kf=strtrim(kf);
 nrecs=length(data);
 
 % record coloring
-cmap=str2func(cmap);
+cmap=str2func(P.COLORMAP);
 colors=cmap(nrecs);
 
 % default columns/rows
@@ -140,13 +123,15 @@ for i=1:nrecs
     
     % focus to new subplot and draw record
     sfh(i)=subplot(nrows,ncols,i);
-    plot(time,data(i).x,'color',colors(i,:),'linewidth',lw);
-    set(gca,'FontName',tn,'FontWeight',tw,'FontSize',ts, ...
-        'xcolor',fgc,'ycolor',fgc, 'TickDir',ticdir,'ticklength',ticlen);
-    grid(gridit);
+    plot(time,data(i).x,'color',colors(i,:),'linewidth',P.TRACEWIDTH);
+    set(gca,'FontName',P.FONTNAME,'FontWeight',P.FONTWEIGHT,...
+        'FontSize',P.FONTSIZE,'Box',P.BOX,...
+        'xcolor',P.FGCOLOR,'ycolor',P.FGCOLOR,...
+        'TickDir',P.TICKDIR,'ticklength',P.TICKLEN);
+    grid(P.GRID);
     
     % zooming
-    axis tight;
+    axis(P.AXIS);
     if(nargin>1 && ~isempty(xlimits)); axis auto; xlim(xlimits(i,:)); end
     if(nargin>2 && ~isempty(ylimits)); ylim(ylimits(i,:)); end
     
@@ -155,52 +140,58 @@ for i=1:nrecs
     fxlimits=get(gca,'xlim');
     yrange=fylimits(2)-fylimits(1);
     xrange=fxlimits(2)-fxlimits(1);
-    ypad=0.05*yrange;  % these are simplistic - really you will have to
-    xpad=0.02*xrange;  % adjust these based on your font and plot size
+    ypad=P.LABELYPAD*yrange;  % these are simplistic - really you will have to
+    xpad=P.LABELXPAD*xrange;  % adjust these based on your font and plot size
     
-    % plot origin flag (orange)
+    % plot origin flag
     hold on
     if(o(i)~=h(v).undef.ntype)
         plot([o(i) o(i)].',[fylimits(1)+ypad fylimits(2)-2*ypad].',...
-            'color',[1 0.5 0],'linewidth',fw);
+            'color',P.OCOLOR,'linewidth',P.LINEWIDTH);
         if(~strcmp(ko{i},h(v).undef.stype))
-            text(o(i)+xpad,fylimits(2)-2*ypad,ko{i},'color',[1 0.5 0], ...
-                'fontname',tn,'fontweight',tw,'verticalalignment','top',...
-                'clipping','on','fontsize',ts);
+            text(o(i)+xpad,fylimits(2)-2*ypad,ko{i},'color',P.OCOLOR, ...
+                'fontname',P.FONTNAME,'fontweight',P.FONTWEIGHT,...
+                'verticalalignment','top',...
+                'clipping','on','fontsize',P.FONTSIZE);
         else
-            text(o(i)+xpad,fylimits(2)-2*ypad,'o','color',[1 0.5 0], ...
-                'fontname',tn,'fontweight',tw,'verticalalignment','top',...
-                'clipping','on','fontsize',ts);
+            text(o(i)+xpad,fylimits(2)-2*ypad,'o','color',P.OCOLOR, ...
+                'fontname',P.FONTNAME,'fontweight',P.FONTWEIGHT,...
+                'verticalalignment','top',...
+                'clipping','on','fontsize',P.FONTSIZE);
         end
     end
     
-    % plot arrival flag (green)
+    % plot arrival flag
     if(a(i)~=h(v).undef.ntype)
         plot([a(i) a(i)].',[fylimits(1)+ypad fylimits(2)-2*ypad].',...
-            'color','g','linewidth',fw);
+            'color',P.ACOLOR,'linewidth',P.LINEWIDTH);
         if(~strcmp(ka{i},h(v).undef.stype))
-            text(a(i)+xpad,fylimits(2)-2*ypad,ka{i},'color','g', ...
-                'fontname',tn,'fontweight',tw,'verticalalignment','top',...
-                'clipping','on','fontsize',ts);
+            text(a(i)+xpad,fylimits(2)-2*ypad,ka{i},'color',P.ACOLOR, ...
+                'fontname',P.FONTNAME,'fontweight',P.FONTWEIGHT,...
+                'verticalalignment','top',...
+                'clipping','on','fontsize',P.FONTSIZE);
         else
-            text(a(i)+xpad,fylimits(2)-2*ypad,'a','color','g', ...
-                'fontname',tn,'fontweight',tw,'verticalalignment','top',...
-                'clipping','on','fontsize',ts);
+            text(a(i)+xpad,fylimits(2)-2*ypad,'a','color',P.ACOLOR, ...
+                'fontname',P.FONTNAME,'fontweight',P.FONTWEIGHT,...
+                'verticalalignment','top',...
+                'clipping','on','fontsize',P.FONTSIZE);
         end
     end
     
     % plot finish flag (red)
     if(f(i)~=h(v).undef.ntype)
         plot([f(i) f(i)].',[fylimits(1)+ypad fylimits(2)-2*ypad].',...
-            'color','r','linewidth',fw);
+            'color',P.FCOLOR,'linewidth',P.LINEWIDTH);
         if(~strcmp(kf{i},h(v).undef.stype))
-            text(f(i)+xpad,fylimits(2)-2*ypad,kf{i},'color','r', ...
-                'fontname',tn,'fontweight',tw,'verticalalignment','top',...
-                'clipping','on','fontsize',ts);
+            text(f(i)+xpad,fylimits(2)-2*ypad,kf{i},'color',P.FCOLOR, ...
+                'fontname',P.FONTNAME,'fontweight',P.FONTWEIGHT,...
+                'verticalalignment','top',...
+                'clipping','on','fontsize',P.FONTSIZE);
         else
-            text(f(i)+xpad,fylimits(2)-2*ypad,'f','color','r', ...
-                'fontname',tn,'fontweight',tw,'verticalalignment','top',...
-                'clipping','on','fontsize',ts);
+            text(f(i)+xpad,fylimits(2)-2*ypad,'f','color',P.FCOLOR, ...
+                'fontname',P.FONTNAME,'fontweight',P.FONTWEIGHT,...
+                'verticalalignment','top',...
+                'clipping','on','fontsize',P.FONTSIZE);
         end
     end
     
@@ -209,18 +200,20 @@ for i=1:nrecs
         if(t(i,j+1)~=h(v).undef.ntype)
             plot([t(i,j+1) t(i,j+1)].',...
                 [fylimits(1)+ypad fylimits(2)-(1+mod(j,5))*ypad].',...
-                'color','y','linewidth',fw)
+                'color',P.TCOLOR,'linewidth',P.LINEWIDTH)
             if(~strcmp(kt{i,j+1},h(v).undef.stype))
                 text(t(i,j+1)+xpad,...
-                    fylimits(2)-(1+mod(j,5))*ypad,kt{i,j+1},'color','y',...
-                    'fontname',tn,'fontweight',tw,'fontsize',ts,...
+                    fylimits(2)-(1+mod(j,5))*ypad,kt{i,j+1},'color',P.TCOLOR,...
+                    'fontname',P.FONTNAME,'fontweight',P.FONTWEIGHT,...
+                    'fontsize',P.FONTSIZE,...
                     'verticalalignment','top','clipping','on');
             else
                 text(t(i,j+1)+xpad,...
                     fylimits(2)-(1+mod(j,5))*ypad,['t' num2str(j)],...
-                    'color','y','fontname',tn,'fontweight',tw,...
+                    'color',P.TCOLOR,'fontname',P.FONTNAME,...
+                    'fontweight',P.FONTWEIGHT,...
                     'verticalalignment','top','clipping','on',...
-                    'fontsize',ts);
+                    'fontsize',P.FONTSIZE);
             end
         end
     end

@@ -11,7 +11,6 @@ clean up documentation
 	- examples
 	- requirements
 	- notes/warnings
-global undefined values
 add dataless support (npts==0)
 	+ rdata,rpdw,cutim support dataless input/output
 	- check/update all functions
@@ -20,7 +19,7 @@ finalize multi-component setup
 	+ gh now outputs nan when ncmp unsupported
 	- check/update all functions
 centralize plotting parameters
-	- function for defaults
+	+ function for defaults
 	+ global for changing on the fly
 
 
@@ -105,7 +104,7 @@ header partitioned by field type
 	- changing version may become complicated
 
 
-add readme (seislab.m) and examples (?.?.?)
+add readme (saclab.m) and examples (?.?.?)
 -------------------------
 	- features
 	- tutorials

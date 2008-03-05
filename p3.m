@@ -29,41 +29,26 @@ error(nargchk(1,8,nargin))
 error(seischk(data,'x'))
 
 % plotting style defaults
-bgc='k';        % background color
-fgc='w';        % axis/text color
-ts=4;           % text size
-tn='times';     % text name
-tw='light';     % text weight
-lw=1;           % record line width
-%fw=3;           % flag width
-cmap='hsv';     % record colormap
-ticdir='out';   % tick direction
-ticlen=[0 0];   % tick length [2D 3D]
-gridit='off';   % grid parameter
+P=pconf;
 
-% allow access to plot styling using a global structure
-global SAClab
-if(isfield(SAClab,'BGCOLOR')); bgc=SAClab.BGCOLOR; end
-if(isfield(SAClab,'FGCOLOR')); fgc=SAClab.FGCOLOR; end
-if(isfield(SAClab,'FONTSIZE')); ts=SAClab.FONTSIZE; end
-if(isfield(SAClab,'FONTNAME')); tn=SAClab.FONTNAME; end
-if(isfield(SAClab,'FONTWEIGHT')); tw=SAClab.FONTWEIGHT; end
-if(isfield(SAClab,'TRACEWIDTH')); lw=SAClab.TRACEWIDTH; end
-%if(isfield(SAClab,'BARWIDTH')); fw=SAClab.BARWIDTH; end
-if(isfield(SAClab,'COLORMAP')); cmap=SAClab.COLORMAP; end
-if(isfield(SAClab,'TICKDIR')); ticdir=SAClab.TICKDIR; end
-if(isfield(SAClab,'TICKLEN')); ticlen=SAClab.TICKLEN; end
-if(isfield(SAClab,'GRIDIT')); gridit=SAClab.GRIDIT; end
+% allow access to plot styling using global SACLAB structure
+global SACLAB
+fields=fieldnames(P).';
+for i=fields; if(isfield(SACLAB,i)); P.(i{:})=SACLAB.(i{:}); end; end
 
 % initialize plot
 if(nargin<7 || isempty(fh) || fh<1); fh=figure;
 else figure(fh); if(nargin==8 && ~isempty(sfh)); subplot(sfh); end; end
-whitebg(bgc);
-set(gcf,'Name','P3 -- Seismogram Plotting Utility', ...
-    'NumberTitle','off','color',bgc,'Pointer','crosshair');
-set(gca,'FontName',tn,'FontWeight',tw,'FontSize',ts,'box','on',...
-    'xcolor',fgc,'ycolor',fgc,'TickDir',ticdir,'ticklength',ticlen);
-grid(gridit);
+whitebg(P.BGCOLOR);
+set(gcf,'Name',['P3 -- ' P.NAME], ...
+    'NumberTitle',P.NUMBERTITLE,...
+    'color',P.BGCOLOR,...
+    'Pointer',P.POINTER);
+set(gca,'FontName',P.FONTNAME,'FontWeight',P.FONTWEIGHT,...
+    'FontSize',P.FONTSIZE,'box',P.BOX,...
+    'xcolor',P.FGCOLOR,'ycolor',P.FGCOLOR,...
+    'TickDir',P.TICKDIR,'ticklength',P.TICKLEN);
+grid(P.GRID);
 
 % number of records
 nrecs=length(data);
@@ -77,7 +62,7 @@ if(~any(strcmp(style,{'record' 'global'})))
 end
 
 % record coloring
-cmap=str2func(cmap);
+cmap=str2func(P.COLORMAP);
 colors=cmap(nrecs);
 
 % header info
@@ -111,12 +96,13 @@ for i=indices
     if(strcmp(style,'record')); ampmax=max(abs(data(i).x)); end
     
     % plot series
-    plot(time,i+data(i).x*scale/ampmax,'color',colors(i,:),'linewidth',lw);
+    plot(time,i+data(i).x*scale/ampmax,...
+        'color',colors(i,:),'linewidth',P.TRACEWIDTH);
 end
 hold off
 
 % zooming
-axis tight;
+axis(P.AXIS);
 if(nargin>1 && ~isempty(xlimits)); axis auto; xlim(xlimits); end
 if(nargin>2 && ~isempty(ylimits)); ylim(ylimits); end
 
