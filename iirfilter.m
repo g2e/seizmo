@@ -283,6 +283,9 @@ for i=1:ng
     
     % find filter order if needed
     if(auto==1)
+        % save pass corners
+        pc2=pc;
+        
         % determine by type
         if(strcmpi(style,'butter'))
             [order,pc]=buttord(pc,sc,pr,sr);
@@ -293,19 +296,35 @@ for i=1:ng
         else
             [order,pc]=ellipord(pc,sc,pr,sr);
         end
+        
+        % check that passband range has not significantly altered
+        % - defining significant as a disagreement of 0.01 or more
+        if(~strcmpi(style,'cheby2'))
+            if(any(abs(pc2-pc)>0.01))
+                warning('SAClab:iirfilter:cornersNotPreserved',...
+                    ['\n\n!!!!! BAD FILTER DESIGN !!!!!\n\n'...
+                    'Passband corners from automatic order determination\n'...
+                    'significantly differ from the desired passband\n'...
+                    'corners in order to satisfy the stopband corners.\n'...
+                    'If you need the passband corners strictly enforced,\n'...
+                    'you will need to alter the stopband corners, filter\n'...
+                    'order and/or ripple/attenuation parameters!\n\n']);
+            end
+        end
+        
         disp(['NYQUIST: ' num2str(nyq(i)) ...
             'Hz  -->  AUTO FILTER ORDER: ' num2str(order)])
     end
 
     % make the filter
     if(strcmpi(style,'butter'))
-        [z,p,k]=butter(order,pc);
+        [z,p,k]=butter(order,pc,type);
     elseif(strcmpi(style,'cheby1'))
-        [z,p,k]=cheby1(order,pr,pc);
+        [z,p,k]=cheby1(order,pr,pc,type);
     elseif(strcmpi(style,'cheby2'))
-        [z,p,k]=cheby2(order,sr,sc);
+        [z,p,k]=cheby2(order,sr,sc,type);
     else
-        [z,p,k]=ellip(order,pr,sr,pc);
+        [z,p,k]=ellip(order,pr,sr,pc,type);
     end
 
     % put into a filter structure
