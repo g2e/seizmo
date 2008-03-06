@@ -46,11 +46,14 @@ function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 %                          
 %     Order:  Optional.  If undefined or 0, automatic filter order
 %             calculations are made (utilizes the supplied/default corners
-%             and ripple parameter to define a proper order).  Filter 
-%             order is analogous to the sharpness/steepness/slope of the
-%             transition from the passband to the stopband.  Higher orders 
-%             provide better frequency resolution at the cost time 
-%             resolution (aka ringing).
+%             and ripple/attenuation parameters to define a proper order).  
+%             Filter order is analogous to the sharpness/steepness/slope of
+%             the transition from the passband to the stopband.  Higher 
+%             orders provide better frequency resolution at the cost time 
+%             resolution (aka ringing).  Note that automatic order
+%             determination HONORS THE STOPBAND CORNERS and may alter the
+%             passband corners significantly to do this (a warning is
+%             issued if so).
 %
 %     Passes: Optional.  Defaults to 1.  Accepts 1,2,3 or 4.  Options 3 is
 %             for backwards filtering (option 4 forward filters after
@@ -224,7 +227,7 @@ for i=1:ng
             if(nc==1)
                 if(~strcmpi(style,'cheby2'))
                     sc=pc*(1+tranbw);
-                    if(sc>1); sc=0.9999; end
+                    if(sc>=1); sc=0.9999; end
                 else
                     sc=pc;
                     pc=pc*(1/(1+tranbw));
@@ -238,7 +241,7 @@ for i=1:ng
             if(nc==1)
                 if(~strcmpi(style,'cheby2'))
                     sc=pc-(1-pc)*tranbw;
-                    if(sc<0); sc=0.0001; end
+                    if(sc<=0); sc=0.0001; end
                 else
                     sc=pc;
                     pc=sc+(1-sc)/(1/tranbw+1);
@@ -262,8 +265,8 @@ for i=1:ng
             if(~strcmpi(style,'cheby2'))
                 sc(1)=pc(1)-tranbw*w;
                 sc(2)=pc(2)+tranbw*w;
-                if(sc(1)<0); sc(1)=0.0001; end
-                if(sc(2)>1); sc(2)=0.9999; end
+                if(sc(1)<=0); sc(1)=0.0001; end
+                if(sc(2)>=1); sc(2)=0.9999; end
             else
                 sc=pc;
                 pc(1)=pc(1)+(1/(1/tranbw+2))*w;
@@ -298,9 +301,10 @@ for i=1:ng
         end
         
         % check that passband range has not significantly altered
-        % - defining significant as a disagreement of 0.01 or more
+        % - defining 'significant' as a disagreement of 0.01 or more
         if(~strcmpi(style,'cheby2'))
             if(any(abs(pc2-pc)>0.01))
+                % you dun fcked up
                 warning('SAClab:iirfilter:cornersNotPreserved',...
                     ['\n\n!!!!! BAD FILTER DESIGN !!!!!\n\n'...
                     'Passband corners from automatic order determination\n'...
