@@ -44,7 +44,7 @@ fseek(fid,0,'bof');
 for i=1:length(fields)
     % empty element shortcut
     if(rows(i)==0)
-        fprintf(fid,'%s %d',fields{i},0);
+        fprintf(fid,'%s %d\n',fields{i},0);
     % special handling of cell/cellstr
     elseif(strncmp('%s',rspecs{i},2))
         % first line (without values yet)

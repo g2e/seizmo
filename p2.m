@@ -1,114 +1,160 @@
-function [fh,lh]=p2(data,xlimits,ylimits,legend_ok,norm,fh,sfh) 
+function [fh,lh]=p2(data,varargin)
 %P2    Overlay plot of SAClab data records
 %
 %    Description: Plots timeseries and xy SAClab records over one another
-%     in a plot.  Other record types are ignored.  Optional inputs are the
-%     x/y limits for the plot ([low high]), a legend logical (default is
-%     false), a normalization flag (default is false), and the figure and 
-%     subplot handles (to put p2 in a particular figure and subplot).  The 
-%     legend box can be moved by left-clicking on its box and dragging.  
-%     The legend labels can be graphically edited by double-clicking on 
-%     them.  Outputs are the figure and legend handles.
+%     in a single plot.  Other record types are ignored.  Optional
+%     inputs should correspond to fields returned by function 'pconf'.
+%     Outputs are the figure and legend handles.
 %
-%    Usage:  [fh,lh]=p2(data,xlim,ylim,legend_ok,norm,fh,sfh)
+%    Usage:  [fh,lh]=p2(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
 %     To overlay the first 4 records
 %      p2(data(1:4)) 
 %
 %     To overlay the 5th and 8th records from 0 to 300 seconds
-%      p2(data([5 8]),[0 300]) 
+%      p2(data([5 8]),'xlimits',[0 300]) 
 %
 %     To plot all traces with a legend, without limiting the x/y axis
-%      p2(data,[],[],1)
+%      p2(data,'legend',true)
 %
 %    See also:  p1, p3, recsec
-
-% check number of inputs
-error(nargchk(1,7,nargin))
 
 % check data structure
 error(seischk(data,'x'))
 
-% plotting style defaults
-P=pconf;
+% get plotting style defaults
+P=pconf2;
 
 % allow access to plot styling using global SACLAB structure
-global SACLAB
-fields=fieldnames(P).';
+global SACLAB; fields=fieldnames(P).';
 for i=fields; if(isfield(SACLAB,i)); P.(i{:})=SACLAB.(i{:}); end; end
 
-% initialize plot
-if(nargin<6 || isempty(fh) || fh<1); fh=figure;
-else figure(fh); if(nargin==7 && ~isempty(sfh)); subplot(sfh); end; end
-whitebg(P.BGCOLOR);
-set(gcf,'Name',['P2 -- ' P.NAME], ...
-    'NumberTitle',P.NUMBERTITLE,...
-    'color',P.BGCOLOR,...
-    'Pointer',P.POINTER);
-set(gca,'FontName',P.FONTNAME,'FontWeight',P.FONTWEIGHT,...
-    'FontSize',P.FONTSIZE,'box',P.BOX,...
-    'xcolor',P.FGCOLOR,'ycolor',P.FGCOLOR,...
-    'TickDir',P.TICKDIR,'ticklength',P.TICKLEN);
+% sort out optional arguments
+for i=1:2:length(varargin)
+    % plotting parameter field
+    varargin{i}=upper(varargin{i});
+    if(isfield(P,varargin{i}))
+        P.(varargin{i})=varargin{i+1};
+    else
+        warning('SAClab:recsec:badInput','Unknown Option: %s',varargin{i}); 
+    end
+end
+
+% clean up unset parameters
+P=pconffix(P);
+
+% select/open plot
+if(isempty(P.FIGHANDLE) || P.FIGHANDLE<1)
+    fh=figure;
+else
+    fh=figure(P.FIGHANDLE);
+    if(~isempty(P.SUBHANDLE)) 
+        subplot(P.SUBHANDLE); 
+    end; 
+end
+
+% SOME STYLING OF THE PLOT
+set(gcf,'name',['P3 -- ' P.NAME],...
+        'numbertitle',P.NUMBERTITLE,...
+        'menubar',P.MENUBAR,...
+        'toolbar',P.TOOLBAR,...
+        'renderer',P.RENDERER,...
+        'doublebuffer',P.DOUBLEBUFFER,...
+        'color',P.FIGBGCOLOR,...
+        'pointer',P.POINTER);
+set(gca,'fontname',P.AXISFONT,'fontweight',P.AXISFONTWEIGHT,...
+        'fontsize',P.AXISFONTSIZE,'box',P.BOX,...
+        'xcolor',P.XAXISCOLOR,'ycolor',P.YAXISCOLOR,...
+        'xaxislocation',P.XAXISLOCATION,'yaxislocation',P.YAXISLOCATION,...
+        'tickdir',P.TICKDIR,'ticklength',P.TICKLEN,...
+        'linewidth',P.AXISLINEWIDTH,'color',P.PLOTBGCOLOR);
 grid(P.GRID);
 
 % number of records
 nrecs=length(data);
 
 % record coloring
-cmap=str2func(P.COLORMAP);
-colors=cmap(nrecs);
+try
+    % try using as a colormap function
+    cmap=str2func(P.COLORMAP);
+    colors=cmap(nrecs);
+catch
+    % otherwise its a color array/string
+    colors=repmat(P.COLORMAP,ceil(nrecs/size(P.COLORMAP,1)),1);
+end
 
 % header info
-iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
 error(lgcchk('leven',leven))
-[b,npts,delta]=gh(data,'b','npts','delta');
+iftype=genumdesc(data,'iftype');
+[b,npts,delta,depmin,depmax]=...
+    gh(data,'b','npts','delta','depmin','depmax');
 
-% normalization
-scaling=ones(nrecs,1);
-if(nargin>4 && ~isempty(norm) && norm); scaling=gnrm(data); end
+% check normalization style
+if(~any(strcmpi(P.NORMSTYLE,{'single' 'group'})))
+    warning('SAClab:recsec:badInput','bad normalization style')
+    P.NORMSTYLE='single';
+end
+
+% check filetype (only timeseries or xy)
+goodfiles=(strcmp(iftype,'Time Series File') | ...
+    strcmp(iftype,'General X vs Y file'));
+indices=find(goodfiles).';
+
+% find amplitude scaling
+ampmax=max(abs([depmin.'; depmax.';]));
+if(strcmpi(P.NORMSTYLE,'group')); ampmax(:)=max(ampmax(indices)); end
 
 % loop through each file
 hold on
-plotted=false(nrecs,1);
-for i=1:nrecs
-    % check if timeseries or xy (if not skip)
-    if(~any(strcmp(iftype(i),...
-            {'Time Series File' 'General X vs Y file'})))
-        continue; 
-    end
-    
+for i=indices
     % get record timing
-    if(strcmp(leven(i),'true')); time=b(i)+(0:npts(i)-1).'*delta(i);
+    if(strcmp(leven(i),'true')); time=(b(i)+(0:npts(i)-1)*delta(i)).';
     else time=data(i).t; end
     
     % plot series
-    plot(time,data(i).x/scaling(i),...
-        'color',colors(i,:),'linewidth',P.TRACEWIDTH);
-    plotted(i)=true;
+    plot(time,data(i).x/(ampmax(i)^P.P2NORM)*(P.NORMMAX^P.P2NORM),...
+        'color',colors(i,:),'linewidth',P.RECWIDTH);
 end
 hold off
 
 % zooming
-axis(P.AXIS);
-if(nargin>1 && ~isempty(xlimits)); axis auto; xlim(xlimits); end
-if(nargin>2 && ~isempty(ylimits)); ylim(ylimits); end
+axis(P.AXIS{:});
+if(~isempty(P.XLIMITS)); axis auto; xlim(P.XLIMITS); end
+if(~isempty(P.YLIMITS)); ylim(P.YLIMITS); end
 
 % legend
-if(nargin>3 && ~isempty(legend_ok) && legend_ok)
-    if(isfield(data,'name'))
-        % filenames
-        lh=legend(data(plotted).name,'location','best');
-    else
-        % record indices
-        i=1:nrecs; 
-        lh=legend(strcat({'Record '},cellstr(num2str(i(plotted).')))); 
-    end
-    set(lh,'interpreter','none')
+if(P.LEGEND)
+    if(isfield(data,'name')); lh=legend(data(goodfiles).name);
+    else lh=legend(strcat({'Record '},cellstr(num2str(indices.')))); end
+    set(lh,'location',P.LEGENDLOCATION,...
+        'edgecolor',P.LEGENDBOXCOLOR,...
+        'linewidth',P.LEGENDBOXWIDTH,...
+        'textcolor',P.LEGENDFONTCOLOR,...
+        'box',P.LEGENDBOX,...
+        'color',P.LEGENDBGCOLOR,...
+        'interpreter',P.LEGENDINTERP,...
+        'fontname',P.LEGENDFONT,...
+        'fontsize',P.LEGENDFONTSIZE,...
+        'fontweight',P.LEGENDFONTWEIGHT);
 end
 
+% built in default axis labels/title
 % title (total plotted / total records)
-title([num2str(nnz(plotted)) '/' num2str(nrecs) ' Records']);
+if(isempty(P.TITLE))
+    P.TITLE=[num2str(length(indices)) '/' num2str(nrecs) ' Records']; 
+end
+if(isempty(P.XLABEL)); P.XLABEL='Time (sec)'; end
+if(isempty(P.YLABEL) && ~P.NAMESONYAXIS); P.YLABEL='Amplitude'; end
+title(P.TITLE,'fontname',P.TITLEFONT,'fontweight',P.TITLEFONTWEIGHT,...
+    'fontsize',P.TITLEFONTSIZE,'color',P.TITLEFONTCOLOR,...
+    'interpreter',P.TITLEINTERP);
+xlabel(P.XLABEL,'fontname',P.XLABELFONT,'fontweight',P.XLABELFONTWEIGHT,...
+    'fontsize',P.XLABELFONTSIZE,'color',P.XLABELFONTCOLOR,...
+    'interpreter',P.XLABELINTERP);
+ylabel(P.YLABEL,'fontname',P.YLABELFONT,'fontweight',P.YLABELFONTWEIGHT,...
+    'fontsize',P.YLABELFONTSIZE,'color',P.YLABELFONTCOLOR,...
+    'interpreter',P.YLABELINTERP);
 
 end

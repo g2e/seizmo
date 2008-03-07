@@ -69,6 +69,7 @@ set(gcf,'name',['RECSEC -- ' P.NAME],...
 set(gca,'fontname',P.AXISFONT,'fontweight',P.AXISFONTWEIGHT,...
         'fontsize',P.AXISFONTSIZE,'box',P.BOX,...
         'xcolor',P.XAXISCOLOR,'ycolor',P.YAXISCOLOR,...
+        'xaxislocation',P.XAXISLOCATION,'yaxislocation',P.YAXISLOCATION,...
         'tickdir',P.TICKDIR,'ticklength',P.TICKLEN,...
         'linewidth',P.AXISLINEWIDTH,'color',P.PLOTBGCOLOR);
 grid(P.GRID);
@@ -82,8 +83,8 @@ try
     cmap=str2func(P.COLORMAP);
     colors=cmap(nrecs);
 catch
-    % otherwise its a color
-    colors=P.COLORMAP(ones(nrecs,1),:);
+    % otherwise its a color array/string
+    colors=repmat(P.COLORMAP,ceil(nrecs/size(P.COLORMAP,1)),1);
 end
 
 % header info
@@ -158,7 +159,9 @@ if(isempty(P.TITLE))
     P.TITLE=[num2str(length(indices)) '/' num2str(nrecs) ' Records']; 
 end
 if(isempty(P.XLABEL)); P.XLABEL='Time (sec)'; end
-if(isempty(P.YLABEL)); P.YLABEL='Distance (\circ)'; end
+if(isempty(P.YLABEL) && strcmpi(P.YLABEL,'gcarc'))
+    P.YLABEL='Distance (\circ)'; 
+end
 title(P.TITLE,'fontname',P.TITLEFONT,'fontweight',P.TITLEFONTWEIGHT,...
     'fontsize',P.TITLEFONTSIZE,'color',P.TITLEFONTCOLOR,...
     'interpreter',P.TITLEINTERP);

@@ -54,8 +54,10 @@ conf=struct(...
 'GRID','on',...                             % GRIDDING
 'XLIMITS',[],...                            % X-AXIS LIMITS
 'XAXISCOLOR',[],...                         % X-AXIS COLOR
+'XAXISLOCATION','bottom',...                % X-AXIS LOCATION
 'YLIMITS',[],...                            % Y-AXIS LIMITS
 'YAXISCOLOR',[],...                         % Y-AXIS COLOR
+'YAXISLOCATION','left',...                  % Y-AXIS LOCATION
 'PLOTBGCOLOR',[],...                        % BACKGROUND COLOR OF PLOT
 ...
 ...% AXIS LABELS
@@ -110,8 +112,21 @@ conf=struct(...
 'MARKXPAD',0.02,...                         % PADDING IN X DIRECTION FOR MARK (NORMED TO RANGE)
 'MARKYPAD',0.05,...                         % PADDING IN Y DIRECTION FOR MARK (NORMED TO RANGE)
 ...
+...% P1 SPECIFIC
+'NCOLS',[],...                              % NUMBER OF SUBPLOT COLUMNS
+...
+...% P2 SPECIFIC
+'P2NORM',false,...                          % NORMALIZE RECORDS IN P2
+...
+...% P3 SPECIFIC
+'NAMESONYAXIS',false,...                    % DISPLAY RECORD NAMES ON Y-AXIS
+...
 ...% RECSEC SPECIFIC
 'YFIELD','gcarc',...                        % HEADER FIELD THAT DEFINES RECORDS Y-AXIS POSITION
+...
+...% PDENDRO SPECIFIC
+'DISSIMCUTOFF',0.05,...                     % DISSIMILARITY CUTOFF FOR COLORING
+'DISSIM',true,...                           % X-AXIS IS DISSIMILARITY (FALSE = SIMILARITY)
 ...
 ...% FIGURE HANDLES
 'FIGHANDLE',[],...                          % FIGURE HANDLE
