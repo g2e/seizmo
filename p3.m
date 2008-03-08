@@ -3,7 +3,7 @@ function [fh,lh]=p3(data,varargin)
 %
 %    Description: Plots timeseries and xy SAClab records spaced out evenly
 %     in a single plot.  Other record types are ignored.  Optional
-%     inputs should correspond to fields returned by function 'pconf'.
+%     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
 %
 %    Usage:  [fh,lh]=p3(data,'plot_option',plot_option_value,...)
@@ -18,7 +18,7 @@ function [fh,lh]=p3(data,varargin)
 error(seischk(data,'x'))
 
 % get plotting style defaults
-P=pconf2;
+P=pconf;
 
 % allow access to plot styling using global SACLAB structure
 global SACLAB; fields=fieldnames(P).';
@@ -31,7 +31,7 @@ for i=1:2:length(varargin)
     if(isfield(P,varargin{i}))
         P.(varargin{i})=varargin{i+1};
     else
-        warning('SAClab:recsec:badInput','Unknown Option: %s',varargin{i}); 
+        warning('SAClab:p3:badInput','Unknown Option: %s',varargin{i}); 
     end
 end
 
@@ -94,7 +94,7 @@ end
 
 % check normalization style
 if(~any(strcmpi(P.NORMSTYLE,{'single' 'group'})))
-    warning('SAClab:recsec:badInput','bad normalization style')
+    warning('SAClab:p3:badInput','bad normalization style')
     P.NORMSTYLE='single';
 end
 

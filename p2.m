@@ -3,7 +3,7 @@ function [fh,lh]=p2(data,varargin)
 %
 %    Description: Plots timeseries and xy SAClab records over one another
 %     in a single plot.  Other record types are ignored.  Optional
-%     inputs should correspond to fields returned by function 'pconf'.
+%     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
 %
 %    Usage:  [fh,lh]=p2(data,'plot_option',plot_option_value,...)
@@ -24,7 +24,7 @@ function [fh,lh]=p2(data,varargin)
 error(seischk(data,'x'))
 
 % get plotting style defaults
-P=pconf2;
+P=pconf;
 
 % allow access to plot styling using global SACLAB structure
 global SACLAB; fields=fieldnames(P).';
@@ -37,7 +37,7 @@ for i=1:2:length(varargin)
     if(isfield(P,varargin{i}))
         P.(varargin{i})=varargin{i+1};
     else
-        warning('SAClab:recsec:badInput','Unknown Option: %s',varargin{i}); 
+        warning('SAClab:p2:badInput','Unknown Option: %s',varargin{i}); 
     end
 end
 
@@ -55,7 +55,7 @@ else
 end
 
 % SOME STYLING OF THE PLOT
-set(gcf,'name',['P3 -- ' P.NAME],...
+set(gcf,'name',['P2 -- ' P.NAME],...
         'numbertitle',P.NUMBERTITLE,...
         'menubar',P.MENUBAR,...
         'toolbar',P.TOOLBAR,...
@@ -93,7 +93,7 @@ iftype=genumdesc(data,'iftype');
 
 % check normalization style
 if(~any(strcmpi(P.NORMSTYLE,{'single' 'group'})))
-    warning('SAClab:recsec:badInput','bad normalization style')
+    warning('SAClab:p2:badInput','bad normalization style')
     P.NORMSTYLE='single';
 end
 
@@ -146,7 +146,7 @@ if(isempty(P.TITLE))
     P.TITLE=[num2str(length(indices)) '/' num2str(nrecs) ' Records']; 
 end
 if(isempty(P.XLABEL)); P.XLABEL='Time (sec)'; end
-if(isempty(P.YLABEL) && ~P.NAMESONYAXIS); P.YLABEL='Amplitude'; end
+if(isempty(P.YLABEL)); P.YLABEL='Amplitude'; end
 title(P.TITLE,'fontname',P.TITLEFONT,'fontweight',P.TITLEFONTWEIGHT,...
     'fontsize',P.TITLEFONTSIZE,'color',P.TITLEFONTCOLOR,...
     'interpreter',P.TITLEINTERP);

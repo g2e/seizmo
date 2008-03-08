@@ -3,7 +3,7 @@ function [fh,lh]=recsec(data,varargin)
 %
 %    Description: Plots timeseries and xy SAClab records spaced out by the 
 %     'gcarc' header field.  Other record types are ignored.  Optional
-%     inputs should correspond to fields returned by function 'pconf'.
+%     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
 %
 %    Usage:  [fh,lh]=recsec(data,'plot_option',plot_option_value,...)
@@ -27,7 +27,7 @@ function [fh,lh]=recsec(data,varargin)
 error(seischk(data,'x'))
 
 % get plotting style defaults
-P=pconf2;
+P=pconf;
 
 % allow access to plot styling using global SACLAB structure
 global SACLAB; fields=fieldnames(P).';

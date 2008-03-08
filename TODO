@@ -5,6 +5,7 @@ bug checks
 	- test data
 clean up warnings/errors
 	- right function in identifier
+	- how to do group warning operations???
 clean up structure checks
 clean up class support
 clean up documentation
@@ -13,15 +14,15 @@ clean up documentation
 	- notes/warnings
 add dataless support (npts==0)
 	+ rdata,rpdw,cutim support dataless input/output
-	- check/update all functions
+	- check/update all functions (ick...)
 finalize multi-component setup
 	+ unused15->ncmp
 	+ gh now outputs nan when ncmp unsupported
 	- check/update all functions
-centralize plotting parameters
-	+ function for defaults
-	+ global for changing on the fly
-
+cutim/rpdw
+	- allow more variable input (like: 'b',200,300)
+correlate/mcxc
+	- clean up and add in
 
 more function ideas (0.5.?)
 ------------------
@@ -86,7 +87,7 @@ stack
 plot versus
 
 
-true guis (0.5.3)
+guis (0.5.3)
 -------------------------
 window
 align
