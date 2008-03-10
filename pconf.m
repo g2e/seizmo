@@ -3,7 +3,7 @@ function [conf]=pconf()
 %
 %    Description: Returns a structure for controlling plotting parameters
 %     in SAClab plotting functions.  Lists all parameters currently 
-%     supported.
+%     supported and their defaults.
 %
 %    Usage: CONF=pconf()
 %
@@ -11,7 +11,7 @@ function [conf]=pconf()
 %     pconf contains the default plotting parameters that can be overridden
 %     in plotting functions by the global SACLAB and also by function call
 %     options.  Once all these are done pconffix should be run to fill in 
-%     unset options that need to be replaced by the general ones.
+%     unset options that need to be replaced by general ones.
 %
 %     Order of operations:
 %       1. CONF=pconf()
@@ -49,6 +49,8 @@ conf=struct(...
 'AXISLINEWIDTH',0.5,...                     % AXIS LINE WIDTH
 'TICKDIR','out',...                         % TICK DIRECTION
 'TICKLEN',[0 0],...                         % TICK LENGTH [2D 3D]
+'XMINORTICK','off',...                      % X-AXIS MINOR TICKS
+'YMINORTICK','off',...                      % Y-AXIS MINOR TICKS
 'AXIS',{{'tight'}},...                      % AXIS PROPERTIES
 'BOX','on',...                              % AXIS BOX
 'GRID','on',...                             % GRIDDING
@@ -103,8 +105,9 @@ conf=struct(...
 'LEGENDFONTCOLOR',[],...
 ...
 ...% MARKERS
-'LINEWIDTH',2,...                           % WIDTH OF OTHER LINES (LIKE MARKERS)
+'MARKERWIDTH',2,...                         % WIDTH OF MARKER LINES
 'MARKERS',true,...                          % PLOT HEADER MARKERS
+'MARKERLABELS',true,...                     % PLOT MARKER LABELS
 'OCOLOR',[1 0.5 0],...                      % COLOR OF O MARKER & LABEL
 'OMARKERFONTCOLOR',[1 0.5 0],...
 'ACOLOR','g',...                            % COLOR OF A MARKER & LABEL
@@ -133,8 +136,13 @@ conf=struct(...
 'YFIELD','gcarc',...                        % HEADER FIELD THAT DEFINES RECORDS Y-AXIS POSITION
 ...
 ...% PDENDRO SPECIFIC
-'DISSIMCUTOFF',0.05,...                     % DISSIMILARITY CUTOFF FOR COLORING
-'DISSIM',true,...                           % X-AXIS IS DISSIMILARITY (FALSE = SIMILARITY)
+'TREELIMIT',0.03,...                        % DISSIMILARITY LIMIT FOR COLORING
+'TREELIMITCOLOR','r',...                    % COLOR OF DISSIMILARITY LIMIT MARKER
+'DISSIM',true,...                           % X-AXIS AS DISSIMILARITY (FALSE = SIMILARITY)
+'TREECOLORMAP','hsv',...                    % GROUP COLORING IN DENDROGRAM
+'TREEDEFCOLOR',[0.5 0.5 0.5],...            % DEFAULT COLORING OF TREE
+'TREETITLE',[],...                          % TITLE FOR DENDROGRAM PLOT
+'TREEXLABEL',[],...                         % XLABEL FOR DENDROGRAM PLOT
 ...
 ...% FIGURE HANDLES
 'FIGHANDLE',[],...                          % FIGURE HANDLE

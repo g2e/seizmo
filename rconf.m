@@ -49,31 +49,32 @@ while 1
     % uncell the field string
     field=field{:}{:};
     
-    % check for comment flag (%) - skip rest of line if so
-    if(strcmp(field(1),'%')); fgetl(fid); continue; end
-    
-    % check if field is numeric - skip rest of line if so
-    if(~isempty(str2num(field))); fgetl(fid); continue; end
+    % make sure field is ok
+    try
+        conf.(field)=[];
+        conf=rmfield(conf,field);
+    catch
+        % bad field name - skip rest of line
+        fgetl(fid); continue;
+    end
     
     % read in number of rows for field value array
     n=textscan(fid,'%d',1); n=n{:};
     
     % check if field value array is empty (nrows==0) - skip rest of line if so
+    if(isempty(n)); fgetl(fid); continue; end
     if(n==0); conf.(field)=[]; fgetl(fid); continue; end
     
     % read in field's value format (indicates number of columns too)
     spec=textscan(fid,'%s',1); spec=spec{:}{:};
     
-    % check if spec is bad - warn and skip rest of line if so
-    if(~strcmp(spec(1),'%'))
-        warning('SAClab:rconf:badSpec',...
-            'Spec ''%s'' for field ''%s'' is invalid',field,spec);
-        fgetl(fid); 
-        continue; 
-    end
-    
     % read in field's value array
-    values=textscan(fid,spec,n);
+    try
+        values=textscan(fid,spec,n);
+    catch
+        warning(lasterr);
+        fgetl(fid); continue;
+    end
     
     % uncell char arrays
     if(length(spec)>2 ...
