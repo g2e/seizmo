@@ -1,4 +1,4 @@
-function [data]=intrpol8(data,sr,new_b,new_e,method)
+function [data]=intrpol8(data,sr,method,new_b,new_e)
 %INTRPOL8    Interpolates SAClab data records to a new sampling frequency
 %
 %    Description: Interpolates data records to new sample rate sr using 
@@ -11,17 +11,17 @@ function [data]=intrpol8(data,sr,new_b,new_e,method)
 %     sample interval, in which case the last point before the end time 
 %     will be the set as the new end time.
 %
-%    Usage: [data]=intrpol8(data,dt,new_b,new_e,method)
+%    Usage: [data]=intrpol8(data,dt,method,new_b,new_e)
 %
 %    Examples:
-%     interpolate at 5 sps using b and e header values
+%     interpolate at 5 sps
 %      data=intrpol8(data,5);  
 %
 %     interpolate at 1 sps from 300 seconds to e
-%      data=intrpol8(data,1,300)
+%      data=intrpol8(data,1,[],300)
 %
 %     interpolate at 5 sps from 900 to 950 seconds using linear interp
-%      data_pdiff=intrpol8(data,5,900,950,'linear')
+%      data_pdiff=intrpol8(data,5,'linear',900,950)
 %
 %    See also: syncsr, deci, stretch, iirfilter
 
@@ -37,9 +37,9 @@ error(lgcchk('leven',leven))
 [b,e,npts,delta]=gh(data,'b','e','npts','delta');
 
 % defaults
-if(nargin<5 || isempty(method)); method{1}='pchip'; end
-if(nargin<4 || isempty(new_e)); new_e=e; end
-if(nargin<3 || isempty(new_b)); new_b=b; end
+if(nargin<5 || isempty(new_e)); new_e=e; end
+if(nargin<4 || isempty(new_b)); new_b=b; end
+if(nargin<3 || isempty(method)); method{1}='pchip'; end
 
 % number of records
 nrecs=length(data);
