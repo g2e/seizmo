@@ -23,6 +23,10 @@ cutim/rpdw
 	- allow more variable input (like: 'b',200,300)
 correlate/mcxc
 	- clean up and add in
+iirfilter
+	- allow more variable input
+	- clean up the corners
+	- figure out best way to handle overdesigned filters
 
 more function ideas (0.5.?)
 ------------------
@@ -42,8 +46,7 @@ log_e x (loge)
 log_n x (logn)
 
 abs (abso)
-rms (rms)
-robust rms (robrms)
+robust rms (robustrms)
 sign
 real
 
@@ -59,8 +62,6 @@ fetch record (frec)
 	- files without cmp not returned
 	- iftype is ixy
 - by header field/value
-
-reverse (flip)
 
 get header definition (ghd)
  - for cleaning up some low level functions
@@ -103,6 +104,8 @@ header partitioned by field type
 	- requires reworked header definition (sub-structuring)
 	- may require significant rewriting of header access functions
 	- changing version may become complicated
+	- partial implementation just separating numeric and string portions
+	  will probably avoid the most headache
 
 
 add readme (saclab.m) and examples (?.?.?)
