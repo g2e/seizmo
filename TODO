@@ -39,17 +39,6 @@ rem glitches (rspikes)
 detect offsets (goffsets)
 rem offsets (roffsets)
 
-x^n (pown)
-n^x (raisen)
-e^x (raisee)
-log_e x (loge)
-log_n x (logn)
-
-abs (abso)
-robust rms (robustrms)
-sign
-real
-
 fir deci (deci2)
  - causal decimation!
 

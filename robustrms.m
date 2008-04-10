@@ -1,8 +1,8 @@
-function [data]=rms(data,nsamples)
-%RMS    Return sliding window root-mean-square of SAClab data records
+function [data]=robustrms(data,nsamples)
+%ROBUSTRMS    Return sliding window root-median-square of SAClab data records
 %
 %    Description: DATA_OUT=RMS(DATA_IN,NSAMPLES) takes the sliding window
-%     root-mean-square of the records in DATA_IN using a window of length 
+%     root-median-square of the records in DATA_IN using a window of length 
 %     NSAMPLES samples centered on each point in the original records.  
 %     Windows extending outside the record are padded with zeros, which 
 %     gives the output tapered edges. NSAMPLES can be a scalar (each
@@ -13,10 +13,10 @@ function [data]=rms(data,nsamples)
 %
 %    Examples:
 %     
-%      Compare envelope and a 10-sample sliding window rms:
-%       p2([envelope(data(1)) rms(data(1),10)])
+%      A comparison of envelope, rms and robust rms:
+%       p2([envelope(data(1)) rms(data(1),10) robustrms(data(1),10)])
 %
-%    See also: envelope, robustrms
+%    See also: envelope, rms
 
 % check nargin
 error(nargchk(2,2,nargin))
@@ -38,17 +38,27 @@ end
 
 % half window length
 half1=floor(nsamples/2);
+half12=2*half1;
 
 % sliding window rms
 for i=1:nrecs
+    % get storage class of data
     oclass=str2func(class(data(i).x));
     
-    % filter to avoid loop
-    data(i).x=oclass(sqrt(filter(ones(1,nsamples(i))/nsamples(i),1,...
-        [double(data(i).x).^2; zeros(half1(i),size(data(i).x,2))])));
+    % pad record with zeros and square it
+    sz=size(data(i).x);
+    data(i).x=[zeros(half1(i),sz(2)); ...
+                double(data(i).x).^2; ...
+                zeros(half1(i),sz(2))];
     
-    % centered windows
-    data(i).x(1:half1(i),:)=[];
+    % get indices of windows
+    indices=hankel(1:sz(1),sz(1):sz(1)+half12(i)).';
+    indices=repmat(indices,[1 1 sz(2)])...
+        +repmat(permute((0:sz(2)-1)*(sz(1)+half12(i)),[1 3 2]),...
+            [nsamples(i) sz(1) 1]);
+    
+    % get root-median
+    data(i).x=oclass(sqrt(permute(median(data(i).x(indices),1),[2 3 1])));
     
     % update header
     data(i)=ch(data(i),'depmax',norm(max(data(i).x)),...
