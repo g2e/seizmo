@@ -25,7 +25,7 @@ function [data]=taper(data,width,type,option)
 %    20th of the record
 %      data=taper(data);
 %
-%    See also: rmean, rtrend, rdrift
+%    See also: rmean, rslope, rdrift
 
 % check input
 error(nargchk(1,4,nargin))

@@ -8,7 +8,8 @@ function [data]=ifourier(data)
 %    Note:
 %     - Assumes amplitudes for spectral files follow the convention from 
 %       SAC/SAClab's fourier routine.  There is a conversion factor of 
-%       npts*delta/2 between this and true spectral amplitudes.
+%       npts*delta/2 between this and spectral amplitudes that are accurate
+%       for sinusoids.
 %
 %    Usage: data=ifourier(data)
 %

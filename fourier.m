@@ -9,11 +9,12 @@ function [data]=fourier(data,format,pp2)
 %     pp2 input (fft length = 2^(nextpow2(len)+pp2) , default pp2=1).
 %
 %    Note:
-%     - SAC (and thus SAClab for sanity) stores amp/real/imag spectral 
-%       data in a raw form that first has to be scaled to give correct 
-%       amplitudes.  Divide records (except for phase!) by npts*delta/2 to 
-%       get accurate spectral information.  All SAClab functions that work
-%       with fourier will expect that this scaling has NOT been applied.
+%     - SAC (and thus SAClab for sanity) calculates amp/real/imag spectral 
+%       data according to Parseval's theorem.  This has to be scaled to 
+%       give accurate amplitudes for sinusoids.  Divide records (except for
+%       phase!) by npts*delta/2 to get accurate spectral information for 
+%       sinusoids.  All SAClab functions that work with fourier will expect
+%       that this scaling has NOT been applied.
 %
 %    Usage: data=fourier(data,format,pp2)
 %
@@ -69,10 +70,10 @@ for i=1:length(data)
     
     % fft
     data(i).x=delta(i)*fft(data(i).x,nspts);    % SAC compatible
-    %data(i).x=2*fft(data(i).x,nspts)/len;      % True amplitudes
+    %data(i).x=2*fft(data(i).x,nspts)/len;      % Accurate sinusoid amplitudes
     
     % expand data to make room for split
-    data(i).x(:,2:2:2*ncmp)=data(i).x;
+    data(i).x(:,(1:ncmp)*2)=data(i).x;
     
     % split complex by desired filetype
     if(strcmpi(format,'rlim'))

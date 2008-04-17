@@ -1,76 +1,63 @@
-function [data,destroy]=cutim(data,ref1,offset1,ref2,offset2,fill,filler,trim)
+function [data,destroy]=cutim(data,varargin)
 %CUTIM    Cut SAClab data records in memory
 %
 %    Description: Cuts data windows from SAClab data records using the
 %     given cut parameters.  Windows that extend outside the timing of the 
-%     data are pushed to the data bounds unless 'fill' is set to 1. In this
-%     case - and only for evenly spaced files - the window is padded with
-%     filler values (default is zero) to meet the window parameters. If a
-%     record ends up having no data it is deleted from the data structure
-%     unless the trim parameter is set to false.
+%     data are pushed to the data bounds unless 'fill' is set to true/1. In
+%     this case - and only for evenly spaced files - the window is padded
+%     with filler values (default is zero) to meet the window parameters.
+%     If a record ends up having no data or is not a timeseries filetype,
+%     it is deleted from the data structure unless the 'removedataless'
+%     parameter is set to false.  
 %
-%     ref values can be one of the following:
-%        'z','n','some other header timing field', and for ref2 only: 'l'
+%     Defining the window is done by supplying time references and/or
+%     offsets in a manner just like SAC's cut command.
 %
-%        'z' corresponds to the zero time of the record. 'n' indicates the 
-%        offset is the sample number (first sample is 1).  ref2 can also
-%        be 'l' which gives the window length in samples.  All header field
-%        references (except 'n' and 'l') take offsets in seconds only.
+%     ref and offset values:
+%        ref can be 'z','x','some other header timing field', and for ref2 
+%        only: 'n'.  'z' corresponds to the zero time of the record. 'x' 
+%        indicates the following offset is the sample number (first sample 
+%        is 1).  ref2 can be 'n' which gives the window length in samples.
+%        All header field references (except 'x' and 'n') assume offsets
+%        are in seconds.
 %
 %        If no ref value is given and an offset is, the ref is assumed as 
 %        'z' (zero).  Offsets default to 0 when not supplied.  If neither 
-%        a ref or offset are given for a pair, then they default to the
-%        beginning and end - 'b',0 or 'e',0.  If both pairs are missing, no
-%        cut is done.
+%        the second ref or offset are given, then they default to the end -
+%        'e',0.  If both pairs are missing, then they default to 'b',0 and
+%        'e',0 which under normal situations will not cut the records.
 %
-%    Usage: [data]=cutim(data,ref1,offset1,ref2,offset2,fill,filler,trim)
+%    Usage: [data]=cutim(data,...,variable,list,of,cut,parameters,...)
 %
 %    Examples:
 %     cut a 400 sample window starting from the 33rd sample
-%       data=cutim(data,'n',33,'l',400);
+%       data=cutim(data,'x',33,'n',400);
 %
 %     cut out a 90s window around t1
 %       data=cutim(data,'t1',-30,'t1',60);
 %
 %     cut one hour starting at the origin time, 
 %     and pad incomplete records with zeros
-%       data=cutim(data,'o',0,'o',3600,1);
+%       data=cutim(data,'o',0,3600,'fill',1);
 %
 %     cut first 300 seconds of records
-%       data=cutim(data,[],[],'b',300);
-%     or more explicitly
-%       data=cutim(data,'b',0,'b',300);
+%       data=cutim(data,'b',0,300);
 %
 %     cut from 300 to 500 seconds relative to reference time
-%       data=cutim(data,[],300,[],500);
+%       data=cutim(data,300,500);
 %     or explicitly
 %       data=cutim(data,'z',300,'z',500);
 %
 %    See also: rpdw
 
 % input check
-error(nargchk(1,8,nargin))
+error(nargchk(1,11,nargin))
 
 % check data structure
 error(seischk(data,'x'))
 
-% defaults
-if(nargin==1); return; end
-if(nargin<8); trim=true; end
-if(nargin<7); filler=0; end
-if(nargin<6); fill=0; end
-if(nargin<5); offset2=0; end
-if(nargin<4); ref2='e'; end
-if(nargin<3); offset1=0; end
-
-% empty cut parameter defaults
-if(isempty(ref1)); if(isempty(offset1)); ref1='b'; else ref1='z'; end; end
-if(isempty(ref2)); if(isempty(offset2)); ref2='e'; else ref2='z'; end; end
-if(isempty(offset1)); offset1=0; end
-if(isempty(offset2)); offset2=0; end
-if(isempty(fill)); fill=0; end
-if(isempty(filler)); filler=0; end
-if(isempty(trim)); trim=true; end
+% parse cut parameters
+[ref1,ref2,offset1,offset2,fill,filler,trim]=cutparam(varargin{:});
 
 % number of records
 nrecs=length(data);
@@ -78,8 +65,7 @@ nrecs=length(data);
 % cut parameter checks
 if(~ischar(ref1) || ~ischar(ref2))
     error('SAClab:cutim:badInput','ref must be a string')
-elseif(~isnumeric(offset1) || ~isnumeric(offset2) || ...
-        ~isvector(offset1) || ~isvector(offset2))
+elseif(~isvector(offset1) || ~isvector(offset2))
     error('SAClab:cutim:badInput','offset must be a numeric vector')
 elseif(~any(length(offset1)==[1 nrecs]) || ~any(length(offset2)==[1 nrecs]))
     error('SAClab:cutim:badInputSize','offset dimensions not correct')
@@ -111,7 +97,7 @@ end
 % window begin point
 if(strcmpi(ref1,'z'))
     bt(1:nrecs,1)=offset1;
-elseif(strcmpi(ref1,'n'))
+elseif(strcmpi(ref1,'x'))
     bp=round(offset1);
 else
     bt=gh(data,ref1)+offset1;
@@ -120,10 +106,15 @@ end
 % window end time
 if(strcmpi(ref2,'z'))
     et(1:nrecs,1)=offset2;
-elseif(strcmpi(ref2,'n') || strcmpi(ref2,'l'))
+elseif(strcmpi(ref2,'x') || strcmpi(ref2,'n'))
     ep=round(offset2);
 else
     et=gh(data,ref2)+offset2;
+end
+
+% check for nans
+if(any(isnan(bt)) || any(isnan(bp)) || any(isnan(et)) || any(isnan(ep)))
+    error('SAClab:cutim:nanHeaderField','header field returned NaN')
 end
 
 % loop through each file
@@ -146,12 +137,12 @@ for i=1:nrecs
     % evenly spaced
     if(strcmp(leven(i),'true'))
         % calculate begin and end points
-        if(~strcmpi(ref1,'n'))
+        if(~strcmpi(ref1,'x'))
             bp(i)=round((bt(i)-b(i))/delta(i))+1;
         end
-        if(strcmpi(ref2,'l'))
+        if(strcmpi(ref2,'n'))
             ep2=bp(i)+ep(i)-1;
-        elseif(strcmpi(ref2,'n'))
+        elseif(strcmpi(ref2,'x'))
             ep2=ep(i);
         else
             ep2=round((et(i)-b(i))/delta(i))+1;
@@ -204,7 +195,7 @@ for i=1:nrecs
     % unevenly spaced
     else
         % get begin point
-        if(~strcmpi(ref1,'n'))
+        if(~strcmpi(ref1,'x'))
             % save to temp variable (avoids corruption in no result case)
             temp=find(data(i).t>=bt(i),1);
             if(isempty(temp))
@@ -229,9 +220,9 @@ for i=1:nrecs
         end
         
         % get end point
-        if(strcmpi(ref2,'l'))
+        if(strcmpi(ref2,'n'))
             ep2=bp(i)+ep(i)-1;
-        elseif(strcmpi(ref2,'n'))
+        elseif(strcmpi(ref2,'x'))
             ep2=ep(i);
         else
             % save to temp variable (avoids corruption in no result case)
@@ -284,7 +275,7 @@ for i=1:nrecs
     end
 end
 
-% destroy empty records
+% destroy empty/wrong filetype records
 if(trim); data(destroy)=[]; end
 
 end

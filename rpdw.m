@@ -1,4 +1,4 @@
-function [data,destroy]=rpdw(data,ref1,offset1,ref2,offset2,fill,filler,trim)
+function [data,destroy]=rpdw(data,varargin)
 %RPDW    Read partial data window from binary seismic datafiles in SAClab
 %
 %    Description: Reads a partial data window from binary seismic datafiles
@@ -8,35 +8,35 @@ function [data,destroy]=rpdw(data,ref1,offset1,ref2,offset2,fill,filler,trim)
 %     parameters are exactly the same as the SAClab 'cutim' command - for 
 %     details on cutting read there.
 %
-%    Usage: [data]=rpdw(data,ref1,offset1,ref2,offset2,fill,filler,trim)
+%    Usage: [data]=rpdw(data,...,variable,list,of,cut,parameters,...)
 %
 %    Examples:
+%     remember to read in the header info first:
+%      files=dir('*.sac')  % reads in files ending in .sac from current dir
+%      data=rh(files.name) % reads in headers of sac files
+%
+%     read in only the first 300 samples:
+%      data=rpdw(data,'x',1,300)
+%     
+%     read in a 90 second window around t1 arrival, padding with zeros if
+%     necessary:
+%      data=rpdw(data,'t1',-30,60,'fill',true)
+%
+%     read in the 123rd sample:
+%      data=rpdw(data,'x',123,123)
+%     or
+%      data=rpdw(data,'x',123,'n',1)
 %
 %    See also: cutim, rh, rdata, rseis, wh, wseis
 
 % input check
-error(nargchk(1,8,nargin))
+error(nargchk(1,11,nargin))
 
 % check data structure
 error(seischk(data,'name','endian'))
 
-% defaults
-if(nargin<8); trim=true; end
-if(nargin<7); filler=0; end
-if(nargin<6); fill=0; end
-if(nargin<5); offset2=0; end
-if(nargin<4); ref2='e'; end
-if(nargin<3); offset1=0; end
-if(nargin<2); ref1='b'; end
-
-% empty cut parameter defaults
-if(isempty(ref1)); if(isempty(offset1)); ref1='b'; else ref1='z'; end; end
-if(isempty(ref2)); if(isempty(offset2)); ref2='e'; else ref2='z'; end; end
-if(isempty(offset1)); offset1=0; end
-if(isempty(offset2)); offset2=0; end
-if(isempty(fill)); fill=0; end
-if(isempty(filler)); filler=0; end
-if(isempty(trim)); trim=true; end
+% parse cut parameters
+[ref1,ref2,offset1,offset2,fill,filler,trim]=cutparam(varargin{:});
 
 % number of records
 nrecs=length(data);
@@ -44,8 +44,7 @@ nrecs=length(data);
 % cut parameter checks
 if(~ischar(ref1) || ~ischar(ref2))
     error('SAClab:rpdw:badInput','ref must be a string')
-elseif(~isnumeric(offset1) || ~isnumeric(offset2) || ...
-        ~isvector(offset1) || ~isvector(offset2))
+elseif(~isvector(offset1) || ~isvector(offset2))
     error('SAClab:rpdw:badInput','offset must be a numeric vector')
 elseif(~any(length(offset1)==[1 nrecs]) || ...
         ~any(length(offset2)==[1 nrecs]))
@@ -84,7 +83,7 @@ end
 % window begin point
 if(strcmpi(ref1,'z'))
     bt(1:nrecs,1)=offset1;
-elseif(strcmpi(ref1,'n'))
+elseif(strcmpi(ref1,'x'))
     bp=round(offset1);
 else
     bt=gh(data,ref1)+offset1;
@@ -93,10 +92,15 @@ end
 % window end time
 if(strcmpi(ref2,'z'))
     et(1:nrecs,1)=offset2;
-elseif(strcmpi(ref2,'n') || strcmpi(ref2,'l'))
+elseif(strcmpi(ref2,'x') || strcmpi(ref2,'n'))
     ep=round(offset2);
 else
     et=gh(data,ref2)+offset2;
+end
+
+% check for nans
+if(any(isnan(bt)) || any(isnan(bp)) || any(isnan(et)) || any(isnan(ep)))
+    error('SAClab:rpdw:nanHeaderField','header field returned NaN')
 end
 
 % grab header setup
@@ -116,7 +120,7 @@ if(~isempty(falsi))
     if(~isempty(falsi(~destroy(falsi))))
         [data(falsi(~destroy(falsi))),destroy(falsi(~destroy(falsi)))]=...
             cutim(data(falsi(~destroy(falsi))),ref1,offset1,ref2,offset2,...
-            fill,filler,false);
+            'fill',fill,'filler',filler,'removedataless',false);
     end
 end
 
@@ -140,12 +144,12 @@ for i=trui.'
     end
     
     % closest points to begin and end
-    if(~strcmpi(ref1,'n'))
+    if(~strcmpi(ref1,'x'))
         bp(i)=round((bt(i)-b(i))/delta(i))+1;
     end
-    if(strcmpi(ref2,'l'))
+    if(strcmpi(ref2,'n'))
         ep2=bp(i)+ep(i)-1;
-    elseif(strcmpi(ref2,'n'))
+    elseif(strcmpi(ref2,'x'))
         ep2=ep(i);
     else
         ep2=round((et(i)-b(i))/delta(i))+1;

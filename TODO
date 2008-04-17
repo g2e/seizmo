@@ -1,4 +1,4 @@
-current focus
+continual focus
 -----------------
 bug checks
 	- function test scripts
@@ -9,38 +9,52 @@ clean up warnings/errors
 clean up structure checks
 clean up class support
 clean up documentation
+	- description includes usage
 	- examples
 	- requirements
-	- notes/warnings
+	- see also
+	- notes/warnings/problems
 add dataless support (npts==0)
 	+ rdata,rpdw,cutim support dataless input/output
-	- check/update all functions (ick...)
+	- check/update all functions (yuck...)
 finalize multi-component setup
 	+ unused15->ncmp
 	+ gh now outputs nan when ncmp unsupported
 	- check/update all functions
-cutim/rpdw
-	- allow more variable input (like: 'b',200,300)
-correlate/mcxc
-	- clean up and add in
+
+
+current focus
+-------------------
 iirfilter
-	- allow more variable input
+	- allow variable input
 	- clean up the corners
 	- figure out best way to handle overdesigned filters
 
+
 more function ideas (0.5.?)
 ------------------
-get poly (gpoly)
-rem poly (rpoly)
-get robust poly (grobpoly)
-rem robust poly (rrobpoly)
-detect glitches (gspikes)
-rem glitches (rspikes)
-detect offsets (goffsets)
-rem offsets (roffsets)
+
+fitting
+- get poly (gpoly)
+- rem poly (rpoly)
+- get smooth spline (gspline)
+- rem smooth spline (rspline)
+- get robust poly (grobpoly)
+- rem robust poly (rrobpoly)
+
+signal cleaning
+- detect glitches (gspikes)
+- rem glitches (rspikes)
+- detect offsets (goffsets)
+- rem offsets (roffsets)
+
+smoothing filters (sliding window function)
++ rms, robustrms
+- weighted rms? (mean weighted by windowing function)
+- non-root/square function (just a mean/median)
 
 fir deci (deci2)
- - causal decimation!
+- causal decimation, linear phase
 
 freq integration (fint)
 freq differentiation (fdif)
@@ -63,13 +77,14 @@ more plotting (0.5.1)
 spectral plotting (pspec1, pspec2, pspec3)
 plot choose component (pcmp1, pcmp2, pcmp3)
 plot particle motion (multi-component)
-picking
-deleting
+spectrogram (get familiar with it)
+picking phases (get familiar with ppk)
 
 
 multi-file functions (0.5.2)
 ---------------------------
 rotate (turn)
+merge
 add, subtr, mul, dvide records
 correlate (use mcxc!)
 beam
@@ -83,6 +98,12 @@ window
 align
 pick
 delete
+
+
+transfer (0.5.4)
+-----------------------
+remove polezeros
+from - to - setup
 
 
 header layout change (slated for 0.6.0)

@@ -30,6 +30,7 @@ conf=struct(...
 'TOOLBAR','auto',...                        % DISPLAY TOOLBAR
 'NUMBERTITLE','off',...                     % DISPLAY FIGURE NUMBER
 'RENDERER','painters',...                   % PLOT RENDERER
+'RENDERERMODE','auto',...                   % PLOT RENDERER MODE
 'DOUBLEBUFFER','on',...                     % DOUBLE THE BUFFER
 'POINTER','crosshair',...                   % POINTER STYLE
 'FIGBGCOLOR',[],...                         % FIGURE COLOR

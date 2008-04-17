@@ -7,7 +7,7 @@ function [scale]=gnrm(data)
 %
 %    Examples:
 %
-%    See also: mul, nrm, gmed
+%    See also: mult, nrm, gmed
 
 % check nargin
 error(nargchk(1,1,nargin))
