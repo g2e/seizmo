@@ -24,10 +24,12 @@ for i=1:nargin
         if(ref1unset)
             ref1='z';
             offset1=varargin{i};
+            ref1unset=false;
         % second offset (use first reference)
         elseif(ref2unset)
             ref2=ref1;
             offset2=varargin{i};
+            ref2unset=false;
         % only two offsets allowed
         else
             error('SAClab:cutim:badInput','Too many offsets')
