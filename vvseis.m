@@ -6,7 +6,7 @@ function [valid]=vvseis()
 %
 %    Notes:
 %     - version 6 corresponds to SAC's v6 binary format
-%     - versions 101,102,200,201,202 are modifications of SAC's v6.
+%     - versions 101,200,201 are modifications of SAC's v6.
 %    
 %    Usage:    valid_versions=vvseis()
 %
@@ -15,6 +15,6 @@ function [valid]=vvseis()
 %    See also:  seischk, isseis, seishi, gv
 
 % no args - return valid versions
-valid=[6 101 102 200 201 202];
+valid=[6 101 200 201];
 
 end

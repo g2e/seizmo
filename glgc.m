@@ -41,12 +41,22 @@ for i=unique(v)
     
     % loop over fields
     for j=1:length(varargin)
-        [varargout{j}{ind(nvarargout{j}(ind)==h.true)}]=deal('true');
-        [varargout{j}{ind(nvarargout{j}(ind)==h.false)}]=deal('false');
-        [varargout{j}{ind(nvarargout{j}(ind)==h.undef.ntype)}]=deal('undefined');
-        [varargout{j}{ind(nvarargout{j}(ind)~=h.true & ...
-            nvarargout{j}(ind)~=h.false & ...
-            nvarargout{j}(ind)~=h.undef.ntype)}]=deal('unknown');
+        if(any(nvarargout{j}(ind)==h.true))
+            [varargout{j}{ind(nvarargout{j}(ind)==h.true)}]=deal('true');
+        end
+        if(any(nvarargout{j}(ind)==h.false))
+            [varargout{j}{ind(nvarargout{j}(ind)==h.false)}]=deal('false');
+        end
+        if(any(nvarargout{j}(ind)==h.undef.ntype))
+            [varargout{j}{ind(nvarargout{j}(ind)==h.undef.ntype)}]=deal('undefined');
+        end
+        if(any(nvarargout{j}(ind)~=h.true ...
+            & nvarargout{j}(ind)~=h.false ...
+            & nvarargout{j}(ind)~=h.undef.ntype))
+            [varargout{j}{ind(nvarargout{j}(ind)~=h.true ...
+                & nvarargout{j}(ind)~=h.false ...
+                & nvarargout{j}(ind)~=h.undef.ntype)}]=deal('unknown');
+        end
     end
 end
 

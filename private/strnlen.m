@@ -20,7 +20,9 @@ if(ischar(A))
         A=[A ones(d(1),n-d(2))*32]; % pad with spaces
     end
 elseif(iscellstr(A) || iscell(A))
-    A=cellfun(@strnlen,A,num2cell(n(ones(size(A)))),'UniformOutput',false); 
+    for i=1:numel(A)
+        A{i}=strnlen(A{i},n);
+    end
 else
     error('array not type char, cellstr, or cell')
 end

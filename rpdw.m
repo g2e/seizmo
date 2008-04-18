@@ -72,7 +72,9 @@ fals=strcmp(leven,'false');
 trui=find(tru);
 falsi=find(fals);
 
-% expand scalar offsets
+% column vector/expand scalar offsets
+offset1=offset1(:);
+offset2=offset2(:);
 if(length(offset1)==1)
     offset1=offset1(ones(nrecs,1));
 end
@@ -81,8 +83,9 @@ if(length(offset2)==1)
 end
 
 % window begin point
+bt=[]; bp=[];
 if(strcmpi(ref1,'z'))
-    bt(1:nrecs,1)=offset1;
+    bt=offset1;
 elseif(strcmpi(ref1,'x'))
     bp=round(offset1);
 else
@@ -90,8 +93,9 @@ else
 end
 
 % window end time
+et=[]; ep=[];
 if(strcmpi(ref2,'z'))
-    et(1:nrecs,1)=offset2;
+    et=offset2;
 elseif(strcmpi(ref2,'x') || strcmpi(ref2,'n'))
     ep=round(offset2);
 else

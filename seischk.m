@@ -39,13 +39,13 @@ elseif(~isvector(data))
     report.message='SAClab data structure must be a vector';
 else
     reqfields=[{'head' 'version'} varargin];
-    lgc=isfield(data,reqfields);
     
-    % only complain about the first field not found
-    i=find(~lgc,1);
-    if(~isempty(i))
-        report.identifier='SAClab:seischk:reqFieldNotFound';
-        report.message=sprintf('SAClab data structure must have field ''%s''',reqfields{i});
+    % this works with older isfield (check one at a time)
+    for i=reqfields
+        if(~isfield(data,i))
+            report.identifier='SAClab:seischk:reqFieldNotFound';
+            report.message=sprintf('SAClab data structure must have field ''%s''',i);
+        end
     end
 end
 
