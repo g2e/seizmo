@@ -7,9 +7,10 @@ function [data]=robustrms(data,nsamples)
 %     Windows extending outside the record are padded with zeros, which 
 %     gives the output tapered edges. NSAMPLES can be a scalar (each
 %     record has the same window size) or a vector (define each record's
-%     window size separately).
+%     window size separately).  Even NSAMPLES will be changed to NSAMPLES+1
+%     so that the sliding window is centered on an existing time point.
 %
-%    Usage: [data]=rms(data,nsamples)
+%    Usage: [data]=robustrms(data,nsamples)
 %
 %    Examples:
 %     
@@ -29,11 +30,10 @@ nrecs=length(data);
 
 % fix/check nsamples
 if(isscalar(nsamples)); nsamples=nsamples(ones(1,nrecs),1); end
-if(~isnumeric(nsamples) || ~isvector(nsamples) ...
-        || length(nsamples)~=nrecs || any(fix(nsamples)~=nsamples) ...
-        || any(nsamples<1) || any(~mod(nsamples,2)))
-    error('SAClab:rms:badInput',...
-        'NSAMPLES must be a scalar/vector of odd positive integer(s)')
+if(~isnumeric(nsamples) || ~isvector(nsamples) || any(nsamples<1) ...
+        || length(nsamples)~=nrecs || any(fix(nsamples)~=nsamples))
+    error('SAClab:robustrms:badInput',...
+        'NSAMPLES must be a scalar/vector of positive integer(s)')
 end
 
 % half window length

@@ -1,9 +1,10 @@
-function [varargin]=onelist(varargin)
+function [list]=onelist(varargin)
 %ONELIST    Compiles multiple char/cellstr arrays into a single column cellstr
 %
 %    Description:  Combines char/cellstr arrays into a single column
-%     cellstr array.  Useful for taking file lists in various formats and
-%     combining them into one easy to handle list.
+%     cellstr array and then pipes each cell through dir.  Useful for 
+%     taking file lists and wildcards in various formats and combining them
+%     into one easy to handle list of files.
 %
 %    Usage: list=onelist(list1,list2,...)
 %
@@ -25,5 +26,15 @@ end
 
 % concatinate arguments
 varargin=[varargin{:}].';
+
+% pump each cell through dir
+list=[];
+for i=1:length(varargin)
+    % get this filelist
+    files=dir(varargin{i});
+    
+    % build list
+    list=[list; {files(~[files.isdir]).name}.']; %#ok<AGROW>
+end
 
 end

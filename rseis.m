@@ -4,6 +4,7 @@ function [data]=rseis(varargin)
 %    Description: Reads binary seismic datafiles into a SAClab data 
 %     structure.  Accepts character arrays of filenames (one filename per 
 %     row) and/or cell arrays of filenames (one filename per cell).
+%     Wildcards are valid.
 %
 %     SAClab data structure setup:
 %
@@ -47,8 +48,7 @@ function [data]=rseis(varargin)
 %     data=rseis(cellarray1,chrarray1,chrarray2,cellarray2);
 %
 %     Read in SAClab datafiles from current directory:
-%      files=dir();
-%      data=rseis(files.name);
+%      data=rseis('*');
 %
 %    See also: rh, rdata, rpdw, wh, wseis, bseis
 

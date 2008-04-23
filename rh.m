@@ -4,6 +4,7 @@ function [data]=rh(varargin)
 %    Description: Reads headers from binary seismic datafiles into a SAClab
 %     structure.  Accepts character arrays of filenames (one filename per 
 %     row) and/or cell arrays of filenames (one filename per cell).
+%     Wildcards are valid.
 %
 %     Fields of output SAClab structure:
 %      head - contains header data
@@ -21,8 +22,7 @@ function [data]=rh(varargin)
 %     data=rh(cellarray1,chrarray1,chrarray2,cellarray2);
 %
 %     Read in headers of all SAClab files in current directory:
-%      files=dir()
-%      data=rh(files.name)
+%      data=rh('*')
 %
 %    See also: rdata, rpdw, rseis, wseis, wh, bseis, seishi, gv
 
