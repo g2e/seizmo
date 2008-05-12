@@ -86,8 +86,8 @@ for i=1:nrecs
     
     % update header
     data(i)=ch(data(i),'delta',dt(i),'b',nt(1),'e',nt(end),...
-        'npts',length(nt),'depmin',-norm(min(data(i).x)),'leven','t',...
-        'depmax',norm(max(data(i).x)),'depmen',norm(mean(data(i).x)));
+        'npts',length(nt),'depmin',min(data(i).x(:)),'leven','t',...
+        'depmax',max(data(i).x(:)),'depmen',mean(data(i).x(:)));
 end
 
 end

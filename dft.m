@@ -1,26 +1,33 @@
-function [data]=fourier(data,format,pp2)
-%FOURIER    Converts time domain SAClab records to the frequency domain
+function [data]=dft(data,format,pow2pad)
+%DFT    Performs a discrete fourier transform on SAClab data records
 %
-%    Description: Converts SAClab records from the time domain to the
-%     frequency domain using the fast fourier transform.  Following SAC
-%     formatting, an output choice between real-imaginary and amplitude-
-%     phase is allowed through the 'format' input ('amph' or 'rlim' only -
-%     default is 'amph').  The power of 2 padding can be adjusted with the
-%     pp2 input (fft length = 2^(nextpow2(len)+pp2) , default pp2=1).
+%    Description: DFT(DATA,FORMAT) converts SAClab records from the time 
+%     domain to the frequency domain using a discrete fourier transform
+%     (Matlab's fft).  Following SAC formatting, an option FORMAT can be
+%     used to select between real-imaginary and amplitude-phase formats
+%     (FORMAT can be either 'amph' or 'rlim' - default is 'amph').  
+%
+%     DFT(DATA,FORMAT,POW2PAD) lets the power of 2 zero padding be adjusted
+%     using POW2PAD (default value is 1) according to the formula:
+%       fftlength=2^(nextpow2(NPTS)+POW2PAD)
+%
+%     In the frequency domain B, DELTA, and NPTS are changed to the 
+%     beginning frequency, sampling frequency, and number of data points in
+%     the transform (includes negative frequencies).  The original values 
+%     of B, DELTA, and NPTS are saved in the header as SB, SDELTA, and 
+%     NSNPTS and are restored when the IDFT command is performed.
 %
 %    Note:
 %     - SAC (and thus SAClab for sanity) calculates amp/real/imag spectral 
-%       data according to Parseval's theorem.  This has to be scaled to 
-%       give accurate amplitudes for sinusoids.  Divide records (except for
-%       phase!) by npts*delta/2 to get accurate spectral information for 
-%       sinusoids.  All SAClab functions that work with fourier will expect
-%       that this scaling has NOT been applied.
+%       data according to Parseval's theorem.  Dividing records (except for
+%       phase!) by npts*delta/2 gives more interesting results for
+%       sinusoids.
 %
-%    Usage: data=fourier(data,format,pp2)
+%    Usage: data=dft(data,format,pow2pad)
 %
 %    Examples:
 %
-%    See also: ifourier
+%    See also: idft
 
 % check nargin
 error(nargchk(1,3,nargin))
@@ -29,15 +36,15 @@ error(nargchk(1,3,nargin))
 error(seischk(data,'x'))
 
 % defaults
-if(nargin<3 || isempty(pp2)); pp2=1; end
+if(nargin<3 || isempty(pow2pad)); pow2pad=1; end
 if(nargin<2 || isempty(format)); format='amph'; end
 
 % check inputs
 if(~any(strcmpi(format,{'amph' 'rlim'})))
-    error('SAClab:fourier:badInput','bad format string: %s',format)
+    error('SAClab:dft:badInput','bad FORMAT string: %s',format)
 end
-if(~isnumeric(pp2) || ~isscalar(pp2) || fix(pp2)~=pp2)
-    error('SAClab:fourier:badInput','pp2 must be a scalar integer')
+if(~isnumeric(pow2pad) || ~isscalar(pow2pad) || fix(pow2pad)~=pow2pad)
+    error('SAClab:dft:badInput','POW2PAD must be a scalar integer')
 end
 
 % retreive header info
@@ -47,12 +54,12 @@ iftype=genumdesc(data,'iftype');
 
 % check leven,iftype
 if(any(~strcmp(leven,'true')))
-    error('SAClab:fourier:illegalOperation',...
+    error('SAClab:dft:illegalOperation',...
         'illegal operation on unevenly spaced record')
-elseif(any(~strcmp(iftype,'Time Series File'))...
-        && any(~strcmp(iftype,'General X vs Y file')))
-    error('SAClab:fourier:illegalOperation',...
-        'illegal filetype for this operation')
+elseif(any(~strcmp(iftype,'Time Series File')...
+        & ~strcmp(iftype,'General X vs Y file')))
+    error('SAClab:dft:illegalOperation',...
+        'illegal operation on spectral file')
 end
 
 % loop through records
@@ -65,7 +72,7 @@ for i=1:length(data)
     [len,ncmp]=size(data(i).x);
     
     % get frequency info
-    nspts=2^(nextpow2(len)+pp2);
+    nspts=2^(nextpow2(len)+pow2pad);
     sb=0; se=1/(delta(i)*2); sdelta=2*se/nspts;
     
     % fft

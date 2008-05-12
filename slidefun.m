@@ -27,8 +27,8 @@ function [data]=slidefun(data,fun,nsamples)
 %
 %    Examples:
 %
-%     Benson et al 2006:
-%      slidefun(data,@(x)mean(abs(x)),fix(maxper/(2*delta)))
+%     Running absolute mean from G. D. Bensen et al, 2006:
+%      slidefun(data,@(x)mean(abs(x)),ceil(1/(2*delta*fmin)))
 %
 %    See also: seisfun, rms, robustrms
 
@@ -78,8 +78,8 @@ for i=1:nrecs
     data(i).x=oclass(temp);
     
     % update header
-    data(i)=ch(data(i),'depmax',norm(max(data(i).x)),...
-        'depmin',-norm(min(data(i).x)),'depmen',norm(mean(data(i).x)));
+    data(i)=ch(data(i),'depmax',max(data(i).x(:)),...
+        'depmin',min(data(i).x(:)),'depmen',mean(data(i).x(:)));
 end
 
 end

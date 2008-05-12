@@ -1,0 +1,36 @@
+to install:
+
+1. add this directory to your matlab path
+2. ???
+3. Profit!
+
+
+reading/writing:
+
+read files in current directory:
+data=rseis('*')
+
+read just the headers in:
+data=rh('*')
+
+read/reread data in (headers must be read already):
+data=rdata(data)
+
+read a partial data window (headers must be read already):
+data=rpdw(data)
+
+write data out:
+wseis(data)
+
+write just headers:
+wh(data)
+
+filenames for writing are stored in data.name, 
+to change a single record's filename:
+data(1).name='mynewfile';
+
+to change several names (specifically records 1,4,7,22,9,2):
+list={'my' 'list' 'of' 'new' 'names' 'etc'}
+[data([1 4 7 22 9 2]).name]=list{:}
+
+

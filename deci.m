@@ -77,8 +77,8 @@ for i=1:length(data)
     
     % update header
     data(i)=ch(data(i),'npts',len,'delta',delta(i),...
-        'e',b(i)+(len-1)*delta(i),'depmin',-norm(min(data(i).x)),...
-        'depmen',norm(mean(data(i).x)),'depmax',norm(max(data(i).x)));
+        'e',b(i)+(len-1)*delta(i),'depmin',min(data(i).x(:)),...
+        'depmen',mean(data(i).x(:)),'depmax',max(data(i).x(:)));
 end
 
 end

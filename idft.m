@@ -1,21 +1,27 @@
-function [data]=ifourier(data)
-%IFOURIER    Converts spectral SAClab records to the time domain
+function [data]=idft(data)
+%IDFT    Performs an inverse discrete fourier transform on SAClab records
 %
-%    Description: Converts SAClab records from the frequency domain to the
-%     time domain using the inverse fast fourier transform.  Output file
-%     type is timeseries file.
+%    Description: IDFT(DATA) converts SAClab records from the frequency 
+%     domain to the time domain using the inverse fast fourier transform.  
+%     Output filetype is a Time Series File.
+%
+%     In the frequency domain B, DELTA, and NPTS are changed to the 
+%     beginning frequency, sampling frequency, and number of data points in
+%     the transform (includes negative frequencies).  The original values 
+%     of B, DELTA, and NPTS are saved in the header as SB, SDELTA, and 
+%     NSNPTS and are restored when this command is performed.
 %
 %    Note:
 %     - Assumes amplitudes for spectral files follow the convention from 
-%       SAC/SAClab's fourier routine.  There is a conversion factor of 
-%       npts*delta/2 between this and spectral amplitudes that are accurate
-%       for sinusoids.
+%       SAC/SAClab's DFT routine.  There is a conversion factor of 
+%       npts*delta/2 between this and spectral amplitudes that are more
+%       interesting for sinusoids.
 %
-%    Usage: data=ifourier(data)
+%    Usage: data=idft(data)
 %
 %    Examples:
 %
-%    See also: fourier
+%    See also: dft
 
 % check nargin
 error(nargchk(1,1,nargin))
@@ -32,12 +38,12 @@ e=sb+(nspts-1).*sdelta;
 
 % check leven,iftype
 if(any(~strcmp(leven,'true')))
-    error('SAClab:fourier:illegalOperation',...
+    error('SAClab:idft:illegalOperation',...
         'illegal operation on unevenly spaced record')
-elseif(any(~strcmp(iftype,'Spectral File-Real/Imag'))...
-        && any(~strcmp(iftype,'Spectral File-Ampl/Phase')))
-    error('SAClab:fourier:illegalOperation',...
-        'illegal filetype for this operation')
+elseif(any(~strcmp(iftype,'Spectral File-Real/Imag')...
+        & ~strcmp(iftype,'Spectral File-Ampl/Phase')))
+    error('SAClab:idft:illegalOperation',...
+        'illegal operation on non-spectral file')
 end
 
 % loop through records

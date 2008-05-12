@@ -1,26 +1,19 @@
-continual focus
+continual/lingering focus
 -----------------
 bug checks
 	- function test scripts
 	- test data
-clean up warnings/errors
-	- right function in identifier
-	- how to do group warning operations???
-clean up structure checks
-clean up class support
+	- class support
+	- structure checks
+	- multi-component support
+	- warnings associated with correct function
+	- dataless (npts==0) support
 clean up documentation
 	- description includes usage
 	- examples
 	- requirements
 	- see also
 	- notes/warnings/problems
-add dataless support (npts==0)
-	+ rdata,rpdw,cutim support dataless input/output
-	- check/update all functions (yuck...)
-finalize multi-component setup
-	+ unused15->ncmp
-	+ gh now outputs nan when ncmp unsupported
-	- check/update all functions
 
 
 current focus
@@ -29,6 +22,7 @@ iirfilter
 	- allow variable input
 	- clean up the corners
 	- figure out best way to handle overdesigned filters
+group warning commands (how?)
 
 
 more function ideas (0.5.?)
@@ -55,9 +49,6 @@ smoothing filters (sliding window function)
 
 fir deci (deci2)
 - causal decimation, linear phase
-
-freq integration (fint)
-freq differentiation (fdif)
 
 fetch record (frec)
 - by component

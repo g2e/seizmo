@@ -26,8 +26,8 @@ for i=1:nrecs
     data(i).x=double(data(i).x);
     scale(i)=max(sqrt(sum((data(i).x).^2,2)));
     data(i).x=oclass(data(i).x/scale(i));
-    data(i)=ch(data(i),'depmax',norm(max(data(i).x)),...
-        'depmin',-norm(min(data(i).x)),'depmen',norm(mean(data(i).x)));
+    data(i)=ch(data(i),'depmax',max(data(i).x(:)),...
+        'depmin',min(data(i).x(:)),'depmen',mean(data(i).x(:)));
 end
 
 end

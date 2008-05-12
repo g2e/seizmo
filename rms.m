@@ -51,8 +51,8 @@ for i=1:nrecs
     data(i).x(1:half1(i),:)=[];
     
     % update header
-    data(i)=ch(data(i),'depmax',norm(max(data(i).x)),...
-        'depmin',-norm(min(data(i).x)),'depmen',norm(mean(data(i).x)));
+    data(i)=ch(data(i),'depmax',max(data(i).x(:)),...
+        'depmin',min(data(i).x(:)),'depmen',mean(data(i).x(:)));
 end
 
 end
