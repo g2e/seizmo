@@ -14,13 +14,20 @@ function [conf]=pconf()
 %     unset options that need to be replaced by general ones.
 %
 %     Order of operations:
-%       1. CONF=pconf()
-%       2. SACLAB --> CONF
-%       3. function options --> CONF
-%       4. CONF=pconffix(CONF)
+%       1. CONF=pconf()               (defaults)
+%       2. SACLAB --> CONF            (user global settings)
+%       3. function options --> CONF  (user function-specific settings)
+%       4. CONF=pconffix(CONF)        (sets unset options using heirarchy)
 %       5. plotting
 %
 %    See also: p1, p2, p3, recsec
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation Update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 16:20 GMT
 
 % SETTING CONFIGURE STRUCTURE DEFAULTS
 conf=struct(...

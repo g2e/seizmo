@@ -8,8 +8,10 @@ function [data]=hilbrt(data,pp2)
 %    Usage: [data]=hilbrt(data)
 %
 %    Examples:
+%     To do a negative 90 degree phase shift:
+%      data=hilbert(mul(data,-1))
 %
-%    See also: envelope
+%    See also: envelope, mul
 
 % check nargin
 error(nargchk(1,2,nargin))

@@ -1,18 +1,29 @@
 function [version,endian]=gv(filename)
 %GV    Get version and byte-order of SAClab datafile
 %
-%    Description: Automatically determines version and byte-order of a
-%     SAClab binary datafile.  Currently based on the header version field
-%     validity - a 32bit signed integer occupying bytes 305 to 308.  If 
-%     the datafile cannot be validated (usually occurs when the file is not
-%     a SAClab datafile or cannot be opened) a warning is issued and the 
-%     version is set to 0.
+%    Description: [VERSION,ENDIAN]=GV(FILENAME) determines the version 
+%     VERSION and byte-order ENDIAN of a SAClab compatible file FILENAME.  
+%     Currently this is solely based on the header version field validity 
+%     - a 32bit signed integer occupying bytes 305 to 308.  If the datafile
+%     cannot be validated (usually occurs when the file is not a SAClab 
+%     datafile or cannot be opened) a warning is issued, VERSION is set to
+%     0, and ENDIAN is left empty.
 %
 %    Usage:    [version,endian]=gv('filename')
 %
 %    Examples:
+%     Figure out a file's version so that we can pull up the definition:
+%      version=gv('myfile')
+%      def=seisdef(version)
 %
-%    See also:  rh, wh, seishi, vvseis
+%    See also:  rh, wh, seisdef, vvseis
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation Update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 16:40 GMT
 
 % get valid versions
 valid=vvseis();

@@ -8,7 +8,8 @@ function [report]=seischk(data,varargin)
 %     included).  The structure contains the fields 'identifier' and 
 %     'message'.
 %
-%    Usage: error(seischk(data)) or warning(seischk(data))
+%    Usage: error(seischk(data))
+%           warning(seischk(data))
 %           error(seischk(data,'requiredfield1','requiredfield2',...))
 %           warning(seischk(data,'requiredfield1','requiredfield2',...))
 %
@@ -24,7 +25,14 @@ function [report]=seischk(data,varargin)
 %
 %           error(seischk(data,'x')
 %
-%    See also: isseis, seishi
+%    See also: isseis, seisdef
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation Update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 05:35 GMT
 
 % check data structure
 report=[];

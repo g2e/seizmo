@@ -1,22 +1,30 @@
 function [data]=stretch(data,factor)
 %STRETCH    Upsample SAClab data records by an integer factor
 %
-%    Description: Upsamples SAClab data records by an integer factor.  
-%     Anti-aliasing is not an issue so there is no limit imposed on the
-%     stretch factor.  Cascades are allowed regardless.  Uses the Matlab
-%     function interp (Signal Processing Toolbox).
+%    Description: STRETCH(DATA,FACTOR) upsamples SAClab data records by an 
+%     integer FACTOR.  Anti-aliasing is not an issue so there is no limit 
+%     imposed on the stretch factor.  Cascades are allowed regardless.  
+%     Uses the Matlab function interp (Signal Processing Toolbox).
+%
+%    Header changes: DELTA, NPTS, DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage:  [data]=stretch(data,factor)
 %
 %    Examples: 
-%       To double samplerates:
-%       [data]=stretch(data,2)
+%     To double samplerates:
+%      data=stretch(data,2)
 %
-%       To cascade to a samplerate 40 times higher:
-%       [data]=stretch(data,[5 8])
+%     To cascade to a samplerate 40 times higher:
+%      data=stretch(data,[5 8])
 %
-%    See also: deci, syncsr, intrpol8
+%    See also: deci, syncsr, interpolate
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 15, 2008 - Updated documentation
 %
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 15, 2008 at 03:55 GMT
 
 % check inputs
 error(nargchk(2,2,nargin))

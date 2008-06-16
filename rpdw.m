@@ -1,33 +1,41 @@
 function [data,destroy]=rpdw(data,varargin)
-%RPDW    Read partial data window from binary seismic datafiles in SAClab
+%RPDW    Read partial data window from binary datafiles into SAClab
 %
-%    Description: Reads a partial data window from binary seismic datafiles
-%     into a SAClab structure using the windowing parameters supplied.  
-%     This provides a mechanism similar to the SAC 'cut' command to limit 
+%    Description: Reads a partial data window from binary datafiles into a
+%     SAClab structure using the windowing parameters supplied.  This 
+%     provides a mechanism similar to the SAC 'cut' command to limit 
 %     memory/cpu usage related to reading in large datafiles.  Input 
 %     parameters are exactly the same as the SAClab 'cutim' command - for 
 %     details on cutting read there.
+%
+%    Header changes: B, E, NPTS, DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage: [data]=rpdw(data,...,variable,list,of,cut,parameters,...)
 %
 %    Examples:
 %     remember to read in the header info first:
-%      files=dir('*.sac')  % reads in files ending in .sac from current dir
-%      data=rh(files.name) % reads in headers of sac files
+%      data=rh('*.SAC')
 %
 %     read in only the first 300 samples:
 %      data=rpdw(data,'x',1,300)
 %     
-%     read in a 90 second window around t1 arrival, padding with zeros if
-%     necessary:
-%      data=rpdw(data,'t1',-30,60,'fill',true)
+%     read in a 90 second window around t1 arrival, padding data gaps with
+%     zeros as necessary:
+%      data=rpdw(data,'t1',-30,60,'fill',true,'filler',0)
 %
-%     read in the 123rd sample:
+%     read in only the 123rd sample:
 %      data=rpdw(data,'x',123,123)
 %     or
 %      data=rpdw(data,'x',123,'n',1)
 %
 %    See also: cutim, rh, rdata, rseis, wh, wseis
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation Update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 05:45 GMT
 
 % input check
 error(nargchk(1,11,nargin))
@@ -110,9 +118,9 @@ end
 % grab header setup
 vers=unique([data.version]);
 nver=length(vers);
-h(nver)=seishi(vers(nver));
+h(nver)=seisdef(vers(nver));
 for i=1:nver-1
-    h(i)=seishi(vers(i));
+    h(i)=seisdef(vers(i));
 end
 
 % allocate bad records matrix

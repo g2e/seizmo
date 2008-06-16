@@ -1,9 +1,10 @@
 function [report]=lgcchk(field,lgc)
 %LGCCHK    Verifies that all elements of cellstr are 'true' or 'false'
 %
-%    Description:  lgcchk(LGC) will generate an appropriate error message
-%     structure if all the elements of cellstr array LGC are not 'true' or
-%     'false'.
+%    Description:  LGCCHK(FIELD,LGC) will generate an appropriate error
+%     message structure if any elements of cellstr array LGC are not 
+%     'true' or 'false'.  FIELD is the header field name (only used for
+%     making the error message).
 %
 %    Usage:  error(lgcchk('fieldname',logic_field))
 %

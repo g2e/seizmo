@@ -1,20 +1,30 @@
 function []=lh(data,varargin)
 %LH    List SAClab data headers
 %
-%    Description: List specified header field(s) and their value(s) from a
-%     SAClab data structure in a manner similar to SAC's lh formating.
-%     Fields must be strings corresponding to a valid header field or a
-%     valid group field (ie. t,kt,resp,user,kuser).
+%    Description: LH(DATA,FIELD1,FIELD2,...) lists the specified header 
+%     field(s) FIELD1, FIELD2, ... and their value(s) in DATA in a manner 
+%     similar to SAC's lh formating.  FIELDS must be strings corresponding 
+%     to a valid header field or a valid group field (ie. t, kt, resp, 
+%     user, kuser).
 %
-%    Usage:    lh(SAClab_struct,'field1','field2',...)
+%    Usage:    lh(data,'field1','field2',...)
 %
 %    Examples:
-%     lh(data)          % lists all header variables
-%     lh(data,'t')      % lists t group
-%     lh(data,'dEltA')
-%     lh(data,'StLA','stLo')
+%      lh(data)          % lists all header variables
+%      lh(data,'t')      % lists t group
+%
+%     Fields are case independent:
+%      lh(data,'dEltA')
+%      lh(data,'StLA','stLo')
 %
 %    See also:  ch, gh, glgc, genum, genumdesc
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation Update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 16:25 GMT
 
 % require at least one input
 if(nargin<1)
@@ -28,9 +38,9 @@ error(seischk(data))
 % headers setup
 vers=unique([data.version]);
 nver=length(vers);
-h(nver)=seishi(vers(nver));
+h(nver)=seisdef(vers(nver));
 for i=1:nver-1
-    h(i)=seishi(vers(i));
+    h(i)=seisdef(vers(i));
 end
 
 % extra padding

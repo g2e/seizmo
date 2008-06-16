@@ -1,7 +1,7 @@
 function [data]=rh(varargin)
-%RH    Read SAClab headers from binary seismic datafiles
+%RH    Read SAClab headers from binary datafiles
 %
-%    Description: Reads headers from binary seismic datafiles into a SAClab
+%    Description: Reads headers from binary datafiles into a SAClab
 %     structure.  Accepts character arrays of filenames (one filename per 
 %     row) and/or cell arrays of filenames (one filename per cell).
 %     Wildcards are valid.
@@ -17,14 +17,27 @@ function [data]=rh(varargin)
 %                                 'seisfile5','seisfile6',...)
 %
 %    Examples:
-%     data=rh('KATH.R');
-%     data=rh('SQRL.R','AAK.R');
-%     data=rh(cellarray1,chrarray1,chrarray2,cellarray2);
+%     Some basic examples:
+%      data=rh('KATH.R');
+%      data=rh('SQRL.R','AAK.R');
 %
-%     Read in headers of all SAClab files in current directory:
+%     Maybe you have several big filelists to read in:
+%      data=rh(cellarray1,chrarray1,chrarray2,cellarray2);
+%
+%     Read in headers of all SAClab readible files in current directory:
 %      data=rh('*')
 %
-%    See also: rdata, rpdw, rseis, wseis, wh, bseis, seishi, gv
+%     Read in some datafile's headers, modify them, and write out changes:
+%      wh(ch(rh('*.SAC'),'kuser0','QCed'))
+%
+%    See also: rdata, rpdw, rseis, wseis, wh, bseis, seisdef, gv
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation Update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 05:50 GMT
 
 % compile file lists
 varargin=onelist(varargin{:});
@@ -62,7 +75,7 @@ for i=1:nfiles
     end
     
     % retrieve header setup
-    h=seishi(version);
+    h=seisdef(version);
     
     % get file size
     fseek(fid,0,'eof');

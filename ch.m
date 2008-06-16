@@ -1,38 +1,52 @@
 function [data]=ch(data,varargin)
 %CH    Change SAClab data header values
 %
-%    Description: Changes the specified SAClab data header field(s) to the
-%     specified value(s).  The field variable must be a string
-%     corresponding to a valid header field.  Values may be scalar
-%     (assigns same value to all) or vectors of length equal to the number
-%     of records.  Values may be contained in a numeric, char, or cell
-%     arrays.  For group field assignment, value arrays should be arranged
-%     with each column corresponding to a specific field in the group. 
+%    Description: CH(DATA,FIELD,VALUE) changes the specified header field 
+%     FIELD to the value(s) in VALUE for each record in DATA and returns
+%     an updated SAClab data structure.  FIELD must be a string 
+%     corresponding to a valid header field.  VALUE may be a scalar 
+%     (assigns same value to all) or a vector of length equal to the number
+%     of records and can be of type numeric, char, or cell.  If FIELD is a 
+%     group field ('t','resp','user','kt','kuser') then VALUE can be a 
+%     scalar (assigns same value to all fields for all records), a vector 
+%     (separate values for each record, but same value for each field), or 
+%     an array (separate values for all fields in all records).  For group 
+%     field assignment, VALUE should be arranged so that columns delimit 
+%     values for each field in the group and rows indicate the record 
+%     (first row = first record, etc).  See the examples below to see how 
+%     to replicate a set of values across several records.
+%
+%     CH(DATA,FIELD1,VALUE1,...,FIELDN,VALUEN) allows for changing multiple
+%     fields in a single call.
 %
 %    Notes:
-%     Replication within fields in the group field case, will fail if the
-%     number of fields in the group equals the number of records in the
-%     dataset when there are multiple header versions in the dataset.  If
-%     you want every record in a dataset to have the same values for a
-%     group field, then replicate the values before input (see examples).
+%     - Assigning a vector of values to a group field can behave 
+%       inconsistently when working with multiple records.  Basically when
+%       the number of records equals the number of fields, replication 
+%       across records becomes replication across fields when there are 2 
+%       or more header versions.  Avoid all this headache by not relying on
+%       CH to do the replication for vectors.  Expand the vector to a 2D
+%       array beforehand.
 %
-%    Usage:    new_struct=ch(SAClab_struct,'group_field1',value1,...
-%                               'field2',{'value2a' 'value2b' ...},...
-%                               'field3',[value3a; value3b; ...])
+%    Header changes: Determined by input list.
+%
+%    Usage: data=ch(data,'field1',values1)
+%           data=ch(data,'field1,'values1,...,'fieldN',valuesN)
 %
 %    Examples:
+%     Some simple examples:
 %      data=ch(data,'DELTA',gh(data,'delta')*2);
 %      data=ch(data,'STLA',lats,'STLO',lons)
 %      data=ch(data,'KT0','sSKS');
 %    
 %     The following has behavior dependent on number of header versions 
-%     in records 2-11 (see Note above):
-%
-%      Copy 't' fields from record 1 to records 2 through 11:
+%     in records 2-11.  If all records have the same header version then CH
+%     replicates the values in record 1 to records 2-11 so their 't' fields
+%     match.  If there are multiple versions CH will give each record one 
+%     value from record 1 and replicate that value to each 't' field.
 %      data=ch(data(2:11),'t',gh(data(1),'t'))
 %
-%     This will always work correctly:
-%
+%     This will always make the 't' fields of records 2-11 match record 1:
 %      t=gh(data(1),'t');
 %      data=ch(data(2:11),'t',t(ones(10,1),:));
 %
@@ -42,6 +56,13 @@ function [data]=ch(data,varargin)
 %         data=ch(data(1:10),'t',gh(data(1:10),'t0'))
 %
 %    See also:  lh, gh, rh, wh, glgc, genum, genumdesc
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 16, 2008 - Documentation update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 16, 2008 at 06:45 GMT
 
 % throw error if unpaired fields
 if (mod(nargin-1,2))
@@ -97,7 +118,7 @@ if(nver>1)
 end
 
 % headers setup
-h=seishi(vers);
+h=seisdef(vers);
 
 % pull entire header
 head=[data.head];

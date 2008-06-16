@@ -1,17 +1,17 @@
-function [data]=add(data,constant,cmp)
-%ADD    Add a constant to SAClab data records
+function [data]=mul(data,constant,cmp)
+%MUL    Multiply SAClab data records by a constant
 %
-%    Description: ADD(DATA,CONSTANT) adds a constant to SAClab data
-%     records.  For multi-component files, this operation is performed on
+%    Description: MUL(DATA,CONSTANT) multiplies SAClab data records by a
+%     constant.  For multi-component files, this operation is performed on
 %     every component (this includes spectral files).
 %
-%     ADD(DATA,CONSTANT,CMP) allows for operations on just components in
+%     MUL(DATA,CONSTANT,CMP) allows for operations on just components in
 %     the list CMP.  See the examples section for a usage case.
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage: data=add(data,constant)
-%           data=add(data,constant,cmp_list)
+%    Usage: data=mul(data,constant)
+%           data=mul(data,constant,cmp_list)
 %
 %    Notes:
 %     - a scalar constant applies the value to all records
@@ -20,18 +20,18 @@ function [data]=add(data,constant,cmp)
 %     - cmp_list gives the dependent component(s) to work on (default=all)
 %
 %    Examples:
-%     Add a 135 degree (3*pi/4) phase shift to data records by only adding
-%     to the phase component in amplitude-phase records (component 2):
-%      data=idft(add(dft(data),3*pi/4,2))
+%     Get the complex conjugate of a real-imaginary spectral records by
+%     multiplying the imaginary component by -1 (component 2):
+%      data=mul(data,-1,2)
 %
-%    See also: sub, mul, divide
+%    See also: sub, add, divide
 
 %     Version History:
 %        ????????????? - Initial Version
 %        June 12, 2008 - Cleaned up documentation and added example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 00:20 GMT
+%     Last Updated June 12, 2008 at 00:05 GMT
 
 % check nargin
 error(nargchk(2,3,nargin))
@@ -58,7 +58,7 @@ end
 % add constant and update header
 for i=1:nrecs
     oclass=str2func(class(data(i).x));
-    data(i).x(:,cmp)=oclass(double(data(i).x(:,cmp))+constant(i));
+    data(i).x(:,cmp)=oclass(double(data(i).x(:,cmp))*constant(i));
     data(i)=ch(data(i),'depmax',max(data(i).x(:)),...
         'depmin',min(data(i).x(:)),'depmen',mean(data(i).x(:)));
 end

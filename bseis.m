@@ -1,15 +1,25 @@
 function [data]=bseis(varargin)
-%BSEIS   Arrange timeseries into SAClab format
+%BSEIS   Arranges xy data into a SAClab data structure
 %
-%    Description: Takes vectors of x-values and y-values and formats them 
-%     to be compatible with SAClab routines such as rseis and wseis.
+%    Description: BSEIS(X1,Y1,X2,Y2,...) takes vectors of x-values and 
+%     y-values and arranges them into a SAClab data structure (one record 
+%     per x/y pair) to be compatible with SAClab functions.  The name field
+%     is left blank so before writing any data generated using this
+%     function, fill in the name field (see example below).
+%
+%    Notes:
+%     - outputs records as equivalent to SAC version 6
+%     - the byte-order is set to match the current architecture
+%     - the filetype is set as 'General X vs Y file'
+%     - automatically figures out if data is evenly sampled
+%     - does not support multiple components (x vs [y1 y2 y3 ...])
 %
 %    Usage:    SAClab_struct=bseis(x_vec1,y_vec1,x_vec2,y_vec2...)
 %
 %    Examples:
 %     To create a square root function in Matlab and then convert the array
 %     information into a SAClab compatible structure and ultimately write
-%     to a formatted binary file:
+%     to a formatted binary file (SAC version 6 equivalent):
 %
 %      xarray=linspace(0,30,1000);
 %      yarray=sqrt(xarray);
@@ -18,6 +28,13 @@ function [data]=bseis(varargin)
 %      wseis(data);
 %
 %    See also:  wseis, rseis
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation Update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 19:20 GMT
 
 % check number of inputs
 if (mod(nargin,2)) 
@@ -28,7 +45,7 @@ end
 pref=6;
 
 % get preferred header layout
-h=seishi(pref);
+h=seisdef(pref);
 
 % undefine numeric header
 undef=zeros(h.size,1,h.store);
@@ -89,7 +106,7 @@ for i=1:2:nargin
         'delta',delta,'b',varargin{i}(1),'e',varargin{i}(end),...
         'npts',npts,'depmin',min(data(j).x(:)),...
         'depmax',max(data(j).x(:)),'depmen',mean(data(j).x(:)),...
-        'iftype','Time Series File','leven','true','lcalda','true',...
+        'iftype','General X vs Y file','leven','true','lcalda','true',...
         'lovrok','true','lpspol','false','nvhdr',pref,...
         'knetwk','SAClab');
     

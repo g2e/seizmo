@@ -1,21 +1,45 @@
 function [fh,sfh]=p1(data,varargin)
 %P1    Plot SAClab data records in individual subplots
 %
-%    Description: Plots timeseries and xy SAClab records in individual
-%     subplots.  Other filetypes are ignored (a space is left in the figure
-%     though).  Flags for 'o','a','f','t(n)' are drawn if defined.  Labels
-%     are drawn for the flags using 'ko','ka','kf','kt(n)' if defined or
-%     the field name (o,a,f,t(n)).  Optional inputs should correspond to 
-%     fields returned by function pconf.  Output is the figure and 
-%     subfigure handles.
+%    Description: P1(DATA) plots timeseries and xy SAClab records in a
+%     figure as individual subplots.  Other filetypes are ignored (a space 
+%     is left for their subplot in the figure).  By default, markers 'o',
+%     'a','f','t(n)' are drawn if defined and are given labels using 'ko',
+%     'ka','kf','kt(n)' if defined otherwise the field name (o,a,f,t(n)) is
+%     used.  
+%
+%     [FH,SFH]=P1(DATA) returns the figure handle in FH and the subplot
+%     handles in SFH.
+%
+%     P1(DATA,PLOT_OPTION,OPTION_VALUE) modifies the plot parameter
+%     PLOT_OPTION to OPTION_VALUE.  A list of available options and their
+%     applicable range can be found with the function PCONF.
 % 
 %    Usage:  [fh,sfh]=p1(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
-%     Plot records with 3 columns of subplots
-%        p1(data,'ncols',3)
+%     Plot records with 3 columns of subplots:
+%      p1(data,'ncols',3)
+%
+%     Plot records with the 'jet' colormap:
+%      p1(data,'colormap','jet')
+%
+%     Create your own colormap (one color per row):
+%      p1(data,'colormap',['k'; 'r'; 'b'])
+%       or
+%      p1(data,'colormap',[0 0 0; 1 0 0; 0 0 1])
+%
+%     Black on white plot without markers:
+%      p1(data,'bgcolor','w','fgcolor','k','colormap','k','markers',false)
 %
 %    See also:  p2, p3, recsec
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation Update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 16:10 GMT
 
 % check data structure
 error(seischk(data,'x'))
@@ -83,9 +107,9 @@ iftype=genumdesc(data,'iftype');
 % header structures (for determining if undefined)
 vers=unique([data.version]);
 nver=length(vers);
-h(nver)=seishi(vers(nver));
+h(nver)=seisdef(vers(nver));
 for i=1:nver-1
-    h(i)=seishi(vers(i));
+    h(i)=seisdef(vers(i));
 end
 
 % default columns/rows

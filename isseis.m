@@ -11,10 +11,16 @@ function [lgc]=isseis(data,varargin)
 %     To see if the function rh returns a valid SAClab structure after
 %     reading in files from the current directory:
 %
-%       files=dir;
-%       if(isseis(rh(files.name))); disp('Valid Structure'); end
+%       if(isseis(rh('*'))); disp('Valid Structure'); end
 %
-%    See also: seischk, seishi
+%    See also: seischk, seisdef
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation Update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 16:30 GMT
 
 % test output of seischk call
 lgc=isempty(seischk(data,varargin{:}));

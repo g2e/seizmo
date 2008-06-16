@@ -1,5 +1,5 @@
-function [header]=seishi(version)
-%SEISHI    Returns SAClab definition structure
+function [header]=seisdef(version)
+%SEISDEF    Returns SAClab definition structure
 %
 %    Description: Provides all information necessary to read/modify/write 
 %     the specified version of a SAClab data record/file.
@@ -12,11 +12,20 @@ function [header]=seishi(version)
 %       the header storage).  Breaking the header into subfields would
 %       probably require more memory anyways due to overhead.
 %    
-%    Usage:    header_info=seishi(version)
+%    Usage:    header_info=seisdef(version)
 %
 %    Examples:
+%     Get detailed information on SAC version 6 files:
+%      sac_ver_6=seisdef(6)
 %
 %    See also:  seischk, isseis, vvseis
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Renamed and added example
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 05:05 GMT
 
 % check nargin
 error(nargchk(1,1,nargin))
@@ -26,7 +35,7 @@ valid=vvseis();
 
 % check for invalid version
 if(~any(valid==version))
-    error('SAClab:seishi:invalidVersion''Header version invalid: %d!',version)
+    error('SAClab:seisdef:invalidVersion''Header version invalid: %d!',version)
 end
 
 % SAC version 6 header setup

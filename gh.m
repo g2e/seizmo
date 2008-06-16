@@ -1,24 +1,60 @@
 function [varargout]=gh(data,varargin)
 %GH    Get SAClab data header values
 %
-%    Description: Gets specified header value(s) from a SAClab data  
-%     structure.  Fields must be strings corresponding to a valid header
-%     field or a valid group field (ie. t,kt,resp,user,kuser).  Values are
-%     returned in numeric arrays or cell string arrays oriented as column
-%     vectors with one value per cell.  One value array per field or group
-%     field. Calling with no fields will attempt to return all headers in a
-%     single numeric array.
+%    Description: GH(DATA) will attempt to return all header values for
+%     all records in DATA as a single numeric array.  Rows in the output
+%     array correspond to the header values of individual records.  The 
+%     order of the fields follows that of how they are stored in memory 
+%     (see SAClab's function SEISDEF for details).  Character fields are 
+%     returned as a series of their ascii number equivalents (0-255).
+%
+%     GH(DATA,FIELD) returns the specified header field FIELD's values for 
+%     each record stored in the SAClab data structure DATA.  FIELD must be
+%     a string corresponding to a valid header field or a valid group field
+%     (ie. t,kt,resp,user,kuser).  Values are returned in numeric arrays or
+%     cellstring arrays oriented such that each column corresponds to an 
+%     individual header field and each row to an individual record.  So the
+%     group field 't' would return a numeric array with 10 columns and as
+%     many rows as records in DATA while group field 'kuser' would return a
+%     cellstring array with 3 columns and as many rows as records in DATA.
+%     
+%     GH(DATA,FIELD1,...,FIELDN) returns one array of values per field or 
+%     group field.
+%
+%    Notes:
+%     - Enumerated fields return the value actually stored, an integer used
+%       to look up the enum string id and description in a table.  To 
+%       retrieve the associated string id or description use the functions 
+%       GENUM or GENUMDESC.
+%     - Logical fields return the value actually stored, not a logical.  To
+%       get a more useful value use GLGC.
 %    
-%    Usage:    [value_array1,...]=gh(SAClab_struct,'field1',...
-%                                       'group_field1','field2',...)
+%    Usage:  headers=gh(data)
+%            values=gh(data,'field1')
+%            [values1,...,valuesN]=gh(data,'field1',...,'fieldN')
 %
 %    Examples:
-%     head=gh(data)       % put all header variables in one numeric array
-%     times=gh(data,'t')  % put all t values in one array
-%     dt=gh(data,'DeLtA')
-%     [stla,stlo]=gh(data,'stla','STLO')
+%     Put all t series values in one array:
+%      times=gh(data,'t')
+%
+%     Pull just the sample rates for records (fields are case insensitive):
+%      dt=gh(data,'DeLtA')
+%
+%     Get the station lat and lon for records:
+%      [stla,stlo]=gh(data,'stla','STLO')
+%
+%     Enumerated fields return the table lookup index which is
+%     the value stored in the header:
+%      gh(data,'iftype')
 %
 %    See also:  ch, lh, rh, wh, glgc, genum, genumdesc
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation update, full header dump fixes
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 23:20 GMT
 
 % require at least one input
 if(nargin<1)
@@ -41,11 +77,12 @@ nver=length(vers);
 sfill=repmat({'NaN'},nrecs,1);
 nfill=nan(nrecs,1);
 if(nver>1)
+    nout=max([1 nargin-1]);
     for i=1:nver
-        varargoutn=cell(1,nargin-1);
+        varargoutn=cell(1,nout);
         [varargoutn{:}]=gh(data(vers(i)==v),varargin{:});
         % assign to varargout
-        for j=1:nargin-1
+        for j=1:nout
             % preallocate by type
             if(i==1)
                 if(iscellstr(varargoutn{j}))
@@ -72,13 +109,13 @@ if(nver>1)
 end
 
 % headers setup
-h=seishi(vers);
+h=seisdef(vers);
 
 % pull entire header
 head=[data.head];
 
 % push out entire header
-if(nargin==1); varargout{1}=head; return; end
+if(nargin==1); varargout{1}=head.'; return; end
 
 % loop over fields
 for i=1:nargin-1

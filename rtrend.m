@@ -1,14 +1,28 @@
-function [data]=rdrift(data)
-%RDRIFT    Remove mean and linear trend from SAClab data records
+function [data]=rtrend(data)
+%RTREND    Remove linear trend from SAClab data records
 %
-%    Description: Removes the mean and trend from SAClab data records.  
-%     Uses Matlab functions detrend, polyfit and polyval.
+%    Description: RTREND(DATA) removes the linear trend from SAClab data 
+%     records by subtracting the best straight line fit to the data as 
+%     determined by a least squares inversion.  It is highly recommended to
+%     combine this command with any filtering operations to reduce edge
+%     effects that may lead to poor data quality.
 %
-%    Usage:  [data]=rdrift(data)
+%    Header changes: DEPMEN, DEPMIN, DEPMAX
+%    
+%    Usage:  [data]=rtrend(data)
 %
 %    Examples:
+%     4th order lowpass butter filter with a passband corner of 10s
+%      data=iirfilter(rtrend(data),'low','butter',1/10,4)
 %
-%    See also: rmean, rslope
+%    See also: rmean, taper
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Cleaned up documentation and added example
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 03:15 GMT
 
 % check input
 error(nargchk(1,1,nargin))

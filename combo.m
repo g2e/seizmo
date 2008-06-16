@@ -1,17 +1,31 @@
 function [recmatrix,indices,store,npts]=combo(data)
 %COMBO    Combines SAClab data records into a single numeric record matrix
 %
-%    Description: Combines SAClab data records into one matrix (records are
-%     in separate columns).  Records are padded with zeros to have the same
-%     number of points.  This is for vectorizing heavy computations in the
-%     short term.  Look into using multi-component files for better 
-%     performance from most functions when working on large datasets.
+%    Description: [RECORDS,INDICES,STORE,NPTS]=COMBO(DATA) combines SAClab
+%     data records stored in DATA into one matrix RECORDS (records are in
+%     separate columns).  INDICES indicates which columns belong to which 
+%     records in DATA (useful when dealing with records with multiple 
+%     components).  STORE is a cell array of data class strings, one for 
+%     each record.  NPTS gives the original npts in each record (records 
+%     are padded with zeros when combined).  This function is useful for 
+%     providing easy access to functions not in SAClab.  Use DISTRO to
+%     redistribute the records back into DATA.
 %
 %    Usage: [recmatrix,indices,store,npts]=combo(data)
 %
 %    Examples:
+%     Get the interquartile range of records and assign to a header field:
+%      recs=combo(data);
+%      data=ch(data,'user3',iqr(recs));
 %
 %    See also: distro
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 15, 2008 - Updated documentation
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 15, 2008 at 02:50 GMT
 
 % check input
 error(nargchk(1,1,nargin))

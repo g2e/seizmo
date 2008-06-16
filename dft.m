@@ -4,30 +4,43 @@ function [data]=dft(data,format,pow2pad)
 %    Description: DFT(DATA,FORMAT) converts SAClab records from the time 
 %     domain to the frequency domain using a discrete fourier transform
 %     (Matlab's fft).  Following SAC formatting, an option FORMAT can be
-%     used to select between real-imaginary and amplitude-phase formats
-%     (FORMAT can be either 'amph' or 'rlim' - default is 'amph').  
+%     given to select between real-imaginary and amplitude-phase formats
+%     (FORMAT can be either 'amph' or 'rlim' - the default is 'amph').  
 %
-%     DFT(DATA,FORMAT,POW2PAD) lets the power of 2 zero padding be adjusted
-%     using POW2PAD (default value is 1) according to the formula:
-%       fftlength=2^(nextpow2(NPTS)+POW2PAD)
+%     DFT(DATA,FORMAT,POW2PAD) lets the power of 2 zero-padding be adjusted
+%     using an integer POW2PAD according to the formula:
+%                fftlength=2^(nextpow2(NPTS)+POW2PAD)
+%     The default value is 1.
 %
+%    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
 %     In the frequency domain B, DELTA, and NPTS are changed to the 
 %     beginning frequency, sampling frequency, and number of data points in
 %     the transform (includes negative frequencies).  The original values 
 %     of B, DELTA, and NPTS are saved in the header as SB, SDELTA, and 
 %     NSNPTS and are restored when the IDFT command is performed.
 %
-%    Note:
+%    Notes:
 %     - SAC (and thus SAClab for sanity) calculates amp/real/imag spectral 
 %       data according to Parseval's theorem.  Dividing records (except for
 %       phase!) by npts*delta/2 gives more interesting results for
 %       sinusoids.
 %
-%    Usage: data=dft(data,format,pow2pad)
+%    Usage: data=dft(data)
+%           data=dft(data,format)
+%           data=dft(data,format,pow2pad)
 %
 %    Examples:
+%     To take the derivative of a time-series in the frequency domain:
+%      data=idft(mulomega(dft(data)))
 %
-%    See also: idft
+%    See also: idft, amph2rlim, rlim2amph, divomega, mulomega
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 11, 2008 - Added example
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 11, 2008 at 19:50 GMT
 
 % check nargin
 error(nargchk(1,3,nargin))
@@ -77,7 +90,7 @@ for i=1:length(data)
     
     % fft
     data(i).x=delta(i)*fft(data(i).x,nspts);    % SAC compatible
-    %data(i).x=2*fft(data(i).x,nspts)/len;      % Accurate sinusoid amplitudes
+    %data(i).x=2*fft(data(i).x,nspts)/len;      % better sinusoid amplitudes
     
     % expand data to make room for split
     data(i).x(:,(1:ncmp)*2)=data(i).x;

@@ -1,11 +1,15 @@
 function [data,destroy]=rdata(data,trim)
-%RDATA    Read SAClab data from binary seismic datafiles
+%RDATA    Read SAClab data from binary datafiles
 %
-%    Description: Reads data from binary seismic datafiles into a SAClab
-%     structure using the info from the input SAClab data structure.
-%     Optional logical parameter trim sets rdata to delete entries in the
-%     structure that have errors (default is true). Optional output destroy
-%     is the logical matrix indicating which records had errors.
+%    Description: [OUTDATA,ERRORS]=RDATA(DATA,TRIM) reads data from binary
+%     datafiles utilizing the header info in DATA.  That data is combined
+%     with DATA and is returned as OUTDATA.  Optional logical parameter
+%     TRIM determines how RDATA handles data that had errors.  By default
+%     TRIM is set to TRUE which deletes from OUTDATA any records that had
+%     errors while reading.  Setting TRIM to FALSE will preserve records in
+%     OUTDATA that had errors.  Optional output ERRORS returns a logical
+%     matrix equal in size to DATA with entries set to TRUE for those
+%     records which had reading errors.
 %
 %     SAClab data structure setup:
 %
@@ -39,15 +43,26 @@ function [data,destroy]=rdata(data,trim)
 %       number of components.  So a three component spectral file will have
 %       six columns total in field x.  Components share the same timing.
 %
-%    Usage:    [data,destroy]=rdata(data,trim)
+%    Usage: data=rdata(data)
+%           data=rdata(data,trim)
+%           [data,errors]=rdata(...)
 %
 %    Examples:
-%     Read in headers, preform some operations, then read in data:
-%       data=rh(filelist)
-%       ...
-%       data=rdata(data)
+%     Read in datafiles (headers only) from the current directory, subset
+%     it to include only time series files, and then read in the associated
+%     time series data:
+%      data=rh('*')
+%      data=data(strcmp(genumdesc(data,'iftype'),'Time Series File'))
+%      data=rdata(data)
 %
-%    See also: rh, rpdw, rseis, wseis, bseis, seishi, gv, seissize
+%    See also: rh, rpdw, rseis, wseis, bseis, seisdef, gv, seissize
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Documentation Update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 15:40 GMT
 
 % check number of inputs
 error(nargchk(1,2,nargin))
@@ -85,9 +100,9 @@ end
 % headers setup
 vers=unique([data.version]);
 nver=length(vers);
-h(nver)=seishi(vers(nver));
+h(nver)=seisdef(vers(nver));
 for i=1:nver-1
-    h(i)=seishi(vers(i));
+    h(i)=seisdef(vers(i));
 end
 
 % read loop
@@ -114,12 +129,12 @@ for i=1:nrecs
     
     % byte size check
     if(bytes>est_bytes(i))
-        % size big enough but inconsistent - read anyways
+        % size big enough but inconsistent - read anyways (SAC bugfix)
         warning('SAClab:rdata:badFileSize',...
             ['Filesize does not match header info (gt)\n'...
             'File: %s'],data(i).name);
     elseif(bytes<est_bytes(i))
-        % size to small - skip
+        % size too small - skip
         fclose(fid);
         warning('SAClab:rdata:badFileSize',...
             ['Filesize does not match header info (lt)\n'...

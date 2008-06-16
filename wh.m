@@ -1,7 +1,7 @@
 function []=wh(data)
-%WH    Write SAClab data headers to binary seismic datafiles
+%WH    Write SAClab data headers as binary datafiles
 %
-%    Description: Writes SAClab data headers to binary seismic datafiles.  
+%    Description: Writes SAClab data headers as binary datafiles.  
 %     Basically this is for updating the headers of existing datafiles to 
 %     match the SAClab data structure.  For files that do not already exist
 %     the 'name' field is used for output file naming.  To write files to a
@@ -18,13 +18,17 @@ function []=wh(data)
 %    Usage:    wh(SAClab_struct)
 %
 %    Examples:
-%     Read in headers, modify them, and write out changes
+%     Read in some datafile's headers, modify them, and write out changes:
+%      wh(ch(rh('*.SAC'),'kuser0','QCed'))
 %
-%         data=rh(filelist)
-%         data=ch(data,'kuser0','QCed')
-%         wh(data)
+%    See also:  wseis, rseis, bseis, rpdw, rdata, rh, seisdef, gv
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Updated documentation
 %
-%    See also:  wseis, rseis, bseis, rpdw, rdata, rh, seishi, gv
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 05:25 GMT
 
 % check number of inputs
 error(nargchk(1,1,nargin))
@@ -35,9 +39,9 @@ error(seischk(data,'name','endian'))
 % headers setup
 vers=unique([data.version]);
 nver=length(vers);
-h(nver)=seishi(vers(nver));
+h(nver)=seisdef(vers(nver));
 for i=1:nver-1
-    h(i)=seishi(vers(i));
+    h(i)=seisdef(vers(i));
 end
 
 % loop over records

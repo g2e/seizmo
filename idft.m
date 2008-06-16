@@ -5,13 +5,14 @@ function [data]=idft(data)
 %     domain to the time domain using the inverse fast fourier transform.  
 %     Output filetype is a Time Series File.
 %
+%    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
 %     In the frequency domain B, DELTA, and NPTS are changed to the 
 %     beginning frequency, sampling frequency, and number of data points in
 %     the transform (includes negative frequencies).  The original values 
 %     of B, DELTA, and NPTS are saved in the header as SB, SDELTA, and 
 %     NSNPTS and are restored when this command is performed.
 %
-%    Note:
+%    Notes:
 %     - Assumes amplitudes for spectral files follow the convention from 
 %       SAC/SAClab's DFT routine.  There is a conversion factor of 
 %       npts*delta/2 between this and spectral amplitudes that are more
@@ -20,8 +21,17 @@ function [data]=idft(data)
 %    Usage: data=idft(data)
 %
 %    Examples:
+%     To take the derivative of a time-series in the frequency domain:
+%      data=idft(mulomega(dft(data)))
 %
-%    See also: dft
+%    See also: dft, amph2rlim, rlim2amph, divomega, mulomega
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 11, 2008 - Added example
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 11, 2008 at 19:50 GMT
 
 % check nargin
 error(nargchk(1,1,nargin))

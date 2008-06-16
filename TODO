@@ -12,16 +12,64 @@ clean up documentation
 	- description includes usage
 	- examples
 	- requirements
+	- supported filetypes
 	- see also
 	- notes/warnings/problems
 
 
 current focus
 -------------------
-iirfilter
-	- allow variable input
-	- clean up the corners
-	- figure out best way to handle overdesigned filters
+cv	- write it
+unwrap	- write it
+fftshift- write it
+bseis 	- options, multi-component support
+gh 	- user defined handling of nonexistant fields
+chkhdr	- update geometry info based on lcalda
+	- check data and leven are consistent
+be meaner on spectral files
+	- rmean
+	- rtrend
+	- taper
+	- deci
+	- stretch
+	- syncsr
+	- interpolate
+	- correlate
+	- envelope
+	- hilbert
+	- fixdelta
+	- iirfilter
+	- dif
+	- integrt
+documentation on cutting
+	- cutim
+	- rpdw
+multi-file functions
+	- correlate (make faster)
+	- convolve (add support in mcxc)
+	- merge
+	- rotate
+	- binoperr
+fix up dif/int
+	- multi-point dif (for SAC compat)
+	- combine integrt with integrt2 (for SAC compat)
+add commands to deal with timing
+	- synchronize
+	- offset reference time
+	- get reference time
+fix up filtering
+	- hilbert
+	- envelope
+	- fir
+	- iirfilter
+		- allow variable input
+		- clean up the corners
+		- figure out best way to handle overdesigned filters
+	- decimate
+	- stretch
+	- syncsr
+	- wiener?
+	- whiten
 group warning commands (how?)
 
 
@@ -63,38 +111,50 @@ get header definition (ghd)
  - allow structure output??
 
 
-more plotting (0.5.1)
+multi-file functions (0.5.1)
+---------------------------
+rotate (turn)
+merge
+correlate (use mcxc!)
+convolve
+beam
+
+
+more plotting (0.5.2)
 -----------------
 spectral plotting (pspec1, pspec2, pspec3)
 plot choose component (pcmp1, pcmp2, pcmp3)
 plot particle motion (multi-component)
-spectrogram (get familiar with it)
 picking phases (get familiar with ppk)
-
-
-multi-file functions (0.5.2)
----------------------------
-rotate (turn)
-merge
-add, subtr, mul, dvide records
-correlate (use mcxc!)
-beam
-stack
 plot versus
 
 
 guis (0.5.3)
 -------------------------
-window
-align
-pick
-delete
+windowing
+aligning
+picking
+deleting (selectrecs)
 
 
 transfer (0.5.4)
 -----------------------
 remove polezeros
 from - to - setup
+
+
+3-D files (0.5.5)
+-----------------------
+spectrogram
+contour
+image
+
+
+mapping, ttbox (0.5.6)
+-----------------------
+auto-mark
+recsec with phase predictions
+map
 
 
 header layout change (slated for 0.6.0)

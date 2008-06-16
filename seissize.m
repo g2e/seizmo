@@ -1,14 +1,24 @@
 function [bytes]=seissize(data)
-%SEISSIZE    Returns estimated size of binary seismic datafiles in bytes
+%SEISSIZE    Returns estimated size of binary datafiles in bytes
 %
-%    Description: Calculates the expected size of a binary seismic datafile
-%     in bytes using the header info from the input SAClab data structure.
+%    Description: SEISSIZE(DATA) returns the expected size of each binary 
+%     datafile in bytes using the header info from the input SAClab data 
+%     structure.  This is mainly used to rapidly detect inconsistent files.
 %
 %    Usage:  bytes=seissize(data)
 %
 %    Examples:
+%     Calculate expected filesizes for SAC files in current directory:
+%      seissize(rh('*.SAC'))
 %
 %    See also: rh, rdata
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Updated documentation
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 05:35 GMT
 
 % check number of inputs
 error(nargchk(1,1,nargin))
@@ -35,9 +45,9 @@ end
 v=[data.version].';
 vers=unique(v);
 nver=length(vers);
-h(nver)=seishi(vers(nver));
+h(nver)=seisdef(vers(nver));
 for i=1:nver-1
-    h(i)=seishi(vers(i));
+    h(i)=seisdef(vers(i));
 end
 nrecs=length(data);
 v2=sum((v(:,ones(1,nver))==vers(:,ones(1,nrecs)).').*...

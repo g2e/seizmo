@@ -1,8 +1,8 @@
 function [data]=divomega(data)
 %DIVOMEGA    Perform integration in the frequency domain on SAClab records
 %
-%    Description: This command divides each point of a spectral file by its
-%     frequency given by:
+%    Description: DIVOMEGA(DATA) divides each point of a spectral file by
+%     its frequency given by:
 %       OMEGA=2.0 * PI * FREQ
 %     This is analogous to integrating the equivalent time series file.
 %     The spectral file can be in either amplitude-phase or real-imaginary
@@ -15,6 +15,8 @@ function [data]=divomega(data)
 %     command.  The effect of the differentiation in the time domain can be
 %     removed by an integration in the frequency domain using this command.
 %
+%    Header Changes: DEPMEN, DEPMIN, DEPMAX
+%
 %    Usage:  data=divomega(data)
 %
 %    Examples:
@@ -23,6 +25,13 @@ function [data]=divomega(data)
 %      data=integrt(data)
 %
 %    See also: mulomega, dft, idft
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 11, 2008 - Documentation Cleanup
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 11, 2008 at 19:50 GMT
 
 % check nargin
 error(nargchk(1,1,nargin))

@@ -1,8 +1,8 @@
 function []=wseis(data)
-%WSEIS    Write SAClab data to binary seismic datafiles
+%WSEIS    Write SAClab data as binary datafiles
 %
-%    Description: Writes SAClab data to binary seismic datafiles.  Uses the
-%     'name' field for naming output files.  To write files to a specific 
+%    Description: Writes SAClab data as binary datafiles.  Uses the 'name'
+%     field for naming output files.  To write files to a specific 
 %     directory either add the path to the name field or browse Matlab 
 %     there using the 'cd' command.  Output file's endianness can be set 
 %     using the 'endian' field.
@@ -10,8 +10,25 @@ function []=wseis(data)
 %    Usage:    wseis(SAClab_struct)
 %
 %    Examples:
+%     Read in some files, clean them up and write over:
+%      wseis(taper(rtrend(rseis('*'))))
 %
-%    See also:  rseis, bseis, seishi, gv, rpdw, rdata, rh, wh
+%     To write out all records in big endian:
+%      data.endian=deal('ieee-be');
+%      wseis(data)
+%
+%     Alter the first records path/filename and write only to it:
+%      data(1).name='../../myfile';
+%      wseis(data(1))
+%
+%    See also:  rseis, bseis, seisdef, gv, rpdw, rdata, rh, wh
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Added examples and updated documentation
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 05:15 GMT
 
 % check number of inputs
 error(nargchk(1,1,nargin))
@@ -40,9 +57,9 @@ est_bytes=seissize(data);
 % headers setup
 vers=unique([data.version]);
 nver=length(vers);
-h(nver)=seishi(vers(nver));
+h(nver)=seisdef(vers(nver));
 for i=1:nver-1
-    h(i)=seishi(vers(i));
+    h(i)=seisdef(vers(i));
 end
 
 % loop over records

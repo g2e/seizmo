@@ -8,6 +8,8 @@ function [data]=mulomega(data)
 %     The spectral file can be in either amplitude-phase or real-imaginary
 %     format.
 %
+%    Header Changes: DEPMEN, DEPMIN, DEPMAX
+%
 %    Usage:  data=mulomega(data)
 %
 %    Examples:
@@ -16,6 +18,13 @@ function [data]=mulomega(data)
 %      data=dif(data)
 %
 %    See also: divomega, dft, idft
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 11, 2008 - Documentation Cleanup
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 11, 2008 at 19:50 GMT
 
 % check nargin
 error(nargchk(1,1,nargin))

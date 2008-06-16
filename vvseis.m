@@ -12,7 +12,14 @@ function [valid]=vvseis()
 %
 %    Examples:
 %
-%    See also:  seischk, isseis, seishi, gv
+%    See also:  seischk, isseis, seisdef, gv
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 12, 2008 - Updated documentation
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 12, 2008 at 05:25 GMT
 
 % no args - return valid versions
 valid=[6 101 200 201];

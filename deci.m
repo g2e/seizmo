@@ -1,22 +1,34 @@
 function [data]=deci(data,factor)
 %DECI    Downsample SAClab data records by integer factor
 %
-%    Description: Downsamples SAClab data records by an integer factor.  
-%     Keep the factor below 13 to avoid problems with the anti-aliasing
-%     filter and numerical noise.  Cascades are allowed by supplying 
+%    Description: DECI(DATA,FACTOR) downsamples SAClab data records by an 
+%     integer FACTOR after implementing an anti-aliasing filter.  To avoid
+%     adding significant numerical noise to the data, keep the decimation
+%     factor below 13.  Strong amplitudes at or near the start and end of 
+%     records will introduce edge effects that can be reduced by first 
+%     detrending and tapering records.  Cascades are allowed by supplying 
 %     a vector of factors.  Uses the Matlab function decimate (Signal 
 %     Processing Toolbox).
 %
-%    Usage:  [data]=stretch(data,factors)
+%    Header changes: DELTA, NPTS, E, DEPMEN, DEPMIN, DEPMAX
+%
+%    Usage:  data=deci(data,factors)
 %
 %    Examples: 
-%     To halve the samplerates:
+%     To halve the samplerates of records in data:
 %      [data]=deci(data,2)
 %
-%     To cascade to a samplerate 40 times lower;
+%     To cascade records to a samplerate 40 times lower;
 %      [data]=deci(data,[5 8])
 %
-%    See also: stretch, syncsr, intrpol8
+%    See also: stretch, syncsr, interpolate
+
+%     Version History:
+%        ????????????? - Initial Version
+%        June 15, 2008 - Updated documentation
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 15, 2008 at 03:45 GMT
 
 % check inputs
 error(nargchk(2,2,nargin))
