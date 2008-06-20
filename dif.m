@@ -10,6 +10,12 @@ function [data]=dif(data)
 %     - Timing is shifted to midpoints.
 %     - Reduces npts by one.
 %
+%    System requirements: Matlab 7
+%
+%    Data requirements: NONE
+%
+%    Header changes: DEPMEN, DEPMIN, DEPMAX, NPTS, B, E
+%
 %    Usage: [data]=dif(data)
 %
 %    Examples:

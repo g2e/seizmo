@@ -14,6 +14,10 @@ function [data]=bseis(varargin)
 %     - automatically figures out if data is evenly sampled
 %     - does not support multiple components (x vs [y1 y2 y3 ...])
 %
+%    Requirements: Matlab 7
+%
+%    Supported types: ALL
+%
 %    Usage:    SAClab_struct=bseis(x_vec1,y_vec1,x_vec2,y_vec2...)
 %
 %    Examples:

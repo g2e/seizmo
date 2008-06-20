@@ -10,6 +10,14 @@ function [recmatrix,indices,store,npts]=combo(data)
 %     are padded with zeros when combined).  This function is useful for 
 %     providing easy access to functions not in SAClab.  Use DISTRO to
 %     redistribute the records back into DATA.
+%    
+%    Notes:
+%
+%    Requirements: Matlab 7
+%
+%    Supported types: ALL
+%
+%    Header changes: NONE
 %
 %    Usage: [recmatrix,indices,store,npts]=combo(data)
 %

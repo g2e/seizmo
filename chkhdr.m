@@ -8,6 +8,13 @@ function [data]=chkhdr(data,varargin)
 %     CHKHDR(DATA,FIELD1,VALUE1,...,FIELDN,VALUEN) allows additional header
 %     changes to be passed through to CH.
 %
+%    Notes:
+%     - Checks that the LEVEN field is set
+%
+%    Requirements: Matlab 7
+%
+%    Supported types: ALL
+%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NPTS, E, B
 %
 %    Usage: data=chkhdr(data)
@@ -23,15 +30,37 @@ function [data]=chkhdr(data,varargin)
 %     Version History:
 %        ????????????? - Initial Version
 %        June 15, 2008 - Updated documentation
+%        June 20, 2008 - Updates header then checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 15, 2008 at 03:00 GMT
+%     Last Updated June 20, 2008 at 07:30 GMT
+
+% todo
+%
+% dataless check and update
+% leven check and fix
+% lat lon check and fix
+% lcalda check and update
+% spectral file exclusion for dep*
+% 
 
 % check input
 error(nargchk(1,1,nargin))
 
 % check data structure
 error(seischk(data,'x'))
+
+% change header first
+data=ch(data,varargin{:});
+
+% lat lon check
+%[evla,evlo,stla,stlo]=gh(data,'evla','evlo','stla','stlo');
+
+% lcalda check
+%[lcalda]=glgc(data,'lcalda');
+
+% leven check/fix
+%leven=glgc(data,'leven');
 
 % get header info
 leven=glgc(data,'leven');
@@ -71,6 +100,6 @@ data(tru)=ch(data(tru),'e',b+(len(tru)-1).*delta);
 
 % update some header fields for all records
 data=ch(data,'depmax',depmax,'npts',len,...
-    'depmin',depmin,'depmen',depmen,varargin{:});
+    'depmin',depmin,'depmen',depmen);
 
 end

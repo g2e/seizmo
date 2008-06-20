@@ -28,6 +28,10 @@ function [data]=ch(data,varargin)
 %       CH to do the replication for vectors.  Expand the vector to a 2D
 %       array beforehand.
 %
+%    Requirements: Matlab 7
+%
+%    Supported types: ALL
+%
 %    Header changes: Determined by input list.
 %
 %    Usage: data=ch(data,'field1',values1)
@@ -60,9 +64,10 @@ function [data]=ch(data,varargin)
 %     Version History:
 %        ????????????? - Initial Version
 %        June 16, 2008 - Documentation update
+%        June 20, 2008 - enum ids & logicals now support uppercase strings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2008 at 06:45 GMT
+%     Last Updated June 20, 2008 at 04:20 GMT
 
 % throw error if unpaired fields
 if (mod(nargin-1,2))
@@ -206,6 +211,8 @@ for m=1:length(h.enum)
     if(isfield(h.enum(m).pos,f))
         % string id/desc enum values
         if(iscellstr(v))
+            % lowercase values
+            v=lower(v);
             % all are ids and are the same (quick)
             if(isfield(h.enum(1).val,v{1}) && length(unique(v))==1)
                 head(h.enum(m).pos.(f),:)=h.enum(1).val.(v{1});
@@ -242,9 +249,9 @@ for m=1:length(h.lgc)
     if(isfield(h.lgc(m).pos,f))
         if(iscellstr(v))
             % logic words (unknown => undefined here)
-            true=strncmp(v,'t',1);
-            false=strncmp(v,'f',1);
-            undef=strncmp(v,'u',1);
+            true=strncmpi(v,'t',1);
+            false=strncmpi(v,'f',1);
+            undef=strncmpi(v,'u',1);
             head(h.lgc(m).pos.(f),true)=h.true;
             head(h.lgc(m).pos.(f),false)=h.false;
             head(h.lgc(m).pos.(f),undef)=h.undef.ntype;

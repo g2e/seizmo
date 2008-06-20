@@ -17,13 +17,9 @@ clean up documentation
 	- notes/warnings/problems
 
 
-current focus
--------------------
-cv	- write it
-unwrap	- write it
-fftshift- write it
-bseis 	- options, multi-component support
-gh 	- user defined handling of nonexistant fields
+
+multi-file functions (0.5.1)
+---------------------------
 chkhdr	- update geometry info based on lcalda
 	- check data and leven are consistent
 be meaner on spectral files
@@ -49,10 +45,22 @@ multi-file functions
 	- convolve (add support in mcxc)
 	- merge
 	- rotate
-	- binoperr
 fix up dif/int
 	- multi-point dif (for SAC compat)
 	- combine integrt with integrt2 (for SAC compat)
+
+
+
+more plotting (0.5.2)
+-----------------
+spectral plotting (pspec1, pspec2, pspec3)
+plot choose component (pcmp1, pcmp2, pcmp3)
+plot particle motion (multi-component)
+picking phases (get familiar with ppk)
+plot versus?
+cv	- change version
+unwrap	- unwrapped phase
+dftshift- 
 add commands to deal with timing
 	- synchronize
 	- offset reference time
@@ -70,7 +78,68 @@ fix up filtering
 	- syncsr
 	- wiener?
 	- whiten
-group warning commands (how?)
+bseis 	- multi-component support and options (use globals)
+ch,gh 	- user defined handling of nonexistant fields (use globals)
+support for virtual header fields
+	- kzdate
+	- kztime
+	- picks
+	- nzday
+	- nzmonth
+	- default
+	- default1
+	- all
+	- full
+structure change
+	- .x,.t => .dep,.ind
+
+
+guis and transfer (0.5.3)
+-------------------------
+windowing
+aligning
+picking
+deleting (selectrecs)
+remove polezeros
+from - to - setup
+
+
+3-D files and more (0.5.4)
+-----------------------
+spectrogram
+contour
+image
+auto-mark
+recsec with phase predictions
+map stations
+tt corrections
+
+
+deep internal changes (0.6.0)
+-------------------------------
+header partitioned by field type
+	- fixes int64 limitation (not particularly useful)
+	- improves memory usage (8x better for strings)
+	- requires reworked header definition (sub-structuring)
+	- may require significant rewriting of header access functions
+	- changing version may become complicated
+	- partial implementation just separating numeric and string portions
+	  will probably avoid the most headache
+support for other filetypes
+	- sac ascii
+	- ah
+	- miniseed
+	- all those others
+	- new structure field (type)
+common header layout
+	- one header layout
+	- read/write do the conversion
+
+
+add readme (saclab.m) and examples (?.?.?)
+-------------------------
+	- features
+	- tutorials
 
 
 more function ideas (0.5.?)
@@ -109,69 +178,5 @@ get header definition (ghd)
  - for cleaning up some low level functions
  - inputs should contain necessary parent fields too
  - allow structure output??
-
-
-multi-file functions (0.5.1)
----------------------------
-rotate (turn)
-merge
-correlate (use mcxc!)
-convolve
-beam
-
-
-more plotting (0.5.2)
------------------
-spectral plotting (pspec1, pspec2, pspec3)
-plot choose component (pcmp1, pcmp2, pcmp3)
-plot particle motion (multi-component)
-picking phases (get familiar with ppk)
-plot versus
-
-
-guis (0.5.3)
--------------------------
-windowing
-aligning
-picking
-deleting (selectrecs)
-
-
-transfer (0.5.4)
------------------------
-remove polezeros
-from - to - setup
-
-
-3-D files (0.5.5)
------------------------
-spectrogram
-contour
-image
-
-
-mapping, ttbox (0.5.6)
------------------------
-auto-mark
-recsec with phase predictions
-map
-
-
-header layout change (slated for 0.6.0)
--------------------------------
-header partitioned by field type
-	- fixes int64 limitation (not particularly useful)
-	- improves memory usage (8x better for strings)
-	- requires reworked header definition (sub-structuring)
-	- may require significant rewriting of header access functions
-	- changing version may become complicated
-	- partial implementation just separating numeric and string portions
-	  will probably avoid the most headache
-
-
-add readme (saclab.m) and examples (?.?.?)
--------------------------
-	- features
-	- tutorials
 
 

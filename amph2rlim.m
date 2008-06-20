@@ -9,6 +9,12 @@ function [data]=amph2rlim(data,option,ignore)
 %     not altered (a warning message is given unless option 
 %     'ignore_preconverted' is set to TRUE).
 %
+%    Notes:
+%
+%    Requirements: Matlab 7
+%
+%    Supported types: ALL
+%
 %    Header changes: IFTYPE
 %
 %    Usage:  data=amph2rlim(data)

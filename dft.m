@@ -12,18 +12,22 @@ function [data]=dft(data,format,pow2pad)
 %                fftlength=2^(nextpow2(NPTS)+POW2PAD)
 %     The default value is 1.
 %
+%    Notes:
+%     - SAC (and thus SAClab for sanity) calculates amp/real/imag spectral 
+%       data according to Parseval's theorem.  Dividing records (except for
+%       phase!) by npts*delta/2 gives more interesting results for
+%       sinusoids.
+%
+%    System requirements: Matlab 7
+%
+%    Data requirements: Time Series or General X vs Y
+%
 %    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
 %     In the frequency domain B, DELTA, and NPTS are changed to the 
 %     beginning frequency, sampling frequency, and number of data points in
 %     the transform (includes negative frequencies).  The original values 
 %     of B, DELTA, and NPTS are saved in the header as SB, SDELTA, and 
 %     NSNPTS and are restored when the IDFT command is performed.
-%
-%    Notes:
-%     - SAC (and thus SAClab for sanity) calculates amp/real/imag spectral 
-%       data according to Parseval's theorem.  Dividing records (except for
-%       phase!) by npts*delta/2 gives more interesting results for
-%       sinusoids.
 %
 %    Usage: data=dft(data)
 %           data=dft(data,format)

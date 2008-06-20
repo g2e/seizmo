@@ -26,7 +26,7 @@ nrecs=length(data);
 leven=glgc(data,'leven');
 error(lgcchk('leven',leven))
 
-% add zeros and update header
+% double precision
 for i=1:nrecs
     % double header and data
     data(i).head=double(data(i).head);

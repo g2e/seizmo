@@ -10,6 +10,12 @@ function [data]=deci(data,factor)
 %     a vector of factors.  Uses the Matlab function decimate (Signal 
 %     Processing Toolbox).
 %
+%    Notes:
+%
+%    System requirements: Matlab 7, Signal Processing Toolbox
+%
+%    Data requirements: Evenly Spaced, Time Series or General X vs Y
+%
 %    Header changes: DELTA, NPTS, E, DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage:  data=deci(data,factors)

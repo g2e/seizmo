@@ -8,16 +8,20 @@ function [data]=add(data,constant,cmp)
 %     ADD(DATA,CONSTANT,CMP) allows for operations on just components in
 %     the list CMP.  See the examples section for a usage case.
 %
-%    Header changes: DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage: data=add(data,constant)
-%           data=add(data,constant,cmp_list)
-%
 %    Notes:
 %     - a scalar constant applies the value to all records
 %     - a vector of constants (length must equal the number of records)
 %       allows applying different values to each record
 %     - cmp_list gives the dependent component(s) to work on (default=all)
+%
+%    System requirements: Matlab 7
+%
+%    Data requirements: NONE
+%
+%    Header changes: DEPMEN, DEPMIN, DEPMAX
+%
+%    Usage: data=add(data,constant)
+%           data=add(data,constant,cmp_list)
 %
 %    Examples:
 %     Add a 135 degree (3*pi/4) phase shift to data records by only adding

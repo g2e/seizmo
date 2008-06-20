@@ -9,6 +9,12 @@ function [data]=distro(data,recmatrix,indices,store,npts)
 %     functions not in SAClab.  For creating a new SAClab data structure
 %     see the command BSEIS.
 %
+%    Notes:
+%
+%    System requirements: Matlab 7
+%
+%    Data requirements: NONE
+%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NPTS, E, B
 %
 %    Usage: [data]=distro(data,recmatrix,indices,store,npts)
