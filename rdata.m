@@ -1,15 +1,15 @@
-function [data,destroy]=rdata(data,trim)
-%RDATA    Read SAClab data from binary datafiles
+function [data,failed]=rdata(data,trim)
+%RDATA    Read SAClab data from datafiles on disk
 %
-%    Description: [OUTDATA,ERRORS]=RDATA(DATA,TRIM) reads data from binary
-%     datafiles utilizing the header info in DATA.  That data is combined
-%     with DATA and is returned as OUTDATA.  Optional logical parameter
-%     TRIM determines how RDATA handles data that had errors.  By default
-%     TRIM is set to TRUE which deletes from OUTDATA any records that had
-%     errors while reading.  Setting TRIM to FALSE will preserve records in
-%     OUTDATA that had errors.  Optional output ERRORS returns a logical
-%     matrix equal in size to DATA with entries set to TRUE for those
-%     records which had reading errors.
+%    Description: [OUTDATA,FAILED]=RDATA(DATA,TRIM) reads the data from
+%     files on disk utilizing the header info in DATA, and returns the 
+%     combined dataset as OUTDATA.  Optional parameter TRIM determines how 
+%     RDATA handles data that had errors.  By default TRIM is set to true 
+%     which deletes from OUTDATA any records that had errors while reading.  
+%     Setting TRIM to FALSE will preserve records in OUTDATA that had 
+%     errors.  Optional output FAILED returns a logical matrix equal in 
+%     size to DATA with entries set to TRUE for those records which had 
+%     reading errors.
 %
 %     SAClab data structure setup:
 %
@@ -42,27 +42,48 @@ function [data,destroy]=rdata(data,trim)
 %     - Multi-component files will replicate the number of columns by the
 %       number of components.  So a three component spectral file will have
 %       six columns total in field x.  Components share the same timing.
+%     - Currently LEVEN is ignored for spectral and xyz files.  Later
+%       versions may require LEVEN to be set to true for these files.
+%
+%    System requirements: Matlab 7
+%
+%    Data requirements: DATA has header, endian, name and version fields.
+%
+%    Header changes: NONE
 %
 %    Usage: data=rdata(data)
 %           data=rdata(data,trim)
-%           [data,errors]=rdata(...)
+%           [data,failed]=rdata(...)
 %
 %    Examples:
 %     Read in datafiles (headers only) from the current directory, subset
 %     it to include only time series files, and then read in the associated
 %     time series data:
 %      data=rh('*')
-%      data=data(strcmp(genumdesc(data,'iftype'),'Time Series File'))
+%      data=data(strcmpi(genumdesc(data,'iftype'),'Time Series File'))
 %      data=rdata(data)
 %
 %    See also: rh, rpdw, rseis, wseis, bseis, seisdef, gv, seissize
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Documentation Update
+%        Jan. 28, 2008 - initial version
+%        Feb. 18, 2008 - works with new GH
+%        Feb. 28, 2008 - works with new GLGC, GENUMDESC
+%        Feb. 29, 2008 - works with SEISSIZE and new definitions
+%        Mar.  3, 2008 - dataless support, workaround for SAC bug
+%        Mar.  4, 2008 - documentation update
+%        June 12, 2008 - documentation update
+%        June 23, 2008 - documentation update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 15:40 GMT
+%     Last Updated June 23, 2008 at 17:40 GMT
+
+% todo:
+% .t and .x => .ind and .dep
+% leven checks
+% stricter check on SAC bug
+% type field
+% trim option => 'trim',true|false
 
 % check number of inputs
 error(nargchk(1,2,nargin))
@@ -106,7 +127,7 @@ for i=1:nver-1
 end
 
 % read loop
-destroy=false(nrecs,1);
+failed=false(nrecs,1);
 for i=1:nrecs
     % logical index of header info
     v=(data(i).version==vers);
@@ -119,7 +140,7 @@ for i=1:nrecs
         % non-existent file or directory
         warning('SAClab:rdata:badFID',...
             'File not openable, %s',data(i).name);
-        destroy(i)=true;
+        failed(i)=true;
         continue;
     end
     
@@ -139,7 +160,7 @@ for i=1:nrecs
         warning('SAClab:rdata:badFileSize',...
             ['Filesize does not match header info (lt)\n'...
             'File: %s'],data(i).name);
-        destroy(i)=true;
+        failed(i)=true;
         continue;
     end
     
@@ -151,17 +172,17 @@ for i=1:nrecs
     
     % act by file type (any new filetypes will have to be added here)
     fseek(fid,h(v).data.startbyte,'bof');
-    if(strcmp(iftype(i),'Time Series File'))
+    if(strcmpi(iftype(i),'Time Series File'))
         % time series file - amplitude and time
         for k=1:ncmp(i)
             data(i).x(:,k)=fread(fid,npts(i),['*' h(v).data.store]);
         end
         
         % timing of amp data if uneven
-        if(strcmp(leven(i),'false'))
+        if(strcmpi(leven(i),'false'))
             data(i).t(:,1)=fread(fid,npts(i),['*' h(v).data.store]);
         end
-    elseif(strcmp(iftype(i),'Spectral File-Real/Imag'))
+    elseif(strcmpi(iftype(i),'Spectral File-Real/Imag'))
         % preallocate data record with NaNs
         data(i).x=nan(npts(i),2*ncmp(i),h(v).data.store);
         
@@ -170,7 +191,7 @@ for i=1:nrecs
             data(i).x(:,2*k-1)=fread(fid,npts(i),['*' h(v).data.store]);
             data(i).x(:,2*k)=fread(fid,npts(i),['*' h(v).data.store]);
         end
-    elseif(strcmp(iftype(i),'Spectral File-Ampl/Phase'))
+    elseif(strcmpi(iftype(i),'Spectral File-Ampl/Phase'))
         % preallocate data record with NaNs
         data(i).x=nan(npts(i),2*ncmp(i),h(v).data.store);
         
@@ -179,17 +200,17 @@ for i=1:nrecs
             data(i).x(:,2*k-1)=fread(fid,npts(i),['*' h(v).data.store]);
             data(i).x(:,2*k)=fread(fid,npts(i),['*' h(v).data.store]);
         end
-    elseif(strcmp(iftype(i),'General X vs Y file'))
+    elseif(strcmpi(iftype(i),'General X vs Y file'))
         % general x vs y data (x is 'dependent')
         for k=1:ncmp(i)
             data(i).x(:,k)=fread(fid,npts(i),['*' h(v).data.store]);
         end
         
         % independent data (if uneven)
-        if(strcmp(leven(i),'false'))
+        if(strcmpi(leven(i),'false'))
             data(i).t(:,1)=fread(fid,npts(i),['*' h(v).data.store]);
         end
-    elseif(strcmp(iftype(i),'General XYZ (3-D) file'))
+    elseif(strcmpi(iftype(i),'General XYZ (3-D) file'))
         % general xyz (3D) grid - nodes are evenly spaced
         for k=1:ncmp(i)
             data(i).x(:,k)=fread(fid,npts(i),['*' h(v).data.store]);
@@ -199,7 +220,7 @@ for i=1:nrecs
         fclose(fid)
         warning('SAClab:rdata:iftypeBad',...
             'File: %s\nBad filetype: %s',data(i).name,iftype(i));
-        destroy(i)=true;
+        failed(i)=true;
         continue;
     end
     
@@ -208,6 +229,6 @@ for i=1:nrecs
 end
 
 % remove unread entries
-if(trim); data(destroy)=[]; end
+if(trim); data(failed)=[]; end
 
 end

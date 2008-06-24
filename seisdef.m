@@ -1,8 +1,10 @@
-function [header]=seisdef(version)
+function [def]=seisdef(version)
 %SEISDEF    Returns SAClab definition structure
 %
-%    Description: Provides all information necessary to read/modify/write 
-%     the specified version of a SAClab data record/file.
+%    Description: [DEFINITIONS]=SEISDEF(VERSION) returns the structure 
+%     DEFINITIONS which provides all information necessary to 
+%     read/understand/modify/write the specified version VERSION of a 
+%     SAClab data record/file.
 %
 %    Notes:
 %     - Currently the definition is set so that all header data is stored 
@@ -11,21 +13,35 @@ function [header]=seisdef(version)
 %       Memory usage suffers slightly (only minor as this applies to just
 %       the header storage).  Breaking the header into subfields would
 %       probably require more memory anyways due to overhead.
+%
+%    System requirements: Matlab 7
+%
+%    Data requirements: valid version number (use vvseis() for listing)
 %    
-%    Usage:    header_info=seisdef(version)
+%    Usage:    definition=seisdef(version)
 %
 %    Examples:
-%     Get detailed information on SAC version 6 files:
+%     Get detailed information on SAC version 6 files (SAClab v6 too):
 %      sac_ver_6=seisdef(6)
 %
 %    See also:  seischk, isseis, vvseis
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Renamed and added example
+%        Jan. 28, 2008 - initial version
+%        Feb. 23, 2008 - rename to sachi, support for new versions
+%        Feb. 28, 2008 - removed validity check (now vvseis)
+%                        and renamed to seishi
+%        Feb. 29, 2008 - header always stored in memory as double precision
+%                        clean up of multi-component definition
+%        Apr. 18, 2008 - removed versions for expanding npts/nspts
+%        June 12, 2008 - renamed as seisdef and added example
+%        June 23, 2008 - documentation cleanup
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 05:05 GMT
+%     Last Updated June 23, 2008 at 14:45 GMT
+
+% todo:
+% virtual field support
 
 % check nargin
 error(nargchk(1,1,nargin))
@@ -38,46 +54,46 @@ if(~any(valid==version))
     error('SAClab:seisdef:invalidVersion''Header version invalid: %d!',version)
 end
 
-% SAC version 6 header setup
+% SAC version 6 setup
 if(any(version==[6 101 102 200 201 202]))
-    header.version=6;
-    header.numfields=133;
-    header.size=302;
-    header.store='double';
+    def.version=6;
+    def.numfields=133;
+    def.size=302;
+    def.store='double';
     
-    header.data.startbyte=632;
-    header.data.store='single';
-    header.data.bytesize=4;
+    def.data.startbyte=632;
+    def.data.store='single';
+    def.data.bytesize=4;
     
-    header.types={'real' 'int' 'enum' 'lgc' 'char'};
-    header.ntype={'real' 'int' 'enum' 'lgc'};
-    header.stype={'char'};
+    def.types={'real' 'int' 'enum' 'lgc' 'char'};
+    def.ntype={'real' 'int' 'enum' 'lgc'};
+    def.stype={'char'};
     
-    header.undef.stype='-12345';
-    header.undef.ntype=-12345;
+    def.undef.stype='-12345';
+    def.undef.ntype=-12345;
     
-    header.true=1;
-    header.false=0;
+    def.true=1;
+    def.false=0;
     
-    header.grp.t.min=0;
-    header.grp.t.max=9;
-    header.grp.kt.min=0;
-    header.grp.kt.max=9;
-    header.grp.user.min=0;
-    header.grp.user.max=9;
-    header.grp.kuser.min=0;
-    header.grp.kuser.max=2;
-    header.grp.resp.min=0;
-    header.grp.resp.max=9;
+    def.grp.t.min=0;
+    def.grp.t.max=9;
+    def.grp.kt.min=0;
+    def.grp.kt.max=9;
+    def.grp.user.min=0;
+    def.grp.user.max=9;
+    def.grp.kuser.min=0;
+    def.grp.kuser.max=2;
+    def.grp.resp.min=0;
+    def.grp.resp.max=9;
     
-    header.real.startbyte=0;
-    header.real.store='single';
-    header.real.bytesize=4;
-    header.real.numfields=70;
-    header.real.size=70;
-    header.real.minpos=1;
-    header.real.maxpos=70;
-    header.real.pos=struct('delta',1,'depmin',2,'depmax',3,'scale',4,...
+    def.real.startbyte=0;
+    def.real.store='single';
+    def.real.bytesize=4;
+    def.real.numfields=70;
+    def.real.size=70;
+    def.real.minpos=1;
+    def.real.maxpos=70;
+    def.real.pos=struct('delta',1,'depmin',2,'depmax',3,'scale',4,...
         'odelta',5,'b',6,'e',7,'o',8,'a',9,'fmt',10,'t0',11,'t1',12,...
         't2',13,'t3',14,'t4',15,'t5',16,'t6',17,'t7',18,'t8',19,'t9',20,...
         'f',21,'resp0',22,'resp1',23,'resp2',24,'resp3',25, 'resp4',26,...
@@ -90,34 +106,34 @@ if(any(version==[6 101 102 200 201 202]))
         'yminimum',62,'ymaximum',63,'unused6',64,'unused7',65,'unused8',66,...
         'unused9',67,'unused10',68,'unused11',69,'unused12',70);
     
-    header.int.startbyte=280;
-    header.int.store='int32';
-    header.int.bytesize=4;
-    header.int.numfields=15;
-    header.int.size=15;
-    header.int.minpos=71;
-    header.int.maxpos=85;
-    header.int.pos=struct('nzyear',71,...
+    def.int.startbyte=280;
+    def.int.store='int32';
+    def.int.bytesize=4;
+    def.int.numfields=15;
+    def.int.size=15;
+    def.int.minpos=71;
+    def.int.maxpos=85;
+    def.int.pos=struct('nzyear',71,...
         'nzjday',72,'nzhour',73,'nzmin',74,'nzsec',75,'nzmsec',76,...
         'nvhdr',77,'norid',78,'nevid',79,'npts',80,'nspts',81,'nwfid',82,...
         'nxsize',83,'nysize',84,'unused15',85);
     
-    header.enum.startbyte=340;
-    header.enum.store='int32';
-    header.enum.bytesize=4;
-    header.enum.numfields=20;
-    header.enum.size=20;
-    header.enum.minpos=86;
-    header.enum.maxpos=105;
-    header.enum.minval=0;
-    header.enum.maxval=97;
-    header.enum.pos=struct('iftype',86,'idep',87,'iztype',88,'unused16',89,...
+    def.enum.startbyte=340;
+    def.enum.store='int32';
+    def.enum.bytesize=4;
+    def.enum.numfields=20;
+    def.enum.size=20;
+    def.enum.minpos=86;
+    def.enum.maxpos=105;
+    def.enum.minval=0;
+    def.enum.maxval=97;
+    def.enum.pos=struct('iftype',86,'idep',87,'iztype',88,'unused16',89,...
         'iinst',90,'istreg',91,'ievreg',92,'ievtyp',93,'iqual',94,...
         'isynth',95,'imagtyp',96,'imagsrc',97,'unused19',98,'unused20',99,...
         'unused21',100,'unused22',101,'unused23',102,'unused24',103,...
         'unused25',104,'unused26',105);
     
-    header.enum.id={'ireal' 'itime' 'irlim' 'iamph' 'ixy' 'iunkn' 'idisp' ...
+    def.enum.id={'ireal' 'itime' 'irlim' 'iamph' 'ixy' 'iunkn' 'idisp' ...
         'ivel' 'iacc' 'ib' 'iday' 'io' 'ia' 'it0' 'it1' 'it2' ...
         'it3' 'it4' 'it5' 'it6' 'it7' 'it8' 'it9' 'iradnv' ...
         'itannv' 'iradev' 'itanev' 'inorth' 'ieast' 'ihorza' 'idown' ...
@@ -131,7 +147,7 @@ if(any(version==[6 101 102 200 201 202]))
         'inu' 'inc' 'io_' 'il' 'ir' 'it' 'iu' 'ieq3' 'ieq0' ...
         'iex0' 'iqc' 'iqb0' 'igey' 'ilit' 'imet' 'iodor'};
     
-    header.enum.val=struct('ireal',0,'itime',1,'irlim',2,'iamph',3,'ixy',4,...
+    def.enum.val=struct('ireal',0,'itime',1,'irlim',2,'iamph',3,'ixy',4,...
         'iunkn',5,'idisp',6,'ivel',7,'iacc',8,'ib',9,'iday',10,'io',11,...
         'ia',12,'it0',13,'it1',14,'it2',15,'it3',16,'it4',17,'it5',18,...
         'it6',19,'it7',20,'it8',21,'it9',22,'iradnv',23,'itannv',24,...
@@ -149,7 +165,7 @@ if(any(version==[6 101 102 200 201 202]))
         'iex0',91,'iqc',92,'iqb0',93,'igey',94,'ilit',95,'imet',96,...
         'iodor',97);
     
-    header.enum.desc={'Undocumented' ...
+    def.enum.desc={'Undocumented' ...
         ...% iftype
         'Time Series File' 'Spectral File-Real/Imag' ...
         'Spectral File-Ampl/Phase' 'General X vs Y file' ...
@@ -205,24 +221,24 @@ if(any(version==[6 101 102 200 201 202]))
         'Mine Collapse' 'Probable Mine Blast' 'Geyser' 'Light' ...
         'Meteroic Event' 'Odors'};
     
-    header.lgc.startbyte=420;
-    header.lgc.store='int32';
-    header.lgc.bytesize=4;
-    header.lgc.numfields=5;
-    header.lgc.size=5;
-    header.lgc.minpos=106;
-    header.lgc.maxpos=110;
-    header.lgc.pos=struct('leven',106,'lpspol',107,'lovrok',108,...
+    def.lgc.startbyte=420;
+    def.lgc.store='int32';
+    def.lgc.bytesize=4;
+    def.lgc.numfields=5;
+    def.lgc.size=5;
+    def.lgc.minpos=106;
+    def.lgc.maxpos=110;
+    def.lgc.pos=struct('leven',106,'lpspol',107,'lovrok',108,...
         'lcalda',109,'unused27',110);
     
-    header.char.startbyte=440;
-    header.char.store='char';
-    header.char.bytesize=1;
-    header.char.numfields=23;
-    header.char.size=192;
-    header.char.minpos=111;
-    header.char.maxpos=302;
-    header.char.pos=struct('kstnm',[111,118],'kevnm',[119,134],...
+    def.char.startbyte=440;
+    def.char.store='char';
+    def.char.bytesize=1;
+    def.char.numfields=23;
+    def.char.size=192;
+    def.char.minpos=111;
+    def.char.maxpos=302;
+    def.char.pos=struct('kstnm',[111,118],'kevnm',[119,134],...
         'khole',[135,142],'ko',[143,150],'ka',[151,158],'kt0',[159,166],...
         'kt1',[167,174],'kt2',[175,182],'kt3',[183,190],'kt4',[191,198],...
         'kt5',[199,206],'kt6',[207,214],'kt7',[215,222],'kt8',[223,230],...
@@ -232,43 +248,43 @@ if(any(version==[6 101 102 200 201 202]))
     
     
     
-    % SAClab version 101 header mod (multi-component support)
+    % SAClab version 101 mod (multi-component support)
     if(any(version==[101 201]))
-        header.version=101;
+        def.version=101;
         
         % replace unused15 with ncmp (number of dependent components)
-        header.int.pos=rmfield(header.int.pos,'unused15');
-        header.int.pos.ncmp=85;
+        def.int.pos=rmfield(def.int.pos,'unused15');
+        def.int.pos.ncmp=85;
     end
     
     
-    % SAClab version 200 header mod (double reals, double data)
+    % SAClab version 200 mod (double reals, double data)
     if(any(version==[200 201]))
-        header.version=200;
+        def.version=200;
         
         % split v6 'single' real group into 2 'double' real groups
-        %header.real(1).startbyte=0;
-        header.real(1).store='double';
-        header.real(1).bytesize=8;
-        header.real(1).numfields=35;
-        header.real(1).size=35;
-        %header.real(1).minpos=1;
-        header.real(1).maxpos=35;
-        header.real(1).pos=struct('delta',1,'depmin',2,'depmax',3,...
+        %def.real(1).startbyte=0;
+        def.real(1).store='double';
+        def.real(1).bytesize=8;
+        def.real(1).numfields=35;
+        def.real(1).size=35;
+        %def.real(1).minpos=1;
+        def.real(1).maxpos=35;
+        def.real(1).pos=struct('delta',1,'depmin',2,'depmax',3,...
             'scale',4,'odelta',5,'b',6,'e',7,'o',8,'a',9,'fmt',10,'t0',11,...
             't1',12,'t2',13,'t3',14,'t4',15,'t5',16,'t6',17,'t7',18,...
             't8',19,'t9',20,'f',21,'resp0',22,'resp1',23,'resp2',24,...
             'resp3',25,'resp4',26,'resp5',27,'resp6',28,'resp7',29,...
             'resp8',30,'resp9',31,'stla',32,'stlo',33,'stel',34,'stdp',35);
         
-        header.real(2).startbyte=440;
-        header.real(2).store='double';
-        header.real(2).bytesize=8;
-        header.real(2).numfields=35;
-        header.real(2).size=35;
-        header.real(2).minpos=36;
-        header.real(2).maxpos=70;
-        header.real(2).pos=struct('evla',36,'evlo',37,'evel',38,'evdp',39,...
+        def.real(2).startbyte=440;
+        def.real(2).store='double';
+        def.real(2).bytesize=8;
+        def.real(2).numfields=35;
+        def.real(2).size=35;
+        def.real(2).minpos=36;
+        def.real(2).maxpos=70;
+        def.real(2).pos=struct('evla',36,'evlo',37,'evel',38,'evdp',39,...
             'mag',40,'user0',41,'user1',42,'user2',43,'user3',44,...
             'user4',45,'user5',46,'user6',47,'user7',48,'user8',49,...
             'user9',50,'dist',51,'az',52,'baz',53,'gcarc',54,'sb',55,...
@@ -278,17 +294,17 @@ if(any(version==[6 101 102 200 201 202]))
             'unused11',69,'unused12',70);
         
         % push char/data out 280 (keep char at end following SAC layout)
-        header.char.startbyte=720;
-        header.data.startbyte=912;
+        def.char.startbyte=720;
+        def.data.startbyte=912;
         
         % change data storage
-        header.data.store='double';
-        header.data.bytesize=8;
+        def.data.store='double';
+        def.data.bytesize=8;
     end
     
-    % SAClab version 201 header mod (101+200)
+    % SAClab version 201 mod (101+200)
     if(any(version==201))
-        header.version=201;
+        def.version=201;
     end
 end
 

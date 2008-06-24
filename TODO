@@ -18,10 +18,8 @@ clean up documentation
 
 
 
-multi-file functions (0.5.1)
----------------------------
-chkhdr	- update geometry info based on lcalda
-	- check data and leven are consistent
+multi-file functions (targeted for 0.5.2)
+-------------------------------------------
 be meaner on spectral files
 	- rmean
 	- rtrend
@@ -37,22 +35,19 @@ be meaner on spectral files
 	- iirfilter
 	- dif
 	- integrt
-documentation on cutting
-	- cutim
-	- rpdw
 multi-file functions
 	- correlate (make faster)
 	- convolve (add support in mcxc)
 	- merge
 	- rotate
 fix up dif/int
-	- multi-point dif (for SAC compat)
-	- combine integrt with integrt2 (for SAC compat)
+	- multi-point dif (for SAC compatibility)
+	- combine integrt with integrt2 (for SAC compatibility)
 
 
 
-more plotting (0.5.2)
------------------
+more plotting and polishing (targeted for 0.5.3)
+-------------------------------------------------
 spectral plotting (pspec1, pspec2, pspec3)
 plot choose component (pcmp1, pcmp2, pcmp3)
 plot particle motion (multi-component)
@@ -65,6 +60,7 @@ add commands to deal with timing
 	- synchronize
 	- offset reference time
 	- get reference time
+chkhdr 	- enum checks
 fix up filtering
 	- hilbert
 	- envelope
@@ -94,17 +90,18 @@ structure change
 	- .x,.t => .dep,.ind
 
 
-guis and transfer (0.5.3)
--------------------------
+guis and transfer (targeted for 0.5.4)
+---------------------------------------
 windowing
 aligning
 picking
 deleting (selectrecs)
-remove polezeros
-from - to - setup
+transfer
+	- remove polezeros
+	- from - to - setup
 
 
-3-D files and more (0.5.4)
+3-D files and more (targeted for 0.5.5+)
 -----------------------
 spectrogram
 contour
