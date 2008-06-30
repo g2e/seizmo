@@ -3,9 +3,7 @@ function [data]=bseis(varargin)
 %
 %    Description: BSEIS(X1,Y1,X2,Y2,...) takes vectors of x-values and 
 %     y-values and arranges them into a SAClab data structure (one record 
-%     per x/y pair) to be compatible with SAClab functions.  The name field
-%     is left blank so before writing any data generated using this
-%     function, fill in the name field (see example below).
+%     per x/y pair) to be compatible with SAClab functions.
 %
 %    Notes:
 %     - outputs records as equivalent to SAC version 6
@@ -14,17 +12,16 @@ function [data]=bseis(varargin)
 %     - automatically figures out if data is evenly sampled
 %     - does not support multiple components (x vs [y1 y2 y3 ...])
 %
-%    Requirements: Matlab 7
+%    System requirements: Matlab 7
 %
-%    Supported types: ALL
+%    Data requirements: numeric vectors
 %
-%    Usage:    SAClab_struct=bseis(x_vec1,y_vec1,x_vec2,y_vec2...)
+%    Usage:    data=bseis(x_vec1,y_vec1,x_vec2,y_vec2...)
 %
 %    Examples:
 %     To create a square root function in Matlab and then convert the array
 %     information into a SAClab compatible structure and ultimately write
 %     to a formatted binary file (SAC version 6 equivalent):
-%
 %      xarray=linspace(0,30,1000);
 %      yarray=sqrt(xarray);
 %      data=bseis(xarray,yarray);
@@ -34,11 +31,27 @@ function [data]=bseis(varargin)
 %    See also:  wseis, rseis
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Documentation Update
+%        Oct. 29, 2007 - initial version
+%        Nov.  7, 2007 - documentation update
+%        Jan. 28, 2008 - sachp support
+%        Feb. 28, 2008 - renamed to bseis
+%        Feb. 29, 2008 - minor documentation update
+%        Mar.  2, 2008 - use genumdesc
+%        Mar.  3, 2008 - fixed unevenly sampled behavior
+%        Mar.  4, 2008 - use platform native byte-order
+%        May  12, 2008 - dep* fix
+%        June 12, 2008 - output XY by default and documentation update
+%        June 28, 2008 - fixed default header settings, added dataless
+%                        support, records now have names by default,
+%                        .dep and .ind rather than .x and .t
+%        June 30, 2008 - history fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 19:20 GMT
+%     Last Updated June 30, 2008 at 06:40 GMT
+
+% todo:
+% - multi-component support
+% - options (through SACLAB global)
 
 % check number of inputs
 if (mod(nargin,2)) 
@@ -78,8 +91,8 @@ if(strcmpi(endian,'L')); endian='ieee-le';
 else endian='ieee-be'; end
 
 % create structure
-data(1:nargin/2,1)=struct('version',pref,'endian',endian,'name',[],...
-    'head',undef,'x',[]);
+data(1:nargin/2,1)=struct('version',pref,'endian',endian,...
+    'name','SAClab','head',undef,'dep',[]);
 
 % loop for each pair
 for i=1:2:nargin
@@ -102,23 +115,31 @@ for i=1:2:nargin
     end
     
     % fill in dependent variable
-    data(j).x=varargin{i+1}(:);
+    data(j).dep=varargin{i+1}(:);
+    
+    % edit name
+    data(j).name=[data(j).name '.' num2str(j) '.sac'];
+    
+    % handle dataless
+    if(isempty(varargin{i}))
+        data(j)=ch(data(j),'npts',0,'iftype','General X vs Y file',...
+            'lovrok','true','nvhdr',pref,'knetwk','SAClab');
+    end
     
     % fill in knowns/presets
     delta=(varargin{i}(end)-varargin{i}(1))/(npts-1);
     data(j)=ch(data(j),...
         'delta',delta,'b',varargin{i}(1),'e',varargin{i}(end),...
-        'npts',npts,'depmin',min(data(j).x(:)),...
-        'depmax',max(data(j).x(:)),'depmen',mean(data(j).x(:)),...
-        'iftype','General X vs Y file','leven','true','lcalda','true',...
-        'lovrok','true','lpspol','false','nvhdr',pref,...
-        'knetwk','SAClab');
+        'npts',npts,'depmin',min(data(j).dep(:)),...
+        'depmax',max(data(j).dep(:)),'depmen',mean(data(j).dep(:)),...
+        'iftype','General X vs Y file','leven','true',...
+        'lovrok','true','nvhdr',pref,'knetwk','SAClab');
     
-    % if timeseries is unevenly spaced add proper info
+    % if is unevenly spaced add proper info
     if(abs(delta-(varargin{i}(min([2 end]))-varargin{i}(1)))>10*eps)
-        data(j).t=varargin{i}(:);
+        data(j).ind=varargin{i}(:);
         data(j)=ch(data(j),'leven','false',...
-            'odelta',data(j).t(min([2 end]))-data(j).t(1));
+            'odelta',data(j).ind(min([2 end]))-data(j).ind(1));
     end
 end
 

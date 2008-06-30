@@ -84,6 +84,10 @@ function [data]=addf(varargin)
 %     to 'error'.
 %     
 %    Notes:
+%     - Ampl-Phase spectral records are first converted to Real-Imag to
+%       assure the operation is linear and equal to that on Real-Imag 
+%       records.  If you want to workaround this, convert the Ampl-Phase
+%       records to General X vs Y.
 %
 %    System requirements: Matlab 7
 %
@@ -108,16 +112,26 @@ function [data]=addf(varargin)
 %           [data]=addf(...,'iftype','error|warn|ignore')
 %
 %    Examples:
+%     Display a stack of the records:
+%      p1(addf(data))
+%
+%     Add records from one dataset to another
+%      data=addf(data1,data2)
 %
 %    See also: subf, mulf, divf, binoperr
 
 %     Version History:
-%        June 10, 2008 - Initial Version
-%        June 11, 2008 - Full filetype and class support
-%        June 20, 2008 - Documentation tidy, 'ncmp' option
+%        June 10, 2008 - initial version
+%        June 11, 2008 - full filetype and class support
+%        June 20, 2008 - documentation update, 'ncmp' option
+%        June 28, 2008 - fixed amph2rlim handling, documentation update,
+%                        .dep and .ind rather than .x and .t
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 20, 2008 at 00:01 GMT
+%     Last Updated June 28, 2008 at 21:45 GMT
+
+% todo:
+% - dataless support
 
 % default options
 option.NEWHDR=false;
@@ -135,7 +149,7 @@ for i=fields; if(isfield(SACLAB,i)); option.(i{:})=SACLAB.(i{:}); end; end
 
 % find all datasets in inline arguments
 isdata=false(1,nargin);
-for i=1:nargin; isdata(i)=isseis(varargin{i},'x'); end
+for i=1:nargin; isdata(i)=isseis(varargin{i},'dep'); end
 
 % push datasets into a separate variable
 data=varargin(isdata);
@@ -187,7 +201,7 @@ for i=1:ndatasets
         gh(data{i},'npts','delta','b',...
         'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
     ncmp{i}=zeros(maxrecs,1);
-    for j=1:maxrecs; ncmp{i}(j)=size(data{i}(j).x,2); end
+    for j=1:maxrecs; ncmp{i}(j)=size(data{i}(j).dep,2); end
 end
 
 % 2+ datasets
@@ -250,29 +264,24 @@ if(ndatasets>1)
     % save class and convert to double precision
     oclass=cell(1,maxrecs);
     if(option.NEWHDR)
-        for i=1:maxrecs; oclass{i}=str2func(class(data{end}(i).x)); end
+        for i=1:maxrecs; oclass{i}=str2func(class(data{end}(i).dep)); end
     else
-        for i=1:maxrecs; oclass{i}=str2func(class(data{1}(i).x)); end
+        for i=1:maxrecs; oclass{i}=str2func(class(data{1}(i).dep)); end
     end
     for i=1:ndatasets
-        for j=1:maxrecs; data{i}(j).x=double(data{i}(j).x); end
+        for j=1:maxrecs; data{i}(j).dep=double(data{i}(j).dep); end
     end
     
     % convert amplitude-phase files to real-imaginary so that operations
     % are consistent. amph2rlim must be done here (before newhdr swap)
     if(option.NEWHDR)
         convertback=strcmpi(iftype{end},'Spectral File-Ampl/Phase');
-        convert=convertback | ...
-            strcmpi(iftype{end},'Spectral File-Real/Imag');
     else
         convertback=strcmpi(iftype{1},'Spectral File-Ampl/Phase');
-        convert=convertback | strcmpi(iftype{1},'Spectral File-Real/Imag');
     end
-    if(any(convert))
-        for i=1:ndatasets
-            data{i}(convert)=amph2rlim(data{i}(convert),...
-                'ignore_preconverted',true);
-        end
+    for i=1:ndatasets
+        convert=strcmpi(iftype{i},'Spectral File-Ampl/Phase');
+        if(any(convert)); data{i}(convert)=amph2rlim(data{i}(convert)); end
     end
     
     % newhdr flag (swap first and last dataset)
@@ -287,18 +296,18 @@ if(ndatasets>1)
     % add records
     for i=1:maxrecs
         for j=2:ndatasets
-            data{1}(i).x=...
-                data{1}(i).x(1:minpts(i),1:mincmp(i))...
-                +data{j}(i).x(1:minpts(i),1:mincmp(i));
+            data{1}(i).dep=...
+                data{1}(i).dep(1:minpts(i),1:mincmp(i))...
+                +data{j}(i).dep(1:minpts(i),1:mincmp(i));
         end
         
         % trim t field for unevenly spaced files
-        if(isfield(data{1}(i),'t') && ~isempty(data{1}(i).t))
-            data{1}(i).t=data{1}(i).t(1:minpts);
+        if(isfield(data{1}(i),'ind') && ~isempty(data{1}(i).ind))
+            data{1}(i).ind=data{1}(i).ind(1:minpts);
         end
         
         % change class back
-        data{1}(i).x=oclass{i}(data{1}(i).x);
+        data{1}(i).dep=oclass{i}(data{1}(i).dep);
     end
     
     % update header
@@ -370,23 +379,20 @@ else
     end
     
     % save class and convert to double precision
-    if(option.NEWHDR); oclass=str2func(class(data(end).x)); 
-    else oclass=str2func(class(data(1).x));
+    if(option.NEWHDR); oclass=str2func(class(data(end).dep)); 
+    else oclass=str2func(class(data(1).dep));
     end
-    for i=1:nrecs; data(i).x=double(data(i).x); end
+    for i=1:nrecs; data(i).dep=double(data(i).dep); end
     
     % convert amplitude-phase files to real-imaginary so that operations
-    % are consistent. amph2rlim must be done here (before newhdr mult/div)
+    % are consistent. amph2rlim must be done here (before newhdr)
     if(option.NEWHDR)
         convertback=strcmpi(iftype{:}(end),'Spectral File-Ampl/Phase');
-        convert=convertback | ...
-            strcmpi(iftype{:}(end),'Spectral File-Real/Imag');
     else
         convertback=strcmpi(iftype{:}(1),'Spectral File-Ampl/Phase');
-        convert=convertback | ...
-            strcmpi(iftype{:}(1),'Spectral File-Real/Imag');
     end
-    if(convert); data=amph2rlim(data,'ignore_preconverted',true); end
+    convert=strcmpi(iftype{:},'Spectral File-Ampl/Phase');
+    if(any(convert)); data(convert)=amph2rlim(data(convert)); end
     
     % newhdr flag (swap first and last record)
     if(option.NEWHDR); data([end 1])=data([1 end]); end
@@ -395,20 +401,20 @@ else
     minpts=min(npts{:});
     mincmp=min(ncmp{:});
     for i=2:nrecs
-        data(1).x=data(1).x(1:minpts,1:mincmp)...
-                 +data(i).x(1:minpts,1:mincmp);
+        data(1).dep=data(1).dep(1:minpts,1:mincmp)...
+                 +data(i).dep(1:minpts,1:mincmp);
     end
     
     % reduce to first record
     data=data(1);
     
-    % trim t field for unevenly spaced files
-    if(isfield(data,'t') && ~isempty(data.t))
-        data.t=data.t(1:minpts);
+    % trim ind field for unevenly spaced files
+    if(isfield(data,'ind') && ~isempty(data.ind))
+        data.ind=data.ind(1:minpts);
     end
     
     % change class back
-    data.x=oclass(data.x);
+    data.dep=oclass(data.dep);
     
     % update header
     data=chkhdr(data);

@@ -124,13 +124,15 @@ function [data,failed]=rpdw(data,varargin)
 %        June 12, 2008 - documentation update
 %        June 23, 2008 - major documentation update, bugfix for uneven
 %                        files, some other cleanups for readability
+%        June 30, 2008 - fixed dataless support, .dep & .ind rather than .x
+%                        & .t, fix for single point data
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated June 23, 2008 at 18:45 GMT
 
 % todo:
-% multi ref support
-% use chkhdr
+% multi ref support?
+% use chkhdr?
 
 % input check
 error(nargchk(1,11,nargin))
@@ -142,7 +144,7 @@ error(seischk(data,'name','endian'))
 [ref1,ref2,offset1,offset2,fill,filler,trim]=cutparam(varargin{:});
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % expand scalars
 if(numel(offset1)==1); offset1(1:nrecs)=offset1; end
@@ -272,13 +274,13 @@ for i=even
     end
     
     % preallocate data record with NaNs, deallocate timing
-    data(i).x=nan(nnp,ncmp(i),h(v).data.store);
-    data(i).t=[];
+    data(i).dep=nan(nnp,ncmp(i),h(v).data.store);
+    data(i).ind=[];
     
     % skip if new npts==0
     if(nnp<1)
-        data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
-            'depmen',0,'depmin',0,'depmax',0);
+        data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
+            'depmen',nan,'depmin',nan,'depmax',nan);
         failed(i)=true;
         continue;
     end
@@ -289,7 +291,7 @@ for i=even
         try
             fseek(fid,h(v).data.startbyte+...
                 h(v).data.bytesize*((j-1)*npts(i)+nbp-1),'bof');
-            data(i).x(:,j)=fread(fid,nnp,['*' h(v).data.store]);
+            data(i).dep(:,j)=fread(fid,nnp,['*' h(v).data.store]);
         catch
             warning('SAClab:rpdw:readFailed',...
                 'Read in of data failed: %s',data(i).name);
@@ -307,41 +309,43 @@ for i=even
     % to fill
     if(fill)
         % add filler
-        data(i).x=[ones(1-bp(i),ncmp(i))*filler; ...
-            data(i).x; ...
+        data(i).dep=[ones(1-bp(i),ncmp(i))*filler; ...
+            data(i).dep; ...
             ones(ep2-npts(i),ncmp(i))*filler];
         
         % empty window - add to failed list
-        if(isempty(data(i).x))
-            data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
-                'depmen',0,'depmin',0,'depmax',0);
+        if(isempty(data(i).dep))
+            data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
+                'depmen',nan,'depmin',nan,'depmax',nan);
             failed(i)=true;
             continue;
         end
         
         % fix header
         data(i)=ch(data(i),'b',b(i)+(bp(i)-1)*delta(i),...
-            'e',b(i)+(ep2-1)*delta(i),'npts',size(data(i).x,1),...
-            'depmen',mean(data(i).x(:)),...
-            'depmin',min(data(i).x(:)),...
-            'depmax',max(data(i).x(:)));
+            'e',b(i)+(ep2-1)*delta(i),'npts',size(data(i).dep,1),...
+            'depmen',mean(data(i).dep(:)),...
+            'depmin',min(data(i).dep(:)),...
+            'depmax',max(data(i).dep(:)));
     % not to fill
     else
         % empty window - add to failed list
-        if(isempty(data(i).x))
-            data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
-                'depmen',0,'depmin',0,'depmax',0);
+        if(isempty(data(i).dep))
+            data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
+                'depmen',nan,'depmin',nan,'depmax',nan);
             failed(i)=true;
             continue;
         end
         
         % fix header
         data(i)=ch(data(i),'b',b(i)+(nbp-1)*delta(i),...
-            'e',b(i)+(nep-1)*delta(i),'npts',size(data(i).x,1),...
-            'depmen',mean(data(i).x(:)),...
-            'depmin',min(data(i).x(:)),...
-            'depmax',max(data(i).x(:)));
+            'e',b(i)+(nep-1)*delta(i),'npts',size(data(i).dep,1),...
+            'depmen',mean(data(i).dep(:)),...
+            'depmin',min(data(i).dep(:)),...
+            'depmax',max(data(i).dep(:)));
     end
+    % single point fix
+    if(size(data(i).dep,1)==1); data(i)=ch(data(i),'delta',nan); end
 end
 
 % remove failed records

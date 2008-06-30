@@ -65,7 +65,7 @@ function []=binoperr(varargin)
 %     call).  By default 'iftype' is set to 'error'.
 %
 %    Notes:
-%     - options may be strung together
+%     - multiple options may be strung together in a single command
 %
 %    System requirements: Matlab 7
 %
@@ -76,13 +76,24 @@ function []=binoperr(varargin)
 %    Usage: binoperr('option1','error|warn|ignore',...,
 %                    'optionN','error|warn|ignore')
 %
+%    Examples:
+%     Turn off warnings for different timing:
+%      binoperr('begin','ignore','ref','ignore')
+%
+%     Show binary error settings:
+%      binoperr
+%
 %    See also: addf, divf, mulf, subf
 
 %     Version History:
-%        June 20, 2008 - Initial Version
+%        June 20, 2008 - initial version
+%        June 28, 2008 - documentation update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 20, 2008 at 04:25 GMT
+%     Last Updated June 28, 2008 at 21:50 GMT
+
+% todo:
+% - interoperation with correlate, convolve, merge, rotate
 
 % default options
 option.NPTS='ERROR';

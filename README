@@ -1,36 +1,43 @@
+<·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>Installing SACLAB 0.5.1<·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>
+
 to install:
 
-1. add this directory to your matlab path
-2. ???
-3. Profit!
+1a. download and extract the tar volume in the directory you want Matlab to reside:
+	tar zxvf saclab-0.5.1-r43.tar.gz
+1b. or check out the latest version with bzr (needs to be installed first):
+	bzr co http://epsc.wustl.edu/~ggeuler/codes/m/saclab/saclab-0.5.1
+2. this will create a directory called saclab-0.5.1 with all the mfiles
+3. add saclab-0.5.1 to your matlab path
 
 
-reading/writing:
+<·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>Reading/Writing SAC Files<·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>
 
 read files in current directory:
 data=rseis('*')
 
-read just the headers in:
+read just the headers of files in current directory:
 data=rh('*')
 
-read/reread data in (headers must be read already):
+read just the data (headers must have been read already):
 data=rdata(data)
 
-read a partial data window (headers must be read already):
+read a partial data window (headers must have been read already):
 data=rpdw(data)
 
-write data out:
+write files:
 wseis(data)
 
 write just headers:
 wh(data)
 
 filenames for writing are stored in data.name, 
-to change a single record's filename:
+to change the first record's filename:
 data(1).name='mynewfile';
 
-to change several names (specifically records 1,4,7,22,9,2):
+to change several names at once (specifically records 1,4,7,22,9,2):
 list={'my' 'list' 'of' 'new' 'names' 'etc'}
 [data([1 4 7 22 9 2]).name]=list{:}
+
+
 
 

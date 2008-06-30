@@ -111,7 +111,10 @@ function [data,failed]=cutim(data,varargin)
 %    See also: rpdw
 
 %     Version History:
-%        Jan. 28, 2008 - initial version
+%        Oct. 30, 2007 - initial version
+%        Nov.  7, 2007 - documentation update
+%        Jan. 28, 2008 - new sachp support
+%        Feb.  6, 2008 - renamed to cutim
 %        Feb. 23, 2008 - works with GLGC, GENUMDESC
 %        Feb. 25, 2008 - bugfix
 %        Feb. 28, 2008 - minor improvements
@@ -123,25 +126,27 @@ function [data,failed]=cutim(data,varargin)
 %        May  12, 2008 - uses new dep* formula
 %        June 12, 2008 - documentation update
 %        June 23, 2008 - major documentation update
+%        June 30, 2008 - fixed dataless support, .dep & .ind rather than .x
+%                        & .t, improved checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 23, 2008 at 22:45 GMT
+%     Last Updated June 30, 2008 at 07:55 GMT
 
 % todo:
-% multi ref support
-% use chkhdr
+% - multi ref support?
+% - use chkhdr?
 
 % input check
 error(nargchk(1,11,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % parse cut parameters
 [ref1,ref2,offset1,offset2,fill,filler,trim]=cutparam(varargin{:});
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % expand scalars
 if(numel(offset1)==1); offset1(1:nrecs)=offset1; end
@@ -161,16 +166,7 @@ end
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
 error(lgcchk('leven',leven))
-warning('off','SAClab:gh:fieldInvalid')
-[b,npts,delta,ncmp]=gh(data,'b','npts','delta','ncmp');
-warning('on','SAClab:gh:fieldInvalid')
-
-% clean up and check ncmp
-ncmp(isnan(ncmp))=1;
-if(any(ncmp<1 | fix(ncmp)~=ncmp))
-    error('SAClab:cutim:badNumCmp',...
-        'field ncmp must be a positive integer')
-end
+[b,delta]=gh(data,'b','delta');
 
 % window begin point
 bt=[]; bp=[];
@@ -198,7 +194,7 @@ if(any(isnan(bt)) || any(isnan(bp)) || any(isnan(et)) || any(isnan(ep)))
 end
 
 % loop through each file
-failed=false(nrecs,1);
+failed=false(nrecs,1); ncmp=nan(nrecs,1); npts=ncmp;
 for i=1:nrecs
     % check for unsupported filetypes
     if(strcmpi(iftype(i),'General XYZ (3-D) file'))
@@ -213,6 +209,9 @@ for i=1:nrecs
             'illegal operation on spectral file');
         continue;
     end
+    
+    % get size
+    [npts(i),ncmp(i)]=size(data(i).dep);
     
     % evenly spaced
     if(strcmpi(leven(i),'true'))
@@ -233,63 +232,73 @@ for i=1:nrecs
         nep=min([ep2 npts(i)]);
         
         % cut
-        data(i).x=data(i).x(nbp:nep,:);
+        data(i).dep=data(i).dep(nbp:nep,:);
         
         % fill or no
         if(fill)
             % add filler
-            data(i).x=[ones(1-bp(i),ncmp(i))*filler; 
-                        data(i).x; 
+            data(i).dep=[ones(1-bp(i),ncmp(i))*filler; 
+                        data(i).dep(:,:); 
                         ones(ep2-npts(i),ncmp(i))*filler];
             
             % empty window - add to failed list
-            if(isempty(data(i).x))
-                data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
-                    'depmen',0,'depmin',0,'depmax',0);
+            if(isempty(data(i).dep))
+                data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
+                    'depmen',nan,'depmin',nan,'depmax',nan);
                 failed(i)=true;
                 continue;
             end
             
             % fix header
             data(i)=ch(data(i),'b',b(i)+(bp(i)-1)*delta(i),...
-                'e',b(i)+(ep2-1)*delta(i),'npts',size(data(i).x,1),...
-                'depmen',mean(data(i).x(:)),...
-                'depmin',min(data(i).x(:)),...
-                'depmax',max(data(i).x(:)));
+                'e',b(i)+(ep2-1)*delta(i),'npts',size(data(i).dep,1),...
+                'depmen',mean(data(i).dep(:)),...
+                'depmin',min(data(i).dep(:)),...
+                'depmax',max(data(i).dep(:)));
         else
             % empty window - add to failed list
-            if(isempty(data(i).x))
-                data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
-                    'depmen',0,'depmin',0,'depmax',0);
+            if(isempty(data(i).dep))
+                data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
+                    'depmen',nan,'depmin',nan,'depmax',nan);
                 failed(i)=true;
                 continue;
             end
                     
             % fix header
             data(i)=ch(data(i),'b',b(i)+(nbp-1)*delta(i),...
-                'e',b(i)+(nep-1)*delta(i),'npts',size(data(i).x,1),...
-                'depmen',mean(data(i).x(:)),...
-                'depmin',min(data(i).x(:)),...
-                'depmax',max(data(i).x(:)));
+                'e',b(i)+(nep-1)*delta(i),'npts',size(data(i).dep,1),...
+                'depmen',mean(data(i).dep(:)),...
+                'depmin',min(data(i).dep(:)),...
+                'depmax',max(data(i).dep(:)));
         end
+        % single point fix
+        if(size(data(i).dep,1)==1); data(i)=ch(data(i),'delta',nan); end
     % unevenly spaced
     else
+        % check .dep and .ind match
+        if(size(data(i).ind,1)~=npts(i))
+            error('SAClab:cutim:dataMismatch',...
+                ['Number of dependent data points does not '...
+                'match number of independent data points for record %d'],i)
+        end
+        
         % get begin point
         if(~strcmpi(ref1,'x'))
             % save to temp variable (avoids corruption in no result case)
-            temp=find(data(i).t>=bt(i),1);
+            temp=find(data(i).ind>=bt(i),1);
             if(isempty(temp))
                 % empty window - add to failed list
-                data(i).x=data(i).x([],:); data(i).t=[];
-                data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
-                    'depmen',0,'depmin',0,'depmax',0,'odelta',0);
+                data(i).dep=data(i).dep([],:); data(i).ind=[];
+                data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
+                    'depmen',nan,'depmin',nan,'depmax',nan,'odelta',nan);
                 failed(i)=true;
                 continue;
             elseif(temp>1)
                 temp2=temp-1;
                 
                 % figure out which is closer
-                if(abs(bt(i)-data(i).t(temp))<=abs(bt(i)-data(i).t(temp2)))
+                if(abs(bt(i)-data(i).ind(temp))...
+                        <=abs(bt(i)-data(i).ind(temp2)))
                     bp(i)=temp;
                 else
                     bp(i)=temp2;
@@ -306,19 +315,20 @@ for i=1:nrecs
             ep2=ep(i);
         else
             % save to temp variable (avoids corruption in no result case)
-            temp=find(data(i).t<=et(i),1,'last');
+            temp=find(data(i).ind<=et(i),1,'last');
             if(isempty(temp))
                 % empty window - add to failed list
-                data(i).x=data(i).x([],:); data(i).t=[];
-                data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
-                    'depmen',0,'depmin',0,'depmax',0,'odelta',0);
+                data(i).dep=data(i).dep([],:); data(i).ind=[];
+                data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
+                    'depmen',nan,'depmin',nan,'depmax',nan,'odelta',nan);
                 failed(i)=true;
                 continue;
             elseif(temp<npts(i))
                 temp2=temp+1;
                 
                 % figure out which is closer
-                if(abs(et(i)-data(i).t(temp))<=abs(et(i)-data(i).t(temp2)))
+                if(abs(et(i)-data(i).ind(temp))...
+                        <=abs(et(i)-data(i).ind(temp2)))
                     ep2=temp;
                 else
                     ep2=temp2;
@@ -333,25 +343,26 @@ for i=1:nrecs
         nep=min([ep2 npts(i)]);
         
         % cut
-        data(i).x=data(i).x(nbp:nep,:);
-        data(i).t=data(i).t(nbp:nep,1);
+        data(i).dep=data(i).dep(nbp:nep,:);
+        data(i).ind=data(i).ind(nbp:nep,1);
         
         % check if bp>ep
         if(nbp>nep)
-            data(i)=ch(data(i),'b',0,'e',0,'npts',0,'delta',0,...
-                'depmen',0,'depmin',0,'depmax',0,'odelta',0);
+            data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
+                'depmen',nan,'depmin',nan,'depmax',nan,'odelta',nan);
             failed(i)=true;
             continue;
         end
         
         % fix header
-        data(i)=ch(data(i),'b',data(i).t(1),...
-            'e',data(i).t(end),'npts',size(data(i).x,1),...
-            'depmen',mean(data(i).x(:)),...
-            'depmin',min(data(i).x(:)),...
-            'depmax',max(data(i).x(:)),...
-            'delta',(data(i).t(end)-data(i).t(1))/(npts(i)-1),...
-            'odelta',data(i).t(min([end 2]))-data(i).t(1));
+        npts(i)=size(data(i).dep,1);
+        data(i)=ch(data(i),'b',data(i).ind(1),...
+            'e',data(i).ind(end),'npts',npts(i),...
+            'depmen',mean(data(i).dep(:)),...
+            'depmin',min(data(i).dep(:)),...
+            'depmax',max(data(i).dep(:)),...
+            'delta',(data(i).ind(end)-data(i).ind(1))/(npts(i)-1),...
+            'odelta',data(i).ind(min([end 2]))-data(i).ind(1));
     end
 end
 

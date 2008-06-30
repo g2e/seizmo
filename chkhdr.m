@@ -44,7 +44,7 @@ function [data]=chkhdr(data,varargin)
 %    See also:  fixdelta, ch, gh
 
 %     Version History:
-%        Feb. 21, 2008 - Initial version
+%        Feb. 21, 2008 - initial version
 %        Feb. 23, 2008 - renamed to chkhdr, some improvements to
 %                        handle unevenly spaced records
 %        Feb. 25, 2008 - Couple bugfixes
@@ -53,18 +53,20 @@ function [data]=chkhdr(data,varargin)
 %        June 20, 2008 - Updates header then checks
 %        June 22, 2008 - Major revision - supports LCALDA field, better
 %                        handling of unevenly sampled data
+%        June 28, 2008 - .dep and .ind rather than .x and .t
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 22, 2008 at 23:30 GMT
+%     Last Updated June 28, 2008 at 22:50 GMT
 
 % todo:
-% enum checks
-%   iftype
-%   iztype
-%   idep
+% - dataless support
+% - enum checks
+%    iftype
+%    iztype
+%    idep
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % change header first
 data=ch(data,varargin{:});
@@ -147,19 +149,19 @@ leven=glgc(data,'leven');
 
 % get header info
 error(lgcchk('leven',leven))
-fals=strcmp(leven,'false');
+fals=strcmpi(leven,'false');
 
-% make sure .t field exists (simpler code)
-if(~isfield(data,'t')); data(1).t=[]; end
+% make sure .ind field exists (simpler code)
+if(~isfield(data,'ind')); data(1).ind=[]; end
 
 % loop over all records, get npts, dep(min,max,men)
 len=zeros(nrecs,1); depmax=len; depmin=len; depmen=len; tlen=len; e=len;
 for i=1:nrecs
-    len(i)=size(data(i).x,1);
-    depmax(i)=max(data(i).x(:));
-    depmin(i)=min(data(i).x(:));
-    depmen(i)=mean(data(i).x(:));
-    tlen(i)=size(data(i).t,1);
+    len(i)=size(data(i).dep,1);
+    depmax(i)=max(data(i).dep(:));
+    depmin(i)=min(data(i).dep(:));
+    depmen(i)=mean(data(i).dep(:));
+    tlen(i)=size(data(i).ind,1);
     if(fals(i))
         % switch to evenly spaced if no .t data and delta is defined
         if(tlen(i)==0 && delta(i)~=h(vers==version(i)).undef.ntype)
@@ -171,19 +173,19 @@ for i=1:nrecs
                 'match number of dependent variable data for record %d'],i)
         % update b, e, odelta, delta
         else
-            b(i)=data(i).t(1);
-            e(i)=data(i).t(end);
-            odelta(i)=data(i).t(2)-data(i).t(1);                % p1 => p2
-            delta(i)=(data(i).t(end)-data(i).t(1))/(len(i)-1);  % average
+            b(i)=data(i).ind(1);
+            e(i)=data(i).ind(end);
+            odelta(i)=data(i).ind(2)-data(i).ind(1); % p1 => p2
+            delta(i)=(data(i).ind(end)-data(i).ind(1))/(len(i)-1); % avg
         end
     else
         % check delta
         if(delta(i)==h(vers==version(i)).undef.ntype)
             error('SAClab:chkhdr:deltaUndefined',...
-                'DELTA field undefined for (evenly spaced) record %d',i)
+                'DELTA field undefined for evenly spaced record %d',i)
         end
         % clear .t and update e, odelta
-        data(i).t=[];
+        data(i).ind=[];
         odelta(i)=h(vers==version(i)).undef.ntype;
         e(i)=b(i)+(len(i)-1)*delta(i);
     end

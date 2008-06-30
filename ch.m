@@ -27,10 +27,14 @@ function [data]=ch(data,varargin)
 %       or more header versions.  Avoid all this headache by not relying on
 %       CH to do the replication for vectors.  Expand the vector to a 2D
 %       array beforehand.
+%     - Passing a nan, inf, -inf value will change a numeric field to its
+%       undefined value.  Use 'nan', 'undef' or 'undefined' to do the same
+%       for a character field.  This is useful for not having to remember
+%       what the field's actual undefined value is.
 %
-%    Requirements: Matlab 7
+%    System requirements: Matlab 7
 %
-%    Supported types: ALL
+%    Data requirements: NONE
 %
 %    Header changes: Determined by input list.
 %
@@ -62,12 +66,25 @@ function [data]=ch(data,varargin)
 %    See also:  lh, gh, rh, wh, glgc, genum, genumdesc
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 16, 2008 - Documentation update
+%        Oct. 29, 2007 - initial version
+%        Nov.  7, 2007 - documentation update
+%        Jan. 28, 2008 - new sachp support
+%        Feb. 18, 2008 - rewrite - parses by version before updating
+%        Feb. 23, 2008 - major code cleanup
+%        Feb. 28, 2008 - major code cleanup
+%        Mar.  4, 2008 - cleanup errors and warnings
+%        June 16, 2008 - documentation update
 %        June 20, 2008 - enum ids & logicals now support uppercase strings
+%        June 28, 2008 - documentation update
+%        June 30, 2008 - undefine field supported using
+%                        nan, inf, -inf, 'nan', 'undef', 'undefined'
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 20, 2008 at 04:20 GMT
+%     Last Updated June 30, 2008 at 09:00 GMT
+
+% todo:
+% - virtual fields
+% - absolute to relative times
 
 % throw error if unpaired fields
 if (mod(nargin-1,2))
@@ -213,15 +230,38 @@ for m=1:length(h.enum)
         if(iscellstr(v))
             % lowercase values
             v=lower(v);
-            % all are ids and are the same (quick)
-            if(isfield(h.enum(1).val,v{1}) && length(unique(v))==1)
-                head(h.enum(m).pos.(f),:)=h.enum(1).val.(v{1});
+            % replace special undefined strings
+            v(strcmpi(v,'undef'))={h.undef.stype};
+            v(strcmpi(v,'undefined'))={h.undef.stype};
+            v(strcmpi(v,'nan'))={h.undef.stype};
+            % all are the same (quick)
+            if(length(unique(v))==1)
+                % all are ids
+                if(isfield(h.enum(1).val,v{1}))
+                    head(h.enum(m).pos.(f),:)=h.enum(1).val.(v{1});
+                % all are undefined
+                elseif(strcmpi(v{1},h.undef.stype))
+                    head(h.enum(m).pos.(f),:)=h.undef.ntype;
+                else
+                    % check if description
+                    desc=strcmpi(v{1},h.enum(1).desc);
+                    if(any(desc))
+                        head(h.enum(m).pos.(f),:)=find(desc)-1;
+                    else
+                        warning('SAClab:ch:enumBad',...
+                            ['\nHeader Version: %d\n'...
+                            'Enum ID/Desc Invalid for field %s'],...
+                            h.version,f);
+                    end
+                end
             % not all are the same (slow)
             else
                 for n=1:length(v)
                     % check if string id
                     if(isfield(h.enum(1).val,v{n}))
                         head(h.enum(m).pos.(f),n)=h.enum(1).val.(v{n});
+                    elseif(strcmpi(v{n},h.undef.stype))
+                        head(h.enum(m).pos.(f),n)=h.undef.ntype;
                     else
                         % check if description
                         desc=strcmpi(v{n},h.enum(1).desc);
@@ -238,7 +278,11 @@ for m=1:length(h.enum)
             end
         % assume numeric cell array of enum values
         % (no check - breaks if mixed num/char cells)
-        else head(h.enum(m).pos.(f),:)=cell2mat(v);
+        else
+            v=cell2mat(v);
+            v(isnan(v))=h.undef.ntype;
+            v(isinf(v))=h.undef.ntype;
+            head(h.enum(m).pos.(f),:)=v;
         end
         return;
     end
@@ -251,13 +295,16 @@ for m=1:length(h.lgc)
             % logic words (unknown => undefined here)
             true=strncmpi(v,'t',1);
             false=strncmpi(v,'f',1);
-            undef=strncmpi(v,'u',1);
+            undef=strncmpi(v,'u',1) | strcmpi(v,'nan');
             head(h.lgc(m).pos.(f),true)=h.true;
             head(h.lgc(m).pos.(f),false)=h.false;
             head(h.lgc(m).pos.(f),undef)=h.undef.ntype;
         else
             % logic numbers (unknown => unknown here)
-            head(h.lgc(m).pos.(f),:)=cell2mat(v);
+            v=cell2mat(v);
+            v(isnan(v))=h.undef.ntype;
+            v(isinf(v))=h.undef.ntype;
+            head(h.lgc(m).pos.(f),:)=v;
         end
         return;
     end
@@ -269,6 +316,9 @@ for n=1:length(h.stype)
         if(isfield(h.(h.stype{n})(m).pos,f))
             p=h.(h.stype{n})(m).pos.(f);
             o=p(2)-p(1)+1;
+            v(strcmpi(v,'undef'))={h.undef.stype};
+            v(strcmpi(v,'undefined'))={h.undef.stype};
+            v(strcmpi(v,'nan'))={h.undef.stype};
             v=strnlen(v,o);
             head(p(1):p(2),:)=char(v).';
             return;
@@ -280,7 +330,10 @@ end
 for n=1:length(h.ntype)
     for m=1:length(h.(h.ntype{n}))
         if(isfield(h.(h.ntype{n})(m).pos,f))
-            head(h.(h.ntype{n})(m).pos.(f),:)=cell2mat(v);
+            v=cell2mat(v);
+            v(isnan(v))=h.undef.ntype;
+            v(isinf(v))=h.undef.ntype;
+            head(h.(h.ntype{n})(m).pos.(f),:)=v;
             return;
         end
     end

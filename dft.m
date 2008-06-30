@@ -20,7 +20,7 @@ function [data]=dft(data,format,pow2pad)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: Time Series or General X vs Y
+%    Data requirements: Evenly Spaced; Time Series or General X vs Y
 %
 %    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
 %     In the frequency domain B, DELTA, and NPTS are changed to the 
@@ -40,17 +40,28 @@ function [data]=dft(data,format,pow2pad)
 %    See also: idft, amph2rlim, rlim2amph, divomega, mulomega
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 11, 2008 - Added example
+%        Jan. 28, 2008 - initial version
+%        Feb. 28, 2008 - seischk support and code cleanup
+%        Mar.  2, 2008 - readibility change
+%        Mar.  3, 2008 - now compatible with SAC
+%        Mar.  4, 2008 - cleaned up errors and warnings
+%        May  12, 2008 - name changed to dft
+%        June 11, 2008 - added example
+%        June 29, 2008 - documentation update, .dep rather than .x
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 11, 2008 at 19:50 GMT
+%     Last Updated June 29, 2008 at 07:50 GMT
+
+% todo:
+% - dep* stats
+% - one ch call
+% - dataless support
 
 % check nargin
 error(nargchk(1,3,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % defaults
 if(nargin<3 || isempty(pow2pad)); pow2pad=1; end
@@ -70,48 +81,48 @@ iftype=genumdesc(data,'iftype');
 [b,delta]=gh(data,'b','delta');
 
 % check leven,iftype
-if(any(~strcmp(leven,'true')))
+if(any(~strcmpi(leven,'true')))
     error('SAClab:dft:illegalOperation',...
         'illegal operation on unevenly spaced record')
-elseif(any(~strcmp(iftype,'Time Series File')...
-        & ~strcmp(iftype,'General X vs Y file')))
+elseif(any(~strcmpi(iftype,'Time Series File')...
+        & ~strcmpi(iftype,'General X vs Y file')))
     error('SAClab:dft:illegalOperation',...
-        'illegal operation on spectral file')
+        'illegal operation on spectral/xyz record')
 end
 
 % loop through records
 for i=1:length(data)
     % save class and convert to double precision
-    oclass=str2func(class(data(i).x));
-    data(i).x=double(data(i).x);
+    oclass=str2func(class(data(i).dep));
+    data(i).dep=double(data(i).dep);
     
     % number of datum/components
-    [len,ncmp]=size(data(i).x);
+    [len,ncmp]=size(data(i).dep);
     
     % get frequency info
     nspts=2^(nextpow2(len)+pow2pad);
     sb=0; se=1/(delta(i)*2); sdelta=2*se/nspts;
     
     % fft
-    data(i).x=delta(i)*fft(data(i).x,nspts);    % SAC compatible
-    %data(i).x=2*fft(data(i).x,nspts)/len;      % better sinusoid amplitudes
+    data(i).dep=delta(i)*fft(data(i).dep,nspts);    % SAC compatible
+    %data(i).dep=2*fft(data(i).dep,nspts)/len;      % better sinusoid amplitudes
     
     % expand data to make room for split
-    data(i).x(:,(1:ncmp)*2)=data(i).x;
+    data(i).dep(:,(1:ncmp)*2)=data(i).dep;
     
     % split complex by desired filetype
     if(strcmpi(format,'rlim'))
-        data(i).x(:,1:2:end)=real(data(i).x(:,2:2:end));
-        data(i).x(:,2:2:end)=imag(data(i).x(:,2:2:end));
+        data(i).dep(:,1:2:end)=real(data(i).dep(:,2:2:end));
+        data(i).dep(:,2:2:end)=imag(data(i).dep(:,2:2:end));
         data(i)=ch(data(i),'iftype','Spectral File-Real/Imag');
     else
-        data(i).x(:,1:2:end)=abs(data(i).x(:,2:2:end));
-        data(i).x(:,2:2:end)=angle(data(i).x(:,2:2:end));
+        data(i).dep(:,1:2:end)=abs(data(i).dep(:,2:2:end));
+        data(i).dep(:,2:2:end)=angle(data(i).dep(:,2:2:end));
         data(i)=ch(data(i),'iftype','Spectral File-Ampl/Phase');
     end
     
     % change class back
-    data(i).x=oclass(data(i).x);
+    data(i).dep=oclass(data(i).dep);
     
     % update header (note there is no field 'se')
     data(i)=ch(data(i),'b',sb,'e',se,'delta',sdelta,'sb',b(i),...

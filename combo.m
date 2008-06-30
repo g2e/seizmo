@@ -13,9 +13,9 @@ function [recmatrix,indices,store,npts]=combo(data)
 %    
 %    Notes:
 %
-%    Requirements: Matlab 7
+%    System requirements: Matlab 7
 %
-%    Supported types: ALL
+%    Data requirements: NONE
 %
 %    Header changes: NONE
 %
@@ -29,28 +29,39 @@ function [recmatrix,indices,store,npts]=combo(data)
 %    See also: distro
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 15, 2008 - Updated documentation
+%        Feb. 16, 2008 - initial version
+%        Feb. 21, 2008 - minor documentation update
+%        Feb. 23, 2008 - minor documentation update
+%        Feb. 28, 2008 - seischk support
+%        Mar.  4, 2008 - minor documentation update
+%        June 15, 2008 - documentation update
+%        June 20, 2008 - minor documentaiton update
+%        June 29, 2008 - documentation update, .dep rather than .x,
+%                        dataless support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 15, 2008 at 02:50 GMT
+%     Last Updated June 29, 2008 at 05:50 GMT
+
+% todo:
+% - option to extract independent component too
 
 % check input
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % loop through records
 store=cell(nrecs,1);
 npts=zeros(nrecs,1);
 ncol=zeros(nrecs,1);
 for i=1:nrecs
-    store{i}=class(data(i).x);
-    [npts(i),ncol(i)]=size(data(i).x);
+    store{i}=class(data(i).dep);
+    [npts(i),ncol(i)]=size(data(i).dep);
+    if(npts(i)==0); ncol(i)=0; end
 end
 
 % preallocate record matrix (doubles)
@@ -61,7 +72,7 @@ indices=zeros(1,col2(end));
 % loop through records
 for i=1:nrecs
     indices(col(i):col2(i))=i;
-    recmatrix(1:npts(i),col(i):col2(i))=data(i).x;
+    recmatrix(1:npts(i),col(i):col2(i))=data(i).dep;
 end
 
 end
