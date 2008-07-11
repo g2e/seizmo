@@ -15,7 +15,7 @@ function [data]=add(data,constant,cmp)
 %     - a vector of constants (length must equal the number of records)
 %       allows applying different values to each record
 %     - cmp_list is the dependent component(s) to work on (default is all)
-%     - an empty list of components will not add to any components
+%     - an empty list of components will not modify any components
 %
 %    System requirements: Matlab 7
 %
@@ -45,9 +45,10 @@ function [data]=add(data,constant,cmp)
 %        June 28, 2008 - history update, ch only called once now, errors
 %                        fixed, updated empty component list behavior,
 %                        .dep rather than .x
+%        July  7, 2008 - allow constant to be an array
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 28, 2008 at 20:20 GMT
+%     Last Updated July  7, 2008 at 19:25 GMT
 
 % todo:
 % - dataless support
@@ -65,15 +66,17 @@ if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
 if(nargin==2); cmp=':'; end
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % check constant
 if(~isnumeric(constant))
     error('SAClab:add:badInput','constant must be numeric');
 elseif(isscalar(constant))
     constant=constant(ones(nrecs,1));
-elseif(~isvector(constant) || length(constant)~=nrecs)
-    error('SAClab:add:badInput','constant vector length ~= # records')
+elseif(numel(constant)~=nrecs)
+    error('SAClab:add:badInput',...
+        ['number of elements in constant '...
+        'not equal to number of records'])
 end
 
 % add constant

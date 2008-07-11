@@ -85,7 +85,7 @@ for i=1:nver-1
 end
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % get lcalda (don't mess with those with lcalda ~= 'true')
 [lcalda]=glgc(data,'lcalda');

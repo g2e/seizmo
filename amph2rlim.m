@@ -59,7 +59,7 @@ if(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
 end
 
 % loop through records
-for i=1:length(data)
+for i=1:numel(data)
     % convert or message
     if(strcmpi(iftype(i),'Spectral File-Ampl/Phase'))
         oclass=str2func(class(data(i).dep));

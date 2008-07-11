@@ -95,7 +95,7 @@ end
 error(seischk(data))
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % recursive section
 %   breaks up dataset with multiple calls so that the

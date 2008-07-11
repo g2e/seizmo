@@ -15,6 +15,12 @@ function [data]=divomega(data)
 %     command.  The effect of the differentiation in the time domain can be
 %     removed by an integration in the frequency domain using this command.
 %
+%    Notes:
+%
+%    System requirements: Matlab 7
+%
+%    Data requirements: Evenly sampled, spectral records
+%
 %    Header Changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage:  data=divomega(data)
@@ -27,17 +33,21 @@ function [data]=divomega(data)
 %    See also: mulomega, dft, idft
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 11, 2008 - Documentation Cleanup
+%        May  12, 2008 - initial version
+%        June 11, 2008 - documentation cleanup
+%        July  8, 2008 - documentation update, single ch call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 11, 2008 at 19:50 GMT
+%     Last Updated July  8, 2008 at 17:50 GMT
+
+% todo:
+%
 
 % check nargin
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % retreive header info
 leven=glgc(data,'leven');
@@ -56,36 +66,47 @@ elseif(any(~strcmp(iftype,'Spectral File-Real/Imag')...
         'illegal operation on a non-spectral file')
 end
 
+% number of records
+nrecs=numel(data);
+
 % loop through records
-for i=1:length(data)
+depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+for i=1:nrecs
     % save class and convert to double precision
-    oclass=str2func(class(data(i).x));
-    data(i).x=double(data(i).x);
+    oclass=str2func(class(data(i).dep));
+    data(i).dep=double(data(i).dep);
     
     % integrate
-    cols=size(data(i).x,2);
+    cols=size(data(i).dep,2);
     omega=[0 1./(2*pi*[linspace(delta(i),e(i),npts2(i)) ...
         linspace(e(i)-delta(i),delta(i),npts21(i))])].';
     if(strcmp(iftype(i),'Spectral File-Real/Imag'))
         % rlim %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % 0Hz real/imag == 0 else
         % real=imag/omega & imag=-real/omega
-        data(i).x(:,[1:2:end 2:2:end])=oclass(...
-            [data(i).x(:,2:2:end).*omega(:,ones(1,cols/2))...
-            -data(i).x(:,1:2:end).*omega(:,ones(1,cols/2))]);
+        data(i).dep(:,[1:2:end 2:2:end])=oclass(...
+            [data(i).dep(:,2:2:end).*omega(:,ones(1,cols/2))...
+            -data(i).dep(:,1:2:end).*omega(:,ones(1,cols/2))]);
     else
         % amph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % amp at 0Hz == 0 else amp=amp/omega
         % phase=phase+pi/2 at -Hz and 0Hz else phase=phase-pi/2
-        data(i).x(:,1:2:end)=data(i).x(:,1:2:end).*omega(:,ones(1,cols/2));
-        data(i).x(2:(npts2+1),2:2:end)=data(i).x(2:(npts2+1),2:2:end)-pi/2;
-        data(i).x([1 npts2+2:end],2:2:end)=data(i).x([1 npts2+2:end],2:2:end)+pi/2;
-        data(i).x=oclass(data(i).x);
+        data(i).dep(:,1:2:end)=...
+            data(i).dep(:,1:2:end).*omega(:,ones(1,cols/2));
+        data(i).dep(2:(npts2+1),2:2:end)=...
+            data(i).dep(2:(npts2+1),2:2:end)-pi/2;
+        data(i).dep([1 npts2+2:end],2:2:end)=...
+            data(i).dep([1 npts2+2:end],2:2:end)+pi/2;
+        data(i).dep=oclass(data(i).dep);
     end
     
-    % update header
-    data(i)=ch(data(i),'depmax',max(data(i).x(:)),...
-        'depmin',min(data(i).x(:)),'depmen',mean(data(i).x(:)));
+    % dep*
+    depmen(i)=mean(data(i).dep(:));
+    depmin(i)=min(data(i).dep(:));
+    depmax(i)=max(data(i).dep(:));
 end
+
+% update header
+data=ch(data,'depmax',depmax,'depmin',depmin,'depmen',depmen);
 
 end
