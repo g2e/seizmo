@@ -1,11 +1,12 @@
 function [data]=divide(data,constant,cmp)
 %DIVIDE    Divide SAClab data records by a constant
 %
-%    Description: DIVIDE(DATA,CONSTANT) divides SAClab data records by a
-%     constant.  For multi-component files, this operation is performed on
-%     every component (this includes spectral files).
+%    Description: DIVIDE(DATA,CONSTANT) divides the dependent component(s)
+%     of SAClab data records by a constant.  For multi-component files, 
+%     this operation is performed on every dependent component (this 
+%     includes spectral files).
 %
-%     DIVIDE(DATA,CONSTANT,CMP) allows for operations on just components in
+%     DIVIDE(DATA,CONSTANT,CMP) allows for operation on just components in
 %     the list CMP.  By default all components are operated on (use ':' to
 %     replicate the default behavior).  See the examples section for a 
 %     usage case.
@@ -31,7 +32,7 @@ function [data]=divide(data,constant,cmp)
 %     affecting the phase component by dividing only the first component:
 %      data=divide(data,32,1)
 %
-%    See also: mul, add, sub
+%    See also: mul, add, sub, seisfun
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -45,12 +46,14 @@ function [data]=divide(data,constant,cmp)
 %        July  7, 2008 - history update, errors fixed, updated empty 
 %                        component list behavior, .dep rather than .x, 
 %                        allow constant to be an array, no longer uses mul
+%        July 17, 2008 - documentation update, dataless support added
+%                        and cmp checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  7, 2008 at 19:30 GMT
+%     Last Updated July 17, 2008 at 08:05 GMT
 
 % todo:
-% - dataless support
+% 
 
 % check nargin
 error(nargchk(2,3,nargin))
@@ -62,7 +65,10 @@ error(seischk(data,'dep'))
 if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
 
 % default component
-if(nargin==2); cmp=':'; end
+if(nargin==2); cmp=':'; 
+elseif(any(fix(cmp)~=cmp) || (~isnumeric(cmp) && ~strcmpi(':',cmp)))
+    error('SAClab:divide:badInput','Component list is bad');
+end
 
 % number of records
 nrecs=numel(data);
@@ -74,15 +80,15 @@ elseif(isscalar(constant))
     constant=constant(ones(nrecs,1));
 elseif(numel(constant)~=nrecs)
     error('SAClab:divide:badInput',...
-        ['number of elements in constant '...
-        'not equal to number of records'])
+        'number of elements in constant not equal to number of records')
 end
 
-% divide constant
+% divide by constant
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
+    if(isempty(data(i).dep)); continue; end
     oclass=str2func(class(data(i).dep));
-    data(i).dep(:,cmp)=oclass(double(data(i).dep(:,cmp))./constant(i));
+    data(i).dep(:,cmp)=oclass(double(data(i).dep(:,cmp))/constant(i));
     depmen(i)=mean(data(i).dep(:)); 
     depmin(i)=min(data(i).dep(:)); 
     depmax(i)=max(data(i).dep(:));

@@ -21,20 +21,20 @@ clean up documentation
 multi-file functions (targeted for 0.5.2)
 -------------------------------------------
 be meaner on spectral files
-	- rmean
-	- rtrend
-	- taper
-	- deci
-	- stretch
-	- syncsr
-	- interpolate
-	- correlate
-	- envelope
-	- hilbert
-	- fixdelta
-	- iirfilter
-	- dif
-	- integrt
+	- rmean		
+	- rtrend	
+	- taper		
+	- deci		
+	- stretch	
+	- syncsr	
+	- interpolate	
+	- correlate	
+	- envelope	xxx
+	- hilbert	xxx
+	- fixdelta	
+	- iirfilter	
+	- dif		
+	- integrt	
 multi-file functions
 	- correlate (make faster)
 	- convolve (add support in mcxc)
@@ -43,7 +43,64 @@ multi-file functions
 fix up dif/int
 	- multi-point dif (for SAC compatibility)
 	- combine integrt with integrt2 (for SAC compatibility)
+		- integreat
+structure change
+	- .x,.t => .dep,.ind
+dataless support
 
+checklist
+	- addf
+	- correlate
+	- convolve
+	- cutim (maybe)
+	- dif
+	- divf
+	- doubleit
+	- fixdelta
+	- genumdesc
+	- genum
+	- gh
+	- glgc
+	- gmedian
+	- gnrm
+	- gv
+	- hsort
+	- iirfilter
+	- integreat
+	- interpolate
+	- isseis
+	- lgcchk
+	- lh
+	- merge
+	- mulf
+	- nrm
+	- p1
+	- p2
+	- p3
+	- pconf
+	- pdendro
+	- pullarr
+	- qcksnr
+	- rdata (maybe)
+	- rdead
+	- recsec
+	- reverse
+	- rh
+	- rmean
+	- rotate
+	- rpdw (maybe)
+	- rseis
+	- rtrend
+	- seischk
+	- seissize
+	- selectrecs
+	- stretch
+	- subf
+	- syncsr
+	- taper
+	- vvseis
+	- wh
+	- wseis
 
 
 more plotting and polishing (targeted for 0.5.3)
@@ -86,8 +143,6 @@ support for virtual header fields
 	- default1
 	- all
 	- full
-structure change
-	- .x,.t => .dep,.ind
 
 
 guis and transfer (targeted for 0.5.4)

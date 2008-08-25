@@ -1,9 +1,10 @@
 function [data]=add(data,constant,cmp)
 %ADD    Add a constant to SAClab data records
 %
-%    Description: ADD(DATA,CONSTANT) adds a constant to SAClab data
-%     records.  For multi-component files, this operation is performed on
-%     every component (this includes spectral files).
+%    Description: ADD(DATA,CONSTANT) adds a constant to the dependent 
+%     component(s) of SAClab data records.  For multi-component files, this
+%     operation is performed on every dependent component (this includes 
+%     spectral files).
 %
 %     ADD(DATA,CONSTANT,CMP) allows for operation on just components in
 %     the list CMP.  By default all components are operated on (use ':' to
@@ -31,7 +32,7 @@ function [data]=add(data,constant,cmp)
 %     to the phase component in amplitude-phase records (component 2):
 %      data=idft(add(dft(data),3*pi/4,2))
 %
-%    See also: sub, mul, divide
+%    See also: sub, mul, divide, seisfun
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -46,12 +47,14 @@ function [data]=add(data,constant,cmp)
 %                        fixed, updated empty component list behavior,
 %                        .dep rather than .x
 %        July  7, 2008 - allow constant to be an array
+%        July 17, 2008 - documentation update, dataless support added 
+%                        and cmp checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  7, 2008 at 19:25 GMT
+%     Last Updated July 17, 2008 at 08:05 GMT
 
 % todo:
-% - dataless support
+%
 
 % check nargin
 error(nargchk(2,3,nargin))
@@ -63,7 +66,10 @@ error(seischk(data,'dep'))
 if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
 
 % default component
-if(nargin==2); cmp=':'; end
+if(nargin==2); cmp=':'; 
+elseif(any(fix(cmp)~=cmp) || (~isnumeric(cmp) && ~strcmpi(':',cmp)))
+    error('SAClab:add:badInput','Component list is bad');
+end
 
 % number of records
 nrecs=numel(data);
@@ -75,13 +81,13 @@ elseif(isscalar(constant))
     constant=constant(ones(nrecs,1));
 elseif(numel(constant)~=nrecs)
     error('SAClab:add:badInput',...
-        ['number of elements in constant '...
-        'not equal to number of records'])
+        'number of elements in constant not equal to number of records')
 end
 
 % add constant
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
+    if(isempty(data(i).dep)); continue; end
     oclass=str2func(class(data(i).dep));
     data(i).dep(:,cmp)=oclass(double(data(i).dep(:,cmp))+constant(i));
     depmen(i)=mean(data(i).dep(:)); 

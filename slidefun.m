@@ -1,11 +1,9 @@
 function [data]=slidefun(data,fun,nsamples)
 %SLIDEFUN    Apply a sliding window function to SAClab data records
 %
-%    Description: SLIDEFUN(DATA,FUN,NSAMPLES) applies a function FUN to a
-%     sliding window of NSAMPLES samples to SAClab data records in DATA.  
-%     Function FUN will only modify the amplitudes of the records and not 
-%     the length or timing.  The number of components in a multi-component
-%     record can be changed.
+%    Description: SLIDEFUN(DATA,FUN,NSAMPLES) applies a function defined by
+%     the function handle FUN to a sliding window of NSAMPLES samples to 
+%     the dependent component(s) of SAClab data records in DATA.
 %     
 %     FUN is expected to handle a column vector (single component) or an 
 %     array (multiple component - components are distributed in columns).  
@@ -21,35 +19,54 @@ function [data]=slidefun(data,fun,nsamples)
 %     the first window is centered on the first point in the record and the 
 %     last window is centered on the last point in the record.
 %
-%    Usage: [data]=slidefun(data,fun,nsamples)
+%    Notes:
+%     - The number of components in the output record need not match that
+%       of the input record.
 %
-%    Note: Will update header values depmen, depmin, depmax.
+%    System requirements: Matlab 7
+%
+%    Data requirements: NONE
+%
+%    Header changes: DEPMEN, DEPMIN, DEPMAX
+%
+%    Usage: data=slidefun(data,fun,nsamples)
 %
 %    Examples:
-%
 %     Running absolute mean from G. D. Bensen et al, 2006:
 %      slidefun(data,@(x)mean(abs(x)),ceil(1/(2*delta*fmin)))
 %
 %    See also: seisfun, rms, robustrms
 
+%     Version History:
+%        Apr. 23, 2008 - initial version
+%        May  12, 2008 - dep* fix
+%        July 18, 2008 - documentation update, dataless support, .dep
+%                        rather than .x, added history, single ch call
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated July 18, 2008 at 23:15 GMT
+
+% todo:
+%
+
 % check nargin
 error(nargchk(3,3,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % check input fun is a function
 if(~isa(fun,'function_handle'))
-    error('FUN must be a function handle!')
+    error('SAClab:slidefun:badInput','FUN must be a function handle!')
 end
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % fix/check nsamples
 if(isscalar(nsamples)); nsamples=nsamples(ones(1,nrecs),1); end
-if(~isnumeric(nsamples) || ~isvector(nsamples) || any(nsamples<1) ...
-        || length(nsamples)~=nrecs || any(fix(nsamples)~=nsamples))
+if(~isnumeric(nsamples) || any(nsamples<1) || numel(nsamples)~=nrecs ...
+        || any(fix(nsamples)~=nsamples))
     error('SAClab:slidefun:badInput',...
         'NSAMPLES must be a scalar/vector of positive integer(s)')
 end
@@ -58,28 +75,37 @@ end
 half1=floor(nsamples/2);
 half12=2*half1;
 
-% sliding window rms
+% loop through each record
+depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
+    % skip dataless
+    if(isempty(data(i).dep)); continue; end
+    
     % get storage class of data
-    oclass=str2func(class(data(i).x));
+    oclass=str2func(class(data(i).dep));
     
     % pad record with zeros
-    sz=size(data(i).x);
-    data(i).x=[zeros(half1(i),sz(2)); ...
-                double(data(i).x); ...
+    sz=size(data(i).dep);
+    data(i).dep=[zeros(half1(i),sz(2)); ...
+                double(data(i).dep); ...
                 zeros(half1(i),sz(2))];
     
     % sliding window for each point
+    % (starts at last point to allocate temp once)
     for j=sz(1):-1:1
-        temp(j,:)=fun(data(i).x(j:j+half12,:)); %#ok<AGROW>
+        temp(j,:)=fun(data(i).dep(j:j+half12,:)); %#ok<AGROW>
     end
     
     % assign back to data and change storage back
-    data(i).x=oclass(temp);
+    data(i).dep=oclass(temp);
     
-    % update header
-    data(i)=ch(data(i),'depmax',max(data(i).x(:)),...
-        'depmin',min(data(i).x(:)),'depmen',mean(data(i).x(:)));
+    % dep*
+    depmen(i)=mean(data(i).dep(:)); 
+    depmin(i)=min(data(i).dep(:)); 
+    depmax(i)=max(data(i).dep(:));
 end
+
+% update header
+data=ch(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
 
 end

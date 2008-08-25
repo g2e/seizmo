@@ -1,42 +1,46 @@
-function [data]=envelope(data,pp2)
+function [data]=envelope(data)
 %ENVELOPE    Return envelopes of SAClab data records
 %
 %    Description: Returns the envelopes of the SAClab data records (complex
-%     magnitude of a record's analytic signal).  Uses the Matlab function
-%     hilbert (Signal Processing Toolbox).
+%     magnitude of a record's analytic signal).
 %
-%    Usage: [data]=envelope(data)
+%    Notes:
+%
+%    System requirements: Matlab 7
+%
+%    Data requirements: Evenly spaced; Time Series or General X vs Y
+%
+%    Header changes: DEPMEN, DEPMIN, DEPMAX
+%
+%    Usage: data=envelope(data)
 %
 %    Examples:
+%     Plot the envelopes against the data:
+%      recsec([data; envelope(data)])
 %
 %    See also: hilbrt
 
+%     Version History:
+%        Jan. 30, 2008 - initial version
+%        Feb. 23, 2008 - seischk support and class support
+%        Feb. 28, 2008 - support for changing fft zeropadding
+%        Mar.  4, 2008 - documentation update
+%        May  12, 2998 - dep* fix
+%        July 17, 2008 - history update, documentation update, now uses
+%                        SAClab functions rather than Matlab's hilbert
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated July 17, 2008 at 17:10 GMT
+
+% todo:
+%
+
 % check nargin
-error(nargchk(1,2,nargin))
+error(nargchk(1,1,nargin))
 
-% check data structure
-error(seischk(data,'x'))
-
-% default fft length to next power of 2 + 1
-if(nargin==1); pp2=1; end
-
-% check spacing
-if(any(~strcmp(glgc(data,'leven'),'true')))
-    error('SAClab:envelope:evenlySpacedOnly',...
-        'Illegal operation on unevenly spaced data');
-end
-
-% get envelopes
-for i=1:length(data)
-    len=size(data(i).x,1);
-    nfft=2^(nextpow2(len)+pp2);
-    oclass=str2func(class(data(i).x));
-    data(i).x=abs(hilbert(double(data(i).x),nfft));
-    data(i).x=oclass(data(i).x(1:len,:));
-    
-    % update header
-    data(i)=ch(data(i),'depmen',mean(data(i).x(:)),...
-        'depmin',min(data(i).x(:)),'depmax',max(data(i).x(:)));
-end
+% sqrt(H(x)^2+x^2)
+data=seisfun(...
+    addf(seisfun(hilbert(data),@(x)x^2),seisfun(data,@(x)x^2)),...
+    @(x)x^0.5);
 
 end

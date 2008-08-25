@@ -4,12 +4,17 @@ function [data]=rlim2amph(data)
 %    Description: RLIM2AMPH(DATA) converts SAClab real-imaginary records 
 %     to amplitude-phase records.  This is particularly useful for 
 %     switching between the formats when performing basic operations on 
-%     spectral records which would otherwise require separating the
-%     amplitude and phase components.  Records in DATA must be of the 
-%     spectral variety.  Amplitude-phase records are not altered (a warning
-%     message is given).
+%     spectral records would otherwise require separating the amplitude and
+%     phase components.  Records in DATA must be of the spectral variety.  
+%     Amplitude-phase records are not altered.
 %
-%    Header changes: IFTYPE
+%    Notes:
+%
+%    System requirements: Matlab 7
+%
+%    Data requirements: Spectral records only.
+%
+%    Header changes: IFTYPE, DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage:  data=rlim2amph(data)
 %
@@ -25,23 +30,22 @@ function [data]=rlim2amph(data)
 %    See also: amph2rlim, dft, idft
 
 %     Version History:
-%        June 11, 2008 - Initial Version
+%        June 11, 2008 - initial version
+%        July 19, 2008 - removed option, single call to ch, dataless
+%                        support, updates DEP* fields, .dep rather than .x,
+%                        documentation update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 11, 2008 at 20:30 GMT
+%     Last Updated July 19, 2008 at 05:45 GMT
+
+% todo:
+%
 
 % check nargin
-error(nargchk(1,3,nargin))
+error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'x'))
-
-% check option
-if(nargin==1)
-    ignore=false;
-elseif(nargin==2 || ~strcmp(option,'ignore_preconverted'))
-    error('SAClab:amph2rlim:badOption','Bad option: %s',option)
-end 
+error(seischk(data,'dep'))
 
 % retreive header info
 iftype=genumdesc(data,'iftype');
@@ -54,24 +58,29 @@ if(any(~strcmp(iftype,'Spectral File-Real/Imag')...
 end
 
 % loop through records
-for i=1:length(data)
+depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+for i=1:numel(data)
+    % skip dataless
+    if(isempty(data(i).dep)); continue; end
+    
     % convert or message
     if(strcmp(iftype(i),'Spectral File-Real/Imag'))
-        oclass=str2func(class(data(i).x));
-        data(i).x=double(data(i).x);
-        temp=complex(data(i).x(:,1:2:end),data(i).x(:,2:2:end));
-        data(i).x(:,1:2:end)=abs(temp);
-        data(i).x(:,2:2:end)=angle(temp);
-        data(i).x=oclass(data(i).x);
-    else
-        if(~ignore)
-            warning('SAClab:rlim2amph:unnecessaryOperation',...
-            'Unnecessary operation on ampltude-phase file %s',data(i).name)
-        end
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+        temp=complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
+        data(i).dep(:,1:2:end)=abs(temp);
+        data(i).dep(:,2:2:end)=angle(temp);
+        data(i).dep=oclass(data(i).dep);
     end
     
-    % update filetype
-    data=ch(data,'iftype','Spectral File-Ampl/Phase');
+    % dep*
+    depmen(i)=mean(data(i).dep(:));
+    depmin(i)=min(data(i).dep(:));
+    depmax(i)=max(data(i).dep(:));
 end
+
+% update filetype
+data=ch(data,'iftype','Spectral File-Ampl/Phase',...
+    'depmax',depmax,'depmin',depmin,'depmen',depmen);
 
 end

@@ -14,7 +14,7 @@ function [data]=amph2rlim(data)
 %
 %    Data requirements: Spectral records only.
 %
-%    Header changes: IFTYPE
+%    Header changes: IFTYPE, DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage:  data=amph2rlim(data)
 %
@@ -34,13 +34,13 @@ function [data]=amph2rlim(data)
 %        June 20, 2008 - minor documentation update
 %        June 28, 2008 - fixed call to ch, removed option,
 %                        documentation update, .dep rather than .x
+%        July 19, 2008 - dataless support, updates DEP* fields
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 28, 2008 at 20:50 GMT
+%     Last Updated July 19, 2008 at 05:30 GMT
 
 % todo:
-% - dep* stats
-% - dataless support
+% 
 
 % check nargin
 error(nargchk(1,1,nargin))
@@ -59,7 +59,11 @@ if(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
 end
 
 % loop through records
+depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:numel(data)
+    % skip dataless
+    if(isempty(data(i).dep)); continue; end
+    
     % convert or message
     if(strcmpi(iftype(i),'Spectral File-Ampl/Phase'))
         oclass=str2func(class(data(i).dep));
@@ -69,9 +73,15 @@ for i=1:numel(data)
         data(i).dep(:,2:2:end)=imag(temp);
         data(i).dep=oclass(data(i).dep);
     end
+    
+    % dep*
+    depmen(i)=mean(data(i).dep(:));
+    depmin(i)=min(data(i).dep(:));
+    depmax(i)=max(data(i).dep(:));
 end
 
 % update filetype
-data=ch(data,'iftype','Spectral File-Real/Imag');
+data=ch(data,'iftype','Spectral File-Real/Imag',...
+    'depmax',depmax,'depmin',depmin,'depmen',depmen);
 
 end

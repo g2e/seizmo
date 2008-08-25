@@ -1,44 +1,45 @@
-function [data]=hilbrt(data,pp2)
+function [data]=hilbrt(data)
 %HILBRT    Return Hilbert transform of SAClab data records
 %
 %    Description: Calculates and returns the Hilbert transform of SAClab
-%     data records.  Hilbert tranform adds a 90 degree phase shift.  Uses
-%     the Matlab function hilbert (Signal Processing Toolbox).
+%     data records.  The Hilbert tranform is simply a -90 degree phase 
+%     shift.
 %
-%    Usage: [data]=hilbrt(data)
+%    Notes:
+%
+%    System requirements: Matlab 7
+%
+%    Data requirements: Evenly spaced; Time Series or General X vs Y
+%
+%    Header changes: DEPMEN, DEPMIN, DEPMAX
+%
+%    Usage: data=hilbrt(data)
 %
 %    Examples:
-%     To do a negative 90 degree phase shift:
+%     To do a positive 90 degree phase shift:
 %      data=hilbert(mul(data,-1))
 %
 %    See also: envelope, mul
 
+%     Version History:
+%        Jan. 30, 2008 - initial version
+%        Feb. 28, 2008 - seischk support and class support
+%        Mar.  4, 2008 - documentation update
+%        May  12, 2998 - dep* fix
+%        June 12, 2008 - minor documentation update
+%        July 17, 2008 - history update, documentation update, now uses
+%                        SAClab functions rather than Matlab's hilbert
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated July 17, 2008 at 17:10 GMT
+
+% todo:
+%
+
 % check nargin
-error(nargchk(1,2,nargin))
+error(nargchk(1,1,nargin))
 
-% check data structure
-error(seischk(data,'x'))
-
-% default fft length to next power of 2 + 1
-if(nargin==1); pp2=1; end
-
-% check spacing
-if(any(~strcmp(glgc(data,'leven'),'true')))
-    error('SAClab:envelope:evenlySpacedOnly',...
-        'Illegal operation on unevenly spaced data');
-end
-
-% get Hilbert transforms
-for i=1:length(data)
-    len=size(data(i).x,1);
-    nfft=2^(nextpow2(len)+pp2);
-    oclass=str2func(class(data(i).x));
-    data(i).x=imag(hilbert(double(data(i).x),nfft));
-    data(i).x=oclass(data(i).x(1:len,:));
-    
-    % update header
-    data(i)=ch(data(i),'depmen',mean(data(i).x(:)),...
-        'depmin',min(data(i).x(:)),'depmax',max(data(i).x(:)));
-end
+% transform, add phase shift, inverse transform
+data=idft(sub(dft(data),pi/2,2));
 
 end

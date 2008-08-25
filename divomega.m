@@ -1,47 +1,46 @@
 function [data]=divomega(data)
 %DIVOMEGA    Perform integration in the frequency domain on SAClab records
 %
-%    Description: DIVOMEGA(DATA) divides each point of a spectral file by
-%     its frequency given by:
+%    Description: DIVOMEGA(DATA) basically divides each point in the 
+%     dependent component(s) of spectral files by:
 %       OMEGA=2.0 * PI * FREQ
-%     This is analogous to integrating the equivalent time series file.
-%     The spectral file can be in either amplitude-phase or real-imaginary
-%     format.
-%     
-%     This is often convenient with normal data but is critical when
-%     obtaining the DFT of data whose spectra ranges over many orders of
-%     magnitude.  For example suppose you have prewhitened a data file by
-%     using the DIF command, and then taken its transform using the DFT
-%     command.  The effect of the differentiation in the time domain can be
-%     removed by an integration in the frequency domain using this command.
+%     to perform the equivalent of integration in the time domain.  This is
+%     particularly handy when working with spectral data as it avoids
+%     the forward and inverse fourier transform necessary for time domain 
+%     integration.  It is also useful for reducing the dynamic range of 
+%     spectral data.
 %
 %    Notes:
+%     - Read the source code below for a better description of the
+%       operations performed for frequency-domain integration.
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: Evenly sampled, spectral records
+%    Data requirements: Evenly sampled; Spectral Ampl/Phase or Imag/Real
 %
 %    Header Changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage:  data=divomega(data)
 %
 %    Examples:
-%     Integrate time series data in the frequency domain vs time domain:
-%      data=idft(divomega(dft(data)))
-%      data=integrt(data)
+%     Integrate spectral data in the time domain vs frequency domain:
+%      data=dft(integrt(idft(data)))
+%      data=divomega(data)
 %
 %    See also: mulomega, dft, idft
 
 %     Version History:
 %        May  12, 2008 - initial version
 %        June 11, 2008 - documentation cleanup
-%        July  8, 2008 - documentation update, single ch call
+%        July  8, 2008 - documentation update, single ch call, .dep rather
+%                        than .x
+%        July 19, 2008 - documentation update, dataless support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  8, 2008 at 17:50 GMT
+%     Last Updated July 19, 2008 at 06:20 GMT
 
 % todo:
-%
+% 
 
 % check nargin
 error(nargchk(1,1,nargin))
@@ -72,6 +71,9 @@ nrecs=numel(data);
 % loop through records
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
+    % skip dataless
+    if(isempty(data(i).dep)); continue; end
+    
     % save class and convert to double precision
     oclass=str2func(class(data(i).dep));
     data(i).dep=double(data(i).dep);
