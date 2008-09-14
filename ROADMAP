@@ -1,0 +1,127 @@
+0.5.3 - plotting and filtering
+-----
+spectral plotting (pspec1, pspec2, pspec3)
+plot choose component (pcmp1, pcmp2, pcmp3)
+plot particle motion (multi-component)
+picking phases (get familiar with ppk)
+unwrap	- unwrapped phase
+dftshift- is this wanted?
+fix up filtering
+	- hilbert
+	- envelope
+	- fir
+	- iirfilter
+		- allow variable input
+		- clean up the corners
+		- figure out best way to handle overdesigned filters
+			- make sure there is output showing changes
+	- decimate
+	- stretch
+	- syncsr
+	- wiener?
+	- whiten
+smoothing filters (sliding window function)
+	+ rms, robustrms
+	- weighted rms? (mean weighted by windowing function)
+	- non-root/square function (just a mean/median)
+
+
+
+0.5.4 - change versions, polezeros, fitting and glitches
+--------------------------------------------------------
+cv	- change version
+chkhdr 	- enum checks
+bseis 	- multi-component support and options (use globals)
+ch,gh 	- user defined handling of nonexistant fields (use globals)
+pz	- add/remove polezeros (transfer predecessor)
+fitting
+	- get poly (gpoly)
+	- rem poly (rpoly)
+	- get smooth spline (gspline)
+	- rem smooth spline (rspline)
+	- get robust poly (grobpoly)
+	- rem robust poly (rrobpoly)
+signal cleaning
+	- detect glitches (gspikes)
+	- rem glitches (rspikes)
+	- detect offsets (goffsets)
+	- rem offsets (roffsets)
+fetch record (frec)
+	- by component
+		- one component only
+		- files without cmp not returned
+		- iftype is ixy
+	- by header field/value
+get header definition (ghd)
+	- for cleaning up some low level functions
+	- inputs should contain necessary parent fields too
+	- allow structure output??
+
+
+
+0.5.5 - virtual header fields
+-------------------------------
+how to handle virtual <=> real
+	- use function handles
+		- try to use anonymous functions
+		- may have to write functions (put in private folder) for complex jobs
+	- adjustments to seisdef
+		- new definition type virt
+			- definition.virt.(type).(field)
+				- subsection listing reference fields (fields)
+				- subsections containing function handles to make/undo virtual field
+		- update ch, gh, lh
+virtual fields to support
+	- nzdttm
+	- kzdate
+	- kztime
+	- nzday
+	- nzmonth
+	- picks
+	- default
+	- default1
+	- all
+	- full
+better handling of timing
+	- allow setting time-related fields using absolute times
+		- SAC uses a 'GMT' preceeding y m d h m s  (required ???)
+		- set to undefined if reference time cannot be determined (SAC ???)
+	- ability to offset all time-related fields together
+		- SAC uses ALLT in CHNHDR to do this
+		- can it be done with virtual field?
+	- synchronize 
+		- match SAC
+		- add option to sync to earliest begin time
+
+
+
+0.5.6 - travel times and autopicking
+---------------------------------
+matTauP integration
+TTBox integration
+travel time curves in plots
+automark
+
+
+
+0.5.7 - guis
+-------------
+windowing
+aligning
+picking
+deleting (selectrecs done!)
+
+
+
+0.5.8+ - 3D files, transfer, mapping, ?
+--------------------------------
+
+
+
+0.6.0 - css
+------------
+find other data filetypes
+figure out how to read/write other filetypes
+convert to css
+import/export css
+

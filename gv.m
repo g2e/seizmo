@@ -9,6 +9,12 @@ function [version,endian]=gv(filename)
 %     datafile or cannot be opened) a warning is issued, VERSION is set to
 %     0, and ENDIAN is left empty.
 %
+%    Notes:
+%
+%    System requirements: Matlab
+%
+%    Data requirements: single string input
+%
 %    Usage:    [version,endian]=gv('filename')
 %
 %    Examples:
@@ -19,11 +25,23 @@ function [version,endian]=gv(filename)
 %    See also:  rh, wh, seisdef, vvseis
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Documentation Update
+%        Jan. 27, 2008 - initial version
+%        Feb. 23, 2008 - minor doc update
+%        Feb. 28, 2008 - uses vvseis now, fix warnings
+%        Mar.  4, 2008 - doc update, fix warnings
+%        June 12, 2008 - doc update
+%        Sep. 14, 2008 - minor doc update, input checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 16:40 GMT
+%     Last Updated Sep. 14, 2008 at 17:25 GMT
+
+% todo:
+
+% check input
+error(nargchk(1,1,nargin))
+if(~ischar(filename))
+    error('SAClab:gv:badInput','FILENAME must be a string!');
+end
 
 % get valid versions
 valid=vvseis();
@@ -36,7 +54,7 @@ fid=fopen(filename);
 
 % check for invalid fid (for directories etc)
 if(fid<0)
-    warning('SAClab:gv:badFID','File not openable, %s',filename);
+    warning('SAClab:gv:badFID','File not openable, %s !',filename);
     return;
 end
 
@@ -46,7 +64,7 @@ try
 catch
     % seek failed
     fclose(fid);
-    warning('SAClab:gv:fileTooShort','File too short, %s',filename);
+    warning('SAClab:gv:fileTooShort','File too short, %s !',filename);
     return;
 end
 
@@ -54,7 +72,7 @@ end
 if(feof(fid))
     % seeked to eof...
     fclose(fid);
-    warning('SAClab:gv:fileTooShort','File too short, %s',filename);
+    warning('SAClab:gv:fileTooShort','File too short, %s !',filename);
     return;
 end
 
@@ -66,7 +84,7 @@ catch
     % read version failed - close file and warn
     fclose(fid);
     warning('SAClab:gv:readVerFail',...
-        'Unable to read header version of file, %s',filename);
+        'Unable to read header version of file, %s !',filename);
     version=0;
     return;
 end
@@ -76,7 +94,7 @@ if(isempty(version))
     % read returned nothing...
     fclose(fid);
     warning('SAClab:gv:readVerFail',...
-        'Unable to read header version of file, %s',filename);
+        'Unable to read header version of file, %s !',filename);
     version=0;
     return;
 elseif(~any(valid==version))
@@ -89,7 +107,7 @@ elseif(~any(valid==version))
         % read version failed - close file and warn
         fclose(fid);
         warning('SAClab:gv:readVerFail',...
-            'Unable to read header version of file, %s',filename);
+            'Unable to read header version of file, %s !',filename);
         version=0;
         return;
     end
@@ -99,7 +117,7 @@ elseif(~any(valid==version))
         % no good again - close file and warn
         fclose(fid);
         warning('SAClab:gv:versionUnknown',...
-            'Unknown header version for file, %s',filename);
+            'Unknown header version for file, %s !',filename);
         version=0;
         return;
     end

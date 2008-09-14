@@ -2,9 +2,9 @@ function [def]=seisdef(version)
 %SEISDEF    Returns SAClab definition structure
 %
 %    Description: [DEFINITIONS]=SEISDEF(VERSION) returns the structure 
-%     DEFINITIONS which provides all information necessary to 
+%     DEFINITIONS which provides all formatting information necessary to 
 %     read/understand/modify/write the specified version VERSION of a 
-%     SAClab data record/file.
+%     SAClab data file or record.
 %
 %    Notes:
 %     - Currently the definition is set so that all header data is stored 
@@ -35,23 +35,26 @@ function [def]=seisdef(version)
 %                        clean up of multi-component definition
 %        Apr. 18, 2008 - removed versions for expanding npts/nspts
 %        June 12, 2008 - renamed as seisdef and added example
-%        June 23, 2008 - documentation cleanup
+%        June 23, 2008 - doc cleanup
+%        Sep. 14, 2008 - minor doc update, input checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 23, 2008 at 14:45 GMT
+%     Last Updated Sep 14, 2008 at 17:25 GMT
 
 % todo:
-% virtual field support
 
-% check nargin
+% check input
 error(nargchk(1,1,nargin))
+if(~isnumeric(version))
+    error('SAClab:seisdef:badInput','VERSION must be numeric!');
+end
 
 % get valid versions
 valid=vvseis();
 
 % check for invalid version
 if(~any(valid==version))
-    error('SAClab:seisdef:invalidVersion''Header version invalid: %d!',version)
+    error('SAClab:seisdef:invalidVersion','Header version invalid: %d!',version)
 end
 
 % SAC version 6 setup
