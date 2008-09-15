@@ -1,9 +1,19 @@
 function [bytes]=seissize(data)
-%SEISSIZE    Returns estimated size of binary datafiles in bytes
+%SEISSIZE    Returns header estimated size of SAClab datafiles in bytes
 %
-%    Description: SEISSIZE(DATA) returns the expected size of each binary 
-%     datafile in bytes using the header info from the input SAClab data 
-%     structure.  This is mainly used to rapidly detect inconsistent files.
+%    Description: SEISSIZE(DATA) returns the expected size (in bytes) using
+%     the header info of each datafile that would be written from DATA. 
+%     This is mainly used to rapidly detect files on disk that are 
+%     inconsistent in size from what their header info indicates.
+%
+%    Notes:
+%
+%    System requirements: Matlab 7
+%
+%    Input/Output requirements: expects SAClab DATA structure to have
+%     version and head fields filled
+%
+%    Header changes: N/A
 %
 %    Usage:  bytes=seissize(data)
 %
@@ -14,11 +24,15 @@ function [bytes]=seissize(data)
 %    See also: rh, rdata
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Updated documentation
+%        Feb. 29, 2008 - initial version (from subfunction sacsize)
+%        Mar.  4, 2008 - doc update, use LGCCHK
+%        June 12, 2008 - doc update
+%        Sep. 14, 2008 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 05:35 GMT
+%     Last Updated Sep. 14, 2008 at 21:15 GMT
+
+% todo:
 
 % check number of inputs
 error(nargchk(1,1,nargin))

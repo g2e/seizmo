@@ -16,8 +16,10 @@ function [def]=seisdef(version)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: valid version number (use vvseis() for listing)
-%    
+%    Input/Output requirements: valid version number (use VVSEIS() listing)
+%
+%    Header changes: N/A
+%
 %    Usage:    definition=seisdef(version)
 %
 %    Examples:

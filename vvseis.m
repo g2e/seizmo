@@ -11,7 +11,9 @@ function [valid]=vvseis()
 %    
 %    System requirements: Matlab
 %
-%    Data requirements:
+%    Input/Output requirements: NONE
+%
+%    Header changes: N/A
 %    
 %    Usage:    valid_versions=vvseis()
 %

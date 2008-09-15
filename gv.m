@@ -10,10 +10,13 @@ function [version,endian]=gv(filename)
 %     0, and ENDIAN is left empty.
 %
 %    Notes:
+%     - only useful for SAC files or very similar
 %
 %    System requirements: Matlab
 %
-%    Data requirements: single string input
+%    Input/Output requirements: one string argument
+%
+%    Header changes: N/A
 %
 %    Usage:    [version,endian]=gv('filename')
 %

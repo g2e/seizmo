@@ -15,8 +15,10 @@ function [report]=seischk(data,varargin)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: first arg can be anything, additional args must be
-%     strings
+%    Input/Output requirements: first arg can be anything, additional args
+%     must be strings
+%
+%    Header changes: N/A
 %
 %    Usage: error(seischk(data))
 %           warning(seischk(data))

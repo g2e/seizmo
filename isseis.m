@@ -13,8 +13,10 @@ function [lgc]=isseis(data,varargin)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: first arg can be anything, additional args must be
-%     strings
+%    Input/Output requirements: first arg can be anything, additional args 
+%     must be strings
+%
+%    Header changes: N/A
 %
 %    Usage:    logical=isseis(data)
 %              logical=isseis(data,field1,...,fieldN)

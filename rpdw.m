@@ -83,8 +83,8 @@ function [data,failed]=rpdw(data,varargin)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: DATA has header, endian, name and version fields.
-%                       Time Series and General X vs Y data only.
+%    Input/Output requirements: DATA has header, endian, name and version 
+%     fields.  Time Series and General X vs Y data only.
 %
 %    Header changes: B, E, NPTS, DELTA, ODELTA
 %                    DEPMEN, DEPMIN, DEPMAX
@@ -128,11 +128,9 @@ function [data,failed]=rpdw(data,varargin)
 %                        & .t, fix for single point data
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 23, 2008 at 18:45 GMT
+%     Last Updated Sep. 15, 2008 at 01:45 GMT
 
 % todo:
-% multi ref support?
-% use chkhdr?
 
 % input check
 error(nargchk(1,11,nargin))

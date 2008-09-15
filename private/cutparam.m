@@ -1,20 +1,19 @@
 function [ref1,ref2,offset1,offset2,fill,filler,trim]=cutparam(varargin)
 %CUTPARAM    Parses inputs defining the cut window for CUTIM/RPDW
 %
-%    Description: CUTPARAM(LIST,OF,WINDOW,PARAMETERS) parses the parameters
-%     passed to CUTIM and RPDW passing the results back.  This includes the
-%     those parameters that define the window as well as other options 
-%     (fill etc).  Parameters go through a number of basic checks (but by
-%     no means complete).
+%    Description: CUTPARAM(LIST,OF,CUT,PARAMETERS,...) parses parameters
+%     passed to CUTIM and RPDW, passing the results back.  This includes
+%     those parameters that define the cut as well as other options (fill
+%     etc).  Parameters go through a number of basic checks.
 %
 %    Notes:
-%     - supplying empty arguments can have unexpected results
+%     - empty input arguments may have unexpected results
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: Parameters should be either strings or numeric.
+%    Input/Output requirements: arguments should be strings/numerics
 %
-%    Header changes: NONE
+%    Header changes: N/A
 %
 %    Usage: [ref1,ref2,offset1,offset2,fill,filler,trim]=cutparam(args)
 %
@@ -23,10 +22,13 @@ function [ref1,ref2,offset1,offset2,fill,filler,trim]=cutparam(varargin)
 %     Version History:
 %        Apr. 17, 2008 - initial version
 %        Apr. 18, 2008 - bugfix
-%        June 24, 2008 - added more checks and a major documentation update
+%        June 24, 2008 - more input checks, major doc update
+%        Sep. 14, 2008 - minor doc update, minor code cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 24, 2008 at 00:15 GMT
+%     Last Updated Sep. 14, 2008 at 20:35 GMT
+
+% todo:
 
 % defaults
 trim=true;
@@ -77,7 +79,7 @@ for i=1:nargin
                     (~isnumeric(varargin{i+1}) && ...
                     ~islogical(varargin{i+1})))
                 error('SAClab:cutparam:badInput',...
-                    'Option value must be a numeric or logical scalar')
+                    'OPTION value must be a numeric or logical scalar!')
             end
         end
         
@@ -88,7 +90,7 @@ for i=1:nargin
         elseif(strcmpi('filler',varargin{i}))
             if(islogical(varargin{i+1}))
                 error('SAClab:cutparam:badInput',...
-                    'Filler value must be a numeric scalar');
+                    'FILLER value must be a numeric scalar!');
             end
             filler=varargin{i+1};
         % option trim

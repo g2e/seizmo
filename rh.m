@@ -1,20 +1,26 @@
 function [data]=rh(varargin)
 %RH    Read SAClab headers from binary datafiles
 %
-%    Description: Reads headers from binary datafiles into a SAClab
-%     structure.  Accepts character arrays of filenames (one filename per 
-%     row) and/or cell arrays of filenames (one filename per cell).
-%     Wildcards are valid.
+%    Description: RH(FILELIST1,...,FILELISTN) reads the headers of 
+%     datafiles into a SAClab structure.  Accepts character arrays of 
+%     filenames (one filename per row) and/or cell arrays of filenames (one
+%     filename per cell).  Wildcards are valid.
 %
 %     Fields of output SAClab structure:
 %      head - contains header data
 %      name - filename (may include path)
 %      endian - byte-order of file (ieee-le or ieee-be)
-%      version - version of file
+%      version - version of datafile
 %
-%    Usage:    SAClab_struct=rh(['seisfile1'; 'seisfile2'; ...],...
-%                                 {'seisfile3' 'seisfile4' ...},...
-%                                 'seisfile5','seisfile6',...)
+%    Notes:
+%
+%    System requirements: Matlab 7
+%
+%    Input/Output requirements: arguments must be char or cellstr arrays
+%
+%    Header changes: NONE
+%
+%    Usage:    data=rh(filelist1,...,filelistN)
 %
 %    Examples:
 %     Some basic examples:
@@ -22,7 +28,7 @@ function [data]=rh(varargin)
 %      data=rh('SQRL.R','AAK.R');
 %
 %     Maybe you have several big filelists to read in:
-%      data=rh(cellarray1,chrarray1,chrarray2,cellarray2);
+%      data=rh(USARRAYdata,FLEDdata,MOMAdata);
 %
 %     Read in headers of all SAClab readible files in current directory:
 %      data=rh('*')
@@ -33,18 +39,26 @@ function [data]=rh(varargin)
 %    See also: rdata, rpdw, rseis, wseis, wh, bseis, seisdef, gv
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Documentation Update
+%        Jan. 28, 2008 - initial version
+%        Feb. 18, 2008 - fixed argument parse bug
+%        Feb. 29, 2008 - doc update, minor code cleaning
+%        Mar.  2, 2008 - code cleaning
+%        Mar.  4, 2008 - minor code cleaning
+%        Apr. 23, 2008 - minor doc update (wildcards now valid)
+%        June 12, 2008 - doc update
+%        Sep. 14, 2008 - doc update, error on no files
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 05:50 GMT
+%     Last Updated Sep. 14, 2008 at 23:20 GMT
 
 % compile file lists
-varargin=onelist(varargin{:});
+varargin=onefilelist(varargin{:});
 nfiles=length(varargin);
 
-% empty data if no files
-if(nfiles<1); nfiles=[]; end
+% error if no files
+if(nfiles<1)
+    error('SAClab:rh:noFilesToRead','No files to read!');
+end
 
 % pre-allocating SAClab structure
 data(nfiles,1)=struct('name',[],'head',[],'endian',[],'version',[]);
@@ -69,7 +83,7 @@ for i=1:nfiles
     if(fid<0)
         % non-existent file or directory
         warning('SAClab:rh:badFID',...
-            'File not openable, %s',varargin{i});
+            'File not openable, %s !',varargin{i});
         destroy(i)=true;
         continue;
     end
@@ -86,7 +100,7 @@ for i=1:nfiles
         % smaller than header size
         fclose(fid);
         warning('SAClab:rh:fileTooShort',...
-            'File too short, %s',varargin{i});
+            'File too short, %s !',varargin{i});
         destroy(i)=true;
         continue;
     end
