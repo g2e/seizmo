@@ -79,7 +79,7 @@ function [data,failed]=cutim(data,varargin)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: Time Series and General X vs Y data only
+%    Input/Output requirements: Time Series and General X vs Y data only
 %     
 %    Header changes: B, E, NPTS, DELTA, ODELTA
 %                    DEPMEN, DEPMIN, DEPMAX
@@ -112,7 +112,7 @@ function [data,failed]=cutim(data,varargin)
 
 %     Version History:
 %        Oct. 30, 2007 - initial version
-%        Nov.  7, 2007 - documentation update
+%        Nov.  7, 2007 - doc update
 %        Jan. 28, 2008 - new sachp support
 %        Feb.  6, 2008 - renamed to cutim
 %        Feb. 23, 2008 - works with GLGC, GENUMDESC
@@ -120,21 +120,21 @@ function [data,failed]=cutim(data,varargin)
 %        Feb. 28, 2008 - minor improvements
 %        Feb. 29, 2008 - better leven check
 %        Mar.  2, 2008 - dataless support
-%        Mar.  4, 2008 - documentation update
+%        Mar.  4, 2008 - doc update
 %        Apr. 17, 2008 - PDW now like SAC
 %        Apr. 18, 2008 - bugfix
 %        May  12, 2008 - uses new dep* formula
-%        June 12, 2008 - documentation update
-%        June 23, 2008 - major documentation update
+%        June 12, 2008 - doc update
+%        June 23, 2008 - major doc update
 %        June 30, 2008 - fixed dataless support, .dep & .ind rather than .x
 %                        & .t, improved checks
+%        Sep. 15, 2008 - minor doc update
+%        Sep. 22, 2008 - error msg fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 30, 2008 at 07:55 GMT
+%     Last Updated Sep. 22, 2008 at 07:25 GMT
 
 % todo:
-% - multi ref support?
-% - use chkhdr?
 
 % input check
 error(nargchk(1,11,nargin))
@@ -159,7 +159,7 @@ offset2=offset2(:);
 % cut parameter checks
 if(numel(offset1)~=nrecs || numel(offset2)~=nrecs)
     error('SAClab:cutim:badInputSize',...
-        'Number of elements in OFFSET not correct')
+        'Number of elements in OFFSET not correct!')
 end
 
 % grab spacing info
@@ -190,7 +190,7 @@ end
 
 % check for nans
 if(any(isnan(bt)) || any(isnan(bp)) || any(isnan(et)) || any(isnan(ep)))
-    error('SAClab:cutim:nanHeaderField','header field returned NaN')
+    error('SAClab:cutim:nanHeaderField','Header field returned NaN!')
 end
 
 % loop through each file
@@ -200,13 +200,13 @@ for i=1:nrecs
     if(strcmpi(iftype(i),'General XYZ (3-D) file'))
         failed(i)=true;
         warning('SAClab:cutim:illegalFiletype',...
-            'illegal operation on xyz file');
+            'Illegal operation on xyz file!');
         continue;
     elseif(any(strcmpi(iftype(i),{'Spectral File-Real/Imag'...
             'Spectral File-Ampl/Phase'})))
         failed(i)=true;
         warning('SAClab:cutim:illegalFiletype',...
-            'illegal operation on spectral file');
+            'Illegal operation on spectral file!');
         continue;
     end
     
@@ -278,8 +278,8 @@ for i=1:nrecs
         % check .dep and .ind match
         if(size(data(i).ind,1)~=npts(i))
             error('SAClab:cutim:dataMismatch',...
-                ['Number of dependent data points does not '...
-                'match number of independent data points for record %d'],i)
+                ['Number of dependent data points does not match number'...
+                'of independent data points for record %d !'],i)
         end
         
         % get begin point

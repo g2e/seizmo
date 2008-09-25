@@ -1,10 +1,10 @@
 function [data]=rh(varargin)
-%RH    Read SAClab headers from binary datafiles
+%RH    Read SAClab headers from datafiles
 %
-%    Description: RH(FILELIST1,...,FILELISTN) reads the headers of 
-%     datafiles into a SAClab structure.  Accepts character arrays of 
-%     filenames (one filename per row) and/or cell arrays of filenames (one
-%     filename per cell).  Wildcards are valid.
+%    Description: RH(FILELIST1,...,FILELISTN) reads the headers of SAClab
+%     compatible datafiles into a SAClab structure.  Accepts character 
+%     arrays of filenames (one filename per row) and/or cell arrays of 
+%     filenames (one filename per cell).  Wildcards are valid.
 %
 %     Fields of output SAClab structure:
 %      head - contains header data

@@ -1,21 +1,28 @@
 function []=wh(data)
-%WH    Write SAClab data headers as binary datafiles
+%WH    Write SAClab data header info to datafiles
 %
-%    Description: Writes SAClab data headers as binary datafiles.  
-%     Basically this is for updating the headers of existing datafiles to 
-%     match the SAClab data structure.  For files that do not already exist
-%     the 'name' field is used for output file naming.  To write files to a
-%     specific directory either add the path to the 'name' field or browse 
-%     Matlab there using the 'cd' command.  Output file byte-order can be 
-%     set using the 'endian' field.
+%    Description: WH(DATA) writes SAClab data headers as datafiles on disk.  
+%     Primarily this is for updating the headers of existing datafiles to 
+%     match the SAClab DATA structure.  For files that do not already exist
+%     the 'name' field is used as the output filename.  To write files to a
+%     specific directory, either add the path to the 'name' field or browse 
+%     there using the 'cd' command before using WH.  Output file byte-order
+%     can be set using the 'endian' field.
 %
-%    Warning:  Using wh after modifying the version/byte-order in SAClab
-%              could cause the file to become corrupted (eg. header has
-%              one byte-order while the data has the other).  Please use
-%              wseis if you want to modify the version/byte-order of a file
-%              in order to avoid corruption issues.
+%    Warning:  If you want to modify the version and/or byte-order of a
+%     datafile with SAClab, use RSEIS and WSEIS to read/write the datafile
+%     so that the data can also be adjusted to the new format.  Using RH 
+%     and WH in conjunction with a version and/or byte-order change is NOT 
+%     recommended as it will likely corrupt your datafiles!
 %
-%    Usage:    wh(SAClab_struct)
+%    System requirements: Matlab 7
+%
+%    Input/Output requirements: Data structure must have 'name' and
+%     'endian' fields.
+%
+%    Header changes: NONE
+%
+%    Usage:    wh(data)
 %
 %    Examples:
 %     Read in some datafile's headers, modify them, and write out changes:
@@ -24,11 +31,17 @@ function []=wh(data)
 %    See also:  wseis, rseis, bseis, rpdw, rdata, rh, seisdef, gv
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Updated documentation
+%        Jan. 28, 2008 - initial version
+%        Feb. 11, 2008 - new SACHP support, better checks
+%        Mar.  4, 2008 - code cleaning, more checks, doc update
+%        June 12, 2008 - doc update
+%        Sep. 15, 2008 - history fix, doc update
+%        Sep. 22, 2008 - blank name and endian handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 05:25 GMT
+%     Last Updated Sep. 22, 2008 at 07:15 GMT
+
+% todo:
 
 % check number of inputs
 error(nargchk(1,1,nargin))
@@ -44,27 +57,54 @@ for i=1:nver-1
     h(i)=seisdef(vers(i));
 end
 
+% get this platform's native byte-order
+[platform,maxint,nativeendian]=computer;
+clear platform maxint
+if(strcmpi(nativeendian,'L')); nativeendian='ieee-le';
+else nativeendian='ieee-be'; end
+
 % loop over records
 for i=1:length(data)
     % logical index of header info
     v=(data(i).version==vers);
     
+    % check for empty filename
+    if(isempty(data(i).name))
+        warning('SAClab:wh:namelessData',...
+            ['Record %d has no associated filename!\n'...
+            '==> Set name as rec%d.sac !'],i,i);
+        data(i).name=['SAClab.' num2str(i) '.sac'];
+    end
+    
     % open existing file for writing
     if(exist(data(i).name,'file'))
-        % check for version/byte-order change
+        % get version/byte-order of datafile on disk
         [version,endian]=gv(data(i).name);
+        
+        % non-zero version ==> file is SAClab compatible
         if(version)
+            % check if current data has no byte-order 
+            % if so ==> set to match datafile on disk
+            if(isempty(data(i).endian))
+                warning('SAClab:wh:endianlessData',...
+                    ['Record %d has no associated byteorder!\n'...
+                    '==> Set byteorder as %s to match existing file!'],...
+                    i,endian);
+                data(i).endian=endian;
+            end
+            
+            % check for version/byte-order change
             if(version~=data(i).version)
                 warning('SAClab:wh:versionMismatch',...
                     ['Version of existing file %s does ' ...
-                    'not match output header version.\n' ...
+                    'not match output header version!\n' ...
                     'Accurate reading of data in existing file '...
                     'may not be possible now!'],data(i).name);
             end
             if(endian~=data(i).endian)
                 warning('SAClab:wh:endianMismatch',...
                     ['Byte-order of existing file %s does '...
-                    'not match output header byte-order.\n'...
+                    'not match output header byte-order!\n'...
                     'Accurate reading of data in existing file '...
                     'may not be possible now!'],data(i).name);
             end
@@ -73,13 +113,36 @@ for i=1:length(data)
             fid=fopen(data(i).name,'r+',data(i).endian);
         % file exists but is not SAClab datafile
         else
+            % check if current data has no byte-order 
+            % if so ==> set to platforms native byteorder
+            if(isempty(data(i).endian))
+                warning('SAClab:wh:endianlessData',...
+                    ['Record %d has no associated byteorder!\n'...
+                    '==> Set byteorder as %s to match platform!'],...
+                    i,nativeendian);
+                data(i).endian=nativeendian;
+            end
+            
+            % SAClab is gonna trash your file!
             warning('SAClab:wh:badFile',...
                 ['Existing file %s is not a SAClab datafile.\n' ...
                 'Attempting to overwrite file...'],data(i).name);
+            
             % overwrite file
             fid=fopen(data(i).name,'w',data(i).endian);
         end
+    % file doesn't exist ==> make new file
     else
+        % check if current data has no byte-order 
+        % if so ==> set to platforms native byteorder
+        if(isempty(data(i).endian))
+            warning('SAClab:wh:endianlessData',...
+                ['Record %d has no associated byteorder!\n'...
+                '==> Set byteorder as %s to match platform!'],...
+                i,nativeendian);
+            data(i).endian=nativeendian;
+        end
+        
         % new file
         fid=fopen(data(i).name,'w',data(i).endian);
     end
@@ -102,7 +165,7 @@ for i=1:length(data)
         % write failed
         fclose(fid);
         error('SAClab:wh:writeFailed',...
-            'Writing failed for file %s\n',data(i).name);
+            'Writing failed for file %s !\n',data(i).name);
     end
     
     % write header

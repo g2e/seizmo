@@ -4,7 +4,8 @@ function [report]=seischk(data,varargin)
 %    Description: SEISCHK(DATA) returns an appropriate error message 
 %     structure if the input variable fails certain SAClab data structure 
 %     requirements (must be a nonempty 1D structure that has 'head' and 
-%     'version' fields).  The output structure contains the fields 
+%     'version' fields).  The 'version' fields must also be set to a valid
+%     SAClab version (see VVSEIS). The output structure contains the fields 
 %     'identifier' and 'message' following Matlab error report standards.
 %
 %     SEISCHK(DATA,FIELD1,...,FIELDN) allows extra fields to be required in
@@ -21,9 +22,7 @@ function [report]=seischk(data,varargin)
 %    Header changes: N/A
 %
 %    Usage: error(seischk(data))
-%           warning(seischk(data))
 %           error(seischk(data,'requiredfield1','requiredfield2',...))
-%           warning(seischk(data,'requiredfield1','requiredfield2',...))
 %
 %    Examples:
 %     Writing out SAClab files requires the names and byte-orders of the
@@ -46,9 +45,10 @@ function [report]=seischk(data,varargin)
 %        Apr. 18, 2008 - fixed isfield to work with R14sp1
 %        June 12, 2008 - doc update
 %        Sep. 14, 2008 - doc update, input checks, return on first issue
+%        Sep. 25, 2008 - checks versions are valid
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2008 at 17:45 GMT
+%     Last Updated Sep. 25, 2008 at 06:55 GMT
 
 % todo:
 
@@ -88,6 +88,13 @@ else
             report.message=sprintf('SAClab data structure must have field ''%s''!',i{:});
             return;
         end
+    end
+    
+    % now check versions are ok
+    if(~isequal(union([data.version],vvseis),vvseis))
+        report.identifier='SAClab:seischk:versionBad';
+        report.message='SAClab data records must have a valid version!';
+        return;
     end
 end
 

@@ -1,9 +1,9 @@
 function [data,failed]=rpdw(data,varargin)
-%RPDW    Read a partial data window from datafiles into SAClab
+%RPDW    Reads partial data window of datafiles into SAClab data structure
 %
 %    Description: RPDW(DATA,PDW) reads a partial data window PDW from 
-%     datafiles on disk into the SAClab structure DATA and returns the 
-%     updated structure.  This provides a mechanism similar to the SAC 
+%     SAClab compatible datafiles into the SAClab structure DATA, returning
+%     the updated structure.  This provides a mechanism similar to the SAC 
 %     'cut' command to limit memory/cpu usage related to reading in large 
 %     datafiles where only a segment is needed.  Note that header fields
 %     will be updated to match the windowed data.
@@ -77,7 +77,7 @@ function [data,failed]=rpdw(data,varargin)
 %       empty records (with headers updated accordingly) rather than
 %       returning an error.
 %     - Multiple component data is supported.
-%     - Partial reads of unevenly sampled data is not supported.  They are
+%     - Partial reads of unevenly sampled data is not supported.  They are 
 %       passed to RDATA and CUTIM instead.
 %     - FILL only works with evenly sampled data.
 %
@@ -126,9 +126,10 @@ function [data,failed]=rpdw(data,varargin)
 %                        files, some other cleanups for readability
 %        June 30, 2008 - fixed dataless support, .dep & .ind rather than .x
 %                        & .t, fix for single point data
+%        Sep. 22, 2008 - minor doc update, error msg fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 15, 2008 at 01:45 GMT
+%     Last Updated Sep. 22, 2008 at 07:35 GMT
 
 % todo:
 
@@ -155,7 +156,7 @@ offset2=offset2(:);
 % cut parameter checks
 if(numel(offset1)~=nrecs || numel(offset2)~=nrecs)
     error('SAClab:rpdw:badInputSize',...
-        'Number of elements in OFFSET not correct')
+        'Number of elements in OFFSET not correct!')
 end
 
 % check leven
@@ -174,7 +175,7 @@ warning('on','SAClab:gh:fieldInvalid')
 ncmp(isnan(ncmp))=1;
 if(any(ncmp<1 | fix(ncmp)~=ncmp))
     error('SAClab:rpdw:badNumCmp',...
-        'field ncmp must be a positive integer')
+        'Field NCMP must be a positive integer!')
 end
 
 % window start point/value
@@ -233,13 +234,13 @@ for i=even
     if(strcmpi(iftype(i),'General XYZ (3-D) file'))
         failed(i)=true;
         warning('SAClab:rpdw:illegalFiletype',...
-            'illegal operation on xyz file');
+            'Illegal operation on xyz file!');
         continue;
     elseif(any(strcmpi(iftype(i),{'Spectral File-Real/Imag'...
             'Spectral File-Ampl/Phase'})))
         failed(i)=true;
         warning('SAClab:rpdw:illegalFiletype',...
-            'illegal operation on spectral file');
+            'Illegal operation on spectral file!');
         continue;
     end
     
@@ -266,7 +267,7 @@ for i=even
     % check that it opened
     if(fid<0)
         warning('SAClab:rpdw:badFID',...
-            'File not openable, %s',data(i).name);
+            'File not openable: %s !',data(i).name);
         failed(i)=true;
         continue;
     end
@@ -292,7 +293,7 @@ for i=even
             data(i).dep(:,j)=fread(fid,nnp,['*' h(v).data.store]);
         catch
             warning('SAClab:rpdw:readFailed',...
-                'Read in of data failed: %s',data(i).name);
+                'Read in of data failed: %s !',data(i).name);
             failed(i)=true;
             break;
         end

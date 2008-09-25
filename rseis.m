@@ -1,10 +1,10 @@
 function [data]=rseis(varargin)
 %RSEIS    Read datafiles into SAClab data structure
 %
-%    Description: RSEIS(FILELIST1,...,FILELISTN) reads datafiles into a 
-%     SAClab data structure.  Accepts character arrays of filenames (one 
-%     filename per row) and/or cell arrays of filenames (one filename per 
-%     cell).  Wildcards are valid.
+%    Description: RSEIS(FILELIST1,...,FILELISTN) reads SAClab compatible 
+%     datafiles into a SAClab data structure.  Accepts character arrays of 
+%     filenames (one filename per row) and/or cell arrays of filenames (one
+%     filename per cell).  Wildcards are valid.
 %
 %     SAClab data structure setup:
 %
@@ -36,7 +36,7 @@ function [data]=rseis(varargin)
 %    Notes:
 %     - Multi-component files will replicate the number of columns by the
 %       number of components.  So a three component spectral file will have
-%       six columns of data.  Dependent omponents share the same 
+%       six columns of data.  Dependent components share the same 
 %       independent component.
 %
 %    System requirements: Matlab 7
@@ -58,18 +58,19 @@ function [data]=rseis(varargin)
 %    See also: rh, rdata, rpdw, wh, wseis, bseis
 
 %     Version History:
-%        Sometime 2006 - 0.1.0 - auto-determine byte-order
-%        Early    2007 - 0.2.0 - multiple file support
-%        Nov.  7, 2007 - 0.3.0 - introduced datafile definition
-%        Jan. 27, 2008 - 0.4.0 - slicker datafile definition structure
-%                        0.5.0 - 'best' datafile definition structure
-%        Feb. 29, 2008 - renamed from rsac to rseis
+%        May  30, 2007 - auto-determine byte-order, multiple file support
+%        Oct. 29, 2007 - complete rewrite, data now stored as struct
+%        Nov.  7, 2007 - doc update
+%        Jan. 27, 2008 - complete rewrite, SACHP support
+%        Feb. 11, 2008 - code now in RH and RDATA (now just a wrapper)
+%        Feb. 29, 2008 - renamed from RSAC to RSEIS
 %        Mar.  4, 2008 - doc update
-%        Apr. 23, 2008 - wildcard filename support
+%        Apr. 23, 2008 - wildcard filename support (doc update)
 %        Sep. 14, 2008 - doc update
+%        Sep. 15, 2008 - history fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2008 at 22:00 GMT
+%     Last Updated Sep. 15, 2008 at 17:20 GMT
 
 % todo:
 

@@ -1,11 +1,11 @@
 function [data,failed]=rdata(data,varargin)
-%RDATA    Read SAClab data from datafiles on disk
+%RDATA    Read SAClab data from datafiles
 %
-%    Description: [OUTDATA,FAILED]=RDATA(DATA,'TRIM',LOGICAL) reads the 
-%     data from files on disk utilizing the header info in DATA, and 
-%     returns the combined dataset as OUTDATA.  Optional parameter TRIM 
-%     determines how RDATA handles data that had errors.  By default TRIM 
-%     is set to true, which deletes any records that had errors while 
+%    Description: [OUTDATA,FAILED]=RDATA(DATA,'TRIM',LOGICAL) reads in 
+%     data from SAClab compatible datafiles utilizing the header info in 
+%     DATA, and returns the combined dataset as OUTDATA. Optional parameter
+%     TRIM determines how RDATA handles data that had errors. By default 
+%     TRIM is set to true, which deletes any records that had errors while 
 %     reading from OUTDATA.  Setting TRIM to FALSE will preserve records in
 %     OUTDATA that had errors.  Optional output FAILED returns a logical 
 %     matrix equal in size to DATA with entries set to TRUE for those 

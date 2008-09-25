@@ -28,9 +28,10 @@ function [bytes]=seissize(data)
 %        Mar.  4, 2008 - doc update, use LGCCHK
 %        June 12, 2008 - doc update
 %        Sep. 14, 2008 - doc update
+%        Sep. 25, 2008 - GET_N_CHECK reduces code, adds dataless support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2008 at 21:15 GMT
+%     Last Updated Sep. 25, 2008 at 04:55 GMT
 
 % todo:
 
@@ -41,19 +42,7 @@ error(nargchk(1,1,nargin))
 error(seischk(data))
 
 % pull necessary header info
-leven=glgc(data,'leven');
-error(lgcchk('leven',leven))
-iftype=genumdesc(data,'iftype');
-warning('off','SAClab:gh:fieldInvalid')
-[npts,ncmp]=gh(data,'npts','ncmp');
-warning('on','SAClab:gh:fieldInvalid')
-
-% fix and check ncmp
-ncmp(isnan(ncmp))=1;
-if(any(ncmp<1 | fix(ncmp)~=ncmp))
-    error('SAClab:seissize:badNumCmp',...
-        'field ncmp must be a positive integer')
-end
+[ncmp,npts,iftype,leven]=get_n_check(data);
 
 % headers setup
 v=[data.version].';

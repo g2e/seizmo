@@ -1,20 +1,33 @@
 function []=wseis(data)
-%WSEIS    Write SAClab data as binary datafiles
+%WSEIS    Write SAClab data to datafiles
 %
-%    Description: Writes SAClab data as binary datafiles.  Uses the 'name'
-%     field for naming output files.  To write files to a specific 
-%     directory either add the path to the name field or browse Matlab 
-%     there using the 'cd' command.  Output file's endianness can be set 
-%     using the 'endian' field.
+%    Description: Writes SAClab data to datafiles.  For files that do not 
+%     already exist the 'name' field is used as the output filename.  To 
+%     write files to a specific directory, either add the path to the 
+%     'name' field or browse there using the CD command before using WSEIS.  
+%     Output file byte-order can be set using the 'endian' field.
 %
-%    Usage:    wseis(SAClab_struct)
+%    Notes:
+%     - unnamed data will be given the name SAClab.N.sac where N is the
+%       index number of the data in the SAClab structure
+%     - data without an endianness given will be set to that of the current
+%       architecture
+%
+%    System requirements: Matlab 7
+%
+%    Input/Output requirements: Data structure must also have 'name' and
+%     'endian' fields.
+%
+%    Header changes: NONE
+%
+%    Usage:    wseis(data)
 %
 %    Examples:
 %     Read in some files, clean them up and write over:
 %      wseis(taper(rtrend(rseis('*'))))
 %
 %     To write out all records in big endian:
-%      data.endian=deal('ieee-be');
+%      [data.endian]=deal('ieee-be');
 %      wseis(data)
 %
 %     Alter the first records path/filename and write only to it:
@@ -24,11 +37,27 @@ function []=wseis(data)
 %    See also:  rseis, bseis, seisdef, gv, rpdw, rdata, rh, wh
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Added examples and updated documentation
+%        Oct. 29, 2007 - initial version, supports struct data
+%        Nov.  7, 2007 - doc update
+%        Jan. 27, 2008 - SACHP support
+%        Feb. 11, 2008 - SACHI support
+%        Feb. 29, 2008 - minor doc fix
+%        Mar.  4, 2008 - renamed from WSAC to WSEIS, better error messages
+%        June 12, 2008 - added examples, doc update
+%        Sep. 24, 2008 - 
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated June 12, 2008 at 05:15 GMT
+
+% todo:
+%  - how do we handle dataless and single point data (LEVEN==undef)?
+%    - set them as LEVEN==true? (fix CUTIM, RPDW, BSEIS, ...)
+%    - handle dataless and 1point as LEVEN==undef (ISDATALESS, HASMULPTS functions)
+%  - fix .dep and .ind
+%  - handle blank endian and name
+%  - fix error msgs
+%  - check ncmp! (only way to read in multiple component data)
+%    - warning messages for bad version or ncmp
 
 % check number of inputs
 error(nargchk(1,1,nargin))
@@ -37,19 +66,7 @@ error(nargchk(1,1,nargin))
 error(seischk(data,'name','endian'))
 
 % header info
-leven=glgc(data,'leven');
-error(lgcchk('leven',leven))
-iftype=genumdesc(data,'iftype');
-warning('off','SAClab:gh:fieldInvalid')
-[npts,ncmp]=gh(data,'npts','ncmp');
-warning('on','SAClab:gh:fieldInvalid')
-
-% clean up and check ncmp
-ncmp(isnan(ncmp))=1;
-if(any(ncmp<1 | fix(ncmp)~=ncmp))
-    error('SAClab:rdata:badNumCmp',...
-        'field ncmp must be a positive integer')
-end
+[ncmp,npts,iftype,leven]=get_n_check(data);
 
 % estimated filesize from header
 est_bytes=seissize(data);
