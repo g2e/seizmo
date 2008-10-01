@@ -78,10 +78,8 @@ function [data,failed]=cutim(data,varargin)
 %     - FILL only works with evenly sampled data.
 %
 %    System requirements: Matlab 7
-%
-%    Input/Output requirements: Time Series and General X vs Y data only
 %     
-%    Header changes: B, E, NPTS, DELTA, ODELTA
+%    Header changes: B, E, NPTS, DELTA, ODELTA, LEVEN
 %                    DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage: data=cutim(data,pdw)
@@ -135,6 +133,7 @@ function [data,failed]=cutim(data,varargin)
 %     Last Updated Sep. 22, 2008 at 07:25 GMT
 
 % todo:
+% - make sure dataless & 1point have LEVEN==undef
 
 % input check
 error(nargchk(1,11,nargin))
@@ -149,12 +148,8 @@ error(seischk(data,'dep'))
 nrecs=numel(data);
 
 % expand scalars
-if(numel(offset1)==1); offset1(1:nrecs)=offset1; end
-if(numel(offset2)==1); offset2(1:nrecs)=offset2; end
-
-% make column vector
-offset1=offset1(:);
-offset2=offset2(:);
+if(numel(offset1)==1); offset1(1:nrecs,1)=offset1; end
+if(numel(offset2)==1); offset2(1:nrecs,1)=offset2; end
 
 % cut parameter checks
 if(numel(offset1)~=nrecs || numel(offset2)~=nrecs)
@@ -163,6 +158,7 @@ if(numel(offset1)~=nrecs || numel(offset2)~=nrecs)
 end
 
 % grab spacing info
+
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
 error(lgcchk('leven',leven))

@@ -61,6 +61,7 @@ function [data]=bseis(varargin)
 %     Last Updated Sep. 24, 2008 at 19:40 GMT
 
 % todo:
+% - make sure dataless & 1point have LEVEN==undef
 
 % check number of inputs
 if (mod(nargin,2)) 

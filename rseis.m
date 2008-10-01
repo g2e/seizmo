@@ -41,8 +41,6 @@ function [data]=rseis(varargin)
 %
 %    System requirements: Matlab 7
 %
-%    Input/Output requirements: arguments must be char or cellstr arrays
-%
 %    Header changes: NONE
 %
 %    Usage:    data=rseis(filelist1,...,filelistN)

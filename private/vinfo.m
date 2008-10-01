@@ -9,8 +9,6 @@ function [h,vi,v,uv,nv]=vinfo(data)
 %
 %    System requirements: Matlab 7
 %
-%    Input/Output requirements: DATA must be a valid SAClab structure
-%
 %    Header changes: N/A
 %
 %    Usage:    [h,vi,v,uv,nv]=vinfo(data)
@@ -22,9 +20,10 @@ function [h,vi,v,uv,nv]=vinfo(data)
 
 %     Version History:
 %        Sep. 25, 2008 - initial version
+%        Sep. 26, 2008 - check internal header version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 25, 2008 at 06:45 GMT
+%     Last Updated Sep. 26, 2008 at 19:45 GMT
 
 % todo:
 
@@ -38,6 +37,14 @@ error(seischk(data))
 v=[data.version].';
 uv=unique(v);
 nv=length(uv);
+
+% check versions
+if(~isequal(v,gh(data,'nvhdr')))
+    error('SAClab:vinfo:verMismatch',...
+        ['Version info is corrupted!\n'...
+         'One or more records have inconsistent version info!\n'...
+         'Check the output of [data.version].'' and gh(data,''nvhdr'').']);
+end
 
 % grab definitions
 vi=nan(size(v));

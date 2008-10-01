@@ -49,6 +49,9 @@ fix up dif/int
 structure change
 	- .x,.t => .dep,.ind
 dataless support
+better help
+	- this seems to force me to fix every function heavily
+	- need to figure out the Contents.m system
 
 
 DONE

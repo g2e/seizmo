@@ -17,8 +17,8 @@ function [varargout]=glgc(data,varargin)
 %       are NOT able to be treated as logical fields.
 %     - Nonexistent header fields will return 'Unknown Logic Field'.
 %     - Values that are not in the logical definition list are marked as
-%       'Unknown Logic Value' unless they are the defined UNDEFINED
-%       value in which case they are tagged as 'Undefined Logic Field'.
+%       'unknown' unless they are the UNDEFINED value in which case they 
+%       are tagged as 'undefined'.
 %
 %    Usage: [lgccellstr1,...,lgccellstrN]=glgc(data,'field1',...,'fieldN')
 %
@@ -34,12 +34,18 @@ function [varargout]=glgc(data,varargin)
 %    See also: gh, genum, genumdesc
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Documentation Update
-%        June 13, 2008 - Sorted out undefined and unknown values/fields
+%        ????????????? - initial version
+%        June 12, 2008 - doc update
+%        June 13, 2008 - sorted out undefined and unknown values/fields
+%        Sep. 28, 2008 - output cleanup
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated June 12, 2008 at 20:15 GMT
+
+% todo:
+% - history fix
+% - vinfo
+% - doc update
 
 % require at least two inputs
 if(nargin<2)
@@ -74,7 +80,7 @@ for i=unique(v)
             varargout{j}(ind(nvarargout{j}(ind)==h.false))={'false'};
         end
         if(any(nvarargout{j}(ind)==h.undef.ntype))
-            varargout{j}(ind(nvarargout{j}(ind)==h.undef.ntype))={'Undefined Logic Field'};
+            varargout{j}(ind(nvarargout{j}(ind)==h.undef.ntype))={'undefined'};
         end
         if(any(isnan(nvarargout{j}(ind))))
             varargout{j}(ind(isnan(nvarargout{j}(ind))))={'Unknown Logic Field'};
@@ -86,7 +92,7 @@ for i=unique(v)
             [varargout{j}{ind(nvarargout{j}(ind)~=h.true ...
                 & nvarargout{j}(ind)~=h.false ...
                 & nvarargout{j}(ind)~=h.undef.ntype ...
-                & ~isnan(nvarargout{j}(ind)))}]=deal('Unknown Logic Value');
+                & ~isnan(nvarargout{j}(ind)))}]=deal('unknown');
         end
     end
 end

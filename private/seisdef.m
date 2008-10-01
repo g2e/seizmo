@@ -39,9 +39,10 @@ function [def]=seisdef(version)
 %        June 12, 2008 - renamed as seisdef and added example
 %        June 23, 2008 - doc cleanup
 %        Sep. 14, 2008 - minor doc update, input checks
+%        Sep. 26, 2008 - multi-component indicator, minor code clean
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep 14, 2008 at 17:25 GMT
+%     Last Updated Sep 26, 2008 at 18:35 GMT
 
 % todo:
 
@@ -60,7 +61,7 @@ if(~any(valid==version))
 end
 
 % SAC version 6 setup
-if(any(version==[6 101 102 200 201 202]))
+if(any(version==[6 101 200 201]))
     def.version=6;
     def.numfields=133;
     def.size=302;
@@ -69,6 +70,9 @@ if(any(version==[6 101 102 200 201 202]))
     def.data.startbyte=632;
     def.data.store='single';
     def.data.bytesize=4;
+    
+    def.mulcmp.valid=false;
+    def.mulcmp.altver=101;
     
     def.types={'real' 'int' 'enum' 'lgc' 'char'};
     def.ntype={'real' 'int' 'enum' 'lgc'};
@@ -256,6 +260,10 @@ if(any(version==[6 101 102 200 201 202]))
     % SAClab version 101 mod (multi-component support)
     if(any(version==[101 201]))
         def.version=101;
+        
+        % turn on multi-component support indicator
+        def.mulcmp.valid=true;
+        def.mulcmp.altver=[];
         
         % replace unused15 with ncmp (number of dependent components)
         def.int.pos=rmfield(def.int.pos,'unused15');

@@ -17,9 +17,6 @@ function []=wh(data)
 %
 %    System requirements: Matlab 7
 %
-%    Input/Output requirements: Data structure must have 'name' and
-%     'endian' fields.
-%
 %    Header changes: NONE
 %
 %    Usage:    wh(data)
@@ -37,9 +34,10 @@ function []=wh(data)
 %        June 12, 2008 - doc update
 %        Sep. 15, 2008 - history fix, doc update
 %        Sep. 22, 2008 - blank name and endian handling
+%        Sep. 26, 2008 - VINFO & NATIVEENDIAN added
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2008 at 07:15 GMT
+%     Last Updated Sep. 26, 2008 at 19:05 GMT
 
 % todo:
 
@@ -50,58 +48,47 @@ error(nargchk(1,1,nargin))
 error(seischk(data,'name','endian'))
 
 % headers setup
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=seisdef(vers(nver));
-for i=1:nver-1
-    h(i)=seisdef(vers(i));
-end
+[h,vi]=vinfo(data);
 
 % get this platform's native byte-order
-[platform,maxint,nativeendian]=computer;
-clear platform maxint
-if(strcmpi(nativeendian,'L')); nativeendian='ieee-le';
-else nativeendian='ieee-be'; end
+endian=nativeendian;
 
 % loop over records
 for i=1:length(data)
-    % logical index of header info
-    v=(data(i).version==vers);
-    
     % check for empty filename
     if(isempty(data(i).name))
         warning('SAClab:wh:namelessData',...
             ['Record %d has no associated filename!\n'...
-            '==> Set name as rec%d.sac !'],i,i);
+            '==> Set name as SAClab.%d.sac !'],i,i);
         data(i).name=['SAClab.' num2str(i) '.sac'];
     end
     
     % open existing file for writing
     if(exist(data(i).name,'file'))
         % get version/byte-order of datafile on disk
-        [version,endian]=gv(data(i).name);
+        [fileversion,fileendian]=gv(data(i).name);
         
         % non-zero version ==> file is SAClab compatible
-        if(version)
+        if(fileversion)
             % check if current data has no byte-order 
             % if so ==> set to match datafile on disk
             if(isempty(data(i).endian))
                 warning('SAClab:wh:endianlessData',...
                     ['Record %d has no associated byteorder!\n'...
                     '==> Set byteorder as %s to match existing file!'],...
-                    i,endian);
-                data(i).endian=endian;
+                    i,fileendian);
+                data(i).endian=fileendian;
             end
             
             % check for version/byte-order change
-            if(version~=data(i).version)
+            if(fileversion~=data(i).version)
                 warning('SAClab:wh:versionMismatch',...
                     ['Version of existing file %s does ' ...
                     'not match output header version!\n' ...
                     'Accurate reading of data in existing file '...
                     'may not be possible now!'],data(i).name);
             end
-            if(endian~=data(i).endian)
+            if(fileendian~=data(i).endian)
                 warning('SAClab:wh:endianMismatch',...
                     ['Byte-order of existing file %s does '...
                     'not match output header byte-order!\n'...
@@ -119,8 +106,8 @@ for i=1:length(data)
                 warning('SAClab:wh:endianlessData',...
                     ['Record %d has no associated byteorder!\n'...
                     '==> Set byteorder as %s to match platform!'],...
-                    i,nativeendian);
-                data(i).endian=nativeendian;
+                    i,endian);
+                data(i).endian=endian;
             end
             
             % SAClab is gonna trash your file!
@@ -139,8 +126,8 @@ for i=1:length(data)
             warning('SAClab:wh:endianlessData',...
                 ['Record %d has no associated byteorder!\n'...
                 '==> Set byteorder as %s to match platform!'],...
-                i,nativeendian);
-            data(i).endian=nativeendian;
+                i,endian);
+            data(i).endian=endian;
         end
         
         % new file
@@ -151,17 +138,17 @@ for i=1:length(data)
     if(fid<0)
         % unopenable file for writing (permissions/directory?)
         error('SAClab:wh:badFID',...
-            ['File not openable for writing '...
-            '(permissions/conflict with directory?):\n%s\n'],...
-            data(i).name);
+            ['File not openable for writing!\n'...
+            '(Permissions problem / conflict with directory?)\n'...
+            'File: %s\n'],data(i).name);
     end
     
     % fill header with dummy bytes (so we can seek around)
     fseek(fid,0,'bof');
-    count=fwrite(fid,zeros(h(v).data.startbyte,1),'char');
+    count=fwrite(fid,zeros(h(vi(i)).data.startbyte,1),'char');
     
     % verify write
-    if(count<h(v).data.startbyte)
+    if(count<h(vi(i)).data.startbyte)
         % write failed
         fclose(fid);
         error('SAClab:wh:writeFailed',...
@@ -169,11 +156,11 @@ for i=1:length(data)
     end
     
     % write header
-    n=h(v).types;
+    n=h(vi(i)).types;
     for m=1:length(n)
-        for k=1:length(h(v).(n{m}))
-            fseek(fid,h(v).(n{m})(k).startbyte,'bof');
-            fwrite(fid,data(i).head(h(v).(n{m})(k).minpos:h(v).(n{m})(k).maxpos),h(v).(n{m})(k).store);
+        for k=1:length(h(vi(i)).(n{m}))
+            fseek(fid,h(vi(i)).(n{m})(k).startbyte,'bof');
+            fwrite(fid,data(i).head(h(vi(i)).(n{m})(k).minpos:h(vi(i)).(n{m})(k).maxpos),h(vi(i)).(n{m})(k).store);
         end
     end
     

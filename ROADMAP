@@ -1,5 +1,6 @@
 0.5.3 - plotting and filtering
 -----
+fix p1 and p3
 spectral plotting (pspec1, pspec2, pspec3)
 plot choose component (pcmp1, pcmp2, pcmp3)
 plot particle motion (multi-component)
@@ -31,7 +32,6 @@ smoothing filters (sliding window function)
 --------------------------------------------------------
 cv	- change version
 chkhdr 	- enum checks
-bseis 	- multi-component support and options (use globals)
 ch,gh 	- user defined handling of nonexistant fields (use globals)
 pz	- add/remove polezeros (transfer predecessor)
 fitting

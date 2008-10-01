@@ -5,10 +5,13 @@ function [data,failed]=rpdw(data,varargin)
 %     SAClab compatible datafiles into the SAClab structure DATA, returning
 %     the updated structure.  This provides a mechanism similar to the SAC 
 %     'cut' command to limit memory/cpu usage related to reading in large 
-%     datafiles where only a segment is needed.  Note that header fields
-%     will be updated to match the windowed data.
+%     datafiles where only a segment is needed.  Note that the datafile 
+%     headers must exist/be read into DATA before running RPDW (use RH).
+%     Header fields will be updated to match the windowed data.
 %     
-%     PDW is a set of several arguments of one of the following forms:
+%     PDW is a set of several arguments that reference header fields in 
+%     DATA to define the data window.  PDW must be one of the following 
+%     forms:
 %                  (1) REF1,OFFSET1,REF2,OFFSET2
 %                  (2) REF1,REF2,OFFSET2
 %                  (3) REF1,OFFSET1,REF2
@@ -24,9 +27,9 @@ function [data,failed]=rpdw(data,varargin)
 %     that defines explicitly or implicitly the starting and stopping 
 %     points of the window.  This syntax attempts to match that of SAC.
 %
-%     REF is a string that refers to a reference value for the independent
-%     component (usually time).  It can be any valid numeric header field 
-%     or 'z' or 'x' or 'n'.
+%     REF is a string that refers to a reference field/value for the 
+%     independent component (usually time).  It can be any valid numeric 
+%     header field or 'z', 'x', or 'n'.
 %      'z' is the zero position for the record - 0.
 %      'x' indicates that the following offset is a sample number (first 
 %       sample is 1).  Note that this defaults to sample 0 without an 
@@ -39,7 +42,7 @@ function [data,failed]=rpdw(data,varargin)
 %     define the position of the window start/stop with respect to the 
 %     reference.  The offset can be a vector of values, one for each record
 %     to be read, to define different offsets for each record (note that 
-%     REF can not be a vector of reference positions currently).
+%     REF can not be a vector of reference positions).
 %
 %     REF1,OFFSET1 define the starting position of the window and
 %     REF2,OFFSET2 define the ending position.  If a REF is given without
@@ -63,11 +66,11 @@ function [data,failed]=rpdw(data,varargin)
 %     is set to 0 (zero).
 %
 %     [DATA,FAILED]=RPDW(...,'TRIM',TRUE|FALSE) turns on/off deleting
-%     records that failed to read or would have no data.  This includes
-%     spectral and xyz files (which are not supported by RPDW).  Optional 
-%     output FAILED gives the indices of these records (with respect to 
-%     their position in the input DATA).  By default 'TRIM' is set to true
-%     (deletes records).
+%     records that are unsupported (spectral and xyz files), that failed to
+%     be read, or would have no data in the window.  Optional output FAILED
+%     returns a logical array (equal in size to DATA) with elements set to 
+%     TRUE for records that encountered problems.  By default 'TRIM' is set
+%     to TRUE (deletes records).
 %
 %    Notes:
 %     - Partial reads of spectral and xyz files are not supported.  They
@@ -75,18 +78,17 @@ function [data,failed]=rpdw(data,varargin)
 %       DATA (see option 'TRIM' to change this behavior).
 %     - Windows with a start position after an end position will return
 %       empty records (with headers updated accordingly) rather than
-%       returning an error.
+%       returning an error.  These records will be deleted unless 'trim' is
+%       set to false.
 %     - Multiple component data is supported.
 %     - Partial reads of unevenly sampled data is not supported.  They are 
 %       passed to RDATA and CUTIM instead.
 %     - FILL only works with evenly sampled data.
+%     - Records with a negative DELTA will return as empty.
 %
 %    System requirements: Matlab 7
 %
-%    Input/Output requirements: DATA has header, endian, name and version 
-%     fields.  Time Series and General X vs Y data only.
-%
-%    Header changes: B, E, NPTS, DELTA, ODELTA
+%    Header changes: B, E, NPTS, DELTA, ODELTA, LEVEN
 %                    DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage: data=rpdw(data,pdw)
@@ -127,9 +129,12 @@ function [data,failed]=rpdw(data,varargin)
 %        June 30, 2008 - fixed dataless support, .dep & .ind rather than .x
 %                        & .t, fix for single point data
 %        Sep. 22, 2008 - minor doc update, error msg fixes
+%        Sep. 27, 2008 - doc update, LEVEN for dataless & 1pnt, updated for
+%                        GET_N_CHECK & VINFO, checks for datafile size,
+%                        updated RDATA call, single CH call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2008 at 07:35 GMT
+%     Last Updated Sep. 28, 2008 at 03:35 GMT
 
 % todo:
 
@@ -146,12 +151,8 @@ error(seischk(data,'name','endian'))
 nrecs=numel(data);
 
 % expand scalars
-if(numel(offset1)==1); offset1(1:nrecs)=offset1; end
-if(numel(offset2)==1); offset2(1:nrecs)=offset2; end
-
-% make column vector
-offset1=offset1(:);
-offset2=offset2(:);
+if(numel(offset1)==1); offset1(1:nrecs,1)=offset1; end
+if(numel(offset2)==1); offset2(1:nrecs,1)=offset2; end
 
 % cut parameter checks
 if(numel(offset1)~=nrecs || numel(offset2)~=nrecs)
@@ -159,24 +160,24 @@ if(numel(offset1)~=nrecs || numel(offset2)~=nrecs)
         'Number of elements in OFFSET not correct!')
 end
 
-% check leven
-leven=glgc(data,'leven');
-error(lgcchk('leven',leven))
-even=find(strcmpi(leven,'true')).';
+% header info
+[ncmp,npts,iftype,leven]=get_n_check(data);
+[b,delta,e,depmen,depmin,depmax]=...
+    gh(data,'b','delta','e','depmen','depmin','depmax');
+
+% index by spacing
+even=strcmpi(leven,'true');
 uneven=strcmpi(leven,'false');
+eveni=find(even).';
 
-% get more header info
-iftype=genumdesc(data,'iftype');
-warning('off','SAClab:gh:fieldInvalid')
-[b,npts,delta,ncmp]=gh(data,'b','npts','delta','ncmp');
-warning('on','SAClab:gh:fieldInvalid')
+% look out for undefined leven
+undef=(~even & ~uneven); 
 
-% clean up and check ncmp
-ncmp(isnan(ncmp))=1;
-if(any(ncmp<1 | fix(ncmp)~=ncmp))
-    error('SAClab:rpdw:badNumCmp',...
-        'Field NCMP must be a positive integer!')
-end
+% estimated filesize from header
+est_bytes=seissize(data);
+
+% headers setup
+[h,vi]=vinfo(data);
 
 % window start point/value
 bt=[]; bp=[];
@@ -203,21 +204,16 @@ if(any(isnan(bt)) || any(isnan(bp)) || any(isnan(et)) || any(isnan(ep)))
     error('SAClab:rpdw:nanHeaderField','Window position is NaN!')
 end
 
-% grab header setup (so we know how to read the file)
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=seisdef(vers(nver));
-for i=1:nver-1
-    h(i)=seisdef(vers(i));
-end
-
 % allocate bad records matrix
 failed=false(nrecs,1);
 
 % let rdata/cutim handle unevenly sampled records (minus file deletion)
-if(any(uneven))
-    [data(uneven),failed(uneven)]=rdata(data(uneven),false);
+if(any(uneven | undef))
+    % read in unevenly sampled datafiles
+    uneven=(uneven | undef);
+    [data(uneven),failed(uneven)]=rdata(data(uneven),'trim',false);
     if(any(uneven & ~failed))
+        % cut unevenly sampled datafiles
         uneven=(uneven & ~failed);
         [data(uneven),failed(uneven)]=cutim(data(uneven),...
             ref1,offset1(uneven),ref2,offset2(uneven),...
@@ -226,9 +222,22 @@ if(any(uneven))
 end
 
 % loop through each evenly spaced file
-for i=even
-    % header version index
-    v=(data(i).version==vers);
+for i=eveni
+    % skip dataless
+    if(npts(i)==0)
+        failed(i)=true; 
+        warning('SAClab:rpdw:noData',...
+            'Illegal operation on dataless file!');
+        continue; 
+    end
+    
+    % look out for negative delta
+    if(delta(i)<=0)
+        failed(i)=true;
+        warning('SAClab:rpdw:negDelta',...
+            'DELTA for record %d is zero/negative, deleting!',i);
+        continue;
+    end
     
     % check for unsupported filetypes
     if(strcmpi(iftype(i),'General XYZ (3-D) file'))
@@ -259,7 +268,15 @@ for i=even
     % boundary conditions
     nbp=max([bp(i) 1]);
     nep=min([ep2 npts(i)]);
-    nnp=nep-nbp+1;
+    nnp=max([nep-nbp+1 0]);
+    
+    % skip if new npts==0
+    if(nnp==0)
+        b(i)=nan; npts(i)=0; leven{i}='nan'; delta(i)=nan;
+        e(i)=nan; depmen(i)=nan; depmin(i)=nan; depmax(i)=nan;
+        failed(i)=true;
+        continue;
+    end
     
     % open file
     fid=fopen(data(i).name,'r',data(i).endian);
@@ -272,29 +289,55 @@ for i=even
         continue;
     end
     
-    % preallocate data record with NaNs, deallocate timing
-    data(i).dep=nan(nnp,ncmp(i),h(v).data.store);
-    data(i).ind=[];
+    % file size
+    fseek(fid,0,'eof');
+    bytes=ftell(fid);
     
-    % skip if new npts==0
-    if(nnp<1)
-        data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
-            'depmen',nan,'depmin',nan,'depmax',nan);
+    % byte size check
+    if(bytes>est_bytes(i))
+        % size big enough but inconsistent - read anyways (SAC bugfix)
+        % SAC BUG: converting a spectral file to a time series file does
+        % not deallocate the second component, thus the written file has
+        % twice as much data.
+        warning('SAClab:rpdw:badFileSize',...
+            ['Filesize of file %s does not match header info!\n'...
+            '%d (estimated) > %d (on disk) --> Reading Anyways!'...
+            'This is usually caused by a SAC bug and can be ignored.'],...
+            data(i).name,est_bytes(i),bytes);
+    elseif(bytes<est_bytes(i))
+        % size too small - skip
+        fclose(fid);
+        warning('SAClab:rpdw:badFileSize',...
+            ['Filesize of file %s does not match header info!\n'...
+            '%d (estimated) < %d (on disk) --> Skipping!'],...
+            data(i).name,est_bytes(i),bytes);
         failed(i)=true;
         continue;
     end
     
-    % loop through each component
+    % preallocate data record with NaNs, deallocate timing
+    data(i).dep=nan(nnp,ncmp(i),h(vi(i)).data.store);
+    data(i).ind=[];
+    
+    % read in each component
     for j=1:ncmp(i)
         % move to first byte of window and read
         try
-            fseek(fid,h(v).data.startbyte+...
-                h(v).data.bytesize*((j-1)*npts(i)+nbp-1),'bof');
-            data(i).dep(:,j)=fread(fid,nnp,['*' h(v).data.store]);
+            fseek(fid,h(vi(i)).data.startbyte+...
+                h(vi(i)).data.bytesize*((j-1)*npts(i)+nbp-1),'bof');
+            temp=fread(fid,nnp,['*' h(vi(i)).data.store]);
+            if(numel(temp)~=nnp)
+                error('SAClab:rpdw:readFailed',...
+                    'Read in of data failed: %s !',data(i).name);
+            else
+                data(i).dep(:,j)=temp;
+                clear temp
+            end
         catch
             warning('SAClab:rpdw:readFailed',...
                 'Read in of data failed: %s !',data(i).name);
             failed(i)=true;
+            clear temp
             break;
         end
     end
@@ -312,40 +355,32 @@ for i=even
             data(i).dep; ...
             ones(ep2-npts(i),ncmp(i))*filler];
         
-        % empty window - add to failed list
-        if(isempty(data(i).dep))
-            data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
-                'depmen',nan,'depmin',nan,'depmax',nan);
-            failed(i)=true;
-            continue;
-        end
-        
         % fix header
-        data(i)=ch(data(i),'b',b(i)+(bp(i)-1)*delta(i),...
-            'e',b(i)+(ep2-1)*delta(i),'npts',size(data(i).dep,1),...
-            'depmen',mean(data(i).dep(:)),...
-            'depmin',min(data(i).dep(:)),...
-            'depmax',max(data(i).dep(:)));
+        b(i)=b(i)+(bp(i)-1)*delta(i);
+        e(i)=b(i)+(ep2-1)*delta(i);
     % not to fill
     else
-        % empty window - add to failed list
-        if(isempty(data(i).dep))
-            data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
-                'depmen',nan,'depmin',nan,'depmax',nan);
-            failed(i)=true;
-            continue;
-        end
-        
         % fix header
-        data(i)=ch(data(i),'b',b(i)+(nbp-1)*delta(i),...
-            'e',b(i)+(nep-1)*delta(i),'npts',size(data(i).dep,1),...
-            'depmen',mean(data(i).dep(:)),...
-            'depmin',min(data(i).dep(:)),...
-            'depmax',max(data(i).dep(:)));
+        b(i)=b(i)+(nbp-1)*delta(i);
+        e(i)=b(i)+(nep-1)*delta(i);
     end
-    % single point fix
-    if(size(data(i).dep,1)==1); data(i)=ch(data(i),'delta',nan); end
+    
+    % more header fix
+    npts(i)=size(data(i).dep,1);
+    depmen(i)=mean(data(i).dep(:));
+    depmin(i)=min(data(i).dep(:));
+    depmax(i)=max(data(i).dep(:));
+    
+    % 1pnt fix
+    if(size(data(i).dep,1)==1)
+        delta(i)=nan; leven{i}='nan';
+    end
 end
+
+% update headers
+data(even)=ch(data(even),'b',b(even),'e',e(even),'delta',delta(even),...
+    'leven',leven(even),'npts',npts(even),...
+    'depmen',depmen(even),'depmin',depmin(even),'depmax',depmax(even));
 
 % remove failed records
 if(trim); data(failed)=[]; end

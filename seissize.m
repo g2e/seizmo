@@ -10,9 +10,6 @@ function [bytes]=seissize(data)
 %
 %    System requirements: Matlab 7
 %
-%    Input/Output requirements: expects SAClab DATA structure to have
-%     version and head fields filled
-%
 %    Header changes: N/A
 %
 %    Usage:  bytes=seissize(data)
@@ -28,10 +25,11 @@ function [bytes]=seissize(data)
 %        Mar.  4, 2008 - doc update, use LGCCHK
 %        June 12, 2008 - doc update
 %        Sep. 14, 2008 - doc update
-%        Sep. 25, 2008 - GET_N_CHECK reduces code, adds dataless support
+%        Sep. 25, 2008 - GET_N_CHECK adds dataless support
+%        Sep. 26, 2008 - VINFO cleans up/reduces code
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 25, 2008 at 04:55 GMT
+%     Last Updated Sep. 26, 2008 at 19:45 GMT
 
 % todo:
 
@@ -45,30 +43,21 @@ error(seischk(data))
 [ncmp,npts,iftype,leven]=get_n_check(data);
 
 % headers setup
-v=[data.version].';
-vers=unique(v);
-nver=length(vers);
-h(nver)=seisdef(vers(nver));
-for i=1:nver-1
-    h(i)=seisdef(vers(i));
-end
-nrecs=length(data);
-v2=sum((v(:,ones(1,nver))==vers(:,ones(1,nrecs)).').*...
-    repmat(1:nver,nrecs,1),2);
-hdata=[h(v2).data];
+[h,vi]=vinfo(data);
+hdata=[h(vi).data];
 
 % filetype
-count=strcmp(iftype,'Time Series File')...
-    +strcmp(iftype,'General X vs Y file')...
-    +strcmp(iftype,'General XYZ (3-D) file')...
-    +2*strcmp(iftype,'Spectral File-Real/Imag')...
-    +2*strcmp(iftype,'Spectral File-Ampl/Phase');
+count=strcmpi(iftype,'Time Series File')...
+    +strcmpi(iftype,'General X vs Y file')...
+    +strcmpi(iftype,'General XYZ (3-D) file')...
+    +2*strcmpi(iftype,'Spectral File-Real/Imag')...
+    +2*strcmpi(iftype,'Spectral File-Ampl/Phase');
 
 % multi-component
 count=ncmp.*count;
 
 % uneven sampling
-count=count+strcmp(leven,'false');
+count=count+strcmpi(leven,'false');
 
 % final tally
 bytes=[hdata.startbyte].'+count.*npts.*[hdata.bytesize].';

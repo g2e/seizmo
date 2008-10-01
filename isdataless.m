@@ -9,8 +9,6 @@ function [lgc]=isdataless(data)
 %
 %    System requirements: Matlab 7
 %
-%    Input/Output requirements: DATA must have 'dep' field
-%
 %    Header changes: N/A
 %
 %    Usage:    lgc=isdataless(data)

@@ -2,13 +2,10 @@
 
 to install:
 
-1a. download and extract the tar volume in the directory you want Matlab to reside:
+1. download and extract the tar volume in the directory you want Matlab to reside:
 	tar zxvf saclab-0.5.1-r43.tar.gz
-1b. or check out the latest version with bzr (needs to be installed first):
-	bzr co http://epsc.wustl.edu/~ggeuler/codes/m/saclab/saclab-0.5.1
 2. this will create a directory called saclab-0.5.1 with all the mfiles
 3. add saclab-0.5.1 to your matlab path
-
 
 <·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>Reading/Writing SAC Files<·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>
 

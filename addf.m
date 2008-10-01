@@ -145,7 +145,7 @@ option.IFTYPE='error';
 
 % get options set by BINOPERR (SACLAB global)
 global SACLAB; fields=fieldnames(option).';
-for i=fields; if(isfield(SACLAB,i)); option.(i{:})=SACLAB.(i{:}); end; end
+for i=fields; if(isfield(SACLAB,i{:})); option.(i{:})=SACLAB.(i{:}); end; end
 
 % find all datasets in inline arguments
 isdata=false(1,nargin);

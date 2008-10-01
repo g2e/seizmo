@@ -1,15 +1,18 @@
 function [data,failed]=rdata(data,varargin)
 %RDATA    Read SAClab data from datafiles
 %
-%    Description: [OUTDATA,FAILED]=RDATA(DATA,'TRIM',LOGICAL) reads in 
-%     data from SAClab compatible datafiles utilizing the header info in 
-%     DATA, and returns the combined dataset as OUTDATA. Optional parameter
-%     TRIM determines how RDATA handles data that had errors. By default 
-%     TRIM is set to true, which deletes any records that had errors while 
-%     reading from OUTDATA.  Setting TRIM to FALSE will preserve records in
-%     OUTDATA that had errors.  Optional output FAILED returns a logical 
-%     matrix equal in size to DATA with entries set to TRUE for those 
-%     records which had reading errors.
+%    Description: [OUTDATA,FAILED]=RDATA(DATA) reads in data from SAClab 
+%     compatible datafiles utilizing the header info in DATA, and returns 
+%     the combined dataset as OUTDATA.  Datafiles that are not SAClab
+%     compatible or have errors will be removed from the returned dataset.
+%     Optional output FAILED returns a logical matrix equal in size to DATA
+%     with entries set to TRUE for those records which had reading errors.
+%
+%     [OUTDATA,FAILED]=RDATA(DATA,'TRIM',LOGICAL) sets optional parameter
+%     TRIM to determine how RDATA handles data that had errors. By default 
+%     TRIM is set to TRUE, which deletes any records from OUTDATA that had 
+%     errors while reading.  Setting TRIM to FALSE will preserve records in
+%     OUTDATA that had errors.
 %
 %     SAClab data structure setup:
 %
@@ -47,9 +50,6 @@ function [data,failed]=rdata(data,varargin)
 %
 %    System requirements: Matlab 7
 %
-%    Input/Output requirements: DATA has header, endian, name and version
-%     fields.
-%
 %    Header changes: NONE
 %
 %    Usage: data=rdata(data)
@@ -79,9 +79,11 @@ function [data,failed]=rdata(data,varargin)
 %                        LEVEN=TRUE for spectral and xyz files, .dep and
 %                        .ind rather than .x and .t, trim option made to
 %                        match RPDW and CUTIM
+%        Sep. 26, 2008 - doc update
+%        Sep. 27, 2008 - updated for GET_N_CHECK and VINFO
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 15, 2008 at 01:30 GMT
+%     Last Updated Sep. 27, 2008 at 20:00 GMT
 
 % todo:
 
@@ -121,40 +123,20 @@ if(nargin==3)
 end
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
+
+% header info
+[ncmp,npts,iftype,leven]=get_n_check(data);
 
 % estimated filesize from header
 est_bytes=seissize(data);
 
-% header info
-leven=glgc(data,'leven');
-error(lgcchk('leven',leven))
-iftype=genumdesc(data,'iftype');
-warning('off','SAClab:gh:fieldInvalid')
-[npts,ncmp]=gh(data,'npts','ncmp');
-warning('on','SAClab:gh:fieldInvalid')
-
-% clean up and check ncmp
-ncmp(isnan(ncmp))=1;
-if(any(ncmp<1 | fix(ncmp)~=ncmp))
-    error('SAClab:rdata:badNumCmp',...
-        'Field NCMP must be a positive integer!')
-end
-
 % headers setup
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=seisdef(vers(nver));
-for i=1:nver-1
-    h(i)=seisdef(vers(i));
-end
+[h,vi]=vinfo(data);
 
 % read loop
 failed=false(nrecs,1);
 for i=1:nrecs
-    % logical index of header info
-    v=(data(i).version==vers);
-    
     % open file for reading
     fid=fopen(data(i).name,'r',data(i).endian);
     
@@ -162,7 +144,7 @@ for i=1:nrecs
     if(fid<0)
         % non-existent file or directory
         warning('SAClab:rdata:badFID',...
-            'File not openable, %s !',data(i).name);
+            'File not openable: %s !',data(i).name);
         failed(i)=true;
         continue;
     end
@@ -194,7 +176,7 @@ for i=1:nrecs
     end
     
     % preallocate data record with NaNs, deallocate timing
-    data(i).dep=nan(npts(i),ncmp(i),h(v).data.store); 
+    data(i).dep=nan(npts(i),ncmp(i),h(vi(i)).data.store); 
     data(i).ind=[];
     
     % skip if npts==0 (dataless)
@@ -210,25 +192,25 @@ for i=1:nrecs
     end
     
     % act by file type (any new filetypes will have to be added here)
-    fseek(fid,h(v).data.startbyte,'bof');
+    fseek(fid,h(vi(i)).data.startbyte,'bof');
     if(strcmpi(iftype(i),'Time Series File'))
         % time series file - amplitude and time
         for k=1:ncmp(i)
-            data(i).dep(:,k)=fread(fid,npts(i),['*' h(v).data.store]);
+            data(i).dep(:,k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
         
         % timing of amp data if uneven
         if(strcmpi(leven(i),'false'))
-            data(i).ind(:,1)=fread(fid,npts(i),['*' h(v).data.store]);
+            data(i).ind(:,1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
     elseif(strcmpi(iftype(i),'Spectral File-Real/Imag'))
         % preallocate data record with NaNs
-        data(i).dep=nan(npts(i),2*ncmp(i),h(v).data.store);
+        data(i).dep=nan(npts(i),2*ncmp(i),h(vi(i)).data.store);
         
         % spectral file - real and imaginary
         for k=1:ncmp(i)
-            data(i).dep(:,2*k-1)=fread(fid,npts(i),['*' h(v).data.store]);
-            data(i).dep(:,2*k)=fread(fid,npts(i),['*' h(v).data.store]);
+            data(i).dep(:,2*k-1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
+            data(i).dep(:,2*k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
         
         % check leven
@@ -241,12 +223,12 @@ for i=1:nrecs
         end
     elseif(strcmpi(iftype(i),'Spectral File-Ampl/Phase'))
         % preallocate data record with NaNs
-        data(i).dep=nan(npts(i),2*ncmp(i),h(v).data.store);
+        data(i).dep=nan(npts(i),2*ncmp(i),h(vi(i)).data.store);
         
         % spectral file - amplitude and phase
         for k=1:ncmp(i)
-            data(i).dep(:,2*k-1)=fread(fid,npts(i),['*' h(v).data.store]);
-            data(i).dep(:,2*k)=fread(fid,npts(i),['*' h(v).data.store]);
+            data(i).dep(:,2*k-1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
+            data(i).dep(:,2*k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
         
         % check leven
@@ -260,17 +242,17 @@ for i=1:nrecs
     elseif(strcmpi(iftype(i),'General X vs Y file'))
         % general x vs y data (x is 'dependent')
         for k=1:ncmp(i)
-            data(i).dep(:,k)=fread(fid,npts(i),['*' h(v).data.store]);
+            data(i).dep(:,k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
         
         % independent data (if uneven)
         if(strcmpi(leven(i),'false'))
-            data(i).ind(:,1)=fread(fid,npts(i),['*' h(v).data.store]);
+            data(i).ind(:,1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
     elseif(strcmpi(iftype(i),'General XYZ (3-D) file'))
         % general xyz (3D) grid - nodes are evenly spaced
         for k=1:ncmp(i)
-            data(i).dep(:,k)=fread(fid,npts(i),['*' h(v).data.store]);
+            data(i).dep(:,k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
         
         % check leven
