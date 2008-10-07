@@ -15,11 +15,9 @@ function [data]=mulomega(data)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: Evenly sampled; Spectral Ampl/Phase or Imag/Real
-%
 %    Header Changes: DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:  data=mulomega(data)
+%    Usage:    data=mulomega(data)
 %
 %    Examples:
 %     Differentiate spectral data in the time domain vs frequency domain:
@@ -30,15 +28,15 @@ function [data]=mulomega(data)
 
 %     Version History:
 %        May  12, 2008 - initial version
-%        June 11, 2008 - documentation cleanup
-%        July 19, 2008 - documentation update, single ch call, dataless
-%                        support, .dep rather than .x
+%        June 11, 2008 - doc cleanup
+%        July 19, 2008 - doc update, single ch call, dataless support,
+%                        .dep rather than .x
+%        Oct.  7, 2008 - minor code cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 19, 2008 at 06:35 GMT
+%     Last Updated Oct.  7, 2008 at 02:10 GMT
 
 % todo:
-%
 
 % check nargin
 error(nargchk(1,1,nargin))
@@ -54,13 +52,13 @@ npts2=npts/2;
 npts21=npts2-1;
 
 % check leven,iftype
-if(any(~strcmp(leven,'true')))
+if(any(~strcmpi(leven,'true')))
     error('SAClab:mulomega:illegalOperation',...
-        'illegal operation on unevenly spaced record')
-elseif(any(~strcmp(iftype,'Spectral File-Real/Imag')...
-        & ~strcmp(iftype,'Spectral File-Ampl/Phase')))
+        'Illegal operation on unevenly spaced record!');
+elseif(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
+        & ~strcmpi(iftype,'Spectral File-Ampl/Phase')))
     error('SAClab:mulomega:illegalOperation',...
-        'illegal operation on a non-spectral file')
+        'Illegal operation on a non-spectral file!');
 end
 
 % number of records

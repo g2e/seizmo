@@ -42,7 +42,7 @@ function [fh,sfh]=p1(data,varargin)
 %     Last Updated June 12, 2008 at 16:10 GMT
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % get plotting style defaults
 P=pconf;
@@ -144,12 +144,12 @@ for i=1:nrecs
     if(strcmp(leven(i),'true'))
         time=b(i)+(0:npts(i)-1).'*delta(i);
     else
-        time=data(i).t; 
+        time=data(i).ind; 
     end
     
     % focus to new subplot and draw record
     sfh(i)=subplot(nrows,P.NCOLS,i);
-    plot(time,data(i).x,'color',colors(i,:),'linewidth',P.RECWIDTH);
+    plot(time,data(i).dep,'color',colors(i,:),'linewidth',P.RECWIDTH);
     set(gca,'fontname',P.AXISFONT,'fontweight',P.AXISFONTWEIGHT,...
         'fontsize',P.AXISFONTSIZE,'box',P.BOX,...
         'xcolor',P.XAXISCOLOR,'ycolor',P.YAXISCOLOR,...

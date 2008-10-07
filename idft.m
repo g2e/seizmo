@@ -3,7 +3,7 @@ function [data]=idft(data)
 %
 %    Description: IDFT(DATA) converts SAClab records from the frequency 
 %     domain to the time domain using an inverse discrete fourier transform
-%     (Matlab's ifft).  Output filetype is Time Series File.
+%     (Matlab's ifft).  Output filetype is 'Time Series File'.
 %
 %    Notes:
 %     - SAC (and thus SAClab's DFT for sanity) calculates spectral data 
@@ -13,8 +13,6 @@ function [data]=idft(data)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: Evenly Spaced; Spectral Ampl/Phase or Imag/Real
-%
 %    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
 %                    DEPMEN, DEPMIN, DEPMAX
 %     In the frequency domain B, DELTA, and NPTS are changed to the 
@@ -23,7 +21,7 @@ function [data]=idft(data)
 %     of B, DELTA, and NPTS are saved in the header as SB, SDELTA, and 
 %     NSNPTS and are restored when this command is performed.
 %
-%    Usage: data=idft(data)
+%    Usage:    data=idft(data)
 %
 %    Examples:
 %     To take the derivative of a time-series in the frequency domain:
@@ -39,14 +37,14 @@ function [data]=idft(data)
 %        Mar.  4, 2008 - cleaned up errors and warnings
 %        May  12, 2008 - name changed to idft
 %        June 11, 2008 - added example
-%        July 19, 2008 - documentation update, .dep rather than .x,
-%                        dataless support, one ch call, updates DEP* fields
+%        July 19, 2008 - doc update, .dep rather than .x, dataless support,
+%                        one ch call, updates DEP* fields
+%        Oct.  7, 2008 - minor code cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 19, 2008 at 04:25 GMT
+%     Last Updated Oct.  7, 2008 at 02:05 GMT
 
 % todo:
-%
 
 % check nargin
 error(nargchk(1,1,nargin))
@@ -62,13 +60,13 @@ iftype=genumdesc(data,'iftype');
 e=sb+(nspts-1).*sdelta;
 
 % check leven,iftype
-if(any(~strcmp(leven,'true')))
+if(any(~strcmpi(leven,'true')))
     error('SAClab:idft:illegalOperation',...
-        'illegal operation on unevenly spaced record')
-elseif(any(~strcmp(iftype,'Spectral File-Real/Imag')...
-        & ~strcmp(iftype,'Spectral File-Ampl/Phase')))
+        'Illegal operation on unevenly spaced record!');
+elseif(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
+        & ~strcmpi(iftype,'Spectral File-Ampl/Phase')))
     error('SAClab:idft:illegalOperation',...
-        'illegal operation on non-spectral file')
+        'Illegal operation on non-spectral file!');
 end
 
 % loop through records
@@ -82,7 +80,7 @@ for i=1:numel(data)
     data(i).dep=double(data(i).dep);
     
     % turn back into time domain
-    if(strcmp(iftype(i),'Spectral File-Real/Imag'))
+    if(strcmpi(iftype(i),'Spectral File-Real/Imag'))
         data(i).dep=1/sdelta(i)*ifft(...
             complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)),...
             'symmetric');

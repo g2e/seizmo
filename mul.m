@@ -15,17 +15,15 @@ function [data]=mul(data,constant,cmp)
 %     - a scalar constant applies the value to all records
 %     - a vector of constants (length must equal the number of records)
 %       allows applying different values to each record
-%     - cmp_list is the dependent component(s) to work on (default is all)
+%     - CMP is the dependent component(s) to work on (default is all)
 %     - an empty list of components will not modify any components
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: NONE
-%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage: data=mul(data,constant)
-%           data=mul(data,constant,cmp_list)
+%    Usage:    data=mul(data,constant)
+%              data=mul(data,constant,cmp_list)
 %
 %    Examples:
 %     Get the complex conjugate of a real-imaginary spectral records by
@@ -36,22 +34,21 @@ function [data]=mul(data,constant,cmp)
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
-%        Feb. 23, 2008 - improved input checks and documentation
+%        Feb. 23, 2008 - improved input checks and docs
 %        Feb. 28, 2008 - seischk support
-%        Mar.  4, 2008 - minor documentation update
+%        Mar.  4, 2008 - minor doc update
 %        May  12, 2998 - dep* fix
-%        June 12, 2008 - documentation update, now works on all components
-%                        by default
+%        June 12, 2008 - doc update, now works on all components by default
 %        July 17, 2008 - history update, errors fixed, updated empty 
 %                        component list behavior, .dep rather than .x, 
 %                        allow constant to be an array, dataless support,
-%                        cmp checks, and documentation update
+%                        cmp checks, and doc update
+%        Oct.  6, 2008 - minor code cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 17, 2008 at 08:10 GMT
+%     Last Updated Oct.  6, 2008 at 22:45 GMT
 
 % todo:
-%
 
 % check nargin
 error(nargchk(2,3,nargin))
@@ -65,7 +62,7 @@ if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
 % default component
 if(nargin==2); cmp=':'; 
 elseif(any(fix(cmp)~=cmp) || (~isnumeric(cmp) && ~strcmpi(':',cmp)))
-    error('SAClab:mul:badInput','Component list is bad');
+    error('SAClab:mul:badInput','Component list is bad!');
 end
 
 % number of records
@@ -73,12 +70,12 @@ nrecs=numel(data);
 
 % check constant
 if(~isnumeric(constant))
-    error('SAClab:mul:badInput','constant must be numeric');
+    error('SAClab:mul:badInput','Constant must be numeric!');
 elseif(isscalar(constant))
     constant=constant(ones(nrecs,1));
 elseif(numel(constant)~=nrecs)
     error('SAClab:mul:badInput',...
-        'number of elements in constant not equal to number of records')
+        'Number of elements in constant not equal to number of records!');
 end
 
 % multiply by constant

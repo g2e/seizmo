@@ -28,10 +28,6 @@ function [gcarc,az,baz,dist]=delaz(evla,evlo,stla,stlo,ellipsoid)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: 
-%     - Latitudes and Longitudes in Degrees 
-%     - Geodetic Latitudes (-90 to 90)
-%
 %    Usage: [gcarc,az,baz,dist]=delaz(evla,evlo,stla,stlo)
 %
 %    Examples:
@@ -41,7 +37,7 @@ function [gcarc,az,baz,dist]=delaz(evla,evlo,stla,stlo,ellipsoid)
 %    See also:
 
 %     Version History:
-%        June 19, 2008 - Initial Version
+%        June 19, 2008 - initial version
 %        June 22, 2008 - Handle multiple locations, specify ellipsoid
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)

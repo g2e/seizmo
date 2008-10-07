@@ -16,7 +16,7 @@ function [h,vi,v,uv,nv]=vinfo(data)
 %    Examples:
 %     NONE
 %
-%    See also: get_n_check
+%    See also: seisdef
 
 %     Version History:
 %        Sep. 25, 2008 - initial version

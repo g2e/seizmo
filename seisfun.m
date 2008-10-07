@@ -14,14 +14,11 @@ function [data]=seisfun(data,fun)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: NONE
-%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage: data=seisfun(data,fun)
 %
 %    Examples:
-%
 %     A multi-tool of a function:
 %      data=seisfun(data,@abs)
 %      data=seisfun(data,@sign)
@@ -38,14 +35,14 @@ function [data]=seisfun(data,fun)
 %     Version History:
 %        Apr.  9, 2008 - initial version
 %        May  12, 2008 - dep* fix
-%        July 17, 2008 - documentation update, dataless support, .dep
-%                        rather than .x, added history, single ch call
+%        July 17, 2008 - doc update, dataless support, .dep rather than .x,
+%                        added history, single ch call
+%        Oct.  6, 2008 - use CHKHDR over CH (slims code)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 17, 2008 at 08:35 GMT
+%     Last Updated Oct.  6, 2008 at 22:50 GMT
 
 % todo:
-%
 
 % check nargin
 error(nargchk(2,2,nargin))
@@ -59,17 +56,12 @@ if(~isa(fun,'function_handle'))
 end
 
 % apply function to records
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:numel(data)
     oclass=str2func(class(data(i).dep));
     data(i).dep=oclass(fun(double(data(i).dep)));
-    if(isempty(data(i).dep)); continue; end
-    depmen(i)=mean(data(i).dep(:)); 
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
 end
 
 % update header
-data=ch(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+data=chkhdr(data,'vsdata');
 
 end

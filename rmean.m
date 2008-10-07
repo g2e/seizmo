@@ -20,32 +20,33 @@ function [data]=rmean(data)
 %     Version History:
 %        ????????????? - Initial Version
 %        June 12, 2008 - Cleaned up documentation and added example
+%        Oct.  3, 2008 - .dep & .ind
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 02:55 GMT
+%     Last Updated Oct  3, 2008 at 15:15 GMT
 
 % check input
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % remove mean and update header
-for i=1:length(data)
-    oclass=str2func(class(data(i).x));
-    data(i).x=double(data(i).x);
+for i=1:numel(data)
+    oclass=str2func(class(data(i).dep));
+    data(i).dep=double(data(i).dep);
     
     % loop through components
-    for j=1:size(data(i).x,2)
-        data(i).x(:,j)=data(i).x(:,j)-mean(data(i).x(:,j));
+    for j=1:size(data(i).dep,2)
+        data(i).dep(:,j)=data(i).dep(:,j)-mean(data(i).dep(:,j));
     end
     
     % change class back
-    data(i).x=oclass(data(i).x);
+    data(i).dep=oclass(data(i).dep);
     
     % adjust header
-    data(i)=ch(data(i),'depmen',mean(data(i).x(:)),...
-        'depmin',min(data(i).x(:)),'depmax',max(data(i).x(:)));
+    data(i)=ch(data(i),'depmen',mean(data(i).dep(:)),...
+        'depmin',min(data(i).dep(:)),'depmax',max(data(i).dep(:)));
 end
 
 end

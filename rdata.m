@@ -81,9 +81,10 @@ function [data,failed]=rdata(data,varargin)
 %                        match RPDW and CUTIM
 %        Sep. 26, 2008 - doc update
 %        Sep. 27, 2008 - updated for GET_N_CHECK and VINFO
+%        Oct.  7, 2008 - combined read code for similar filetypes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 27, 2008 at 20:00 GMT
+%     Last Updated Oct.  7, 2008 at 03:05 GMT
 
 % todo:
 
@@ -113,7 +114,7 @@ if(nargin==3)
         if(~iscalar(varargin{2}) || ...
                 (~islogical(varargin{2}) && ~isnumeric(varargin{2})))
             error('SAClab:rdata:badInput',...
-                'TRIM option not able to be evaluated!');
+                'TRIM option unable to be evaluated!');
         else
             trim=varargin{2};
         end
@@ -126,7 +127,11 @@ end
 nrecs=numel(data);
 
 % header info
-[ncmp,npts,iftype,leven]=get_n_check(data);
+ncmp=gncmp(data);
+npts=gh(data,'npts');
+iftype=genumdesc(data,'iftype');
+leven=glgc(data,'leven');
+error(lgcchk('leven',leven(npts>1)))
 
 % estimated filesize from header
 est_bytes=seissize(data);
@@ -193,7 +198,7 @@ for i=1:nrecs
     
     % act by file type (any new filetypes will have to be added here)
     fseek(fid,h(vi(i)).data.startbyte,'bof');
-    if(strcmpi(iftype(i),'Time Series File'))
+    if(strcmpi(iftype(i),{'Time Series File' 'General X vs Y file'}))
         % time series file - amplitude and time
         for k=1:ncmp(i)
             data(i).dep(:,k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
@@ -203,7 +208,7 @@ for i=1:nrecs
         if(strcmpi(leven(i),'false'))
             data(i).ind(:,1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
-    elseif(strcmpi(iftype(i),'Spectral File-Real/Imag'))
+    elseif(strcmpi(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'}))
         % preallocate data record with NaNs
         data(i).dep=nan(npts(i),2*ncmp(i),h(vi(i)).data.store);
         
@@ -220,34 +225,6 @@ for i=1:nrecs
                 'LEVEN for Spectral file %s must be TRUE!',data(i).name);
             failed(i)=true;
             continue;
-        end
-    elseif(strcmpi(iftype(i),'Spectral File-Ampl/Phase'))
-        % preallocate data record with NaNs
-        data(i).dep=nan(npts(i),2*ncmp(i),h(vi(i)).data.store);
-        
-        % spectral file - amplitude and phase
-        for k=1:ncmp(i)
-            data(i).dep(:,2*k-1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
-            data(i).dep(:,2*k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
-        end
-        
-        % check leven
-        if(strcmpi(leven(i),'false'))
-            fclose(fid);
-            warning('SAClab:rh:badLeven',...
-                'LEVEN for Spectral file %s must be TRUE!',data(i).name);
-            failed(i)=true;
-            continue;
-        end
-    elseif(strcmpi(iftype(i),'General X vs Y file'))
-        % general x vs y data (x is 'dependent')
-        for k=1:ncmp(i)
-            data(i).dep(:,k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
-        end
-        
-        % independent data (if uneven)
-        if(strcmpi(leven(i),'false'))
-            data(i).ind(:,1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
     elseif(strcmpi(iftype(i),'General XYZ (3-D) file'))
         % general xyz (3D) grid - nodes are evenly spaced

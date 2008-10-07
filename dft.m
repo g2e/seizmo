@@ -16,11 +16,9 @@ function [data]=dft(data,format,pow2pad)
 %     - SAC (and thus SAClab for sanity) calculates spectral data according
 %       to Parseval's theorem.  Dividing records (except for phase!) by 
 %       npts*delta/2 gives results that may better match the amplitudes
-%       of sinusoids.
+%       of sinusoid functions.
 %
 %    System requirements: Matlab 7
-%
-%    Data requirements: Evenly Spaced; Time Series or General X vs Y
 %
 %    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
 %                    DEPMEN, DEPMIN, DEPMAX
@@ -30,9 +28,9 @@ function [data]=dft(data,format,pow2pad)
 %     of B, DELTA, and NPTS are saved in the header as SB, SDELTA, and 
 %     NSNPTS and are restored when the IDFT command is performed.
 %
-%    Usage: data=dft(data)
-%           data=dft(data,format)
-%           data=dft(data,format,pow2pad)
+%    Usage:    data=dft(data)
+%              data=dft(data,format)
+%              data=dft(data,format,pow2pad)
 %
 %    Examples:
 %     To take the derivative of a time-series in the frequency domain:
@@ -48,14 +46,14 @@ function [data]=dft(data,format,pow2pad)
 %        Mar.  4, 2008 - cleaned up errors and warnings
 %        May  12, 2008 - name changed to dft
 %        June 11, 2008 - added example
-%        June 29, 2008 - documentation update, .dep rather than .x
+%        June 29, 2008 - doc update, .dep rather than .x
 %        July 18, 2008 - dataless support, one ch call, updates DEP* fields
+%        Oct.  6, 2008 - minor code cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 18, 2008 at 23:15 GMT
+%     Last Updated Oct.  6, 2008 at 23:15 GMT
 
 % todo:
-% 
 
 % check nargin
 error(nargchk(1,3,nargin))
@@ -69,10 +67,10 @@ if(nargin<2 || isempty(format)); format='amph'; end
 
 % check inputs
 if(~any(strcmpi(format,{'amph' 'rlim'})))
-    error('SAClab:dft:badInput','bad FORMAT string: %s',format)
+    error('SAClab:dft:badInput','Bad FORMAT string: %s !',format)
 end
 if(~isnumeric(pow2pad) || ~isscalar(pow2pad) || fix(pow2pad)~=pow2pad)
-    error('SAClab:dft:badInput','POW2PAD must be a scalar integer')
+    error('SAClab:dft:badInput','POW2PAD must be a scalar integer!')
 end
 
 % retreive header info
@@ -83,11 +81,11 @@ iftype=genumdesc(data,'iftype');
 % check leven,iftype
 if(any(~strcmpi(leven,'true')))
     error('SAClab:dft:illegalOperation',...
-        'illegal operation on unevenly spaced record')
+        'Illegal operation on unevenly spaced record!')
 elseif(any(~strcmpi(iftype,'Time Series File')...
         & ~strcmpi(iftype,'General X vs Y file')))
     error('SAClab:dft:illegalOperation',...
-        'illegal operation on spectral/xyz record')
+        'Illegal operation on spectral/xyz record!')
 end
 
 % output type
@@ -96,9 +94,10 @@ else iftype='Spectral File-Ampl/Phase';
 end
 
 % loop through records
+nrecs=numel(data);
 sb=nan(nrecs,1); se=sb; sdelta=sb; nspts=sb; len=sb;
 depmen=sb; depmin=sb; depmax=sb;
-for i=1:numel(data)
+for i=1:nrecs
     % skip dataless
     if(isempty(data(i).dep)); continue; end
     

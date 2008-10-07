@@ -21,7 +21,7 @@ function [fh,lh]=p2(data,varargin)
 %    See also:  p1, p3, recsec
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % get plotting style defaults
 P=pconf;
@@ -113,10 +113,10 @@ hold on
 for i=indices
     % get record timing
     if(strcmp(leven(i),'true')); time=(b(i)+(0:npts(i)-1)*delta(i)).';
-    else time=data(i).t; end
+    else time=data(i).ind; end
     
     % plot series
-    plot(time,data(i).x/(ampmax(i)^P.P2NORM)*(P.NORMMAX^P.P2NORM),...
+    plot(time,data(i).dep/(ampmax(i)^P.P2NORM)*(P.NORMMAX^P.P2NORM),...
         'color',colors(i,:),'linewidth',P.RECWIDTH);
 end
 hold off

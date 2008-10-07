@@ -12,11 +12,9 @@ function [data]=rlim2amph(data)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: Spectral records only.
-%
 %    Header changes: IFTYPE, DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:  data=rlim2amph(data)
+%    Usage:    data=rlim2amph(data)
 %
 %    Examples:
 %     To simply multiply two records in the frequency domain, they must be
@@ -33,13 +31,13 @@ function [data]=rlim2amph(data)
 %        June 11, 2008 - initial version
 %        July 19, 2008 - removed option, single call to ch, dataless
 %                        support, updates DEP* fields, .dep rather than .x,
-%                        documentation update
+%                        doc update
+%        Oct.  7, 2008 - minor code cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 19, 2008 at 05:45 GMT
+%     Last Updated Oct.  7, 2008 at 02:05 GMT
 
 % todo:
-%
 
 % check nargin
 error(nargchk(1,1,nargin))
@@ -51,10 +49,10 @@ error(seischk(data,'dep'))
 iftype=genumdesc(data,'iftype');
 
 % records must be spectral
-if(any(~strcmp(iftype,'Spectral File-Real/Imag')...
-        & ~strcmp(iftype,'Spectral File-Ampl/Phase')))
+if(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
+        & ~strcmpi(iftype,'Spectral File-Ampl/Phase')))
     error('SAClab:rlim2amph:illegalOperation',...
-        'illegal operation on non-spectral file')
+        'Illegal operation on non-spectral file!');
 end
 
 % loop through records
@@ -64,7 +62,7 @@ for i=1:numel(data)
     if(isempty(data(i).dep)); continue; end
     
     % convert or message
-    if(strcmp(iftype(i),'Spectral File-Real/Imag'))
+    if(strcmpi(iftype(i),'Spectral File-Real/Imag'))
         oclass=str2func(class(data(i).dep));
         data(i).dep=double(data(i).dep);
         temp=complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));

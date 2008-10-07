@@ -30,9 +30,11 @@ function [list]=onefilelist(varargin)
 %        Mar.  7, 2008 - initial version
 %        Apr. 23, 2008 - now expands wildcards using DIR
 %        Sep. 14, 2008 - doc update, input checks
+%        Oct.  3, 2008 - fix paths being dropped
+%        Oct.  5, 2008 - now handles dir input (read all files in dir)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2008 at 20:15 GMT
+%     Last Updated Oct.  5, 2008 at 20:50 GMT
 
 % todo:
 
@@ -63,6 +65,16 @@ list=[];
 for i=1:length(varargin)
     % get this filelist
     files=dir(varargin{i});
+    
+    % add path if not empty
+    if(~isempty(files))
+        [pathstr,name,ext,versn]=fileparts(varargin{i});
+        if(isdir(varargin{i}))
+            pathstr=fullfile(pathstr,[name ext versn]);
+        end
+        fullfilenames=strcat(pathstr,filesep,{files.name}.');
+        [files.name]=swap(fullfilenames{:});
+    end
     
     % build list
     list=[list; {files(~[files.isdir]).name}.']; %#ok<AGROW>

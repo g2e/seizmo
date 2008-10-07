@@ -49,7 +49,7 @@ function [data]=slidefun(data,fun,nsamples,varargin)
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NCMP
 %
-%    Usage:    data=slidefun(data,fun,nsamples)
+%    Usage:    data=slidefun(data,fun,n)
 %              data=slidefun(...,'position','center'|'trail'|'lead')
 %              data=slidefun(...,'offset',offset)
 %              data=slidefun(...,'edge','truncate'|'pad')
@@ -78,9 +78,13 @@ function [data]=slidefun(data,fun,nsamples,varargin)
 %        Oct.  1, 2008 - big changes: now several options to control the
 %                        window size and position as well as how edge cases
 %                        are handled
+%        Oct.  3, 2008 - fixed bug related to incrementing wrong variable
+%        Oct.  5, 2008 - fixed bug that caused pad not to, fixed bug that
+%                        did not change class to double for the function,
+%                        allow OFFSET option to have value for each record
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  1, 2008 at 21:55 GMT
+%     Last Updated Oct.  5, 2008 at 20:15 GMT
 
 % todo:
 
@@ -103,7 +107,7 @@ if(isscalar(nsamples)); nsamples=nsamples(ones(1,nrecs),1); end
 if(~isnumeric(nsamples) || any(nsamples<1) || numel(nsamples)~=nrecs ...
         || any(fix(nsamples)~=nsamples))
     error('SAClab:slidefun:badInput',...
-        'NSAMPLES must be a scalar/vector of positive integer(s)')
+        'N must be positive integer(s)')
 end
 
 % option defaults
@@ -144,10 +148,13 @@ if(~ischar(option.POSITION) || ...
     error('SAClab:slidefun:badOptionValue',...
         'POSITION option must be ''CENTER'', ''TRAIL'' or ''LEAD''!');
 end
-if(~isscalar(option.OFFSET) || ...
-        option.OFFSET~=fix(option.OFFSET))
+if(isscalar(option.OFFSET))
+    option.OFFSET=option.OFFSET(ones(1,nrecs),1); 
+end
+if(~isnumeric(option.OFFSET) || numel(option.OFFSET)~=nrecs || ...
+        any(option.OFFSET~=fix(option.OFFSET)))
     error('SAClab:slidefun:badOptionValue',...
-        'OFFSET option must be an integer!');
+        'OFFSET option must be integer(s)!');
 end
 if(~ischar(option.EDGE) || ...
         ~any(strcmpi(option.EDGE,{'pad' 'truncate'})))
@@ -163,16 +170,17 @@ for i=1:nrecs
     
     % get storage class of data
     oclass=str2func(class(data(i).dep));
+    data(i).dep=double(data(i).dep);
     
     % build window indices
     switch option.POSITION
         case 'center'
-            hw=(1:nsamples(i))+option.OFFSET;
-            window=[-fliplr(hw) zeros(~logical(option.OFFSET),1) hw];
+            hw=(1:nsamples(i))+option.OFFSET(i);
+            window=[-fliplr(hw) zeros(~logical(option.OFFSET(i)),1) hw];
         case 'trail'
-            window=(1-nsamples(i):0)+option.OFFSET;
+            window=(1-nsamples(i):0)+option.OFFSET(i);
         case 'lead'
-            window=(0:nsamples(i)-1)+option.OFFSET;
+            window=(0:nsamples(i)-1)+option.OFFSET(i);
     end
     
     % testbed (get the size of output)
@@ -185,21 +193,21 @@ for i=1:nrecs
     switch option.EDGE
         case 'pad'
             % pad data and adjust window
-            window=window+abs(min(window));
+            pwindow=window+abs(min(window));
             data(i).dep=[zeros(abs(min(window)),sz(2)); ...
-                        double(data(i).dep); ...
+                        data(i).dep; ...
                         zeros(abs(max(window)),sz(2))];
             % slide function across
             for j=1:sz(1)
-                temp(j,:)=fun(data(i).dep(j+window,:));
+                temp(j,:)=fun(data(i).dep(j+pwindow,:));
             end
         case 'truncate'
             % slide function across
             for j=1:sz(1)
                 % allow only valid indices
-                window=j+window;
-                window=window(window>=1 & window<=sz(1));
-                temp(j,:)=fun(data(i).dep(window,:));
+                jwindow=j+window;
+                tjwindow=jwindow(jwindow>=1 & jwindow<=sz(1));
+                temp(j,:)=fun(data(i).dep(tjwindow,:));
             end
     end
     

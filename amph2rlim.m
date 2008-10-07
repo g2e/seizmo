@@ -12,11 +12,9 @@ function [data]=amph2rlim(data)
 %
 %    System requirements: Matlab 7
 %
-%    Data requirements: Spectral records only.
-%
 %    Header changes: IFTYPE, DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:  data=amph2rlim(data)
+%    Usage:    data=amph2rlim(data)
 %
 %    Examples:
 %     To simply multiply two records in the frequency domain, they must be
@@ -31,16 +29,16 @@ function [data]=amph2rlim(data)
 
 %     Version History:
 %        June 11, 2008 - initial version
-%        June 20, 2008 - minor documentation update
+%        June 20, 2008 - minor doc update
 %        June 28, 2008 - fixed call to ch, removed option,
-%                        documentation update, .dep rather than .x
+%                        doc update, .dep rather than .x
 %        July 19, 2008 - dataless support, updates DEP* fields
+%        Oct.  7, 2008 - minor code cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 19, 2008 at 05:30 GMT
+%     Last Updated Oct.  7, 2008 at 02:05 GMT
 
 % todo:
-% 
 
 % check nargin
 error(nargchk(1,1,nargin))
@@ -55,7 +53,7 @@ iftype=genumdesc(data,'iftype');
 if(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
         & ~strcmpi(iftype,'Spectral File-Ampl/Phase')))
     error('SAClab:amph2rlim:illegalOperation',...
-        'illegal operation on non-spectral record(s)')
+        'Illegal operation on non-spectral record(s)!');
 end
 
 % loop through records

@@ -91,10 +91,10 @@ function [data,failed]=rpdw(data,varargin)
 %    Header changes: B, E, NPTS, DELTA, ODELTA, LEVEN
 %                    DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage: data=rpdw(data,pdw)
-%           data=rpdw(data,pdw,'fill',true|false)
-%           data=rpdw(data,pdw,'fill',true|false,'filler',value)
-%           [data,failed]=rpdw(data,pdw,...'trim',true|false)
+%    Usage:    data=rpdw(data,pdw)
+%              data=rpdw(data,pdw,'fill',true|false)
+%              data=rpdw(data,pdw,'fill',true|false,'filler',value)
+%              [data,failed]=rpdw(data,pdw,...'trim',true|false)
 %
 %    Examples:
 %     ALL THE FOLLOWING EXAMPLES REQUIRE YOU TO 
@@ -137,6 +137,11 @@ function [data,failed]=rpdw(data,varargin)
 %     Last Updated Sep. 28, 2008 at 03:35 GMT
 
 % todo:
+% - dataless & 1pt handling
+%   - don't change leven or delta
+%   - how to read/cut under such conditions
+% - cmp option to subselect components to read
+%   - how to specify individually
 
 % input check
 error(nargchk(1,11,nargin))
@@ -144,26 +149,19 @@ error(nargchk(1,11,nargin))
 % check data structure
 error(seischk(data,'name','endian'))
 
-% parse cut parameters
-[ref1,ref2,offset1,offset2,fill,filler,trim]=cutparam(varargin{:});
-
 % number of records
 nrecs=numel(data);
 
-% expand scalars
-if(numel(offset1)==1); offset1(1:nrecs,1)=offset1; end
-if(numel(offset2)==1); offset2(1:nrecs,1)=offset2; end
-
-% cut parameter checks
-if(numel(offset1)~=nrecs || numel(offset2)~=nrecs)
-    error('SAClab:rpdw:badInputSize',...
-        'Number of elements in OFFSET not correct!')
-end
+% parse cut parameters
+option=cutparam(nrecs,varargin{:});
 
 % header info
-[ncmp,npts,iftype,leven]=get_n_check(data);
-[b,delta,e,depmen,depmin,depmax]=...
-    gh(data,'b','delta','e','depmen','depmin','depmax');
+ncmp=gncmp(data);
+[b,delta,e,depmen,depmin,depmax,npts]=...
+    gh(data,'b','delta','e','depmen','depmin','depmax','npts');
+iftype=genumdesc(data,'iftype');
+leven=glgc(data,'leven');
+error(lgcchk('leven',leven(npts>1)))
 
 % index by spacing
 even=strcmpi(leven,'true');
@@ -181,22 +179,22 @@ est_bytes=seissize(data);
 
 % window start point/value
 bt=[]; bp=[];
-if(strcmpi(ref1,'z'))
-    bt=offset1;
-elseif(strcmpi(ref1,'x'))
-    bp=round(offset1);
+if(strcmpi(option.REF1,'z'))
+    bt=option.OFFSET1;
+elseif(strcmpi(option.REF1,'x'))
+    bp=round(option.OFFSET1);
 else
-    bt=gh(data,ref1)+offset1;
+    bt=gh(data,option.REF1)+option.OFFSET1;
 end
 
 % window stop point/value
 et=[]; ep=[];
-if(strcmpi(ref2,'z'))
-    et=offset2;
-elseif(strcmpi(ref2,'x') || strcmpi(ref2,'n'))
-    ep=round(offset2);
+if(strcmpi(option.REF2,'z'))
+    et=option.OFFSET2;
+elseif(strcmpi(option.REF2,'x') || strcmpi(option.REF2,'n'))
+    ep=round(option.OFFSET2);
 else
-    et=gh(data,ref2)+offset2;
+    et=gh(data,option.REF2)+option.OFFSET2;
 end
 
 % check for nans
@@ -216,8 +214,8 @@ if(any(uneven | undef))
         % cut unevenly sampled datafiles
         uneven=(uneven & ~failed);
         [data(uneven),failed(uneven)]=cutim(data(uneven),...
-            ref1,offset1(uneven),ref2,offset2(uneven),...
-            'fill',fill,'filler',filler,'trim',false);
+            option.REF1,option.OFFSET1(uneven),option.REF2,option.OFFSET2(uneven),...
+            'fill',option.FILL,'filler',option.FILLER,'trim',false);
     end
 end
 
@@ -254,12 +252,12 @@ for i=eveni
     end
     
     % closest points to begin and end
-    if(~strcmpi(ref1,'x'))
+    if(~strcmpi(option.REF1,'x'))
         bp(i)=round((bt(i)-b(i))/delta(i))+1;
     end
-    if(strcmpi(ref2,'n'))
+    if(strcmpi(option.REF2,'n'))
         ep2=bp(i)+ep(i)-1;
-    elseif(strcmpi(ref2,'x'))
+    elseif(strcmpi(option.REF2,'x'))
         ep2=ep(i);
     else
         ep2=round((et(i)-b(i))/delta(i))+1;
@@ -349,11 +347,11 @@ for i=eveni
     if(failed(i)); continue; end
     
     % to fill
-    if(fill)
+    if(option.FILL(i))
         % add filler
-        data(i).dep=[ones(1-bp(i),ncmp(i))*filler; ...
+        data(i).dep=[ones(1-bp(i),ncmp(i))*option.FILLER(i); ...
             data(i).dep; ...
-            ones(ep2-npts(i),ncmp(i))*filler];
+            ones(ep2-npts(i),ncmp(i))*option.FILLER(i)];
         
         % fix header
         b(i)=b(i)+(bp(i)-1)*delta(i);
@@ -383,6 +381,6 @@ data(even)=ch(data(even),'b',b(even),'e',e(even),'delta',delta(even),...
     'depmen',depmen(even),'depmin',depmin(even),'depmax',depmax(even));
 
 % remove failed records
-if(trim); data(failed)=[]; end
+if(option.TRIM); data(failed)=[]; end
 
 end

@@ -20,26 +20,25 @@ add readme (saclab.m) and examples
 	- tutorials
 
 
-0.5.2
+0.5
 -------------------------------------------
 be meaner on spectral files
-	- rmean		
-	- rtrend	
-	- taper		
-	- deci		
-	- stretch	
-	- syncsr	
-	- interpolate	
-	- correlate	
-	- envelope	xxx
-	- hilbert	xxx
-	- fixdelta	
-	- iirfilter	
-	- dif		
-	- integrt	
+	- rmean
+	- rtrend
+	- taper	(big clean needed)	
+	- deci	
+	- stretch
+	- syncsr (big clean needed)
+	- interpolate (big clean needed)
+	+ envelope
+	+ hilbert
+	- fixdelta
+	- iirfilter (big clean needed)
+	- dif (big clean needed)
+	- integrt (big clean needed)
 multi-file functions
 	- correlate (make faster)
-	- convolve (add support in mcxc)
+	- convolve (add support in mcxc then just slight mod of correlate)
 	- merge
 	- rotate
 fix up dif/int
@@ -48,11 +47,35 @@ fix up dif/int
 		- integreat
 structure change
 	- .x,.t => .dep,.ind
-dataless support
+		- tons of files to clean up still
+dataless + 1pt support
+	- clean up bseis, cutim, rpdw
+	+ isdataless
 better help
 	- this seems to force me to fix every function heavily
+	  so they are simpler for explaining
 	- need to figure out the Contents.m system
-
+binfun	- make it happen
+some basic functions for location
+	- vdelaz
+	- vdeadreck
+	- sphdelaz
+	- sphdeadreck
+	- haversine
+some basic functions for time
+	- utc2gps
+	- gps2epoch
+	- epoch2gps
+	- utc2epoch
+	- epoch2utc
+	- look at etime, datenum, datestr, datevec
+start thinking about changes to SEISDEF
+	- .virt
+		- .ch
+		- .gh
+	- .vgrp
+how to handle absolute times input to ch/gh regular fields
+	- if 6 columns => convert
 
 DONE
 ------------

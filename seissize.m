@@ -10,7 +10,7 @@ function [bytes]=seissize(data)
 %
 %    System requirements: Matlab 7
 %
-%    Header changes: N/A
+%    Header changes: NONE
 %
 %    Usage:  bytes=seissize(data)
 %
@@ -27,9 +27,10 @@ function [bytes]=seissize(data)
 %        Sep. 14, 2008 - doc update
 %        Sep. 25, 2008 - GET_N_CHECK adds dataless support
 %        Sep. 26, 2008 - VINFO cleans up/reduces code
+%        Oct.  7, 2008 - drop GET_N_CHECK (keep dataless support)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 26, 2008 at 19:45 GMT
+%     Last Updated Oct.  7, 2008 at 03:45 GMT
 
 % todo:
 
@@ -39,8 +40,12 @@ error(nargchk(1,1,nargin))
 % check data structure
 error(seischk(data))
 
-% pull necessary header info
-[ncmp,npts,iftype,leven]=get_n_check(data);
+% header info
+ncmp=gncmp(data);
+npts=gh(data,'npts');
+iftype=genumdesc(data,'iftype');
+leven=glgc(data,'leven');
+error(lgcchk('leven',leven(npts>1)))
 
 % headers setup
 [h,vi]=vinfo(data);

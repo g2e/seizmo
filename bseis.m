@@ -6,7 +6,7 @@ function [data]=bseis(varargin)
 %     data structure (one record per IND/DEP pair) to be compatible with
 %     SAClab functions.  Independent data must be a vector as multiple
 %     independent components are not currently supported.  If there are
-%     multiple dependent components for a inddependent datum, they should
+%     multiple dependent components for an independent datum, they should
 %     be arranged such that DEP contains each component in separate
 %     columns.
 %
@@ -17,8 +17,6 @@ function [data]=bseis(varargin)
 %     - automatically figures out if data is evenly sampled
 %
 %    System requirements: Matlab 7
-%
-%    Input/Output requirements: numeric arrays
 %
 %    Header changes: 
 %     CREATES HEADER INFO: 
@@ -56,34 +54,53 @@ function [data]=bseis(varargin)
 %        June 30, 2008 - history fix
 %        Sep. 24, 2008 - multi-component support, fixed some behavior bugs,
 %                        global options support (alt. header version)
+%        Oct.  2, 2008 - SACLAB global options cleaned up, fixed uneven
+%                        datafile detection
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 24, 2008 at 19:40 GMT
+%     Last Updated Oct.  2, 2008 at 20:30 GMT
 
 % todo:
-% - make sure dataless & 1point have LEVEN==undef
 
 % check number of inputs
 if (mod(nargin,2)) 
     error('SAClab:bseis:badNargs','Unpaired IND/DEP data!')
 end
 
-% preferred SAClab header version
-pref=6;
+% defaults
+option.PREFHDRVER=6;
+option.ENDIAN=[];
 
-% get preferred header layout
+% get options from SACLAB global
 global SACLAB
-if(isfield(SACLAB,'PREFERREDHEADERVERSION') ...
-        && ~isempty(SACLAB.PREFERREDHEADERVERSION) ...
-        && isscalar(SACLAB.PREFERREDHEADERVERSION) ...
-        && isnumeric(SACLAB.PREFERREDHEADERVERSION) ...
-        && any(vvseis==SACLAB.PREFERREDHEADERVERSION))
-    pref=SACLAB.PREFERREDHEADERVERSION;
+if(isfield(SACLAB,'BSEIS'))
+    if(isfield(SACLAB.BSEIS,'ENDIAN'))
+        if(strcmpi(SACLAB.BSEIS.ENDIAN,{'ieee-le' 'ieee-be'}))
+            option.ENDIAN=lower(SACLAB.BSEIS.ENDIAN);
+        else
+            warning('SAClab:bseis:badOption','ENDIAN incomprehensible!');
+        end
+    end
+    if(isfield(SACLAB.BSEIS,'PREFHDRVER') ...
+        && isscalar(SACLAB.BSEIS.PREFHDRVER) ...
+        && isnumeric(SACLAB.BSEIS.PREFHDRVER) ...
+        && any(vvseis==SACLAB.BSEIS.PREFHDRVER))
+        option.PREFHDRVER=SACLAB.BSEIS.PREFHDRVER;
+    else
+        warning('SAClab:bseis:badOption','PREFHDRVER incomprehensible!');
+    end
 end
-h=seisdef(pref);
+
+% get the version definition
+h=seisdef(option.PREFHDRVER);
+
+% get the native byteorder if needed
+if(isempty(option.ENDIAN))
+    option.ENDIAN=nativeendian;
+end
 
 % undefine numeric header
-undef=zeros(h.size,1,h.store);
+undef=nan(h.size,1,h.store);
 for i=1:length(h.ntype)
     for j=1:length(h.(h.ntype{i}))
         undef(h.(h.ntype{i})(j).minpos:h.(h.ntype{i})(j).maxpos)=h.undef.ntype;
@@ -102,15 +119,9 @@ for i=1:length(h.stype)
     end
 end
 
-% get this platform's native byte-order
-[platform,maxint,endian]=computer;
-clear platform maxint
-if(strcmpi(endian,'L')); endian='ieee-le';
-else endian='ieee-be'; end
-
 % create structure
-data(1:nargin/2,1)=struct('version',pref,'endian',endian,...
-    'name','','head',undef,'dep',[]);
+data(1:nargin/2,1)=struct('version',option.PREFHDRVER,...
+    'endian',option.ENDIAN,'name','','head',undef,'dep',[]);
 
 % loop for each pair
 for i=1:2:nargin
@@ -173,14 +184,14 @@ for i=1:2:nargin
         'iftype','General X vs Y file','leven','true',...
         'lovrok','true','nvhdr',pref,'knetwk','SAClab');
     
-    % handle single point data
+    % handle 1pt data
     if(npts==1)
         data(j)=ch(data(j),'leven',nan);
         continue;
     end
     
     % add proper info to unevenly spaced data
-    if(abs(delta-diff(varargin{i}))>10*eps)
+    if(any(abs(delta-diff(varargin{i}))>10*eps))
         data(j).ind=varargin{i}(:);
         data(j)=ch(data(j),'leven','false',...
             'odelta',data(j).ind(min([2 end]))-data(j).ind(1));

@@ -1,11 +1,11 @@
 function []=wseis(data)
 %WSEIS    Write SAClab data to datafiles
 %
-%    Description: Writes SAClab data to datafiles.  For files that do not 
-%     already exist the 'name' field is used as the output filename.  To 
-%     write files to a specific directory, either add the path to the 
-%     'name' field or browse there using the CD command before using WSEIS.  
-%     Output file byte-order can be set using the 'endian' field.
+%    Description: WSEIS(DATA) writes SAClab data to datafiles.  The 'name' 
+%     field is used as the output filename and the 'endian' field gives the
+%     output file byte-order.  To write files to a specific directory, 
+%     either add the path to the 'name' field or browse there using the CD 
+%     command before using WSEIS.
 %
 %    Notes:
 %     - unnamed data will be given the name SAClab.N.sac where N is the
@@ -43,9 +43,10 @@ function []=wseis(data)
 %        Sep. 26, 2008 - .dep and .ind rather than .x and .t, history fix,
 %                        doc update, NCMP/NPTS/NVHDR checks, error msg
 %                        fixes, dataless support
+%        Oct.  7, 2008 - combined write code for similar filetypes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 26, 2008 at 19:05 GMT
+%     Last Updated Oct.  7, 2008 at 03:00 GMT
 
 % todo:
 
@@ -56,7 +57,11 @@ error(nargchk(1,1,nargin))
 error(seischk(data,'name','endian'))
 
 % header info
-[ncmp,npts,iftype,leven]=get_n_check(data);
+ncmp=gncmp(data);
+npts=gh(data,'npts');
+iftype=genumdesc(data,'iftype');
+leven=glgc(data,'leven');
+error(lgcchk('leven',leven(npts>1)))
 
 % estimated filesize from header
 est_bytes=seissize(data);
@@ -180,37 +185,21 @@ for i=1:length(data)
     
     % act by file type (new filetypes will have to be added here)
     fseek(fid,h(vi(i)).data.startbyte,'bof');
-    if(strcmpi(iftype(i),'Time Series File'))
-        % time series file - amplitude and time
+    if(strcmpi(iftype(i),{'Time Series File' 'General X vs Y file'}))
+        % dependent component(s) of data
         for k=1:ncmp(i)
             fwrite(fid,data(i).dep(:,k),h(vi(i)).data.store);
         end
         
-        % timing of amp data if uneven
+        % independent component of data if uneven
         if(strcmpi(leven(i),'false'))
             fwrite(fid,data(i).ind(:),h(vi(i)).data.store);
         end
-    elseif(strcmpi(iftype(i),'Spectral File-Real/Imag'))
-        % spectral file - real and imaginary
+    elseif(strcmpi(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'}))
+        % spectral file
         for k=1:ncmp(i)
             fwrite(fid,data(i).dep(:,2*k-1),h(vi(i)).data.store);
             fwrite(fid,data(i).dep(:,2*k),h(vi(i)).data.store);
-        end
-    elseif(strcmpi(iftype(i),'Spectral File-Ampl/Phase'))
-        % spectral file - amplitude and phase
-        for k=1:ncmp(i)
-            fwrite(fid,data(i).dep(:,2*k-1),h(vi(i)).data.store);
-            fwrite(fid,data(i).dep(:,2*k),h(vi(i)).data.store);
-        end
-    elseif(strcmpi(iftype(i),'General X vs Y file'))
-        % general x vs y data (x is 'dependent')
-        for k=1:ncmp(i)
-            fwrite(fid,data(i).dep(:,k),h(vi(i)).data.store);
-        end
-        
-        % independent data (if uneven)
-        if(strcmpi(leven(i),'false'))
-            fwrite(fid,data(i).ind(:),h(vi(i)).data.store);
         end
     elseif(strcmpi(iftype(i),'General XYZ (3-D) file'))
         % general xyz (3D) grid - nodes are evenly spaced

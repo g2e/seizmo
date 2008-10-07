@@ -129,7 +129,7 @@ function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 error(nargchk(2,7,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % check filter
 if(~any(strcmpi(style,{'butter' 'cheby1' 'cheby2' 'ellip'})) || ...

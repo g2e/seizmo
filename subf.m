@@ -2,140 +2,173 @@ function [data]=subf(varargin)
 %SUBF    Subtract SAClab data records
 %
 %    Description: SUBF(DATA) will subtract records 2+ from record 1 in DATA
-%     and will return a single record with its header fields set to those 
-%     of the first record.  The header can be set to that of the last 
-%     record by setting option 'newhdr' to TRUE.  Records should be of the 
+%     and will return a single record with its header fields set to those
+%     of the first record.  The header can be set to that of the last
+%     record by setting option 'newhdr' to TRUE.  Records should be of the
 %     same filetype, be evenly sampled, have the same sample rate, number
 %     of points, and timing but these can all be ignored (for better or for
 %     worse) by setting options available in BINOPERR to 'ignore'.
 %     
-%     SUBF(DATA1,DATA2) will subtract the records in DATA2 to DATA1.  If 
+%     SUBF(DATA1,DATA2) will subtract the records in DATA2 to DATA1.  If
 %     either DATA1 or DATA2 are a single record the record will be applied
-%     to every record of the other dataset.  DATA1 and DATA2 must contain 
+%     to every record of the other dataset.  DATA1 and DATA2 must contain
 %     the same number of records otherwise.
 %     
-%     SUBF(DATA1,DATA2,...,DATAN) subtracts records in datasets 2-N from 
-%     those in dataset 1.  Every dataset must have the same number of 
+%     SUBF(DATA1,DATA2,...,DATAN) subtracts records in datasets 2-N from
+%     those in dataset 1.  Every dataset must have the same number of
 %     records.  The exception to this rule is single record datasets, which
 %     are replicated to match the size of the rest of the datasets.
 %     
-%     SUBF(...,'newhdr',true) controls the inheritance of header fields and 
-%     will set the resultant records' header fields to those of the last 
-%     record to be subtracted.  So 
+%     SUBF(...,'newhdr',true) controls the inheritance of header fields and
+%     will set the resultant records' header fields to those of the last
+%     record to be subtracted.  So
 %                    SUBF(DATA1,DATA2,'newhdr',true)
 %     will produce records with header fields set to those in DATA2.  By
 %     default 'newhdr' is set to FALSE which sets the resultant records'
 %     header fields to those in DATA1.  If subtracting all records in a
-%     single dataset, setting 'newhdr' to TRUE will set the resultant 
-%     record's header equal to the last record's header.  Leaving 
-%     'newhdr' set to the default FALSE will set the resultant record's 
+%     single dataset, setting 'newhdr' to TRUE will set the resultant
+%     record's header equal to the last record's header.  Leaving
+%     'newhdr' set to the default FALSE will set the resultant record's
 %     header to that of the first record's header.
-%
+%     
 %     The following options may also be controlled by BINOPERR.
 %     
 %     SUBF(...,'npts','error|warn|ignore') sets the behavior of how SUBF
 %     handles subtracting records with different numbers of points.  If the
 %     option is set to 'warn' or 'ignore', the number of points in the
-%     resultant records will be equal to that of the shortest record.  
-%     Note that points are subtracted according to their order in the 
-%     record not by their timing, such that the first points are always 
-%     subtracted from one another and so on.  By default 'npts' is set to 
+%     resultant records will be equal to that of the shortest record.
+%     Note that points are subtracted according to their order in the
+%     record not by their timing, such that the first points are always
+%     subtracted from one another and so on.  By default 'npts' is set to
 %     'error'.
 %     
 %     SUBF(...,'delta','error|warn|ignore') sets the behavior of how SUBF
-%     handles subtracting records with different sample rates.  If the 
-%     option is set to 'warn' or 'ignore', the records are just subtracted 
-%     point for point (basically ignoring timing).  The resultant records' 
+%     handles subtracting records with different sample rates.  If the
+%     option is set to 'warn' or 'ignore', the records are just subtracted
+%     point for point (basically ignoring timing).  The resultant records'
 %     sample rates are determined by the parent of their header fields (set
 %     by option 'newhdr').  By default 'delta' is set to 'error'.
 %     
 %     SUBF(...,'begin','error|warn|ignore') sets the behavior of how SUBF
-%     handles subtracting records with different begin times.  If the 
-%     option is set to 'warn' or 'ignore', the resultant records' begin 
-%     times are determined by the parent of their header fields (set by 
+%     handles subtracting records with different begin times.  If the
+%     option is set to 'warn' or 'ignore', the resultant records' begin
+%     times are determined by the parent of their header fields (set by
 %     option 'newhdr').  By default 'begin' is set to 'warn'.
 %     
 %     SUBF(...,'ref','error|warn|ignore') sets the behavior of how SUBF
-%     handles subtracting records with different reference times.  If the 
+%     handles subtracting records with different reference times.  If the
 %     option is set to 'warn' or 'ignore', the resultant records' reference
-%     times are determined by the parent of their header fields (set by 
+%     times are determined by the parent of their header fields (set by
 %     option 'newhdr').  By default 'ref' is set to 'warn'.
 %     
 %     SUBF(...,'ncmp','error|warn|ignore') sets the behavior of how SUBF
 %     handles subtracting records with different numbers of components.  If
 %     the option is set to 'warn' or 'ignore', the number of components in
-%     the resultant records will be equal to that of the record with the 
+%     the resultant records will be equal to that of the record with the
 %     least.  Note that components are operated on according to their order
-%     in the record so that the first components always divide and so 
+%     in the record so that the first components always divide and so
 %     on.  By default 'ncmp' is set to 'error'.
 %     
 %     SUBF(...,'leven','error|warn|ignore') sets the behavior of how SUBF
 %     handles subtracting unevenly sampled records.  If the option is set
-%     to 'warn' or 'ignore', the records are just subtracted point for 
-%     point (basically ignoring timing).  The resultant records' leven 
-%     fields are determined by the parent of their header fields (set by 
+%     to 'warn' or 'ignore', the records are just subtracted point for
+%     point (basically ignoring timing).  The resultant records' leven
+%     fields are determined by the parent of their header fields (set by
 %     option 'newhdr').  By default 'leven' is set to 'error'.
 %     
 %     SUBF(...,'iftype','error|warn|ignore') sets the behavior of how SUBF
 %     handles subtracting records of different types.  If the option is set
-%     to 'warn' or 'ignore', the records are just subtracted point for 
-%     point.  The resultant records' iftypes are determined by the parent 
+%     to 'warn' or 'ignore', the records are just subtracted point for
+%     point.  The resultant records' iftypes are determined by the parent
 %     of their header fields (set by option 'newhdr').  By default 'iftype'
 %     is set to 'error'.
 %     
 %    Notes:
-%
+%     - Ampl-Phase spectral records are first converted to Real-Imag to
+%       assure the operation is linear and equal to that on Real-Imag
+%       records.  If you want to workaround this, convert the Ampl-Phase
+%       records to General X vs Y.
+%     
 %    System requirements: Matlab 7
-%
-%    Data requirements: Records to be subtracted should match in NPTS, 
-%     DELTA, B, IFTYPE, number of components and reference time.  These can
-%     be ignored by setting options with BINOPERR or inline options.
-%
+%     
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
 %     NPTS, E, NCMP (see option 'npts' and 'ncmp')
 %     See option 'newhdr' for inheritance of other header fields.
-%    
+%     
 %    Usage: [data]=subf(data)
 %           [data]=subf(data1,data2)
 %           [data]=subf(data1,data2,...,dataN)
-%           [data]=subf(...,'newhdr',true)
-%           [data]=subf(...,'npts','error|warn|ignore')
-%           [data]=subf(...,'delta','error|warn|ignore')
-%           [data]=subf(...,'begin','error|warn|ignore')
-%           [data]=subf(...,'ref','error|warn|ignore')
-%           [data]=subf(...,'ncmp','error|warn|ignore')
-%           [data]=subf(...,'leven','error|warn|ignore')
-%           [data]=subf(...,'iftype','error|warn|ignore')
-%
+%           [data]=subf(...,'newhdr',true|false)
+%           [data]=subf(...,'npts','error'|'warn'|'ignore')
+%           [data]=subf(...,'delta','error'|'warn'|'ignore')
+%           [data]=subf(...,'begin','error'|'warn'|'ignore')
+%           [data]=subf(...,'ref','error'|'warn'|'ignore')
+%           [data]=subf(...,'ncmp','error'|'warn'|'ignore')
+%           [data]=subf(...,'leven','error'|'warn'|'ignore')
+%           [data]=subf(...,'iftype','error'|'warn'|'ignore')
+%     
 %    Examples:
-%
+%     Check if two records are exactly the same:
+%      p1(subf(data(1:2)))
+%     
 %    See also: addf, mulf, divf, binoperr
+%    Data requirements: Records to be subtracted should match in NPTS, 
+%     DELTA, B, IFTYPE, number of components and reference time.  These can
+%     be ignored by setting options with BINOPERR or inline options.
 
 %     Version History:
-%        June 10, 2008 - Initial Version
-%        June 11, 2008 - Full filetype and class support
-%        June 20, 2008 - Documentation tidy, 'ncmp' option
+%        June 10, 2008 - initial version
+%        June 11, 2008 - full filetype and class support
+%        June 20, 2008 - doc update, 'ncmp' option
+%        Oct.  6, 2008 - doc update, code clean, more checks, added example
+%                        fixed amph2rlim handling, .dep and .ind rather 
+%                        than .x and .t
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 20, 2008 at 01:30 GMT
+%     Last Updated Oct.  6, 2008 at 23:55 GMT
 
 % default options
 option.NEWHDR=false;
-option.NPTS='error';
-option.DELTA='error';
-option.BEGIN='warn';
-option.REF='warn';
-option.NCMP='error';
-option.LEVEN='error';
-option.IFTYPE='error';
+option.NPTS='ERROR';
+option.DELTA='ERROR';
+option.BEGIN='WARN';
+option.REF='WARN';
+option.NCMP='ERROR';
+option.LEVEN='ERROR';
+option.IFTYPE='ERROR';
+
+% available states
+states={'ERROR' 'WARN' 'IGNORE'};
 
 % get options set by BINOPERR (SACLAB global)
 global SACLAB; fields=fieldnames(option).';
-for i=fields; if(isfield(SACLAB,i)); option.(i{:})=SACLAB.(i{:}); end; end
+if(isfield(SACLAB,'BINOPERR'))
+    for i=fields
+        if(isfield(SACLAB.BINOPERR,i{:}))
+            if(strcmpi('NEWHDR',i{:}))
+                try
+                    option.(i{:})=logical(SACLAB.BINOPERR.(i{:})(1));
+                catch
+                    warning('SAClab:subf:badState',...
+                        '%s in unknown state => changing to default!',i{:});
+                    SACLAB.BINOPERR.(i{:})=option.(i{:});
+                end
+            else
+                if(~any(strcmpi(SACLAB.BINOPERR.(i{:}),states)))
+                    warning('SAClab:subf:badState',...
+                        '%s in unknown state => changing to default!',i{:});
+                    SACLAB.BINOPERR.(i{:})=option.(i{:});
+                else
+                    option.(i{:})=upper(SACLAB.BINOPERR.(i{:}));
+                end
+            end
+        end
+    end
+end
 
 % find all datasets in inline arguments
 isdata=false(1,nargin);
-for i=1:nargin; isdata(i)=isseis(varargin{i},'x'); end
+for i=1:nargin; isdata(i)=isseis(varargin{i},'dep'); end
 
 % push datasets into a separate variable
 data=varargin(isdata);
@@ -144,17 +177,30 @@ varargin(isdata)=[];
 % options must be field-value pairs
 nargopt=length(varargin);
 if(mod(nargopt,2))
-    error('SAClab:subf:badNumOptions','Unpaired option!')
+    error('SAClab:subf:badNumOptions','Unpaired option(s)!');
 end
 
 % get inline options
 for i=1:2:nargopt
-    % plotting parameter field
     varargin{i}=upper(varargin{i});
     if(isfield(option,varargin{i}))
-        option.(varargin{i})=varargin{i+1};
+        if(strcmpi('NEWHDR',varargin{i}))
+            try
+                option.(varargin{i})=logical(varargin{i+1}(1));
+            catch
+                warning('SAClab:subf:badState',...
+                    '%s state bad => leaving alone!',varargin{i});
+            end
+        else
+            if(~any(strcmpi(varargin{i+1},states)))
+                warning('SAClab:subf:badState',...
+                    '%s state bad => leaving alone!',varargin{i});
+            else
+                option.(varargin{i})=upper(varargin{i+1});
+            end
+        end
     else
-        warning('SAClab:subf:badInput','Unknown Option: %s',varargin{i}); 
+        warning('SAClab:subf:badInput','Unknown Option: %s !',varargin{i}); 
     end
 end
 
@@ -168,7 +214,8 @@ end
 % check for bad sized datasets
 maxrecs=max(nrecs);
 if(any(nrecs~=1 & nrecs~=maxrecs))
-    error('SAClab:subf:nrecsMismatch','Number of records inconsistent')
+    error('SAClab:subf:nrecsMismatch',...
+        'Number of records in datasets inconsistent')
 end
 
 % expand scalar datasets
@@ -177,8 +224,8 @@ for i=find(nrecs==1)
 end
 
 % get header fields
-b=cell(1,ndatasets); npts=b; delta=b; leven=b; iftype=b; ncmp=b;
-nzyear=b; nzjday=b; nzhour=b; nzmin=b; nzsec=b; nzmsec=b;
+b(1:ndatasets)={nan(maxrecs,1)}; npts=b; delta=b; leven=b; iftype=b; ncmp=b;
+nzyear=b; nzjday=b; nzhour=b; nzmin=b; nzsec=b; nzmsec=b; nnpts=b;
 for i=1:ndatasets
     leven{i}=glgc(data{i},'leven');
     iftype{i}=genumdesc(data{i},'iftype');
@@ -187,7 +234,13 @@ for i=1:ndatasets
         gh(data{i},'npts','delta','b',...
         'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
     ncmp{i}=zeros(maxrecs,1);
-    for j=1:maxrecs; ncmp{i}(j)=size(data{i}(j).x,2); end
+    for j=1:maxrecs
+        [nnpts{i}(j),ncmp{i}(j)]=size(data{i}(j).dep);
+    end
+    if(~isequal(nnpts{i},npts{i}))
+        error('SAClab:addf:nptsBad',...
+            'NPTS in header does not match data for dataset %d',i);
+    end
 end
 
 % 2+ datasets
@@ -195,7 +248,7 @@ if(ndatasets>1)
     % check records
     if(~isequal(iftype{:}))
         report.identifier='SAClab:subf:mixedIFTYPE';
-        report.message='Filetypes differ for some records';
+        report.message='Filetypes differ for some records!';
         if(strcmpi(option.IFTYPE,'error')); error(report);
         elseif(strcmpi(option.IFTYPE,'warn')); warning(report.identifier,report.message);
         end
@@ -203,7 +256,7 @@ if(ndatasets>1)
     for i=1:ndatasets
         if(any(~strcmpi(leven{i},'true')))
             report.identifier='SAClab:subf:illegalOperation';
-            report.message='illegal operation on unevenly spaced record';
+            report.message='illegal operation on unevenly spaced record!';
             if(strcmpi(option.LEVEN,'error')); error(report);
             elseif(strcmpi(option.LEVEN,'warn')); warning(report.identifier,report.message);
             end
@@ -211,28 +264,28 @@ if(ndatasets>1)
     end
     if(~isequal(ncmp{:}))
         report.identifier='SAClab:subf:mixedNCMP';
-        report.message='Number of components differ for some records';
+        report.message='Number of components differ for some records!';
         if(strcmpi(option.NCMP,'error')); error(report);
         elseif(strcmpi(option.NCMP,'warn')); warning(report.identifier,report.message);
         end
     end
     if(~isequal(npts{:}))
         report.identifier='SAClab:subf:mixedNPTS';
-        report.message='Number of points differ for some records';
+        report.message='Number of points differ for some records!';
         if(strcmpi(option.NPTS,'error')); error(report);
         elseif(strcmpi(option.NPTS,'warn')); warning(report.identifier,report.message);
         end
     end
     if(~isequal(delta{:}))
         report.identifier='SAClab:subf:mixedDELTA';
-        report.message='Sample rates differ for some records';
+        report.message='Sample rates differ for some records!';
         if(strcmpi(option.DELTA,'error')); error(report);
         elseif(strcmpi(option.DELTA,'warn')); warning(report.identifier,report.message);
         end
     end
     if(~isequal(b{:}))
         report.identifier='SAClab:subf:mixedB';
-        report.message='Begin times differ for some records';
+        report.message='Begin times differ for some records!';
         if(strcmpi(option.BEGIN,'error')); error(report);
         elseif(strcmpi(option.BEGIN,'warn')); warning(report.identifier,report.message);
         end
@@ -241,7 +294,7 @@ if(ndatasets>1)
             || ~isequal(nzhour{:}) || ~isequal(nzmin{:}) ...
             || ~isequal(nzsec{:})  || ~isequal(nzmsec{:}))
         report.identifier='SAClab:subf:mixedReferenceTimes';
-        report.message='Reference times differ for some records';
+        report.message='Reference times differ for some records!';
         if(strcmpi(option.REF,'error')); error(report);
         elseif(strcmpi(option.REF,'warn')); warning(report.identifier,report.message);
         end
@@ -250,29 +303,24 @@ if(ndatasets>1)
     % save class and convert to double precision
     oclass=cell(1,maxrecs);
     if(option.NEWHDR)
-        for i=1:maxrecs; oclass{i}=str2func(class(data{end}(i).x)); end
+        for i=1:maxrecs; oclass{i}=str2func(class(data{end}(i).dep)); end
     else
-        for i=1:maxrecs; oclass{i}=str2func(class(data{1}(i).x)); end
+        for i=1:maxrecs; oclass{i}=str2func(class(data{1}(i).dep)); end
     end
     for i=1:ndatasets
-        for j=1:maxrecs; data{i}(j).x=double(data{i}(j).x); end
+        for j=1:maxrecs; data{i}(j).dep=double(data{i}(j).dep); end
     end
     
     % convert amplitude-phase files to real-imaginary so that operations
     % are consistent. amph2rlim must be done here (before newhdr mult/div)
     if(option.NEWHDR)
         convertback=strcmpi(iftype{end},'Spectral File-Ampl/Phase');
-        convert=convertback | ...
-            strcmpi(iftype{end},'Spectral File-Real/Imag');
     else
         convertback=strcmpi(iftype{1},'Spectral File-Ampl/Phase');
-        convert=convertback | strcmpi(iftype{1},'Spectral File-Real/Imag');
     end
-    if(any(convert))
-        for i=1:ndatasets
-            data{i}(convert)=amph2rlim(data{i}(convert),...
-                'ignore_preconverted',true);
-        end
+    for i=1:ndatasets
+        convert=strcmpi(iftype{i},'Spectral File-Ampl/Phase');
+        if(any(convert)); data{i}(convert)=amph2rlim(data{i}(convert)); end
     end
     
     % newhdr flag (swap first and last dataset and multiply by -1)
@@ -291,21 +339,21 @@ if(ndatasets>1)
     % subtract records
     for i=1:maxrecs
         for j=2:ndatasets
-            data{1}(i).x=...
-                data{1}(i).x(1:minpts(i),1:mincmp(i))...
-                -data{j}(i).x(1:minpts(i),1:mincmp(i));
+            data{1}(i).dep=...
+                data{1}(i).dep(1:minpts(i),1:mincmp(i))...
+                -data{j}(i).dep(1:minpts(i),1:mincmp(i));
         end
         
-        % trim t field for unevenly spaced files
-        if(isfield(data{1}(i),'t') && ~isempty(data{1}(i).t))
-            data{1}(i).t=data{1}(i).t(1:minpts);
+        % trim ind field for unevenly spaced files
+        if(isfield(data{1}(i),'ind') && ~isempty(data{1}(i).ind))
+            data{1}(i).ind=data{1}(i).ind(1:minpts);
         end
         
         % change class back
-        data{1}(i).x=oclass{i}(data{1}(i).x);
+        data{1}(i).dep=oclass{i}(data{1}(i).dep);
     end
     
-    % updata header
+    % update header
     data=chkhdr(data{1});
     
     % convert back to amph if necessary
@@ -323,42 +371,42 @@ else
     % check records
     if(~isscalar(unique(iftype{:})))
         report.identifier='SAClab:subf:mixedIFTYPE';
-        report.message='Filetypes differ for some records';
+        report.message='Filetypes differ for some records!';
         if(strcmpi(option.IFTYPE,'error')); error(report);
         elseif(strcmpi(option.IFTYPE,'warn')); warning(report.identifier,report.message);
         end
     end
     if(any(~strcmpi(leven{:},'true')))
         report.identifier='SAClab:subf:illegalOperation';
-        report.message='illegal operation on unevenly spaced record';
+        report.message='illegal operation on unevenly spaced record!';
         if(strcmpi(option.LEVEN,'error')); error(report);
         elseif(strcmpi(option.LEVEN,'warn')); warning(report.identifier,report.message);
         end
     end
     if(~isscalar(unique(ncmp{:})))
         report.identifier='SAClab:subf:mixedNCMP';
-        report.message='Number of components differ for some records';
+        report.message='Number of components differ for some records!';
         if(strcmpi(option.NCMP,'error')); error(report);
         elseif(strcmpi(option.NCMP,'warn')); warning(report.identifier,report.message);
         end
     end
     if(~isscalar(unique(npts{:})))
         report.identifier='SAClab:subf:mixedNPTS';
-        report.message='Number of points differ for some records';
+        report.message='Number of points differ for some records!';
         if(strcmpi(option.NPTS,'error')); error(report);
         elseif(strcmpi(option.NPTS,'warn')); warning(report.identifier,report.message);
         end
     end
     if(~isscalar(unique(delta{:})))
         report.identifier='SAClab:subf:mixedDELTA';
-        report.message='Sample rates differ for some records';
+        report.message='Sample rates differ for some records!';
         if(strcmpi(option.DELTA,'error')); error(report);
         elseif(strcmpi(option.DELTA,'warn')); warning(report.identifier,report.message);
         end
     end
     if(~isscalar(unique(b{:})))
         report.identifier='SAClab:subf:mixedB';
-        report.message='Begin times differ for some records';
+        report.message='Begin times differ for some records!';
         if(strcmpi(option.BEGIN,'error')); error(report);
         elseif(strcmpi(option.BEGIN,'warn')); warning(report.identifier,report.message);
         end
@@ -367,30 +415,27 @@ else
             ~isscalar(unique(nzhour{:})) || ~isscalar(unique(nzmin{:})) ...
             || ~isscalar(unique(nzsec{:})) || ~isscalar(unique(nzmsec{:})))
         report.identifier='SAClab:subf:mixedReferenceTimes';
-        report.message='Reference times differ for some records';
+        report.message='Reference times differ for some records!';
         if(strcmpi(option.REF,'error')); error(report);
         elseif(strcmpi(option.REF,'warn')); warning(report.identifier,report.message);
         end
     end
     
     % save class and convert to double precision
-    if(option.NEWHDR); oclass=str2func(class(data(end).x)); 
-    else oclass=str2func(class(data(1).x));
+    if(option.NEWHDR); oclass=str2func(class(data(end).dep)); 
+    else oclass=str2func(class(data(1).dep));
     end
-    for i=1:nrecs; data(i).x=double(data(i).x); end
+    for i=1:nrecs; data(i).dep=double(data(i).dep); end
     
     % convert amplitude-phase files to real-imaginary so that operations
     % are consistent. amph2rlim must be done here (before newhdr mult/div)
     if(option.NEWHDR)
         convertback=strcmpi(iftype{:}(end),'Spectral File-Ampl/Phase');
-        convert=convertback | ...
-            strcmpi(iftype{:}(end),'Spectral File-Real/Imag');
     else
         convertback=strcmpi(iftype{:}(1),'Spectral File-Ampl/Phase');
-        convert=convertback | ...
-            strcmpi(iftype{:}(1),'Spectral File-Real/Imag');
     end
-    if(convert); data=amph2rlim(data,'ignore_preconverted',true); end
+    convert=strcmpi(iftype{:},'Spectral File-Ampl/Phase');
+    if(any(convert)); data(convert)=amph2rlim(data(convert)); end
     
     % newhdr flag (swap first and last record and multiply by -1)
     if(option.NEWHDR); data([end 1])=mul(data([1 end]),-1); end
@@ -399,20 +444,20 @@ else
     minpts=min(npts{:});
     mincmp=min(ncmp{:});
     for i=2:nrecs
-        data(1).x=data(1).x(1:minpts,1:mincmp)...
-                 -data(i).x(1:minpts,1:mincmp);
+        data(1).dep=data(1).dep(1:minpts,1:mincmp)...
+                 -data(i).dep(1:minpts,1:mincmp);
     end
     
     % reduce to first record
     data=data(1);
     
-    % trim t field for unevenly spaced files
-    if(isfield(data,'t') && ~isempty(data.t))
-        data.t=data.t(1:minpts);
+    % trim ind field for unevenly spaced files
+    if(isfield(data,'ind') && ~isempty(data.ind))
+        data.ind=data.ind(1:minpts);
     end
     
     % change class back
-    data.x=oclass(data.x);
+    data.dep=oclass(data.dep);
     
     % update header
     data=chkhdr(data);
