@@ -105,12 +105,7 @@ iftype=genumdesc(data,'iftype');
     'b','delta','npts','gcarc');
 
 % header structures (for determining if undefined)
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=seisdef(vers(nver));
-for i=1:nver-1
-    h(i)=seisdef(vers(i));
-end
+[h,idx]=vinfo(data);
 
 % default columns/rows
 if(isempty(P.NCOLS))
@@ -132,7 +127,7 @@ end
 sfh=zeros(nrecs,1);
 for i=1:nrecs
     % header version
-    v=(data(i).version==vers);
+    v=idx(i);
     
     % check if timeseries or xy (if not skip)
     if(~any(strcmp(iftype(i),{'Time Series File' ...

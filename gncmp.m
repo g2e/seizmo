@@ -32,7 +32,7 @@ function [ncmp]=gncmp(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'name','endian'))
+error(seischk(data))
 
 % get ncmp via GH, avoiding warnings
 warning('off','SAClab:gh:fieldInvalid')

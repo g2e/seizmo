@@ -38,9 +38,10 @@ function [varargout]=glgc(data,varargin)
 %        June 12, 2008 - doc update
 %        June 13, 2008 - sorted out undefined and unknown values/fields
 %        Sep. 28, 2008 - output cleanup
+%        Oct. 17, 2008 - added VINFO support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 20:15 GMT
+%     Last Updated Oct. 17, 2008 at 02:45 GMT
 
 % todo:
 % - history fix
@@ -63,35 +64,32 @@ varargout=nvarargout;
 [nvarargout{:}]=gh(data,varargin{:});
 
 % loop over versions
-v=[data.version];
-for i=unique(v)
-    % grab header setup
-    h=seisdef(i);
-    
+[h,idx]=vinfo(data);
+for i=1:numel(h)
     % indexing of data with this header version
-    ind=find(v==i);
+    ind=find(idx==i);
     
     % loop over fields
     for j=1:length(varargin)
-        if(any(nvarargout{j}(ind)==h.true))
-            varargout{j}(ind(nvarargout{j}(ind)==h.true))={'true'};
+        if(any(nvarargout{j}(ind)==h(i).true))
+            varargout{j}(ind(nvarargout{j}(ind)==h(i).true))={'true'};
         end
-        if(any(nvarargout{j}(ind)==h.false))
-            varargout{j}(ind(nvarargout{j}(ind)==h.false))={'false'};
+        if(any(nvarargout{j}(ind)==h(i).false))
+            varargout{j}(ind(nvarargout{j}(ind)==h(i).false))={'false'};
         end
-        if(any(nvarargout{j}(ind)==h.undef.ntype))
-            varargout{j}(ind(nvarargout{j}(ind)==h.undef.ntype))={'undefined'};
+        if(any(nvarargout{j}(ind)==h(i).undef.ntype))
+            varargout{j}(ind(nvarargout{j}(ind)==h(i).undef.ntype))={'undefined'};
         end
         if(any(isnan(nvarargout{j}(ind))))
             varargout{j}(ind(isnan(nvarargout{j}(ind))))={'Unknown Logic Field'};
         end
-        if(any(nvarargout{j}(ind)~=h.true ...
-            & nvarargout{j}(ind)~=h.false ...
-            & nvarargout{j}(ind)~=h.undef.ntype ...
+        if(any(nvarargout{j}(ind)~=h(i).true ...
+            & nvarargout{j}(ind)~=h(i).false ...
+            & nvarargout{j}(ind)~=h(i).undef.ntype ...
             & ~isnan(nvarargout{j}(ind))))
-            [varargout{j}{ind(nvarargout{j}(ind)~=h.true ...
-                & nvarargout{j}(ind)~=h.false ...
-                & nvarargout{j}(ind)~=h.undef.ntype ...
+            [varargout{j}{ind(nvarargout{j}(ind)~=h(i).true ...
+                & nvarargout{j}(ind)~=h(i).false ...
+                & nvarargout{j}(ind)~=h(i).undef.ntype ...
                 & ~isnan(nvarargout{j}(ind)))}]=deal('unknown');
         end
     end

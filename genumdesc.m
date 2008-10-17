@@ -37,9 +37,10 @@ function [varargout]=genumdesc(data,varargin)
 %        ????????????? - Initial Version
 %        June 13, 2008 - Documentation update, compat fixes, better
 %                        support for undefined and unknown values/fields
+%        Oct. 17, 2008 - added VINFO support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 13, 2008 at 20:15 GMT
+%     Last Updated Oct. 17, 2008 at 02:45 GMT
 
 % require at least two inputs
 if(nargin<2)
@@ -57,13 +58,10 @@ varargout=nvarargout;
 [nvarargout{:}]=gh(data,varargin{:});
 
 % loop over versions
-v=[data.version];
-for i=unique(v)
-    % grab header setup
-    h=seisdef(i);
-    
+[h,idx]=vinfo(data);
+for i=1:numel(h)
     % indexing of data with this header version
-    ind=find(v==i);
+    ind=find(idx==i);
     
     % loop over fields
     for j=1:length(varargin)
@@ -74,14 +72,14 @@ for i=unique(v)
         end
         
         % undefined enum value
-        undef=nvarargout{j}(ind)==h.undef.ntype;
+        undef=nvarargout{j}(ind)==h(i).undef.ntype;
         if(any(undef))
             varargout{j}(ind(undef))={'Undefined Enum Field'};
         end
         
         % unknown enum value if outside enumerator list
-        unknown=(~nan & ~undef & (nvarargout{j}(ind)<h.enum(1).minval ...
-                | nvarargout{j}(ind)>h.enum(1).maxval ...
+        unknown=(~nan & ~undef & (nvarargout{j}(ind)<h(i).enum(1).minval...
+                | nvarargout{j}(ind)>h(i).enum(1).maxval ...
                 | round(nvarargout{j}(ind))~=nvarargout{j}(ind)));
         if(any(unknown))
             varargout{j}(ind(unknown))={'Unknown Enum Value'};
@@ -91,7 +89,7 @@ for i=unique(v)
         good=~nan & ~undef & ~unknown;
         if(any(good))
             varargout{j}(ind(good))=...
-                h.enum(1).desc(nvarargout{j}(ind(good))+1);
+                h(i).enum(1).desc(nvarargout{j}(ind(good))+1);
         end
     end
 end

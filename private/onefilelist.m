@@ -13,10 +13,7 @@ function [list]=onefilelist(varargin)
 %
 %    System requirements: Matlab 7
 %
-%    Input/Output requirements: arguments must be character arrays or cell 
-%     string arrays
-%
-%    Header changes: N/A
+%    Header changes: NONE
 %
 %    Usage: list=onefilelist(list1,...,listN)
 %
@@ -31,10 +28,13 @@ function [list]=onefilelist(varargin)
 %        Apr. 23, 2008 - now expands wildcards using DIR
 %        Sep. 14, 2008 - doc update, input checks
 %        Oct.  3, 2008 - fix paths being dropped
-%        Oct.  5, 2008 - now handles dir input (read all files in dir)
+%        Oct.  5, 2008 - now handles directory entries in input filelist 
+%                        without breaking (reads all files in directory)
+%        Oct. 13, 2008 - skip directory entries in input filelist
+%        Oct. 16, 2008 - fix files in current directory bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2008 at 20:50 GMT
+%     Last Updated Oct. 16, 2008 at 23:55 GMT
 
 % todo:
 
@@ -63,17 +63,20 @@ varargin=[varargin{:}].';
 % pump each cell through dir
 list=[];
 for i=1:length(varargin)
+    % skip directories (so dir doesn't expand it)
+    if(isdir(varargin{i})); continue; end
+    
     % get this filelist
     files=dir(varargin{i});
     
-    % add path if not empty
+    % add path if not empty list
     if(~isempty(files))
-        [pathstr,name,ext,versn]=fileparts(varargin{i});
-        if(isdir(varargin{i}))
-            pathstr=fullfile(pathstr,[name ext versn]);
+        pathstr=fileparts(varargin{i});
+        % only add path if there is one
+        if(~isempty(pathstr))
+            fullfilenames=strcat(pathstr,filesep,{files.name}.');
+            [files.name]=swap(fullfilenames{:});
         end
-        fullfilenames=strcat(pathstr,filesep,{files.name}.');
-        [files.name]=swap(fullfilenames{:});
     end
     
     % build list

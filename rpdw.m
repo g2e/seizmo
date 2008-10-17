@@ -137,7 +137,7 @@ function [data,failed]=rpdw(data,varargin)
 %     Last Updated Sep. 28, 2008 at 03:35 GMT
 
 % todo:
-% - dataless & 1pt handling
+% - dataless, 0pt & 1pt handling
 %   - don't change leven or delta
 %   - how to read/cut under such conditions
 % - cmp option to subselect components to read
@@ -147,13 +147,13 @@ function [data,failed]=rpdw(data,varargin)
 error(nargchk(1,11,nargin))
 
 % check data structure
-error(seischk(data,'name','endian'))
+error(seischk(data))
 
 % number of records
 nrecs=numel(data);
 
 % parse cut parameters
-option=cutparam(nrecs,varargin{:});
+option=cutparameters(nrecs,varargin{:});
 
 % header info
 ncmp=gncmp(data);

@@ -1,29 +1,34 @@
-function [h,vi,v,uv,nv]=vinfo(data)
+function [h,idx]=vinfo(data)
 %VINFO    Returns version info for SAClab data records
 %
-%    Description: VINFO(DATA) returns an abundance of version related info
-%     pertaining to the records in the SAClab structure DATA.  This is an
-%     internal function to reduce rampant code repetition.
+%    Description: [H,IDX]=VINFO(DATA) returns all necessary version
+%     definitions pertaining to the records in the SAClab structure DATA in
+%     the struct array H.  IDX has one entry per record in DATA that
+%     gives the index in H that corresponds to that record's version
+%     definition. This is an internal function to reduce rampant code
+%     repetition.
 %
 %    Notes:
 %
 %    System requirements: Matlab 7
 %
-%    Header changes: N/A
+%    Header changes: NONE
 %
-%    Usage:    [h,vi,v,uv,nv]=vinfo(data)
+%    Usage:    [h,idx]=vinfo(data)
 %
 %    Examples:
-%     NONE
 %
 %    See also: seisdef
 
 %     Version History:
 %        Sep. 25, 2008 - initial version
 %        Sep. 26, 2008 - check internal header version
+%        Oct. 16, 2008 - removed header version consistency check
+%        Oct. 17, 2008 - filetype support, removed several pointless
+%                        outputs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 26, 2008 at 19:45 GMT
+%     Last Updated Oct. 17, 2008 at 01:45 GMT
 
 % todo:
 
@@ -33,26 +38,30 @@ error(nargchk(1,1,nargin))
 % check data structure
 error(seischk(data))
 
+% get filetypes
+ft={data.filetype}.';
+uft=unique(ft);
+nft=numel(uft);
+
 % get versions
 v=[data.version].';
-uv=unique(v);
-nv=length(uv);
 
-% check versions
-if(~isequal(v,gh(data,'nvhdr')))
-    error('SAClab:vinfo:verMismatch',...
-        ['Version info is corrupted!\n'...
-         'One or more records have inconsistent version info!\n'...
-         'Check the output of [data.version].'' and gh(data,''nvhdr'').']);
-end
-
-% grab definitions
-vi=nan(size(v));
-h(nv)=seisdef(uv(nv));
-vi(v==uv(nv))=nv;
-for i=1:nv-1
-    h(i)=seisdef(uv(i));
-    vi(v==uv(i))=i;
+% loop through each filetype
+count=0; idx=nan(size(data));
+for i=1:nft
+    % who has this filetype
+    ift=strcmpi(uft{i},ft);
+    
+    % get local versions
+    uv=unique(v(ift));
+    nv=numel(uv);
+    
+    % grab definitions
+    for j=1:nv
+        count=count+1;
+        h(count)=seisdef(uft{i},uv(j));
+        idx(v==uv(j) & ift)=count;
+    end
 end
 
 end

@@ -7,10 +7,13 @@ function [data]=rh(varargin)
 %     filenames (one filename per cell).  Wildcards are valid.
 %
 %     Fields of output SAClab structure:
-%      head - contains header data
-%      name - filename (may include path)
+%      dir - directory of file
+%      name - file name
+%      filetype - type of datafile
+%      version - version of filetype
 %      endian - byte-order of file (ieee-le or ieee-be)
-%      version - version of datafile
+%      haddata - logical indicating if data is read in (false here)
+%      head - contains header data
 %
 %    Notes:
 %
@@ -45,9 +48,11 @@ function [data]=rh(varargin)
 %        Apr. 23, 2008 - minor doc update (wildcards now valid)
 %        June 12, 2008 - doc update
 %        Sep. 14, 2008 - doc update, error on no files
+%        Oct. 15, 2008 - added hasdata field
+%        Oct. 17, 2008 - added dir and filetype fields
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2008 at 23:20 GMT
+%     Last Updated Oct. 17, 2008 at 00:30 GMT
 
 % compile file lists
 varargin=onefilelist(varargin{:});
@@ -59,70 +64,80 @@ if(nfiles<1)
 end
 
 % pre-allocating SAClab structure
-data(nfiles,1)=struct('name',[],'head',[],'endian',[],'version',[]);
+data(nfiles,1)=struct('dir',[],'name',[],'filetype',[],...
+    'version',[],'endian',[],'hasdata',[],'head',[]);
 
 % loop for each file
 destroy=false(nfiles,1);
 for i=1:nfiles
-    % get version and byte-order
-    [version,endian]=gv(varargin{i});
+    % get filetype, version and byte-order
+    [filetype,version,endian]=getversion(varargin{i});
     
     % validity check
-    if(version==0)
+    if(isempty(filetype))
         % invalid - jump to next file
         destroy(i)=true;
         continue;
     end
     
-    % open file for reading
-    fid=fopen(varargin{i},'r',endian);
-    
-    % fid check
-    if(fid<0)
-        % non-existent file or directory
-        warning('SAClab:rh:badFID',...
-            'File not openable, %s !',varargin{i});
-        destroy(i)=true;
-        continue;
-    end
-    
     % retrieve header setup
-    h=seisdef(version);
+    h=seisdef(filetype,version);
     
-    % get file size
-    fseek(fid,0,'eof');
-    bytes=ftell(fid);
-    
-    % minimum size check
-    if(bytes<h.data.startbyte)
-        % smaller than header size
-        fclose(fid);
-        warning('SAClab:rh:fileTooShort',...
-            'File too short, %s !',varargin{i});
-        destroy(i)=true;
-        continue;
-    end
-    
-    % save filename, byte-order, version
-    data(i).name=varargin{i};
-    data(i).endian=endian;
-    data(i).version=version;
-    
-    % preallocate header
-    data(i).head=nan(h.size,1,h.store);
-    
-    % reading in header
-    n=h.types;
-    for m=1:length(n)
-        for k=1:length(h.(n{m}))
-            fseek(fid,h.(n{m})(k).startbyte,'bof');
-            data(i).head(h.(n{m})(k).minpos:h.(n{m})(k).maxpos)=...
-                fread(fid,h.(n{m})(k).size,h.(n{m})(k).store);
+    % handle types separately
+    if(strcmpi(filetype,'SAClab Binary'))
+        % open file for reading
+        fid=fopen(varargin{i},'r',endian);
+        
+        % fid check
+        if(fid<0)
+            % non-existent file or directory
+            warning('SAClab:rh:badFID',...
+                'File not openable, %s !',varargin{i});
+            destroy(i)=true;
+            continue;
         end
+        
+        % get file size
+        fseek(fid,0,'eof');
+        bytes=ftell(fid);
+        
+        % minimum size check
+        if(bytes<h.data.startbyte)
+            % smaller than header size
+            fclose(fid);
+            warning('SAClab:rh:fileTooShort',...
+                'File too short, %s !',varargin{i});
+            destroy(i)=true;
+            continue;
+        end
+        
+        % save directory and filename
+        [pathstr,name,ext,ver]=fileparts(varargin{i});
+        data(i).dir=pathstr;
+        data(i).name=[name ext ver];
+        
+        % save filetype, version, endian and hasdata
+        data(i).filetype=filetype;
+        data(i).version=version;
+        data(i).endian=endian;
+        data(i).hasdata=false;
+        
+        % preallocate header
+        data(i).head=nan(h.size,1,h.store);
+        
+        % reading in header
+        n=h.types;
+        for m=1:length(n)
+            for k=1:length(h.(n{m}))
+                fseek(fid,h.(n{m})(k).startbyte,'bof');
+                data(i).head(h.(n{m})(k).minpos:h.(n{m})(k).maxpos)=...
+                    fread(fid,h.(n{m})(k).size,h.(n{m})(k).store);
+            end
+        end
+        
+        % closing file
+        fclose(fid);
     end
-    
-    % closing file
-    fclose(fid);
 end
 
 % remove unread entries

@@ -8,14 +8,10 @@ function []=wseis(data)
 %     command before using WSEIS.
 %
 %    Notes:
-%     - unnamed data will be given the name SAClab.N.sac where N is the
-%       index number of the data in the SAClab structure
-%     - data without an endianness given will be set to that of the current
-%       architecture
 %
 %    System requirements: Matlab 7
 %
-%    Header changes: NONE (maybe NPTS,NCMP,NVHDR)
+%    Header changes: NONE (CHKHDR may make changes though)
 %
 %    Usage:    wseis(data)
 %
@@ -44,24 +40,32 @@ function []=wseis(data)
 %                        doc update, NCMP/NPTS/NVHDR checks, error msg
 %                        fixes, dataless support
 %        Oct.  7, 2008 - combined write code for similar filetypes
+%        Oct.  8, 2008 - fixed a couple bugs caused by last change
+%        Oct. 15, 2008 - fixed spectral data support, drop support for
+%                        blank fields, support hasdata field, better
+%                        separation of even vs uneven checks
+%        Oct. 16, 2008 - moved checks to CHKHDR, support new struct layout
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2008 at 03:00 GMT
+%     Last Updated Oct. 16, 2008 at 21:00 GMT
 
 % todo:
+% - filetype support
 
 % check number of inputs
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'name','endian'))
+error(seischk(data,'dep'))
+
+% check data headers
+data=chkhdr(data);
 
 % header info
 ncmp=gncmp(data);
 npts=gh(data,'npts');
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
-error(lgcchk('leven',leven(npts>1)))
 
 % estimated filesize from header
 est_bytes=seissize(data);
@@ -69,86 +73,20 @@ est_bytes=seissize(data);
 % headers setup
 [h,vi]=vinfo(data);
 
-% platform's endianness
-endian=nativeendian;
-
 % loop over records
 for i=1:length(data)
-    % check for empty filename
-    if(isempty(data(i).name))
-        warning('SAClab:wseis:namelessData',...
-            ['Record %d has no associated filename!\n'...
-            '==> Set name as SAClab.%d.sac !'],i,i);
-        data(i).name=['SAClab.' num2str(i) '.sac'];
+    % skip writing if dataless
+    if(~data(i).hasdata)
+        warning('SAClab:wseis:dataless',...
+            'Use WH to write only headers! Record %d Skipped.',i);
+        continue; 
     end
     
-    % check for empty endianness
-    if(isempty(data(i).name))
-        warning('SAClab:wseis:endianlessData',...
-            ['Record %d has no associated byteorder!\n'...
-            '==> Set byteorder as %s to match platform!'],i,endian);
-        data(i).endian=endian;
-    end
-    
-    % check that data matches npts, ncmp
-    [nrows,ncols]=size(data(i).dep);
-    if(nrows~=npts(i))
-        warning('SAClab:wseis:nptsInconsistent',...
-            ['NPTS does not match data for record %d !\n'...
-             'Changing NPTS to match data! (%d ==> %d)'],...
-             i,npts(i),nrows);
-        npts(i)=nrows;
-        data(i)=ch(data(i),'npts',nrows);
-        est_bytes(i)=seissize(data(i));
-    end
-    if(ncols~=ncmp(i))
-        warning('SAClab:wseis:nptsInconsistent',...
-            ['NCMP does not match data for record %d !\n'...
-             'Changing NCMP to match data! (%d ==> %d)'],...
-             i,ncmp(i),ncols);
-        ncmp(i)=ncols;
-        % check that header can handle multiple components
-        if(ncmp(i)>1)
-            if(~h(vi(i)).mulcmp.valid)
-                % change version
-                warning('SAClab:wseis:versNotMulCmp',...
-                    ['SAClab version %d cannot handle multiple '...
-                    'components!\nChanging record %d to version %d !'],...
-                    data(i).version,i,h(vi(i)).mulcmp.altver);
-                data(i)=ch(data(i),'nvhdr',h(vi(i)).mulcmp.altver);
-                data(i).version=h(vi(i)).mulcmp.altver;
-                [h,vi]=vinfo(data);
-            end
-        end
-        data(i)=ch(data(i),'ncmp',ncols);
-        est_bytes(i)=seissize(data(i));
-    end
-    nipts=numel(data(i).ind);
-    if(strcmpi(leven(i),'false'))
-        if(nipts~=npts(i))
-            warning('SAClab:wseis:nptsInconsistent',...
-                ['NPTS does not match data for record %d !\n'...
-                 'Truncating larger to size of smaller!'],i);
-            if(nipts>npts(i))
-                data(i).ind=data(i).ind(1:npts(i));
-            else
-                npts(i)=nipts;
-                data(i)=ch(data(i),'npts',nipts);
-                data(i).dep=data(i).dep(1:nipts,:);
-                est_bytes(i)=seissize(data(i));
-            end
-        end
-    else
-        if(nipts~=0)
-            warning('SAClab:wseis:unnecessaryData',...
-                ['Ignoring unnecessary independent component data\n'...
-                 'for evenly-spaced record %d !'],i);
-            data(i).ind=[];
-        end
-    end
-    
+    % construct fullname
+    name=fullfile(data(i).dir,data(i).name);
+
     % open file for writing
-    fid=fopen(data(i).name,'w',data(i).endian);
+    fid=fopen(name,'w',data(i).endian);
     
     % check fid
     if(fid<0)
@@ -156,7 +94,7 @@ for i=1:length(data)
         error('SAClab:wseis:badFID',...
             ['File not openable for writing!\n'...
             '(Permissions problem / conflict with directory?)\n'...
-            'File: %s\n'],data(i).name);
+            'Record: %d, File: %s\n'],i,name);
     end
     
     % fill header with dummy bytes (so we can seek around)
@@ -168,7 +106,7 @@ for i=1:length(data)
         % write failed
         fclose(fid);
         error('SAClab:wseis:writeFailed',...
-            'Writing failed!\nFile: %s !',data(i).name);
+            'Writing failed!\nRecord: %d, File: %s',i,name);
     end
     
     % write header
@@ -180,12 +118,12 @@ for i=1:length(data)
         end
     end
     
-    % skip if npts==0 (dataless)
+    % skip data writing if npts==0
     if(npts(i)==0); fclose(fid); continue; end
     
     % act by file type (new filetypes will have to be added here)
     fseek(fid,h(vi(i)).data.startbyte,'bof');
-    if(strcmpi(iftype(i),{'Time Series File' 'General X vs Y file'}))
+    if(any(strcmpi(iftype(i),{'Time Series File' 'General X vs Y file'})))
         % dependent component(s) of data
         for k=1:ncmp(i)
             fwrite(fid,data(i).dep(:,k),h(vi(i)).data.store);
@@ -195,22 +133,17 @@ for i=1:length(data)
         if(strcmpi(leven(i),'false'))
             fwrite(fid,data(i).ind(:),h(vi(i)).data.store);
         end
-    elseif(strcmpi(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'}))
+    elseif(any(strcmpi(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
         % spectral file
         for k=1:ncmp(i)
             fwrite(fid,data(i).dep(:,2*k-1),h(vi(i)).data.store);
             fwrite(fid,data(i).dep(:,2*k),h(vi(i)).data.store);
         end
-    elseif(strcmpi(iftype(i),'General XYZ (3-D) file'))
+    elseif(any(strcmpi(iftype(i),'General XYZ (3-D) file')))
         % general xyz (3D) grid - nodes are evenly spaced
         for k=1:ncmp(i)
             fwrite(fid,data(i).dep(:,k),h(vi(i)).data.store);
         end
-    else
-        % unknown filetype
-        fclose(fid)
-        error('SAClab:wseis:iftypeBad',...
-            'File: %s\nBad filetype: %s !',data(i).name,iftype(i));
     end
     
     % verify written file's size
@@ -221,7 +154,7 @@ for i=1:length(data)
         fclose(fid);
         error('SAClab:wseis:badFileSize',...
             ['Output file''s written size does not match expected size!\n'...
-            'File: %s'],data(i).name);
+            'Record: %d, File: %s'],i,name);
     end
     
     % close file

@@ -9,10 +9,13 @@ function [data]=rseis(varargin)
 %     SAClab data structure setup:
 %
 %     Fields for all files:
-%      head - contains header data
-%      name - filename (may include path)
+%      dir - directory of file
+%      name - file name
+%      filetype - type of datafile
+%      version - version of filetype
 %      endian - byte-order of file (ieee-le or ieee-be)
-%      version - version of datafile
+%      haddata - logical indicating if data is read in
+%      head - contains header data
 %
 %     Fields for timeseries files:
 %      dep(:,1) - amplitudes
@@ -36,8 +39,8 @@ function [data]=rseis(varargin)
 %    Notes:
 %     - Multi-component files will replicate the number of columns by the
 %       number of components.  So a three component spectral file will have
-%       six columns of data.  Dependent components share the same 
-%       independent component.
+%       six columns of data.  Dependent components ('dep') share the same 
+%       independent component ('ind').
 %
 %    System requirements: Matlab 7
 %
@@ -66,9 +69,11 @@ function [data]=rseis(varargin)
 %        Apr. 23, 2008 - wildcard filename support (doc update)
 %        Sep. 14, 2008 - doc update
 %        Sep. 15, 2008 - history fix
+%        Oct. 15, 2008 - doc update for hasdata field
+%        Oct. 16, 2008 - doc update for dir and filetype fields
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 15, 2008 at 17:20 GMT
+%     Last Updated Oct. 16, 2008 at 00:50 GMT
 
 % todo:
 

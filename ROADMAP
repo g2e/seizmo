@@ -117,8 +117,26 @@ deleting (selectrecs done!)
 --------------------------------
 
 
+0.6.0
+------
+single internal format
+	- removes undefined being specific
+	- cleans up code quite a bit
+	- simplifies code quite a bit
+virtual fields and groups
+	- allows for a number of sac features
+support absolute times
+	- less trouble for user
+negative delta support
+	- or at least know where the problems are
+.filetype support
+	- infrastructure for supporting more filetypes
+filename cleanup
+	- names should be less conflicting
+	- add shortcut folder
 
-0.6.0 - css
+
+0.7.0 - css
 ------------
 find other data filetypes
 figure out how to read/write other filetypes

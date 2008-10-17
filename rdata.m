@@ -17,10 +17,13 @@ function [data,failed]=rdata(data,varargin)
 %     SAClab data structure setup:
 %
 %     Fields for all files:
-%      head - contains header data
-%      name - filename (may include path)
+%      dir - directory of file
+%      name - file name
+%      filetype - type of datafile
+%      version - version of filetype
 %      endian - byte-order of file (ieee-le or ieee-be)
-%      version - version of datafile
+%      haddata - logical indicating if data is read in
+%      head - contains header data
 %
 %     Fields for timeseries files:
 %      dep(:,1) - amplitudes
@@ -44,9 +47,8 @@ function [data,failed]=rdata(data,varargin)
 %    Notes:
 %     - Multi-component files will replicate the number of columns by the
 %       number of components.  So a three component spectral file will have
-%       six columns total in field x.  Components share the same timing.
-%     - Currently LEVEN is ignored for spectral and xyz files.  Later
-%       versions may require LEVEN to be set to true for these files.
+%       six columns of data.  All dependent components ('dep') share the 
+%       same independent component ('ind').
 %
 %    System requirements: Matlab 7
 %
@@ -82,9 +84,12 @@ function [data,failed]=rdata(data,varargin)
 %        Sep. 26, 2008 - doc update
 %        Sep. 27, 2008 - updated for GET_N_CHECK and VINFO
 %        Oct.  7, 2008 - combined read code for similar filetypes
+%        Oct.  8, 2008 - fixed a couple bugs from last change
+%        Oct. 15, 2008 - update to new SEISCHK, hasdata field
+%        Oct. 17, 2008 - added CHKHDR, support new struct layout
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2008 at 03:05 GMT
+%     Last Updated Oct. 17, 2008 at 00:45 GMT
 
 % todo:
 
@@ -92,7 +97,10 @@ function [data,failed]=rdata(data,varargin)
 error(nargchk(1,3,nargin))
 
 % check data structure
-error(seischk(data,'name','endian'))
+error(seischk(data))
+
+% check data headers
+data=chkhdr(data);
 
 % default trim
 trim=true;
@@ -131,7 +139,6 @@ ncmp=gncmp(data);
 npts=gh(data,'npts');
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
-error(lgcchk('leven',leven(npts>1)))
 
 % estimated filesize from header
 est_bytes=seissize(data);
@@ -142,14 +149,17 @@ est_bytes=seissize(data);
 % read loop
 failed=false(nrecs,1);
 for i=1:nrecs
+    % construct fullname
+    name=fullfile(data(i).dir,data(i).name);
+    
     % open file for reading
-    fid=fopen(data(i).name,'r',data(i).endian);
+    fid=fopen(name,'r',data(i).endian);
     
     % fid check
     if(fid<0)
         % non-existent file or directory
         warning('SAClab:rdata:badFID',...
-            'File not openable: %s !',data(i).name);
+            'Record: %d, File not openable: %s !',i,name);
         failed(i)=true;
         continue;
     end
@@ -165,40 +175,33 @@ for i=1:nrecs
         % not deallocate the second component, thus the written file has
         % twice as much data.
         warning('SAClab:rdata:badFileSize',...
-            ['Filesize of file %s does not match header info!\n'...
+            ['Record: %d, File: %s\n'...
+            'Filesize does not match header info!\n'...
             '%d (estimated) > %d (on disk) --> Reading Anyways!'...
             'This is usually caused by a SAC bug and can be ignored.'],...
-            data(i).name,est_bytes(i),bytes);
+            i,name,est_bytes(i),bytes);
     elseif(bytes<est_bytes(i))
         % size too small - skip
         fclose(fid);
         warning('SAClab:rdata:badFileSize',...
-            ['Filesize of file %s does not match header info!\n'...
+            ['Record: %d, File: %s\n'...
+            'Filesize does not match header info!\n'...
             '%d (estimated) < %d (on disk) --> Skipping!'],...
-            data(i).name,est_bytes(i),bytes);
+            i,name,est_bytes(i),bytes);
         failed(i)=true;
         continue;
     end
     
     % preallocate data record with NaNs, deallocate timing
     data(i).dep=nan(npts(i),ncmp(i),h(vi(i)).data.store); 
-    data(i).ind=[];
+    if(isfield(data,'ind')); data(i).ind=[]; end
     
-    % skip if npts==0 (dataless)
+    % skip if npts==0
     if(npts(i)==0); fclose(fid); continue; end
-    
-    % skip if npts<0 (bad)
-    if(npts(i)<0)
-        fclose(fid);
-        warning('SAClab:rdata:nptsBad',...
-            'NPTS for file %s can not be set negative!',data(i).name);
-        failed(i)=true;
-        continue;
-    end
     
     % act by file type (any new filetypes will have to be added here)
     fseek(fid,h(vi(i)).data.startbyte,'bof');
-    if(strcmpi(iftype(i),{'Time Series File' 'General X vs Y file'}))
+    if(any(strcmpi(iftype(i),{'Time Series File' 'General X vs Y file'})))
         % time series file - amplitude and time
         for k=1:ncmp(i)
             data(i).dep(:,k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
@@ -208,7 +211,7 @@ for i=1:nrecs
         if(strcmpi(leven(i),'false'))
             data(i).ind(:,1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
-    elseif(strcmpi(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'}))
+    elseif(any(strcmpi(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
         % preallocate data record with NaNs
         data(i).dep=nan(npts(i),2*ncmp(i),h(vi(i)).data.store);
         
@@ -217,37 +220,15 @@ for i=1:nrecs
             data(i).dep(:,2*k-1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
             data(i).dep(:,2*k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
-        
-        % check leven
-        if(strcmpi(leven(i),'false'))
-            fclose(fid);
-            warning('SAClab:rh:badLeven',...
-                'LEVEN for Spectral file %s must be TRUE!',data(i).name);
-            failed(i)=true;
-            continue;
-        end
-    elseif(strcmpi(iftype(i),'General XYZ (3-D) file'))
+    elseif(any(strcmpi(iftype(i),'General XYZ (3-D) file')))
         % general xyz (3D) grid - nodes are evenly spaced
         for k=1:ncmp(i)
             data(i).dep(:,k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
         end
-        
-        % check leven
-        if(strcmpi(leven(i),'false'))
-            fclose(fid);
-            warning('SAClab:rh:badLeven',...
-                'LEVEN for XYZ file %s must be TRUE!',data(i).name);
-            failed(i)=true;
-            continue;
-        end
-    else
-        % unknown filetype
-        fclose(fid)
-        warning('SAClab:rdata:iftypeBad',...
-            'File: %s\nBad filetype: %s !',data(i).name,iftype(i));
-        failed(i)=true;
-        continue;
     end
+    
+    % all data read in
+    data(i).hasdata=true;
     
     % closing file
     fclose(fid);

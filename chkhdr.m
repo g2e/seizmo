@@ -58,86 +58,127 @@ function [data]=chkhdr(data,option,varargin)
 %        June 22, 2008 - Major revision - supports LCALDA field, better
 %                        handling of unevenly sampled data
 %        June 28, 2008 - .dep and .ind rather than .x and .t
+%        Oct. 15, 2008 - broke into sections, fixed location bugs, now does
+%                        location calculations very much like SAC
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated June 28, 2008 at 22:50 GMT
 
 % todo:
 % - categories
-%   - theworks
-%   - vsdata
-%   - location
-%   - spacing
+%   - all
+%   - version   x
+%   - vsdata    x
+%   - location  x
+%   - spacing   x
 %   - timing
 %   - enums
-%   - version
-% - dataless support
 % - enum checks
 %    iftype
 %    iztype
 %    idep
-
-% check data structure
-error(seischk(data,'dep'))
+% - spacing checks
+%    check leven vs iftype
 
 % check option
-if(nargin<2 || isempty(option)); option='theworks'; end
+if(nargin==1 || isempty(option)); option='all'; end
 option=lower(option);
 
-% change header first
+% change header before checking
 data=ch(data,varargin{:});
 
-% grab header setup
-[h,vi,v,uv,nv]=vinfo(data);
+% grab header setup (will check data structure too)
+[h,vi]=vinfo(data);
 
 % number of records
 nrecs=numel(data);
 
-if(~isempty(intersect(option,{'theworks' 'location'})))
+
+if(~isempty(intersect(option,{'version' 'all'})))
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%% BEGIN VERSION CHECK SECTION  %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % What is the point of this section?
+    % - to verify version listed in header matches that in struct
+    
+    if(~isequal([data.version].',gh(data,'nvhdr')))
+        error('SAClab:chkhdr:verMismatch',...
+            ['Version info is corrupted!\n'...
+            'One or more records have inconsistent version info!\n'...
+            'Check the output of [data.version].'' and gh(data,''nvhdr'').']);
+    end
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%  END VERSION CHECK SECTION   %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+end
+
+
+if(~isempty(intersect(option,{'location' 'all'})))
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% BEGIN LOCATION CHECK SECTION %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    % get lcalda (don't mess with those with lcalda ~= 'true')
-    check_loc=strcmpi(glgc(data,'lcalda'),'true');
+    % What is the point of this section?
+    % - To calculate the fields associated with LCALDA if possible.
+    % - To look out for and remove bad lat/lon values
     
     % get event/station location info
     [evla,evlo,stla,stlo,gcarc,az,baz,dist]=...
         gh(data,'evla','evlo','stla','stlo','gcarc','az','baz','dist');
     
-    % version specific
+    % check for undefined (version specific)
     defevla=false(nrecs,1); defevlo=defevla;
     defstla=defevla; defstlo=defevla;
-    for i=1:nv
+    for i=1:numel(h)
         % which to check
-        check=(vi==i & check_loc);
+        check=(vi==i);
         
-        % which lat lon are defined
+        % find lat lon that are defined
         defevla(check)=(evla(check)~=h(i).undef.ntype);
         defevlo(check)=(evlo(check)~=h(i).undef.ntype);
         defstla(check)=(stla(check)~=h(i).undef.ntype);
         defstlo(check)=(stlo(check)~=h(i).undef.ntype);
     end
     
-    % latitude check - needs to be geodetic (90 to -90)
-    badevla=(evla(defevla)>90 | evla(defevla)<-90);
-    evla(defevla(badevla))=nan; defevla(badevla)=false;
-    badstla=(stla(defstla)>90 | stla(defstla)<-90);
-    stla(defstla(badstla))=nan; defstla(badstla)=false;
+    % latitude check - needs to be 90 to -90
+    badevla=(evla>90 | evla<-90);
+    evla(defevla & badevla)=nan; 
+    defevla(badevla)=false;
+    badstla=(stla>90 | stla<-90);
+    stla(defstla & badstla)=nan; 
+    defstla(badstla)=false;
     
-    % longitude fix - set to positive (0 to 360)
+    % longitude fix 
+    % - first set to positive (0 to 360)
+    % - then set for symmetry (-180 to 180)
     evlo(defevlo)=mod(evlo(defevlo),360);
     stlo(defstlo)=mod(stlo(defstlo),360);
+    evlo(defevlo & evlo>180)=evlo(defevlo & evlo>180)-360;
+    stlo(defstlo & stlo>180)=stlo(defstlo & stlo>180)-360;
     
-    % longitude fix - set for symmetry (-180 to 180)
-    evlo(defevlo(evlo(defevlo)>180))=evlo(defevlo(evlo(defevlo)>180))-360;
-    stlo(defstlo(stlo(defstlo)>180))=stlo(defstlo(stlo(defstlo)>180))-360;
-    
-    % delaz calc (only if all lat lon defined with lcalda 'true')
-    def=(defevla & defevlo & defstla & defstlo);
-    if(any(def))
-        [gcarc(def),az(def),baz(def),dist(def)]=...
-            delaz(evla(def),evlo(def),stla(def),stlo(def));
+    % get lcalda (don't mess with those with lcalda ~= 'true')
+    check_loc=strcmpi(glgc(data,'lcalda'),'true');
+    if(any(check_loc))
+        % undefine fields to be calculated
+        gcarc(check_loc)=nan; az(check_loc)=nan;
+        baz(check_loc)=nan; dist(check_loc)=nan;
+        
+        % delaz calc (only if all lat lon defined with lcalda 'true')
+        def=(defevla & defevlo & defstla & defstlo & check_loc);
+        if(any(def))
+            % get geocentric latitude
+            geocevla=geodetic2geocentriclat(evla(def));
+            geocstla=geodetic2geocentriclat(stla(def));
+            
+            % get gcarc, az, baz based on sphere (great-circle-arc)
+            [gcarc(def),az(def),baz(def)]=...
+                sphericalinv(geocevla,evlo(def),geocstla,stlo(def));
+            
+            % get km dist based on ellipsoid (geodesic)
+            dist(def)=vincentyinv(evla(def),evlo(def),stla(def),stlo(def));
+        end
     end
     
     % update header
@@ -148,14 +189,23 @@ if(~isempty(intersect(option,{'theworks' 'location'})))
     %%%  END LOCATION CHECK SECTION  %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
-if(~isempty(intersect(option,{'theworks' 'spacing'})))
+
+
+if(~isempty(intersect(option,{'spacing' 'all'})))
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%% BEGIN SPACING CHECK SECTION  %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
+    % What is the point of this section?
+    % - make sure leven is true/false
+    % - make sure delta is defined and >0
+    % - make sure npts is defined and >=0
+    
     % get leven and delta and npts
-    leven=glgc(data,'leven');
     [delta,npts]=gh(data,'delta','npts');
+    
+    % check leven is 'true' or 'false'
+    error(lgcchk('leven',glgc(data,'leven')));
     
     % check npts>=0
     if(npts<0)
@@ -163,95 +213,171 @@ if(~isempty(intersect(option,{'theworks' 'spacing'})))
             'NPTS cannot be set negative!');
     end
     
-    % check multi-point records
-    mulpts=(npts>1);
-    if(any(mulpts))
-        error(lgcchk('leven',leven(mulpts)));
-        if(delta<=0)
-            error('SAClab:chkhdr:negativeDELTA',...
+    % check delta>0
+    if(delta<=0)
+        error('SAClab:chkhdr:negativeDELTA',...
                 'DELTA cannot be set negative!');
-        end
     end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%  END SPACING CHECK SECTION   %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
-if(~isempty(intersect(option,{'theworks' 'vsdata'})))
+
+
+if(~isempty(intersect(option,{'vsdata' 'all'})))
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%  BEGIN VSDATA CHECK SECTION  %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    % make sure fields exist (simpler code)
-    if(~isfield(data,'ind')); data(1).ind=[]; end
-    if(~isfield(data,'dep')); data(1).dep=[]; end
+    % What is the point of this section?
+    % - check that data matches header info
+    % - update dep*
     
-    % get header info
+    % make sure 'version' and 'spacing' checks are done
+    if(isempty(intersect(option,'all')) ...
+            && numel(intersect(option,{'version' 'spacing'}))<2)
+        % call yourself
+        data=chkhdr(data,{'version' 'spacing'});
+    end
+    
+    % get some header info
+    ncmp=gncmp(data);
+    [b,e,delta,npts]=gh(data,'b','e','delta','npts');
+    iftype=genumdesc(data,'iftype');
     leven=glgc(data,'leven');
-    uneven=strcmpi(leven,'false');
-    [delta,odelta,b,e]=gh(data,'delta','odelta','b','e');
     
-    % loop over all records, get npts, dep(min,max,men)
-    ilen=nan(nrecs,1); dlen=ilen; ndcmp=ilen; nicmp=ilen;
-    depmax=ilen; depmin=ilen; depmen=ilen;
+    % loop through each file
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
     for i=1:nrecs
-        % size up data and get range
-        [dlen(i),ndcmp(i)]=size(data(i).dep);
-        [ilen(i),nicmp(i)]=size(data(i).ind);
-        depmax(i)=max(data(i).dep(:));
-        depmin(i)=min(data(i).dep(:));
-        depmen(i)=mean(data(i).dep(:));
+        % skip dataless
+        if(~data(i).hasdata); continue; end
         
-        % allow only 1 ind cmp
-        if(nicmp(i)>1)
-            error('SAClab:chkhdr:badNumCMP',...
-                'Too many independent components for record %d!',i);
+        % check .dep field exists
+        if(~isfield(data,'dep'))
+            error('SAClab:chkhdr:noDEP',...
+                'DEP field required for record %d !',i);
         end
         
-        % check uneven data
-        if(uneven(i))
+        % check that data matches npts, ncmp
+        [nrows,ncols]=size(data(i).dep);
+        if(any(strcmpi(iftype(i),...
+                {'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
+            % spectral files have 2 values per component
+            ncols=ncols/2;
+            if(fix(ncols)~=ncols)
+                error('SAClab:chkhdr:badDATA',...
+                    ['Data for spectral record %d does not have '...
+                    'an even number of columns!'],i);
+            end
+        end
+        if(nrows~=npts(i))
+            warning('SAClab:chkhdr:nptsInconsistent',...
+                ['NPTS does not match data for record %d !\n'...
+                'Changing NPTS to match data! (%d ==> %d)'],...
+                i,npts(i),nrows);
+            npts(i)=nrows;
+        end
+        if(ncols~=ncmp(i))
+            warning('SAClab:chkhdr:nptsInconsistent',...
+                ['NCMP does not match data for record %d !\n'...
+                'Changing NCMP to match data! (%d ==> %d)'],...
+                i,ncmp(i),ncols);
+            ncmp(i)=ncols;
+        end
+        
+        % make sure header can handle multiple components if needed
+        if(ncmp(i)>1)
+            if(~h(vi(i)).mulcmp.valid)
+                % change version
+                warning('SAClab:chkhdr:versNotMulCmp',...
+                    ['SAClab version %d cannot handle multiple '...
+                    'components!\nChanging record %d to version %d !'],...
+                    data(i).version,i,h(vi(i)).mulcmp.altver);
+                data(i)=ch(data(i),'nvhdr',h(vi(i)).mulcmp.altver);
+                data(i).version=h(vi(i)).mulcmp.altver;
+                [h,vi]=vinfo(data);
+            end
+        end
+        
+        % check uneven
+        if(strcmpi(leven(i),'false'))
+            % check .dep field exists
+            if(~isfield(data,'ind'))
+                warning('SAClab:chkhdr:noIND',...
+                    ['LEVEN set FALSE requires an independent component\n'...
+                    'dataset for record %d but there is none:\n'...
+                    'Changing LEVEN to TRUE!'],i);
+                leven{i}='true';
+            end
+            
+            % get size
+            [nipts,nicmp]=size(data(i).ind);
+            
             % switch to evenly spaced if no corresponding independent data
-            if(ilen(i)==0 && dlen>0)
-                warning('SAClab:chkhdr:levenBad',...
-                    ['LEVEN set FALSE without independent '...
-                    'dataset for record %d: Changed LEVEN to TRUE!'],i);
-                leven{i}=true; odelta(i)=nan;
-            % error if .ind and .dep not the same length
-            elseif(ilen(i)~=dlen(i))
-                error('SAClab:chkhdr:dataInconsistent',...
-                    ['Number of independent variable data does not ',...
-                    'match the number of dependent variable data for ',...
-                    'record %d!'],i)
-            % update b, e, odelta, delta
+            if((nipts==0 || nicmp==0) && npts(i)>0)
+                warning('SAClab:chkhdr:noINDdata',...
+                    ['LEVEN set FALSE requires an independent component\n'...
+                    'dataset for record %d but there is none:\n'...
+                    'Changing LEVEN to TRUE!'],i);
+                leven{i}='true';
+            end
+            
+            % allow only 1 ind cmp
+            if(nicmp>1)
+                error('SAClab:chkhdr:badNumCMP',...
+                    'Too many independent components for record %d!',i);
+            end
+            
+            % assure consistency with dependent data
+            if(nipts~=npts(i))
+                warning('SAClab:chkhdr:nptsInconsistent',...
+                    ['NPTS does not match data for record %d !\n'...
+                    'Truncating larger to size of smaller!'],i);
+                if(nipts>npts(i))
+                    data(i).ind=data(i).ind(1:npts(i));
+                else
+                    npts(i)=nipts;
+                    data(i).dep=data(i).dep(1:nipts,:);
+                end
+            end
+            
+            % update fields to match
+            if(npts(i)==0)
+                b(i)=nan;
+                e(i)=nan;
             else
                 b(i)=data(i).ind(1);
                 e(i)=data(i).ind(end);
-                odelta(i)=diff(data(i).ind([1 2])); % pt1 => pt2
-                delta(i)=diff(data(i).ind([1 end]))/(dlen(i)-1);
+                depmax(i)=max(data(i).dep(:));
+                depmin(i)=min(data(i).dep(:));
+                depmen(i)=mean(data(i).dep(:));
+            end
+            if(npts(i)>1)
+                delta(i)=diff(data(i).ind([1 end]))/(npts(i)-1);
             end
         else
-            % check delta
-            if(delta(i)>0)
-                % clear .ind and update e, odelta
+            % clear .ind
+            if(isfield(data,'ind'))
                 data(i).ind=[];
-                odelta(i)=nan;
-                e(i)=b(i)+(dlen(i)-1)*delta(i);
-            else
-                % clear .ind and update delta, odelta
-                warning('SAClab:chkhdr:deltaUnset',...
-                    ['DELTA not set for record %d: '...
-                    'Using B and E to find DELTA!'],i);
-                data(i).ind=[];
-                odelta(i)=nan;
-                delta(i)=(e(i)-b(i))/(dlen(i)-1);
+            end
+            
+            % update e
+            e(i)=b(i)+(npts(i)-1)*delta(i);
+            
+            % update fields to match
+            if(npts(i)>0)
+                depmax(i)=max(data(i).dep(:));
+                depmin(i)=min(data(i).dep(:));
+                depmen(i)=mean(data(i).dep(:));
             end
         end
     end
     
     % update header
     warning('off','SAClab:ch:fieldInvalid')
-    data=ch(data,'delta',delta,'odelta',odelta,...
-        'npts',dlen,'ncmp',ndcmp,'b',b,'e',e,'leven',leven,...
+    data=ch(data,'delta',delta,...
+        'npts',npts,'ncmp',ncmp,'b',b,'e',e,'leven',leven,...
         'depmax',depmax,'depmin',depmin,'depmen',depmen);
     warning('on','SAClab:ch:fieldInvalid')
     
@@ -259,7 +385,24 @@ if(~isempty(intersect(option,{'theworks' 'vsdata'})))
     %%%   END VSDATA CHECK SECTION   %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
-if(~isempty(intersect(option,{'theworks' 'enums'})))
+
+
+if(~isempty(intersect(option,{'timing' 'all'})))
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%  BEGIN TIMING CHECK SECTION  %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    % What is the point of this section?
+    % - make sure delta, npts, b, e agree
+    % - 
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%%   END TIMING CHECK SECTION   %%%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+end
+
+
+if(~isempty(intersect(option,{'enums' 'all'})))
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%  BEGIN ENUMS CHECK SECTION   %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -268,5 +411,6 @@ if(~isempty(intersect(option,{'theworks' 'enums'})))
     %%%   END ENUMS CHECK SECTION    %%%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
+
 
 end

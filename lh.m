@@ -22,9 +22,10 @@ function []=lh(data,varargin)
 %     Version History:
 %        ????????????? - Initial Version
 %        June 12, 2008 - Documentation Update
+%        Oct. 17, 2008 - added VINFO support, supports new struct layout
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 16:25 GMT
+%     Last Updated Oct. 17, 2008 at 02:25 GMT
 
 % require at least one input
 if(nargin<1)
@@ -36,39 +37,27 @@ end
 error(seischk(data))
 
 % headers setup
-vers=unique([data.version]);
-nver=length(vers);
-h(nver)=seisdef(vers(nver));
-for i=1:nver-1
-    h(i)=seisdef(vers(i));
-end
+[h,idx]=vinfo(data);
 
 % extra padding
 disp(' ')
 
 % loop over files
 for i=1:length(data)
-    % get header info individually
-    v=data(i).version==vers;
-    
     % list all case
     if (nargin==1)
         clear varargin
         % all available field type sets
-        for j=1:length(h(v).types)
-            for k=1:length(h(v).(h(v).types{j}))
-                varargin{k,j}=fieldnames(h(v).(h(v).types{j})(k).pos)';
+        for j=1:length(h(idx(i)).types)
+            for k=1:length(h(idx(i)).(h(idx(i)).types{j}))
+                varargin{k,j}=fieldnames(h(idx(i)).(h(idx(i)).types{j})(k).pos)';
             end
         end
         varargin=[varargin{:}].';
     end
     
-    % get filename if available
-    if(isfield(data,'name'))
-        name=data(i).name;
-    else
-        name='';
-    end
+    % get filename
+    name=fullfile(data(i).dir,data(i).name);
     
     % formatted header
     disp(' ')
@@ -82,8 +71,8 @@ for i=1:length(data)
         
         % check for group fields
         group=0; glen=1;
-        if(isfield(h(v).grp,gf))
-            g=h(v).grp.(gf).min:h(v).grp.(gf).max;
+        if(isfield(h(idx(i)).grp,gf))
+            g=h(idx(i)).grp.(gf).min:h(idx(i)).grp.(gf).max;
             group=1; glen=length(g);
         end
         
@@ -95,7 +84,7 @@ for i=1:length(data)
             end
             
             % display field/value
-            lh_disp(h(v),f,data(i));
+            lh_disp(h(idx(i)),f,data(i));
         end
     end
 end
@@ -176,6 +165,6 @@ end
 
 % field not found
 warning('SAClab:lh:fieldInvalid',...
-    '\nHeader Version: %d\nInvalid field: %s',h.version,f);
+    'Filetype: %s, Version: %d\nInvalid field: %s',h.filetype,h.version,f);
 
 end

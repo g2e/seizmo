@@ -56,9 +56,11 @@ function [data]=bseis(varargin)
 %                        global options support (alt. header version)
 %        Oct.  2, 2008 - SACLAB global options cleaned up, fixed uneven
 %                        datafile detection
+%        Oct. 15, 2008 - hasdata field support, possible bugfix for struct
+%                        setup
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  2, 2008 at 20:30 GMT
+%     Last Updated Oct. 15, 2008 at 07:15 GMT
 
 % todo:
 
@@ -120,8 +122,8 @@ for i=1:length(h.stype)
 end
 
 % create structure
-data(1:nargin/2,1)=struct('version',option.PREFHDRVER,...
-    'endian',option.ENDIAN,'name','','head',undef,'dep',[]);
+data(1:nargin/2,1)=struct('name',[],'endian',[],...
+    'version',[],'hasdata',[],'head',[],'dep',[]);
 
 % loop for each pair
 for i=1:2:nargin
@@ -168,10 +170,16 @@ for i=1:2:nargin
     % edit name
     data(j).name=['SAClab.' num2str(j) '.sac'];
     
+    % fill in other fields
+    data(j).endian=option.ENDIAN;
+    data(j).version=option.PREFHDRVER;
+    data(j).hasdata=true;
+    data(j).head=undef;
+    
     % handle dataless separately
     if(npts==0)
         data(j)=ch(data(j),'npts',0,'iftype','General X vs Y file',...
-            'lovrok','true','nvhdr',pref,'knetwk','SAClab');
+            'lovrok','true','nvhdr',option.PREFHDRVER,'knetwk','SAClab');
         continue;
     end
     
@@ -182,7 +190,7 @@ for i=1:2:nargin
         'npts',npts,'depmin',min(data(j).dep(:)),...
         'depmax',max(data(j).dep(:)),'depmen',mean(data(j).dep(:)),...
         'iftype','General X vs Y file','leven','true',...
-        'lovrok','true','nvhdr',pref,'knetwk','SAClab');
+        'lovrok','true','nvhdr',option.PREFHDRVER,'knetwk','SAClab');
     
     % handle 1pt data
     if(npts==1)

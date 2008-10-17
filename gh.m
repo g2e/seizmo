@@ -52,9 +52,10 @@ function [varargout]=gh(data,varargin)
 %     Version History:
 %        ????????????? - Initial Version
 %        June 12, 2008 - Documentation update, full header dump fixes
+%        Oct. 17, 2008 - added VINFO support, supports new struct layout
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 23:20 GMT
+%     Last Updated Oct. 17, 2008 at 02:30 GMT
 
 % require at least one input
 if(nargin<1)
@@ -71,16 +72,15 @@ nrecs=length(data);
 % recursive section
 %   breaks up dataset with multiple calls so that the
 %   rest of gh deals with only one header version
-v=[data.version];
-vers=unique(v(:));
-nver=length(vers);
+[h,idx]=vinfo(data);
+nver=numel(h);
 sfill=repmat({'NaN'},nrecs,1);
 nfill=nan(nrecs,1);
 if(nver>1)
     nout=max([1 nargin-1]);
     for i=1:nver
         varargoutn=cell(1,nout);
-        [varargoutn{:}]=gh(data(vers(i)==v),varargin{:});
+        [varargoutn{:}]=gh(data(idx==i),varargin{:});
         % assign to varargout
         for j=1:nout
             % preallocate by type
@@ -102,14 +102,11 @@ if(nver>1)
                 end
             end
             % assign
-            varargout{j}(vers(i)==v,1:in)=varargoutn{j};
+            varargout{j}(idx==i,1:in)=varargoutn{j};
         end
     end
     return;
 end
-
-% headers setup
-h=seisdef(vers);
 
 % pull entire header
 head=[data.head];
@@ -178,7 +175,7 @@ end
 
 % field not found
 warning('SAClab:gh:fieldInvalid',...
-    '\nHeader Version: %d\nInvalid field: %s',h.version,f);
+    'Filetype: %s, Version: %d\nInvalid field: %s',h.filetype,h.version,f);
 head=nan;
 type=0;
 

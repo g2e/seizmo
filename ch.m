@@ -78,9 +78,10 @@ function [data]=ch(data,varargin)
 %        June 28, 2008 - documentation update
 %        June 30, 2008 - undefine field supported using
 %                        nan, inf, -inf, 'nan', 'undef', 'undefined'
+%        Oct. 17, 2008 - added VINFO support, supports new struct layout
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 30, 2008 at 09:00 GMT
+%     Last Updated Oct. 17, 2008 at 02:35 GMT
 
 % todo:
 % - virtual fields
@@ -100,9 +101,8 @@ nrecs=numel(data);
 % recursive section
 %   breaks up dataset with multiple calls so that the
 %   rest of ch deals with only one header version
-v=[data.version];
-vers=unique(v(:));
-nver=length(vers);
+[h,idx]=vinfo(data);
+nver=numel(h);
 if(nver>1)
     for i=1:nver
         % need a way to parse varargin quickly
@@ -118,7 +118,7 @@ if(nver>1)
                 % records, otherwise replicate for each ch call. This
                 % breaks group field replication when nrecs==ngfields.
                 if(length(varargin{j})==nrecs)
-                    temp{j}=varargin{j}(vers(i)==v);
+                    temp{j}=varargin{j}(idx==i);
                 else
                     temp{j}=varargin{j};
                 end
@@ -126,7 +126,7 @@ if(nver>1)
                 % check and dice up input array
                 dim=size(varargin{j},1);
                 if(dim==nrecs)
-                    temp{j}=varargin{j}(vers(i)==v,:);
+                    temp{j}=varargin{j}(idx==i,:);
                 else
                     error('SAClab:ch:invalidInputSize',...
                         'Value array for field %s not correct size',...
@@ -134,13 +134,10 @@ if(nver>1)
                 end
             end
         end
-        data(vers(i)==v)=ch(data(vers(i)==v),temp{:});
+        data(idx==i)=ch(data(idx==i),temp{:});
     end
     return;
 end
-
-% headers setup
-h=seisdef(vers);
 
 % pull entire header
 head=[data.head];
@@ -341,6 +338,6 @@ end
             
 % field not found
 warning('SAClab:ch:fieldInvalid',...
-    '\nHeader Version: %d\nInvalid field: %s',h.version,f);
+    'Filetype: %s, Version: %d\nInvalid field: %s',h.filetype,h.version,f);
 
 end

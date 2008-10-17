@@ -3,38 +3,31 @@ function [report]=seischk(data,varargin)
 %
 %    Description: SEISCHK(DATA) returns an appropriate error message 
 %     structure if the input variable fails certain SAClab data structure 
-%     requirements (must be a nonempty 1D structure that has 'head' and 
-%     'version' fields).  The 'version' fields must also be set to a valid
-%     SAClab version (see VVSEIS). The output structure contains the fields 
-%     'identifier' and 'message' following Matlab error report standards.
+%     requirements.  The output structure contains the fields 'identifier'
+%     and 'message' following Matlab error report standards.
 %
 %     SEISCHK(DATA,FIELD1,...,FIELDN) allows extra fields to be required in
-%     addition to the 'head' and 'version' fields.  FIELD must be a string.
+%     addition to the default ones.  FIELD must be a string.
 %
 %    Notes:
-%     - see examples for extra field uses
+%     - Current SAClab Structure Requirements
+%       - Fields: dir, name, filetype, version, endian, hasdata, head
+%       - All default fields must be nonempty
+%       - All default fields must be valid
+%     - Non-default fields are not required to be nonempty or valid
+%     - See examples for non-default field uses
 %
 %    System requirements: Matlab 7
 %
-%    Input/Output requirements: first arg can be anything, additional args
-%     must be strings
-%
-%    Header changes: N/A
+%    Header changes: NONE
 %
 %    Usage: error(seischk(data))
 %           error(seischk(data,'requiredfield1','requiredfield2',...))
 %
 %    Examples:
-%     Writing out SAClab files requires the names and byte-orders of the
-%     output files be set, so to include the fields 'name' and 'endian' in 
-%     the check:
-%
-%           error(seischk(data,'endian','name'))
-%
-%     Most functions require data records stored in the field 'x'.  This
-%     will perform a regular check as well as assure the 'x' field exists:
-%
-%           error(seischk(data,'x')
+%     Most functions require records have data stored in the field 'dep'.
+%     This will perform a regular check as well as assure the field exists:
+%      error(seischk(data,'dep')
 %
 %    See also: isseis, seisdef
 
@@ -46,9 +39,15 @@ function [report]=seischk(data,varargin)
 %        June 12, 2008 - doc update
 %        Sep. 14, 2008 - doc update, input checks, return on first issue
 %        Sep. 25, 2008 - checks versions are valid
+%        Oct. 15, 2008 - data no longer required to be vector; require the
+%                        name, endian, and hasdata fields by default now; 
+%                        require that fields name, endian, version, hasdata
+%                        and head are not empty and are valid for each
+%                        record
+%        Oct. 17, 2008 - require new fields 'dir' and 'filetype'
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 25, 2008 at 06:55 GMT
+%     Last Updated Oct. 17, 2008 at 00:00 GMT
 
 % todo:
 
@@ -74,12 +73,9 @@ elseif(isempty(data))
     report.identifier='SAClab:seischk:dataEmpty';
     report.message='SAClab data structure must not be empty!';
     return;
-elseif(~isvector(data))
-    report.identifier='SAClab:seischk:dataNotVector';
-    report.message='SAClab data structure must be a vector!';
-    return;
 else
-    reqfields=[{'head' 'version'} varargin];
+    defreqfields={'dir' 'name' 'filetype' 'version' 'endian' 'hasdata' 'head'};
+    reqfields=[defreqfields varargin];
     
     % this works with older isfield (check one at a time)
     for i=reqfields
@@ -90,11 +86,59 @@ else
         end
     end
     
-    % now check versions are ok
-    if(~isequal(union([data.version],vvseis),vvseis))
-        report.identifier='SAClab:seischk:versionBad';
-        report.message='SAClab data records must have a valid version!';
-        return;
+    for i=1:numel(data)
+        % check for empties
+        for j=defreqfields
+            if(isempty(data(i).(j{:})))
+                report.identifier='SAClab:seischk:reqFieldEmpty';
+                report.message=sprintf('SAClab data structure field ''%s'' must not be empty!',j{:});
+                return;
+            end
+        end
+        
+        % check dir is ok
+        if(~isempty(data(i).dir) && ~ischar(data(i).dir))
+            report.identifier='SAClab:seischk:nameBad';
+            report.message='SAClab data records must have a valid directory!';
+            return;
+        end
+        
+        % check name is ok
+        if(~ischar(data(i).name))
+            report.identifier='SAClab:seischk:dirBad';
+            report.message='SAClab data records must have a valid name!';
+            return;
+        end
+        
+        % check version/filetype is ok
+        if(~isnumeric(data(i).version)...
+                || ~isequal(union(data(i).version,...
+                vvseis(data(i).filetype)),vvseis(data(i).filetype)))
+            report.identifier='SAClab:seischk:versionBad';
+            report.message='SAClab data records must have a valid version!';
+            return;
+        end
+        
+        % check endian is ok
+        if(~any(strcmp(data(i).endian,{'ieee-be' 'ieee-le'})))
+            report.identifier='SAClab:seischk:endianBad';
+            report.message='SAClab data records must have a valid endian!';
+            return;
+        end
+        
+        % check hasdata is ok
+        if(~islogical(data(i).hasdata))
+            report.identifier='SAClab:seischk:hasdataBad';
+            report.message='SAClab data records must have logical HASDATA field!';
+            return;
+        end
+        
+        % check header is ok
+        if(~isnumeric(data(i).head) || ~isequal(size(data(i).head),[302 1]))
+            report.identifier='SAClab:seischk:headerBad';
+            report.message='SAClab data records must have a valid header!';
+            return;
+        end
     end
 end
 

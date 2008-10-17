@@ -1,10 +1,10 @@
-function [def]=seisdef(version)
+function [def]=seisdef(filetype,version)
 %SEISDEF    Returns SAClab definition structure
 %
-%    Description: [DEFINITIONS]=SEISDEF(VERSION) returns the structure 
+%    Description: [DEFINITIONS]=SEISDEF(FILETYPE,VERSION) returns struct 
 %     DEFINITIONS which provides all formatting information necessary to 
-%     read/understand/modify/write the specified version VERSION of a 
-%     SAClab data file or record.
+%     read/understand/modify/write the specified version VERSION of the
+%     data file type FILETYPE.
 %
 %    Notes:
 %     - Currently the definition is set so that all header data is stored 
@@ -16,15 +16,13 @@ function [def]=seisdef(version)
 %
 %    System requirements: Matlab 7
 %
-%    Input/Output requirements: valid version number (use VVSEIS() listing)
+%    Header changes: NONE
 %
-%    Header changes: N/A
-%
-%    Usage:    definition=seisdef(version)
+%    Usage:    definition=seisdef(filetype,version)
 %
 %    Examples:
 %     Get detailed information on SAC version 6 files (SAClab v6 too):
-%      sac_ver_6=seisdef(6)
+%      sac_ver_6=seisdef('SAClab Binary',6)
 %
 %    See also:  seischk, isseis, vvseis
 
@@ -40,28 +38,35 @@ function [def]=seisdef(version)
 %        June 23, 2008 - doc cleanup
 %        Sep. 14, 2008 - minor doc update, input checks
 %        Sep. 26, 2008 - multi-component indicator, minor code clean
+%        Oct. 17, 2008 - filetype support (gonna break stuff)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep 26, 2008 at 18:35 GMT
+%     Last Updated Oct. 17, 2008 at 00:25 GMT
 
 % todo:
 
 % check input
-error(nargchk(1,1,nargin))
+error(nargchk(2,2,nargin))
+if(~ischar(filetype))
+    error('SAClab:seisdef:badInput','FILETYPE must be a string!');
+end
 if(~isnumeric(version))
     error('SAClab:seisdef:badInput','VERSION must be numeric!');
 end
 
 % get valid versions
-valid=vvseis();
+valid=vvseis(filetype);
 
 % check for invalid version
-if(~any(valid==version))
-    error('SAClab:seisdef:invalidVersion','Header version invalid: %d!',version)
+if(isempty(valid) || ~any(valid==version))
+    error('SAClab:seisdef:invalidVersion',...
+        'Filetype: %s, Version: %d Invalid!',filetype,version)
 end
 
-% SAC version 6 setup
-if(any(version==[6 101 200 201]))
+% SAClab binary setup
+if(strcmpi(filetype,'SAClab Binary'))
+    % start with SAC version 6
+    def.filetype='SAClab Binary';
     def.version=6;
     def.numfields=133;
     def.size=302;

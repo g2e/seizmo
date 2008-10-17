@@ -1,41 +1,46 @@
-function [valid]=vvseis()
+function [valid]=vvseis(filetype)
 %VVSEIS    Returns valid SAClab datafile versions
 %
-%    Description: VVSEIS() returns a vector of version numbers 
-%     corresponding to seismic datafile formats that SAClab can work with.
+%    Description: VVSEIS(FILETYPE) returns a vector of version numbers
+%     of the specified filetype FILETYPE that SAClab can work with.  If the
+%     filetype is not support, VVSEIS will return an empty array.
 %
 %    Notes:
+%     - currently only supports filetype 'SAClab Binary'
 %     - version 6 corresponds to SAC's v6 binary format
 %     - versions 101,200,201 are modifications of SAC's v6.
-%     - see SEISDEF.M for details on the formats
-%    
-%    System requirements: Matlab
 %
-%    Input/Output requirements: NONE
+%    System requirements: Matlab 7
 %
-%    Header changes: N/A
+%    Header changes: NONE
 %    
-%    Usage:    valid_versions=vvseis()
+%    Usage:    valid_versions=vvseis(filetype)
 %
 %    Examples:
-%     Find out the number of different versions SAClab supports:
-%      length(vvseis)
+%     How many different SAClab binary file versions are supported:
+%      length(vvseis('SAClab Binary'))
 %
 %    See also:  seischk, isseis, seisdef, gv
 
 %     Version History:
 %        Feb. 28, 2008 - initial version
 %        Mar.  4, 2008 - doc update
-%        Mar. 18, 2008 - removed 2 versions to match seisdef update
-%        June 12, 2008 - doc update
+%        Apr. 18, 2008 - drop a couple deprecated versions
+%        June 12, 2008 - doc update, added history
 %        Sep. 14, 2008 - minor doc update
+%        Oct. 17, 2008 - filetype argument, history fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2008 at 15:25 GMT
+%     Last Updated Oct 17, 2008 at 00:25 GMT
 
 % todo:
 
-% no args - return valid versions
-valid=[6 101 200 201];
+% check nargin
+error(nargchk(1,1,nargin))
+
+% SAClab binary version
+if(strcmpi(filetype,'SAClab Binary'))
+    valid=[6 101 200 201];
+end
 
 end

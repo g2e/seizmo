@@ -21,7 +21,7 @@ tru=strcmp(lgc,'true');
 fals=strcmp(lgc,'false');
 if(~all(tru | fals))
     report.identifier='SAClab:lgcchk:logicBad';
-    report.message=sprintf('logical field ''%s'' needs to be set to true of false',field); 
+    report.message=sprintf('Logical field ''%s'' needs to be set to true of false!',field); 
 end
 
 end

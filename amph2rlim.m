@@ -57,8 +57,9 @@ if(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
 end
 
 % loop through records
+nrecs=numel(data);
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:numel(data)
+for i=1:nrecs
     % skip dataless
     if(isempty(data(i).dep)); continue; end
     
