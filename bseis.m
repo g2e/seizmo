@@ -16,7 +16,7 @@ function [data]=bseis(varargin)
 %     - the filetype is set as 'General X vs Y file'
 %     - automatically figures out if data is evenly sampled
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: 
 %     CREATES HEADER INFO: 
@@ -58,11 +58,18 @@ function [data]=bseis(varargin)
 %                        datafile detection
 %        Oct. 15, 2008 - hasdata field support, possible bugfix for struct
 %                        setup
+%        Oct. 27, 2008 - update for struct changes, better SACLAB global
+%                        handling, made consistent with new requirements,
+%                        single CH call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 15, 2008 at 07:15 GMT
+%     Last Updated Oct. 27, 2008 at 06:55 GMT
 
 % todo:
+
+% turn off checking
+oldseischkstate=get_seischk_state;
+set_seischk_state(true);
 
 % check number of inputs
 if (mod(nargin,2)) 
@@ -70,7 +77,8 @@ if (mod(nargin,2))
 end
 
 % defaults
-option.PREFHDRVER=6;
+option.FILETYPE='SAClab Binary';
+option.VERSION=6;
 option.ENDIAN=[];
 
 % get options from SACLAB global
@@ -80,21 +88,36 @@ if(isfield(SACLAB,'BSEIS'))
         if(strcmpi(SACLAB.BSEIS.ENDIAN,{'ieee-le' 'ieee-be'}))
             option.ENDIAN=lower(SACLAB.BSEIS.ENDIAN);
         else
-            warning('SAClab:bseis:badOption','ENDIAN incomprehensible!');
+            warning('SAClab:bseis:badOption',...
+                'ENDIAN option from SACLAB global unknown => skipping!');
         end
     end
-    if(isfield(SACLAB.BSEIS,'PREFHDRVER') ...
-        && isscalar(SACLAB.BSEIS.PREFHDRVER) ...
-        && isnumeric(SACLAB.BSEIS.PREFHDRVER) ...
-        && any(vvseis==SACLAB.BSEIS.PREFHDRVER))
-        option.PREFHDRVER=SACLAB.BSEIS.PREFHDRVER;
-    else
-        warning('SAClab:bseis:badOption','PREFHDRVER incomprehensible!');
+    if(isfield(SACLAB.BSEIS,'FILETYPE'))
+        if(isfield(SACLAB.BSEIS,'VERSION')...
+            && isscalar(SACLAB.BSEIS.VERSION)...
+            && isnumeric(SACLAB.BSEIS.PREFHDRVER)...
+            && any(SACLAB.BSEIS.VERSION==vvseis(SACLAB.BSEIS.FILETYPE)))
+            option.FILETYPE=SACLAB.BSEIS.FILETYPE;
+            option.VERSION=SACLAB.BSEIS.VERSION;
+        else
+            warning('SAClab:bseis:badOption',...
+                'FILETYPE option from SACLAB global unknown => skipping!');
+        end
+    end
+    if(isfield(SACLAB.BSEIS,'VERSION'))
+        if(isscalar(SACLAB.BSEIS.VERSION)...
+            && isnumeric(SACLAB.BSEIS.VERSION)...
+            && any(SACLAB.BSEIS.VERSION==vvseis(option.FILETYPE)))
+            option.VERSION=SACLAB.BSEIS.VERSION;
+        else
+            warning('SAClab:bseis:badOption',...
+                'VERSION option from SACLAB global unknown => skipping!');
+        end
     end
 end
 
 % get the version definition
-h=seisdef(option.PREFHDRVER);
+h=seisdef(option.FILETYPE,option.VERSION);
 
 % get the native byteorder if needed
 if(isempty(option.ENDIAN))
@@ -105,7 +128,8 @@ end
 undef=nan(h.size,1,h.store);
 for i=1:length(h.ntype)
     for j=1:length(h.(h.ntype{i}))
-        undef(h.(h.ntype{i})(j).minpos:h.(h.ntype{i})(j).maxpos)=h.undef.ntype;
+        undef(h.(h.ntype{i})(j).minpos:h.(h.ntype{i})(j).maxpos)=...
+            h.undef.ntype;
     end
 end
 
@@ -122,13 +146,16 @@ for i=1:length(h.stype)
 end
 
 % create structure
-data(1:nargin/2,1)=struct('name',[],'endian',[],...
-    'version',[],'hasdata',[],'head',[],'dep',[]);
+nrecs=nargin/2;
+data(1:nrecs,1)=struct('location',[],'name',[],'filetype',[],...
+    'version',[],'endian',[],'hasdata',[],'head',[],'dep',[]);
 
 % loop for each pair
+leven=true(nrecs,1); delta=ones(nrecs,1);
+[b,e,npts,ncmp,depmen,depmin,depmax]=swap(nan(nrecs,1));
 for i=1:2:nargin
     % output index
-    j=round((i+1)/2);
+    j=ceil(i/2);
     
     % check type
     if(~isnumeric(varargin{i}))
@@ -144,66 +171,74 @@ for i=1:2:nargin
         error('SAClab:bseis:badInput',...
             'Independent data must be a vector: pair %d !',j);
     end
-    npts=length(varargin{i});
+    
+    % get npts
+    npts(j)=length(varargin{i});
+    
+    % cross check
     if(isvector(varargin{i+1}))
         % vectors can be row or column vectors
-        if(npts~=length(varargin{i+1}))
+        if(npts(j)~=length(varargin{i+1}))
             error('SAClab:bseis:badInput',...
                 ['Dependent data does not match independent data length'...
                  ': pair %d !'],j);
         end
         
-        % fill in dependent variable
+        % fill in dependent variable (as column vector)
         data(j).dep=varargin{i+1}(:);
+        ncmp(j)=1;
     else
         % arrays must have components oriented down columns
-        if(npts~=size(varargin{i+1},1))
+        [ndpts,ncmp(j)]=size(varargin{i+1});
+        if(npts(j)~=ndpts)
             error('SAClab:bseis:badInput',...
                 ['Dependent data does not match independent data length'...
                  ': pair %d !'],j);
         end
         
-        % fill in dependent variable
-        data(j).dep=varargin{i+1};
+        % fill in dependent variable (assure 2D output)
+        data(j).dep=varargin{i+1}(:,:);
     end
     
     % edit name
     data(j).name=['SAClab.' num2str(j) '.sac'];
     
     % fill in other fields
+    data(j).location='.';
     data(j).endian=option.ENDIAN;
-    data(j).version=option.PREFHDRVER;
+    data(j).filetype=option.FILETYPE;
+    data(j).version=option.VERSION;
     data(j).hasdata=true;
     data(j).head=undef;
     
-    % handle dataless separately
-    if(npts==0)
-        data(j)=ch(data(j),'npts',0,'iftype','General X vs Y file',...
-            'lovrok','true','nvhdr',option.PREFHDRVER,'knetwk','SAClab');
-        continue;
-    end
+    % handle 0pt
+    if(npts(j)==0); continue; end
     
-    % fill in knowns/presets
-    delta=(varargin{i}(end)-varargin{i}(1))/(npts-1);
-    data(j)=ch(data(j),...
-        'delta',delta,'b',varargin{i}(1),'e',varargin{i}(end),...
-        'npts',npts,'depmin',min(data(j).dep(:)),...
-        'depmax',max(data(j).dep(:)),'depmen',mean(data(j).dep(:)),...
-        'iftype','General X vs Y file','leven','true',...
-        'lovrok','true','nvhdr',option.PREFHDRVER,'knetwk','SAClab');
+    % get b,e,dep*
+    b(j)=varargin{i}(1);
+    e(j)=varargin{i}(end);
+    depmen(j)=mean(data(j).dep(:));
+    depmin(j)=min(data(j).dep(:));
+    depmax(j)=max(data(j).dep(:));
     
-    % handle 1pt data
-    if(npts==1)
-        data(j)=ch(data(j),'leven',nan);
-        continue;
-    end
+    % handle 1pt
+    if(npts(j)==1); continue; end
     
-    % add proper info to unevenly spaced data
-    if(any(abs(delta-diff(varargin{i}))>10*eps))
-        data(j).ind=varargin{i}(:);
-        data(j)=ch(data(j),'leven','false',...
-            'odelta',data(j).ind(min([2 end]))-data(j).ind(1));
+    % get delta and handle uneven
+    delta(j)=diff(varargin{i}([1 end]))/(npts(j)-1);
+    if(any(abs(delta(j)-diff(varargin{i}))>10*eps))
+        data(j).ind=varargin{i}(:); leven(j)=false;
     end
 end
+
+% write header changes
+data=ch(data,'b',b,'e',e,'delta',delta,'npts',npts,'ncmp',ncmp,...
+    'depmen',depmen,'depmin',depmin,'depmax',depmax,...
+    'iftype','General X vs Y file','lovrok','true',...
+    'nvhdr',option.VERSION,'knetwk','SAClab','leven',leven);
+
+
+% toggle checking back
+set_seischk_state(oldseischkstate);
 
 end

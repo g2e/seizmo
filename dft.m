@@ -109,7 +109,7 @@ for i=1:nrecs
     [len(i),ncmp]=size(data(i).dep);
     
     % get frequency info
-    nspts=2^(nextpow2(len(i))+pow2pad);
+    nspts(i)=2^(nextpow2(len(i))+pow2pad);
     sb(i)=0; se(i)=1/(delta(i)*2); sdelta=2*se(i)/nspts(i);
     
     % fft

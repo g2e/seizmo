@@ -14,9 +14,7 @@ function [def]=seisdef(filetype,version)
 %       the header storage).  Breaking the header into subfields would
 %       probably require more memory anyways due to overhead.
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    definition=seisdef(filetype,version)
 %
@@ -39,9 +37,10 @@ function [def]=seisdef(filetype,version)
 %        Sep. 14, 2008 - minor doc update, input checks
 %        Sep. 26, 2008 - multi-component indicator, minor code clean
 %        Oct. 17, 2008 - filetype support (gonna break stuff)
+%        Oct. 26, 2008 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 17, 2008 at 00:25 GMT
+%     Last Updated Oct. 26, 2008 at 22:25 GMT
 
 % todo:
 

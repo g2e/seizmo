@@ -10,9 +10,7 @@ function [valid]=vvseis(filetype)
 %     - version 6 corresponds to SAC's v6 binary format
 %     - versions 101,200,201 are modifications of SAC's v6.
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %    
 %    Usage:    valid_versions=vvseis(filetype)
 %
@@ -29,9 +27,10 @@ function [valid]=vvseis(filetype)
 %        June 12, 2008 - doc update, added history
 %        Sep. 14, 2008 - minor doc update
 %        Oct. 17, 2008 - filetype argument, history fix
+%        Oct. 27, 2008 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct 17, 2008 at 00:25 GMT
+%     Last Updated Oct 26, 2008 at 02:35 GMT
 
 % todo:
 

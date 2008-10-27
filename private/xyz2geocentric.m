@@ -1,25 +1,23 @@
 function [lat,lon,radius]=xyz2geocentric(x,y,z,r)
-%XYZ2SPHERICAL    Converts coordinates from cartesian to geocentric
+%XYZ2GEOCENTRIC    Converts coordinates from cartesian to geocentric
 %
-%    Description: [LAT,LON,RADIUS]=XYZ2SPHERICAL(X,Y,Z) converts arrays of
+%    Description: [LAT,LON,RADIUS]=XYZ2GEOCENTRIC(X,Y,Z) converts arrays of
 %     coordinates in Earth-centered, Earth-Fixed (ECEF) to geocentric
 %     latitude, longitude, radius.  LAT and LON are in degrees.  X, Y and Z
-%     must be the same size and in the same units so that RADIUS will be
-%     as well.
+%     must have the same units (so RADIUS will be in those units) and must
+%     be same size arrays or scalars.
 %
-%     [LAT,LON,DEPTH]=XYZ2SPHERICAL(X,Y,Z,R) allows specifying the radius
+%     [LAT,LON,DEPTH]=XYZ2GEOCENTRIC(X,Y,Z,R) allows specifying the radius
 %     R of the sphere so depth is returned rather than radius.  In this 
-%     case, the size and units of X, Y, Z must match those of R so that 
-%     DEPTH will match in size and units as well.
+%     case, the units of X, Y, Z must match those of R (so DEPTH will be in
+%     those units).  R must be a scalar.
 %
 %    Notes:
 %     - the ECEF coordinate system has the X axis passing through the
 %       equator at the prime meridian, the Z axis through the north pole
 %       and the Y axis through the equator at 90 degrees longitude.
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    [lat,lon,radius]=xyz2geocentric(x,y,z)
 %              [lat,lon,depth]=xyz2geocentric(x,y,z,r)
@@ -32,22 +30,48 @@ function [lat,lon,radius]=xyz2geocentric(x,y,z,r)
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
+%        Oct. 26, 2008 - scalar expansion, doc and comment update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2008 at 16:45 GMT
+%     Last Updated Oct. 26, 2008 at 04:15 GMT
 
 % todo:
 
 % require 3 or 4 inputs
 error(nargchk(3,4,nargin))
 
-% check inputs
+% size up inputs
+sx=size(x); sy=size(y); sz=size(z);
+nx=prod(sx); ny=prod(sy); nz=prod(sz);
+
+% basic check inputs
 if(~isnumeric(x) || ~isnumeric(y) || ~isnumeric(z))
-    error('SAClab:xyz2geocentric:nonNumeric',...
-    'All inputs must be numeric!');
-elseif(isempty(x) || ~isequal(size(x),size(y),size(z)))
+    error('SAClab:xyz2geocentric:nonNumeric','All inputs must be numeric!');
+elseif(any([nx ny nz]==0))
     error('SAClab:xyz2geocentric:unpairedCoord',...
-        'Coordinate inputs must be nonempty, equal size arrays!');
+        'Coordinate inputs must be nonempty arrays!');
+elseif((~isequal(sx,sy) && all([nx ny]~=1)) ||...
+       (~isequal(sx,sz) && all([nx nz]~=1)) ||...
+       (~isequal(sz,sy) && all([nz ny]~=1)))
+    error('SAClab:xyz2geocentric:unpairedCoord',...
+        'Coordinate inputs must be scalar or equal sized arrays!');
+end
+
+% expand scalars
+if(all([nx ny nz]==1))
+    % do nothing
+elseif(all([nx ny]==1))
+    x=repmat(x,sz); y=repmat(y,sz);
+elseif(all([nx nz]==1))
+    x=repmat(x,sy); z=repmat(z,sy);
+elseif(all([ny nz]==1))
+    y=repmat(y,sx); z=repmat(z,sx);
+elseif(nx==1)
+    x=repmat(x,sz);
+elseif(ny==1)
+    y=repmat(y,sz);
+elseif(nz==1)
+    z=repmat(z,sy);
 end
 
 % convert to geocentric

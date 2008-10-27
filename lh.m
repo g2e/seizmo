@@ -3,9 +3,13 @@ function []=lh(data,varargin)
 %
 %    Description: LH(DATA,FIELD1,FIELD2,...) lists the specified header 
 %     field(s) FIELD1, FIELD2, ... and their value(s) in DATA in a manner 
-%     similar to SAC's lh formating.  FIELDS must be strings corresponding 
+%     similar to SAC's lh formating.  FIELD must be a string corresponding 
 %     to a valid header field or a valid group field (ie. t, kt, resp, 
 %     user, kuser).
+%
+%    Notes:
+%
+%    Tested on: Matlab r2007b
 %
 %    Usage:    lh(data,'field1','field2',...)
 %
@@ -20,21 +24,26 @@ function []=lh(data,varargin)
 %    See also:  ch, gh, glgc, genum, genumdesc
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Documentation Update
+%        Oct. 29, 2007 - initial version
+%        Nov.  7, 2007 - doc update
+%        Jan. 28, 2008 - new sachp support
+%        Feb. 23, 2008 - minor doc update
+%        Feb. 29, 2008 - major code overhaul
+%        Mar.  4, 2008 - minor doc update
+%        June 12, 2008 - doc update, added history
 %        Oct. 17, 2008 - added VINFO support, supports new struct layout
+%        Oct. 27, 2008 - update for struct change, doc update, history
+%                        overhaul
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 17, 2008 at 02:25 GMT
+%     Last Updated Oct. 27, 2008 at 05:15 GMT
 
-% require at least one input
+% todo:
+
+% skip if nothing
 if(nargin<1)
-    error('MATLAB:nargchk:notEnoughInputs',...
-        'Not enough input arguments.')
+    return;
 end
-
-% check data structure
-error(seischk(data))
 
 % headers setup
 [h,idx]=vinfo(data);
@@ -57,7 +66,7 @@ for i=1:length(data)
     end
     
     % get filename
-    name=fullfile(data(i).dir,data(i).name);
+    name=fullfile(data(i).location,data(i).name);
     
     % formatted header
     disp(' ')

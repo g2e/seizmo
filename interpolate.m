@@ -47,7 +47,7 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 error(nargchk(2,5,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seischk(data,'dep'))
 
 % get timing info
 leven=glgc(data,'leven');
@@ -60,7 +60,7 @@ if(nargin<4 || isempty(new_b)); new_b=b; end
 if(nargin<3 || isempty(method)); method{1}='spline'; end
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % check and expand inputs
 if(isscalar(new_b)); new_b(1:nrecs,1)=new_b;
@@ -90,22 +90,22 @@ dt=1./sr;
 % looping for each file
 for i=1:nrecs
     % save class and convert to double precision
-    oclass=str2func(class(data(i).x));
+    oclass=str2func(class(data(i).dep));
     
     % make new timing array
     nt=(new_b(i):dt(i):new_e(i)).';
     
     % old timing of data
     if(strcmp(leven(i),'true')); ot=b(i)+(0:npts(i)-1).'*delta(i);
-    else ot=data(i).t; data(i).t=[]; end
+    else ot=data(i).ind; data(i).ind=[]; end
     
     % interpolate and convert class back
-    data(i).x=oclass(interp1(double(ot),double(data(i).x),double(nt),method{i}));
+    data(i).dep=oclass(interp1(double(ot),double(data(i).dep),double(nt),method{i}));
     
     % update header
     data(i)=ch(data(i),'delta',dt(i),'b',nt(1),'e',nt(end),...
-        'npts',length(nt),'depmin',min(data(i).x(:)),'leven','t',...
-        'depmax',max(data(i).x(:)),'depmen',mean(data(i).x(:)));
+        'npts',length(nt),'depmin',min(data(i).dep(:)),'leven','t',...
+        'depmax',max(data(i).dep(:)),'depmen',mean(data(i).dep(:)));
 end
 
 end

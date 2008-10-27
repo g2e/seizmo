@@ -67,15 +67,15 @@ function [data]=ch(data,varargin)
 
 %     Version History:
 %        Oct. 29, 2007 - initial version
-%        Nov.  7, 2007 - documentation update
+%        Nov.  7, 2007 - doc update
 %        Jan. 28, 2008 - new sachp support
 %        Feb. 18, 2008 - rewrite - parses by version before updating
 %        Feb. 23, 2008 - major code cleanup
 %        Feb. 28, 2008 - major code cleanup
 %        Mar.  4, 2008 - cleanup errors and warnings
-%        June 16, 2008 - documentation update
+%        June 16, 2008 - doc update
 %        June 20, 2008 - enum ids & logicals now support uppercase strings
-%        June 28, 2008 - documentation update
+%        June 28, 2008 - doc update
 %        June 30, 2008 - undefine field supported using
 %                        nan, inf, -inf, 'nan', 'undef', 'undefined'
 %        Oct. 17, 2008 - added VINFO support, supports new struct layout
@@ -89,11 +89,14 @@ function [data]=ch(data,varargin)
 
 % throw error if unpaired fields
 if (mod(nargin-1,2))
-    error('SAClab:ch:badNargs','Unpaired Field/Value!')
+    error('SAClab:ch:badNargs','Unpaired Field/Value!');
 end
 
 % check data structure
 error(seischk(data))
+
+% quick exit
+if(nargin==1); return; end
 
 % number of records
 nrecs=numel(data);
@@ -129,7 +132,7 @@ if(nver>1)
                     temp{j}=varargin{j}(idx==i,:);
                 else
                     error('SAClab:ch:invalidInputSize',...
-                        'Value array for field %s not correct size',...
+                        'Value array for field %s incorrect size!',...
                         varargin{j-1});
                 end
             end
@@ -145,7 +148,7 @@ head=[data.head];
 % loop over field/value pairs
 for i=1:2:(nargin-2)
     % force values into cell array
-    if(isnumeric(varargin{i+1}))
+    if(isnumeric(varargin{i+1}) || islogical(varargin{i+1}))
         varargin{i+1}=num2cell(varargin{i+1});
     elseif(ischar(varargin{i+1}))
         varargin{i+1}=cellstr(varargin{i+1});
@@ -178,14 +181,14 @@ for i=1:2:(nargin-2)
             else
                 error('SAClab:ch:invalidInputSize',...
                     ['\nHeader Version: %d\n'...
-                    'Group value vector for field %s not correct size'],...
+                    'Group value vector for field %s incorrect size!'],...
                     h.version,varargin{i});
             end
         % check for correct length
         elseif(len~=nrecs)
             error('SAClab:ch:invalidInputSize',...
                 ['\nHeader Version: %d\n'...
-                'Value vector for field %s not correct size'],...
+                'Value vector for field %s incorrect size!'],...
                 h.version,varargin{i});
         end
     % array
@@ -247,7 +250,7 @@ for m=1:length(h.enum)
                     else
                         warning('SAClab:ch:enumBad',...
                             ['\nHeader Version: %d\n'...
-                            'Enum ID/Desc Invalid for field %s'],...
+                            'Enum ID/Desc Invalid for field %s !'],...
                             h.version,f);
                     end
                 end
@@ -267,7 +270,7 @@ for m=1:length(h.enum)
                         else
                             warning('SAClab:ch:enumBad',...
                                 ['\nHeader Version: %d\n'...
-                                'Enum ID/Desc Invalid for field %s'],...
+                                'Enum ID/Desc Invalid for field %s !'],...
                                 h.version,f);
                         end
                     end
@@ -299,9 +302,14 @@ for m=1:length(h.lgc)
         else
             % logic numbers (unknown => unknown here)
             v=cell2mat(v);
-            v(isnan(v))=h.undef.ntype;
-            v(isinf(v))=h.undef.ntype;
-            head(h.lgc(m).pos.(f),:)=v;
+            if(islogical(v))
+                head(h.lgc(m).pos.(f),v)=h.true;
+                head(h.lgc(m).pos.(f),~v)=h.false;
+            else
+                v(isnan(v))=h.undef.ntype;
+                v(isinf(v))=h.undef.ntype;
+                head(h.lgc(m).pos.(f),:)=v;
+            end
         end
         return;
     end
@@ -338,6 +346,7 @@ end
             
 % field not found
 warning('SAClab:ch:fieldInvalid',...
-    'Filetype: %s, Version: %d\nInvalid field: %s',h.filetype,h.version,f);
+    'Filetype: %s, Version: %d\nInvalid field: %s !',...
+    h.filetype,h.version,f);
 
 end

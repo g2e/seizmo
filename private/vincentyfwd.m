@@ -1,23 +1,29 @@
-function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid)
+function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %VINCENTYFWD    Find destination point on an ellipsoid relative to a point
 %    
 %    Description: [LAT2,LON2,BAZ]=VINCENTYFWD(LAT1,LON1,DIST,AZ) returns
-%     geodetic latitudes LAT2 and longitudes LON2 of destination point(s),
-%     as well as the backazimuths BAZ, given the distances DIST and forward
-%     azimuths AZ from initial point(s) with geodetic latitudes LAT1 and
-%     longitudes LON1.  Inputs are all in degrees except DIST which must be
-%     in kilometers.  Outputs are all in degrees.  LAT1 and LON1 must be
-%     nonempty same-size arrays and DIST and AZ must be as well.  If
-%     multiple initial points and distance-azimuths are given, all must be
-%     same size (1 initial point per distance-azimuth).  A single initial
-%     point may be paired with multiple distance-azimuths and multiple
-%     initial points may be paired with a single distance-azimuth to make
-%     working with repetitive data simpler.
+%     geodetic latitudes LAT2 and longitudes LON2 of destination points, as
+%     well as the backazimuths BAZ, given the distances DIST and forward
+%     azimuths AZ from initial points with geodetic latitudes LAT1 and
+%     longitudes LON1 on the WGS-84 reference ellipsoid.  Inputs are all in
+%     degrees except DIST which must be in kilometers.  Outputs are all in
+%     degrees.  LAT1 and LON1 must be scalar or nonempty same-size arrays
+%     and DIST and AZ must be as well.  If multiple initial points and
+%     distance-azimuths are given, all must be same size (1 initial point
+%     per distance-azimuth).  A single initial point may be paired with
+%     multiple distance-azimuths and multiple initial points may be paired
+%     with a single distance-azimuth to make working with repetitive data
+%     simpler.
 %
 %     VINCENTYFWD(LAT1,LON1,DIST,AZ,[A F]) allows specifying the
 %     ellipsoid parameters A (equatorial radius in kilometers) and F
-%     (flattening).  This is compatible with Matlab's Mapping Toolbox
-%     function ALMANAC.
+%     (flattening).  This is compatible with output from Matlab's Mapping
+%     Toolbox function ALMANAC.  By default the ellipsoid parameters are
+%     set to those of the WGS-84 reference ellipsoid.
+%
+%     VINCENTYFWD(LAT1,LON1,DIST,AZ,[A F],TOL) sets the tolerance (minimum
+%     precision) of the calculation.  Units are in radians.  The default is
+%     1e-12 (~0.01mm for the WGS-84 reference ellipsoid).
 %
 %    Notes:
 %     - Destination points are found following the formulation of:
@@ -29,12 +35,11 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid)
 %     - Longitudes are returned in the range -180<lon<=180
 %     - Azimuths are returned in the range 0<=az<=360
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az)
 %              [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az,[a f])
+%              [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az,[a f],tol)
 %
 %    Examples:
 %     St. Louis, MO USA to ???:
@@ -44,17 +49,19 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid)
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
+%        Oct. 26, 2008 - improved scalar expansion, allow specifying the
+%                        tolerance, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2008 at 05:45 GMT
+%     Last Updated Oct. 26, 2008 at 04:45 GMT
 
 % todo:
 
-% require 4 or 5 inputs
-error(nargchk(4,5,nargin))
+% require 4 to 6 inputs
+error(nargchk(4,6,nargin))
 
 % default - WGS-84 Reference Ellipsoid
-if(nargin==4)
+if(nargin==4 || isempty(ellipsoid))
     % a=radius at equator (major axis)
     % f=flattening
     a=6378137.0;
@@ -71,34 +78,57 @@ else
     end
 end
 
-% check inputs
+% default tolerances
+if(any(nargin==[4 5]) || isempty(tolerance))
+    % roughly 0.01mm
+    tolerance=1e-12;
+elseif(~isnumeric(tolerance) || numel(tolerance)>1)
+    error('SAClab:vincentyfwd:badTolerance',...
+        'Tolerance must be a scalar specifying precision in radians!');
+elseif(any(tolerance<0) || any(tolerance>pi))
+    error('SAClab:vincentyfwd:badTolerance',...
+        'Tolerances must be in the range 0 to PI!');
+end
+
+% size up inputs
+sz1=size(evla); sz2=size(evlo);
+sz3=size(dist); sz4=size(az);
+n1=prod(sz1); n2=prod(sz2);
+n3=prod(sz3); n4=prod(sz4);
+
+% basic check inputs
 if(~isnumeric(evla) || ~isnumeric(evlo) ||...
         ~isnumeric(dist) || ~isnumeric(az))
     error('SAClab:vincentyfwd:nonNumeric','All inputs must be numeric!');
-elseif(isempty(dist) || ~isequal(size(dist),size(az)))
-    error('SAClab:vincentyfwd:unpairedLatLon',...
-        'Distances and azimuths must be nonempty, equal size arrays!')
-elseif(isempty(evla) || ~isequal(size(evla),size(evlo)))
-    error('SAClab:vincentyfwd:unpairedLatLon',...
-        'Latitudes & longitudes must be nonempty, equal size arrays!')
-elseif(~isscalar(evla) && ~isscalar(az) ...
-        && ~isequal(size(evla),size(az)))
-    error('SAClab:vincentyfwd:nonscalarUnequalArrays',...
-        'Input arrays need to be scalar or have equal size!')
+elseif(any([n1 n2 n3 n4]==0))
+    error('SAClab:vincentyfwd:emptyLatLon',...
+        'Location inputs must be nonempty arrays!');
 end
-
-% number of pairs
-n1=size(evla); n2=size(dist); n=n1;
 
 % expand scalars
-if(isscalar(evla)); evla=repmat(evla,n2); evlo=repmat(evlo,n2); n=n2;
-elseif(isscalar(az)); dist=repmat(dist,n1); az=repmat(az,n1);
+if(n1==1); evla=repmat(evla,sz2); n1=n2; sz1=sz2; end
+if(n2==1); evlo=repmat(evlo,sz1); n2=n1; sz2=sz1; end
+if(n3==1); stla=repmat(dist,sz4); n3=n4; sz3=sz4; end
+if(n4==1); stlo=repmat(az,sz3); n4=n3; sz4=sz3; end
+
+% cross check inputs
+if(~isequal(sz1,sz2) || ~isequal(sz3,sz4) ||...
+        (~any([n1 n3]==1) && ~isequal(sz1,sz3)))
+    error('SAClab:vincentyfwd:nonscalarUnequalArrays',...
+        'Input arrays need to be scalar or have equal size!');
 end
+
+% expand scalars
+if(n2==1); evla=repmat(evla,sz3); evlo=repmat(evlo,sz3); end
+if(n4==1); dist=repmat(stla,sz1); az=repmat(stlo,sz1); end
+
+% number of pairs
+n=size(evla);
 
 % check lats are within -90 to 90 (Geodetic Latitude φ)
 if(any(abs(evla)>90))
     error('SAClab:vincentyfwd:latitudeOutOfRange',...
-        'Starting latitude out of range (-90 to 90): %g',evla);
+        'Starting latitude out of range (-90 to 90)');
 end
 
 % force lon 0 to 360
@@ -136,7 +166,7 @@ B=u2./1024.*(256+u2.*(-128+u2.*(74-47.*u2)));
 
 % iterate until sigma converges
 left=true(n); cos2sigmam=nan(n); deltasigma=nan(n);
-sigma=dist./(b.*A); sigmaprime=2*pi*ones(n); eps=1e-12;
+sigma=dist./(b.*A); sigmaprime=2*pi*ones(n);
 while (any(left)) % forces at least one iteration
     cos2sigmam(left)=cos(2.*sigma1(left)+sigma(left));
     deltasigma(left)=B(left).*sin(sigma(left)).*(cos2sigmam(left)...
@@ -145,7 +175,7 @@ while (any(left)) % forces at least one iteration
         .*(-3+4.*cos2sigmam(left).^2)));
     sigmaprime(left)=sigma(left);
     sigma(left)=dist(left)./(b.*A(left))+deltasigma(left);
-    left(left)=abs(sigma(left)-sigmaprime(left))>eps;
+    left(left)=abs(sigma(left)-sigmaprime(left))>tolerance;
 end
 
 % get destination point

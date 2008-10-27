@@ -9,7 +9,7 @@ function [data]=rseis(varargin)
 %     SAClab data structure setup:
 %
 %     Fields for all files:
-%      dir - directory of file
+%      location - directory of file
 %      name - file name
 %      filetype - type of datafile
 %      version - version of filetype
@@ -42,9 +42,9 @@ function [data]=rseis(varargin)
 %       six columns of data.  Dependent components ('dep') share the same 
 %       independent component ('ind').
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
-%    Header changes: NONE
+%    Header changes: Any inconsistent field found with CHKHDR
 %
 %    Usage:    data=rseis(filelist1,...,filelistN)
 %
@@ -71,9 +71,10 @@ function [data]=rseis(varargin)
 %        Sep. 15, 2008 - history fix
 %        Oct. 15, 2008 - doc update for hasdata field
 %        Oct. 16, 2008 - doc update for dir and filetype fields
+%        Oct. 27, 2008 - minor doc update for struct change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2008 at 00:50 GMT
+%     Last Updated Oct. 27, 2008 at 03:40 GMT
 
 % todo:
 

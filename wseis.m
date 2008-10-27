@@ -1,17 +1,15 @@
 function []=wseis(data)
 %WSEIS    Write SAClab data to datafiles
 %
-%    Description: WSEIS(DATA) writes SAClab data to datafiles.  The 'name' 
-%     field is used as the output filename and the 'endian' field gives the
-%     output file byte-order.  To write files to a specific directory, 
-%     either add the path to the 'name' field or browse there using the CD 
-%     command before using WSEIS.
+%    Description: WSEIS(DATA) writes SAClab records in DATA to datafiles.
+%     The 'name' field is used as the output filename, the 'location' field
+%     gives the path and the 'endian' field specifies the byte-order.
 %
 %    Notes:
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
-%    Header changes: NONE (CHKHDR may make changes though)
+%    Header changes: Any inconsistent field found with CHKHDR
 %
 %    Usage:    wseis(data)
 %
@@ -22,7 +20,7 @@ function []=wseis(data)
 %     To write out all records in big endian:
 %      wseis(cendian(data,'ieee-be'))
 %
-%     Alter the first records path/filename and write it:
+%     Alter the first record's filename and write it:
 %      data(1).name='../../myfile';
 %      wseis(data(1))
 %
@@ -45,12 +43,13 @@ function []=wseis(data)
 %                        blank fields, support hasdata field, better
 %                        separation of even vs uneven checks
 %        Oct. 16, 2008 - moved checks to CHKHDR, support new struct layout
+%        Oct. 27, 2008 - update for struct change, use state changes for
+%                        SEISCHK & CHKHDR
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2008 at 21:00 GMT
+%     Last Updated Oct. 27, 2008 at 02:50 GMT
 
 % todo:
-% - filetype support
 
 % check number of inputs
 error(nargchk(1,1,nargin))
@@ -58,20 +57,28 @@ error(nargchk(1,1,nargin))
 % check data structure
 error(seischk(data,'dep'))
 
-% check data headers
+% turn off struct checking
+oldseischkstate=get_seischk_state;
+set_seischk_state(true);
+
+% headers setup
+[h,vi]=vinfo(data);
+
+% check headers
 data=chkhdr(data);
+
+% turn off header checking
+oldchkhdrstate=get_chkhdr_state;
+set_chkhdr_state(true);
+
+% estimated filesize from header
+est_bytes=seissize(data);
 
 % header info
 ncmp=gncmp(data);
 npts=gh(data,'npts');
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
-
-% estimated filesize from header
-est_bytes=seissize(data);
-
-% headers setup
-[h,vi]=vinfo(data);
 
 % loop over records
 for i=1:length(data)
@@ -83,7 +90,7 @@ for i=1:length(data)
     end
     
     % construct fullname
-    name=fullfile(data(i).dir,data(i).name);
+    name=fullfile(data(i).location,data(i).name);
 
     % open file for writing
     fid=fopen(name,'w',data(i).endian);
@@ -114,7 +121,8 @@ for i=1:length(data)
     for m=1:length(n)
         for k=1:length(h(vi(i)).(n{m}))
             fseek(fid,h(vi(i)).(n{m})(k).startbyte,'bof');
-            fwrite(fid,data(i).head(h(vi(i)).(n{m})(k).minpos:h(vi(i)).(n{m})(k).maxpos),h(vi(i)).(n{m})(k).store);
+            fwrite(fid,data(i).head(h(vi(i)).(n{m})(k).minpos:...
+                h(vi(i)).(n{m})(k).maxpos),h(vi(i)).(n{m})(k).store);
         end
     end
     
@@ -133,7 +141,8 @@ for i=1:length(data)
         if(strcmpi(leven(i),'false'))
             fwrite(fid,data(i).ind(:),h(vi(i)).data.store);
         end
-    elseif(any(strcmpi(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
+    elseif(any(strcmpi(iftype(i),...
+            {'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
         % spectral file
         for k=1:ncmp(i)
             fwrite(fid,data(i).dep(:,2*k-1),h(vi(i)).data.store);
@@ -153,12 +162,16 @@ for i=1:length(data)
         % write failed/incomplete
         fclose(fid);
         error('SAClab:wseis:badFileSize',...
-            ['Output file''s written size does not match expected size!\n'...
+            ['Output file disksize does not match expected size!\n'...
             'Record: %d, File: %s'],i,name);
     end
     
     % close file
     fclose(fid);
 end
+
+% toggle checking back
+set_seischk_state(oldseischkstate);
+set_chkhdr_state(oldchkhdrstate);
 
 end

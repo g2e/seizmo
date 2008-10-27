@@ -1,16 +1,16 @@
 function [bytes]=seissize(data)
-%SEISSIZE    Returns header estimated size of SAClab datafiles in bytes
+%SEISSIZE    Returns header-estimated disksize of SAClab datafiles in bytes
 %
-%    Description: SEISSIZE(DATA) returns the expected size (in bytes) using
-%     the header info of each datafile that would be written from DATA. 
-%     This is mainly used to rapidly detect files on disk that are 
-%     inconsistent in size from what their header info indicates.
+%    Description: SEISSIZE(DATA) returns the expected on-disk size in bytes
+%     of each record in DATA using only the header info.  This is mainly
+%     to rapidly detect files on disk that are inconsistent in size from
+%     that expected given their header info.
 %
 %    Notes:
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
-%    Header changes: NONE
+%    Header changes: NONE (may make changes internally by calling CHKHDR)
 %
 %    Usage:  bytes=seissize(data)
 %
@@ -28,28 +28,32 @@ function [bytes]=seissize(data)
 %        Sep. 25, 2008 - GET_N_CHECK adds dataless support
 %        Sep. 26, 2008 - VINFO cleans up/reduces code
 %        Oct.  7, 2008 - drop GET_N_CHECK (keep dataless support)
+%        Oct. 26, 2008 - CHKHDR added (true dataless support), doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2008 at 03:45 GMT
+%     Last Updated Oct. 26, 2008 at 15:00 GMT
 
 % todo:
 
 % check number of inputs
 error(nargchk(1,1,nargin))
 
-% check data structure
-error(seischk(data))
+% headers setup (check struct too)
+[h,vi]=vinfo(data);
+hdata=[h(vi).data];
+
+% turn off struct checking
+oldstate=get_seischk_state;
+set_seischk_state(true);
+
+% check header
+data=chkhdr(data);
 
 % header info
 ncmp=gncmp(data);
 npts=gh(data,'npts');
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
-error(lgcchk('leven',leven(npts>1)))
-
-% headers setup
-[h,vi]=vinfo(data);
-hdata=[h(vi).data];
 
 % filetype
 count=strcmpi(iftype,'Time Series File')...
@@ -66,5 +70,8 @@ count=count+strcmpi(leven,'false');
 
 % final tally
 bytes=[hdata.startbyte].'+count.*npts.*[hdata.bytesize].';
+
+% toggle struct checking back
+set_seischk_state(oldstate);
 
 end

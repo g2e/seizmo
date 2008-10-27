@@ -40,7 +40,7 @@ error(nargchk(1,1,nargin))
 
 % sqrt(H(x)^2+x^2)
 data=seisfun(...
-    addf(seisfun(hilbert(data),@(x)x^2),seisfun(data,@(x)x^2)),...
-    @(x)x^0.5);
+    addf(seisfun(hilbrt(data),@(x)x.^2),seisfun(data,@(x)x.^2)),...
+    @(x)x.^0.5);
 
 end

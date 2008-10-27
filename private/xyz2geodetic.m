@@ -9,7 +9,9 @@ function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
 %
 %     XYZ2GEODETIC(X,Y,Z,[A F]) allows specifying the ellipsoid parameters
 %     A (equatorial radius in kilometers) and F (flattening).  This is 
-%     compatible with Matlab's Mapping Toolbox function ALMANAC.
+%     compatible with output from Matlab's Mapping Toolbox function
+%     ALMANAC.  By default the ellipsoid parameters are set to those of the
+%     reference ellipsoid WGS-84.
 %
 %    Notes:
 %     - Utilizes the preferred algorithm in:
@@ -20,9 +22,7 @@ function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
 %       equator at the prime meridian, the Z axis through the north pole
 %       and the Y axis through the equator at 90 degrees longitude.
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    [lat,lon,depth]=xyz2geodetic(x,y,z)
 %              [lat,lon,depth]=xyz2geodetic(x,y,z,[a f])
@@ -35,9 +35,10 @@ function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
+%        Oct. 26, 2008 - scalar expansion, doc and comment update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2008 at 16:50 GMT
+%     Last Updated Oct. 26, 2008 at 04:00 GMT
 
 % todo:
 
@@ -45,7 +46,7 @@ function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
 error(nargchk(3,4,nargin))
 
 % default - WGS-84 Reference Ellipsoid
-if(nargin==3)
+if(nargin==3 || isempty(ellipsoid))
     % a=radius at equator (major axis)
     % f=flattening
     a=6378.137;
@@ -57,20 +58,46 @@ else
         f=ellipsoid(2);
     else
         error('SAClab:xyz2geodetic:badEllipsoid',...
-            ['Ellipsoid must a 2 element vector specifying:\n'...
+            ['Ellipsoid must be a 2 element vector specifying:\n'...
             '[equatorial_km_radius flattening(<1)]']);
     end
 end
 
-% check inputs
+% size up inputs
+sx=size(x); sy=size(y); sz=size(z);
+nx=prod(sx); ny=prod(sy); nz=prod(sz);
+
+% basic check inputs
 if(~isnumeric(x) || ~isnumeric(y) || ~isnumeric(z))
     error('SAClab:xyz2geodetic:nonNumeric','All inputs must be numeric!');
-elseif(isempty(x) || ~isequal(size(x),size(y),size(z)))
+elseif(any([nx ny nz]==0))
     error('SAClab:xyz2geodetic:unpairedCoord',...
-        'Coordinate inputs must be nonempty, equal size arrays!');
+        'Coordinate inputs must be nonempty arrays!');
+elseif((~isequal(sx,sy) && all([nx ny]~=1)) ||...
+       (~isequal(sx,sz) && all([nx nz]~=1)) ||...
+       (~isequal(sz,sy) && all([nz ny]~=1)))
+    error('SAClab:xyz2geodetic:unpairedCoord',...
+        'Coordinate inputs must be scalar or equal sized arrays!');
 end
 
-% optimization (reduce CPU USAGE vs MEMORY)
+% expand scalars
+if(all([nx ny nz]==1))
+    % do nothing
+elseif(all([nx ny]==1))
+    x=repmat(x,sz); y=repmat(y,sz);
+elseif(all([nx nz]==1))
+    x=repmat(x,sy); z=repmat(z,sy);
+elseif(all([ny nz]==1))
+    y=repmat(y,sx); z=repmat(z,sx);
+elseif(nx==1)
+    x=repmat(x,sz);
+elseif(ny==1)
+    y=repmat(y,sz);
+elseif(nz==1)
+    z=repmat(z,sy);
+end
+
+% vectorized setup
 f1=1-f;
 f12=f1^2;
 a2=a^2;

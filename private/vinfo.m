@@ -9,26 +9,32 @@ function [h,idx]=vinfo(data)
 %     repetition.
 %
 %    Notes:
+%     - currently assumes each definition struct has the same top tier
+%       layout (ok for now) and also does not preallocate the struct which
+%       may be a speed bottle neck as this is a low level function
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: NONE
 %
 %    Usage:    [h,idx]=vinfo(data)
 %
 %    Examples:
+%     Get the undefined value for your data:
+%      h=vinfo(data);
+%      h.undef
 %
-%    See also: seisdef
+%    See also: seisdef, vvseis
 
 %     Version History:
 %        Sep. 25, 2008 - initial version
 %        Sep. 26, 2008 - check internal header version
 %        Oct. 16, 2008 - removed header version consistency check
-%        Oct. 17, 2008 - filetype support, removed several pointless
-%                        outputs
+%        Oct. 17, 2008 - filetype support, removed several pointless output
+%        Oct. 25, 2008 - doc update, block mlint hint for now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 17, 2008 at 01:45 GMT
+%     Last Updated Oct. 25, 2008 at 21:30 GMT
 
 % todo:
 
@@ -59,7 +65,7 @@ for i=1:nft
     % grab definitions
     for j=1:nv
         count=count+1;
-        h(count)=seisdef(uft{i},uv(j));
+        h(count)=seisdef(uft{i},uv(j)); %#ok<AGROW>
         idx(v==uv(j) & ift)=count;
     end
 end

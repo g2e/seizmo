@@ -7,7 +7,7 @@ function [data]=rh(varargin)
 %     filenames (one filename per cell).  Wildcards are valid.
 %
 %     Fields of output SAClab structure:
-%      dir - directory of file
+%      location - directory of file
 %      name - file name
 %      filetype - type of datafile
 %      version - version of filetype
@@ -17,7 +17,7 @@ function [data]=rh(varargin)
 %
 %    Notes:
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: NONE
 %
@@ -50,9 +50,12 @@ function [data]=rh(varargin)
 %        Sep. 14, 2008 - doc update, error on no files
 %        Oct. 15, 2008 - added hasdata field
 %        Oct. 17, 2008 - added dir and filetype fields
+%        Oct. 27, 2008 - update for struct changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 17, 2008 at 00:30 GMT
+%     Last Updated Oct. 27, 2008 at 03:40 GMT
+
+% todo:
 
 % compile file lists
 varargin=onefilelist(varargin{:});
@@ -64,7 +67,7 @@ if(nfiles<1)
 end
 
 % pre-allocating SAClab structure
-data(nfiles,1)=struct('dir',[],'name',[],'filetype',[],...
+data(nfiles,1)=struct('location',[],'name',[],'filetype',[],...
     'version',[],'endian',[],'hasdata',[],'head',[]);
 
 % loop for each file
@@ -113,7 +116,8 @@ for i=1:nfiles
         
         % save directory and filename
         [pathstr,name,ext,ver]=fileparts(varargin{i});
-        data(i).dir=pathstr;
+        if(isempty(pathstr)); pathstr='.'; end
+        data(i).location=pathstr;
         data(i).name=[name ext ver];
         
         % save filetype, version, endian and hasdata

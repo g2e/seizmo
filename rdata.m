@@ -17,7 +17,7 @@ function [data,failed]=rdata(data,varargin)
 %     SAClab data structure setup:
 %
 %     Fields for all files:
-%      dir - directory of file
+%      location - directory of file
 %      name - file name
 %      filetype - type of datafile
 %      version - version of filetype
@@ -50,9 +50,9 @@ function [data,failed]=rdata(data,varargin)
 %       six columns of data.  All dependent components ('dep') share the 
 %       same independent component ('ind').
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
-%    Header changes: NONE
+%    Header changes: Any inconsistent field found with CHKHDR
 %
 %    Usage: data=rdata(data)
 %           data=rdata(data,'trim',true|false)
@@ -87,20 +87,16 @@ function [data,failed]=rdata(data,varargin)
 %        Oct.  8, 2008 - fixed a couple bugs from last change
 %        Oct. 15, 2008 - update to new SEISCHK, hasdata field
 %        Oct. 17, 2008 - added CHKHDR, support new struct layout
+%        Oct. 27, 2008 - minor doc update, updated for struct changes,
+%                        make use of state changes for SEISCHK & CHKHDR
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 17, 2008 at 00:45 GMT
+%     Last Updated Oct. 27, 2008 at 06:05 GMT
 
 % todo:
 
 % check number of inputs
 error(nargchk(1,3,nargin))
-
-% check data structure
-error(seischk(data))
-
-% check data headers
-data=chkhdr(data);
 
 % default trim
 trim=true;
@@ -110,7 +106,7 @@ if(nargin==2 && ~isempty(varargin{1}))
     if((~islogical(varargin{1}) && ~isnumeric(varargin{1})) ...
             || ~isscalar(varargin{1}))
         error('SAClab:rdata:badInput',...
-            'TRIM option not able to be evaluated!');
+            'TRIM option must be logical!');
     else
         trim=varargin{1};
     end
@@ -122,17 +118,31 @@ if(nargin==3)
         if(~iscalar(varargin{2}) || ...
                 (~islogical(varargin{2}) && ~isnumeric(varargin{2})))
             error('SAClab:rdata:badInput',...
-                'TRIM option unable to be evaluated!');
+                'TRIM option must be logical!');
         else
             trim=varargin{2};
         end
     else
-        error('SAClab:rdata:badInput','Bad option!');
+        error('SAClab:rdata:badInput','Unknown option!');
     end
 end
 
-% number of records
-nrecs=numel(data);
+% headers setup (also checks struct)
+[h,vi]=vinfo(data);
+
+% turn off struct checking
+oldseischkstate=get_seischk_state;
+set_seischk_state(true);
+
+% check header
+data=chkhdr(data);
+
+% turn off header checking
+oldchkhdrstate=get_chkhdr_state;
+set_chkhdr_state(true);
+
+% estimated filesize from header
+est_bytes=seissize(data);
 
 % header info
 ncmp=gncmp(data);
@@ -140,17 +150,14 @@ npts=gh(data,'npts');
 iftype=genumdesc(data,'iftype');
 leven=glgc(data,'leven');
 
-% estimated filesize from header
-est_bytes=seissize(data);
-
-% headers setup
-[h,vi]=vinfo(data);
+% number of records
+nrecs=numel(data);
 
 % read loop
 failed=false(nrecs,1);
 for i=1:nrecs
     % construct fullname
-    name=fullfile(data(i).dir,data(i).name);
+    name=fullfile(data(i).location,data(i).name);
     
     % open file for reading
     fid=fopen(name,'r',data(i).endian);
@@ -204,26 +211,32 @@ for i=1:nrecs
     if(any(strcmpi(iftype(i),{'Time Series File' 'General X vs Y file'})))
         % time series file - amplitude and time
         for k=1:ncmp(i)
-            data(i).dep(:,k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
+            data(i).dep(:,k)=fread(fid,npts(i),...
+                ['*' h(vi(i)).data.store]);
         end
         
         % timing of amp data if uneven
         if(strcmpi(leven(i),'false'))
-            data(i).ind(:,1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
+            data(i).ind(:,1)=fread(fid,npts(i),...
+                ['*' h(vi(i)).data.store]);
         end
-    elseif(any(strcmpi(iftype(i),{'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
+    elseif(any(strcmpi(iftype(i),...
+            {'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
         % preallocate data record with NaNs
         data(i).dep=nan(npts(i),2*ncmp(i),h(vi(i)).data.store);
         
         % spectral file - real and imaginary
         for k=1:ncmp(i)
-            data(i).dep(:,2*k-1)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
-            data(i).dep(:,2*k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
+            data(i).dep(:,2*k-1)=fread(fid,npts(i),...
+                ['*' h(vi(i)).data.store]);
+            data(i).dep(:,2*k)=fread(fid,npts(i),...
+                ['*' h(vi(i)).data.store]);
         end
     elseif(any(strcmpi(iftype(i),'General XYZ (3-D) file')))
         % general xyz (3D) grid - nodes are evenly spaced
         for k=1:ncmp(i)
-            data(i).dep(:,k)=fread(fid,npts(i),['*' h(vi(i)).data.store]);
+            data(i).dep(:,k)=fread(fid,npts(i),...
+                ['*' h(vi(i)).data.store]);
         end
     end
     
@@ -236,5 +249,9 @@ end
 
 % remove unread entries
 if(trim); data(failed)=[]; end
+
+% toggle checking back
+set_seischk_state(oldseischkstate);
+set_chkhdr_state(oldchkhdrstate);
 
 end

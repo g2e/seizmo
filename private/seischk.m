@@ -17,9 +17,7 @@ function [report]=seischk(data,varargin)
 %     - Non-default fields are not required to be nonempty or valid
 %     - See examples for non-default field uses
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage: error(seischk(data))
 %           error(seischk(data,'requiredfield1','requiredfield2',...))
@@ -44,27 +42,35 @@ function [report]=seischk(data,varargin)
 %                        require that fields name, endian, version, hasdata
 %                        and head are not empty and are valid for each
 %                        record
-%        Oct. 17, 2008 - require new fields 'dir' and 'filetype'
+%        Oct. 17, 2008 - require new fields DIR and FILETYPE
+%        Oct. 27, 2008 - LOCATION field replaces DIR field, vectorized
+%                        using cellfun, global SACLAB allows skipping check
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 17, 2008 at 00:00 GMT
+%     Last Updated Oct. 27, 2008 at 04:55 GMT
 
 % todo:
 
 % check input
+report=[];
 if(nargin<1)
     error('SAClab:seischk:notEnoughInputs','Not enough input arguments.');
 elseif(nargin>1)
-    for i=1:nargin-1
-        if(~ischar(varargin{i}))
-            error('SAClab:seischk:badInput',...
-                'Additional argument FIELD%d must be a string!',i);
-        end
+    if(~iscellstr(varargin))
+        error('SAClab:seischk:badInput',...
+            'Additional arguments must be strings!');
     end
 end
 
+% check SACLAB global for quick exit
+global SACLAB
+if(isfield(SACLAB,'SEISCHK') && isfield(SACLAB.SEISCHK,'SKIP')...
+        && islogical(SACLAB.SEISCHK.SKIP)...
+        && isscalar(SACLAB.SEISCHK.SKIP) && SACLAB.SEISCHK.SKIP)
+    return;
+end
+
 % check data structure
-report=[];
 if(~isstruct(data))
     report.identifier='SAClab:seischk:dataNotStruct';
     report.message='SAClab data must be a structure!';
@@ -74,71 +80,58 @@ elseif(isempty(data))
     report.message='SAClab data structure must not be empty!';
     return;
 else
-    defreqfields={'dir' 'name' 'filetype' 'version' 'endian' 'hasdata' 'head'};
-    reqfields=[defreqfields varargin];
+    defreqfields={'location' 'name' 'filetype' 'version' 'endian' 'hasdata' 'head'};
+    reqfields=sort([defreqfields varargin]);
+    fields=sort(fieldnames(data).');
     
-    % this works with older isfield (check one at a time)
-    for i=reqfields
-        if(~isfield(data,i{:}))
-            report.identifier='SAClab:seischk:reqFieldNotFound';
-            report.message=sprintf('SAClab data structure must have field ''%s''!',i{:});
-            return;
-        end
+    % check that all fields are present
+    if(~isequal(intersect(reqfields,fields),reqfields))
+        i=setxor(intersect(reqfields,fields),reqfields);
+        report.identifier='SAClab:seischk:reqFieldNotFound';
+        report.message=sprintf('SAClab data structure must have field ''%s''!',i{1});
+        return;
     end
     
-    for i=1:numel(data)
-        % check for empties
-        for j=defreqfields
-            if(isempty(data(i).(j{:})))
-                report.identifier='SAClab:seischk:reqFieldEmpty';
-                report.message=sprintf('SAClab data structure field ''%s'' must not be empty!',j{:});
-                return;
-            end
-        end
-        
-        % check dir is ok
-        if(~isempty(data(i).dir) && ~ischar(data(i).dir))
-            report.identifier='SAClab:seischk:nameBad';
-            report.message='SAClab data records must have a valid directory!';
-            return;
-        end
-        
-        % check name is ok
-        if(~ischar(data(i).name))
-            report.identifier='SAClab:seischk:dirBad';
-            report.message='SAClab data records must have a valid name!';
-            return;
-        end
-        
-        % check version/filetype is ok
-        if(~isnumeric(data(i).version)...
-                || ~isequal(union(data(i).version,...
-                vvseis(data(i).filetype)),vvseis(data(i).filetype)))
-            report.identifier='SAClab:seischk:versionBad';
-            report.message='SAClab data records must have a valid version!';
-            return;
-        end
-        
-        % check endian is ok
-        if(~any(strcmp(data(i).endian,{'ieee-be' 'ieee-le'})))
-            report.identifier='SAClab:seischk:endianBad';
-            report.message='SAClab data records must have a valid endian!';
-            return;
-        end
-        
-        % check hasdata is ok
-        if(~islogical(data(i).hasdata))
-            report.identifier='SAClab:seischk:hasdataBad';
-            report.message='SAClab data records must have logical HASDATA field!';
-            return;
-        end
-        
-        % check header is ok
-        if(~isnumeric(data(i).head) || ~isequal(size(data(i).head),[302 1]))
-            report.identifier='SAClab:seischk:headerBad';
-            report.message='SAClab data records must have a valid header!';
-            return;
-        end
+    % compile into cell arrays
+    locations={data.location};
+    names={data.name};
+    endians={data.endian};
+    versions={data.version};
+    filetypes={data.filetype};
+    hasdatas={data.hasdata};
+    headers={data.head};
+    
+    % check each using cellfun
+    if(any(cellfun('isempty',locations)) || ~iscellstr(locations))
+        report.identifier='SAClab:seischk:nameBad';
+        report.message=['SAClab struct LOCATION field must be a '...
+            'nonempty string!'];
+    elseif(any(cellfun('isempty',names)) || ~iscellstr(names))
+        report.identifier='SAClab:seischk:dirBad';
+        report.message=['SAClab struct NAME field must be a '...
+            'nonempty string!'];
+    elseif(any(cellfun('isempty',endians)) || ~iscellstr(endians) ||...
+            ~all(strcmpi(endians,'ieee-be') | strcmpi(endians,'ieee-le')))
+        report.identifier='SAClab:seischk:endianBad';
+        report.message=['SAClab struct ENDIAN field must be ''ieee-le'''...
+            ' or ''ieee-be''!'];
+    elseif(any(cellfun('isempty',hasdatas)) ||...
+            ~all(cellfun('islogical',hasdatas)))
+        report.identifier='SAClab:seischk:hasdataBad';
+        report.message='SAClab struct HASDATA field must be a logical!';
+    elseif(~iscellstr(filetypes)...
+            || any(cellfun('prodofsize',versions)~=1)...
+            || any(cellfun('isempty',cellfun(@(x,y)intersect(x,y),...
+            cellfun(@(x)vvseis(x),filetypes,'UniformOutput',false),...
+            versions,'UniformOutput',false))))
+        report.identifier='SAClab:seischk:versionBad';
+        report.message=['SAClab struct FILETYPE and VERSION fields '...
+            'must be valid!'];
+    elseif(any(cellfun('size',headers,1)~=302)...
+            || any(cellfun('size',headers,2)~=1)...
+            || any(cellfun('ndims',headers)~=2))
+        report.identifier='SAClab:seischk:headerBad';
+        report.message='SAClab struct HEAD field must be 302x1';
     end
 end
 

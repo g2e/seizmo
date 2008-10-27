@@ -11,7 +11,7 @@ function [data]=idft(data)
 %       Matlab's fft/ifft functions work so be careful when working with
 %       amplitudes!
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
 %                    DEPMEN, DEPMIN, DEPMAX
@@ -70,8 +70,9 @@ elseif(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
 end
 
 % loop through records
+nrecs=numel(data);
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:numel(data)
+for i=1:nrecs
     % skip dataless
     if(isempty(data(i).dep)); continue; end
     

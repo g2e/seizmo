@@ -19,9 +19,7 @@ function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 %     - Longitudes are returned in the range -180<lon<=180
 %     - Azimuths are returned in the range 0<=az<=360
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    [stla,stlo]=sphericalfwd(evla,evlo,gcarc,az)
 %
@@ -33,29 +31,47 @@ function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
+%        Oct. 26, 2008 - improved scalar expansion, doc and comment update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2008 at 06:10 GMT
+%     Last Updated Oct. 26, 2008 at 16:00 GMT
 
 % todo:
 
 % require 4 inputs
 error(nargchk(4,4,nargin))
 
-% check inputs
+% size up inputs
+sz1=size(evla); sz2=size(evlo);
+sz3=size(gcarc); sz4=size(az);
+n1=prod(sz1); n2=prod(sz2);
+n3=prod(sz3); n4=prod(sz4);
+
+% basic check inputs
 if(~isnumeric(evla) || ~isnumeric(evlo) ||...
         ~isnumeric(gcarc) || ~isnumeric(az))
     error('SAClab:sphericalfwd:nonNumeric','All inputs must be numeric!');
-elseif(isempty(gcarc) || ~isequal(size(gcarc),size(az)))
-    error('SAClab:sphericalfwd:unpairedLatLon',...
-        'Distances & azimuths must be nonempty, equal size arrays!')
-elseif(isempty(evla) || ~isequal(size(evla),size(evlo)))
-    error('SAClab:sphericalfwd:unpairedLatLon',...
-        'Latitudes & longitudes must be nonempty, equal size arrays!')
-elseif(~isscalar(evla) && ~isscalar(az) && ~isequal(size(evla),size(az)))
-    error('SAClab:sphericalfwd:nonscalarUnequalArrays',...
-        'Input arrays need to be scalar or have equal size!')
+elseif(any([n1 n2 n3 n4]==0))
+    error('SAClab:sphericalfwd:emptyLatLon',...
+        'Location inputs must be nonempty arrays!');
 end
+
+% expand scalars
+if(n1==1); evla=repmat(evla,sz2); n1=n2; sz1=sz2; end
+if(n2==1); evlo=repmat(evlo,sz1); n2=n1; sz2=sz1; end
+if(n3==1); stla=repmat(gcarc,sz4); n3=n4; sz3=sz4; end
+if(n4==1); stlo=repmat(az,sz3); n4=n3; sz4=sz3; end
+
+% cross check inputs
+if(~isequal(sz1,sz2) || ~isequal(sz3,sz4) ||...
+        (~any([n1 n3]==1) && ~isequal(sz1,sz3)))
+    error('SAClab:sphericalfwd:nonscalarUnequalArrays',...
+        'Input arrays need to be scalar or have equal size!');
+end
+
+% expand scalars
+if(n2==1); evla=repmat(evla,sz3); evlo=repmat(evlo,sz3); end
+if(n4==1); gcarc=repmat(stla,sz1); az=repmat(stlo,sz1); end
 
 % convert to radians
 d2r=pi/180; r2d=180/pi;

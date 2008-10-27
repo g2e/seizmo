@@ -3,20 +3,19 @@ function []=wh(data)
 %
 %    Description: WH(DATA) writes SAClab data headers as datafiles on disk.  
 %     Primarily this is for updating the headers of existing datafiles to 
-%     match the SAClab DATA structure.  For files that do not already exist
-%     the 'name' field is used as the output filename.  To write files to a
-%     specific directory, either add the path to the 'name' field or browse 
-%     there using the 'cd' command before using WH.  Output file byte-order
-%     can be set using the 'endian' field.
+%     match the SAClab DATA structure.  Struct fields 'location' and 'name'
+%     are used to create or write to a file on disk.  Byte-order is set
+%     using the 'endian' field.
 %
-%    Warning:  If you want to modify the version and/or byte-order of a
-%     datafile with SAClab, use RSEIS and WSEIS to read/write the datafile
-%     so that the data can also be adjusted to the new format.  Using RH 
-%     and WH in conjunction with a version and/or byte-order change is NOT 
-%     recommended as it only changes the header and will likely corrupt
-%     your datafiles!
+%    Warning:  
+%     If you want to modify the filetype, version or byte-order of
+%     datafiles with SAClab, use RSEIS and WSEIS to read/write the entire
+%     datafile so that the data can also be adjusted to the new format.
+%     Using RH and WH in conjunction with a filetype, version or byte-order
+%     change is NOT recommended as it only changes the header and will
+%     likely corrupt your datafiles!
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: NONE
 %
@@ -24,7 +23,7 @@ function []=wh(data)
 %
 %    Examples:
 %     Read in some datafile's headers, modify them, and write out changes:
-%      wh(ch(rh('*.SAC'),'kuser0','QCed'))
+%      wh(ch(rh('A.SAC'),'kuser0','QCed'))
 %
 %    See also:  wseis, rseis, bseis, rpdw, rdata, rh, seisdef, gv
 
@@ -39,30 +38,24 @@ function []=wh(data)
 %        Oct. 15, 2008 - new SEISCHK support (blank name and endian not
 %                        allowed) => NATIVEENDIAN dropped
 %        Oct. 17, 2008 - supports new struct layout, added CHKHDR support
+%        Oct. 27, 2008 - update for struct changes, remove CHKHDR so user
+%                        can write whatever they want to disk
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 15, 2008 at 13:30 GMT
+%     Last Updated Oct. 27, 2008 at 04:00 GMT
 
 % todo:
-% - filetype support
-% - clean up warnings
 
 % check number of inputs
 error(nargchk(1,1,nargin))
 
-% check data structure
-error(seischk(data))
-
-% check header
-data=chkhdr(data);
-
-% headers setup
+% headers setup (checks struct too)
 [h,vi]=vinfo(data);
 
 % loop over records
 for i=1:numel(data)
     % construct fullname
-    name=fullfile(data(i).dir,data(i).name);
+    name=fullfile(data(i).location,data(i).name);
     
     % open existing file for writing
     if(exist(name,'file'))
@@ -70,21 +63,25 @@ for i=1:numel(data)
         [filetype,fileversion,fileendian]=getversion(name);
         
         % non-zero version ==> file is SAClab compatible
-        if(fileversion)
-            % check for version/byte-order change
+        if(~isempty(filetype))
+            % check for filetype/version/byte-order change
+            if(filetype~=data(i).filetype)
+                warning('SAClab:wh:filetypeMismatch',...
+                    ['Filetype of existing file %s does NOT '...
+                    'match the output filetype!\n'...
+                    'Data corruption is likely to occur!'],name);
+            end
             if(fileversion~=data(i).version)
                 warning('SAClab:wh:versionMismatch',...
                     ['Version of existing file %s does ' ...
-                    'not match output header version!\n' ...
-                    'Accurate reading of data in existing file '...
-                    'may not be possible now!'],name);
+                    'NOT match output filetype version!\n' ...
+                    'Data corruption is likely to occur!'],name);
             end
             if(fileendian~=data(i).endian)
                 warning('SAClab:wh:endianMismatch',...
                     ['Byte-order of existing file %s does '...
-                    'not match output header byte-order!\n'...
-                    'Accurate reading of data in existing file '...
-                    'may not be possible now!'],name);
+                    'NOT match output header byte-order!\n'...
+                    'Data corruption is likely to occur!'],name);
             end
             
             % open file for modification
@@ -131,7 +128,8 @@ for i=1:numel(data)
     for m=1:length(n)
         for k=1:length(h(vi(i)).(n{m}))
             fseek(fid,h(vi(i)).(n{m})(k).startbyte,'bof');
-            fwrite(fid,data(i).head(h(vi(i)).(n{m})(k).minpos:h(vi(i)).(n{m})(k).maxpos),h(vi(i)).(n{m})(k).store);
+            fwrite(fid,data(i).head(h(vi(i)).(n{m})(k).minpos:...
+                h(vi(i)).(n{m})(k).maxpos),h(vi(i)).(n{m})(k).store);
         end
     end
     
