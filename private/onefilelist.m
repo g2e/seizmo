@@ -9,13 +9,16 @@ function [list]=onefilelist(varargin)
 %
 %    Notes:
 %     - does not support cell arrays of cellstr arrays (ie. no recursion!)
-%     - directories will be omitted from the returned list
+%     - directory entries are not expanded and will be omitted from the
+%       returned list
+%     - uses Matlab's DIR command to get the filelist and file info, which
+%       has limited wildcard capability (only * is a valid wildcard and the
+%       wildcards can only be applied to filenames, not the path to the
+%       file)
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
-%    Header changes: NONE
-%
-%    Usage: list=onefilelist(list1,...,listN)
+%    Usage:    list=onefilelist(list1,...,listN)
 %
 %    Examples:
 %     Compile a list of files from several directories
@@ -32,9 +35,10 @@ function [list]=onefilelist(varargin)
 %                        without breaking (reads all files in directory)
 %        Oct. 13, 2008 - skip directory entries in input filelist
 %        Oct. 16, 2008 - fix files in current directory bug
+%        Oct. 31, 2008 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2008 at 23:55 GMT
+%     Last Updated Oct. 31, 2008 at 00:05 GMT
 
 % todo:
 

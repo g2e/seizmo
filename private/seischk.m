@@ -45,6 +45,7 @@ function [report]=seischk(data,varargin)
 %        Oct. 17, 2008 - require new fields DIR and FILETYPE
 %        Oct. 27, 2008 - LOCATION field replaces DIR field, vectorized
 %                        using cellfun, global SACLAB allows skipping check
+%        Oct. 30, 2008 - little simpler code for checking required fields
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Oct. 27, 2008 at 04:55 GMT
@@ -84,9 +85,9 @@ else
     reqfields=sort([defreqfields varargin]);
     fields=sort(fieldnames(data).');
     
-    % check that all fields are present
-    if(~isequal(intersect(reqfields,fields),reqfields))
-        i=setxor(intersect(reqfields,fields),reqfields);
+    % check that all required fields are present
+    if(~isempty(setdiff(reqfields,fields)))
+        i=setdiff(reqfields,fields);
         report.identifier='SAClab:seischk:reqFieldNotFound';
         report.message=sprintf('SAClab data structure must have field ''%s''!',i{1});
         return;
