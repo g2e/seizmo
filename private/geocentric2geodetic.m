@@ -15,9 +15,7 @@ function [lat,lon,depth]=geocentric2geodetic(lat,lon,depth,ellipsoid)
 %
 %    Notes:
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    [lat,lon,depth]=geocentric2geodetic(lat,lon,depth)
 %              [lat,lon,depth]=geocentric2geodetic(lat,lon,depth,[a f])
@@ -30,9 +28,10 @@ function [lat,lon,depth]=geocentric2geodetic(lat,lon,depth,ellipsoid)
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
+%        Nov. 10, 2008 - scalar expansion, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2008 at 16:10 GMT
+%     Last Updated Nov. 10, 2008 at 08:45 GMT
 
 % todo:
 
@@ -40,7 +39,7 @@ function [lat,lon,depth]=geocentric2geodetic(lat,lon,depth,ellipsoid)
 error(nargchk(3,4,nargin))
 
 % default - WGS-84 Reference Ellipsoid
-if(nargin==3)
+if(nargin==3 || isempty(ellipsoid))
     % a=radius at equator (major axis)
     % f=flattening
     a=6378.137;

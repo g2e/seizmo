@@ -1,28 +1,28 @@
-function [def]=seisdef(filetype,version)
-%SEISDEF    Returns SAClab definition structure
+function [def]=seizdef(filetype,version)
+%SEIZDEF    Returns specified SAClab definition structure
 %
-%    Description: [DEFINITIONS]=SEISDEF(FILETYPE,VERSION) returns struct 
-%     DEFINITIONS which provides all formatting information necessary to 
-%     read/understand/modify/write the specified version VERSION of the
-%     data file type FILETYPE.
+%    Description: [DEFINITIONS]=SEIZDEF(FILETYPE,VERSION) returns the
+%     struct DEFINITIONS which provides all formatting information
+%     necessary to read/understand/modify/write the specified version
+%     VERSION of the data filetype FILETYPE using SAClab.
 %
 %    Notes:
 %     - Currently the definition is set so that all header data is stored 
-%       as doubles in memory.  This preserves accuracy, provides
-%       simplicity, and makes class-issues a lot less of a headache. 
+%       as doubles in memory.  This attempts to preserve accuracy, provide
+%       simplicity, and make class-issues a lot less of a headache. 
 %       Memory usage suffers slightly (only minor as this applies to just
 %       the header storage).  Breaking the header into subfields would
 %       probably require more memory anyways due to overhead.
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    definition=seisdef(filetype,version)
+%    Usage:    definition=seizdef(filetype,version)
 %
 %    Examples:
 %     Get detailed information on SAC version 6 files (SAClab v6 too):
-%      sac_ver_6=seisdef('SAClab Binary',6)
+%      sac_ver_6=seizdef('SAClab Binary',6)
 %
-%    See also:  seischk, isseis, vvseis
+%    See also:  seizchk, isseiz, validseiz
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -38,19 +38,20 @@ function [def]=seisdef(filetype,version)
 %        Sep. 26, 2008 - multi-component indicator, minor code clean
 %        Oct. 17, 2008 - filetype support (gonna break stuff)
 %        Oct. 26, 2008 - minor doc update
+%        Nov. 13, 2008 - renamed from SEISDEF to SEIZDEF
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 26, 2008 at 22:25 GMT
+%     Last Updated Nov. 13, 2008 at 04:40 GMT
 
 % todo:
 
 % check input
 error(nargchk(2,2,nargin))
 if(~ischar(filetype))
-    error('SAClab:seisdef:badInput','FILETYPE must be a string!');
+    error('SAClab:seizdef:badInput','FILETYPE must be a string!');
 end
 if(~isnumeric(version))
-    error('SAClab:seisdef:badInput','VERSION must be numeric!');
+    error('SAClab:seizdef:badInput','VERSION must be numeric!');
 end
 
 % get valid versions
@@ -58,7 +59,7 @@ valid=vvseis(filetype);
 
 % check for invalid version
 if(isempty(valid) || ~any(valid==version))
-    error('SAClab:seisdef:invalidVersion',...
+    error('SAClab:seizdef:invalidVersion',...
         'Filetype: %s, Version: %d Invalid!',filetype,version)
 end
 

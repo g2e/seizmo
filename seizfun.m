@@ -12,7 +12,7 @@ function [data]=seisfun(data,fun)
 %     - Does not check the number of points in the output record and thus
 %       does not alter the NPTS or E header fields.
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %

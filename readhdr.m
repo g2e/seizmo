@@ -12,7 +12,7 @@ function [data]=rh(varargin)
 %      filetype - type of datafile
 %      version - version of filetype
 %      endian - byte-order of file (ieee-le or ieee-be)
-%      haddata - logical indicating if data is read in (false here)
+%      hasdata - logical indicating if data is read in (false here)
 %      head - contains header data
 %
 %    Notes:

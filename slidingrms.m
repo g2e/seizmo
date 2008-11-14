@@ -1,5 +1,5 @@
 function [data]=slidingrms(data,nsamples,varargin)
-%SLIDINGRMS    Returns sliding-window root-mean-square of SAClab data records
+%SLIDINGRMS    Returns sliding-window root-mean-square of SAClab records
 %
 %    Description: SLIDINGRMS(DATA,N) applies a centered sliding-window 
 %     root-mean-square of 2N+1 samples to the dependent component(s) of 
@@ -36,11 +36,24 @@ function [data]=slidingrms(data,nsamples,varargin)
 %     adds zeros to the data so that all the points of the sliding-window 
 %     always reference some value.  Default setting is TRUNCATE.
 %
+%     SLIDINGRMS(...,'DIM',N) specifies an alternative dimension to slide
+%     across rather than the default 1 (slides down the component - 2 would
+%     slide across the components).
+%
+%     SLIDINGRMS(...,'CUSTOM',WINDOW) allows a custom sliding window
+%     average.  This might be useful for a Gaussian average or similar.
+%     WINDOW must be formatted as [index; weight] where index is relative
+%     to the reference data point and weight does not include the averaging
+%     divisor (this will be automatically computed).  An example WINDOW:
+%        [ -3  -2  -1    0   1  2    3;
+%         0.1   1  10  100  10  1  0.1]
+%     gives a severe weighting to the center point (reference data point).
+%
 %    Notes:
 %     - Centered windows are of length 2N+1, while the others are just N
-%     - SLIDINGRMS is faster than SLIDEFUN because it uses SLIDINGMEAN
+%     - SLIDINGRMS is faster than SLIDEFUN because it uses SLIDINGAVG
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
@@ -48,12 +61,14 @@ function [data]=slidingrms(data,nsamples,varargin)
 %              data=slidingrms(...,'position','center'|'trail'|'lead')
 %              data=slidingrms(...,'offset',offset)
 %              data=slidingrms(...,'edge','truncate'|'pad')
+%              data=slidingrms(...,'dim',n)
+%              data=slidingrms(...,'custom',window)
 %
 %    Examples:
 %      Compare an envelope and a 21-sample sliding-window root-mean-square:
 %       p2([envelope(data(1)) slidingrms(data(1),10)])
 %
-%    See also: envelope, slidingam, slidefun
+%    See also: envelope, slidingam, slidefun, slidingavg, seizfun
 
 %     Version History:
 %        Apr.  9, 2008 - initial version
@@ -64,9 +79,10 @@ function [data]=slidingrms(data,nsamples,varargin)
 %        Oct.  5, 2008 - big change: updated to match options of SLIDEFUN,
 %                        name changed from RMS to SLIDINGRMS
 %        Oct.  7, 2008 - now just an alias to SLIDINGMEAN and SEISFUN
+%        Nov. 13, 2008 - update to use SLIDINGAVG and SEIZFUN
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2008 at 00:20 GMT
+%     Last Updated Nov. 13, 2008 at 22:00 GMT
 
 % todo:
 
@@ -74,9 +90,9 @@ function [data]=slidingrms(data,nsamples,varargin)
 error(nargchk(2,8,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizchk(data,'dep'))
 
 % alias to other functions
-data=seisfun(slidingmean(seisfun(data,@(x)x.^2),nsamples,varargin{:}),@(x)sqrt(x));
+data=seizfun(data,@(x)sqrt(slidingavg(x.^2,nsamples,varargin{:})));
 
 end

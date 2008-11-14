@@ -9,7 +9,9 @@ function [leaps]=totalleaps(dates,option)
 %     TOTALLEAPS(DATES,'SERIAL') takes a serialdate array as input.  Note
 %     that this option really is not a good idea as using Matlab's DATENUM
 %     will not properly handle UTC times (no leap second support) when
-%     converting to a serial date number.
+%     converting to a serial date number.  If your time is within a
+%     positive leap second, DATENUM (and DATEVEC, DATESTR) will convert the
+%     date to the following date thus making the date incorrect.
 %
 %    Notes:
 %     - Offsets are not valid for pre-1972 when UTC was not synced with the
@@ -28,9 +30,10 @@ function [leaps]=totalleaps(dates,option)
 
 %     Version History:
 %        Nov.  1, 2008 - initial version
+%        Nov. 10, 2008 - uses GETLEAPS to speed calls up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2008 at 17:00 GMT
+%     Last Updated Nov. 10, 2008 at 16:05 GMT
 
 % todo:
 
@@ -77,10 +80,9 @@ switch lower(option)
 end
 
 % get leapsecond info
-leapstr=leapseconds;
-nleaps=size(leapstr,1);
-leapdates=datenum(leapstr);
-offset=cumsum([0; 2*strcmp('+',cellstr(leapstr(:,end)))-1]);
+[leapdates,offset]=getleaps();
+nleaps=numel(offset);
+offset=cumsum([0; offset]);
 
 % expand (to vectorize)
 dates=dates(:,ones(1,nleaps));

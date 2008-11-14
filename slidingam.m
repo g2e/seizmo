@@ -1,5 +1,5 @@
 function [data]=slidingam(data,nsamples,varargin)
-%SLIDINGAM    Returns sliding-window absolute-mean of SAClab data records
+%SLIDINGAM    Returns sliding-window absolute-mean of SAClab records
 %
 %    Description: SLIDINGAM(DATA,N) applies a centered sliding-window 
 %     absolute-mean of 2N+1 samples to the dependent component(s) of 
@@ -36,11 +36,24 @@ function [data]=slidingam(data,nsamples,varargin)
 %     adds zeros to the data so that all the points of the sliding-window 
 %     always reference some value.  Default setting is TRUNCATE.
 %
+%     SLIDINGAM(...,'DIM',N) specifies an alternative dimension to slide
+%     across rather than the default 1 (slides down the component - 2 would
+%     slide across the components).
+%
+%     SLIDINGAM(...,'CUSTOM',WINDOW) allows a custom sliding window
+%     average.  This might be useful for a Gaussian average or similar.
+%     WINDOW must be formatted as [index; weight] where index is relative
+%     to the reference data point and weight does not include the averaging
+%     divisor (this will be automatically computed).  An example WINDOW:
+%        [ -3  -2  -1    0   1  2    3;
+%         0.1   1  10  100  10  1  0.1]
+%     gives a severe weighting to the center point (reference data point).
+%
 %    Notes:
 %     - Centered windows are of length 2N+1, while the others are just N
-%     - SLIDINGAM is faster than SLIDEFUN because it uses SLIDINGMEAN
+%     - SLIDINGAM is faster than SLIDEFUN because it uses SLIDINGAVG
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
@@ -48,19 +61,22 @@ function [data]=slidingam(data,nsamples,varargin)
 %              data=slidingam(...,'position','center'|'trail'|'lead')
 %              data=slidingam(...,'offset',offset)
 %              data=slidingam(...,'edge','truncate'|'pad')
+%              data=slidingam(...,'dim',n)
+%              data=slidingam(...,'custom',window)
 %
 %    Examples:
 %      Compare an envelope and a 21-sample sliding-window absolute-mean:
 %       p2([envelope(data(1)) slidingam(data(1),10)])
 %
-%    See also: slidingmean, slidingrms, slidefun
+%    See also: envelope, slidingavg, slidingrms, slidefun, seizfun
 
 %     Version History:
 %        Oct.  5, 2008 - initial version
 %        Oct.  7, 2008 - now just an alias to SLIDINGMEAN and SEISFUN
+%        Nov. 13, 2008 - update to use SLIDINGAVG and SEIZFUN
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2008 at 00:20 GMT
+%     Last Updated Nov. 13, 2008 at 21:55 GMT
 
 % todo:
 
@@ -68,9 +84,9 @@ function [data]=slidingam(data,nsamples,varargin)
 error(nargchk(2,8,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizchk(data,'dep'))
 
 % alias to other functions
-data=slidingmean(seisfun(data,@(x)abs(x)),nsamples,varargin{:});
+data=seizfun(data,@(x)slidingavg(abs(x),nsamples,varargin{:}));
 
 end

@@ -27,7 +27,7 @@ function [leaps]=leapseconds()
 %     Ever wondered when those pesky leap seconds were? Just run:
 %      leapseconds
 %
-%    See also: julday, calday, isleapyear
+%    See also: julday, calday, isleapyear, leapsinday, totalleaps
 
 %     Version History:
 %        Oct. 28, 2008 - initial version

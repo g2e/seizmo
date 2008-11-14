@@ -11,7 +11,9 @@ function [leaps]=leapsinday(dates,option)
 %     LEAPSINDAY(DATES,'SERIAL') takes a serialdate array as input.  Note
 %     that this option really is not a good idea as using Matlab's DATENUM
 %     will not properly handle UTC times (no leap second support) when
-%     converting to a serial date number.
+%     converting to a serial date number.  If your time is within a
+%     positive leap second, DATENUM (and DATEVEC, DATESTR) will convert the
+%     date to the following date thus making the date incorrect.
 %
 %    Notes:
 %     - Only valid for UTC dates from 1972 on when the UTC second was
@@ -27,13 +29,14 @@ function [leaps]=leapsinday(dates,option)
 %     Find out how many seconds there will be in today:
 %      86400+leapsinday(now,'serial')
 %
-%    See also: totalleaps, leapseconds
+%    See also: totalleaps, leapseconds, getleaps
 
 %     Version History:
 %        Nov.  1, 2008 - initial version
+%        Nov. 10, 2008 - uses GETLEAPS to speed calls up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2008 at 17:30 GMT
+%     Last Updated Nov. 10, 2008 at 16:05 GMT
 
 % todo:
 
@@ -80,10 +83,8 @@ switch lower(option)
 end
         
 % get leapsecond info
-leapstr=leapseconds;
-nleaps=size(leapstr,1);
-leapdates=datenum(leapstr)-1;
-offset=2*strcmp('+',cellstr(leapstr(:,end)))-1;
+[leapdates,offset]=getleaps();
+nleaps=numel(offset);
 
 % expand (to vectorize)
 dates=dates(:,ones(1,nleaps));

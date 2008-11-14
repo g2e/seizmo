@@ -14,7 +14,7 @@ function [data]=rseis(varargin)
 %      filetype - type of datafile
 %      version - version of filetype
 %      endian - byte-order of file (ieee-le or ieee-be)
-%      haddata - logical indicating if data is read in
+%      hasdata - logical indicating if data is read in
 %      head - contains header data
 %
 %     Fields for timeseries files:

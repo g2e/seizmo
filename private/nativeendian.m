@@ -8,9 +8,7 @@ function [endianness]=nativeendian()
 %
 %    Notes:
 %
-%    System requirements: Matlab 7
-%
-%    Input/Output requirements: N/A
+%    Tested on: Matlab r2007b
 %
 %    Header changes: N/A
 %

@@ -15,9 +15,7 @@ function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 %       equator at the prime meridian, the Z axis through the north pole
 %       and the Y axis through the equator at 90 degrees longitude.
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    [x,y,z]=geocentric2xyz(lat,lon,radius)
 %              [x,y,z]=geocentric2xyz(lat,lon,depth,r)
@@ -30,22 +28,48 @@ function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
+%        Nov. 10, 2008 - scalar expansion, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2008 at 16:15 GMT
+%     Last Updated Nov. 10, 2008 at 08:45 GMT
 
 % todo:
 
 % require 3 or 4 inputs
 error(nargchk(3,4,nargin))
 
-% check inputs
+% size up inputs
+sx=size(lat); sy=size(lon); sz=size(radius);
+nx=prod(sx); ny=prod(sy); nz=prod(sz);
+
+% basic check inputs
 if(~isnumeric(lat) || ~isnumeric(lon) || ~isnumeric(radius))
-    error('SAClab:geocentric2xyz:nonNumeric',...
-    'All inputs must be numeric!');
-elseif(isempty(lat) || ~isequal(size(lat),size(lon),size(radius)))
+    error('SAClab:geocentric2xyz:nonNumeric','All inputs must be numeric!');
+elseif(any([nx ny nz]==0))
     error('SAClab:geocentric2xyz:unpairedCoord',...
-        'Coordinate inputs must be nonempty, equal size arrays!');
+        'Coordinate inputs must be nonempty arrays!');
+elseif((~isequal(sx,sy) && all([nx ny]~=1)) ||...
+       (~isequal(sx,sz) && all([nx nz]~=1)) ||...
+       (~isequal(sz,sy) && all([nz ny]~=1)))
+    error('SAClab:geocentric2xyz:unpairedCoord',...
+        'Coordinate inputs must be scalar or equal sized arrays!');
+end
+
+% expand scalars
+if(all([nx ny nz]==1))
+    % do nothing
+elseif(all([nx ny]==1))
+    lat=repmat(lat,sz); lon=repmat(lon,sz);
+elseif(all([nx nz]==1))
+    lat=repmat(lat,sy); radius=repmat(radius,sy);
+elseif(all([ny nz]==1))
+    lon=repmat(lon,sx); radius=repmat(radius,sx);
+elseif(nx==1)
+    lat=repmat(lat,sz);
+elseif(ny==1)
+    lon=repmat(lon,sz);
+elseif(nz==1)
+    radius=repmat(radius,sy);
 end
 
 % check input (converts depth to radius)

@@ -13,7 +13,6 @@ function [times]=fixtimes(times,option)
 %
 %     FIXTIMES(TIMES,'UTC') allows fixing UTC times which have leap seconds
 %     occasionally inserted on certain dates (see LEAPSECONDS).
-%     seconds.
 %
 %    Notes:
 %

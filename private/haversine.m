@@ -16,18 +16,21 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 %       than SPHERICALINV as it uses the haversine function rather than a
 %       cosine which becomes inefficient at small distances.
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    gcarc=haversine(lat1,lon1,lat2,lon2)
 %
 %    Examples:
+%     Plotting up short distance results for sphericalinv and haversine:
+%      plot(0:1e-9:1e-5,sphericalinv(0,0,0:1e-9:1e-5,0),...
+%           0:1e-9:1e-5,haversine(0,0,0:1e-9:1e-5,0))
+%     demonstrates where this function becomes useful (couple meters).
 %
 %    See also: sphericalinv, vincentyinv, sphericalfwd, vincentyfwd
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
+%        Nov. 10, 2008 - improved scalar expansion, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Oct. 12, 2008 at 17:00 GMT
@@ -37,21 +40,37 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 % require 4 inputs
 error(nargchk(4,4,nargin))
 
-% check inputs
+% size up inputs
+sz1=size(evla); sz2=size(evlo);
+sz3=size(stla); sz4=size(stlo);
+n1=prod(sz1); n2=prod(sz2);
+n3=prod(sz3); n4=prod(sz4);
+
+% basic check inputs
 if(~isnumeric(evla) || ~isnumeric(evlo) ||...
         ~isnumeric(stla) || ~isnumeric(stlo))
     error('SAClab:haversine:nonNumeric','All inputs must be numeric!');
-elseif(isempty(stla) || ~isequal(size(stla),size(stlo)))
-    error('SAClab:haversine:unpairedLatLon',...
-        'Latitudes & longitudes must be nonempty, equal size arrays!')
-elseif(isempty(evla) || ~isequal(size(evla),size(evlo)))
-    error('SAClab:haversine:unpairedLatLon',...
-        'Latitudes & longitudes must be nonempty, equal size arrays!')
-elseif(~isscalar(evla) && ~isscalar(stla) ...
-        && ~isequal(size(evla),size(stla)))
-    error('SAClab:haversine:nonscalarUnequalArrays',...
-        'Location arrays need to be scalar or have equal size!')
+elseif(any([n1 n2 n3 n4]==0))
+    error('SAClab:haversine:emptyLatLon',...
+        'Latitudes & longitudes must be nonempty arrays!');
 end
+
+% expand scalars
+if(n1==1); evla=repmat(evla,sz2); n1=n2; sz1=sz2; end
+if(n2==1); evlo=repmat(evlo,sz1); n2=n1; sz2=sz1; end
+if(n3==1); stla=repmat(stla,sz4); n3=n4; sz3=sz4; end
+if(n4==1); stlo=repmat(stlo,sz3); n4=n3; sz4=sz3; end
+
+% cross check inputs
+if(~isequal(sz1,sz2) || ~isequal(sz3,sz4) ||...
+        (~any([n1 n3]==1) && ~isequal(sz1,sz3)))
+    error('SAClab:haversine:nonscalarUnequalArrays',...
+        'Input arrays need to be scalar or have equal size!');
+end
+
+% expand scalars
+if(n2==1); evla=repmat(evla,sz3); evlo=repmat(evlo,sz3); end
+if(n4==1); stla=repmat(stla,sz1); stlo=repmat(stlo,sz1); end
 
 % get haversine distance
 a=sind((stla-evla)/2).^2+cosd(evla).*cosd(stla).*sind((stlo-evlo)/2).^2;

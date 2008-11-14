@@ -11,9 +11,7 @@ function [lat]=geodetic2geocentriclat(lat,ecc)
 %    Notes:
 %     - If the location is not on the surface use GEODETIC2GEOCENTRIC.
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    latitudes=geodetic2geocentriclat(latitudes)
 %              latitudes=geodetic2geocentriclat(latitudes,ecc)
@@ -26,9 +24,10 @@ function [lat]=geodetic2geocentriclat(lat,ecc)
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
+%        Nov. 10, 2008 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2008 at 16:30 GMT
+%     Last Updated Nov. 10, 2008 at 08:40 GMT
 
 % todo:
 

@@ -22,7 +22,7 @@ function [data,failed]=rdata(data,varargin)
 %      filetype - type of datafile
 %      version - version of filetype
 %      endian - byte-order of file (ieee-le or ieee-be)
-%      haddata - logical indicating if data is read in
+%      hasdata - logical indicating if data is read in
 %      head - contains header data
 %
 %     Fields for timeseries files:
@@ -89,9 +89,10 @@ function [data,failed]=rdata(data,varargin)
 %        Oct. 17, 2008 - added CHKHDR, support new struct layout
 %        Oct. 27, 2008 - minor doc update, updated for struct changes,
 %                        make use of state changes for SEISCHK & CHKHDR
+%        Nov. 12, 2008 - fix allocation of ind cmp for uneven records
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 27, 2008 at 06:05 GMT
+%     Last Updated Nov. 12, 2008 at 10:25 GMT
 
 % todo:
 
@@ -199,9 +200,13 @@ for i=1:nrecs
         continue;
     end
     
-    % preallocate data record with NaNs, deallocate timing
-    data(i).dep=nan(npts(i),ncmp(i),h(vi(i)).data.store); 
-    if(isfield(data,'ind')); data(i).ind=[]; end
+    % preallocate data record with NaNs, deallocate timing if even spacing
+    data(i).dep=nan(npts(i),ncmp(i),h(vi(i)).data.store);
+    if(isfield(data,'ind'))
+        if(strcmpi(leven(i),'true')); data(i).ind=[];
+        else data(i).ind=nan(npts(i),1,h(vi(i)).data.store);
+        end
+    end
     
     % skip if npts==0
     if(npts(i)==0); fclose(fid); continue; end

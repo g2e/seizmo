@@ -11,9 +11,7 @@ function [filetype,version,endian]=getversion(filename)
 %     - Currently this is solely based on the header version field validity 
 %       which is a 32bit signed integer occupying bytes 305 to 308.
 %
-%    System requirements: Matlab
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    [filetype,version,endian]=getversion('filename')
 %

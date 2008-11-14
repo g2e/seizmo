@@ -1,9 +1,9 @@
-function [valid]=vvseis(filetype)
-%VVSEIS    Returns valid SAClab datafile versions
+function [valid]=validseiz(filetype)
+%VALIDSEIZ    Returns valid SAClab datafile versions
 %
-%    Description: VVSEIS(FILETYPE) returns a vector of version numbers
+%    Description: VALIDSEIZ(FILETYPE) returns a vector of version numbers
 %     of the specified filetype FILETYPE that SAClab can work with.  If the
-%     filetype is not support, VVSEIS will return an empty array.
+%     filetype is not supported, VALIDSEIZ will return an empty array.
 %
 %    Notes:
 %     - currently only supports filetype 'SAClab Binary'
@@ -12,13 +12,13 @@ function [valid]=vvseis(filetype)
 %
 %    Tested on: Matlab r2007b
 %    
-%    Usage:    valid_versions=vvseis(filetype)
+%    Usage:    valid_versions=validseiz(filetype)
 %
 %    Examples:
 %     How many different SAClab binary file versions are supported:
-%      length(vvseis('SAClab Binary'))
+%      length(validseiz('SAClab Binary'))
 %
-%    See also:  seischk, isseis, seisdef, gv
+%    See also:  seizchk, isseiz, seizdef, getversion
 
 %     Version History:
 %        Feb. 28, 2008 - initial version
@@ -28,9 +28,10 @@ function [valid]=vvseis(filetype)
 %        Sep. 14, 2008 - minor doc update
 %        Oct. 17, 2008 - filetype argument, history fix
 %        Oct. 27, 2008 - minor doc update
+%        Nov. 13, 2008 - renamed from VVSEIS to VALIDSEIZ
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct 26, 2008 at 02:35 GMT
+%     Last Updated Nov. 13, 2008 at 04:05 GMT
 
 % todo:
 

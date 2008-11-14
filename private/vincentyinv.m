@@ -24,7 +24,7 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %     the tolerances of the calculation.  TOL1 sets the minimum precision
 %     in radians for convergent cases.  TOL2 sets the maximum distance in
 %     radians from the antipode at which a case is deemed divergent and is
-%     forced to return with the last result.  Note that setting TOL2 too
+%     forced to return with the latest result.  Note that setting TOL2 too
 %     high can force convergent cases to return before they satify TOL1.
 %     By default T0L1 is 1e-12 and TOL2 is 1e-2.
 %

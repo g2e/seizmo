@@ -1,8 +1,8 @@
 function [state]=get_chkhdr_state()
 global SACLAB
 try
-    state=SACLAB.CHKHDR.SKIP;
+    state=SACLAB.CHKHDR.ON;
 catch
-    state=false;
+    state=true;
 end
 end

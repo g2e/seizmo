@@ -11,9 +11,7 @@ function [radius]=geodeticlat2radius(lat,ellipsoid)
 %
 %    Notes:
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    radius=geodeticlat2radius(latitudes)
 %              radius=geodeticlat2radius(latitudes,[a f])
@@ -26,9 +24,10 @@ function [radius]=geodeticlat2radius(lat,ellipsoid)
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
+%        Nov. 10, 2008 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2008 at 17:30 GMT
+%     Last Updated Nov. 10, 2008 at 08:40 GMT
 
 % todo:
 

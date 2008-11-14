@@ -32,9 +32,7 @@ function [data]=ch(data,varargin)
 %       for a character field.  This is useful for not having to remember
 %       what the field's actual undefined value is.
 %
-%    System requirements: Matlab 7
-%
-%    Data requirements: NONE
+%    Tested on: Matlab r2007b
 %
 %    Header changes: Determined by input list.
 %
