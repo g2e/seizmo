@@ -1,7 +1,7 @@
 function [data]=envelope(data)
-%ENVELOPE    Return envelopes of SAClab data records
+%ENVELOPE    Return envelopes of SEIZMO data records
 %
-%    Description: Returns the envelopes of the SAClab data records (complex
+%    Description: Returns the envelopes of the SEIZMO data records (complex
 %     magnitude of a record's analytic signal).
 %
 %    Notes:
@@ -24,10 +24,10 @@ function [data]=envelope(data)
 %        Jan. 30, 2008 - initial version
 %        Feb. 23, 2008 - seischk support and class support
 %        Feb. 28, 2008 - support for changing fft zeropadding
-%        Mar.  4, 2008 - documentation update
+%        Mar.  4, 2008 - doc update
 %        May  12, 2998 - dep* fix
-%        July 17, 2008 - history update, documentation update, now uses
-%                        SAClab functions rather than Matlab's hilbert
+%        July 17, 2008 - history update, doc update, now uses
+%                        SEIZMO functions rather than Matlab's hilbert
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated July 17, 2008 at 17:10 GMT

@@ -1,7 +1,7 @@
 function [data]=amph2rlim(data)
-%AMPH2RLIM    Convert SAClab spectral records from AMPH to RLIM
+%AMPH2RLIM    Convert SEIZMO spectral records from AMPH to RLIM
 %
-%    Description: AMPH2RLIM(DATA) converts SAClab amplitude-phase records 
+%    Description: AMPH2RLIM(DATA) converts SEIZMO amplitude-phase records 
 %     to real-imaginary records.  This is particularly useful when
 %     performing basic operations on spectral records which would otherwise
 %     require separating the amplitude and phase components.  Records in 
@@ -52,7 +52,7 @@ iftype=genumdesc(data,'iftype');
 % records must be spectral
 if(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
         & ~strcmpi(iftype,'Spectral File-Ampl/Phase')))
-    error('SAClab:amph2rlim:illegalOperation',...
+    error('seizmo:amph2rlim:illegalOperation',...
         'Illegal operation on non-spectral record(s)!');
 end
 

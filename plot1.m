@@ -1,7 +1,7 @@
 function [fh,sfh]=p1(data,varargin)
-%P1    Plot SAClab data records in individual subplots
+%P1    Plot SEIZMO data records in individual subplots
 %
-%    Description: P1(DATA) plots timeseries and xy SAClab records in a
+%    Description: P1(DATA) plots timeseries and xy SEIZMO records in a
 %     figure as individual subplots.  Other filetypes are ignored (a space 
 %     is left for their subplot in the figure).  By default, markers 'o',
 %     'a','f','t(n)' are drawn if defined and are given labels using 'ko',
@@ -36,7 +36,7 @@ function [fh,sfh]=p1(data,varargin)
 
 %     Version History:
 %        ????????????? - Initial Version
-%        June 12, 2008 - Documentation Update
+%        June 12, 2008 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated June 12, 2008 at 16:10 GMT
@@ -47,9 +47,9 @@ error(seischk(data,'dep'))
 % get plotting style defaults
 P=pconf;
 
-% allow access to plot styling using global SACLAB structure
-global SACLAB; fields=fieldnames(P).';
-for i=fields; if(isfield(SACLAB,i)); P.(i{:})=SACLAB.(i{:}); end; end
+% allow access to plot styling using global SEIZMO structure
+global SEIZMO; fields=fieldnames(P).';
+for i=fields; if(isfield(SEIZMO,i)); P.(i{:})=SEIZMO.(i{:}); end; end
 
 % sort out optional arguments
 for i=1:2:length(varargin)
@@ -58,7 +58,7 @@ for i=1:2:length(varargin)
     if(isfield(P,varargin{i}))
         P.(varargin{i})=varargin{i+1};
     else
-        warning('SAClab:p1:badInput','Unknown Option: %s',varargin{i}); 
+        warning('seizmo:p1:badInput','Unknown Option: %s',varargin{i}); 
     end
 end
 

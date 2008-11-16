@@ -1,50 +1,60 @@
-function [varargout]=genumdesc(data,varargin)
-%GENUMDESC    Get enum string description from SAClab header enum field
+function [varargout]=getenumdesc(data,varargin)
+%GETENUMDESC    Get enum string description from SEIZMO header enum field
 %
-%    Description: GENUMDESC(DATA,FIELD) returns a cellstring array filled 
+%    Description: GETENUMDESC(DATA,FIELD) returns a cellstring array filled 
 %     with the description strings associated with the enum field FIELD
-%     stored in the SAClab structure DATA.  This is more useful/readible
-%     than the magic number (enumerator integer) returned with GH.
+%     stored in the SEIZMO structure DATA.  This is more useful/readible
+%     than the magic number (enumerator integer) returned with GETHEADER.
 %
-%     GENUMDESC(DATA,FIELD1,...,FIELDN) returns a cellstring array for each
-%     field supplied.
+%     GETENUMDESC(DATA,FIELD1,...,FIELDN) returns a cellstring array for
+%     each field supplied.
 %
 %    Notes:
 %     - Numeric header fields not defined to be enum fields can be used as 
-%       if they were enum fields with GENUMDESC.  This gives the user the 
+%       if they were enum fields with GETENUMDESC.  This gives the user the 
 %       ability to have more enum fields if needed.  Character fields are
 %       NOT able to be treated as enum fields.
 %     - Nonexistent header fields will return 'Unknown Enum Field'.
 %     - Enum values that aren't defined in the enumerator list are tagged
 %       as 'Unknown Enum Value' unless they are the defined UNDEFINED
-%       value in which case they are tagged as 'Undefined Enum Field'.
+%       value in which case they are tagged as 'Undefined Enum Field'. This
+%       avoids conflict with enum fields called 'unknown' and 'undefined'.
 %
-%    Usage: cellstr=genumdesc(data,'field')
-%           [cellstr1,...,cellstrN]=genumdesc(data,'field1',...,'fieldN')
+%    Tested on: Matlab r2007b
+%
+%    Usage: cellstr=getenumdesc(data,'field')
+%           [cellstr1,...,cellstrN]=getenumdesc(data,'field1',...,'fieldN')
 %
 %    Examples:
 %     To check if all records are timeseries data:
-%      if(all(strcmp(genumdesc(data,'iftype'),'Time Series File')))
+%      if(all(strcmp(getenumdesc(data,'iftype'),'Time Series File')))
 %          disp('timeseries dataset')
 %      end
 %
 %     Interpret resp0 as an enum field:
-%      my_enum_desc=genumdesc(data,'resp0')   
+%      my_enum_desc=getenumdesc(data,'resp0')   
 %
-%    See also: gh, glgc, genum
+%    See also: getheader, getlgc, getenumid
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 13, 2008 - Documentation update, compat fixes, better
-%                        support for undefined and unknown values/fields
+%        Feb. 23, 2008 - initial version
+%        Feb. 28, 2008 - minor code clean
+%        Feb. 29, 2008 - handle undefined
+%        Mar.  4, 2008 - minor doc update
+%        June 13, 2008 - doc update, compat fixes, handle values out of
+%                        range or non-whole, avoid name conflict
 %        Oct. 17, 2008 - added VINFO support
+%        Nov. 16, 2008 - history fix, doc update, code cleaning, rename
+%                        from GENUMDESC to GETENUMDESC
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 17, 2008 at 02:45 GMT
+%     Last Updated Nov. 16, 2008 at 05:15 GMT
+
+% todo:
 
 % require at least two inputs
 if(nargin<2)
-    error('MATLAB:nargchk:notEnoughInputs',...
+    error('seizmo:getenumdesc:notEnoughInputs',...
         'Not enough input arguments.')
 end
 
@@ -52,41 +62,43 @@ end
 varnargin=length(varargin);
 nvarargout=cell(1,varnargin);
 varargout=nvarargout;
-[varargout{:}]=deal(cell(length(data),1));
+[varargout{:}]=deal(cell(numel(data),1));
 
 % get header info
-[nvarargout{:}]=gh(data,varargin{:});
+[nvarargout{:}]=getheader(data,varargin{:});
 
 % loop over versions
-[h,idx]=vinfo(data);
+[h,idx]=versioninfo(data);
 for i=1:numel(h)
     % indexing of data with this header version
     ind=find(idx==i);
     
     % loop over fields
     for j=1:length(varargin)
-        % unknown enum field if NaN
-        nan=isnan(nvarargout{j}(ind));
-        if(any(nan))
-            varargout{j}(ind(nan))={'Unknown Enum Field'};
+        % check for cell output (char field)
+        if(iscell(nvarargout{j}(ind)))
+            error('seizmo:getenumdesc:badField',...
+                'String fields are not supported!');
         end
         
-        % undefined enum value
+        % compare
+        bad=isnan(nvarargout{j}(ind));
         undef=nvarargout{j}(ind)==h(i).undef.ntype;
+        unknown=~(bad | undef) & (nvarargout{j}(ind)<h(i).enum(1).minval...
+                | nvarargout{j}(ind)>h(i).enum(1).maxval ...
+                | fix(nvarargout{j}(ind))~=nvarargout{j}(ind));
+        good=~(bad | undef | unknown);
+        
+        % assign enum descriptions
+        if(any(bad))
+            varargout{j}(ind(bad))={'Unknown Enum Field'};
+        end
         if(any(undef))
             varargout{j}(ind(undef))={'Undefined Enum Field'};
         end
-        
-        % unknown enum value if outside enumerator list
-        unknown=(~nan & ~undef & (nvarargout{j}(ind)<h(i).enum(1).minval...
-                | nvarargout{j}(ind)>h(i).enum(1).maxval ...
-                | round(nvarargout{j}(ind))~=nvarargout{j}(ind)));
         if(any(unknown))
             varargout{j}(ind(unknown))={'Unknown Enum Value'};
         end
-        
-        % good enum values
-        good=~nan & ~undef & ~unknown;
         if(any(good))
             varargout{j}(ind(good))=...
                 h(i).enum(1).desc(nvarargout{j}(ind(good))+1);

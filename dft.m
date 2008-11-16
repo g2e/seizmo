@@ -1,7 +1,7 @@
 function [data]=dft(data,format,pow2pad)
-%DFT    Performs a discrete fourier transform on SAClab data records
+%DFT    Performs a discrete fourier transform on SEIZMO data records
 %
-%    Description: DFT(DATA,FORMAT) converts SAClab records from the time 
+%    Description: DFT(DATA,FORMAT) converts SEIZMO records from the time 
 %     domain to the frequency domain using a discrete fourier transform
 %     (Matlab's fft).  Following SAC formatting, an option FORMAT can be
 %     given to select between real-imaginary and amplitude-phase formats
@@ -13,7 +13,7 @@ function [data]=dft(data,format,pow2pad)
 %     The default value is 1.
 %
 %    Notes:
-%     - SAC (and thus SAClab for sanity) calculates spectral data according
+%     - SAC (and thus SEIZMO for sanity) calculates spectral data according
 %       to Parseval's theorem.  Dividing records (except for phase!) by 
 %       npts*delta/2 gives results that may better match the amplitudes
 %       of sinusoid functions.
@@ -67,10 +67,10 @@ if(nargin<2 || isempty(format)); format='amph'; end
 
 % check inputs
 if(~any(strcmpi(format,{'amph' 'rlim'})))
-    error('SAClab:dft:badInput','Bad FORMAT string: %s !',format)
+    error('seizmo:dft:badInput','Bad FORMAT string: %s !',format)
 end
 if(~isnumeric(pow2pad) || ~isscalar(pow2pad) || fix(pow2pad)~=pow2pad)
-    error('SAClab:dft:badInput','POW2PAD must be a scalar integer!')
+    error('seizmo:dft:badInput','POW2PAD must be a scalar integer!')
 end
 
 % retreive header info
@@ -80,11 +80,11 @@ iftype=genumdesc(data,'iftype');
 
 % check leven,iftype
 if(any(~strcmpi(leven,'true')))
-    error('SAClab:dft:illegalOperation',...
+    error('seizmo:dft:illegalOperation',...
         'Illegal operation on unevenly spaced record!')
 elseif(any(~strcmpi(iftype,'Time Series File')...
         & ~strcmpi(iftype,'General X vs Y file')))
-    error('SAClab:dft:illegalOperation',...
+    error('seizmo:dft:illegalOperation',...
         'Illegal operation on spectral/xyz record!')
 end
 

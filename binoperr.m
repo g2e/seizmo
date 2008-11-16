@@ -1,5 +1,5 @@
 function []=binoperr(varargin)
-%BINOPERR    Controls behavior of SAClab binary functions
+%BINOPERR    Controls behavior of SEIZMO binary functions
 %
 %    Description: Allows for changing the behavior of how binary functions 
 %     (addf, divf, mulf, divf) handle records with some unequal aspects.
@@ -10,7 +10,7 @@ function []=binoperr(varargin)
 %     BINOPERR() displays the current binary operator error settings.
 %
 %     BINOPERR('defaults') clears any previous settings and causes all
-%     SAClab binary functions to use their default settings.
+%     SEIZMO binary functions to use their default settings.
 %     
 %     BINOPERR('npts','error'|'warn'|'ignore') sets how binary operations
 %     handle records with different numbers of points.  If the option is 
@@ -88,7 +88,7 @@ function []=binoperr(varargin)
 %     Version History:
 %        June 20, 2008 - initial version
 %        June 28, 2008 - doc update
-%        Oct.  6, 2008 - doc update, use new SACLAB layout
+%        Oct.  6, 2008 - doc update, use new SEIZMO layout
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Oct.  6, 2008 at 15:50 GMT
@@ -109,17 +109,17 @@ option.IFTYPE='ERROR';
 % available states
 states={'ERROR' 'WARN' 'IGNORE'};
 
-% pull up and check over SACLAB global
-global SACLAB; fields=fieldnames(option).';
-if(isfield(SACLAB,'BINOPERR'))
+% pull up and check over SEIZMO global
+global SEIZMO; fields=fieldnames(option).';
+if(isfield(SEIZMO,'BINOPERR'))
     for i=fields
-        if(isfield(SACLAB.BINOPERR,i))
-            if(~any(strcmpi(SACLAB.BINOPERR.(i{:}),states)))
-                warning('SAClab:binoperr:badState',...
+        if(isfield(SEIZMO.BINOPERR,i))
+            if(~any(strcmpi(SEIZMO.BINOPERR.(i{:}),states)))
+                warning('seizmo:binoperr:badState',...
                     '%s in unknown state => changing to default!',i{:});
-                SACLAB.BINOPERR.(i{:})=option.(i{:});
+                SEIZMO.BINOPERR.(i{:})=option.(i{:});
             else
-                option.(i{:})=upper(SACLAB.BINOPERR.(i{:}));
+                option.(i{:})=upper(SEIZMO.BINOPERR.(i{:}));
             end
         end
     end
@@ -132,36 +132,36 @@ if(nargin==0)
 elseif(nargin==1)
     % check input is 'defaults'
     if(~strcmpi('defaults',varargin{:}))
-        error('SAClab:binoperr:unknownOption',...
+        error('seizmo:binoperr:unknownOption',...
             'Unknown option or bad option usage!');
     end
-    % clear SACLAB settings
-    if(isfield(SACLAB,'BINOPERR'))
-        SACLAB=rmfield(SACLAB,'BINOPERR');
+    % clear SEIZMO settings
+    if(isfield(SEIZMO,'BINOPERR'))
+        SEIZMO=rmfield(SEIZMO,'BINOPERR');
     end
 % set options
 else
     % all inputs must be 'option','state' pairs
     if(mod(nargin,2))
-        error('SAClab:binoperr:unpairedOption','Option missing a value!');
+        error('seizmo:binoperr:unpairedOption','Option missing a value!');
     end
     % must be valid
     varargin=upper(varargin);
     for i=varargin(1:2:end)
         if(~isfield(option,i))
-            error('SAClab:binoperr:unknownOption',...
+            error('seizmo:binoperr:unknownOption',...
                 'Unknown option: %s',i{:});
         end
     end
     for i=varargin(2:2:end)
         if(~any(strcmpi(i,states)))
-            error('SAClab:binoperr:unknownOptionState',...
+            error('seizmo:binoperr:unknownOptionState',...
                 'Unknown option state: %s',i{:});
         end
     end
     % assign settings
     for i=1:2:nargin
-        SACLAB.BINOPERR.(varargin{i})=varargin{i+1};
+        SEIZMO.BINOPERR.(varargin{i})=varargin{i+1};
     end
 end
 

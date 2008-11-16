@@ -1,11 +1,11 @@
 function [data]=taper(data,width,type,option)
-%TAPER   Taper SAClab data records
+%TAPER   Taper SEIZMO data records
 %
 %    Description: A taper is a monotonically varying function between zero
 %     and one.  It is applied in a symmetric manner to the data such that 
 %     the signal is zero for the first and last data points and increases 
 %     smoothly to its original value at an interior point relative to each 
-%     end.  This command allows SAClab to utilize the multitude of window
+%     end.  This command allows SEIZMO to utilize the multitude of window
 %     functions available in Matlab's Signal Processing Toolbox for tapers.
 %
 %     TAPER(DATA) tapers data records with a Hanning taper set to vary from
@@ -64,7 +64,7 @@ function [data]=taper(data,width,type,option)
 
 %     Version History:
 %        ????????????? - Initial Version
-%        June 12, 2008 - Cleaned up documentation, made 'hann' default
+%        June 12, 2008 - Cleaned up doc, made 'hann' default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated June 12, 2008 at 04:35 GMT
@@ -82,10 +82,10 @@ if(nargin<2 || isempty(width)); width=[0.05 0.05]; end
 % check width
 if(length(width)==1); width=[width width];
 elseif(length(width)~=2)
-    error('SAClab:taper:badInput','too many taper halfwidth parameters')
+    error('seizmo:taper:badInput','too many taper halfwidth parameters')
 end
 if(any(width>1))
-    error('SAClab:taper:badInput',...
+    error('seizmo:taper:badInput',...
         'taper halfwidth far too big - use 0.0 to 0.5')
 end
 
@@ -100,7 +100,7 @@ iftype=genumdesc(data,'iftype');
 tru=strcmp(leven,'true');
 fals=strcmp(leven,'false');
 if(~all(tru | fals))
-    error('SAClab:taper:levenBad',...
+    error('seizmo:taper:levenBad',...
         'logical field leven needs to be set'); 
 end
 
@@ -108,7 +108,7 @@ end
 for i=1:length(data)
     % check for unsupported filetypes
     if(strcmp(iftype(i),'General XYZ (3-D) file'))
-        warning('SAClab:taper:illegalFiletype',...
+        warning('seizmo:taper:illegalFiletype',...
             'Illegal operation on xyz file');
         continue;
     end

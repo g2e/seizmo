@@ -31,9 +31,9 @@ error(seischk(data,'x'))
 % get plotting style defaults
 P=pconf;
 
-% allow access to plot styling using global SACLAB structure
-global SACLAB; fields=fieldnames(P).';
-for i=fields; if(isfield(SACLAB,i)); P.(i{:})=SACLAB.(i{:}); end; end
+% allow access to plot styling using global SEIZMO structure
+global SEIZMO; fields=fieldnames(P).';
+for i=fields; if(isfield(SEIZMO,i)); P.(i{:})=SEIZMO.(i{:}); end; end
 
 % sort out optional arguments
 for i=1:2:length(varargin)
@@ -42,7 +42,7 @@ for i=1:2:length(varargin)
     if(isfield(P,varargin{i}))
         P.(varargin{i})=varargin{i+1};
     else
-        warning('SAClab:pdendro:badInput',...
+        warning('seizmo:pdendro:badInput',...
             'Unknown Option: %s',varargin{i}); 
     end
 end

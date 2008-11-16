@@ -34,7 +34,7 @@ error(nargchk(1,1,nargin));
 % require Nx3 numeric
 sz=size(caldates);
 if(~isnumeric(caldates) || sz(2)~=3)
-    error('SAClab:cal2doy:badInput',...
+    error('seizmo:cal2doy:badInput',...
         'DATES array must have Nx3 elements: [years months dayofmonths]');
 end
 

@@ -1,5 +1,5 @@
 function [data]=integreat(data,option)
-%INTEGREAT    Integrates SAClab data records
+%INTEGREAT    Integrates SEIZMO data records
 %
 %    Description:
 %
@@ -48,7 +48,7 @@ if(nargin==1 || isempty(option))
     % default
     option='trapezoidal';
 elseif(~ischar(option) && ~iscellstr(option))
-    error('SAClab:integreat:badOption',...
+    error('seizmo:integreat:badOption',...
         'OPTION must be a character or cell string array!');
 end
 
@@ -58,7 +58,7 @@ nopt=numel(option);
 if(nopt==1)
     option(1:nrecs,1)=option;
 elseif(nopt~=nrecs)
-    error('SAClab:integreat:badOption',...
+    error('seizmo:integreat:badOption',...
         'OPTION must be a single option or one option per record!');
 end
 
@@ -114,7 +114,7 @@ for i=1:nrecs
         case 'midpoint'
             
         otherwise
-            error('SAClab:integreat:badOption','Unknown OPTION!');
+            error('seizmo:integreat:badOption','Unknown OPTION!');
     end
     
     % change class back

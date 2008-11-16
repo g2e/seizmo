@@ -1,12 +1,12 @@
 function [data]=idft(data)
-%IDFT    Performs an inverse discrete fourier transform on SAClab records
+%IDFT    Performs an inverse discrete fourier transform on SEIZMO records
 %
-%    Description: IDFT(DATA) converts SAClab records from the frequency 
+%    Description: IDFT(DATA) converts SEIZMO records from the frequency 
 %     domain to the time domain using an inverse discrete fourier transform
 %     (Matlab's ifft).  Output filetype is 'Time Series File'.
 %
 %    Notes:
-%     - SAC (and thus SAClab's DFT for sanity) calculates spectral data 
+%     - SAC (and thus SEIZMO's DFT for sanity) calculates spectral data 
 %       according to Parseval's theorem.  This is not equivalent to how
 %       Matlab's fft/ifft functions work so be careful when working with
 %       amplitudes!
@@ -61,11 +61,11 @@ e=sb+(nspts-1).*sdelta;
 
 % check leven,iftype
 if(any(~strcmpi(leven,'true')))
-    error('SAClab:idft:illegalOperation',...
+    error('seizmo:idft:illegalOperation',...
         'Illegal operation on unevenly spaced record!');
 elseif(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
         & ~strcmpi(iftype,'Spectral File-Ampl/Phase')))
-    error('SAClab:idft:illegalOperation',...
+    error('seizmo:idft:illegalOperation',...
         'Illegal operation on non-spectral file!');
 end
 

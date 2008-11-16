@@ -26,11 +26,11 @@ function [leaps]=totalleaps(dates,option)
 %     Get is the current offset:
 %      totalleaps(now,'serial')
 %
-%    See also: leapsinday, leapseconds
+%    See also: leapsinday, getleapseconds
 
 %     Version History:
 %        Nov.  1, 2008 - initial version
-%        Nov. 10, 2008 - uses GETLEAPS to speed calls up
+%        Nov. 10, 2008 - uses GETLEAPSECONDS to speed calls up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Nov. 10, 2008 at 16:05 GMT
@@ -44,13 +44,13 @@ error(nargchk(1,2,nargin));
 if(nargin==1 || isempty(option))
     option='gregorian';
 elseif(~ischar(option) || ~any(strcmpi(option,{'serial' 'gregorian'})))
-    error('SAClab:totalleaps:optionBad',...
+    error('seizmo:totalleaps:optionBad',...
         'OPTION must be ''serial'' or ''gregorian''!');
 end
 
 % require numeric
 if(~isnumeric(dates))
-    error('SAClab:totalleaps:badInput',...
+    error('seizmo:totalleaps:badInput',...
         'DATES must be a numeric array!');
 end
 
@@ -61,7 +61,7 @@ switch lower(option)
         % require Nx2 or Nx3
         ndates=prod(sz)/sz(2);
         if(~any(sz(2)==[2 3]))
-            error('SAClab:totalleaps:badInput',...
+            error('seizmo:totalleaps:badInput',...
                 'DATES must be a Nx2 or Nx3 array!');
         end
         
@@ -80,7 +80,7 @@ switch lower(option)
 end
 
 % get leapsecond info
-[leapdates,offset]=getleaps();
+[leapdates,offset]=getleapseconds();
 nleaps=numel(offset);
 offset=cumsum([0; offset]);
 

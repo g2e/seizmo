@@ -35,7 +35,7 @@ error(nargchk(1,1,nargin));
 % require Nx5 or Nx6 numeric
 sz=size(utc);
 if(~isnumeric(utc) || ~any(sz(2)==[5 6]))
-    error('SAClab:utc2tai:badInput','UTC array must be Nx5 or Nx6!');
+    error('seizmo:utc2tai:badInput','UTC array must be Nx5 or Nx6!');
 end
 
 % fix times

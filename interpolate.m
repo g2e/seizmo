@@ -1,7 +1,7 @@
 function [data]=interpolate(data,sr,method,new_b,new_e)
-%INTERPOLATE    Interpolates SAClab data records to a new samplerate
+%INTERPOLATE    Interpolates SEIZMO data records to a new samplerate
 %
-%    Description: INTERPOLATE(DATA,RATE) interpolates SAClab data records
+%    Description: INTERPOLATE(DATA,RATE) interpolates SEIZMO data records
 %     in DATA to a new sample rate RATE.  As this is interpolation (the
 %     default method is spline), edge effects are not an issue as they are
 %     for SYNCSR, DECI, and STRETCH.  RATE can be a vector of rates with 
@@ -38,7 +38,7 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 
 %     Version History:
 %        ????????????? - Initial Version
-%        June 15, 2008 - Documentation update, name change
+%        June 15, 2008 - doc update, name change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated June 15, 2008 at 00:20 GMT
@@ -65,23 +65,23 @@ nrecs=numel(data);
 % check and expand inputs
 if(isscalar(new_b)); new_b(1:nrecs,1)=new_b;
 elseif(~isvector(new_b) || length(new_b)~=nrecs)
-    error('SAClab:interpolate:badInput','dimensions of new_b are bad')
+    error('seizmo:interpolate:badInput','dimensions of new_b are bad')
 end
 if(isscalar(new_e)); new_e(1:nrecs,1)=new_e;
 elseif(~isvector(new_e) || length(new_e)~=nrecs)
-    error('SAClab:interpolate:badInput','dimensions of new_e are bad') 
+    error('seizmo:interpolate:badInput','dimensions of new_e are bad') 
 end
 if(isscalar(sr)); sr(1:nrecs,1)=sr;
 elseif(~isvector(sr) || length(sr)~=nrecs)
-    error('SAClab:interpolate:badInput','dimensions of sr are bad') 
+    error('seizmo:interpolate:badInput','dimensions of sr are bad') 
 end
 if(ischar(method)); method=cellstr(method); end
 if(~iscellstr(method))
-    error('SAClab:interpolate:badInput','method must be char/cellstr')
+    error('seizmo:interpolate:badInput','method must be char/cellstr')
 end
 if(isscalar(method)); method=method(ones(nrecs,1),1);
 elseif(~isvector(method) || length(method)~=nrecs)
-    error('SAClab:interpolate:badInput','dimensions of method are bad')
+    error('seizmo:interpolate:badInput','dimensions of method are bad')
 end
 
 % sampling interval

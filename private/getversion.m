@@ -1,10 +1,10 @@
 function [filetype,version,endian]=getversion(filename)
-%GETVERSION    Get filetype, version and byte-order of SAClab datafile
+%GETVERSION    Get filetype, version and byte-order of SEIZMO datafile
 %
 %    Description: [FILETYPE,VERSION,ENDIAN]=GETVERSION(FILENAME) determines
 %     the filetype FILETYPE, version VERSION and byte-order ENDIAN of a
-%     SAClab compatible file FILENAME.  If a datafile cannot be validated
-%     (occurs when the file is not a SAClab datafile or cannot be opened or
+%     SEIZMO compatible file FILENAME.  If a datafile cannot be validated
+%     (occurs when the file is not a SEIZMO datafile or cannot be opened or
 %     read) a warning is given & FILETYPE, VERSION, ENDIAN are set empty.
 %
 %    Notes:
@@ -18,9 +18,9 @@ function [filetype,version,endian]=getversion(filename)
 %    Examples:
 %     Figure out a file's version so that we can pull up the definition:
 %      [filetype,version,endian]=getversion('myfile')
-%      definition=seisdef(version)
+%      definition=seizmodef(version)
 %
-%    See also:  rh, wh, seisdef, vvseis
+%    See also:  readheader, writeheader, seizmodef, validseizmo
 
 %     Version History:
 %        Jan. 27, 2008 - initial version
@@ -29,17 +29,19 @@ function [filetype,version,endian]=getversion(filename)
 %        Mar.  4, 2008 - doc update, fix warnings
 %        June 12, 2008 - doc update
 %        Sep. 14, 2008 - minor doc update, input checks
-%        Oct. 17, 2008 - renamed from GV to GETVERSION, filetype output
+%        Oct. 17, 2008 - renamed from GV to GETVERSION, filetype outputj
+%        Nov. 15, 2008 - update for new naming schema, better separation of
+%                        methods for getting versions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 17, 2008 at 00:55 GMT
+%     Last Updated Nov. 15, 2008 at 20:45 GMT
 
 % todo:
 
 % check input
 error(nargchk(1,1,nargin))
 if(~ischar(filename))
-    error('SAClab:gv:badInput','FILENAME must be a string!');
+    error('seizmo:getversion:badInput','FILENAME must be a string!');
 end
 
 % preset filetype/version/endian to invalid
@@ -48,31 +50,50 @@ filetype=[]; version=[]; endian=[];
 % open file for reading
 fid=fopen(filename);
 
-% get valid versions for SAClab Binary
-valid=vvseis('SAClab Binary');
-
 % check for invalid fid (for directories etc)
 if(fid<0)
-    warning('SAClab:gv:badFID','File not openable, %s !',filename);
+    warning('seizmo:getversion:badFID',...
+        'File not openable, %s !',filename);
     return;
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% METHOD ONE -- SAC VERSION FIELD %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+try
+    [filetype,version,endian]=getsacversion(fid);
+    fclose(fid);
+    return;
+catch
+    % go on to the next method below
+end
+
+% all methods failed - clean up and give some info
+fclose(fid);
+report=lasterror;
+warning(report.identifier,report.message);
+
+end
+
+
+function [filetype,version,endian]=getsacversion(fid)
+% gets version for sac files
 
 try
     % seek to version field
     fseek(fid,304,'bof');
 catch
     % seek failed
-    fclose(fid);
-    warning('SAClab:gv:fileTooShort','File too short, %s !',filename);
-    return;
+    error('seizmo:getversion:fileTooShort',...
+        'File too short, %s !',filename);
 end
 
 % at end of file
 if(feof(fid))
     % seeked to eof...
-    fclose(fid);
-    warning('SAClab:gv:fileTooShort','File too short, %s !',filename);
-    return;
+    error('seizmo:getversion:fileTooShort',...
+        'File too short, %s !',filename);
 end
 
 try
@@ -80,51 +101,66 @@ try
     ver=fread(fid,1,'int32','ieee-le');
 catch
     % read version failed - close file and warn
-    fclose(fid);
-    warning('SAClab:gv:readVerFail',...
+    error('seizmo:getversion:readVerFail',...
         'Unable to read header version of file, %s !',filename);
+end
+
+% check for empty
+if(isempty(ver))
+    % read returned nothing...
+    error('seizmo:getversion:readVerFail',...
+        'Unable to read header version of file, %s !',filename);
+end
+
+% check if valid SAC or SEIZMO file
+sac=validseizmo('SAC Binary');
+seizmo=validseizmo('SEIZMO Binary');
+if(any(sac==ver))
+    filetype='SAC Binary';
+    version=ver;
+    endian='ieee-le';
+    return;
+elseif(any(seizmo==ver))
+    filetype='SEIZMO Binary';
+    version=ver;
+    endian='ieee-le';
     return;
 end
 
-% check if valid
+% no good - seek back
+fseek(fid,-4,'cof');
+
+try
+    % read in version as big-endian
+    ver=fread(fid,1,'int32','ieee-be');
+catch
+    % read version failed - close file and warn
+    error('seizmo:getversion:readVerFail',...
+        'Unable to read header version of file, %s !',filename);
+end
+
+% check for empty
 if(isempty(ver))
     % read returned nothing...
-    fclose(fid);
-    warning('SAClab:gv:readVerFail',...
+    error('seizmo:getversion:readVerFail',...
         'Unable to read header version of file, %s !',filename);
-    return;
-elseif(~any(valid==ver))
-    % no good - seek back
-    fseek(fid,-4,'cof');
-    
-    try
-        % read in version as big-endian
-        ver=fread(fid,1,'int32','ieee-be');
-    catch
-        % read version failed - close file and warn
-        fclose(fid);
-        warning('SAClab:gv:readVerFail',...
-            'Unable to read header version of file, %s !',filename);
-        return;
-    end
-    
-    % check if valid
-    if(~any(valid==ver))
-        % no good again - close file and warn
-        fclose(fid);
-        warning('SAClab:gv:versionUnknown',...
-            'Unknown header version for file, %s !',filename);
-        return;
-    else
-        filetype='SAClab Binary';
-        version=ver;
-        endian='ieee-be';
-    end
-else
-    filetype='SAClab Binary';
-    version=ver;
-    endian='ieee-le';
 end
-fclose(fid);
+
+% check if valid SAC or SEIZMO file
+if(any(sac==ver))
+    filetype='SAC Binary';
+    version=ver;
+    endian='ieee-be';
+    return;
+elseif(any(seizmo==ver))
+    filetype='SEIZMO Binary';
+    version=ver;
+    endian='ieee-be';
+    return;
+end
+
+% unknown version
+error('seizmo:getversion:versionUnknown',...
+    'Unknown/Unsupported version!');
 
 end

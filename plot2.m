@@ -1,7 +1,7 @@
 function [fh,lh]=p2(data,varargin)
-%P2    Overlay plot of SAClab data records
+%P2    Overlay plot of SEIZMO data records
 %
-%    Description: Plots timeseries and xy SAClab records over one another
+%    Description: Plots timeseries and xy SEIZMO records over one another
 %     in a single plot.  Other record types are ignored.  Optional
 %     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
@@ -26,9 +26,9 @@ error(seischk(data,'dep'))
 % get plotting style defaults
 P=pconf;
 
-% allow access to plot styling using global SACLAB structure
-global SACLAB; fields=fieldnames(P).';
-for i=fields; if(isfield(SACLAB,i)); P.(i{:})=SACLAB.(i{:}); end; end
+% allow access to plot styling using global SEIZMO structure
+global SEIZMO; fields=fieldnames(P).';
+for i=fields; if(isfield(SEIZMO,i)); P.(i{:})=SEIZMO.(i{:}); end; end
 
 % sort out optional arguments
 for i=1:2:length(varargin)
@@ -37,7 +37,7 @@ for i=1:2:length(varargin)
     if(isfield(P,varargin{i}))
         P.(varargin{i})=varargin{i+1};
     else
-        warning('SAClab:p2:badInput','Unknown Option: %s',varargin{i}); 
+        warning('seizmo:p2:badInput','Unknown Option: %s',varargin{i}); 
     end
 end
 
@@ -95,7 +95,7 @@ iftype=genumdesc(data,'iftype');
 
 % check normalization style
 if(~any(strcmpi(P.NORMSTYLE,{'single' 'group'})))
-    warning('SAClab:p2:badInput','bad normalization style')
+    warning('seizmo:p2:badInput','bad normalization style')
     P.NORMSTYLE='single';
 end
 

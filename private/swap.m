@@ -22,7 +22,7 @@ function [varargout]=swap(varargin)
 %     Preallocate some arrays with 4x4 nan array:
 %      [a,b,c,d]=swap(nan(4))
 %
-%    See also: 
+%    See also: deal
 
 %     Version History:
 %        Feb. 12, 2008 - initial version

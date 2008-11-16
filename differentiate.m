@@ -1,8 +1,8 @@
 function [data]=dif(data)
-%DIF    Differentiate SAClab data records using discrete differences
+%DIF    Differentiate SEIZMO data records using discrete differences
 %
 %    Description: DIF(DATA) calculates and returns the derivative of each 
-%     record in the SAClab structure DATA using the differences between 
+%     record in the SEIZMO structure DATA using the differences between 
 %     points as an approximation of the derivative at the midpoint.  Works 
 %     with unevenly spaced data.
 %
@@ -32,8 +32,8 @@ function [data]=dif(data)
 %       Feb. 28, 2008 - seischk support
 %       Mar.  4, 2008 - lgcchk support
 %       May  12, 2008 - dep* fix
-%       June 20, 2008 - minor documentation update
-%       June 29, 2008 - documentation update, .dep & .ind rather than .x &
+%       June 20, 2008 - minor doc update
+%       June 29, 2008 - doc update, .dep & .ind rather than .x &
 %                       .t, dataless support, only calls ch once, strict
 %                       filetype check
 %
@@ -52,11 +52,11 @@ error(seischk(data,'dep'))
 % check for unsupported filetypes
 iftype=genumdesc(data,'iftype');
 if(strcmpi(iftype,'General XYZ (3-D) file'))
-    error('SAClab:dif:illegalFiletype',...
+    error('seizmo:dif:illegalFiletype',...
         'illegal operation on xyz file');
 elseif(any(strcmpi(iftype,'Spectral File-Real/Imag') | ...
         strcmpi(iftype,'Spectral File-Ampl/Phase')))
-    error('SAClab:dif:illegalFiletype',...
+    error('seizmo:dif:illegalFiletype',...
         'illegal operation on spectral file');
 end
 

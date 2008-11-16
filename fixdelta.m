@@ -1,5 +1,5 @@
 function [data]=fixdelta(data)
-%FIXDELTA    Fix sample spacing for SAClab data records
+%FIXDELTA    Fix sample spacing for SEIZMO data records
 %
 %    Description:  FIXDELTA(DATA) fixes the sample spacing (DELTA header
 %     field) of records in DATA to be the decimal equivalent of a fraction
@@ -9,31 +9,32 @@ function [data]=fixdelta(data)
 %
 %    Notes:
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: DELTA
 %
-%    Usage: data=fixdelta(data)
+%    Usage:    data=fixdelta(data)
 %
 %    Examples:
-%     Double the precision of records and fix the delta intervals
-%      data=fixdelta(classit(data,'double'));
+%     Force the double precision and update the delta field:
+%      data=fixdelta(recast(data,'double'));
 %
-%    See also: doubleit, chkhdr
+%    See also: rat, recast
 
 %     Version History:
 %        Feb. 21, 2008 - initial version
-%        Feb. 23, 2008 - uses GLGC now
-%        Feb. 28, 2008 - uses SEISCHK now
-%        Mar.  4, 2008 - doc update, fixed LEVEN bug, uses LGCCHK now
+%        Feb. 23, 2008 - minor doc update
+%        Feb. 28, 2008 - minor doc update
+%        Mar.  4, 2008 - minor doc update
 %        Oct.  8, 2008 - doc update, add history
+%        Nov. 16, 2008 - update for new name schema, doc and history update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  8, 2008 at 06:50 GMT
+%     Last Updated Nov. 16, 2008 at 06:10 GMT
 
 % todo:
 
-[n,d]=rat(gh(data,'delta'));
-data=ch(data,'delta',n./d);
+[n,d]=rat(getheader(data,'delta'));
+data=changeheader(data,'delta',n./d);
 
 end

@@ -72,7 +72,7 @@ else
         a=ellipsoid(1)*1000; % km=>m
         f=ellipsoid(2);
     else
-        error('SAClab:vincentyfwd:badEllipsoid',...
+        error('seizmo:vincentyfwd:badEllipsoid',...
             ['Ellipsoid must a 2 element vector specifying:\n'...
             '[equatorial_radius flattening(<1)]'])
     end
@@ -83,10 +83,10 @@ if(any(nargin==[4 5]) || isempty(tolerance))
     % roughly 0.01mm
     tolerance=1e-12;
 elseif(~isnumeric(tolerance) || numel(tolerance)>1)
-    error('SAClab:vincentyfwd:badTolerance',...
+    error('seizmo:vincentyfwd:badTolerance',...
         'Tolerance must be a scalar specifying precision in radians!');
 elseif(any(tolerance<0) || any(tolerance>pi))
-    error('SAClab:vincentyfwd:badTolerance',...
+    error('seizmo:vincentyfwd:badTolerance',...
         'Tolerances must be in the range 0 to PI!');
 end
 
@@ -99,9 +99,9 @@ n3=prod(sz3); n4=prod(sz4);
 % basic check inputs
 if(~isnumeric(evla) || ~isnumeric(evlo) ||...
         ~isnumeric(dist) || ~isnumeric(az))
-    error('SAClab:vincentyfwd:nonNumeric','All inputs must be numeric!');
+    error('seizmo:vincentyfwd:nonNumeric','All inputs must be numeric!');
 elseif(any([n1 n2 n3 n4]==0))
-    error('SAClab:vincentyfwd:emptyLatLon',...
+    error('seizmo:vincentyfwd:emptyLatLon',...
         'Location inputs must be nonempty arrays!');
 end
 
@@ -114,7 +114,7 @@ if(n4==1); stlo=repmat(az,sz3); n4=n3; sz4=sz3; end
 % cross check inputs
 if(~isequal(sz1,sz2) || ~isequal(sz3,sz4) ||...
         (~any([n1 n3]==1) && ~isequal(sz1,sz3)))
-    error('SAClab:vincentyfwd:nonscalarUnequalArrays',...
+    error('seizmo:vincentyfwd:nonscalarUnequalArrays',...
         'Input arrays need to be scalar or have equal size!');
 end
 
@@ -127,7 +127,7 @@ n=size(evla);
 
 % check lats are within -90 to 90 (Geodetic Latitude φ)
 if(any(abs(evla)>90))
-    error('SAClab:vincentyfwd:latitudeOutOfRange',...
+    error('seizmo:vincentyfwd:latitudeOutOfRange',...
         'Starting latitude out of range (-90 to 90)');
 end
 

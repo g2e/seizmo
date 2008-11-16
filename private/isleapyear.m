@@ -30,7 +30,7 @@ function [isleap]=isleapyear(year)
 
 % require numeric years
 if(~isnumeric(year))
-    error('SAClab:isleapyear:badYear','YEARS must be numeric!');
+    error('seizmo:isleapyear:badYear','YEARS must be numeric!');
 end
 
 % force years to be integer

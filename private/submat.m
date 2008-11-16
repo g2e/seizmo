@@ -30,7 +30,7 @@ function [X]=submat(X,varargin)
 
 % CHECK VARARGIN
 if(~mod(nargin,2))
-    error('SAClab:submat:badNumArgs',...
+    error('seizmo:submat:badNumArgs',...
         'dimension argument must be followed by indices argument');
 end
 

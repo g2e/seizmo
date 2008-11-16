@@ -38,7 +38,7 @@ error(nargchk(1,1,nargin));
 
 % require numeric
 if(~isnumeric(dates))
-    error('SAClab:fixdates:badInput','DATES must be a numeric array!');
+    error('seizmo:fixdates:badInput','DATES must be a numeric array!');
 end
 
 % force integers
@@ -100,7 +100,7 @@ switch sz(2)
         end
     % unknown
     otherwise
-        error('SAClab:fixdates:badInput',...
+        error('seizmo:fixdates:badInput',...
             'DATES must be Nx2 or Nx3!');
 end
 dates=permute(dates,[2 1 3:numel(sz)]);

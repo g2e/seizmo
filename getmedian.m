@@ -1,40 +1,48 @@
-function [median]=gmedian(data)
-%GMEDIAN    Returns median of each SAClab data record
+function [median]=getmedian(data)
+%GETMEDIAN    Returns median of each SEIZMO data record
 %
-%    Description: GMEDIAN(DATA) returns the median of each SAClab data 
+%    Description: GETMEDIAN(DATA) returns the median of each SEIZMO data 
 %     record.  Output is a cell array with one cell per record and multi-
 %     component records return a vector of medians, one for each component.
 %
-%    Usage: [medians]=gmedian(data)
+%    Notes:
+%
+%    Tested on: Matlab r2007b
+%
+%    Usage:    medians=getmedian(data)
 %
 %    Examples:
 %     Remove median from records (cell2mat converts the cell array output
 %     to a numeric matrix as long as all the records have the same number 
 %     of components):
-%      data=sub(data,cell2mat(gmedian(data)));
+%      data=subtract(data,cell2mat(getmedian(data)));
 %
-%    See also: gnrm, rmean, sub
+%    See also: getnorm, removemean, subtract
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 15, 2008 - Renamed and updated documentation
+%        Feb. 12, 2008 - initial version
+%        Feb. 28, 2008 - uses SEISCHK, doc update
+%        Mar.  4, 2008 - minor doc update
+%        June 15, 2008 - renamed from GMED to GMEDIAN, doc update
+%        Nov. 16, 2008 - updated for new name schema (now GETMEDIAN),
+%                        history fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 15, 2008 at 04:05 GMT
+%     Last Updated Nov. 16, 2008 at 02:15 GMT
 
 % check nargin
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seizmocheck(data,'dep'))
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % find medians
 median=cell(nrecs,1);
 for i=1:nrecs
-    median{i}=median(double(data(i).x));
+    median{i}=median(double(data(i).dep));
 end
 
 end

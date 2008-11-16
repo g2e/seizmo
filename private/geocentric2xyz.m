@@ -44,14 +44,14 @@ nx=prod(sx); ny=prod(sy); nz=prod(sz);
 
 % basic check inputs
 if(~isnumeric(lat) || ~isnumeric(lon) || ~isnumeric(radius))
-    error('SAClab:geocentric2xyz:nonNumeric','All inputs must be numeric!');
+    error('seizmo:geocentric2xyz:nonNumeric','All inputs must be numeric!');
 elseif(any([nx ny nz]==0))
-    error('SAClab:geocentric2xyz:unpairedCoord',...
+    error('seizmo:geocentric2xyz:unpairedCoord',...
         'Coordinate inputs must be nonempty arrays!');
 elseif((~isequal(sx,sy) && all([nx ny]~=1)) ||...
        (~isequal(sx,sz) && all([nx nz]~=1)) ||...
        (~isequal(sz,sy) && all([nz ny]~=1)))
-    error('SAClab:geocentric2xyz:unpairedCoord',...
+    error('seizmo:geocentric2xyz:unpairedCoord',...
         'Coordinate inputs must be scalar or equal sized arrays!');
 end
 
@@ -75,7 +75,7 @@ end
 % check input (converts depth to radius)
 if(nargin==4)
     if(~isnumeric(r) || ~isscalar(r))
-        error('SAClab:geocentric2xyz:badR',...
+        error('seizmo:geocentric2xyz:badR',...
         'Sphere radius input must be numerical scalar!');
     end
     radius=r-radius; 

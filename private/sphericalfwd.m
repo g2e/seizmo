@@ -50,9 +50,9 @@ n3=prod(sz3); n4=prod(sz4);
 % basic check inputs
 if(~isnumeric(evla) || ~isnumeric(evlo) ||...
         ~isnumeric(gcarc) || ~isnumeric(az))
-    error('SAClab:sphericalfwd:nonNumeric','All inputs must be numeric!');
+    error('seizmo:sphericalfwd:nonNumeric','All inputs must be numeric!');
 elseif(any([n1 n2 n3 n4]==0))
-    error('SAClab:sphericalfwd:emptyLatLon',...
+    error('seizmo:sphericalfwd:emptyLatLon',...
         'Location inputs must be nonempty arrays!');
 end
 
@@ -65,7 +65,7 @@ if(n4==1); stlo=repmat(az,sz3); n4=n3; sz4=sz3; end
 % cross check inputs
 if(~isequal(sz1,sz2) || ~isequal(sz3,sz4) ||...
         (~any([n1 n3]==1) && ~isequal(sz1,sz3)))
-    error('SAClab:sphericalfwd:nonscalarUnequalArrays',...
+    error('seizmo:sphericalfwd:nonscalarUnequalArrays',...
         'Input arrays need to be scalar or have equal size!');
 end
 

@@ -1,9 +1,9 @@
 function [data,failed]=rdata(data,varargin)
-%RDATA    Read SAClab data from datafiles
+%RDATA    Read SEIZMO data from datafiles
 %
-%    Description: [OUTDATA,FAILED]=RDATA(DATA) reads in data from SAClab 
+%    Description: [OUTDATA,FAILED]=RDATA(DATA) reads in data from SEIZMO 
 %     compatible datafiles utilizing the header info in DATA, and returns 
-%     the combined dataset as OUTDATA.  Datafiles that are not SAClab
+%     the combined dataset as OUTDATA.  Datafiles that are not SEIZMO
 %     compatible or have errors will be removed from the returned dataset.
 %     Optional output FAILED returns a logical matrix equal in size to DATA
 %     with entries set to TRUE for those records which had reading errors.
@@ -14,7 +14,7 @@ function [data,failed]=rdata(data,varargin)
 %     errors while reading.  Setting TRIM to FALSE will preserve records in
 %     OUTDATA that had errors.
 %
-%     SAClab data structure setup:
+%     SEIZMO data structure setup:
 %
 %     Fields for all files:
 %      location - directory of file
@@ -106,7 +106,7 @@ trim=true;
 if(nargin==2 && ~isempty(varargin{1}))
     if((~islogical(varargin{1}) && ~isnumeric(varargin{1})) ...
             || ~isscalar(varargin{1}))
-        error('SAClab:rdata:badInput',...
+        error('seizmo:rdata:badInput',...
             'TRIM option must be logical!');
     else
         trim=varargin{1};
@@ -118,13 +118,13 @@ if(nargin==3)
     if(strcmpi(varargin{1},'trim'))
         if(~iscalar(varargin{2}) || ...
                 (~islogical(varargin{2}) && ~isnumeric(varargin{2})))
-            error('SAClab:rdata:badInput',...
+            error('seizmo:rdata:badInput',...
                 'TRIM option must be logical!');
         else
             trim=varargin{2};
         end
     else
-        error('SAClab:rdata:badInput','Unknown option!');
+        error('seizmo:rdata:badInput','Unknown option!');
     end
 end
 
@@ -166,7 +166,7 @@ for i=1:nrecs
     % fid check
     if(fid<0)
         % non-existent file or directory
-        warning('SAClab:rdata:badFID',...
+        warning('seizmo:rdata:badFID',...
             'Record: %d, File not openable: %s !',i,name);
         failed(i)=true;
         continue;
@@ -182,7 +182,7 @@ for i=1:nrecs
         % SAC BUG: converting a spectral file to a time series file does
         % not deallocate the second component, thus the written file has
         % twice as much data.
-        warning('SAClab:rdata:badFileSize',...
+        warning('seizmo:rdata:badFileSize',...
             ['Record: %d, File: %s\n'...
             'Filesize does not match header info!\n'...
             '%d (estimated) > %d (on disk) --> Reading Anyways!'...
@@ -191,7 +191,7 @@ for i=1:nrecs
     elseif(bytes<est_bytes(i))
         % size too small - skip
         fclose(fid);
-        warning('SAClab:rdata:badFileSize',...
+        warning('seizmo:rdata:badFileSize',...
             ['Record: %d, File: %s\n'...
             'Filesize does not match header info!\n'...
             '%d (estimated) < %d (on disk) --> Skipping!'],...

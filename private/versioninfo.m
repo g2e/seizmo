@@ -1,8 +1,8 @@
 function [h,idx]=versioninfo(data)
-%VERSIONINFO    Returns version info for SAClab data records
+%VERSIONINFO    Returns version info for SEIZMO data records
 %
 %    Description: [H,IDX]=VERSIONINFO(DATA) returns all necessary version
-%     definitions pertaining to the records in the SAClab structure DATA in
+%     definitions pertaining to the records in the SEIZMO structure DATA in
 %     the struct array H.  IDX has one entry per record in DATA that
 %     gives the index in H that corresponds to that record's version
 %     definition. This is an internal function to reduce rampant code
@@ -15,8 +15,6 @@ function [h,idx]=versioninfo(data)
 %
 %    Tested on: Matlab r2007b
 %
-%    Header changes: NONE
-%
 %    Usage:    [h,idx]=versioninfo(data)
 %
 %    Examples:
@@ -24,7 +22,7 @@ function [h,idx]=versioninfo(data)
 %      h=versioninfo(data);
 %      h.undef
 %
-%    See also: seizdef, validseiz
+%    See also: seizmodef, validseizmo
 
 %     Version History:
 %        Sep. 25, 2008 - initial version
@@ -33,9 +31,10 @@ function [h,idx]=versioninfo(data)
 %        Oct. 17, 2008 - filetype support, removed several pointless output
 %        Oct. 25, 2008 - doc update, block mlint hint for now
 %        Nov. 13, 2008 - renamed from VINFO to VERSIONINFO
+%        Nov. 15, 2008 - update for new name schema
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2008 at 04:00 GMT
+%     Last Updated Nov. 15, 2008 at 19:25 GMT
 
 % todo:
 
@@ -43,7 +42,7 @@ function [h,idx]=versioninfo(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seizchk(data))
+error(seizmocheck(data))
 
 % get filetypes
 ft={data.filetype}.';
@@ -66,7 +65,7 @@ for i=1:nft
     % grab definitions
     for j=1:nv
         count=count+1;
-        h(count)=seizdef(uft{i},uv(j)); %#ok<AGROW>
+        h(count)=seizmodef(uft{i},uv(j)); %#ok<AGROW>
         idx(v==uv(j) & ift)=count;
     end
 end

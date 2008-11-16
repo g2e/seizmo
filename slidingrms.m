@@ -1,9 +1,9 @@
 function [data]=slidingrms(data,nsamples,varargin)
-%SLIDINGRMS    Returns sliding-window root-mean-square of SAClab records
+%SLIDINGRMS    Returns sliding-window root-mean-square of SEIZMO records
 %
 %    Description: SLIDINGRMS(DATA,N) applies a centered sliding-window 
 %     root-mean-square of 2N+1 samples to the dependent component(s) of 
-%     SAClab data records in DATA.  N can be a scalar (each record has the
+%     SEIZMO data records in DATA.  N can be a scalar (each record has the
 %     same window size) or a vector (define each record's window size 
 %     separately).  Sliding windows extending outside the record are
 %     truncated (look at 'EDGE' option to change this).
@@ -74,7 +74,7 @@ function [data]=slidingrms(data,nsamples,varargin)
 %        Apr.  9, 2008 - initial version
 %        Apr. 23, 2008 - changed behavior for windows with even npts
 %        May  12, 2998 - dep* fix
-%        July 17, 2008 - history update, documentation update, .dep rather
+%        July 17, 2008 - history update, doc update, .dep rather
 %                        than .x, dataless handling
 %        Oct.  5, 2008 - big change: updated to match options of SLIDEFUN,
 %                        name changed from RMS to SLIDINGRMS

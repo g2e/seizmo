@@ -1,8 +1,8 @@
 function [data]=divide(data,constant,cmp)
-%DIVIDE    Divide SAClab data records by a constant
+%DIVIDE    Divide SEIZMO data records by a constant
 %
 %    Description: DIVIDE(DATA,CONSTANT) divides the dependent component(s)
-%     of SAClab data records by a constant.  For multi-component files, 
+%     of SEIZMO data records by a constant.  For multi-component files, 
 %     this operation is performed on every dependent component (this 
 %     includes spectral files).
 %
@@ -64,7 +64,7 @@ if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
 % default component
 if(nargin==2); cmp=':'; 
 elseif(any(fix(cmp)~=cmp) || (~isnumeric(cmp) && ~strcmpi(':',cmp)))
-    error('SAClab:divide:badInput','Component list is bad!');
+    error('seizmo:divide:badInput','Component list is bad!');
 end
 
 % number of records
@@ -72,11 +72,11 @@ nrecs=numel(data);
 
 % check constant
 if(~isnumeric(constant))
-    error('SAClab:divide:badInput','Constant must be numeric!');
+    error('seizmo:divide:badInput','Constant must be numeric!');
 elseif(isscalar(constant))
     constant=constant(ones(nrecs,1));
 elseif(numel(constant)~=nrecs)
-    error('SAClab:divide:badInput',...
+    error('seizmo:divide:badInput',...
         'Number of elements in constant not equal to number of records!');
 end
 

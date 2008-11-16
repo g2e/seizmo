@@ -1,5 +1,5 @@
 function [data]=syncsr(data,sr)
-%SYNCSR    Resamples SAClab data records to a common sample rate
+%SYNCSR    Resamples SEIZMO data records to a common sample rate
 %
 %    Description: SYNCSR(DATA,SR) syncronizes the sample rates of data 
 %     records in DATA to a new sample rate SR.  A fir filter is used to
@@ -23,7 +23,7 @@ function [data]=syncsr(data,sr)
 
 %     Version History:
 %        ????????????? - Initial Version
-%        June 16, 2008 - Updated documentation, rejects spectral records
+%        June 16, 2008 - doc update, rejects spectral records
 %                        fixed no header update bug, and changed the way
 %                        records are resampled when Matlab's resample fails
 %
@@ -38,13 +38,13 @@ error(seischk(data,'x'))
 
 % check rate
 if(~isnumeric(sr) || ~isscalar(sr) || sr<=0)
-    error('SAClab:syncsr:badInput',...
+    error('seizmo:syncsr:badInput',...
         'sample rate must be a positive numeric scalar')
 end
 
 % require evenly sampled records only
 if(any(~strcmp(glgc(data,'leven'),'true')))
-    error('SAClab:syncsr:evenlySpacedOnly',...
+    error('seizmo:syncsr:evenlySpacedOnly',...
         'illegal operation on unevenly spaced data');
 end
 
@@ -52,7 +52,7 @@ end
 iftype=genumdesc(data,'iftype');
 if(any(strcmp(iftype,'Spectral File-Real/Imag') | ...
         strcmp(iftype,'Spectral File-Ampl/Phase')))
-    error('SAClab:syncsr:illegalOperation',...
+    error('seizmo:syncsr:illegalOperation',...
         'Illegal operation of spectral file')
 end
 

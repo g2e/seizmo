@@ -29,11 +29,11 @@ function [leaps]=leapsinday(dates,option)
 %     Find out how many seconds there will be in today:
 %      86400+leapsinday(now,'serial')
 %
-%    See also: totalleaps, leapseconds, getleaps
+%    See also: totalleaps, getleapseconds
 
 %     Version History:
 %        Nov.  1, 2008 - initial version
-%        Nov. 10, 2008 - uses GETLEAPS to speed calls up
+%        Nov. 10, 2008 - uses GETLEAPSECONDS to speed calls up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Nov. 10, 2008 at 16:05 GMT
@@ -47,13 +47,13 @@ error(nargchk(1,2,nargin));
 if(nargin==1 || isempty(option))
     option='gregorian';
 elseif(~ischar(option) || ~any(strcmpi(option,{'serial' 'gregorian'})))
-    error('SAClab:leapsinday:optionBad',...
+    error('seizmo:leapsinday:optionBad',...
         'OPTION must be ''serial'' or ''gregorian''!');
 end
 
 % require numeric
 if(~isnumeric(dates))
-    error('SAClab:leapsinday:badInput',...
+    error('seizmo:leapsinday:badInput',...
         'DATES must be a numeric array!');
 end
 
@@ -64,7 +64,7 @@ switch lower(option)
         % require Nx2 or Nx3
         ndates=prod(sz)/sz(2);
         if(~any(sz(2)==[2 3]))
-            error('SAClab:leapsinday:badInput',...
+            error('seizmo:leapsinday:badInput',...
                 'DATES must be a Nx2 or Nx3 array!');
         end
         
@@ -83,7 +83,7 @@ switch lower(option)
 end
         
 % get leapsecond info
-[leapdates,offset]=getleaps();
+[leapdates,offset]=getleapseconds();
 nleaps=numel(offset);
 
 % expand (to vectorize)

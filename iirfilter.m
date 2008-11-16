@@ -1,5 +1,5 @@
 function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
-%IIRFILTER    Apply an IIR filter to SAClab data records
+%IIRFILTER    Apply an IIR filter to SEIZMO data records
 %
 %    Description: Utilizing the set of supplied parameters IIR filters are
 %     built to the desired specs and implemented on the data records.
@@ -134,7 +134,7 @@ error(seischk(data,'dep'))
 % check filter
 if(~any(strcmpi(style,{'butter' 'cheby1' 'cheby2' 'ellip'})) || ...
    ~any(strcmpi(type,{'low' 'high' 'notch' 'stop' 'bandpass'})))
-        error('SAClab:iirfilter:badInput','unknown filter')
+        error('seizmo:iirfilter:badInput','unknown filter')
 end
 
 % built-in defaults
@@ -159,7 +159,7 @@ if(nargin==4 || isempty(order) || order==0); auto=1; end
 % check passes
 if(nargin<6 || isempty(passes)); passes=dp;
 elseif (~any(passes==[1 2 3 4]))
-    error('SAClab:iirfilter:badInput','1 or 2 passes only')
+    error('seizmo:iirfilter:badInput','1 or 2 passes only')
 end
 
 % check ripple
@@ -169,7 +169,7 @@ if(nargin==7 && ~isempty(ripple))
 
     % check for negative
     if(any(ripple<=0))
-        error('SAClab:iirfilter:badInput',...
+        error('seizmo:iirfilter:badInput',...
             'negative or zero ripple not allowed')
     end
 
@@ -184,7 +184,7 @@ if(nargin==7 && ~isempty(ripple))
         sr=ripple(2);
         if(~strcmpi(style,'ellip')); auto=1; end
     else
-        error('SAClab:iirfilter:badInput',...
+        error('seizmo:iirfilter:badInput',...
             'too many ripple parameters')
     end
 end
@@ -197,20 +197,20 @@ for i=1:ng
 
     % check corners
     if(any(pc>=1))
-        error('SAClab:iirfilter:badInput',...
+        error('seizmo:iirfilter:badInput',...
             'corner(s) at/above nyquist')
     elseif(any(pc<=0))
-        error('SAClab:iirfilter:badInput',...
+        error('seizmo:iirfilter:badInput',...
         'corner(s) at/below 0')
     end
 
     % dangerously close warnings
     if(any(pc>0.85))
-        warning('SAClab:iirfilter:nyqClose',...
+        warning('seizmo:iirfilter:nyqClose',...
             'Corner close to Nyquist')
     end
     if(any(pc<0.001))
-        warning('SAClab:iirfilter:zeroClose',...
+        warning('seizmo:iirfilter:zeroClose',...
             'Extreme low frequency corner')
     end
 
@@ -218,7 +218,7 @@ for i=1:ng
     if(any(strcmpi(type,{'low' 'high'})))
         % check number of corners
         if(~any(nc==[1 2]))
-            error('SAClab:iirfilter:badInput',...
+            error('seizmo:iirfilter:badInput',...
                 'incorrect number of corners defined')
         end
     
@@ -255,7 +255,7 @@ for i=1:ng
     else % stop/notch or bandpass
         % check number of corners
         if(~any(nc==[2 4]))
-            error('SAClab:iirfilter:badInput',...
+            error('seizmo:iirfilter:badInput',...
                 'incorrect number of corners defined')
         end
     
@@ -305,7 +305,7 @@ for i=1:ng
         if(~strcmpi(style,'cheby2'))
             if(any(abs(pc2-pc)>0.01))
                 % you dun fcked up
-                warning('SAClab:iirfilter:cornersNotPreserved',...
+                warning('seizmo:iirfilter:cornersNotPreserved',...
                     ['\n\n!!!!! BAD FILTER DESIGN !!!!!\n\n'...
                     'Passband corners from automatic order determination\n'...
                     'significantly differ from the desired passband\n'...
@@ -353,7 +353,7 @@ end
 
 function [data]=imprevfilt(data,fs,mirror)
 %IMPREVFILT   Implements reverse pass filter
-%   Implements a filter design on SAClab data records and makes appropriate
+%   Implements a filter design on SEIZMO data records and makes appropriate
 %   header updates.  Takes a mirror option which does pseudo-IC to limit 
 %   edge effects.  Works with multiple records.
 
@@ -378,7 +378,7 @@ end
 
 function [data]=impfilt(data,fs,mirror)
 %IMPFILT   Implements filter
-%   Implements a filter design on SAClab data records and makes appropriate
+%   Implements a filter design on SEIZMO data records and makes appropriate
 %   header updates.  Takes a mirror option which does pseudo-IC to limit 
 %   edge effects.  Works with multiple records.
 

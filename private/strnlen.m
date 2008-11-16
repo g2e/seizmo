@@ -32,7 +32,7 @@ error(nargchk(2,2,nargin))
 
 % check n
 if(~isnumeric(n) || ~isscalar(n) || fix(n)~=n)
-    error('SAClab:strnlen:badN','N must be an integer!');
+    error('seizmo:strnlen:badN','N must be an integer!');
 end
 
 % find elements to trucate/pad
@@ -51,7 +51,7 @@ elseif(iscellstr(A) || iscell(A))
         A{i}=strnlen(A{i},n);
     end
 else
-    error('SAClab:strnlen:badA',...
+    error('seizmo:strnlen:badA',...
         'A must have only char elements!');
 end
 

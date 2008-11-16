@@ -1,5 +1,5 @@
 function [data]=classit(data,class)
-%CLASSIT    Change in memory SAClab data storage
+%CLASSIT    Change in memory SEIZMO data storage
 %
 %    Description: CLASSIT(DATA,CLASS) changes the Matlab data storage of 
 %     records in DATA to CLASS.  CLASS must be a string or cellstr of valid
@@ -50,7 +50,7 @@ if(isa(class,'function_handle'))
     if(isscalar(class))
         class(1:nrecs,1)={class};
     elseif(numel(class)~=nrecs)
-        error('SAClab:classit:badInput',...
+        error('seizmo:classit:badInput',...
             'CLASS must be scalar or match number of records in DATA!');
     else
         class=mat2cell(class(:),ones(1,nrecs),1);
@@ -61,13 +61,13 @@ elseif(ischar(class) || iscellstr(class))
         class(i)={str2func(class{i})};
     end
 else
-    error('SAClab:classit:badInput',...
+    error('seizmo:classit:badInput',...
         'CLASS must be a string, cellstr, or function handle!');
 end
 if(isscalar(class))
     class(1:nrecs,1)=class;
 elseif(numel(class)~=nrecs)
-    error('SAClab:classit:badInput',...
+    error('seizmo:classit:badInput',...
         'CLASS must be scalar or match number of records in DATA!');
 end
 

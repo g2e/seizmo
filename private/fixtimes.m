@@ -43,7 +43,7 @@ error(nargchk(1,2,nargin));
 % check times
 sz=size(times);
 if(~isnumeric(times) || ~any(sz(2)==[5 6]))
-    error('SAClab:fixtimes:badInput',...
+    error('seizmo:fixtimes:badInput',...
         'TIMES must be a numeric array!');
 end
 
@@ -51,7 +51,7 @@ end
 if(nargin==1 || isempty(option))
     option='tai';
 elseif(~ischar(option) || ~any(strcmpi(option,{'utc' 'tai'})))
-    error('SAClab:fixtimes:optionBad',...
+    error('seizmo:fixtimes:optionBad',...
         'OPTION must be ''utc'' or ''tai''!');
 end
 

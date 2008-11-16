@@ -1,7 +1,7 @@
 function [data]=reverse(data)
-%REVERSE    Time reverse SAClab data records
+%REVERSE    Time reverse SEIZMO data records
 %
-%    Description: Time reverses SAClab data records so that the beginning
+%    Description: Time reverses SEIZMO data records so that the beginning
 %     and end of each record is switched.
 %
 %    Usage: [data]=reverse(data)

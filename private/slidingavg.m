@@ -47,7 +47,7 @@ function [y]=slidingavg(x,nsamples,varargin)
 %
 %    Notes:
 %     - Centered windows are of length 2N+1, while the others are just N
-%     - SLIDINGAVG is faster than SLIDEFUN because it uses Matlab's FILTER
+%     - SLIDINGAVG is faster than SLIDINGFUN but less flexible
 %
 %    Tested on: Matlab r2007b
 %
@@ -67,15 +67,16 @@ function [y]=slidingavg(x,nsamples,varargin)
 %     An example of a custom call:
 %      y=slidingavg(x,[],'custom',[-10:10; gausswin(21).'])
 %
-%    See also: slidingrms, slidingam, slidefun
+%    See also: slidingrms, slidingam, slidingfun
 
 %     Version History:
 %        Oct.  7, 2008 - initial version
 %        Nov. 13, 2008 - renamed from SLIDINGMEAN to SLIDINGAVG, made it a
 %                        normal function, added options DIM and CUSTOM
+%        Nov. 15, 2008 - update for new toolbox name
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2008 at 17:20 GMT
+%     Last Updated Nov. 15, 2008 at 22:50 GMT
 
 % todo:
 
@@ -87,7 +88,7 @@ if(isempty(x)); y=x; return; end
 
 % check input array
 if(~isnumeric(x))
-    error('SAClab:slidingavg:badInput','X must be numeric!');
+    error('seizmo:slidingavg:badInput','X must be numeric!');
 end
 
 % option defaults
@@ -97,12 +98,12 @@ option.EDGE='truncate';
 option.DIM=1;
 option.CUSTOM=[];
 
-% get options set by SACLAB global
-global SACLAB; fields=fieldnames(option).';
-if(isfield(SACLAB,'SLIDINGAVG'))
+% get options set by SEIZMO global
+global SEIZMO; fields=fieldnames(option).';
+if(isfield(SEIZMO,'SLIDINGAVG'))
     for i=fields
-        if(isfield(SACLAB.SLIDINGAVG,i{:})); 
-            option.(i{:})=SACLAB.SLIDINGAVG.(i{:});
+        if(isfield(SEIZMO.SLIDINGAVG,i{:})); 
+            option.(i{:})=SEIZMO.SLIDINGAVG.(i{:});
         end
     end
 end
@@ -110,7 +111,7 @@ end
 % options must be field-value pairs
 nargopt=length(varargin);
 if(mod(nargopt,2))
-    error('SAClab:slidingavg:badNumOptions','Unpaired option!')
+    error('seizmo:slidingavg:badNumOptions','Unpaired option!')
 end
 
 % get inline options
@@ -119,7 +120,7 @@ for i=1:2:nargopt
     if(isfield(option,varargin{i}))
         option.(varargin{i})=varargin{i+1};
     else
-        warning('SAClab:slidingavg:badInput',...
+        warning('seizmo:slidingavg:badInput',...
             'Unknown Option: %s !',varargin{i}); 
     end
 end
@@ -127,29 +128,29 @@ end
 % check options
 if(~ischar(option.POSITION) || ...
         ~any(strcmpi(option.POSITION,{'center' 'trail' 'lead'})))
-    error('SAClab:slidingavg:badOptionValue',...
+    error('seizmo:slidingavg:badOptionValue',...
         'POSITION option must be ''CENTER'', ''TRAIL'' or ''LEAD''!');
 end
 if(~isnumeric(option.OFFSET) || ~isscalar(option.OFFSET) || ...
         option.OFFSET~=fix(option.OFFSET))
-    error('SAClab:slidingavg:badOptionValue',...
+    error('seizmo:slidingavg:badOptionValue',...
         'OFFSET option must be an integer!');
 end
 if(~ischar(option.EDGE) || ...
         ~any(strcmpi(option.EDGE,{'pad' 'truncate'})))
-    error('SAClab:slidingavg:badOptionValue',...
+    error('seizmo:slidingavg:badOptionValue',...
         'EDGE option must be ''PAD'' or ''TRUNCATE''');
 end
 if(~isnumeric(option.DIM) || ~isscalar(option.DIM) || option.DIM<1 || ...
         option.DIM~=fix(option.DIM))
-    error('SAClab:slidingavg:badOptionValue',...
+    error('seizmo:slidingavg:badOptionValue',...
         'DIM option must be a positive integer!');
 end
 csz=size(option.CUSTOM);
 if(~isempty(option.CUSTOM) && (~isnumeric(option.CUSTOM) || ...
         numel(csz)>2 || csz(1)~=2 || ...
         any(option.CUSTOM(1,:)~=fix(option.CUSTOM(1,:)))))
-    error('SAClab:slidingavg:badOptionValue',...
+    error('seizmo:slidingavg:badOptionValue',...
         'CUSTOM option must be a 2xN numeric array!');
 end
 
@@ -158,7 +159,7 @@ if(isempty(option.CUSTOM))
     % fix/check nsamples
     if(~isnumeric(nsamples) || ~isscalar(nsamples)...
             || nsamples<1 || fix(nsamples)~=nsamples)
-        error('SAClab:slidingavg:badInput',...
+        error('seizmo:slidingavg:badInput',...
             'N must be a positive integer')
     end
     

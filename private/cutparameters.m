@@ -2,7 +2,7 @@ function [option]=cutparameters(varargin)
 %CUTPARAMETERS    Parses inputs defining the cut window for CUTIM/RPDW
 %
 %    Description: CUTPARAMETERS(NRECS,VARARGIN) parses parameters VARARGIN
-%     passed to CUTIM and RPDW, passing the results back as a struct.  
+%     passed to CUT and READDATAWINDOW, passing results back as a struct.  
 %     Parameters include those that define the window as well as other
 %     options (fill, cmplist, etc).  Parameters go through basic type/size
 %     checks (which is why NRECS is an argument).
@@ -10,29 +10,30 @@ function [option]=cutparameters(varargin)
 %    Notes:
 %     - empty input arguments may have unexpected results
 %
-%    System requirements: Matlab 7
-%
-%    Header changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    options=cutparameters(nrecs,args)
 %
-%    Examples: NONE
+%    Examples:
+%     CUTPARAMETERS is what allows CUT and READDATAWINDOW to have very
+%     flexible input lists.
 %
-%    See also: cutim, rpdw
+%    See also: cut, readdatawindow
 
 %     Version History:
 %        Apr. 17, 2008 - initial version
 %        Apr. 18, 2008 - bugfix
 %        June 24, 2008 - more input checks, major doc update
 %        Sep. 14, 2008 - minor doc update, minor code cleaning
-%        Oct.  2, 2008 - output now a struct, added CMPLIST, SACLAB global
+%        Oct.  2, 2008 - output now a struct, added CMPLIST, SEIZMO global
 %                        access, code cleaning
 %        Oct.  7, 2008 - improved CMPLIST checking, input change to check
 %                        sizes
 %        Oct. 16, 2008 - name changed from CUTPARAM to CUTPARAMETERS
+%        Nov. 15, 2008 - update for new name schema
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2008 at 03:50 GMT
+%     Last Updated Nov. 15, 2008 at 22:45 GMT
 
 % todo:
 
@@ -46,12 +47,12 @@ option.OFFSET1=0;
 option.OFFSET2=0;
 option.CMPLIST=':';
 
-% get options set by SACLAB global
-global SACLAB; fields=fieldnames(option).';
-if(isfield(SACLAB,'CUTPARAMETERS'))
+% get options set by SEIZMO global
+global SEIZMO; fields=fieldnames(option).';
+if(isfield(SEIZMO,'CUTPARAMETERS'))
     for i=fields
-        if(isfield(SACLAB.CUTPARAMETERS,i{:})); 
-            option.(i{:})=SACLAB.CUTPARAMETERS.(i{:}); 
+        if(isfield(SEIZMO.CUTPARAMETERS,i{:})); 
+            option.(i{:})=SEIZMO.CUTPARAMETERS.(i{:}); 
         end
     end
 end
@@ -85,7 +86,8 @@ for i=1:nargin
             ref2=true;
         % only two offsets allowed
         else
-            error('SAClab:cutparameters:badInput','Too many window offsets!')
+            error('seizmo:cutparameters:badInput',...
+                'Too many window offsets!')
         end
     % string (could be reference or other option)
     elseif(ischar(varargin{i}))
@@ -97,7 +99,7 @@ for i=1:nargin
                 continue; % leave as default by skipping
             elseif(~isnumeric(varargin{i+1}) && ...
                     ~islogical(varargin{i+1}))
-                error('SAClab:cutparameters:badInput',...
+                error('seizmo:cutparameters:badInput',...
                     'OPTION value must be numeric or logical!')
             end
         end
@@ -110,7 +112,7 @@ for i=1:nargin
                 option.FILLER=double(varargin{i+1});
             case 'trim'
                 if(~isscalar(varargin{i+1}))
-                    error('SAClab:cutparameters:badInput',...
+                    error('seizmo:cutparameters:badInput',...
                         'TRIM option must be scalar!');
                 end
                 option.TRIM=logical(varargin{i+1});
@@ -119,13 +121,13 @@ for i=1:nargin
                     for j=1:numel(varargin{i+1})
                         if(~isnumeric(varargin{i+1}{j}) ...
                             && ~strcmp(varargin{i+1}{j},':'))
-                            error('SAClab:cutparameters:badInput',...
+                            error('seizmo:cutparameters:badInput',...
                                 'CMPLIST incomprehensible!');
                         end
                     end
                 elseif(~isnumeric(varargin{i+1}) ...
                     && ~strcmp(varargin{i+1},':'))
-                    error('SAClab:cutparameters:badInput',...
+                    error('seizmo:cutparameters:badInput',...
                         'CMPLIST incomprehensible!');
                 end
                 option.CMPLIST=varargin{i+1};
@@ -161,12 +163,12 @@ for i=1:nargin
                     end
                 else
                     % only two references allowed
-                    error('SAClab:cutparameters:badInput',...
+                    error('seizmo:cutparameters:badInput',...
                         'Too many window references!')
                 end
         end
     else
-        error('SAClab:cutparameters:badInput',...
+        error('seizmo:cutparameters:badInput',...
             'Window parameters must be strings or numeric!')
     end
 end
@@ -180,16 +182,16 @@ if(numel(option.FILL)==1); option.FILL(1:nrecs,1)=option.FILL; end
 
 % cut parameter checks
 if(numel(option.OFFSET1)~=nrecs || numel(option.OFFSET2)~=nrecs)
-    error('SAClab:cutparameters:badInputSize',...
+    error('seizmo:cutparameters:badInputSize',...
         'Number of elements in OFFSET not correct!')
 elseif(numel(option.CMPLIST)~=nrecs)
-    error('SAClab:cutparameters:badInputSize',...
+    error('seizmo:cutparameters:badInputSize',...
         'Number of elements in CMPLIST not correct!')
 elseif(numel(option.FILLER)~=nrecs)
-    error('SAClab:cutparameters:badInputSize',...
+    error('seizmo:cutparameters:badInputSize',...
         'Number of elements in FILLER not correct!')
 elseif(numel(option.FILL)~=nrecs)
-    error('SAClab:cutparameters:badInputSize',...
+    error('seizmo:cutparameters:badInputSize',...
         'Number of elements in FILL not correct!')
 end
 

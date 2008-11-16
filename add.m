@@ -1,8 +1,8 @@
 function [data]=add(data,constant,cmp)
-%ADD    Add a constant to SAClab data records
+%ADD    Add a constant to SEIZMO data records
 %
 %    Description: ADD(DATA,CONSTANT) adds a constant to the dependent 
-%     component(s) of SAClab data records.  For multi-component files, this
+%     component(s) of SEIZMO data records.  For multi-component files, this
 %     operation is performed on every dependent component (this includes 
 %     spectral files).
 %
@@ -65,7 +65,7 @@ if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
 % default component
 if(nargin==2); cmp=':'; 
 elseif(any(fix(cmp)~=cmp) || (~isnumeric(cmp) && ~strcmpi(':',cmp)))
-    error('SAClab:add:badInput','Component list is bad!');
+    error('seizmo:add:badInput','Component list is bad!');
 end
 
 % number of records
@@ -73,11 +73,11 @@ nrecs=numel(data);
 
 % check constant
 if(~isnumeric(constant))
-    error('SAClab:add:badInput','Constant must be numeric!');
+    error('seizmo:add:badInput','Constant must be numeric!');
 elseif(isscalar(constant))
     constant=constant(ones(nrecs,1));
 elseif(numel(constant)~=nrecs)
-    error('SAClab:add:badInput',...
+    error('seizmo:add:badInput',...
         'Number of elements in constant not equal to number of records!');
 end
 

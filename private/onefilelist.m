@@ -44,7 +44,7 @@ function [list]=onefilelist(varargin)
 
 % check nargin
 if(nargin<1)
-    error('SAClab:onefilelist:notEnoughInputs',...
+    error('seizmo:onefilelist:notEnoughInputs',...
         'Not enough input arguments.');
 end
 
@@ -52,7 +52,7 @@ end
 for i=1:nargin
     % check that input is char or cellstr array
     if(~ischar(varargin{i}) && ~iscellstr(varargin{i}))
-        error('SAClab:onefilelist:badInput',...
+        error('seizmo:onefilelist:badInput',...
             'Inputs must be character and cellstr arrays only!');
     end
     

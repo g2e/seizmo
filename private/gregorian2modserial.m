@@ -46,7 +46,7 @@ error(nargchk(1,1,nargin));
 % check times
 sz=size(times);
 if(~isnumeric(times) || ~any(sz(2)==[2 3 5 6]))
-    error('SAClab:gregorian2serial:badInput',...
+    error('seizmo:gregorian2serial:badInput',...
         'DATES must be a numeric Nx2, Nx3, Nx5 or Nx6 array!');
 end
 

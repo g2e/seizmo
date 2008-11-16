@@ -34,7 +34,7 @@ error(nargchk(1,1,nargin));
 % require Nx2 numeric
 sz=size(doydates);
 if(~isnumeric(doydates) || sz(2)~=2)
-    error('SAClab:doy2cal:badInput',...
+    error('seizmo:doy2cal:badInput',...
         'DATES array must have Nx2 elements: [years dayofyears]');
 end
 

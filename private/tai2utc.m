@@ -35,7 +35,7 @@ error(nargchk(1,1,nargin));
 % require Nx5 or Nx6 numeric
 sz=size(tai);
 if(~isnumeric(tai) || ~any(sz(2)==[5 6]))
-    error('SAClab:tai2utc:badInput','TAI array must be Nx5 or Nx6!');
+    error('seizmo:tai2utc:badInput','TAI array must be Nx5 or Nx6!');
 end
 
 % fix times
