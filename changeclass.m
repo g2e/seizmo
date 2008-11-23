@@ -1,22 +1,22 @@
-function [data]=classit(data,class)
-%CLASSIT    Change in memory SEIZMO data storage
+function [data]=changeclass(data,class)
+%CHANGECLASS    Change SEIZMO data storage (in memory)
 %
-%    Description: CLASSIT(DATA,CLASS) changes the Matlab data storage of 
+%    Description: CHANGECLASS(DATA,CLASS) changes the class type of SEIZMO
 %     records in DATA to CLASS.  CLASS must be a string or cellstr of valid
-%     Matlab class(es) ('double', 'single', etc).  This does not change the
+%     class(es) ('double', 'single', etc).  This does not change the
 %     storage type of data written to disk (requires a version change).
 %
 %    Notes:
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: NONE
 %
-%    Usage:    data=classit(data,class)
+%    Usage:    data=changeclass(data,class)
 %
 %    Examples:
 %     Double precision records and fix the delta intervals
-%      data=fixdelta(classit(data,'double'))
+%      data=fixdelta(changeclass(data,'double'))
 %
 %    See also: fixdelta
 
@@ -30,9 +30,10 @@ function [data]=classit(data,class)
 %                        dropped reclassing header (keep it double!), allow
 %                        data to be changed to any Matlab supported class,
 %                        drop LGCCHK
+%        Nov. 22, 2008 - renamed from CLASSIT to CHANGECLASS
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  8, 2008 at 06:50 GMT
+%     Last Updated Nov. 22, 2008 at 06:50 GMT
 
 % todo:
 
@@ -40,17 +41,17 @@ function [data]=classit(data,class)
 error(nargchk(2,2,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % number of records
 nrecs=numel(data);
 
-% check class
+% check class and convert to function handle
 if(isa(class,'function_handle'))
     if(isscalar(class))
         class(1:nrecs,1)={class};
     elseif(numel(class)~=nrecs)
-        error('seizmo:classit:badInput',...
+        error('seizmo:changeclass:badInput',...
             'CLASS must be scalar or match number of records in DATA!');
     else
         class=mat2cell(class(:),ones(1,nrecs),1);
@@ -61,26 +62,24 @@ elseif(ischar(class) || iscellstr(class))
         class(i)={str2func(class{i})};
     end
 else
-    error('seizmo:classit:badInput',...
+    error('seizmo:changeclass:badInput',...
         'CLASS must be a string, cellstr, or function handle!');
 end
 if(isscalar(class))
     class(1:nrecs,1)=class;
 elseif(numel(class)~=nrecs)
-    error('seizmo:classit:badInput',...
+    error('seizmo:changeclass:badInput',...
         'CLASS must be scalar or match number of records in DATA!');
 end
 
-% retreive header info
-leven=glgc(data,'leven');
-
-% loop through each record
+% reclass dependent data
 for i=1:nrecs
-    % reclass dependent data
     data(i).dep=class{i}(data(i).dep);
-    
-    % reclass independent data
-    if(strcmp(leven(i),'false'))
+end
+
+% reclass independent data
+if(isfield(data,'ind'))
+    for i=1:nrecs
         data(i).ind=class{i}(data(i).ind);
     end
 end

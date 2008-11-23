@@ -1,63 +1,80 @@
-function [data]=syncsr(data,sr)
-%SYNCSR    Resamples SEIZMO data records to a common sample rate
+function [data]=syncrates(data,sr)
+%SYNCRATES    Resample SEIZMO records to a common sample rate
 %
-%    Description: SYNCSR(DATA,SR) syncronizes the sample rates of data 
-%     records in DATA to a new sample rate SR.  A fir filter is used to
-%     avoid aliasing issues but can cause edge effects if the records
+%    Description: SYNCRATES(DATA,SR) syncronizes the sample rates of SEIZMO 
+%     records in DATA to the sample rate SR.  A fir filter is used to
+%     avoid aliasing issues, but this can cause edge effects if the records
 %     deviate from zero strongly at the start/end of the record.  Typically
-%     using RTREND and TAPER helps to limit these effects.  Uses the Matlab
-%     function resample (Signal Processing Toolbox).
+%     using RTREND and TAPER on records beforehand helps to limit the edge
+%     effects.  Uses the Matlab function resample (Signal Processing
+%     Toolbox).
+%
+%    Notes:
+%     - requires evenly sampled data (use INTERPOLATE for uneven data)
+%
+%    Tested on: Matlab r2007b
 %
 %    Header Changes: DELTA, NPTS, DEPMEN, DEPMIN, DEPMAX, E
 %
-%    Notes:
-%     - Requires evenly sampled data (use INTERPOLATE for uneven data)
-%
-%    Usage:  data=syncsr(data,sr)
+%    Usage:    data=syncrates(data,sr)
 %
 %    Examples:
-%     change all records to 5sps
-%      data=syncsr(data,5)
+%     Change all records to 5sps:
+%      data=syncrates(data,5)
 %
-%    See also: interpolate, iirfilter, deci, stretch
+%    See also: interpolate, iirfilter, subsample, oversample
 
 %     Version History:
-%        ????????????? - Initial Version
+%        Feb. 16, 2008 - initial version
+%        Feb. 23, 2008 - minor fix
+%        Feb. 26, 2008 - minor fix
+%        Mar.  4, 2008 - doc update, better checks
 %        June 16, 2008 - doc update, rejects spectral records
 %                        fixed no header update bug, and changed the way
 %                        records are resampled when Matlab's resample fails
+%        Nov. 22, 2008 - update for new name schema (now SYNCRATES), allow
+%                        resampling spectral records, disallow resampling
+%                        xyz records
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2008 at 03:15 GMT
+%     Last Updated Nov. 22, 2008 at 19:15 GMT
+
+% todo:
 
 % check nargin
 error(nargchk(2,2,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seizmocheck(data,'dep'))
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
 
 % check rate
 if(~isnumeric(sr) || ~isscalar(sr) || sr<=0)
-    error('seizmo:syncsr:badInput',...
-        'sample rate must be a positive numeric scalar')
+    error('seizmo:syncrates:badInput',...
+        'SR must be a positive numeric scalar!');
 end
 
 % require evenly sampled records only
-if(any(~strcmp(glgc(data,'leven'),'true')))
-    error('seizmo:syncsr:evenlySpacedOnly',...
-        'illegal operation on unevenly spaced data');
+if(any(~strcmpi(getlgc(data,'leven'),'true')))
+    error('seizmo:syncrates:evenlySpacedOnly',...
+        'Illegal operation on unevenly spaced data!');
 end
 
 % require non-spectral records
-iftype=genumdesc(data,'iftype');
-if(any(strcmp(iftype,'Spectral File-Real/Imag') | ...
-        strcmp(iftype,'Spectral File-Ampl/Phase')))
-    error('seizmo:syncsr:illegalOperation',...
-        'Illegal operation of spectral file')
+iftype=getenumdesc(data,'iftype');
+if(any(strcmp(iftype,'General XYZ (3-D) file')))
+    error('seizmo:syncrates:illegalOperation',...
+        'Illegal operation on xyz files!');
 end
 
 % make delta groups
-delta=gh(data,'delta');
+delta=getheader(data,'delta');
 gdt=unique(delta); ng=length(gdt); gi=cell(ng,1);
 for i=1:ng; gi{i}=find(delta==gdt(i)).'; end
 
@@ -71,15 +88,14 @@ for i=1:ng
     try
         data(gi{i})=chsr(data(gi{i}),n(i),d(i),sr);
     catch
-        disp('interpolating some records because resample failed...')
-        % interpolate to a sample rate at least 4 times current AND desired
-        % sample rates to preserve the data and allow for decimation.
-        % here we find the lowest multiple of the desired rate that
-        % satisfies that criteria...hopefully that integer is fairly
-        % factorable...if not the function crashes
+        % interpolate to a sample rate at least 4 times the current
+        % AND the desired sample rates to preserve the data and allow
+        % for decimation.  here we find the lowest multiple of the
+        % desired rate that is 4x the current rate...hopefully that
+        % integer is fairly factorable...if not the function crashes
         lowest_multiple=max([4 ceil(4/(gdt*sr))]);
         
-        % interpolate temporarily to high rate
+        % interpolate temporarily to higher rate
         data(gi{i})=interpolate(data(gi{i}),lowest_multiple*sr,'spline');
         
         % now resample
@@ -87,25 +103,25 @@ for i=1:ng
     end
 end
 
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
+
 end
 
 function [data]=chsr(data,n,d,sr)
 %CHSR  Resample records to new rate
 
 % combine records
-[recs,ind,store,npts]=combo(data);
+[dep,idx1,ind,idx2,store,npts]=combinerecords(data);
 
 % resample
-recs=resample(recs,n,d);
+dep=resample(dep,n,d);
 
 % new length
 nnpts=floor((npts-1)*n/d)+1;
 
 % redistribute records
-data=ch(data,'delta',1/sr);
-data=distro(data,recs,ind,store,nnpts);
-
-% update header
-data=chkhdr(data);
+data=changeheader(data,'delta',1/sr);
+data=distributerecords(data,dep,idx1,[],[],store,nnpts);
 
 end

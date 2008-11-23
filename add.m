@@ -1,8 +1,8 @@
 function [data]=add(data,constant,cmp)
-%ADD    Add a constant to SEIZMO data records
+%ADD    Add a constant to SEIZMO records
 %
 %    Description: ADD(DATA,CONSTANT) adds a constant to the dependent 
-%     component(s) of SEIZMO data records.  For multi-component files, this
+%     component(s) of SEIZMO records.  For multi-component files, this
 %     operation is performed on every dependent component (this includes 
 %     spectral files).
 %
@@ -18,7 +18,7 @@ function [data]=add(data,constant,cmp)
 %     - CMP is the dependent component(s) to work on (default is all)
 %     - an empty list of components will not modify any components
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
@@ -26,11 +26,11 @@ function [data]=add(data,constant,cmp)
 %              data=add(data,constant,cmp_list)
 %
 %    Examples:
-%     Add a 135 degree (3*pi/4) phase shift to data records by only adding
+%     Add a 135 degree (3*pi/4) phase shift to records by only adding
 %     to the phase component in amplitude-phase records (component 2):
 %      data=idft(add(dft(data),3*pi/4,2))
 %
-%    See also: sub, mul, divide, seisfun
+%    See also: subtract, multiply, divide, seizmofun
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -47,9 +47,10 @@ function [data]=add(data,constant,cmp)
 %        July  7, 2008 - allow constant to be an array
 %        July 17, 2008 - doc update, dataless support added and cmp checks
 %        Oct.  6, 2008 - minor code cleaning
+%        Nov. 22, 2008 - update for new name schema
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2008 at 22:45 GMT
+%     Last Updated Nov. 22, 2008 at 04:20 GMT
 
 % todo:
 
@@ -57,7 +58,7 @@ function [data]=add(data,constant,cmp)
 error(nargchk(2,3,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % no constant case
 if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
@@ -85,14 +86,16 @@ end
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
     if(isempty(data(i).dep)); continue; end
-    oclass=str2func(class(data(i).dep));
-    data(i).dep(:,cmp)=oclass(double(data(i).dep(:,cmp))+constant(i));
+    if(~isempty(cmp))
+        oclass=str2func(class(data(i).dep));
+        data(i).dep(:,cmp)=oclass(double(data(i).dep(:,cmp))+constant(i));
+    end
     depmen(i)=mean(data(i).dep(:)); 
     depmin(i)=min(data(i).dep(:)); 
     depmax(i)=max(data(i).dep(:));
 end
 
 % update header
-data=ch(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
 
 end

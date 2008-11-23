@@ -1,30 +1,31 @@
-function []=wseis(data)
-%WSEIS    Write SEIZMO data to datafiles
+function []=writeseizmo(data)
+%WRITESEIZMO    Write SEIZMO records to datafiles
 %
-%    Description: WSEIS(DATA) writes SEIZMO records in DATA to datafiles.
-%     The 'name' field is used as the output filename, the 'location' field
-%     gives the path and the 'endian' field specifies the byte-order.
+%    Description: WRITESEIZMO(DATA) writes SEIZMO records in DATA to
+%     datafiles.  Uses the fields in the structure to determine how and
+%     where to write the records.
 %
 %    Notes:
 %
 %    Tested on: Matlab r2007b
 %
-%    Header changes: Any inconsistent field found with CHKHDR
+%    Header changes: see CHECKHEADER
 %
-%    Usage:    wseis(data)
+%    Usage:    writeseizmo(data)
 %
 %    Examples:
 %     Read in some files, clean them up and write over:
-%      wseis(taper(rtrend(rseis('*'))))
+%      writeseizmo(taper(removetrend(readseizmo('*'))))
 %
 %     To write out all records in big endian:
-%      wseis(cendian(data,'ieee-be'))
+%      writeseizmo(changebyteorder(data,'ieee-be'))
 %
-%     Alter the first record's filename and write it:
-%      data(1).name='../../myfile';
-%      wseis(data(1))
+%     Alter the location of where the files are written:
+%      [data.location]=deal('some/new/directory');
+%      writeseizmo(data)
 %
-%    See also:  rseis, bseis, seisdef, gv, rpdw, rdata, rh, wh
+%    See also:  readseizmo, bseizmo, seizmodef, getversion, readdata,
+%               readdatawindow, readheader, writeheader
 
 %     Version History:
 %        Oct. 29, 2007 - initial version, supports struct data
@@ -45,9 +46,10 @@ function []=wseis(data)
 %        Oct. 16, 2008 - moved checks to CHKHDR, support new struct layout
 %        Oct. 27, 2008 - update for struct change, use state changes for
 %                        SEISCHK & CHKHDR
+%        Nov. 17, 2008 - update for new name schema (now WRITESEIZMO)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 27, 2008 at 02:50 GMT
+%     Last Updated Nov. 17, 2008 at 18:10 GMT
 
 % todo:
 
@@ -55,37 +57,37 @@ function []=wseis(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % turn off struct checking
-oldseischkstate=get_seischk_state;
-set_seischk_state(true);
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
 
 % headers setup
-[h,vi]=vinfo(data);
+[h,vi]=versioninfo(data);
 
 % check headers
-data=chkhdr(data);
+data=checkheader(data);
 
 % turn off header checking
-oldchkhdrstate=get_chkhdr_state;
-set_chkhdr_state(true);
+oldcheckheaderstate=get_checkheader_state;
+set_checkheader_state(false);
 
 % estimated filesize from header
-est_bytes=seissize(data);
+est_bytes=seizmosize(data);
 
 % header info
-ncmp=gncmp(data);
-npts=gh(data,'npts');
-iftype=genumdesc(data,'iftype');
-leven=glgc(data,'leven');
+ncmp=getncmp(data);
+npts=getheader(data,'npts');
+iftype=getenumdesc(data,'iftype');
+leven=getlgc(data,'leven');
 
 % loop over records
 for i=1:length(data)
     % skip writing if dataless
     if(~data(i).hasdata)
-        warning('seizmo:wseis:dataless',...
-            'Use WH to write only headers! Record %d Skipped.',i);
+        warning('seizmo:writeseizmo:dataless',...
+            'Use WRITEHEADER to write only headers! Record %d Skipped.',i);
         continue; 
     end
     
@@ -93,12 +95,12 @@ for i=1:length(data)
     name=fullfile(data(i).location,data(i).name);
 
     % open file for writing
-    fid=fopen(name,'w',data(i).endian);
+    fid=fopen(name,'w',data(i).byteorder);
     
     % check fid
     if(fid<0)
         % unopenable file for writing (permissions/directory?)
-        error('seizmo:wseis:badFID',...
+        error('seizmo:writeseizmo:badFID',...
             ['File not openable for writing!\n'...
             '(Permissions problem / conflict with directory?)\n'...
             'Record: %d, File: %s\n'],i,name);
@@ -112,7 +114,7 @@ for i=1:length(data)
     if(count<h(vi(i)).data.startbyte)
         % write failed
         fclose(fid);
-        error('seizmo:wseis:writeFailed',...
+        error('seizmo:writeseizmo:writeFailed',...
             'Writing failed!\nRecord: %d, File: %s',i,name);
     end
     
@@ -161,7 +163,7 @@ for i=1:length(data)
     if(bytes~=est_bytes(i))
         % write failed/incomplete
         fclose(fid);
-        error('seizmo:wseis:badFileSize',...
+        error('seizmo:writeseizmo:badFileSize',...
             ['Output file disksize does not match expected size!\n'...
             'Record: %d, File: %s'],i,name);
     end
@@ -171,7 +173,7 @@ for i=1:length(data)
 end
 
 % toggle checking back
-set_seischk_state(oldseischkstate);
-set_chkhdr_state(oldchkhdrstate);
+set_seizmocheck_state(oldseizmocheckstate);
+set_checkheader_state(oldcheckheaderstate);
 
 end

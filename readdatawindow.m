@@ -1,13 +1,14 @@
-function [data,failed]=rpdw(data,varargin)
-%RPDW    Reads partial data window of datafiles into SEIZMO data structure
+function [data,failed]=readdatawindow(data,varargin)
+%READDATAWINDOW    Read data window into SEIZMO data structure
 %
-%    Description: RPDW(DATA,PDW) reads a partial data window PDW from 
+%    Description: READDATAWINDOW(DATA,PDW) reads a data window PDW from 
 %     SEIZMO compatible datafiles into the SEIZMO structure DATA, returning
 %     the updated structure.  This provides a mechanism similar to the SAC 
 %     'cut' command to limit memory/cpu usage related to reading in large 
 %     datafiles where only a segment is needed.  Note that the datafile 
-%     headers must exist/be read into DATA before running RPDW (use RH).
-%     Header fields will be updated to match the windowed data.
+%     headers must exist/be read into DATA before running READDATAWINDOW
+%     (use READHEADER). Header fields will be updated to match the windowed
+%     data.
 %     
 %     PDW is a set of several arguments that reference header fields in 
 %     DATA to define the data window.  PDW must be one of the following 
@@ -55,65 +56,71 @@ function [data,failed]=rpdw(data,varargin)
 %     11), the window defaults to the entire record ('b',0,'e',0) - ie no
 %     window.
 %
-%     RPDW(...,'FILL',TRUE|FALSE) turns on/off the filling of data gaps to
-%     allow records that don't extend for the entire window to do so by
-%     padding them with zeros.  This is useful for operations that require
-%     records to all have the same length.  See option 'FILLER' to alter 
-%     the fill value.  By default 'FILL' is false (no fill).
+%     READDATAWINDOW(...,'CMPLIST',LIST) allows reading in only specific
+%     components of records.  Should be either a row vector of indices or
+%     ':'.  May also be an array of rows of indices or ':' (use a cell
+%     array to get a mixture.  Default is ':' (all components).
 %
-%     RPDW(...,'FILLER',VALUE) changes the fill value to VALUE.  Adjusting
-%     this value does NOT turn option 'FILL' to true.  By default 'FILLER'
-%     is set to 0 (zero).
+%     READDATAWINDOW(...,'FILL',TRUE|FALSE) turns on/off the filling of
+%     data gaps to allow records that don't extend for the entire window to
+%     do so by padding them with zeros.  This is useful for operations that
+%     require records to all have the same length.  See option 'FILLER' to
+%     alter the fill value.  By default 'FILL' is false (no fill).
 %
-%     [DATA,FAILED]=RPDW(...,'TRIM',TRUE|FALSE) turns on/off deleting
-%     records that are unsupported (spectral and xyz files), that failed to
-%     be read, or would have no data in the window.  Optional output FAILED
-%     returns a logical array (equal in size to DATA) with elements set to 
-%     TRUE for records that encountered problems.  By default 'TRIM' is set
-%     to TRUE (deletes records).
+%     READDATAWINDOW(...,'FILLER',VALUE) changes the fill value to VALUE.
+%     Adjusting this value does NOT turn option 'FILL' to true.  By default
+%     'FILLER' is set to 0 (zero).
+%
+%     [DATA,FAILED]=READDATAWINDOW(...,'TRIM',TRUE|FALSE) turns on/off
+%     deleting records that are unsupported for windowing (spectral and xyz
+%     files), that failed to be read, or would have no data in the window.
+%     Optional output FAILED returns a logical array (equal in size to
+%     DATA) with elements set to TRUE for records that encountered
+%     problems.  By default 'TRIM' is set to TRUE (deletes records).
 %
 %    Notes:
 %     - Partial reads of spectral and xyz files are not supported.  They
-%       will not be read in with RPDW.  By default they are deleted from
-%       DATA (see option 'TRIM' to change this behavior).
+%       will not be read in.  By default they are deleted from DATA (see
+%       option 'TRIM' to change this behavior).
 %     - Windows with a start position after an end position will return
 %       empty records (with headers updated accordingly) rather than
 %       returning an error.  These records will be deleted unless 'trim' is
 %       set to false.
 %     - Multiple component data is supported.
 %     - Partial reads of unevenly sampled data is not supported.  They are 
-%       passed to RDATA and CUTIM instead.
+%       passed to READDATA and CUT instead.
 %     - FILL only works with evenly sampled data.
 %     - Records with a negative DELTA will return as empty.
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
-%    Header changes: B, E, NPTS, DELTA, ODELTA, LEVEN
-%                    DEPMEN, DEPMIN, DEPMAX
+%    Header changes: B, E, NPTS, DELTA, NCMP, DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:    data=rpdw(data,pdw)
-%              data=rpdw(data,pdw,'fill',true|false)
-%              data=rpdw(data,pdw,'fill',true|false,'filler',value)
-%              [data,failed]=rpdw(data,pdw,...'trim',true|false)
+%    Usage:    data=readdatawindow(data,pdw)
+%              data=readdatawindow(...,'cmplist',list,...)
+%              data=readdatawindow(...,'fill',logical,...)
+%              data=readdatawindow(...,'filler',value,...)
+%              [data,failed]=readdatawindow(...,'trim',logical,...)
 %
 %    Examples:
 %     ALL THE FOLLOWING EXAMPLES REQUIRE YOU TO 
 %     REMEMBER TO READ IN THE HEADER INFO FIRST:
-%      data=rh('*.SAC')
+%      data=readheader('*.SAC')
 %
 %     read in only the first 300 samples of records:
-%      data=rpdw(data,'x',1,300)
+%      data=readdatawindow(data,'x',1,300)
 %     
 %     read in a 90 second window around the t1 arrival, 
 %     padding data gaps with zeros as necessary:
-%      data=rpdw(data,'t1',-30,60,'fill',true)
+%      data=readdatawindow(data,'t1',-30,60,'fill',true)
 %
 %     read in only the 123rd sample:
-%      data=rpdw(data,'x',123,123)
+%      data=readdatawindow(data,'x',123,123)
 %     or
-%      data=rpdw(data,'x',123,'n',1)
+%      data=readdatawindow(data,'x',123,'n',1)
 %
-%    See also: cutim, rh, rdata, rseis, wh, wseis
+%    See also: cut, readheader, readdata, readseizmo, writeheader,
+%              writeseizmo, bseizmo, getheader, changeheader, listheader
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -132,22 +139,33 @@ function [data,failed]=rpdw(data,varargin)
 %        Sep. 27, 2008 - doc update, LEVEN for dataless & 1pnt, updated for
 %                        GET_N_CHECK & VINFO, checks for datafile size,
 %                        updated RDATA call, single CH call
+%        Nov. 18, 2008 - updated to new name schema (now READDATAWINDOW),
+%                        fixed fill bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 28, 2008 at 03:35 GMT
+%     Last Updated Nov. 18, 2008 at 05:35 GMT
 
 % todo:
-% - dataless, 0pt & 1pt handling
-%   - don't change leven or delta
-%   - how to read/cut under such conditions
-% - cmp option to subselect components to read
-%   - how to specify individually
 
 % input check
-error(nargchk(1,11,nargin))
+error(nargchk(1,11,nargin));
 
-% check data structure
-error(seischk(data))
+% headers setup (also checks struct)
+[h,vi]=versioninfo(data);
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
+
+% turn off header checking
+oldcheckheaderstate=get_checkheader_state;
+set_checkheader_state(false);
+
+% estimated filesize from header
+est_bytes=seizmosize(data);
 
 % number of records
 nrecs=numel(data);
@@ -156,133 +174,104 @@ nrecs=numel(data);
 option=cutparameters(nrecs,varargin{:});
 
 % header info
-ncmp=gncmp(data);
-[b,delta,e,depmen,depmin,depmax,npts]=...
-    gh(data,'b','delta','e','depmen','depmin','depmax','npts');
-iftype=genumdesc(data,'iftype');
-leven=glgc(data,'leven');
-error(lgcchk('leven',leven(npts>1)))
+ncmp=getncmp(data);
+[b,delta,e,npts]=getheader(data,'b','delta','e','npts');
+iftype=getenumdesc(data,'iftype');
+leven=getlgc(data,'leven');
 
 % index by spacing
 even=strcmpi(leven,'true');
 uneven=strcmpi(leven,'false');
-eveni=find(even).';
-
-% look out for undefined leven
-undef=(~even & ~uneven); 
-
-% estimated filesize from header
-est_bytes=seissize(data);
-
-% headers setup
-[h,vi]=vinfo(data);
-
-% window start point/value
-bt=[]; bp=[];
-if(strcmpi(option.REF1,'z'))
-    bt=option.OFFSET1;
-elseif(strcmpi(option.REF1,'x'))
-    bp=round(option.OFFSET1);
-else
-    bt=gh(data,option.REF1)+option.OFFSET1;
-end
-
-% window stop point/value
-et=[]; ep=[];
-if(strcmpi(option.REF2,'z'))
-    et=option.OFFSET2;
-elseif(strcmpi(option.REF2,'x') || strcmpi(option.REF2,'n'))
-    ep=round(option.OFFSET2);
-else
-    et=gh(data,option.REF2)+option.OFFSET2;
-end
-
-% check for nans
-if(any(isnan(bt)) || any(isnan(bp)) || any(isnan(et)) || any(isnan(ep)))
-    error('seizmo:rpdw:nanHeaderField','Window position is NaN!')
-end
 
 % allocate bad records matrix
 failed=false(nrecs,1);
 
 % let rdata/cutim handle unevenly sampled records (minus file deletion)
-if(any(uneven | undef))
+if(any(uneven))
     % read in unevenly sampled datafiles
-    uneven=(uneven | undef);
-    [data(uneven),failed(uneven)]=rdata(data(uneven),'trim',false);
+    [data(uneven),failed(uneven)]=readdata(data(uneven),'trim',false);
     if(any(uneven & ~failed))
         % cut unevenly sampled datafiles
         uneven=(uneven & ~failed);
-        [data(uneven),failed(uneven)]=cutim(data(uneven),...
-            option.REF1,option.OFFSET1(uneven),option.REF2,option.OFFSET2(uneven),...
-            'fill',option.FILL,'filler',option.FILLER,'trim',false);
+        [data(uneven),failed(uneven)]=cut(data(uneven),...
+            option.REF1,option.OFFSET1(uneven),...
+            option.REF2,option.OFFSET2(uneven),...
+            'fill',option.FILL,'filler',option.FILLER,...
+            'cmplist',option.CMPLIST,'trim',false);
     end
 end
 
+% window start point
+if(strcmpi(option.REF1,'z'))
+    bp=round((option.OFFSET1-b)./delta)+1;
+elseif(strcmpi(option.REF1,'x'))
+    bp=round(option.OFFSET1);
+else
+    bp=round((getheader(data,option.REF1)+option.OFFSET1-b)./delta)+1;
+end
+
+% window end point
+if(strcmpi(option.REF2,'z'))
+    ep=round((option.OFFSET2-b)./delta)+1;
+elseif(strcmpi(option.REF2,'x'))
+    ep=round(option.OFFSET2);
+elseif(strcmpi(option.REF2,'n'))
+    ep=bp+round(option.OFFSET2)-1;
+else
+    ep=round((getheader(data,option.REF2)+option.OFFSET2-b)./delta)+1;
+end
+
+% boundary conditions
+nbp=max(bp,1);
+nep=min(ep,npts);
+nnp=max(nep-nbp+1,0);
+if(any(~nnp))
+    nbp(~nnp)=nan;
+    nep(~nnp)=nan;
+end
+
+% get new b/e
+fill=option.FILL;
+nofill=~fill;
+% to fill
+if(any(fill))
+    b(fill)=b(fill)+(bp(fill)-1).*delta(fill);
+    e(fill)=b(fill)+(ep(fill)-1).*delta(fill);
+    npts(fill)=max(bp-ep+1,0);
+% not to fill
+elseif(any(nofill))
+    b(nofill)=b(nofill)+(nbp(nofill)-1).*delta(nofill);
+    e(nofill)=b(nofill)+(nep(nofill)-1).*delta(nofill);
+    npts(nofill)=nnp(nofill);
+end
+
 % loop through each evenly spaced file
-for i=eveni
-    % skip dataless
-    if(npts(i)==0)
-        failed(i)=true; 
-        warning('seizmo:rpdw:noData',...
-            'Illegal operation on dataless file!');
-        continue; 
-    end
-    
-    % look out for negative delta
-    if(delta(i)<=0)
-        failed(i)=true;
-        warning('seizmo:rpdw:negDelta',...
-            'DELTA for record %d is zero/negative, deleting!',i);
-        continue;
-    end
-    
+[depmen,depmin,depmax]=swap(nan(nrecs,1));
+for i=find(even).'
     % check for unsupported filetypes
     if(strcmpi(iftype(i),'General XYZ (3-D) file'))
         failed(i)=true;
-        warning('seizmo:rpdw:illegalFiletype',...
+        warning('seizmo:readdatawindow:illegalFiletype',...
             'Illegal operation on xyz file!');
         continue;
     elseif(any(strcmpi(iftype(i),{'Spectral File-Real/Imag'...
             'Spectral File-Ampl/Phase'})))
         failed(i)=true;
-        warning('seizmo:rpdw:illegalFiletype',...
+        warning('seizmo:readdatawindow:illegalFiletype',...
             'Illegal operation on spectral file!');
         continue;
     end
     
-    % closest points to begin and end
-    if(~strcmpi(option.REF1,'x'))
-        bp(i)=round((bt(i)-b(i))/delta(i))+1;
-    end
-    if(strcmpi(option.REF2,'n'))
-        ep2=bp(i)+ep(i)-1;
-    elseif(strcmpi(option.REF2,'x'))
-        ep2=ep(i);
-    else
-        ep2=round((et(i)-b(i))/delta(i))+1;
-    end
-    
-    % boundary conditions
-    nbp=max([bp(i) 1]);
-    nep=min([ep2 npts(i)]);
-    nnp=max([nep-nbp+1 0]);
-    
-    % skip if new npts==0
-    if(nnp==0)
-        b(i)=nan; npts(i)=0; leven{i}='nan'; delta(i)=nan;
-        e(i)=nan; depmen(i)=nan; depmin(i)=nan; depmax(i)=nan;
-        failed(i)=true;
-        continue;
-    end
+    % construct fullname
+    name=fullfile(data(i).location,data(i).name);
     
     % open file
-    fid=fopen(data(i).name,'r',data(i).endian);
+    fid=fopen(name,'r',data(i).byteorder);
     
     % check that it opened
     if(fid<0)
-        warning('seizmo:rpdw:badFID',...
-            'File not openable: %s !',data(i).name);
+        warning('seizmo:readdatawindow:badFID',...
+            'Record: %d, File not openable: %s !',i,name);
         failed(i)=true;
         continue;
     end
@@ -297,90 +286,78 @@ for i=eveni
         % SAC BUG: converting a spectral file to a time series file does
         % not deallocate the second component, thus the written file has
         % twice as much data.
-        warning('seizmo:rpdw:badFileSize',...
-            ['Filesize of file %s does not match header info!\n'...
+        warning('seizmo:readdatawindow:badFileSize',...
+            ['Record: %d, File: %s'...
+            'Filesize does not match header info!\n'...
             '%d (estimated) > %d (on disk) --> Reading Anyways!'...
             'This is usually caused by a SAC bug and can be ignored.'],...
-            data(i).name,est_bytes(i),bytes);
+            i,name,est_bytes(i),bytes);
     elseif(bytes<est_bytes(i))
         % size too small - skip
         fclose(fid);
-        warning('seizmo:rpdw:badFileSize',...
-            ['Filesize of file %s does not match header info!\n'...
+        warning('seizmo:readdatawindow:badFileSize',...
+            ['Record: %d, File: %s'...
+            'Filesize of file does not match header info!\n'...
             '%d (estimated) < %d (on disk) --> Skipping!'],...
-            data(i).name,est_bytes(i),bytes);
+            i,name,est_bytes(i),bytes);
         failed(i)=true;
         continue;
     end
     
+    % deal with components
+    cmp=1:ncmp(i);
+    cmp=cmp(option.CMPLIST{i});
+    cmp=cmp(:).';
+    ncmp(i)=numel(cmp);
+    
     % preallocate data record with NaNs, deallocate timing
-    data(i).dep=nan(nnp,ncmp(i),h(vi(i)).data.store);
-    data(i).ind=[];
+    data(i).dep=nan(nnp(i),ncmp(i),h(vi(i)).data.store);
+    if(isfield(data,'ind')); data(i).ind=[]; end
     
     % read in each component
-    for j=1:ncmp(i)
-        % move to first byte of window and read
-        try
-            fseek(fid,h(vi(i)).data.startbyte+...
-                h(vi(i)).data.bytesize*((j-1)*npts(i)+nbp-1),'bof');
-            temp=fread(fid,nnp,['*' h(vi(i)).data.store]);
-            if(numel(temp)~=nnp)
-                error('seizmo:rpdw:readFailed',...
-                    'Read in of data failed: %s !',data(i).name);
-            else
-                data(i).dep(:,j)=temp;
-                clear temp
-            end
-        catch
-            warning('seizmo:rpdw:readFailed',...
-                'Read in of data failed: %s !',data(i).name);
-            failed(i)=true;
-            clear temp
-            break;
+    if(nnp(i)>0)
+        for j=1:ncmp(i)
+            % move to first byte of window and read
+            fseek(fid,h(vi(i)).data.startbyte+h(vi(i)).data.bytesize...
+                *((cmp(j)-1)*npts(i)+nbp(i)-1),'bof');
+            data(i).dep(:,j)=fread(fid,nnp(i),['*' h(vi(i)).data.store]);
         end
     end
+    
+    % data read in
+    data(i).hasdata=true;
     
     % close file
     fclose(fid);
     
-    % skip to next record if read failed
-    if(failed(i)); continue; end
-    
-    % to fill
+    % add filler
     if(option.FILL(i))
-        % add filler
-        data(i).dep=[ones(1-bp(i),ncmp(i))*option.FILLER(i); ...
+        data(i).dep=[ones(min(1,ep(1))-bp(i),ncmp(i))*option.FILLER(i);...
             data(i).dep; ...
-            ones(ep2-npts(i),ncmp(i))*option.FILLER(i)];
-        
-        % fix header
-        b(i)=b(i)+(bp(i)-1)*delta(i);
-        e(i)=b(i)+(ep2-1)*delta(i);
-    % not to fill
-    else
-        % fix header
-        b(i)=b(i)+(nbp-1)*delta(i);
-        e(i)=b(i)+(nep-1)*delta(i);
+            ones(ep(i)-max(npts(i),bp(i)),ncmp(i))*option.FILLER(i)];
     end
     
     % more header fix
     npts(i)=size(data(i).dep,1);
-    depmen(i)=mean(data(i).dep(:));
-    depmin(i)=min(data(i).dep(:));
-    depmax(i)=max(data(i).dep(:));
-    
-    % 1pnt fix
-    if(size(data(i).dep,1)==1)
-        delta(i)=nan; leven{i}='nan';
+    if(nnp(i)>0)
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
     end
 end
 
 % update headers
-data(even)=ch(data(even),'b',b(even),'e',e(even),'delta',delta(even),...
-    'leven',leven(even),'npts',npts(even),...
+warning('off','seizmo:changeheader:fieldInvalid')
+data(even)=changeheader(data(even),'b',b(even),'e',e(even),...
+    'delta',delta(even),'npts',npts(even),'ncmp',ncmp(even),...
     'depmen',depmen(even),'depmin',depmin(even),'depmax',depmax(even));
+warning('off','seizmo:changeheader:fieldInvalid')
 
 % remove failed records
 if(option.TRIM); data(failed)=[]; end
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
+set_checkheader_state(oldcheckheaderstate);
 
 end

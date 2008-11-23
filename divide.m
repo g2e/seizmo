@@ -1,10 +1,10 @@
 function [data]=divide(data,constant,cmp)
-%DIVIDE    Divide SEIZMO data records by a constant
+%DIVIDE    Divide SEIZMO records by a constant
 %
 %    Description: DIVIDE(DATA,CONSTANT) divides the dependent component(s)
-%     of SEIZMO data records by a constant.  For multi-component files, 
-%     this operation is performed on every dependent component (this 
-%     includes spectral files).
+%     of SEIZMO records by a constant.  For multi-component files, this
+%     operation is performed on every dependent component (this includes
+%     spectral files).
 %
 %     DIVIDE(DATA,CONSTANT,CMP) allows for operation on just components in
 %     the list CMP.  By default all components are operated on (use ':' to
@@ -18,7 +18,7 @@ function [data]=divide(data,constant,cmp)
 %     - CMP is the dependent component(s) to work on (default is all)
 %     - an empty list of components will not modify any components
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %    
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
@@ -30,7 +30,7 @@ function [data]=divide(data,constant,cmp)
 %     affecting the phase component by dividing only the first component:
 %      data=divide(data,32,1)
 %
-%    See also: mul, add, sub, seisfun
+%    See also: multiply, add, subtract, seizmofun
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -46,9 +46,10 @@ function [data]=divide(data,constant,cmp)
 %                        allow constant to be an array, no longer uses mul
 %        July 17, 2008 - doc update, dataless support added and cmp checks
 %        Oct.  6, 2008 - minor code cleaning
+%        Nov. 22, 2008 - update for new name schema
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 17, 2008 at 22:45 GMT
+%     Last Updated Nov. 22, 2008 at 07:15 GMT
 
 % todo:
 
@@ -56,7 +57,7 @@ function [data]=divide(data,constant,cmp)
 error(nargchk(2,3,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % no constant case
 if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
@@ -84,14 +85,16 @@ end
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
     if(isempty(data(i).dep)); continue; end
-    oclass=str2func(class(data(i).dep));
-    data(i).dep(:,cmp)=oclass(double(data(i).dep(:,cmp))/constant(i));
-    depmen(i)=mean(data(i).dep(:)); 
+    if(~isempty(cmp))
+        oclass=str2func(class(data(i).dep));
+        data(i).dep(:,cmp)=oclass(double(data(i).dep(:,cmp))/constant(i));
+    end
+    depmen(i)=mean(data(i).dep(:));
     depmin(i)=min(data(i).dep(:)); 
     depmax(i)=max(data(i).dep(:));
 end
 
 % update header
-data=ch(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
 
 end

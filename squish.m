@@ -1,35 +1,33 @@
-function [data]=deci(data,factor)
-%DECI    Downsample SEIZMO data records by integer factor
+function [data]=squish(data,factor)
+%SQUISH    Downsample SEIZMO records by an integer factor
 %
-%    Description: DECI(DATA,FACTOR) downsamples SEIZMO data records by an 
+%    Description: SQUISH(DATA,FACTOR) downsamples SEIZMO records by an 
 %     integer FACTOR after implementing an anti-aliasing filter.  To avoid
 %     adding significant numerical noise to the data, keep the decimation
 %     factor below 13.  If a decimation factor greater than this is needed,
-%     consider using a cascade of decimation factors (by giving a vector
-%     for FACTOR).  For a usage case for this see the examples below.
+%     consider using a cascade of decimation factors (by giving an array of
+%     factors for FACTOR).  For a usage case, see the examples below.
 %     Strong amplitudes at or near the start and end of records will
-%     introduce edge effects that can be reduced by first detrending and 
+%     introduce edge effects that can be avoided by first detrending and 
 %     then tapering records.  Uses the Matlab function decimate (Signal 
 %     Processing Toolbox).
 %
 %    Notes:
 %
-%    System requirements: Matlab 7, Signal Processing Toolbox
-%
-%    Data requirements: Evenly Spaced; Time Series or General X vs Y
+%    Tested on: Matlab r2007b
 %
 %    Header changes: DELTA, NPTS, E, DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:  data=deci(data,factors)
+%    Usage:    data=squish(data,factors)
 %
 %    Examples: 
 %     To halve the samplerates of records in data:
-%      data=deci(data,2)
+%      data=squish(data,2)
 %
 %     To cascade records to a samplerate 40 times lower;
-%      data=deci(data,[5 8])
+%      data=squish(data,[5 8])
 %
-%    See also: stretch, syncsr, interpolate
+%    See also: stretch, syncrates, interpolate
 
 %     Version History:
 %        Oct. 30, 2007 - initial version
@@ -43,54 +41,61 @@ function [data]=deci(data,factor)
 %        June 30, 2008 - single ch call, dataless support, handle 
 %                        decimation to single point, doc update,
 %                        .dep rather than .x, filetype checking
+%        Nov. 23, 2008 - update for new name schema (now SQUISH)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 30, 2008 at 06:20 GMT
+%     Last Updated Nov. 23, 2008 at 10:20 GMT
 
 % todo:
-%
 
 % check inputs
 error(nargchk(2,2,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
 
 % empty factor
 if(isempty(factor)); return; end
 
 % check factor
-if(~isnumeric(factor) || ~isvector(factor) || ...
-        any(factor<1) || any(fix(factor)~=factor))
-    error('seizmo:deci:badInput',...
-        'factor must be a scalar/vector of positive integer(s)')
+if(~isnumeric(factor) || any(factor<1) || any(fix(factor)~=factor))
+    error('seizmo:squish:badInput',...
+        'FACTOR must be one or more positive integers!')
 end
 
 % number of factors
-nf=length(factor);
+factor=factor(:);
+nf=numel(factor);
 
 % overall factor
 of=prod(factor);
 
 % check filetype
-iftype=genumdesc(data,'iftype');
+iftype=getenumdesc(data,'iftype');
 if(strcmpi(iftype,'General XYZ (3-D) file'))
-    error('seizmo:deci:illegalFiletype',...
-        'illegal operation on xyz file');
+    error('seizmo:squish:illegalFiletype',...
+        'Illegal operation on xyz records!');
 elseif(any(strcmpi(iftype,'Spectral File-Real/Imag') | ...
         strcmpi(iftype,'Spectral File-Ampl/Phase')))
-    error('seizmo:deci:illegalFiletype',...
-        'illegal operation on spectral file');
+    error('seizmo:squish:illegalFiletype',...
+        'Illegal operation on spectral records!');
 end
 
 % check spacing
-if(any(~strcmpi(glgc(data,'leven'),'true')))
-    error('seizmo:deci:evenlySpacedOnly',...
-        'illegal operation on unevenly spaced data');
+if(any(~strcmpi(getlgc(data,'leven'),'true')))
+    error('seizmo:squish:evenlySpacedOnly',...
+        'Illegal operation on unevenly spaced records!');
 end
 
 % header info
-[b,delta]=gh(data,'b','delta');
+[b,delta]=getheader(data,'b','delta');
 delta=delta*of;
 
 % number of records
@@ -102,7 +107,7 @@ depmen=e; depmin=e; depmax=e;
 for i=1:nrecs
     % dataless support
     [npts(i),ncmp]=size(data(i).dep);
-    if(any([npts(i) ncmp]==0)); npts(i)=0; delta(i)=nan; continue; end
+    if(any([npts(i) ncmp]==0)); npts(i)=0; continue; end
     
     % save class and convert to double precision
     oclass=str2func(class(data(i).dep));
@@ -118,12 +123,7 @@ for i=1:nrecs
         % preallocate after we know length
         if(j==1)
             npts(i)=size(temp,1);
-            if(npts(i)==1)
-                delta(i)=nan;
-                e(i)=b(i);
-            else
-                e(i)=b(i)+(npts(i)-1)*delta(i);
-            end
+            e(i)=b(i)+(npts(i)-1)*delta(i);
             save=zeros(npts(i),ncmp);
         end
         save(:,j)=temp;
@@ -139,7 +139,10 @@ for i=1:nrecs
 end
 
 % update header
-data(i)=ch(data(i),'npts',npts,'delta',delta,'e',e,'depmin',depmin,...
-    'depmen',depmen,'depmax',depmax);
+data(i)=changeheader(data(i),'npts',npts,'delta',delta,'e',e,...
+    'depmin',depmin,'depmen',depmen,'depmax',depmax);
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
 
 end

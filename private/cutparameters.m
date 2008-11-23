@@ -45,7 +45,7 @@ option.REF1='b';
 option.REF2='e';
 option.OFFSET1=0;
 option.OFFSET2=0;
-option.CMPLIST=':';
+option.CMPLIST={':'};
 
 % get options set by SEIZMO global
 global SEIZMO; fields=fieldnames(option).';
@@ -65,7 +65,7 @@ varargin=varargin(2:end);
 skip=false; % skip next argument? (already read in)
 ref1=false; % is REF1/OFFSET1 set?
 ref2=false; % is REF2/OFFSET2 set?
-for i=1:nargin
+for i=1:nargin-1
     % skip flag
     if(skip); skip=false; continue; end
     
@@ -81,7 +81,7 @@ for i=1:nargin
             ref1=true;
         % second offset (use first reference)
         elseif(~ref2)
-            option.REF2=ref1;
+            option.REF2=option.REF1;
             option.OFFSET2=varargin{i};
             ref2=true;
         % only two offsets allowed
@@ -125,12 +125,17 @@ for i=1:nargin
                                 'CMPLIST incomprehensible!');
                         end
                     end
-                elseif(~isnumeric(varargin{i+1}) ...
-                    && ~strcmp(varargin{i+1},':'))
+                    option.CMPLIST=varargin{i+1};
+                elseif(isnumeric(varargin{i+1}) ...
+                        && all(varargin{i+1}==fix(varargin{i+1})) ...
+                        && all(varargin{i+1}>0))
+                    option.CMPLIST=num2cell(varargin{i+1},2);
+                elseif(ischar(varargin{i+1}) && strcmp(varargin{i+1},':'))
+                    option.CMPLIST=cellstr(varargin{i+1});
+                else
                     error('seizmo:cutparameters:badInput',...
                         'CMPLIST incomprehensible!');
                 end
-                option.CMPLIST=varargin{i+1};
             otherwise
                 % window reference
                 if(~ref1)

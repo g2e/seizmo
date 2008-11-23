@@ -1,16 +1,9 @@
 function [data]=taper(data,width,type,option)
-%TAPER   Taper SEIZMO data records
+%TAPER   Taper SEIZMO records
 %
-%    Description: A taper is a monotonically varying function between zero
-%     and one.  It is applied in a symmetric manner to the data such that 
-%     the signal is zero for the first and last data points and increases 
-%     smoothly to its original value at an interior point relative to each 
-%     end.  This command allows SEIZMO to utilize the multitude of window
-%     functions available in Matlab's Signal Processing Toolbox for tapers.
-%
-%     TAPER(DATA) tapers data records with a Hanning taper set to vary from
-%     0 to 1 over 0.05 of every records' width on each end.  This matches
-%     SAC's default taper command.
+%    Description: TAPER(DATA) tapers data records with a Hann taper set to
+%     vary from 0 to 1 over 0.05 of every records' width on each end.  This
+%     matches SAC's default taper command.
 %
 %     TAPER(DATA,WIDTH) allows the taper width to be set.  WIDTH should be
 %     a number anywhere from 0.0 (no taper) to 0.5 (taper entire record).
@@ -47,12 +40,17 @@ function [data]=taper(data,width,type,option)
 %     taper types 'chebwin', 'kaiser' and 'tukeywin' the taper parameter is
 %     required.  Use Matlab's help for specifics on each taper's parameter.
 %
+%    Notes:
+%     - uses Matlab's Signal Processing Toolbox WINDOW function
+%
+%    Tested on: Matlab r2007b
+%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %   
-%    Usage: data=taper(data)
-%           data=taper(data,width)
-%           data=taper(data,width,type)
-%           data=taper(data,width,type,option)
+%    Usage:    data=taper(data)
+%              data=taper(data,width)
+%              data=taper(data,width,type)
+%              data=taper(data,width,type,option)
 %
 %    Examples:
 %     Taper data with a gaussian that is applied to the first and last 10th
@@ -63,62 +61,75 @@ function [data]=taper(data,width,type,option)
 %    See also: rmean, rtrend
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 12, 2008 - Cleaned up doc, made 'hann' default
+%        Oct. 31, 2007 - initial version
+%        Nov.  7, 2007 - doc update
+%        Feb. 12, 2008 - rename from SACTAPER to TAPER, handle string input
+%        Feb. 16, 2008 - class support, multi-component support
+%        Feb. 25, 2008 - support for unevenly sampled records, better
+%                        checks, input arguments order changed
+%        Mar.  4, 2008 - minor doc update, major code cleaning
+%        Apr. 17, 2008 - minor doc update
+%        May  12, 2008 - dep* formula fix
+%        June 12, 2008 - doc update, made 'hann' default to match SAC
+%        Nov. 22, 2008 - doc update, history fix, update for new name
+%                        schema, handle widths>1, one changeheader call,
+%                        error on xyz file, better checking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 04:35 GMT
+%     Last Updated Nov. 22, 2008 at 21:55 GMT
 
 % check input
 error(nargchk(1,4,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seizmocheck(data,'dep'))
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
 
 % defaults
 if(nargin<3 || isempty(type)); type='hann'; end
 if(nargin<2 || isempty(width)); width=[0.05 0.05]; end
 
 % check width
-if(length(width)==1); width=[width width];
-elseif(length(width)~=2)
-    error('seizmo:taper:badInput','too many taper halfwidth parameters')
+if(numel(width)==1)
+    width=[width width];
+elseif(numel(width)~=2)
+    error('seizmo:taper:badInput','Too many taper halfwidth parameters!');
 end
-if(any(width>1))
-    error('seizmo:taper:badInput',...
-        'taper halfwidth far too big - use 0.0 to 0.5')
+if(any(width<0))
+    error('seizmo:taper:badInput','Taper halfwidths must be >=0!');
 end
 
 % make function handle
 type=str2func(type);
 
 % header info
-leven=glgc(data,'leven');
-iftype=genumdesc(data,'iftype');
+leven=getlgc(data,'leven');
+iftype=getenumdesc(data,'iftype');
 
-% check sample spacing logical
-tru=strcmp(leven,'true');
-fals=strcmp(leven,'false');
-if(~all(tru | fals))
-    error('seizmo:taper:levenBad',...
-        'logical field leven needs to be set'); 
+% check for unsupported filetypes
+if(any(strcmpi(iftype,'General XYZ (3-D) file')))
+    error('seizmo:taper:illegalFiletype',...
+        'Illegal operation on xyz file');
 end
 
+% number of records
+nrecs=numel(data);
+
 % work through each file
-for i=1:length(data)
-    % check for unsupported filetypes
-    if(strcmp(iftype(i),'General XYZ (3-D) file'))
-        warning('seizmo:taper:illegalFiletype',...
-            'Illegal operation on xyz file');
-        continue;
-    end
-    
+depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+for i=1:nrecs
     % save class and convert to double precision
-    oclass=str2func(class(data(i).x));
-    data(i).x=double(data(i).x);
+    oclass=str2func(class(data(i).dep));
+    data(i).dep=double(data(i).dep);
     
     % record size, taper size
-    [npts,ncmp]=size(data(i).x);
+    [npts,ncmp]=size(data(i).dep);
     nwidth=ceil(width*npts);
     
     % unevenly spaced
@@ -133,15 +144,21 @@ for i=1:length(data)
         end
         
         % interpolate
-        last1=find(data(i).t>data(i).t(1)+(data(i).t(end)-data(i).t(1))*width(1),1)-1;
-        last2=find(data(i).t<data(i).t(end)-(data(i).t(end)-data(i).t(1))*width(2),1,'last')+1;
-        even_times=linspace(data(i).t(1),data(i).t(end),npts);
-        taper1=interp1(even_times(1:nwidth(1)),taperedge1(1:nwidth(1)),data(i).t(1:last1),'pchip');
-        taper2=interp1(even_times(end-nwidth(2)+1:end),taperedge2(nwidth(2)+1:end),data(i).t(last2:end),'pchip');
+        last1=find(data(i).ind<(data(i).ind(1)+...
+            (data(i).ind(end)-data(i).ind(1))*width(1)),1,'last');
+        last2=find(data(i).ind>(data(i).ind(end)-...
+            (data(i).ind(end)-data(i).ind(1))*width(2)),1,'first');
+        even_times=linspace(data(i).ind(1),data(i).ind(end),npts);
+        taper1=interp1(even_times(1:nwidth(1)),taperedge1(1:nwidth(1)),...
+            data(i).ind(1:last1),'pchip');
+        taper2=interp1(even_times((end-nwidth(2)+1):end),...
+            taperedge2((nwidth(2)+1):end),data(i).ind(last2:end),'pchip');
         
         % apply taper halfwidths separately
-        data(i).x(1:last1,:)=data(i).x(1:last1,:).*taper1(:,ones(ncmp,1));
-        data(i).x(last2:end,:)=data(i).x(last2:end,:).*taper2(:,ones(ncmp,1));
+        data(i).dep(1:last1,:)=...
+            data(i).dep(1:last1,:).*taper1(:,ones(ncmp,1));
+        data(i).dep(last2:end,:)=...
+            data(i).dep(last2:end,:).*taper2(:,ones(ncmp,1));
     % evenly spaced
     else
         % make tapers
@@ -153,17 +170,30 @@ for i=1:length(data)
             taperedge2=window(type,2*nwidth(2));
         end
         
+        % adjust for npts
+        nwidth=min(npts,nwidth);
+        
         % apply taper halfwidths separately
-        data(i).x(1:nwidth(1),:)=data(i).x(1:nwidth(1),:).*taperedge1(1:nwidth(1),ones(ncmp,1));
-        data(i).x(end-nwidth(2)+1:end,:)=data(i).x(end-nwidth(2)+1:end,:).*taperedge2(nwidth(2)+1:end,ones(ncmp,1));
+        data(i).dep(1:nwidth(1),:)=data(i).dep(1:nwidth(1),:)...
+            .*taperedge1(1:nwidth(1),ones(ncmp,1));
+        data(i).dep((end-nwidth(2)+1):end,:)=...
+            data(i).dep((end-nwidth(2)+1):end,:)...
+            .*taperedge2((end-nwidth(2)+1):end,ones(ncmp,1));
     end
     
     % change class back
-    data(i).x=oclass(data(i).x);
+    data(i).dep=oclass(data(i).dep);
     
-    % adjust header
-    data(i)=ch(data(i),'depmen',mean(data(i).x(:)),...
-        'depmin',min(data(i).x(:)),'depmax',max(data(i).x(:)));
+    % get dep* values
+    depmen(i)=mean(data(i).dep(:)); 
+    depmin(i)=min(data(i).dep(:)); 
+    depmax(i)=max(data(i).dep(:));
 end
+
+% update header
+data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
 
 end

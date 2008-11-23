@@ -1,7 +1,7 @@
-function [data]=divomega(data)
-%DIVOMEGA    Perform integration in the frequency domain on SEIZMO records
+function [data]=divideomega(data)
+%DIVIDEOMEGA    Integrate SEIZMO records in the frequency domain
 %
-%    Description: DIVOMEGA(DATA) basically divides each point in the 
+%    Description: DIVIDEOMEGA(DATA) basically divides each point in the 
 %     dependent component(s) of spectral files by:
 %       OMEGA=2.0 * PI * FREQ
 %     to perform the equivalent of integration in the time domain.  This is
@@ -14,18 +14,18 @@ function [data]=divomega(data)
 %     - Read the source code below for a better description of the
 %       operations performed for frequency-domain integration.
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header Changes: DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:    data=divomega(data)
+%    Usage:    data=divideomega(data)
 %
 %    Examples:
 %     Integrate spectral data in the time domain vs frequency domain:
-%      data=dft(integrt(idft(data)))
-%      data=divomega(data)
+%      data=dft(integrate(idft(data)))
+%      data=divideomega(data)
 %
-%    See also: mulomega, dft, idft
+%    See also: multiplyomega, dft, idft
 
 %     Version History:
 %        May  12, 2008 - initial version
@@ -33,9 +33,11 @@ function [data]=divomega(data)
 %        July  8, 2008 - doc update, single ch call, .dep rather than .x
 %        July 19, 2008 - doc update, dataless support
 %        Oct.  7, 2008 - minor code cleaning
+%        Nov. 22, 2008 - update for new name schema (now DIVIDEOMEGA),
+%                        changes idep field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2008 at 02:10 GMT
+%     Last Updated Nov. 22, 2008 at 07:00 GMT
 
 % todo:
 
@@ -43,22 +45,30 @@ function [data]=divomega(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
 
 % retreive header info
-leven=glgc(data,'leven');
-iftype=genumdesc(data,'iftype');
-[e,delta,npts]=gh(data,'e','delta','npts');
+leven=getlgc(data,'leven');
+idep=getenumid(data,'idep');
+iftype=getenumdesc(data,'iftype');
+[e,delta,npts]=getheader(data,'e','delta','npts');
 npts2=npts/2;
 npts21=npts2-1;
 
 % check leven,iftype
 if(any(~strcmpi(leven,'true')))
-    error('seizmo:divomega:illegalOperation',...
+    error('seizmo:divideomega:illegalOperation',...
         'Illegal operation on unevenly spaced record!');
 elseif(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
         & ~strcmpi(iftype,'Spectral File-Ampl/Phase')))
-    error('seizmo:divomega:illegalOperation',...
+    error('seizmo:divideomega:illegalOperation',...
         'Illegal operation on a non-spectral file!');
 end
 
@@ -105,7 +115,18 @@ for i=1:nrecs
     depmax(i)=max(data(i).dep(:));
 end
 
+% change idep
+vel=strcmpi(idep,'ivel');
+acc=strcmpi(idep,'iacc');
+if(any(vel)); idep(vel)={'idisp'}; end
+if(any(acc)); idep(acc)={'ivel'}; end
+if(any(~vel & ~acc)); idep(~vel & ~acc)={'iunkn'}; end
+
 % update header
-data=ch(data,'depmax',depmax,'depmin',depmin,'depmen',depmen);
+data=changeheader(data,'idep',idep,...
+    'depmax',depmax,'depmin',depmin,'depmen',depmen);
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
 
 end

@@ -51,7 +51,7 @@ function [data]=slidingrms(data,nsamples,varargin)
 %
 %    Notes:
 %     - Centered windows are of length 2N+1, while the others are just N
-%     - SLIDINGRMS is faster than SLIDEFUN because it uses SLIDINGAVG
+%     - SLIDINGRMS is faster than SLIDINGFUN because it uses SLIDINGAVG
 %
 %    Tested on: Matlab r2007b
 %
@@ -68,7 +68,7 @@ function [data]=slidingrms(data,nsamples,varargin)
 %      Compare an envelope and a 21-sample sliding-window root-mean-square:
 %       p2([envelope(data(1)) slidingrms(data(1),10)])
 %
-%    See also: envelope, slidingam, slidefun, slidingavg, seizfun
+%    See also: envelope, slidingabsmean, slidingfun, slidingavg, seizmofun
 
 %     Version History:
 %        Apr.  9, 2008 - initial version
@@ -80,9 +80,10 @@ function [data]=slidingrms(data,nsamples,varargin)
 %                        name changed from RMS to SLIDINGRMS
 %        Oct.  7, 2008 - now just an alias to SLIDINGMEAN and SEISFUN
 %        Nov. 13, 2008 - update to use SLIDINGAVG and SEIZFUN
+%        Nov. 22, 2008 - update for new names again
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2008 at 22:00 GMT
+%     Last Updated Nov. 22, 2008 at 22:00 GMT
 
 % todo:
 
@@ -90,9 +91,9 @@ function [data]=slidingrms(data,nsamples,varargin)
 error(nargchk(2,8,nargin))
 
 % check data structure
-error(seizchk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % alias to other functions
-data=seizfun(data,@(x)sqrt(slidingavg(x.^2,nsamples,varargin{:})));
+data=seizmofun(data,@(x)sqrt(slidingavg(x.^2,nsamples,varargin{:})));
 
 end

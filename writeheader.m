@@ -1,31 +1,31 @@
-function []=wh(data)
-%WH    Write SEIZMO data header info to datafiles
+function []=writeheader(data)
+%WRITEHEADER    Write SEIZMO data header info to datafiles
 %
-%    Description: WH(DATA) writes SEIZMO data headers as datafiles on disk.  
-%     Primarily this is for updating the headers of existing datafiles to 
-%     match the SEIZMO DATA structure.  Struct fields 'location' and 'name'
-%     are used to create or write to a file on disk.  Byte-order is set
-%     using the 'endian' field.
+%    Description: WRITEHEADER(DATA) writes SEIZMO data headers as datafiles
+%     on disk.  Primarily this is for updating the headers of existing
+%     datafiles to match the SEIZMO DATA structure.
 %
 %    Warning:  
 %     If you want to modify the filetype, version or byte-order of
-%     datafiles with SEIZMO, use RSEIS and WSEIS to read/write the entire
-%     datafile so that the data can also be adjusted to the new format.
-%     Using RH and WH in conjunction with a filetype, version or byte-order
-%     change is NOT recommended as it only changes the header and will
-%     likely corrupt your datafiles!
+%     datafiles with SEIZMO, use READSEIZMO and WRITESEIZMO to read/write
+%     the entire datafile so that the data can also be adjusted to the new
+%     format.  Using READHEADER and WRITEHEADER in conjunction with a
+%     filetype, version or byte-order change is NOT recommended as it only
+%     changes the header and will likely corrupt your datafiles!
 %
 %    Tested on: Matlab r2007b
 %
 %    Header changes: NONE
 %
-%    Usage:    wh(data)
+%    Usage:    writeheader(data)
 %
 %    Examples:
 %     Read in some datafile's headers, modify them, and write out changes:
-%      wh(ch(rh('A.SAC'),'kuser0','QCed'))
+%      writeheader(changeheader(readheader('A.SAC'),'kuser0','QCed'))
 %
-%    See also:  wseis, rseis, bseis, rpdw, rdata, rh, seisdef, gv
+%    See also:  writeseizmo, readseizmo, bseizmo, readdatawindow, readdata,
+%               readheader, seizmodef, getversion, changeheader, getheader,
+%               listheader, getlgc, getenumid, getenumdesc, getncmp
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -40,9 +40,10 @@ function []=wh(data)
 %        Oct. 17, 2008 - supports new struct layout, added CHKHDR support
 %        Oct. 27, 2008 - update for struct changes, remove CHKHDR so user
 %                        can write whatever they want to disk
+%        Nov. 17, 2008 - update for new name schema (now WRITEHEADER)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 27, 2008 at 04:00 GMT
+%     Last Updated Nov. 17, 2008 at 18:20 GMT
 
 % todo:
 
@@ -50,7 +51,7 @@ function []=wh(data)
 error(nargchk(1,1,nargin))
 
 % headers setup (checks struct too)
-[h,vi]=vinfo(data);
+[h,vi]=versioninfo(data);
 
 % loop over records
 for i=1:numel(data)
@@ -67,39 +68,43 @@ for i=1:numel(data)
             % check for filetype/version/byte-order change
             if(filetype~=data(i).filetype)
                 warning('seizmo:wh:filetypeMismatch',...
-                    ['Filetype of existing file %s does NOT '...
-                    'match the output filetype!\n'...
-                    'Data corruption is likely to occur!'],name);
+                    ['Filetype of existing file does '...
+                    'NOT match the output filetype!\n'...
+                    'Record: %d, File: %s\n' ...
+                    'Data corruption is likely to occur!'],i,name);
             end
             if(fileversion~=data(i).version)
                 warning('seizmo:wh:versionMismatch',...
-                    ['Version of existing file %s does ' ...
+                    ['Version of existing file does ' ...
                     'NOT match output filetype version!\n' ...
-                    'Data corruption is likely to occur!'],name);
+                    'Record: %d, File: %s\n' ...
+                    'Data corruption is likely to occur!'],i,name);
             end
-            if(fileendian~=data(i).endian)
+            if(fileendian~=data(i).byteorder)
                 warning('seizmo:wh:endianMismatch',...
-                    ['Byte-order of existing file %s does '...
+                    ['Byte-order of existing file does '...
                     'NOT match output header byte-order!\n'...
-                    'Data corruption is likely to occur!'],name);
+                    'Record: %d, File: %s\n' ...
+                    'Data corruption is likely to occur!'],i,name);
             end
             
             % open file for modification
-            fid=fopen(name,'r+',data(i).endian);
+            fid=fopen(name,'r+',data(i).byteorder);
         % file exists but is not SEIZMO datafile
         else
             % SEIZMO is gonna trash your file!
             warning('seizmo:wh:badFile',...
-                ['Existing file %s is not a SEIZMO datafile.\n' ...
-                'Attempting to overwrite file...'],name);
+                ['Existing file is not a SEIZMO datafile.\n' ...
+                'Record: %d, File: %s\n' ...
+                'Attempting to overwrite file...'],i,name);
             
             % overwrite file
-            fid=fopen(name,'w',data(i).endian);
+            fid=fopen(name,'w',data(i).byteorder);
         end
     % file doesn't exist ==> make new file
     else
         % new file
-        fid=fopen(name,'w',data(i).endian);
+        fid=fopen(name,'w',data(i).byteorder);
     end
     
     % check fid
@@ -108,7 +113,7 @@ for i=1:numel(data)
         error('seizmo:wh:badFID',...
             ['File not openable for writing!\n'...
             '(Permissions problem / conflict with directory?)\n'...
-            'File: %s\n'],name);
+            'Record: %d, File: %s\n'],i,name);
     end
     
     % fill header with dummy bytes (so we can seek around)
@@ -120,7 +125,7 @@ for i=1:numel(data)
         % write failed
         fclose(fid);
         error('seizmo:wh:writeFailed',...
-            'Writing failed for file %s !\n',name);
+            'Writing failed!\nRecord: %d, File: %s',i,name);
     end
     
     % write header

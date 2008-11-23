@@ -1,7 +1,7 @@
-function [data,failed]=cutim(data,varargin)
-%CUTIM    Cut SEIZMO data records in memory
+function [data,failed]=cut(data,varargin)
+%CUT    Cut SEIZMO data records
 %
-%    Description: CUTIM(DATA,PDW) cuts the records in DATA to the window
+%    Description: CUT(DATA,PDW) cuts the records in DATA to the window
 %     limits defined by PDW and outputs the updated dataset.  Header fields
 %     are updated to match the windowed data.  Works with unevenly sampled
 %     data.
@@ -50,20 +50,26 @@ function [data,failed]=cutim(data,varargin)
 %     11), the window defaults to the entire record ('b',0,'e',0) - ie no 
 %     window.
 %
-%     CUTIM(...,'FILL',TRUE|FALSE) turns on/off the filling of data gaps to
+%     CUT(...,'CMPLIST',LIST) allows specifying only certain components to
+%     be included in the output.  Basically any components not in the list
+%     are cut.  LIST should be either a row vector of indices or ':'.  It
+%     may also be an array of rows of indices or ':' (use a cell array to
+%     get a mixture.  Default is ':' (all components).
+%
+%     CUT(...,'FILL',TRUE|FALSE) turns on/off the filling of data gaps to
 %     allow records that don't extend for the entire window to do so by
 %     padding them with zeros.  Does not work with unevenly sampled data.
 %     This option is useful for operations that require records to have the
 %     same length.  See option 'FILLER' to alter the fill value.  By 
 %     default 'FILL' is false (no fill).
 %
-%     CUTIM(...,'FILLER',VALUE) changes the fill value to VALUE.  Adjusting
+%     CUT(...,'FILLER',VALUE) changes the fill value to VALUE.  Adjusting
 %     this value does NOT turn option 'FILL' to true.  By default 'FILLER'
 %     is set to 0 (zero).
 %
-%     [DATA,FAILED]=CUTIM(...,'TRIM',TRUE|FALSE) turns on/off deleting
+%     [DATA,FAILED]=CUT(...,'TRIM',TRUE|FALSE) turns on/off deleting
 %     records that have no data (after cutting) as well as spectral and xyz
-%     records (which are not supported by CUTIM).  Optional output FAILED 
+%     records (which are not supported by CUT).  Optional output FAILED 
 %     gives the indices of these records (with respect to their position in
 %     the input DATA).  By default 'TRIM' is set to true (deletes records).
 %
@@ -77,36 +83,36 @@ function [data,failed]=cutim(data,varargin)
 %     - Multiple component data is supported.
 %     - FILL only works with evenly sampled data.
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab 7
 %     
-%    Header changes: B, E, NPTS, DELTA, ODELTA, LEVEN
-%                    DEPMEN, DEPMIN, DEPMAX
+%    Header changes: B, E, NPTS, DELTA, NCMP, DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage: data=cutim(data,pdw)
-%           data=cutim(data,pdw,'fill',true|false)
-%           data=cutim(data,pdw,'fill',true|false,'filler',value)
-%           [data,failed]=cutim(data,pdw,...'trim',true|false)
+%    Usage: data=cut(data,pdw)
+%           data=cut(...,'cmplist',list,...)
+%           data=cut(...,'fill',logical,...)
+%           data=cut(...,'filler',value,...)
+%           [data,failed]=cut(...,'trim',logical,...)
 %
 %    Examples:
 %     cut a 400 sample window starting from the 33rd sample
-%       data=cutim(data,'x',33,'n',400);
+%       data=cut(data,'x',33,'n',400);
 %
 %     cut out a 90s window around t1
-%       data=cutim(data,'t1',-30,'t1',60);
+%       data=cut(data,'t1',-30,'t1',60);
 %
 %     cut one hour starting at the origin time, 
 %     padding incomplete records with zeros
-%       data=cutim(data,'o',0,3600,'fill',1);
+%       data=cut(data,'o',0,3600,'fill',1);
 %
 %     cut first 300 seconds of records
-%       data=cutim(data,'b',0,300);
+%       data=cut(data,'b',0,300);
 %
 %     cut from 300 to 500 seconds relative to reference time
-%       data=cutim(data,300,500);
+%       data=cut(data,300,500);
 %     or explicitly
-%       data=cutim(data,'z',300,'z',500);
+%       data=cut(data,'z',300,'z',500);
 %
-%    See also: rpdw
+%    See also: readdatawindow, getheader, changeheader
 
 %     Version History:
 %        Oct. 30, 2007 - initial version
@@ -133,36 +139,35 @@ function [data,failed]=cutim(data,varargin)
 %     Last Updated Sep. 22, 2008 at 07:25 GMT
 
 % todo:
-% - make sure dataless & 1point have LEVEN==undef
 
 % input check
 error(nargchk(1,11,nargin))
 
-% check data structure
-error(seischk(data,'dep'))
+% headers setup (also checks struct)
+[h,vi]=versioninfo(data);
 
-% parse cut parameters
-[ref1,ref2,offset1,offset2,fill,filler,trim]=cutparam(varargin{:});
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
+
+% turn off header checking
+oldcheckheaderstate=get_checkheader_state;
+set_checkheader_state(false);
 
 % number of records
 nrecs=numel(data);
 
-% expand scalars
-if(numel(offset1)==1); offset1(1:nrecs,1)=offset1; end
-if(numel(offset2)==1); offset2(1:nrecs,1)=offset2; end
+% parse cut parameters
+option=cutparameters(nrecs,varargin{:});
 
-% cut parameter checks
-if(numel(offset1)~=nrecs || numel(offset2)~=nrecs)
-    error('seizmo:cutim:badInputSize',...
-        'Number of elements in OFFSET not correct!')
-end
-
-% grab spacing info
-
-iftype=genumdesc(data,'iftype');
-leven=glgc(data,'leven');
-error(lgcchk('leven',leven))
-[b,delta]=gh(data,'b','delta');
+% header info
+ncmp=getncmp(data);
+[b,delta,e,npts]=getheader(data,'b','delta','e','npts');
+iftype=getenumdesc(data,'iftype');
+leven=getlgc(data,'leven');
 
 % window begin point
 bt=[]; bp=[];
@@ -364,5 +369,9 @@ end
 
 % removed failed/empty cut records
 if(trim); data(failed)=[]; end
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
+set_checkheader_state(oldcheckheaderstate);
 
 end

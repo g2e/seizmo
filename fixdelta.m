@@ -1,5 +1,5 @@
 function [data]=fixdelta(data)
-%FIXDELTA    Fix sample spacing for SEIZMO data records
+%FIXDELTA    Fix sample spacing for SEIZMO records
 %
 %    Description:  FIXDELTA(DATA) fixes the sample spacing (DELTA header
 %     field) of records in DATA to be the decimal equivalent of a fraction
@@ -17,9 +17,9 @@ function [data]=fixdelta(data)
 %
 %    Examples:
 %     Force the double precision and update the delta field:
-%      data=fixdelta(recast(data,'double'));
+%      data=fixdelta(changeclass(data,'double'));
 %
-%    See also: rat, recast
+%    See also: rat, changeclass
 
 %     Version History:
 %        Feb. 21, 2008 - initial version
@@ -28,9 +28,10 @@ function [data]=fixdelta(data)
 %        Mar.  4, 2008 - minor doc update
 %        Oct.  8, 2008 - doc update, add history
 %        Nov. 16, 2008 - update for new name schema, doc and history update
+%        Nov. 22, 2008 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2008 at 06:10 GMT
+%     Last Updated Nov. 22, 2008 at 22:40 GMT
 
 % todo:
 

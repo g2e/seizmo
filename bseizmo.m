@@ -1,7 +1,7 @@
-function [data]=bseis(varargin)
-%BSEIS   Arranges xy data into a SEIZMO data structure
+function [data]=bseizmo(varargin)
+%BSEIZMO    Arranges xy data into a SEIZMO data structure
 %
-%    Description: BSEIS(IND1,DEP1,IND2,DEP2,...) takes arrays of
+%    Description: BSEIZMO(IND1,DEP1,IND2,DEP2,...) takes arrays of
 %     independent and dependent components and arranges them into a SEIZMO
 %     data structure (one record per IND/DEP pair) to be compatible with
 %     SEIZMO functions.  Independent data must be a vector as multiple
@@ -23,19 +23,18 @@ function [data]=bseis(varargin)
 %      DELTA, B, E, NPTS, DEPMEN, DEPMIN, DEPMAX, IFTYPE, LEVEN, LOVROK,
 %      NVHDR, KNETWK, and for unevenly spaced data ODELTA
 %
-%    Usage:    data=bseis(IND1,DEP1,IND2,DEP2...)
+%    Usage:    data=bseizmo(IND1,DEP1,IND2,DEP2...)
 %
 %    Examples:
 %     To create a square root function in Matlab and then convert the array
 %     information into a SEIZMO compatible structure and ultimately write
-%     to a formatted binary file (SAC version 6 equivalent):
+%     to a formatted binary file:
 %      times=linspace(0,30,1000);
 %      amps=sqrt(times);
-%      data=bseis(times,amps);
-%      data.name='myfile';
-%      wseis(data);
+%      data=bseizmo(times,amps);
+%      wseizmo(data);
 %
-%    See also:  wseis, rseis
+%    See also:  wseizmo, rseizmo
 
 %     Version History:
 %        Oct. 29, 2007 - initial version
@@ -61,68 +60,67 @@ function [data]=bseis(varargin)
 %        Oct. 27, 2008 - update for struct changes, better SEIZMO global
 %                        handling, made consistent with new requirements,
 %                        single CH call
+%        Nov. 18, 2008 - default is SEIZMO Binary (v201), better struct
+%                         initialization, renamed from BSEIS to BSEIZMO
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 27, 2008 at 06:55 GMT
+%     Last Updated Nov. 18, 2008 at 06:45 GMT
 
 % todo:
 
 % turn off checking
-oldseischkstate=get_seischk_state;
-set_seischk_state(true);
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
 
 % check number of inputs
 if (mod(nargin,2)) 
-    error('seizmo:bseis:badNargs','Unpaired IND/DEP data!')
+    error('seizmo:bseizmo:badNargs','Unpaired IND/DEP data!')
 end
 
 % defaults
 option.FILETYPE='SEIZMO Binary';
-option.VERSION=6;
-option.ENDIAN=[];
+option.VERSION=201;
+option.BYTEORDER=nativebyteorder;
 
 % get options from SEIZMO global
 global SEIZMO
-if(isfield(SEIZMO,'BSEIS'))
-    if(isfield(SEIZMO.BSEIS,'ENDIAN'))
-        if(strcmpi(SEIZMO.BSEIS.ENDIAN,{'ieee-le' 'ieee-be'}))
-            option.ENDIAN=lower(SEIZMO.BSEIS.ENDIAN);
+if(isfield(SEIZMO,'BSEIZMO'))
+    if(isfield(SEIZMO.BSEIZMO,'ENDIAN'))
+        if(strcmpi(SEIZMO.BSEIZMO.BYTEORDER,{'ieee-le' 'ieee-be'}))
+            option.BYTEORDER=lower(SEIZMO.BSEIZMO.BYTEORDER);
         else
-            warning('seizmo:bseis:badOption',...
-                'ENDIAN option from SEIZMO global unknown => skipping!');
+            warning('seizmo:bseizmo:badOption',...
+               'Unknown BYTEORDER option from SEIZMO global => skipping!');
         end
     end
-    if(isfield(SEIZMO.BSEIS,'FILETYPE'))
-        if(isfield(SEIZMO.BSEIS,'VERSION')...
-            && isscalar(SEIZMO.BSEIS.VERSION)...
-            && isnumeric(SEIZMO.BSEIS.PREFHDRVER)...
-            && any(SEIZMO.BSEIS.VERSION==vvseis(SEIZMO.BSEIS.FILETYPE)))
-            option.FILETYPE=SEIZMO.BSEIS.FILETYPE;
-            option.VERSION=SEIZMO.BSEIS.VERSION;
+    if(isfield(SEIZMO.BSEIZMO,'FILETYPE'))
+        if(isfield(SEIZMO.BSEIZMO,'VERSION')...
+                && isscalar(SEIZMO.BSEIZMO.VERSION)...
+                && isnumeric(SEIZMO.BSEIZMO.VERSION)...
+                && any(SEIZMO.BSEIZMO.VERSION==...
+                validseizmo(SEIZMO.BSEIZMO.FILETYPE)))
+            option.FILETYPE=SEIZMO.BSEIZMO.FILETYPE;
+            option.VERSION=SEIZMO.BSEIZMO.VERSION;
         else
-            warning('seizmo:bseis:badOption',...
-                'FILETYPE option from SEIZMO global unknown => skipping!');
+            warning('seizmo:bseizmo:badOption',...
+                'Unknown FILETYPE option from SEIZMO global => skipping!');
         end
     end
-    if(isfield(SEIZMO.BSEIS,'VERSION'))
-        if(isscalar(SEIZMO.BSEIS.VERSION)...
-            && isnumeric(SEIZMO.BSEIS.VERSION)...
-            && any(SEIZMO.BSEIS.VERSION==vvseis(option.FILETYPE)))
-            option.VERSION=SEIZMO.BSEIS.VERSION;
+    if(isfield(SEIZMO.BSEIZMO,'VERSION'))
+        if(isscalar(SEIZMO.BSEIZMO.VERSION)...
+                && isnumeric(SEIZMO.BSEIZMO.VERSION)...
+                && any(SEIZMO.BSEIZMO.VERSION==...
+                validseizmo(option.FILETYPE)))
+            option.VERSION=SEIZMO.BSEIZMO.VERSION;
         else
-            warning('seizmo:bseis:badOption',...
-                'VERSION option from SEIZMO global unknown => skipping!');
+            warning('seizmo:bseizmo:badOption',...
+                'Unknown VERSION option from SEIZMO global => skipping!');
         end
     end
 end
 
 % get the version definition
-h=seisdef(option.FILETYPE,option.VERSION);
-
-% get the native byteorder if needed
-if(isempty(option.ENDIAN))
-    option.ENDIAN=nativeendian;
-end
+h=seizmodef(option.FILETYPE,option.VERSION);
 
 % undefine numeric header
 undef=nan(h.size,1,h.store);
@@ -147,8 +145,9 @@ end
 
 % create structure
 nrecs=nargin/2;
-data(1:nrecs,1)=struct('location',[],'name',[],'filetype',[],...
-    'version',[],'endian',[],'hasdata',[],'head',[],'dep',[]);
+data(1:nrecs,1)=struct('location','.','name',[],...
+    'filetype',option.FILETYPE,'version',option.VERSION,...
+    'byteorder',option.BYTEORDER,'hasdata',true,'head',undef,'dep',[]);
 
 % loop for each pair
 leven=true(nrecs,1); delta=ones(nrecs,1);
@@ -159,16 +158,16 @@ for i=1:2:nargin
     
     % check type
     if(~isnumeric(varargin{i}))
-        error('seizmo:bseis:badInput',...
+        error('seizmo:bseizmo:badInput',...
             'Independent data must be numeric: pair %d !',j);
     elseif(~isnumeric(varargin{i+1}))
-        error('seizmo:bseis:badInput',...
+        error('seizmo:bseizmo:badInput',...
             'Dependent data must be numeric: pair %d !',j);
     end
     
     % check size
-    if(~isvector(varargin{i}))
-        error('seizmo:bseis:badInput',...
+    if(~isvector(varargin{i}) && ~isempty(varargin{i}))
+        error('seizmo:bseizmo:badInput',...
             'Independent data must be a vector: pair %d !',j);
     end
     
@@ -179,7 +178,7 @@ for i=1:2:nargin
     if(isvector(varargin{i+1}))
         % vectors can be row or column vectors
         if(npts(j)~=length(varargin{i+1}))
-            error('seizmo:bseis:badInput',...
+            error('seizmo:bseizmo:badInput',...
                 ['Dependent data does not match independent data length'...
                  ': pair %d !'],j);
         end
@@ -191,7 +190,7 @@ for i=1:2:nargin
         % arrays must have components oriented down columns
         [ndpts,ncmp(j)]=size(varargin{i+1});
         if(npts(j)~=ndpts)
-            error('seizmo:bseis:badInput',...
+            error('seizmo:bseizmo:badInput',...
                 ['Dependent data does not match independent data length'...
                  ': pair %d !'],j);
         end
@@ -201,15 +200,7 @@ for i=1:2:nargin
     end
     
     % edit name
-    data(j).name=['SEIZMO.' num2str(j) '.sac'];
-    
-    % fill in other fields
-    data(j).location='.';
-    data(j).endian=option.ENDIAN;
-    data(j).filetype=option.FILETYPE;
-    data(j).version=option.VERSION;
-    data(j).hasdata=true;
-    data(j).head=undef;
+    data(j).name=['SEIZMO.' num2str(j) '.sz'];
     
     % handle 0pt
     if(npts(j)==0); continue; end
@@ -232,13 +223,14 @@ for i=1:2:nargin
 end
 
 % write header changes
-data=ch(data,'b',b,'e',e,'delta',delta,'npts',npts,'ncmp',ncmp,...
-    'depmen',depmen,'depmin',depmin,'depmax',depmax,...
+data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
+    'depmen',depmen,'depmin',depmin,'depmax',depmax,'ncmp',ncmp,...
     'iftype','General X vs Y file','lovrok','true',...
-    'nvhdr',option.VERSION,'knetwk','SEIZMO','leven',leven);
+    'idep','iunkn','iztype','iunkn',...
+    'nvhdr',option.VERSION,'knetwk','SZ','leven',leven);
 
 
 % toggle checking back
-set_seischk_state(oldseischkstate);
+set_seizmocheck_state(oldseizmocheckstate);
 
 end

@@ -1,14 +1,14 @@
-function [data]=sub(data,constant,cmp)
-%SUB    Subtract a constant from SEIZMO data records
+function [data]=subtract(data,constant,cmp)
+%SUBTRACT    Subtract a constant from SEIZMO records
 %
-%    Description: SUB(DATA,CONSTANT) subtracts a constant from the 
-%     dependent component(s) of SEIZMO data records.  For multi-component 
+%    Description: SUBTRACT(DATA,CONSTANT) subtracts a constant from the 
+%     dependent component(s) of SEIZMO records.  For multi-component 
 %     files, this operation is performed on every dependent component (this
 %     includes spectral files).
 %
-%     SUB(DATA,CONSTANT,CMP) allows for operations on just components in
-%     the list CMP.  By default all components are operated on (use ':' to
-%     replicate the default behavior).  See the examples section for a 
+%     SUBTRACT(DATA,CONSTANT,CMP) allows for operations on just components
+%     in the list CMP.  By default all components are operated on (use ':'
+%     to replicate the default behavior).  See the examples section for a 
 %     usage case.
 %
 %    Notes:
@@ -18,20 +18,20 @@ function [data]=sub(data,constant,cmp)
 %     - CMP is the dependent component(s) to work on (default is all)
 %     - an empty list of components will not modify any components
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:    data=sub(data,constant)
-%              data=sub(data,constant,cmp_list)
+%    Usage:    data=subtract(data,constant)
+%              data=subtract(data,constant,cmp_list)
 %
 %    Examples:
 %     Do a Hilbert transform by converting records to the frequency 
 %     domain, subtracting pi/2 from the phase (component 2 in spectral
 %     records), and converting back to the time domain:
-%      data=idft(sub(dft(data),pi/2,2))
+%      data=idft(subtract(dft(data),pi/2,2))
 %
-%    See also: add, mul, divide, seisfun
+%    See also: add, multiply, divide, seizmofun
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -45,9 +45,10 @@ function [data]=sub(data,constant,cmp)
 %                        allow constant to be an array, dataless support
 %                        added, cmp checks, no longer uses add, doc update
 %        Oct.  6, 2008 - minor code cleaning
+%        Nov. 22, 2008 - update to new name schema (now SUBTRACT)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2008 at 22:45 GMT
+%     Last Updated Nov. 22, 2008 at 07:25 GMT
 
 % todo:
 
@@ -55,7 +56,7 @@ function [data]=sub(data,constant,cmp)
 error(nargchk(2,3,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % no constant case
 if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
@@ -63,7 +64,7 @@ if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
 % default component
 if(nargin==2); cmp=':'; 
 elseif(any(fix(cmp)~=cmp) || (~isnumeric(cmp) && ~strcmpi(':',cmp)))
-    error('seizmo:sub:badInput','Component list is bad!');
+    error('seizmo:subtract:badInput','Component list is bad!');
 end
 
 % number of records
@@ -71,11 +72,11 @@ nrecs=numel(data);
 
 % check constant
 if(~isnumeric(constant))
-    error('seizmo:sub:badInput','Constant must be numeric!');
+    error('seizmo:subtract:badInput','Constant must be numeric!');
 elseif(isscalar(constant))
     constant=constant(ones(nrecs,1));
 elseif(numel(constant)~=nrecs)
-    error('seizmo:sub:badInput',...
+    error('seizmo:subtract:badInput',...
         'Number of elements in constant not equal to number of records!');
 end
 
@@ -83,14 +84,16 @@ end
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
     if(isempty(data(i).dep)); continue; end
-    oclass=str2func(class(data(i).dep));
-    data(i).dep(:,cmp)=oclass(double(data(i).dep(:,cmp))-constant(i));
-    depmen(i)=mean(data(i).dep(:)); 
+    if(~isempty(cmp))
+        oclass=str2func(class(data(i).dep));
+        data(i).dep(:,cmp)=oclass(double(data(i).dep(:,cmp))-constant(i));
+    end
+    depmen(i)=mean(data(i).dep(:));
     depmin(i)=min(data(i).dep(:)); 
     depmax(i)=max(data(i).dep(:));
 end
 
 % update header
-data=ch(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
 
 end

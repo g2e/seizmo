@@ -1,0 +1,35 @@
+Things to worry about across Matlab versions:
+
+Prior to 7.3:
+1. struct assignment bug
+	affects
+	- ???
+
+Prior to 7.2:
+1. character encoding via fread/fwrite
+	affects (???)
+	- readheader
+	- writeheader
+	- writeseizmo
+
+Prior to 7.1:
+1. isfield did not handle cell input
+	affects:
+	- lots... :(
+2. cellfun did not handle functions
+	affects:
+	- seizmocheck
+	- checkheader
+
+
+Current issues with Octave:
+1. cellstr support for several functions
+   including strcmp*, setdiff, intersect
+	affects:
+	- lots... :(
+2. error does not take struct input
+	affects
+	- seizmocheck
+
+
+

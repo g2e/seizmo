@@ -1,15 +1,15 @@
-function [data,failed]=rdata(data,varargin)
-%RDATA    Read SEIZMO data from datafiles
+function [data,failed]=readdata(data,varargin)
+%READDATA    Read SEIZMO data from datafiles
 %
-%    Description: [OUTDATA,FAILED]=RDATA(DATA) reads in data from SEIZMO 
+%    Description: [OUTDATA,FAILED]=READDATA(DATA) reads in data from SEIZMO 
 %     compatible datafiles utilizing the header info in DATA, and returns 
 %     the combined dataset as OUTDATA.  Datafiles that are not SEIZMO
 %     compatible or have errors will be removed from the returned dataset.
 %     Optional output FAILED returns a logical matrix equal in size to DATA
 %     with entries set to TRUE for those records which had reading errors.
 %
-%     [OUTDATA,FAILED]=RDATA(DATA,'TRIM',LOGICAL) sets optional parameter
-%     TRIM to determine how RDATA handles data that had errors. By default 
+%     [OUTDATA,FAILED]=READDATA(DATA,'TRIM',LOGICAL) sets option parameter
+%     TRIM to determine how to handle data that had errors.  By default 
 %     TRIM is set to TRUE, which deletes any records from OUTDATA that had 
 %     errors while reading.  Setting TRIM to FALSE will preserve records in
 %     OUTDATA that had errors.
@@ -21,7 +21,7 @@ function [data,failed]=rdata(data,varargin)
 %      name - file name
 %      filetype - type of datafile
 %      version - version of filetype
-%      endian - byte-order of file (ieee-le or ieee-be)
+%      byteorder - byte-order of file (ieee-le or ieee-be)
 %      hasdata - logical indicating if data is read in
 %      head - contains header data
 %
@@ -52,21 +52,23 @@ function [data,failed]=rdata(data,varargin)
 %
 %    Tested on: Matlab r2007b
 %
-%    Header changes: Any inconsistent field found with CHKHDR
+%    Header changes: see CHECKHEADER
 %
-%    Usage: data=rdata(data)
-%           data=rdata(data,'trim',true|false)
-%           [data,failed]=rdata(...)
+%    Usage: data=readdata(data)
+%           data=readdata(data,'trim',true|false)
+%           [data,failed]=readdata(...)
 %
 %    Examples:
 %     Read in datafiles (headers only) from the current directory, subset
 %     it to include only time series files, and then read in the associated
 %     time series data:
-%      data=rh('*')
-%      data=data(strcmpi(genumdesc(data,'iftype'),'Time Series File'))
-%      data=rdata(data)
+%      data=readheader('*')
+%      data=data(strcmpi(getenumdesc(data,'iftype'),'Time Series File'))
+%      data=readdata(data)
 %
-%    See also: rh, rpdw, rseis, wseis, bseis, seisdef, gv, seissize
+%    See also: readheader, readdatawindow, readseizmo, writeseizmo, getlgc,
+%              writeheader, bseizmo, seizmodef, getversion, seizmosize
+%              getheader, listheader, changeheader, getenumid, getenumdesc
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -90,9 +92,10 @@ function [data,failed]=rdata(data,varargin)
 %        Oct. 27, 2008 - minor doc update, updated for struct changes,
 %                        make use of state changes for SEISCHK & CHKHDR
 %        Nov. 12, 2008 - fix allocation of ind cmp for uneven records
+%        Nov. 17, 2008 - update for new name schema (now READDATA)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 12, 2008 at 10:25 GMT
+%     Last Updated Nov. 17, 2008 at 18:35 GMT
 
 % todo:
 
@@ -106,7 +109,7 @@ trim=true;
 if(nargin==2 && ~isempty(varargin{1}))
     if((~islogical(varargin{1}) && ~isnumeric(varargin{1})) ...
             || ~isscalar(varargin{1}))
-        error('seizmo:rdata:badInput',...
+        error('seizmo:readdata:badInput',...
             'TRIM option must be logical!');
     else
         trim=varargin{1};
@@ -118,38 +121,38 @@ if(nargin==3)
     if(strcmpi(varargin{1},'trim'))
         if(~iscalar(varargin{2}) || ...
                 (~islogical(varargin{2}) && ~isnumeric(varargin{2})))
-            error('seizmo:rdata:badInput',...
+            error('seizmo:readdata:badInput',...
                 'TRIM option must be logical!');
         else
             trim=varargin{2};
         end
     else
-        error('seizmo:rdata:badInput','Unknown option!');
+        error('seizmo:readdata:badInput','Unknown option!');
     end
 end
 
 % headers setup (also checks struct)
-[h,vi]=vinfo(data);
+[h,vi]=versioninfo(data);
 
 % turn off struct checking
-oldseischkstate=get_seischk_state;
-set_seischk_state(true);
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
 
 % check header
-data=chkhdr(data);
+data=checkheader(data);
 
 % turn off header checking
-oldchkhdrstate=get_chkhdr_state;
-set_chkhdr_state(true);
+oldcheckheaderstate=get_checkheader_state;
+set_checkheader_state(false);
 
 % estimated filesize from header
-est_bytes=seissize(data);
+est_bytes=seizmosize(data);
 
 % header info
-ncmp=gncmp(data);
-npts=gh(data,'npts');
-iftype=genumdesc(data,'iftype');
-leven=glgc(data,'leven');
+ncmp=getncmp(data);
+npts=getheader(data,'npts');
+iftype=getenumdesc(data,'iftype');
+leven=getlgc(data,'leven');
 
 % number of records
 nrecs=numel(data);
@@ -161,12 +164,12 @@ for i=1:nrecs
     name=fullfile(data(i).location,data(i).name);
     
     % open file for reading
-    fid=fopen(name,'r',data(i).endian);
+    fid=fopen(name,'r',data(i).byteorder);
     
     % fid check
     if(fid<0)
         % non-existent file or directory
-        warning('seizmo:rdata:badFID',...
+        warning('seizmo:readdata:badFID',...
             'Record: %d, File not openable: %s !',i,name);
         failed(i)=true;
         continue;
@@ -182,7 +185,7 @@ for i=1:nrecs
         % SAC BUG: converting a spectral file to a time series file does
         % not deallocate the second component, thus the written file has
         % twice as much data.
-        warning('seizmo:rdata:badFileSize',...
+        warning('seizmo:readdata:badFileSize',...
             ['Record: %d, File: %s\n'...
             'Filesize does not match header info!\n'...
             '%d (estimated) > %d (on disk) --> Reading Anyways!'...
@@ -191,7 +194,7 @@ for i=1:nrecs
     elseif(bytes<est_bytes(i))
         % size too small - skip
         fclose(fid);
-        warning('seizmo:rdata:badFileSize',...
+        warning('seizmo:readdata:badFileSize',...
             ['Record: %d, File: %s\n'...
             'Filesize does not match header info!\n'...
             '%d (estimated) < %d (on disk) --> Skipping!'],...
@@ -256,7 +259,7 @@ end
 if(trim); data(failed)=[]; end
 
 % toggle checking back
-set_seischk_state(oldseischkstate);
-set_chkhdr_state(oldchkhdrstate);
+set_seizmocheck_state(oldseizmocheckstate);
+set_checkheader_state(oldcheckheaderstate);
 
 end

@@ -1,24 +1,42 @@
 function [data]=reverse(data)
-%REVERSE    Time reverse SEIZMO data records
+%REVERSE    Reverse SEIZMO records
 %
-%    Description: Time reverses SEIZMO data records so that the beginning
-%     and end of each record is switched.
+%    Description: REVERSE(DATA) reverses the dependent components in
+%     SEIZMO records so that the start and end of each is switched.
 %
-%    Usage: [data]=reverse(data)
+%    Notes:
+%     - useful for flipping negative & positive frequencies
+%
+%    Tested on: Matlab r2007b
+%
+%    Header changes: NONE
+%
+%    Usage:    data=reverse(data)
 %
 %    Examples:
+%     See what this operation does:
+%      plot1([data(1) reverse(data(1))])
 %
-%    See also: 
+%    See also:
+
+%     Version History:
+%        Apr.  9, 2008 - initial version
+%        Nov. 22, 2008 - doc update, history fix, .dep
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Nov. 22, 2008 at 09:20 GMT
+
+% todo:
 
 % check nargin
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'x'))
+error(seizmocheck(data,'dep'))
 
 % reverse records
-for i=1:length(data)
-    data(i).x=data(i).x(end:-1:1,:);
+for i=1:numel(data)
+    data(i).dep=data(i).dep(end:-1:1,:);
 end
 
 end

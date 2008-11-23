@@ -1,8 +1,8 @@
 function [data]=interpolate(data,sr,method,new_b,new_e)
-%INTERPOLATE    Interpolates SEIZMO data records to a new samplerate
+%INTERPOLATE    Interpolate SEIZMO records to a new samplerate
 %
-%    Description: INTERPOLATE(DATA,RATE) interpolates SEIZMO data records
-%     in DATA to a new sample rate RATE.  As this is interpolation (the
+%    Description: INTERPOLATE(DATA,RATE) interpolates SEIZMO records in
+%     DATA to a new sample rate RATE.  As this is interpolation (the
 %     default method is spline), edge effects are not an issue as they are
 %     for SYNCSR, DECI, and STRETCH.  RATE can be a vector of rates with 
 %     one element per record in DATA to interpolate records to different 
@@ -18,15 +18,19 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %     window for interpolation.  The window can be a vector list to specify
 %     a separate window for each record.
 %
+%    Notes:
+%
+%    Tested on: Matlab r2007b
+%
 %    Header changes: DELTA, NPTS, LEVEN, B, E, DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage: data=interpolate(data,dt)
-%           data=interpolate(data,dt,method)
-%           data=interpolate(data,dt,method,new_b,new_e)
+%    Usage:    data=interpolate(data,dt)
+%              data=interpolate(data,dt,method)
+%              data=interpolate(data,dt,method,new_b,new_e)
 %
 %    Examples:
 %     interpolate records at 5 sps
-%      data=intrpolate(data,5);  
+%      data=interpolate(data,5);  
 %
 %     interpolate records at 1 sps from 300 seconds to e
 %      data=interpolate(data,1,[],300)
@@ -34,25 +38,40 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %     interpolate at 5 sps from 900 to 950 seconds using linear interp
 %      data_pdiff=interpolate(data,5,'linear',900,950)
 %
-%    See also: syncsr, deci, stretch, iirfilter
+%    See also: syncrates, subsample, oversample, iirfilter
 
 %     Version History:
-%        ????????????? - Initial Version
-%        June 15, 2008 - doc update, name change
+%        Oct. 31, 2007 - initial version
+%        Feb. 16, 2008 - doc update, code cleaning
+%        Feb. 29, 2008 - better checks
+%        Mar.  4, 2008 - better checks, class support
+%        Mar. 20, 2008 - change input order
+%        May  12, 2008 - fix dep* formula
+%        June 15, 2008 - doc update, name changed from INTRPOL8 to
+%                        INTERPOLATE
+%        Nov. 22, 2008 - better checks, .dep & .ind rather than .x & .t,
+%                        doc update, history fix, one CHANGEHEADER call,
+%                        extrapolation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 15, 2008 at 00:20 GMT
+%     Last Updated Nov. 22, 2008 at 20:40 GMT
 
 % check number of arguments
 error(nargchk(2,5,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
 
 % get timing info
-leven=glgc(data,'leven');
-error(lgcchk('leven',leven))
-[b,e,npts,delta]=gh(data,'b','e','npts','delta');
+leven=getlgc(data,'leven');
+[b,e,npts,delta]=getheader(data,'b','e','npts','delta');
 
 % defaults
 if(nargin<5 || isempty(new_e)); new_e=e; end
@@ -63,49 +82,83 @@ if(nargin<3 || isempty(method)); method{1}='spline'; end
 nrecs=numel(data);
 
 % check and expand inputs
-if(isscalar(new_b)); new_b(1:nrecs,1)=new_b;
-elseif(~isvector(new_b) || length(new_b)~=nrecs)
-    error('seizmo:interpolate:badInput','dimensions of new_b are bad')
+if(~isnumeric(new_b))
+    error('seizmo:interpolate:badInput',...
+        'NEW_B must be numeric!');
+elseif(isscalar(new_b))
+    new_b(1:nrecs,1)=new_b;
+elseif(numel(new_b)~=nrecs)
+    error('seizmo:interpolate:badInput',...
+        'NEW_B must be scalar or have the same num of elements as DATA!');
 end
-if(isscalar(new_e)); new_e(1:nrecs,1)=new_e;
-elseif(~isvector(new_e) || length(new_e)~=nrecs)
-    error('seizmo:interpolate:badInput','dimensions of new_e are bad') 
+if(~isnumeric(new_e))
+    error('seizmo:interpolate:badInput',...
+        'NEW_E must be numeric!');
+elseif(isscalar(new_e))
+    new_e(1:nrecs,1)=new_e;
+elseif(numel(new_e)~=nrecs)
+    error('seizmo:interpolate:badInput',...
+        'NEW_E must be scalar or have the same num of elements as DATA!');
 end
-if(isscalar(sr)); sr(1:nrecs,1)=sr;
-elseif(~isvector(sr) || length(sr)~=nrecs)
-    error('seizmo:interpolate:badInput','dimensions of sr are bad') 
+if(~isnumeric(sr))
+    error('seizmo:interpolate:badInput',...
+        'SR must be numeric!');
+elseif(isscalar(sr))
+    sr(1:nrecs,1)=sr;
+elseif(numel(sr)~=nrecs)
+    error('seizmo:interpolate:badInput',...
+        'SR must be scalar or have the same num of elements as DATA!');
 end
 if(ischar(method)); method=cellstr(method); end
 if(~iscellstr(method))
-    error('seizmo:interpolate:badInput','method must be char/cellstr')
+    error('seizmo:interpolate:badInput','METHOD must be char/cellstr!')
 end
-if(isscalar(method)); method=method(ones(nrecs,1),1);
-elseif(~isvector(method) || length(method)~=nrecs)
-    error('seizmo:interpolate:badInput','dimensions of method are bad')
+if(isscalar(method))
+    method(1:nrecs,1)=method;
+elseif(numel(method)~=nrecs)
+    error('seizmo:interpolate:badInput',...
+        'METHOD must be scalar or have the same num of elements as DATA!');
 end
 
 % sampling interval
 dt=1./sr;
 
 % looping for each file
+depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
     % save class and convert to double precision
     oclass=str2func(class(data(i).dep));
-    
-    % make new timing array
-    nt=(new_b(i):dt(i):new_e(i)).';
     
     % old timing of data
     if(strcmp(leven(i),'true')); ot=b(i)+(0:npts(i)-1).'*delta(i);
     else ot=data(i).ind; data(i).ind=[]; end
     
-    % interpolate and convert class back
-    data(i).dep=oclass(interp1(double(ot),double(data(i).dep),double(nt),method{i}));
+    % make new timing array
+    nt=(new_b(i):dt(i):new_e(i)).';
     
-    % update header
-    data(i)=ch(data(i),'delta',dt(i),'b',nt(1),'e',nt(end),...
-        'npts',length(nt),'depmin',min(data(i).dep(:)),'leven','t',...
-        'depmax',max(data(i).dep(:)),'depmen',mean(data(i).dep(:)));
+    % interpolate and convert class back
+    data(i).dep=oclass(interp1(...
+        double(ot),double(data(i).dep),double(nt),method{i},'extrap'));
+    
+    % get values (handling dataless)
+    npts(i)=numel(nt);
+    if(npts(i)==0)
+        b(i)=nan;
+        e(i)=nan;
+    else
+        b(i)=nt(1);
+        e(i)=nt(end);
+        depmen(i)=mean(data(i).dep(:)); 
+        depmin(i)=min(data(i).dep(:)); 
+        depmax(i)=max(data(i).dep(:));
+    end
 end
+
+% update header
+data=changeheader(data,'delta',dt,'b',b,'e',e,'npts',npts,...
+    'leven',true,'depmin',depmin,'depmax',depmax,'depmen',depmen);
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
 
 end

@@ -4,13 +4,13 @@ function [data]=rlim2amph(data)
 %    Description: RLIM2AMPH(DATA) converts SEIZMO real-imaginary records 
 %     to amplitude-phase records.  This is particularly useful for 
 %     switching between the formats when performing basic operations on 
-%     spectral records would otherwise require separating the amplitude and
-%     phase components.  Records in DATA must be of the spectral variety.  
+%     spectral records would require separating the amplitude and phase
+%     components.  Records in DATA must be of the spectral variety.  
 %     Amplitude-phase records are not altered.
 %
 %    Notes:
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: IFTYPE, DEPMEN, DEPMIN, DEPMAX
 %
@@ -18,11 +18,9 @@ function [data]=rlim2amph(data)
 %
 %    Examples:
 %     To simply multiply two records in the frequency domain, they must be
-%     converted to real-imaginary first (the operation can be done on 
-%     amplitude-phase records but requires working on the components 
-%     independently):
+%     converted to real-imaginary first:
 %      data=amph2rlim(data)
-%      data=mulf(data(1),data(2))
+%      data=multiplyrecords(data(1),data(2))
 %      data=rlim2amph(data)
 %
 %    See also: amph2rlim, dft, idft
@@ -33,9 +31,10 @@ function [data]=rlim2amph(data)
 %                        support, updates DEP* fields, .dep rather than .x,
 %                        doc update
 %        Oct.  7, 2008 - minor code cleaning
+%        Nov. 22, 2008 - update for new name schema
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2008 at 02:05 GMT
+%     Last Updated Nov. 22, 2008 at 06:30 GMT
 
 % todo:
 
@@ -43,10 +42,17 @@ function [data]=rlim2amph(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
 
 % retreive header info
-iftype=genumdesc(data,'iftype');
+iftype=getenumdesc(data,'iftype');
 
 % records must be spectral
 if(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
@@ -79,7 +85,10 @@ for i=1:nrecs
 end
 
 % update filetype
-data=ch(data,'iftype','Spectral File-Ampl/Phase',...
+data=changeheader(data,'iftype','Spectral File-Ampl/Phase',...
     'depmax',depmax,'depmin',depmin,'depmen',depmen);
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
 
 end

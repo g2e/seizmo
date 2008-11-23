@@ -1,9 +1,9 @@
-function [data]=slidefun(data,fun,nsamples,varargin)
-%SLIDEFUN    Apply a sliding window function to SEIZMO data records
+function [data]=slidingfun(data,fun,nsamples,varargin)
+%SLIDINGFUN    Apply a sliding window function to SEIZMO records
 %
-%    Description: SLIDEFUN(DATA,FUN,N) applies the function defined by the
-%     function handle FUN to a centered sliding window of 2N+1 samples to 
-%     the dependent component(s) of SEIZMO data records in DATA.  FUN is 
+%    Description: SLIDINGFUN(DATA,FUN,N) applies the function defined by
+%     the function handle FUN to a centered sliding window of 2N+1 samples
+%     to the dependent component(s) of SEIZMO records in DATA.  FUN is 
 %     expected to handle a column vector (single component) or an array 
 %     (multiple component - components are distributed in columns).  Output
 %     of FUN is assigned to the reference data point of the sliding window.  
@@ -12,8 +12,8 @@ function [data]=slidefun(data,fun,nsamples,varargin)
 %     same window size) or a vector (define each record's window size 
 %     separately).
 %
-%     SLIDEFUN(...,'POSITION','CENTER'|'TRAIL'|'LEAD') sets the position of
-%     the sliding window relative to the reference data point.  CENTER 
+%     SLIDINGFUN(...,'POSITION','CENTER'|'TRAIL'|'LEAD') sets the position
+%     of the sliding window relative to the reference data point.  CENTER 
 %     positions the window such that the reference point is at its center.
 %     TRAIL positions the window to trail the reference point such that the
 %     reference point has the highest index in the window.  LEAD sets the
@@ -22,7 +22,7 @@ function [data]=slidefun(data,fun,nsamples,varargin)
 %     CENTER positioning is 2N+1, while for TRAIL or LEAD the window size
 %     is N.  Default position is CENTER.
 %     
-%     SLIDEFUN(...,'OFFSET',OFFSET) sets the offset of the sliding window
+%     SLIDINGFUN(...,'OFFSET',OFFSET) sets the offset of the sliding window
 %     from to the reference data point in number of samples.  For a
 %     centered window (see option 'POSITION') this introduces a gap of 
 %     2*OFFSET-1 in the window.  For example an OFFSET of 1 will exclude
@@ -32,7 +32,7 @@ function [data]=slidefun(data,fun,nsamples,varargin)
 %     the reference data point twice and an OFFSET of -2 will cause the 3
 %     centermost points to be included twice and so on.  Default OFFSET=0.
 %     
-%     SLIDEFUN(...,'EDGE','TRUNCATE'|'PAD') sets how SLIDEFUN handles the
+%     SLIDINGFUN(...,'EDGE','TRUNCATE'|'PAD') sets how to handle the
 %     edge cases when applying the sliding window function.  TRUNCATE
 %     eliminates points in the window that do not reference a datapoint
 %     (for instance if a window extends before or after the data, that
@@ -44,31 +44,33 @@ function [data]=slidefun(data,fun,nsamples,varargin)
 %     - The number of components in the output record need not match that
 %       of the input record
 %     - Centered windows are of length 2N+1, while the others are just N
+%     - SLIDINGFUN is much slower than SLIDINGABSMEAN or SLIDINGRMS
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NCMP
 %
-%    Usage:    data=slidefun(data,fun,n)
-%              data=slidefun(...,'position','center'|'trail'|'lead')
-%              data=slidefun(...,'offset',offset)
-%              data=slidefun(...,'edge','truncate'|'pad')
+%    Usage:    data=slidingfun(data,fun,n)
+%              data=slidingfun(...,'position','center'|'trail'|'lead')
+%              data=slidingfun(...,'offset',offset)
+%              data=slidingfun(...,'edge','truncate'|'pad')
 %
 %    Examples:
 %     Running absolute mean normalization like G. D. Bensen et al, 2007 
 %     where Tmin, Tmax bound the period band of the regional seismicity 
 %     to be downweighted (usually 5-150s):
 %      f=iirfilter(data,'bandpass','butter',[1/Tmax 1/Tmin],4,2);
-%      w=slidefun(f,@(x)mean(abs(x)),ceil(Tmax./(4*gh(data,'delta'))));
-%      time_norm_data=divf(data,w);
+%      w=slidingfun(f,@(x)mean(abs(x)),...
+%          ceil(Tmax./(4*getheader(data,'delta'))));
+%      time_norm_data=dividerecords(data,w);
 %
 %     Root-Mean-Square:
-%      slidefun(data,@(x)sqrt(mean(x.^2)),N)
+%      slidingfun(data,@(x)sqrt(mean(x.^2)),N)
 %
 %     Root-Median-Square:
-%      slidefun(data,@(x)sqrt(median(x.^2)),N)
+%      slidingfun(data,@(x)sqrt(median(x.^2)),N)
 %
-%    See also: seisfun
+%    See also: seizmofun, slidingrms, slidingabsmean, slidingavg
 
 %     Version History:
 %        Apr. 23, 2008 - initial version
@@ -82,9 +84,10 @@ function [data]=slidefun(data,fun,nsamples,varargin)
 %        Oct.  5, 2008 - fixed bug that caused pad not to, fixed bug that
 %                        did not change class to double for the function,
 %                        allow OFFSET option to have value for each record
+%        Nov. 22, 2008 - update for new name schema (now SLIDINGFUN)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2008 at 20:15 GMT
+%     Last Updated Nov. 22, 2008 at 22:25 GMT
 
 % todo:
 
@@ -92,11 +95,12 @@ function [data]=slidefun(data,fun,nsamples,varargin)
 error(nargchk(3,9,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % check input fun is a function
 if(~isa(fun,'function_handle'))
-    error('seizmo:slidefun:badInput','FUN must be a function handle!')
+    error('seizmo:slidingfun:badInput',...
+        'FUN must be a function handle!')
 end
 
 % number of records
@@ -106,7 +110,7 @@ nrecs=numel(data);
 if(isscalar(nsamples)); nsamples=nsamples(ones(1,nrecs),1); end
 if(~isnumeric(nsamples) || any(nsamples<1) || numel(nsamples)~=nrecs ...
         || any(fix(nsamples)~=nsamples))
-    error('seizmo:slidefun:badInput',...
+    error('seizmo:slidingfun:badInput',...
         'N must be positive integer(s)')
 end
 
@@ -117,10 +121,10 @@ option.EDGE='truncate';
 
 % get options set by SEIZMO global
 global SEIZMO; fields=fieldnames(option).';
-if(isfield(SEIZMO,'SLIDEFUN'))
+if(isfield(SEIZMO,'SLIDINGFUN'))
     for i=fields
-        if(isfield(SEIZMO.SLIDEFUN,i{:})); 
-            option.(i{:})=SEIZMO.SLIDEFUN.(i{:}); 
+        if(isfield(SEIZMO.SLIDINGFUN,i{:})); 
+            option.(i{:})=SEIZMO.SLIDINGFUN.(i{:}); 
         end
     end
 end
@@ -128,7 +132,7 @@ end
 % options must be field-value pairs
 nargopt=length(varargin);
 if(mod(nargopt,2))
-    error('seizmo:slidefun:badNumOptions','Unpaired option!')
+    error('seizmo:slidingfun:badNumOptions','Unpaired option!')
 end
 
 % get inline options
@@ -137,7 +141,7 @@ for i=1:2:nargopt
     if(isfield(option,varargin{i}))
         option.(varargin{i})=varargin{i+1};
     else
-        warning('seizmo:slidefun:badInput',...
+        warning('seizmo:slidingfun:badInput',...
             'Unknown Option: %s !',varargin{i}); 
     end
 end
@@ -145,7 +149,7 @@ end
 % check options
 if(~ischar(option.POSITION) || ...
         ~any(strcmpi(option.POSITION,{'center' 'trail' 'lead'})))
-    error('seizmo:slidefun:badOptionValue',...
+    error('seizmo:slidingfun:badOptionValue',...
         'POSITION option must be ''CENTER'', ''TRAIL'' or ''LEAD''!');
 end
 if(isscalar(option.OFFSET))
@@ -153,12 +157,12 @@ if(isscalar(option.OFFSET))
 end
 if(~isnumeric(option.OFFSET) || numel(option.OFFSET)~=nrecs || ...
         any(option.OFFSET~=fix(option.OFFSET)))
-    error('seizmo:slidefun:badOptionValue',...
+    error('seizmo:slidingfun:badOptionValue',...
         'OFFSET option must be integer(s)!');
 end
 if(~ischar(option.EDGE) || ...
         ~any(strcmpi(option.EDGE,{'pad' 'truncate'})))
-    error('seizmo:slidefun:badOptionValue',...
+    error('seizmo:slidingfun:badOptionValue',...
         'EDGE option must be ''PAD'' or ''TRUNCATE''');
 end
 
@@ -222,8 +226,9 @@ for i=1:nrecs
 end
 
 % update header
-warning('off','seizmo:ch:fieldInvalid');
-data=ch(data,'depmen',depmen,'depmin',depmin,'depmax',depmax,'ncmp',ncmp);
-warning('on','seizmo:ch:fieldInvalid');
+warning('off','seizmo:changeheader:fieldInvalid');
+data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax,...
+    'ncmp',ncmp);
+warning('on','seizmo:changeheader:fieldInvalid');
 
 end

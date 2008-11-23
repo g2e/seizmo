@@ -4,8 +4,8 @@ function []=binoperr(varargin)
 %    Description: Allows for changing the behavior of how binary functions 
 %     (addf, divf, mulf, divf) handle records with some unequal aspects.
 %     In particular, this function will modify the behavior of all of these
-%     functions until the Matlab session is finished or another call to
-%     BINOPERR undoes it.
+%     functions until the session is finished or another call to BINOPERR
+%     undoes it.
 %
 %     BINOPERR() displays the current binary operator error settings.
 %
@@ -67,9 +67,7 @@ function []=binoperr(varargin)
 %    Notes:
 %     - multiple options may be strung together in a single command
 %
-%    System requirements: Matlab 7
-%
-%    Header Changes: NONE
+%    Tested on: Matlab r2007b
 %
 %    Usage:    binoperr()
 %              binoperr('defaults')
@@ -83,15 +81,16 @@ function []=binoperr(varargin)
 %     Show binary error settings:
 %      binoperr
 %
-%    See also: addf, divf, mulf, subf
+%    See also: addrecords, dividerecords, multiplyrecords, subtractrecords
 
 %     Version History:
 %        June 20, 2008 - initial version
 %        June 28, 2008 - doc update
 %        Oct.  6, 2008 - doc update, use new SEIZMO layout
+%        Nov. 22, 2008 - update for new name schema
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2008 at 15:50 GMT
+%     Last Updated Nov. 22, 2008 at 06:20 GMT
 
 % todo:
 % - interoperation with correlate, convolve, merge, rotate

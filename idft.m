@@ -25,9 +25,9 @@ function [data]=idft(data)
 %
 %    Examples:
 %     To take the derivative of a time-series in the frequency domain:
-%      data=idft(mulomega(dft(data)))
+%      data=idft(multiplyomega(dft(data)))
 %
-%    See also: dft, amph2rlim, rlim2amph, divomega, mulomega
+%    See also: dft, amph2rlim, rlim2amph, divideomega, multiplyomega
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -40,9 +40,10 @@ function [data]=idft(data)
 %        July 19, 2008 - doc update, .dep rather than .x, dataless support,
 %                        one ch call, updates DEP* fields
 %        Oct.  7, 2008 - minor code cleaning
+%        Nov. 22, 2008 - update for new name schema
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2008 at 02:05 GMT
+%     Last Updated Nov. 22, 2008 at 06:45 GMT
 
 % todo:
 
@@ -50,13 +51,20 @@ function [data]=idft(data)
 error(nargchk(1,1,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
 
 % retreive header info
-leven=glgc(data,'leven');
-iftype=genumdesc(data,'iftype');
+leven=getlgc(data,'leven');
+iftype=getenumdesc(data,'iftype');
 [b,delta,sb,sdelta,npts,nspts]=...
-    gh(data,'b','delta','sb','sdelta','npts','nspts');
+    getheader(data,'b','delta','sb','sdelta','npts','nspts');
 e=sb+(nspts-1).*sdelta;
 
 % check leven,iftype
@@ -101,8 +109,12 @@ for i=1:nrecs
 end
 
 % update header (note there is no field 'se')
-data=ch(data,'b',sb,'e',e,'delta',sdelta,'sb',b,...
-    'sdelta',delta,'nspts',npts,'npts',nspts,'iftype','Time Series File',...
+data=changeheader(data,'b',sb,'e',e,'delta',sdelta,'sb',b,...
+    'sdelta',delta,'nspts',npts,'npts',nspts,...
+    'iftype','Time Series File',...
     'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
 
 end

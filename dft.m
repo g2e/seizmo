@@ -18,7 +18,7 @@ function [data]=dft(data,format,pow2pad)
 %       npts*delta/2 gives results that may better match the amplitudes
 %       of sinusoid functions.
 %
-%    System requirements: Matlab 7
+%    Tested on: Matlab r2007b
 %
 %    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
 %                    DEPMEN, DEPMIN, DEPMAX
@@ -34,9 +34,9 @@ function [data]=dft(data,format,pow2pad)
 %
 %    Examples:
 %     To take the derivative of a time-series in the frequency domain:
-%      data=idft(mulomega(dft(data)))
+%      data=idft(multiplyomega(dft(data)))
 %
-%    See also: idft, amph2rlim, rlim2amph, divomega, mulomega
+%    See also: idft, amph2rlim, rlim2amph, divideomega, multiplyomega
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -49,9 +49,10 @@ function [data]=dft(data,format,pow2pad)
 %        June 29, 2008 - doc update, .dep rather than .x
 %        July 18, 2008 - dataless support, one ch call, updates DEP* fields
 %        Oct.  6, 2008 - minor code cleaning
+%        Nov. 22, 2008 - update for new name schema
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2008 at 23:15 GMT
+%     Last Updated Nov. 22, 2008 at 06:45 GMT
 
 % todo:
 
@@ -59,7 +60,14 @@ function [data]=dft(data,format,pow2pad)
 error(nargchk(1,3,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
 
 % defaults
 if(nargin<3 || isempty(pow2pad)); pow2pad=1; end
@@ -74,9 +82,9 @@ if(~isnumeric(pow2pad) || ~isscalar(pow2pad) || fix(pow2pad)~=pow2pad)
 end
 
 % retreive header info
-leven=glgc(data,'leven');
-iftype=genumdesc(data,'iftype');
-[b,delta]=gh(data,'b','delta');
+leven=getlgc(data,'leven');
+iftype=getenumdesc(data,'iftype');
+[b,delta]=getheader(data,'b','delta');
 
 % check leven,iftype
 if(any(~strcmpi(leven,'true')))
@@ -138,8 +146,11 @@ for i=1:nrecs
 end
 
 % update header (note there is no field 'se')
-data=ch(data,'b',sb,'e',se,'delta',sdelta,'sb',b,...
+data=changeheader(data,'b',sb,'e',se,'delta',sdelta,'sb',b,...
     'sdelta',delta,'nspts',len,'npts',nspts,'iftype',iftype,...
     'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
 
 end
