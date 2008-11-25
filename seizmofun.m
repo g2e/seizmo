@@ -48,6 +48,10 @@ error(nargchk(2,2,nargin))
 % check data structure
 error(seizmocheck(data,'dep'))
 
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
 % check input fun is a function
 if(~isa(fun,'function_handle'))
     error('seizmo:seizmofun:badInput','FUN must be a function handle!');
@@ -61,5 +65,8 @@ end
 
 % update header
 data=checkheader(data);
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
 
 end

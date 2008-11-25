@@ -58,6 +58,10 @@ error(nargchk(2,3,nargin))
 % check data structure
 error(seizmocheck(data,'dep'))
 
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
 % no constant case
 if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
 
@@ -95,5 +99,8 @@ end
 
 % update header
 data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
 
 end

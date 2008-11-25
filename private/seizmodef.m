@@ -50,9 +50,10 @@ function [def]=seizmodef(filetype,version,option)
 %        Nov. 15, 2008 - update for new name scheme (now SEIZMODEF), SAC
 %                        and SEIZMO now separate filetypes, definition
 %                        caching to speed things up
+%        Nov. 24, 2008 - fixed iacc description (nm/sec/sec)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 18:40 GMT
+%     Last Updated Nov. 24, 2008 at 05:30 GMT
 
 % todo:
 
@@ -218,7 +219,7 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
         'Spectral File-Ampl/Phase' 'General X vs Y file' ...
         ...% idep
         'Unknown' 'Displacement (nm)' ...
-        'Velocity (nm/sec)' 'Acceleration (cm/sec/sec)' ...
+        'Velocity (nm/sec)' 'Acceleration (nm/sec/sec)' ...
         ...% iztype
         'Begin Time' 'GMT Day' 'Event Origin Time' 'First Arrival Time' ...
         'User Defined Time Pick 0' 'User Defined Time Pick 1' ...

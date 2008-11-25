@@ -58,7 +58,7 @@ function [data]=taper(data,width,type,option)
 %     from peak out to 4 standard deviations:
 %      data=taper(data,0.1,'gausswin',4);
 %
-%    See also: rmean, rtrend
+%    See also: removemean, removetrend
 
 %     Version History:
 %        Oct. 31, 2007 - initial version

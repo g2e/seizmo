@@ -1,9 +1,9 @@
 function [median]=getmedian(data)
-%GETMEDIAN    Returns median of each SEIZMO data record
+%GETMEDIAN    Returns median of each SEIZMO record
 %
-%    Description: GETMEDIAN(DATA) returns the median of each SEIZMO data 
-%     record.  Output is a cell array with one cell per record and multi-
-%     component records return a vector of medians, one for each component.
+%    Description: GETMEDIAN(DATA) returns the median value in the dependent
+%     component(s) for each SEIZMO record.  Multi-component records are
+%     just combined and treated as a single one to find the median.
 %
 %    Notes:
 %
@@ -12,10 +12,8 @@ function [median]=getmedian(data)
 %    Usage:    medians=getmedian(data)
 %
 %    Examples:
-%     Remove median from records (cell2mat converts the cell array output
-%     to a numeric matrix as long as all the records have the same number 
-%     of components):
-%      data=subtract(data,cell2mat(getmedian(data)));
+%     Remove median from records:
+%      data=subtract(data,getmedian(data));
 %
 %    See also: getnorm, removemean, subtract
 
@@ -26,9 +24,13 @@ function [median]=getmedian(data)
 %        June 15, 2008 - renamed from GMED to GMEDIAN, doc update
 %        Nov. 16, 2008 - updated for new name schema (now GETMEDIAN),
 %                        history fix
+%        Nov. 23, 2008 - output changed to just one value per record not
+%                        one value per component
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2008 at 02:15 GMT
+%     Last Updated Nov. 23, 2008 at 23:45 GMT
+
+% todo:
 
 % check nargin
 error(nargchk(1,1,nargin))
@@ -40,9 +42,9 @@ error(seizmocheck(data,'dep'))
 nrecs=numel(data);
 
 % find medians
-median=cell(nrecs,1);
+median=nan(nrecs,1);
 for i=1:nrecs
-    median{i}=median(double(data(i).dep));
+    median(i)=median(double(data(i).dep(:)));
 end
 
 end

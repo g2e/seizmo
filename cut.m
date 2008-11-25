@@ -1,5 +1,5 @@
 function [data,failed]=cut(data,varargin)
-%CUT    Cut SEIZMO data records
+%CUT    Cut a window out of SEIZMO records
 %
 %    Description: CUT(DATA,PDW) cuts the records in DATA to the window
 %     limits defined by PDW and outputs the updated dataset.  Header fields
@@ -54,7 +54,7 @@ function [data,failed]=cut(data,varargin)
 %     be included in the output.  Basically any components not in the list
 %     are cut.  LIST should be either a row vector of indices or ':'.  It
 %     may also be an array of rows of indices or ':' (use a cell array to
-%     get a mixture.  Default is ':' (all components).
+%     give a mixture.  Default is ':' (all components).
 %
 %     CUT(...,'FILL',TRUE|FALSE) turns on/off the filling of data gaps to
 %     allow records that don't extend for the entire window to do so by
@@ -83,36 +83,36 @@ function [data,failed]=cut(data,varargin)
 %     - Multiple component data is supported.
 %     - FILL only works with evenly sampled data.
 %
-%    Tested on: Matlab 7
+%    Tested on: Matlab r2007b
 %     
 %    Header changes: B, E, NPTS, DELTA, NCMP, DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage: data=cut(data,pdw)
-%           data=cut(...,'cmplist',list,...)
-%           data=cut(...,'fill',logical,...)
-%           data=cut(...,'filler',value,...)
-%           [data,failed]=cut(...,'trim',logical,...)
+%    Usage:    data=cut(data,pdw)
+%              data=cut(...,'cmplist',list,...)
+%              data=cut(...,'fill',logical,...)
+%              data=cut(...,'filler',value,...)
+%              [data,failed]=cut(...,'trim',logical,...)
 %
 %    Examples:
-%     cut a 400 sample window starting from the 33rd sample
+%     Cut a 400 sample window starting from the 33rd sample:
 %       data=cut(data,'x',33,'n',400);
 %
-%     cut out a 90s window around t1
+%     Cut out a 90s window around t1:
 %       data=cut(data,'t1',-30,'t1',60);
 %
-%     cut one hour starting at the origin time, 
+%     Cut one hour starting at the origin time, 
 %     padding incomplete records with zeros
-%       data=cut(data,'o',0,3600,'fill',1);
+%       data=cut(data,'o',0,3600,'fill',true);
 %
-%     cut first 300 seconds of records
+%     Cut records to first 300 seconds:
 %       data=cut(data,'b',0,300);
 %
-%     cut from 300 to 500 seconds relative to reference time
+%     Cut from 300 to 500 seconds relative to reference time:
 %       data=cut(data,300,500);
-%     or explicitly
+%     or explicitly:
 %       data=cut(data,'z',300,'z',500);
 %
-%    See also: readdatawindow, getheader, changeheader
+%    See also: readdatawindow
 
 %     Version History:
 %        Oct. 30, 2007 - initial version
@@ -134,17 +134,20 @@ function [data,failed]=cut(data,varargin)
 %                        & .t, improved checks
 %        Sep. 15, 2008 - minor doc update
 %        Sep. 22, 2008 - error msg fixes
+%        Nov. 24, 2008 - fixed some bugs for uneven, fixed fill bug, one
+%                        changeheader call, support new cutparameters,
+%                        better checking, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2008 at 07:25 GMT
+%     Last Updated Nov. 24, 2008 at 04:15 GMT
 
 % todo:
 
 % input check
 error(nargchk(1,11,nargin))
 
-% headers setup (also checks struct)
-[h,vi]=versioninfo(data);
+% check data structure
+error(seizmocheck(data,'dep'))
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;
@@ -169,132 +172,113 @@ ncmp=getncmp(data);
 iftype=getenumdesc(data,'iftype');
 leven=getlgc(data,'leven');
 
-% window begin point
-bt=[]; bp=[];
-if(strcmpi(ref1,'z'))
-    bt=offset1;
-elseif(strcmpi(ref1,'x'))
-    bp=round(offset1);
+% window start point/time
+if(strcmpi(option.REF1,'z'))
+    bt=option.OFFSET1;
+    bp=round((bt-b)./delta)+1;
+elseif(strcmpi(option.REF1,'x'))
+    bp=round(option.OFFSET1);
 else
-    bt=gh(data,ref1)+offset1;
+    bt=getheader(data,option.REF1)+option.OFFSET1;
+    bp=round((bt-b)./delta)+1;
 end
 
-% window end time
-et=[]; ep=[];
-if(strcmpi(ref2,'z'))
-    et=offset2;
-elseif(strcmpi(ref2,'x') || strcmpi(ref2,'n'))
-    ep=round(offset2);
+% window end point/time
+if(strcmpi(option.REF2,'z'))
+    et=option.OFFSET2;
+    ep=round((et-b)./delta)+1;
+elseif(strcmpi(option.REF2,'x'))
+    ep=round(option.OFFSET2);
+elseif(strcmpi(option.REF2,'n'))
+    ep=bp+round(option.OFFSET2)-1;
 else
-    et=gh(data,ref2)+offset2;
+    et=getheader(data,option.REF2)+option.OFFSET2;
+    ep=round((et-b)./delta)+1;
 end
 
-% check for nans
-if(any(isnan(bt)) || any(isnan(bp)) || any(isnan(et)) || any(isnan(ep)))
-    error('seizmo:cutim:nanHeaderField','Header field returned NaN!')
+% boundary conditions
+nbp=max(bp,1);
+nep=min(ep,npts);
+nnp=max(nep-nbp+1,0);
+if(any(~nnp))
+    nbp(~nnp)=nan;
+    nep(~nnp)=nan;
+end
+
+% get new b/e/npts for evenly spaced
+fill=option.FILL;
+even=strcmpi(leven,'true');
+fe=fill & even;
+nfe=~fill & even;
+% to fill, even spaced
+if(any(fe))
+    e(fe)=b(fe)+(ep(fe)-1).*delta(fe);
+    b(fe)=b(fe)+(bp(fe)-1).*delta(fe);
+    npts(fe)=max(ep(fe)-bp(fe)+1,0);
+% not to fill, even spaced
+elseif(any(nfe))
+    e(nfe)=b(nfe)+(nep(nfe)-1).*delta(nfe);
+    b(nfe)=b(nfe)+(nbp(nfe)-1).*delta(nfe);
+    npts(nfe)=nnp(nfe);
 end
 
 % loop through each file
-failed=false(nrecs,1); ncmp=nan(nrecs,1); npts=ncmp;
+failed=false(nrecs,1);
+[depmen,depmin,depmax]=swap(nan(nrecs,1));
 for i=1:nrecs
     % check for unsupported filetypes
     if(strcmpi(iftype(i),'General XYZ (3-D) file'))
         failed(i)=true;
-        warning('seizmo:cutim:illegalFiletype',...
+        warning('seizmo:cut:illegalFiletype',...
             'Illegal operation on xyz file!');
         continue;
     elseif(any(strcmpi(iftype(i),{'Spectral File-Real/Imag'...
             'Spectral File-Ampl/Phase'})))
         failed(i)=true;
-        warning('seizmo:cutim:illegalFiletype',...
+        warning('seizmo:cut:illegalFiletype',...
             'Illegal operation on spectral file!');
         continue;
     end
     
-    % get size
-    [npts(i),ncmp(i)]=size(data(i).dep);
-    
     % evenly spaced
-    if(strcmpi(leven(i),'true'))
-        % calculate begin and end points
-        if(~strcmpi(ref1,'x'))
-            bp(i)=round((bt(i)-b(i))/delta(i))+1;
-        end
-        if(strcmpi(ref2,'n'))
-            ep2=bp(i)+ep(i)-1;
-        elseif(strcmpi(ref2,'x'))
-            ep2=ep(i);
-        else
-            ep2=round((et(i)-b(i))/delta(i))+1;
-        end
-        
-        % boundary conditions
-        nbp=max([bp(i) 1]);
-        nep=min([ep2 npts(i)]);
-        
+    if(even(i))
         % cut
-        data(i).dep=data(i).dep(nbp:nep,:);
-        
-        % fill or no
-        if(fill)
-            % add filler
-            data(i).dep=[ones(1-bp(i),ncmp(i))*filler; 
-                        data(i).dep(:,:); 
-                        ones(ep2-npts(i),ncmp(i))*filler];
-            
-            % empty window - add to failed list
-            if(isempty(data(i).dep))
-                data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
-                    'depmen',nan,'depmin',nan,'depmax',nan);
-                failed(i)=true;
-                continue;
-            end
-            
-            % fix header
-            data(i)=ch(data(i),'b',b(i)+(bp(i)-1)*delta(i),...
-                'e',b(i)+(ep2-1)*delta(i),'npts',size(data(i).dep,1),...
-                'depmen',mean(data(i).dep(:)),...
-                'depmin',min(data(i).dep(:)),...
-                'depmax',max(data(i).dep(:)));
+        if(nnp(i))
+            data(i).dep=data(i).dep(nbp(i):nep(i),option.CMPLIST{i});
         else
-            % empty window - add to failed list
-            if(isempty(data(i).dep))
-                data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
-                    'depmen',nan,'depmin',nan,'depmax',nan);
-                failed(i)=true;
-                continue;
-            end
-                    
-            % fix header
-            data(i)=ch(data(i),'b',b(i)+(nbp-1)*delta(i),...
-                'e',b(i)+(nep-1)*delta(i),'npts',size(data(i).dep,1),...
-                'depmen',mean(data(i).dep(:)),...
-                'depmin',min(data(i).dep(:)),...
-                'depmax',max(data(i).dep(:)));
+            data(i).dep=data(i).dep([],option.CMPLIST{i});
         end
-        % single point fix
-        if(size(data(i).dep,1)==1); data(i)=ch(data(i),'delta',nan); end
+        
+        % get ncmp
+        ncmp(i)=size(data(i).dep,2);
+        
+        % add filler
+        if(fill(i))
+            data(i).dep=...
+                [ones(min(1,ep(i))-bp(i)+1,ncmp(i))*option.FILLER(i);...
+                data(i).dep;...
+                ones(ep(i)-max(npts(i),bp(i))+1,ncmp(i))*option.FILLER(i)];
+        end
+        
+        % handle empty
+        if(~npts(i))
+            failed(i)=true;
+            continue;
+        end
     % unevenly spaced
     else
-        % check .dep and .ind match
-        if(size(data(i).ind,1)~=npts(i))
-            error('seizmo:cutim:dataMismatch',...
-                ['Number of dependent data points does not match number'...
-                'of independent data points for record %d !'],i)
-        end
-        
-        % get begin point
+        % get begin point for window
         if(~strcmpi(ref1,'x'))
-            % save to temp variable (avoids corruption in no result case)
+            % find first point after beginning of window
             temp=find(data(i).ind>=bt(i),1);
+            
+            % handle no points after begin
             if(isempty(temp))
-                % empty window - add to failed list
-                data(i).dep=data(i).dep([],:); data(i).ind=[];
-                data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
-                    'depmen',nan,'depmin',nan,'depmax',nan,'odelta',nan);
-                failed(i)=true;
-                continue;
+                % empty window
+                bp(i)=npts(i)+1;
+            % 'round' to closer point
             elseif(temp>1)
+                % index of point on other side of begin time
                 temp2=temp-1;
                 
                 % figure out which is closer
@@ -304,71 +288,80 @@ for i=1:nrecs
                 else
                     bp(i)=temp2;
                 end
+            % 1st point is closest
             else
                 bp(i)=temp;
             end
         end
         
-        % get end point
-        if(strcmpi(ref2,'n'))
-            ep2=bp(i)+ep(i)-1;
-        elseif(strcmpi(ref2,'x'))
-            ep2=ep(i);
-        else
-            % save to temp variable (avoids corruption in no result case)
+        % get end point for window
+        if(~strcmpi(ref2,'n') && ~strcmpi(ref2,'x'))
+            % find last point before end of window
             temp=find(data(i).ind<=et(i),1,'last');
+            
+            % handle no points before end
             if(isempty(temp))
-                % empty window - add to failed list
-                data(i).dep=data(i).dep([],:); data(i).ind=[];
-                data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
-                    'depmen',nan,'depmin',nan,'depmax',nan,'odelta',nan);
-                failed(i)=true;
-                continue;
+                % empty window
+                ep(i)=0;
+            % 'round' to closest point
             elseif(temp<npts(i))
+                % index of point on other side of end time
                 temp2=temp+1;
                 
                 % figure out which is closer
                 if(abs(et(i)-data(i).ind(temp))...
                         <=abs(et(i)-data(i).ind(temp2)))
-                    ep2=temp;
+                    ep(i)=temp;
                 else
-                    ep2=temp2;
+                    ep(i)=temp2;
                 end
+            % last point is closest
             else
-                ep2=temp;
+                ep(i)=temp;
             end
         end
         
         % boundary conditions
-        nbp=max([bp(i) 1]);
-        nep=min([ep2 npts(i)]);
+        nbp(i)=max([bp(i) 1]);
+        nep(i)=min([ep(i) npts(i)]);
+        npts(i)=max(nep(i)-nbp(i)+1,0);
         
         % cut
-        data(i).dep=data(i).dep(nbp:nep,:);
-        data(i).ind=data(i).ind(nbp:nep,1);
+        data(i).dep=data(i).dep(nbp(i):nep(i),option.CMPLIST{i});
+        data(i).ind=data(i).ind(nbp(i):nep(i),1);
         
-        % check if bp>ep
-        if(nbp>nep)
-            data(i)=ch(data(i),'b',nan,'e',nan,'npts',0,'delta',nan,...
-                'depmen',nan,'depmin',nan,'depmax',nan,'odelta',nan);
+        % get ncmp
+        ncmp(i)=size(data(i).dep,2);
+        
+        % handle empty
+        if(~npts(i))
+            b(i)=nan; e(i)=nan; 
             failed(i)=true;
             continue;
         end
         
-        % fix header
-        npts(i)=size(data(i).dep,1);
-        data(i)=ch(data(i),'b',data(i).ind(1),...
-            'e',data(i).ind(end),'npts',npts(i),...
-            'depmen',mean(data(i).dep(:)),...
-            'depmin',min(data(i).dep(:)),...
-            'depmax',max(data(i).dep(:)),...
-            'delta',(data(i).ind(end)-data(i).ind(1))/(npts(i)-1),...
-            'odelta',data(i).ind(min([end 2]))-data(i).ind(1));
+        % update timing
+        b(i)=data(i).ind(1);
+        e(i)=data(i).ind(end);
+        if(npts(i)>1)
+            delta(i)=(e(i)-b(i))/(npts(i)-1);
+        end
     end
+    
+    % update dep*
+    depmen(i)=mean(data(i).dep(:));
+    depmin(i)=min(data(i).dep(:));
+    depmax(i)=max(data(i).dep(:));
 end
 
+% update headers
+warning('off','seizmo:changeheader:fieldInvalid')
+data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
+    'ncmp',ncmp,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+warning('off','seizmo:changeheader:fieldInvalid')
+
 % removed failed/empty cut records
-if(trim); data(failed)=[]; end
+if(option.TRIM); data(failed)=[]; end
 
 % toggle checking back
 set_seizmocheck_state(oldseizmocheckstate);

@@ -106,15 +106,15 @@ nrecs=numel(data);
 sb=nan(nrecs,1); se=sb; sdelta=sb; nspts=sb; len=sb;
 depmen=sb; depmin=sb; depmax=sb;
 for i=1:nrecs
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
+    % number of datum/components
+    [len(i),ncmp]=size(data(i).dep);
+    
+    % skip dataless (but increase ncmp)
+    if(isempty(data(i).dep)); data(i).dep=zeros(0,2*ncmp); continue; end
     
     % save class and convert to double precision
     oclass=str2func(class(data(i).dep));
     data(i).dep=double(data(i).dep);
-    
-    % number of datum/components
-    [len(i),ncmp]=size(data(i).dep);
     
     % get frequency info
     nspts(i)=2^(nextpow2(len(i))+pow2pad);

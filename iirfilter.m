@@ -80,9 +80,9 @@ function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 %
 %        ***  UNITS IN dB!!!  ***
 %
-%     fs:     Optional output. Filter structure(s).  Useful for visualizing 
-%             the filter with the fvtool.  Remember that the filter is tied
-%             to the sampling frequency of the records!
+%     fs:     Optional output. Cell array of filter structure(s).  Useful
+%             for visualizing the filter with the fvtool.  Remember that
+%             the filter is tied to the sampling frequency of the records!
 %
 %     nyq:    Optional output. Nyquist frequencies for filter structure(s).
 %
@@ -123,13 +123,24 @@ function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 %           This program will filter on any filetype.  The output for 
 %           unevenly spaced or xyz files will not be accurate though!
 %
-%    See also: intrpol8, syncsr, deci, stretch, dft, idft
+%    See also: interpolate, syncrates, squish, stretch, dft, idft
 
 % check number of inputs
 error(nargchk(2,7,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
+
+% turn off header checking
+oldcheckheaderstate=get_checkheader_state;
+set_checkheader_state(false);
 
 % check filter
 if(~any(strcmpi(style,{'butter' 'cheby1' 'cheby2' 'ellip'})) || ...
@@ -146,7 +157,7 @@ sr=30;      % stopband attenuation (in dB)
 dp=1;       % default pass option (forward pass only)
 
 % make delta groups
-delta=gh(data,'delta');
+delta=getheader(data,'delta');
 gdt=unique(delta); ng=length(gdt); gi=cell(ng,1); nyq=1./(2*gdt);
 for i=1:ng; gi{i}=find(delta==gdt(i)).'; end
 
@@ -190,6 +201,7 @@ if(nargin==7 && ~isempty(ripple))
 end
 
 % build and impliment filter for each group
+fs=cell(ng,1);
 for i=1:ng
     % sort and normalize corners
     pc=sort(corners(:)/nyq(i),1).';
@@ -333,69 +345,52 @@ for i=1:ng
 
     % put into a filter structure
     [sos,g]=zp2sos(z,p,k);
-    fs(i)=dfilt.df2tsos(sos,g);
+    fs{i}=dfilt.df2tsos(sos,g);
+    
+    % combine records
+    [recs,idx1,ind,idx2,store,npts]=combinerecords(data(gi{i}));
 
     % implement
     if(passes==1)
-        data(gi{i})=impfilt(data(gi{i}),fs(i),mirror);
+        recs=impfilt(recs,fs{i},mirror,true);
     elseif(passes==2)
-        data(gi{i})=impfilt(data(gi{i}),fs(i),mirror);
-        data(gi{i})=imprevfilt(data(gi{i}),fs(i),mirror);
+        recs=impfilt(impfilt(recs,fs{i},mirror,true),fs{i},mirror,false);
     elseif(passes==3)
-        data(gi{i})=imprevfilt(data(gi{i}),fs(i),mirror);
+        recs=impfilt(recs,fs{i},mirror,false);
     elseif(passes==4)
-        data(gi{i})=imprevfilt(data(gi{i}),fs(i),mirror);
-        data(gi{i})=impfilt(data(gi{i}),fs(i),mirror);
+        recs=impfilt(impfilt(recs,fs{i},mirror,false),fs{i},mirror,true);
     end
+    
+    % distribute records back
+    data(gi{i})=distributerecords(data(gi{i}),recs,idx1,[],[],store,npts);
 end
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
+set_checkheader_state(oldcheckheaderstate);
 
 end
 
-function [data]=imprevfilt(data,fs,mirror)
-%IMPREVFILT   Implements reverse pass filter
+function [recs]=impfilt(recs,fs,mirror,forward)
+%IMPREVFILT   Implements filter
 %   Implements a filter design on SEIZMO data records and makes appropriate
 %   header updates.  Takes a mirror option which does pseudo-IC to limit 
 %   edge effects.  Works with multiple records.
 
-% combine records
-[recs,ind,store,npts]=combo(data);
-recs=recs(end:-1:1,:);
+% reverse
+if(~forward); recs=recs(end:-1:1,:); end
 
 % mirror logical
 if(mirror)
     % prepend a mirror-flip of the series to limit edge effects
     recs=filter(fs,[2*recs(ones(end-1,1),:)-recs(end:-1:2,:); recs]);
-    recs=recs(fix(end/2)+1:end,:);
+    recs=recs(ceil(end/2):end,:);
 else
     % straight forward filter
     recs=filter(fs,recs);
 end
 
-% distribute records back
-data=distro(data,recs(end:-1:1,:),ind,store,npts);
-
-end
-
-function [data]=impfilt(data,fs,mirror)
-%IMPFILT   Implements filter
-%   Implements a filter design on SEIZMO data records and makes appropriate
-%   header updates.  Takes a mirror option which does pseudo-IC to limit 
-%   edge effects.  Works with multiple records.
-
-% combine records
-[recs,ind,store,npts]=combo(data);
-
-% mirror logical
-if(mirror)
-    % prepend a mirror-flip of the series to limit edge effects
-    recs=filter(fs,[2*recs(ones(end-1,1),:)-recs(end:-1:2,:); recs]);
-    recs=recs(fix(end/2)+1:end,:);
-else
-    % straight forward filter
-    recs=filter(fs,recs);
-end
-
-% distribute records back
-data=distro(data,recs,ind,store,npts);
+% reverse
+if(~forward); recs=recs(end:-1:1,:); end
 
 end

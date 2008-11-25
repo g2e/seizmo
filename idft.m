@@ -81,8 +81,11 @@ end
 nrecs=numel(data);
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
+    % skip dataless (reduce ncmp by 2)
+    if(isempty(data(i).dep))
+        data(i).dep=data(i).dep([],1:2:end); 
+        continue; 
+    end
     
     % save class and convert to double precision
     oclass=str2func(class(data(i).dep));

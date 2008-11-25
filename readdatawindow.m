@@ -181,7 +181,7 @@ leven=getlgc(data,'leven');
 
 % index by spacing
 even=strcmpi(leven,'true');
-uneven=strcmpi(leven,'false');
+uneven=~even;
 
 % allocate bad records matrix
 failed=false(nrecs,1);
@@ -235,15 +235,18 @@ fill=option.FILL;
 nofill=~fill;
 % to fill
 if(any(fill))
-    b(fill)=b(fill)+(bp(fill)-1).*delta(fill);
     e(fill)=b(fill)+(ep(fill)-1).*delta(fill);
-    npts(fill)=max(bp-ep+1,0);
+    b(fill)=b(fill)+(bp(fill)-1).*delta(fill);
+    npts(fill)=max(ep(fill)-bp(fill)+1,0);
 % not to fill
 elseif(any(nofill))
-    b(nofill)=b(nofill)+(nbp(nofill)-1).*delta(nofill);
     e(nofill)=b(nofill)+(nep(nofill)-1).*delta(nofill);
+    b(nofill)=b(nofill)+(nbp(nofill)-1).*delta(nofill);
     npts(nofill)=nnp(nofill);
 end
+
+% fail evenly spaced records with 0 pts
+failed(npts==0 & even)=true;
 
 % loop through each evenly spaced file
 [depmen,depmin,depmax]=swap(nan(nrecs,1));
@@ -315,7 +318,7 @@ for i=find(even).'
     if(isfield(data,'ind')); data(i).ind=[]; end
     
     % read in each component
-    if(nnp(i)>0)
+    if(nnp(i))
         for j=1:ncmp(i)
             % move to first byte of window and read
             fseek(fid,h(vi(i)).data.startbyte+h(vi(i)).data.bytesize...
@@ -332,14 +335,14 @@ for i=find(even).'
     
     % add filler
     if(option.FILL(i))
-        data(i).dep=[ones(min(1,ep(1))-bp(i),ncmp(i))*option.FILLER(i);...
-            data(i).dep; ...
-            ones(ep(i)-max(npts(i),bp(i)),ncmp(i))*option.FILLER(i)];
+        data(i).dep=...
+            [ones(min(1,ep(i))-bp(i)+1,ncmp(i))*option.FILLER(i);...
+            data(i).dep;...
+            ones(ep(i)-max(npts(i),bp(i))+1,ncmp(i))*option.FILLER(i)];
     end
     
     % more header fix
-    npts(i)=size(data(i).dep,1);
-    if(nnp(i)>0)
+    if(npts(i)>0)
         depmen(i)=mean(data(i).dep(:));
         depmin(i)=min(data(i).dep(:));
         depmax(i)=max(data(i).dep(:));
@@ -349,7 +352,7 @@ end
 % update headers
 warning('off','seizmo:changeheader:fieldInvalid')
 data(even)=changeheader(data(even),'b',b(even),'e',e(even),...
-    'delta',delta(even),'npts',npts(even),'ncmp',ncmp(even),...
+    'npts',npts(even),'ncmp',ncmp(even),...
     'depmen',depmen(even),'depmin',depmin(even),'depmax',depmax(even));
 warning('off','seizmo:changeheader:fieldInvalid')
 

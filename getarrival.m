@@ -27,20 +27,15 @@ function [times]=getarrival(data,phase)
 %        Oct.  8, 2008 - doc update, add history
 %        Nov. 16, 2008 - doc update, history fix, rename from PULLARR to
 %                        GETARRIVAL, minor code clean
+%        Nov. 24, 2008 - minor code cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  16, 2008 at 06:00 GMT
+%     Last Updated Nov.  24, 2008 at 00:40 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(2,2,nargin))
-
-% number of records
-nrecs=numel(data);
-
-% preallocate output
-times=nan(nrecs,1);
     
 % grab header values
 [kt,t]=getheader(data,'kt','t');
@@ -48,7 +43,11 @@ times=nan(nrecs,1);
 % remove spaces from kt
 kt=strtrim(kt);
 
+% number of records
+nrecs=numel(data);
+
 % do operations individually
+times=nan(nrecs,1);
 for i=1:nrecs
     % find first match
     pos=find(strcmp(phase,kt(i,:)),1);
