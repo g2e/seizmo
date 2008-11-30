@@ -1,24 +1,33 @@
-function [fh,lh]=p3(data,varargin)
-%P3   Plot SEIZMO data records in an evenly spaced record section
+function [fh,lh]=recordsection(data,varargin) 
+%RECSEC   Plots SEIZMO data records in a distance spaced record section
 %
-%    Description: Plots timeseries and xy SEIZMO records spaced out evenly
-%     in a single plot.  Other record types are ignored.  Optional
+%    Description: Plots timeseries and xy SEIZMO records spaced out by the 
+%     'gcarc' header field.  Other record types are ignored.  Optional
 %     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
 %
-%    Usage:  [fh,lh]=p3(data,'plot_option',plot_option_value,...)
+%    Usage:  [fh,lh]=recsec(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
-%     To add record names to the yaxis:
-%        p3(data,'namesonyaxis',true)
+%     To make a record section of data between 100 and 150 degrees showing 
+%     the first 300 seconds with the max amplitude normalized to 3 degrees
+%     while preserving the relative amplitudes between records and
+%     including a legend:
+%      recsec(data,'xlimits',[0 300],'ylimits',[100 150],...
+%           'normstyle','group','norm2yrange',false','normmax',3,...
+%           'legend',true)
 %
-%    See also:  p1, p2, recsec
+%     To plot records against azimuth/backazimuth:
+%       recsec(data,'yfield','az')
+%       recsec(data,'yfield','baz')
+%
+%    See also:  p1, p2, p3
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % get plotting style defaults
-P=pconf;
+P=plotconfig;
 
 % allow access to plot styling using global SEIZMO structure
 global SEIZMO; fields=fieldnames(P).';
@@ -31,12 +40,12 @@ for i=1:2:length(varargin)
     if(isfield(P,varargin{i}))
         P.(varargin{i})=varargin{i+1};
     else
-        warning('seizmo:p3:badInput','Unknown Option: %s',varargin{i}); 
+        warning('seizmo:recsec:badInput','Unknown Option: %s',varargin{i}); 
     end
 end
 
 % clean up unset parameters
-P=pconffix(P);
+P=plotconfigfix(P);
 
 % select/open plot
 if(isempty(P.FIGHANDLE) || P.FIGHANDLE<1)
@@ -49,7 +58,7 @@ else
 end
 
 % SOME STYLING OF THE PLOT
-set(gcf,'name',['P3 -- ' P.NAME],...
+set(gcf,'name',['RECSEC -- ' P.NAME],...
         'numbertitle',P.NUMBERTITLE,...
         'menubar',P.MENUBAR,...
         'toolbar',P.TOOLBAR,...
@@ -81,22 +90,24 @@ catch
 end
 
 % header info
-leven=glgc(data,'leven');
-error(lgcchk('leven',leven))
-iftype=genumdesc(data,'iftype');
-[b,npts,delta,depmin,depmax]=...
-    gh(data,'b','npts','delta','depmin','depmax');
+leven=getlgc(data,'leven');
+iftype=getenumdesc(data,'iftype');
+[b,npts,delta,depmin,depmax,yfield]=...
+    getheader(data,'b','npts','delta','depmin','depmax',P.YFIELD);
 
 % yaxis scaling for amplitudes
 if(P.NORM2YRANGE)
-    scale=nrecs*P.NORMMAX;
+    scale=(max(yfield)-min(yfield))*P.NORMMAX;
+    
+    % fix for no range case
+    if(scale==0); scale=1; end
 else
     scale=P.NORMMAX;
 end
 
 % check normalization style
 if(~any(strcmpi(P.NORMSTYLE,{'single' 'group'})))
-    warning('seizmo:p3:badInput','bad normalization style')
+    warning('seizmo:recsec:badInput','bad normalization style')
     P.NORMSTYLE='single';
 end
 
@@ -117,7 +128,7 @@ for i=indices
     else time=data(i).ind; end
     
     % plot series
-    plot(time,i+data(i).dep/ampmax(i)*scale,...
+    plot(time,yfield(i)+data(i).dep/ampmax(i)*scale,...
         'color',colors(i,:),'linewidth',P.RECWIDTH);
 end
 hold off
@@ -126,14 +137,6 @@ hold off
 axis(P.AXIS{:});
 if(~isempty(P.XLIMITS)); axis auto; xlim(P.XLIMITS); end
 if(~isempty(P.YLIMITS)); ylim(P.YLIMITS); end
-
-% label y-axis with record names
-if(P.NAMESONYAXIS)
-    if(isfield(data,'name'))
-        set(gca,'ytick',1:nrecs);
-        set(gca,'yticklabel',{data.name}.');
-    end
-end
 
 % legend
 if(P.LEGEND)
@@ -157,7 +160,9 @@ if(isempty(P.TITLE))
     P.TITLE=[num2str(length(indices)) '/' num2str(nrecs) ' Records']; 
 end
 if(isempty(P.XLABEL)); P.XLABEL='Time (sec)'; end
-if(isempty(P.YLABEL) && ~P.NAMESONYAXIS); P.YLABEL='Record Number'; end
+if(isempty(P.YLABEL) && strcmpi(P.YLABEL,'gcarc'))
+    P.YLABEL='Distance (\circ)'; 
+end
 title(P.TITLE,'fontname',P.TITLEFONT,'fontweight',P.TITLEFONTWEIGHT,...
     'fontsize',P.TITLEFONTSIZE,'color',P.TITLEFONTCOLOR,...
     'interpreter',P.TITLEINTERP);

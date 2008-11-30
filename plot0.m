@@ -1,30 +1,24 @@
-function [fh,lh]=p2(data,varargin)
-%P2    Overlay plot of SEIZMO data records
+function [fh,lh]=plot0(data,varargin)
+%P3   Plot SEIZMO data records in an evenly spaced record section
 %
-%    Description: Plots timeseries and xy SEIZMO records over one another
+%    Description: Plots timeseries and xy SEIZMO records spaced out evenly
 %     in a single plot.  Other record types are ignored.  Optional
 %     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
 %
-%    Usage:  [fh,lh]=p2(data,'plot_option',plot_option_value,...)
+%    Usage:  [fh,lh]=p3(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
-%     To overlay the first 4 records
-%      p2(data(1:4)) 
+%     To add record names to the yaxis:
+%        p3(data,'namesonyaxis',true)
 %
-%     To overlay the 5th and 8th records from 0 to 300 seconds
-%      p2(data([5 8]),'xlimits',[0 300]) 
-%
-%     To plot all traces with a legend, without limiting the x/y axis
-%      p2(data,'legend',true)
-%
-%    See also:  p1, p3, recsec
+%    See also:  p1, p2, recsec
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % get plotting style defaults
-P=pconf;
+P=plotconfig;
 
 % allow access to plot styling using global SEIZMO structure
 global SEIZMO; fields=fieldnames(P).';
@@ -37,12 +31,12 @@ for i=1:2:length(varargin)
     if(isfield(P,varargin{i}))
         P.(varargin{i})=varargin{i+1};
     else
-        warning('seizmo:p2:badInput','Unknown Option: %s',varargin{i}); 
+        warning('seizmo:p3:badInput','Unknown Option: %s',varargin{i}); 
     end
 end
 
 % clean up unset parameters
-P=pconffix(P);
+P=plotconfigfix(P);
 
 % select/open plot
 if(isempty(P.FIGHANDLE) || P.FIGHANDLE<1)
@@ -55,7 +49,7 @@ else
 end
 
 % SOME STYLING OF THE PLOT
-set(gcf,'name',['P2 -- ' P.NAME],...
+set(gcf,'name',['P3 -- ' P.NAME],...
         'numbertitle',P.NUMBERTITLE,...
         'menubar',P.MENUBAR,...
         'toolbar',P.TOOLBAR,...
@@ -87,15 +81,21 @@ catch
 end
 
 % header info
-leven=glgc(data,'leven');
-error(lgcchk('leven',leven))
-iftype=genumdesc(data,'iftype');
+leven=getlgc(data,'leven');
+iftype=getenumdesc(data,'iftype');
 [b,npts,delta,depmin,depmax]=...
-    gh(data,'b','npts','delta','depmin','depmax');
+    getheader(data,'b','npts','delta','depmin','depmax');
+
+% yaxis scaling for amplitudes
+if(P.NORM2YRANGE)
+    scale=nrecs*P.NORMMAX;
+else
+    scale=P.NORMMAX;
+end
 
 % check normalization style
 if(~any(strcmpi(P.NORMSTYLE,{'single' 'group'})))
-    warning('seizmo:p2:badInput','bad normalization style')
+    warning('seizmo:p3:badInput','bad normalization style')
     P.NORMSTYLE='single';
 end
 
@@ -116,7 +116,7 @@ for i=indices
     else time=data(i).ind; end
     
     % plot series
-    plot(time,data(i).dep/(ampmax(i)^P.P2NORM)*(P.NORMMAX^P.P2NORM),...
+    plot(time,i+data(i).dep/ampmax(i)*scale,...
         'color',colors(i,:),'linewidth',P.RECWIDTH);
 end
 hold off
@@ -125,6 +125,14 @@ hold off
 axis(P.AXIS{:});
 if(~isempty(P.XLIMITS)); axis auto; xlim(P.XLIMITS); end
 if(~isempty(P.YLIMITS)); ylim(P.YLIMITS); end
+
+% label y-axis with record names
+if(P.NAMESONYAXIS)
+    if(isfield(data,'name'))
+        set(gca,'ytick',1:nrecs);
+        set(gca,'yticklabel',{data.name}.');
+    end
+end
 
 % legend
 if(P.LEGEND)
@@ -148,7 +156,7 @@ if(isempty(P.TITLE))
     P.TITLE=[num2str(length(indices)) '/' num2str(nrecs) ' Records']; 
 end
 if(isempty(P.XLABEL)); P.XLABEL='Time (sec)'; end
-if(isempty(P.YLABEL)); P.YLABEL='Amplitude'; end
+if(isempty(P.YLABEL) && ~P.NAMESONYAXIS); P.YLABEL='Record Number'; end
 title(P.TITLE,'fontname',P.TITLEFONT,'fontweight',P.TITLEFONTWEIGHT,...
     'fontsize',P.TITLEFONTSIZE,'color',P.TITLEFONTCOLOR,...
     'interpreter',P.TITLEINTERP);

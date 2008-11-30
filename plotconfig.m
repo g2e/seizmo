@@ -1,4 +1,4 @@
-function [conf]=pconf()
+function [conf]=plotconfig()
 %PCONF    Returns default configuration structure for SEIZMO plotting
 %
 %    Description: Returns a structure for controlling plotting parameters

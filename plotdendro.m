@@ -1,4 +1,4 @@
-function [perm,colors,fh,sfh]=pdendro(Z,data,varargin)
+function [perm,colors,fh,sfh]=plotdendro(Z,data,varargin)
 %PDENDRO    Plots correlation linkage and seismograms
 %
 %    Description: Plots the heirarchial linkage given in Z corresponding to
@@ -26,10 +26,10 @@ function [perm,colors,fh,sfh]=pdendro(Z,data,varargin)
 %              dendrogram, linkage, cluster (Statistics Toolbox)
 
 % check data structure
-error(seischk(data,'x'))
+error(seizmocheck(data,'dep'))
 
 % get plotting style defaults
-P=pconf;
+P=plotconfig;
 
 % allow access to plot styling using global SEIZMO structure
 global SEIZMO; fields=fieldnames(P).';
@@ -48,7 +48,7 @@ for i=1:2:length(varargin)
 end
 
 % clean up unset parameters
-P=pconffix(P);
+P=plotconfigfix(P);
 
 % number of records
 nrecs=length(data);
@@ -132,7 +132,7 @@ clear temp
 % waveform subplot
 sfh(2)=subplot('Position',[0.5 0.1 0.4 0.8]);
 set(sfh(2),'color',P.PLOTBGCOLOR);
-p3(data(perm),'fighandle',fh,'subhandle',sfh(2),...
+plot0(data(perm),'fighandle',fh,'subhandle',sfh(2),...
     'yaxislocation','right',varargin{:},...
     'colormap',colors);
 

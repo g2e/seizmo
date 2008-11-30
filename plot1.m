@@ -1,4 +1,4 @@
-function [fh,sfh]=p1(data,varargin)
+function [fh,sfh]=plot1(data,varargin)
 %P1    Plot SEIZMO data records in individual subplots
 %
 %    Description: P1(DATA) plots timeseries and xy SEIZMO records in a
@@ -42,10 +42,10 @@ function [fh,sfh]=p1(data,varargin)
 %     Last Updated June 12, 2008 at 16:10 GMT
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % get plotting style defaults
-P=pconf;
+P=plotconfig;
 
 % allow access to plot styling using global SEIZMO structure
 global SEIZMO; fields=fieldnames(P).';
@@ -63,7 +63,7 @@ for i=1:2:length(varargin)
 end
 
 % clean up unset parameters
-P=pconffix(P);
+P=plotconfigfix(P);
 
 % select/open plot
 if(isempty(P.FIGHANDLE) || P.FIGHANDLE<1)
@@ -97,15 +97,14 @@ catch
 end
 
 % header info
-leven=glgc(data,'leven');
-error(lgcchk('leven',leven))
-iftype=genumdesc(data,'iftype');
+leven=getlgc(data,'leven');
+iftype=getenumdesc(data,'iftype');
 [t,kt,o,ko,a,ka,f,kf,b,delta,npts,gcarc]=...
-    gh(data,'t','kt','o','ko','a','ka','f','kf',...
+    getheader(data,'t','kt','o','ko','a','ka','f','kf',...
     'b','delta','npts','gcarc');
 
 % header structures (for determining if undefined)
-[h,idx]=vinfo(data);
+[h,idx]=versioninfo(data);
 
 % default columns/rows
 if(isempty(P.NCOLS))
