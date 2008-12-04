@@ -17,7 +17,7 @@ function [data,failed]=readdata(data,varargin)
 %     SEIZMO data structure setup:
 %
 %     Fields for all files:
-%      location - directory of file
+%      path - path to file
 %      name - file name
 %      filetype - type of datafile
 %      version - version of filetype
@@ -161,7 +161,7 @@ nrecs=numel(data);
 failed=false(nrecs,1);
 for i=1:nrecs
     % construct fullname
-    name=fullfile(data(i).location,data(i).name);
+    name=fullfile(data(i).path,data(i).name);
     
     % open file for reading
     fid=fopen(name,'r',data(i).byteorder);

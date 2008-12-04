@@ -121,7 +121,8 @@ dep=resample(dep,n,d);
 nnpts=floor((npts-1)*n/d)+1;
 
 % redistribute records
-data=changeheader(data,'delta',1/sr);
+e=getheader(data,'b')+(nnpts-1)./sr;
+data=changeheader(data,'delta',1/sr,'npts',nnpts,'e',e);
 data=distributerecords(data,dep,idx1,[],[],store,nnpts);
 
 end

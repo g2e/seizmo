@@ -21,7 +21,7 @@ function []=writeseizmo(data)
 %      writeseizmo(changebyteorder(data,'ieee-be'))
 %
 %     Alter the location of where the files are written:
-%      [data.location]=deal('some/new/directory');
+%      [data.path]=deal('some/new/directory');
 %      writeseizmo(data)
 %
 %    See also:  readseizmo, bseizmo, seizmodef, getversion, readdata,
@@ -92,7 +92,7 @@ for i=1:length(data)
     end
     
     % construct fullname
-    name=fullfile(data(i).location,data(i).name);
+    name=fullfile(data(i).path,data(i).name);
 
     % open file for writing
     fid=fopen(name,'w',data(i).byteorder);

@@ -67,7 +67,7 @@ for i=1:numel(data)
     end
     
     % get filename
-    name=fullfile(data(i).location,data(i).name);
+    name=fullfile(data(i).path,data(i).name);
     
     % formatted header
     disp(' ')

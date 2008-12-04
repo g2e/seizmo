@@ -7,34 +7,37 @@ function [y]=slidingavg(x,nsamples,varargin)
 %     to change this).
 %
 %     SLIDINGAVG(...,'POSITION','CENTER'|'TRAIL'|'LEAD') sets the position
-%     of the sliding window relative to the reference data point.  CENTER 
+%     of the sliding window relative to the reference data point (the data
+%     point that the average of the current window is assigned to).  CENTER 
 %     positions the window such that the reference point is at its center.
 %     TRAIL positions the window to trail the reference point such that the
 %     reference point has the highest index in the window.  LEAD sets the
 %     window to lead the reference point such that the reference point has 
 %     the lowest index in the window.  Note that the window size for a
-%     CENTER positioning is 2N+1, while for TRAIL or LEAD the window size
-%     is N.  Default position is CENTER.
+%     CENTER positioning is 2N+1 samples, while for TRAIL or LEAD the
+%     window size is N samples.  Default position is CENTER.
 %     
 %     SLIDINGAVG(...,'OFFSET',OFFSET) sets the offset of the sliding
 %     window from the reference data point in number of samples.  For a
 %     centered window (see option 'POSITION') this introduces a gap of
-%     2*OFFSET-1 in the window.  For example an OFFSET of 1 will exclude
-%     the reference data point from the sliding window.  Negative OFFSETS
-%     are allowed for a centered window, but they are complicated due to
-%     overlap.  For example an OFFSET of -1 will make the window include
-%     the reference data point twice and an OFFSET of -2 will cause the 3
-%     centermost points to be included twice and so on.  Default OFFSET=0.
+%     2*OFFSET-1 samples in the center of the window.  For example an
+%     OFFSET of 1 will exclude the reference data point from the sliding
+%     window.  An OFFSET of 0 is treated specially and will not alter the
+%     sliding window.  Negative OFFSETS are allowed for a centered window,
+%     but they are complicated due to overlap.  For example an OFFSET of -1
+%     will make the window include the reference data point twice and an
+%     OFFSET of -2 will cause the 3 centermost points to be included twice
+%     and so on.  Default OFFSET=0.
 %     
 %     SLIDINGAVG(...,'EDGE','TRUNCATE'|'PAD') sets how to handle the edge
-%     cases.  TRUNCATE eliminates points in the sliding-window that do not
+%     cases.  TRUNCATE eliminates points in the sliding window that do not
 %     reference a datapoint (for instance if the window extends before or
 %     after the data, that portion of the window will be truncated).  PAD
 %     adds zeros to the data so that all the points of the sliding-window
 %     always reference some value.  Default setting is TRUNCATE.
 %
 %     SLIDINGAVG(...,'DIM',N) specifies an alternative dimension to slide
-%     across rather than the default 1.
+%     across.  Default seeting is N=1 (slides across rows).
 %
 %     SLIDINGAVG(...,'CUSTOM',WINDOW) allows a custom sliding window
 %     average.  This might be useful for a Gaussian average or similar.
@@ -47,11 +50,9 @@ function [y]=slidingavg(x,nsamples,varargin)
 %
 %    Notes:
 %     - Centered windows are of length 2N+1, while the others are just N
-%     - SLIDINGAVG is faster than SLIDINGFUN but less flexible
+%     - SLIDINGAVG is much faster than SLIDINGFUN but less flexible
 %
 %    Tested on: Matlab r2007b
-%
-%    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Usage:    y=slidingavg(x,n)
 %              y=slidingavg(...,'position','center'|'trail'|'lead')
@@ -67,16 +68,20 @@ function [y]=slidingavg(x,nsamples,varargin)
 %     An example of a custom call:
 %      y=slidingavg(x,[],'custom',[-10:10; gausswin(21).'])
 %
-%    See also: slidingrms, slidingam, slidingfun
+%    See also: slidingrms, slidingabsmean, slidingfun
 
 %     Version History:
 %        Oct.  7, 2008 - initial version
 %        Nov. 13, 2008 - renamed from SLIDINGMEAN to SLIDINGAVG, made it a
 %                        normal function, added options DIM and CUSTOM
 %        Nov. 15, 2008 - update for new toolbox name
+%        Dec.  3, 2008 - fixed offset bugs for center, fix offset bug for
+%                        trail/lead, fixed bug for handling custom filters,
+%                        fix bug in handling multiple entries for the same
+%                        element, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 22:50 GMT
+%     Last Updated Dec.  3, 2008 at 06:15 GMT
 
 % todo:
 
@@ -139,7 +144,7 @@ end
 if(~ischar(option.EDGE) || ...
         ~any(strcmpi(option.EDGE,{'pad' 'truncate'})))
     error('seizmo:slidingavg:badOptionValue',...
-        'EDGE option must be ''PAD'' or ''TRUNCATE''');
+        'EDGE option must be ''PAD'' or ''TRUNCATE''!');
 end
 if(~isnumeric(option.DIM) || ~isscalar(option.DIM) || option.DIM<1 || ...
         option.DIM~=fix(option.DIM))
@@ -160,14 +165,14 @@ if(isempty(option.CUSTOM))
     if(~isnumeric(nsamples) || ~isscalar(nsamples)...
             || nsamples<1 || fix(nsamples)~=nsamples)
         error('seizmo:slidingavg:badInput',...
-            'N must be a positive integer')
+            'N must be a positive integer!')
     end
     
     % build window indices
     switch option.POSITION
         case 'center'
-            hw=(1:nsamples)+option.OFFSET;
-            window=[-fliplr(hw) zeros(~logical(option.OFFSET),1) hw];
+            hw=(1:nsamples)+option.OFFSET-(option.OFFSET>0);
+            window=[-fliplr(hw) zeros(~option.OFFSET,1) hw];
         case 'trail'
             window=(1-nsamples:0)+option.OFFSET;
         case 'lead'
@@ -184,10 +189,12 @@ end
 % translate window to filter input
 minw=min(window);
 maxw=max(window);
-aminw=abs(minw);
 rangew=maxw-minw+1;
 lw=zeros(1,rangew);
-lw(window+aminw+1)=weights;
+owidx=maxw-window+1;
+for i=1:nw
+    lw(owidx(i))=lw(owidx(i))+weights(i);
+end
 
 % permute x
 sz=size(x);

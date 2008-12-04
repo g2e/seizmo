@@ -7,7 +7,7 @@ function [data]=readheader(varargin)
 %     filenames (one filename per cell).  Wildcards are valid.
 %
 %     Fields of output SEIZMO structure:
-%      location - directory of file
+%      path - directory of file
 %      name - file name
 %      filetype - type of datafile
 %      version - version of filetype
@@ -61,7 +61,7 @@ function [data]=readheader(varargin)
 
 % compile file lists
 varargin=onefilelist(varargin{:});
-nfiles=length(varargin);
+nfiles=numel(varargin);
 
 % error if no files
 if(nfiles<1)
@@ -69,14 +69,15 @@ if(nfiles<1)
 end
 
 % pre-allocating SEIZMO structure
-data(nfiles,1)=struct('location',[],'name',[],'filetype',[],...
+data(nfiles,1)=struct('path',[],'name',[],'filetype',[],...
     'version',[],'byteorder',[],'hasdata',[],'head',[]);
 
 % loop for each file
 destroy=false(nfiles,1);
 for i=1:nfiles
     % get filetype, version and byte-order
-    [filetype,version,endian]=getversion(varargin{i});
+    name=fullfile(varargin(i).path,varargin(i).name);
+    [filetype,version,endian]=getversion(name);
     
     % validity check
     if(isempty(filetype))
@@ -92,13 +93,13 @@ for i=1:nfiles
     if(strcmpi(filetype,'SAC Binary')...
             || strcmpi(filetype,'SEIZMO Binary'))
         % open file for reading
-        fid=fopen(varargin{i},'r',endian);
+        fid=fopen(name,'r',endian);
         
         % fid check
         if(fid<0)
             % non-existent file or directory
             warning('seizmo:readheader:badFID',...
-                'File not openable, %s !',varargin{i});
+                'File not openable, %s !',name);
             destroy(i)=true;
             continue;
         end
@@ -112,16 +113,15 @@ for i=1:nfiles
             % smaller than header size
             fclose(fid);
             warning('seizmo:readheader:fileTooShort',...
-                'File too short, %s !',varargin{i});
+                'File too short, %s !',name);
             destroy(i)=true;
             continue;
         end
         
         % save directory and filename
-        [pathstr,name,ext,ver]=fileparts(varargin{i});
-        if(isempty(pathstr)); pathstr='.'; end
-        data(i).location=pathstr;
-        data(i).name=[name ext ver];
+        if(isempty(varargin(i).path)); varargin(i).path=['.' filesep]; end
+        data(i).path=varargin(i).path;
+        data(i).name=varargin(i).name;
         
         % save filetype, version, endian and hasdata
         data(i).filetype=filetype;

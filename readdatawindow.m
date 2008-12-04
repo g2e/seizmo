@@ -266,7 +266,7 @@ for i=find(even).'
     end
     
     % construct fullname
-    name=fullfile(data(i).location,data(i).name);
+    name=fullfile(data(i).path,data(i).name);
     
     % open file
     fid=fopen(name,'r',data(i).byteorder);

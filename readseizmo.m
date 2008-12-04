@@ -9,7 +9,7 @@ function [data]=readseizmo(varargin)
 %     SEIZMO data structure setup:
 %
 %     Fields for all files:
-%      location - directory of file
+%      path - path to file
 %      name - file name
 %      filetype - type of datafile
 %      version - version of filetype

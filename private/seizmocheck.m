@@ -11,7 +11,7 @@ function [report]=seizmocheck(data,varargin)
 %
 %    Notes:
 %     - Current SEIZMO Structure Requirements
-%       - Fields: location, name, filetype, version, 
+%       - Fields: path, name, filetype, version, 
 %                 byteorder, hasdata, head
 %       - All default fields must be nonempty
 %       - All default fields must be valid
@@ -44,7 +44,7 @@ function [report]=seizmocheck(data,varargin)
 %                        and head are not empty and are valid for each
 %                        record
 %        Oct. 17, 2008 - require new fields DIR and FILETYPE
-%        Oct. 27, 2008 - LOCATION field replaces DIR field, vectorized
+%        Oct. 27, 2008 - PATH field replaces DIR field, vectorized
 %                        using cellfun, global SEIZMO allows skipping check
 %        Oct. 30, 2008 - little simpler code for checking required fields
 %        Nov. 13, 2008 - renamed from SEISCHK to SEIZCHK
@@ -85,7 +85,7 @@ elseif(isempty(data))
     report.message='SEIZMO struct must not be empty!';
     return;
 else
-    defreqfields={'location' 'name' 'filetype'...
+    defreqfields={'path' 'name' 'filetype'...
         'version' 'byteorder' 'hasdata' 'head'};
     reqfields=sort([defreqfields varargin]);
     fields=sort(fieldnames(data).');
@@ -100,7 +100,7 @@ else
     end
     
     % compile into cell arrays
-    locations={data.location};
+    paths={data.path};
     names={data.name};
     endians={data.byteorder};
     versions={data.version};
@@ -109,9 +109,9 @@ else
     headers={data.head};
     
     % check each using cellfun
-    if(any(cellfun('isempty',locations)) || ~iscellstr(locations))
+    if(any(cellfun('isempty',paths)) || ~iscellstr(paths))
         report.identifier='seizmo:seizmocheck:nameBad';
-        report.message=['SEIZMO struct LOCATION field must be a '...
+        report.message=['SEIZMO struct PATH field must be a '...
             'nonempty string!'];
     elseif(any(cellfun('isempty',names)) || ~iscellstr(names))
         report.identifier='seizmo:seizmocheck:dirBad';

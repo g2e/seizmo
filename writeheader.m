@@ -56,7 +56,7 @@ error(nargchk(1,1,nargin))
 % loop over records
 for i=1:numel(data)
     % construct fullname
-    name=fullfile(data(i).location,data(i).name);
+    name=fullfile(data(i).path,data(i).name);
     
     % open existing file for writing
     if(exist(name,'file'))
