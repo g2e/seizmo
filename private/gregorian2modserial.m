@@ -17,9 +17,8 @@ function [modserial]=gregorian2modserial(times)
 %       86400 seconds)!
 %     - Basically like Matlab's DATENUM except that it also accepts day of
 %       year style dates, rolls-over negative calendar months, does not
-%       handle string input and outputs day and secondofday rather than
-%       just days (for better precision).  Because GREGORIAN2SERIAL is not
-%       compiled and DATENUM is, DATENUM is 2 to 3 times faster.
+%       handle string input, and outputs day and secondofday rather than
+%       just days (for better precision).
 %
 %    Tested on: Matlab r2007b
 %
@@ -70,7 +69,7 @@ switch sz(2)
         seconds=86400*mod(times(:,2,:),1);
     case 3
         % year, month, day of month
-        ndays=[0 31 59 90 120 151 181 212 243 273 304 334];
+        ndays=[0 31 59 90 120 151 181 212 243 273 304 334].';
         times(:,1,:)=times(:,1,:)+floor((times(:,2,:)-1)/12);
         times(:,2,:)=mod(times(:,2,:)-1,12)+1;
         yr=times(:,1,:);
@@ -109,7 +108,7 @@ switch sz(2)
         seconds=mod(seconds,86400);
     case 6
         % year, month, day of month, hour, minute, second
-        ndays=[0 31 59 90 120 151 181 212 243 273 304 334];
+        ndays=[0 31 59 90 120 151 181 212 243 273 304 334].';
         times(:,1,:)=times(:,1,:)+floor((times(:,2,:)-1)/12);
         times(:,2,:)=mod(times(:,2,:)-1,12)+1;
         yr=times(:,1,:);

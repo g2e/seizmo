@@ -18,7 +18,7 @@ function [fh,lh]=plot2(data,varargin)
 %     To plot all traces with a legend, without limiting the x/y axis
 %      p2(data,'legend',true)
 %
-%    See also:  p1, p3, recsec
+%    See also:  p1, p0, recsec
 
 % check data structure
 error(seizmocheck(data,'dep'))

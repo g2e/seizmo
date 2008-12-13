@@ -1,10 +1,10 @@
-function [data]=removedeadrecords(data,option)
+function [data,removed]=removedeadrecords(data,option)
 %REMOVEDEADRECORDS    Removes constant SEIZMO records
 %
 %    Description: REMOVEDEADRECORDS(DATA) removes records that have no
 %     change in the dependent component.  These can cause problems in
 %     analysis and are not worth keeping.  Uses the header fields 
-%     depmin/depmax so that records can be eliminated before reading
+%     'depmin'/'depmax' so that records can be eliminated before reading
 %     in the data.
 %
 %     REMOVEDEADRECORDS(DATA,OPTION) allows changing how records are
@@ -13,11 +13,16 @@ function [data]=removedeadrecords(data,option)
 %     records.  When OPTION is false, the data (in .dep) is used to find
 %     dead records.
 %
+%     [DATA,REMOVED]=REMOVEDEADRECORDS(...) also returns a listing of the
+%     indices of the records removed in REMOVED.  These indices are
+%     relative to the input dataset, not the output dataset (obviously
+%     because the records are no longer in the output dataset!).
+%
 %    Notes:
 %
 %    Tested on: Matlab r2007b
 %
-%    Header changes: NONE
+%    Header changes: NONE (may use CHECKHEADER)
 %
 %    Usage:    data=removedeadrecords(data)
 %
@@ -32,9 +37,10 @@ function [data]=removedeadrecords(data,option)
 %        Feb. 28, 2008 - SEISCHK support
 %        Mar.  4, 2008 - minor doc update
 %        Nov. 22, 2008 - update for new name schema (now REMOVEDEADRECORDS)
+%        Dec.  8, 2008 - 2nd output lists removed indices
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 08:00 GMT
+%     Last Updated Dec.  8, 2008 at 21:30 GMT
 
 % todo:
 
@@ -64,7 +70,8 @@ if(option)
     [depmax,depmin]=getheader(data,'depmax','depmin');
     
     % remove dead records
-    data(depmax-depmin==0)=[];
+    removed=((depmax-depmin)==0);
+    data(removed)=[];
     
     % toggle checking back
     set_seizmocheck_state(oldseizmocheckstate);
@@ -81,7 +88,8 @@ else
     end
     
     % remove dead records
-    data((dmax-dmin)==0)=[];
+    removed=((dmax-dmin)==0);
+    data(removed)=[];
 end
 
 end

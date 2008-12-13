@@ -63,7 +63,7 @@ switch sz(2)
         end
     case 3
         % year, month, day of month
-        ndays=[0 31 59 90 120 151 181 212 243 273 304 334];
+        ndays=[0 31 59 90 120 151 181 212 243 273 304 334].';
         times(:,1,:)=times(:,1,:)+floor((times(:,2,:)-1)/12);
         times(:,2,:)=mod(times(:,2,:)-1,12)+1;
         yr=times(:,1,:);
@@ -98,7 +98,7 @@ switch sz(2)
         serial=serial+times(:,3,:)/24+times(:,4,:)/1440+times(:,5,:)/86400;
     case 6
         % year, month, day of month, hour, minute, second
-        ndays=[0 31 59 90 120 151 181 212 243 273 304 334];
+        ndays=[0 31 59 90 120 151 181 212 243 273 304 334].';
         times(:,1,:)=times(:,1,:)+floor((times(:,2,:)-1)/12);
         times(:,2,:)=mod(times(:,2,:)-1,12)+1;
         yr=times(:,1,:);

@@ -20,7 +20,7 @@ function [conf]=plotconfig()
 %       4. CONF=pconffix(CONF)        (sets unset options using heirarchy)
 %       5. plotting
 %
-%    See also: p1, p2, p3, recsec
+%    See also: p1, p2, p0, recsec
 
 %     Version History:
 %        ????????????? - Initial Version

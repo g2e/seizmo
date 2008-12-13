@@ -22,7 +22,7 @@ function [perm,colors,fh,sfh]=plotdendro(Z,data,varargin)
 %       Z=linkage(1-cv,'average')
 %       pdendro(Z,data,'treelimit',1)
 %
-%    See also: p1, p2, p3, recsec, mcxc,
+%    See also: p1, p2, p0, recsec, mcxc,
 %              dendrogram, linkage, cluster (Statistics Toolbox)
 
 % check data structure

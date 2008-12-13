@@ -308,7 +308,7 @@ if(isscalar(unique(iztype(goodztype))))
         i=find(izt);
         warning('seizmo:checkheader:badRefTime',...
             ['%s field not set to 0 for record(s):\n' sprintf('%d ',i)...
-            '\nIZTYPE field demands it is!',upper(iz)]);
+            '\nIZTYPE field demands it is!'],upper(iz{1}(2:end)));
     end
 else
     for i=find(goodztype).';

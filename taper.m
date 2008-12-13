@@ -2,7 +2,7 @@ function [data]=taper(data,width,type,option)
 %TAPER   Taper SEIZMO records
 %
 %    Description: TAPER(DATA) tapers data records with a Hann taper set to
-%     vary from 0 to 1 over 0.05 of every records' width on each end.  This
+%     vary from 0 to 1 over 5% of every records' length on each end.  This
 %     matches SAC's default taper command.
 %
 %     TAPER(DATA,WIDTH) allows the taper width to be set.  WIDTH should be
@@ -38,7 +38,9 @@ function [data]=taper(data,width,type,option)
 %
 %     TAPER(DATA,WIDTH,TYPE,OPTION) sets a taper parameter to OPTION.  For
 %     taper types 'chebwin', 'kaiser' and 'tukeywin' the taper parameter is
-%     required.  Use Matlab's help for specifics on each taper's parameter.
+%     required.  Use 'help <type_string>' and 'doc <type_string>', where 
+%     <type_string> should be replaced with the taper's above TYPE string,
+%     for specifics on each taper's parameter.
 %
 %    Notes:
 %     - uses Matlab's Signal Processing Toolbox WINDOW function
@@ -74,9 +76,10 @@ function [data]=taper(data,width,type,option)
 %        Nov. 22, 2008 - doc update, history fix, update for new name
 %                        schema, handle widths>1, one changeheader call,
 %                        error on xyz file, better checking
+%        Dec. 12, 2008 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 21:55 GMT
+%     Last Updated Dec. 12, 2008 at 02:55 GMT
 
 % check input
 error(nargchk(1,4,nargin))

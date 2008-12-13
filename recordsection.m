@@ -21,7 +21,7 @@ function [fh,lh]=recordsection(data,varargin)
 %       recsec(data,'yfield','az')
 %       recsec(data,'yfield','baz')
 %
-%    See also:  p1, p2, p3
+%    See also:  p1, p2, p0
 
 % check data structure
 error(seizmocheck(data,'dep'))

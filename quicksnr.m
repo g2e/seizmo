@@ -31,9 +31,10 @@ function [snr]=quicksnr(data,nwin,swin)
 %                        better checks, formula changed to compare
 %                        variation of values in the windows rather than
 %                        just the maximums
+%        Dec. 13, 2008 - allow different window for each record (whoops)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  24, 2008 at 00:30 GMT
+%     Last Updated Dec. 13, 2008 at 03:00 GMT
 
 % todo:
 
@@ -56,14 +57,15 @@ set_checkheader_state(false);
 
 % check windows
 if(~isnumeric(nwin) || ~isnumeric(swin)...
-        || numel(nwin)~=2 || numel(swin)~=2)
+        || size(nwin,2)~=2 || size(swin,2)~=2 ...
+        || size(nwin,1)~=size(swin,1))
     error('seizmo:quicksnr:badInput',...
-        'NOISEWINDOW & SIGNALWINDOW must be 2 element numeric arrays!');
+        'NOISEWINDOW & SIGNALWINDOW must be Nx2 numeric arrays!');
 end
 
 % snr=(max-min of signal)/(max-min of noise)
-[nmax,nmin]=getheader(cut(data,nwin(1),nwin(2)),'depmax','depmin');
-[smax,smin]=getheader(cut(data,swin(1),swin(2)),'depmax','depmin');
+[nmax,nmin]=getheader(cut(data,nwin(:,1),nwin(:,2),'trim',false),'depmax','depmin');
+[smax,smin]=getheader(cut(data,swin(:,1),swin(:,2),'trim',false),'depmax','depmin');
 snr=(smax-smin)./(nmax-nmin);
 
 % toggle checking back

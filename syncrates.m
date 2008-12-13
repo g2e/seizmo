@@ -5,8 +5,8 @@ function [data]=syncrates(data,sr)
 %     records in DATA to the sample rate SR.  A fir filter is used to
 %     avoid aliasing issues, but this can cause edge effects if the records
 %     deviate from zero strongly at the start/end of the record.  Typically
-%     using RTREND and TAPER on records beforehand helps to limit the edge
-%     effects.  Uses the Matlab function resample (Signal Processing
+%     using REMOVETREND and TAPER on records beforehand helps to limit the
+%     edge effects.  Uses the Matlab function resample (Signal Processing
 %     Toolbox).
 %
 %    Notes:
@@ -19,10 +19,10 @@ function [data]=syncrates(data,sr)
 %    Usage:    data=syncrates(data,sr)
 %
 %    Examples:
-%     Change all records to 5sps:
+%     Change all records to 5 samples per second:
 %      data=syncrates(data,5)
 %
-%    See also: interpolate, iirfilter, subsample, oversample
+%    See also: interpolate, iirfilter, squish, stretch
 
 %     Version History:
 %        Feb. 16, 2008 - initial version

@@ -21,7 +21,7 @@ function [dep,idx1,ind,idx2,store,npts]=combinerecords(data)
 %
 %    Examples:
 %     Get the interquartile range of records and assign to a header field:
-%      dep=combo(data);
+%      dep=combinerecords(data);
 %      data=changeheader(data,'user3',iqr(dep));
 %
 %    See also: distributerecords, bseizmo

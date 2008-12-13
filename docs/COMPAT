@@ -24,12 +24,12 @@ Prior to 7.1:
 
 Current issues with Octave:
 1. cellstr support for several functions
-   including strcmp*, setdiff, intersect
+   including setdiff, intersect, etc
 	affects:
 	- lots... :(
 2. error does not take struct input
 	affects
-	- seizmocheck
+	- lots... :(
 
 
 

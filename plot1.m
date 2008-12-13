@@ -32,7 +32,7 @@ function [fh,sfh]=plot1(data,varargin)
 %     Black on white plot without markers:
 %      p1(data,'bgcolor','w','fgcolor','k','colormap','k','markers',false)
 %
-%    See also:  p2, p3, recsec
+%    See also:  p2, p0, recsec
 
 %     Version History:
 %        ????????????? - Initial Version
@@ -179,9 +179,11 @@ for i=1:nrecs
     end
     %if(isempty(P.XLABEL)); P.XLABEL='Time (sec)'; end
     %if(isempty(P.YLABEL)); P.YLABEL='Amplitude'; end
+    if(p1title(1)~=32)
     title(p1title,'fontname',P.TITLEFONT,'fontweight',P.TITLEFONTWEIGHT,...
         'fontsize',P.TITLEFONTSIZE,'color',P.TITLEFONTCOLOR,...
         'interpreter',P.TITLEINTERP);
+    end
     xlabel(P.XLABEL,'fontname',P.XLABELFONT,'fontweight',P.XLABELFONTWEIGHT,...
         'fontsize',P.XLABELFONTSIZE,'color',P.XLABELFONTCOLOR,...
         'interpreter',P.XLABELINTERP);

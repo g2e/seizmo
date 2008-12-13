@@ -1,4 +1,4 @@
-function [data]=selectrecords(data,option,plottype,varargin)
+function [data,selected,h]=selectrecords(data,option,plottype,varargin)
 %SELECTRECS    Select or delete SEIZMO data records graphically
 %
 %    Description:  SELECTRECS(DATA,OPTION,PLOTTYPE) allows a user to select
@@ -20,13 +20,13 @@ function [data]=selectrecords(data,option,plottype,varargin)
 %     To select which records to delete using p1:
 %       data=selectrecs(data,'delete','p1')
 %
-%    See also: p1, p3
+%    See also: p1, p0
 
 % check data structure
 error(seizmocheck(data,'dep'))
 
 % defaults
-if(nargin<3); plottype='plot0'; end
+if(nargin<3); plottype='p0'; end
 if(nargin<2); option='keep'; end
 
 % plottype selection
@@ -35,7 +35,7 @@ button=0;
 selected=false(nrecs,1);
 bgcolors=zeros(nrecs,3);
 handles=ones(nrecs,1)*-1;
-if(isequal(plottype,'plot1'))
+if(isequal(plottype,'p1'))
     % plot type 1
     [h,sh]=plot1(data,varargin{:});
     
@@ -99,7 +99,7 @@ if(isequal(plottype,'plot1'))
     else
         error('seizmo:selectrecs:badInput','Unknown option: %s',option)
     end
-elseif(isequal(plottype,'plot0'))
+elseif(isequal(plottype,'p0'))
     % plot type 3
     [h]=plot0(data,varargin{:});
     

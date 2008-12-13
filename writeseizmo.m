@@ -47,9 +47,10 @@ function []=writeseizmo(data)
 %        Oct. 27, 2008 - update for struct change, use state changes for
 %                        SEISCHK & CHKHDR
 %        Nov. 17, 2008 - update for new name schema (now WRITESEIZMO)
+%        Dec. 13, 2008 - added mkdir call to make sure path exists
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 17, 2008 at 18:10 GMT
+%     Last Updated Dec. 13, 2008 at 03:30 GMT
 
 % todo:
 
@@ -93,6 +94,15 @@ for i=1:length(data)
     
     % construct fullname
     name=fullfile(data(i).path,data(i).name);
+    
+    % make sure directory exists
+    [ok,msg,msgid]=mkdir(data(i).path);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:writeseizmo:pathBad',...
+            ['Record: %d, File: %s\n' ...
+            'Cannot write record to path!'],i,name);
+    end
 
     % open file for writing
     fid=fopen(name,'w',data(i).byteorder);
