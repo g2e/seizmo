@@ -132,6 +132,6 @@ function [data]=addrecords(varargin)
 % todo:
 
 % pass on to recordfun
-data=recordfun('+',varargin);
+data=recordfun('+',varargin{:});
 
 end

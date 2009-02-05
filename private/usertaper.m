@@ -5,7 +5,7 @@ function [data,taptype,tap,tapopt,h,h2]=usertaper(data,skip,rdrift)
 error(nargchk(1,3,nargin))
 
 % check data structure
-error(seischk(data,'dep'))
+error(seizmocheck(data,'dep'))
 
 % defaults
 if(nargin<3 || isempty(rdrift)); rdrift=1; end  % demean tapered data

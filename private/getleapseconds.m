@@ -29,9 +29,10 @@ function [dates,leaps]=getleapseconds(option)
 %     Version History:
 %        Nov. 10, 2008 - initial version
 %        Nov. 15, 2008 - update for new name schema, option now a logical
+%        Dec. 13, 2008 - fix bug, eliminate recursion
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 22:10 GMT
+%     Last Updated Dec. 13, 2008 at 07:50 GMT
 
 % todo:
 
@@ -50,19 +51,15 @@ end
 global SEIZMO
 
 % retrieve from memory or recalculate
-if(option)
-    if(isfield(SEIZMO,'GETLEAPSECONDS')...
-            && isfield(SEIZMO.GETLEAPSECONDS,'DATES')...
-            && isfield(SEIZMO.GETLEAPSECONDS,'LEAPS')...
-            && isnumeric(SEIZMO.GETLEAPSECONDS.DATES)...
-            && isnumeric(SEIZMO.GETLEAPSECONDS.LEAPS)...
-            && isequal(size(SEIZMO.GETLEAPSECONDS.LEAPS),...
-            size(SEIZMO.GETLEAPSECONDS.DATES)))
-        dates=SEIZMO.GETLEAPSECONDS.DATES;
-        leaps=SEIZMO.GETLEAPSECONDS.LEAPS;
-    else
-        [dates,leaps]=getleapseconds('refresh');
-    end
+if(option && isfield(SEIZMO,'GETLEAPSECONDS')...
+        && isfield(SEIZMO.GETLEAPSECONDS,'DATES')...
+        && isfield(SEIZMO.GETLEAPSECONDS,'LEAPS')...
+        && isnumeric(SEIZMO.GETLEAPSECONDS.DATES)...
+        && isnumeric(SEIZMO.GETLEAPSECONDS.LEAPS)...
+        && isequal(size(SEIZMO.GETLEAPSECONDS.LEAPS),...
+        size(SEIZMO.GETLEAPSECONDS.DATES)))
+    dates=SEIZMO.GETLEAPSECONDS.DATES;
+    leaps=SEIZMO.GETLEAPSECONDS.LEAPS;
 else
     leapstr=leapseconds;
     dates=datenum(leapstr);

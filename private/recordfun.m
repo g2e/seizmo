@@ -186,7 +186,7 @@ end
 isdata=false(1,nargin-1);
 oldseizmocheckstate=get_seizmocheck_state;
 set_seizmocheck_state(true);
-for i=1:(nargin-1); isdata(i)=isseis(varargin{i},'dep'); end
+for i=1:(nargin-1); isdata(i)=isseizmo(varargin{i},'dep'); end
 set_seizmocheck_state(oldseizmocheckstate);
 
 % push datasets into a separate variable
@@ -194,7 +194,7 @@ data=varargin(isdata);
 varargin(isdata)=[];
 
 % options must be field-value pairs
-nargopt=length(varargin);
+nargopt=numel(varargin);
 if(mod(nargopt,2))
     error('seizmo:recordfun:badNumOptions','Unpaired option(s)!');
 end

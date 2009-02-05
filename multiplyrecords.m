@@ -128,6 +128,6 @@ function [data]=multiplyrecords(varargin)
 % todo:
 
 % pass on to recordfun
-data=recordfun('+',varargin);
+data=recordfun('*',varargin{:});
 
 end

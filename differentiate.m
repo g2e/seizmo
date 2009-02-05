@@ -38,7 +38,7 @@ function [data]=differentiate(data,option)
 %    Examples:
 %     These are equal:
 %      removemean(data)
-%      integrate(differentiate(data))
+%      removemean(integrate(differentiate(data)))
 %
 %    See also: integrate, multiplyomega, divideomega
 

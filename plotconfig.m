@@ -41,6 +41,8 @@ conf=struct(...
 'DOUBLEBUFFER','on',...                     % DOUBLE THE BUFFER
 'POINTER','crosshair',...                   % POINTER STYLE
 'FIGBGCOLOR',[],...                         % FIGURE COLOR
+'UNITS','normalized',...                    % FIGURE UNITS
+'POSITION',[],...                           % FIGURE POSITION
 ...
 ...% GENERAL
 'BGCOLOR','k',...                           % BACKGROUND COLOR
