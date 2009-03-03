@@ -1,8 +1,8 @@
-function [application,version]=getapp()
-%GETAPP    Return the application running this script and its version
+function [application,version]=getapplication()
+%GETAPPLICATION    Returns application running this script and its version
 %
-%    Description: [APPLICATION,VERSION]=GETAPP() will determine and return
-%     the name and version of the application running this script
+%    Description: [APPLICATION,VERSION]=GETAPPLICATION() will determine and
+%     return the name and version of the application running this script
 %     (obviously only if the application can run this script in the first
 %     place).  Both APPLICATION and VERSION are strings.
 %
@@ -11,14 +11,14 @@ function [application,version]=getapp()
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    [application,version]=getapp()
+%    Usage:    [application,version]=getapplication()
 %
 %    Examples:
 %     Matlab and Octave still behave quite differently for a number of
 %     different functions so it is best in some cases to use different
 %     function calls depending on which we are running:
-%      [app,ver]=getapp;
-%      if(strcmpi(app,'matlab'))
+%      [app,ver]=getapplication;
+%      if(strcmp(app,'MATLAB'))
 %        % do something via matlab routines
 %      else
 %        % do something via octave routines
@@ -28,9 +28,10 @@ function [application,version]=getapp()
 
 %     Version History:
 %        Nov. 13, 2008 - initial version
+%        Mar.  3, 2009 - minor doc cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2008 at 05:50 GMT
+%     Last Updated Mar.  3, 2009 at 20:10 GMT
 
 % todo:
 

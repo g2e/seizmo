@@ -42,7 +42,7 @@ conf=struct(...
 'POINTER','crosshair',...                   % POINTER STYLE
 'FIGBGCOLOR',[],...                         % FIGURE COLOR
 'UNITS','normalized',...                    % FIGURE UNITS
-'POSITION',[0 0 0.5 0.5],...                % FIGURE POSITION
+'POSITION',[],...                           % FIGURE POSITION
 ...
 ...% GENERAL
 'BGCOLOR','k',...                           % BACKGROUND COLOR

@@ -67,7 +67,7 @@ function [data,failed]=readdata(data,varargin)
 %      data=readdata(data)
 %
 %    See also: readheader, readdatawindow, readseizmo, writeseizmo, getlgc,
-%              writeheader, bseizmo, seizmodef, getversion, seizmosize
+%              writeheader, bseizmo, seizmodef, getfileversion, seizmosize,
 %              getheader, listheader, changeheader, getenumid, getenumdesc
 
 %     Version History:
@@ -93,9 +93,10 @@ function [data,failed]=readdata(data,varargin)
 %                        make use of state changes for SEISCHK & CHKHDR
 %        Nov. 12, 2008 - fix allocation of ind cmp for uneven records
 %        Nov. 17, 2008 - update for new name schema (now READDATA)
+%        Mar.  3, 2009 - update for GETFILEVERSION
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 17, 2008 at 18:35 GMT
+%     Last Updated Mar.  3, 2009 at 19:25 GMT
 
 % todo:
 

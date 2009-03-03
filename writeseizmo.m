@@ -24,7 +24,7 @@ function []=writeseizmo(data)
 %      [data.path]=deal('some/new/directory');
 %      writeseizmo(data)
 %
-%    See also:  readseizmo, bseizmo, seizmodef, getversion, readdata,
+%    See also:  readseizmo, bseizmo, seizmodef, getfileversion, readdata,
 %               readdatawindow, readheader, writeheader
 
 %     Version History:

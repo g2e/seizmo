@@ -24,8 +24,8 @@ function []=writeheader(data)
 %      writeheader(changeheader(readheader('A.SAC'),'kuser0','QCed'))
 %
 %    See also:  writeseizmo, readseizmo, bseizmo, readdatawindow, readdata,
-%               readheader, seizmodef, getversion, changeheader, getheader,
-%               listheader, getlgc, getenumid, getenumdesc, getncmp
+%               readheader, seizmodef, getfileversion, changeheader,
+%               getheader, listheader, getlgc, getenumid, getenumdesc
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -42,9 +42,10 @@ function []=writeheader(data)
 %                        can write whatever they want to disk
 %        Nov. 17, 2008 - update for new name schema (now WRITEHEADER)
 %        Dec. 13, 2008 - added mkdir call to make sure path exists
+%        Mar.  3, 2009 - update for GETFILEVERSION
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 13, 2008 at 03:30 GMT
+%     Last Updated Mar.  3, 2009 at 19:20 GMT
 
 % todo:
 
@@ -71,7 +72,7 @@ for i=1:numel(data)
     % open existing file for writing
     if(exist(name,'file'))
         % get version/byte-order of datafile on disk
-        [filetype,fileversion,fileendian]=getversion(name);
+        [filetype,fileversion,fileendian]=getfileversion(name);
         
         % non-zero version ==> file is SEIZMO compatible
         if(~isempty(filetype))

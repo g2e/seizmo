@@ -3,12 +3,12 @@ function [list]=onefilelist(varargin)
 %
 %    Description:  ONELIST(ARG1,...,ARGN) combines the input char/cellstr 
 %     arrays into a single-column cellstr array and then pipes each cell 
-%     through RDIR to expand wildcard inputs.  This is mostly useful for 
+%     through XDIR to expand wildcard inputs.  This is mostly useful for 
 %     taking file lists and wildcards in various array formats and 
 %     combining them into one simple list of files.
 %
 %    Notes:
-%     - RDIR is taken from the Matlab File Exchange
+%     - XDIR is taken from the Matlab File Exchange
 %
 %    Tested on: Matlab r2007b
 %
@@ -59,7 +59,7 @@ end
 % concatinate arguments
 varargin=[varargin{:}].';
 
-% pump each cell through dir
+% pump each cell through xdir
 list=[];
 for i=1:length(varargin)
     % get this filelist

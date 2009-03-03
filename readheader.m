@@ -53,9 +53,10 @@ function [data]=readheader(varargin)
 %        Oct. 17, 2008 - added dir and filetype fields
 %        Oct. 27, 2008 - update for struct changes
 %        Nov. 15, 2008 - new name schema (now READHEADER)
+%        Mar.  3, 2009 - update for GETFILEVERSION
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 27, 2008 at 03:40 GMT
+%     Last Updated Mar.  3, 2009 at 19:20 GMT
 
 % todo:
 
@@ -77,7 +78,7 @@ destroy=false(nfiles,1);
 for i=1:nfiles
     % get filetype, version and byte-order
     name=fullfile(varargin(i).path,varargin(i).name);
-    [filetype,version,endian]=getversion(name);
+    [filetype,version,endian]=getfileversion(name);
     
     % validity check
     if(isempty(filetype))

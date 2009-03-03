@@ -2,7 +2,7 @@ function [endianness]=nativebyteorder()
 %NATIVEBYTEORDER    Returns native endianness of present platform
 %
 %    Description: NATIVEBYTEORDER returns the endianness of the current
-%     computer using the builtin Matlab function COMPUTER.  Output is a
+%     computer using the built-in Matlab function COMPUTER.  Output is a
 %     string of either 'ieee-le' or 'ieee-be' (works with FREAD/FWRITE
 %     statements).
 %

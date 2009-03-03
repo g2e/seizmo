@@ -14,7 +14,7 @@ function [bytes]=seizmosize(data)
 %
 %    Examples:
 %     Calculate expected filesizes for SAC files in current directory:
-%      seizmosize(rh('*.SAC'))
+%      seizmosize(readheader('*.SAC'))
 %
 %    See also: readheader, readdata
 

@@ -56,6 +56,7 @@ function [varargout]=xdir(str)
 
 % todo:
 % - specify a max recursion depth
+% - handle '?' wildcard
 
 % use the current directory if nothing is specified
 if(nargin==0); str='*'; end
@@ -115,7 +116,7 @@ elseif strcmp(wildpath,'**')
   for i=1:numel(tmp),
     if (tmp(i).isdir ...
         && ~strcmp(tmp(i).name,'.') && ~strcmp(tmp(i).name,'..') ),
-      D=[D; xdir([prepath tmp(i).name filesep '**' postpath])];
+      D=[D; xdir([prepath tmp(i).name filesep '**' postpath])]; %#ok<AGROW>
     end
   end
 else
@@ -126,7 +127,7 @@ else
   for i=1:numel(tmp),
     if((tmp(i).isdir ...
         && ~strcmp(tmp(i).name,'.') && ~strcmp(tmp(i).name,'..')))
-      D=[D; xdir([prepath tmp(i).name postpath])];
+      D=[D; xdir([prepath tmp(i).name postpath])]; %#ok<AGROW>
     end
   end
 end
