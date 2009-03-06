@@ -8,31 +8,20 @@ picking phases (get familiar with ppk)
 unwrap	- unwrapped phase
 dftshift- is this wanted?
 fix up filtering
-	- hilbert
-	- envelope
 	- fir
 	- iirfilter
 		- allow variable input
 		- clean up the corners
 		- figure out best way to handle overdesigned filters
 			- make sure there is output showing changes
-	- decimate
-	- stretch
-	- syncsr
 	- wiener?
 	- whiten
-smoothing filters (sliding window function)
-	+ rms, robustrms
-	- weighted rms? (mean weighted by windowing function)
-	- non-root/square function (just a mean/median)
 
 
 
 0.5.4 - change versions, polezeros, fitting and glitches
 --------------------------------------------------------
 cv	- change version
-chkhdr 	- enum checks
-ch,gh 	- user defined handling of nonexistant fields (use globals)
 pz	- add/remove polezeros (transfer predecessor)
 fitting
 	- get poly (gpoly)
@@ -46,12 +35,6 @@ signal cleaning
 	- rem glitches (rspikes)
 	- detect offsets (goffsets)
 	- rem offsets (roffsets)
-fetch record (frec)
-	- by component
-		- one component only
-		- files without cmp not returned
-		- iftype is ixy
-	- by header field/value
 get header definition (ghd)
 	- for cleaning up some low level functions
 	- inputs should contain necessary parent fields too

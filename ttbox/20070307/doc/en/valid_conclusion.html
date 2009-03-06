@@ -1,0 +1,82 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Conclusions</h4>
+  
+
+  <p>
+  Using the Flat Earth Transformation (M&uuml;ller, 1977) results in a coordinate
+  singularity at the planet's center, which is transformed to infinite depth. This singularity
+  makes it difficult to compute ray paths and travel times for phases that come close
+  to the center.
+  With the "flat" sampling mode, this problem is effectively removed.
+  It is thus possible to compute ray paths and travel times even for inner
+  core phase for epicentral distances close to 180&deg;.
+  </p>
+  <p>
+  The take off angle optimization used by TTBOX for shooting rays finds very good
+  solutions in almost any case and acceptable solutions in the few exceptions.
+  </p>
+  
+  <!--
+  <p>
+  The accuracy of TTBOX results as well
+  as the duration of computations are tunable by choice of model discretization parameters.
+  For Ray path plots, rather crude discretizations are usually sufficient. More accurate
+  times and therefore finer models
+  are necessary for earthquake localization, especially on local and regional scales.
+  </p>
+  -->
+
+  <p>
+  Comparison with the travel time difference between the Jeffreys Bullen travel times
+  (Jeffreys & Bullen, 1940) shows that TTBOX is well suited to distinguish the JB velocity
+  structure from the IASP91 velocity structure by travel time. This important for a use
+  with inversion programs.
+  </p>
+ 
+  <p>
+  Travel times computed using TTBOX are - in the limit for ideal depth sampling -
+  within &plusmn;0.05s or less of the printed IASP91 travel time tables. Deviations 
+  increase slightly with increasing epicentral distance. What is astonishing is 
+  that the completely independent <span class="tt">TauP Toolbox</span>
+  of Crotwell et al. (1999) produces not only a very similar
+  deviation from the printed tables, but also the same distance dependence. On the other
+  hand, the program <span class="tt">onset</span>, which uses essentially the same
+  computational methods as were used in the production of the reference data by Kennett (1991)
+  gives travel time differences that are very similar to the printed reference,
+  but do not correlate with those of TTBOX and <span class="tt">TauP Toolbox</span>.
+  It is obvious that at least two of the data sets compared in the previous
+  sections contain a systematic offset, but it is important to notice that carrying out more tests
+  alone does not allow to recognize the biased data set, since truth is not subject to 
+  majority decision.
+  </p>
+  <p>
+  From all this, I conclude that Type III, IV and V errors are not the main
+  cause for the observed 0.05s differences between TTBOX and the IASP91 reference, and
+  that TTBOX is in fact a valid tool for travel time computation.
+  </p>
+  
+  <p>
+  A drawback of computing in MatLab is that MatLab is relatively slow. However, this does
+  not matter much in many cases (and at today's CPU speed) and is balanced by the integration
+  with other MatLab routines and the built-in graphics routines.
+  </p>
+
+<p>
+(But I am not selling used cars. You are invited to draw your own conclusions.)
+</p>
+
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

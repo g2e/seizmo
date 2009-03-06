@@ -1,0 +1,433 @@
+  <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+  <h4>Release Notes for Freeze 03.07.2007</h4>
+  
+  
+  <p>
+  Since the 02052004 version (more than two years ago now), many things have been changed and, hopefully, improved. Almost all routines of TTBOX have experienced minor or major modifications, up to complete rewriting. Most changes affect speed (faster now) and robustness (bug fixes and general smartness). I must admit that I lost track of all the changes but try to recollect them here.
+  </p>
+  <p>
+  The patch of 27.08.2004 is incorporated into this new version.
+  </p>
+  
+  <p>
+  This document is divided into the following sections:
+  </p>
+  
+  <ol>
+      <li><a href="#newfeat">Incredible New Features</a></li>
+      <li><a href="#newdoc">New/Modified Documentation</a></li>
+      <li><a href="#newprog">New Routines</a></li>
+      <li><a href="#modprog">Modified Routines</a></li>
+      <li><a href="#modstruct">Modified Data Structures</a></li>
+      <li><a href="#deprecated">Deprecated Routines</a></li>
+  </ol>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <h5><a name="newfeat">Incredible New Features</a></h5>
+  
+  
+  <dl>
+      <dt>Arbitrary Surface Reflections</dt>
+      <dd>A new handling of multiple phases has been introduced. TTBOX can now handle arbitrary surface multiples of the form Xn, where X is any seismic phase name recognized by the program and n an arbitrary integer number. Just try, for example, <span class="tt">mkrayfan('PKP2',iasp91,0);</span> (this does not yet work for phases like P5KP: the entire phase is repeated, not only parts of it)</dd>
+      
+      <dt>New Shooting</dt>
+      <dd>An entirely new shooting method has been implemented (see routine <a href="../../mkshootray.m" target="content">MKSHOOTRAY</a>). It relies on a careful analysis of the velocity model to determine critical distances, e.g. beginnings and ends of triplications or shadow zones. The old shooting, based on a brute force approach, had difficulties to find all possible rays at distances corresponding to such critical distances, and the new method is also faster, especially for densely sampled velocity models.</dd>
+      
+      <dt>Better Ray Plots</dt>
+      <dd>The plots of MKRAYFAN now consist of as few line segments as possible, which results in faster rendering and easier post-processing of plots. The "UserData" field of the line object's properties (accessible via set/get or the MatLab property editor) now contain phase name, epicentral distance, ray parameter and maximum depth of each ray, allowing to analyze the ploted ray fan. It is now also possible to define the ray color prior to plotting using an additional optional input parameter</dd>
+      
+      <dt>.nd to .clr conversion</dt>
+      <dd>A limited conversion of models given in .nd files into .clr files is now possible, but only for models that consist of constant-velocity layers (<a href="../../mknd2clr.m" target="content">MKND2CLR</a> routine)</dd>
+  </dl>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <h5><a name="newdoc">New/Modified Documentation</a></h5>
+  
+  <dl>
+      <dt><a href="./toc/toc_intro_valid.html" target="toc">Origin of the Residuals</a></dt>
+      <dd>A new sub-section "Origin of the Residuals"
+      is included into the
+      validation section. The formerly unresolved reasons for the differences
+      between TTBOX result and printed IASPEI 1991 seismological tables (Kennett, 1991)
+      is explained here, as investigated by Knapmeyer (2005).</dd>
+      
+      <dt></dt>
+      <dd></dd>
+     
+      
+      <dt><a href="./toc/toc_tutor_sampling.html" target="toc">Good &amp; Bad Depth Sampling</a></dt>
+      <dd>A sufficient depth sampling is the prerequisite of accurate ray geometry and travel time computations. But what is "sufficient"? This section demonstrates some effects of insufficient sampling tu guide the user.</dd>
+      
+      <dt>Layout</dt>
+      <dd>The content frame of the online documentation now covers the entire width of the browser window (except the toc frame), instead of only 40em of it.</dd>
+      
+      <dt>New error messages</dt>
+      <dd>Since I have introduced new routines, the section describing the <a href="./toc/toc_prg.html" target="toc">TTBOX error messages</a> also needed an update.</dd>
+      
+  </dl>
+  
+  
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <h5><a name="newprog">New Routines</a></h5>
+  
+  <p>
+  A lot of new routines has been written. Most of them are part of the computational engine and will not be explained further in the list below. The interested reader is referred to the help lines contained in the respective m-files.
+  </p>
+  
+  <dl>
+ 
+  <dt><a href="../../mkanalytictimes.m" target="external">mkanalytictimes</a></dt>
+  <dd><span class="tt">mkanalytictimes</span> computes travel times
+  for PcP, PKIKP, PKiKP and other phases at 0&deg; or 180&deg; distance.
+  The routine is intended mainly as part of the validation.</dd>
+      
+  <dt><a href="../../mk2ptinterp.m" target="external">mk2ptinterp</a></dt>
+  <dd>Linear Interpolation between two points</dd>
+  
+  <dt><a href="../../mkderive.m" target="external">mkderive</a></dt><dd></dd>
+  
+  
+  <dt><a href="../../.m" target="content">mkdepthbydist</a></dt>
+  <dd>This routine plots the ray turning point (or reflection) depth of a given phase and focal depth as function of epicentral distance. In such plots, the spatial extent of travel time triplications can be investigated easily, and they're useful to test the quality of the model's depth sampling.</dd>
+  
+  <dt><a href="../../mkdetectdiscon.m" target="external">mkdetectdiscon</a></dt><dd></dd>
+  
+  <dt><a href="../../mkemptypscan.m" target="external">mkemptypscan</a></dt>
+  <dd>Provides an empty PSCAN structure with all necessary fields.</dd>
+  
+  <dt><a href="../../mkemptymodel.m" target="external">mkemptymodel</a></dt>
+  <dd>Provides an empty MODEL structure with all necessary fields.</dd>
+  
+  <dt><a href="../../mkfalseposition.m" target="external">mkfalseposition</a></dt><dd></dd>
+  <dt><a href="../../mkfindextremedists.m" target="external">mkfindextremedists</a></dt><dd></dd>
+  <dt><a href="../../mkfumblep.m" target="external">mkfumblep</a></dt><dd></dd>
+  <dt><a href="../../mkfzeronest.m" target="external">mkfzeronest</a></dt><dd></dd>
+  
+  <dt><a href="../../mkimprovemodel.m" target="external">mkimprovemodel</a></dt>
+  <dd>This routine analyses the velocity model and adds a few new depth samples at critical depths (e.g. slightly above and below first order discontinuities), in order to improve both shooting and travel time accuracy.</dd>
+  
+  <dt><a href="../../mkisextreme.m" target="external">mkisextreme</a></dt><dd></dd>
+  <dt><a href="../../mklvzanalysis.m" target="external">mklvzanalysis</a></dt><dd></dd>
+  <dt><a href="../../mklvzsmp.m" target="external">mklvzsmp</a></dt><dd></dd>
+  <dt><a href="../../mknanfreepscan.m" target="external">mknanfreepscan</a></dt><dd></dd>
+  <dt><a href="../../mknd2clr.m" target="external">mknd2clr</a></dt>
+  <dd>This is for for the conversion from models in named discontinuity format into CLR format. Currently, it
+  just reproduces the layers as given in ND representation exactly, i.e. under the assumption of all parameters being constant between the given depths.</dd>
+  
+  <dt><a href="../../mkpolarframe.m" target="external">mkpolarframe</a></dt>
+  <dd>This routine previously was a part of <span class="tt">mkraydiagram</span>. It plots the polar diagram used e.g. by <span class="tt">mkrayfan</span> to plot seismic rays and is now a highly versatile routine for drawing nice polar coordinate frames. The routine now produces fewer line objects than before in order to make a posteriori modifications easier.</dd>
+  
+  <dt><a href="../../mkpsampler.m" target="external">mkpsampler</a></dt>
+  <dd>The new shooting uses this routine instead of <span class="tt">pscan</span> to investigate the &Delta;(p) (epicentral distance as function of ray parameter) function. <span class="tt">mkpsampler</span> produces an irregular sampling adapted to the shape of the function and thus needs fewer samples to determine the ray parameter and take off angle necessary to reach a given epicentral distance. As <span class="tt">mkscanp</span>, this routine returns a <span class="tt">pscan</span> structure.</dd>
+  
+  
+  <dt><a href="../../mkscanp.m" target="external">mkscanp</a></dt>
+  <dd>This routine previously was a part of the now deprecated <span class="tt">mkfindp</span> routine, which was the main routine of the old shooting mechanism. It is not used by TTBOX routines any longer but can be useful e.g for producing highly precise plots of the &Delta;(p) function. The new data structure <span class="tt">pscan</span> has been introduced to collect the output of this routine.</dd>
+  
+  
+  <dt><a href="../../mkshootray.m" target="external">mkshootray</a></dt>
+  <dd>This is the main routine of the new shooting mechanism. To find out what ray parameter and take off angle you need to reach a given epicentral distance with with a given seismic phase, you call <span class="tt">mkshootray</span>.</dd>
+  
+  
+  <dt><a href="../../mkstriprepetitions.m" target="external">mkstriprepetitions</a></dt>
+  <dd>This is a part of the handling of multiples.</dd>
+  
+  
+  <dt><a href="../../mkuniquesamples.m" target="external">mkuniquesamples</a></dt><dd></dd>
+  
+  
+  
+  </dl>
+  
+  
+  
+  <h5><a name="modprog">Modified Routines</a></h5>
+  
+  <p>
+  Almost all routines have been modified at all scales from minor bug fixes to complete rewriting, but I took special care to keep the calling sequences compatible to the previous version. So usually, you can ignore all these changes (but you may appreciate them as my effort to improve the product)
+  </p>
+  
+  
+  
+  <dl>
+  
+      <dt><a href="../../mkangle2rayp.m" target="external">mkangle2rayp</a></dt>
+      <dd>bug fixed: if the source is at a discontinuity, different velocities must be used for upgoing and downgoing rays.</dd>
+      
+      
+      <dt><a href="../../mkclr2model.m" target="external">mkclr2model</a></dt>
+      <dd>Now uses <span class="tt">mkemptymodel</span></dd>
+      
+
+      
+      <dt><a href="../../mkgv0.m" target="external">mkgv0</a></dt>
+      <dd>The previous version was fully vectorized, but TTBOX did not use this, so I de-vectrorized the routine in order to speed it up.</dd>
+      
+      
+      <dt><a href="../../mkinterpmodel.m" target="external">mkinterpmodel</a></dt>
+      <dd>several bug fixes:
+          <ul>
+          
+          <li><span class="tt">mkinterpmodel</span> now uses "pchip" interpolation instead of "spline" interpolation, since the latter produced artifact low velocity zones at corners of the original model. "pchip" avoids that.</li>
+          
+          <li>The handling of discontinuities has been improved.</li>
+      
+          <li>MatLab 7 required an update, since interp1 is now more sensitive for NaN elements. The new
+          version of <span class="tt">interp1</span> crashed <span class="tt">mkinterpmodel</span> when interpolating for a single depth
+          value. <span class="tt">mkinterpmodel</span> has been modified to avoid this.</li>
+          
+          <li>I had forgotten to copy the year field into the interpolated model
+          structure. Now it's included.</li>
+          
+          </ul>
+          
+          </dd>
+      
+      
+      
+      <dt><a href="../../mkraydepth.m" target="external">mkraydepth</a></dt>
+      <dd>This routine has been rewritten entirely, because the old version was slow, complicated and incorrect, especially with total reflections, at discontinuities and low velocity zones.</dd>
+      
+      
+      
+      <dt><a href="../../mkraydepthinv.m" target="external">mkraydepthinv</a></dt>
+      <dd>Two exceptions in which NaN must be returned have been added.</dd>
+      
+      
+      <dt><a href="../../mkrayfan.m" target="external">mkrayfan</a></dt>
+      <dd>
+      
+          <ul>
+          
+          <li>MKRAYFAN now generates much less graphic objects, which means that ray fan plots render much faster and can be manipulated easily using the property editor. While doing this, I also repaired the problem of the sometimes missing ray ends and "color overshooting" at the CMB. So ray fan plots are better, smaller, faster now. Additionally, the plot objects contain more information: the user data field of each ray's line object now contains the takeoff angle, the deepest depth reached, and the epicentral distance at which the ray arrives.</li>
+          
+          <li>MKRAYFAN does not adjust the figure window size any longer - I found that too confusing.</li>
+          
+          
+          
+          </ul>
+      
+      </dd>
+      
+      
+      <dt><a href="../../mkrayp2angle.m" target="external">mkrayp2angle</a></dt>
+      <dd>This routine has been vectorized in both ray parameter and velocity: now one can submit lists of ray paremeters, and two velocities for upper/lower side of discontinuities can be given.</dd>
+      
+      <dt><a href="../../mkreadnd.m" target="external">mkreadnd</a></dt>
+      <dd>The struct-to-double assignment bug, which generates warnings in MatLab R14 and later, has been repaired.</dd>
+      
+      
+      <dt><a href="../../mksmarttakeoff.m" target="external">mksmarttakeoff</a></dt>
+      <dd>
+      
+         <ul>
+         
+             <li>The routine has been rewritten entirely to fix all kinds of bugs and imprecisions. It can now also handle depth phases and multiple surface reflections.</li>
+         
+             <li>MKSMARTTAKEOFF now returns empty if the quake focus is at a depth where vs==0. This is needed when grid search location programs accidentally generate test foci in the core, for example.</li>
+         
+         </ul>
+      
+      </dd>
+      
+      
+      <dt><a href="../../mksynopsis.m" target="external">mksynopsis</a></dt>
+      <dd><span class="tt">mksynopsis</span> now uses the new shooting method.</dd>
+      
+      
+      <dt><a href="../../mktim4p.m" target="external">mktim4p</a></dt>
+      <dd>
+      
+          <ul>
+          
+              <li>many minor bugs have been fixed.</li>
+              <li>The handling of PS and SP in MKTIM4P was severely erroneous and has been repaired</li>
+              <li>surface reflections (multiples) of arbitrary degree</li>
+              <li>generation of ScS in S case suppressed
+              <li>special handling for takeoff angles 90 in P, PP, PPP, S, SS SSS</li>
+              <li>takoff==NaN caught, no PS or SP construction if second leg returns NaN distance</li>
+              <li>depth phase reflection angle bug repaired</li>
+              <li>removed P vertext bullshit from ScS, ray parameter too large, exception removed from ScS, because unnecessary</li>
+
+         
+          </ul>
+      
+      </dd>
+      
+      
+      <dt><a href="../../mktp.m" target="external">mktp</a></dt>
+      <dd>A bug in MKTP is fixed which caused the travel time for some phases to be inf, although
+      there was no problem in ray geometry. The problem was the handling of a singularity
+      in the argument of atanh().</dd>
+      
+      
+      <dt><a href="../../mktpsum.m" target="external">mktpsum</a></dt>
+      <dd>Some invalid rays excluded from result.</dd>
+      
+      
+      
+      <dt><a href="../../mkttboxvalid.m" target="external">mkttboxvalid</a></dt>
+      <dd>The routine now uses the new shooting method.</dd>
+      
+      
+      
+      <dt><a href="../../mkttime.m" target="external">mkttime</a></dt>
+      <dd>The routine now uses the new shooting method. <span class="tt">mkttime</span> now catches the p=NaN output of <span class="tt">mkshootray</span> (and previously <span class="tt">mkfindp</span>) for non existing phases. </dd>
+      
+      
+      
+      <dt><a href="../../mkx4p.m" target="external">mkx4p</a></dt>
+      <dd>
+      
+          <ul>
+         
+              <li>Many minor bugs have been fixed.</li>
+          
+              <li>SP nonsense repaired</li>
+
+              <li>check for complex takeoff</li>
+
+              <li>SKS SEGX/SEGZ dioscrepancy repaired</li>
+
+              <li>Handling of surface reflections of arbitrary degree (multiples)</li>
+
+              <li>generation of ScS in S code supressed</li>
+
+
+              <li>takeoff==90 requires special handling in P, PP, PPP as well
+             as in S, SS, SSS, </li>
+
+              <li>takeoff==NaN caught, no SP or PS construction if second leg is NaN.</li>
+
+              <li>depth phase reflection angle bug repaired</li>
+
+              <li>P vertex bullshit in ScS removed, ray parameter too large
+             exception removed from ScS, because unnecessary, </li>
+
+          
+              <li>A new exception is caught: p==inf may occur when tracing S waves through liquid media, which is nonsense. MKX4P now returns a NaN distance in that case to signal a problem. (This problem occurred when using TTBOX in Genetic Algorithm optimizations - the GA can produce rather weird velocity models...)</li>
+          </ul>
+      
+      </dd>
+      
+      
+      
+      <dt><a href="../../mkxpsum.m" target="external">mkxpsum</a></dt>
+      <dd>The constrution of vertical coordinates of ray segments in MKXPSUM has been improved. An indexing error sometimes caused the z coordinate vector to be longer than the x coordinate vector. (Only in exotic models, I hope...). This is now fixed.</dd>
+      
+      
+ 
+      
+  </dl>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <h5><a name="modstruct">New/Modified Data Structures</a></h5>
+  
+  <dl>
+     
+      <dt>model</dt>
+      <dd>The model structure as it's delivered by MKREADND has not changed, but the new routine MKIMPROVEMODEL adds some fields that are required by the new shooting method. This is done one the fly if necessary (but you can also provide model structs that already contain it) and you don't need to care for this. The new fields are described in the section on <a href="./toc/toc_datastruct.html" target="toc">Model Data Structure</a>.</dd>
+      
+      <dt></dt>
+      <dd></dd>
+  </dl>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <h5><a name="deprecated">Deprecated Routines</a></h5>
+  
+  <p>
+  Some routines, mostly those of the old shooting method, are not needed any longer and their use is deprecated. If you wrote any program using one of the folloqing routines, you should revise them in order to use the appropriate new routines.
+  </p>
+  <p>
+  Most important is that you replace any call to MKFINDP by calls to MKSHOOTRAY. The calling sequence of the two routines is identical, it should be sufficient just to rename the call.
+  </p>
+  
+  
+  <dl>
+  
+  <dt><a href="../../mkfindp.m" target="external">mkfindp</a></dt>
+  <dd><span class="tt">mkfindp</span> is the main routine of the old shooting mechanism. It has been replaced by <span class="tt">mkshootray</span> and must not be used any more, because the new shooting does anything faster, better and more robust.
+  <!-- MKFINDP couldn't handle some exotic velocity models in which the delta(takoff) function has
+      holes. fixed. --></dd>
+  
+  
+  
+  <dt><a href="../../mkfindzeros.m" target="external">mkfindzeros</a></dt>
+  <dd><span class="tt">mkfindzeros</span> is part of the old shooting mechanism. It is an implementation of an ad hoc 1D optimization method which should not be used anyway...
+  <!-- MKFINDZEROS has an extended calling sequence with a new optional data structure for loop control parasmeters. This has been introduced mainly for algorithms optimization purposes.--></dd>
+       
+  </dl>
+  
+
+
+  
+  <hr>
+eof.
+  </body>
+</html>

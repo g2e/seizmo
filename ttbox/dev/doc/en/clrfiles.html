@@ -1,0 +1,667 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.clr file format</h4>
+  
+  <h5>Introduction</h5>
+
+<p>
+The .clr or <span class="bold">Continuous Layer Representation</span> file format
+is an ASCII format to store velocity models that are continuously defined by radius or depth dependent
+functions and their parameters. Prominent examples for such models are PREM (Dziewonski & Anderson, 1981)
+and IASP92 (Kennett & Engdahl, 1991). The advantage of such model definition is that the model
+is uniquely defined at any depth and that there is no discussion about which kind of interpolation
+to use. A layering with first order discontinuities is still possible, since each polynomial
+has a well defined range of depth in which it is valid. The planet may consist of an arbitrary amount
+of such layers (what even allows a cubic spline representation of arbitrary velocity profiles).
+</p>
+<p>
+The .clr format is a human readable ASCII format which is based on the Keyword Line concept used
+for some data in the .nd format. The .clr format is much more flexible than the .nd format and probably
+easier to read and write for humans. But as the .nd format, the .clr format is a line oriented
+format: Information is subdivided into blocks which are on separate lines.
+</p>
+<p>
+Information is tagged by Keywords and Modifiers which define the type of information given
+in a line. This allows a very flexible file formatting.
+</p>
+<p>
+The format definition is somewhat lengthy, but the resulting syntax and structure is quite
+simple and straight forward.
+</p>
+
+<h5>Units</h5>
+<p>
+Since an explicit declaration of physical units would imply that there is some unit conversion
+code in the file reader program, the physical units of quantities specified in a .clr file are
+<span class="it">not</span> declared explicitly.
+</p>
+<p>
+Instead, it is assumed that quantities are declared in the following units:
+</p>
+
+<div align="center">
+  <table>
+  <caption>
+  Units used
+  </caption>
+  <thead>
+  <th>Quantity</th>
+  <th>Unit</th>
+  </thead>
+  <tr>
+      <td>Depths, Radius</td>
+      <td>km</td>
+  </tr>
+  <tr>
+      <td>Velocity</td>
+      <td>km/s</td>
+  </tr>
+  <tr>
+      <td>Density</td>
+      <td>g/cm<span class="sup">3<span></td>
+  </tr>
+  <tr>
+      <td>Q-factors</td>
+      <td>dimensionless</td>
+  </tr>
+  <!--
+  <tr>
+      <td></td>
+      <td></td>
+  </tr>
+  -->
+  </table>
+  </div>
+  
+<h5>General File Structure</h5>
+
+<!-->
+layers nicht notwendigerweise in reihenfolge der tiefe
+
+radius definition nicht notwendigerweise vor layer/disc definition - statt dessen
+umwandlung von radien in tiefen erst nach auslesen des kompletten files
+
+diskontinuitaeten-definitionen nicht notwendigerweise zwischen den durch die
+diskontinuitaeten getrennten layern
+
+prinzip der filestruktur: alles kann in beliebiger reihenfolge kommen! deswegen hat
+man ja die keywords! (nur bei layern muss man natuerlich blocks bilden)
+-->
+
+<p>
+The Keyword concept allows a very flexible file structuring: it is not necessary
+to give the separate pieces of information in a certain sequence. Layers need not be defined
+in the sequence given by depth (or radius). Discontinuities need not be defined between the
+layers they separate. The planets radius does not have to be defined first. Comments may be
+nearly everywhere. Enjoy!
+</p>
+
+<p>
+The only important point is that layers are defined by a couple of lines which are
+grouped by <span class="tt">start</span> and <span class="tt">end</span> Modifiers.
+This is necessary to  ake sure that velocities, densities etc. are connected in the right
+way.
+</p>
+
+<p>
+It is important to understand that the .clr file
+<span class="bold">format is not organized by format strings</span>.
+Instead, a .clr file consist of lines, and lines consist of tokens, separated by whitespace.
+</p>
+
+<h5>General Line Syntax</h5>
+
+<p>
+A Line in a .clr file is either empty or consists of the following elements:
+</p>
+
+<ol>
+  <li>Evaluated content:
+    <ol>
+    <li>Keyword</li>
+    <li>Modifier</li>
+    <li>Parameter List</li>
+    </ol>
+  </li>
+  <li>non-evaluated content
+    <ol>
+    <li>Comment</li>
+    </ol>
+  </li>
+</ol>
+
+<p>
+You may omit either the evaluated content or the non-evaluated content or both.
+</p>
+<p>
+This means thayt you can have empty lines (useful for a visual structuring of files),
+lines that contain only comments, lines that contain only data, or lines that contain
+commented data.
+</p>
+<p>
+All comments are stripped off before a line is evaluated.
+</p>
+<p>
+The evaluated content is a series of whitespace-separated tokens (by whitespace, the space
+character [ASCII 32] and Tab stops [ASCII 9] are meant).
+</p>
+<p>
+Keywords and Modifiers are preceeded by exclamation marks to distinguish them from parameters.
+</p>
+<p>
+Numerical Parameters may be given in floating point format (e.g. 314.159) or fixed point
+format (e.g. 3.14159e+2).
+</p>
+<p>
+String Parameters are not case sensitive, any string is transformed to lower case during file read.
+</p>
+
+
+<h5>Keywords</h5>
+
+<p>
+Each line of a .clr file consists of either a comment, or a keyword and its parameters.
+</p>
+
+<p>
+A Keyword Line consist of several tokens (strings or numbers) that are separated by whitespace
+(the space character [ASCII 32] or Tab stops [ASCII 9]). The line begins with the Keyword itself,
+which may be followed by a Keyword Modifier and then a number of Keyword Parameters:
+</p>
+<pre>
+!Keyword !Modifier parameter parameter parameter
+</pre>
+<p>
+The Exclamation mark "!" is used to distinguish Keywords and Modifiers from parameters. The
+possible Modifiers and the allowed number of parameters depend on the Keyword.
+</p>
+<p>
+A simple example is
+</p>
+<pre>
+!name IASP91
+</pre>
+<p>
+where "name" is the keyword and "IASP91" is a string parameter. A Modifier is not present.
+This example line defines the model name to be "IASP91".
+</p>
+<p>
+A more advanced example is
+</p>
+<pre>
+!layer !depth 0 20
+</pre>
+<p>
+Where "layer" is the keyword, "depth" is a modifier and "0" and "20" are the parameters.
+This example defines a layer to reach from depth 0km to depth 20km.
+</p>
+<p>
+An alternative definition of the same depth range is
+</p>
+<pre>
+!layer !radius 6351 6371
+</pre>
+<p>
+which, of course, implies that the planetary radius is defined as 6371km.
+</p>
+<p>
+The following tables give a list of all Keywords, their Modifiers and the specified Parameters.
+</p>
+<p>
+List of all Keywords:
+</p>
+<ol>
+<li><a href="#name">name</a></li>
+<li><a href="#year">year</a></li>
+<li><a href="#planet">planet</a></li>
+<li><a href="#layer">layer</a></li>
+<li><a href="#discon">discon</a></li>
+<li><a href="#usertag">usertag</a></li>
+
+</ol>
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="name"><span class="tt">name</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+   <tr>
+     <td><span class="tt">-</span></td>
+     <td>model name</td>
+     <td>string</td>
+     <td>Velocity models usually have names like "IASP91" or "PREM".</td>
+   </tr>
+</table>
+</div>
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="year"><span class="tt">year</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+
+   <tr>
+     <td><span class="tt">-</span></td>
+     <td>model publication year</td>
+     <td>numeric</td>
+     <td>The year in which the model was first published.</td>
+   </tr>
+
+</table>
+</div>
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="planet"><span class="tt">planet</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+
+     <tr>
+     <td><span class="tt">name</span></td>
+     <td>planet name</td>
+     <td>string</td>
+     <td>The planet's name ("earth", "moon" etc.). This is an informational parameter
+         which helps to avoid confusion, but is not evaluated.</td>
+   </tr>
+
+   <tr>
+     <td><span class="tt">radius</span></td>
+     <td>planetary radius</td>
+     <td>numeric</td>
+     <td>The radius of the planet for which this model is constructed.</td>
+   </tr>
+
+</table>
+</div>
+
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="layer"><span class="tt">layer</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+   <tr>
+     <td><span class="tt">start</span></td>
+     <td>name</td>
+     <td>string</td>
+     <td>Layer start mark. The description of a new layer begins here. The layer name
+         parameter is optional and may be omitted.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">depth</span></td>
+     <td>1. depth of layer top<br>
+         2. depth of layer bottom</td>
+     <td>numeric</td>
+     <td>Parameter polynomials of this layer are valid from top depth to bottom depth.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">radius</span></td>
+     <td>1. radius of layer bottom<br>
+         2. radius of layer top</td>
+     <td>numeric</td>
+     <td>Parameter polynomials of this layer are valid from bottom radius to top radius.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">end</span></td>
+     <td>-</td>
+     <td>-</td>
+     <td>Layer end mark. The description of the current layer ends here.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">vp</span></td>
+     <td>1. constant term of layer polynomial<br>
+         2. 1st order coefficient of layer polynomial<br>
+         3. 2nd order coefficient of layer polynomial<br>
+         ...<br>
+         n. n-th order coefficient of layer polynomial</td>
+     <td>numeric</td>
+     <td>P wave velocity polynomial. Physical properties of layers are defined by n-th degree polynomials. The degree of
+         the polynomial is implied by the number of coefficients given.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">vs</span></td>
+     <td>1. constant term of layer polynomial<br>
+         2. 1st order coefficient of layer polynomial<br>
+         3. 2nd order coefficient of layer polynomial<br>
+         ...<br>
+         n. n-th order coefficient of layer polynomial</td>
+     <td>numeric</td>
+     <td>S wave velocity polynomial. Physical properties of layers are defined by n-th degree polynomials. The degree of
+         the polynomial is implied by the number of coefficients given.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">rho</span></td>
+     <td>1. constant term of layer polynomial<br>
+         2. 1st order coefficient of layer polynomial<br>
+         3. 2nd order coefficient of layer polynomial<br>
+         ...<br>
+         n. n-th order coefficient of layer polynomial</td>
+     <td>numeric</td>
+     <td>Density polynomial. Physical properties of layers are defined by n-th degree polynomials. The degree of
+         the polynomial is implied by the number of coefficients given.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">qp</span></td>
+     <td>1. constant term of layer polynomial<br>
+         2. 1st order coefficient of layer polynomial<br>
+         3. 2nd order coefficient of layer polynomial<br>
+         ...<br>
+         n. n-th order coefficient of layer polynomial</td>
+    <td>numeric</td>
+     <td>P wave quality factor polynomial. Physical properties of layers are defined by n-th degree polynomials. The degree of
+         the polynomial is implied by the number of coefficients given.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">qp</span></td>
+     <td>1. constant term of layer polynomial<br>
+         2. 1st order coefficient of layer polynomial<br>
+         3. 2nd order coefficient of layer polynomial<br>
+         ...<br>
+         n. n-th order coefficient of layer polynomial</td>
+     <td>numeric</td>
+     <td>Q wave quality factor polynomial. Physical properties of layers are defined by n-th degree polynomials. The degree of
+         the polynomial is implied by the number of coefficients given.</td>
+   </tr>
+<!--
+   <tr>
+     <td><span class="tt"></span></td>
+     <td></td>
+     <td></td>
+     <td></td>
+   </tr>
+-->
+</table>
+</div>
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="discon"><span class="tt">discon</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+   <tr>
+     <td><span class="tt">depth</span></td>
+     <td>1. discontinuity depth<br>
+         2. discontinuity name</td>
+     <td>1. numeric <br>
+         2. string</td>
+     <td>Depth and name of a discontinuity</td>
+   </tr>
+   <tr>
+     <td><span class="tt">radius</span></td>
+     <td>1. discontinuity radius<br>
+         2. discontinuity name</td>
+     <td>1. numeric <br>
+         2. string</td>
+     <td>Radius and name of a discontinuity</td>
+   </tr>
+<!--
+   <tr>
+     <td><span class="tt"></span></td>
+     <td></td>
+     <td></td>
+     <td></td>
+   </tr>
+-->
+</table>
+</div>
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="usertag"><span class="tt">usertag</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+
+   <tr>
+     <td><span class="tt">-</span></td>
+     <td>User Tag</td>
+     <td>string</td>
+     <td>An arbitrary string may be used as an additional information. Might be useful
+         when generating files automatically.</td>
+   </tr>
+
+</table>
+</div>
+
+
+
+
+
+
+<h5>Definition of Layers</h5>
+
+<p>
+A single layer is defined by a block of lines with <span class="tt">layer</span>-Keywords.
+Since a layer consists of up to six different physical parameters and a depth range, some means
+to group these informations into a layer. For this purpose, the <span class="tt">start</span>
+ and <span class="tt">end</span> modifiers of the layer keyword have been introduced.
+</p>
+<p>
+A full-featured layer definition then looks like this:
+</p>
+<pre>
+!layer !start LayerName
+!layer !depth p<span class="sub">1</span> p<span class="sub">2</span>
+!layer !vp p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !vs p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !rho p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !qp p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !qs p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !end
+</pre>
+<p>
+Where the p<span class="sub">n</span> are the coefficients of the respective layer polynomials.
+(Except for the <span class="tt">!depth</span> declaration, where
+ p<span class="sub">1</span> and p<span class="sub">2</span>
+give the top and bottom depth of the layer.)
+</p>
+
+<p>
+Instead by depths measured from the surface, the vertical extent of the layer may also be
+defined by two radius values, measured from the planet's center. The first value is the smaller
+one in both cases.
+</p>
+<p>
+Different layers may use different vertical coordinates: it is possible to define one layer in
+terms of depth and another one in terms of radius.
+</p>
+<p>
+If one of the parameters is not defined in the model (IASP91, for example, does not define
+densities and quality factors), simply omit the respective line. Undefined parameters will
+result in NaN output of the reding routine.
+</p>
+<p>
+The definition of the IASP91 transition zone, for example, may look like this:
+</p>
+<pre>
+!layer !start Transition Zone
+!layer !vp    29.38896 -21.40656
+!layer !vs    17.70732 -13.50652
+!layer !depth 410 660
+!layer !end
+</pre>
+<p>
+NOTE that, although the layer is named "Transition Zone", this layer definition does not
+imply a definition of discontinuities at 410km and 660km depth! There will be discontinuities at
+these depths at which rays are refracted, but a programm will not be able to recognize these
+discontinuities as those delimiting the transition zone. This requires extra definitions of discontinuities.
+</p>
+<p>
+If there are multiple lines in a layer definition block which define the same quantity,
+the last one of them will overwrite all previous ones.
+<p>
+
+
+<h5>Definition of Discontinuities</h5>
+<p>
+A named discontinuity is declared by the <span class="tt">discon</span> Keyword.
+</p>
+<p>
+ Assigning a name is useful in order to evaluate seismic
+phase names of in which these discontinuities are referred. In order to compute a PcP travel time,
+for example, you need to know where the core mantle boundary is.
+</p>
+<p>
+A discontinuity declaration looks like this:
+</p>
+<pre>
+!discon !depth 2890 outer core
+</pre>
+<p>
+This line declares the core-mantle boundary to be at 2890km depth.
+</p>
+<p>
+Instead of depth, it is also possible to use the radius:
+</p>
+<pre>
+!discon !radius 3481 outer core
+</pre>
+<p>
+defines the same core mantle boundary (if the radius is 6371km).
+</p>
+<p>
+There are predefined names for standard discontinuities which should be used
+properly:
+</p>
+
+<div align="center">
+   <table>
+   <thead>
+   <th>Discontinuity</th>
+   <th>.clr format name</th>
+   <th>Explanation</th>
+   </thead>
+   <tr>
+      <td>Conrad D.</td>
+      <td>'conrad'</td>
+      <td>Boundary between upper and lower crust, not always present</td>
+   </tr>
+   <tr>
+      <td>Mohorovicic D.</td>
+      <td>'moho' <span class="it">or</span><br> 'mantle'</td>
+      <td>Boundary between crust and mantle</td>
+   </tr>
+   <tr>
+      <td>Olivine-&alpha to &beta;-Spinel phase transition, "410"</td>
+      <td>'olivine alpha beta' <span class="it">or</span><br> 'transition zone'</td>
+      <td>Beginning of the mantle transition zone</td>
+   </tr>
+   <tr>
+      <td>&beta;-Spinel to &gamma-Spinel phase transition, "520"</td>
+      <td>'olivine beta gamma'</td>
+      <td></td>
+   </tr>
+   <tr>
+      <td>Spinel-Perowskite Transition, "660"</td>
+      <td>'olivine gamma perovskite' <span class="it">or</span><br> 'lower mantle'</td>
+      <td>Boundary between upper and lower mantle</td>
+   </tr>
+   <tr>
+      <td>Core-mantle-Boundary, "CMB"</td>
+      <td>'outer core' <span class="it">or</span><br> 'outer-core'</td>
+      <td>Boundary between Mantle and Core</td>
+   </tr>
+   <tr>
+      <td>Inner core Boundary, "ICB"</td>
+      <td>'inner core' <span class="it">or</span><br> 'inner-core'</td>
+      <td>Boundary between liquid outer and solid inner core.</td>
+   </tr>
+   </table>
+   </div>
+   
+   
+<p>
+Discontinuity declarations may be grouped somewhere in the .clr file, or
+may be given between the declaration of the layers they separate - just as you like.
+</p>
+<p>
+If there are multiple discontinuity declarations for the same position (irrespective
+of using depth or radius coordinates), the last one will override all previous ones.
+</p>
+
+
+
+<h5>Comments</h5>
+
+
+
+<ul>
+<li>A .clr-file may contain an arbitrary amount of comment</li>
+
+<li>Comments may start anywhere in the file</li>
+<li>Comments are indicated by one of the following character sequences:
+
+	<div align="center">
+   <table>
+   <thead>
+   <th>Character Sequence</th>
+   <th>consists of</th>
+   </thead>
+   <tr>
+     <td>#</td>
+     <td>number sign</td>
+   </tr>
+   <tr>
+     <td>/*</td>
+     <td>slash + star</td>
+   </tr>
+   <tr>
+     <td>//</td>
+     <td>double slash</td>
+   </tr>
+   </table>
+   </div>
+   
+   </li>
+<li>A comment begins with one of the character sequences above and
+<span class="bold">ends at the end of the same line in which it begins</span>.</li>
+<li>Comments are stripped off before evaluation of the line.</li>
+</ul>
+
+
+    <hr>
+eof.
+  </body>
+</html>

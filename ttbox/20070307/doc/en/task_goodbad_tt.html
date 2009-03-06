@@ -1,0 +1,115 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Good and Bad Depth Sampling</h4>
+ 
+  
+  <h5><a name="tt">Travel Time Curve Distortions</a></h5>
+  
+  <p>
+  The effects of the infinite depth of the flat earth model are also visible in the shape of travel time curves. The causes for the distortions are the same as for the ray geometry: linear approximation is not sufficient at great depth if the sample distance is large. But in travel time curves, they become visible more clearly.
+  </p>
+  <p>
+  The general shape of the PKP triplication is reproduced if the velocity model is sampled with 100km sample distance in spherical coordinates, but the steeper the rays are, the more erroneous the resulting traveltimes become. The loops in the traveltime curve are all artefacts of the poor sampling.
+  </p>
+  
+  
+  
+  
+  
+  
+  <table>
+  
+     <tr>
+        <td>
+            <a href="../images/PKP_TTError_100km.png" target="extern"><img src="../images/../images/PKP_TTError_100km.png" alt="PKP travel time error" class="thumb"></a>
+        </td>
+     <tr>
+        <td>
+        Errors in the travel time curve of PKP due to sparse samplimg; Black: sampling distance constantly 1km in flat earth coordinates, Red: sampling distance constantly 100km in spherical coordinates.<br>
+        This plot was produced using the following commands:<br>        
+        <p><span class="tt">
+        clf;<br> 
+        ttc_1km=mkttcurves(iasp91_1km,0,0.01,'PKP');<br> 
+        mkplotttcurves(ttc_1km,'k-');<br> 
+        ttc=mkttcurves(iasp91_100km_sph,0,0.01,'PKP');<br> 
+        mkplotttcurves(ttc,'r-');<br> 
+        box on;<br> 
+        grid on;<br> 
+        xlabel('Epicentral Distance [deg]');<br> 
+        ylabel('Travel Time [s]');<br> 
+        </span></p>
+        </td>
+     <tr>
+     </tr>
+  
+  </table>
+  
+  <p>
+  The computation of the reference curve in tha above plot with an 1km sampling in flat earth coordinates took about 2h on a 3GHz PC (0.01deg steps in takeoff angle are quite small), which ist why one cannot always use the finest possible sampling.
+  </p>
+  <p>
+  A sampling with 100km sample distance in flat earth coordinates produces significantly better results, but a closeup reveals that it is still contaminated by the effects of the vertical stretching applied by the flat earth transformation.
+  </p>
+  
+  
+  <table>
+  
+     <tr>
+        <td>
+            <a href="../images/PKP_TTError_100km_flat.png" target="extern"><img src="../images/../images/PKP_TTError_100km_flat.png" alt="PKP travel time error" class="thumb"></a>
+        </td>
+     <tr>
+        <td>
+        As above, but with an additional curve for a 100km sampling in flat earth (blue). Black: sampling distance constantly 1km in flat earth coordinates, Red: sampling distance constantly 100km in spherical coordinates.<br>
+        This additional curve was produced using the following commands:<br>        
+        <p><span class="tt">
+        ttc_100km_flat=mkttcurves(iasp91_100km,0,0.01,'PKP');<br>
+        mkplotttcurves(ttc_100km_flat,'b-');<br>
+        </span></p>
+        </td>
+     <tr>
+     </tr>
+  
+  </table>
+  
+  
+  <p>
+  A 10km sampling in flat earth is necessary to overcome the problem (with IASP91). With 10km sampling, the computation takes 7.5min instead of 2h. (yes, Iknow it's still slow. That's the disadvantage of MatLab)
+  </p>
+  
+  <table>
+  
+     <tr>
+        <td>
+            <a href="../images/PKP_TTError_10km_flat.png" target="extern"><img src="../images/../images/PKP_TTError_10km_flat.png" alt="PKP travel time error" class="thumb"></a>
+        </td>
+     <tr>
+        <td>
+        As above, but with an additional curve for a 10km sampling in flat earth (green). Blue: sampling distance 100km in flat earth. Black: sampling distance constantly 1km in flat earth coordinates, Red: sampling distance constantly 100km in spherical coordinates.<br>
+        This additional curve was produced using the following commands:<br>        
+        <p><span class="tt">
+        ttc_10km_flat=mkttcurves(iasp91_10km,0,0.01,'PKP');<br>
+        mkplotttcurves(ttc_10km_flat,'b-');<br>
+        </span></p>
+        </td>
+     <tr>
+     </tr>
+  
+  </table>
+  
+  
+  
+  
+
+  
+  <hr>
+eof.
+  </body>
+</html>

@@ -1,0 +1,80 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Good and Bad Depth Sampling</h4>
+  
+
+
+  <h5><a name="triplication">Distorted Triplications</a></h5>
+  
+  <p>
+  The best way to visualize the spatial extent of travel time triplications due to velocity discontinuities is problably to plot the ray penetration depth (i.e. turning point depth or depth of total reflection, respectively) as function of the covered epicentral distance. This type of plot allows to see directly the distance range covered by the triplication, the number of arrivals observable in a certain distance, and the depths associated with the triplications.
+  </p>
+  <p>
+  Such plots are generated on the fly by MKTTCURVES for many phases within one model, but can also be generated using MKDEPTHBYDIST. The latter allows for easy comparison of different models.
+  </p>
+  
+  <p>
+  Several different effects are visible:
+  </p>
+  <ol>
+  <li>The extent of the trilpications in terms of epicentral distance varies, i.e. a wrong distance for beginning and end of the triplication is predicted if the depth sampling is insufficient.</li>
+  <li>The depth associated with the ends of the triplication is predicted incorrectly</li>
+  <li>For some samplings, spurious trilications appear that have no real counterpart (e.g. which disappear if the sampling becomes finer)</li>
+  </ol>
+  
+  <table>
+  
+     <tr>
+        <td>
+            <a href="../images/P_15deg_triplication.png" target="extern"><img src="../images/P_15deg_triplication.png" alt="" class="thumb"></a>
+        </td>
+     <tr>
+        <td>
+        <p>
+        Distortion of the triplication of P travel times around 15 deg epicentral distance for various depth samplings (see plot legend). 
+        </p>
+        <p>
+        The above picture was generated using the following commands (and some manual adjustment of line thickness and color)
+        </p>
+        <p>
+        <span class="tt">
+        mkdepthbydist(iasp91_1km,0,0.01,'P');
+        [dist,depth]=mkdepthbydist(iasp91_1km,0,0.01,'P');
+        hold on
+        [dist,depth]=mkdepthbydist(iasp91_100km_sph,0,0.01,'P');
+        plot(dist,depth,'b-');
+        [dist,depth]=mkdepthbydist(iasp91_100km,0,0.01,'P');
+        plot(dist,depth,'r-');
+        [dist,depth]=mkdepthbydist(iasp91_10km,0,0.01,'P');
+        plot(dist,depth,'g-');
+        [dist,depth]=mkdepthbydist(iasp91_50km,0,0.01,'P');
+        plot(dist,depth,'m-');
+        hold off
+        legend('1km flat','100km spherical','100km flat','10km flat','50km flat');
+        </span></p>
+        </td>
+     <tr>
+     </tr>
+  
+  </table>
+  
+  <p>
+  The distortion of spatial extent of the triplications is strongest for the mos crude models (100km sampling), and the difference between spherical-equidistant and flat-earth-equidistant depth sampling is somewhat second-order. In these cases, the associated depth also deviates most from the true depths.
+  </p>
+  
+  <p>
+  Spurious triplications appear also for fine samplings, but their shape depends very much on the sampling interval, or, more precisely, on the wavenumber of the sampling. On a local scale, a slight modification of the sampling distance essentially shifts the samples and thus provides slightly different approximations of the velocity gradient and thus the triplications. A doubling of the wavenumber, on the other hand, leaves the samples where they are but adds new ones. By scanning through a range of sampling distances, a quasi-periodic emergence and vanishing of spurious triplications occurs.
+  </p>
+  
+  
+  <hr>
+eof.
+  </body>
+</html>

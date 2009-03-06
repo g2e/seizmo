@@ -1,0 +1,70 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+
+
+
+<h4>Types of Errors</h4>
+
+<p>
+The results of travel time computations with TTBOX will almost certainly be
+different from the values in the reference. For a proper interpretation, it is
+important to distinguish the types of errors which contribute to this difference:
+</p>
+
+<dl>
+
+<dt>1.) Reference Errors</dt>
+<dd>These are all errors that may be contained in the reference data.
+Concerning the IASP91 travel time booklet, such errors may arise from the
+&tau;-spline interpolation method used to produce the tables. But the main
+source of reference error is the roundoff error: The IASP91 booklet gives travel times
+to only two decimal places (of seconds) which means that the tables are accurate
+within &plusmn;0.005s (the usual 4/5 roundoff means that t=0.01 represents all
+values from the interval 0.005&le;t&lt;0.0149).<br>
+</dd>
+
+<dt>2.) Hardware Errors</dt>
+<dd>These are errors that are caused by the used computer system, mainly by the
+limited numerical resolution (32 or 64 bit?), but also by defective hardware (unlikely).
+<br>
+Errors of these kind can most probably be neglected. (All numerical errors are due to limited
+hardware resolution, but it's probably not important here if we use 32bit or 64bit
+hardware.)</dd>
+
+<dt>3.) Software Errors</dt>
+<dd>These are errors caused by properties of the software: mainly
+numerically poor formulation of computations, systematical biases due to algorithms,
+ but also real bugs.<br>
+The goal of the validation is to determine these errors: it must be determined
+how large they are, and it would be nice to show that they are neglectible.</dd>
+
+<dt>4.) Model Errors</dt>
+<dd>Errors which are caused by poor descretization of the velocity model: e.g.
+using too few depth samples, using depth samples at unsuitable positions, or errors
+due to interpolation between depths samples.<br>
+These Errors can be tuned by varying the descretization parameters.</dd>
+
+<dt>5.) Shooting Errors</dt>
+<dd>TTBOX uses a shooting method to compute travel times. This requires knowledge
+of the take off angle at which a seismic ray must be shot to reach the desired
+epicentral distance. Via the ray parameter, an uncertainty in this angle is transformed
+ into an error in
+the resulting travel time. TTBOX uses an optimization method
+to find the correct take off angle. Usually the desired epicentral distance is
+achieved within &plusmn;0.001&deg; (the accuracy at which the optimization stops).</dd>
+
+</dl>
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

@@ -4,10 +4,19 @@ function [data]=merge(data,varargin)
 %
 %
 
+%     Version History:
+%        Dec.  6, 2008 - initial version
+%        Dec.  8, 2008 - more options
+%        Mar.  5, 2009 - 
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Dec.  8, 2008 at 21:20 GMT
+
 % todo:
 %   - uneven support - just toss together and sort after?
 %   - make description
 %   - add rest of gap/lap methods
+%   - handle delta
 
 % check nargin
 if(mod(nargin-1,2))
@@ -30,124 +39,124 @@ oldcheckheaderstate=get_checkheader_state;
 set_checkheader_state(false);
 
 % defaults
-option.TOLERANCE=0.2;
-option.OVERLAP='sequential';
-option.GAP='sequential';
-option.FILLMETHOD='spline';
-option.SEQUENTIALMETHOD='longer';
-option.TRUNCATEMETHOD='longer';
-option.FILLER=0;
-option.TIMING='tai';
-option.USEABSOLUTETIMING=true;
+option.TOLERANCE=0.02; % seconds, any positive number
+option.OVERLAP='sequential'; % sequential/truncate
+option.GAP='sequential'; % sequential/interpolate/fill
+option.INTERPOLATE='spline'; % spline/pchip/linear/nearest
+option.ADJUST='shorter'; % longer/shorter/first/last
+option.ADJUSTUNITS='intervals'; % seconds/intervals
+option.ADJUSTMAX=0.5; % interval: 0-0.5 , seconds: 0+
+option.FILLER=0; % any number
+option.TIMING='utc'; % utc/tai
+option.USEABSOLUTETIMING=true; % true/false
 option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
 option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};
 
 % get options from SEIZMO global
 global SEIZMO
-fields=fieldnames(option);
+fields=fieldnames(SEIZMO.MERGE);
 for i=fields
-    try
-        option.(i)=SEIZMO.MERGE.(i);
-    catch
-        % do nothing
-    end
+    option.(i)=SEIZMO.MERGE.(i);
 end
 
-% parse options
+% get options from command line
 for i=1:2:nargin-1
     if(~ischar(varargin{i}))
         error('seizmo:merge:badInput',...
             'Options must be specified as a strings!');
     end
-    if((isnumeric(varargin{i+1}) && ~isscalar(varargin{i+1}))...
-        || (ischar(varargin{i+1}) && size(varargin{i+1},1)~=1))
+    option.(upper(varargin{i}))=varargin{i+1};
+end
+
+% check options
+fields=fieldnames(option);
+for i=fields
+    % get value of field and do a basic check
+    value=option.i;
+    if((isnumeric(value) && ~isscalar(value))...
+        || (ischar(value) && size(value,1)~=1))
         error('seizmo:merge:badInput',...
-            'Bad value for option %s !',varargin{i});
+            'Bad value for option %s !',value);
     end
-    switch lower(varargin{i})
+    
+    % specific checks
+    switch lower(i)
         case 'tolerance'
-            if(~isnumeric(varargin{i+1}))
+            if(~isnumeric(value))
                 error('seizmo:merge:badInput',...
                     'TOLERANCE must be a scalar number!');
             end
-            option.TOLERANCE=varargin{i+1};
         case 'overlap'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
+            if(~ischar(value) || ~any(strcmpi(value,...
                     {'sequential' 'truncate'})))
                 error('seizmo:merge:badInput',...
                     ['OVERLAP option must be '...
                     '''sequential'' or ''truncate''!']);
             end
-            option.OVERLAP=lower(varargin{i+1});
         case 'gap'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
+            if(~ischar(value) || ~any(strcmpi(value,...
                     {'sequential' 'fill'})))
                 error('seizmo:merge:badInput',...
                     ['GAP option must be '...
                     '''sequential'' or ''fill''!']);
             end
-            option.GAP=lower(varargin{i+1});
-        case 'fillmethod'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
-                    {'value' 'nearest' 'linear' 'pchip' 'spline'})))
+        case 'interpolate'
+            if(~ischar(value) || ~any(strcmpi(value,...
+                    {'nearest' 'linear' 'pchip' 'spline'})))
                 error('seizmo:merge:badInput',...
-                    ['FILLMETHOD option must be ''value'' '...
+                    ['INTERPOLATE option must be '...
                     '''nearest'' ''linear'' ''pchip'' or ''spline''!']);
             end
-            option.FILLMETHOD=lower(varargin{i+1});
-        case 'sequentialmethod'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
+        case 'adjust'
+            if(~ischar(value) || ~any(strcmpi(value,...
                     {'first' 'last' 'shorter' 'longer'})))
                 error('seizmo:merge:badInput',...
-                    ['SEQUENTIALMETHOD option must be '...
+                    ['ADJUST option must be '...
                     '''first'' ''last'' ''shorter'' or ''longer''!']);
             end
-            option.SEQUENTIALMETHOD=lower(varargin{i+1});
-        case 'truncatemethod'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
-                    {'first' 'last' 'shorter' 'longer'})))
+        case 'adjustunits'
+            if(~ischar(value) || ~any(strcmpi(value,...
+                    {'seconds' 'intervals'})))
                 error('seizmo:merge:badInput',...
-                    ['TRUNCATEMETHOD option must be '...
-                    '''first'' ''last'' ''shorter'' or ''longer''!']);
+                    ['ADJUSTUNITS option must be '...
+                    '''seconds'' or ''intervals''!']);
             end
-            option.TRUNCATEMETHOD=lower(varargin{i+1});
+        case 'adjustmax'
+            if(~isnumeric(value))
+                error('seizmo:merge:badInput',...
+                    'ADJUSTMAX must be a scalar number!');
+            end
         case 'filler'
-            if(~isnumeric(varargin{i+1}))
+            if(~isnumeric(value))
                 error('seizmo:merge:badInput',...
                     'FILLER must be a scalar number!');
             end
-            option.FILLER=varargin{i+1};
         case 'timing'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
+            if(~ischar(value) || ~any(strcmpi(value,...
                     {'tai' 'utc'})))
                 error('seizmo:merge:badInput',...
-                    ['TIMING option must be '...
-                    '''tai'' or ''utc''!']);
+                    'TIMING option must be ''tai'' or ''utc''!');
             end
-            option.TIMING=lower(varargin{i+1});
         case 'useabsolutetiming'
-            if(~islogical(varargin{i+1}) || ~isscalar(varargin{i+1}))
+            if(~islogical(value) || ~isscalar(value))
                 error('seizmo:merge:badInput',...
                     'USEABSOLUTETIMING option must be a logical!');
             end
-            option.USEABSOLUTETIMING=varargin{i+1};
         case 'requiredcharfields'
-            if(~iscellstr(varargin{i+1}))
+            if(~iscellstr(value))
                 error('seizmo:merge:badInput',...
                     ['REQUIREDCHARFIELDS option must be '...
                     'a cellstr array of header fields!']);
             end
-            option.REQUIREDCHARFIELDS=varargin{i+1};
         case 'requiredrealfields'
-            if(~iscellstr(varargin{i+1}))
+            if(~iscellstr(value))
                 error('seizmo:merge:badInput',...
                     ['REQUIREDREALFIELDS option must be '...
                     'a cellstr array of header fields!']);
             end
-            option.REQUIREDREALFIELDS=varargin{i+1};
         otherwise
             error('seizmo:merge:badInput',...
-                'Unknown option: %s !',varargin{i});
+                'Unknown option: %s !',i);
     end
 end
 
@@ -235,92 +244,69 @@ for i=1:size(f,1)
     gidx(dups)=[];
     ng=numel(gidx);
     
-    % merge
-    % looped so multiple merges are sane
-    % if a vectorized solution exists please let me know :D
+    % handle uneven
+    if(~leven(j))
+        % what to do?
+        % - pass to mseq as if perfect
+        % - merge .ind
+        % - sort by .ind
+        % - if diff .ind==0 whine
+        continue;
+    end
+    
+    % check for merge between every pair
+    %   looped so multiple merges are sane
+    %   if a vectorized solution exists please let me know :D
     for j=1:(ng-1)
+        % make sure record is not deleted from previous merge
         if(destroy(gidx(j))); continue; end
         for k=2:ng
-            if(destroy(gidx(j))); continue; end
+            % make sure these records are not deleted
+            if(destroy(gidx(j))); break; end
             if(destroy(gidx(k))); continue; end
             
-            % handle uneven
-            if(~leven(j))
-                % what to do?
-                % - pass to mseq as if perfect
-                % - merge .ind
-                % - sort by .ind
-                % - if diff .ind==0 whine
-                continue;
-            end
-            
-            % only find mergible (sequential within tolerance)
+            % get time gap
             diff12=delta(gidx(j))+(ae(gidx(j),1)-ab(gidx(k),1))*86400 ...
                 +(ae(gidx(j),2)-ab(gidx(k),2));
             diff21=delta(gidx(j))+(ae(gidx(k),1)-ab(gidx(j),1))*86400 ...
                 +(ae(gidx(k),2)-ab(gidx(j),2));
+            
+            % only find mergible (sequential within tolerance)
             if(diff12==0)
                 % perfectly mergible, 1st file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mseq(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff12,option,1);
+                mergefunc=@mseq; tdiff=diff12; lead=1;
             elseif(diff21==0)
                 % perfectly mergible, 2nd file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mseq(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff21,option,2);
+                mergefunc=@mseq; tdiff=diff21; lead=2;
             elseif(diff12>0 && diff12<option.TOLERANCE)
                 % mergible gap, 1st file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mgap(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff12,option,1);
+                mergefunc=@mgap; tdiff=diff12; lead=1;
             elseif(diff21>0 && diff21<option.TOLERANCE)
                 % mergible gap, 2nd file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mgap(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff21,option,2);
+                mergefunc=@mgap; tdiff=diff21; lead=2;
             elseif(diff12<0 && abs(diff12)<option.TOLERANCE)
                 % mergible overlap, 1st file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mlap(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff12,option,1);
+                mergefunc=@mlap; tdiff=diff12; lead=1;
             elseif(diff21<0 && abs(diff21)<option.TOLERANCE)
                 % mergible overlap, 2nd file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mlap(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff21,option,2);
-            elseif(diff12<0 && abs(diff12)<option.TOLERANCE)
+                mergefunc=@mlap; tdiff=diff21; lead=2;
+            else
+                % data not mergible
+                continue;
             end
+            
+            % merge the records
+            %
+            % why so many variables?
+            % limits to one CHANGEHEADER call which speeds things up a lot
+            [data(gidx([j k])),destroy(gidx([j k])),...
+                ab(gidx([j k]),:),ae(gidx([j k]),:),delta(gidx([j k])),...
+                npts(gidx([j k])),depmin(gidx([j k])),...
+                depmax(gidx([j k])),depmen(gidx([j k]))]=...
+                mergefunc(data(gidx([j k])),ab(gidx([j k]),:),...
+                ae(gidx([j k]),:),delta(gidx([j k])),npts(gidx([j k])),...
+                depmin(gidx([j k])),depmax(gidx([j k])),...
+                depmen(gidx([j k])),tdiff,option,lead);
         end
     end
 end
@@ -356,8 +342,9 @@ set_checkheader_state(oldcheckheaderstate);
 
 end
 
-function [data,destroy,ab,ae,npts,depmin,depmax,depmen]=...
-    mseq(data,ab,ae,npts,depmin,depmax,depmen,diff,option,first)
+
+function [data,destroy,ab,ae,delta,npts,depmin,depmax,depmen]=...
+    mseq(data,ab,ae,delta,npts,depmin,depmax,depmen,diff,option,first)
 %MSEQ    Merge sequential records
 
 % who's header do we keep
@@ -365,36 +352,30 @@ destroy=false(2,1);
 last=3-first;
 long=find(npts==max(npts),1,'first');
 short=3-long;
-switch option.SEQUENTIALMETHOD
+switch option.ADJUST
     case 'first'
-        keep=first;
-        kill=last;
-        ab(keep,:)=ab(first,:);
-        ae(keep,:)=ae(last,:)-[0 diff];
-    case 'last'
         keep=last;
         kill=first;
-        ab(keep,:)=ab(first,:)+[0 diff];
-        ae(keep,:)=ae(last,:);
+        ab(keep,:)=ab(last,:)-[0 npts(first)*delta(last)];
+    case 'last'
+        keep=first;
+        kill=last;
+        ae(keep,:)=ae(first,:)+[0 npts(last)*delta(first)];
     case 'longer'
-        keep=long;
-        kill=short;
-        if(keep==first)
-            ab(keep,:)=ab(first,:);
-            ae(keep,:)=ae(last,:)-[0 diff];
-        else
-            ab(keep,:)=ab(first,:)+[0 diff];
-            ae(keep,:)=ae(last,:);
-        end
-    otherwise % shorter
         keep=short;
         kill=long;
         if(keep==first)
-            ab(keep,:)=ab(first,:);
-            ae(keep,:)=ae(last,:)-[0 diff];
+            ae(keep,:)=ae(first,:)+[0 npts(last)*delta(first)];
         else
-            ab(keep,:)=ab(first,:)+[0 diff];
-            ae(keep,:)=ae(last,:);
+            ab(keep,:)=ab(last,:)-[0 npts(first)*delta(last)];
+        end
+    otherwise % shorter
+        keep=long;
+        kill=short;
+        if(keep==first)
+            ae(keep,:)=ae(first,:)+[0 npts(last)*delta(first)];
+        else
+            ab(keep,:)=ab(last,:)-[0 npts(first)*delta(last)];
         end
 end
 
@@ -413,8 +394,8 @@ destroy(kill)=true;
 end
 
 
-function [data,destroy,ab,ae,npts,depmin,depmax,depmen]=...
-    mgap(data,ab,ae,npts,depmin,depmax,depmen,diff,option,first)
+function [data,destroy,ab,ae,delta,npts,depmin,depmax,depmen]=...
+    mgap(data,ab,ae,delta,npts,depmin,depmax,depmen,diff,option,first)
 %MGAP    Merge gaps
 
 switch option.GAP
@@ -422,24 +403,77 @@ switch option.GAP
         [data,destroy,ab,ae,npts,depmin,depmax,depmen]=...
             mseq(data,ab,ae,npts,depmin,depmax,depmen,...
             diff,option,first);
-    otherwise % fill
-        
+    case 'interpolate'
+        % what to do?
+        % - adjust the record or interpolate new samples
+        % - interpolate the gap
+    case 'fill'
+        % what to do?
+        % - adjust the record or interpolate new samples
+        % - fill the gap with the filler
 end
 
 end
 
 
-function [data,destroy,ab,ae,npts,depmin,depmax,depmen]=...
-    mlap(data,ab,ae,npts,depmin,depmax,depmen,diff,option,first)
+function [data,destroy,ab,ae,delta,npts,depmin,depmax,depmen]=...
+    mlap(data,ab,ae,delta,npts,depmin,depmax,depmen,diff,option,first)
 %MLAP    Merge overlaps
 
 switch option.OVERLAP
     case 'sequential'
+        % just shift the option.ADJUST record to make sequential
         [data,destroy,ab,ae,npts,depmin,depmax,depmen]=...
             mseq(data,ab,ae,npts,depmin,depmax,depmen,...
             diff,option,first);
-    otherwise % truncate
+    case 'truncate'
+        % what to do?
+        % - decide how many samples to delete
+        % - adjust the remaining or interpolate
         
+        % how many samples to delete?
+        last=3-first;
+        long=find(npts==max(npts),1,'first');
+        short=3-long;
+        switch option.ADJUST
+            case 'first'
+                keep=last;
+                kill=first;
+                
+                % can we adjust?
+                
+                
+                ab(keep,:)=ab(last,:)-[0 npts(first)*delta(last)];
+            case 'last'
+                keep=first;
+                kill=last;
+                ae(keep,:)=ae(first,:)+[0 npts(last)*delta(first)];
+            case 'longer'
+                keep=short;
+                kill=long;
+                if(keep==first)
+                    ae(keep,:)=ae(first,:)+[0 npts(last)*delta(first)];
+                else
+                    ab(keep,:)=ab(last,:)-[0 npts(first)*delta(last)];
+                end
+            otherwise % shorter
+                keep=long;
+                kill=short;
+                if(keep==first)
+                    ae(keep,:)=ae(first,:)+[0 npts(last)*delta(first)];
+                else
+                    ab(keep,:)=ab(last,:)-[0 npts(first)*delta(last)];
+                end
+        end
+        
+        
+        round(abs(diff())/delta())
 end
+
+end
+
+
+function []=truncate()
+%
 
 end

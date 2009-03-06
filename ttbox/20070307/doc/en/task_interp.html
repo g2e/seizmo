@@ -1,0 +1,92 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Task: MODEL Interpolation</h4>
+  
+  <p>
+  NOTE: This section is not about the evaluation of continuously defined models at discrete
+  depths. That is described in the 
+  <a href="task_convert.html" target="content">section on conversion between CLR and ND</a>
+  (<a href="toc/toc_tutor_juggle.html" target="toc">see TOC</a>).
+  </p>
+  
+  <p>
+  This section deals with the interpolation of discrete models. Sometimes, a model is given
+  at relatively sparsely distributed depths only. To compute reliable travel times, it is
+  desirable to interpolate the model.
+  </p>
+
+  <p>
+  To interpolate a model that is given in a MODEL structure to a new list 
+  <span class="tt">newz</span> of depth values, call
+  </p>
+  <pre>
+  newmodel=mkinterpmodel(model,newz,preserveflag);
+  </pre>
+  <p>
+  or
+  </p>
+  <pre>
+  newmodel=mkinterpmodel(model);
+  </pre>
+  <p>
+  where
+  </p>
+  <dl>
+     <dt>model</dt>
+     <dd>the original MODEL structure</dd>
+     <dt>newz</dt>
+     <dd>a vector of the form <span class="tt">min:delta:max</span>, or a scalar</dd>
+     <dt>preserveflag</dt>
+     <dd>'preserve' or 'simple': a string which defines whether the discontinuities should be preserved during
+         interpolation. Usually, you set this to <span class="tt">'preserve'</span>.</dd>
+  </dl>
+
+  <p>
+  If <span class="tt">newz</span> is a scalar, velocities, density and Q factors for the single depth given in that
+  scalar are computed, but the result of <span class="tt">mkinterpmodel</span> is still a MODEL structure.
+  Such calls of <span class="tt">mkinterpmodel</span> are used internally to determine the
+  velocity at ray turning points.
+  </p>
+  
+  <p>
+  If the depth sampling is too coarse, spurious caustics and triplications will be produced in the travel times. You should check that all caustics/triplications you can see are for real and do not vanish with better sampling.
+  </p>
+  
+  
+  <p>
+  If <span class="tt">newz</span> and <span class="tt">preserveflag</span> are not specified, as in
+  the second case above, the model is interpolated in a way that produces layers that have a constant
+  5km thickness <span class="it">after application of the Flat Earth Transformation</span>
+  (corresponding to the 'flat' interpolation mode of MKCLR2MODEL). This
+  is espceially useful for computation of core phases which come close to the planet's center, at the
+  cost of increasing cpu time.
+  </p>
+  
+  <p>
+  <span class="bold"><span class="red">IMPORTANT</span></span>: if you want to use the result MODEL structure in any TTBOX routine, always set
+  'preserve'. This causes <span class="tt">mkinterpmodel</span> to produce a model which has
+  all the discontinuities of the original model at the correct depth and with their original
+  names (in addition to the depths specified in <span class="tt">newz</span>!). <br>
+  The <span class="tt">'simple'</span> mode produces a model which is defined ad the
+  depths given in <span class="tt">newz</span> only, which usually smoothes out the discontinuities.
+  <span class="tt">'simple'</span> interpolation has been implemented to determine the velocity at source depth, bu it might also be useful when preparig a model for a FD
+  computation or for other non-TTBOX uses.
+  </p>
+  <p>
+  <span class="bold"><span class="red">
+  TTBOX routines will most probably crash when using them with a 'simple' interpolated model.
+  </span></span>
+  </p>
+
+
+  <hr>
+eof.
+  </body>
+</html>

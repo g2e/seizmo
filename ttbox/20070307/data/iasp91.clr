@@ -1,0 +1,88 @@
+// IASP91 velocity model
+//
+// Kennett, B.L.N.; Engdahl, E.R. (1991):
+// Traveltimes for global earthquake location and phase identification;
+// GJI, vol. 105, pp.429-465
+//
+// typed by hand Martin Knapmeyer 01.09.2003
+//
+// note that layer names and discontinuity names are not defined in the above paper!
+
+!name IASP91
+!year 1991
+!planet !name earth
+!planet !radius 6371
+
+!layer !start upper crust
+!layer !depth 0 20
+!layer !vp 5.80
+!layer !vs 3.36
+!layer !end
+
+!layer !start lower crust
+!layer !depth 20 35
+!layer !vp 6.50
+!layer !vs 3.75
+!layer !end
+
+!layer !start upper mantle layer 1
+!layer !depth 35 120
+!layer !vp 8.78541 -0.74953
+!layer !vs 6.706231 -2.248585
+!layer !end
+
+!layer !start upper mantle layer 2
+!layer !depth 120 210
+!layer !vp 25.41389 -17.69722
+!layer !vs 5.75020 -1.27420
+!layer !end
+
+!layer !start upper mantle layer 3
+!layer !depth 210 410
+!layer !vp 30.78765 -23.25415
+!layer !vs 15.24213 -11.08552
+!layer !end
+
+!layer !start transition zone
+!layer !depth 410 660
+!layer !vp 29.38896 -21.40656
+!layer !vs 17.70732 -13.50652
+!layer !end
+
+!layer !start lower mantle layer 1
+!layer !depth 660 760
+!layer !vp 25.96984 -16.93412
+!layer !vs 20.76890 -16.53147
+!layer !end
+
+!layer !start lower mantle layer 2
+!layer !depth  760 2740
+!layer !vp 25.1486 -41.1538 51.9932 -26.6083
+!layer !vs 12.9303 -21.2590 27.8988 -14.1080
+!layer !end
+
+!layer !start D''
+!layer !depth 2740 2889
+!layer !vp 14.49470 -1.47089
+!layer !vs 8.16616 -1.58206
+!layer !end
+
+!layer !start Outer Core
+!layer !depth 2889 5153.9
+!layer !vp 10.03904 3.75665 -13.67046
+!layer !vs 0
+!layer !end
+
+!layer !start Inner Core
+!layer !depth 5153.9 6371
+!layer !vp 11.24094 0 -4.09689
+!layer !vs 3.56454 0 -3.45241
+!layer !end
+
+!discon !depth 20 conrad
+!discon !depth 35 moho
+!discon !depth 410 olivine alpha beta
+!discon !depth 660 lower mantle
+!discon !depth 2740 D''
+!discon !depth 2889 outer core
+!discon !depth 5153.9 inner core

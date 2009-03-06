@@ -1,0 +1,73 @@
+  <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+  <h4>Installation of TTBOX</h4>
+
+  <h5>System Requirements</h5>
+  
+  <p>
+  I started the development of TTBOX on MatLab 5 for Windows and continued on MatLab 6 and 7 (R2006a) for Linux.
+  The current version has never been tested on MatLab 5 and 6, but I'm optimistic that it will run at least on version 6.
+  </p>
+  <p>
+  TTBOX does definitively not run on MatLab 4, since MatLab 4 had neither the <span class="tt">switch</span> statement
+  nor <span class="tt">struct</span> variables.
+  </p>
+  <p>
+  Hardware requirements are those of MatLab.
+  </p>
+  
+  <!--
+  <p>
+  To run TTBOX, you need MatLab Version 6 (or higher). Please follow the
+  MatLab Installation Guide to find out how to install MatLab. (TTBOX was developed under MatLab 5
+  and later on MatLab 6. It does definitively not run under MatLab 4, but I have not tested the final
+  version under MatLab 5)
+  </p>
+  -->
+  
+  <h5>Installation Procedure</h5>
+  
+  <p>
+  The installation of TTBOX is relatively simple. All you have to do is to create
+  some directories and tell MatLab, where TTBOX is.
+  </p>
+  <ol>
+  <li>if it does not already exist, create a directory <span class="tt">matlab</span>
+      within your home directory.</li>
+  <li>Copy the TTBOX directory into the <span class="tt">matlab</span> directory</li>
+  <li>if it does not already exist, create a file <span class="tt">startup.m</span>
+      within the <span class="tt">matlab</span> directory</li>
+
+  <li>Insert the following lines into <span class="tt">startup.m</span>:
+  <pre>
+basepath='This should be the path to your home directory!';
+addpath([basepath filesep 'matlab' filesep 'ttbox'],1);
+addpath([basepath filesep 'matlab' filesep 'ttbox' filesep 'support'],1);
+      </pre>
+  </li>
+  <li>execute <span class="tt">startup</span> within the MatLab command window.</li>
+  <li>MatLab is now ready to execute TTBOX routines.</li>
+  <li>The startup-script will be executed automatically upon start of MatLab.</li>
+  <li>In order to read the online documentation, you have to browse to the doc directory
+      and open the ttbox/doc/ttbox.html file with your web browser (it is recommended to set a bookmark).</li>
+  </ol>
+
+
+  
+  <p>
+  It is not important where the TTBOX routines and the support directory reside.
+  What is important, is that an
+  addpath-call during startup tells MatLab where it actually is. Please refer to the MatLab
+  documentation to find out about startup behavior of MatLab and its search path list.
+  </p>
+
+  <hr>
+eof.
+  </body>
+</html>

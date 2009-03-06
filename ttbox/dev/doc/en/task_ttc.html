@@ -1,0 +1,142 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Task: Generate Set of Travel Time Curves</h4>
+  
+  <p>
+  To generate and plot a set of travel time curves for a model,
+  do the following:
+  </p>
+  
+  <ol>
+  <li>read the velocity model from an .nd file using <span class="tt">model=mkreadnd(pfad);</span></li>
+  <li>call <span class="tt">ttc=mkttcurves(model,h,dangle);</span> or
+     <span class="tt">ttc=mkttcurves(model,h,dangle,phases);</span> where
+     <dl>
+        <dt>model</dt>
+        <dd>a model structure containing the velocity model</dd>
+        <dt>h</dt>
+        <dd>the focal depth in km for which the travel time curves will be computed</dd>
+        <dt>dangle</dt>
+        <dd>the take off angle resolution (in degrees). Rays will be shot from
+            the source at angles dangle:dangle:90, measured against the vertical</dd>
+        <dt>phases</dt>
+        <dd>a string matrix giving a list of phases, for which travel time curves
+            will be computed. Generate this matrix using <span class="tt">strvcat</span>.
+            If <span class="bold">phases</span> is not specified, a standard catalogue will be used.</dd>
+     </dl>
+     <br>
+     You can also call <span class="tt">ttc=mkttquick(model,h,rayparm,dangle);</span> with the
+     ray parameter as additional input parameter. MKTTQUICK allows to use the output of MKSHOOTRAY as
+     input and thus to use lists of specific ray parameters / take off angles which produce rays
+     that arrive at predefined distances.
+  </li>
+  <li>The routine will return a variable <span class="bold">ttc</span> which is a ttcurve structure.
+      See section on data structures for details.</li>
+  <li>Call <span class="tt">mkplotttcurve(ttc,linespec);</span> without output parameter 
+      to plot the travel time curves (the routine will not produce any plot when called with
+      output parameter).
+      Here, <span class="bold">ttc</span> is the ttcurve structure computed before and <span class="bold">linespec</span> is a MatLab linespec string.<br>
+      MKPLOTTTCURVES plots into the current axis without clearing it ("hold" is on during plot).</li>
+  </ol>
+  
+  <p>
+  When producing plots, the routine sets the "tag" property of line objects to allow later identification.
+  The used tags consist of the word "phase", a space character, and the respective phase name.
+  </p>
+
+  <div align="center">
+  <table>
+  <tr>
+  <td>
+  <a href="../images/ttcurves.png" target="extern">
+  <img src="../images/ttcurves.png" alt="travel time curve example plot" class="thumb">
+  </a>
+  </td>
+  </tr>
+  <tr>
+  <td>PREM travel times for P, S, PKP, SKS, PcP, ScS computed with
+  MKTTCURVES for h=0km and dangle=0.1&deg. Since MKPLOTTTCURVES tries not to destroy an existing
+  graph (may be a waveform section), this is not beautified. X axis is epicentral distance in degrees,
+  Y axis is travel time in seconds.</td>
+  </tr>
+  </table>
+  </div>
+  
+  <p>
+  You can also call MKTTCURVES without output argument. It will then produce colorful
+  plots of travel time curves, as well as ray turning point depth, travel time and 
+  epicentral distance as function of ray parameter.
+  </p>
+  
+  
+<div align="center">
+  <table>
+  <tr>
+  <td>
+  <a href="../images/PREM_ttcurves.png" target="extern">
+  <img src="../images/PREM_ttcurves.png" alt="travel time curve example plot" class="thumb">
+  </a>
+  </td>
+  </tr>
+  <tr>
+  <td>PREM travel time curves for various phases, focal depth 0km. Such a plot is generated
+  by MKTTCURVES automatically when called without output parameter. 
+  (<a href="../images/PREM_ttcurves.pdf" target="extern">same as PDF</a>)</td>
+  </tr>
+  
+  <tr>
+  <td>
+  <a href="../images/pendepth_by_epidist.png" target="extern">
+  <img src="../images/pendepth_by_epidist.png" alt="penetration depth example plot" class="thumb">
+  </a>
+  </td>
+  </tr>
+  <tr>
+  <td>The depth to ray turning or reflection point, as function of epicentral distance for various phases,
+  focal depth 0km. Colors in the plot correspond to the travel time curve plot.
+  Such a plot is generated
+  by MKTTCURVES automatically when called without output parameter.<br>
+  Such plots can also be generated using the MKDEPTHBYDIST routine.</td>
+  </tr>
+  
+ <tr>
+  <td>
+  <a href="../images/tt_and_epidist_by_p.png" target="extern">
+  <img src="../images/tt_and_epidist_by_p.png" alt="tt and epicentral distance example plot" class="thumb">
+  </a>
+  </td>
+  </tr>
+  <tr>
+  <td>Travel Time and Epicentral Distance as function of ray parameter for various phases, focal
+  depth 0km. Colors in the plot correspond to the travel time curve plot above. Such a plot is generated
+  by MKTTCURVES automatically when called without output parameter.</td>
+  </tr>
+  
+  <tr>
+  <td>
+  <a href="../images/taup.png" target="extern">
+  <img src="../images/taup.png" alt="tau(p) example plot" class="thumb">
+  </a>
+  </td>
+  </tr>
+  <tr>
+  <td>Tau(p) curve for various phases, focal
+  depth 0km. Colors in the plot correspond to the travel time curve plot above. Such a plot is generated
+  by MKTTCURVES automatically when called without output parameter.</td>
+  </tr>
+
+  </table>
+  </div>
+
+
+  <hr>
+eof.
+  </body>
+</html>

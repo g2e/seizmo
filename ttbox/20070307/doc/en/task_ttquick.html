@@ -1,0 +1,79 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+
+ 
+  <h4>Travel Time Curves for Specific Distance Samples</h4>
+  
+  <p>
+  When MKTTCURVES computes travel times, it scans the take off angle of each phase
+  with a constant angular increment. This translates into an uneven sampling of
+  epicentral distance. But in many cases one would like to have travel times for
+  a set of specific predefined epicentral distances.
+  </p>
+  <p>
+  A loop which calls MKTTIME many times could be used to produce travel time curves
+  in such cases, but it would waste a lot of CPU time to do so, since each call of
+  MKTTIME invokes MKSHOOTRAY to determine the necessary ray parameter.
+  </p>
+  <p>
+  It is far better to use MKTTQUICK with a list of ray parameters that correspoond to
+  the desired epicentral distances:
+  </p>
+  <ol>
+     <li>Call <span class="tt">[p,a,d]=mkshootray(phase,delta,h,model);</span> with input parameters
+         <dl>
+            <dt>phase</dt>
+            <dd>The seismic phase for which you would like to have travel times</dd>
+            <dt>delta</dt>
+            <dd>A list of epicentral distances, in degrees</dd>
+            <dt>h</dt>
+            <dd>Source depth in kilometers. This has to be a single value!
+            </dd>
+            <dt>model</dt>
+            <dd>a MODEL structure containing the velocity model</dd>
+         </dl>
+     </li>
+     <li>Call <span class="tt">ttcurves=mkttquick(model,h,p,a,phase);</span> with input
+         parameters
+         <dl>
+            <dt>model</dt>
+            <dd>a MODEL structure containing the velocity model</dd>
+            <dt>h</dt>
+            <dd>Source depth in kilometers. This has to be a single value!</dd>
+            <dt>p</dt>
+            <dd>Output parameter <span class="tt">p</span> from MKSHOOTRAY. This is a list of ray parameters
+                which corresponds to the list of epicentral distances used in
+                the call of MKSHOOTRAY</dd>
+            <dt>a</dt>
+            <dd>Output parameter <span class="tt">a</span> from MKSHOOTRAY. This is a list of take off
+                angles, corresponding to the ray parameters at source depths.
+                These angles are necesary to distinguish upgoing from downgoing
+                rays, when a non-surface source is used.</dd>
+            <dt>phase</dt>
+            <dd>The seismic phase for which you would like to have travel times.
+                This has to be the same as in the call of MKSHOOTRAY.</dd>
+         </dl>
+     <span class="tt">ttcurves</span> is now a TTCURVES structure as returned by MKTTCUVRES,
+     but sampled at the distances you initially defined when calling MKSHOOTRAY.</li>
+	  <li>You can now
+	  		<ol>
+		  <li>Call <span class="tt">mkplotttcurves(ttcurves,linespec);</span> to plot the travel time curves. Here, <span class="tt">linespec</span> is a
+	  MatLab linspec string as accepted by the plot command.
+	  		</li>
+	  		<li>Call <span class="tt">mkrayfan(phase,a,h,model);</span> to plot the corresponding ray paths.</li>
+	  		</ol>
+	  </li>
+  </ol>
+
+
+  <hr>
+eof.
+  </body>
+</html>

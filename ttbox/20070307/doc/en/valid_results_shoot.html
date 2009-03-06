@@ -1,0 +1,49 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+
+<h4>Validation Results: Shooting Errors</h4>
+
+<p>
+Figures below show the difference between desired epicentral distance and the actual
+distance resulting of take off angle optimization. This optimization stops
+when the shooting error is smaller than 0.001&deg;. In very
+rare cases, a solution of this quality is not found (although the shooting
+error is still smaller than 0.01&deg;), but usually, the shooting error
+is much smaller than this limit and can therefore be neglected. (The shooting error is
+controlled by an epsilon parameter which is set to 0.001&deg;. Reducing this parameter
+to 0.00001&deg; does not reduce the travel time error but increases the cpu time
+needed.)
+</p>
+<p>
+The Shooting error is independent of wave type and model discretization.
+</p>
+
+<div align="center">
+<table>
+
+   <tr><td><a href="../images/shootingerror_P.png" target="extern"><img src="../images/shootingerror_P.png" class="thumb"></a></td></tr>
+   <tr><td>Shooting Error for P and PKIKP rays.</td></tr>
+
+</table>
+</div>
+
+<div align="center">
+<table>
+
+   <tr><td><a href="../images/shooterror_S.png" target="extern"><img src="../images/shooterror_S.png" class="thumb"></a></td></tr>
+   <tr><td>Shooting Error for S and SKIKS rays.</td></tr>
+
+</table>
+</div>
+
+  <hr>
+eof.
+  </body>
+</html>

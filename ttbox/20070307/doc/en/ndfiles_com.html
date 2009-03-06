@@ -1,0 +1,112 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.nd file format: Comments</h4>
+  
+
+<h5><a name="com">Comments</a></h5>
+
+<p>
+Comments are useful to give additional information to human readers, but are not evaluated
+during file reading.
+</p>
+
+<ul>
+<li>A .nd-file may contain an arbitrary amount of comment</li>
+
+<li>Comments may start anywhere in the file</li>
+<li>Comments are indicated by one of the following character sequences:
+
+	<div align="center">
+   <table>
+   <thead>
+   <th>Character Sequence</th>
+   <th>consists of</th>
+   </thead>
+   <tr>
+     <td>#</td>
+     <td>number sign</td>
+   </tr>
+   <tr>
+     <td>/*</td>
+     <td>slash + star</td>
+   </tr>
+   <tr>
+     <td>//</td>
+     <td>double slash</td>
+   </tr>
+   </table>
+   </div>
+
+</li>
+<li>A comment begins with one of the character sequences above and
+<span class="bold">ends at the end of the same line in which it begins</span>.</li>
+<li>Comments are stripped off before evaluation of the line.</li>
+</ul>
+
+<p>
+The following example contains several types of legal comments:
+</p>
+
+<pre>
+ // This is a discrete version of PREM
+ // values at lower side of moho are computed for 24.40001km
+ !name PREM // Preliminary Reference Earth Model
+ 0.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 24.400 6.80000 3.90000 2.90000 1345.91217 600.00000
+  Moho # here begins the mantle
+ 24.4   8.11062 4.49100 3.38075 /* I have deleted Q factors here
+ 40.000 8.10097 4.48526 3.37905
+ 60.000 8.08861 4.47789 3.37688
+</pre>
+
+<p>
+The first two lines will be ignored completely.
+The model name will be identified as "PREM", the name of the discontinuity at 24.4km as "Moho".
+</p>
+
+<p>
+The following example demonstrates several types of (currently) illegal commenting:
+</p>
+
+<pre>
+ /*
+ This is a discrete version of PREM
+ values at lower side of moho are computed for 24.40001km
+ */
+ !name PREM  / Preliminary Reference Earth Model
+ 0.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 24.400 6.80000 3.90000 2.90000 1345.91217 600.00000
+  Moho
+ 24.4   8.11062 4.49100 3.38075 /* here follows Q */ 1441.7098  600
+</pre>
+
+
+<ul>
+<li>The first line is a legal comment, but without text.</li>
+<li>The second to fourths line are not recognized as comment. The Problem with these lines is, that
+a) multi-line comments are not allowed and b) "*/" does not close a comment.</li>
+<li>The model name will be recognized as "PREM/PreliminaryReferenceEarthModel", because a) "/" does not open
+    a comment and b) all whitespaces are removed before processing a Keyword Line.</li>
+<li>In the last line, the two Q values are part of the comment, because comments end at the
+    end of the line. Again, "*/" does not close a comment.</li>
+</ul>
+
+
+
+
+
+    <hr>
+eof.
+  </body>
+</html>

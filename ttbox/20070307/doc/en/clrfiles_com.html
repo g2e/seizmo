@@ -1,0 +1,54 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.clr file format</h4>
+
+
+<h5>Comments</h5>
+
+
+
+<ul>
+<li>A .clr-file may contain an arbitrary amount of comment</li>
+
+<li>Comments may start anywhere in the file</li>
+<li>Comments are indicated by one of the following character sequences:
+
+	<div align="center">
+   <table>
+   <thead>
+   <th>Character Sequence</th>
+   <th>consists of</th>
+   </thead>
+   <tr>
+     <td>#</td>
+     <td>number sign</td>
+   </tr>
+   <tr>
+     <td>/*</td>
+     <td>slash + star</td>
+   </tr>
+   <tr>
+     <td>//</td>
+     <td>double slash</td>
+   </tr>
+   </table>
+   </div>
+   
+   </li>
+<li>A comment begins with one of the character sequences above and
+<span class="bold">ends at the end of the same line in which it begins</span>.</li>
+<li>Comments are stripped off before evaluation of the line.</li>
+</ul>
+
+
+    <hr>
+eof.
+  </body>
+</html>

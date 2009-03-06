@@ -1,0 +1,55 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Validation of Software</h4>
+  
+  <p><span class="it">
+  For the new version, the validation needed to be repeated. I did indeed do that, and the validation was successful. But I did not update the following section with the new validation results (which do not differ very much, and when they do, they are better). You may validate the software yourself, if you wish. The necessary tools are contained in the distribution.
+  </span>
+  </p>
+  
+<p>
+New numeric software has to convince users that it works properly. It is difficult to
+guarantee this for every problem you might think of, but some tests of basic tasks
+are possible. Such a testing (called validation hereafter) is described in the following
+sections.
+</p>
+
+<p>
+TTBOX has been validated against the IASP91 travel times for phases
+P, S, PKIKP (a.k.a. PKPdf) and SKIKS (a.k.a. SKSdf) as published by Kennett (1991).
+To make the validation procedure fully transparent, the used routine
+<a href="../../mkttboxvalid.m" target="extern">MKTTBOXVALID</a> and
+the reference tables used are included in the TTBOX distribution.
+</p>
+
+<p>
+In an additional test, the output of two other software packages has been compared
+with the same reference data. These are the FORTRAN program <span class="tt">onset</span>
+by Johannes Schweitzer which is based on the libtau-library by R. Buland (Buland & Chapman, 1983)
+ and the Java-written <a href="http://www.seis.sc.edu/software/index.html" target="extern"><span class="tt">TauP Toolkit</span></a> by Crotwell et al. (1999)
+ which can be accessed via web for example at
+<a href="http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html" target="extern">http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html</a>.
+</p>
+
+<p><span class="it">
+Since the first release, I was able to solve the problem of travel time residuals
+between TTBOX times and the IASP91 tables. I have not yet revised the whole section
+on validation. Instead, I have added a new sub-section "Origin of Residuals".
+The conclusions have been updated accordingly.
+</span>
+</p>
+
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

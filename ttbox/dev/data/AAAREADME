@@ -1,0 +1,108 @@
+The .txt files in his directory contain reference data for software
+validation and output of programs onset and TauP
+
+iasp91_P_0km.txt:  P travel times as given in the IASP91 booklet by Kennett (1991)
+                   on pages 6 to 12 for epicentral distances in the range 0 to 99 deg
+                   for focal depth 0km.
+                   first column: epicentral distance [deg].
+                   second columnd: minutes of travel time
+                   thrid column: seconds of travel time
+                   (this is the format required by MKTTBOXVALID)
+
+
+iasp91_S_0km.txt: S travel times: 0km focus, 0 to 99 deg.
+
+iasp91_PKPab_0km.txt PKPab travel times for epicentral distances 145 to 180 deg
+                     and 0km focus from the IASP91 booklet
+
+iasp91_PKPbc_0km.txt PKPbc travel times for epicentral distances 145 to 155 deg
+                     and 0km focus from the IASP91 booklet
+
+
+iasp91_PKPdf_0km.txt PKPdf (PKIKP) travel times for epicentral distances 114 to 180 deg
+                     and 0km focus from the  IASP91 booklet.
+
+                     
+iasp91_SKSdf_0km.txt SKSdf (SKIKS) travel times for epicentral distances 104-180deg
+                     and 0km focus from the IASP91 booklet.
+
+jb_P_0km.txt         P travel times from Jeffreys & Bullen (1940)
+                     for distances 0 to 99deg (only integer distances) and 0km focus.
+                     
+onset_times_0km.txt:  P, S, PKPdf and SKSdf travel times computed using program onset
+                      by J. Schweitzer (2000)
+                      Travel times were computed for source and station on the equator.
+                      first column: epicentral distance
+                      second column: P, PKPdf travel time [s], including ellipticity correction
+                                     (PKPdf from 125deg onwards)
+                      third column: ellipticity correction for 2nd column [s]. This has to be
+                                    subtracted before comparing with the other data
+                      fourth column: S, SKSdf travel time [s], including ellipticity correction
+                                     (SKSdf from 125deg onwards)
+                      fifth column: ellipticity correction for fourth column. This has to be
+                                    subtracted from the fourth column before comparing with 
+                                    the other data
+          
+TauP_times_P_0km_web.txt: P travel times computed with the TauP Toolkit, 0km source depth
+                          first column: epicentral distance
+                          second column: P travel time in seconds
+                          third column: ray parameter in sec/deg
+
+TauP_times_PcP_0km_web.txt: P travel times computed with the TauP Toolkit, 0km source depth
+                          first column: epicentral distance
+                          second column: P travel time in seconds
+                          third column: ray parameter in sec/deg
+                          
+TauP_times_PKP_0km_web.txt: raw data file from which files for PKPab and PKPbc were
+                            constructed (TauP Toolkit does not distinguish PKPab and
+                            PKPbc)
+                            first column: epicentral distance
+                            second column: PKPdf travel time in seconds
+                            third column: ray parameter in sec/deg
+                            
+TauP_times_PKPab_0km_web.txt: PKPab travel times from TauP Toolkit for epicentral
+                              distances 145 to 176 deg and 0km focus.
+                              first column: epicentral distance
+                              second column: PKPdf travel time in seconds
+                              third column: ray parameter in sec/deg
+                              
+TauP_times_PKPbc_0km_web.txt: PKPbc travel times from TauP Toolkit for epicentral
+                              distances 145 to 155 deg and 0km focus.
+                              first column: epicentral distance
+                              second column: PKPdf travel time in seconds
+                              third column: ray parameter in sec/deg
+
+TauP_times_PKPdf_0km_web.txt: PKPdf travel times computed with the TauP Toolkit, 0km source depth
+                              first column: epicentral distance
+                              second column: PKPdf travel time in seconds
+                              third column: ray parameter in sec/deg
+                              
+bulands_depth_smpling.txt: depth sampling extracted from program REMODL by R. Buland
+                           first column: 1 - P waves, 2 - S waves
+                           second column: slowness (units??)
+                           third column: normalized radius of ray turning point depth
+                                         6371(1-z)=depth below surface in km
+                           fourth column: vp at depth given in 3rd col
+                           fifth column: vs at depth given in 3rd col
+                           This has been produced during validation of TTBOX from
+                           the 15.05.1992 version of program REMODL, which is available
+                           at ORFEUS.
+
+ttbox_testdata_mkfindp: test data used for profiling TTBOX. This is input data for MKFINDP.
+                        The data set has no specific meaning, it's just do produce a nontrivial call.
+								the file also contains refrence output for MKFINDP and MKTTCURVES from the
+								unchanged software. This can be used to validate changes in the software.
+								(The profiler test data has no specific use for you, the user, but I
+								wanted to archive it somewhere. This was the natural place to do so.)
+
+ttbox_profiler_data.txt: output from the MatLab profiler, produced during TTBOX optimization in 2005
+                   This file contains cpu times spent in several of the TTBOX routines which
+						 were identified to be the most severe bottlenecks.
+						 the test carried out was a call to MKFINDP with a certain test data set (given in
+						 the file ttbox_testdata_mkfindp)
+						 first column: function name
+						 second column: number of child functions called by this function
+						 third column: number of calls to the function
+						 fourth comlumn: total time spent in that function (including child function calls)
+						 fifth column: self time of that function
+						 sixth column: rank number on the list of most evil time wasters

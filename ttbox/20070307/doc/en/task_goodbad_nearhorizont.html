@@ -1,0 +1,98 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Good and Bad Depth Sampling</h4>
+  
+  
+  
+  
+  <h5><a name="nearhorizont">Artifacts for Near-Horizontal Takeoff</a></h5>
+  
+  <p>
+  A ray that leaves a deep source horizontally has no reason to leave the source depth - it will circle around at this depth eternally (or until anelasticity eats it). Therefore the epicentral distance as function of take off angle (&Delta;(&alpha;)) should have a singularity for &alpha;=90&deg;.
+  </p>
+  <p>
+  In crude depth samplings, rays with takeoff angles close to 90&deg; are also affected. I must admit that I currently do not understand exactly what happens here, but the plots below show the effect quite clearly.
+  </p>
+  
+  <p>
+  As with other effects, this one also diminishes when the depth sampling gets finer.
+  </p>
+  
+  
+  <table>
+  
+     <tr>
+        <td>
+            <a href="../images/P_90deg_takeoff.png" target="extern"><img src="../images/P_90deg_takeoff.png" alt="" class="thumb"></a>
+            <a href="../images/P_90deg_takeoff_b.png" target="extern"><img src="../images/P_90deg_takeoff_b.png" alt="" class="thumb"></a>
+        </td>
+     <tr>
+        <td>
+        
+        <p>
+        Epicentral distance reached by nearly horizontally starting P waves for a focal depth of 300km and various depth samplings. The right plot is acloseup of the left one, showing that &Delta;(&alpha;) can have a quite complex structure near &alpha;=90&deg;
+        </p>
+        
+        <p>
+        The above plot was produced using the following commands (and a few manual adjustments):
+        </p>
+        
+        <p><span class="tt">
+        figure(1);
+        clf;
+        hold on;
+        h=300;
+        dz=0.01;
+        
+        [dist,depth,rayparm,angles]=mkdepthbydist(iasp91_1km,h,dz,'P');
+        [angles,sorter]=sort(angles);
+        dist=dist(sorter);
+        plot(angles,dist,'k-');
+        
+        [dist,depth,rayparm,angles]=mkdepthbydist(iasp91_10km,h,dz,'P');
+        [angles,sorter]=sort(angles);
+        dist=dist(sorter);
+        plot(angles,dist,'g-');
+        
+        [dist,depth,rayparm,angles]=mkdepthbydist(iasp91_50km,h,dz,'P');
+        [angles,sorter]=sort(angles);
+        dist=dist(sorter);
+        plot(angles,dist,'b-');
+        
+        [dist,depth,rayparm,angles]=mkdepthbydist(iasp91_100km,h,dz,'P');
+        [angles,sorter]=sort(angles);
+        dist=dist(sorter);
+        plot(angles,dist,'m-');
+        
+        [dist,depth,rayparm,angles]=mkdepthbydist(iasp91_100km_sph,h,dz,'P');
+        [angles,sorter]=sort(angles);
+        dist=dist(sorter);
+        plot(angles,dist,'r-');
+        hold off;
+        
+        legend('1km flat','10km flat','50km flat','100km flat','100km spherical');
+        box on
+        grid on
+        xlabel('Take Off Angle [deg]');
+        ylabel('Epicentral Distance [deg]');
+        title('Phase: P, Focal Depth: 300km');
+        
+        </span></p>
+        </td>
+     <tr>
+     </tr>
+  
+  </table>
+  
+ 
+  <hr>
+eof.
+  </body>
+</html>

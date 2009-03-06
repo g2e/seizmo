@@ -1,0 +1,113 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="./css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>How To Freeze TTBOX</h4>
+  
+  <p>
+  (This file is a to-do list for me - to make sure that I don't forget
+  some step when producing TTBOX freezes. Therefore, the following is in german.)
+  </p>
+  
+  <h5>Erzeugung des Freeze-Verzeichnisses</h5>
+  
+  <p>
+  VORSICHT: die links in den folgenden Anweisungen zeigen auf meine
+  in Entwicklung befindliche version (matlab/mfiles/ttbox), nicht auf
+  den neu erstellten Freeze (das geht naemlich nicht)!!
+  </p>
+
+  <ol>
+  <li>Kopiere das komplette TTBOX-Verzeichnis in das FREEZE-verzeichnis
+      (matlab/mfiles/FREEZE)</li>
+  <li>Mache eine Sicherheitskopie vom Verzeichnis ttbox/old au&szlig;erhalb
+      des FREEZE-Verzeichnisses.</li>
+  <li>Entferne ttbox/old aus der Kopie des TTBOX-Verzeichnisses.</li>
+  <li>Benenne die Kopie des TTBOX-Verzeichnisses um: an "TTBOX" wird das jeweilige Freeze-Datum
+      angehaengt in Schreibweise DDMMJJJJ, also TTBOXDDMMJJJJ.</li>
+  <li>Setze das Freeze-Datum in die
+      <a href="ttbox.html">Titelseite der HTML-Doku</a> ein.</li>
+  <li>Ersetze den "Version not Frozen"-Text auf der Titelseite der Doku
+      durch "version freeze DDMMJJJ".</li>
+  <li>Setze das Freeze-Datum in die Tabelle auf
+      <a href="./en/versions.html">Release-Notes-Seite</a>
+      im Abschnitt "READ THIS FIRST" der Doku ein.
+      </li>
+  <li>Setze das Freeze-Datum in die &Uuml;berschrift der
+      <a href="./en/relnotes.html">Release-Notes-Datei</a>
+       dieses Freeze ein.</li>
+  <li>Benenne die release-notes-Datei um: an den Namen wird das
+      Freeze-Datum angeh&auml;ngt, um diese Datei von denen anderer
+      Freezes zu unterscheiden: relnotesDDMMJJ.html</li>
+  <li>&Auml;ndere den Link auf die release-notes-Datei in der
+      <a href="./en/versions.html">Release-Notes-Seite</a>.</li>
+  <li>Erzeuge eine Textdatei README_TTBOXDDMMJJJ.txt im verzeichnis
+      matlab/mfiles/FREEZE</li>
+  <li>Kopiere die 
+      <a href="./en/installation.html">Installationsanweisungen</a>
+      aus der HTML-Doku in diese Datei (als plain text)</li>
+      
+  </ol>
+
+  <h5>Erzeugung einer .zip-Distribution</h5>
+  
+  <ol>
+
+  <li>Starte das Programm "Ark"</li>
+  <li>Lege in matlab/mfiles/FREEZE eine neue Archivdatei an:
+      TTBOXDDMMJJJJ.zip, wobei DDMMJJJJ das Freeze-Datum ist</li>
+  <li>F&uuml;ge zu dem Archiv das Verzeichnis TTBOXDDMMJJJJ hinzu.</li>
+  <li>F&uuml;ge zu dem Archiv die Datei README_TTBOXDDMMJJJJ.txt hinzu, so
+      da&szlig; diese ausserhalb des TTBOX-Verzeichnisses liegt (und dem
+      auspackenden user sofort ins Auge springt)</li>
+
+  </ol>
+  
+  <h5>Verbreitung der Distribution</h5>
+  
+  <ol>
+  
+  <li>Lege die .zip-Datei auf den Webserver des SPP1115</li>
+  <li>Verlinke die .zip-Datei mit dem TTBOX-Abstract zur DGG-Tagung 2004</li>
+
+  </ol>
+
+
+  <h5>Vorbereitung des n&auml;chsten Freeze</h5>
+  
+  <p>
+  Die folgenden Anweisungen betreffen das Verzeichnis /matlab/mfiles/ttbox,
+  d.h. die bei mir in Benutzung und Weiterentwicklung befindliche Version!
+  </p>
+  
+  <ol>
+  
+  <li>Setze das Freeze-Datum in die Tabelle auf
+      <a href="./en/versions.html">Release-Notes-Seite</a>
+      im Abschnitt "READ THIS FIRST" der Doku (in mfiles/ttbox!) ein.
+      </li>
+  <li>F&uuml;ge ind der <a href="./en/versions.html">Release Notes Seite</a>
+      eine neue erste Zeile in der Liste der existierenden Freezes ein.</li>
+  <li>Setze in die zweite Spalte dieser Zeile einen Link auf
+      "relnotes.html".</li>
+  <li>&Auml;ndere den link auf die jetzt alte relnotes.html entsprechend
+      dem Freeze-Datum auf relnotesDDMMJJJJ.html.</li>
+  <li>Benenne die alte relnotes.html in relnotesDDMMJJJJ.html um.</li>
+  <li>Erzeuge eine neue, leere relnotes.html f&uuml;r das n&auml;chste Freeze.</li>
+
+
+  </ol>
+
+
+  
+
+
+  <hr>
+eof.
+  </body>
+</html>

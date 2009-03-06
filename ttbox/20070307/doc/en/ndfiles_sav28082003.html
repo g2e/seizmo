@@ -1,0 +1,479 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.nd file format</h4>
+  
+  <p>
+  <a href="#profi">shortcut to the format reference</a>
+  </p>
+  
+  <p>
+  The .nd file format is based on the "named discontinuity" format used by the
+  TauP Toolkit (Crotwell et al., 1999). It is a human readable ASCII format which defines
+  velocity, density and Q factor at discrete depths, with linear interpolation implied.
+  </p>
+  <p>
+  For TTBOX, the format has been extended a little: it is now possible to store the
+  planetary radius, the model name, and the year in which the model was published.
+  </p>
+  <p>
+  The Routines MKREADND and MKWRITEND read and write .nd-files from disk.
+  </p>
+  
+  <p>
+  The Format consists of the following elementary building blocks:
+  </p>
+  <ol>
+  <li><span class="bold">data lines</span> to specify velocity, density and Q factor at depth</li>
+  <li><span class="bold">discontinuity name lines</span> to specify the depth of prominent 
+  1st order discontinuities</li>
+  <li>Unnamed Discontinuities</li>
+  <li><span class="bold">comments</span> to give arbitrary additional information (which is not
+      evaluated during file reading)</li>
+  <li><span class="bold">keyword lines</span> to specify planet radius, model name, and year of model publication</li>
+
+  </ol>
+  
+  <p>
+  Here comes a simple example of a .nd file, which demonstrates all features:
+  </p>
+  
+  <pre>
+  
+/* Simple sample Model */
+!year 2002
+!radius 6375 // The Radius!
+0.0  5.0  3.0  2.7
+20   5.0  3.0  2.7 100
+20   6.5  3.7  2.9	200	300
+33   6.5  3.7  2.9
+mantle # this is the Moho
+33   7.8  4.4  3.3
+410  8.9  4.7  3.5 # here is an unnamed discontinuity!
+410  9.1  4.9  3.7 // some parms in here # and complicated comment
+670  10.2 5.5  4.0
+670  10.7 5.9  4.4 # some complicated comment // after the parms
+2891 13.7 7.2  5.6
+outer-core // here begins the outer core
+2891 8.0  0.0  9.9
+5149.5 10.3 0.0 12.2
+inner-core
+5149.5 11 3.5 12.7
+6371 11.3  3.7  13
+  </pre>
+  
+<p>
+As you see, there are different (but equal) ways to define a comment. Comments may start
+right in the middle of a line. Undefined Parameters may be omitted.
+</p>
+<p>
+<a name="profi">The following sections</a> describe the building blocks of .nd-files in detail:
+</p>
+<ul>
+<li><a href="#dl">Data Lines</a></li>
+<li><a href="#dnl">Discontinuity Name Lines</a></li>
+<li><a href="#ud">Unnamed Discontinuities</a></li>
+<li><a href="#key">Keyword Lines</a></li>
+<li><a href="#com">Comments</a></li>
+</ul>
+
+<h5><a name="dl">Data Lines</a></h5>
+
+<p>
+Data Lines are, of course, the most important building block in .nd files. The use of the MatLab
+functions <span class="tt">strtok</span> and <span class="tt">str2num</span> allows a very flexible
+formatting, which makes file reading and editing much easier for humans.
+</p>
+
+<ul>
+<li>
+A Data Line consists of up to six numerical entries. The physical meaning of these Entries is:
+   <ol>
+   <li>depth in km</li>
+   <li>P-wave velocity v<span class="sub">p</span> in km/s</li>
+   <li>S wave velocity v<span class="sub">s</span> in km/s</li>
+   <li>density &rho; in g/ccm</li>
+   <li>P wave quality factor Q<span class="sub">p</span>, dimensionless</li>
+   <li>S wave quality factor Q<span class="sub">s</span>, demensionless</li>
+   </ol>
+</li>
+<li> Numerical values may be given in any form which <span class="tt">str2num</span> can transform
+from string to numeric.
+</li>
+<li>Entries are separated by whitespace: Tab stops (ASCII 9) or space (ASCII32). An abritrary
+number of whitespace characters may be used. During file read, the entries are separated using MatLab's
+<span class="tt">strtok</span> function.
+</li>
+<li>
+Missing entries at the end of the line may simply be omitted. NaN is returned bt MKREADND.
+</li>
+<li>
+Missing entries in the middle of the line have to be replaced by -1 (you can't
+replace a missing entry by whitespace because white space is the separator). NaN is returned by MKREADND.
+</li>
+<li>
+It is very important to understand that
+<span class="bold">Data Lines are not formatted by a format string</span>
+as usual in FORTRAN programs.
+</li>
+</ul>
+
+<p>
+The following example gives some layers of a PREM (Dziewonski & Anderson, 1981) like model. In PREM, all six of the quantities
+representable in .nd files are given.
+</p>
+
+<pre>
+  0.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 24.400 6.80000 3.90000 2.90000 1345.91217 600.00000
+</pre>
+
+<p>
+(Note that the formatting of this example is just chosen to enhance the readability. It is not
+necessary to have all decimal points in the same positions or use only one space as separator!)
+</p>
+
+<p>
+Many models, like IASP91 (Kennet & Engdahl, 1991) do not specify some quantities.
+If the missing quantities are at the end of the line, you may simply omit them: IASP91
+does not specify density and Q factors. The Data Lines in an .nd file may look like this:
+</p>
+
+<pre>
+ 35.000 8.04000 4.47000
+ 77.500 8.04500 4.48500
+120.000 8.05000 4.50000
+165.000 8.17500 4.50900
+210.000 8.30000 4.51800
+210.000 8.30000 4.52200
+260.000 8.48250 4.60900
+310.000 8.66500 4.69600
+</pre>
+
+<p>
+This will be interpreted as depth in the first column, v<span class="sub">p</span>
+in the second column and v<span class="sub">s</span> in the third column.
+</p>
+
+<p>
+If, for example, the S wave velocity v<span class="sub">p</span> is undefined but a density
+given, the Data Lines have to look like this:
+</p>
+
+<pre>
+  0.000 5.80000 -1 2.60000
+ 15.000 5.80000 -1 2.60000
+ 15.000 5.80000 -1 2.60000
+ 24.400 6.80000 -1 2.90000
+</pre>
+
+<p>
+This will be interpreted as depth in the first column, v<span class="sub">p</span>
+in the second column, v<span class="sub">s</span> undefined and density in the fourth
+column. The "-1" entries define the respective quantity as unknown.
+</p>
+<p>
+Omitting entries in the middle of the line as in
+</p>
+<pre>
+  0.000 5.80000    2.60000
+ 15.000 5.80000    2.60000
+ 15.000 5.80000    2.60000
+ 24.400 6.80000    2.90000
+</pre>
+
+<p>
+Would again be interpreted as depth in the first column, v<span class="sub">p</span>
+in the second column and v<span class="sub">s</span> in the third column. Since an arbitrary number
+of white space is allowed as separator between entries, the longer gap between the second and third
+column wouldn't be interpreted as missing value!
+</p>
+
+<h5><a name="dnl">Discontinuity Name Lines</a></h5>
+
+<p>
+First order Discontinuities may be named for later association with specific effects. This property
+gives the format its name.
+<p>
+
+<ul>
+<li>A named Discontinuity is defined by two adjacent Data Lines with identical depth value and
+a Discontinuity Name Line inbetween.</li>
+<li>Discontinuity names may be almost arbitrary strings. Exception: The discontinuity name
+    is not allowed to begin with a "!", since this is the escape-character to used to distinguish
+    Discontinuity Name Lines and Keyword Lines.</li>
+<li>Discontinuity names are NOT case sensitive.</li>
+<li>Several names for Earth's standard discontinuities are predefined and will make MKREADND store
+the discontinuity depths in the respective fields of the model structure. These names are:
+   <div align="center">
+   <table>
+   <thead>
+   <th>Discontinuity</th>
+   <th>TTBOX name</th>
+   <th>Explanation</th>
+   </thead>
+   <tr>
+      <td>Conrad D.</td>
+      <td>'conrad'</td>
+      <td>Boundary between upper and lower crust, not always present</td>
+   </tr>
+   <tr>
+      <td>Mohorovicic D.</td>
+      <td>'moho' <span class="it">or</span><br> 'mantle'</td>
+      <td>Boundary between crust and mantle</td>
+   </tr>
+   <tr>
+      <td>Olivine-&alpha to &beta;-Spinel phase transition, "410"</td>
+      <td>'olivine alpha beta' <span class="it">or</span><br> 'transition zone'</td>
+      <td>Beginning of the mantle transition zone</td>
+   </tr>
+   <tr>
+      <td>&beta;-Spinel to &gamma-Spinel phase transition, "520"</td>
+      <td>'olivine beta gamma'</td>
+      <td></td>
+   </tr>
+   <tr>
+      <td>Spinel-Perowskite Transition, "660"</td>
+      <td>'olivine gamma perovskite' <span class="it">or</span><br> 'lower mantle'</td>
+      <td>Boundary between upper and lower mantle</td>
+   </tr>
+   <tr>
+      <td>Core-mantle-Boundary, "CMB"</td>
+      <td>'outer core' <span class="it">or</span><br> 'outer-core'</td>
+      <td>Boundary between Mantle and Core</td>
+   </tr>
+   <tr>
+      <td>Inner core Boundary, "ICB"</td>
+      <td>'inner core' <span class="it">or</span><br> 'inner-core'</td>
+      <td>Boundary between liquid outer and solid inner core.</td>
+   </tr>
+   </table>
+   </div>
+
+</li>
+</ul>
+
+<p>
+The following example shows the definition of a Moho within a PREM-like model:
+</p>
+
+<pre>
+ 0.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 24.400 6.80000 3.90000 2.90000 1345.91217 600.00000
+  mantle
+ 24.4   8.11062 4.49100 3.38075 1441.7098  600
+ 40.000 8.10097 4.48526 3.37905 1441.96734 600.00000
+ 60.000 8.08861 4.47789 3.37688 1442.29855 600.00000
+</pre>
+
+<p>
+Values of physical parameters are defined above and below the discontinuity at the
+same depth (24.4km in the above example). The insertion of the predefined name causes MKREADND
+to store the depth of the Moho in the .moho-field of the model-structure.
+</p>
+
+<p>
+PREM defines a Low velocity zone, which does not exist in all earth models. The beginning of this
+zone may be indicated by a non-predefined discontinuity name:
+</p>
+
+<pre>
+ 80.000 8.07625 4.47052 3.37471 1442.63089 600.00000
+115.000 8.05461 4.45762 3.37090 195.43033 80.00000
+150.000 8.03298 4.44472 3.36710 195.51154 80.00000
+185.000 8.01134 4.43182 3.36329 195.59324 80.00000
+220.000 7.98971 4.41892 3.35949 195.67543 80.00000
+  LVZ
+220     8.55895 4.6439  3.43578 362.6702  143
+265.000 8.64552 4.67540 3.46265 365.06069 143.00000
+</pre>
+
+<p>
+This Name and the associated depth (220 km) are stored in the .dz- and .dname-fields of the
+model-structure.
+</p>
+
+<h5><a name="ud">Unnamed Discontinuities</a></h5>
+
+<p>
+Discontinuities may also remain unnamed as in the following example from IASP91:
+</p>
+
+<pre>
+ 77.500 8.04500 4.48500 -1.00000 -1.00000 -1.00000
+120.000 8.05000 4.50000 -1.00000 -1.00000 -1.00000
+165.000 8.17500 4.50900 -1.00000 -1.00000 -1.00000
+210.000 8.30000 4.51800 -1.00000 -1.00000 -1.00000
+210.000 8.30000 4.52200 -1.00000 -1.00000 -1.00000
+260.000 8.48250 4.60900 -1.00000 -1.00000 -1.00000
+310.000 8.66500 4.69600 -1.00000 -1.00000 -1.00000
+</pre>
+
+<p>
+The discontinuity at 210km depth will be ignored in the sense that no special treatment of it is
+possible. Its depth is not stored within the .dz-field of the model-structure.
+</p>
+
+<h5><a name="key">Keyword Lines</a></h5>
+
+<p>
+Keyword Lines are used to store data other than velocity, density and Q-factors.
+</p>
+
+<ul>
+<li>A Keyword Line may occur anywhere within the .nd file.</li>
+<li>Before processing, any whitespace will be removed from the Keyword Line (!)</li>
+<li>Keyword Lines consist of
+    <ol>
+    <li>an arbitrary number of whitespace characters at the beginning of the line</li>
+    <li>an Exclamation mark "!" to distinguish Discontinuity Name Lines and Keyword Lines</li>
+    <li>an arbitrary number of whitespace character as separator</li>
+    <li>the data value (string or numeric, depending on keyword)</li>
+    </ol>
+</li>
+<li>In case of multiple occurences of the same Keyword, only the last one counts.</li>
+<li>The following Keywords are defined:
+
+    <div align="center">
+    <table>
+    <thead>
+    <th>Keyword</th>
+    <th>Type</th>
+    <th>Explanation</th>
+    </thead>
+    <tr>
+       <td>!radius'</td>
+       <td>numeric</td>
+       <td>Planetary Radius in km. If not defined within the file, the largst depth value
+           used in a Data Line will be used.</td>
+    </tr>
+    <tr>
+       <td>!year</td>
+       <td>numeric</td>
+       <td>Year of Publication of model</td>
+    </tr>
+    <tr>
+       <td>!name</td>
+       <td>string</td>
+       <td>Name of model, without any whitespace</td>
+    </tr>
+    </table>
+    </div>
+</li>
+</ul>
+
+<p>
+In an .nd-file for the IASP91 model you might define
+</p>
+
+<pre>
+!name IASP91
+!radius 6371
+!year 1991
+</pre>
+
+<p>
+For the Moon Model by Nakamura (1983), the respective lines would be
+</p>
+
+<pre>
+!radius 1738
+!year 1983
+!name Nakamura83
+</pre>
+
+
+
+<h5><a name="com">Comments</a></h5>
+
+<p>
+Comments are useful to give additional information to human readers, but are not evaluated
+during file reading.
+</p>
+
+<ul>
+<li>A .nd-file may contain an arbitrary amount of comment</li>
+
+<li>Comments may start anywhere in the file</li>
+<li>Comments are indicated by one of the following character sequences:
+    <ul>
+    <li># (number sign)</li>
+    <li>/* (slash-star)</li>
+    <li>// (double slash)</li>
+    </ul>
+</li>
+<li>A comment begins with one of the character sequences above and 
+<span class="bold">ends at the end of the same line in which it begins</span>.</li>
+<li>Comments are stripped off before evaluation of the line.</li>
+</ul>
+
+<p>
+The following example contains several types of legal comments:
+</p>
+
+<pre>
+ // This is a discrete version of PREM
+ // values at lower side of moho are computed for 24.40001km
+ !name PREM // Preliminary Reference Earth Model
+ 0.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 24.400 6.80000 3.90000 2.90000 1345.91217 600.00000
+  Moho # here begins the mantle
+ 24.4   8.11062 4.49100 3.38075 /* I have deleted Q factors here
+ 40.000 8.10097 4.48526 3.37905
+ 60.000 8.08861 4.47789 3.37688
+</pre>
+
+<p>
+The first two lines will be ignored completely.
+The model name will be identified as "PREM", the name of the discontinuity at 24.4km as "Moho".
+</p>
+
+<p>
+The following example demonstrates several types of (currently) illegal commenting:
+</p>
+
+<pre>
+ /*
+ This is a discrete version of PREM
+ values at lower side of moho are computed for 24.40001km
+ */
+ !name PREM  / Preliminary Reference Earth Model
+ 0.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 24.400 6.80000 3.90000 2.90000 1345.91217 600.00000
+  Moho
+ 24.4   8.11062 4.49100 3.38075 /* here follows Q */ 1441.7098  600
+</pre>
+
+
+<ul>
+<li>The first line is a legal comment, but without text.</li>
+<li>The second to fourths line are not recognized as comment. The Problem with these lines is, that
+a) multi-line comments are not allowed and b) "*/" does not close a comment.</li>
+<li>The model name will be recognized as "PREM/PreliminaryReferenceEarthModel", because a) "/" does not open
+    a comment and b) all whitespaces are removed before processing a Keyword Line.</li>
+<li>In the last line, the two Q c values are part of the comment, because comments end at the
+    end of the line. Again, "*/" does not close a comment.</li>
+</ul>
+
+
+
+
+
+    <hr>
+eof.
+  </body>
+</html>

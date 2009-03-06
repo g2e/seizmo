@@ -1,0 +1,325 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Error Messages</h4>
+  
+  <p>
+  TTBOX routines cast a number of error messages when they feel uncomfortable. Most of them
+  should be self-explanatory, but here are some additional comments. Some of the errors should never occur. But if they do, please tell me (and please tell me how to reproduce)
+  </p>
+  <p>
+  The large number of errors listed here does not mean that TTBOX is full of errors but that I tried to catch every possible exception or at least give meaningful information to the user.
+  </p>
+  <p>
+  TTBOX error messages always start with the name of the complaining routine. Messages
+  are listed alphabetically here, which means they are at first ordered alphabetically
+  by routine name.
+  </p>
+
+  <p>
+  Some messages quote the character string or number which is responsible for the error.
+  These quotations are given in angle brackets &lt; &gt; here.
+  </p>
+  
+
+<dl>
+
+<dt>MKANALYTICTIMES: cannot handle  &lt;phase&gt;</dt>
+<dd>MKANALYTICTIMES handles only a few phases at predefined epicentral distances.
+    Allowed phases and assigned distances are specified in the help lines.</dd>
+
+<dt>MKANALYZEMODEL: 3 input arguments required!</dt>
+<dd>MKANALYZEMODEL requires at least 3 input arguments, a 4th one is optional.</dd>
+
+<dt>MKANGLE2RAYP: phase names cannot start with &lt;starttype&gt;</dt>
+<dd>All phase names begin with 'P', 'S', 'p', 's'. Names beginning with other
+characters are illegal. (Check for typos!)</dd>
+
+<dt>MKCLR2MODEL: unknown sampling mode &lt;mode&gt;</dt>
+<dd>The sampling modes recognized by MKCLR2MODEL are listed in the help lines. (Check for typos!)</dd>
+
+
+<dt>MKCOLOR2BW: tag keyword  &lt;keyword&gt;  not recognized</dt>
+<dd>MKCOLOR2BW changes color and line style of graphics objects identified by certain
+    keywords and modifiers, which are stored in the object's tag-property. If this
+    property contains values other than those used by TTBOX, this error occurs. </dd>
+
+<dt>MKCOLOR2BW: tag modifier  &lt;modifier&gt;  not recognized</dt>
+<dd>MKCOLOR2BW changes color and line style of graphics objects identified by certain
+    keywords and modifiers, which are stored in the object's tag-property. If this
+    property contains values other than those used by TTBOX, this error occurs.</dd>
+
+<dt>MKFINDJUMP: lengths of X and Y have to be equal!</dt>
+<dd>You should never see this message. MKFINDJUMP is used by MKFINDP to analyze epicentral
+distance as function of take off angle and should always use equally long X and Y. If not,
+you are in serious trouble (sorry, no idea what may have happened).</dd>
+
+<dt>MKFALSEPOSITION: root slipped out of bracket!</dt>
+<dd>I hope that you will never see this message. The routine MKFALSEPOSITION searches the minimum of a function using the false position method as described by Press et al. (1992). This method searches a mimimum by narrowing the brackets, but runs havoc if the brackets do not contain a minimum. The routine tries hard to make sure that this never occurs, but if it does, there is nothing you can do...</dd>
+
+<dt>MKFINDEXTREMEDISTS: insufficient information!</dt>
+<dd>Another error that should never occur - and again, there is nothing you can do if it does. This is in a part of the program wheere it tires to determine if the shooting function &Delta;(&alpha) has a local extremum between two function samples, and sometimes, two samples (and the gradients there) do not give sufficient information. Usually, the program then makes some assumption and continue to run.</dd>
+
+<dt>MKFINDEXTREMEDISTS: unexpected gradient sign (#1)!</dt>
+<dd>I'm very confident that this cannot occur - the gradiens sign is -1, 0, or +1, and this error occurs in the unlikely case that sign() returns someting else (the sign of NaN is NaN, but I have never seen this happening in all my tests). But if this happens, you're lost.</dd>
+
+<dt>MKFINDEXTREMEDISTS: unexpected gradient sign (#2)!</dt>
+<dd>I'm very confident that this cannot occur - the gradiens sign is -1, 0, or +1, and this error occurs in the unlikely case that sign() returns someting else (the sign of NaN is NaN, but I have never seen this happening in all my tests). But if this happens, you're lost.</dd>
+
+<dt>MKFINDEXTREMEDISTS: unexpected SEARCHWHAT: &lt;searchwhat&gt;</dt>
+<dd>The searchwhat parameter is set internally, you have no influence on its value. If it has an unexpected value, something's wrong with MatLab.</dd>
+
+<dt>MKFINDEXTREMEDISTS: unexpected SEARCHWHAT value.</dt>
+<dd>The searchwhat parameter is set internally, you have no influence on its value. If it has an unexpected value, something's wrong with MatLab.</dd>
+
+<dt>MKFINDZEROS: illegal number of input parameters!</dt>
+<dd>MKFINDZEROS can accept different numbers of input parameters. See help lines for details.</dd>
+
+
+<dt>MKFUMBLEP: unexpected number of NaN solutions.</dt>
+<dd>There's a list of two values, and one or the both of them might be NaN. The "unexpected number" error means that there are more than two elements in the list and that more than two of them are zero. I have never seen this so occur and have no idea how it could happen - this error message is to have a well-defined crash just in case...</dd>
+
+
+<dt>MKFUMBLEP: unknown search direction &lt;direction&gt;</dt>
+<dd>The search direction may be "up", "down" or "both" - if this error occurs, something else has been entered in the calling routine.</dd>
+
+
+
+<dt>MKINTERPMODEL: unknown option &lt;option&gt;</dt>
+<dd>MKINTERPMODEL knows several different types of interpolation, which are described
+in the routine's help lines. You probably entered a non-existing type. (Check for typos!)</dd>
+
+<dt>MKMAKECLR: unknown result type &lt;result type&gt;</dt>
+<dd>MKMAKECLR can produce different types of output, which are described in the routine's
+help lines. You probably asked for a non-existing type. (Check for typos!)</dd>
+
+
+<dt>MKND2CLR: unknown mode &lt;mode&gt;</dt>
+<dd>This routine currently has only one mode: "constant". If this error occurs, you shoul check your input for typos.</dd>
+
+
+<dt>MKPARM2CLR: unknown keyword &lt;keyword&gt;</dt>
+<dd>You have used an illegal keyword in a CLR file. (Check for typos!)</dd>
+
+<dt>MKPARM2CLR: unknown modifier &lt;modifier&gt;</dt>
+<dd>You have used an illegal modifier in a CLR file. (Check for typos!)</dd>
+
+<dt>MKPARMCONSOLID: keyword &lt;keyword&gt; requires two parameters</dt>
+<dd>A lower and an upper boundary value are expected.</dd>
+
+<dt>MKPARMCONSOLID: modifier &lt;modifier&gt; illegal for keyword</dt>
+<dd>Each Keyword has a number of allowed modifiers, which are given in the CLR format
+description. Check your Modifier for typos!</dd>
+
+<dt>MKPARMCONSOLID: modifier required for keyword &lt;keyword&gt;</dt>
+<dd>The keyword needs a modifier which defines how to interpret the parameters.</dd>
+
+<dt>MKPARMCONSOLID: no modifier allowed for keyword &lt;keyword&gt;</dt>
+<dd>Modifiers are not allowed here.</dd>
+
+<dt>MKPARMCONSOLID: no parameter allowed for modifier &lt;modifier&gt;</dt>
+<dd>This was the "end" modifier of the "layer" keyword, wasn't it? The end is simply the end
+and has no modifications. If it was not the "end", it probably was the "usertag". 
+The "usertag" keyword allows arbitrary strings, but these
+should not begin with exclamation marks.</dd>
+
+<dt>MKPARMCONSOLID: unknown keyword &lt;keyword&gt;</dt>
+<dd>The CLR file contains an unrecognized keyword. Check for typos!</dd>
+
+
+<dt>MKPHASECATALOG: unrecognized phase list type &lt;phasetype&gt;</dt>
+<dd>MKPHASECATALOG can return several standard lists of phase names, which are
+described in the routine's help lines. When you get this message, you have demanded
+a list type which does not exist. (Check for typos!)</dd>
+
+<dt>MKPLOTCLR: illegal number of input args!</dt>
+<dd>MKPLOTCLR accepts either 2 or 3 input arguments.</dd>
+
+<dt>MKPLOTCLR: unknwon quantity &lt;quantity name&gt;</dt>
+<dd>MKPLOTCLR plots one physical property at once, depending on a keyword given
+upon call. The keywords are described in the routine's help lines. You have probably
+chosen one that does not exist.  (Check for typos!)</dd>
+
+<dt>MKPOLARFRAME: illegal number of input parameters!</dt>
+<dd>MKPOLARFRAME knows three different calling sequences with 0, 2, or 6 input parameters. Everything else is an error.</dd>
+
+
+<dt>MKRADIUS2DEPTH: No planetary radius defined!</dt>
+<dd>A CLR file defines layer or discontinuity locations by radius coordinates,
+but the planet's radius is undefined, making it impossible to convert these
+radii into depths.</dd>
+
+<dt>MKRAYDEPTHINV: unexpected value of IDENT</dt>
+<dd>A given depth value may occur in contain 0, 1, or 2 adjacent samples with the same
+depth (2 is for discontinuities). Larger numbers of identical depths are not allowed
+and cause this error. Check your model's depth sample list for identical depth entries,
+there are probably three or more samples with the same depths. Reduce that number to at most 2.</dd>
+
+<dt>MKRAYDIAGRAM: type &lt;type&gt; unknown.</dt>
+<dd>MKRAYDIAGRAM plots P and S wave segments of rays in different ways. The type string
+defines the wave type of each ray element and may therefore not contain characters
+other than 'P' and 'S'. You should never see this message, because ray type strings
+are produced by MKX4P automatically.</dd>
+
+<dt>MKRAYDIAGRAM: use 3, 4, 5, 6, or 7 input parameters!</dt>
+<dd>MKRAYDIAGRAM knows several different calling sequences which are described in it's
+help lines. You have used an illegal number of input parameters.</dd>
+
+<dt>MKRAYFAN: illegal number of input arguments!</dt>
+<dd>MKRAYFAN knows several different calling sequences which are described in it's
+help lines and in the tutorial. You have used an illegal number of input parameters.</dd>
+
+<dt>MKRAYP2ANGLE: phase names cannot start with &lt;starttype&gt;</dt>
+<dd>All phase names begin with 'P', 'S', 'p', 's'. Names beginning with other
+characters are illegal. (Check for typos!)</dd>
+
+<dt>MKREADCLR:  &lt;msg&gt;</dt>
+<dd>MKREADCLEAR couldn't open the desired CLR file. The message &lt;msg&gt; is what
+<span class="tt">fopen</span> returned. There is probably a typo in your path or file name,
+or you don't have the permission to read/write. Consult the MatLab Documentation for
+further help.</dd>
+
+<dt>MKREADND: File &lt;path&gt; does not exist!</dt>
+<dd>The desired .nd file doesn't exist. Check your path and file name for typos.</dd>
+
+<dt>MKREADND: Please specify path to .nd file!</dt>
+<dd>You tried to run MKREADND without specifying the file you want to read.</dd>
+
+<dt>MKSAMPLECLR: illegal number of input arguments</dt>
+<dd>MKSAMPLECLR knows several different calling sequences which are described in it's
+help lines. You have used an illegal number of input parameters.</dd>
+
+<dt>MKSAMPLECLR: unknown mode &lt;mode&gt;</dt>
+<dd>MKSAMPLECLR knows several different modes of operation which are described in the help lines.
+You have chose one that does not exist. Check for typos.</dd>
+
+
+<dt>MKSHOOTRAY: unknown function minimizer &lt;minimizer&gt:</dt>
+<dd>In MKSHOOTRAY (the replacement for MKFINDP) I tested several differnt function minimizing methods. All of them are still implemented, but the choice is hard-wired in MKSHOOTRAY. Therefore you will never see this error, except if MatLab's variable management is damaged.</dd>
+
+
+<dt>MKSMARTTAKEOFF: complex take off generated for CMB touch</dt>
+<dd>This means that it is not possible to send rays down to the core mantle boundary at an
+angle as needed for Pdiff. Usually, the model contains extreme low velocity zones that
+do not allow to send rays down there at all.</dd>
+
+<dt>MKSMARTTAKEOFF: complex take off generated for ICB touch</dt>
+<dd>This means that it is not possible to send rays down to the inner core boundary
+at an angle that makes PKP touch the ICB. Usually, the model contains extreme low velocity zones that
+do not allow to send rays down there at all.</dd>
+
+<dt>MKSPLITTOKENLIST: Exclamation mark missing at begin of line &lt;linenumber&gt; of file</dt>
+<dd>All lines in CLR files are either comments or keyword lines (or empty), and keywords
+have to be preceded by an exclamation mark. You may have forgotten to set the "!", or
+you may have forgotten to set a comment mark (see the description of CLR files!)</dd>
+
+
+<dt>MKSYNOPSIS: illegal number of input arguments!</dt>
+<dd>MKSYNOPSIS knows several different calling sequences which are described in it's
+help lines. You have used an illegal number of input parameters.</dd>
+
+
+<dt>MKTIM4P: cannot handle phase  &lt;phase&gt;. Abort.</dt>
+<dd>Currently, MKTIM4P contains extra code for any phase that it can handle, so the set of
+phases that can be evaluated is limited. You have chosen one for which no code exists.
+(ask MKPHASECATALOG to see which phases are possible)</dd>
+
+<dt>MKTIM4P: Depth phases do not exist for surface foci!</dt>
+<dd>Depth phases are computed only if the source depth is larger than zero.
+(May be the first letter in your phase name should be uppercase?)</dd>
+
+<dt>MKTIM4P: illegal number of input arguments!</dt>
+<dd>MKTIM4P knows several different calling sequences which are described in the help lines, but the one
+you have tried is not allowed. (Check for Typos!)</dd>
+
+<dt>MKTIM4P: unknown anglemode &lt;anglemode&gt;</dt>
+<dd>MKTIM4P knowns several different modes of operation which are described in the help lines.
+You have chose one that does not exist. Check for typos.</dd>
+
+<dt>MKTOUCHDIS: illegal number of input arguments!</dt>
+<dd>MKTOUCHDIS:knows several different calling sequences which are described in it's
+help lines. You have used an illegal number of input parameters.</dd>
+
+<dt>MKTOUCHDIS: unknown format type &lt;formattype&gt;</dt>
+<dd>MKTOUCHDIS can return text output in several different formats. See help lines to learn which.
+Check for typos.</dd>
+
+<dt>MKTOUCHDIS: cannot handle &lt;sphase&gt;</dd>
+<dd>You should never see this, because MKTOUCHDIS generates phase names internally. This error
+message is just a formal part of a switch-statement. If you get this error, you are in trouble.</dd>
+
+<dt>MKTP: time computation resulting in NaN!</dt>
+<dd>The only reason for this that I know is:
+you tried to send rays to a depth where the velocity model is not defined, e.g. you model has no core
+and you try to compute PKP times, or your source is above the topmost layer of the model.
+If this is not the case, you have a very serious problem, and I can't help you any further - at least not from remote. </dd>
+
+<dt>MKTTBOXVALID: unknown plot mode &lt;plotmode&gt;</dt>
+<dd>MKTTBOXVALID knows several different calling sequences which are described in the help lines, but the one
+you have tried is not allowed. (Check for Typos!)</dd>
+
+<dt>MKTTBOXVALID: unknown file extension &lt;extension&gt;</dt>
+<dd>MKTTBOXVALID can handle .clr and .nd files, which are recognized by
+file extension '.clr' and '.nd', respectively. Files with other
+extensions produce this error. (Check for typos!)</dd>
+
+<dt>MKTTCURVES: unknown phase name &lt;phasename&gt;</dt>
+<dd>All phase names begin with 'P', 'S', 'p', 's'. Names beginning with other
+characters are illegal. (Check for typos!)</dd>
+
+<dt>MKTTDIAGRAM: wrong number of input arguments!</dt>
+<dd>MKTTDIAGRAM knows several different calling sequences which are described in the help lines.</dd>
+
+<dt>MKTTQUICK: unknown phase name &lt;phasename&gt;</dt>
+<dd>All phase names begin with 'P', 'S', 'p', 's'. Names beginning with other
+characters are illegal. (Check for typos!)</dd>
+
+<dt>MKWRITECLR: &lt;message&gt;</dt>
+<dd>The quoted message was returned by <span class="tt">fopen</span>. Usually, you do
+not have permission to write to the specified directory, or the directory does not exist.
+See the MatLab documentation for further help.</dd>
+
+<dt>MKWRITECLR: wrong number of input arguments!</dt>
+<dd>MKWRITECLR knows several different calling sequences which are described in the help lines, but the one
+you have tried is not allowed.</dd>
+
+<dt>MKWRITEND: illegal number of input parameters</dt>
+<dd>MKWRITEND knows several different calling sequences which are described in the help lines, but the one
+you have tried is not allowed.</dd>
+
+<dt>MKX4P: cannot handle phase &lt;phase&gt;. Returning NaN.</dt>
+<dd>Currently, MKX4P contains extra code for any phase that it can handle, so the set of
+phases that can be evaluated is limited. You have chosen one for which no code exists.
+(ask MKPHASECATALOG to see which phases are possible)</dd>
+
+<dt>MKX4P: Depth phases do not exist for surface foci!</dt>
+<dd>Depth phases are computed only if the source depth is larger than zero.
+(May be the first letter in your phase name should be uppercase?)</dd>
+
+<dt>MKX4P: illegal number of input arguments!</dt>
+<dd>MKX4P knows several different calling sequences which are described in the help lines, but the one
+you have tried is not allowed.</dd>
+
+<dt>MKX4P: unknown anglemode &lt;anglemode&gt;</dt>
+<dd>MKX4P knows several different modes of operation which are described in the help lines.
+You have chose one that does not exist. Check for typos.</dd>
+
+<dt>MKXP: distance computation resulting in NaN!</dt>
+<dd>This is a very serious problem which should never occur. But if it occurs, I can't
+tell you what's wrong (at least not remotely and without further analysis). Sorry.</dd>
+
+
+</dl>
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

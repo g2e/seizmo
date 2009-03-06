@@ -1,0 +1,135 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Task: Plot Rays</h4>
+  
+  <p>
+  The MKRAYFAN routine allows to plot sets of ray paths through any model for all
+  seismic phases that TTBOX can handle.
+  </p>
+
+  <ol>
+  <li>read the velocity model from an .nd file using <span class="tt">model=mkreadnd(pfad);</span>
+      or discretize a model from a .clr file.</li>
+  <li>call <br>
+        <span class="tt">mkrayfan(phase,model,h);</span> or<br>
+        <span class="tt">mkrayfan(phase,model,h,colspec);</span> or<br>
+        <span class="tt">mkrayfan(phase,model,h,dangle);</span> or<br>
+        <span class="tt">mkrayfan(phase,model,h,dangle,colspec);</span><br><br> where
+     <dl>
+        <dt>phase</dt>
+        <dd>a string containing the phase name, e.g. 'P' or 'SKS'</dd>
+        <dt>model</dt>
+        <dd>a model structure containing the velocity model, as returned by MKREADND.</dd>
+        <dt>h</dt>
+        <dd>the focal depth in km</dd>
+        <dt>dangle</dt>
+        <dd>an optional angle increment, in degrees measured against the vertical<br>
+            If this is a scalar rays with take off angles dangle:dangle:(180-dangle) are
+            generated.<br>
+            If this is a vector, rays with takeoff angles as specified in this vector
+            are generated.<br>
+            You may generate an angle list by calling
+             <span class="tt">dangle=mksmarttakeoff(phase,model,h,deltaangle);</span>
+             where deltaangle is a scalar defining an angle increment. MKSMARTTAKEOFF
+             produrces a list of angles which is optimized for the phase under consideration.
+            </dd>
+        <dt>colspec</dt>
+        <dd>An optional string specifying the color used for rays. This may be a short
+            color name ('b', 'r', 'k'), a long color name ('blue','red','black') or a RGB triple.
+            It is important that the RGB triple is also given a string ('[0.1 0.2 0.3]'), because
+            being a string is what distinguishes a color specification from an angle parameter.<br>
+            if no colspec argument is given, P wave legs are blue and S wave legs are red.</dd>
+     </dl>
+  </li>
+  </ol>
+  
+  <p>
+  This generates a circular plot with colored rays and an angular scale around the perimeter and
+  discontinuities drawn as circles.
+  The plot is drawn into the current figure. If <span class="tt">hold</span> if off, the window is resized.
+  </p>
+  
+  <p>
+  MKRAYFAN sets the "tag" property of line objects to allow later identification of P and S legs.
+  The used tags are "ray p" and "ray s".
+  </p>
+  
+  <p>Alternatively, you may
+  <ol>
+  <li>call <span class="tt">handles=mkrayfan(...);</span>
+  The MKRAYFAN routine performs as above, but returns a list of handles to all ray segments.
+  </li>
+  <li>Use <span class="tt">set(handles,PropertyName,PropertyValue);</span> to change
+     properties of the ray lines. You may, for example, change colors in order to
+     distinguish the different branches of a triplication (see example below).</li>
+  </ol>
+
+
+  
+  
+<div align="center">
+  <table>
+  <tr>
+  <td>
+  <a href="../images/P_rayfan.png" target="extern">
+  <img src="../images/P_rayfan.png" alt="ray fan example plot" class="thumb">
+  </a>
+  </td>
+  </tr>
+  <tr>
+  <td>Paths of P phase in PREM, for a focus at 500km depth with take off angle resolution 2&deg;
+      (<a href="../images/P_rayfan.pdf" target="extern">as vector graphics in PDF</a>)</td>
+  </tr>
+  <tr>
+  <td>
+  <a href="../images/SKS_rayfan.png" target="extern">
+  <img src="../images/SKS_rayfan.png" alt="ray fan example plot" class="thumb">
+  </a>
+  </td>
+  </tr>
+  <tr>
+  <td>Paths of SKS phase in PREM, for a focus at 500km depth with take off angle resolution 5&deg;.
+  (<a href="../images/SKS_rayfan.pdf" target="extern">as vector graphics in PDF</a>)</td>
+  </tr>
+
+  <tr>
+  <td>
+  <a href="../images/PKPtriplication.png" target="extern">
+  <img src="../images/PKPtriplication.png" alt="ray fan example plot" class="thumb">
+  </a>
+  </td>
+  </tr>
+  <tr>
+  <td>Paths of PKP phase in PREM, for a focus at 0km depth with take off angle resolution 0.2&deg;.
+  This plot was created using four calls of MKRAYFAN and re-coloring the rays using the
+  handles returned by MKRAYFAN.
+  (<a href="../images/PKPtriplication.pdf" target="extern">as vector graphics in PDF</a>)</td>
+  </tr>
+  </table>
+  </div>
+  
+
+
+  
+
+  <h6><span class="red">Bugs and Limitations</span></h6>
+
+  <ol>
+  <li>Rays in media with linear velocity laws are circular arcs, but MKRAYFAN plots
+      them as piecewise straight lines. So at large magnification or with crudely
+      discretized models, ray will look polygonal instead of curved. But this is only
+      the plot, the computation, epicentral distances and times are correct.</li>
+  
+  </ol>
+
+  <hr>
+eof.
+  </body>
+</html>

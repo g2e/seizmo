@@ -1,0 +1,241 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Task: Read Model From .CLR File</h4>
+  
+  <p>
+  To read a velocity model from a .clr file, execute
+  </p>
+  <pre>
+        clr=mkreadclr(pfad,'silent');
+  </pre>
+  <p>
+  where <span class="tt">pfad</span> is the path and filename of the file you wish to read.
+  </p>
+  <p>
+  The output variable "clr" contains a CLR structure (see 
+  <a href="toc/toc_datastruct.html" target="toc">subsection clr of section on Data
+  Structures</a> for description). This type of structure contains all information on layer
+  polynomials and discontinuities.
+  </p>
+  <p>
+  CLR structures cannot be used directly but need to be converted into ND format (see section <a href="toc/toc_tutor_juggle.html" target="toc">Convert Between CLR and ND</a> to learn how to do that).
+  </p>
+  <p>
+  The second argument makes MKREADCLR run silent, i.e. without screen output. If you omit it,
+  the routine will write a lot of text to the screen that traces the file reading and parsing
+  process. This might be helpful when debugging unreadable CLR files.
+  </p>
+  <p>
+  For the iasp91.clr file in the data-directory of the TTBOX distribution, this output would be
+  </p>
+  <pre>
+>>clr=mkreadclr(path_to_iasp91_file);
+MKSPLITTOKENLIST: keyword NAME identified.
+MKPARMCONSOLID: string parameters "IASP91"
+MKSPLITTOKENLIST: keyword YEAR identified.
+MKPARMCONSOLID: numeric parameters [1991]
+MKSPLITTOKENLIST: keyword PLANET identified.
+MKSPLITTOKENLIST: modifier NAME identified.
+MKPARMCONSOLID: string parameters "earth"
+MKSPLITTOKENLIST: keyword PLANET identified.
+MKSPLITTOKENLIST: modifier RADIUS identified.
+MKPARMCONSOLID: numeric parameters [6371]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "upper crust"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [0  20]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [5.8]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [3.36]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "lower crust"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [20  35]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [6.5]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [3.75]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "upper mantle layer 1"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [35  120]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [8.7854    -0.74953]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [6.7062     -2.2486]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "upper mantle layer 2"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [120  210]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [25.4139     -17.6972]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [5.7502     -1.2742]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "upper mantle layer 3"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [210  410]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [30.7876     -23.2541]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [15.2421     -11.0855]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "transition zone"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [410  660]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [29.389     -21.4066]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [17.7073     -13.5065]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "lower mantle layer 1"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [660  760]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [25.9698     -16.9341]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [20.7689     -16.5315]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "lower mantle layer 2"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [760  2740]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [25.1486     -41.1538      51.9932     -26.6083]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [12.9303      -21.259      27.8988      -14.108]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "D''"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [2740  2889]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [14.4947     -1.47089]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [8.1662     -1.5821]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "Outer Core"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [2889         5153.9]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [10.039      3.75665     -13.6705]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [0]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier START identified.
+MKPARMCONSOLID: string parameters "Inner Core"
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [5153.9           6371]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VP identified.
+MKPARMCONSOLID: numeric parameters [11.2409            0     -4.09689]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier VS identified.
+MKPARMCONSOLID: numeric parameters [3.5645           0     -3.4524]
+MKSPLITTOKENLIST: keyword LAYER identified.
+MKSPLITTOKENLIST: modifier END identified.
+MKSPLITTOKENLIST: keyword DISCON identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [20]
+MKPARMCONSOLID: string parameters "conrad"
+MKSPLITTOKENLIST: keyword DISCON identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [35]
+MKPARMCONSOLID: string parameters "moho"
+MKSPLITTOKENLIST: keyword DISCON identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [410]
+MKPARMCONSOLID: string parameters "olivine alpha beta"
+MKSPLITTOKENLIST: keyword DISCON identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [660]
+MKPARMCONSOLID: string parameters "lower mantle"
+MKSPLITTOKENLIST: keyword DISCON identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [2740]
+MKPARMCONSOLID: string parameters "D''"
+MKSPLITTOKENLIST: keyword DISCON identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [2889]
+MKPARMCONSOLID: string parameters "outer core"
+MKSPLITTOKENLIST: keyword DISCON identified.
+MKSPLITTOKENLIST: modifier DEPTH identified.
+MKPARMCONSOLID: numeric parameters [5153.9]
+MKPARMCONSOLID: string parameters "inner core"
+
+  </pre>
+
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

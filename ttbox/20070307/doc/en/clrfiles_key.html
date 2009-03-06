@@ -1,0 +1,328 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.clr file format</h4>
+  
+
+
+<h5>Keywords</h5>
+
+<p>
+Each line of a .clr file consists of either a comment, or a keyword and its parameters.
+</p>
+
+<p>
+A Keyword Line consist of several tokens (strings or numbers) that are separated by whitespace
+(the space character [ASCII 32] or Tab stops [ASCII 9]). The line begins with the Keyword itself,
+which may be followed by a Keyword Modifier and then a number of Keyword Parameters:
+</p>
+<pre>
+!Keyword !Modifier parameter1 parameter2 parameter3 ... parameterN
+</pre>
+<p>
+The Exclamation mark "!" is used to distinguish Keywords and Modifiers from parameters. The
+possible Modifiers and the allowed number of parameters depend on the Keyword.
+</p>
+<p>
+A consequence of the use of whitespace as parameter separator are certain limitations to
+string parameters: only one string parameter per keyword is possible, since strings may consist
+of several words which are also separated by whitespace, and a string parameter also has to be
+the last parameter of a multi-parameter keyword.
+</p>
+<p>
+A simple example is
+</p>
+<pre>
+!name IASP91
+</pre>
+<p>
+where "name" is the keyword and "IASP91" is a string parameter. A Modifier is not present.
+This example line defines the model name to be "IASP91".
+</p>
+<p>
+A more advanced example is
+</p>
+<pre>
+!layer !depth 0 20
+</pre>
+<p>
+Where "layer" is the keyword, "depth" is a modifier and "0" and "20" are the parameters.
+This example defines a layer to reach from depth 0km to depth 20km.
+</p>
+<p>
+An alternative definition of the same depth range is
+</p>
+<pre>
+!layer !radius 6351 6371
+</pre>
+<p>
+which, of course, requires that the planetary radius is defined as 6371km somewhere.
+</p>
+<p>
+The following tables give a list of all Keywords, their Modifiers and the specified Parameters.
+</p>
+<p>
+List of all Keywords:
+</p>
+<ol>
+<li><a href="#name">name</a></li>
+<li><a href="#year">year</a></li>
+<li><a href="#planet">planet</a></li>
+<li><a href="#layer">layer</a></li>
+<li><a href="#discon">discon</a></li>
+<li><a href="#usertag">usertag</a></li>
+
+</ol>
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="name"><span class="tt">name</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+   <tr>
+     <td><span class="tt">-</span></td>
+     <td>model name</td>
+     <td>string</td>
+     <td>Velocity models usually have names like "IASP91" or "PREM".</td>
+   </tr>
+</table>
+</div>
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="year"><span class="tt">year</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+
+   <tr>
+     <td><span class="tt">-</span></td>
+     <td>model publication year</td>
+     <td>numeric</td>
+     <td>The year in which the model was first published.</td>
+   </tr>
+
+</table>
+</div>
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="planet"><span class="tt">planet</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+
+     <tr>
+     <td><span class="tt">name</span></td>
+     <td>planet name</td>
+     <td>string</td>
+     <td>The planet's name ("earth", "moon" etc.). This is an informational parameter
+         which helps to avoid confusion, but is not evaluated.</td>
+   </tr>
+
+   <tr>
+     <td><span class="tt">radius</span></td>
+     <td>planetary radius</td>
+     <td>numeric</td>
+     <td>The radius of the planet for which this model is constructed.</td>
+   </tr>
+
+</table>
+</div>
+
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="layer"><span class="tt">layer</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+   <tr>
+     <td><span class="tt">start</span></td>
+     <td>name</td>
+     <td>string</td>
+     <td>Layer start mark. The description of a new layer begins here. The layer name
+         parameter is optional and may be omitted.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">depth</span></td>
+     <td>1. depth of layer top<br>
+         2. depth of layer bottom</td>
+     <td>numeric</td>
+     <td>Parameter polynomials of this layer are valid from top depth to bottom depth.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">radius</span></td>
+     <td>1. radius of layer bottom<br>
+         2. radius of layer top</td>
+     <td>numeric</td>
+     <td>Parameter polynomials of this layer are valid from bottom radius to top radius.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">end</span></td>
+     <td>-</td>
+     <td>-</td>
+     <td>Layer end mark. The description of the current layer ends here.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">vp</span></td>
+     <td>1. constant term of layer polynomial<br>
+         2. 1st order coefficient of layer polynomial<br>
+         3. 2nd order coefficient of layer polynomial<br>
+         ...<br>
+         n. (n-1)-th order coefficient of layer polynomial</td>
+     <td>numeric</td>
+     <td>P wave velocity polynomial. Physical properties of layers are defined by (n-1)-th degree polynomials. The degree of
+         the polynomial is implied by the number of coefficients given.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">vs</span></td>
+     <td>1. constant term of layer polynomial<br>
+         2. 1st order coefficient of layer polynomial<br>
+         3. 2nd order coefficient of layer polynomial<br>
+         ...<br>
+         n. (n-1)-th order coefficient of layer polynomial</td>
+     <td>numeric</td>
+     <td>S wave velocity polynomial. Physical properties of layers are defined by (n-1)-th degree polynomials. The degree of
+         the polynomial is implied by the number of coefficients given.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">rho</span></td>
+     <td>1. constant term of layer polynomial<br>
+         2. 1st order coefficient of layer polynomial<br>
+         3. 2nd order coefficient of layer polynomial<br>
+         ...<br>
+         n. (n-1)-th order coefficient of layer polynomial</td>
+     <td>numeric</td>
+     <td>Density polynomial. Physical properties of layers are defined by (n-1)-th degree polynomials. The degree of
+         the polynomial is implied by the number of coefficients given.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">qp</span></td>
+     <td>1. constant term of layer polynomial<br>
+         2. 1st order coefficient of layer polynomial<br>
+         3. 2nd order coefficient of layer polynomial<br>
+         ...<br>
+         n. (n-1)-th order coefficient of layer polynomial</td>
+    <td>numeric</td>
+     <td>P wave quality factor polynomial. Physical properties of layers are defined by (n-1)-th degree polynomials. The degree of
+         the polynomial is implied by the number of coefficients given.</td>
+   </tr>
+   <tr>
+     <td><span class="tt">qs</span></td>
+     <td>1. constant term of layer polynomial<br>
+         2. 1st order coefficient of layer polynomial<br>
+         3. 2nd order coefficient of layer polynomial<br>
+         ...<br>
+         n. (n-1)-th order coefficient of layer polynomial</td>
+     <td>numeric</td>
+     <td>S wave quality factor polynomial. Physical properties of layers are defined by (n-1)-th degree polynomials. The degree of
+         the polynomial is implied by the number of coefficients given.</td>
+   </tr>
+<!--
+   <tr>
+     <td><span class="tt"></span></td>
+     <td></td>
+     <td></td>
+     <td></td>
+   </tr>
+-->
+</table>
+</div>
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="discon"><span class="tt">discon</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+   <tr>
+     <td><span class="tt">depth</span></td>
+     <td>1. discontinuity depth<br>
+         2. discontinuity name</td>
+     <td>1. numeric <br>
+         2. string</td>
+     <td>Depth and name of a discontinuity</td>
+   </tr>
+   <tr>
+     <td><span class="tt">radius</span></td>
+     <td>1. discontinuity radius<br>
+         2. discontinuity name</td>
+     <td>1. numeric <br>
+         2. string</td>
+     <td>Radius and name of a discontinuity</td>
+   </tr>
+<!--
+   <tr>
+     <td><span class="tt"></span></td>
+     <td></td>
+     <td></td>
+     <td></td>
+   </tr>
+-->
+</table>
+</div>
+
+<div align="center">
+<table>
+   <caption>
+   <span class="bold">keyword: <a name="usertag"><span class="tt">usertag</span></a></span>
+   </caption>
+   <thead>
+     <th>Modifier</th>
+     <th>Parameter</th>
+     <th>Type</th>
+     <th>Explanation</th>
+   </thead>
+
+   <tr>
+     <td><span class="tt">-</span></td>
+     <td>User Tag</td>
+     <td>string</td>
+     <td>An arbitrary string may be used as an additional information. Might be useful
+         when generating files automatically.</td>
+   </tr>
+
+</table>
+</div>
+
+
+
+
+
+    <hr>
+eof.
+  </body>
+</html>

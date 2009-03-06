@@ -1,0 +1,106 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>PSCAN Structure</h4>
+
+  <p>
+  The PSCAN structure is a structure to contain the output of MKSCANP. This routine scans epicentral distance as function of ray parameter and take off angle for a given phase and source depth. Empty PSCAN structures are returned by MKEMPTYPSCAN.
+  </p>
+
+
+<!-- STRUCTURE FIELD DEFINITION TABLE -->
+<div align="center">
+<table>
+<caption>
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+
+<tr>                
+<td>.phase:</td>
+<td>string</td>
+<td>-</td>
+<td>Name of the phase for which this struct is valid</td>
+</tr>
+ 
+<tr>
+   <td>.h:</td>
+   <td>scalar</td>
+   <td>km</td>
+   <td>focal depth for which this struct is valid</td>
+</tr>
+
+<tr>
+    <td>.angles:</td>
+    <td>array</td>
+	 <td>deg</td>
+	 <td>list of take off angles</td>
+</tr>
+
+<tr>
+    <td>.p:</td>
+    <td>array</td>
+    <td>sec/deg</td>
+	 <td> list of ray parameters correpsonding to the take off
+                    angles at depth h</td>
+</tr>
+
+<tr>
+    <td>.dist:</td>
+    <td>array</td>
+	 <td>deg</td>
+	 <td>list of epicentral distances corresponding to p.</td>
+</tr>
+
+ <tr>
+     <td>.vp:</td>
+     <td>scalar or 2-element array</td>
+     <td> km/s</td>
+	  <td> P wave velocity at focal depth</td>
+</tr>
+
+<tr>
+    <td> .vs:</td>
+    <td>scalar or 2-element array</td>
+	 <td>km/s</td>
+	 <td>S wave velocity at focal depth</td>
+</tr>
+
+<tr>
+    <td> .starts:</td>
+    <td>array</td>
+	 <td>index</td>
+	 <td>positions where continuous pieces of dist(p) begin</td>
+</tr>
+
+<tr>
+    <td> .ends:</td>
+    <td>array</td>
+	 <td>index</td>
+	 <td> positions where continuous pieces of dist(p) end
+                    The i-th continuous piece begins at starts(i) and ends at
+                    ends(i).</td>
+</tr>
+
+</table>
+</div>
+<!-- END OF STRUCTURE FIELD DEFINITION TABLE -->
+
+
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

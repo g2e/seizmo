@@ -1,0 +1,65 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Task: Read Model From .ND File</h4>
+  
+  <p>
+  To read a velocity model from a .nd file, execute
+  <p>
+  
+  <pre>
+  model=mkreadnd(pfad);
+  </pre>
+
+  <p>
+  where <span class="tt">pfad</span> is the complete path and filename of the
+  file you wish to read.
+  </p>
+  <p>
+  The above command will write some control output to the screen:
+  (<span class="tt">basepath</span> is a string containing some path, 
+  <span class="tt">filesep</span> is a MatLab function which returns the
+  separator character '/' or '\', depending on the platform):
+  </p>
+  <pre>
+  >>prem=mkreadnd([basepath filesep 'prem.nd']);
+  MKREADND: discontinuity:     mantle at 24.4 km
+  MKREADND: discontinuity:     LVZ at 220 km
+  MKREADND: discontinuity:     Transition Zone at 400 km
+  MKREADND: discontinuity:     Lower mantle at 670 km
+  MKREADND: discontinuity:     outer-core at 2891 km
+  MKREADND: discontinuity:     inner-core at 5149.5 km
+  MKREADND: non-standard discontinuity: lvz
+  MKREADND: planet radius is 6371
+  MKREADND: 6 discontinuity names.
+  MKREADND: 88 parameter sets.
+  MKREADND: 105 lines total.
+  >>
+  </pre>
+  <p>
+  The variable <span class="tt">prem</span> is now a model 
+  (see <a href="./toc/toc_datastruct.html" target="toc">section on model structures</a> for description)
+  structure which contains parameters
+  of a discretized version of the PREM model by Dziewonski & Anderson (1981).
+  </p>
+  
+  <p>
+  To suppress the screen output (which could be very annoying when you use MKREADND within
+  a programm that reads many model files), call
+  </p>
+  <pre>
+  model=mkreadnd(pfad,'silent');
+  </pre>
+  
+
+
+  <hr>
+eof.
+  </body>
+</html>

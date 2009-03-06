@@ -41,13 +41,6 @@ multi-file functions
 	- convolve (add support in mcxc then just slight mod of correlate)
 	- merge
 	- rotate
-fix up dif/int
-	- multi-point dif (for SAC compatibility)
-	- combine integrt with integrt2 (for SAC compatibility)
-		- integreat
-structure change
-	- .x,.t => .dep,.ind
-		- tons of files to clean up still
 dataless + 1pt support
 	- clean up bseis, cutim, rpdw
 	+ isdataless
@@ -56,19 +49,6 @@ better help
 	  so they are simpler for explaining
 	- need to figure out the Contents.m system
 binfun	- make it happen
-some basic functions for location
-	- vdelaz
-	- vdeadreck
-	- sphdelaz
-	- sphdeadreck
-	- haversine
-some basic functions for time
-	- utc2gps
-	- gps2epoch
-	- epoch2gps
-	- utc2epoch
-	- epoch2utc
-	- look at etime, datenum, datestr, datevec
 start thinking about changes to SEISDEF
 	- .virt
 		- .ch

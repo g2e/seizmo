@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.clr file format</h4>
+  
+  <h5>Introduction</h5>
+
+<p>
+The .clr (pronounced "clear") or <span class="bold">Continuous Layer Representation</span> file format
+is an ASCII format to store velocity models that are continuously defined by radius or depth dependent
+polynomials and their parameters. Prominent examples for such models are PREM (Dziewonski & Anderson, 1981)
+and IASP92 (Kennett & Engdahl, 1991). The advantage of such model definition is that the model
+is uniquely defined at any depth and that there is no discussion about which kind of interpolation
+to use. A layering with first order discontinuities is still possible, since each polynomial
+has a well defined range of depth in which it is valid. The planet may consist of an arbitrary amount
+of such layers (what even allows a cubic spline representation of arbitrary velocity profiles).
+</p>
+<p>
+The .clr format is a human readable ASCII format which is based on the Keyword Line concept used
+for some data in the .nd format. The .clr format is much more flexible than the .nd format and probably
+easier to read and write for humans. But as the .nd format, the .clr format is a line oriented
+format: Information is subdivided into blocks which are on separate lines.
+</p>
+<p>
+Information is tagged by Keywords and Modifiers which define the type of information given
+in a line. This allows a very flexible file formatting.
+</p>
+<p>
+The format definition is somewhat lengthy, but the resulting syntax and structure is quite
+simple and straight forward. I recommend to look into a .clr file before reading the format
+specification (see the <a href="./toc/toc_tutor_juggle.html" target="toc">Files You Need Section</a> for examples).
+</p>
+
+<p>
+<span class="red">It is important to understand that .clr files are not formatted by Format Strings as common
+in FORTRAN programming.</span>
+</p>
+
+
+
+
+    <hr>
+eof.
+  </body>
+</html>

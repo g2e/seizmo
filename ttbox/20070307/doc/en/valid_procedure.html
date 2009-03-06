@@ -1,0 +1,45 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+
+<h4>Validation Procedure</h4>
+
+<p>
+Without repeated validations on different computer systems, it is impossible
+to distinguish Hardware and Software Errors. The magnitude of Type IV (model errors) can be
+controlled by variation of the depth discretization of the model.
+</p>
+
+<p>
+Therefore the procedure has to be as follows:
+</p>
+
+<ul>
+<li>A continuously defined velocity model (like IASP91) has to be used to
+    avoid errors due to interpolation between predefined depth samples.</li>
+<li>From this continuous model, several differently discretized versions have
+    to be used. MKCLR2MODEL allows to define a discretization interval and
+    to use two different discretization methods: "spherical" which produces
+    depths samples that are equidistant in spherical coordinates, and "flat", which
+    produces depth samples that are equidistant in flat earth coordinates.</li>
+<li>By variation of the depth sampling interval and the sampling mode of MKCLR2MODEL it
+    can be determined at which discretization the Type IV Errors may be neglected: this
+    is the case when a further improvement of discretization does not result in
+    further reduction of the total error.</li>
+<li>Type V errors are made sufficiently small by applying an optimization process to the
+    seismic ray's take off angle.</li>
+<li>The remaining differences between reference travel times and computed travel times
+    are the sum of type I, type II and type III errors. This sum should be below the level
+    defined by the reference's roundoff error, but it is not desireable to make it zero.</li>
+</ul>
+
+  <hr>
+eof.
+  </body>
+</html>

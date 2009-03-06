@@ -1,0 +1,108 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.clr file format</h4>
+
+
+
+<h5>Definition of Discontinuities</h5>
+<p>
+A named discontinuity is declared by the <span class="tt">discon</span> Keyword.
+</p>
+<p>
+ Assigning a name is useful in order to evaluate seismic
+phase names of in which these discontinuities are referred. In order to compute a PcP travel time,
+for example, you need to know where the core mantle boundary is.
+</p>
+<p>
+A discontinuity declaration looks like this:
+</p>
+<pre>
+!discon !depth 2890 outer core
+</pre>
+<p>
+This line declares the core-mantle boundary to be at 2890km depth.
+</p>
+<p>
+Instead of depth, it is also possible to use the radius:
+</p>
+<pre>
+!discon !radius 3481 outer core
+</pre>
+<p>
+defines the same core mantle boundary (if the radius is 6371km).
+</p>
+<p>
+There are <a href="discon.html">predefined names</a> for standard discontinuities which should be used
+properly.
+</p>
+
+<!-- obsoleted table, refer to discon.html instead
+<div align="center">
+   <table>
+   <thead>
+   <th>Discontinuity</th>
+   <th>.clr format name</th>
+   <th>Explanation</th>
+   </thead>
+   <tr>
+      <td>Conrad D.</td>
+      <td>'conrad'</td>
+      <td>Boundary between upper and lower crust, not always present</td>
+   </tr>
+   <tr>
+      <td>Mohorovicic D.</td>
+      <td>'moho' <span class="it">or</span><br> 'mantle'</td>
+      <td>Boundary between crust and mantle</td>
+   </tr>
+   <tr>
+      <td>Olivine-&alpha to &beta;-Spinel phase transition, "410"</td>
+      <td>'olivine alpha beta' <span class="it">or</span><br> 'transition zone'</td>
+      <td>Beginning of the mantle transition zone</td>
+   </tr>
+   <tr>
+      <td>&beta;-Spinel to &gamma-Spinel phase transition, "520"</td>
+      <td>'olivine beta gamma'</td>
+      <td></td>
+   </tr>
+   <tr>
+      <td>Spinel-Perowskite Transition, "660"</td>
+      <td>'olivine gamma perovskite' <span class="it">or</span><br> 'lower mantle'</td>
+      <td>Boundary between upper and lower mantle</td>
+   </tr>
+   <tr>
+      <td>Core-mantle-Boundary, "CMB"</td>
+      <td>'CMB' <span class="it">or</span><br>'outer core' <span class="it">or</span><br> 'outer-core'</td>
+      <td>Boundary between Mantle and Core</td>
+   </tr>
+   <tr>
+      <td>Inner core Boundary, "ICB"</td>
+      <td>'ICB' <span class="it">or</span><br>'inner core' <span class="it">or</span><br> 'inner-core'</td>
+      <td>Boundary between liquid outer and solid inner core.</td>
+   </tr>
+   </table>
+   </div>
+-->
+   
+   
+<p>
+Discontinuity declarations may be grouped somewhere in the .clr file, or
+may be given between the declaration of the layers they separate - just as you like.
+</p>
+<p>
+If there are multiple discontinuity declarations for the same position (irrespective
+of using depth or radius coordinates), the last one will override all previous ones.
+</p>
+
+
+
+    <hr>
+eof.
+  </body>
+</html>

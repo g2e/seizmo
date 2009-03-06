@@ -1,0 +1,42 @@
+  <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+  <h4>Release Notes for Freeze 26.02.2004</h4>
+
+  <p>
+  The first version and already has release notes... But don't worry, these are mainly for
+  me to keep track, since I made some changes since the Backup-Freeze of 09.02.2004.
+  </p>
+  
+  <ul>
+  <li>A new Routine MKTTBOXDATA has been introduced. This routine returns the
+      path to the "data" subdirectory of the TTBOX directory. This allows easy access
+      to this directory without hard-wiring the path.</li>
+  <li>A bug in MKTTCURVES was fixed: ray parameters were computed from take off angles
+      using P velocities only. The routine now uses the appropriate velocity.</li>
+  <li>Some unneccessary old code was removed.</li>
+  <li>Test with <span class="tt">onset</span> and <span class="tt">TauP Toolkit</span> have been added in the section on validation.</li>
+  <li>MKTIM4P allowed SS phases inside the core and PKP, PKIKP outside the inner core. That's repaired.</li>
+  <li>MKTTCURVES now also plots &tau;(p) curves.</li>
+  <li>MKCLR2MODEL now accepts a predefined list of depths at which to sample the model</li>
+  <li>Several modifications of the documentation have been made.</li>
+  <li>MKRAYP2ANGLE transforms ray parameters into take off angles at source depth.</li>
+  <li>MKX4P and MKTIM4P now handle depth phases recursively. MKSMARTTAKEOFF has been modified
+      accordingly.</li>
+  <li>A page on phase names has been added to the doc files.</li>
+  <li>MKRAYFAN now accepts a color argument and thus allows to plot rays in arbitrary colors.</li>
+  </ul>
+
+
+
+
+  
+  <hr>
+eof.
+  </body>
+</html>

@@ -1,0 +1,67 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Flat Earth Transformation</h4>
+  
+  
+  <p>
+  A major drawback of Newton's Law of Gravity is that it makes planets spherical. This means
+  that we have to deal with angular coordinates and their poles and periodicities when describing things that move around in
+  planets or on their surfaces. The equations of motions usually contain sines and tangents
+  and the like, what makes them difficult to handle.
+  </p>
+  <p>
+  The Flat Earth Transform (M&uuml;ller, 1977) is a coordinate transform which replaces
+  a spherically layered velocity model (a model of concentric shells) by a horizontally
+  flat layered model in cartesian coordinates which produces the same travel times. After
+  applying the inverse transformation, ray geometry computed in the flat model gives the
+  ray geometry for the spherical model.
+  </p>
+
+  <p>
+  Let the velocity v<span class="sub">spher</span> be given as function of depth
+  z<span class="sub">spher</span> below the surface of a planet with Radius
+  R<span class="sub">p</span>:<br>
+  <img src="../equations/flat_earth_v.gif"><br>
+  Then the velocity in cartesian Flat Earth Coordinates is
+  <img src="../equations/flat_earth_vf.gif"><br>
+  where z<span class="sub">flat</span> is the Flat Earth depth, which is given by<br>
+  <img src="../equations/flat_earth_zf.gif"><br>
+  </p>
+  <p>
+  Additionally, the ray parameter, which is usually given in seconds per degree has to
+  be transformed into seconds per Kilometer on a flat surface:<br>
+  <img src="../equations/flat_earth_pf.gif"><br>
+  </p>
+  
+
+
+
+  <p>
+  The inverse transformation is obtained by solving the above equations for the spherical
+  quantities. 
+  </p> 
+
+  <p>
+  Obviously, the planet's center (where z<span class="sub">spher</span>=R<span class="sub">p</span>
+  and hence the argument of the Logarithm is infinite) is transformed to infinite depth. It is thus impossible
+  to compute rays that go straight through the middle of the planet, and it causes numerical
+  problems for rays that come close to the middle (because the inverse transformation has
+  to deal with very large depth values then). The latter problem may be overcome by a
+  sufficiently dense sampling at great depth.
+  </p>
+  
+
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

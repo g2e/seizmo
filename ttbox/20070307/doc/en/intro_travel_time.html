@@ -1,0 +1,71 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Travel Time Integration</h4>
+  
+  <p>
+  Travel times are also computed for a horizontally layered isotropic medium
+   in cartesian coordinates.
+  </p>
+  
+  <p>
+  The total time the ray needs to travel from depth 
+  z<span class="sub">1</span> to depth z<span class="sub">2</span>
+   is given by (Sawarenski & Kirnos, 1960)<br>
+   <img src="../equations/ttime_integral.gif"><br>
+   where
+  </p>
+  
+  <dl>
+  <dt>T</dt>
+  <dd>The desired travel time</dd>
+
+  <dt>p</dt>
+  <dd>Ray parameter</dd>
+
+  <dt>z<span class="sub">1</span>, z<span class="sub">2</span></dt>
+  <dd>Ray reaches from depth z<span class="sub">1</span> to depth z<span class="sub">2</span>
+  with z<span class="sub">1</span>&lt;z<span class="sub">2</span></dd>
+  
+  <dt>v(z)</dt>
+  <dd>Velocity v as function of depth z</dd>
+
+  </dl>
+
+<p>
+  This integral has to be evaluated layer by layer, with z<span class="sub">1</span> at the
+  layer top and z<span class="sub">2</span> at the layer bottom or the ray's turning point (vertex).
+  </p>
+
+  <p>
+  For a constant velocity (g=0) the solution of the integral is<br>
+  <img src="../equations/ttime_vconst.gif"><br>
+  This solution is used if g=0 to avoid the then unneccessary complexity of the solution
+  for media with linear velocity laws.
+  </p>
+  
+  <p>
+  For a linear velocity law, the expression under the integral may be rewritten as<br>
+  <img src="../equations/ttime_vlinear1.gif"><br>
+  <img src="../equations/ttime_vlinear2.gif"><br>
+  Then indefinite integration results in<br>
+<img src="../equations/ttime_vlinear3.gif"><br>
+  <img src="../equations/ttime_vlinear4.gif"><br>
+  </p>
+
+<p>
+  The desired travel time is then computed numerically as difference of two such
+  terms for z=z<span class="sub">1</span> and z=z<span class="sub">2</span>, respectively,
+  and with the parameters v<span class="sub">0</span>, and g of the actual velocity law.
+  </p>
+
+  <hr>
+eof.
+  </body>
+</html>

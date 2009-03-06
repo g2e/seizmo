@@ -1,0 +1,153 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+
+ 
+  <h4>Emergent Properties of Models</h4>
+  
+  
+  <p>
+  Beside the model properties that are immediately visible from the list
+  od model parameters (such as the existence of LVZ or liquid layers) other
+  properties exist that emerge from the physics behind the model. Some of these
+  properties may be analyzed by TTBOX routines.
+  </p>
+  
+  <h5>Critical Rays</h5>
+  
+  <p>
+  Critical rays are those that have their tunring points (or reflections) at the depths of structural features of the velocity model, e.g. velocity discontinuities. The question "At what distance do I see effects of the mantle transition zone?", for example, asks for the critical rays connected with the 410km and 660km discontinuities (on Earth).
+  </p>
+  
+  <p>
+  The new shooting mechanism of TTBOX, invoked by MKSHOOTRAY, uses an analysis of critical rays to optimize the take off angle needed to reach a given epicentral distance. The ray parameters of the critical rays are appended to the model structure by MKIMPROVEMODEL.
+  </p>
+  
+  <p>
+  But you can also use MKIMPROVEMODEL youself to determine and evaluate these critical rays:
+  </p>
+  
+  
+  <ol>
+     <li>determine critical ray parameters by executing <span class="tt">imodel=mkimprovemodel(model);</span><br>
+     where
+     <dl>
+        <dt>model</dt>
+        <dd>a model structure as obtained from MKREADND or MKCLR2MODEL</dd>
+        
+        <dt>imodel</dt>
+        <dd>a model structure with an additional .criticalrays substructure, containing depth and ray parameter information</dd>
+     </dl>
+     </li>
+     <li>By plotting <span class="tt">plot(imodel.criticalrays.p,imodel.criticalrays.z,'o-');</span>
+     you get an approximation of the P-velocity model transformed into a slowness model.
+     </li>
+     <li>Transform e.g. the P ray parameters into the take off angles needed by MKRAYFAN using
+     <span class="tt">takeoff=mkrayp2angle(phase,h,imodel.criticalrays.p,imodel);</span><br>
+     where
+     <dl>
+        <dt>phase</dt>
+        <dd>A valid seismic phase name</dd>
+     
+        <dt>h</dt>
+        <dd>focal depth</dd>
+        
+        <dt>imodel.criticalrays.p</dt>
+        <dd>P wave ray parameters as determined by MKIMPROVEMODEL</dd>
+        
+        <dt>imodel</dt>
+        <dd>The velocity model (at this point it is not necessary to use the output of MKIMPROVEMODEL, but it avoids confusion)</dd>
+        
+        <dt>takeoff</dt>
+        <dd>List of takeoff angles corresponding to the input ray parameters. Since each ray parameter describes an upgoing as well as a downgoing ray, the list of takeoff angles is twice as long as the list of ray parameters. The first half of the list is for upgoing rays (if h=0, the upgoing rays are omitted).</dd>
+     </dl>
+     </li>
+     <li>Plot the corresponding rays using <span class="tt">mkrayfan(phase,imodel,h,takeoff);</span><br>
+     You may notice that rays that touch the core mantle boundary sometimes do not appear in this plot - that's a numerical problem: although the ray parameters of such rays can be computed very precisely, the ray tracing may identify the rays as PKP or SKS and refuse to compute them if P or S is what is asked for. That's a problem of vertex depth differences in the order of 1e-13km and very difficult to handle exactly. :-(</li>
+    
+  </ol>
+  
+  <!--
+  <dl>
+        <dt></dt>
+        <dd></dd>
+        
+        <dt></dt>
+        <dd></dd>
+  <dl>
+  -->
+  
+  <!--
+  
+  the following is old stuff, replaced by the new shooting and MKIMPROVEMODEL.
+  
+  
+  <h5>Core Shadow and Grazing Rays</h5>
+  
+  <p>
+  An important property is the extent of the core shadow, which is the distance at
+  which a ray arrives that just grazes the CMB. The routine <span class="tt">MKTOUCHDIS</span>
+  searches for grazing rays.
+  </p>
+  <p>
+  This routine determines the ray parameters needed to reach each of the models
+  discontinuities and computes the distances at which rays arrive and the travel
+  time of these rays. Ray parameters, distances and times are written to the screen
+  and returned in a TTC structure. Additionally, the routine produces a plot that
+  contains the paths of all these rays within the model.
+  </p>
+  
+  <ol>
+  <li>call <span class="tt">ttc=mktouchdis(model,h,formattype);</span>
+      where
+      <dl>
+         <dt>model</dt>
+         <dd>a MODEL structure defining the velocity model</dd>
+         <dt>h</dt>
+         <dd>the source depth in km below surface</dd>
+         <dt>formattype</dt>
+         <dd>a string defining the text output format for printing the results
+             to the screen. The routine can produce plain text or HTML. (see help
+             lines for a list of all options)</dd>
+      </dl>
+  </li>
+  <li><span class="tt">ttc</span> is now a TTC structure (see ttcurves structure) containing phase names,
+      ray parameters, take off angles, epicentral distances and travel times
+      for rays that touch the discontinuities of the model.</li>
+  </ol>
+
+  <p>
+  The following table (including caption and header lines) was produced by MKTOUCHDIS for a 20km-sampling of PREM.
+  </p>
+  
+  
+  <table border="1"><caption>Discontinuity Touching Rays for Model: PREM (1981)</caption><thead><th>Discontinuity Name</th><th>Depth [km]</th><th>Phase</th><th>slowness s/&deg;</th><th>Distance [&deg;]</th><th>Time [h:m:s]</th></thead>
+<tr><td>conrad</td><td>   15.00</td><td> P</td><td> 19.126</td><td>   7.87</td><td> 00:02:30.7234</td></tr>
+<tr><td>conrad</td><td>   15.00</td><td> S</td><td> 34.667</td><td>   7.87</td><td> 00:04:33.1863</td></tr>
+<tr><td>moho</td><td>   24.40</td><td> P</td><td> 16.290</td><td>   6.67</td><td> 00:01:51.4803</td></tr>
+<tr><td>moho</td><td>   24.40</td><td> S</td><td> 28.402</td><td>   6.62</td><td> 00:03:13.5319</td></tr>
+<tr><td>lvz</td><td>  220.00</td><td> P</td><td> 13.437</td><td>  40.07</td><td> 00:09:09.4705</td></tr>
+<tr><td>lvz</td><td>  220.00</td><td> S</td><td> 24.294</td><td>  41.59</td><td> 00:17:09.8137</td></tr>
+<tr><td>olivine alpha beta</td><td>  400.00</td><td> P</td><td> 11.703</td><td>  24.73</td><td> 00:05:29.9375</td></tr>
+<tr><td>olivine alpha beta</td><td>  400.00</td><td> S</td><td> 21.848</td><td>  27.69</td><td> 00:11:11.7348</td></tr>
+<tr><td>olivine gamma perovskite</td><td>  670.00</td><td> P</td><td>  9.692</td><td>  31.21</td><td> 00:06:26.3739</td></tr>
+<tr><td>olivine gamma perovskite</td><td>  670.00</td><td> S</td><td> 17.863</td><td>  31.49</td><td> 00:11:55.0824</td></tr>
+<tr><td>cmb</td><td> 2891.00</td><td> P</td><td>  4.428</td><td>  98.39</td><td> 00:13:37.8743</td></tr>
+<tr><td>cmb</td><td> 2891.00</td><td> S</td><td>  8.361</td><td> 102.71</td><td> 00:25:45.1364</td></tr>
+<tr><td>icb</td><td> 5149.50</td><td> PKP</td><td>  2.059</td><td> 152.79</td><td> 00:19:56.5337</td></tr>
+<tr><td>icb</td><td> 5149.50</td><td> SKS</td><td>  2.059</td><td> 141.71</td><td> 00:26:49.769</td></tr>
+<tr><td colspan="6">      olivine beta gamma: Discontinuity undefined</td></tr>
+</table>
+  
+-->
+
+  <hr>
+eof.
+  </body>
+</html>

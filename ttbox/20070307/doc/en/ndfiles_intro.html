@@ -1,0 +1,80 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.nd file format: Introduction</h4>
+
+  <p>
+  The .nd file format is based on the <span class="bold">named discontinuity</span> format used by the
+  TauP Toolkit (Crotwell et al., 1999). It is a human readable ASCII format which defines
+  velocity, density and Q factor at discrete depths.
+  </p>
+  <p>
+  For TTBOX, the format has been extended a little: it is now possible to store the
+  planetary radius, the model name, and the year in which the model was published.
+  </p>
+  <p>
+  The Routines MKREADND and MKWRITEND read and write .nd-files from disk.
+  </p>
+  
+  <p>
+  The Format consists of the following elementary building blocks:
+  </p>
+  <ol>
+  <li><span class="bold">data lines</span> to specify velocity, density and Q factor at depth</li>
+  <li><span class="bold">discontinuity name lines</span> to specify the depth of prominent 
+  1st order discontinuities</li>
+  <li>Unnamed Discontinuities</li>
+  <li><span class="bold">comments</span> to give arbitrary additional information (which is not
+      evaluated during file reading)</li>
+  <li><span class="bold">keyword lines</span> to specify planet radius, model name, and year of model publication</li>
+
+  </ol>
+  
+  <p>
+  Here comes a simple example of a .nd file, which demonstrates all features:
+  </p>
+  
+  <pre>
+  
+/* Simple sample Model */
+!name simplesample
+!year 2002
+!radius 6375 // The Radius!
+0.0  5.0  3.0  2.7 // Qp and Qs undefined
+20   5.0  3.0  2.7 100 // Qs undefined
+20   6.5  3.7  2.9	200	300 // Qp and Qs defined
+33   6.5  3.7  2.9 -1 -1 // Q factors undefined!
+mantle # this is the Moho
+33   7.8  4.4  3.3
+410  8.9  4.7  3.5 # here is an unnamed discontinuity!
+410  9.1  4.9  3.7 // some parms in here # and complicated comment
+670  10.2 5.5  4.0
+670  10.7 5.9  4.4 # some complicated comment // after the parms
+2891 13.7 7.2  5.6
+outer-core // here begins the outer core
+2891 8.0  0.0  9.9
+5149.5 10.3 0.0 12.2
+inner-core
+5149.5 11 3.5 12.7
+6371 11.3  -1  13 // vs undefined!
+  </pre>
+  
+<p>
+As you see, there are different (but equivalent) ways to define a comment. Comments may start
+right in the middle of a line. Undefined Parameters may simply be omitted, or declared to be -1, what
+is a physically meaningless value for all quantities.
+</p>
+<p>
+<a name="profi">The following sections</a> describe the building blocks of .nd-files in detail:
+</p>
+
+    <hr>
+eof.
+  </body>
+</html>

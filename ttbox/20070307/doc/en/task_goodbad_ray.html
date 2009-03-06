@@ -1,0 +1,128 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Good and Bad Depth Sampling</h4>
+  
+  
+  
+  <h5><a name="ray">Ray Direction at Great Depth</a></h5>
+  
+  <p>
+  TTBOX uses the <a href="toc/toc_intro_comput.html" target="toc">Flat Earth Transform</a> to evaluate both Epicentral Distance and Travel Time as functions of ray parameter. This transformation allows to replace a spherical symmetric model by a cartesian, rectangular one and thus to avoid the complications of polar coordinates. However, this is not without cost: the Flat Earth Transform shifts the planets center towards infinite depth, and the integral equations have singularities there.
+  </p>
+  
+  <p>
+  The consequence is, that small angular distances close to the planet's center are transformed into long cartesian distances at very great depth, and thus small inaccuracies in the determination of the depth reached by a certain ray are amplified into big errors in the resulting epicentral distance and travel time. This effect gets worse when the depth sampling is poor, because the evaluation of the integrals performs a linear interpolation between the individual samples - but in the rectangular replacement model.
+  </p>
+  
+  
+  <table>
+  
+     <tr>
+        <td>
+            <a href="../images/PKIKP_RayfanError_100km.png" target="extern"><img src="../images/PKIKP_RayfanError_100km.png" alt="PKIKP ray geometry error" class="thumb"></a>
+        </td>
+     <tr>
+        <td>
+           Erroneous ray geometry due to poor depth sampling: The closer rays come to the singularity in the planet's center, the more they deviate from the true path. Thick grey lines: reference model (sampling distance constantly 1km in flat earth coordinates). Red lines: poorly sampled model (sampling distance constantly 100km in spherical coordinates).<br>
+           
+           This plot was generated using the follwing commands:
+           
+           <p><span class="tt">
+           clf;<br>
+           rayhandles=mkrayfan('PKIKP',iasp91_1km,0,0.5);<br>
+           set(rayhandles,'Color',[1 1 1]*0.7);<br>
+           set(rayhandles,'LineWidth',2);<br>
+           hold on;<br>
+           mkrayfan('PKIKP',iasp91_100km_sph,0,0.5,'r');<br>
+           hold off;<br>
+           </span><p>
+           
+        </td>
+     <tr>
+     </tr>
+  
+  </table>
+  
+  
+  <table>
+  
+     <tr>
+        <td>
+            <a href="../images/PKIKP_RayfanError_10km.png" target="extern"><img src="../images/PKIKP_RayfanError_10km.png" alt="PKIKP ray geometry error" class="thumb"></a>
+        </td>
+     <tr>
+        <td>
+           As above, but for sampling distance 10km in spherical coordinates (red lines). Thick grey lines: reference model (sampling distance constantly 1km in flat earth coordinates).<br>
+           
+           This plot was generated using the follwing commands:
+           
+           <p><span class="tt">
+           clf;<br>
+           rayhandles=mkrayfan('PKIKP',iasp91_1km,0,0.5);<br>
+           set(rayhandles,'Color',[1 1 1]*0.7);<br>
+           set(rayhandles,'LineWidth',2);<br>
+           hold on;<br>
+           mkrayfan('PKIKP',iasp91_10km_sph,0,0.5,'r');<br>
+           hold off;<br>
+           </span><p>
+           
+        </td>
+     <tr>
+     </tr>
+  
+  </table>
+  
+  <p>
+  Using a depth sampling that has constant sample interval in flat earth coordinates rather than in spherical coordinates, as provided by the "flat" operation mode of MKCLR2MODEL, produces a clearly superior depth sampling: With 100km-sampling distance in flat earth coordinates, the ray geometry is significantly better than with a 10km-sampling in spherical coordinates, but the number of samples in the former is less than 50% of the number of samples in the latter. A sampling that uses constant spacing in flat earth is not only more precise but also faster in evaluation, since computation time scales with sample number.
+  </p>
+  
+  <table>
+  
+     <tr>
+        <td>
+            <a href="../images/PKIKP_RayfanError_10km_detail.png" target="extern"><img src="../images/PKIKP_RayfanError_10km_detail.png" alt="PKIKP ray geometry error" class="thumb"></a>
+        </td>
+     <tr>
+        <td>
+           Close-up of a comparison with a model that uses 100km (one hundred km) sample distance in flat earth coordinates (blue lines). The small difference between the 1km-flat and the 100km-flat sampling demonstrates the superiority of regulat sampling in flat earth. Red lines: 10km (ten km) sampling in spherical coordinates. Thick grey lines: reference model (sampling distance constantly 1km in flat earth coordinates).<br>
+           
+           This plot was generated using the follwing commands:
+           
+           <p><span class="tt">
+           clf;<br>
+           rayhandles=mkrayfan('PKIKP',iasp91_1km,0,0.5);<br>
+           set(rayhandles,'Color',[1 1 1]*0.7);<br>
+           set(rayhandles,'LineWidth',2);<br>
+           hold on;<br>
+           mkrayfan('PKIKP',iasp91_10km_sph,0,0.5,'r');<br>
+           mkrayfan('PKIKP',iasp91_100km,0,0.5,'b');<br>
+           hold off;<br>
+           </span><p>
+           
+        </td>
+     <tr>
+     </tr>
+  
+  </table>
+  
+  
+  <p>
+  Note that plots as shown above can show only the largest errors. To produce ray fan plots it might thus be sufficient to use a relatively crude sampling, but for higher numerical precision, finer samplings are necessary. Although the ray geometry for 1km and 100km sampling in flat earth appears to be very similar, the differences in travel time between these two models will be inacceptable for many applications.
+  </p>
+  
+  
+  
+  
+  
+ 
+  <hr>
+eof.
+  </body>
+</html>

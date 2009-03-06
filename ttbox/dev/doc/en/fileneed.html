@@ -1,0 +1,73 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Files You Need</h4>
+
+  <p>
+  What you need to compute travel times are seismic models. TTBOX stores models in
+  ASCII files in formats named .clr (Continuous LayeR) or .nd (Named Discontinuity) which are described
+  in the <a href="./toc/toc_files.html" target="toc">section on File Formats</a>.
+  </p>
+  
+  <p>
+  The .nd format stores models in the way that is used by the computation routines:
+  It is a tabular format which defines velocities, densities and Q factors at discrete
+  depths.
+  </p>
+  <p>
+  The .clr (pronounced "clear") format is designed to store models which are defined
+  piecewise continuously by Layer Polynomials, like IASP91 and PREM.
+  It is a pure storage format and output of MKREADCLR needs to be
+  transformed in order to be usable for computation (see section on conversion between CLR and ND).
+  </p>
+
+  <p>
+  To get you started, the subdirectory "data" of the TTBOX distribution contains several .clr 
+  and .nd files. They may also serve as examples for the file format. These files are:
+  </p>
+  <dl>
+     <dt><a href="../../data/iasp91.clr" target="extern">iasp91.clr</a></dt>
+     <dd>The IASP91 model by Kennett & Engdahl (1991) in polynomial form.</dd>
+
+     <dt><a href="../../data/jb.nd" target="extern">jb.nd</a></dt>
+     <dd>The Jeffreys-Bullen (1940) model. Since the Booklet by Jeffreys and Bullen does not
+     contain a table of the velocities, these are taken from Jeffreys (1959). NOTE that Jeffreys (1959)
+     does not give crustal velocities. File jb.nd does therefore not contain a crust and cannot be used directly,
+     but need to be completed with some crustal velocity values. Running e.g. MKRAYFAN with the JB model as given
+     in this file will result in an error.</dd>
+
+     <dt><a href="../../data/ak135.nd" target="extern">ak135.nd</a></dt>
+     <dd>The ak135 model by Kennett, Engdahl & Buland (1995).</dd>
+     
+     <dt><a href="../../data/prem.clr" target="extern">prem.clr</a></dt>
+     <dd>The PREM model (Dziewonski & Anderson, 1981) for continental crust, also in polynomial form.</dd>
+     
+
+  </dl>
+  
+  <p>
+  These files are readable with MKREADCLR and MKREADND, respectively. See sections "Read Model from
+  .clr File" and "Read Model from .nd File" to learn how.
+  </p>
+
+  <p>
+  The data directory contains some additional files with lists of published travel
+  times for IASP91 and JB models. These files were used as reference data 
+  during software validation.
+  </p>
+
+
+
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

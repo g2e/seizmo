@@ -1,0 +1,133 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.nd file format: Discontinuity Name Lines</h4>
+  
+
+
+<h5><a name="dnl">Discontinuity Name Lines</a></h5>
+
+<p>
+First order Discontinuities may be named for later association with specific effects. This property
+gives the format its name.
+<p>
+
+<p>
+<span class="red">IMPORTANT: TTBOX needs the core mantle boundary and the inner core boundary
+being defined. Without defining these discontinuities, MKX4P and MKTIM4P will
+crash sooner or later, since CMB and ICB depths are used to restrict ray parameter
+ranges.</span>
+</p>
+
+<ul>
+<li>A named Discontinuity is defined by two adjacent Data Lines with identical depth value and
+a Discontinuity Name Line inbetween.</li>
+<li>Discontinuity names may be almost arbitrary strings. Exception: The discontinuity name
+    is not allowed to begin with a "!", since this is the escape-character used to distinguish
+    Discontinuity Name Lines and Keyword Lines.</li>
+<li>Discontinuity names are NOT case sensitive.</li>
+<li>Several names for Earth's <a href="discon.html">standard discontinuities</a> are predefined and will make MKREADND store
+the discontinuity depths in the respective fields of the model structure.
+
+<!-- obsoleted table, refer to discon.html instead
+   <div align="center">
+   <table>
+   <thead>
+   <th>Discontinuity</th>
+   <th>TTBOX name</th>
+   <th>Explanation</th>
+   </thead>
+   <tr>
+      <td>Conrad D.</td>
+      <td>'conrad'</td>
+      <td>Boundary between upper and lower crust, not always present</td>
+   </tr>
+   <tr>
+      <td>Mohorovicic D.</td>
+      <td>'moho' <span class="it">or</span><br> 'mantle'</td>
+      <td>Boundary between crust and mantle</td>
+   </tr>
+   <tr>
+      <td>Olivine-&alpha to &beta;-Spinel phase transition, "410"</td>
+      <td>'olivine alpha beta' <span class="it">or</span><br> 'transition zone'</td>
+      <td>Beginning of the mantle transition zone</td>
+   </tr>
+   <tr>
+      <td>&beta;-Spinel to &gamma-Spinel phase transition, "520"</td>
+      <td>'olivine beta gamma'</td>
+      <td></td>
+   </tr>
+   <tr>
+      <td>Spinel-Perowskite Transition, "660"</td>
+      <td>'olivine gamma perovskite' <span class="it">or</span><br> 'lower mantle'</td>
+      <td>Boundary between upper and lower mantle</td>
+   </tr>
+   <tr>
+      <td>Core-mantle-Boundary, "CMB"</td>
+      <td>'CMB' <span class="it">or</span><br> 'outer core' <span class="it">or</span><br> 'outer-core'</td>
+      <td>Boundary between Mantle and Core</td>
+   </tr>
+   <tr>
+      <td>Inner core Boundary, "ICB"</td>
+      <td>'ICB' <span class="it">or</span><br> 'inner core' <span class="it">or</span><br> 'inner-core'</td>
+      <td>Boundary between liquid outer and solid inner core.</td>
+   </tr>
+   </table>
+   </div>
+   -->
+
+</li>
+</ul>
+
+<p>
+The following example shows the definition of a Moho within a PREM-like model:
+</p>
+
+<pre>
+ 0.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 15.000 5.80000 3.20000 2.60000 1451.91656 600.00000
+ 24.400 6.80000 3.90000 2.90000 1345.91217 600.00000
+  mantle
+ 24.4   8.11062 4.49100 3.38075 1441.7098  600
+ 40.000 8.10097 4.48526 3.37905 1441.96734 600.00000
+ 60.000 8.08861 4.47789 3.37688 1442.29855 600.00000
+</pre>
+
+<p>
+Values of physical parameters are defined above and below the discontinuity at the
+same depth (24.4km in the above example). The insertion of the predefined name causes MKREADND
+to store the depth of the Moho in the .moho-field of the model-structure.
+</p>
+
+<p>
+PREM defines a Low velocity zone, which does not exist in all earth models. The beginning of this
+zone may be indicated by a non-predefined discontinuity name:
+</p>
+
+<pre>
+ 80.000 8.07625 4.47052 3.37471 1442.63089 600.00000
+115.000 8.05461 4.45762 3.37090 195.43033 80.00000
+150.000 8.03298 4.44472 3.36710 195.51154 80.00000
+185.000 8.01134 4.43182 3.36329 195.59324 80.00000
+220.000 7.98971 4.41892 3.35949 195.67543 80.00000
+  LVZ
+220     8.55895 4.6439  3.43578 362.6702  143
+265.000 8.64552 4.67540 3.46265 365.06069 143.00000
+</pre>
+
+<p>
+This Name and the associated depth (220 km) are stored in the .dz- and .dname-fields of the
+model-structure.
+</p>
+
+    <hr>
+eof.
+  </body>
+</html>

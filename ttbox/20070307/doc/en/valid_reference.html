@@ -1,0 +1,167 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+
+<h4>Reference Data</h4>
+
+<p>
+Travel times from printed tables are used as reference, rather than the output
+of other software. This has the advantage that these tables
+are publicly available to everybody, so everybody can repeat the validation
+with precisely the same reference data without further discussion of additional
+errors which may be introduced by using different compilers or different hardware.
+The disadvantage is that printed tables usually contain travel times for a limited
+number of focal depths and epicentral distances only, and with a relatively large roundoff
+error.
+</p>
+<p>
+Since I have typed the reference data files by hand, I include these files into the
+TTBOX distribution in order to make it possible to identify typing errors (which, to
+my best knowledge and after several tests, do not exist) and to make my validation
+procedure fully transparent. The path to the data directory
+will be returned by MKTTBOXDATA once TTBOX is installed.
+</p>
+
+<p>
+The following travel time data files are given in the data directory of the TTBOX distribution:
+</p>
+
+<dl>
+<dt><a href="../../data/iasp91_P_0km.txt" target="extern">iasp91_P_0km.txt</a></dt>
+<dd>P travel times as given in the IASP91 booklet by Kennett (1991)
+                   on pages 6 to 12 for epicentral distances in the range 0&deg;
+                    to 99&deg;
+                   for focal depth 0km.<br>
+                   Format:</br>
+                   <ul>
+                   <li>first column: epicentral distance [deg]</li>
+                   <li>second column: minutes of travel time</li>
+                   <li>third column: seconds of travel time</li>
+                   </ul>
+                   (this is the format required by MKTTBOXVALID)
+</dd>
+
+<dt><a href="../../data/iasp91_S_0km.txt" target="extern">iasp91_S_0km.txt</a></dt>
+<dd>S travel times: 0km focus, Epicentral distance 0&deg; to 99&deg;.
+</dd>
+
+<dt><a href="../../data/iasp91_PKPab_0km.txt" target="extern">iasp91_PKPab_0km.txt</a></dt>
+ <dd>PKPab travel times for epicentral distances 145 to 180 deg
+                     and 0km focus from the IASP91 booklet</dd>
+
+<dt><a href="../../data/iasp91_PKPbc_0km.txt" target="extern">iasp91_PKPbc_0km.txt</a></dt>
+ <dd>PKPbc travel times for epicentral distances 145 to 155 deg
+                     and 0km focus from the IASP91 booklet</dd>
+
+
+<dt><a href="../../data/iasp91_PKPdf_0km.txt" target="extern">iasp91_PKPdf_0km.txt</a></dt>
+<dd>PKPdf (PKIKP) travel times for epicentral distances 114&deg; to 180&deg;
+                     and 0km focus from the  IASP91 booklet.
+</dd>
+
+<dt><a href="../../data/iasp91_SKSdf_0km.txt" target="extern">iasp91_SKSdf_0km.txt</a></dt>
+<dd>SKSdf (SKIKS) travel times for epicentral distances 104&deg; to 180&deg;
+                     and 0km focus from the IASP91 booklet.</dd>
+                     
+<dt><a href="../../data/iasp91_PcP_0km.txt" target="extern">iasp91_PcP_0km.txt</a></dt>
+<dd>PcP travel times for epicentral distances 0&deg; to 98&deg;
+                     and 0km focus from the  IASP91 booklet.
+</dd>
+
+<dt><a href="../../data/jb_P_0km.txt" target="extern">jb_P_0km.txt</a></dt>
+<dd>P travel times from Jeffreys & Bullen (1940)
+for distances 0&deg; to 99&deg; (only integer distances) and 0km focus.<br>
+</dd>
+
+<dt><a href="../../data/jb_S_0km.txt" target="extern">jb_S_0km.txt</a></dt>
+<dd>S travel times from Jeffreys & Bullen (1940)
+for distances 0&deg; to 100&deg; (only integer distances) and 0km focus.<br>
+</dd>
+
+<dt><a href="../../data/jb_PcP_0km.txt" target="extern">jb_PcP_0km.txt</a></dt>
+<dd>PcP travel times from Jeffreys & Bullen (1940)
+for distances 0&deg; to 98&deg; (only integer distances) and 0km focus.<br>
+</dd>
+</dl>
+
+<p>
+JB files are given as comparison between the two standard models IASP91 and JB: It is
+a minimum requirement that travel times computed by TTBOX differ from IASP91 by less
+than the difference between these standard models. It should be possible to distinguish
+these models by comparing their travel times.
+</p>
+
+<p>
+The following files contain travel times computed with programs <span class="tt">onset</span>
+ and <span class="tt">TauP Toolkit</span> (see section on Results of other Software for details).
+ The data therein were also be tested against the IASP91 Booklet by Kennett (1991), which still
+ serves as reference.
+</p>
+
+<dl>
+<dt><a href="../../data/onset_times_0km.txt" target="extern">onset_times_0km.txt</a></dt>
+<dd>P, PKPdf, S and SKSdf travel times computed with <span class="tt">onset</span>. This file contains the
+epicentral distance (degrees) in the first column, P and PKPdf travel time in the second column
+(times are P up to 98&deg; and PKPdf from 125&deg; onwards), ellipticity correction
+for P in the third column, S and SKSdf travel times in the fourth
+(times are PS up to 98&deg; and SKSdf from 125&deg; onwards), and ellipticity correction for S in
+the fifth column. The ellipticity corrections have to be subtracted from the travel times
+to get the spherical traveltimes which alone should be compared with TTBOX times.
+All travel times in the file are in seconds and valid for a surface focus.
+Both source and station were assumed to be at the equator.<br>
+These data were computed on a Sun Ultra 5_10 under Solaris 5.8.</dd>
+
+<dt><a href="../../data/TauP_times_P_0km_web.txt" target="extern">TauP_times_P_0km_web.txt</a></dt>
+<dd>P travel times computed by the <span class="tt">TauP Toolkit</span>. This file contains
+epicentral distance (degrees) in the first column and P travel times (seconds) in the second
+column. Times were calculated using the web interface at
+<a href="http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html" target="extern">http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html</a>.
+If the toolkit produced more than one time for a certain distance, the first was copied.<br>
+These data were computed using a Suse Linux PC with SunJava2-1.3.1.</dd>
+
+<dt><a href="../../data/TauP_times_PKP_0km_web.txt" target="extern">TauP_times_PKP_0km_web.txt</a></dt>
+<dd>raw data file from which files for PKPab and PKPbc were constructed (TauP Toolkit does not distinguish PKPab and
+                            PKPbc)</dd>
+                            
+<dt><a href="../../data/TauP_times_PKPab_0km_web.txt" target="extern">TauP_times_PKPab_0km_web.txt</a></dt>
+<dd>PKPab travel times computed by the <span class="tt">TauP Toolkit</span>. This file contains
+epicentral distance (degrees) in the first column and PKPdf travel times (seconds) in the second
+column. Times were calculated using the web interface at
+<a href="http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html" target="extern">http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html</a>.
+If the toolkit produced more than one time for a certain distance, the first was copied.<br>
+These data were computed using a Suse Linux PC with SunJava2-1.3.1.</dd>
+
+<dt><a href="../../data/TauP_times_PKPbc_0km_web.txt" target="extern">TauP_times_PKPbc_0km_web.txt</a></dt>
+<dd>PKPbc travel times computed by the <span class="tt">TauP Toolkit</span>. This file contains
+epicentral distance (degrees) in the first column and PKPdf travel times (seconds) in the second
+column. Times were calculated using the web interface at
+<a href="http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html" target="extern">http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html</a>.
+If the toolkit produced more than one time for a certain distance, the first was copied.<br>
+These data were computed using a Suse Linux PC with SunJava2-1.3.1.</dd>
+
+
+<dt><a href="../../data/TauP_times_PKPdf_0km_web.txt" target="extern">TauP_times_PKPdf_0km_web.txt</a></dt>
+<dd>PKPdf travel times computed by the <span class="tt">TauP Toolkit</span>. This file contains
+epicentral distance (degrees) in the first column and PKPdf travel times (seconds) in the second
+column. Times were calculated using the web interface at
+<a href="http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html" target="extern">http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html</a>.
+If the toolkit produced more than one time for a certain distance, the first was copied.<br>
+These data were computed using a Suse Linux PC with SunJava2-1.3.1.</dd>
+
+</dl>
+
+
+<p>
+  (The TTBOX results shown in the following sections were computed on Intel XEON architecture
+  with MatLab 6.1.0.450 (R12) under Suse Linux.)
+  </p>
+  <hr>
+eof.
+  </body>
+</html>

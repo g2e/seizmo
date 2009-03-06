@@ -1,0 +1,43 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>CPU time needed</h4>
+  
+  <p>
+  What has not been considered in the previous sections is computational speed. Since the &tau;-p method uses
+  pre-computed tables, the actual computations are done long before the user decides to
+  ask for a specific travel time. What the programs do on user demand is essentially table
+  lookup, which works extremely fast, of course. TTBOX, on the other hand, was designed
+  to <span class="it">avoid</span> the use of pre-computed tables, because the need for such tables
+  reduces flexibility. It therefore computes complete rays whenever asked for a travel time.
+  Additionally, MatLab is an interpreted language and therefore slower than compiled
+  FORTRAN. 
+  </p>
+  <p>
+  TTBOX execution time scales linearily with the number of model layers
+  covered by the ray and therefore with vertical sampling density and ray turning/reflection
+  point depth. Execution time trades off with accuracy (please refer to the new section on <a href="./toc/toc_tutor.html" target="toc">Good &amp; Bad Depth Sampling</a> in the tutorial). For ray path plots and overviews
+  of travel time curve sets, a crude discretization is often sufficient. More accurate
+  times and therefore finer models are necessary for earthquake localization,
+  especially on local and regional scales. These will take more time.
+  </p>
+  
+  <p>
+  I do not give a table of times here, because the actual CPU time needed for a computation
+  heavily depends on the used computer and its CPU load.
+  </p>
+  
+  
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

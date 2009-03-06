@@ -1,0 +1,99 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Seismic Phase Names used in TTBOX</h4>
+  
+  <p>
+  The current version of TTBOX handles different phases by special phase specific code
+  which is located in MKX4P, MKTIM4P, and MKSMARTTAKEOFF. This is not very elegant, but
+  easy to implement. MKPHASECATALOG tells you which phases are available.<br>
+  Future versions, hopefully, will have a more versatile phase name parser.
+  </p>
+  <p>
+  An exception are depth phases, which are handled recursively by combining an upgoint p or s
+  ray with a standard phase for a surface focus. So every phase TBOX can handle is 
+   available as depth phase automatically.
+  </p>
+  <p>
+  The nomenclature used is a simplified standard nomenclature. The following table summarizes
+  the available symbols and their meaning.
+  </p>
+  
+  <div align="center">
+  <table>
+  <thead>
+  <th>Symbol</th>
+  <th>Explanation</th>
+  </thead>
+  <tr>
+      <td>P</td>
+      <td>P wave leg</td>
+  </tr>
+  <tr>
+      <td>S</td>
+      <td>S wave leg</td>
+  </tr>
+  <tr>
+      <td>p</td>
+      <td>Depth phases: the P leg which goes upward from the source.</td>
+  </tr>
+  <tr>
+      <td>s</td>
+      <td>Depth phases: the S leg which goes upward from the source.</td>
+  </tr>
+  <tr>
+      <td>K</td>
+      <td>Outer core P wave leg</td>
+  </tr>
+  <tr>
+      <td>I</td>
+      <td>Inner core P wave leg</td>
+  </tr>
+  <tr>
+      <td>c</td>
+      <td>Reflection at Core Mantle Boundary</td>
+  </tr>
+  <tr>
+      <td>i</td>
+      <td>Reflection at Inner Core Boundary</td>
+  </tr>
+
+  <!--
+  <tr>
+      <td></td>
+      <td></td>
+  </tr>
+  -->
+  </table>
+  </div>
+
+  <p>
+  Multiples of all phases can be handled: If you seismic phase is named X, then Xn denotes the n-th multiple
+  of this phase. For example, SKS2 is the second multiple SKSSKS. An arbitrary integer number can be appended to
+  all phase names TTBOX recognizes.
+  </p>
+
+  
+  <h5><span class="red">Limitations</span></h5>
+  <ul>
+  <li>Diffracted waves and head waves are currently not supported.</li>
+  <li>Branch designators for travel time triplications (like "ab", "bc", "df" for PKP)
+      are currently not supported.</li>
+  <li>Reflections at arbitrary discontinuities are supprted only in the total reflection range.</li>
+  <li>Conversions at arbitrary discontinuities are currently not supported.</li>
+  <li>Multiple phase handling does currently not encompass phases like PK5P (PKKKKKP), numbers are allowed
+  only at the end of a phase name.</li>
+  </ul>
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

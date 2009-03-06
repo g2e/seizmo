@@ -1,0 +1,122 @@
+// PREM velocoty model
+//
+// Dziewonski, Adam M.; Anderson, Don L. (1981):
+// Preliminary Reference Earth Model;
+// Physics of the Earth and Planetary Interiors, vol. 25, 297-356
+//
+// coefficients typed by hand Martin Knapmeyer
+//
+// I have omitted the Q factors here since PREM gives Qmu and Qkappa,
+// whereas TTBOX expects QP and QS.
+//
+// This is the continental crust version only.
+
+!name PREM
+!year 1981
+
+!planet !name Earth
+!planet !radius 6371
+
+!layer !start Inner Core
+!layer !radius 0 1221.5
+!layer !vp 11.2622 0 -6.364 0
+!layer !vs 3.6678 0 -4.4475 0
+!layer !rho 13.0885 0 -8.8381 0
+!layer !end
+
+!discon !radius 1221.5 Inner Core
+
+!layer !start Outer Core
+!layer !radius 1221.5 3480
+!layer !vp 11.0487 -4.0362 4.8023 -13.5732
+!layer !vs 0 0 0 0
+!layer !rho 12.5815 -1.2638 -3.6426 -5.5281
+!layer !end
+
+!discon !radius 3480 Outer Core
+
+!layer !start Lower Mantle 3
+!layer !radius 3480 3630
+!layer !vp 15.3891 -5.3181 5.5242 -2.5514
+!layer !vs 6.9254 1.4672 -2.0834 0.9783
+!layer !rho 7.9565 -6.4761 5.5283 -3.0807
+!layer !end
+
+
+
+!layer !start Lower Mantle 2
+!layer !radius 3630 5600
+!layer !vp 24.952 -40.4673 51.4832 -26.6419
+!layer !vs 11.1671 -13.7818 17.4575 -9.2777
+!layer !rho 7.9565 -6.4761 5.5283 -3.0807
+!layer !end
+
+
+
+!layer !start Lower Mantle 1
+!layer !radius 5600 5701
+!layer !vp 29.2766 -23.6027 5.5242 -2.5514
+!layer !vs 22.3459 -17.2473 -2.0834 0.9783
+!layer !rho 7.9565 -6.4761 5.5283 -3.0807
+!layer !end
+
+!discon !radius 5701 lower mantle
+
+!layer !start Transition Zone
+!layer !radius 5701 5771
+!layer !vp 19.0957 -9.8672 0 0
+!layer !vs 9.9839 -4.9324 0 0
+!layer !rho 5.3197 -1.4836 0 0
+!layer !end
+
+!layer !start
+!layer !radius 5771 5971
+!layer !vp 39.7027 -32.6166 0 0
+!layer !vs 22.3512 -18.5856 0 0
+!layer !rho 11.2494 -8.0298 0 0
+!layer !end
+
+!discon !radius 5971 olivine alpha beta
+
+!layer !start
+!layer !radius 5971 6151
+!layer !vp 20.3926 -12.2569 0 0
+!layer !vs 8.9496 -4.4597 0 0
+!layer !rho 7.1089 -3.8045 0 0
+!layer !end
+
+!discon !radius 6151 LVZ
+
+!layer !start LVZ
+!layer !radius 6151 6291
+!layer !vp 4.1875 3.9382 0 0
+!layer !vs 2.1519 2.3481 0 0
+!layer !rho 2.691 0.6924 0 0
+!layer !end
+
+
+
+!layer !start LID
+!layer !radius 6291 6346.6
+!layer !vp 4.1875 3.9382 0 0
+!layer !vs 2.1519 2.3481 0 0
+!layer !rho 2.691 0.6924 0 0
+!layer !end
+
+!discon !radius 6346.6 moho
+
+!layer !start Crust
+!layer !radius 6346.6 6356
+!layer !vp 6.8 0 0 0
+!layer !vs 3.9 0 0 0
+!layer !rho 2.9 0 0 0
+!layer !end
+
+!discon !radius 6356 conrad
+
+!layer !start
+!layer !radius 6356 6371
+!layer !vp 5.8 0 0 0
+!layer !vs 3.2 0 0 0
+!layer !rho 2.6 0 0 0
+!layer !end

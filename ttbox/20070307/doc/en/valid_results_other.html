@@ -1,0 +1,99 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+
+<h4>Validation Results: Travel Time Errors of other Software</h4>
+
+<p>
+A deviation of about 0.05s between TTBOX traveltimes and the IASP91 Booklet is somewhat
+unsatisfactory. I have tried several modifications of my code in order to reduce the total
+number of mathematical operations (especially addition/subtraction). I have also investigated
+the possibility that the shooting error of 0.001&deg; might be too large. These Experiments yielded
+differences in the results of about 10<span class="sup">-13</span>s or less, which may be neglected.
+</p>
+
+<p>
+In order to get an idea what might be the source of the observed deviations I have computed
+travel times using two other programs.</p>
+
+
+<p>
+The two other programs are
+</p>
+<ul>
+<li>the FORTRAN77 program <span class="tt">onset</span> (v1.0)
+by Johannes Schweitzer (2000) which is based on the libtau-library by R. Buland (Buland & Chapman, 1983)</li>
+<li>the Java-written <a href="http://www.seis.sc.edu/software/index.html" target="extern"><span class="tt">TauP Toolkit</span></a> by Crotwell et al. (1999)
+ which can be accessed via web for example at
+<a href="http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html" target="extern">http://www.le.ac.uk/gl/pdt/teaching/java/TauP/taup.html</a>.
+</li>
+</ul>
+
+<p>
+Both <span class="tt">onset</span> and <span class="tt">TauP Toolkit</span> use the
+method of Buland & Chapman (1983), which computes travel times by interpolation of the &tau;(p)
+curve, with &tau;(p)=Traveltime(p)-p&Delta;(p). The <span class="tt">TauP Toolkit</span> is a completely independent implementation
+of that method and contains some modifications: The flat earth transformation is avoided
+by converting the original method into one for spherical media, and linear interpolation
+between slowness samples is used (at least in the version described by Crotwell et al., 1999)
+instead of the spline interpolation suggested by Buland & Chapman.
+</p>
+<p>
+The &tau;(p) function is
+computed using an integral equation wich is different from the ray path and
+travel time integrals used in TTBOX, so the numerics involved is
+also different.
+</p>
+
+
+
+<p>
+The travel times computed with these programs are also contained in the data directory of the TTBOX distribution
+(see section on Reference Data).
+</p>
+
+<div align="center">
+<table>
+
+   <tr><td><a href="../images/timeerror_others_P.png" target="extern"><img src="../images/timeerror_others_P.png" class="thumb"></a></td></tr>
+   <tr><td>Comparison of P and PKPdf traveltime deviations from the reference data for programs TTBOX
+   , onset and TauP Toolkit. The curves for 50km sampling in TTBOX are covered by the legend, but are
+   the same as in the section on TTBOX travel time errors. (label at the y-axis should read "|T(computed)-T(booklet)|")<br>
+   (<a href="../images/timeerror_others_P.pdf">Plot as PDF</a>)</td></tr>
+
+</table>
+</div>
+
+<p>
+The above image shows a comparison of <span class="tt">onset</span> (red dotted) and
+<span class="tt">TauP Toolkit</span> (magenta) travel times with the reference times from the
+IASP91 Booklet. Within roundoff error, <span class="tt">onset</span> essentially
+reproduces the reference data (although the deviation for PKIKP is a little high).
+The <span class="tt">TauP Toolkit</span> deviations, on the other hand, are
+highly similar to the TTBOX deviations for sufficiently good depth sampling. What is
+especially intriguing is that the variation of deviation with distance is the same for
+TTBOX and TauP Toolkit.
+</p>
+<p>
+The step-like structure of the TauP-curve probably originates in an accumulation of roundoff
+error: the reference data is rounded to 0.01s, and the TauP output is also rounded
+to 0.01s, so the difference between the two must be an integer multiple of 0.01s.
+</p>
+<p>
+The scatter in the onset-curve originates in an ccumulation of roundoff error. onset returns 
+travel times that are corrected for ellipticity (see files in the data directory). The ellipticity
+correction contained in the output is rounded. J. Schweitzer has compared the uncorrected travel times
+with the IASP91 booklet and found that onset reproduces them exactly.
+</p>
+
+
+  <hr>
+eof.
+  </body>
+</html>

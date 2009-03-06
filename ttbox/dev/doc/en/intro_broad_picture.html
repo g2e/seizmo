@@ -1,0 +1,54 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Theoretical Background: The Broad Picture</h4>
+  
+  <p>
+  The following sections describe the mathematical background of travel time and ray
+  path computation in TTBOX. Before going into details, I give a short overview on
+  the ideas behind all this.
+  </p>
+  
+  <p>
+  TTBOX computes seismic ray paths and travel times for a one dimensional spherical
+  velocity model, i.e. a model in which seismic velocities are functions of depth below surface
+  only. There is no lateral inhomogeneity and no anisotropy. Also the planet is in fact assumed
+  to be spherical, not elliptical (although I intend to include ellipticity corrections in future
+  versions). 
+  </p>
+  <p>
+  Under these assumptions, the propagation of seismic rays can easily be computed
+  by applying Snell's law, which describes ray geometry by seismic velocity
+  (which varies along the ray) and the ray parameter (which is constant along the ray).
+  (Well, it's not <span class="it">that</span> easy - otherwise the package would be smaller!)
+  </p>
+  <p>
+  Velocity models may be defined by a list
+  of depth samples or piecewise continuously by layer polynomials which are discretized
+  into a list of samples before computing paths and times.
+  </p>
+  <p>
+  The Flat Earth Transformation (M&uuml;ller, 1977) is applied to the discrete velocity samples in order
+  to carry out computations in cartesian coordinates, which is easier than in a spherical
+  medium.
+  </p>
+  <p>
+  The integral equations for epicentral distance and travel time are solved analytically
+  for layers with linear velocity laws and then evaluated layer by layer.
+  This means that a linear interpolation is applied
+  between depth samples in flat earth coordinates. The accuracy of the solution therefore
+  depends on the quality of the depth sampling.
+  </p>
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

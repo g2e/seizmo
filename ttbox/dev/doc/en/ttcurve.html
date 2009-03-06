@@ -1,0 +1,123 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>TTCURVES structure</h4>
+  
+  <p>
+  The TTCURVES structure is used to store an entire set of travel time curves.
+  </p>
+  <p>
+  The ttc substructure is an array which contains data for the i-th phase in <span class="tt">ttc(i)</span>.
+  The name of the i-th phase is <span class="tt">ttc(i).p</span>, the travel time of the j-th ray of the i-th
+  phase is given in <span class="tt">ttc(i).t(j)</span>.
+  </p>
+
+
+<!-- STRUCTURE FIELD DEFINITION TABLE -->
+<div align="center">
+<table>
+<caption>
+ttcurve structure
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+    <td>name</td>
+    <td>string</td>
+    <td>-</td>
+    <td>model name (usually taken from the name field of a model structure)</td>
+</tr>
+<tr>
+    <td>dangle</td>
+    <td>numeric scalar<br>
+        <span class="it">or</span><br>
+        numeric vector</td>
+    <td>&deg;</td>
+    <td>delta takeoff angle.<br>
+    <span class="bold">scalar</span>: the MKTTCURVES routine shoots rays into every
+    direction between 0&deg; and 90&deg, in steps of DANGLE.<br>
+    <span class="bold">vector</span>: explicit list of takeoff angles</td>
+</tr>
+<tr>
+    <td>h</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>focal depth for which travel time curves are computed</td>
+</tr>
+<tr>
+    <td>anz</td>
+    <td>numeric</td>
+    <td>dimensionless</td>
+    <td>number of phases contained in ttc substructure</td>
+</tr>
+<tr>
+    <td>ttc</td>
+    <td>struture array</td>
+    <td>-</td>
+    <td>substructure containing the actual travel time curve data</td>
+</tr>
+</table>
+</div>
+
+<div align="center">
+<table>
+<caption>
+ttc substructure
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+    <td>p</td>
+    <td>string</td>
+    <td>-</td>
+    <td>name of phase</td>
+</tr>
+<tr>
+    <td>d</td>
+    <td>numeric array</td>
+    <td>&deg;</td>
+    <td>Epicentral distances at which travel times are given</td>
+</tr>
+<tr>
+    <td>rayp</td>
+    <td>numeric array</td>
+    <td>&deg;/sec</td>
+    <td>Ray Parameters from which travel times are computed</td>
+</tr>
+<tr>
+    <td>angle</td>
+    <td>numeric array</td>
+    <td>&deg;</td>
+    <td>Take Off angles from which travel times are computed</td>
+</tr>
+
+<tr>
+    <td>t</td>
+    <td>numeric array</td>
+    <td>s</td>
+    <td>t(n) is travel time of phase p at distance d(n)</td>
+</tr>
+</table>
+</div>
+<!-- END OF STRUCTURE FIELD DEFINITION TABLE -->
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

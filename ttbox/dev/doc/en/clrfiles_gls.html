@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.clr file format</h4>
+
+<h5>General Line Syntax</h5>
+
+<p>
+A line in a .clr file is either empty or consists of the following elements:
+</p>
+
+<ol>
+  <li>Evaluated content:
+    <ol>
+    <li>Keyword</li>
+    <li>Modifier</li>
+    <li>Parameter List</li>
+    </ol>
+  </li>
+  <li>non-evaluated content
+    <ol>
+    <li>Comment Opening Characters</li>
+    <li>Comment</li>
+    </ol>
+  </li>
+</ol>
+
+<p>
+You may omit either the evaluated content or the non-evaluated content or both.
+</p>
+<p>
+This means that you can have empty lines (useful for a visual structuring of files),
+lines that contain only comments, lines that contain only data, or lines that contain
+commented data.
+</p>
+<p>
+All comments are stripped off before a line is evaluated.
+</p>
+<p>
+The evaluated content is a series of whitespace-separated tokens (by whitespace, the space
+character [ASCII 32] and Tab stops [ASCII 9] are meant).
+</p>
+<p>
+Keywords and Modifiers are preceeded by exclamation marks to distinguish them from parameters.
+</p>
+<p>
+Numerical Parameters may be given in floating point format (e.g. 314.159) or fixed point
+format (e.g. 3.14159e+2).
+</p>
+<p>
+String Parameters are not case sensitive, any string is transformed to lower case during file read.
+</p>
+
+
+
+    <hr>
+eof.
+  </body>
+</html>

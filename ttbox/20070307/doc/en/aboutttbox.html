@@ -1,0 +1,107 @@
+  <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+  <h4>About TTBOX</h4>
+
+  <h5>How to Quote</h5>
+
+  <p>If you use TTBOX, please quote the following reference:</p>
+
+  <pre>
+  Knapmeyer, M. (2004):
+  TTBox: A MatLab Toolbox for the Computation of 1D Teleseismic
+  Travel Times; Seismological Research Letters, vol. 75, No. 6, 726-733
+  </pre>
+
+
+  <h5>Introduction</h5>
+  <p>
+  The Travel Time Toolbox (TTBOX) is a 
+  <a href="http://www.mathworks.com/" target="extern">MatLab</a><span class="sup">&#174;</span>
+  Toolbox for computation of seismic travel times and ray paths in spherical 1D velocity models 
+  of terrestrial planets. It is written completely in the MatLab programming Language and
+  does not make use of any precompiled FORTRAN or C or JAVA (or, in general, MEX) files.
+  </p>
+  <p>
+  The goal behind the development of TTBOX was to have a travel time calculation software
+  which </p>
+  <ul>
+  <li>allows a quick change of velocity models,</li>
+  <li>allows a self-contained description of such models,</li>
+  <li>does not make implicit assumptions about the planet under considerations
+      (except sphericity, of course)</li>
+  <li>integrates smoothly with other MatLab programs,</li>
+  <li>is independent of sudden changes of formats or calling sequences 
+  in third-party software.</li>
+  </ul>
+
+
+  <p>
+  An important point was the necessity to compute travel times not only for the earth but also
+  for Moon and Mars - this requires, for example, to define the planetary radius within the
+  model files.
+  </p>
+  <p>
+  TTBOX uses relatively simple algorithms - it just traces rays straight forward through
+  a flat layered velocity model. This limits the performance, compared to the sophisticated methods
+  developed by Buland & Chapman (1983), but it keeps the software relatively transparent and simple.
+  </p>
+  <p>
+  The MatLab programming language and its flexibility with data types and calling sequences
+  allows for convenient, compact and easy-to-maintain routines.
+  </p>
+
+  <h5>This Documentation</h5>
+
+  <p>
+  This Documentation is mainly a technical reference to data structures and file formats,
+  but also gives information on theoretical backround and, last but not least, a tutorial
+  to the most important tasks. The help lines for the individual routines, which you can
+  get from the MatLab Console by entering 
+  </p>
+  <pre>
+  >>help filename
+  </pre>
+  </p>
+  <p>
+   are also accessible from this Documentation.
+  </p>
+  <p>It is assumed that you
+  are familiar with MatLab.
+  </p>
+  <p>The documentation is structured
+  as follows:
+  </p>
+  <ul>
+  <li>First of all, the <a href="toc/toc_intro_comput.html" target="toc">theoretical fundamentals</a> are given: how the Flat Earth Transformation
+  is used to compute the traveltimes and ray paths.</li>
+  <li>This is accompanied by a section on <a href="toc/toc_intro_valid.html" target="toc">software validation</a>, in which the quality of TTBOX
+  travel time results is compared with IASP91 reference times.</li>
+  <li>A <a href="toc/toc_tutor.html" target="toc">Tutorial</a>, which describes how to get started and the most common tasks.</li>
+  <li>A description of the <a href="toc/toc_datastruct.html" target="toc">data structures</a> used. Several structures are used to
+  represent velocity models and travel time results.</li>
+  <li>The <a href="toc/toc_prg.html" target="toc">programs reference section</a> is divided into a subsection on
+  <a href="toc/toc_prg_user.html" target="toc">User routines</a>, i.e. routines
+  which the user will call directly in order to solve his (or her) problems, and
+  <a href="toc/toc_prg_engin.html" target="toc">Engine Routines</a>,
+  which are usually called by the User Routines, but not by the User.
+  An <a href="toc/toc_prg_index.html" target="toc">alphabetic program index</a> allows to find a specific routine quickly.</li>
+  <li><a href="toc/toc_prg.html" target="toc">Error Messages</a> cast by TTBOX routines are also explained in the programs reference section.</li>
+  <li>The last section describes the <a href="toc/toc_files.html" target="toc">file formats</a> used to store velocity models.</li>
+  </ul>
+  
+  <p>
+  As you may have noticed aready, this documentation usually avoids linking between pages, because hyperlinking usually
+  brings readers out of track. Instead, links open the appropriate part of the
+  Table of Contents in order to show where more information may be found.
+  </p>
+
+  <hr>
+eof.
+  </body>
+</html>

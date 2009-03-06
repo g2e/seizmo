@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.clr file format</h4>
+
+
+<h5>General File Structure</h5>
+
+
+<p>
+The Keyword concept allows a very flexible file structuring: it is not necessary
+to give the separate pieces of information in a certain sequence. Layers need not be defined
+in the sequence given by depth (or radius). Discontinuities need not be defined between the
+layers they separate. The planets radius does not have to be defined first. Comments may be
+nearly everywhere. Enjoy!
+</p>
+
+<p>
+The only important point is that layers are defined by a couple of lines which are
+grouped by <span class="tt">start</span> and <span class="tt">end</span> Modifiers.
+This is necessary to make sure that velocities, densities etc. are connected in the right
+way.
+</p>
+
+<p>
+May be I'm repeating myself, but it is indeed <span class="bold">important to understand that the .clr file
+format is not organized by format strings</span>.
+Instead, a .clr file consist of lines, and lines consist of tokens, separated by whitespace.
+</p>
+
+
+    <hr>
+eof.
+  </body>
+</html>

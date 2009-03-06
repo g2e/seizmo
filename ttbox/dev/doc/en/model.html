@@ -1,0 +1,239 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>MODEL structure</h4>
+
+  <p>
+  The MODEL structure type defines the seismological structure of a planet
+  in terms of discrete layers and named discontinuities. It allows to keep
+  all necessary data within a single input parameter and thus a quick change
+  between models and planets.
+  </p>
+  <p>
+  The structure fields can be divided into three groups:
+  </p>
+  <ol>
+  <li>Layer Definition Stuff</li>
+  <li>Discontinuity Definition Stuff</li>
+  <li>Critical rays stuff</li>
+  <li>Miscellaneous Stuff</li>
+  </ol>
+
+<!-- STRUCTURE FIELD DEFINITION TABLE -->
+<div align="center">
+<table>
+<caption>
+Layer Definition Stuff
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+    <td>z</td>
+    <td>numeric vector</td>
+    <td>km</td>
+    <td>specifies the depth of the upper boundaries of all layers in model.
+        z(1) is the top of the uppermost layer.</td>
+</tr>
+<tr>
+    <td>vp</td>
+    <td>numeric vector</td>
+    <td>km/s</td>
+    <td>P wave velocities at depths specified in z. vp(1) corresponds to z(1)</td>
+</tr>
+<tr>
+    <td>vs</td>
+    <td>numeric vector</td>
+    <td>km/s</td>
+    <td>S wave velocities at depths specified in z. vs(1) corresponds to z(1)</td>
+</tr>
+<tr>
+    <td>rho</td>
+    <td>numeric vector</td>
+    <td>g/cm<span class="sup">3</span></td>
+    <td>Density at depth specified in z. rho(1) corresponds to z(1)</td>
+</tr>
+<tr>
+    <td>qp</td>
+    <td>numeric vector</td>
+    <td>dimensionless</td>
+    <td>P wave quality factor at depth specified in z. qp(1) corresponds to z(1)</td>
+</tr>
+<tr>
+    <td>qs</td>
+    <td>numeric vector</td>
+    <td>dimensionless</td>
+    <td>S wave quality factor at depth specified in z. qp(1) corresponds to z(1)</td>
+</tr>
+</table>
+</div>
+
+<div align="center">
+<table>
+<caption>
+Discontinuity Definition Stuff<br>
+<span class="red">IMPORTANT: TTBOX needs the core mantle boundary and the inner core boundary
+being defined. Without defining these discontinuities, MKX4P and MKTIM4P will
+crash sooner or later, since CMB and ICB depths are used to restrict ray parameter
+ranges.</span>
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+    <td>conr</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to Conrad Discontinuity. Must be NaN if not specified.</td>
+</tr>
+<tr>
+    <td>moho</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to Mohorovicic Discontinuity. Must be NaN if not specified.</td>
+</tr>
+<tr>
+    <td>d410</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to Olivine-&alpha; - &beta;-spinel phase transition. Must be NaN if not specified.
+    This is named after the mean depth on earth in order to get a short name.</td>
+</tr>
+<tr>
+    <td>d520</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to &beta;-spinel-&gamma-spinel phase transition. Must be NaN if not specified.
+    This is named after the mean depth on earth in order to get a short name.</td>
+</tr>
+<tr>
+    <td>d660</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to &gamma-spinel-Perovskite Boundary. Must be NaN if not specified.
+    This is named after the mean depth on earth in order to get a short name.</td>
+</tr>
+<tr>
+    <td>cmb</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to the Core-Mantle-Boundary. Must be NaN if not specified.</td>
+</tr>
+<tr>
+    <td>icb</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to the Core-Mantle-Boundary. Must be NaN if not specified.</td>
+</tr>
+<tr>
+    <td>dz</td>
+    <td>numeric vector</td>
+    <td>km</td>
+    <td>Depths of non-standard discontinuites. Must be empty if none specified.</td>
+</tr>
+<tr>
+    <td>dname</td>
+    <td>string matrix</td>
+    <td>-</td>
+    <td>Names of non-standard discontinuities. dname(i,:) is the name string for the
+    i-th non-standard discontinuity, the depth of which is given in dz(i). 
+    Must be empty if none specified.</td>
+</tr>
+</table>
+</div>
+
+
+<div align="center">
+<table>
+<caption>
+Critical Rays Stuff
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+   <td>criticalrays</td>
+   <td>struct</td>
+   <td>-</td>
+   <td>This struct contains all new information in sub-fields as described below. It is generated on the fly if needed by calling MKIMPROVEMODEL, but you can also provide models that already contain it.</td>
+</tr>
+<tr>
+   <td>.z</td>
+   <td>array</td>
+   <td>[km]</td>
+   <td>Subfield of the criticalryas field. This is a list of critical depths in the velocity model, e.g. depths of discontinuities, sudden changes in velocity gradient, Low velocity tops and bottoms and others. A critical depth is understood as a depth where the behaviour of rays changes.</td>
+</tr>
+<tr>
+   <td>.p</td>
+   <td>array</td>
+   <td>s/&deg;</td>
+   <td>Subfield of the criticalryas field. These are the ray parameters of P waves that have their turning point depths at the depths given in .z. With these ray parameters, rays can be sent exactly to the critical depths - these rays e.g. delimit of the various branches of the PKP phase.</td>
+</tr>
+<tr>
+   <td>.s</td>
+   <td>array</td>
+   <td>s/&deg;</td>
+   <td>Subfield of the criticalryas field. These are the ray parameters of S waves that have their turning point depths at the depths given in .z. With these ray parameters, rays can be sent exactly to the critical depths - these rays e.g. delimit of the various branches of the SKS phase.</td>
+</tr>
+</table>
+</div>
+
+
+
+
+<div align="center">
+<table>
+<caption>
+Miscellaneuos Stuff
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+    <td>rp</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Radius of Planet. If not specified in .nd file, the largest depth value given
+    in z is used.</td>
+</tr>
+<tr>
+    <td>name</td>
+    <td>string</td>
+    <td>-</td>
+    <td>Model name, used in plot annotations.</td>
+</tr>
+<tr>
+    <td>year</td>
+    <td>numeric</td>
+    <td>year</td>
+    <td>Year of model publication.</td>
+</tr>
+</table>
+</div>
+<!-- END OF STRUCTURE FIELD DEFINITION TABLE -->
+
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

@@ -1,0 +1,198 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Task: Generate Model File</h4>
+  
+  <p>
+  To compute travel times and ray paths for a model, you need to store the model in
+  a .nd file. The file format is adopted from the TauP Toolkit by Crotwell et al. (1999),
+  but I have introduced some slight enhancements. A Detailed description is given in the
+   <a href="toc/toc_files_nd.html" target="toc">section on File Formats</a>.
+  <p>
+  <p>
+  The easiest way to learn about .nd files is probably to look into an existing one. The format
+  is rather simple and human-beings-friendly.
+  </p>
+  <p>
+  There are essentially three ways to generate a .nd file:
+  </p>
+  <ol>
+  <li><a href="#type">type it by hand</a></li>
+  <li><a href="#mkwritend1">write it using MKWRITEND, MODEL structure as input</a></li>
+  <li><a href="#mkwritend2">write it using MKWRITEND, 1D arrays as input</a></li>
+  </ol>
+  <p>
+  These methods are described in the following sections.
+  </p>
+  
+  <p>
+<span class="red">IMPORTANT: TTBOX needs the core mantle boundary and the inner core boundary
+being defined. Without defining these discontinuities, MKX4P and MKTIM4P will
+crash sooner or later, since CMB and ICB depths are used to restrict ray parameter
+ranges.</span>
+</p>
+  
+  
+  <h5><a name="type">Type .nd File by Hand</a></h5>
+  
+  <p>
+  The .nd file format is essentially a table. You mainly have to enter depths, velocities,
+  densities and Q factors into an ASCII file. If some of these quantities are not specified
+  in your model, don't worry, there are ways to leave values undefined. (However, if it is the
+  depths that are not defined, you will not get very far with your model...)
+  </p>
+
+  <p>
+  To put your model data into an .nd file, follow these steps:
+  </p>
+
+  
+  <ol>
+  <li>Open a new ASCII file.</li>
+  <li>Define the model name.<br>
+      To do so, enter a line beginning with "!name", followed by a blank and the model's name:
+      <pre>
+      !name IASP91
+      </pre>
+      </li>
+  <li>Define the Planet's Radius.<br>
+      To do so, enter a line beginning with "!radius", followed by a blank and the planet's
+      radius in km:<br>
+      <pre>
+      !radius 6371
+      </pre>
+      If you do not define the radius explicitly with this keyword, TTBOX will assume that
+      the deepest layer in the model describes the planet's center.</li>
+  <li>Enter the model data.<br>
+      Each line consists of up to six physical parameters. These
+      Parameters are (in the sequence they are to be entered):
+      <ol>
+        <li>depth in km</li>
+        <li>P-wave velocity v<span class="sub">p</span> in km/s</li>
+        <li>S wave velocity v<span class="sub">s</span> in km/s</li>
+        <li>density &rho; in g/ccm</li>
+        <li>P wave quality factor Q<span class="sub">p</span>, dimensionless</li>
+        <li>S wave quality factor Q<span class="sub">s</span>, dimensionless</li>
+      </ol>
+      Values may be entered in fixed point or floating point format, as you like.<br>
+      Separate entries by space (ASCII 32) or Tab stops (ASCII 9). A typical data line might
+      look like this:<br>
+      <pre>
+      0.000 5.8 3.20 2.60 1451.91656 600.00
+      </pre>
+      If a certain value is not specified, enter -1.<br>
+      At discontinuities, enter <span class="it">two</span> lines with identical depth
+      values: one for the upper side of the discontinuity, one for the lower side:
+      <pre>
+      24.400 6.80000 3.90000 2.90000 1345.91217 600.00000
+      24.4   8.11062 4.49100 3.38075 1441.7098  600
+      </pre>
+  </li>
+  <li>Name the standard discontinuities.<br>
+      To name a discontinuity, enter its name in a new line between the two lines that
+      define properties above and below the discontinuity. Discontinutiy names are
+      not case sensitive. A table of Standard Discontinuity Names is given in the
+      <a href="toc/toc_tutor_gen.html" target="toc">General Section of the Tutorial</a>.<br>
+
+      However, you can use any name for non-standard Discontinuities.<br>
+      The following lines define a Moho at 24.4km depth:
+      <pre>
+      24.400 6.80000 3.90000 2.90000 1345.91217 600.00000
+      moho
+      24.4   8.11062 4.49100 3.38075 1441.7098  600
+      </pre>
+  </li>
+  <li>If you wish, you may add comments.<br>
+      A comment begins with one of the character sequences "#", "/*" or "//" and ends at the
+      end of the line in which it begins. You may insert comment lines between data lines,
+      or you may append a comment at the end of any line. Comments are stripped off before
+      evaluating the file.<br>
+  </li>
+  <li>Save the file.</li>
+
+  </ol>
+
+  <h5><a name="mkwritend1">Write .nd File Using MKWRITEND from MODEL structure</a></h5>
+  
+  <ol>
+  <li>Set up a MODEL structure of your velocity model. For a description of such structures,
+      see the subsection "model" in the <a href="toc/toc_datastruct.html" target="toc">section on Data Structures</a>.</li>
+  <li>execute <span class="tt">mkwritend(model,path);</span><br>
+      where <span class="tt">path</span> is the full path and filename to store the file at.</li>
+  </ol>
+
+  <h5><a name="mkwritend2">Write .nd File Using MKWRITEND from 1D Arrays</a></h5>
+
+  <p>
+  In order to write a model file with MKREADND, you may also enter your model into several
+  1D arrays. You also need a string matrix containing all discontinuity names. The names of these
+  variables do not matter, the names used in the following are as used internally in MKWRITEND.
+  </p>
+  <p>
+  If your model contains first order discontinuities, it is necessary to enter parameters
+  for the upper and lower side of the discontinuity separately.
+  </p>
+  
+  <ol>
+  <li>Set up the following variables:
+      <dl>
+         <dt>name</dt>
+         <dd>This is a string containing the model name.</dd>
+         <dt>year</dt>
+         <dd>This is a numeric scalar, denoting the year in which the model
+             was published (or constructed, if the model is unpublished).</dd>
+         <dt>radius</dt>
+         <dd>This is a numeric scalar, denoting the radius of the planet in km.</dd>
+      </dl>
+  </li>
+  <li>Set up the following 1D arrays:
+     <dl>
+        <dt>z=[z1 z2 z3 ... zn];</dt>
+        <dd>depth values in km (the z1, z2, z3, ..., zn being the depths at which your model is defined)<br>
+        </dd>
+        <dt>vp</dt>
+        <dd>P wave velocities in km/s at the depths given in z</dd>
+        <dt>vs</dt>
+        <dd>S wave velocities in km/s at the depths given in z</dd>
+        <dt>rho</dt>
+        <dd>densities in g/cm<span class="sup">3</span> at the depths given in z</dd>
+        <dt>qp</dt>
+        <dd>P wave Q factors at the depths given in z</dd>
+        <dt>qs</dt>
+        <dd>S wave Q factors at the depths given in z</dd>
+        <dt>dz</dt>
+        <dd>discontinuity depths in km</dd>
+     </dl>
+  </li>
+  <li>Use <span class="tt">strvcat</span> to set up a string matrix <span class="bold">dname</span> for
+      the discontinuity names. The first discontinuity corresponds to depth dz(1):
+      <pre>
+      dz=[24 410 2890];
+      dname=strvcat('moho','olivine alpha beta','cmb');
+      </pre>
+      defines a moho at 24km, the Olivine-&alpha to &beta;-spinel phase transition at 410km and
+      the core-mantle-boundary at 2890km depth.
+  </li>
+  <li>call <span class="tt">mkwritend(name,year,radius,z,vp,vs,rho,qp,qs,dz,dname,path);</span> where
+      <span class="tt">path</span> defines the complete path and filename under which the file
+      is to be stored.<br></li>
+  <li>If you wish, you may now open the newly written file with any ASCII editor and
+  add comments.<br>
+      A comment begins with one of the character sequences "#", "/*" or "//" and ends at the
+      end of the line in which it begins. You may insert comment lines between data lines,
+      or you may append a comment at the end of any line. Comments are stripped off before
+      evaluating the file.</li>
+  </ol>
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

@@ -1,0 +1,161 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Task: Generate CLR Files</h4>
+  
+  <p>
+  The CLR file format is designed to be human readable and human writeable
+  (Just look into the <a href="../../data/iasp91.clr" target="extern">.clr
+   file for the IASP91 model</a> to see that the file format
+  is quite easy to understand).
+  So there are two ways to generate a CLR file:
+  </p>
+  <ol>
+  <li><a href="#type">Type it by hand</a></li>
+  <li><a href="#mknd2clr">construct CLR structure from MODEL structure using MKND2CLR</a>, and subsequently</li>
+  <li><a href="#mkwriteclr">write CLR file using MKWRITECLR</a></li>
+  </ol>
+  <p>
+  Unless the model is machine generated and available in a MatLab-variable, it is
+  probably easier to type .clr files by hand.
+  </p>
+
+  
+  <h5><a name="type">Type .clr File by Hand</a></h5>
+  
+  <p>
+  The following description explains the typing of a .clr file step-by-step, what is
+  a bit lenghty and looks more complicated than it actually is.<br>
+
+  </p>
+  
+  <ol>
+  <li>Open a new ASCII file.</li>
+  <li>Define the model's name.<br>
+      To do so, enter a new line<br>
+      <span class="tt">!name YourModelName</span><br>
+      (You may use either Tab stops (ASCII9) or space (ASCII32) to separate keywords an parameters)<br>
+      This line defines that the Model is named "YourModelName".</li>
+  <li>Define the model's publication year.<br>
+      To do so, enter a new line<br>
+      <span class="tt">!year PublicationYear</span><br>
+      where "PublicationYear" is a number that denotes the year of publication, e.g. 1991.
+      </li>
+  <li>You may insert empty lines at any place to provide some optical structuring.
+      Empty lines are ignored when reading the file.</li>
+  <li>Define the planet, for which the model is valid. You have to specify both name and radius
+      of the planet. Enter two lines:<br>
+      <span class="tt">!planet !name PlanetName</span><br>
+      <span class="tt">!planet !radius PlanetRadius</span><br>
+      here, PlanetName is a string specifying the name of the Planet, and PlanetRadius is
+      a number (in fixpoint or as float) that gives the Planet's radius in km.</li>
+  <li>Now enter the layer data.<br>
+      <ol>
+         <li>To start the description of a new layer, enter a new line<br>
+             <span class="tt">!layer !start LayerName</span><br>
+             where LayerName is a string denoting the Layer's name. This string may be omitted.</li>
+         <li>Specify the depth extent of the layer.<br>
+             You can specify this as depth in km measured
+             from the surface by entering<br>
+             <span class="tt">!layer !depth TopDepth BottomDepth</span><br>
+             where TopDepth and BoottomDepth are numbers denoting the depth of the top and
+             the bottom of the layer.<br>
+             OR you can specify the radius in km, measured from the planet's center:<br>
+             <span class="tt">!layer !radius BottomRadius TopRadius</span><br>
+             Where BootomRadius and TopRadius are the radius to the bottom and the top
+             of the layer. <br>
+             NOTE that the first number is always the smaller one.</li>
+         <li>To specify the coefficients of the P wave velocity, enter the coefficients
+             of the Layer Polynomial in a new line:<br>
+             <span class="tt">!layer !vp p1 p2 p3 pn</span><br>
+             The modifier "!vp" declares that this is the P wave velocity. The p1, p2, p3,...,pn
+             are coefficients of a (n-1)-th degree polynomial, p1 being the constant term and pn being
+             the coefficient of the highest power. (see <a href="toc/toc_files_clr.html" target="toc">section on Layer Polynomials in the CLR
+             file format description</a>)
+             </li>
+
+         <li>To specify other quantities, use the appropriate modifier:
+             <dl>
+                <dt>!vp</dt>
+                <dd>P wave velocity</dd>
+                <dt>!vs</dt>
+                <dd>S wave velocity</dd>
+                <dt>!rho</dt>
+                <dd>Density</dd>
+                <dt>!qp</dt>
+                <dd>P wave Q-factor</dd>
+                <dt>!qs</dt>
+                <dd>S wave Q-factor</dd>
+             </dl>
+             The syntax is the same as for vp.<br>
+             If you wish to leave one or more of these quantities undefined, just do not enter
+             a line with the respective modifier.
+         </li>
+         <li>To finish the layer, enter a new line<br>
+             <span class="tt">!layer !end</span></li>
+      </ol>
+      </li>
+  <li>Finally, enter discontinuity data. A discontinuity is defined by depth and name<br>
+      <span class="tt">!discon !depth DiscontinuityDepth DiscontinuityName</span><br>
+      where DiscontinuityDepth is a depth from the surface in km and DiscontinuityName
+      is a string.<br>
+      A Discontinuity can also be defined by Radius and name<br>
+      <span class="tt">!discon !radius DiscontinuityRadius DiscontinuityName</span><br>
+      where DiscontinuityRadius is the radius measured from the planet's center in km.<br>
+      <br>
+      There are several standard names for standard discontinuities like the Moho or the 
+      Core Mantle Boundary. A Table of these standard names is given in the 
+      <a href="toc/toc_tutor_gen.html" target="toc">General section of the tutorial</a>.</li>
+  <li>You can add comments at any place. A comment begins with "#", "//", or "/*" and ends
+      at the end of the line.</li>
+  </ol>
+
+  <h5><a name="mknd2clrclr">Construct CLR structure from MODEL using MKND2CLR</a></h5>
+
+  <p>
+  If your velocity model is given in an .nd file or a MODEL structure as returned by MKREADND, you can
+  construct a CLR structure from the ND structure by applying MKND2CLR. The following description assumes that you have an .nd file.
+  </p>
+  <ol>
+  <li>read the .nd file by executing <span class="tt">model=mkreadnd(PathToNDFile);</span></li>
+  <li>convert it to .clr by executing <span class="tt">clrout=mknd2clr(model,mode);</span> where mode defines what kind of layer polynomials is to be constructed. Available options currently are:
+    <dl>
+	 	<dt>constant</dt>
+		<dd>All parameters will be taken constant between the depths defined in MODEL. In this mode, the construction of layer "polynomials" is straigh forward.</dd>
+    </dl>
+	 Note that some models (e.g. ak135) define a certain interpolation mode between discrete depth values. In ak135, linear interpolation has to be applied. The "constant" mode in this case does not give an exact representation!
+  </li>
+  <li>save the new CLR structure by executing <span class="tt">mkwriteclr(clr,PathToCLRFile);</span></li>
+  </ol>
+
+  <h5><a name="mkwriteclr">Write .clr file using MKWRITECLR</a></h5>
+  
+  <p>
+  If your velocity model is already stored in a CLR structure (see
+  <a href="toc/toc_datastruct.html" target="toc">section on Data Structures</a> for definition),
+  you can write a .clr file using MKWRITECLR.
+  </p>
+  <p>
+  To do so, execute
+  </p>
+  <pre>
+  mkwriteclr(clr,path);
+  </pre>
+  <p>
+  where <span class="tt">clr</span> is your data structure and path the <span class="tt">path</span> to store the file at.
+  </p>
+
+
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

@@ -1,0 +1,273 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>CLR structure</h4>
+  
+  <p>
+  The CLR structure type defines sesimological velocity models in terms
+  of piecewise continuous polynomials, as known from standard models like PREM
+  (Dziewonski & Anderson, 1981). Within the TTBOX context it is mainly the internal
+  rpresentation of .clr files, which are a storage format for such models. CLR structures are
+  currently not used for computation.
+  </p>
+  <p>
+  Layer information is stored as coefficients of layer polynomials. For details on the
+  evaluation of these polynomials, see the <a href="toc/toc_files_clr.html" target="toc">section on the .clr format</a>.
+  </p>
+  <p>
+  Its field can be divided into the following groups:
+  </p>
+  <ol>
+  <li>General Information</li>
+  <li>Layer Data</li>
+  <li>Discontinuity Data</li>
+  </ol>
+
+
+
+<!-- STRUCTURE FIELD DEFINITION TABLE -->
+<div align="center">
+<table>
+<caption>
+General Information
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+    <td>name</td>
+    <td>string</td>
+    <td>-</td>
+    <td>model name</td>
+</tr>
+<tr>
+    <td>year</td>
+    <td>numeric</td>
+    <td>-</td>
+    <td>Year of model publication</td>
+</tr>
+<tr>
+    <td>planet</td>
+    <td>string</td>
+    <td>-</td>
+    <td>Name of planet for which model is valid.</td>
+</tr>
+<tr>
+    <td>rp</td>
+    <td>numeric</td>
+    <td>km</td>
+    <td>Radius of planet for which model is valid.</td>
+</tr>
+<tr>
+    <td>tag</td>
+    <td>string</td>
+    <td>-</td>
+    <td>A user-defined tag with no special meaning. The user may use this as he likes. Or She.</td>
+</tr>
+
+</table>
+</div>
+<!-- END OF STRUCTURE FIELD DEFINITION TABLE -->
+
+<p>
+Layer information is represented in one field which contains the number of
+continuously defined layers an the layers-substructure
+</p>
+
+<!-- STRUCTURE FIELD DEFINITION TABLE -->
+<div align="center">
+<table>
+<caption>
+Layer Information
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+    <td>lyrcnt</td>
+    <td>numeric</td>
+    <td>counter</td>
+    <td>Number of Layers in model.</td>
+</tr>
+<tr>
+    <td>layers</td>
+    <td>structure</td>
+    <td>-</td>
+    <td>layers is an array of structures. Each layer has its own structure, containing
+        the coefficients of all layer polynomials. The sequence of layers does not
+        neccessarily correspond to the layer sequence in depth: layers(i) is not neccessarily
+        the i-th layer from the surface or from the planets center. Depths are given by depth
+        data only!</td>
+</tr>
+</table>
+</div>
+<!-- END OF STRUCTURE FIELD DEFINITION TABLE -->
+
+<!-- STRUCTURE FIELD DEFINITION TABLE -->
+<div align="center">
+<table>
+<caption>
+Layers sub-structure
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+    <td>name</td>
+    <td>string</td>
+    <td>-</td>
+    <td>name of layer (may be empty)</td>
+</tr>
+<tr>
+    <td>depth</td>
+    <td>numeric 2-element vector</td>
+    <td>km</td>
+    <td>min(depth) is the depth to the top of the layer, measured from the surface.
+        max(depth) is the depth of its bottom.</td>
+</tr>
+<tr>
+    <td>vp</td>
+    <td>numeric n-element vector</td>
+    <td>km/s</td>
+    <td>P wave velocity layer polynomial coefficients.
+        The first element is the constant term, the last element is coefficient of the highest power.
+        A correct interpretation of the polynomial results
+        in a velocity in km/s. The degree of the polynomial is implied by the number of
+        coefficients.</td>
+</tr>
+<tr>
+    <td>vs</td>
+    <td>numeric n-element vector</td>
+    <td>km/s</td>
+    <td>S wave velocity layer polynomial coefficients. The first element is the constant term, the last element is coefficient of the highest power.
+        A correct interpretation of the polynomial results
+        in a velocity in km/s. The degree of the polynomial is implied by the number of
+        coefficients.</td>
+</tr>
+<tr>
+    <td>rho</td>
+    <td>numeric n-element vector</td>
+    <td>g/cm<span class="sup">3</span></td>
+    <td>Density layer polynomial coefficients. The first element is the constant term, the last element is coefficient of the highest power.
+    A correct interpretation of the polynomial results
+        in a density in g/cm<span class="sup">3</span>. The degree of the polynomial is implied
+         by the number of coefficients.</td>
+</tr>
+<tr>
+    <td>qp</td>
+    <td>numeric n-element vector</td>
+    <td>-</td>
+    <td>P wave Q-factor layer polynomial coefficients. The first element is the constant term, the last element is coefficient of the highest power.
+    A correct interpretation of the polynomial results
+        in a dimensionless Q<span class="sup">p</span> factor. The degree of the polynomial is implied
+         by the number of coefficients.</td>
+</tr>
+<tr>
+    <td>qs</td>
+    <td>numeric n-element vector</td>
+    <td>-</td>
+    <td>S wave Q-factor layer polynomial coefficients. The first element is the constant term, the last element is coefficient of the highest power.
+    A correct interpretation of the polynomial results
+        in a dimensionless Q<span class="sup">s</span> factor. The degree of the polynomial is implied
+         by the number of coefficients.</td>
+</tr>
+
+</table>
+</div>
+<!-- END OF STRUCTURE FIELD DEFINITION TABLE -->
+
+
+
+<div align="center">
+<table>
+<caption>
+Discontinuity Definition Stuff
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+    <td>conr</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to Conrad Discontinuity. Must be NaN if not specified.</td>
+</tr>
+<tr>
+    <td>moho</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to Mohorovicic Discontinuity. Must be NaN if not specified.</td>
+</tr>
+<tr>
+    <td>d410</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to Olivine-&alpha; - &beta;-spinel phase transition. Must be NaN if not specified.
+    This is named after the mean depth on earth in order to get a short name.</td>
+</tr>
+<tr>
+    <td>d520</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to &beta;-spinel-&gamma-spinel phase transition. Must be NaN if not specified.
+    This is named after the mean depth on earth in order to get a short name.</td>
+</tr>
+<tr>
+    <td>d660</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to &gamma-spinel-Perovskite Boundary. Must be NaN if not specified.
+    This is named after the mean depth on earth in order to get a short name.</td>
+</tr>
+<tr>
+    <td>cmb</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to the Core-Mantle-Boundary. Must be NaN if not specified.</td>
+</tr>
+<tr>
+    <td>icb</td>
+    <td>numeric scalar</td>
+    <td>km</td>
+    <td>Depth to the Core-Mantle-Boundary. Must be NaN if not specified.</td>
+</tr>
+<tr>
+    <td>dz</td>
+    <td>numeric vector</td>
+    <td>km</td>
+    <td>Depths of non-standard discontinuites. Must be empty if none specified.</td>
+</tr>
+<tr>
+    <td>dname</td>
+    <td>string matrix</td>
+    <td>-</td>
+    <td>Names of non-standard discontinuities. dname(i,:) is the name string for the
+    i-th non-standard discontinuity, the depth of which is given in dz(i). 
+    Must be empty if none specified.</td>
+</tr>
+</table>
+</div>
+
+
+  <hr>
+eof.
+  </body>
+</html>

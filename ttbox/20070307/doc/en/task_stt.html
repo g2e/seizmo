@@ -1,0 +1,54 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Task: Compute a Single Travel Time</h4>
+  
+  <p>
+  To compute the travel time for a single phase and a given repicentral distance,
+  do the following:
+  </p>
+  
+  <ol>
+  <li>read the velocity model from an .nd file using <span class="tt">model=mkreadnd(pfad);</span></li>
+  <li>call <span class="tt">[tt,p]=mkttime(phase,delta,h,model);</span> where
+     <dl>
+        <dt>phase</dt>
+        <dd>a string containing the phase name, e.g. 'P' or 'SKS'</dd>
+        <dt>delta</dt>
+        <dd>the epicentral distance, in degrees</dd>
+        <dt>h</dt>
+        <dd>the focal depth in km</dd>
+        <dt>model</dt>
+        <dd>a model structure containing the velocity structure</dd>
+     </dl>
+  </li>
+  <li>
+     As Result, the routine returns
+     <dl>
+        <dt>tt</dt>
+        <dd>The requested travel time in seconds</dd>
+        <dt>p</dt>
+        <dd>The ray parameter in s/&deg; which is needed to reach the given epicentral distance
+            from the given focal depth.</dd>
+     </dl>
+  </li>
+  </ol>
+  
+  <p>
+  NOTE that bot <span class="bold">tt</span> and <span class="bold">p</span> might be vectors
+  in case of phase triplications!
+  </p>
+  
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

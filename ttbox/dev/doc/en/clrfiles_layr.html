@@ -1,0 +1,87 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.clr file format</h4>
+
+
+
+
+
+
+<h5>Definition of Layers</h5>
+
+<p>
+A single layer is defined by a block of lines with <span class="tt">layer</span>-Keywords.
+Since a layer consists of up to six different physical parameters and a depth range, some means
+to group these informations into a layer is necessary. For this purpose, the <span class="tt">start</span>
+ and <span class="tt">end</span> modifiers of the layer keyword have been introduced.
+</p>
+<p>
+A full-featured layer definition then looks like this:
+</p>
+<pre>
+!layer !start LayerName
+!layer !depth p<span class="sub">1</span> p<span class="sub">2</span>
+!layer !vp p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !vs p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !rho p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !qp p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !qs p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !end
+</pre>
+<p>
+Where the p<span class="sub">n</span> are the coefficients of the respective layer polynomials.
+(Except for the <span class="tt">!depth</span> declaration, where
+ p<span class="sub">1</span> and p<span class="sub">2</span>
+give the top and bottom depth of the layer. min(p1 p2) is the top depth, max(p1 p2) the bottom
+depth)
+</p>
+
+<p>
+Instead of a definition by depths measured from the surface, the vertical extent of the layer may also be
+defined by two radius values, measured from the planet's center.
+</p>
+<p>
+Different layers may use different vertical coordinates: it is possible to define one layer in
+terms of depth and another one in terms of radius. It is even possible to define one parameter
+of the same layer by depth and another by radius: the modifier is effective in its own line only.
+</p>
+<p>
+If one of the parameters is not defined in the model (IASP91, for example, does not define
+densities and quality factors), simply omit the respective line. Undefined parameters will
+result in NaN output of the reading routine.
+</p>
+<p>
+The definition of the IASP91 transition zone, for example, may look like this:
+</p>
+<pre>
+!layer !start Transition Zone
+!layer !vp    29.38896 -21.40656
+!layer !vs    17.70732 -13.50652
+!layer !depth 410 660
+!layer !end
+</pre>
+<p>
+NOTE that, although the layer is named "Transition Zone", this layer definition does not
+imply a definition of discontinuities at 410km and 660km depth! There will be discontinuities at
+these depths at which rays are refracted, but a program will not be able to recognize these
+discontinuities as those delimiting the transition zone. This requires extra definitions of discontinuities.
+</p>
+<p>
+If there are multiple lines in a layer definition block which define the same quantity,
+the last one of them will overwrite all previous ones.
+<p>
+
+
+
+
+    <hr>
+eof.
+  </body>
+</html>

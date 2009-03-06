@@ -1,0 +1,82 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>VMOD Array</h4>
+  
+  <p>
+  The VMOD array is a simple means to represent a seismic layer structure
+  stored in a .nd file. The VMOD array does not allow to store discontinuity
+  name information.
+  </p>
+  <p>
+  The VMOD type is merely a historical artefact, but may be useful when converting
+  machine generated models (or models from other sources) into model structures and
+  .nd files.
+  </p>
+
+<!-- STRUCTURE FIELD DEFINITION TABLE -->
+<div align="center">
+<table>
+<caption>
+VMOD Array
+</caption>
+<thead>
+   <th>Field</th>
+   <th>Type</th>
+   <th>Units</th>
+   <th>Description</th>
+</thead>
+<tr>
+    <td>vmod[:,1]</td>
+    <td>numeric array</td>
+    <td>km</td>
+    <td>specifies the depth of the upper boundaries of all layers in model.
+        vmod[1,1] is the top of the uppermost layer.</td>
+</tr>
+<tr>
+    <td>vmod[:,2]</td>
+    <td>numeric array</td>
+    <td>km/s</td>
+    <td>P wave velocities at depths specified in vmod[:,1].</td>
+</tr>
+<tr>
+    <td>vmod[:,3]</td>
+    <td>numeric array</td>
+    <td>km/s</td>
+    <td>S wave velocities at depths specified in vmod[:,1].</td>
+</tr>
+<tr>
+    <td>vmod[:,4]</td>
+    <td>numeric array</td>
+    <td>g/cm<span class="sup">3</span></td>
+    <td>Density at depths specified in vmod[:,1].</td>
+</tr>
+<tr>
+    <td>vmod[:,5]</td>
+    <td>numeric array</td>
+    <td>dimensionless</td>
+    <td>P wave quality factor at depth specified in vmod[:,1].</td>
+</tr>
+<tr>
+    <td>vmod[:,6]</td>
+    <td>numeric array</td>
+    <td>dimensionless</td>
+    <td>S wave quality factor at depth specified in vmod[:,1].</td>
+</tr>
+</table>
+</div>
+<!-- END OF STRUCTURE FIELD DEFINITION TABLE -->
+
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

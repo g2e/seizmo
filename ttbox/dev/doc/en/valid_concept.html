@@ -1,0 +1,56 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+
+
+
+<h4>Concept of Validation</h4>
+
+<p>
+The validation follows a quite simple approach: take some reference travel times
+from some standard source and compute travel times for the same velocity model,
+seismic phase, focal depth
+and epicentral distances as given in that reference. The absolute deviation between
+reference and computed values is a measure for the quality of the program. The references
+used in the following tests are described in the section on reference data.
+</p>
+<p>
+The procedure is implemented in routine <a href="../../mkttboxvalid.m" target="extern">MKTTBOXVALID</a>.
+Phase name, focal depth, vertical discretization interval for the velocity model, path to
+the velocity model and path to the reference data file are input parameters of this
+routine. You can study how the error decreases when the vertical discretization
+gets finer.</p>
+<p>
+I have chosen to test P and S wave travel times because these are very important for
+earthquake localization. Additionally, PKIKP and SKIKS have been chosen because rays
+that travel through the inner core may get very close to the coordinate singularity
+of the flat earth transform, what makes the computation of these phases close to
+180&deg; difficult.
+</p>
+<p>
+Only surface foci are considered, because I do not think that deeper foci would give
+significant new information for the validation problem. But it would be easy to include
+deeper foci into the test procedure - one simply has to produce a reference data file
+for the desired depth.
+</p>
+<p>
+At distances where triplications occur, only the earliest of the two or three possible
+onsets is used, although TTBOX returns all solutions.
+</p>
+<p>
+MKTTBOXVALID creates three plots: the absolute difference between computed and
+reference travel time, the computed and reference travel times as travel time curves
+and the shooting error, which shows how good TTBOX estimated the ray parameter needed
+to arrive at the given epicentral distance.
+</p>
+
+  <hr>
+eof.
+  </body>
+</html>

@@ -1,0 +1,87 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Task: Convert Between CLR and ND</h4>
+  
+  <ul>
+  <li><a href="#clr2nd">Convert from CLR to ND</a></li>
+  <li><a href="#nd2clr">Convert from ND to CLR</a></li>
+  </ul>
+  
+  <h5><a name="clr2nd">Convert from CLR to ND</a></h5>
+  
+  <p>
+  A conversion from the continuous layer representation to a discrete layering
+  is necessary for the computation of travel times, since all the computational
+  routines are based on MODEL structures and .nd files.
+  </p>
+  <p>
+  To compute travel times for a velocity model that is stored in a .clr file, do the
+  following:
+  </p>
+  
+  <ol>
+  <li>load the .clr file by executing <span class="tt">clr=mkreadclr('path/to/your/clr_file.clr','silent');</span><br>
+      <span class="tt">clr</span> is now a structure variable containing all information
+      about the velocity model.</li>
+  <li>convert the CLR structure into a MODEL structure by executing
+      <span class="tt">model=mkclr2model(clr,deltaz,mode);</span><br>
+      where
+      <dl>
+      <dt>clr</dt><dd> is the structure variable obtained in step 1</dd>
+      <dt>deltaz</dt><dd> is either the depth
+      sampling width in km or a list of depths at which the model will be sampled.
+		If the sample distance is too big, spurious caustics and traveltime triplications may result.
+		Problems caused by a crude sampling can partly be "repaired" by later model interpolation, but if you have an analytic model, you better use a sufficiently dense discretization.</dd>
+      <dt>mode</dt><dd>a string "spherical" or "flat" which denotes the
+      sampling method: "spherical" denotes a sampling which is equidistant in spherical
+      coordinates, whereas "flat" sampling is equidistant in flat earth coordinates. The
+      latter produces a larger number of samples, resulting in longer computation times
+      for ray paths and travel times, but also much better results especially for core
+      phases. (The mode will be ignored if <span class="tt">deltaz</span> is a depth list)</dd>
+      <dt>model</dt><dd> is then a structure variable containing a discrete layer model
+      as needed by the routines for travel time computation.<br>
+      </dl>
+      </li>
+  <li>Perform your computations with <span class="tt">model</span> as input data (see the 
+      <a href="toc/toc_tutor_rout.html" target="toc">section on routine tasks</a> to learn how).<br>
+      <span class="it">Or</span><br>
+      execute <span class="tt">mkwritend(model,'path/to/save/nd_file.nd');</span>
+       to store the <span class="tt">model</span> in an .nd file for later use.
+      </li>
+  </ol>
+
+  <h5><a name="nd2clr">Convert from ND to CLR</a></h5>
+  
+  <p>
+  Currently only a verly limited transformation from .nd to .clr files is possible, using the MKND2CLR routine. The conversion is limited to velocity models with constant velocity layers.
+  </p>
+  
+  <ol>
+     <li>Read the model from a .nd file: <span class="tt">model=mkreadnd(path)</span></li>
+     <li>Convert the model structure into a CLR structure: <span class="tt">clrout=mknd2clr(model,mode)</span>, where
+     <dl>
+     <dt>model</dt>
+     <dd>a model structure, as read from file</dd>
+     
+     <dt>mode</dt>
+     <dd>conversion mode: currently only the "constant" mode is available, where it is assumed that the velocity and all other parameters remain constant throughout a layer.</dd>
+     </dl>
+     
+     </li>
+     <li>write the CLR structure to disk, using <span class="tt">mkwriteclr(clr,path);</span> </li>
+
+  </ol>
+
+
+
+  <hr>
+eof.
+  </body>
+</html>

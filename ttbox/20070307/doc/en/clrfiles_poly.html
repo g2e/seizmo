@@ -1,0 +1,77 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.clr file format</h4>
+
+<h5>Layer Polynomials</h5>
+
+<p>
+All physical parameters are defined by polynominals of n-th degree, with normalized radius
+as free variable. This type of model representation has been used successfully in several
+well known models as PREM (Dziewonski & Anderson, 1981) or IASP91 (Kennett & Anderson, 1991).
+</p>
+
+<p>
+So if a layer and its P wave velocity is given by lines like
+</p>
+<pre>
+!planet !radius r<span class="sub">p</span>
+!layer !start SampleLayer
+!layer !depth z<span class="sub">1</span> z<span class="sub">2</span>
+!layer !vp p<span class="sub">1</span> p<span class="sub">2</span> p<span class="sub">3</span> ... p<span class="sub">n</span>
+!layer !end
+</pre>
+<p>
+Then the velocity in the depth interval [<span class="it">min(z<span class="sub">1</span>,&nbsp;z<span class="sub">2</span>),max(z<span class="sub">1</span>,z<span class="sub">2</span>)</span>] is given by <br>
+<span class="it">
+v<span class="sub">p</span> = p<span class="sub">1</span>+
+                              p<span class="sub">2</span>x+
+                              p<span class="sub">3</span>x<span class="sup">2</span>+
+                              ...+
+                              p<span class="sub">n</span>x<span class="sup">(n-1)</span>
+</span><br>
+where <span class="it">x</span> is the normalized radius<br>
+<span class="it">x = (r<span class="sub">p</span>-z)/r<span class="sub">p</span></span>
+for min(<span class="it">z<span class="sub">1</span>,z<span class="sub">2</span>)&lt;=z&lt;=max(z<span class="sub">1</span>,z<span class="sub">2</span>)</span>
+</p>
+
+<p>
+(Note that it is not defined which of z<span class="sub">1</span> and z<span class="sub">2</span> is the larger one!)
+</p>
+
+<p>
+The first element listed in the .clr file is the constant term and will be stored
+in the first element of the respective vector of a CLR structure. The last element
+listed in the .clr file is the coefficient of the highest power and will be stored
+in the last element of the respective vector of a CLR structure.
+</p>
+<p>
+Evaluation of v<span class="sub">p</span> in matlab will read like this:
+</p>
+<pre>
+x=(clr.rp-depth(indies))./clr.rp;
+vp=clr.vp(1)+clr.vp(2).*x+clr.vp(3).*x^2+...;
+</pre>
+<p>
+(which is not the way a polynomial should be evaluated) or, when using <span class="tt">polyval</span>:
+</p>
+<pre>
+vp=polyval(flipud(clr.vp),x);
+</pre>
+
+<p>
+NOTE that you have to enter a "0" as coefficient if a certain power of x is "not present" in your
+polynomial!
+</p>
+
+
+    <hr>
+eof.
+  </body>
+</html>

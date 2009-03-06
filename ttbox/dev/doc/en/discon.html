@@ -1,0 +1,76 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Standard Discontinuity Names</h4>
+  
+      <p>
+      The following standard names are recognized by TTBOX.<br>
+      Discontinuity names are not case sensitive.
+      </p>
+
+      <div align="center">
+      <table>
+      <thead>
+      <th>Discontinuity</th>
+      <th>TTBOX name</th>
+      <th>Explanation</th>
+      </thead>
+      <tr>
+         <td>Conrad D.</td>
+         <td>'conrad'</td>
+         <td>Boundary between upper and lower crust, not always present</td>
+      </tr>
+      <tr>
+         <td>Mohorovicic D.</td>
+         <td>'moho' <span class="it">or</span><br> 'mantle'</td>
+         <td>Boundary between crust and mantle</td>
+      </tr>
+      <tr>
+         <td>Olivine-&alpha to &beta;-Spinel phase transition, "410"</td>
+         <td>'olivine alpha beta' <span class="it">or</span><br> 'transition zone'</td>
+         <td>Beginning of the mantle transition zone</td>
+      </tr>
+      <tr>
+         <td>&beta;-Spinel to &gamma-Spinel phase transition, "520"</td>
+         <td>'olivine beta gamma'</td>
+         <td></td>
+      </tr>
+      <tr>
+         <td>Spinel-Perowskite Transition, "660"</td>
+         <td>'olivine gamma perovskite' <span class="it">or</span><br> 'lower mantle'</td>
+         <td>Boundary between upper and lower mantle</td>
+      </tr>
+      <tr>
+         <td>Core-mantle-Boundary, "CMB"</td>
+         <td>'cmb' <span class="it">or</span><br> 'outer core' <span class="it">or</span><br> 'outer-core'</td>
+         <td>Boundary between Mantle and Core</td>
+      </tr>
+      <tr>
+         <td>Inner core Boundary, "ICB"</td>
+         <td>'icb' <span class="it">or</span><br> 'inner core' <span class="it">or</span><br> 'inner-core'</td>
+         <td>Boundary between liquid outer and solid inner core.</td>
+      </tr>
+      </table>
+      </div>
+      
+      <p>
+      Discontinuities labeled with these names in .clr or .nd files will be stored in
+      the .conr, .moho, .d410, .d520, d660, .cmb, and .icb fields of MODEL and CLR structure
+      variables.
+      </p>
+      
+      <p>
+      <span class="bold">Proper computation of phases which are affected by discontinuities (like PcP, PKP) is
+      not possible if discontinuities are not named properly!</span>
+      </p>
+      
+  <hr>
+eof.
+  </body>
+</html>

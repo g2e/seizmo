@@ -1,0 +1,61 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Good and Bad Depth Sampling</h4>
+  
+  
+  
+  
+  
+  <h5><a name="models">Used Velocity Models</a></h5>
+  
+  <p>
+  The examples given in this section are all computed with routines and models contained in the TTBOX distribution, enabling the reader to repeat and extend them.
+  </p>
+  <p>
+  All examples use a number of example models that were generated using the following commands:
+  </p>
+  <p><span class="tt">
+ 
+  %%% read the IASP91 model in its polynomial form <br>
+  iasp91=mkreadclr([mkttboxdata 'iasp91.clr'],'silent');<br>
+  <br>
+  %%% depth sample distance: 1km in flat earth coordinates<br>
+  %%% This is a very good sampling and serves as reference in the following<br>
+  iasp91_1km=mkclr2model(iasp91,1,'flat');<br>
+  <br><br>
+  
+  %%% depth sample distance: 10km in flat earth coordinates<br>
+  iasp91_10km=mkclr2model(iasp91,10,'flat');<br>
+  %%% depth sample distance: 50km in flat earth coordinates<br>
+  iasp91_50km=mkclr2model(iasp91,50,'flat');<br>
+  <br>
+  %%% depth sample distance: 100km in flat earth coordinates<br>
+  iasp91_100km=mkclr2model(iasp91,100,'flat');<br>
+  <br>
+  <br>
+  %%% depth sample distance: 100km in spherical coordinates<br>
+  %%% For core phases, this is a really bad depth sampling<br>
+  iasp91_100km_sph=mkclr2model(iasp91,100,'spherical');<br>
+  <br>
+  %%% depth sample distance: 10km in spherical coordinates<br>
+  iasp91_10km_sph=mkclr2model(iasp91,10,'spherical');<br>
+  </span></p>
+  
+  
+  
+  
+  
+  
+
+  
+  <hr>
+eof.
+  </body>
+</html>

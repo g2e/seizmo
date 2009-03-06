@@ -1,0 +1,53 @@
+ <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>Good and Bad Depth Sampling</h4>
+  
+  
+  <h5>Introduction</h5>
+  
+  <p>
+  A sufficient depth sampling is the prerequisite of accurate ray geometry and travel time computations. But what is "sufficient"? This section demonstrates some effects of insufficient sampling to guide the user: Ray paths suffer most when coming close to the planetary center, which is at infinite depth in the Flat Earth Domain. Artifact travel time triplications emerge if the sampling exaggerates velocity gradients, especially if  the sampling produces sharp kinks in the velocity profile.</p>
+  <p>Diagnostic properties of poor depth sampling are shown in ray path plots, travel time curves and covered epicentral distance as function of take off angle.</p>
+  
+  <h6>How to test sampling quality</h6>
+  
+  <p>
+  What "good sampling" or "bad sampling" means depends on what you wish to compute, and for what purpose. You should always keep this in mind, especially since a very fine sampling consumes very much CPU time in the evaluation.
+  </p>
+  
+  <p>
+  As in the section on <a href="./toc/toc_intro_valid.html" target="toc">software evaluation</a>, an asymptotic process of comparison can be used to assess the precision of results: if a decrease of depth sample distance does not change the results significantly (with respect to your purpose), then a finer sampling is not necessary.
+  </p>
+  
+  <p>
+  The relevant results can be obtained using one of the following routines (see the <a href="./toc/toc_tutor_rout.html" target="toc">routine tasks</a> section for a more detailed description, as well as the help lines of the individual routines):
+  </p>
+  
+  <dl>
+  
+  <dt><a href="../../mkttime.m" target="content">mkttime</a></dt>
+  <dd>Computation of travel time for a single focal depth at a single epicentral distance</dd>
+  
+  <dt><a href="../../mkttcurves.m" target="content">mkttcurves</a> and <a href="../../mkplottturves.m" target="content">mkplottturves</a></dt>
+  <dd>Computation of travel time curves for a single focal depth and all distances, to asses overall shape, existence of spurious travel time triplications etc.</dd>
+  
+  <dt><a href="../../mkdepthbydist.m" target="content">mkdepthbydist</a></dt>
+  <dd>Computation of turning point or reflection depth as function of epicentral distance, for a single focal depth. This allows a more detailed investigation of trevel time triplications.</dd>
+  
+  <dt><a href="../../mkrayfan.m" target="content">mkrayfan</a></dt>
+  <dd>Compute and plot ray paths inside the planet. Ray path plots are much less sensitive to the depth sampling than travel times, but show very clear effects for core phases.</dd>
+  
+  </dl>
+  
+  
+  <hr>
+eof.
+  </body>
+</html>

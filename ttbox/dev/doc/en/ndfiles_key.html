@@ -1,0 +1,88 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+
+  <h4>.nd file format: Keyword Lines</h4>
+  
+
+
+<h5><a name="key">Keyword Lines</a></h5>
+
+<p>
+Keyword Lines are used to store data other than velocity, density and Q-factors. Keyword Lines
+are not allowed in the .nd format used by the TauP Toolkit (Cortwell et al., 1999). A file
+using Keyword Lines is thus not compatible to TauP.
+</p>
+
+<ul>
+<li>A Keyword Line may occur anywhere within the .nd file.</li>
+<li>Before processing, any whitespace will be removed from the Keyword Line (!)</li>
+<li>Keyword Lines consist of
+    <ol>
+    <li>an arbitrary number of whitespace characters at the beginning of the line</li>
+    <li>an Exclamation mark "!" to distinguish Discontinuity Name Lines and Keyword Lines</li>
+    <li>an arbitrary number of whitespace character as separator</li>
+    <li>the data value (string or numeric, depending on keyword)</li>
+    </ol>
+</li>
+<li>In case of multiple occurences of the same Keyword, only the last one counts.</li>
+<li>The following Keywords are defined:
+
+    <div align="center">
+    <table>
+    <thead>
+    <th>Keyword</th>
+    <th>Type</th>
+    <th>Explanation</th>
+    </thead>
+    <tr>
+       <td>!radius</td>
+       <td>numeric</td>
+       <td>Planetary Radius in km. If not defined within the file, the largst depth value
+           used in a Data Line will be used.</td>
+    </tr>
+    <tr>
+       <td>!year</td>
+       <td>numeric</td>
+       <td>Year of Publication of model</td>
+    </tr>
+    <tr>
+       <td>!name</td>
+       <td>string</td>
+       <td>Name of model, without any whitespace</td>
+    </tr>
+    </table>
+    </div>
+</li>
+</ul>
+
+<p>
+In an .nd-file for the IASP91 model you might define
+</p>
+
+<pre>
+!name IASP91
+!radius 6371
+!year 1991
+</pre>
+
+<p>
+For the Moon Model by Nakamura (1983), the respective lines would be
+</p>
+
+<pre>
+!radius 1738
+!year 1983
+!name Nakamura83
+</pre>
+
+
+    <hr>
+eof.
+  </body>
+</html>

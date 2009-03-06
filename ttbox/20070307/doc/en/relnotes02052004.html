@@ -1,0 +1,36 @@
+  <html>
+  <head>
+    <title></title>
+    <meta content="">
+
+    <LINK REL=STYLESHEET TYPE="text/css" HREF="../css/ttbox.css">
+  </head>
+  <body>
+  <h4>Release Notes for Freeze 02.05.2004</h4>
+
+
+  
+  <ul>
+  <li>The depth phase handling in MKTIM4P and MKX4P was not correct. wrong handling of take
+      of angles at the surface produced an error which could be as large as 3s for deep sources.
+      This is repaired.</li>
+  <li>A new Section on <a href="./toc/toc_tutor_adv.html" target="toc">andvanced tasks</a>
+      has been added to the Documentation.
+      It tries to explain how to make efficient use of TTBOX routines.</li>
+  <li>The calling sequence of MKRAYDEPTH has been changed: he planet's radius
+      has been added as input parameter for use in the flat earth transfom.</li>
+  <li>The calling sequence of MKTTBOXVALID has been extended: two optional
+      parameters, <span class="tt">takeabs</span> and <span class="tt">radius</span>,
+      have been added to allow for more flexible testing and plotting. The old
+      calling sequence is still valid, some defaults for the new parameters are
+      used then which reproduce the results of the old version.</li>
+  </ul>
+
+
+
+
+  
+  <hr>
+eof.
+  </body>
+</html>
