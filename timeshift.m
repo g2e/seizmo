@@ -3,12 +3,17 @@ function [data]=timeshift(data,shift,timing,varargin)
 %
 %    Description: TIMESHIFT(DATA,SHIFT) adjusts the relative timing of
 %     SEIZMO records in DATA by SHIFT seconds.  This adjustment is added
-%     to all defined header time fields.  The reference time fields are
-%     then adjusted by -SHIFT.
+%     to all defined header time fields (see Header changes section).  The
+%     reference time fields are then adjusted by -SHIFT.  This preserves
+%     the actual timing of the data and is basically equivalent to SAC's
+%     'chnhdr allt shift' command.
 %
-%     TIMESHIFT(DATA,SHIFT,TIMING) sets the absolute timing to a specified
-%     type ('UTC' or 'TAI' - 'TAI' is default).  Handle leapseconds by
-%     setting this option to 'UTC'.
+%     TIMESHIFT(DATA,SHIFT,TIMING) timeshifts while interpreting the
+%     absolute timing as the specified type ('UTC' or 'TAI' - 'UTC' is
+%     default).  Handle UTC leap seconds by setting this option to 'UTC'.
+%     There are no leap seconds in the International Atomic Time standard
+%     (TAI), so setting the absolute timing to 'tai' will basically skip
+%     any leap second functions.
 %
 %     TIMESHIFT(DATA,SHIFT,TIMING,FIELD1,...,FIELDN) also adjusts header
 %     fields FIELD1 TO FIELDN by SHIFT seconds.
@@ -25,14 +30,20 @@ function [data]=timeshift(data,shift,timing,varargin)
 %              data=timeshift(data,shift,field1,...,fieldN)
 %
 %    Examples:
+%     Shift the reference time to the origin time (note '-' sign):
+%      data=timeshift(data,-gh(data,'o'))
 %
-%    See also: changeheader, getheader
+%     Also useful for quickly plotting data aligned on a phase:
+%      plot0(timeshift(data,-Parrivaltimes))
+%
+%    See also: changeheader, getheader, fixtimes
 
 %     Version History:
 %        Dec. 13, 2008 - initial version
+%        Mar. 12, 2009 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 13, 2008 at 07:30 GMT
+%     Last Updated Mar. 12, 2009 at 14:10 GMT
 
 % todo:
 
@@ -73,7 +84,7 @@ end
 
 % default timing
 if(nargin==2 || isempty(timing))
-    timing='tai';
+    timing='utc';
 end
 
 % get header fields

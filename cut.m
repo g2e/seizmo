@@ -35,9 +35,9 @@ function [data,failed]=cut(data,varargin)
 %
 %     OFFSET is a numeric value giving the offset to be added to REF to 
 %     define the position of the window start/stop with respect to the 
-%     reference.  The offset can be a vector of values, one for each record
-%     to be read, to define different offsets for each record (note that 
-%     REF can not be a vector of reference positions currently).
+%     reference.  The offset can be a vector of values (one per record)
+%     to define different offsets for each record (note that REF cannot
+%     be a vector of reference positions).
 %
 %     REF1,OFFSET1 define the starting position of the window and
 %     REF2,OFFSET2 define the ending position.  If a REF is given without
@@ -78,8 +78,8 @@ function [data,failed]=cut(data,varargin)
 %       they are deleted from DATA (see option 'TRIM' to change this 
 %       behavior).
 %     - Windows with a start position after an end position will return
-%       empty records (with headers updated accordingly) rather than
-%       returning an error.
+%       empty records (if 'TRIM' is set to false) with headers updated
+%       accordingly rather than returning an error.
 %     - Multiple component data is supported.
 %     - FILL only works with evenly sampled data.
 %
@@ -137,9 +137,10 @@ function [data,failed]=cut(data,varargin)
 %        Nov. 24, 2008 - fixed some bugs for uneven, fixed fill bug, one
 %                        changeheader call, support new cutparameters,
 %                        better checking, doc update
+%        Mar. 12, 2009 - fixed 3 more fill bugs :(
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 24, 2008 at 04:15 GMT
+%     Last Updated Mar. 12, 2009 at 16:40 GMT
 
 % todo:
 
@@ -205,38 +206,26 @@ if(any(~nnp))
     nep(~nnp)=nan;
 end
 
-% get new b/e/npts for evenly spaced
-fill=option.FILL;
+% evenly spaced record list
 even=strcmpi(leven,'true');
-fe=fill & even;
-nfe=~fill & even;
-% to fill, even spaced
-if(any(fe))
-    e(fe)=b(fe)+(ep(fe)-1).*delta(fe);
-    b(fe)=b(fe)+(bp(fe)-1).*delta(fe);
-    npts(fe)=max(ep(fe)-bp(fe)+1,0);
-% not to fill, even spaced
-elseif(any(nfe))
-    e(nfe)=b(nfe)+(nep(nfe)-1).*delta(nfe);
-    b(nfe)=b(nfe)+(nbp(nfe)-1).*delta(nfe);
-    npts(nfe)=nnp(nfe);
-end
 
 % loop through each file
 failed=false(nrecs,1);
-[depmen,depmin,depmax]=swap(nan(nrecs,1));
+[depmen,depmin,depmax]=deal(nan(nrecs,1));
 for i=1:nrecs
     % check for unsupported filetypes
     if(strcmpi(iftype(i),'General XYZ (3-D) file'))
         failed(i)=true;
         warning('seizmo:cut:illegalFiletype',...
-            'Illegal operation on xyz file!');
+            ['Record: %d \n' ...
+            'Illegal operation on xyz file!'],i);
         continue;
     elseif(any(strcmpi(iftype(i),{'Spectral File-Real/Imag'...
             'Spectral File-Ampl/Phase'})))
         failed(i)=true;
         warning('seizmo:cut:illegalFiletype',...
-            'Illegal operation on spectral file!');
+            ['Record: %d \n' ...
+            'Illegal operation on spectral file!'],i);
         continue;
     end
     
@@ -253,17 +242,20 @@ for i=1:nrecs
         ncmp(i)=size(data(i).dep,2);
         
         % add filler
-        if(fill(i))
+        if(option.FILL(i))
             data(i).dep=...
-                [ones(min(1,ep(i))-bp(i)+1,ncmp(i))*option.FILLER(i);...
+                [ones(min(0,ep(i))-bp(i)+1,ncmp(i))*option.FILLER(i);...
                 data(i).dep;...
-                ones(ep(i)-max(npts(i),bp(i))+1,ncmp(i))*option.FILLER(i)];
+                ones(ep(i)-max(npts(i),bp(i)-1),ncmp(i))*option.FILLER(i)];
         end
         
-        % handle empty
-        if(~npts(i))
+        % update dep*
+        if(numel(data(i).dep))
+            depmen(i)=mean(data(i).dep(:));
+            depmin(i)=min(data(i).dep(:));
+            depmax(i)=max(data(i).dep(:));
+        else
             failed(i)=true;
-            continue;
         end
     % unevenly spaced
     else
@@ -333,6 +325,13 @@ for i=1:nrecs
         % get ncmp
         ncmp(i)=size(data(i).dep,2);
         
+        % toss warning on fill
+        if(option.FILL(i))
+            warning('seizmo:cut:noFillUneven',...
+                ['Record: %d \n' ...
+                'Cannot fill unevenly-spaced record!'],i);
+        end
+        
         % handle empty
         if(~npts(i))
             b(i)=nan; e(i)=nan; 
@@ -340,18 +339,31 @@ for i=1:nrecs
             continue;
         end
         
-        % update timing
+        % update timing/dep*
         b(i)=data(i).ind(1);
         e(i)=data(i).ind(end);
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
         if(npts(i)>1)
             delta(i)=(e(i)-b(i))/(npts(i)-1);
         end
     end
-    
-    % update dep*
-    depmen(i)=mean(data(i).dep(:));
-    depmin(i)=min(data(i).dep(:));
-    depmax(i)=max(data(i).dep(:));
+end
+
+% get new b/e/npts for evenly spaced
+fe=option.FILL & even;
+nfe=~option.FILL & even;
+% to fill, even spaced
+if(any(fe))
+    e(fe)=b(fe)+(ep(fe)-1).*delta(fe);
+    b(fe)=b(fe)+(bp(fe)-1).*delta(fe);
+    npts(fe)=max(ep(fe)-bp(fe)+1,0);
+% not to fill, even spaced
+elseif(any(nfe))
+    e(nfe)=b(nfe)+(nep(nfe)-1).*delta(nfe);
+    b(nfe)=b(nfe)+(nbp(nfe)-1).*delta(nfe);
+    npts(nfe)=nnp(nfe);
 end
 
 % update headers

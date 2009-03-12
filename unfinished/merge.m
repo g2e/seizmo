@@ -227,6 +227,111 @@ for i=1:size(f,1)
     % no records to merge with
     if(ng==1); continue; end
     
+    % handle uneven / differing sample rates
+    if(~leven(j))
+        % what to do?
+        % - pass to mseq as if perfect
+        % - merge .ind
+        % - sort by .ind
+        % - if diff .ind==0 whine
+        continue;
+    end
+    
+    % what variables do we need to add
+    % - original indices
+    % - can we expand the temp space to avoid lots of resizing?
+    % - 
+    
+    % loop until no new merges
+    new=true; start=1;
+    while(new)
+        % find exact duplicates
+        dups=(ab(gidx,ones(ng,1))==ab(gidx,ones(ng,1)).' ...
+            & ab(gidx,2*ones(ng,1))==ab(gidx,2*ones(ng,1)).') ...
+            & (ae(gidx,ones(ng,1))==ae(gidx,ones(ng,1)).' ...
+            & ae(gidx,2*ones(ng,1))==ae(gidx,2*ones(ng,1)).');
+        dupsu=(dups-dups.')>0;    % only delete if other not deleted
+        dupsu(tril(true(ng)))=0;  % upper triangle
+        dups(triu(true(ng)))=0;   % lower triangle
+        dups=sum(dups+dupsu,2)>0; % logical indices in group
+        
+        % remove exact duplicates
+        destroy(gidx(dups))=true;
+        gidx(dups)=[];
+        ng=numel(gidx);
+        
+        % number of new records
+        nn=0;
+        
+        % check for merge between every pair
+        for j=1:(ng-1)
+            % skip exact duplicates
+            if(destroy(gidx(j))); continue; end
+            
+            % make sure we only merge with those that are new
+            for k=max([start j+1]):ng
+                % skip exact duplicates
+                if(destroy(gidx(k))); continue; end
+                
+                % get time gap
+                diff12=delta(gidx(j)) ...
+                    +(ae(gidx(j),1)-ab(gidx(k),1))*86400 ...
+                    +(ae(gidx(j),2)-ab(gidx(k),2));
+                diff21=delta(gidx(j)) ...
+                    +(ae(gidx(k),1)-ab(gidx(j),1))*86400 ...
+                    +(ae(gidx(k),2)-ab(gidx(j),2));
+                
+                % only find mergible (sequential within tolerance)
+                if(diff12==0)
+                    % perfectly mergible, 1st file first
+                    mergefunc=@mseq; tdiff=diff12; lead=1;
+                elseif(diff21==0)
+                    % perfectly mergible, 2nd file first
+                    mergefunc=@mseq; tdiff=diff21; lead=2;
+                elseif(diff12>0 && diff12<option.TOLERANCE)
+                    % mergible gap, 1st file first
+                    mergefunc=@mgap; tdiff=diff12; lead=1;
+                elseif(diff21>0 && diff21<option.TOLERANCE)
+                    % mergible gap, 2nd file first
+                    mergefunc=@mgap; tdiff=diff21; lead=2;
+                elseif(diff12<0 && abs(diff12)<option.TOLERANCE)
+                    % mergible overlap, 1st file first
+                    mergefunc=@mlap; tdiff=diff12; lead=1;
+                elseif(diff21<0 && abs(diff21)<option.TOLERANCE)
+                    % mergible overlap, 2nd file first
+                    mergefunc=@mlap; tdiff=diff21; lead=2;
+                else
+                    % data not mergible
+                    continue;
+                end
+                
+                % we got a merge about to happen
+                % - new record should get a new position
+                % - increment new record count
+                nn=nn+1; pos=nrecs+nn;
+                
+                
+                
+                % merge the records
+                %
+                % why so many variables?
+                % limits to one CHANGEHEADER call which speeds things up a lot
+                [data(pos),ab(pos,:),ae(pos,:),delta(pos),...
+                    npts(pos),depmin(pos),depmax(pos),depmen(pos)]=...
+                    mergefunc(data(gidx([j k])),ab(gidx([j k]),:),...
+                    ae(gidx([j k]),:),delta(gidx([j k])),npts(gidx([j k])),...
+                    depmin(gidx([j k])),depmax(gidx([j k])),...
+                    depmen(gidx([j k])),tdiff,option,lead);
+            end
+        end
+        
+        % ok here is where we do some updates
+        % - update ng, gidx, new, start
+        
+    end
+    
+    % ok so now we need to get rid of any duplicates/partial pieces
+    
     % find duplicates
     dups=(ab(gidx,ones(ng,1))>ab(gidx,ones(ng,1)).' ...
         | (ab(gidx,ones(ng,1))==ab(gidx,ones(ng,1)).' ...
@@ -243,72 +348,6 @@ for i=1:size(f,1)
     destroy(gidx(dups))=true;
     gidx(dups)=[];
     ng=numel(gidx);
-    
-    % handle uneven
-    if(~leven(j))
-        % what to do?
-        % - pass to mseq as if perfect
-        % - merge .ind
-        % - sort by .ind
-        % - if diff .ind==0 whine
-        continue;
-    end
-    
-    % check for merge between every pair
-    %   looped so multiple merges are sane
-    %   if a vectorized solution exists please let me know :D
-    for j=1:(ng-1)
-        % make sure record is not deleted from previous merge
-        if(destroy(gidx(j))); continue; end
-        for k=2:ng
-            % make sure these records are not deleted
-            if(destroy(gidx(j))); break; end
-            if(destroy(gidx(k))); continue; end
-            
-            % get time gap
-            diff12=delta(gidx(j))+(ae(gidx(j),1)-ab(gidx(k),1))*86400 ...
-                +(ae(gidx(j),2)-ab(gidx(k),2));
-            diff21=delta(gidx(j))+(ae(gidx(k),1)-ab(gidx(j),1))*86400 ...
-                +(ae(gidx(k),2)-ab(gidx(j),2));
-            
-            % only find mergible (sequential within tolerance)
-            if(diff12==0)
-                % perfectly mergible, 1st file first
-                mergefunc=@mseq; tdiff=diff12; lead=1;
-            elseif(diff21==0)
-                % perfectly mergible, 2nd file first
-                mergefunc=@mseq; tdiff=diff21; lead=2;
-            elseif(diff12>0 && diff12<option.TOLERANCE)
-                % mergible gap, 1st file first
-                mergefunc=@mgap; tdiff=diff12; lead=1;
-            elseif(diff21>0 && diff21<option.TOLERANCE)
-                % mergible gap, 2nd file first
-                mergefunc=@mgap; tdiff=diff21; lead=2;
-            elseif(diff12<0 && abs(diff12)<option.TOLERANCE)
-                % mergible overlap, 1st file first
-                mergefunc=@mlap; tdiff=diff12; lead=1;
-            elseif(diff21<0 && abs(diff21)<option.TOLERANCE)
-                % mergible overlap, 2nd file first
-                mergefunc=@mlap; tdiff=diff21; lead=2;
-            else
-                % data not mergible
-                continue;
-            end
-            
-            % merge the records
-            %
-            % why so many variables?
-            % limits to one CHANGEHEADER call which speeds things up a lot
-            [data(gidx([j k])),destroy(gidx([j k])),...
-                ab(gidx([j k]),:),ae(gidx([j k]),:),delta(gidx([j k])),...
-                npts(gidx([j k])),depmin(gidx([j k])),...
-                depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                mergefunc(data(gidx([j k])),ab(gidx([j k]),:),...
-                ae(gidx([j k]),:),delta(gidx([j k])),npts(gidx([j k])),...
-                depmin(gidx([j k])),depmax(gidx([j k])),...
-                depmen(gidx([j k])),tdiff,option,lead);
-        end
-    end
 end
 
 % get relative times from absolute

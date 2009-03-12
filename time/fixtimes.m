@@ -1,5 +1,5 @@
 function [times]=fixtimes(times,option)
-%FIXTIMES    Cleans up times to be in the proper ranges
+%FIXTIMES    Cleans up times so they are in their proper ranges
 %
 %    Description: FIXTIMES(TIMES) returns equivalent times to the times in
 %     TIMES such that they follow typical Gregorian calendar conventions

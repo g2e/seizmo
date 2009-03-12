@@ -141,9 +141,10 @@ function [data,failed]=readdatawindow(data,varargin)
 %                        updated RDATA call, single CH call
 %        Nov. 18, 2008 - updated to new name schema (now READDATAWINDOW),
 %                        fixed fill bug
+%        Mar. 12, 2009 - fixed 3 more fill bugs :(
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 18, 2008 at 05:35 GMT
+%     Last Updated Mar. 12, 2009 at 16:40 GMT
 
 % todo:
 
@@ -186,7 +187,7 @@ uneven=~even;
 % allocate bad records matrix
 failed=false(nrecs,1);
 
-% let rdata/cutim handle unevenly sampled records (minus file deletion)
+% let readdata/cut handle unevenly sampled records (minus file deletion)
 if(any(uneven))
     % read in unevenly sampled datafiles
     [data(uneven),failed(uneven)]=readdata(data(uneven),'trim',false);
@@ -230,26 +231,8 @@ if(any(~nnp))
     nep(~nnp)=nan;
 end
 
-% get new b/e
-fill=option.FILL;
-nofill=~fill;
-% to fill
-if(any(fill))
-    e(fill)=b(fill)+(ep(fill)-1).*delta(fill);
-    b(fill)=b(fill)+(bp(fill)-1).*delta(fill);
-    npts(fill)=max(ep(fill)-bp(fill)+1,0);
-% not to fill
-elseif(any(nofill))
-    e(nofill)=b(nofill)+(nep(nofill)-1).*delta(nofill);
-    b(nofill)=b(nofill)+(nbp(nofill)-1).*delta(nofill);
-    npts(nofill)=nnp(nofill);
-end
-
-% fail evenly spaced records with 0 pts
-failed(npts==0 & even)=true;
-
 % loop through each evenly spaced file
-[depmen,depmin,depmax]=swap(nan(nrecs,1));
+[depmen,depmin,depmax]=deal(nan(nrecs,1));
 for i=find(even).'
     % check for unsupported filetypes
     if(strcmpi(iftype(i),'General XYZ (3-D) file'))
@@ -336,17 +319,34 @@ for i=find(even).'
     % add filler
     if(option.FILL(i))
         data(i).dep=...
-            [ones(min(1,ep(i))-bp(i)+1,ncmp(i))*option.FILLER(i);...
+            [ones(min(0,ep(i))-bp(i)+1,ncmp(i))*option.FILLER(i);...
             data(i).dep;...
-            ones(ep(i)-max(npts(i),bp(i))+1,ncmp(i))*option.FILLER(i)];
+            ones(ep(i)-max(npts(i),bp(i)-1),ncmp(i))*option.FILLER(i)];
     end
     
-    % more header fix
-    if(npts(i)>0)
+    % update dep*
+    if(numel(data(i).dep))
         depmen(i)=mean(data(i).dep(:));
         depmin(i)=min(data(i).dep(:));
         depmax(i)=max(data(i).dep(:));
+    else
+        failed(i)=true;
     end
+end
+
+% get new b/e
+fill=option.FILL;
+nofill=~fill;
+% to fill
+if(any(fill))
+    e(fill)=b(fill)+(ep(fill)-1).*delta(fill);
+    b(fill)=b(fill)+(bp(fill)-1).*delta(fill);
+    npts(fill)=max(ep(fill)-bp(fill)+1,0);
+% not to fill
+elseif(any(nofill))
+    e(nofill)=b(nofill)+(nep(nofill)-1).*delta(nofill);
+    b(nofill)=b(nofill)+(nbp(nofill)-1).*delta(nofill);
+    npts(nofill)=nnp(nofill);
 end
 
 % update headers
