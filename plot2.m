@@ -1,24 +1,24 @@
 function [fh,lh]=plot2(data,varargin)
-%P2    Overlay plot of SEIZMO data records
+%PLOT2    Overlay plot of SEIZMO data records
 %
 %    Description: Plots timeseries and xy SEIZMO records over one another
 %     in a single plot.  Other record types are ignored.  Optional
 %     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
 %
-%    Usage:  [fh,lh]=p2(data,'plot_option',plot_option_value,...)
+%    Usage:  [fh,lh]=plot2(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
 %     To overlay the first 4 records
-%      p2(data(1:4)) 
+%      plot2(data(1:4)) 
 %
 %     To overlay the 5th and 8th records from 0 to 300 seconds
-%      p2(data([5 8]),'xlimits',[0 300]) 
+%      plot2(data([5 8]),'xlimits',[0 300]) 
 %
 %     To plot all traces with a legend, without limiting the x/y axis
-%      p2(data,'legend',true)
+%      plot2(data,'legend',true)
 %
-%    See also:  p1, p0, recsec
+%    See also:  plot1, plot0, recordsection
 
 % check data structure
 error(seizmocheck(data,'dep'))

@@ -1,12 +1,12 @@
 function [fh,lh]=recordsection(data,varargin) 
-%RECSEC   Plots SEIZMO data records in a distance spaced record section
+%RECORDSECTION   Plots SEIZMO data records in a distance spaced record section
 %
 %    Description: Plots timeseries and xy SEIZMO records spaced out by the 
 %     'gcarc' header field.  Other record types are ignored.  Optional
 %     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
 %
-%    Usage:  [fh,lh]=recsec(data,'plot_option',plot_option_value,...)
+%    Usage:  [fh,lh]=recordsection(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
 %     To make a record section of data between 100 and 150 degrees showing 
@@ -18,10 +18,10 @@ function [fh,lh]=recordsection(data,varargin)
 %           'legend',true)
 %
 %     To plot records against azimuth/backazimuth:
-%       recsec(data,'yfield','az')
-%       recsec(data,'yfield','baz')
+%       recordsection(data,'yfield','az')
+%       recordsection(data,'yfield','baz')
 %
-%    See also:  p1, p2, p0
+%    See also:  plot1, plot2, plot0
 
 % check data structure
 error(seizmocheck(data,'dep'))

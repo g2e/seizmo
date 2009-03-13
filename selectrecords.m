@@ -1,7 +1,7 @@
 function [data,selected,h]=selectrecords(data,option,plottype,varargin)
-%SELECTRECS    Select or delete SEIZMO data records graphically
+%SELECTRECORDS    Select or delete SEIZMO data records graphically
 %
-%    Description:  SELECTRECS(DATA,OPTION,PLOTTYPE) allows a user to select
+%    Description:  SELECTRECORDS(DATA,OPTION,PLOTTYPE) allows a user to select
 %     records in DATA.  Selection/unselection is done by left clicking the 
 %     record and exiting the function is done by middle-clicking the plot.
 %     OPTION must be either 'keep' or 'delete' and determines what will be 
@@ -9,18 +9,18 @@ function [data,selected,h]=selectrecords(data,option,plottype,varargin)
 %     records will be given a green shaded background.  For option 'delete'
 %     the background will be colored a shade of red.  PLOTTYPE controls the
 %     plot type to use for record selection and must be (currently) 'p1' or
-%     'p3'.  
+%     'p0'.  
 %
-%     SELECTRECS(DATA,OPTION,PLOTTYPE,VARARGIN) sends addition arguments
+%     SELECTRECORDS(DATA,OPTION,PLOTTYPE,VARARGIN) sends addition arguments
 %     VARARGIN to the plot function.
 %
-%    Usage: [data]=selectrecs(data,option,plottype,varargin)
+%    Usage: [data]=selectrecords(data,option,plottype,varargin)
 %
 %    Examples:
 %     To select which records to delete using p1:
-%       data=selectrecs(data,'delete','p1')
+%       data=selectrecords(data,'delete','p1')
 %
-%    See also: p1, p0
+%    See also: plot1, plot0
 
 % check data structure
 error(seizmocheck(data,'dep'))

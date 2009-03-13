@@ -1,5 +1,5 @@
 function [perm,colors,fh,sfh]=plotdendro(Z,data,varargin)
-%PDENDRO    Plots correlation linkage and seismograms
+%PLOTDENDRO    Plots correlation linkage and seismograms
 %
 %    Description: Plots the heirarchial linkage given in Z corresponding to
 %     records given in DATA.  Records in DATA are plotted with respect to
@@ -12,7 +12,7 @@ function [perm,colors,fh,sfh]=plotdendro(Z,data,varargin)
 %     PERM.  FH and SFH give the figure and subplot handles.
 %
 %    Usage: [PERM,COLORS,FH,SFH]=...
-%             pdendro(Z,DATA,'plot_option',plot_option_value,...)
+%             plotdendro(Z,DATA,'plot_option',plot_option_value,...)
 %
 %    Examples:
 %     Get similarities using mcxc, assemble the tree using linkage, and
@@ -20,9 +20,9 @@ function [perm,colors,fh,sfh]=plotdendro(Z,data,varargin)
 %       records=combo(data)
 %       cv=mcxc(records)
 %       Z=linkage(1-cv,'average')
-%       pdendro(Z,data,'treelimit',1)
+%       plotdendro(Z,data,'treelimit',1)
 %
-%    See also: p1, p2, p0, recsec, mcxc,
+%    See also: plot1, plot2, plot0, recordsection, mcxc,
 %              dendrogram, linkage, cluster (Statistics Toolbox)
 
 % check data structure

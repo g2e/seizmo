@@ -1,38 +1,38 @@
 function [fh,sfh]=plot1(data,varargin)
-%P1    Plot SEIZMO data records in individual subplots
+%PLOT1    Plot SEIZMO data records in individual subplots
 %
-%    Description: P1(DATA) plots timeseries and xy SEIZMO records in a
+%    Description: PLOT1(DATA) plots timeseries and xy SEIZMO records in a
 %     figure as individual subplots.  Other filetypes are ignored (a space 
 %     is left for their subplot in the figure).  By default, markers 'o',
 %     'a','f','t(n)' are drawn if defined and are given labels using 'ko',
 %     'ka','kf','kt(n)' if defined otherwise the field name (o,a,f,t(n)) is
 %     used.  
 %
-%     [FH,SFH]=P1(DATA) returns the figure handle in FH and the subplot
+%     [FH,SFH]=PLOT1(DATA) returns the figure handle in FH and the subplot
 %     handles in SFH.
 %
-%     P1(DATA,PLOT_OPTION,OPTION_VALUE) modifies the plot parameter
+%     PLOT1(DATA,PLOT_OPTION,OPTION_VALUE) modifies the plot parameter
 %     PLOT_OPTION to OPTION_VALUE.  A list of available options and their
 %     applicable range can be found with the function PCONF.
 % 
-%    Usage:  [fh,sfh]=p1(data,'plot_option',plot_option_value,...)
+%    Usage:  [fh,sfh]=plot1(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
 %     Plot records with 3 columns of subplots:
-%      p1(data,'ncols',3)
+%      plot1(data,'ncols',3)
 %
 %     Plot records with the 'jet' colormap:
-%      p1(data,'colormap','jet')
+%      plot1(data,'colormap','jet')
 %
 %     Create your own colormap (one color per row):
-%      p1(data,'colormap',['k'; 'r'; 'b'])
+%      plot1(data,'colormap',['k'; 'r'; 'b'])
 %       or
-%      p1(data,'colormap',[0 0 0; 1 0 0; 0 0 1])
+%      plot1(data,'colormap',[0 0 0; 1 0 0; 0 0 1])
 %
 %     Black on white plot without markers:
-%      p1(data,'bgcolor','w','fgcolor','k','colormap','k','markers',false)
+%      plot1(data,'bgcolor','w','fgcolor','k','colormap','k','markers',false)
 %
-%    See also:  p2, p0, recsec
+%    See also:  plot2, plot0, recordsection
 
 %     Version History:
 %        ????????????? - Initial Version
