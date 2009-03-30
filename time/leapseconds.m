@@ -18,6 +18,18 @@ function [leaps]=leapseconds()
 %       are not properly corrected here to maintain timing near UT1 (GMT).
 %       There was actually a different method implemented but that is not
 %       a matter for this function.
+%     - Q: How to properly handle data around leap seconds from equipment
+%          that doesn't handle leap seconds?  
+%       A: Leave the last data segment before a leap second alone.  The
+%          first and subsequent data segments after a leap second should be
+%          shifted to one second earlier until the clock corrected to the
+%          actual UTC time (should have to jump back 1 second).  These will
+%          then be correct in UTC time.
+%     - Q: What if a data segment begins within a leap second on equipment
+%          that doesn't handle leap seconds?
+%       A: You need to merge that data segment with the prior (without UTC
+%          awareness) and then shift all subsequent records to 1 second
+%          prior (until the clock locks to the correct UTC time).
 %
 %    Tested on: Matlab r2007b
 %
@@ -31,9 +43,10 @@ function [leaps]=leapseconds()
 
 %     Version History:
 %        Oct. 28, 2008 - initial version
+%        Mar. 29, 2009 - added some notes on data handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 28, 2008 at 15:00 GMT
+%     Last Updated Mar. 29, 2009 at 23:45 GMT
 
 % todo:
 
