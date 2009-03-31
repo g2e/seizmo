@@ -92,8 +92,12 @@ end
 % header info
 leven=getlgc(data,'leven');
 iftype=getenumdesc(data,'iftype');
-[b,npts,delta,depmin,depmax,yfield]=...
-    getheader(data,'b','npts','delta','depmin','depmax',P.YFIELD);
+[t,kt,o,ko,a,ka,f,kf,b,e,npts,delta,depmin,depmax,yfield]=...
+    getheader(data,'t','kt','o','ko','a','ka','f','kf',...
+    'b','e','npts','delta','depmin','depmax',P.YFIELD);
+
+% header structures (for determining if undefined)
+[h,idx]=versioninfo(data);
 
 % yaxis scaling for amplitudes
 if(P.NORM2YRANGE)
@@ -120,9 +124,15 @@ indices=find(goodfiles).';
 ampmax=max(abs([depmin.'; depmax.';]));
 if(strcmpi(P.NORMSTYLE,'group')); ampmax(:)=max(ampmax(indices)); end
 
+% find time scaling
+xpad=0.005*abs(max(e)-min(b));
+
 % loop through each file
 hold on
 for i=indices
+    % header version
+    v=idx(i);
+    
     % get record timing
     if(strcmp(leven(i),'true')); time=(b(i)+(0:npts(i)-1)*delta(i)).';
     else time=data(i).ind; end
@@ -130,6 +140,91 @@ for i=indices
     % plot series
     plot(time,yfield(i)+data(i).dep/ampmax(i)*scale,...
         'color',colors(i,:),'linewidth',P.RECWIDTH);
+    
+    % skip markers
+    if(~P.MARKERS); continue; end
+    
+    % plot origin flag
+    hold on
+    if(o(i)~=h(v).undef.ntype)
+        plot([o(i) o(i)].',yfield(i)+scale*[-0.8 0.8].',...
+            'color',P.OCOLOR,'linewidth',P.MARKERWIDTH);
+        if(P.MARKERLABELS)
+            if(~strcmp(ko{i},h(v).undef.stype))
+                text(o(i)+xpad,yfield(i)+scale*0.6,ko{i},'color',P.OCOLOR, ...
+                    'fontname',P.MARKERFONT,'fontweight',P.MARKERFONTWEIGHT,...
+                    'fontsize',P.MARKERFONTSIZE,'color',P.OMARKERFONTCOLOR,...
+                    'verticalalignment','top','clipping','on');
+            else
+                text(o(i)+xpad,yfield(i)+scale*0.6,'o','color',P.OCOLOR, ...
+                    'fontname',P.MARKERFONT,'fontweight',P.MARKERFONTWEIGHT,...
+                    'fontsize',P.MARKERFONTSIZE,'color',P.OMARKERFONTCOLOR,...
+                    'verticalalignment','top','clipping','on');
+            end
+        end
+    end
+    
+    % plot arrival flag
+    if(a(i)~=h(v).undef.ntype)
+        plot([a(i) a(i)].',yfield(i)+scale*[-0.8 0.8].',...
+            'color',P.ACOLOR,'linewidth',P.MARKERWIDTH);
+        if(P.MARKERLABELS)
+            if(~strcmp(ka{i},h(v).undef.stype))
+                text(a(i)+xpad,yfield(i)+scale*0.6,ka{i},'color',P.ACOLOR, ...
+                    'fontname',P.MARKERFONT,'fontweight',P.MARKERFONTWEIGHT,...
+                    'fontsize',P.MARKERFONTSIZE,'color',P.AMARKERFONTCOLOR,...
+                    'verticalalignment','top','clipping','on');
+            else
+                text(a(i)+xpad,yfield(i)+scale*0.6,'a','color',P.ACOLOR, ...
+                    'fontname',P.MARKERFONT,'fontweight',P.MARKERFONTWEIGHT,...
+                    'fontsize',P.MARKERFONTSIZE,'color',P.AMARKERFONTCOLOR,...
+                    'verticalalignment','top','clipping','on');
+            end
+        end
+    end
+    
+    % plot finish flag
+    if(f(i)~=h(v).undef.ntype)
+        plot([f(i) f(i)].',yfield(i)+scale*[-0.8 0.8].',...
+            'color',P.FCOLOR,'linewidth',P.MARKERWIDTH);
+        if(P.MARKERLABELS)
+            if(~strcmp(kf{i},h(v).undef.stype))
+                text(f(i)+xpad,yfield(i)+scale*0.6,kf{i},'color',P.FCOLOR, ...
+                    'fontname',P.MARKERFONT,'fontweight',P.MARKERFONTWEIGHT,...
+                    'fontsize',P.MARKERFONTSIZE,'color',P.FMARKERFONTCOLOR,...
+                    'verticalalignment','top','clipping','on');
+            else
+                text(f(i)+xpad,yfield(i)+scale*0.6,'f','color',P.FCOLOR, ...
+                    'fontname',P.MARKERFONT,'fontweight',P.MARKERFONTWEIGHT,...
+                    'fontsize',P.MARKERFONTSIZE,'color',P.FMARKERFONTCOLOR,...
+                    'verticalalignment','top','clipping','on');
+            end
+        end
+    end
+    
+    % plot picks
+    for j=0:9
+        if(t(i,j+1)~=h(v).undef.ntype)
+            plot([t(i,j+1) t(i,j+1)].',...
+                yfield(i)+scale*[-0.8 0.8].',...
+                'color',P.TCOLOR,'linewidth',P.MARKERWIDTH)
+            if(P.MARKERLABELS)
+                if(~strcmp(kt{i,j+1},h(v).undef.stype))
+                    text(t(i,j+1)+xpad,...
+                        yfield(i)+scale*0.6,kt{i,j+1},'color',P.TCOLOR,...
+                        'fontname',P.MARKERFONT,'fontweight',P.MARKERFONTWEIGHT,...
+                        'fontsize',P.MARKERFONTSIZE,'color',P.TMARKERFONTCOLOR,...
+                        'verticalalignment','top','clipping','on');
+                else
+                    text(t(i,j+1)+xpad,...
+                        yfield(i)+scale*0.6,['t' num2str(j)],'color',P.TCOLOR,...
+                        'fontname',P.MARKERFONT,'fontweight',P.MARKERFONTWEIGHT,...
+                        'fontsize',P.MARKERFONTSIZE,'color',P.TMARKERFONTCOLOR,...
+                        'verticalalignment','top','clipping','on');
+                end
+            end
+        end
+    end
 end
 hold off
 

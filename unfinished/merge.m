@@ -132,7 +132,7 @@ function [data]=merge(data,varargin)
 %     DATA=MERGE(DATA,...,'ALLOCATE',SIZE,...) sets the temporary space
 %     initially allocated for merged records.  This is just a guess of the
 %     maximum number of merged records created for a merge group.  Note
-%     that the number roughly scales with sum(1:n) where n is the number of
+%     that the number scales with sum(1:n-1) where n is the number of
 %     records to be merged together.  The default value is 10.  Not really
 %     worth changing.
 %
@@ -174,7 +174,8 @@ function [data]=merge(data,varargin)
 %       - Do you have a large number of records to string together? If yes,
 %         consider breaking the set up into smaller groups first - MERGE is
 %         not set up (currently) to handle this in a cpu/memory efficient
-%         manner.  Seriously.
+%         manner.  Seriously.  It creates sum(1:(n-1)) records to string
+%         together n records, which is terrible.
 %
 %    Tested on: Matlab r2007b
 %
@@ -223,7 +224,7 @@ function [data]=merge(data,varargin)
 %        Dec.  6, 2008 - initial version
 %        Dec.  8, 2008 - more options
 %        Mar. 30, 2009 - major update: description added, tons of options, 
-%                        handles the 'QSPA case'
+%                        handles the 'South Pole Case'
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Mar. 30, 2009 at 02:00 GMT
@@ -258,9 +259,10 @@ set_checkheader_state(false);
 valid.OVERLAP={'sequential' 'truncate'};
 valid.GAP={'sequential' 'interpolate' 'fill'};
 valid.INTERPOLATE={'spline' 'pchip' 'linear' 'nearest'};
-valid.ADJUST={'longer' 'shorter' 'first' 'last'};
+valid.ADJUST={'longer' 'shorter' 'first' 'last' 'one' 'two'};
 valid.SHIFTUNITS={'seconds' 'intervals'};
 valid.TIMING={'utc' 'tai'};
+valid.ENGINE={'brute' 'fast'};
 
 % defaults
 option.TOLERANCE=0.02; % seconds, any positive number
@@ -281,6 +283,7 @@ option.MERGEGAPS=true; % on/off switch for merging gaps
 option.MERGEOVERLAPS=true; % on/off switch for merging overlaps
 option.VERBOSE=false; % turn on/off verbose messages
 option.DEBUG=false; % turn on/off debugging messages
+option.ENGINE='fast'; % brute/fast
 
 % get options from SEIZMO global
 global SEIZMO
@@ -323,7 +326,8 @@ for i=1:numel(fields)
                 error('seizmo:merge:badInput',...
                     '%s must be a scalar real number!',fields{i});
             end
-        case {'overlap' 'gap' 'interpolate' 'adjust' 'shiftunits' 'timing'}
+        case {'overlap' 'gap' 'interpolate' 'adjust'...
+                'shiftunits' 'timing' 'engine'}
             if(~ischar(value) || size(value,1)~=1 || ~any(strcmpi(value,...
                     valid.(fields{i}))))
                 error('seizmo:merge:badInput',...
@@ -476,6 +480,38 @@ for i=1:size(f,1)
              'is unsupported at the moment!']);
     end
     
+    
+    % ok we need a new engine to merge files
+    %
+    % How will it work?
+    % 1 - pick up next unmerged file (starts at 1)
+    % 2 - attempt to merge with other files
+    %   2a - if no merges, then flag file(s) and go to 1
+    %   2b - if merges, then take merged file and go to 2
+    %
+    % This should handle complicated cases and be quick.
+    
+    % loop until no files left unattempted
+    attempted=false(ng,1);
+    while(any(~attempted))
+        % get an unattempted file
+        j=find(~attempted,1,'first');
+        
+        % go merge with other files
+        % include ab,ae,npts,dt,history,fullname,dep*,delta,attempted
+        % output to temp space or throw error if no merge?
+        % - how to handle recursion?
+        % need a counter
+        try
+            gomerge(data(gidx(j)),...
+                data(gidx));
+        catch
+            % 
+        end
+    end
+    
+    
+    %{
     % loop until no new merges
     new=true;       % new records flag
     start=1;        % start index of last round's new records
@@ -613,8 +649,9 @@ for i=1:size(f,1)
         % starting index of new records
         start=oldng+1;
     end
+    %}
     
-    % debug
+    % detail message
     if(option.VERBOSE || option.DEBUG)
         disp(' ');
         disp(sprintf('Finished Merging Group: %d',i));
@@ -629,7 +666,7 @@ for i=1:size(f,1)
     ngood=sum(good);
     goodidx=1:ngood;
     
-    % debug
+    % detail message
     if(option.VERBOSE || option.DEBUG)
         disp('Deleting Duplicate(s) and/or Partial Piece(s):');
         disp(sprintf(' %d',gidx(bad)));
@@ -718,8 +755,12 @@ switch option.ADJUST
         keep=first;
     case 'longer'
         [keep,keep]=min(npts);
-    otherwise % shorter
+    case 'shorter'
         [keep,keep]=max(npts);
+    case 'one'
+        keep=2;
+    otherwise % two
+        keep=1;
 end
 kill=3-keep;
 
@@ -779,8 +820,12 @@ switch option.ADJUST
         keep=first;
     case 'longer'
         [keep,keep]=min(npts);
-    otherwise % shorter
+    case 'shorter'
         [keep,keep]=max(npts);
+    case 'one'
+        keep=2;
+    otherwise % two
+        keep=1;
 end
 kill=3-keep;
 
@@ -930,8 +975,12 @@ switch option.ADJUST
         keep=first;
     case 'longer'
         [keep,keep]=min(npts);
-    otherwise % shorter
+    case 'shorter'
         [keep,keep]=max(npts);
+    case 'one'
+        keep=2;
+    otherwise % two
+        keep=1;
 end
 kill=3-keep;
 

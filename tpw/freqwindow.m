@@ -148,7 +148,7 @@ for i=s(:)'
             data3=cut(data3,iwin(1),iwin(2));
             
             % make record section plot
-            f1=recsec(data3,...
+            f1=recsec(data3,'xlimits',iwin,...
                 'name',[dates(i).name '  Period band: ' band(j,:)]);
             
             % get choice from user
@@ -256,6 +256,10 @@ for i=s(:)'
             % window
             [data3,win,f1,f2]=userwindow(data2(good));
             
+            % insert window limits into header
+            data3=ch(data3,'a',win(1),'ka','winbgn',...
+                'f',win(2),'kf','winend');
+            
             % taper
             data3=taper(data3,taperwidth);
             
@@ -266,7 +270,7 @@ for i=s(:)'
             good(bad1 | bad2)=[];
             
             % plot tapered and trimmed set
-            f4=recsec(data3);
+            f4=recsec(data3,'xlimits',win);
             
             % undo time shift
             data3=timeshift(data3,z(good));
@@ -276,7 +280,7 @@ for i=s(:)'
             data3=cut(data3,padstart,padend,'fill',true);
             
             % plot padded data
-            f5=recsec(data3);
+            f5=recsec(data3,'xlimits',[padstart padend]);
             
             % get choice from user
             choice=menu('what to do?',...

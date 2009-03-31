@@ -1,13 +1,239 @@
 function [data]=merge(data,varargin)
 %MERGE    Merge SEIZMO records
 %
+%    Description: DATA=MERGE(DATA) will take all records in DATA and merge
+%     any pairs that are within +/-0.02 seconds of being continuous.  The
+%     output dataset will contain the merged records with all duplicate or
+%     partial records removed.  A 'pair' must have a number of fields that
+%     are identical to one another (see options REQUIREDCHARFIELDS and
+%     REQUIREDREALFIELDS for a list of those).  By default the records are
+%     merged end-to-end so no data is added or deleted -- just shifted to
+%     be continuous in time.  Basically this is for eliminating small
+%     'time tears'.
 %
+%     DATA=MERGE(DATA,...,'TOLERANCE',TOLERANCE,...) allows changing the
+%     magnitude of the time tears that can be merged.  Setting TOLERANCE to
+%     0.1 will therefore allow merging records with a gap or overlap within
+%     +/-0.1 seconds.  TOLERANCE can also be a two-element vector, so that
+%     gaps or overlaps around a certain magnitude can be targeted.  This is
+%     particularly suited for removing leap seconds that have been stupidly
+%     inserted into continuous data.
 %
+%     DATA=MERGE(DATA,...,'ADJUST',METHOD,...) allows changing which record
+%     out of a mergible pair is shifted/interpolated to time-align with the
+%     other.  There are four choices: 'FIRST' 'LAST' 'LONGER' & 'SHORTER'.
+%     The default is 'SHORTER' (which adjusts the shorter record to time-
+%     align with the longer).
+%
+%     DATA=MERGE(DATA,...,'OVERLAP',METHOD,...) allows changing how
+%     overlaps are merged.  There are two choices: 'SEQUENTIAL' and
+%     'TRUNCATE'.  The default is 'SEQUENTIAL', which basically just shifts
+%     the timing of one of the records (as chosen by the ADJUST option) so
+%     they no longer overlap and then combines just the two records.  This
+%     is useful for cases where the data is actually continuous but a time
+%     tear was inserted to deal with accrued time error.  The 'TRUNCATE'
+%     option allows for deleting overlapping data from one of the records
+%     (as chosen by the ADJUST option).  This is useful for merging records
+%     that do have some redundant data.
+%
+%     DATA=MERGE(DATA,...,'GAP',METHOD,...) allows changing how gaps are
+%     merged.  There are three choices: 'SEQUENTIAL' 'INTERPOLATE' and
+%     'FILL'.  The default is 'SEQUENTIAL', which basically just shifts
+%     the timing of one of the records (as chosen by the ADJUST option) so
+%     there no longer is a gap and then just combines the two records.  The
+%     'INTERPOLATE' option allows for interpolation of the data gap.  The
+%     style of interpolation can be set with the INTERPOLATE option (the
+%     default is 'spline').  This option is useful for small data gaps that
+%     are real (maybe from a small loss of data in a buffer) or artificial
+%     (useful for interpolating over a removed glitch).  The 'FILL' option
+%     will insert a filler value into the data gap (default is zeros).
+%     This is useful for combining data with large gaps.  The filler can be
+%     changed with the FILLER option.
+%
+%     DATA=MERGE(DATA,...,'SHIFTMAX',MAXVALUE,...) allows changing the cap
+%     on when the record-to-be-adjusted (see ADJUST option) is interpolated
+%     or shifted to time-align with the other record.  This option only
+%     applies to the overlaps and gaps that ARE NOT to be made sequential.
+%     This means that if you are doing a truncation, gap interpolation or
+%     gap filling the option is in effect.  A record in these cases can be
+%     shifted at most one half the sample interval.  By default the
+%     MAXVALUE is 0.01 intervals -- meaning the adjusted record is only
+%     shifted if the time change is very minor, otherwise the data will be
+%     interpolated at the aligned sample times.  A MAXVALUE of 0.5
+%     intervals will always shift the data to the new times without
+%     interpolating new values.  Really the choice depends on how sensitive
+%     you think your data is to time shifts and/or how much you trust the
+%     timing of the adjusted record.  If your trying to get relative
+%     arrival times of P recordings then you probably are worried about
+%     minor shifts in timing (which begs the question of why you are
+%     dealing with such crappy data in the first place).  The default is
+%     basically saying the data timing is pretty accurate and any new data
+%     from new time points should be interpolated unless the time shift is
+%     damn small and really would not change anything.
+%
+%     DATA=MERGE(DATA,...,'SHIFTUNITS',UNITS,...) allows changing the units
+%     of the SHIFTMAX option.  By default UNITS is 'INTERVALS'.  This can
+%     be changed to 'SECONDS' if that is more useful.
+%
+%     DATA=MERGE(DATA,...,'INTERPOLATE',METHOD,...) allows changing the
+%     interpolation method.  The choices are basically those allowed in
+%     Matlab's INTERP1 command: 'spline' 'pchip' 'linear' and 'nearest'.
+%     The default is 'spline', which is continuous in the 1st and 2nd
+%     derivatives.  Look out for artifacting if you use one of the other
+%     options and are going to differentiate the data later.
+%
+%     DATA=MERGE(DATA,...,'FILLER',FILLER,...) allows changing the filler
+%     when the GAP option is set to 'FILL'.  The default is zero.  Can be
+%     any real number.
+%
+%     DATA=MERGE(DATA,...,'MERGESEQUENTIAL',LOGICAL,...) allows turning the
+%     merging of sequential records (time tear of zero) on or off.  Will
+%     not turn off making gaps or overlaps sequential (use GAP or OVERLAP
+%     options above or see MERGEGAPS and MERGEOVERLAPS below).
+%
+%     DATA=MERGE(DATA,...,'MERGEOVERLAPS',LOGICAL,...) allows turning on/off
+%     the merging of overlapping data that is within the time tear
+%     tolerance.  Useful for just working on gaps.
+%
+%     DATA=MERGE(DATA,...,'MERGEGAPS',LOGICAL,...) allows turning on/off
+%     the merging of data with gaps that are within the time tear
+%     tolerance.  Useful for just working on overlaps.
+%
+%     DATA=MERGE(DATA,...,'USEABSOLUTETIMING',LOGICAL,...) allows turning
+%     on/off the usage of the reference time fields to figure out the
+%     timing of data.  This can be safely turned off if all the data share
+%     the same reference time.  Leave it on if your reference times vary
+%     with each record.
+%
+%     DATA=MERGE(DATA,...,'TIMING',STANDARD,...) allows changing the timing
+%     standard assumed for the reference time.  The choices are: 'UTC' and
+%     'TAI'.  The default is 'UTC', which has leap second awareness.  This
+%     is useful for dealing with data that have had UTC leap seconds
+%     properly inserted (basically MERGE won't even see the data overlap
+%     because UTC times are converted to a leapless standard).  Proper
+%     handling of leap seconds requires that the records' have their
+%     reference time at the actual UTC time.  If the recording equipment
+%     doesn't actually handle leap seconds then some time adjustment is/was
+%     needed for the data.  See LEAPSECONDS for more info.  The 'TAI'
+%     option is useful for data without any leap second concerns.
+%
+%     DATA=MERGE(DATA,...,'REQUIREDCHARFIELDS',FIELDS,...) allows changing
+%     the character fields required to be equal between records before
+%     checking if they can be merged.  The list is a cellstring array.  The
+%     default is: {'knetwk' 'kstnm' 'khole' 'kcmpnm'}.
+%
+%     DATA=MERGE(DATA,...,'REQUIREDREALFIELDS',FIELDS,...) allows changing
+%     the numerical fields required to be equal between records before
+%     checking if they can be merged.  The list must be a cellstring array.
+%     The default is: {'delta' 'cmpinc' 'cmpaz'}.  Note that LEVEN and NCMP
+%     are also required but cannot be removed from the list.  Removing
+%     DELTA from the list will allow creation of unevenly sampled records.
+%
+%     DATA=MERGE(DATA,...,'ALLOCATE',SIZE,...) sets the temporary space
+%     initially allocated for merged records.  This is just a guess of the
+%     maximum number of merged records created for a merge group.  Note
+%     that the number scales with sum(1:n-1) where n is the number of
+%     records to be merged together.  The default value is 10.  Not really
+%     worth changing.
+%
+%     DATA=MERGE(DATA,...,'VERBOSE',LOGICAL,...) turns on/off detailed
+%     messages about the merges.  Useful for seeing what is happening.
+%     Default is FALSE (off).
+%
+%     DATA=MERGE(DATA,...,'DEBUG',LOGICAL,...) turns on/off detailed
+%     messages and some debugging messages.  Not really useful for anyone
+%     but me.  Default is FALSE (off).
+%
+%    Notes:
+%     - MERGE is a rather complicated function 'under the hood' as it tries
+%       to allow for most of the sane ways I could come up with to combine
+%       records.  The defaults should be good for the most common cases but
+%       if you have a more complicated situation, MERGE (hopefully) can
+%       save you some time. Good luck!
+%     - Biggest caveat -- merging multiple records together can return with
+%       different solutions depending on the order of the records.  This is
+%       because each merge operation is separate from the next.  So which
+%       records gets truncated, shifted, interpolated, or left alone
+%       depends on the order in which the records are processed (starts at
+%       the lower indices) and the ADJUST option.  So you may want to
+%       consider preparing the data a bit before using merge if you are
+%       merging 3+ into 1+ records.  Sorting by start time would probably
+%       be enough.
+%     - Run FIXDELTA first to take care of small differences in sample
+%       rates caused by floating point inaccuracies!
+%     - If you find an error you don't understand or a bug let me know!
+%       This function hasn't been vetted as much as some of the others.
+%     - How to speed things up?
+%       - Are your reference times all the same? If yes, set
+%         USEABSOLUTETIMING to FALSE.
+%       - Do you care about leap seconds? If no, set TIMING to TAI.
+%       - Do you care about timing accuracy? If not too much, then consider
+%         setting SHIFTMAX to 0.5 (with SHIFTUNITS set to INTERVALS).  This
+%         allows nudging the timing of records by half an interval so that
+%         they time-align without interpolating the data.  BIG speed jump.
+%       - Do you have a large number of records to string together? If yes,
+%         consider breaking the set up into smaller groups first - MERGE is
+%         not set up (currently) to handle this in a cpu/memory efficient
+%         manner.  Seriously.  It creates sum(1:(n-1)) records to string
+%         together n records, which is terrible.
+%
+%    Tested on: Matlab r2007b
+%
+%    Header changes: B, E, NPTS, DEPMEN, DEPMIN, DEPMAX
+%                    (see CHECKHEADER for more)
+%
+%    Usage:    data=merge(data)
+%              data=merge(data,...,'tolerance',tolerance,...)
+%              data=merge(data,...,'adjust',method,...)
+%              data=merge(data,...,'overlap',method,...)
+%              data=merge(data,...,'gap',method,...)
+%              data=merge(data,...,'shiftmax',value,...)
+%              data=merge(data,...,'shiftunits',units,...)
+%              data=merge(data,...,'interpolate',method,...)
+%              data=merge(data,...,'filler',filler,...)
+%              data=merge(data,...,'mergesequential',logical,...)
+%              data=merge(data,...,'mergeoverlaps',logical,...)
+%              data=merge(data,...,'mergegaps',logical,...)
+%              data=merge(data,...,'useabsolutetiming',logical,...)
+%              data=merge(data,...,'timing',standard,...)
+%              data=merge(data,...,'requiredcharfields',fields,...)
+%              data=merge(data,...,'requiredrealfields',fields,...)
+%              data=merge(data,...,'allocate',size,...)
+%              data=merge(data,...,'verbose',logical,...)
+%              data=merge(data,...,'debug',logical,...)
+%
+%    Examples:
+%     Just friggin merge already!
+%      data=merge(data)
+%
+%     Merge roughly 1 second gaps/overlaps:
+%      data=merge(data,'tolerance',[0.99 1.01])
+%
+%     Merge just gaps:
+%      data=merge(data,'mergesequential',false,'mergeoverlaps',false)
+%
+%     Merge gaps by inserting NaNs:
+%      data=merge(data,'gap','fill','filler',nan)
+%
+%     Try it before you buy it:
+%      merge(data,'verbose',true);
+%
+%    See also: removeduplicates, cut
+
+%     Version History:
+%        Dec.  6, 2008 - initial version
+%        Dec.  8, 2008 - more options
+%        Mar. 30, 2009 - major update: description added, tons of options, 
+%                        handles the 'QSPA case'
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Mar. 30, 2009 at 02:00 GMT
 
 % todo:
 %   - uneven support - just toss together and sort after?
-%   - make description
-%   - add rest of gap/lap methods
+%   - a better way to handle multi-merges?
+%   - a way to output all temporary records
+%   - debug!!
 
 % check nargin
 if(mod(nargin-1,2))
@@ -29,126 +255,115 @@ data=checkheader(data);
 oldcheckheaderstate=get_checkheader_state;
 set_checkheader_state(false);
 
+% valid values for string options
+valid.OVERLAP={'sequential' 'truncate'};
+valid.GAP={'sequential' 'interpolate' 'fill'};
+valid.INTERPOLATE={'spline' 'pchip' 'linear' 'nearest'};
+valid.ADJUST={'longer' 'shorter' 'first' 'last'};
+valid.SHIFTUNITS={'seconds' 'intervals'};
+valid.TIMING={'utc' 'tai'};
+
 % defaults
-option.TOLERANCE=0.2;
-option.OVERLAP='sequential';
-option.GAP='sequential';
-option.FILLMETHOD='spline';
-option.SEQUENTIALMETHOD='longer';
-option.TRUNCATEMETHOD='longer';
-option.FILLER=0;
-option.TIMING='tai';
-option.USEABSOLUTETIMING=true;
+option.TOLERANCE=0.02; % seconds, any positive number
+option.OVERLAP='sequential'; % sequential/truncate
+option.GAP='sequential'; % sequential/interpolate/fill
+option.INTERPOLATE='spline'; % spline/pchip/linear/nearest
+option.ADJUST='shorter'; % longer/shorter/first/last
+option.SHIFTUNITS='intervals'; % seconds/intervals
+option.SHIFTMAX=0.01; % interval: 0-0.5 , seconds: 0+
+option.FILLER=0; % any number
+option.TIMING='utc'; % utc/tai
+option.USEABSOLUTETIMING=true; % true/false
 option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
 option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};
+option.ALLOCATE=10; % size of temp space
+option.MERGESEQUENTIAL=true; % on/off switch for merging sequential
+option.MERGEGAPS=true; % on/off switch for merging gaps
+option.MERGEOVERLAPS=true; % on/off switch for merging overlaps
+option.VERBOSE=false; % turn on/off verbose messages
+option.DEBUG=false; % turn on/off debugging messages
 
 % get options from SEIZMO global
 global SEIZMO
-fields=fieldnames(option);
-for i=fields
-    try
-        option.(i)=SEIZMO.MERGE.(i);
-    catch
-        % do nothing
+try
+    fields=fieldnames(SEIZMO.MERGE);
+    for i=1:numel(fields)
+        option.(fields{i})=SEIZMO.MERGE.(fields{i});
     end
+catch
 end
 
-% parse options
+% get options from command line
 for i=1:2:nargin-1
     if(~ischar(varargin{i}))
         error('seizmo:merge:badInput',...
             'Options must be specified as a strings!');
     end
-    if((isnumeric(varargin{i+1}) && ~isscalar(varargin{i+1}))...
-        || (ischar(varargin{i+1}) && size(varargin{i+1},1)~=1))
+    option.(upper(varargin{i}))=varargin{i+1};
+end
+
+% check options
+fields=fieldnames(option);
+for i=1:numel(fields)
+    % get value of field and do a basic check
+    value=option.(fields{i});
+    if((ischar(value) && size(value,1)~=1))
         error('seizmo:merge:badInput',...
-            'Bad value for option %s !',varargin{i});
+            'Bad value for option %s !',value);
     end
-    switch lower(varargin{i})
+    
+    % specific checks
+    switch lower(fields{i})
         case 'tolerance'
-            if(~isnumeric(varargin{i+1}))
+            if(~isnumeric(value))
                 error('seizmo:merge:badInput',...
-                    'TOLERANCE must be a scalar number!');
+                    'TOLERANCE must be a 1 or 2 element real array!');
             end
-            option.TOLERANCE=varargin{i+1};
-        case 'overlap'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
-                    {'sequential' 'truncate'})))
+        case {'shiftmax' 'filler'}
+            if(~isnumeric(value) || ~isscalar(value))
                 error('seizmo:merge:badInput',...
-                    ['OVERLAP option must be '...
-                    '''sequential'' or ''truncate''!']);
+                    '%s must be a scalar real number!',fields{i});
             end
-            option.OVERLAP=lower(varargin{i+1});
-        case 'gap'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
-                    {'sequential' 'fill'})))
+        case {'overlap' 'gap' 'interpolate' 'adjust' 'shiftunits' 'timing'}
+            if(~ischar(value) || size(value,1)~=1 || ~any(strcmpi(value,...
+                    valid.(fields{i}))))
                 error('seizmo:merge:badInput',...
-                    ['GAP option must be '...
-                    '''sequential'' or ''fill''!']);
+                    ['%s option must be one of the following:\n'...
+                    sprintf('%s ',valid.(fields{i}){:})],fields{i});
             end
-            option.GAP=lower(varargin{i+1});
-        case 'fillmethod'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
-                    {'value' 'nearest' 'linear' 'pchip' 'spline'})))
+        case {'requiredcharfields' 'requiredrealfields'}
+            if(~iscellstr(value))
                 error('seizmo:merge:badInput',...
-                    ['FILLMETHOD option must be ''value'' '...
-                    '''nearest'' ''linear'' ''pchip'' or ''spline''!']);
+                    '%s option must be a cellstr array of header fields!',...
+                    fields{i});
             end
-            option.FILLMETHOD=lower(varargin{i+1});
-        case 'sequentialmethod'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
-                    {'first' 'last' 'shorter' 'longer'})))
+        case 'allocate'
+            if(~isnumeric(value) || fix(value)~=value)
                 error('seizmo:merge:badInput',...
-                    ['SEQUENTIALMETHOD option must be '...
-                    '''first'' ''last'' ''shorter'' or ''longer''!']);
+                    'ALLOCATE must be a scalar integer!');
             end
-            option.SEQUENTIALMETHOD=lower(varargin{i+1});
-        case 'truncatemethod'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
-                    {'first' 'last' 'shorter' 'longer'})))
+        case {'useabsolutetiming' 'mergesequential' 'mergegaps'...
+                'mergeoverlaps' 'verbose' 'debug'}
+            if(~islogical(value) || ~isscalar(value))
                 error('seizmo:merge:badInput',...
-                    ['TRUNCATEMETHOD option must be '...
-                    '''first'' ''last'' ''shorter'' or ''longer''!']);
+                    '%s option must be a logical!',fields{i});
             end
-            option.TRUNCATEMETHOD=lower(varargin{i+1});
-        case 'filler'
-            if(~isnumeric(varargin{i+1}))
-                error('seizmo:merge:badInput',...
-                    'FILLER must be a scalar number!');
-            end
-            option.FILLER=varargin{i+1};
-        case 'timing'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
-                    {'tai' 'utc'})))
-                error('seizmo:merge:badInput',...
-                    ['TIMING option must be '...
-                    '''tai'' or ''utc''!']);
-            end
-            option.TIMING=lower(varargin{i+1});
-        case 'useabsolutetiming'
-            if(~islogical(varargin{i+1}) || ~isscalar(varargin{i+1}))
-                error('seizmo:merge:badInput',...
-                    'USEABSOLUTETIMING option must be a logical!');
-            end
-            option.USEABSOLUTETIMING=varargin{i+1};
-        case 'requiredcharfields'
-            if(~iscellstr(varargin{i+1}))
-                error('seizmo:merge:badInput',...
-                    ['REQUIREDCHARFIELDS option must be '...
-                    'a cellstr array of header fields!']);
-            end
-            option.REQUIREDCHARFIELDS=varargin{i+1};
-        case 'requiredrealfields'
-            if(~iscellstr(varargin{i+1}))
-                error('seizmo:merge:badInput',...
-                    ['REQUIREDREALFIELDS option must be '...
-                    'a cellstr array of header fields!']);
-            end
-            option.REQUIREDREALFIELDS=varargin{i+1};
         otherwise
             error('seizmo:merge:badInput',...
-                'Unknown option: %s !',varargin{i});
+                'Unknown option: %s !',fields{i});
     end
+end
+
+% handle tolerance
+if(numel(option.TOLERANCE)==1)
+    option.TOLERANCE=[-1 option.TOLERANCE];
+end
+option.TOLERANCE=sort(option.TOLERANCE);
+
+% get full filenames (for verbose or debugging output)
+nrecs=numel(data);
+if(option.VERBOSE || option.DEBUG)
+    fullname=strcat({data.path}.',{data.name}.');
 end
 
 % get header fields
@@ -158,9 +373,11 @@ if(option.USEABSOLUTETIMING)
         nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=getheader(data,...
         'b','e','delta','npts','depmin','depmax','depmen',...
         'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
+    dt=[nzyear nzjday nzhour nzmin nzsec nzmsec];
 else
     [b,e,delta,npts,depmin,depmax,depmen]=...
         getheader(data,'b','e','delta','npts','depmin','depmax','depmen');
+    dt=nan(nrecs,6);
 end
 szreal=size(option.REQUIREDREALFIELDS); reqreal=cell(szreal);
 szchar=size(option.REQUIREDCHARFIELDS); reqchar=cell(szchar);
@@ -180,7 +397,6 @@ if(any(~strcmp(iftype,'itime') & ~strcmp(iftype,'ixy')))
 end
 
 % get start and end of records in absolute time
-nrecs=numel(data);
 if(option.USEABSOLUTETIMING)
     if(strcmp(option.TIMING,'utc'))
         ab=gregorian2modserial(utc2tai(...
@@ -208,133 +424,266 @@ end
     strcat('',reqreal{:}),'_',num2str(leven),'_',num2str(ncmp))),...
     'rows');
 
+% add temp space to arrays
+alloc=(nrecs+1):(nrecs+option.ALLOCATE);
+data(nrecs+option.ALLOCATE).dep=[];
+ab(alloc,:)=nan; ae(alloc,:)=nan; dt(alloc,:)=nan;
+delta(alloc,1)=nan; npts(alloc,1)=nan; fullname(alloc,1)={''};
+depmen(alloc,1)=nan; depmin(alloc,1)=nan; depmax(alloc,1)=nan;
+
+% debug
+if(option.DEBUG)
+    disp('Group IDs:')
+    disp(f);
+    disp(' ');
+    disp('Lookup Table:')
+    disp(sprintf('%d - %d\n',[1:nrecs; h.']));
+end
+
 % loop through each group
-destroy=false(nrecs,1);
+destroy=false(nrecs+option.ALLOCATE,1);
 for i=1:size(f,1)
     % get group member indices
     gidx=find(h==i);
     ng=numel(gidx);
+    origng=ng;
+    history=num2cell(gidx).';
+    
+    % detail message
+    if(option.VERBOSE || option.DEBUG)
+        disp(' '); disp(' ');
+        disp(sprintf('Processing Group: %d',i));
+        disp(['Members: ' sprintf('%d ',gidx)]);
+        disp(sprintf('Number in Group: %d',ng));
+    end
     
     % no records to merge with
     if(ng==1); continue; end
     
-    % find duplicates
-    dups=(ab(gidx,ones(ng,1))>ab(gidx,ones(ng,1)).' ...
-        | (ab(gidx,ones(ng,1))==ab(gidx,ones(ng,1)).' ...
-        & ab(gidx,2*ones(ng,1))>=ab(gidx,2*ones(ng,1)).')) ...
-        & (ae(gidx,ones(ng,1))<ae(gidx,ones(ng,1)).' ...
-        | (ae(gidx,ones(ng,1))==ae(gidx,ones(ng,1)).' ...
-        & ae(gidx,2*ones(ng,1))<=ae(gidx,2*ones(ng,1)).'));
-    dupsu=(dups-dups.')>0;    % only delete if other not deleted
-    dupsu(tril(true(ng)))=0;  % upper triangle
-    dups(triu(true(ng)))=0;   % lower triangle
-    dups=sum(dups+dupsu,2)>0; % logical indices in group
+    % handle uneven / differing sample rates (NEEDS TO BE WRITTEN)
+    if(any(~leven(gidx)) || numel(unique(delta(gidx)))~=1)
+        % debug
+        %any(~leven(gidx))
+        %numel(unique(delta(gidx)))~=1
+        %die
+        
+        % what to do?
+        % - pass to mseq as if perfect
+        % - merge .ind
+        % - sort by .ind
+        % - if diff .ind==0 whine
+        error('seizmo:merge:unevenUnsupported',...
+            ['Merging Uneven Records or Records with differing DELTA\n'...
+             'is unsupported at the moment!']);
+    end
     
-    % remove duplicates
-    destroy(gidx(dups))=true;
-    gidx(dups)=[];
-    ng=numel(gidx);
-    
-    % merge
-    % looped so multiple merges are sane
-    % if a vectorized solution exists please let me know :D
-    for j=1:(ng-1)
-        if(destroy(gidx(j))); continue; end
-        for k=2:ng
+    % loop until no new merges
+    new=true;       % new records flag
+    start=1;        % start index of last round's new records
+    pos=nrecs;      % index of last record in data
+    while(new)
+        % reset new records for this round
+        new=false;
+        
+        % memory
+        oldng=ng;
+        
+        % flag duplicates based on time/history
+        destroy(gidx)=(flagexactdupes(ab(gidx,:),ae(gidx,:)) | ...
+            flagexacthistorydupes(history));
+        
+        % check for merge between every pair
+        for j=1:(ng-1)
+            % skip exact duplicates
             if(destroy(gidx(j))); continue; end
-            if(destroy(gidx(k))); continue; end
             
-            % handle uneven
-            if(~leven(j))
-                % what to do?
-                % - pass to mseq as if perfect
-                % - merge .ind
-                % - sort by .ind
-                % - if diff .ind==0 whine
-                continue;
-            end
-            
-            % only find mergible (sequential within tolerance)
-            diff12=delta(gidx(j))+(ae(gidx(j),1)-ab(gidx(k),1))*86400 ...
-                +(ae(gidx(j),2)-ab(gidx(k),2));
-            diff21=delta(gidx(j))+(ae(gidx(k),1)-ab(gidx(j),1))*86400 ...
-                +(ae(gidx(k),2)-ab(gidx(j),2));
-            if(diff12==0)
-                % perfectly mergible, 1st file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mseq(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff12,option,1);
-            elseif(diff21==0)
-                % perfectly mergible, 2nd file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mseq(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff21,option,2);
-            elseif(diff12>0 && diff12<option.TOLERANCE)
-                % mergible gap, 1st file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mgap(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff12,option,1);
-            elseif(diff21>0 && diff21<option.TOLERANCE)
-                % mergible gap, 2nd file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mgap(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff21,option,2);
-            elseif(diff12<0 && abs(diff12)<option.TOLERANCE)
-                % mergible overlap, 1st file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mlap(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff12,option,1);
-            elseif(diff21<0 && abs(diff21)<option.TOLERANCE)
-                % mergible overlap, 2nd file first
-                [data(gidx([j k])),destroy(gidx([j k])),...
-                    ab(gidx([j k]),:),ae(gidx([j k]),:),...
-                    npts(gidx([j k])),depmin(gidx([j k])),...
-                    depmax(gidx([j k])),depmen(gidx([j k]))]=...
-                    mlap(data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),npts(gidx([j k])),...
-                    depmin(gidx([j k])),depmax(gidx([j k])),...
-                    depmen(gidx([j k])),diff21,option,2);
-            elseif(diff12<0 && abs(diff12)<option.TOLERANCE)
+            % make sure we only merge with those that are new
+            for k=max([start j+1]):oldng
+                % skip exact duplicates
+                if(destroy(gidx(k))); continue; end
+                
+                % skip merge if history has any overlap
+                if(~isequal(numel(history{j})+numel(history{k}),...
+                        numel(unique([history{[j k]}]))))
+                    continue;
+                end
+                
+                % skip if will be a history dupe
+                if(ishistorydupe([history{[j k]}],history))
+                   continue;
+                end
+                
+                % get time tear (shift required to make sequential)
+                tdiff(1)=-delta(gidx(j)) ...
+                    +(ab(gidx(k),1)-ae(gidx(j),1))*86400 ...
+                    +(ab(gidx(k),2)-ae(gidx(j),2));
+                tdiff(2)=-delta(gidx(j)) ...
+                    +(ab(gidx(j),1)-ae(gidx(k),1))*86400 ...
+                    +(ab(gidx(j),2)-ae(gidx(k),2));
+                
+                % find minimum shift
+                [lead,lead]=min(abs(tdiff));
+                tdiff=tdiff(lead);
+                
+                % skip based on switches
+                if((~option.MERGESEQUENTIAL && tdiff==0) ...
+                        || (~option.MERGEGAPS && tdiff>0) ...
+                        || (~option.MERGEOVERLAPS && tdiff<0))
+                    continue;
+                end
+                
+                % check if within tolerance
+                if(abs(tdiff)>=option.TOLERANCE(1)...
+                        && abs(tdiff)<=option.TOLERANCE(2))
+                    % merge type
+                    if(~tdiff)
+                        mergefunc=@mseq;
+                        type='sequential';
+                    elseif(tdiff>0)
+                        mergefunc=@mgap;
+                        type='gap';
+                    else
+                        mergefunc=@mlap;
+                        type='overlap';
+                    end
+                else
+                    % data not mergible
+                    continue;
+                end
+                
+                % merge going to happen --> update arrays
+                new=true;                     % new records flag
+                pos=pos+1;                    % index of new record in data
+                ng=ng+1;                      % number of records in group
+                gidx(ng)=pos;                 % index of new record
+                delta(pos)=delta(j);          % delta for new record
+                
+                % detail message
+                if(option.VERBOSE || option.DEBUG)
+                    disp(sprintf(...
+                        ['\nMerging Record:\n'...
+                         ' %d - %s\n'...
+                         ' begin: Day: %d Second: %f\n'...
+                         ' end:   Day: %d Second: %f\n'...
+                         ' npts:  %d\n'...
+                         ' merge history: '...
+                         sprintf('%d ',[history{j}]) '\n'...
+                         'with\n'...
+                         ' %d - %s\n'...
+                         ' begin: Day: %d Second: %f\n'...
+                         ' end:   Day: %d Second: %f\n'...
+                         ' npts:  %d\n'...
+                         ' merge history: '...
+                         sprintf('%d ',[history{k}]) '\n'...
+                         'Time Tear:  %f seconds\n'...
+                         'Merge Type: %s'],...
+                        gidx(j),fullname{gidx(j)},ab(gidx(j),1),...
+                        ab(gidx(j),2),ae(gidx(j),1),ae(gidx(j),2),...
+                        npts(gidx(j)),...
+                        gidx(k),fullname{gidx(k)},ab(gidx(k),1),...
+                        ab(gidx(k),2),ae(gidx(k),1),ae(gidx(k),2),...
+                        npts(gidx(k)),...
+                        tdiff,type));
+                end
+                
+                % merge the records
+                [data(pos),ab(pos,:),ae(pos,:),npts(pos),...
+                    dt(pos,:),depmin(pos),depmax(pos),depmen(pos),...
+                    fullname(pos),history(ng)]=mergefunc(...
+                    data(gidx([j k])),ab(gidx([j k]),:),...
+                    ae(gidx([j k]),:),delta(pos),...
+                    npts(gidx([j k])),dt(gidx([j k]),:),...
+                    option,lead,gidx([j k]),fullname(gidx([j k])),...
+                    history([j k]),tdiff);
+                
+                % detail message
+                if(option.VERBOSE || option.DEBUG)
+                    disp(sprintf(...
+                        ['Output Record:\n'...
+                         ' %d - %s\n'...
+                         ' begin: Day: %d Second: %f\n'...
+                         ' end:   Day: %d Second: %f\n'...
+                         ' npts: %d\n'...
+                         ' merge history: ' sprintf('%d ',[history{ng}])],...
+                        pos,fullname{pos},ab(pos,1),ab(pos,2),...
+                        ae(pos,1),ae(pos,2),npts(pos)));
+                end
             end
         end
+        
+        % starting index of new records
+        start=oldng+1;
     end
+    
+    % debug
+    if(option.VERBOSE || option.DEBUG)
+        disp(' ');
+        disp(sprintf('Finished Merging Group: %d',i));
+        disp(['Members: ' sprintf('%d ',gidx)]);
+        disp(sprintf('Number in Group: %d',ng));
+    end
+    
+    % get longest records with unique time coverage
+    good=~(flagdupes(ab(gidx,:),ae(gidx,:))...
+        | flaghistorydupes(history));
+    bad=~good;
+    ngood=sum(good);
+    goodidx=1:ngood;
+    
+    % debug
+    if(option.VERBOSE || option.DEBUG)
+        disp('Deleting Duplicate(s) and/or Partial Piece(s):');
+        disp(sprintf(' %d',gidx(bad)));
+        disp('Changing Indices Of Good Record(s):');
+        disp(sprintf('%d ==> %d\n',[gidx(good).'; gidx(goodidx).']));
+        disp('-------------------------------');
+        disp(sprintf('%d kept / %d made / %d original',...
+            ngood,ng-origng,origng));
+    end
+    
+    % check if good exceeds nrecs
+    if(any(gidx(goodidx))>nrecs)
+        error('seizmo:merge:badCode',...
+            ['Hmmm...\n'...
+             'We ended up with more records than we started with...\n'...
+             'Please tell Garrett about this error if you get it.']);
+    end
+    
+    % get rid of any duplicates/partial pieces
+    data(gidx(goodidx))=data(gidx(good));
+    ab(gidx(goodidx),:)=ab(gidx(good),:);
+    ae(gidx(goodidx),:)=ae(gidx(good),:);
+    delta(gidx(goodidx))=delta(gidx(good));
+    npts(gidx(goodidx))=npts(gidx(good));
+    depmin(gidx(goodidx))=depmin(gidx(good));
+    depmax(gidx(goodidx))=depmax(gidx(good));
+    depmen(gidx(goodidx))=depmen(gidx(good));
+    dt(gidx(goodidx),:)=dt(gidx(good),:);
+    destroy(gidx(ngood+1:end))=true;
 end
+
+% trim off temp space
+data(nrecs+1:end)=[];
+destroy(nrecs+1:end)=[];
+ab(nrecs+1:end,:)=[];
+ae(nrecs+1:end,:)=[];
+dt(nrecs+1:end,:)=[];
+delta(nrecs+1:end)=[];
+npts(nrecs+1:end)=[];
+depmin(nrecs+1:end)=[];
+depmax(nrecs+1:end)=[];
+depmen(nrecs+1:end)=[];
 
 % get relative times from absolute
 if(option.USEABSOLUTETIMING)
     if(strcmp(option.TIMING,'utc'))
         az=gregorian2modserial(utc2tai(...
-            [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000]));
+            [dt(:,1:4) dt(:,5)+dt(:,6)/1000]));
         b=(ab(:,1)-az(:,1))*86400+(ab(:,2)-az(:,2));
         e=(ae(:,1)-az(:,1))*86400+(ae(:,2)-az(:,2));
     else
         az=gregorian2modserial(...
-            [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000]);
+            [dt(:,1:4) dt(:,5)+dt(:,6)/1000]);
         b=(ab(:,1)-az(:,1))*86400+(ab(:,2)-az(:,2));
         e=(ae(:,1)-az(:,1))*86400+(ae(:,2)-az(:,2));
     end
@@ -356,90 +705,940 @@ set_checkheader_state(oldcheckheaderstate);
 
 end
 
-function [data,destroy,ab,ae,npts,depmin,depmax,depmen]=...
-    mseq(data,ab,ae,npts,depmin,depmax,depmen,diff,option,first)
+
+function [data,ab,ae,npts,dt,depmin,depmax,depmen,name,history]=...
+    mseq(data,ab,ae,delta,npts,dt,option,first,idx,name,history,varargin)
 %MSEQ    Merge sequential records
 
-% who's header do we keep
-destroy=false(2,1);
+% who do we keep
 last=3-first;
-long=find(npts==max(npts),1,'first');
-short=3-long;
-switch option.SEQUENTIALMETHOD
+switch option.ADJUST
     case 'first'
-        keep=first;
-        kill=last;
-        ab(keep,:)=ab(first,:);
-        ae(keep,:)=ae(last,:)-[0 diff];
-    case 'last'
         keep=last;
-        kill=first;
-        ab(keep,:)=ab(first,:)+[0 diff];
-        ae(keep,:)=ae(last,:);
+    case 'last'
+        keep=first;
     case 'longer'
-        keep=long;
-        kill=short;
-        if(keep==first)
-            ab(keep,:)=ab(first,:);
-            ae(keep,:)=ae(last,:)-[0 diff];
-        else
-            ab(keep,:)=ab(first,:)+[0 diff];
-            ae(keep,:)=ae(last,:);
-        end
+        [keep,keep]=min(npts);
     otherwise % shorter
-        keep=short;
-        kill=long;
-        if(keep==first)
-            ab(keep,:)=ab(first,:);
-            ae(keep,:)=ae(last,:)-[0 diff];
-        else
-            ab(keep,:)=ab(first,:)+[0 diff];
-            ae(keep,:)=ae(last,:);
-        end
+        [keep,keep]=max(npts);
+end
+kill=3-keep;
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Adjusting: %s (%d - %s)',...
+        option.ADJUST,idx(kill),name{kill}));
+end
+
+% adjust
+if(keep==first)
+    ab=ab(first,:);
+    ae=fixmodserial(ae(first,:)+[0 npts(last)*delta]);
+else
+    ab=fixmodserial(ab(last,:)-[0 npts(first)*delta]);
+    ae=ae(last,:);
 end
 
 % merge
 data(keep).dep=[data(first).dep; data(last).dep];
+data(kill)=[];
+
+% update name,history,npts,dt
+name=name(keep);
+history={[history{[first last]}]};
+npts=sum(npts);
+dt=dt(keep,:);
 
 % update header fields
-depmin(keep)=min(data(keep).dep(:));
-depmax(keep)=max(data(keep).dep(:));
-depmen(keep)=mean(data(keep).dep(:));
-
-% update npts, destroy
-npts(keep)=sum(npts);
-destroy(kill)=true;
+depmin=min(data.dep(:));
+depmax=max(data.dep(:));
+depmen=mean(data.dep(:));
     
 end
 
 
-function [data,destroy,ab,ae,npts,depmin,depmax,depmen]=...
-    mgap(data,ab,ae,npts,depmin,depmax,depmen,diff,option,first)
+function [data,ab,ae,npts,dt,depmin,depmax,depmen,name,history]=...
+    mgap(data,ab,ae,delta,npts,dt,option,first,idx,name,history,diff)
 %MGAP    Merge gaps
 
+% how much do we need to shift the samples
+shift=cmod(diff,delta);
+
+% get max shift in seconds
+if(isequal(option.SHIFTUNITS,'intervals'))
+    maxshift=option.SHIFTMAX*delta;
+else
+    maxshift=option.SHIFTMAX;
+end
+
+% who do we keep
+last=3-first;
+switch option.ADJUST
+    case 'first'
+        keep=last;
+    case 'last'
+        keep=first;
+    case 'longer'
+        [keep,keep]=min(npts);
+    otherwise % shorter
+        [keep,keep]=max(npts);
+end
+kill=3-keep;
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Gap Method: %s',option.GAP));
+end
+
+% how to handle gap?
 switch option.GAP
     case 'sequential'
-        [data,destroy,ab,ae,npts,depmin,depmax,depmen]=...
-            mseq(data,ab,ae,npts,depmin,depmax,depmen,...
-            diff,option,first);
-    otherwise % fill
+        % just shift the option.ADJUST record to make sequential
+        [data,ab,ae,npts,dt,depmin,depmax,depmen,name,history]=...
+            mseq(data,ab,ae,delta,npts,dt,option,first,idx,name,history);
+    case 'interpolate'
+        % detail message
+        if(option.VERBOSE || option.DEBUG)
+            disp(sprintf(...
+                ['Interpolate Method: %s\n',...
+                 'Adjusting: %s (%d - %s)'...
+                 'Adjustment: %f seconds'],...
+                option.INTERPOLATE,option.ADJUST,...
+                idx(kill),name{kill},shift));
+        end
         
+        % update
+        dt=dt(keep,:);
+        name=name(keep);
+        history={[history{[first last]}]};
+        
+        % shift or interpolate option.ADJUST record to align?
+        if(abs(shift)<=maxshift)
+            % detail message
+            if(option.VERBOSE || option.DEBUG)
+                disp('Adjust Method: shift');
+            end
+            
+            % shift which?
+            if(kill==first)
+                % shift timing of first record and interpolate gap
+                [data,ab,ae,npts]=shiftfirstandinterpolategap(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            else
+                % shift timing of last record and interpolate gap
+                [data,ab,ae,npts]=shiftlastandinterpolategap(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            end
+        else
+            % detail message
+            if(option.VERBOSE || option.DEBUG)
+                disp('Adjust Method: interpolate');
+            end
+            
+            % interpolate which?
+            if(kill==first)
+                % interpolate first record and interpolate gap
+                [data,ab,ae,npts]=interpolatefirstandinterpolategap(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            else
+                % interpolate last record and interpolate gap
+                [data,ab,ae,npts]=interpolatelastandinterpolategap(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            end
+        end
+        % get dep*
+        depmin=min(data.dep(:));
+        depmax=max(data.dep(:));
+        depmen=mean(data.dep(:));
+    case 'fill'
+        % detail message
+        if(option.VERBOSE || option.DEBUG)
+            disp(sprintf(...
+                ['Filler: %d\n',...
+                 'Adjusting: %s (%d - %s)'...
+                 'Adjustment: %f seconds'],...
+                option.FILLER,option.ADJUST,idx(kill),name{kill},shift));
+        end
+        
+        % update
+        dt=dt(keep,:);
+        name=name(keep);
+        history={[history{[first last]}]};
+        
+        % shift or interpolate option.ADJUST record to align?
+        if(abs(shift)<=maxshift)
+            % detail message
+            if(option.VERBOSE || option.DEBUG)
+                disp('Adjust Method: shift');
+            end
+            
+            % shift which?
+            if(kill==first)
+                % shift timing of first record and fill gap
+                [data,ab,ae,npts]=shiftfirstandfillgap(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            else
+                % shift timing of last record and fill gap
+                [data,ab,ae,npts]=shiftlastandfillgap(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            end
+        else
+            % detail message
+            if(option.VERBOSE || option.DEBUG)
+                disp('Adjust Method: interpolate');
+            end
+            
+            % interpolate which?
+            if(kill==first)
+                % interpolate first record and fill gap
+                [data,ab,ae,npts]=interpolatefirstandfillgap(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            else
+                % interpolate last record and fill gap
+                [data,ab,ae,npts]=interpolatelastandfillgap(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            end
+        end
+        % get dep*
+        depmin=min(data.dep(:));
+        depmax=max(data.dep(:));
+        depmen=mean(data.dep(:));
 end
 
 end
 
 
-function [data,destroy,ab,ae,npts,depmin,depmax,depmen]=...
-    mlap(data,ab,ae,npts,depmin,depmax,depmen,diff,option,first)
+function [data,ab,ae,npts,dt,depmin,depmax,depmen,name,history]=...
+    mlap(data,ab,ae,delta,npts,dt,option,first,idx,name,history,diff)
 %MLAP    Merge overlaps
 
+% minimum time shift to align (always within +/-delta/2)
+shift=cmod(diff,delta);
+
+% get max shift allowed in seconds (otherwise interpolate)
+if(isequal(option.SHIFTUNITS,'intervals'))
+    maxshift=option.SHIFTMAX*delta;
+else
+    maxshift=option.SHIFTMAX;
+end
+
+% who do we keep
+last=3-first;
+switch option.ADJUST
+    case 'first'
+        keep=last;
+    case 'last'
+        keep=first;
+    case 'longer'
+        [keep,keep]=min(npts);
+    otherwise % shorter
+        [keep,keep]=max(npts);
+end
+kill=3-keep;
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Overlap Method: %s',option.OVERLAP));
+end
+
+% how to handle overlap?
 switch option.OVERLAP
     case 'sequential'
-        [data,destroy,ab,ae,npts,depmin,depmax,depmen]=...
-            mseq(data,ab,ae,npts,depmin,depmax,depmen,...
-            diff,option,first);
-    otherwise % truncate
+        % just shift the option.ADJUST record to make sequential
+        [data,ab,ae,npts,dt,depmin,depmax,depmen,name,history]=...
+            mseq(data,ab,ae,delta,npts,dt,option,first,idx,name,history);
+    case 'truncate'
+        % truncate overlap from option.ADJUST record
+        % detail message
+        if(option.VERBOSE || option.DEBUG)
+            disp(sprintf(...
+                ['Adjusting:  %s (%d - %s)\n'...
+                 'Adjustment: %f seconds'],...
+                option.ADJUST,idx(kill),name{kill},shift));
+        end
         
+        % update
+        dt=dt(keep,:);
+        name=name(keep);
+        history={[history{[first last]}]};
+        
+        % shift or interpolate option.ADJUST record to align?
+        if(abs(shift)<=maxshift)
+            % detail message
+            if(option.VERBOSE || option.DEBUG)
+                disp('Adjust Method: shift');
+            end
+            
+            % shift which?
+            if(kill==first)
+                % shift timing and truncate first record
+                [data,ab,ae,npts]=shiftandtruncatefirst(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            else
+                % shift timing and truncate last record
+                [data,ab,ae,npts]=shiftandtruncatelast(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            end
+        else
+            % detail message
+            if(option.VERBOSE || option.DEBUG)
+                disp('Adjust Method: interpolate');
+            end
+            
+            % interpolate which?
+            if(kill==first)
+                % interpolate and truncate first record
+                [data,ab,ae,npts]=interpolateandtruncatefirst(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            else
+                % interpolate and truncate last record
+                [data,ab,ae,npts]=interpolateandtruncatelast(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            end
+        end
+        % get dep*
+        depmin=min(data.dep(:));
+        depmax=max(data.dep(:));
+        depmen=mean(data.dep(:));
+end
+
+end
+
+
+function [time]=fixmodserial(time)
+% fixes modserial times to have seconds between 0 and 86400
+time=[time(:,1)+floor(time(:,2)./86400) mod(time(:,2),86400)];
+end
+
+
+function [data,ab,ae,npts]=shiftfirstandinterpolategap(...
+    data,ab,ae,delta,npts,shift,first,last,option)
+% shift first record and interpolate the data gap
+
+% we need to shift the samples of the first record to align with the last
+% then we interpolate samples in the gap between
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+%ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of first
+sab=ab(first,:)+[0 shift];
+sae=ae(first,:)+[0 shift];
+
+% figure out number of samples in gap
+nsamples=round((ab(last,2)-sae(2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% interpolate gap
+gaptimes=(sae(2)+delta):delta:(sae(2)+nsamples*delta);
+firsttimes=sab(2):delta:(sab(2)+(npts(first)-1)*delta);
+lasttimes=ab(last,2):delta:(ab(last,2)+(npts(last)-1)*delta);
+gapdata=interp1([firsttimes lasttimes],...
+    [data(first).dep; data(last).dep],...
+    gaptimes,option.INTERPOLATE,'extrap');
+gapdata=gapdata.';
+
+% combine data
+data(last).dep=[data(first).dep; gapdata; data(last).dep];
+data(first)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial(sab);
+ae=ae(last,:);
+npts=npts(1)+npts(2)+nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=shiftlastandinterpolategap(...
+    data,ab,ae,delta,npts,shift,first,last,option)
+% shift last record and interpolate the data gap
+
+% we need to shift the samples of the last record to align with the first
+% then we interpolate samples in the gap between
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of last
+sab=ab(last,:)-[0 shift];
+sae=ae(last,:)-[0 shift];
+
+% figure out number of samples in gap
+nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% interpolate gap
+gaptimes=(ae(first,2)+delta):delta:(ae(first,2)+nsamples*delta);
+firsttimes=ab(first,2):delta:(ab(first,2)+(npts(first)-1)*delta);
+lasttimes=sab(2):delta:(sab(2)+(npts(last)-1)*delta);
+gapdata=interp1([firsttimes lasttimes],...
+    [data(first).dep; data(last).dep],...
+    gaptimes,option.INTERPOLATE,'extrap');
+gapdata=gapdata.';
+
+% combine data
+data(first).dep=[data(first).dep; gapdata; data(last).dep];
+data(last)=[];
+
+% set new ab, ae, npts
+ab=ab(first,:);
+ae=fixmodserial(sae);
+npts=npts(1)+npts(2)+nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=interpolatefirstandinterpolategap(...
+    data,ab,ae,delta,npts,shift,first,last,option)
+% interpolate first record and gap
+
+% we need to interpolate the samples of the first record to align with the
+% last, then we interpolate the gap between
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+%ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of first
+sab=ab(first,:)+[0 shift];
+sae=ae(first,:)+[0 shift];
+
+% figure out number of samples in gap
+nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% interpolate first record and gap
+firsttimes=ab(first,2):delta:(ab(first,2)+(npts(first)-1)*delta);
+lasttimes=ab(last,2):delta:(ab(last,2)+(npts(last)-1)*delta);
+gaptimes=(sae(2)+delta):delta:(sae(2)+nsamples*delta);
+newtimes=sab(2):delta:(sab(2)+(npts(first)-1)*delta);
+newdata=interp1([firsttimes lasttimes],...
+    [data(first).dep; data(last).dep],...
+    [newtimes gaptimes],option.INTERPOLATE,'extrap');
+newdata=newdata.';
+
+% combine data
+data(last).dep=[newdata; data(last).dep];
+data(first)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial(sab);
+ae=ae(last,:);
+npts=npts(1)+npts(2)+nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=interpolatelastandinterpolategap(...
+    data,ab,ae,delta,npts,shift,first,last,option)
+% interpolate last record and gap
+
+% we need to interpolate the samples of the last record to align with the
+% first, then we interpolate the gap between
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of last
+sab=ab(last,:)-[0 shift];
+sae=ae(last,:)-[0 shift];
+
+% figure out number of samples in gap
+nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% interpolate last record and gap
+firsttimes=ab(first,2):delta:(ab(first,2)+(npts(first)-1)*delta);
+lasttimes=ab(last,2):delta:(ab(last,2)+(npts(last)-1)*delta);
+gaptimes=(ae(first,2)+delta):delta:(ae(first,2)+nsamples*delta);
+newtimes=sab(2):delta:(sab(2)+(npts(last)-1)*delta);
+newdata=interp1([firsttimes lasttimes],...
+    [data(first).dep; data(last).dep],...
+    [gaptimes newtimes],option.INTERPOLATE,'extrap');
+newdata=newdata.';
+
+% combine data
+data(first).dep=[data(first).dep; newdata];
+data(last)=[];
+
+% set new ab, ae, npts
+ab=ab(first,:);
+ae=fixmodserial(sae);
+npts=npts(1)+npts(2)+nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=...
+    shiftfirstandfillgap(data,ab,ae,delta,npts,shift,first,last,option)
+% shift first record and fill gap
+
+% we need to shift the samples of the first record to align with the last
+% then we fill the gap between
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+%ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of first
+sab=ab(first,:)+[0 shift];
+sae=ae(first,:)+[0 shift];
+
+% figure out number of samples in gap
+nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% combine data and add filler
+ncmp=size(data(first).dep,2);
+data(last).dep=[data(first).dep; ...
+    option.FILLER.*ones(nsamples,ncmp); data(last).dep];
+data(first)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial(sab);
+ae=ae(last,:);
+npts=npts(1)+npts(2)+nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=...
+    shiftlastandfillgap(data,ab,ae,delta,npts,shift,first,last,option)
+% shift last record and fill gap
+
+% we need to shift the samples of the last record to align with the first
+% then we fill the gap between
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of last
+sab=ab(last,:)-[0 shift];
+sae=ae(last,:)-[0 shift];
+
+% figure out number of samples in gap
+nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% combine data and add filler
+ncmp=size(data(first).dep,2);
+data(first).dep=[data(first).dep;...
+    option.FILLER.*ones(nsamples,ncmp); data(last).dep];
+data(last)=[];
+
+% set new ab, ae, npts
+ab=ab(first,:);
+ae=fixmodserial(sae);
+npts=npts(1)+npts(2)+nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=interpolatefirstandfillgap(...
+    data,ab,ae,delta,npts,shift,first,last,option)
+% interpolate first record and fill gap
+
+% we need to interpolate the samples of the first record to align with the
+% last, then we fill the gap
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+%ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of first
+sab=ab(first,:)+[0 shift];
+sae=ae(first,:)+[0 shift];
+
+% interpolate first record
+oldtimes=ab(first,2):delta:(ab(first,2)+(npts(first)-1)*delta);
+newtimes=sab(2):delta:(sab(2)+(npts(first)-1)*delta);
+data(first).dep=...
+    interp1(oldtimes,data(first).dep,newtimes,option.INTERPOLATE,'extrap');
+data(first).dep=data(first).dep.';
+
+% figure out number of samples in gap
+nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% combine data and fill gap
+ncmp=size(data(first).dep,2);
+data(last).dep=[data(first).dep;...
+    option.FILLER.*ones(nsamples,ncmp); data(last).dep];
+data(first)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial(sab);
+ae=ae(last,:);
+npts=npts(1)+npts(2)+nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=interpolatelastandfillgap(...
+    data,ab,ae,delta,npts,shift,first,last,option)
+% interpolate last record and fill gap
+
+% we need to interpolate the samples of the last record to align with the
+% first, then we fill the gap
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of last
+sab=ab(last,:)-[0 shift];
+sae=ae(last,:)-[0 shift];
+
+% interpolate last record
+oldtimes=ab(last,2):delta:(ab(last,2)+(npts(last)-1)*delta);
+newtimes=sab(2):delta:(sab(2)+(npts(last)-1)*delta);
+data(last).dep=...
+    interp1(oldtimes,data(last).dep,newtimes,option.INTERPOLATE,'extrap');
+data(last).dep=data(last).dep.';
+
+% figure out number of samples in gap
+nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% combine data and fill gap
+ncmp=size(data(first).dep,2);
+data(first).dep=[data(first).dep;...
+    option.FILLER.*ones(nsamples,ncmp); data(last).dep];
+data(last)=[];
+
+% set new ab, ae, npts
+ab=ab(first,:);
+ae=fixmodserial(sae);
+npts=npts(1)+npts(2)+nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=...
+    shiftandtruncatefirst(data,ab,ae,delta,npts,shift,first,last,option)
+% shift and truncate data of first record
+
+% we need to shift the samples of the first record to align with the last
+% then we drop the overlapping samples from the first
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+%ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of first
+sab=ab(first,:)+[0 shift];
+sae=ae(first,:)+[0 shift];
+
+% figure out number of samples dropped
+nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Truncated: %d',nsamples));
+end
+
+% combine data and drop overlap from first
+data(last).dep=[data(first).dep(1:end-nsamples,:); data(last).dep];
+data(first)=[];
+
+% set new ab,ae,npts,dt
+ab=fixmodserial(sab);
+ae=ae(last,:);
+npts=npts(1)+npts(2)-nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=...
+    shiftandtruncatelast(data,ab,ae,delta,npts,shift,first,last,option)
+% shift and truncate data of last record
+
+% we need to shift the samples of the last record to align with the first
+% then we drop the overlapping samples from the last 
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of last
+sab=ab(last,:)-[0 shift];
+sae=ae(last,:)-[0 shift];
+
+% figure out number of samples dropped
+nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Truncated: %d',nsamples));
+end
+
+% combine data and drop overlap from last
+data(first).dep=[data(first).dep; data(last).dep(nsamples+1:end,:)];
+data(last)=[];
+
+% set new ab, ae, npts
+ab=ab(first,:);
+ae=fixmodserial(sae);
+npts=npts(1)+npts(2)-nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=interpolateandtruncatefirst(...
+    data,ab,ae,delta,npts,shift,first,last,option)
+% interpolate and truncate data of first record
+
+% we need to interpolate the samples of the first record to align with the
+% last, then we drop the overlapping samples from the first
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+%ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of first
+sab=ab(first,:)+[0 shift];
+sae=ae(first,:)+[0 shift];
+
+% interpolate first record
+oldtimes=ab(first,2):delta:(ab(first,2)+(npts(first)-1)*delta);
+newtimes=sab(2):delta:(sab(2)+(npts(first)-1)*delta);
+data(first).dep=...
+    interp1(oldtimes,data(first).dep,newtimes,option.INTERPOLATE,'extrap');
+data(first).dep=data(first).dep.';
+
+% figure out number of samples dropped
+nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Truncated: %d',nsamples));
+end
+
+% combine data and drop overlap from first
+data(last).dep=[data(first).dep(1:end-nsamples,:); data(last).dep];
+data(first)=[];
+
+% set new ab,ae,npts,dt
+ab=fixmodserial(sab);
+ae=ae(last,:);
+npts=npts(1)+npts(2)-nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=interpolateandtruncatelast(...
+    data,ab,ae,delta,npts,shift,first,last,option)
+% interpolate and truncate data of last record
+
+% we need to interpolate the samples of the last record to align with the
+% first, then we drop the overlapping samples from the last
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of last
+sab=ab(last,:)-[0 shift];
+sae=ae(last,:)-[0 shift];
+
+% interpolate last record
+oldtimes=ab(last,2):delta:(ab(last,2)+(npts(last)-1)*delta);
+newtimes=sab(2):delta:(sab(2)+(npts(last)-1)*delta);
+data(last).dep=...
+    interp1(oldtimes,data(last).dep,newtimes,option.INTERPOLATE,'extrap');
+data(last).dep=data(last).dep.';
+
+% figure out number of samples dropped
+nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Truncated: %d',nsamples));
+end
+
+% combine data and drop overlap from last
+data(first).dep=[data(first).dep; data(last).dep(nsamples+1:end,:)];
+data(last)=[];
+
+% set new ab, ae, npts
+ab=ab(first,:);
+ae=fixmodserial(sae);
+npts=npts(1)+npts(2)-nsamples;
+
+end
+
+
+function [flags]=flagexactdupes(b,e)
+% flags records that start/end at the same time as another as duplicates
+
+% check inputs
+if(~isequal(size(b),size(e)))
+    error('seizmo:merge:badInputs',['Array sizes do not match:' ...
+        'B: %s\nE: %s'],size(b),size(e))
+end
+
+% number of inputs
+nrecs=size(b,1);
+
+% assure times are valid
+b=fixmodserial(b);
+e=fixmodserial(e);
+
+% find exact duplicates (note datetime must be valid)
+dups=(b(:,ones(nrecs,1))==b(:,ones(nrecs,1)).' ...
+    & b(:,2*ones(nrecs,1))==b(:,2*ones(nrecs,1)).') ...
+    & (e(:,ones(nrecs,1))==e(:,ones(nrecs,1)).' ...
+    & e(:,2*ones(nrecs,1))==e(:,2*ones(nrecs,1)).');
+dupsu=(dups-dups.')>0;      % only delete if other not deleted
+dupsu(tril(true(nrecs)))=0; % upper triangle
+dups(triu(true(nrecs)))=0;  % lower triangle
+flags=sum(dups+dupsu,2)>0;  % logical indices in group
+        
+end
+
+
+function [flags]=flagdupes(b,e)
+% flags records that are exact duplicates or are partial pieces
+
+% check inputs
+if(~isequal(size(b),size(e)))
+    error('seizmo:merge:badInputs',['Array sizes do not match:' ...
+        'B: %s\nE: %s'],size(b),size(e))
+end
+
+% number of inputs
+nrecs=size(b,1);
+
+% assure times are valid
+b=fixmodserial(b);
+e=fixmodserial(e);
+
+% find duplicate data (note datetime must be valid)
+dups=(b(:,ones(nrecs,1))>b(:,ones(nrecs,1)).' ...
+    | (b(:,ones(nrecs,1))==b(:,ones(nrecs,1)).' ...
+    & b(:,2*ones(nrecs,1))>=b(:,2*ones(nrecs,1)).')) ...
+    & (e(:,ones(nrecs,1))<e(:,ones(nrecs,1)).' ...
+    | (e(:,ones(nrecs,1))==e(:,ones(nrecs,1)).' ...
+    & e(:,2*ones(nrecs,1))<=e(:,2*ones(nrecs,1)).'));
+dupsu=(dups-dups.')>0;      % only delete if other not deleted
+dupsu(tril(true(nrecs)))=0; % upper trianrecsle
+dups(triu(true(nrecs)))=0;  % lower triangle
+flags=sum(dups+dupsu,2)>0;  % logical indices in group
+
+end
+
+
+function [logical]=ishistorydupe(history1,history2)
+% check history for repeats
+
+% number of records
+nrecs=numel(history2);
+
+% find history dupes
+history1=sort(history1);
+logical=false;
+for i=1:nrecs
+    if(isequal(history1,sort(history2{i})))
+        logical=true;
+        return;
+    end
+end
+
+end
+
+
+function [flags]=flagexacthistorydupes(history)
+% flags records that are the construct of the same records
+
+% number of records
+nrecs=numel(history);
+
+% sort history
+for i=1:nrecs
+    history{i}=sort(history{i});
+end
+
+% find history dupes
+flags=false(nrecs,1);
+for i=1:nrecs-1
+    if(flags(i)); continue; end
+    for j=i+1:nrecs
+        if(flags(j)); continue; end
+        if(isequal(history{i},history{j})); flags(j)=true; end
+    end
+end
+
+end
+
+
+function [flags]=flaghistorydupes(history)
+% flags records that are the subset construct
+
+% number of records
+nrecs=numel(history);
+
+% find history dupes
+flags=false(nrecs,1);
+for i=1:nrecs-1
+    if(flags(i)); continue; end
+    for j=i+1:nrecs
+        if(flags(i)); break; end
+        if(flags(j)); continue; end
+        if(isempty(setdiff(history{j},history{i})))
+            flags(j)=true;
+        elseif(isempty(setdiff(history{i},history{j})))
+            flags(i)=true;
+        end
+    end
 end
 
 end

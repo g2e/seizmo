@@ -58,9 +58,9 @@ while(1)
     elseif (i==1)
         h=p2(data,'p2norm',true,'normmax',1);
     elseif (i==2)
-        h=p0(data);
+        h=p0(data,'xlimits',[0 1]);
     else
-        h=recsec(data);
+        h=recsec(data,'xlimits',[0 1]);
     end
     
     % make taper bars
@@ -159,9 +159,9 @@ while(1)
     if (i==1)
         h2=p2(data2,'p2norm',true,'normmax',1);
     elseif (i==2)
-        h2=p0(data2);
+        h2=p0(data2,'xlimits',[0 1]);
     else
-        h2=recsec(data2);
+        h2=recsec(data2,'xlimits',[0 1]);
     end
     
     % TRY AGAIN?

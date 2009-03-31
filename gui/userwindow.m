@@ -15,7 +15,10 @@ if(nargin<2 || isempty(fill)); fill=0; end          % no zero fill
 % push all records to start at zero
 if(push) 
     [b,e]=gh(data,'b','e'); 
-    data=ch(data,'b',0,'e',e-b); 
+    data=ch(data,'b',0,'e',e-b);
+    iwin=[0 max(e-b)];
+else
+    iwin=[min(gh(data,'b')) max(gh(data,'e'))];
 end
 
 % repeat until satisfied
@@ -58,9 +61,9 @@ while(1)
     elseif (i==1)
         h=p2(data,'p2norm',true,'normmax',1);
     elseif (i==2)
-        h=p0(data);
+        h=p0(data,'xlimits',iwin);
     else
-        h=recsec(data);
+        h=recsec(data,'xlimits',iwin);
     end
     
     % make window bars
@@ -136,9 +139,9 @@ while(1)
     if (i==1)
         h2=p2(data2,'p2norm',true,'normmax',1);
     elseif (i==2)
-        h2=p0(data2);
+        h2=p0(data2,'xlimits',win);
     else
-        h2=recsec(data2);
+        h2=recsec(data2,'xlimits',win);
     end
     
     % TRY AGAIN?
