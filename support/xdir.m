@@ -72,6 +72,7 @@ function [varargout]=xdir(str,depth)
 %      for ...
 %        regexp(filename,regexptranslate('wildcard',string),'match')
 %      end
+%   - but how to allow for '?' in a filename too?
 
 % use the current directory if nothing is specified
 if(nargin==0); str='*'; end
@@ -179,7 +180,7 @@ else
   end
 end
 
-% make sure all entries have a path (use './' or '.\' if there is none)
+% to make all entries have a path (use './' or '.\' if there is none)
 %[D(strcmp({D.path},'')).path]=deal(['.' filesep]);
 
 % display listing if no output variables are specified

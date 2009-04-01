@@ -185,6 +185,13 @@ if(numel(option.CMPLIST)==1); option.CMPLIST(1:nrecs,1)=option.CMPLIST; end
 if(numel(option.FILLER)==1); option.FILLER(1:nrecs,1)=option.FILLER; end
 if(numel(option.FILL)==1); option.FILL(1:nrecs,1)=option.FILL; end
 
+% assure column vectors
+option.OFFSET1=option.OFFSET1(:);
+option.OFFSET2=option.OFFSET2(:);
+option.CMPLIST=option.CMPLIST(:);
+option.FILLER=option.FILLER(:);
+option.FILL=option.FILL(:);
+
 % cut parameter checks
 if(numel(option.OFFSET1)~=nrecs || numel(option.OFFSET2)~=nrecs)
     error('seizmo:cutparameters:badInputSize',...

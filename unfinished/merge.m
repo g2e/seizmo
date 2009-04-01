@@ -21,9 +21,10 @@ function [data]=merge(data,varargin)
 %
 %     DATA=MERGE(DATA,...,'ADJUST',METHOD,...) allows changing which record
 %     out of a mergible pair is shifted/interpolated to time-align with the
-%     other.  There are four choices: 'FIRST' 'LAST' 'LONGER' & 'SHORTER'.
-%     The default is 'SHORTER' (which adjusts the shorter record to time-
-%     align with the longer).
+%     other.  There are six choices: 'FIRST' 'LAST' 'LONGER' 'SHORTER'
+%     'ONE' & 'TWO.  The default is 'SHORTER' (which adjusts the shorter
+%     record to time-align with the longer).  Method ONE adjust the record
+%     with a lower index, while TWO adjust the higher.
 %
 %     DATA=MERGE(DATA,...,'OVERLAP',METHOD,...) allows changing how
 %     overlaps are merged.  There are two choices: 'SEQUENTIAL' and
@@ -131,10 +132,8 @@ function [data]=merge(data,varargin)
 %
 %     DATA=MERGE(DATA,...,'ALLOCATE',SIZE,...) sets the temporary space
 %     initially allocated for merged records.  This is just a guess of the
-%     maximum number of merged records created for a merge group.  Note
-%     that the number scales with sum(1:n-1) where n is the number of
-%     records to be merged together.  The default value is 10.  Not really
-%     worth changing.
+%     maximum number of merged records created for a merge group.  The
+%     default value is 10.  Not really worth changing.
 %
 %     DATA=MERGE(DATA,...,'VERBOSE',LOGICAL,...) turns on/off detailed
 %     messages about the merges.  Useful for seeing what is happening.
@@ -171,11 +170,6 @@ function [data]=merge(data,varargin)
 %         setting SHIFTMAX to 0.5 (with SHIFTUNITS set to INTERVALS).  This
 %         allows nudging the timing of records by half an interval so that
 %         they time-align without interpolating the data.  BIG speed jump.
-%       - Do you have a large number of records to string together? If yes,
-%         consider breaking the set up into smaller groups first - MERGE is
-%         not set up (currently) to handle this in a cpu/memory efficient
-%         manner.  Seriously.  It creates sum(1:(n-1)) records to string
-%         together n records, which is terrible.
 %
 %    Tested on: Matlab r2007b
 %
@@ -225,14 +219,13 @@ function [data]=merge(data,varargin)
 %        Dec.  8, 2008 - more options
 %        Mar. 30, 2009 - major update: description added, tons of options, 
 %                        handles the 'South Pole Case'
+%        Apr.  1, 2009 - major update again: speedy multi-merge
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 30, 2009 at 02:00 GMT
+%     Last Updated Apr.  1, 2009 at 08:20 GMT
 
 % todo:
 %   - uneven support - just toss together and sort after?
-%   - a better way to handle multi-merges?
-%   - a way to output all temporary records
 %   - debug!!
 
 % check nargin
@@ -262,7 +255,6 @@ valid.INTERPOLATE={'spline' 'pchip' 'linear' 'nearest'};
 valid.ADJUST={'longer' 'shorter' 'first' 'last' 'one' 'two'};
 valid.SHIFTUNITS={'seconds' 'intervals'};
 valid.TIMING={'utc' 'tai'};
-valid.ENGINE={'brute' 'fast'};
 
 % defaults
 option.TOLERANCE=0.02; % seconds, any positive number
@@ -283,7 +275,6 @@ option.MERGEGAPS=true; % on/off switch for merging gaps
 option.MERGEOVERLAPS=true; % on/off switch for merging overlaps
 option.VERBOSE=false; % turn on/off verbose messages
 option.DEBUG=false; % turn on/off debugging messages
-option.ENGINE='fast'; % brute/fast
 
 % get options from SEIZMO global
 global SEIZMO
@@ -326,8 +317,7 @@ for i=1:numel(fields)
                 error('seizmo:merge:badInput',...
                     '%s must be a scalar real number!',fields{i});
             end
-        case {'overlap' 'gap' 'interpolate' 'adjust'...
-                'shiftunits' 'timing' 'engine'}
+        case {'overlap' 'gap' 'interpolate' 'adjust' 'shiftunits' 'timing'}
             if(~ischar(value) || size(value,1)~=1 || ~any(strcmpi(value,...
                     valid.(fields{i}))))
                 error('seizmo:merge:badInput',...
@@ -449,8 +439,9 @@ for i=1:size(f,1)
     % get group member indices
     gidx=find(h==i);
     ng=numel(gidx);
+    
+    % backup for later
     origng=ng;
-    history=num2cell(gidx).';
     
     % detail message
     if(option.VERBOSE || option.DEBUG)
@@ -459,6 +450,22 @@ for i=1:size(f,1)
         disp(['Members: ' sprintf('%d ',gidx)]);
         disp(sprintf('Number in Group: %d',ng));
     end
+    
+    % find any exact duplicates
+    bad=flagexactdupes(ab(gidx,:),ae(gidx,:));
+    
+    % detail message
+    if(option.VERBOSE || option.DEBUG)
+        disp(' ');
+        disp('Deleting Duplicate(s):');
+        disp(sprintf(' %d',gidx(bad)));
+        disp(sprintf('Number Still in Group: %d',ng-sum(bad)));
+    end
+    
+    % get rid of any exact duplicates
+    destroy(gidx(bad))=true;
+    ng=ng-sum(bad);
+    gidx(bad)=[];
     
     % no records to merge with
     if(ng==1); continue; end
@@ -480,222 +487,80 @@ for i=1:size(f,1)
              'is unsupported at the moment!']);
     end
     
+    % all the same delta so share
+    gdelta=delta(gidx(1));
     
-    % ok we need a new engine to merge files
-    %
-    % How will it work?
-    % 1 - pick up next unmerged file (starts at 1)
-    % 2 - attempt to merge with other files
-    %   2a - if no merges, then flag file(s) and go to 1
-    %   2b - if merges, then take merged file and go to 2
-    %
-    % This should handle complicated cases and be quick.
+    % separate arrays for adding new info
+    history=num2cell(gidx).';
+    newgidx=gidx;
+    newng=ng;
     
     % loop until no files left unattempted
-    attempted=false(ng,1);
+    attempted=false(ng,1); newidx=nrecs+1;
     while(any(~attempted))
         % get an unattempted file
         j=find(~attempted,1,'first');
         
-        % go merge with other files
-        % include ab,ae,npts,dt,history,fullname,dep*,delta,attempted
-        % output to temp space or throw error if no merge?
-        % - how to handle recursion?
-        % need a counter
-        try
-            gomerge(data(gidx(j)),...
-                data(gidx));
-        catch
-            % 
+        % go merge with other records
+        [data(newidx),ab(newidx,:),ae(newidx,:),npts(newidx),...
+            dt(newidx,:),fullname(newidx),newhistory]=gomerge(...
+            data(gidx(j)),ab(gidx(j),:),ae(gidx(j),:),npts(gidx(j)),...
+            dt(gidx(j),:),fullname(gidx(j)),history(j),newidx,...
+            data(gidx),ab(gidx,:),ae(gidx,:),npts(gidx),dt(gidx,:),...
+            fullname(gidx),ng,history(1:ng),gidx,gdelta,option);
+        
+        % check merge history
+        if(isequal(newhistory,history(j)))
+            attempted(j)=true;
+        else
+            newng=newng+1;
+            attempted(ismember(gidx,[newhistory{:}]))=true;
+            newgidx(newng)=newidx;
+            delta(newidx)=gdelta;
+            history(newng)=newhistory;
+            depmin(newidx)=min(data(newidx).dep(:));
+            depmax(newidx)=max(data(newidx).dep(:));
+            depmen(newidx)=mean(data(newidx).dep(:));
+            newidx=newidx+1;
         end
     end
-    
-    
-    %{
-    % loop until no new merges
-    new=true;       % new records flag
-    start=1;        % start index of last round's new records
-    pos=nrecs;      % index of last record in data
-    while(new)
-        % reset new records for this round
-        new=false;
-        
-        % memory
-        oldng=ng;
-        
-        % flag duplicates based on time/history
-        destroy(gidx)=(flagexactdupes(ab(gidx,:),ae(gidx,:)) | ...
-            flagexacthistorydupes(history));
-        
-        % check for merge between every pair
-        for j=1:(ng-1)
-            % skip exact duplicates
-            if(destroy(gidx(j))); continue; end
-            
-            % make sure we only merge with those that are new
-            for k=max([start j+1]):oldng
-                % skip exact duplicates
-                if(destroy(gidx(k))); continue; end
-                
-                % skip merge if history has any overlap
-                if(~isequal(numel(history{j})+numel(history{k}),...
-                        numel(unique([history{[j k]}]))))
-                    continue;
-                end
-                
-                % skip if will be a history dupe
-                if(ishistorydupe([history{[j k]}],history))
-                   continue;
-                end
-                
-                % get time tear (shift required to make sequential)
-                tdiff(1)=-delta(gidx(j)) ...
-                    +(ab(gidx(k),1)-ae(gidx(j),1))*86400 ...
-                    +(ab(gidx(k),2)-ae(gidx(j),2));
-                tdiff(2)=-delta(gidx(j)) ...
-                    +(ab(gidx(j),1)-ae(gidx(k),1))*86400 ...
-                    +(ab(gidx(j),2)-ae(gidx(k),2));
-                
-                % find minimum shift
-                [lead,lead]=min(abs(tdiff));
-                tdiff=tdiff(lead);
-                
-                % skip based on switches
-                if((~option.MERGESEQUENTIAL && tdiff==0) ...
-                        || (~option.MERGEGAPS && tdiff>0) ...
-                        || (~option.MERGEOVERLAPS && tdiff<0))
-                    continue;
-                end
-                
-                % check if within tolerance
-                if(abs(tdiff)>=option.TOLERANCE(1)...
-                        && abs(tdiff)<=option.TOLERANCE(2))
-                    % merge type
-                    if(~tdiff)
-                        mergefunc=@mseq;
-                        type='sequential';
-                    elseif(tdiff>0)
-                        mergefunc=@mgap;
-                        type='gap';
-                    else
-                        mergefunc=@mlap;
-                        type='overlap';
-                    end
-                else
-                    % data not mergible
-                    continue;
-                end
-                
-                % merge going to happen --> update arrays
-                new=true;                     % new records flag
-                pos=pos+1;                    % index of new record in data
-                ng=ng+1;                      % number of records in group
-                gidx(ng)=pos;                 % index of new record
-                delta(pos)=delta(j);          % delta for new record
-                
-                % detail message
-                if(option.VERBOSE || option.DEBUG)
-                    disp(sprintf(...
-                        ['\nMerging Record:\n'...
-                         ' %d - %s\n'...
-                         ' begin: Day: %d Second: %f\n'...
-                         ' end:   Day: %d Second: %f\n'...
-                         ' npts:  %d\n'...
-                         ' merge history: '...
-                         sprintf('%d ',[history{j}]) '\n'...
-                         'with\n'...
-                         ' %d - %s\n'...
-                         ' begin: Day: %d Second: %f\n'...
-                         ' end:   Day: %d Second: %f\n'...
-                         ' npts:  %d\n'...
-                         ' merge history: '...
-                         sprintf('%d ',[history{k}]) '\n'...
-                         'Time Tear:  %f seconds\n'...
-                         'Merge Type: %s'],...
-                        gidx(j),fullname{gidx(j)},ab(gidx(j),1),...
-                        ab(gidx(j),2),ae(gidx(j),1),ae(gidx(j),2),...
-                        npts(gidx(j)),...
-                        gidx(k),fullname{gidx(k)},ab(gidx(k),1),...
-                        ab(gidx(k),2),ae(gidx(k),1),ae(gidx(k),2),...
-                        npts(gidx(k)),...
-                        tdiff,type));
-                end
-                
-                % merge the records
-                [data(pos),ab(pos,:),ae(pos,:),npts(pos),...
-                    dt(pos,:),depmin(pos),depmax(pos),depmen(pos),...
-                    fullname(pos),history(ng)]=mergefunc(...
-                    data(gidx([j k])),ab(gidx([j k]),:),...
-                    ae(gidx([j k]),:),delta(pos),...
-                    npts(gidx([j k])),dt(gidx([j k]),:),...
-                    option,lead,gidx([j k]),fullname(gidx([j k])),...
-                    history([j k]),tdiff);
-                
-                % detail message
-                if(option.VERBOSE || option.DEBUG)
-                    disp(sprintf(...
-                        ['Output Record:\n'...
-                         ' %d - %s\n'...
-                         ' begin: Day: %d Second: %f\n'...
-                         ' end:   Day: %d Second: %f\n'...
-                         ' npts: %d\n'...
-                         ' merge history: ' sprintf('%d ',[history{ng}])],...
-                        pos,fullname{pos},ab(pos,1),ab(pos,2),...
-                        ae(pos,1),ae(pos,2),npts(pos)));
-                end
-            end
-        end
-        
-        % starting index of new records
-        start=oldng+1;
-    end
-    %}
     
     % detail message
     if(option.VERBOSE || option.DEBUG)
         disp(' ');
         disp(sprintf('Finished Merging Group: %d',i));
-        disp(['Members: ' sprintf('%d ',gidx)]);
-        disp(sprintf('Number in Group: %d',ng));
+        disp(['Members: ' sprintf('%d ',newgidx)]);
+        disp(sprintf('Number in Group: %d',newng));
     end
     
     % get longest records with unique time coverage
-    good=~(flagdupes(ab(gidx,:),ae(gidx,:))...
+    good=~(flagdupes(ab(newgidx,:),ae(newgidx,:))...
         | flaghistorydupes(history));
-    bad=~good;
     ngood=sum(good);
     goodidx=1:ngood;
     
     % detail message
     if(option.VERBOSE || option.DEBUG)
         disp('Deleting Duplicate(s) and/or Partial Piece(s):');
-        disp(sprintf(' %d',gidx(bad)));
+        disp(sprintf(' %d',newgidx(~good)));
         disp('Changing Indices Of Good Record(s):');
-        disp(sprintf('%d ==> %d\n',[gidx(good).'; gidx(goodidx).']));
+        disp(sprintf('%d ==> %d\n',[newgidx(good).'; newgidx(goodidx).']));
         disp('-------------------------------');
         disp(sprintf('%d kept / %d made / %d original',...
-            ngood,ng-origng,origng));
-    end
-    
-    % check if good exceeds nrecs
-    if(any(gidx(goodidx))>nrecs)
-        error('seizmo:merge:badCode',...
-            ['Hmmm...\n'...
-             'We ended up with more records than we started with...\n'...
-             'Please tell Garrett about this error if you get it.']);
+            ngood,newng-ng,origng));
     end
     
     % get rid of any duplicates/partial pieces
-    data(gidx(goodidx))=data(gidx(good));
-    ab(gidx(goodidx),:)=ab(gidx(good),:);
-    ae(gidx(goodidx),:)=ae(gidx(good),:);
-    delta(gidx(goodidx))=delta(gidx(good));
-    npts(gidx(goodidx))=npts(gidx(good));
-    depmin(gidx(goodidx))=depmin(gidx(good));
-    depmax(gidx(goodidx))=depmax(gidx(good));
-    depmen(gidx(goodidx))=depmen(gidx(good));
-    dt(gidx(goodidx),:)=dt(gidx(good),:);
-    destroy(gidx(ngood+1:end))=true;
+    data(newgidx(goodidx))=data(newgidx(good));
+    ab(newgidx(goodidx),:)=ab(newgidx(good),:);
+    ae(newgidx(goodidx),:)=ae(newgidx(good),:);
+    delta(newgidx(goodidx))=delta(newgidx(good));
+    npts(newgidx(goodidx))=npts(newgidx(good));
+    depmin(newgidx(goodidx))=depmin(newgidx(good));
+    depmax(newgidx(goodidx))=depmax(newgidx(good));
+    depmen(newgidx(goodidx))=depmen(newgidx(good));
+    dt(newgidx(goodidx),:)=dt(newgidx(good),:);
+    destroy(newgidx(ngood+1:end))=true;
 end
 
 % trim off temp space
@@ -742,8 +607,111 @@ set_checkheader_state(oldcheckheaderstate);
 end
 
 
-function [data,ab,ae,npts,dt,depmin,depmax,depmen,name,history]=...
-    mseq(data,ab,ae,delta,npts,dt,option,first,idx,name,history,varargin)
+function [mdata,mab,mae,mnpts,mdt,mname,mhistory]=gomerge(...
+    mdata,mab,mae,mnpts,mdt,mname,mhistory,mabsidx,...
+    data,ab,ae,npts,dt,name,nrecs,history,absidx,delta,option)
+
+% if record is unmerged then identify as the original
+if(isscalar([mhistory{:}])); idx=[mhistory{:}];
+else idx=mabsidx;
+end
+
+for i=1:nrecs
+    % skip records already merged in
+    if(any(absidx(i)==[mhistory{:}])); continue; end
+    
+    % time tear (the shift required to make sequential)
+    tdiff(1)=-delta+(ab(i,1)-mae(1))*86400+(ab(i,2)-mae(2));
+    tdiff(2)=-delta+(mab(1)-ae(i,1))*86400+(mab(2)-ae(i,2));
+    
+    % use minimum shift (so we don't try to merge in strange ways)
+    [lead,lead]=min(abs(tdiff));
+    tdiff=tdiff(lead);
+    
+    % skip based on switches
+    if((~option.MERGESEQUENTIAL && tdiff==0) ...
+            || (~option.MERGEGAPS && tdiff>0) ...
+            || (~option.MERGEOVERLAPS && tdiff<0))
+        continue;
+    end
+    
+    % check if within tolerance
+    if(abs(tdiff)>=option.TOLERANCE(1)...
+            && abs(tdiff)<=option.TOLERANCE(2))
+        % merge type
+        if(~tdiff)
+            mergefunc=@mseq;
+            type='SEQUENTIAL';
+        elseif(tdiff>0)
+            mergefunc=@mgap;
+            type='GAP';
+        else
+            mergefunc=@mlap;
+            type='OVERLAP';
+        end
+    else
+        % data not mergible
+        continue;
+    end
+    
+    % detail message
+    if(option.VERBOSE || option.DEBUG)
+        disp(sprintf(...
+            ['\nMerging Record:\n'...
+             ' %d - %s\n'...
+             ' begin: Day: %d Second: %f\n'...
+             ' end:   Day: %d Second: %f\n'...
+             ' npts:  %d\n'...
+             ' merge history: '...
+             sprintf('%d ',[mhistory{:}]) '\n'...
+             'with\n'...
+             ' %d - %s\n'...
+             ' begin: Day: %d Second: %f\n'...
+             ' end:   Day: %d Second: %f\n'...
+             ' npts:  %d\n'...
+             ' merge history: '...
+             sprintf('%d ',absidx(i)) '\n'...
+             'Time Tear:  %f seconds\n'...
+             'Merge Type: %s'],...
+            idx,mname{:},mab(1),mab(2),mae(1),mae(2),mnpts,...
+            absidx(i),name{i},ab(i,1),ab(i,2),ae(i,1),ae(i,2),npts(i),...
+            tdiff,type));
+    end
+    
+    % merge the records
+    [mdata,mab,mae,mnpts,mdt,mname]=mergefunc(...
+        [mdata; data(i)],[mab; ab(i,:)],[mae; ae(i,:)],delta,...
+        [mnpts npts(i)],[mdt; dt(i,:)],option,lead,[idx absidx(i)],...
+        [mname name(i)],tdiff);
+    
+    % update merge history
+    if(lead==1); mhistory={[mhistory{:} history{i}]};
+    else mhistory={[history{i} mhistory{:}]};
+    end
+    
+    % detail message
+    if(option.VERBOSE || option.DEBUG)
+        disp(sprintf(...
+            ['Output Record:\n'...
+             ' %d - %s\n'...
+             ' begin: Day: %d Second: %f\n'...
+             ' end:   Day: %d Second: %f\n'...
+             ' npts: %d\n'...
+             ' merge history: ' sprintf('%d ',[mhistory{:}])],...
+            mabsidx,mname{:},mab(1),mab(2),mae(1),mae(2),mnpts));
+    end
+    
+    % now recurse
+    [mdata,mab,mae,mnpts,mdt,mname,mhistory]=gomerge(...
+        mdata,mab,mae,mnpts,mdt,mname,mhistory,mabsidx,...
+        data,ab,ae,npts,dt,name,nrecs,history,absidx,delta,option);
+end
+
+end
+
+
+function [data,ab,ae,npts,dt,name]=mseq(...
+    data,ab,ae,delta,npts,dt,option,first,idx,name,varargin)
 %MSEQ    Merge sequential records
 
 % who do we keep
@@ -783,22 +751,16 @@ end
 data(keep).dep=[data(first).dep; data(last).dep];
 data(kill)=[];
 
-% update name,history,npts,dt
+% update name, npts, dt
 name=name(keep);
-history={[history{[first last]}]};
 npts=sum(npts);
 dt=dt(keep,:);
-
-% update header fields
-depmin=min(data.dep(:));
-depmax=max(data.dep(:));
-depmen=mean(data.dep(:));
     
 end
 
 
-function [data,ab,ae,npts,dt,depmin,depmax,depmen,name,history]=...
-    mgap(data,ab,ae,delta,npts,dt,option,first,idx,name,history,diff)
+function [data,ab,ae,npts,dt,name]=...
+    mgap(data,ab,ae,delta,npts,dt,option,first,idx,name,diff)
 %MGAP    Merge gaps
 
 % how much do we need to shift the samples
@@ -838,8 +800,8 @@ end
 switch option.GAP
     case 'sequential'
         % just shift the option.ADJUST record to make sequential
-        [data,ab,ae,npts,dt,depmin,depmax,depmen,name,history]=...
-            mseq(data,ab,ae,delta,npts,dt,option,first,idx,name,history);
+        [data,ab,ae,npts,dt,name]=mseq(...
+            data,ab,ae,delta,npts,dt,option,first,idx,name);
     case 'interpolate'
         % detail message
         if(option.VERBOSE || option.DEBUG)
@@ -854,7 +816,6 @@ switch option.GAP
         % update
         dt=dt(keep,:);
         name=name(keep);
-        history={[history{[first last]}]};
         
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
@@ -890,10 +851,6 @@ switch option.GAP
                     data,ab,ae,delta,npts,shift,first,last,option);
             end
         end
-        % get dep*
-        depmin=min(data.dep(:));
-        depmax=max(data.dep(:));
-        depmen=mean(data.dep(:));
     case 'fill'
         % detail message
         if(option.VERBOSE || option.DEBUG)
@@ -907,7 +864,6 @@ switch option.GAP
         % update
         dt=dt(keep,:);
         name=name(keep);
-        history={[history{[first last]}]};
         
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
@@ -943,17 +899,13 @@ switch option.GAP
                     data,ab,ae,delta,npts,shift,first,last,option);
             end
         end
-        % get dep*
-        depmin=min(data.dep(:));
-        depmax=max(data.dep(:));
-        depmen=mean(data.dep(:));
 end
 
 end
 
 
-function [data,ab,ae,npts,dt,depmin,depmax,depmen,name,history]=...
-    mlap(data,ab,ae,delta,npts,dt,option,first,idx,name,history,diff)
+function [data,ab,ae,npts,dt,name]=mlap(...
+    data,ab,ae,delta,npts,dt,option,first,idx,name,diff)
 %MLAP    Merge overlaps
 
 % minimum time shift to align (always within +/-delta/2)
@@ -993,8 +945,8 @@ end
 switch option.OVERLAP
     case 'sequential'
         % just shift the option.ADJUST record to make sequential
-        [data,ab,ae,npts,dt,depmin,depmax,depmen,name,history]=...
-            mseq(data,ab,ae,delta,npts,dt,option,first,idx,name,history);
+        [data,ab,ae,npts,dt,name]=mseq(...
+            data,ab,ae,delta,npts,dt,option,first,idx,name);
     case 'truncate'
         % truncate overlap from option.ADJUST record
         % detail message
@@ -1008,7 +960,6 @@ switch option.OVERLAP
         % update
         dt=dt(keep,:);
         name=name(keep);
-        history={[history{[first last]}]};
         
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
@@ -1044,10 +995,6 @@ switch option.OVERLAP
                     data,ab,ae,delta,npts,shift,first,last,option);
             end
         end
-        % get dep*
-        depmin=min(data.dep(:));
-        depmax=max(data.dep(:));
-        depmen=mean(data.dep(:));
 end
 
 end
@@ -1621,49 +1568,6 @@ dupsu=(dups-dups.')>0;      % only delete if other not deleted
 dupsu(tril(true(nrecs)))=0; % upper trianrecsle
 dups(triu(true(nrecs)))=0;  % lower triangle
 flags=sum(dups+dupsu,2)>0;  % logical indices in group
-
-end
-
-
-function [logical]=ishistorydupe(history1,history2)
-% check history for repeats
-
-% number of records
-nrecs=numel(history2);
-
-% find history dupes
-history1=sort(history1);
-logical=false;
-for i=1:nrecs
-    if(isequal(history1,sort(history2{i})))
-        logical=true;
-        return;
-    end
-end
-
-end
-
-
-function [flags]=flagexacthistorydupes(history)
-% flags records that are the construct of the same records
-
-% number of records
-nrecs=numel(history);
-
-% sort history
-for i=1:nrecs
-    history{i}=sort(history{i});
-end
-
-% find history dupes
-flags=false(nrecs,1);
-for i=1:nrecs-1
-    if(flags(i)); continue; end
-    for j=i+1:nrecs
-        if(flags(j)); continue; end
-        if(isequal(history{i},history{j})); flags(j)=true; end
-    end
-end
 
 end
 

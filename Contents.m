@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r65 (r2007b) 13-Mar-2009
+% Version 0.6.0-r68 (r2007b) 01-Apr-2009
 %
 % Alphabetical list of functions
 %ADD                 - Add a constant to SEIZMO records

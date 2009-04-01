@@ -7,9 +7,10 @@ function [data,removed]=removeduplicates(data,varargin)
 %     X vs Y records.  Uses the reference time fields (NZ*) to allow
 %     finding duplicates that do not share the same reference position.
 %
-%     REMOVEDUPLICATES(...,'TIMING','UTC') takes UTC leapseconds into
-%     account.  The default option is 'TAI', which assumes records use a
-%     timing standard with no leapseconds.
+%     REMOVEDUPLICATES(...,'TIMING','TAI') uses the TAI timing standard,
+%     which does not have any leap seconds.  The default is 'UTC', which
+%     supports all leap seconds returned in function LEAPSECONDS.  Try
+%     looking at data around a leap second to see how this works.
 %
 %     REMOVEDUPLICATES(...,'USEABSOLUTETIMING',FALSE) will not account for
 %     differences in the reference position of records (it just blindly
@@ -59,9 +60,10 @@ function [data,removed]=removeduplicates(data,varargin)
 %     Version History:
 %        Dec.  6, 2008 - initial version
 %        Dec.  8, 2008 - more options
+%        Apr.  1, 2009 - changed TIMING default to UTC to match MERGE
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  8, 2008 at 21:20 GMT
+%     Last Updated Apr.  1, 2009 at 08:40 GMT
 
 % todo:
 
@@ -86,7 +88,7 @@ oldcheckheaderstate=get_checkheader_state;
 set_checkheader_state(false);
 
 % defaults
-option.TIMING='tai';
+option.TIMING='utc';
 option.USEABSOLUTETIMING=true;
 option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
 option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};

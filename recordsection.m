@@ -123,6 +123,7 @@ indices=find(goodfiles).';
 % find amplitude scaling
 ampmax=max(abs([depmin.'; depmax.';]));
 if(strcmpi(P.NORMSTYLE,'group')); ampmax(:)=max(ampmax(indices)); end
+ampmax(ampmax==0)=1; % avoid NaNs
 
 % find time scaling
 xpad=0.005*abs(max(e)-min(b));
