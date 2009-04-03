@@ -1,4 +1,4 @@
-function [data,selected,h]=selectrecords(data,option,plottype,varargin)
+function [data,selected,h]=selectrecords(data,option,plottype,selected,varargin)
 %SELECTRECORDS    Select or delete SEIZMO data records graphically
 %
 %    Description:  SELECTRECORDS(DATA,OPTION,PLOTTYPE) allows a user to select
@@ -25,150 +25,103 @@ function [data,selected,h]=selectrecords(data,option,plottype,varargin)
 % check data structure
 error(seizmocheck(data,'dep'))
 
+% number of records
+nrecs=numel(data);
+
 % defaults
+if(nargin<4); selected=false(nrecs,1); end
 if(nargin<3); plottype='p0'; end
 if(nargin<2); option='keep'; end
 
+% default coloring
+if(strcmpi(option,'delete'))
+    color=[0.3 0 0];
+elseif(strcmpi(option,'keep'))
+    color=[0 0.3 0];
+else
+    error('seizmo:selectrecs:badInput','Unknown option: %s',option)
+end
+
 % plottype selection
-nrecs=numel(data);
 button=0;
-selected=false(nrecs,1);
-bgcolors=zeros(nrecs,3);
 handles=ones(nrecs,1)*-1;
 if(isequal(plottype,'p1'))
     % plot type 1
     [h,sh]=plot1(data,varargin{:});
     
-    % are we deleting or keeping
-    if(isequal(option,'keep'))
-        while(button~=2)
-            % bring plot to focus
-            figure(h);
+    % color preselected
+    bgcolors=cell2mat(get(sh,'color'));
+    set(sh(selected),'color',color);
+    
+    while(button~=2)
+        % get mouse button pressed
+        [x,y,button]=ginput(1);
+        if(button==1)
+            % grab axis handle
+            handle=gca;
             
-            % get mouse button pressed
-            [x,y,button]=ginput(1);
-            if(button==1)
-                % grab axis handle and background color of clicked subplot
-                handle=gca;
-                bgcolor=get(handle,'color');
-                
-                % figure out which record
-                clicked=find(handle==sh,1);
-                
-                % remove from list if in list and change color
-                if(selected(clicked))
-                    selected(clicked)=false;
-                    set(handle,'color',bgcolors(clicked,:));
-                % otherwise add to list and change color
-                else
-                    selected(clicked)=true;
-                    bgcolors(clicked,:)=bgcolor;
-                    set(handle,'color',[0 0.3 0]);
-                end
+            % figure out which record
+            clicked=find(handle==sh,1);
+            
+            % remove from list if in list and change color
+            if(selected(clicked))
+                selected(clicked)=false;
+                set(handle,'color',bgcolors(clicked,:));
+            % otherwise add to list and change color
+            else
+                selected(clicked)=true;
+                set(handle,'color',color);
             end
         end
-        data=data(selected);
-    elseif(isequal(option,'delete'))
-        while(button~=2)
-            % bring plot to focus
-            figure(h);
-            
-            % get mouse button pressed
-            [x,y,button]=ginput(1);
-            if(button==1)
-                % grab axis handle and background color of clicked subplot
-                handle=gca;
-                bgcolor=get(handle,'color');
-                
-                % figure out which record
-                clicked=find(handle==sh,1);
-                
-                % remove from list if in list and change color
-                if(selected(clicked))
-                    selected(clicked)=false;
-                    set(handle,'color',bgcolors(clicked,:));
-                % otherwise add to list and change color
-                else
-                    selected(clicked)=true;
-                    bgcolors(clicked,:)=bgcolor;
-                    set(handle,'color',[0.3 0 0]);
-                end
-            end
-        end
-        data(selected)=[];
-    else
-        error('seizmo:selectrecs:badInput','Unknown option: %s',option)
     end
 elseif(isequal(plottype,'p0'))
-    % plot type 3
+    % plot type 0
     [h]=plot0(data,varargin{:});
+    handle=gca;
     
-    % are we deleting or keeping
-    if(isequal(option,'keep'))
-        while(button~=2)
-            % bring plot to focus
-            figure(h);
-            handle=gca;
+    % color preselected
+    xlims=xlim(handle);
+    clicked=find(selected); nclicked=numel(clicked);
+    for i=1:nclicked
+        handles(clicked(i))=patch([xlims(ones(1,2)) xlims(2*ones(1,2))],...
+            [clicked(i)+0.5 clicked(i)-0.5 clicked(i)-0.5 clicked(i)+0.5],...
+            color);
+    end
+    alpha(handles(selected),0.99) % alpha doesn't work right
+    
+    while(button~=2)
+        % get mouse button pressed
+        [x,y,button]=ginput(1);
+        if(button==1 && isequal(handle,gca))
+            % figure out which record from y position
+            clicked=round(y);
             
-            % get mouse button pressed
-            [x,y,button]=ginput(1);
-            if(button==1 && isequal(handle,gca))
-                % figure out which record from y position
-                clicked=round(y);
-                
-                % check range
-                if(clicked<1 || clicked>nrecs); continue; end
-                
-                % remove from list if in list and remove patch
-                if(selected(clicked))
-                    selected(clicked)=false;
-                    delete(handles(clicked));
-                % otherwise add to list and add patch
-                else
-                    selected(clicked)=true;
-                    xlims=xlim(handle);
-                    handles(clicked)=patch([xlims(1) xlims(1) xlims(2) xlims(2)],...
-                        [clicked+0.5 clicked-0.5 clicked-0.5 clicked+0.5],[0 0.3 0]);
-                    alpha(handles(clicked),0.99)
-                end
+            % check range
+            if(clicked<1 || clicked>nrecs); continue; end
+            
+            % remove from list if in list and remove patch
+            if(selected(clicked))
+                selected(clicked)=false;
+                delete(handles(clicked));
+            % otherwise add to list and add patch
+            else
+                selected(clicked)=true;
+                xlims=xlim(handle);
+                handles(clicked)=patch([xlims(1) xlims(1) xlims(2) xlims(2)],...
+                    [clicked+0.5 clicked-0.5 clicked-0.5 clicked+0.5],color);
+                alpha(handles(clicked),0.99) % alpha doesn't work right
             end
         end
-        data=data(selected);
-    elseif(isequal(option,'delete'))
-        while(button~=2)
-            % bring plot to focus
-            figure(h);
-            handle=gca;
-            
-            % get mouse button pressed
-            [x,y,button]=ginput(1);
-            if(button==1 && isequal(handle,gca))
-                % figure out which record from y position
-                clicked=round(y);
-                
-                % check range
-                if(clicked<1 || clicked>nrecs); continue; end
-                
-                % remove from list if in list and remove patch
-                if(selected(clicked))
-                    selected(clicked)=false;
-                    delete(handles(clicked));
-                % otherwise add to list and add patch
-                else
-                    selected(clicked)=true;
-                    xlims=xlim(handle);
-                    handles(clicked)=patch([xlims(1) xlims(1) xlims(2) xlims(2)],...
-                        [clicked+0.5 clicked-0.5 clicked-0.5 clicked+0.5],[0.3 0 0]);
-                    alpha(handles(clicked),0.99);
-                end
-            end
-        end
-        data(selected)=[];
-    else
-        error('seizmo:selectrecs:badInput','Unknown option: %s',option)
     end
 else
     error('seizmo:selectrecs:badInput','Unsupported plottype: %s',plottype)
+end
+
+% handle data
+if(strcmpi(option,'keep'))
+    data=data(selected);
+else
+    data(selected)=[];
 end
 
 end
