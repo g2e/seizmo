@@ -6,6 +6,7 @@ function []=writeseizmo(data)
 %     where to write the records.
 %
 %    Notes:
+%     - Requires field LOVROK to be set to TRUE for overwriting.
 %
 %    Tested on: Matlab r2007b
 %
@@ -48,9 +49,10 @@ function []=writeseizmo(data)
 %                        SEISCHK & CHKHDR
 %        Nov. 17, 2008 - update for new name schema (now WRITESEIZMO)
 %        Dec. 13, 2008 - added mkdir call to make sure path exists
+%        Apr.  7, 2009 - LOVROK support, better messages/checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 13, 2008 at 03:30 GMT
+%     Last Updated Apr.  7, 2009 at 07:35 GMT
 
 % todo:
 
@@ -81,14 +83,15 @@ est_bytes=seizmosize(data);
 ncmp=getncmp(data);
 npts=getheader(data,'npts');
 iftype=getenumdesc(data,'iftype');
-leven=getlgc(data,'leven');
+[leven,lovrok]=getlgc(data,'leven','lovrok');
 
 % loop over records
 for i=1:length(data)
     % skip writing if dataless
     if(~data(i).hasdata)
         warning('seizmo:writeseizmo:dataless',...
-            'Use WRITEHEADER to write only headers! Record %d Skipped.',i);
+            ['Record: %d, File: %s\n' ...
+            'Use WRITEHEADER to write only headers!'],i,name);
         continue; 
     end
     
@@ -104,6 +107,26 @@ for i=1:length(data)
             'Cannot write record to path!'],i,name);
     end
 
+    % check if existing file
+    if(exist(name,'file'))
+        % check lovrok
+        if(strcmpi(lovrok(i),'false'))
+            warning('seizmo:writeseizmo:lovrokBlock',...
+                ['Record: %d, File: %s\n' ...
+                'LOVROK set to FALSE!\n' ...
+                'Cannot Overwrite ==> Skipping!'],i,name);
+            continue;
+        end
+        
+        % check if directory
+        if(exist(name,'dir'))
+            error('seizmo:writeseizmo:badFID',...
+                ['Record: %d, File: %s\n' ...
+                'File not openable for writing!\n'...
+                '(Directory Conflict!)'],i,name);
+        end
+    end
+    
     % open file for writing
     fid=fopen(name,'w',data(i).byteorder);
     
@@ -111,9 +134,9 @@ for i=1:length(data)
     if(fid<0)
         % unopenable file for writing (permissions/directory?)
         error('seizmo:writeseizmo:badFID',...
-            ['File not openable for writing!\n'...
-            '(Permissions problem / conflict with directory?)\n'...
-            'Record: %d, File: %s\n'],i,name);
+            ['Record: %d, File: %s\n' ...
+            'File not openable for writing!\n'...
+            '(Permissions problem?)'],i,name);
     end
     
     % fill header with dummy bytes (so we can seek around)
@@ -125,7 +148,7 @@ for i=1:length(data)
         % write failed
         fclose(fid);
         error('seizmo:writeseizmo:writeFailed',...
-            'Writing failed!\nRecord: %d, File: %s',i,name);
+            'Record: %d, File: %s\nWriting failed!',i,name);
     end
     
     % write header
@@ -174,8 +197,9 @@ for i=1:length(data)
         % write failed/incomplete
         fclose(fid);
         error('seizmo:writeseizmo:badFileSize',...
-            ['Output file disksize does not match expected size!\n'...
-            'Record: %d, File: %s'],i,name);
+            ['Record: %d, File: %s\n'...
+            'Output file disksize does not match expected size!\n'],...
+            i,name);
     end
     
     % close file

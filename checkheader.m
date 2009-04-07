@@ -75,20 +75,25 @@ function [data]=checkheader(data,options,varargin)
 %                        sequencing of checks, significant variable sharing
 %                        to reduce repeated calls, more checks, support for
 %                        turning this function on/off through SEIZMO global
+%        Apr.  7, 2009 - fixed LOVROK handling (not checked here anymore),
+%                        try/catch for quicker on/off flag check
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2008 at 05:30 GMT
+%     Last Updated Apr.  7, 2009 at 07:00 GMT
 
 % todo:
 % - excluding certain options
 %   - 'exclude_option'
 %   - global list
-% - check_cmp
+%
+% - check_cmp (separate function CHECK_ORIENTATION)
 %   - inc 0-180
 %   - az  0-180
 %   - E => az=90, inc=90
 %   - N => az=0, inc=90
 %   - Z => az=0, inc=0 or 180
+%
+% - don't fix any header fields!?!
 %
 % testing
 %  - single record test of all features
@@ -104,11 +109,10 @@ end
 
 % check SEIZMO global for quick exit
 global SEIZMO
-if(isfield(SEIZMO,'CHECKHEADER') && isfield(SEIZMO.CHECKHEADER,'ON')...
-        && islogical(SEIZMO.CHECKHEADER.ON)...
-        && isscalar(SEIZMO.CHECKHEADER.ON)...
-        && ~SEIZMO.CHECKHEADER.ON)
-    return;
+try
+    if(~SEIZMO.CHECKHEADER.ON); return; end
+catch
+    % checks data below
 end
 
 % check data structure
@@ -147,17 +151,9 @@ end
 options(strcmp('version',options))=[];
 if(isempty(options)); set_seizmocheck_state(oldseizmocheckstate); return; end
 
-% don't overwrite headers of records if explicitly unallowed
-ok=~strcmp(getlgc(data,'lovrok'),'false');
-if(any(~ok))
-    warning('seizmo:checkheader:lovrokBlock',...
-        ['Records:\n' sprintf('%d ',find(~ok))...
-        '\nLOVROK is set to FALSE ==> the header cannot be changed!']);
-end
-
 % check location if needed
 if(~isempty(intersect(options,{'location' 'all'})))
-    data=check_location(data,ok,h,vi);
+    data=check_location(data,h,vi);
     options(strcmp('location',options))=[];
     if(isempty(options)); set_seizmocheck_state(oldseizmocheckstate); return; end
 end
@@ -197,14 +193,11 @@ check_spectral_timing(b,e,delta,npts,sdelta,nspts,spectral);
 [e,delta]=check_normal_timing(b,e,npts,delta,~leven,~xyz & ~spectral);
 options(strcmp('timing',options))=[];
 if(isempty(options))
-    if(any(ok))
-        data(ok)=changeheader(data(ok),'nzyear',nzyear(ok),...
-            'nzjday',nzjday(ok),'nzhour',nzhour(ok),'nzmin',nzmin(ok),...
-            'nzsec',nzsec(ok),'nzmsec',nzmsec(ok),'e',e(ok),...
-            'delta',delta(ok));
-    end
+    data=changeheader(data,'nzyear',nzyear,'nzjday',nzjday,...
+        'nzhour',nzhour,'nzmin',nzmin,'nzsec',nzsec,'nzmsec',nzmsec,...
+        'e',e,'delta',delta);
     set_seizmocheck_state(oldseizmocheckstate);
-    return; 
+    return;
 end
 
 % check vs data (required at this point)
@@ -214,31 +207,23 @@ end
     check_vsdata(data,b,e,delta,npts,ncmp,depmin,depmax,depmen,leven,spectral,h,vi);
 options(strcmp('vsdata',options))=[];
 if(isempty(options))
-    if(any(ok))
-        warning('off','seizmo:changeheader:fieldInvalid');
-        data(ok)=changeheader(data(ok),'nzyear',nzyear(ok),...
-            'nzjday',nzjday(ok),'nzhour',nzhour(ok),'nzmin',nzmin(ok),...
-            'nzsec',nzsec(ok),'nzmsec',nzmsec(ok),'e',e(ok),...
-            'delta',delta(ok),'npts',npts(ok),'ncmp',ncmp(ok),...
-            'b',b(ok),'leven',leven(ok),'depmax',depmax(ok),...
-            'depmin',depmin(ok),'depmen',depmen(ok));
-        warning('on','seizmo:changeheader:fieldInvalid');
-    end
+    warning('off','seizmo:changeheader:fieldInvalid');
+    data=changeheader(data,'nzyear',nzyear,'nzjday',nzjday,...
+        'nzhour',nzhour,'nzmin',nzmin,'nzsec',nzsec,'nzmsec',nzmsec,...
+        'e',e,'delta',delta,'npts',npts,'ncmp',ncmp,'b',b,'leven',leven,...
+        'depmax',depmax,'depmin',depmin,'depmen',depmen);
+    warning('on','seizmo:changeheader:fieldInvalid');
     set_seizmocheck_state(oldseizmocheckstate);
     return; 
 end
 
 % update header
-if(any(ok))
-    warning('off','seizmo:changeheader:fieldInvalid');
-    data(ok)=changeheader(data(ok),'nzyear',nzyear(ok),...
-        'nzjday',nzjday(ok),'nzhour',nzhour(ok),'nzmin',nzmin(ok),...
-        'nzsec',nzsec(ok),'nzmsec',nzmsec(ok),'e',e(ok),...
-        'delta',delta(ok),'npts',npts(ok),'ncmp',ncmp(ok),...
-        'b',b(ok),'leven',leven(ok),'depmax',depmax(ok),...
-        'depmin',depmin(ok),'depmen',depmen(ok));
-    warning('on','seizmo:changeheader:fieldInvalid');
-end
+warning('off','seizmo:changeheader:fieldInvalid');
+data=changeheader(data,'nzyear',nzyear,'nzjday',nzjday,'nzhour',nzhour,...
+    'nzmin',nzmin,'nzsec',nzsec,'nzmsec',nzmsec,'e',e,'delta',delta,...
+    'npts',npts,'ncmp',ncmp,'b',b,'leven',leven,'depmax',depmax,...
+    'depmin',depmin,'depmen',depmen);
+warning('on','seizmo:changeheader:fieldInvalid');
 
 % toggle checking back
 set_seizmocheck_state(oldseizmocheckstate);
@@ -755,7 +740,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
-function [data]=check_location(data,ok,h,vi)
+function [data]=check_location(data,h,vi)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% BEGIN LOCATION CHECK SECTION %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -765,7 +750,7 @@ function [data]=check_location(data,ok,h,vi)
     getheader(data,'evla','evlo','stla','stlo','gcarc','az','baz','dist');
 
 % check for undefined (version specific)
-defevla=false(size(ok)); defevlo=defevla;
+defevla=false(numel(data),1); defevlo=defevla;
 defstla=defevla; defstlo=defevla;
 for i=1:numel(h)
     % which to check
@@ -818,11 +803,8 @@ if(any(check_loc))
 end
 
 % update header
-if(any(ok))
-    data(ok)=changeheader(data(ok),'evla',evla(ok),'evlo',evlo(ok),...
-        'stla',stla(ok),'stlo',stlo(ok),...
-        'gcarc',gcarc(ok),'az',az(ok),'baz',baz(ok),'dist',dist(ok));
-end
+data=changeheader(data,'evla',evla,'evlo',evlo,'stla',stla,'stlo',stlo,...
+    'gcarc',gcarc,'az',az,'baz',baz,'dist',dist);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%  END LOCATION CHECK SECTION  %%%
