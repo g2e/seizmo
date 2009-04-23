@@ -2,7 +2,8 @@ function [data,CONF,good]=align_chop(data,CONF)
 %CHOP    Window data
 
 % check input
-error(nargchk(2,2,nargin))
+msg=nargchk(2,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % 
 good=1;

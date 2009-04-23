@@ -4,7 +4,8 @@ function [data]=seizmofilter(data,fs,idx,passes,mirror)
 
 
 % check number of input arguments
-error(nargchk(2,5,nargin));
+msg=nargchk(2,5,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check data structure
 error(seizmocheck(data,'dep'))

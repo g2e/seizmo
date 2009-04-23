@@ -1,6 +1,10 @@
 function [data,failed]=readdata(data,varargin)
 %READDATA    Read SEIZMO data from datafiles
 %
+%    Usage: data=readdata(data)
+%           data=readdata(data,'trim',true|false)
+%           [data,failed]=readdata(...)
+%
 %    Description: [OUTDATA,FAILED]=READDATA(DATA) reads in data from SEIZMO 
 %     compatible datafiles utilizing the header info in DATA, and returns 
 %     the combined dataset as OUTDATA.  Datafiles that are not SEIZMO
@@ -54,10 +58,6 @@ function [data,failed]=readdata(data,varargin)
 %
 %    Header changes: see CHECKHEADER
 %
-%    Usage: data=readdata(data)
-%           data=readdata(data,'trim',true|false)
-%           [data,failed]=readdata(...)
-%
 %    Examples:
 %     Read in datafiles (headers only) from the current directory, subset
 %     it to include only time series files, and then read in the associated
@@ -94,10 +94,10 @@ function [data,failed]=readdata(data,varargin)
 %        Nov. 12, 2008 - fix allocation of ind cmp for uneven records
 %        Nov. 17, 2008 - update for new name schema (now READDATA)
 %        Mar.  3, 2009 - update for GETFILEVERSION
-%        Apr. 23, 2009 - fix nargchk for octave
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 11:35 GMT
+%     Last Updated Apr. 23, 2009 at 20:40 GMT
 
 % todo:
 

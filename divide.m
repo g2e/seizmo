@@ -1,6 +1,9 @@
 function [data]=divide(data,constant,cmp)
 %DIVIDE    Divide SEIZMO records by a constant
 %
+%    Usage:    data=divide(data,constant)
+%              data=divide(data,constant,cmp_list)
+%
 %    Description: DIVIDE(DATA,CONSTANT) divides the dependent component(s)
 %     of SEIZMO records by a constant.  For multi-component files, this
 %     operation is performed on every dependent component (this includes
@@ -21,9 +24,6 @@ function [data]=divide(data,constant,cmp)
 %    Tested on: Matlab r2007b
 %    
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage:    data=divide(data,constant)
-%              data=divide(data,constant,cmp_list)
 %
 %    Examples:
 %     Alter the amplitudes of amplitude-phase spectral records without
@@ -47,17 +47,21 @@ function [data]=divide(data,constant,cmp)
 %        July 17, 2008 - doc update, dataless support added and cmp checks
 %        Oct.  6, 2008 - minor code cleaning
 %        Nov. 22, 2008 - update for new name schema
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 07:15 GMT
+%     Last Updated Apr. 23, 2009 at 20:10 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,3,nargin))
+msg=nargchk(2,3,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

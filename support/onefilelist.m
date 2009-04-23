@@ -1,6 +1,8 @@
 function [list]=onefilelist(varargin)
 %ONEFILELIST    Compiles multiple filelists into one
 %
+%    Usage:    list=onefilelist(list1,...,listN)
+%
 %    Description:  ONELIST(ARG1,...,ARGN) combines the input char/cellstr 
 %     arrays into a single-column cellstr array and then pipes each cell 
 %     through XDIR to expand wildcard inputs.  This is mostly useful for 
@@ -8,11 +10,9 @@ function [list]=onefilelist(varargin)
 %     combining them into one simple list of files.
 %
 %    Notes:
-%     - XDIR is taken from the Matlab File Exchange
+%     - XDIR is derived from RDIR (taken from the Matlab File Exchange)
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    list=onefilelist(list1,...,listN)
 %
 %    Examples:
 %     Compile a list of files from several directories
@@ -31,9 +31,10 @@ function [list]=onefilelist(varargin)
 %        Oct. 16, 2008 - fix files in current directory bug
 %        Oct. 31, 2008 - minor doc update
 %        Dec.  2, 2008 - use XDIR to expand wildcard ability
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  2, 2008 at 09:20 GMT
+%     Last Updated Apr. 23, 2009 at 22:15 GMT
 
 % todo:
 

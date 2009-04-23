@@ -1,6 +1,8 @@
 function [data]=squish(data,factor)
 %SQUISH    Downsample SEIZMO records by an integer factor
 %
+%    Usage:    data=squish(data,factors)
+%
 %    Description: SQUISH(DATA,FACTOR) downsamples SEIZMO records by an 
 %     integer FACTOR after implementing an anti-aliasing filter.  To avoid
 %     adding significant numerical noise to the data, keep the decimation
@@ -17,8 +19,6 @@ function [data]=squish(data,factor)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DELTA, NPTS, E, DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage:    data=squish(data,factors)
 %
 %    Examples: 
 %     To halve the samplerates of records in data:
@@ -42,17 +42,21 @@ function [data]=squish(data,factor)
 %                        decimation to single point, doc update,
 %                        .dep rather than .x, filetype checking
 %        Nov. 23, 2008 - update for new name schema (now SQUISH)
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 23, 2008 at 10:20 GMT
+%     Last Updated Apr. 23, 2009 at 21:00 GMT
 
 % todo:
 
 % check inputs
-error(nargchk(2,2,nargin))
+msg=nargchk(2,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

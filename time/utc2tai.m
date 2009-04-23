@@ -1,6 +1,8 @@
 function [utc]=utc2tai(utc)
 %UTC2TAI    Convert UTC time to TAI time
 %
+%    Usage:    tai=utc2tai(utc)
+%
 %    Description: UTC2TAI(UTC) returns the equivalent International Atomic
 %     Time (TAI) of the UTC times in UTC.  Times should be either a Nx5 or
 %     Nx6 of [yr dayofyr hr min sec] or [yr mon dayofmon hr min sec].
@@ -12,8 +14,6 @@ function [utc]=utc2tai(utc)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    tai=utc2tai(utc)
-%
 %    Examples:
 %     It is a lot easier to do time differences in TAI,
 %     which does not have leap seconds:
@@ -23,14 +23,16 @@ function [utc]=utc2tai(utc)
 
 %     Version History:
 %        Nov.  2, 2008 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2008 at 15:10 GMT
+%     Last Updated Apr. 23, 2009 at 21:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % require Nx5 or Nx6 numeric
 sz=size(utc);

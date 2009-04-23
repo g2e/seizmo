@@ -1,6 +1,11 @@
 function [data]=taper(data,width,type,option)
 %TAPER   Taper SEIZMO records
 %
+%    Usage:    data=taper(data)
+%              data=taper(data,width)
+%              data=taper(data,width,type)
+%              data=taper(data,width,type,option)
+%
 %    Description: TAPER(DATA) tapers data records with a Hann taper set to
 %     vary from 0 to 1 over 5% of every records' length on each end.  This
 %     matches SAC's default taper command.
@@ -48,11 +53,6 @@ function [data]=taper(data,width,type,option)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
-%   
-%    Usage:    data=taper(data)
-%              data=taper(data,width)
-%              data=taper(data,width,type)
-%              data=taper(data,width,type,option)
 %
 %    Examples:
 %     Taper data with a gaussian that is applied to the first and last 10th
@@ -79,15 +79,19 @@ function [data]=taper(data,width,type,option)
 %        Dec. 12, 2008 - doc update
 %        Apr. 22, 2009 - changed interpolation method for building tapers
 %                        related to unevenly sampled records
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2009 at 05:05 GMT
+%     Last Updated Apr. 23, 2009 at 21:05 GMT
 
 % check input
-error(nargchk(1,4,nargin))
+msg=nargchk(1,4,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

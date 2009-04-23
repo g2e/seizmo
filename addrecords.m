@@ -1,6 +1,18 @@
 function [data]=addrecords(varargin)
 %ADDRECORDS    Add SEIZMO records
 %
+%    Usage: [data]=addrecords(data)
+%           [data]=addrecords(data1,data2)
+%           [data]=addrecords(data1,data2,...,dataN)
+%           [data]=addrecords(...,'newhdr',true|false)
+%           [data]=addrecords(...,'npts','error'|'warn'|'ignore')
+%           [data]=addrecords(...,'delta','error'|'warn'|'ignore')
+%           [data]=addrecords(...,'begin','error'|'warn'|'ignore')
+%           [data]=addrecords(...,'ref','error'|'warn'|'ignore')
+%           [data]=addrecords(...,'ncmp','error'|'warn'|'ignore')
+%           [data]=addrecords(...,'leven','error'|'warn'|'ignore')
+%           [data]=addrecords(...,'iftype','error'|'warn'|'ignore')
+%
 %    Description: ADDRECORDS(DATA) will add all records in DATA, returning
 %     one record with its header fields set to those of the first record
 %     in DATA.  The header can be set to that of the last record by setting
@@ -95,19 +107,7 @@ function [data]=addrecords(varargin)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
 %     NPTS, E, NCMP (see option 'npts' and 'ncmp')
 %     See option 'newhdr' for inheritance of other header fields.
-%     
-%    Usage: [data]=addrecords(data)
-%           [data]=addrecords(data1,data2)
-%           [data]=addrecords(data1,data2,...,dataN)
-%           [data]=addrecords(...,'newhdr',true|false)
-%           [data]=addrecords(...,'npts','error'|'warn'|'ignore')
-%           [data]=addrecords(...,'delta','error'|'warn'|'ignore')
-%           [data]=addrecords(...,'begin','error'|'warn'|'ignore')
-%           [data]=addrecords(...,'ref','error'|'warn'|'ignore')
-%           [data]=addrecords(...,'ncmp','error'|'warn'|'ignore')
-%           [data]=addrecords(...,'leven','error'|'warn'|'ignore')
-%           [data]=addrecords(...,'iftype','error'|'warn'|'ignore')
-%     
+%
 %    Examples:
 %     Display a stack of the records:
 %      plot1(addrecords(data))
@@ -125,9 +125,10 @@ function [data]=addrecords(varargin)
 %                        .dep and .ind rather than .x and .t
 %        Oct.  6, 2008 - doc update, code clean, more checks
 %        Nov. 23, 2008 - now just calls RECORDFUN
+%        Apr. 23, 2009 - move usage up
 %     
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 23, 2008 at 20:10 GMT
+%     Last Updated Apr. 23, 2009 at 20:05 GMT
 
 % todo:
 

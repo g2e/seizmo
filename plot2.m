@@ -1,12 +1,12 @@
 function [fh,lh]=plot2(data,varargin)
 %PLOT2    Overlay plot of SEIZMO data records
 %
+%    Usage:  [fh,lh]=plot2(data,'plot_option',plot_option_value,...)
+%
 %    Description: Plots timeseries and xy SEIZMO records over one another
 %     in a single plot.  Other record types are ignored.  Optional
 %     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
-%
-%    Usage:  [fh,lh]=plot2(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
 %     To overlay the first 4 records
@@ -21,7 +21,8 @@ function [fh,lh]=plot2(data,varargin)
 %    See also:  plot1, plot0, recordsection
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % get plotting style defaults
 P=plotconfig;

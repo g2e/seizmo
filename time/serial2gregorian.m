@@ -1,6 +1,8 @@
 function [times]=serial2gregorian(serial,option)
 %SERIAL2GREGORIAN    Convert serial dates to Gregorian dates
 %
+%    Usage:    dates=serial2gregorian(dates)
+%
 %    Description: SERIAL2GREGORIAN(DATES) returns the equivalent Gregorian
 %     dates for the serial dates stored in DATES.  A serial date of 1
 %     corresponds to Jan 1, 0000.
@@ -19,8 +21,6 @@ function [times]=serial2gregorian(serial,option)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    dates=serial2gregorian(dates)
-%
 %    Examples:
 %     See how long it takes to run serial2gregorian vs datevec:
 %      serial2gregorian(now)-datevec(now)
@@ -29,19 +29,21 @@ function [times]=serial2gregorian(serial,option)
 %    See also: gregorian2serial, isleapyear, doy2cal, cal2doy, fixdates
 
 %     Version History:
-%        Nov.  11, 2008 - initial version
+%        Nov. 11, 2008 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 11, 2008 at 16:45 GMT
+%     Last Updated Apr. 23, 2009 at 21:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,2,nargin));
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check times
 if(~isnumeric(serial))
-    error('seizmo:gregorian2serial:badInput',...
+    error('seizmo:serial2gregorian:badInput',...
         'DATES must be a numeric array!');
 end
 
@@ -50,7 +52,7 @@ if(nargin==1 || isempty(option))
     option='caltime';
 elseif(~ischar(option)...
         || ~any(strcmpi(option,{'caldate' 'caltime' 'doydate' 'doytime'})))
-    error('seizmo:gregorian2serial:optionBad',...
+    error('seizmo:serial2gregorian:optionBad',...
         ['OPTION must be ''caldate'', ''caltime'', '...
         '''doydate'' or ''doytime''!']);
 end

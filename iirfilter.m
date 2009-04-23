@@ -1,6 +1,8 @@
 function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 %IIRFILTER    Apply an IIR filter to SEIZMO data records
 %
+%    Usage: [data,fs]=iirfilter(data,type,style,corners,order,passes,ripple)
+%
 %    Description: Utilizing the set of supplied parameters IIR filters are
 %     built to the desired specs and implemented on the data records.
 %
@@ -86,10 +88,6 @@ function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 %
 %     nyq:    Optional output. Nyquist frequencies for filter structure(s).
 %
-%
-%    Usage: [data,fs]=iirfilter(data,type,style,corners,order,passes,ripple)
-%
-%
 %    Examples:
 %      4th order lowpass butter filter with a passband corner of 10s
 %     [data]=iirfilter(data,'low','butter',1/10,4)
@@ -126,10 +124,12 @@ function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 %    See also: interpolate, syncrates, squish, stretch, dft, idft
 
 % check number of inputs
-error(nargchk(2,7,nargin))
+msg=nargchk(2,7,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

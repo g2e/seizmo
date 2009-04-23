@@ -1,6 +1,8 @@
 function [h,idx]=versioninfo(data)
 %VERSIONINFO    Returns version info for SEIZMO data records
 %
+%    Usage:    [h,idx]=versioninfo(data)
+%
 %    Description: [H,IDX]=VERSIONINFO(DATA) returns all necessary version
 %     definitions pertaining to the records in the SEIZMO structure DATA in
 %     the struct array H.  IDX has one entry per record in DATA that
@@ -14,8 +16,6 @@ function [h,idx]=versioninfo(data)
 %       may be a speed bottle neck as this is a low level function
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    [h,idx]=versioninfo(data)
 %
 %    Examples:
 %     Get the undefined value for your data:
@@ -32,10 +32,11 @@ function [h,idx]=versioninfo(data)
 %        Oct. 25, 2008 - doc update, block mlint hint for now
 %        Nov. 13, 2008 - renamed from VINFO to VERSIONINFO
 %        Nov. 15, 2008 - update for new name schema
-%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 12:00 GMT
+%     Last Updated Apr. 23, 2009 at 21:20 GMT
 
 % todo:
 

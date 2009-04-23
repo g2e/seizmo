@@ -1,6 +1,9 @@
 function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 %GEOCENTRIC2XYZ    Converts coordinates from geocentric to cartesian
 %
+%    Usage:    [x,y,z]=geocentric2xyz(lat,lon,radius)
+%              [x,y,z]=geocentric2xyz(lat,lon,depth,r)
+%
 %    Description: [X,Y,Z]=GEOCENTRIC2XYZ(LAT,LON,RADIUS) converts
 %     coordinates in geocentric latitude, longitude, radius to 
 %     Earth-centered, Earth-Fixed (ECEF).  LAT and LON are in degrees.  
@@ -17,9 +20,6 @@ function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    [x,y,z]=geocentric2xyz(lat,lon,radius)
-%              [x,y,z]=geocentric2xyz(lat,lon,depth,r)
-%
 %    Examples:
 %     Find out how far a position is from the equatorial plane (z):
 %      [x,y,z]=geocentric2xyz(lat,lon,depth,r)
@@ -29,14 +29,16 @@ function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - scalar expansion, doc update
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 10, 2008 at 08:45 GMT
+%     Last Updated Apr. 23, 2009 at 21:45 GMT
 
 % todo:
 
 % require 3 or 4 inputs
-error(nargchk(3,4,nargin))
+msg=nargchk(3,4,nargin);
+if(~isempty(msg)); error(msg); end
 
 % size up inputs
 sx=size(lat); sy=size(lon); sz=size(radius);

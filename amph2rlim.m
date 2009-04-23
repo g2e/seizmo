@@ -1,6 +1,8 @@
 function [data]=amph2rlim(data)
 %AMPH2RLIM    Convert SEIZMO spectral records from AMPH to RLIM
 %
+%    Usage:    data=amph2rlim(data)
+%
 %    Description: AMPH2RLIM(DATA) converts SEIZMO amplitude-phase records 
 %     to real-imaginary records.  This is particularly useful when
 %     performing basic operations on spectral records which would otherwise
@@ -13,8 +15,6 @@ function [data]=amph2rlim(data)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: IFTYPE, DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage:    data=amph2rlim(data)
 %
 %    Examples:
 %     To simply multiply two records in the frequency domain, they must be
@@ -33,17 +33,21 @@ function [data]=amph2rlim(data)
 %        July 19, 2008 - dataless support, updates DEP* fields
 %        Oct.  7, 2008 - minor code cleaning
 %        Nov. 22, 2008 - update for new name schema
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 04:35 GMT
+%     Last Updated Apr. 23, 2009 at 20:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

@@ -1,6 +1,8 @@
 function [gcarc]=haversine(evla,evlo,stla,stlo)
 %HAVERSINE    Returns distance between 2 points using the Haversine formula
 %
+%    Usage:    gcarc=haversine(lat1,lon1,lat2,lon2)
+%
 %    Description: HAVERSINE(LAT1,LON1,LAT2,LON2) returns the spherical
 %     greater-circle-arc degree distance between two points.  LAT1, LON1,
 %     LAT2, LON2 must all be in degrees and the latitudes must be
@@ -18,8 +20,6 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    gcarc=haversine(lat1,lon1,lat2,lon2)
-%
 %    Examples:
 %     Plotting up short distance results for sphericalinv and haversine:
 %      plot(0:1e-9:1e-5,sphericalinv(0,0,0:1e-9:1e-5,0),...
@@ -31,10 +31,10 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - improved scalar expansion, doc update
-%        Apr. 23, 2009 - fix nargchk for octave
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 12:00 GMT
+%     Last Updated Apr. 23, 2009 at 21:50 GMT
 
 % todo:
 

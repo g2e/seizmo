@@ -1,6 +1,9 @@
 function [times]=modserial2gregorian(modserial,option)
 %MODSERIAL2GREGORIAN    Convert modified serial dates to Gregorian dates
 %
+%    Usage:    gregoriandate=modserial2gregorian(modserialdate)
+%              gregoriandate=modserial2gregorian(modserialdate,option)
+%
 %    Description: MODSERIAL2GREGORIAN(MODSERIAL) returns the equivalent
 %     Gregorian dates in [year month dayofmonth hour minute second] format
 %     for the modified serial dates stored in MODSERIAL.  Modified serial
@@ -23,9 +26,6 @@ function [times]=modserial2gregorian(modserial,option)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    gregoriandate=modserial2gregorian(modserialdate)
-%              gregoriandate=modserial2gregorian(modserialdate,option)
-%
 %    Examples:
 %     500 seconds from now:
 %      modserial2gregorian([now 500])
@@ -33,20 +33,22 @@ function [times]=modserial2gregorian(modserial,option)
 %    See also: gregorian2modserial, serial2gregorian, gregorian2serial
 
 %     Version History:
-%        Nov.  12, 2008 - initial version
+%        Nov. 12, 2008 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 12, 2008 at 03:40 GMT
+%     Last Updated Apr. 23, 2009 at 21:30 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,2,nargin));
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check days and seconds
 sz=size(modserial);
 if(~isnumeric(modserial) || sz(2)~=2)
-    error('seizmo:gregorian2serial:badInput',...
+    error('seizmo:modserial2gregorian:badInput',...
         'MODSERIAL must be a numeric array of size Nx2!');
 end
 
@@ -55,7 +57,7 @@ if(nargin==1 || isempty(option))
     option='caltime';
 elseif(~ischar(option)...
         || ~any(strcmpi(option,{'caldate' 'caltime' 'doydate' 'doytime'})))
-    error('seizmo:gregorian2serial:optionBad',...
+    error('seizmo:modserial2gregorian:optionBad',...
         ['OPTION must be ''caldate'', ''caltime'', '...
         '''doydate'' or ''doytime''!']);
 end

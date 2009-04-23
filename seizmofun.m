@@ -1,6 +1,8 @@
 function [data]=seizmofun(data,fun)
 %SEIZMOFUN    Apply function to SEIZMO records
 %
+%    Usage:    data=seizmofun(data,fun)
+%
 %    Description: SEIZMOFUN(DATA,FUN) applies the function defined by the 
 %     function handle FUN to the dependent component(s) of SEIZMO records
 %     in DATA.
@@ -12,8 +14,6 @@ function [data]=seizmofun(data,fun)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NPTS, NCMP
-%
-%    Usage:    data=seizmofun(data,fun)
 %
 %    Examples:
 %     A multi-tool of a function:
@@ -36,17 +36,21 @@ function [data]=seizmofun(data,fun)
 %                        added history, single ch call
 %        Oct.  6, 2008 - use CHKHDR over CH (slims code)
 %        Nov. 22, 2008 - update for new name schema (now SEIZMOFUN)
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 07:30 GMT
+%     Last Updated Apr. 23, 2009 at 20:55 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,2,nargin))
+msg=nargchk(2,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

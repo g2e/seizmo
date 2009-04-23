@@ -1,6 +1,8 @@
 function [valid]=validseizmo(filetype)
 %VALIDSEIZMO    Returns valid SEIZMO datafile versions
 %
+%    Usage:    valid_versions=validseizmo(filetype)
+%
 %    Description: VALIDSEIZMO(FILETYPE) returns a vector of version numbers
 %     of the specified filetype FILETYPE that SEIZMO can work with.  If the
 %     filetype is not supported, VALIDSEIZMO will return an empty array.
@@ -10,8 +12,6 @@ function [valid]=validseizmo(filetype)
 %     - SEIZMO versions 101,200,201 are modifications of SAC version 6
 %
 %    Tested on: Matlab r2007b
-%    
-%    Usage:    valid_versions=validseizmo(filetype)
 %
 %    Examples:
 %     How many different SEIZMO binary file versions are supported:
@@ -29,10 +29,10 @@ function [valid]=validseizmo(filetype)
 %        Oct. 27, 2008 - minor doc update
 %        Nov. 13, 2008 - renamed from VVSEIS to VALIDSEIZ
 %        Nov. 15, 2008 - now VALIDSEIZMO and separated SAC from SEIZMO
-%        Apr. 23, 2009 - fix nargchk for octave
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 11:35 GMT
+%     Last Updated Apr. 23, 2009 at 21:20 GMT
 
 % todo:
 

@@ -1,6 +1,11 @@
 function [data]=slidingfun(data,fun,nsamples,varargin)
 %SLIDINGFUN    Apply a sliding window function to SEIZMO records
 %
+%    Usage:    data=slidingfun(data,fun,n)
+%              data=slidingfun(...,'position','center'|'trail'|'lead')
+%              data=slidingfun(...,'offset',offset)
+%              data=slidingfun(...,'edge','truncate'|'pad')
+%
 %    Description: SLIDINGFUN(DATA,FUN,N) applies the function defined by
 %     the function handle FUN to a centered sliding window of 2N+1 samples
 %     to the dependent component(s) of SEIZMO records in DATA.  FUN is 
@@ -50,11 +55,6 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NCMP
 %
-%    Usage:    data=slidingfun(data,fun,n)
-%              data=slidingfun(...,'position','center'|'trail'|'lead')
-%              data=slidingfun(...,'offset',offset)
-%              data=slidingfun(...,'edge','truncate'|'pad')
-%
 %    Examples:
 %     Running absolute mean normalization like G. D. Bensen et al, 2007 
 %     where Tmin, Tmax bound the period band of the regional seismicity 
@@ -85,17 +85,21 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %                        did not change class to double for the function,
 %                        allow OFFSET option to have value for each record
 %        Nov. 22, 2008 - update for new name schema (now SLIDINGFUN)
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 22:25 GMT
+%     Last Updated Apr. 23, 2009 at 21:00 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(3,9,nargin))
+msg=nargchk(3,9,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % check input fun is a function
 if(~isa(fun,'function_handle'))

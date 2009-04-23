@@ -1,6 +1,8 @@
 function [dates]=fixdates(dates)
 %FIXDATES    Assures calendar or day of year dates are in proper range
 %
+%    Usage:    dates=fixdates(dates)
+%
 %    Description: FIXDATES(DATES) returns equivalent dates to the dates
 %     in DATES such that they follow typical Gregorian calendar conventions
 %     (months are 1 to 12, dayofmonths are 1 to the last day of the month,
@@ -12,8 +14,6 @@ function [dates]=fixdates(dates)
 %    Notes:
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    dates=fixdates(dates)
 %
 %    Examples:
 %     Last day of February:
@@ -27,14 +27,16 @@ function [dates]=fixdates(dates)
 
 %     Version History:
 %        Nov.  1, 2008 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2008 at 17:40 GMT
+%     Last Updated Apr. 23, 2009 at 21:25 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % require numeric
 if(~isnumeric(dates))

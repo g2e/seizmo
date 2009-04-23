@@ -1,6 +1,8 @@
 function [X]=submat(X,varargin)
 %SUBMAT    Returns a submatrix reduced along indicated dimensions
 %
+%    Usage:    Y=submat(X,DIM1,LIST1,DIM2,LIST2,...)
+%
 %    Description: Y=SUBMAT(X,DIM,LIST) creates a matrix Y that is
 %     the matrix X reduced along dimension DIM to the indices in LIST.  If
 %     DIM is a list of dimensions, LIST is used to reduce each dimension.
@@ -12,8 +14,6 @@ function [X]=submat(X,varargin)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    Y=submat(X,DIM1,LIST1,DIM2,LIST2,...)
-%
 %    Examples:
 %      Return x reduced to only the elements in index 1 of dimension 5:
 %      x=submat(x,5,1)
@@ -22,9 +22,10 @@ function [X]=submat(X,varargin)
 
 %     Version History:
 %        Nov. 12, 2008 - initial version
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 12, 2008 at 04:25 GMT
+%     Last Updated Apr. 23, 2009 at 22:25 GMT
 
 % todo:
 

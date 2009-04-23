@@ -7,7 +7,8 @@ function [events]=readsodcsv(filename)
 %2002-03-03T07:16:15.690Z, -45.837, -76.119, 10.0, kiloMETER, 6.0, MW, WHDF, NEIC, 8653027, 143, 1
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check filename is char
 if(~ischar(filename)); error('FILENAME must be a string!'); end

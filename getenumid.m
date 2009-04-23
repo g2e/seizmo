@@ -1,6 +1,9 @@
 function [varargout]=getenumid(data,varargin)
 %GETENUMID    Get enum string id from SEIZMO data header enum field
 %
+%    Usage: cellstr=getenumid(data,'field')
+%           [cellstr1,...,cellstrN]=getenumid(data,'field1',...,'fieldN')
+%
 %    Description: GETENUMID(DATA,FIELD) returns a cellstring array filled
 %     with the enum id strings associated with the enum field FIELD stored
 %     in the SEIZMO structure DATA.  This is more useful/readible than the 
@@ -21,9 +24,6 @@ function [varargout]=getenumid(data,varargin)
 %       avoids conflict with enum fields called 'unknown' and 'undefined'.
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage: cellstr=getenumid(data,'field')
-%           [cellstr1,...,cellstrN]=getenumid(data,'field1',...,'fieldN')
 %
 %    Examples:
 %     To check if all records are timeseries data:
@@ -46,9 +46,10 @@ function [varargout]=getenumid(data,varargin)
 %        Oct. 17, 2008 - added VINFO support
 %        Nov. 16, 2008 - history fix, doc update, code cleaning, rename
 %                        from GENUM to GETENUMID
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2008 at 05:25 GMT
+%     Last Updated Apr. 23, 2009 at 20:15 GMT
 
 % require at least two inputs
 if(nargin<2)

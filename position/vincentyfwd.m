@@ -1,6 +1,10 @@
 function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %VINCENTYFWD    Find destination point on an ellipsoid relative to a point
 %    
+%    Usage:    [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az)
+%              [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az,[a f])
+%              [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az,[a f],tol)
+%
 %    Description: [LAT2,LON2,BAZ]=VINCENTYFWD(LAT1,LON1,DIST,AZ) returns
 %     geodetic latitudes LAT2 and longitudes LON2 of destination points, as
 %     well as the backazimuths BAZ, given the distances DIST and forward
@@ -37,10 +41,6 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az)
-%              [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az,[a f])
-%              [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az,[a f],tol)
-%
 %    Examples:
 %     St. Louis, MO USA to ???:
 %      [lat2,lon2,baz]=vincentyfwd(38.649,-90.305,5000,-30)
@@ -51,10 +51,10 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %        Oct. 14, 2008 - initial version
 %        Oct. 26, 2008 - improved scalar expansion, allow specifying the
 %                        tolerance, doc update
-%        Apr. 23, 2009 - fix nargchk for octave
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 12:00 GMT
+%     Last Updated Apr. 23, 2009 at 21:50 GMT
 
 % todo:
 

@@ -1,6 +1,10 @@
 function [data]=dft(data,format,pow2pad)
 %DFT    Performs a discrete fourier transform on SEIZMO data records
 %
+%    Usage:    data=dft(data)
+%              data=dft(data,format)
+%              data=dft(data,format,pow2pad)
+%
 %    Description: DFT(DATA,FORMAT) converts SEIZMO records from the time 
 %     domain to the frequency domain using a discrete fourier transform
 %     (Matlab's fft).  Following SAC formatting, an option FORMAT can be
@@ -28,10 +32,6 @@ function [data]=dft(data,format,pow2pad)
 %     of B, DELTA, and NPTS are saved in the header as SB, SDELTA, and 
 %     NSNPTS and are restored when the IDFT command is performed.
 %
-%    Usage:    data=dft(data)
-%              data=dft(data,format)
-%              data=dft(data,format,pow2pad)
-%
 %    Examples:
 %     To take the derivative of a time-series in the frequency domain:
 %      data=idft(multiplyomega(dft(data)))
@@ -50,17 +50,21 @@ function [data]=dft(data,format,pow2pad)
 %        July 18, 2008 - dataless support, one ch call, updates DEP* fields
 %        Oct.  6, 2008 - minor code cleaning
 %        Nov. 22, 2008 - update for new name schema
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 06:45 GMT
+%     Last Updated Apr. 23, 2009 at 20:00 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,3,nargin))
+msg=nargchk(1,3,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

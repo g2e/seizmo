@@ -1,6 +1,18 @@
 function [data]=recordfun(fun,varargin)
 %RECORDFUN    Perform basic function between SEIZMO records
 %
+%    Usage:    data=recordfun(fun,data)
+%              data=recordfun(fun,data1,data2)
+%              data=recordfun(fun,data1,data2,...,dataN)
+%              data=recordfun(...,'newhdr',true|false)
+%              data=recordfun(...,'npts','error'|'warn'|'ignore')
+%              data=recordfun(...,'delta','error'|'warn'|'ignore')
+%              data=recordfun(...,'begin','error'|'warn'|'ignore')
+%              data=recordfun(...,'ref','error'|'warn'|'ignore')
+%              data=recordfun(...,'ncmp','error'|'warn'|'ignore')
+%              data=recordfun(...,'leven','error'|'warn'|'ignore')
+%              data=recordfun(...,'iftype','error'|'warn'|'ignore')
+%
 %    Description: RECORDFUN(FUN,DATA) operates on all records in DATA using
 %     FUN and will return a single record with its header fields set to
 %     those of the first record in DATA.  FUN must be either '+', '-', '/',
@@ -99,19 +111,7 @@ function [data]=recordfun(fun,varargin)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
 %     NPTS, E, NCMP (see option 'npts' and 'ncmp')
 %     See option 'newhdr' for inheritance of other header fields.
-%     
-%    Usage:    data=recordfun(fun,data)
-%              data=recordfun(fun,data1,data2)
-%              data=recordfun(fun,data1,data2,...,dataN)
-%              data=recordfun(...,'newhdr',true|false)
-%              data=recordfun(...,'npts','error'|'warn'|'ignore')
-%              data=recordfun(...,'delta','error'|'warn'|'ignore')
-%              data=recordfun(...,'begin','error'|'warn'|'ignore')
-%              data=recordfun(...,'ref','error'|'warn'|'ignore')
-%              data=recordfun(...,'ncmp','error'|'warn'|'ignore')
-%              data=recordfun(...,'leven','error'|'warn'|'ignore')
-%              data=recordfun(...,'iftype','error'|'warn'|'ignore')
-%     
+%
 %    Examples:
 %     Display a stack of the records:
 %      plot1(recordfun('+',data))
@@ -131,9 +131,10 @@ function [data]=recordfun(fun,varargin)
 %        Oct.  6, 2008 - doc update, code clean, more checks
 %        Nov. 23, 2008 - combined code of basic functions to centralize
 %                        and reduce code
+%        Apr. 23, 2009 - move usage up
 %     
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 23, 2008 at 20:00 GMT
+%     Last Updated Apr. 23, 2008 at 20:45 GMT
 
 % todo:
 

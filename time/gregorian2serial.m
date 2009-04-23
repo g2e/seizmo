@@ -1,6 +1,8 @@
 function [serial]=gregorian2serial(times)
 %GREGORIAN2SERIAL    Convert Gregorian dates to serial dates
 %
+%    Usage:    dates=gregorian2serial(dates)
+%
 %    Description: GREGORIAN2SERIAL(DATES) returns the equivalent serial
 %     dates for the Gregorian dates stored in DATES.  Serial date 1
 %     corresponds to January 1, 0000.  DATES must be a Nx2, Nx3, Nx5 or Nx6
@@ -17,8 +19,6 @@ function [serial]=gregorian2serial(times)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    dates=gregorian2serial(dates)
-%
 %    Examples:
 %     The output of Matlab's datenum and gregorian2serial should match:
 %      gregorian2serial([2008 366 0 0 0.01])
@@ -28,14 +28,16 @@ function [serial]=gregorian2serial(times)
 
 %     Version History:
 %        Nov.  2, 2008 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2008 at 21:45 GMT
+%     Last Updated Apr. 23, 2009 at 21:25 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check times
 sz=size(times);

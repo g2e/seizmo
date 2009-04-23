@@ -1,6 +1,8 @@
 function [data]=fixdelta(data,tol)
 %FIXDELTA    Fix sample spacing for SEIZMO records
 %
+%    Usage:    data=fixdelta(data)
+%
 %    Description: DATA=FIXDELTA(DATA) fixes the sample spacing (DELTA
 %     header field) of records in DATA to be the decimal equivalent of a
 %     fraction of 2 small integers.  This is particularly useful for
@@ -18,8 +20,6 @@ function [data]=fixdelta(data,tol)
 %
 %    Header changes: DELTA
 %
-%    Usage:    data=fixdelta(data)
-%
 %    Examples:
 %     Force the double precision and update the delta field:
 %      data=fixdelta(changeclass(data,'double'));
@@ -35,14 +35,16 @@ function [data]=fixdelta(data,tol)
 %        Nov. 16, 2008 - update for new name schema, doc and history update
 %        Nov. 22, 2008 - doc update
 %        Dec.  5, 2008 - tolerance option added
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  5, 2008 at 00:40 GMT
+%     Last Updated Apr. 23, 2009 at 20:10 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,2,nargin))
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % default tolerance
 if(nargin==1 || ~isscalar(tol) || ~isnumeric(tol))

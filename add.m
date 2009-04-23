@@ -1,6 +1,9 @@
 function [data]=add(data,constant,cmp)
 %ADD    Add a constant to SEIZMO records
 %
+%    Usage:    data=add(data,constant)
+%              data=add(data,constant,cmp_list)
+%
 %    Description: ADD(DATA,CONSTANT) adds a constant to the dependent 
 %     component(s) of SEIZMO records.  For multi-component files, this
 %     operation is performed on every dependent component (this includes 
@@ -21,9 +24,6 @@ function [data]=add(data,constant,cmp)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage:    data=add(data,constant)
-%              data=add(data,constant,cmp_list)
 %
 %    Examples:
 %     Add a 135 degree (3*pi/4) phase shift to records by only adding
@@ -47,18 +47,22 @@ function [data]=add(data,constant,cmp)
 %        July  7, 2008 - allow constant to be an array
 %        July 17, 2008 - doc update, dataless support added and cmp checks
 %        Oct.  6, 2008 - minor code cleaning
-%        Nov. 22, 2008 - update for new name schema
+%        Nov. 22, 2008 - update for new name schemas
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 04:20 GMT
+%     Last Updated Apr. 23, 2009 at 20:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,3,nargin))
+msg=nargchk(2,3,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

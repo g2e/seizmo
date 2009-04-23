@@ -1,6 +1,18 @@
 function [data]=multiplyrecords(varargin)
 %MULTIPLYRECORDS    Multiply SEIZMO records
 %
+%    Usage:    data=multiplyrecords(data)
+%              data=multiplyrecords(data1,data2)
+%              data=multiplyrecords(data1,data2,...,dataN)
+%              data=multiplyrecords(...,'newhdr',true|false)
+%              data=multiplyrecords(...,'npts','error'|'warn'|'ignore')
+%              data=multiplyrecords(...,'delta','error'|'warn'|'ignore')
+%              data=multiplyrecords(...,'begin','error'|'warn'|'ignore')
+%              data=multiplyrecords(...,'ref','error'|'warn'|'ignore')
+%              data=multiplyrecords(...,'ncmp','error'|'warn'|'ignore')
+%              data=multiplyrecords(...,'leven','error'|'warn'|'ignore')
+%              data=multiplyrecords(...,'iftype','error'|'warn'|'ignore')
+%
 %    Description: MULTIPLYRECORDS(DATA) will multiply all records in DATA,
 %     returning one record with its header fields set to those of the
 %     first record.  The header can be set to that of the last record by
@@ -94,19 +106,7 @@ function [data]=multiplyrecords(varargin)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
 %     NPTS, E, NCMP (see option 'npts' and 'ncmp')
 %     See option 'newhdr' for inheritance of other header fields.
-%     
-%    Usage:    data=multiplyrecords(data)
-%              data=multiplyrecords(data1,data2)
-%              data=multiplyrecords(data1,data2,...,dataN)
-%              data=multiplyrecords(...,'newhdr',true|false)
-%              data=multiplyrecords(...,'npts','error'|'warn'|'ignore')
-%              data=multiplyrecords(...,'delta','error'|'warn'|'ignore')
-%              data=multiplyrecords(...,'begin','error'|'warn'|'ignore')
-%              data=multiplyrecords(...,'ref','error'|'warn'|'ignore')
-%              data=multiplyrecords(...,'ncmp','error'|'warn'|'ignore')
-%              data=multiplyrecords(...,'leven','error'|'warn'|'ignore')
-%              data=multiplyrecords(...,'iftype','error'|'warn'|'ignore')
-%     
+%
 %    Examples:
 %     Convolve a record with itself:
 %      idft(multiplyrecords(dft(data([1 1]))))
@@ -121,9 +121,10 @@ function [data]=multiplyrecords(varargin)
 %                        fixed amph2rlim handling, .dep and .ind rather 
 %                        than .x and .t
 %        Nov. 23, 2008 - now just calls RECORDFUN
+%        Apr. 23, 2009 - move usage up
 %     
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 23, 2008 at 20:30 GMT
+%     Last Updated Apr. 23, 2009 at 20:30 GMT
 
 % todo:
 

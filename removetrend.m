@@ -1,6 +1,8 @@
 function [data]=removetrend(data)
 %REMOVETREND    Remove linear trend from SEIZMO records
 %
+%    Usage:    data=removetrend(data)
+%
 %    Description: REMOVETREND(DATA) removes the linear trend from SEIZMO
 %     records by subtracting the best straight line fit to the data as 
 %     determined by a least squares inversion.  For multi-component
@@ -13,8 +15,6 @@ function [data]=removetrend(data)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
-%    
-%    Usage:    data=removetrend(data)
 %
 %    Examples:
 %     4th order lowpass butter filter with a passband corner of 10s
@@ -37,17 +37,21 @@ function [data]=removetrend(data)
 %        Oct.  3, 2008 - .dep & .ind
 %        Nov. 22, 2008 - doc update, history fix, renamed from RTREND to
 %                        REMOVETREND, one CHANGEHEADER call, better checks
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 09:05 GMT
+%     Last Updated Apr. 23, 2009 at 20:50 GMT
 
 % todo:
 
 % check input
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

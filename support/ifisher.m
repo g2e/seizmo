@@ -1,11 +1,11 @@
 function [R]=ifisher(Z)
 %IFISHER    Converts Z statistics to correlation coefficients
 %
+%    Usage: r=ifisher(z)
+%
 %    Description:  This uses the inverse Fisher transform to convert z 
 %     statistics to correlation coefficients.  Correlation coefficients 
 %     will be bounded by -1 and 1.  NaNs will be preserved as NaNs.
-%
-%    Usage: r=ifisher(z)
 %
 %    Examples:
 %     Convert correlations to z statistic get the mean and std dev and

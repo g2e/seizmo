@@ -1,6 +1,9 @@
 function [data]=subtract(data,constant,cmp)
 %SUBTRACT    Subtract a constant from SEIZMO records
 %
+%    Usage:    data=subtract(data,constant)
+%              data=subtract(data,constant,cmp_list)
+%
 %    Description: SUBTRACT(DATA,CONSTANT) subtracts a constant from the 
 %     dependent component(s) of SEIZMO records.  For multi-component 
 %     files, this operation is performed on every dependent component (this
@@ -21,9 +24,6 @@ function [data]=subtract(data,constant,cmp)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage:    data=subtract(data,constant)
-%              data=subtract(data,constant,cmp_list)
 %
 %    Examples:
 %     Do a Hilbert transform by converting records to the frequency 
@@ -46,17 +46,21 @@ function [data]=subtract(data,constant,cmp)
 %                        added, cmp checks, no longer uses add, doc update
 %        Oct.  6, 2008 - minor code cleaning
 %        Nov. 22, 2008 - update to new name schema (now SUBTRACT)
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 07:25 GMT
+%     Last Updated Apr. 23, 2009 at 21:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,3,nargin))
+msg=nargchk(2,3,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

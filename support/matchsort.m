@@ -1,16 +1,16 @@
 function [y,li]=matchsort(x,i,dim)
 %MATCHSORT    Replicates a sort operation using the returned permutation indices
 %
+%    Usage: y=matchsort(x,i)
+%           y=matchsort(x,i,dim)
+%           [y,li]=matchsort(x,i,dim)
+%
 %    Description:  Replicates a previous sort operation using the 
 %     permutation matrix from that previous sort.  Useful for sorting
 %     multiple matrices in parallel.  If no dimension argument is supplied,
 %     matchsort will operate on the first non-singleton dimension just like
 %     sort does.  Second output is the permutation matrix transformed into
 %     the corresponding matrix of linear indices.
-%
-%    Usage: y=matchsort(x,i)
-%           y=matchsort(x,i,dim)
-%           [y,li]=matchsort(x,i,dim)
 %
 %    Examples:
 %     

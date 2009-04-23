@@ -1,6 +1,9 @@
 function [diff]=timediff(times1,times2,option)
 %TIMEDIFF    Return number of seconds between times
 %
+%    Usage:    diff=timediff(times1,times2)
+%              diff=timediff(times1,times2,'utc')
+%
 %    Description: TIMEDIFF(TIMES1,TIMES2) returns the difference in time
 %     between times in TIMES1 and times in TIMES2.  TIMES1 and TIMES2 must
 %     be a Nx2, Nx3, Nx5, or Nx6 array of [yr dayofyr], [yr mon dayofmon], 
@@ -18,9 +21,6 @@ function [diff]=timediff(times1,times2,option)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    diff=timediff(times1,times2)
-%              diff=timediff(times1,times2,'utc')
-%
 %    Examples:
 %     Find the number of seconds in 2005:
 %      timediff([2005 1],[2006 1],'utc')
@@ -29,14 +29,16 @@ function [diff]=timediff(times1,times2,option)
 
 %     Version History:
 %        Nov. 12, 2008 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 12, 2008 at 04:40 GMT
+%     Last Updated Apr. 23, 2009 at 21:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,3,nargin))
+msg=nargchk(2,3,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check times
 sz1=size(times1);

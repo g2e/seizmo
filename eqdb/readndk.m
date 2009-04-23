@@ -7,7 +7,8 @@ function [events]=readndk(filename)
 %      
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check filename is char
 if(~ischar(filename)); error('FILENAME must be a string!'); end

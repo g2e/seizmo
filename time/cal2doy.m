@@ -1,6 +1,8 @@
 function [doydates]=cal2doy(caldates)
 %CAL2DOY    Convert Year & Month & Day of Month to Year & Day of Year
 %
+%    Usage:    doydates=cal2doy(caldates)
+%
 %    Description: CAL2DOY(CALDATES) returns a Nx2 numeric array of day of
 %     year dates corresponding to CALDATES, a Nx3 numeric array with the
 %     1st column giving the year, the 2nd column lists the month number
@@ -12,8 +14,6 @@ function [doydates]=cal2doy(caldates)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    doydates=cal2doy(caldates)
-%
 %    Examples:
 %     Get the day of year of now:
 %      doydate=cal2doy([0 1 now])
@@ -22,14 +22,16 @@ function [doydates]=cal2doy(caldates)
 
 %     Version History:
 %        Oct. 31, 2008 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 31, 2008 at 22:20 GMT
+%     Last Updated Apr. 23, 2009 at 21:25 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % require Nx3 numeric
 sz=size(caldates);

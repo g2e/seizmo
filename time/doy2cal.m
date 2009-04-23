@@ -1,6 +1,8 @@
 function [caldates]=doy2cal(doydates)
 %DOY2CAL    Convert Year & Day of Year to Year & Month & Day of Month
 %
+%    Usage:    caldates=doy2cal(doydates)
+%
 %    Description: DOY2CAL(DOYDATES) returns a Nx3 numeric array of calendar
 %     dates corresponding to DOYDATES, a Nx2 numeric array with the first
 %     column having the year and the second the day of the year.  The
@@ -12,8 +14,6 @@ function [caldates]=doy2cal(doydates)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    caldates=doy2cal(doydates)
-%
 %    Examples:
 %     Get the calendar date of today:
 %      caldate=doy2cal([0 now])
@@ -22,14 +22,16 @@ function [caldates]=doy2cal(doydates)
 
 %     Version History:
 %        Oct. 31, 2008 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 31, 2008 at 21:40 GMT
+%     Last Updated Apr. 23, 2009 at 21:25 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % require Nx2 numeric
 sz=size(doydates);

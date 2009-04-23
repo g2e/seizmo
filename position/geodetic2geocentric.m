@@ -1,6 +1,9 @@
 function [lat,lon,depth]=geodetic2geocentric(lat,lon,depth,ellipsoid)
 %GEODETIC2GEOCENTRIC    Converts coordinates from geodetic to geocentric
 %
+%    Usage:    [lat,lon,depth]=geodetic2geocentric(lat,lon,depth)
+%              [lat,lon,depth]=geodetic2geocentric(lat,lon,depth,[a f])
+%
 %    Description: [LAT,LON,DEPTH]=GEODETIC2GEOCENTRIC(LAT,LON,DEPTH) 
 %     converts arrays of coordinates from geodetic to geocentric latitude,
 %     longitude, depth.  LAT and LON are in degrees.  DEPTH is in
@@ -17,9 +20,6 @@ function [lat,lon,depth]=geodetic2geocentric(lat,lon,depth,ellipsoid)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    [lat,lon,depth]=geodetic2geocentric(lat,lon,depth)
-%              [lat,lon,depth]=geodetic2geocentric(lat,lon,depth,[a f])
-%
 %    Examples:
 %     Get your station locations into geocentric coordinates:
 %      [lat,lon,depth]=geodetic2geocentric(stla,stlo,(stdp-stel)/1000)
@@ -29,14 +29,16 @@ function [lat,lon,depth]=geodetic2geocentric(lat,lon,depth,ellipsoid)
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - scalar expansion, doc update
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 10, 2008 at 08:45 GMT
+%     Last Updated Apr. 23, 2009 at 21:45 GMT
 
 % todo:
 
 % require 3 or 4 inputs
-error(nargchk(3,4,nargin))
+msg=nargchk(3,4,nargin);
+if(~isempty(msg)); error(msg); end
 
 % default - WGS-84 Reference Ellipsoid
 if(nargin==3 || isempty(ellipsoid))

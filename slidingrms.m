@@ -1,6 +1,13 @@
 function [data]=slidingrms(data,nsamples,varargin)
 %SLIDINGRMS    Returns sliding-window root-mean-square of SEIZMO records
 %
+%    Usage:    data=slidingrms(data,n)
+%              data=slidingrms(...,'position','center'|'trail'|'lead')
+%              data=slidingrms(...,'offset',offset)
+%              data=slidingrms(...,'edge','truncate'|'pad')
+%              data=slidingrms(...,'dim',n)
+%              data=slidingrms(...,'custom',window)
+%
 %    Description: SLIDINGRMS(DATA,N) applies a centered sliding-window 
 %     root-mean-square of 2N+1 samples to the dependent component(s) of 
 %     SEIZMO data records in DATA.  N can be a scalar (each record has the
@@ -57,13 +64,6 @@ function [data]=slidingrms(data,nsamples,varargin)
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:    data=slidingrms(data,n)
-%              data=slidingrms(...,'position','center'|'trail'|'lead')
-%              data=slidingrms(...,'offset',offset)
-%              data=slidingrms(...,'edge','truncate'|'pad')
-%              data=slidingrms(...,'dim',n)
-%              data=slidingrms(...,'custom',window)
-%
 %    Examples:
 %      Compare an envelope and a 21-sample sliding-window root-mean-square:
 %       p2([envelope(data(1)) slidingrms(data(1),10)])
@@ -81,17 +81,21 @@ function [data]=slidingrms(data,nsamples,varargin)
 %        Oct.  7, 2008 - now just an alias to SLIDINGMEAN and SEISFUN
 %        Nov. 13, 2008 - update to use SLIDINGAVG and SEIZFUN
 %        Nov. 22, 2008 - update for new names again
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 22:00 GMT
+%     Last Updated Apr. 23, 2009 at 21:00 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,8,nargin))
+msg=nargchk(2,8,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % alias to other functions
 data=seizmofun(data,@(x)sqrt(slidingavg(x.^2,nsamples,varargin{:})));

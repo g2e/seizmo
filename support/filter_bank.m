@@ -1,6 +1,8 @@
 function [bank]=filter_bank(range,option,width,offset)
 %FILTER_BANK    Makes a set of narrow-band bandpass filters
 %
+%    Usage: [bank]=filter_bank(range,option,width,offset)
+%
 %    Description:  FILTER_BANK(RANGE,OPTION,WIDTH,OFFSET) returns a bank of
 %     bandpass filters.  Each row in the bank corresponds to a separate
 %     filter, with the first column giving the center frequency and the 2nd
@@ -11,8 +13,6 @@ function [bank]=filter_bank(range,option,width,offset)
 %     constant over the frequency range (WIDTH and OFFSET are taken in mHz)
 %     or if the width and offset varies (WIDTH and OFFSET are assumed to be
 %     given as a fraction of the center frequency).
-%
-%    Usage: [bank]=filter_bank(range,option,width,offset)
 %
 %    Examples:
 %      Build a filter bank over the range 0.01 to 0.1 Hz with filter widths
@@ -27,7 +27,8 @@ function [bank]=filter_bank(range,option,width,offset)
 %    See also: iirfilter
 
 % check number of arguments
-error(nargchk(4,4,nargin));
+msg=nargchk(4,4,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check arguments
 if(numel(range)>2 || ~isnumeric(range) || any(range<0))

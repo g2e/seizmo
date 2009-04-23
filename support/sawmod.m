@@ -1,6 +1,8 @@
 function [c]=sawmod(a,b)
 %SAWMOD    Returns a sawtooth modulus
 %
+%    Usage: [c]=sawmod(a,b)
+%
 %    Description: SAWMOD(A,B) is S.*(A-N.*X) where N=round(A./B) if B~=0
 %     and S=1-2.*MOD(N,2).  Thus SAWMOD(A,B) is always within the range
 %     +/-B and forms a continuous function (but discontinuous in the 1st
@@ -15,8 +17,6 @@ function [c]=sawmod(a,b)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage: [c]=sawmod(a,b)
-%
 %    Examples:
 %     To get latitude values LAT within the range of +/-90:
 %      LAT=sawmod(LAT,90);
@@ -25,9 +25,10 @@ function [c]=sawmod(a,b)
 
 %     Version History:
 %        Mar. 24, 2009 - initial version
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2009 at 18:45 GMT
+%     Last Updated Apr. 23, 2009 at 22:20 GMT
 
 n=round(0.5.*a./b);
 s=1-2*mod(n,2);

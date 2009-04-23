@@ -1,6 +1,8 @@
 function [times]=getarrival(data,phase)
 %GETARRIVAL    Returns stored phase arrival time from SEIZMO data header
 %
+%    Usage:    times=getarrival(data,phase)
+%
 %    Description: GETARRIVAL(DATA,PHASE) searches 'kt(n)' header fields in
 %     the SEIZMO structure DATA for the specified phase PHASE.  If found,
 %     the matching 't(n)' value is returned.  If not, NaN is returned.
@@ -11,8 +13,6 @@ function [times]=getarrival(data,phase)
 %     - NAME OF PHASE IS CASE SENSITIVE!
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    times=getarrival(data,phase)
 %
 %    Examples:
 %     Ptimes=getarrival(data,'P');
@@ -28,14 +28,16 @@ function [times]=getarrival(data,phase)
 %        Nov. 16, 2008 - doc update, history fix, rename from PULLARR to
 %                        GETARRIVAL, minor code clean
 %        Nov. 24, 2008 - minor code cleaning
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  24, 2008 at 00:40 GMT
+%     Last Updated Apr. 23, 2009 at 20:10 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,2,nargin))
+msg=nargchk(2,2,nargin);
+if(~isempty(msg)); error(msg); end
     
 % grab header values
 [kt,t]=getheader(data,'kt','t');

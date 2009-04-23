@@ -1,12 +1,12 @@
 function [fh,lh]=recordsection(data,varargin) 
 %RECORDSECTION   Plots SEIZMO data records in a distance spaced record section
 %
+%    Usage:  [fh,lh]=recordsection(data,'plot_option',plot_option_value,...)
+%
 %    Description: Plots timeseries and xy SEIZMO records spaced out by the 
 %     'gcarc' header field.  Other record types are ignored.  Optional
 %     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
-%
-%    Usage:  [fh,lh]=recordsection(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
 %     To make a record section of data between 100 and 150 degrees showing 
@@ -24,7 +24,8 @@ function [fh,lh]=recordsection(data,varargin)
 %    See also:  plot1, plot2, plot0
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % get plotting style defaults
 P=plotconfig;

@@ -5,7 +5,8 @@ function [T,pop,big,small]=groupwaves(corr_grid,data)
 global CONF GCOLOR
 
 % check nargin
-error(nargchk(2,2,nargin))
+msg=nargchk(2,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
 if(~isstruct(data))

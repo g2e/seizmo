@@ -1,6 +1,9 @@
 function [dates,leaps]=getleapseconds(option)
 %GETLEAPSECONDS    Returns leapsecond info with caching for multiple calls
 %
+%    Usage:    [dates,leaps]=getleapseconds()
+%              [dates,leaps]=getleapseconds(true|false)
+%
 %    Description:  [DATES,LEAPS]=GETLEAPSECONDS() returns leap second info
 %     and stores that info in a global variable to speed up subsequent
 %     calls.  DATES contains the serial dates on which the 'leaps' occur
@@ -16,9 +19,6 @@ function [dates,leaps]=getleapseconds(option)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    [dates,leaps]=getleapseconds()
-%              [dates,leaps]=getleapseconds(true|false)
-%
 %    Examples:
 %     To see the speed benefit of caching:
 %      tic; for i=1:100; [dates,leaps]=getleapseconds(true); end; toc
@@ -30,14 +30,16 @@ function [dates,leaps]=getleapseconds(option)
 %        Nov. 10, 2008 - initial version
 %        Nov. 15, 2008 - update for new name schema, option now a logical
 %        Dec. 13, 2008 - fix bug, eliminate recursion
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 13, 2008 at 07:50 GMT
+%     Last Updated Apr. 23, 2009 at 21:25 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(0,1,nargin));
+msg=nargchk(0,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check option
 if(nargin==0 || isempty(option))

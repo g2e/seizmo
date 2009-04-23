@@ -1,12 +1,12 @@
 function [Z]=fisher(R)
 %FISHER    Converts correlation coefficients to the Z statistic
 %
+%    Usage: z=fisher(r)
+%
 %    Description:  This uses the Fisher transform to convert correlation 
 %     coefficients to the z statistic.  Correlation coefficients should be 
 %     bounded by -1 and 1.  Any correlation coefficient outside the range 
 %     is set to NaN.
-%
-%    Usage: z=fisher(r)
 %
 %    Examples:
 %     Convert correlations to z statistic get the mean and std dev and

@@ -1,6 +1,8 @@
 function [fh,sfh]=plot1(data,varargin)
 %PLOT1    Plot SEIZMO data records in individual subplots
 %
+%    Usage:  [fh,sfh]=plot1(data,'plot_option',plot_option_value,...)
+%
 %    Description: PLOT1(DATA) plots timeseries and xy SEIZMO records in a
 %     figure as individual subplots.  Other filetypes are ignored (a space 
 %     is left for their subplot in the figure).  By default, markers 'o',
@@ -14,8 +16,6 @@ function [fh,sfh]=plot1(data,varargin)
 %     PLOT1(DATA,PLOT_OPTION,OPTION_VALUE) modifies the plot parameter
 %     PLOT_OPTION to OPTION_VALUE.  A list of available options and their
 %     applicable range can be found with the function PCONF.
-% 
-%    Usage:  [fh,sfh]=plot1(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
 %     Plot records with 3 columns of subplots:
@@ -37,12 +37,14 @@ function [fh,sfh]=plot1(data,varargin)
 %     Version History:
 %        ????????????? - Initial Version
 %        June 12, 2008 - doc update
+%        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 16:10 GMT
+%     Last Updated Apr. 23, 2009 at 20:35 GMT
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % get plotting style defaults
 P=plotconfig;

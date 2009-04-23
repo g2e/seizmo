@@ -1,6 +1,10 @@
 function [data,removed]=removedeadrecords(data,option)
 %REMOVEDEADRECORDS    Removes constant SEIZMO records
 %
+%    Usage:    data=removedeadrecords(data)
+%              data=removedeadrecords(data,option)
+%              [data,removed]=removedeadrecords(...)
+%
 %    Description: REMOVEDEADRECORDS(DATA) removes records that have no
 %     change in the dependent component.  These can cause problems in
 %     analysis and are not worth keeping.  Uses the header fields 
@@ -24,8 +28,6 @@ function [data,removed]=removedeadrecords(data,option)
 %
 %    Header changes: NONE (may use CHECKHEADER)
 %
-%    Usage:    data=removedeadrecords(data)
-%
 %    Examples:
 %     Remove dead records before reading in data from current directory:
 %      data=readdata(removedeadrecords(readheaders('*')));
@@ -38,14 +40,17 @@ function [data,removed]=removedeadrecords(data,option)
 %        Mar.  4, 2008 - minor doc update
 %        Nov. 22, 2008 - update for new name schema (now REMOVEDEADRECORDS)
 %        Dec.  8, 2008 - 2nd output lists removed indices
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  8, 2008 at 21:30 GMT
+%     Last Updated Apr. 23, 2009 at 20:50 GMT
 
 % todo:
 
 % check input
-error(nargchk(1,2,nargin))
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check option
 if(nargin==1 || isempty(option))
@@ -57,7 +62,8 @@ end
 % proceed by option
 if(option)
     % check data structure
-    error(seizmocheck(data))
+	msg=seizmocheck(data);
+	if(~isempty(msg)); error(msg.identifier,msg.message); end
     
     % turn off struct checking
     oldseizmocheckstate=get_seizmocheck_state;
@@ -77,7 +83,8 @@ if(option)
     set_seizmocheck_state(oldseizmocheckstate);
 else
     % check data structure
-    error(seizmocheck(data,'dep'))
+	msg=seizmocheck(data,'dep');
+	if(~isempty(msg)); error(msg.identifier,msg.message); end
     
     % get min/max of data
     nrecs=numel(data);

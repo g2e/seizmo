@@ -1,6 +1,8 @@
 function [varargout]=getlgc(data,varargin)
 %GETLGC    Get logical string from SEIZMO logical header field
 %
+%    Usage: [cellstr1,...,cellstrN]=getlgc(data,'field1',...,'fieldN')
+%
 %    Description: GETLGC(DATA,FIELD) returns a cellstring array containing
 %     'true' 'false' 'undefined' or 'unknown' corresponding to values of
 %     the logical field FIELD in the SEIZMO structure DATA.  This provides
@@ -21,8 +23,6 @@ function [varargout]=getlgc(data,varargin)
 %       are tagged as 'undefined'.
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage: [cellstr1,...,cellstrN]=getlgc(data,'field1',...,'fieldN')
 %
 %    Examples:
 %     To check if all records are evenly spaced:
@@ -47,9 +47,10 @@ function [varargout]=getlgc(data,varargin)
 %        Oct. 17, 2008 - added VINFO support
 %        Nov. 16, 2008 - history fix, rename from GLGC to GETLGC,
 %                        doc update, code cleaning
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2008 at 05:15 GMT
+%     Last Updated Apr. 23, 2009 at 20:15 GMT
 
 % todo:
 

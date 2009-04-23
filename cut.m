@@ -1,6 +1,12 @@
 function [data,failed]=cut(data,varargin)
 %CUT    Cut a window out of SEIZMO records
 %
+%    Usage:    data=cut(data,pdw)
+%              data=cut(...,'cmplist',list,...)
+%              data=cut(...,'fill',logical,...)
+%              data=cut(...,'filler',value,...)
+%              [data,failed]=cut(...,'trim',logical,...)
+%
 %    Description: CUT(DATA,PDW) cuts the records in DATA to the window
 %     limits defined by PDW and outputs the updated dataset.  Header fields
 %     are updated to match the windowed data.  Works with unevenly sampled
@@ -87,12 +93,6 @@ function [data,failed]=cut(data,varargin)
 %     
 %    Header changes: B, E, NPTS, DELTA, NCMP, DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:    data=cut(data,pdw)
-%              data=cut(...,'cmplist',list,...)
-%              data=cut(...,'fill',logical,...)
-%              data=cut(...,'filler',value,...)
-%              [data,failed]=cut(...,'trim',logical,...)
-%
 %    Examples:
 %     Cut a 400 sample window starting from the 33rd sample:
 %       data=cut(data,'x',33,'n',400);
@@ -138,17 +138,21 @@ function [data,failed]=cut(data,varargin)
 %                        changeheader call, support new cutparameters,
 %                        better checking, doc update
 %        Mar. 12, 2009 - fixed 3 more fill bugs :(
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 12, 2009 at 16:40 GMT
+%     Last Updated Apr. 23, 2009 at 20:00 GMT
 
 % todo:
 
 % input check
-error(nargchk(1,11,nargin))
+msg=nargchk(1,11,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

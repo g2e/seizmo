@@ -1,6 +1,8 @@
 function [data]=stretch(data,factor)
 %STRETCH    Upsample SEIZMO records by an integer factor
 %
+%    Usage:    data=stretch(data,factor)
+%
 %    Description: STRETCH(DATA,FACTOR) upsamples SEIZMO records by an 
 %     integer FACTOR.  Anti-aliasing is not an issue so there is no limit 
 %     imposed on the stretch factor.  Cascades are allowed regardless.  
@@ -11,8 +13,6 @@ function [data]=stretch(data,factor)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DELTA, NPTS, DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage:    data=stretch(data,factor)
 %
 %    Examples: 
 %     To double samplerates:
@@ -33,17 +33,21 @@ function [data]=stretch(data,factor)
 %        Nov. 23, 2008 - doc update, history fixed, better checking, single
 %                        changeheader call, update for new name schema,
 %                        .dep rather than .x
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 23, 2008 at 09:45 GMT
+%     Last Updated Apr. 23, 2009 at 21:05 GMT
 
 % todo:
 
 % check inputs
-error(nargchk(2,2,nargin))
+msg=nargchk(2,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

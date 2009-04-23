@@ -1,6 +1,8 @@
 function [isleap]=isleapyear(year)
 %ISLEAPYEAR    True if year is a leap year
 %
+%    Usage:    leapyears=isleapyear(years)
+%
 %    Description: ISLEAPYEAR(YEARS) returns a logical array equal in size
 %     to YEARS with values set to true for the corresponding elements in
 %     YEARS that are leap years.
@@ -12,8 +14,6 @@ function [isleap]=isleapyear(year)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    leapyears=isleapyear(years)
-%
 %    Examples:
 %     Takes into account the century rule and the exception so that
 %     isleapyear([1900 1904 2000 2004]) returns [0 1 1 1].
@@ -22,9 +22,10 @@ function [isleap]=isleapyear(year)
 
 %     Version History:
 %        Oct. 28, 2008 - initial version
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 28, 2008 at 15:10 GMT
+%     Last Updated Apr. 23, 2009 at 21:30 GMT
 
 % todo:
 

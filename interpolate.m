@@ -1,6 +1,10 @@
 function [data]=interpolate(data,sr,method,new_b,new_e)
 %INTERPOLATE    Interpolate SEIZMO records to a new samplerate
 %
+%    Usage:    data=interpolate(data,dt)
+%              data=interpolate(data,dt,method)
+%              data=interpolate(data,dt,method,new_b,new_e)
+%
 %    Description: INTERPOLATE(DATA,RATE) interpolates SEIZMO records in
 %     DATA to a new sample rate RATE.  As this is interpolation (the
 %     default method is spline), edge effects are not an issue as they are
@@ -23,10 +27,6 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DELTA, NPTS, LEVEN, B, E, DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage:    data=interpolate(data,dt)
-%              data=interpolate(data,dt,method)
-%              data=interpolate(data,dt,method,new_b,new_e)
 %
 %    Examples:
 %     interpolate records at 5 sps
@@ -52,15 +52,19 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %        Nov. 22, 2008 - better checks, .dep & .ind rather than .x & .t,
 %                        doc update, history fix, one CHANGEHEADER call,
 %                        extrapolation
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 20:40 GMT
+%     Last Updated Apr. 23, 2009 at 20:25 GMT
 
 % check number of arguments
-error(nargchk(2,5,nargin))
+msg=nargchk(2,5,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

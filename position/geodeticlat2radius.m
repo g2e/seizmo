@@ -1,6 +1,9 @@
 function [radius]=geodeticlat2radius(lat,ellipsoid)
 %GEODETICLAT2RADIUS    Returns the radius at a geodetic latitude
 %
+%    Usage:    radius=geodeticlat2radius(latitudes)
+%              radius=geodeticlat2radius(latitudes,[a f])
+%
 %    Description: GEODETICLAT2RADIUS(LATITUDES) returns the radii at
 %     geodetic latitudes LATITUDES.  LATITUDES must be in degrees.  Assumes
 %     the WGS-84 reference ellipsoid.
@@ -13,9 +16,6 @@ function [radius]=geodeticlat2radius(lat,ellipsoid)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    radius=geodeticlat2radius(latitudes)
-%              radius=geodeticlat2radius(latitudes,[a f])
-%
 %    Examples:
 %     Get the radius for St. Louis, MO USA:
 %      radius=geodeticlat2radius(38.649)
@@ -25,14 +25,16 @@ function [radius]=geodeticlat2radius(lat,ellipsoid)
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - minor doc update
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 10, 2008 at 08:40 GMT
+%     Last Updated Apr. 23, 2009 at 21:45 GMT
 
 % todo:
 
 % require 1 or 2 inputs
-error(nargchk(1,2,nargin))
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % default - WGS-84 Reference Ellipsoid
 if(nargin==1)

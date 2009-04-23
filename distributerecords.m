@@ -1,6 +1,8 @@
 function [data]=distributerecords(data,dep,idx1,ind,idx2,store,npts)
 %DISTRIBUTERECORDS    Distributes a record matrix back into a SEIZMO struct
 %
+%    Usage:    data=distributerecords(data,dep,idx1,ind,idx2,store,npts)
+%
 %    Description: DISTRIBUTERECORDS(DATA,DEP,IDX1,IND,IDX2,STORE,NPTS)
 %     imports the data in DEP and IND (numeric arrays with each column as a
 %     separate component of records - DEP contains the dependent components
@@ -25,8 +27,6 @@ function [data]=distributerecords(data,dep,idx1,ind,idx2,store,npts)
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NPTS, NCMP, E, B, DELTA, LEVEN
 %
-%    Usage:    data=distributerecords(data,dep,idx1,ind,idx2,store,npts)
-%
 %    Examples:
 %     The typical usage:
 %      [dep,idx1,ind,idx2,store,npts]=combinerecords(data);
@@ -45,17 +45,21 @@ function [data]=distributerecords(data,dep,idx1,ind,idx2,store,npts)
 %        June 29, 2008 - doc update, .dep rather than .x
 %        Nov. 22, 2008 - update for new name schema (now DISTRIBUTERECORDS)
 %                        now accepts independent component input
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 18:15 GMT
+%     Last Updated Apr. 23, 2009 at 20:00 GMT
 
 % todo:
 
 % check input
-error(nargchk(7,7,nargin))
+msg=nargchk(7,7,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data));
+msg=seizmocheck(data);
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % loop through records
 for i=1:numel(data)

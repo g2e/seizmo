@@ -1,6 +1,11 @@
 function [varargout]=xdir(str,depth)
 %XDIR    Directory listing with recursion
 %
+%    Usage:      xdir(path)
+%                xdir(path,depth)
+%              d=xdir(path)
+%              d=xdir(path,depth)
+%
 %    Description: XDIR(PATH) lists the files matching PATH or within the
 %     directory PATH.  The wildcard '*' may be used to specify a directory
 %     or filename pattern (DIR only allows wildcards for the filename).
@@ -40,11 +45,6 @@ function [varargout]=xdir(str,depth)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:      xdir(path)
-%                xdir(path,depth)
-%              d=xdir(path)
-%              d=xdir(path,depth)
-%
 %    Examples:
 %     List all m-files in private directories below the current directory:
 %      xdir **/private/*.m
@@ -67,7 +67,7 @@ function [varargout]=xdir(str,depth)
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 10:35 GMT
+%     Last Updated Apr. 23, 2009 at 22:35 GMT
 
 % todo:
 % - handle '?' wildcard (only for matlab - octave already does this!)

@@ -1,6 +1,8 @@
 function [data]=syncrates(data,sr)
 %SYNCRATES    Resample SEIZMO records to a common sample rate
 %
+%    Usage:    data=syncrates(data,sr)
+%
 %    Description: SYNCRATES(DATA,SR) syncronizes the sample rates of SEIZMO 
 %     records in DATA to the sample rate SR.  A fir filter is used to
 %     avoid aliasing issues, but this can cause edge effects if the records
@@ -15,8 +17,6 @@ function [data]=syncrates(data,sr)
 %    Tested on: Matlab r2007b
 %
 %    Header Changes: DELTA, NPTS, DEPMEN, DEPMIN, DEPMAX, E
-%
-%    Usage:    data=syncrates(data,sr)
 %
 %    Examples:
 %     Change all records to 5 samples per second:
@@ -35,17 +35,21 @@ function [data]=syncrates(data,sr)
 %        Nov. 22, 2008 - update for new name schema (now SYNCRATES), allow
 %                        resampling spectral records, disallow resampling
 %                        xyz records
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 19:15 GMT
+%     Last Updated Apr. 23, 2009 at 21:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,2,nargin))
+msg=nargchk(2,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

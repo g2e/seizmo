@@ -1,6 +1,18 @@
 function [data]=subtractrecords(varargin)
 %SUBTRACTRECORDS    Subtract SEIZMO records
 %
+%    Usage:    data=subtractrecords(data)
+%              data=subtractrecords(data1,data2)
+%              data=subtractrecords(data1,data2,...,dataN)
+%              data=subtractrecords(...,'newhdr',true|false)
+%              data=subtractrecords(...,'npts','error'|'warn'|'ignore')
+%              data=subtractrecords(...,'delta','error'|'warn'|'ignore')
+%              data=subtractrecords(...,'begin','error'|'warn'|'ignore')
+%              data=subtractrecords(...,'ref','error'|'warn'|'ignore')
+%              data=subtractrecords(...,'ncmp','error'|'warn'|'ignore')
+%              data=subtractrecords(...,'leven','error'|'warn'|'ignore')
+%              data=subtractrecords(...,'iftype','error'|'warn'|'ignore')
+%
 %    Description: SUBTRACTRECORDS(DATA) will subtract records 2+ from
 %     record 1 in DATA, returning one record with its header fields set to
 %     those of the first record.  The header can be set to that of the last
@@ -94,19 +106,7 @@ function [data]=subtractrecords(varargin)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
 %     NPTS, E, NCMP (see option 'npts' and 'ncmp')
 %     See option 'newhdr' for inheritance of other header fields.
-%     
-%    Usage:    data=subtractrecords(data)
-%              data=subtractrecords(data1,data2)
-%              data=subtractrecords(data1,data2,...,dataN)
-%              data=subtractrecords(...,'newhdr',true|false)
-%              data=subtractrecords(...,'npts','error'|'warn'|'ignore')
-%              data=subtractrecords(...,'delta','error'|'warn'|'ignore')
-%              data=subtractrecords(...,'begin','error'|'warn'|'ignore')
-%              data=subtractrecords(...,'ref','error'|'warn'|'ignore')
-%              data=subtractrecords(...,'ncmp','error'|'warn'|'ignore')
-%              data=subtractrecords(...,'leven','error'|'warn'|'ignore')
-%              data=subtractrecords(...,'iftype','error'|'warn'|'ignore')
-%     
+%
 %    Examples:
 %     Check if two records are exactly the same:
 %      plot1(subtractrecords(data(1:2)))
@@ -121,9 +121,10 @@ function [data]=subtractrecords(varargin)
 %                        fixed amph2rlim handling, .dep and .ind rather 
 %                        than .x and .t
 %        Nov. 23, 2008 - now just calls RECORDFUN
+%        Apr. 23, 2008 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 23, 2008 at 20:45 GMT
+%     Last Updated Apr. 23, 2009 at 21:05 GMT
 
 % todo:
 

@@ -1,6 +1,8 @@
 function [data]=removemean(data)
 %REMOVEMEAN    Remove mean from SEIZMO records
 %
+%    Usage:    data=removemean(data)
+%
 %    Description: REMOVEMEAN(DATA) removes the mean from SEIZMO records.
 %     In the case of multi-component records, each component has the mean
 %     removed.
@@ -12,8 +14,6 @@ function [data]=removemean(data)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage:    data=removemean(data)
 %
 %    Examples:
 %     It is generally a good idea to remove the mean from records before
@@ -33,17 +33,21 @@ function [data]=removemean(data)
 %        June 12, 2008 - doc update, history added
 %        Oct.  3, 2008 - .dep & .ind
 %        Nov. 22, 2008 - doc update, rename from RMEAN to REMOVEMEAN
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 08:20 GMT
+%     Last Updated Apr. 23, 2009 at 20:50 GMT
 
 % todo:
 
 % check input
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

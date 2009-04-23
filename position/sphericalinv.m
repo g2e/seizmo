@@ -1,6 +1,8 @@
 function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %SPHERICALINV    Return distance and azimuth between 2 locations on sphere
 %
+%    Usage:    [gcarc,az,baz]=sphericalinv(lat1,lon1,lat2,lon2)
+%
 %    Description: [GCARC,AZ,BAZ]=SPHERICALINV(LAT1,LON1,LAT2,LON2) returns
 %     the great-circle-arc degree distances GCARC, forward azimuths AZ and
 %     back azimuths BAZ between initial point(s) with geocentric latitudes
@@ -20,8 +22,6 @@ function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    [gcarc,az,baz]=sphericalinv(lat1,lon1,lat2,lon2)
-%
 %    Examples:
 %     St. Louis, MO USA to Yaounde, Cameroon:
 %      [dist,az,baz]=sphericalinv(38.649,-90.305,3.861,11.521)
@@ -34,10 +34,10 @@ function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Oct. 26, 2008 - improved scalar expansion, doc and comment update
-%        Apr. 23, 2009 - fix nargchk for octave
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 12:00 GMT
+%     Last Updated Apr. 23, 2009 at 21:50 GMT
 
 % todo:
 

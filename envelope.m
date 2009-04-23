@@ -1,6 +1,8 @@
 function [data]=envelope(data)
 %ENVELOPE    Return envelopes of SEIZMO records
 %
+%    Usage:    data=envelope(data)
+%
 %    Description: ENVELOPE(DATA) returns the envelope (the complex
 %     magnitude of a record's analytic signal) of the SEIZMO records.
 %
@@ -9,8 +11,6 @@ function [data]=envelope(data)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage:    data=envelope(data)
 %
 %    Examples:
 %     Plot the envelopes against the data:
@@ -27,14 +27,16 @@ function [data]=envelope(data)
 %        July 17, 2008 - history update, doc update, now uses
 %                        SEIZMO functions rather than Matlab's hilbert
 %        Nov. 22, 2008 - update for new name schema
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 22:45 GMT
+%     Last Updated Apr. 23, 2009 at 20:10 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % sqrt(H(x)^2+x^2)
 data=seizmofun(...

@@ -1,6 +1,9 @@
 function [filetype,version,endian]=getfileversion(filename,verbose)
 %GETFILEVERSION    Get filetype, version and byte-order of SEIZMO datafile
 %
+%    Usage:    [filetype,version,endian]=getfileversion('filename')
+%              [filetype,version,endian]=getfileversion('filename',verbose)
+%
 %    Description: [FILETYPE,VERSION,ENDIAN]=GETFILEVERSION(FILENAME) gets
 %     the filetype FILETYPE, version VERSION, and byte-order ENDIAN of a
 %     SEIZMO compatible file FILENAME.  If a datafile cannot be validated
@@ -16,9 +19,6 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %       validity (a 32bit signed integer occupying bytes 305 to 308).
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    [filetype,version,endian]=getfileversion('filename')
-%              [filetype,version,endian]=getfileversion('filename',verbose)
 %
 %    Examples:
 %     Figure out a file's version so that we can pull up the definition:
@@ -42,10 +42,10 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %        Apr.  7, 2009 - verbose option, output cleanup, better subfunction
 %                        handling, total separation of type methods
 %        Apr. 23, 2009 - fix for array of function handles (octave needs
-%                        comma separated list)
+%                        comma separated list), move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 10:50 GMT
+%     Last Updated Apr. 23, 2009 at 21:15 GMT
 
 % todo:
 

@@ -1,6 +1,8 @@
 function [snr]=quicksnr(data,nwin,swin)
 %QUICKSNR    Quick estimation of SNR for SEIZMO records
 %
+%    Usage:    snr=quicksnr(data,noisewindow,signalwindow)
+%
 %    Description: QUICKSNR(DATA,NOISEWINDOW,SIGNALWINDOW) estimates the
 %     signal to noise ratio for SEIZMO records by calculating the ratio of
 %     the maximum-minimum amplitudes of two data windows that represent the
@@ -11,8 +13,6 @@ function [snr]=quicksnr(data,nwin,swin)
 %    Notes:
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    snr=quicksnr(data,noisewindow,signalwindow)
 %
 %    Examples:
 %     To get SNR estimates of P (assuming times are stored in header):
@@ -32,17 +32,21 @@ function [snr]=quicksnr(data,nwin,swin)
 %                        variation of values in the windows rather than
 %                        just the maximums
 %        Dec. 13, 2008 - allow different window for each record (whoops)
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 13, 2008 at 03:00 GMT
+%     Last Updated Apr. 23, 2009 at 20:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(3,3,nargin))
+msg=nargchk(3,3,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

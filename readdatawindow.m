@@ -1,6 +1,12 @@
 function [data,failed]=readdatawindow(data,varargin)
 %READDATAWINDOW    Read data window into SEIZMO data structure
 %
+%    Usage:    data=readdatawindow(data,pdw)
+%              data=readdatawindow(...,'cmplist',list,...)
+%              data=readdatawindow(...,'fill',logical,...)
+%              data=readdatawindow(...,'filler',value,...)
+%              [data,failed]=readdatawindow(...,'trim',logical,...)
+%
 %    Description: READDATAWINDOW(DATA,PDW) reads a data window PDW from 
 %     SEIZMO compatible datafiles into the SEIZMO structure DATA, returning
 %     the updated structure.  This provides a mechanism similar to the SAC 
@@ -96,12 +102,6 @@ function [data,failed]=readdatawindow(data,varargin)
 %
 %    Header changes: B, E, NPTS, DELTA, NCMP, DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:    data=readdatawindow(data,pdw)
-%              data=readdatawindow(...,'cmplist',list,...)
-%              data=readdatawindow(...,'fill',logical,...)
-%              data=readdatawindow(...,'filler',value,...)
-%              [data,failed]=readdatawindow(...,'trim',logical,...)
-%
 %    Examples:
 %     ALL THE FOLLOWING EXAMPLES REQUIRE YOU TO 
 %     REMEMBER TO READ IN THE HEADER INFO FIRST:
@@ -142,14 +142,16 @@ function [data,failed]=readdatawindow(data,varargin)
 %        Nov. 18, 2008 - updated to new name schema (now READDATAWINDOW),
 %                        fixed fill bug
 %        Mar. 12, 2009 - fixed 3 more fill bugs :(
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 12, 2009 at 16:40 GMT
+%     Last Updated Apr. 23, 2009 at 20:40 GMT
 
 % todo:
 
 % input check
-error(nargchk(1,11,nargin));
+msg=nargchk(1,11,nargin);
+if(~isempty(msg)); error(msg); end
 
 % headers setup (also checks struct)
 [h,vi]=versioninfo(data);

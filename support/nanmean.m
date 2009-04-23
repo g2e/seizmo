@@ -1,11 +1,11 @@
 function [mean]=nanmean(x,dim)
 %NANMEAN    Return mean excluding NaNs
 %
-%    Description:  Returns the means along a dimension excluding NaN 
-%     elements.  Operates exactly like mean.
-%
 %    Usage: mean=nanmean(x)
 %           mean=nanmean(x,dim)
+%
+%    Description:  Returns the means along a dimension excluding NaN 
+%     elements.  Operates exactly like mean.
 %
 %    Examples:
 %

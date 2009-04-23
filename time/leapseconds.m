@@ -1,6 +1,8 @@
 function [leaps]=leapseconds()
 %LEAPSECONDS    Returns date and time strings of each leap second
 %
+%    Usage:    leaps=leapseconds()
+%
 %    Description: LEAPSECONDS() returns a formatted character array of the
 %     date-times of the end of each leap second, which is always the start
 %     of the next UTC month.  The last characters of each row gives a '+'
@@ -33,8 +35,6 @@ function [leaps]=leapseconds()
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    leaps=leapseconds()
-%
 %    Examples:
 %     Ever wondered when those pesky leap seconds were? Just run:
 %      leapseconds
@@ -44,9 +44,10 @@ function [leaps]=leapseconds()
 %     Version History:
 %        Oct. 28, 2008 - initial version
 %        Mar. 29, 2009 - added some notes on data handling
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 29, 2009 at 23:45 GMT
+%     Last Updated Apr. 23, 2009 at 21:30 GMT
 
 % todo:
 

@@ -1,6 +1,9 @@
 function [report]=seizmocheck(data,varargin)
 %SEIZMOCHECK    Validate SEIZMO data structure
 %
+%    Usage:    msg=seizmocheck(data)
+%              msg=seizmocheck(data,'requiredfield',...,'requiredfield')
+%
 %    Description: SEIZMOCHECK(DATA) returns an appropriate error message 
 %     structure if the input variable fails certain SEIZMO data structure 
 %     requirements.  The output structure contains the fields 'identifier'
@@ -20,13 +23,18 @@ function [report]=seizmocheck(data,varargin)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    error(seizmocheck(data))
-%              error(seizmocheck(data,'requiredfield',...,'requiredfield'))
-%
 %    Examples:
 %     Most functions require records have data stored in the field 'dep'.
 %     This will perform a regular check as well as assure the field exists:
 %      error(seizmocheck(data,'dep')
+%
+%     Octave does not handle structs passed to ERROR, nor does it handle
+%     the empty case like Matlab so the following should be done to force
+%     compatibility:
+%      msg=seizmocheck(data,...);
+%      if(~isempty(msg))
+%          error(msg.identifier,msg.message);
+%      end
 %
 %    See also: isseizmo, seizmodef
 
@@ -50,9 +58,11 @@ function [report]=seizmocheck(data,varargin)
 %        Nov. 13, 2008 - renamed from SEISCHK to SEIZCHK
 %        Nov. 15, 2008 - update for the new name scheme (now SEIZMOCHECK),
 %                        change endian to byteorder, .dep special handling
+%        Apr. 23, 2009 - move usage up, mention usage style compatible with
+%                        octave and matlab
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 18:50 GMT
+%     Last Updated Apr. 23, 2009 at 21:50 GMT
 
 % todo:
 

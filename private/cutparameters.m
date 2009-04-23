@@ -1,6 +1,8 @@
 function [option]=cutparameters(varargin)
 %CUTPARAMETERS    Parses inputs defining the cut window for CUTIM/RPDW
 %
+%    Usage:    options=cutparameters(nrecs,args)
+%
 %    Description: CUTPARAMETERS(NRECS,VARARGIN) parses parameters VARARGIN
 %     passed to CUT and READDATAWINDOW, passing results back as a struct.  
 %     Parameters include those that define the window as well as other
@@ -11,8 +13,6 @@ function [option]=cutparameters(varargin)
 %     - empty input arguments may have unexpected results
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    options=cutparameters(nrecs,args)
 %
 %    Examples:
 %     CUTPARAMETERS is what allows CUT and READDATAWINDOW to have very
@@ -31,9 +31,10 @@ function [option]=cutparameters(varargin)
 %                        sizes
 %        Oct. 16, 2008 - name changed from CUTPARAM to CUTPARAMETERS
 %        Nov. 15, 2008 - update for new name schema
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 22:45 GMT
+%     Last Updated Apr. 23, 2009 at 21:15 GMT
 
 % todo:
 

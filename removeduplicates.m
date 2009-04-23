@@ -1,6 +1,13 @@
 function [data,removed]=removeduplicates(data,varargin)
 %REMOVEDUPLICATES    Remove duplicate SEIZMO records
 %
+%    Usage:    data=removeduplicates(data)
+%              data=removeduplicates(data,'timing','utc')
+%              data=removeduplicates(data,'useabsolutetiming',true|false)
+%              data=removeduplicates(data,'requiredcharfields',fields)
+%              data=removeduplicates(data,'requiredrealfields',fields)
+%              [data,removed]=removeduplicates(...)
+%
 %    Description: REMOVEDUPLICATES(DATA) returns the SEIZMO record dataset
 %     DATA without any duplicate records or partial pieces based on the
 %     start (B) and end (E) fields.  This is only valid for Time Series and
@@ -43,13 +50,6 @@ function [data,removed]=removeduplicates(data,varargin)
 %
 %    Header changes: NONE (does use CHECKHEADER though)
 %
-%    Usage:    data=removeduplicates(data)
-%              data=removeduplicates(data,'timing','utc')
-%              data=removeduplicates(data,'useabsolutetiming',true|false)
-%              data=removeduplicates(data,'requiredcharfields',fields)
-%              data=removeduplicates(data,'requiredrealfields',fields)
-%              [data,removed]=removeduplicates(...)
-%
 %    Examples:
 %     Datasets sometimes include duplicates and partial pieces.  Usually
 %     this is associated with data pulled from a DHI server.
@@ -61,9 +61,10 @@ function [data,removed]=removeduplicates(data,varargin)
 %        Dec.  6, 2008 - initial version
 %        Dec.  8, 2008 - more options
 %        Apr.  1, 2009 - changed TIMING default to UTC to match MERGE
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  1, 2009 at 08:40 GMT
+%     Last Updated Apr. 23, 2009 at 20:50 GMT
 
 % todo:
 
@@ -74,7 +75,8 @@ if(mod(nargin-1,2))
 end
 
 % check data structure
-error(seizmocheck(data))
+msg=seizmocheck(data);
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

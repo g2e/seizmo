@@ -1,6 +1,10 @@
 function [data]=checkheader(data,options,varargin)
 %CHECKHEADER    Check and fix header values of SEIZMO records
 %
+%    Usage: data=checkheader(data)
+%           data=checkheader(data,options)
+%           data=checkheader(data,options,'field1',values1,...)
+%
 %    Description: CHECKHEADER(DATA) does a number of consistency checks on
 %     SEIZMO records in DATA.  By default it does all of the checks that
 %     can be specified (see next calling option).
@@ -45,10 +49,6 @@ function [data]=checkheader(data,options,varargin)
 %                    DEPMEN, DEPMIN, DEPMAX, EVLA, EVLO, STLA, STLO,
 %                    GCARC, AZ, BAZ, DIST
 %
-%    Usage: data=checkheader(data)
-%           data=checkheader(data,options)
-%           data=checkheader(data,options,'field1',values1,...)
-%
 %    Examples:
 %     Check header fields after modifying
 %     the t0 field with some arrival data:
@@ -77,10 +77,10 @@ function [data]=checkheader(data,options,varargin)
 %                        turning this function on/off through SEIZMO global
 %        Apr.  7, 2009 - fixed LOVROK handling (not checked here anymore),
 %                        try/catch for quicker on/off flag check
-%        Apr. 23, 2009 - fix seizmocheck for octave
+%        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 12:00 GMT
+%     Last Updated Apr. 23, 2009 at 20:00 GMT
 
 % todo:
 % - excluding certain options

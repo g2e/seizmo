@@ -1,6 +1,8 @@
 function [bytes]=seizmosize(data)
 %SEIZMOSIZE    Returns header-estimated disksize of SEIZMO records in bytes
 %
+%    Usage:    bytes=seizmosize(data)
+%
 %    Description: SEIZMOSIZE(DATA) returns the expected on-disk size in
 %     bytes of each record in DATA using only the header info.  This is
 %     mainly to detect files on disk that are inconsistent in size from
@@ -9,8 +11,6 @@ function [bytes]=seizmosize(data)
 %    Notes:
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    bytes=seizmosize(data)
 %
 %    Examples:
 %     Calculate expected filesizes for SAC files in current directory:
@@ -32,7 +32,7 @@ function [bytes]=seizmosize(data)
 %        Apr. 23, 2009 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 13:05 GMT
+%     Last Updated Apr. 23, 2009 at 21:20 GMT
 
 % todo:
 

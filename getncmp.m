@@ -1,6 +1,8 @@
 function [ncmp]=getncmp(data)
 %GETNCMP    Return the number of dependent components for SEIZMO records
 %
+%    Usage:    ncmp=getncmp(data)
+%
 %    Description: GETNCMP(DATA) returns the number of dependent components
 %     for each record in DATA.  This is basically a workaround for handling
 %     filetypes that do not support multiple components (and thus not
@@ -9,8 +11,6 @@ function [ncmp]=getncmp(data)
 %    Notes:
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    ncmp=getncmp(data)
 %
 %    Examples:
 %     Compare the number of components for a time series and spectral file:
@@ -21,10 +21,10 @@ function [ncmp]=getncmp(data)
 %     Version History:
 %        Oct.  7, 2008 - initial version
 %        Nov. 16, 2008 - update for new name schema (now GETNCMP)
-%        Apr. 23, 2009 - fix nargchk for octave
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 13:05 GMT
+%     Last Updated Apr. 23, 2009 at 20:20 GMT
 
 % todo:
 

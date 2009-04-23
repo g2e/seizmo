@@ -2,10 +2,12 @@ function [data,taptype,tap,tapopt,h,h2]=usertaper(data,skip,rdrift)
 %USERTAPER    Interactively taper SAClab data
 
 % check nargin
-error(nargchk(1,3,nargin))
+msg=nargchk(1,3,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % defaults
 if(nargin<3 || isempty(rdrift)); rdrift=1; end  % demean tapered data

@@ -1,6 +1,8 @@
 function []=writeseizmo(data)
 %WRITESEIZMO    Write SEIZMO records to datafiles
 %
+%    Usage:    writeseizmo(data)
+%
 %    Description: WRITESEIZMO(DATA) writes SEIZMO records in DATA to
 %     datafiles.  Uses the fields in the structure to determine how and
 %     where to write the records.
@@ -11,8 +13,6 @@ function []=writeseizmo(data)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: see CHECKHEADER
-%
-%    Usage:    writeseizmo(data)
 %
 %    Examples:
 %     Read in some files, clean them up and write over:
@@ -50,17 +50,21 @@ function []=writeseizmo(data)
 %        Nov. 17, 2008 - update for new name schema (now WRITESEIZMO)
 %        Dec. 13, 2008 - added mkdir call to make sure path exists
 %        Apr.  7, 2009 - LOVROK support, better messages/checks
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  7, 2009 at 07:35 GMT
+%     Last Updated Apr. 23, 2009 at 21:15 GMT
 
 % todo:
 
 % check number of inputs
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

@@ -1,6 +1,13 @@
 function [data]=slidingabsmean(data,nsamples,varargin)
 %SLIDINGABSMEAN    Returns sliding-window absolute-mean of SEIZMO records
 %
+%    Usage:    data=slidingabsmean(data,n)
+%              data=slidingabsmean(...,'position','center'|'trail'|'lead')
+%              data=slidingabsmean(...,'offset',offset)
+%              data=slidingabsmean(...,'edge','truncate'|'pad')
+%              data=slidingabsmean(...,'dim',n)
+%              data=slidingabsmean(...,'custom',window)
+%
 %    Description: SLIDINGABSMEAN(DATA,N) applies a centered sliding-window 
 %     absolute-mean of 2N+1 samples to the dependent component(s) of 
 %     SEIZMO data records in DATA.  N can be a scalar (each record has the
@@ -58,13 +65,6 @@ function [data]=slidingabsmean(data,nsamples,varargin)
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:    data=slidingabsmean(data,n)
-%              data=slidingabsmean(...,'position','center'|'trail'|'lead')
-%              data=slidingabsmean(...,'offset',offset)
-%              data=slidingabsmean(...,'edge','truncate'|'pad')
-%              data=slidingabsmean(...,'dim',n)
-%              data=slidingabsmean(...,'custom',window)
-%
 %    Examples:
 %      Compare an envelope and a 21-sample sliding-window absolute-mean:
 %       p2([envelope(data(1)) slidingabsmean(data(1),10)])
@@ -76,17 +76,21 @@ function [data]=slidingabsmean(data,nsamples,varargin)
 %        Oct.  7, 2008 - now just an alias to SLIDINGMEAN and SEISFUN
 %        Nov. 13, 2008 - update to use SLIDINGAVG and SEIZFUN
 %        Nov. 22, 2008 - update for new name schema (now SLIDINGABSMEAN)
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 22:10 GMT
+%     Last Updated Apr. 23, 2009 at 20:55 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,8,nargin))
+msg=nargchk(2,8,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % alias to other functions
 data=seizmofun(data,@(x)slidingavg(abs(x),nsamples,varargin{:}));

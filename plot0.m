@@ -1,12 +1,12 @@
 function [fh,lh]=plot0(data,varargin)
 %PLOT0   Plot SEIZMO data records in an evenly spaced record section
 %
+%    Usage:  [fh,lh]=plot0(data,'plot_option',plot_option_value,...)
+%
 %    Description: Plots timeseries and xy SEIZMO records spaced out evenly
 %     in a single plot.  Other record types are ignored.  Optional
 %     inputs should correspond to fields returned by function pconf.
 %     Outputs are the figure and legend handles.
-%
-%    Usage:  [fh,lh]=plot0(data,'plot_option',plot_option_value,...)
 %
 %    Examples:
 %     To add record names to the yaxis:
@@ -15,7 +15,8 @@ function [fh,lh]=plot0(data,varargin)
 %    See also:  plot1, plot2, recordsection
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % get plotting style defaults
 P=plotconfig;

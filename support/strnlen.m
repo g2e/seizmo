@@ -1,6 +1,8 @@
 function [A]=strnlen(A,n)
 %STRNLEN    Pad/truncate char/cellstr array to n character columns
 %
+%    Usage: A=strnlen(A,len)
+%
 %    Description: STRNLEN(A,N) pads or truncates char/cellstr array A to
 %     have N columns.  Padding is done with spaces.  Works recursively, so
 %     will accept nested cellstr arrays.  Does not modify array type.
@@ -8,8 +10,6 @@ function [A]=strnlen(A,n)
 %    Notes:
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage: A=strnlen(A,len)
 %
 %    Examples:
 %     Require elements in your array to be strings of length 8:
@@ -21,14 +21,16 @@ function [A]=strnlen(A,n)
 %        Mar.  7, 2008 - initial version
 %        Apr. 18, 2008 - fixed recursion
 %        Oct. 26, 2008 - code cleaning, comment and doc update
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 26, 2008 at 14:45 GMT
+%     Last Updated Apr. 23, 2009 at 22:20 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,2,nargin))
+msg=nargchk(2,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check n
 if(~isnumeric(n) || ~isscalar(n) || fix(n)~=n)

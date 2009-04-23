@@ -2,10 +2,12 @@ function [data,win,h,h2]=userwindow(data,fill,rdrift,push)
 %USERWINDOW    Interactively window SEIZMO records
 
 % check nargin
-error(nargchk(1,4,nargin))
+msg=nargchk(1,4,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % defaults
 if(nargin<4 || isempty(push)); push=0; end          % keep timing

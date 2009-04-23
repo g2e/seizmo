@@ -1,6 +1,10 @@
 function [varargout]=getheader(data,varargin)
 %GETHEADER    Get SEIZMO data header values
 %
+%    Usage:  headers=getheader(data)
+%            values=getheader(data,'field1')
+%            [values1,...,valuesN]=getheader(data,'field1',...,'fieldN')
+%
 %    Description: GETHEADER(DATA) will return header values for all records
 %     in DATA as a single numeric array.  Rows in the output array
 %     correspond to the header values of individual records.  The order of
@@ -31,10 +35,6 @@ function [varargout]=getheader(data,varargin)
 %       get a more useful value use GETLGC.
 %
 %    Tested on: Matlab r2007b
-%    
-%    Usage:  headers=getheader(data)
-%            values=getheader(data,'field1')
-%            [values1,...,valuesN]=getheader(data,'field1',...,'fieldN')
 %
 %    Examples:
 %     Put all t series values in one array:
@@ -65,9 +65,10 @@ function [varargout]=getheader(data,varargin)
 %        June 12, 2008 - doc update, full header dump fixes
 %        Oct. 17, 2008 - added VINFO support, supports new struct layout
 %        Nov. 16, 2008 - update for new name schema (now GETHEADER)
+%        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2008 at 01:50 GMT
+%     Last Updated Apr. 23, 2009 at 20:15 GMT
 
 % todo:
 
@@ -78,7 +79,8 @@ if(nargin<1)
 end
 
 % check data structure
-error(seizmocheck(data))
+msg=seizmocheck(data);
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % number of records
 nrecs=numel(data);

@@ -1,6 +1,8 @@
 function []=listheader(data,varargin)
 %LISTHEADER    List SEIZMO data headers
 %
+%    Usage:    listheader(data,'field1','field2',...)
+%
 %    Description: LISTHEADER(DATA,FIELD1,FIELD2,...) lists the header
 %     field(s) FIELD1, FIELD2, ... and their value(s) in DATA in a manner 
 %     similar to SAC's lh formating.  FIELD must be a string corresponding 
@@ -10,8 +12,6 @@ function []=listheader(data,varargin)
 %    Notes:
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    listheader(data,'field1','field2',...)
 %
 %    Examples:
 %      listheader(data)          % lists all header variables
@@ -34,9 +34,10 @@ function []=listheader(data,varargin)
 %        Oct. 17, 2008 - added VINFO support, supports new struct layout
 %        Oct. 27, 2008 - update for struct change, doc update, history fix
 %        Nov. 16, 2008 - update for new name schema (now listheader)
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2008 at 01:15 GMT
+%     Last Updated Apr. 23, 2009 at 20:25 GMT
 
 % todo:
 

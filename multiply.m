@@ -1,6 +1,9 @@
 function [data]=multiply(data,constant,cmp)
 %MULTIPLY    Multiply SEIZMO records by a constant
 %
+%    Usage:    data=multiply(data,constant)
+%              data=multiply(data,constant,cmp_list)
+%
 %    Description: MULTIPLY(DATA,CONSTANT) multiplies the dependent
 %     component(s) of SEIZMO records by a constant.  For multi-component
 %     files, this operation is performed on every dependent component (this
@@ -22,9 +25,6 @@ function [data]=multiply(data,constant,cmp)
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
-%    Usage:    data=multiply(data,constant)
-%              data=multiply(data,constant,cmp_list)
-%
 %    Examples:
 %     Get the complex conjugate of a real-imaginary spectral records by
 %     multiplying the imaginary component by -1 (component 2):
@@ -45,17 +45,21 @@ function [data]=multiply(data,constant,cmp)
 %                        cmp checks, and doc update
 %        Oct.  6, 2008 - minor code cleaning
 %        Nov. 22, 2008 - update for new name schema (now MULTIPLY)
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 07:20 GMT
+%     Last Updated Apr. 23, 2009 at 20:30 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,3,nargin))
+msg=nargchk(2,3,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

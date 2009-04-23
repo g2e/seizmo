@@ -1,6 +1,9 @@
 function [data]=integrate(data,option)
 %INTEGRATE    Integrate SEIZMO records
 %
+%    Usage:    data=integrate(data)
+%              data=integrate(data,method)
+%
 %    Description: INTEGRATE(DATA) will integrate SEIZMO records in DATA
 %     using the assumption that the record's points are at the midpoints of
 %     the integrated record and that their values give the difference
@@ -34,9 +37,6 @@ function [data]=integrate(data,option)
 %
 %    Header changes: B, E, NPTS, DELTA, DEPMIN, DEPMAX, DEPMEN
 %
-%    Usage:    data=integrate(data)
-%              data=integrate(data,method)
-%
 %    Examples:
 %     Check how good integrate undoes differentiate:
 %      plot1(subtractrecords(data,integrate(differentiate(data))))
@@ -47,17 +47,21 @@ function [data]=integrate(data,option)
 %        Nov. 12, 2008 - initial version
 %        Nov. 25, 2008 - finally combined integrt, integrt2 and SAC int
 %                        methods into one function, fixed several bugs too
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 25, 2008 at 04:40 GMT
+%     Last Updated Apr. 23, 2009 at 20:25 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,2,nargin))
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

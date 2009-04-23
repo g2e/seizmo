@@ -1,6 +1,9 @@
 function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
 %XYZ2GEODETIC    Converts coordinates from cartesian to geodetic
 %
+%    Usage:    [lat,lon,depth]=xyz2geodetic(x,y,z)
+%              [lat,lon,depth]=xyz2geodetic(x,y,z,[a f])
+%
 %    Description: [LAT,LON,DEPTH]=XYZ2GEODETIC(X,Y,Z) converts coordinates
 %     in Earth-centered, Earth-fixed (ECEF) coordinates to geodetic  
 %     latitude, longitude, depth.  LAT and LON are in degrees.  DEPTH, X,
@@ -24,9 +27,6 @@ function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    [lat,lon,depth]=xyz2geodetic(x,y,z)
-%              [lat,lon,depth]=xyz2geodetic(x,y,z,[a f])
-%
 %    Examples:
 %     Find the geodetic position of some point given in xyz:
 %      [lat,lon,depth]=xyz2geodetic(3000,3000,3000)
@@ -36,14 +36,16 @@ function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Oct. 26, 2008 - scalar expansion, doc and comment update
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 26, 2008 at 04:00 GMT
+%     Last Updated Apr. 23, 2009 at 21:55 GMT
 
 % todo:
 
 % require 3 or 4 inputs
-error(nargchk(3,4,nargin))
+msg=nargchk(3,4,nargin);
+if(~isempty(msg)); error(msg); end
 
 % default - WGS-84 Reference Ellipsoid
 if(nargin==3 || isempty(ellipsoid))

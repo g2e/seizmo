@@ -1,6 +1,9 @@
 function [data]=differentiate(data,option)
 %DIFFERENTIATE    Differentiate SEIZMO records
 %
+%    Usage:    data=differentiate(data)
+%              data=differentiate(data,option)
+%
 %    Description: DIFFERENTIATE(DATA) returns the derivative of each
 %     record in the SEIZMO structure DATA using the differences between
 %     points as an approximation of the derivative at the midpoint.  Works
@@ -33,8 +36,6 @@ function [data]=differentiate(data,option)
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NPTS, B, E
 %
-%    Usage:    data=differentiate(data)
-%
 %    Examples:
 %     These are equal:
 %      removemean(data)
@@ -52,17 +53,21 @@ function [data]=differentiate(data,option)
 %       June 29, 2008 - doc update, .dep & .ind rather than .x &
 %                       .t, dataless support, only calls ch once, strict
 %                       filetype check
+%       Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                       move usage up
 %
 %    Written by Garrett Euler (ggeuler at wustl dot edu)
-%    Last Updated June 29, 2008 at 07:25 GMT
+%    Last Updated Apr. 23, 2009 at 20:00 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,2,nargin))
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

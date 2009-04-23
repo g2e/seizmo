@@ -1,6 +1,9 @@
 function [data]=changeheader(data,varargin)
 %CHANGEHEADER    Change SEIZMO data header values
 %
+%    Usage: data=changeheader(data,'field1',values1)
+%           data=changeheader(data,'field1,'values1,...,'fieldN',valuesN)
+%
 %    Description: CHANGEHEADER(DATA,FIELD,VALUE) changes the header field 
 %     FIELD to the value(s) in VALUE for each record in DATA and returns
 %     an updated SEIZMO data structure.  FIELD must be a string 
@@ -35,9 +38,6 @@ function [data]=changeheader(data,varargin)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: Determined by input list.
-%
-%    Usage: data=changeheader(data,'field1',values1)
-%           data=changeheader(data,'field1,'values1,...,'fieldN',valuesN)
 %
 %    Examples:
 %     Some simple examples:
@@ -87,9 +87,10 @@ function [data]=changeheader(data,varargin)
 %        Oct. 17, 2008 - added VINFO support, supports new struct layout
 %        Nov. 16, 2008 - rename from CH to CHANGEHEADER, doc update, error
 %                        msg update
+%        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2008 at 07:20 GMT
+%     Last Updated Apr. 23, 2009 at 20:00 GMT
 
 % todo:
 
@@ -99,7 +100,8 @@ if (mod(nargin-1,2))
 end
 
 % check data structure
-error(seizmocheck(data))
+msg=seizmocheck(data);
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % quick exit
 if(nargin==1); return; end

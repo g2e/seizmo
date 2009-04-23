@@ -1,6 +1,8 @@
 function [dep,idx1,ind,idx2,store,npts]=combinerecords(data)
 %COMBINERECORDS    Combines SEIZMO data records into a single numeric record matrix
 %
+%    Usage:    [dep,idx1,ind,idx2,store,npts]=combo(data)
+%
 %    Description: [DEP,IDX1,IND,IDX2,STORE,NPTS]=COMBINERECORDS(DATA)
 %     combines SEIZMO records stored in DATA into numeric arrays DEP & IND 
 %     (components are in separate columns).  IDX1 & IDX2 indicate which
@@ -16,8 +18,6 @@ function [dep,idx1,ind,idx2,store,npts]=combinerecords(data)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: see CHECKHEADER
-%
-%    Usage:    [dep,idx1,ind,idx2,store,npts]=combo(data)
 %
 %    Examples:
 %     Get the interquartile range of records and assign to a header field:
@@ -38,17 +38,21 @@ function [dep,idx1,ind,idx2,store,npts]=combinerecords(data)
 %                        dataless support
 %        Nov. 22, 2008 - update for new name schema (now COMBINERECORDS)
 %                        now outputs independent component
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 18:55 GMT
+%     Last Updated Apr. 23, 2009 at 20:00 GMT
 
 % todo:
 
 % check input
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

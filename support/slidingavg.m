@@ -1,6 +1,13 @@
 function [y]=slidingavg(x,nsamples,varargin)
 %SLIDINGAVG    Returns sliding-window average of data
 %
+%    Usage:    y=slidingavg(x,n)
+%              y=slidingavg(...,'position','center'|'trail'|'lead')
+%              y=slidingavg(...,'offset',offset)
+%              y=slidingavg(...,'edge','truncate'|'pad')
+%              y=slidingavg(...,'dim',n)
+%              y=slidingavg(...,'custom',window)
+%
 %    Description: SLIDINGAVG(X,N) applies a centered sliding-window average
 %     of 2N+1 samples down the columns of numeric array X.  Sliding windows
 %     extending outside the record are truncated (look at the 'EDGE' option
@@ -54,13 +61,6 @@ function [y]=slidingavg(x,nsamples,varargin)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    y=slidingavg(x,n)
-%              y=slidingavg(...,'position','center'|'trail'|'lead')
-%              y=slidingavg(...,'offset',offset)
-%              y=slidingavg(...,'edge','truncate'|'pad')
-%              y=slidingavg(...,'dim',n)
-%              y=slidingavg(...,'custom',window)
-%
 %    Examples:
 %     Get a smoothed amplitude spectra:
 %      y=slidingavg(abs(fft(x)))
@@ -79,14 +79,16 @@ function [y]=slidingavg(x,nsamples,varargin)
 %                        trail/lead, fixed bug for handling custom filters,
 %                        fix bug in handling multiple entries for the same
 %                        element, doc update
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  3, 2008 at 06:15 GMT
+%     Last Updated Apr. 23, 2009 at 22:20 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,12,nargin))
+msg=nargchk(2,12,nargin);
+if(~isempty(msg)); error(msg); end
 
 % quick return if empty
 if(isempty(x)); y=x; return; end

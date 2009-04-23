@@ -1,6 +1,11 @@
 function [data]=timeshift(data,shift,timing,option,varargin)
 %TIMESHIFT    Shift timing of SEIZMO records
 %
+%    Usage:    data=timeshift(data,shift)
+%              data=timeshift(data,shift,timing)
+%              data=timeshift(data,shift,timing,option)
+%              data=timeshift(data,shift,timing,option,field1,...,fieldN)
+%
 %    Description: TIMESHIFT(DATA,SHIFT) adjusts the relative timing of
 %     SEIZMO records in DATA by SHIFT seconds.  This adjustment is added
 %     to all defined header time fields (see Header changes section).  The
@@ -34,9 +39,6 @@ function [data]=timeshift(data,shift,timing,option,varargin)
 %    Header changes: B, E, A, F, O, T0-T9,
 %                    NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC
 %
-%    Usage:    data=timeshift(data,shift)
-%              data=timeshift(data,shift,field1,...,fieldN)
-%
 %    Examples:
 %     Shift the reference time to the origin time (note '-' sign):
 %      data=timeshift(data,-gh(data,'o'))
@@ -50,14 +52,16 @@ function [data]=timeshift(data,shift,timing,option,varargin)
 %        Dec. 13, 2008 - initial version
 %        Mar. 12, 2009 - doc update
 %        Mar. 29, 2009 - added OPTION input to allow for more flexibility
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 29, 2009 at 15:30 GMT
+%     Last Updated Apr. 23, 2009 at 21:10 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,inf,nargin));
+msg=nargchk(2,inf,nargin);
+if(~isempty(msg)); error(msg); end
 
 % get undefined value
 [h,idx]=versioninfo(data);

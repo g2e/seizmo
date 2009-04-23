@@ -1,6 +1,8 @@
 function [data,scale]=normalize(data)
 %NORMALIZE    Normalizes SEIZMO records
 %
+%    Usage:    [data,scale]=normalize(data)
+%
 %    Description: [DATA,SCALE]=NORMALIZE(DATA) scales the amplitudes of
 %     SEIZMO records to the range of -1 to 1.  SCALE contains the
 %     normalization factors.  All components for a record are scaled by the
@@ -20,8 +22,6 @@ function [data,scale]=normalize(data)
 %
 %    Header changes: DEPMIN, DEPMAX, DEPMEN
 %
-%    Usage:    [data,scale]=normalize(data)
-%
 %    Examples:
 %     Display record overlay with records scaled:
 %      plot2(normalize(data))
@@ -37,17 +37,21 @@ function [data,scale]=normalize(data)
 %        June 16, 2008 - doc update
 %        Nov. 23, 2008 - renamed from NRM to NORMALIZE, update for new name
 %                        schema, .dep over .x, one changeheader call
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 23, 2008 at 23:35 GMT
+%     Last Updated Apr. 23, 2009 at 20:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % number of records
 nrecs=numel(data);

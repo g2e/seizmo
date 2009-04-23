@@ -1,6 +1,8 @@
 function [scale]=getnorm(data)
 %GETNORM    Return normalizers for SEIZMO records
 %
+%    Usage:    scale=getnorm(data)
+%
 %    Description: GETNORM(DATA) returns the maximum amplitude of each
 %     SEIZMO record in DATA assuming that for multi-component records
 %     the components are orthogonal to one another.  This is useful for 
@@ -17,8 +19,6 @@ function [scale]=getnorm(data)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    scale=getnorm(data)
-%
 %    Examples:
 %     Find the maximum amplitude of ground motion for a 3 component record:
 %       amp_max=getnorm(data)
@@ -33,15 +33,19 @@ function [scale]=getnorm(data)
 %        Apr. 17, 2008 - minor doc update
 %        June 16, 2008 - doc update
 %        Nov. 16, 2008 - renamed from GNRM to GETNORM
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2008 at 02:05 GMT
+%     Last Updated Apr. 23, 2009 at 20:20 GMT
 
 % check nargin
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % number of records
 nrecs=numel(data);

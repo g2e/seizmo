@@ -1,6 +1,9 @@
 function [times]=fixtimes(times,option)
 %FIXTIMES    Cleans up times so they are in their proper ranges
 %
+%    Usage:    times=fixtimes(times)
+%              times=fixtimes(times,'utc')
+%
 %    Description: FIXTIMES(TIMES) returns equivalent times to the times in
 %     TIMES such that they follow typical Gregorian calendar conventions
 %     (months are 1 to 12, dayofmonths are 1 to the last day of the month,
@@ -18,9 +21,6 @@ function [times]=fixtimes(times,option)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    times=fixtimes(times)
-%              times=fixtimes(times,'utc')
-%
 %    Examples:
 %     Find the UTC time 500 seconds after some other time in UTC:
 %      UTC=[2008 12 31 23 55 3.789];
@@ -31,14 +31,16 @@ function [times]=fixtimes(times,option)
 
 %     Version History:
 %        Nov.  2, 2008 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2008 at 08:20 GMT
+%     Last Updated Apr. 23, 2009 at 21:25 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,2,nargin));
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check times
 sz=size(times);

@@ -1,6 +1,9 @@
 function [lat]=geodetic2geocentriclat(lat,ecc)
 %GEODETIC2GEOCENTRICLAT    Convert latitudes from geodetic to geocentric
 %
+%    Usage:    latitudes=geodetic2geocentriclat(latitudes)
+%              latitudes=geodetic2geocentriclat(latitudes,ecc)
+%
 %    Description: GEODETIC2GEOCENTRICLAT(LATITUDES) converts LATITUDES that
 %     are geodetic latitudes to geocentric latitudes.  LATITUDES units are
 %     in degrees.  Assumes the WGS-84 reference ellipsoid.
@@ -13,9 +16,6 @@ function [lat]=geodetic2geocentriclat(lat,ecc)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    latitudes=geodetic2geocentriclat(latitudes)
-%              latitudes=geodetic2geocentriclat(latitudes,ecc)
-%
 %    Examples:
 %     Get the geocentric latitude for St. Louis, MO USA:
 %      latitude=geodetic2geocentriclat(38.649)
@@ -25,10 +25,10 @@ function [lat]=geodetic2geocentriclat(lat,ecc)
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - minor doc update
-%        Apr. 23, 2009 - fix nargchk for octave
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 12:00 GMT
+%     Last Updated Apr. 23, 2009 at 21:45 GMT
 
 % todo:
 

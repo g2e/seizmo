@@ -27,13 +27,16 @@ function [conf]=plotconfigfix(conf)
 %        Nov. 13, 2008 - renamed from PCONFFIX to PLOTCONFFIX
 %        Nov. 15, 2008 - renamed from PLOTCONFFIX to PLOTCONFIGFIX
 %
+%        Apr. 23, 2009 - fix nargchk for octave
+%
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 19:00 GMT
+%     Last Updated Apr. 23, 2009 at 19:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check input
 if(~isstruct(conf) || ~isfield(conf,'GENERAL'))

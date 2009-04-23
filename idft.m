@@ -1,6 +1,8 @@
 function [data]=idft(data)
 %IDFT    Performs an inverse discrete fourier transform on SEIZMO records
 %
+%    Usage:    data=idft(data)
+%
 %    Description: IDFT(DATA) converts SEIZMO records from the frequency 
 %     domain to the time domain using an inverse discrete fourier transform
 %     (Matlab's ifft).  Output filetype is 'Time Series File'.
@@ -21,8 +23,6 @@ function [data]=idft(data)
 %     of B, DELTA, and NPTS are saved in the header as SB, SDELTA, and 
 %     NSNPTS and are restored when this command is performed.
 %
-%    Usage:    data=idft(data)
-%
 %    Examples:
 %     To take the derivative of a time-series in the frequency domain:
 %      data=idft(multiplyomega(dft(data)))
@@ -41,17 +41,20 @@ function [data]=idft(data)
 %                        one ch call, updates DEP* fields
 %        Oct.  7, 2008 - minor code cleaning
 %        Nov. 22, 2008 - update for new name schema
+%        Apr. 23, 2009 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 06:45 GMT
+%     Last Updated Apr. 23, 2009 at 20:20 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

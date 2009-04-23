@@ -1,6 +1,9 @@
 function [li]=sort2li(i,dim)
 %SORT2LI    Transforms permutation indices from sort to linear indices
 %
+%    Usage: li=sort2li(sort_indices)
+%           li=sort2li(sort_indices,dim)
+%
 %    Description:  The indices returned from the 'sort' function are
 %     difficult to reimplement for sorting multiple n-d matrices in 
 %     parallel.  This function transforms the indices output from sort into
@@ -8,9 +11,6 @@ function [li]=sort2li(i,dim)
 %     If no dimension argument is supplied, sort2li will operate on the 
 %     first non-singleton dimension just like sort will do without a 
 %     dimension argument.
-%
-%    Usage: li=sort2li(sort_indices)
-%           li=sort2li(sort_indices,dim)
 %
 %    Examples:
 %      
@@ -47,14 +47,14 @@ end
 function [X]=submat_noeval(X,varargin)
 %SUBMAT_NOEVAL    Returns a submatrix reduced along indicated dimensions
 %
+%    Usage: Y=submat_noeval(X,DIM1,LIST1,DIM2,LIST2,...)
+%
 %    Description: Y=SUBMAT_NOEVAL(X,DIM,LIST) creates a matrix Y that is
 %     the matrix X reduced along dimension DIM to the indices in LIST.  If
 %     DIM is a list of dimensions, LIST is used to reduce each dimension.
 %
 %     Y=SUBMAT_NOEVAL(X,DIM1,LIST1,DIM2,LIST2,...) allows for access to
 %     multiple dimensions independently.
-%
-%    Usage: Y=submat_noeval(X,DIM1,LIST1,DIM2,LIST2,...)
 %
 %    Examples:
 %      Return x reduced to only the elements in index 1 of dimension 5:

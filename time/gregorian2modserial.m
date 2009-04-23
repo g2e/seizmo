@@ -1,6 +1,8 @@
 function [modserial]=gregorian2modserial(times)
 %GREGORIAN2MODSERIAL    Convert Gregorian dates to modified serial dates
 %
+%    Usage:    modserial=gregorian2modserial(dates)
+%
 %    Description: [MODSERIAL]=GREGORIAN2MODSERIAL(DATES) returns the
 %     equivalent modified serial dates for the Gregorian dates stored in
 %     DATES.  A modified serial date of 1 day and 0 seconds corresponds to 
@@ -22,8 +24,6 @@ function [modserial]=gregorian2modserial(times)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    modserial=gregorian2modserial(dates)
-%
 %    Examples:
 %     Why use modserial over serial? Better precision:
 %      modserial=gregorian2modserial([0 now])
@@ -33,19 +33,21 @@ function [modserial]=gregorian2modserial(times)
 
 %     Version History:
 %        Nov. 11, 2008 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 11, 2008 at 01:45 GMT
+%     Last Updated Apr. 23, 2009 at 21:25 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check times
 sz=size(times);
 if(~isnumeric(times) || ~any(sz(2)==[2 3 5 6]))
-    error('seizmo:gregorian2serial:badInput',...
+    error('seizmo:gregorian2modserial:badInput',...
         'DATES must be a numeric Nx2, Nx3, Nx5 or Nx6 array!');
 end
 

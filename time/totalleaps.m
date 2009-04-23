@@ -1,6 +1,9 @@
 function [leaps]=totalleaps(dates,option)
 %TOTALLEAPS    Returns the accumulated leap seconds for the given dates
 %
+%    Usage:    offset=totalleaps(dates)
+%              offset=totalleaps(dates,'serial')
+%
 %    Description: TOTALLEAPS(DATES) returns the total offset in seconds
 %     of International Atomic Time (TAI) from UTC time for any UTC date.
 %     DATES must be an array of UTC dates in the form [years daysofyear] or
@@ -19,9 +22,6 @@ function [leaps]=totalleaps(dates,option)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    offset=totalleaps(dates)
-%              offset=totalleaps(dates,'serial')
-%
 %    Examples:
 %     Get is the current offset:
 %      totalleaps(now,'serial')
@@ -31,14 +31,16 @@ function [leaps]=totalleaps(dates,option)
 %     Version History:
 %        Nov.  1, 2008 - initial version
 %        Nov. 10, 2008 - uses GETLEAPSECONDS to speed calls up
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 10, 2008 at 16:05 GMT
+%     Last Updated Apr. 23, 2009 at 21:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,2,nargin));
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check option
 if(nargin==1 || isempty(option))

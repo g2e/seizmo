@@ -1,6 +1,11 @@
 function []=binoperr(varargin)
 %BINOPERR    Controls behavior of SEIZMO binary functions
 %
+%    Usage:    binoperr()
+%              binoperr('defaults')
+%              binoperr('option1','error'|'warn'|'ignore',...,
+%                       'optionN','error'|'warn'|'ignore')
+%
 %    Description: Allows for changing the behavior of how binary functions 
 %     (addf, divf, mulf, divf) handle records with some unequal aspects.
 %     In particular, this function will modify the behavior of all of these
@@ -69,11 +74,6 @@ function []=binoperr(varargin)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    binoperr()
-%              binoperr('defaults')
-%              binoperr('option1','error'|'warn'|'ignore',...,
-%                       'optionN','error'|'warn'|'ignore')
-%
 %    Examples:
 %     Turn off warnings for different timing:
 %      binoperr('begin','ignore','ref','ignore')
@@ -88,9 +88,10 @@ function []=binoperr(varargin)
 %        June 28, 2008 - doc update
 %        Oct.  6, 2008 - doc update, use new SEIZMO layout
 %        Nov. 22, 2008 - update for new name schema
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 06:20 GMT
+%     Last Updated Apr. 23, 2009 at 20:05 GMT
 
 % todo:
 % - interoperation with correlate, convolve, merge, rotate

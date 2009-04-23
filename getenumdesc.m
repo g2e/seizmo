@@ -1,6 +1,9 @@
 function [varargout]=getenumdesc(data,varargin)
 %GETENUMDESC    Get enum string description from SEIZMO header enum field
 %
+%    Usage: cellstr=getenumdesc(data,'field')
+%           [cellstr1,...,cellstrN]=getenumdesc(data,'field1',...,'fieldN')
+%
 %    Description: GETENUMDESC(DATA,FIELD) returns a cellstring array filled 
 %     with the description strings associated with the enum field FIELD
 %     stored in the SEIZMO structure DATA.  This is more useful/readible
@@ -21,9 +24,6 @@ function [varargout]=getenumdesc(data,varargin)
 %       avoids conflict with enum fields called 'unknown' and 'undefined'.
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage: cellstr=getenumdesc(data,'field')
-%           [cellstr1,...,cellstrN]=getenumdesc(data,'field1',...,'fieldN')
 %
 %    Examples:
 %     To check if all records are timeseries data:
@@ -46,9 +46,10 @@ function [varargout]=getenumdesc(data,varargin)
 %        Oct. 17, 2008 - added VINFO support
 %        Nov. 16, 2008 - history fix, doc update, code cleaning, rename
 %                        from GENUMDESC to GETENUMDESC
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2008 at 05:15 GMT
+%     Last Updated Apr. 23, 2009 at 20:15 GMT
 
 % todo:
 

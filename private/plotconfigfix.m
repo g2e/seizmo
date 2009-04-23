@@ -1,6 +1,8 @@
 function [conf]=plotconfigfix(conf)
 %PLOTCONFIGFIX    Fixes SEIZMO plot configuration control
 %
+%    Usage:    conf=plotconfigfix(conf)
+%
 %    Description: PLOTCONFIGFIX(CONF) fixes plot configuration structure
 %     returned by PLOTCONFIG.  Currently this involves stepping through
 %     a heirarchy of configuration fields and applying their values to
@@ -10,8 +12,6 @@ function [conf]=plotconfigfix(conf)
 %    Notes:
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    conf=plotconfigfix(conf)
 %
 %    Examples:
 %     PLOTCONFIGFIX allows for changes to a high level field to change a
@@ -26,14 +26,16 @@ function [conf]=plotconfigfix(conf)
 %        Mar.  7, 2008 - initial version
 %        Nov. 13, 2008 - renamed from PCONFFIX to PLOTCONFFIX
 %        Nov. 15, 2008 - renamed from PLOTCONFFIX to PLOTCONFIGFIX
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 19:00 GMT
+%     Last Updated Apr. 23, 2009 at 21:15 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check input
 if(~isstruct(conf) || ~isfield(conf,'GENERAL'))

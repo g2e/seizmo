@@ -1,6 +1,8 @@
 function [data]=changeclass(data,class)
 %CHANGECLASS    Change SEIZMO data storage (in memory)
 %
+%    Usage:    data=changeclass(data,class)
+%
 %    Description: CHANGECLASS(DATA,CLASS) changes the class type of SEIZMO
 %     records in DATA to CLASS.  CLASS must be a string or cellstr of valid
 %     class(es) ('double', 'single', etc).  This does not change the
@@ -11,8 +13,6 @@ function [data]=changeclass(data,class)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: NONE
-%
-%    Usage:    data=changeclass(data,class)
 %
 %    Examples:
 %     Double precision records and fix the delta intervals
@@ -31,17 +31,21 @@ function [data]=changeclass(data,class)
 %                        data to be changed to any Matlab supported class,
 %                        drop LGCCHK
 %        Nov. 22, 2008 - renamed from CLASSIT to CHANGECLASS
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
+%                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 06:50 GMT
+%     Last Updated Apr. 23, 2009 at 20:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,2,nargin))
+msg=nargchk(2,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % number of records
 nrecs=numel(data);

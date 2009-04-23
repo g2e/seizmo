@@ -1,6 +1,11 @@
 function [var]=nanvar(x,opt,dim,w)
 %NANMEAN    Return variance excluding NaNs
 %
+%    Usage: var=nanvar(x)
+%           var=nanvar(x,opt)
+%           var=nanvar(x,opt,dim)
+%           var=nanvar(x,opt,dim,w)
+%
 %    Description:  Returns the variances along a dimension excluding NaN 
 %     elements.
 %     
@@ -13,11 +18,6 @@ function [var]=nanvar(x,opt,dim,w)
 %
 %     Elements with a weight of NaN are ignored.  Weights with a 
 %     corresponding element of NaN are ignored.
-%
-%    Usage: var=nanvar(x)
-%           var=nanvar(x,opt)
-%           var=nanvar(x,opt,dim)
-%           var=nanvar(x,opt,dim,w)
 %
 %    Examples:
 %

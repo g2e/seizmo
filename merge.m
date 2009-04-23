@@ -1,6 +1,26 @@
 function [data]=merge(data,varargin)
 %MERGE    Merge SEIZMO records
 %
+%    Usage:    data=merge(data)
+%              data=merge(data,...,'tolerance',tolerance,...)
+%              data=merge(data,...,'adjust',method,...)
+%              data=merge(data,...,'overlap',method,...)
+%              data=merge(data,...,'gap',method,...)
+%              data=merge(data,...,'shiftmax',value,...)
+%              data=merge(data,...,'shiftunits',units,...)
+%              data=merge(data,...,'interpolate',method,...)
+%              data=merge(data,...,'filler',filler,...)
+%              data=merge(data,...,'mergesequential',logical,...)
+%              data=merge(data,...,'mergeoverlaps',logical,...)
+%              data=merge(data,...,'mergegaps',logical,...)
+%              data=merge(data,...,'useabsolutetiming',logical,...)
+%              data=merge(data,...,'timing',standard,...)
+%              data=merge(data,...,'requiredcharfields',fields,...)
+%              data=merge(data,...,'requiredrealfields',fields,...)
+%              data=merge(data,...,'allocate',size,...)
+%              data=merge(data,...,'verbose',logical,...)
+%              data=merge(data,...,'debug',logical,...)
+%
 %    Description: DATA=MERGE(DATA) will take all records in DATA and merge
 %     any pairs that are within +/-0.02 seconds of being continuous.  The
 %     output dataset will contain the merged records with all duplicate or
@@ -176,26 +196,6 @@ function [data]=merge(data,varargin)
 %    Header changes: B, E, NPTS, DEPMEN, DEPMIN, DEPMAX
 %                    (see CHECKHEADER for more)
 %
-%    Usage:    data=merge(data)
-%              data=merge(data,...,'tolerance',tolerance,...)
-%              data=merge(data,...,'adjust',method,...)
-%              data=merge(data,...,'overlap',method,...)
-%              data=merge(data,...,'gap',method,...)
-%              data=merge(data,...,'shiftmax',value,...)
-%              data=merge(data,...,'shiftunits',units,...)
-%              data=merge(data,...,'interpolate',method,...)
-%              data=merge(data,...,'filler',filler,...)
-%              data=merge(data,...,'mergesequential',logical,...)
-%              data=merge(data,...,'mergeoverlaps',logical,...)
-%              data=merge(data,...,'mergegaps',logical,...)
-%              data=merge(data,...,'useabsolutetiming',logical,...)
-%              data=merge(data,...,'timing',standard,...)
-%              data=merge(data,...,'requiredcharfields',fields,...)
-%              data=merge(data,...,'requiredrealfields',fields,...)
-%              data=merge(data,...,'allocate',size,...)
-%              data=merge(data,...,'verbose',logical,...)
-%              data=merge(data,...,'debug',logical,...)
-%
 %    Examples:
 %     Just friggin merge already!
 %      data=merge(data)
@@ -221,9 +221,10 @@ function [data]=merge(data,varargin)
 %                        handles the 'South Pole Case'
 %        Apr.  1, 2009 - major update again: speedy multi-merge
 %        Apr.  7, 2009 - slightly more detail in verbose output
+%        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  7, 2009 at 17:50 GMT
+%     Last Updated Apr. 23, 2009 at 20:30 GMT
 
 % todo:
 %   - uneven support - just toss together and sort after?
@@ -236,7 +237,8 @@ if(mod(nargin-1,2))
 end
 
 % check data structure
-error(seizmocheck(data,'dep'))
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;

@@ -23,13 +23,11 @@ Prior to 7.1:
 
 
 Current issues with Octave:
-1. cellstr support for several functions
-   including setdiff, intersect, etc
-	affects:
-	- lots... :(
-2. error does not take struct input
-	affects
-	- lots... :(
+	- error needs to support structs
+	- error needs to not error on blank messages
+	- cell array of function handles should handle space separated (not require commas)
+	- way to assign new field to empty struct
+	- setdiff does not handle mixed char/cell
 
 
 

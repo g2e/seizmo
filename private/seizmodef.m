@@ -1,6 +1,9 @@
 function [def]=seizmodef(filetype,version,option)
 %SEIZMODEF    Returns specified SEIZMO definition structure
 %
+%    Usage:    definition=seizmodef(filetype,version)
+%              definition=seizmodef(filetype,version,option)
+%
 %    Description: [DEFINITIONS]=SEIZMODEF(FILETYPE,VERSION) returns the
 %     struct DEFINITIONS which provides all formatting information
 %     necessary to read/understand/modify/write the specified version
@@ -22,9 +25,6 @@ function [def]=seizmodef(filetype,version,option)
 %       probably require more memory anyways due to overhead.
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    definition=seizmodef(filetype,version)
-%              definition=seizmodef(filetype,version,option)
 %
 %    Examples:
 %     Get detailed information on SAC version 6 files:
@@ -51,10 +51,10 @@ function [def]=seizmodef(filetype,version,option)
 %                        and SEIZMO now separate filetypes, definition
 %                        caching to speed things up
 %        Nov. 24, 2008 - fixed iacc description (nm/sec/sec)
-%        Apr. 23, 2008 - fix nargchk for octave
+%        Apr. 23, 2008 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 11:40 GMT
+%     Last Updated Apr. 23, 2009 at 21:20 GMT
 
 % todo:
 

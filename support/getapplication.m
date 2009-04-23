@@ -1,6 +1,8 @@
 function [application,version]=getapplication()
 %GETAPPLICATION    Returns application running this script and its version
 %
+%    Usage:    [application,version]=getapplication()
+%
 %    Description: [APPLICATION,VERSION]=GETAPPLICATION() will determine and
 %     return the name and version of the application running this script
 %     (obviously only if the application can run this script in the first
@@ -10,8 +12,6 @@ function [application,version]=getapplication()
 %     - returns 'UNKNOWN' if it cannot figure out the application
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    [application,version]=getapplication()
 %
 %    Examples:
 %     Matlab and Octave still behave quite differently for a number of
@@ -29,9 +29,10 @@ function [application,version]=getapplication()
 %     Version History:
 %        Nov. 13, 2008 - initial version
 %        Mar.  3, 2009 - minor doc cleaning
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  3, 2009 at 20:10 GMT
+%     Last Updated Apr. 23, 2009 at 22:15 GMT
 
 % todo:
 

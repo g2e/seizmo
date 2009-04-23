@@ -1,6 +1,9 @@
 function [leaps]=leapsinday(dates,option)
 %LEAPSINDAY    Returns the number of leap seconds in the given dates
 %
+%    Usage:    seconds=leapsinday(dates)
+%              seconds=leapsinday(dates,'serial')
+%
 %    Description: LEAPSINDAY(DATES) returns the an array of additional
 %     seconds added to each of the UTC dates in DATES.  If a positive leap
 %     second occurs during one of the dates, that date will have a
@@ -22,9 +25,6 @@ function [leaps]=leapsinday(dates,option)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    seconds=leapsinday(dates)
-%              seconds=leapsinday(dates,'serial')
-%
 %    Examples:
 %     Find out how many seconds there will be in today:
 %      86400+leapsinday(now,'serial')
@@ -34,14 +34,16 @@ function [leaps]=leapsinday(dates,option)
 %     Version History:
 %        Nov.  1, 2008 - initial version
 %        Nov. 10, 2008 - uses GETLEAPSECONDS to speed calls up
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 10, 2008 at 16:05 GMT
+%     Last Updated Apr. 23, 2009 at 21:30 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,2,nargin));
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check option
 if(nargin==1 || isempty(option))

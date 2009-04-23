@@ -1,6 +1,8 @@
 function [data]=bseizmo(varargin)
 %BSEIZMO    Arranges xy data into a SEIZMO data structure
 %
+%    Usage:    data=bseizmo(IND1,DEP1,IND2,DEP2...)
+%
 %    Description: BSEIZMO(IND1,DEP1,IND2,DEP2,...) takes arrays of
 %     independent and dependent components and arranges them into a SEIZMO
 %     data structure (one record per IND/DEP pair) to be compatible with
@@ -22,8 +24,6 @@ function [data]=bseizmo(varargin)
 %     CREATES HEADER INFO: 
 %      DELTA, B, E, NPTS, DEPMEN, DEPMIN, DEPMAX, IFTYPE, LEVEN, LOVROK,
 %      NVHDR, KNETWK, and for unevenly spaced data ODELTA
-%
-%    Usage:    data=bseizmo(IND1,DEP1,IND2,DEP2...)
 %
 %    Examples:
 %     To create a square root function in Matlab and then convert the array
@@ -61,10 +61,11 @@ function [data]=bseizmo(varargin)
 %                        handling, made consistent with new requirements,
 %                        single CH call
 %        Nov. 18, 2008 - default is SEIZMO Binary (v201), better struct
-%                         initialization, renamed from BSEIS to BSEIZMO
+%                        initialization, renamed from BSEIS to BSEIZMO
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 18, 2008 at 06:45 GMT
+%     Last Updated Apr. 23, 2009 at 20:05 GMT
 
 % todo:
 

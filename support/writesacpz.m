@@ -1,6 +1,8 @@
 function []=writesacpz(file,z,p,k)
 %WRITESACPZ    Writes out a SAC PoleZero file
 %
+%    Usage:    writesacpz(file,z,p,k)
+%
 %    Description: WRITESACPZ(FILE,Z,P,K) writes the SAC PoleZero file FILE
 %     using the zeros in Z, the poles in P, and the constant in K.  See the
 %     Notes section for file format details.  Z and P must be numeric
@@ -36,8 +38,6 @@ function []=writesacpz(file,z,p,k)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usages:    writesacpz(file,z,p,k)
-%
 %    Examples:
 %     Read in a SAC PoleZero file, alter the constant, and write out:
 %      [z,p,k]=readsacpz('SAC_PZs_XB_CM32_BHZ_02');
@@ -48,14 +48,16 @@ function []=writesacpz(file,z,p,k)
 
 %     Version History:
 %        Apr.  7, 2009 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  7, 2009 at 02:45 GMT
+%     Last Updated Apr. 23, 2009 at 22:30 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(4,4,nargin));
+msg=nargchk(4,4,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check file
 if(~ischar(file))

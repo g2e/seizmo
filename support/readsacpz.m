@@ -1,6 +1,8 @@
 function [z,p,k]=readsacpz(file)
 %READSACPZ    Reads in a SAC PoleZero file
 %
+%    Usage:    [z,p,k]=readsacpz(file)
+%
 %    Description: [Z,P,K]=READSACPZ(FILE) reads the SAC PoleZero file FILE,
 %     returning the zeros in separate rows of Z, the poles in separate rows
 %     of P, and the constant in K.  See the Notes section for file format
@@ -39,8 +41,6 @@ function [z,p,k]=readsacpz(file)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usages:    [z,p,k]=readsacpz(file)
-%
 %    Examples:
 %     Read in a SAC PoleZero file, and apply it to some records:
 %      [z,p,k]=readsacpz('SAC_PZs_XB_CM32_BHZ_02');
@@ -55,14 +55,16 @@ function [z,p,k]=readsacpz(file)
 
 %     Version History:
 %        Apr.  7, 2009 - initial version
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  7, 2009 at 00:45 GMT
+%     Last Updated Apr. 23, 2009 at 22:15 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end;
 
 % check file
 if(~ischar(file))

@@ -1,6 +1,18 @@
 function [data]=dividerecords(varargin)
 %DIVIDERECORDS    Divide SEIZMO records
 %
+%    Usage:    data=dividerecords(data)
+%              data=dividerecords(data1,data2)
+%              data=dividerecords(data1,data2,...,dataN)
+%              data=dividerecords(...,'newhdr',true|false)
+%              data=dividerecords(...,'npts','error'|'warn'|'ignore')
+%              data=dividerecords(...,'delta','error'|'warn'|'ignore')
+%              data=dividerecords(...,'begin','error'|'warn'|'ignore')
+%              data=dividerecords(...,'ref','error'|'warn'|'ignore')
+%              data=dividerecords(...,'ncmp','error'|'warn'|'ignore')
+%              data=dividerecords(...,'leven','error'|'warn'|'ignore')
+%              data=dividerecords(...,'iftype','error'|'warn'|'ignore')
+%
 %    Description: DIVIDERECORDS(DATA) will divide records 2+ from record 1
 %     in DATA, returning one record with its header fields set to those
 %     of the first record.  The header can be set to that of the last
@@ -94,19 +106,7 @@ function [data]=dividerecords(varargin)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
 %     NPTS, E, NCMP (see option 'npts' and 'ncmp')
 %     See option 'newhdr' for inheritance of other header fields.
-%     
-%    Usage:    data=dividerecords(data)
-%              data=dividerecords(data1,data2)
-%              data=dividerecords(data1,data2,...,dataN)
-%              data=dividerecords(...,'newhdr',true|false)
-%              data=dividerecords(...,'npts','error'|'warn'|'ignore')
-%              data=dividerecords(...,'delta','error'|'warn'|'ignore')
-%              data=dividerecords(...,'begin','error'|'warn'|'ignore')
-%              data=dividerecords(...,'ref','error'|'warn'|'ignore')
-%              data=dividerecords(...,'ncmp','error'|'warn'|'ignore')
-%              data=dividerecords(...,'leven','error'|'warn'|'ignore')
-%              data=dividerecords(...,'iftype','error'|'warn'|'ignore')
-%     
+%
 %    Examples:
 %     Plot the time-dependent amplitude ratio between two records:
 %      plot1(dividerecords(data(1:2)))
@@ -121,9 +121,10 @@ function [data]=dividerecords(varargin)
 %                        .dep and .ind rather than .x and .t
 %        Oct.  6, 2008 - doc update, code clean, more checks
 %        Nov. 23, 2008 - now just calls RECORDFUN
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 23, 2008 at 20:20 GMT
+%     Last Updated Apr. 23, 2009 at 20:10 GMT
 
 % todo:
 

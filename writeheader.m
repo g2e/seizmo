@@ -1,6 +1,8 @@
 function []=writeheader(data)
 %WRITEHEADER    Write SEIZMO data header info to datafiles
 %
+%    Usage:    writeheader(data)
+%
 %    Description: WRITEHEADER(DATA) writes SEIZMO data headers as datafiles
 %     on disk.  Primarily this is for updating the headers of existing
 %     datafiles to match the SEIZMO DATA structure.
@@ -17,8 +19,6 @@ function []=writeheader(data)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: NONE
-%
-%    Usage:    writeheader(data)
 %
 %    Examples:
 %     Read in some datafile's headers, modify them, and write out changes:
@@ -45,14 +45,16 @@ function []=writeheader(data)
 %        Dec. 13, 2008 - added mkdir call to make sure path exists
 %        Mar.  3, 2009 - update for GETFILEVERSION
 %        Apr.  7, 2009 - LOVROK support, better messages/checks
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  7, 2009 at 07:30 GMT
+%     Last Updated Apr. 23, 2009 at 21:10 GMT
 
 % todo:
 
 % check number of inputs
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % headers setup (checks struct too)
 [h,vi]=versioninfo(data);

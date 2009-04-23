@@ -1,6 +1,8 @@
 function [data]=readseizmo(varargin)
 %READSEIZMO    Read datafiles into SEIZMO data structure
 %
+%    Usage:    data=readseizmo(filelist1,...,filelistN)
+%
 %    Description: READSEIZMO(FILELIST1,...,FILELISTN) reads compatible 
 %     datafiles into a SEIZMO data structure.  Accepts character arrays of 
 %     filenames (one filename per row) and/or cell arrays of filenames (one
@@ -46,8 +48,6 @@ function [data]=readseizmo(varargin)
 %
 %    Header changes: see CHECKHEADER
 %
-%    Usage:    data=readseizmo(filelist1,...,filelistN)
-%
 %    Examples:
 %     Some simple read statements:
 %      data=readseizmo('KATH.R');
@@ -74,9 +74,10 @@ function [data]=readseizmo(varargin)
 %        Oct. 16, 2008 - doc update for dir and filetype fields
 %        Oct. 27, 2008 - minor doc update for struct change
 %        Nov. 15, 2008 - update for new name schema (now READSEIZMO)
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 23:45 GMT
+%     Last Updated Apr. 23, 2009 at 20:40 GMT
 
 % todo:
 

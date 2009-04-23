@@ -1,6 +1,8 @@
 function [data]=hilbrt(data)
 %HILBRT    Return Hilbert transform of SEIZMO records
 %
+%    Usage:    data=hilbrt(data)
+%
 %    Description: HILBRT(DATA) calculates and returns the Hilbert transform
 %     of SEIZMO records.  The Hilbert tranform is simply a -90 degree phase
 %     shift.
@@ -10,8 +12,6 @@ function [data]=hilbrt(data)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
-%
-%    Usage:    data=hilbrt(data)
 %
 %    Examples:
 %     To do a positive 90 degree phase shift:
@@ -28,14 +28,16 @@ function [data]=hilbrt(data)
 %        July 17, 2008 - history update, doc update, now uses
 %                        SEIZMO functions rather than Matlab's hilbert
 %        Nov. 22, 2008 - doc update, update for new name schema
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 22, 2008 at 22:50 GMT
+%     Last Updated Apr. 23, 2009 at 20:20 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % transform, add phase shift, inverse transform
 data=idft(subtract(dft(data),pi/2,2));

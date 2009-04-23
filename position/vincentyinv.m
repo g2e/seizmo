@@ -1,6 +1,11 @@
 function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %VINCENTYINV    Find distance and azimuth between 2 locations on ellipsoid
 %    
+%    Usage:    [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo)
+%              [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,[a f])
+%              [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,[a f],...
+%                                        [tol1 tol2])
+%
 %    Description: [DIST,AZ,BAZ]=VINCENTYINV(LAT1,LON1,LAT2,LON2) returns
 %     the geodesic lengths DIST, forward azimuths AZ and back azimuths BAZ
 %     between initial point(s) with geodetic latitudes LAT1 and longitudes
@@ -40,11 +45,6 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo)
-%              [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,[a f])
-%              [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,[a f],...
-%                                        [tol1 tol2])
-%
 %    Examples:
 %     St. Louis, MO USA to Yaounde, Cameroon:
 %      [dist,az,baz]=vincentyinv(38.649,-90.305,3.861,11.521)
@@ -63,10 +63,10 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %                        specifying the tolerance for convergent and
 %                        divergent cases, improved scalar expansion, doc
 %                        and comment update
-%        Apr. 23, 2009 - fix nargchk for octave
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 12:00 GMT
+%     Last Updated Apr. 23, 2009 at 21:50 GMT
 
 % todo:
 

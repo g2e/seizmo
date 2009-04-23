@@ -1,6 +1,8 @@
 function [data]=readheader(varargin)
 %READHEADER    Read header info from SEIZMO datafiles
 %
+%    Usage:    data=readheader(filelist1,...,filelistN)
+%
 %    Description: READHEADER(FILELIST1,...,FILELISTN) reads the headers of
 %     SEIZMO compatible datafiles into a SEIZMO structure.  Accepts char 
 %     arrays of filenames (one filename per row) and/or cell arrays of 
@@ -20,8 +22,6 @@ function [data]=readheader(varargin)
 %    Tested on: Matlab r2007b
 %
 %    Header changes: NONE
-%
-%    Usage:    data=readheader(filelist1,...,filelistN)
 %
 %    Examples:
 %     Some basic examples:
@@ -54,9 +54,10 @@ function [data]=readheader(varargin)
 %        Oct. 27, 2008 - update for struct changes
 %        Nov. 15, 2008 - new name schema (now READHEADER)
 %        Mar.  3, 2009 - update for GETFILEVERSION
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  3, 2009 at 19:20 GMT
+%     Last Updated Apr. 23, 2009 at 20:40 GMT
 
 % todo:
 

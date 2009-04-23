@@ -1,6 +1,9 @@
 function [lat]=geocentric2geodeticlat(lat,ecc)
 %GEOCENTRIC2GEODETICLAT    Convert latitudes from geocentric to geodetic
 %
+%    Usage:    latitudes=geocentric2geodeticlat(latitudes)
+%              latitudes=geocentric2geodeticlat(latitudes,ecc)
+%
 %    Description: GEOCENTRIC2GEODETICLAT(LATITUDES) converts LATITUDES that
 %     are geocentric latitudes to geodetic latitudes.  LATITUDES units are
 %     in degrees.  Assumes the WGS-84 reference ellipsoid.
@@ -13,9 +16,6 @@ function [lat]=geocentric2geodeticlat(lat,ecc)
 %
 %    Tested on: Matlab r2007b
 %
-%    Usage:    latitudes=geocentric2geodeticlat(latitudes)
-%              latitudes=geocentric2geodeticlat(latitudes,ecc)
-%
 %    Examples:
 %     Show the difference in latitudes:
 %      plot(geocentric2geodeticlat(-90:90)-(-90:90))
@@ -25,14 +25,16 @@ function [lat]=geocentric2geodeticlat(lat,ecc)
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - minor doc update
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 10, 2008 at 08:40 GMT
+%     Last Updated Apr. 23, 2009 at 21:45 GMT
 
 % todo:
 
 % require 1 or 2 inputs
-error(nargchk(1,2,nargin))
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % assume WGS-84 ellipsoid if no eccentricity given
 if(nargin==1); ecc=8.181919084262149e-02; end

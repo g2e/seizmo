@@ -1,6 +1,9 @@
 function [lgc]=isseizmo(data,varargin)
 %ISSEIZMO    True for SEIZMO data structures
 %
+%    Usage:    logical=isseizmo(data)
+%              logical=isseizmo(data,field1,...,fieldN)
+%
 %    Description: ISSEIZMO(DATA) returns logical true if DATA is a SEIZMO 
 %     data structure and false otherwise.  See SEIZMOCHECK for minimum 
 %     requirements.
@@ -12,9 +15,6 @@ function [lgc]=isseizmo(data,varargin)
 %     - ISSEIZMO is just a logical frontend for SEIZMOCHECK
 %
 %    Tested on: Matlab r2007b
-%
-%    Usage:    logical=isseizmo(data)
-%              logical=isseizmo(data,field1,...,fieldN)
 %
 %    Examples:
 %     To see if the function READHEADER returns a valid SEIZMO structure
@@ -31,19 +31,20 @@ function [lgc]=isseizmo(data,varargin)
 %        Sep. 14, 2008 - doc update, input checks
 %        Nov. 13, 2008 - renamed from ISSEIS to ISSEIZ
 %        Nov. 15, 2008 - update for new name schema (now ISSEIZMO)
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 19:25 GMT
+%     Last Updated Apr. 23, 2009 at 21:15 GMT
 
 % todo:
 
 % check input
 if(nargin<1)
-    error('seizmo:isseiz:notEnoughInputs','Not enough input arguments.');
+    error('seizmo:isseizmo:notEnoughInputs','Not enough input arguments.');
 elseif(nargin>1)
     for i=1:nargin-1
         if(~ischar(varargin{i}))
-            error('seizmo:isseiz:badInput',...
+            error('seizmo:isseizmo:badInput',...
                 'Additional argument FIELD%d must be a string!',i);
         end
     end

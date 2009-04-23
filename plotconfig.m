@@ -1,11 +1,11 @@
 function [conf]=plotconfig()
 %PLOTCONFIG    Returns default configuration structure for SEIZMO plotting
 %
+%    Usage: CONF=plotconfig()
+%
 %    Description: Returns a structure for controlling plotting parameters
 %     in SEIZMO plotting functions.  Lists all parameters currently 
 %     supported and their defaults.
-%
-%    Usage: CONF=plotconfig()
 %
 %    Examples:
 %     pconf contains the default plotting parameters that can be overridden
@@ -25,9 +25,10 @@ function [conf]=plotconfig()
 %     Version History:
 %        ????????????? - Initial Version
 %        June 12, 2008 - doc update
+%        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2008 at 16:20 GMT
+%     Last Updated Apr. 23, 2009 at 20:35 GMT
 
 % SETTING CONFIGURE STRUCTURE DEFAULTS
 conf=struct(...

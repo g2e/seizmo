@@ -19,7 +19,8 @@ function [data]=convolve(data,varargin)
 %   - study specfem3d - how do they work with kinematic sources
 %   - 
 % check nargin
-error(nargchk(1,2,nargin))
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
 error(seizmocheck(data,'dep'))
