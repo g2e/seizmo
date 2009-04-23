@@ -29,14 +29,16 @@ function [bytes]=seizmosize(data)
 %        Oct. 26, 2008 - CHKHDR added (true dataless support), doc update
 %        Nov. 13, 2008 - renamed from SEISSIZE to SEIZSIZE
 %        Nov. 15, 2008 - update for new naming scheme (now SEIZMOSIZE)
+%        Apr. 23, 2009 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 18:40 GMT
+%     Last Updated Apr. 23, 2009 at 13:05 GMT
 
 % todo:
 
 % check number of inputs
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % headers setup (check struct too)
 [h,vi]=versioninfo(data);

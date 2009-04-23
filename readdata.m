@@ -94,14 +94,16 @@ function [data,failed]=readdata(data,varargin)
 %        Nov. 12, 2008 - fix allocation of ind cmp for uneven records
 %        Nov. 17, 2008 - update for new name schema (now READDATA)
 %        Mar.  3, 2009 - update for GETFILEVERSION
+%        Apr. 23, 2009 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  3, 2009 at 19:25 GMT
+%     Last Updated Apr. 23, 2009 at 11:35 GMT
 
 % todo:
 
 % check number of inputs
-error(nargchk(1,3,nargin))
+msg=nargchk(1,3,nargin);
+if(~isempty(msg)); error(msg); end
 
 % default trim
 trim=true;

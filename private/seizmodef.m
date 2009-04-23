@@ -51,14 +51,16 @@ function [def]=seizmodef(filetype,version,option)
 %                        and SEIZMO now separate filetypes, definition
 %                        caching to speed things up
 %        Nov. 24, 2008 - fixed iacc description (nm/sec/sec)
+%        Apr. 23, 2008 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 24, 2008 at 05:30 GMT
+%     Last Updated Apr. 23, 2009 at 11:40 GMT
 
 % todo:
 
 % check input
-error(nargchk(2,3,nargin))
+msg=nargchk(2,3,nargin);
+if(~isempty(msg)); error(msg); end
 if(~ischar(filetype))
     error('seizmo:seizmodef:badInput','FILETYPE must be a string!');
 end

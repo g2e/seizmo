@@ -29,14 +29,16 @@ function [valid]=validseizmo(filetype)
 %        Oct. 27, 2008 - minor doc update
 %        Nov. 13, 2008 - renamed from VVSEIS to VALIDSEIZ
 %        Nov. 15, 2008 - now VALIDSEIZMO and separated SAC from SEIZMO
+%        Apr. 23, 2009 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 19:15 GMT
+%     Last Updated Apr. 23, 2009 at 11:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % get versions
 if(strcmpi(filetype,'SAC Binary'))

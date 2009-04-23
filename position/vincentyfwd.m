@@ -51,14 +51,16 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %        Oct. 14, 2008 - initial version
 %        Oct. 26, 2008 - improved scalar expansion, allow specifying the
 %                        tolerance, doc update
+%        Apr. 23, 2009 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 26, 2008 at 04:45 GMT
+%     Last Updated Apr. 23, 2009 at 12:00 GMT
 
 % todo:
 
 % require 4 to 6 inputs
-error(nargchk(4,6,nargin))
+msg=nargchk(4,6,nargin);
+if(~isempty(msg)); error(msg); end
 
 % default - WGS-84 Reference Ellipsoid
 if(nargin==4 || isempty(ellipsoid))

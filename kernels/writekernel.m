@@ -2,6 +2,7 @@ function []=writekernel(filename,x,y,sp,sa)
 % write out sensitivity kernel
 
 % combine (note the switch)
+sp=sp.'; sa=sa.';
 m=[y(:) x(:) sp(:) sa(:)];
 
 % write out header portion

@@ -21,14 +21,16 @@ function [ncmp]=getncmp(data)
 %     Version History:
 %        Oct.  7, 2008 - initial version
 %        Nov. 16, 2008 - update for new name schema (now GETNCMP)
+%        Apr. 23, 2009 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2008 at 03:35 GMT
+%     Last Updated Apr. 23, 2009 at 13:05 GMT
 
 % todo:
 
 % input check
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % get ncmp via GH, avoiding warnings
 warning('off','seizmo:getheader:fieldInvalid')

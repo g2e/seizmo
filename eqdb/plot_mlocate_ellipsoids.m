@@ -18,12 +18,12 @@ cmap=hsv(cint);
 zmin=nan; zmax=nan;
 for n=1:length(files)
     % read in info
-    [lat,lon,dep]=textread(files{n},'%10.4f%10.4f%10.4f',1,'headerlines',1);
+    [lat,lon,dep]=textread(files(n).name,'%10.4f%10.4f%10.4f',1,'headerlines',1);
     [years,months,days,hours,minutes,mag,...
         latdev,londev,depdev,...
         xx,xy,xz,xdist,...
         yx,yy,yz,ydist,...
-        zx,zy,zz,zdist]=textread(files{n},['%4d-%2d-%2d-%2d:%2d-%5.2f\n'...
+        zx,zy,zz,zdist]=textread(files(n).name,['%4d-%2d-%2d-%2d:%2d-%5.2f\n'...
                                            '%8.2f%8.2f%8.2f\n'...
                                            '   %10.5f%10.5f%10.5f%10.5f\n'...
                                            '   %10.5f%10.5f%10.5f%10.5f\n'...
@@ -64,21 +64,23 @@ for n=1:length(files)
         % draw ellipsoid (cycle ellipsoid coloring every 100km)
         figure(h);
         surf(x,y,z,'facecolor',cmap(1+mod(round(cint*(dep+depdev(i))/repeatint),cint),:),'edgecolor','none');
-        if(i==1); hold on; end
+        if(i==1);
+            hold on;
+        end
     end
 end
 
 % setup colormap used
-zmin=round(zmin); zmax=round(zmax);
-zminr=fix(zmin/repeatint); zmaxr=fix(zmax/repeatint);
-fmini=1+mod(round(cint*zmin/repeatint),cint);
-fmaxi=1+mod(round(cint*zmax/repeatint),cint);
-cmap=[cmap(fmini:end,:); repmat(cmap,[zmaxr-zminr 1]); cmap(1:fmaxi,:)];
-colormap(cmap)
+%zmin=round(zmin); zmax=round(zmax);
+%zminr=fix(zmin/repeatint); zmaxr=fix(zmax/repeatint);
+%fmini=1+mod(round(cint*zmin/repeatint),cint);
+%fmaxi=1+mod(round(cint*zmax/repeatint),cint);
+%cmap=[cmap(fmini:end,:); repmat(cmap,[zmaxr-zminr 1]); cmap(1:fmaxi,:)];
+%colormap(cmap)
 
 % universal plotting parameters
 figure(h)
-colorbar
+%colorbar
 set(gca,'ZDir','reverse')
 set(gca,'YDir','reverse')
 xlabel('Latitude (deg)')

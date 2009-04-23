@@ -77,9 +77,11 @@ function [data]=taper(data,width,type,option)
 %                        schema, handle widths>1, one changeheader call,
 %                        error on xyz file, better checking
 %        Dec. 12, 2008 - doc update
+%        Apr. 22, 2009 - changed interpolation method for building tapers
+%                        related to unevenly sampled records
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 12, 2008 at 02:55 GMT
+%     Last Updated Apr. 22, 2009 at 05:05 GMT
 
 % check input
 error(nargchk(1,4,nargin))
@@ -153,9 +155,9 @@ for i=1:nrecs
             (data(i).ind(end)-data(i).ind(1))*width(2)),1,'first');
         even_times=linspace(data(i).ind(1),data(i).ind(end),npts);
         taper1=interp1(even_times(1:nwidth(1)),taperedge1(1:nwidth(1)),...
-            data(i).ind(1:last1),'pchip');
+            data(i).ind(1:last1),'spline');
         taper2=interp1(even_times((end-nwidth(2)+1):end),...
-            taperedge2((nwidth(2)+1):end),data(i).ind(last2:end),'pchip');
+            taperedge2((nwidth(2)+1):end),data(i).ind(last2:end),'spline');
         
         % apply taper halfwidths separately
         data(i).dep(1:last1,:)=...

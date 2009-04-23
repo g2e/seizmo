@@ -34,14 +34,16 @@ function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Oct. 26, 2008 - improved scalar expansion, doc and comment update
+%        Apr. 23, 2009 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 26, 2008 at 15:20 GMT
+%     Last Updated Apr. 23, 2009 at 12:00 GMT
 
 % todo:
 
 % require 4 inputs
-error(nargchk(4,4,nargin))
+msg=nargchk(4,4,nargin);
+if(~isempty(msg)); error(msg); end
 
 % size up inputs
 sz1=size(evla); sz2=size(evlo);

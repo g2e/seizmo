@@ -77,9 +77,10 @@ function [data]=checkheader(data,options,varargin)
 %                        turning this function on/off through SEIZMO global
 %        Apr.  7, 2009 - fixed LOVROK handling (not checked here anymore),
 %                        try/catch for quicker on/off flag check
+%        Apr. 23, 2009 - fix seizmocheck for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  7, 2009 at 07:00 GMT
+%     Last Updated Apr. 23, 2009 at 12:00 GMT
 
 % todo:
 % - excluding certain options
@@ -116,7 +117,8 @@ catch
 end
 
 % check data structure
-error(seizmocheck(data));
+msg=seizmocheck(data);
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=get_seizmocheck_state;
@@ -246,25 +248,25 @@ validztype={'iunkn' 'ib' 'iday' 'io' 'ia' 'it0' 'it1' 'it2' 'it3' 'it4'...
 validdep={'iunkn' 'idisp' 'ivel' 'iacc' 'ivolts'};
 
 % check data type
-if(any(cellfun(@(x)~isempty(setdiff(x,validftype)),iftype)))
-    i=find(cellfun(@(x)~isempty(setdiff(x,validftype)),iftype));
+if(~isempty(setdiff(iftype,validftype)))
+    [dummy,i]=setdiff(iftype,validftype);
     error('seizmo:checkheader:badFileType',...
         ['IFTYPE field id unknown for record(s):\n' sprintf('%d ',i)...
         '\nMust be one of the following:\n' sprintf('%s ',validftype{:})]);
 end
 
 % check dependent component type
-if(any(cellfun(@(x)~isempty(setdiff(x,validdep)),idep)))
-    i=find(cellfun(@(x)~isempty(setdiff(x,validdep)),idep));
+if(~isempty(setdiff(idep,validdep)))
+    [dummy,i]=setdiff(idep,validdep);
     warning('seizmo:checkheader:badDepType',...
         ['IDEP field id unknown for record(s):\n' sprintf('%d ',i)...
         '\nMust be one of the following:\n' sprintf('%s ',validdep{:})]);
 end
 
 % check reference type
-badztype=cellfun(@(x)~isempty(setdiff(x,validztype)),iztype);
-if(any(badztype))
-    i=find(badztype);
+[dummy,i]=setdiff(iztype,validztype);
+badztype=false(size(data)); badztype(i)=true;
+if(~isempty(i))
     warning('seizmo:checkheader:badRefType',...
         ['IZTYPE field id unknown for record(s):\n' sprintf('%d ',i)...
         '\nMust be one of the following:\n' sprintf('%s ',validftype{:})]);

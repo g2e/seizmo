@@ -32,17 +32,20 @@ function [h,idx]=versioninfo(data)
 %        Oct. 25, 2008 - doc update, block mlint hint for now
 %        Nov. 13, 2008 - renamed from VINFO to VERSIONINFO
 %        Nov. 15, 2008 - update for new name schema
+%        Apr. 23, 2009 - fix nargchk and seizmocheck for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2008 at 19:25 GMT
+%     Last Updated Apr. 23, 2009 at 12:00 GMT
 
 % todo:
 
 % check number of inputs
-error(nargchk(1,1,nargin))
+msg=nargchk(1,1,nargin);
+if(~isempty(msg)); error(msg); end
 
 % check data structure
-error(seizmocheck(data))
+msg=seizmocheck(data);
+if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % get filetypes
 ft={data.filetype}.';

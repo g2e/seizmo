@@ -63,14 +63,16 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %                        specifying the tolerance for convergent and
 %                        divergent cases, improved scalar expansion, doc
 %                        and comment update
+%        Apr. 23, 2009 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 26, 2008 at 07:20 GMT
+%     Last Updated Apr. 23, 2009 at 12:00 GMT
 
 % todo:
 
 % require 4 to 6 inputs
-error(nargchk(4,6,nargin))
+msg=nargchk(4,6,nargin);
+if(~isempty(msg)); error(msg); end
 
 % default - WGS-84 Reference Ellipsoid
 if(nargin==4 || isempty(ellipsoid))

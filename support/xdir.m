@@ -60,13 +60,17 @@ function [varargout]=xdir(str,depth)
 %                        separate the path from the name, RDIR => XDIR
 %        Mar. 31, 2009 - rewrote path separation (fixes a few more bugs),
 %                        now can specify recursion limits
+%        Apr. 20, 2009 - add filesep to end of path for non-wildcard
+%                        directory expansion
+%        Apr. 23, 2009 - made to work with Octave too (fixes for assigning
+%                        to struct and adding fields to empty struct)
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated Mar. 31, 2009 at 17:45 GMT
+%     Last Updated Apr. 23, 2009 at 10:35 GMT
 
 % todo:
-% - handle '?' wildcard
+% - handle '?' wildcard (only for matlab - octave already does this!)
 %   - something along the lines of:
 %      d=dir('*')
 %      for ...
@@ -142,10 +146,26 @@ if isempty(wildpath)
   % handle dir expanding directories
   if(isdir([prepath postpath]))
     D=dir([prepath postpath]);
-    [D(:).path]=deal([prepath postpath]);
+    % workaround for new field to empty struct
+    if(isempty(D))
+        blah=[{'path'}; fieldnames(D)];
+        clear('D');
+        bah=[blah cell(size(blah))].';
+        D([],1)=struct(bah{:});
+    else
+        [D.path]=deal([prepath postpath filesep]);
+    end
   else
     D=dir([prepath postpath]);
-    [D(:).path]=deal(prepath);
+    % workaround for new field to empty struct
+    if(isempty(D))
+        blah=[{'path'}; fieldnames(D)];
+        clear('D');
+        bah=[blah cell(size(blah))].';
+        D([],1)=struct(bah{:});
+    else
+        [D.path]=deal(prepath);
+    end
   end
 % a double wild directory means recurse down into sub directories
 elseif strcmp(wildpath,'**')
@@ -153,7 +173,10 @@ elseif strcmp(wildpath,'**')
   if(depth(1)<1)
     D=xdir([prepath postpath(2:end)],depth);
   else
-    D=dir(''); [D(:).path]=deal([]);
+    % empty struct with path field
+    blah=[{'path'}; fieldnames(dir)];
+    bah=[blah cell(size(blah))].';
+    D([],1)=struct(bah{:});
   end
 
   % then look for sub directories (if recursion limit is not exceeded)
@@ -162,7 +185,7 @@ elseif strcmp(wildpath,'**')
     % process each directory
     for i=1:numel(tmp),
       if (tmp(i).isdir ...
-          && ~strcmp(tmp(i).name,'.') && ~strcmp(tmp(i).name,'..') ),
+          && ~strcmp(tmp(i).name,'.') && ~strcmp(tmp(i).name,'..'))
         D=[D; xdir([prepath tmp(i).name filesep '**' postpath],depth-1)]; %#ok<AGROW>
       end
     end
@@ -170,11 +193,16 @@ elseif strcmp(wildpath,'**')
 else
   % Process directory wild card looking for sub directories that match
   tmp=dir([prepath wildpath]);
-  D=dir(''); [D(:).path]=deal([]);
+  
+  % empty struct with path field
+  blah=[{'path'}; fieldnames(dir)];
+  bah=[blah cell(size(blah))].';
+  D([],1)=struct(bah{:});
+  
   % process each directory found
-  for i=1:numel(tmp),
-    if((tmp(i).isdir ...
-        && ~strcmp(tmp(i).name,'.') && ~strcmp(tmp(i).name,'..')))
+  for i=1:numel(tmp)
+    if(tmp(i).isdir ...
+        && ~strcmp(tmp(i).name,'.') && ~strcmp(tmp(i).name,'..'))
       D=[D; xdir([prepath tmp(i).name postpath],depth)]; %#ok<AGROW>
     end
   end

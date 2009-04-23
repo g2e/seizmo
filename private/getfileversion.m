@@ -41,14 +41,18 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %                        minor code cleaning
 %        Apr.  7, 2009 - verbose option, output cleanup, better subfunction
 %                        handling, total separation of type methods
+%        Apr. 23, 2009 - fix for array of function handles (octave needs
+%                        comma separated list)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  7, 2009 at 05:35 GMT
+%     Last Updated Apr. 23, 2009 at 10:50 GMT
 
 % todo:
 
 % check input
-error(nargchk(1,2,nargin))
+msg=nargchk(1,2,nargin);
+if(~isempty(msg)); error(msg); end
+
 if(~ischar(filename))
     error('seizmo:getfileversion:badInput','FILENAME must be a string!');
 end
@@ -73,7 +77,7 @@ if(fid<0)
 end
 
 % methods
-funcs={@getsacbinaryversion @getseizmobinaryversion};
+funcs={@getsacbinaryversion, @getseizmobinaryversion};
 
 % try different methods, catching errors
 for i=1:numel(funcs)
