@@ -10,8 +10,7 @@ function [data]=changebyteorder(data,endianness)
 %     record's endianness individually.
 %
 %    Notes:
-%
-%    Tested on: Matlab r2007b
+%     - empty string ('') will preserve the byteorder of records
 %
 %    Examples:
 %     Change records in current directory to the platform's byte-ordering:
@@ -25,9 +24,14 @@ function [data]=changebyteorder(data,endianness)
 %        Nov. 16, 2008 - rename from CENDIAN to CHANGEBYTEORDER
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        May  28, 2009 - fixed to update byteorder field, minor doc update
+%        May  29, 2009 - allow empty endianness (no change)
+%
+%     Testing History:
+%        r72 - Linux Matlab (r2007b)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:05 GMT
+%     Last Updated May  29, 2009 at 21:10 GMT
 
 % todo:
 
@@ -38,6 +42,9 @@ if(~isempty(msg)); error(msg); end
 % check data structure
 msg=seizmocheck(data);
 if(~isempty(msg)); error(msg.identifier,msg.message); end
+
+% fast exit
+if(isempty(endianness)); return; end
 
 % check and fix type
 if(~iscellstr(endianness))
@@ -53,9 +60,13 @@ end
 if(isscalar(endianness))
     endianness=endianness(ones(numel(data),1));
 elseif(numel(data)~=numel(endianness))
-    error('seizmo:cendian:badInput',...
+    error('seizmo:changebyteorder:badInput',...
         'ENDIANNESS must be scalar or match the size of DATA!');
 end
+
+% find those to preserve
+preserve=strcmp(endianness,'');
+[endianness{preserve}]=deal(data(preserve).byteorder);
 
 % check endianness
 endianness=lower(endianness);
@@ -65,6 +76,6 @@ if(any(~strcmp(endianness,'ieee-le') & ~strcmp(endianness,'ieee-be')))
 end
 
 % change endianness
-[data.endian]=deal(endianness{:});
+[data.byteorder]=deal(endianness{:});
 
 end

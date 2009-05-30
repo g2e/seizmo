@@ -1,7 +1,7 @@
 function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 %SPHERICALFWD    Finds a point on a sphere relative to another point
 %
-%    Usage:    [stla,stlo]=sphericalfwd(evla,evlo,gcarc,az)
+%    Usage:    [lat2,lon2]=sphericalfwd(lat1,lon1,gcarc,az)
 %
 %    Description: [LAT2,LON2,BAZ]=SPHERICALFWD(LAT1,LON1,GCARC,AZ) returns
 %     geocentric latitudes LAT2 and longitudes LON2 of destination
@@ -33,9 +33,10 @@ function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 %        Oct. 14, 2008 - initial version
 %        Oct. 26, 2008 - improved scalar expansion, doc and comment update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        May   8, 2009 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:50 GMT
+%     Last Updated May   8, 2009 at 22:35 GMT
 
 % todo:
 

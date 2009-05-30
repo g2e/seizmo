@@ -1,11 +1,29 @@
-function []=writeheader(data)
+function []=writeheader(data,varargin)
 %WRITEHEADER    Write SEIZMO data header info to datafiles
 %
 %    Usage:    writeheader(data)
+%              writeheader(data,...,'name',name,...)
+%              writeheader(data,...,'prepend',string,...)
+%              writeheader(data,...,'append',string,...)
+%              writeheader(data,...,'delete',string,...)
+%              writeheader(data,...,'delete',{str1 ... strN},...)
+%              writeheader(data,...,'change',{original replacement},...)
+%              writeheader(data,...,'path',path,...)
+%              writeheader(data,...,'pathprepend',string,...)
+%              writeheader(data,...,'pathappend',string,...)
+%              writeheader(data,...,'pathdelete',string,...)
+%              writeheader(data,...,'pathdelete',{str1 ... strN},...)
+%              writeheader(data,...,'pathchange',{original replacemnt},...)
+%              writeheader(data,...,'byteorder',endianness,...)
 %
 %    Description: WRITEHEADER(DATA) writes SEIZMO data headers as datafiles
 %     on disk.  Primarily this is for updating the headers of existing
 %     datafiles to match the SEIZMO DATA structure.
+%
+%     For options 'NAME', 'PREPEND', 'APPEND', 'DELETE', and 'CHANGE' see
+%     CHANGENAME for usage.  For options 'PATH', 'PATHPREPEND',
+%     'PATHAPPEND', 'PATHDELETE', and 'PATHCHANGE' see CHANGEPATH for
+%     usage.  For option 'BYTEORDER' see CHANGEBYTEORDER for usage.
 %
 %    Notes:  
 %     - If you want to modify the filetype, version or byte-order of
@@ -15,8 +33,6 @@ function []=writeheader(data)
 %       filetype, version or byte-order change is NOT recommended as it
 %       only changes the header and will likely corrupt your datafiles!
 %     - Requires field LOVROK to be set to TRUE for overwriting.
-%
-%    Tested on: Matlab r2007b
 %
 %    Header changes: NONE
 %
@@ -46,15 +62,25 @@ function []=writeheader(data)
 %        Mar.  3, 2009 - update for GETFILEVERSION
 %        Apr.  7, 2009 - LOVROK support, better messages/checks
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        May  29, 2009 - allow options via WRITEPARAMETERS
+%
+%     Testing History:
+%        r72 - Linux Matlab (r2007b)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:10 GMT
+%     Last Updated May  29, 2009 at 22:10 GMT
 
 % todo:
+% - document options
 
-% check number of inputs
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+% check nargin
+if(mod(nargin-1,2))
+    error('seizmo:writeheader:badNumInputs',...
+        'Bad number of arguments!');
+end
+
+% handle options
+data=writeparameters(data,varargin{:});
 
 % headers setup (checks struct too)
 [h,vi]=versioninfo(data);

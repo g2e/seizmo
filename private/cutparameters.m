@@ -1,5 +1,5 @@
 function [option]=cutparameters(varargin)
-%CUTPARAMETERS    Parses inputs defining the cut window for CUTIM/RPDW
+%CUTPARAMETERS    Parses inputs defining the data window(s)
 %
 %    Usage:    options=cutparameters(nrecs,args)
 %
@@ -11,8 +11,6 @@ function [option]=cutparameters(varargin)
 %
 %    Notes:
 %     - empty input arguments may have unexpected results
-%
-%    Tested on: Matlab r2007b
 %
 %    Examples:
 %     CUTPARAMETERS is what allows CUT and READDATAWINDOW to have very
@@ -32,11 +30,19 @@ function [option]=cutparameters(varargin)
 %        Oct. 16, 2008 - name changed from CUTPARAM to CUTPARAMETERS
 %        Nov. 15, 2008 - update for new name schema
 %        Apr. 23, 2009 - move usage up
+%        May  29, 2009 - minor doc update, add nargin check
+%
+%     Testing History:
+%        r72 - Linux Matlab (r2007b)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:15 GMT
+%     Last Updated May  29, 2009 at 02:15 GMT
 
 % todo:
+
+% check number of inputs
+msg=nargchk(1,inf,nargin);
+if(~isempty(msg)); error(msg); end
 
 % option defaults
 option.TRIM=true;

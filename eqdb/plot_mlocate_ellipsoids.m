@@ -88,7 +88,7 @@ ylabel('Longitude (deg)')
 zlabel('Depth (km)')
 box on
 axis vis3d
-lighting phong
+lighting gouraud
 material shiny
 light('Position',[ 1 -1  0],'Style','infinite')
 light('Position',[ 1  1  0],'Style','infinite')

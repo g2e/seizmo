@@ -13,7 +13,7 @@ function [data]=bseizmo(varargin)
 %     columns.
 %
 %    Notes:
-%     - outputs records as equivalent to SAC version 6
+%     - outputs records as SEIZMO binary version 201
 %     - the byte-order is set to match the current architecture
 %     - the filetype is set as 'General X vs Y file'
 %     - automatically figures out if data is evenly sampled
@@ -32,7 +32,7 @@ function [data]=bseizmo(varargin)
 %      times=linspace(0,30,1000);
 %      amps=sqrt(times);
 %      data=bseizmo(times,amps);
-%      wseizmo(data);
+%      writeseizmo(data);
 %
 %    See also:  wseizmo, rseizmo
 
@@ -63,9 +63,10 @@ function [data]=bseizmo(varargin)
 %        Nov. 18, 2008 - default is SEIZMO Binary (v201), better struct
 %                        initialization, renamed from BSEIS to BSEIZMO
 %        Apr. 23, 2009 - move usage up
+%        May  15, 2009 - minor doc fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:05 GMT
+%     Last Updated May  15, 2009 at 18:45 GMT
 
 % todo:
 

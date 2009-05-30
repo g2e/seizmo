@@ -18,10 +18,10 @@ function [report]=seizmocheck(data,varargin)
 %                 byteorder, hasdata, head
 %       - All default fields must be nonempty
 %       - All default fields must be valid
-%     - Non-default fields are not required to be nonempty or valid
-%     - See examples for non-default field uses
-%
-%    Tested on: Matlab r2007b
+%     - Non-default fields are not required to be nonempty nor are they
+%       checked for validity.
+%     - Optional field 'dep' is handled specially (an empty dep field is
+%       ambiguous, so the hasdata field is checked to be true).
 %
 %    Examples:
 %     Most functions require records have data stored in the field 'dep'.
@@ -60,9 +60,13 @@ function [report]=seizmocheck(data,varargin)
 %                        change endian to byteorder, .dep special handling
 %        Apr. 23, 2009 - move usage up, mention usage style compatible with
 %                        octave and matlab
+%        May  29, 2009 - minor doc update
+%
+%     Testing History:
+%        r72 - Linux Matlab (r2007b)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:50 GMT
+%     Last Updated May  29, 2009 at 02:25 GMT
 
 % todo:
 

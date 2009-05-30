@@ -10,7 +10,7 @@ function [data]=integrate(data,option)
 %     between those points.  This operation will add 1 point to the
 %     records, starting with the first point set to 0.  This also is
 %     attempted for uneven records but may fail if the midpoint assumption
-%     cannot be true (assuming the independent component must be increase
+%     cannot be true (the independent component must increase
 %     monotonically).  The trapezoidal rule is used as a fallback in this
 %     instance (a warning is issued as well).
 %
@@ -49,9 +49,10 @@ function [data]=integrate(data,option)
 %                        methods into one function, fixed several bugs too
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        May   8, 2009 - uses expanded idep unit set
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:25 GMT
+%     Last Updated May   8, 2009 at 18:10 GMT
 
 % todo:
 
@@ -262,11 +263,35 @@ for i=1:nrecs
 end
 
 % change dependent component type
+ispop=strcmpi(idep,'ipop');
+iscrackle=strcmpi(idep,'icrackle');
+issnap=strcmpi(idep,'isnap');
+isjerk=strcmpi(idep,'ijerk');
 isacc=strcmpi(idep,'iacc');
 isvel=strcmpi(idep,'ivel');
+isdisp=strcmpi(idep,'idisp');
+isabsmnt=strcmpi(idep,'iabsmnt');
+isabsity=strcmpi(idep,'iabsity');
+isabseler=strcmpi(idep,'iabseler');
+isabserk=strcmpi(idep,'iabserk');
+isabsnap=strcmpi(idep,'iabsnap');
+isabsackl=strcmpi(idep,'iabsackl');
+idep(ispop)={'icrackle'};
+idep(iscrackle)={'isnap'};
+idep(issnap)={'ijerk'};
+idep(isjerk)={'iacc'};
 idep(isacc)={'ivel'};
 idep(isvel)={'idisp'};
-idep(~isacc & ~isvel)={'iunkn'};
+idep(isdisp)={'iabsmnt'};
+idep(isabsmnt)={'iabsity'};
+idep(isabsity)={'iabseler'};
+idep(isabseler)={'iabserk'};
+idep(isabserk)={'iabsnap'};
+idep(isabsnap)={'iabsackle'};
+idep(isabsackl)={'iabspop'};
+idep(~(ispop | iscrackle | issnap | isjerk | isacc | isvel | isdisp | ...
+    isabsmnt | isabsity | isabseler | isabserk | isabsnap | isabsackl))...
+    ={'iunkn'};
 
 % update headers
 data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax,...

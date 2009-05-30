@@ -63,7 +63,7 @@ function [y]=slidingavg(x,nsamples,varargin)
 %
 %    Examples:
 %     Get a smoothed amplitude spectra:
-%      y=slidingavg(abs(fft(x)))
+%      y=slidingavg(abs(fft(x)),2)
 %
 %     An example of a custom call:
 %      y=slidingavg(x,[],'custom',[-10:10; gausswin(21).'])
@@ -80,11 +80,13 @@ function [y]=slidingavg(x,nsamples,varargin)
 %                        fix bug in handling multiple entries for the same
 %                        element, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        May  10, 2009 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:20 GMT
+%     Last Updated May  10, 2009 at 02:50 GMT
 
 % todo:
+% - fix nan handling
 
 % check nargin
 msg=nargchk(2,12,nargin);

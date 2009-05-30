@@ -30,7 +30,7 @@ function [data]=differentiate(data,option)
 %     - for option 'five'
 %       - B increased by 2*DELTA, E decreased by 2*DELTA
 %       - NPTS decreased by 4
-%       - NOT SAC COMPATIBLE!
+%       - EDGES ARE NOT SAC COMPATIBLE!
 %
 %    Tested on: Matlab r2007b
 %
@@ -55,11 +55,18 @@ function [data]=differentiate(data,option)
 %                       filetype check
 %       Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                       move usage up
+%       May   8, 2009 - uses expanded idep unit set
 %
 %    Written by Garrett Euler (ggeuler at wustl dot edu)
-%    Last Updated Apr. 23, 2009 at 20:00 GMT
+%    Last Updated May   8, 2009 at 19:00 GMT
 
 % todo:
+% - add 'five' option for uneven
+% - 'three' and 'five' are not really 3pt and 5pt
+%   - 'three' is just 'two' basically
+%   - 'five' is just a 4pt
+% - lets look for a more stencils and a better naming scheme
+% - can we undo other integrate options?
 
 % check nargin
 msg=nargchk(1,2,nargin);
@@ -169,7 +176,7 @@ for i=1:nrecs
             b(i)=b(i)+2*delta(i); e(i)=e(i)-2*delta(i); npts(i)=npts(i)-4;
         % unevenly spaced
         else
-            
+            % need to derive this using Lagrange multipliers IIRC
             error('seizmo:differentiate:undone','5pt not for uneven!');
         end
     end
@@ -184,11 +191,35 @@ for i=1:nrecs
 end
 
 % change dependent component type
-isdis=strcmpi(idep,'idisp');
+iscrackle=strcmpi(idep,'icrackle');
+issnap=strcmpi(idep,'isnap');
+isjerk=strcmpi(idep,'ijerk');
+isacc=strcmpi(idep,'iacc');
 isvel=strcmpi(idep,'ivel');
-idep(isdis)={'ivel'};
+isdisp=strcmpi(idep,'idisp');
+isabsmnt=strcmpi(idep,'iabsmnt');
+isabsity=strcmpi(idep,'iabsity');
+isabseler=strcmpi(idep,'iabseler');
+isabserk=strcmpi(idep,'iabserk');
+isabsnap=strcmpi(idep,'iabsnap');
+isabsackl=strcmpi(idep,'iabsackl');
+isabspop=strcmpi(idep,'iabspop');
+idep(iscrackle)={'ipop'};
+idep(issnap)={'icrackle'};
+idep(isjerk)={'isnap'};
+idep(isacc)={'ijerk'};
 idep(isvel)={'iacc'};
-idep(~isdis & ~isvel)={'iunkn'};
+idep(isdisp)={'ivel'};
+idep(isabsmnt)={'idisp'};
+idep(isabsity)={'iabsmnt'};
+idep(isabseler)={'iabsity'};
+idep(isabserk)={'iabseler'};
+idep(isabsnap)={'iabserk'};
+idep(isabsackl)={'iabsnap'};
+idep(isabspop)={'iabsackl'};
+idep(~(iscrackle | issnap | isjerk | isacc | isvel | isdisp | isabsmnt |...
+    isabsity | isabseler | isabserk | isabsnap | isabsackl | isabspop))...
+    ={'iunkn'};
 
 % update header
 data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax,...

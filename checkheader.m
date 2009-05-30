@@ -78,9 +78,10 @@ function [data]=checkheader(data,options,varargin)
 %        Apr.  7, 2009 - fixed LOVROK handling (not checked here anymore),
 %                        try/catch for quicker on/off flag check
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
+%        May  10, 2009 - add support for expanded idep set
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:00 GMT
+%     Last Updated May  10, 2009 at 02:00 GMT
 
 % todo:
 % - excluding certain options
@@ -95,6 +96,7 @@ function [data]=checkheader(data,options,varargin)
 %   - Z => az=0, inc=0 or 180
 %
 % - don't fix any header fields!?!
+% - check .ind for monotonicity
 %
 % testing
 %  - single record test of all features
@@ -245,7 +247,9 @@ function [spectral,xyz]=check_enums(data,iftype,iztype,idep,hour,min,sec,msec)
 validftype={'itime' 'irlim' 'iamph' 'ixy' 'ixyz'};
 validztype={'iunkn' 'ib' 'iday' 'io' 'ia' 'it0' 'it1' 'it2' 'it3' 'it4'...
     'it5' 'it6' 'it7' 'it8' 'it9'};
-validdep={'iunkn' 'idisp' 'ivel' 'iacc' 'ivolts'};
+validdep={'iunkn' 'idisp' 'ivel' 'iacc' 'ivolts' 'iabsmnt' ...
+        'iabsity' 'iabseler' 'iabserk' 'iabsnap' 'iabsackl' 'iabspop' ...
+        'ijerk' 'isnap' 'icrackle' 'ipop'};
 
 % check data type
 if(~isempty(setdiff(iftype,validftype)))

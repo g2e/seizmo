@@ -43,8 +43,8 @@ function [data]=merge(data,varargin)
 %     out of a mergible pair is shifted/interpolated to time-align with the
 %     other.  There are six choices: 'FIRST' 'LAST' 'LONGER' 'SHORTER'
 %     'ONE' & 'TWO.  The default is 'SHORTER' (which adjusts the shorter
-%     record to time-align with the longer).  Method ONE adjust the record
-%     with a lower index, while TWO adjust the higher.
+%     record to time-align with the longer).  Method ONE adjusts the record
+%     with a lower index, while TWO adjusts the higher.
 %
 %     DATA=MERGE(DATA,...,'OVERLAP',METHOD,...) allows changing how
 %     overlaps are merged.  There are two choices: 'SEQUENTIAL' and
@@ -112,8 +112,8 @@ function [data]=merge(data,varargin)
 %     not turn off making gaps or overlaps sequential (use GAP or OVERLAP
 %     options above or see MERGEGAPS and MERGEOVERLAPS below).
 %
-%     DATA=MERGE(DATA,...,'MERGEOVERLAPS',LOGICAL,...) allows turning on/off
-%     the merging of overlapping data that is within the time tear
+%     DATA=MERGE(DATA,...,'MERGEOVERLAPS',LOGICAL,...) allows turning
+%     on/off the merging of overlapping data that is within the time tear
 %     tolerance.  Useful for just working on gaps.
 %
 %     DATA=MERGE(DATA,...,'MERGEGAPS',LOGICAL,...) allows turning on/off
@@ -191,8 +191,6 @@ function [data]=merge(data,varargin)
 %         allows nudging the timing of records by half an interval so that
 %         they time-align without interpolating the data.  BIG speed jump.
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: B, E, NPTS, DEPMEN, DEPMIN, DEPMAX
 %                    (see CHECKHEADER for more)
 %
@@ -218,17 +216,21 @@ function [data]=merge(data,varargin)
 %        Dec.  6, 2008 - initial version
 %        Dec.  8, 2008 - more options
 %        Mar. 30, 2009 - major update: description added, tons of options, 
-%                        handles the 'South Pole Case'
+%                        handles the 'QSPA Case'
 %        Apr.  1, 2009 - major update again: speedy multi-merge
 %        Apr.  7, 2009 - slightly more detail in verbose output
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
+%        May  15, 2009 - minor doc update
+%        May  28, 2009 - minor doc update
+%
+%     Testing History:
+%        r72 - Linux Matlab (r2007b)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:30 GMT
+%     Last Updated May  28, 2009 at 23:15 GMT
 
 % todo:
 %   - uneven support - just toss together and sort after?
-%   - debug!!
 
 % check nargin
 if(mod(nargin-1,2))
@@ -284,7 +286,9 @@ global SEIZMO
 try
     fields=fieldnames(SEIZMO.MERGE);
     for i=1:numel(fields)
-        option.(fields{i})=SEIZMO.MERGE.(fields{i});
+        if(~isempty(SEIZMO.MERGE.(fields{i})))
+            option.(fields{i})=SEIZMO.MERGE.(fields{i});
+        end
     end
 catch
 end
@@ -293,9 +297,11 @@ end
 for i=1:2:nargin-1
     if(~ischar(varargin{i}))
         error('seizmo:merge:badInput',...
-            'Options must be specified as a strings!');
+            'Options must be specified as a string!');
     end
-    option.(upper(varargin{i}))=varargin{i+1};
+    if(~isempty(varargin{i+1}))
+        option.(upper(varargin{i}))=varargin{i+1};
+    end
 end
 
 % check options

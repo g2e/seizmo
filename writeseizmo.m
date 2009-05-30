@@ -1,16 +1,32 @@
-function []=writeseizmo(data)
+function []=writeseizmo(data,varargin)
 %WRITESEIZMO    Write SEIZMO records to datafiles
 %
 %    Usage:    writeseizmo(data)
+%              writeseizmo(data,...,'name',name,...)
+%              writeseizmo(data,...,'prepend',string,...)
+%              writeseizmo(data,...,'append',string,...)
+%              writeseizmo(data,...,'delete',string,...)
+%              writeseizmo(data,...,'delete',{str1 ... strN},...)
+%              writeseizmo(data,...,'change',{original replacement},...)
+%              writeseizmo(data,...,'path',path,...)
+%              writeseizmo(data,...,'pathprepend',string,...)
+%              writeseizmo(data,...,'pathappend',string,...)
+%              writeseizmo(data,...,'pathdelete',string,...)
+%              writeseizmo(data,...,'pathdelete',{str1 ... strN},...)
+%              writeseizmo(data,...,'pathchange',{original replacemnt},...)
+%              writeseizmo(data,...,'byteorder',endianness,...)
 %
 %    Description: WRITESEIZMO(DATA) writes SEIZMO records in DATA to
 %     datafiles.  Uses the fields in the structure to determine how and
 %     where to write the records.
 %
+%     For options 'NAME', 'PREPEND', 'APPEND', 'DELETE', and 'CHANGE' see
+%     CHANGENAME for usage.  For options 'PATH', 'PATHPREPEND',
+%     'PATHAPPEND', 'PATHDELETE', and 'PATHCHANGE' see CHANGEPATH for
+%     usage.  For option 'BYTEORDER' see CHANGEBYTEORDER for usage.
+%
 %    Notes:
 %     - Requires field LOVROK to be set to TRUE for overwriting.
-%
-%    Tested on: Matlab r2007b
 %
 %    Header changes: see CHECKHEADER
 %
@@ -52,15 +68,24 @@ function []=writeseizmo(data)
 %        Apr.  7, 2009 - LOVROK support, better messages/checks
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        May  29, 2009 - allow options via WRITEPARAMETERS
+%
+%     Testing History:
+%        r72 - Linux Matlab (r2007b)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:15 GMT
+%     Last Updated May  29, 2009 at 22:10 GMT
 
 % todo:
 
-% check number of inputs
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+% check nargin
+if(mod(nargin-1,2))
+    error('seizmo:writeseizmo:badNumInputs',...
+        'Bad number of arguments!');
+end
+
+% handle options
+data=writeparameters(data,varargin{:});
 
 % check data structure
 msg=seizmocheck(data,'dep');
