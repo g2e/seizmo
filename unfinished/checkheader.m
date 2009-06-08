@@ -77,7 +77,6 @@ function [data]=checkheader(data,options,varargin)
 %                        try/catch for quicker on/off flag check
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %        May  10, 2009 - add support for expanded idep set
-%        June  8, 2009 - couple fixes for non-column vector data
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -95,7 +94,7 @@ function [data]=checkheader(data,options,varargin)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  8, 2009 at 00:40 GMT
+%     Last Updated May  10, 2009 at 02:00 GMT
 
 % todo:
 % - use CHECKOPERR to decide how to handle individual cases
@@ -349,7 +348,7 @@ end
 
 % check reference type
 [dummy,i]=setdiff(iztype,validztype);
-badztype=false(size(data(:))); badztype(i)=true;
+badztype=false(size(data)); badztype(i)=true;
 if(~isempty(i))
     warning('seizmo:checkheader:badRefType',...
         ['IZTYPE field id unknown for record(s):\n' sprintf('%d ',i)...
@@ -647,7 +646,6 @@ if(isempty(idx)); return; end
 
 % get dep data size
 [nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
-nrows=nrows(:); ncols=ncols(:);
 
 % check npts
 if(any(nrows~=npts(ok)))

@@ -35,21 +35,52 @@ function [data]=correlate(data1,varargin)
 % correlograms replace dataset
 % figure out lags
 %   lag_slave + b_slave - b_master
+% - add fields to know
+%   - master record
+%   - slave record
+% - change name to CORR_MASTER_SLAVE
+
+% check nargin
+if(nargin<1)
+    error('seizmo:selectrecords:notEnoughInputs',...
+        'Not enough input arguments.');
+end
 
 % check data structure
-error(seischk(data1,'dep'))
+msg=seizmocheck(data1,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
+
+% check headers
+data1=checkheader(data1);
 
 % 1 or 2 datasets
-nrecs1=numel(data1);
-if(nargin>1 && isseis(varargin{1},'dep')); 
-    ndata=2; nrecs2=numel(varargin{1});
-else
-    ndata=1;
+nrecs1=numel(data1); onedata=true;
+if(nargin>1 && isseizmo(varargin{1},'dep'))
+    data2=varargin{1};
+    varargin(1)=[];
+    nrecs2=numel(data2); 
+    onedata=false;
+    data2=checkheader(data2);
+end
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% turn off header checking
+oldcheckheaderstate=get_checkheader_state;
+set_checkheader_state(false);
+
+% check varargin
+nvarargin=numel(varargin);
+if(mod(nvarargin,2))
+    error('seizmo:correlate:OptionMustBePaired',...
+        'Options must be paired with a value!');
 end
 
 % how many peaks
-npeaks=0;
-for i=1:length(varargin)
+npeaks=0; % default is no peak picking
+for i=1:2:nvarargin
     if(ischar(varargin{i}) && strcmpi('npeaks',varargin{i}))
         npeaks=varargin{i+1};
     end
@@ -65,9 +96,23 @@ end
 % npeaks>0 ==> assign grids to new fields
 if(npeaks)
     % split based on ndatasets
-    if(ndata==2)
+    if(onedata)
         % check datasets
-        delta=check_data(data1,varargin{1});
+        delta=cross_check_data(data1);
+        % get relative start times (disregarding absolute timing)
+        b1=gh(data1,'b');
+        bdiff=(b1(:,ones(nrecs1,1)).'-b1(:,ones(nrecs1,1))).';
+        bdiff=bdiff(tril(true(nrecs1),-1)); % extract upper triangle
+        % extract records
+        data1=combo(data1);
+        % get correlation peaks
+        [data.cg,data.lg,data.pg]=mcxc(data1,varargin{:});
+        % adjust lags
+        s=size(data.lg); s(ndims(s):4)=1;
+        data.lg=data.lg*delta+bdiff(:,:,ones(s(3),1),ones(s(4),1));
+    else % two datasets
+        % check datasets
+        delta=cross_check_data(data1,data2);
         % get relative start times (disregarding absolute timing)
         b1=gh(data1,'b');
         b2=gh(varargin{1},'b');
@@ -75,20 +120,6 @@ if(npeaks)
         % extract records
         data1=combo(data1);
         varargin{1}=combo(varargin{1});
-        % get correlation peaks
-        [data.cg,data.lg,data.pg]=mcxc(data1,varargin{:});
-        % adjust lags
-        s=size(data.lg); s(ndims(s):4)=1;
-        data.lg=data.lg*delta+bdiff(:,:,ones(s(3),1),ones(s(4),1));
-    else
-        % check datasets
-        delta=check_data(data1);
-        % get relative start times (disregarding absolute timing)
-        b1=gh(data1,'b');
-        bdiff=(b1(:,ones(nrecs1,1)).'-b1(:,ones(nrecs1,1))).';
-        bdiff=bdiff(tril(true(nrecs1),-1)); % extract upper triangle
-        % extract records
-        data1=combo(data1);
         % get correlation peaks
         [data.cg,data.lg,data.pg]=mcxc(data1,varargin{:});
         % adjust lags
@@ -133,9 +164,13 @@ else
     end
 end
 
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
+set_checkheader_state(oldcheckheaderstate);
+
 end
 
-function [delta]=check_data(data1,data2)
+function [delta]=cross_check_data(data1,data2)
 % assure datasets are capable of being sensibly cross correlated
 
 % if 2 datasets, datasets must be consistent with one another

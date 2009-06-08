@@ -1,5 +1,5 @@
 function [varargout]=xdir(str,depth)
-%XDIR    Directory listing with recursion
+%XDIR    Cross-Platform directory listing with recursion
 %
 %    Usage:      xdir(path)
 %                xdir(path,depth)
@@ -8,7 +8,7 @@ function [varargout]=xdir(str,depth)
 %
 %    Description: XDIR(PATH) lists the files matching PATH or within the
 %     directory PATH.  The wildcard '*' may be used to specify a directory
-%     or filename pattern (DIR only allows wildcards for the filename).
+%     or filename pattern (Matlab's DIR only allows wildcards in the name).
 %     For example, XDIR */*.m lists all the M-files in the subdirectories
 %     one level below the current directory.  The directory wildcard '**'
 %     is used to match multiple directory levels for a file or directory
@@ -43,8 +43,6 @@ function [varargout]=xdir(str,depth)
 %       be aware of Matlab's recursion limit (typically 50) if accessing
 %       deep trees.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     List all m-files in private directories below the current directory:
 %      xdir **/private/*.m
@@ -64,12 +62,23 @@ function [varargout]=xdir(str,depth)
 %                        directory expansion
 %        Apr. 23, 2009 - made to work with Octave too (fixes for assigning
 %                        to struct and adding fields to empty struct)
+%        June  4, 2009 - use GLOB to preempt or replace octave's dir
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:35 GMT
+%     Last Updated June  4, 2009 at 01:45 GMT
 
 % todo:
+% - be mindful of octave/matlab differences in DIR
+%   - matlab will not expand wildcards before last pathsep
+%       - xdir accounts for this!
+%   - matlab does not handle ? wildcard, octave does
+%       - xdir does not account for this
+%   - if wildcard entry is a directory
+%       - octave expands the entry
+%       - matlab lists the entry but does not expand it
+%       - xdir accounts for this!
+%
 % - handle '?' wildcard (only for matlab - octave already does this!)
 %   - something along the lines of:
 %      d=dir('*')
@@ -77,23 +86,36 @@ function [varargout]=xdir(str,depth)
 %        regexp(filename,regexptranslate('wildcard',string),'match')
 %      end
 %   - but how to allow for '?' in a filename too?
+%   - really we just need a glob for matlab too!
+
+% take care of common tasks
+persistent emptylist octave
+if(isempty(octave) || ~islogical(octave))
+  octave=strcmpi(getapplication,'OCTAVE');
+end
+if(~isstruct(emptylist))
+  blah=[{'path'}; fieldnames(dir)];
+  bah=[blah cell(size(blah))].';
+  tmp([],1)=struct(bah{:});
+  emptylist=tmp;
+end
 
 % use the current directory if nothing is specified
 if(nargin==0); str='*'; end
 
 % check if string
 if(~ischar(str))
-    error('seizmo:xdir:badPath','PATH must be a string!');
+  error('seizmo:xdir:badPath','PATH must be a string!');
 end
 
 % allow full range if depth not specified
 if(nargin<2 || isempty(depth))
-    depth=[0 inf];
+  depth=[0 inf];
 elseif(~isreal(depth) || numel(depth)>2 || any(fix(depth)~=depth))
-    error('seizmo:xdir:badDepth',...
-        'DEPTH must be a 1 or 2 element array of real integers!')
+  error('seizmo:xdir:badDepth',...
+      'DEPTH must be a 1 or 2 element array of real integers!')
 elseif(isscalar(depth))
-    depth=[0 depth];
+  depth=[0 depth];
 end
 
 % collapse multiple file separators
@@ -115,56 +137,70 @@ F=find(newstr==filesep);
 
 % if there are file separators then check for path wildcards
 if(~isempty(F))
-    % assume easy case (no path wildcards)
-    prepath=newstr(1:F(end));
-    postpath=newstr(F(end)+1:end);
-    
-    % find position of first wildcard
-    W=find(newstr=='*',1,'first');
-    
-    % check for path wildcards
-    if(~isempty(W))
-        % split the file path around the first wild card specifier
-        if(W<F(1))
-            % no prepath, some wildpath, some postpath
-            prepath='';
-            wildpath=newstr(1:F(1)-1);
-            postpath=newstr(F(1):end);
-        elseif(W<F(end))
-            % some prepath, some wildpath, some postpath
-            L=F(find(W>F,1,'last'));
-            H=F(find(W<F,1,'first'));
-            prepath=newstr(1:L);
-            wildpath=newstr(L+1:H-1);
-            postpath=newstr(H:end);
-        end
+  % assume easy case (no path wildcards)
+  prepath=newstr(1:F(end));
+  postpath=newstr(F(end)+1:end);
+  
+  % find position of first wildcard
+  W=find(newstr=='*',1,'first');
+  
+  % check for path wildcards
+  if(~isempty(W))
+    % split the file path around the first wild card specifier
+    if(W<F(1))
+      % no prepath, some wildpath, some postpath
+      prepath='';
+      wildpath=newstr(1:F(1)-1);
+      postpath=newstr(F(1):end);
+    elseif(W<F(end))
+      % some prepath, some wildpath, some postpath
+      L=F(find(W>F,1,'last'));
+      H=F(find(W<F,1,'first'));
+      prepath=newstr(1:L);
+      wildpath=newstr(L+1:H-1);
+      postpath=newstr(H:end);
     end
+  end
 end
 
 % if no directory wildcards then just get file list
+D=emptylist;
 if isempty(wildpath)
   % handle dir expanding directories
   if(isdir([prepath postpath]))
-    D=dir([prepath postpath]);
+    % list directory and clean up ending filesep
+    path=[prepath postpath];
+    D=dir(path);
+    if(strcmp(path(end),filesep)); path=path(1:end-1); end
+    
     % workaround for new field to empty struct
     if(isempty(D))
-        blah=[{'path'}; fieldnames(D)];
-        clear('D');
-        bah=[blah cell(size(blah))].';
-        D([],1)=struct(bah{:});
+      D=emptylist;
     else
-        [D.path]=deal([prepath postpath filesep]);
+      [D.path]=deal([path filesep]);
     end
   else
-    D=dir([prepath postpath]);
-    % workaround for new field to empty struct
-    if(isempty(D))
-        blah=[{'path'}; fieldnames(D)];
-        clear('D');
-        bah=[blah cell(size(blah))].';
-        D([],1)=struct(bah{:});
-    else
+    % handle difference between octave/matlab
+    if(octave)
+      % get matches
+      tmp=glob([prepath postpath]);
+      D=dir(prepath);
+      D=D(ismember(strcat(prepath,{D.name}),tmp));
+      
+      % workaround for new field to empty struct
+      if(isempty(D))
+        D=emptylist;
+      else
         [D.path]=deal(prepath);
+      end
+    else % matlab
+      D=dir([prepath postpath]);
+      % workaround for new field to empty struct
+      if(isempty(D))
+        D=emptylist;
+      else
+        [D.path]=deal(prepath);
+      end
     end
   end
 % a double wild directory means recurse down into sub directories
@@ -172,38 +208,58 @@ elseif strcmp(wildpath,'**')
   % first look for files in the current directory (remove extra filesep)
   if(depth(1)<1)
     D=xdir([prepath postpath(2:end)],depth);
-  else
-    % empty struct with path field
-    blah=[{'path'}; fieldnames(dir)];
-    bah=[blah cell(size(blah))].';
-    D([],1)=struct(bah{:});
   end
 
   % then look for sub directories (if recursion limit is not exceeded)
   if(depth(2))
-    tmp=dir([prepath '*']);
-    % process each directory
-    for i=1:numel(tmp),
-      if (tmp(i).isdir ...
-          && ~strcmp(tmp(i).name,'.') && ~strcmp(tmp(i).name,'..'))
-        D=[D; xdir([prepath tmp(i).name filesep '**' postpath],depth-1)]; %#ok<AGROW>
+    % handle difference between octave/matlab
+    if(octave)
+      tmp=glob([prepath '*']);
+      
+      % process each directory found
+      for i=1:numel(tmp)
+        if(isdir(tmp{i}) ...
+            && ~strcmp(tmp{i}(end-1:end),[filesep '.']) ...
+            && ~strcmp(tmp{i}(end-2:end),[filesep '..']))
+          D=[D; xdir([tmp{i} filesep '**' postpath],depth-1)]; %#ok<AGROW>
+        end
+      end
+    else % matlab
+      % list directory
+      tmp=dir([prepath '*']);
+      
+      % process each directory found
+      for i=1:numel(tmp)
+        if(tmp(i).isdir ...
+            && ~strcmp(tmp(i).name,'.') && ~strcmp(tmp(i).name,'..'))
+          D=[D; xdir([prepath tmp(i).name filesep '**' postpath],depth-1)]; %#ok<AGROW>
+        end
       end
     end
   end
 else
-  % Process directory wild card looking for sub directories that match
-  tmp=dir([prepath wildpath]);
-  
-  % empty struct with path field
-  blah=[{'path'}; fieldnames(dir)];
-  bah=[blah cell(size(blah))].';
-  D([],1)=struct(bah{:});
-  
-  % process each directory found
-  for i=1:numel(tmp)
-    if(tmp(i).isdir ...
-        && ~strcmp(tmp(i).name,'.') && ~strcmp(tmp(i).name,'..'))
-      D=[D; xdir([prepath tmp(i).name postpath],depth)]; %#ok<AGROW>
+  % handle difference between octave/matlab
+  if(octave)
+    tmp=glob([prepath wildpath]);
+    
+    % process each directory found
+    for i=1:numel(tmp)
+      if(isdir(tmp{i}) ...
+          && ~strcmp(tmp{i}(end-1:end),[filesep '.']) ...
+          && ~strcmp(tmp{i}(end-2:end),[filesep '..']))
+        D=[D; xdir([tmp{i} postpath],depth)]; %#ok<AGROW>
+      end
+    end
+  else % matlab
+    % Process directory wild card looking for sub directories that match
+    tmp=dir([prepath wildpath]);
+    
+    % process each directory found
+    for i=1:numel(tmp)
+      if(tmp(i).isdir ...
+          && ~strcmp(tmp(i).name,'.') && ~strcmp(tmp(i).name,'..'))
+        D=[D; xdir([prepath tmp(i).name postpath],depth)]; %#ok<AGROW>
+      end
     end
   end
 end
@@ -213,9 +269,9 @@ end
 
 % display listing if no output variables are specified
 if(nargout==0)
-  for i=1:numel(D) 
-      disp(sprintf('%d %16d %20s %-s',...
-          D(i).isdir,D(i).bytes,D(i).date,[D(i).path D(i).name]));
+  for i=1:numel(D)
+    disp(sprintf('%d %16d %20s %-s',...
+        D(i).isdir,D(i).bytes,D(i).date,[D(i).path D(i).name]));
   end
 else
   % send list out

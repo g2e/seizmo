@@ -25,6 +25,7 @@ To install:
    seizmo/dev/tpw          (some functions related to two plane wave work)
    seizmo/dev/private_link (link to seizmo private functions - for development)
 5. these directories are external packages included for your convenience
+   seizmo/dev/external     (misc stuff I thought was cool or might come in handy)
    seizmo/dev/ttbox        (a free travel time toolbox)
    seizmo/dev/m_map        (a free mapping toolbox)
 6. these should be left alone
@@ -81,13 +82,4 @@ wh  = writeheader
 
 for more info type:
 help <function>
-
-some more advanced examples:
-filenames for writing are stored in data.name, 
-to change the first record's filename:
-data(1).name='mynewfile';
-
-to change several names at once (specifically records 1,4,7,22,9,2):
-list={'my' 'list' 'of' 'new' 'names' 'etc'}
-[data([1 4 7 22 9 2]).name]=deal(list{:})
 

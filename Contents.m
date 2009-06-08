@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r73 (30-May-2009)
+% Version 0.6.0-r74 Ararat 08-Jun-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -74,6 +74,8 @@
 %SYNCRATES           - Resample SEIZMO records to a common sample rate
 %TAPER               - Taper SEIZMO records
 %TIMESHIFT           - Shift timing of SEIZMO records
+%UNWHITEN            - Undo spectral whitening of SEIZMO data records
+%WHITEN              - Spectral whitening of time-series SEIZMO data records
 %WRITEHEADER         - Write SEIZMO data header info to datafiles
 %WRITESEIZMO         - Write SEIZMO records to datafile
 %

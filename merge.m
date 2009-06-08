@@ -42,17 +42,18 @@ function [data]=merge(data,varargin)
 %     DATA=MERGE(DATA,...,'ADJUST',METHOD,...) allows changing which record
 %     out of a mergible pair is shifted/interpolated to time-align with the
 %     other.  There are six choices: 'FIRST' 'LAST' 'LONGER' 'SHORTER'
-%     'ONE' & 'TWO.  The default is 'SHORTER' (which adjusts the shorter
-%     record to time-align with the longer).  Method ONE adjusts the record
-%     with a lower index, while TWO adjusts the higher.
+%     'ONE' & 'TWO'.  The default is 'SHORTER' (which adjusts the shorter
+%     record to time-align with the longer).  Method 'ONE' adjusts the
+%     record with a lower index, while 'TWO' adjusts the higher.
 %
 %     DATA=MERGE(DATA,...,'OVERLAP',METHOD,...) allows changing how
 %     overlaps are merged.  There are two choices: 'SEQUENTIAL' and
 %     'TRUNCATE'.  The default is 'SEQUENTIAL', which basically just shifts
 %     the timing of one of the records (as chosen by the ADJUST option) so
-%     they no longer overlap and then combines just the two records.  This
-%     is useful for cases where the data is actually continuous but a time
-%     tear was inserted to deal with accrued time error.  The 'TRUNCATE'
+%     they no longer overlap and then combines the two records.  This is
+%     useful for cases where the data is actually continuous but a time
+%     tear was inserted to deal with accrued time error over a longer time
+%     section than the records that are being merged.  The 'TRUNCATE'
 %     option allows for deleting overlapping data from one of the records
 %     (as chosen by the ADJUST option).  This is useful for merging records
 %     that do have some redundant data.
@@ -223,8 +224,20 @@ function [data]=merge(data,varargin)
 %        May  15, 2009 - minor doc update
 %        May  28, 2009 - minor doc update
 %
-%     Testing History:
-%        r72 - Linux Matlab (r2007b)
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated May  28, 2009 at 23:15 GMT

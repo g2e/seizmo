@@ -7,10 +7,10 @@ function []=binoperr(varargin)
 %                       'optionN','error'|'warn'|'ignore')
 %
 %    Description: Allows for changing the behavior of how binary functions 
-%     (addf, divf, mulf, divf) handle records with some unequal aspects.
-%     In particular, this function will modify the behavior of all of these
-%     functions until the session is finished or another call to BINOPERR
-%     undoes it.
+%     (addrecords, subtractrecords, multiplyrecords, dividerecords) handle
+%     records with some unequal aspects.  In particular, this function will
+%     modify the behavior of all of these functions until the session is
+%     finished or a subsequent call to BINOPERR undoes it.
 %
 %     BINOPERR() displays the current binary operator error settings.
 %
@@ -72,8 +72,6 @@ function []=binoperr(varargin)
 %    Notes:
 %     - multiple options may be strung together in a single command
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Turn off warnings for different timing:
 %      binoperr('begin','ignore','ref','ignore')
@@ -82,6 +80,7 @@ function []=binoperr(varargin)
 %      binoperr
 %
 %    See also: addrecords, dividerecords, multiplyrecords, subtractrecords
+%              checkoperr
 
 %     Version History:
 %        June 20, 2008 - initial version
@@ -89,13 +88,30 @@ function []=binoperr(varargin)
 %        Oct.  6, 2008 - doc update, use new SEIZMO layout
 %        Nov. 22, 2008 - update for new name schema
 %        Apr. 23, 2009 - move usage up
+%        June  4, 2009 - minor doc fixes
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:05 GMT
+%     Last Updated June  4, 2009 at 05:45 GMT
 
 % todo:
-% - interoperation with correlate, convolve, merge, rotate
+% - interoperation with correlate, convolve, merge, rotate?
 % - newhdr option?
+% - all option
 
 % default options
 option.NPTS='ERROR';

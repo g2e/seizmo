@@ -106,8 +106,6 @@ function [data]=recordfun(fun,varargin)
 %       records.  If you want to workaround this behavior, convert the
 %       Ampl-Phase records to General X vs Y beforehand.
 %     
-%    Tested on: Matlab r2007b
-%     
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
 %     NPTS, E, NCMP (see option 'npts' and 'ncmp')
 %     See option 'newhdr' for inheritance of other header fields.
@@ -132,9 +130,25 @@ function [data]=recordfun(fun,varargin)
 %        Nov. 23, 2008 - combined code of basic functions to centralize
 %                        and reduce code
 %        Apr. 23, 2009 - move usage up
+%        June  8, 2009 - force column-vector data
 %     
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
+%
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2008 at 20:45 GMT
+%     Last Updated June  8, 2009 at 00:45 GMT
 
 % todo:
 
@@ -241,7 +255,7 @@ end
 
 % expand scalar datasets
 for i=find(nrecs==1)
-    data{i}(1:maxrecs)=data{i};
+    data{i}(1:maxrecs,1)=data{i};
 end
 
 % check and get header fields

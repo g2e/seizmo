@@ -46,13 +46,34 @@ function [data,selected,h]=selectrecords(data,varargin)
 %    See also: plot1, plot0
 
 %     Version History:
+%        Apr. 17, 2008 - initial version (happy bday bro!)
+%        Nov. 16, 2008 - update for name changes
+%        Nov. 30, 2008 - update for name changes
+%        Dec. 13, 2008 - minor bug fixes
+%        Mar. 13, 2009 - doc fixes
+%        Apr.  3, 2009 - added preselect argument, combine keep/delete code
+%                        redundancy
+%        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %        May  30, 2009 - major doc update, major code cleaning
+%        June  2, 2009 - fixed history, patches go on bottom now
 %
-%     Testing History:
-%        r72 - Linux Matlab (r2007b)
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  30, 2009 at 01:15 GMT
+%     Last Updated June  2, 2009 at 19:00 GMT
 
 % todo:
 
@@ -113,23 +134,27 @@ varargin(1:min([3 numel(varargin)]))=[];
 % check options
 fields=fieldnames(option);
 for i=1:numel(fields)
-    value=option.(fields{i});
     % specific checks
     switch lower(fields{i})
         case {'operation' 'type'}
-            if(~ischar(value) || size(value,1)~=1 || ~any(strcmpi(value,...
-                    valid.(fields{i}))))
+            if(~ischar(option.(fields{i})) || ...
+                    size(option.(fields{i}),1)~=1 || ...
+                    ~any(strcmpi(option.(fields{i}),valid.(fields{i}))))
                 error('seizmo:selectrecords:badInput',...
                     ['%s option must be one of the following:\n'...
                     sprintf('%s ',valid.(fields{i}){:})],fields{i});
             end
         case 'selected'
-            if(~islogical(value) || ~any(numel(value)==[1 nrecs]))
+            if(isnumeric(option.SELECTED))
+                option.SELECTED=logical(option.SELECTED);
+            end
+            if(~islogical(option.SELECTED) || ...
+                    ~any(numel(option.SELECTED)==[1 nrecs]))
                 error('seizmo:selectrecords:badInput',...
                     ['SELECTED option must be a logical scalar or a\n' ...
                     'logical array with one element per record!']);
             end
-            if(isscalar(value))
+            if(isscalar(option.SELECTED))
                 option.SELECTED=option.SELECTED(ones(nrecs,1),1);
             end
         case {'keepcolor' 'deletecolor'}
@@ -152,17 +177,14 @@ switch option.TYPE
         h=plot0(data,varargin{:});
         handle=gca;
         
-        % color preselected
+        % patch under all
         xlims=xlim(handle);
-        clicked=find(selected); nclicked=numel(clicked);
-        for i=1:nclicked
-            handles(clicked(i))=...
-                patch([xlims(ones(1,2)) xlims(2*ones(1,2))],...
-                [clicked(i)+0.5 clicked(i)-0.5 ...
-                clicked(i)-0.5 clicked(i)+0.5],...
-                color);
+        for i=1:nrecs
+            handles(i)=patch([xlims(ones(1,2)) xlims(2*ones(1,2))],...
+                [i+0.5 i-0.5 i-0.5 i+0.5],color);
+            uistack(handles(i),'bottom');
         end
-        alpha(handles(selected),0.99) % alpha doesn't work right
+        set(handles(~selected),'visible','off')
         
         while(button~=2)
             % get mouse button pressed
@@ -179,19 +201,14 @@ switch option.TYPE
                 % check range
                 if(clicked<1 || clicked>nrecs); continue; end
                 
-                % remove from list if in list and remove patch
+                % remove from selected if already selected, turn off patch
                 if(selected(clicked))
                     selected(clicked)=false;
-                    delete(handles(clicked));
-                % otherwise add to list and add patch
+                    set(handles(clicked),'visible','off');
+                % otherwise add to selected, turn on patch
                 else
                     selected(clicked)=true;
-                    xlims=xlim(handle);
-                    handles(clicked)=...
-                        patch([xlims(1) xlims(1) xlims(2) xlims(2)],...
-                        [clicked+0.5 clicked-0.5 ...
-                        clicked-0.5 clicked+0.5],color);
-                    alpha(handles(clicked),0.99) % alpha doesn't work right
+                    set(handles(clicked),'visible','on');
                 end
             end
         end

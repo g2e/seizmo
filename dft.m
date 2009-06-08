@@ -14,15 +14,17 @@ function [data]=dft(data,format,pow2pad)
 %     DFT(DATA,FORMAT,POW2PAD) lets the power of 2 zero-padding be adjusted
 %     using an integer POW2PAD according to the formula:
 %                fftlength=2^(nextpow2(NPTS)+POW2PAD)
-%     The default value is 1.
+%     The default value is 1 and is a good choice for most problems.
+%     Setting POW2PAD to <1 is not recommended and setting <0 will truncate
+%     the time series.  Setting POW2PAD >1 will increase the frequency
+%     resolution of the spectrogram at the cost of increased computation
+%     time and array size.
 %
 %    Notes:
 %     - SAC (and thus SEIZMO for sanity) calculates spectral data according
 %       to Parseval's theorem.  Dividing records (except for phase!) by 
 %       npts*delta/2 gives results that may better match the amplitudes
-%       of sinusoid functions.
-%
-%    Tested on: Matlab r2007b
+%       of sinusoid functions.  
 %
 %    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
 %                    DEPMEN, DEPMIN, DEPMAX
@@ -52,9 +54,26 @@ function [data]=dft(data,format,pow2pad)
 %        Nov. 22, 2008 - update for new name schema
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        June  3, 2009 - allow individual record options, warn on
+%                        pow2pad<0, better checking, global option access
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:00 GMT
+%     Last Updated June  3, 2009 at 16:55 GMT
 
 % todo:
 
@@ -73,22 +92,79 @@ set_seizmocheck_state(false);
 % check headers
 data=checkheader(data);
 
+% valid option values
+valid.FORMAT={'amph' 'rlim'};
+
 % defaults
-if(nargin<3 || isempty(pow2pad)); pow2pad=1; end
-if(nargin<2 || isempty(format)); format='amph'; end
+option.FORMAT='amph';
+option.POW2PAD=1;
 
-% check inputs
-if(~any(strcmpi(format,{'amph' 'rlim'})))
-    error('seizmo:dft:badInput','Bad FORMAT string: %s !',format)
-end
-if(~isnumeric(pow2pad) || ~isscalar(pow2pad) || fix(pow2pad)~=pow2pad)
-    error('seizmo:dft:badInput','POW2PAD must be a scalar integer!')
+% get options from SEIZMO global
+global SEIZMO
+try
+    fields=fieldnames(SEIZMO.DFT);
+    for i=1:numel(fields)
+        if(~isempty(SEIZMO.DFT.(fields{i})))
+            option.(fields{i})=SEIZMO.DFT.(fields{i});
+        end
+    end
+catch
 end
 
+% get option from command line
+if(nargin>=2 && ~isempty(format)); option.FORMAT=format; end
+if(nargin>=3 && ~isempty(pow2pad)); option.POW2PAD=pow2pad; end
+
+% check options
+nrecs=numel(data);
+fields=fieldnames(option);
+for i=1:numel(fields)
+    % specific checks
+    switch lower(fields{i})
+        case 'format'
+            if(iscellstr(option.(fields{i})))
+                option.(fields{i})=char(option.(fields{i}));
+            end
+            if(isempty(option.(fields{i})) ...
+                    || ~ischar(option.(fields{i})) ...
+                    || ~any(size(option.(fields{i}),1)==[1 nrecs]) ...
+                    || ~isempty(setdiff(lower(option.(fields{i})),...
+                    valid.(fields{i}))))
+                error('seizmo:dft:badInput',...
+                    ['%s option must be one of the following:\n'...
+                    sprintf('%s ',valid.(fields{i}){:})],fields{i});
+            end
+            if(size(option.(fields{i}),1)==1)
+                option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
+            end
+            option.(fields{i})=cellstr(option.(fields{i}));
+        case 'pow2pad'
+            if(isempty(option.(fields{i})) || ...
+                    any(fix(option.(fields{i}))~=option.(fields{i})) ...
+                    || ~any(numel(option.(fields{i}))==[1 nrecs]))
+                error('seizmo:dft:badInput',...
+                    ['%s option must be an integer or an array\n'...
+                    'of integers with one option per record.'],fields{i});
+            end
+            if(isscalar(option.(fields{i})))
+                option.(fields{i})=option.(fields{i})(ones(nrecs,1),1);
+            end
+    end
+end
+
+% special warning for POW2PAD
+if(any(option.POW2PAD<0))
+    warning('seizmo:dft:dataTruncation',...
+        ['Records: ' sprintf('%d ',find(option.POW2PAD<0))...
+        '\nSetting option POW2PAD < 0 will\n'...
+        'truncate data from the records!'])
+end
+    
 % retreive header info
 leven=getlgc(data,'leven');
 iftype=getenumdesc(data,'iftype');
-[b,delta]=getheader(data,'b','delta');
+[b,delta,npts]=getheader(data,'b','delta','npts');
+ncmp=getncmp(data);
 
 % check leven,iftype
 if(any(~strcmpi(leven,'true')))
@@ -101,18 +177,14 @@ elseif(any(~strcmpi(iftype,'Time Series File')...
 end
 
 % output type
-if(strcmpi(format,'rlim')); iftype='Spectral File-Real/Imag';
-else iftype='Spectral File-Ampl/Phase';
-end
+iftype(1:nrecs,1)={'Spectral File-Ampl/Phase'};
+rlim=strcmpi(option.FORMAT,'rlim');
+if(any(rlim)); iftype(rlim)={'Spectral File-Real/Imag'}; end
 
 % loop through records
-nrecs=numel(data);
-sb=nan(nrecs,1); se=sb; sdelta=sb; nspts=sb; len=sb;
+sb=nan(nrecs,1); se=sb; sdelta=sb; nspts=sb;
 depmen=sb; depmin=sb; depmax=sb;
 for i=1:nrecs
-    % number of datum/components
-    [len(i),ncmp]=size(data(i).dep);
-    
     % skip dataless (but increase ncmp)
     if(isempty(data(i).dep)); data(i).dep=zeros(0,2*ncmp); continue; end
     
@@ -121,23 +193,29 @@ for i=1:nrecs
     data(i).dep=double(data(i).dep);
     
     % get frequency info
-    nspts(i)=2^(nextpow2(len(i))+pow2pad);
+    nspts(i)=2^(nextpow2(npts(i))+option.POW2PAD(i));
     sb(i)=0; se(i)=1/(delta(i)*2); sdelta=2*se(i)/nspts(i);
+    
+    % truncate npts if POW2PAD<0
+    if(option.POW2PAD(i)<0)
+        npts(i)=2^(nextpow2(npts(i))+option.POW2PAD(i));
+    end
     
     % fft
     data(i).dep=delta(i)*fft(data(i).dep,nspts(i));    % SAC compatible
-    %data(i).dep=2*fft(data(i).dep,nspts(i))/len(i);   % better sinusoid amplitudes
+    %data(i).dep=2*fft(data(i).dep,nspts(i))/npts(i);  % for sinusoid amplitudes
     
     % expand data to make room for split
     data(i).dep(:,(1:ncmp)*2)=data(i).dep;
     
     % split complex by desired filetype
-    if(strcmpi(format,'rlim'))
-        data(i).dep(:,1:2:end)=real(data(i).dep(:,2:2:end));
-        data(i).dep(:,2:2:end)=imag(data(i).dep(:,2:2:end));
-    else
-        data(i).dep(:,1:2:end)=abs(data(i).dep(:,2:2:end));
-        data(i).dep(:,2:2:end)=angle(data(i).dep(:,2:2:end));
+    switch lower(option.FORMAT{i})
+        case 'rlim'
+            data(i).dep(:,1:2:end)=real(data(i).dep(:,2:2:end));
+            data(i).dep(:,2:2:end)=imag(data(i).dep(:,2:2:end));
+        case 'amph'
+            data(i).dep(:,1:2:end)=abs(data(i).dep(:,2:2:end));
+            data(i).dep(:,2:2:end)=angle(data(i).dep(:,2:2:end));
     end
     
     % change class back
@@ -151,7 +229,7 @@ end
 
 % update header (note there is no field 'se')
 data=changeheader(data,'b',sb,'e',se,'delta',sdelta,'sb',b,...
-    'sdelta',delta,'nspts',len,'npts',nspts,'iftype',iftype,...
+    'sdelta',delta,'nspts',npts,'npts',nspts,'iftype',iftype,...
     'depmen',depmen,'depmin',depmin,'depmax',depmax);
 
 % toggle checking back
