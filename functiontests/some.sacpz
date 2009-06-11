@@ -1,0 +1,22 @@
+* blah blah *
+* this is a commented
+** sac pz file
+*** blah blah
+ZEROS 3
+* blah blah bah
+** ........
+POLES 5
+* --------
+-0.0370  0.0370
+**********
+-0.0370  -0.0370
+* a;dlskfj
+-1131.0000  0.0000
+-1005.0000  0.0000
+-502.7000  0.0000
+********
+CONSTANT 5.409056e+17
+*******
+
+
+

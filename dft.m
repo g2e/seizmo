@@ -56,6 +56,7 @@ function [data]=dft(data,format,pow2pad)
 %                        move usage up
 %        June  3, 2009 - allow individual record options, warn on
 %                        pow2pad<0, better checking, global option access
+%        June 11, 2009 - fix bug that assigned delta for all file the same
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -73,7 +74,7 @@ function [data]=dft(data,format,pow2pad)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  3, 2009 at 16:55 GMT
+%     Last Updated June 11, 2009 at 21:35 GMT
 
 % todo:
 
@@ -194,7 +195,7 @@ for i=1:nrecs
     
     % get frequency info
     nspts(i)=2^(nextpow2(npts(i))+option.POW2PAD(i));
-    sb(i)=0; se(i)=1/(delta(i)*2); sdelta=2*se(i)/nspts(i);
+    sb(i)=0; se(i)=1/(delta(i)*2); sdelta(i)=2*se(i)/nspts(i);
     
     % truncate npts if POW2PAD<0
     if(option.POW2PAD(i)<0)

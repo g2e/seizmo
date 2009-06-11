@@ -81,9 +81,10 @@ function [data]=taper(data,width,type,option)
 %                        related to unevenly sampled records
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        June 11, 2009 - special handling of spectral records (4 tapers)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:05 GMT
+%     Last Updated June 11, 2009 at 20:00 GMT
 
 % check input
 msg=nargchk(1,4,nargin);
@@ -170,24 +171,56 @@ for i=1:nrecs
             data(i).dep(last2:end,:).*taper2(:,ones(ncmp,1));
     % evenly spaced
     else
-        % make tapers
-        if(nargin==4 && ~isempty(option))
-            taperedge1=window(type,2*nwidth(1),option);
-            taperedge2=window(type,2*nwidth(2),option);
-        else
-            taperedge1=window(type,2*nwidth(1));
-            taperedge2=window(type,2*nwidth(2));
+        % time series and general xy records
+        if(strcmp(iftype(i),'itime') || strcmp(iftype(i),'ixy'))
+            % make tapers
+            if(nargin==4 && ~isempty(option))
+                taperedge1=window(type,2*nwidth(1),option);
+                taperedge2=window(type,2*nwidth(2),option);
+            else
+                taperedge1=window(type,2*nwidth(1));
+                taperedge2=window(type,2*nwidth(2));
+            end
+            
+            % adjust for npts
+            nwidth=min(npts,nwidth);
+            
+            % apply taper halfwidths separately
+            data(i).dep(1:nwidth(1),:)=data(i).dep(1:nwidth(1),:)...
+                .*taperedge1(1:nwidth(1),ones(ncmp,1));
+            data(i).dep((end-nwidth(2)+1):end,:)=...
+                data(i).dep((end-nwidth(2)+1):end,:)...
+                .*taperedge2((end-nwidth(2)+1):end,ones(ncmp,1));
+        else % spectral
+            % fix nwidth
+            nwidth=ceil(width*npts/2);
+            
+            % make tapers
+            if(nargin==4 && ~isempty(option))
+                taperedge1=window(type,2*nwidth(1),option);
+                taperedge2=window(type,2*nwidth(2),option);
+            else
+                taperedge1=window(type,2*nwidth(1));
+                taperedge2=window(type,2*nwidth(2));
+            end
+            
+            % adjust for npts
+            nwidth=min(npts/2,nwidth);
+            
+            % apply taper halfwidths separately
+            data(i).dep(1:nwidth(1),:)=data(i).dep(1:nwidth(1),:)...
+                .*taperedge1(1:nwidth(1),ones(ncmp,1));
+            data(i).dep((end-nwidth(1)+2):end,:)=...
+                data(i).dep((end-nwidth(1)+2):end,:)...
+                .*taperedge1((end-nwidth(1)+2):end,ones(ncmp,1));
+            nyqpt=npts/2+1;
+            data(i).dep((nyqpt-nwidth(2)+1):nyqpt,:)=...
+                data(i).dep((nyqpt-nwidth(2)+1):nyqpt,:)...
+                .*taperedge2((end-nwidth(2)+1):end,ones(ncmp,1));
+            data(i).dep((nyqpt+1):(nyqpt+nwidth(2)-1),:)=...
+                data(i).dep((nyqpt+1):(nyqpt+nwidth(2)-1),:)...
+                .*taperedge2(2:nwidth(2),ones(ncmp,1));
         end
-        
-        % adjust for npts
-        nwidth=min(npts,nwidth);
-        
-        % apply taper halfwidths separately
-        data(i).dep(1:nwidth(1),:)=data(i).dep(1:nwidth(1),:)...
-            .*taperedge1(1:nwidth(1),ones(ncmp,1));
-        data(i).dep((end-nwidth(2)+1):end,:)=...
-            data(i).dep((end-nwidth(2)+1):end,:)...
-            .*taperedge2((end-nwidth(2)+1):end,ones(ncmp,1));
     end
     
     % change class back

@@ -1,0 +1,110 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta name="GENERATOR" content="Microsoft FrontPage 5.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<title>MatTaup</title>
+</head>
+
+<body>
+
+<p align="center"><b><font size="4" color="#000080">MatTaup: A TauP toolkit for 
+MATLAB</font></b></p>
+<hr>
+<p><b><font color="#000080">Introduction</font></b></p>
+<p><a href="http://www.seis.sc.edu/software/TauP/index.html">TauP</a> is a Java 
+based seismic travel time calculator, which is developed and maintained by H. 
+Philip Crotwell at the University of South Carolina. MatTaup is a TauP toolkit 
+for MATLAB users, and it is actually a set of interface programs that call TauP 
+functions for travel time calculation. MatTaup contains several MATLAB functions 
+and Java classes that make MATLAB functions communicate with TauP. Currently 
+only the following five tools in TauP are implemented: </p>
+<table border="1" cellpadding="0" cellspacing="0" width="669" id="AutoNumber1" style="border-left-style: none; border-right-style: none; border-top: 1.5pt solid green; border-bottom: 1.5pt solid green" fpstyle="1,011111100">
+  <tr>
+    <td width="157" align="center" style="border-left-style: none; border-right-style: none; border-top-style: none; border-bottom: .75pt solid green">
+    <p align="center"><font face="Times New Roman" size="2">TauP Command </font>
+    </td>
+    <td width="223" align="center" style="border-left-style: none; border-right-style: none; border-top-style: none; border-bottom: .75pt solid green">
+    <font size="2" face="Times New Roman">MATLAB command</font></td>
+    <td width="726" align="center" style="border-left-style: none; border-right-style: none; border-top-style: none; border-bottom: .75pt solid green">
+    <font face="Times New Roman" size="2">Description</font></td>
+  </tr>
+  <tr>
+    <td width="157" style="border-style: none"><font face="Courier" size="2">&nbsp; 
+    taup</font></td>
+    <td width="223" style="border-style: none"><font face="Courier" size="2">&nbsp; 
+    taup</font></td>
+    <td width="726" style="border-style: none">
+    <font FACE="Times New Roman" SIZE="2">
+    <p ALIGN="LEFT" style="margin-top: 3; margin-bottom: 3">&nbsp;&nbsp; a GUI 
+    that incorporates the time, pierce and path tools. </font></td>
+  </tr>
+  <tr>
+    <td width="157" style="border-style: none"><font face="Courier" size="2">&nbsp; 
+    taup_time</font></td>
+    <td width="223" style="border-style: none"><font face="Courier" size="2">&nbsp; 
+    taupTime</font></td>
+    <td width="726" style="border-style: none">
+    <font FACE="Times New Roman" SIZE="2">
+    <p ALIGN="LEFT" style="margin-top: 3; margin-bottom: 3">&nbsp;&nbsp; 
+    calculates travel times</font></td>
+  </tr>
+  <tr>
+    <td width="157" style="border-style: none"><font face="Courier" size="2">&nbsp; 
+    taup_path</font></td>
+    <td width="223" style="border-style: none"><font face="Courier" size="2">&nbsp; 
+    taupPath</font></td>
+    <td width="726" style="border-style: none">
+    <font FACE="Times New Roman" SIZE="2">
+    <p ALIGN="LEFT" style="margin-top: 3; margin-bottom: 3">&nbsp;&nbsp; 
+    calculates ray paths, depth versus epicentral distance.</font></td>
+  </tr>
+  <tr>
+    <td width="157" style="border-style: none"><font face="Courier" size="2">&nbsp; 
+    taup_pierce</font></td>
+    <td width="223" style="border-style: none"><font face="Courier" size="2">&nbsp; 
+    taupPierce</font></td>
+    <td width="726" style="border-style: none">
+    <font FACE="Times New Roman" SIZE="2">
+    <p ALIGN="LEFT" style="margin-top: 3; margin-bottom: 3">&nbsp;&nbsp; 
+    calculates pierce points at model discontinuities and specified depths</font></td>
+  </tr>
+  <tr>
+    <td width="157" style="border-style: none"><font face="Courier" size="2">&nbsp; 
+    taup_curve</font></td>
+    <td width="223" style="border-style: none"><font face="Courier" size="2">&nbsp; 
+    taupCurve</font></td>
+    <td width="726" style="border-style: none">
+    <font FACE="Times New Roman" SIZE="2">
+    <p ALIGN="LEFT" style="margin-top: 3; margin-bottom: 3">&nbsp;&nbsp; 
+    calculates travel time curves, time versus epicentral distance.</font></td>
+  </tr>
+</table>
+<p>Running MatTaup requires MATLAB version 6.0 (R12) or above.</p>
+<p><br>
+<b><font color="#000080">Download and Installation</font></b></p>
+<p>MatTaup is free to download and use under the terms of
+<a href="http://www.gnu.org/copyleft/gpl.html">Gnu Public License</a>. <br>
+Download from <a href="archives/matTaup.zip">here</a> (ZIP file, ~2MB). </p>
+<p>To install MatTaup, you first need to uncompress the zip file into a 
+directory where you wish MatTaup to be installed. Then you need to add directory 
+&quot;matTaup&quot; into MATLAB search paths, and add the Java archive file &quot;matTaup\lib\matTaup.jar&quot; 
+into MATLAB Java class paths by modifying &quot;classpath.txt&quot;. After you restart 
+MATLAB, MatTaup is ready to use. Use MATLAB help command for usages.</p>
+<p>MatTaup is already included in
+<a href="http://www.ess.washington.edu/SEIS/FMI">FMI</a> (FISSURES-MATLAB 
+Interface). You do not need to install MatTaup if you have installed FMI.</p>
+<p><br>
+<font color="#000080"><b>Contact</b></font></p>
+<p>MatTaup is written and maintained by Qin Li at the University of Washington. 
+Please send any question, comment or bug report to
+<a href="mailto:qinli@u.washingto.edu">qinli@u.washington.edu</a><br>
+&nbsp;</p>
+<hr>
+<p align="right"><font size="2">Last update: 04/15/2004</font></p>
+
+</body>
+
+</html>

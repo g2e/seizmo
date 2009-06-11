@@ -34,12 +34,12 @@ function [z,p,k]=readsacpz(file)
 %       the real component and the second number gives the imaginary
 %       component (thus there are 2 complex conjugate pairs).  The last
 %       line gives the multiplicative factor.
+%     - Comment lines may be added to the SAC PoleZero file by starting the
+%       line with a '*' (asterisk).
 %     - READSACPZ will read all valid sections -- if there are multiple
 %       zeros, poles or constant sections then only the last one will be
 %       kept.  Please be aware that this may be important if using programs
 %       that append to SAC PoleZero files rather than overwriting them.
-%
-%    Tested on: Matlab r2007b
 %
 %    Examples:
 %     Read in a SAC PoleZero file, and apply it to some records:
@@ -56,9 +56,25 @@ function [z,p,k]=readsacpz(file)
 %     Version History:
 %        Apr.  7, 2009 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        June 11, 2009 - add asterisk comment support, octave support
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:15 GMT
+%     Last Updated June 11, 2009 at 07:55 GMT
 
 % todo:
 
@@ -89,8 +105,12 @@ if(fid<0); error('SAC PoleZero File: %s\nNot Openable!',file); end
 z=[]; p=[]; k=1;
 
 % read in all lines
-a=textscan(fid,'%s','delimiter','\n','whitespace','');
-a=a{1}; a=strtrim(a);
+c=0; a=cell(1,0);
+while 1
+    tmp=fgetl(fid);
+    if(~ischar(tmp)); break; end
+    c=c+1; a{c}=tmp;
+end
 
 % close file
 fclose(fid);
@@ -105,10 +125,10 @@ while(line<=nlines)
     end
     
     % process line
-    words=textscan(a{line},'%s'); words=words{1};
+    words=getwords(a{line});
     
-    % skip line if blank
-    if(isempty(words))
+    % skip line if blank or comment
+    if(isempty(words) || strcmp(words{1}(1),'*'))
         line=line+1;
         continue;
     end
@@ -157,10 +177,10 @@ while(line<=nlines)
                 end
                 
                 % process line
-                words=textscan(a{line},'%s'); words=words{1};
+                words=getwords(a{line});
                 
-                % skip line if blank
-                if(isempty(words))
+                % skip line if blank or comment
+                if(isempty(words) || strcmp(words{1}(1),'*'))
                     line=line+1;
                     continue;
                 end
@@ -214,10 +234,10 @@ while(line<=nlines)
                 end
                 
                 % process line
-                words=textscan(a{line},'%s'); words=words{1};
+                words=getwords(a{line});
                 
-                % skip line if blank
-                if(isempty(words))
+                % skip line if blank or comment
+                if(isempty(words) || strcmp(words{1}(1),'*'))
                     line=line+1;
                     continue;
                 end
