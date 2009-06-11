@@ -34,8 +34,6 @@ function [data]=timeshift(data,shift,timing,option,varargin)
 %    Notes:
 %     - DOES NOT WORK FOR SPECTRAL OR XYZ RECORDS!
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: B, E, A, F, O, T0-T9,
 %                    NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC
 %
@@ -53,9 +51,25 @@ function [data]=timeshift(data,shift,timing,option,varargin)
 %        Mar. 12, 2009 - doc update
 %        Mar. 29, 2009 - added OPTION input to allow for more flexibility
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        June 10, 2009 - added testing table
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:10 GMT
+%     Last Updated June 10, 2009 at 19:50 GMT
 
 % todo:
 
@@ -102,6 +116,7 @@ end
 
 % shift option
 if(nargin<=3 || isempty(option))
+    % default is both
     refshift=-shift;
     relshift=shift;
     usershift=shift;

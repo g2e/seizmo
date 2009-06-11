@@ -10,7 +10,7 @@ function [diff]=timediff(times1,times2,option)
 %     [yr dayofyr hr min sec] or [yr mon dayofmon hr min sec].  Only the
 %     seconds portion of TIMES1 and TIMES2 is allowed to be non-integer
 %     (ie you cannot have 1.5 minutes etc).  TIMES1 and TIMES2 must have
-%     equal size of be a single time.  Time difference is returned in
+%     equal size or be a single time.  Time difference is returned in
 %     number of seconds.
 %
 %     TIMEDIFF(TIMES1,TIMES2,'UTC') allows finding the difference between
@@ -18,8 +18,6 @@ function [diff]=timediff(times1,times2,option)
 %     certain dates -- see LEAPSECONDS).
 %
 %    Notes:
-%
-%    Tested on: Matlab r2007b
 %
 %    Examples:
 %     Find the number of seconds in 2005:
@@ -30,9 +28,25 @@ function [diff]=timediff(times1,times2,option)
 %     Version History:
 %        Nov. 12, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        June 10, 2009 - minro doc fix, add testing table
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:35 GMT
+%     Last Updated June 10, 2009 at 19:50 GMT
 
 % todo:
 

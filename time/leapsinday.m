@@ -4,8 +4,8 @@ function [leaps]=leapsinday(dates,option)
 %    Usage:    seconds=leapsinday(dates)
 %              seconds=leapsinday(dates,'serial')
 %
-%    Description: LEAPSINDAY(DATES) returns the an array of additional
-%     seconds added to each of the UTC dates in DATES.  If a positive leap
+%    Description: LEAPSINDAY(DATES) returns an array of additional seconds
+%     to be added to each of the UTC dates in DATES.  If a positive leap
 %     second occurs during one of the dates, that date will have a
 %     corresponding 1 returned.  If there are no leap seconds during a
 %     particular day, a 0 will be returned.  DATES must be a Nx2 array of
@@ -23,10 +23,8 @@ function [leaps]=leapsinday(dates,option)
 %       synced with the International Atomic Time (TAI) second and leap
 %       seconds were introduced to keep UTC near UT1.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
-%     Find out how many seconds there will be in today:
+%     Find out how many seconds there will be today:
 %      86400+leapsinday(now,'serial')
 %
 %    See also: totalleaps, getleapseconds
@@ -35,9 +33,26 @@ function [leaps]=leapsinday(dates,option)
 %        Nov.  1, 2008 - initial version
 %        Nov. 10, 2008 - uses GETLEAPSECONDS to speed calls up
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        June 11, 2009 - fix leap second bug, fix hardcode bug,
+%                        minor doc update, add testing table
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:30 GMT
+%     Last Updated June 11, 2009 at 00:30 GMT
 
 % todo:
 
@@ -88,13 +103,16 @@ end
 [leapdates,offset]=getleapseconds();
 nleaps=numel(offset);
 
+% correct for getleapseconds giving the end date of each leap second
+leapdates=leapdates-1;
+
 % expand (to vectorize)
 dates=dates(:,ones(1,nleaps));
 leapdates=leapdates(:,ones(1,ndates));
 
 % compare dates
 leaps=zeros(sz);
-idx=(dates==leapdates.')*(1:24).';
+idx=(dates==leapdates.')*(1:nleaps).';
 leaps(idx>0)=offset(idx(idx>0));
 
 end

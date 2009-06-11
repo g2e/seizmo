@@ -46,8 +46,6 @@ function [data,removed]=removeduplicates(data,varargin)
 %     - it is recommended to run FIXDELTA first to take care of floating
 %       point accuracy causing false-negatives
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: NONE (does use CHECKHEADER though)
 %
 %    Examples:
@@ -62,9 +60,25 @@ function [data,removed]=removeduplicates(data,varargin)
 %        Dec.  8, 2008 - more options
 %        Apr.  1, 2009 - changed TIMING default to UTC to match MERGE
 %        Apr. 23, 2009 - move usage up
+%        June 11, 2009 - add testing table
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:50 GMT
+%     Last Updated June 11, 2009 at 00:45 GMT
 
 % todo:
 

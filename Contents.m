@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r74 Ararat 08-Jun-2009
+% Version 0.6.0-r75 Ararat 11-Jun-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -48,6 +48,7 @@
 %PLOT2               - Overlay plot of SEIZMO data records
 %PLOTCONFIG          - Returns default configuration structure for SEIZMO plotting
 %PLOTDENDRO          - Plots correlation linkage and seismograms
+%PREWHITEN           - Prewhiten SEIZMO data records for spectral operations
 %QUICKSNR            - Quick estimation of SNR for SEIZMO records
 %READDATA            - Read SEIZMO data from datafiles
 %READDATAWINDOW      - Read data window into SEIZMO data structure
@@ -74,8 +75,8 @@
 %SYNCRATES           - Resample SEIZMO records to a common sample rate
 %TAPER               - Taper SEIZMO records
 %TIMESHIFT           - Shift timing of SEIZMO records
-%UNWHITEN            - Undo spectral whitening of SEIZMO data records
-%WHITEN              - Spectral whitening of time-series SEIZMO data records
+%UNPREWHITEN         - Undo prewhitening of SEIZMO data records
+%WHITEN              - Spectral whitening/normalization of SEIZMO data records
 %WRITEHEADER         - Write SEIZMO data header info to datafiles
 %WRITESEIZMO         - Write SEIZMO records to datafile
 %

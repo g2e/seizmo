@@ -1,4 +1,4 @@
-function [data]=slidingabsmean(data,nsamples,varargin)
+function [data]=slidingabsmean(data,varargin)
 %SLIDINGABSMEAN    Returns sliding-window absolute-mean of SEIZMO records
 %
 %    Usage:    data=slidingabsmean(data,n)
@@ -61,8 +61,6 @@ function [data]=slidingabsmean(data,nsamples,varargin)
 %     - Centered windows are of length 2N+1, while the others are just N
 %     - SLIDINGABSMEAN is faster than SLIDEFUN because it uses SLIDINGAVG
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
@@ -78,21 +76,45 @@ function [data]=slidingabsmean(data,nsamples,varargin)
 %        Nov. 22, 2008 - update for new name schema (now SLIDINGABSMEAN)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        June  9, 2009 - nsamples now in varargin, add testing table
+%                        toggle seizmocheck, up nargin allowed
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:55 GMT
+%     Last Updated June  9, 2009 at 19:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,8,nargin);
+msg=nargchk(2,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
 % alias to other functions
-data=seizmofun(data,@(x)slidingavg(abs(x),nsamples,varargin{:}));
+data=seizmofun(data,@(x)slidingavg(abs(x),varargin{:}));
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
 
 end

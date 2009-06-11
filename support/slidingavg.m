@@ -59,8 +59,6 @@ function [y]=slidingavg(x,nsamples,varargin)
 %     - Centered windows are of length 2N+1, while the others are just N
 %     - SLIDINGAVG is much faster than SLIDINGFUN but less flexible
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Get a smoothed amplitude spectra:
 %      y=slidingavg(abs(fft(x)),2)
@@ -81,6 +79,22 @@ function [y]=slidingavg(x,nsamples,varargin)
 %                        element, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        May  10, 2009 - minor doc fix
+%        June  9, 2009 - allow for unlimited varargin
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated May  10, 2009 at 02:50 GMT
@@ -89,7 +103,7 @@ function [y]=slidingavg(x,nsamples,varargin)
 % - fix nan handling
 
 % check nargin
-msg=nargchk(2,12,nargin);
+msg=nargchk(2,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
 % quick return if empty

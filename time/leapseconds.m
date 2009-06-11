@@ -11,7 +11,8 @@ function [leaps]=leapseconds()
 %     first leap second was positive and occurred on June 30, 1972 at
 %     23:59:60 and ended on July 1, 1972 at 00:00:00, so it's string is
 %     '01-Jul-1972 00:00:00+'.  A negative leap second would start at the
-%     58th second, removing one second as there would be no 59th second.
+%     58th second (if we begin each minute with the 0th second), removing
+%     one second as there would be no 59th second.
 %
 %    Notes:
 %     - At some point it may be worthwhile to just read in
@@ -33,8 +34,6 @@ function [leaps]=leapseconds()
 %          awareness) and then shift all subsequent records to 1 second
 %          prior (until the clock locks to the correct UTC time).
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Ever wondered when those pesky leap seconds were? Just run:
 %      leapseconds
@@ -45,9 +44,25 @@ function [leaps]=leapseconds()
 %        Oct. 28, 2008 - initial version
 %        Mar. 29, 2009 - added some notes on data handling
 %        Apr. 23, 2009 - move usage up
+%        June 10, 2009 - minor doc update, add testing table
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:30 GMT
+%     Last Updated June 10, 2009 at 23:45 GMT
 
 % todo:
 

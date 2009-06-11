@@ -1,10 +1,15 @@
-function [data]=unwhiten(data)
-%UNWHITEN    Undo spectral whitening of SEIZMO data records
+function [data]=unprewhiten(data)
+%UNPREWHITEN    Undo prewhitening of SEIZMO data records
 %
-%    Description: UNWHITEN(DATA) uses an inverse filter to unwhiten the
-%     records in DATA.  That inverse filter is found in the 'pef' field of
-%     DATA.  Records are required to have the 'whitened' field set to true.
-%     See function WHITEN and the suggested reading in Notes for more info.
+%    Usage:    data=unprewhiten(data)
+%
+%    Description: UNPREWHITEN(DATA) restores the predictable portion of
+%     records in DATA by inversely applying the prediction error filter
+%     stored in the 'pef' field in DATA.  This effectively undoes
+%     PREWHITEN.  Records are required to have the 'prewhitened' field set
+%     to true.  See function PREWHITEN and the suggested reading in Notes
+%     for more detailed information.  The returned DATA will have the 'pef'
+%     field set to an empty array and the 'prewhitened' field set to false.
 %
 %    Notes:
 %     - Suggested Reading:
@@ -15,16 +20,16 @@ function [data]=unwhiten(data)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
-%     Try whitening and unwhitening first.  Then try comparing some
-%     operation without whiten/unwhiten with one including it to get a
-%     feel for how important/detrimental it is.  
-%      plot1(unwhiten(whiten(data(1),order)))
-%      plot1(subtractrecords(data(1),unwhiten(whiten(data(1),order))))
+%     Try prewhitening and unprewhitening first.  Then try comparing some
+%     operation without prewhiten/unprewhiten with one including it to get
+%     a feel for how important/detrimental it is.  Plotting the difference:
+%      plot1(subtractrecords(data,unprewhiten(prewhiten(data,order))))
 %
-%    See also: whiten, levinson, filter
+%    See also: prewhiten, levinson, filter, whiten
 
 %     Version History:
 %        June  8, 2009 - initial version
+%        June  9, 2009 - renamed from UNWHITEN to UNPREWHITEN, doc fixes
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -42,7 +47,7 @@ function [data]=unwhiten(data)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  8, 2009 at 21:30 GMT
+%     Last Updated June  9, 2009 at 18:15 GMT
 
 % todo:
 
@@ -72,27 +77,27 @@ ncmp=getncmp(data);
 
 % require evenly-spaced time series, general x vs y
 if(any(~strcmpi(leven,'true')))
-    error('seizmo:unwhiten:illegalOperation',...
+    error('seizmo:unprewhiten:illegalOperation',...
         'Illegal operation on unevenly spaced record!')
 elseif(any(~strcmpi(iftype,'Time Series File')...
         & ~strcmpi(iftype,'General X vs Y file')))
-    error('seizmo:unwhiten:illegalOperation',...
+    error('seizmo:unprewhiten:illegalOperation',...
         'Illegal operation on spectral/xyz record!')
 end
 
-% error for nonwhitened
+% error for nonprewhitened
 nrecs=numel(data);
-if(isfield(data,'whitened') && ...
+if(isfield(data,'prewhitened') && ...
         isfield(data,'pef') && ...
-        islogical([data.whitened]) && ...
-        numel([data.whitened])==nrecs)
-    idx=[data.whitened];
+        islogical([data.prewhitened]) && ...
+        numel([data.prewhitened])==nrecs)
+    idx=[data.prewhitened];
 else
     % prepare a decent list for the error msg
     try
         % list records that are unset or false
-        data(cellfun('isempty',{data.whitened})).whitened=false;
-        idx=[data.whitened];
+        data(cellfun('isempty',{data.prewhitened})).prewhitened=false;
+        idx=[data.prewhitened];
     catch
         % list them all
         idx=false(nrecs,1);
@@ -100,9 +105,9 @@ else
 end
 if(any(~idx))
     i=find(~idx);
-    error('seizmo:unwhiten:recordsNotWhitened',...
+    error('seizmo:unprewhiten:recordsNotPrewhitened',...
         ['Records: ' sprintf('%d ',i) '\n'...
-        'Cannot unwhiten non-whitened records!']);
+        'Cannot unprewhiten non-prewhitened records!']);
 end
 
 % loop through whitened records
@@ -113,7 +118,7 @@ for i=find(idx)
     
     % check pef matches ncmp
     if(size(data(i).pef,1)~=ncmp(i))
-        error('seizmo:unwhiten:ncmpInconsistent',...
+        error('seizmo:unprewhiten:ncmpInconsistent',...
             'Record: %d\nNCMP has changed since WHITEN operation!',i);
     end
     
@@ -124,7 +129,7 @@ for i=find(idx)
     end
     
     % reset whitened, clear pef
-    data(i).whitened=false;
+    data(i).prewhitened=false;
     data(i).pef=[];
     
     % update dep*
