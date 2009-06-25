@@ -1,30 +1,28 @@
-function [dep,idx1,ind,idx2,store,npts]=combinerecords(data)
-%COMBINERECORDS    Combines SEIZMO data records into a single numeric record matrix
+function [dep,idx1,ind,idx2,store,npts]=records2mat(data)
+%RECORDS2MAT    Combines SEIZMO data records into a single numeric matrix
 %
-%    Usage:    [dep,idx1,ind,idx2,store,npts]=combo(data)
+%    Usage:    [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 %
-%    Description: [DEP,IDX1,IND,IDX2,STORE,NPTS]=COMBINERECORDS(DATA)
+%    Description: [DEP,IDX1,IND,IDX2,STORE,NPTS]=RECORDS2MAT(DATA)
 %     combines SEIZMO records stored in DATA into numeric arrays DEP & IND 
 %     (components are in separate columns).  IDX1 & IDX2 indicate which
 %     columns belong to which records in DATA.  STORE is a cell array of
 %     data class strings, one for each record.  NPTS gives the original
 %     npts in each record (records are padded with zeros when combined).
 %     This function is useful for providing easy access to functions not
-%     in the SEIZMO toolbox.  Use DISTRIBUTERECORDS to redistribute the
-%     records back into DATA if necessary.
+%     in the SEIZMO toolbox.  Use MAT2RECORDS to redistribute the records
+%     back into DATA if necessary.
 %    
 %    Notes:
-%
-%    Tested on: Matlab r2007b
 %
 %    Header changes: see CHECKHEADER
 %
 %    Examples:
 %     Get the interquartile range of records and assign to a header field:
-%      dep=combinerecords(data);
+%      dep=records2mat(data);
 %      data=changeheader(data,'user3',iqr(dep));
 %
-%    See also: distributerecords, bseizmo
+%    See also: mat2records, bseizmo
 
 %     Version History:
 %        Feb. 16, 2008 - initial version
@@ -40,9 +38,26 @@ function [dep,idx1,ind,idx2,store,npts]=combinerecords(data)
 %                        now outputs independent component
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        June 12, 2009 - minor doc update, add testing table
+%        June 25, 2009 - name change from COMBINERECORDS to RECORDS2MAT
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:00 GMT
+%     Last Updated June 25, 2009 at 04:35 GMT
 
 % todo:
 

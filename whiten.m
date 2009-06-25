@@ -33,11 +33,12 @@ function [data]=whiten(data,halfwindow,varargin)
 %     Spectral normalization returns much whiter noise:
 %      plot1([data(1) whiten(data(1))])
 %
-%    See also: whitensp, slidingabsmean, prewhiten, unprewhiten
+%    See also: slidingabsmean, prewhiten, unprewhiten
 
 %     Version History:
 %        June  9, 2009 - initial version
 %        June 11, 2009 - updated default halfwindow from 2 to 20
+%        June 24, 2009 - now transparent to filetype (except ixyz)
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -55,7 +56,7 @@ function [data]=whiten(data,halfwindow,varargin)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 11, 2009 at 16:00 GMT
+%     Last Updated June 24, 2009 at 22:45 GMT
 
 % todo:
 
@@ -86,18 +87,33 @@ iftype=getenumdesc(data,'iftype');
 if(any(~strcmpi(leven,'true')))
     error('seizmo:whiten:illegalOperation',...
         'Illegal operation on unevenly spaced record!')
-elseif(any(~strcmpi(iftype,'Time Series File')...
-        & ~strcmpi(iftype,'General X vs Y file')))
+elseif(any(strcmpi(iftype,'General XYZ (3-D) file')))
     error('seizmo:whiten:illegalOperation',...
-        'Illegal operation on spectral/xyz record!')
+        'Illegal operation on xyz record!')
 end
 
 % default centered window half size
 if(nargin==1 || isempty(halfwindow)); halfwindow=20; end
 
+% get filetype logical arrays
+istime=strcmpi(iftype,'Time Series File');
+isxy=strcmpi(iftype,'General X vs Y file');
+isrlim=strcmpi(iftype,'Spectral File-Real/Imag');
+isamph=strcmpi(iftype,'Spectral File-Ampl/Phase');
+
 % get amph and rlim type records
-amph=dft(data);
-data=amph2rlim(amph);
+if(any(istime | isxy))
+    amph(istime | isxy)=dft(data(istime | isxy));
+    data(istime | isxy)=amph2rlim(amph(istime | isxy));
+end
+if(any(isrlim))
+    amph(isrlim)=rlim2amph(data(isrlim));
+    data(isrlim)=amph2rlim(data(isrlim));
+end
+if(any(isamph))
+    amph(isamph)=data(isamph);
+    data(isamph)=amph2rlim(data(isamph));
+end
 
 % fake amph records as rlim (to get by dividerecords checks/fixes)
 amph=changeheader(amph,'iftype','irlim');
@@ -111,8 +127,17 @@ amph=seizmofun(amph,@(x)x(:,[1:2:end; 1:2:end]));
 % divide complex by smoothed amplitude
 data=dividerecords(data,amph);
 
-% convert back to time-series
-data=idft(data);
+% convert back to original type
+if(any(isamph))
+    data(isamph)=rlim2amph(data(isamph));
+end
+if(any(istime))
+    data(istime)=idft(data(istime));
+end
+if(any(isxy))
+    data(isxy)=idft(data(isxy));
+    data(isxy)=changeheader(data(isxy),'iftype','ixy');
+end
 
 % toggle checking back
 set_seizmocheck_state(oldseizmocheckstate);

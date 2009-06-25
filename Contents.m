@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r75 Ararat 11-Jun-2009
+% Version 0.6.0-r77 Ararat 25-Jun-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -13,11 +13,11 @@
 %CHANGENAME          - Change the filename of SEIZMO records
 %CHANGEPATH          - Change the filepath of SEIZMO records
 %CHECKHEADER         - Check and fix header values of SEIZMO records
-%COMBINERECORDS      - Combines SEIZMO data records into a single numeric record matrix
+%COPYHEADER          - Copy one record's header to all records
 %CUT                 - Cut a window out of SEIZMO records
+%DELETERECORDS       - Deletes indicated records from SEIZMO data structure
 %DFT                 - Performs a discrete fourier transform on SEIZMO data records
 %DIFFERENTIATE       - Differentiate SEIZMO records
-%DISTRIBUTERECORDS   - Distributes a record matrix back into a SEIZMO struct
 %DIVIDE              - Divide SEIZMO records by a constant
 %DIVIDEOMEGA         - Integrate SEIZMO records in the frequency domain
 %DIVIDERECORDS       - Divide SEIZMO records
@@ -31,12 +31,15 @@
 %GETMEDIAN           - Returns median of each SEIZMO record
 %GETNCMP             - Return the number of dependent components for SEIZMO records
 %GETNORM             - Return normalizers for SEIZMO records
+%GETPOLYNOMIAL       - Get polynomial fit to SEIZMO records
 %HILBRT              - Return Hilbert transform of SEIZMO records
 %IDFT                - Performs an inverse discrete fourier transform on SEIZMO records
 %IIRFILTER           - Apply an IIR filter to SEIZMO data records
 %INTEGRATE           - Integrate SEIZMO records
 %INTERPOLATE         - Interpolate SEIZMO records to a new samplerate
+%KEEPRECORDS         - Keeps indicated records in SEIZMO data structure
 %LISTHEADER          - List SEIZMO data headers
+%MAT2RECORDS         - Distributes a record matrix back into a SEIZMO struct
 %MERGE               - Merge SEIZMO records
 %MIRRORFLIP          - Returns a mirror-flip of SEIZMO records
 %MULTIPLY            - Multiply SEIZMO records by a constant
@@ -55,10 +58,12 @@
 %READHEADER          - Read header info from SEIZMO datafiles
 %READSEIZMO          - Read datafiles into SEIZMO data structure
 %RECORDFUN           - Perform basic function between SEIZMO records
+%RECORDS2MAT         - Combines SEIZMO data records into a single numeric matrix
 %RECORDSECTION       - Plots SEIZMO data records in a distance spaced record section
 %REMOVEDEADRECORDS   - Removes constant SEIZMO records
 %REMOVEDUPLICATES    - Remove duplicate SEIZMO records
 %REMOVEMEAN          - Remove mean from SEIZMO records
+%REMOVEPOLYNOMIAL    - Remove polynomial trend from SEIZMO records
 %REMOVETREND         - Remove linear trend from SEIZMO records
 %REVERSE             - Reverse SEIZMO records
 %RLIM2AMPH           - Convert SEIZMO spectral records from RLIM to AMPH
@@ -72,6 +77,7 @@
 %STRETCH             - Upsample SEIZMO records by an integer factor
 %SUBTRACT            - Subtract a constant from SEIZMO records
 %SUBTRACTRECORDS     - Subtract SEIZMO records
+%SYNCHRONIZE         - Synchronizes the reference times of SEIZMO records
 %SYNCRATES           - Resample SEIZMO records to a common sample rate
 %TAPER               - Taper SEIZMO records
 %TIMESHIFT           - Shift timing of SEIZMO records
@@ -122,6 +128,7 @@
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
 %FISHER              - Converts correlation coefficients to the Z statistic
 %GETAPPLICATION      - Returns application running this script and its version
+%GETWORDS            - Returns a cell array of words from a string
 %IFISHER             - Converts Z statistics to correlation coefficients
 %LTI2SUB             - Square matrix lower triangle linear index to subscripts
 %MATCHSORT           - Replicates a sort operation using the returned permutation indices
@@ -130,6 +137,7 @@
 %NANVAR              - Return variance excluding NaNs
 %NATIVEBYTEORDER     - Returns native endianness of present platform
 %NDSQUAREFORM        - Reshapes a multi-page distance matrix between square and triangle vector forms
+%NEXTPOW2N           - Returns the next higher power of 2 for all array elements
 %ONEFILELIST         - Compiles multiple filelists into one
 %READSACPZ           - Reads in a SAC PoleZero file
 %SAWMOD              - Returns a sawtooth modulus

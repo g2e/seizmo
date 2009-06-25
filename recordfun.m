@@ -101,10 +101,6 @@ function [data]=recordfun(fun,varargin)
 %     to 'error'.
 %     
 %    Notes:
-%     - Ampl-Phase spectral records are first converted to Real-Imag to
-%       assure the operation is linear and equal to that on Real-Imag
-%       records.  If you want to workaround this behavior, convert the
-%       Ampl-Phase records to General X vs Y beforehand.
 %     
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
 %     NPTS, E, NCMP (see option 'npts' and 'ncmp')
@@ -131,6 +127,9 @@ function [data]=recordfun(fun,varargin)
 %                        and reduce code
 %        Apr. 23, 2009 - move usage up
 %        June  8, 2009 - force column-vector data
+%        June 12, 2009 - ISSEIZMO now overrides setting SEIZMOCHECK off
+%                        by default, so remove setting SEIZMOCHECK state
+%        June 24, 2009 - now adds iamph files directly
 %     
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -148,7 +147,7 @@ function [data]=recordfun(fun,varargin)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  8, 2009 at 00:45 GMT
+%     Last Updated June 24, 2009 at 23:20 GMT
 
 % todo:
 
@@ -199,10 +198,7 @@ end
 
 % find all datasets in inline arguments
 isdata=false(1,nargin-1);
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(true);
 for i=1:(nargin-1); isdata(i)=isseizmo(varargin{i},'dep'); end
-set_seizmocheck_state(oldseizmocheckstate);
 
 % push datasets into a separate variable
 data=varargin(isdata);
@@ -357,18 +353,6 @@ if(ndatasets>1)
         for j=1:maxrecs; data{i}(j).dep=double(data{i}(j).dep); end
     end
     
-    % convert amplitude-phase files to real-imaginary so that operations
-    % are consistent. amph2rlim must be done here (before newhdr swap)
-    if(option.NEWHDR)
-        convertback=strcmpi(iftype{end},'Spectral File-Ampl/Phase');
-    else
-        convertback=strcmpi(iftype{1},'Spectral File-Ampl/Phase');
-    end
-    for i=1:ndatasets
-        convert=strcmpi(iftype{i},'Spectral File-Ampl/Phase');
-        if(any(convert)); data{i}(convert)=amph2rlim(data{i}(convert)); end
-    end
-    
     % newhdr flag (swap first and last dataset)
     if(option.NEWHDR)
         if(strcmpi(fun,{'+' '*'}))
@@ -432,11 +416,6 @@ if(ndatasets>1)
     set_checkheader_state(true);
     data=checkheader(data{1});
     set_checkheader_state(oldcheckheaderstate);
-    
-    % convert back to amph if necessary
-    if(any(convertback))
-        data(convertback)=rlim2amph(data(convertback));
-    end
 % 1 dataset
 else
     % uncell
@@ -504,16 +483,6 @@ else
     end
     for i=1:nrecs; data(i).dep=double(data(i).dep); end
     
-    % convert amplitude-phase files to real-imaginary so that operations
-    % are consistent. amph2rlim must be done here (before newhdr)
-    if(option.NEWHDR)
-        convertback=strcmpi(iftype{:}(end),'Spectral File-Ampl/Phase');
-    else
-        convertback=strcmpi(iftype{:}(1),'Spectral File-Ampl/Phase');
-    end
-    convert=strcmpi(iftype{:},'Spectral File-Ampl/Phase');
-    if(any(convert)); data(convert)=amph2rlim(data(convert)); end
-    
     % newhdr flag (swap first and last record)
     if(option.NEWHDR)
         if(strcmpi(fun,{'+' '*'}))
@@ -566,9 +535,6 @@ else
     set_checkheader_state(true);
     data=checkheader(data);
     set_checkheader_state(oldcheckheaderstate);
-    
-    % convert back to amph if necessary
-    if(convertback); data=rlim2amph(data); end
 end
 
 end

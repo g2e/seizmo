@@ -9,7 +9,7 @@ function [data,selected,h]=selectrecords(data,varargin)
 %
 %    Description: [DATA,SELECTED,H]=SELECTRECORDS(DATA) returns the records
 %     in SEIZMO data structure DATA that are graphically selected by the
-%     user.  By default the plottype is PLOT0 and no records are
+%     user.  By default the plottype is PLOT1 and no records are
 %     preselected.  Selection/unselection of records is performed by left-
 %     clicking over a record.  Complete dataset selection by middle-
 %     clicking over the plot or closing the figure.  Optional additional
@@ -24,12 +24,13 @@ function [data,selected,h]=selectrecords(data,varargin)
 %
 %     SELECTRECORDS(DATA,OPTION,TYPE) sets the plot type to be used in
 %     record selection.  TYPE must be one of 'plot0','plot1','p0', or 'p1'.
-%     The default is 'plot0'.
+%     The default is 'plot1'.
 %
 %     SELECTRECORDS(DATA,OPTION,TYPE,SELECTED) allows preselecting records
-%     in DATA using the logical array SELECTED.  SELECTED must be either
-%     true (all selected), false (all unselected), or a logical array with
-%     the same number of elements as DATA.  The default is false.
+%     in DATA using the array SELECTED.  SELECTED must be either true (all
+%     selected), false (none selected), a logical array with the same
+%     number of elements as DATA, or an array of linear indices.  The
+%     default is false.
 %
 %     SELECTRECORDS(DATA,OPTION,TYPE,SELECTED,PLOTOPTIONS) passes plotting
 %     options PLOTOPTIONS (all arguments after SELECTED) to the plotting
@@ -56,6 +57,7 @@ function [data,selected,h]=selectrecords(data,varargin)
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %        May  30, 2009 - major doc update, major code cleaning
 %        June  2, 2009 - fixed history, patches go on bottom now
+%        June 25, 2009 - minor doc fixes, allow numeric array for selected
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -73,7 +75,7 @@ function [data,selected,h]=selectrecords(data,varargin)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  2, 2009 at 19:00 GMT
+%     Last Updated June 25, 2009 at 08:55 GMT
 
 % todo:
 
@@ -146,7 +148,13 @@ for i=1:numel(fields)
             end
         case 'selected'
             if(isnumeric(option.SELECTED))
-                option.SELECTED=logical(option.SELECTED);
+                if(option.SELECTED>0 && option.SELECTED<=nrecs)
+                    temp=option.SELECTED;
+                    option.SELECTED=false(nrecs,1);
+                    option.SELECTED(temp)=true;
+                else
+                    option.SELECTED=logical(option.SELECTED);
+                end
             end
             if(~islogical(option.SELECTED) || ...
                     ~any(numel(option.SELECTED)==[1 nrecs]))

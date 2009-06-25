@@ -29,10 +29,17 @@ function [data]=timeshift(data,shift,timing,option,varargin)
 %     only the additional fields, use option 'USER'.
 %
 %     TIMESHIFT(DATA,SHIFT,TIMING,OPTION,FIELD1,...,FIELDN) also adjusts
-%     header fields FIELD1 TO FIELDN by SHIFT seconds.
+%     header fields FIELD1 TO FIELDN by SHIFT seconds.  Giving fields that
+%     are already identified as timing fields will apply SHIFT twice unless
+%     OPTION is set appropriately!!
 %
 %    Notes:
 %     - DOES NOT WORK FOR SPECTRAL OR XYZ RECORDS!
+%     - Since reference timing is only accurate to the millisecond, this
+%       operation will be inaccurate up to 1 millisec.  This can be 'fixed'
+%       by giving shifts to the millisecond.  The NZMSEC field should be
+%       replaced with NZNSEC to allow for nanosecond accuracy (int32 would
+%       still be fine)!
 %
 %    Header changes: B, E, A, F, O, T0-T9,
 %                    NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC
@@ -52,6 +59,8 @@ function [data]=timeshift(data,shift,timing,option,varargin)
 %        Mar. 29, 2009 - added OPTION input to allow for more flexibility
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        June 10, 2009 - added testing table
+%        June 24, 2009 - added explaination about inaccurate shifting,
+%                        improved checks on options
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -69,7 +78,7 @@ function [data]=timeshift(data,shift,timing,option,varargin)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 10, 2009 at 19:50 GMT
+%     Last Updated June 24, 2009 at 23:40 GMT
 
 % todo:
 
@@ -110,8 +119,14 @@ else
 end
 
 % default timing
+valid.TIMING={'UTC' 'TAI'};
 if(nargin==2 || isempty(timing))
     timing='utc';
+elseif(~ischar(timing) || size(timing,1)~=1 ...
+        || ~any(strcmpi(timing,valid.TIMING)))
+    error('seizmo:timeshift:badTiming',...
+        ['TIMING must be a string of one of the following:\n'...
+        sprintf('%s ',valid.TIMING{:})]);
 end
 
 % shift option
@@ -121,7 +136,7 @@ if(nargin<=3 || isempty(option))
     relshift=shift;
     usershift=shift;
 else
-    if(~ischar(option))
+    if(~ischar(option) || size(option,1)~=1)
         error('seizmo:timeshift:badOption',...
             ['OPTION option must be string of one of the following:\n'...
              'BOTH  REFERENCE  RELATIVE  USER']);

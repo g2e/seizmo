@@ -14,8 +14,6 @@ function [data]=syncrates(data,sr)
 %    Notes:
 %     - requires evenly sampled data (use INTERPOLATE for uneven data)
 %
-%    Tested on: Matlab r2007b
-%
 %    Header Changes: DELTA, NPTS, DEPMEN, DEPMIN, DEPMAX, E
 %
 %    Examples:
@@ -37,9 +35,27 @@ function [data]=syncrates(data,sr)
 %                        xyz records
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        June 25, 2009 - update for RECORD2MAT/MAT2RECORD, added testing
+%                        table, process records individually, minor bug fix
+%                        for rare case when resample does not work
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:05 GMT
+%     Last Updated June 25, 2009 at 06:55 GMT
 
 % todo:
 
@@ -70,63 +86,60 @@ if(any(~strcmpi(getlgc(data,'leven'),'true')))
         'Illegal operation on unevenly spaced data!');
 end
 
-% require non-spectral records
+% require non-xyz records
 iftype=getenumdesc(data,'iftype');
 if(any(strcmp(iftype,'General XYZ (3-D) file')))
     error('seizmo:syncrates:illegalOperation',...
         'Illegal operation on xyz files!');
 end
 
-% make delta groups
-delta=getheader(data,'delta');
-gdt=unique(delta); ng=length(gdt); gi=cell(ng,1);
-for i=1:ng; gi{i}=find(delta==gdt(i)).'; end
+% get header info
+[delta,b,npts]=getheader(data,'delta','b','npts');
 
 % find fraction numerator/denominator of sampling
 % rate ratio expressed as integers
-[n,d]=rat(gdt*sr);
+[n,d]=rat(delta*sr);
 
-% work on each group
-for i=1:ng
+% loop over every record
+nrecs=numel(data);
+depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+for i=1:nrecs
+    % skip dataless
+    if(isempty(data(i).dep)); continue; end
+    
+    % save class
+    oclass=str2func(class(data(i).dep));
+    
     % try resample
     try
-        data(gi{i})=chsr(data(gi{i}),n(i),d(i),sr);
+        data(i).dep=oclass(resample(double(data(i).dep),n(i),d(i)));
     catch
         % interpolate to a sample rate at least 4 times the current
         % AND the desired sample rates to preserve the data and allow
         % for decimation.  here we find the lowest multiple of the
         % desired rate that is 4x the current rate...hopefully that
         % integer is fairly factorable...if not the function crashes
-        lowest_multiple=max([4 ceil(4/(gdt*sr))]);
+        lm=max([4 ceil(4/(delta(i)*sr))]);
         
         % interpolate temporarily to higher rate
-        data(gi{i})=interpolate(data(gi{i}),lowest_multiple*sr,'spline');
+        data(i)=interpolate(data(i),lm*sr,'spline');
         
         % now resample
-        data(gi{i})=chsr(data(gi{i}),1,lowest_multiple,sr);
+        data(i).dep=oclass(resample(double(data(i).dep),1,lm));
     end
+    
+    % get dep*
+    depmen(i)=mean(data(i).dep(:)); 
+    depmin(i)=min(data(i).dep(:)); 
+    depmax(i)=max(data(i).dep(:));
 end
+
+% update header
+npts=floor((npts-1).*n./d)+1; npts(npts<0)=0;
+data=changeheader(data,'delta',1/sr,'npts',npts,'e',b+(npts-1)./sr,...
+    'depmen',depmen,'depmin',depmin,'depmax',depmax);
 
 % toggle checking back
 set_seizmocheck_state(oldseizmocheckstate);
-
-end
-
-function [data]=chsr(data,n,d,sr)
-%CHSR  Resample records to new rate
-
-% combine records
-[dep,idx1,ind,idx2,store,npts]=combinerecords(data);
-
-% resample
-dep=resample(dep,n,d);
-
-% new length
-nnpts=floor((npts-1)*n/d)+1;
-
-% redistribute records
-e=getheader(data,'b')+(nnpts-1)./sr;
-data=changeheader(data,'delta',1/sr,'npts',nnpts,'e',e);
-data=distributerecords(data,dep,idx1,[],[],store,nnpts);
 
 end

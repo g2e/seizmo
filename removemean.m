@@ -11,17 +11,16 @@ function [data]=removemean(data)
 %     - useful for avoiding edge-effects in spectral operations but
 %       REMOVETREND is probably a better option in this case
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
 %     It is generally a good idea to remove the mean from records before
 %     performing any filtering operations to avoid edge effects:
-%      plot1(subsample(data,5))             % more ringing
-%      plot1(subsample(removemean(data),5)) % less ringing
+%      plot1(squish(data,5))             % more ringing
+%      plot1(squish(removemean(data),5)) % less ringing
 %
-%    See also: removetrend, taper, removedeadrecords
+%    See also: removetrend, removepolynomial, getpolynomial, taper,
+%              removedeadrecords
 
 %     Version History:
 %        Oct. 31, 2007 - initial version
@@ -35,9 +34,25 @@ function [data]=removemean(data)
 %        Nov. 22, 2008 - doc update, rename from RMEAN to REMOVEMEAN
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        June 24, 2009 - minor doc fix
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:50 GMT
+%     Last Updated June 24, 2009 at 03:55 GMT
 
 % todo:
 

@@ -78,6 +78,8 @@ function [data]=checkheader(data,options,varargin)
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %        May  10, 2009 - add support for expanded idep set
 %        June  8, 2009 - couple fixes for non-column vector data
+%        June 23, 2009 - fixed enum checking bug that only returned one
+%                        record per bad enum value
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -95,7 +97,7 @@ function [data]=checkheader(data,options,varargin)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  8, 2009 at 00:40 GMT
+%     Last Updated June 23, 2009 at 22:20 GMT
 
 % todo:
 % - use CHECKOPERR to decide how to handle individual cases
@@ -333,7 +335,7 @@ validdep={'iunkn' 'idisp' 'ivel' 'iacc' 'ivolts' 'iabsmnt' ...
 
 % check data type
 if(~isempty(setdiff(iftype,validftype)))
-    [dummy,i]=setdiff(iftype,validftype);
+    i=find(~ismember(iftype,validftype));
     error('seizmo:checkheader:badFileType',...
         ['IFTYPE field id unknown for record(s):\n' sprintf('%d ',i)...
         '\nMust be one of the following:\n' sprintf('%s ',validftype{:})]);
@@ -341,19 +343,19 @@ end
 
 % check dependent component type
 if(~isempty(setdiff(idep,validdep)))
-    [dummy,i]=setdiff(idep,validdep);
+    i=find(~ismember(idep,validdep));
     warning('seizmo:checkheader:badDepType',...
         ['IDEP field id unknown for record(s):\n' sprintf('%d ',i)...
         '\nShould be one of the following:\n' sprintf('%s ',validdep{:})]);
 end
 
 % check reference type
-[dummy,i]=setdiff(iztype,validztype);
+i=find(~ismember(iztype,validztype));
 badztype=false(size(data(:))); badztype(i)=true;
 if(~isempty(i))
     warning('seizmo:checkheader:badRefType',...
         ['IZTYPE field id unknown for record(s):\n' sprintf('%d ',i)...
-        '\nShould be one of the following:\n' sprintf('%s ',validftype{:})]);
+        '\nShould be one of the following:\n' sprintf('%s ',validztype{:})]);
 end
 
 % get logicals for spectral and xyz datatypes

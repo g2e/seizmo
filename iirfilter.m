@@ -348,7 +348,7 @@ for i=1:ng
     fs{i}=dfilt.df2tsos(sos,g);
     
     % combine records
-    [recs,idx1,ind,idx2,store,npts]=combinerecords(data(gi{i}));
+    [recs,idx1,ind,idx2,store,npts]=records2mat(data(gi{i}));
 
     % implement
     if(passes==1)
@@ -362,7 +362,7 @@ for i=1:ng
     end
     
     % distribute records back
-    data(gi{i})=distributerecords(data(gi{i}),recs,idx1,[],[],store,npts);
+    data(gi{i})=mat2records(data(gi{i}),recs,idx1,[],[],store,npts);
 end
 
 % toggle checking back

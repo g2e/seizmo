@@ -27,8 +27,8 @@ function [data]=prewhiten(data,order)
 %     to some maximum entropy with increasing ORDER.  Restoration of the
 %     original record may also degrade at higher ORDER.  Some tuning will
 %     likely be required to find the best ORDER for your operation.  ORDER
-%     must be a positive integer <NPTS, where NPTS is the number of points
-%     in a record.  Currently ORDER must be scalar (for efficiency).
+%     must be a positive integer or integers (one per record) <NPTS, where
+%     NPTS is the number of points in a record.
 %
 %    Notes:
 %     - Suggested Reading:
@@ -50,6 +50,8 @@ function [data]=prewhiten(data,order)
 %     Version History:
 %        June  8, 2009 - initial version
 %        June  9, 2009 - renamed from WHITEN to PREWHITEN, doc fixes
+%        June 25, 2009 - update for RECORD2MAT/MAT2RECORD, process records
+%                        individually rather than all together (faster)
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -67,7 +69,7 @@ function [data]=prewhiten(data,order)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  9, 2009 at 16:50 GMT
+%     Last Updated June 25, 2009 at 07:45 GMT
 
 % todo:
 
@@ -91,6 +93,8 @@ oldcheckheaderstate=get_checkheader_state;
 set_checkheader_state(false);
 
 % get some header fields
+npts=getheader(data,'npts');
+ncmp=getncmp(data);
 leven=getlgc(data,'leven');
 iftype=getenumdesc(data,'iftype');
 
@@ -129,42 +133,61 @@ if(any(idx))
         'PREWHITEN will not prewhiten prewhitened records!']);
 end
 
-% combine records for numerical efficiency
-[recs,idx,ind,idx2,store,npts]=combinerecords(data);
-
-% default order
-if(nargin==1); order=6; end
-
-% check order
-if(~isnumeric(order) || any(fix(order)~=order) || ~isscalar(order))
-    error('seizmo:prewhiten:badOrder','ORDER must be a scalar integer!');
+% default/check order
+if(nargin==1 || isempty(order))
+    order=6;
+elseif(~isnumeric(order) || any(fix(order)~=order) ...
+        || ~any(numel(order)==[1 nrecs]))
+    error('seizmo:prewhiten:badOrder',...
+        'ORDER must be a scalar or an array with 1 integer per record!');
 end
-if(order<1 || any(order>=npts))
+order=order(:);
+if(any(order<1 | order>=npts))
     error('seizmo:prewhiten:badOrder','ORDER must be >0 but <NPTS!');
 end
 
-% get autocorr
-nrows=2^nextpow2(2*size(recs,1)-1);
-x=fft(recs,nrows);
-x=ifft(abs(x).^2);
-%x=ifft(abs(x).^2).*npts(idx1,ones(nrows,1)).'; % biased autocorr
-
-% get predition error filter
-a=levinson(x(1:order+1,:),order);
-
-% implement filters separately
-for i=1:size(recs,2)
-    recs(:,i)=recs(:,i)-filter([0 -a(i,2:end)],1,recs(:,i));
+% expand scalar order
+if(isscalar(order))
+    order(1:nrecs,1)=order;
 end
 
-% store the whitening filter at the struct level
+% loop over records
+npts2=2.^nextpow2n(2*npts);
+depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+for i=1:nrecs
+    % skip dataless
+    if(isempty(data(i).dep)); continue; end
+    
+    % save class and convert to double precision
+    oclass=str2func(class(data(i).dep));
+    data(i).dep=double(data(i).dep);
+    
+    % get autocorr
+    x=ifft(abs(fft(data(i).dep,npts2(i))).^2);
+    
+    % get predition error filter
+    a=levinson(x(1:order(i)+1,:),order(i));
+    
+    % implement filter
+    for j=1:ncmp(i)
+        data(i).dep(:,j)=...
+            data(i).dep(:,j)-filter([0 -a(j,2:end)],1,data(i).dep(:,j));
+    end
+    
+    % store the whitening filter at the struct level
+    data(i).pef=a;
+    
+    % change class back
+    data(i).dep=oclass(data(i).dep);
+    
+    % get dep*
+    depmen(i)=mean(data(i).dep(:)); 
+    depmin(i)=min(data(i).dep(:)); 
+    depmax(i)=max(data(i).dep(:));
+end
+
+% toggle prewhitened logical
 [data.prewhitened]=deal(true);
-for i=1:numel(data)
-    data(i).pef=a(idx==i,:);
-end
-
-% distribute records back
-data=distributerecords(data,recs,idx,[],[],store,npts);
 
 % toggle checking back
 set_seizmocheck_state(oldseizmocheckstate);

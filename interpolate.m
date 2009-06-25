@@ -24,8 +24,6 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: DELTA, NPTS, LEVEN, B, E, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
@@ -54,9 +52,25 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %                        extrapolation
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        June 12, 2009 - add testing matrix
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:25 GMT
+%     Last Updated June 12, 2009 at 20:25 GMT
 
 % check number of arguments
 msg=nargchk(2,5,nargin);

@@ -18,8 +18,6 @@ function [data]=bseizmo(varargin)
 %     - the filetype is set as 'General X vs Y file'
 %     - automatically figures out if data is evenly sampled
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: 
 %     CREATES HEADER INFO: 
 %      DELTA, B, E, NPTS, DEPMEN, DEPMIN, DEPMAX, IFTYPE, LEVEN, LOVROK,
@@ -64,9 +62,26 @@ function [data]=bseizmo(varargin)
 %                        initialization, renamed from BSEIS to BSEIZMO
 %        Apr. 23, 2009 - move usage up
 %        May  15, 2009 - minor doc fixes
+%        June 12, 2009 - little better output name format, fill in kstnm,
+%                        khole, and kcmpnm, add testing table
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  15, 2009 at 18:45 GMT
+%     Last Updated June 12, 2009 at 17:30 GMT
 
 % todo:
 
@@ -146,13 +161,13 @@ for i=1:length(h.stype)
 end
 
 % create structure
-nrecs=nargin/2;
+nrecs=nargin/2; format=['%0' num2str(ceil(log10(nrecs+1))) 'd'];
 data(1:nrecs,1)=struct('path','.','name',[],...
     'filetype',option.FILETYPE,'version',option.VERSION,...
     'byteorder',option.BYTEORDER,'hasdata',true,'head',undef,'dep',[]);
 
 % loop for each pair
-leven=true(nrecs,1); delta=ones(nrecs,1);
+leven=true(nrecs,1); delta=ones(nrecs,1); kstnm=cell(nrecs,1);
 [b,e,npts,ncmp,depmen,depmin,depmax]=swap(nan(nrecs,1));
 for i=1:2:nargin
     % output index
@@ -202,7 +217,8 @@ for i=1:2:nargin
     end
     
     % edit name
-    data(j).name=['SEIZMO.' num2str(j) '.sz'];
+    kstnm{j}=['R' sprintf(format,j)];
+    data(j).name=['SEIZMO.' sprintf(format,j) '.sz'];
     
     % handle 0pt
     if(npts(j)==0); continue; end
@@ -227,9 +243,9 @@ end
 % write header changes
 data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
     'depmen',depmen,'depmin',depmin,'depmax',depmax,'ncmp',ncmp,...
-    'iftype','General X vs Y file','lovrok','true',...
-    'idep','iunkn','iztype','iunkn',...
-    'nvhdr',option.VERSION,'knetwk','SZ','leven',leven);
+    'iftype','General X vs Y file','lovrok','true','leven',leven,...
+    'idep','iunkn','iztype','iunkn','nvhdr',option.VERSION,...
+    'knetwk','SZ','kcmpnm','Q','khole','XX','kstnm',kstnm);
 
 
 % toggle checking back

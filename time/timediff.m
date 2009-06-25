@@ -2,7 +2,7 @@ function [diff]=timediff(times1,times2,option)
 %TIMEDIFF    Return number of seconds between times
 %
 %    Usage:    diff=timediff(times1,times2)
-%              diff=timediff(times1,times2,'utc')
+%              diff=timediff(times1,times2,'utc'|'tai')
 %
 %    Description: TIMEDIFF(TIMES1,TIMES2) returns the difference in time
 %     between times in TIMES1 and times in TIMES2.  TIMES1 and TIMES2 must
@@ -13,9 +13,11 @@ function [diff]=timediff(times1,times2,option)
 %     equal size or be a single time.  Time difference is returned in
 %     number of seconds.
 %
-%     TIMEDIFF(TIMES1,TIMES2,'UTC') allows finding the difference between
-%     UTC times (which may have leap seconds occasionally inserted on
-%     certain dates -- see LEAPSECONDS).
+%     TIMEDIFF(TIMES1,TIMES2,'UTC'|'TAI') allows finding the difference
+%     between UTC times (which may have leap seconds occasionally inserted
+%     on certain dates -- see LEAPSECONDS).  The default is 'TAI' and does
+%     not account for UTC leap seconds.  Using '' or [] will also give the
+%     default behavior.
 %
 %    Notes:
 %
@@ -28,7 +30,8 @@ function [diff]=timediff(times1,times2,option)
 %     Version History:
 %        Nov. 12, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
-%        June 10, 2009 - minro doc fix, add testing table
+%        June 10, 2009 - minor doc fix, add testing table
+%        June 24, 2009 - added scalar datetime expansion, minor doc update
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -46,7 +49,7 @@ function [diff]=timediff(times1,times2,option)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 10, 2009 at 19:50 GMT
+%     Last Updated June 24, 2009 at 20:05 GMT
 
 % todo:
 
@@ -66,6 +69,13 @@ if(~isnumeric(times1) || ~isnumeric(times2)...
         'TIMES1 and TIMES2 must be a non-empty numeric date arrays!');
 end
 
+% expand scalar
+if(prod(sz1([1 3:end]))==1)
+    times1=repmat(times1,[sz2(1) 1 sz2(3:end)]);
+elseif(prod(sz2([1 3:end]))==1)
+    times2=repmat(times2,[sz1(1) 1 sz1(3:end)]);
+end
+
 % check option
 if(nargin==2 || isempty(option))
     option='tai';
@@ -79,9 +89,6 @@ switch lower(option)
     case 'tai'
         % TAI => MODIFIED SERIAL
         modserial=gregorian2modserial(times2)-gregorian2modserial(times1);
-        
-        % take difference
-        diff=submat(modserial,2,1)*86400+submat(modserial,2,2);
     case 'utc'
         % add zeros (date => time)
         if(any(sz1(2)==[2 3])); times1(:,end+3,:)=0; end
@@ -90,9 +97,9 @@ switch lower(option)
         % UTC => TAI => MODIFIED SERIAL
         modserial=gregorian2modserial(utc2tai(times2))...
             -gregorian2modserial(utc2tai(times1));
-        
-        % take difference
-        diff=submat(modserial,2,1)*86400+submat(modserial,2,2);
 end
+
+% take difference
+diff=submat(modserial,2,1)*86400+submat(modserial,2,2);
 
 end

@@ -2,7 +2,7 @@ function [times]=fixtimes(times,option)
 %FIXTIMES    Cleans up times so they are in their proper ranges
 %
 %    Usage:    times=fixtimes(times)
-%              times=fixtimes(times,'utc')
+%              times=fixtimes(times,'utc'|'tai')
 %
 %    Description: FIXTIMES(TIMES) returns equivalent times to the times in
 %     TIMES such that they follow typical Gregorian calendar conventions
@@ -15,7 +15,8 @@ function [times]=fixtimes(times,option)
 %     etc).
 %
 %     FIXTIMES(TIMES,'UTC') allows fixing UTC times which have leap seconds
-%     occasionally inserted on certain dates (see LEAPSECONDS).
+%     occasionally inserted on certain dates (see LEAPSECONDS).  Setting to
+%     'TAI' or [] will not take leapseconds into account (the default).
 %
 %    Notes:
 %
@@ -32,6 +33,7 @@ function [times]=fixtimes(times,option)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        June 11, 2009 - fix leap second bug (was in LEAPSINDAY),
 %                        add testing table
+%        June 24, 2009 - minor doc update
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -49,7 +51,7 @@ function [times]=fixtimes(times,option)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 11, 2009 at 00:30 GMT
+%     Last Updated June 24, 2009 at 18:55 GMT
 
 % todo:
 
@@ -67,7 +69,8 @@ end
 % check option
 if(nargin==1 || isempty(option))
     option='tai';
-elseif(~ischar(option) || ~any(strcmpi(option,{'utc' 'tai'})))
+elseif(~ischar(option) || size(option,1)~=1 ...
+        || ~any(strcmpi(option,{'utc' 'tai'})))
     error('seizmo:fixtimes:optionBad',...
         'OPTION must be ''utc'' or ''tai''!');
 end

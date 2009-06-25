@@ -32,9 +32,10 @@ function [lgc]=isseizmo(data,varargin)
 %        Nov. 13, 2008 - renamed from ISSEIS to ISSEIZ
 %        Nov. 15, 2008 - update for new name schema (now ISSEIZMO)
 %        Apr. 23, 2009 - move usage up
+%        June 12, 2009 - force SEIZMOCHECK state to on for the check
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:15 GMT
+%     Last Updated June 12, 2009 at 17:00 GMT
 
 % todo:
 
@@ -51,6 +52,9 @@ elseif(nargin>1)
 end
 
 % test output of seizmocheck call
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(true);
 lgc=isempty(seizmocheck(data,varargin{:}));
+set_seizmocheck_state(oldseizmocheckstate);
 
 end
