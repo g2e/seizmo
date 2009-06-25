@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r77 Ararat 25-Jun-2009
+% Version 0.6.0-r78 Ararat 25-Jun-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -32,12 +32,17 @@
 %GETNCMP             - Return the number of dependent components for SEIZMO records
 %GETNORM             - Return normalizers for SEIZMO records
 %GETPOLYNOMIAL       - Get polynomial fit to SEIZMO records
+%GETSPECTRALCMP      - Returns the indicated portion of spectral records
 %HILBRT              - Return Hilbert transform of SEIZMO records
 %IDFT                - Performs an inverse discrete fourier transform on SEIZMO records
 %IIRFILTER           - Apply an IIR filter to SEIZMO data records
 %INTEGRATE           - Integrate SEIZMO records
 %INTERPOLATE         - Interpolate SEIZMO records to a new samplerate
+%KEEPAM              - Returns the amplitude component of spectral records
+%KEEPIM              - Returns the imaginary component of spectral records
+%KEEPPH              - Returns phase component of spectral records
 %KEEPRECORDS         - Keeps indicated records in SEIZMO data structure
+%KEEPRL              - Returns the real component of spectral records
 %LISTHEADER          - List SEIZMO data headers
 %MAT2RECORDS         - Distributes a record matrix back into a SEIZMO struct
 %MERGE               - Merge SEIZMO records

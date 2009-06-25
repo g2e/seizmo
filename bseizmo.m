@@ -13,7 +13,7 @@ function [data]=bseizmo(varargin)
 %     columns.
 %
 %    Notes:
-%     - outputs records as SEIZMO binary version 201
+%     - outputs records as SAC binary version 6
 %     - the byte-order is set to match the current architecture
 %     - the filetype is set as 'General X vs Y file'
 %     - automatically figures out if data is evenly sampled
@@ -21,7 +21,7 @@ function [data]=bseizmo(varargin)
 %    Header changes: 
 %     CREATES HEADER INFO: 
 %      DELTA, B, E, NPTS, DEPMEN, DEPMIN, DEPMAX, IFTYPE, LEVEN, LOVROK,
-%      NVHDR, KNETWK, and for unevenly spaced data ODELTA
+%      NVHDR, KNETWK, KSTNM, KHOLE, KCMPNM
 %
 %    Examples:
 %     To create a square root function in Matlab and then convert the array
@@ -32,7 +32,7 @@ function [data]=bseizmo(varargin)
 %      data=bseizmo(times,amps);
 %      writeseizmo(data);
 %
-%    See also:  wseizmo, rseizmo
+%    See also:  writeseizmo, readseizmo
 
 %     Version History:
 %        Oct. 29, 2007 - initial version
@@ -64,6 +64,7 @@ function [data]=bseizmo(varargin)
 %        May  15, 2009 - minor doc fixes
 %        June 12, 2009 - little better output name format, fill in kstnm,
 %                        khole, and kcmpnm, add testing table
+%        June 25, 2009 - best use SAC v6
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -81,7 +82,7 @@ function [data]=bseizmo(varargin)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2009 at 17:30 GMT
+%     Last Updated June 25, 2009 at 15:35 GMT
 
 % todo:
 
@@ -95,8 +96,8 @@ if (mod(nargin,2))
 end
 
 % defaults
-option.FILETYPE='SEIZMO Binary';
-option.VERSION=201;
+option.FILETYPE='SAC Binary';
+option.VERSION=6;
 option.BYTEORDER=nativebyteorder;
 
 % get options from SEIZMO global
@@ -218,7 +219,7 @@ for i=1:2:nargin
     
     % edit name
     kstnm{j}=['R' sprintf(format,j)];
-    data(j).name=['SEIZMO.' sprintf(format,j) '.sz'];
+    data(j).name=['SEIZMO.' sprintf(format,j) '.SAC'];
     
     % handle 0pt
     if(npts(j)==0); continue; end
