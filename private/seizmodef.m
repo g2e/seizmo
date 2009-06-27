@@ -24,8 +24,6 @@ function [def]=seizmodef(filetype,version,option)
 %       the header storage).  Breaking the header into subfields would
 %       probably require more memory anyways due to overhead.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Get detailed information on SAC version 6 files:
 %      sac_ver_6=seizmodef('SAC Binary',6)
@@ -54,9 +52,27 @@ function [def]=seizmodef(filetype,version,option)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        May   8, 2009 - add more idep units
 %        May  15, 2009 - fixed problems from last update
+%        June 27, 2009 - switch v101 from SEIZMO to SAC even though it is
+%                        not supported by SAC -- this makes things a bit
+%                        easier for multiple component support
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  15, 2009 at 18:35 GMT
+%     Last Updated June 27, 2009 at 20:50 GMT
 
 % todo:
 
@@ -310,10 +326,9 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
 end
  
 % seizmo binary modifications
-if(strcmpi(filetype,'SEIZMO Binary'))
+if(strcmpi(filetype,'SAC Binary') || strcmpi(filetype,'SEIZMO Binary'))
     % seizmo version 101 mod (multi-component support)
     if(any(version==[101 201]))
-        def.filetype='SEIZMO Binary';
         def.version=101;
         
         % turn on multi-component support indicator
@@ -324,8 +339,9 @@ if(strcmpi(filetype,'SEIZMO Binary'))
         def.int.pos=rmfield(def.int.pos,'unused15');
         def.int.pos.ncmp=85;
     end
-    
-    
+end
+
+if(strcmpi(filetype,'SEIZMO Binary'))
     % seizmo version 200 mod (double reals, double data)
     if(any(version==[200 201]))
         def.filetype='SEIZMO Binary';

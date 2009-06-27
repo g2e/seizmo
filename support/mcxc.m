@@ -42,7 +42,7 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %     peak picker is allowed to search.  By default LAGS is set to the
 %     maximum possible range.  LAGS can be a one (symmetric window) or two
 %     (asymmetric window) element vector indicating the range of lags (in 
-%     samples!) to search.  LAGS will be ignored unless NPEAKS is set >0.
+%     samples!) to search.
 %
 %     [CG,LG,PG]=MCXC(...,'adjacent',ADJACENT,...) controls the number of
 %     adjacent points to be returned in addition to each pick picked.  By

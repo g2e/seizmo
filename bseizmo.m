@@ -21,7 +21,7 @@ function [data]=bseizmo(varargin)
 %    Header changes: 
 %     CREATES HEADER INFO: 
 %      DELTA, B, E, NPTS, DEPMEN, DEPMIN, DEPMAX, IFTYPE, LEVEN, LOVROK,
-%      NVHDR, KNETWK, KSTNM, KHOLE, KCMPNM
+%      NVHDR, KNETWK, KSTNM, KHOLE, KCMPNM, LCALDA
 %
 %    Examples:
 %     To create a square root function in Matlab and then convert the array
@@ -65,6 +65,8 @@ function [data]=bseizmo(varargin)
 %        June 12, 2009 - little better output name format, fill in kstnm,
 %                        khole, and kcmpnm, add testing table
 %        June 25, 2009 - best use SAC v6
+%        June 26, 2009 - no warning for ncmp field update
+%        June 27, 2009 - switch to multiple component version if necessary
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -82,7 +84,7 @@ function [data]=bseizmo(varargin)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2009 at 15:35 GMT
+%     Last Updated June 26, 2009 at 21:05 GMT
 
 % todo:
 
@@ -168,6 +170,7 @@ data(1:nrecs,1)=struct('path','.','name',[],...
     'byteorder',option.BYTEORDER,'hasdata',true,'head',undef,'dep',[]);
 
 % loop for each pair
+nvhdr=option.VERSION(ones(nrecs,1),1);
 leven=true(nrecs,1); delta=ones(nrecs,1); kstnm=cell(nrecs,1);
 [b,e,npts,ncmp,depmen,depmin,depmax]=swap(nan(nrecs,1));
 for i=1:2:nargin
@@ -241,13 +244,26 @@ for i=1:2:nargin
     end
 end
 
+% change records with ncmp>1 to alternative version
+if(~h.mulcmp.valid && any(ncmp>1))
+    mcmp=ncmp>1;
+    warning('seizmo:bseizmo:versNotMulCmp',...
+        ['Records:\n' sprintf('%d ',find(mcmp))...
+        '\nVersion cannot handle multiple components!\n'...
+        'Changing to a multi-component version!']);
+    [data(mcmp).version]=deal(h.mulcmp.altver);
+    nvhdr(mcmp)=h.mulcmp.altver;
+end
+
 % write header changes
+warning('off','seizmo:changeheader:fieldInvalid')
 data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
     'depmen',depmen,'depmin',depmin,'depmax',depmax,'ncmp',ncmp,...
     'iftype','General X vs Y file','lovrok','true','leven',leven,...
-    'idep','iunkn','iztype','iunkn','nvhdr',option.VERSION,...
-    'knetwk','SZ','kcmpnm','Q','khole','XX','kstnm',kstnm);
-
+    'idep','iunkn','iztype','iunkn','nvhdr',nvhdr,...
+    'knetwk','SZ','kcmpnm','Q','khole','XX','kstnm',kstnm,...
+    'lcalda',true);
+warning('on','seizmo:changeheader:fieldInvalid')
 
 % toggle checking back
 set_seizmocheck_state(oldseizmocheckstate);

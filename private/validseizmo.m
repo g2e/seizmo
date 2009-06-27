@@ -11,8 +11,6 @@ function [valid]=validseizmo(filetype)
 %     - currently only supports filetypes 'SAC Binary' and 'SEIZMO Binary'
 %     - SEIZMO versions 101,200,201 are modifications of SAC version 6
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     How many different SEIZMO binary file versions are supported:
 %      length(validseizmo('SEIZMO Binary'))
@@ -30,9 +28,27 @@ function [valid]=validseizmo(filetype)
 %        Nov. 13, 2008 - renamed from VVSEIS to VALIDSEIZ
 %        Nov. 15, 2008 - now VALIDSEIZMO and separated SAC from SEIZMO
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        June 27, 2009 - switch v101 from SEIZMO to SAC even though it is
+%                        not supported by SAC -- this makes things a bit
+%                        easier for multiple component support
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:20 GMT
+%     Last Updated June 27, 2009 at 20:50 GMT
 
 % todo:
 
@@ -42,9 +58,9 @@ if(~isempty(msg)); error(msg); end
 
 % get versions
 if(strcmpi(filetype,'SAC Binary'))
-    valid=6;
+    valid=[6 101];
 elseif(strcmpi(filetype,'SEIZMO Binary'))
-    valid=[101 200 201];
+    valid=[200 201];
 end
 
 end
