@@ -12,7 +12,7 @@ function tt_curve=taupCurve(model,depth,phase)
 % Output argumet:
 %   tt is a structure array with fields:
 %   tt(index).phaseName
-%            .sourceDepth
+%            .srcDepth
 %            .distance (in degree)
 %            .time
 %   If no output argument specified, travel timve curves will be plotted.
@@ -35,6 +35,10 @@ function tt_curve=taupCurve(model,depth,phase)
 %   qinli@u.washington.edu
 %   Nov, 2002
 %
+% Modified:
+%  June 29, 2009 (gge) added defaults for depth,phase; minor code cleaning
+%                      changed sourceDepth to srcDepth
+
 
 import edu.sc.seis.TauP.*;
 import java.io.*;
@@ -42,12 +46,14 @@ import java.lang.*;
 import java.util.*;
 import java.util.zip.*;
 
-if nargin~=3
-    error('3 input arguments required');
-end;
-
-if isempty(model)
+if nargin<1 || isempty(model)
     model='iasp91';
+end;
+if nargin<2 || isempty(depth)
+    depth=0;
+end;
+if nargin<3 || isempty(phase)
+    phase='ttall';
 end;
 
 inArgs{1}='-mod';
@@ -64,10 +70,11 @@ catch
     return;
 end;
 
-tt_curve = [];
+tt(1:matCurve.length)=struct('time',[],'distance',[],'srcDepth',[],...
+    'phaseName',[],'rayParam',[]);
 for ii=1:matCurve.length
     tt(ii).phaseName=char(matCurve(ii).phaseName);
-    tt(ii).sourceDepth=matCurve(ii).sourceDepth;
+    tt(ii).srcDepth=matCurve(ii).sourceDepth;
     tt(ii).time=matCurve(ii).time;
     tt(ii).distance=matCurve(ii).dist;
     tt(ii).rayParam=matCurve(ii).rayParam;
@@ -76,28 +83,29 @@ end;
 c={'b','r','g','m','c','y', ...
    'b--','r--','g--','m--','c--','y--', ... 
    'b-.','r-.','g-.','m-.','c-.','y-.', ...
+   'b:','r:','g:','m:','c:','y:', ...
+   'b','r','g','m','c','y', ...
+   'b--','r--','g--','m--','c--','y--', ... 
+   'b-.','r-.','g-.','m-.','c-.','y-.', ...
+   'b:','r:','g:','m:','c:','y:', ...
+   'b','r','g','m','c','y', ...
+   'b--','r--','g--','m--','c--','y--', ... 
+   'b-.','r-.','g-.','m-.','c-.','y-.', ...
    'b:','r:','g:','m:','c:','y:'};
-p={};
 if nargout==0
     clf;hold on;box on
-    n=0;
-    for ii=1:length(tt)
-        if length(tt(ii).distance)>1
+    n=0; p=cell(1,1);
+    for ii=1:numel(tt)
+        if numel(tt(ii).distance)>1
             n=n+1;
-            k=find(diff(tt(ii).rayParam)==0);
-            temp_dist=tt(ii).distance;
-            temp_time=tt(ii).time;
-            if ~isempty(k) % shadow zone
-                temp_dist(k)=nan;
-                temp_time(k)=nan;
-            end;
-            plot(temp_dist,temp_time,c{ii});
+            plot(tt(ii).distance,tt(ii).time,c{ii});
             p{n}=tt(ii).phaseName;
         end;
     end;
-    legend(p,2);
+    legend(p,2,'fontsize',6);
     xlabel('Distance (deg)');
     ylabel('Travel Time (s)');
+    title(upper(model));
     return;
 end;
 

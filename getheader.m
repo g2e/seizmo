@@ -34,8 +34,6 @@ function [varargout]=getheader(data,varargin)
 %     - Logical fields return the value actually stored, not a logical.  To
 %       get a more useful value use GETLGC.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Put all t series values in one array:
 %      times=getheader(data,'t')
@@ -66,9 +64,25 @@ function [varargout]=getheader(data,varargin)
 %        Oct. 17, 2008 - added VINFO support, supports new struct layout
 %        Nov. 16, 2008 - update for new name schema (now GETHEADER)
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
+%        June 29, 2009 - added testing table
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:15 GMT
+%     Last Updated June 29, 2009 at 06:10 GMT
 
 % todo:
 

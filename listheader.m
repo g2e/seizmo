@@ -11,8 +11,6 @@ function []=listheader(data,varargin)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %      listheader(data)          % lists all header variables
 %      listheader(data,'t')      % lists t group
@@ -35,9 +33,25 @@ function []=listheader(data,varargin)
 %        Oct. 27, 2008 - update for struct change, doc update, history fix
 %        Nov. 16, 2008 - update for new name schema (now listheader)
 %        Apr. 23, 2009 - move usage up
+%        June 29, 2009 - added testing table
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:25 GMT
+%     Last Updated June 29, 2009 at 06:10 GMT
 
 % todo:
 

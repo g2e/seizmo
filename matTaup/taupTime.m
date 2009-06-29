@@ -7,8 +7,8 @@ function tt=taupTime(model,depth,phase,varargin)
 % Input arguments:
 % The first three arguments are fixed:
 %   Model:      Global velocity model. Default is "iasp91".
-%   Depth:      Event depth in km
-%   Phase:      Phase list separated by comma
+%   Depth:      Event depth in km. Default is 0.
+%   Phase:      Phase list separated by commas. Default is 'ttall'.
 % The other arguments are variable:
 %   'deg' value:   Epicentral distance in degree
 %   'km'  value:   Epicentral distance in kilometer
@@ -41,6 +41,8 @@ function tt=taupTime(model,depth,phase,varargin)
 %   qinli@u.washington.edu
 %   Nov, 2002
 %
+% Modified:
+%  June 29, 2009 (gge) added defaults for depth,phase; minor code cleaning
 
 import edu.sc.seis.TauP.*;
 import java.io.*;
@@ -54,6 +56,12 @@ end;
 
 if isempty(model)
     model='iasp91';
+end;
+if isempty(depth)
+    depth=0;
+end;
+if isempty(phase)
+    phase='ttall';
 end;
 
 inArgs{1}='-mod';
@@ -71,7 +79,7 @@ ii=1;
 while (ii<=length(varargin))
     switch lower(varargin{ii})
     case {'deg','km'}
-        if ~(isa(varargin{ii+1},'double') & length(varargin{ii+1})==1)
+        if ~(isnumeric(varargin{ii+1}) && numel(varargin{ii+1})==1)
             error('  Incompatible value for option %s !',varargin{ii});
         end;
         inArgs{n_inArgs+1}=['-' varargin{ii}];
@@ -80,7 +88,7 @@ while (ii<=length(varargin))
         ii=ii+2;
         dist=1;
     case {'sta','station'}
-        if ~(isa(varargin{ii+1},'double') & length(varargin{ii+1})==2)
+        if ~(isnumeric(varargin{ii+1}) && numel(varargin{ii+1})==2)
             error('  Incompatible value for option %s !',varargin{ii});
         end;
         inArgs{n_inArgs+1}='-sta';
@@ -91,7 +99,7 @@ while (ii<=length(varargin))
         ii=ii+2;
         sta=1;
     case {'evt','event'}
-        if ~(isa(varargin{ii+1},'double') & length(varargin{ii+1})==2)
+        if ~(isnumeric(varargin{ii+1}) && numel(varargin{ii+1})==2)
             error('  Incompatible value for option %s !',varargin{ii});
         end;
         inArgs{n_inArgs+1}='-evt';
@@ -105,7 +113,7 @@ while (ii<=length(varargin))
         error('  Unknown option %s \n',varargin{ii});
     end; %switch
 end; %for
-if ~(dist | (sta & evt))
+if ~(dist || (sta && evt))
     error('  Event/source locations or distance not specified !');
 end;
 
@@ -129,7 +137,8 @@ if nargout==0
     return;
 end;
 
-tt = [];
+tt(1:arrivals.length)=struct('time',[],'distance',[],'srcDepth',[],...
+    'phaseName',[],'rayParam',[]);
 for ii=1:arrivals.length
     tt(ii).time=arrivals(ii).getTime;
     tt(ii).distance=arrivals(ii).getDistDeg;

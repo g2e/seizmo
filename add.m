@@ -21,8 +21,6 @@ function [data]=add(data,constant,cmp)
 %     - CMP is the dependent component(s) to work on (default is all)
 %     - an empty list of components will not modify any components
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
@@ -50,9 +48,25 @@ function [data]=add(data,constant,cmp)
 %        Nov. 22, 2008 - update for new name schemas
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        June 29, 2009 - add testing table
+%
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:05 GMT
+%     Last Updated June 29, 2009 at 01:30 GMT
 
 % todo:
 
