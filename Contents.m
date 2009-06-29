@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r78 Ararat 25-Jun-2009
+% Version 0.6.0-r80 Ararat 29-Jun-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -14,6 +14,7 @@
 %CHANGEPATH          - Change the filepath of SEIZMO records
 %CHECKHEADER         - Check and fix header values of SEIZMO records
 %COPYHEADER          - Copy one record's header to all records
+%CORRELATE           - Compute cross correlograms of SEIZMO data records
 %CUT                 - Cut a window out of SEIZMO records
 %DELETERECORDS       - Deletes indicated records from SEIZMO data structure
 %DFT                 - Performs a discrete fourier transform on SEIZMO data records
@@ -24,20 +25,25 @@
 %ENVELOPE            - Return envelopes of SEIZMO records
 %FIXDELTA            - Fix sample spacing for SEIZMO records
 %GETARRIVAL          - Returns stored phase arrival time from SEIZMO data header
+%GETCOMPONENTIDX     - Returns index array to separate dataset into components
 %GETENUMDESC         - Get enum string description from SEIZMO header enum field
 %GETENUMID           - Get enum string id from SEIZMO data header enum field
 %GETHEADER           - Get SEIZMO data header values
 %GETLGC              - Get logical string from SEIZMO logical header field
 %GETMEDIAN           - Returns median of each SEIZMO record
 %GETNCMP             - Return the number of dependent components for SEIZMO records
+%GETNETWORKIDX       - Returns index array for separating dataset into networks
 %GETNORM             - Return normalizers for SEIZMO records
 %GETPOLYNOMIAL       - Get polynomial fit to SEIZMO records
 %GETSPECTRALCMP      - Returns the indicated portion of spectral records
+%GETSTATIONIDX       - Returns index array for separating dataset into stations
+%GETSTREAMIDX        - Returns index array for separating dataset into streams
 %HILBRT              - Return Hilbert transform of SEIZMO records
 %IDFT                - Performs an inverse discrete fourier transform on SEIZMO records
 %IIRFILTER           - Apply an IIR filter to SEIZMO data records
 %INTEGRATE           - Integrate SEIZMO records
 %INTERPOLATE         - Interpolate SEIZMO records to a new samplerate
+%JOINRECORDS         - Join SEIZMO records into multiple-component record(s)
 %KEEPAM              - Returns the amplitude component of spectral records
 %KEEPIM              - Returns the imaginary component of spectral records
 %KEEPPH              - Returns phase component of spectral records
@@ -78,6 +84,7 @@
 %SLIDINGFUN          - Apply a sliding window function to SEIZMO records
 %SLIDINGRMS          - Returns sliding-window root-mean-square of SEIZMO records
 %SORTBYFIELD         - Sort SEIZMO records by a header or SEIZMO struct field
+%SPLITRECORDS        - Split up components into separate records
 %SQUISH              - Downsample SEIZMO records by an integer factor
 %STRETCH             - Upsample SEIZMO records by an integer factor
 %SUBTRACT            - Subtract a constant from SEIZMO records

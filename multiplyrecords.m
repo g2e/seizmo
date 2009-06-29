@@ -5,11 +5,13 @@ function [data]=multiplyrecords(varargin)
 %              data=multiplyrecords(data1,data2)
 %              data=multiplyrecords(data1,data2,...,dataN)
 %              data=multiplyrecords(...,'newhdr',true|false)
-%              data=multiplyrecords(...,'npts','error'|'warn'|'ignore')
+%              data=multiplyrecords(...,'npts',...
+%                  'error'|'warn'|'truncate'|'pad'|'ignore')
+%              data=multiplyrecords(...,'ncmp',...
+%                  'error'|'warn'|'truncate'|'pad'|'ignore')
 %              data=multiplyrecords(...,'delta','error'|'warn'|'ignore')
 %              data=multiplyrecords(...,'begin','error'|'warn'|'ignore')
 %              data=multiplyrecords(...,'ref','error'|'warn'|'ignore')
-%              data=multiplyrecords(...,'ncmp','error'|'warn'|'ignore')
 %              data=multiplyrecords(...,'leven','error'|'warn'|'ignore')
 %              data=multiplyrecords(...,'iftype','error'|'warn'|'ignore')
 %
@@ -43,16 +45,29 @@ function [data]=multiplyrecords(varargin)
 %     'newhdr' set to the default FALSE will set the resultant record's
 %     header to that of the first record's header.
 %     
-%     
+%     *********************************************************
 %     The following options may also be controlled by BINOPERR.
+%     *********************************************************
 %     
-%     MULTIPLYRECORDS(...,'npts','error|warn|ignore') sets the reaction to
-%     records with different numbers of points.  If the option is set to
-%     'warn' or 'ignore', the number of points in the resultant records
-%     will be equal to that of the shortest record.  Note that points are
-%     operated on according to their order in the record not by their
-%     timing, such that the first points are always operated on together
-%     and so on.  By default 'npts' is set to 'error'.
+%     MULTIPLYRECORDS(...,'npts','error|warn|truncate|pad|ignore') sets the
+%     reaction to records with different numbers of points.  If the option
+%     is set to 'warn' or 'ignore', the number of points in the records is
+%     not altered - which will likely cause an error during the operation.
+%     If the option is set to 'truncate', the number of points in the
+%     records being operated on will be equal to that with the least.
+%     Option 'pad' will make the records being operated on have number of
+%     points equal to that with the most (note that padding is done with
+%     zeros).  By default 'npts' is set to 'error'.
+%     
+%     MULTIPLYRECORDS(...,'ncmp','error|warn|truncate|pad|ignore') sets the
+%     reaction to records with different numbers of components.  If the
+%     option is set to 'warn' or 'ignore', the number of components in the
+%     records is not altered - which will likely lead to an error.  If the
+%     option is set to 'truncate', the number of components in the records
+%     being operated on will be equal to that with the least.  Option 'pad'
+%     will make the number of components for records in the operation equal
+%     to that of the record with the most (note that padding is done with
+%     zeros).  By default 'ncmp' is set to 'error'.
 %     
 %     MULTIPLYRECORDS(...,'delta','error|warn|ignore') sets the reaction to
 %     records with different sample rates.  If the option is set to 'warn'
@@ -73,14 +88,6 @@ function [data]=multiplyrecords(varargin)
 %     determined by the parent of their header fields (set by option
 %     'newhdr').  By default 'ref' is set to 'warn'.
 %     
-%     MULTIPLYRECORDS(...,'ncmp','error|warn|ignore') sets the reaction to
-%     records with different numbers of components.  If the option is set
-%     to 'warn' or 'ignore', the number of components in the resultant
-%     records will be equal to that of the record with the least.  Note
-%     that components are operated on according to their order in the
-%     record so that the first components always go together.  By default
-%     'ncmp' is set to 'error'.
-%     
 %     MULTIPLYRECORDS(...,'leven','error|warn|ignore') sets the reaction to
 %     unevenly sampled records.  If the option is set to 'warn' or
 %     'ignore', the records are just operated on point for point (basically
@@ -96,15 +103,9 @@ function [data]=multiplyrecords(varargin)
 %     to 'error'.
 %     
 %    Notes:
-%     - Ampl-Phase spectral records are first converted to Real-Imag to
-%       assure the operation is linear and equal to that on Real-Imag
-%       records.  If you want to workaround this, convert the Ampl-Phase
-%       records to General X vs Y.
-%     
-%    Tested on: Matlab r2007b
 %     
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
-%     NPTS, E, NCMP (see option 'npts' and 'ncmp')
+%     NPTS, NCMP (see option 'npts' and 'ncmp')
 %     See option 'newhdr' for inheritance of other header fields.
 %
 %    Examples:
@@ -122,9 +123,25 @@ function [data]=multiplyrecords(varargin)
 %                        than .x and .t
 %        Nov. 23, 2008 - now just calls RECORDFUN
 %        Apr. 23, 2009 - move usage up
+%        June 28, 2009 - cleaned up docs for recent changes to RECORDFUN
+%     
+%     Testing Table:
+%                                  Linux    Windows     Mac
+%        Matlab 7       r14        
+%               7.0.1   r14sp1
+%               7.0.4   r14sp2
+%               7.1     r14sp3
+%               7.2     r2006a
+%               7.3     r2006b
+%               7.4     r2007a
+%               7.5     r2007b
+%               7.6     r2008a
+%               7.7     r2008b
+%               7.8     r2009a
+%        Octave 3.2.0
 %     
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:30 GMT
+%     Last Updated June 28, 2009 at 22:45 GMT
 
 % todo:
 

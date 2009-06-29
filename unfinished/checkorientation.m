@@ -1,0 +1,2 @@
+function [varargout]=checkorientation(data)
+%

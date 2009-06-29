@@ -3,8 +3,8 @@ function []=binoperr(varargin)
 %
 %    Usage:    binoperr()
 %              binoperr('defaults')
-%              binoperr('option1','error'|'warn'|'ignore',...,
-%                       'optionN','error'|'warn'|'ignore')
+%              binoperr('option1',state,...,
+%                       'optionN',state)
 %
 %    Description: Allows for changing the behavior of how binary functions 
 %     (addrecords, subtractrecords, multiplyrecords, dividerecords) handle
@@ -17,12 +17,15 @@ function []=binoperr(varargin)
 %     BINOPERR('defaults') clears any previous settings and causes all
 %     SEIZMO binary functions to use their default settings.
 %     
-%     BINOPERR('npts','error'|'warn'|'ignore') sets how binary operations
-%     handle records with different numbers of points.  If the option is 
-%     set to 'warn' or 'ignore', the number of points in the resultant 
-%     records will be equal to that of the shortest record.  Note that 
-%     binary operations work point by point (ignore timing).  By default 
-%     'npts' is set to 'error'.
+%     BINOPERR('npts','error'|'warn'|'truncate'|'pad'|'ignore') sets how
+%     binary operations handle records with different numbers of points.
+%     If the option is set to 'warn' or 'ignore', the number of points in
+%     the records is not altered - which will likely cause an error during
+%     the operation.  If the option is set to 'truncate', the number of
+%     points in the records being operated on will be equal to that with
+%     the least.  Option 'pad' will make the records being operated on have
+%     number of points equal to that with the most (note that padding is
+%     done with zeros).  By default 'npts' is set to 'error'.
 %     
 %     BINOPERR('delta','error'|'warn'|'ignore') sets how binary operations
 %     handle records with different sample rates.  If the option is set to
@@ -46,13 +49,15 @@ function []=binoperr(varargin)
 %     'newhdr' in the binary function call).  By default 'ref' is set to 
 %     'warn'.
 %     
-%     BINOPERR('ncmp','error'|'warn'|'ignore') sets how binary operations 
-%     handle records with different numbers of components.  If the option
-%     is set to 'warn' or 'ignore', the number of components in the
-%     resultant records will be equal to that of the record with the least.  
-%     Note that components are operated on according to their order in the 
-%     record so that the first components always go together.  By default 
-%     'ncmp' is set to 'error'.
+%     BINOPERR('ncmp','error'|'warn'|'truncate'|'pad'|'ignore') sets how
+%     binary operations handle records with different number of components.
+%     If the option is set to 'warn' or 'ignore', the number of components
+%     in the records is not altered - which will likely lead to an error.
+%     If the option is set to 'truncate', the number of components in the 
+%     records being operated on will be equal to that with the least.
+%     Option 'pad' will make the number of components for records in the
+%     operation equal to that of the record with the most (note that
+%     padding is done with zeros).  By default 'ncmp' is set to 'error'.
 %     
 %     BINOPERR('leven','error'|'warn'|'ignore') sets how binary operations
 %     handle unevenly sampled records.  If the option is set to 'warn' or 
@@ -89,6 +94,8 @@ function []=binoperr(varargin)
 %        Nov. 22, 2008 - update for new name schema
 %        Apr. 23, 2009 - move usage up
 %        June  4, 2009 - minor doc fixes
+%        June 28, 2009 - added 'truncate' and 'pad' states to 'npts' and
+%                        'ncmp' options, some code reworking to accomadate
 %
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -106,12 +113,9 @@ function []=binoperr(varargin)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  4, 2009 at 05:45 GMT
+%     Last Updated June 28, 2009 at 20:45 GMT
 
 % todo:
-% - interoperation with correlate, convolve, merge, rotate?
-% - newhdr option?
-% - all option
 
 % default options
 option.NPTS='ERROR';
@@ -123,19 +127,26 @@ option.LEVEN='ERROR';
 option.IFTYPE='ERROR';
 
 % available states
-states={'ERROR' 'WARN' 'IGNORE'};
+valid.NPTS={'ERROR' 'WARN' 'TRUNCATE' 'PAD' 'IGNORE'};
+valid.NCMP={'ERROR' 'WARN' 'TRUNCATE' 'PAD' 'IGNORE'};
+valid.REF={'ERROR' 'WARN' 'IGNORE'};
+valid.DELTA={'ERROR' 'WARN' 'IGNORE'};
+valid.BEGIN={'ERROR' 'WARN' 'IGNORE'};
+valid.LEVEN={'ERROR' 'WARN' 'IGNORE'};
+valid.IFTYPE={'ERROR' 'WARN' 'IGNORE'};
 
 % pull up and check over SEIZMO global
 global SEIZMO; fields=fieldnames(option).';
 if(isfield(SEIZMO,'BINOPERR'))
     for i=fields
-        if(isfield(SEIZMO.BINOPERR,i))
-            if(~any(strcmpi(SEIZMO.BINOPERR.(i{:}),states)))
+        j=i{:};
+        if(isfield(SEIZMO.BINOPERR,j))
+            if(~any(strcmpi(SEIZMO.BINOPERR.(j),valid.(j))))
                 warning('seizmo:binoperr:badState',...
-                    '%s in unknown state => changing to default!',i{:});
-                SEIZMO.BINOPERR.(i{:})=option.(i{:});
+                    '%s in unknown state => changing to default!',j);
+                SEIZMO.BINOPERR.(i{:})=option.(j);
             else
-                option.(i{:})=upper(SEIZMO.BINOPERR.(i{:}));
+                option.(j)=upper(SEIZMO.BINOPERR.(j));
             end
         end
     end
@@ -163,16 +174,16 @@ else
     end
     % must be valid
     varargin=upper(varargin);
-    for i=varargin(1:2:end)
-        if(~isfield(option,i))
+    for i=1:2:numel(varargin)
+        if(~isfield(option,varargin{i}))
             error('seizmo:binoperr:unknownOption',...
-                'Unknown option: %s',i{:});
+                'Unknown option: %s',varargin{i});
         end
-    end
-    for i=varargin(2:2:end)
-        if(~any(strcmpi(i,states)))
+        
+        if(~any(strcmpi(valid.(varargin{i}),varargin{i+1})))
             error('seizmo:binoperr:unknownOptionState',...
-                'Unknown option state: %s',i{:});
+                'Option: %s\nUnknown state: %s',...
+                varargin{i},varargin{i+1});
         end
     end
     % assign settings

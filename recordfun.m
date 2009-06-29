@@ -5,23 +5,27 @@ function [data]=recordfun(fun,varargin)
 %              data=recordfun(fun,data1,data2)
 %              data=recordfun(fun,data1,data2,...,dataN)
 %              data=recordfun(...,'newhdr',true|false)
-%              data=recordfun(...,'npts','error'|'warn'|'ignore')
+%              data=recordfun(...,'npts',...
+%                  'error'|'warn'|'truncate'|'pad'|'ignore')
+%              data=recordfun(...,'ncmp',...
+%                  'error'|'warn'|'truncate'|'pad'|'ignore')
 %              data=recordfun(...,'delta','error'|'warn'|'ignore')
 %              data=recordfun(...,'begin','error'|'warn'|'ignore')
 %              data=recordfun(...,'ref','error'|'warn'|'ignore')
-%              data=recordfun(...,'ncmp','error'|'warn'|'ignore')
 %              data=recordfun(...,'leven','error'|'warn'|'ignore')
 %              data=recordfun(...,'iftype','error'|'warn'|'ignore')
 %
 %    Description: RECORDFUN(FUN,DATA) operates on all records in DATA using
 %     FUN and will return a single record with its header fields set to
 %     those of the first record in DATA.  FUN must be either '+', '-', '/',
-%     or '*' and will operate on the records point by point.  The header
-%     can be set to that of the last record by setting option 'newhdr' to
-%     TRUE.  Records should be of the same filetype, be evenly sampled,
-%     have the same sample rate, number of points, and timing but these can
-%     all be ignored (for better or for worse) by setting options available
-%     in BINOPERR to 'ignore'.
+%     '*', or a function handle.  The '+', '-', '/','*' options all operate
+%     on the records point by point.  Function handles must accept 2
+%     numeric arrays and return 1 numeric array.  The returned header can
+%     be that of the last record by setting option 'newhdr' to TRUE.
+%     Records should be of the same filetype, be evenly sampled, have the
+%     same sample rate, number of points, and timing but these can all be
+%     ignored (for better or for worse) by setting options available in
+%     BINOPERR to 'ignore'.
 %     
 %     RECORDFUN(FUN,DATA1,DATA2) operates between the records in DATA1 and
 %     DATA2, returning a dataset of the same size.  If either DATA1 or
@@ -48,16 +52,29 @@ function [data]=recordfun(fun,varargin)
 %     the default FALSE will set the resultant record's header to that of
 %     the first record's header.
 %     
-%     
+%     *********************************************************
 %     The following options may also be controlled by BINOPERR.
+%     *********************************************************
 %     
-%     RECORDFUN(...,'npts','error|warn|ignore') sets the reaction to
-%     records with different numbers of points.  If the option is set to
-%     'warn' or 'ignore', the number of points in the resultant records
-%     will be equal to that of the shortest record.  Note that points are
-%     operated on according to their order in the record not by their
-%     timing, such that the first points are always operated on together
-%     and so on.  By default 'npts' is set to 'error'.
+%     RECORDFUN(...,'npts','error|warn|truncate|pad|ignore') sets the
+%     reaction to records with different numbers of points.  If the option
+%     is set to 'warn' or 'ignore', the number of points in the records is
+%     not altered - which will likely cause an error during the operation.
+%     If the option is set to 'truncate', the number of points in the
+%     records being operated on will be equal to that with the least.
+%     Option 'pad' will make the records being operated on have number of
+%     points equal to that with the most (note that padding is done with
+%     zeros).  By default 'npts' is set to 'error'.
+%     
+%     RECORDFUN(...,'ncmp','error|warn|truncate|pad|ignore') sets the
+%     reaction to records with different numbers of components.  If the
+%     option is set to 'warn' or 'ignore', the number of components in the
+%     records is not altered - which will likely lead to an error.  If the
+%     option is set to 'truncate', the number of components in the records
+%     being operated on will be equal to that with the least.  Option 'pad'
+%     will make the number of components for records in the operation equal
+%     to that of the record with the most (note that padding is done with
+%     zeros).  By default 'ncmp' is set to 'error'.
 %     
 %     RECORDFUN(...,'delta','error|warn|ignore') sets the reaction to
 %     records with different sample rates.  If the option is set to 'warn'
@@ -78,14 +95,6 @@ function [data]=recordfun(fun,varargin)
 %     determined by the parent of their header fields (set by option
 %     'newhdr').  By default 'ref' is set to 'warn'.
 %     
-%     RECORDFUN(...,'ncmp','error|warn|ignore') sets the reaction to
-%     records with different numbers of components.  If the option is set
-%     to 'warn' or 'ignore', the number of components in the resultant
-%     records will be equal to that of the record with the least.  Note
-%     that components are operated on according to their order in the
-%     record so that the first components always go together.  By default
-%     'ncmp' is set to 'error'.
-%     
 %     RECORDFUN(...,'leven','error|warn|ignore') sets the reaction to
 %     unevenly sampled records.  If the option is set to 'warn' or
 %     'ignore', the records are just operated on point for point (basically
@@ -103,7 +112,7 @@ function [data]=recordfun(fun,varargin)
 %    Notes:
 %     
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
-%     NPTS, E, NCMP (see option 'npts' and 'ncmp')
+%     NPTS, NCMP (see option 'npts' and 'ncmp')
 %     See option 'newhdr' for inheritance of other header fields.
 %
 %    Examples:
@@ -114,7 +123,7 @@ function [data]=recordfun(fun,varargin)
 %      data=recordfun('+',data1,data2)
 %     
 %    See also: addrecords, subtractrecords, multiplyrecords, dividerecords,
-%              binoperr, seizmofun
+%              binoperr, seizmofun, joinrecords
 
 %     Version History:
 %        June 10, 2008 - initial version
@@ -130,6 +139,8 @@ function [data]=recordfun(fun,varargin)
 %        June 12, 2009 - ISSEIZMO now overrides setting SEIZMOCHECK off
 %                        by default, so remove setting SEIZMOCHECK state
 %        June 24, 2009 - now adds iamph files directly
+%        June 28, 2009 - now accepts function handles, additional methods
+%                        for different npts/ncmp, lots of code refactoring
 %     
 %     Testing Table:
 %                                  Linux    Windows     Mac
@@ -147,7 +158,7 @@ function [data]=recordfun(fun,varargin)
 %        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 24, 2009 at 23:20 GMT
+%     Last Updated June 28, 2009 at 21:45 GMT
 
 % todo:
 
@@ -162,7 +173,13 @@ option.LEVEN='ERROR';
 option.IFTYPE='ERROR';
 
 % available states
-states={'ERROR' 'WARN' 'IGNORE'};
+valid.NPTS={'ERROR' 'WARN' 'TRUNCATE' 'PAD' 'IGNORE'};
+valid.NCMP={'ERROR' 'WARN' 'TRUNCATE' 'PAD' 'IGNORE'};
+valid.REF={'ERROR' 'WARN' 'IGNORE'};
+valid.DELTA={'ERROR' 'WARN' 'IGNORE'};
+valid.BEGIN={'ERROR' 'WARN' 'IGNORE'};
+valid.LEVEN={'ERROR' 'WARN' 'IGNORE'};
+valid.IFTYPE={'ERROR' 'WARN' 'IGNORE'};
 
 % get options set by BINOPERR (SEIZMO global)
 global SEIZMO; fields=fieldnames(option).';
@@ -178,7 +195,7 @@ if(isfield(SEIZMO,'BINOPERR'))
                     SEIZMO.BINOPERR.(i{:})=option.(i{:});
                 end
             else
-                if(~any(strcmpi(SEIZMO.BINOPERR.(i{:}),states)))
+                if(~any(strcmpi(SEIZMO.BINOPERR.(i{:}),valid.(i{:}))))
                     warning('seizmo:recordfun:badState',...
                         '%s in unknown state => changed to default!',i{:});
                     SEIZMO.BINOPERR.(i{:})=option.(i{:});
@@ -191,14 +208,34 @@ if(isfield(SEIZMO,'BINOPERR'))
 end
 
 % check function
-if(~isscalar(fun) || ~ischar(fun) || ~any(strcmpi(fun,{'+' '-' '/' '*'}))) 
+if(~isscalar(fun) || ((~ischar(fun) ...
+        && ~any(strcmpi(fun,{'+' '-' '/' '*'}))) ...
+        && ~isa(fun,'function_handle')))
     error('seizmo:recordfun:badFUN',...
-        'FUN must be ''+'' ''-'' ''/'' or ''*''!');
+        'FUN must be ''+'' ''-'' ''/'' ''*'' or a function handle!');
+end
+if(ischar(fun))
+    % cannot use str2func to build anonymous functions
+    % without throwing a warning...so manually doing it
+    switch fun
+        case '+'
+            fun=@(x,y)(x+y);
+        case '-'
+            fun=@(x,y)(x-y);
+        case '*'
+            fun=@(x,y)(x.*y);
+        case '/'
+            fun=@(x,y)(x./y);
+    end
 end
 
 % find all datasets in inline arguments
 isdata=false(1,nargin-1);
 for i=1:(nargin-1); isdata(i)=isseizmo(varargin{i},'dep'); end
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
 
 % push datasets into a separate variable
 data=varargin(isdata);
@@ -222,7 +259,7 @@ for i=1:2:nargopt
                     '%s state bad => leaving alone!',varargin{i});
             end
         else
-            if(~any(strcmpi(varargin{i+1},states)))
+            if(~any(strcmpi(varargin{i+1},valid.(varargin{i}))))
                 warning('seizmo:recordfun:badState',...
                     '%s state bad => leaving alone!',varargin{i});
             else
@@ -255,21 +292,23 @@ for i=find(nrecs==1)
 end
 
 % check and get header fields
-b(1:ndatasets)={nan(maxrecs,1)}; npts=b; delta=b; leven=b; iftype=b; ncmp=b;
-nzyear=b; nzjday=b; nzhour=b; nzmin=b; nzsec=b; nzmsec=b; nnpts=b;
+b(1:ndatasets)={nan(maxrecs,1)};
+npts=b; delta=b; leven=b; iftype=b; ncmp=b;
+nzyear=b; nzjday=b; nzhour=b; nzmin=b; nzsec=b; nzmsec=b;
 for i=1:ndatasets
     data{i}=checkheader(data{i});
+    ncmp{i}=getncmp(data{i});
     leven{i}=getlgc(data{i},'leven');
     iftype{i}=getenumdesc(data{i},'iftype');
     [npts{i},delta{i},b{i},nzyear{i},nzjday{i},...
         nzhour{i},nzmin{i},nzsec{i},nzmsec{i}]=...
         getheader(data{i},'npts','delta','b',...
         'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
-    ncmp{i}=zeros(maxrecs,1);
-    for j=1:maxrecs
-        [nnpts{i}(j),ncmp{i}(j)]=size(data{i}(j).dep);
-    end
 end
+
+% turn off header checking
+oldcheckheaderstate=get_checkheader_state;
+set_checkheader_state(false);
 
 % 2+ datasets
 if(ndatasets>1)
@@ -353,69 +392,71 @@ if(ndatasets>1)
         for j=1:maxrecs; data{i}(j).dep=double(data{i}(j).dep); end
     end
     
-    % newhdr flag (swap first and last dataset)
-    if(option.NEWHDR)
-        if(strcmpi(fun,{'+' '*'}))
-            data([end 1])=data([1 end]);
-        elseif(strcmpi(fun,'/'))
-            data{1}=seizmofun(data{1},@(x)1./x);
-            data{end}=seizmofun(data{end},@(x)1./x);
-            data([end 1])=data([1 end]);
-        else
-            data{1}=multiply(data{1},-1);
-            data{end}=multiply(data{end},-1);
-            data([end 1])=data([1 end]); 
+    % alter size of npts/ncmp
+    allnpts=cell2mat(npts);
+    allncmp=cell2mat(ncmp);
+    if(strcmpi(option.NPTS,'TRUNCATE'))
+        minpts=min(allnpts,[],2);
+        for i=1:ndatasets
+            for j=1:maxrecs
+                data{i}(j).dep=data{i}(j).dep(1:minpts(j),:);
+            end
+        end
+    elseif(strcmpi(option.NPTS,'PAD'))
+        maxpts=max(allnpts,[],2);
+        for i=1:ndatasets
+            for j=1:maxrecs
+                data{i}(j).dep=[data{i}(j).dep;
+                    zeros(maxpts(j)-npts{i}(j),ncmp{i}(j))];
+            end
+        end
+    end
+    if(strcmpi(option.NCMP,'TRUNCATE'))
+        mincmp=min(allncmp,[],2);
+        for i=1:ndatasets
+            for j=1:maxrecs
+                data{i}(j).dep=data{i}(j).dep(:,1:mincmp(j));
+            end
+        end
+    elseif(strcmpi(option.NCMP,'PAD'))
+        maxcmp=max(allncmp,[],2);
+        for i=1:ndatasets
+            for j=1:maxrecs
+                data{i}(j).dep=[data{i}(j).dep ...
+                    zeros(npts{i}(j),maxcmp(j)-ncmp{i}(j))];
+            end
         end
     end
     
-    % get min npts and ncmp in each set
-    allnpts=cell2mat(npts);
-    minpts=min(allnpts,[],2);
-    allncmp=cell2mat(ncmp);
-    mincmp=min(allncmp,[],2);
-    
     % operate on records
+    npts=nan(maxrecs,1); ncmp=npts;
+    depmen=npts; depmin=npts; depmax=npts;
     for i=1:maxrecs
-        if(strcmpi(fun,'+'))
-            for j=2:ndatasets
-                data{1}(i).dep=...
-                    data{1}(i).dep(1:minpts(i),1:mincmp(i))...
-                    +data{j}(i).dep(1:minpts(i),1:mincmp(i));
-            end
-        elseif(strcmpi(fun,'-'))
-            for j=2:ndatasets
-                data{1}(i).dep=...
-                    data{1}(i).dep(1:minpts(i),1:mincmp(i))...
-                    -data{j}(i).dep(1:minpts(i),1:mincmp(i));
-            end
-        elseif(strcmpi(fun,'/'))
-            for j=2:ndatasets
-                data{1}(i).dep=...
-                    data{1}(i).dep(1:minpts(i),1:mincmp(i))...
-                    ./data{j}(i).dep(1:minpts(i),1:mincmp(i));
-            end
-        else
-            for j=2:ndatasets
-                data{1}(i).dep=...
-                    data{1}(i).dep(1:minpts(i),1:mincmp(i))...
-                    .*data{j}(i).dep(1:minpts(i),1:mincmp(i));
-            end
+        % apply function
+        for j=2:ndatasets
+            data{1}(i).dep=fun(data{1}(i).dep,data{j}(i).dep);
         end
         
-        % trim ind field for unevenly spaced files
-        if(isfield(data{1}(i),'ind') && ~isempty(data{1}(i).ind))
-            data{1}(i).ind=data{1}(i).ind(1:minpts);
+        % get header info
+        [npts(i),ncmp(i)]=size(data{1}(i).dep);
+        if(npts(i)>0 && ncmp(i)>0)
+            depmen(i)=mean(data{1}(i).dep(:));
+            depmin(i)=min(data{1}(i).dep(:));
+            depmax(i)=max(data{1}(i).dep(:));
         end
         
         % change class back
         data{1}(i).dep=oclass{i}(data{1}(i).dep);
+        
+        % copy header if newhdr set
+        if(option.NEWHDR)
+            % this totally requires header layout to be equivalent
+            data{1}(i).head=data{end}(i).head;
+        end
     end
     
-    % update header
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(true);
-    data=checkheader(data{1});
-    set_checkheader_state(oldcheckheaderstate);
+    % reduce to first dataset
+    data=data{1};
 % 1 dataset
 else
     % uncell
@@ -428,43 +469,55 @@ else
     if(~isscalar(unique(iftype{:})))
         report.identifier='seizmo:recordfun:mixedIFTYPE';
         report.message='Filetypes differ for some records!';
-        if(strcmpi(option.IFTYPE,'error')); error(report);
-        elseif(strcmpi(option.IFTYPE,'warn')); warning(report.identifier,report.message);
+        if(strcmpi(option.IFTYPE,'error'))
+            error(report);
+        elseif(strcmpi(option.IFTYPE,'warn'))
+            warning(report.identifier,report.message);
         end
     end
     if(any(~strcmpi(leven{:},'true')))
         report.identifier='seizmo:recordfun:illegalOperation';
         report.message='illegal operation on unevenly spaced record!';
-        if(strcmpi(option.LEVEN,'error')); error(report);
-        elseif(strcmpi(option.LEVEN,'warn')); warning(report.identifier,report.message);
+        if(strcmpi(option.LEVEN,'error'))
+            error(report);
+        elseif(strcmpi(option.LEVEN,'warn'))
+            warning(report.identifier,report.message);
         end
     end
     if(~isscalar(unique(ncmp{:})))
         report.identifier='seizmo:recordfun:mixedNCMP';
         report.message='Number of components differ for some records!';
-        if(strcmpi(option.NCMP,'error')); error(report);
-        elseif(strcmpi(option.NCMP,'warn')); warning(report.identifier,report.message);
+        if(strcmpi(option.NCMP,'error'))
+            error(report);
+        elseif(strcmpi(option.NCMP,'warn'))
+            warning(report.identifier,report.message);
         end
     end
     if(~isscalar(unique(npts{:})))
         report.identifier='seizmo:recordfun:mixedNPTS';
         report.message='Number of points differ for some records!';
-        if(strcmpi(option.NPTS,'error')); error(report);
-        elseif(strcmpi(option.NPTS,'warn')); warning(report.identifier,report.message);
+        if(strcmpi(option.NPTS,'error'))
+            error(report);
+        elseif(strcmpi(option.NPTS,'warn'))
+            warning(report.identifier,report.message);
         end
     end
     if(~isscalar(unique(delta{:})))
         report.identifier='seizmo:recordfun:mixedDELTA';
         report.message='Sample rates differ for some records!';
-        if(strcmpi(option.DELTA,'error')); error(report);
-        elseif(strcmpi(option.DELTA,'warn')); warning(report.identifier,report.message);
+        if(strcmpi(option.DELTA,'error'))
+            error(report);
+        elseif(strcmpi(option.DELTA,'warn'))
+            warning(report.identifier,report.message);
         end
     end
     if(~isscalar(unique(b{:})))
         report.identifier='seizmo:recordfun:mixedB';
         report.message='Begin times differ for some records!';
-        if(strcmpi(option.BEGIN,'error')); error(report);
-        elseif(strcmpi(option.BEGIN,'warn')); warning(report.identifier,report.message);
+        if(strcmpi(option.BEGIN,'error'))
+            error(report);
+        elseif(strcmpi(option.BEGIN,'warn'))
+            warning(report.identifier,report.message);
         end
     end
     if(~isscalar(unique(nzyear{:})) || ~isscalar(unique(nzjday{:})) || ...
@@ -472,8 +525,10 @@ else
             || ~isscalar(unique(nzsec{:})) || ~isscalar(unique(nzmsec{:})))
         report.identifier='seizmo:recordfun:mixedReferenceTimes';
         report.message='Reference times differ for some records!';
-        if(strcmpi(option.REF,'error')); error(report);
-        elseif(strcmpi(option.REF,'warn')); warning(report.identifier,report.message);
+        if(strcmpi(option.REF,'error'))
+            error(report);
+        elseif(strcmpi(option.REF,'warn'))
+            warning(report.identifier,report.message);
         end
     end
     
@@ -483,58 +538,67 @@ else
     end
     for i=1:nrecs; data(i).dep=double(data(i).dep); end
     
-    % newhdr flag (swap first and last record)
-    if(option.NEWHDR)
-        if(strcmpi(fun,{'+' '*'}))
-            data([end 1])=data([1 end]);
-        elseif(strcmpi(fun,'/'))
-            data([end 1])=seizmofun(data([1 end]),@(x)1./x);
-        else
-            data([end 1])=multiply(data([1 end]),-1);
+    % alter size of npts/ncmp
+    npts=cell2mat(npts);
+    ncmp=cell2mat(ncmp);
+    if(strcmpi(option.NPTS,'TRUNCATE'))
+        minpts=min(npts);
+        for i=1:nrecs
+            data(i).dep=data(i).dep(1:minpts,:);
+        end
+    elseif(strcmpi(option.NPTS,'PAD'))
+        maxpts=max(npts);
+        for i=1:nrecs
+            data(i).dep=[data(i).dep; zeros(maxpts-npts(i),ncmp(i))];
+        end
+    end
+    if(strcmpi(option.NCMP,'TRUNCATE'))
+        mincmp=min(ncmp);
+        for i=1:nrecs
+            data(i).dep=data(i).dep(:,1:mincmp);
+        end
+    elseif(strcmpi(option.NCMP,'PAD'))
+        maxcmp=max(ncmp);
+        for i=1:nrecs
+            data(i).dep=[data(i).dep zeros(npts(i),maxcmp-ncmp(i))];
         end
     end
     
     % operate on records
-    minpts=min(npts{:});
-    mincmp=min(ncmp{:});
-    if(strcmpi(fun,'+'))
-        for i=2:nrecs
-            data(1).dep=data(1).dep(1:minpts,1:mincmp)...
-                 +data(i).dep(1:minpts,1:mincmp);
-        end
-    elseif(strcmpi(fun,'-'))
-        for i=2:nrecs
-            data(1).dep=data(1).dep(1:minpts,1:mincmp)...
-                 -data(i).dep(1:minpts,1:mincmp);
-        end
-    elseif(strcmpi(fun,'/'))
-        for i=2:nrecs
-            data(1).dep=data(1).dep(1:minpts,1:mincmp)...
-                 ./data(i).dep(1:minpts,1:mincmp);
-        end
-    else
-        for i=2:nrecs
-            data(1).dep=data(1).dep(1:minpts,1:mincmp)...
-                 .*data(i).dep(1:minpts,1:mincmp);
-        end
+    for i=2:nrecs
+        data(1).dep=fun(data(1).dep,data(i).dep);
+    end
+    
+    % copy header if newhdr set
+    if(option.NEWHDR)
+        % this totally requires header layout to be equivalent
+        data(1).head=data(end).head;
     end
     
     % reduce to first record
     data=data(1);
     
-    % trim ind field for unevenly spaced files
-    if(isfield(data,'ind') && ~isempty(data.ind))
-        data.ind=data.ind(1:minpts);
-    end
-    
     % change class back
     data.dep=oclass(data.dep);
     
-    % update header
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(true);
-    data=checkheader(data);
-    set_checkheader_state(oldcheckheaderstate);
+    % get header info
+    [npts,ncmp]=size(data.dep);
+    depmen=nan; depmin=nan; depmax=nan;
+    if(npts>0 && ncmp>0)
+        depmen=mean(data.dep(:));
+        depmin=min(data.dep(:));
+        depmax=max(data.dep(:));
+    end
 end
+
+% update header
+warning('off','seizmo:changeheader:fieldInvalid')
+data=changeheader(data,'npts',npts,'ncmp',ncmp,...
+    'depmen',depmen,'depmin',depmin,'depmax',depmax);
+warning('on','seizmo:changeheader:fieldInvalid')
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
+set_checkheader_state(oldcheckheaderstate);
 
 end
