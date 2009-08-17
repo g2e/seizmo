@@ -12,8 +12,6 @@ function [doydates]=cal2doy(caldates)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Get the day of year of now:
 %      doydate=cal2doy([0 1 now])
@@ -25,7 +23,7 @@ function [doydates]=cal2doy(caldates)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:25 GMT
+%     Last Updated Aug. 17, 2009 at 21:00 GMT
 
 % todo:
 

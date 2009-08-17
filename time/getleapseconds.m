@@ -29,25 +29,11 @@ function [dates,leaps]=getleapseconds(option)
 %        Nov. 15, 2008 - update for new name schema, option now a logical
 %        Dec. 13, 2008 - fix bug, eliminate recursion
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
-%        June 11, 2009 - minor doc update, add testing table
-%
-%     Testing Table:
-%                                  Linux    Windows     Mac
-%        Matlab 7       r14        
-%               7.0.1   r14sp1
-%               7.0.4   r14sp2
-%               7.1     r14sp3
-%               7.2     r2006a
-%               7.3     r2006b
-%               7.4     r2007a
-%               7.5     r2007b
-%               7.6     r2008a
-%               7.7     r2008b
-%               7.8     r2009a
-%        Octave 3.2.0
+%        June 11, 2009 - minor doc update
+%        Aug.  4, 2009 - strictly formatted string passed to datenum
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 11, 2009 at 00:00 GMT
+%     Last Updated Aug. 17, 2009 at 21:00 GMT
 
 % todo:
 
@@ -78,7 +64,7 @@ if(option && isfield(SEIZMO,'GETLEAPSECONDS')...
     leaps=SEIZMO.GETLEAPSECONDS.LEAPS;
 else
     leapstr=leapseconds;
-    dates=datenum(leapstr);
+    dates=datenum(leapstr(:,1:end-1));
     leaps=2*strcmp('+',cellstr(leapstr(:,end)))-1; % +/-1
     [dates,idx]=sort(dates);
     leaps=leaps(idx);

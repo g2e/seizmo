@@ -81,26 +81,11 @@ function [data]=slidingrms(data,varargin)
 %        Nov. 22, 2008 - update for new names again
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
-%        June  9, 2009 - nsamples now in varargin, add testing table,
-%                        toggle seizmocheck, up nargin allowed
-%
-%     Testing Table:
-%                                  Linux    Windows     Mac
-%        Matlab 7       r14        
-%               7.0.1   r14sp1
-%               7.0.4   r14sp2
-%               7.1     r14sp3
-%               7.2     r2006a
-%               7.3     r2006b
-%               7.4     r2007a
-%               7.5     r2007b
-%               7.6     r2008a
-%               7.7     r2008b
-%               7.8     r2009a
-%        Octave 3.2.0
+%        June  9, 2009 - nsamples now in varargin, toggle seizmocheck,
+%                        up nargin allowed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  9, 2009 at 19:00 GMT
+%     Last Updated Aug. 17, 2009 at 20:30 GMT
 
 % todo:
 

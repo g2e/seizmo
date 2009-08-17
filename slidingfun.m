@@ -51,8 +51,6 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %     - Centered windows are of length 2N+1, while the others are just N
 %     - SLIDINGFUN is much slower than SLIDINGABSMEAN or SLIDINGRMS
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NCMP
 %
 %    Examples:
@@ -89,7 +87,7 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:00 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

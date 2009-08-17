@@ -1,7 +1,8 @@
-function [times]=getarrival(data,phase)
+function [times,n]=getarrival(data,phase)
 %GETARRIVAL    Returns stored phase arrival time from SEIZMO data header
 %
 %    Usage:    times=getarrival(data,phase)
+%              [times,n]=getarrival(data,phase)
 %
 %    Description: GETARRIVAL(DATA,PHASE) searches 'kt(n)' header fields in
 %     the SEIZMO structure DATA for the specified phase PHASE.  If found,
@@ -10,6 +11,12 @@ function [times]=getarrival(data,phase)
 %     found for each record is returned - lower index has preference.  Note
 %     that the returned time is based on the reference time and is not
 %     relative to the origin (see example below).
+%
+%     [TIMES,N]=GETARRIVAL(DATA,PHASE) also returns an index array that
+%     indicates the header field from which the time was found for each
+%     record.  So [3 2 1] would mean record 1's time came from t3, record
+%     2's time from t2 and record 3's from t1.  This is particularly useful
+%     for setting iztype when combining getarrival with timeshift.
 %     
 %    Notes:
 %     - NAME OF PHASE IS CASE SENSITIVE!
@@ -33,25 +40,11 @@ function [times]=getarrival(data,phase)
 %                        GETARRIVAL, minor code clean
 %        Nov. 24, 2008 - minor code cleaning
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
-%        June 29, 2009 - add testing table, doc update
-%
-%     Testing Table:
-%                                  Linux    Windows     Mac
-%        Matlab 7       r14        
-%               7.0.1   r14sp1
-%               7.0.4   r14sp2
-%               7.1     r14sp3
-%               7.2     r2006a
-%               7.3     r2006b
-%               7.4     r2007a
-%               7.5     r2007b
-%               7.6     r2008a
-%               7.7     r2008b
-%               7.8     r2009a
-%        Octave 3.2.0
+%        June 29, 2009 - doc update
+%        June 30, 2009 - second output: t index
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 29, 2009 at 04:30 GMT
+%     Last Updated Aug. 17, 2009 at 20:55 GMT
 
 % todo:
 
@@ -80,7 +73,7 @@ kt=strtrim(kt);
 nrecs=numel(data);
 
 % do operations individually
-times=nan(nrecs,1);
+times=nan(nrecs,1); n=times;
 for i=1:nrecs
     % find first match
     pos=find(strcmp(phase,kt(i,:)),1);
@@ -94,6 +87,7 @@ for i=1:nrecs
     
     % add time
     times(i)=t(i,pos);
+    n(i)=pos-1;
 end
 
 % toggle checking back

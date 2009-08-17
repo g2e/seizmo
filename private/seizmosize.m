@@ -10,8 +10,6 @@ function [bytes]=seizmosize(data)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Calculate expected filesizes for SAC files in current directory:
 %      seizmosize(readheader('*.SAC'))
@@ -32,7 +30,7 @@ function [bytes]=seizmosize(data)
 %        Apr. 23, 2009 - fix nargchk for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:20 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

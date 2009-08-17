@@ -21,8 +21,6 @@ function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 %     - Longitudes are returned in the range -180<lon<=180
 %     - Azimuths are returned in the range 0<=az<=360
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     St. Louis, MO USA to ???:
 %      [lat,lon]=sphericalfwd(38.649,-90.305,45,-30)
@@ -36,7 +34,7 @@ function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 %        May   8, 2009 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   8, 2009 at 22:35 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

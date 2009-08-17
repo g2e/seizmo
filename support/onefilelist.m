@@ -12,8 +12,6 @@ function [list]=onefilelist(varargin)
 %    Notes:
 %     - XDIR is derived from RDIR (taken from the Matlab File Exchange)
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Compile a list of files from several directories
 %      list=onefilelist('*','../*','~/*')
@@ -34,7 +32,7 @@ function [list]=onefilelist(varargin)
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:15 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

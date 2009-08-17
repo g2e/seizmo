@@ -18,8 +18,6 @@ function [lat,lon,depth]=geocentric2geodetic(lat,lon,depth,ellipsoid)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Get your earthquake location into geodetic coordinates:
 %      [lat,lon,depth]=geocentric2geodetic(evla,evlo,evdp/1000)
@@ -32,7 +30,7 @@ function [lat,lon,depth]=geocentric2geodetic(lat,lon,depth,ellipsoid)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:45 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

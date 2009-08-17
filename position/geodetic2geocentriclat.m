@@ -14,8 +14,6 @@ function [lat]=geodetic2geocentriclat(lat,ecc)
 %    Notes:
 %     - If the location is not on the surface use GEODETIC2GEOCENTRIC.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Get the geocentric latitude for St. Louis, MO USA:
 %      latitude=geodetic2geocentriclat(38.649)
@@ -28,7 +26,7 @@ function [lat]=geodetic2geocentriclat(lat,ecc)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:45 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

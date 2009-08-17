@@ -14,8 +14,6 @@ function [radius]=geodeticlat2radius(lat,ellipsoid)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Get the radius for St. Louis, MO USA:
 %      radius=geodeticlat2radius(38.649)
@@ -28,7 +26,7 @@ function [radius]=geodeticlat2radius(lat,ellipsoid)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:45 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

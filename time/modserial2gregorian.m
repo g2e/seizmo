@@ -24,8 +24,6 @@ function [times]=modserial2gregorian(modserial,option)
 %       It also does not handle string input and isn't compiled so it is
 %       a bit slower.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     500 seconds from now:
 %      modserial2gregorian([now 500])
@@ -37,7 +35,7 @@ function [times]=modserial2gregorian(modserial,option)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:30 GMT
+%     Last Updated Aug. 17, 2009 at 21:05 GMT
 
 % todo:
 

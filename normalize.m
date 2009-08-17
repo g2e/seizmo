@@ -18,8 +18,6 @@ function [data,scale]=normalize(data)
 %    Notes:
 %     - this formulation normalizes real-imaginary spectral records too
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
@@ -41,7 +39,7 @@ function [data,scale]=normalize(data)
 %                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:35 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

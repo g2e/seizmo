@@ -17,8 +17,6 @@ function [scale]=getnorm(data)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Find the maximum amplitude of ground motion for a 3 component record:
 %       amp_max=getnorm(data)
@@ -37,7 +35,7 @@ function [scale]=getnorm(data)
 %                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:20 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % check nargin
 msg=nargchk(1,1,nargin);

@@ -15,8 +15,6 @@ function [c]=sawmod(a,b)
 %      sawmod(A,0) returns A
 %      sawmod(A,A) returns A
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     To get latitude values LAT within the range of +/-90:
 %      LAT=sawmod(LAT,90);
@@ -28,7 +26,7 @@ function [c]=sawmod(a,b)
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:20 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 n=round(0.5.*a./b);
 s=1-2*mod(n,2);

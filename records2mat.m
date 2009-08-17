@@ -38,26 +38,11 @@ function [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 %                        now outputs independent component
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
-%        June 12, 2009 - minor doc update, add testing table
+%        June 12, 2009 - minor doc update
 %        June 25, 2009 - name change from COMBINERECORDS to RECORDS2MAT
 %
-%     Testing Table:
-%                                  Linux    Windows     Mac
-%        Matlab 7       r14        
-%               7.0.1   r14sp1
-%               7.0.4   r14sp2
-%               7.1     r14sp3
-%               7.2     r2006a
-%               7.3     r2006b
-%               7.4     r2007a
-%               7.5     r2007b
-%               7.6     r2008a
-%               7.7     r2008b
-%               7.8     r2009a
-%        Octave 3.2.0
-%
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2009 at 04:35 GMT
+%     Last Updated Aug. 17, 2009 at 20:30 GMT
 
 % todo:
 

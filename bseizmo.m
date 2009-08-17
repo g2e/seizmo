@@ -63,28 +63,13 @@ function [data]=bseizmo(varargin)
 %        Apr. 23, 2009 - move usage up
 %        May  15, 2009 - minor doc fixes
 %        June 12, 2009 - little better output name format, fill in kstnm,
-%                        khole, and kcmpnm, add testing table
+%                        khole, and kcmpnm
 %        June 25, 2009 - best use SAC v6
 %        June 26, 2009 - no warning for ncmp field update
 %        June 27, 2009 - switch to multiple component version if necessary
 %
-%     Testing Table:
-%                                  Linux    Windows     Mac
-%        Matlab 7       r14        
-%               7.0.1   r14sp1
-%               7.0.4   r14sp2
-%               7.1     r14sp3
-%               7.2     r2006a
-%               7.3     r2006b
-%               7.4     r2007a
-%               7.5     r2007b
-%               7.6     r2008a
-%               7.7     r2008b
-%               7.8     r2009a
-%        Octave 3.2.0
-%
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 26, 2009 at 21:05 GMT
+%     Last Updated Aug. 17, 2009 at 20:00 GMT
 
 % todo:
 

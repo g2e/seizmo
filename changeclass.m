@@ -10,8 +10,6 @@ function [data]=changeclass(data,class)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: NONE
 %
 %    Examples:
@@ -35,7 +33,7 @@ function [data]=changeclass(data,class)
 %                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:05 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

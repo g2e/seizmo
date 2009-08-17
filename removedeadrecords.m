@@ -24,8 +24,6 @@ function [data,removed]=removedeadrecords(data,option)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: NONE (may use CHECKHEADER)
 %
 %    Examples:
@@ -44,7 +42,7 @@ function [data,removed]=removedeadrecords(data,option)
 %                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:50 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

@@ -32,11 +32,8 @@ function [option]=cutparameters(varargin)
 %        Apr. 23, 2009 - move usage up
 %        May  29, 2009 - minor doc update, add nargin check
 %
-%     Testing History:
-%        r72 - Linux Matlab (r2007b)
-%
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  29, 2009 at 02:15 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

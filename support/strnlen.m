@@ -20,25 +20,9 @@ function [A]=strnlen(A,n)
 %        Apr. 18, 2008 - fixed recursion
 %        Oct. 26, 2008 - code cleaning, comment and doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
-%        June 28, 2009 - added testing table
-%
-%     Testing Table:
-%                                  Linux    Windows     Mac
-%        Matlab 7       r14        
-%               7.0.1   r14sp1
-%               7.0.4   r14sp2
-%               7.1     r14sp3
-%               7.2     r2006a
-%               7.3     r2006b
-%               7.4     r2007a
-%               7.5     r2007b
-%               7.6     r2008a
-%               7.7     r2008b
-%               7.8     r2009a
-%        Octave 3.2.0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 28, 2009 at 17:50 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

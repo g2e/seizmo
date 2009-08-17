@@ -11,8 +11,6 @@ function [application,version]=getapplication()
 %    Notes:
 %     - returns 'UNKNOWN' if it cannot figure out the application
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Matlab and Octave still behave quite differently for a number of
 %     different functions so it is best in some cases to use different
@@ -32,7 +30,7 @@ function [application,version]=getapplication()
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:15 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

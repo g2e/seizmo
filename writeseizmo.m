@@ -70,11 +70,8 @@ function []=writeseizmo(data,varargin)
 %                        move usage up
 %        May  29, 2009 - allow options via WRITEPARAMETERS
 %
-%     Testing History:
-%        r72 - Linux Matlab (r2007b)
-%
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  29, 2009 at 22:10 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

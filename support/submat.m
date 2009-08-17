@@ -12,8 +12,6 @@ function [X]=submat(X,varargin)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %      Return x reduced to only the elements in index 1 of dimension 5:
 %      x=submat(x,5,1)
@@ -25,7 +23,7 @@ function [X]=submat(X,varargin)
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:25 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

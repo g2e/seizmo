@@ -15,8 +15,6 @@ function [data]=sortbyfield(data,field,mode)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: NONE
 %
 %    Examples: 
@@ -37,7 +35,7 @@ function [data]=sortbyfield(data,field,mode)
 %                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:00 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

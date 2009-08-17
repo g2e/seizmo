@@ -14,8 +14,6 @@ function [lat]=geocentric2geodeticlat(lat,ecc)
 %    Notes:
 %     - If the location is not on the surface use GEOCENTRIC2GEODETIC.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Show the difference in latitudes:
 %      plot(geocentric2geodeticlat(-90:90)-(-90:90))
@@ -28,7 +26,7 @@ function [lat]=geocentric2geodeticlat(lat,ecc)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:45 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

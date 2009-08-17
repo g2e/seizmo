@@ -39,8 +39,6 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %     - Longitudes are returned in the range -180<lon<=180
 %     - Azimuths are returned in the range 0<=az<=360
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     St. Louis, MO USA to ???:
 %      [lat2,lon2,baz]=vincentyfwd(38.649,-90.305,5000,-30)
@@ -54,7 +52,7 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:50 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

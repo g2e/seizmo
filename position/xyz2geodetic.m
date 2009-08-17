@@ -25,8 +25,6 @@ function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
 %       equator at the prime meridian, the Z axis through the north pole
 %       and the Y axis through the equator at 90 degrees longitude.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Find the geodetic position of some point given in xyz:
 %      [lat,lon,depth]=xyz2geodetic(3000,3000,3000)
@@ -39,7 +37,7 @@ function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:55 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

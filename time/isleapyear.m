@@ -12,8 +12,6 @@ function [isleap]=isleapyear(year)
 %     - Only valid for 1+ AD unless corrections are made to BC years
 %       (1 BC == 0, 2 BC == -1, ...)
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Takes into account the century rule and the exception so that
 %     isleapyear([1900 1904 2000 2004]) returns [0 1 1 1].
@@ -25,7 +23,7 @@ function [isleap]=isleapyear(year)
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:30 GMT
+%     Last Updated Aug. 17, 2009 at 21:05 GMT
 
 % todo:
 

@@ -32,8 +32,6 @@ function [data]=differentiate(data,option)
 %       - NPTS decreased by 4
 %       - EDGES ARE NOT SAC COMPATIBLE!
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NPTS, B, E
 %
 %    Examples:
@@ -58,7 +56,7 @@ function [data]=differentiate(data,option)
 %       May   8, 2009 - uses expanded idep unit set
 %
 %    Written by Garrett Euler (ggeuler at wustl dot edu)
-%    Last Updated May   8, 2009 at 19:00 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 % - add 'five' option for uneven

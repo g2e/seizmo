@@ -12,8 +12,6 @@ function [caldates]=doy2cal(doydates)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Get the calendar date of today:
 %      caldate=doy2cal([0 now])
@@ -25,7 +23,7 @@ function [caldates]=doy2cal(doydates)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:25 GMT
+%     Last Updated Aug. 17, 2009 at 20:55 GMT
 
 % todo:
 

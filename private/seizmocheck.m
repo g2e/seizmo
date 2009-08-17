@@ -62,11 +62,8 @@ function [report]=seizmocheck(data,varargin)
 %                        octave and matlab
 %        May  29, 2009 - minor doc update
 %
-%     Testing History:
-%        r72 - Linux Matlab (r2007b)
-%
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  29, 2009 at 02:25 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

@@ -10,8 +10,6 @@ function [endianness]=nativebyteorder()
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Change SEIZMO files in current directory to current platform's
 %     byte-ordering:
@@ -25,7 +23,7 @@ function [endianness]=nativebyteorder()
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:15 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

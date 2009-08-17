@@ -20,8 +20,6 @@ function [lat,lon,radius]=xyz2geocentric(x,y,z,r)
 %       equator at the prime meridian, the Z axis through the north pole
 %       and the Y axis through the equator at 90 degrees longitude.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Find out how far an xyz position is from the earth's center:
 %      [lat,lon,radius]=xyz2geocentric(x,y,z)
@@ -34,7 +32,7 @@ function [lat,lon,radius]=xyz2geocentric(x,y,z,r)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:55 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

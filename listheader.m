@@ -33,25 +33,11 @@ function []=listheader(data,varargin)
 %        Oct. 27, 2008 - update for struct change, doc update, history fix
 %        Nov. 16, 2008 - update for new name schema (now listheader)
 %        Apr. 23, 2009 - move usage up
-%        June 29, 2009 - added testing table
-%
-%     Testing Table:
-%                                  Linux    Windows     Mac
-%        Matlab 7       r14        
-%               7.0.1   r14sp1
-%               7.0.4   r14sp2
-%               7.1     r14sp3
-%               7.2     r2006a
-%               7.3     r2006b
-%               7.4     r2007a
-%               7.5     r2007b
-%               7.6     r2008a
-%               7.7     r2008b
-%               7.8     r2009a
-%        Octave 3.2.0
+%        Aug.  4, 2009 - changed numeric format from %d to %g so Octave
+%                        output is not integer
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 29, 2009 at 06:10 GMT
+%     Last Updated Aug. 17, 2009 at 20:25 GMT
 
 % todo:
 
@@ -177,10 +163,10 @@ for m=1:length(h.ntype)
     for n=1:length(h.(h.ntype{m}))
         if(isfield(h.(h.ntype{m})(n).pos,f))
             if(data.head(h.(h.ntype{m})(n).pos.(f))==h.undef.ntype)
-                disp(sprintf('%12s = UNDEFINED (%d)',upper(f),...
+                disp(sprintf('%12s = UNDEFINED (%g)',upper(f),...
                     data.head(h.(h.ntype{m})(n).pos.(f))));
             else
-                disp(sprintf('%12s = %d',upper(f),...
+                disp(sprintf('%12s = %g',upper(f),...
                     data.head(h.(h.ntype{m})(n).pos.(f))));
             end
             return;

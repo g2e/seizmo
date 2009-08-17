@@ -38,11 +38,8 @@ function [data]=writeparameters(data,varargin)
 %     Version History:
 %        May  29, 2009 - initial version
 %
-%     Testing History:
-%        r72 - Linux Matlab (r2007b)
-%
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  29, 2009 at 21:55 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % check nargin
 if(mod(nargin-1,2))

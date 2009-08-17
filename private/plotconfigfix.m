@@ -11,8 +11,6 @@ function [conf]=plotconfigfix(conf)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     PLOTCONFIGFIX allows for changes to a high level field to change a
 %     number of fields for instance:
@@ -29,7 +27,7 @@ function [conf]=plotconfigfix(conf)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:15 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

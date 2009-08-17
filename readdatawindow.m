@@ -98,8 +98,6 @@ function [data,failed]=readdatawindow(data,varargin)
 %     - FILL only works with evenly sampled data.
 %     - Records with a negative DELTA will return as empty.
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: B, E, NPTS, DELTA, NCMP, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
@@ -145,7 +143,7 @@ function [data,failed]=readdatawindow(data,varargin)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:40 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

@@ -13,8 +13,6 @@ function [dates]=fixdates(dates)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Last day of February:
 %      fixdates([someyear 3 0])
@@ -30,7 +28,7 @@ function [dates]=fixdates(dates)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:25 GMT
+%     Last Updated Aug. 17, 2009 at 20:55 GMT
 
 % todo:
 

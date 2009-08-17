@@ -14,8 +14,6 @@ function [varargout]=swap(varargin)
 %    Notes:
 %     - wrote this before I knew about DEAL...probably should toss it
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Do a simple swap:
 %      [b,a]=swap(a,b)
@@ -31,7 +29,7 @@ function [varargout]=swap(varargin)
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:25 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

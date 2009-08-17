@@ -18,8 +18,6 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 %       than SPHERICALINV as it uses the haversine function rather than a
 %       cosine which becomes inefficient at small distances.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Plotting up short distance results for sphericalinv and haversine:
 %      plot(0:1e-9:1e-5,sphericalinv(0,0,0:1e-9:1e-5,0),...
@@ -34,7 +32,7 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:50 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

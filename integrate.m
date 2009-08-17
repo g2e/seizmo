@@ -33,8 +33,6 @@ function [data]=integrate(data,option)
 %       an unevenly spaced records but a good estimation is made with the
 %       the midpoint assumption)
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: B, E, NPTS, DELTA, DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
@@ -52,7 +50,7 @@ function [data]=integrate(data,option)
 %        May   8, 2009 - uses expanded idep unit set
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   8, 2009 at 18:10 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

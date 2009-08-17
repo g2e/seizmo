@@ -22,8 +22,6 @@ function [varargout]=getlgc(data,varargin)
 %       'unknown' unless they are the UNDEFINED value in which case they 
 %       are tagged as 'undefined'.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     To check if all records are evenly spaced:
 %      if(all(strcmp(getlgc(data,'leven'),'true'))) 
@@ -50,7 +48,7 @@ function [varargout]=getlgc(data,varargin)
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:15 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

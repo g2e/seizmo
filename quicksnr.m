@@ -12,8 +12,6 @@ function [snr]=quicksnr(data,nwin,swin)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     To get SNR estimates of P (assuming times are stored in header):
 %       Ptimes=getarrival(data,'P');
@@ -36,7 +34,7 @@ function [snr]=quicksnr(data,nwin,swin)
 %                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:35 GMT
+%     Last Updated Aug. 17, 2009 at 20:55 GMT
 
 % todo:
 

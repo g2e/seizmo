@@ -20,8 +20,6 @@ function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %     - Accuracy degrades at very small distances (see HAVERSINE)
 %     - Azimuths are returned in the range 0<=az<=360
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     St. Louis, MO USA to Yaounde, Cameroon:
 %      [dist,az,baz]=sphericalinv(38.649,-90.305,3.861,11.521)
@@ -37,7 +35,7 @@ function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:50 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

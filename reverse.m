@@ -9,8 +9,6 @@ function [data]=reverse(data)
 %    Notes:
 %     - useful for flipping negative & positive frequencies
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: NONE
 %
 %    Examples:
@@ -26,7 +24,7 @@ function [data]=reverse(data)
 %                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:55 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

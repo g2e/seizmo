@@ -88,8 +88,6 @@ function [data,failed]=cut(data,varargin)
 %       accordingly rather than returning an error.
 %     - Multiple component data is supported.
 %     - FILL only works with evenly sampled data.
-%
-%    Tested on: Matlab r2007b
 %     
 %    Header changes: B, E, NPTS, DELTA, NCMP, DEPMEN, DEPMIN, DEPMAX
 %
@@ -142,7 +140,7 @@ function [data,failed]=cut(data,varargin)
 %                        move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:00 GMT
+%     Last Updated Aug. 17, 2009 at 20:55 GMT
 
 % todo:
 

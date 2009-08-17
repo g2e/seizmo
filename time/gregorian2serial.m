@@ -17,8 +17,6 @@ function [serial]=gregorian2serial(times)
 %       handle string input.  Because this is not compiled and DATENUM is,
 %       DATENUM is 2 to 3 times faster.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     The output of Matlab's datenum and gregorian2serial should match:
 %      gregorian2serial([2008 366 0 0 0.01])
@@ -31,7 +29,7 @@ function [serial]=gregorian2serial(times)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:25 GMT
+%     Last Updated Aug. 17, 2009 at 21:00 GMT
 
 % todo:
 

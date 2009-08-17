@@ -14,8 +14,6 @@ function [lgc]=isseizmo(data,varargin)
 %    Notes:
 %     - ISSEIZMO is just a logical frontend for SEIZMOCHECK
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     To see if the function READHEADER returns a valid SEIZMO structure
 %     after reading in files from the current directory:
@@ -35,7 +33,7 @@ function [lgc]=isseizmo(data,varargin)
 %        June 12, 2009 - force SEIZMOCHECK state to on for the check
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2009 at 17:00 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

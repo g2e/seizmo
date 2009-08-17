@@ -19,8 +19,6 @@ function [times]=serial2gregorian(serial,option)
 %     - Basically like Matlab's DATEVEC except that it also outputs day of
 %       year style dates but does not handle string input.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     See how long it takes to run serial2gregorian vs datevec:
 %      serial2gregorian(now)-datevec(now)
@@ -33,7 +31,7 @@ function [times]=serial2gregorian(serial,option)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:35 GMT
+%     Last Updated Aug. 17, 2009 at 21:05 GMT
 
 % todo:
 

@@ -36,8 +36,6 @@ function []=writesacpz(file,z,p,k)
 %       the last line gives the multiplicative factor.  The order of these
 %       three sections does not matter.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Read in a SAC PoleZero file, alter the constant, and write out:
 %      [z,p,k]=readsacpz('SAC_PZs_XB_CM32_BHZ_02');
@@ -51,7 +49,7 @@ function []=writesacpz(file,z,p,k)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:30 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

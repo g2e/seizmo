@@ -173,21 +173,24 @@ for i=1:nrecs
     % axis labels
     if(isempty(P.TITLE))
         if(isfield(data,'name') && ~isempty(data(i).name))
-            p1title=[texlabel(data(i).name,'literal') ...
-                '  -  ' num2str(gcarc(i)) '\circ'];
+	    try
+	        p1title=[texlabel(data(i).name,'literal') ...
+		    '  -  ' num2str(gcarc(i)) '\circ'];
+            catch
+	        p1title=[data(i).name ...
+		    '  -  ' num2str(gcarc(i)) '\circ'];
+            end
         else p1title=['RECORD ' num2str(i) ...
                 '  -  ' num2str(gcarc(i)) '\circ'];
         end
     else
         p1title=P.TITLE;
     end
-    %if(isempty(P.XLABEL)); P.XLABEL='Time (sec)'; end
-    %if(isempty(P.YLABEL)); P.YLABEL='Amplitude'; end
-    if(p1title(1)~=32)
+    if(isempty(P.XLABEL)); P.XLABEL='Time (sec)'; end
+    if(isempty(P.YLABEL)); P.YLABEL='Amplitude'; end
     title(p1title,'fontname',P.TITLEFONT,'fontweight',P.TITLEFONTWEIGHT,...
         'fontsize',P.TITLEFONTSIZE,'color',P.TITLEFONTCOLOR,...
         'interpreter',P.TITLEINTERP);
-    end
     xlabel(P.XLABEL,'fontname',P.XLABELFONT,'fontweight',P.XLABELFONTWEIGHT,...
         'fontsize',P.XLABELFONTSIZE,'color',P.XLABELFONTCOLOR,...
         'interpreter',P.XLABELINTERP);

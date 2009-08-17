@@ -43,8 +43,6 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %     - Azimuths & distances for near antipodal points are not accurate and
 %       should be avoided if possible.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     St. Louis, MO USA to Yaounde, Cameroon:
 %      [dist,az,baz]=vincentyinv(38.649,-90.305,3.861,11.521)
@@ -67,7 +65,7 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %        May   8, 2009 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   8, 2009 at 22:30 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 % todo:
 

@@ -8,8 +8,6 @@ function [data]=envelope(data)
 %
 %    Notes:
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
@@ -30,7 +28,7 @@ function [data]=envelope(data)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:10 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

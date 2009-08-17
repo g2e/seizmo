@@ -21,10 +21,10 @@ function [varargout]=xdir(str,depth)
 %
 %     D=XDIR(PATH) returns the results in an M-by-1 structure with the
 %     fields:
-%       name    -- filename
+%       name    -- filename or directory name
 %       date    -- modification date
-%       bytes   -- number of bytes allocated to the file
-%       isdir   -- 1 if name is a directory, 0 otherwise
+%       bytes   -- number of bytes allocated to the file or directory
+%       isdir   -- 1 if is a directory, 0 otherwise
 %       datenum -- modification date as a MATLAB serial date number
 %       path    -- path to the file or directory
 %
@@ -63,10 +63,11 @@ function [varargout]=xdir(str,depth)
 %        Apr. 23, 2009 - made to work with Octave too (fixes for assigning
 %                        to struct and adding fields to empty struct)
 %        June  4, 2009 - use GLOB to preempt or replace octave's dir
+%        Aug.  4, 2009 - fix dir listing for Octave when no path given
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated June  4, 2009 at 01:45 GMT
+%     Last Updated Aug.  4, 2009 at 09:45 GMT
 
 % todo:
 % - be mindful of octave/matlab differences in DIR
@@ -182,9 +183,14 @@ if isempty(wildpath)
   else
     % handle difference between octave/matlab
     if(octave)
-      % get matches
+      % list matches, list dir, get matches
+      % (avoids subdir expansion in single subdir case)
       tmp=glob([prepath postpath]);
-      D=dir(prepath);
+      if(isempty(prepath))
+        D=dir;
+      else
+        D=dir(prepath);
+      end
       D=D(ismember(strcat(prepath,{D.name}),tmp));
       
       % workaround for new field to empty struct

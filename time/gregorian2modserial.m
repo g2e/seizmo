@@ -22,8 +22,6 @@ function [modserial]=gregorian2modserial(times)
 %       handle string input, and outputs day and secondofday rather than
 %       just days (for better precision).
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     Why use modserial over serial? Better precision:
 %      modserial=gregorian2modserial([0 now])
@@ -36,7 +34,7 @@ function [modserial]=gregorian2modserial(times)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 21:25 GMT
+%     Last Updated Aug. 17, 2009 at 21:00 GMT
 
 % todo:
 

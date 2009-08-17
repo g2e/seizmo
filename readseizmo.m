@@ -44,8 +44,6 @@ function [data]=readseizmo(varargin)
 %       six columns of data.  Dependent components ('dep') share the same 
 %       independent component ('ind').
 %
-%    Tested on: Matlab r2007b
-%
 %    Header changes: see CHECKHEADER
 %
 %    Examples:
@@ -77,7 +75,7 @@ function [data]=readseizmo(varargin)
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:40 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 

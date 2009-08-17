@@ -12,8 +12,6 @@ function [c]=cmod(a,b)
 %      cmod(A,0) returns A
 %      cmod(A,A) returns 0
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     To get longitude values LON within the range of +/-180:
 %      LON=cmod(LON,360);
@@ -25,7 +23,7 @@ function [c]=cmod(a,b)
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 22:20 GMT
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
 
 c=a-round(a./b).*b;
 if(isscalar(b))

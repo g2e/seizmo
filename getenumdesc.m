@@ -23,8 +23,6 @@ function [varargout]=getenumdesc(data,varargin)
 %       value in which case they are tagged as 'Undefined Enum Field'. This
 %       avoids conflict with enum fields called 'unknown' and 'undefined'.
 %
-%    Tested on: Matlab r2007b
-%
 %    Examples:
 %     To check if all records are timeseries data:
 %      if(all(strcmp(getenumdesc(data,'iftype'),'Time Series File')))
@@ -49,7 +47,7 @@ function [varargout]=getenumdesc(data,varargin)
 %        Apr. 23, 2009 - move usage up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:15 GMT
+%     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
 
