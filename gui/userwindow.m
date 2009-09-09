@@ -1,74 +1,159 @@
-function [data,win,h,h2]=userwindow(data,fill,rdrift,push)
+function [data,win,fh]=userwindow(data,fill,func,varargin)
 %USERWINDOW    Interactively window SEIZMO records
+%
+%    Usage:    data=userwindow(data)
+%              data=userwindow(data,fill)
+%              data=userwindow(data,fill,func)
+%              data=userwindow(data,fill,func,'field',value,...)
+%              [data,win]=userwindow(...)
+%              [data,win,fh]=userwindow(...)
+%
+%    Description: DATA=USERWINDOW(DATA) presents a interactive menu and
+%     plot interface to window a dataset visually with a few mouse clicks.
+%     By default, the windows are not padded with zeros and no mean or
+%     trend removal is done on the windowed records.
+%
+%     DATA=USERWINDOW(DATA,FILL) allows zero-padding of records in DATA.
+%     If FILL is FALSE or empty (the default), no zero-padding is done.
+%     Set FILL to TRUE to pad incomplete records with zeros so that they
+%     extend across the window.
+%
+%     DATA=USERWINDOW(DATA,FILL,FUNC) applies function FUNC to records in
+%     DATA after windowing and before the confirmation window.  FUNC must
+%     be a function handle.  Some common function handles for this are
+%     @removemean and @removetrend.
+%
+%     DATA=USERWINDOW(DATA,FILL,FUNC,'FIELD',VALUE,...) passes field/value
+%     pairs to the plotting function, to allow further customization.
+%
+%     [DATA,WIN]=USERWINDOW(...) also returns the window limits in WIN as
+%     [start end].
+%
+%     [DATA,WIN,FH]=USERWINDOW(...) returns the figure handles in FH.
+%
+%    Notes:
+%     - automatically switches start and end window limits if they are not
+%       proper (ie if the end comes before the start)
+%
+%    Header changes: B, E, NPTS, DELTA, DEPMEN, DEPMIN, DEPMAX
+%
+%    Examples:
+%     Let the user window the data, adding zeros to fill any incomplete
+%     records in the window and remove the trend after windowing:
+%      data=userwindow(data,true,@removetrend);
+%
+%    See also: usertaper, usercluster, selectrecords
+
+%     Version History:
+%        Sep.  5, 2009 - rewrite
+%        Sep.  9, 2009 - added documentation
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Sep.  9, 2009 at 03:45 GMT
+
+% todo:
 
 % check nargin
-msg=nargchk(1,4,nargin);
+msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
-% defaults
-if(nargin<4 || isempty(push)); push=0; end          % keep timing
-if(nargin<3 || isempty(rdrift)); rdrift=1; end      % demean new window
-if(nargin<2 || isempty(fill)); fill=0; end          % no zero fill
+% check fill
+if(nargin<2 || isempty(fill)); fill=false; end
 
-% push all records to start at zero
-if(push) 
-    [b,e]=gh(data,'b','e'); 
-    data=ch(data,'b',0,'e',e-b);
-    iwin=[0 max(e-b)];
-else
-    iwin=[min(gh(data,'b')) max(gh(data,'e'))];
+% check function handle
+if(nargin<3 || isempty(func))
+    func=@deal;
+elseif(~isa(func,'function_handle'))
+    error('seizmo:userwindow:badInput','FUNC must be a function handle!');
 end
 
-% repeat until satisfied
-h=-1; h2=-1;
-while(1)
-    % info
-    mymenu={'Choose a new data window by clicking your';
-            'mouse on the (soon to be) displayed figure.';
-            '  ';
-            'Usage:';
-            '==================================';
-            'Left clicking   -=> indicates the window start position';
-            'Right clicking  -=> indicates the window end position';
-            'Middle clicking -=> finalizes the window positions';
-            '==================================';
-            '  ';
-            'You can rechoose window parameters as many';
-            'times as you wish until you finalize them.';
-            '  ';
-            'When you finalize there will be a confirmation';
-            'menu at the end so you will have a chance to redo';
-            'the windowing if your not satisfied.';
-            '  ';
-            'Choose a plot type for analysis:'};
-    i=menu(mymenu,'Overlay Plot','Evenly Spaced Plot','Distance Spaced Plot','DO NOT WINDOW','DIE!');
+% outer loop - only breaks free by user command
+happy_user=false; fh=[-1 -1];
+while(~happy_user)
+    % explain to the user how this works with a little prompt
+    % and make them decide what kind of plot to use for the
+    % windowing, offering them back out options.  This prompt
+    % looks like trash because of default menu fonts.
+    prompt={'+-------------------------------------------------------+'
+            '|                Welcome to SEIZMO''s interactive windowing function             |'
+            '+-------------------------------------------------------+'
+            '|                                                                                                                |'
+            '|                                             MOUSE USAGE                                             |'
+            '|                                                                                                                |'
+            '|    LEFT CLICK                       MIDDLE CLICK                      RIGHT CLICK   |'
+            '+-----------+                +------------+               +------------+'
+            '|   Mark Window                     Finalize Marks                     Mark Window   |'
+            '|          Start                                                                              End           |'
+            '+-------------------------------------------------------+'
+            '|                                                                                                                |'
+            '|                                                   NOTES                                                   |'
+            '|                                                                                                                |'
+            '|          + You may refine window marks until you finalize                        |'
+            '|          + When finalized, a new plot with the windowed                           |'
+            '|              waveforms will appear, as well as a confirmation                      |'
+            '|              prompt.  You will have the option to re-window.                      |'
+            '|                                                                                                                |'
+            '+-------------------------------------------------------+'
+            '|                                                                                                                |'
+            '|                 PLEASE CHOOSE AN OPTION BELOW TO PROCEED!                 |'
+            '|                                                                                                                |'
+            '+-------------------------------------------------------+'};
     
-    % quick escape
-    if (i==4)
-        % NO WINDOW
-        win=[];
-        if(push)
-            data=ch(data,'b',b,'e',e); 
-        end
-        return;
-    elseif (i==5)
-        % DEATH!
-        error('user seppuku')
     
-    % plot selectionand view window
-    elseif (i==1)
-        h=p2(data,'p2norm',true,'normmax',1);
-    elseif (i==2)
-        h=p0(data,'xlimits',iwin);
-    else
-        h=recsec(data,'xlimits',iwin);
+    % way cooler menu -- if only matlab gui's used fixed width
+    %{
+    prompt={'+-------------------------------------------------------+'
+            '|  Welcome to SEIZMO''s interactive windowing function   |'
+            '+-------------------------------------------------------+'
+            '|                                                       |'
+            '|                     MOUSE USAGE:                      |'
+            '|                                                       |'
+            '| LEFT CLICK          MIDDLE CLICK          RIGHT CLICK |'
+            '+------------+      +--------------+      +-------------+'
+            '| Mark Window        Finalize Marks         Mark Window |'
+            '|   Start                                      End      |'
+            '+-------------------------------------------------------+'
+            '|                                                       |'
+            '|                        NOTES:                         |'
+            '|                                                       |'
+            '|  + You may refine window marks until you finalize     |'
+            '|  + When finalized, a new plot with the windowed       |'
+            '|    waveforms will appear, as well as a confirmation   |'
+            '|    prompt.  You will have the option to re-window.    |'
+            '|                                                       |'
+            '+-------------------------------------------------------+'
+            '|                                                       |'
+            '|        PLEASE CHOOSE AN OPTION BELOW TO PROCEED!      |'
+            '|                                                       |'
+            '+-------------------------------------------------------+'};
+    %}
+    
+    % display prompt and get user choice
+    choice=menu(prompt,'OVERLAY PLOT','EVENLY SPACED PLOT',...
+        'DISTANCE SPACED PLOT','DO NOT WINDOW','DIE!');
+    
+    % proceed by user choice
+    switch choice
+        case 1 % overlay
+            fh(1)=plot2(data,varargin{:});
+        case 2 % evenly spaced
+            fh(1)=plot0(data,varargin{:});
+        case 3 % distance spaced
+            fh(1)=recordsection(data,varargin{:});
+        case 4 % no window
+            win=[];
+            return
+        case 5 % immediate death
+            error('seizmo:userwindow:killYourSelf',...
+                'User demanded Seppuku!')
     end
     
-    % make window bars
+    % add window limit markers
+    figure(fh(1));
     span=ylim;
     win=xlim;
     hold on
@@ -76,93 +161,63 @@ while(1)
     goh(2)=plot([win(2) win(2)],span,'r','linewidth',4);
     hold off
     
-    % loop until user is satisfied
-    final=0;
-    while (final==0)
+    % loop until user finalizes markers
+    final=false;
+    while(~final)
         % focus plot and let user pick
-        figure(h);
+        figure(fh(1));
         [x,y,button]=ginput(1);
         
-        % which mouse button
-        if (button==1)
-            % left - update window start
-            win(1)=x;
-            figure(h);
-            delete(goh(1));
-            hold on
-            goh(1)=plot([win(1) win(1)],span,'g','linewidth',4);
-            hold off
-        elseif (button==3)
-            % right - update window end
-            win(2)=x;
-            figure(h);
-            delete(goh(2));
-            hold on
-            goh(2)=plot([win(2) win(2)],span,'r','linewidth',4);
-            hold off
-        elseif (button==2)
-            % middle - satisfied so clean up and exit click loop
+        % which mouse button?
+        switch button
+            case 1
+                % left click - update window start
+                win(1)=x;
+                set(goh(1),'xdata',[x x])
+            case 3
+                % right click - update window end
+                win(2)=x;
+                set(goh(2),'xdata',[x x])
+            case 2
+            % middle click - finalize markers
             if (win(1)>win(2))
-                % start and end reversed - exchange
-                win=fliplr(win);
-                figure(h);
-                delete(goh(1));
-                delete(goh(2));
-                hold on
-                goh(1)=plot([win(1) win(1)],span,'g','linewidth',4);
-                goh(2)=plot([win(2) win(2)],span,'r','linewidth',4);
-                hold off
-            elseif (win(1)==win(2))
-                % start/end the same
-                win=xlim;
-                figure(h);
-                delete(goh(1));
-                delete(goh(2));
-                hold on
-                goh(1)=plot([win(1) win(1)],span,'g','linewidth',4);
-                goh(2)=plot([win(2) win(2)],span,'r','linewidth',4);
-                hold off
+                % start and end reversed - fix
+                win=win([2 1]);
+                set(goh(1),'xdata',[win(1) win(1)])
+                set(goh(2),'xdata',[win(2) win(2)])
             end
-            final=1;
+            final=true;
         end
     end
     
-    % cut
-    data2=cut(data,'z',win(1),win(2),'fill',fill,'filler',0);
+    % get windowed data
+    data2=cut(data,'z',win(1),win(2),'fill',fill);
     
-    % remove trends
-    if(rdrift==2)
-        data2=rtr(data2);
-    elseif(rdrift==1)
-        data2=rmean(data2);
+    % apply function post cut
+    data2=func(data2);
+
+    % proceed by user choice
+    switch choice
+        case 1 % overlay
+            fh(2)=plot2(data2,varargin{:});
+        case 2 % evenly spaced
+            fh(2)=plot0(data2,varargin{:});
+        case 3 % distance spaced
+            fh(2)=recordsection(data2,varargin{:});
     end
     
-    % view window
-    if (i==1)
-        h2=p2(data2,'p2norm',true,'normmax',1);
-    elseif (i==2)
-        h2=p0(data2,'xlimits',win);
-    else
-        h2=recsec(data2,'xlimits',win);
-    end
-    
-    % TRY AGAIN?
-    k=menu('Keep window?','YES','NO - TRY AGAIN','NO - DIE!');
-    if (k==1)
-        % DONE
-        data=data2;
-        if(push)
-            [b2,e2]=gh(data,'b','e');
-            data=ch(data,'b',b2+b,'e',e2+b); 
-        end
-        return;
-    elseif (k==2)
-        % REPEAT
-        close([h h2]);
-        h=-1; h2=-1;
-    elseif (k==3)
-        % DEATH!
-        error('user seppuku')
+    % confirm results
+    choice=menu('KEEP WINDOW?','YES','NO - TRY AGAIN','NO - DIE!');
+    switch choice
+        case 1 % all done!
+            data=data2;
+            happy_user=true;
+        case 2 % please try again
+            close(fh);
+            fh=[-1 -1];
+        case 3 % i bear too great a shame to go on
+            error('seizmo:userwindow:killYourSelf',...
+                'User demanded Seppuku!')
     end
 end
 

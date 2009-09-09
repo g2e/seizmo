@@ -1,0 +1,17 @@
+%   1 - These scripts require the included file:
+%          mattaup/lib/matTaup.jar
+%       to be added in Matlab's javaclasspath.  You may use the functions
+%       javaaddpath and javarmpath to alter the dynamic portion of the path
+%       or you will need to add the jar file to the Matlab system file
+%       'classpath.txt'.  Use the command 'edit classpath.txt' in Matlab to
+%       add the the jar file (be careful and use the full path!).  This may
+%       require administrator privileges.
+%
+%   2 - To install these scripts in Matlab, add this directory to the Matlab
+%       path.  You may do this by using Matlab functions addpath, rmpath,
+%       and savepath.  This can be done graphically in Matlab by going to
+%       File => Set Path.  Setting the path may require administrative
+%       privileges.
+%
+%   3 - Type 'help mattaup' in Matlab to check if step 2 worked.  Run some
+%       of the functions listed to check if step 1 worked.

@@ -16,7 +16,7 @@ function [times]=fixtimes(times,option)
 %
 %     FIXTIMES(TIMES,'UTC') allows fixing UTC times which have leap seconds
 %     occasionally inserted on certain dates (see LEAPSECONDS).  Setting to
-%     'TAI' or [] will not take leapseconds into account (the default).
+%     'TAI' or [] will not take leap seconds into account (the default).
 %
 %    Notes:
 %
@@ -26,16 +26,20 @@ function [times]=fixtimes(times,option)
 %      UTC(6)=UTC(6)+500;
 %      fixtimes(UTC,'UTC')
 %
-%    See also: fixdates, isleapyear, leapseconds, totalleaps, leapsinday
+%    See also: fixdates, isleapyear, leapseconds, totalleaps, leapsinday,
+%              getleapseconds, cal2doy, doy2cal, timediff, utc2tai,
+%              tai2utc, gregorian2modserial, gregorian2serial,
+%              serial2gregorian, modserial2gregorian
 
 %     Version History:
 %        Nov.  2, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        June 11, 2009 - fix leap second bug (was in LEAPSINDAY)
 %        June 24, 2009 - minor doc update
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:00 GMT
+%     Last Updated Sep.  5, 2009 at 19:15 GMT
 
 % todo:
 

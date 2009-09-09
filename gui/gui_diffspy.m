@@ -1,4 +1,5 @@
 function []=gui_diffspy(a)
+%GUI_DIFFSPY    Core-diffracted profile browser
 
 % check table
 if(nargin)

@@ -14,21 +14,24 @@ function [dates]=fixdates(dates)
 %    Notes:
 %
 %    Examples:
-%     Last day of February:
+%     Nifty way to say the last day of February:
 %      fixdates([someyear 3 0])
 %     will return [someyear 2 28] or [someyear 2 29].
 %
 %     Five hundred days after the start of some year:
 %      fixdates([someyear 500])
 %
-%    See also: fixtimes, doy2cal, cal2doy
+%    See also: fixtimes, doy2cal, cal2doy, timediff, isleapyear,
+%              gregorian2modserial, gregorian2serial, serial2gregorian,
+%              modserial2gregorian
 
 %     Version History:
 %        Nov.  1, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:55 GMT
+%     Last Updated Sep.  5, 2009 at 19:15 GMT
 
 % todo:
 

@@ -25,16 +25,22 @@ function [diff]=timediff(times1,times2,option)
 %     Find the number of seconds in 2005:
 %      timediff([2005 1],[2006 1],'utc')
 %
-%    See also: gregorian2modserial, utc2tai
+%    See also: fixtimes, isleapyear, leapseconds, totalleaps, leapsinday,
+%              getleapseconds, cal2doy, doy2cal, fixdates, utc2tai,
+%              tai2utc, gregorian2modserial, gregorian2serial,
+%              serial2gregorian, modserial2gregorian
 
 %     Version History:
 %        Nov. 12, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        June 10, 2009 - minor doc fix
 %        June 24, 2009 - added scalar datetime expansion, minor doc update
+%        Sep.  5, 2009 - added SUBMAT as a subfunction so the time package
+%                        is free from 3rd party dependencies (I think),
+%                        minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:05 GMT
+%     Last Updated Sep.  5, 2009 at 19:35 GMT
 
 % todo:
 
@@ -86,5 +92,53 @@ end
 
 % take difference
 diff=submat(modserial,2,1)*86400+submat(modserial,2,2);
+
+end
+
+function [X]=submat(X,varargin)
+%SUBMAT    Returns a submatrix reduced along indicated dimensions
+%
+%    Usage:    Y=submat(X,DIM1,LIST1,DIM2,LIST2,...)
+%
+%    Description: Y=SUBMAT(X,DIM,LIST) creates a matrix Y that is
+%     the matrix X reduced along dimension DIM to the indices in LIST.  If
+%     DIM is a list of dimensions, LIST is used to reduce each dimension.
+%
+%     Y=SUBMAT(X,DIM1,LIST1,DIM2,LIST2,...) allows for access to
+%     multiple dimensions independently.
+%
+%    Notes:
+%
+%    Examples:
+%      Return x reduced to only the elements in index 1 of dimension 5:
+%      x=submat(x,5,1)
+%
+%    See also: submat_eval, colon operator (:), repmat
+
+%     Version History:
+%        Nov. 12, 2008 - initial version
+%        Apr. 23, 2009 - move usage up
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Aug. 17, 2009 at 21:15 GMT
+
+% todo:
+
+% CHECK VARARGIN
+if(~mod(nargin,2))
+    error('seizmo:submat:badNumArgs',...
+        'dimension argument must be followed by indices argument');
+end
+
+% DEFAULT TO ENTIRE MATRIX AND EXPAND TO MAX INPUT DIMENSION
+list(1:max([ndims(X) [varargin{1:2:end}]]))={':'};
+
+% REDUCED/REPLICATED DIMENSIONS
+for i=1:2:nargin-2
+    [list{[varargin{i}]}]=deal(varargin{i+1});
+end
+
+% SUBSET
+X=X(list{:});
 
 end

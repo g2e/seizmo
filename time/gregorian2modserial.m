@@ -1,7 +1,7 @@
 function [modserial]=gregorian2modserial(times)
 %GREGORIAN2MODSERIAL    Convert Gregorian dates to modified serial dates
 %
-%    Usage:    modserial=gregorian2modserial(dates)
+%    Usage:    modserialdates=gregorian2modserial(gregoriandates)
 %
 %    Description: [MODSERIAL]=GREGORIAN2MODSERIAL(DATES) returns the
 %     equivalent modified serial dates for the Gregorian dates stored in
@@ -27,14 +27,16 @@ function [modserial]=gregorian2modserial(times)
 %      modserial=gregorian2modserial([0 now])
 %      serial=gregorian2serial([0 now])
 %
-%    See also: serial2gregorian, gregorian2serial, modserial2gregorian
+%    See also: serial2gregorian, gregorian2serial, modserial2gregorian,
+%              fixtimes, fixdates, timediff, isleapyear, cal2doy, doy2cal
 
 %     Version History:
 %        Nov. 11, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:00 GMT
+%     Last Updated Sep.  5, 2009 at 19:40 GMT
 
 % todo:
 

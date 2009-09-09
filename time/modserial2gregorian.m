@@ -1,16 +1,16 @@
 function [times]=modserial2gregorian(modserial,option)
 %MODSERIAL2GREGORIAN    Convert modified serial dates to Gregorian dates
 %
-%    Usage:    gregoriandate=modserial2gregorian(modserialdate)
-%              gregoriandate=modserial2gregorian(modserialdate,option)
+%    Usage:    gregoriandates=modserial2gregorian(modserialdates)
+%              gregoriandates=modserial2gregorian(modserialdates,option)
 %
-%    Description: MODSERIAL2GREGORIAN(MODSERIAL) returns the equivalent
+%    Description: MODSERIAL2GREGORIAN(DATES) returns the equivalent
 %     Gregorian dates in [year month dayofmonth hour minute second] format
 %     for the modified serial dates stored in MODSERIAL.  Modified serial
 %     dates are the number of days and seconds since January 0, year 0
 %     at 00:00:00 and are in the format [days seconds].
 %
-%     MODSERIAL2GREGORIAN(MODSERIAL,OPTION) specifies the output format:
+%     MODSERIAL2GREGORIAN(DATES,OPTION) specifies the output format:
 %      OPTION        OUTPUT
 %       'caldate' =>  [year month dayofmonth]
 %       'caltime' =>  [year month dayofmonth hour minute seconds]
@@ -28,14 +28,16 @@ function [times]=modserial2gregorian(modserial,option)
 %     500 seconds from now:
 %      modserial2gregorian([now 500])
 %
-%    See also: gregorian2modserial, serial2gregorian, gregorian2serial
+%    See also: gregorian2modserial, serial2gregorian, gregorian2serial,
+%              fixtimes, fixdates, timediff, isleapyear, cal2doy, doy2cal
 
 %     Version History:
 %        Nov. 12, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:05 GMT
+%     Last Updated Sep.  5, 2009 at 19:35 GMT
 
 % todo:
 

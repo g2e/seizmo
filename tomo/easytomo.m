@@ -1,34 +1,54 @@
-function [spos,epos,G,m_synth,tt]=easytomo(nrays,nblocks,vmean,vvar)
+function [G,m_synth,tt,s,e]=easytomo(nrays,nblocks,vmean,vvar)
 %EASYTOMO    Generates a random, simple tomography problem
 %
-%    Description:
-%     [spos,epos,G,m_synth,tt]=easytomo(nrays,nblocks,vmean,vvar) creates a
-%     region of nblocks by nblocks (each block is of unit size) with each
-%     block having a random velocity within the range vmean+/-vvar.  Then
-%     nrays ray paths are randomly generated to start and end on the
-%     boundary of the region.  Their total travel time through the region
-%     and individual path lengths within each block are then calculated.  
-%     
-%     The output is spos (the starting position of all ray paths in [x y]),
-%     epos (the end position of all ray paths in [x y]), G (the path length
+%    Usage:    [G,m_synth,tt,s,e]=easytomo(nrays,model)
+%              [G,m_synth,tt,s,e]=easytomo(nrays,nblocks,vmean,vvar)
+%
+%    Description: [G,M_SYNTH,TT,S,E]=EASYTOMO(NRAYS,MODEL) draws
+%     NRAYS number of raypaths through the velocity model MODEL.  Their
+%     total travel time through the region and individual path lengths
+%     within each block are then calculated and returned.  MODEL should
+%     have velocities scaled to the block size (so if the blocks are 5x5km,
+%     then a velocity of 1 would mean 5kmps).  Blocks are assumed to be
+%     square.  The model does not have to be square (ie the matrix can be
+%     MxN).  The outputs are the kernel matrix G (contains the path length
 %     in each block for each ray path with one ray path per row - this
-%     defines your data/model relationship and is the hard part to find),
-%     m_synth (1/velocity aka the slowness for each block - this is what
-%     you want to resolve), and tt (the total travel time for each ray path
-%     through the region - this is your data).
+%     defines your data/model relationship and is the hard part to work
+%     out), m_synth (1/velocity aka the slowness for each block - this is
+%     what you want to resolve), tt (the total travel time for each ray
+%     path through the region - this is your data), and the starting and
+%     ending positions of the raypaths in [x y] format, S and E.
+%
+%     [G,M_SYNTH,TT,S,E]=EASYTOMO(NRAYS,NBLOCKS,VMEAN,VVAR) creates a
+%     region of NBLOCKS by NBLOCKS (blocks are square) with each block
+%     having a random velocity within the range vmean+/-vvar blocks/sec.
+%     NBLOCKS may be a 2 element vector to specify a non-square region.
 %
 %    Notes/Caveats:
+%     - in the plot, green squares indicate the starting position of a ray
+%       path and the red diamonds give the ending position
 %     - no receivers or sources - its just random raypaths
 %     - no ray path bending - just straight lines
-%     - no error added to the travel times
-%     - nblocks can be vector [m n] to specify a non-square region
-%     - nblocks can be a input velocity model (don't specify vmean & vvar)
+%     - rays always start and end on the boundary of the region
+%     - no error is added to the travel times
 %
-%    Example:
+%    Examples:
 %     GDA style exercise (15 rays through a 3x3 grid with velocity 10+/-1):
-%      [spos,epos,G,m_synth,tt]=easytomo(15,3,10,1)
+%      [G,m_synth,tt,s,e]=easytomo(15,3,10,1)
+%
+%    See also:
 
-%    Written by Garrett Euler
+%     Version History:
+%        Fall     2004 - initial version
+%        Fall     2006 - made into a function, doc update
+%        Fall     2008 - major code cleanup, renamed to EASYTOMO
+%        Mar.  6, 2009 - added to SEIZMO
+%        Sep.  6, 2009 - updated documentation
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Sep.  6, 2009 at 02:50 GMT
+
+% todo:
 
 % act by number of inputs
 if(nargin==4)
@@ -55,7 +75,7 @@ axis ij;
 caxis([min(vel(:))-2*eps max(vel(:))+2*eps])
 colormap(flipud(jet(1024)));
 a=colorbar;
-ylabel(a,'Velocity (units/sec)','fontsize',14,'fontweight','bold')
+ylabel(a,'Velocity (blocks/sec)','fontsize',14,'fontweight','bold')
 title('Velocity Grid and Raypaths','fontsize',14,'fontweight','bold')
 set(gca,'fontsize',14,'fontweight','bold','xaxislocation','top')
 drawnow;
@@ -104,8 +124,8 @@ ex(s21)=pos(s21,2)*n;
 ex(s22)=pos(s22,2)*n; ey(s22)=m;
                       ey(s23)=pos(s23,2)*m;
 ex(s24)=n;            ey(s24)=pos(s24,2)*m;
-spos=[sx sy];
-epos=[ex ey];
+s=[sx sy];
+e=[ex ey];
 
 % plot ray paths
 plot([sx.'; ex.'],[sy.'; ey.'],'k','linewidth',2)
@@ -169,7 +189,7 @@ for i=1:nrays
         ixs(r+1)=ixs(r)+ixs(r+1);
         iys(r+1)=iys(r)+iys(r+1);
         d(r)=[]; ixs(r)=[]; iys(r)=[];
-        disp('corner!'); 
+        disp('corner!'); % haven't actually seen this yet
     end
     
     % drop final block step (steps off grid)

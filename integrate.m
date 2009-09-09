@@ -48,9 +48,10 @@ function [data]=integrate(data,option)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        May   8, 2009 - uses expanded idep unit set
+%        Sep.  8, 2009 - drop SWAP for DEAL
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Sep.  8, 2009 at 06:05 GMT
 
 % todo:
 
@@ -96,7 +97,7 @@ idep=getenumid(data,'idep');
 [b,e,delta,npts]=getheader(data,'b','e','delta','npts');
 
 % integrate
-[depmen,depmin,depmax]=swap(nan(nrecs,1));
+[depmen,depmin,depmax]=deal(nan(nrecs,1));
 for i=1:nrecs
     % skip dataless
     if(~npts(i)); continue; end

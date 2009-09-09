@@ -11,16 +11,13 @@ function [h,idx]=versioninfo(data)
 %     repetition.
 %
 %    Notes:
-%     - currently assumes each definition struct has the same top tier
-%       layout (ok for now) and also does not preallocate the struct which
-%       may be a speed bottle neck as this is a low level function
 %
 %    Examples:
 %     Get the undefined value for your data:
 %      h=versioninfo(data);
 %      h.undef
 %
-%    See also: seizmodef, validseizmo
+%    See also: seizmodef, validseizmo, seizmocheck
 
 %     Version History:
 %        Sep. 25, 2008 - initial version
@@ -32,9 +29,10 @@ function [h,idx]=versioninfo(data)
 %        Nov. 15, 2008 - update for new name schema
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Sep.  7, 2009 - fixed multi-filetype bottleneck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Sep.  7, 2009 at 07:05 GMT
 
 % todo:
 
@@ -46,30 +44,18 @@ if(~isempty(msg)); error(msg); end
 msg=seizmocheck(data);
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
-% get filetypes
+% get filetype and version
 ft={data.filetype}.';
-uft=unique(ft);
-nft=numel(uft);
-
-% get versions
 v=[data.version].';
 
-% loop through each filetype
-count=0; idx=nan(size(data));
-for i=1:nft
-    % who has this filetype
-    ift=strcmpi(uft{i},ft);
-    
-    % get local versions
-    uv=unique(v(ift));
-    nv=numel(uv);
-    
-    % grab definitions
-    for j=1:nv
-        count=count+1;
-        h(count)=seizmodef(uft{i},uv(j)); %#ok<AGROW>
-        idx(v==uv(j) & ift)=count;
-    end
+% get unique filetype/versions
+[u,a,idx]=unique([double(char(ft)) v],'rows');
+nu=numel(a);
+
+% loop through unique filetype/versions
+h(1:nu,1)=deal(seizmodef(ft{a(1)},v(a(1))));
+for i=2:nu
+    h(i)=seizmodef(ft{a(i)},v(a(i)));
 end
 
 end

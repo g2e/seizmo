@@ -24,16 +24,18 @@ function [leaps]=totalleaps(dates,option)
 %     Get the current offset:
 %      totalleaps(now,'serial')
 %
-%    See also: leapsinday, getleapseconds
+%    See also: leapsinday, getleapseconds, leapseconds, fixtimes, timediff,
+%              utc2tai, tai2utc
 
 %     Version History:
 %        Nov.  1, 2008 - initial version
 %        Nov. 10, 2008 - uses GETLEAPSECONDS to speed calls up
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        June 11, 2009 - minor doc update
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:05 GMT
+%     Last Updated Sep.  5, 2009 at 19:15 GMT
 
 % todo:
 

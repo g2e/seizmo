@@ -1,9 +1,9 @@
 function [conf]=plotconfigfix(conf)
-%PLOTCONFIGFIX    Fixes SEIZMO plot configuration control
+%PLOTCONFIGFIX    Fixes the SEIZMO plot configuration struct
 %
 %    Usage:    conf=plotconfigfix(conf)
 %
-%    Description: PLOTCONFIGFIX(CONF) fixes plot configuration structure
+%    Description: PLOTCONFIGFIX(CONF) fixes a plot configuration structure
 %     returned by PLOTCONFIG.  Currently this involves stepping through
 %     a heirarchy of configuration fields and applying their values to
 %     unset fields that are under them.  The heirarchy is actually defined
@@ -18,16 +18,17 @@ function [conf]=plotconfigfix(conf)
 %     uses two options that will apply their values to nearly every element
 %     in the figure.
 %
-%    See also: plotconfig, plot1, plot2, plotall, recordsection, plotdendro
+%    See also: plotconfig, plot1, plot2, plot0, recordsection, plotdendro
 
 %     Version History:
 %        Mar.  7, 2008 - initial version
 %        Nov. 13, 2008 - renamed from PCONFFIX to PLOTCONFFIX
 %        Nov. 15, 2008 - renamed from PLOTCONFFIX to PLOTCONFIGFIX
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Sep.  7, 2009 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Sep.  7, 2009 at 06:25 GMT
 
 % todo:
 

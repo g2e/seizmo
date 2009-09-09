@@ -22,15 +22,17 @@ function [x,y,z]=geodetic2xyz(lat,lon,depth,ellipsoid)
 %     Get out of the geodetic coordinate system and into cartesian:
 %      [x,y,z]=geodetic2xyz(lat,lon,depth)
 %
-%    See also: xyz2geodetic, spherical2xyz, xyz2spherical
+%    See also: xyz2geodetic, geocentric2xyz, xyz2geocentric,
+%              geodetic2geocentric, geocentric2geodetic
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - scalar expansion, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Sep.  5, 2009 at 20:00 GMT
 
 % todo:
 

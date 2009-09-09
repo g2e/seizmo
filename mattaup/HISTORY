@@ -1,0 +1,11 @@
+v1.2.0  - fixed java file breakage with TauP 1.2beta2
+        - added Contents.m
+        - added this file and WISHLIST
+        - condensed jar files into 1 (to match original MatTauP)
+v1.1.0  - updated m-files
+            - cleaner code
+            - more options
+            - more documentation
+            - utilize help system
+        - added a Makefile for compiling
+        - added path interpolation (fixes plots of diffracted paths)

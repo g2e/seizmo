@@ -232,6 +232,7 @@ hold off
 
 % zooming
 axis(P.AXIS{:});
+xlim([min(b) max(e)]);
 if(~isempty(P.XLIMITS)); axis auto; xlim(P.XLIMITS); end
 if(~isempty(P.YLIMITS)); ylim(P.YLIMITS); end
 

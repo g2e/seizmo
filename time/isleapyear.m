@@ -16,14 +16,17 @@ function [isleap]=isleapyear(year)
 %     Takes into account the century rule and the exception so that
 %     isleapyear([1900 1904 2000 2004]) returns [0 1 1 1].
 %
-%    See also: julday, calday, leapseconds
+%    See also: fixdates, fixtimes, timediff, cal2doy, doy2cal,
+%              gregorian2modserial, gregorian2serial, serial2gregorian,
+%              modserial2gregorian
 
 %     Version History:
 %        Oct. 28, 2008 - initial version
 %        Apr. 23, 2009 - move usage up
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:05 GMT
+%     Last Updated Sep.  5, 2009 at 19:10 GMT
 
 % todo:
 

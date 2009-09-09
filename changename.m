@@ -75,9 +75,11 @@ function [data]=changename(data,varargin)
 %        May  28, 2009 - initial version
 %        May  29, 2009 - fix empty option handling, allow scalar expansion
 %                        for name
+%        Sep.  5, 2009 - FILENAME and FILE also point to NAME option, error
+%                        on unknown option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:00 GMT
+%     Last Updated Sep.  5, 2009 at 05:55 GMT
 
 % todo:
 
@@ -117,6 +119,9 @@ for i=1:2:nargin-1
         error('seizmo:changename:badInput',...
             'Options must be specified as a strings!');
     end
+    if(strcmpi(varargin{i},'filename') || strcmpi(varargin{i},'file'))
+        varargin{i}='name';
+    end
     option.(upper(varargin{i}))=varargin{i+1};
 end
 
@@ -124,11 +129,10 @@ end
 nrecs=numel(data);
 fields=fieldnames(option);
 for i=1:numel(fields)
-    % skip empty fields
-    if(isempty(option.(fields{i}))); continue; end
     % specific checks
     switch lower(fields{i})
         case {'name' 'append' 'prepend'}
+            if(isempty(option.(fields{i}))); continue; end
             if(ischar(option.(fields{i})))
                 option.(fields{i})=cellstr(option.(fields{i}));
             elseif(iscellstr(option.(fields{i})))
@@ -144,6 +148,7 @@ for i=1:numel(fields)
                     fields{i});
             end
         case 'delete'
+            if(isempty(option.(fields{i}))); continue; end
             if(ischar(option.(fields{i})))
                 option.(fields{i})=cellstr(option.(fields{i}));
             end
@@ -164,6 +169,7 @@ for i=1:numel(fields)
                 option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
             end
         case 'change'
+            if(isempty(option.(fields{i}))); continue; end
             if(~iscellstr(option.(fields{i})) || ...
                     numel(size(option.(fields{i})))~=2 || ...
                     ~any(size(option.(fields{i}),1)==[1 nrecs]) || ...
@@ -180,6 +186,9 @@ for i=1:numel(fields)
             if(size(option.(fields{i}),1)==1)
                 option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
             end
+        otherwise
+            error('seizmo:changename:badField',...
+                'Unknown Option: %s',fields{i});
     end
 end
 

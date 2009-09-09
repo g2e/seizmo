@@ -35,9 +35,10 @@ function []=listheader(data,varargin)
 %        Apr. 23, 2009 - move usage up
 %        Aug.  4, 2009 - changed numeric format from %d to %g so Octave
 %                        output is not integer
+%        Sep.  4, 2009 - changed numeric format again from %g to %-.10g
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:25 GMT
+%     Last Updated Sep.  4, 2009 at 09:10 GMT
 
 % todo:
 
@@ -166,7 +167,7 @@ for m=1:length(h.ntype)
                 disp(sprintf('%12s = UNDEFINED (%g)',upper(f),...
                     data.head(h.(h.ntype{m})(n).pos.(f))));
             else
-                disp(sprintf('%12s = %g',upper(f),...
+                disp(sprintf('%12s = %-.10g',upper(f),...
                     data.head(h.(h.ntype{m})(n).pos.(f))));
             end
             return;

@@ -16,7 +16,7 @@ function [data]=writeparameters(data,varargin)
 %              data=writeparameters(data,...,'byteorder',endianness,...)
 %
 %    Description: WRITEPARAMETERS is a wrapper function for several
-%     funcitons that alter top level fields of a SEIZMO data structure such
+%     functions that alter top level fields of a SEIZMO data structure such
 %     as the 'name', 'path' and 'byteorder' fields.  This is intended to
 %     provide the functions WRITESEIZMO and WRITEHEADER with a large amount
 %     of options.  For options 'NAME', 'PREPEND', 'APPEND', 'DELETE', and

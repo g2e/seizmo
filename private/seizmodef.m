@@ -1,20 +1,21 @@
-function [def]=seizmodef(filetype,version,option)
+function [def]=seizmodef(filetype,version,usecache)
 %SEIZMODEF    Returns specified SEIZMO definition structure
 %
 %    Usage:    definition=seizmodef(filetype,version)
-%              definition=seizmodef(filetype,version,option)
+%              definition=seizmodef(filetype,version,usecache)
 %
 %    Description: [DEFINITIONS]=SEIZMODEF(FILETYPE,VERSION) returns the
 %     struct DEFINITIONS which provides all formatting information
 %     necessary to read/understand/modify/write the specified version
 %     VERSION of the data filetype FILETYPE using the SEIZMO toolbox.
 %
-%     SEIZMODEF(FILETYPE,VERSION,OPTION) allows setting the caching
-%     behavior with a logical.  If OPTION is set to TRUE, SEISMODEF will
+%     SEIZMODEF(FILETYPE,VERSION,USECACHE) allows setting the caching
+%     behavior with a logical.  If USECACHE is set to TRUE, SEISMODEF will
 %     first check if a cached definition struct exists for that filetype
-%     and version and will use it.  If a definition does not exist, a new
-%     one is created and cached.  OPTION set FALSE will always get a new
-%     definition (updating the cache too).
+%     and version and if so, SEIZMODEF will use that.  If a definition does
+%     not exist, a new one is created and cached.  OPTION set FALSE will
+%     always create a new definition (updating the cache too).  By default,
+%     USECACHE is TRUE.
 %
 %    Notes:
 %     - Currently the definition is set so that all header data is stored 
@@ -55,9 +56,11 @@ function [def]=seizmodef(filetype,version,option)
 %        June 27, 2009 - switch v101 from SEIZMO to SAC even though it is
 %                        not supported by SAC -- this makes things a bit
 %                        easier for multiple component support
+%        Sep.  3, 2009 - updated discription and code for better
+%                        readibility about caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Sep.  3, 2009 at 20:15 GMT
 
 % todo:
 
@@ -70,11 +73,11 @@ end
 if(~isnumeric(version))
     error('seizmo:seizmodef:badInput','VERSION must be numeric!');
 end
-if(nargin==2 || isempty(option))
-    option=true;
-elseif(~islogical(option))
+if(nargin==2 || isempty(usecache))
+    usecache=true; % use cache by default
+elseif(~islogical(usecache))
     error('seizmo:seizmodef:badInput',...
-        'OPTION must be logical!')
+        'USECACHE must be logical!')
 end
 
 % get valid versions
@@ -93,7 +96,7 @@ ver=['V' int2str(version)];
 
 % reuse if already defined
 global SEIZMO
-if(option)
+if(usecache)
     try
         def=SEIZMO.SEIZMODEF.(ft).(ver);
         return;

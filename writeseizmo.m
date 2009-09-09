@@ -35,14 +35,14 @@ function []=writeseizmo(data,varargin)
 %      writeseizmo(taper(removetrend(readseizmo('*'))))
 %
 %     To write out all records in big endian:
-%      writeseizmo(changebyteorder(data,'ieee-be'))
+%      writeseizmo(data,'byteorder','ieee-be')
 %
 %     Alter the location of where the files are written:
-%      [data.path]=deal('some/new/directory');
-%      writeseizmo(data)
+%      writeseizmo(data,'path','some/new/directory')
 %
 %    See also:  readseizmo, bseizmo, seizmodef, getfileversion, readdata,
-%               readdatawindow, readheader, writeheader
+%               readdatawindow, readheader, writeheader, changename,
+%               changepath
 
 %     Version History:
 %        Oct. 29, 2007 - initial version, supports struct data
@@ -69,9 +69,10 @@ function []=writeseizmo(data,varargin)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        May  29, 2009 - allow options via WRITEPARAMETERS
+%        Sep.  5, 2009 - improved the examples
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Sep.  5, 2009 at 06:00 GMT
 
 % todo:
 

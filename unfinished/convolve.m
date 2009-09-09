@@ -1,7 +1,7 @@
 function [data]=convolve(data,varargin)
 %CONVOLVE    Convolve SEIZMO records with a function
 %
-%
+% COMING SOON!!!
 
 % todo:
 % - need options to create convolve function

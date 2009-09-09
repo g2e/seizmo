@@ -22,15 +22,17 @@ function [lat,lon,depth]=geocentric2geodetic(lat,lon,depth,ellipsoid)
 %     Get your earthquake location into geodetic coordinates:
 %      [lat,lon,depth]=geocentric2geodetic(evla,evlo,evdp/1000)
 %
-%    See also: geodetic2geocentric, geocentric2xyz, xyz2geodetic
+%    See also: geodetic2geocentric, geocentric2xyz, xyz2geodetic,
+%              xyz2geocentric, geodetic2xyz
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - scalar expansion, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Sep.  5, 2009 at 20:05 GMT
 
 % todo:
 

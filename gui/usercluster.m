@@ -1,5 +1,5 @@
 function [cutoff,color,perm]=usercluster(Z,data,cutoff,varargin)
-%USERCLUSTER    Graphical selection of clustering limit
+%USERCLUSTER    Interactively cluster SEIZMO records
 
 % cluster analysis loop
 while (1)

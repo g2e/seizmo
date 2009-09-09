@@ -103,9 +103,9 @@ end
 % header info
 leven=getlgc(data,'leven');
 iftype=getenumdesc(data,'iftype');
-[t,kt,o,ko,a,ka,f,kf,b,delta,npts,gcarc]=...
+[t,kt,o,ko,a,ka,f,kf,b,e,delta,npts,gcarc]=...
     getheader(data,'t','kt','o','ko','a','ka','f','kf',...
-    'b','delta','npts','gcarc');
+    'b','e','delta','npts','gcarc');
 
 % header structures (for determining if undefined)
 [h,idx]=versioninfo(data);
@@ -173,12 +173,12 @@ for i=1:nrecs
     % axis labels
     if(isempty(P.TITLE))
         if(isfield(data,'name') && ~isempty(data(i).name))
-	    try
-	        p1title=[texlabel(data(i).name,'literal') ...
-		    '  -  ' num2str(gcarc(i)) '\circ'];
+            try
+                p1title=[texlabel(data(i).name,'literal') ...
+                    '  -  ' num2str(gcarc(i)) '\circ'];
             catch
-	        p1title=[data(i).name ...
-		    '  -  ' num2str(gcarc(i)) '\circ'];
+    	        p1title=[data(i).name ...
+        	    '  -  ' num2str(gcarc(i)) '\circ'];
             end
         else p1title=['RECORD ' num2str(i) ...
                 '  -  ' num2str(gcarc(i)) '\circ'];
@@ -282,6 +282,12 @@ for i=1:nrecs
             end
         end
     end
+
+    % rezooming
+    axis(P.AXIS{:});
+    xlim([min(b) max(e)]);
+    if(~isempty(P.XLIMITS)); axis auto; xlim(P.XLIMITS(i,:)); end
+    if(~isempty(P.YLIMITS)); ylim(P.YLIMITS(i,:)); end
     hold off
 end
 

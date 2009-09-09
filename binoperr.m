@@ -72,7 +72,7 @@ function []=binoperr(varargin)
 %     'ignore', the records are just worked on point for point.  The 
 %     resultant records' iftype fields are determined by the parent of 
 %     their header fields (set by option 'newhdr' in the binary function
-%     call).  By default 'iftype' is set to 'error'.
+%     call).  By default 'iftype' is set to 'warn'.
 %
 %    Notes:
 %     - multiple options may be strung together in a single command
@@ -96,9 +96,11 @@ function []=binoperr(varargin)
 %        June  4, 2009 - minor doc fixes
 %        June 28, 2009 - added 'truncate' and 'pad' states to 'npts' and
 %                        'ncmp' options, some code reworking to accomadate
+%        Aug. 21, 2009 - changed IFTYPE from ERROR to WARN to allow working
+%                        with mixed xy and timeseries data
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:00 GMT
+%     Last Updated Aug. 21, 2009 at 21:25 GMT
 
 % todo:
 
@@ -109,7 +111,7 @@ option.BEGIN='WARN';
 option.REF='WARN';
 option.NCMP='ERROR';
 option.LEVEN='ERROR';
-option.IFTYPE='ERROR';
+option.IFTYPE='WARN';
 
 % available states
 valid.NPTS={'ERROR' 'WARN' 'TRUNCATE' 'PAD' 'IGNORE'};

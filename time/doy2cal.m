@@ -16,14 +16,17 @@ function [caldates]=doy2cal(doydates)
 %     Get the calendar date of today:
 %      caldate=doy2cal([0 now])
 %
-%    See also: cal2doy, isleapyear, cleandate
+%    See also: cal2doy, isleapyear, fixdates, fixtimes, timediff,
+%              gregorian2modserial, gregorian2serial, serial2gregorian,
+%              modserial2gregorian
 
 %     Version History:
 %        Oct. 31, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:55 GMT
+%     Last Updated Sep.  5, 2009 at 19:15 GMT
 
 % todo:
 

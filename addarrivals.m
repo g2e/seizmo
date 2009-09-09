@@ -30,7 +30,10 @@ function [data]=addarrivals(data,varargin)
 %     returns a large list similar to Brian Kennett's ttimes program would
 %     when told to list all.
 %
-%     ADDARRIVALS(...,'FIELDS',INDICES,...)
+%     ADDARRIVALS(...,'FIELDS',INDICES,...) indicates the header field
+%     indices of the t,kt,user fields to put arrivals in.  The default is
+%     0:9.  The indices are for all records and can not be individually
+%     set.
 %
 %    Notes:
 %     - TauP was written by:
@@ -44,13 +47,15 @@ function [data]=addarrivals(data,varargin)
 %     Fill t, kt, user fields 6:9 with several S phases:
 %      data=addarrivals(data,'phases','tts+','fields',6:9);
 %
-%    See also: getarrival, taupTime, changeheader
+%    See also: getarrival, tauptime, changeheader
 
 %     Version History:
 %        June 29, 2009 - initial version
+%        Aug. 25, 2009 - description update (forgot fields option)
+%        Sep.  2, 2009 - now uses tauptime
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 19:55 GMT
+%     Last Updated Sep.  2, 2009 at 11:30 GMT
 
 % todo:
 
@@ -187,8 +192,8 @@ for i=1:nrecs
     end
     
     % get arrivals
-    arrivals=taupTime(option.MODEL{i},evdp(i)/1000,...
-        option.PHASES{i},location{:});
+    arrivals=tauptime('mod',option.MODEL{i},'h',evdp(i)/1000,...
+        'ph',option.PHASES{i},location{:});
     
     % add arrivals
     for j=1:min(numel(idx),numel(arrivals))

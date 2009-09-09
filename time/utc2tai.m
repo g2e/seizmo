@@ -17,14 +17,16 @@ function [utc]=utc2tai(utc)
 %     which does not have leap seconds:
 %      utc2tai([2008 12 31 23 59 60])-utc2tai([2009 1 1 0 0 0])
 %
-%    See also: tai2utc, fixtimes, timediff, leapseconds, totalleaps
+%    See also: tai2utc, fixtimes, timediff, leapseconds, totalleaps,
+%              getleapseconds, leapsinday
 
 %     Version History:
 %        Nov.  2, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Sep.  5, 2009 at 19:30 GMT
 
 % todo:
 

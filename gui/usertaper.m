@@ -1,185 +1,293 @@
-function [data,taptype,tap,tapopt,h,h2]=usertaper(data,skip,rdrift)
-%USERTAPER    Interactively taper SAClab data
+function [data,tpr,fh]=usertaper(data,func,varargin)
+%USERTAPER    Interactively taper SEIZMO records
+%
+%    Usage:    data=usertaper(data)
+%              data=usertaper(data,func)
+%              data=usertaper(data,func,'field',value,...)
+%              [data,tpr]=usertaper(...)
+%              [data,tpr,fh]=usertaper(...)
+%
+%    Description: DATA=USERTAPER(DATA) presents a interactive menu and
+%     plot interface to taper records in a dataset with a few mouse clicks.
+%     The default taper type is that set by function TAPER.  This may be
+%     modified using the menu presented.  By default no mean or trend
+%     removal is done after tapering.
+%
+%     DATA=USERTAPER(DATA,FUNC) applies function FUNC to records in DATA
+%     after tapering and before the confirmation window.  FUNC must be a
+%     function handle.  Some common function handles for this are
+%     @removemean and @removetrend.
+%
+%     DATA=USERTAPER(DATA,FUNC,'FIELD',VALUE,...) passes field/value pairs
+%     to the plotting function, to allow further customization.
+%
+%     [DATA,TPR]=USERTAPER(...) also returns the taper properties in a
+%     struct TPR.  TPR contains fields type, width, and option which are
+%     arguments passed to the TAPER function.  Note that these fields are
+%     returned as empty unless set interactively.  
+%
+%     [DATA,TPR,FH]=USERTAPER(...) returns the figure handles in FH.
+%
+%    Notes:
+%
+%    Header changes: DEPMEN, DEPMIN, DEPMAX
+%
+%    Examples:
+%     Taper and remove the trend afterwards (before confirmation window):
+%      data=usertaper(data,@removetrend);
+%
+%    See also: taper, userwindow, usercluster, selectrecords
+
+%     Version History:
+%        Sep.  9, 2009 - rewrite and added documentation
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Sep.  9, 2009 at 07:30 GMT
+
+% todo:
+% - subplot showing taper
+% - option for wvtool
 
 % check nargin
-msg=nargchk(1,3,nargin);
+msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
-% defaults
-if(nargin<3 || isempty(rdrift)); rdrift=1; end  % demean tapered data
-if(nargin<2 || isempty(skip)); skip=1; end      % skip taper type/opt selection
+% check function handle
+if(nargin<2 || isempty(func))
+    func=@deal;
+elseif(~isa(func,'function_handle'))
+    error('seizmo:usertaper:badInput','FUNC must be a function handle!');
+end
 
-% taperdefaults
-taptype='hann';
-tap=[0 0];
-tapopt=[];
+% taper types
+types={[],'barthannwin','bartlett','blackman','blackmanharris',...
+    'bohmanwin','chebwin','flattopwin','gausswin','hamming','hann',...
+    'kaiser','nuttallwin','parzenwin','rectwin','triang','tukeywin'};
+
+% taper defaults
+tpr.type=[];
+tpr.width=[];
+tpr.option=[];
 
 % length normalization
 [b,e,npts,delta]=gh(data,'b','e','npts','delta');
 data=ch(data,'b',0,'e',1,'delta',1./(npts-1));
 
-% repeat until satisfied
-h=-1; h2=-1;
-while(1)
-    % info
-    mymenu={'Choose limits for the region you want untapered by clicking your';
-            'mouse on the (soon to be) displayed figure.';
-            '  ';
-            'Usage:';
-            '==================================';
-            'Left clicking   -=> indicates the start of the untapered window';
-            'Right clicking  -=> indicates the end of the untapered window';
-            'Middle clicking -=> finalizes the tapers';
-            '==================================';
-            '  ';
-            'You can rechoose taper parameters as many';
-            'times as you wish until you finalize them.';
-            '  ';
-            'When you finalize there will be a confirmation';
-            'menu at the end so you will have a chance to redo';
-            'the tapering if your not satisfied.';
-            '  ';
-            '  ';
-            'Choose a plot type for analysis:'};
-    i=menu(mymenu,'Overlay Plot','Evenly Spaced Plot','Distance Spaced Plot','DO NOT TAPER','DIE!');
+% outer loop - only breaks free by user command
+happy_user=false; fh=[-1 -1];
+while(~happy_user)
+    % explain to the user how this works with a little prompt
+    % and make them decide what kind of plot to use for the
+    % windowing, offering them back out options.  This prompt
+    % looks like trash because of default menu fonts.
+    prompt={'+-------------------------------------------------------+'
+            '|                Welcome to SEIZMO''s interactive tapering function                |'
+            '+-------------------------------------------------------+'
+            '|                                                                                                               |'
+            '|                                            MOUSE USAGE                                             |'
+            '|                                                                                                               |'
+            '|    LEFT CLICK                      MIDDLE CLICK                      RIGHT CLICK   |'
+            '+-------------+          +-------------+          +--------------+'
+            '|  Mark Untapered                 Finalize Marks                  Mark Untapered  |'
+            '|          Start                                                                             End           |'
+            '+-------------------------------------------------------+'
+            '|                                                                                                               |'
+            '|                                                  NOTES                                                   |'
+            '|                                                                                                               |'
+            '|          + You may refine tapering limits until you finalize                       |'
+            '|          + When finalized, a new plot with the tapered                              |'
+            '|              waveforms will appear, as well as a confirmation                     |'
+            '|              prompt.  You will have the option to re-taper.                         |'
+            '|                                                                                                               |'
+            '+-------------------------------------------------------+'
+            '|                                                                                                               |'
+            '|                PLEASE CHOOSE AN OPTION BELOW TO PROCEED!                 |'
+            '|                                                                                                               |'
+            '+-------------------------------------------------------+'};
     
-    % quick escape
-    if (i==4)
-        % NO TAPER
-        data=ch(data,'b',b,'e',e,'delta',delta);
-        return;
-    elseif (i==5)
-        % DEATH!
-        error('user seppuku')
     
-    % plot selection
-    elseif (i==1)
-        h=p2(data,'p2norm',true,'normmax',1);
-    elseif (i==2)
-        h=p0(data,'xlimits',[0 1]);
-    else
-        h=recsec(data,'xlimits',[0 1]);
-    end
+    % way cooler menu -- if only matlab gui's used fixed width
+    %{
+    prompt={'+-------------------------------------------------------+'
+            '|   Welcome to SEIZMO''s interactive tapering function   |'
+            '+-------------------------------------------------------+'
+            '|                                                       |'
+            '|                     MOUSE USAGE:                      |'
+            '|                                                       |'
+            '|   LEFT CLICK        MIDDLE CLICK         RIGHT CLICK  |'
+            '+---------------+   +--------------+    +---------------+'
+            '| Mark Untapered     Finalize Marks      Mark Untapered |'
+            '|     Start                                    End      |'
+            '+-------------------------------------------------------+'
+            '|                                                       |'
+            '|                        NOTES:                         |'
+            '|                                                       |'
+            '|  + You may refine tapering limits until you finalize  |'
+            '|  + When finalized, a new plot with the tapered        |'
+            '|    waveforms will appear, as well as a confirmation   |'
+            '|    prompt.  You will have the option to re-window.    |'
+            '|                                                       |'
+            '+-------------------------------------------------------+'
+            '|                                                       |'
+            '|        PLEASE CHOOSE AN OPTION BELOW TO PROCEED!      |'
+            '|                                                       |'
+            '+-------------------------------------------------------+'};
+    %}
     
-    % make taper bars
-    span=ylim;
-    tap=xlim;
-    hold on
-    goh(1)=plot([tap(1) tap(1)],span,'g','linewidth',4);
-    goh(2)=plot([tap(2) tap(2)],span,'r','linewidth',4);
-    hold off
+    % display prompt and get user choice
+    choice=menu(prompt,'CHOOSE TAPER','OVERLAY PLOT',...
+        'EVENLY SPACED PLOT','DISTANCE SPACED PLOT',...
+        'DO NOT TAPER','DIE!');
     
-    % loop until user is satisfied
-    final=0;
-    while (final==0)
-        % focus plot and let user pick
-        figure(h);
-        [x,y,button]=ginput(1);
-        
-        % which mouse button
-        if (button==1)
-            % left - update untapered start
-            tap(1)=x;
-            figure(h);
-            delete(goh(1));
-            hold on
-            goh(1)=plot([tap(1) tap(1)],span,'g','linewidth',4);
-            hold off
-        elseif (button==3)
-            % right - update untapered end
-            tap(2)=x;
-            figure(h);
-            delete(goh(2));
-            hold on
-            goh(2)=plot([tap(2) tap(2)],span,'r','linewidth',4);
-            hold off
-        elseif (button==2)
-            % middle - finalize and click loop
-            final=1;
-        end
-    end
-    
-    % fix tap(2)
-    tap(2)=1-tap(2);
-    
-    % option to skip
-    if(~skip)
-        % taper types
-        types={'barthannwin','bartlett','blackman','blackmanharris',...
-            'bohmanwin','chebwin','flattopwin','gausswin','hamming',...
-            'hann','kaiser','nuttallwin','parzenwin','rectwin',...
-            'triang','tukeywin'};
-        
-        % choose taper type
-        j=menu('CHOOSE A TAPER TYPE','DEFAULT','BARTHANN','BARTLETT',...
+    % proceed by user choice
+    switch choice
+        case 1 % taper select
+            j=menu('CHOOSE A TAPER TYPE','DEFAULT','BARTHANN','BARTLETT',...
             'BLACKMAN','BLACKMAN-HARRIS','BOHMAN','CHEBYCHEV',...
             'FLAT TOP','GAUSSIAN','HAMMING','HANN','KAISER',...
             'NUTTALL','PARZEN','RECTANGULAR','TRIANGULAR','TUKEY');
-        if(j>1)
-            taptype=types{j-1};
-        end
+            tpr.type=types{j};
+            
+            % taper options
+            switch j
+                case 7 % cheb
+                    tpr.option=inputdlg(['Chebychev - Stopband '...
+                        'Attenuation (in dB)? [100]:'],...
+                        'Chebychev Taper Option',1,{'100'});
+                    if(isempty(tpr.option))
+                        tpr.option=100;
+                    else
+                        tpr.option=str2double(tpr.option{:});
+                    end
+                    if(isempty(tpr.option) || isnan(tpr.option))
+                        tpr.option=100;
+                    end
+                case 9 % gauss
+                    tpr.option=inputdlg(['Gaussian - Number of std dev?'...
+                        ' [3.5]:'],'Gaussian Taper Option',1,{'3.5'});
+                    if(isempty(tpr.option))
+                        tpr.option=3.5;
+                    else
+                        tpr.option=str2double(tpr.option{:});
+                    end
+                    if(isempty(tpr.option) || isnan(tpr.option))
+                        tpr.option=3.5;
+                    end
+                case 12 % kaiser
+                    tpr.option=inputdlg(['Kaiser - Stopband '...
+                        'Attenuation Factor Beta? [7.5]:'],...
+                        'Kaiser Taper Option',1,{'7.5'});
+                    if(isempty(tpr.option))
+                        tpr.option=7.5;
+                    else
+                        tpr.option=str2double(tpr.option{:});
+                    end
+                    if(isempty(tpr.option) || isnan(tpr.option))
+                        tpr.option=7.5;
+                    end
+                case 17 % tukey
+                    tpr.option=inputdlg(['Tukey - Taper to Constant '...
+                        'Ratio? [1]:'],'Tukey Taper Option',1,{'1'});
+                    if(isempty(tpr.option))
+                        tpr.option=1;
+                    else
+                        tpr.option=str2double(tpr.option{:});
+                    end
+                    if(isempty(tpr.option) || isnan(tpr.option))
+                        tpr.option=1;
+                    end
+            end
+            % go back to main menu
+            continue;
+        case 2 % overlay
+            fh(1)=plot2(data,varargin{:});
+        case 3 % evenly spaced
+            fh(1)=plot0(data,varargin{:});
+        case 4 % distance spaced
+            fh(1)=recordsection(data,varargin{:});
+        case 5 % no taper
+            tpr.type=[];
+            tpr.width=[];
+            tpr.option=[];
+            data=ch(data,'b',b,'e',e,'delta',delta);
+            return;
+        case 6 % immediate death
+            error('seizmo:usertaper:killYourSelf',...
+                'User demanded Seppuku!')
+    end
+    
+    % add taper limit markers
+    figure(fh(1));
+    span=ylim;
+    tpr.width=xlim;
+    hold on
+    goh(1)=plot([tpr.width(1) tpr.width(1)],span,'g','linewidth',4);
+    goh(2)=plot([tpr.width(2) tpr.width(2)],span,'r','linewidth',4);
+    hold off
+    
+    % loop until user finalizes markers
+    final=false;
+    while(~final)
+        % focus plot and let user pick
+        figure(fh(1));
+        [x,y,button]=ginput(1);
         
-        % taper options
-        if(j==7) % cheb
-            tapopt=input('Chebychev - Stopband Attenuation? 0.1-200 [100]: ');
-            if(isempty(tapopt))
-                tapopt=100;
+        % which mouse button?
+        switch button
+            case 1
+                % left click - update untapered start
+                tpr.width(1)=x;
+                set(goh(1),'xdata',[x x])
+            case 3
+                % right click - update untapered end
+                tpr.width(2)=x;
+                set(goh(2),'xdata',[x x])
+            case 2
+            % middle click - finalize markers
+            if (tpr.width(1)>tpr.width(2))
+                % start and end reversed - fix
+                tpr.width=tpr.width([2 1]);
+                set(goh(1),'xdata',[tpr.width(1) tpr.width(1)])
+                set(goh(2),'xdata',[tpr.width(2) tpr.width(2)])
             end
-        elseif(j==9) % gauss
-            tapopt=input('Gaussian - Number of std dev? 0.1-10 [3.5]: ');
-            if(isempty(tapopt))
-                tapopt=3.5;
-            end
-        elseif(j==12) % kaiser
-            tapopt=input('Kaiser - Stopband Attenuation Factor? 0-200 [7.5]: ');
-            if(isempty(tapopt))
-                tapopt=7.5;
-            end
-        elseif(j==17) % tukey
-            tapopt=input('Tukey - Taper/Constant Ratio? 0-1 [1]: ');
-            if(isempty(tapopt))
-                tapopt=1;
-            end
+            final=true;
         end
     end
     
-    % taper
-    data2=taper(data,[tap(1) tap(2)],taptype,tapopt);
+    % fix end taper
+    tpr.width(2)=1-tpr.width(2);
     
-    % remove trends
-    if(rdrift==2)
-        data2=rtr(data2);
-    elseif(rdrift==1)
-        data2=rmean(data2);
-    end
+    % get windowed data
+    data2=taper(data,tpr.width,tpr.type,tpr.option);
     
-    % view window
-    if (i==1)
-        h2=p2(data2,'p2norm',true,'normmax',1);
-    elseif (i==2)
-        h2=p0(data2,'xlimits',[0 1]);
-    else
-        h2=recsec(data2,'xlimits',[0 1]);
-    end
-    
-    % TRY AGAIN?
-    k=menu('Keep taper?','YES','NO - TRY AGAIN','NO - DIE!');
-    if (k==1)
-        % DONE
-        data=ch(data2,'b',b,'e',e,'delta',delta);
-        return;
-    elseif (k==2)
-        % REPEAT
-        close([h h2]);
-        h=-1; h2=-1;
-    elseif (k==3)
-        % DEATH!
-        error('user seppuku')
-    end
-end
+    % apply function post cut
+    data2=func(data2);
 
+    % proceed by user choice
+    switch choice
+        case 2 % overlay
+            fh(2)=plot2(data2,varargin{:});
+        case 3 % evenly spaced
+            fh(2)=plot0(data2,varargin{:});
+        case 4 % distance spaced
+            fh(2)=recordsection(data2,varargin{:});
+    end
+    
+    % confirm results
+    choice=menu('KEEP TAPER?','YES','NO - TRY AGAIN','NO - DIE!');
+    switch choice
+        case 1 % all done!
+            data=ch(data2,'b',b,'e',e,'delta',delta);
+            happy_user=true;
+        case 2 % please try again
+            close(fh);
+            fh=[-1 -1];
+        case 3 % i bear too great a shame to go on
+            error('seizmo:usertaper:killYourSelf',...
+                'User demanded Seppuku!')
+    end
 end

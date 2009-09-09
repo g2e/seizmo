@@ -22,7 +22,8 @@ function [dates,leaps]=getleapseconds(option)
 %      tic; for i=1:100; [dates,leaps]=getleapseconds(true); end; toc
 %      tic; for i=1:100; [dates,leaps]=getleapseconds(false); end; toc
 %
-%    See also: leapseconds, totalleaps, leapsinday
+%    See also: leapseconds, totalleaps, leapsinday, fixtimes, timediff,
+%              utc2tai, tai2utc
 
 %     Version History:
 %        Nov. 10, 2008 - initial version
@@ -31,9 +32,10 @@ function [dates,leaps]=getleapseconds(option)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        June 11, 2009 - minor doc update
 %        Aug.  4, 2009 - strictly formatted string passed to datenum
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:00 GMT
+%     Last Updated Sep.  5, 2009 at 19:15 GMT
 
 % todo:
 

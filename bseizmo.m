@@ -6,7 +6,7 @@ function [data]=bseizmo(varargin)
 %    Description: BSEIZMO(IND1,DEP1,IND2,DEP2,...) takes arrays of
 %     independent and dependent components and arranges them into a SEIZMO
 %     data structure (one record per IND/DEP pair) to be compatible with
-%     SEIZMO functions.  Independent data must be a vector as multiple
+%     SEIZMO functions.  Independent data must be a vector, as multiple
 %     independent components are not currently supported.  If there are
 %     multiple dependent components for an independent datum, they should
 %     be arranged such that DEP contains each component in separate
@@ -15,7 +15,7 @@ function [data]=bseizmo(varargin)
 %    Notes:
 %     - outputs records as SAC binary version 6
 %     - the byte-order is set to match the current architecture
-%     - the filetype is set as 'General X vs Y file'
+%     - the filetype is set as 'Time Series File'
 %     - automatically figures out if data is evenly sampled
 %
 %    Header changes: 
@@ -67,9 +67,14 @@ function [data]=bseizmo(varargin)
 %        June 25, 2009 - best use SAC v6
 %        June 26, 2009 - no warning for ncmp field update
 %        June 27, 2009 - switch to multiple component version if necessary
+%        Sep.  4, 2009 - made automatic LEVEN setting more reasonable
+%        Sep.  5, 2009 - even more lenient on LEVEN setting, outputs time
+%                        series files rather than xy files, and puts the
+%                        current time into the reference time fields (this
+%                        all together makes files readible by PQL)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:00 GMT
+%     Last Updated Sep.  5, 2009 at 07:35 GMT
 
 % todo:
 
@@ -86,6 +91,10 @@ end
 option.FILETYPE='SAC Binary';
 option.VERSION=6;
 option.BYTEORDER=nativebyteorder;
+
+% use current time for reference timing
+dt=serial2gregorian(now,'doytime');
+dt(5:6)=[floor(dt(5)) floor(1000*(dt(5)-floor(dt(5))))];
 
 % get options from SEIZMO global
 global SEIZMO
@@ -157,7 +166,7 @@ data(1:nrecs,1)=struct('path','.','name',[],...
 % loop for each pair
 nvhdr=option.VERSION(ones(nrecs,1),1);
 leven=true(nrecs,1); delta=ones(nrecs,1); kstnm=cell(nrecs,1);
-[b,e,npts,ncmp,depmen,depmin,depmax]=swap(nan(nrecs,1));
+[b,e,npts,ncmp,depmen,depmin,depmax]=deal(nan(nrecs,1));
 for i=1:2:nargin
     % output index
     j=ceil(i/2);
@@ -224,7 +233,7 @@ for i=1:2:nargin
     
     % get delta and handle uneven
     delta(j)=diff(varargin{i}([1 end]))/(npts(j)-1);
-    if(any(abs(delta(j)-diff(varargin{i}))>10*eps))
+    if(any(abs(delta(j)-diff(varargin{i}))>10*max(varargin{i})*eps))
         data(j).ind=varargin{i}(:); leven(j)=false;
     end
 end
@@ -244,7 +253,9 @@ end
 warning('off','seizmo:changeheader:fieldInvalid')
 data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
     'depmen',depmen,'depmin',depmin,'depmax',depmax,'ncmp',ncmp,...
-    'iftype','General X vs Y file','lovrok','true','leven',leven,...
+    'nzyear',dt(1),'nzjday',dt(2),'nzhour',dt(3),'nzmin',dt(4),...
+    'nzsec',dt(5),'nzmsec',dt(6),...
+    'iftype','Time Series File','lovrok','true','leven',leven,...
     'idep','iunkn','iztype','iunkn','nvhdr',nvhdr,...
     'knetwk','SZ','kcmpnm','Q','khole','XX','kstnm',kstnm,...
     'lcalda',true);

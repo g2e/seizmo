@@ -68,7 +68,6 @@ function []=writeheader(data,varargin)
 %     Last Updated Aug. 17, 2009 at 20:45 GMT
 
 % todo:
-% - document options
 
 % check nargin
 if(mod(nargin-1,2))

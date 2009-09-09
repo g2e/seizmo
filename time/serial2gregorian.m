@@ -1,7 +1,8 @@
 function [times]=serial2gregorian(serial,option)
 %SERIAL2GREGORIAN    Convert serial dates to Gregorian dates
 %
-%    Usage:    dates=serial2gregorian(dates)
+%    Usage:    gregoriandates=serial2gregorian(serialdates)
+%              gregoriandates=serial2gregorian(serialdates)
 %
 %    Description: SERIAL2GREGORIAN(DATES) returns the equivalent Gregorian
 %     dates for the serial dates stored in DATES.  A serial date of 1
@@ -24,14 +25,16 @@ function [times]=serial2gregorian(serial,option)
 %      serial2gregorian(now)-datevec(now)
 %      datevec(now)-datevec(now)
 %
-%    See also: gregorian2serial, isleapyear, doy2cal, cal2doy, fixdates
+%    See also: gregorian2serial, gregorian2modserial, modserial2gregorian,
+%              isleapyear, doy2cal, cal2doy, fixdates, fixtimes, timediff
 
 %     Version History:
 %        Nov. 11, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Sep.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:05 GMT
+%     Last Updated Sep.  5, 2009 at 19:35 GMT
 
 % todo:
 

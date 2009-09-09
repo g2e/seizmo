@@ -107,7 +107,7 @@ function [data]=recordfun(fun,varargin)
 %     'ignore', the records are just operated on point for point.  The 
 %     resultant records' iftypes are determined by the parent of their
 %     header fields (set by option 'newhdr').  By default 'iftype' is set
-%     to 'error'.
+%     to 'warn'.
 %     
 %    Notes:
 %     
@@ -141,9 +141,11 @@ function [data]=recordfun(fun,varargin)
 %        June 24, 2009 - now adds iamph files directly
 %        June 28, 2009 - now accepts function handles, additional methods
 %                        for different npts/ncmp, lots of code refactoring
+%        Aug. 21, 2009 - changed IFTYPE from ERROR to WARN to allow working
+%                        with mixed xy and timeseries data
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Aug. 21, 2009 at 21:25 GMT
 
 % todo:
 
@@ -155,7 +157,7 @@ option.BEGIN='WARN';
 option.REF='WARN';
 option.NCMP='ERROR';
 option.LEVEN='ERROR';
-option.IFTYPE='ERROR';
+option.IFTYPE='WARN';
 
 % available states
 valid.NPTS={'ERROR' 'WARN' 'TRUNCATE' 'PAD' 'IGNORE'};

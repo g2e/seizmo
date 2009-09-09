@@ -13,6 +13,7 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %     [FILETYPE,VERSION,ENDIAN]=GETFILEVERSION(FILENAME,VERBOSE) outputs
 %     all error messages encountered during reading attempts as warnings.
 %     This is useful for when a file is not reading in when it should be.
+%     VERBOSE must be logical.
 %
 %    Notes:
 %     - Currently this is solely based on the sac header version field
@@ -21,7 +22,7 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %    Examples:
 %     Figure out a file's version so that we can pull up the definition:
 %      [filetype,version,endian]=getfileversion('myfile')
-%      definition=seizmodef(version)
+%      definition=seizmodef(filetype,version)
 %
 %    See also:  readheader, writeheader, seizmodef, validseizmo
 
@@ -42,9 +43,10 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %        Apr. 23, 2009 - fix for array of function handles (octave needs
 %                        comma separated list), move usage up
 %        June 12, 2009 - minor error msg change
+%        Sep.  7, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Sep.  7, 2009 at 07:15 GMT
 
 % todo:
 

@@ -1,0 +1,5 @@
+- smash any bugs since original release
+- tauppierce output should not have those extra entries
+- taup applet needs to have path interpolation (tell Philip)
+- function to list available models
+- functions for taup_create, taup_setsac
