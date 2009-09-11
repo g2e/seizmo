@@ -17,6 +17,7 @@ function [data]=readseizmo(varargin)
 %      version - version of filetype
 %      byteorder - byte-order of file (ieee-le or ieee-be)
 %      hasdata - logical indicating if data is read in
+%      misc - place for miscellaneous record info
 %      head - contains header data
 %
 %     Fields for timeseries files:
@@ -73,9 +74,10 @@ function [data]=readseizmo(varargin)
 %        Oct. 27, 2008 - minor doc update for struct change
 %        Nov. 15, 2008 - update for new name schema (now READSEIZMO)
 %        Apr. 23, 2009 - move usage up
+%        Sep. 11, 2009 - added misc field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Sep. 11, 2009 at 07:05 GMT
 
 % todo:
 

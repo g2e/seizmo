@@ -2,8 +2,8 @@ function [data]=mirrorflip(data,varargin)
 %MIRRORFLIP    Returns a mirror-flip of SEIZMO records
 %
 %    Usage:    data=mirrorflip(data)
-%              data=mirrorflip(data,...,'type',type)
-%              data=mirrorflip(data,...,'length',N)
+%              data=mirrorflip(data,...,'type',type,...)
+%              data=mirrorflip(data,...,'length',N,...)
 %
 %    Description: MIRRORFLIP(DATA) returns a mirror-flipped version of
 %     SEIZMO records in DATA prepended to the original records.  The output
@@ -12,8 +12,8 @@ function [data]=mirrorflip(data,varargin)
 %     where B is the original begin time and E is the end time of the
 %     record.
 %
-%     MIRRORFLIP(DATA,...,'TYPE',TYPE) allows changing the direction and
-%     output.  Valid TYPE strings are the following:
+%     MIRRORFLIP(DATA,...,'TYPE',TYPE,...) allows changing the direction
+%     and output.  Valid TYPE strings are the following:
 %      'front'      - returns just the front-sided mirror-flip 
 %      'back'       - returns just the back-sided mirror-flip
 %      'prepend'    - returns the front-sided mirror-flip prepended to the
@@ -23,16 +23,16 @@ function [data]=mirrorflip(data,varargin)
 %      'both'       - returns both the back and front-sided mirror-flips
 %                     attached to the original record
 %
-%     MIRRORFLIP(DATA,...,'LENGTH',N) changes the number of samples that
-%     are mirror-flipped.  By default N is NPTS-1 (the maximum), where NPTS
-%     is the number of points in each record.  Setting N to NaN will force
-%     the default behavior.
+%     MIRRORFLIP(DATA,...,'LENGTH',N,...) changes the number of samples
+%     that are mirror-flipped.  By default N is NPTS-1 (the maximum), where
+%     NPTS is the number of points in each record.  Setting N to NaN will
+%     force the default behavior.
 %
 %    Notes:
-%     - Mirror-flipping is often useful for avoiding strong edge-effects
-%       in filter-related processing.  This only limits such effects on the
-%       interior portion of data.  Data near the edge should not be trusted
-%       in any case.
+%     - Mirror-flipping is often useful for reducing strong edge-effects
+%       in filter-related processing by faking data ahead of the record
+%       window being filtered on.  This is known in signal processing as
+%       pseudo-initial conditioning the filter.
 %
 %    Header changes: B, E, NPTS, DEPMEN, DEPMIN, DEPMAX
 %
@@ -51,9 +51,10 @@ function [data]=mirrorflip(data,varargin)
 %                        concatination/arithmitic ambiguity
 %        May  29, 2009 - make nan the default for length option
 %        June  3, 2009 - fixes for options checking
+%        Sep. 11, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:25 GMT
+%     Last Updated Sep. 11, 2009 at 08:05 GMT
 
 % todo:
 

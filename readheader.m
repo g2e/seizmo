@@ -15,6 +15,7 @@ function [data]=readheader(varargin)
 %      version - version of filetype
 %      byteorder - byte-order of file (ieee-le or ieee-be)
 %      hasdata - logical indicating if data is read in (false here)
+%      misc - place for miscellaneous record info
 %      head - contains header data
 %
 %    Notes:
@@ -53,9 +54,10 @@ function [data]=readheader(varargin)
 %        Nov. 15, 2008 - new name schema (now READHEADER)
 %        Mar.  3, 2009 - update for GETFILEVERSION
 %        Apr. 23, 2009 - move usage up
+%        Sep. 11, 2009 - added misc field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Sep. 11, 2009 at 06:50 GMT
 
 % todo:
 
@@ -70,7 +72,7 @@ end
 
 % pre-allocating SEIZMO structure
 data(nfiles,1)=struct('path',[],'name',[],'filetype',[],...
-    'version',[],'byteorder',[],'hasdata',[],'head',[]);
+    'version',[],'byteorder',[],'hasdata',[],'misc',[],'head',[]);
 
 % loop for each file
 destroy=false(nfiles,1);

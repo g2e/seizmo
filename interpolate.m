@@ -1,9 +1,9 @@
 function [data]=interpolate(data,sr,method,new_b,new_e)
 %INTERPOLATE    Interpolate SEIZMO records to a new samplerate
 %
-%    Usage:    data=interpolate(data,dt)
-%              data=interpolate(data,dt,method)
-%              data=interpolate(data,dt,method,new_b,new_e)
+%    Usage:    data=interpolate(data,rate)
+%              data=interpolate(data,rate,method)
+%              data=interpolate(data,rate,method,new_b,new_e)
 %
 %    Description: INTERPOLATE(DATA,RATE) interpolates SEIZMO records in
 %     DATA to a new sample rate RATE.  As this is interpolation (the
@@ -36,7 +36,7 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %     interpolate at 5 sps from 900 to 950 seconds using linear interp
 %      data_pdiff=interpolate(data,5,'linear',900,950)
 %
-%    See also: syncrates, subsample, oversample, iirfilter
+%    See also: syncrates, squish, stretch, iirfilter
 
 %     Version History:
 %        Oct. 31, 2007 - initial version
@@ -52,9 +52,10 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %                        extrapolation
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Sep. 11, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:25 GMT
+%     Last Updated Sep. 11, 2009 at 08:05 GMT
 
 % check number of arguments
 msg=nargchk(2,5,nargin);

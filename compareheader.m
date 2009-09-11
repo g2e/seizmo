@@ -57,7 +57,7 @@ for i=1:numel(h)
     for j=1:length(h(i).types)
         for k=1:length(h(i).(h(i).types{j}))
             fields{j,k,i}=...
-                fieldnames(h(i).(h(i).types{j})(k).pos)';
+                fieldnames(h(i).(h(i).types{j})(k).pos).';
         end
     end
 end
@@ -75,7 +75,7 @@ disp(' ')
 disp(' RECORDS:')
 disp('---------------------------')
 for i=1:nrecs
-    disp(sprintf('%d - %s%s',i,data(i).path,data(i).name))
+    disp(sprintf('%d - %s',i,fullfile(data(i).path,data(i).name)))
 end
 disp('---------------------------')
 disp(' ')
@@ -91,6 +91,9 @@ nvarg=numel(varargin);
 for i=1:nvarg
     % force lowercase
     gf=lower(varargin{i});
+    
+    % skip empty
+    if(isempty(gf)); continue; end
     
     % check for group fields (similar to list all case)
     group=false; glen=1; g=cell(nrecs,1);
@@ -108,7 +111,7 @@ for i=1:nvarg
         glen=numel(g);
     end
     
-    % wildcard case (?==63,*==42) - pass to regexpi
+    % wildcard case (?==63,*==42) - pass to regexp
     wild=false;
     if(~group && (any(gf==42) || any(gf==63)))
         % declare as wildcard

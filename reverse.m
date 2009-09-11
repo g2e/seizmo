@@ -15,16 +15,17 @@ function [data]=reverse(data)
 %     See what this operation does:
 %      plot1([data(1) reverse(data(1))])
 %
-%    See also:
+%    See also: mirrorflip
 
 %     Version History:
 %        Apr.  9, 2008 - initial version
 %        Nov. 22, 2008 - doc update, history fix, .dep
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Sep. 11, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Sep. 11, 2009 at 08:05 GMT
 
 % todo:
 

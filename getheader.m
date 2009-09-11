@@ -49,7 +49,7 @@ function [varargout]=getheader(data,varargin)
 %      getheader(data,'iftype')
 %
 %    See also:  changeheader, listheader, readheader, writeheader, getlgc,
-%               getenumid, getenumdesc, getncmp, getarrival
+%               getenumid, getenumdesc, getncmp, getarrival, compareheader
 
 %     Version History:
 %        Oct. 29, 2008 - initial version

@@ -1,13 +1,17 @@
 function []=listheader(data,varargin)
 %LISTHEADER    List SEIZMO data headers
 %
-%    Usage:    listheader(data,'field1','field2',...)
+%    Usage:    listheader(data)
+%              listheader(data,'field1','field2',...)
 %
-%    Description: LISTHEADER(DATA,FIELD1,FIELD2,...) lists the header
-%     field(s) FIELD1, FIELD2, ... and their value(s) in DATA in a manner 
-%     similar to SAC's lh formating.  FIELD must be a string corresponding 
-%     to a valid header field or a valid group field (ie. t, kt, resp, 
-%     user, kuser).
+%    Description: LISTHEADER(DATA) lists the entire header of all records
+%     in DATA with a format similar to SAC's lh command.
+%
+%     LISTHEADER(DATA,FIELD1,...,FIELDN) lists the header field(s) FIELD1
+%     to FIELDN and their value(s) from records in DATA in a manner similar
+%     to SAC's lh command.  FIELDS must be a string corresponding to a
+%     valid header field, group field (ie. t, kt, resp, user, kuser), or
+%     wildcards ('nz*' 'dep*' etc).  Only * and ? are valid wildcards.
 %
 %    Notes:
 %
@@ -19,7 +23,7 @@ function []=listheader(data,varargin)
 %      listheader(data,'dEltA')
 %      listheader(data,'StLA','stLo')
 %
-%    See also:  changeheader, getheader, getlgc, getenumid, getenumdesc
+%    See also:  compareheader, changeheader, getheader
 
 %     Version History:
 %        Oct. 29, 2007 - initial version
@@ -36,18 +40,17 @@ function []=listheader(data,varargin)
 %        Aug.  4, 2009 - changed numeric format from %d to %g so Octave
 %                        output is not integer
 %        Sep.  4, 2009 - changed numeric format again from %g to %-.10g
+%        Sep. 11, 2009 - add support for wildcards * and ?, skip on empty
+%                        fix, better nargin checking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  4, 2009 at 09:10 GMT
+%     Last Updated Sep. 11, 2009 at 06:15 GMT
 
 % todo:
-% - handle ''
-% - fix input check
 
-% skip if nothing
-if(nargin<1)
-    return;
-end
+% check nargin
+msg=nargchk(1,inf,nargin);
+if(~isempty(msg)); error(msg); end
 
 % headers setup
 [h,idx]=versioninfo(data);
@@ -57,17 +60,19 @@ disp(' ')
 
 % loop over files
 for i=1:numel(data)
+    % all available fields
+    fields=cell(1,1);
+    for j=1:length(h(idx(i)).types)
+        for k=1:length(h(idx(i)).(h(idx(i)).types{j}))
+            fields{k,j}=...
+                fieldnames(h(idx(i)).(h(idx(i)).types{j})(k).pos).';
+        end
+    end
+    fields=[fields{:}].';
+    
     % list all case
     if (nargin==1)
-        clear varargin
-        % all available field type sets
-        for j=1:length(h(idx(i)).types)
-            for k=1:length(h(idx(i)).(h(idx(i)).types{j}))
-                varargin{k,j}=...
-                    fieldnames(h(idx(i)).(h(idx(i)).types{j})(k).pos)';
-            end
-        end
-        varargin=[varargin{:}].';
+        varargin=fields;
     end
     
     % get filename
@@ -79,9 +84,12 @@ for i=1:numel(data)
     disp('---------------------------')
     
     % loop over fields
-    for j=1:length(varargin)
+    for j=1:numel(varargin)
         % force lowercase
         gf=lower(varargin{j});
+        
+        % skip empty
+        if(isempty(gf)); continue; end
         
         % check for group fields
         group=0; glen=1;
@@ -90,10 +98,30 @@ for i=1:numel(data)
             group=1; glen=length(g);
         end
         
+        % wildcard case (?==63,*==42) - pass to regexp
+        wild=false;
+        if(~group && (any(gf==42) || any(gf==63)))
+            % declare as wildcard
+            wild=true;
+            % no partial matches
+            ngf=['^' gf '$'];
+            % replace ? with .
+            ngf(ngf==63)=46;
+            % replace * with .*
+            tmp=find(ngf==42);
+            for k=1:numel(tmp)
+                ngf=[ngf(1:tmp(k)-2+k) '.' ngf(tmp(k)+k-1:end)];
+            end
+            % now find matches in fields
+            ngf=fields(~cellfun('isempty',regexp(fields,ngf)));
+            glen=numel(ngf);
+        end
+        
         % group loop
         for k=1:glen
-            % modify field if group
+            % modify field if in a group
             if(group); f=[gf num2str(g(k))];
+            elseif(wild); f=ngf{k};
             else f=gf;
             end
             

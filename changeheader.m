@@ -63,7 +63,7 @@ function [data]=changeheader(data,varargin)
 %           'set of' 'examples'});
 %
 %    See also:  listheader, getheader, readheader, writeheader, getlgc,
-%               getenumid, getenumdesc
+%               getenumid, getenumdesc, compareheader
 
 %     Version History:
 %        Oct. 29, 2007 - initial version

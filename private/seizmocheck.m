@@ -15,8 +15,8 @@ function [report]=seizmocheck(data,varargin)
 %    Notes:
 %     - Current SEIZMO Structure Requirements
 %       - Fields: path, name, filetype, version, 
-%                 byteorder, hasdata, head
-%       - All default fields must be nonempty
+%                 byteorder, hasdata, misc, head
+%       - All default fields must be nonempty (except misc)
 %       - All default fields must be valid
 %     - Non-default fields are not required to be nonempty nor are they
 %       checked for validity.
@@ -61,16 +61,18 @@ function [report]=seizmocheck(data,varargin)
 %        Apr. 23, 2009 - move usage up, mention usage style compatible with
 %                        octave and matlab
 %        May  29, 2009 - minor doc update
+%        Sep. 11, 2009 - added misc field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Sep. 11, 2009 at 06:55 GMT
 
 % todo:
 
 % check input
 report=[];
 if(nargin<1)
-    error('seizmo:seizmocheck:notEnoughInputs','Not enough input arguments.');
+    error('seizmo:seizmocheck:notEnoughInputs',...
+        'Not enough input arguments.');
 elseif(nargin>1)
     if(~iscellstr(varargin))
         error('seizmo:seizmocheck:badInput',...
@@ -97,7 +99,7 @@ elseif(isempty(data))
     return;
 else
     defreqfields={'path' 'name' 'filetype'...
-        'version' 'byteorder' 'hasdata' 'head'};
+        'version' 'byteorder' 'hasdata' 'misc' 'head'};
     reqfields=sort([defreqfields varargin]);
     fields=sort(fieldnames(data).');
     
