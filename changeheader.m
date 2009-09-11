@@ -7,15 +7,20 @@ function [data]=changeheader(data,varargin)
 %    Description: CHANGEHEADER(DATA,FIELD,VALUE) changes the header field 
 %     FIELD to the value(s) in VALUE for each record in DATA and returns
 %     an updated SEIZMO data structure.  FIELD must be a string 
-%     corresponding to a valid header field.  VALUE may be a scalar 
-%     (assigns same value to all) or a vector of length equal to the number
-%     of records and can be of type numeric, logical, char, or cell.  If
+%     corresponding to a valid header field.  A VALUE for normal header
+%     fields may be a scalar (assigns same value to all), a column vector
+%     of length equal to the number of records (assigns a separate value to
+%     each record), or a char array (which is converted to a cellstr array
+%     internally, and thus becomes a column vector).  YOU SHOULD NOT PASS A
+%     ROW VECTOR UNLESS ALL YOUR RECORDS ARE A SINGLE FILETYPE!  If the
 %     FIELD is a group field ('t','resp','user','kt','kuser') then VALUE
 %     can be a scalar (assigns same value to all fields for all records), a
-%     vector (separate values for each record, but same value for each
-%     field), or an array (separate values for all fields in all records).
-%     For group field assignment, VALUE should be arranged so that columns
-%     delimit values for each field in the group and rows delimit records 
+%     column vector (separate values for each record, but same value for
+%     all fields in the group), a row vector (separate values for each
+%     field in the group, but the same values across records), or an array
+%     (separate values for all fields in all records).  Thus for group
+%     field assignment, VALUE should be arranged so that columns delimit
+%     values for each field in the group and rows delimit records 
 %     (first row = first record, etc).  See the examples below to see how 
 %     to replicate a set of values across several records.
 %
@@ -23,13 +28,7 @@ function [data]=changeheader(data,varargin)
 %     multiple fields in a single call.
 %
 %    Notes:
-%     - Assigning a vector of values to a group field can behave 
-%       inconsistently when working with multiple records.  Basically when
-%       the number of records equals the number of fields, replication 
-%       across records becomes replication across fields when there are 2 
-%       or more header versions.  Avoid all this headache by not relying on
-%       CHANGEHEADER to do the replication for vectors.  Expand the vector
-%       to an array beforehand.  You have been warned!
+%     - Be careful with row vectors!
 %     - Passing a nan, inf, -inf value will change a numeric field to its
 %       undefined value.  Use 'nan', 'undef' or 'undefined' to do the same
 %       for a character field.  This is useful for not having to remember
@@ -42,29 +41,26 @@ function [data]=changeheader(data,varargin)
 %      data=changeheader(data,'DELTA',getheader(data,'delta')*2);
 %      data=changeheader(data,'STLA',lats,'STLO',lons)
 %      data=changeheader(data,'KT0','sSKS');
-%     
-%     Copying the values of a group field from one record to other records
-%     can have troubles with expansion if the number of records being
-%     assigned to is the same size as the group field (ie 10 fields and 10
-%     records) AND there are multiple data filetypes/versions (ie SAC
-%     binary vs SEIZMO binary -- NOT timeseries vs spectral records). For
-%     example, the following has behavior dependent on number of record
-%     types in records 2-11.  If all records have the same filetype/version
-%     then the values in record 1 copy to records 2-11 so their 't' fields
-%     match.  If there are multiple filetypes though, this will cause each
-%     record to get a separate value from record 1 and replicate that value
-%     across it's 't' fields.
-%      data=changeheader(data(2:11),'t',getheader(data(1),'t'))
 %
-%     This will always make the 't' fields of records 2-11 match record 1:
-%      t=getheader(data(1),'t');
-%      data=changeheader(data(2:11),'t',t(ones(10,1),:));
-%     or
-%      data=changeheader(data(2:11),'t',getheader(data(ones(10,1)),'t'));
+%     Note that this will not split 'nan' to assign each letter to each
+%     field in kuser because character arrays are first converted to cell
+%     arrays.  So 'nan' is passed to each field in kuser and they all
+%     become undefined (special behavior - see notes section):
+%      data=changeheader(data,'kuser','nan')
 %
-%     Replication across fields will not have this problem.  Copy values in
-%     field 't0' to rest of 't' fields for each record:
-%         data=changeheader(data(1:10),'t',getheader(data(1:10),'t0'))
+%     Note that this case would bypass the cellstr conversion as the value
+%     array is passed as a numeric array:
+%      data=changeheader(data,'kuser',double('nan'))
+%
+%     To assign separate strings to fields in a character group field you
+%     should pass a row vector cell array like this:
+%      data=changeheader(data,'kuser',{'nan' 'blah' 'wow'})
+%
+%     But that replicates the same strings to all records in DATA, so to
+%     assign separate values to all records and all fields (assuming there
+%     are only 2 records):
+%      data=changeheader(data,'kuser',{'nan' 'blah' 'wow'; 'another' ...
+%           'set of' 'examples'});
 %
 %    See also:  listheader, getheader, readheader, writeheader, getlgc,
 %               getenumid, getenumdesc
@@ -86,9 +82,12 @@ function [data]=changeheader(data,varargin)
 %        Nov. 16, 2008 - rename from CH to CHANGEHEADER, doc update, error
 %                        msg update
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
+%        Sep. 11, 2009 - fix splitting of values, changes behavior in
+%                        multi-filetype cases and in group field cases,
+%                        updated documentation to reflect this
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:00 GMT
+%     Last Updated Sep. 11, 2009 at 02:15 GMT
 
 % todo:
 
@@ -108,39 +107,31 @@ if(nargin==1); return; end
 nrecs=numel(data);
 
 % recursive section
-%   breaks up dataset with multiple calls so that the
-%   rest of changeheader deals with only one header version
+% - break up into single filetype calls
 [h,idx]=versioninfo(data);
 nver=numel(h);
 if(nver>1)
     for i=1:nver
-        % need a way to parse varargin quickly
+        % need to parse varargin
         temp=cell(1,nargin-1);
         for j=1:2:nargin-2
             temp{j}=varargin{j};
         end
         for j=2:2:nargin-1
-            if(isscalar(varargin{j}) || isempty(varargin{j}))
+            sz=size(varargin{j});
+            if(any(prod(sz)==[0 1]))
                 temp{j}=varargin{j};
-            elseif(isvector(varargin{j}))
-                % dice up input if size is the same as the number of
-                % records, otherwise replicate for each ch call. This
-                % breaks group field replication when nrecs==ngfields.
-                if(length(varargin{j})==nrecs)
-                    temp{j}=varargin{j}(idx==i);
-                else
-                    temp{j}=varargin{j};
-                end
+            elseif(sz(1)==nrecs)
+                % dice up input only if a column vector
+                % - this prevents splitting up text unexpectedly
+                % - this is more stringent than previously
+                temp{j}=varargin{j}(idx==i,:);
+            elseif(sz(1)==1)
+                temp{j}=varargin{j};
             else
-                % check and dice up input array
-                dim=size(varargin{j},1);
-                if(dim==nrecs)
-                    temp{j}=varargin{j}(idx==i,:);
-                else
-                    error('seizmo:changeheader:invalidInputSize',...
-                        'Value array for field %s incorrect size!',...
-                        varargin{j-1});
-                end
+                error('seizmo:changeheader:invalidInputSize',...
+                    'Value array for field %s incorrect size!',...
+                    varargin{j-1});
             end
         end
         data(idx==i)=changeheader(data(idx==i),temp{:});
@@ -171,18 +162,28 @@ for i=1:2:(nargin-2)
     end
     
     % check & expand values
-    if(isscalar(varargin{i+1}))
+    if(isempty(varargin{i+1}))
+        % skip changing if nothing to put there
+        continue;
+    elseif(isscalar(varargin{i+1}))
+        % full expansion
         varargin{i+1}=varargin{i+1}(ones(nrecs,glen));
     elseif(isvector(varargin{i+1}))
-        varargin{i+1}=varargin{i+1}(:);
-        len=numel(varargin{i+1});
-        if(len==0); continue; end
-        % figure out group expansion
+        sz=size(varargin{i+1});
+        
+        % group or record expansion
         if(group)
-            % expand
-            if(len==nrecs)
+            if(sz(1)==nrecs && nrecs~=1)
+                % expand laterally (across group fields)
                 varargin{i+1}=varargin{i+1}(:,ones(glen,1));
-            elseif(len==glen)
+            elseif(sz(2)==glen && glen~=1)
+                % expand vertically (across records)
+                varargin{i+1}=varargin{i+1}(ones(nrecs,1),:);
+            elseif(sz(2)==nrecs && nrecs~=1)
+                % misoriented vector - transpose & expand laterally
+                varargin{i+1}=varargin{i+1}(ones(glen,1),:).';
+            elseif(sz(1)==glen && glen~=1)
+                % misoriented vector - transpose & expand vertically
                 varargin{i+1}=varargin{i+1}(:,ones(nrecs,1)).';
             else
                 error('seizmo:changeheader:invalidInputSize',...
@@ -190,8 +191,11 @@ for i=1:2:(nargin-2)
                     'Group value vector for field %s incorrect size!'],...
                     h.filetype,h.version,varargin{i});
             end
-        % check for correct length
-        elseif(len~=nrecs)
+        elseif(prod(sz)==nrecs)
+            % assure column vector
+            varargin{i+1}=varargin{i+1}(:);
+        else
+            % not in a group, but is a vector of unusual length
             error('seizmo:changeheader:invalidInputSize',...
                 ['\nFiletype: %s, Version: %d\n'...
                 'Value vector for field %s incorrect size!'],...
@@ -199,6 +203,10 @@ for i=1:2:(nargin-2)
         end
     % array
     else
+        % no expansion, just check for correct orientation
+        % - allow number of columns to exceed the number of
+        %   fields in the group (to allow for variable group
+        %   size across different filetypes)
         dim=size(varargin{i+1});
         if(dim(1)~=nrecs || dim(2)<glen)
             error('seizmo:changeheader:invalidInputSize',...
@@ -327,9 +335,21 @@ for n=1:length(h.stype)
         if(isfield(h.(h.stype{n})(m).pos,f))
             p=h.(h.stype{n})(m).pos.(f);
             o=p(2)-p(1)+1;
-            v(strcmpi(v,'undef'))={h.undef.stype};
-            v(strcmpi(v,'undefined'))={h.undef.stype};
-            v(strcmpi(v,'nan'))={h.undef.stype};
+            if(iscellstr(v))
+                v(strcmpi(v,'undef'))={h.undef.stype};
+                v(strcmpi(v,'undefined'))={h.undef.stype};
+                v(strcmpi(v,'nan'))={h.undef.stype};
+            else
+                % assume numeric matrix (will be changed to cellstr)
+                % (no check - breaks if mixed num/char cells)
+                v=cell2mat(v);
+                undeftmp1=isnan(v);
+                undeftmp2=isinf(v);
+                v(undeftmp1 | undeftmp2)=0;
+                v=cellstr(char(v));
+                v(logical(sum(undeftmp1,2)))={h.undef.stype};
+                v(logical(sum(undeftmp2,2)))={h.undef.stype};
+            end
             v=strnlen(v,o);
             head(p(1):p(2),:)=char(v).';
             return;

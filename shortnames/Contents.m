@@ -1,10 +1,10 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r83 Ararat 06-Sep-2009
+% Version 0.6.0-r84 Ararat 11-Sep-2009
 %
 % Shortcut function names
 %ADDF   - ADDRECORDS          - Add SEIZMO records
 %CH     - CHANGEHEADER        - Change SEIZMO data header values
-%DECI   - SQUISH              - Downsample SEIZMO records by an integer factor
+%CMPH   - COMPAREHEADER       - List SEIZMO data headers side-by-side for easy comparison
 %DIF    - DIFFERENTIATE       - Differentiate SEIZMO records
 %DIVF   - DIVIDERECORDS       - Divide SEIZMO records
 %GH     - GETHEADER           - Get SEIZMO data header values
@@ -28,6 +28,7 @@
 %RPOLY  - REMOVEPOLYNOMIAL    - Remove polynomial trend from SEIZMO records
 %RTR    - REMOVETREND         - Remove linear trend from SEIZMO records
 %REV    - REVERSE             - Reverse SEIZMO records
+%DECI   - SQUISH              - Downsample SEIZMO records by an integer factor
 %SUB    - SUBTRACT            - Subtract a constant from SEIZMO records
 %SUBF   - SUBTRACTRECORDS     - Subtract SEIZMO records
 %SYNC   - SYNCHRONIZE         - Synchronizes the reference times of SEIZMO records

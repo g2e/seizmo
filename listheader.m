@@ -41,6 +41,8 @@ function []=listheader(data,varargin)
 %     Last Updated Sep.  4, 2009 at 09:10 GMT
 
 % todo:
+% - handle ''
+% - fix input check
 
 % skip if nothing
 if(nargin<1)
@@ -116,9 +118,9 @@ for m=1:length(h.enum)
                 ival<=h.enum(1).maxval)
             disp(sprintf('%12s = %s',upper(f),h.enum(1).desc{ival+1}));
         elseif(ival==h.undef.ntype)
-            disp(sprintf('%12s = UNDEFINED (%d)',upper(f),ival));
+            disp(sprintf('%12s = UNDEFINED (%g)',upper(f),ival));
         else
-            disp(sprintf('%12s = UNKNOWN (%d)',upper(f),ival));
+            disp(sprintf('%12s = UNKNOWN (%g)',upper(f),ival));
         end
         return;
     end
@@ -130,10 +132,10 @@ for m=1:length(h.lgc)
         elseif(data.head(h.lgc(m).pos.(f))==h.true)
             disp(sprintf('%12s = TRUE',upper(f)));  
         elseif(data.head(h.lgc(m).pos.(f))==h.undef.ntype)
-            disp(sprintf('%12s = UNDEFINED (%d)',upper(f),...
+            disp(sprintf('%12s = UNDEFINED (%g)',upper(f),...
                 data.head(h.lgc(m).pos.(f))));
         else
-            disp(sprintf('%12s = INVALID (%d)',upper(f),...
+            disp(sprintf('%12s = INVALID (%g)',upper(f),...
                 data.head(h.lgc(m).pos.(f))));
         end
         return;
