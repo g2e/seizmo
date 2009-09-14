@@ -1,7 +1,8 @@
 function [varargout]=getlgc(data,varargin)
 %GETLGC    Get logical string from SEIZMO logical header field
 %
-%    Usage: [cellstr1,...,cellstrN]=getlgc(data,'field1',...,'fieldN')
+%    Usage:    cellstr=getlgc(data,'field')
+%              [cellstr1,...,cellstrN]=getlgc(data,'field1',...,'fieldN')
 %
 %    Description: GETLGC(DATA,FIELD) returns a cellstring array containing
 %     'true' 'false' 'undefined' or 'unknown' corresponding to values of
@@ -46,9 +47,10 @@ function [varargout]=getlgc(data,varargin)
 %        Nov. 16, 2008 - history fix, rename from GLGC to GETLGC,
 %                        doc update, code cleaning
 %        Apr. 23, 2009 - move usage up
+%        Sep. 12, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Sep. 12, 2009 at 05:00 GMT
 
 % todo:
 

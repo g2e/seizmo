@@ -85,9 +85,11 @@ function [data]=changeheader(data,varargin)
 %        Sep. 11, 2009 - fix splitting of values, changes behavior in
 %                        multi-filetype cases and in group field cases,
 %                        updated documentation to reflect this
+%        Sep. 12, 2009 - added vgrp support
+%        Sep. 14, 2009 - vf support, abs time support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 11, 2009 at 02:15 GMT
+%     Last Updated Sep. 14, 2009 at 22:35 GMT
 
 % todo:
 
@@ -142,6 +144,12 @@ end
 % pull entire header
 head=[data.head];
 
+% get reference times hack
+reftime=head(h.reftime,:).';
+reftime(reftime==h.undef.ntype)=nan;
+reftime(:,5)=reftime(:,5)+reftime(:,6)/1000;
+reftime=utc2tai(reftime(:,1:5));
+
 % loop over field/value pairs
 for i=1:2:(nargin-2)
     % force values into cell array
@@ -152,13 +160,14 @@ for i=1:2:(nargin-2)
     end
     
     % force field name to be lowercase
-    gf=lower(varargin{i});
+    gf=strtrim(lower(varargin{i}));
+    wf=getwords(gf);
     
     % check for group fields
-    group=0; glen=1;
-    if(isfield(h.grp,gf))
-        g=h.grp.(gf).min:h.grp.(gf).max;
-        group=1; glen=length(g);
+    group=false; glen=1;
+    if(isfield(h.vgrp,wf{1}))
+        ngf=strtrim(strcat(h.vgrp.(wf{1}),{' '},joinwords(wf(2:end))));
+        group=true; glen=numel(ngf);
     end
     
     % check & expand values
@@ -219,11 +228,12 @@ for i=1:2:(nargin-2)
     % group field loop
     for j=1:glen
         % modify field if group
-        if(group); f=[gf num2str(g(j))];
-        else f=gf; end
+        if(group); f=ngf{j};
+        else f=gf;
+        end
         
         % assign values to field
-        head=a2h(head,h,f,varargin{i+1}(:,j));
+        head=a2h(head,h,f,varargin{i+1}(:,j),reftime);
     end
 end
 
@@ -234,8 +244,19 @@ head=mat2cell(head,h.size,ones(1,nrecs));
 end
 
 
-function [head]=a2h(head,h,f,v)
+function [head]=a2h(head,h,f,v,reftime)
 %A2H    Subfunction that assigns values to header field
+
+% virtual fields
+if(isfield(h.vf,f))
+    switch h.vf.(f).type
+        case {'enum' 'lgc' 'int' 'real'}
+            head=h.vf.(f).ch(h,head,cell2mat(v));
+        case 'char'
+            head=h.vf.(f).ch(h,head,v);
+    end
+    return;
+end
 
 % special treatment for enums
 for m=1:length(h.enum)
@@ -366,6 +387,30 @@ for n=1:length(h.ntype)
             v(isinf(v))=h.undef.ntype;
             head(h.(h.ntype{n})(m).pos.(f),:)=v;
             return;
+        elseif(strcmp(h.ntype{n},'real') && ...
+                any(strcmp(f(max(1,end-3):end),{' utc' ' tai'})))
+            f2=strtrim(f(1:end-4));
+            if(isfield(h.(h.ntype{n})(m).pos,f2))
+                v=cell2mat(v);
+                undef1=logical(sum(v==h.undef.ntype,2));
+                undef2=logical(sum(isnan(reftime),2)...
+                    +sum(isinf(reftime),2)+sum(reftime==h.undef.ntype,2));
+                def=~undef1 & ~undef2;
+                head(h.(h.ntype{n})(m).pos.(f2),:)=h.undef.ntype;
+                if(any(def))
+                    switch f(end-2:end)
+                        case 'utc'
+                            head(h.(h.ntype{n})(m).pos.(f2),def)=...
+                                timediff(reftime(def,:),...
+                                utc2tai(v(def,:)));
+                        case 'tai'
+                            head(h.(h.ntype{n})(m).pos.(f2),def)=...
+                                timediff(reftime(def,:),...
+                                fixtimes(v(def,:)));
+                    end
+                end
+                return;
+            end
         end
     end
 end

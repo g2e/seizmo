@@ -70,14 +70,48 @@ function [varargout]=xdir(str,depth)
 %                        to struct and adding fields to empty struct)
 %        June  4, 2009 - use GLOB to preempt or replace octave's dir
 %        Aug.  4, 2009 - fix dir listing for Octave when no path given
-%        Sep. 12, 2009 - doc update
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated Sep. 12, 2009 at 04:40 GMT
+%     Last Updated Aug.  4, 2009 at 09:45 GMT
 
 % todo:
-% - see unfinished xdir todo
+% - be mindful of octave/matlab differences in DIR
+%   - wildcards before last pathsep
+%       - matlab doesn't expand
+%       - octave does
+%       - xdir accounts for this!
+%   - ? wildcard
+%       - matlab doesn't treat as wild
+%       - octave does
+%       - xdir does NOT account for this!
+%   - if wildcard entry is a directory
+%       - octave expands the entry
+%       - matlab lists the entry but does not expand it
+%       - xdir accounts for this discrepancy!
+%
+% - handle '?' wildcard (only for matlab - octave already does this!)
+%  * => .*     42 => 46 42
+%  ? => .      63 => 46
+%  . => \.     46 => 92 46
+% \? => \?  92 63 => 92 63
+%  \ => \\     92 => 92 92
+%  ] => \]     93 => 92 93
+%  [ => \[     91 => 92 91
+%  $ => \$     36 => 92 36
+%
+%  *     ?     .     [     ]     $     \
+% 42    63    46    91    93    36    92
+%
+% c:\/?\*  how to do this?
+%
+%   - something along the lines of:
+%      d=dir('*')
+%      for ...
+%        regexp(filename,regexptranslate('wildcard',string),'match')
+%      end
+%   - but how to allow for '?' in a filename too?
+%   - really we just need a glob for matlab too!
 
 % take care of common tasks
 persistent emptylist octave
@@ -85,9 +119,10 @@ if(isempty(octave) || ~islogical(octave))
   octave=strcmpi(getapplication,'OCTAVE');
 end
 if(~isstruct(emptylist))
-  blah=[{'path'}; fieldnames(dir)];
-  bah=[blah cell(size(blah))].';
-  tmp([],1)=struct(bah{:});
+  % make empty dir struct with path added in
+  blah=[{'path'}; fieldnames(dir(''))];
+  blah=[blah cell(size(blah))].';
+  tmp([],1)=struct(blah{:});
   emptylist=tmp;
 end
 
@@ -133,7 +168,7 @@ if(~isempty(F))
   postpath=newstr(F(end)+1:end);
   
   % find position of first wildcard
-  W=find(newstr=='*',1,'first');
+  W=find(newstr=='*' | newstr=='?',1,'first');
   
   % check for path wildcards
   if(~isempty(W))
@@ -154,11 +189,12 @@ if(~isempty(F))
   end
 end
 
-% if no directory wildcards then just get file list
+% if no path wildcards then just get listing
 D=emptylist;
 if isempty(wildpath)
   % handle dir expanding directories
   if(isdir([prepath postpath]))
+    % no wildcards and is a directory
     % list directory and clean up ending filesep
     path=[prepath postpath];
     D=dir(path);
@@ -174,7 +210,8 @@ if isempty(wildpath)
     % handle difference between octave/matlab
     if(octave)
       % list matches, list dir, get matches
-      % (avoids subdir expansion in single subdir case)
+      % - dir expands single dir case
+      % - glob does not, so use glob
       tmp=glob([prepath postpath]);
       if(isempty(prepath))
         D=dir;
@@ -190,6 +227,14 @@ if isempty(wildpath)
         [D.path]=deal(prepath);
       end
     else % matlab
+      % either a file or wildcarded files/dirs
+      
+      % get list of all in dir
+      
+      % translate postpath
+      
+      % find matches
+      
       D=dir([prepath postpath]);
       % workaround for new field to empty struct
       if(isempty(D))
@@ -274,3 +319,109 @@ else
   varargout{1}=D;
 end
 
+end
+
+function [application,version]=getapplication()
+%GETAPPLICATION    Returns application running this script and its version
+%
+%    Usage:    [application,version]=getapplication()
+%
+%    Description: [APPLICATION,VERSION]=GETAPPLICATION() will determine and
+%     return the name and version of the application running this script
+%     (obviously only if the application can run this script in the first
+%     place).  Both APPLICATION and VERSION are strings.
+%
+%    Notes:
+%     - returns 'UNKNOWN' if it cannot figure out the application
+%
+%    Examples:
+%     Matlab and Octave still behave quite differently for a number of
+%     different functions so it is best in some cases to use different
+%     function calls depending on which we are running:
+%      [app,ver]=getapplication;
+%      if(strcmp(app,'MATLAB'))
+%        % do something via matlab routines
+%      else
+%        % do something via octave routines
+%      end
+%
+%    See also: nativebyteorder, ver
+
+%     Version History:
+%        Nov. 13, 2008 - initial version
+%        Mar.  3, 2009 - minor doc cleaning
+%        Apr. 23, 2009 - move usage up
+%        Sep.  8, 2009 - minor doc update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Sep.  8, 2009 at 19:55 GMT
+
+% todo:
+
+% checking for Matlab will throw an error in Octave
+try
+    % first check if we are in Matlab
+    a=ver('matlab');
+    
+    % we are in Matlab
+    application=a.Name;
+    version=a.Version;
+    return;
+catch
+    % check if we are in Octave
+    if(exist('OCTAVE_VERSION','builtin')==5)
+        application='OCTAVE';
+        version=OCTAVE_VERSION;
+        return;
+    % ok I have no clue what is running
+    else
+        application='UNKNOWN';
+        version='UNKNOWN';
+        return;
+    end
+end
+
+end
+
+function [string]=translator(string)
+% - handle '?' wildcard (only for matlab - octave already does this!)
+%
+%  * => .*     42 => 46 42
+%  ? => .      63 => 46
+%
+%  . => \.     46 => 92 46
+% \? => \?  92 63 => 92 63
+% \* => \*  92 42 => 92 42
+%  \ => \\     92 => 92 92
+%  ] => \]     93 => 92 93
+%  [ => \[     91 => 92 91
+%  $ => \$     36 => 92 36
+%
+%  *     ?     .     [     ]     $     \
+% 42    63    46    91    93    36    92
+%
+% c:\???  how to do this?
+% - avoid so it should never happen!!
+
+% position of chars to be escaped
+period=string==46;
+brkbgn=string==91;
+brkend=string==93;
+dollar=string==36;
+
+% find *,?,\
+stars=string==42;
+quest=string==63;
+slash=string==92;
+
+% remove \* from *,  \? from ?,  \* & \? from \
+sp=regexp(string,'\\\*');
+qp=regexp(string,'\\\?');
+stars(find(stars)-1==sp)=false;
+quest(find(quest)-1==qp)=false;
+slash(find(slash)==sp | find(slash)==qp)=false;
+
+% push string into cell array with each char in a separate cell
+string=num2cell(string);
+
+end

@@ -10,7 +10,7 @@ function []=listheader(data,varargin)
 %     LISTHEADER(DATA,FIELD1,...,FIELDN) lists the header field(s) FIELD1
 %     to FIELDN and their value(s) from records in DATA in a manner similar
 %     to SAC's lh command.  FIELDS must be a string corresponding to a
-%     valid header field, group field (ie. t, kt, resp, user, kuser), or
+%     valid header field, group field (ie. 't' 'kt' 'resp' 'user' etc), or
 %     wildcards ('nz*' 'dep*' etc).  Only * and ? are valid wildcards.
 %
 %    Notes:
@@ -42,11 +42,16 @@ function []=listheader(data,varargin)
 %        Sep.  4, 2009 - changed numeric format again from %g to %-.10g
 %        Sep. 11, 2009 - add support for wildcards * and ?, skip on empty
 %                        fix, better nargin checking
+%        Sep. 12, 2009 - added vgrp support, use regexptranslate
+%        Sep. 13, 2009 - added utc/tai abs time fields
+%        Sep. 14, 2009 - vlists, abs time vgrp, vf, vf via wildcards
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 11, 2009 at 06:15 GMT
+%     Last Updated Sep. 14, 2009 at 08:20 GMT
 
 % todo:
+% - skip undefined (set via global)
+% - multiple columns? (just like cmph)
 
 % check nargin
 msg=nargchk(1,inf,nargin);
@@ -54,21 +59,63 @@ if(~isempty(msg)); error(msg); end
 
 % headers setup
 [h,idx]=versioninfo(data);
+nh=numel(h);
+
+% number of records
+nrecs=numel(data);
 
 % extra padding
 disp(' ')
 
-% loop over files
-for i=1:numel(data)
-    % all available fields
-    fields=cell(1,1);
-    for j=1:length(h(idx(i)).types)
-        for k=1:length(h(idx(i)).(h(idx(i)).types{j}))
-            fields{k,j}=...
-                fieldnames(h(idx(i)).(h(idx(i)).types{j})(k).pos).';
+% gather all possible fields and reftimes
+nfields=cell(nh,1); nutcf=nfields; ntaif=nfields;
+tmpfields=cell(2,5); tmputcf=tmpfields; tmptaif=tmpfields;
+reftime=nan(nrecs,6);
+for i=1:nh
+    % add virtual fields to wildcard search
+    vf=fieldnames(h(i).vf);
+    
+    % all available field type sets
+    for j=1:numel(h(i).types)
+        for k=1:numel(h(i).(h(i).types{j}))
+            tmpfields{k,j}=...
+                fieldnames(h(i).(h(i).types{j})(k).pos).';
+            % special absolute time alternate fields for all real
+            if(strcmp(h(i).types{j},'real'))
+                tmputcf{k,j}=...
+                    strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
+                    ' utc');
+                tmptaif{k,j}=...
+                    strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
+                    ' tai');
+            end
         end
     end
-    fields=[fields{:}].';
+    
+    % combine
+    nfields{i}=[[tmpfields{:}].'; vf];
+    nutcf{i}=[tmputcf{:}].';
+    ntaif{i}=[tmptaif{:}].';
+    tmpfields=cell(2,5);
+    tmputcf=tmpfields;
+    tmptaif=tmpfields;
+    
+    % get reference times hack
+    % (skips getheader)
+    vidx=find(idx==i);
+    head=[data(vidx).head];
+    reftime(vidx,:)=head(h.reftime,:).';
+    reftime(vidx(reftime(vidx,:)==h.undef.ntype),:)=nan;
+    reftime(:,5)=reftime(:,5)+reftime(:,6)/1000;
+    reftime=utc2tai(reftime(:,1:5));
+end
+
+% loop over files
+for i=1:nrecs
+    % all available fields
+    fields=nfields{idx(i)};
+    utcf=nutcf{idx(i)};
+    taif=ntaif{idx(i)};
     
     % list all case
     if (nargin==1)
@@ -86,16 +133,30 @@ for i=1:numel(data)
     % loop over fields
     for j=1:numel(varargin)
         % force lowercase
-        gf=lower(varargin{j});
+        gf=strtrim(lower(varargin{j}));
+        wf=getwords(gf);
         
         % skip empty
         if(isempty(gf)); continue; end
         
-        % check for group fields
-        group=0; glen=1;
-        if(isfield(h(idx(i)).grp,gf))
-            g=h(idx(i)).grp.(gf).min:h(idx(i)).grp.(gf).max;
-            group=1; glen=length(g);
+        % check for vlist/vgrp
+        group=false; glen=1;
+        if(strcmp(gf,'all') || strcmp(gf,'full'))
+            % list all
+            ngf=fields; group=true; glen=numel(ngf);
+        elseif(strcmp(gf,'picks'))
+            % list picks - hardcoded...
+            ngf={'kt0' 't0' 'kt1' 't1' 'kt2' 't2' 'kt3' 't3'...
+                'kt4' 't4' 'kt5' 't5' 'kt6' 't6' 'kt7' 't7'...
+                'kt8' 't8' 'kt9' 't9'};
+            group=true; glen=numel(ngf);
+        else
+            % check for group fields (similar to list all case)
+            if(isfield(h(idx(i)).vgrp,wf{1}))
+                ngf=strtrim(strcat(h(idx(i)).vgrp.(wf{1}),{' '},...
+                    joinwords(wf(2:end))));
+                group=true; glen=numel(ngf);
+            end
         end
         
         % wildcard case (?==63,*==42) - pass to regexp
@@ -103,40 +164,89 @@ for i=1:numel(data)
         if(~group && (any(gf==42) || any(gf==63)))
             % declare as wildcard
             wild=true;
-            % no partial matches
-            ngf=['^' gf '$'];
-            % replace ? with .
-            ngf(ngf==63)=46;
-            % replace * with .*
-            tmp=find(ngf==42);
-            for k=1:numel(tmp)
-                ngf=[ngf(1:tmp(k)-2+k) '.' ngf(tmp(k)+k-1:end)];
+            % only show absolute time fields if explicitly sought
+            if(strcmp(joinwords(wf(2:end)),'utc'))
+                % no partial matches, trim excess blanks between field, utc
+                ngf=['^' regexptranslate('wildcard',...
+                    strtrim(wf{1})) ' utc$'];
+                % find matches in utc set
+                ngf=utcf(~cellfun('isempty',regexp(utcf,ngf)));
+            elseif(strcmp(joinwords(wf(2:end)),'tai'))
+                % no partial matches, trim excess blanks between field, tai
+                ngf=['^' regexptranslate('wildcard',...
+                    strtrim(wf{1})) ' tai$'];
+                % find matches in tai set
+                ngf=taif(~cellfun('isempty',regexp(taif,ngf)));
+            else
+                % no partial matches
+                ngf=['^' regexptranslate('wildcard',gf) '$'];
+                % find matches in normal fields
+                ngf=fields(~cellfun('isempty',regexp(fields,ngf)));
             end
-            % now find matches in fields
-            ngf=fields(~cellfun('isempty',regexp(fields,ngf)));
             glen=numel(ngf);
         end
         
         % group loop
         for k=1:glen
             % modify field if in a group
-            if(group); f=[gf num2str(g(k))];
+            if(group); f=ngf{k};
             elseif(wild); f=ngf{k};
             else f=gf;
             end
             
             % display field/value
-            lh_disp(h(idx(i)),f,data(i));
+            lh_disp(h(idx(i)),f,data(i),reftime(i,:));
         end
     end
 end
 
 end
 
-function []=lh_disp(h,f,data)
+function []=lh_disp(h,f,data,reftime)
 %LH_DISP    Finds and displays field/value pairs for lh
 
-% handle enum/lgc fields specially
+% virtual fields
+if(isfield(h.vf,f))
+    switch h.vf.(f).type
+        case 'enum'
+            % searches only enum(1) for now (prefer one big
+            % set of enums to share vs separate sets)
+            ival=h.vf.(f).gh(h,data.head);
+            if(ival==fix(ival) && ival>=h.enum(1).minval && ...
+                    ival<=h.enum(1).maxval)
+                disp(sprintf('%12s = %s',upper(f),h.enum(1).id{ival+1}));
+            elseif(ival==h.undef.ntype)
+                disp(sprintf('%12s = UNDEFINED (%g)',upper(f),ival));
+            else
+                disp(sprintf('%12s = UNKNOWN (%g)',upper(f),ival));
+            end
+        case 'lgc'
+            ival=h.vf.(f).gh(h,data.head);
+            switch ival
+                case h.false
+                    disp(sprintf('%12s = FALSE',upper(f)));
+                case h.true
+                    disp(sprintf('%12s = TRUE',upper(f)));
+                case h.undef.ntype
+                    disp(sprintf('%12s = UNDEFINED (%g)',upper(f),ival));
+                otherwise
+                    disp(sprintf('%12s = INVALID (%g)',upper(f),ival));
+            end
+        case 'char'
+            ival=h.vf.(f).gh(h,data.head);
+            disp(sprintf('%12s = %s',upper(f),ival{:}));
+        otherwise
+            ival=h.vf.(f).gh(h,data.head);
+            if(ival==h.undef.ntype)
+                disp(sprintf('%12s = UNDEFINED (%g)',upper(f),ival));
+            else
+                disp(sprintf('%12s = %-.10g',upper(f),ival));
+            end
+    end
+    return;
+end
+
+% handle enum/lgc fields
 for m=1:length(h.enum)
     if(isfield(h.enum(m).pos,f))
         ival=data.head(h.enum(m).pos.(f));
@@ -201,6 +311,52 @@ for m=1:length(h.ntype)
                     data.head(h.(h.ntype{m})(n).pos.(f))));
             end
             return;
+        % UTC absolute times section
+        elseif(strcmp(f(max(1,end-3):end),' utc'))
+            f2=strtrim(f(1:end-4));
+            if(isfield(h.(h.ntype{m})(n).pos,f2))
+                if(data.head(h.(h.ntype{m})(n).pos.(f2))==h.undef.ntype)
+                    disp(sprintf('%12s = UNDEFINED (%g)',upper(f),...
+                        data.head(h.(h.ntype{m})(n).pos.(f2))));
+                elseif(any(isnan(reftime) | isinf(reftime)))
+                    disp(sprintf('%12s = NO REFTIME (%g)',upper(f),...
+                        data.head(h.(h.ntype{m})(n).pos.(f2))));
+                else
+                    % get values for output
+                    utc=tai2utc(reftime+...
+                        [0 0 0 0 data.head(h.(h.ntype{m})(n).pos.(f2))]);
+                    cal=doy2cal(utc(1:2));
+                    utc(5)=round(1000*utc(5));
+                    disp(sprintf(['%12s = %04d-%02d-%02d (%03d) '...
+                        '%02d:%02d:%02d.%03d'],upper(f),utc(1),cal(2),...
+                        cal(3),utc(2),utc(3),utc(4),floor(utc(5)/1000),...
+                        mod(utc(5),1000)));
+                end
+                return;
+            end
+        % TAI absolute times section
+        elseif(strcmp(f(max(1,end-3):end),' tai'))
+            f2=strtrim(f(1:end-4));
+            if(isfield(h.(h.ntype{m})(n).pos,f2))
+                if(data.head(h.(h.ntype{m})(n).pos.(f2))==h.undef.ntype)
+                    disp(sprintf('%12s = UNDEFINED (%g)',upper(f),...
+                        data.head(h.(h.ntype{m})(n).pos.(f2))));
+                elseif(any(isnan(reftime) | isinf(reftime)))
+                    disp(sprintf('%12s = NO REFTIME (%g)',upper(f),...
+                        data.head(h.(h.ntype{m})(n).pos.(f2))));
+                else
+                    % get values for output
+                    tai=fixtimes(reftime+...
+                        [0 0 0 0 data.head(h.(h.ntype{m})(n).pos.(f2))]);
+                    cal=doy2cal(tai(1:2));
+                    tai(5)=round(1000*tai(5));
+                    disp(sprintf(['%12s = %04d-%02d-%02d (%03d) '...
+                        '%02d:%02d:%02d.%03d'],upper(f),tai(1),cal(2),...
+                        cal(3),tai(2),tai(3),tai(4),floor(tai(5)/1000),...
+                        mod(tai(5),1000)));
+                end
+                return;
+            end
         end
     end
 end

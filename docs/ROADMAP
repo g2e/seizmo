@@ -1,127 +1,106 @@
-0.5.3 - plotting and filtering
------
-fix p1 and p3
-spectral plotting (pspec1, pspec2, pspec3)
-plot choose component (pcmp1, pcmp2, pcmp3)
-plot particle motion (multi-component)
-picking phases (get familiar with ppk)
-unwrap	- unwrapped phase
-dftshift- is this wanted?
-fix up filtering
-	- fir
-	- iirfilter
-		- allow variable input
-		- clean up the corners
-		- figure out best way to handle overdesigned filters
-			- make sure there is output showing changes
-	- wiener?
-	- whiten
-
-
-
-0.5.4 - change versions, polezeros, fitting and glitches
---------------------------------------------------------
-cv	- change version
-pz	- add/remove polezeros (transfer predecessor)
-fitting
-	- get poly (gpoly)
-	- rem poly (rpoly)
-	- get smooth spline (gspline)
-	- rem smooth spline (rspline)
-	- get robust poly (grobpoly)
-	- rem robust poly (rrobpoly)
-signal cleaning
-	- detect glitches (gspikes)
-	- rem glitches (rspikes)
-	- detect offsets (goffsets)
-	- rem offsets (roffsets)
+0.6.0 - stable, helpful and functional
+----------------------------------------
+virtual fields and groups (working on)
+	- vgrp
+		- picks
+		- default
+		- default1
+		- all
+		- full
+		- t utc, user utc, resp utc
+		- t tai, user tai, resp tai
+	- allows for a number of sac features
+	- function handles to go to/from underlying fields
+	- what do func. expect in, what do they put out
+		- do we hardcode? ...i think we have to
+		- pass h,head
+			- ch returns updated head
+			- gh, cmph, lh returns field
+support absolute times (working on)
+	- less trouble for user
+	- need to add to ch and gh
+		- undefined if reftime undefined
+	- absolute time vgrps next
+	- cell array input/output pretty much req
+negative delta support (...)
+	- or at least know where the problems are
+.filetype support (done)
+	- infrastructure for supporting more filetypes
+filename cleanup (done?)
+	- names should be less conflicting
+	- add shortcut folder
+document every function (working on)
+	- iirfilter (waiting on rewrite)
+	- plotting (waiting on rewrite)
+	- align/cluster (waiting on rewrite)
+	- tpw (waiting on rewrite)
+	- eqdp (queued after above)
+fix iirfilter
+	- modularize
+		- separate design from implementation
+	- allow filter struct or polezero in/out
+	- filterdesign function
+fix plotting
+	- better global setting (like binoperr?)
+	- better option passing
+	- allow turning markers on/off
+	- allow setting markers above/below
+	- ditto for tt curves (only recsec)
+	- flags or line for predicted?
+fix checkheader
+	- method (skip/check/fix)
+	- report (silent/warn/error)
+	- infrastructure to alter (like binoperr?)
+travel time correction
+	- get more models
+		- where to put them
+		- decide best struct layout
+	- write correction routines
+response
+	- findsacpz
+		- allow dir input
+		- need default dir
+		- sacpz db
+	- apply/remove sacpz
+	- sacpz2fap
+	- resp? (gonna be a pita)
+signal cleaning (to do)
+	- robust poly (get, remove)
+	- smooth splines (get, remove)
+	- glitches (get, remove)
+	- steps (get, remove)
+other new functions
+	- autopick
+	- useralign
+	- usercluster
+	- pick
+	- unwrap
+	- changeversion/filetype
+	- spectral plotting
+	- particle motion plots (cmp vs cmp)
+	- check orientation
+	- rotate
+	- convolve
+	- deconvolve
 get header definition (ghd)
 	- for cleaning up some low level functions
 	- inputs should contain necessary parent fields too
 	- allow structure output??
 
 
-
-0.5.5 - virtual header fields
--------------------------------
-how to handle virtual <=> real
-	- use function handles
-		- try to use anonymous functions
-		- may have to write functions (put in private folder) for complex jobs
-	- adjustments to seisdef
-		- new definition type virt
-			- definition.virt.(type).(field)
-				- subsection listing reference fields (fields)
-				- subsections containing function handles to make/undo virtual field
-		- update ch, gh, lh
-virtual fields to support
-	- nzdttm
-	- kzdate
-	- kztime
-	- nzday
-	- nzmonth
-	- picks
-	- default
-	- default1
-	- all
-	- full
-better handling of timing
-	- allow setting time-related fields using absolute times
-		- SAC uses a 'GMT' preceeding y m d h m s  (required ???)
-		- set to undefined if reference time cannot be determined (SAC ???)
-	- ability to offset all time-related fields together
-		- SAC uses ALLT in CHNHDR to do this
-		- can it be done with virtual field?
-	- synchronize 
-		- match SAC
-		- add option to sync to earliest begin time
-
-
-
-0.5.6 - travel times and autopicking
----------------------------------
-matTauP integration
-TTBox integration
-travel time curves in plots
-automark
-
-
-
-0.5.7 - guis
--------------
-windowing
-aligning
-picking
-deleting (selectrecs done!)
-
-
-
-0.5.8+ - 3D files, transfer, mapping, ?
---------------------------------
-
-
-0.6.0
-------
+0.7.0 - css?
+------------
 single internal format
 	- removes undefined being specific
 	- cleans up code quite a bit
 	- simplifies code quite a bit
-virtual fields and groups
-	- allows for a number of sac features
-support absolute times
-	- less trouble for user
-negative delta support
-	- or at least know where the problems are
-.filetype support
-	- infrastructure for supporting more filetypes
-filename cleanup
-	- names should be less conflicting
-	- add shortcut folder
-
-
-0.7.0 - css
-------------
 find other data filetypes
+	- miniseed
+	- segy
+	- sac ascii
+	- ah
+	- css
+	- reflect
 figure out how to read/write other filetypes
 convert to css
 import/export css

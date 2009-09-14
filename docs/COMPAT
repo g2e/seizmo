@@ -24,10 +24,16 @@ Prior to 7.1:
 
 Current issues with Octave:
 	- error needs to support structs
+		- worked around
 	- error needs to not error on blank messages
+		- worked around
 	- cell array of function handles should handle space separated (not require commas)
+		- worked around?
 	- way to assign new field to empty struct
+		- worked around
 	- setdiff does not handle mixed char/cell
-
+		- does now? (worked around)
+	- switch case didn't handle cells prior to 3.2.2
+		- friggin update it
 
 

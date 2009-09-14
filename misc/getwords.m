@@ -15,15 +15,21 @@ function [words]=getwords(str)
 %       ans = 
 %       'This'    'example'    'is'    'pretty'    'dumb!'
 %
-%    See also: strtok
+%    See also: joinwords, strtok, isspace
 
 %     Version History:
 %        June 11, 2009 - initial version
+%        Sep. 13, 2009 - minor doc update, added input check
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Sep. 13, 2009 at 15:25 GMT
 
 % todo:
+
+% check str
+if(~ischar(str))
+    error('seizmo:getwords:badInput','STR must be a char array!');
+end
 
 % highlight word boundaries
 idx=diff([false ~isspace(str) false]);

@@ -64,9 +64,11 @@ function [varargout]=getheader(data,varargin)
 %        Oct. 17, 2008 - added VINFO support, supports new struct layout
 %        Nov. 16, 2008 - update for new name schema (now GETHEADER)
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
+%        Sep. 12, 2009 - added vgrp support
+%        Sep. 14, 2009 - vf support, abs time support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:05 GMT
+%     Last Updated Sep. 14, 2009 at 22:35 GMT
 
 % todo:
 
@@ -128,26 +130,34 @@ head=[data.head];
 % push out entire header
 if(nargin==1); varargout{1}=head.'; return; end
 
+% get reference times hack
+reftime=head(h.reftime,:).';
+reftime(reftime==h.undef.ntype)=nan;
+reftime(:,5)=reftime(:,5)+reftime(:,6)/1000;
+reftime=utc2tai(reftime(:,1:5));
+
 % loop over fields
 for i=1:nargin-1
     % force field to be lowercase
-    gf=lower(varargin{i});
+    gf=strtrim(lower(varargin{i}));
+    wf=getwords(gf);
     
     % check for group fields
-    group=0; glen=1;
-    if(isfield(h.grp,gf))
-        g=h.grp.(gf).min:h.grp.(gf).max;
-        group=1; glen=length(g);
+    group=false; glen=1;
+    if(isfield(h.vgrp,wf{1}))
+        ngf=strtrim(strcat(h.vgrp.(wf{1}),{' '},joinwords(wf(2:end))));
+        group=true; glen=numel(ngf);
     end
     
     % group field loop
     for j=1:glen
         % modify field if group
-        if(group); f=[gf num2str(g(j))];
-        else f=gf; end
+        if(group); f=ngf{j};
+        else f=gf;
+        end
         
         % pull header values
-        [val,type]=ph(head,h,f);
+        [val,type]=ph(head,h,f,reftime);
         
         % preallocate (did not know the type until now)
         if(j==1)
@@ -165,8 +175,21 @@ end
 
 end
 
-function [head,type]=ph(head,h,f)
+function [head,type]=ph(head,h,f,reftime)
 %PH    Pull header values
+
+% virtual fields
+if(isfield(h.vf,f))
+    switch h.vf.(f).type
+        case {'enum' 'lgc' 'int' 'real'}
+            head=h.vf.(f).gh(h,head);
+            type=0;
+        case 'char'
+            head=h.vf.(f).gh(h,head);
+            type=1;
+    end
+    return;
+end
 
 % output by type
 for n=1:length(h.stype)
@@ -183,6 +206,34 @@ for n=1:length(h.ntype)
         if(isfield(h.(h.ntype{n})(m).pos,f))
             head=head(h.(h.ntype{n})(m).pos.(f),:).';
             type=0; return;
+        elseif(strcmp(h.ntype{n},'real') && ...
+                any(strcmp(f(max(1,end-3):end),{' utc' ' tai'})))
+            f2=strtrim(f(1:end-4));
+            if(isfield(h.(h.ntype{n})(m).pos,f2))
+                nrecs=size(head,2);
+                value=zeros(nrecs,5);
+                value(:,5)=head(h.(h.ntype{n})(m).pos.(f2),:).';
+                head=mat2cell(ones(size(value,1),5)*h.undef.ntype,...
+                    ones(nrecs,1));
+                undef1=value(:,5)==h.undef.ntype;
+                undef2=logical(sum(isnan(reftime),2)...
+                    +sum(isinf(reftime),2)+sum(reftime==h.undef.ntype,2));
+                def=~undef1 & ~undef2;
+                if(any(def))
+                    switch f(end-2:end)
+                        case 'utc'
+                            head(def,:)=mat2cell(...
+                                tai2utc(reftime(def,:)+value(def,:)),...
+                                ones(sum(def),1));
+                        case 'tai'
+                            head(def,:)=mat2cell(...
+                                fixtimes(reftime(def,:)+value(def,:)),...
+                                ones(sum(def),1));
+                    end
+                end
+                type=1;
+                return;
+            end
         end
     end
 end

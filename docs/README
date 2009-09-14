@@ -6,31 +6,43 @@ To install:
 1. download and extract the tar volume in the directory
    you want the SEIZMO directory tree to reside:
         cd ~   (your home directory for example)
-	tar jxvf seizmo-dev-rXX.tar.bz2
+	tar jxvf seizmo-devel-rXX.tar.bz2
+
 2. this will create a directory tree under seizmo full of useful mfiles
-3. add the following folders to your Matlab path
-   seizmo/dev              (main functions for working)
-   seizmo/dev/support      (helpful functions needed by others)
-   seizmo/dev/position     (functions for earth positioning)
-   seizmo/dev/time         (functions for data timing)
-4. the following directories are optional (and often unfinished/unworking)
-   seizmo/dev/shortnames   (short-named links to longer-named functions)
-   seizmo/dev/gui          (for working with data graphically)
-   seizmo/dev/align        (for aligning data on a phase)
-   seizmo/dev/cluster      (waveform clustering for multi-channel cross correlation)
-   seizmo/dev/eqdb         (for working with earthquake lists)
-   seizmo/dev/inv          (some inversion scripts)
-   seizmo/dev/kernels      (a few functions to make Rayleigh plane-wave kernels)
-   seizmo/dev/tomo         (tomography functions from GDA)
-   seizmo/dev/tpw          (some functions related to two plane wave work)
-   seizmo/dev/private_link (link to seizmo private functions - for development)
-5. these directories are external packages included for your convenience
-   seizmo/dev/external     (misc stuff I thought was cool or might come in handy)
-   seizmo/dev/ttbox        (a free travel time toolbox)
-   seizmo/dev/m_map        (a free mapping toolbox)
-6. these should be left alone
-   seizmo/dev/deprecated   (old and forgotten)
-   seizmo/dev/unfinished   (for development)
+
+3. add the following folders to your Matlab path (as admin):
+   seizmo/devel            (main stuff)
+   seizmo/devel/misc       (necessary various functions)
+   seizmo/devel/position   (for earth positioning)
+   seizmo/devel/time       (for data timing)
+   seizmo/devel/mattaup    (taup access)
+
+4. add the mattaup jar-file in matlab using 'edit classpath.txt' (as admin):
+   seizmo/devel/mattaup/lib/matTaup.jar
+
+Thats it! The rest is optional. Good luck!
+
+5. the following directories are optional, but recommended:
+   seizmo/devel/shortnames      (short-named links to longer-named functions)
+   seizmo/devel/gui             (for working with data graphically)
+   seizmo/devel/seizmo_internal (link to seizmo private functions)
+
+6. these are often broken but may be useful
+   seizmo/devel/align        (for aligning data on a phase)
+   seizmo/devel/cluster      (waveform clustering for multi-channel cross correlation)
+   seizmo/devel/eqdb         (for working with earthquake lists)
+   seizmo/devel/invert       (some inversion scripts)
+   seizmo/devel/tomo         (tomography functions from GDA)
+   seizmo/devel/tpw          (some functions related to two plane wave work)
+
+7. these directories are external packages included for your convenience
+   seizmo/devel/external     (misc stuff I thought was cool or might come in handy)
+   seizmo/devel/ttbox        (a free travel time toolbox)
+   seizmo/devel/m_map        (a free mapping toolbox)
+
+8. these should be left alone
+   seizmo/devel/deprecated   (old and forgotten)
+   seizmo/devel/unfinished   (for development)
 
 
 <·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>Using SEIZMO<·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>
@@ -41,7 +53,16 @@ in browsing the functions using Matlab's 'help' command.
 To get a list of all the main functions along with a quick
 description:
 
-help dev
+help devel
+
+You can list functions from other directories as well:
+help misc
+help time
+help position
+help mattaup
+help shortnames
+help seizmo_internal
+help gui
 
 Use that list to learn more about individual functions or
 type:
@@ -82,4 +103,6 @@ wh  = writeheader
 
 for more info type:
 help <function>
+ or
+help <directory>
 

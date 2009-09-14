@@ -19,11 +19,11 @@ function [def]=seizmodef(filetype,version,usecache)
 %
 %    Notes:
 %     - Currently the definition is set so that all header data is stored 
-%       as doubles in memory.  This attempts to preserve accuracy, provide
-%       simplicity, and make class-issues a lot less of a headache. 
-%       Memory usage suffers slightly (only minor as this applies to just
-%       the header storage).  Breaking the header into subfields would
-%       probably require more memory anyways due to overhead.
+%       as doubles in memory.  This attempts to preserve some accuracy,
+%       while providing simplicity, and make class-issues a lot less of a
+%       headache. Memory usage suffers slightly (only minor as this applies
+%       to just the header storage).  Breaking the header into subfields
+%       would probably require more memory anyways due to overhead.
 %
 %    Examples:
 %     Get detailed information on SAC version 6 files:
@@ -58,9 +58,12 @@ function [def]=seizmodef(filetype,version,usecache)
 %                        easier for multiple component support
 %        Sep.  3, 2009 - updated discription and code for better
 %                        readibility about caching
+%        Sep. 12, 2009 - vgrp added, grp dropped
+%        Sep. 12, 2009 - drop v101 switch (ugly hack), added reftime hack
+%        Sep. 13, 2009 - vf added
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  3, 2009 at 20:15 GMT
+%     Last Updated Sep. 13, 2009 at 23:10 GMT
 
 % todo:
 
@@ -111,37 +114,83 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.filetype='SAC Binary';
     def.version=6;
     def.numfields=133;
-    def.size=302;
-    def.store='double';
+    def.size=302;       % number of values in header array
+    def.store='double'; % store entire header as doubles 
     
+    % data section info
     def.data.startbyte=632;
     def.data.store='single';
     def.data.bytesize=4;
     
+    % multi-component info
     def.mulcmp.valid=false;
-    def.mulcmp.altver=101;
+    def.mulcmp.altver=[];
     
+    % header types
     def.types={'real' 'int' 'enum' 'lgc' 'char'};
     def.ntype={'real' 'int' 'enum' 'lgc'};
     def.stype={'char'};
     
+    % undefined values
     def.undef.stype='-12345';
     def.undef.ntype=-12345;
     
+    % true/false values (really)
     def.true=1;
     def.false=0;
     
-    def.grp.t.min=0;
-    def.grp.t.max=9;
-    def.grp.kt.min=0;
-    def.grp.kt.max=9;
-    def.grp.user.min=0;
-    def.grp.user.max=9;
-    def.grp.kuser.min=0;
-    def.grp.kuser.max=2;
-    def.grp.resp.min=0;
-    def.grp.resp.max=9;
+    % virtual groups
+    % - all group members must be the same type
+    % - requires combined inputs for ch (careful of order!)
+    % - outputs combined in gh (ditto)
+    % - listed individually in lh, cmph
+    def.vgrp.t={'t0' 't1' 't2' 't3' 't4' 't5' 't6' 't7' 't8' 't9'};
+    def.vgrp.kt={'kt0' 'kt1' 'kt2' 'kt3' 'kt4' ...
+        'kt5' 'kt6' 'kt7' 'kt8' 'kt9'};
+    def.vgrp.user={'user0' 'user1' 'user2' 'user3' 'user4' ...
+        'user5' 'user6' 'user7' 'user8' 'user9'};
+    def.vgrp.kuser={'kuser0' 'kuser1' 'kuser2'};
+    def.vgrp.resp={'resp0' 'resp1' 'resp2' 'resp3' 'resp4' ...
+        'resp5' 'resp6' 'resp7' 'resp8' 'resp9'};
+    def.vgrp.dep={'depmin' 'depmen' 'depmax'};
+    def.vgrp.st={'stla' 'stlo' 'stel' 'stdp'};
+    def.vgrp.ev={'evla' 'evlo' 'evel' 'evdp'};
+    def.vgrp.nz={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec'};
+    def.vgrp.nzdttm={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec'};
+    def.vgrp.kname={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
     
+    % virtual fields
+    % - composite field formed from 1+ fields
+    % - uses functions to go back and forth
+    % - currently def, head are the only inputs
+    % - ch returns head
+    % - gh returns value
+    def.vf.kzdate.type='char';
+    def.vf.kzdate.ch=@vf_ch_kzdate;
+    def.vf.kzdate.gh=@vf_gh_kzdate;
+    def.vf.kztime.type='char';
+    def.vf.kztime.ch=@vf_ch_kztime;
+    def.vf.kztime.gh=@vf_gh_kztime;
+    def.vf.kzdttm.type='char';
+    def.vf.kzdttm.ch=@vf_ch_kzdttm;
+    def.vf.kzdttm.gh=@vf_gh_kzdttm;
+    def.vf.nzmonth.type='int';
+    def.vf.nzmonth.ch=@vf_ch_nzmonth;
+    def.vf.nzmonth.gh=@vf_gh_nzmonth;
+    def.vf.nzcday.type='int';
+    def.vf.nzcday.ch=@vf_ch_nzcday;
+    def.vf.nzcday.gh=@vf_gh_nzcday;
+    
+    % this is a hack
+    % - would like reftime header positions
+    %   without having to call getheader
+    % - this should always match def.int.pos.nz*!!!
+    % - this requires all headers to have
+    %   reftime stored like sac
+    % - must go year,jday,hour,min,sec,msec
+    def.reftime=71:76;
+    
+    % begin header section descriptions
     def.real.startbyte=0;
     def.real.store='single';
     def.real.bytesize=4;
@@ -312,9 +361,9 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
         'kuser1',[255,262],'kuser2',[263,270],'kcmpnm',[271,278],...
         'knetwk',[279,286],'kdatrd',[287,294],'kinst',[295,302]);
 end
- 
-% seizmo binary modifications
-if(strcmpi(filetype,'SAC Binary') || strcmpi(filetype,'SEIZMO Binary'))
+
+if(strcmpi(filetype,'SEIZMO Binary'))
+    def.filetype='SEIZMO Binary';
     % seizmo version 101 mod (multi-component support)
     if(any(version==[101 201]))
         def.version=101;
@@ -327,12 +376,9 @@ if(strcmpi(filetype,'SAC Binary') || strcmpi(filetype,'SEIZMO Binary'))
         def.int.pos=rmfield(def.int.pos,'unused15');
         def.int.pos.ncmp=85;
     end
-end
-
-if(strcmpi(filetype,'SEIZMO Binary'))
+    
     % seizmo version 200 mod (double reals, double data)
     if(any(version==[200 201]))
-        def.filetype='SEIZMO Binary';
         def.version=200;
         
         % split v6 'single' real group into 2 'double' real groups
