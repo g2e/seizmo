@@ -1,8 +1,9 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r84 Ararat 11-Sep-2009
+% Version 0.6.0-r87 Ararat 16-Sep-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
+%ADDARRIVALS         - Adds the indicated phases to the SEIZMO data header
 %ADDRECORDS          - Add SEIZMO records
 %AMPH2RLIM           - Convert SEIZMO spectral records from AMPH to RLIM
 %BINOPERR            - Controls behavior of SEIZMO binary functions

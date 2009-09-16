@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r84 Ararat 11-Sep-2009
+% Version 0.6.0-r87 Ararat 16-Sep-2009
 %
 % Shortcut function names
 %ADDF   - ADDRECORDS          - Add SEIZMO records
@@ -32,6 +32,7 @@
 %SUB    - SUBTRACT            - Subtract a constant from SEIZMO records
 %SUBF   - SUBTRACTRECORDS     - Subtract SEIZMO records
 %SYNC   - SYNCHRONIZE         - Synchronizes the reference times of SEIZMO records
+%SYNCSR - SYNCRATES           - Resample SEIZMO records to a common sample rate
 %WH     - WRITEHEADER         - Write SEIZMO data header info to datafiles
 %W      - WRITESEIZMO         - Write SEIZMO records to datafile
 

@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r83 Ararat 06-Sep-2009
+% Version 0.6.0-r87 Ararat 16-Sep-2009
 %
 % Miscellaneous Support functions
 %CMOD                - Returns a centered modulus
@@ -8,6 +8,7 @@
 %GETAPPLICATION      - Returns application running this script and its version
 %GETWORDS            - Returns a cell array of words from a string
 %IFISHER             - Converts Z statistics to correlation coefficients
+%JOINWORDS           - Combines a cellstr into a space-separated string
 %LTI2SUB             - Square matrix lower triangle linear indices to subscripts
 %MATCHSORT           - Replicates a sort operation using the returned permutation indices
 %MCXC                - Multi-channel cross correlation with built-in peak picker
@@ -16,6 +17,7 @@
 %NEXTPOW2N           - Returns the next higher power of 2 for all array elements
 %ONEFILELIST         - Compiles multiple filelists into one
 %PLOTERR             - General error bar plot (EXTERNAL!)
+%READCSV             - Read in .csv formatted file as a structure
 %READSACPZ           - Reads in a SAC PoleZero file
 %SAWMOD              - Returns a sawtooth modulus
 %SLIDINGAVG          - Returns sliding-window average of data
@@ -28,6 +30,7 @@
 %SUBMAT              - Returns a submatrix reduced along indicated dimensions
 %SWAP                - Swap values
 %UTI2SUB             - Square matrix upper triangle linear indices to subscripts
+%WRITECSV            - Write out .csv formatted file from a structure
 %WRITESACPZ          - Writes out a SAC PoleZero file
 %XDIR                - Cross-app compatible directory listing with recursion
 

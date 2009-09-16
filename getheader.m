@@ -33,6 +33,10 @@ function [varargout]=getheader(data,varargin)
 %       GETENUM or GETENUMDESC.
 %     - Logical fields return the value actually stored, not a logical.  To
 %       get a more useful value use GETLGC.
+%     - group fields:    t, kt, user, kuser, resp, dep, st, ev, nz, nzdttm,
+%                         kname, {real group} utc, {real group} tai
+%     - virtual fields:  nzmonth, nzcday, kzdttm, kzdate, kztime, z, ztai
+%     - abs time fields: {real field} utc, {real field} tai
 %
 %    Examples:
 %     Put all t series values in one array:
@@ -65,10 +69,10 @@ function [varargout]=getheader(data,varargin)
 %        Nov. 16, 2008 - update for new name schema (now GETHEADER)
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %        Sep. 12, 2009 - added vgrp support
-%        Sep. 14, 2009 - vf support, abs time support
+%        Sep. 15, 2009 - vf support, abs time support, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2009 at 22:35 GMT
+%     Last Updated Sep. 15, 2009 at 04:20 GMT
 
 % todo:
 

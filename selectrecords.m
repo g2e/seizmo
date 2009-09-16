@@ -58,9 +58,10 @@ function [data,selected,h]=selectrecords(data,varargin)
 %        May  30, 2009 - major doc update, major code cleaning
 %        June  2, 2009 - fixed history, patches go on bottom now
 %        June 25, 2009 - minor doc fixes, allow numeric array for selected
+%        Sep. 16, 2009 - fix for getting bgcolor for single record
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMTs
+%     Last Updated Sep. 16, 2009 at 19:00 GMTs
 
 % todo:
 
@@ -210,7 +211,10 @@ switch option.TYPE
         [h,sh]=plot1(data,varargin{:});
         
         % color preselected
-        bgcolors=cell2mat(get(sh,'color'));
+        bgcolors=get(sh,'color');
+        if(iscell(bgcolors))
+            bgcolors=cell2mat(bgcolors);
+        end
         set(sh(selected),'color',color);
         
         while(button~=2)

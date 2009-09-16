@@ -10,10 +10,16 @@ function []=listheader(data,varargin)
 %     LISTHEADER(DATA,FIELD1,...,FIELDN) lists the header field(s) FIELD1
 %     to FIELDN and their value(s) from records in DATA in a manner similar
 %     to SAC's lh command.  FIELDS must be a string corresponding to a
-%     valid header field, group field (ie. 't' 'kt' 'resp' 'user' etc), or
+%     valid header field, group field (ie. 't' 'kt' 'resp' 'user' 'kuser'
+%     etc), absolute fields ('t9 utc' 'user3 tai' 'resp utc' etc), or
 %     wildcards ('nz*' 'dep*' etc).  Only * and ? are valid wildcards.
 %
 %    Notes:
+%     - group fields:    t, kt, user, kuser, resp, dep, st, ev, nz, nzdttm,
+%                         kname, {real group} utc, {real group} tai
+%     - list fields:     picks, all, full
+%     - virtual fields:  nzmonth, nzcday, kzdttm, kzdate, kztime, z, ztai
+%     - abs time fields: {real field} utc, {real field} tai
 %
 %    Examples:
 %      listheader(data)          % lists all header variables
@@ -22,6 +28,9 @@ function []=listheader(data,varargin)
 %     Fields are case independent:
 %      listheader(data,'dEltA')
 %      listheader(data,'StLA','stLo')
+%
+%     List only single char fields
+%      listheader(data,'?')
 %
 %    See also:  compareheader, changeheader, getheader
 
@@ -45,9 +54,10 @@ function []=listheader(data,varargin)
 %        Sep. 12, 2009 - added vgrp support, use regexptranslate
 %        Sep. 13, 2009 - added utc/tai abs time fields
 %        Sep. 14, 2009 - vlists, abs time vgrp, vf, vf via wildcards
+%        Sep. 15, 2009 - doc updated
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2009 at 08:20 GMT
+%     Last Updated Sep. 15, 2009 at 04:00 GMT
 
 % todo:
 % - skip undefined (set via global)

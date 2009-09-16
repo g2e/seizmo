@@ -13,10 +13,15 @@ function []=compareheader(data,varargin)
 %     COMPAREHEADER(DATA,'FIELD1',...,'FIELDN') prints out the header
 %     fields FIELD1 to FIELDN for records in DATA as a table.  FIELDS may
 %     be normal fields ('b' 'kt1' 'xmaximum' etc), group fields ('t' 'kt'
-%     etc), or wildcards ('*t1' '?' etc).  Only * and ? are valid
-%     wildcards.
+%     etc), absolute fields ('t9 utc' 'user3 tai' 'resp utc' etc), or
+%     wildcards ('*t1' '?' etc).  Only * and ? are valid wildcards.
 %
 %    Notes:
+%     - group fields:    t, kt, user, kuser, resp, dep, st, ev, nz, nzdttm,
+%                         kname, {real group} utc, {real group} tai
+%     - list fields:     picks, all, full
+%     - virtual fields:  nzmonth, nzcday, kzdttm, kzdate, kztime, z, ztai
+%     - abs time fields: {real field} utc, {real field} tai
 %
 %    Examples:
 %     Some simple cases:
@@ -27,6 +32,9 @@ function []=compareheader(data,varargin)
 %      compareheader(data,'dEltA')
 %      compareheader(data,'StLA','stLo')
 %
+%     Compare picks:
+%      compareheader(data,'picks')
+%
 %    See also: listheader, getheader, changeheader
 
 %     Version History:
@@ -35,9 +43,10 @@ function []=compareheader(data,varargin)
 %        Sep. 13, 2009 - added utc/tai abs time fields, added abs time
 %                        vgrp, added vf support, global option to set
 %                        column width, vf show up in wildcards
+%        Sep. 15, 2009 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2009 at 23:10 GMT
+%     Last Updated Sep. 15, 2009 at 04:00 GMT
 
 % todo:
 

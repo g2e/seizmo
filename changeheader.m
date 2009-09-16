@@ -33,6 +33,10 @@ function [data]=changeheader(data,varargin)
 %       undefined value.  Use 'nan', 'undef' or 'undefined' to do the same
 %       for a character field.  This is useful for not having to remember
 %       what the field's actual undefined value is.
+%     - group fields:    t, kt, user, kuser, resp, dep, st, ev, nz, nzdttm,
+%                         kname, {real group} utc, {real group} tai
+%     - virtual fields:  nzmonth, nzcday, kzdttm, kzdate, kztime, z, ztai
+%     - abs time fields: {real field} utc, {real field} tai
 %
 %    Header changes: Determined by input list.
 %
@@ -86,10 +90,10 @@ function [data]=changeheader(data,varargin)
 %                        multi-filetype cases and in group field cases,
 %                        updated documentation to reflect this
 %        Sep. 12, 2009 - added vgrp support
-%        Sep. 14, 2009 - vf support, abs time support
+%        Sep. 15, 2009 - vf support, abs time support, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2009 at 22:35 GMT
+%     Last Updated Sep. 14, 2009 at 04:20 GMT
 
 % todo:
 

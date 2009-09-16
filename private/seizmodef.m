@@ -180,6 +180,14 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.vf.nzcday.type='int';
     def.vf.nzcday.ch=@vf_ch_nzcday;
     def.vf.nzcday.gh=@vf_gh_nzcday;
+    %def.vf.z.type='abs';
+    %def.vf.z.ch=@vf_ch_z;
+    %def.vf.z.gh=@vf_gh_z;
+    %def.vf.z.lh=@vf_lh_z;
+    %def.vf.ztai.type='abs';
+    %def.vf.ztai.ch=@vf_ch_ztai;
+    %def.vf.ztai.gh=@vf_gh_ztai;
+    %def.vf.ztai.lh=@vf_lh_ztai;
     
     % this is a hack
     % - would like reftime header positions
