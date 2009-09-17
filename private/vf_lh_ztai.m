@@ -1,8 +1,8 @@
-function [value]=vf_gh_kzdttm(def,head)
-%VF_GH_KZDTTM    Returns value for virtual field KZDTTM
+function [value]=vf_lh_ztai(def,head)
+%VF_LH_ZTAI    Returns value for virtual field ZTAI as a string
 
 % get current reftime
-tmp=head(def.reftime(1:6),:);
+tmp=head(def.reftime,:);
 
 % who's (un)defined
 nv=size(head,2);
@@ -12,10 +12,21 @@ bad=logical(sum(isnan(tmp) | isinf(tmp) | tmp==def.undef.ntype) ...
     (tmp(5,:)<0 | tmp(5,:)>60); (tmp(6,:)<0 | tmp(6,:)>999)]);
 good=~bad;
 
-% default to all undef
+% default to undef
 value(nv,1)={def.undef.stype};
 
 if(any(good))
+    % get secs
+    tmp(7,good)=(tmp(5,good)+tmp(6,good)/1000).';
+    
+    % convert to tai
+    tmp([1:4 7],good)=utc2tai(tmp([1:4 7],good).').';
+    
+    % get sec/msec
+    tmp(7,good)=round(1000*tmp(7,good));
+    tmp(5,good)=fix(tmp(7,good)/1000);
+    tmp(6,good)=mod(tmp(7,good),1000);
+    
     % get month/cday
     cal=doy2cal(tmp(1:2,good).');
     

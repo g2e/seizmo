@@ -61,9 +61,10 @@ function [def]=seizmodef(filetype,version,usecache)
 %        Sep. 12, 2009 - vgrp added, grp dropped
 %        Sep. 12, 2009 - drop v101 switch (ugly hack), added reftime hack
 %        Sep. 13, 2009 - vf added
+%        Sep. 17, 2009 - added several new vgrps and vfs, added def.abs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2009 at 23:10 GMT
+%     Last Updated Sep. 17, 2009 at 20:30 GMT
 
 % todo:
 
@@ -139,6 +140,11 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.true=1;
     def.false=0;
     
+    % allowed absolute time extensions
+    % - utc/tai return absolute times in [yr jday hr mn secs]
+    % - 6utc/6tai return absolute times in [yr mo cday hr mn secs]
+    def.abs={'utc' 'tai' '6utc' '6tai'};
+    
     % virtual groups
     % - all group members must be the same type
     % - requires combined inputs for ch (careful of order!)
@@ -158,13 +164,33 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.vgrp.nz={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec'};
     def.vgrp.nzdttm={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec'};
     def.vgrp.kname={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
+    def.vgrp.real={'delta' 'depmin' 'depmax' 'scale' 'odelta' 'b' 'e' ...
+        'o' 'a' 'fmt' 't0' 't1' 't2' 't3' 't4' 't5' 't6' 't7' 't8' 't9' ...
+        'f' 'resp0' 'resp1' 'resp2' 'resp3' 'resp4' 'resp5' 'resp6' ...
+        'resp7' 'resp8' 'resp9' 'stla' 'stlo' 'stel' 'stdp' 'evla' ...
+        'evlo' 'evel' 'evdp' 'mag' 'user0' 'user1' 'user2' 'user3' ...
+        'user4' 'user5' 'user6' 'user7' 'user8' 'user9' 'dist' 'az' ...
+        'baz' 'gcarc' 'sb' 'sdelta' 'depmen' 'cmpaz' 'cmpinc' ...
+        'xminimum' 'xmaximum' 'yminimum' 'ymaximum' 'unused6' 'unused7' ...
+        'unused8' 'unused9' 'unused10' 'unused11' 'unused12'};
+    def.vgrp.int={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec' ...
+        'nvhdr' 'norid' 'nevid' 'npts' 'nspts' 'nwfid' 'nxsize' ...
+        'nysize' 'unused15'};
+    def.vgrp.enum={'iftype' 'idep' 'iztype' 'unused16' 'iinst' 'istreg' ...
+        'ievreg' 'ievtyp' 'iqual' 'isynth' 'imagtyp' 'imagsrc' ...
+        'unused19' 'unused20' 'unused21' 'unused22' 'unused23' ...
+        'unused24' 'unused25' 'unused26'};
+    def.vgrp.lgc={'leven' 'lpspol' 'lovrok' 'lcalda' 'unused27'};
+    def.vgrp.char={'kstnm' 'kevnm' 'khole' 'ko' 'ka' 'kt0' 'kt1' 'kt2' ...
+        'kt3' 'kt4' 'kt5' 'kt6' 'kt7' 'kt8' 'kt9' 'kf' 'kuser0' ...
+        'kuser1' 'kuser2' 'kcmpnm' 'knetwk' 'kdatrd' 'kinst'};
     
     % virtual fields
     % - composite field formed from 1+ fields
     % - uses functions to go back and forth
-    % - currently def, head are the only inputs
-    % - ch returns head
-    % - gh returns value
+    % - ch - takes def, head, value - returns head
+    % - gh - takes def, head - returns value
+    % - lh - takes def, head - returns value
     def.vf.kzdate.type='char';
     def.vf.kzdate.ch=@vf_ch_kzdate;
     def.vf.kzdate.gh=@vf_gh_kzdate;
@@ -180,22 +206,36 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.vf.nzcday.type='int';
     def.vf.nzcday.ch=@vf_ch_nzcday;
     def.vf.nzcday.gh=@vf_gh_nzcday;
-    %def.vf.z.type='abs';
-    %def.vf.z.ch=@vf_ch_z;
-    %def.vf.z.gh=@vf_gh_z;
-    %def.vf.z.lh=@vf_lh_z;
-    %def.vf.ztai.type='abs';
-    %def.vf.ztai.ch=@vf_ch_ztai;
-    %def.vf.ztai.gh=@vf_gh_ztai;
-    %def.vf.ztai.lh=@vf_lh_ztai;
+    def.vf.z.type='abs';
+    def.vf.z.ch=@vf_ch_z;
+    def.vf.z.gh=@vf_gh_z;
+    def.vf.z.lh=@vf_lh_z;
+    def.vf.z6.type='abs';
+    def.vf.z6.ch=@vf_ch_z6;
+    def.vf.z6.gh=@vf_gh_z6;
+    def.vf.z6.lh=@vf_lh_z6;
+    def.vf.ztai.type='abs';
+    def.vf.ztai.ch=@vf_ch_ztai;
+    def.vf.ztai.gh=@vf_gh_ztai;
+    def.vf.ztai.lh=@vf_lh_ztai;
+    def.vf.z6tai.type='abs';
+    def.vf.z6tai.ch=@vf_ch_z6tai;
+    def.vf.z6tai.gh=@vf_gh_z6tai;
+    def.vf.z6tai.lh=@vf_lh_z6tai;
+    def.vf.ncmp.type='int';
+    def.vf.ncmp.ch=@vf_ch_ncmp;
+    def.vf.ncmp.gh=@vf_gh_ncmp;
     
     % this is a hack
-    % - would like reftime header positions
-    %   without having to call getheader
+    % - would like reftime header positions without having to
+    %   call getheader (avoids deep recursion & is faster)
     % - this should always match def.int.pos.nz*!!!
-    % - this requires all headers to have
-    %   reftime stored like sac
-    % - must go year,jday,hour,min,sec,msec
+    % - this nearly requires all headers to have reftime stored
+    %   like sac (any function that uses def.reftime otherwise
+    %   must be aware of exceptions - there are none yet)
+    % - for exceptions (none yet), you will need reftime to
+    %   return any useful reference timing info from the header
+    % - currently assumed to go year,jday,hour,min,sec,msec
     def.reftime=71:76;
     
     % begin header section descriptions
@@ -383,6 +423,14 @@ if(strcmpi(filetype,'SEIZMO Binary'))
         % replace unused15 with ncmp (number of dependent components)
         def.int.pos=rmfield(def.int.pos,'unused15');
         def.int.pos.ncmp=85;
+        
+        % remove vf ncmp
+        def.vf=rmfield(def.vf,'ncmp');
+        
+        % alter vgrp int
+        def.vgrp.int={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec' ...
+        'nvhdr' 'norid' 'nevid' 'npts' 'nspts' 'nwfid' 'nxsize' ...
+        'nysize' 'ncmp'};
     end
     
     % seizmo version 200 mod (double reals, double data)

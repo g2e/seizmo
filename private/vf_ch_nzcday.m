@@ -1,30 +1,41 @@
 function [head]=vf_ch_nzcday(def,head,value)
 %VF_CH_NZCDAY    Sets virtual field NZCDAY
 
+% pull in current year & jday
 yj=head(def.reftime(1:2),:).';
+
+% who's (un)defined
 bady=yj(:,1)==def.undef.ntype;
 badj=yj(:,2)==def.undef.ntype;
-bad2=bady & badj;
-dt=datevec(now); dt2=cal2doy(dt(1:3));
-if(any(bad2))
-    % both year and jday undef
-    % - use current year/doy
-    yj(bad2,1)=dt(1);
-    yj(bad2,2)=dt2(2);
-end
-if(any(bady & ~badj))
-    % just year undef
-    % - use current year
-    yj(bady & ~badj,1)=dt(1);
-end
-if(any(badj & ~bady))
-    % just jday undef
-    % - set jday as 1
-    yj(badj & ~bady,2)=1;
+badc=value==def.undef.ntype;
+goodc=~badc;
+
+% get current year
+dt=datevec(now);
+
+% undef jday if cday undef
+if(any(~badj & badc))
+    yj(~badj & badc,2)=def.undef.ntype;
 end
 
-cal=doy2cal(yj);
-cal(:,3)=value;
-head(def.reftime(1:2),:)=cal2doy(cal).';
+% set undef year to current if cday ok
+if(any(bady & goodc))
+    yj(bady & goodc,1)=dt(1);
+end
+
+% set undef jday to 1 if cday ok
+if(any(badj & goodc))
+    yj(badj & goodc,2)=1;
+end
+
+% get new jday based on cday
+if(any(goodc))
+    cal=doy2cal(yj(goodc,:));
+    cal(:,3)=value(goodc);
+    yj(goodc,:)=cal2doy(cal);
+end
+
+% set header
+head(def.reftime(1:2),:)=yj.';
 
 end
