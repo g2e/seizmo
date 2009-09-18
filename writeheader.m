@@ -63,9 +63,10 @@ function []=writeheader(data,varargin)
 %        Apr.  7, 2009 - LOVROK support, better messages/checks
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        May  29, 2009 - allow options via WRITEPARAMETERS
+%        Sep. 18, 2009 - added empty data shortcut
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Sep. 18, 2009 at 14:35 GMT
 
 % todo:
 
@@ -73,6 +74,12 @@ function []=writeheader(data,varargin)
 if(mod(nargin-1,2))
     error('seizmo:writeheader:badNumInputs',...
         'Bad number of arguments!');
+end
+
+% shortcut for empty data
+if(isempty(data))
+    disp('Nothing to write!')
+    return;
 end
 
 % handle options

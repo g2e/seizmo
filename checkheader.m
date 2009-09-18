@@ -80,9 +80,11 @@ function [data]=checkheader(data,options,varargin)
 %        June  8, 2009 - couple fixes for non-column vector data
 %        June 23, 2009 - fixed enum checking bug that only returned one
 %                        record per bad enum value
+%        Sep. 18, 2009 - added warning for ghassan about datasets with
+%                        multiple samplerates
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:00 GMT
+%     Last Updated Sep. 18, 2009 at 22:35 GMT
 
 % todo:
 % - use CHECKOPERR to decide how to handle individual cases
@@ -421,6 +423,15 @@ function []=check_delta(delta)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%  BEGIN DELTA CHECK SECTION   %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% for ghassan
+% warn when the dataset has differing sample rates
+if(~isscalar(unique(delta)))
+    d=unique(delta);
+    warning('seizmo:checkheader:multiDELTA',...
+        ['Dataset has records with differing samplerates!\n' ...
+        'DELTAs:\n' sprintf('%d ',d)]);
+end
 
 % soft requirement: delta > 0
 % note that this is only required because negative delta breaks some code

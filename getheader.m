@@ -70,9 +70,10 @@ function [varargout]=getheader(data,varargin)
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %        Sep. 12, 2009 - added vgrp support
 %        Sep. 15, 2009 - vf support, abs time support, doc update
+%        Sep. 18, 2009 - 2nd pass at abs time support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 15, 2009 at 04:20 GMT
+%     Last Updated Sep. 18, 2009 at 17:05 GMT
 
 % todo:
 
@@ -135,10 +136,20 @@ head=[data.head];
 if(nargin==1); varargout{1}=head.'; return; end
 
 % get reference times hack
-reftime=head(h.reftime,:).';
-reftime(reftime==h.undef.ntype)=nan;
-reftime(:,5)=reftime(:,5)+reftime(:,6)/1000;
-reftime=utc2tai(reftime(:,1:5));
+ref=head(h.reftime,:);
+bad=logical(sum(isnan(ref) | isinf(ref) | ref==h.undef.ntype ...
+    | ref~=round(ref) | [false(1,nrecs); (ref(2,:)<1 | ref(2,:)>366); ...
+    (ref(3,:)<0 | ref(3,:)>23); (ref(4,:)<0 | ref(4,:)>59); ...
+    (ref(5,:)<0 | ref(5,:)>60); (ref(6,:)<0 | ref(6,:)>999)]));
+good=~bad.';
+if(any(bad))
+    ref(:,bad)=h.undef.ntype;
+end
+if(any(good))
+    ref(5,good)=ref(5,good)+ref(6,good)/1000;
+    ref(1:5,good)=utc2tai(ref(1:5,good).').';
+end
+ref=ref(1:5,:).';
 
 % loop over fields
 for i=1:nargin-1
@@ -161,7 +172,7 @@ for i=1:nargin-1
         end
         
         % pull header values
-        [val,type]=ph(head,h,f,reftime);
+        [val,type]=ph(head,h,f,ref,good);
         
         % preallocate (did not know the type until now)
         if(j==1)
@@ -179,7 +190,7 @@ end
 
 end
 
-function [head,type]=ph(head,h,f,reftime)
+function [head,type]=ph(head,h,f,reftime,good)
 %PH    Pull header values
 
 % virtual fields
@@ -188,7 +199,7 @@ if(isfield(h.vf,f))
         case {'enum' 'lgc' 'int' 'real'}
             head=h.vf.(f).gh(h,head);
             type=0;
-        case 'char'
+        case {'char' 'abs'}
             head=h.vf.(f).gh(h,head);
             type=1;
     end
@@ -196,8 +207,8 @@ if(isfield(h.vf,f))
 end
 
 % output by type
-for n=1:length(h.stype)
-    for m=1:length(h.(h.stype{n}))
+for n=1:numel(h.stype)
+    for m=1:numel(h.(h.stype{n}))
         if(isfield(h.(h.stype{n})(m).pos,f))
             p=h.(h.stype{n})(m).pos.(f);
             head=cellstr(char(head(p(1):p(2),:).'));
@@ -205,38 +216,78 @@ for n=1:length(h.stype)
         end
     end
 end
-for n=1:length(h.ntype)
-    for m=1:length(h.(h.ntype{n}))
+for n=1:numel(h.ntype)
+    for m=1:numel(h.(h.ntype{n}))
         if(isfield(h.(h.ntype{n})(m).pos,f))
             head=head(h.(h.ntype{n})(m).pos.(f),:).';
             type=0; return;
-        elseif(strcmp(h.ntype{n},'real') && ...
-                any(strcmp(f(max(1,end-3):end),{' utc' ' tai'})))
-            f2=strtrim(f(1:end-4));
-            if(isfield(h.(h.ntype{n})(m).pos,f2))
-                nrecs=size(head,2);
-                value=zeros(nrecs,5);
-                value(:,5)=head(h.(h.ntype{n})(m).pos.(f2),:).';
-                head=mat2cell(ones(size(value,1),5)*h.undef.ntype,...
-                    ones(nrecs,1));
-                undef1=value(:,5)==h.undef.ntype;
-                undef2=logical(sum(isnan(reftime),2)...
-                    +sum(isinf(reftime),2)+sum(reftime==h.undef.ntype,2));
-                def=~undef1 & ~undef2;
-                if(any(def))
-                    switch f(end-2:end)
-                        case 'utc'
-                            head(def,:)=mat2cell(...
-                                tai2utc(reftime(def,:)+value(def,:)),...
-                                ones(sum(def),1));
-                        case 'tai'
-                            head(def,:)=mat2cell(...
-                                fixtimes(reftime(def,:)+value(def,:)),...
-                                ones(sum(def),1));
+        elseif(strcmpi(h.ntype{n},'real'))
+            % absolute time fields section
+            wf=getwords(f);
+            if(isfield(h.real(m).pos,wf{1}))
+                if(any(strcmpi(joinwords(wf(2:end)),{'utc' 'tai'})))
+                    % get header values in a workable form
+                    nrecs=size(head,2);
+                    value=zeros(nrecs,5);
+                    value(:,5)=head(h.(h.ntype{n})(m).pos.(wf{1}),:).';
+                    
+                    % default output to undef
+                    head=mat2cell(ones(size(value,1),5)*h.undef.ntype,...
+                        ones(nrecs,1));
+                    
+                    % who's (un)defined
+                    good=good & value(:,5)~=h.undef.ntype ...
+                        & ~isnan(value(:,5)) & ~isinf(value(:,5));
+                    
+                    % skip if empty
+                    if(any(good))
+                        switch wf{2}
+                            case 'utc'
+                                head(good,:)=mat2cell(...
+                                    tai2utc(reftime(good,:)...
+                                    +value(good,:)),ones(sum(good),1));
+                            case 'tai'
+                                head(good,:)=mat2cell(...
+                                    fixtimes(reftime(good,:)...
+                                    +value(good,:)),ones(sum(good),1));
+                        end
                     end
+                    type=1;
+                    return;
+                elseif(any(strcmpi(joinwords(wf(2:end)),{'6utc' '6tai'})))
+                    % get header values in a workable form
+                    nrecs=size(head,2);
+                    value=zeros(nrecs,6);
+                    value(:,6)=head(h.(h.ntype{n})(m).pos.(wf{1}),:).';
+                    
+                    % default output to undef
+                    head=mat2cell(ones(size(value,1),6)*h.undef.ntype,...
+                        ones(nrecs,1));
+                    
+                    % convert reftime from nx5 to nx6
+                    reftime=reftime(:,[1:2 2:5]);
+                    reftime(good,1:3)=doy2cal(reftime(good,1:2));
+                    
+                    % who's (un)defined
+                    good=good & value(:,6)~=h.undef.ntype ...
+                        & ~isnan(value(:,6)) & ~isinf(value(:,6));
+                    
+                    % skip if empty
+                    if(any(good))
+                        switch wf{2}
+                            case '6utc'
+                                head(good,:)=mat2cell(...
+                                    tai2utc(reftime(good,:)...
+                                    +value(good,:)),ones(sum(good),1));
+                            case '6tai'
+                                head(good,:)=mat2cell(...
+                                    fixtimes(reftime(good,:)...
+                                    +value(good,:)),ones(sum(good),1));
+                        end
+                    end
+                    type=1;
+                    return;
                 end
-                type=1;
-                return;
             end
         end
     end

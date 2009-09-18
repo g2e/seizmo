@@ -70,9 +70,10 @@ function []=writeseizmo(data,varargin)
 %                        move usage up
 %        May  29, 2009 - allow options via WRITEPARAMETERS
 %        Sep.  5, 2009 - improved the examples
+%        Sep. 18, 2009 - added empty data shortcut
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 06:00 GMT
+%     Last Updated Sep. 18, 2009 at 14:35 GMT
 
 % todo:
 
@@ -80,6 +81,12 @@ function []=writeseizmo(data,varargin)
 if(mod(nargin-1,2))
     error('seizmo:writeseizmo:badNumInputs',...
         'Bad number of arguments!');
+end
+
+% shortcut for empty data
+if(isempty(data))
+    disp('Nothing to write!')
+    return;
 end
 
 % handle options

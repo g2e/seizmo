@@ -55,9 +55,10 @@ function []=listheader(data,varargin)
 %        Sep. 13, 2009 - added utc/tai abs time fields
 %        Sep. 14, 2009 - vlists, abs time vgrp, vf, vf via wildcards
 %        Sep. 15, 2009 - doc updated
+%        Sep. 18, 2009 - 2nd pass at abs time support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 15, 2009 at 04:00 GMT
+%     Last Updated Sep. 18, 2009 at 20:20 GMT
 
 % todo:
 % - skip undefined (set via global)
@@ -78,9 +79,12 @@ nrecs=numel(data);
 disp(' ')
 
 % gather all possible fields and reftimes
-nfields=cell(nh,1); nutcf=nfields; ntaif=nfields;
-tmpfields=cell(2,5); tmputcf=tmpfields; tmptaif=tmpfields;
-reftime=nan(nrecs,6);
+nfields=cell(nh,1);
+nutcf=nfields; ntaif=nfields; nutc6f=nfields; ntai6f=nfields;
+tmpfields=cell(2,5); % just a guess
+tmputcf=tmpfields; tmptaif=tmpfields;
+tmputc6f=tmpfields; tmptai6f=tmpfields;
+ref=nan(nrecs,5); bad=true(nrecs,1); good=false(nrecs,1);
 for i=1:nh
     % add virtual fields to wildcard search
     vf=fieldnames(h(i).vf);
@@ -98,6 +102,12 @@ for i=1:nh
                 tmptaif{k,j}=...
                     strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
                     ' tai');
+                tmputc6f{k,j}=...
+                    strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
+                    ' 6utc');
+                tmptai6f{k,j}=...
+                    strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
+                    ' 6tai');
             end
         end
     end
@@ -106,18 +116,33 @@ for i=1:nh
     nfields{i}=[[tmpfields{:}].'; vf];
     nutcf{i}=[tmputcf{:}].';
     ntaif{i}=[tmptaif{:}].';
+    nutc6f{i}=[tmputc6f{:}].';
+    ntai6f{i}=[tmptai6f{:}].';
     tmpfields=cell(2,5);
     tmputcf=tmpfields;
     tmptaif=tmpfields;
+    tmputc6f=tmpfields;
+    tmptai6f=tmpfields;
     
     % get reference times hack
     % (skips getheader)
     vidx=find(idx==i);
     head=[data(vidx).head];
-    reftime(vidx,:)=head(h.reftime,:).';
-    reftime(vidx(reftime(vidx,:)==h.undef.ntype),:)=nan;
-    reftime(:,5)=reftime(:,5)+reftime(:,6)/1000;
-    reftime=utc2tai(reftime(:,1:5));
+    tmp=head(h.reftime,:);
+    bad(vidx,1)=logical(sum(isnan(tmp) | isinf(tmp) ...
+        | tmp==h.undef.ntype | tmp~=round(tmp) ...
+        | [false(1,numel(vidx)); (tmp(2,:)<1 | tmp(2,:)>366); ...
+        (tmp(3,:)<0 | tmp(3,:)>23); (tmp(4,:)<0 | tmp(4,:)>59); ...
+        (tmp(5,:)<0 | tmp(5,:)>60); (tmp(6,:)<0 | tmp(6,:)>999)]));
+    good(vidx,1)=~bad(vidx,1).';
+    if(any(bad(vidx,1)))
+        tmp(:,bad(vidx,1))=h.undef.ntype;
+    end
+    if(any(good(vidx,1)))
+        tmp(5,good(vidx,1))=tmp(5,good(vidx,1))+tmp(6,good(vidx,1))/1000;
+        tmp(1:5,good(vidx,1))=utc2tai(tmp(1:5,good(vidx,1)).').';
+    end
+    ref(vidx,:)=tmp(1:5,:).';
 end
 
 % loop over files
@@ -126,6 +151,8 @@ for i=1:nrecs
     fields=nfields{idx(i)};
     utcf=nutcf{idx(i)};
     taif=ntaif{idx(i)};
+    utc6f=nutc6f{idx(i)};
+    tai6f=ntai6f{idx(i)};
     
     % list all case
     if (nargin==1)
@@ -187,6 +214,18 @@ for i=1:nrecs
                     strtrim(wf{1})) ' tai$'];
                 % find matches in tai set
                 ngf=taif(~cellfun('isempty',regexp(taif,ngf)));
+            elseif(strcmp(joinwords(wf(2:end)),'6utc'))
+                % no partial matches, trim excess blanks between field, utc
+                ngf=['^' regexptranslate('wildcard',...
+                    strtrim(wf{1})) ' 6utc$'];
+                % find matches in utc set
+                ngf=utc6f(~cellfun('isempty',regexp(utc6f,ngf)));
+            elseif(strcmp(joinwords(wf(2:end)),'6tai'))
+                % no partial matches, trim excess blanks between field, tai
+                ngf=['^' regexptranslate('wildcard',...
+                    strtrim(wf{1})) ' 6tai$'];
+                % find matches in tai set
+                ngf=tai6f(~cellfun('isempty',regexp(tai6f,ngf)));
             else
                 % no partial matches
                 ngf=['^' regexptranslate('wildcard',gf) '$'];
@@ -205,14 +244,14 @@ for i=1:nrecs
             end
             
             % display field/value
-            lh_disp(h(idx(i)),f,data(i),reftime(i,:));
+            lh_disp(h(idx(i)),f,data(i),ref(i,:),good(i));
         end
     end
 end
 
 end
 
-function []=lh_disp(h,f,data,reftime)
+function []=lh_disp(h,f,data,reftime,good)
 %LH_DISP    Finds and displays field/value pairs for lh
 
 % virtual fields
@@ -224,66 +263,69 @@ if(isfield(h.vf,f))
             ival=h.vf.(f).gh(h,data.head);
             if(ival==fix(ival) && ival>=h.enum(1).minval && ...
                     ival<=h.enum(1).maxval)
-                disp(sprintf('%12s = %s',upper(f),h.enum(1).id{ival+1}));
+                disp(sprintf('%17s = %s',upper(f),h.enum(1).id{ival+1}));
             elseif(ival==h.undef.ntype)
-                disp(sprintf('%12s = UNDEFINED (%g)',upper(f),ival));
+                disp(sprintf('%17s = UNDEFINED (%g)',upper(f),ival));
             else
-                disp(sprintf('%12s = UNKNOWN (%g)',upper(f),ival));
+                disp(sprintf('%17s = UNKNOWN (%g)',upper(f),ival));
             end
         case 'lgc'
             ival=h.vf.(f).gh(h,data.head);
             switch ival
                 case h.false
-                    disp(sprintf('%12s = FALSE',upper(f)));
+                    disp(sprintf('%17s = FALSE',upper(f)));
                 case h.true
-                    disp(sprintf('%12s = TRUE',upper(f)));
+                    disp(sprintf('%17s = TRUE',upper(f)));
                 case h.undef.ntype
-                    disp(sprintf('%12s = UNDEFINED (%g)',upper(f),ival));
+                    disp(sprintf('%17s = UNDEFINED (%g)',upper(f),ival));
                 otherwise
-                    disp(sprintf('%12s = INVALID (%g)',upper(f),ival));
+                    disp(sprintf('%17s = INVALID (%g)',upper(f),ival));
             end
         case 'char'
             ival=h.vf.(f).gh(h,data.head);
-            disp(sprintf('%12s = %s',upper(f),ival{:}));
+            disp(sprintf('%17s = %s',upper(f),ival{:}));
+        case 'abs'
+            ival=h.vf.(f).lh(h,data.head);
+            disp(sprintf('%17s = %s',upper(f),ival{:}));
         otherwise
             ival=h.vf.(f).gh(h,data.head);
             if(ival==h.undef.ntype)
-                disp(sprintf('%12s = UNDEFINED (%g)',upper(f),ival));
+                disp(sprintf('%17s = UNDEFINED (%g)',upper(f),ival));
             else
-                disp(sprintf('%12s = %-.10g',upper(f),ival));
+                disp(sprintf('%17s = %-.10g',upper(f),ival));
             end
     end
     return;
 end
 
 % handle enum/lgc fields
-for m=1:length(h.enum)
+for m=1:numel(h.enum)
     if(isfield(h.enum(m).pos,f))
         ival=data.head(h.enum(m).pos.(f));
         % searches only enum(1) for now (prefer one big
         % set of enums to share vs separate sets)
         if(ival==fix(ival) && ival>=h.enum(1).minval && ...
                 ival<=h.enum(1).maxval)
-            disp(sprintf('%12s = %s',upper(f),h.enum(1).desc{ival+1}));
+            disp(sprintf('%17s = %s',upper(f),h.enum(1).desc{ival+1}));
         elseif(ival==h.undef.ntype)
-            disp(sprintf('%12s = UNDEFINED (%g)',upper(f),ival));
+            disp(sprintf('%17s = UNDEFINED (%g)',upper(f),ival));
         else
-            disp(sprintf('%12s = UNKNOWN (%g)',upper(f),ival));
+            disp(sprintf('%17s = UNKNOWN (%g)',upper(f),ival));
         end
         return;
     end
 end
-for m=1:length(h.lgc)
+for m=1:numel(h.lgc)
     if(isfield(h.lgc(m).pos,f))
         if(data.head(h.lgc(m).pos.(f))==h.false)
-            disp(sprintf('%12s = FALSE',upper(f)));
+            disp(sprintf('%17s = FALSE',upper(f)));
         elseif(data.head(h.lgc(m).pos.(f))==h.true)
-            disp(sprintf('%12s = TRUE',upper(f)));  
+            disp(sprintf('%17s = TRUE',upper(f)));  
         elseif(data.head(h.lgc(m).pos.(f))==h.undef.ntype)
-            disp(sprintf('%12s = UNDEFINED (%g)',upper(f),...
+            disp(sprintf('%17s = UNDEFINED (%g)',upper(f),...
                 data.head(h.lgc(m).pos.(f))));
         else
-            disp(sprintf('%12s = INVALID (%g)',upper(f),...
+            disp(sprintf('%17s = INVALID (%g)',upper(f),...
                 data.head(h.lgc(m).pos.(f))));
         end
         return;
@@ -291,17 +333,17 @@ for m=1:length(h.lgc)
 end
 
 % string types
-for m=1:length(h.stype)
-    for n=1:length(h.(h.stype{m}))
+for m=1:numel(h.stype)
+    for n=1:numel(h.(h.stype{m}))
         if(isfield(h.(h.stype{m})(n).pos,f))
             p=h.(h.stype{m})(n).pos.(f);
-            q=p(2)-p(1)+1; u=length(h.undef.stype);
+            q=p(2)-p(1)+1; u=numel(h.undef.stype);
             if(strcmp([h.undef.stype ones(1,q-u)*32],...
                 char(data.head(p(1):p(2)).')))
-                disp(sprintf('%12s = UNDEFINED (%s)',upper(f),...
+                disp(sprintf('%17s = UNDEFINED (%s)',upper(f),...
                     char(data.head(p(1):p(2)))));
             else
-                disp(sprintf('%12s = %s',upper(f),...
+                disp(sprintf('%17s = %s',upper(f),...
                     char(data.head(p(1):p(2)))));
             end
             return;
@@ -310,69 +352,61 @@ for m=1:length(h.stype)
 end
 
 % remaining numeric types
-for m=1:length(h.ntype)
-    for n=1:length(h.(h.ntype{m}))
+for m=1:numel(h.ntype)
+    for n=1:numel(h.(h.ntype{m}))
         if(isfield(h.(h.ntype{m})(n).pos,f))
             if(data.head(h.(h.ntype{m})(n).pos.(f))==h.undef.ntype)
-                disp(sprintf('%12s = UNDEFINED (%g)',upper(f),...
+                disp(sprintf('%17s = UNDEFINED (%g)',upper(f),...
                     data.head(h.(h.ntype{m})(n).pos.(f))));
             else
-                disp(sprintf('%12s = %-.10g',upper(f),...
+                disp(sprintf('%17s = %-.10g',upper(f),...
                     data.head(h.(h.ntype{m})(n).pos.(f))));
             end
             return;
-        % UTC absolute times section
-        elseif(strcmp(f(max(1,end-3):end),' utc'))
-            f2=strtrim(f(1:end-4));
-            if(isfield(h.(h.ntype{m})(n).pos,f2))
-                if(data.head(h.(h.ntype{m})(n).pos.(f2))==h.undef.ntype)
-                    disp(sprintf('%12s = UNDEFINED (%g)',upper(f),...
-                        data.head(h.(h.ntype{m})(n).pos.(f2))));
-                elseif(any(isnan(reftime) | isinf(reftime)))
-                    disp(sprintf('%12s = NO REFTIME (%g)',upper(f),...
-                        data.head(h.(h.ntype{m})(n).pos.(f2))));
-                else
-                    % get values for output
-                    utc=tai2utc(reftime+...
-                        [0 0 0 0 data.head(h.(h.ntype{m})(n).pos.(f2))]);
-                    cal=doy2cal(utc(1:2));
-                    utc(5)=round(1000*utc(5));
-                    disp(sprintf(['%12s = %04d-%02d-%02d (%03d) '...
-                        '%02d:%02d:%02d.%03d'],upper(f),utc(1),cal(2),...
-                        cal(3),utc(2),utc(3),utc(4),floor(utc(5)/1000),...
-                        mod(utc(5),1000)));
+        elseif(strcmpi(h.ntype{n},'real'))
+            % absolute time fields section
+            wf=getwords(f);
+            if(isfield(h.real(n).pos,wf{1}))
+                v=data.head(h.real(n).pos.(wf{1}));
+                if(any(strcmpi(joinwords(wf(2:end)),{'utc' '6utc'})))
+                    if(v==h.undef.ntype || isnan(v) || isinf(v))
+                        disp(sprintf('%17s = UNDEFINED (%g)',upper(f),v));
+                    elseif(~good)
+                        disp(sprintf('%17s = NO REFTIME (%g)',upper(f),v));
+                    else
+                        % get values for output
+                        utc=tai2utc(reftime+[0 0 0 0 v]);
+                        cal=doy2cal(utc(1:2));
+                        utc(5)=round(1000*utc(5));
+                        disp(sprintf(['%17s = %04d-%02d-%02d (%03d) '...
+                            '%02d:%02d:%02d.%03d'],upper(f),utc(1),...
+                            cal(2),cal(3),utc(2),utc(3),utc(4),...
+                            floor(utc(5)/1000),mod(utc(5),1000)));
+                    end
+                    return;
+                elseif(any(strcmpi(joinwords(wf(2:end)),{'tai' '6tai'})))
+                    if(v==h.undef.ntype || isnan(v) || isinf(v))
+                        disp(sprintf('%17s = UNDEFINED (%g)',upper(f),v));
+                    elseif(~good)
+                        disp(sprintf('%17s = NO REFTIME (%g)',upper(f),v));
+                    else
+                        tai=fixtimes(reftime+[0 0 0 0 v]);
+                        cal=doy2cal(tai(1:2));
+                        tai(5)=round(1000*tai(5));
+                        disp(sprintf(['%17s = %04d-%02d-%02d (%03d) '...
+                            '%02d:%02d:%02d.%03d'],upper(f),tai(1),...
+                            cal(2),cal(3),tai(2),tai(3),tai(4),...
+                            floor(tai(5)/1000),mod(tai(5),1000)));
+                    end
+                    return;
                 end
-                return;
-            end
-        % TAI absolute times section
-        elseif(strcmp(f(max(1,end-3):end),' tai'))
-            f2=strtrim(f(1:end-4));
-            if(isfield(h.(h.ntype{m})(n).pos,f2))
-                if(data.head(h.(h.ntype{m})(n).pos.(f2))==h.undef.ntype)
-                    disp(sprintf('%12s = UNDEFINED (%g)',upper(f),...
-                        data.head(h.(h.ntype{m})(n).pos.(f2))));
-                elseif(any(isnan(reftime) | isinf(reftime)))
-                    disp(sprintf('%12s = NO REFTIME (%g)',upper(f),...
-                        data.head(h.(h.ntype{m})(n).pos.(f2))));
-                else
-                    % get values for output
-                    tai=fixtimes(reftime+...
-                        [0 0 0 0 data.head(h.(h.ntype{m})(n).pos.(f2))]);
-                    cal=doy2cal(tai(1:2));
-                    tai(5)=round(1000*tai(5));
-                    disp(sprintf(['%12s = %04d-%02d-%02d (%03d) '...
-                        '%02d:%02d:%02d.%03d'],upper(f),tai(1),cal(2),...
-                        cal(3),tai(2),tai(3),tai(4),floor(tai(5)/1000),...
-                        mod(tai(5),1000)));
-                end
-                return;
             end
         end
     end
 end
 
 % field not found
-warning('seizmo:listheader:fieldInvalid',...
-    'Filetype: %s, Version: %d\nInvalid field: %s',h.filetype,h.version,f);
+%warning('seizmo:listheader:fieldInvalid',...
+%   'Filetype: %s, Version: %d\nInvalid field: %s',h.filetype,h.version,f);
 
 end

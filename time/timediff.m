@@ -38,9 +38,12 @@ function [diff]=timediff(times1,times2,option)
 %        Sep.  5, 2009 - added SUBMAT as a subfunction so the time package
 %                        is free from 3rd party dependencies (I think),
 %                        minor doc update
+%        Sep. 18, 2009 - relaxed checks 
+%                         + returns empty matrix on empty input
+%                         + allow more cases with differing formats
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 19:35 GMT
+%     Last Updated Sep. 18, 2009 at 15:45 GMT
 
 % todo:
 
@@ -51,13 +54,13 @@ if(~isempty(msg)); error(msg); end
 % check times
 sz1=size(times1);
 sz2=size(times2);
+if(isempty(times1) || isempty(times2)); diff=[]; return; end
 if(~isnumeric(times1) || ~isnumeric(times2)...
-        || isempty(times1) || isempty(times2)...
         || ~any(sz1(2)==[2 3 5 6]) || ~any(sz2(2)==[2 3 5 6])...
-        || (~isequal(sz1,sz2) && ...
+        || (~isequal(sz1([1 3:end]),sz2([1 3:end])) && ...
         prod(sz1([1 3:end]))~=1 && prod(sz2([1 3:end]))~=1))
     error('seizmo:timediff:badInput',...
-        'TIMES1 and TIMES2 must be a non-empty numeric date arrays!');
+        'TIMES1 and TIMES2 must be numeric date arrays!');
 end
 
 % expand scalar

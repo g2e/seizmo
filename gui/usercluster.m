@@ -4,7 +4,7 @@ function [cutoff,color,perm]=usercluster(Z,data,cutoff,varargin)
 % cluster analysis loop
 while (1)
     % default limit
-    if(isempty(cutoff)); cutoff=0.03; end
+    if(nargin==2 || isempty(cutoff)); cutoff=0.03; end
     
     % dendrogram/waveforms
     [perm,color,fh,sfh]=plotdendro(Z,data,'treelimit',cutoff,varargin{:});

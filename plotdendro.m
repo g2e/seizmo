@@ -17,10 +17,10 @@ function [perm,colors,fh,sfh]=plotdendro(Z,data,varargin)
 %    Examples:
 %     Get similarities using mcxc, assemble the tree using linkage, and
 %     visualize the heirarchy using pdendro:
-%       records=combo(data)
-%       cv=mcxc(records)
-%       Z=linkage(1-cv,'average')
-%       plotdendro(Z,data,'treelimit',1)
+%       records=records2mat(data);
+%       cv=mcxc(records,'npeaks',1);
+%       Z=linkage(1-cv.','average');
+%       plotdendro(Z,data,'treelimit',1);
 %
 %    See also: plot1, plot2, plot0, recordsection, mcxc,
 %              dendrogram, linkage, cluster (Statistics Toolbox)

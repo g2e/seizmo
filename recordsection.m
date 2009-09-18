@@ -78,7 +78,7 @@ set(gca,'fontname',P.AXISFONT,'fontweight',P.AXISFONTWEIGHT,...
 grid(P.GRID);
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % record coloring
 try
@@ -258,7 +258,7 @@ if(isempty(P.TITLE))
     P.TITLE=[num2str(length(indices)) '/' num2str(nrecs) ' Records']; 
 end
 if(isempty(P.XLABEL)); P.XLABEL='Time (sec)'; end
-if(isempty(P.YLABEL) && strcmpi(P.YLABEL,'gcarc'))
+if(isempty(P.YLABEL) && strcmpi(P.YFIELD,'gcarc'))
     P.YLABEL='Distance (\circ)'; 
 end
 title(P.TITLE,'fontname',P.TITLEFONT,'fontweight',P.TITLEFONTWEIGHT,...

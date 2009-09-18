@@ -9,12 +9,12 @@ dt=def.undef.ntype*ones(nv,2);
 good=false(nv,1);
 
 % who's (un)defined
-num=true(1,12);
+num=true(1,16);
 num(1,[5 8 11 12 16])=false;
 for i=1:nv
     % must be a 16 character string with proper separators
     % and numeric chars elsewhere
-    if(ischar(value{i}) && isequal(size(value{i}),[1 12]) ...
+    if(ischar(value{i}) && isequal(size(value{i}),[1 16]) ...
             && strcmp(value{i}(~num),'-- ()') ...
             && all(isstrprop(value{i}(num),'digit')))
         good(i)=true;

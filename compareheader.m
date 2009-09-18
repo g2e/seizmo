@@ -44,9 +44,10 @@ function []=compareheader(data,varargin)
 %                        vgrp, added vf support, global option to set
 %                        column width, vf show up in wildcards
 %        Sep. 15, 2009 - doc update
+%        Sep. 18, 2009 - 2nd pass at abs time support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 15, 2009 at 04:00 GMT
+%     Last Updated Sep. 18, 2009 at 20:00 GMT
 
 % todo:
 
@@ -78,8 +79,10 @@ if(~isscalar(cn) || cn~=round(cn) || cn<=0)
 end
 
 % gather all possible fields and reftimes
-fields=cell(2,5,nh); utcf=fields; taif=fields;
-reftime=nan(nrecs,6); vf=cell(nh,1);
+fields=cell(2,5,nh); % just a guess
+utcf=fields; taif=fields; utc6f=fields; tai6f=fields;
+ref=nan(nrecs,5); bad=true(nrecs,1); good=false(nrecs,1);
+vf=cell(nh,1); 
 for i=1:nh
     % vf in wildcard search
     vf{i}=fieldnames(h(i).vf).';
@@ -97,6 +100,12 @@ for i=1:nh
                 taif{k,j,i}=...
                     strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
                     ' tai');
+                utc6f{k,j,i}=...
+                    strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
+                    ' 6utc');
+                tai6f{k,j,i}=...
+                    strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
+                    ' 6tai');
             end
         end
     end
@@ -105,16 +114,29 @@ for i=1:nh
     % (skips getheader)
     vidx=find(idx==i);
     head=[data(vidx).head];
-    reftime(vidx,:)=head(h.reftime,:).';
-    reftime(vidx(reftime(vidx,:)==h.undef.ntype),:)=nan;
-    reftime(:,5)=reftime(:,5)+reftime(:,6)/1000;
-    reftime=utc2tai(reftime(:,1:5));
+    tmp=head(h.reftime,:);
+    bad(vidx,1)=logical(sum(isnan(tmp) | isinf(tmp) ...
+        | tmp==h.undef.ntype | tmp~=round(tmp) ...
+        | [false(1,numel(vidx)); (tmp(2,:)<1 | tmp(2,:)>366); ...
+        (tmp(3,:)<0 | tmp(3,:)>23); (tmp(4,:)<0 | tmp(4,:)>59); ...
+        (tmp(5,:)<0 | tmp(5,:)>60); (tmp(6,:)<0 | tmp(6,:)>999)]));
+    good(vidx,1)=~bad(vidx,1).';
+    if(any(bad(vidx,1)))
+        tmp(:,bad(vidx,1))=h.undef.ntype;
+    end
+    if(any(good(vidx,1)))
+        tmp(5,good(vidx,1))=tmp(5,good(vidx,1))+tmp(6,good(vidx,1))/1000;
+        tmp(1:5,good(vidx,1))=utc2tai(tmp(1:5,good(vidx,1)).').';
+    end
+    ref(vidx,:)=tmp(1:5,:).';
 end
 % only list each field once
 % - this forces an alphabetical listing
 fields=unique([[fields{:}].'; [vf{:}].']);
 utcf=unique([utcf{:}].');
 taif=unique([taif{:}].');
+utc6f=unique([utc6f{:}].');
+tai6f=unique([tai6f{:}].');
 
 % list all if no fields given
 if(nargin==1)
@@ -194,6 +216,18 @@ for i=1:nvarg
                 strtrim(wf{1})) ' tai$'];
             % find matches in tai set
             ngf=taif(~cellfun('isempty',regexp(taif,ngf)));
+        elseif(strcmp(joinwords(wf(2:end)),'6utc'))
+            % no partial matches, trim excess blanks between field and utc
+            ngf=['^' regexptranslate('wildcard',...
+                strtrim(wf{1})) ' 6utc$'];
+            % find matches in utc set
+            ngf=utc6f(~cellfun('isempty',regexp(utc6f,ngf)));
+        elseif(strcmp(joinwords(wf(2:end)),'6tai'))
+            % no partial matches, trim excess blanks between field and tai
+            ngf=['^' regexptranslate('wildcard',...
+                strtrim(wf{1})) ' 6tai$'];
+            % find matches in tai set
+            ngf=tai6f(~cellfun('isempty',regexp(tai6f,ngf)));
         elseif(numel(wf)==1)
             % no partial matches
             ngf=['^' regexptranslate('wildcard',gf) '$'];
@@ -215,7 +249,7 @@ for i=1:nvarg
         % get value formatted as string (right justified)
         values=nan(nrecs,cn);
         for k=1:nrecs
-            tmp=cmph_disp(h(idx(k)),f,data(k),cs,cn,reftime(k,:));
+            tmp=cmph_disp(h(idx(k)),f,data(k),cs,cn,ref(k,:),good(k));
             
             % check for oversized output
             if(numel(tmp)>cn)
@@ -229,13 +263,13 @@ for i=1:nvarg
         
         % display
         values=values.';
-        disp([sprintf('%12s | ',upper(f)) char(values(:).')])
+        disp([sprintf('%17s | ',upper(f)) char(values(:).')])
     end
 end
 
 end
 
-function [string]=cmph_disp(h,f,data,cs,cn,reftime)
+function [string]=cmph_disp(h,f,data,cs,cn,reftime,good)
 %CMPH_DISP    Returns the value of a header field as a string
 
 % virtual fields
@@ -270,6 +304,9 @@ if(isfield(h.vf,f))
             end
         case 'char'
             ival=h.vf.(f).gh(h,data.head);
+            string=sprintf(['%' cs 's'],ival{:});
+        case 'abs'
+            ival=h.vf.(f).lh(h,data.head);
             string=sprintf(['%' cs 's'],ival{:});
         otherwise
             ival=h.vf.(f).gh(h,data.head);
@@ -352,57 +389,49 @@ for m=1:numel(h.ntype)
                     data.head(h.(h.ntype{m})(n).pos.(f))));
             end
             return;
-        % UTC absolute times section
-        elseif(strcmp(f(max(1,end-3):end),' utc'))
-            f=strtrim(f(1:end-4));
-            if(isfield(h.(h.ntype{m})(n).pos,f))
-                if(data.head(h.(h.ntype{m})(n).pos.(f))==h.undef.ntype)
-                    string=sprintf(['%' cs 's'],...
-                        sprintf('UNDEFINED (%g)',...
-                        data.head(h.(h.ntype{m})(n).pos.(f))));
-                elseif(any(isnan(reftime) | isinf(reftime)))
-                    string=sprintf(['%' cs 's'],...
-                        sprintf('NO REFTIME (%g)',...
-                        data.head(h.(h.ntype{m})(n).pos.(f))));
-                else
-                    % get values for output
-                    utc=tai2utc(reftime+...
-                        [0 0 0 0 data.head(h.(h.ntype{m})(n).pos.(f))]);
-                    cal=doy2cal(utc(1:2));
-                    utc(5)=round(1000*utc(5));
-                    string=sprintf(['%' cs 's'],...
-                        sprintf(['%04d-%02d-%02d (%03d) '...
-                        '%02d:%02d:%02d.%03d'],utc(1),cal(2),cal(3),...
-                        utc(2),utc(3),utc(4),floor(utc(5)/1000),...
-                        mod(utc(5),1000)));
+        elseif(strcmpi(h.ntype{n},'real'))
+            % absolute time fields section
+            wf=getwords(f);
+            if(isfield(h.real(n).pos,wf{1}))
+                v=data.head(h.real(n).pos.(wf{1}));
+                if(any(strcmpi(joinwords(wf(2:end)),{'utc' '6utc'})))
+                    if(v==h.undef.ntype || isnan(v) || isinf(v))
+                        string=sprintf(['%' cs 's'],...
+                            sprintf('UNDEFINED (%g)',v));
+                    elseif(~good)
+                        string=sprintf(['%' cs 's'],...
+                            sprintf('NO REFTIME (%g)',v));
+                    else
+                        % get values for output
+                        utc=tai2utc(reftime+[0 0 0 0 v]);
+                        cal=doy2cal(utc(1:2));
+                        utc(5)=round(1000*utc(5));
+                        string=sprintf(['%' cs 's'],...
+                            sprintf(['%04d-%02d-%02d (%03d) '...
+                            '%02d:%02d:%02d.%03d'],utc(1),cal(2),cal(3),...
+                            utc(2),utc(3),utc(4),fix(utc(5)/1000),...
+                            mod(utc(5),1000)));
+                    end
+                    return;
+                elseif(any(strcmpi(joinwords(wf(2:end)),{'tai' '6tai'})))
+                    if(v==h.undef.ntype || isnan(v) || isinf(v))
+                        string=sprintf(['%' cs 's'],...
+                            sprintf('UNDEFINED (%g)',v));
+                    elseif(~good)
+                        string=sprintf(['%' cs 's'],...
+                            sprintf('NO REFTIME (%g)',v));
+                    else
+                        tai=fixtimes(reftime+[0 0 0 0 v]);
+                        cal=doy2cal(tai(1:2));
+                        tai(5)=round(1000*tai(5));
+                        string=sprintf(['%' cs 's'],...
+                            sprintf(['%04d-%02d-%02d (%03d) '...
+                            '%02d:%02d:%02d.%03d'],tai(1),cal(2),cal(3),...
+                            tai(2),tai(3),tai(4),floor(tai(5)/1000),...
+                            mod(tai(5),1000)));
+                    end
+                    return;
                 end
-                return;
-            end
-        % TAI absolute times section
-        elseif(strcmp(f(max(1,end-3):end),' tai'))
-            f=strtrim(f(1:end-4));
-            if(isfield(h.(h.ntype{m})(n).pos,f))
-                if(data.head(h.(h.ntype{m})(n).pos.(f))==h.undef.ntype)
-                    string=sprintf(['%' cs 's'],...
-                        sprintf('UNDEFINED (%g)',...
-                        data.head(h.(h.ntype{m})(n).pos.(f))));
-                elseif(any(isnan(reftime) | isinf(reftime)))
-                    string=sprintf(['%' cs 's'],...
-                        sprintf('NO REFTIME (%g)',...
-                        data.head(h.(h.ntype{m})(n).pos.(f))));
-                else
-                    % get values for output
-                    tai=fixtimes(reftime+...
-                        [0 0 0 0 data.head(h.(h.ntype{m})(n).pos.(f))]);
-                    cal=doy2cal(tai(1:2));
-                    tai(5)=round(1000*tai(5));
-                    string=sprintf(['%' cs 's'],...
-                        sprintf(['%04d-%02d-%02d (%03d) '...
-                        '%02d:%02d:%02d.%03d'],tai(1),cal(2),cal(3),...
-                        tai(2),tai(3),tai(4),floor(tai(5)/1000),...
-                        mod(tai(5),1000)));
-                end
-                return;
             end
         end
     end

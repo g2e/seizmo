@@ -91,9 +91,10 @@ function [data]=changeheader(data,varargin)
 %                        updated documentation to reflect this
 %        Sep. 12, 2009 - added vgrp support
 %        Sep. 15, 2009 - vf support, abs time support, doc update
+%        Sep. 18, 2009 - 2nd pass at abs time support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2009 at 04:20 GMT
+%     Last Updated Sep. 18, 2009 at 15:55 GMT
 
 % todo:
 
@@ -149,10 +150,20 @@ end
 head=[data.head];
 
 % get reference times hack
-reftime=head(h.reftime,:).';
-reftime(reftime==h.undef.ntype)=nan;
-reftime(:,5)=reftime(:,5)+reftime(:,6)/1000;
-reftime=utc2tai(reftime(:,1:5));
+ref=head(h.reftime,:);
+bad=logical(sum(isnan(ref) | isinf(ref) | ref==h.undef.ntype ...
+    | ref~=round(ref) | [false(1,nrecs); (ref(2,:)<1 | ref(2,:)>366); ...
+    (ref(3,:)<0 | ref(3,:)>23); (ref(4,:)<0 | ref(4,:)>59); ...
+    (ref(5,:)<0 | ref(5,:)>60); (ref(6,:)<0 | ref(6,:)>999)]));
+good=~bad.';
+if(any(bad))
+    ref(:,bad)=h.undef.ntype;
+end
+if(any(good))
+    ref(5,good)=ref(5,good)+ref(6,good)/1000;
+    ref(1:5,good)=utc2tai(ref(1:5,good).').';
+end
+ref=ref(1:5,:).';
 
 % loop over field/value pairs
 for i=1:2:(nargin-2)
@@ -237,7 +248,7 @@ for i=1:2:(nargin-2)
         end
         
         % assign values to field
-        head=a2h(head,h,f,varargin{i+1}(:,j),reftime);
+        head=a2h(head,h,f,varargin{i+1}(:,j),ref,good);
     end
 end
 
@@ -248,7 +259,7 @@ head=mat2cell(head,h.size,ones(1,nrecs));
 end
 
 
-function [head]=a2h(head,h,f,v,reftime)
+function [head]=a2h(head,h,f,v,reftime,good)
 %A2H    Subfunction that assigns values to header field
 
 % virtual fields
@@ -256,14 +267,14 @@ if(isfield(h.vf,f))
     switch h.vf.(f).type
         case {'enum' 'lgc' 'int' 'real'}
             head=h.vf.(f).ch(h,head,cell2mat(v));
-        case 'char'
+        case {'char' 'abs'}
             head=h.vf.(f).ch(h,head,v);
     end
     return;
 end
 
 % special treatment for enums
-for m=1:length(h.enum)
+for m=1:numel(h.enum)
     if(isfield(h.enum(m).pos,f))
         % string id/desc enum values
         if(iscellstr(v))
@@ -274,7 +285,7 @@ for m=1:length(h.enum)
             v(strcmpi(v,'undefined'))={h.undef.stype};
             v(strcmpi(v,'nan'))={h.undef.stype};
             % all are the same (quick)
-            if(length(unique(v))==1)
+            if(numel(unique(v))==1)
                 % all are ids
                 if(isfield(h.enum(1).val,v{1}))
                     head(h.enum(m).pos.(f),:)=h.enum(1).val.(v{1});
@@ -293,9 +304,8 @@ for m=1:length(h.enum)
                             h.filetype,h.version,f);
                     end
                 end
-            % not all are the same (slow b/c looped)
-            else
-                for n=1:length(v)
+            else % not all are the same (slow b/c looped)
+                for n=1:numel(v)
                     % check if string id
                     if(isfield(h.enum(1).val,v{n}))
                         head(h.enum(m).pos.(f),n)=h.enum(1).val.(v{n});
@@ -328,15 +338,15 @@ for m=1:length(h.enum)
 end
 
 % special treatment for logical words
-for m=1:length(h.lgc)
+for m=1:numel(h.lgc)
     if(isfield(h.lgc(m).pos,f))
         if(iscellstr(v))
             % logic words (unknown => undefined here)
-            true=strncmpi(v,'t',1);
-            false=strncmpi(v,'f',1);
+            lgctrue=strncmpi(v,'t',1);
+            lgcfalse=strncmpi(v,'f',1);
             undef=strncmpi(v,'u',1) | strcmpi(v,'nan');
-            head(h.lgc(m).pos.(f),true)=h.true;
-            head(h.lgc(m).pos.(f),false)=h.false;
+            head(h.lgc(m).pos.(f),lgctrue)=h.true;
+            head(h.lgc(m).pos.(f),lgcfalse)=h.false;
             head(h.lgc(m).pos.(f),undef)=h.undef.ntype;
         else
             % logic numbers (unknown => unknown here)
@@ -355,8 +365,8 @@ for m=1:length(h.lgc)
 end
 
 % string types
-for n=1:length(h.stype)
-    for m=1:length(h.(h.stype{n}))
+for n=1:numel(h.stype)
+    for m=1:numel(h.(h.stype{n}))
         if(isfield(h.(h.stype{n})(m).pos,f))
             p=h.(h.stype{n})(m).pos.(f);
             o=p(2)-p(1)+1;
@@ -383,37 +393,75 @@ for n=1:length(h.stype)
 end
 
 % remainder of numeric types
-for n=1:length(h.ntype)
-    for m=1:length(h.(h.ntype{n}))
+for n=1:numel(h.ntype)
+    for m=1:numel(h.(h.ntype{n}))
         if(isfield(h.(h.ntype{n})(m).pos,f))
             v=cell2mat(v);
             v(isnan(v))=h.undef.ntype;
             v(isinf(v))=h.undef.ntype;
             head(h.(h.ntype{n})(m).pos.(f),:)=v;
             return;
-        elseif(strcmp(h.ntype{n},'real') && ...
-                any(strcmp(f(max(1,end-3):end),{' utc' ' tai'})))
-            f2=strtrim(f(1:end-4));
-            if(isfield(h.(h.ntype{n})(m).pos,f2))
-                v=cell2mat(v);
-                undef1=logical(sum(v==h.undef.ntype,2));
-                undef2=logical(sum(isnan(reftime),2)...
-                    +sum(isinf(reftime),2)+sum(reftime==h.undef.ntype,2));
-                def=~undef1 & ~undef2;
-                head(h.(h.ntype{n})(m).pos.(f2),:)=h.undef.ntype;
-                if(any(def))
-                    switch f(end-2:end)
-                        case 'utc'
-                            head(h.(h.ntype{n})(m).pos.(f2),def)=...
-                                timediff(reftime(def,:),...
-                                utc2tai(v(def,:)));
-                        case 'tai'
-                            head(h.(h.ntype{n})(m).pos.(f2),def)=...
-                                timediff(reftime(def,:),...
-                                fixtimes(v(def,:)));
+        elseif(strcmp(h.ntype{n},'real'))
+            % absolute time fields section
+            wf=getwords(f);
+            if(any(strcmpi(joinwords(wf(2:end)),...
+                    {'utc' 'tai' '6utc' '6tai'})))
+                if(isfield(h.real(m).pos,wf{1}))
+                    % set all to undef
+                    head(h.real(m).pos.(wf{1}),:)=h.undef.ntype;
+                    
+                    % who's (un)defined
+                    nv=numel(v);
+                    good5=false(nv,1);
+                    good6=good5;
+                    for i=1:nv
+                        % must be 1x5 or 1x6 numeric array
+                        if(isnumeric(v{i}))
+                            if(isequal(size(v{i}),[1 5]) ...
+                                    && ~any(v{i}==h.undef.ntype) ...
+                                    && ~any(isnan(v{i}) | isinf(v{i})) ...
+                                    && isequal(v{i}(1:4),round(v{i}(1:4))))
+                                good5(i)=true;
+                            elseif(isequal(size(v{i}),[1 6]) ...
+                                    && ~any(v{i}==h.undef.ntype) ...
+                                    && ~any(isnan(v{i}) | isinf(v{i})) ...
+                                    && isequal(v{i}(1:5),round(v{i}(1:5))))
+                                good6(i)=true;
+                            end
+                        end
                     end
+                    good5=good5 & good;
+                    good6=good6 & good;
+                    
+                    % skip empty
+                    if(any(good5))
+                        % fix times
+                        switch wf{2}
+                            case {'utc' '6utc'}
+                                head(h.real(m).pos.(wf{1}),good5)=...
+                                    timediff(reftime(good5,:),...
+                                    utc2tai(cell2mat(v(good5,1))));
+                            case {'tai' '6tai'}
+                                head(h.real(m).pos.(wf{1}),good5)=...
+                                    timediff(reftime(good5,:),...
+                                    fixtimes(cell2mat(v(good5,1))));
+                        end
+                    end
+                    if(any(good6))
+                        % fix times
+                        switch wf{2}
+                            case {'utc' '6utc'}
+                                head(h.real(m).pos.(wf{1}),good6)=...
+                                    timediff(reftime(good6,:),...
+                                    utc2tai(cell2mat(v(good6,1))));
+                            case {'tai' '6tai'}
+                                head(h.real(m).pos.(wf{1}),good6)=...
+                                    timediff(reftime(good6,:),...
+                                    fixtimes(cell2mat(v(good6,1))));
+                        end
+                    end
+                    return;
                 end
-                return;
             end
         end
     end
