@@ -13,8 +13,12 @@ function [X]=submat(X,varargin)
 %    Notes:
 %
 %    Examples:
-%      Return x reduced to only the elements in index 1 of dimension 5:
+%     Return x reduced to only the elements in index 1 of dimension 5:
 %      x=submat(x,5,1)
+%
+%     Reduce dimensions 1 thru 3 to return a matrix that only contains
+%     elements that were in row/column/page 4 or 5 for those dimensions:
+%      x=submat(x,1:3,4:5)
 %
 %    See also: submat_eval, colon operator (:), repmat
 
@@ -22,9 +26,10 @@ function [X]=submat(X,varargin)
 %        Nov. 12, 2008 - initial version
 %        Apr. 23, 2009 - move usage up
 %        Sep.  8, 2009 - fixed error message
+%        Sep. 21, 2009 - updated examples, removed unnecessary brackets
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 05:35 GMT
+%     Last Updated Sep. 21, 2009 at 20:45 GMT
 
 % todo:
 
@@ -38,7 +43,7 @@ list(1:max([ndims(X) [varargin{1:2:end}]]))={':'};
 
 % REDUCED/REPLICATED DIMENSIONS
 for i=1:2:nargin-2
-    [list{[varargin{i}]}]=deal(varargin{i+1});
+    [list{varargin{i}}]=deal(varargin{i+1});
 end
 
 % SUBSET

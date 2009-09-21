@@ -1,4 +1,4 @@
-function [y,li]=matchsort(x,i,dim)
+function [x,li]=matchsort(x,i,dim)
 %MATCHSORT    Replicates a sort operation using the returned sort indices
 %
 %    Usage: y=matchsort(x,sort_idx)
@@ -31,13 +31,14 @@ function [y,li]=matchsort(x,i,dim)
 %      [n,li]=matchsort(b,i,4);
 %      o=c(li); p=d(li); q=e(li);
 %
-%    See also: sort, sort2li, submat
+%    See also: sort, unsort, sort2li
 
 %     Version History:
 %        Sep.  8, 2009 - doc cleanup, dropped submat, sort2li subfunctions
+%        Sep. 21, 2009 - minor doc update, changed arg y to x
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 06:35 GMT
+%     Last Updated Sep. 21, 2009 at 20:35 GMT
 
 % todo:
 
@@ -58,6 +59,6 @@ end
 li=sort2li(i,dim);
 
 % MATCH SORT
-y=x(li);
+x=x(li);
 
 end

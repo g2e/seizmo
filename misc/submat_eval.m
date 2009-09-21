@@ -1,5 +1,5 @@
 function [X]=submat_eval(X,varargin)
-%SUBMAT_EVAL    Returns a submatrix reduced along indicated dimensions
+%SUBMAT_EVAL    Returns a submatrix using eval
 %
 %    Usage:    Y=submat_eval(X,DIM1,LIST1,DIM2,LIST2,...)
 %
@@ -32,9 +32,10 @@ function [X]=submat_eval(X,varargin)
 %        Nov. 12, 2008 - initial version
 %        Apr. 23, 2009 - move usage up
 %        Sep.  8, 2009 - fixed error message
+%        Sep. 21, 2009 - updated one-liner, removed unnecessary brackets
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 05:35 GMT
+%     Last Updated Sep. 21, 2009 at 23:05 GMT
 
 % todo:
 
@@ -49,9 +50,9 @@ end
 % REDUCTION/REPLICATION OF DIMENSIONS
 for i=1:2:nargin-2
     if(ischar(varargin{i+1}))
-        [list{[varargin{i}]}]=deal(varargin{i+1});
+        [list{varargin{i}}]=deal(varargin{i+1});
     else
-        [list{[varargin{i}]}]=deal(mat2str(varargin{i+1}));
+        [list{varargin{i}}]=deal(mat2str(varargin{i+1}));
     end
 end
 

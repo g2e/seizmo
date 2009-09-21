@@ -26,9 +26,10 @@ function [li]=sort2li(i,dim)
 
 %     Version History:
 %        Sep.  8, 2009 - doc cleanup, dropped submat subfunction
+%        Sep. 21, 2009 - dropped submat call (now uses only built-ins)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 06:15 GMT
+%     Last Updated Sep. 21, 2009 at 21:00 GMT
 
 % todo:
 
@@ -47,7 +48,9 @@ step=max([1 prod(sx(1:dim-1))]);
 
 % LINEAR INDICES OF FIRST ELEMENTS ALONG DIM
 li=reshape(1:numel(i),sx);
-li=submat(li,dim,ones(1,sx(dim)));
+list(1:numel(sx))={':'};
+list{dim}=ones(1,sx(dim));
+li=li(list{:});
 
 % LINEAR INDICES OF ALL ELEMENTS
 li=reshape(li+(i-1).*step,sx);
