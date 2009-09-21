@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r87 Ararat 16-Sep-2009
+% Version 0.6.0-r90 Ararat 20-Sep-2009
 %
 % Miscellaneous Support functions
 %CMOD                - Returns a centered modulus
@@ -18,7 +18,6 @@
 %ONEFILELIST         - Compiles multiple filelists into one
 %PLOTERR             - General error bar plot (EXTERNAL!)
 %READCSV             - Read in .csv formatted file as a structure
-%READSACPZ           - Reads in a SAC PoleZero file
 %SAWMOD              - Returns a sawtooth modulus
 %SLIDINGAVG          - Returns sliding-window average of data
 %SNR2MAXPHASEERROR   - Returns maximum narrow-band phase error based on SNR 
@@ -31,6 +30,5 @@
 %SWAP                - Swap values
 %UTI2SUB             - Square matrix upper triangle linear indices to subscripts
 %WRITECSV            - Write out .csv formatted file from a structure
-%WRITESACPZ          - Writes out a SAC PoleZero file
 %XDIR                - Cross-app compatible directory listing with recursion
 

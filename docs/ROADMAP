@@ -1,40 +1,13 @@
 0.6.0 - stable, helpful and functional
 ----------------------------------------
-virtual fields and groups (working on)
-	- vgrp
-		- picks
-		- default
-		- default1
-		- all
-		- full
-		- t utc, user utc, resp utc
-		- t tai, user tai, resp tai
-	- allows for a number of sac features
-	- function handles to go to/from underlying fields
-	- what do func. expect in, what do they put out
-		- do we hardcode? ...i think we have to
-		- pass h,head
-			- ch returns updated head
-			- gh, cmph, lh returns field
-support absolute times (working on)
-	- less trouble for user
-	- need to add to ch and gh
-		- undefined if reftime undefined
-	- absolute time vgrps next
-	- cell array input/output pretty much req
 negative delta support (...)
 	- or at least know where the problems are
-.filetype support (done)
-	- infrastructure for supporting more filetypes
-filename cleanup (done?)
-	- names should be less conflicting
-	- add shortcut folder
 document every function (working on)
 	- iirfilter (waiting on rewrite)
 	- plotting (waiting on rewrite)
 	- align/cluster (waiting on rewrite)
 	- tpw (waiting on rewrite)
-	- eqdp (queued after above)
+	- eqdb (queued after above)
 fix iirfilter
 	- modularize
 		- separate design from implementation
@@ -51,6 +24,7 @@ fix checkheader
 	- method (skip/check/fix)
 	- report (silent/warn/error)
 	- infrastructure to alter (like binoperr?)
+	- warn when datasets have multiple delta/filetype/version/dep
 travel time correction
 	- get more models
 		- where to put them
@@ -59,8 +33,9 @@ travel time correction
 response
 	- findsacpz
 		- allow dir input
-		- need default dir
+		- no default dir
 		- sacpz db
+			- need a way to make a sacpz db
 	- apply/remove sacpz
 	- sacpz2fap
 	- resp? (gonna be a pita)

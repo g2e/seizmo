@@ -34,7 +34,8 @@ while (1)
             
             % redraw plot (to show new grouping)
             delete(sfh);
-            [perm,color,fh,sfh]=plotdendro(Z,data,'treelimit',cutoff,'fighandle',fh,varargin{:});
+            [perm,color,fh,sfh]=plotdendro(Z,data,'treelimit',cutoff,...
+                'fighandle',fh,varargin{:});
         end
     end
     
