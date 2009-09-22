@@ -1,5 +1,27 @@
-function [cutoff,color,perm]=usercluster(Z,data,cutoff,varargin)
+function [cutoff,color,perm]=usercluster(data,Z,varargin)
 %USERCLUSTER    Interactively cluster SEIZMO records
+%
+%    Usage:    data=usercluster(data)
+%              data=usercluster(data,Z)
+%              data=usercluster(data,Z,'field',value,...)
+%              [data,cutoff]=usercluster(...)
+%              [data,cutoff,fh]=usercluster(...)
+%
+%    Description:
+%
+%    Notes:
+%
+%    Examples:
+%
+%    See also: userwindow, usertaper, plotdendro, cluster, linkage
+
+%     Version History:
+%        Sep. 22, 2009 - rewrite and added documentation
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Sep. 22, 2009 at 07:30 GMT
+
+% todo:
 
 % cluster analysis loop
 while (1)

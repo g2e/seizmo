@@ -51,7 +51,8 @@ function [z,p,k]=readsacpz(file)
 %      fvtool(fs)
 %
 %    See also: writesacpz, getsacpz, applysacpz, removesacpz, makesacpzdb,
-%              parse_sacpz_filename, readresp, writeresp
+%              parse_sacpz_filename, db2sacpz, gensacpzname, readresp,
+%              writeresp
 
 %     Version History:
 %        Apr.  7, 2009 - initial version

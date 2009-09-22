@@ -34,7 +34,7 @@ function [db]=makesacpzdb(varargin)
 %      save seizmo/data/sacpzdb sacpzdb  # NOTE: fix the path
 %
 %    See also: getsacpz, readsacpz, parse_sacpz_filename, writesacpz,
-%              applysacpz, removesacpz
+%              applysacpz, removesacpz, db2sacpz, gensacpzname
 
 %     Version History:
 %        Sep. 20, 2009 - initial version

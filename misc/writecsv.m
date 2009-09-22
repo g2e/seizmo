@@ -1,16 +1,21 @@
-function []=writecsv(file,lines)
+function []=writecsv(file,lines,o)
 %WRITECSV    Write out .csv formatted file from a structure
 %
 %    Usage:    writecsv(file,struct)
+%              writecsv(file,struct,overwrite)
 %
 %    Description: WRITECSV(FILE,STRUCT) writes a comma-separated values
 %     (CSV) text file FILE using the struct array STRUCT.  STRUCT is
 %     expected to be a single-level structure with all character string
-%     values.  
+%     values.
+%
+%     WRITECSV(FILE,STRUCT,OVERWRITE) quietly overwrites pre-existing CSV
+%     files without confirmation when OVERWRITE is set to TRUE.  By default
+%     OVERWRITE is FALSE.
 %
 %    Notes:
-%     - text entries with commas or line terminators will not be read
-%       back in correctly!
+%     - Look out for text entries with commas or line terminators.  They
+%       will not be read back in correctly!
 %
 %    Examples:
 %     Read a SOD (Standing Order for Data) generated event csv file, change
@@ -29,15 +34,20 @@ function []=writecsv(file,lines)
 
 %     Version History:
 %        Sep. 16, 2009 - initial version
+%        Sep. 22, 2009 - fixed dir check bug, skip confirmation option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2009 at 07:35 GMT
+%     Last Updated Sep. 22, 2009 at 06:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
+msg=nargchk(2,3,nargin);
 if(~isempty(msg)); error(msg); end;
+
+
+% default overwrite to false
+if(nargin==2 || isempty(o)); o=false; end
 
 % check structure
 if(~isstruct(lines))
@@ -51,16 +61,19 @@ if(~ischar(file))
         'FILE must be a string!');
 end
 if(exist(file,'file'))
-    disp(sprintf('CSV File: %s\nFile Exists!',file));
-    reply=input('Overwrite? Y/N [N]: ','s');
-    if(isempty(reply) || ~strncmpi(reply,'y',1))
-        disp('Not overwriting!');
-        return;
+    if(exist(file,'dir'))
+        error('seizmo:writecsv:dirConflict',...
+            'CSV File: %s\nIs A Directory!',file);
     end
-    disp('Overwriting!');
-elseif(exist(file,'dir'))
-    error('seizmo:writecsv:dirConflict',...
-        'CSV File: %s\nIs A Directory!',file);
+    if(~o)
+        disp(sprintf('CSV File: %s\nFile Exists!',file));
+        reply=input('Overwrite? Y/N [N]: ','s');
+        if(isempty(reply) || ~strncmpi(reply,'y',1))
+            disp('Not overwriting!');
+            return;
+        end
+        disp('Overwriting!');
+    end
 end
 
 % get the field names

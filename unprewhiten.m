@@ -5,11 +5,12 @@ function [data]=unprewhiten(data)
 %
 %    Description: UNPREWHITEN(DATA) restores the predictable portion of
 %     records in DATA by inversely applying the prediction error filter
-%     stored in the 'pef' field in DATA.  This effectively undoes
-%     PREWHITEN.  Records are required to have the 'prewhitened' field set
-%     to true.  See function PREWHITEN and the suggested reading in Notes
-%     for more detailed information.  The returned DATA will have the 'pef'
-%     field set to an empty array and the 'prewhitened' field set to false.
+%     stored in the .misc.pef field in DATA.  This effectively undoes
+%     PREWHITEN.  Records are required to have the .misc.prewhitened' field
+%     set to TRUE.  See function PREWHITEN and the suggested reading in
+%     Notes for more detailed information.  The returned DATA will have the
+%     .misc.pef field set to an empty array and the .misc.prewhitened field
+%     set to FALSE.
 %
 %    Notes:
 %     - Suggested Reading:
@@ -30,9 +31,12 @@ function [data]=unprewhiten(data)
 %     Version History:
 %        June  8, 2009 - initial version
 %        June  9, 2009 - renamed from UNWHITEN to UNPREWHITEN, doc fixes
+%        Sep. 22, 2009 - pushed .pef & .prewhitened to .misc.pef &
+%                        .misc.prewhitened (avoids struct concatination
+%                        errors)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Sep. 22, 2009 at 00:20 GMT
 
 % todo:
 
@@ -70,19 +74,23 @@ elseif(any(~strcmpi(iftype,'Time Series File')...
         'Illegal operation on spectral/xyz record!')
 end
 
+% pull .misc field out
+misc=[data.misc];
+
 % error for nonprewhitened
 nrecs=numel(data);
-if(isfield(data,'prewhitened') && ...
-        isfield(data,'pef') && ...
-        islogical([data.prewhitened]) && ...
-        numel([data.prewhitened])==nrecs)
-    idx=[data.prewhitened];
+if(isfield(misc,'prewhitened') && ...
+        isfield(misc,'pef') && ...
+        islogical([misc.prewhitened]) && ...
+        numel([misc.prewhitened])==nrecs)
+    idx=[misc.prewhitened];
 else
     % prepare a decent list for the error msg
     try
         % list records that are unset or false
-        data(cellfun('isempty',{data.prewhitened})).prewhitened=false;
-        idx=[data.prewhitened];
+        [misc(cellfun('isempty',...
+            {misc.prewhitened})).prewhitened]=deal(false);
+        idx=[misc.prewhitened];
     catch
         % list them all
         idx=false(nrecs,1);
@@ -102,7 +110,7 @@ for i=find(idx)
     oclass=str2func(class(data(i).dep));
     
     % check pef matches ncmp
-    if(size(data(i).pef,1)~=ncmp(i))
+    if(size(data(i).misc.pef,1)~=ncmp(i))
         error('seizmo:unprewhiten:ncmpInconsistent',...
             'Record: %d\nNCMP has changed since WHITEN operation!',i);
     end
@@ -110,12 +118,12 @@ for i=find(idx)
     % unwhiten filter
     for j=1:ncmp(i)
         data(i).dep(:,j)=oclass(...
-            filter(1,data(i).pef(j,:),double(data(i).dep(:,j))));
+            filter(1,data(i).misc.pef(j,:),double(data(i).dep(:,j))));
     end
     
-    % reset whitened, clear pef
-    data(i).prewhitened=false;
-    data(i).pef=[];
+    % unset prewhitened, clear pef
+    data(i).misc.prewhitened=false;
+    data(i).misc.pef=[];
     
     % update dep*
     if(isempty(data(i).dep)); continue; end

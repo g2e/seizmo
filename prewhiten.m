@@ -8,8 +8,8 @@ function [data]=prewhiten(data,order)
 %     records in DATA with and without a prediction error filter of order 6
 %     applied.  The returned record is thus the unpredictable (random)
 %     portion of the data (which has a significantly whiter spectrum).  The
-%     predictable portion of the data is stored in the 'pef' field of the
-%     data structure as the prediction error filter.  The original record
+%     predictable portion of the data is stored as a prediction error
+%     filter under the struct field .misc.pef in DATA.  The original record
 %     may be restored (as much as possible) by applying the prediction
 %     error filter with an inverse filter to the whitened record (see
 %     UNPREWHITEN).  The whitened record has several advantages but the
@@ -17,7 +17,8 @@ function [data]=prewhiten(data,order)
 %     spectral operations.  In particular, this operation will produce a
 %     better conditioned matrix in a deconvolution.  For more info please
 %     consider looking through the suggested reading in the Notes section.
-%     Prewhitened records will have the 'prewhitened' field set to TRUE.
+%     Prewhitened records will also have the struct field .misc.prewhitened
+%     field set to TRUE.
 %
 %     PREWHITEN(DATA,ORDER) allows specifying the order (number of samples
 %     or poles) in the prediction error filter.  The higher the order, the
@@ -52,9 +53,12 @@ function [data]=prewhiten(data,order)
 %        June  9, 2009 - renamed from WHITEN to PREWHITEN, doc fixes
 %        June 25, 2009 - update for RECORD2MAT/MAT2RECORD, process records
 %                        individually rather than all together (faster)
+%        Sep. 22, 2009 - pushed .pef & .prewhitened to .misc.pef &
+%                        .misc.prewhitened (avoids struct concatination
+%                        errors)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Sep. 22, 2009 at 00:10 GMT
 
 % todo:
 
@@ -93,19 +97,23 @@ elseif(any(~strcmpi(iftype,'Time Series File')...
         'Illegal operation on spectral/xyz record!')
 end
 
+% pull .misc field out
+misc=[data.misc];
+
 % error for already prewhitened
 nrecs=numel(data);
-if(isfield(data,'prewhitened') && ...
-        isfield(data,'pef') && ...
-        islogical([data.prewhitened]) && ...
-        numel([data.prewhitened])==nrecs)
-    idx=[data.prewhitened];
+if(isfield(misc,'prewhitened') && ...
+        isfield(misc,'pef') && ...
+        islogical([misc.prewhitened]) && ...
+        numel([misc.prewhitened])==nrecs)
+    idx=[misc.prewhitened];
 else
     % try to list those that are prewhitened with the correct index
     try
         % list records that are unset or false
-        data(cellfun('isempty',{data.prewhitened})).prewhitened=false;
-        idx=[data.prewhitened];
+        [misc(cellfun('isempty',...
+            {misc.prewhitened})).prewhitened]=deal(false);
+        idx=[misc.prewhitened];
     catch
         % list them all
         idx=false(nrecs,1);
@@ -159,8 +167,9 @@ for i=1:nrecs
             data(i).dep(:,j)-filter([0 -a(j,2:end)],1,data(i).dep(:,j));
     end
     
-    % store the whitening filter at the struct level
-    data(i).pef=a;
+    % store the prewhitening filter at the struct level
+    data(i).misc.prewhitened=true;
+    data(i).misc.pef=a;
     
     % change class back
     data(i).dep=oclass(data(i).dep);
@@ -170,9 +179,6 @@ for i=1:nrecs
     depmin(i)=min(data(i).dep(:)); 
     depmax(i)=max(data(i).dep(:));
 end
-
-% toggle prewhitened logical
-[data.prewhitened]=deal(true);
 
 % toggle checking back
 set_seizmocheck_state(oldseizmocheckstate);

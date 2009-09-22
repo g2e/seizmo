@@ -1,11 +1,16 @@
-function []=writesodeventcsv(file,events)
+function []=writesodeventcsv(file,events,varargin)
 %WRITESODEVENTCSV    Write out a SOD event .csv file from a structure
 %
-%    Usage:    events=writesodeventcsv(file,events)
+%    Usage:    writesodeventcsv(file,events)
+%              writesodeventcsv(file,events,overwrite)
 %
 %    Description: WRITESODEVENTCSV(FILE,EVENTS) writes out a CSV (comma-
 %     separated values) file similar to that of event .csv files produced
 %     with SOD (Standing Order for Data).
+%
+%     WRITESODEVENTCSV(FILE,STRUCT,OVERWRITE) quietly overwrites pre-
+%     existing CSV files without confirmation when OVERWRITE is set to
+%     TRUE.  By default OVERWRITE is FALSE.
 %
 %    Notes:
 %     - converts latitude, longitude, depth and magnitude from numeric form
@@ -38,14 +43,15 @@ function []=writesodeventcsv(file,events)
 
 %     Version History:
 %        Sep. 16, 2009 - initial version
+%        Sep. 22, 2009 - overwrite confirmation skip option added
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2009 at 22:45 GMT
+%     Last Updated Sep. 22, 2009 at 06:40 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
+msg=nargchk(2,3,nargin);
 if(~isempty(msg)); error(msg); end;
 
 % convert some fields from numbers to strings
@@ -70,6 +76,6 @@ tmp=cellstr(reshape(...
 [events.time]=deal(tmp{:});
 
 % write out
-writecsv(file,events);
+writecsv(file,events,varargin{:});
 
 end

@@ -1,7 +1,8 @@
-function []=writesacpz(file,z,p,k)
+function []=writesacpz(file,z,p,k,o)
 %WRITESACPZ    Writes out a SAC PoleZero file
 %
 %    Usage:    writesacpz(file,z,p,k)
+%              writesacpz(file,z,p,k,overwrite)
 %
 %    Description: WRITESACPZ(FILE,Z,P,K) writes the SAC PoleZero file FILE
 %     using the zeros in Z, the poles in P, and the constant in K.  See the
@@ -9,7 +10,12 @@ function []=writesacpz(file,z,p,k)
 %     vectors composed of reals and/or complex conjugate pairs.  K must be
 %     a real scalar.
 %
+%     WRITESACPZ(FILE,Z,P,K,OVERWRITE) quietly overwrites pre-existing SAC
+%     PoleZero files without confirmation when OVERWRITE is set to TRUE.
+%     By default OVERWRITE is FALSE.
+%
 %    Notes:
+%     - Will overwrite any existing file with the same name!
 %     - The format of a SAC PoleZero file is free format and is keyword
 %       driven.  The keywords are 'ZEROS' 'POLES' and 'CONSTANT'.  Specify
 %       the number of zeros by using the keyword 'ZEROS' followed by an
@@ -43,22 +49,28 @@ function []=writesacpz(file,z,p,k)
 %      writesacpz('SAC_PZs_XB_CM32_BHZ_02',z,p,k);
 %
 %    See also: readsacpz, getsacpz, applysacpz, removesacpz, makesacpzdb,
-%              parse_sacpz_filename, readresp, writeresp
+%              parse_sacpz_filename, db2sacpz, gensacpzname, readresp,
+%              writeresp
 
 %     Version History:
 %        Apr.  7, 2009 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  8, 2009 - fix some error ids
 %        Sep. 20, 2009 - minor doc update
+%        Sep. 22, 2009 - dropped looped writing of zeros/poles,
+%                        confirmation for overwrite with skip option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 20, 2009 at 17:25 GMT
+%     Last Updated Sep. 22, 2009 at 05:35 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(4,4,nargin);
+msg=nargchk(4,5,nargin);
 if(~isempty(msg)); error(msg); end;
+
+% default overwrite to false
+if(nargin==4 || isempty(o)); o=false; end
 
 % check file
 if(~ischar(file))
@@ -69,10 +81,15 @@ if(exist(file,'file'))
     if(exist(file,'dir'))
         error('seizmo:writesacpz:dirConflict',...
             'SAC PoleZero File: %s\nIs A Directory!',file);
-    else
-        warning('seizmo:writesacpz:fileClobber',...
-            'SAC PoleZero File: %s\nAlready Exists! Overwriting!',...
-            file);
+    end
+    if(~o)
+        disp(sprintf('SAC PoleZero File: %s\nFile Exists!',file));
+        reply=input('Overwrite? Y/N [N]: ','s');
+        if(isempty(reply) || ~strncmpi(reply,'y',1))
+            disp('Not overwriting!');
+            return;
+        end
+        disp('Overwriting!');
     end
 end
 
@@ -111,14 +128,10 @@ end
 
 % write to file
 fprintf(fid,'ZEROS %d\n',nz);
-for i=1:nnz
-    fprintf(fid,'%g  %g\n',real(z(i)),imag(z(i)));
-end
+if(nnz); fprintf(fid,'%g  %g\n',[real(z(:).'); imag(z(:).')]); end
 fprintf(fid,'POLES %d\n',np);
-for i=1:nnp
-    fprintf(fid,'%g  %g\n',real(p(i)),imag(p(i)));
-end
-fprintf(fid,'CONSTANT %g\n',k);
+if(nnp); fprintf(fid,'%g  %g\n',[real(p(:).'); imag(p(:).')]); end
+fprintf(fid,'CONSTANT %e\n',k);
 
 % close file
 fclose(fid);

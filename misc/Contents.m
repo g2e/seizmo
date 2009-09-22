@@ -1,11 +1,12 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r91 Ararat 21-Sep-2009
+% Version 0.6.0-r92 Ararat 22-Sep-2009
 %
 % Miscellaneous Support functions
 %CMOD                - Returns a centered modulus
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
 %FISHER              - Converts correlation coefficients to the Z statistic
 %GETAPPLICATION      - Returns application running this script and its version
+%GETSUBFIELD         - Get substructure field contents
 %GETWORDS            - Returns a cell array of words from a string
 %IFISHER             - Converts Z statistics to correlation coefficients
 %JOINWORDS           - Combines a cellstr into a space-separated string
