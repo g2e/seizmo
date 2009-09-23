@@ -40,9 +40,10 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 
 %     Version History:
 %        Sep.  9, 2009 - rewrite and added documentation
+%        Sep. 23, 2009 - updated for taper changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  9, 2009 at 07:30 GMT
+%     Last Updated Sep. 23, 2009 at 10:30 GMT
 
 % todo:
 % - subplot showing taper
@@ -55,6 +56,17 @@ if(~isempty(msg)); error(msg); end
 % check data structure
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% check headers
+data=checkheader(data);
+
+% turn off header checking
+oldcheckheaderstate=get_checkheader_state;
+set_checkheader_state(false);
 
 % check function handle
 if(nargin<2 || isempty(func))
@@ -74,8 +86,8 @@ tpr.width=[];
 tpr.option=[];
 
 % length normalization
-[b,e,npts,delta]=gh(data,'b','e','npts','delta');
-data=ch(data,'b',0,'e',1,'delta',1./(npts-1));
+[b,e,npts,delta]=getheader(data,'b','e','npts','delta');
+data=changeheader(data,'b',0,'e',1,'delta',1./(npts-1));
 
 % outer loop - only breaks free by user command
 happy_user=false; fh=[-1 -1];
@@ -213,9 +225,12 @@ while(~happy_user)
             tpr.type=[];
             tpr.width=[];
             tpr.option=[];
-            data=ch(data,'b',b,'e',e,'delta',delta);
+            data=changeheader(data,'b',b,'e',e,'delta',delta);
             return;
         case 6 % immediate death
+            % toggle checking back
+            set_seizmocheck_state(oldseizmocheckstate);
+            set_checkheader_state(oldcheckheaderstate);
             error('seizmo:usertaper:killYourSelf',...
                 'User demanded Seppuku!')
     end
@@ -262,7 +277,7 @@ while(~happy_user)
     tpr.width(2)=1-tpr.width(2);
     
     % get windowed data
-    data2=taper(data,tpr.width,tpr.type,tpr.option);
+    data2=taper(data,tpr.width,0,tpr.type,tpr.option);
     
     % apply function post cut
     data2=func(data2);
@@ -281,13 +296,22 @@ while(~happy_user)
     choice=menu('KEEP TAPER?','YES','NO - TRY AGAIN','NO - DIE!');
     switch choice
         case 1 % all done!
-            data=ch(data2,'b',b,'e',e,'delta',delta);
+            data=changeheader(data2,'b',b,'e',e,'delta',delta);
             happy_user=true;
         case 2 % please try again
             close(fh);
             fh=[-1 -1];
         case 3 % i bear too great a shame to go on
+            % toggle checking back
+            set_seizmocheck_state(oldseizmocheckstate);
+            set_checkheader_state(oldcheckheaderstate);
             error('seizmo:usertaper:killYourSelf',...
                 'User demanded Seppuku!')
     end
+end
+
+% toggle checking back
+set_seizmocheck_state(oldseizmocheckstate);
+set_checkheader_state(oldcheckheaderstate);
+
 end

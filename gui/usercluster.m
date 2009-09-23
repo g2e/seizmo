@@ -1,4 +1,4 @@
-function [cutoff,color,perm]=usercluster(data,Z,varargin)
+function [cutoff,color,perm]=usercluster(data,Z,cutoff,varargin)
 %USERCLUSTER    Interactively cluster SEIZMO records
 %
 %    Usage:    data=usercluster(data)
@@ -26,7 +26,7 @@ function [cutoff,color,perm]=usercluster(data,Z,varargin)
 % cluster analysis loop
 while (1)
     % default limit
-    if(nargin==2 || isempty(cutoff)); cutoff=0.03; end
+    %cutoff=0.03;
     
     % dendrogram/waveforms
     [perm,color,fh,sfh]=plotdendro(Z,data,'treelimit',cutoff,varargin{:});

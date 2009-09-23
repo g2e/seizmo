@@ -72,9 +72,10 @@ function [data]=bseizmo(varargin)
 %                        series files rather than xy files, and puts the
 %                        current time into the reference time fields (this
 %                        all together makes files readible by PQL)
+%        Sep. 23, 2009 - added .misc field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 07:35 GMT
+%     Last Updated Sep. 23, 2009 at 07:35 GMT
 
 % todo:
 
@@ -161,7 +162,8 @@ end
 nrecs=nargin/2; format=['%0' num2str(ceil(log10(nrecs+1))) 'd'];
 data(1:nrecs,1)=struct('path','.','name',[],...
     'filetype',option.FILETYPE,'version',option.VERSION,...
-    'byteorder',option.BYTEORDER,'hasdata',true,'head',undef,'dep',[]);
+    'byteorder',option.BYTEORDER,'hasdata',true,'misc',[],...
+    'head',undef,'dep',[]);
 
 % loop for each pair
 nvhdr=option.VERSION(ones(nrecs,1),1);

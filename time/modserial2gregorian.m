@@ -35,9 +35,10 @@ function [times]=modserial2gregorian(modserial,option)
 %        Nov. 12, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
+%        Sep. 23, 2009 - fixed serial conversion (year 0 bug)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 19:35 GMT
+%     Last Updated Sep. 23, 2009 at 08:15 GMT
 
 % todo:
 
@@ -70,12 +71,12 @@ modserial(:,2,:)=mod(modserial(:,2,:),86400);
 % get year
 serial=modserial(:,1,:);
 yr=floor(serial/365.2425);
-newserial=serial-(365*yr+fix(yr/4)-fix(yr/100)+fix(yr/400));
+newserial=serial-(365*yr+fix((yr+3)/4)-fix((yr+99)/100)+fix((yr+399)/400));
 low=newserial<1;
 if(any(low(:)))
     yr(low)=yr(low)-1;
-    serial(low)=serial(low)...
-        -(365*yr(low)+fix(yr(low)/4)-fix(yr(low)/100)+fix(yr(low)/400));
+    serial(low)=serial(low)-(365*yr(low)+fix((yr(low)+3)/4) ...
+        -fix((yr(low)+99)/100)+fix((yr(low)+399)/400));
 end
 serial(~low)=newserial(~low);
 clear newserial

@@ -1,54 +1,65 @@
-function [data]=taper(data,width,type,option)
+function [data]=taper(data,w,o,type,opt)
 %TAPER   Taper SEIZMO records
 %
 %    Usage:    data=taper(data)
 %              data=taper(data,width)
-%              data=taper(data,width,type)
-%              data=taper(data,width,type,option)
+%              data=taper(data,width,offset)
+%              data=taper(data,width,offset,type)
+%              data=taper(data,width,offset,type,option)
 %
 %    Description: TAPER(DATA) tapers data records with a Hann taper set to
 %     vary from 0 to 1 over 5% of every records' length on each end.  This
 %     matches SAC's default taper command.
 %
 %     TAPER(DATA,WIDTH) allows the taper width to be set.  WIDTH should be
-%     a number anywhere from 0.0 (no taper) to 0.5 (taper entire record).
-%     Two numbers may be given to apply a different width taper to each
-%     end (first number gives leading taper).
+%     a number anywhere from 0.0 (no taper) to 0.5 (taper from the edge to
+%     the center of the record).  The tapering is applied symmetrically (as
+%     in the taper is applied to both ends of the records).  To specify
+%     different leading and trailing tapers set WIDTH to [WIDTH1 WIDTH2],
+%     where WIDTH1 gives the width of the leading taper and WIDTH2
+%     indicates the width of the trailing taper.  The default width is
+%     0.05.
 %
-%     TAPER(DATA,WIDTH,TYPE) allows the taper type to be changed.  TYPE is
-%     a string that must be one of the following:
+%     TAPER(DATA,WIDTH,OFFSET) specifies the offset of the tapers from the
+%     start/end of the records as a fraction of the records width.  Any
+%     points in the record nearer to the start/end of the record than
+%     OFFSET are set to 0.  So an offset of 0.1 for a taper of width 0.2
+%     will zero out the first and last tenth of the record and taper from
+%     0.1 to 0.3 and from 0.7 to 0.9.  The default offset is 0.
+%
+%     TAPER(DATA,WIDTH,OFFSET,TYPE) allows the taper type to be changed.
+%     TYPE is a string that must be one of the following:
 %
 %       TYPE string     Formal window/taper name       Option
 %       %%%%%%%%%%%%%%  %%%%%%%%%%%%%%%%%%%%%%%%       %%%%%%%%%%%%%%%%%%%%
 %       barthannwin     Modified Bartlett-Hann         
 %       bartlett        Bartlett                       
-%       blackman        Blackman                       'periodic|symmetric'
+%       blackman        Blackman                       
 %       blackmanharris  Minimum 4-term Blackman-Harris 
 %       bohmanwin       Bohman                         
-%       chebwin         Chebyshev                       sidelobe_atten*
-%       flattopwin      Flat Top weighted              'periodic|symmetric'
-%       gausswin        Gaussian                        num_std_dev
-%       hamming         Hamming                        'periodic|symmetric'
-%       hann            Hann (Hanning)                 'periodic|symmetric'
-%       kaiser          Kaiser                          beta_parameter*
+%       chebwin         Chebyshev                      sidelobe_atten (100)
+%       flattopwin      Flat Top weighted              
+%       gausswin        Gaussian                       num_std_dev (2.5)
+%       hamming         Hamming                        
+%       hann            Hann (Hanning)                 
+%       kaiser          Kaiser                         beta_parameter (0.5)
 %       nuttallwin      Nuttall-defined Blackman-Harris
-%       parzenwin       Parzen (de la Valle-Poussin)
-%       rectwin         Rectangular (no taper)
-%       triang          Triangular 
-%       tukeywin        Tukey (tapered cosine)          taper_ratio*
+%       parzenwin       Parzen (de la Valle-Poussin)   
+%       rectwin         Rectangular (no taper)         
+%       triang          Triangular                     
+%       tukeywin        Tukey (tapered cosine)         taper_ratio (0.5)
 %
 %     More information on each taper can be found with 'help <type_string>'
 %     and 'doc <type_string>' where <type_string> should be replaced with
-%     the taper's above TYPE string.
+%     the taper's above TYPE string.  The default type is 'hann'.
 %
-%     TAPER(DATA,WIDTH,TYPE,OPTION) sets a taper parameter to OPTION.  For
-%     taper types 'chebwin', 'kaiser' and 'tukeywin' the taper parameter is
-%     required.  Use 'help <type_string>' and 'doc <type_string>', where 
+%     TAPER(DATA,WIDTH,OFFSET,TYPE,OPTION) sets a taper's parameter to
+%     OPTION.  Use 'help <type_string>' and 'doc <type_string>', where 
 %     <type_string> should be replaced with the taper's above TYPE string,
-%     for specifics on each taper's parameter.
+%     for specifics on each taper's parameter.  Setting OPTION to [] or nan
+%     uses the default value.
 %
 %    Notes:
-%     - uses Matlab's Signal Processing Toolbox WINDOW function
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
@@ -56,9 +67,13 @@ function [data]=taper(data,width,type,option)
 %     Taper data with a gaussian that is applied to the first and last 10th
 %     of the record with the taper forced to represent a gaussian curve 
 %     from peak out to 4 standard deviations:
-%      data=taper(data,0.1,'gausswin',4);
+%      data=taper(data,0.1,0,'gausswin',4);
 %
-%    See also: removemean, removetrend
+%     Now do a similar taper but start the leading taper after the first
+%     third and the trailing taper before the final eighth:
+%      data=taper(data,0.1,[1/3 0.125],'gausswin',4)
+%
+%    See also: removemean, removetrend, removepolynomial
 
 %     Version History:
 %        Oct. 31, 2007 - initial version
@@ -81,12 +96,17 @@ function [data]=taper(data,width,type,option)
 %                        move usage up
 %        June 11, 2009 - special handling of spectral records (4 tapers)
 %        June 29, 2009 - fix iftype bug
+%        Sep. 23, 2009 - major code revision, changed input args, allow for
+%                        1 entry per record, more checks, use new taperfun
+%                        function to handle taper building
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:55 GMT
+%     Last Updated Sep. 23, 2009 at 18:15 GMT
+
+% todo:
 
 % check input
-msg=nargchk(1,4,nargin);
+msg=nargchk(1,5,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
@@ -101,23 +121,93 @@ set_seizmocheck_state(false);
 data=checkheader(data);
 
 % defaults
-if(nargin<3 || isempty(type)); type='hann'; end
-if(nargin<2 || isempty(width)); width=[0.05 0.05]; end
+if(nargin<5 || isempty(opt)); opt=nan; end
+if(nargin<4 || isempty(type)); type='hann'; end
+if(nargin<3 || isempty(o)); o=[0 0]; end
+if(nargin<2 || isempty(w)); w=[0.05 0.05]; end
 
-% check width
-if(numel(width)==1)
-    width=[width width];
-elseif(numel(width)~=2)
-    error('seizmo:taper:badInput','Too many taper halfwidth parameters!');
+% number of records
+nrecs=numel(data);
+
+% check width (class, # of rows, # of columns)
+if(~isreal(w)); error('seizmo:taper:badInput','WIDTH must be real!'); end
+sz=size(w);
+if(sz(1)==1)
+    w=w(ones(nrecs,1),:);
+elseif(sz(1)~=nrecs)
+    error('seizmo:taper:badInput',...
+        'WIDTH must have 1 row or 1 row per record!');
 end
-if(any(width<0))
-    error('seizmo:taper:badInput','Taper halfwidths must be >=0!');
+if(sz(2)==1)
+    w=[w w];
+elseif(sz(2)~=2)
+    error('seizmo:taper:badInput',...
+        'WIDTH must have 1 or 2 columns!');
 end
 
-% make function handle
-type=str2func(type);
+% fix negative width
+if(any(w<0)); w(w<0)=0; end
+
+% check offsets (class, # of rows, # of columns)
+if(~isreal(o)); error('seizmo:taper:badInput','OFFSET must be real!'); end
+sz=size(o);
+if(sz(1)==1)
+    o=o(ones(nrecs,1),:);
+elseif(sz(1)~=nrecs)
+    error('seizmo:taper:badInput',...
+        'OFFSET must have 1 row or 1 row per record!');
+end
+if(sz(2)==1)
+    o=[o o];
+elseif(sz(2)~=2)
+    error('seizmo:taper:badInput',...
+        'OFFSET must have 1 or 2 columns!');
+end
+
+% convert width to limit
+lim1=[o(:,1) o(:,1)+w(:,1)];
+lim2=[o(:,2) o(:,2)+w(:,2)];
+
+% check type (class, # of rows, # of columns)
+if(ischar(type)); type=cellstr(type); end
+sz=size(type);
+if(~iscellstr(type))
+    error('seizmo:taper:badInput',...
+        'TYPE must be a char or cellstr array!');
+end
+if(sz(1)==1)
+    type=type(ones(nrecs,1),:);
+elseif(sz(1)~=nrecs)
+    error('seizmo:taper:badInput',...
+        'TYPE must have 1 row or 1 row per record!');
+end
+if(sz(2)==1)
+    type=[type type];
+elseif(sz(2)~=2)
+    error('seizmo:taper:badInput',...
+        'TYPE cell array must have 1 or 2 columns!');
+end
+
+% check option (class, # of rows, # of columns)
+if(~isreal(opt))
+    error('seizmo:taper:badInput','OPTION must be real!');
+end
+sz=size(opt);
+if(sz(1)==1)
+    opt=opt(ones(nrecs,1),:);
+elseif(sz(1)~=nrecs)
+    error('seizmo:taper:badInput',...
+        'OPTON must have 1 row or 1 row per record!');
+end
+if(sz(2)==1)
+    opt=[opt opt];
+elseif(sz(2)~=2)
+    error('seizmo:taper:badInput',...
+        'OPTION must have 1 or 2 columns!');
+end
 
 % header info
+[b,e,delta,npts,ncmp]=getheader(data,'b','e','delta','npts','ncmp');
 leven=getlgc(data,'leven');
 iftype=getenumid(data,'iftype');
 
@@ -127,9 +217,6 @@ if(any(strcmpi(iftype,'ixyz')))
         'Illegal operation on xyz file');
 end
 
-% number of records
-nrecs=numel(data);
-
 % work through each file
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
@@ -137,88 +224,47 @@ for i=1:nrecs
     oclass=str2func(class(data(i).dep));
     data(i).dep=double(data(i).dep);
     
-    % record size, taper size
-    [npts,ncmp]=size(data(i).dep);
-    nwidth=ceil(width*npts);
-    
     % unevenly spaced
     if(strcmp(leven(i),'false'))
-        % make tapers
-        if(nargin==4 && ~isempty(option))
-            taperedge1=window(type,2*nwidth(1),option);
-            taperedge2=window(type,2*nwidth(2),option);
-        else
-            taperedge1=window(type,2*nwidth(1));
-            taperedge2=window(type,2*nwidth(2));
-        end
+        % get normalized time
+        times=(data(i).ind-b(i))/(e(i)-b(i));
         
-        % interpolate
-        last1=find(data(i).ind<(data(i).ind(1)+...
-            (data(i).ind(end)-data(i).ind(1))*width(1)),1,'last');
-        last2=find(data(i).ind>(data(i).ind(end)-...
-            (data(i).ind(end)-data(i).ind(1))*width(2)),1,'first');
-        even_times=linspace(data(i).ind(1),data(i).ind(end),npts);
-        taper1=interp1(even_times(1:nwidth(1)),taperedge1(1:nwidth(1)),...
-            data(i).ind(1:last1),'spline');
-        taper2=interp1(even_times((end-nwidth(2)+1):end),...
-            taperedge2((nwidth(2)+1):end),data(i).ind(last2:end),'spline');
+        % get tapers
+        taper1=taperfun(type{i,1},times,lim1(i,:),opt(i,1));
+        taper2=taperfun(type{i,2},1-times,lim2(i,:),opt(i,2));
+        taper1=taper1(:); taper2=taper2(:);
         
-        % apply taper halfwidths separately
-        data(i).dep(1:last1,:)=...
-            data(i).dep(1:last1,:).*taper1(:,ones(ncmp,1));
-        data(i).dep(last2:end,:)=...
-            data(i).dep(last2:end,:).*taper2(:,ones(ncmp,1));
+        % apply tapers
+        data(i).dep=data(i).dep.*taper1(:,ones(1,ncmp(i))) ...
+            .*taper2(:,ones(1,ncmp(i)));
     % evenly spaced
     else
         % time series and general xy records
         if(strcmp(iftype(i),'itime') || strcmp(iftype(i),'ixy'))
-            % make tapers
-            if(nargin==4 && ~isempty(option))
-                taperedge1=window(type,2*nwidth(1),option);
-                taperedge2=window(type,2*nwidth(2),option);
-            else
-                taperedge1=window(type,2*nwidth(1));
-                taperedge2=window(type,2*nwidth(2));
-            end
+            % get normalized time
+            times=(linspace(b(i),e(i),npts(i))-b(i))/(e(i)-b(i));
             
-            % adjust for npts
-            nwidth=min(npts,nwidth);
+            % get tapers
+            taper1=taperfun(type{i,1},times,lim1(i,:),opt(i,1));
+            taper2=taperfun(type{i,2},1-times,lim2(i,:),opt(i,2));
+            taper1=taper1(:); taper2=taper2(:);
             
-            % apply taper halfwidths separately
-            data(i).dep(1:nwidth(1),:)=data(i).dep(1:nwidth(1),:)...
-                .*taperedge1(1:nwidth(1),ones(ncmp,1));
-            data(i).dep((end-nwidth(2)+1):end,:)=...
-                data(i).dep((end-nwidth(2)+1):end,:)...
-                .*taperedge2((end-nwidth(2)+1):end,ones(ncmp,1));
+            % apply tapers
+            data(i).dep=data(i).dep.*taper1(:,ones(1,ncmp(i))) ...
+                .*taper2(:,ones(1,ncmp(i)));
         else % spectral
-            % fix nwidth
-            nwidth=ceil(width*npts/2);
+            % get normalized frequency
+            freq=[linspace(b(i),e(i),npts(i)/2+1) linspace( ...
+                e(i)-delta(i),b(i)+delta(i),npts(i)/2-1)]/(e(i)-b(i));
             
-            % make tapers
-            if(nargin==4 && ~isempty(option))
-                taperedge1=window(type,2*nwidth(1),option);
-                taperedge2=window(type,2*nwidth(2),option);
-            else
-                taperedge1=window(type,2*nwidth(1));
-                taperedge2=window(type,2*nwidth(2));
-            end
+            % get tapers
+            taper1=taperfun(type{i,1},freq,lim1(i,:),opt(i,1));
+            taper2=taperfun(type{i,2},1-freq,lim2(i,:),opt(i,2));
+            taper1=taper1(:); taper2=taper2(:);
             
-            % adjust for npts
-            nwidth=min(npts/2,nwidth);
-            
-            % apply taper halfwidths separately
-            data(i).dep(1:nwidth(1),:)=data(i).dep(1:nwidth(1),:)...
-                .*taperedge1(1:nwidth(1),ones(ncmp,1));
-            data(i).dep((end-nwidth(1)+2):end,:)=...
-                data(i).dep((end-nwidth(1)+2):end,:)...
-                .*taperedge1((end-nwidth(1)+2):end,ones(ncmp,1));
-            nyqpt=npts/2+1;
-            data(i).dep((nyqpt-nwidth(2)+1):nyqpt,:)=...
-                data(i).dep((nyqpt-nwidth(2)+1):nyqpt,:)...
-                .*taperedge2((end-nwidth(2)+1):end,ones(ncmp,1));
-            data(i).dep((nyqpt+1):(nyqpt+nwidth(2)-1),:)=...
-                data(i).dep((nyqpt+1):(nyqpt+nwidth(2)-1),:)...
-                .*taperedge2(2:nwidth(2),ones(ncmp,1));
+            % apply tapers
+            data(i).dep=data(i).dep.*taper1(:,ones(1,2*ncmp(i))) ...
+                .*taper2(:,ones(1,2*ncmp(i)));
         end
     end
     
