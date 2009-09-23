@@ -38,9 +38,10 @@ function [db]=makesacpzdb(varargin)
 
 %     Version History:
 %        Sep. 20, 2009 - initial version
+%        Sep. 23, 2009 - added informative output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 20, 2009 at 03:55 GMT
+%     Last Updated Sep. 23, 2009 at 21:35 GMT
 
 % todo:
 
@@ -52,12 +53,23 @@ nin=nargin;
 % default to current directory if none given
 if(nargin==0); varargin{1}='.'; nin=1; end
 
+% check varargin
+if(~iscellstr(varargin))
+    error('seizmo:makesacpzdb:badInput','DIR must be a string!');
+end
+
 % loop over directories
 db=cell(nin,1);
 for i=1:nin
+    % status update
+    disp(['SAC PoleZero Directory:' varargin{i}])
+    
     % get filelist for this directory
     files=xdir(varargin{i});
     filenames={files.name}.';
+    
+    % status update
+    disp(['  Found ' sprintf('%d',numel(files)) ' Files']);
     
     % filter out invalid and parse valid
     [good,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filenames);
@@ -65,6 +77,7 @@ for i=1:nin
     
     % handle empty case
     if(isempty(files))
+        disp('  Found 0 Properly Formatted Filenames');
         db{i}([],1)=struct('path',[],'name',[],'knetwk',[],'kstnm',[],...
             'kcmpnm',[],'khole',[],'b',[],'e',[],'z',[],'p',[],'k',[]);
         continue;
@@ -77,8 +90,12 @@ for i=1:nin
         'b',mat2cell(b,ones(n,1)),'e',mat2cell(e,ones(n,1)),'z',[],...
         'p',[],'k',[]);
     
+    % status update
+    disp(['  Found ' sprintf('%d',n) ' Properly Formatted Filenames']);
+    
     % now read in the PoleZero info
     good=true(n,1);
+    print_time_left(0,n);
     for j=1:n
         try
             [db{i}(j).z,db{i}(j).p,db{i}(j).k]=...
@@ -86,10 +103,14 @@ for i=1:nin
         catch
             good(j)=false;
         end
+        print_time_left(j,n);
     end
     
     % remove invalid
     db{i}=db{i}(good,1);
+    
+    % status update
+    disp(['  Read In ' sprintf('%d',sum(good)) ' SAC PoleZero Files!'])
 end
 
 % combine directory dbs

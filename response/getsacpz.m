@@ -49,9 +49,11 @@ if(~isempty(msg)); error(msg); end
 % get sacpzdb
 if(nargin==1)
     % load default sacpzdb
+    disp('Loading SAC PoleZero Database (May Take Several Minutes)');
     load sacpzdb
 elseif(nargin==2 && isstruct(varargin{1}))
     % check struct
+    disp('Checking SAC PoleZero Database');
     reqf={'knetwk' 'kstnm' 'kcmpnm' 'khole' 'b' 'e' 'z' 'p' 'k'};
     for i=1:numel(reqf)
         if(~isfield(varargin{1},reqf{i}))
@@ -65,6 +67,7 @@ elseif(nargin==2 && isstruct(varargin{1}))
     sacpzdb=varargin{1};
 elseif(iscellstr(varargin))
     % make a sacpzdb using directories given
+    disp('Creating SAC PoleZero Database (Gonna Be A While)');
     sacpzdb=makesacpzdb(varargin{:});
 else
     error('seizmo:getsacpz:badInputs',...
@@ -91,7 +94,12 @@ dbkcmpnm={sacpzdb.kcmpnm}.';
 dbkhole={sacpzdb.khole}.';
 
 % loop over records
+disp('Getting Relevant SAC PoleZeros');
+print_time_left(0,nrecs);
 for i=1:nrecs
+    % set progress bar to overwrite
+    redraw=false;
+    
     % find sacpz file(s) for this record by name
     % - includes handling khole goofiness
     ok=find(strcmpi(knetwk{i},dbknetwk) & strcmpi(kstnm{i},dbkstnm) ...
@@ -105,6 +113,7 @@ for i=1:nrecs
     oke=timediff(dbb(ok,:),e{i})>0 & timediff(dbe(ok,:),e{i})<0;
     halfbaked=(okb & ~oke) | (~okb & oke);
     if(any(halfbaked))
+        redraw=true;
         warning('seizmo:getsacpz:halfbaked',...
             ['Record: %d\n' ...
             'Record overlaps SAC PoleZero file time boundary!'],i);
@@ -113,9 +122,9 @@ for i=1:nrecs
     
     % warn if no files found
     if(isempty(ok))
+        redraw=true;
         warning('seizmo:getsacpz:noGoodSACPZ',...
             'Record: %d\nCould not find a matching SAC PoleZero file!',i);
-        continue;
     else
         % get file with latest b
         [idx,idx]=min(timediff(dbb(ok,:),b{i}));
@@ -123,6 +132,7 @@ for i=1:nrecs
         % assign to data.misc.sacpz
         data(i).misc.sacpz=sacpzdb(ok(idx));
     end
+    print_time_left(i,nrecs,redraw);
 end
 
 end

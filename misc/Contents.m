@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r92 Ararat 22-Sep-2009
+% Version 0.6.0-r94 Ararat 23-Sep-2009
 %
 % Miscellaneous Support functions
 %CMOD                - Returns a centered modulus
@@ -17,7 +17,6 @@
 %NDSQUAREFORM        - Reshapes between an n-d distance matrix and "vector"
 %NEXTPOW2N           - Returns the next higher power of 2 for all array elements
 %ONEFILELIST         - Compiles multiple filelists into one
-%PLOTERR             - General error bar plot (EXTERNAL!)
 %READCSV             - Read in .csv formatted file as a structure
 %SAWMOD              - Returns a sawtooth modulus
 %SLIDINGAVG          - Returns sliding-window average of data
@@ -29,6 +28,7 @@
 %SUBMAT              - Returns a submatrix reduced along indicated dimensions
 %SUBMAT_EVAL         - Returns a submatrix using eval
 %SWAP                - Swap values
+%TAPERFUN            - Returns a taper as specified
 %UNSORT              - Undoes a sort operation using the returned sort indices
 %UTI2SUB             - Square matrix upper triangle linear indices to subscripts
 %WRITECSV            - Write out .csv formatted file from a structure
