@@ -1,0 +1,225 @@
+% The following gives a rough compatibility chart
+% between SEIZMO and SAC.  
+
+about				about=ver('dev')
+abs					seizmofun(data,@abs)
+absolutevalue		seizmofun(data,@abs)
+add					add(data,value)
+addf				addrecords(data1,data2)
+apk					N/A
+arraymap			N/A
+axes				See axes properties
+bandpass			iirfilter(data,'bandpass',...)
+bandrej				iirfilter(data,'notch',...)
+bbfk				N/A
+beam				N/A
+begindevices		N/A (ever)
+beginframe			See subplot
+beginwindow			See figure & figure properties
+benioff				N/A
+binoperr			binoperr
+border				set(gca,'box','on')
+capf				N/A
+chnhdr				changeheader(data,'field',value,...)
+chpf				N/A
+color				plot[012](data,'colormap',['r';'w';'b'])
+comcor				N/A (maybe available through debugging)
+commit				unnecessary!
+contour				N/A (can be done with matlab)
+convert				changetype (n/a), changeversion (n/a), changebyteorder
+convolve			convolve (n/a)
+copyhdr				copyheader (n/a), otherwise use getheader/changeheader
+correlate			correlate (n/a)
+cut					readdatawindow
+cuterr				N/A, see readdatawindow
+cutim				cut
+datagen				N/A, see bseizmo
+decimate			squish
+deletechannel		deleterecords (n/a)
+deltacheck			binoperr
+dif					differentiate
+div					divide
+divf				dividerecords
+divomega			divideomega
+echo				N/A, (maybe warning on/off)
+enddevices			N/A (ever)
+endframe			unnecessary!
+envelope			envelope
+erase				see close/clear
+evaluate			simple arithmetic is builtin
+exp					seizmofun(data,@exp)
+exp10				seizmofun(data,@(x)10.^x)
+external			see path, function, script
+external_interface	N/A, see various SEIZMO functions to learn
+external_howto		N/A, see various SEIZMO functions to learn
+fft					dft
+fileid				N/A, see text
+filenumber			N/A, see text
+filterdesign		filterdesign (n/a)
+fir					N/A
+floor				see xlim, ylim
+funcgen				N/A, see bseizmo
+getbb				unnecessary!
+gmap				N/A, to be covered by m_map
+gmtmap				N/A, to be covered by m_map
+grayscale			N/A (can be done with matlab)
+grid				set(gca,'xgrid','on')
+gtext				see xlabel, ylabel, title
+hanning				N/A, see slidingavg + seizmofun
+help				help dev
+help_intro			help dev
+highpass			iirfilter(data,'high',...)
+hilbert				hilbrt
+history				use the command history window, commandhistory
+howto_external		N/A, see various SEIZMO functions to learn
+ifft				idft
+image				N/A (can be done with matlab)
+inicm				see clear (also global SEIZMO)
+installmacro		N/A, see path, function, script
+int					integrate
+interpolate			interpolate
+keepam				keepam (n/a)
+khronhite			N/A
+line				see plot properties
+linefit				getpolynomial
+linlin				see plot properties
+linlog				see plot properties
+listhdr				listheader
+load				unnecessary!
+loadctable			see colormap
+log					
+log10
+loglab
+loglin
+loglog
+lowpass				iirfilter(data,'low',...)
+macro
+map
+mat
+markptp
+marktimes
+markvalue
+merge				merge
+message
+mtw
+mul					multiply
+mulf				multiplyrecords
+mulomega			multiplyomega
+news
+nplotc
+null
+oapf
+ohpf
+pause
+pickauthor
+pickphase
+picks
+plabel
+plot
+plot1				plot1
+plot2				plot2
+plotalpha
+plotc
+plotctable
+plotdy
+plotpk
+plotpktable
+plotpm
+plotsp
+plotxy
+print
+printhelp
+production
+qdp					unnecessary!
+quantize
+quit
+quitsub
+read				readseizmo
+readbbf
+readcss
+readdb
+readerr	
+readgse
+readhdr				readheader
+readsdd
+readsp
+readsuds	
+readtable
+recalltrace
+report
+reverse				reverse
+rglitches
+rmean				removemean
+rms
+rollback
+rotate				rotate (n/a)
+rq
+rtrend				removetrend
+scallop
+setbb
+setdevice
+setmacro
+sgf
+smooth
+sonogram
+sort				sortbyfield
+spe
+spectrogram
+sqr
+sqrt
+sss
+stretch				stretch
+sub					subtract
+subf				subtractrecords
+symbol
+synchronize			synchronize
+syntax
+systemcommand		try !
+taper				taper
+ticks
+title
+trace
+transcript
+transfer
+transfertable
+tsize
+tutorial
+unsetbb
+unwrap
+vspace
+wait
+whpf
+width
+wiener
+wild
+window
+write				writeseizmo
+writebbf
+writecss
+writegse	
+writehdr			writeheader
+writesdd
+writesp
+xdiv
+xfudge
+xfull
+xgrid
+xlabel
+xlim
+xlin
+xlog
+xvport
+ydiv
+yfudge
+yfull
+ygrid
+ylabel
+ylim
+ylin
+ylog
+yvport
+zcolors
+zlabels
+zlevels
+zlines
+zticks

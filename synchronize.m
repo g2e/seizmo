@@ -141,7 +141,7 @@ end
 % get shift
 reftimes=[nzyear nzjday nzhour nzmin nzsec+nzmsec/1000];
 times=sortrows(fixtimes([reftimes(:,1:4) reftimes(:,5)+values],timing));
-times(:,5)=round(1000*times(:,5))/1000; % account for millisecond limit
+times(:,5)=fix(1000*times(:,5))/1000; % account for millisecond limit
 switch lower(option)
     case 'last'
         synctime=times(end,:);

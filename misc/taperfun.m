@@ -31,9 +31,10 @@ function [pts]=taperfun(type,pts,limits,varargin)
 
 %     Version History:
 %        Sep. 23, 2009 - initial version
+%        Sep. 24, 2009 - fix no taper gives nan bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 23, 2009 at 18:00 GMT
+%     Last Updated Sep. 24, 2009 at 02:20 GMT
 
 % todo:
 
@@ -42,7 +43,7 @@ z=pts<limits(1);
 if(any(z)); pts(z)=0; end
 
 % untapered pts
-u=pts>limits(2);
+u=pts>=limits(2);
 if(any(u)); pts(u)=1; end
 
 % tapered

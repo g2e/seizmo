@@ -135,7 +135,7 @@ sfh(2)=subplot('Position',[0.5 0.1 0.4 0.8]);
 set(sfh(2),'color',P.PLOTBGCOLOR);
 plot0(data(perm),'fighandle',fh,'subhandle',sfh(2),...
     'yaxislocation','right',varargin{:},...
-    'colormap',colors);
+    'colormap',colors,'markers',false);
 
 % match dendrogram yaxis to waveform plot
 span=get(sfh(2),'YLim');
