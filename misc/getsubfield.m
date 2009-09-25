@@ -9,7 +9,7 @@ function [s]=getsubfield(s,varargin)
 %     dimensions 1 and 3+ must be equal sized.  Deeper subfields may be
 %     extracted by providing more fields.  F by default is returned as a
 %     cell array, unless all cells contain non-empty elements of class
-%     struct or double.
+%     struct, logical, or double.
 %
 %    Notes:
 %
@@ -24,9 +24,10 @@ function [s]=getsubfield(s,varargin)
 
 %     Version History:
 %        Sep. 22, 2009 - initial version
+%        Sep. 25, 2009 - unwraps logical array now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2009 at 05:00 GMT
+%     Last Updated Sep. 25, 2009 at 07:30 GMT
 
 % todo:
 
@@ -63,6 +64,8 @@ for i=1:numel(varargin)
         elseif(all(cellfun('isclass',s,'struct')))
             s=cell2mat(s);
         elseif(all(cellfun('isclass',s,'double')))
+            s=cell2mat(s);
+        elseif(all(cellfun('isclass',s,'logical')))
             s=cell2mat(s);
         else
             return;

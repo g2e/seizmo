@@ -62,9 +62,10 @@ function [def]=seizmodef(filetype,version,usecache)
 %        Sep. 12, 2009 - drop v101 switch (ugly hack), added reftime hack
 %        Sep. 13, 2009 - vf added
 %        Sep. 17, 2009 - added several new vgrps and vfs, added def.abs
+%        Sep. 25, 2009 - multi-cmp fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 17, 2009 at 20:30 GMT
+%     Last Updated Sep. 25, 2009 at 07:15 GMT
 
 % todo:
 
@@ -125,7 +126,8 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     
     % multi-component info
     def.mulcmp.valid=false;
-    def.mulcmp.altver=[];
+    def.mulcmp.altver=101;
+    def.mulcmp.alttype='SEIZMO Binary';
     
     % header types
     def.types={'real' 'int' 'enum' 'lgc' 'char'};
@@ -418,7 +420,6 @@ if(strcmpi(filetype,'SEIZMO Binary'))
         
         % turn on multi-component support indicator
         def.mulcmp.valid=true;
-        def.mulcmp.altver=[];
         
         % replace unused15 with ncmp (number of dependent components)
         def.int.pos=rmfield(def.int.pos,'unused15');
@@ -475,6 +476,9 @@ if(strcmpi(filetype,'SEIZMO Binary'))
         % change data storage
         def.data.store='double';
         def.data.bytesize=8;
+        
+        % change multi-component alternative
+        def.mulcmp.altver=201;
     end
     
     % seizmo version 201 mod (101+200)

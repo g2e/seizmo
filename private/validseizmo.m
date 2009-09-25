@@ -31,9 +31,10 @@ function [valid]=validseizmo(filetype)
 %        June 27, 2009 - switch v101 from SEIZMO to SAC even though it is
 %                        not supported by SAC -- this makes things a bit
 %                        easier for multiple component support
+%        Sep. 25, 2009 - undid hack mentioned above
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 27, 2009 at 20:50 GMT
+%     Last Updated Sep. 25, 2009 at 07:40 GMT
 
 % todo:
 
@@ -43,9 +44,9 @@ if(~isempty(msg)); error(msg); end
 
 % get versions
 if(strcmpi(filetype,'SAC Binary'))
-    valid=[6 101];
+    valid=6;
 elseif(strcmpi(filetype,'SEIZMO Binary'))
-    valid=[200 201];
+    valid=[101 200 201];
 end
 
 end

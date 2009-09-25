@@ -17,11 +17,18 @@ function [data]=bseizmo(varargin)
 %     - the byte-order is set to match the current architecture
 %     - the filetype is set as 'Time Series File'
 %     - automatically figures out if data is evenly sampled
+%     - reference time is set to the date and time at runtime
+%     - idep and iztype are set to unknown
+%     - lovrok and lcalda are set to true
+%     - knetwk is set to SZ, kcmpnm is set to Q, khole is set to XX
+%     - kstnm is set to R# where # is a zero padded index set according to
+%       the order of input into BSEIZMO
 %
 %    Header changes: 
 %     CREATES HEADER INFO: 
-%      DELTA, B, E, NPTS, DEPMEN, DEPMIN, DEPMAX, IFTYPE, LEVEN, LOVROK,
-%      NVHDR, KNETWK, KSTNM, KHOLE, KCMPNM, LCALDA
+%      DELTA, B, E, NPTS, DEPMEN, DEPMIN, DEPMAX, IFTYPE, IDEP, IZTYPE,
+%      NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC, LEVEN, LOVROK, LCALDA,
+%      NVHDR, KNETWK, KSTNM, KHOLE, KCMPNM
 %
 %    Examples:
 %     To create a square root function in Matlab and then convert the array
@@ -73,9 +80,11 @@ function [data]=bseizmo(varargin)
 %                        current time into the reference time fields (this
 %                        all together makes files readible by PQL)
 %        Sep. 23, 2009 - added .misc field
+%        Sep. 25, 2009 - doc update, minor reftime improvement, multi-cmp
+%                        fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 23, 2009 at 07:35 GMT
+%     Last Updated Sep. 25, 2009 at 07:15 GMT
 
 % todo:
 
@@ -95,7 +104,7 @@ option.BYTEORDER=nativebyteorder;
 
 % use current time for reference timing
 dt=serial2gregorian(now,'doytime');
-dt(5:6)=[floor(dt(5)) floor(1000*(dt(5)-floor(dt(5))))];
+dt(5:6)=[fix(dt(5)) fix(1000*mod(dt(5),1))];
 
 % get options from SEIZMO global
 global SEIZMO
@@ -248,6 +257,7 @@ if(~h.mulcmp.valid && any(ncmp>1))
         '\nVersion cannot handle multiple components!\n'...
         'Changing to a multi-component version!']);
     [data(mcmp).version]=deal(h.mulcmp.altver);
+    [data(mcmp).filetype]=deal(h.mulcmp.alttype);
     nvhdr(mcmp)=h.mulcmp.altver;
 end
 

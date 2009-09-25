@@ -5,13 +5,14 @@ function [diff]=timediff(times1,times2,option)
 %              diff=timediff(times1,times2,'utc'|'tai')
 %
 %    Description: TIMEDIFF(TIMES1,TIMES2) returns the difference in time
-%     between times in TIMES1 and times in TIMES2.  TIMES1 and TIMES2 must
-%     be a Nx2, Nx3, Nx5, or Nx6 array of [yr dayofyr], [yr mon dayofmon], 
+%     between times TIMES1 and TIMES2 in units of seconds.  The formula is
+%     essentially TIMES2-TIMES1.  So if TIMES2 is later than TIMES1 the
+%     number will be positive.  TIMES1 and TIMES2 must be a Nx2, Nx3, Nx5,
+%     or Nx6 array of [yr dayofyr], [yr mon dayofmon],
 %     [yr dayofyr hr min sec] or [yr mon dayofmon hr min sec].  Only the
 %     seconds portion of TIMES1 and TIMES2 is allowed to be non-integer
-%     (ie you cannot have 1.5 minutes etc).  TIMES1 and TIMES2 must have
-%     equal size or be a single time.  Time difference is returned in
-%     number of seconds.
+%     (ie. you cannot have 1.5 minutes etc).  TIMES1 and TIMES2 must have
+%     an equal number of times or be a single time.
 %
 %     TIMEDIFF(TIMES1,TIMES2,'UTC'|'TAI') allows finding the difference
 %     between UTC times (which may have leap seconds occasionally inserted
@@ -41,9 +42,10 @@ function [diff]=timediff(times1,times2,option)
 %        Sep. 18, 2009 - relaxed checks 
 %                         + returns empty matrix on empty input
 %                         + allow more cases with differing formats
+%        Sep. 25, 2009 - description update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 18, 2009 at 15:45 GMT
+%     Last Updated Sep. 25, 2009 at 03:45 GMT
 
 % todo:
 

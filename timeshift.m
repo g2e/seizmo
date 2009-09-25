@@ -1,10 +1,12 @@
-function [data]=timeshift(data,shift,timing,option,varargin)
+function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %TIMESHIFT    Shift timing of SEIZMO records
 %
 %    Usage:    data=timeshift(data,shift)
-%              data=timeshift(data,shift,timing)
-%              data=timeshift(data,shift,timing,option)
-%              data=timeshift(data,shift,timing,option,field1,...,fieldN)
+%              data=timeshift(data,shift,iztype)
+%              data=timeshift(data,shift,iztype,timing)
+%              data=timeshift(data,shift,iztype,timing,option)
+%              data=timeshift(data,shift,iztype,timing,option,...
+%                             field1,...,fieldN)
 %
 %    Description: TIMESHIFT(DATA,SHIFT) adjusts the relative timing of
 %     SEIZMO records in DATA by SHIFT seconds.  This adjustment is added
@@ -13,40 +15,44 @@ function [data]=timeshift(data,shift,timing,option,varargin)
 %     the actual timing of the data and is basically equivalent to SAC's
 %     'chnhdr allt shift' command.
 %
-%     TIMESHIFT(DATA,SHIFT,TIMING) timeshifts while interpreting the
+%     TIMESHIFT(DATA,SHIFT,IZTYPE) changes the output records' header field
+%     'iztype' to IZTYPE.  This value is passed directly to CHANGEHEADER as
+%     'changeheader(DATA,'iztype',IZTYPE)'.  The default IZTYPE is 'iunkn'.
+%
+%     TIMESHIFT(DATA,SHIFT,IZTYPE,TIMING) timeshifts while interpreting the
 %     absolute timing as the specified type ('UTC' or 'TAI' - 'UTC' is
 %     default).  Handle UTC leap seconds by setting this option to 'UTC'.
 %     There are no leap seconds in the International Atomic Time standard
 %     (TAI), so setting the absolute timing to 'tai' will basically skip
 %     any leap second functions.
 %
-%     TIMESHIFT(DATA,SHIFT,TIMING,OPTION) allows for changing just the
-%     reference and relative time fields by setting OPTION to 'REFERENCE'
-%     or 'RELATIVE'.  The default is 'BOTH' ([] also works), which changes
-%     both.  Note that if the 'REFERENCE' option is given, the shift is
-%     applied without a sign change.  All options will apply a shift to
-%     additional fields given (see next usage format).  To apply a shift to
-%     only the additional fields, use option 'USER'.
+%     TIMESHIFT(DATA,SHIFT,IZTYPE,TIMING,OPTION) facilitates changing only
+%     reference or relative time fields by setting OPTION to 'REFERENCE' or
+%     'RELATIVE'.  The default is 'BOTH' ([] also works), which changes
+%     both sets.  Note that if OPTION is 'REFERENCE', SHIFT is applied to
+%     the reference time without a sign change.  All of the above options
+%     will also apply SHIFT to any additional fields given (see next usage
+%     format).  To apply a shift to only the additional fields, use option
+%     'USER'.
 %
-%     TIMESHIFT(DATA,SHIFT,TIMING,OPTION,FIELD1,...,FIELDN) also adjusts
+%     TIMESHIFT(DATA,SHIFT,IZTYPE,TIMING,OPTION,FIELD1,...,FIELDN) adjusts
 %     header fields FIELD1 TO FIELDN by SHIFT seconds.  Giving fields that
-%     are already identified as timing fields will apply SHIFT twice unless
-%     OPTION is set appropriately!!
+%     are already identified as timing fields (A, B, E, F, O, Tn) will
+%     apply SHIFT twice unless OPTION is set to 'REFERENCE' or 'USER'!
 %
 %    Notes:
 %     - DOES NOT WORK FOR SPECTRAL OR XYZ RECORDS!
-%     - Since reference timing is only accurate to the millisecond, this
-%       operation will be inaccurate up to 1 millisec.  This can be 'fixed'
-%       by giving shifts to the millisecond.  The NZMSEC field should be
-%       replaced with NZNSEC to allow for nanosecond accuracy (int32 would
-%       still be fine)!
+%     - Since reference time resolution is limited to 1 millisecond, this
+%       operation is limited to such a resolution.  Giving a shift with
+%       more precision than to the millisecond will not be honored unless
+%       OPTION is 'RELATIVE' or 'USER'.
 %
-%    Header changes: B, E, A, F, O, T0-T9,
-%                    NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC
+%    Header changes: NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC
+%                    A, B, E, F, O, Tn, and any user-defined field
 %
 %    Examples:
 %     Shift the reference time to the origin time (note '-' sign):
-%      data=timeshift(data,-gh(data,'o'))
+%      data=timeshift(data,-gh(data,'o'),'io')
 %
 %     Also useful for quickly plotting data aligned on a phase:
 %      plot0(timeshift(data,-Parrivaltimes))
@@ -60,9 +66,11 @@ function [data]=timeshift(data,shift,timing,option,varargin)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        June 24, 2009 - added explaination about inaccurate shifting,
 %                        improved checks on options
+%        Sep. 25, 2009 - added iztype field parameter, better fixes for
+%                        reftime millisec limit
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Sep. 25, 2009 at 05:30 GMT
 
 % todo:
 
@@ -72,7 +80,7 @@ if(~isempty(msg)); error(msg); end
 
 % get undefined value
 [h,idx]=versioninfo(data);
-undef=[h.undef.ntype].';
+undef=getsubfield(h,'undef','ntype').';
 undef=undef(idx);
 
 % turn off struct checking
@@ -85,8 +93,12 @@ data=checkheader(data);
 % number of records
 nrecs=numel(data);
 
+% valid option values
+valid.TIMING={'UTC' 'TAI'};
+valid.OPTION={'BOTH' 'REFERENCE' 'RELATIVE' 'USER'};
+
 % check shift is numeric
-if(~isnumeric(shift))
+if(~isreal(shift))
     error('seizmo:timeshift:badShift',...
         'SHIFT option must be a numeric array!');
 elseif(~any(numel(shift)==[1 nrecs]))
@@ -95,16 +107,20 @@ elseif(~any(numel(shift)==[1 nrecs]))
         'the same number of elements as DATA!']);
 end
 
-% expand scalar shift
+% expand scalar shift, make column vector
 if(numel(shift)==1)
     shift(1:nrecs,1)=shift;
 else
     shift=shift(:);
 end
 
-% default timing
-valid.TIMING={'UTC' 'TAI'};
-if(nargin==2 || isempty(timing))
+% default iztype
+if(nargin<3 || isempty(iztype))
+    iztype='iunkn';
+end
+
+% default/check timing
+if(nargin<4 || isempty(timing))
     timing='utc';
 elseif(~ischar(timing) || size(timing,1)~=1 ...
         || ~any(strcmpi(timing,valid.TIMING)))
@@ -113,40 +129,35 @@ elseif(~ischar(timing) || size(timing,1)~=1 ...
         sprintf('%s ',valid.TIMING{:})]);
 end
 
-% shift option
-if(nargin<=3 || isempty(option))
-    % default is both
-    refshift=-shift;
-    relshift=shift;
-    usershift=shift;
-else
-    if(~ischar(option) || size(option,1)~=1)
-        error('seizmo:timeshift:badOption',...
-            ['OPTION option must be string of one of the following:\n'...
-             'BOTH  REFERENCE  RELATIVE  USER']);
-    end
-    switch lower(option)
-        case 'both'
-            refshift=-shift;
-            relshift=shift;
-            usershift=shift;
-        case 'reference'
-            refshift=shift;
-            relshift=0.*shift;
-            usershift=shift;
-        case 'relative'
-            refshift=0.*shift;
-            relshift=shift;
-            usershift=shift;
-        case 'user'
-            refshift=0.*shift;
-            relshift=0.*shift;
-            usershift=shift;
-        otherwise
-            error('seizmo:timeshift:badOption',...
-                ['OPTION option must be string of one of the following:'...
-                 '\nBOTH  REFERENCE  RELATIVE  USER']);
-    end
+% default/check/implement shift option
+if(nargin<5 || isempty(option)); option='both'; end
+if(~ischar(option) || size(option,1)~=1 ...
+        || ~any(strcmpi(option,valid.OPTION)))
+    error('seizmo:timeshift:badOption',...
+        ['OPTION must be a string of one of the following:\n'...
+         sprintf('%s ',valid.OPTION{:})]);
+end
+switch lower(option)
+    case 'both'
+        % force shift to nearest millisecond
+        shift=round(shift*1000)/1000;
+        refshift=-shift;
+        relshift=shift;
+        usershift=shift;
+    case 'reference'
+        % force shift to nearest millisecond
+        shift=round(shift*1000)/1000;
+        refshift=shift;
+        relshift=0.*shift;
+        usershift=shift;
+    case 'relative'
+        refshift=0.*shift;
+        relshift=shift;
+        usershift=shift;
+    case 'user'
+        refshift=0.*shift;
+        relshift=0.*shift;
+        usershift=shift;
 end
 
 % get header fields
@@ -164,17 +175,8 @@ if(any(~(strcmp(iftype,'itime') | strcmp(iftype,'ixy'))))
 end
 
 % get new absolute timing
-switch lower(timing)
-    case 'tai'
-        times=[nzyear nzjday nzhour nzmin nzsec+refshift+nzmsec/1000];
-        times=fixtimes(times);
-    case 'utc'
-        times=[nzyear nzjday nzhour nzmin nzsec+refshift+nzmsec/1000];
-        times=fixtimes(times,'utc');
-    otherwise
-        error('seizmo:timeshift:badTimes',...
-            'TIMING option must be ''TAI'' or ''UTC''!');
-end
+times=fixtimes( ...
+    [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+refshift],timing);
 
 % undefined to NaN
 a(a==undef)=nan; b(b==undef)=nan;
@@ -191,13 +193,15 @@ for i=1:nvararg
     user{i}(user{i}==undef(:,ones(sz,1)))=nan;
     user{i}=user{i}+usershift(:,ones(sz,1));
 end
+
+% combine field and values for changeheader call
 user=[varargin; user];
 
 % change header fields
-data=changeheader(data,...
+data=changeheader(data,'iztype',iztype,...
     'nzyear',times(:,1),'nzjday',times(:,2),'nzhour',times(:,3),...
-    'nzmin',times(:,4),'nzsec',floor(times(:,5)),...
-    'nzmsec',floor(1000*mod(times(:,5),1)),...
+    'nzmin',times(:,4),'nzsec',fix(times(:,5)+1e-9),...
+    'nzmsec',fix(1000*mod(times(:,5)+1e-9,1)),...
     'a',a+relshift,'b',b+relshift,'e',e+relshift,'f',f+relshift,...
     'o',o+relshift,'t',t+relshift(:,ones(10,1)),user{:});
 

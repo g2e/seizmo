@@ -82,6 +82,7 @@ function [data]=checkheader(data,options,varargin)
 %                        record per bad enum value
 %        Sep. 18, 2009 - added warning for ghassan about datasets with
 %                        multiple samplerates
+%        Sep. 25, 2009 - fixed/updated multi-cmp code, allow iztype<1e-3
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Sep. 18, 2009 at 22:35 GMT
@@ -365,7 +366,7 @@ if(any(spectral)); iztype(spectral & strcmp('ib',iztype))={'isb'}; end
 if(isscalar(unique(iztype(goodztype))))
     iz=unique(iztype(goodztype));
     izt=getheader(data(goodztype),iz{1}(2:end));
-    if(any(izt))
+    if(any(abs(izt)>0.001)) % handle reftime millisec limitation
         i=find(izt);
         warning('seizmo:checkheader:badRefTime',...
             ['Header inconsistency found!\n'...
@@ -374,7 +375,7 @@ if(isscalar(unique(iztype(goodztype))))
     end
 else
     for i=find(goodztype).';
-        if(getheader(data(i),iztype{i}(2:end))~=0)
+        if(abs(getheader(data(i),iztype{i}(2:end)))>0.001)
             warning('seizmo:checkheader:badRefTime',...
             ['Header inconsistency found!\n'...
             'Record %d: %s field not set to 0, '...
@@ -679,17 +680,18 @@ end
 % make sure header can handle multiple components if needed
 if(any(ok & ncmp>1))
     mok=ok & ncmp>1;
-    verch=~[h(vi).mulcmp.valid];
+    verch=~getsubfield(h(vi),'mulcmp','valid').';
     if(any(verch(mok)))
         % change version
         goch=verch & mok;
         warning('seizmo:checkheader:versNotMulCmp',...
             ['Records:\n' sprintf('%d ',find(goch))...
-            '\nCannot handle multiple components!\n'...
+            '\nDo not support multiple components!\n'...
             'Changing to a multi-component version!']);
-        data(goch)=...
-            changeheader(data(goch),'nvhdr',[h(vi(goch)).mulcmp.altver]);
-        [data(goch).version]=deal(h(vi(goch)).mulcmp.altver);
+        mulcmp=getsubfield(h(vi(goch)),'mulcmp');
+        data(goch)=changeheader(data(goch),'nvhdr',[mulcmp.altver]);
+        [data(goch).filetype]=deal(mulcmp.alttype);
+        [data(goch).version]=deal(mulcmp.altver);
         [h,vi]=versioninfo(data);
     end
 end
