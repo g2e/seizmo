@@ -3,17 +3,20 @@ function [data]=changeclass(data,class)
 %
 %    Usage:    data=changeclass(data,class)
 %
-%    Description: CHANGECLASS(DATA,CLASS) changes the class type of SEIZMO
-%     records in DATA to CLASS.  CLASS must be a string or cellstr of valid
-%     class(es) ('double', 'single', etc).  This does not change the
-%     storage type of data written to disk (requires a version change).
+%    Description: CHANGECLASS(DATA,CLASS) changes the in-memory class type
+%     of the independent and dependent data stored in the SEIZMO dataset
+%     DATA to CLASS.  CLASS must be a string or cellstr of valid class(es)
+%     ('double', 'single', etc).  This does not change the storage type of
+%     data written to disk (requires a filetype/version change).
 %
 %    Notes:
+%     - Changing the storage type of written data requires a
+%       filetype/version change (using CHANGEFILETYPE)
 %
 %    Header changes: NONE
 %
 %    Examples:
-%     Double precision records and fix the delta intervals
+%     Return double precision records and attempt to fix sample spacing:
 %      data=fixdelta(changeclass(data,'double'))
 %
 %    See also: fixdelta
@@ -31,9 +34,10 @@ function [data]=changeclass(data,class)
 %        Nov. 22, 2008 - renamed from CLASSIT to CHANGECLASS
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Oct.  5, 2009 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Oct.  5, 2009 at 21:55 GMT
 
 % todo:
 

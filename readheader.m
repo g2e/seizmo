@@ -11,12 +11,14 @@ function [data]=readheader(varargin)
 %     Fields of output SEIZMO structure:
 %      path - directory of file
 %      name - file name
-%      filetype - type of datafile
+%      filetype - type of file
 %      version - version of filetype
 %      byteorder - byte-order of file (ieee-le or ieee-be)
+%      head - header data
 %      hasdata - logical indicating if data is read in (false here)
+%      ind - independent component data (for uneven)
+%      dep - dependent component data
 %      misc - place for miscellaneous record info
-%      head - contains header data
 %
 %    Notes:
 %
@@ -55,9 +57,11 @@ function [data]=readheader(varargin)
 %        Mar.  3, 2009 - update for GETFILEVERSION
 %        Apr. 23, 2009 - move usage up
 %        Sep. 11, 2009 - added misc field
+%        Sep. 29, 2009 - added dep & ind (to allow dataset concatenation)
+%        Oct.  5, 2009 - reordered struct fields, minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 11, 2009 at 06:50 GMT
+%     Last Updated Oct.  5, 2009 at 16:05 GMT
 
 % todo:
 
@@ -72,7 +76,8 @@ end
 
 % pre-allocating SEIZMO structure
 data(nfiles,1)=struct('path',[],'name',[],'filetype',[],...
-    'version',[],'byteorder',[],'hasdata',[],'misc',[],'head',[]);
+    'version',[],'byteorder',[],'head',[],'hasdata',[],...
+    'ind',[],'dep',[],'misc',[]);
 
 % loop for each file
 destroy=false(nfiles,1);

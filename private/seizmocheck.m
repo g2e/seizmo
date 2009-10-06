@@ -62,9 +62,10 @@ function [report]=seizmocheck(data,varargin)
 %                        octave and matlab
 %        May  29, 2009 - minor doc update
 %        Sep. 11, 2009 - added misc field
+%        Oct.  5, 2009 - added warnings for multi-filetype/version/endian
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 11, 2009 at 06:55 GMT
+%     Last Updated Oct.  5, 2009 at 17:20 GMT
 
 % todo:
 
@@ -160,6 +161,26 @@ else
             report.identifier='seizmo:seizmocheck:needData';
             report.message='All records must have data read in!';
         end
+    end
+    
+    % issue warnings for multiple types of file/version/endian
+    uf=unique(filetypes);
+    uv=unique(cell2mat(versions));
+    ue=unique(endians);
+    if(~isscalar(uf))
+        warning('seizmo:seizmocheck:multiFiletype',...
+            ['Dataset has multiple file types:\n' ...
+            sprintf('''%s'' ',uf{:})]);
+    end
+    if(~isscalar(uv))
+        warning('seizmo:seizmocheck:multiVersion',...
+            ['Dataset has multiple file type versions:\n' ...
+            sprintf('%d  ',uv)]);
+    end
+    if(~isscalar(ue))
+        warning('seizmo:seizmocheck:multiEndian',...
+            ['Dataset has multiple byteorders:\n' ...
+            sprintf('''%s'' ',ue{:})]);
     end
 end
 

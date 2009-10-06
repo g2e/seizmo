@@ -118,9 +118,10 @@ function tt=tauptime(varargin)
 %                        cleaning
 %        Sep.  2, 2009 - allow multiple calls to PHASES
 %        Sep.  5, 2009 - minor doc update
+%        Sep. 30, 2009 - changed abssawmod to abslatmod
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 21:00 GMT
+%     Last Updated Sep. 30, 2009 at 15:40 GMT
 
 % todo:
 
@@ -284,7 +285,7 @@ if(nargout==0)
     % list phase info
     for ii=1:arrivals.length
         fprintf(' %7.2f  %6.1f   %-10s   %7.2f   %7.3f    %7.2f  = %-10s\n',...
-            abssawmod(arrivals(ii).getDistDeg,180),...
+            abslatmod(arrivals(ii).getDistDeg,180),...
             arrivals(ii).getSourceDepth,...
             char(arrivals(ii).getName),arrivals(ii).getTime,...
             arrivals(ii).getRayParam/R2D,arrivals(ii).getDistDeg,...
@@ -307,7 +308,7 @@ end
 
 end
 
-function [c]=abssawmod(a,b)
+function [c]=abslatmod(a,b)
 % returns distance range always as the minor arc length (0-180deg)
 
 n=round(0.5.*a./b);

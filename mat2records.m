@@ -15,8 +15,12 @@ function [data]=mat2records(data,dep,idx1,ind,idx2,store,npts)
 %     each column/component).  NPTS gives the number of points in each
 %     record in DATA (not for each column/component).  This function is
 %     typically used in conjunction with RECORDS2MAT to access functions
-%     not in the SEIZMO toolbox.  For creating a new SEIZMO data structure
-%     from a matrix of data, see the command BSEIZMO.
+%     not in the SEIZMO toolbox.
+%
+%     **********************************************
+%     FOR CREATING A NEW SEIZMO DATA STRUCTURE FROM
+%     A MATRIX OF DATA, SEE THE COMMAND BSEIZMO!
+%     **********************************************
 %
 %    Notes:
 %     - IDX1 and IDX2 must match the number of columns in DEP and IND
@@ -46,9 +50,10 @@ function [data]=mat2records(data,dep,idx1,ind,idx2,store,npts)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        June 25, 2009 - name change from DISTRIBUTERECORDS to MAT2RECORDS
+%        Oct.  5, 2009 - update checkheader call, force checking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:25 GMT
+%     Last Updated Oct.  5, 2009 at 22:15 GMT
 
 % todo:
 
@@ -72,7 +77,14 @@ for i=1:numel(data)
     end
 end
 
+% turn on header checking
+oldcheckheaderstate=get_checkheader_state;
+set_checkheader_state(true);
+
 % update header
-data=checkheader(data,'vsdata');
+data=checkheader(data);
+
+% toggle checking back
+set_checkheader_state(oldcheckheaderstate);
 
 end

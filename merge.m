@@ -223,9 +223,10 @@ function [data]=merge(data,varargin)
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
 %        May  15, 2009 - minor doc update
 %        May  28, 2009 - minor doc update
+%        Sep. 30, 2009 - update for CMOD ==> LONMOD
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:25 GMT
+%     Last Updated Sep. 30, 2009 at 15:40 GMT
 
 % todo:
 %   - uneven support - just toss together and sort after?
@@ -772,7 +773,7 @@ function [data,ab,ae,npts,dt,name]=...
 %MGAP    Merge gaps
 
 % how much do we need to shift the samples
-shift=cmod(diff,delta);
+shift=lonmod(diff,delta);
 
 % get max shift in seconds
 if(isequal(option.SHIFTUNITS,'intervals'))
@@ -922,7 +923,7 @@ function [data,ab,ae,npts,dt,name]=mlap(...
 %MLAP    Merge overlaps
 
 % minimum time shift to align (always within +/-delta/2)
-shift=cmod(diff,delta);
+shift=lonmod(diff,delta);
 
 % get max shift allowed in seconds (otherwise interpolate)
 if(isequal(option.SHIFTUNITS,'intervals'))

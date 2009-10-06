@@ -63,9 +63,11 @@ function [def]=seizmodef(filetype,version,usecache)
 %        Sep. 13, 2009 - vf added
 %        Sep. 17, 2009 - added several new vgrps and vfs, added def.abs
 %        Sep. 25, 2009 - multi-cmp fixes
+%        Sep. 29, 2009 - added delaz vgrp
+%        Oct.  2, 2009 - added gcp vgrp (just baz)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 25, 2009 at 07:15 GMT
+%     Last Updated Oct.  2, 2009 at 20:10 GMT
 
 % todo:
 
@@ -163,6 +165,8 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.vgrp.dep={'depmin' 'depmen' 'depmax'};
     def.vgrp.st={'stla' 'stlo' 'stel' 'stdp'};
     def.vgrp.ev={'evla' 'evlo' 'evel' 'evdp'};
+    def.vgrp.delaz={'gcarc' 'az' 'baz' 'dist'};
+    def.vgrp.gcp={'baz'};
     def.vgrp.nz={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec'};
     def.vgrp.nzdttm={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec'};
     def.vgrp.kname={'knetwk' 'kstnm' 'khole' 'kcmpnm'};

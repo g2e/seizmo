@@ -11,14 +11,16 @@ function [data]=readseizmo(varargin)
 %     SEIZMO data structure setup:
 %
 %     Fields for all files:
-%      path - path to file
+%      path - directory of file
 %      name - file name
-%      filetype - type of datafile
+%      filetype - type of file
 %      version - version of filetype
 %      byteorder - byte-order of file (ieee-le or ieee-be)
+%      head - header data
 %      hasdata - logical indicating if data is read in
+%      ind - independent component data (for uneven)
+%      dep - dependent component data
 %      misc - place for miscellaneous record info
-%      head - contains header data
 %
 %     Fields for timeseries files:
 %      dep(:,1) - amplitudes
@@ -75,9 +77,11 @@ function [data]=readseizmo(varargin)
 %        Nov. 15, 2008 - update for new name schema (now READSEIZMO)
 %        Apr. 23, 2009 - move usage up
 %        Sep. 11, 2009 - added misc field
+%        Sep. 29, 2009 - minor doc update
+%        Oct.  5, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 11, 2009 at 07:05 GMT
+%     Last Updated Oct.  5, 2009 at 16:05 GMT
 
 % todo:
 

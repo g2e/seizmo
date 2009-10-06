@@ -82,9 +82,10 @@ function [data]=bseizmo(varargin)
 %        Sep. 23, 2009 - added .misc field
 %        Sep. 25, 2009 - doc update, minor reftime improvement, multi-cmp
 %                        fix
+%        Oct.  5, 2009 - reordered struct fields, added .ind
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 25, 2009 at 07:15 GMT
+%     Last Updated Oct.  5, 2009 at 16:00 GMT
 
 % todo:
 
@@ -171,8 +172,8 @@ end
 nrecs=nargin/2; format=['%0' num2str(ceil(log10(nrecs+1))) 'd'];
 data(1:nrecs,1)=struct('path','.','name',[],...
     'filetype',option.FILETYPE,'version',option.VERSION,...
-    'byteorder',option.BYTEORDER,'hasdata',true,'misc',[],...
-    'head',undef,'dep',[]);
+    'byteorder',option.BYTEORDER,'head',undef,'hasdata',true,...
+    'ind',[],'dep',[],'misc',[]);
 
 % loop for each pair
 nvhdr=option.VERSION(ones(nrecs,1),1);

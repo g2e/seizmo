@@ -1,58 +1,246 @@
-function [data]=checkheader(data,options,varargin)
+function [data]=checkheader(data,varargin)
 %CHECKHEADER    Check and fix header values of SEIZMO records
 %
 %    Usage: data=checkheader(data)
-%           data=checkheader(data,options)
-%           data=checkheader(data,options,'field1',values1,...)
+%           data=checkheader(data,...
+%                            'option1','error|warn|ignore|fix|warnfix',...,
+%                            'optionN','error|warn|ignore|fix|warnfix')
 %
 %    Description: CHECKHEADER(DATA) does a number of consistency checks on
-%     SEIZMO records in DATA.  By default it does all of the checks that
-%     can be specified (see next calling option).
+%     SEIZMO records in DATA.  Run CHECKOPERR() to get the current option
+%     states.  See the table below for a description of each option.  Run
+%     checkoperr('defaults') to put CHECKHEADER into the default mode.
 %
-%     CHECKHEADER(DATA,OPTIONS) allows choosing which checks are performed.
-%     The available options are:
-%
-%      'version' - makes sure the version stored in the header and the
-%                  struct match
-%      'enums'   - assures filetype ids are valid, warns about unknown
-%                  reference time ids or dependent component ids, checks
-%                  that the field that reference time is synced with is 0
-%      'leven'   - checks that sample spacing logical is set correctly
-%      'delta'   - checks that sample spacing value is valid (>0)
-%      'npts'    - checks that npts is valid (>=0)
-%      'timing'  - checks NZ fields, checks spectral records are consistent
-%                  in regard to freq vs time, makes sure b,e,npts,delta are
-%                  consistent
-%      'vsdata'  - checks and updates header to match .dep and .ind data
-%      'location'- checks locations are valid and gets relative positioning
-%                  (if LCALDA is ~FALSE)
-%      'all'     - does all of the above
-%
-%     Note that most of the options build off of one another.  For instance
-%     all checks require the version check to have passed.  Multiple
-%     options may be given by passing OPTIONS as a cell array of options.
-%     
-%     CHECKHEADER(DATA,OPTION,FIELD1,VALUE1,...,FIELDN,VALUEN) makes header 
-%     changes before the consistency checks and fixes.
+%     DATA=CHECKHEADER(DATA,'OPTION1','ERROR|WARN|IGNORE|FIX|WARNFIX',...,
+%     'OPTIONN','ERROR|WARN|IGNORE|FIX|WARNFIX') modifies the state of
+%     options OPTION1 to OPTIONN to the specified state for this run.  To
+%     alter the state of these options for the duration of the Matlab/
+%     Octave session, use CHECKOPERR.
 %
 %    Notes:
-%     - CHECKHEADER is LOVROK aware (overwrite ok logical)
 %     - use GET_CHECKHEADER_STATE and SET_CHECKHEADER_STATE to check and
 %       change if CHECKHEADER is on or off (turning CHECKHEADER off will
 %       speed up most functions but will allow inconsistencies to cause
-%       touble)
+%       trouble)
+%     - Valid Options:
+%       INVALID_NVHDR
+%           CHECKS:     VALID VERSION FIELD WITHIN HEADER
+%           FIX:        CHANGE NVHDR TO STRUCT .VERSION FIELD
+%           DEFAULT:    ERROR
+%       INVALID_IFTYPE
+%           CHECKS:     VALID DATATYPE FIELD WITHIN HEADER
+%           FIX:        CHANGE IFTYPE TO GENERAL XY DATATYPE
+%           DEFAULT:    ERROR
+%       MULTIPLE_IFTYPE
+%           CHECKS:     DATASET HAS MULTIPLE DATATYPES
+%           FIX:        NONE
+%           DEFAULT:    WARN
+%       INVALID_UNEVEN
+%           CHECKS:     UNEVENLY SAMPLED SPECTRAL OR XYZ DATATYPE
+%           FIX:        NONE
+%           DEFAULT:    ERROR
+%       INVALID_IZTYPE
+%           CHECKS:     VALID REFERENCE TIME TYPE FIELD
+%           FIX:        CHANGE IZTYPE TO UNKNOWN
+%           DEFAULT:    WARN
+%       MULTIPLE_IZTYPE
+%           CHECKS:     DATASET HAS MULTIPLE REFERENCE TIME TYPES
+%           FIX:        NONE
+%           DEFAULT:    WARN
+%       NONZERO_IZTYPE
+%           CHECKS:     ASSOCIATED FIELD IS NONZERO (TOLERANCE OF 0.001s)
+%           FIX:        CHANGE IZTYPE TO UNKNOWN
+%           DEFAULT:    WARN
+%       INVALID_IDEP
+%           CHECKS:     VALID DEPENDENT COMPONENT TYPE
+%           FIX:        CHANGE IDEP TO UNKNOWN
+%           DEFAULT:    WARN
+%       MULTIPLE_IDEP
+%           CHECKS:     DATASET HAS MULTIPLE DEPENDENT COMPONENT TYPES
+%           FIX:        NONE
+%           DEFAULT:    WARN
+%       UNSET_LEVEN
+%           CHECKS:     EVENLY SPACED SAMPLING LOGICAL, LEVEN, IS DEFINED
+%           FIX:        SET TO TRUE
+%           DEFAULT:    ERROR
+%       MULTIPLE_LEVEN
+%           CHECKS:     DATASET HAS SOME EVENLY AND SOME UNEVENLY SAMPLED
+%           FIX:        NONE
+%           DEFAULT:    WARN
+%       MULTIPLE_DELTA
+%           CHECKS:     DATASET HAS MULTIPLE SAMPLERATES
+%           FIX:        NONE
+%           DEFAULT:    WARN
+%       NEGATIVE_DELTA
+%           CHECKS:     NEGATIVE SAMPLE SPACING
+%           FIX:        NONE
+%           DEFAULT:    ERROR
+%       ZERO_DELTA
+%           CHECKS:     SAMPLE SPACING IS ZERO
+%           FIX:        NONE
+%           DEFAULT:    ERROR
+%       NEGATIVE_NPTS
+%           CHECKS:     NEGATIVE NUMBER OF POINTS
+%           FIX:        SET NPTS TO ZERO
+%           DEFAULT:    WARNFIX
+%       ZERO_NPTS
+%           CHECKS:     ZERO NUMBER OF POINTS
+%           FIX:        NONE
+%           DEFAULT:    WARN
+%       MULCMP_DEP
+%           CHECKS:     NCMP SET >1
+%           FIX:        NONE
+%           DEFAULT:    IGNORE
+%       INVALID_MULCMP_DEP
+%           CHECKS:     FILETYPE SUPPORTS MULTIPLE DEPENDENT COMPONENTS
+%           FIX:        CHANGE TO MULTI-COMPONENT CAPABLE FILETYPE/VERSION
+%           DEFAULT:    WARNFIX
+%       NEGATIVE_NCMP
+%           CHECKS:     NCMP SET NEGATIVE
+%           FIX:        SET NCMP TO ZERO
+%           DEFAULT:    WARNFIX
+%       ZERO_NCMP
+%           CHECKS:     NCMP SET TO ZERO
+%           FIX:        NONE
+%           DEFAULT:    WARN
+%       BAD_SPECTRAL_B
+%           CHECKS:     B FIELD FOR SPECTRAL DATA IS ZERO
+%           FIX:        SET B TO ZERO
+%           DEFAULT:    ERROR
+%       BAD_SPECTRAL_DELTA
+%           CHECKS:     DELTA FIELD FOR SPECTRAL DATA IS CONSISTENT
+%           FIX:        SET DELTA BASED ON E/NPTS
+%           DEFAULT:    ERROR
+%       BAD_SPECTRAL_E
+%           CHECKS:     E FIELD FOR SPECTRAL DATA IS NYQUIST
+%           FIX:        SET E BASED ON SDELTA, OR 0.5 IF SDELTA UNDEFINED
+%           DEFAULT:    ERROR
+%       BAD_SPECTRAL_NPTS
+%           CHECKS:     NPTS FOR SPECTRAL DATA IS A POWER OF 2
+%           FIX:        NONE
+%           DEFAULT:    ERROR
+%       BAD_SPECTRAL_NSPTS
+%           CHECKS:     NSPTS FOR SPECTRAL DATA IS DEFINED, & <NPTS
+%           FIX:        SET NSPTS TO NPTS
+%           DEFAULT:    ERROR
+%       BAD_SPECTRAL_SB
+%           CHECKS:     SB FOR SPECTRAL DATA IS DEFINED
+%           FIX:        SET SB TO ZERO
+%           DEFAULT:    ERROR
+%       BAD_SPECTRAL_SDELTA
+%           CHECKS:     SDELTA IS DEFINED
+%           FIX:        SET SDELTA BASED ON E, OR 1 IF E UNDEFINED
+%           DEFAULT:    ERROR
+%       NONINTEGER_REFTIME
+%           CHECKS:     REFTIME FIELDS (NZ*) ARE IN INTEGERS
+%           FIX:        SET NZ* TO ZERO (NZJDAY IS SET TO 1)
+%           DEFAULT:    WARN
+%       UNSET_REFTIME
+%           CHECKS:     REFTIME FIELDS (NZ*) ARE DEFINED
+%           FIX:        SET NZ* TO ZERO (NZJDAY IS SET TO 1)
+%           DEFAULT:    WARN
+%       OUTOFRANGE_REFTIME
+%           CHECKS:     REFTIME FIELDS (NZ*) ARE IN DEFINED RANGES
+%           FIX:        SET NZ* TO ZERO (NZJDAY IS SET TO 1)
+%           DEFAULT:    WARN
+%       INCONSISTENT_E
+%           CHECKS:     E IS CONSISTENT WITH B & DELTA FOR EVENLY SAMPLED
+%           FIX:        CHANGE E TO MATCH B & DELTA
+%           DEFAULT:    FIX
+%       INACCURATE_TIMING
+%           CHECKS:     TIME PRECISION DEGRADATION
+%           FIX:        NONE
+%           DEFAULT:    WARN
+%       OUTOFRANGE_LAT
+%           CHECKS:     STLA/EVLA ARE IN RANGE -90 TO 90
+%           FIX:        SET STLA/EVLA TO UNDEFINED
+%           DEFAULT:    WARNFIX
+%       OUTOFRANGE_LON
+%           CHECKS:     STLO/EVLO ARE IN RANGE -180 TO 180
+%           FIX:        WRAP STLO/EVLO TO -180 TO 180
+%           DEFAULT:    WARNFIX
+%       OLD_DELAZ
+%           CHECKS:     GCARC/AZ/BAZ/DIST (IF LCALDA TRUE)
+%           FIX:        UPDATE GCARC/AZ/BAZ/DIST
+%           DEFAULT:    FIX
+%       KM_DEPTH
+%           CHECKS:     EVDP >0m & <1000m
+%           FIX:        MULTIPLY EVDP BY 1000
+%           DEFAULT:    WARN
+%       UNSET_ELEV
+%           CHECKS:     EVEL/STEL ARE DEFINED
+%           FIX:        SET EVEL/STEL TO ZERO
+%           DEFAULT:    IGNORE
+%       UNSET_DEPTH
+%           CHECKS:     EVDP/STDP ARE DEFINED
+%           FIX:        SET EVDP/STDP TO ZERO
+%           DEFAULT:    IGNORE
+%       INCONSISTENT_DEP_NPTS
+%           CHECKS:     NPTS IN HEADER MATCHES NPTS IN DEP
+%           FIX:        UPDATE NPTS IN HEADER
+%           DEFAULT:    WARNFIX
+%       INCONSISTENT_DEP_NCMP
+%           CHECKS:     NCMP IN HEADER MATCHES NCMP IN DEP
+%           FIX:        UPDATE NCMP IN HEADER
+%           DEFAULT:    WARNFIX
+%       BAD_SPECTRAL_DEP
+%           CHECKS:     DEPENDENT DATA IS 2^N BY 2*NCMP
+%           FIX:        NONE
+%           DEFAULT:    ERROR
+%       MISSING_IND
+%           CHECKS:     IND DATA CORRESPONDING TO DEP DATA EXISTS
+%           FIX:        SET LEVEN TO TRUE
+%           DEFAULT:    WARNFIX
+%       EVEN_IND
+%           CHECKS:     EVENLY SPACED DATA W/ NON-EMPTY IND DATA
+%           FIX:        SET .IND TO EMPTY
+%           DEFAULT:    FIX
+%       MULCMP_IND
+%           CHECKS:     MULTIPLE INDEPENDENT DATA IN IND
+%           FIX:        NONE
+%           DEFAULT:    ERROR
+%       INCONSISTENT_IND_NPTS
+%           CHECKS:     NUMBER OF POINTS IN IND AND DEP MATCH
+%           FIX:        TRUNCATE TO SHORTER
+%           DEFAULT:    ERROR
+%       NONMONOTONIC_IND
+%           CHECKS:     TIME POINTS IN IND ALWAYS INCREASING/DECREASING
+%           FIX:        PARALLEL SORT IND & DEP
+%           DEFAULT:    ERROR
+%       REPEAT_IND
+%           CHECKS:     REPEAT TIME POINTS IN IND
+%           FIX:        DROP ALL BUT FIRST
+%           DEFAULT:    ERROR
+%       INCONSISTENT_IND_B
+%           CHECKS:     B MATCHES IND DATA
+%           FIX:        UPDATE B
+%           DEFAULT:    FIX
+%       INCONSISTENT_IND_E
+%           CHECKS:     E MATCHES IND DATA
+%           FIX:        UPDATE E
+%           DEFAULT:    FIX
+%       INCONSISTENT_IND_DELTA
+%           CHECKS:     DELTA MATCHES IND DATA
+%           FIX:        UPDATE DELTA
+%           DEFAULT:    FIX
+%       OLD_DEP_STATS
+%           CHECKS:     DEPMAX/DEPMEN/DEPMIN
+%           FIX:        UPDATE DEP* STATS
+%           DEFAULT:    FIX
 %
-%    Header changes: DELTA, NPTS, NCMP, B, E, LEVEN,
+%    Header changes: NVHDR, IFTYPE, IZTYPE, IDEP,
+%                    DELTA, NPTS, NCMP, B, E, LEVEN, SDELTA, SB, NSPTS,
 %                    NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC
-%                    DEPMEN, DEPMIN, DEPMAX, EVLA, EVLO, STLA, STLO,
+%                    DEPMEN, DEPMIN, DEPMAX,
+%                    EVLA, EVLO, EVEL, EVDP, STLA, STLO, STEL, STDP,
 %                    GCARC, AZ, BAZ, DIST
 %
 %    Examples:
-%     Check header fields after modifying
-%     the t0 field with some arrival data:
-%      data=checkheader(data,[],'t0',P_arrivaltimes)
+%     This may help point out header problems:
+%      checkheader(data,'all','warn')
 %
-%    See also: listheader, changeheader, getheader
+%    See also: listheader, changeheader, getheader, readheader, readdata,
+%              seizmocheck, checkoperr, checkparameters
 
 %     Version History:
 %        Feb. 21, 2008 - initial version
@@ -83,102 +271,17 @@ function [data]=checkheader(data,options,varargin)
 %        Sep. 18, 2009 - added warning for ghassan about datasets with
 %                        multiple samplerates
 %        Sep. 25, 2009 - fixed/updated multi-cmp code, allow iztype<1e-3
+%        Oct.  5, 2009 - major revision
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 18, 2009 at 22:35 GMT
+%     Last Updated Oct.  5, 2009 at 22:00 GMT
 
 % todo:
-% - use CHECKOPERR to decide how to handle individual cases
-%   - need to separate each case
-%       - new checks
-%           - invalid_nvhdr
-%           - invalid_iftype
-%           - invalid_iztype
-%           - nonzero_reftime
-%           - invalid_idep
-%           - unset_leven
-%           - uneven_spectral
-%           - uneven_xyz
-%           - negative_delta
-%           - zero_delta
-%           - negative_npts
-%           - zero_npts
-%           - noninteger_reftime
-%           - outofrange_reftime
-%           - bad_{b,npts,e,nspts,delta}_spectral
-%           - inconsistent_delta_uneven
-%           - inconsistent_e
-%           - inaccurate_timing
-%           - inconsistent_npts
-%           - inconsistent_ncmp
-%           - nonmulticmp_version
-%           - bad_dep_spectral
-%           - missing_ind
-%           - too_many_ind
-%           - inconsistent_ind_dep
-%           - nonmonotonic_ind
-%           - inconsistent_b_uneven
-%           - inconsistent_e_uneven
-%           - inconsistent_depstats
-%           - outofrange_st(lo,la)
-%           - outofrange_ev(lo,la)
-%
-%   - figure out fixes or what to do if no fix available
-%
-% - check_cmp (separate function CHECK_ORIENTATION)
-%   - inc 0-180
-%   - az  0-180
-%   - E => az=90, inc=90
-%   - N => az=0, inc=90
-%   - Z => az=0, inc=0 or 180
-%
-% - what is done?
-%   - version unknown
-%       - error
-%   - enums
-%       - iftype unknown
-%           - error
-%       - iztype unknown
-%           - warn, no fix
-%       - idep unknown
-%           - warn, no fix
-%       - iztype field not 0
-%           - warn, no fix
-%   - leven
-%       - leven not set
-%           - error
-%       - leven must be true
-%           - error
-%   - delta
-%       - delta <= 0
-%           - warn, no fix
-%   - npts
-%       - npts < 0
-%           - warn, no fix
-%   - timing
-%       - absolute timing
-%           - req integers
-%               - warn, no fix
-%           - req within range
-%               - warn, no fix
-%       - spectral timing
-%           - any inconsistency
-%               - error
-%       - normal timing
-%           - fix inconsistent
-%           - warn on time acc. decay
-%   - vsdata
-%       - warn/fix inconsistent
-%       - error on malformed
-%   - location
-%       - fix
 
 % check input
 if(nargin<1)
     error('seizmo:checkheader:notEnoughInputs',...
         'Not enough input arguments.');
-elseif(nargin==1 || isempty(options))
-    options='all'; 
 end
 
 % check SEIZMO global for quick exit
@@ -197,694 +300,1664 @@ if(~isempty(msg)); error(msg.identifier,msg.message); end
 oldseizmocheckstate=get_seizmocheck_state;
 set_seizmocheck_state(false);
 
-% change header if needed
-if(nargin>2); data=changeheader(data,varargin{:}); end
-
 % grab header setup
 [h,vi]=versioninfo(data);
 
-% check option is valid
-if(~ischar(options) && ~iscellstr(options))
-    error('seizmo:checkheader:badOption','OPTIONS must be strings!');
-end
-valid_options={'all' 'version' 'enums' 'leven' 'delta' 'npts'...
-    'timing' 'vsdata' 'location'};
-options=unique(lower(cellstr(options)));
-if(~isempty(setdiff(options,valid_options)))
-    error('seizmo:checkheader:badOption','Unknown OPTIONS!');
-end
+% parse options
+option=checkparameters(false,varargin{:});
 
-% check version is consistent (required)
-v=getheader(data,'nvhdr');
-if(~isequal([data.version].',v))
-    i=find([data.version].'~=v);
-    error('seizmo:checkheader:verMismatch',...
-        ['Version info is corrupted! NVHDR field for record(s):\n'...
-        sprintf('%d ',i)...
-        '\nis inconsistent with the version stored in the struct!']);
-end
-options(strcmp('version',options))=[];
-if(isempty(options)); set_seizmocheck_state(oldseizmocheckstate); return; end
-
-% check location if needed
-if(~isempty(intersect(options,{'location' 'all'})))
-    data=check_location(data,h,vi);
-    options(strcmp('location',options))=[];
-    if(isempty(options)); set_seizmocheck_state(oldseizmocheckstate); return; end
-end
-
-% check enums (required at this point)
-[nzhour,nzmin,nzsec,nzmsec]=...
-    getheader(data,'nzhour','nzmin','nzsec','nzmsec');
+% get header fields
 [iftype,iztype,idep]=getenumid(data,'iftype','iztype','idep');
-[spectral,xyz]=check_enums(data,iftype,iztype,idep,nzhour,nzmin,nzsec,nzmsec);
-options(strcmp('enums',options))=[];
-if(isempty(options)); set_seizmocheck_state(oldseizmocheckstate); return; end
+[leven,lcalda]=getlgc(data,'leven','lcalda');
+[nvhdr,delta,npts,ncmp,nz,b,e,sb,sdelta,nspts,st,ev,delaz,dep]=...
+    getheader(data,'nvhdr','delta','npts','ncmp','nz','b','e','sb',...
+    'sdelta','nspts','st','ev','delaz','dep');
 
-% check leven (required at this point)
-leven=getlgc(data,'leven');
-[leven]=check_leven(leven,spectral | xyz);
-options(strcmp('leven',options))=[];
-if(isempty(options)); set_seizmocheck_state(oldseizmocheckstate); return; end
+% logicals
+xyz=strcmp(iftype,'ixyz');
+spectral=(strcmp(iftype,'irlim') | strcmp(iftype,'iamph'));
+undef=getsubfield(h(vi),'undef','ntype').';
 
-% check delta (required at this point)
-delta=getheader(data,'delta');
-check_delta(delta);
-options(strcmp('delta',options))=[];
-if(isempty(options)); set_seizmocheck_state(oldseizmocheckstate); return; end
-
-% check npts (required at this point)
-npts=getheader(data,'npts');
-check_npts(npts);
-options(strcmp('npts',options))=[];
-if(isempty(options)); set_seizmocheck_state(oldseizmocheckstate); return; end
-
-% check timing (required at this point)
-[nzyear,nzjday,b,e,sb,sdelta,nspts]=...
-    getheader(data,'nzyear','nzjday','b','e','sb','sdelta','nspts');
-check_absolute_timing(nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec,iftype);
-check_spectral_timing(b,e,delta,npts,sdelta,nspts,spectral);
-[e,delta]=check_normal_timing(b,e,npts,delta,~leven,~xyz & ~spectral);
-options(strcmp('timing',options))=[];
-if(isempty(options))
-    data=changeheader(data,'nzyear',nzyear,'nzjday',nzjday,...
-        'nzhour',nzhour,'nzmin',nzmin,'nzsec',nzsec,'nzmsec',nzmsec,...
-        'e',e,'delta',delta);
-    set_seizmocheck_state(oldseizmocheckstate);
-    return;
+% fudge factor
+try
+    fudge=SEIZMO.CHECKHEADER.FUDGE;
+catch
+    fudge=1e-6;
 end
 
-% check vs data (required at this point)
-[ncmp]=getncmp(data);
-[depmin,depmax,depmen]=getheader(data,'depmin','depmax','depmen');
-[data,b,e,delta,npts,ncmp,depmin,depmax,depmen,leven]=...
-    check_vsdata(data,b,e,delta,npts,ncmp,depmin,depmax,depmen,leven,spectral,h,vi);
-options(strcmp('vsdata',options))=[];
-if(isempty(options))
-    warning('off','seizmo:changeheader:fieldInvalid');
-    data=changeheader(data,'nzyear',nzyear,'nzjday',nzjday,...
-        'nzhour',nzhour,'nzmin',nzmin,'nzsec',nzsec,'nzmsec',nzmsec,...
-        'e',e,'delta',delta,'npts',npts,'ncmp',ncmp,'b',b,'leven',leven,...
-        'depmax',depmax,'depmin',depmin,'depmen',depmen);
-    warning('on','seizmo:changeheader:fieldInvalid');
-    set_seizmocheck_state(oldseizmocheckstate);
-    return; 
+%%%%%%%%%%%%%%%%
+% BEGIN CHECKS %
+%%%%%%%%%%%%%%%%
+
+% check for invalid header version
+if(~strcmp(option.INVALID_NVHDR,'IGNORE'))
+    [nvhdr]=invalid_nvhdr(option.INVALID_NVHDR,h,vi,nvhdr);
 end
+
+% START ENUMS
+% check for invalid data type
+if(~strcmp(option.INVALID_IFTYPE,'IGNORE'))
+    [iftype]=invalid_iftype(option.INVALID_IFTYPE,iftype);
+end
+
+% check for multiple data types
+if(~strcmp(option.MULTIPLE_IFTYPE,'IGNORE'))
+    multiple_iftype(option.MULTIPLE_IFTYPE,iftype);
+end
+
+% check for undefined leven
+if(~strcmp(option.UNSET_LEVEN,'IGNORE'))
+    [leven]=unset_leven(option.UNSET_LEVEN,leven);
+end
+
+% check for invalid uneven
+if(~strcmp(option.INVALID_UNEVEN,'IGNORE'))
+    invalid_uneven(option.INVALID_UNEVEN,spectral | xyz,leven);
+end
+
+% check for invalid reference time type
+if(~strcmp(option.INVALID_IZTYPE,'IGNORE'))
+    [iztype]=invalid_iztype(option.INVALID_IZTYPE,iztype);
+end
+
+% check for invalid reftime fields
+if(~strcmp(option.NONINTEGER_REFTIME,'IGNORE'))
+    [nz]=noninteger_reftime(option.NONINTEGER_REFTIME,nz);
+end
+
+% check for invalid reftime fields
+if(~strcmp(option.UNSET_REFTIME,'IGNORE'))
+    [nz]=unset_reftime(option.UNSET_REFTIME,undef,nz);
+end
+
+% check for invalid reftime fields
+if(~strcmp(option.OUTOFRANGE_REFTIME,'IGNORE'))
+    [nz]=outofrange_reftime(option.OUTOFRANGE_REFTIME,nz);
+end
+
+% check for nonzero iztype
+if(~strcmp(option.NONZERO_IZTYPE,'IGNORE'))
+    [iztype]=nonzero_iztype(option.NONZERO_IZTYPE,spectral,data,nz,iztype);
+end
+
+% check for multiple reference time types
+if(~strcmp(option.MULTIPLE_IZTYPE,'IGNORE'))
+    multiple_iztype(option.MULTIPLE_IZTYPE,iztype);
+end
+
+% check for invalid dependent component type
+if(~strcmp(option.INVALID_IDEP,'IGNORE'))
+    [idep]=invalid_idep(option.INVALID_IDEP,idep);
+end
+
+% check for multiple dependent component types
+if(~strcmp(option.MULTIPLE_IDEP,'IGNORE'))
+    multiple_idep(option.MULTIPLE_IDEP,idep);
+end
+% END ENUMS
+
+% START TIMING
+% check for inconsistent e
+if(~strcmp(option.INCONSISTENT_E,'IGNORE'))
+    [e]=inconsistent_e(...
+        option.INCONSISTENT_E,leven,spectral,b,delta,npts,e);
+end
+
+% check for inaccurate timing
+if(~strcmp(option.INACCURATE_TIMING,'IGNORE'))
+    inaccurate_timing(option.INACCURATE_TIMING,b,delta,e,fudge);
+end
+% END TIMING
+
+% START SPECTRAL
+% check for bad spectral b
+if(~strcmp(option.BAD_SPECTRAL_B,'IGNORE'))
+    [b]=bad_spectral_b(option.BAD_SPECTRAL_B,spectral,b);
+end
+
+% check for bad spectral sdelta
+if(~strcmp(option.BAD_SPECTRAL_SDELTA,'IGNORE'))
+    [sdelta]=bad_spectral_sdelta(...
+        option.BAD_SPECTRAL_SDELTA,spectral,undef,e,sdelta);
+end
+
+% check for bad spectral e
+if(~strcmp(option.BAD_SPECTRAL_E,'IGNORE'))
+    [e]=bad_spectral_e(option.BAD_SPECTRAL_E,spectral,sdelta,e,fudge);
+end
+
+% check for bad spectral npts
+if(~strcmp(option.BAD_SPECTRAL_NPTS,'IGNORE'))
+    bad_spectral_npts(option.BAD_SPECTRAL_NPTS,spectral,npts);
+end
+
+% check for bad spectral nspts
+if(~strcmp(option.BAD_SPECTRAL_NSPTS,'IGNORE'))
+    [nspts]=bad_spectral_nspts(...
+        option.BAD_SPECTRAL_NSPTS,spectral,npts,nspts);
+end
+
+% check for bad spectral delta
+if(~strcmp(option.BAD_SPECTRAL_DELTA,'IGNORE'))
+    [delta]=bad_spectral_delta(...
+        option.BAD_SPECTRAL_DELTA,spectral,e,npts,delta,fudge);
+end
+
+% check for bad spectral sb
+if(~strcmp(option.BAD_SPECTRAL_SB,'IGNORE'))
+    [sb]=bad_spectral_sb(option.BAD_SPECTRAL_SB,spectral,undef,sb);
+end
+% END SPECTRAL
+
+% START LOCATION
+% check for bad lat
+if(~strcmp(option.OUTOFRANGE_LAT,'IGNORE'))
+    [ev,st]=outofrange_lat(option.OUTOFRANGE_LAT,undef,ev,st);
+end
+
+% check for bad lon
+if(~strcmp(option.OUTOFRANGE_LON,'IGNORE'))
+    [ev,st]=outofrange_lon(option.OUTOFRANGE_LON,undef,ev,st);
+end
+
+% check for undef depth
+if(~strcmp(option.UNSET_DEPTH,'IGNORE'))
+    [ev,st]=unset_depth(option.UNSET_DEPTH,undef,ev,st);
+end
+
+% check for undef elev
+if(~strcmp(option.UNSET_ELEV,'IGNORE'))
+    [ev,st]=unset_elev(option.UNSET_ELEV,undef,ev,st);
+end
+
+% check for km depths
+if(~strcmp(option.KM_DEPTH,'IGNORE'))
+    [ev]=km_depth(option.KM_DEPTH,undef,ev);
+end
+
+% check for old delaz
+if(~strcmp(option.OLD_DELAZ,'IGNORE'))
+    [delaz]=old_delaz(option.OLD_DELAZ,undef,lcalda,st,ev,delaz);
+end
+% END LOCATION
+
+% START VSDATA
+% check for mismatch between ncmp and size of dep
+if(~strcmp(option.INCONSISTENT_DEP_NCMP,'IGNORE'))
+    [ncmp]=inconsistent_dep_ncmp(...
+        option.INCONSISTENT_DEP_NCMP,spectral,data,ncmp);
+end
+
+% check for multiple component records
+if(~strcmp(option.MULCMP_DEP,'IGNORE'))
+    mulcmp_dep(option.MULCMP_DEP,ncmp);
+end
+
+% check for multiple component records using a non-multi-cmp filetype
+if(~strcmp(option.INVALID_MULCMP_DEP,'IGNORE'))
+    [data,h,vi,nvhdr]=invalid_mulcmp_dep(...
+        option.INVALID_MULCMP_DEP,data,h,vi,nvhdr,ncmp);
+end
+
+% check for negative ncmp
+if(~strcmp(option.NEGATIVE_NCMP,'IGNORE'))
+    [ncmp]=negative_ncmp(option.NEGATIVE_NCMP,ncmp);
+end
+
+% check for no cmp records
+if(~strcmp(option.ZERO_NCMP,'IGNORE'))
+    zero_ncmp(option.ZERO_NCMP,ncmp);
+end
+
+% check for mismatch between ncmp and size of dep for spectral
+if(~strcmp(option.BAD_SPECTRAL_DEP,'IGNORE'))
+    bad_spectral_dep(option.BAD_SPECTRAL_DEP,spectral,data);
+end
+
+% check for missing ind
+if(~strcmp(option.MISSING_IND,'IGNORE'))
+    [leven]=missing_ind(option.MISSING_IND,leven,data);
+end
+
+% check for dataset with some evenly sampled and unevenly sampled records
+if(~strcmp(option.MULTIPLE_LEVEN,'IGNORE'))
+    multiple_leven(option.MULTIPLE_LEVEN,leven);
+end
+
+% clear even with ind
+if(~strcmp(option.EVEN_IND,'IGNORE'))
+    [data]=even_ind(option.EVEN_IND,leven,data);
+end
+
+% check for multiple independent datum
+if(~strcmp(option.MULCMP_IND,'IGNORE'))
+    mulcmp_ind(option.MULCMP_IND,leven,data);
+end
+
+% check for mismatch between dep size and ind size
+if(~strcmp(option.INCONSISTENT_IND_NPTS,'IGNORE'))
+    [data]=inconsistent_ind_npts(...
+        option.INCONSISTENT_IND_NPTS,leven,data);
+end
+
+% check for nonmonotonic ind
+if(~strcmp(option.NONMONOTONIC_IND,'IGNORE'))
+    [data]=nonmonotonic_ind(option.NONMONOTONIC_IND,leven,data);
+end
+
+% check for repeat ind
+if(~strcmp(option.REPEAT_IND,'IGNORE'))
+    [data]=repeat_ind(option.REPEAT_IND,leven,data);
+end
+
+% check for mismatch between npts and size of dep
+if(~strcmp(option.INCONSISTENT_DEP_NPTS,'IGNORE'))
+    [npts]=inconsistent_dep_npts(...
+        option.INCONSISTENT_DEP_NPTS,data,npts);
+end
+
+% check for negative npts
+if(~strcmp(option.NEGATIVE_NPTS,'IGNORE'))
+    [npts]=negative_npts(option.NEGATIVE_NPTS,npts);
+end
+
+% check for zero npts
+if(~strcmp(option.ZERO_NPTS,'IGNORE'))
+    zero_npts(option.ZERO_NPTS,npts);
+end
+
+% check for mismatch between b and ind
+if(~strcmp(option.INCONSISTENT_IND_B,'IGNORE'))
+    [b]=inconsistent_ind_b(option.INCONSISTENT_IND_B,undef,leven,data,b);
+end
+
+% check for mismatch between e and ind
+if(~strcmp(option.INCONSISTENT_IND_E,'IGNORE'))
+    [e]=inconsistent_ind_e(option.INCONSISTENT_IND_E,undef,leven,data,e);
+end
+
+% check for mismatch between delta and ind
+if(~strcmp(option.INCONSISTENT_IND_DELTA,'IGNORE'))
+    [delta]=inconsistent_ind_delta(...
+        option.INCONSISTENT_IND_DELTA,leven,data,delta);
+end
+
+% check for negative delta
+if(~strcmp(option.NEGATIVE_DELTA,'IGNORE'))
+    negative_delta(option.NEGATIVE_DELTA,delta);
+end
+
+% check for zero delta
+if(~strcmp(option.ZERO_DELTA,'IGNORE'))
+    zero_delta(option.ZERO_DELTA,delta);
+end
+
+% check for multiple sample rates
+if(~strcmp(option.MULTIPLE_DELTA,'IGNORE'))
+    multiple_delta(option.MULTIPLE_DELTA,delta);
+end
+
+% check for old dep stats
+if(~strcmp(option.OLD_DEP_STATS,'IGNORE'))
+    [dep]=old_dep_stats(option.OLD_DEP_STATS,undef,data,dep);
+end
+% END VSDATA
+
+%{
+% check for 
+if(~strcmp(option.,'IGNORE'))
+    (option.,);
+end
+%}
 
 % update header
-warning('off','seizmo:changeheader:fieldInvalid');
-data=changeheader(data,'nzyear',nzyear,'nzjday',nzjday,'nzhour',nzhour,...
-    'nzmin',nzmin,'nzsec',nzsec,'nzmsec',nzmsec,'e',e,'delta',delta,...
-    'npts',npts,'ncmp',ncmp,'b',b,'leven',leven,'depmax',depmax,...
-    'depmin',depmin,'depmen',depmen);
-warning('on','seizmo:changeheader:fieldInvalid');
+data=changeheader(data,'nvhdr',nvhdr,'iftype',iftype,'iztype',iztype,...
+    'idep',idep,'leven',leven,'delta',delta,'npts',npts,'ncmp',ncmp,...
+    'nz',nz,'b',b,'e',e,'sb',sb,'sdelta',sdelta,'nspts',nspts,'st',st,...
+    'ev',ev,'delaz',delaz,'dep',dep);
 
 % toggle checking back
 set_seizmocheck_state(oldseizmocheckstate);
 
 end
 
-%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%
+function [nvhdr]=invalid_nvhdr(opt,h,vi,nvhdr)
+bad=find([h(vi).version].'~=nvhdr);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:NVHDRbad';
+    report.message=['Version info corrupted! NVHDR for record(s):\n' ...
+        sprintf('%d ',bad) ...
+        '\nis inconsistent with the version stored in the struct!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            nvhdr=[h(vi).version].';
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting invalid NVHDR to match struct!');
+            nvhdr=[h(vi).version].';
+    end
+end
 
-function [spectral,xyz]=check_enums(data,iftype,iztype,idep,hour,min,sec,msec)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%   BEGIN ENUM CHECK SECTION   %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+end
 
-% create valid enum id lists
+function [iftype]=invalid_iftype(opt,iftype)
 validftype={'itime' 'irlim' 'iamph' 'ixy' 'ixyz'};
-validztype={'iunkn' 'ib' 'iday' 'io' 'ia' 'it0' 'it1' 'it2' 'it3' 'it4'...
+bad=find(~ismember(iftype,validftype));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:IFTYPEbad';
+    report.message=['IFTYPE unknown for record(s):\n' sprintf('%d ',bad) ...
+        '\nMust be one of the following:\n' sprintf('%s ',validftype{:})];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            iftype(bad)={'ixy'};
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting invalid IFTYPE to ''ixy''!');
+            iftype(bad)={'ixy'};
+    end
+end
+
+end
+
+function multiple_iftype(opt,iftype)
+bad=unique(iftype);
+if(~isscalar(bad))
+    report.identifier='seizmo:checkheader:multiIFTYPE';
+    report.message=['Dataset has multiple datatypes:\n' ...
+        sprintf('%s ',bad{:}) ...
+        '\nThis will slow operations down and may cause problems!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO AUTOFIX FOR MULTIPLE DATA TYPES!\n' ...
+                'CONSIDER CONVERTING ALL RECORDS IN\n' ...
+                'YOUR DATASET TO A SINGLE FILETYPE.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR MULTIPLE DATA TYPES!\n' ...
+                'CONSIDER CONVERTING ALL RECORDS IN\n' ...
+                'YOUR DATASET TO A SINGLE FILETYPE.']);
+    end
+end
+
+end
+
+function [leven]=unset_leven(opt,leven)
+validleven={'true' 'false'};
+bad=find(~ismember(leven,validleven));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:unsetLEVEN';
+    report.message=['LEVEN must be TRUE or FALSE for records:\n'...
+        sprintf('%d ',bad)];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            leven(bad)={'true'};
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting invalid LEVEN to TRUE!');
+            leven(bad)={'true'};
+    end
+end
+
+end
+
+function []=invalid_uneven(opt,reqeven,leven)
+bad=find(reqeven & strcmp(leven,'false'));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:badUneven';
+    report.message=['LEVEN must be TRUE for Spectral/XYZ records:\n'...
+        sprintf('%d ',bad)];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp('NO AUTOFIX FOR UNEVEN SPECTRAL/XYZ! FIX IT MANUALLY.');
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('NO AUTOFIX FOR UNEVEN SPECTRAL/XYZ! FIX IT MANUALLY.');
+    end
+end
+
+end
+
+function [iztype]=invalid_iztype(opt,iztype)
+validztype={'iunkn' 'ib' 'iday' 'io' 'ia' 'it0' 'it1' 'it2' 'it3' 'it4' ...
     'it5' 'it6' 'it7' 'it8' 'it9'};
+bad=find(~ismember(iztype,validztype));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:IZTYPEbad';
+    report.message=['IZTYPE unknown for record(s):\n' sprintf('%d ',bad) ...
+        '\nMust be one of the following:\n' sprintf('%s ',validztype{:})];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            iztype(bad)={'iunkn'};
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting invalid IZTYPE to ''iunkn''!');
+            iztype(bad)={'iunkn'};
+    end
+end
+
+end
+
+function [nz]=noninteger_reftime(opt,nz)
+bad=nz~=fix(nz);
+badrec=find(logical(sum(bad,2)));
+if(~isempty(badrec))
+    report.identifier='seizmo:checkheader:nonintREF';
+    report.message=['Reference time fields for record(s):\n' ...
+        sprintf('%d ',badrec) ...
+        'stored as noninteger values!  This will cause problems.'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            nz=fix(nz(bad));
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Truncating decimal portion of NZ* fields!');
+            nz=fix(nz(bad));
+    end
+end
+
+end
+
+function [nz]=unset_reftime(opt,undef,nz)
+bad=nz==undef(:,ones(size(nz,2),1)) | isnan(nz) | isinf(nz);
+badrec=find(logical(sum(bad,2)));
+bad=find(bad);
+column=1+fix((bad-1)/size(bad,1));
+if(~isempty(badrec))
+    report.identifier='seizmo:checkheader:undefREF';
+    report.message=['Reference time fields for record(s):\n' ...
+        sprintf('%d ',badrec) ...
+        'have undefined values!  This will cause problems.'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            nz(bad(column~=2))=0;
+            nz(bad(column==2))=1;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting NZ* fields to 0 (and NZJDAY to 1)!');
+            nz(bad(column~=2))=0;
+            nz(bad(column==2))=1;
+    end
+end
+
+end
+
+function [nz]=outofrange_reftime(opt,nz)
+bad1=false(size(nz,1),1);
+bad2=nz(:,2)<1 | nz(:,2)>366 | (nz(:,2)==366 & ~isleapyear(nz(:,1)));
+bad3=nz(:,3)<0 | nz(:,3)>23;
+bad4=nz(:,4)<0 | nz(:,4)>59;
+bad5=nz(:,5)<0 | nz(:,5)>60; % allow for leapsecond & precision error
+bad6=nz(:,6)<0 | nz(:,6)>999;
+bad=find(bad1 | bad2 | bad3 | bad4 | bad5 | bad6);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:outofrangeRef';
+    report.message=['Records:\n' sprintf('%d ',bad)...
+        '\nReference time fields NZ* not in defined range!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO AUTOFIX FOR OUT OF RANGE REFERENCE TIME!\n' ...
+                'CONSIDER USING fixtimes.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR OUT OF RANGE REFERENCE TIME!\n' ...
+                'CONSIDER USING fixtimes.']);
+    end
+end
+
+end
+
+function [iztype]=nonzero_iztype(opt,spectral,data,nz,iztype)
+day=strcmp('iday',iztype);
+badday=find(day & logical(sum(nz(:,3:6)~=0,2)));
+unkn=strcmp('iunkn',iztype);
+other=find(~day & ~unkn);
+b=strcmp('ib',iztype);
+if(any(spectral & b)); iztype(spectral & b)={'isb'}; end
+if(isscalar(unique(iztype(other))))
+    iz=unique(iztype(other));
+    izt=getheader(data(other),iz{1}(2:end));
+    bad=other(abs(izt)>0.001);
+else
+    bad=true(numel(other),1);
+    for i=1:numel(other)
+        bad(i)=abs(getheader(data(other(i)),...
+            iztype{other(i)}(2:end)))>0.001;
+    end
+end
+if(any(spectral & b)); iztype(spectral & b)={'ib'}; end
+bad=[bad(:); badday(:)];
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:nonzeroIZTYPE';
+    report.message=['Header inconsistency found! Records:\n' ...
+        sprintf('%d ',bad)...
+        '\nNZHOUR, NZMIN, NZSEC, NZMSEC are not zero for IZTYPE=IDAY\n' ...
+        'or IZTYPE corresponds to a header field and that field is\n' ...
+        'not zero (must be within 0.001s)!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            iztype(bad)={'iunkn'};
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting IZTYPE to ''iunkn'' for nonzero!');
+            iztype(bad)={'iunkn'};
+    end
+end
+
+end
+
+function multiple_iztype(opt,iztype)
+bad=unique(iztype);
+if(~isscalar(bad))
+    report.identifier='seizmo:checkheader:multiIZTYPE';
+    report.message=['Dataset has multiple reference time types:\n' ...
+        sprintf('%s ',bad{:})];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO AUTOFIX FOR MULTIPLE REFERENCE TIME TYPES! ' ...
+                'CONSIDER SETTING ALL TO ''iunkn'' ' ...
+                'OR USING synchronize.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR MULTIPLE REFERENCE TIME TYPES! ' ...
+                'CONSIDER SETTING ALL TO ''iunkn'' ' ...
+                'OR USING synchronize.']);
+    end
+end
+
+end
+
+function [idep]=invalid_idep(opt,idep)
 validdep={'iunkn' 'idisp' 'ivel' 'iacc' 'ivolts' 'iabsmnt' ...
         'iabsity' 'iabseler' 'iabserk' 'iabsnap' 'iabsackl' 'iabspop' ...
         'ijerk' 'isnap' 'icrackle' 'ipop'};
-
-% check data type
-if(~isempty(setdiff(iftype,validftype)))
-    i=find(~ismember(iftype,validftype));
-    error('seizmo:checkheader:badFileType',...
-        ['IFTYPE field id unknown for record(s):\n' sprintf('%d ',i)...
-        '\nMust be one of the following:\n' sprintf('%s ',validftype{:})]);
-end
-
-% check dependent component type
-if(~isempty(setdiff(idep,validdep)))
-    i=find(~ismember(idep,validdep));
-    warning('seizmo:checkheader:badDepType',...
-        ['IDEP field id unknown for record(s):\n' sprintf('%d ',i)...
-        '\nShould be one of the following:\n' sprintf('%s ',validdep{:})]);
-end
-
-% check reference type
-i=find(~ismember(iztype,validztype));
-badztype=false(size(data(:))); badztype(i)=true;
-if(~isempty(i))
-    warning('seizmo:checkheader:badRefType',...
-        ['IZTYPE field id unknown for record(s):\n' sprintf('%d ',i)...
-        '\nShould be one of the following:\n' sprintf('%s ',validztype{:})]);
-end
-
-% get logicals for spectral and xyz datatypes
-xyz=strcmp(iftype,'ixyz');
-spectral=(strcmp(iftype,'irlim') | strcmp(iftype,'iamph'));
-
-% check day iztype
-dayztype=strcmp('iday',iztype);
-if(any(dayztype & (hour~=0 | min~=0 | sec~=0 | msec~=0)))
-    i=find(dayztype & (hour~=0 | min~=0 | sec~=0 | msec~=0));
-    warning('seizmo:checkheader:badRefTime',...
-        ['Header inconsistency found!\n'...
-        'Records:\n' sprintf('%d ',i)...
-        '\nNZHOUR, NZMIN, NZSEC, NZMSEC should be 0 for IZTYPE=IDAY!']);
-end
-
-% check reference field is zero
-goodztype=(~badztype & ~strcmp('iunkn',iztype) & ~dayztype);
-if(any(spectral)); iztype(spectral & strcmp('ib',iztype))={'isb'}; end
-if(isscalar(unique(iztype(goodztype))))
-    iz=unique(iztype(goodztype));
-    izt=getheader(data(goodztype),iz{1}(2:end));
-    if(any(abs(izt)>0.001)) % handle reftime millisec limitation
-        i=find(izt);
-        warning('seizmo:checkheader:badRefTime',...
-            ['Header inconsistency found!\n'...
-            '%s field not set to 0 for record(s):\n' sprintf('%d ',i)...
-            '\nIZTYPE field indicates that it is!'],upper(iz{1}(2:end)));
-    end
-else
-    for i=find(goodztype).';
-        if(abs(getheader(data(i),iztype{i}(2:end)))>0.001)
-            warning('seizmo:checkheader:badRefTime',...
-            ['Header inconsistency found!\n'...
-            'Record %d: %s field not set to 0, '...
-            'but IZTYPE indicates that it is!'],...
-                i,upper(iztype{i}(2:end)));
-        end
+bad=find(~ismember(idep,validdep));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:IDEPbad';
+    % only show first 5 (the rest are kinda crazy)
+    report.message=['IDEP unknown for record(s):\n' sprintf('%d ',bad) ...
+        '\nMust be one of the following:\n' sprintf('%s ',validdep{1:5})];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            idep(bad)={'iunkn'};
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting invalid IDEP to ''iunkn''!');
+            idep(bad)={'iunkn'};
     end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%    END ENUM CHECK SECTION    %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
-
-function [tru]=check_leven(leven,truereq)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%  BEGIN LEVEN CHECK SECTION   %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% leven must be true/false!
-tru=strcmp(leven,'true');
-fals=strcmp(leven,'false');
-if(~all(tru | fals))
-    i=find(~(tru | fals));
-    error('seizmo:checkheader:levenBad',...
-        ['LEVEN field must be set TRUE or FALSE for records:\n'...
-        sprintf('%d ',i)]);
+function multiple_idep(opt,idep)
+bad=unique(idep);
+if(~isscalar(bad))
+    report.identifier='seizmo:checkheader:multiIDEP';
+    report.message=['Dataset has multiple dependent component types:\n' ...
+        sprintf('%s ',bad{:})];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO AUTOFIX FOR MULTIPLE DEPENDENT COMPONENT TYPES! ' ...
+                'CONSIDER SETTING ALL TO ''iunkn'' ' ...
+                'OR USING integrate & differentiate.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR MULTIPLE DEPENDENT COMPONENT TYPES! ' ...
+                'CONSIDER SETTING ALL TO ''iunkn'' ' ...
+                'OR USING integrate & differentiate.']);
+    end
 end
 
-% leven must be true!
-if(any(fals & truereq))
-    i=find(fals & truereq);
-    error('seizmo:checkheader:levenBad',...
-        ['LEVEN field must be set TRUE for Spectral/XYZ records:\n'...
-        sprintf('%d ',i)]);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%    END LEVEN CHECK SECTION   %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function multiple_leven(opt,leven)
+bad=unique(leven);
+if(~isscalar(bad))
+    report.identifier='seizmo:checkheader:multiLEVEN';
+    report.message=['Dataset has some evenly & unevenly sampled '...
+        'records!\n' ...
+        'This will slow some operations down and may cause problems!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO AUTOFIX FOR MULTIPLE SAMPLING TYPES!\n' ...
+                'CONSIDER USING interpolate TO EVENLY SAMPLE UNEVEN.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR MULTIPLE SAMPLING TYPES!\n' ...
+                'CONSIDER USING interpolate TO EVENLY SAMPLE UNEVEN.']);
+    end
 end
 
-
-function []=check_delta(delta)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%  BEGIN DELTA CHECK SECTION   %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% for ghassan
-% warn when the dataset has differing sample rates
-if(~isscalar(unique(delta)))
-    d=unique(delta);
-    warning('seizmo:checkheader:multiDELTA',...
-        ['Dataset has records with differing samplerates!\n' ...
-        'DELTAs:\n' sprintf('%d ',d)]);
 end
 
-% soft requirement: delta > 0
-% note that this is only required because negative delta breaks some code
-if(any(delta<=0))
-    i=find(delta<=0);
-    warning('seizmo:checkheader:negativeDELTA',...
-        ['Records:\n' sprintf('%d ',i) '\nDELTA<=0 may cause problems!']);
+function multiple_delta(opt,delta)
+bad=unique(delta);
+if(~isscalar(bad))
+    report.identifier='seizmo:checkheader:multiDELTA';
+    report.message=['Dataset has multiple sample intervals:\n' ...
+        sprintf('%d ',bad)];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO AUTOFIX FOR MULTIPLE SAMPLE INTERVALS! ' ...
+                'CONSIDER USING syncrates.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR MULTIPLE SAMPLE INTERVALS! ' ...
+                'CONSIDER USING syncrates.']);
+    end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%    END DELTA CHECK SECTION   %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
-
-function []=check_npts(npts)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%   BEGIN NPTS CHECK SECTION   %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% check npts>=0
-if(any(npts<0))
-    i=find(npts<0);
-    warning('seizmo:checkheader:negativeNPTS',...
-        ['Records:\n' sprintf('%d ',i) '\nNPTS<0 may cause problems!']);
+function negative_delta(opt,delta)
+bad=find(delta<0);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:negativeDELTA';
+    report.message=['DELTA for record(s):\n' ...
+        sprintf('%d ',bad) ...
+        '\nis NEGATIVE (time decreases in the record).\n' ...
+        'This will cause problems!'];
+    report.message='';
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO AUTOFIX FOR NEGATIVE SAMPLE INTERVALS!\n' ...
+                'CONSIDER USING reverse & changing B, E, DELTA']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR NEGATIVE SAMPLE INTERVALS!\n' ...
+                'CONSIDER USING reverse & changing B, E, DELTA']);
+    end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%    END NPTS CHECK SECTION    %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
-
-function []=check_absolute_timing(year,jday,hour,minute,sec,msec,iftype)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% BEGIN ABS TIMING CHECK SECTION %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% which are time series records
-ts=strcmp(iftype,'itime');
-
-% check for nonintegers
-if(any([year jday hour minute sec msec]...
-        ~=fix([year jday hour minute sec msec])))
-    i=[year jday hour minute sec msec]...
-        ~=fix([year jday hour minute sec msec]);
-    warning('seizmo:checkheader:badRefTime',...
-        ['Records:\n' sprintf('%d ',i) '\nNZ fields should be integers!']);
+function zero_delta(opt,delta)
+bad=find(delta==0);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:zeroDELTA';
+    report.message=['DELTA for record(s):\n' ...
+        sprintf('%d ',bad) ...
+        '\nis ZERO (all points have the same time in the record).\n' ...
+        'This will likely cause problems!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO AUTOFIX FOR ZERO DELTA! '...
+                'TRY TO FIGURE OUT THE CAUSE.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR ZERO DELTA! '...
+                'TRY TO FIGURE OUT THE CAUSE.']);
+    end
 end
 
-% check range ok
-badjday=(jday<1 | jday>366 | (jday==366 & ~isleapyear(year)));
-badhour=(hour<0 | hour>23);
-badmin=(minute<0 | minute>59);
-badsec=(sec<0 | sec>60);
-badmsec=(msec<0 | msec>999);
-if(any(ts & (badjday | badhour | badmin | badsec | badmsec)))
-    i=find(ts & (badjday | badhour | badmin | badsec | badmsec));
-    warning('seizmo:checkheader:badRefTime',...
-        ['Time Series Records:\n' sprintf('%d ',i)...
-        '\nReference NZJDAY or NZ time fields not in defined range!']);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% END ABS TIMING CHECK SECTION %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [npts]=negative_npts(opt,npts)
+bad=find(npts<0);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:negativeNPTS';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nNPTS is negative!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            npts(npts<0)=0;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting negative NPTS to 0!');
+            npts(npts<0)=0;
+    end
 end
 
-
-function []=check_spectral_timing(b,e,d,n,sd,sn,s)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% BEGIN SPECTRAL TIMING CHECK SECTION %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% quick exit if none
-if(~any(s)); return; end
-
-% get fudge factor
-global SEIZMO
-try
-    fudge=SEIZMO.CHECKHEADER.FUDGE;
-catch
-    fudge=1e-6;
 end
 
-% assure b==0
-if(any(b(s)~=0))
-    i=find(s & b~=0);
-    error('seizmo:checkheader:badB',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nB field for Spectral records must be 0!']);
+function zero_npts(opt,npts)
+bad=find(npts==0);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:zeroNPTS';
+    report.message=['Record(s):\n' sprintf('%d ',bad) '\nNPTS is zero!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp('NO AUTOFIX FOR ZERO NPTS! TRY TO FIGURE OUT THE CAUSE.');
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('NO AUTOFIX FOR ZERO NPTS! TRY TO FIGURE OUT THE CAUSE.');
+    end
 end
 
-% check npts=2^?
-if(any(n(s)~=2.^ceil(log2(n(s)))))
-    i=find(s & (n~=2.^ceil(log2(n))));
-    error('seizmo:checkheader:badNPTS',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nNPTS field for Spectral records must be a power of 2!']);
 end
 
-% cross check e is nyquist
-if(any(abs(e(s)-1./(2*sd(s)))>fudge*e(s)))
-    i=find(s & (abs(e-1./(2*sd))>fudge*e(s)));
-    error('seizmo:checkheader:badE',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nE field for Spectral records gives the Nyquist frequency\n'...
-        'and must be consistent with SDELTA (E=1/(2*SDELTA))!']);
+function mulcmp_dep(opt,ncmp)
+bad=find(ncmp>1);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:NCMPgt1';
+    report.message=['Record(s):\n' sprintf('%d ',bad) '\nNCMP>1!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp('NO AUTOFIX FOR NCMP>1! CONSIDER USING splitrecords.');
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('NO AUTOFIX FOR NCMP>1! CONSIDER USING splitrecords.');
+    end
 end
 
-% cross check nspts with npts
-if(any(sn(s)<0) || any(sn(s)>n(s)))
-    i=find(s & (sn<0 | sn>n));
-    error('seizmo:checkheader:badNSPTS',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nNSPTS field for Spectral records gives the number of\n'...
-        'points in the time domain and must be >0 and <=NPTS!']);
 end
 
-% cross check delta with npts & sdelta
-if(any(abs(d(s)-1./(n(s).*sd(s)))>fudge*d(s)))
-    i=find(s & (abs(d-1./(n.*sd))>fudge*d));
-    error('seizmo:checkheader:badDELTA',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nDELTA field for Spectral records gives the frequency\n'...
-        'resolution and must be consistent with SDELTA and NPTS!']);
+function [data,h,vi,nvhdr]=invalid_mulcmp_dep(opt,data,h,vi,nvhdr,ncmp)
+bad=find(ncmp>1 & ~getsubfield(h(vi),'mulcmp','valid').');
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:versNotMulCmp';
+    report.message=['Record(s):\n' sprintf('%d ',bad)...
+            '\nDo not support multiple components!\n'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            mulcmp=getsubfield(h(vi(bad)),'mulcmp');
+            nvhdr(bad)=[mulcmp.altver];
+            [data(bad).filetype]=deal(mulcmp.alttype);
+            [data(bad).version]=deal(mulcmp.altver);
+            [h,vi]=versioninfo(data);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Changing to a multi-component version!');
+            mulcmp=getsubfield(h(vi(bad)),'mulcmp');
+            nvhdr(bad)=[mulcmp.altver];
+            [data(bad).filetype]=deal(mulcmp.alttype);
+            [data(bad).version]=deal(mulcmp.altver);
+            [h,vi]=versioninfo(data);
+    end
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% END SPECTRAL TIMING CHECK SECTION %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
 
-
-function [e,delta]=check_normal_timing(b,e,npts,delta,fals,tsxy)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%  BEGIN TIMING CHECK SECTION  %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% get fudge factor
-global SEIZMO
-try
-    fudge=SEIZMO.CHECKHEADER.FUDGE;
-catch
-    fudge=1e-6;
+function [ncmp]=negative_ncmp(opt,ncmp)
+bad=find(ncmp<0);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:negativeNCMP';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nNCMP is negative!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            ncmp(ncmp<0)=0;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting negative NCMP to 0!');
+            ncmp(ncmp<0)=0;
+    end
 end
 
-% for uneven files just adjust delta
-delta(fals)=(e(fals)-b(fals))./(npts(fals)-1);
+end
 
-% for even files just adjust e (itime and ixy)
-check=~fals & tsxy;
-e(check)=b(check)+delta(check).*(npts(check)-1);
+function zero_ncmp(opt,ncmp)
+bad=find(ncmp==0);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:zeroNCMP';
+    report.message=['Record(s):\n' sprintf('%d ',bad) '\nNCMP is zero!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp('NO AUTOFIX FOR ZERO NCMP! TRY TO FIGURE OUT THE CAUSE.');
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('NO AUTOFIX FOR ZERO NCMP! TRY TO FIGURE OUT THE CAUSE.');
+    end
+end
 
-% check delta is resolvable for the entire record
-d=b+delta-b;
-if(any(abs(d-delta)/delta>fudge))
-    % require timing to be accurate to 1 millionth of a sample interval
-    i=find(abs(d-delta)/delta>fudge);
-    warning('seizmo:checkheader:timecorrupt',...
-        ['Records:\n' sprintf('%d ',i)...
+end
+
+function [e]=inconsistent_e(opt,leven,spectral,b,delta,npts,e)
+bad=find(strcmp(leven,'true') & ~spectral & e~=b+(npts-1).*delta);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:inconsistentE';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nE is inconsistent with that expected from B,NPTS,DELTA!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            e(bad)=b(bad)+(npts(bad)-1).*delta(bad);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting E to match expected!');
+            e(bad)=b(bad)+(npts(bad)-1).*delta(bad);
+    end
+end
+
+end
+
+function inaccurate_timing(opt,b,delta,e,fudge)
+bad=find((b+delta-b-delta)/delta>fudge | (e+delta-e-delta)/delta>fudge);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:timingDegraded';
+    report.message=['Records:\n' sprintf('%d ',bad)...
         '\nDELTA is too insignificant to be well resolved!\n'...
         'This can introduce significant numerical error!\n'...
         'It is recommended to adjust the relative timing so\n'...
         'that the sample interval can be resolved.  This may\n'...
         'require splitting the record into smaller segments\n'...
-        'or simply just changing the reference time to be\n'...
-        'closer to the time of the record.']);
-end
-d=e+delta-e;
-if(any(abs(d-delta)/delta>fudge))
-    % require timing to be accurate to 1 millionth of a sample interval
-    i=find(abs(d-delta)/delta>fudge);
-    warning('seizmo:checkheader:timecorrupt',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nDELTA is too insignificant to be well resolved!\n'...
-        'This can introduce significant numerical error!\n'...
-        'It is recommended to adjust the relative timing so\n'...
-        'that the sample interval can be resolved.  This may\n'...
-        'require splitting the record into smaller segments\n'...
-        'or simply just changing the reference time to be\n'...
-        'closer to the time of the record.']);
-end
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%   END TIMING CHECK SECTION   %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-end
-
-
-function [data,b,e,delta,npts,ncmp,depmin,depmax,depmen,tru,h,vi]=...
-    check_vsdata(data,b,e,delta,npts,ncmp,depmin,depmax,depmen,tru,s,h,vi)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%  BEGIN VSDATA CHECK SECTION  %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% get fudge factor
-global SEIZMO
-try
-    fudge=SEIZMO.CHECKHEADER.FUDGE;
-catch
-    fudge=1e-6;
-end
-
-% hasdata
-ok=[data.hasdata].';
-idx=find(ok);
-
-% quick exit
-if(isempty(idx)); return; end
-
-% get dep data size
-[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
-nrows=nrows(:); ncols=ncols(:);
-
-% check npts
-if(any(nrows~=npts(ok)))
-    i=idx(nrows~=npts(ok));
-    warning('seizmo:checkheader:nptsInconsistent',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nNPTS does not match data!\n'...
-        'Changing NPTS to match data!']);
-    npts(ok)=nrows;
-end
-
-% fix/check ncol for spectral
-ncols(s(ok))=ncols(s(ok))/2;
-if(any(ncols(s(ok))~=fix(ncols(s(ok)))))
-    i=idx(ncols(s(ok))~=fix(ncols(s(ok))));
-    error('seizmo:checkheader:badDATA',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nSpectral records must have an even number of columns!']);
-end
-
-% check ncmp
-if(any(ncols~=ncmp(ok)))
-    i=idx(ncols~=ncmp(ok));
-    warning('seizmo:checkheader:ncmpInconsistent',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nNCMP does not match data!\n'...
-        'Changing NCMP to match data!']);
-    ncmp(ok)=ncols;
-end
-
-% make sure header can handle multiple components if needed
-if(any(ok & ncmp>1))
-    mok=ok & ncmp>1;
-    verch=~getsubfield(h(vi),'mulcmp','valid').';
-    if(any(verch(mok)))
-        % change version
-        goch=verch & mok;
-        warning('seizmo:checkheader:versNotMulCmp',...
-            ['Records:\n' sprintf('%d ',find(goch))...
-            '\nDo not support multiple components!\n'...
-            'Changing to a multi-component version!']);
-        mulcmp=getsubfield(h(vi(goch)),'mulcmp');
-        data(goch)=changeheader(data(goch),'nvhdr',[mulcmp.altver]);
-        [data(goch).filetype]=deal(mulcmp.alttype);
-        [data(goch).version]=deal(mulcmp.altver);
-        [h,vi]=versioninfo(data);
+        'or possibly just changing the reference time to be\n'...
+        'closer to the time range of the record.'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp('NO AUTOFIX FOR INACCURATE TIMING!');
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('NO AUTOFIX FOR INACCURATE TIMING!');
     end
 end
 
-% work on uneven
-fals=~tru;
-uidx=find(fals & ok);
-if(~isempty(uidx))
-    % require .ind field for uneven
-    if(~isfield(data,'ind'))
-        warning('seizmo:checkheader:noIND',...
-            ['Records:\n' sprintf('%d ',uidx)...
-            '\nLEVEN set FALSE requires an independent component\n'...
-            'dataset but there is none.  Changing LEVEN to TRUE!']);
-        fals(ok)=false;
-    else
-        % get ind data size
-        [nirows,nicols]=arrayfun(@(x)size(x.ind),data(uidx));
-        
-        % switch empty .ind to even
-        noind=~(nirows.*nicols) & npts(uidx);
-        if(any(noind))
-            warning('seizmo:checkheader:noINDdata',...
-                ['Records:\n' sprintf('%d ',uidx(noind))...
-                'LEVEN set FALSE requires an independent component\n'...
-                'dataset but there is none.  Changing LEVEN to TRUE!']);
-            fals(uidx(noind))=false;
-            nirows(noind)=[];
-            nicols(noind)=[];
-            uidx(noind)=[];
-        end
-        
-        % make sure only 1 .ind cmp
-        if(any(nicols>1))
-            error('seizmo:checkheader:badNumCMP',...
-                ['Records:\n' sprintf('%d ',find(nicols>1))...
-                'Too many independent components (only 1 allowed)!'])
-        end
-        
-        % make .dep & .ind consistent npts
-        if(any(nirows~=npts(uidx)))
-            bad=nirows~=npts(uidx);
-            i=uidx(bad);
-            warning('seizmo:checkheader:nptsInconsistent',...
-                ['Records:\n' sprintf('%d ',i)...
-                'NPTS inconsistent between IND and DEP data!\n'...
-                'Truncating longer dataset to length of shorter!']);
-            for j=find(bad)';
-                if(nirows(j)>npts(uidx(j)))
-                    data(uidx(j)).ind=data(uidx(j)).ind(1:npts(uidx(j)));
-                else
-                    npts(uidx(j))=nirows(j);
-                    data(uidx(j)).dep=data(uidx(j)).dep(1:nirows(j),:);
-                end
-            end
-        end
-        
-        % update uneven fields
-        b(uidx(npts(uidx)==0))=nan;
-        e(uidx(npts(uidx)==0))=nan;
-        b(uidx(npts(uidx)>0))=...
-            arrayfun(@(x)x.ind(1),data(uidx(npts(uidx)>0)));
-        e(uidx(npts(uidx)>0))=...
-            arrayfun(@(x)x.ind(end),data(uidx(npts(uidx)>0)));
-        delta(uidx(npts(uidx)>1))=...
-            arrayfun(@(x)diff(x.ind([1 end])),...
-            data(uidx(npts(uidx)>1)))./npts(uidx(npts(uidx)>1));
+end
+
+function [b]=bad_spectral_b(opt,spectral,b)
+bad=find(spectral & b~=0);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:badSpectralB';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nB for spectral records must be 0!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            b(bad)=0;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting spectral B to 0!');
+            b(bad)=0;
     end
 end
 
-% work on even
-tru=~fals;
-if(~isempty(tru))
-    % clear .ind
-    if(isfield(data,'ind'))
-        for i=find(tru)'
-            data(i).ind=[];
-        end
+end
+
+function [sdelta]=bad_spectral_sdelta(opt,spectral,undef,e,sdelta)
+bad=spectral & (sdelta==undef | isnan(sdelta) | isinf(sdelta));
+badd=find(bad & (e==undef | isnan(e) | isinf(e)));
+bad=find(bad);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:badSpectralSDELTA';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nSDELTA for spectral records must be defined!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            sdelta(bad)=1./(2*e);
+            if(any(badd)); sdelta(badd)=1; end
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['==> Setting SDELTA based on E ' ...
+                '(set to 1 if E is undef)!']);
+            sdelta(bad)=1./(2*e);
+            if(any(badd)); sdelta(badd)=1; end
     end
-    
-    % update e
-    tts=tru & ~s;
-    e(tts)=b(tts)+(npts(tts)-1).*delta(tts);
 end
 
-% update dep stats if npts>0
-somepts=npts>0 & ok;
-depmin(somepts)=arrayfun(@(x)min(x.dep(:)),data(somepts));
-depmax(somepts)=arrayfun(@(x)max(x.dep(:)),data(somepts));
-depmen(somepts)=arrayfun(@(x)mean(x.dep(:)),data(somepts));
-
-% check delta is resolvable for the entire record
-d=b+delta-b;
-if(any(abs(d-delta)/delta>fudge))
-    % require timing to be accurate to 1 millionth of a sample interval
-    i=find(abs(d-delta)/delta>fudge);
-    warning('seizmo:checkheader:timecorrupt',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nDELTA is too insignificant to be well resolved!\n'...
-        'This can introduce significant numerical error!\n'...
-        'It is recommended to adjust the relative timing so\n'...
-        'that the sample interval can be resolved.  This may\n'...
-        'require splitting the record into smaller segments\n'...
-        'or simply just changing the reference time to be\n'...
-        'closer to the time of the record.']);
-end
-d=e+delta-e;
-if(any(abs(d-delta)/delta>fudge))
-    % require timing to be accurate to 1 millionth of a sample interval
-    i=find(abs(d-delta)/delta>fudge);
-    warning('seizmo:checkheader:timecorrupt',...
-        ['Records:\n' sprintf('%d ',i)...
-        '\nDELTA is too insignificant to be well resolved!\n'...
-        'This can introduce significant numerical error!\n'...
-        'It is recommended to adjust the relative timing so\n'...
-        'that the sample interval can be resolved.  This may\n'...
-        'require splitting the record into smaller segments\n'...
-        'or simply just changing the reference time to be\n'...
-        'closer to the time of the record.']);
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%   END VSDATA CHECK SECTION   %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [e]=bad_spectral_e(opt,spectral,sdelta,e,fudge)
+bad=find(spectral & abs((e-1./(2*sdelta))./e)>fudge);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:badSpectralE';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+        '\nE for spectral records gives the Nyquist frequency\n'...
+        'and must be consistent with SDELTA (E=1/(2*SDELTA))!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            e(bad)=1./(2*sdelta(bad));
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['==> Setting E based on SDELTA ' ...
+                '(set to 0.5 if SDELTA is undef)!']);
+            e(bad)=1./(2*sdelta(bad));
+    end
 end
 
-function [data]=check_location(data,h,vi)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% BEGIN LOCATION CHECK SECTION %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-% get event/station location info
-[evla,evlo,stla,stlo,gcarc,az,baz,dist]=...
-    getheader(data,'evla','evlo','stla','stlo','gcarc','az','baz','dist');
-
-% check for undefined (version specific)
-defevla=false(numel(data),1); defevlo=defevla;
-defstla=defevla; defstlo=defevla;
-for i=1:numel(h)
-    % which to check
-    check=(vi==i);
-    
-    % find lat lon that are defined
-    defevla(check)=(evla(check)~=h(i).undef.ntype);
-    defevlo(check)=(evlo(check)~=h(i).undef.ntype);
-    defstla(check)=(stla(check)~=h(i).undef.ntype);
-    defstlo(check)=(stlo(check)~=h(i).undef.ntype);
 end
 
-% latitude check - needs to be 90 to -90
-badevla=(evla>90 | evla<-90);
-evla(defevla & badevla)=nan; 
-defevla(badevla)=false;
-badstla=(stla>90 | stla<-90);
-stla(defstla & badstla)=nan; 
-defstla(badstla)=false;
+function bad_spectral_npts(opt,spectral,npts)
+bad=find(spectral & npts~=2.^ceil(log2(npts)));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:badSpectralNPTS';
+    report.message=['Records:\n' sprintf('%d ',bad)...
+        '\nNPTS field for spectral records must be a power of 2!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO FIX FOR SPECTRAL NPTS NOT A POWER OF 2!\n' ...
+                'TRY TO FIGURE OUT THE CAUSE.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO FIX FOR SPECTRAL NPTS NOT A POWER OF 2!\n' ...
+                'TRY TO FIGURE OUT THE CAUSE.']);
+    end
+end
 
-% longitude fix 
-% - first set to positive (0 to 360)
-% - then set for symmetry (-180 to 180)
-evlo(defevlo)=mod(evlo(defevlo),360);
-stlo(defstlo)=mod(stlo(defstlo),360);
-evlo(defevlo & evlo>180)=evlo(defevlo & evlo>180)-360;
-stlo(defstlo & stlo>180)=stlo(defstlo & stlo>180)-360;
+end
+
+function [nspts]=bad_spectral_nspts(opt,spectral,npts,nspts)
+bad=find(spectral & (nspts<0 | nspts>npts));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+        '\nNSPTS field for spectral records gives the number of\n' ...
+        'points in the time domain and must be >=0 and <=NPTS!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            nspts(bad)=npts(bad);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting invalid NSPTS to equal NPTS!');
+            nspts(bad)=npts(bad);
+    end
+end
+
+end
+
+function [delta]=bad_spectral_delta(opt,spectral,e,npts,delta,fudge)
+bad=find(spectral & abs((delta-2*e./npts)./delta)>fudge);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:badSpectralDELTA';
+    report.message=['Records:\n' sprintf('%d ',bad)...
+        '\nDELTA for spectral records gives the frequency\n'...
+        'resolution and must be consistent with E and NPTS!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            delta(bad)=2*e(bad)./npts(bad);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting DELTA based on E & NPTS!');
+            delta(bad)=2*e(bad)./npts(bad);
+    end
+end
+
+end
+
+function [sb]=bad_spectral_sb(opt,spectral,undef,sb)
+bad=find(spectral & (sb==undef | isnan(sb) | isinf(sb)));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:badSpectralSB';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nSB for spectral records must be defined!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            sb(bad)=0;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting SB to 0!');
+            sb(bad)=0;
+    end
+end
+
+end
+
+function [ev,st]=outofrange_lat(opt,undef,ev,st)
+badev=abs(ev(:,1))>90 & ...
+    ~(ev(:,1)==undef | isnan(ev(:,1)) | isinf(ev(:,1)));
+badst=abs(st(:,1))>90 & ...
+    ~(st(:,1)==undef | isnan(st(:,1)) | isinf(st(:,1)));
+bad=find(badev | badst);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:outOfRangeLat';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nEVLA/STLA must be in range -90 to 90!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            ev(badev,1)=latmod(ev(badev,1),90);
+            st(badst,1)=latmod(st(badst,1),90);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Unwrapping out of range latitudes!');
+            ev(badev,1)=latmod(ev(badev,1),90);
+            st(badst,1)=latmod(st(badst,1),90);
+    end
+end
+
+end
+
+function [ev,st]=outofrange_lon(opt,undef,ev,st)
+badev=abs(ev(:,2))>180 & ...
+    ~(ev(:,2)==undef | isnan(ev(:,2)) | isinf(ev(:,2)));
+badst=abs(st(:,2))>180 & ...
+    ~(st(:,2)==undef | isnan(st(:,2)) | isinf(st(:,2)));
+bad=find(badev | badst);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:outOfRangeLon';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nEVLO/STLO must be in range -180 to 180!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            ev(badev,2)=lonmod(ev(badev,2),360);
+            st(badst,2)=lonmod(st(badst,2),360);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Unwrapping out of range longitudes!');
+            ev(badev,2)=lonmod(ev(badev,2),360);
+            st(badst,2)=lonmod(st(badst,2),360);
+    end
+end
+
+end
+
+function [ev,st]=unset_depth(opt,undef,ev,st)
+badev=ev(:,4)==undef | isnan(ev(:,4)) | isinf(ev(:,4));
+badst=st(:,4)==undef | isnan(st(:,4)) | isinf(st(:,4));
+bad=find(badst | badev);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:unsetDepth';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nEVDP/STDP must be defined!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            ev(badev,4)=0;
+            st(badst,4)=0;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting undefined depths to 0!');
+            ev(badev,4)=0;
+            st(badst,4)=0;
+    end
+end
+
+end
+
+function [ev,st]=unset_elev(opt,undef,ev,st)
+badev=ev(:,3)==undef | isnan(ev(:,3)) | isinf(ev(:,3));
+badst=st(:,3)==undef | isnan(st(:,3)) | isinf(st(:,3));
+bad=find(badst | badev);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:unsetElevation';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nEVEL/STEL must be defined!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            ev(badev,3)=0;
+            st(badst,3)=0;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting undefined elevations to 0!');
+            ev(badev,3)=0;
+            st(badst,3)=0;
+    end
+end
+
+end
+
+function [ev]=km_depth(opt,undef,ev)
+bad=find(ev(:,4)<1000 & ev(:,4)>0 & ...
+    (ev(:,4)==undef | isnan(ev(:,4)) | isinf(ev(:,4))));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:possibleKmDepth';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nEVDP must be in meters but appears to be in km!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            ev(bad,4)=ev(bad,4)*1000;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Converting kilometer depth to meters!');
+            ev(bad,4)=ev(bad,4)*1000;
+    end
+end
+
+end
+
+function [delaz]=old_delaz(opt,undef,lcalda,st,ev,delaz)
+
+% get defined st/ev
+def=~logical(sum( ...
+    st(:,1:2)==undef(:,[1 1]) | isnan(st(:,1:2)) | isinf(st(:,1:2)),2)) ...
+    & ~logical(sum( ...
+    ev(:,1:2)==undef(:,[1 1]) | isnan(ev(:,1:2)) | isinf(ev(:,1:2)),2));
 
 % get lcalda (don't mess with those with lcalda == 'false')
-check_loc=~strcmpi(getlgc(data,'lcalda'),'false');
-if(any(check_loc))
-    % undefine fields to be calculated
-    gcarc(check_loc)=nan; az(check_loc)=nan;
-    baz(check_loc)=nan; dist(check_loc)=nan;
+chk=~strcmp(lcalda,'false');
+newdelaz=nan(size(delaz));
+ok=chk & def;
+if(any(ok))
+    % get geocentric latitude
+    geocevla=geodetic2geocentriclat(ev(ok,1));
+    geocstla=geodetic2geocentriclat(st(ok,1));
     
-    % delaz calc (only if all lat lon defined)
-    def=(defevla & defevlo & defstla & defstlo & check_loc);
-    if(any(def))
-        % get geocentric latitude
-        geocevla=geodetic2geocentriclat(evla(def));
-        geocstla=geodetic2geocentriclat(stla(def));
-        
-        % get gcarc, az, baz based on sphere (great-circle-arc)
-        [gcarc(def),az(def),baz(def)]=...
-            sphericalinv(geocevla,evlo(def),geocstla,stlo(def));
-        
-        % get km dist based on ellipsoid (geodesic)
-        dist(def)=vincentyinv(evla(def),evlo(def),stla(def),stlo(def));
+    % get gcarc, az, baz based on sphere (great-circle-arc)
+    [newdelaz(ok,1),newdelaz(ok,2),newdelaz(ok,3)]=...
+        sphericalinv(geocevla,ev(ok,2),geocstla,st(ok,2));
+    
+    % get km dist based on ellipsoid (geodesic)
+    newdelaz(ok,4)=vincentyinv(ev(ok,1),ev(ok,2),st(ok,1),st(ok,2));
+end
+
+bad=find(logical(sum(delaz~=newdelaz,2)));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:oldDelAz';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+        '\nGCARC, AZ, BAZ and/or DIST inconsistent w/ STLA/LO & EVLA/LO!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            % replace all to be checked
+            delaz(chk,:)=newdelaz(chk,:);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Updating DELAZ values to match locations!');
+            delaz(chk,:)=newdelaz(chk,:);
     end
 end
 
-% update header
-data=changeheader(data,'evla',evla,'evlo',evlo,'stla',stla,'stlo',stlo,...
-    'gcarc',gcarc,'az',az,'baz',baz,'dist',dist);
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%  END LOCATION CHECK SECTION  %%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 end
+
+function [npts]=inconsistent_dep_npts(opt,data,npts)
+ok=find([data.hasdata].');
+[nrows]=arrayfun(@(x)size(x.dep,1),data(ok));
+bad=nrows~=npts(ok);
+if(any(bad))
+    report.identifier='seizmo:checkheader:NPTSinconsistent';
+    report.message=['Records:\n' sprintf('%d ',ok(bad)) ...
+        '\nNPTS does not match data!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            npts(ok(bad))=nrows(bad);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting NPTS to match data!');
+            npts(ok(bad))=nrows(bad);
+    end
+end
+
+end
+
+function [ncmp]=inconsistent_dep_ncmp(opt,spectral,data,ncmp)
+ok=find([data.hasdata].');
+[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
+ncmp(spectral)=2*ncmp(spectral);
+bad=ncols~=ncmp(ok);
+if(any(bad))
+    report.identifier='seizmo:checkheader:NCMPinconsistent';
+    report.message=['Records:\n' sprintf('%d ',ok(bad)) ...
+        '\nNCMP does not match data!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            ncmp(ok(bad))=ncols(bad);
+            ncmp(spectral)=ncmp(spectral)/2;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting NCMP to match data!');
+            ncmp(ok(bad))=ncols(bad);
+            ncmp(spectral)=ncmp(spectral)/2;
+    end
+end
+
+end
+
+function bad_spectral_dep(opt,spectral,data)
+ok=find([data.hasdata].' & spectral);
+[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
+bad=logical(mod(ncols,2)) | nrows~=2.^ceil(log2(nrows));
+if(any(bad))
+    report.identifier='seizmo:checkheader:badDepSize';
+    report.message=['Records:\n' sprintf('%d ',ok(bad)) ...
+        '\nSpectral records must have even number of columns' ...
+        '\nand NPTS equal to a power of two!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO FIX FOR IMPROPERLY SIZED SPECTRAL DATA!\n' ...
+                'THIS WILL HAVE TO BE DELT WITH MANUALLY.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO FIX FOR IMPROPERLY SIZED SPECTRAL DATA!\n' ...
+                'THIS WILL HAVE TO BE DELT WITH MANUALLY.']);
+    end
+end
+
+end
+
+function [leven]=missing_ind(opt,leven,data)
+ok=find(strcmp(leven,'false') & [data.hasdata].');
+[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
+[nirows,nicols]=arrayfun(@(x)size(x.ind),data(ok));
+bad=ok(~(nirows.*nicols) & (nrows.*ncols));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:noIND';
+    report.message=['Records:\n' sprintf('%d ',bad)...
+            '\nLEVEN set FALSE requires an independent component\n'...
+            'dataset but there is none.'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            leven(bad)=true;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting LEVEN to TRUE!');
+            leven(bad)=true;
+    end
+end
+
+end
+
+function [data]=even_ind(opt,leven,data)
+ok=find(~strcmp(leven,'false') & [data.hasdata].');
+empty=arrayfun(@(x)isempty(x.ind),data(ok));
+bad=ok(~empty);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:unnecessaryIND';
+    report.message=['Records:\n' sprintf('%d ',bad)...
+            '\nLEVEN set TRUE but independent component data present.'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            for i=bad'
+                data(i).ind=[];
+            end
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Clearing .ind!');
+            for i=bad'
+                data(i).ind=[];
+            end
+    end
+end
+
+end
+
+function mulcmp_ind(opt,leven,data)
+ok=find(strcmp(leven,'false') & [data.hasdata].');
+[nirows,nicols]=arrayfun(@(x)size(x.ind),data(ok));
+bad=ok(nicols>1);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:badNumIndCmp';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+                '\nToo many independent components (only 1 allowed)!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            disp(['NO FIX FOR 2+ INDEPENDENT COMPONENTS!\n' ...
+                'THIS WILL HAVE TO BE DELT WITH MANUALLY.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO FIX FOR 2+ INDEPENDENT COMPONENTS!\n' ...
+                'THIS WILL HAVE TO BE DELT WITH MANUALLY.']);
+    end
+end
+
+end
+
+function [data]=inconsistent_ind_npts(opt,leven,data)
+ok=find(strcmp(leven,'false') & [data.hasdata].');
+nrows=arrayfun(@(x)size(x.dep,1),data(ok));
+nirows=arrayfun(@(x)size(x.ind,1),data(ok));
+bad=ok(nrows~=nirows);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:inconsistentNPTS';
+    report.message=['Records:\n' sprintf('%d ',bad)...
+                '\nNPTS inconsistent between IND and DEP data!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            for i=bad';
+                if(nirows(i)>nrows(i))
+                    data(i).ind=data(i).ind(1:nrows(i));
+                else
+                    data(i).dep=data(i).dep(1:nirows(i),:);
+                end
+            end
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Truncating longer dataset to length of shorter!');
+            for i=bad';
+                if(nirows(i)>nrows(i))
+                    data(i).ind=data(i).ind(1:nrows(i));
+                else
+                    data(i).dep=data(i).dep(1:nirows(i),:);
+                end
+            end
+    end
+end
+
+end
+
+function [data]=nonmonotonic_ind(opt,leven,data)
+ok=find(strcmp(leven,'false') & [data.hasdata].');
+bad=ok(arrayfun(@(x)double(min(diff(x.ind))),data(ok))<0);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:nonmonotonicIND';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+                '\nIndependent component must be monotonic!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            for i=bad'
+                [data(i).ind,idx]=sort(data(i).ind);
+                data(i).dep=data(i).dep(idx,:);
+            end
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Sorting IND and DEP!');
+            for i=bad'
+                [data(i).ind,idx]=sort(data(i).ind);
+                data(i).dep=data(i).dep(idx,:);
+            end
+    end
+end
+
+end
+
+function [data]=repeat_ind(opt,leven,data)
+ok=find(strcmp(leven,'false') & [data.hasdata].');
+bad=ok(arrayfun(@(x)any(diff(sort(x.ind))==0),data(ok)));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:repeatIND';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+                '\nIndependent component must not have repeated values!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            for i=bad'
+                [data(i).ind,idx]=unique(data(i).ind);
+                data(i).dep=data(i).dep(idx,:);
+            end
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            for i=bad'
+                [data(i).ind,idx]=unique(data(i).ind);
+                data(i).dep=data(i).dep(idx,:);
+            end
+    end
+end
+
+end
+
+function [b]=inconsistent_ind_b(opt,undef,leven,data,b)
+newb=undef;
+ok=find(strcmp(leven,'false') & [data.hasdata].');
+empty=arrayfun(@(x)isempty(x.ind),data(ok));
+newb(ok(~empty))=arrayfun(@(x)double(x.ind(1)),data(ok(~empty)));
+bad=ok(b(ok)~=newb(ok));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:';
+    report.message='';
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            b(bad)=newb(bad);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting B to match data!');
+            b(bad)=newb(bad);
+    end
+end
+
+end
+
+function [e]=inconsistent_ind_e(opt,undef,leven,data,e)
+newe=undef;
+ok=find(strcmp(leven,'false') & [data.hasdata].');
+empty=arrayfun(@(x)isempty(x.ind),data(ok));
+newe(ok(~empty))=arrayfun(@(x)double(x.ind(end)),data(ok(~empty)));
+bad=ok(e(ok)~=newe(ok));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:oldE';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+                '\nE does not match data!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            e(bad)=newe(bad);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting E to match data!');
+            e(bad)=newe(bad);
+    end
+end
+
+end
+
+function [delta]=inconsistent_ind_delta(opt,leven,data,delta)
+ok=find(strcmp(leven,'false') & [data.hasdata].');
+ok=ok(arrayfun(@(x)numel(x.ind)>1,data(ok)));
+newd=arrayfun(@(x)double(x.ind(end)-x.ind(1))/(size(x.ind,1)-1),data(ok));
+bad=ok(delta(ok)~=newd);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:oldDelta';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+                '\nDELTA does not match data!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            delta(bad)=newd(bad);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Setting DELTA to match data!');
+            delta(bad)=newd(bad);
+    end
+end
+
+end
+
+function [dep]=old_dep_stats(opt,undef,data,dep)
+undef=undef(:,[1 1 1]); newdep=undef;
+dep(isinf(dep) | isnan(dep))=undef(isinf(dep) | isnan(dep));
+ok=find([data.hasdata].');
+empty=arrayfun(@(x)isempty(x.dep),data(ok));
+newdep(ok(~empty),:)=[ ...
+    arrayfun(@(x)double(min(x.dep(:))),data(ok(~empty))) ...
+    arrayfun(@(x)mean(double(x.dep(:))),data(ok(~empty))) ...
+    arrayfun(@(x)double(max(x.dep(:))),data(ok(~empty)))];
+bad=ok(logical(sum(dep(ok,:)~=newdep(ok,:),2)));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:oldDepStats';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+                '\nDEP stats do not match data!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            dep(bad,:)=newdep(bad,:);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Updating DEP stats to match data!');
+            dep(bad,:)=newdep(bad,:);
+    end
+end
+
+end
+
+%{
+function []=(opt,)
+bad=find();
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:';
+    report.message='';
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            
+    end
+end
+
+end
+%}

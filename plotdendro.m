@@ -1,4 +1,4 @@
-function [perm,colors,fh,sfh]=plotdendro(Z,data,varargin)
+function [perm,colors,fh,sfh]=plotdendro(data,Z,varargin)
 %PLOTDENDRO    Plots correlation linkage and seismograms
 %
 %    Usage: [PERM,COLORS,FH,SFH]=...
@@ -52,7 +52,7 @@ end
 P=plotconfigfix(P);
 
 % number of records
-nrecs=length(data);
+nrecs=numel(data);
 
 % select/open plot
 if(isempty(P.FIGHANDLE) || P.FIGHANDLE<1)
@@ -85,6 +85,7 @@ catch
     [H,H2,perm]=dendrogram(Z,0,'labels',S,...
         'orientation','left','colorthreshold',P.TREELIMIT);
 end
+perm=perm.';
 
 % style the plot
 set(sfh(1),'fontname',P.AXISFONT,'fontweight',P.AXISFONTWEIGHT,...

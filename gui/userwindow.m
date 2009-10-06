@@ -8,12 +8,12 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %              [data,win]=userwindow(...)
 %              [data,win,fh]=userwindow(...)
 %
-%    Description: DATA=USERWINDOW(DATA) presents a interactive menu and
-%     plot interface to window a dataset visually with a few mouse clicks.
-%     By default, the windows are not padded with zeros and no mean or
-%     trend removal is done on the windowed records.
+%    Description: DATA=USERWINDOW(DATA) presents an interactive menu and
+%     plot to facilitate windowing a dataset with a few mouse clicks.  By
+%     default, the windowed data is not padded with zeros nor is the mean
+%     or trend removed.
 %
-%     DATA=USERWINDOW(DATA,FILL) allows zero-padding of records in DATA.
+%     DATA=USERWINDOW(DATA,FILL) toggles zero-padding of records in DATA.
 %     If FILL is FALSE or empty (the default), no zero-padding is done.
 %     Set FILL to TRUE to pad incomplete records with zeros so that they
 %     extend across the window.

@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r87 Ararat 16-Sep-2009
+% Version 0.6.0-r97 Ararat 05-Oct-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -14,6 +14,7 @@
 %CHANGENAME          - Change the filename of SEIZMO records
 %CHANGEPATH          - Change the filepath of SEIZMO records
 %CHECKHEADER         - Check and fix header values of SEIZMO records
+%CHECKOPERR          - Controls behavior of SEIZMO CHECKHEADER function
 %COMPAREHEADER       - List SEIZMO data headers side-by-side for easy comparison
 %COPYHEADER          - Copy one record's header to all records
 %CORRELATE           - Compute cross correlograms of SEIZMO data records

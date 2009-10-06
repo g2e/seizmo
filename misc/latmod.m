@@ -1,10 +1,10 @@
-function [c]=sawmod(a,b)
-%SAWMOD    Returns a sawtooth modulus
+function [c]=latmod(a,b)
+%LATMOD    Returns a latitude modulus
 %
-%    Usage:    c=sawmod(a,b)
+%    Usage:    c=latmod(a,b)
 %
-%    Description: SAWMOD(A,B) is S.*(A-N.*X) where N=round(A./B) if B~=0
-%     and S=1-2.*MOD(N,2).  Thus SAWMOD(A,B) is always within the range
+%    Description: LATMOD(A,B) is S.*(A-N.*X) where N=round(A./B) if B~=0
+%     and S=1-2.*MOD(N,2).  Thus LATMOD(A,B) is always within the range
 %     +/-B and forms a continuous function (but discontinuous in the 1st
 %     dirivative).  The function is mainly useful for unwrapping latitude
 %     values back to a valid range.  The inputs A and B must be real arrays
@@ -12,22 +12,23 @@ function [c]=sawmod(a,b)
 %
 %    Notes:
 %     By convention:
-%      sawmod(A,0) returns A
-%      sawmod(A,A) returns A
+%      latmod(A,0) returns A
+%      latmod(A,A) returns A
 %
 %    Examples:
 %     To get latitude values LAT within the range of +/-90:
-%      LAT=sawmod(LAT,90);
+%      LAT=latmod(LAT,90);
 %
-%    See also: cmod, mod, rem
+%    See also: lonmod, mod, rem
 
 %     Version History:
 %        Mar. 24, 2009 - initial version
 %        Apr. 23, 2009 - move usage up
 %        Sep.  7, 2009 - minor doc update
+%        Sep. 30, 2009 - changed name from SAWMOD to LATMOD
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  7, 2009 at 08:10 GMT
+%     Last Updated Sep. 30, 2009 at 15:25 GMT
 
 % todo:
 

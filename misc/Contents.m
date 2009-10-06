@@ -1,8 +1,7 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r94 Ararat 23-Sep-2009
+% Version 0.6.0-r97 Ararat 30-Sep-2009
 %
 % Miscellaneous Support functions
-%CMOD                - Returns a centered modulus
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
 %FISHER              - Converts correlation coefficients to the Z statistic
 %GETAPPLICATION      - Returns application running this script and its version
@@ -10,6 +9,8 @@
 %GETWORDS            - Returns a cell array of words from a string
 %IFISHER             - Converts Z statistics to correlation coefficients
 %JOINWORDS           - Combines a cellstr into a space-separated string
+%LATMOD              - Returns a latitude modulus
+%LONMOD              - Returns a longitude modulus
 %LTI2SUB             - Square matrix lower triangle linear indices to subscripts
 %MATCHSORT           - Replicates a sort operation using the returned permutation indices
 %MCXC                - Multi-channel cross correlation with built-in peak picker
@@ -18,7 +19,6 @@
 %NEXTPOW2N           - Returns the next higher power of 2 for all array elements
 %ONEFILELIST         - Compiles multiple filelists into one
 %READCSV             - Read in .csv formatted file as a structure
-%SAWMOD              - Returns a sawtooth modulus
 %SLIDINGAVG          - Returns sliding-window average of data
 %SNR2MAXPHASEERROR   - Returns maximum narrow-band phase error based on SNR 
 %SORT2LI             - Transforms permutation indices from sort to linear indices

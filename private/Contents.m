@@ -1,7 +1,8 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r83 Ararat 07-Sep-2009
+% Version 0.6.0-r97 Ararat 05-Oct-2009
 %
 % Low-level internal functions
+%CHECKPARAMETERS       - Parses options passed to CHECKHEADER
 %CUTPARAMETERS         - Parses inputs defining the data window(s)
 %GET_CHECKHEADER_STATE - Returns TRUE if CHECKHEADER is on, FALSE if not
 %GETFILEVERSION        - Get filetype, version and byte-order of SEIZMO datafile

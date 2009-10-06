@@ -1,46 +1,156 @@
-function [cutoff,color,perm]=usercluster(data,Z,cutoff,varargin)
+function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %USERCLUSTER    Interactively cluster SEIZMO records
 %
-%    Usage:    data=usercluster(data)
-%              data=usercluster(data,Z)
-%              data=usercluster(data,Z,'field',value,...)
-%              [data,cutoff]=usercluster(...)
-%              [data,cutoff,fh]=usercluster(...)
+%    Usage:    grp=usercluster(data)
+%              grp=usercluster(data,cg)
+%              grp=usercluster(data,cg,cutoff)
+%              grp=usercluster(data,cg,cutoff,method)
+%              grp=usercluster(data,cg,cutoff,method,criterion)
+%              grp=usercluster(data,cg,cutoff,method,criterion,...
+%                              'field1',value1,...,'fieldN',valueN)
+%              [grp,fh]=usercluster(...)
 %
-%    Description:
+%    Description: GRP=USERCLUSTER(DATA) cross correlates the records in
+%     DATA and passes the maximum correlation values to clustering routines
+%     that facilitate rapid segregation of the dataset with just a few
+%     mouse clicks.  GRP is a struct containing several fields providing
+%     the parameters used in the analysis and some related info.  The
+%     layout is as follows:
+%       GRP.cutoff    = clustering limit
+%       GRP.method    = cluster distance method
+%       GRP.criterion = cluster formation method
+%       GRP.perm      = permutation indices for matching plot ordering
+%       GRP.color     = record coloring from plot
+%       GRP.T         = group index for each record
+%
+%     GRP=USERCLUSTER(DATA,CG) passes in the correlation matrix CG.  CG
+%     should be N(N-1)/2 x 1 where N is the number of records in DATA.
+%
+%     GRP=USERCLUSTER(DATA,CG,CUTOFF) sets the dissimilarity cutoff for
+%     forming clusters to CUTOFF.  This should be a value between 0 and 1.
+%     The default value is 0.2.
+%
+%     GRP=USERCLUSTER(DATA,CG,CUTOFF,METHOD) alters the method for forming
+%     the dendrogram.  See the function LINKAGE for details.  The default
+%     is 'average'.
+%
+%     GRP=USERCLUSTER(DATA,CG,CUTOFF,METHOD,CRITERION) set the method for
+%     forming clusters to CRITERION.  The default value is 'inconsistent'.
+%     Another valid value is 'distance'.  See CLUSTER for more info.
+%
+%     GRP=USERCLUSTER(DATA,CG,CUTOFF,METHOD,CRITERION,'FIELD',VALUE,...)
+%     passes field and value pairs on to PLOTDENDRO for further
+%     customization.
+%
+%     [GRP,FH]=USERCLUSTER(...) returns the figure handle in FH.
 %
 %    Notes:
 %
 %    Examples:
+%     Cluster starting with a dissimilarity cutoff of 0.05:
+%      grp=usercluster(data,[],0.05);
 %
-%    See also: userwindow, usertaper, plotdendro, cluster, linkage
+%    See also: userwindow, usertaper, useralign, plotdendro,
+%              cluster, linkage, pdist, inconsistent, dendrogram
 
 %     Version History:
-%        Sep. 22, 2009 - rewrite and added documentation
+%        Sep. 25, 2009 - rewrite and added documentation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2009 at 07:30 GMT
+%     Last Updated Sep. 25, 2009 at 18:30 GMT
 
 % todo:
 
+% check nargin
+msg=nargchk(1,inf,nargin);
+if(~isempty(msg)); error(msg); end
+if(nargin>5 && ~mod(nargin,2))
+    error('seizmo:usercluster:badNumInputs',...
+        'Bad number of arguments!');
+end
+
+% check data structure
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% correlate if no second input
+if(nargin==1 || isempty(cg))
+    disp('CORRELATING DATASET (MAY TAKE A FEW MINUTES)')
+    peaks=correlate(data,'npeaks',1);
+    cg=peaks.cg;
+end
+
+% check correlation grid
+cg=squeeze(cg); sz=size(cg);
+if(sz(2)~=1 || numel(sz)>2)
+    error('seizmo:usercluster:badCorrGrid',...
+        'CG does not have proper dimensions!');
+end
+
+% default dendrogram cutoff
+if(nargin<3 || isempty(cutoff)); cutoff=0.2; end
+if(~isreal(cutoff) || ~isscalar(cutoff))
+    error('seizmo:usercluster:badCutoff',...
+        'CUTOFF must be a number from 0 and 1');
+end
+if(cutoff<0); cutoff=0; end
+if(cutoff>1); cutoff=1; end
+
+% default/check method
+if(nargin<4 || isempty(method)); method='average'; end
+
+% default/check criterion
+if(nargin<5 || isempty(criterion)); criterion='inconsistent'; end
+if(~any(strcmpi(criterion,{'inconsistent' 'distance'})))
+    error('seizmo:usercluster:badCriterion',...
+        'CRITERION must be ''inconsistent'' or ''distance''!');
+end
+
+% get linkage
+Z=linkage(1-cg.',method);
+
+% save parameters
+grp.cutoff=cutoff;
+grp.method=method;
+grp.criterion=criterion;
+
 % cluster analysis loop
+disp('WAITING ON USER INPUT ON CLUSTER CUTOFF')
 while (1)
-    % default limit
-    %cutoff=0.03;
-    
     % dendrogram/waveforms
-    [perm,color,fh,sfh]=plotdendro(Z,data,'treelimit',cutoff,varargin{:});
+    [grp.perm,grp.color,fh,sfh]=plotdendro(data,Z,varargin{:},...
+        'treelimit',grp.cutoff);
     drawnow;
-    
-    mymenu={'Please choose a cutoff in the dendrogram to indicate';
-            'the maximum dissimilarity link for clusters.';
-            '  '
-            'USAGE';
-            '================================';
-            'Left click   -=> indicates cutoff position';
-            'Middle click -=> finalizes the cutoff';
-            '================================'};
-    menu(mymenu,'OK');
+    prompt={'+-------------------------------------------------------+'
+            '|               Welcome to SEIZMO''s interactive clustering function              |'
+            '+-------------------------------------------------------+'
+            '|                                                                                                               |'
+            '|                                            MOUSE USAGE                                             |'
+            '|                                                                                                               |'
+            '|    LEFT CLICK                      MIDDLE CLICK                      RIGHT CLICK   |'
+            '+-------------+          +-------------+          +--------------+'
+            '|     Set Cluster                      Finalize Limit                                              |'
+            '|         Limit                                                                                              |'
+            '+-------------------------------------------------------+'};
+    % way cooler menu -- if only matlab gui's used fixed width
+    %{
+    prompt={'+-------------------------------------------------------+'
+            '|  Welcome to SEIZMO''s interactive clustering function  |'
+            '+-------------------------------------------------------+'
+            '|                                                       |'
+            '|                     MOUSE USAGE:                      |'
+            '|                                                       |'
+            '|   LEFT CLICK        MIDDLE CLICK         RIGHT CLICK  |'
+            '+---------------+   +--------------+    +---------------+'
+            '|  Set Cluster       Finalize Limit                     |'
+            '|     Limit                                             |'
+            '+-------------------------------------------------------+'};
+    %}
+    menu(prompt,'OK');
     
     % loop until right click
     button=1;
@@ -52,24 +162,29 @@ while (1)
         
         % action on left click
         if (button==1)
-            cutoff=x;
+            grp.cutoff=x;
             
             % redraw plot (to show new grouping)
             delete(sfh);
-            [perm,color,fh,sfh]=plotdendro(Z,data,'treelimit',cutoff,...
-                'fighandle',fh,varargin{:});
+            [grp.perm,grp.color,fh,sfh]=plotdendro(data,Z,varargin{:},...
+                'treelimit',grp.cutoff,'fighandle',fh);
         end
     end
     
     % check satisfaction
-    done=menu('Keep groups?','YES','NO - TRY AGAIN','NO - DIE!');
-    if(done==1)
-        return;
-    elseif(done==2)
-        close(fh);
-    elseif(done==3)
-        % DEATH!
-        error('user seppuku')
+    done=menu('KEEP GROUPS?','YES','NO - TRY AGAIN','NO - DIE!');
+    switch done
+        case 1 % rainbow's end
+            disp(['DISSIMILARITY LIMIT SET TO: ' num2str(grp.cutoff)])
+            grp.T=cluster(Z,'cutoff',grp.cutoff,'criterion',criterion);
+            set_seizmocheck_state(oldseizmocheckstate);
+            return;
+        case 2 % never never quit
+            close(fh);
+        case 3 % i bear too great a shame to go on
+            set_seizmocheck_state(oldseizmocheckstate);
+            error('seizmo:userwindow:killYourSelf',...
+                'User demanded Seppuku!')
     end
 end
 

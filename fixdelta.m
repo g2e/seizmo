@@ -3,23 +3,25 @@ function [data]=fixdelta(data,tol)
 %
 %    Usage:    data=fixdelta(data)
 %
-%    Description: DATA=FIXDELTA(DATA) fixes the sample spacing (DELTA
+%    Description: DATA=FIXDELTA(DATA) modifies the sample spacing (DELTA
 %     header field) of records in DATA to be the decimal equivalent of a
 %     fraction of 2 small integers.  This is particularly useful for
-%     upgrading the sample spacing from single to double precision as it
-%     extends the precision.
+%     upgrading the sample spacing from single to double precision when the
+%     original sample spacing can be expressed as the fraction of two small
+%     integers, as it extends the precision significantly.
 %
 %     DATA=FIXDELTA(DATA,TOL) allows specifying the maximum tolerance TOL
-%     that the fraction of 2 small integers must match DELTA within.  So
-%     a tolerance of 1e-4 requires the new sample rate to be within 1e-4 of
-%     the old sample rate.
+%     that the fraction of 2 small integers must match DELTA within.  For
+%     example, a tolerance of 1e-4 requires the new sample rate to be
+%     within 0.01% of the original sample rate.  The default tolerance is
+%     1e-6 (0.0001% of the original sample rate).
 %
 %    Notes:
 %
 %    Header changes: DELTA
 %
 %    Examples:
-%     Force the double precision and update the delta field:
+%     Force double precision and update the delta field:
 %      data=fixdelta(changeclass(data,'double'));
 %
 %    See also: rat, changeclass
@@ -34,9 +36,10 @@ function [data]=fixdelta(data,tol)
 %        Nov. 22, 2008 - doc update
 %        Dec.  5, 2008 - tolerance option added
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Oct.  5, 2009 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Oct.  5, 2009 at 21:45 GMT
 
 % todo:
 
