@@ -42,7 +42,7 @@ function [report]=seizmocheck(data,varargin)
 %        Feb. 28, 2008 - initial version
 %        Mar.  2, 2008 - require nonempty data structure
 %        Mar.  4, 2008 - fix error statement
-%        Apr. 18, 2008 - fixed isfield to work with R14sp1
+%        Apr. 18, 2008 - fixed isfield to work with R14SP1
 %        June 12, 2008 - doc update
 %        Sep. 14, 2008 - doc update, input checks, return on first issue
 %        Sep. 25, 2008 - checks versions are valid
@@ -63,9 +63,10 @@ function [report]=seizmocheck(data,varargin)
 %        May  29, 2009 - minor doc update
 %        Sep. 11, 2009 - added misc field
 %        Oct.  5, 2009 - added warnings for multi-filetype/version/endian
+%        Oct.  6, 2009 - use new function ISVALIDSEIZMO (R14SP1 fix)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 17:20 GMT
+%     Last Updated Oct.  6, 2009 at 18:30 GMT
 
 % todo:
 
@@ -142,9 +143,7 @@ else
         report.message='SEIZMO struct HASDATA field must be a logical!';
     elseif(any(cellfun('isempty',filetypes)) || ~iscellstr(filetypes)...
             || any(cellfun('prodofsize',versions)~=1)...
-            || any(cellfun('isempty',cellfun(@(x,y)intersect(x,y),...
-            cellfun(@(x)validseizmo(x),filetypes,'UniformOutput',false),...
-            versions,'UniformOutput',false))))
+            || any(~isvalidseizmo(filetypes,versions)))
         report.identifier='seizmo:seizmocheck:versionBad';
         report.message=['SEIZMO struct FILETYPE and VERSION fields '...
             'must be valid!'];

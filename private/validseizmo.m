@@ -1,10 +1,14 @@
 function [valid]=validseizmo(filetype)
-%VALIDSEIZMO    Returns valid SEIZMO datafile versions
+%VALIDSEIZMO    Returns valid SEIZMO datafile filetypes or versions
 %
-%    Usage:    valid_versions=validseizmo(filetype)
+%    Usage:    valid_filetypes=validseizmo()
+%              valid_versions=validseizmo(filetype)
 %
-%    Description: VALIDSEIZMO(FILETYPE) returns a vector of version numbers
-%     of the specified filetype FILETYPE that SEIZMO can work with.  If the
+%    Description: VALIDSEIZMO() returns a cellstr array of filetypes that
+%     SEIZMO will work with.
+%
+%     VALIDSEIZMO(FILETYPE) returns a vector of version numbers of the
+%     specified filetype FILETYPE that SEIZMO can work with.  If the
 %     filetype is not supported, VALIDSEIZMO will return an empty array.
 %
 %    Notes:
@@ -12,6 +16,9 @@ function [valid]=validseizmo(filetype)
 %     - SEIZMO versions 101,200,201 are modifications of SAC version 6
 %
 %    Examples:
+%     What filetypes are supported?
+%      validseizmo()
+%
 %     How many different SEIZMO binary file versions are supported:
 %      length(validseizmo('SEIZMO Binary'))
 %
@@ -32,21 +39,32 @@ function [valid]=validseizmo(filetype)
 %                        not supported by SAC -- this makes things a bit
 %                        easier for multiple component support
 %        Sep. 25, 2009 - undid hack mentioned above
+%        Oct.  6, 2009 - new usage form to return valid filetypes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 25, 2009 at 07:40 GMT
+%     Last Updated Oct.  6, 2009 at 18:20 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
+msg=nargchk(0,1,nargin);
 if(~isempty(msg)); error(msg); end
 
-% get versions
-if(strcmpi(filetype,'SAC Binary'))
-    valid=6;
-elseif(strcmpi(filetype,'SEIZMO Binary'))
-    valid=[101 200 201];
+if(nargin)
+    % handle empty
+    if(isempty(filetype)); valid=[]; return; end
+    
+    % get versions
+    switch lower(filetype)
+        case 'sac binary'
+            valid=6;
+        case 'seizmo binary'
+            valid=[101 200 201];
+        otherwise
+            valid=[];
+    end
+else
+    valid={'SAC Binary'; 'SEIZMO Binary'};
 end
 
 end

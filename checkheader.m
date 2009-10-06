@@ -272,9 +272,10 @@ function [data]=checkheader(data,varargin)
 %                        multiple samplerates
 %        Sep. 25, 2009 - fixed/updated multi-cmp code, allow iztype<1e-3
 %        Oct.  5, 2009 - major revision
+%        Oct.  6, 2009 - drop arrayfun usage (R14SP1 fix)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 22:00 GMT
+%     Last Updated Oct.  6, 2009 at 19:55 GMT
 
 % todo:
 
@@ -1586,11 +1587,14 @@ end
 
 function [npts]=inconsistent_dep_npts(opt,data,npts)
 ok=find([data.hasdata].');
-[nrows]=arrayfun(@(x)size(x.dep,1),data(ok));
-bad=nrows~=npts(ok);
-if(any(bad))
+nrows=nan(size(npts));
+for i=ok.'; nrows(i)=size(data(i).dep,1); end
+bad=ok(nrows(ok)~=npts(ok));
+%[nrows]=arrayfun(@(x)size(x.dep,1),data(ok));
+%bad=nrows~=npts(ok);
+if(~isempty(bad))
     report.identifier='seizmo:checkheader:NPTSinconsistent';
-    report.message=['Records:\n' sprintf('%d ',ok(bad)) ...
+    report.message=['Records:\n' sprintf('%d ',bad) ...
         '\nNPTS does not match data!'];
     switch opt
         case 'ERROR'
@@ -1598,11 +1602,11 @@ if(any(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
-            npts(ok(bad))=nrows(bad);
+            npts(bad)=nrows(bad);
         case 'WARNFIX'
             warning(report.identifier,report.message);
             disp('==> Setting NPTS to match data!');
-            npts(ok(bad))=nrows(bad);
+            npts(bad)=nrows(bad);
     end
 end
 
@@ -1610,12 +1614,14 @@ end
 
 function [ncmp]=inconsistent_dep_ncmp(opt,spectral,data,ncmp)
 ok=find([data.hasdata].');
-[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
+nrows=nan(size(ncmp)); ncols=nrows;
+for i=ok.'; [nrows(i),ncols(i)]=size(data(i).dep); end
+%[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
 ncmp(spectral)=2*ncmp(spectral);
-bad=ncols~=ncmp(ok);
-if(any(bad))
+bad=ok(ncols(ok)~=ncmp(ok));
+if(~isempty(bad))
     report.identifier='seizmo:checkheader:NCMPinconsistent';
-    report.message=['Records:\n' sprintf('%d ',ok(bad)) ...
+    report.message=['Records:\n' sprintf('%d ',bad) ...
         '\nNCMP does not match data!'];
     switch opt
         case 'ERROR'
@@ -1623,12 +1629,12 @@ if(any(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
-            ncmp(ok(bad))=ncols(bad);
+            ncmp(bad)=ncols(bad);
             ncmp(spectral)=ncmp(spectral)/2;
         case 'WARNFIX'
             warning(report.identifier,report.message);
             disp('==> Setting NCMP to match data!');
-            ncmp(ok(bad))=ncols(bad);
+            ncmp(bad)=ncols(bad);
             ncmp(spectral)=ncmp(spectral)/2;
     end
 end
@@ -1637,11 +1643,14 @@ end
 
 function bad_spectral_dep(opt,spectral,data)
 ok=find([data.hasdata].' & spectral);
-[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
-bad=logical(mod(ncols,2)) | nrows~=2.^ceil(log2(nrows));
-if(any(bad))
+nrows=nan(size(ok)); ncols=nrows;
+for i=1:numel(ok); [nrows(i),ncols(i)]=size(data(ok(i)).dep); end
+%[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
+%bad=logical(mod(ncols,2)) | nrows~=2.^ceil(log2(nrows));
+bad=ok(mod(ncols,2) | nrows~=2.^ceil(log2(nrows)));
+if(~isempty(bad))
     report.identifier='seizmo:checkheader:badDepSize';
-    report.message=['Records:\n' sprintf('%d ',ok(bad)) ...
+    report.message=['Records:\n' sprintf('%d ',bad) ...
         '\nSpectral records must have even number of columns' ...
         '\nand NPTS equal to a power of two!'];
     switch opt
@@ -1663,8 +1672,13 @@ end
 
 function [leven]=missing_ind(opt,leven,data)
 ok=find(strcmp(leven,'false') & [data.hasdata].');
-[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
-[nirows,nicols]=arrayfun(@(x)size(x.ind),data(ok));
+nrows=nan(size(ok)); ncols=nrows; nirows=nrows; nicols=nrows;
+for i=1:numel(ok)
+    [nrows(i),ncols(i)]=size(data(ok(i)).dep);
+    [nirows(i),nicols(i)]=size(data(ok(i)).ind);
+end
+%[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
+%[nirows,nicols]=arrayfun(@(x)size(x.ind),data(ok));
 bad=ok(~(nirows.*nicols) & (nrows.*ncols));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:noIND';
@@ -1689,8 +1703,10 @@ end
 
 function [data]=even_ind(opt,leven,data)
 ok=find(~strcmp(leven,'false') & [data.hasdata].');
-empty=arrayfun(@(x)isempty(x.ind),data(ok));
-bad=ok(~empty);
+bad=false(size(ok));
+for i=1:numel(ok); bad(i)=isempty(data(ok(i)).ind); end
+bad=ok(bad);
+%bad=ok(~arrayfun(@(x)isempty(x.ind),data(ok)));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:unnecessaryIND';
     report.message=['Records:\n' sprintf('%d ',bad)...
@@ -1701,13 +1717,13 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
-            for i=bad'
+            for i=bad.'
                 data(i).ind=[];
             end
         case 'WARNFIX'
             warning(report.identifier,report.message);
             disp('==> Clearing .ind!');
-            for i=bad'
+            for i=bad.'
                 data(i).ind=[];
             end
     end
@@ -1717,7 +1733,9 @@ end
 
 function mulcmp_ind(opt,leven,data)
 ok=find(strcmp(leven,'false') & [data.hasdata].');
-[nirows,nicols]=arrayfun(@(x)size(x.ind),data(ok));
+nirows=nan(size(ok)); nicols=nirows;
+for i=1:numel(ok); [nirows(i),nicols(i)]=size(data(ok(i)).ind); end
+%[nirows,nicols]=arrayfun(@(x)size(x.ind),data(ok));
 bad=ok(nicols>1);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badNumIndCmp';
@@ -1742,8 +1760,13 @@ end
 
 function [data]=inconsistent_ind_npts(opt,leven,data)
 ok=find(strcmp(leven,'false') & [data.hasdata].');
-nrows=arrayfun(@(x)size(x.dep,1),data(ok));
-nirows=arrayfun(@(x)size(x.ind,1),data(ok));
+nrows=nan(size(ok)); nirows=nrows;
+for i=1:numel(ok)
+    nrows(i)=size(data(ok(i)).dep,1);
+    nirows(i)=size(data(ok(i)).ind,1);
+end
+%nrows=arrayfun(@(x)size(x.dep,1),data(ok));
+%nirows=arrayfun(@(x)size(x.ind,1),data(ok));
 bad=ok(nrows~=nirows);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:inconsistentNPTS';
@@ -1755,7 +1778,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
-            for i=bad';
+            for i=bad.';
                 if(nirows(i)>nrows(i))
                     data(i).ind=data(i).ind(1:nrows(i));
                 else
@@ -1765,7 +1788,7 @@ if(~isempty(bad))
         case 'WARNFIX'
             warning(report.identifier,report.message);
             disp('==> Truncating longer dataset to length of shorter!');
-            for i=bad';
+            for i=bad.';
                 if(nirows(i)>nrows(i))
                     data(i).ind=data(i).ind(1:nrows(i));
                 else
@@ -1779,7 +1802,12 @@ end
 
 function [data]=nonmonotonic_ind(opt,leven,data)
 ok=find(strcmp(leven,'false') & [data.hasdata].');
-bad=ok(arrayfun(@(x)double(min(diff(x.ind))),data(ok))<0);
+bad=false(size(ok));
+for i=1:numel(ok)
+    if(~isempty(data(ok(i)).ind)); bad(i)=min(diff(data(ok(i)).ind))<0; end
+end
+bad=ok(bad);
+%bad=ok(arrayfun(@(x)double(min(diff(x.ind))),data(ok))<0);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:nonmonotonicIND';
     report.message=['Records:\n' sprintf('%d ',bad) ...
@@ -1808,7 +1836,10 @@ end
 
 function [data]=repeat_ind(opt,leven,data)
 ok=find(strcmp(leven,'false') & [data.hasdata].');
-bad=ok(arrayfun(@(x)any(diff(sort(x.ind))==0),data(ok)));
+bad=false(size(ok));
+for i=1:numel(ok); bad(i)=any(diff(sort(data(ok(i)).ind))==0); end
+bad=ok(bad);
+%bad=ok(arrayfun(@(x)any(diff(sort(x.ind))==0),data(ok)));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:repeatIND';
     report.message=['Records:\n' sprintf('%d ',bad) ...
@@ -1819,13 +1850,14 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
-            for i=bad'
+            for i=bad.'
                 [data(i).ind,idx]=unique(data(i).ind);
                 data(i).dep=data(i).dep(idx,:);
             end
         case 'WARNFIX'
             warning(report.identifier,report.message);
-            for i=bad'
+            disp('==> Sorting and dropping repeated values!');
+            for i=bad.'
                 [data(i).ind,idx]=unique(data(i).ind);
                 data(i).dep=data(i).dep(idx,:);
             end
@@ -1837,8 +1869,11 @@ end
 function [b]=inconsistent_ind_b(opt,undef,leven,data,b)
 newb=undef;
 ok=find(strcmp(leven,'false') & [data.hasdata].');
-empty=arrayfun(@(x)isempty(x.ind),data(ok));
-newb(ok(~empty))=arrayfun(@(x)double(x.ind(1)),data(ok(~empty)));
+for i=ok.'
+    if(~isempty(data(i).ind)); newb(i)=double(data(i).ind(1)); end
+end
+%empty=arrayfun(@(x)isempty(x.ind),data(ok));
+%newb(ok(~empty))=arrayfun(@(x)double(x.ind(1)),data(ok(~empty)));
 bad=ok(b(ok)~=newb(ok));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:';
@@ -1862,8 +1897,11 @@ end
 function [e]=inconsistent_ind_e(opt,undef,leven,data,e)
 newe=undef;
 ok=find(strcmp(leven,'false') & [data.hasdata].');
-empty=arrayfun(@(x)isempty(x.ind),data(ok));
-newe(ok(~empty))=arrayfun(@(x)double(x.ind(end)),data(ok(~empty)));
+for i=ok.'
+    if(~isempty(data(i).ind)); newe(i)=double(data(i).ind(end)); end
+end
+%empty=arrayfun(@(x)isempty(x.ind),data(ok));
+%newe(ok(~empty))=arrayfun(@(x)double(x.ind(end)),data(ok(~empty)));
 bad=ok(e(ok)~=newe(ok));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:oldE';
@@ -1887,9 +1925,18 @@ end
 
 function [delta]=inconsistent_ind_delta(opt,leven,data,delta)
 ok=find(strcmp(leven,'false') & [data.hasdata].');
-ok=ok(arrayfun(@(x)numel(x.ind)>1,data(ok)));
-newd=arrayfun(@(x)double(x.ind(end)-x.ind(1))/(size(x.ind,1)-1),data(ok));
-bad=ok(delta(ok)~=newd);
+bad=false(size(ok)); newd=nan(size(delta));
+for i=1:numel(ok)
+    if(numel(data(ok(i)).ind)>1)
+        bad(i)=true;
+        newd(ok(i))=double(data(ok(i)).ind(end)-data(ok(i)).ind(1)) ...
+            /(size(data(ok(i)).ind,1)-1);
+    end
+end
+ok=ok(bad);
+%ok=ok(arrayfun(@(x)numel(x.ind)>1,data(ok)));
+%newd=arrayfun(@(x)double(x.ind(end)-x.ind(1))/(size(x.ind,1)-1),data(ok));
+bad=ok(delta(ok)~=newd(ok));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:oldDelta';
     report.message=['Records:\n' sprintf('%d ',bad) ...
@@ -1914,11 +1961,18 @@ function [dep]=old_dep_stats(opt,undef,data,dep)
 undef=undef(:,[1 1 1]); newdep=undef;
 dep(isinf(dep) | isnan(dep))=undef(isinf(dep) | isnan(dep));
 ok=find([data.hasdata].');
-empty=arrayfun(@(x)isempty(x.dep),data(ok));
-newdep(ok(~empty),:)=[ ...
-    arrayfun(@(x)double(min(x.dep(:))),data(ok(~empty))) ...
-    arrayfun(@(x)mean(double(x.dep(:))),data(ok(~empty))) ...
-    arrayfun(@(x)double(max(x.dep(:))),data(ok(~empty)))];
+for i=ok.'
+    if(~isempty(data(i).dep))
+        newdep(i,:)=[double(min(data(i).dep(:))) ...
+            mean(double(data(i).dep(:))) ...
+            double(max(data(i).dep(:)))];
+    end
+end
+%empty=arrayfun(@(x)isempty(x.dep),data(ok));
+%newdep(ok(~empty),:)=[ ...
+%    arrayfun(@(x)double(min(x.dep(:))),data(ok(~empty))) ...
+%    arrayfun(@(x)mean(double(x.dep(:))),data(ok(~empty))) ...
+%    arrayfun(@(x)double(max(x.dep(:))),data(ok(~empty)))];
 bad=ok(logical(sum(dep(ok,:)~=newdep(ok,:),2)));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:oldDepStats';
