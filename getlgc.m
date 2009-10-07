@@ -18,10 +18,9 @@ function [varargout]=getlgc(data,varargin)
 %       GETLGC as if they were logical fields.  This gives the user the 
 %       ability to have more logical fields if needed.  Character fields 
 %       are NOT able to be treated as logical fields.
-%     - Nonexistent header fields will return 'Unknown Logic Field'.
-%     - Values that are not in the logical definition list are marked as
-%       'unknown' unless they are the UNDEFINED value in which case they 
-%       are tagged as 'undefined'.
+%     - Nonexistent header fields return 'NaN'
+%     - Invalid logical values return 'nan'
+%     - Undefined fields return 'Undefined'
 %
 %    Examples:
 %     To check if all records are evenly spaced:
@@ -48,9 +47,10 @@ function [varargout]=getlgc(data,varargin)
 %                        doc update, code cleaning
 %        Apr. 23, 2009 - move usage up
 %        Sep. 12, 2009 - minor doc update
+%        Oct.  6, 2009 - change special output to work with CHANGEHEADER
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 12, 2009 at 05:00 GMT
+%     Last Updated Oct.  6, 2009 at 21:45 GMT
 
 % todo:
 
@@ -98,13 +98,13 @@ for i=1:numel(h)
             varargout{j}(ind(fals))={'false'};
         end
         if(any(undef))
-            varargout{j}(ind(undef))={'undefined'};
+            varargout{j}(ind(undef))={'Undefined'};
         end
         if(any(bad))
-            varargout{j}(ind(bad))={'Unknown Logic Field'};
+            varargout{j}(ind(bad))={'NaN'};
         end
         if(any(unknown))
-            varargout{j}(ind(unknown))={'unknown'};
+            varargout{j}(ind(unknown))={'nan'};
         end
     end
 end

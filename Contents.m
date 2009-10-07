@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r97 Ararat 05-Oct-2009
+% Version 0.6.0-r99 Ararat 07-Oct-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -82,6 +82,7 @@
 %REVERSE             - Reverse SEIZMO records
 %RLIM2AMPH           - Convert SEIZMO spectral records from RLIM to AMPH
 %SEIZMOFUN           - Apply function to SEIZMO records
+%SEIZMORESET         - Resets saved SEIZMO settings
 %SELECTRECORDS       - Select or delete SEIZMO data records graphically
 %SLIDINGABSMEAN      - Returns sliding-window absolute-mean of SEIZMO records
 %SLIDINGFUN          - Apply a sliding window function to SEIZMO records

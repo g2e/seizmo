@@ -83,9 +83,10 @@ function [data]=bseizmo(varargin)
 %        Sep. 25, 2009 - doc update, minor reftime improvement, multi-cmp
 %                        fix
 %        Oct.  5, 2009 - reordered struct fields, added .ind
+%        Oct.  7, 2009 - appropriate extension for filetype
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 16:00 GMT
+%     Last Updated Oct.  7, 2009 at 16:35 GMT
 
 % todo:
 
@@ -228,7 +229,7 @@ for i=1:2:nargin
     
     % edit name
     kstnm{j}=['R' sprintf(format,j)];
-    data(j).name=['SEIZMO.' sprintf(format,j) '.SAC'];
+    data(j).name=['SEIZMO.' sprintf(format,j)];
     
     % handle 0pt
     if(npts(j)==0); continue; end
@@ -260,6 +261,16 @@ if(~h.mulcmp.valid && any(ncmp>1))
     [data(mcmp).version]=deal(h.mulcmp.altver);
     [data(mcmp).filetype]=deal(h.mulcmp.alttype);
     nvhdr(mcmp)=h.mulcmp.altver;
+end
+
+% append appropriate extension
+sz=strcmpi('SEIZMO Binary',{data.filetype});
+sac=strcmpi('SAC Binary',{data.filetype});
+if(any(sz))
+    data(sz)=changename(data(sz),'append','.SZ');
+end
+if(any(sac))
+    data(sac)=changename(data(sac),'append','.SAC');
 end
 
 % write header changes

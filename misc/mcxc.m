@@ -46,7 +46,7 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %     requires that peaks be at least 1 sample interval apart.  Setting
 %     SPACING==0 will cause the peak picker to always return the same peak
 %     for all the peaks.  Setting SPACING too high can cause the peak
-%     picker to return a peak with value=0, lag=0, polarity=0 when no
+%     picker to return a peak with value=nan, lag=?, polarity=nan when no
 %     points are left satisfying the SPACING requirement.  SPACING will be 
 %     ignored unless NPEAKS is set >0.
 %
@@ -68,7 +68,7 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %     would give the highest peak cross correlation value for each 
 %     correlogram (note that floor(ADJACENT)+1 will always give the 4th
 %     dimension index of the peak values).  Adjacent points may be set to 
-%     value=0, lag=?, polarity=0 when the point comes within SPACING of
+%     value=nan, lag=?, polarity=nan when the point comes within SPACING of
 %     another peak or if the point falls outside the allowed lag range.  
 %     ADJACENT will be ignored unless NPEAKS is set >0.
 %
@@ -180,12 +180,14 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %        May   7, 2008 - added convolve stuff? (which didn't work, yay)
 %        June 27, 2009 - minor doc fix
 %        Sep.  9, 2009 - cleaned up on documentation
+%        Oct.  6, 2009 - dropped use of LOGICAL function
+%        Oct.  7, 2009 - replaced preallocation zeros w/ nan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  9, 2009 at 02:25 GMT
+%     Last Updated Oct.  7, 2009 at 18:30 GMT
 
 % todo:
-% - replace zeros with nans
+% - vectorized gives different lag result if no peaks left
 
 % at least one input
 if(nargin<1)
@@ -436,7 +438,7 @@ sh=sh(glags);
 len=length(sh);
 
 % preallocate output
-cg=zeros(sx(2),sy(2),len);
+cg=nan(sx(2),sy(2),len);
 
 end
 
@@ -532,7 +534,7 @@ len=length(sh);
 range=(-spacing:spacing).';
 
 % preallocate output
-cg=zeros(sx(2),sy(2),n,1+2*adjacent); lg=cg;
+cg=nan(sx(2),sy(2),n,1+2*adjacent); lg=cg;
 
 % adjacent
 peak=1+adjacent;
@@ -568,10 +570,11 @@ for i=1:sx(2)
         for k=2:n
             % zero previous peak
             izero=imxc+range;
-            XCFT(izero(izero>0 & izero<=len))=0;
+            XCFT(izero(izero>0 & izero<=len))=nan;
             
             % pick peak
             [cg(i,j,k,peak),imxc]=max(XCFT);
+            if(isnan(cg(i,j,k,peak))); continue; end
             lg(i,j,k,peak)=lags(imxc);
             
             % add adjacent points
@@ -612,10 +615,11 @@ for i=1:sx(2)
         for k=2:n
             % zero previous peak
             izero=imxc+range;
-            XCFT(izero(izero>0 & izero<=len))=0;
+            XCFT(izero(izero>0 & izero<=len))=nan;
             
             % pick peak
             [cg(i,j,k,peak),imxc]=max(XCFT);
+            if(isnan(cg(i,j,k,peak))); continue; end
             lg(i,j,k,peak)=lags(imxc);
             
             % add adjacent points
@@ -660,10 +664,11 @@ for i=1:sx(2)
         for k=2:n
             % zero previous peak
             izero=imxc+range;
-            AXCFT(izero(izero>0 & izero<=len))=0;
+            AXCFT(izero(izero>0 & izero<=len))=nan;
             
             % pick peak
             [cg(i,j,k,peak),imxc]=max(AXCFT);
+            if(isnan(cg(i,j,k,peak))); continue; end
             lg(i,j,k,peak)=lags(imxc);
             pg(i,j,k,peak)=squeeze(cg(i,j,k,peak))/XCFT(imxc);
             
@@ -710,10 +715,11 @@ for i=1:sx(2)
         for k=2:n
             % zero previous peak
             izero=imxc+range;
-            AXCFT(izero(izero>0 & izero<=len))=0;
+            AXCFT(izero(izero>0 & izero<=len))=nan;
             
             % pick peak
             [cg(i,j,k,peak),imxc]=max(AXCFT);
+            if(isnan(cg(i,j,k,peak))); continue; end
             lg(i,j,k,peak)=lags(imxc);
             pg(i,j,k,peak)=squeeze(cg(i,j,k,peak))/XCFT(imxc);
             
@@ -751,7 +757,7 @@ range=(-spacing:spacing).';
 per21=2*spacing+1;
 
 % preallocate output
-cg=zeros(sx(2),sy(2),n,1+2*adjacent); lg=cg;
+cg=nan(sx(2),sy(2),n,1+2*adjacent); lg=cg;
 
 % preallocate zeroer
 cols=repmat(1:sy(2),per21,1);
@@ -762,7 +768,7 @@ ptsadj=[-adjacent:-1 1:adjacent].';
 idxadj=ptsadj+peak;
 nadj=2*adjacent;
 adjcols=repmat(1:sy(2),nadj,1);
-cgtemp=zeros(nadj,sy(2)); 
+cgtemp=nan(nadj,sy(2)); 
 lgtemp=cgtemp;
 
 end
@@ -793,8 +799,8 @@ for i=1:sx(2)
         % add adjacent point(s)
         iadj=imxc(ones(nadj,1),:)+ptsadj(:,ones(1,sy(2)));
         good=(iadj>0 & iadj<=len);
-        cgtemp(:,:)=0;
-        lgtemp(:,:)=0;
+        cgtemp(:,:)=nan;
+        lgtemp(:,:)=nan;
         cgtemp(good)=XCFT(sub2ind([len sy(2)],iadj(good),adjcols(good)));
         lgtemp(good)=lags(iadj(good));
         cg(i,:,j,idxadj)=cgtemp.';
@@ -803,7 +809,7 @@ for i=1:sx(2)
         % zero out peak(s)
         rows=imxc(ones(per21,1),:)+range(:,ones(1,sy(2)));
         good2=(rows>0 & rows<=len);
-        XCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=0;
+        XCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=nan;
     end
 end
 
@@ -834,8 +840,8 @@ for i=1:sx(2)
         % add adjacent point(s)
         iadj=imxc(ones(nadj,1),:)+ptsadj(:,ones(1,sy(2)));
         good=(iadj>0 & iadj<=len);
-        cgtemp(:,:)=0;
-        lgtemp(:,:)=0;
+        cgtemp(:,:)=nan;
+        lgtemp(:,:)=nan;
         cgtemp(good)=XCFT(sub2ind([len sy(2)],iadj(good),adjcols(good)));
         lgtemp(good)=lags(iadj(good));
         cg(i,:,j,idxadj)=cgtemp.';
@@ -844,7 +850,7 @@ for i=1:sx(2)
         % zero out peak(s)
         rows=imxc(ones(per21,1),:)+range(:,ones(1,sy(2)));
         good2=(rows>0 & rows<=len);
-        XCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=0;
+        XCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=nan;
     end
 end
 
@@ -881,9 +887,9 @@ for i=1:sx(2)
         % add adjacent point(s)
         iadj=imxc(ones(nadj,1),:)+ptsadj(:,ones(1,sy(2)));
         good=(iadj>0 & iadj<=len);
-        cgtemp(:,:)=0;
-        lgtemp(:,:)=0;
-        pgtemp(:,:)=0;
+        cgtemp(:,:)=nan;
+        lgtemp(:,:)=nan;
+        pgtemp(:,:)=nan;
         cgtemp(good)=AXCFT(sub2ind([len sy(2)],iadj(good),adjcols(good)));
         lgtemp(good)=lags(iadj(good));
         pgtemp(good)=cgtemp(good)./XCFT(sub2ind([len sy(2)],iadj(good),adjcols(good)));
@@ -894,7 +900,7 @@ for i=1:sx(2)
         % zero out peak(s)
         rows=imxc(ones(per21,1),:)+range(:,ones(1,sy(2)));
         good2=(rows>0 & rows<=len);
-        AXCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=0;
+        AXCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=nan;
     end
 end
 
@@ -930,9 +936,9 @@ for i=1:sx(2)
         % add adjacent point(s)
         iadj=imxc(ones(nadj,1),:)+ptsadj(:,ones(1,sy(2)));
         good=(iadj>0 & iadj<=len);
-        cgtemp(:,:)=0;
-        lgtemp(:,:)=0;
-        pgtemp(:,:)=0;
+        cgtemp(:,:)=nan;
+        lgtemp(:,:)=nan;
+        pgtemp(:,:)=nan;
         cgtemp(good)=AXCFT(sub2ind([len sy(2)],iadj(good),adjcols(good)));
         lgtemp(good)=lags(iadj(good));
         pgtemp(good)=cgtemp(good)./XCFT(sub2ind([len sy(2)],iadj(good),adjcols(good)));
@@ -943,7 +949,7 @@ for i=1:sx(2)
         % zero out peak(s)
         rows=imxc(ones(per21,1),:)+range(:,ones(1,sy(2)));
         good2=(rows>0 & rows<=len);
-        AXCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=0;
+        AXCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=nan;
     end
 end
 
@@ -1090,7 +1096,7 @@ c=[0 cumsum(ilen)];
 txc=(sx(2)^2-sx(2))/2;
 
 % preallocate output
-cv=zeros(txc,1,len);
+cv=nan(txc,1,len);
 
 end
 
@@ -1148,10 +1154,10 @@ c=[1 c2+1];
 txc=(sx(2)^2-sx(2))/2;
 
 % preallocate output
-cv=zeros(txc,1,len);
+cv=nan(txc,1,len);
 
 % preallocate correlograms
-XCF=zeros(nFFT,sx(2));
+XCF=nan(nFFT,sx(2));
 
 end
 
@@ -1223,7 +1229,7 @@ c=[0 cumsum(ilen)];
 txc=(sx(2)^2-sx(2))/2;
 
 % preallocate output
-cv=zeros(txc,1,n,1+2*adjacent); lv=cv;
+cv=nan(txc,1,n,1+2*adjacent); lv=cv;
 
 % adjacent
 peak=1+adjacent;
@@ -1262,10 +1268,11 @@ for i=1:sx(2)-1
         for p=2:n
             % zero previous peak
             izero=imxc+range;
-            XCFT(izero(izero>0 & izero<=len))=0;
+            XCFT(izero(izero>0 & izero<=len))=nan;
             
             % pick peak
             [cv(k,1,p,peak),imxc]=max(XCFT);
+            if(isnan(cv(k,1,p,peak))); continue; end
             lv(k,1,p,peak)=lags(imxc);
             
             % add adjacent points
@@ -1309,10 +1316,11 @@ for i=1:sx(2)-1
         for p=2:n
             % zero previous peak
             izero=imxc+range;
-            XCFT(izero(izero>0 & izero<=len))=0;
+            XCFT(izero(izero>0 & izero<=len))=nan;
             
             % pick peak
             [cv(k,1,p,peak),imxc]=max(XCFT);
+            if(isnan(cv(k,1,p,peak))); continue; end
             lv(k,1,p,peak)=lags(imxc);
             
             % add adjacent points
@@ -1332,7 +1340,7 @@ function [cv,lv,pv]=smcxcmncap(F,CF,ZLAC,nFFT,sx,n,adjacent,spacing,lagrng)
 % preallocate just about everything
 [cv,lv,lags,shift,len,range,per21,c,peak,ptsadj,idxadj,txc]=...
     smcxc_alloc(nFFT,sx,n,adjacent,spacing,lagrng);
-pv=zeros(txc,1,n,1+2*adjacent);
+pv=nan(txc,1,n,1+2*adjacent);
 
 % get correlation peaks
 for i=1:sx(2)-1
@@ -1360,10 +1368,11 @@ for i=1:sx(2)-1
         for p=2:n
             % zero previous peak
             izero=imxc+range;
-            AXCFT(izero(izero>0 & izero<=len))=0;
+            AXCFT(izero(izero>0 & izero<=len))=nan;
             
             % pick peak
             [cv(k,1,p,peak),imxc]=max(AXCFT);
+            if(isnan(cv(k,1,p,peak))); continue; end
             lv(k,1,p,peak)=lags(imxc);
             pv(k,1,p,peak)=cv(k,1,p,peak)/XCFT(imxc);
             
@@ -1385,7 +1394,7 @@ function [cv,lv,pv]=smcxcmcap(F,CF,nFFT,sx,n,adjacent,spacing,lagrng)
 % preallocate just about everything
 [cv,lv,lags,shift,len,range,per21,c,peak,ptsadj,idxadj,txc]=...
     smcxc_alloc(nFFT,sx,n,adjacent,spacing,lagrng);
-pv=zeros(txc,1,n,1+2*adjacent);
+pv=nan(txc,1,n,1+2*adjacent);
 
 % get correlation peaks
 for i=1:sx(2)-1
@@ -1413,10 +1422,11 @@ for i=1:sx(2)-1
         for p=2:n
             % zero previous peak
             izero=imxc+range;
-            AXCFT(izero(izero>0 & izero<=len))=0;
+            AXCFT(izero(izero>0 & izero<=len))=nan;
             
             % pick peak
             [cv(k,1,p,peak),imxc]=max(AXCFT);
+            if(isnan(cv(k,1,p,peak))); continue; end
             lv(k,1,p,peak)=lags(imxc);
             pv(k,1,p,peak)=cv(k,1,p,peak)/XCFT(imxc);
             
@@ -1456,19 +1466,19 @@ ilen=sx(2)-1:-1:1;
 c2=cumsum(ilen);
 c=[1 c2+1];
 txc=(sx(2)^2-sx(2))/2;
-imxc=zeros(1,sx(2));
+imxc=nan(1,sx(2));
 
 % preallocate output
-cv=zeros(txc,1,n,1+2*adjacent); lv=cv;
+cv=nan(txc,1,n,1+2*adjacent); lv=cv;
 
 % preallocate correlograms
-XCF=zeros(nFFT,sx(2));
-XCFT=zeros(len,sx(2));
+XCF=nan(nFFT,sx(2));
+XCFT=nan(len,sx(2));
 
 % preallocate peak zeroer
-rows=zeros(per21,sx(2));
+rows=nan(per21,sx(2));
 cols=repmat(1:sx(2),per21,1);
-good2=logical(rows);
+good2=false(size(rows));
 
 % adjacent
 peak=1+adjacent;
@@ -1476,9 +1486,9 @@ ptsadj=[-adjacent:-1 1:adjacent].';
 idxadj=ptsadj+peak;
 nadj=2*adjacent;
 adjcols=repmat(1:sx(2),nadj,1);
-cgtemp=zeros(nadj,sx(2)); 
+cgtemp=nan(nadj,sx(2)); 
 lgtemp=cgtemp;
-good=logical(cgtemp);
+good=false(size(cgtemp));
 iadj=cgtemp;
 
 end
@@ -1514,14 +1524,14 @@ for i=1:sx(2)-1
         % add adjacent point(s)
         %iadj=imxc(ones(nadj,1),:)+ptsadj(:,ones(1,sy(2)));
         %good=(iadj>0 & iadj<=len);
-        %cgtemp(:,:)=0;
-        %lgtemp(:,:)=0;
+        %cgtemp(:,:)=nan;
+        %lgtemp(:,:)=nan;
         %cgtemp(good)=XCFT(sub2ind([len sy(2)],iadj(good),adjcols(good)));
         %lgtemp(good)=lags(iadj(good));
         %cg(i,:,j,idxadj)=cgtemp.';
         %lg(i,:,j,idxadj)=lgtemp.';
         iadj(:,i2)=imxc(ones(nadj,1),i2)+ptsadj(:,ones(1,ilen(i)));
-        good(:,:)=false; cgtemp(:,:)=0; lgtemp(:,:)=0;
+        good(:,:)=false; cgtemp(:,:)=nan; lgtemp(:,:)=nan;
         good(:,i2)=(iadj(:,i2)>0 & iadj(:,i2)<=len);
         cgtemp(good)=XCFT(sub2ind([len sx(2)],iadj(good),adjcols(good)));
         lgtemp(good)=lags(iadj(good));
@@ -1531,10 +1541,10 @@ for i=1:sx(2)-1
         % zero out peak(s)
         %rows=imxc(ones(per21,1),:)+range(:,ones(1,sy(2)));
         %good=(rows>0 & rows<=len);
-        %XCFT(sub2ind([len sy(2)],rows(good),cols(good)))=0;
+        %XCFT(sub2ind([len sy(2)],rows(good),cols(good)))=nan;
         rows(:,i2)=imxc(ones(per21,1),i2)+range(:,ones(1,ilen(i)));
         good2(:,:)=false; good2(:,i2)=(rows(:,i2)>0 & rows(:,i2)<=len);
-        XCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=0;
+        XCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=nan;
     end
 end
 
@@ -1567,7 +1577,7 @@ for i=1:sx(2)-1
         
         % add adjacent point(s)
         iadj(:,i2)=imxc(ones(nadj,1),i2)+ptsadj(:,ones(1,ilen(i)));
-        good(:,:)=false; cgtemp(:,:)=0; lgtemp(:,:)=0;
+        good(:,:)=false; cgtemp(:,:)=nan; lgtemp(:,:)=nan;
         good(:,i2)=(iadj(:,i2)>0 & iadj(:,i2)<=len);
         cgtemp(good)=XCFT(sub2ind([len sx(2)],iadj(good),adjcols(good)));
         lgtemp(good)=lags(iadj(good));
@@ -1577,7 +1587,7 @@ for i=1:sx(2)-1
         % zero out peak(s)
         rows(:,i2)=imxc(ones(per21,1),i2)+range(:,ones(1,ilen(i)));
         good2(:,:)=false; good2(:,i2)=(rows(:,i2)>0 & rows(:,i2)<=len);
-        XCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=0;
+        XCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=nan;
     end
 end
 
@@ -1616,7 +1626,7 @@ for i=1:sx(2)-1
         
         % add adjacent point(s)
         iadj(:,i2)=imxc(ones(nadj,1),i2)+ptsadj(:,ones(1,ilen(i)));
-        good(:,:)=false; cgtemp(:,:)=0; lgtemp(:,:)=0; pgtemp(:,:)=0;
+        good(:,:)=false; cgtemp(:,:)=nan; lgtemp(:,:)=nan; pgtemp(:,:)=nan;
         good(:,i2)=(iadj(:,i2)>0 & iadj(:,i2)<=len);
         cgtemp(good)=AXCFT(sub2ind([len sx(2)],iadj(good),adjcols(good)));
         lgtemp(good)=lags(iadj(good));
@@ -1628,7 +1638,7 @@ for i=1:sx(2)-1
         % zero out peak(s)
         rows(:,i2)=imxc(ones(per21,1),i2)+range(:,ones(1,ilen(i)));
         good2(:,:)=false; good2(:,i2)=(rows(:,i2)>0 & rows(:,i2)<=len);
-        AXCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=0;
+        AXCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=nan;
     end
 end
 
@@ -1666,7 +1676,7 @@ for i=1:sx(2)-1
         
         % add adjacent point(s)
         iadj(:,i2)=imxc(ones(nadj,1),i2)+ptsadj(:,ones(1,ilen(i)));
-        good(:,:)=false; cgtemp(:,:)=0; lgtemp(:,:)=0; pgtemp(:,:)=0;
+        good(:,:)=false; cgtemp(:,:)=nan; lgtemp(:,:)=nan; pgtemp(:,:)=nan;
         good(:,i2)=(iadj(:,i2)>0 & iadj(:,i2)<=len);
         cgtemp(good)=AXCFT(sub2ind([len sx(2)],iadj(good),adjcols(good)));
         lgtemp(good)=lags(iadj(good));
@@ -1678,7 +1688,7 @@ for i=1:sx(2)-1
         % zero out peak(s)
         rows(:,i2)=imxc(ones(per21,1),i2)+range(:,ones(1,ilen(i)));
         good2(:,:)=false; good2(:,i2)=(rows(:,i2)>0 & rows(:,i2)<=len);
-        AXCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=0;
+        AXCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=nan;
     end
 end
 

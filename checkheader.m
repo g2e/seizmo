@@ -272,10 +272,12 @@ function [data]=checkheader(data,varargin)
 %                        multiple samplerates
 %        Sep. 25, 2009 - fixed/updated multi-cmp code, allow iztype<1e-3
 %        Oct.  5, 2009 - major revision
-%        Oct.  6, 2009 - drop arrayfun usage (R14SP1 fix)
+%        Oct.  6, 2009 - drop ARRAYFUN/LOGICAL functions (R14SP1 fix),
+%                        nonzero_iztype fix
+%        Oct.  7, 2009 - minor changes to a few messages
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 19:55 GMT
+%     Last Updated Oct.  7, 2009 at 17:55 GMT
 
 % todo:
 
@@ -650,7 +652,8 @@ validftype={'itime' 'irlim' 'iamph' 'ixy' 'ixyz'};
 bad=find(~ismember(iftype,validftype));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:IFTYPEbad';
-    report.message=['IFTYPE unknown for record(s):\n' sprintf('%d ',bad) ...
+    report.message=['IFTYPE unknown/undefined for record(s):\n' ...
+        sprintf('%d ',bad) ...
         '\nMust be one of the following:\n' sprintf('%s ',validftype{:})];
     switch opt
         case 'ERROR'
@@ -744,7 +747,8 @@ validztype={'iunkn' 'ib' 'iday' 'io' 'ia' 'it0' 'it1' 'it2' 'it3' 'it4' ...
 bad=find(~ismember(iztype,validztype));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:IZTYPEbad';
-    report.message=['IZTYPE unknown for record(s):\n' sprintf('%d ',bad) ...
+    report.message=['IZTYPE unknown/undefined for record(s):\n' ...
+        sprintf('%d ',bad) ...
         '\nMust be one of the following:\n' sprintf('%s ',validztype{:})];
     switch opt
         case 'ERROR'
@@ -764,7 +768,7 @@ end
 
 function [nz]=noninteger_reftime(opt,nz)
 bad=nz~=fix(nz);
-badrec=find(logical(sum(bad,2)));
+badrec=find(sum(bad,2)~=0);
 if(~isempty(badrec))
     report.identifier='seizmo:checkheader:nonintREF';
     report.message=['Reference time fields for record(s):\n' ...
@@ -788,14 +792,14 @@ end
 
 function [nz]=unset_reftime(opt,undef,nz)
 bad=nz==undef(:,ones(size(nz,2),1)) | isnan(nz) | isinf(nz);
-badrec=find(logical(sum(bad,2)));
+badrec=find(sum(bad,2)~=0);
 bad=find(bad);
 column=1+fix((bad-1)/size(bad,1));
 if(~isempty(badrec))
     report.identifier='seizmo:checkheader:undefREF';
     report.message=['Reference time fields for record(s):\n' ...
         sprintf('%d ',badrec) ...
-        'have undefined values!  This will cause problems.'];
+        'have undefined values!'];
     switch opt
         case 'ERROR'
             error(report.identifier,report.message);
@@ -845,8 +849,8 @@ end
 
 function [iztype]=nonzero_iztype(opt,spectral,data,nz,iztype)
 day=strcmp('iday',iztype);
-badday=find(day & logical(sum(nz(:,3:6)~=0,2)));
-unkn=strcmp('iunkn',iztype);
+badday=find(day & sum(nz(:,3:6)~=0,2)~=0);
+unkn=strcmp('iunkn',iztype) | ~strncmp('i',iztype,1);
 other=find(~day & ~unkn);
 b=strcmp('ib',iztype);
 if(any(spectral & b)); iztype(spectral & b)={'isb'}; end
@@ -919,7 +923,8 @@ bad=find(~ismember(idep,validdep));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:IDEPbad';
     % only show first 5 (the rest are kinda crazy)
-    report.message=['IDEP unknown for record(s):\n' sprintf('%d ',bad) ...
+    report.message=['IDEP unknown/undefined for record(s):\n' ...
+        sprintf('%d ',bad) ...
         '\nMust be one of the following:\n' sprintf('%s ',validdep{1:5})];
     switch opt
         case 'ERROR'
@@ -1541,10 +1546,10 @@ end
 function [delaz]=old_delaz(opt,undef,lcalda,st,ev,delaz)
 
 % get defined st/ev
-def=~logical(sum( ...
-    st(:,1:2)==undef(:,[1 1]) | isnan(st(:,1:2)) | isinf(st(:,1:2)),2)) ...
-    & ~logical(sum( ...
-    ev(:,1:2)==undef(:,[1 1]) | isnan(ev(:,1:2)) | isinf(ev(:,1:2)),2));
+def=0==sum( ...
+    st(:,1:2)==undef(:,[1 1]) | isnan(st(:,1:2)) | isinf(st(:,1:2)),2) ...
+    & 0==sum( ...
+    ev(:,1:2)==undef(:,[1 1]) | isnan(ev(:,1:2)) | isinf(ev(:,1:2)),2);
 
 % get lcalda (don't mess with those with lcalda == 'false')
 chk=~strcmp(lcalda,'false');
@@ -1563,7 +1568,7 @@ if(any(ok))
     newdelaz(ok,4)=vincentyinv(ev(ok,1),ev(ok,2),st(ok,1),st(ok,2));
 end
 
-bad=find(logical(sum(delaz~=newdelaz,2)));
+bad=find(sum(delaz~=newdelaz,2)~=0);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:oldDelAz';
     report.message=['Record(s):\n' sprintf('%d ',bad) ...
@@ -1646,7 +1651,7 @@ ok=find([data.hasdata].' & spectral);
 nrows=nan(size(ok)); ncols=nrows;
 for i=1:numel(ok); [nrows(i),ncols(i)]=size(data(ok(i)).dep); end
 %[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
-%bad=logical(mod(ncols,2)) | nrows~=2.^ceil(log2(nrows));
+%bad=mod(ncols,2) | nrows~=2.^ceil(log2(nrows));
 bad=ok(mod(ncols,2) | nrows~=2.^ceil(log2(nrows)));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badDepSize';
@@ -1973,7 +1978,7 @@ end
 %    arrayfun(@(x)double(min(x.dep(:))),data(ok(~empty))) ...
 %    arrayfun(@(x)mean(double(x.dep(:))),data(ok(~empty))) ...
 %    arrayfun(@(x)double(max(x.dep(:))),data(ok(~empty)))];
-bad=ok(logical(sum(dep(ok,:)~=newdep(ok,:),2)));
+bad=ok(sum(dep(ok,:)~=newdep(ok,:),2)~=0);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:oldDepStats';
     report.message=['Records:\n' sprintf('%d ',bad) ...

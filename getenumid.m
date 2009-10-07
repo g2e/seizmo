@@ -17,11 +17,9 @@ function [varargout]=getenumid(data,varargin)
 %       if they were enum fields with GETENUMID.  This gives the user the 
 %       ability to have more enum fields if needed.  Character fields are
 %       NOT able to be treated as enum fields.
-%     - Nonexistent header fields will return 'Unknown Enum Field'.
-%     - Enum values that aren't defined in the enumerator list are tagged
-%       as 'Unknown Enum Value' unless they are the defined UNDEFINED
-%       value in which case they are tagged as 'Undefined Enum Field'. This
-%       avoids conflict with enum fields called 'unknown' and 'undefined'.
+%     - Nonexistent header fields return 'NaN'
+%     - Invalid enum values return 'nan'
+%     - Undefined fields return 'Undefined'
 %
 %    Examples:
 %     To check if all records are timeseries data:
@@ -45,9 +43,10 @@ function [varargout]=getenumid(data,varargin)
 %        Nov. 16, 2008 - history fix, doc update, code cleaning, rename
 %                        from GENUM to GETENUMID
 %        Apr. 23, 2009 - move usage up
+%        Oct.  6, 2009 - change special output to work with CHANGEHEADER
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Oct.  6, 2009 at 21:45 GMT
 
 % require at least two inputs
 if(nargin<2)
@@ -88,13 +87,13 @@ for i=1:numel(h)
         
         % assign enum descriptions
         if(any(bad))
-            varargout{j}(ind(bad))={'Unknown Enum Field'};
+            varargout{j}(ind(bad))={'NaN'};
         end
         if(any(undef))
-            varargout{j}(ind(undef))={'Undefined Enum Field'};
+            varargout{j}(ind(undef))={'Undefined'};
         end
         if(any(unknown))
-            varargout{j}(ind(unknown))={'Unknown Enum Value'};
+            varargout{j}(ind(unknown))={'nan'};
         end
         if(any(good))
             varargout{j}(ind(good))=...

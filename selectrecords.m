@@ -59,9 +59,10 @@ function [data,selected,h]=selectrecords(data,varargin)
 %        June  2, 2009 - fixed history, patches go on bottom now
 %        June 25, 2009 - minor doc fixes, allow numeric array for selected
 %        Sep. 16, 2009 - fix for getting bgcolor for single record
+%        Oct.  6, 2009 - dropped use of LOGICAL function
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2009 at 19:00 GMTs
+%     Last Updated Oct.  6, 2009 at 20:50 GMTs
 
 % todo:
 
@@ -139,7 +140,7 @@ for i=1:numel(fields)
                     option.SELECTED=false(nrecs,1);
                     option.SELECTED(temp)=true;
                 else
-                    option.SELECTED=logical(option.SELECTED);
+                    option.SELECTED=option.SELECTED~=0;
                 end
             end
             if(~islogical(option.SELECTED) || ...

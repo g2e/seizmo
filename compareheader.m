@@ -45,9 +45,10 @@ function []=compareheader(data,varargin)
 %                        column width, vf show up in wildcards
 %        Sep. 15, 2009 - doc update
 %        Sep. 18, 2009 - 2nd pass at abs time support
+%        Oct.  6, 2009 - dropped use of LOGICAL function
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 18, 2009 at 20:00 GMT
+%     Last Updated Oct.  6, 2009 at 21:00 GMT
 
 % todo:
 
@@ -115,11 +116,11 @@ for i=1:nh
     vidx=find(idx==i);
     head=[data(vidx).head];
     tmp=head(h.reftime,:);
-    bad(vidx,1)=logical(sum(isnan(tmp) | isinf(tmp) ...
+    bad(vidx,1)=sum(isnan(tmp) | isinf(tmp) ...
         | tmp==h.undef.ntype | tmp~=round(tmp) ...
         | [false(1,numel(vidx)); (tmp(2,:)<1 | tmp(2,:)>366); ...
         (tmp(3,:)<0 | tmp(3,:)>23); (tmp(4,:)<0 | tmp(4,:)>59); ...
-        (tmp(5,:)<0 | tmp(5,:)>60); (tmp(6,:)<0 | tmp(6,:)>999)]));
+        (tmp(5,:)<0 | tmp(5,:)>60); (tmp(6,:)<0 | tmp(6,:)>999)])~=0;
     good(vidx,1)=~bad(vidx,1).';
     if(any(bad(vidx,1)))
         tmp(:,bad(vidx,1))=h.undef.ntype;

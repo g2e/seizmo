@@ -92,9 +92,10 @@ function [data]=changeheader(data,varargin)
 %        Sep. 12, 2009 - added vgrp support
 %        Sep. 15, 2009 - vf support, abs time support, doc update
 %        Sep. 18, 2009 - 2nd pass at abs time support
+%        Oct.  6, 2009 - dropped use of LOGICAL function
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 18, 2009 at 15:55 GMT
+%     Last Updated Oct.  6, 2009 at 21:00 GMT
 
 % todo:
 
@@ -151,10 +152,10 @@ head=[data.head];
 
 % get reference times hack
 ref=head(h.reftime,:);
-bad=logical(sum(isnan(ref) | isinf(ref) | ref==h.undef.ntype ...
+bad=sum(isnan(ref) | isinf(ref) | ref==h.undef.ntype ...
     | ref~=round(ref) | [false(1,nrecs); (ref(2,:)<1 | ref(2,:)>366); ...
     (ref(3,:)<0 | ref(3,:)>23); (ref(4,:)<0 | ref(4,:)>59); ...
-    (ref(5,:)<0 | ref(5,:)>60); (ref(6,:)<0 | ref(6,:)>999)]));
+    (ref(5,:)<0 | ref(5,:)>60); (ref(6,:)<0 | ref(6,:)>999)])~=0;
 good=~bad.';
 if(any(bad))
     ref(:,bad)=h.undef.ntype;
@@ -382,8 +383,8 @@ for n=1:numel(h.stype)
                 undeftmp2=isinf(v);
                 v(undeftmp1 | undeftmp2)=0;
                 v=cellstr(char(v));
-                v(logical(sum(undeftmp1,2)))={h.undef.stype};
-                v(logical(sum(undeftmp2,2)))={h.undef.stype};
+                v(sum(undeftmp1,2)~=0)={h.undef.stype};
+                v(sum(undeftmp2,2)~=0)={h.undef.stype};
             end
             v=strnlen(v,o);
             head(p(1):p(2),:)=char(v).';

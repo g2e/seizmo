@@ -133,6 +133,10 @@ function [data]=correlate(data1,varargin)
 %       and single component (GETNCMP should return all ones).  All records
 %       are also passed through CHECKHEADER so sane settings for all header
 %       fields are enforced.
+%     - CORRELATE ignores the reference timing of records when computing
+%       lag times (or rather it assumes records are synced to the same
+%       reference time).  Synchronize the dataset to a single reference
+%       time to get lags based on absolute timing.
 %
 %    Header Changes: ALL (see BSEIZMO for defaults not listed below)
 %     DEPMEN, DEPMIN, DEPMAX are updated for the correlogram.
@@ -151,6 +155,7 @@ function [data]=correlate(data1,varargin)
 %       KSTNM                KSTNM
 %       KHOLE                KHOLE
 %       KCMPNM               KCMPNM
+%       NZ                   NZ
 %      MASTER RECORD FIELD  CORRELOGRAM FIELD
 %       STLA                 EVLA
 %       STLO                 EVLO
@@ -162,7 +167,7 @@ function [data]=correlate(data1,varargin)
 %       KCMPNM               KT3
 %
 %    Examples:
-%     Equivalent to 'correlate' in SAC:
+%     Basically equivalent to 'correlate' in SAC:
 %      correlograms=correlate(data(1),data,'normxc',false)
 %
 %     Align all correlograms on their strongest peak:
@@ -173,9 +178,12 @@ function [data]=correlate(data1,varargin)
 
 %     Version History:
 %        June 27, 2009 - first fully functional version
+%        Oct.  7, 2009 - slave records NZ* info passed on, fixed record
+%                        names in 2 dataset correlogram case, fixed ST/EV
+%                        info in 1 dataset correlogram case
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:00 GMTs
+%     Last Updated Oct.  7, 2009 at 18:15 GMTs
 
 % todo:
 
@@ -283,9 +291,11 @@ else
     % split based on ndatasets
     if(onedata)
         % extract header info needed
-        [knetwk,kstnm,khole,kcmpnm,b,stla,stlo,stdp,stel]=...
+        [knetwk,kstnm,khole,kcmpnm,b,stla,stlo,stdp,stel,...
+            nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=...
             getheader(data1,'knetwk','kstnm','khole','kcmpnm','b',...
-            'stla','stlo','stdp','stel');
+            'stla','stlo','stdp','stel','nzyear','nzjday','nzhour',...
+            'nzmin','nzsec','nzmsec');
         
         % extract records
         data1=records2mat(data1);
@@ -336,6 +346,20 @@ else
         midx=midx(tril(true(nrecs1),-1));
         sidx=sidx(tril(true(nrecs1),-1));
         
+        % add reference times to header
+        nzyear=nzyear(:,ones(nrecs1,1));
+        nzjday=nzjday(:,ones(nrecs1,1));
+        nzhour=nzhour(:,ones(nrecs1,1));
+        nzmin=nzmin(:,ones(nrecs1,1));
+        nzsec=nzsec(:,ones(nrecs1,1));
+        nzmsec=nzmsec(:,ones(nrecs1,1));
+        nzyear=nzyear(tril(true(nrecs1),-1));
+        nzjday=nzjday(tril(true(nrecs1),-1));
+        nzhour=nzhour(tril(true(nrecs1),-1));
+        nzmin=nzmin(tril(true(nrecs1),-1));
+        nzsec=nzsec(tril(true(nrecs1),-1));
+        nzmsec=nzmsec(tril(true(nrecs1),-1));
+        
         % add station id to header
         mknetwk=knetwk'; mknetwk=mknetwk(tril(true(nrecs1),-1));
         mkstnm=kstnm'; mkstnm=mkstnm(tril(true(nrecs1),-1));
@@ -347,10 +371,10 @@ else
         kcmpnm=kcmpnm(tril(true(nrecs1),-1));
         
         % add station locations to header
-        evla=stla(:,ones(nrecs1,1)); stla=evla.';
-        evlo=stlo(:,ones(nrecs1,1)); stlo=evlo.';
-        evel=stel(:,ones(nrecs1,1)); stel=evel.';
-        evdp=stdp(:,ones(nrecs1,1)); stdp=evdp.';
+        stla=stla(:,ones(nrecs1,1)); evla=stla.';
+        stlo=stlo(:,ones(nrecs1,1)); evlo=stlo.';
+        stel=stel(:,ones(nrecs1,1)); evel=stel.';
+        stdp=stdp(:,ones(nrecs1,1)); evdp=stdp.';
         stla=stla(tril(true(nrecs1),-1)); evla=evla(tril(true(nrecs1),-1));
         stlo=stlo(tril(true(nrecs1),-1)); evlo=evlo(tril(true(nrecs1),-1));
         stel=stel(tril(true(nrecs1),-1)); evel=evel(tril(true(nrecs1),-1));
@@ -366,6 +390,8 @@ else
         
         % update header
         data=changeheader(data,...
+            'nzyear',nzyear,'nzjday',nzjday,'nzhour',nzhour,...
+            'nzmin',nzmin,'nzsec',nzsec,'nzmsec',nzmsec,...
             'user0',midx,'kuser0','MASTER',...
             'user1',sidx,'kuser1','SLAVE',...
             'depmen',depmen,'depmin',depmin,'depmax',depmax,...
@@ -378,9 +404,11 @@ else
         [mknetwk,mkstnm,mkhole,mkcmpnm,mb,mstla,mstlo,mstdp,mstel]=...
             getheader(data1,'knetwk','kstnm','khole','kcmpnm','b',...
             'stla','stlo','stdp','stel');
-        [sknetwk,skstnm,skhole,skcmpnm,sb,sstla,sstlo,sstdp,sstel]=...
+        [sknetwk,skstnm,skhole,skcmpnm,sb,sstla,sstlo,sstdp,sstel,...
+            nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=...
             getheader(data2,'knetwk','kstnm','khole','kcmpnm','b',...
-            'stla','stlo','stdp','stel');
+            'stla','stlo','stdp','stel','nzyear','nzjday','nzhour',...
+            'nzmin','nzsec','nzmsec');
         
         % extract records
         data1=records2mat(data1);
@@ -423,8 +451,8 @@ else
         skhole=skhole(:,ones(nrecs1,1));
         skcmpnm=skcmpnm(:,ones(nrecs1,1));
         names=strcat({'CORR_-_MASTER_-_REC'},midx,{'_-_'},...
-            mknetwk',{'.'},mkstnm',{'.'},mkhole',{'.'},mkcmpnm',...
-            {'_-_SLAVE_-_REC'},sidx',{'_-_'},...
+            mknetwk,{'.'},mkstnm,{'.'},mkhole,{'.'},mkcmpnm,...
+            {'_-_SLAVE_-_REC'},sidx,{'_-_'},...
             sknetwk,{'.'},skstnm,{'.'},skhole,{'.'},skcmpnm);
         [data.name]=deal(names{:});
         
@@ -452,6 +480,14 @@ else
         mstla=mstla(:); mstlo=mstlo(:);
         mstel=mstel(:); mstdp=mstdp(:);
         
+        % add reference times to header
+        nzyear=nzyear(:,ones(nrecs1,1)); nzyear=nzyear(:);
+        nzjday=nzjday(:,ones(nrecs1,1)); nzjday=nzjday(:);
+        nzhour=nzhour(:,ones(nrecs1,1)); nzhour=nzhour(:);
+        nzmin=nzmin(:,ones(nrecs1,1)); nzmin=nzmin(:);
+        nzsec=nzsec(:,ones(nrecs1,1)); nzsec=nzsec(:);
+        nzmsec=nzmsec(:,ones(nrecs1,1)); nzmsec=nzmsec(:);
+        
         % dep*
         depmen=nan(ncors,1); depmin=depmen; depmax=depmen;
         for i=1:ncors
@@ -462,6 +498,8 @@ else
         
         % update header
         data=changeheader(data,...
+            'nzyear',nzyear,'nzjday',nzjday,'nzhour',nzhour,...
+            'nzmin',nzmin,'nzsec',nzsec,'nzmsec',nzmsec,...
             'user0',midx,'kuser0','MASTER',...
             'user1',sidx,'kuser1','SLAVE',...
             'knetwk',sknetwk,'kstnm',skstnm,...

@@ -31,9 +31,10 @@ function [option]=cutparameters(varargin)
 %        Nov. 15, 2008 - update for new name schema
 %        Apr. 23, 2009 - move usage up
 %        May  29, 2009 - minor doc update, add nargin check
+%        Oct.  6, 2009 - drop use of LOGICAL function
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Oct.  6, 2009 at 20:45 GMT
 
 % todo:
 
@@ -111,7 +112,7 @@ for i=1:nargin-1
         % options
         switch lower(varargin{i})
             case 'fill'
-                option.FILL=logical(varargin{i+1});
+                option.FILL=varargin{i+1}~=0;
             case 'filler'
                 option.FILLER=double(varargin{i+1});
             case 'trim'
@@ -119,7 +120,7 @@ for i=1:nargin-1
                     error('seizmo:cutparameters:badInput',...
                         'TRIM option must be scalar!');
                 end
-                option.TRIM=logical(varargin{i+1});
+                option.TRIM=varargin{i+1}~=0;
             case 'cmplist'
                 if(iscell(varargin{i+1}))
                     for j=1:numel(varargin{i+1})

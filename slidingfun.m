@@ -85,9 +85,10 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %        Nov. 22, 2008 - update for new name schema (now SLIDINGFUN)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Oct.  6, 2009 - dropped use of LOGICAL function
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Oct.  6, 2009 at 20:50 GMT
 
 % todo:
 
@@ -182,7 +183,7 @@ for i=1:nrecs
     switch option.POSITION
         case 'center'
             hw=(1:nsamples(i))+option.OFFSET(i);
-            window=[-fliplr(hw) zeros(~logical(option.OFFSET(i)),1) hw];
+            window=[-fliplr(hw) zeros(option.OFFSET(i)==0,1) hw];
         case 'trail'
             window=(1-nsamples(i):0)+option.OFFSET(i);
         case 'lead'

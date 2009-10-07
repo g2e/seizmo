@@ -6,11 +6,10 @@ tmp=head(def.reftime(3:6),:);
 
 % who's (un)defined
 nv=size(head,2);
-bad=logical(sum(isnan(tmp) | isinf(tmp) | tmp==def.undef.ntype ...
+good=sum(isnan(tmp) | isinf(tmp) | tmp==def.undef.ntype ...
     | tmp~=round(tmp) | [(tmp(1,:)<0 | tmp(1,:)>23); ...
     (tmp(2,:)<0 | tmp(2,:)>59); (tmp(3,:)<0 | tmp(3,:)>60); ...
-    (tmp(4,:)<0 | tmp(4,:)>999)]));
-good=~bad;
+    (tmp(4,:)<0 | tmp(4,:)>999)])==0;
 
 % default to all undef
 value(nv,1)={def.undef.stype};

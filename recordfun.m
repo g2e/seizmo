@@ -143,9 +143,10 @@ function [data]=recordfun(fun,varargin)
 %                        for different npts/ncmp, lots of code refactoring
 %        Aug. 21, 2009 - changed IFTYPE from ERROR to WARN to allow working
 %                        with mixed xy and timeseries data
+%        Oct.  6, 2009 - dropped use of LOGICAL function
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2009 at 21:25 GMT
+%     Last Updated Oct.  6, 2009 at 20:55 GMT
 
 % todo:
 
@@ -175,7 +176,7 @@ if(isfield(SEIZMO,'BINOPERR'))
         if(isfield(SEIZMO.BINOPERR,i{:}))
             if(strcmpi('NEWHDR',i{:}))
                 try
-                    option.(i{:})=logical(SEIZMO.BINOPERR.(i{:})(1));
+                    option.(i{:})=SEIZMO.BINOPERR.(i{:})(1)~=0;
                 catch
                     warning('seizmo:recordfun:badState',...
                         '%s in unknown state => changed to default!',i{:});
@@ -240,7 +241,7 @@ for i=1:2:nargopt
     if(isfield(option,varargin{i}))
         if(strcmpi('NEWHDR',varargin{i}))
             try
-                option.(varargin{i})=logical(varargin{i+1}(1));
+                option.(varargin{i})=varargin{i+1}(1)~=0;
             catch
                 warning('seizmo:recordfun:badState',...
                     '%s state bad => leaving alone!',varargin{i});
