@@ -1,7 +1,5 @@
 0.6.0 - stable, helpful and functional
 ----------------------------------------
-negative delta support (...)
-	- or at least know where the problems are
 document every function (working on)
 	- iirfilter (waiting on rewrite)
 	- plotting (waiting on rewrite)
@@ -20,22 +18,12 @@ fix plotting
 	- allow setting markers above/below
 	- ditto for tt curves (only recsec)
 	- flags or line for predicted?
-fix checkheader
-	- method (skip/check/fix)
-	- report (silent/warn/error)
-	- infrastructure to alter (like binoperr?)
-	- warn when datasets have multiple delta/filetype/version/dep
 travel time correction
 	- get more models
 		- where to put them
 		- decide best struct layout
 	- write correction routines
 response
-	- findsacpz
-		- allow dir input
-		- no default dir
-		- sacpz db
-			- need a way to make a sacpz db
 	- apply/remove sacpz
 	- sacpz2fap
 	- resp? (gonna be a pita)
@@ -57,11 +45,11 @@ other new functions
 	- rotate
 	- convolve
 	- deconvolve
-get header definition (ghd)
-	- for cleaning up some low level functions
-	- inputs should contain necessary parent fields too
-	- allow structure output??
-
+possible extras
+	- synchronize on absolute time
+	- cut on absolute times
+	- amph2rlim/rlim2amph 2nd output is converted logicals
+	- merge uneven & multi-rate
 
 0.7.0 - css?
 ------------

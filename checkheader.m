@@ -239,8 +239,8 @@ function [data]=checkheader(data,varargin)
 %     This may help point out header problems:
 %      checkheader(data,'all','warn')
 %
-%    See also: listheader, changeheader, getheader, readheader, readdata,
-%              seizmocheck, checkoperr, checkparameters
+%    See also: LISTHEADER, CHANGEHEADER, GETHEADER, READHEADER, READDATA,
+%              SEIZMOCHECK, CHECKOPERR, CHECKPARAMETERS
 
 %     Version History:
 %        Feb. 21, 2008 - initial version

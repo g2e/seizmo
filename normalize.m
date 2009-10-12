@@ -24,7 +24,7 @@ function [data,scale]=normalize(data)
 %     Display record overlay with records scaled:
 %      plot2(normalize(data))
 %
-%    See also: multiply, getnorm
+%    See also: MULTIPLY, GETNORM
 
 %     Version History:
 %        Feb. 12, 2008 - initial version

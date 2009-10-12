@@ -44,7 +44,7 @@ function [data,selected,h]=selectrecords(data,varargin)
 %     To select which records to delete using plot1:
 %       data=selectrecords(data,'delete','plot1')
 %
-%    See also: plot1, plot0
+%    See also: PLOT1, PLOT0
 
 %     Version History:
 %        Apr. 17, 2008 - initial version (happy bday bro!)

@@ -43,7 +43,7 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %     St. Louis, MO USA to ???:
 %      [lat2,lon2,baz]=vincentyfwd(38.649,-90.305,5000,-30)
 %
-%    See also: vincentyinv, sphericalinv, sphericalfwd, haversine
+%    See also: VINCENTYINV, SPHERICALINV, SPHERICALFWD, HAVERSINE
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

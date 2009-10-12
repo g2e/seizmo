@@ -169,7 +169,7 @@ function tt=tauppierce(varargin)
 %     Return underside reflection points for pS^640S (note 3 nonzeros):
 %      tauppierce('p','pS^640S','z',33,'d',120,'under',true)
 %
-%    See also: taup, tauppath, taupcurve, tauptime
+%    See also: TAUP, TAUPPATH, TAUPCURVE, TAUPTIME
 
 %     Version History:
 %        Sep.  2, 2009 - major revision of script, name change to avoid

@@ -39,7 +39,7 @@ function [data]=bseizmo(varargin)
 %      data=bseizmo(times,amps);
 %      writeseizmo(data);
 %
-%    See also:  writeseizmo, readseizmo
+%    See also:  WRITESEIZMO, READSEIZMO
 
 %     Version History:
 %        Oct. 29, 2007 - initial version

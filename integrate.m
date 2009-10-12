@@ -39,7 +39,7 @@ function [data]=integrate(data,option)
 %     Check how good integrate undoes differentiate:
 %      plot1(subtractrecords(data,integrate(differentiate(data))))
 %
-%    See also: differentiate, divideomega, multiplyomega
+%    See also: DIFFERENTIATE, DIVIDEOMEGA, MULTIPLYOMEGA
 
 %     Version History:
 %        Nov. 12, 2008 - initial version

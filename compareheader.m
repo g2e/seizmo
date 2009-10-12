@@ -35,7 +35,7 @@ function []=compareheader(data,varargin)
 %     Compare picks:
 %      compareheader(data,'picks')
 %
-%    See also: listheader, getheader, changeheader
+%    See also: LISTHEADER, GETHEADER, CHANGEHEADER
 
 %     Version History:
 %        Sep. 11, 2009 - initial version

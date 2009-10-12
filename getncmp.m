@@ -15,7 +15,7 @@ function [ncmp]=getncmp(data)
 %     Compare the number of components for a time series and spectral file:
 %      getncmp([data(1) dft(data(1))])
 %
-%    See also: getheader, getenumid, getenumdesc, getlgc
+%    See also: GETHEADER, GETENUMID, GETENUMDESC, GETLGC
 
 %     Version History:
 %        Oct.  7, 2008 - initial version

@@ -22,8 +22,8 @@ function [x,y,z]=geodetic2xyz(lat,lon,depth,ellipsoid)
 %     Get out of the geodetic coordinate system and into cartesian:
 %      [x,y,z]=geodetic2xyz(lat,lon,depth)
 %
-%    See also: xyz2geodetic, geocentric2xyz, xyz2geocentric,
-%              geodetic2geocentric, geocentric2geodetic
+%    See also: XYZ2GEODETIC, GEOCENTRIC2XYZ, XYZ2GEOCENTRIC,
+%              GEODETIC2GEOCENTRIC, GEOCENTRIC2GEODETIC
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

@@ -112,7 +112,7 @@ function [data]=subtractrecords(varargin)
 %     Check if two records are exactly the same:
 %      plot1(subtractrecords(data(1:2)))
 %     
-%    See also: addrecords, multiplyrecords, dividerecords, binoperr
+%    See also: ADDRECORDS, MULTIPLYRECORDS, DIVIDERECORDS, BINOPERR
 
 %     Version History:
 %        June 10, 2008 - initial version

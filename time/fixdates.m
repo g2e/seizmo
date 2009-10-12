@@ -21,9 +21,9 @@ function [dates]=fixdates(dates)
 %     Five hundred days after the start of some year:
 %      fixdates([someyear 500])
 %
-%    See also: fixtimes, doy2cal, cal2doy, timediff, isleapyear,
-%              gregorian2modserial, gregorian2serial, serial2gregorian,
-%              modserial2gregorian
+%    See also: FIXTIMES, DOY2CAL, CAL2DOY, TIMEDIFF, ISLEAPYEAR,
+%              GREGORIAN2MODSERIAL, GREGORIAN2SERIAL, SERIAL2GREGORIAN,
+%              MODSERIAL2GREGORIAN
 
 %     Version History:
 %        Nov.  1, 2008 - initial version

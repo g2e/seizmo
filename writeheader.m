@@ -40,9 +40,9 @@ function []=writeheader(data,varargin)
 %     Read in some datafile's headers, modify them, and write out changes:
 %      writeheader(changeheader(readheader('A.SAC'),'kuser0','QCed'))
 %
-%    See also:  writeseizmo, readseizmo, bseizmo, readdatawindow, readdata,
-%               readheader, seizmodef, getfileversion, changeheader,
-%               getheader, listheader, getlgc, getenumid, getenumdesc
+%    See also:  WRITESEIZMO, READSEIZMO, BSEIZMO, READDATAWINDOW, READDATA,
+%               READHEADER, SEIZMODEF, GETFILEVERSION, CHANGEHEADER,
+%               GETHEADER, LISTHEADER, GETLGC, GETENUMID, GETENUMDESC
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

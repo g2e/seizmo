@@ -15,8 +15,8 @@ function [data]=keepam(data)
 %     Using keepam allows plotting amplitudes using PLOT1:
 %      plot1(keepam(data))
 %
-%    See also: keepph, keeprl, keepim, getspectralcmp, splitrecords, dft,
-%              idft
+%    See also: KEEPPH, KEEPRL, KEEPIM, GETSPECTRALCMP, SPLITRECORDS, DFT,
+%              IDFT
 
 %     Version History:
 %        June 25, 2009 - initial version

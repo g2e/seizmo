@@ -26,7 +26,7 @@ function [m,covm] = linem(dd,tt,covd)
 %      gcarc=getheader(data,'gcarc');
 %      [m,covm]=linem(gcarc,P);
 %
-%    See also: correlate, wlinem
+%    See also: CORRELATE, WLINEM
 
 %     Version History:
 %        Aug. 25, 2009 - initial version

@@ -35,7 +35,7 @@ function [data]=mat2records(data,dep,idx1,ind,idx2,store,npts)
 %      ...non-seizmo commands...
 %      data=mat2records(data,dep,idx1,ind,idx2,store,npts);
 %
-%    See also: records2mat, bseizmo
+%    See also: RECORDS2MAT, BSEIZMO
 
 %     Version History:
 %        Feb. 16, 2008 - initial version

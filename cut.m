@@ -110,7 +110,7 @@ function [data,failed]=cut(data,varargin)
 %     or explicitly:
 %       data=cut(data,'z',300,'z',500);
 %
-%    See also: readdatawindow
+%    See also: READDATAWINDOW
 
 %     Version History:
 %        Oct. 30, 2007 - initial version

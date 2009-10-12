@@ -21,7 +21,7 @@ function [data]=sortbyfield(data,field,mode)
 %     Sort by descending degree distance:
 %      data=sortbyfield(data,'gcarc','descend')
 %
-%    See also: sort, getheader
+%    See also: SORT, GETHEADER
 
 %     Version History:
 %        Oct. 31, 2007 - initial version

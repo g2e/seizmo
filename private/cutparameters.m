@@ -16,7 +16,7 @@ function [option]=cutparameters(varargin)
 %     CUTPARAMETERS is what allows CUT and READDATAWINDOW to have very
 %     flexible input lists.
 %
-%    See also: cut, readdatawindow
+%    See also: CUT, READDATAWINDOW
 
 %     Version History:
 %        Apr. 17, 2008 - initial version

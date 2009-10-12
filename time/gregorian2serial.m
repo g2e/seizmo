@@ -22,8 +22,8 @@ function [serial]=gregorian2serial(times)
 %      gregorian2serial([2008 366 0 0 0.01])
 %      datenum([2008 12 31 0 0 0.01])
 %
-%    See also: serial2gregorian, gregorian2modserial, modserial2gregorian,
-%              isleapyear, doy2cal, cal2doy, fixdates, fixtimes, timediff
+%    See also: SERIAL2GREGORIAN, GREGORIAN2MODSERIAL, MODSERIAL2GREGORIAN,
+%              ISLEAPYEAR, DOY2CAL, CAL2DOY, FIXDATES, FIXTIMES, TIMEDIFF
 
 %     Version History:
 %        Nov.  2, 2008 - initial version

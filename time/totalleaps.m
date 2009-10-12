@@ -24,8 +24,8 @@ function [leaps]=totalleaps(dates,option)
 %     Get the current offset:
 %      totalleaps(now,'serial')
 %
-%    See also: leapsinday, getleapseconds, leapseconds, fixtimes, timediff,
-%              utc2tai, tai2utc
+%    See also: LEAPSINDAY, GETLEAPSECONDS, LEAPSECONDS, FIXTIMES, TIMEDIFF,
+%              UTC2TAI, TAI2UTC
 
 %     Version History:
 %        Nov.  1, 2008 - initial version

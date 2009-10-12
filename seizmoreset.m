@@ -24,7 +24,7 @@ function []=seizmoreset(varargin)
 %     previous state.  A workaround is to reset checking after the error:
 %      seizmoreset('checks')
 %
-%    See also: set_seizmocheck_state, set_checkheader_state
+%    See also: SET_SEIZMOCHECK_STATE, SET_CHECKHEADER_STATE
 
 %     Version History:
 %        Oct.  7, 2009 - initial version

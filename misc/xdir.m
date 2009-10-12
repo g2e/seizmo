@@ -53,7 +53,7 @@ function [varargout]=xdir(str,depth)
 %     List all m-files in private directories below the current directory:
 %      xdir **/private/*.m
 %
-%    See also: dir, ls, cd, delete, rmdir, mkdir
+%    See also: DIR, LS, CD, DELETE, RMDIR, MKDIR
 
 %     Version History:
 %        Apr. 14, 2008 - initial version (RDIR - Matlab FEX #19550)

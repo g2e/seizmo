@@ -1,10 +1,11 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r99 Ararat 07-Oct-2009
+% Version 0.6.0-r100 Ararat 12-Oct-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
 %ADDARRIVALS         - Adds the indicated phases to the SEIZMO data header
 %ADDRECORDS          - Add SEIZMO records
+%ATTACH              - Attach data to SEIZMO records
 %AMPH2RLIM           - Convert SEIZMO spectral records from AMPH to RLIM
 %BINOPERR            - Controls behavior of SEIZMO binary functions
 %BSEIZMO             - Arranges xy data into a SEIZMO data structure
@@ -16,10 +17,14 @@
 %CHECKHEADER         - Check and fix header values of SEIZMO records
 %CHECKOPERR          - Controls behavior of SEIZMO CHECKHEADER function
 %COMPAREHEADER       - List SEIZMO data headers side-by-side for easy comparison
+%CONVOLVE            - Convolve SEIZMO records with a time function
 %COPYHEADER          - Copy one record's header to all records
 %CORRELATE           - Compute cross correlograms of SEIZMO data records
 %CUT                 - Cut a window out of SEIZMO records
+%DECONVOLVE          - Spectrally deconvolve a time function from SEIZMO records
+%DECONVOLVETD        - Time-domain Deconvolution of SEIZMO records
 %DELETERECORDS       - Deletes indicated records from SEIZMO data structure
+%DETACH              - Detach data from SEIZMO records
 %DFT                 - Performs a discrete fourier transform on SEIZMO data records
 %DIFFERENTIATE       - Differentiate SEIZMO records
 %DIVIDE              - Divide SEIZMO records by a constant

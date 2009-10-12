@@ -15,7 +15,7 @@ function [data]=reverse(data)
 %     See what this operation does:
 %      plot1([data(1) reverse(data(1))])
 %
-%    See also: mirrorflip
+%    See also: MIRRORFLIP
 
 %     Version History:
 %        Apr.  9, 2008 - initial version

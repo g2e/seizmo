@@ -24,7 +24,7 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 %           0:1e-9:1e-5,haversine(0,0,0:1e-9:1e-5,0))
 %     demonstrates where this function becomes useful (couple meters).
 %
-%    See also: sphericalinv, vincentyinv, sphericalfwd, vincentyfwd
+%    See also: SPHERICALINV, VINCENTYINV, SPHERICALFWD, VINCENTYFWD
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

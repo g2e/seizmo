@@ -27,7 +27,7 @@ function [i,j]=lti2sub(len,lti)
 %     in the vector:
 %      [thing1,thing2]=lti2sub(400,8544)
 %
-%    See also: uti2sub, sub2uti, sub2lti
+%    See also: UTI2SUB, SUB2UTI, SUB2LTI
 
 %     Version History:
 %        Sep.  8, 2009 - added documentation

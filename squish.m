@@ -25,7 +25,7 @@ function [data]=squish(data,factor)
 %     To cascade records to a samplerate 40 times lower;
 %      data=squish(data,[5 8])
 %
-%    See also: stretch, syncrates, interpolate
+%    See also: STRETCH, SYNCRATES, INTERPOLATE
 
 %     Version History:
 %        Oct. 30, 2007 - initial version

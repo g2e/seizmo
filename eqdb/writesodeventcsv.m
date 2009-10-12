@@ -39,7 +39,7 @@ function []=writesodeventcsv(file,events,varargin)
 %      events=events([events.magnitude]>5.5));
 %      writesodeventcsv('my_gt_5p5.csv',events);
 %
-%    See also: readsodeventcsv, readcsv, writecsv
+%    See also: READSODEVENTCSV, READCSV, WRITECSV
 
 %     Version History:
 %        Sep. 16, 2009 - initial version

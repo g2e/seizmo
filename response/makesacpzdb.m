@@ -33,8 +33,8 @@ function [db]=makesacpzdb(varargin)
 %      sacpzdb=cat(1,sacpzdb,mysacpzdb)
 %      save seizmo/data/sacpzdb sacpzdb  # NOTE: fix the path
 %
-%    See also: getsacpz, readsacpz, parse_sacpz_filename, writesacpz,
-%              applysacpz, removesacpz, db2sacpz, gensacpzname
+%    See also: GETSACPZ, READSACPZ, PARSE_SACPZ_FILENAME, WRITESACPZ,
+%              APPLYSACPZ, REMOVESACPZ, DB2SACPZ, GENSACPZNAME
 
 %     Version History:
 %        Sep. 20, 2009 - initial version

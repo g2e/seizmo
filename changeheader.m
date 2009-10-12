@@ -66,8 +66,8 @@ function [data]=changeheader(data,varargin)
 %      data=changeheader(data,'kuser',{'nan' 'blah' 'wow'; 'another' ...
 %           'set of' 'examples'});
 %
-%    See also:  listheader, getheader, readheader, writeheader, getlgc,
-%               getenumid, getenumdesc, compareheader
+%    See also:  LISTHEADER, GETHEADER, READHEADER, WRITEHEADER, GETLGC,
+%               GETENUMID, GETENUMDESC, COMPAREHEADER
 
 %     Version History:
 %        Oct. 29, 2007 - initial version

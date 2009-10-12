@@ -40,9 +40,9 @@ function []=writeseizmo(data,varargin)
 %     Alter the location of where the files are written:
 %      writeseizmo(data,'path','some/new/directory')
 %
-%    See also:  readseizmo, bseizmo, seizmodef, getfileversion, readdata,
-%               readdatawindow, readheader, writeheader, changename,
-%               changepath
+%    See also:  READSEIZMO, BSEIZMO, SEIZMODEF, GETFILEVERSION, READDATA,
+%               READDATAWINDOW, READHEADER, WRITEHEADER, CHANGENAME,
+%               CHANGEPATH
 
 %     Version History:
 %        Oct. 29, 2007 - initial version, supports struct data

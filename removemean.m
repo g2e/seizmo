@@ -19,8 +19,8 @@ function [data]=removemean(data)
 %      plot1(squish(data,5))             % more ringing
 %      plot1(squish(removemean(data),5)) % less ringing
 %
-%    See also: removetrend, removepolynomial, getpolynomial, taper,
-%              removedeadrecords
+%    See also: REMOVETREND, REMOVEPOLYNOMIAL, GETPOLYNOMIAL, TAPER,
+%              REMOVEDEADRECORDS
 
 %     Version History:
 %        Oct. 31, 2007 - initial version

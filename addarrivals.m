@@ -47,7 +47,7 @@ function [data]=addarrivals(data,varargin)
 %     Fill t, kt, user fields 6:9 with several S phases:
 %      data=addarrivals(data,'phases','tts+','fields',6:9);
 %
-%    See also: getarrival, tauptime, changeheader
+%    See also: GETARRIVAL, TAUPTIME, CHANGEHEADER
 
 %     Version History:
 %        June 29, 2009 - initial version

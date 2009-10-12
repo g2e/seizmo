@@ -12,7 +12,7 @@ function [fh,lh]=plot0(data,varargin)
 %     To add record names to the yaxis:
 %        plot0(data,'namesonyaxis',true)
 %
-%    See also:  plot1, plot2, recordsection
+%    See also:  PLOT1, PLOT2, RECORDSECTION
 
 % check data structure
 msg=seizmocheck(data,'dep');
@@ -32,7 +32,7 @@ for i=1:2:length(varargin)
     if(isfield(P,varargin{i}))
         P.(varargin{i})=varargin{i+1};
     else
-        warning('seizmo:p3:badInput','Unknown Option: %s',varargin{i}); 
+        warning('seizmo:p0:badInput','Unknown Option: %s',varargin{i}); 
     end
 end
 
@@ -50,7 +50,7 @@ else
 end
 
 % SOME STYLING OF THE PLOT
-set(gcf,'name',['P3 -- ' P.NAME],...
+set(gcf,'name',['P0 -- ' P.NAME],...
         'numbertitle',P.NUMBERTITLE,...
         'menubar',P.MENUBAR,...
         'toolbar',P.TOOLBAR,...
@@ -100,7 +100,7 @@ end
 
 % check normalization style
 if(~any(strcmpi(P.NORMSTYLE,{'single' 'group'})))
-    warning('seizmo:p3:badInput','bad normalization style')
+    warning('seizmo:p0:badInput','bad normalization style')
     P.NORMSTYLE='single';
 end
 

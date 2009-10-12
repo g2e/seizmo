@@ -17,7 +17,7 @@ function [snr]=quicksnr(data,nwin,swin)
 %       Ptimes=getarrival(data,'P');
 %       snr=quicksnr(data,Ptimes+[-100 -20],Ptimes+[-20 40])
 %
-%    See also: getarrival, cut
+%    See also: GETARRIVAL, CUT
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

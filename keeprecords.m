@@ -17,7 +17,7 @@ function [data]=keeprecords(data,idx)
 %      data=deleterecords(data,[2 5]);
 %      data([2 5])=[];
 %
-%    See also: selectrecords, deleterecords
+%    See also: SELECTRECORDS, DELETERECORDS
 
 %     Version History:
 %        June 25, 2009 - initial version

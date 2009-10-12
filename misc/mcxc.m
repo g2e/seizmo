@@ -144,7 +144,7 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %    Examples:
 %     
 %
-%    See also: xcorr, fftfilt (Signal Processing Toolbox)
+%    See also: XCORR, FFTFILT (Signal Processing Toolbox)
 
 %    Seismology Specific Notes:
 %     The idea behind mcxc is that it is a more robust way of determining

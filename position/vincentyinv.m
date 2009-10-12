@@ -50,7 +50,7 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %     St. Louis, MO USA to Isla Isabella, Galapagos:
 %      [dist,az,baz]=sphericalinv(38.649,-90.305,-0.823,-91.097)
 %
-%    See also: vincentyfwd, sphericalinv, sphericalfwd, haversine
+%    See also: VINCENTYFWD, SPHERICALINV, SPHERICALFWD, HAVERSINE
 
 %     Version History:
 %        June 19, 2008 - initial version

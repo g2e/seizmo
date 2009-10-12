@@ -25,7 +25,7 @@ function [data]=seizmofun(data,fun)
 %      data=seizmofun(data,@(x)3.^x)
 %      data=seizmofun(data,@(x)real(exp(-2*i*pi*x)))
 %
-%    See also: add, divide, multiply, subtract, slidingfun
+%    See also: ADD, DIVIDE, MULTIPLY, SUBTRACT, SLIDINGFUN
 
 %     Version History:
 %        Apr.  9, 2008 - initial version

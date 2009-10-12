@@ -42,7 +42,7 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %     records in the window and remove the trend after windowing:
 %      data=userwindow(data,true,@removetrend);
 %
-%    See also: usertaper, usercluster, selectrecords
+%    See also: USERTAPER, USERCLUSTER, SELECTRECORDS
 
 %     Version History:
 %        Sep.  5, 2009 - rewrite

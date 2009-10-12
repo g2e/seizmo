@@ -22,7 +22,7 @@ function [data]=multiplyomega(data)
 %      data=dft(differentiate(idft(data)))
 %      data=multiplyomega(data)
 %
-%    See also: divideomega, dft, idft
+%    See also: DIVIDEOMEGA, DFT, IDFT
 
 %     Version History:
 %        May  12, 2008 - initial version

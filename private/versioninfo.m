@@ -17,7 +17,7 @@ function [h,idx]=versioninfo(data)
 %      h=versioninfo(data);
 %      h.undef
 %
-%    See also: seizmodef, validseizmo, seizmocheck
+%    See also: SEIZMODEF, VALIDSEIZMO, SEIZMOCHECK
 
 %     Version History:
 %        Sep. 25, 2008 - initial version

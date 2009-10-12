@@ -16,7 +16,7 @@ function [c]=lonmod(a,b)
 %     To get longitude values LON within the range of +/-180:
 %      LON=lonmod(LON,360);
 %
-%    See also: latmod, mod, rem
+%    See also: LATMOD, MOD, REM
 
 %     Version History:
 %        Mar. 24, 2009 - initial version

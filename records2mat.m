@@ -22,7 +22,7 @@ function [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 %      dep=records2mat(data);
 %      data=changeheader(data,'user3',iqr(dep));
 %
-%    See also: mat2records, bseizmo
+%    See also: MAT2RECORDS, BSEIZMO
 
 %     Version History:
 %        Feb. 16, 2008 - initial version

@@ -57,7 +57,7 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %     Sync to the first occurance of USER2, making sure to update USERN:
 %      data=synchronize(data,'user2','first',[],[],'user');
 %
-%    See also: timeshift, cut
+%    See also: TIMESHIFT, CUT
 
 %     Version History:
 %        June 24, 2009 - initial version

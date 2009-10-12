@@ -21,7 +21,7 @@ function [fh,lh]=recordsection(data,varargin)
 %       recordsection(data,'yfield','az')
 %       recordsection(data,'yfield','baz')
 %
-%    See also:  plot1, plot2, plot0
+%    See also:  PLOT1, PLOT2, PLOT0
 
 % check data structure
 msg=seizmocheck(data,'dep');

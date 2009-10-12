@@ -23,7 +23,7 @@ function [data]=divideomega(data)
 %      data=dft(integrate(idft(data)))
 %      data=divideomega(data)
 %
-%    See also: multiplyomega, dft, idft
+%    See also: MULTIPLYOMEGA, DFT, IDFT
 
 %     Version History:
 %        May  12, 2008 - initial version

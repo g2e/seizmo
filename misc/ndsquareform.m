@@ -73,7 +73,7 @@ function [x]=ndsquareform(x,method,flag)
 %                  4  7  9 10  0];
 %      v=ndsquareform(m)
 %
-%    See also: squareform, tril, triu, permute
+%    See also: SQUAREFORM, TRIL, TRIU, PERMUTE
 
 %     Version History:
 %        Sep.  8, 2009 - rewrite and added documentation

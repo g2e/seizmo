@@ -22,8 +22,8 @@ function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 %     Find out how far a position is from the equatorial plane (z):
 %      [x,y,z]=geocentric2xyz(lat,lon,depth,r)
 %
-%    See also: xyz2geocentric, xyz2geodetic, geodetic2xyz,
-%              geodetic2geocentric, geocentric2geodetic
+%    See also: XYZ2GEOCENTRIC, XYZ2GEODETIC, GEODETIC2XYZ,
+%              GEODETIC2GEOCENTRIC, GEOCENTRIC2GEODETIC
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

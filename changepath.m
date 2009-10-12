@@ -69,7 +69,7 @@ function [data]=changepath(data,varargin)
 %     Replace certain portions of all filepaths:
 %      data=changepath(data,'change',{'//' '/' 'dir1' 'dir2'})
 %
-%    See also: changebyteorder, changename, writeheader, writeseizmo
+%    See also: CHANGEBYTEORDER, CHANGENAME, WRITEHEADER, WRITESEIZMO
 
 %     Version History:
 %        May  28, 2009 - initial version

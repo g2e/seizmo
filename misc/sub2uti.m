@@ -28,7 +28,7 @@ function [uti]=sub2uti(i,j)
 %      idx=sub2uti(400,74,233)
 %      dissim=my_dissim_vector(idx)
 %
-%    See also: sub2lti, uti2sub, sub2lti
+%    See also: SUB2LTI, UTI2SUB, SUB2LTI
 
 %     Version History:
 %        Sep.  8, 2009 - added documentation

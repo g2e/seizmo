@@ -67,9 +67,9 @@ function [data,failed]=readdata(data,varargin)
 %      data=data(strcmpi(getenumdesc(data,'iftype'),'Time Series File'))
 %      data=readdata(data)
 %
-%    See also: readheader, readdatawindow, readseizmo, writeseizmo, getlgc,
-%              writeheader, bseizmo, seizmodef, getfileversion, seizmosize,
-%              getheader, listheader, changeheader, getenumid, getenumdesc
+%    See also: READHEADER, READDATAWINDOW, READSEIZMO, WRITESEIZMO, GETLGC,
+%              WRITEHEADER, BSEIZMO, SEIZMODEF, GETFILEVERSION, SEIZMOSIZE,
+%              GETHEADER, LISTHEADER, CHANGEHEADER, GETENUMID, GETENUMDESC
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

@@ -18,7 +18,7 @@ function [radius]=geodeticlat2radius(lat,ellipsoid)
 %     Get the radius for St. Louis, MO USA:
 %      radius=geodeticlat2radius(38.649)
 %
-%    See also: geocentric2geodeticlat, geodetic2geocentriclat
+%    See also: GEOCENTRIC2GEODETICLAT, GEODETIC2GEOCENTRICLAT
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

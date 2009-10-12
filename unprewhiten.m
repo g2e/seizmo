@@ -26,7 +26,7 @@ function [data]=unprewhiten(data)
 %     a feel for how important/detrimental it is.  Plotting the difference:
 %      plot1(subtractrecords(data,unprewhiten(prewhiten(data,order))))
 %
-%    See also: prewhiten, levinson, filter, whiten
+%    See also: PREWHITEN, LEVINSON, FILTER, WHITEN
 
 %     Version History:
 %        June  8, 2009 - initial version

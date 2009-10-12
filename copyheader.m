@@ -30,7 +30,7 @@ function [data]=copyheader(data,idx,varargin)
 %     Copy event info from WUSTL.sac to all other records:
 %      data=copyheader(data,'WUSTL.sac','evla','evlo','evel','evdp');
 %
-%    See also: getheader, changeheader, listheader
+%    See also: GETHEADER, CHANGEHEADER, LISTHEADER
 
 %     Version History:
 %        June 25, 2009 - initial version

@@ -24,7 +24,7 @@ function [data]=fixdelta(data,tol)
 %     Force double precision and update the delta field:
 %      data=fixdelta(changeclass(data,'double'));
 %
-%    See also: rat, changeclass
+%    See also: RAT, CHANGECLASS
 
 %     Version History:
 %        Feb. 21, 2008 - initial version

@@ -247,7 +247,7 @@ function [varargout]=checkoperr(varargin)
 %     Make CHECKHEADER only require that the version field is valid:
 %      checkoperr('all','ignore','invalid_nvhdr','error')
 %
-%    See also: checkheader, checkparameters, binoperr
+%    See also: CHECKHEADER, CHECKPARAMETERS, BINOPERR
 
 %     Version History:
 %        June  4, 2009 - initial version

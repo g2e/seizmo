@@ -29,8 +29,8 @@ function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
 %     Find the geodetic position of some point given in xyz:
 %      [lat,lon,depth]=xyz2geodetic(3000,3000,3000)
 %
-%    See also: geodetic2xyz, geocentric2xyz, xyz2geocentric,
-%              geodetic2geocentric, geocentric2geodetic
+%    See also: GEODETIC2XYZ, GEOCENTRIC2XYZ, XYZ2GEOCENTRIC,
+%              GEODETIC2GEOCENTRIC, GEOCENTRIC2GEODETIC
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

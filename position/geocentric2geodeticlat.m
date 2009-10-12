@@ -18,7 +18,7 @@ function [lat]=geocentric2geodeticlat(lat,ecc)
 %     Show the difference in latitudes:
 %      plot(geocentric2geodeticlat(-90:90)-(-90:90))
 %
-%    See also: geodetic2geocentriclat, geodeticlat2radius
+%    See also: GEODETIC2GEOCENTRICLAT, GEODETICLAT2RADIUS
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

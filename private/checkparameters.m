@@ -238,7 +238,7 @@ function [option]=checkparameters(setglobal,varargin)
 %     stored in the header:
 %      checkparameters(true,'all','ignore','invalid_nvhdr','error');
 %
-%    See also: checkheader, checkoperr
+%    See also: CHECKHEADER, CHECKOPERR
 
 %     Version History:
 %        Sep. 29, 2009 - initial version taken from CHECKOPERR

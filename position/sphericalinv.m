@@ -27,7 +27,7 @@ function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %     St. Louis, MO USA to Isla Isabella, Galapagos:
 %      [dist,az,baz]=sphericalinv(38.649,-90.305,-0.823,-91.097)
 %
-%    See also: haversine, sphericalfwd, vincentyinv, vincentyfwd
+%    See also: HAVERSINE, SPHERICALFWD, VINCENTYINV, VINCENTYFWD
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

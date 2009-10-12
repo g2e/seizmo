@@ -21,7 +21,7 @@ function [data]=amph2rlim(data)
 %      data=multiplyrecords(data(1),data(2))
 %      data=rlim2amph(data)
 %
-%    See also: rlim2amph, dft, idft
+%    See also: RLIM2AMPH, DFT, IDFT
 
 %     Version History:
 %        June 11, 2008 - initial version

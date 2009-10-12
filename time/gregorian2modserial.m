@@ -27,8 +27,8 @@ function [modserial]=gregorian2modserial(times)
 %      modserial=gregorian2modserial([0 now])
 %      serial=gregorian2serial([0 now])
 %
-%    See also: serial2gregorian, gregorian2serial, modserial2gregorian,
-%              fixtimes, fixdates, timediff, isleapyear, cal2doy, doy2cal
+%    See also: SERIAL2GREGORIAN, GREGORIAN2SERIAL, MODSERIAL2GREGORIAN,
+%              FIXTIMES, FIXDATES, TIMEDIFF, ISLEAPYEAR, CAL2DOY, DOY2CAL
 
 %     Version History:
 %        Nov. 11, 2008 - initial version

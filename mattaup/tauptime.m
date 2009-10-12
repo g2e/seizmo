@@ -106,7 +106,7 @@ function tt=tauptime(varargin)
 %      tauptime('mod','prem','dep',50,'ph','Pdiff,PKP',...
 %          'sta',[-40 -100],'evt',[30,50])
 %
-%    See also: taup, tauppath, taupcurve, tauppierce
+%    See also: TAUP, TAUPPATH, TAUPCURVE, TAUPPIERCE
 
 %     Version History:
 %        June 29, 2009 - added defaults for depth, phase, model

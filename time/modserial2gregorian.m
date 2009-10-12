@@ -28,8 +28,8 @@ function [times]=modserial2gregorian(modserial,option)
 %     500 seconds from now:
 %      modserial2gregorian([now 500])
 %
-%    See also: gregorian2modserial, serial2gregorian, gregorian2serial,
-%              fixtimes, fixdates, timediff, isleapyear, cal2doy, doy2cal
+%    See also: GREGORIAN2MODSERIAL, SERIAL2GREGORIAN, GREGORIAN2SERIAL,
+%              FIXTIMES, FIXDATES, TIMEDIFF, ISLEAPYEAR, CAL2DOY, DOY2CAL
 
 %     Version History:
 %        Nov. 12, 2008 - initial version

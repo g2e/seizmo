@@ -29,7 +29,7 @@ function [x,li]=unsort(x,i,dim)
 %      x=x(li); % sorted
 %      x(li)=x; % unsorted
 %
-%    See also: sort, matchsort, sort2li
+%    See also: SORT, MATCHSORT, SORT2LI
 
 %     Version History:
 %        Sep. 21, 2009 - initial version

@@ -33,7 +33,7 @@ function [data]=writeparameters(data,varargin)
 %     Read in a dataset, merge, and write out with new names:
 %      writeseizmo(merge(readseizmo('*')),'append','.merged')
 %
-%    See also: changebyteorder, changename, changepath
+%    See also: CHANGEBYTEORDER, CHANGENAME, CHANGEPATH
 
 %     Version History:
 %        May  29, 2009 - initial version

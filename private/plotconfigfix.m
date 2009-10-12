@@ -18,7 +18,7 @@ function [conf]=plotconfigfix(conf)
 %     uses two options that will apply their values to nearly every element
 %     in the figure.
 %
-%    See also: plotconfig, plot1, plot2, plot0, recordsection, plotdendro
+%    See also: PLOTCONFIG, PLOT1, PLOT2, PLOT0, RECORDSECTION, PLOTDENDRO
 
 %     Version History:
 %        Mar.  7, 2008 - initial version

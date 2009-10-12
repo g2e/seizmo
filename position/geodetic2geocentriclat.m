@@ -18,7 +18,7 @@ function [lat]=geodetic2geocentriclat(lat,ecc)
 %     Get the geocentric latitude for St. Louis, MO USA:
 %      latitude=geodetic2geocentriclat(38.649)
 %
-%    See also: geocentric2geodeticlat, geodeticlat2radius
+%    See also: GEOCENTRIC2GEODETICLAT, GEODETICLAT2RADIUS
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

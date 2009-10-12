@@ -26,8 +26,8 @@ function [db]=gensacpzname(db)
 %     Make new names and write out SAC PoleZero files:
 %      db2sacpz(gensacpzname(mysacpzdb));
 %
-%    See also: makesacpzdb, db2sacpz, getsacpz, applysacpz, removesacpz,
-%              readsacpz, writesacpz, parse_sacpz_filename
+%    See also: MAKESACPZDB, DB2SACPZ, GETSACPZ, APPLYSACPZ, REMOVESACPZ,
+%              READSACPZ, WRITESACPZ, PARSE_SACPZ_FILENAME
 
 %     Version History:
 %        Sep. 22, 2009 - initial version

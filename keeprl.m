@@ -16,8 +16,8 @@ function [data]=keeprl(data)
 %     Real vs imaginary:
 %      p2([keeprl(data(1)) keepim(data(1))])
 %
-%    See also: keepam, keepph, keepim, getspectralcmp, splitrecords, dft,
-%              idft
+%    See also: KEEPAM, KEEPPH, KEEPIM, GETSPECTRALCMP, SPLITRECORDS, DFT,
+%              IDFT
 
 %     Version History:
 %        June 25, 2009 - initial version

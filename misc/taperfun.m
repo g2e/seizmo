@@ -27,7 +27,7 @@ function [pts]=taperfun(type,pts,limits,varargin)
 %      t=sort(rand(100,1));
 %      plot(t,taperfun('gausswin',t,0:1,4),'o')
 %
-%    See also: taper, window
+%    See also: TAPER, WINDOW
 
 %     Version History:
 %        Sep. 23, 2009 - initial version

@@ -84,8 +84,8 @@ function []=binoperr(varargin)
 %     Show binary error settings:
 %      binoperr
 %
-%    See also: addrecords, dividerecords, multiplyrecords, subtractrecords
-%              checkoperr
+%    See also: ADDRECORDS, DIVIDERECORDS, MULTIPLYRECORDS, SUBTRACTRECORDS
+%              CHECKOPERR
 
 %     Version History:
 %        June 20, 2008 - initial version

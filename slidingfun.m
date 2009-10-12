@@ -68,7 +68,7 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %     Root-Median-Square:
 %      slidingfun(data,@(x)sqrt(median(x.^2)),N)
 %
-%    See also: seizmofun, slidingrms, slidingabsmean, slidingavg
+%    See also: SEIZMOFUN, SLIDINGRMS, SLIDINGABSMEAN, SLIDINGAVG
 
 %     Version History:
 %        Apr. 23, 2008 - initial version

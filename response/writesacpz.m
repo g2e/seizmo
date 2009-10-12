@@ -48,9 +48,9 @@ function []=writesacpz(file,z,p,k,o)
 %      k=k*correction_factor;
 %      writesacpz('SAC_PZs_XB_CM32_BHZ_02',z,p,k);
 %
-%    See also: readsacpz, getsacpz, applysacpz, removesacpz, makesacpzdb,
-%              parse_sacpz_filename, db2sacpz, gensacpzname, readresp,
-%              writeresp
+%    See also: READSACPZ, GETSACPZ, APPLYSACPZ, REMOVESACPZ, MAKESACPZDB,
+%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME, READRESP,
+%              WRITERESP
 
 %     Version History:
 %        Apr.  7, 2009 - initial version

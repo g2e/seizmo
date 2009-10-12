@@ -57,8 +57,8 @@ function [data]=readseizmo(varargin)
 %     Read in every SEIZMO compatible datafile from the current directory:
 %      data=readseizmo('*');
 %
-%    See also: readheader, readdata, readdatawindow, writeheader, 
-%              writeseizmo, bseizmo, changeheader, getheader, listheader
+%    See also: READHEADER, READDATA, READDATAWINDOW, WRITEHEADER, 
+%              WRITESEIZMO, BSEIZMO, CHANGEHEADER, GETHEADER, LISTHEADER
 
 %     Version History:
 %        May  30, 2007 - auto-determine byte-order, multiple file support

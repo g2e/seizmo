@@ -30,7 +30,7 @@ function [data,removed]=removedeadrecords(data,option)
 %     Remove dead records before reading in data from current directory:
 %      data=readdata(removedeadrecords(readheaders('*')));
 %
-%    See also: removemean, removetrend
+%    See also: REMOVEMEAN, REMOVETREND
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

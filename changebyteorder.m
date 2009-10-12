@@ -16,8 +16,8 @@ function [data]=changebyteorder(data,endianness)
 %     Change records in current directory to the platform's byte-ordering:
 %      writeseizmo(changebyteorder(readseizmo('*'),nativebyteorder))
 %
-%    See also: nativebyteorder, writeseizmo, readseizmo, bseizmo,
-%              readdata, readdatawindow, readheader, writeheader
+%    See also: NATIVEBYTEORDER, WRITESEIZMO, READSEIZMO, BSEIZMO,
+%              READDATA, READDATAWINDOW, READHEADER, WRITEHEADER
 
 %     Version History:
 %        Sep. 25, 2008 - initial version

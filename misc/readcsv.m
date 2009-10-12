@@ -18,7 +18,7 @@ function [lines]=readcsv(file)
 %     Read a SOD (Standing Order for Data) generated event csv file:
 %      events=readcsv('events.csv')
 %
-%    See also: writecsv, csvread, csvwrite
+%    See also: WRITECSV, CSVREAD, CSVWRITE
 
 %     Version History:
 %        Sep. 16, 2009 - initial version

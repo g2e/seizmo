@@ -22,7 +22,7 @@ function [application,version]=getapplication()
 %        % do something via octave routines
 %      end
 %
-%    See also: nativebyteorder, ver
+%    See also: NATIVEBYTEORDER, VER
 
 %     Version History:
 %        Nov. 13, 2008 - initial version

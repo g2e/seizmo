@@ -33,7 +33,7 @@ function [data]=whiten(data,halfwindow,varargin)
 %     Spectral normalization returns much whiter noise:
 %      plot1([data(1) whiten(data(1))])
 %
-%    See also: slidingabsmean, prewhiten, unprewhiten
+%    See also: SLIDINGABSMEAN, PREWHITEN, UNPREWHITEN
 
 %     Version History:
 %        June  9, 2009 - initial version

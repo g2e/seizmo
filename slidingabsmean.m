@@ -67,7 +67,7 @@ function [data]=slidingabsmean(data,varargin)
 %      Compare an envelope and a 21-sample sliding-window absolute-mean:
 %       p2([envelope(data(1)) slidingabsmean(data(1),10)])
 %
-%    See also: envelope, slidingavg, slidingrms, slidingfun, seizmofun
+%    See also: ENVELOPE, SLIDINGAVG, SLIDINGRMS, SLIDINGFUN, SEIZMOFUN
 
 %     Version History:
 %        Oct.  5, 2008 - initial version

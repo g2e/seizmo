@@ -20,7 +20,7 @@ function [data]=syncrates(data,sr)
 %     Change all records to 5 samples per second:
 %      data=syncrates(data,5)
 %
-%    See also: interpolate, iirfilter, squish, stretch
+%    See also: INTERPOLATE, IIRFILTER, SQUISH, STRETCH
 
 %     Version History:
 %        Feb. 16, 2008 - initial version

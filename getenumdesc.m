@@ -30,7 +30,7 @@ function [varargout]=getenumdesc(data,varargin)
 %     Interpret resp0 as an enum field:
 %      my_enum_desc=getenumdesc(data,'resp0')   
 %
-%    See also: getheader, getlgc, getenumid
+%    See also: GETHEADER, GETLGC, GETENUMID
 
 %     Version History:
 %        Feb. 23, 2008 - initial version

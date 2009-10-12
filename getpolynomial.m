@@ -18,8 +18,8 @@ function [p]=getpolynomial(data,order)
 %     Get various polynomial fits to a record:
 %      getpolynomial(data(ones(1,5)),0:4)
 %
-%    See also: removemean, removetrend, removepolynomial, taper,
-%              removedeadrecords
+%    See also: REMOVEMEAN, REMOVETREND, REMOVEPOLYNOMIAL, TAPER,
+%              REMOVEDEADRECORDS
 
 %     Version History:
 %        June 24, 2009 - initial version

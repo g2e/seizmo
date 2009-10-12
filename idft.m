@@ -25,7 +25,7 @@ function [data]=idft(data)
 %     To take the derivative of a time-series in the frequency domain:
 %      data=idft(multiplyomega(dft(data)))
 %
-%    See also: dft, amph2rlim, rlim2amph, divideomega, multiplyomega
+%    See also: DFT, AMPH2RLIM, RLIM2AMPH, DIVIDEOMEGA, MULTIPLYOMEGA
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

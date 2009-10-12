@@ -38,8 +38,8 @@ function [data]=readheader(varargin)
 %     Read in some datafile's headers, modify them, and write out changes:
 %      writeheader(changeheader(readheader('*.SAC'),'kuser0','QCed'))
 %
-%    See also: readdata, readdatawindow, writeheader, changeheader
-%              getheader, listheader, readseizmo, writeseizmo, bseizmo
+%    See also: READDATA, READDATAWINDOW, WRITEHEADER, CHANGEHEADER
+%              GETHEADER, LISTHEADER, READSEIZMO, WRITESEIZMO, BSEIZMO
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

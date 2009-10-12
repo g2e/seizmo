@@ -36,7 +36,7 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 %     Taper and remove the trend afterwards (before confirmation window):
 %      data=usertaper(data,@removetrend);
 %
-%    See also: taper, userwindow, usercluster, selectrecords
+%    See also: TAPER, USERWINDOW, USERCLUSTER, SELECTRECORDS
 
 %     Version History:
 %        Sep.  9, 2009 - rewrite and added documentation

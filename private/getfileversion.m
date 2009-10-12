@@ -24,7 +24,7 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %      [filetype,version,endian]=getfileversion('myfile')
 %      definition=seizmodef(filetype,version)
 %
-%    See also:  readheader, writeheader, seizmodef, validseizmo
+%    See also:  READHEADER, WRITEHEADER, SEIZMODEF, VALIDSEIZMO
 
 %     Version History:
 %        Jan. 27, 2008 - initial version

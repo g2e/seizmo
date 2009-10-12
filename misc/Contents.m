@@ -1,9 +1,10 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r97 Ararat 30-Sep-2009
+% Version 0.6.0-r100 Ararat 12-Oct-2009
 %
 % Miscellaneous Support functions
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
 %FISHER              - Converts correlation coefficients to the Z statistic
+%GAUSSIANTF          - Returns a gaussian time function
 %GETAPPLICATION      - Returns application running this script and its version
 %GETSUBFIELD         - Get substructure field contents
 %GETWORDS            - Returns a cell array of words from a string

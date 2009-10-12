@@ -18,7 +18,7 @@ function [words]=getwords(str,delimiter)
 %       ans = 
 %       'This'    'example'    'is'    'pretty'    'dumb!'
 %
-%    See also: joinwords, strtok, isspace
+%    See also: JOINWORDS, STRTOK, ISSPACE
 
 %     Version History:
 %        June 11, 2009 - initial version

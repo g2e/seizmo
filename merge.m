@@ -211,7 +211,7 @@ function [data]=merge(data,varargin)
 %     Try it before you buy it:
 %      merge(data,'verbose',true);
 %
-%    See also: removeduplicates, cut
+%    See also: REMOVEDUPLICATES, CUT
 
 %     Version History:
 %        Dec.  6, 2008 - initial version

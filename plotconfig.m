@@ -20,7 +20,7 @@ function [conf]=plotconfig()
 %       4. CONF=plotconfigfix(CONF)   (sets unset options using heirarchy)
 %       5. plotting
 %
-%    See also: plot1, plot2, plot0, recordsection
+%    See also: PLOT1, PLOT2, PLOT0, RECORDSECTION
 
 %     Version History:
 %        ????????????? - Initial Version

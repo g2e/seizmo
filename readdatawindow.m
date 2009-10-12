@@ -117,8 +117,8 @@ function [data,failed]=readdatawindow(data,varargin)
 %     or
 %      data=readdatawindow(data,'x',123,'n',1)
 %
-%    See also: cut, readheader, readdata, readseizmo, writeheader,
-%              writeseizmo, bseizmo, getheader, changeheader, listheader
+%    See also: CUT, READHEADER, READDATA, READSEIZMO, WRITEHEADER,
+%              WRITESEIZMO, BSEIZMO, GETHEADER, CHANGEHEADER, LISTHEADER
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

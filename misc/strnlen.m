@@ -13,7 +13,7 @@ function [A]=strnlen(A,n)
 %     Require elements in your array to be strings of length 8:
 %      A=strnlen(A,8);
 %
-%    See also: strtrim, deblank, strjust
+%    See also: STRTRIM, DEBLANK, STRJUST, STRNCMP, STRNCMPI
 
 %     Version History:
 %        Mar.  7, 2008 - initial version

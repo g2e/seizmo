@@ -27,8 +27,8 @@ function []=db2sacpz(db,varargin)
 %      cd my/sacpz/dir
 %      db2sacpz(IUdb);
 %
-%    See also: makesacpzdb, writesacpz, readsacpz, parse_sacpz_filename,
-%              applysacpz, removesacpz, getsacpz, gensacpzname
+%    See also: MAKESACPZDB, WRITESACPZ, READSACPZ, PARSE_SACPZ_FILENAME,
+%              APPLYSACPZ, REMOVESACPZ, GETSACPZ, GENSACPZNAME
 
 %     Version History:
 %        Sep. 22, 2009 - initial version

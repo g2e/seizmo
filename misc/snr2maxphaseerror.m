@@ -27,7 +27,7 @@ function [phase]=snr2maxphaseerror(snr)
 %       period=10; % Assume 10sec is dominant period
 %       arrivalerror=period/(2*pi).*snr2maxphaseerror(snr);
 %
-%    See also: quicksnr
+%    See also: QUICKSNR
 
 %     Version History:
 %        Aug. 22, 2009 - initial version

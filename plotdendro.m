@@ -22,8 +22,8 @@ function [perm,colors,fh,sfh]=plotdendro(data,Z,varargin)
 %       Z=linkage(1-cv.','average');
 %       plotdendro(Z,data,'treelimit',1);
 %
-%    See also: plot1, plot2, plot0, recordsection, mcxc,
-%              dendrogram, linkage, cluster (Statistics Toolbox)
+%    See also: PLOT1, PLOT2, PLOT0, RECORDSECTION, MCXC,
+%              DENDROGRAM, LINKAGE, CLUSTER (Statistics Toolbox)
 
 % check data structure
 msg=seizmocheck(data,'dep');

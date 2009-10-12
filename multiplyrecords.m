@@ -112,7 +112,7 @@ function [data]=multiplyrecords(varargin)
 %     Convolve a record with itself:
 %      idft(multiplyrecords(dft(data([1 1]))))
 %     
-%    See also: dividerecords, addrecords, subtractrecords, binoperr
+%    See also: DIVIDERECORDS, ADDRECORDS, SUBTRACTRECORDS, BINOPERR
 %
 %     Version History:
 %        June 10, 2008 - initial version

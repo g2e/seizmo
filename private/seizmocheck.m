@@ -36,7 +36,7 @@ function [report]=seizmocheck(data,varargin)
 %          error(msg.identifier,msg.message);
 %      end
 %
-%    See also: isseizmo, seizmodef
+%    See also: ISSEIZMO, SEIZMODEF, ISVALIDSEIZMO, VALIDSEIZMO
 
 %     Version History:
 %        Feb. 28, 2008 - initial version

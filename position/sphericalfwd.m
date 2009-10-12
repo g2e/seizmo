@@ -25,7 +25,7 @@ function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 %     St. Louis, MO USA to ???:
 %      [lat,lon]=sphericalfwd(38.649,-90.305,45,-30)
 %
-%    See also: sphericalinv, haversine, vincentyfwd, vincentyinv
+%    See also: SPHERICALINV, HAVERSINE, VINCENTYFWD, VINCENTYINV
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

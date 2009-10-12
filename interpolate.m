@@ -36,7 +36,7 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %     interpolate at 5 sps from 900 to 950 seconds using linear interp
 %      data_pdiff=interpolate(data,5,'linear',900,950)
 %
-%    See also: syncrates, squish, stretch, iirfilter
+%    See also: SYNCRATES, SQUISH, STRETCH, IIRFILTER
 
 %     Version History:
 %        Oct. 31, 2007 - initial version

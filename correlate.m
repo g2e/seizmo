@@ -174,7 +174,7 @@ function [data]=correlate(data1,varargin)
 %      p0(timeshift(correlate(data),...
 %       -getfield(correlate(data,'npeaks',1),'lg')))
 %
-%    See also: convolve, dft, idft, mcxc
+%    See also: CONVOLVE, DFT, IDFT, MCXC
 
 %     Version History:
 %        June 27, 2009 - first fully functional version

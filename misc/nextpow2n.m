@@ -14,7 +14,7 @@ function [p]=nextpow2n(n)
 %     Get the next power of 2 for a sequence:
 %      nextpow2n(1:10)
 %
-%    See also: nextpow2, log2, pow2
+%    See also: NEXTPOW2, LOG2, POW2
 
 %     Version History:
 %        June 25, 2009 - initial version

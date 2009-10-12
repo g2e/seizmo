@@ -16,9 +16,9 @@ function [isleap]=isleapyear(year)
 %     Takes into account the century rule and the exception so that
 %     isleapyear([1900 1904 2000 2004]) returns [0 1 1 1].
 %
-%    See also: fixdates, fixtimes, timediff, cal2doy, doy2cal,
-%              gregorian2modserial, gregorian2serial, serial2gregorian,
-%              modserial2gregorian
+%    See also: FIXDATES, FIXTIMES, TIMEDIFF, CAL2DOY, DOY2CAL,
+%              GREGORIAN2MODSERIAL, GREGORIAN2SERIAL, SERIAL2GREGORIAN,
+%              MODSERIAL2GREGORIAN
 
 %     Version History:
 %        Oct. 28, 2008 - initial version

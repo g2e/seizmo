@@ -17,8 +17,8 @@ function [tai]=tai2utc(tai)
 %     TAI to UTC can handle leap seconds:
 %      tai2utc([2009 1 1 0 0 22; 2009 1 1 0 0 23; 2009 1 1 0 0 24])
 %
-%    See also: utc2tai, fixtimes, timediff, leapseconds, totalleaps,
-%              getleapseconds, leapsinday
+%    See also: UTC2TAI, FIXTIMES, TIMEDIFF, LEAPSECONDS, TOTALLEAPS,
+%              GETLEAPSECONDS, LEAPSINDAY
 
 %     Version History:
 %        Nov.  2, 2008 - initial version

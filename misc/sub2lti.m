@@ -28,7 +28,7 @@ function [lti]=sub2lti(len,i,j)
 %      idx=sub2lti(400,74,233)
 %      dissim=my_dissim_vector(idx)
 %
-%    See also: sub2uti, lti2sub, uti2sub
+%    See also: SUB2UTI, LTI2SUB, UTI2SUB
 
 %     Version History:
 %        Sep.  8, 2009 - added documentation

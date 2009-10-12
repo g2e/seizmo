@@ -43,7 +43,7 @@ function [data]=mirrorflip(data,varargin)
 %      data=squish(data,[2 2 2 5]);
 %      data=cut(data,b,e);
 %
-%    See also: reverse
+%    See also: REVERSE
 
 %     Version History:
 %        May  14, 2009 - initial version

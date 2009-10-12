@@ -39,7 +39,7 @@ function [data]=differentiate(data,option)
 %      removemean(data)
 %      removemean(integrate(differentiate(data)))
 %
-%    See also: integrate, multiplyomega, divideomega
+%    See also: INTEGRATE, MULTIPLYOMEGA, DIVIDEOMEGA
 
 %    Version History:
 %       Jan. 28, 2008 - initial version

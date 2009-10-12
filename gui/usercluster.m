@@ -50,8 +50,8 @@ function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %     Cluster starting with a dissimilarity cutoff of 0.05:
 %      grp=usercluster(data,[],0.05);
 %
-%    See also: userwindow, usertaper, useralign, plotdendro,
-%              cluster, linkage, pdist, inconsistent, dendrogram
+%    See also: USERWINDOW, USERTAPER, USERALIGN, PLOTDENDRO,
+%              CLUSTER, LINKAGE, PDIST, INCONSISTENT, DENDROGRAM
 
 %     Version History:
 %        Sep. 25, 2009 - rewrite and added documentation

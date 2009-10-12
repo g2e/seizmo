@@ -22,7 +22,7 @@ function [valid]=validseizmo(filetype)
 %     How many different SEIZMO binary file versions are supported:
 %      length(validseizmo('SEIZMO Binary'))
 %
-%    See also:  seizmocheck, isseizmo, seizmodef, getfileversion
+%    See also:  SEIZMOCHECK, ISSEIZMO, SEIZMODEF, GETFILEVERSION
 
 %     Version History:
 %        Feb. 28, 2008 - initial version

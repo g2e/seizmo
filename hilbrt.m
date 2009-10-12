@@ -15,7 +15,7 @@ function [data]=hilbrt(data)
 %     To do a positive 90 degree phase shift:
 %      data=hilbrt(multiply(data,-1))
 %
-%    See also: envelope
+%    See also: ENVELOPE
 
 %     Version History:
 %        Jan. 30, 2008 - initial version

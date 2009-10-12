@@ -31,7 +31,7 @@ function [varargout]=getlgc(data,varargin)
 %     Treat field RESP0 as a logical field:
 %      my_lgc=getlgc(data,'resp0')
 %
-%    See also: getheader, getenumid, getenumdesc
+%    See also: GETHEADER, GETENUMID, GETENUMDESC
 
 %     Version History:
 %        Feb. 12, 2008 - initial version

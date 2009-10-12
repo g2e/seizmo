@@ -69,7 +69,7 @@ function [data]=changename(data,varargin)
 %     Replace certain portions of all filenames:
 %      data=changename(data,'change',{'..' '.__.' 'part1' 'part2'})
 %
-%    See also: changebyteorder, changepath, writeheader, writeseizmo
+%    See also: CHANGEBYTEORDER, CHANGEPATH, WRITEHEADER, WRITESEIZMO
 
 %     Version History:
 %        May  28, 2009 - initial version

@@ -26,7 +26,7 @@ function [X]=submat_eval(X,varargin)
 %      x=repmat(x,[1 2 ones(1,ndims(x)-2)])
 %      x=submat_eval(x,2,'1:end 1:end')
 %
-%    See also: submat, eval, colon operator (:), end, repmat
+%    See also: SUBMAT, EVAL, COLON OPERATOR (:), END, REPMAT
 
 %     Version History:
 %        Nov. 12, 2008 - initial version

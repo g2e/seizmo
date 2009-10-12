@@ -19,7 +19,7 @@ function [c]=latmod(a,b)
 %     To get latitude values LAT within the range of +/-90:
 %      LAT=latmod(LAT,90);
 %
-%    See also: lonmod, mod, rem
+%    See also: LONMOD, MOD, REM
 
 %     Version History:
 %        Mar. 24, 2009 - initial version

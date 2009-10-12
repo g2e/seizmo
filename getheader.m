@@ -52,8 +52,8 @@ function [varargout]=getheader(data,varargin)
 %     the value stored in the header:
 %      getheader(data,'iftype')
 %
-%    See also:  changeheader, listheader, readheader, writeheader, getlgc,
-%               getenumid, getenumdesc, getncmp, getarrival, compareheader
+%    See also:  CHANGEHEADER, LISTHEADER, READHEADER, WRITEHEADER, GETLGC,
+%               GETENUMID, GETENUMDESC, GETNCMP, GETARRIVAL, COMPAREHEADER
 
 %     Version History:
 %        Oct. 29, 2008 - initial version

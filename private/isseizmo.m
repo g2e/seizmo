@@ -20,7 +20,7 @@ function [lgc]=isseizmo(data,varargin)
 %
 %       if(isseizmo(readheader('*'))); disp('Valid Structure'); end
 %
-%    See also: seizmocheck, seizmodef
+%    See also: SEIZMOCHECK, SEIZMODEF
 
 %     Version History:
 %        Feb. 28, 2008 - initial version

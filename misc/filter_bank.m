@@ -26,7 +26,7 @@ function [bank]=filter_bank(range,option,width,offset)
 %      of constant 10 mHz and offset by 5 mHz:
 %        bank=filter_bank([0.01 0.1],'constant',0.010,0.005)
 %
-%    See also: iirfilter
+%    See also: IIRFILTER
 
 %     Version History:
 %        Sep.  7, 2009 - doc update

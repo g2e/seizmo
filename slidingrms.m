@@ -66,7 +66,7 @@ function [data]=slidingrms(data,varargin)
 %      Compare an envelope and a 21-sample sliding-window root-mean-square:
 %       p2([envelope(data(1)) slidingrms(data(1),10)])
 %
-%    See also: envelope, slidingabsmean, slidingfun, slidingavg, seizmofun
+%    See also: ENVELOPE, SLIDINGABSMEAN, SLIDINGFUN, SLIDINGAVG, SEIZMOFUN
 
 %     Version History:
 %        Apr.  9, 2008 - initial version

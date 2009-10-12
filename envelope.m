@@ -14,7 +14,7 @@ function [data]=envelope(data)
 %     Plot the envelopes against the data:
 %      recordsection([data; envelope(data)])
 %
-%    See also: hilbrt
+%    See also: HILBRT
 
 %     Version History:
 %        Jan. 30, 2008 - initial version

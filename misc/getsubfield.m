@@ -20,7 +20,7 @@ function [s]=getsubfield(s,varargin)
 %      a(3).b(5).c='b';
 %      f=getsubfield(a,'b','c')
 %
-%    See also: getfield
+%    See also: GETFIELD
 
 %     Version History:
 %        Sep. 22, 2009 - initial version

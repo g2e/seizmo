@@ -19,7 +19,7 @@ function [data]=getspectralcmp(data,cmp)
 %     This is SAC's KEEPAM:
 %      data=getspectralcmp(data,'am');
 %
-%    See also: keepam, keepph, keeprl, keepim, splitrecords, dft, idft
+%    See also: KEEPAM, KEEPPH, KEEPRL, KEEPIM, SPLITRECORDS, DFT, IDFT
 
 %     Version History:
 %        June 25, 2009 - initial version

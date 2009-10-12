@@ -121,7 +121,7 @@ function [data,fs,nyq]=iirfilter(data,type,style,corners,order,passes,ripple)
 %           This program will filter on any filetype.  The output for 
 %           unevenly spaced or xyz files will not be accurate though!
 %
-%    See also: interpolate, syncrates, squish, stretch, dft, idft
+%    See also: INTERPOLATE, SYNCRATES, SQUISH, STRETCH, DFT, IDFT
 
 % check number of inputs
 msg=nargchk(2,7,nargin);

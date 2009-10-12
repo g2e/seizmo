@@ -15,7 +15,7 @@ function [endianness]=nativebyteorder()
 %     byte-ordering:
 %      writeseizmo(readseizmo('*'),'byteorder',nativebyteorder)
 %
-%    See also: changebyteorder, writeseizmo, readseizmo, bseizmo
+%    See also: CHANGEBYTEORDER, WRITESEIZMO, READSEIZMO, BSEIZMO
 
 %     Version History:
 %        Sep. 25, 2008 - initial version

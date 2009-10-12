@@ -28,7 +28,7 @@ function [data]=multiply(data,constant,cmp)
 %     multiplying the imaginary component by -1 (component 2):
 %      data=multiply(data,-1,2)
 %
-%    See also: subtract, add, divide, seizmofun
+%    See also: SUBTRACT, ADD, DIVIDE, SEIZMOFUN
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

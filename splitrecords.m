@@ -34,8 +34,8 @@ function [data,idx]=splitrecords(data)
 %     Now subtract and plot to make sure:
 %      p1(subtractrecords(savedata,data));
 %
-%    See also: joinrecords, recordfun, getspectralcmp, keepam, keepph,
-%              keeprl, keepim, cut
+%    See also: JOINRECORDS, RECORDFUN, GETSPECTRALCMP, KEEPAM, KEEPPH,
+%              KEEPRL, KEEPIM, CUT
 
 %     Version History:
 %        June 29, 2009 - initial version

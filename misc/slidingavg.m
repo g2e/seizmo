@@ -66,7 +66,7 @@ function [y]=slidingavg(x,nsamples,varargin)
 %     An example of a custom call:
 %      y=slidingavg(x,[],'custom',[-10:10; gausswin(21).'])
 %
-%    See also: slidingrms, slidingabsmean, slidingfun
+%    See also: SLIDINGRMS, SLIDINGABSMEAN, SLIDINGFUN
 
 %     Version History:
 %        Oct.  7, 2008 - initial version

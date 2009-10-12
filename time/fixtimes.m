@@ -26,10 +26,10 @@ function [times]=fixtimes(times,option)
 %      UTC(6)=UTC(6)+500;
 %      fixtimes(UTC,'UTC')
 %
-%    See also: fixdates, isleapyear, leapseconds, totalleaps, leapsinday,
-%              getleapseconds, cal2doy, doy2cal, timediff, utc2tai,
-%              tai2utc, gregorian2modserial, gregorian2serial,
-%              serial2gregorian, modserial2gregorian
+%    See also: FIXDATES, ISLEAPYEAR, LEAPSECONDS, TOTALLEAPS, LEAPSINDAY,
+%              GETLEAPSECONDS, CAL2DOY, DOY2CAL, TIMEDIFF, UTC2TAI,
+%              TAI2UTC, GREGORIAN2MODSERIAL, GREGORIAN2SERIAL,
+%              SERIAL2GREGORIAN, MODSERIAL2GREGORIAN
 
 %     Version History:
 %        Nov.  2, 2008 - initial version

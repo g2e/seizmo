@@ -28,7 +28,7 @@ function [data]=add(data,constant,cmp)
 %     to the phase component in amplitude-phase records (component 2):
 %      data=idft(add(dft(data),3*pi/4,2))
 %
-%    See also: subtract, multiply, divide, seizmofun
+%    See also: SUBTRACT, MULTIPLY, DIVIDE, SEIZMOFUN
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

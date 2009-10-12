@@ -24,7 +24,7 @@ function [idx,componentcode]=getcomponentidx(data)
 %          componentdata{i}=data(idx==i);
 %      end
 %
-%    See also: getnetworkidx, getstationidx, getstreamidx
+%    See also: GETNETWORKIDX, GETSTATIONIDX, GETSTREAMIDX
 
 %     Version History:
 %        June 28, 2009 - initial version

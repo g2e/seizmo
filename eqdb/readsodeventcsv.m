@@ -36,7 +36,7 @@ function [events]=readsodeventcsv(file)
 %      ev1(1)
 %      ev2(1)
 %
-%    See also: writesodeventcsv, readcsv, writecsv
+%    See also: WRITESODEVENTCSV, READCSV, WRITECSV
 
 %     Version History:
 %        Sep. 16, 2009 - initial version

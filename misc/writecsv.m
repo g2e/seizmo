@@ -30,7 +30,7 @@ function []=writecsv(file,lines,o)
 %      a=struct('yo',{'woah' 'dude!'},'another',{'awe' 'some'});
 %      writecsv('easy.csv',a)
 %
-%    See also: readcsv, csvread, csvwrite
+%    See also: READCSV, CSVREAD, CSVWRITE
 
 %     Version History:
 %        Sep. 16, 2009 - initial version

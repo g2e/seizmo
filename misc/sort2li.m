@@ -22,7 +22,7 @@ function [li]=sort2li(i,dim)
 %      d=b(sort2li(i))
 %      isequal(c,1./d)
 %
-%    See also: sort, submat, matchsort
+%    See also: SORT, SUBMAT, MATCHSORT, UNSORT
 
 %     Version History:
 %        Sep.  8, 2009 - doc cleanup, dropped submat subfunction

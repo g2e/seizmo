@@ -27,8 +27,8 @@ function [leaps]=leapsinday(dates,option)
 %     Find out how many seconds there will be today:
 %      86400+leapsinday(now,'serial')
 %
-%    See also: totalleaps, getleapseconds, leapseconds, fixtimes, timediff,
-%              utc2tai, tai2utc
+%    See also: TOTALLEAPS, GETLEAPSECONDS, LEAPSECONDS, FIXTIMES, TIMEDIFF,
+%              UTC2TAI, TAI2UTC
 
 %     Version History:
 %        Nov.  1, 2008 - initial version

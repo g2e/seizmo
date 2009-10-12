@@ -19,7 +19,7 @@ function [data]=stretch(data,factor)
 %     To cascade to a samplerate 40 times higher:
 %      data=stretch(data,[5 8])
 %
-%    See also: squish, syncrates, interpolate
+%    See also: SQUISH, SYNCRATES, INTERPOLATE
 
 %     Version History:
 %        Oct. 31, 2007 - initial version

@@ -18,8 +18,8 @@ function [data]=removetrend(data)
 %     4th order lowpass butter filter with a passband corner of 10s
 %      data=iirfilter(removetrend(data),'low','butter',1/10,4)
 %
-%    See also: removemean, removepolynomial, getpolynomial, taper,
-%              removedeadrecords
+%    See also: REMOVEMEAN, REMOVEPOLYNOMIAL, GETPOLYNOMIAL, TAPER,
+%              REMOVEDEADRECORDS
 
 %     Version History:
 %        Oct. 31, 2007 - initial version

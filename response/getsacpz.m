@@ -31,8 +31,8 @@ function [data]=getsacpz(data,varargin)
 %      save mysacpzdb mysacpzdb
 %      data=getsacpz(data,mysacpzdb)
 %
-%    See also: applysacpz, removesacpz, readsacpz, writesacpz, makesacpzdb,
-%              parse_sacpz_filename, db2sacpz, gensacpzname
+%    See also: APPLYSACPZ, REMOVESACPZ, READSACPZ, WRITESACPZ, MAKESACPZDB,
+%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME
 
 %     Version History:
 %        Sep. 20, 2009 - initial version

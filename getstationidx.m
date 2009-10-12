@@ -21,7 +21,7 @@ function [idx,stationcode]=getstationidx(data)
 %          stationdata{i}=data(idx==i);
 %      end
 %
-%    See also: getstreamidx, getnetworkidx, getcomponentidx
+%    See also: GETSTREAMIDX, GETNETWORKIDX, GETCOMPONENTIDX
 
 %     Version History:
 %        June 28, 2009 - initial version

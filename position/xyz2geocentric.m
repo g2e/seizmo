@@ -24,8 +24,8 @@ function [lat,lon,radius]=xyz2geocentric(x,y,z,r)
 %     Find out how far an xyz position is from the earth's center:
 %      [lat,lon,radius]=xyz2geocentric(x,y,z)
 %
-%    See also: geocentric2xyz, xyz2geodetic, geodetic2xyz,
-%              geodetic2geocentric, geocentric2geodetic
+%    See also: GEOCENTRIC2XYZ, XYZ2GEODETIC, GEODETIC2XYZ,
+%              GEODETIC2GEOCENTRIC, GEOCENTRIC2GEODETIC
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

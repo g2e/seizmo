@@ -14,7 +14,7 @@ function [bytes]=seizmosize(data)
 %     Calculate expected filesizes for SAC files in current directory:
 %      seizmosize(readheader('*.SAC'))
 %
-%    See also: readheader, readdata
+%    See also: READHEADER, READDATA
 
 %     Version History:
 %        Feb. 29, 2008 - initial version (was a subfunction called sacsize)

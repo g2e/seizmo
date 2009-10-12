@@ -21,8 +21,8 @@ function [lgc]=isvalidseizmo(filetype,version)
 %     version fields in a dataset are ok:
 %      all(isvalidseizmo({data.filetype},{data.version});
 %
-%    See also: validseizmo, seizmocheck, isseizmo, seizmodef,
-%              getfileversion
+%    See also: VALIDSEIZMO, SEIZMOCHECK, ISSEIZMO, SEIZMODEF,
+%              GETFILEVERSION
 
 %     Version History:
 %        Oct.  6, 2009 - initial version

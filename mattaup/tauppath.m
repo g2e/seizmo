@@ -129,7 +129,7 @@ function [tt]=tauppath(varargin)
 %      tauppath('mod','prem','dep',50,'ph','Pdiff,PKP',...
 %          'sta',[-40 -100],'evt',[30,50])
 %
-%    See also: taup, tauptime, taupcurve, tauppierce
+%    See also: TAUP, TAUPTIME, TAUPCURVE, TAUPPIERCE
 
 %     Version History:
 %        Aug. 30, 2009 - major revision of script, name change to avoid

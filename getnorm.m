@@ -21,7 +21,7 @@ function [scale]=getnorm(data)
 %     Find the maximum amplitude of ground motion for a 3 component record:
 %       amp_max=getnorm(data)
 %
-%    See also: multiply, normalize, getmedian
+%    See also: MULTIPLY, NORMALIZE, GETMEDIAN
 
 %     Version History:
 %        Feb. 12, 2008 - initial version

@@ -115,8 +115,8 @@ function [data]=joinrecords(varargin)
 %     Separate spectral record components then put them back together:
 %      data=joinrecords(keepam(data),keepph(data));
 %
-%    See also: splitrecords, recordfun, merge, addrecords, subtractrecords,
-%              dividerecords, multiplyrecords, binoperr
+%    See also: SPLITRECORDS, RECORDFUN, MERGE, ADDRECORDS, SUBTRACTRECORDS,
+%              DIVIDERECORDS, MULTIPLYRECORDS, BINOPERR
 
 %     Version History:
 %        June 28, 2009 - initial version

@@ -22,8 +22,8 @@ function [dates,leaps]=getleapseconds(option)
 %      tic; for i=1:100; [dates,leaps]=getleapseconds(true); end; toc
 %      tic; for i=1:100; [dates,leaps]=getleapseconds(false); end; toc
 %
-%    See also: leapseconds, totalleaps, leapsinday, fixtimes, timediff,
-%              utc2tai, tai2utc
+%    See also: LEAPSECONDS, TOTALLEAPS, LEAPSINDAY, FIXTIMES, TIMEDIFF,
+%              UTC2TAI, TAI2UTC
 
 %     Version History:
 %        Nov. 10, 2008 - initial version

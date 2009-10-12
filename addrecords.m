@@ -117,7 +117,7 @@ function [data]=addrecords(varargin)
 %     Add records from one dataset to another
 %      data=addrecords(data1,data2)
 %     
-%    See also: subtractrecords, multiplyrecords, dividerecords, binoperr
+%    See also: SUBTRACTRECORDS, MULTIPLYRECORDS, DIVIDERECORDS, BINOPERR
 
 %     Version History:
 %        June 10, 2008 - initial version

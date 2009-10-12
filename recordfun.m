@@ -122,8 +122,8 @@ function [data]=recordfun(fun,varargin)
 %     Add records from one dataset to another
 %      data=recordfun('+',data1,data2)
 %     
-%    See also: addrecords, subtractrecords, multiplyrecords, dividerecords,
-%              binoperr, seizmofun, joinrecords
+%    See also: ADDRECORDS, SUBTRACTRECORDS, MULTIPLYRECORDS, DIVIDERECORDS,
+%              BINOPERR, SEIZMOFUN, JOINRECORDS
 
 %     Version History:
 %        June 10, 2008 - initial version

@@ -20,7 +20,7 @@ function [str]=joinwords(words,delimiter)
 %       ans = 
 %       This_example_is_pretty_dumb!
 %
-%    See also: getwords, strtok, isspace
+%    See also: GETWORDS, STRTOK, ISSPACE
 
 %     Version History:
 %        Sep. 13, 2009 - initial version

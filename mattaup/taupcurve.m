@@ -87,7 +87,7 @@ function tt=taupcurve(varargin)
 %     Apply a reduction velocity of 25km/s
 %      taupcurve('mod','prem','dep',300,'ph','ttp+','redkm',25)
 %
-%    See also: taup, tauppath, tauptime, tauppierce
+%    See also: TAUP, TAUPPATH, TAUPTIME, TAUPPIERCE
 
 %     Version History:
 %        Sep.  2, 2009 - major revision of script, name change to avoid

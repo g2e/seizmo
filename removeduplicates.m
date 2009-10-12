@@ -53,7 +53,7 @@ function [data,removed]=removeduplicates(data,varargin)
 %     this is associated with data pulled from a DHI server.
 %      data=removeduplicates(data)
 %
-%    See also: merge, removedeadrecords
+%    See also: MERGE, REMOVEDEADRECORDS
 
 %     Version History:
 %        Dec.  6, 2008 - initial version

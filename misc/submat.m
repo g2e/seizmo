@@ -20,7 +20,7 @@ function [X]=submat(X,varargin)
 %     elements that were in row/column/page 4 or 5 for those dimensions:
 %      x=submat(x,1:3,4:5)
 %
-%    See also: submat_eval, colon operator (:), repmat
+%    See also: SUBMAT_EVAL, COLON OPERATOR (:), REPMAT
 
 %     Version History:
 %        Nov. 12, 2008 - initial version

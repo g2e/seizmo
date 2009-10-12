@@ -25,8 +25,8 @@ function [times]=serial2gregorian(serial,option)
 %      serial2gregorian(now)-datevec(now)
 %      datevec(now)-datevec(now)
 %
-%    See also: gregorian2serial, gregorian2modserial, modserial2gregorian,
-%              isleapyear, doy2cal, cal2doy, fixdates, fixtimes, timediff
+%    See also: GREGORIAN2SERIAL, GREGORIAN2MODSERIAL, MODSERIAL2GREGORIAN,
+%              ISLEAPYEAR, DOY2CAL, CAL2DOY, FIXDATES, FIXTIMES, TIMEDIFF
 
 %     Version History:
 %        Nov. 11, 2008 - initial version

@@ -32,7 +32,7 @@ function [fh,sfh]=plot1(data,varargin)
 %     Black on white plot without markers:
 %      plot1(data,'bgcolor','w','fgcolor','k','colormap','k','markers',false)
 %
-%    See also:  plot2, plot0, recordsection
+%    See also:  PLOT2, PLOT0, RECORDSECTION
 
 %     Version History:
 %        ????????????? - Initial Version

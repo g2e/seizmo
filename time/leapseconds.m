@@ -38,8 +38,8 @@ function [leaps]=leapseconds()
 %     Ever wondered when those pesky leap seconds were? Just run:
 %      leapseconds
 %
-%    See also: getleapseconds, isleapyear, leapsinday, totalleaps,
-%              fixtimes, timediff, utc2tai, tai2utc
+%    See also: GETLEAPSECONDS, ISLEAPYEAR, LEAPSINDAY, TOTALLEAPS,
+%              FIXTIMES, TIMEDIFF, UTC2TAI, TAI2UTC
 
 %     Version History:
 %        Oct. 28, 2008 - initial version

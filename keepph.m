@@ -15,8 +15,8 @@ function [data]=keepph(data)
 %     Using keepph allows plotting the unwrapped phase using PLOT1:
 %      plot1(seizmofun(keepph(data),@unwrap))
 %
-%    See also: keepam, keeprl, keepim, getspectralcmp, splitrecords, dft,
-%              idft
+%    See also: KEEPAM, KEEPRL, KEEPIM, GETSPECTRALCMP, SPLITRECORDS, DFT,
+%              IDFT
 
 %     Version History:
 %        June 25, 2009 - initial version

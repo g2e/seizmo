@@ -31,7 +31,7 @@ function [x,li]=matchsort(x,i,dim)
 %      [n,li]=matchsort(b,i,4);
 %      o=c(li); p=d(li); q=e(li);
 %
-%    See also: sort, unsort, sort2li
+%    See also: SORT, UNSORT, SORT2LI
 
 %     Version History:
 %        Sep.  8, 2009 - doc cleanup, dropped submat, sort2li subfunctions

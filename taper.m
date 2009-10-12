@@ -73,7 +73,7 @@ function [data]=taper(data,w,o,type,opt)
 %     third and the trailing taper before the final eighth:
 %      data=taper(data,0.1,[1/3 0.125],'gausswin',4)
 %
-%    See also: removemean, removetrend, removepolynomial
+%    See also: REMOVEMEAN, REMOVETREND, REMOVEPOLYNOMIAL
 
 %     Version History:
 %        Oct. 31, 2007 - initial version

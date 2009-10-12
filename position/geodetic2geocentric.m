@@ -22,8 +22,8 @@ function [lat,lon,depth]=geodetic2geocentric(lat,lon,depth,ellipsoid)
 %     Get your station locations into geocentric coordinates:
 %      [lat,lon,depth]=geodetic2geocentric(stla,stlo,(stdp-stel)/1000)
 %
-%    See also: geocentric2geodetic, geodetic2xyz, xyz2geocentric,
-%              xyz2geodetic, geocentric2xyz
+%    See also: GEOCENTRIC2GEODETIC, GEODETIC2XYZ, XYZ2GEOCENTRIC,
+%              XYZ2GEODETIC, GEOCENTRIC2XYZ
 
 %     Version History:
 %        Oct. 14, 2008 - initial version

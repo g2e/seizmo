@@ -16,7 +16,7 @@ function [list]=onefilelist(varargin)
 %     Compile a list of files from several directories
 %      list=onefilelist('*','../*','~/*')
 %
-%    See also: strnlen, xdir
+%    See also: STRNLEN, XDIR
 
 %     Version History:
 %        Mar.  7, 2008 - initial version

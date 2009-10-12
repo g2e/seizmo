@@ -13,7 +13,7 @@ function [median]=getmedian(data)
 %     Remove median from records:
 %      data=subtract(data,getmedian(data));
 %
-%    See also: getnorm, removemean, subtract
+%    See also: GETNORM, REMOVEMEAN, SUBTRACT
 
 %     Version History:
 %        Feb. 12, 2008 - initial version

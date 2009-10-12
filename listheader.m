@@ -32,7 +32,7 @@ function []=listheader(data,varargin)
 %     List only single char fields
 %      listheader(data,'?')
 %
-%    See also:  compareheader, changeheader, getheader
+%    See also:  COMPAREHEADER, CHANGEHEADER, GETHEADER
 
 %     Version History:
 %        Oct. 29, 2007 - initial version

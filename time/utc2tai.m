@@ -17,8 +17,8 @@ function [utc]=utc2tai(utc)
 %     which does not have leap seconds:
 %      utc2tai([2008 12 31 23 59 60])-utc2tai([2009 1 1 0 0 0])
 %
-%    See also: tai2utc, fixtimes, timediff, leapseconds, totalleaps,
-%              getleapseconds, leapsinday
+%    See also: TAI2UTC, FIXTIMES, TIMEDIFF, LEAPSECONDS, TOTALLEAPS,
+%              GETLEAPSECONDS, LEAPSINDAY
 
 %     Version History:
 %        Nov.  2, 2008 - initial version

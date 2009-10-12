@@ -28,7 +28,7 @@ function [data]=divide(data,constant,cmp)
 %     affecting the phase component by dividing only the first component:
 %      data=divide(data,32,1)
 %
-%    See also: multiply, add, subtract, seizmofun
+%    See also: MULTIPLY, ADD, SUBTRACT, SEIZMOFUN
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

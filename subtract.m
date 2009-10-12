@@ -29,7 +29,7 @@ function [data]=subtract(data,constant,cmp)
 %     records), and converting back to the time domain:
 %      data=idft(subtract(dft(data),pi/2,2))
 %
-%    See also: add, multiply, divide, seizmofun
+%    See also: ADD, MULTIPLY, DIVIDE, SEIZMOFUN
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

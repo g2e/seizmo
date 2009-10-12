@@ -112,7 +112,7 @@ function [data]=dividerecords(varargin)
 %     Plot the time-dependent amplitude ratio between two records:
 %      plot1(dividerecords(data(1:2)))
 %     
-%    See also: multiplyrecords, addrecords, subtractrecords, binoperr
+%    See also: MULTIPLYRECORDS, ADDRECORDS, SUBTRACTRECORDS, BINOPERR
 
 %     Version History:
 %        June 10, 2008 - Initial Version

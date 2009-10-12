@@ -17,8 +17,8 @@ function [data]=removepolynomial(data,order)
 %     Check out the difference various order polynomials make:
 %      plot1(removepolynomial(data(ones(1,10)),1:10))
 %
-%    See also: removemean, removetrend, getpolynomial, taper,
-%              removedeadrecords
+%    See also: REMOVEMEAN, REMOVETREND, GETPOLYNOMIAL, TAPER,
+%              REMOVEDEADRECORDS
 
 %     Version History:
 %        June 24, 2009 - initial version

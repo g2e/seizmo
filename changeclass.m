@@ -19,7 +19,7 @@ function [data]=changeclass(data,class)
 %     Return double precision records and attempt to fix sample spacing:
 %      data=fixdelta(changeclass(data,'double'))
 %
-%    See also: fixdelta
+%    See also: FIXDELTA
 
 %     Version History:
 %        Feb. 21, 2008 - initial version

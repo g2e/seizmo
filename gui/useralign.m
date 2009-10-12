@@ -26,7 +26,7 @@ function [db,data]=useralign(data,phase,db)
 %          db=useralign(data,phase,db);
 %      end
 %
-%    See also: userwindow, usertaper, usercluster
+%    See also: USERWINDOW, USERTAPER, USERCLUSTER
 
 %     Version History:
 %        Sep. 25, 2009 - initial version

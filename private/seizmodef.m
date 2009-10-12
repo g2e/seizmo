@@ -29,7 +29,7 @@ function [def]=seizmodef(filetype,version,usecache)
 %     Get detailed information on SAC version 6 files:
 %      sac_ver_6=seizmodef('SAC Binary',6)
 %
-%    See also:  seizmocheck, isseizmo, validseizmo
+%    See also:  SEIZMOCHECK, ISSEIZMO, VALIDSEIZMO
 
 %     Version History:
 %        Jan. 28, 2008 - initial version

@@ -37,7 +37,7 @@ function []=taup()
 %     Only possible usage example:
 %      taup
 %
-%    See also: taupcurve, tauppath, tauppierce, tauptime
+%    See also: TAUPCURVE, TAUPPATH, TAUPPIERCE, TAUPTIME
 
 %     Version History:
 %        Sep.  5, 2009 - major doc update

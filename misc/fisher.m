@@ -18,7 +18,7 @@ function [Z]=fisher(R)
 %       z_std=var(z)
 %       [r_lower,r_mean,r_upper]=ifisher(z_mean-z_std,z_mean,z_mean+z_std)
 %
-%    See also: ifisher
+%    See also: IFISHER
 
 %     Version History:
 %        Sep.  9, 2009 - minor doc update

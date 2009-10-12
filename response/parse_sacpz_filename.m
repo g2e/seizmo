@@ -43,8 +43,8 @@ function [gd,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filename)
 %      [good,knetwk,kstnm,kcmpnm,khole,b,e]=...
 %          parse_sacpz_filename(filenames)
 %
-%    See also: getsacpz, readsacpz, writesacpz, makesacpzdb, db2sacpz,
-%              applysacpz, removesacpz, gensacpzname
+%    See also: GETSACPZ, READSACPZ, WRITESACPZ, MAKESACPZDB, DB2SACPZ,
+%              APPLYSACPZ, REMOVESACPZ, GENSACPZNAME
 
 %     Version History:
 %        Sep. 20, 2009 - initial version

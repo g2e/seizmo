@@ -57,7 +57,7 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %     Also useful for quickly plotting data aligned on a phase:
 %      plot0(timeshift(data,-Parrivaltimes))
 %
-%    See also: changeheader, getheader, fixtimes
+%    See also: CHANGEHEADER, GETHEADER, FIXTIMES
 
 %     Version History:
 %        Dec. 13, 2008 - initial version
