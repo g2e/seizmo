@@ -7,10 +7,10 @@ function [data]=unprewhiten(data)
 %     records in DATA by inversely applying the prediction error filter
 %     stored in the .misc.pef field in DATA.  This effectively undoes
 %     PREWHITEN.  Records are required to have the .misc.prewhitened' field
-%     set to TRUE.  See function PREWHITEN and the suggested reading in
-%     Notes for more detailed information.  The returned DATA will have the
-%     .misc.pef field set to an empty array and the .misc.prewhitened field
-%     set to FALSE.
+%     set to TRUE.  See function PREWHITEN and the suggested reading in the
+%     Notes section for more detailed information.  The returned dataset
+%     DATA will have each record's .misc.pef field set to an empty array
+%     and the .misc.prewhitened field set to FALSE.
 %
 %    Notes:
 %     - Suggested Reading:
@@ -24,7 +24,7 @@ function [data]=unprewhiten(data)
 %     Try prewhitening and unprewhitening first.  Then try comparing some
 %     operation without prewhiten/unprewhiten with one including it to get
 %     a feel for how important/detrimental it is.  Plotting the difference:
-%      plot1(subtractrecords(data,unprewhiten(prewhiten(data,order))))
+%      plot1(subtractrecords(data,unprewhiten(prewhiten(data))))
 %
 %    See also: PREWHITEN, LEVINSON, FILTER, WHITEN
 
@@ -32,11 +32,11 @@ function [data]=unprewhiten(data)
 %        June  8, 2009 - initial version
 %        June  9, 2009 - renamed from UNWHITEN to UNPREWHITEN, doc fixes
 %        Sep. 22, 2009 - pushed .pef & .prewhitened to .misc.pef &
-%                        .misc.prewhitened (avoids struct concatination
-%                        errors)
+%                        .misc.prewhitened (avoids struct cat errors)
+%        Oct. 13, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2009 at 00:20 GMT
+%     Last Updated Oct. 13, 2009 at 05:50 GMT
 
 % todo:
 

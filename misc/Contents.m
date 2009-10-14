@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r100 Ararat 12-Oct-2009
+% Version 0.6.0-r101 Ararat 14-Oct-2009
 %
 % Miscellaneous Support functions
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
@@ -15,10 +15,13 @@
 %LTI2SUB             - Square matrix lower triangle linear indices to subscripts
 %MATCHSORT           - Replicates a sort operation using the returned permutation indices
 %MCXC                - Multi-channel cross correlation with built-in peak picker
+%NANMEAN             - Return mean excluding NaN elements
+%NANVARIANCE         - Return variance excluding NaNs
 %NATIVEBYTEORDER     - Returns native endianness of present platform
 %NDSQUAREFORM        - Reshapes between an n-d distance matrix and "vector"
 %NEXTPOW2N           - Returns the next higher power of 2 for all array elements
 %ONEFILELIST         - Compiles multiple filelists into one
+%PRINT_TIME_LEFT     - Ascii progress bar
 %READCSV             - Read in .csv formatted file as a structure
 %SLIDINGAVG          - Returns sliding-window average of data
 %SNR2MAXPHASEERROR   - Returns maximum narrow-band phase error based on SNR 

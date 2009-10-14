@@ -183,7 +183,7 @@ function [data]=correlate(data1,varargin)
 %                        info in 1 dataset correlogram case
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2009 at 18:15 GMTs
+%     Last Updated Oct.  7, 2009 at 18:15 GMT
 
 % todo:
 

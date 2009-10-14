@@ -275,9 +275,10 @@ function [data]=checkheader(data,varargin)
 %        Oct.  6, 2009 - drop ARRAYFUN/LOGICAL functions (R14SP1 fix),
 %                        nonzero_iztype fix
 %        Oct.  7, 2009 - minor changes to a few messages
+%        Oct. 13, 2009 - fix ncmp check for spectral records
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2009 at 17:55 GMT
+%     Last Updated Oct. 13, 2009 at 07:55 GMT
 
 % todo:
 
@@ -1622,7 +1623,7 @@ ok=find([data.hasdata].');
 nrows=nan(size(ncmp)); ncols=nrows;
 for i=ok.'; [nrows(i),ncols(i)]=size(data(i).dep); end
 %[nrows,ncols]=arrayfun(@(x)size(x.dep),data(ok));
-ncmp(spectral)=2*ncmp(spectral);
+ncols(spectral)=ncols(spectral)./2;
 bad=ok(ncols(ok)~=ncmp(ok));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:NCMPinconsistent';
@@ -1635,12 +1636,10 @@ if(~isempty(bad))
             warning(report.identifier,report.message);
         case 'FIX'
             ncmp(bad)=ncols(bad);
-            ncmp(spectral)=ncmp(spectral)/2;
         case 'WARNFIX'
             warning(report.identifier,report.message);
             disp('==> Setting NCMP to match data!');
             ncmp(bad)=ncols(bad);
-            ncmp(spectral)=ncmp(spectral)/2;
     end
 end
 

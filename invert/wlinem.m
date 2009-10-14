@@ -1,9 +1,10 @@
-function [m,covm] = wlinem(dd,tt,covd,We)
-%WLINEM    Straight line fit to traveltime data with weighted least squares
+function [m,covm] = wlinem(dd,tt,power,covd,We)
+%WLINEM    Linear fit to traveltime data with weighted least squares
 %
 %    Usage:  [m,covm]=wlinem(dd,tt)
-%            [m,covm]=wlinem(dd,tt,covd)
-%            [m,covm]=wlinem(dd,tt,covd,We)
+%            [m,covm]=wlinem(dd,tt,power)
+%            [m,covm]=wlinem(dd,tt,power,covd)
+%            [m,covm]=wlinem(dd,tt,power,covd,We)
 %
 %    Description: [M,COVM]=WLINEM(DD,TT) uses the degree distances DD and
 %     the travel times TT to solve for the best straight-line fit to the
@@ -14,13 +15,18 @@ function [m,covm] = wlinem(dd,tt,covd,We)
 %     of 1 (gives the identity matrix).  The weighting matrix is also set
 %     equal to the identity matrix for this case.
 %
-%     [M,COVM]=WLINEM(DD,TT,COVD) includes the supplied data covariance
-%     matrix COVD in the computation of the model covariance matrix COVM.
-%     The weighting matrix is set equal to the identity matrix for this
-%     case.
+%     [M,COVM]=WLINEM(DD,TT,POWER) fits the travel times using an nth
+%     degree polynomial, where n is POWER.  The default value of POWER is
+%     1 (straight line fit).  Setting POWER to 0, finds the mean.  Setting
+%     POWER to 2 gives a parabolic fit.  M is arranged so that the
+%     polynomial coefficients are in ascending order (opposite of POLYFIT).
 %
-%     [M,COVM]=WLINEM(DD,TT,COVD,WE) utilizes the weighting matrix WE in
-%     the computation.
+%     [M,COVM]=WLINEM(DD,TT,POWER,COVD) includes the data covariance matrix
+%     COVD in the computation of the model covariance matrix COVM.  The
+%     weighting matrix is set equal to the identity matrix for this case.
+%
+%     [M,COVM]=WLINEM(DD,TT,POWER,COVD,WE) utilizes the weighting matrix WE
+%     in the inversion.
 %
 %    Notes:
 %     - Make sure that your data covariance matrix is filled with variances
@@ -34,41 +40,53 @@ function [m,covm] = wlinem(dd,tt,covd,We)
 %      data=addarrivals(data);
 %      P=getarrival(data,'P');
 %      gcarc=getheader(data,'gcarc');
-%      [m,covm]=linem(gcarc,P);
+%      [m,covm]=wlinem(gcarc,P);
 %
-%    See also: CORRELATE, LINEM
+%    See also: CORRELATE
 
 %     Version History:
 %        Aug. 25, 2009 - initial version
 %        Sep.  9, 2009 - minor doc fix, fix weighting matrix checks
+%        Oct. 13, 2009 - minor doc update, add power option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  9, 2009 at 04:45 GMT
+%     Last Updated Oct. 13, 2009 at 18:30 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,4,nargin);
+msg=nargchk(2,5,nargin);
 if(~isempty(msg)); error(msg); end
 
-% default covd
+% default power, covd, We
 ndd=numel(dd);
-if(nargin==2); covd=diag(ones(ndd,1)); We=covd; end
-if(nargin==3); We=diag(ones(ndd,1)); end
+if(nargin<3 || isempty(power)); power=1; end
+if(nargin<4 || isempty(covd))
+    covd=sparse(1:ndd,1:ndd,ones(ndd,1),ndd,ndd);
+end
+if(nargin<5 || isempty(We))
+    We=sparse(1:ndd,1:ndd,ones(ndd,1),ndd,ndd);
+end
 
 % make sure dd,tt are equal sized column vectors
 if(ndd~=numel(tt))
-    error('seizmo:linem:badInput',...
+    error('seizmo:wlinem:badInput',...
         ['Distance and Traveltime arrays must\n'...
         'have the same number of elements!']);
 end
 dd=dd(:);
 tt=tt(:);
 
+% make sure power is scalar, whole and >=0
+if(~isscalar(power) || power~=fix(power) || power<0)
+    error('seizmo:wlinem:badInput',...
+        'POWER must be a scalar integer >=0!');
+end
+
 % make sure covd is square and correct size
 sz=size(covd);
 if(numel(sz)>2 || sz(1)~=sz(2) || sz(1)~=ndd)
-    error('seizmo:linem:badInput',...
+    error('seizmo:wlinem:badInput',...
         ['Data covariance matrix must be square and\n'...
         'match with Distance and Traveltime arrays!']);
 end
@@ -76,21 +94,22 @@ end
 % make sure We is square and correct size
 sz=size(We);
 if(numel(sz)>2 || sz(1)~=sz(2) || sz(1)~=ndd)
-    error('seizmo:linem:badInput',...
+    error('seizmo:wlinem:badInput',...
         ['Weighting matrix must be square and\n'...
         'match with Distance and Traveltime arrays!']);
 end
 
 % kernel matrix
-G=[ones(ndd,1) dd];
+p=1:power;
+G=[ones(ndd,1) dd(:,ones(power,1)).^p(ones(ndd,1),:)];
 
 % generalized inverse of kernel matrix, weighted least squares
-M=inv(G.'*We*G)*G.'*We;
+Gg=inv(G.'*We*G)*G.'*We;
 
 % covariance of model parameters
-covm=M*covd*M.';
+covm=Gg*covd*Gg.';
 
 % least squares solution
-m=M*tt;
+m=Gg*tt;
 
 end

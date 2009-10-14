@@ -13,6 +13,6 @@ function [S]=dtwresid(DT,CG,LG,xcpow)
 nr=size(DT,1);
 if(any(size(CG)~=nr) || any(size(LG)~=nr)); error('size mismatch'); end
 
-S=sqrt(nanvar(LG+DT(:,ones(nr,1))-DT(:,ones(nr,1)).',0,1,CG.^xcpow));
+S=sqrt(nanwvar(LG+DT(:,ones(nr,1))-DT(:,ones(nr,1)).',0,1,CG.^xcpow));
 
 end

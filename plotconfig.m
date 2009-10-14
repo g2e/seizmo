@@ -26,9 +26,10 @@ function [conf]=plotconfig()
 %        ????????????? - Initial Version
 %        June 12, 2008 - doc update
 %        Apr. 23, 2009 - move usage up
+%        Oct. 14, 2009 - added XSCALE, YSCALE, SPECTRALCMP
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:35 GMT
+%     Last Updated Oct. 14, 2009 at 05:35 GMT
 
 % SETTING CONFIGURE STRUCTURE DEFAULTS
 conf=struct(...
@@ -65,9 +66,11 @@ conf=struct(...
 'AXIS',{{'tight'}},...                      % AXIS PROPERTIES
 'BOX','on',...                              % AXIS BOX
 'GRID','on',...                             % GRIDDING
+'XSCALE','linear',...                       % X-AXIS SCALE
 'XLIMITS',[],...                            % X-AXIS LIMITS
 'XAXISCOLOR',[],...                         % X-AXIS COLOR
 'XAXISLOCATION','bottom',...                % X-AXIS LOCATION
+'YSCALE','linear',...                       % Y-AXIS SCALE
 'YLIMITS',[],...                            % Y-AXIS LIMITS
 'YAXISCOLOR',[],...                         % Y-AXIS COLOR
 'YAXISLOCATION','left',...                  % Y-AXIS LOCATION
@@ -94,6 +97,7 @@ conf=struct(...
 'YLABELINTERP','tex',...
 ...
 ...% RECORDS
+'SPECTRALCMP','AM',...                      % SPECTRAL CMP TO PLOT 
 'RECWIDTH',1,...                            % RECORD LINE WIDTH
 'COLORMAP','hsv',...                        % RECORD COLORING
 ...

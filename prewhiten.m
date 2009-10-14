@@ -6,7 +6,7 @@ function [data]=prewhiten(data,order)
 %
 %    Description: PREWHITEN(DATA) returns the difference between the 
 %     records in DATA with and without a prediction error filter of order 6
-%     applied.  The returned record is thus the unpredictable (random)
+%     applied.  The returned records are thus the unpredictable (noise)
 %     portion of the data (which has a significantly whiter spectrum).  The
 %     predictable portion of the data is stored as a prediction error
 %     filter under the struct field .misc.pef in DATA.  The original record
@@ -29,7 +29,7 @@ function [data]=prewhiten(data,order)
 %     original record may also degrade at higher ORDER.  Some tuning will
 %     likely be required to find the best ORDER for your operation.  ORDER
 %     must be a positive integer or integers (one per record) <NPTS, where
-%     NPTS is the number of points in a record.
+%     NPTS is the number of points in a record.  Default ORDER is 6.
 %
 %    Notes:
 %     - Suggested Reading:
@@ -44,7 +44,7 @@ function [data]=prewhiten(data,order)
 %     operation without prewhiten/unprewhiten with one including it to get
 %     a feel for how important/detrimental it is.  The difference can be
 %     found by plotting the difference:
-%      plot1(subtractrecords(data,unprewhiten(prewhiten(data,order))))
+%      plot1(subtractrecords(data,unprewhiten(prewhiten(data))))
 %
 %    See also: UNPREWHITEN, LEVINSON, FILTER, WHITEN
 
@@ -54,11 +54,11 @@ function [data]=prewhiten(data,order)
 %        June 25, 2009 - update for RECORD2MAT/MAT2RECORD, process records
 %                        individually rather than all together (faster)
 %        Sep. 22, 2009 - pushed .pef & .prewhitened to .misc.pef &
-%                        .misc.prewhitened (avoids struct concatination
-%                        errors)
+%                        .misc.prewhitened (avoids struct cat errors)
+%        Oct. 13, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2009 at 00:10 GMT
+%     Last Updated Oct. 13, 2009 at 05:50 GMT
 
 % todo:
 

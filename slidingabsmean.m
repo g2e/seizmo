@@ -17,7 +17,7 @@ function [data]=slidingabsmean(data,varargin)
 %
 %     SLIDINGABSMEAN(...,'POSITION','CENTER'|'TRAIL'|'LEAD') sets the
 %     position of the sliding window relative to the reference data point
-%     (the data point which is assigned to by the window).  CENTER 
+%     (the data point which is assigned the window's average).  CENTER 
 %     positions the window such that the reference point is at its center.
 %     TRAIL positions the window to trail the reference point such that the
 %     reference point has the highest index in the window.  LEAD sets the
@@ -27,7 +27,7 @@ function [data]=slidingabsmean(data,varargin)
 %     is N.  Default position is CENTER.
 %     
 %     SLIDINGABSMEAN(...,'OFFSET',OFFSET) sets the offset of the sliding
-%     window from to the reference data point in number of samples.  For a
+%     window from the reference data point in number of samples.  For a
 %     centered window (see option 'POSITION') this introduces a gap of 
 %     2*OFFSET-1 in the window.  For example an OFFSET of 1 will exclude
 %     the reference data point from the sliding window.  Negative OFFSETS
@@ -42,7 +42,8 @@ function [data]=slidingabsmean(data,varargin)
 %     reference a datapoint (for instance if the window extends before or 
 %     after the data, that portion of the window will be truncated).  PAD 
 %     adds zeros to the data so that all the points of the sliding-window 
-%     always reference some value.  Default setting is TRUNCATE.
+%     always reference some value.  This will create a tapered look at the
+%     edges of the data.  The default setting of EDGE is TRUNCATE.
 %
 %     SLIDINGABSMEAN(...,'DIM',N) slides across dimension N raher than the
 %     default 1 (1 slides down the component - 2 would slide across the
@@ -76,11 +77,12 @@ function [data]=slidingabsmean(data,varargin)
 %        Nov. 22, 2008 - update for new name schema (now SLIDINGABSMEAN)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
-%        June  9, 2009 - nsamples now in varargin
-%                        toggle seizmocheck, up nargin allowed
+%        June  9, 2009 - nsamples now in varargin, toggle seizmocheck,
+%                        up nargin allowed
+%        Oct. 13, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Oct. 13, 2009 at 06:05 GMT
 
 % todo:
 

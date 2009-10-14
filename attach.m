@@ -6,14 +6,14 @@ function [data]=attach(data,option,dep,ind)
 %
 %    Description: DATA=ATTACH(DATA,OPTION,DEP) attaches DEP to the
 %     dependent data in records in SEIZMO struct DATA.  DEP must be a
-%     numeric array or a cell array of numeric arrays, one per record in
-%     DATA.  Numeric arrays in DEP must have the same number of columns as
-%     the number of components in the record it is being attached to.
-%     OPTION is either 'beginning' or 'ending' and decides how DEP is
-%     attached to the dependent data.  For instance, if OPTION is 'ending'
-%     then DEP is attached at the end and the E header field is adjusted.
-%     If OPTON is 'beginning', DEP is attached at the beginning of the
-%     dependent dataset and the B header field is adjusted accordingly.
+%     numeric array or a cell array of numeric arrays (one per record).
+%     Numeric arrays in DEP must have the same number of columns as the
+%     number of components in the record it is being attached to.  OPTION
+%     is either 'beginning' or 'ending' and decides how DEP is attached to
+%     the dependent data.  For instance, if OPTION is 'ending', DEP is
+%     attached at the end and the E header field is adjusted.  If OPTON is
+%     'beginning', DEP is attached at the beginning of the dependent
+%     dataset and the B header field is adjusted accordingly.
 %
 %     DATA=ATTACH(DATA,OPTION,DEP,IND) attaches IND to the independent
 %     component data.  IND must be supplied if there is any unevenly
@@ -37,9 +37,10 @@ function [data]=attach(data,option,dep,ind)
 
 %     Version History:
 %        Oct. 10, 2009 - initial version
+%        Oct. 13, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2009 at 21:40 GMT
+%     Last Updated Oct. 13, 2009 at 05:45 GMT
 
 % todo:
 

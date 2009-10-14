@@ -1,4 +1,4 @@
-function [uti]=sub2uti(i,j)
+function [uti]=sub2uti(nrows,i,j)
 %SUB2UTI    Square matrix upper triangle linear indices from subscripts
 %
 %    Usage:    idx=sub2uti(i,j)
@@ -19,7 +19,6 @@ function [uti]=sub2uti(i,j)
 %     5    -  -  -  -  -
 %
 %    Notes:
-%     - Minimal input checks are done!
 %
 %    Examples:
 %     Say you have a dissimilarity vector (in this case, say it corresponds
@@ -32,18 +31,39 @@ function [uti]=sub2uti(i,j)
 
 %     Version History:
 %        Sep.  8, 2009 - added documentation
+%        Oct. 13, 2009 - added checks, updated documentation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 05:00 GMT
+%     Last Updated Oct. 13, 2009 at 21:40 GMT
 
 % todo:
 
-%len=len(1);
-if(any(i>=j))
-    error('seizmo:sub2uti:badInput','Indices out of range!');
+% checks
+if(isempty(nrows) || ~isnumeric(nrows) ...
+        || any(nrows~=fix(nrows)) || numel(nrows)>2)
+    error('seizmo:sub2uti:badInput',...
+        'NROWS must be a scalar number or 1x2 array of [NROWS NCOLS]!');
+elseif(~isnumeric(i) || ~isnumeric(j) ...
+        || any(i~=fix(i)) || any(j~=fix(j)) ...
+        || (~isscalar(i) && ~isscalar(j) && numel(i)~=numel(j)))
+    error('seizmo:sub2uti:badInput',...
+        ['I and J must be scalar integers or be\n' ...
+        'arrays with the same number of integers!']);
 end
-j=j-1;
-k=cumsum([0 1:max(j)]);
+
+% get first dimension if more than 1
+nrows=nrows(1);
+
+% subscripts should be in upper triangle
+if(any(i>=j))
+    error('seizmo:sub2uti:badInput','Indices outside upper triangle!');
+end
+
+% get upper triangle indices
+j=j(:)-1;
+k=[0 1:max(j)];
+k(k>nrows)=nrows;
+k=cumsum(k);
 uti=k(j).'+i(:);
 
 end

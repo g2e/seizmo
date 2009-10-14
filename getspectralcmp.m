@@ -7,13 +7,13 @@ function [data]=getspectralcmp(data,cmp)
 %     indicated by CMP.  CMP must be one of the following: 'AM', 'PH',
 %     'RL', 'IM', or 'CMPLX'.  CMP may be a list of components as long as
 %     there is exactly one entry per record.  Filetype is changed to
-%     General X vs Y.
+%     General X vs Y.  Note that this drops the negative frequencies.
 %
 %    Notes:
 %     - Using 'CMPLX' will return a complex array.  This will definitely
 %       cause issues with other functions.  Use at your own risk.
 %
-%    Header changes: DEPMEN, DEPMIN, DEPMAX, IFTYPE
+%    Header changes: DEPMEN, DEPMIN, DEPMAX, IFTYPE, NPTS
 %
 %    Examples:
 %     This is SAC's KEEPAM:
@@ -23,9 +23,11 @@ function [data]=getspectralcmp(data,cmp)
 
 %     Version History:
 %        June 25, 2009 - initial version
+%        Oct. 13, 2009 - does fftshift and adjusts B
+%        Oct. 14, 2009 - just return positive freqs, no B or E adjust
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:05 GMT
+%     Last Updated Oct. 14, 2009 at 05:55 GMT
 
 % todo:
 
@@ -43,10 +45,6 @@ set_seizmocheck_state(false);
 
 % check headers
 data=checkheader(data);
-
-% turn off header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(false);
 
 % number of records
 nrecs=numel(data);
@@ -69,9 +67,10 @@ if(size(cmp,1)==1)
 end
 cmp=cellstr(lower(cmp));
 
-% get filetype
+% get header info
 iftype=getenumdesc(data,'iftype');
-ncmp=getncmp(data);
+[npts,ncmp]=getheader(data,'npts','ncmp');
+npts=npts/2+1; % new npts
 
 % require spectral records
 if(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
@@ -88,7 +87,7 @@ iftype='ixy';
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
     % skip dataless (but decrease columns)
-    if(isempty(data(i).dep)); data(i).dep=zeros(0,ncmp); continue; end
+    if(isempty(data(i).dep)); data(i).dep=zeros(0,ncmp(i)); continue; end
     
     % save class and convert to double precision
     oclass=str2func(class(data(i).dep));
@@ -135,7 +134,7 @@ for i=1:nrecs
     end
     
     % change class back
-    data(i).dep=oclass(data(i).dep);
+    data(i).dep=oclass(data(i).dep(1:npts(i),:));
     
     % dep*
     depmen(i)=mean(data(i).dep(:)); 
@@ -145,11 +144,9 @@ end
 
 % update header
 data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax,...
-    'iftype',iftype);
+    'iftype',iftype,'npts',npts);
 
 % toggle checking back
 set_seizmocheck_state(oldseizmocheckstate);
-set_checkheader_state(oldcheckheaderstate);
 
 end
-

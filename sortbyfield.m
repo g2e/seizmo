@@ -4,11 +4,11 @@ function [data]=sortbyfield(data,field,mode)
 %    Usage:    data=sortbyfield(data,field)
 %              data=sortbyfield(data,field,mode)
 %
-%    Description: SORTBYFIELD(DATA,FIELD) sorts SEIZMO records
-%     in DATA by the header field FIELD.  Also will sort by any field in
-%     data such as 'name', 'version', 'byteorder', etc.  Data fields
-%     'head', 'dep', and 'ind' are not supported.  Group header fields are
-%     also not supported.
+%    Description: SORTBYFIELD(DATA,FIELD) sorts records in SEIZMO struct
+%     DATA by the header field FIELD.  Also will sort by any top-level
+%     struct field in DATA such as 'name', 'version', 'byteorder', etc.  
+%     Data fields 'misc', 'head', 'dep', and 'ind' are not supported.
+%     Group header fields are also not allowed.
 %
 %     SORTBYFIELD(DATA,FIELD,MODE) sets the sorting order ('ascend' or
 %     'descend' is allowed - 'ascend' is the default).
@@ -33,9 +33,10 @@ function [data]=sortbyfield(data,field,mode)
 %                        history fix
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Oct. 13, 2009 - minor doc update, added .misc to bad fields
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Oct. 13, 2009 at 06:30 GMT
 
 % todo:
 
@@ -51,7 +52,7 @@ if(~isempty(msg)); error(msg.identifier,msg.message); end
 if(nargin==2 || isempty(mode)); mode='ascend'; end
 
 % get field values (or filenames/byte-orders/versions)
-bad={'head' 'dep' 'ind'};
+bad={'head' 'dep' 'ind' 'misc'};
 if(~ischar(field) || any(strcmpi(field,bad)))
     error('seizmo:sortbyfield:badField','FIELD is bad!');
 elseif(isfield(data,field))
@@ -67,13 +68,11 @@ end
 % check indices size
 if(numel(indices)~=numel(data))
     error('seizmo:sortbyfield:tooManyIndices',...
-        'Too many output indices!')
+        'Too many elements to sort by!')
 end
 
 % flip if descend mode
-if(strcmpi(mode,'descend'))
-    indices=indices(end:-1:1);
-end
+if(strcmpi(mode,'descend')); indices=indices(end:-1:1); end
 
 % sort data
 data=data(indices);

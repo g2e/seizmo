@@ -1,4 +1,4 @@
-function [i,j]=uti2sub(len,uti)
+function [i,j]=uti2sub(nrows,uti)
 %UTI2SUB    Square matrix upper triangle linear indices to subscripts
 %
 %    Usage:    [i,j]=uti2sub(nrows,idx)
@@ -18,7 +18,6 @@ function [i,j]=uti2sub(len,uti)
 %     5    -  -  -  -  -
 %
 %    Notes:
-%     - No input checks are done!
 %
 %    Examples:
 %     Say you have a dissimilarity vector (in this case, say it corresponds
@@ -31,16 +30,30 @@ function [i,j]=uti2sub(len,uti)
 
 %     Version History:
 %        Sep.  8, 2009 - added documentation
+%        Oct. 13, 2009 - added checks, updated documentation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 04:50 GMT
+%     Last Updated Oct. 13, 2009 at 22:35 GMT
 
 % todo:
 
-len=len(1);
+% checks
+if(isempty(nrows) || ~isnumeric(nrows) ...
+        || any(nrows~=fix(nrows)) || numel(nrows)>2)
+    error('seizmo:uti2sub:badInput',...
+        'NROWS must be a scalar number or 1x2 array of [NROWS NCOLS]!');
+elseif(~isnumeric(uti) || any(uti~=fix(uti)))
+    error('seizmo:uti2sub:badInput','IDX must be indices!');
+end
+
+% get first dimension if more than 1
+nrows=nrows(1);
+
+% get subscripts
 uti=uti(:);
-k=cumsum([0 1:len-1]);
-[i,j]=min((uti(:,ones(1,len))>k(ones(length(uti),1),:)).');
-i=uti-k(j-1).'; j=j(:);
+k=cumsum([0 1:nrows-1]);
+[i,j]=min((uti(:,ones(1,nrows))>k(ones(numel(uti),1),:)).');
+i=uti-k(j-1).';
+j=j(:);
 
 end

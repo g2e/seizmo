@@ -12,12 +12,12 @@ function [x]=ndsquareform(x,method,flag)
 %     between an n-dimensional, symmetric, square matrix M and the
 %     corresponding n-d "vector" V (quoted because it isn't quite a vector,
 %     as it may have >1 non-singletone dimensions - but at least one of the
-%     first two must be singleton).  The vector form is just the upper
-%     triangle section of the matrix form and thus consumes less space.
-%     The disadvantage to the vector form is that one does not immediately
-%     know where a specific element comes from in the matrix form.  Vectors
-%     are always returned as column-vectors.  Matrices are always returned
-%     with the diagonal elements set to zero.
+%     first two must be singleton).  The vector form is the lower triangle
+%     section of the matrix form and thus consumes less space.  The
+%     primary disadvantage to the vector form is that one does not
+%     immediately know what a specific element corresponds to in the matrix
+%     form.  Vectors are always returned as column vectors.  Matrices are
+%     always returned with the diagonal elements set to zero.
 %
 %     M=NDSQUAREFORM(V,'TOMATRIX') requires NDSQUAREFORM to interpret the
 %     input as a vector to be transformed into a matrix.  This option
@@ -35,22 +35,25 @@ function [x]=ndsquareform(x,method,flag)
 %     default) converts V to an n-d symmetric, square matrix.  With FLAG
 %     set to FALSE, V is converted to an n-d anti-symmetric, square matrix
 %     (the lower triangle elements have opposite sign to the upper triangle
-%     elements).  Remember that V always corresponds to the upper triangle
-%     values in M!
+%     elements).  If V is a logical vector then the upper and lower
+%     triangles have opposite logical values in the anti-symmetric case.
+%     Remember that V always corresponds to the lower triangle values in M!
 %
 %     V=NDSQUAREFORM(M,METHOD,FLAG) allows switching between extraction of
-%     the upper and lower triangle portions of M.  When FLAG is set to TRUE
-%     (the default), the upper triangle portion of M is returned in vector
-%     form as V.  Setting FLAG to FALSE returns the lower triangle portion.
+%     the lower and upper triangle portions of M.  When FLAG is set to TRUE
+%     (the default), the lower triangle portion of M is returned in vector
+%     form as V.  Setting FLAG to FALSE returns the upper triangle portion.
 %
 %    Note:
 %     - 1x1x... is always assumed a vector unless METHOD is set to
 %       'ismatrix'!
-%     - diagonal is NOT required to be zeros
+%     - The diagonal is NOT required to be zeros.
 %
 %    Example:
+%     Create an n-d vector and convert to matrix form:
 %      v=repmat(1:10,[1 1 2 2])
 %      m=ndsquareform(v)
+%     gives:
 %      m(:,:,1,1)=[0  1  2  3  4
 %                  1  0  5  6  7
 %                  2  5  0  8  9
@@ -71,15 +74,23 @@ function [x]=ndsquareform(x,method,flag)
 %                  2  5  0  8  9
 %                  3  6  8  0 10
 %                  4  7  9 10  0];
+%     and going back to vector form:
 %      v=ndsquareform(m)
+%     gives:
+%      v(:,:,1,1)=[1 2 3 4 5 6 7 8 9 10];
+%      v(:,:,2,1)=[1 2 3 4 5 6 7 8 9 10];
+%      v(:,:,1,2)=[1 2 3 4 5 6 7 8 9 10];
+%      v(:,:,2,2)=[1 2 3 4 5 6 7 8 9 10];
 %
 %    See also: SQUAREFORM, TRIL, TRIU, PERMUTE
 
 %     Version History:
 %        Sep.  8, 2009 - rewrite and added documentation
+%        Oct. 14, 2009 - (fully?) compatible with SQUAREFORM, note switch
+%                        to lower triangle, lots of fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 19:30 GMT
+%     Last Updated Oct. 14, 2009 at 01:20 GMT
 
 % todo:
 
@@ -106,23 +117,36 @@ if(nargin<3 || isempty(flag)); flag=true; end
 switch lower(method)
     case 'tovector'
         % check squareness and symmetry (only first page)
-        if(sz(1)~=sz(2) || (~isequal(x(:,:,1),x(:,:,1).') && ...
-                ~isequal(x(:,:,1),-x(:,:,1).')))
+        xd=x((1:sz(1))+((1:sz(1))-1)*sz(1));
+        if(sz(1)~=sz(2) || (~isnumeric(x) && ~islogical(x)))
             error('seizmo:ndsquareform:badInput',...
-                'M must be a square, (anti-)symmetric matrix!');
+                'M must be a square numeric or logical array!');
+        elseif(isnumeric(x) && (~isequal(x(:,:,1),x(:,:,1).') && ...
+                ~isequal(x(:,:,1)-diag(xd),diag(xd)-x(:,:,1).')))
+            % the above uses diag to ignore the diagonal
+            error('seizmo:ndsquareform:badInput',...
+                'M must be a(n) (anti-)symmetric matrix!');
+        elseif(islogical(x) && (~isequal(x(:,:,1),x(:,:,1).') && ...
+                ~isequal(x(:,:,1) | diag(true(sz(1),1)), ...
+                ~x(:,:,1).' | diag(true(sz(1),1)))))
+            % the above uses diag to ignore the diagonal
+            error('seizmo:ndsquareform:badInput',...
+                'M must be a(n) (anti-)symmetric matrix!');
         end
         
-        if(flag)
-            % swap upper triangle with lower to make extraction easy
+        if(~flag)
+            % swap upper triangle with lower
             x=permute(x,[2 1 3:ndims]);
         end
         
         % logical indexing
         lti=tril(true(sz(1)),-1);
         
-        % extract lower triangle, replicating logical indices to match
-        % the number of pages (this preserves the n-dimensionality too)
-        x=x(lti(:,:,ones(1,pages)));
+        % extract lower triangle, replicating logical
+        % indices to match the number of pages
+        % - we also force a row vector here to match SQUAREFORM & PDIST
+        x=reshape(x(lti(:,:,ones(1,pages))),...
+            [1 (sz(1)^2-sz(1))/2 sz(3:end)]);
     case 'tomatrix'
         % get size of output matrix
         len=prod(sz(1:2));
@@ -136,8 +160,10 @@ switch lower(method)
         
         % preallocate output (preserving class)
         if(isnumeric(x))
+            lgc=false;
             m=zeros([n n sz(3:end)],class(x));
         elseif(islogical(x))
+            lgc=true;
             m=false([n n sz(3:end)]);
         else
             error('seizmo:ndsquareform:badInput',...
@@ -150,13 +176,24 @@ switch lower(method)
         % fill lower triangle
         m(lti(:,:,ones(1,pages)))=x(:);
         
-        % permute to upper and fill lower
+        % fill upper
         if(flag)
             % symmetric matrix
-            x=m+permute(m,[2 1 3:ndims]);
+            if(lgc)
+                x=m | permute(m,[2 1 3:ndims]);
+            else
+                x=m+permute(m,[2 1 3:ndims]);
+            end
         else
             % anti-symmetric matrix
-            x=permute(m,[2 1 3:ndims])-m;
+            if(lgc)
+                % preserve the diagonal & lower triangle
+                m=permute(m,[2 1 3:ndims]);
+                m(lti(:,:,ones(1,pages)))=~x(:);
+                x=permute(m,[2 1 3:ndims]);
+            else
+                x=m-permute(m,[2 1 3:ndims]);
+            end
         end
     otherwise
         error('seizmo:ndsquareform:badMethod',...

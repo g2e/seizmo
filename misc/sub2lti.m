@@ -1,4 +1,4 @@
-function [lti]=sub2lti(len,i,j)
+function [lti]=sub2lti(nrows,i,j)
 %SUB2LTI    Square matrix lower triangle linear indices from subscripts
 %
 %    Usage:    idx=sub2lti(nrows,i,j)
@@ -19,7 +19,6 @@ function [lti]=sub2lti(len,i,j)
 %     5    4  7  9 10  -
 %
 %    Notes:
-%     - No input checks are done!
 %
 %    Examples:
 %     Say you have a dissimilarity vector (in this case, say it corresponds
@@ -32,17 +31,36 @@ function [lti]=sub2lti(len,i,j)
 
 %     Version History:
 %        Sep.  8, 2009 - added documentation
+%        Oct. 13, 2009 - added checks, updated documentation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 05:00 GMT
+%     Last Updated Oct. 13, 2009 at 21:30 GMT
 
 % todo:
 
-len=len(1);
-if(any(j>=i))
-    error('seizmo:sub2lti:badInput','Indices out of range!');
+% checks
+if(isempty(nrows) || ~isnumeric(nrows) ...
+        || any(nrows~=fix(nrows)) || numel(nrows)>2)
+    error('seizmo:sub2lti:badInput',...
+        'NROWS must be a scalar number or 1x2 array of [NROWS NCOLS]!');
+elseif(~isnumeric(i) || ~isnumeric(j) ...
+        || any(i~=fix(i)) || any(j~=fix(j)) ...
+        || (~isscalar(i) && ~isscalar(j) && numel(i)~=numel(j)))
+    error('seizmo:sub2lti:badInput',...
+        ['I and J must be scalar integers or be\n' ...
+        'arrays with the same number of integers!']);
 end
-k=cumsum(1:len-1);
-lti=i(:)-k(j).'+len*(j(:)-1);
+
+% get first dimension if more than 1
+nrows=nrows(1);
+
+% subscripts should be in lower triangle
+if(any(j>=i))
+    error('seizmo:sub2lti:badInput','Indices outside lower triangle!');
+end
+
+% get lower triangle indices
+k=cumsum(1:nrows-1);
+lti=i(:)-k(j).'+nrows*(j(:)-1);
 
 end
