@@ -57,9 +57,10 @@ function [data]=dft(data,format,pow2pad)
 %        June  3, 2009 - allow individual record options, warn on
 %                        pow2pad<0, better checking, global option access
 %        June 11, 2009 - fix bug that assigned delta for all file the same
+%        Oct. 15, 2009 - force fft down columns
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:05 GMT
+%     Last Updated Oct. 15, 2009 at 16:05 GMT
 
 % todo:
 
@@ -188,8 +189,8 @@ for i=1:nrecs
     end
     
     % fft
-    data(i).dep=delta(i)*fft(data(i).dep,nspts(i));    % SAC compatible
-    %data(i).dep=2*fft(data(i).dep,nspts(i))/npts(i);  % for sinusoid amplitudes
+    data(i).dep=delta(i)*fft(data(i).dep,nspts(i),1);    % SAC compatible
+    %data(i).dep=2*fft(data(i).dep,nspts(i),1)/npts(i);  % for sinusoid amplitudes
     
     % expand data to make room for split
     data(i).dep(:,(1:ncmp)*2)=data(i).dep;

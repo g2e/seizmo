@@ -5,11 +5,13 @@ function [data]=seizmofun(data,fun)
 %
 %    Description: SEIZMOFUN(DATA,FUN) applies the function defined by the 
 %     function handle FUN to the dependent component(s) of SEIZMO records
-%     in DATA.
+%     in DATA.  Does not adjust the independent data at all.
 %
 %    Notes:
 %     - The number of components in the output record need not match that
 %       of the input record.
+%     - Changing the NPTS in an unevenly sampled record will not adjust the
+%       independent component data.  You must do this yourself!
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NPTS, NCMP
 %
@@ -36,9 +38,11 @@ function [data]=seizmofun(data,fun)
 %        Nov. 22, 2008 - update for new name schema (now SEIZMOFUN)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Oct. 15, 2009 - no header checking, updates header for npts, ncmp,
+%                        dep*, catches errors to keep checking correct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Oct. 15, 2009 at 17:00 GMT
 
 % todo:
 
@@ -54,21 +58,40 @@ if(~isempty(msg)); error(msg.identifier,msg.message); end
 oldseizmocheckstate=get_seizmocheck_state;
 set_seizmocheck_state(false);
 
-% check input fun is a function
-if(~isa(fun,'function_handle'))
-    error('seizmo:seizmofun:badInput','FUN must be a function handle!');
+% try applying function
+try
+    % check input fun is a function
+    if(~isa(fun,'function_handle'))
+        error('seizmo:seizmofun:badInput','FUN must be a function handle!');
+    end
+    
+    % apply function to records
+    ncmp=nan(nrecs,1); npts=ncmp; depmen=ncmp; depmin=ncmp; depmax=ncmp;
+    for i=1:nrecs
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=oclass(fun(double(data(i).dep)));
+        
+        % get npts, ncmp, dep*
+        [npts(i),ncmp(i)]=size(data(i).dep);
+        if(npts(i)) % skip dep* for empty
+            depmen(i)=mean(data(i).dep(:)); 
+            depmin(i)=min(data(i).dep(:)); 
+            depmax(i)=max(data(i).dep(:));
+        end
+    end
+    
+    % update header
+    data=changeheader(data,'npts',npts,'ncmp',ncmp,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+    
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    rethrow(lasterror)
 end
-
-% apply function to records
-for i=1:numel(data)
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=oclass(fun(double(data(i).dep)));
-end
-
-% update header
-data=checkheader(data);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

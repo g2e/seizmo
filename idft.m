@@ -41,9 +41,10 @@ function [data]=idft(data)
 %        Nov. 22, 2008 - update for new name schema
 %        Apr. 23, 2009 - fix nargchk for octave
 %        June  3, 2009 - minor doc fix
+%        Oct. 15, 2009 - force ifft down columns
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:25 GMT
+%     Last Updated Oct. 15, 2009 at 16:05 GMT
 
 % todo:
 
@@ -97,11 +98,11 @@ for i=1:nrecs
     if(strcmpi(iftype(i),'Spectral File-Real/Imag'))
         data(i).dep=1/sdelta(i)*ifft(...
             complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)),...
-            'symmetric');
+            [],1,'symmetric');
     else
         data(i).dep=1/sdelta(i)*ifft(...
             data(i).dep(:,1:2:end).*exp(j*data(i).dep(:,2:2:end)),...
-            'symmetric');
+            [],1,'symmetric');
     end
     
     % truncate to original length and change class back

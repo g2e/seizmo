@@ -23,33 +23,44 @@ function [var]=nanvariance(x,biased,dim,w)
 %     weighted variance.  W must be equal in size to X.  The formula for
 %     the unbiased weighted variance is as follows:
 %
-%               SUM(ABS(W(NN)*(X(NN)-NANMEAN(X))).^2,DIM)
+%               SUM(W(NN).*ABS((X(NN)-X0(NN))).^2,DIM)
 %        VAR = ________________________________________
 %                SUM(W(NN),DIM)-(SUM(W(NN),DIM)/NNN)
 %
-%     where NN are the non-NaN element indices and NNN is the number of
-%     non-NaN elements.  Note the ABS which assures a real-valued variance.
-%     Also note that elements with a weight on NaN are ignored.
+%     where X0 is the weighted mean, NN are the non-NaN element indices,
+%     and NNN is the number of non-NaN elements.  Note the usage of ABS,
+%     which assures a real-valued variance.  Also note that elements with a
+%     weight on NaN are ignored.
 %
 %    Notes:
-%     - there is no special case for the first input of []
-%     - nanvariance is NOT compatible nanvar!
+%     - nanvar incompatibilities:
+%       - weights are always the 4th argument in nanvariance while they are
+%         the second input for nanvar (weighted variance in nanvar is
+%         always biased)
+%       - variances of 1 sample is always biased in nanvar (returns 0),
+%         while nanvariance does an unbiased variance (returns nan) unless
+%         the biased flag is set
+%       - the weighting matrix, w, must be equal sized with x in
+%         nanvariance, while nanvar requires a vector equal in length to
+%         the dimension of x that the variance is being calculated on
+%         (nanvar replicates the weights for array cases)
 %
 %    Examples:
-%     Mean and unbiased variance down the 3rd dimension of a random valued
-%     matrix with some NaNs:
+%     Unbiased variance down the 3rd dimension
+%     of a random valued matrix with some NaNs:
 %      x=rand(10,10,10);
 %      x(x>0.4 & x<0.6)=nan;
-%      mean=nanmean(x,3);
 %      var=nanvariance(x,[],3);
 %
 %    See also: VAR, NANMEAN, NANVAR
 
 %     Version History:
 %        Oct. 14, 2009 - brought back, added checks, better documentation
+%        Oct. 15, 2009 - working version (checks out with nanvar), dropped
+%                        nanmean calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2009 at 05:25 GMT
+%     Last Updated Oct. 15, 2009 at 21:35 GMT
 
 % todo:
 
@@ -86,14 +97,17 @@ idx{dim}=ones(size(x,dim),1);
 
 % UNWEIGHTED VARIANCE
 if(nargin<4 || isempty(w))
+    % NaNs
+    nans=isnan(x);
+    nne=sum(~nans,dim);
+    
+    % WEIGHTED MEAN
+    x(nans)=0;
+    x0=sum(x,dim)./nne;
+    
     % GET RESIDUALS
     % --> NOTE THAT NANMEAN IS USED TO GET THE MEAN
-    mean=nanmean(x,dim);
-    resid=x-mean(idx{:});
-    
-    % NON-NaN ELEMENTS
-    nans=isnan(resid);
-    nne=sum(~nans,dim);
+    resid=x-x0(idx{:});
     
     % REMOVE INFLUENCE OF NaNs BY SETTING THEM TO 0
     resid(nans)=0;
@@ -102,7 +116,7 @@ if(nargin<4 || isempty(w))
     if(~biased); nne=nne-1; end
     
     % RETURN NaN WHEN DOING UNBIASED VARIANCE WITH ONLY ONE ELEMENT
-    % --> NOTE THAT NANMEAN RETURNS NaN IF THERE ARE ZERO ELEMENTS, SO
+    % --> NOTE THAT THE MEAN RETURNS NaN IF THERE ARE ZERO ELEMENTS, SO
     %     THE VARIANCE WILL ALREADY BE NaN IN THESE CASES.
     nne(nne<1)=nan;
     
@@ -116,33 +130,34 @@ else
         error('seizmo:nanvariance:badInput','W must equal size of X!');
     end
     
-    % GET WEIGHTED RESIDUALS
-    % --> NOTE THAT NANMEAN IS USED TO GET THE MEAN
-    mean=nanmean(x,dim);
-    wresid=(x-mean(idx{:})).*w;
-    
-    % NON-NaN ELEMENTS
-    nans=isnan(wresid);
-    nne=sum(~nans,dim);
-    
-    % REMOVE INFLUENCE OF NaNs BY SETTING THEM TO 0
-    wresid(nans)=0;
+    % NaNs
+    nans=isnan(x) | isnan(w);
     
     % GET WEIGHTED DEGREES OF FREEDOM (IGNORING NaNs)
     w(nans)=0;
     wnne=sum(w,dim);
     
+    % WEIGHTED MEAN
+    x(nans)=0;
+    x0=sum(w.*x,dim)./wnne;
+    
+    % GET RESIDUALS
+    resid=x-x0(idx{:});
+    
+    % REMOVE INFLUENCE OF NaNs BY SETTING THEM TO 0
+    resid(nans)=0;
+    
     % UNBIASED WEIGHTED VARIANCE
-    if(~biased); wnne=wnne-wnne./nne; end
+    if(~biased); wnne=wnne-wnne./sum(~nans,dim); end
     
     % RETURN NaN WHEN DOING UNBIASED VARIANCE WITH ONLY ONE ELEMENT
-    % --> NOTE THAT NANMEAN RETURNS NaN IF THERE ARE ZERO ELEMENTS, SO
+    % --> NOTE THAT THE MEAN RETURNS NaN IF THERE ARE ZERO ELEMENTS, SO
     %     THE VARIANCE WILL ALREADY BE NaN IN THESE CASES.
     wnne(wnne==0)=nan;
     
     % GET VARIANCE
     % --> NOTE THAT ABS FORCES REAL-VALUED OUTPUT
-    var=sum(abs(wresid).^2,dim)./wnne;
+    var=sum(w.*abs(resid).^2,dim)./wnne;
 end
 
 end

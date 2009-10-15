@@ -86,14 +86,15 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Oct.  6, 2009 - dropped use of LOGICAL function
+%        Oct. 15, 2009 - increased nargin allowance
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 20:50 GMT
+%     Last Updated Oct. 15, 2009 at 17:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(3,9,nargin);
+msg=nargchk(3,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
@@ -229,9 +230,7 @@ for i=1:nrecs
 end
 
 % update header
-warning('off','seizmo:changeheader:fieldInvalid');
 data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax,...
     'ncmp',ncmp);
-warning('on','seizmo:changeheader:fieldInvalid');
 
 end

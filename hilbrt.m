@@ -27,9 +27,12 @@ function [data]=hilbrt(data)
 %                        SEIZMO functions rather than Matlab's hilbert
 %        Nov. 22, 2008 - doc update, update for new name schema
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Oct. 15, 2009 - does data and header checking now, try/catch will
+%                        assure checking state is kept correct, no longer
+%                        calls other SEIZMO functions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Oct. 15, 2009 at 16:20 GMT
 
 % todo:
 
@@ -37,7 +40,74 @@ function [data]=hilbrt(data)
 msg=nargchk(1,1,nargin);
 if(~isempty(msg)); error(msg); end
 
-% transform, add phase shift, inverse transform
-data=idft(subtract(dft(data),pi/2,2));
+% check data structure
+msg=seizmocheck(data,'dep');
+if(~isempty(msg)); error(msg.identifier,msg.message); end
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% attempt header check
+try
+    % check header
+    data=checkheader(data);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    rethrow(lasterror)
+end
+
+% attempt hilbert
+try
+    % get header info
+    [npts,ncmp]=getheader(data,'npts','ncmp');
+    nspts=2.^(nextpow2n(npts)+1);
+    
+    % loop over records
+    nrecs=numel(data);
+    depmin=nan(nrecs,1); depmen=depmin; depmax=depmin;
+    for i=1:nrecs
+        % skip dataless
+        if(isempty(data(i).dep)); continue; end
+        
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+        
+        % multiplier to give analytic signal
+        h=zeros(nspts(i),1);
+        h([1 nspts(i)/2+1])=1;
+        h(2:(nspts(i)/2))=2;
+        
+        % get hilbert
+        data(i).dep=imag(ifft(...
+            fft(data(i).dep,nspts(i),1).*h(:,ones(1,ncmp(i))),...
+            [],1));
+        
+        % truncate to original length and change class back
+        data(i).dep=oclass(data(i).dep(1:npts(i),:));
+        
+        % dep*
+        depmen(i)=mean(data(i).dep(:)); 
+        depmin(i)=min(data(i).dep(:)); 
+        depmax(i)=max(data(i).dep(:));
+    end
+    
+    % update header
+    data=changeheader(data,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+    
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    rethrow(lasterror)
+end
 
 end
