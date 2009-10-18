@@ -70,7 +70,7 @@ for i=1:numel(h)
     ind=find(idx==i);
     
     % loop over fields
-    for j=1:length(varargin)
+    for j=1:numel(varargin)
         % check for cell output (char field)
         if(iscell(nvarargout{j}(ind)))
             error('seizmo:getenumid:badField',...

@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r102 Ararat 14-Oct-2009
+% Version 0.6.0-r103 Ararat 17-Oct-2009
 %
 % Miscellaneous Support functions
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
@@ -32,6 +32,7 @@
 %SUBMAT_EVAL         - Returns a submatrix using eval
 %SWAP                - Swap values
 %TAPERFUN            - Returns a taper as specified
+%TRIANGLETF          - Returns a triangle time function
 %UNSORT              - Undoes a sort operation using the returned sort indices
 %UTI2SUB             - Square matrix upper triangle linear indices to subscripts
 %WRITECSV            - Write out .csv formatted file from a structure

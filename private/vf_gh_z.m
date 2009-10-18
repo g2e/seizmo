@@ -1,4 +1,4 @@
-function [value]=vf_gh_z(def,head)
+function [value,good]=vf_gh_z(def,head)
 %VF_GH_Z    Returns value for virtual field Z
 
 % get reference time
@@ -21,7 +21,7 @@ if(any(good))
     % get secs
     value(good,5)=(tmp(5,good)+tmp(6,good)/1000).';
 end
-% wrap in cell
-value=mat2cell(value,ones(nv,1));
+% normally wrap in cell
+if(nargout==1); value=mat2cell(value,ones(nv,1)); end
 
 end

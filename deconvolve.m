@@ -1,10 +1,11 @@
-function [data]=deconvolve(data,tf,h2o,zi,zf)
+function [data]=deconvolve(data,tf,h2o,frange,zi,zf)
 %DECONVOLVE    Spectrally deconvolve a time function from SEIZMO records
 %
 %    Usage:    data=deconvolve(data,tf)
 %              data=deconvolve(data,tf,h2o)
-%              data=deconvolve(data,tf,h2o,zi)
-%              data=deconvolve(data,tf,h2o,zi,zf)
+%              data=deconvolve(data,tf,h2o,frange)
+%              data=deconvolve(data,tf,h2o,frange,zi)
+%              data=deconvolve(data,tf,h2o,frange,zi,zf)
 %
 %    Description: DATA=DECONVOLVE(DATA,TF) deconvolves time function TF out
 %     of records in SEIZMO struct DATA using spectral division.  TF must be
@@ -20,14 +21,21 @@ function [data]=deconvolve(data,tf,h2o,zi,zf)
 %     as setting the waterlevel.  The best value for H2O varies and often
 %     requires some inspection.  The default value is 0 and is the unstable
 %     case.  H2O must be a positive scalar or an array of positive values,
-%     1 per record.
+%     with 1 value per record in DATA.
 %
-%     DATA=DECONVOLVE(DATA,TF,H2O,ZI) removes the effect of convolution
-%     initial conditions ZI from records in DATA before deconvolution.
-%     This will remove the effects of the preceeding data that can not be
-%     accounted for otherwise.
+%     DATA=DECONVOLVE(DATA,TF,H2O,FRANGE) specifies the frequency range
+%     over which the spectral division is done.  Frequencies outside this
+%     range are set to 0.  FRANGE must be 1x2 or Nx2 where N is the number
+%     of records in DATA.  By default FRANGE is [0 NYQ] which includes all
+%     frequencies (NYQ is the nyquist frequency for each record).  Use []
+%     to get the default range.
 %
-%     DATA=DECONVOLVE(DATA,TF,H2O,ZI,ZF) attaches convolution final
+%     DATA=DECONVOLVE(DATA,TF,H2O,FRANGE,ZI) removes convolution initial
+%     conditions ZI from records in DATA before deconvolution.  This will
+%     remove the effects of the preceeding data that can not be accounted
+%     for otherwise.
+%
+%     DATA=DECONVOLVE(DATA,TF,H2O,FRANGE,ZI,ZF) attaches convolution final
 %     conditions ZF to the records in DATA.  This will include the full
 %     convolution information for the final points in the record so they
 %     are properly accounted for.
@@ -39,20 +47,21 @@ function [data]=deconvolve(data,tf,h2o,zi,zf)
 %    Examples:
 %     Convolve and then deconvolve a dataset:
 %      [data1,zf]=convolve(data,gausswin(13))
-%      data2=deconvolve(data1,gausswin(13),0.001,[],zf);
+%      data2=deconvolve(data1,gausswin(13),0.001,[],[],zf);
 %
-%    See also: DECONVOLVETD, CONVOLVE, IIRFILTER, CORRELATE
+%    See also: CONVOLVE, IIRFILTER, CORRELATE
 
 %     Version History:
 %        Oct. 12, 2009 - initial version
+%        Oct. 17, 2009 - added frange option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 12, 2009 at 17:50 GMT
+%     Last Updated Oct. 17, 2009 at 16:50 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,5,nargin);
+msg=nargchk(2,6,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
@@ -69,7 +78,8 @@ data=checkheader(data);
 % get header info
 leven=getlgc(data,'leven');
 iftype=getenumid(data,'iftype');
-[npts,ncmp]=getheader(data,'npts','ncmp');
+[npts,ncmp,delta]=getheader(data,'npts','ncmp','delta');
+nyq=1./(2*delta);
 
 % cannot do spectral/xyz records
 if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
@@ -130,8 +140,18 @@ elseif(any(h2o<0))
 end
 if(isscalar(h2o)); h2o=h2o(ones(nrecs,1),1); end
 
+% check frequency range
+if(nargin<4 || isempty(frange))
+    frange=[zeros(nrecs,1) nyq];
+elseif(~isnumeric(frange) || (~isequal(size(frange),[1 2]) ...
+        && ~isequal(size(frange),[nrecs 2])))
+    error('seizmo:deconvolve:badFRANGE',...
+        'FRANGE must be a numeric array of size 1x2 or Nx2!')
+end
+if(size(frange,1)==1); frange=frange(ones(nrecs,1),:); end
+
 % check initial conditions
-if(nargin>3 && ~isempty(zi))
+if(nargin>4 && ~isempty(zi))
     if(iscell(zi))
         if(numel(zi)~=nrecs)
             error('seizmo:deconvolve:badZI',...
@@ -163,7 +183,7 @@ if(nargin>3 && ~isempty(zi))
 end
 
 % check initial conditions
-if(nargin>4 && ~isempty(zf))
+if(nargin>5 && ~isempty(zf))
     if(iscell(zf))
         if(numel(zf)~=nrecs)
             error('seizmo:deconvolve:badZF',...
@@ -202,23 +222,37 @@ for i=1:nrecs
     data(i).dep=double(data(i).dep);
     
     % clear initial conditions
-    if(nargin>3 && ~isempty(zi))
+    if(nargin>4 && ~isempty(zi))
         data(i).dep(1:nzi(ziidx(i)),:)=...
             data(i).dep(1:nzi(ziidx(i)),:)-zi{ziidx(i)};
     end
     
     % waterlevel stabilized spectral division
-    if(nargin>3 && ~isempty(zi))
+    if(nargin>5 && ~isempty(zf))
         nspts=2^(nextpow2(npts(i)+ntf(tfidx(i))-1)+1);
-        tmp=fft(tf{tfidx(i)}(:,ones(1,ncmp(i))),nspts);
-        tmp=(abs(tmp)+h2o(i)).*exp(j*angle(tmp));
-        tmp=ifft(fft([data(i).dep; zf{zfidx(i)}],nspts)./tmp,'symmetric');
+        sdelta=2*nyq(i)./nspts;
+        freq=abs([linspace(0,nyq(i),nspts/2+1) ...
+            linspace(-nyq(i)+sdelta,-sdelta,nspts/2-1)]);
+        good=freq>=frange(i,1) & freq<=frange(i,2);
+        tmp1=fft(tf{tfidx(i)}(:,ones(1,ncmp(i))),nspts);
+        tmp1=(abs(tmp1)+h2o(i)).*exp(j*angle(tmp1));
+        tmp2=fft([data(i).dep; zf{zfidx(i)}],nspts);
+        tmp=complex(zeros(nspts,ncmp(i)));
+        tmp(good,:)=tmp2(good,:)./tmp1(good,:);
+        tmp=ifft(tmp,'symmetric');
         data(i).dep=tmp(1:npts(i),:);
     else
         nspts=2^(nextpow2(npts(i))+1);
-        tmp=fft(tf{tfidx(i)}(:,ones(1,ncmp(i))),nspts);
-        tmp=(abs(tmp)+h2o(i)).*exp(j*angle(tmp));
-        tmp=ifft(fft(data(i).dep,nspts)./tmp,'symmetric');
+        sdelta=2*nyq(i)./nspts;
+        freq=abs([linspace(0,nyq(i),nspts/2+1) ...
+            linspace(-nyq(i)+sdelta,-sdelta,nspts/2-1)]);
+        good=freq>=frange(i,1) & freq<=frange(i,2);
+        tmp1=fft(tf{tfidx(i)}(:,ones(1,ncmp(i))),nspts);
+        tmp1=(abs(tmp1)+h2o(i)).*exp(j*angle(tmp1));
+        tmp2=fft(data(i).dep,nspts);
+        tmp=complex(zeros(nspts,ncmp(i)));
+        tmp(good,:)=tmp2(good,:)./tmp1(good,:);
+        tmp=ifft(tmp,'symmetric');
         data(i).dep=tmp(1:npts(i),:);
     end
     

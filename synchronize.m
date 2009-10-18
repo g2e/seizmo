@@ -22,7 +22,9 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %     FIELD is not a recognized timing field (A, B, E, F, O, Tn), it will
 %     not be shifted in the resulting output unless it is also supplied as
 %     a user field (see final usage description).  Field may also be 'Z'
-%     to align on a reference time.
+%     to align on a reference time.  Field can be a 1x5 or 1x6 numeric
+%     vector or a KZDTTM string to directly set the absolute time to
+%     synchronize on.
 %
 %     SYNCHRONIZE(DATA,FIELD,OPTION) sets whether reference times are
 %     synced to the first or last occuring FIELD (in absolute time sense).
@@ -63,9 +65,10 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %        June 24, 2009 - initial version
 %        Sep. 24, 2009 - added iztype field parameter
 %        Sep. 25, 2009 - better fix for reftime millisec limit, true sync
+%        Oct. 17, 2009 - added direct absolute time input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 25, 2009 at 04:50 GMT
+%     Last Updated Oct. 17, 2009 at 15:20 GMT
 
 % todo:
 
@@ -93,14 +96,36 @@ valid.TIMING={'UTC' 'TAI'};
 valid.OPTION={'LAST' 'FIRST'};
 
 % default/check field (catching warnings)
+abstime=false;
+if(nargin>1 && iscell(field) && isscalar(field)); field=field{1}; end
 if(nargin<2 || isempty(field))
     field='b';
     values=getheader(data,field);
+elseif(isnumeric(field))
+    if((~isequal(size(field),[1 5]) && ~isequal(size(field),[1 6])) ...
+            || any(isnan(field) | isinf(field)) ...
+            || ~isequal(field(1:end-1),round(field(1:end-1))))
+        error('seizmo:synchronize:badField',...
+            'Numeric FIELD must be 1x5 or 1x6 and not be NaN or Inf!');
+    end
+    abstime=true;
 elseif(~ischar(field) || size(field,1)~=1)
     error('seizmo:synchronize:badField',...
         'FIELD must be a character string!');
 else
-    if(strcmpi(field,'z'))
+    if(isequal(size(field),[1 29]))
+        num=true(1,29);
+        num(1,[5 8 11 12 16 17 20 23 26])=false;
+        if(~strcmp(field(~num),'-- () ::.') ...
+            || ~all(isstrprop(field(num),'digit')))
+            error('seizmo:synchronize:badField',...
+                'FIELD kzdttm-style string improperly formatted!');
+        end
+        field=str2double([cellstr(field(1:4)) cellstr(field(13:15)) ...
+            cellstr(field(18:19)) cellstr(field(21:22)) ...
+            cellstr(field(24:25)) cellstr(field(27:29))]);
+        abstime=true;
+    elseif(strcmpi(field,'z'))
         values=zeros(nrecs,1);
     else
         warning('off','seizmo:getheader:fieldInvalid')
@@ -114,7 +139,7 @@ else
 end
 
 % force values to nearest millisecond
-values=round(values*1000)/1000;
+if(~abstime); values=round(values*1000)/1000; end
 
 % default/check option
 if(nargin<3 || isempty(option))
@@ -157,14 +182,21 @@ end
 
 % get shift
 reftimes=[nzyear nzjday nzhour nzmin nzsec+nzmsec/1000];
-times=sortrows(fixtimes(...
-    [reftimes(:,1:4) reftimes(:,5)+values],timing));
-times(:,5)=fix(1000*(times(:,5)+1e-9))/1000; % account for millisec limit
-switch lower(option)
-    case 'last'
-        synctime=times(end,:);
-    case 'first'
-        synctime=times(1,:);
+if(abstime)
+    synctime=fixtimes(field,timing);
+    if(strcmpi(timing,'tai'))
+        reftimes=fixtimes(reftimes);
+    end
+else
+    times=sortrows(fixtimes(...
+        [reftimes(:,1:4) reftimes(:,5)+values],timing));
+    times(:,5)=fix(1000*(times(:,5)+1e-9))/1000; % account 4 millisec limit
+    switch lower(option)
+        case 'last'
+            synctime=times(end,:);
+        case 'first'
+            synctime=times(1,:);
+    end
 end
 
 % get shift

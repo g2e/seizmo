@@ -208,6 +208,10 @@ function [option]=checkparameters(setglobal,varargin)
 %           CHECKS:     NUMBER OF POINTS IN IND AND DEP MATCH
 %           FIX:        TRUNCATE TO SHORTER
 %           DEFAULT:    ERROR
+%       CMPLX_IND
+%           CHECKS:     IND IS COMPLEX
+%           FIX:        SET IND REAL
+%           DEFAULT:    ERROR
 %       NONMONOTONIC_IND
 %           CHECKS:     TIME POINTS IN IND ALWAYS INCREASING/DECREASING
 %           FIX:        PARALLEL SORT IND & DEP
@@ -228,10 +232,18 @@ function [option]=checkparameters(setglobal,varargin)
 %           CHECKS:     DELTA MATCHES IND DATA
 %           FIX:        UPDATE DELTA
 %           DEFAULT:    FIX
+%       CMPLX_DEP
+%           CHECKS:     DEP IS COMPLEX
+%           FIX:        SET DEP REAL
+%           DEFAULT:    ERROR
 %       OLD_DEP_STATS
 %           CHECKS:     DEPMAX/DEPMEN/DEPMIN
 %           FIX:        UPDATE DEP* STATS
 %           DEFAULT:    FIX
+%       CMPLX_HEAD
+%           CHECKS:     HEAD IS COMPLEX
+%           FIX:        SET HEAD REAL
+%           DEFAULT:    ERROR
 %
 %    Examples:
 %     Make all subsequent calls to CHECKHEADER only check the version
@@ -243,9 +255,10 @@ function [option]=checkparameters(setglobal,varargin)
 %     Version History:
 %        Sep. 29, 2009 - initial version taken from CHECKOPERR
 %        Oct.  5, 2009 - added option table to notes, new option EVEN_IND
+%        Oct. 16, 2009 - added complex data checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 16:35 GMT
+%     Last Updated Oct. 16, 2009 at 19:40 GMT
 
 % todo:
 
@@ -313,12 +326,15 @@ option.MISSING_IND='WARNFIX';
 option.EVEN_IND='FIX';
 option.MULCMP_IND='ERROR';
 option.INCONSISTENT_IND_NPTS='ERROR';
+option.CMPLX_IND='ERROR';
 option.NONMONOTONIC_IND='ERROR';
 option.REPEAT_IND='ERROR';
 option.INCONSISTENT_IND_B='FIX';
 option.INCONSISTENT_IND_E='FIX';
 option.INCONSISTENT_IND_DELTA='FIX';
+option.CMPLX_DEP='ERROR';
 option.OLD_DEP_STATS='FIX';
+option.CMPLX_HEAD='ERROR';
 
 % valid states
 states={'ERROR' 'WARN' 'IGNORE' 'FIX' 'WARNFIX'};

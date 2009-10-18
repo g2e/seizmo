@@ -56,8 +56,8 @@ function [varargout]=getheader(data,varargin)
 %               GETENUMID, GETENUMDESC, GETNCMP, GETARRIVAL, COMPAREHEADER
 
 %     Version History:
-%        Oct. 29, 2008 - initial version
-%        Nov.  7, 2008 - doc update
+%        Oct. 29, 2007 - initial version
+%        Nov.  7, 2007 - doc update
 %        Jan. 28, 2008 - new sachp support
 %        Feb. 18, 2008 - rewrite - parses by version first
 %        Feb. 23, 2008 - minor doc update
@@ -72,9 +72,10 @@ function [varargout]=getheader(data,varargin)
 %        Sep. 15, 2009 - vf support, abs time support, doc update
 %        Sep. 18, 2009 - 2nd pass at abs time support
 %        Oct.  6, 2009 - dropped use of LOGICAL function
+%        Oct. 16, 2009 - reftime code only used when necessary
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 20:55 GMT
+%     Last Updated Oct. 16, 2009 at 17:50 GMT
 
 % todo:
 
@@ -136,21 +137,8 @@ head=[data.head];
 % push out entire header
 if(nargin==1); varargout{1}=head.'; return; end
 
-% get reference times hack
-ref=head(h.reftime,:);
-bad=sum(isnan(ref) | isinf(ref) | ref==h.undef.ntype ...
-    | ref~=round(ref) | [false(1,nrecs); (ref(2,:)<1 | ref(2,:)>366); ...
-    (ref(3,:)<0 | ref(3,:)>23); (ref(4,:)<0 | ref(4,:)>59); ...
-    (ref(5,:)<0 | ref(5,:)>60); (ref(6,:)<0 | ref(6,:)>999)])~=0;
-good=~bad.';
-if(any(bad))
-    ref(:,bad)=h.undef.ntype;
-end
-if(any(good))
-    ref(5,good)=ref(5,good)+ref(6,good)/1000;
-    ref(1:5,good)=utc2tai(ref(1:5,good).').';
-end
-ref=ref(1:5,:).';
+% preallocate ref
+ref=[]; ref6=[]; good=[];
 
 % loop over fields
 for i=1:nargin-1
@@ -173,7 +161,7 @@ for i=1:nargin-1
         end
         
         % pull header values
-        [val,type]=ph(head,h,f,ref,good);
+        [val,type,ref,ref6,good]=ph(head,h,f,ref,ref6,good);
         
         % preallocate (did not know the type until now)
         if(j==1)
@@ -191,7 +179,7 @@ end
 
 end
 
-function [head,type]=ph(head,h,f,reftime,good)
+function [head,type,ref,ref6,good]=ph(head,h,f,ref,ref6,good)
 %PH    Pull header values
 
 % virtual fields
@@ -227,14 +215,20 @@ for n=1:numel(h.ntype)
             wf=getwords(f);
             if(isfield(h.real(m).pos,wf{1}))
                 if(any(strcmpi(joinwords(wf(2:end)),{'utc' 'tai'})))
+                    % get reftimes
+                    if(isempty(ref))
+                        [ref,good]=vf_gh_z(h,head); good=good';
+                        ref6=ref(:,[1:2 2:5]);
+                        ref6(good,1:3)=doy2cal(ref6(good,1:2));
+                    end
+                    
                     % get header values in a workable form
                     nrecs=size(head,2);
                     value=zeros(nrecs,5);
                     value(:,5)=head(h.(h.ntype{n})(m).pos.(wf{1}),:).';
                     
                     % default output to undef
-                    head=mat2cell(ones(size(value,1),5)*h.undef.ntype,...
-                        ones(nrecs,1));
+                    head=ones(size(value,1),5)*h.undef.ntype;
                     
                     % who's (un)defined
                     good=good & value(:,5)~=h.undef.ntype ...
@@ -244,30 +238,30 @@ for n=1:numel(h.ntype)
                     if(any(good))
                         switch wf{2}
                             case 'utc'
-                                head(good,:)=mat2cell(...
-                                    tai2utc(reftime(good,:)...
-                                    +value(good,:)),ones(sum(good),1));
+                                head(good,:)=fixtimes(ref(good,:)...
+                                    +value(good,:),'utc');
                             case 'tai'
-                                head(good,:)=mat2cell(...
-                                    fixtimes(reftime(good,:)...
-                                    +value(good,:)),ones(sum(good),1));
+                                head(good,:)=fixtimes(utc2tai(...
+                                    ref(good,:))+value(good,:));
                         end
                     end
-                    type=1;
+                    head=mat2cell(head,ones(nrecs,1)); type=1;
                     return;
                 elseif(any(strcmpi(joinwords(wf(2:end)),{'6utc' '6tai'})))
+                    % get reftimes
+                    if(isempty(ref6))
+                        [ref,good]=vf_gh_z(h,head); good=good';
+                        ref6=ref(:,[1:2 2:5]);
+                        ref6(good,1:3)=doy2cal(ref6(good,1:2));
+                    end
+                    
                     % get header values in a workable form
                     nrecs=size(head,2);
                     value=zeros(nrecs,6);
                     value(:,6)=head(h.(h.ntype{n})(m).pos.(wf{1}),:).';
                     
                     % default output to undef
-                    head=mat2cell(ones(size(value,1),6)*h.undef.ntype,...
-                        ones(nrecs,1));
-                    
-                    % convert reftime from nx5 to nx6
-                    reftime=reftime(:,[1:2 2:5]);
-                    reftime(good,1:3)=doy2cal(reftime(good,1:2));
+                    head=ones(size(value,1),6)*h.undef.ntype;
                     
                     % who's (un)defined
                     good=good & value(:,6)~=h.undef.ntype ...
@@ -277,16 +271,14 @@ for n=1:numel(h.ntype)
                     if(any(good))
                         switch wf{2}
                             case '6utc'
-                                head(good,:)=mat2cell(...
-                                    tai2utc(reftime(good,:)...
-                                    +value(good,:)),ones(sum(good),1));
+                                head(good,:)=fixtimes(ref6(good,:)...
+                                    +value(good,:),'utc');
                             case '6tai'
-                                head(good,:)=mat2cell(...
-                                    fixtimes(reftime(good,:)...
-                                    +value(good,:)),ones(sum(good),1));
+                                head(good,:)=fixtimes(utc2tai(...
+                                    ref6(good,:))+value(good,:));
                         end
                     end
-                    type=1;
+                    head=mat2cell(head,ones(nrecs,1)); type=1;
                     return;
                 end
             end

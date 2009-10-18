@@ -65,9 +65,10 @@ function [def]=seizmodef(filetype,version,usecache)
 %        Sep. 25, 2009 - multi-cmp fixes
 %        Sep. 29, 2009 - added delaz vgrp
 %        Oct.  2, 2009 - added gcp vgrp (just baz)
+%        Oct. 16, 2009 - removed rmfield usage (its slow)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  2, 2009 at 20:10 GMT
+%     Last Updated Oct. 16, 2009 at 06:45 GMT
 
 % todo:
 
@@ -228,9 +229,12 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.vf.z6tai.ch=@vf_ch_z6tai;
     def.vf.z6tai.gh=@vf_gh_z6tai;
     def.vf.z6tai.lh=@vf_lh_z6tai;
-    def.vf.ncmp.type='int';
-    def.vf.ncmp.ch=@vf_ch_ncmp;
-    def.vf.ncmp.gh=@vf_gh_ncmp;
+    % ncmp virtual field only for non-mulcmp versions
+    if(version==6 || version==200)
+        def.vf.ncmp.type='int';
+        def.vf.ncmp.ch=@vf_ch_ncmp;
+        def.vf.ncmp.gh=@vf_gh_ncmp;
+    end
     
     % this is a hack
     % - would like reftime header positions without having to
@@ -426,11 +430,10 @@ if(strcmpi(filetype,'SEIZMO Binary'))
         def.mulcmp.valid=true;
         
         % replace unused15 with ncmp (number of dependent components)
-        def.int.pos=rmfield(def.int.pos,'unused15');
-        def.int.pos.ncmp=85;
-        
-        % remove vf ncmp
-        def.vf=rmfield(def.vf,'ncmp');
+        def.int.pos=struct('nzyear',71,...
+            'nzjday',72,'nzhour',73,'nzmin',74,'nzsec',75,'nzmsec',76,...
+            'nvhdr',77,'norid',78,'nevid',79,'npts',80,'nspts',81,...
+            'nwfid',82,'nxsize',83,'nysize',84,'ncmp',85);
         
         % alter vgrp int
         def.vgrp.int={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec' ...

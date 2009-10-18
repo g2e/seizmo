@@ -93,9 +93,10 @@ function [data]=changeheader(data,varargin)
 %        Sep. 15, 2009 - vf support, abs time support, doc update
 %        Sep. 18, 2009 - 2nd pass at abs time support
 %        Oct.  6, 2009 - dropped use of LOGICAL function
+%        Oct. 16, 2009 - reftime code only used when necessary
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 21:00 GMT
+%     Last Updated Oct. 16, 2009 at 18:35 GMT
 
 % todo:
 
@@ -150,21 +151,8 @@ end
 % pull entire header
 head=[data.head];
 
-% get reference times hack
-ref=head(h.reftime,:);
-bad=sum(isnan(ref) | isinf(ref) | ref==h.undef.ntype ...
-    | ref~=round(ref) | [false(1,nrecs); (ref(2,:)<1 | ref(2,:)>366); ...
-    (ref(3,:)<0 | ref(3,:)>23); (ref(4,:)<0 | ref(4,:)>59); ...
-    (ref(5,:)<0 | ref(5,:)>60); (ref(6,:)<0 | ref(6,:)>999)])~=0;
-good=~bad.';
-if(any(bad))
-    ref(:,bad)=h.undef.ntype;
-end
-if(any(good))
-    ref(5,good)=ref(5,good)+ref(6,good)/1000;
-    ref(1:5,good)=utc2tai(ref(1:5,good).').';
-end
-ref=ref(1:5,:).';
+% preallocate ref
+ref=[]; tai=[]; good=[];
 
 % loop over field/value pairs
 for i=1:2:(nargin-2)
@@ -249,7 +237,7 @@ for i=1:2:(nargin-2)
         end
         
         % assign values to field
-        head=a2h(head,h,f,varargin{i+1}(:,j),ref,good);
+        [head,ref,tai,good]=a2h(head,h,f,varargin{i+1}(:,j),ref,tai,good);
     end
 end
 
@@ -260,7 +248,7 @@ head=mat2cell(head,h.size,ones(1,nrecs));
 end
 
 
-function [head]=a2h(head,h,f,v,reftime,good)
+function [head,ref,tai,good]=a2h(head,h,f,v,ref,tai,good)
 %A2H    Subfunction that assigns values to header field
 
 % virtual fields
@@ -408,6 +396,12 @@ for n=1:numel(h.ntype)
             if(any(strcmpi(joinwords(wf(2:end)),...
                     {'utc' 'tai' '6utc' '6tai'})))
                 if(isfield(h.real(m).pos,wf{1}))
+                    % get reftimes
+                    if(isempty(ref))
+                        [ref,good]=vf_gh_z(h,head); good=good';
+                        tai=ref; tai(good,:)=utc2tai(ref(good,:));
+                    end
+                    
                     % set all to undef
                     head(h.real(m).pos.(wf{1}),:)=h.undef.ntype;
                     
@@ -440,12 +434,12 @@ for n=1:numel(h.ntype)
                         switch wf{2}
                             case {'utc' '6utc'}
                                 head(h.real(m).pos.(wf{1}),good5)=...
-                                    timediff(reftime(good5,:),...
+                                    timediff(tai(good5,:),...
                                     utc2tai(cell2mat(v(good5,1))));
                             case {'tai' '6tai'}
                                 head(h.real(m).pos.(wf{1}),good5)=...
-                                    timediff(reftime(good5,:),...
-                                    fixtimes(cell2mat(v(good5,1))));
+                                    timediff(tai(good5,:),...
+                                    cell2mat(v(good5,1)));
                         end
                     end
                     if(any(good6))
@@ -453,12 +447,12 @@ for n=1:numel(h.ntype)
                         switch wf{2}
                             case {'utc' '6utc'}
                                 head(h.real(m).pos.(wf{1}),good6)=...
-                                    timediff(reftime(good6,:),...
+                                    timediff(tai(good6,:),...
                                     utc2tai(cell2mat(v(good6,1))));
                             case {'tai' '6tai'}
                                 head(h.real(m).pos.(wf{1}),good6)=...
-                                    timediff(reftime(good6,:),...
-                                    fixtimes(cell2mat(v(good6,1))));
+                                    timediff(tai(good6,:),...
+                                    cell2mat(v(good6,1)));
                         end
                     end
                     return;

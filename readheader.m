@@ -59,9 +59,11 @@ function [data]=readheader(varargin)
 %        Sep. 11, 2009 - added misc field
 %        Sep. 29, 2009 - added dep & ind (to allow dataset concatenation)
 %        Oct.  5, 2009 - reordered struct fields, minor doc update
+%        Oct. 16, 2009 - dropped fullfile usage, took filesep out of loop
+%                        (for speed), reduced seizmodef calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 16:05 GMT
+%     Last Updated Oct. 16, 2009 at 17:15 GMT
 
 % todo:
 
@@ -79,11 +81,19 @@ data(nfiles,1)=struct('path',[],'name',[],'filetype',[],...
     'version',[],'byteorder',[],'head',[],'hasdata',[],...
     'ind',[],'dep',[],'misc',[]);
 
+% getting file separator
+fs=filesep;
+
+% "preallocate" definition info
+filetypes(1:1,1)={''};
+versions=zeros(1,1);
+def=cell(1,1); c=1;
+
 % loop for each file
 destroy=false(nfiles,1);
 for i=1:nfiles
     % get filetype, version and byte-order
-    name=fullfile(varargin(i).path,varargin(i).name);
+    name=[varargin(i).path fs varargin(i).name];
     [filetype,version,endian]=getfileversion(name);
     
     % validity check
@@ -94,7 +104,17 @@ for i=1:nfiles
     end
     
     % retrieve header setup
-    h=seizmodef(filetype,version);
+    idx=strcmpi(filetype,filetypes) & version==versions;
+    if(any(idx))
+        h=def{idx};
+    else
+        % get definition
+        filetypes{c}=filetype;
+        versions(c)=version;
+        def{c}=seizmodef(filetype,version);
+        h=def{c};
+        c=c+1;
+    end
     
     % handle types separately
     if(strcmpi(filetype,'SAC Binary')...
@@ -126,7 +146,9 @@ for i=1:nfiles
         end
         
         % save directory and filename
-        if(isempty(varargin(i).path)); varargin(i).path=['.' filesep]; end
+        if(isempty(varargin(i).path))
+            varargin(i).path=['.' fs];
+        end
         data(i).path=varargin(i).path;
         data(i).name=varargin(i).name;
         
@@ -141,8 +163,8 @@ for i=1:nfiles
         
         % reading in header
         n=h.types;
-        for m=1:length(n)
-            for k=1:length(h.(n{m}))
+        for m=1:numel(n)
+            for k=1:numel(h.(n{m}))
                 fseek(fid,h.(n{m})(k).startbyte,'bof');
                 data(i).head(h.(n{m})(k).minpos:h.(n{m})(k).maxpos)=...
                     fread(fid,h.(n{m})(k).size,h.(n{m})(k).store);

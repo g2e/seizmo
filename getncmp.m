@@ -22,9 +22,10 @@ function [ncmp]=getncmp(data)
 %        Nov. 16, 2008 - update for new name schema (now GETNCMP)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        June  3, 2009 - minor doc fix
+%        Oct. 16, 2009 - drop warnings, allow 0 cmp records
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:05 GMT
+%     Last Updated Oct. 16, 2009 at 09:00 GMT
 
 % todo:
 
@@ -33,15 +34,13 @@ msg=nargchk(1,1,nargin);
 if(~isempty(msg)); error(msg); end
 
 % get ncmp via GH, avoiding warnings
-warning('off','seizmo:getheader:fieldInvalid')
 ncmp=getheader(data,'ncmp');
-warning('on','seizmo:getheader:fieldInvalid')
 
 % clean up and check ncmp
 ncmp(isnan(ncmp))=1;
-if(any(ncmp<1 | fix(ncmp)~=ncmp))
+if(any(ncmp<0 | fix(ncmp)~=ncmp))
     error('seizmo:getncmp:badNumCmp',...
-        'Field NCMP must be a positive integer!')
+        'Field NCMP must be integer >=0!')
 end
 
 end

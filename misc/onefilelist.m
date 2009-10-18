@@ -2,12 +2,16 @@ function [list]=onefilelist(varargin)
 %ONEFILELIST    Compiles multiple filelists into one
 %
 %    Usage:    list=onefilelist(list1,...,listN)
+%              list=onefilelist
 %
-%    Description: ONEFILELIST(ARG1,...,ARGN) combines input char/cellstr 
-%     arrays into a single-column cellstr array and then pipes each cell 
-%     through XDIR to expand wildcard inputs.  This is mostly useful for 
-%     taking file lists and wildcards in various array formats and 
-%     combining them into one simple list of files.
+%    Description: LIST=ONEFILELIST(ARG1,...,ARGN) combines input
+%     char/cellstr arrays into a single-column cellstr array and then pipes
+%     each cell through XDIR to expand wildcard inputs and to get detailed
+%     info for each file.  This is mostly useful for taking file lists and
+%     wildcards in various array formats and combining them into one
+%     structured list of files.  See XDIR for the format of LIST.
+%
+%     LIST=ONEFILELIST presents a gui to select files.
 %
 %    Notes:
 %     - XDIR is derived from RDIR (taken from the Matlab File Exchange)
@@ -31,37 +35,45 @@ function [list]=onefilelist(varargin)
 %        Dec.  2, 2008 - use XDIR to expand wildcard ability
 %        Apr. 23, 2009 - move usage up
 %        Sep.  8, 2009 - minor doc fix
+%        Oct. 16, 2009 - file select ui if no input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 05:30 GMT
+%     Last Updated Oct. 16, 2009 at 07:15 GMT
 
 % todo:
 
 % check nargin
 if(nargin<1)
-    error('seizmo:onefilelist:notEnoughInputs',...
-        'Not enough input arguments.');
-end
-
-% check, organize, and compile char/cellstr arrays
-for i=1:nargin
-    % check that input is char or cellstr array
-    if(~ischar(varargin{i}) && ~iscellstr(varargin{i}))
-        error('seizmo:onefilelist:badInput',...
-            'Inputs must be character and cellstr arrays only!');
+    [files,path]=uigetfile(...
+        {'*.*' 'All Files (*.*)';
+        '*.sac;*.SAC;sac.*;SAC.*' 'SAC Files (*.sac,*.SAC,sac.*,SAC.*)';
+        '*.sz;*.SZ;sz.*;SZ.*' 'SEIZMO Files (*.sz,*.SZ,sz.*,SZ.*)'},...
+        'Select File(s)','MultiSelect','on');
+    if(isequal(0,files))
+        error('seizmo:onefilelist:noFilesSelected','No files selected!');
+    end
+    varargin=strcat(path,filesep,cellstr(files));
+else
+    % check, organize, and compile char/cellstr arrays
+    for i=1:max(1,nargin)
+        % check that input is char or cellstr array
+        if(~ischar(varargin{i}) && ~iscellstr(varargin{i}))
+            error('seizmo:onefilelist:badInput',...
+                'Inputs must be character and cellstr arrays only!');
+        end
+        
+        % char to cellstr then array to column vector
+        varargin{i}=cellstr(varargin{i});
+        varargin{i}=varargin{i}(:).';
     end
     
-    % char to cellstr then array to column vector
-    varargin{i}=cellstr(varargin{i});
-    varargin{i}=varargin{i}(:).';
+    % concatinate arguments
+    varargin=[varargin{:}].';
 end
-
-% concatinate arguments
-varargin=[varargin{:}].';
 
 % pump each cell through xdir
 list=[];
-for i=1:length(varargin)
+for i=1:numel(varargin)
     % get this filelist
     files=xdir(varargin{i});
     

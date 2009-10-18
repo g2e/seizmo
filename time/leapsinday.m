@@ -24,7 +24,8 @@ function [leaps]=leapsinday(dates,option)
 %       seconds were introduced to keep UTC near UT1.
 %
 %    Examples:
-%     Find out how many seconds there will be today:
+%     Find out how many seconds there will be today (as long as you are not
+%     currently in the leap second):
 %      86400+leapsinday(now,'serial')
 %
 %    See also: TOTALLEAPS, GETLEAPSECONDS, LEAPSECONDS, FIXTIMES, TIMEDIFF,
@@ -37,9 +38,10 @@ function [leaps]=leapsinday(dates,option)
 %        June 11, 2009 - fix leap second bug, fix hardcode bug,
 %                        minor doc update
 %        Sep.  5, 2009 - minor doc update
+%        Oct. 16, 2009 - major speed increase
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 19:15 GMT
+%     Last Updated Oct. 16, 2009 at 02:15 GMT
 
 % todo:
 
@@ -99,7 +101,7 @@ leapdates=leapdates(:,ones(1,ndates));
 
 % compare dates
 leaps=zeros(sz);
-idx=(dates==leapdates.')*(1:nleaps).';
-leaps(idx>0)=offset(idx(idx>0));
+[row,col]=find(dates==leapdates.');
+leaps(row)=offset(col);
 
 end

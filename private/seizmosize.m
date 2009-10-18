@@ -28,9 +28,10 @@ function [bytes]=seizmosize(data)
 %        Nov. 13, 2008 - renamed from SEISSIZE to SEIZSIZE
 %        Nov. 15, 2008 - update for new naming scheme (now SEIZMOSIZE)
 %        Apr. 23, 2009 - fix nargchk for octave
+%        Oct. 15, 2009 - speed boost
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Oct. 15, 2009 at 23:45 GMT
 
 % todo:
 
@@ -40,7 +41,7 @@ if(~isempty(msg)); error(msg); end
 
 % headers setup (check struct too)
 [h,vi]=versioninfo(data);
-hdata=[h(vi).data];
+hdata=[h.data];
 
 % turn off struct checking
 oldstate=get_seizmocheck_state;
@@ -69,7 +70,7 @@ count=ncmp.*count;
 count=count+strcmpi(leven,'false');
 
 % final tally
-bytes=[hdata.startbyte].'+count.*npts.*[hdata.bytesize].';
+bytes=[hdata(vi).startbyte].'+count.*npts.*[hdata(vi).bytesize].';
 
 % toggle struct checking back
 set_seizmocheck_state(oldstate);

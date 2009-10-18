@@ -100,9 +100,10 @@ function [data,failed]=readdata(data,varargin)
 %        Sep. 11, 2009 - added misc field to doc
 %        Sep. 29, 2009 - minor doc update
 %        Oct.  5, 2009 - minor doc update
+%        Oct. 16, 2009 - drop fullfile usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 16:05 GMT
+%     Last Updated Oct. 16, 2009 at 03:25 GMT
 
 % todo:
 
@@ -170,11 +171,14 @@ leven=getlgc(data,'leven');
 % number of records
 nrecs=numel(data);
 
+% getting file separator
+fs=filesep;
+
 % read loop
 failed=false(nrecs,1);
 for i=1:nrecs
     % construct fullname
-    name=fullfile(data(i).path,data(i).name);
+    name=[data(i).path fs data(i).name];
     
     % open file for reading
     fid=fopen(name,'r',data(i).byteorder);

@@ -44,9 +44,10 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %                        comma separated list), move usage up
 %        June 12, 2009 - minor error msg change
 %        Sep.  7, 2009 - minor doc update
+%        Oct. 16, 2009 - added persistent vars to speed things up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  7, 2009 at 07:15 GMT
+%     Last Updated Oct. 16, 2009 at 02:45 GMT
 
 % todo:
 
@@ -78,7 +79,10 @@ if(fid<0)
 end
 
 % methods
-funcs={@getsacbinaryversion, @getseizmobinaryversion};
+persistent funcs
+if(isempty(funcs))
+    funcs={@getsacbinaryversion, @getseizmobinaryversion};
+end
 
 % try different methods, catching errors
 for i=1:numel(funcs)
@@ -139,7 +143,8 @@ if(isempty(ver))
 end
 
 % check if valid SAC file
-sac=validseizmo('SAC Binary');
+persistent sac
+if(isempty(sac)); sac=validseizmo('SAC Binary'); end
 if(any(sac==ver))
     filetype='SAC Binary';
     version=ver;
@@ -219,7 +224,8 @@ if(isempty(ver))
 end
 
 % check if valid SEIZMO file
-seizmo=validseizmo('SEIZMO Binary');
+persistent seizmo
+if(isempty(seizmo)); seizmo=validseizmo('SEIZMO Binary'); end
 if(any(seizmo==ver))
     filetype='SEIZMO Binary';
     version=ver;

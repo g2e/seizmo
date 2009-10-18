@@ -203,6 +203,10 @@ function [data]=checkheader(data,varargin)
 %           CHECKS:     NUMBER OF POINTS IN IND AND DEP MATCH
 %           FIX:        TRUNCATE TO SHORTER
 %           DEFAULT:    ERROR
+%       CMPLX_IND
+%           CHECKS:     IND IS COMPLEX
+%           FIX:        SET IND REAL
+%           DEFAULT:    ERROR
 %       NONMONOTONIC_IND
 %           CHECKS:     TIME POINTS IN IND ALWAYS INCREASING/DECREASING
 %           FIX:        PARALLEL SORT IND & DEP
@@ -223,10 +227,18 @@ function [data]=checkheader(data,varargin)
 %           CHECKS:     DELTA MATCHES IND DATA
 %           FIX:        UPDATE DELTA
 %           DEFAULT:    FIX
+%       CMPLX_DEP
+%           CHECKS:     DEP IS COMPLEX
+%           FIX:        SET DEP REAL
+%           DEFAULT:    ERROR
 %       OLD_DEP_STATS
 %           CHECKS:     DEPMAX/DEPMEN/DEPMIN
 %           FIX:        UPDATE DEP* STATS
 %           DEFAULT:    FIX
+%       CMPLX_HEAD
+%           CHECKS:     HEAD IS COMPLEX
+%           FIX:        SET HEAD REAL
+%           DEFAULT:    ERROR
 %
 %    Header changes: NVHDR, IFTYPE, IZTYPE, IDEP,
 %                    DELTA, NPTS, NCMP, B, E, LEVEN, SDELTA, SB, NSPTS,
@@ -276,9 +288,11 @@ function [data]=checkheader(data,varargin)
 %                        nonzero_iztype fix
 %        Oct.  7, 2009 - minor changes to a few messages
 %        Oct. 13, 2009 - fix ncmp check for spectral records
+%        Oct. 15, 2009 - fix for inaccurate_timing (big speed jump)
+%        Oct. 16, 2009 - added complex data checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 13, 2009 at 07:55 GMT
+%     Last Updated Oct. 16, 2009 at 19:35 GMT
 
 % todo:
 
@@ -544,6 +558,11 @@ if(~strcmp(option.INCONSISTENT_IND_NPTS,'IGNORE'))
         option.INCONSISTENT_IND_NPTS,leven,data);
 end
 
+% check for complex ind
+if(~strcmp(option.CMPLX_IND,'IGNORE'))
+    [data]=cmplx_ind(option.CMPLX_IND,data);
+end
+
 % check for nonmonotonic ind
 if(~strcmp(option.NONMONOTONIC_IND,'IGNORE'))
     [data]=nonmonotonic_ind(option.NONMONOTONIC_IND,leven,data);
@@ -601,9 +620,19 @@ if(~strcmp(option.MULTIPLE_DELTA,'IGNORE'))
     multiple_delta(option.MULTIPLE_DELTA,delta);
 end
 
+% check for complex dep
+if(~strcmp(option.CMPLX_DEP,'IGNORE'))
+    [data]=cmplx_dep(option.CMPLX_DEP,data);
+end
+
 % check for old dep stats
 if(~strcmp(option.OLD_DEP_STATS,'IGNORE'))
     [dep]=old_dep_stats(option.OLD_DEP_STATS,undef,data,dep);
+end
+
+% check for complex head
+if(~strcmp(option.CMPLX_HEAD,'IGNORE'))
+    [data]=cmplx_head(option.CMPLX_HEAD,data);
 end
 % END VSDATA
 
@@ -1223,7 +1252,7 @@ end
 end
 
 function inaccurate_timing(opt,b,delta,e,fudge)
-bad=find((b+delta-b-delta)/delta>fudge | (e+delta-e-delta)/delta>fudge);
+bad=find((b+delta-b-delta)./delta>fudge | (e+delta-e-delta)./delta>fudge);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:timingDegraded';
     report.message=['Records:\n' sprintf('%d ',bad)...
@@ -1993,6 +2022,99 @@ if(~isempty(bad))
             warning(report.identifier,report.message);
             disp('==> Updating DEP stats to match data!');
             dep(bad,:)=newdep(bad,:);
+    end
+end
+
+end
+
+function [data]=cmplx_head(opt,data)
+nrecs=numel(data);
+bad=false(nrecs,1);
+for i=1:nrecs
+    bad(i)=~isreal(data(i).head);
+end
+bad=find(bad).';
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:cmplxHeader';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+                '\nHeader is complex (not real valued)!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            for i=bad
+                data(i).head=real(data(i).head);
+            end
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Stripping imaginary values from header!');
+            for i=bad
+                data(i).head=real(data(i).head);
+            end
+    end
+end
+
+end
+
+function [data]=cmplx_ind(opt,data)
+nrecs=numel(data);
+bad=false(nrecs,1);
+for i=1:nrecs
+    bad(i)=~isreal(data(i).ind);
+end
+bad=find(bad).';
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:cmplxIND';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+                '\nIND is complex (not real valued)!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            for i=bad
+                data(i).ind=real(data(i).ind);
+            end
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Stripping imaginary values from IND!');
+            for i=bad
+                data(i).ind=real(data(i).ind);
+            end
+    end
+end
+
+end
+
+function [data]=cmplx_dep(opt,data)
+nrecs=numel(data);
+bad=false(nrecs,1);
+for i=1:nrecs
+    bad(i)=~isreal(data(i).dep);
+end
+bad=find(bad).';
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:cmplxDEP';
+    report.message=['Records:\n' sprintf('%d ',bad) ...
+                '\nDEP is complex (not real valued)!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            for i=bad
+                data(i).dep=real(data(i).dep);
+            end
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Stripping imaginary values from DEP!');
+            for i=bad
+                data(i).dep=real(data(i).dep);
+            end
     end
 end
 

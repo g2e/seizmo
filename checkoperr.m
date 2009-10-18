@@ -218,6 +218,10 @@ function [varargout]=checkoperr(varargin)
 %           CHECKS:     NUMBER OF POINTS IN IND AND DEP MATCH
 %           FIX:        TRUNCATE TO SHORTER
 %           DEFAULT:    ERROR
+%       CMPLX_IND
+%           CHECKS:     IND IS COMPLEX
+%           FIX:        SET IND REAL
+%           DEFAULT:    ERROR
 %       NONMONOTONIC_IND
 %           CHECKS:     TIME POINTS IN IND ALWAYS INCREASING/DECREASING
 %           FIX:        PARALLEL SORT IND & DEP
@@ -238,10 +242,18 @@ function [varargout]=checkoperr(varargin)
 %           CHECKS:     DELTA MATCHES IND DATA
 %           FIX:        UPDATE DELTA
 %           DEFAULT:    FIX
+%       CMPLX_DEP
+%           CHECKS:     DEP IS COMPLEX
+%           FIX:        SET DEP REAL
+%           DEFAULT:    ERROR
 %       OLD_DEP_STATS
 %           CHECKS:     DEPMAX/DEPMEN/DEPMIN
 %           FIX:        UPDATE DEP* STATS
 %           DEFAULT:    FIX
+%       CMPLX_HEAD
+%           CHECKS:     HEAD IS COMPLEX
+%           FIX:        SET HEAD REAL
+%           DEFAULT:    ERROR
 %
 %    Examples:
 %     Make CHECKHEADER only require that the version field is valid:
@@ -254,9 +266,10 @@ function [varargout]=checkoperr(varargin)
 %        Sep. 28, 2009 - major revision for upcoming checkheader rewrite
 %        Sep. 29, 2009 - uses CHECKPARAMETERS now
 %        Oct.  5, 2009 - doc update
+%        Oct. 16, 2009 - added complex data checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 16:35 GMT
+%     Last Updated Oct. 16, 2009 at 19:40 GMT
 
 % todo:
 

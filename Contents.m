@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r100 Ararat 12-Oct-2009
+% Version 0.6.0-r103 Ararat 17-Oct-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -22,7 +22,6 @@
 %CORRELATE           - Compute cross correlograms of SEIZMO data records
 %CUT                 - Cut a window out of SEIZMO records
 %DECONVOLVE          - Spectrally deconvolve a time function from SEIZMO records
-%DECONVOLVETD        - Time-domain Deconvolution of SEIZMO records
 %DELETERECORDS       - Deletes indicated records from SEIZMO data structure
 %DETACH              - Detach data from SEIZMO records
 %DFT                 - Performs a discrete fourier transform on SEIZMO data records

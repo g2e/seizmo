@@ -40,16 +40,14 @@ function [valid]=validseizmo(filetype)
 %                        easier for multiple component support
 %        Sep. 25, 2009 - undid hack mentioned above
 %        Oct.  6, 2009 - new usage form to return valid filetypes
+%        Oct. 16, 2009 - dropped redundant nargin check (2x faster)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 18:20 GMT
+%     Last Updated Oct. 16, 2009 at 02:25 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(0,1,nargin);
-if(~isempty(msg)); error(msg); end
-
 if(nargin)
     % handle empty
     if(isempty(filetype)); valid=[]; return; end

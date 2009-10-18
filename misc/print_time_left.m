@@ -63,8 +63,8 @@ perc_complete=floor(100*act_step/tot_step);
 % update if new percent or if 0th step
 if(old_perc_complete~=perc_complete || ~act_step)
     % internally keep track of output length and timer
-    if(~exist('nb','var') || isempty(nb)); nb=0; end
-    if(~exist('i','var') || isempty(i)); i=tic; end
+    if(~act_step || ~exist('nb','var') || isempty(nb)); nb=0; end
+    if(~act_step || ~exist('i','var') || isempty(i)); i=tic; end
     if(nargin==3 && redraw); nb=0; end
     
     % time spent so far

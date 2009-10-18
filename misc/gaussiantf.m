@@ -15,9 +15,7 @@ function [x]=gaussiantf(t,t0,hwidth,stddev,amp)
 %     X=GAUSSIANTF(T,T0,HWIDTH,STDDEV) sets the falloff value STDDEV.  The
 %     default value is sqrt(2), which causes the gaussian to drop off to
 %     1/e at a time distance of HWIDTH from T0.  See the Notes section for
-%     the gaussian formula.  Basically setting STDDEV to N will create a
-%     curve that is equivalent to a scaled probability density function for
-%     a gaussian distribution of N standard deviations at -HWIDTH & HWIDTH.
+%     the gaussian formula.
 %
 %     X=GAUSSIANTF(T,T0,HWIDTH,STDDEV,AMP) sets the peak amplitude of the
 %     gaussian curve at T0.  The default value of AMP is 1.
@@ -30,19 +28,22 @@ function [x]=gaussiantf(t,t0,hwidth,stddev,amp)
 %                   2     \          HWIDTH /
 %     X = AMP * e
 %
-%
 %    Examples:
-%     Gaussian curve centered at 10 seconds with a characteristic falloff
-%     time of 5 seconds:
-%      plot(0:0.1:20,gaussiantf(0:0.1:20,10,5))
+%     Compare gaussian and triangle time functions
+%     for convolving with synthetic seismic data:
+%      plot(-15:0.1:15,gaussiantf(-15:0.1:15,0,10,...
+%          exp(0.5)*sqrt(2),exp(0.5)/10/sqrt(pi)))
+%      hold on
+%      plot(-15:0.1:15,triangletf(-15:0.1:15,0,10,1/10))
 %
-%    See also: TAPERFUN, GAUSSWIN, MAKESOURCEFUNCTION
+%    See also: TRIANGLETF, TAPERFUN, GAUSSWIN
 
 %     Version History:
 %        Oct. 11, 2009 - initial version
+%        Oct. 17, 2009 - new example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 11, 2009 at 15:20 GMT
+%     Last Updated Oct. 17, 2009 at 21:30 GMT
 
 % todo:
 
