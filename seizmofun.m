@@ -91,7 +91,7 @@ catch
     set_seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    rethrow(lasterror)
+    error(lasterror)
 end
 
 end

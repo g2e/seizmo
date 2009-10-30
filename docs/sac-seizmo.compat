@@ -1,7 +1,7 @@
 % The following gives a rough compatibility chart
 % between SEIZMO and SAC.  
 
-about				about=ver('dev')
+about				about=ver('seizmo')
 abs					seizmofun(data,@abs)
 absolutevalue		seizmofun(data,@abs)
 add					add(data,value)
@@ -66,8 +66,8 @@ grayscale			N/A (can be done with matlab)
 grid				set(gca,'xgrid','on')
 gtext				see xlabel, ylabel, title
 hanning				N/A, see slidingavg + seizmofun
-help				help dev
-help_intro			help dev
+help				help seizmo
+help_intro			
 highpass			iirfilter(data,'high',...)
 hilbert				hilbrt
 history				use the command history window, commandhistory

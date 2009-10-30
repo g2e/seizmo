@@ -1,12 +1,14 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r103 Ararat 18-Oct-2009
+% Version 0.6.0-r104 Ararat 29-Oct-2009
 %
 % Shortcut function names
 %ADDF   - ADDRECORDS                     - Add SEIZMO records
 %CH     - CHANGEHEADER                   - Change SEIZMO data header values
 %CMPH   - COMPAREHEADER                  - List SEIZMO data headers side-by-side for easy comparison
 %CSTF   - CONVOLVE_SOURCE_TIMEFUNCTION   - Convolve source function on SEIZMO records
+%DSTF   - DECONVOLVE_SOURCE_TIMEFUNCTION - Deconvolve source from SEIZMO records
 %DIF    - DIFFERENTIATE                  - Differentiate SEIZMO records
+%DIVO   - DIVIDEOMEGA                    - Integrate SEIZMO records in the frequency domain
 %DIVF   - DIVIDERECORDS                  - Divide SEIZMO records
 %GH     - GETHEADER                      - Get SEIZMO data header values
 %GPOLY  - GETPOLYNOMIAL                  - Get polynomial fit to SEIZMO records
@@ -14,6 +16,7 @@
 %LH     - LISTHEADER                     - List SEIZMO data headers
 %MSTF   - MAKE_SOURCE_TIMEFUNCTION       - Returns source time functions for convolution
 %MUL    - MULTIPLY                       - Multiply SEIZMO records by a constant
+%MULO   - MULTIPLYOMEGA                  - Differentiate SEIZMO records in the frequency domain
 %MULF   - MULTIPLYRECORDS                - Multiply SEIZMO records
 %P0     - PLOT0                          - Plot SEIZMO data records in an evenly spaced record section
 %P1     - PLOT1                          - Plot SEIZMO data records in individual subplots

@@ -56,9 +56,10 @@ function [data]=prewhiten(data,order)
 %        Sep. 22, 2009 - pushed .pef & .prewhitened to .misc.pef &
 %                        .misc.prewhitened (avoids struct cat errors)
 %        Oct. 13, 2009 - minor doc update
+%        Oct. 19, 2009 - global access to order
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 13, 2009 at 05:50 GMT
+%     Last Updated Oct. 19, 2009 at 06:40 GMT
 
 % todo:
 
@@ -126,10 +127,18 @@ if(any(idx))
         'PREWHITEN will not prewhiten prewhitened records!']);
 end
 
-% default/check order
+% default/global/check order
+global SEIZMO
 if(nargin==1 || isempty(order))
     order=6;
-elseif(~isnumeric(order) || any(fix(order)~=order) ...
+    try
+        if(~isempty(SEIZMO.PREWHITEN.ORDER))
+            order=SEIZMO.PREWHITEN.ORDER;
+        end
+    catch
+    end
+end
+if(~isnumeric(order) || any(fix(order)~=order) ...
         || ~any(numel(order)==[1 nrecs]))
     error('seizmo:prewhiten:badOrder',...
         'ORDER must be a scalar or an array with 1 integer per record!');

@@ -47,16 +47,23 @@ function [data]=merge(data,varargin)
 %     record with a lower index, while 'TWO' adjusts the higher.
 %
 %     DATA=MERGE(DATA,...,'OVERLAP',METHOD,...) allows changing how
-%     overlaps are merged.  There are two choices: 'SEQUENTIAL' and
-%     'TRUNCATE'.  The default is 'SEQUENTIAL', which basically just shifts
-%     the timing of one of the records (as chosen by the ADJUST option) so
-%     they no longer overlap and then combines the two records.  This is
-%     useful for cases where the data is actually continuous but a time
-%     tear was inserted to deal with accrued time error over a longer time
-%     section than the records that are being merged.  The 'TRUNCATE'
-%     option allows for deleting overlapping data from one of the records
-%     (as chosen by the ADJUST option).  This is useful for merging records
-%     that do have some redundant data.
+%     overlaps are merged.  There are 4 choices: 'SEQUENTIAL', 'TRUNCATE',
+%     'ADD', & 'AVERAGE'.  The default is 'SEQUENTIAL', which shifts the
+%     timing of one of the records (as chosen by the ADJUST option) so they
+%     no longer overlap and then combines the two records.  This is useful
+%     for cases where the data is actually continuous but a time tear was
+%     inserted to deal with accrued time error over a longer time section
+%     than the records that are being merged.  The 'TRUNCATE' option allows
+%     for deleting overlapping data from one of the records (as chosen by
+%     the ADJUST option).  This is useful for merging records that do have
+%     some redundant data.  The 'ADD' option will merge the records much
+%     like the 'TRUNCATE' method, but rather than dropping the overlapping
+%     data from one of the records the data is numerically added to the
+%     other records' data in the overlapping segment.  This is useful for
+%     sequential records that have been filtered (to allow adding the final
+%     conditions to adjacent records).  The 'AVERAGE' option does a simple
+%     average of the data in the overlapping segment so the records mend
+%     together better.  This might be useful for some situations.
 %
 %     DATA=MERGE(DATA,...,'GAP',METHOD,...) allows changing how gaps are
 %     merged.  There are three choices: 'SEQUENTIAL' 'INTERPOLATE' and
@@ -224,12 +231,20 @@ function [data]=merge(data,varargin)
 %        May  15, 2009 - minor doc update
 %        May  28, 2009 - minor doc update
 %        Sep. 30, 2009 - update for CMOD ==> LONMOD
+%        Oct. 30, 2009 - significant update: overlap add/average method,
+%                        improved time sequence code, handle partial
+%                        pieces and dataless
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 30, 2009 at 15:40 GMT
+%     Last Updated Oct. 30, 2009 at 19:45 GMT
 
 % todo:
+%   - try/catch
+%   - seizmo_verbose
+%   - tolerance units
+%   - overlap blend? (how to blend partial pieces...)
 %   - uneven support - just toss together and sort after?
+%   - variable delta support (convert to uneven then do above?)
 
 % check nargin
 if(mod(nargin-1,2))
@@ -253,7 +268,7 @@ oldcheckheaderstate=get_checkheader_state;
 set_checkheader_state(false);
 
 % valid values for string options
-valid.OVERLAP={'sequential' 'truncate'};
+valid.OVERLAP={'sequential' 'truncate' 'add' 'average'};
 valid.GAP={'sequential' 'interpolate' 'fill'};
 valid.INTERPOLATE={'spline' 'pchip' 'linear' 'nearest'};
 valid.ADJUST={'longer' 'shorter' 'first' 'last' 'one' 'two'};
@@ -262,7 +277,7 @@ valid.TIMING={'utc' 'tai'};
 
 % defaults
 option.TOLERANCE=0.02; % seconds, any positive number
-option.OVERLAP='sequential'; % sequential/truncate
+option.OVERLAP='sequential'; % sequential/truncate/add/average
 option.GAP='sequential'; % sequential/interpolate/fill
 option.INTERPOLATE='spline'; % spline/pchip/linear/nearest
 option.ADJUST='shorter'; % longer/shorter/first/last
@@ -504,7 +519,8 @@ for i=1:size(f,1)
     newng=ng;
     
     % loop until no files left unattempted
-    attempted=false(ng,1); newidx=nrecs+1;
+    attempted=npts(gidx)==0; % skip dataless
+    newidx=nrecs+1;
     while(any(~attempted))
         % get an unattempted file
         j=find(~attempted,1,'first');
@@ -625,6 +641,9 @@ else idx=mabsidx;
 end
 
 for i=1:nrecs
+    % skip dataless
+    if(isempty(data(i).dep)); continue; end
+    
     % skip records already merged in
     if(any(absidx(i)==[mhistory{:}])); continue; end
     
@@ -1011,6 +1030,60 @@ switch option.OVERLAP
                     data,ab,ae,delta,npts,shift,first,last,option);
             end
         end
+    case {'add' 'average'}
+        % add/average overlap from option.ADJUST record
+        
+        % divisor for adding (1) or averaging (2)
+        d=1; if(strcmpi(option.OVERLAP,'average')); d=2; end
+        
+        % detail message
+        if(option.VERBOSE || option.DEBUG)
+            disp(sprintf(...
+                ['Adjusting:  %s (%d - %s)\n'...
+                 'Adjustment: %f seconds (%f samples)'],...
+                option.ADJUST,idx(kill),name{kill},shift,shift/delta));
+        end
+        
+        % update
+        dt=dt(keep,:);
+        name=name(keep);
+        
+        % shift or interpolate option.ADJUST record to align?
+        if(abs(shift)<=maxshift)
+            % detail message
+            if(option.VERBOSE || option.DEBUG)
+                disp('Adjust Method: shift');
+            end
+            
+            % shift which?
+            if(kill==first)
+                % shift timing and add first record
+                [data,ab,ae,npts]=shiftandavgfirst(...
+                    data,ab,ae,delta,npts,shift,first,last,option,d);
+            else
+                % shift timing and add last record
+                [data,ab,ae,npts]=shiftandavglast(...
+                    data,ab,ae,delta,npts,shift,first,last,option,d);
+            end
+        else
+            % detail message
+            if(option.VERBOSE || option.DEBUG)
+                disp(sprintf(...
+                    ['Adjust Method: interpolate\n'...
+                     'Interpolate Method: %s'],option.INTERPOLATE));
+            end
+            
+            % interpolate which?
+            if(kill==first)
+                % interpolate and add first record
+                [data,ab,ae,npts]=interpolateandavgfirst(...
+                    data,ab,ae,delta,npts,shift,first,last,option,d);
+            else
+                % interpolate and add last record
+                [data,ab,ae,npts]=interpolateandavglast(...
+                    data,ab,ae,delta,npts,shift,first,last,option,d);
+            end
+        end
 end
 
 end
@@ -1047,10 +1120,10 @@ if(option.VERBOSE || option.DEBUG)
 end
 
 % interpolate gap
-gaptimes=(sae(2)+delta):delta:(sae(2)+nsamples*delta);
-firsttimes=sab(2):delta:(sab(2)+(npts(first)-1)*delta);
-lasttimes=ab(last,2):delta:(ab(last,2)+(npts(last)-1)*delta);
-gapdata=interp1([firsttimes lasttimes],...
+lasttimes=ab(last,2)+(0:(npts(last)-1))*delta;
+gaptimes=sae(2)+(1:nsamples)*delta;
+newtimes=sab(2)+(0:(npts(first)-1))*delta;
+gapdata=interp1([newtimes lasttimes],...
     [data(first).dep; data(last).dep],...
     gaptimes,option.INTERPOLATE,'extrap');
 gapdata=gapdata.';
@@ -1092,10 +1165,10 @@ if(option.VERBOSE || option.DEBUG)
 end
 
 % interpolate gap
-gaptimes=(ae(first,2)+delta):delta:(ae(first,2)+nsamples*delta);
-firsttimes=ab(first,2):delta:(ab(first,2)+(npts(first)-1)*delta);
-lasttimes=sab(2):delta:(sab(2)+(npts(last)-1)*delta);
-gapdata=interp1([firsttimes lasttimes],...
+firsttimes=ab(first,2)+(0:(npts(first)-1))*delta;
+gaptimes=ae(first,2)+(1:nsamples)*delta;
+newtimes=sab(2)+(0:(npts(last)-1))*delta;
+gapdata=interp1([firsttimes newtimes],...
     [data(first).dep; data(last).dep],...
     gaptimes,option.INTERPOLATE,'extrap');
 gapdata=gapdata.';
@@ -1137,10 +1210,10 @@ if(option.VERBOSE || option.DEBUG)
 end
 
 % interpolate first record and gap
-firsttimes=ab(first,2):delta:(ab(first,2)+(npts(first)-1)*delta);
-lasttimes=ab(last,2):delta:(ab(last,2)+(npts(last)-1)*delta);
-gaptimes=(sae(2)+delta):delta:(sae(2)+nsamples*delta);
-newtimes=sab(2):delta:(sab(2)+(npts(first)-1)*delta);
+firsttimes=ab(first,2)+(0:(npts(first)-1))*delta;
+lasttimes=ab(last,2)+(0:(npts(last)-1))*delta;
+gaptimes=sae(2)+(1:nsamples)*delta;
+newtimes=sab(2)+(0:(npts(first)-1))*delta;
 newdata=interp1([firsttimes lasttimes],...
     [data(first).dep; data(last).dep],...
     [newtimes gaptimes],option.INTERPOLATE,'extrap');
@@ -1183,10 +1256,10 @@ if(option.VERBOSE || option.DEBUG)
 end
 
 % interpolate last record and gap
-firsttimes=ab(first,2):delta:(ab(first,2)+(npts(first)-1)*delta);
-lasttimes=ab(last,2):delta:(ab(last,2)+(npts(last)-1)*delta);
-gaptimes=(ae(first,2)+delta):delta:(ae(first,2)+nsamples*delta);
-newtimes=sab(2):delta:(sab(2)+(npts(last)-1)*delta);
+firsttimes=ab(first,2)+(0:(npts(first)-1))*delta;
+lasttimes=ab(last,2)+(0:(npts(last)-1))*delta;
+gaptimes=ae(first,2)+(1:nsamples)*delta;
+newtimes=sab(2)+(0:(npts(last)-1))*delta;
 newdata=interp1([firsttimes lasttimes],...
     [data(first).dep; data(last).dep],...
     [gaptimes newtimes],option.INTERPOLATE,'extrap');
@@ -1297,8 +1370,8 @@ sab=ab(first,:)+[0 shift];
 sae=ae(first,:)+[0 shift];
 
 % interpolate first record
-oldtimes=ab(first,2):delta:(ab(first,2)+(npts(first)-1)*delta);
-newtimes=sab(2):delta:(sab(2)+(npts(first)-1)*delta);
+oldtimes=ab(first,2)+(0:(npts(first)-1))*delta;
+newtimes=sab(2)+(0:(npts(first)-1))*delta;
 data(first).dep=...
     interp1(oldtimes,data(first).dep,newtimes,option.INTERPOLATE,'extrap');
 data(first).dep=data(first).dep.';
@@ -1342,8 +1415,8 @@ sab=ab(last,:)-[0 shift];
 sae=ae(last,:)-[0 shift];
 
 % interpolate last record
-oldtimes=ab(last,2):delta:(ab(last,2)+(npts(last)-1)*delta);
-newtimes=sab(2):delta:(sab(2)+(npts(last)-1)*delta);
+oldtimes=ab(last,2)+(0:(npts(last)-1))*delta;
+newtimes=sab(2)+(0:(npts(last)-1))*delta;
 data(last).dep=...
     interp1(oldtimes,data(last).dep,newtimes,option.INTERPOLATE,'extrap');
 data(last).dep=data(last).dep.';
@@ -1380,7 +1453,7 @@ function [data,ab,ae,npts]=...
 % make sure all times share the same day
 ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
 ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
-%ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
 
 % get shifted times of first
 sab=ab(first,:)+[0 shift];
@@ -1388,6 +1461,7 @@ sae=ae(first,:)+[0 shift];
 
 % figure out number of samples dropped
 nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+ns=min(nsamples,npts(last));
 
 % detail message
 if(option.VERBOSE || option.DEBUG)
@@ -1395,13 +1469,14 @@ if(option.VERBOSE || option.DEBUG)
 end
 
 % combine data and drop overlap from first
-data(last).dep=[data(first).dep(1:end-nsamples,:); data(last).dep];
+data(last).dep=[data(first).dep(1:end-nsamples,:); data(last).dep;
+    data(first).dep(end-nsamples+ns+1:end,:)];
 data(first)=[];
 
-% set new ab,ae,npts,dt
+% set new ab, ae, npts
 ab=fixmodserial(sab);
-ae=ae(last,:);
-npts=npts(1)+npts(2)-nsamples;
+ae=fixmodserial([ab(first,1) max(ae(last,2),sae(2))]);
+npts=npts(1)+npts(2)-ns;
 
 end
 
@@ -1424,6 +1499,7 @@ sae=ae(last,:)-[0 shift];
 
 % figure out number of samples dropped
 nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+nsamples=min(nsamples,npts(last));
 
 % detail message
 if(option.VERBOSE || option.DEBUG)
@@ -1436,7 +1512,7 @@ data(last)=[];
 
 % set new ab, ae, npts
 ab=ab(first,:);
-ae=fixmodserial(sae);
+ae=fixmodserial([ab(first,1) max(ae(first,2),sae(2))]);
 npts=npts(1)+npts(2)-nsamples;
 
 end
@@ -1452,35 +1528,37 @@ function [data,ab,ae,npts]=interpolateandtruncatefirst(...
 % make sure all times share the same day
 ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
 ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
-%ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
 
 % get shifted times of first
 sab=ab(first,:)+[0 shift];
 sae=ae(first,:)+[0 shift];
 
 % interpolate first record
-oldtimes=ab(first,2):delta:(ab(first,2)+(npts(first)-1)*delta);
-newtimes=sab(2):delta:(sab(2)+(npts(first)-1)*delta);
+oldtimes=ab(first,2)+(0:(npts(first)-1))*delta;
+newtimes=sab(2)+(0:(npts(first)-1))*delta;
 data(first).dep=...
     interp1(oldtimes,data(first).dep,newtimes,option.INTERPOLATE,'extrap');
 data(first).dep=data(first).dep.';
 
 % figure out number of samples dropped
 nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+ns=min(nsamples,npts(last));
 
 % detail message
 if(option.VERBOSE || option.DEBUG)
-    disp(sprintf('Samples Truncated: %d',nsamples));
+    disp(sprintf('Samples Truncated: %d',ns));
 end
 
 % combine data and drop overlap from first
-data(last).dep=[data(first).dep(1:end-nsamples,:); data(last).dep];
+data(last).dep=[data(first).dep(1:end-nsamples,:); data(last).dep;
+    data(first).dep(end-nsamples+ns+1:end,:)];
 data(first)=[];
 
-% set new ab,ae,npts,dt
+% set new ab, ae, npts
 ab=fixmodserial(sab);
-ae=ae(last,:);
-npts=npts(1)+npts(2)-nsamples;
+ae=fixmodserial([ab(first,1) max(ae(last,2),sae(2))]);
+npts=npts(1)+npts(2)-ns;
 
 end
 
@@ -1502,14 +1580,15 @@ sab=ab(last,:)-[0 shift];
 sae=ae(last,:)-[0 shift];
 
 % interpolate last record
-oldtimes=ab(last,2):delta:(ab(last,2)+(npts(last)-1)*delta);
-newtimes=sab(2):delta:(sab(2)+(npts(last)-1)*delta);
+oldtimes=ab(last,2)+(0:(npts(last)-1))*delta;
+newtimes=sab(2)+(0:(npts(last)-1))*delta;
 data(last).dep=...
     interp1(oldtimes,data(last).dep,newtimes,option.INTERPOLATE,'extrap');
 data(last).dep=data(last).dep.';
 
 % figure out number of samples dropped
 nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+nsamples=min(nsamples,npts(last));
 
 % detail message
 if(option.VERBOSE || option.DEBUG)
@@ -1522,8 +1601,190 @@ data(last)=[];
 
 % set new ab, ae, npts
 ab=ab(first,:);
-ae=fixmodserial(sae);
+ae=fixmodserial([ab(first,1) max(ae(first,2),sae(2))]);
 npts=npts(1)+npts(2)-nsamples;
+
+end
+
+
+function [data,ab,ae,npts]=...
+    shiftandavgfirst(data,ab,ae,delta,npts,shift,first,last,option,dvd)
+% shift and add data of first record
+
+% we need to shift the samples of the first record to align with the last
+% then we add the overlapping samples from the first to the last
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of first
+sab=ab(first,:)+[0 shift];
+sae=ae(first,:)+[0 shift];
+
+% figure out number of samples dropped
+nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+e1=max(0,npts(first)-nsamples);
+b2=min(nsamples,npts(last));
+ns=b2+min(0,npts(first)-nsamples);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Truncated: %d',nsamples));
+end
+
+% combine data
+% - note that there may be partial pieces here
+data(last).dep=[data(first).dep(1:e1,:); data(last).dep(1:b2-ns,:); ...
+    (data(first).dep(e1+1:e1+ns,:)+data(last).dep(b2-ns+1:b2,:))/dvd; ...
+    data(first).dep(e1+ns+1:end,:); data(last).dep(b2+1:end,:)];
+data(first)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial([ab(first,1) min(ab(last,2),sab(2))]);
+ae=fixmodserial([ab(first,1) max(ae(last,2),sae(2))]);
+npts=npts(1)+npts(2)-ns;
+
+end
+
+
+function [data,ab,ae,npts]=...
+    shiftandavglast(data,ab,ae,delta,npts,shift,first,last,option,dvd)
+% shift and add data of last record
+
+% we need to shift the samples of the last record to align with the first
+% then we add the overlapping samples from the last to the first
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of last
+sab=ab(last,:)-[0 shift];
+sae=ae(last,:)-[0 shift];
+
+% figure out number of samples
+nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+e1=max(0,npts(first)-nsamples);
+b2=min(nsamples,npts(last));
+ns=b2+min(0,npts(first)-nsamples);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% combine data
+% - note that there may be partial pieces here
+data(first).dep=[data(first).dep(1:e1,:); data(last).dep(1:b2-ns,:); ...
+    (data(first).dep(e1+1:e1+ns,:)+data(last).dep(b2-ns+1:b2,:))/dvd; ...
+    data(first).dep(e1+ns+1:end,:); data(last).dep(b2+1:end,:)];
+data(last)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial([ab(first,1) min(ab(first,2),sab(2))]);
+ae=fixmodserial([ab(first,1) max(ae(first,2),sae(2))]);
+npts=npts(1)+npts(2)-ns;
+
+end
+
+
+function [data,ab,ae,npts]=interpolateandavgfirst(...
+    data,ab,ae,delta,npts,shift,first,last,option,dvd)
+% interpolate and add data of first record
+
+% we need to interpolate the samples of the first record to align with the
+% last, then we add the overlapping samples from the first to the last
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of first
+sab=ab(first,:)+[0 shift];
+sae=ae(first,:)+[0 shift];
+
+% interpolate first record
+oldtimes=ab(first,2)+(0:(npts(first)-1))*delta;
+newtimes=sab(2)+(0:(npts(first)-1))*delta;
+data(first).dep=...
+    interp1(oldtimes,data(first).dep,newtimes,option.INTERPOLATE,'extrap');
+data(first).dep=data(first).dep.';
+
+% figure out number of samples
+nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+e1=max(0,npts(first)-nsamples);
+b2=min(nsamples,npts(last));
+ns=b2+min(0,npts(first)-nsamples);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% combine data
+% - note that there may be partial pieces here
+data(last).dep=[data(first).dep(1:e1,:); data(last).dep(1:b2-ns,:); ...
+    (data(first).dep(e1+1:e1+ns,:)+data(last).dep(b2-ns+1:b2,:))/dvd; ...
+    data(first).dep(e1+ns+1:end,:); data(last).dep(b2+1:end,:)];
+data(first)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial([ab(first,1) min(ab(last,2),sab(2))]);
+ae=fixmodserial([ab(first,1) max(ae(last,2),sae(2))]);
+npts=npts(1)+npts(2)-ns;
+
+end
+
+
+function [data,ab,ae,npts]=interpolateandavglast(...
+    data,ab,ae,delta,npts,shift,first,last,option,dvd)
+% interpolate and add data of last record
+
+% we need to interpolate the samples of the last record to align with the
+% first, then we add the overlapping samples from the last to the first
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of last
+sab=ab(last,:)-[0 shift];
+sae=ae(last,:)-[0 shift];
+
+% interpolate last record
+oldtimes=ab(last,2)+(0:(npts(last)-1))*delta;
+newtimes=sab(2)+(0:(npts(last)-1))*delta;
+data(last).dep=...
+    interp1(oldtimes,data(last).dep,newtimes,option.INTERPOLATE,'extrap');
+data(last).dep=data(last).dep.';
+
+% figure out number of samples
+nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+e1=max(0,npts(first)-nsamples);
+b2=min(nsamples,npts(last));
+ns=b2+min(0,npts(first)-nsamples);
+
+% detail message
+if(option.VERBOSE || option.DEBUG)
+    disp(sprintf('Samples Added: %d',nsamples));
+end
+
+% combine data
+% - note that there may be partial pieces here
+data(first).dep=[data(first).dep(1:e1,:); data(last).dep(1:b2-ns,:); ...
+    (data(first).dep(e1+1:e1+ns,:)+data(last).dep(b2-ns+1:b2,:))/dvd; ...
+    data(first).dep(e1+ns+1:end,:); data(last).dep(b2+1:end,:)];
+data(last)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial([ab(first,1) min(ab(first,2),sab(2))]);
+ae=fixmodserial([ab(first,1) max(ae(first,2),sae(2))]);
+npts=npts(1)+npts(2)-ns;
 
 end
 
@@ -1581,7 +1842,7 @@ dups=(b(:,ones(nrecs,1))>b(:,ones(nrecs,1)).' ...
     | (e(:,ones(nrecs,1))==e(:,ones(nrecs,1)).' ...
     & e(:,2*ones(nrecs,1))<=e(:,2*ones(nrecs,1)).'));
 dupsu=(dups-dups.')>0;      % only delete if other not deleted
-dupsu(tril(true(nrecs)))=0; % upper trianrecsle
+dupsu(tril(true(nrecs)))=0; % upper triangle
 dups(triu(true(nrecs)))=0;  % lower triangle
 flags=sum(dups+dupsu,2)>0;  % logical indices in group
 

@@ -23,10 +23,6 @@ travel time correction
 		- where to put them
 		- decide best struct layout
 	- write correction routines
-response
-	- apply/remove sacpz
-	- sacpz2fap
-	- resp? (gonna be a pita)
 signal cleaning (to do)
 	- robust poly (get, remove)
 	- smooth splines (get, remove)
@@ -37,19 +33,16 @@ other new functions
 	- useralign
 	- usercluster
 	- pick
-	- unwrap
 	- changeversion/filetype
 	- spectral plotting
 	- particle motion plots (cmp vs cmp)
 	- check orientation
 	- rotate
-	- convolve
-	- deconvolve
 possible extras
-	- synchronize on absolute time
 	- cut on absolute times
 	- amph2rlim/rlim2amph 2nd output is converted logicals
 	- merge uneven & multi-rate
+	- merge overlap add
 
 0.7.0 - css?
 ------------

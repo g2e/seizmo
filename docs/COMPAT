@@ -20,7 +20,11 @@ Prior to 7.1:
 	affects:
 	- seizmocheck
 	- checkheader
-
+3. (on solaris) graphics suck
+	- menu does not work (menu with no text or buttons)
+	- cursor position is offset by figure menus
+4. divide by zero throws warning
+5. logical on not 0 or 1 throws warning
 
 Current issues with Octave:
 	- error needs to support structs

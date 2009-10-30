@@ -98,9 +98,10 @@ function []=binoperr(varargin)
 %                        'ncmp' options, some code reworking to accomadate
 %        Aug. 21, 2009 - changed IFTYPE from ERROR to WARN to allow working
 %                        with mixed xy and timeseries data
+%        Oct. 21, 2009 - dropped rmfield usage (slow)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2009 at 21:25 GMT
+%     Last Updated Oct. 21, 2009 at 07:25 GMT
 
 % todo:
 
@@ -145,13 +146,13 @@ if(nargin==0)
 % one input = 'defaults'
 elseif(nargin==1)
     % check input is 'defaults'
-    if(~strcmpi('defaults',varargin{:}))
+    if(~strcmpi({'defaults' 'default' 'def'},varargin{:}))
         error('seizmo:binoperr:unknownOption',...
             'Unknown option or bad option usage!');
     end
     % clear SEIZMO settings
     if(isfield(SEIZMO,'BINOPERR'))
-        SEIZMO=rmfield(SEIZMO,'BINOPERR');
+        SEIZMO.BINOPERR=[];
     end
 % set options
 else

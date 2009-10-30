@@ -38,9 +38,10 @@ function [fh,sfh]=plot1(data,varargin)
 %        ????????????? - Initial Version
 %        June 12, 2008 - doc update
 %        Apr. 23, 2009 - fix seizmocheck for octave, move usage up
+%        Oct. 21, 2009 - fix ylimits option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2009 at 20:35 GMT
+%     Last Updated Oct. 21, 2009 at 19:25 GMT
 
 % check data structure
 msg=seizmocheck(data,'dep');
@@ -123,7 +124,7 @@ if(~isempty(P.XLIMITS))
     P.XLIMITS=repmat(P.XLIMITS,ceil(nrecs/size(P.XLIMITS,1)),1);
 end
 if(~isempty(P.YLIMITS))
-    P.YLIMITS=repmat(P.XLIMITS,ceil(nrecs/size(P.XLIMITS,1)),1);
+    P.YLIMITS=repmat(P.YLIMITS,ceil(nrecs/size(P.YLIMITS,1)),1);
 end
 
 % loop through each record
@@ -286,7 +287,11 @@ for i=1:nrecs
 
     % rezooming
     axis(P.AXIS{:});
-    xlim([min(b) max(e)]);
+    try
+        xlim([min(b) max(e)]);
+    catch
+        xlim([min(b)-1 max(e)+1]);
+    end
     if(~isempty(P.XLIMITS)); axis auto; xlim(P.XLIMITS(i,:)); end
     if(~isempty(P.YLIMITS)); ylim(P.YLIMITS(i,:)); end
     hold off

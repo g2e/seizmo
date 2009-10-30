@@ -1,5 +1,5 @@
 % Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r103 Ararat 17-Oct-2009
+% Version 0.6.0-r104 Ararat 22-Oct-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -48,6 +48,7 @@
 %HILBRT              - Return Hilbert transform of SEIZMO records
 %IDFT                - Performs an inverse discrete fourier transform on SEIZMO records
 %IIRFILTER           - Apply an IIR filter to SEIZMO data records
+%INSTANTPHASE        - Return instantaneous phase of SEIZMO records
 %INTEGRATE           - Integrate SEIZMO records
 %INTERPOLATE         - Interpolate SEIZMO records to a new samplerate
 %JOINRECORDS         - Join SEIZMO records into multiple-component record(s)
@@ -102,6 +103,7 @@
 %TAPER               - Taper SEIZMO records
 %TIMESHIFT           - Shift timing of SEIZMO records
 %UNPREWHITEN         - Undo prewhitening of SEIZMO data records
+%UNWRAPPHASE         - Unwraps the phase of SEIZMO records
 %WHITEN              - Spectral whitening/normalization of SEIZMO data records
 %WRITEHEADER         - Write SEIZMO data header info to datafiles
 %WRITESEIZMO         - Write SEIZMO records to datafile

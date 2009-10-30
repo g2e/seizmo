@@ -38,9 +38,11 @@ function [data]=attach(data,option,dep,ind)
 %     Version History:
 %        Oct. 10, 2009 - initial version
 %        Oct. 13, 2009 - minor doc update
+%        Oct. 26, 2009 - added 'prepend' and 'append' as valid options,
+%                        fixed bug in matrix entry
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 13, 2009 at 05:45 GMT
+%     Last Updated Oct. 26, 2009 at 18:55 GMT
 
 % todo:
 
@@ -74,7 +76,7 @@ end
 nrecs=numel(data);
 
 % check option
-validopt={'beginning' 'ending'};
+validopt={'beginning' 'ending' 'prepend' 'append'};
 if(~ischar(option))
     error('seizmo:attach:badOption','OPTION must be a string!');
 end
@@ -105,9 +107,9 @@ else
         error('seizmo:attach:badDEP',...
             'DEP must be a numeric array of size [n ncmp]!');
     end
-    dep={dep};
     ndep=size(dep,1);
     depidx=ones(nrecs,1);
+    dep={dep};
 end
 
 % check ind
@@ -137,9 +139,9 @@ elseif(nargin>3 && ~isempty(ind))
             error('seizmo:attach:badIND',...
                 'IND must be a numeric array of size [n 1]!');
         end
-        ind={ind};
         nind=size(ind,1);
         indidx=ones(nrecs,1);
+        ind={ind};
     end
     if(~isequal(nind(indidx(1:nrecs)),ndep(depidx(1:nrecs))))
         error('seizmo:attach:IndDepSizeMismatch',...
@@ -162,10 +164,10 @@ for i=1:nrecs
         
         % attach
         switch lower(option)
-            case 'beginning'
+            case {'beginning' 'prepend'}
                 data(i).dep=[tmpd; data(i).dep];
                 data(i).ind=[tmpi; data(i).ind];
-            case 'ending'
+            case {'ending' 'append'}
                 data(i).dep=[data(i).dep; tmpd];
                 data(i).ind=[data(i).ind; tmpi];
         end
@@ -189,10 +191,10 @@ for i=1:nrecs
         
         % attach/timing
         switch lower(option)
-            case 'beginning'
+            case {'beginning' 'prepend'}
                 data(i).dep=[tmpd; data(i).dep];
                 b(i)=b(i)-delta(i)*ndep(depidx(i));
-            case 'ending'
+            case {'ending' 'append'}
                 data(i).dep=[data(i).dep; tmpd];
                 e(i)=e(i)+delta(i)*ndep(depidx(i));
         end

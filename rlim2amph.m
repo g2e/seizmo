@@ -32,9 +32,10 @@ function [data]=rlim2amph(data)
 %        Nov. 22, 2008 - update for new name schema
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Oct. 21, 2009 - only touches rlim (maybe a bit faster)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Oct. 21, 2009 at 06:45 GMT
 
 % todo:
 
@@ -50,47 +51,69 @@ if(~isempty(msg)); error(msg.identifier,msg.message); end
 oldseizmocheckstate=get_seizmocheck_state;
 set_seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
-
-% retreive header info
-iftype=getenumdesc(data,'iftype');
-
-% records must be spectral
-if(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
-        & ~strcmpi(iftype,'Spectral File-Ampl/Phase')))
-    error('seizmo:rlim2amph:illegalOperation',...
-        'Illegal operation on non-spectral file!');
+% attempt header check
+try
+    % check header
+    data=checkheader(data);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
 
-% loop through records
-nrecs=numel(data);
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:nrecs
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
-    
-    % convert or message
-    if(strcmpi(iftype(i),'Spectral File-Real/Imag'))
-        oclass=str2func(class(data(i).dep));
-        data(i).dep=double(data(i).dep);
-        temp=complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
-        data(i).dep(:,1:2:end)=abs(temp);
-        data(i).dep(:,2:2:end)=angle(temp);
-        data(i).dep=oclass(data(i).dep);
+% attempt conversion
+try
+    % retreive header info
+    iftype=getenumid(data,'iftype');
+
+    % find spectral
+    amph=strcmpi(iftype,'iamph');
+    rlim=strcmpi(iftype,'irlim');
+    irlim=find(rlim); nrlim=numel(irlim);
+
+    % records must be spectral
+    if(any(~amph & ~rlim))
+        error('seizmo:rlim2amph:illegalOperation',...
+            'Illegal operation on non-spectral file!');
     end
+
+    % loop through records
+    depmen=nan(nrlim,1); depmin=depmen; depmax=depmen;
+    for i=1:nrlim
+        k=irlim(i);
+
+        % skip dataless
+        if(isempty(data(k).dep)); continue; end
+
+        % convert
+
+        oclass=str2func(class(data(k).dep));
+        data(k).dep=double(data(k).dep);
+        temp=complex(data(k).dep(:,1:2:end),data(k).dep(:,2:2:end));
+        data(k).dep(:,1:2:end)=abs(temp);
+        data(k).dep(:,2:2:end)=angle(temp);
+        data(k).dep=oclass(data(k).dep);
+
+        % dep*
+        depmen(i)=mean(data(k).dep(:));
+        depmin(i)=min(data(k).dep(:));
+        depmax(i)=max(data(k).dep(:));
+    end
+
+    % update filetype
+    data(rlim)=changeheader(data(rlim),'iftype','iamph',...
+        'depmax',depmax,'depmin',depmin,'depmen',depmen);
+
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
     
-    % dep*
-    depmen(i)=mean(data(i).dep(:));
-    depmin(i)=min(data(i).dep(:));
-    depmax(i)=max(data(i).dep(:));
+    % rethrow error
+    error(lasterror)
 end
-
-% update filetype
-data=changeheader(data,'iftype','Spectral File-Ampl/Phase',...
-    'depmax',depmax,'depmin',depmin,'depmen',depmen);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

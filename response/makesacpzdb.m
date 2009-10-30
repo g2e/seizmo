@@ -62,7 +62,7 @@ end
 db=cell(nin,1);
 for i=1:nin
     % status update
-    disp(['SAC PoleZero Directory:' varargin{i}])
+    disp(['SAC PoleZero Directory: ' varargin{i}])
     
     % get filelist for this directory
     files=xdir(varargin{i});

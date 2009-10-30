@@ -15,7 +15,7 @@ function [data]=hilbrt(data)
 %     To do a positive 90 degree phase shift:
 %      data=hilbrt(multiply(data,-1))
 %
-%    See also: ENVELOPE
+%    See also: ENVELOPE, INSTANTPHASE
 
 %     Version History:
 %        Jan. 30, 2008 - initial version
@@ -30,9 +30,10 @@ function [data]=hilbrt(data)
 %        Oct. 15, 2009 - does data and header checking now, try/catch will
 %                        assure checking state is kept correct, no longer
 %                        calls other SEIZMO functions
+%        Oct. 19, 2009 - added checks for IFTYPE and LEVEN
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 15, 2009 at 16:20 GMT
+%     Last Updated Oct. 19, 2009 at 23:35 GMT
 
 % todo:
 
@@ -57,7 +58,7 @@ catch
     set_seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    rethrow(lasterror)
+    error(lasterror)
 end
 
 % attempt hilbert
@@ -65,6 +66,20 @@ try
     % get header info
     [npts,ncmp]=getheader(data,'npts','ncmp');
     nspts=2.^(nextpow2n(npts)+1);
+    leven=getlgc(data,'leven');
+    iftype=getenumid(data,'iftype');
+    
+    % cannot do spectral/xyz records
+    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:hilbrt:badIFTYPE',...
+            'Datatype of records in DATA must be Timeseries or XY!');
+    end
+    
+    % cannot do unevenly sampled records
+    if(any(strcmpi(leven,'false')))
+        error('seizmo:hilbrt:badLEVEN',...
+            'Invalid operation on unevenly sampled records!');
+    end
     
     % loop over records
     nrecs=numel(data);
@@ -107,7 +122,7 @@ catch
     set_seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    rethrow(lasterror)
+    error(lasterror)
 end
 
 end

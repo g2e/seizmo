@@ -29,13 +29,15 @@ function [x,t]=make_source_timefunction(delta,hwidth,type)
 %      tmp=[t x]';
 %      plot(tmp{:});
 %
-%    See also: CONVOLVE_SOURCE_TIMEFUNCTION, TRIANGLETF, GAUSSIANTF
+%    See also: CONVOLVE_SOURCE_TIMEFUNCTION, TRIANGLETF, GAUSSIANTF,
+%              DECONVOLVE_SOURCE_TIMEFUNCTION
 
 %     Version History:
 %        Oct. 17, 2009 - initial version
+%        Oct. 29, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 17, 2009 at 22:45 GMT
+%     Last Updated Oct. 29, 2009 at 01:50 GMT
 
 % todo:
 

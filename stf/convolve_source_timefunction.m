@@ -1,8 +1,9 @@
-function [data]=convolve_source_timefunction(data,varargin)
+function [data,x,t]=convolve_source_timefunction(data,varargin)
 %CONVOLVE_SOURCE_TIMEFUNCTION   Convolve source function on SEIZMO records
 %
 %    Usage:    data=convolve_source_timefunction(data,hwidth)
 %              data=convolve_source_timefunction(data,hwidth,type)
+%              [data,x,t]=convolve_source_timefunction(...)
 %
 %    Description: DATA=CONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH) convolves
 %     a gaussian source function onto records in SEIZMO struct DATA.
@@ -10,7 +11,7 @@ function [data]=convolve_source_timefunction(data,varargin)
 %     scalar or an array of size equal to the number of records in DATA.
 %     Note that the gaussian is centered on each point, so the convolution
 %     is an acausal operation.  The gaussian has unit area so that the
-%     energy is preserved (use MAKE_SOURCE_TIMEFUNCTION to get the actual
+%     energy is preserved (see the last Usage format to get the actual
 %     source function).  The returned records include extra points before
 %     and after the time limits of the original records.  These points
 %     are included because energy has been given to those points through
@@ -21,6 +22,10 @@ function [data]=convolve_source_timefunction(data,varargin)
 %     MAKE_SOURCE_TIMEFUNCTION for valid values.  TYPE should be a string
 %     like 'gaussian' or 'triangle' or a cellstr array with one string per
 %     record in DATA.
+%
+%     [DATA,X,T]=CONVOLVE_SOURCE_TIMEFUNCTION(...) also exports the source
+%     time functions in cell arrays X and T.  See MAKE_SOURCE_TIMEFUNCTION
+%     for more info.
 %
 %    Notes:
 %     - gaussian-type functions extend from -1.5*HWIDTH to 1.5*HWIDTH
@@ -33,13 +38,17 @@ function [data]=convolve_source_timefunction(data,varargin)
 %     data read into a SEIZMO dataset:
 %      data=convolve_source_timefunction(data,10,'triangle');
 %
-%    See also: MAKE_SOURCE_TIMEFUNCTION, TRIANGLETF, GAUSSIANTF
+%    See also: CONVOLVE, DECONVOLVE_SOURCE_TIMEFUNCTION, DECONVOLVE,
+%              MAKE_SOURCE_TIMEFUNCTION, TRIANGLETF, GAUSSIANTF
 
 %     Version History:
-%        Oct. 17, 2009 - initial version
+%        Oct. 18, 2009 - initial version
+%        Oct. 19, 2009 - export source function too
+%        Oct. 22, 2009 - fixed time adjust (only adjust b & e)
+%        Oct. 28, 2009 - works with new convolve
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 18, 2009 at 00:25 GMT
+%     Last Updated Oct. 28, 2009 at 16:10 GMT
 
 % todo:
 
@@ -68,7 +77,7 @@ catch
     set_seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    rethrow(lasterror)
+    error(lasterror)
 end
 
 % attempt rest
@@ -77,7 +86,7 @@ try
     nrecs=numel(data);
     
     % get header info
-    delta=getheader(data,'delta');
+    [b,e,delta]=getheader(data,'b','e','delta');
     leven=getlgc(data,'leven');
     iftype=getenumid(data,'iftype');
     
@@ -96,16 +105,16 @@ try
     % pass to make_source_timefunction
     [x,t]=make_source_timefunction(delta,varargin{:});
     
+    % get delay (in samples!)
+    delay=nan(nrecs,1);
+    for i=1:nrecs; delay(i)=t{i}(1); end
+    delay=round(delay./delta);
+    
     % convolve with records
-    [data,zf]=convolve(data,x);
+    [data,zf]=convolve(data,x,delay);
     
     % attach final conditions
-    data=attach(data,'ending',zf);
-    
-    % get/apply time shift
-    t1=nan(nrecs,1);
-    for i=1:nrecs; t1(i)=t{i}(1); end
-    data=timeshift(data,t1);
+    data=attach(attach(data,'ending',zf(:,1)),'beginning',zf(:,2));
     
     % toggle checking back
     set_seizmocheck_state(oldseizmocheckstate);
@@ -116,7 +125,7 @@ catch
     set_checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    rethrow(lasterror)
+    error(lasterror)
 end
 
 end

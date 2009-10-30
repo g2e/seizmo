@@ -3,13 +3,20 @@ function [data]=envelope(data)
 %
 %    Usage:    data=envelope(data)
 %
-%    Description: ENVELOPE(DATA) returns the envelope (the complex
-%     magnitude of a record's analytic signal) of records in SEIZMO struct
-%     DATA.  The envelope formula is as follows:
+%    Description: ENVELOPE(DATA) returns the envelope (the point-by-point
+%     complex magnitude of a record's analytic signal) of records in SEIZMO
+%     struct DATA.  The envelope is related to the Hilbert-transformed
+%     records, the analytic signal of the records, and the instantaneous
+%     phase of records by the following formulas:
 %
-%       ENVELOPE = sqrt(X^2 + H(X)^2)
+%       A(X) = X + iH(X)
 %
-%     where X is the records' data and H denotes a Hilbert transform.
+%                        i*PHI(X)
+%       A(X) = ENV(X) * e
+%
+%     where X is the records' data, i is sqrt(-1), H() denotes a Hilbert
+%     transform, A is the analytic signal, ENV is the envelope of the
+%     signal and PHI is the instantaneous phase.
 %
 %    Notes:
 %
@@ -19,7 +26,7 @@ function [data]=envelope(data)
 %     Plot the envelopes against the data:
 %      recordsection([data; envelope(data)])
 %
-%    See also: HILBRT
+%    See also: HILBRT, INSTANTPHASE
 
 %     Version History:
 %        Jan. 30, 2008 - initial version
@@ -34,9 +41,11 @@ function [data]=envelope(data)
 %        Oct. 15, 2009 - does data and header checking now, try/catch will
 %                        assure checking state is kept correct, no longer
 %                        calls other SEIZMO functions
+%        Oct. 19, 2009 - added checks for IFTYPE and LEVEN
+%        Oct. 20, 2009 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 15, 2009 at 16:20 GMT
+%     Last Updated Oct. 20, 2009 at 21:50 GMT
 
 % todo:
 
@@ -61,7 +70,7 @@ catch
     set_seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    rethrow(lasterror)
+    error(lasterror)
 end
 
 % attempt envelope
@@ -69,6 +78,20 @@ try
     % get header info
     [npts,ncmp]=getheader(data,'npts','ncmp');
     nspts=2.^(nextpow2n(npts)+1);
+    leven=getlgc(data,'leven');
+    iftype=getenumid(data,'iftype');
+    
+    % cannot do spectral/xyz records
+    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:envelope:badIFTYPE',...
+            'Datatype of records in DATA must be Timeseries or XY!');
+    end
+    
+    % cannot do unevenly sampled records
+    if(any(strcmpi(leven,'false')))
+        error('seizmo:envelope:badLEVEN',...
+            'Invalid operation on unevenly sampled records!');
+    end
     
     % loop over records
     nrecs=numel(data);
@@ -111,7 +134,7 @@ catch
     set_seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    rethrow(lasterror)
+    error(lasterror)
 end
 
 end

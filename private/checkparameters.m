@@ -256,9 +256,10 @@ function [option]=checkparameters(setglobal,varargin)
 %        Sep. 29, 2009 - initial version taken from CHECKOPERR
 %        Oct.  5, 2009 - added option table to notes, new option EVEN_IND
 %        Oct. 16, 2009 - added complex data checks
+%        Oct. 21, 2009 - dropped rmfield usage (slow)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2009 at 19:40 GMT
+%     Last Updated Oct. 21, 2009 at 07:25 GMT
 
 % todo:
 
@@ -352,7 +353,7 @@ if(nargin==2)
     if(setglobal)
         % clear SEIZMO settings
         if(isfield(SEIZMO,'CHECKPARAMETERS'))
-            SEIZMO=rmfield(SEIZMO,'CHECKPARAMETERS');
+            SEIZMO.CHECKPARAMETERS=[];
         end
     end
     return;

@@ -10,9 +10,11 @@ function [data]=deleterecords(data,idx)
 %
 %    Notes:
 %
+%    Header changes: NONE
+%
 %    Examples:
 %     These do the exact same thing:
-%      data=keeprecords(data,[1 3 6:end]);
+%      data=keeprecords(data,[1 3 6:numel(data)]);
 %      data=data([1 3 6:end]);
 %      data=deleterecords(data,[2 5]);
 %      data([2 5])=[];
@@ -21,9 +23,10 @@ function [data]=deleterecords(data,idx)
 
 %     Version History:
 %        June 25, 2009 - initial version
+%        Oct. 21, 2009 - updated example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:05 GMT
+%     Last Updated Oct. 21, 2009 at 00:25 GMT
 
 % todo:
 
