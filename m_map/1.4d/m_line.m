@@ -24,13 +24,14 @@ function h=m_line(long,lat,varargin);
 % This software is provided "as is" without warranty of any kind. But
 % it's mine, so you can't sell it.
 
+global MAP_VAR_LIST
 clp='on';
 
 k=1;
 while k<length(varargin),
   switch lower(varargin{k}(1:3)),
     case 'cli',
-      clp=varargin{k+1}
+      clp=varargin{k+1};
       if isempty(findstr(clp,'on')),
         varargin{k+1}='off';
       else
@@ -43,7 +44,15 @@ while k<length(varargin),
   end;
 end;
 
-[X,Y]=m_ll2xy(long,lat,'clip',clp);
+long2=long+360;
+long2(long2>MAP_VAR_LIST.longs(2))=NaN;
+long2(long2<MAP_VAR_LIST.longs(1))=NaN;
+long3=long-360;
+long3(long3<MAP_VAR_LIST.longs(1))=NaN;
+long3(long3>MAP_VAR_LIST.longs(2))=NaN;
+long(long>MAP_VAR_LIST.longs(2))=NaN;
+long(long<MAP_VAR_LIST.longs(1))=NaN;
+[X,Y]=m_ll2xy([long long2 long3],[lat lat lat],'clip',clp);
 
 if nargout>0,
   h=line(X,Y,'tag','m_line',varargin{:});

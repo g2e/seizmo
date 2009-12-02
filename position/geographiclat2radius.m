@@ -1,14 +1,14 @@
-function [radius]=geodeticlat2radius(lat,ellipsoid)
-%GEODETICLAT2RADIUS    Returns the radius at a geodetic latitude
+function [radius]=geographiclat2radius(lat,ellipsoid)
+%GEOGRAPHICLAT2RADIUS    Returns the radius at a geographic latitude
 %
-%    Usage:    radius=geodeticlat2radius(latitudes)
-%              radius=geodeticlat2radius(latitudes,[a f])
+%    Usage:    radius=geographiclat2radius(latitudes)
+%              radius=geographiclat2radius(latitudes,[a f])
 %
-%    Description: GEODETICLAT2RADIUS(LATITUDES) returns the radii at
-%     geodetic latitudes LATITUDES.  LATITUDES must be in degrees.  Assumes
-%     the WGS-84 reference ellipsoid.
+%    Description: GEOGRAPHICLAT2RADIUS(LATITUDES) returns the radii at
+%     geographic latitudes LATITUDES.  LATITUDES must be in degrees.
+%     Assumes the WGS-84 reference ellipsoid.
 %
-%     GEODETICLAT2RADIUS(LATITUDES,[A F]) allows specifying the ellipsoid
+%     GEOGRAPHICLAT2RADIUS(LATITUDES,[A F]) allows specifying the ellipsoid
 %     parameters A (equatorial radius in kilometers) and F (flattening).
 %     This is compatible with Matlab's Mapping Toolbox function ALMANAC.
 %
@@ -16,17 +16,18 @@ function [radius]=geodeticlat2radius(lat,ellipsoid)
 %
 %    Examples:
 %     Get the radius for St. Louis, MO USA:
-%      radius=geodeticlat2radius(38.649)
+%      radius=geographiclat2radius(38.649)
 %
-%    See also: GEOCENTRIC2GEODETICLAT, GEODETIC2GEOCENTRICLAT
+%    See also: GEOCENTRIC2GEOGRAPHICLAT, GEOGRAPHIC2GEOCENTRICLAT
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - minor doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Nov. 13, 2009 - name change: geodetic to geographic
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Nov. 13, 2009 at 20:15 GMT
 
 % todo:
 
@@ -35,7 +36,7 @@ msg=nargchk(1,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % default - WGS-84 Reference Ellipsoid
-if(nargin==1)
+if(nargin==1 || isempty(ellipsoid))
     % a=radius at equator (major axis)
     % f=flattening
     a=6378.137;
@@ -46,7 +47,7 @@ else
         a=ellipsoid(1);
         f=ellipsoid(2);
     else
-        error('seizmo:geodeticlat2radius:badEllipsoid',...
+        error('seizmo:geographiclat2radius:badEllipsoid',...
             ['Ellipsoid must a 2 element vector specifying:\n'...
             '[equatorial_km_radius flattening(<1)]']);
     end

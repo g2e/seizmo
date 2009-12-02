@@ -2,24 +2,25 @@ function [data]=merge(data,varargin)
 %MERGE    Merge SEIZMO records
 %
 %    Usage:    data=merge(data)
-%              data=merge(data,...,'tolerance',tolerance,...)
-%              data=merge(data,...,'adjust',method,...)
-%              data=merge(data,...,'overlap',method,...)
-%              data=merge(data,...,'gap',method,...)
-%              data=merge(data,...,'shiftmax',value,...)
-%              data=merge(data,...,'shiftunits',units,...)
-%              data=merge(data,...,'interpolate',method,...)
-%              data=merge(data,...,'filler',filler,...)
-%              data=merge(data,...,'mergesequential',logical,...)
-%              data=merge(data,...,'mergeoverlaps',logical,...)
-%              data=merge(data,...,'mergegaps',logical,...)
-%              data=merge(data,...,'useabsolutetiming',logical,...)
-%              data=merge(data,...,'timing',standard,...)
-%              data=merge(data,...,'requiredcharfields',fields,...)
-%              data=merge(data,...,'requiredrealfields',fields,...)
-%              data=merge(data,...,'allocate',size,...)
-%              data=merge(data,...,'verbose',logical,...)
-%              data=merge(data,...,'debug',logical,...)
+%              data=merge(...,'tolerance',tolerance,...)
+%              data=merge(...,'toleranceunits',units,...)
+%              data=merge(...,'adjust',method,...)
+%              data=merge(...,'overlap',method,...)
+%              data=merge(...,'gap',method,...)
+%              data=merge(...,'shiftmax',value,...)
+%              data=merge(...,'shiftunits',units,...)
+%              data=merge(...,'interpolate',method,...)
+%              data=merge(...,'filler',filler,...)
+%              data=merge(...,'mergesequential',logical,...)
+%              data=merge(...,'mergeoverlaps',logical,...)
+%              data=merge(...,'mergegaps',logical,...)
+%              data=merge(...,'useabsolutetiming',logical,...)
+%              data=merge(...,'timing',standard,...)
+%              data=merge(...,'requiredcharfields',fields,...)
+%              data=merge(...,'requiredrealfields',fields,...)
+%              data=merge(...,'allocate',size,...)
+%              data=merge(...,'verbose',logical,...)
+%              data=merge(...,'debug',logical,...)
 %
 %    Description: DATA=MERGE(DATA) will take all records in DATA and merge
 %     any pairs that are within +/-0.02 seconds of being continuous.  The
@@ -31,7 +32,11 @@ function [data]=merge(data,varargin)
 %     be continuous in time.  Basically this is for eliminating small
 %     'time tears'.
 %
-%     DATA=MERGE(DATA,...,'TOLERANCE',TOLERANCE,...) allows changing the
+%     DATA=MERGE(...,'TOLERANCEUNITS',UNITS,...) allows changing the
+%     units of the TOLERANCE option.  By default UNITS is 'SECONDS'.  This
+%     may be changed to 'INTERVALS' if that is more useful.
+%
+%     DATA=MERGE(...,'TOLERANCE',TOLERANCE,...) allows changing the
 %     magnitude of the time tears that can be merged.  Setting TOLERANCE to
 %     0.1 will therefore allow merging records with a gap or overlap within
 %     +/-0.1 seconds.  TOLERANCE can also be a two-element vector, so that
@@ -39,14 +44,14 @@ function [data]=merge(data,varargin)
 %     particularly suited for removing leap seconds that have been stupidly
 %     inserted into continuous data.
 %
-%     DATA=MERGE(DATA,...,'ADJUST',METHOD,...) allows changing which record
+%     DATA=MERGE(...,'ADJUST',METHOD,...) allows changing which record
 %     out of a mergible pair is shifted/interpolated to time-align with the
 %     other.  There are six choices: 'FIRST' 'LAST' 'LONGER' 'SHORTER'
 %     'ONE' & 'TWO'.  The default is 'SHORTER' (which adjusts the shorter
 %     record to time-align with the longer).  Method 'ONE' adjusts the
 %     record with a lower index, while 'TWO' adjusts the higher.
 %
-%     DATA=MERGE(DATA,...,'OVERLAP',METHOD,...) allows changing how
+%     DATA=MERGE(...,'OVERLAP',METHOD,...) allows changing how
 %     overlaps are merged.  There are 4 choices: 'SEQUENTIAL', 'TRUNCATE',
 %     'ADD', & 'AVERAGE'.  The default is 'SEQUENTIAL', which shifts the
 %     timing of one of the records (as chosen by the ADJUST option) so they
@@ -65,7 +70,7 @@ function [data]=merge(data,varargin)
 %     average of the data in the overlapping segment so the records mend
 %     together better.  This might be useful for some situations.
 %
-%     DATA=MERGE(DATA,...,'GAP',METHOD,...) allows changing how gaps are
+%     DATA=MERGE(...,'GAP',METHOD,...) allows changing how gaps are
 %     merged.  There are three choices: 'SEQUENTIAL' 'INTERPOLATE' and
 %     'FILL'.  The default is 'SEQUENTIAL', which basically just shifts
 %     the timing of one of the records (as chosen by the ADJUST option) so
@@ -79,7 +84,7 @@ function [data]=merge(data,varargin)
 %     This is useful for combining data with large gaps.  The filler can be
 %     changed with the FILLER option.
 %
-%     DATA=MERGE(DATA,...,'SHIFTMAX',MAXVALUE,...) allows changing the cap
+%     DATA=MERGE(...,'SHIFTMAX',MAXVALUE,...) allows changing the cap
 %     on when the record-to-be-adjusted (see ADJUST option) is interpolated
 %     or shifted to time-align with the other record.  This option only
 %     applies to the overlaps and gaps that ARE NOT to be made sequential.
@@ -100,41 +105,41 @@ function [data]=merge(data,varargin)
 %     from new time points should be interpolated unless the time shift is
 %     damn small and really would not change anything.
 %
-%     DATA=MERGE(DATA,...,'SHIFTUNITS',UNITS,...) allows changing the units
+%     DATA=MERGE(...,'SHIFTUNITS',UNITS,...) allows changing the units
 %     of the SHIFTMAX option.  By default UNITS is 'INTERVALS'.  This can
 %     be changed to 'SECONDS' if that is more useful.
 %
-%     DATA=MERGE(DATA,...,'INTERPOLATE',METHOD,...) allows changing the
+%     DATA=MERGE(...,'INTERPOLATE',METHOD,...) allows changing the
 %     interpolation method.  The choices are basically those allowed in
 %     Matlab's INTERP1 command: 'spline' 'pchip' 'linear' and 'nearest'.
 %     The default is 'spline', which is continuous in the 1st and 2nd
 %     derivatives.  Look out for artifacting if you use one of the other
 %     options and are going to differentiate the data later.
 %
-%     DATA=MERGE(DATA,...,'FILLER',FILLER,...) allows changing the filler
+%     DATA=MERGE(...,'FILLER',FILLER,...) allows changing the filler
 %     when the GAP option is set to 'FILL'.  The default is zero.  Can be
 %     any real number.
 %
-%     DATA=MERGE(DATA,...,'MERGESEQUENTIAL',LOGICAL,...) allows turning the
+%     DATA=MERGE(...,'MERGESEQUENTIAL',LOGICAL,...) allows turning the
 %     merging of sequential records (time tear of zero) on or off.  Will
 %     not turn off making gaps or overlaps sequential (use GAP or OVERLAP
 %     options above or see MERGEGAPS and MERGEOVERLAPS below).
 %
-%     DATA=MERGE(DATA,...,'MERGEOVERLAPS',LOGICAL,...) allows turning
+%     DATA=MERGE(...,'MERGEOVERLAPS',LOGICAL,...) allows turning
 %     on/off the merging of overlapping data that is within the time tear
 %     tolerance.  Useful for just working on gaps.
 %
-%     DATA=MERGE(DATA,...,'MERGEGAPS',LOGICAL,...) allows turning on/off
+%     DATA=MERGE(...,'MERGEGAPS',LOGICAL,...) allows turning on/off
 %     the merging of data with gaps that are within the time tear
 %     tolerance.  Useful for just working on overlaps.
 %
-%     DATA=MERGE(DATA,...,'USEABSOLUTETIMING',LOGICAL,...) allows turning
+%     DATA=MERGE(...,'USEABSOLUTETIMING',LOGICAL,...) allows turning
 %     on/off the usage of the reference time fields to figure out the
 %     timing of data.  This can be safely turned off if all the data share
 %     the same reference time.  Leave it on if your reference times vary
 %     with each record.
 %
-%     DATA=MERGE(DATA,...,'TIMING',STANDARD,...) allows changing the timing
+%     DATA=MERGE(...,'TIMING',STANDARD,...) allows changing the timing
 %     standard assumed for the reference time.  The choices are: 'UTC' and
 %     'TAI'.  The default is 'UTC', which has leap second awareness.  This
 %     is useful for dealing with data that have had UTC leap seconds
@@ -146,28 +151,28 @@ function [data]=merge(data,varargin)
 %     needed for the data.  See LEAPSECONDS for more info.  The 'TAI'
 %     option is useful for data without any leap second concerns.
 %
-%     DATA=MERGE(DATA,...,'REQUIREDCHARFIELDS',FIELDS,...) allows changing
+%     DATA=MERGE(...,'REQUIREDCHARFIELDS',FIELDS,...) allows changing
 %     the character fields required to be equal between records before
 %     checking if they can be merged.  The list is a cellstring array.  The
 %     default is: {'knetwk' 'kstnm' 'khole' 'kcmpnm'}.
 %
-%     DATA=MERGE(DATA,...,'REQUIREDREALFIELDS',FIELDS,...) allows changing
+%     DATA=MERGE(...,'REQUIREDREALFIELDS',FIELDS,...) allows changing
 %     the numerical fields required to be equal between records before
 %     checking if they can be merged.  The list must be a cellstring array.
 %     The default is: {'delta' 'cmpinc' 'cmpaz'}.  Note that LEVEN and NCMP
 %     are also required but cannot be removed from the list.  Removing
 %     DELTA from the list will allow creation of unevenly sampled records.
 %
-%     DATA=MERGE(DATA,...,'ALLOCATE',SIZE,...) sets the temporary space
+%     DATA=MERGE(...,'ALLOCATE',SIZE,...) sets the temporary space
 %     initially allocated for merged records.  This is just a guess of the
 %     maximum number of merged records created for a merge group.  The
 %     default value is 10.  Not really worth changing.
 %
-%     DATA=MERGE(DATA,...,'VERBOSE',LOGICAL,...) turns on/off detailed
+%     DATA=MERGE(...,'VERBOSE',LOGICAL,...) turns on/off detailed
 %     messages about the merges.  Useful for seeing what is happening.
 %     Default is FALSE (off).
 %
-%     DATA=MERGE(DATA,...,'DEBUG',LOGICAL,...) turns on/off detailed
+%     DATA=MERGE(...,'DEBUG',LOGICAL,...) turns on/off detailed
 %     messages and some debugging messages.  Not really useful for anyone
 %     but me.  Default is FALSE (off).
 %
@@ -234,15 +239,14 @@ function [data]=merge(data,varargin)
 %        Oct. 30, 2009 - significant update: overlap add/average method,
 %                        improved time sequence code, handle partial
 %                        pieces and dataless
+%        Nov.  2, 2009 - toleranceunits, try/catch, seizmoverbose as
+%                        default for verbose
+%        Nov.  3, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 30, 2009 at 19:45 GMT
+%     Last Updated Nov.  3, 2009 at 19:45 GMT
 
 % todo:
-%   - try/catch
-%   - seizmo_verbose
-%   - tolerance units
-%   - overlap blend? (how to blend partial pieces...)
 %   - uneven support - just toss together and sort after?
 %   - variable delta support (convert to uneven then do above?)
 
@@ -260,373 +264,401 @@ if(~isempty(msg)); error(msg.identifier,msg.message); end
 oldseizmocheckstate=get_seizmocheck_state;
 set_seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
-
-% turn off header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(false);
-
-% valid values for string options
-valid.OVERLAP={'sequential' 'truncate' 'add' 'average'};
-valid.GAP={'sequential' 'interpolate' 'fill'};
-valid.INTERPOLATE={'spline' 'pchip' 'linear' 'nearest'};
-valid.ADJUST={'longer' 'shorter' 'first' 'last' 'one' 'two'};
-valid.SHIFTUNITS={'seconds' 'intervals'};
-valid.TIMING={'utc' 'tai'};
-
-% defaults
-option.TOLERANCE=0.02; % seconds, any positive number
-option.OVERLAP='sequential'; % sequential/truncate/add/average
-option.GAP='sequential'; % sequential/interpolate/fill
-option.INTERPOLATE='spline'; % spline/pchip/linear/nearest
-option.ADJUST='shorter'; % longer/shorter/first/last
-option.SHIFTUNITS='intervals'; % seconds/intervals
-option.SHIFTMAX=0.01; % interval: 0-0.5 , seconds: 0+
-option.FILLER=0; % any number
-option.TIMING='utc'; % utc/tai
-option.USEABSOLUTETIMING=true; % true/false
-option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
-option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};
-option.ALLOCATE=10; % size of temp space
-option.MERGESEQUENTIAL=true; % on/off switch for merging sequential
-option.MERGEGAPS=true; % on/off switch for merging gaps
-option.MERGEOVERLAPS=true; % on/off switch for merging overlaps
-option.VERBOSE=false; % turn on/off verbose messages
-option.DEBUG=false; % turn on/off debugging messages
-
-% get options from SEIZMO global
-global SEIZMO
+% attempt header check
 try
-    fields=fieldnames(SEIZMO.MERGE);
-    for i=1:numel(fields)
-        if(~isempty(SEIZMO.MERGE.(fields{i})))
-            option.(fields{i})=SEIZMO.MERGE.(fields{i});
-        end
-    end
+    % check header
+    data=checkheader(data);
+    
+    % turn off header checking
+    oldcheckheaderstate=get_checkheader_state;
+    set_checkheader_state(false);
 catch
-end
-
-% get options from command line
-for i=1:2:nargin-1
-    if(~ischar(varargin{i}))
-        error('seizmo:merge:badInput',...
-            'Options must be specified as a string!');
-    end
-    if(~isempty(varargin{i+1}))
-        option.(upper(varargin{i}))=varargin{i+1};
-    end
-end
-
-% check options
-fields=fieldnames(option);
-for i=1:numel(fields)
-    % get value of field and do a basic check
-    value=option.(fields{i});
-    if((ischar(value) && size(value,1)~=1))
-        error('seizmo:merge:badInput',...
-            'Bad value for option %s !',value);
-    end
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
     
-    % specific checks
-    switch lower(fields{i})
-        case 'tolerance'
-            if(~isnumeric(value))
-                error('seizmo:merge:badInput',...
-                    'TOLERANCE must be a 1 or 2 element real array!');
+    % rethrow error
+    error(lasterror)
+end
+
+% get global
+global SEIZMO
+
+% attempt rest
+try
+    % valid values for string options
+    valid.TOLERANCEUNITS={'seconds' 'intervals'};
+    valid.OVERLAP={'sequential' 'truncate' 'add' 'average'};
+    valid.GAP={'sequential' 'interpolate' 'fill'};
+    valid.INTERPOLATE={'spline' 'pchip' 'linear' 'nearest'};
+    valid.ADJUST={'longer' 'shorter' 'first' 'last' 'one' 'two'};
+    valid.SHIFTUNITS={'seconds' 'intervals'};
+    valid.TIMING={'utc' 'tai'};
+
+    % defaults
+    option.TOLERANCE=0.02; % seconds, any positive number
+    option.TOLERANCEUNITS='seconds'; % seconds/intervals
+    option.OVERLAP='sequential'; % sequential/truncate/add/average
+    option.GAP='sequential'; % sequential/interpolate/fill
+    option.INTERPOLATE='spline'; % spline/pchip/linear/nearest
+    option.ADJUST='shorter'; % longer/shorter/first/last
+    option.SHIFTUNITS='intervals'; % seconds/intervals
+    option.SHIFTMAX=0.01; % interval: 0-0.5 , seconds: 0+
+    option.FILLER=0; % any number
+    option.TIMING='utc'; % utc/tai
+    option.USEABSOLUTETIMING=true; % true/false
+    option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
+    option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};
+    option.ALLOCATE=10; % size of temp space
+    option.MERGESEQUENTIAL=true; % on/off switch for merging sequential
+    option.MERGEGAPS=true; % on/off switch for merging gaps
+    option.MERGEOVERLAPS=true; % on/off switch for merging overlaps
+    option.VERBOSE=seizmoverbose; % default to seizmoverbose state
+    option.DEBUG=false; % turn on/off debugging messages
+
+    % get options from SEIZMO global
+    ME=upper(mfilename);
+    try
+        fields=fieldnames(SEIZMO.(ME));
+        for i=1:numel(fields)
+            if(~isempty(SEIZMO.(ME).(fields{i})))
+                option.(fields{i})=SEIZMO.(ME).(fields{i});
             end
-        case {'shiftmax' 'filler'}
-            if(~isnumeric(value) || ~isscalar(value))
-                error('seizmo:merge:badInput',...
-                    '%s must be a scalar real number!',fields{i});
-            end
-        case {'overlap' 'gap' 'interpolate' 'adjust' 'shiftunits' 'timing'}
-            if(~ischar(value) || size(value,1)~=1 || ~any(strcmpi(value,...
-                    valid.(fields{i}))))
-                error('seizmo:merge:badInput',...
-                    ['%s option must be one of the following:\n'...
-                    sprintf('%s ',valid.(fields{i}){:})],fields{i});
-            end
-        case {'requiredcharfields' 'requiredrealfields'}
-            if(~iscellstr(value))
-                error('seizmo:merge:badInput',...
-                    '%s option must be a cellstr array of header fields!',...
-                    fields{i});
-            end
-        case 'allocate'
-            if(~isnumeric(value) || fix(value)~=value)
-                error('seizmo:merge:badInput',...
-                    'ALLOCATE must be a scalar integer!');
-            end
-        case {'useabsolutetiming' 'mergesequential' 'mergegaps'...
-                'mergeoverlaps' 'verbose' 'debug'}
-            if(~islogical(value) || ~isscalar(value))
-                error('seizmo:merge:badInput',...
-                    '%s option must be a logical!',fields{i});
-            end
-        otherwise
+        end
+    catch
+    end
+
+    % get options from command line
+    for i=1:2:nargin-1
+        if(~ischar(varargin{i}))
             error('seizmo:merge:badInput',...
-                'Unknown option: %s !',fields{i});
-    end
-end
-
-% handle tolerance
-if(numel(option.TOLERANCE)==1)
-    option.TOLERANCE=[-1 option.TOLERANCE];
-end
-option.TOLERANCE=sort(option.TOLERANCE);
-
-% get full filenames (for verbose or debugging output)
-nrecs=numel(data);
-if(option.VERBOSE || option.DEBUG)
-    fullname=strcat({data.path}.',{data.name}.');
-end
-
-% get header fields
-ncmp=getncmp(data);
-if(option.USEABSOLUTETIMING)
-    [b,e,delta,npts,depmin,depmax,depmen,...
-        nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=getheader(data,...
-        'b','e','delta','npts','depmin','depmax','depmen',...
-        'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
-    dt=[nzyear nzjday nzhour nzmin nzsec nzmsec];
-else
-    [b,e,delta,npts,depmin,depmax,depmen]=...
-        getheader(data,'b','e','delta','npts','depmin','depmax','depmen');
-    dt=nan(nrecs,6);
-end
-szreal=size(option.REQUIREDREALFIELDS); reqreal=cell(szreal);
-szchar=size(option.REQUIREDCHARFIELDS); reqchar=cell(szchar);
-if(prod(szreal)~=0)
-    [reqreal{:}]=getheader(data,option.REQUIREDREALFIELDS{:});
-end
-if(prod(szchar)~=0)
-    [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
-end
-iftype=getenumid(data,'iftype');
-leven=strcmp(getlgc(data,'leven'),'true');
-
-% require timeseries and general x vs y
-if(any(~strcmp(iftype,'itime') & ~strcmp(iftype,'ixy')))
-    error('seizmo:merge:badRecordType',...
-        'Records must be Time Series or General X vs Y !');
-end
-
-% get start and end of records in absolute time
-if(option.USEABSOLUTETIMING)
-    if(strcmp(option.TIMING,'utc'))
-        ab=gregorian2modserial(utc2tai(...
-            [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+b]));
-        ae=gregorian2modserial(utc2tai(...
-            [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+e]));
-    else
-        ab=gregorian2modserial(...
-            [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+b]);
-        ae=gregorian2modserial(...
-            [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+e]);
-    end
-else
-    ab=[zeros(nrecs,1) b];
-    ae=[zeros(nrecs,1) e];
-end
-
-% change real to char
-for i=1:prod(szreal)
-    reqreal{i}=num2str(reqreal{i},'%16.16e');
-end
-
-% make groups (require at least leven and ncmp to be the same)
-[f,h,h]=unique(char(strcat(strcat('',reqchar{:}),'_',...
-    strcat('',reqreal{:}),'_',num2str(leven),'_',num2str(ncmp))),...
-    'rows');
-
-% add temp space to arrays
-alloc=(nrecs+1):(nrecs+option.ALLOCATE);
-data(nrecs+option.ALLOCATE).dep=[];
-ab(alloc,:)=nan; ae(alloc,:)=nan; dt(alloc,:)=nan;
-delta(alloc,1)=nan; npts(alloc,1)=nan; fullname(alloc,1)={''};
-depmen(alloc,1)=nan; depmin(alloc,1)=nan; depmax(alloc,1)=nan;
-
-% debug
-if(option.DEBUG)
-    disp('Group IDs:')
-    disp(f);
-    disp(' ');
-    disp('Lookup Table:')
-    disp(sprintf('%d - %d\n',[1:nrecs; h.']));
-end
-
-% loop through each group
-destroy=false(nrecs+option.ALLOCATE,1);
-for i=1:size(f,1)
-    % get group member indices
-    gidx=find(h==i);
-    ng=numel(gidx);
-    
-    % backup for later
-    origng=ng;
-    
-    % detail message
-    if(option.VERBOSE || option.DEBUG)
-        disp(' '); disp(' ');
-        disp(sprintf('Processing Group: %d',i));
-        disp(['Members: ' sprintf('%d ',gidx)]);
-        disp(sprintf('Number in Group: %d',ng));
-    end
-    
-    % find any exact duplicates
-    bad=flagexactdupes(ab(gidx,:),ae(gidx,:));
-    
-    % detail message
-    if(option.VERBOSE || option.DEBUG)
-        disp(' ');
-        disp('Deleting Duplicate(s):');
-        disp(sprintf(' %d',gidx(bad)));
-        disp(sprintf('Number Still in Group: %d',ng-sum(bad)));
-    end
-    
-    % get rid of any exact duplicates
-    destroy(gidx(bad))=true;
-    ng=ng-sum(bad);
-    gidx(bad)=[];
-    
-    % no records to merge with
-    if(ng==1); continue; end
-    
-    % handle uneven / differing sample rates (NEEDS TO BE WRITTEN)
-    if(any(~leven(gidx)) || numel(unique(delta(gidx)))~=1)
-        % debug
-        %any(~leven(gidx))
-        %numel(unique(delta(gidx)))~=1
-        %die
-        
-        % what to do?
-        % - pass to mseq as if perfect
-        % - merge .ind
-        % - sort by .ind
-        % - if diff .ind==0 whine
-        error('seizmo:merge:unevenUnsupported',...
-            ['Merging Uneven Records or Records with differing DELTA\n'...
-             'is unsupported at the moment!']);
-    end
-    
-    % all the same delta so share
-    gdelta=delta(gidx(1));
-    
-    % separate arrays for adding new info
-    history=num2cell(gidx).';
-    newgidx=gidx;
-    newng=ng;
-    
-    % loop until no files left unattempted
-    attempted=npts(gidx)==0; % skip dataless
-    newidx=nrecs+1;
-    while(any(~attempted))
-        % get an unattempted file
-        j=find(~attempted,1,'first');
-        
-        % go merge with other records
-        [data(newidx),ab(newidx,:),ae(newidx,:),npts(newidx),...
-            dt(newidx,:),fullname(newidx),newhistory]=gomerge(...
-            data(gidx(j)),ab(gidx(j),:),ae(gidx(j),:),npts(gidx(j)),...
-            dt(gidx(j),:),fullname(gidx(j)),history(j),newidx,...
-            data(gidx),ab(gidx,:),ae(gidx,:),npts(gidx),dt(gidx,:),...
-            fullname(gidx),ng,history(1:ng),gidx,gdelta,option);
-        
-        % check merge history
-        if(isequal(newhistory,history(j)))
-            attempted(j)=true;
-        else
-            newng=newng+1;
-            attempted(ismember(gidx,[newhistory{:}]))=true;
-            newgidx(newng)=newidx;
-            delta(newidx)=gdelta;
-            history(newng)=newhistory;
-            depmin(newidx)=min(data(newidx).dep(:));
-            depmax(newidx)=max(data(newidx).dep(:));
-            depmen(newidx)=mean(data(newidx).dep(:));
-            newidx=newidx+1;
+                'Options must be specified as a string!');
+        end
+        if(~isempty(varargin{i+1}))
+            option.(upper(varargin{i}))=varargin{i+1};
         end
     end
-    
-    % detail message
-    if(option.VERBOSE || option.DEBUG)
-        disp(' ');
-        disp(sprintf('Finished Merging Group: %d',i));
-        disp(['Members: ' sprintf('%d ',newgidx)]);
-        disp(sprintf('Number in Group: %d',newng));
-    end
-    
-    % get longest records with unique time coverage
-    good=~(flagdupes(ab(newgidx,:),ae(newgidx,:))...
-        | flaghistorydupes(history));
-    ngood=sum(good);
-    goodidx=1:ngood;
-    
-    % detail message
-    if(option.VERBOSE || option.DEBUG)
-        disp('Deleting Duplicate(s) and/or Partial Piece(s):');
-        disp(sprintf(' %d',newgidx(~good)));
-        disp('Changing Indices Of Good Record(s):');
-        disp(sprintf('%d ==> %d\n',[newgidx(good).'; newgidx(goodidx).']));
-        disp('-------------------------------');
-        disp(sprintf('%d kept / %d made / %d original',...
-            ngood,newng-ng,origng));
-    end
-    
-    % get rid of any duplicates/partial pieces
-    data(newgidx(goodidx))=data(newgidx(good));
-    ab(newgidx(goodidx),:)=ab(newgidx(good),:);
-    ae(newgidx(goodidx),:)=ae(newgidx(good),:);
-    delta(newgidx(goodidx))=delta(newgidx(good));
-    npts(newgidx(goodidx))=npts(newgidx(good));
-    depmin(newgidx(goodidx))=depmin(newgidx(good));
-    depmax(newgidx(goodidx))=depmax(newgidx(good));
-    depmen(newgidx(goodidx))=depmen(newgidx(good));
-    dt(newgidx(goodidx),:)=dt(newgidx(good),:);
-    destroy(newgidx(ngood+1:end))=true;
-end
 
-% trim off temp space
-data(nrecs+1:end)=[];
-destroy(nrecs+1:end)=[];
-ab(nrecs+1:end,:)=[];
-ae(nrecs+1:end,:)=[];
-dt(nrecs+1:end,:)=[];
-delta(nrecs+1:end)=[];
-npts(nrecs+1:end)=[];
-depmin(nrecs+1:end)=[];
-depmax(nrecs+1:end)=[];
-depmen(nrecs+1:end)=[];
+    % check options
+    fields=fieldnames(option);
+    for i=1:numel(fields)
+        % get value of field and do a basic check
+        value=option.(fields{i});
+        if((ischar(value) && size(value,1)~=1))
+            error('seizmo:merge:badInput',...
+                'Bad value for option %s !',value);
+        end
 
-% get relative times from absolute
-if(option.USEABSOLUTETIMING)
-    if(strcmp(option.TIMING,'utc'))
-        az=gregorian2modserial(utc2tai(...
-            [dt(:,1:4) dt(:,5)+dt(:,6)/1000]));
-        b=(ab(:,1)-az(:,1))*86400+(ab(:,2)-az(:,2));
-        e=(ae(:,1)-az(:,1))*86400+(ae(:,2)-az(:,2));
+        % specific checks
+        switch lower(fields{i})
+            case 'tolerance'
+                if(~isnumeric(value))
+                    error('seizmo:merge:badInput',...
+                        'TOLERANCE must be a 1 or 2 element real array!');
+                end
+            case {'shiftmax' 'filler'}
+                if(~isnumeric(value) || ~isscalar(value))
+                    error('seizmo:merge:badInput',...
+                        '%s must be a scalar real number!',fields{i});
+                end
+            case {'overlap' 'gap' 'interpolate' 'toleranceunits' ...
+                    'adjust' 'shiftunits' 'timing'}
+                if(~ischar(value) || size(value,1)~=1 ...
+                        || ~any(strcmpi(value,valid.(fields{i}))))
+                    error('seizmo:merge:badInput',...
+                        ['%s option must be one of the following:\n'...
+                        sprintf('%s ',valid.(fields{i}){:})],fields{i});
+                end
+            case {'requiredcharfields' 'requiredrealfields'}
+                if(~iscellstr(value))
+                    error('seizmo:merge:badInput',...
+                        '%s option must be a cellstr of header fields!',...
+                        fields{i});
+                end
+            case 'allocate'
+                if(~isnumeric(value) || fix(value)~=value)
+                    error('seizmo:merge:badInput',...
+                        'ALLOCATE must be a scalar integer!');
+                end
+            case {'useabsolutetiming' 'mergesequential' 'mergegaps'...
+                    'mergeoverlaps' 'verbose' 'debug'}
+                if(~islogical(value) || ~isscalar(value))
+                    error('seizmo:merge:badInput',...
+                        '%s option must be a logical!',fields{i});
+                end
+            otherwise
+                error('seizmo:merge:badInput',...
+                    'Unknown option: %s !',fields{i});
+        end
+    end
+
+    % handle tolerance
+    if(numel(option.TOLERANCE)==1)
+        option.TOLERANCE=[-1 option.TOLERANCE];
+    end
+    option.TOLERANCE=sort(option.TOLERANCE);
+
+    % get full filenames (for verbose or debugging output)
+    nrecs=numel(data);
+    if(option.VERBOSE || option.DEBUG)
+        fullname=strcat({data.path}.',{data.name}.');
+    end
+
+    % get header fields
+    ncmp=getncmp(data);
+    if(option.USEABSOLUTETIMING)
+        [b,e,delta,npts,depmin,depmax,depmen,...
+            nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=getheader(data,...
+            'b','e','delta','npts','depmin','depmax','depmen',...
+            'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
+        dt=[nzyear nzjday nzhour nzmin nzsec nzmsec];
     else
-        az=gregorian2modserial(...
-            [dt(:,1:4) dt(:,5)+dt(:,6)/1000]);
-        b=(ab(:,1)-az(:,1))*86400+(ab(:,2)-az(:,2));
-        e=(ae(:,1)-az(:,1))*86400+(ae(:,2)-az(:,2));
+        [b,e,delta,npts,depmin,depmax,depmen]=getheader(data,...
+            'b','e','delta','npts','depmin','depmax','depmen');
+        dt=nan(nrecs,6);
     end
-else
-    b=ab(:,2);
-    e=ae(:,2);
+    szreal=size(option.REQUIREDREALFIELDS); reqreal=cell(szreal);
+    szchar=size(option.REQUIREDCHARFIELDS); reqchar=cell(szchar);
+    if(prod(szreal)~=0)
+        [reqreal{:}]=getheader(data,option.REQUIREDREALFIELDS{:});
+    end
+    if(prod(szchar)~=0)
+        [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
+    end
+    iftype=getenumid(data,'iftype');
+    leven=strcmp(getlgc(data,'leven'),'true');
+
+    % require timeseries and general x vs y
+    if(any(~strcmp(iftype,'itime') & ~strcmp(iftype,'ixy')))
+        error('seizmo:merge:badRecordType',...
+            'Records must be Time Series or General X vs Y !');
+    end
+
+    % get start and end of records in absolute time
+    if(option.USEABSOLUTETIMING)
+        if(strcmp(option.TIMING,'utc'))
+            ab=gregorian2modserial(utc2tai(...
+                [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+b]));
+            ae=gregorian2modserial(utc2tai(...
+                [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+e]));
+        else
+            ab=gregorian2modserial(...
+                [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+b]);
+            ae=gregorian2modserial(...
+                [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+e]);
+        end
+    else
+        ab=[zeros(nrecs,1) b];
+        ae=[zeros(nrecs,1) e];
+    end
+
+    % change real to char
+    for i=1:prod(szreal)
+        reqreal{i}=num2str(reqreal{i},'%16.16e');
+    end
+
+    % make groups (require at least leven and ncmp to be the same)
+    [f,h,h]=unique(char(strcat(strcat('',reqchar{:}),'_',...
+        strcat('',reqreal{:}),'_',num2str(leven),'_',num2str(ncmp))),...
+        'rows');
+
+    % add temp space to arrays
+    alloc=(nrecs+1):(nrecs+option.ALLOCATE);
+    data(nrecs+option.ALLOCATE).dep=[];
+    ab(alloc,:)=nan; ae(alloc,:)=nan; dt(alloc,:)=nan;
+    delta(alloc,1)=nan; npts(alloc,1)=nan; fullname(alloc,1)={''};
+    depmen(alloc,1)=nan; depmin(alloc,1)=nan; depmax(alloc,1)=nan;
+
+    % debug
+    if(option.DEBUG)
+        disp('Group IDs:')
+        disp(f);
+        disp(' ');
+        disp('Lookup Table:')
+        disp(sprintf('%d - %d\n',[1:nrecs; h.']));
+    end
+
+    % loop through each group
+    destroy=false(nrecs+option.ALLOCATE,1);
+    for i=1:size(f,1)
+        % get group member indices
+        gidx=find(h==i);
+        ng=numel(gidx);
+
+        % backup for later
+        origng=ng;
+
+        % detail message
+        if(option.VERBOSE || option.DEBUG)
+            disp(' '); disp(' ');
+            disp(sprintf('Processing Group: %d',i));
+            disp(['Members: ' sprintf('%d ',gidx)]);
+            disp(sprintf('Number in Group: %d',ng));
+        end
+
+        % find any exact duplicates
+        bad=flagexactdupes(ab(gidx,:),ae(gidx,:));
+
+        % detail message
+        if(option.VERBOSE || option.DEBUG)
+            disp(' ');
+            disp('Deleting Duplicate(s):');
+            disp(sprintf(' %d',gidx(bad)));
+            disp(sprintf('Number Still in Group: %d',ng-sum(bad)));
+        end
+
+        % get rid of any exact duplicates
+        destroy(gidx(bad))=true;
+        ng=ng-sum(bad);
+        gidx(bad)=[];
+
+        % no records to merge with
+        if(ng==1); continue; end
+
+        % handle uneven / differing sample rates (NEEDS TO BE WRITTEN)
+        if(any(~leven(gidx)) || numel(unique(delta(gidx)))~=1)
+            % debug
+            %any(~leven(gidx))
+            %numel(unique(delta(gidx)))~=1
+            %die
+
+            % what to do?
+            % - pass to mseq as if perfect
+            % - merge .ind
+            % - sort by .ind
+            % - if diff .ind==0 whine
+            error('seizmo:merge:unevenUnsupported',...
+                ['Merging Uneven Records or Records with differing\n'...
+                'DELTA is unsupported at the moment!']);
+            % uneven flag
+            % gomerge_uneven
+        end
+
+        % all the same delta so share
+        gdelta=delta(gidx(1));
+
+        % separate arrays for adding new info
+        history=num2cell(gidx).';
+        newgidx=gidx;
+        newng=ng;
+
+        % loop until no files left unattempted
+        attempted=npts(gidx)==0; % skip dataless
+        newidx=nrecs+1;
+        while(any(~attempted))
+            % get an unattempted file
+            j=find(~attempted,1,'first');
+
+            % go merge with other records
+            [data(newidx),ab(newidx,:),ae(newidx,:),npts(newidx),...
+                dt(newidx,:),fullname(newidx),newhistory]=gomerge(...
+                data(gidx(j)),ab(gidx(j),:),ae(gidx(j),:),npts(gidx(j)),...
+                dt(gidx(j),:),fullname(gidx(j)),history(j),newidx,...
+                data(gidx),ab(gidx,:),ae(gidx,:),npts(gidx),dt(gidx,:),...
+                fullname(gidx),ng,history(1:ng),gidx,gdelta,option);
+
+            % check merge history
+            if(isequal(newhistory,history(j)))
+                attempted(j)=true;
+            else
+                newng=newng+1;
+                attempted(ismember(gidx,[newhistory{:}]))=true;
+                newgidx(newng)=newidx;
+                delta(newidx)=gdelta;
+                history(newng)=newhistory;
+                depmin(newidx)=min(data(newidx).dep(:));
+                depmax(newidx)=max(data(newidx).dep(:));
+                depmen(newidx)=mean(data(newidx).dep(:));
+                newidx=newidx+1;
+            end
+        end
+
+        % detail message
+        if(option.VERBOSE || option.DEBUG)
+            disp(' ');
+            disp(sprintf('Finished Merging Group: %d',i));
+            disp(['Members: ' sprintf('%d ',newgidx)]);
+            disp(sprintf('Number in Group: %d',newng));
+        end
+
+        % get longest records with unique time coverage
+        good=~(flagdupes(ab(newgidx,:),ae(newgidx,:))...
+            | flaghistorydupes(history));
+        ngood=sum(good);
+        goodidx=1:ngood;
+
+        % detail message
+        if(option.VERBOSE || option.DEBUG)
+            disp('Deleting Duplicate(s) and/or Partial Piece(s):');
+            disp(sprintf(' %d',newgidx(~good)));
+            disp('Changing Indices Of Good Record(s):');
+            disp(sprintf('%d ==> %d\n',[newgidx(good).'; ...
+                newgidx(goodidx).']));
+            disp('-------------------------------');
+            disp(sprintf('%d kept / %d made / %d original',...
+                ngood,newng-ng,origng));
+        end
+
+        % get rid of any duplicates/partial pieces
+        data(newgidx(goodidx))=data(newgidx(good));
+        ab(newgidx(goodidx),:)=ab(newgidx(good),:);
+        ae(newgidx(goodidx),:)=ae(newgidx(good),:);
+        delta(newgidx(goodidx))=delta(newgidx(good));
+        npts(newgidx(goodidx))=npts(newgidx(good));
+        depmin(newgidx(goodidx))=depmin(newgidx(good));
+        depmax(newgidx(goodidx))=depmax(newgidx(good));
+        depmen(newgidx(goodidx))=depmen(newgidx(good));
+        dt(newgidx(goodidx),:)=dt(newgidx(good),:);
+        destroy(newgidx(ngood+1:end))=true;
+    end
+
+    % trim off temp space
+    data(nrecs+1:end)=[];
+    destroy(nrecs+1:end)=[];
+    ab(nrecs+1:end,:)=[];
+    ae(nrecs+1:end,:)=[];
+    dt(nrecs+1:end,:)=[];
+    delta(nrecs+1:end)=[];
+    npts(nrecs+1:end)=[];
+    depmin(nrecs+1:end)=[];
+    depmax(nrecs+1:end)=[];
+    depmen(nrecs+1:end)=[];
+
+    % get relative times from absolute
+    if(option.USEABSOLUTETIMING)
+        if(strcmp(option.TIMING,'utc'))
+            az=gregorian2modserial(utc2tai(...
+                [dt(:,1:4) dt(:,5)+dt(:,6)/1000]));
+            b=(ab(:,1)-az(:,1))*86400+(ab(:,2)-az(:,2));
+            e=(ae(:,1)-az(:,1))*86400+(ae(:,2)-az(:,2));
+        else
+            az=gregorian2modserial(...
+                [dt(:,1:4) dt(:,5)+dt(:,6)/1000]);
+            b=(ab(:,1)-az(:,1))*86400+(ab(:,2)-az(:,2));
+            e=(ae(:,1)-az(:,1))*86400+(ae(:,2)-az(:,2));
+        end
+    else
+        b=ab(:,2);
+        e=ae(:,2);
+    end
+
+    % update header
+    data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
+        'depmin',depmin,'depmax',depmax,'depmen',depmen);
+
+    % remove unwanted data
+    data(destroy)=[];
+
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    set_checkheader_state(oldcheckheaderstate);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    set_checkheader_state(oldcheckheaderstate);
+    
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
-    'depmin',depmin,'depmax',depmax,'depmen',depmen);
-
-% remove unwanted data
-data(destroy)=[];
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
-set_checkheader_state(oldcheckheaderstate);
 
 end
 
@@ -662,9 +694,12 @@ for i=1:nrecs
         continue;
     end
     
+    % deal with units
+    tol=option.TOLERANCE;
+    if(strcmpi(option.TOLERANCEUNITS,'intervals')); tol=tol.*delta; end
+    
     % check if within tolerance
-    if(abs(tdiff)>=option.TOLERANCE(1)...
-            && abs(tdiff)<=option.TOLERANCE(2))
+    if(abs(tdiff)>=tol(1) && abs(tdiff)<=tol(2))
         % merge type
         if(~tdiff)
             mergefunc=@mseq;

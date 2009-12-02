@@ -8,8 +8,8 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %
 %    Description: [DIST,AZ,BAZ]=VINCENTYINV(LAT1,LON1,LAT2,LON2) returns
 %     the geodesic lengths DIST, forward azimuths AZ and back azimuths BAZ
-%     between initial point(s) with geodetic latitudes LAT1 and longitudes
-%     LON1 and final point(s) with geodetic latitudes LAT2 and longitudes
+%     between initial point(s) with geographic latitudes LAT1 & longitudes
+%     LON1 and final point(s) with geographic latitudes LAT2 & longitudes
 %     LON2 on the WGS-84 reference ellipsoid.  All inputs must be in
 %     degrees.  DIST is in kilometers.  AZ and BAZ are in degrees.  LAT1
 %     and LON1 must be scalar or nonempty same-size arrays and LAT2 and
@@ -63,9 +63,10 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %                        and comment update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        May   8, 2009 - minor doc fix
+%        Nov. 13, 2009 - name change: geodetic to geographic
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Nov. 13, 2009 at 20:15 GMT
 
 % todo:
 
@@ -141,7 +142,7 @@ if(n4==1); stla=repmat(stla,sz1); stlo=repmat(stlo,sz1); end
 % number of pairs
 n=size(evla);
 
-% check lats are within -90 to 90 (Geodetic Latitude φ)
+% check lats are within -90 to 90 (Geographic Latitude φ)
 if(any(abs(evla)>90))
     error('seizmo:vincentyinv:latitudeOutOfRange',...
         'Starting latitudes out of range (-90 to 90)');

@@ -1,45 +1,46 @@
-function [lat,lon,depth]=xyz2geodetic(x,y,z,ellipsoid)
-%XYZ2GEODETIC    Converts coordinates from cartesian to geodetic
+function [lat,lon,depth]=xyz2geographic(x,y,z,ellipsoid)
+%XYZ2GEOGRAPHIC    Converts coordinates from cartesian to geographic
 %
-%    Usage:    [lat,lon,depth]=xyz2geodetic(x,y,z)
-%              [lat,lon,depth]=xyz2geodetic(x,y,z,[a f])
+%    Usage:    [lat,lon,depth]=xyz2geographic(x,y,z)
+%              [lat,lon,depth]=xyz2geographic(x,y,z,[a f])
 %
-%    Description: [LAT,LON,DEPTH]=XYZ2GEODETIC(X,Y,Z) converts coordinates
-%     in Earth-centered, Earth-fixed (ECEF) coordinates to geodetic  
-%     latitude, longitude, depth.  LAT and LON are in degrees.  DEPTH, X,
-%     Y, Z must be/are in kilometers.  The reference ellipsoid is assumed
-%     to be WGS-84.
+%    Description: [LAT,LON,DEPTH]=XYZ2GEOGRAPHIC(X,Y,Z) converts
+%     coordinates in Earth-centered, Earth-fixed (ECEF) coordinates to
+%     geographic latitude, longitude, depth.  LAT and LON are in degrees.
+%     DEPTH, X, Y, Z must be/are in kilometers.  The reference ellipsoid
+%     is assumed to be WGS-84.
 %
-%     XYZ2GEODETIC(X,Y,Z,[A F]) allows specifying the ellipsoid parameters
-%     A (equatorial radius in kilometers) and F (flattening).  This is 
-%     compatible with output from Matlab's Mapping Toolbox function
+%     XYZ2GEOGRAPHIC(X,Y,Z,[A F]) allows specifying the ellipsoid
+%     parameters A (equatorial radius in kilometers) and F (flattening).
+%     This is compatible with output from Matlab's Mapping Toolbox function
 %     ALMANAC.  By default the ellipsoid parameters are set to those of the
 %     reference ellipsoid WGS-84.
 %
 %    Notes:
 %     - Utilizes the preferred algorithm in:
 %        J. Zhu, "Conversion of Earth-centered Earth-fixed coordinates to 
-%        geodetic coordinates," Aerospace and Electronic Systems, IEEE 
+%        geographic coordinates," Aerospace and Electronic Systems, IEEE 
 %        Transactions on, vol. 30, pp. 957-961, 1994
 %     - the ECEF coordinate system has the X axis passing through the
 %       equator at the prime meridian, the Z axis through the north pole
 %       and the Y axis through the equator at 90 degrees longitude.
 %
 %    Examples:
-%     Find the geodetic position of some point given in xyz:
-%      [lat,lon,depth]=xyz2geodetic(3000,3000,3000)
+%     Find the geographic position of some point given in xyz:
+%      [lat,lon,depth]=xyz2geographic(3000,3000,3000)
 %
-%    See also: GEODETIC2XYZ, GEOCENTRIC2XYZ, XYZ2GEOCENTRIC,
-%              GEODETIC2GEOCENTRIC, GEOCENTRIC2GEODETIC
+%    See also: GEOGRAPHIC2XYZ, GEOCENTRIC2XYZ, XYZ2GEOCENTRIC,
+%              GEOGRAPHIC2GEOCENTRIC, GEOCENTRIC2GEOGRAPHIC
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Oct. 26, 2008 - scalar expansion, doc and comment update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
+%        Nov. 13, 2009 - name change: geodetic to geographic
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 20:15 GMT
+%     Last Updated Nov. 13, 2009 at 20:15 GMT
 
 % todo:
 
@@ -59,7 +60,7 @@ else
         a=ellipsoid(1);
         f=ellipsoid(2);
     else
-        error('seizmo:xyz2geodetic:badEllipsoid',...
+        error('seizmo:xyz2geographic:badEllipsoid',...
             ['Ellipsoid must be a 2 element vector specifying:\n'...
             '[equatorial_km_radius flattening(<1)]']);
     end
@@ -71,14 +72,15 @@ nx=prod(sx); ny=prod(sy); nz=prod(sz);
 
 % basic check inputs
 if(~isnumeric(x) || ~isnumeric(y) || ~isnumeric(z))
-    error('seizmo:xyz2geodetic:nonNumeric','All inputs must be numeric!');
+    error('seizmo:xyz2geographic:nonNumeric',...
+        'All inputs must be numeric!');
 elseif(any([nx ny nz]==0))
-    error('seizmo:xyz2geodetic:unpairedCoord',...
+    error('seizmo:xyz2geographic:unpairedCoord',...
         'Coordinate inputs must be nonempty arrays!');
 elseif((~isequal(sx,sy) && all([nx ny]~=1)) ||...
        (~isequal(sx,sz) && all([nx nz]~=1)) ||...
        (~isequal(sz,sy) && all([nz ny]~=1)))
-    error('seizmo:xyz2geodetic:unpairedCoord',...
+    error('seizmo:xyz2geographic:unpairedCoord',...
         'Coordinate inputs must be scalar or equal sized arrays!');
 end
 
@@ -124,7 +126,7 @@ u=sqrt(re2ro2+z2);
 b2av=b2./(a.*sqrt(re2ro2+z21e2)); clear z2 re2ro2 z21e2
 r2d=180/pi;
 
-% get geodetic coords
+% get geographic coords
 depth=-u.*(1-b2av);
 lat=atan((z+e2.*b2av.*z./f12)./r).*r2d;
 lon=atan2(y,x).*r2d;

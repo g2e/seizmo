@@ -12,4 +12,6 @@ function [varargout]=checkorientation(data)
 % 1 component with different orientations
 % non-ortho set
 
+
+
 end

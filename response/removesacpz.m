@@ -76,9 +76,10 @@ function [data,pz]=removesacpz(data,varargin)
 
 %     Version History:
 %        Oct. 22, 2009 - initial version
+%        Oct. 30, 2009 - added informative output on error
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 22, 2009 at 03:25 GMT
+%     Last Updated Oct. 30, 2009 at 18:50 GMT
 
 % todo:
 
@@ -340,6 +341,11 @@ try
     set_seizmocheck_state(oldseizmocheckstate);
     set_checkheader_state(oldcheckheaderstate);
 catch
+    % since apply/remove sacpz bomb out so often...
+    if(exist('i','var'))
+        disp(sprintf('REMOVESACPZ bombed out on record: %d',i));
+    end
+    
     % toggle checking back
     set_seizmocheck_state(oldseizmocheckstate);
     set_checkheader_state(oldcheckheaderstate);

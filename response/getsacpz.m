@@ -34,11 +34,12 @@ function [data]=getsacpz(data,varargin)
 %     - warns if no files are found or a record straddles a time boundary
 %
 %    Examples:
-%     Reading in the default full database is slow (>100000 PoleZeros), so
-%     to speed operations up in repetitive tasks use the 2nd call type.
-%     This requires that you isolate the relevant PoleZero files.  Then
-%     just run something similar to the commands below to create a
-%     database, save it for later and add the info to the current records:
+%     Working with the full IRIS database (default) is somewhat slow
+%     (with >150000 PoleZeros what do you expect?).  If you can isolate the
+%     relevant PoleZero files for your dataset(s) then this operation will
+%     be significantly faster.  Run something similar to the commands below
+%     to create your custom database, save it for later and add the info to
+%     a dataset:
 %      mysacpzdb=makesacpzdb('my/sacpz/dir');
 %      save mysacpzdb mysacpzdb
 %      data=getsacpz(data,mysacpzdb)
@@ -52,9 +53,11 @@ function [data]=getsacpz(data,varargin)
 %                        checks data and properly handles errors, default
 %                        sacpzdb now allows individual network access
 %        Oct. 22, 2009 - add info about required header fields
+%        Nov.  2, 2009 - seizmoverbose support, network specific searching,
+%                        fixed example to reflect improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 22, 2009 at 00:20 GMT
+%     Last Updated Nov.  2, 2009 at 16:45 GMT
 
 % todo:
 
@@ -88,6 +91,9 @@ end
 
 % attempt rest
 try
+    % verbosity
+    verbose=seizmoverbose;
+    
     % number of records
     nrecs=numel(data);
     
@@ -101,21 +107,46 @@ try
     
     % get sacpzdb
     if(nargin==1)
-        % load default sacpzdb
-        tmp=unique(knetwk);
-        disp('Loading SAC PoleZero Databases For Networks:');
-        disp(['  ' sprintf('%s ',tmp{:})]);
-        disp('  This May Take A Minute');
-        tmp=load('sacpzdb',tmp{:});
-        tmp=struct2cell(tmp);
-        sacpzdb=cat(1,tmp{:});
+        % networks of dataset
+        NET=upper(knetwk);
+        nets=unique(NET);
+        
+        % detail message
+        if(verbose)
+            disp('Loading SAC PoleZero Databases For Networks:');
+            disp(['  ' sprintf('%s ',nets{:})]);
+            disp('This May Take A Minute...');
+        end
+        
+        % load IRIS SAC PoleZero database
+        sacpzdb=load('sacpzdb',nets{:});
+        if(~isequal(fieldnames(sacpzdb),nets))
+            badnets=nets(~ismember(nets,fieldnames(sacpzdb)));
+            error('seizmo:getsacpz:badKNETWK',...
+                ['These networks have no response info ' ...
+                'in the IRIS database:\n' sprintf('%s ',badnets{:})]);
+        end
+        
+        % get db info
+        for i=1:numel(nets)
+            db.(nets{i}).b=cell2mat({sacpzdb.(nets{i}).b}.');
+            db.(nets{i}).e=cell2mat({sacpzdb.(nets{i}).e}.');
+            db.(nets{i}).knetwk={sacpzdb.(nets{i}).knetwk}.';
+            db.(nets{i}).kstnm={sacpzdb.(nets{i}).kstnm}.';
+            db.(nets{i}).kcmpnm={sacpzdb.(nets{i}).kcmpnm}.';
+            db.(nets{i}).khole={sacpzdb.(nets{i}).khole}.';
+        end
     else
-        disp('Creating SAC PoleZero Database (May Take A While)');
+        % detail message
+        if(verbose)
+            disp('Creating Custom SAC PoleZero Database');
+        end
+        
         % get structs
         valid=false;
         structs=cellfun('isclass',varargin,'struct');
         try
-            sacpzdb=cat(1,varargin{structs});
+            sacpzdb.CUSTOM=cat(1,varargin{structs});
         catch
             error('seizmo:getsacpz:badInputs',...
                 'Alternate SACPZdbs are not concatenateable!');
@@ -136,7 +167,8 @@ try
         end
         if(any(dirs))
             try
-                sacpzdb=[sacpzdb; makesacpzdb(varargin{dirs})];
+                sacpzdb.CUSTOM=[sacpzdb.CUSTOM; ...
+                    makesacpzdb(varargin{dirs})];
                 valid=true;
             catch
                 error('seizmo:getsacpz:badInputs',...
@@ -152,54 +184,65 @@ try
                 tmp=load(varargin{i});
                 tmp=struct2cell(tmp);
                 try
-                    sacpzdb=cat(1,sacpzdb,tmp{:});
+                    sacpzdb.CUSTOM=cat(1,sacpzdb.CUSTOM,tmp{:});
                 catch
                     error('seizmo:getsacpz:badInputs',...
                         'Alternate SACPZdbs are not concatenateable!');
                 end
             end
         end
-
+        
         % check sacpzdb
         if(~valid)
-            disp('Checking SAC PoleZero Database');
+            if(verbose)
+                disp('Checking Custom SAC PoleZero Database');
+            end
             reqf={'knetwk' 'kstnm' 'kcmpnm' 'khole' 'b' 'e' 'z' 'p' 'k'};
             for i=1:numel(reqf)
-                if(~isfield(varargin{1},reqf{i}))
+                if(~isfield(sacpzdb.CUSTOM,reqf{i}))
                     error('seizmo:getsacpz:badSACPZ',...
-                        ['SACPZ struct must contain fields:\n' ...
+                        ['SACPZDBs must contain fields:\n' ...
                         sprintf('%s ',reqf)]);
                 end
             end
         end
+        
+        % get db info
+        db.CUSTOM.b=cell2mat({sacpzdb.CUSTOM.b}.');
+        db.CUSTOM.e=cell2mat({sacpzdb.CUSTOM.e}.');
+        db.CUSTOM.knetwk={sacpzdb.CUSTOM.knetwk}.';
+        db.CUSTOM.kstnm={sacpzdb.CUSTOM.kstnm}.';
+        db.CUSTOM.kcmpnm={sacpzdb.CUSTOM.kcmpnm}.';
+        db.CUSTOM.khole={sacpzdb.CUSTOM.khole}.';
+        NET(1:nrecs,1)={'CUSTOM'};
     end
     
-    % get db info
-    dbb=cell2mat({sacpzdb.b}.');
-    dbe=cell2mat({sacpzdb.e}.');
-    dbknetwk={sacpzdb.knetwk}.';
-    dbkstnm={sacpzdb.kstnm}.';
-    dbkcmpnm={sacpzdb.kcmpnm}.';
-    dbkhole={sacpzdb.khole}.';
+    % detail message
+    if(verbose)
+        disp('Getting Relevant SAC PoleZeros');
+        print_time_left(0,nrecs);
+    end
     
     % loop over records
-    disp('Getting Relevant SAC PoleZeros');
-    print_time_left(0,nrecs);
     for i=1:nrecs
         % set progress bar to overwrite
         redraw=false;
         
         % find sacpz file(s) for this record by name
         % - includes handling khole goofiness
-        ok=find(strcmpi(knetwk{i},dbknetwk) & strcmpi(kstnm{i},dbkstnm) ...
-            & strcmpi(kcmpnm{i},dbkcmpnm) ...
-            & (strcmpi(khole{i},dbkhole) | strcmpi(khole2{i},dbkhole)));
+        ok=find(strcmpi(knetwk{i},db.(NET{i}).knetwk) ...
+            & strcmpi(kstnm{i},db.(NET{i}).kstnm) ...
+            & strcmpi(kcmpnm{i},db.(NET{i}).kcmpnm) ...
+            & (strcmpi(khole{i},db.(NET{i}).khole) ...
+            | strcmpi(khole2{i},db.(NET{i}).khole)));
         
         % now find sacpz file(s) for this record by time
         % - find sacpz surrounding record's b & e
         % - warn if overlaps boundary
-        okb=timediff(dbb(ok,:),b{i})>0 & timediff(dbe(ok,:),b{i})<0;
-        oke=timediff(dbb(ok,:),e{i})>0 & timediff(dbe(ok,:),e{i})<0;
+        okb=timediff(db.(NET{i}).b(ok,:),b{i})>0 ...
+            & timediff(db.(NET{i}).e(ok,:),b{i})<0;
+        oke=timediff(db.(NET{i}).b(ok,:),e{i})>0 ...
+            & timediff(db.(NET{i}).e(ok,:),e{i})<0;
         halfbaked=(okb & ~oke) | (~okb & oke);
         if(any(halfbaked))
             redraw=true;
@@ -217,13 +260,17 @@ try
                 'Could not find a matching SAC PoleZero file!'],i);
         else
             % get file with latest b
-            [idx,idx]=min(timediff(dbb(ok,:),b{i}));
+            [idx,idx]=min(timediff(db.(NET{i}).b(ok,:),b{i}));
             
             % assign to data.misc.sacpz
             data(i).misc.has_sacpz=true;
-            data(i).misc.sacpz=sacpzdb(ok(idx));
+            data(i).misc.sacpz=sacpzdb.(NET{i})(ok(idx));
         end
-        print_time_left(i,nrecs,redraw);
+        
+        % detail message
+        if(verbose)
+            print_time_left(i,nrecs,redraw);
+        end
     end
     
     % toggle checking back

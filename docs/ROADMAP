@@ -42,7 +42,8 @@ possible extras
 	- cut on absolute times
 	- amph2rlim/rlim2amph 2nd output is converted logicals
 	- merge uneven & multi-rate
-	- merge overlap add
+changeheader
+	- output nan for undefined? (nan already output for unknown field)
 
 0.7.0 - css?
 ------------

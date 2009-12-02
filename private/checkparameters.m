@@ -257,9 +257,11 @@ function [option]=checkparameters(setglobal,varargin)
 %        Oct.  5, 2009 - added option table to notes, new option EVEN_IND
 %        Oct. 16, 2009 - added complex data checks
 %        Oct. 21, 2009 - dropped rmfield usage (slow)
+%        Dec.  1, 2009 - fixed bug where global settings overrode command
+%                        line settings when SETGLOBAL was set FALSE
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 21, 2009 at 07:25 GMT
+%     Last Updated Dec.  1, 2009 at 22:15 GMT
 
 % todo:
 
@@ -337,11 +339,33 @@ option.CMPLX_DEP='ERROR';
 option.OLD_DEP_STATS='FIX';
 option.CMPLX_HEAD='ERROR';
 
+% make a defaults backup
+defaults=option;
+
+% get option names
+fields=fieldnames(option).';
+
 % valid states
 states={'ERROR' 'WARN' 'IGNORE' 'FIX' 'WARNFIX'};
 
-% pull up and check over SEIZMO global
-global SEIZMO; fields=fieldnames(option).';
+% pull up SEIZMO global
+global SEIZMO
+
+% pull in pre-existing settings too
+if(isfield(SEIZMO,'CHECKPARAMETERS'))
+    for i=fields
+        if(isfield(SEIZMO.CHECKPARAMETERS,i))
+            if(~any(strcmpi(SEIZMO.CHECKPARAMETERS.(i{:}),states)))
+                % change improper regardless of setglobal
+                warning('seizmo:checkparameters:badState',...
+                    '%s in unknown state => changing to default!',i{:});
+                SEIZMO.CHECKPARAMETERS.(i{:})=option.(i{:});
+            else
+                option.(i{:})=upper(SEIZMO.CHECKPARAMETERS.(i{:}));
+            end
+        end
+    end
+end
 
 % parse options
 if(nargin==2)
@@ -350,6 +374,7 @@ if(nargin==2)
         error('seizmo:checkparameters:unknownOption',...
             'Unknown option or bad option usage!');
     end
+    option=defaults;
     if(setglobal)
         % clear SEIZMO settings
         if(isfield(SEIZMO,'CHECKPARAMETERS'))
@@ -380,7 +405,7 @@ elseif(nargin>2)
     end
     % assign settings
     for i=1:2:nin
-        if(strcmpi(varargin{i},'all'))
+        if(strcmp(varargin{i},'ALL'))
             for j=fields
                 option.(j{:})=varargin{i+1};
             end
@@ -393,22 +418,6 @@ elseif(nargin>2)
             option.(varargin{i})=varargin{i+1};
             if(setglobal)
                 SEIZMO.CHECKPARAMETERS.(varargin{i})=varargin{i+1};
-            end
-        end
-    end
-end
-
-% pull in pre-existing settings too
-if(isfield(SEIZMO,'CHECKPARAMETERS'))
-    for i=fields
-        if(isfield(SEIZMO.CHECKPARAMETERS,i))
-            if(~any(strcmpi(SEIZMO.CHECKPARAMETERS.(i{:}),states)))
-                % change improper regardless of setglobal
-                warning('seizmo:checkparameters:badState',...
-                    '%s in unknown state => changing to default!',i{:});
-                SEIZMO.CHECKPARAMETERS.(i{:})=option.(i{:});
-            else
-                option.(i{:})=upper(SEIZMO.CHECKPARAMETERS.(i{:}));
             end
         end
     end

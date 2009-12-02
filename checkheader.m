@@ -290,9 +290,10 @@ function [data]=checkheader(data,varargin)
 %        Oct. 13, 2009 - fix ncmp check for spectral records
 %        Oct. 15, 2009 - fix for inaccurate_timing (big speed jump)
 %        Oct. 16, 2009 - added complex data checks
+%        Nov. 13, 2009 - update for geodetic to geographic
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2009 at 19:35 GMT
+%     Last Updated Nov. 13, 2009 at 20:25 GMT
 
 % todo:
 
@@ -1587,8 +1588,8 @@ newdelaz=nan(size(delaz));
 ok=chk & def;
 if(any(ok))
     % get geocentric latitude
-    geocevla=geodetic2geocentriclat(ev(ok,1));
-    geocstla=geodetic2geocentriclat(st(ok,1));
+    geocevla=geographic2geocentriclat(ev(ok,1));
+    geocstla=geographic2geocentriclat(st(ok,1));
     
     % get gcarc, az, baz based on sphere (great-circle-arc)
     [newdelaz(ok,1),newdelaz(ok,2),newdelaz(ok,3)]=...

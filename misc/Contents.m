@@ -1,5 +1,5 @@
-% Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r103 Ararat 17-Oct-2009
+% Seismology Toolbox - misc
+% Version 0.6.0-r105 Ararat 2-Dec-2009
 %
 % Miscellaneous Support functions
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
@@ -9,6 +9,8 @@
 %GETSUBFIELD         - Get substructure field contents
 %GETWORDS            - Returns a cell array of words from a string
 %IFISHER             - Converts Z statistics to correlation coefficients
+%ISORTHOGONAL        - TRUE if orientations are orthogonal
+%ISPARALLEL          - TRUE if orientations are parallel
 %JOINWORDS           - Combines a cellstr into a space-separated string
 %LATMOD              - Returns a latitude modulus
 %LONMOD              - Returns a longitude modulus
@@ -35,6 +37,7 @@
 %TRIANGLETF          - Returns a triangle time function
 %UNSORT              - Undoes a sort operation using the returned sort indices
 %UTI2SUB             - Square matrix upper triangle linear indices to subscripts
+%VECNORM             - Returns vector norms
 %WRITECSV            - Write out .csv formatted file from a structure
 %XDIR                - Cross-app compatible directory listing with recursion
 

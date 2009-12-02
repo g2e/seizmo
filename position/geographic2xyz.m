@@ -1,15 +1,16 @@
-function [x,y,z]=geodetic2xyz(lat,lon,depth,ellipsoid)
-%GEODETIC2XYZ    Converts coordinates from geodetic to cartesian
+function [x,y,z]=geographic2xyz(lat,lon,depth,ellipsoid)
+%GEOGRAPHIC2XYZ    Converts coordinates from geographic to cartesian
 %
-%    Usage:    [x,y,z]=geodetic2xyz(lat,lon,depth)
-%              [x,y,z]=geodetic2xyz(lat,lon,depth,[a f])
+%    Usage:    [x,y,z]=geographic2xyz(lat,lon,depth)
+%              [x,y,z]=geographic2xyz(lat,lon,depth,[a f])
 %
-%    Description: [X,Y,Z]=GEODETIC2XYZ(LAT,LON,DEPTH) converts coordinates
-%     in geodetic latitude, longitude, depth to Earth-centered, Earth-fixed
-%     (ECEF).  LAT and LON are in degrees.  DEPTH, X, Y, Z must be/are in
-%     kilometers.  The reference ellipsoid is assumed to be WGS-84.
+%    Description: [X,Y,Z]=GEOGRAPHIC2XYZ(LAT,LON,DEPTH) converts
+%     coordinates in geographic latitude, longitude, depth to Earth-
+%     centered, Earth-fixed (ECEF).  LAT and LON are in degrees.  DEPTH, X,
+%     Y, Z must be/are in kilometers.  The reference ellipsoid is assumed
+%     to be WGS-84.
 %
-%     GEODETIC2ECEF(LAT,LON,DEPTH,[A F]) allows specifying the ellipsoid
+%     GEOGRAPHIC2XYZ(LAT,LON,DEPTH,[A F]) allows specifying the ellipsoid
 %     parameters A (equatorial radius in kilometers) and F (flattening).
 %     This is compatible with Matlab's Mapping Toolbox function ALMANAC.
 %
@@ -19,20 +20,21 @@ function [x,y,z]=geodetic2xyz(lat,lon,depth,ellipsoid)
 %       and the Y axis through the equator at 90 degrees longitude.
 %
 %    Examples:
-%     Get out of the geodetic coordinate system and into cartesian:
-%      [x,y,z]=geodetic2xyz(lat,lon,depth)
+%     Get out of the geographic coordinate system and into cartesian:
+%      [x,y,z]=geographic2xyz(lat,lon,depth)
 %
-%    See also: XYZ2GEODETIC, GEOCENTRIC2XYZ, XYZ2GEOCENTRIC,
-%              GEODETIC2GEOCENTRIC, GEOCENTRIC2GEODETIC
+%    See also: XYZ2GEOGRAPHIC, GEOCENTRIC2XYZ, XYZ2GEOCENTRIC,
+%              GEOGRAPHIC2GEOCENTRIC, GEOCENTRIC2GEOGRAPHIC
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - scalar expansion, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
+%        Nov. 13, 2009 - name change: geodetic to geographic, minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 20:00 GMT
+%     Last Updated Nov. 13, 2009 at 20:15 GMT
 
 % todo:
 
@@ -52,7 +54,7 @@ else
         a=ellipsoid(1);
         f=ellipsoid(2);
     else
-        error('seizmo:geodetic2xyz:badEllipsoid',...
+        error('seizmo:geographic2xyz:badEllipsoid',...
             ['Ellipsoid must a 2 element vector specifying:\n'...
             '[equatorial_km_radius flattening(<1)]']);
     end
@@ -64,14 +66,15 @@ nx=prod(sx); ny=prod(sy); nz=prod(sz);
 
 % basic check inputs
 if(~isnumeric(lat) || ~isnumeric(lon) || ~isnumeric(depth))
-    error('seizmo:geodetic2xyz:nonNumeric','All inputs must be numeric!');
+    error('seizmo:geographic2xyz:nonNumeric',...
+        'All inputs must be numeric!');
 elseif(any([nx ny nz]==0))
-    error('seizmo:geodetic2xyz:unpairedCoord',...
+    error('seizmo:geographic2xyz:unpairedCoord',...
         'Coordinate inputs must be nonempty arrays!');
 elseif((~isequal(sx,sy) && all([nx ny]~=1)) ||...
        (~isequal(sx,sz) && all([nx nz]~=1)) ||...
        (~isequal(sz,sy) && all([nz ny]~=1)))
-    error('seizmo:geodetic2xyz:unpairedCoord',...
+    error('seizmo:geographic2xyz:unpairedCoord',...
         'Coordinate inputs must be scalar or equal sized arrays!');
 end
 

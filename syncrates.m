@@ -1,18 +1,29 @@
-function [data]=syncrates(data,sr)
+function [data]=syncrates(data,sr,tol)
 %SYNCRATES    Resample SEIZMO records to a common sample rate
 %
 %    Usage:    data=syncrates(data,sr)
+%              data=syncrates(data,sr,tol)
 %
 %    Description: SYNCRATES(DATA,SR) syncronizes the sample rates of SEIZMO 
 %     records in DATA to the sample rate SR.  A fir filter is used to
 %     avoid aliasing issues, but this can cause edge effects if the records
 %     deviate from zero strongly at the start/end of the record.  Typically
 %     using REMOVETREND and TAPER on records beforehand helps to limit the
-%     edge effects.  Uses the Matlab function resample (Signal Processing
-%     Toolbox).
+%     edge effects.  Uses the Matlab function RESAMPLE (Signal Processing
+%     Toolbox) and RAT (see Notes below!).
+%
+%     SYNCRATES(DATA,SR,TOL) specifies the maximum tolerance TOL that the
+%     fraction of 2 small integers must match the ratio of the old and new
+%     sample rates of a record.  The integers specify the upsampling and
+%     downsampling portions of the resampling operation.  See function RAT
+%     for more details.  The default TOL is 1e-6:
+%       abs(Up/Down - New/Old) / (New/Old) <= 1e-6
 %
 %    Notes:
 %     - requires evenly sampled data (use INTERPOLATE for uneven data)
+%     - Matlab r2007b function RAT has a bug in it - change line 116ish to:
+%        if(x==0) || (abs((C(1,1)/C(2,1)-X(j))/X(j))<=max(tol,eps(X(j))))
+%       This will force RAT to function as described.
 %
 %    Header Changes: DELTA, NPTS, DEPMEN, DEPMIN, DEPMAX, E
 %
@@ -38,14 +49,17 @@ function [data]=syncrates(data,sr)
 %        June 25, 2009 - update for RECORD2MAT/MAT2RECORD, process records
 %                        individually, minor bug fix for rare case when
 %                        resample does not work
+%        Nov. 26, 2009 - document RAT bug, alter RAT call slightly to force
+%                        better accuracy of the resampling operation, add
+%                        TOL argument, fix NPTS handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Nov. 26, 2009 at 15:20 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
+msg=nargchk(2,3,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
@@ -65,6 +79,12 @@ if(~isnumeric(sr) || ~isscalar(sr) || sr<=0)
         'SR must be a positive numeric scalar!');
 end
 
+% check tol
+if(nargin==2 || isempty(tol)); tol=1e-6; end
+if(~isscalar(tol) || ~isreal(tol))
+    error('seizmo:syncrates:badInput','TOL must be a scalar real!');
+end
+
 % require evenly sampled records only
 if(any(~strcmpi(getlgc(data,'leven'),'true')))
     error('seizmo:syncrates:evenlySpacedOnly',...
@@ -79,15 +99,15 @@ if(any(strcmp(iftype,'General XYZ (3-D) file')))
 end
 
 % get header info
-[delta,b,npts]=getheader(data,'delta','b','npts');
+[delta,b]=getheader(data,'delta','b');
 
 % find fraction numerator/denominator of sampling
 % rate ratio expressed as integers
-[n,d]=rat(delta*sr);
+[n,d]=rat(delta*sr,tol);
 
 % loop over every record
 nrecs=numel(data);
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+depmen=nan(nrecs,1); depmin=depmen; depmax=depmen; npts=depmen;
 for i=1:nrecs
     % skip dataless
     if(isempty(data(i).dep)); continue; end
@@ -99,6 +119,7 @@ for i=1:nrecs
     try
         data(i).dep=oclass(resample(double(data(i).dep),n(i),d(i)));
     catch
+        disp(['Had some trouble resampling record: ' num2str(i)])
         % interpolate to a sample rate at least 4 times the current
         % AND the desired sample rates to preserve the data and allow
         % for decimation.  here we find the lowest multiple of the
@@ -113,14 +134,18 @@ for i=1:nrecs
         data(i).dep=oclass(resample(double(data(i).dep),1,lm));
     end
     
+    % get npts
+    npts(i)=size(data(i).dep,1);
+    
     % get dep*
-    depmen(i)=mean(data(i).dep(:)); 
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
+    if(npts(i))
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+    end
 end
 
 % update header
-npts=floor((npts-1).*n./d)+1; npts(npts<0)=0;
 data=changeheader(data,'delta',1/sr,'npts',npts,'e',b+(npts-1)./sr,...
     'depmen',depmen,'depmin',depmin,'depmax',depmax);
 

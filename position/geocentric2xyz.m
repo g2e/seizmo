@@ -22,17 +22,18 @@ function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 %     Find out how far a position is from the equatorial plane (z):
 %      [x,y,z]=geocentric2xyz(lat,lon,depth,r)
 %
-%    See also: XYZ2GEOCENTRIC, XYZ2GEODETIC, GEODETIC2XYZ,
-%              GEODETIC2GEOCENTRIC, GEOCENTRIC2GEODETIC
+%    See also: XYZ2GEOCENTRIC, XYZ2GEOGRAPHIC, GEOGRAPHIC2XYZ,
+%              GEOGRAPHIC2GEOCENTRIC, GEOCENTRIC2GEOGRAPHIC
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - scalar expansion, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
+%        Nov. 13, 2009 - name change: geodetic to geographic
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 20:10 GMT
+%     Last Updated Nov. 13, 2009 at 20:15 GMT
 
 % todo:
 
@@ -46,7 +47,8 @@ nx=prod(sx); ny=prod(sy); nz=prod(sz);
 
 % basic check inputs
 if(~isnumeric(lat) || ~isnumeric(lon) || ~isnumeric(radius))
-    error('seizmo:geocentric2xyz:nonNumeric','All inputs must be numeric!');
+    error('seizmo:geocentric2xyz:nonNumeric',...
+        'All inputs must be numeric!');
 elseif(any([nx ny nz]==0))
     error('seizmo:geocentric2xyz:unpairedCoord',...
         'Coordinate inputs must be nonempty arrays!');

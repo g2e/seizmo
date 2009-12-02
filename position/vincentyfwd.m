@@ -6,9 +6,9 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %              [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az,[a f],tol)
 %
 %    Description: [LAT2,LON2,BAZ]=VINCENTYFWD(LAT1,LON1,DIST,AZ) returns
-%     geodetic latitudes LAT2 and longitudes LON2 of destination points, as
+%     geographic latitudes LAT2 & longitudes LON2 of destination points, as
 %     well as the backazimuths BAZ, given the distances DIST and forward
-%     azimuths AZ from initial points with geodetic latitudes LAT1 and
+%     azimuths AZ from initial points with geographic latitudes LAT1 and
 %     longitudes LON1 on the WGS-84 reference ellipsoid.  Inputs are all in
 %     degrees except DIST which must be in kilometers.  Outputs are all in
 %     degrees.  LAT1 and LON1 must be scalar or nonempty same-size arrays
@@ -35,7 +35,7 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %        the Ellipsoid with Application of Nested Equations, Survey Review,
 %        Vol. XXII, No. 176, pp. 88-93.
 %       and assume the reference ellipsoid WGS-84 unless another is given.
-%     - Latitudes are geodetic (0 deg lat == equator, range -90<=lat<=90)
+%     - Latitudes are geographic (0 deg lat == equator, range -90<=lat<=90)
 %     - Longitudes are returned in the range -180<lon<=180
 %     - Azimuths are returned in the range 0<=az<=360
 %
@@ -50,9 +50,10 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %        Oct. 26, 2008 - improved scalar expansion, allow specifying the
 %                        tolerance, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Nov. 13, 2009 - name change: geodetic to geographic
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Nov. 13, 2009 at 20:15 GMT
 
 % todo:
 
@@ -125,7 +126,7 @@ if(n4==1); dist=repmat(stla,sz1); az=repmat(stlo,sz1); end
 % number of pairs
 n=size(evla);
 
-% check lats are within -90 to 90 (Geodetic Latitude φ)
+% check lats are within -90 to 90 (Geographic Latitude φ)
 if(any(abs(evla)>90))
     error('seizmo:vincentyfwd:latitudeOutOfRange',...
         'Starting latitude out of range (-90 to 90)');

@@ -2,15 +2,15 @@ function [report]=seizmocheck(data,varargin)
 %SEIZMOCHECK    Validate SEIZMO data structure
 %
 %    Usage:    msg=seizmocheck(data)
-%              msg=seizmocheck(data,'requiredfield',...,'requiredfield')
+%              msg=seizmocheck(data,'reqfield1',...,'reqfieldN')
 %
 %    Description: SEIZMOCHECK(DATA) returns an appropriate error message 
 %     structure if the input variable fails certain SEIZMO data structure 
 %     requirements.  The output structure contains the fields 'identifier'
 %     and 'message' following Matlab error report standards.
 %
-%     SEIZMOCHECK(DATA,FIELD1,...,FIELDN) allows more fields to be required
-%     in addition to the default ones.  FIELD must be a string.
+%     SEIZMOCHECK(DATA,'REQFIELD1',...,'REQFIELDN') allows more fields to
+%     be required in addition to the default ones.
 %
 %    Notes:
 %     - Current SEIZMO Structure Requirements
@@ -64,9 +64,10 @@ function [report]=seizmocheck(data,varargin)
 %        Sep. 11, 2009 - added misc field
 %        Oct.  5, 2009 - added warnings for multi-filetype/version/endian
 %        Oct.  6, 2009 - use new function ISVALIDSEIZMO (R14SP1 fix)
+%        Nov. 18, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 18:30 GMT
+%     Last Updated Nov. 18, 2009 at 20:50 GMT
 
 % todo:
 

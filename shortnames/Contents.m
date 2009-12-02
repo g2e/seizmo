@@ -1,5 +1,5 @@
-% Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r104 Ararat 29-Oct-2009
+% Seismology Toolbox - shortnames
+% Version 0.6.0-r105 Ararat 2-Dec-2009
 %
 % Shortcut function names
 %ADDF   - ADDRECORDS                     - Add SEIZMO records

@@ -1,7 +1,7 @@
-% Matlab toolbox for the TauP Toolkit
-% Version 1.2.0-r01 Ararat 05-Sep-2009
+% Seismology Toolbox - mattaup
+% Version 0.6.0-r105 Ararat 2-Dec-2009
 %
-% MatTauP functions
+% TauP Toolkit functions
 %TAUP       - Invokes the TauP java applet
 %TAUPCURVE  - Calculate travel time curves using the TauP toolkit
 %TAUPPATH   - Calculate ray paths using the TauP toolkit

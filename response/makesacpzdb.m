@@ -28,10 +28,26 @@ function [db]=makesacpzdb(varargin)
 %
 %    Examples:
 %     To add-in some SAC PoleZero files to the main SACPZ database:
-%      load sacpzdb
+%      % load and flatten the main db
+%      sacpzdb_tmp=load('sacpzdb');
+%      sacpzdb_tmp=struct2cell(sacpzdb_tmp);
+%      sacpzdb_tmp=cat(1,sacpzdb_tmp{:});
+%      
+%      % create db from personal directory
 %      mysacpzdb=makesacpzdb('my/sacpz/dir');
-%      sacpzdb=cat(1,sacpzdb,mysacpzdb)
-%      save seizmo/data/sacpzdb sacpzdb  # NOTE: fix the path
+%
+%      % concatenate the dbs
+%      sacpzdb_tmp=cat(1,sacpzdb_tmp,mysacpzdb)
+%
+%      % break up db by network
+%      knetwk={sacpzdb_tmp.knetwk};
+%      nets=unique(knetwk);
+%      for i=1:numel(nets)
+%          sacpzdb.(nets{i})=sacpzdb_tmp(strcmpi(knetwk,nets(i)));
+%      end
+%      
+%      % save (NOTE: fix the path)
+%      save seizmo/response/sacpzdb -struct sacpzdb
 %
 %    See also: GETSACPZ, READSACPZ, PARSE_SACPZ_FILENAME, WRITESACPZ,
 %              APPLYSACPZ, REMOVESACPZ, DB2SACPZ, GENSACPZNAME
@@ -39,9 +55,10 @@ function [db]=makesacpzdb(varargin)
 %     Version History:
 %        Sep. 20, 2009 - initial version
 %        Sep. 23, 2009 - added informative output
+%        Nov.  2, 2009 - seizmoverbose support, fixed example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 23, 2009 at 21:35 GMT
+%     Last Updated Nov.  2, 2009 at 20:15 GMT
 
 % todo:
 
@@ -58,18 +75,25 @@ if(~iscellstr(varargin))
     error('seizmo:makesacpzdb:badInput','DIR must be a string!');
 end
 
+% verbosity
+verbose=seizmoverbose;
+
 % loop over directories
 db=cell(nin,1);
 for i=1:nin
-    % status update
-    disp(['SAC PoleZero Directory: ' varargin{i}])
+    % detail message
+    if(verbose)
+        disp(['SAC PoleZero Directory: ' varargin{i}])
+    end
     
     % get filelist for this directory
     files=xdir(varargin{i});
     filenames={files.name}.';
     
-    % status update
-    disp(['  Found ' sprintf('%d',numel(files)) ' Files']);
+    % detail message
+    if(verbose)
+        disp(['  Found ' sprintf('%d',numel(files)) ' Files']);
+    end
     
     % filter out invalid and parse valid
     [good,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filenames);
@@ -77,7 +101,9 @@ for i=1:nin
     
     % handle empty case
     if(isempty(files))
-        disp('  Found 0 Properly Formatted Filenames');
+        if(verbose)
+            disp('  Found 0 Properly Formatted Filenames');
+        end
         db{i}([],1)=struct('path',[],'name',[],'knetwk',[],'kstnm',[],...
             'kcmpnm',[],'khole',[],'b',[],'e',[],'z',[],'p',[],'k',[]);
         continue;
@@ -90,8 +116,10 @@ for i=1:nin
         'b',mat2cell(b,ones(n,1)),'e',mat2cell(e,ones(n,1)),'z',[],...
         'p',[],'k',[]);
     
-    % status update
-    disp(['  Found ' sprintf('%d',n) ' Properly Formatted Filenames']);
+    % detail message
+    if(verbose)
+        disp(['  Found ' sprintf('%d',n) ' Properly Formatted Filenames']);
+    end
     
     % now read in the PoleZero info
     good=true(n,1);
@@ -109,8 +137,11 @@ for i=1:nin
     % remove invalid
     db{i}=db{i}(good,1);
     
-    % status update
-    disp(['  Read In ' sprintf('%d',sum(good)) ' SAC PoleZero Files!'])
+    % detail message
+    if(verbose)
+        disp(...
+            ['  Read In ' sprintf('%d',sum(good)) ' SAC PoleZero Files!']);
+    end
 end
 
 % combine directory dbs

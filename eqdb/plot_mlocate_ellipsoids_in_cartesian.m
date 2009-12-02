@@ -14,7 +14,7 @@ cmap=hsv(cint);
 % wireframe parameters
 wflatlinelatint=15;
 wflonlinelonint=15;
-wfdepint=100;
+%wfdepint=100;
 wflatlinelonint=1;
 wflonlinelatint=1;
 
@@ -29,8 +29,8 @@ wflonlinelat=wflonlinelats(ones(numel(wflonlinelons),1),:).';
 wflonlinelon=wflonlinelons(ones(numel(wflonlinelats),1),:);
 
 % convert wireframe to xyz
-[wfx1,wfy1,wfz1]=geodetic2xyz(wflatlinelat,wflatlinelon,zeros(size(wflatlinelat)));
-[wfx2,wfy2,wfz2]=geodetic2xyz(wflonlinelat,wflonlinelon,zeros(size(wflonlinelat)));
+[wfx1,wfy1,wfz1]=geographic2xyz(wflatlinelat,wflatlinelon,zeros(size(wflatlinelat)));
+[wfx2,wfy2,wfz2]=geographic2xyz(wflonlinelat,wflonlinelon,zeros(size(wflonlinelat)));
 
 % plot wireframe
 h=figure;
@@ -86,8 +86,8 @@ for n=1:length(files)
         zmin=min([zmin; z(:)]);
         zmax=max([zmax; z(:)]);
         
-        % translate geodetic position to cartesian
-        [x(:),y(:),z(:)]=geodetic2xyz(x(:),y(:),z(:));
+        % translate geographic position to cartesian
+        [x(:),y(:),z(:)]=geographic2xyz(x(:),y(:),z(:));
         
         % draw ellipsoid (cycle ellipsoid coloring every 100km)
         figure(h);

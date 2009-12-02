@@ -1,5 +1,5 @@
-% Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r83 Ararat 06-Sep-2009
+% Seismology Toolbox - tomo
+% Version 0.6.0-r105 Ararat 2-Dec-2009
 %
 % Tomography functions
 %EASYTOMO - Generates a random, simple tomography problem

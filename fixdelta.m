@@ -2,6 +2,7 @@ function [data]=fixdelta(data,tol)
 %FIXDELTA    Fix sample spacing for SEIZMO records
 %
 %    Usage:    data=fixdelta(data)
+%              data=fixdelta(data,tol)
 %
 %    Description: DATA=FIXDELTA(DATA) modifies the sample spacing (DELTA
 %     header field) of records in DATA to be the decimal equivalent of a
@@ -12,11 +13,14 @@ function [data]=fixdelta(data,tol)
 %
 %     DATA=FIXDELTA(DATA,TOL) allows specifying the maximum tolerance TOL
 %     that the fraction of 2 small integers must match DELTA within.  For
-%     example, a tolerance of 1e-4 requires the new sample rate to be
-%     within 0.01% of the original sample rate.  The default tolerance is
-%     1e-6 (0.0001% of the original sample rate).
+%     example, a tolerance of 1e-4 requires the new sample spacing to be
+%     within 0.01% of the original sample spacing.  The default tolerance
+%     is 1e-5 (0.001% of the original sample spacing).
 %
 %    Notes:
+%     - Matlab r2007b function RAT has a bug in it - change line 116ish to:
+%        if(x==0) || (abs((C(1,1)/C(2,1)-X(j))/X(j))<=max(tol,eps(X(j))))
+%       This will force RAT to function as described.
 %
 %    Header changes: DELTA
 %
@@ -37,9 +41,11 @@ function [data]=fixdelta(data,tol)
 %        Dec.  5, 2008 - tolerance option added
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Oct.  5, 2009 - doc update
+%        Nov. 26, 2009 - document RAT bug, change default to not vary with
+%                        input (RAT's default does so we choose a default)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 21:45 GMT
+%     Last Updated Nov. 26, 2009 at 07:05 GMT
 
 % todo:
 
@@ -48,8 +54,8 @@ msg=nargchk(1,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % default tolerance
-if(nargin==1 || ~isscalar(tol) || ~isnumeric(tol))
-    [n,d]=rat(getheader(data,'delta'));
+if(nargin==1 || ~isscalar(tol) || ~isreal(tol))
+    [n,d]=rat(getheader(data,'delta'),1e-5);
 else
     [n,d]=rat(getheader(data,'delta'),tol);
 end

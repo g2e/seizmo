@@ -1,17 +1,17 @@
-function [lat,lon,depth]=geodetic2geocentric(lat,lon,depth,ellipsoid)
-%GEODETIC2GEOCENTRIC    Converts coordinates from geodetic to geocentric
+function [lat,lon,depth]=geographic2geocentric(lat,lon,depth,ellipsoid)
+%GEOGRAPHIC2GEOCENTRIC    Converts coordinates from geographic 2 geocentric
 %
-%    Usage:    [lat,lon,depth]=geodetic2geocentric(lat,lon,depth)
-%              [lat,lon,depth]=geodetic2geocentric(lat,lon,depth,[a f])
+%    Usage:    [lat,lon,depth]=geographic2geocentric(lat,lon,depth)
+%              [lat,lon,depth]=geographic2geocentric(lat,lon,depth,[a f])
 %
-%    Description: [LAT,LON,DEPTH]=GEODETIC2GEOCENTRIC(LAT,LON,DEPTH) 
-%     converts arrays of coordinates from geodetic to geocentric latitude,
-%     longitude, depth.  LAT and LON are in degrees.  DEPTH is in
+%    Description: [LAT,LON,DEPTH]=GEOGRAPHIC2GEOCENTRIC(LAT,LON,DEPTH) 
+%     converts arrays of coordinates from geographic to geocentric
+%     latitude, longitude, depth.  LAT and LON are in degrees.  DEPTH is in
 %     kilometers.  The reference ellipsoid is assumed to be WGS-84.  The
 %     volumetric radius is derived from the ellipsoid parameters to find
 %     the spherical depth.
 %
-%     [LAT,LON,DEPTH]=GEODETIC2GEOCENTRIC(LAT,LON,DEPTH,[A F]) allows
+%     [LAT,LON,DEPTH]=GEOGRAPHIC2GEOCENTRIC(LAT,LON,DEPTH,[A F]) allows
 %     specifying the ellipsoid parameters A (equatorial radius in 
 %     kilometers) and F (flattening).  This is compatible with Matlab's 
 %     Mapping Toolbox function ALMANAC.
@@ -20,19 +20,20 @@ function [lat,lon,depth]=geodetic2geocentric(lat,lon,depth,ellipsoid)
 %
 %    Examples:
 %     Get your station locations into geocentric coordinates:
-%      [lat,lon,depth]=geodetic2geocentric(stla,stlo,(stdp-stel)/1000)
+%      [lat,lon,depth]=geographic2geocentric(stla,stlo,(stdp-stel)/1000)
 %
-%    See also: GEOCENTRIC2GEODETIC, GEODETIC2XYZ, XYZ2GEOCENTRIC,
-%              XYZ2GEODETIC, GEOCENTRIC2XYZ
+%    See also: GEOCENTRIC2GEOGRAPHIC, GEOGRAPHIC2XYZ, XYZ2GEOCENTRIC,
+%              XYZ2GEOGRAPHIC, GEOCENTRIC2XYZ
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - scalar expansion, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
+%        Nov. 13, 2009 - name change: geodetic to geographic
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 20:05 GMT
+%     Last Updated Nov. 13, 2009 at 20:15 GMT
 
 % todo:
 
@@ -52,7 +53,7 @@ else
         a=ellipsoid(1);
         f=ellipsoid(2);
     else
-        error('seizmo:geodetic2geocentric:badEllipsoid',...
+        error('seizmo:geographic2geocentric:badEllipsoid',...
             ['Ellipsoid must a 2 element vector specifying:\n'...
             '[equatorial_km_radius flattening(<1)]']);
     end
@@ -62,7 +63,7 @@ end
 r=(a^3*(1-f))^(1/3);
 
 % convert to geocentric (via xyz)
-[x,y,z]=geodetic2xyz(lat,lon,depth,[a f]);
+[x,y,z]=geographic2xyz(lat,lon,depth,[a f]);
 [lat,lon,depth]=xyz2geocentric(x,y,z,r);
 
 end

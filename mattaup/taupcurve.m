@@ -94,9 +94,10 @@ function tt=taupcurve(varargin)
 %                        breakage due to input/output changes, multiple
 %                        calls to PHASES allowed
 %        Sep.  5, 2009 - minor doc update
+%        Nov. 13, 2009 - dropped some import calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 21:00 GMT
+%     Last Updated Nov. 13, 2009 at 17:25 GMT
 
 % todo:
 
@@ -107,10 +108,6 @@ end
 
 % initialize java code
 import edu.sc.seis.TauP.*;
-import java.io.*;
-import java.lang.*;
-import java.util.*;
-import java.util.zip.*;
 
 % default options
 model='iasp91';

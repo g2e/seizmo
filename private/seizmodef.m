@@ -66,9 +66,10 @@ function [def]=seizmodef(filetype,version,usecache)
 %        Sep. 29, 2009 - added delaz vgrp
 %        Oct.  2, 2009 - added gcp vgrp (just baz)
 %        Oct. 16, 2009 - removed rmfield usage (its slow)
+%        Nov.  2, 2009 - added cmp vgrp ([cmpinc cmpaz])
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2009 at 06:45 GMT
+%     Last Updated Nov.  2, 2009 at 18:15 GMT
 
 % todo:
 
@@ -166,6 +167,7 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.vgrp.dep={'depmin' 'depmen' 'depmax'};
     def.vgrp.st={'stla' 'stlo' 'stel' 'stdp'};
     def.vgrp.ev={'evla' 'evlo' 'evel' 'evdp'};
+    def.vgrp.cmp={'cmpinc' 'cmpaz'};
     def.vgrp.delaz={'gcarc' 'az' 'baz' 'dist'};
     def.vgrp.gcp={'baz'};
     def.vgrp.nz={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec'};

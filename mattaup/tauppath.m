@@ -140,9 +140,11 @@ function [tt]=tauppath(varargin)
 %        Sep.  2, 2009 - allow multiple calls to PHASES
 %        Sep.  5, 2009 - minor doc update
 %        Sep. 30, 2009 - changed abssawmod to abslatmod
+%        Nov. 13, 2009 - dropped abslatmod for getModuloDistDeg, dropped
+%                        some import calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 30, 2009 at 15:40 GMT
+%     Last Updated Nov. 13, 2009 at 17:15 GMT
 
 % todo:
 
@@ -153,10 +155,6 @@ end
 
 % initialize java code
 import edu.sc.seis.TauP.*;
-import java.io.*;
-import java.lang.*;
-import java.util.*;
-import java.util.zip.*;
 
 % default options
 model='iasp91';
@@ -292,7 +290,7 @@ end
 
 % debug
 %disp(inArgs);
-%arrivals=MatTauP_Path.run_path(inArgs);
+arrivals=MatTauP_Path.run_path(inArgs);
 
 % attempt run
 try
@@ -373,8 +371,7 @@ if(nargout==0)
     for ii=1:arrivals.length
         % list phase info
         fprintf(' %7.2f  %6.1f   %-10s   %7.2f   %7.3f    %7.2f  = %-10s\n',...
-            abslatmod(arrivals(ii).getDistDeg,180),...
-            arrivals(ii).getSourceDepth,...
+            arrivals(ii).getModuloDistDeg,arrivals(ii).getSourceDepth,...
             char(arrivals(ii).getName),arrivals(ii).getTime,...
             arrivals(ii).getRayParam/R2D,arrivals(ii).getDistDeg,...
             char(arrivals(ii).getPuristName));
@@ -438,23 +435,4 @@ function [cx,cy]=circle2(r,steps)
     ang=0:2*pi/steps:pi*2;
     cx=sin(-pi/4+ang)*r;
     cy=cos(-pi/4+ang)*r;
-end
-
-function [c]=abslatmod(a,b)
-% returns distance range always as the minor arc length (0-180deg)
-
-n=round(0.5.*a./b);
-s=1-2*mod(n,2);
-c=s.*(a-2.*n.*b);
-if(isscalar(b))
-    if(b==0)
-        c=a;
-    end
-else
-    d=b==0;
-    c(d)=a(d);
-end
-
-c=abs(c);
-
 end

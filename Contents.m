@@ -1,5 +1,5 @@
-% Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r104 Ararat 22-Oct-2009
+% Seismology Toolbox - seizmo
+% Version 0.6.0-r105 Ararat 2-Dec-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -70,6 +70,7 @@
 %PLOT2               - Overlay plot of SEIZMO data records
 %PLOTCONFIG          - Returns default configuration structure for SEIZMO plotting
 %PLOTDENDRO          - Plots correlation linkage and seismograms
+%PLOTSTATIONS        - Plots station and earthquake locations of SEIZMO records
 %PREWHITEN           - Prewhiten SEIZMO data records for spectral operations
 %QUICKSNR            - Quick estimation of SNR for SEIZMO records
 %READDATA            - Read SEIZMO data from datafiles

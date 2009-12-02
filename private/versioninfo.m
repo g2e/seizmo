@@ -1,7 +1,8 @@
-function [h,idx]=versioninfo(data)
+function [h,idx]=versioninfo(data,varargin)
 %VERSIONINFO    Returns version info for SEIZMO data records
 %
 %    Usage:    [h,idx]=versioninfo(data)
+%              [h,idx]=versioninfo(data,'reqfield1',...,'reqfieldN')
 %
 %    Description: [H,IDX]=VERSIONINFO(DATA) returns all necessary version
 %     definitions pertaining to the records in the SEIZMO structure DATA in
@@ -9,6 +10,9 @@ function [h,idx]=versioninfo(data)
 %     gives the index in H that corresponds to that record's version
 %     definition. This is an internal function to reduce rampant code
 %     repetition.
+%
+%     [H,IDX]=VERSIONINFO(DATA,'REQFIELD1',...,'REQFIELDN') passes
+%     additional required SEIZMO struct fields on to SEIZMOCHECK.
 %
 %    Notes:
 %
@@ -30,18 +34,19 @@ function [h,idx]=versioninfo(data)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Sep.  7, 2009 - fixed multi-filetype bottleneck
+%        Nov. 18, 2009 - allow extra input into seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  7, 2009 at 07:05 GMT
+%     Last Updated Nov. 18, 2009 at 20:45 GMT
 
 % todo:
 
 % check number of inputs
-msg=nargchk(1,1,nargin);
+msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data);
+msg=seizmocheck(data,varargin{:});
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % get filetype and version

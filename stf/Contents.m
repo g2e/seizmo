@@ -1,5 +1,5 @@
-% Seismology Toolbox for Matlab and Octave
-% Version 0.6.0-r104 Ararat 29-Oct-2009
+% Seismology Toolbox - stf
+% Version 0.6.0-r105 Ararat 2-Dec-2009
 %
 % Source time function functions
 %CONVOLVE_SOURCE_TIMEFUNCTION   - Convolve source function on SEIZMO records
