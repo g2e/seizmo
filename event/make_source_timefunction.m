@@ -17,8 +17,8 @@ function [x,t]=make_source_timefunction(delta,hwidth,type)
 %     'TRIANGLE'.  Type may be a cell array of strings.
 %
 %    Notes:
-%     - gaussian-type functions extend from -1.5*HWIDTH to 1.5*HWIDTH
-%     - triangle-type functions extend from -HWIDTH to HWIDTH
+%     - gaussian-type functions extend from about -1.5*HWIDTH to 1.5*HWIDTH
+%     - triangle-type functions extend from about -HWIDTH to HWIDTH
 %
 %    Examples:
 %     Make source functions for all records in a SEIZMO dataset:

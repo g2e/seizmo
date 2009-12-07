@@ -44,6 +44,24 @@ possible extras
 	- merge uneven & multi-rate
 changeheader
 	- output nan for undefined? (nan already output for unknown field)
+3-cmp records
+	force as ZNE
+	how to handle gaps/overlaps
+	how to handle non-synced breaks in components
+	movies/plots of 3-d particle motion
+	movies/plots of 2-d particle motion
+getpeaks
+markpeaks
+verbosity support
+try/catch
+routines to plot models
+routines to plot raypaths
+function to make g matrix for sph tri stuff
+array functions
+	stacks
+	beams
+	fk
+	vespa
 
 0.7.0 - css?
 ------------

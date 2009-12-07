@@ -87,7 +87,8 @@ try
         & ((b(:,1)==2006 & b(:,2)>135) | b(:,1)==2007);
     if(any(fixme))
         if(v)
-            disp(['Records:\n' sprintf('%d ',find(fixme)) ...
+            warning('seizmo:fix_cameroon:CM02',...
+                ['Records:\n' sprintf('%d ',find(fixme)) ...
                 '\nXB.CM02 amplitudes divided by 32!']);
         end
         data(fixme)=divide(data(fixme),32);
@@ -120,7 +121,8 @@ try
         & b(:,1)==2006 & b(:,2)<185;
     if(any(fixme))
         if(v)
-            disp(['Records:\n' sprintf('%d ',find(fixme)) ...
+            warning('seizmo:fix_cameroon:CM08',...
+                ['Records:\n' sprintf('%d ',find(fixme)) ...
                 '\nXB.CM08 timing adjusted significantly (>600s)!']);
         end
         % get time since 2006.001 00:00:00.000
@@ -154,7 +156,8 @@ try
         & (b(:,1)==2006 | b(:,1)==2007);
     if(any(fixme))
         if(v)
-            disp(['Records:\n' sprintf('%d ',find(fixme)) ...
+            warning('seizmo:fix_cameroon:CM14',...
+                ['Records:\n' sprintf('%d ',find(fixme)) ...
                 '\nXB.CM14.0?.?HE amplitudes multiplied by 78.3!']);
         end
         data(fixme)=multiply(data(fixme),78.3);

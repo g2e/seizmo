@@ -1,5 +1,5 @@
 % Seismology Toolbox - time
-% Version 0.6.0-r105 Ararat 2-Dec-2009
+% Version 0.6.0-r106 Ararat 7-Dec-2009
 %
 % Time functions
 %CAL2DOY             - Convert Year & Month & Day of Month to Year & Day of Year

@@ -40,9 +40,10 @@ function [data]=seizmofun(data,fun)
 %                        move usage up
 %        Oct. 15, 2009 - no header checking, updates header for npts, ncmp,
 %                        dep*, catches errors to keep checking correct
+%        Dec.  4, 2009 - whoops, forgot NRECS
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 15, 2009 at 17:00 GMT
+%     Last Updated Dec.  4, 2009 at 17:45 GMT
 
 % todo:
 
@@ -60,9 +61,13 @@ set_seizmocheck_state(false);
 
 % try applying function
 try
+    % number of records
+    nrecs=numel(data);
+    
     % check input fun is a function
     if(~isa(fun,'function_handle'))
-        error('seizmo:seizmofun:badInput','FUN must be a function handle!');
+        error('seizmo:seizmofun:badInput',...
+            'FUN must be a function handle!');
     end
     
     % apply function to records

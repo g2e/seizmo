@@ -22,7 +22,7 @@ function [data]=fixdelta(data,tol)
 %        if(x==0) || (abs((C(1,1)/C(2,1)-X(j))/X(j))<=max(tol,eps(X(j))))
 %       This will force RAT to function as described.
 %
-%    Header changes: DELTA
+%    Header changes: DELTA, E
 %
 %    Examples:
 %     Force double precision and update the delta field:
@@ -43,9 +43,10 @@ function [data]=fixdelta(data,tol)
 %        Oct.  5, 2009 - doc update
 %        Nov. 26, 2009 - document RAT bug, change default to not vary with
 %                        input (RAT's default does so we choose a default)
+%        Dec.  4, 2009 - update E, only fix evenly spaced
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 26, 2009 at 07:05 GMT
+%     Last Updated Dec.  4, 2009 at 06:35 GMT
 
 % todo:
 
@@ -53,14 +54,66 @@ function [data]=fixdelta(data,tol)
 msg=nargchk(1,2,nargin);
 if(~isempty(msg)); error(msg); end
 
-% default tolerance
-if(nargin==1 || ~isscalar(tol) || ~isreal(tol))
-    [n,d]=rat(getheader(data,'delta'),1e-5);
-else
-    [n,d]=rat(getheader(data,'delta'),tol);
+% check data structure
+msg=seizmocheck(data);
+if(~isempty(msg)); error(msg.identifier,msg.message); end
+
+% turn off struct checking
+oldseizmocheckstate=get_seizmocheck_state;
+set_seizmocheck_state(false);
+
+% attempt header check
+try
+    % check header
+    data=checkheader(data);
+    
+    % turn off header checking
+    oldcheckheaderstate=get_checkheader_state;
+    set_checkheader_state(false);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
 
-% fix delta
-data=changeheader(data,'delta',n./d);
+% attempt rest
+try
+    % grab header info
+    [leven,delta,b,npts]=getheader(data,'leven','delta','b','npts');
+    
+    % only work on evenly spaced
+    es=strcmpi(leven,'false');
+    v=seizmoverbose;
+    if(any(es) && v)
+        warning('seizmo:fixdelta:Uneven',...
+            ['Record(s):\n' sprintf('%d ',find(es)) ...
+            '\nNot fixing DELTA field for unevenly sampled record(s)!']);
+    end
+    es=~es;
+
+    % default tolerance
+    if(nargin==1 || ~isscalar(tol) || ~isreal(tol))
+        [n,d]=rat(delta,1e-5);
+    else
+        [n,d]=rat(delta,tol);
+    end
+
+    % fix delta
+    data(es)=changeheader(data(es),'delta',n(es)./d(es),...
+        'e',b(es)+(npts(es)-1).*n(es)./d(es));
+
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    set_checkheader_state(oldcheckheaderstate);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    set_checkheader_state(oldcheckheaderstate);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

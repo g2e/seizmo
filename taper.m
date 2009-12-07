@@ -99,9 +99,10 @@ function [data]=taper(data,w,o,type,opt)
 %        Sep. 23, 2009 - major code revision, changed input args, allow for
 %                        1 entry per record, more checks, use new taperfun
 %                        function to handle taper building
+%        Dec.  4, 2009 - drop linspace usage (speed/accuracy decision)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 23, 2009 at 18:15 GMT
+%     Last Updated Dec.  4, 2009 at 18:45 GMT
 
 % todo:
 
@@ -242,7 +243,7 @@ for i=1:nrecs
         % time series and general xy records
         if(strcmp(iftype(i),'itime') || strcmp(iftype(i),'ixy'))
             % get normalized time
-            times=(linspace(b(i),e(i),npts(i))-b(i))/(e(i)-b(i));
+            times=((0:(npts(i)-1))*delta(i))/(e(i)-b(i));
             
             % get tapers
             taper1=taperfun(type{i,1},times,lim1(i,:),opt(i,1));
@@ -254,8 +255,8 @@ for i=1:nrecs
                 .*taper2(:,ones(1,ncmp(i)));
         else % spectral
             % get normalized frequency
-            freq=[linspace(b(i),e(i),npts(i)/2+1) linspace( ...
-                e(i)-delta(i),b(i)+delta(i),npts(i)/2-1)]/(e(i)-b(i));
+            freq=[(0:(npts(i)/2))*delta(i) ...
+                ((npts(i)/2-1):-1:1)*delta(i)]/e(i);
             
             % get tapers
             taper1=taperfun(type{i,1},freq,lim1(i,:),opt(i,1));

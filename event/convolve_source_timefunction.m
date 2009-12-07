@@ -28,8 +28,8 @@ function [data,x,t]=convolve_source_timefunction(data,varargin)
 %     for more info.
 %
 %    Notes:
-%     - gaussian-type functions extend from -1.5*HWIDTH to 1.5*HWIDTH
-%     - triangle-type functions extend from -HWIDTH to HWIDTH
+%     - gaussian-type functions extend from about -1.5*HWIDTH to 1.5*HWIDTH
+%     - triangle-type functions extend from about -HWIDTH to HWIDTH
 %
 %    Header changes: DEPMIN, DEPMEN, DEPMAX, NPTS, B, E
 %

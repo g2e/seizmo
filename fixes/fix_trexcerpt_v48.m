@@ -1,43 +1,38 @@
-function [data]=fix_db2sac_v48(data,knetwk)
-%FIX_DB2SAC_V48    Cleans up headers of SAC files created with DB2SAC
+function [data]=fix_trexcerpt_v48(data,knetwk)
+%FIX_TREXCERPT_V48    Cleans up headers of SAC files created with TREXCERPT
 %
-%    Usage:    data=fix_db2sac_v48(data,knetwk)
+%    Usage:    data=fix_TREXCERPT_v48(data,knetwk)
 %
-%    Description: DATA=FIX_DB2SAC_V48(DATA,KNETWK) fixes the headers of SAC
-%     files exported using DB2SAC from ANTELOPE version 4.8.  The fixes
-%     are:
+%    Description: DATA=FIX_TREXCERPT_V48(DATA,KNETWK) fixes the headers of
+%     SAC files exported using TREXCERPT from ANTELOPE version 4.8.  The
+%     fixes are:
 %     1. adjusts DELTA field slightly (single to double precision issue)
-%     2. sets IDEP field to 'IUNKN' (unknown units) - for db2sac -counts
+%     2. sets IDEP field to 'IUNKN' (unknown units)
 %     3. sets IZTYPE field to 'IB'
 %     4. sets KNETWK field to KNETWK (note this is the 2nd input argument)
 %     5. splits KCMPNM field to set KHOLE and KCMPNM
 %     6. sets empty KHOLE to '__'
 %     7. sets LOVROK to TRUE (allow overwrite)
-%     8. set USER7, USER8, NORID, NEVID to undefined
+%     8. set NORID, NEVID to undefined
+%     9. fixes E field
 %
 %    Notes:
-%     - SAC records created with DB2SAC may be off by 1 millisecond
-%       compared to records created with TREXCERPT.  No fix is available
-%       for this discrepancy.  A check appeared to show that TREXCERPT is
-%       accurate.
+%     - DEPMIN, DEPMEN, DEPMAX are set if the data is also read in
 %
 %    Header changes: DELTA, IDEP, IZTYPE, KNETWK, KCMPNM, KHOLE, LOVROK,
-%                    USER7, USER8, NORID, NEVID
+%                    NORID, NEVID, E, DEPMIN, DEPMEN, DEPMAX
 %
 %    Examples:
-%     Read, clean up, and overwrite some DB2SAC-made SAC files:
-%      w(fix_db2sac_v48(r('*')))
+%     Read, clean up, and overwrite some TREXCERPT-made SAC files:
+%      w(fix_trexcerpt_v48(r('*')))
 %
-%    See also: FIX_SOD_V222, FIX_RDSEED_V48, FIX_TREXCERPT_V48,
-%              FIX_CAMEROON
+%    See also: FIX_SOD_V222, FIX_RDSEED_V48, FIX_CAMEROON, FIX_DB2SAC_V48
 
 %     Version History:
-%        Dec.  1, 2009 - initial version
-%        Dec.  2, 2009 - no data requirement now
-%        Dec.  4, 2009 - USER7, USER8, NORID, NEVID unset
+%        Dec.  4, 2009 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2009 at 04:45 GMT
+%     Last Updated Dec.  4, 2009 at 05:45 GMT
 
 % todo:
 
@@ -90,8 +85,8 @@ try
     
     % update header
     data=changeheader(data,'idep','iunkn','iztype','ib','lovrok',true,...
-        'user7',nan,'user8',nan,'knetwk',knetwk,'kcmpnm',kcmpnm,...
-        'khole',khole,'nevid',nan,'norid',nan);
+        'knetwk',knetwk,'kcmpnm',kcmpnm,'khole',khole,...
+        'nevid',nan,'norid',nan);
 
     % toggle checking back
     set_seizmocheck_state(oldseizmocheckstate);

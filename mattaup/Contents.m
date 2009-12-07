@@ -1,5 +1,5 @@
 % Seismology Toolbox - mattaup
-% Version 0.6.0-r105 Ararat 2-Dec-2009
+% Version 0.6.0-r106 Ararat 7-Dec-2009
 %
 % TauP Toolkit functions
 %TAUP       - Invokes the TauP java applet

@@ -182,12 +182,14 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %        Sep.  9, 2009 - cleaned up on documentation
 %        Oct.  6, 2009 - dropped use of LOGICAL function
 %        Oct.  7, 2009 - replaced preallocation zeros w/ nan
+%        Dec.  7, 2009 - avoid divide by zero for autocorrelation==0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2009 at 18:30 GMT
+%     Last Updated Dec.  7, 2009 at 03:10 GMT
 
 % todo:
 % - vectorized gives different lag result if no peaks left
+% - make sure fft, sum, etc are given dim parameter
 
 % at least one input
 if(nargin<1)
@@ -333,14 +335,23 @@ else
         if(normxc)
             % note that padding x,y
             % adds offset here...
+            % one reason convolve does not work
             ZLACx=sqrt(sum(x.*flipud(x)));
             ZLACy=sqrt(sum(y.*flipud(y)));
+            
+            % avoid divide by zero
+            ZLACx(ZLACx==0)=eps;
+            ZLACy(ZLACy==0)=eps;
         end
     else
         CFy=conj(fft(y,nFFT));
         if(normxc)
             ZLACx=sqrt(sum(x.^2));
             ZLACy=sqrt(sum(y.^2));
+            
+            % avoid divide by zero
+            ZLACx(ZLACx==0)=eps;
+            ZLACy(ZLACy==0)=eps;
         end
     end
     
@@ -992,11 +1003,17 @@ if(convolve)
         % note that padding x,y
         % adds offset here...
         ZLAC=sqrt(sum(x.*flipud(x)));
+        
+        % avoid divide by zero
+        ZLAC(ZLAC==0)=eps;
     end
 else
     CF=conj(F);
     if(normxc)
         ZLAC=sqrt(sum(x.^2));
+        
+        % avoid divide by zero
+        ZLAC(ZLAC==0)=eps;
     end
 end
 

@@ -372,7 +372,7 @@ set_checkheader_state(oldcheckheaderstate);
 end
 
 function [recs]=impfilt(recs,fs,mirror,forward)
-%IMPREVFILT   Implements filter
+%IMPFILT   Implements filter
 %   Implements a filter design on SEIZMO data records and makes appropriate
 %   header updates.  Takes a mirror option which does pseudo-IC to limit 
 %   edge effects.  Works with multiple records.

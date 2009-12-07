@@ -1,5 +1,5 @@
 function [data]=fix_sod_v222(data)
-%FIX_SOD_V222    Cleans up header info for SAC files created with SOD
+%FIX_SOD_V222    Cleans up headers of SAC files created with SOD
 %
 %    Usage:    data=fix_sod_v222(data)
 %
@@ -20,14 +20,17 @@ function [data]=fix_sod_v222(data)
 %     Read, clean up, and overwrite some SOD-made SAC files:
 %      w(fix_sod_v222(r('*)))
 %
-%    See also: FIX_RDSEED_V48, FIX_DB2SAC_V48, FIX_CAMEROON
+%    See also: FIX_RDSEED_V48, FIX_DB2SAC_V48, FIX_TREXCERPT_V48,
+%              FIX_CAMEROON
 
 %     Version History:
 %        Nov. 23, 2009 - initial version
 %        Dec.  1, 2009 - minor doc update
+%        Dec.  2, 2009 - no data requirement now
+%        Dec.  4, 2009 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  1, 2009 at 22:45 GMT
+%     Last Updated Dec.  4, 2009 at 05:55 GMT
 
 % todo:
 
@@ -36,7 +39,7 @@ msg=nargchk(1,1,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-[h,idx]=versioninfo(data,'dep');
+[h,idx]=versioninfo(data);
 
 % get undefined values
 undef=getsubfield(h,'undef','ntype').';

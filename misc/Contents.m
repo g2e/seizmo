@@ -1,5 +1,5 @@
 % Seismology Toolbox - misc
-% Version 0.6.0-r105 Ararat 2-Dec-2009
+% Version 0.6.0-r106 Ararat 7-Dec-2009
 %
 % Miscellaneous Support functions
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
@@ -23,6 +23,7 @@
 %NEXTPOW2N           - Returns the next higher power of 2 for all array elements
 %ONEFILELIST         - Compiles multiple filelists into one
 %PRINT_TIME_LEFT     - Ascii progress bar
+%RAT                 - Rational approximation. (UNBUGGED VERSION)
 %READCSV             - Read in .csv formatted file as a structure
 %SLIDINGAVG          - Returns sliding-window average of data
 %SNR2MAXPHASEERROR   - Returns maximum narrow-band phase error based on SNR 

@@ -22,9 +22,10 @@ function [data]=removepolynomial(data,order)
 
 %     Version History:
 %        June 24, 2009 - initial version
+%        Dec.  4, 2009 - drop linspace usage (speed/accuracy decision)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Dec.  4, 2009 at 18:55 GMT
 
 % todo:
 
@@ -57,7 +58,7 @@ if(isscalar(order))
 end
 
 % header info
-[b,e,npts]=getheader(data,'b','e','npts');
+[delta,npts]=getheader(data,'delta','npts');
 leven=getlgc(data,'leven');
 
 % remove trend and update header
@@ -72,7 +73,7 @@ for i=1:numel(data)
     
     % evenly spaced
     if(strcmp(leven(i),'true'))
-        time=linspace(b(i),e(i),npts(i)).';
+        time=((0:npts(i)-1)*delta(i)).';
         for j=1:size(data(i).dep,2)
             data(i).dep(:,j)=data(i).dep(:,j) ...
                 -polyval(polyfit(time,data(i).dep(:,j),order(i)),time);

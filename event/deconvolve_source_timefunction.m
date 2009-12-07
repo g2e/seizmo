@@ -37,8 +37,8 @@ function [data,x,t]=deconvolve_source_timefunction(data,varargin)
 %     T.  See MAKE_SOURCE_TIMEFUNCTION for more info.
 %
 %    Notes:
-%     - gaussian-type functions extend from -1.5*HWIDTH to 1.5*HWIDTH
-%     - triangle-type functions extend from -HWIDTH to HWIDTH
+%     - gaussian-type functions extend from about -1.5*HWIDTH to 1.5*HWIDTH
+%     - triangle-type functions extend from about -HWIDTH to HWIDTH
 %
 %    Header changes: DEPMIN, DEPMEN, DEPMAX
 %

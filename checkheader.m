@@ -830,7 +830,7 @@ if(~isempty(badrec))
     report.identifier='seizmo:checkheader:undefREF';
     report.message=['Reference time fields for record(s):\n' ...
         sprintf('%d ',badrec) ...
-        'have undefined values!'];
+        '\nhave undefined values!'];
     switch opt
         case 'ERROR'
             error(report.identifier,report.message);

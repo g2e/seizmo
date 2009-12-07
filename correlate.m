@@ -181,9 +181,10 @@ function [data]=correlate(data1,varargin)
 %        Oct.  7, 2009 - slave records NZ* info passed on, fixed record
 %                        names in 2 dataset correlogram case, fixed ST/EV
 %                        info in 1 dataset correlogram case
+%        Dec.  5, 2009 - calculates delaz stuff
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2009 at 18:15 GMT
+%     Last Updated Dec.  5, 2009 at 00:45 GMT
 
 % todo:
 
@@ -399,6 +400,9 @@ else
             'kt0',mknetwk,'kt1',mkstnm,'kt2',mkhole,'kt3',mkcmpnm,...
             'stla',stla,'stlo',stlo,'stel',stel,'stdp',stdp,...
             'evla',evla,'evlo',evlo,'evel',evel,'evdp',evdp);
+        
+        % update delaz stuff
+        data=checkheader(data,'all','ignore','old_delaz','fix');
     else
         % extract header info needed
         [mknetwk,mkstnm,mkhole,mkcmpnm,mb,mstla,mstlo,mstdp,mstel]=...
@@ -508,6 +512,9 @@ else
             'kt0',mknetwk,'kt1',mkstnm,'kt2',mkhole,'kt3',mkcmpnm,...
             'stla',sstla,'stlo',sstlo,'stel',sstel,'stdp',sstdp,...
             'evla',mstla,'evlo',mstlo,'evel',mstel,'evdp',mstdp);
+        
+        % update delaz stuff
+        data=checkheader(data,'all','ignore','old_delaz','fix');
     end
 end
 

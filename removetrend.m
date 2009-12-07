@@ -39,9 +39,10 @@ function [data]=removetrend(data)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        June 24, 2009 - minor doc update
+%        Dec.  6, 2009 - workaround: remove mean first for stability
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Dec.  6, 2009 at 22:20 GMT
 
 % todo:
 
@@ -57,52 +58,79 @@ if(~isempty(msg)); error(msg.identifier,msg.message); end
 oldseizmocheckstate=get_seizmocheck_state;
 set_seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
-
-% header info
-leven=getlgc(data,'leven');
-
-% number of records
-nrecs=numel(data);
-
-% remove trend and update header
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:numel(data)
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
+% attempt header check
+try
+    % check header
+    data=checkheader(data);
     
-    % save class and convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
+    % turn off header checking
+    oldcheckheaderstate=get_checkheader_state;
+    set_checkheader_state(false);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
     
-    % evenly spaced
-    if(strcmp(leven(i),'true'))
-        for j=1:size(data(i).dep,2)
-            data(i).dep(:,j)=detrend(data(i).dep(:,j));
-        end
-    % unevenly spaced
-    else
-        for j=1:size(data(i).dep,2)
-            data(i).dep(:,j)=data(i).dep(:,j) ...
-                -polyval(polyfit(double(data(i).ind),data(i).dep(:,j),1),...
-                double(data(i).ind));
-        end
-    end
-    
-    % change class back
-    data(i).dep=oclass(data(i).dep);
-    
-    % adjust header
-    depmen(i)=mean(data(i).dep(:));
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
+    % rethrow error
+    error(lasterror)
 end
 
-% adjust header
-data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+% attempt rest
+try
+    % header info
+    leven=getlgc(data,'leven');
 
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
+    % number of records
+    nrecs=numel(data);
+
+    % remove trend and update header
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:numel(data)
+        % skip dataless
+        if(isempty(data(i).dep)); continue; end
+
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+
+        % evenly spaced
+        if(strcmp(leven(i),'true'))
+            for j=1:size(data(i).dep,2)
+                data(i).dep(:,j)=detrend(...
+                    data(i).dep(:,j)-mean(data(i).dep(:,j)));
+            end
+            % unevenly spaced
+        else
+            for j=1:size(data(i).dep,2)
+                data(i).dep(:,j)=data(i).dep(:,j) ...
+                    -polyval(polyfit(double(data(i).ind),...
+                    data(i).dep(:,j),1)-mean(data(i).dep(:,j)),...
+                    double(data(i).ind));
+            end
+        end
+
+        % change class back
+        data(i).dep=oclass(data(i).dep);
+
+        % adjust header
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+    end
+
+    % adjust header
+    data=changeheader(data,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    set_checkheader_state(oldcheckheaderstate);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    set_checkheader_state(oldcheckheaderstate);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

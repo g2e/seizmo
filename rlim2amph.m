@@ -33,9 +33,10 @@ function [data]=rlim2amph(data)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Oct. 21, 2009 - only touches rlim (maybe a bit faster)
+%        Dec.  4, 2009 - handle no rlim case
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 21, 2009 at 06:45 GMT
+%     Last Updated Dec.  4, 2009 at 20:45 GMT
 
 % todo:
 
@@ -78,6 +79,9 @@ try
         error('seizmo:rlim2amph:illegalOperation',...
             'Illegal operation on non-spectral file!');
     end
+    
+    % quick exit if all amph
+    if(nrlim==0); return; end
 
     % loop through records
     depmen=nan(nrlim,1); depmin=depmen; depmax=depmen;

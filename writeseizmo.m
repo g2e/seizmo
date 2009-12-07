@@ -71,9 +71,10 @@ function []=writeseizmo(data,varargin)
 %        May  29, 2009 - allow options via WRITEPARAMETERS
 %        Sep.  5, 2009 - improved the examples
 %        Sep. 18, 2009 - added empty data shortcut
+%        Dec.  6, 2009 - bug fix: moved hasdata check after name formation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 18, 2009 at 14:35 GMT
+%     Last Updated Dec.  6, 2009 at 21:45 GMT
 
 % todo:
 
@@ -121,6 +122,9 @@ iftype=getenumdesc(data,'iftype');
 
 % loop over records
 for i=1:length(data)
+    % construct fullname
+    name=fullfile(data(i).path,data(i).name);
+    
     % skip writing if dataless
     if(~data(i).hasdata)
         warning('seizmo:writeseizmo:dataless',...
@@ -128,9 +132,6 @@ for i=1:length(data)
             'Use WRITEHEADER to write only headers!'],i,name);
         continue; 
     end
-    
-    % construct fullname
-    name=fullfile(data(i).path,data(i).name);
     
     % make sure directory exists
     [ok,msg,msgid]=mkdir(data(i).path);

@@ -34,9 +34,10 @@ function [data]=amph2rlim(data)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Oct. 21, 2009 - only touches amph (maybe a bit faster)
+%        Dec.  4, 2009 - fixed IFTYPE bug, handle no amph case
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 21, 2009 at 06:45 GMT
+%     Last Updated Dec.  4, 2009 at 20:45 GMT
 
 % todo:
 
@@ -67,7 +68,7 @@ end
 % attempt conversion
 try
     % retreive header info
-    iftype=getenumdesc(data,'iftype');
+    iftype=getenumid(data,'iftype');
 
     % find spectral
     amph=strcmpi(iftype,'iamph');
@@ -79,6 +80,9 @@ try
         error('seizmo:amph2rlim:illegalOperation',...
             'Illegal operation on non-spectral file!');
     end
+    
+    % quick exit if all rlim
+    if(namph==0); return; end
 
     % loop through records
     depmen=nan(namph,1); depmin=depmen; depmax=depmen;

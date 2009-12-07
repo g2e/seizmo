@@ -1,4 +1,4 @@
-function [median]=getmedian(data)
+function [medians]=getmedian(data)
 %GETMEDIAN    Returns median of each SEIZMO record
 %
 %    Usage:    medians=getmedian(data)
@@ -26,9 +26,10 @@ function [median]=getmedian(data)
 %                        one value per component
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Dec.  4, 2009 - fix variable/function clash bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Dec.  4, 2009 at 21:15 GMT
 
 % todo:
 
@@ -44,9 +45,9 @@ if(~isempty(msg)); error(msg.identifier,msg.message); end
 nrecs=numel(data);
 
 % find medians
-median=nan(nrecs,1);
+medians=nan(nrecs,1);
 for i=1:nrecs
-    median(i)=median(double(data(i).dep(:)));
+    medians(i)=median(double(data(i).dep(:)));
 end
 
 end

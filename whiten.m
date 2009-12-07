@@ -39,9 +39,11 @@ function [data]=whiten(data,halfwindow,varargin)
 %        June  9, 2009 - initial version
 %        June 11, 2009 - updated default halfwindow from 2 to 20
 %        June 24, 2009 - now transparent to filetype (except ixyz)
+%        Dec.  4, 2009 - fixed rlim handling
+%        Dec.  7, 2009 - no divide by zero by adding eps to smooth spectra
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Dec.  7, 2009 at 01:50 GMT
 
 % todo:
 
@@ -93,7 +95,6 @@ if(any(istime | isxy))
 end
 if(any(isrlim))
     amph(isrlim)=rlim2amph(data(isrlim));
-    data(isrlim)=amph2rlim(data(isrlim));
 end
 if(any(isamph))
     amph(isamph)=data(isamph);
@@ -108,6 +109,9 @@ amph=slidingabsmean(amph,halfwindow,varargin{:});
 
 % copy amplitude over phase
 amph=seizmofun(amph,@(x)x(:,[1:2:end; 1:2:end]));
+
+% add eps to avoid divide by zero
+amph=add(amph,eps);
 
 % divide complex by smoothed amplitude
 data=dividerecords(data,amph);

@@ -1,5 +1,5 @@
 % Seismology Toolbox - seizmo
-% Version 0.6.0-r105 Ararat 2-Dec-2009
+% Version 0.6.0-r106 Ararat 7-Dec-2009
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -90,6 +90,7 @@
 %SEIZMOFUN           - Apply function to SEIZMO records
 %SEIZMORESET         - Resets saved SEIZMO settings
 %SELECTRECORDS       - Select or delete SEIZMO data records graphically
+%SETASIDAY           - Sets the reference times of records to the start of the day
 %SLIDINGABSMEAN      - Returns sliding-window absolute-mean of SEIZMO records
 %SLIDINGFUN          - Apply a sliding window function to SEIZMO records
 %SLIDINGRMS          - Returns sliding-window root-mean-square of SEIZMO records

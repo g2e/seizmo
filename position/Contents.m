@@ -1,5 +1,5 @@
 % Seismology Toolbox - position
-% Version 0.6.0-r105 Ararat 2-Dec-2009
+% Version 0.6.0-r106 Ararat 7-Dec-2009
 %
 % Position functions
 %AUTHALIC2GEOGRAPHICLAT   - Convert latitude from authalic to geographic

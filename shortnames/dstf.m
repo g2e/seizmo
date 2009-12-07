@@ -1,1 +1,1 @@
-../stf/deconvolve_source_timefunction.m
+../event/deconvolve_source_timefunction.m
