@@ -25,6 +25,7 @@
 %PRINT_TIME_LEFT     - Ascii progress bar
 %RAT                 - Rational approximation. (UNBUGGED VERSION)
 %READCSV             - Read in .csv formatted file as a structure
+%READTXT             - Reads in a text file as a single string
 %SLIDINGAVG          - Returns sliding-window average of data
 %SNR2MAXPHASEERROR   - Returns maximum narrow-band phase error based on SNR 
 %SORT2LI             - Transforms permutation indices from sort to linear indices

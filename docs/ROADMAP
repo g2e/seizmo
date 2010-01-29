@@ -50,6 +50,9 @@ changeheader
 	how to handle non-synced breaks in components
 	movies/plots of 3-d particle motion
 	movies/plots of 2-d particle motion
+listheader/compareheader - fix reftime hack
+getheader/changeheader - versioninfo caching
+versioninfo caching for other functions (only if getheader/changeheader done)
 getpeaks
 markpeaks
 verbosity support

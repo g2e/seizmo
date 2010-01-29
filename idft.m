@@ -42,9 +42,11 @@ function [data]=idft(data)
 %        Apr. 23, 2009 - fix nargchk for octave
 %        June  3, 2009 - minor doc fix
 %        Oct. 15, 2009 - force ifft down columns
+%        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
+%                        improved messaging
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 15, 2009 at 16:05 GMT
+%     Last Updated Jan. 29, 2010 at 18:30 GMT
 
 % todo:
 
@@ -57,70 +59,95 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
+% attempt inverse fast fourier transform
+try
+    % check headers
+    data=checkheader(data);
 
-% retreive header info
-leven=getlgc(data,'leven');
-iftype=getenumdesc(data,'iftype');
-[b,delta,sb,sdelta,npts,nspts]=...
-    getheader(data,'b','delta','sb','sdelta','npts','nspts');
-e=sb+(nspts-1).*sdelta;
+    % verbosity
+    verbose=seizmoverbose;
 
-% check leven,iftype
-if(any(~strcmpi(leven,'true')))
-    error('seizmo:idft:illegalOperation',...
-        'Illegal operation on unevenly spaced record!');
-elseif(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
-        & ~strcmpi(iftype,'Spectral File-Ampl/Phase')))
-    error('seizmo:idft:illegalOperation',...
-        'Illegal operation on non-spectral file!');
-end
+    % number of records
+    nrecs=numel(data);
 
-% loop through records
-nrecs=numel(data);
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:nrecs
-    % skip dataless (reduce ncmp by 2)
-    if(isempty(data(i).dep))
-        data(i).dep=data(i).dep([],1:2:end); 
-        continue; 
+    % retreive header info
+    leven=getlgc(data,'leven');
+    iftype=getenumid(data,'iftype');
+    [b,delta,sb,sdelta,npts,nspts]=...
+        getheader(data,'b','delta','sb','sdelta','npts','nspts');
+    e=sb+(nspts-1).*sdelta;
+
+    % check leven,iftype
+    if(any(strcmpi(leven,'false')))
+        error('seizmo:idft:badLEVEN',...
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
+            '\nInvalid operation on unevenly sampled record(s)!']);
+    elseif(any(~strcmpi(iftype,'irlim') & ~strcmpi(iftype,'iamph')))
+        error('seizmo:idft:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'irlim') & ~strcmpi(iftype,'iamph'))) ...
+            '\nDatatype of record(s) in DATA must be spectral!']);
     end
     
-    % save class and convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
-    
-    % turn back into time domain
-    if(strcmpi(iftype(i),'Spectral File-Real/Imag'))
-        data(i).dep=1/sdelta(i)*ifft(...
-            complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)),...
-            [],1,'symmetric');
-    else
-        data(i).dep=1/sdelta(i)*ifft(...
-            data(i).dep(:,1:2:end).*exp(j*data(i).dep(:,2:2:end)),...
-            [],1,'symmetric');
+    % detail message
+    if(verbose)
+        disp('Transforming Record(s) to the Time Domain');
+        print_time_left(0,nrecs);
     end
+
+    % loop through records
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:nrecs
+        % skip dataless (reduce ncmp by 2)
+        if(isempty(data(i).dep))
+            data(i).dep=data(i).dep([],1:2:end);
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+
+        % turn back into time domain
+        if(strcmpi(iftype(i),'irlim'))
+            data(i).dep=1/sdelta(i)*ifft(...
+                complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)),...
+                [],1,'symmetric');
+        else % iamph
+            data(i).dep=1/sdelta(i)*ifft(...
+                data(i).dep(:,1:2:end).*exp(j*data(i).dep(:,2:2:end)),...
+                [],1,'symmetric');
+        end
+
+        % truncate to original length and change class back
+        data(i).dep=oclass(data(i).dep(1:nspts(i),:));
+
+        % dep*
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % update header (note there is no field 'se')
+    data=changeheader(data,'b',sb,'e',e,'delta',sdelta,'sb',b,...
+        'sdelta',delta,'nspts',npts,'npts',nspts,'iftype','itime',...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
     
-    % truncate to original length and change class back
-    data(i).dep=oclass(data(i).dep(1:nspts(i),:));
-    
-    % dep*
-    depmen(i)=mean(data(i).dep(:)); 
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
+    % rethrow error
+    error(lasterror)
 end
-
-% update header (note there is no field 'se')
-data=changeheader(data,'b',sb,'e',e,'delta',sdelta,'sb',b,...
-    'sdelta',delta,'nspts',npts,'npts',nspts,...
-    'iftype','Time Series File',...
-    'depmen',depmen,'depmin',depmin,'depmax',depmax);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

@@ -9,8 +9,10 @@ if(nargout)
     try
         varargout{1}=SEIZMO.SEIZMOVERBOSE;
         if(~islogical(varargout{1}) || ~isscalar(varargout{1}))
-            error('seizmo:seizmoverbose:badState',...
-                'STATE of SEIZMOVERBOSE must be TRUE or FALSE!');
+            warning('seizmo:seizmoverbose:badState',...
+                ['STATE of SEIZMOVERBOSE must be TRUE or FALSE!\n' ...
+                'Using default verbosity (TRUE)!']);
+            varargout{1}=true;
         end
     catch
         varargout{1}=true;

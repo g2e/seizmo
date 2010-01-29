@@ -29,7 +29,7 @@ function [times,n]=getarrival(data,phase)
 %     Get arrival time that is relative to origin time:
 %      Ptimes=getarrival(data,'P')-getheader(data,'o');
 %
-%    See also: QUICKSNR, GETHEADER, ADDARRIVAL
+%    See also: QUICKSNR, GETHEADER, ADDARRIVALS
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -42,9 +42,10 @@ function [times,n]=getarrival(data,phase)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        June 29, 2009 - doc update
 %        June 30, 2009 - second output: t index
+%        Dec.  8, 2009 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:55 GMT
+%     Last Updated Dec.  8, 2009 at 01:15 GMT
 
 % todo:
 

@@ -82,6 +82,9 @@ end
 
 % attempt rest
 try
+    % verbosity
+    verbose=seizmoverbose;
+    
     % number of records
     nrecs=numel(data);
     
@@ -114,6 +117,9 @@ try
     [data,zf]=convolve(data,x,delay);
     
     % attach final conditions
+    if(verbose)
+        disp('Attaching Convolution Final Conditions onto Record(s)');
+    end
     data=attach(attach(data,'ending',zf(:,1)),'beginning',zf(:,2));
     
     % toggle checking back

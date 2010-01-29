@@ -42,8 +42,8 @@ function [data]=prewhiten(data,order)
 %    Examples:
 %     Try prewhitening and unprewhitening first.  Then try comparing some
 %     operation without prewhiten/unprewhiten with one including it to get
-%     a feel for how important/detrimental it is.  The difference can be
-%     found by plotting the difference:
+%     a feel for how important/detrimental it is.  The effect can be seen
+%     by plotting the difference:
 %      plot1(subtractrecords(data,unprewhiten(prewhiten(data))))
 %
 %    See also: UNPREWHITEN, LEVINSON, FILTER, WHITEN
@@ -57,9 +57,11 @@ function [data]=prewhiten(data,order)
 %                        .misc.prewhitened (avoids struct cat errors)
 %        Oct. 13, 2009 - minor doc update
 %        Oct. 19, 2009 - global access to order
+%        Jan. 27, 2010 - seizmoverbose support, proper SEIZMO handling,
+%                        better error messages, force dim stuff
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 19, 2009 at 06:40 GMT
+%     Last Updated Jan. 27, 2010 at 23:30 GMT
 
 % todo:
 
@@ -75,122 +77,164 @@ if(~isempty(msg)); error(msg.identifier,msg.message); end
 oldseizmocheckstate=get_seizmocheck_state;
 set_seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
-
-% turn off header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(false);
-
-% get some header fields
-npts=getheader(data,'npts');
-ncmp=getncmp(data);
-leven=getlgc(data,'leven');
-iftype=getenumdesc(data,'iftype');
-
-% require evenly-spaced time series, general x vs y
-if(any(~strcmpi(leven,'true')))
-    error('seizmo:prewhiten:illegalOperation',...
-        'Illegal operation on unevenly spaced record!')
-elseif(any(~strcmpi(iftype,'Time Series File')...
-        & ~strcmpi(iftype,'General X vs Y file')))
-    error('seizmo:prewhiten:illegalOperation',...
-        'Illegal operation on spectral/xyz record!')
+% attempt header check
+try
+    % check headers
+    data=checkheader(data);
+    
+    % turn off header checking
+    oldcheckheaderstate=get_checkheader_state;
+    set_checkheader_state(false);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
 
-% pull .misc field out
-misc=[data.misc];
-
-% error for already prewhitened
-nrecs=numel(data);
-if(isfield(misc,'prewhitened') && ...
-        isfield(misc,'pef') && ...
-        islogical([misc.prewhitened]) && ...
-        numel([misc.prewhitened])==nrecs)
-    idx=[misc.prewhitened];
-else
-    % try to list those that are prewhitened with the correct index
-    try
-        % list records that are unset or false
-        [misc(cellfun('isempty',...
-            {misc.prewhitened})).prewhitened]=deal(false);
-        idx=[misc.prewhitened];
-    catch
-        % list them all
-        idx=false(nrecs,1);
-    end
-end
-if(any(idx))
-    i=find(idx);
-    error('seizmo:prewhiten:recordsNotWhitened',...
-        ['Records: ' sprintf('%d ',i) '\n'...
-        'PREWHITEN will not prewhiten prewhitened records!']);
-end
-
-% default/global/check order
+% retrieve global settings
 global SEIZMO
-if(nargin==1 || isempty(order))
-    order=6;
-    try
-        if(~isempty(SEIZMO.PREWHITEN.ORDER))
-            order=SEIZMO.PREWHITEN.ORDER;
+
+% attempt prewhitening
+try
+    % verbosity
+    verbose=seizmoverbose;
+
+    % number of records
+    nrecs=numel(data);
+
+    % get some header fields
+    npts=getheader(data,'npts');
+    ncmp=getncmp(data);
+    leven=getlgc(data,'leven');
+    iftype=getenumid(data,'iftype');
+
+    % require evenly-spaced time series, general x vs y
+    if(any(strcmpi(leven,'false')))
+        error('seizmo:prewhiten:illegalOperation',...
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
+            '\nIllegal operation on unevenly sampled record(s)!']);
+    elseif(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:prewhiten:illegalOperation',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) must be Timeseries or XY!']);
+    end
+
+    % pull .misc field out
+    misc=[data.misc];
+
+    % error for already prewhitened
+    if(isfield(misc,'prewhitened') && ...
+            isfield(misc,'pef') && ...
+            islogical([misc.prewhitened]) && ...
+            numel([misc.prewhitened])==nrecs)
+        idx=[misc.prewhitened];
+    else
+        % try to list those that are prewhitened with the correct index
+        try
+            % list records that are unset or false
+            [misc(cellfun('isempty',...
+                {misc.prewhitened})).prewhitened]=deal(false);
+            idx=[misc.prewhitened];
+        catch
+            % list them all
+            idx=false(nrecs,1);
         end
-    catch
     end
-end
-if(~isnumeric(order) || any(fix(order)~=order) ...
-        || ~any(numel(order)==[1 nrecs]))
-    error('seizmo:prewhiten:badOrder',...
-        'ORDER must be a scalar or an array with 1 integer per record!');
-end
-order=order(:);
-if(any(order<1 | order>=npts))
-    error('seizmo:prewhiten:badOrder','ORDER must be >0 but <NPTS!');
-end
-
-% expand scalar order
-if(isscalar(order))
-    order(1:nrecs,1)=order;
-end
-
-% loop over records
-npts2=2.^nextpow2n(2*npts);
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:nrecs
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
-    
-    % save class and convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
-    
-    % get autocorr
-    x=ifft(abs(fft(data(i).dep,npts2(i))).^2);
-    
-    % get predition error filter
-    a=levinson(x(1:order(i)+1,:),order(i));
-    
-    % implement filter
-    for j=1:ncmp(i)
-        data(i).dep(:,j)=...
-            data(i).dep(:,j)-filter([0 -a(j,2:end)],1,data(i).dep(:,j));
+    if(any(idx))
+        i=find(idx);
+        error('seizmo:prewhiten:recordsNotWhitened',...
+            ['Record(s): ' sprintf('%d ',i) ...
+            '\nPREWHITEN will not prewhiten prewhitened records!']);
     end
-    
-    % store the prewhitening filter at the struct level
-    data(i).misc.prewhitened=true;
-    data(i).misc.pef=a;
-    
-    % change class back
-    data(i).dep=oclass(data(i).dep);
-    
-    % get dep*
-    depmen(i)=mean(data(i).dep(:)); 
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
-end
 
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
-set_checkheader_state(oldcheckheaderstate);
+    % default/global/check order
+    if(nargin==1 || isempty(order))
+        order=6;
+        try
+            if(~isempty(SEIZMO.PREWHITEN.ORDER))
+                order=SEIZMO.PREWHITEN.ORDER;
+            end
+        catch
+        end
+    end
+    if(~isnumeric(order) || any(fix(order)~=order) ...
+            || ~any(numel(order)==[1 nrecs]))
+        error('seizmo:prewhiten:badOrder',...
+            'ORDER must be a scalar or an array w/ 1 integer per record!');
+    end
+    order=order(:);
+    if(any(order<1 | order>=npts))
+        error('seizmo:prewhiten:badOrder','ORDER must be >0 and <NPTS!');
+    end
+
+    % expand scalar order
+    if(isscalar(order))
+        order(1:nrecs,1)=order;
+    end
+
+    % detail message
+    if(verbose)
+        disp('Prewhitening Record(s)');
+        print_time_left(0,nrecs);
+    end
+
+    % loop over records
+    npts2=2.^nextpow2n(2*npts);
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:nrecs
+        % skip dataless
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+
+        % get autocorr
+        x=ifft(abs(fft(data(i).dep,npts2(i),1)).^2,[],1);
+
+        % get predition error filter
+        a=levinson(x(1:order(i)+1,:),order(i));
+
+        % implement filter
+        for j=1:ncmp(i)
+            data(i).dep(:,j)=...
+                data(i).dep(:,j)...
+                -filter([0 -a(j,2:end)],1,data(i).dep(:,j),[],1);
+        end
+
+        % store the prewhitening filter at the struct level
+        data(i).misc.prewhitened=true;
+        data(i).misc.pef=a;
+
+        % change class back
+        data(i).dep=oclass(data(i).dep);
+
+        % get dep*
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    set_checkheader_state(oldcheckheaderstate);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    set_checkheader_state(oldcheckheaderstate);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

@@ -26,9 +26,10 @@ function [data]=changebyteorder(data,endianness)
 %                        move usage up
 %        May  28, 2009 - fixed to update byteorder field, minor doc update
 %        May  29, 2009 - allow empty endianness (no change)
+%        Jan. 28, 2010 - seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Jan. 28, 2010 at 00:05 GMT
 
 % todo:
 
@@ -40,8 +41,24 @@ if(~isempty(msg)); error(msg); end
 msg=seizmocheck(data);
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
+% verbosity
+verbose=seizmoverbose;
+
+% number of records
+nrecs=numel(data);
+
+% detail message
+if(verbose)
+    disp('Changing Byte Order of Record(s)');
+    print_time_left(0,nrecs);
+end
+
 % fast exit
-if(isempty(endianness)); return; end
+if(isempty(endianness))
+    % detail message
+    if(verbose); print_time_left(nrecs,nrecs); end
+    return;
+end
 
 % check and fix type
 if(~iscellstr(endianness))
@@ -74,5 +91,8 @@ end
 
 % change endianness
 [data.byteorder]=deal(endianness{:});
+
+% detail message
+if(verbose); print_time_left(nrecs,nrecs); end
 
 end

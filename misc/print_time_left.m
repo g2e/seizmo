@@ -33,12 +33,16 @@ function []=print_time_left(act_step,tot_step,redraw)
 %     Version History:
 %        July 20, 2005 - initial version
 %        Oct. 14, 2009 - made into single function (with subfunction)
+%        Jan. 26, 2010 - fixed bug where no redraw is done when specified,
+%                        now updates when last and current steps differ in
+%                        percent, some caller detection added
 %
 %     Written by Nicolas Le Roux (lerouxni at iro dot umontreal dot ca)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2009 at 08:05 GMT
+%     Last Updated Jan. 26, 2010 at 17:25 GMT
 
 % todo:
+% - preceeding warning message links are missing occasionally?
 
 % check nargin
 msg=nargchk(2,3,nargin);
@@ -54,18 +58,32 @@ elseif(~isscalar(tot_step) || ~isnumeric(tot_step))
 end
 
 % declare persistent vars
-persistent nb i
+persistent nb i old_step old_fun
+if(~exist('old_step','var') || isempty(old_step)); old_step=act_step-1; end
+
+% who called last time & this time
+[st]=dbstack;
+cur_fun=st(2).name;
+if(~exist('old_fun','var') || isempty(old_fun)); old_fun=cur_fun; end
+
+% default redraw
+if(nargin==2); redraw=false; end
+
+% redraw if new caller (should help catch some bugs)
+if(~strcmpi(old_fun,cur_fun)); redraw=true; end
+old_fun=cur_fun;
 
 % percent complete
-old_perc_complete=floor(100*(act_step-1)/tot_step);
+old_perc_complete=floor(100*old_step/tot_step);
 perc_complete=floor(100*act_step/tot_step);
+old_step=act_step;
 
-% update if new percent or if 0th step
-if(old_perc_complete~=perc_complete || ~act_step)
+% update if redrawing or new percent or if 0th step
+if(old_perc_complete~=perc_complete || ~act_step || redraw)
     % internally keep track of output length and timer
     if(~act_step || ~exist('nb','var') || isempty(nb)); nb=0; end
     if(~act_step || ~exist('i','var') || isempty(i)); i=tic; end
-    if(nargin==3 && redraw); nb=0; end
+    if(redraw); nb=0; end
     
     % time spent so far
     time_spent=toc(i);
@@ -97,7 +115,7 @@ if(old_perc_complete~=perc_complete || ~act_step)
 end
 
 % clear persistent vars if done (for later calls)
-if(act_step==tot_step); nb=[]; i=[]; end
+if(act_step==tot_step); nb=[]; i=[]; old_step=[]; old_fun=[]; end
 
 end
 

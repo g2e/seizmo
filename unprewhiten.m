@@ -34,9 +34,11 @@ function [data]=unprewhiten(data)
 %        Sep. 22, 2009 - pushed .pef & .prewhitened to .misc.pef &
 %                        .misc.prewhitened (avoids struct cat errors)
 %        Oct. 13, 2009 - minor doc update
+%        Jan. 27, 2010 - seizmoverbose support, better error messages,
+%                        force dim stuff
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 13, 2009 at 05:50 GMT
+%     Last Updated Jan. 27, 2010 at 23:40 GMT
 
 % todo:
 
@@ -52,91 +54,133 @@ if(~isempty(msg)); error(msg.identifier,msg.message); end
 oldseizmocheckstate=get_seizmocheck_state;
 set_seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
-
-% turn off header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(false);
-
-% get some header fields
-leven=getlgc(data,'leven');
-iftype=getenumdesc(data,'iftype');
-ncmp=getncmp(data);
-
-% require evenly-spaced time series, general x vs y
-if(any(~strcmpi(leven,'true')))
-    error('seizmo:unprewhiten:illegalOperation',...
-        'Illegal operation on unevenly spaced record!')
-elseif(any(~strcmpi(iftype,'Time Series File')...
-        & ~strcmpi(iftype,'General X vs Y file')))
-    error('seizmo:unprewhiten:illegalOperation',...
-        'Illegal operation on spectral/xyz record!')
+% attempt header check
+try
+    % check headers
+    data=checkheader(data);
+    
+    % turn off header checking
+    oldcheckheaderstate=get_checkheader_state;
+    set_checkheader_state(false);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
 
-% pull .misc field out
-misc=[data.misc];
+% attempt prewhitening
+try
+    % verbosity
+    verbose=seizmoverbose;
 
-% error for nonprewhitened
-nrecs=numel(data);
-if(isfield(misc,'prewhitened') && ...
-        isfield(misc,'pef') && ...
-        islogical([misc.prewhitened]) && ...
-        numel([misc.prewhitened])==nrecs)
-    idx=[misc.prewhitened];
-else
-    % prepare a decent list for the error msg
-    try
-        % list records that are unset or false
-        [misc(cellfun('isempty',...
-            {misc.prewhitened})).prewhitened]=deal(false);
+    % number of records
+    nrecs=numel(data);
+
+    % get some header fields
+    leven=getlgc(data,'leven');
+    iftype=getenumid(data,'iftype');
+    ncmp=getncmp(data);
+
+    % require evenly-spaced time series, general x vs y
+    if(any(~strcmpi(leven,'true')))
+        error('seizmo:unprewhiten:illegalOperation',...
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
+            '\nIllegal operation on unevenly sampled record(s)!']);
+    elseif(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:unprewhiten:illegalOperation',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) must be Timeseries or XY!']);
+    end
+
+    % pull .misc field out
+    misc=[data.misc];
+
+    % error for nonprewhitened
+    if(isfield(misc,'prewhitened') && ...
+            isfield(misc,'pef') && ...
+            islogical([misc.prewhitened]) && ...
+            numel([misc.prewhitened])==nrecs)
         idx=[misc.prewhitened];
-    catch
-        % list them all
-        idx=false(nrecs,1);
+    else
+        % prepare a decent list for the error msg
+        try
+            % list records that are unset or false
+            [misc(cellfun('isempty',...
+                {misc.prewhitened})).prewhitened]=deal(false);
+            idx=[misc.prewhitened];
+        catch
+            % list them all
+            idx=false(nrecs,1);
+        end
     end
-end
-if(any(~idx))
-    i=find(~idx);
-    error('seizmo:unprewhiten:recordsNotPrewhitened',...
-        ['Records: ' sprintf('%d ',i) '\n'...
-        'Cannot unprewhiten non-prewhitened records!']);
-end
+    if(any(~idx))
+        i=find(~idx);
+        error('seizmo:unprewhiten:recordsNotPrewhitened',...
+            ['Record(s): ' sprintf('%d ',i) '\n'...
+            'Cannot unprewhiten non-prewhitened records!']);
+    end
 
-% loop through whitened records
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=find(idx)
-    % get class
-    oclass=str2func(class(data(i).dep));
-    
-    % check pef matches ncmp
-    if(size(data(i).misc.pef,1)~=ncmp(i))
-        error('seizmo:unprewhiten:ncmpInconsistent',...
-            'Record: %d\nNCMP has changed since WHITEN operation!',i);
+    % detail message
+    if(verbose)
+        disp('Un-Prewhitening Record(s)');
+        print_time_left(0,nrecs);
+    end
+
+    % loop through whitened records
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=find(idx)
+        % get class
+        oclass=str2func(class(data(i).dep));
+
+        % check pef matches ncmp
+        if(size(data(i).misc.pef,1)~=ncmp(i))
+            error('seizmo:unprewhiten:ncmpInconsistent',...
+                'Record: %d\nNCMP has changed since WHITEN operation!',i);
+        end
+
+        % unwhiten filter
+        for j=1:ncmp(i)
+            data(i).dep(:,j)=oclass(...
+                filter(1,data(i).misc.pef(j,:),...
+                double(data(i).dep(:,j)),[],1));
+        end
+
+        % unset prewhitened, clear pef
+        data(i).misc.prewhitened=false;
+        data(i).misc.pef=[];
+
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+
+        % update dep*
+        if(isempty(data(i).dep)); continue; end
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
     end
     
-    % unwhiten filter
-    for j=1:ncmp(i)
-        data(i).dep(:,j)=oclass(...
-            filter(1,data(i).misc.pef(j,:),double(data(i).dep(:,j))));
+    % detail message
+    if(verbose && i~=nrecs)
+        print_time_left(nrecs,nrecs);
     end
+
+    % update header
+    data=changeheader(data,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    set_checkheader_state(oldcheckheaderstate);
+catch
+    % toggle checking back
+    set_seizmocheck_state(oldseizmocheckstate);
+    set_checkheader_state(oldcheckheaderstate);
     
-    % unset prewhitened, clear pef
-    data(i).misc.prewhitened=false;
-    data(i).misc.pef=[];
-    
-    % update dep*
-    if(isempty(data(i).dep)); continue; end
-    depmen(i)=mean(data(i).dep(:)); 
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
-set_checkheader_state(oldcheckheaderstate);
 
 end

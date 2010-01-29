@@ -11,7 +11,7 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %             [cg,lg,pg]=mcxc(...,'absxc',absxc,...)
 %             [cg,lg,pg]=mcxc(...,'vectorxc',vectorxc,...)
 %             [cg,lg,pg]=mcxc(...,'pow2pad',pow2pad,...)
-%             [cg,lg,pg]=mcxc(...,'convolve',true|false,...) NOT WORKING!
+%             [cg,lg,pg]=mcxc(...,'verbose',verbosity,...)
 %
 %    Description: [CG,LG]=MCXC(X,Y) performs multi-channel cross
 %     correlation of records distributed in the columns of X against
@@ -107,9 +107,9 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %     Y even more.  By default POW2PAD is set to 1 and changing it is
 %     discouraged.
 %
-%     [CG,LG,PG]=MCXC(...,'convolve',CONVOLVE,...) allows switching between
-%     cross correlation and convolution.  Default is false (cross
-%     correlation).  THIS OPTION IS NOT WORKING (indexing issue)!!!
+%     [CG,LG,PG]=MCXC(...,'verbose',VERBOSITY,...) switches the verbose
+%     message output for MCXC.  VERBOSITY should be a logical where TRUE
+%     gives verbose output and FALSE does not.  The default is TRUE.
 %
 %    Notes:
 %     Options Summary:
@@ -123,7 +123,7 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %      - ADJACENT == 0                          0+
 %      - LAGS     == [-size(X,1)+1 size(Y,1)-1] -size(X,1)+1 to size(Y,1)-1
 %      - POW2PAD  == 1                  INTEGERS (0+ recommended)
-%      - CONVOLVE == FALSE    Any value that can be evaluated as TRUE/FALSE
+%      - VERBOSE  == TRUE     Any value that can be evaluated as TRUE/FALSE
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %     Output Summary (with NPEAKS >0):
@@ -142,7 +142,12 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %    Examples:
-%     
+%     The single dataset option is good for cases where correlations
+%     between all records are needed.  For instance, in a seismic ambient
+%     noise study.  This will produce correlograms for all pairs of records
+%     in a dataset (Remember individual records should extend down the
+%     columns of X!):
+%      [correlograms,lags]=mcxc(X);
 %
 %    See also: XCORR, FFTFILT (Signal Processing Toolbox)
 
@@ -183,13 +188,15 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %        Oct.  6, 2009 - dropped use of LOGICAL function
 %        Oct.  7, 2009 - replaced preallocation zeros w/ nan
 %        Dec.  7, 2009 - avoid divide by zero for autocorrelation==0
+%        Jan. 27, 2010 - killed convolve option, forced fft/ifft/sum/max to
+%                        work on dimension 1, added a simple example, added
+%                        a verbose option (requires PRINT_TIME_LEFT)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  7, 2009 at 03:10 GMT
+%     Last Updated Jan. 27, 2010 at 20:10 GMT
 
 % todo:
-% - vectorized gives different lag result if no peaks left
-% - make sure fft, sum, etc are given dim parameter
+% - vectorized gives different lag result if no peaks left (DO NOT CARE)
 
 % at least one input
 if(nargin<1)
@@ -205,7 +212,7 @@ normxc=true;        % normalize correlograms
 absxc=true;         % take absolute value before picking
 vectorxc=false;     % use looped subfunctions
 pow2pad=1;          % next power of 2 plus 1
-convolve=false;     % cross correlate
+verbose=true;       % verbosity of messages
 
 % parse and check x and y
 if(~isnumeric(x))
@@ -220,7 +227,7 @@ else
 end
 
 % parse options
-nvarargin=length(varargin);
+nvarargin=numel(varargin);
 if(mod(nvarargin,2))
     error('seizmo:mcxc:unpairedOption',...
         'All options must be ''field''/value pairs');
@@ -287,13 +294,13 @@ for i=1:2:nvarargin
                     'POW2PAD must be an integer scalar'); 
             end
             pow2pad=value;
-        case 'convolve'
+        case 'verbose'
             if((~isnumeric(value) && ~islogical(value)) ...
                     || ~isscalar(value))
                 error('seizmo:mcxc:badInput',...
-                    'CONVOLVE must be a logical scalar!');
+                    'VERBOSE must be a logical scalar!');
             end
-            convolve=value;
+            verbose=value;
         otherwise
             error('seizmo:mcxc:unknownOption',...
                 'Unknown option: %s',varargin{i});
@@ -310,10 +317,15 @@ spacing=ceil(spacing-1);
 % force lags to be in order
 lags=sort(lags);
 
+% detail message
+if(verbose)
+    disp('Correlating Record(s)')
+end
+
 % x or x+y
 if(selfxc)
     [cg,lg,pg]=smcxc(x,npeaks,adjacent,spacing,...
-        lags,normxc,absxc,vectorxc,pow2pad,convolve);
+        lags,normxc,absxc,vectorxc,pow2pad,verbose);
 else
     % size'em up
     sx=size(x); sy=size(y);
@@ -327,32 +339,17 @@ else
     nFFT=2^(nextpow2(max([sx(1) sy(1)]))+pow2pad);
     
     % getting transforms and conjugates
-    Fx=fft(x,nFFT);
+    Fx=fft(x,nFFT,1);
     
     % conjugates and autocorrelations
-    if(convolve)
-        CFy=fft(y,nFFT);
-        if(normxc)
-            % note that padding x,y
-            % adds offset here...
-            % one reason convolve does not work
-            ZLACx=sqrt(sum(x.*flipud(x)));
-            ZLACy=sqrt(sum(y.*flipud(y)));
-            
-            % avoid divide by zero
-            ZLACx(ZLACx==0)=eps;
-            ZLACy(ZLACy==0)=eps;
-        end
-    else
-        CFy=conj(fft(y,nFFT));
-        if(normxc)
-            ZLACx=sqrt(sum(x.^2));
-            ZLACy=sqrt(sum(y.^2));
-            
-            % avoid divide by zero
-            ZLACx(ZLACx==0)=eps;
-            ZLACy(ZLACy==0)=eps;
-        end
+    CFy=conj(fft(y,nFFT,1));
+    if(normxc)
+        ZLACx=sqrt(sum(x.^2,1));
+        ZLACy=sqrt(sum(y.^2,1));
+
+        % avoid divide by zero
+        ZLACx(ZLACx==0)=eps;
+        ZLACy(ZLACy==0)=eps;
     end
     
     % get peaks
@@ -363,20 +360,20 @@ else
             if(normxc)
                 % absolute peaks
                 if(absxc)
-                    [cg,lg,pg]=mcxcmncapv(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,npeaks,adjacent,spacing,lags);
+                    [cg,lg,pg]=mcxcmncapv(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,npeaks,adjacent,spacing,lags,verbose);
                 % positive peaks
                 else
-                    [cg,lg]=mcxcmncpv(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,npeaks,adjacent,spacing,lags);
+                    [cg,lg]=mcxcmncpv(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,npeaks,adjacent,spacing,lags,verbose);
                     if(nargout>2); pg=ones(sx(2),sy(2),npeaks,1+2*adjacent); end
                 end
             % dont normalize
             else
                 % absolute peaks
                 if(absxc)
-                    [cg,lg,pg]=mcxcmcapv(Fx,CFy,nFFT,sx,sy,npeaks,adjacent,spacing,lags);
+                    [cg,lg,pg]=mcxcmcapv(Fx,CFy,nFFT,sx,sy,npeaks,adjacent,spacing,lags,verbose);
                 % positive peaks
                 else
-                    [cg,lg]=mcxcmcpv(Fx,CFy,nFFT,sx,sy,npeaks,adjacent,spacing,lags);
+                    [cg,lg]=mcxcmcpv(Fx,CFy,nFFT,sx,sy,npeaks,adjacent,spacing,lags,verbose);
                     if(nargout>2); pg=ones(sx(2),sy(2),npeaks,1+2*adjacent); end
                 end
             end
@@ -386,20 +383,20 @@ else
             if(normxc)
                 % absolute peaks
                 if(absxc)
-                    [cg,lg,pg]=mcxcmncap(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,npeaks,adjacent,spacing,lags);
+                    [cg,lg,pg]=mcxcmncap(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,npeaks,adjacent,spacing,lags,verbose);
                 % positive peaks
                 else
-                    [cg,lg]=mcxcmncp(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,npeaks,adjacent,spacing,lags);
+                    [cg,lg]=mcxcmncp(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,npeaks,adjacent,spacing,lags,verbose);
                     if(nargout>2); pg=ones(sx(2),sy(2),npeaks,1+2*adjacent); end
                 end
             % dont normalize
             else
                 % absolute peaks
                 if(absxc)
-                    [cg,lg,pg]=mcxcmcap(Fx,CFy,nFFT,sx,sy,npeaks,adjacent,spacing,lags);
+                    [cg,lg,pg]=mcxcmcap(Fx,CFy,nFFT,sx,sy,npeaks,adjacent,spacing,lags,verbose);
                 % positive peaks
                 else
-                    [cg,lg]=mcxcmcp(Fx,CFy,nFFT,sx,sy,npeaks,adjacent,spacing,lags);
+                    [cg,lg]=mcxcmcp(Fx,CFy,nFFT,sx,sy,npeaks,adjacent,spacing,lags,verbose);
                     if(nargout>2); pg=ones(sx(2),sy(2),npeaks,1+2*adjacent); end
                 end
             end
@@ -411,19 +408,19 @@ else
         if(vectorxc)
             % normalize
             if(normxc)
-                [cg,lg]=mcxcncv(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,lags);
+                [cg,lg]=mcxcncv(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,lags,verbose);
             % dont normalize
             else
-                [cg,lg]=mcxccv(Fx,CFy,nFFT,sx,sy,lags);
+                [cg,lg]=mcxccv(Fx,CFy,nFFT,sx,sy,lags,verbose);
             end
         % loop
         else
             % normalize
             if(normxc)
-                [cg,lg]=mcxcnc(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,lags);
+                [cg,lg]=mcxcnc(Fx,CFy,ZLACx,ZLACy,nFFT,sx,sy,lags,verbose);
             % dont normalize
             else
-                [cg,lg]=mcxcc(Fx,CFy,nFFT,sx,sy,lags);
+                [cg,lg]=mcxcc(Fx,CFy,nFFT,sx,sy,lags,verbose);
             end
         end
     end
@@ -446,16 +443,22 @@ lags=(-sx(1)+1:sy(1)-1).';
 glags=(lags>=lagrng(1) & lags<=lagrng(2));
 lags=lags(glags);
 sh=sh(glags);
-len=length(sh);
+len=numel(sh);
 
 % preallocate output
 cg=nan(sx(2),sy(2),len);
 
 end
 
-function [cg,lags]=mcxcnc(F,CF,ZLACx,ZLACy,nFFT,sx,sy,lagrng)
+function [cg,lags]=mcxcnc(F,CF,ZLACx,ZLACy,nFFT,sx,sy,lagrng,verbose)
 %MCXCNC    mcxc 4 normalized correlograms - looped
 
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
+
 % preallocate just about everything
 [cg,lags,shift]=mcxcc_alloc(nFFT,sx,sy,lagrng);
 
@@ -463,16 +466,27 @@ function [cg,lags]=mcxcnc(F,CF,ZLACx,ZLACy,nFFT,sx,sy,lagrng)
 for i=1:sx(2)
     for j=1:sy(2)
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         cg(i,j,:)=XCF(shift)./(ZLACx(i)*ZLACy(j));
+        
+        % detail message
+        if(verbose)
+            print_time_left((i-1)*sy(2)+j,nrecs);
+        end
     end
 end
 
 end
 
-function [cg,lags]=mcxcc(F,CF,nFFT,sx,sy,lagrng)
+function [cg,lags]=mcxcc(F,CF,nFFT,sx,sy,lagrng,verbose)
 %MCXCC    mcxc 4 correlograms - looped
 
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
+
 % preallocate just about everything
 [cg,lags,shift]=mcxcc_alloc(nFFT,sx,sy,lagrng);
 
@@ -480,15 +494,26 @@ function [cg,lags]=mcxcc(F,CF,nFFT,sx,sy,lagrng)
 for i=1:sx(2)
     for j=1:sy(2)
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         cg(i,j,:)=XCF(shift);
+        
+        % detail message
+        if(verbose)
+            print_time_left((i-1)*sy(2)+j,nrecs);
+        end
     end
 end
 
 end
 
-function [cg,lags]=mcxcncv(F,CF,ZLACx,ZLACy,nFFT,sx,sy,lagrng)
+function [cg,lags]=mcxcncv(F,CF,ZLACx,ZLACy,nFFT,sx,sy,lagrng,verbose)
 %MCXCNCV    mcxc 4 normalized correlograms - vectorized
+
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
 
 % allocate
 [cg,lags,shift,len]=mcxcc_alloc(nFFT,sx,sy,lagrng);
@@ -498,17 +523,28 @@ cg=permute(cg,[1 3 2]);
 % get correlograms
 for i=1:sx(2)
     % do all possible pairings against record i
-    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,'symmetric');
+    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,[],1,'symmetric');
     
     % put zero lag at center and normalize
     cg(i,:,:)=XCF(shift,:)./(ZLACx(i)*ZLACy);
+        
+    % detail message
+    if(verbose)
+        print_time_left(i*sy(2),nrecs);
+    end
 end
 cg=permute(cg,[1 3 2]);
 
 end
 
-function [cg,lags]=mcxccv(F,CF,nFFT,sx,sy,lagrng)
+function [cg,lags]=mcxccv(F,CF,nFFT,sx,sy,lagrng,verbose)
 %MCXCCV    mcxc 4 normalized correlograms - vectorized
+
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
 
 % allocate
 [cg,lags,shift]=mcxcc_alloc(nFFT,sx,sy,lagrng);
@@ -517,10 +553,15 @@ cg=permute(cg,[1 3 2]);
 % get correlograms
 for i=1:sx(2)
     % do all possible pairings against record i
-    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,'symmetric');
+    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,[],1,'symmetric');
     
     % put zero lag at center
     cg(i,:,:)=XCF(shift,:);
+        
+    % detail message
+    if(verbose)
+        print_time_left(i*sy(2),nrecs);
+    end
 end
 cg=permute(cg,[1 3 2]);
 
@@ -541,7 +582,7 @@ lags=(-sx(1)+1:sy(1)-1).';
 glags=(lags>=lagrng(1) & lags<=lagrng(2));
 lags=lags(glags);
 sh=sh(glags);
-len=length(sh);
+len=numel(sh);
 range=(-spacing:spacing).';
 
 % preallocate output
@@ -554,9 +595,15 @@ idxadj=ptsadj+peak;
 
 end
 
-function [cg,lg]=mcxcmncp(F,CF,ZLACx,ZLACy,nFFT,sx,sy,n,adjacent,spacing,lagrng)
+function [cg,lg]=mcxcmncp(F,CF,ZLACx,ZLACy,nFFT,sx,sy,n,adjacent,spacing,lagrng,verbose)
 %MCXCMNCP    mcxc 4 multiple normalized correlogram peaks - looped
 
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
+
 % preallocate just about everything
 [cg,lg,lags,shift,len,range,peak,ptsadj,idxadj]=mcxc_alloc(nFFT,sx,sy,n,adjacent,spacing,lagrng);
 
@@ -564,7 +611,7 @@ function [cg,lg]=mcxcmncp(F,CF,ZLACx,ZLACy,nFFT,sx,sy,n,adjacent,spacing,lagrng)
 for i=1:sx(2)
     for j=1:sy(2)
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         XCFT=XCF(shift)./(ZLACx(i)*ZLACy(j));
         
         % pick peak
@@ -594,14 +641,25 @@ for i=1:sx(2)
             cg(i,j,k,idxadj(good))=XCFT(iadj(good));
             lg(i,j,k,idxadj(good))=lags(iadj(good));
         end
+        
+        % detail message
+        if(verbose)
+            print_time_left((i-1)*sy(2)+j,nrecs);
+        end
     end
 end
 
 end
 
-function [cg,lg]=mcxcmcp(F,CF,nFFT,sx,sy,n,adjacent,spacing,lagrng)
+function [cg,lg]=mcxcmcp(F,CF,nFFT,sx,sy,n,adjacent,spacing,lagrng,verbose)
 %MCXCMCP    mcxc 4 multiple correlogram peaks - looped
 
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
+
 % preallocate just about everything
 [cg,lg,lags,shift,len,range,peak,ptsadj,idxadj]=mcxc_alloc(nFFT,sx,sy,n,adjacent,spacing,lagrng);
 
@@ -609,7 +667,7 @@ function [cg,lg]=mcxcmcp(F,CF,nFFT,sx,sy,n,adjacent,spacing,lagrng)
 for i=1:sx(2)
     for j=1:sy(2)
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         XCFT=XCF(shift);
         
         % pick peak
@@ -639,13 +697,24 @@ for i=1:sx(2)
             cg(i,j,k,idxadj(good))=XCFT(iadj(good));
             lg(i,j,k,idxadj(good))=lags(iadj(good));
         end
+        
+        % detail message
+        if(verbose)
+            print_time_left((i-1)*sy(2)+j,nrecs);
+        end
     end
 end
 
 end
 
-function [cg,lg,pg]=mcxcmncap(F,CF,ZLACx,ZLACy,nFFT,sx,sy,n,adjacent,spacing,lagrng)
+function [cg,lg,pg]=mcxcmncap(F,CF,ZLACx,ZLACy,nFFT,sx,sy,n,adjacent,spacing,lagrng,verbose)
 %MCXCMNCAP    mcxc 4 multiple normalized correlogram absolute peaks - looped
+
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
 
 % preallocate just about everything
 [cg,lg,lags,shift,len,range,peak,ptsadj,idxadj]=mcxc_alloc(nFFT,sx,sy,n,adjacent,spacing,lagrng);
@@ -655,7 +724,7 @@ pg=cg;
 for i=1:sx(2)
     for j=1:sy(2)
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         XCFT=XCF(shift)./(ZLACx(i)*ZLACy(j));
         AXCFT=abs(XCFT);
         
@@ -690,13 +759,24 @@ for i=1:sx(2)
             lg(i,j,k,idxadj(good))=lags(iadj(good));
             pg(i,j,k,idxadj(good))=squeeze(cg(i,j,k,idxadj(good)))./XCFT(iadj(good));
         end
+        
+        % detail message
+        if(verbose)
+            print_time_left((i-1)*sy(2)+j,nrecs);
+        end
     end
 end
 
 end
 
-function [cg,lg,pg]=mcxcmcap(F,CF,nFFT,sx,sy,n,adjacent,spacing,lagrng)
+function [cg,lg,pg]=mcxcmcap(F,CF,nFFT,sx,sy,n,adjacent,spacing,lagrng,verbose)
 %MCXCMCAP    mcxc 4 multiple correlogram absolute peaks - looped
+
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
 
 % preallocate just about everything
 [cg,lg,lags,shift,len,range,peak,ptsadj,idxadj]=mcxc_alloc(nFFT,sx,sy,n,adjacent,spacing,lagrng);
@@ -706,7 +786,7 @@ pg=cg;
 for i=1:sx(2)
     for j=1:sy(2)
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         XCFT=XCF(shift);
         AXCFT=abs(XCFT);
         
@@ -740,6 +820,11 @@ for i=1:sx(2)
             cg(i,j,k,idxadj(good))=AXCFT(iadj(good));
             lg(i,j,k,idxadj(good))=lags(iadj(good));
             pg(i,j,k,idxadj(good))=squeeze(cg(i,j,k,idxadj(good)))./XCFT(iadj(good));
+        end
+        
+        % detail message
+        if(verbose)
+            print_time_left((i-1)*sy(2)+j,nrecs);
         end
     end
 end
@@ -763,7 +848,7 @@ lags=(-sx(1)+1:sy(1)-1).';
 glags=(lags>=lagrng(1) & lags<=lagrng(2));
 lags=lags(glags);
 sh=sh(glags);
-len=length(sh);
+len=numel(sh);
 range=(-spacing:spacing).';
 per21=2*spacing+1;
 
@@ -784,8 +869,14 @@ lgtemp=cgtemp;
 
 end
 
-function [cg,lg]=mcxcmncpv(F,CF,ZLACx,ZLACy,nFFT,sx,sy,n,adjacent,spacing,lagrng)
+function [cg,lg]=mcxcmncpv(F,CF,ZLACx,ZLACy,nFFT,sx,sy,n,adjacent,spacing,lagrng,verbose)
 %MCXCMNCPV    mcxc 4 multiple normalized correlogram peaks - vectorized
+
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
 
 % allocate
 [cg,lg,lags,shift,len,range,per21,cols,...
@@ -796,7 +887,7 @@ ZLACy=ZLACy(ones(len,1),:);
 % get correlation peaks
 for i=1:sx(2)
     % do all possible pairings against record i
-    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,'symmetric');
+    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,[],1,'symmetric');
     
     % put zero lag at center and normalize
     XCFT=XCF(shift,:)./(ZLACx(i)*ZLACy);
@@ -804,7 +895,7 @@ for i=1:sx(2)
     % multi-peak picker
     for j=1:n
         % find peak(s)
-        [cg(i,:,j,peak),imxc]=max(XCFT);
+        [cg(i,:,j,peak),imxc]=max(XCFT,[],1);
         lg(i,:,j,peak)=lags(imxc);
         
         % add adjacent point(s)
@@ -822,12 +913,23 @@ for i=1:sx(2)
         good2=(rows>0 & rows<=len);
         XCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=nan;
     end
+        
+    % detail message
+    if(verbose)
+        print_time_left(i*sy(2),nrecs);
+    end
 end
 
 end
 
-function [cg,lg]=mcxcmcpv(F,CF,nFFT,sx,sy,n,adjacent,spacing,lagrng)
+function [cg,lg]=mcxcmcpv(F,CF,nFFT,sx,sy,n,adjacent,spacing,lagrng,verbose)
 %MCXCMCPV    mcxc 4 multiple correlogram peaks - vectorized
+
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
 
 % allocate
 [cg,lg,lags,shift,len,range,per21,cols,...
@@ -837,7 +939,7 @@ function [cg,lg]=mcxcmcpv(F,CF,nFFT,sx,sy,n,adjacent,spacing,lagrng)
 % get correlation peaks
 for i=1:sx(2)
     % do all possible pairings against record i
-    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,'symmetric');
+    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,[],1,'symmetric');
     
     % put zero lag at center
     XCFT=XCF(shift,:);
@@ -845,7 +947,7 @@ for i=1:sx(2)
     % multi-peak picker
     for j=1:n
         % find peak(s)
-        [cg(i,:,j,peak),imxc]=max(XCFT);
+        [cg(i,:,j,peak),imxc]=max(XCFT,[],1);
         lg(i,:,j,peak)=lags(imxc);
         
         % add adjacent point(s)
@@ -863,12 +965,23 @@ for i=1:sx(2)
         good2=(rows>0 & rows<=len);
         XCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=nan;
     end
+        
+    % detail message
+    if(verbose)
+        print_time_left(i*sy(2),nrecs);
+    end
 end
 
 end
 
-function [cg,lg,pg]=mcxcmncapv(F,CF,ZLACx,ZLACy,nFFT,sx,sy,n,adjacent,spacing,lagrng)
+function [cg,lg,pg]=mcxcmncapv(F,CF,ZLACx,ZLACy,nFFT,sx,sy,n,adjacent,spacing,lagrng,verbose)
 %MCXCMNCAPV    mcxc 4 multiple normalized correlogram absolute peaks - vectorized
+
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
 
 % allocate
 [cg,lg,lags,shift,len,range,per21,cols,...
@@ -880,7 +993,7 @@ pg=cg; pgtemp=cgtemp;
 % get correlation peaks
 for i=1:sx(2)
     % do all possible pairings against record i
-    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,'symmetric');
+    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,[],1,'symmetric');
     
     % put zero lag at center and make real
     XCFT=XCF(shift,:)./(ZLACx(i)*ZLACy);
@@ -891,7 +1004,7 @@ for i=1:sx(2)
     % multi-peak picker
     for j=1:n
         % find peak(s)
-        [cg(i,:,j,peak),imxc]=max(AXCFT);
+        [cg(i,:,j,peak),imxc]=max(AXCFT,[],1);
         lg(i,:,j,peak)=lags(imxc);
         pg(i,:,j,peak)=cg(i,:,j,peak)./XCFT((0:sy(2)-1)*len+imxc);
         
@@ -913,12 +1026,23 @@ for i=1:sx(2)
         good2=(rows>0 & rows<=len);
         AXCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=nan;
     end
+        
+    % detail message
+    if(verbose)
+        print_time_left(i*sy(2),nrecs);
+    end
 end
 
 end
 
-function [cg,lg,pg]=mcxcmcapv(F,CF,nFFT,sx,sy,n,adjacent,spacing,lagrng)
+function [cg,lg,pg]=mcxcmcapv(F,CF,nFFT,sx,sy,n,adjacent,spacing,lagrng,verbose)
 %MCXCMCAPV    mcxc 4 multiple correlogram absolute peaks - vectorized
+
+% detail message
+if(verbose)
+    nrecs=sx(2)*sy(2);
+    print_time_left(0,nrecs);
+end
 
 % allocate
 [cg,lg,lags,shift,len,range,per21,cols,...
@@ -929,7 +1053,7 @@ pg=cg; pgtemp=cgtemp;
 % get correlation peaks
 for i=1:sx(2)
     % do all possible pairings against record i
-    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,'symmetric');
+    XCF=ifft(F(:,i*ones(1,sy(2))).*CF,[],1,'symmetric');
     
     % put zero lag at center and make real
     XCFT=XCF(shift,:);
@@ -940,7 +1064,7 @@ for i=1:sx(2)
     % multi-peak picker
     for j=1:n
         % find peak(s)
-        [cg(i,:,j,peak),imxc]=max(AXCFT);
+        [cg(i,:,j,peak),imxc]=max(AXCFT,[],1);
         lg(i,:,j,peak)=lags(imxc);
         pg(i,:,j,peak)=cg(i,:,j,peak)./XCFT((0:sy(2)-1)*len+imxc);
         
@@ -961,6 +1085,11 @@ for i=1:sx(2)
         rows=imxc(ones(per21,1),:)+range(:,ones(1,sy(2)));
         good2=(rows>0 & rows<=len);
         AXCFT(sub2ind([len sy(2)],rows(good2),cols(good2)))=nan;
+    end
+        
+    % detail message
+    if(verbose)
+        print_time_left(i*sy(2),nrecs);
     end
 end
 
@@ -978,7 +1107,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [cv,lv,pv]=smcxc(x,npeaks,adjacent,spacing,lags,normxc,absxc,vectorxc,pow2pad,convolve)
+function [cv,lv,pv]=smcxc(x,npeaks,adjacent,spacing,lags,normxc,absxc,vectorxc,pow2pad,verbose)
 %SMCXC    Self mcxc wrapper
 
 % size'em up
@@ -997,24 +1126,12 @@ nFFT=2^(nextpow2(sx(1))+pow2pad);
 F=fft(x,nFFT);
 
 % conjugates and autocorrelations
-if(convolve)
-    CF=F;
-    if(normxc)
-        % note that padding x,y
-        % adds offset here...
-        ZLAC=sqrt(sum(x.*flipud(x)));
-        
-        % avoid divide by zero
-        ZLAC(ZLAC==0)=eps;
-    end
-else
-    CF=conj(F);
-    if(normxc)
-        ZLAC=sqrt(sum(x.^2));
-        
-        % avoid divide by zero
-        ZLAC(ZLAC==0)=eps;
-    end
+CF=conj(F);
+if(normxc)
+    ZLAC=sqrt(sum(x.^2));
+
+    % avoid divide by zero
+    ZLAC(ZLAC==0)=eps;
 end
 
 % get peaks
@@ -1025,20 +1142,20 @@ if(npeaks)
         if(normxc)
             % absolute peaks
             if(absxc)
-                [cv,lv,pv]=smcxcmncapv(F,CF,ZLAC,nFFT,sx,npeaks,adjacent,spacing,lags);
+                [cv,lv,pv]=smcxcmncapv(F,CF,ZLAC,nFFT,sx,npeaks,adjacent,spacing,lags,verbose);
             % positive peaks
             else
-                [cv,lv]=smcxcmncpv(F,CF,ZLAC,nFFT,sx,npeaks,adjacent,spacing,lags);
+                [cv,lv]=smcxcmncpv(F,CF,ZLAC,nFFT,sx,npeaks,adjacent,spacing,lags,verbose);
                 if(nargout>2); pv=ones(txc,1,npeaks,1+2*adjacent); end
             end
         % dont normalize
         else
             % absolute peaks
             if(absxc)
-                [cv,lv,pv]=smcxcmcapv(F,CF,nFFT,sx,npeaks,adjacent,spacing,lags);
+                [cv,lv,pv]=smcxcmcapv(F,CF,nFFT,sx,npeaks,adjacent,spacing,lags,verbose);
             % positive peaks
             else
-                [cv,lv]=smcxcmcpv(F,CF,nFFT,sx,npeaks,adjacent,spacing,lags);
+                [cv,lv]=smcxcmcpv(F,CF,nFFT,sx,npeaks,adjacent,spacing,lags,verbose);
                 if(nargout>2); pv=ones(txc,1,npeaks,1+2*adjacent); end
             end
         end
@@ -1048,20 +1165,20 @@ if(npeaks)
         if(normxc)
             % absolute peaks
             if(absxc)
-                [cv,lv,pv]=smcxcmncap(F,CF,ZLAC,nFFT,sx,npeaks,adjacent,spacing,lags);
+                [cv,lv,pv]=smcxcmncap(F,CF,ZLAC,nFFT,sx,npeaks,adjacent,spacing,lags,verbose);
             % positive peaks
             else
-                [cv,lv]=smcxcmncp(F,CF,ZLAC,nFFT,sx,npeaks,adjacent,spacing,lags);
+                [cv,lv]=smcxcmncp(F,CF,ZLAC,nFFT,sx,npeaks,adjacent,spacing,lags,verbose);
                 if(nargout>2); pv=ones(txc,1,npeaks,1+2*adjacent); end
             end
         % dont normalize
         else
             % absolute peaks
             if(absxc)
-                [cv,lv,pv]=smcxcmcap(F,CF,nFFT,sx,npeaks,adjacent,spacing,lags);
+                [cv,lv,pv]=smcxcmcap(F,CF,nFFT,sx,npeaks,adjacent,spacing,lags,verbose);
             % positive peaks
             else
-                [cv,lv]=smcxcmcp(F,CF,nFFT,sx,npeaks,adjacent,spacing,lags);
+                [cv,lv]=smcxcmcp(F,CF,nFFT,sx,npeaks,adjacent,spacing,lags,verbose);
                 if(nargout>2); pv=ones(txc,1,npeaks,1+2*adjacent); end
             end
         end
@@ -1073,19 +1190,19 @@ else
     if(vectorxc)
         % normalize
         if(normxc)
-            [cv,lv]=smcxcncv(F,CF,ZLAC,nFFT,sx,lags);
+            [cv,lv]=smcxcncv(F,CF,ZLAC,nFFT,sx,lags,verbose);
         % dont normalize
         else
-            [cv,lv]=smcxccv(F,CF,nFFT,sx,lags);
+            [cv,lv]=smcxccv(F,CF,nFFT,sx,lags,verbose);
         end
     % loop
     else
         % normalize
         if(normxc)
-            [cv,lv]=smcxcnc(F,CF,ZLAC,nFFT,sx,lags);
+            [cv,lv]=smcxcnc(F,CF,ZLAC,nFFT,sx,lags,verbose);
         % dont normalize
         else
-            [cv,lv]=smcxcc(F,CF,nFFT,sx,lags);
+            [cv,lv]=smcxcc(F,CF,nFFT,sx,lags,verbose);
         end
     end
 end
@@ -1098,7 +1215,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [cv,lags,sh,c]=smcxcc_alloc(nFFT,sx,lagrng)
+function [cv,lags,sh,c,txc]=smcxcc_alloc(nFFT,sx,lagrng)
 % allocation for smcxcc - looped
 
 % shifts and lags
@@ -1107,7 +1224,7 @@ lags=(-sx(1)+1:sx(1)-1).';
 glags=(lags>=lagrng(1) & lags<=lagrng(2));
 lags=lags(glags);
 sh=sh(glags);
-len=length(sh);
+len=numel(sh);
 ilen=sx(2)-1:-1:1;
 c=[0 cumsum(ilen)];
 txc=(sx(2)^2-sx(2))/2;
@@ -1117,11 +1234,16 @@ cv=nan(txc,1,len);
 
 end
 
-function [cv,lags]=smcxcnc(F,CF,ZLAC,nFFT,sx,lagrng)
+function [cv,lags]=smcxcnc(F,CF,ZLAC,nFFT,sx,lagrng,verbose)
 %SMCXCNC    smcxc 4 normalized correlograms - looped
 
 % preallocate just about everything
-[cv,lags,shift,c]=smcxcc_alloc(nFFT,sx,lagrng);
+[cv,lags,shift,c,nrecs]=smcxcc_alloc(nFFT,sx,lagrng);
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlograms
 for i=1:sx(2)-1
@@ -1129,18 +1251,28 @@ for i=1:sx(2)-1
         k=c(i)+j-i;
         
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         cv(k,1,:)=XCF(shift)./(ZLAC(i)*ZLAC(j));
+        
+        % detail message
+        if(verbose)
+            print_time_left(k,nrecs);
+        end
     end
 end
 
 end
 
-function [cv,lags]=smcxcc(F,CF,nFFT,sx,lagrng)
+function [cv,lags]=smcxcc(F,CF,nFFT,sx,lagrng,verbose)
 %SMCXCC    smcxc 4 correlograms - looped
 
 % preallocate just about everything
-[cv,lags,shift,c]=smcxcc_alloc(nFFT,sx,lagrng);
+[cv,lags,shift,c,nrecs]=smcxcc_alloc(nFFT,sx,lagrng);
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlograms
 for i=1:sx(2)-1
@@ -1148,14 +1280,19 @@ for i=1:sx(2)-1
         k=c(i)+j-i;
         
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         cv(k,1,:)=XCF(shift);
+        
+        % detail message
+        if(verbose)
+            print_time_left(k,nrecs);
+        end
     end
 end
 
 end
 
-function [cv,XCF,lags,sh,len,ilen,c,c2]=smcxccv_alloc(nFFT,sx,lagrng)
+function [cv,XCF,lags,sh,len,ilen,c,c2,txc]=smcxccv_alloc(nFFT,sx,lagrng)
 % allocation for smcxcc - vectorized
 
 % preallocate shifts and lags
@@ -1164,7 +1301,7 @@ lags=(-sx(1)+1:sx(1)-1).';
 glags=(lags>=lagrng(1) & lags<=lagrng(2));
 lags=lags(glags);
 sh=sh(glags);
-len=length(sh);
+len=numel(sh);
 ilen=sx(2)-1:-1:1;
 c2=cumsum(ilen);
 c=[1 c2+1];
@@ -1178,35 +1315,50 @@ XCF=nan(nFFT,sx(2));
 
 end
 
-function [cv,lags]=smcxcncv(F,CF,ZLAC,nFFT,sx,lagrng)
+function [cv,lags]=smcxcncv(F,CF,ZLAC,nFFT,sx,lagrng,verbose)
 %SMCXCNCV    smcxc 4 normalized correlograms - vectorized
 
 % preallocate just about everything
-[cv,XCF,lags,shift,len,ilen,c,c2]=smcxccv_alloc(nFFT,sx,lagrng);
+[cv,XCF,lags,shift,len,ilen,c,c2,nrecs]=smcxccv_alloc(nFFT,sx,lagrng);
 ZLAC2=ZLAC(ones(len,1),:);
 cv=permute(cv,[3 2 1]);
 
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
+
 % get correlograms
 for i=1:sx(2)-1
     % indicies
     i2=i+1:sx(2);
     
     % do all possible pairings against record i
-    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),'symmetric');
+    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),[],1,'symmetric');
     
     % put zero lag at center & normalize
     cv(:,1,c(i):c2(i))=XCF(shift,i2)./(ZLAC(i)*ZLAC2(:,i2));
+    
+    % detail message
+    if(verbose)
+        print_time_left(c2(i),nrecs);
+    end
 end
 cv=permute(cv,[3 2 1]);
 
 end
 
-function [cv,lags]=smcxccv(F,CF,nFFT,sx,lagrng)
+function [cv,lags]=smcxccv(F,CF,nFFT,sx,lagrng,verbose)
 %SMCXCCV    smcxc 4 correlograms - vectorized
 
 % preallocate just about everything
-[cv,XCF,lags,shift,len,ilen,c,c2]=smcxccv_alloc(nFFT,sx,lagrng);
+[cv,XCF,lags,shift,len,ilen,c,c2,nrecs]=smcxccv_alloc(nFFT,sx,lagrng);
 cv=permute(cv,[3 2 1]);
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlograms
 for i=1:sx(2)-1
@@ -1214,10 +1366,15 @@ for i=1:sx(2)-1
     i2=i+1:sx(2);
     
     % do all possible pairings against record i
-    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),'symmetric');
+    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),[],1,'symmetric');
     
     % put zero lag at center
     cv(:,1,c(i):c2(i))=XCF(shift,i2);
+    
+    % detail message
+    if(verbose)
+        print_time_left(c2(i),nrecs);
+    end
 end
 cv=permute(cv,[3 2 1]);
 
@@ -1238,7 +1395,7 @@ lags=(-sx(1)+1:sx(1)-1).';
 glags=(lags>=lagrng(1) & lags<=lagrng(2));
 lags=lags(glags);
 sh=sh(glags);
-len=length(sh);
+len=numel(sh);
 range=(-spacing:spacing).';
 per21=2*spacing+1;
 ilen=sx(2)-1:-1:1;
@@ -1255,12 +1412,17 @@ idxadj=ptsadj+peak;
 
 end
 
-function [cv,lv]=smcxcmncp(F,CF,ZLAC,nFFT,sx,n,adjacent,spacing,lagrng)
+function [cv,lv]=smcxcmncp(F,CF,ZLAC,nFFT,sx,n,adjacent,spacing,lagrng,verbose)
 %SMCXCMNCP    smcxc 4 multiple normalized correlogram peaks - looped
 
 % preallocate just about everything
-[cv,lv,lags,shift,len,range,per21,c,peak,ptsadj,idxadj]=...
+[cv,lv,lags,shift,len,range,per21,c,peak,ptsadj,idxadj,nrecs]=...
     smcxc_alloc(nFFT,sx,n,adjacent,spacing,lagrng);
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlation peaks
 for i=1:sx(2)-1
@@ -1268,7 +1430,7 @@ for i=1:sx(2)-1
         k=c(i)+j-i;
         
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         XCFT=XCF(shift)./(ZLAC(i)*ZLAC(j));
         
         % pick peak
@@ -1298,17 +1460,27 @@ for i=1:sx(2)-1
             cv(k,1,p,idxadj(good))=XCFT(iadj(good));
             lv(k,1,p,idxadj(good))=lags(iadj(good));
         end
+        
+        % detail message
+        if(verbose)
+            print_time_left(k,nrecs);
+        end
     end
 end
 
 end
 
-function [cv,lv]=smcxcmcp(F,CF,nFFT,sx,n,adjacent,spacing,lagrng)
+function [cv,lv]=smcxcmcp(F,CF,nFFT,sx,n,adjacent,spacing,lagrng,verbose)
 %SMCXCMCP    smcxc 4 multiple correlogram peaks - looped
 
 % preallocate just about everything
-[cv,lv,lags,shift,len,range,per21,c,peak,ptsadj,idxadj]=...
+[cv,lv,lags,shift,len,range,per21,c,peak,ptsadj,idxadj,nrecs]=...
     smcxc_alloc(nFFT,sx,n,adjacent,spacing,lagrng);
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlation peaks
 for i=1:sx(2)-1
@@ -1316,7 +1488,7 @@ for i=1:sx(2)-1
         k=c(i)+j-i;
         
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         XCFT=XCF(shift);
         
         % pick peak
@@ -1346,18 +1518,28 @@ for i=1:sx(2)-1
             cv(k,1,p,idxadj(good))=XCFT(iadj(good));
             lv(k,1,p,idxadj(good))=lags(iadj(good));
         end
+        
+        % detail message
+        if(verbose)
+            print_time_left(k,nrecs);
+        end
     end
 end
 
 end
 
-function [cv,lv,pv]=smcxcmncap(F,CF,ZLAC,nFFT,sx,n,adjacent,spacing,lagrng)
+function [cv,lv,pv]=smcxcmncap(F,CF,ZLAC,nFFT,sx,n,adjacent,spacing,lagrng,verbose)
 %SMCXCMNCAP    smcxc 4 multiple normalized correlogram absolute peaks - looped
 
 % preallocate just about everything
-[cv,lv,lags,shift,len,range,per21,c,peak,ptsadj,idxadj,txc]=...
+[cv,lv,lags,shift,len,range,per21,c,peak,ptsadj,idxadj,nrecs]=...
     smcxc_alloc(nFFT,sx,n,adjacent,spacing,lagrng);
-pv=nan(txc,1,n,1+2*adjacent);
+pv=nan(nrecs,1,n,1+2*adjacent);
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlation peaks
 for i=1:sx(2)-1
@@ -1365,7 +1547,7 @@ for i=1:sx(2)-1
         k=c(i)+j-i;
         
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         XCFT=XCF(shift)./(ZLAC(i)*ZLAC(j));
         AXCFT=abs(XCFT);
         
@@ -1400,18 +1582,28 @@ for i=1:sx(2)-1
             lv(k,1,p,idxadj(good))=lags(iadj(good));
             pv(k,1,p,idxadj(good))=squeeze(cv(k,1,p,idxadj(good)))./XCFT(iadj(good));
         end
+        
+        % detail message
+        if(verbose)
+            print_time_left(k,nrecs);
+        end
     end
 end
 
 end
 
-function [cv,lv,pv]=smcxcmcap(F,CF,nFFT,sx,n,adjacent,spacing,lagrng)
+function [cv,lv,pv]=smcxcmcap(F,CF,nFFT,sx,n,adjacent,spacing,lagrng,verbose)
 %SMCXCMCAP    smcxc 4 multiple correlogram absolute peaks - looped
 
 % preallocate just about everything
-[cv,lv,lags,shift,len,range,per21,c,peak,ptsadj,idxadj,txc]=...
+[cv,lv,lags,shift,len,range,per21,c,peak,ptsadj,idxadj,nrecs]=...
     smcxc_alloc(nFFT,sx,n,adjacent,spacing,lagrng);
-pv=nan(txc,1,n,1+2*adjacent);
+pv=nan(nrecs,1,n,1+2*adjacent);
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlation peaks
 for i=1:sx(2)-1
@@ -1419,7 +1611,7 @@ for i=1:sx(2)-1
         k=c(i)+j-i;
         
         % correlate
-        XCF=ifft(F(:,i).*CF(:,j),'symmetric');
+        XCF=ifft(F(:,i).*CF(:,j),[],1,'symmetric');
         XCFT=XCF(shift);
         AXCFT=abs(XCFT);
         
@@ -1453,6 +1645,11 @@ for i=1:sx(2)-1
             cv(k,1,p,idxadj(good))=AXCFT(iadj(good));
             lv(k,1,p,idxadj(good))=lags(iadj(good));
             pv(k,1,p,idxadj(good))=squeeze(cv(k,1,p,idxadj(good)))./XCFT(iadj(good));
+        end
+        
+        % detail message
+        if(verbose)
+            print_time_left(k,nrecs);
         end
     end
 end
@@ -1466,7 +1663,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [cv,lv,XCF,XCFT,lags,sh,len,range,per21,ilen,c,c2,imxc,rows,cols,...
-    good2,peak,ptsadj,idxadj,nadj,adjcols,cgtemp,lgtemp,iadj,good]=...
+    good2,peak,ptsadj,idxadj,nadj,adjcols,cgtemp,lgtemp,iadj,good,txc]=...
     smcxcv_alloc(nFFT,sx,n,adjacent,spacing,lagrng)
 % allocation for smcxc - vectorized
 
@@ -1476,7 +1673,7 @@ lags=(-sx(1)+1:sx(1)-1).';
 glags=(lags>=lagrng(1) & lags<=lagrng(2));
 lags=lags(glags);
 sh=sh(glags);
-len=length(sh);
+len=numel(sh);
 range=(-spacing:spacing).';
 per21=2*spacing+1;
 ilen=sx(2)-1:-1:1;
@@ -1510,14 +1707,19 @@ iadj=cgtemp;
 
 end
 
-function [cv,lv]=smcxcmncpv(F,CF,ZLAC,nFFT,sx,n,adjacent,spacing,lagrng)
+function [cv,lv]=smcxcmncpv(F,CF,ZLAC,nFFT,sx,n,adjacent,spacing,lagrng,verbose)
 %SMCXCMNCPV    smcxc 4 multiple normalized correlogram peaks - vectorized
 
 % preallocate just about everything
 [cv,lv,XCF,XCFT,lags,shift,len,range,per21,ilen,c,c2,imxc,rows,cols,good2,...
-    peak,ptsadj,idxadj,nadj,adjcols,cgtemp,lgtemp,iadj,good]=...
+    peak,ptsadj,idxadj,nadj,adjcols,cgtemp,lgtemp,iadj,good,nrecs]=...
     smcxcv_alloc(nFFT,sx,n,adjacent,spacing,lagrng);
 ZLAC2=ZLAC(ones(len,1),:);
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlation peaks
 for i=1:sx(2)-1
@@ -1525,7 +1727,7 @@ for i=1:sx(2)-1
     i2=i+1:sx(2);
     
     % do all possible pairings against record i
-    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),'symmetric');
+    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),[],1,'symmetric');
     
     % put zero lag at center & normalize
     XCFT(:,i2)=XCF(shift,i2)./(ZLAC(i)*ZLAC2(:,i2));
@@ -1535,7 +1737,7 @@ for i=1:sx(2)-1
         % find peak(s)
         %[cg(i,:,j,peak),imxc]=max(XCFT);
         %lg(i,:,j,peak)=lags(imxc);
-        [cv(c(i):c2(i),1,j,peak),imxc(i2)]=max(XCFT(:,i2));
+        [cv(c(i):c2(i),1,j,peak),imxc(i2)]=max(XCFT(:,i2),[],1);
         lv(c(i):c2(i),1,j,peak)=lags(imxc(i2));
         
         % add adjacent point(s)
@@ -1563,17 +1765,27 @@ for i=1:sx(2)-1
         good2(:,:)=false; good2(:,i2)=(rows(:,i2)>0 & rows(:,i2)<=len);
         XCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=nan;
     end
+    
+    % detail message
+    if(verbose)
+        print_time_left(c2(i),nrecs);
+    end
 end
 
 end
 
-function [cv,lv]=smcxcmcpv(F,CF,nFFT,sx,n,adjacent,spacing,lagrng)
+function [cv,lv]=smcxcmcpv(F,CF,nFFT,sx,n,adjacent,spacing,lagrng,verbose)
 %SMCXCMCPV    smcxc 4 multiple correlogram peaks - vectorized
 
 % preallocate just about everything
 [cv,lv,XCF,XCFT,lags,shift,len,range,per21,ilen,c,c2,imxc,rows,cols,good2,...
-    peak,ptsadj,idxadj,nadj,adjcols,cgtemp,lgtemp,iadj,good]=...
+    peak,ptsadj,idxadj,nadj,adjcols,cgtemp,lgtemp,iadj,good,nrecs]=...
     smcxcv_alloc(nFFT,sx,n,adjacent,spacing,lagrng);
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlation peaks
 for i=1:sx(2)-1
@@ -1581,7 +1793,7 @@ for i=1:sx(2)-1
     i2=i+1:sx(2);
     
     % do all possible pairings against record i
-    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),'symmetric');
+    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),[],1,'symmetric');
     
     % put zero lag at center
     XCFT(:,i2)=XCF(shift,i2);
@@ -1589,7 +1801,7 @@ for i=1:sx(2)-1
     % multi-peak picker
     for j=1:n
         % find peak(s)
-        [cv(c(i):c2(i),1,j,peak),imxc(i2)]=max(XCFT(:,i2));
+        [cv(c(i):c2(i),1,j,peak),imxc(i2)]=max(XCFT(:,i2),[],1);
         lv(c(i):c2(i),1,j,peak)=lags(imxc(i2));
         
         % add adjacent point(s)
@@ -1606,19 +1818,29 @@ for i=1:sx(2)-1
         good2(:,:)=false; good2(:,i2)=(rows(:,i2)>0 & rows(:,i2)<=len);
         XCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=nan;
     end
+    
+    % detail message
+    if(verbose)
+        print_time_left(c2(i),nrecs);
+    end
 end
 
 end
 
-function [cv,lv,pv]=smcxcmncapv(F,CF,ZLAC,nFFT,sx,n,adjacent,spacing,lagrng)
+function [cv,lv,pv]=smcxcmncapv(F,CF,ZLAC,nFFT,sx,n,adjacent,spacing,lagrng,verbose)
 %SMCXCMNCAPV    smcxc 4 multiple normalized correlogram absolute peaks - vectorized
 
 % preallocate just about everything
 [cv,lv,XCF,XCFT,lags,shift,len,range,per21,ilen,c,c2,imxc,rows,cols,good2,...
-    peak,ptsadj,idxadj,nadj,adjcols,cgtemp,lgtemp,iadj,good]=...
+    peak,ptsadj,idxadj,nadj,adjcols,cgtemp,lgtemp,iadj,good,nrecs]=...
     smcxcv_alloc(nFFT,sx,n,adjacent,spacing,lagrng);
 ZLAC2=ZLAC(ones(len,1),:);
 pv=cv; AXCFT=XCFT; pgtemp=cgtemp;
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlation peaks
 for i=1:sx(2)-1
@@ -1626,7 +1848,7 @@ for i=1:sx(2)-1
     i2=i+1:sx(2);
     
     % do all possible pairings against record i
-    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),'symmetric');
+    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),[],1,'symmetric');
     
     % put zero lag at center & normalize
     XCFT(:,i2)=XCF(shift,i2)./(ZLAC(i)*ZLAC2(:,i2));
@@ -1637,7 +1859,7 @@ for i=1:sx(2)-1
     % multi-peak picker
     for j=1:n
         % find peak(s)
-        [cv(c(i):c2(i),1,j,peak),imxc(i2)]=max(AXCFT(:,i2));
+        [cv(c(i):c2(i),1,j,peak),imxc(i2)]=max(AXCFT(:,i2),[],1);
         lv(c(i):c2(i),1,j,peak)=lags(imxc(i2));
         pv(c(i):c2(i),1,j,peak)=cv(c(i):c2(i),1,j,peak)./XCFT(imxc(i2)+(i2-1)*len).';
         
@@ -1657,18 +1879,28 @@ for i=1:sx(2)-1
         good2(:,:)=false; good2(:,i2)=(rows(:,i2)>0 & rows(:,i2)<=len);
         AXCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=nan;
     end
+    
+    % detail message
+    if(verbose)
+        print_time_left(c2(i),nrecs);
+    end
 end
 
 end
 
-function [cv,lv,pv]=smcxcmcapv(F,CF,nFFT,sx,n,adjacent,spacing,lagrng)
+function [cv,lv,pv]=smcxcmcapv(F,CF,nFFT,sx,n,adjacent,spacing,lagrng,verbose)
 %SMCXCMCAPV    smcxc 4 multiple correlogram absolute peaks - vectorized
 
 % preallocate just about everything
 [cv,lv,XCF,XCFT,lags,shift,len,range,per21,ilen,c,c2,imxc,rows,cols,good2,...
-    peak,ptsadj,idxadj,nadj,adjcols,cgtemp,lgtemp,iadj,good]=...
+    peak,ptsadj,idxadj,nadj,adjcols,cgtemp,lgtemp,iadj,good,nrecs]=...
     smcxcv_alloc(nFFT,sx,n,adjacent,spacing,lagrng);
 pv=cv; AXCFT=XCFT; pgtemp=cgtemp;
+
+% detail message
+if(verbose)
+    print_time_left(0,nrecs);
+end
 
 % get correlation peaks
 for i=1:sx(2)-1
@@ -1676,7 +1908,7 @@ for i=1:sx(2)-1
     i2=i+1:sx(2);
     
     % do all possible pairings against record i
-    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),'symmetric');
+    XCF(:,i2)=ifft(F(:,i*ones(1,ilen(i))).*CF(:,i2),[],1,'symmetric');
     
     % put zero lag at center & normalize
     XCFT(:,i2)=XCF(shift,i2);
@@ -1687,7 +1919,7 @@ for i=1:sx(2)-1
     % multi-peak picker
     for j=1:n
         % find peak(s)
-        [cv(c(i):c2(i),1,j,peak),imxc(i2)]=max(AXCFT(:,i2));
+        [cv(c(i):c2(i),1,j,peak),imxc(i2)]=max(AXCFT(:,i2),[],1);
         lv(c(i):c2(i),1,j,peak)=lags(imxc(i2));
         pv(c(i):c2(i),1,j,peak)=cv(c(i):c2(i),1,j,peak)./XCFT(imxc(i2)+(i2-1)*len).';
         
@@ -1706,6 +1938,11 @@ for i=1:sx(2)-1
         rows(:,i2)=imxc(ones(per21,1),i2)+range(:,ones(1,ilen(i)));
         good2(:,:)=false; good2(:,i2)=(rows(:,i2)>0 & rows(:,i2)<=len);
         AXCFT(sub2ind([len sx(2)],rows(good2),cols(good2)))=nan;
+    end
+    
+    % detail message
+    if(verbose)
+        print_time_left(c2(i),nrecs);
     end
 end
 

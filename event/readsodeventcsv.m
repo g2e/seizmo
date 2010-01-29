@@ -1,4 +1,4 @@
-function [events]=readsodeventcsv(file)
+function [events]=readsodeventcsv(varargin)
 %READSODEVENTCSV    Read in a SOD event .csv formatted file as a structure
 %
 %    Usage:    events=readsodeventcsv(file)
@@ -8,7 +8,9 @@ function [events]=readsodeventcsv(file)
 %     CSV (comma-separated values) file is expected to have 1 header line
 %     of comma-separated field names.  Each line in FILE is placed as a
 %     separated index in EVENTS, such that all values from line 4 (counting
-%     the header line) can be accessed in EVENTS(3).
+%     the header line) can be accessed in EVENTS(3).  Calling
+%     READSODEVENTCSV without a FILE argument or with FILE set to '' will
+%     present a graphical file selection menu.
 %
 %    Notes:
 %     - converts latitude, longitude, depth and magnitude to numeric form
@@ -36,22 +38,23 @@ function [events]=readsodeventcsv(file)
 %      ev1(1)
 %      ev2(1)
 %
-%    See also: WRITESODEVENTCSV, READCSV, WRITECSV
+%    See also: WRITESODEVENTCSV, READCSV, WRITECSV, SETEVENT
 
 %     Version History:
 %        Sep. 16, 2009 - initial version
+%        Jan. 26, 2010 - allow no input (select file graphically)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2009 at 22:30 GMT
+%     Last Updated Jan. 26, 2010 at 22:40 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
+msg=nargchk(0,1,nargin);
 if(~isempty(msg)); error(msg); end;
 
 % send on to readcsv
-events=readcsv(file);
+events=readcsv(varargin{:});
 
 % convert some fields to numbers
 f={'latitude' 'longitude' 'magnitude'};

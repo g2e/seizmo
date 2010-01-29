@@ -4,8 +4,8 @@ function [medians]=getmedian(data)
 %    Usage:    medians=getmedian(data)
 %
 %    Description: GETMEDIAN(DATA) returns the median value in the dependent
-%     component(s) for each SEIZMO record.  Multi-component records are
-%     just combined and treated as a single one to find the median.
+%     component(s) for each SEIZMO record in DATA.  Multi-component records
+%     are just combined and treated as a single one to find the median.
 %
 %    Notes:
 %
@@ -27,9 +27,10 @@ function [medians]=getmedian(data)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Dec.  4, 2009 - fix variable/function clash bug
+%        Jan. 29, 2010 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2009 at 21:15 GMT
+%     Last Updated Jan. 29, 2010 at 23:35 GMT
 
 % todo:
 

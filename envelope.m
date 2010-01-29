@@ -43,9 +43,10 @@ function [data]=envelope(data)
 %                        calls other SEIZMO functions
 %        Oct. 19, 2009 - added checks for IFTYPE and LEVEN
 %        Oct. 20, 2009 - doc update
+%        Jan. 29, 2010 - seizmoverbose support, better warnings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 20, 2009 at 21:50 GMT
+%     Last Updated Jan. 29, 2010 at 17:50 GMT
 
 % todo:
 
@@ -58,23 +59,19 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% attempt header check
-try
-    % check header
-    data=checkheader(data);
-catch
-    % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror)
-end
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt envelope
 try
+    % check header
+    data=checkheader(data);
+
+    % verbosity
+    verbose=seizmoverbose;
+
+    % number of records
+    nrecs=numel(data);
+    
     % get header info
     [npts,ncmp]=getheader(data,'npts','ncmp');
     nspts=2.^(nextpow2n(npts)+1);
@@ -84,21 +81,33 @@ try
     % cannot do spectral/xyz records
     if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
         error('seizmo:envelope:badIFTYPE',...
-            'Datatype of records in DATA must be Timeseries or XY!');
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
     end
     
     % cannot do unevenly sampled records
     if(any(strcmpi(leven,'false')))
         error('seizmo:envelope:badLEVEN',...
-            'Invalid operation on unevenly sampled records!');
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
+            '\nInvalid operation on unevenly sampled record(s)!']);
+    end
+    
+    % detail message
+    if(verbose)
+        disp('Getting Envelope of Record(s)');
+        print_time_left(0,nrecs);
     end
     
     % loop over records
-    nrecs=numel(data);
     depmin=nan(nrecs,1); depmen=depmin; depmax=depmin;
     for i=1:nrecs
         % skip dataless
-        if(isempty(data(i).dep)); continue; end
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
         
         % save class and convert to double precision
         oclass=str2func(class(data(i).dep));
@@ -111,8 +120,7 @@ try
         
         % get envelope
         data(i).dep=abs(ifft(...
-            fft(data(i).dep,nspts(i),1).*h(:,ones(1,ncmp(i))),...
-            [],1));
+            fft(data(i).dep,nspts(i),1).*h(:,ones(1,ncmp(i))),[],1));
         
         % truncate to original length and change class back
         data(i).dep=oclass(data(i).dep(1:npts(i),:));
@@ -121,6 +129,9 @@ try
         depmen(i)=mean(data(i).dep(:)); 
         depmin(i)=min(data(i).dep(:)); 
         depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
     end
     
     % update header
@@ -128,10 +139,10 @@ try
         'depmen',depmen,'depmin',depmin,'depmax',depmax);
     
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)

@@ -13,7 +13,7 @@ function [data]=keeprecords(data,idx)
 %    Header changes: NONE
 %
 %    Examples:
-%     These do the exact same thing:
+%     These all do the exact same thing:
 %      data=keeprecords(data,[1 3 6:numel(data)]);
 %      data=data([1 3 6:end]);
 %      data=deleterecords(data,[2 5]);

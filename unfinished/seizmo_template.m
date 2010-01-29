@@ -101,7 +101,20 @@ try
     % loop over records
     depmin=nan(nrecs,1); depmen=depmin; depmax=depmin;
     for i=1:nrecs
+        % skip dataless
+        if(isempty(data(i).dep)); continue; end
         
+        % convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+        
+        % convert back
+        data(i).dep=oclass(data(i).dep);
+        
+        % get dep*
+        depmin=min(data(i).dep(:));
+        depmen=mean(data(i).dep(:));
+        depmax=max(data(i).dep(:));
     end
     
     % update headers

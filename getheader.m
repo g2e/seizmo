@@ -73,9 +73,11 @@ function [varargout]=getheader(data,varargin)
 %        Sep. 18, 2009 - 2nd pass at abs time support
 %        Oct.  6, 2009 - dropped use of LOGICAL function
 %        Oct. 16, 2009 - reftime code only used when necessary
+%        Jan. 28, 2010 - eliminate extra struct checks
+%        Jan. 29, 2010 - added VERSIONINFO cache support/hack
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2009 at 17:50 GMT
+%     Last Updated Jan. 29, 2010 at 01:45 GMT
 
 % todo:
 
@@ -85,48 +87,78 @@ if(nargin<1)
         'Not enough input arguments.')
 end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+% check data structure & grab header setup
+[h,idx]=versioninfo(data);
 
 % number of records
 nrecs=numel(data);
 
+% load SEIZMO info
+global SEIZMO
+
 % recursive section
-%   breaks up dataset with multiple calls so that the
-%   rest of gh deals with only one header version
-[h,idx]=versioninfo(data);
+% - break up into single filetype calls
 nver=numel(h);
 sfill=repmat({'NaN'},nrecs,1);
 nfill=nan(nrecs,1);
 if(nver>1)
-    nout=max([1 nargin-1]);
-    for i=1:nver
-        varargoutn=cell(1,nout);
-        [varargoutn{:}]=getheader(data(idx==i),varargin{:});
-        % assign to varargout
-        for j=1:nout
-            % preallocate by type
-            if(i==1)
-                if(iscellstr(varargoutn{j}))
-                    varargout{j}=sfill; type=1;
-                else
-                    varargout{j}=nfill; type=0;
+    % turn off struct checking
+    oldseizmocheckstate=seizmocheck_state(false);
+    oldversioninfocache=versioninfo_cache(true);
+    
+    try
+        nout=max([1 nargin-1]);
+        for i=1:nver
+            % versioninfo cache hack
+            SEIZMO.VERSIONINFO.H=h(i);
+            SEIZMO.VERSIONINFO.IDX=ones(sum(idx==i),1);
+            
+            varargoutn=cell(1,nout);
+            [varargoutn{:}]=getheader(data(idx==i),varargin{:});
+            
+            % assign to varargout
+            for j=1:nout
+                % preallocate by type
+                if(i==1)
+                    if(iscellstr(varargoutn{j}))
+                        varargout{j}=sfill; type=1;
+                    else
+                        varargout{j}=nfill; type=0;
+                    end
                 end
-            end
-            % expand
-            in=size(varargoutn{j},2);
-            out=size(varargout{j},2);
-            if(in>out)
-                if(type)
-                    varargout{j}(:,out+1:in)=sfill(:,ones(1,in-out));
-                else
-                    varargout{j}(:,out+1:in)=nfill(:,ones(1,in-out));
+                % expand
+                in=size(varargoutn{j},2);
+                out=size(varargout{j},2);
+                if(in>out)
+                    if(type)
+                        varargout{j}(:,out+1:in)=sfill(:,ones(1,in-out));
+                    else
+                        varargout{j}(:,out+1:in)=nfill(:,ones(1,in-out));
+                    end
                 end
+                % assign
+                varargout{j}(idx==i,1:in)=varargoutn{j};
             end
-            % assign
-            varargout{j}(idx==i,1:in)=varargoutn{j};
         end
+        
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        versioninfo_cache(oldversioninfocache);
+        
+        % fix cache hack
+        SEIZMO.VERSIONINFO.H=h;
+        SEIZMO.VERSIONINFO.IDX=idx;
+    catch
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        versioninfo_cache(oldversioninfocache);
+        
+        % fix cache hack
+        SEIZMO.VERSIONINFO.H=h;
+        SEIZMO.VERSIONINFO.IDX=idx;
+        
+        % rethrow error
+        error(lasterror)
     end
     return;
 end

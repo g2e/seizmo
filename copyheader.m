@@ -34,9 +34,10 @@ function [data]=copyheader(data,idx,varargin)
 
 %     Version History:
 %        June 25, 2009 - initial version
+%        Jan. 28, 2010 - seizmoverbose support, proper SEIZMO handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:00 GMT
+%     Last Updated Jan. 28, 2010 at 21:20 GMT
 
 % todo:
 
@@ -49,61 +50,71 @@ msg=seizmocheck(data);
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% number of records
-nrecs=numel(data);
+% attempt copy of header
+try
+    % detail message
+    if(seizmoverbose)
+        disp('Copying Header of One Record to the Rest');
+    end
+    
+    % number of records
+    nrecs=numel(data);
 
-if(nargin==1)
-    [data.head]=deal(getheader(data(1)));
-elseif(nargin==2)
-    % check index
-    if(isempty(idx))
-        idx=1;
-    elseif(ischar(idx) && size(idx,1)==1)
-        idx=find(strcmp(idx,{data.name}),1);
+    if(nargin==1)
+        [data.head]=deal(getheader(data(1)));
+    elseif(nargin==2)
+        % check index
         if(isempty(idx))
-            error('seizmo:copyheader:badName','NAME not found!'); 
+            idx=1;
+        elseif(ischar(idx) && size(idx,1)==1)
+            idx=find(strcmp(idx,{data.name}),1);
+            if(isempty(idx))
+                error('seizmo:copyheader:badName','NAME not found!');
+            end
         end
-    end
-    if(~isscalar(idx) || ~isnumeric(idx) ...
-            || idx~=fix(idx) || idx<1 || idx>nrecs)
-        error('seizmo:copyheader:badIDX',...
-            'IDX must be a valid scalar indice!');
-    end
-    
-    % copy full header
-    [data.head]=deal(getheader(data(idx)));
-else
-    % check headers
-    data=checkheader(data);
-    
-    % check index
-    if(isempty(idx))
-        idx=1;
-    elseif(ischar(idx) && size(idx,1)==1)
-        idx=find(strcmp(idx,{data.name}),1);
+        if(~isscalar(idx) || ~isnumeric(idx) ...
+                || idx~=fix(idx) || idx<1 || idx>nrecs)
+            error('seizmo:copyheader:badIDX',...
+                'IDX must be a valid scalar indice!');
+        end
+
+        % copy full header
+        [data.head]=deal(getheader(data(idx)));
+    else
+        % check index
         if(isempty(idx))
-            error('seizmo:copyheader:badName','NAME not found!'); 
+            idx=1;
+        elseif(ischar(idx) && size(idx,1)==1)
+            idx=find(strcmp(idx,{data.name}),1);
+            if(isempty(idx))
+                error('seizmo:copyheader:badName','NAME not found!');
+            end
         end
+        if(~isscalar(idx) || ~isnumeric(idx) ...
+                || idx~=fix(idx) || idx<1 || idx>nrecs)
+            error('seizmo:copyheader:badIDX',...
+                'IDX must be a valid scalar indice!');
+        end
+
+        % get values
+        values=cell(1,numel(varargin));
+        [values{:}]=getheader(data(idx),varargin{:});
+
+        % apply values
+        values=[varargin; values];
+        data=changeheader(data,values{:});
     end
-    if(~isscalar(idx) || ~isnumeric(idx) ...
-            || idx~=fix(idx) || idx<1 || idx>nrecs)
-        error('seizmo:copyheader:badIDX',...
-            'IDX must be a valid scalar indice!');
-    end
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
     
-    % get values
-    values=cell(1,numel(varargin));
-    [values{:}]=getheader(data(idx),varargin{:});
-    
-    % apply values
-    values=[varargin; values];
-    data=changeheader(data,values{:});
+    % rethrow error
+    error(lasterror)
 end
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

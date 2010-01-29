@@ -35,9 +35,10 @@ function [x,t]=make_source_timefunction(delta,hwidth,type)
 %     Version History:
 %        Oct. 17, 2009 - initial version
 %        Oct. 29, 2009 - minor doc update
+%        Jan. 27, 2010 - seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 29, 2009 at 01:50 GMT
+%     Last Updated Jan. 27, 2010 at 07:05 GMT
 
 % todo:
 
@@ -87,6 +88,15 @@ if(nd==1); delta=delta(ones(nstf,1),1); end
 if(nt==1); type=type(ones(nstf,1),1); end
 if(nh==1); hwidth=hwidth(ones(nstf,1),1); end
 
+% verbosity
+verbose=seizmoverbose;
+
+% detail message
+if(verbose)
+    disp('Making Source Time Function(s)');
+    print_time_left(0,nstf);
+end
+
 % gaussian parameters
 a=exp(0.5)*sqrt(2);
 b=exp(0.5)/sqrt(pi);
@@ -104,6 +114,11 @@ for i=1:nstf
             npts=ceil(hwidth(i)/delta(i));
             t{i}=delta(i).*(-npts:npts);
             x{i}=triangletf(t{i},0,hwidth(i),1/hwidth(i));
+    end
+    
+    % detail message
+    if(verbose)
+        print_time_left(i,nstf);
     end
 end
 

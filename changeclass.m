@@ -35,9 +35,10 @@ function [data]=changeclass(data,class)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Oct.  5, 2009 - doc update
+%        Jan. 28, 2010 - seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 21:55 GMT
+%     Last Updated Jan. 28, 2010 at 00:05 GMT
 
 % todo:
 
@@ -48,6 +49,9 @@ if(~isempty(msg)); error(msg); end
 % check data structure
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
+
+% verbosity
+verbose=seizmoverbose;
 
 % number of records
 nrecs=numel(data);
@@ -78,16 +82,37 @@ elseif(numel(class)~=nrecs)
         'CLASS must be scalar or match number of records in DATA!');
 end
 
+% detail message
+if(verbose)
+    disp('Changing Class of Dependent Data in Record(s)');
+    print_time_left(0,nrecs);
+end
+
 % reclass dependent data
 for i=1:nrecs
     data(i).dep=class{i}(data(i).dep);
+    
+    % detail message
+    if(verbose); print_time_left(i,nrecs); end
+end
+
+% detail message
+if(verbose)
+    disp('Changing Class of Independent Data in Record(s)');
+    print_time_left(0,nrecs);
 end
 
 % reclass independent data
 if(isfield(data,'ind'))
     for i=1:nrecs
         data(i).ind=class{i}(data(i).ind);
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
     end
+else
+    % detail message
+    if(verbose); print_time_left(nrecs,nrecs); end
 end
 
 end

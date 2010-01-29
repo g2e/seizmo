@@ -44,9 +44,10 @@ function [varargout]=getenumdesc(data,varargin)
 %                        from GENUMDESC to GETENUMDESC
 %        Apr. 23, 2009 - move usage up
 %        Oct.  6, 2009 - change special output to work with CHANGEHEADER
+%        Jan. 29, 2010 - elimate extra VERSIONINFO call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 21:45 GMT
+%     Last Updated Jan. 29, 2010 at 00:25 GMT
 
 % todo:
 
@@ -65,8 +66,12 @@ varargout=nvarargout;
 % get header info
 [nvarargout{:}]=getheader(data,varargin{:});
 
+% pull header setup
+global SEIZMO
+h=SEIZMO.VERSIONINFO.H;
+idx=SEIZMO.VERSIONINFO.IDX;
+
 % loop over versions
-[h,idx]=versioninfo(data);
 for i=1:numel(h)
     % indexing of data with this header version
     ind=find(idx==i);

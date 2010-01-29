@@ -45,9 +45,10 @@ function [data]=multiply(data,constant,cmp)
 %        Nov. 22, 2008 - update for new name schema (now MULTIPLY)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Jan. 26, 2010 - seizmoverbose support, properly handle states
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Jan. 26, 2010 at 18:25 GMT
 
 % todo:
 
@@ -59,10 +60,6 @@ if(~isempty(msg)); error(msg); end
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
 % no constant case
 if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end
 
@@ -71,6 +68,9 @@ if(nargin==2); cmp=':';
 elseif(any(fix(cmp)~=cmp) || (~isnumeric(cmp) && ~strcmpi(':',cmp)))
     error('seizmo:multiply:badInput','Component list is bad!');
 end
+
+% verbosity
+verbose=seizmoverbose;
 
 % number of records
 nrecs=numel(data);
@@ -85,23 +85,57 @@ elseif(numel(constant)~=nrecs)
         'Number of elements in constant not equal to number of records!');
 end
 
+% detail message
+if(verbose)
+    disp('Multiplying Record(s) by Constant')
+    print_time_left(0,nrecs);
+end
+
 % multiply by constant
 depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
 for i=1:nrecs
-    if(isempty(data(i).dep)); continue; end
+    % skip dataless
+    if(isempty(data(i).dep))
+        % detail message
+        if(verbose)
+            print_time_left(i,nrecs);
+        end
+        continue;
+    end
+    
+    % multiply selected cmp
     if(~isempty(cmp))
         oclass=str2func(class(data(i).dep));
         data(i).dep(:,cmp)=oclass(double(data(i).dep(:,cmp))*constant(i));
     end
+    
+    % dep*
     depmen(i)=mean(data(i).dep(:)); 
     depmin(i)=min(data(i).dep(:)); 
     depmax(i)=max(data(i).dep(:));
+    
+    % detail message
+    if(verbose)
+        print_time_left(i,nrecs);
+    end
 end
 
-% update header
-data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
 
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
+% try updating header
+try
+    data=changeheader(data,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+    
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

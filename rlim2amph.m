@@ -34,9 +34,10 @@ function [data]=rlim2amph(data)
 %                        move usage up
 %        Oct. 21, 2009 - only touches rlim (maybe a bit faster)
 %        Dec.  4, 2009 - handle no rlim case
+%        Jan. 26, 2010 - seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2009 at 20:45 GMT
+%     Last Updated Jan. 26, 2010 at 18:50 GMT
 
 % todo:
 
@@ -49,23 +50,19 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% attempt header check
-try
-    % check header
-    data=checkheader(data);
-catch
-    % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror)
-end
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt conversion
 try
+    % check header
+    data=checkheader(data);
+    
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % number of records
+    nrecs=numel(data);
+    
     % retreive header info
     iftype=getenumid(data,'iftype');
 
@@ -77,11 +74,24 @@ try
     % records must be spectral
     if(any(~amph & ~rlim))
         error('seizmo:rlim2amph:illegalOperation',...
-            'Illegal operation on non-spectral file!');
+            ['Record(s):\n' sprintf('%d ',find(~amph & ~rlim)) ...
+            '\nIllegal operation on non-spectral record(s)!']);
+    end
+    
+    % detail message
+    if(verbose)
+        disp('Converting RLIM Record(s) to AMPH');
+        print_time_left(0,nrecs);
     end
     
     % quick exit if all amph
-    if(nrlim==0); return; end
+    if(nrlim==0)
+        % detail message
+        if(verbose)
+            print_time_left(nrecs,nrecs);
+        end
+        return;
+    end
 
     % loop through records
     depmen=nan(nrlim,1); depmin=depmen; depmax=depmen;
@@ -89,10 +99,15 @@ try
         k=irlim(i);
 
         % skip dataless
-        if(isempty(data(k).dep)); continue; end
+        if(isempty(data(k).dep))
+            % detail message
+            if(verbose)
+                print_time_left(k,nrecs);
+            end
+            continue;
+        end
 
         % convert
-
         oclass=str2func(class(data(k).dep));
         data(k).dep=double(data(k).dep);
         temp=complex(data(k).dep(:,1:2:end),data(k).dep(:,2:2:end));
@@ -104,6 +119,16 @@ try
         depmen(i)=mean(data(k).dep(:));
         depmin(i)=min(data(k).dep(:));
         depmax(i)=max(data(k).dep(:));
+        
+        % detail message
+        if(verbose)
+            print_time_left(k,nrecs);
+        end
+    end
+    
+    % detail message
+    if(verbose && k~=nrecs)
+        print_time_left(nrecs,nrecs);
     end
 
     % update filetype
@@ -111,10 +136,10 @@ try
         'depmax',depmax,'depmin',depmin,'depmen',depmen);
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)

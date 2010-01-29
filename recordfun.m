@@ -144,11 +144,13 @@ function [data]=recordfun(fun,varargin)
 %        Aug. 21, 2009 - changed IFTYPE from ERROR to WARN to allow working
 %                        with mixed xy and timeseries data
 %        Oct.  6, 2009 - dropped use of LOGICAL function
+%        Jan. 26, 2010 - seizmoverbose support, properly handle states
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 20:55 GMT
+%     Last Updated Jan. 26, 2010 at 19:45 GMT
 
 % todo:
+% - could use some code re-ordering
 
 % default options
 option.NEWHDR=false;
@@ -170,7 +172,8 @@ valid.LEVEN={'ERROR' 'WARN' 'IGNORE'};
 valid.IFTYPE={'ERROR' 'WARN' 'IGNORE'};
 
 % get options set by BINOPERR (SEIZMO global)
-global SEIZMO; fields=fieldnames(option).';
+global SEIZMO
+fields=fieldnames(option).';
 if(isfield(SEIZMO,'BINOPERR'))
     for i=fields
         if(isfield(SEIZMO.BINOPERR,i{:}))
@@ -207,14 +210,20 @@ if(ischar(fun))
     % without throwing a warning...so manually doing it
     switch fun
         case '+'
+            phrase='Adding';
             fun=@(x,y)(x+y);
         case '-'
+            phrase='Subtracting';
             fun=@(x,y)(x-y);
         case '*'
+            phrase='Multiplying';
             fun=@(x,y)(x.*y);
         case '/'
+            phrase='Dividing';
             fun=@(x,y)(x./y);
     end
+else
+    phrase='Applying Operator on';
 end
 
 % find all datasets in inline arguments
@@ -222,371 +231,419 @@ isdata=false(1,nargin-1);
 for i=1:(nargin-1); isdata(i)=isseizmo(varargin{i},'dep'); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% push datasets into a separate variable
-data=varargin(isdata);
-varargin(isdata)=[];
+% attempt dataset setup/checking
+try
+    % push datasets into a separate variable
+    data=varargin(isdata);
+    varargin(isdata)=[];
 
-% options must be field-value pairs
-nargopt=numel(varargin);
-if(mod(nargopt,2))
-    error('seizmo:recordfun:badNumOptions','Unpaired option(s)!');
-end
+    % options must be field-value pairs
+    nargopt=numel(varargin);
+    if(mod(nargopt,2))
+        error('seizmo:recordfun:badNumOptions','Unpaired option(s)!');
+    end
 
-% get inline options
-for i=1:2:nargopt
-    varargin{i}=upper(varargin{i});
-    if(isfield(option,varargin{i}))
-        if(strcmpi('NEWHDR',varargin{i}))
-            try
-                option.(varargin{i})=varargin{i+1}(1)~=0;
-            catch
-                warning('seizmo:recordfun:badState',...
-                    '%s state bad => leaving alone!',varargin{i});
+    % get inline options
+    for i=1:2:nargopt
+        varargin{i}=upper(varargin{i});
+        if(isfield(option,varargin{i}))
+            if(strcmpi('NEWHDR',varargin{i}))
+                try
+                    option.(varargin{i})=varargin{i+1}(1)~=0;
+                catch
+                    warning('seizmo:recordfun:badState',...
+                        '%s state bad => leaving alone!',varargin{i});
+                end
+            else
+                if(~any(strcmpi(varargin{i+1},valid.(varargin{i}))))
+                    warning('seizmo:recordfun:badState',...
+                        '%s state bad => leaving alone!',varargin{i});
+                else
+                    option.(varargin{i})=upper(varargin{i+1});
+                end
             end
         else
-            if(~any(strcmpi(varargin{i+1},valid.(varargin{i}))))
-                warning('seizmo:recordfun:badState',...
-                    '%s state bad => leaving alone!',varargin{i});
-            else
-                option.(varargin{i})=upper(varargin{i+1});
+            warning('seizmo:recordfun:badInput',...
+                'Unknown Option: %s !',varargin{i});
+        end
+    end
+    
+    % verbosity
+    verbose=seizmoverbose;
+
+    % get number of records in each dataset
+    ndatasets=numel(data);
+    nrecs=zeros(1,ndatasets);
+    for i=1:ndatasets
+        nrecs(i)=numel(data{i});
+    end
+
+    % check for bad sized datasets
+    maxrecs=max(nrecs);
+    if(any(nrecs~=1 & nrecs~=maxrecs))
+        error('seizmo:recordfun:nrecsMismatch',...
+            'Number of records in datasets inconsistent!');
+    end
+
+    % expand scalar datasets
+    for i=find(nrecs==1)
+        data{i}(1:maxrecs,1)=data{i};
+    end
+
+    % check and get header fields
+    b(1:ndatasets)={nan(maxrecs,1)};
+    npts=b; delta=b; leven=b; iftype=b; ncmp=b;
+    nzyear=b; nzjday=b; nzhour=b; nzmin=b; nzsec=b; nzmsec=b;
+    for i=1:ndatasets
+        data{i}=checkheader(data{i});
+        ncmp{i}=getncmp(data{i});
+        leven{i}=getlgc(data{i},'leven');
+        iftype{i}=getenumdesc(data{i},'iftype');
+        [npts{i},delta{i},b{i},nzyear{i},nzjday{i},...
+            nzhour{i},nzmin{i},nzsec{i},nzmsec{i}]=...
+            getheader(data{i},'npts','delta','b',...
+            'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
+    end
+
+    % turn off header checking
+    oldcheckheaderstate=checkheader_state(false);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
+end
+
+% attempt fun
+try
+    % 2+ datasets
+    if(ndatasets>1)
+        % check records
+        if(~isequal(iftype{:}))
+            report.identifier='seizmo:recordfun:mixedIFTYPE';
+            report.message='Filetypes differ for some records!';
+            if(strcmpi(option.IFTYPE,'error'))
+                error(report);
+            elseif(strcmpi(option.IFTYPE,'warn'))
+                warning(report.identifier,report.message);
             end
         end
-    else
-        warning('seizmo:recordfun:badInput',...
-            'Unknown Option: %s !',varargin{i}); 
-    end
-end
-
-% get number of records in each dataset
-ndatasets=numel(data);
-nrecs=zeros(1,ndatasets);
-for i=1:ndatasets
-    nrecs(i)=numel(data{i});
-end
-
-% check for bad sized datasets
-maxrecs=max(nrecs);
-if(any(nrecs~=1 & nrecs~=maxrecs))
-    error('seizmo:recordfun:nrecsMismatch',...
-        'Number of records in datasets inconsistent!');
-end
-
-% expand scalar datasets
-for i=find(nrecs==1)
-    data{i}(1:maxrecs,1)=data{i};
-end
-
-% check and get header fields
-b(1:ndatasets)={nan(maxrecs,1)};
-npts=b; delta=b; leven=b; iftype=b; ncmp=b;
-nzyear=b; nzjday=b; nzhour=b; nzmin=b; nzsec=b; nzmsec=b;
-for i=1:ndatasets
-    data{i}=checkheader(data{i});
-    ncmp{i}=getncmp(data{i});
-    leven{i}=getlgc(data{i},'leven');
-    iftype{i}=getenumdesc(data{i},'iftype');
-    [npts{i},delta{i},b{i},nzyear{i},nzjday{i},...
-        nzhour{i},nzmin{i},nzsec{i},nzmsec{i}]=...
-        getheader(data{i},'npts','delta','b',...
-        'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
-end
-
-% turn off header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(false);
-
-% 2+ datasets
-if(ndatasets>1)
-    % check records
-    if(~isequal(iftype{:}))
-        report.identifier='seizmo:recordfun:mixedIFTYPE';
-        report.message='Filetypes differ for some records!';
-        if(strcmpi(option.IFTYPE,'error'))
-            error(report);
-        elseif(strcmpi(option.IFTYPE,'warn'))
-            warning(report.identifier,report.message);
+        for i=1:ndatasets
+            if(any(~strcmpi(leven{i},'true')))
+                report.identifier='seizmo:recordfun:illegalOperation';
+                report.message=...
+                    'Illegal operation on unevenly sampled record(s)!';
+                if(strcmpi(option.LEVEN,'error'))
+                    error(report);
+                elseif(strcmpi(option.LEVEN,'warn'))
+                    warning(report.identifier,report.message);
+                end
+            end
         end
-    end
-    for i=1:ndatasets
-        if(any(~strcmpi(leven{i},'true')))
+        if(~isequal(ncmp{:}))
+            report.identifier='seizmo:recordfun:mixedNCMP';
+            report.message='Number of components differ for some records!';
+            if(strcmpi(option.NCMP,'error'))
+                error(report);
+            elseif(strcmpi(option.NCMP,'warn'))
+                warning(report.identifier,report.message);
+            end
+        end
+        if(~isequal(npts{:}))
+            report.identifier='seizmo:recordfun:mixedNPTS';
+            report.message='Number of points differ for some records!';
+            if(strcmpi(option.NPTS,'error'))
+                error(report);
+            elseif(strcmpi(option.NPTS,'warn'))
+                warning(report.identifier,report.message);
+            end
+        end
+        if(~isequal(delta{:}))
+            report.identifier='seizmo:recordfun:mixedDELTA';
+            report.message='Sample rates differ for some records!';
+            if(strcmpi(option.DELTA,'error'))
+                error(report);
+            elseif(strcmpi(option.DELTA,'warn'))
+                warning(report.identifier,report.message);
+            end
+        end
+        if(~isequal(b{:}))
+            report.identifier='seizmo:recordfun:mixedB';
+            report.message='Begin times differ for some records!';
+            if(strcmpi(option.BEGIN,'error'))
+                error(report);
+            elseif(strcmpi(option.BEGIN,'warn'))
+                warning(report.identifier,report.message);
+            end
+        end
+        if(~isequal(nzyear{:}) || ~isequal(nzjday{:}) ...
+                || ~isequal(nzhour{:}) || ~isequal(nzmin{:}) ...
+                || ~isequal(nzsec{:})  || ~isequal(nzmsec{:}))
+            report.identifier='seizmo:recordfun:mixedReferenceTimes';
+            report.message='Reference times differ for some records!';
+            if(strcmpi(option.REF,'error'))
+                error(report);
+            elseif(strcmpi(option.REF,'warn'))
+                warning(report.identifier,report.message);
+            end
+        end
+
+        % save class and convert to double precision
+        oclass=cell(1,maxrecs);
+        if(option.NEWHDR)
+            for i=1:maxrecs
+                oclass{i}=str2func(class(data{end}(i).dep));
+            end
+        else
+            for i=1:maxrecs
+                oclass{i}=str2func(class(data{1}(i).dep));
+            end
+        end
+        for i=1:ndatasets
+            for j=1:maxrecs; data{i}(j).dep=double(data{i}(j).dep); end
+        end
+
+        % alter size of npts/ncmp
+        allnpts=cell2mat(npts);
+        allncmp=cell2mat(ncmp);
+        if(strcmpi(option.NPTS,'TRUNCATE'))
+            minpts=min(allnpts,[],2);
+            for i=1:ndatasets
+                for j=1:maxrecs
+                    data{i}(j).dep=data{i}(j).dep(1:minpts(j),:);
+                end
+            end
+        elseif(strcmpi(option.NPTS,'PAD'))
+            maxpts=max(allnpts,[],2);
+            for i=1:ndatasets
+                for j=1:maxrecs
+                    data{i}(j).dep=[data{i}(j).dep;
+                        zeros(maxpts(j)-npts{i}(j),ncmp{i}(j))];
+                end
+            end
+        end
+        if(strcmpi(option.NCMP,'TRUNCATE'))
+            mincmp=min(allncmp,[],2);
+            for i=1:ndatasets
+                for j=1:maxrecs
+                    data{i}(j).dep=data{i}(j).dep(:,1:mincmp(j));
+                end
+            end
+        elseif(strcmpi(option.NCMP,'PAD'))
+            maxcmp=max(allncmp,[],2);
+            for i=1:ndatasets
+                for j=1:maxrecs
+                    data{i}(j).dep=[data{i}(j).dep ...
+                        zeros(npts{i}(j),maxcmp(j)-ncmp{i}(j))];
+                end
+            end
+        end
+        
+        % detail message
+        if(verbose)
+            disp([phrase ' Record(s) Across Datasets']);
+            print_time_left(0,maxrecs);
+        end
+
+        % operate on records
+        npts=nan(maxrecs,1); ncmp=npts;
+        depmen=npts; depmin=npts; depmax=npts;
+        for i=1:maxrecs
+            % apply function
+            for j=2:ndatasets
+                data{1}(i).dep=fun(data{1}(i).dep,data{j}(i).dep);
+            end
+
+            % get header info
+            [npts(i),ncmp(i)]=size(data{1}(i).dep);
+            if(npts(i)>0 && ncmp(i)>0)
+                depmen(i)=mean(data{1}(i).dep(:));
+                depmin(i)=min(data{1}(i).dep(:));
+                depmax(i)=max(data{1}(i).dep(:));
+            end
+
+            % change class back
+            data{1}(i).dep=oclass{i}(data{1}(i).dep);
+
+            % copy header if newhdr set
+            if(option.NEWHDR)
+                % this totally requires header layout to be equivalent
+                data{1}(i).head=data{end}(i).head;
+            end
+            
+            % detail message
+            if(verbose)
+                print_time_left(i,maxrecs);
+            end
+        end
+
+        % reduce to first dataset
+        data=data{1};
+    else % 1 dataset
+        % uncell
+        data=data{:};
+
+        % no records to add on
+        if(isscalar(data)); return; end
+
+        % check records
+        if(~isscalar(unique(iftype{:})))
+            report.identifier='seizmo:recordfun:mixedIFTYPE';
+            report.message='Filetypes differ for some records!';
+            if(strcmpi(option.IFTYPE,'error'))
+                error(report);
+            elseif(strcmpi(option.IFTYPE,'warn'))
+                warning(report.identifier,report.message);
+            end
+        end
+        if(any(~strcmpi(leven{:},'true')))
             report.identifier='seizmo:recordfun:illegalOperation';
-            report.message='illegal operation on unevenly spaced record!';
+            report.message=...
+                'illegal operation on unevenly spaced record(s)!';
             if(strcmpi(option.LEVEN,'error'))
                 error(report);
             elseif(strcmpi(option.LEVEN,'warn'))
                 warning(report.identifier,report.message);
             end
         end
-    end
-    if(~isequal(ncmp{:}))
-        report.identifier='seizmo:recordfun:mixedNCMP';
-        report.message='Number of components differ for some records!';
-        if(strcmpi(option.NCMP,'error'))
-            error(report);
-        elseif(strcmpi(option.NCMP,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    if(~isequal(npts{:}))
-        report.identifier='seizmo:recordfun:mixedNPTS';
-        report.message='Number of points differ for some records!';
-        if(strcmpi(option.NPTS,'error'))
-            error(report);
-        elseif(strcmpi(option.NPTS,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    if(~isequal(delta{:}))
-        report.identifier='seizmo:recordfun:mixedDELTA';
-        report.message='Sample rates differ for some records!';
-        if(strcmpi(option.DELTA,'error'))
-            error(report);
-        elseif(strcmpi(option.DELTA,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    if(~isequal(b{:}))
-        report.identifier='seizmo:recordfun:mixedB';
-        report.message='Begin times differ for some records!';
-        if(strcmpi(option.BEGIN,'error'))
-            error(report);
-        elseif(strcmpi(option.BEGIN,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    if(~isequal(nzyear{:}) || ~isequal(nzjday{:}) ...
-            || ~isequal(nzhour{:}) || ~isequal(nzmin{:}) ...
-            || ~isequal(nzsec{:})  || ~isequal(nzmsec{:}))
-        report.identifier='seizmo:recordfun:mixedReferenceTimes';
-        report.message='Reference times differ for some records!';
-        if(strcmpi(option.REF,'error'))
-            error(report);
-        elseif(strcmpi(option.REF,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    
-    % save class and convert to double precision
-    oclass=cell(1,maxrecs);
-    if(option.NEWHDR)
-        for i=1:maxrecs; oclass{i}=str2func(class(data{end}(i).dep)); end
-    else
-        for i=1:maxrecs; oclass{i}=str2func(class(data{1}(i).dep)); end
-    end
-    for i=1:ndatasets
-        for j=1:maxrecs; data{i}(j).dep=double(data{i}(j).dep); end
-    end
-    
-    % alter size of npts/ncmp
-    allnpts=cell2mat(npts);
-    allncmp=cell2mat(ncmp);
-    if(strcmpi(option.NPTS,'TRUNCATE'))
-        minpts=min(allnpts,[],2);
-        for i=1:ndatasets
-            for j=1:maxrecs
-                data{i}(j).dep=data{i}(j).dep(1:minpts(j),:);
+        if(~isscalar(unique(ncmp{:})))
+            report.identifier='seizmo:recordfun:mixedNCMP';
+            report.message='Number of components differ for some records!';
+            if(strcmpi(option.NCMP,'error'))
+                error(report);
+            elseif(strcmpi(option.NCMP,'warn'))
+                warning(report.identifier,report.message);
             end
         end
-    elseif(strcmpi(option.NPTS,'PAD'))
-        maxpts=max(allnpts,[],2);
-        for i=1:ndatasets
-            for j=1:maxrecs
-                data{i}(j).dep=[data{i}(j).dep;
-                    zeros(maxpts(j)-npts{i}(j),ncmp{i}(j))];
+        if(~isscalar(unique(npts{:})))
+            report.identifier='seizmo:recordfun:mixedNPTS';
+            report.message='Number of points differ for some records!';
+            if(strcmpi(option.NPTS,'error'))
+                error(report);
+            elseif(strcmpi(option.NPTS,'warn'))
+                warning(report.identifier,report.message);
             end
         end
-    end
-    if(strcmpi(option.NCMP,'TRUNCATE'))
-        mincmp=min(allncmp,[],2);
-        for i=1:ndatasets
-            for j=1:maxrecs
-                data{i}(j).dep=data{i}(j).dep(:,1:mincmp(j));
+        if(~isscalar(unique(delta{:})))
+            report.identifier='seizmo:recordfun:mixedDELTA';
+            report.message='Sample rates differ for some records!';
+            if(strcmpi(option.DELTA,'error'))
+                error(report);
+            elseif(strcmpi(option.DELTA,'warn'))
+                warning(report.identifier,report.message);
             end
         end
-    elseif(strcmpi(option.NCMP,'PAD'))
-        maxcmp=max(allncmp,[],2);
-        for i=1:ndatasets
-            for j=1:maxrecs
-                data{i}(j).dep=[data{i}(j).dep ...
-                    zeros(npts{i}(j),maxcmp(j)-ncmp{i}(j))];
+        if(~isscalar(unique(b{:})))
+            report.identifier='seizmo:recordfun:mixedB';
+            report.message='Begin times differ for some records!';
+            if(strcmpi(option.BEGIN,'error'))
+                error(report);
+            elseif(strcmpi(option.BEGIN,'warn'))
+                warning(report.identifier,report.message);
             end
         end
-    end
-    
-    % operate on records
-    npts=nan(maxrecs,1); ncmp=npts;
-    depmen=npts; depmin=npts; depmax=npts;
-    for i=1:maxrecs
-        % apply function
-        for j=2:ndatasets
-            data{1}(i).dep=fun(data{1}(i).dep,data{j}(i).dep);
+        if(~isscalar(unique(nzyear{:})) ...
+                || ~isscalar(unique(nzjday{:})) ...
+                || ~isscalar(unique(nzhour{:})) ...
+                || ~isscalar(unique(nzmin{:})) ...
+                || ~isscalar(unique(nzsec{:})) ...
+                || ~isscalar(unique(nzmsec{:})))
+            report.identifier='seizmo:recordfun:mixedReferenceTimes';
+            report.message='Reference times differ for some records!';
+            if(strcmpi(option.REF,'error'))
+                error(report);
+            elseif(strcmpi(option.REF,'warn'))
+                warning(report.identifier,report.message);
+            end
+        end
+
+        % save class and convert to double precision
+        if(option.NEWHDR); oclass=str2func(class(data(end).dep));
+        else oclass=str2func(class(data(1).dep));
+        end
+        for i=1:nrecs; data(i).dep=double(data(i).dep); end
+
+        % alter size of npts/ncmp
+        npts=cell2mat(npts);
+        ncmp=cell2mat(ncmp);
+        if(strcmpi(option.NPTS,'TRUNCATE'))
+            minpts=min(npts);
+            for i=1:nrecs
+                data(i).dep=data(i).dep(1:minpts,:);
+            end
+        elseif(strcmpi(option.NPTS,'PAD'))
+            maxpts=max(npts);
+            for i=1:nrecs
+                data(i).dep=[data(i).dep; zeros(maxpts-npts(i),ncmp(i))];
+            end
+        end
+        if(strcmpi(option.NCMP,'TRUNCATE'))
+            mincmp=min(ncmp);
+            for i=1:nrecs
+                data(i).dep=data(i).dep(:,1:mincmp);
+            end
+        elseif(strcmpi(option.NCMP,'PAD'))
+            maxcmp=max(ncmp);
+            for i=1:nrecs
+                data(i).dep=[data(i).dep zeros(npts(i),maxcmp-ncmp(i))];
+            end
         end
         
-        % get header info
-        [npts(i),ncmp(i)]=size(data{1}(i).dep);
-        if(npts(i)>0 && ncmp(i)>0)
-            depmen(i)=mean(data{1}(i).dep(:));
-            depmin(i)=min(data{1}(i).dep(:));
-            depmax(i)=max(data{1}(i).dep(:));
+        % detail message
+        if(verbose)
+            disp([phrase ' Record(s)']);
+            print_time_left(0,nrecs);
         end
         
-        % change class back
-        data{1}(i).dep=oclass{i}(data{1}(i).dep);
-        
+        % operate on records
+        for i=2:nrecs
+            data(1).dep=fun(data(1).dep,data(i).dep);
+            
+            % detail message
+            if(verbose)
+                print_time_left(i,nrecs);
+            end
+        end
+
         % copy header if newhdr set
         if(option.NEWHDR)
             % this totally requires header layout to be equivalent
-            data{1}(i).head=data{end}(i).head;
+            data(1).head=data(end).head;
+        end
+
+        % reduce to first record
+        data=data(1);
+
+        % change class back
+        data.dep=oclass(data.dep);
+
+        % get header info
+        [npts,ncmp]=size(data.dep);
+        depmen=nan; depmin=nan; depmax=nan;
+        if(npts>0 && ncmp>0)
+            depmen=mean(data.dep(:));
+            depmin=min(data.dep(:));
+            depmax=max(data.dep(:));
         end
     end
+
+    % update header
+    data=changeheader(data,'npts',npts,'ncmp',ncmp,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
-    % reduce to first dataset
-    data=data{1};
-% 1 dataset
-else
-    % uncell
-    data=data{:};
-    
-    % no records to add on
-    if(isscalar(data)); return; end
-    
-    % check records
-    if(~isscalar(unique(iftype{:})))
-        report.identifier='seizmo:recordfun:mixedIFTYPE';
-        report.message='Filetypes differ for some records!';
-        if(strcmpi(option.IFTYPE,'error'))
-            error(report);
-        elseif(strcmpi(option.IFTYPE,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    if(any(~strcmpi(leven{:},'true')))
-        report.identifier='seizmo:recordfun:illegalOperation';
-        report.message='illegal operation on unevenly spaced record!';
-        if(strcmpi(option.LEVEN,'error'))
-            error(report);
-        elseif(strcmpi(option.LEVEN,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    if(~isscalar(unique(ncmp{:})))
-        report.identifier='seizmo:recordfun:mixedNCMP';
-        report.message='Number of components differ for some records!';
-        if(strcmpi(option.NCMP,'error'))
-            error(report);
-        elseif(strcmpi(option.NCMP,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    if(~isscalar(unique(npts{:})))
-        report.identifier='seizmo:recordfun:mixedNPTS';
-        report.message='Number of points differ for some records!';
-        if(strcmpi(option.NPTS,'error'))
-            error(report);
-        elseif(strcmpi(option.NPTS,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    if(~isscalar(unique(delta{:})))
-        report.identifier='seizmo:recordfun:mixedDELTA';
-        report.message='Sample rates differ for some records!';
-        if(strcmpi(option.DELTA,'error'))
-            error(report);
-        elseif(strcmpi(option.DELTA,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    if(~isscalar(unique(b{:})))
-        report.identifier='seizmo:recordfun:mixedB';
-        report.message='Begin times differ for some records!';
-        if(strcmpi(option.BEGIN,'error'))
-            error(report);
-        elseif(strcmpi(option.BEGIN,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    if(~isscalar(unique(nzyear{:})) || ~isscalar(unique(nzjday{:})) || ...
-            ~isscalar(unique(nzhour{:})) || ~isscalar(unique(nzmin{:})) ...
-            || ~isscalar(unique(nzsec{:})) || ~isscalar(unique(nzmsec{:})))
-        report.identifier='seizmo:recordfun:mixedReferenceTimes';
-        report.message='Reference times differ for some records!';
-        if(strcmpi(option.REF,'error'))
-            error(report);
-        elseif(strcmpi(option.REF,'warn'))
-            warning(report.identifier,report.message);
-        end
-    end
-    
-    % save class and convert to double precision
-    if(option.NEWHDR); oclass=str2func(class(data(end).dep)); 
-    else oclass=str2func(class(data(1).dep));
-    end
-    for i=1:nrecs; data(i).dep=double(data(i).dep); end
-    
-    % alter size of npts/ncmp
-    npts=cell2mat(npts);
-    ncmp=cell2mat(ncmp);
-    if(strcmpi(option.NPTS,'TRUNCATE'))
-        minpts=min(npts);
-        for i=1:nrecs
-            data(i).dep=data(i).dep(1:minpts,:);
-        end
-    elseif(strcmpi(option.NPTS,'PAD'))
-        maxpts=max(npts);
-        for i=1:nrecs
-            data(i).dep=[data(i).dep; zeros(maxpts-npts(i),ncmp(i))];
-        end
-    end
-    if(strcmpi(option.NCMP,'TRUNCATE'))
-        mincmp=min(ncmp);
-        for i=1:nrecs
-            data(i).dep=data(i).dep(:,1:mincmp);
-        end
-    elseif(strcmpi(option.NCMP,'PAD'))
-        maxcmp=max(ncmp);
-        for i=1:nrecs
-            data(i).dep=[data(i).dep zeros(npts(i),maxcmp-ncmp(i))];
-        end
-    end
-    
-    % operate on records
-    for i=2:nrecs
-        data(1).dep=fun(data(1).dep,data(i).dep);
-    end
-    
-    % copy header if newhdr set
-    if(option.NEWHDR)
-        % this totally requires header layout to be equivalent
-        data(1).head=data(end).head;
-    end
-    
-    % reduce to first record
-    data=data(1);
-    
-    % change class back
-    data.dep=oclass(data.dep);
-    
-    % get header info
-    [npts,ncmp]=size(data.dep);
-    depmen=nan; depmin=nan; depmax=nan;
-    if(npts>0 && ncmp>0)
-        depmen=mean(data.dep(:));
-        depmin=min(data.dep(:));
-        depmax=max(data.dep(:));
-    end
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-warning('off','seizmo:changeheader:fieldInvalid')
-data=changeheader(data,'npts',npts,'ncmp',ncmp,...
-    'depmen',depmen,'depmin',depmin,'depmax',depmax);
-warning('on','seizmo:changeheader:fieldInvalid')
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
-set_checkheader_state(oldcheckheaderstate);
 
 end

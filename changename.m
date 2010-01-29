@@ -49,12 +49,7 @@ function [data]=changename(data,varargin)
 %     columns in the cellstr array.
 %
 %    Notes:
-%     - CHANGENAME does NOT check the validity of input strings! 
-%     - The order in which the options are implemented:
-%        name, prepend, append, delete, change
-%       This may come in handy for some more complicated cases.
-%     - Using an option more than once replaces the previous option value
-%       with the later one.
+%     - CHANGENAME does NOT check the validity of the filenames created!
 %
 %    Examples:
 %     Prepend and append to all filenames:
@@ -77,9 +72,12 @@ function [data]=changename(data,varargin)
 %                        for name
 %        Sep.  5, 2009 - FILENAME and FILE also point to NAME option, error
 %                        on unknown option
+%        Jan. 28, 2010 - drop global options, options are implemented in
+%                        the order given, multiple calls for the same
+%                        option are all done, seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 05:55 GMT
+%     Last Updated Jan. 28, 2010 at 22:45 GMT
 
 % todo:
 
@@ -96,127 +94,107 @@ if(~isempty(msg)); error(msg.identifier,msg.message); end
 % fast exit
 if(nargin==1); return; end
 
-% default options
-option.NAME=[];
-option.PREPEND=[];
-option.APPEND=[];
-option.DELETE=[];
-option.CHANGE=[];
+% number of records
+nrecs=numel(data);
 
-% get options from SEIZMO global
-global SEIZMO
-try
-    fields=fieldnames(SEIZMO.CHANGENAME);
-    for i=1:numel(fields)
-        option.(fields{i})=SEIZMO.CHANGENAME.(fields{i});
-    end
-catch
+% detail message
+if(seizmoverbose)
+    disp('Changing Names of Record(s)')
 end
 
 % get options from command line
 for i=1:2:nargin-1
     if(~ischar(varargin{i}))
         error('seizmo:changename:badInput',...
-            'Options must be specified as a strings!');
+            'Options must be specified as strings!');
     end
-    if(strcmpi(varargin{i},'filename') || strcmpi(varargin{i},'file'))
-        varargin{i}='name';
-    end
-    option.(upper(varargin{i}))=varargin{i+1};
-end
-
-% check options
-nrecs=numel(data);
-fields=fieldnames(option);
-for i=1:numel(fields)
-    % specific checks
-    switch lower(fields{i})
-        case {'name' 'append' 'prepend'}
-            if(isempty(option.(fields{i}))); continue; end
-            if(ischar(option.(fields{i})))
-                option.(fields{i})=cellstr(option.(fields{i}));
-            elseif(iscellstr(option.(fields{i})))
+    
+    % check
+    switch lower(varargin{i})
+        case {'filename' 'file' 'name' 'append' 'prepend'}
+            if(isempty(varargin{i+1})); continue; end
+            if(ischar(varargin{i+1}))
+                varargin{i+1}=cellstr(varargin{i+1});
+            elseif(iscellstr(varargin{i+1}))
                 % flatten multi-line names
-                option.(fields{i})=cellstr(char(option.(fields{i})));
+                varargin{i+1}=cellstr(char(varargin{i+1}));
             end
-            if(~iscellstr(option.(fields{i})) || ...
-                    numel(size(option.(fields{i})))~=2 || ...
-                    ~any(size(option.(fields{i}),1)==[1 nrecs]))
+            if(~iscellstr(varargin{i+1}) || ...
+                    numel(size(varargin{i+1}))~=2 || ...
+                    ~any(size(varargin{i+1},1)==[1 nrecs]))
                 error('seizmo:changename:badInput',...
                     ['%s option must be a cellstr/char array\n'...
                     'with a single string or one for each record!'],...
-                    fields{i});
+                    upper(varargin{i}));
             end
         case 'delete'
-            if(isempty(option.(fields{i}))); continue; end
-            if(ischar(option.(fields{i})))
-                option.(fields{i})=cellstr(option.(fields{i}));
+            if(isempty(varargin{i+1})); continue; end
+            if(ischar(varargin{i+1}))
+                varargin{i+1}=cellstr(varargin{i+1});
             end
-            if(~iscellstr(option.(fields{i})) || ...
-                    numel(size(option.(fields{i})))~=2 || ...
-                    ~any(size(option.(fields{i}),1)==[1 nrecs]))
+            if(~iscellstr(varargin{i+1}) || ...
+                    numel(size(varargin{i+1}))~=2 || ...
+                    ~any(size(varargin{i+1},1)==[1 nrecs]))
                 error('seizmo:changename:badInput',...
                     ['%s option must be a cellstr/char array\n'...
                     'with a single string or one for each record!'],...
-                    fields{i});
+                    upper(varargin{i}));
             end
-            if(any(cellfun('size',option.(fields{i}),1)>1))
+            if(any(cellfun('size',varargin{i+1},1)>1))
                 error('seizmo:changename:badInput',...
                     ['%s option does not allow cellstr arrays\n'...
-                    'with multi-line cells!'],fields{i});
+                    'with multi-line cells!'],upper(varargin{i}));
             end
-            if(size(option.(fields{i}),1)==1)
-                option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
+            if(size(varargin{i+1},1)==1)
+                varargin{i+1}=varargin{i+1}(ones(nrecs,1),:);
             end
         case 'change'
-            if(isempty(option.(fields{i}))); continue; end
-            if(~iscellstr(option.(fields{i})) || ...
-                    numel(size(option.(fields{i})))~=2 || ...
-                    ~any(size(option.(fields{i}),1)==[1 nrecs]) || ...
-                    mod(size(option.(fields{i}),2),2))
+            if(isempty(varargin{i+1})); continue; end
+            if(~iscellstr(varargin{i+1}) || ...
+                    numel(size(varargin{i+1}))~=2 || ...
+                    ~any(size(varargin{i+1},1)==[1 nrecs]) || ...
+                    mod(size(varargin{i+1},2),2))
                 error('seizmo:changename:badInput',...
                     ['%s option must be a cellstr array\n'...
-                    'with input/output string pairs!'],fields{i});
+                    'with input/output string pairs!'],upper(varargin{i}));
             end
-            if(any(cellfun('size',option.(fields{i}),1)>1))
+            if(any(cellfun('size',varargin{i+1},1)>1))
                 error('seizmo:changename:badInput',...
                     ['%s option does not allow cellstr arrays\n'...
-                    'with multi-line cells!'],fields{i});
+                    'with multi-line cells!'],upper(varargin{i}));
             end
-            if(size(option.(fields{i}),1)==1)
-                option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
+            if(size(varargin{i+1},1)==1)
+                varargin{i+1}=varargin{i+1}(ones(nrecs,1),:);
             end
         otherwise
             error('seizmo:changename:badField',...
-                'Unknown Option: %s',fields{i});
+                'Unknown Option: %s',upper(varargin{i}));
     end
-end
-
-% implement options
-if(~isempty(option.NAME))
-    [data.name]=deal(option.NAME{:});
-end
-if(~isempty(option.PREPEND))
-    option.PREPEND=strcat(option.PREPEND,{data.name}');
-    [data.name]=deal(option.PREPEND{:});
-end
-if(~isempty(option.APPEND))
-    option.APPEND=strcat({data.name}',option.APPEND);
-    [data.name]=deal(option.APPEND{:});
-end
-if(~isempty(option.DELETE))
-    for i=1:nrecs
-        for j=1:size(option.DELETE,2)
-            data(i).name=strrep(data(i).name,option.DELETE{i,j},'');
-        end
-    end
-end
-if(~isempty(option.CHANGE))
-    for i=1:nrecs
-        for j=1:2:size(option.CHANGE,2)
-            data(i).name=strrep(data(i).name,...
-                option.CHANGE{i,j},option.CHANGE{i,j+1});
-        end
+    
+    % implement
+    switch lower(varargin{i})
+        case {'filename' 'file' 'name'}
+            [data.name]=deal(varargin{i+1});
+        case 'prepend'
+            varargin{i+1}=strcat(varargin{i+1},{data.name}');
+            [data.name]=deal(varargin{i+1}{:});
+        case 'append'
+            varargin{i+1}=strcat({data.name}',varargin{i+1});
+            [data.name]=deal(varargin{i+1}{:});
+        case 'delete'
+            for j=1:nrecs
+                for k=1:size(varargin{i+1},2)
+                    data(j).name=...
+                        strrep(data(j).name,varargin{i+1}{j,k},'');
+                end
+            end
+        case 'change'
+            for j=1:nrecs
+                for k=1:2:size(varargin{i+1},2)
+                    data(j).name=strrep(data(j).name,...
+                        varargin{i+1}{j,k},varargin{i+1}{j,k+1});
+                end
+            end
     end
 end
 

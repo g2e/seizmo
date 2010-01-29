@@ -30,9 +30,10 @@ function [idx,streamcode]=getstreamidx(data)
 
 %     Version History:
 %        June 28, 2009 - initial version
+%        Jan. 29, 2010 - cleaned up unnecessary code
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:05 GMT
+%     Last Updated Jan. 29, 2010 at 22:55 GMT
 
 % todo:
 
@@ -40,34 +41,14 @@ function [idx,streamcode]=getstreamidx(data)
 msg=nargchk(1,1,nargin);
 if(~isempty(msg)); error(msg); end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
-
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% check headers
-data=checkheader(data);
-
 % get header info
-[knetwk,kstnm,khole,kcmpnm]=...
-    getheader(data,'knetwk','kstnm','khole','kcmpnm');
+kname=upper(getheader(data,'kname'));
 
 % truncate kcmpnm to first 2 characters
-kcmpnm=strnlen(kcmpnm,2);
+kname(:,4)=strnlen(kname(:,4),2);
 
-% uppercase
-knetwk=upper(knetwk);
-kstnm=upper(kstnm);
-khole=upper(khole);
-kcmpnm=upper(kcmpnm);
-
-% get station groups
-[streamcode,idx,idx]=unique(strcat(knetwk,'.',kstnm,'.',khole,'.',kcmpnm));
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
+% get stream groups
+[streamcode,idx,idx]=unique(strcat(...
+    kname(:,1),'.',kname(:,2),'.',kname(:,3),'.',kname(:,4)));
 
 end

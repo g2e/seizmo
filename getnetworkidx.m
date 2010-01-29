@@ -25,9 +25,10 @@ function [idx,networkcode]=getnetworkidx(data)
 
 %     Version History:
 %        June 28, 2009 - initial version
+%        Jan. 29, 2010 - cleaned up unnecessary code
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:05 GMT
+%     Last Updated Jan. 29, 2010 at 23:20 GMT
 
 % todo:
 
@@ -35,27 +36,7 @@ function [idx,networkcode]=getnetworkidx(data)
 msg=nargchk(1,1,nargin);
 if(~isempty(msg)); error(msg); end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
-
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% check headers
-data=checkheader(data);
-
-% get header info
-[knetwk]=getheader(data,'knetwk');
-
-% uppercase
-knetwk=upper(knetwk);
-
-% get station groups
-[networkcode,idx,idx]=unique(knetwk);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
+% get network groups
+[networkcode,idx,idx]=unique(upper(getheader(data,'knetwk')));
 
 end

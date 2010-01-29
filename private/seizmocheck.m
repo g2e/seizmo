@@ -36,7 +36,7 @@ function [report]=seizmocheck(data,varargin)
 %          error(msg.identifier,msg.message);
 %      end
 %
-%    See also: ISSEIZMO, SEIZMODEF, ISVALIDSEIZMO, VALIDSEIZMO
+%    See also: ISSEIZMO, SEIZMODEF, ISVALIDSEIZMO, VALIDSEIZMO, CHECKHEADER
 
 %     Version History:
 %        Feb. 28, 2008 - initial version
@@ -83,6 +83,7 @@ elseif(nargin>1)
     end
 end
 
+disp('debug seizmocheck 1!')
 % check SEIZMO global for quick exit
 global SEIZMO
 try
@@ -90,6 +91,7 @@ try
 catch
     % checks data below
 end
+disp('debug seizmocheck 2!')
 
 % check data structure
 if(~isstruct(data))

@@ -23,9 +23,10 @@ function [data]=setevent(data,event)
 
 %     Version History:
 %        Dec.  1, 2009 - initial version
+%        Jan. 26, 2010 - seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  1, 2009 at 22:45 GMT
+%     Last Updated Jan. 26, 2010 at 19:55 GMT
 
 % todo:
 
@@ -55,6 +56,12 @@ end
 
 % attempt rest
 try
+    % verbosity
+    verbose=seizmoverbose;
+
+    % number of records
+    nrecs=numel(data);
+    
     % figure out if event is a sodcsv or ndk struct
     if(~isstruct(event) || ~isscalar(event))
         error('seizmo:setevent:badInput',...
@@ -66,15 +73,28 @@ try
     ndkfields={'year' 'month' 'day' 'hour' 'minute' 'seconds' ...
         'latitude' 'longitude' 'depth' 'mb' 'ms' 'name'};
     if(all(ismember(sodfields,fields)))
+        % detail message
+        if(verbose)
+            disp('Importing Event Info');
+            print_time_left(0,nrecs);
+        end
+        
         % add info to header
         data=changeheader(data,'o 6utc',mat2cell(event.time,1),...
             'ev',[event.latitude event.longitude 0 event.depth*1000],...
             'mag',event.magnitude,'imagtyp',['i' event.magnitudeType]);
     elseif(all(ismember(ndkfields,fields)))
+        % detail message
+        if(verbose)
+            disp('Importing Event Info');
+            print_time_left(0,nrecs);
+        end
+        
         % get the magnitude
         magtype='ims'; mag=event.ms;
         body=event.mb>event.ms;
         if(body); magtype='imb'; mag=event.mb; end
+        
         % add info to header
         data=changeheader(data,...
             'o 6utc',{[event.year event.month event.day ...
@@ -91,6 +111,11 @@ try
     set_seizmocheck_state(true);
     data=checkheader(data,'all','ignore','old_delaz','fix');
     set_checkheader_state(oldcheckheaderstate);
+    
+    % detail message
+    if(verbose)
+        print_time_left(nrecs,nrecs);
+    end
     
     % toggle checking back
     set_seizmocheck_state(oldseizmocheckstate);

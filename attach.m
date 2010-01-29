@@ -11,7 +11,7 @@ function [data]=attach(data,option,dep,ind)
 %     number of components in the record it is being attached to.  OPTION
 %     is either 'beginning' or 'ending' and decides how DEP is attached to
 %     the dependent data.  For instance, if OPTION is 'ending', DEP is
-%     attached at the end and the E header field is adjusted.  If OPTON is
+%     attached at the end and the E header field is adjusted.  If OPTION is
 %     'beginning', DEP is attached at the beginning of the dependent
 %     dataset and the B header field is adjusted accordingly.
 %
@@ -40,9 +40,10 @@ function [data]=attach(data,option,dep,ind)
 %        Oct. 13, 2009 - minor doc update
 %        Oct. 26, 2009 - added 'prepend' and 'append' as valid options,
 %                        fixed bug in matrix entry
+%        Jan. 26, 2010 - seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 26, 2009 at 18:55 GMT
+%     Last Updated Jan. 26, 2010 at 08:55 GMT
 
 % todo:
 
@@ -55,164 +56,189 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
+% attempt attach
+try
+    % check headers
+    data=checkheader(data);
+    
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % number of records
+    nrecs=numel(data);
 
-% get header info
-leven=getlgc(data,'leven');
-iftype=getenumid(data,'iftype');
-[npts,ncmp,b,delta,e]=getheader(data,'npts','ncmp','b','delta','e');
+    % get header info
+    leven=getlgc(data,'leven');
+    iftype=getenumid(data,'iftype');
+    [npts,ncmp,b,delta,e]=getheader(data,'npts','ncmp','b','delta','e');
 
-% cannot do spectral/xyz records
-if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-    error('seizmo:attach:badIFTYPE',...
-        'Datatype of records in DATA must be Timeseries or XY!');
-end
-
-% number of records
-nrecs=numel(data);
-
-% check option
-validopt={'beginning' 'ending' 'prepend' 'append'};
-if(~ischar(option))
-    error('seizmo:attach:badOption','OPTION must be a string!');
-end
-if(~strcmpi(option,validopt))
-    error('seizmo:attach:badOption',...
-        ['OPTION must be one of the following:\n' ...
-        sprintf('''%s'' ',validopt{:})]);
-end
-
-% check dep
-if(iscell(dep))
-    if(numel(dep)~=nrecs)
-        error('seizmo:attach:badDEP',...
-            'DEP must be a cell array with one element per record!');
+    % cannot do spectral/xyz records
+    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:attach:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) must be Timeseries or XY!']);
     end
-    ndep=nan(nrecs,1);
-    for i=1:nrecs
-        if(~isnumeric(dep{i}) ...
-                || (~isempty(dep{i}) && size(dep{i},2)~=ncmp(i)))
+
+    % check option
+    validopt={'beginning' 'ending' 'prepend' 'append'};
+    if(~ischar(option))
+        error('seizmo:attach:badOption','OPTION must be a string!');
+    end
+    if(~strcmpi(option,validopt))
+        error('seizmo:attach:badOption',...
+            ['OPTION must be one of the following:\n' ...
+            sprintf('''%s'' ',validopt{:})]);
+    end
+    option(1)=upper(option(1));
+
+    % check dep
+    if(iscell(dep))
+        if(numel(dep)~=nrecs)
             error('seizmo:attach:badDEP',...
-                'DEP elements must be numeric arrays of size [n ncmp]!');
+                'DEP must be a cell array with one element per record!');
         end
-        ndep(i)=size(dep{i},1);
-    end
-    depidx=1:nrecs;
-else
-    if(~isnumeric(dep) || (~isempty(dep) && any(size(dep,2)~=ncmp)))
-        error('seizmo:attach:badDEP',...
-            'DEP must be a numeric array of size [n ncmp]!');
-    end
-    ndep=size(dep,1);
-    depidx=ones(nrecs,1);
-    dep={dep};
-end
-
-% check ind
-if(nargin==3 && any(strcmpi(leven,'false')))
-    error('seizmo:attach:INDnecessary',...
-        ['IND argument must be given if ' ...
-        'DATA has unevenly sampled records!']);
-elseif(nargin>3 && ~isempty(ind))
-    if(iscell(ind))
-        if(numel(ind)~=nrecs)
-            error('seizmo:attach:badIND',...
-                'IND must be a cell array with one element per record!');
-        end
-        nind=nan(nrecs,1);
+        ndep=nan(nrecs,1);
         for i=1:nrecs
-            if(~isnumeric(ind{i}) ...
-                    || (~isempty(ind{i}) && size(ind{i},2)~=1))
-                error('seizmo:attach:badIND',...
-                    ['IND elements must be numeric ' ...
-                    'arrays of size [n 1]!']);
+            if(~isnumeric(dep{i}) ...
+                    || (~isempty(dep{i}) && size(dep{i},2)~=ncmp(i)))
+                error('seizmo:attach:badDEP',...
+                    'DEP elements must be real arrays of size [n ncmp]!');
             end
-            nind(i)=size(ind{i},1);
+            ndep(i)=size(dep{i},1);
         end
-        indidx=1:nrecs;
+        depidx=1:nrecs;
     else
-        if(~isnumeric(ind) || any(size(ind,2)~=1))
-            error('seizmo:attach:badIND',...
-                'IND must be a numeric array of size [n 1]!');
+        if(~isnumeric(dep) || (~isempty(dep) && any(size(dep,2)~=ncmp)))
+            error('seizmo:attach:badDEP',...
+                'DEP must be a real array of size [n ncmp]!');
         end
-        nind=size(ind,1);
-        indidx=ones(nrecs,1);
-        ind={ind};
+        ndep=size(dep,1);
+        depidx=ones(nrecs,1);
+        dep={dep};
     end
-    if(~isequal(nind(indidx(1:nrecs)),ndep(depidx(1:nrecs))))
-        error('seizmo:attach:IndDepSizeMismatch',...
-            'DEP & IND must have the same number of rows!');
-    end
-end
 
-% loop over records
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:nrecs
-    % get data class
-    oclass=str2func(class(data(i).dep));
-    
-    % unevenly spaced
-    if(strcmpi(leven{i},'false'))
-        % reclass attachment
-        tmpd=oclass(dep{depidx(i)});
-        oclassi=str2func(class(data(i).ind));
-        tmpi=oclassi(ind{indidx(i)});
-        
-        % attach
-        switch lower(option)
-            case {'beginning' 'prepend'}
-                data(i).dep=[tmpd; data(i).dep];
-                data(i).ind=[tmpi; data(i).ind];
-            case {'ending' 'append'}
-                data(i).dep=[data(i).dep; tmpd];
-                data(i).ind=[data(i).ind; tmpi];
-        end
-        
-        % npts/timing
-        npts(i)=npts(i)+ndep(depidx(i));
-        if(npts(i))
-            b(i)=data(i).ind(1);
-            e(i)=data(i).ind(end);
-            if(npts(i)>1); delta=(e(i)-b(i))/(npts(i)-1); end
+    % check ind
+    if(nargin==3 && any(strcmpi(leven,'false')))
+        error('seizmo:attach:INDnecessary',...
+            ['IND argument must be given if ' ...
+            'DATA has unevenly sampled records!']);
+    elseif(nargin>3 && ~isempty(ind))
+        if(iscell(ind))
+            if(numel(ind)~=nrecs)
+                error('seizmo:attach:badIND',...
+                    'IND must be a cell array with 1 element per record!');
+            end
+            nind=nan(nrecs,1);
+            for i=1:nrecs
+                if(~isnumeric(ind{i}) ...
+                        || (~isempty(ind{i}) && size(ind{i},2)~=1))
+                    error('seizmo:attach:badIND',...
+                        ['IND elements must be numeric ' ...
+                        'arrays of size [n 1]!']);
+                end
+                nind(i)=size(ind{i},1);
+            end
+            indidx=1:nrecs;
         else
-            b(i)=nan;
-            e(i)=nan;
+            if(~isnumeric(ind) || any(size(ind,2)~=1))
+                error('seizmo:attach:badIND',...
+                    'IND must be a numeric array of size [n 1]!');
+            end
+            nind=size(ind,1);
+            indidx=ones(nrecs,1);
+            ind={ind};
         end
-    else % evenly spaced
-        % reclass attachment
-        tmpd=oclass(dep{depidx(i)});
-        
-        % npts
-        npts(i)=npts(i)+ndep(depidx(i));
-        
-        % attach/timing
-        switch lower(option)
-            case {'beginning' 'prepend'}
-                data(i).dep=[tmpd; data(i).dep];
-                b(i)=b(i)-delta(i)*ndep(depidx(i));
-            case {'ending' 'append'}
-                data(i).dep=[data(i).dep; tmpd];
-                e(i)=e(i)+delta(i)*ndep(depidx(i));
+        if(~isequal(nind(indidx(1:nrecs)),ndep(depidx(1:nrecs))))
+            error('seizmo:attach:IndDepSizeMismatch',...
+                'DEP & IND must have the same number of rows!');
         end
     end
     
-    % dep*
-    if(npts(i))
-        depmen(i)=mean(data(i).dep(:));
-        depmin(i)=min(data(i).dep(:));
-        depmax(i)=max(data(i).dep(:));
+    % detail message
+    if(verbose)
+        disp(['Attaching Data to Record(s) ' option]);
+        print_time_left(0,nrecs);
     end
+
+    % loop over records
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:nrecs
+        % get data class
+        oclass=str2func(class(data(i).dep));
+
+        % unevenly spaced
+        if(strcmpi(leven{i},'false'))
+            % reclass attachment
+            tmpd=oclass(dep{depidx(i)});
+            oclassi=str2func(class(data(i).ind));
+            tmpi=oclassi(ind{indidx(i)});
+
+            % attach
+            switch lower(option)
+                case {'beginning' 'prepend'}
+                    data(i).dep=[tmpd; data(i).dep];
+                    data(i).ind=[tmpi; data(i).ind];
+                case {'ending' 'append'}
+                    data(i).dep=[data(i).dep; tmpd];
+                    data(i).ind=[data(i).ind; tmpi];
+            end
+
+            % npts/timing
+            npts(i)=npts(i)+ndep(depidx(i));
+            if(npts(i))
+                b(i)=data(i).ind(1);
+                e(i)=data(i).ind(end);
+                if(npts(i)>1); delta=(e(i)-b(i))/(npts(i)-1); end
+            else
+                b(i)=nan;
+                e(i)=nan;
+            end
+        else % evenly spaced
+            % reclass attachment
+            tmpd=oclass(dep{depidx(i)});
+
+            % npts
+            npts(i)=npts(i)+ndep(depidx(i));
+
+            % attach/timing
+            switch lower(option)
+                case {'beginning' 'prepend'}
+                    data(i).dep=[tmpd; data(i).dep];
+                    b(i)=b(i)-delta(i)*ndep(depidx(i));
+                case {'ending' 'append'}
+                    data(i).dep=[data(i).dep; tmpd];
+                    e(i)=e(i)+delta(i)*ndep(depidx(i));
+            end
+        end
+
+        % dep*
+        if(npts(i))
+            depmen(i)=mean(data(i).dep(:));
+            depmin(i)=min(data(i).dep(:));
+            depmax(i)=max(data(i).dep(:));
+        end
+        
+        % detail message
+        if(verbose)
+            print_time_left(i,nrecs);
+        end
+    end
+
+    % update header
+    data=changeheader(data,'npts',npts,'b',b,'delta',delta,'e',e,...
+        'depmax',depmax,'depmin',depmin,'depmen',depmen);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'npts',npts,'b',b,'delta',delta,'e',e,...
-    'depmax',depmax,'depmin',depmin,'depmen',depmen);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

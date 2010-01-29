@@ -287,7 +287,6 @@ if(nargout==0)
             char(arrivals(ii).getName),arrivals(ii).getTime,...
             arrivals(ii).getRayParam/R2D,arrivals(ii).getDistDeg,...
             char(arrivals(ii).getPuristName));
-        arrivals(ii).getTau
     end
     
     return

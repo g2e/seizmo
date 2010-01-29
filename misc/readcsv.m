@@ -8,7 +8,8 @@ function [lines]=readcsv(file)
 %     line of comma-separated field names.  All values returned in STRUCT
 %     are text.  Each line in FILE is placed as a separated index in
 %     STRUCT, such that all values from line 4 (counting the header line)
-%     can be accessed in STRUCT(3).
+%     can be accessed in STRUCT(3).  Calling READCSV without FILE or with
+%     FILE set to '' will present a graphical file selection menu.
 %
 %    Notes:
 %     - does not handle text entries with commas or line terminators!
@@ -22,15 +23,28 @@ function [lines]=readcsv(file)
 
 %     Version History:
 %        Sep. 16, 2009 - initial version
+%        Jan. 26, 2010 - add graphical selection
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2009 at 04:45 GMT
+%     Last Updated Jan. 26, 2010 at 22:45 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
+msg=nargchk(0,1,nargin);
 if(~isempty(msg)); error(msg); end;
+
+% graphical selection
+if(nargin<1 || isempty(file))
+    [file,path]=uigetfile(...
+        {'*.csv;*.CSV' 'CSV Files (*.csv,*.CSV)';
+        '*.*' 'All Files (*.*)'},...
+        'Select CSV File');
+    if(isequal(0,file))
+        error('seizmo:readcsv:noFileSelected','No input file selected!');
+    end
+    file=strcat(path,filesep,file);
+end
 
 % check file
 if(~ischar(file))

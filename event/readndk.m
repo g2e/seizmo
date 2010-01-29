@@ -1,37 +1,178 @@
-function [events]=readndk(filename)
-%READNDK    Reads a .ndk formatted text file into a struct
+function [events]=readndk(file)
+%READNDK    Reads a GlobalCMT Project NDK-format text file into a struct
 %
-%    Description:
-%     
-%     Layout:
-%      
+%    Usage:    events=readndk(file)
+%
+%    Description: EVENTS=READNDK(FILE) reads in an NDK-formatted text file
+%     from the Global CMT project (www.globalcmt.org).  All event info from
+%     the file is imported into struct array EVENTS (see the Notes section
+%     below for more details).  If FILE is not given or set to '' then a
+%     graphical file selection menu is presented.
+%
+%    Notes:
+%     - Details of the NDK format may be found using the Global CMT
+%       project's website (www.globalcmt.org) or (hopefully) here:
+%       http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/
+%       The file 'allorder.ndk_explained' will provide the details.
+%     - Fields of NDK struct:
+%           catalog
+%           year
+%           month
+%           day
+%           hour
+%           minute
+%           seconds
+%           latitude
+%           longitude
+%           depth
+%           mb
+%           ms
+%           location
+%           name
+%           data1type
+%           data1nstn
+%           data1ncmp
+%           data1sper
+%           data2type
+%           data2nstn
+%           data2ncmp
+%           data2sper
+%           data3type
+%           data3nstn
+%           data3ncmp
+%           data3sper
+%           srcinvtype
+%           srcfunctype
+%           srcfuncdur
+%           centroidstring
+%           centroidtime
+%           centroidtimeerr
+%           centroidlat
+%           centroidlaterr
+%           centroidlon
+%           centroidlonerr
+%           centroiddep
+%           centroiddeperr
+%           depthtype
+%           timestamp
+%           exponent
+%           mrr
+%           mrrerr
+%           mtt
+%           mtterr
+%           mpp
+%           mpperr
+%           mrt
+%           mrterr
+%           mrp
+%           mrperr
+%           mtp
+%           mtperr
+%           version
+%           eigval1
+%           plunge1
+%           azimuth1
+%           eigval2
+%           plunge2
+%           azimuth2
+%           eigval3
+%           plunge3
+%           azimuth3
+%           scalarmoment
+%           strike1
+%           dip1
+%           rake1
+%           strik2
+%           dip2
+%           rake2
+%
+%    Examples:
+%     Import info from a quick CMT into some records:
+%      ndk=readndk('quick.ndk');
+%      data=setevent(data,ndk(33));
+%
+%    See also: READSODEVENTCSV, READTXT, SETEVENT
+
+%     Version History:
+%        Mar.  6, 2009 - initial version (in SEIZMO)
+%        Apr. 23, 2009 - octave compatibility fix
+%        Jan. 26, 2010 - allow no input (select file graphically), added
+%                        history and documentation, clean up code a bit
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Jan. 26, 2010 at 22:40 GMT
+
+% todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
+msg=nargchk(0,1,nargin);
 if(~isempty(msg)); error(msg); end;
 
-% check filename is char
-if(~ischar(filename)); error('FILENAME must be a string!'); end
+% graphical selection
+if(nargin<1 || isempty(file))
+    [file,path]=uigetfile(...
+        {'*.ndk;*.NDK' 'NDK Files (*.ndk,*.NDK)';
+        '*.*' 'All Files (*.*)'},...
+        'Select NDK File');
+    if(isequal(0,file))
+        error('seizmo:readndk:noFileSelected','No input file selected!');
+    end
+    file=strcat(path,filesep,file);
+end
 
-% open file
-fid=fopen(filename);
+% check file
+if(~ischar(file))
+    error('seizmo:readndk:fileNotString',...
+        'FILE must be a string!');
+end
+if(~exist(file,'file'))
+    error('seizmo:readndk:fileDoesNotExist',...
+        'CSV File: %s\nDoes Not Exist!',file);
+elseif(exist(file,'dir'))
+    error('seizmo:readndk:dirConflict',...
+        'CSV File: %s\nIs A Directory!',file);
+end
 
-% check if file exists
-if(fid<0); error('%s not openable!',filename); end
+% open file for reading
+fid=fopen(file);
 
-% just read in plain as matlab licks the nutsack when it comes to parsing
-% strict formats (stop fucking deleting whitespace before/after asshats)
-a=textscan(fid,'%s','delimiter','\n','whitespace',''); a=a{1}; a=char(a);
+% check if file is openable
+if(fid<0)
+    error('seizmo:readndk:cannotOpenFile',...
+        'NDK File: %s\nNot Openable!',file);
+end
 
-% close file
+% read in file and close
+a=fread(fid,'*char');
 fclose(fid);
+
+% delete linefeed and carriage return characters
+a(a==10)=[];
+a(a==13)=[];
+
+try
+    % reshape into nx80 array
+    a=reshape(a,80,[])';
+catch
+    error('seizmo:readndk:malformedNDK',...
+        ['NDK file: %s\n'...
+        'Looks like some lines are not 80 characters long!'],file);
+end
+
+% check that there are 5 lines per event
+if(mod(size(a,1),5))
+    error('seizmo:readndk:malformedNDK',...
+        ['NDK file: %s\n'...
+        'Looks like some events do not have 5 lines!'],file);
+end
 
 % allocate struct
 n=size(a,1)/5;
 events(1:n,1)=struct();
 
-% extract each field separately (cause matlab sure as fuck will not)
-% wrap them in cell arrays so we can easily push into a struct
+% begin slow section (text to datatype to struct field)
+% - replacement with a faster version is welcome!
+% LINE 1
 temp=cellstr(a(1:5:end,1:4));
 [events.catalog]=deal(temp{:});
 temp=num2cell(str2num(a(1:5:end,6:9)));
@@ -58,7 +199,7 @@ temp=num2cell(str2num(a(1:5:end,53:55)));
 [events.ms]=deal(temp{:});
 temp=cellstr(a(1:5:end,57:80));
 [events.location]=deal(temp{:});
-
+% LINE 2
 temp=cellstr(a(2:5:end,1:16));
 [events.name]=deal(temp{:});
 temp=cellstr(a(2:5:end,18));
@@ -91,7 +232,7 @@ temp=cellstr(a(2:5:end,70:74));
 [events.srcfunctype]=deal(temp{:});
 temp=num2cell(str2num(a(2:5:end,76:80)));
 [events.srcfuncdur]=deal(temp{:});
-
+% LINE 3
 temp=cellstr(a(3:5:end,1:8));
 [events.centroidstring]=deal(temp{:});
 temp=num2cell(str2num(a(3:5:end,13:18)));
@@ -114,7 +255,7 @@ temp=cellstr(a(3:5:end,60:63));
 [events.depthtype]=deal(temp{:});
 temp=cellstr(a(3:5:end,65:80));
 [events.timestamp]=deal(temp{:});
-
+% LINE 4
 temp=num2cell(str2num(a(4:5:end,1:2)));
 [events.exponent]=deal(temp{:});
 temp=num2cell(str2num(a(4:5:end,4:9)));
@@ -141,7 +282,7 @@ temp=num2cell(str2num(a(4:5:end,69:74)));
 [events.mtp]=deal(temp{:});
 temp=num2cell(str2num(a(4:5:end,76:80)));
 [events.mtperr]=deal(temp{:});
-
+% LINE 5
 temp=cellstr(a(5:5:end,1:3));
 [events.version]=deal(temp{:});
 temp=num2cell(str2num(a(5:5:end,5:11)));

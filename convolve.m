@@ -54,9 +54,10 @@ function [data,zf]=convolve(data,tf,delay,zi)
 %        Oct. 28, 2009 - worked out (a)causal stuff, adds delay option,
 %                        doubles initial conditions and final conditions,
 %                        fixed a couple bugs (dataless, zi applied wrong)
+%        Jan. 27, 2010 - seizmoverbose support, proper SEIZMO handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 28, 2009 at 22:15 GMT
+%     Last Updated Jan. 27, 2010 at 07:15 GMT
 
 % todo:
 
@@ -69,168 +70,197 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
+% attempt convolution
+try
+    % check headers
+    data=checkheader(data);
+    
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % number of records
+    nrecs=numel(data);
 
-% get header info
-leven=getlgc(data,'leven');
-iftype=getenumid(data,'iftype');
-ncmp=getheader(data,'ncmp');
+    % get header info
+    leven=getlgc(data,'leven');
+    iftype=getenumid(data,'iftype');
+    ncmp=getheader(data,'ncmp');
 
-% cannot do spectral/xyz records
-if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-    error('seizmo:convolve:badIFTYPE',...
-        'Datatype of records in DATA must be Timeseries or XY!');
-end
-
-% cannot do unevenly sampled records
-if(any(strcmpi(leven,'false')))
-    error('seizmo:convolve:badLEVEN',...
-        'Invalid operation on unevenly sampled records!');
-end
-
-% number of records
-nrecs=numel(data);
-
-% check time function
-if(iscell(tf))
-    if(numel(tf)~=nrecs)
-        error('seizmo:convolve:badTF',...
-            'TF must be a cell array with one element per record!');
+    % cannot do spectral/xyz records
+    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:convolve:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
     end
-    ntf=nan(nrecs,1);
-    for i=1:nrecs
-        if(~isnumeric(tf{i}) || ~isvector(tf{i}) || isempty(tf{i}))
+
+    % cannot do unevenly sampled records
+    if(any(strcmpi(leven,'false')))
+        error('seizmo:convolve:badLEVEN',...
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
+            '\nInvalid operation on unevenly sampled record(s)!']);
+    end
+
+    % check time function
+    if(iscell(tf))
+        if(numel(tf)~=nrecs)
             error('seizmo:convolve:badTF',...
-                'TF elements must be non-empty numeric vectors!');
-        else
-            ntf(i)=numel(tf{i});
-            tf{i}=double(tf{i}(:).');
+                'TF must be a cell array with one element per record!');
+        end
+        ntf=nan(nrecs,1);
+        for i=1:nrecs
+            if(~isnumeric(tf{i}) || ~isvector(tf{i}) || isempty(tf{i}))
+                error('seizmo:convolve:badTF',...
+                    'TF elements must be non-empty numeric vectors!');
+            else
+                ntf(i)=numel(tf{i});
+                tf{i}=double(tf{i}(:).');
+            end
+        end
+        tfidx=1:nrecs;
+    else
+        if(~isnumeric(tf) || ~isvector(tf) || isempty(tf))
+            error('seizmo:convolve:badTF',...
+                'TF must be a non-empty numeric vector!');
+        end
+        ntf=numel(tf);
+        tf={double(tf(:).')};
+        tfidx=ones(nrecs,1);
+    end
+
+    % check delay
+    if(nargin<3 || isempty(delay)); delay=0; end
+    if(~isreal(delay) || ~any(numel(delay)==[1 nrecs]) ...
+            || ~all(delay==fix(delay)))
+        error('seizmo:convolve:badDelay',...
+            ['DELAY must be a scalar integer or an array\n' ...
+            'of integers, one per record in DATA!']);
+    end
+    if(isscalar(delay)); delay=delay(ones(nrecs,1),1); end
+
+    % get expected lengths
+    nfz=max(0,ntf(tfidx)+delay-1);
+    nbz=abs(min(0,delay));
+
+    % check initial conditions
+    haszi=nargin>3 && ~isempty(zi);
+    if(haszi)
+        % expand single columns
+        if(iscell(zi) && size(zi,2)==1); zi{end,2}=[]; end
+        if(~iscell(zi) || ~isequal(size(zi),[nrecs 2]))
+            error('seizmo:convolve:badZI',...
+                ['ZI must be a Nx2 cell array where\n'...
+                'N is the number of records in DATA!']);
+        end
+        % allow empty if empty desired
+        if(~all(cellfun('isreal',zi(:))) ...
+                || ~all(...
+                (cellfun('prodofsize',zi(:,1))==0 & nfz.*ncmp==0) ...
+                | sum(([cellfun('size',zi(:,1),1) ...
+                cellfun('size',zi(:,1),2)]==[nfz ncmp]),2)==2) ...
+                || ~all(...
+                (cellfun('prodofsize',zi(:,2))==0 & nbz.*ncmp==0) ...
+                | sum(([cellfun('size',zi(:,2),1) ...
+                cellfun('size',zi(:,2),2)]==[nbz ncmp]),2))==2)
+            error('seizmo:convolve:badZI',...
+                'ZI elements are improperly sized!');
+        end
+        for i=1:nrecs
+            zi{i,1}=double(zi{i,1});
+            zi{i,2}=double(zi{i,2});
         end
     end
-    tfidx=1:nrecs;
-else
-    if(~isnumeric(tf) || ~isvector(tf) || isempty(tf))
-        error('seizmo:convolve:badTF',...
-            'TF must be a non-empty numeric vector!');
+    
+    % detail message
+    if(verbose)
+        disp('Convolving Time Function(s) on Record(s)');
+        print_time_left(0,nrecs);
     end
-    ntf=numel(tf);
-    tf={double(tf(:).')};
-    tfidx=ones(nrecs,1);
-end
 
-% check delay
-if(nargin<3 || isempty(delay)); delay=0; end
-if(~isreal(delay) || ~any(numel(delay)==[1 nrecs]) ...
-        || ~all(delay==fix(delay)))
-    error('seizmo:convolve:badDelay',...
-        ['DELAY must be a scalar integer or an array\n' ...
-        'of integers, one per record in DATA!']);
-end
-if(isscalar(delay)); delay=delay(ones(nrecs,1),1); end
-
-% get expected lengths
-nfz=max(0,ntf(tfidx)+delay-1);
-nbz=abs(min(0,delay));
-
-% check initial conditions
-haszi=nargin>3 && ~isempty(zi);
-if(haszi)
-    % expand single columns
-    if(iscell(zi) && size(zi,2)==1); zi{end,2}=[]; end
-    if(~iscell(zi) || ~isequal(size(zi),[nrecs 2]))
-        error('seizmo:convolve:badZI',...
-            ['ZI must be a Nx2 cell array where\n'...
-            'N is the number of records in DATA!']);
-    end
-    % allow empty if empty desired
-    if(~all(cellfun('isreal',zi(:))) ...
-            || ~all((cellfun('prodofsize',zi(:,1))==0 & nfz.*ncmp==0) ...
-            | sum(([cellfun('size',zi(:,1),1) ...
-            cellfun('size',zi(:,1),2)]==[nfz ncmp]),2)==2) ...
-            || ~all((cellfun('prodofsize',zi(:,2))==0 & nbz.*ncmp==0) ...
-            | sum(([cellfun('size',zi(:,2),1) ...
-            cellfun('size',zi(:,2),2)]==[nbz ncmp]),2))==2)
-        error('seizmo:convolve:badZI',...
-            'ZI elements are improperly sized!');
-    end
+    % loop through records
+    zf=cell(nrecs,2);
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
     for i=1:nrecs
-        zi{i,1}=double(zi{i,1});
-        zi{i,2}=double(zi{i,2});
-    end
-end
+        % simple ascii illustration of how this looks when
+        % the record is shorter than the neg/pos delays of
+        % the time function (zi alter the zf):
+        %
+        % dep in:               ----
+        %
+        % dep out:              ----
+        % zf  for:                  -------
+        % zf  bak:     ---------
+        % zi  for:              -------
+        % zi  bak:         ---------
 
-% loop through records
-zf=cell(nrecs,2);
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:nrecs
-    % simple ascii illustration of how this looks when
-    % the record is shorter than the neg/pos delays of
-    % the time function (zi alter the zf):
-    %
-    % dep in:               ----
-    %
-    % dep out:              ----
-    % zf  for:                  -------
-    % zf  bak:     ---------
-    % zi  for:              -------
-    % zi  bak:         ---------
-    
-    % get data class, convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
-    
-    % skip dataless (do convert class back)
-    if(isempty(data(i).dep))
-        % note zf==zi in this case
+        % get data class, convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+
+        % skip dataless (do convert class back)
+        if(isempty(data(i).dep))
+            % note zf==zi in this case
+            data(i).dep=oclass(data(i).dep);
+            zf{i,1}=oclass(zi{i,1});
+            zf{i,2}=oclass(zi{i,2});
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % convolve (assumes simple causal case)
+        [data(i).dep,zf{i,1}]=filter(tf{tfidx(i)},1,data(i).dep,[],1);
+
+        % combined convolved record with final conditions (padding too)
+        data(i).dep=...
+            [zeros(max(0,delay(i)),ncmp(i)); data(i).dep; zf{i,1}; ...
+            zeros(abs(min(ntf(tfidx(i))-1-nbz(i),0)),ncmp(i))];
+
+        % start/stop indice of record
+        start=nbz(i)+1;
+        stop=size(data(i).dep,1)-nfz(i);
+
+        % now apply initial conditions ontop of everything
+        if(haszi)
+            data(i).dep(start:(start+nfz(i)-1),:)=...
+                data(i).dep(start:(start+nfz(i)-1),:)+zi{i,1};
+            data(i).dep((stop-nbz(i)+1):stop,:)=...
+                data(i).dep((stop-nbz(i)+1):stop,:)+zi{i,2};
+        end
+
+        % extract final conditions (leaving just the record)
+        zf{i,1}=data(i).dep((stop+1):end,:);
+        zf{i,2}=data(i).dep(1:nbz(i),:);
+        data(i).dep([1:nbz(i) (stop+1):end],:)=[];
+
+        % dep*
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+
+        % restore class
         data(i).dep=oclass(data(i).dep);
-        zf{i,1}=oclass(zi{i,1});
-        zf{i,2}=oclass(zi{i,2});
-        continue;
+        zf{i,1}=oclass(zf{i,1});
+        zf{i,2}=oclass(zf{i,2});
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
     end
+
+    % update header
+    data=changeheader(data,...
+        'depmax',depmax,'depmin',depmin,'depmen',depmen);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
     
-    % convolve (assumes simple causal case)
-    [data(i).dep,zf{i,1}]=filter(tf{tfidx(i)},1,data(i).dep,[],1);
-    
-    % combined convolved record with final conditions (padding too)
-    data(i).dep=[zeros(max(0,delay(i)),ncmp(i)); data(i).dep; zf{i,1}; ...
-        zeros(abs(min(ntf(tfidx(i))-1-nbz(i),0)),ncmp(i))];
-    
-    % start/stop indice of record
-    start=nbz(i)+1;
-    stop=size(data(i).dep,1)-nfz(i);
-    
-    % now apply initial conditions ontop of everything
-    if(haszi)
-        data(i).dep(start:(start+nfz(i)-1),:)=...
-            data(i).dep(start:(start+nfz(i)-1),:)+zi{i,1};
-        data(i).dep((stop-nbz(i)+1):stop,:)=...
-            data(i).dep((stop-nbz(i)+1):stop,:)+zi{i,2};
-    end
-    
-    % extract final conditions (leaving just the record)
-    zf{i,1}=data(i).dep((stop+1):end,:);
-    zf{i,2}=data(i).dep(1:nbz(i),:);
-    data(i).dep([1:nbz(i) (stop+1):end],:)=[];
-    
-    % dep*
-    depmen(i)=mean(data(i).dep(:));
-    depmin(i)=min(data(i).dep(:));
-    depmax(i)=max(data(i).dep(:));
-    
-    % restore class
-    data(i).dep=oclass(data(i).dep);
-    zf{i,1}=oclass(zf{i,1});
-    zf{i,2}=oclass(zf{i,2});
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'depmax',depmax,'depmin',depmin,'depmen',depmen);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

@@ -231,6 +231,14 @@ function [data]=checkheader(data,varargin)
 %           CHECKS:     DEP IS COMPLEX
 %           FIX:        SET DEP REAL
 %           DEFAULT:    ERROR
+%       NAN_DEP
+%           CHECKS:     DEP HAS NANS
+%           FIX:        REMOVE RECORD
+%           DEFAULT:    ERROR
+%       INF_DEP
+%           CHECKS:     DEP HAS INFINITE VALUES
+%           FIX:        REMOVE RECORD
+%           DEFAULT:    ERROR
 %       OLD_DEP_STATS
 %           CHECKS:     DEPMAX/DEPMEN/DEPMIN
 %           FIX:        UPDATE DEP* STATS
@@ -291,9 +299,13 @@ function [data]=checkheader(data,varargin)
 %        Oct. 15, 2009 - fix for inaccurate_timing (big speed jump)
 %        Oct. 16, 2009 - added complex data checks
 %        Nov. 13, 2009 - update for geodetic to geographic
+%        Dec.  8, 2009 - new options NAN_DEP & INF_DEP
+%        Jan. 29, 2010 - forgot to predefine destruction arrays, minor
+%                        changing of messages, proper SEIZMO handling,
+%                        fixed EVEN_IND bug, VERSIONINFO caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 20:25 GMT
+%     Last Updated Jan. 29, 2010 at 02:55 GMT
 
 % todo:
 
@@ -303,6 +315,7 @@ if(nargin<1)
         'Not enough input arguments.');
 end
 
+disp('debug checkheader 1!')
 % check SEIZMO global for quick exit
 global SEIZMO
 try
@@ -310,348 +323,383 @@ try
 catch
     % checks data below
 end
+disp('debug checkheader 2!')
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
-
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% grab header setup
+% check data structure & grab header setup
 [h,vi]=versioninfo(data);
 
-% parse options
-option=checkparameters(false,varargin{:});
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% get header fields
-[iftype,iztype,idep]=getenumid(data,'iftype','iztype','idep');
-[leven,lcalda]=getlgc(data,'leven','lcalda');
-[nvhdr,delta,npts,ncmp,nz,b,e,sb,sdelta,nspts,st,ev,delaz,dep]=...
-    getheader(data,'nvhdr','delta','npts','ncmp','nz','b','e','sb',...
-    'sdelta','nspts','st','ev','delaz','dep');
-
-% logicals
-xyz=strcmp(iftype,'ixyz');
-spectral=(strcmp(iftype,'irlim') | strcmp(iftype,'iamph'));
-undef=getsubfield(h(vi),'undef','ntype').';
-
-% fudge factor
+% attempt header check
 try
-    fudge=SEIZMO.CHECKHEADER.FUDGE;
+    % parse options
+    option=checkparameters(false,varargin{:});
+
+    % get header fields
+    [iftype,iztype,idep]=getenumid(data,'iftype','iztype','idep');
+    [leven,lcalda]=getlgc(data,'leven','lcalda');
+    [nvhdr,delta,npts,ncmp,nz,b,e,sb,sdelta,nspts,st,ev,delaz,dep]=...
+        getheader(data,'nvhdr','delta','npts','ncmp','nz','b','e','sb',...
+        'sdelta','nspts','st','ev','delaz','dep');
+
+    % predefine destruction arrays
+    destroy1=[];
+    destroy2=[];
+
+    % logicals
+    xyz=strcmp(iftype,'ixyz');
+    spectral=(strcmp(iftype,'irlim') | strcmp(iftype,'iamph'));
+    undef=getsubfield(h(vi),'undef','ntype').';
+
+    % fudge factor
+    try
+        fudge=SEIZMO.CHECKHEADER.FUDGE;
+    catch
+        fudge=1e-6;
+    end
+
+    %%%%%%%%%%%%%%%%
+    % BEGIN CHECKS %
+    %%%%%%%%%%%%%%%%
+
+    % check for invalid header version
+    if(~strcmp(option.INVALID_NVHDR,'IGNORE'))
+        [nvhdr]=invalid_nvhdr(option.INVALID_NVHDR,h,vi,nvhdr);
+    end
+
+    % START ENUMS
+    % check for invalid data type
+    if(~strcmp(option.INVALID_IFTYPE,'IGNORE'))
+        [iftype]=invalid_iftype(option.INVALID_IFTYPE,iftype);
+    end
+
+    % check for multiple data types
+    if(~strcmp(option.MULTIPLE_IFTYPE,'IGNORE'))
+        multiple_iftype(option.MULTIPLE_IFTYPE,iftype);
+    end
+
+    % check for undefined leven
+    if(~strcmp(option.UNSET_LEVEN,'IGNORE'))
+        [leven]=unset_leven(option.UNSET_LEVEN,leven);
+    end
+
+    % check for invalid uneven
+    if(~strcmp(option.INVALID_UNEVEN,'IGNORE'))
+        invalid_uneven(option.INVALID_UNEVEN,spectral | xyz,leven);
+    end
+
+    % check for invalid reference time type
+    if(~strcmp(option.INVALID_IZTYPE,'IGNORE'))
+        [iztype]=invalid_iztype(option.INVALID_IZTYPE,iztype);
+    end
+
+    % check for invalid reftime fields
+    if(~strcmp(option.NONINTEGER_REFTIME,'IGNORE'))
+        [nz]=noninteger_reftime(option.NONINTEGER_REFTIME,nz);
+    end
+
+    % check for invalid reftime fields
+    if(~strcmp(option.UNSET_REFTIME,'IGNORE'))
+        [nz]=unset_reftime(option.UNSET_REFTIME,undef,nz);
+    end
+
+    % check for invalid reftime fields
+    if(~strcmp(option.OUTOFRANGE_REFTIME,'IGNORE'))
+        [nz]=outofrange_reftime(option.OUTOFRANGE_REFTIME,nz);
+    end
+
+    % check for nonzero iztype
+    if(~strcmp(option.NONZERO_IZTYPE,'IGNORE'))
+        SEIZMO.VERSIONINFO.USECACHE=false;
+        [iztype]=nonzero_iztype(...
+            option.NONZERO_IZTYPE,spectral,data,nz,iztype);
+        SEIZMO.VERSIONINFO.USECACHE=true;
+        SEIZMO.VERSIONINFO.H=h;
+        SEIZMO.VERSIONINFO.IDX=vi;
+    end
+
+    % check for multiple reference time types
+    if(~strcmp(option.MULTIPLE_IZTYPE,'IGNORE'))
+        multiple_iztype(option.MULTIPLE_IZTYPE,iztype);
+    end
+
+    % check for invalid dependent component type
+    if(~strcmp(option.INVALID_IDEP,'IGNORE'))
+        [idep]=invalid_idep(option.INVALID_IDEP,idep);
+    end
+
+    % check for multiple dependent component types
+    if(~strcmp(option.MULTIPLE_IDEP,'IGNORE'))
+        multiple_idep(option.MULTIPLE_IDEP,idep);
+    end
+    % END ENUMS
+
+    % START TIMING
+    % check for inconsistent e
+    if(~strcmp(option.INCONSISTENT_E,'IGNORE'))
+        [e]=inconsistent_e(...
+            option.INCONSISTENT_E,leven,spectral,b,delta,npts,e);
+    end
+
+    % check for inaccurate timing
+    if(~strcmp(option.INACCURATE_TIMING,'IGNORE'))
+        inaccurate_timing(option.INACCURATE_TIMING,b,delta,e,fudge);
+    end
+    % END TIMING
+
+    % START SPECTRAL
+    % check for bad spectral b
+    if(~strcmp(option.BAD_SPECTRAL_B,'IGNORE'))
+        [b]=bad_spectral_b(option.BAD_SPECTRAL_B,spectral,b);
+    end
+
+    % check for bad spectral sdelta
+    if(~strcmp(option.BAD_SPECTRAL_SDELTA,'IGNORE'))
+        [sdelta]=bad_spectral_sdelta(...
+            option.BAD_SPECTRAL_SDELTA,spectral,undef,e,sdelta);
+    end
+
+    % check for bad spectral e
+    if(~strcmp(option.BAD_SPECTRAL_E,'IGNORE'))
+        [e]=bad_spectral_e(option.BAD_SPECTRAL_E,spectral,sdelta,e,fudge);
+    end
+
+    % check for bad spectral npts
+    if(~strcmp(option.BAD_SPECTRAL_NPTS,'IGNORE'))
+        bad_spectral_npts(option.BAD_SPECTRAL_NPTS,spectral,npts);
+    end
+
+    % check for bad spectral nspts
+    if(~strcmp(option.BAD_SPECTRAL_NSPTS,'IGNORE'))
+        [nspts]=bad_spectral_nspts(...
+            option.BAD_SPECTRAL_NSPTS,spectral,npts,nspts);
+    end
+
+    % check for bad spectral delta
+    if(~strcmp(option.BAD_SPECTRAL_DELTA,'IGNORE'))
+        [delta]=bad_spectral_delta(...
+            option.BAD_SPECTRAL_DELTA,spectral,e,npts,delta,fudge);
+    end
+
+    % check for bad spectral sb
+    if(~strcmp(option.BAD_SPECTRAL_SB,'IGNORE'))
+        [sb]=bad_spectral_sb(option.BAD_SPECTRAL_SB,spectral,undef,sb);
+    end
+    % END SPECTRAL
+
+    % START LOCATION
+    % check for bad lat
+    if(~strcmp(option.OUTOFRANGE_LAT,'IGNORE'))
+        [ev,st]=outofrange_lat(option.OUTOFRANGE_LAT,undef,ev,st);
+    end
+
+    % check for bad lon
+    if(~strcmp(option.OUTOFRANGE_LON,'IGNORE'))
+        [ev,st]=outofrange_lon(option.OUTOFRANGE_LON,undef,ev,st);
+    end
+
+    % check for undef depth
+    if(~strcmp(option.UNSET_DEPTH,'IGNORE'))
+        [ev,st]=unset_depth(option.UNSET_DEPTH,undef,ev,st);
+    end
+
+    % check for undef elev
+    if(~strcmp(option.UNSET_ELEV,'IGNORE'))
+        [ev,st]=unset_elev(option.UNSET_ELEV,undef,ev,st);
+    end
+
+    % check for km depths
+    if(~strcmp(option.KM_DEPTH,'IGNORE'))
+        [ev]=km_depth(option.KM_DEPTH,undef,ev);
+    end
+
+    % check for old delaz
+    if(~strcmp(option.OLD_DELAZ,'IGNORE'))
+        [delaz]=old_delaz(option.OLD_DELAZ,undef,lcalda,st,ev,delaz);
+    end
+    % END LOCATION
+
+    % START VSDATA
+    % check for mismatch between ncmp and size of dep
+    if(~strcmp(option.INCONSISTENT_DEP_NCMP,'IGNORE'))
+        [ncmp]=inconsistent_dep_ncmp(...
+            option.INCONSISTENT_DEP_NCMP,spectral,data,ncmp);
+    end
+
+    % check for multiple component records
+    if(~strcmp(option.MULCMP_DEP,'IGNORE'))
+        mulcmp_dep(option.MULCMP_DEP,ncmp);
+    end
+
+    % check for multiple component records using a non-multi-cmp filetype
+    if(~strcmp(option.INVALID_MULCMP_DEP,'IGNORE'))
+        [data,h,vi,nvhdr]=invalid_mulcmp_dep(...
+            option.INVALID_MULCMP_DEP,data,h,vi,nvhdr,ncmp);
+    end
+
+    % check for negative ncmp
+    if(~strcmp(option.NEGATIVE_NCMP,'IGNORE'))
+        [ncmp]=negative_ncmp(option.NEGATIVE_NCMP,ncmp);
+    end
+
+    % check for no cmp records
+    if(~strcmp(option.ZERO_NCMP,'IGNORE'))
+        zero_ncmp(option.ZERO_NCMP,ncmp);
+    end
+
+    % check for mismatch between ncmp and size of dep for spectral
+    if(~strcmp(option.BAD_SPECTRAL_DEP,'IGNORE'))
+        bad_spectral_dep(option.BAD_SPECTRAL_DEP,spectral,data);
+    end
+
+    % check for missing ind
+    if(~strcmp(option.MISSING_IND,'IGNORE'))
+        [leven]=missing_ind(option.MISSING_IND,leven,data);
+    end
+
+    % check for dataset with mix of evenly & unevenly sampled records
+    if(~strcmp(option.MULTIPLE_LEVEN,'IGNORE'))
+        multiple_leven(option.MULTIPLE_LEVEN,leven);
+    end
+
+    % clear even with ind
+    if(~strcmp(option.EVEN_IND,'IGNORE'))
+        [data]=even_ind(option.EVEN_IND,leven,data);
+    end
+
+    % check for multiple independent datum
+    if(~strcmp(option.MULCMP_IND,'IGNORE'))
+        mulcmp_ind(option.MULCMP_IND,leven,data);
+    end
+
+    % check for mismatch between dep size and ind size
+    if(~strcmp(option.INCONSISTENT_IND_NPTS,'IGNORE'))
+        [data]=inconsistent_ind_npts(...
+            option.INCONSISTENT_IND_NPTS,leven,data);
+    end
+
+    % check for complex ind
+    if(~strcmp(option.CMPLX_IND,'IGNORE'))
+        [data]=cmplx_ind(option.CMPLX_IND,data);
+    end
+
+    % check for nonmonotonic ind
+    if(~strcmp(option.NONMONOTONIC_IND,'IGNORE'))
+        [data]=nonmonotonic_ind(option.NONMONOTONIC_IND,leven,data);
+    end
+
+    % check for repeat ind
+    if(~strcmp(option.REPEAT_IND,'IGNORE'))
+        [data]=repeat_ind(option.REPEAT_IND,leven,data);
+    end
+
+    % check for mismatch between npts and size of dep
+    if(~strcmp(option.INCONSISTENT_DEP_NPTS,'IGNORE'))
+        [npts]=inconsistent_dep_npts(...
+            option.INCONSISTENT_DEP_NPTS,data,npts);
+    end
+
+    % check for negative npts
+    if(~strcmp(option.NEGATIVE_NPTS,'IGNORE'))
+        [npts]=negative_npts(option.NEGATIVE_NPTS,npts);
+    end
+
+    % check for zero npts
+    if(~strcmp(option.ZERO_NPTS,'IGNORE'))
+        zero_npts(option.ZERO_NPTS,npts);
+    end
+
+    % check for mismatch between b and ind
+    if(~strcmp(option.INCONSISTENT_IND_B,'IGNORE'))
+        [b]=inconsistent_ind_b(...
+            option.INCONSISTENT_IND_B,undef,leven,data,b);
+    end
+
+    % check for mismatch between e and ind
+    if(~strcmp(option.INCONSISTENT_IND_E,'IGNORE'))
+        [e]=inconsistent_ind_e(...
+            option.INCONSISTENT_IND_E,undef,leven,data,e);
+    end
+
+    % check for mismatch between delta and ind
+    if(~strcmp(option.INCONSISTENT_IND_DELTA,'IGNORE'))
+        [delta]=inconsistent_ind_delta(...
+            option.INCONSISTENT_IND_DELTA,leven,data,delta);
+    end
+
+    % check for negative delta
+    if(~strcmp(option.NEGATIVE_DELTA,'IGNORE'))
+        negative_delta(option.NEGATIVE_DELTA,delta);
+    end
+
+    % check for zero delta
+    if(~strcmp(option.ZERO_DELTA,'IGNORE'))
+        zero_delta(option.ZERO_DELTA,delta);
+    end
+
+    % check for multiple sample rates
+    if(~strcmp(option.MULTIPLE_DELTA,'IGNORE'))
+        multiple_delta(option.MULTIPLE_DELTA,delta);
+    end
+
+    % check for complex dep
+    if(~strcmp(option.CMPLX_DEP,'IGNORE'))
+        [data]=cmplx_dep(option.CMPLX_DEP,data);
+    end
+
+    % check for nan dep
+    if(~strcmp(option.NAN_DEP,'IGNORE'))
+        [destroy1]=nan_dep(option.NAN_DEP,data);
+    end
+
+    % check for inf dep
+    if(~strcmp(option.INF_DEP,'IGNORE'))
+        [destroy2]=inf_dep(option.INF_DEP,data);
+    end
+
+    % check for old dep stats
+    if(~strcmp(option.OLD_DEP_STATS,'IGNORE'))
+        [dep]=old_dep_stats(option.OLD_DEP_STATS,undef,data,dep);
+    end
+
+    % check for complex head
+    if(~strcmp(option.CMPLX_HEAD,'IGNORE'))
+        [data]=cmplx_head(option.CMPLX_HEAD,data);
+    end
+    % END VSDATA
+
+    %{
+    % check for 
+    if(~strcmp(option.,'IGNORE'))
+        (option.,);
+    end
+    %}
+
+    % update header
+    data=changeheader(data,'nvhdr',nvhdr,'iftype',iftype,...
+        'iztype',iztype,'idep',idep,'leven',leven,'delta',delta,...
+        'npts',npts,'ncmp',ncmp,'nz',nz,'b',b,'e',e,'sb',sb,...
+        'sdelta',sdelta,'nspts',nspts,'st',st,'ev',ev,'delaz',delaz,...
+        'dep',dep);
+
+    % remove unwanted records
+    if(any(destroy1 | destroy2))
+        data(destroy1 | destroy2)=[];
+    end
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+	versioninfo_cache(oldversioninfocache);
 catch
-    fudge=1e-6;
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+	versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
 end
-
-%%%%%%%%%%%%%%%%
-% BEGIN CHECKS %
-%%%%%%%%%%%%%%%%
-
-% check for invalid header version
-if(~strcmp(option.INVALID_NVHDR,'IGNORE'))
-    [nvhdr]=invalid_nvhdr(option.INVALID_NVHDR,h,vi,nvhdr);
-end
-
-% START ENUMS
-% check for invalid data type
-if(~strcmp(option.INVALID_IFTYPE,'IGNORE'))
-    [iftype]=invalid_iftype(option.INVALID_IFTYPE,iftype);
-end
-
-% check for multiple data types
-if(~strcmp(option.MULTIPLE_IFTYPE,'IGNORE'))
-    multiple_iftype(option.MULTIPLE_IFTYPE,iftype);
-end
-
-% check for undefined leven
-if(~strcmp(option.UNSET_LEVEN,'IGNORE'))
-    [leven]=unset_leven(option.UNSET_LEVEN,leven);
-end
-
-% check for invalid uneven
-if(~strcmp(option.INVALID_UNEVEN,'IGNORE'))
-    invalid_uneven(option.INVALID_UNEVEN,spectral | xyz,leven);
-end
-
-% check for invalid reference time type
-if(~strcmp(option.INVALID_IZTYPE,'IGNORE'))
-    [iztype]=invalid_iztype(option.INVALID_IZTYPE,iztype);
-end
-
-% check for invalid reftime fields
-if(~strcmp(option.NONINTEGER_REFTIME,'IGNORE'))
-    [nz]=noninteger_reftime(option.NONINTEGER_REFTIME,nz);
-end
-
-% check for invalid reftime fields
-if(~strcmp(option.UNSET_REFTIME,'IGNORE'))
-    [nz]=unset_reftime(option.UNSET_REFTIME,undef,nz);
-end
-
-% check for invalid reftime fields
-if(~strcmp(option.OUTOFRANGE_REFTIME,'IGNORE'))
-    [nz]=outofrange_reftime(option.OUTOFRANGE_REFTIME,nz);
-end
-
-% check for nonzero iztype
-if(~strcmp(option.NONZERO_IZTYPE,'IGNORE'))
-    [iztype]=nonzero_iztype(option.NONZERO_IZTYPE,spectral,data,nz,iztype);
-end
-
-% check for multiple reference time types
-if(~strcmp(option.MULTIPLE_IZTYPE,'IGNORE'))
-    multiple_iztype(option.MULTIPLE_IZTYPE,iztype);
-end
-
-% check for invalid dependent component type
-if(~strcmp(option.INVALID_IDEP,'IGNORE'))
-    [idep]=invalid_idep(option.INVALID_IDEP,idep);
-end
-
-% check for multiple dependent component types
-if(~strcmp(option.MULTIPLE_IDEP,'IGNORE'))
-    multiple_idep(option.MULTIPLE_IDEP,idep);
-end
-% END ENUMS
-
-% START TIMING
-% check for inconsistent e
-if(~strcmp(option.INCONSISTENT_E,'IGNORE'))
-    [e]=inconsistent_e(...
-        option.INCONSISTENT_E,leven,spectral,b,delta,npts,e);
-end
-
-% check for inaccurate timing
-if(~strcmp(option.INACCURATE_TIMING,'IGNORE'))
-    inaccurate_timing(option.INACCURATE_TIMING,b,delta,e,fudge);
-end
-% END TIMING
-
-% START SPECTRAL
-% check for bad spectral b
-if(~strcmp(option.BAD_SPECTRAL_B,'IGNORE'))
-    [b]=bad_spectral_b(option.BAD_SPECTRAL_B,spectral,b);
-end
-
-% check for bad spectral sdelta
-if(~strcmp(option.BAD_SPECTRAL_SDELTA,'IGNORE'))
-    [sdelta]=bad_spectral_sdelta(...
-        option.BAD_SPECTRAL_SDELTA,spectral,undef,e,sdelta);
-end
-
-% check for bad spectral e
-if(~strcmp(option.BAD_SPECTRAL_E,'IGNORE'))
-    [e]=bad_spectral_e(option.BAD_SPECTRAL_E,spectral,sdelta,e,fudge);
-end
-
-% check for bad spectral npts
-if(~strcmp(option.BAD_SPECTRAL_NPTS,'IGNORE'))
-    bad_spectral_npts(option.BAD_SPECTRAL_NPTS,spectral,npts);
-end
-
-% check for bad spectral nspts
-if(~strcmp(option.BAD_SPECTRAL_NSPTS,'IGNORE'))
-    [nspts]=bad_spectral_nspts(...
-        option.BAD_SPECTRAL_NSPTS,spectral,npts,nspts);
-end
-
-% check for bad spectral delta
-if(~strcmp(option.BAD_SPECTRAL_DELTA,'IGNORE'))
-    [delta]=bad_spectral_delta(...
-        option.BAD_SPECTRAL_DELTA,spectral,e,npts,delta,fudge);
-end
-
-% check for bad spectral sb
-if(~strcmp(option.BAD_SPECTRAL_SB,'IGNORE'))
-    [sb]=bad_spectral_sb(option.BAD_SPECTRAL_SB,spectral,undef,sb);
-end
-% END SPECTRAL
-
-% START LOCATION
-% check for bad lat
-if(~strcmp(option.OUTOFRANGE_LAT,'IGNORE'))
-    [ev,st]=outofrange_lat(option.OUTOFRANGE_LAT,undef,ev,st);
-end
-
-% check for bad lon
-if(~strcmp(option.OUTOFRANGE_LON,'IGNORE'))
-    [ev,st]=outofrange_lon(option.OUTOFRANGE_LON,undef,ev,st);
-end
-
-% check for undef depth
-if(~strcmp(option.UNSET_DEPTH,'IGNORE'))
-    [ev,st]=unset_depth(option.UNSET_DEPTH,undef,ev,st);
-end
-
-% check for undef elev
-if(~strcmp(option.UNSET_ELEV,'IGNORE'))
-    [ev,st]=unset_elev(option.UNSET_ELEV,undef,ev,st);
-end
-
-% check for km depths
-if(~strcmp(option.KM_DEPTH,'IGNORE'))
-    [ev]=km_depth(option.KM_DEPTH,undef,ev);
-end
-
-% check for old delaz
-if(~strcmp(option.OLD_DELAZ,'IGNORE'))
-    [delaz]=old_delaz(option.OLD_DELAZ,undef,lcalda,st,ev,delaz);
-end
-% END LOCATION
-
-% START VSDATA
-% check for mismatch between ncmp and size of dep
-if(~strcmp(option.INCONSISTENT_DEP_NCMP,'IGNORE'))
-    [ncmp]=inconsistent_dep_ncmp(...
-        option.INCONSISTENT_DEP_NCMP,spectral,data,ncmp);
-end
-
-% check for multiple component records
-if(~strcmp(option.MULCMP_DEP,'IGNORE'))
-    mulcmp_dep(option.MULCMP_DEP,ncmp);
-end
-
-% check for multiple component records using a non-multi-cmp filetype
-if(~strcmp(option.INVALID_MULCMP_DEP,'IGNORE'))
-    [data,h,vi,nvhdr]=invalid_mulcmp_dep(...
-        option.INVALID_MULCMP_DEP,data,h,vi,nvhdr,ncmp);
-end
-
-% check for negative ncmp
-if(~strcmp(option.NEGATIVE_NCMP,'IGNORE'))
-    [ncmp]=negative_ncmp(option.NEGATIVE_NCMP,ncmp);
-end
-
-% check for no cmp records
-if(~strcmp(option.ZERO_NCMP,'IGNORE'))
-    zero_ncmp(option.ZERO_NCMP,ncmp);
-end
-
-% check for mismatch between ncmp and size of dep for spectral
-if(~strcmp(option.BAD_SPECTRAL_DEP,'IGNORE'))
-    bad_spectral_dep(option.BAD_SPECTRAL_DEP,spectral,data);
-end
-
-% check for missing ind
-if(~strcmp(option.MISSING_IND,'IGNORE'))
-    [leven]=missing_ind(option.MISSING_IND,leven,data);
-end
-
-% check for dataset with some evenly sampled and unevenly sampled records
-if(~strcmp(option.MULTIPLE_LEVEN,'IGNORE'))
-    multiple_leven(option.MULTIPLE_LEVEN,leven);
-end
-
-% clear even with ind
-if(~strcmp(option.EVEN_IND,'IGNORE'))
-    [data]=even_ind(option.EVEN_IND,leven,data);
-end
-
-% check for multiple independent datum
-if(~strcmp(option.MULCMP_IND,'IGNORE'))
-    mulcmp_ind(option.MULCMP_IND,leven,data);
-end
-
-% check for mismatch between dep size and ind size
-if(~strcmp(option.INCONSISTENT_IND_NPTS,'IGNORE'))
-    [data]=inconsistent_ind_npts(...
-        option.INCONSISTENT_IND_NPTS,leven,data);
-end
-
-% check for complex ind
-if(~strcmp(option.CMPLX_IND,'IGNORE'))
-    [data]=cmplx_ind(option.CMPLX_IND,data);
-end
-
-% check for nonmonotonic ind
-if(~strcmp(option.NONMONOTONIC_IND,'IGNORE'))
-    [data]=nonmonotonic_ind(option.NONMONOTONIC_IND,leven,data);
-end
-
-% check for repeat ind
-if(~strcmp(option.REPEAT_IND,'IGNORE'))
-    [data]=repeat_ind(option.REPEAT_IND,leven,data);
-end
-
-% check for mismatch between npts and size of dep
-if(~strcmp(option.INCONSISTENT_DEP_NPTS,'IGNORE'))
-    [npts]=inconsistent_dep_npts(...
-        option.INCONSISTENT_DEP_NPTS,data,npts);
-end
-
-% check for negative npts
-if(~strcmp(option.NEGATIVE_NPTS,'IGNORE'))
-    [npts]=negative_npts(option.NEGATIVE_NPTS,npts);
-end
-
-% check for zero npts
-if(~strcmp(option.ZERO_NPTS,'IGNORE'))
-    zero_npts(option.ZERO_NPTS,npts);
-end
-
-% check for mismatch between b and ind
-if(~strcmp(option.INCONSISTENT_IND_B,'IGNORE'))
-    [b]=inconsistent_ind_b(option.INCONSISTENT_IND_B,undef,leven,data,b);
-end
-
-% check for mismatch between e and ind
-if(~strcmp(option.INCONSISTENT_IND_E,'IGNORE'))
-    [e]=inconsistent_ind_e(option.INCONSISTENT_IND_E,undef,leven,data,e);
-end
-
-% check for mismatch between delta and ind
-if(~strcmp(option.INCONSISTENT_IND_DELTA,'IGNORE'))
-    [delta]=inconsistent_ind_delta(...
-        option.INCONSISTENT_IND_DELTA,leven,data,delta);
-end
-
-% check for negative delta
-if(~strcmp(option.NEGATIVE_DELTA,'IGNORE'))
-    negative_delta(option.NEGATIVE_DELTA,delta);
-end
-
-% check for zero delta
-if(~strcmp(option.ZERO_DELTA,'IGNORE'))
-    zero_delta(option.ZERO_DELTA,delta);
-end
-
-% check for multiple sample rates
-if(~strcmp(option.MULTIPLE_DELTA,'IGNORE'))
-    multiple_delta(option.MULTIPLE_DELTA,delta);
-end
-
-% check for complex dep
-if(~strcmp(option.CMPLX_DEP,'IGNORE'))
-    [data]=cmplx_dep(option.CMPLX_DEP,data);
-end
-
-% check for old dep stats
-if(~strcmp(option.OLD_DEP_STATS,'IGNORE'))
-    [dep]=old_dep_stats(option.OLD_DEP_STATS,undef,data,dep);
-end
-
-% check for complex head
-if(~strcmp(option.CMPLX_HEAD,'IGNORE'))
-    [data]=cmplx_head(option.CMPLX_HEAD,data);
-end
-% END VSDATA
-
-%{
-% check for 
-if(~strcmp(option.,'IGNORE'))
-    (option.,);
-end
-%}
-
-% update header
-data=changeheader(data,'nvhdr',nvhdr,'iftype',iftype,'iztype',iztype,...
-    'idep',idep,'leven',leven,'delta',delta,'npts',npts,'ncmp',ncmp,...
-    'nz',nz,'b',b,'e',e,'sb',sb,'sdelta',sdelta,'nspts',nspts,'st',st,...
-    'ev',ev,'delaz',delaz,'dep',dep);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end
 
@@ -733,7 +781,7 @@ validleven={'true' 'false'};
 bad=find(~ismember(leven,validleven));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:unsetLEVEN';
-    report.message=['LEVEN must be TRUE or FALSE for records:\n'...
+    report.message=['LEVEN must be TRUE or FALSE for record(s):\n'...
         sprintf('%d ',bad)];
     switch opt
         case 'ERROR'
@@ -755,7 +803,7 @@ function []=invalid_uneven(opt,reqeven,leven)
 bad=find(reqeven & strcmp(leven,'false'));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badUneven';
-    report.message=['LEVEN must be TRUE for Spectral/XYZ records:\n'...
+    report.message=['LEVEN must be TRUE for Spectral/XYZ record(s):\n'...
         sprintf('%d ',bad)];
     switch opt
         case 'ERROR'
@@ -859,7 +907,7 @@ bad6=nz(:,6)<0 | nz(:,6)>999;
 bad=find(bad1 | bad2 | bad3 | bad4 | bad5 | bad6);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:outofrangeRef';
-    report.message=['Records:\n' sprintf('%d ',bad)...
+    report.message=['Record(s):\n' sprintf('%d ',bad)...
         '\nReference time fields NZ* not in defined range!'];
     switch opt
         case 'ERROR'
@@ -900,7 +948,7 @@ if(any(spectral & b)); iztype(spectral & b)={'ib'}; end
 bad=[bad(:); badday(:)];
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:nonzeroIZTYPE';
-    report.message=['Header inconsistency found! Records:\n' ...
+    report.message=['Header inconsistency found! Record(s):\n' ...
         sprintf('%d ',bad)...
         '\nNZHOUR, NZMIN, NZSEC, NZMSEC are not zero for IZTYPE=IDAY\n' ...
         'or IZTYPE corresponds to a header field and that field is\n' ...
@@ -1003,7 +1051,7 @@ bad=unique(leven);
 if(~isscalar(bad))
     report.identifier='seizmo:checkheader:multiLEVEN';
     report.message=['Dataset has some evenly & unevenly sampled '...
-        'records!\n' ...
+        'record(s)!\n' ...
         'This will slow some operations down and may cause problems!'];
     switch opt
         case 'ERROR'
@@ -1159,6 +1207,7 @@ end
 end
 
 function [data,h,vi,nvhdr]=invalid_mulcmp_dep(opt,data,h,vi,nvhdr,ncmp)
+global SEIZMO
 bad=find(ncmp>1 & ~getsubfield(h(vi),'mulcmp','valid').');
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:versNotMulCmp';
@@ -1174,7 +1223,9 @@ if(~isempty(bad))
             nvhdr(bad)=[mulcmp.altver];
             [data(bad).filetype]=deal(mulcmp.alttype);
             [data(bad).version]=deal(mulcmp.altver);
+            SEIZMO.VERSIONINFO.USECACHE=false;
             [h,vi]=versioninfo(data);
+            SEIZMO.VERSIONINFO.USECACHE=true;
         case 'WARNFIX'
             warning(report.identifier,report.message);
             disp('==> Changing to a multi-component version!');
@@ -1182,7 +1233,9 @@ if(~isempty(bad))
             nvhdr(bad)=[mulcmp.altver];
             [data(bad).filetype]=deal(mulcmp.alttype);
             [data(bad).version]=deal(mulcmp.altver);
+            SEIZMO.VERSIONINFO.USECACHE=false;
             [h,vi]=versioninfo(data);
+            SEIZMO.VERSIONINFO.USECACHE=true;
     end
 end
 
@@ -1256,7 +1309,7 @@ function inaccurate_timing(opt,b,delta,e,fudge)
 bad=find((b+delta-b-delta)./delta>fudge | (e+delta-e-delta)./delta>fudge);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:timingDegraded';
-    report.message=['Records:\n' sprintf('%d ',bad)...
+    report.message=['Record(s):\n' sprintf('%d ',bad)...
         '\nDELTA is too insignificant to be well resolved!\n'...
         'This can introduce significant numerical error!\n'...
         'It is recommended to adjust the relative timing so\n'...
@@ -1332,7 +1385,7 @@ function [e]=bad_spectral_e(opt,spectral,sdelta,e,fudge)
 bad=find(spectral & abs((e-1./(2*sdelta))./e)>fudge);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badSpectralE';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
         '\nE for spectral records gives the Nyquist frequency\n'...
         'and must be consistent with SDELTA (E=1/(2*SDELTA))!'];
     switch opt
@@ -1356,7 +1409,7 @@ function bad_spectral_npts(opt,spectral,npts)
 bad=find(spectral & npts~=2.^ceil(log2(npts)));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badSpectralNPTS';
-    report.message=['Records:\n' sprintf('%d ',bad)...
+    report.message=['Record(s):\n' sprintf('%d ',bad)...
         '\nNPTS field for spectral records must be a power of 2!'];
     switch opt
         case 'ERROR'
@@ -1379,7 +1432,7 @@ function [nspts]=bad_spectral_nspts(opt,spectral,npts,nspts)
 bad=find(spectral & (nspts<0 | nspts>npts));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
         '\nNSPTS field for spectral records gives the number of\n' ...
         'points in the time domain and must be >=0 and <=NPTS!'];
     switch opt
@@ -1402,7 +1455,7 @@ function [delta]=bad_spectral_delta(opt,spectral,e,npts,delta,fudge)
 bad=find(spectral & abs((delta-2*e./npts)./delta)>fudge);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badSpectralDELTA';
-    report.message=['Records:\n' sprintf('%d ',bad)...
+    report.message=['Record(s):\n' sprintf('%d ',bad)...
         '\nDELTA for spectral records gives the frequency\n'...
         'resolution and must be consistent with E and NPTS!'];
     switch opt
@@ -1630,7 +1683,7 @@ bad=ok(nrows(ok)~=npts(ok));
 %bad=nrows~=npts(ok);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:NPTSinconsistent';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
         '\nNPTS does not match data!'];
     switch opt
         case 'ERROR'
@@ -1657,7 +1710,7 @@ ncols(spectral)=ncols(spectral)./2;
 bad=ok(ncols(ok)~=ncmp(ok));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:NCMPinconsistent';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
         '\nNCMP does not match data!'];
     switch opt
         case 'ERROR'
@@ -1684,7 +1737,7 @@ for i=1:numel(ok); [nrows(i),ncols(i)]=size(data(ok(i)).dep); end
 bad=ok(mod(ncols,2) | nrows~=2.^ceil(log2(nrows)));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badDepSize';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
         '\nSpectral records must have even number of columns' ...
         '\nand NPTS equal to a power of two!'];
     switch opt
@@ -1716,7 +1769,7 @@ end
 bad=ok(~(nirows.*nicols) & (nrows.*ncols));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:noIND';
-    report.message=['Records:\n' sprintf('%d ',bad)...
+    report.message=['Record(s):\n' sprintf('%d ',bad)...
             '\nLEVEN set FALSE requires an independent component\n'...
             'dataset but there is none.'];
     switch opt
@@ -1738,12 +1791,12 @@ end
 function [data]=even_ind(opt,leven,data)
 ok=find(~strcmp(leven,'false') & [data.hasdata].');
 bad=false(size(ok));
-for i=1:numel(ok); bad(i)=isempty(data(ok(i)).ind); end
+for i=1:numel(ok); bad(i)=~isempty(data(ok(i)).ind); end
 bad=ok(bad);
 %bad=ok(~arrayfun(@(x)isempty(x.ind),data(ok)));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:unnecessaryIND';
-    report.message=['Records:\n' sprintf('%d ',bad)...
+    report.message=['Record(s):\n' sprintf('%d ',bad)...
             '\nLEVEN set TRUE but independent component data present.'];
     switch opt
         case 'ERROR'
@@ -1773,7 +1826,7 @@ for i=1:numel(ok); [nirows(i),nicols(i)]=size(data(ok(i)).ind); end
 bad=ok(nicols>1);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badNumIndCmp';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
                 '\nToo many independent components (only 1 allowed)!'];
     switch opt
         case 'ERROR'
@@ -1804,7 +1857,7 @@ end
 bad=ok(nrows~=nirows);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:inconsistentNPTS';
-    report.message=['Records:\n' sprintf('%d ',bad)...
+    report.message=['Record(s):\n' sprintf('%d ',bad)...
                 '\nNPTS inconsistent between IND and DEP data!'];
     switch opt
         case 'ERROR'
@@ -1844,7 +1897,7 @@ bad=ok(bad);
 %bad=ok(arrayfun(@(x)double(min(diff(x.ind))),data(ok))<0);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:nonmonotonicIND';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
                 '\nIndependent component must be monotonic!'];
     switch opt
         case 'ERROR'
@@ -1876,7 +1929,7 @@ bad=ok(bad);
 %bad=ok(arrayfun(@(x)any(diff(sort(x.ind))==0),data(ok)));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:repeatIND';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
                 '\nIndependent component must not have repeated values!'];
     switch opt
         case 'ERROR'
@@ -1939,7 +1992,7 @@ end
 bad=ok(e(ok)~=newe(ok));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:oldE';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
                 '\nE does not match data!'];
     switch opt
         case 'ERROR'
@@ -1973,7 +2026,7 @@ ok=ok(bad);
 bad=ok(delta(ok)~=newd(ok));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:oldDelta';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
                 '\nDELTA does not match data!'];
     switch opt
         case 'ERROR'
@@ -2010,7 +2063,7 @@ end
 bad=ok(sum(dep(ok,:)~=newdep(ok,:),2)~=0);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:oldDepStats';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
                 '\nDEP stats do not match data!'];
     switch opt
         case 'ERROR'
@@ -2037,7 +2090,7 @@ end
 bad=find(bad).';
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:cmplxHeader';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
                 '\nHeader is complex (not real valued)!'];
     switch opt
         case 'ERROR'
@@ -2068,7 +2121,7 @@ end
 bad=find(bad).';
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:cmplxIND';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
                 '\nIND is complex (not real valued)!'];
     switch opt
         case 'ERROR'
@@ -2099,7 +2152,7 @@ end
 bad=find(bad).';
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:cmplxDEP';
-    report.message=['Records:\n' sprintf('%d ',bad) ...
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
                 '\nDEP is complex (not real valued)!'];
     switch opt
         case 'ERROR'
@@ -2116,6 +2169,62 @@ if(~isempty(bad))
             for i=bad
                 data(i).dep=real(data(i).dep);
             end
+    end
+end
+
+end
+
+function [destroy]=nan_dep(opt,data)
+nrecs=numel(data);
+bad=false(nrecs,1);
+destroy=bad;
+for i=1:nrecs
+    bad(i)=any(isnan(data(i).dep(:)));
+end
+bad=find(bad).';
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:nanDEP';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+                '\nDependent data has NaNs!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            destroy=bad;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Removing record(s) with NaN values!');
+            destroy=bad;
+    end
+end
+
+end
+
+function [destroy]=inf_dep(opt,data)
+nrecs=numel(data);
+bad=false(nrecs,1);
+destroy=bad;
+for i=1:nrecs
+    bad(i)=any(isinf(data(i).dep(:)));
+end
+bad=find(bad).';
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:infDEP';
+    report.message=['Record(s):\n' sprintf('%d ',bad) ...
+                '\nDependent data has infinite values!'];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            destroy=bad;
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp('==> Removing record(s) with Inf values!');
+            destroy=bad;
     end
 end
 

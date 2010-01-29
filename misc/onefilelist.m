@@ -36,14 +36,15 @@ function [list]=onefilelist(varargin)
 %        Apr. 23, 2009 - move usage up
 %        Sep.  8, 2009 - minor doc fix
 %        Oct. 16, 2009 - file select ui if no input
+%        Jan. 27, 2010 - file select ui if empty first arg & only 1 arg
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2009 at 07:15 GMT
+%     Last Updated Jan. 27, 2010 at 08:05 GMT
 
 % todo:
 
 % check nargin
-if(nargin<1)
+if(nargin<1 || (nargin==1 && isempty(varargin{1})))
     [files,path]=uigetfile(...
         {'*.*' 'All Files (*.*)';
         '*.sac;*.SAC;sac.*;SAC.*' 'SAC Files (*.sac,*.SAC,sac.*,SAC.*)';

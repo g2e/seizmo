@@ -33,17 +33,18 @@ function [data,failed]=cut(data,varargin)
 %     or 'z' or 'x' or 'n'.
 %      'z' is the zero position for the record - 0.
 %      'x' indicates that the following offset is a sample number (first 
-%       sample is 1).  Note that this defaults to sample 0 without an 
-%       offset.
+%       sample is 1).  Note that this defaults to sample 0 when given
+%       without an offset.
 %      'n' indicates that the following offset is the length of the window
-%       in number of samples.  Note that this defaults to length 0 without
-%       an offset.  Also note that this is only valid as a second REF.
+%       in number of samples.  Note that this defaults to length 0 when
+%       given without an offset.  Also note that this is only valid as a
+%       second REF.
 %
 %     OFFSET is a numeric value giving the offset to be added to REF to 
 %     define the position of the window start/stop with respect to the 
 %     reference.  The offset can be a vector of values (one per record)
-%     to define different offsets for each record (note that REF cannot
-%     be a vector of reference positions).
+%     to define different offsets for each record (Note that REF cannot
+%     be a vector of reference positions!).
 %
 %     REF1,OFFSET1 define the starting position of the window and
 %     REF2,OFFSET2 define the ending position.  If a REF is given without
@@ -80,7 +81,7 @@ function [data,failed]=cut(data,varargin)
 %     the input DATA).  By default 'TRIM' is set to true (deletes records).
 %
 %    Notes:
-%     - Windowing of spectral and xyz files are not supported.  By default
+%     - Windowing of spectral and xyz records is not supported.  By default
 %       they are deleted from DATA (see option 'TRIM' to change this 
 %       behavior).
 %     - Windows with a start position after an end position will return
@@ -92,14 +93,14 @@ function [data,failed]=cut(data,varargin)
 %    Header changes: B, E, NPTS, DELTA, NCMP, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Cut a 400 sample window starting from the 33rd sample:
+%     Cut a 400 sample window starting with the 33rd sample:
 %       data=cut(data,'x',33,'n',400);
 %
 %     Cut out a 90s window around t1:
 %       data=cut(data,'t1',-30,'t1',60);
 %
 %     Cut one hour starting at the origin time, 
-%     padding incomplete records with zeros
+%     padding incomplete records with zeros:
 %       data=cut(data,'o',0,3600,'fill',true);
 %
 %     Cut records to first 300 seconds:
@@ -107,8 +108,6 @@ function [data,failed]=cut(data,varargin)
 %
 %     Cut from 300 to 500 seconds relative to reference time:
 %       data=cut(data,300,500);
-%     or explicitly:
-%       data=cut(data,'z',300,'z',500);
 %
 %    See also: READDATAWINDOW
 
@@ -138,14 +137,16 @@ function [data,failed]=cut(data,varargin)
 %        Mar. 12, 2009 - fixed 3 more fill bugs :(
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Jan. 28, 2010 - proper SEIZMO handling, seizmoverbose support,
+%                        better warning messages
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:55 GMT
+%     Last Updated Jan. 28, 2010 at 21:55 GMT
 
 % todo:
 
 % input check
-msg=nargchk(1,11,nargin);
+msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
@@ -153,50 +154,87 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
+% make sure global settings are kept
+try
+    % check headers
+    data=checkheader(data);
 
-% turn off header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(false);
+    % verbosity
+    verbose=seizmoverbose;
 
-% number of records
-nrecs=numel(data);
+    % number of records
+    nrecs=numel(data);
 
-% parse cut parameters
-option=cutparameters(nrecs,varargin{:});
+    % parse cut parameters
+    option=cutparameters(nrecs,varargin{:});
 
-% header info
-ncmp=getncmp(data);
-[b,delta,e,npts]=getheader(data,'b','delta','e','npts');
-iftype=getenumdesc(data,'iftype');
-leven=getlgc(data,'leven');
+    % header info
+    [b,delta,e,npts,ncmp]=getheader(data,'b','delta','e','npts','ncmp');
+    iftype=getenumid(data,'iftype');
+    leven=getlgc(data,'leven');
+    
+    % find spectral/xyz
+    amph=strcmpi(iftype,'iamph');
+    rlim=strcmpi(iftype,'irlim');
+    xyz=strcmpi(iftype,'ixyz');
+    uneven=strcmpi(leven,'false');
+    even=~uneven;
+    
+    % check iftype
+    failed=false(nrecs,1);
+    if(any(amph | rlim))
+        failed(amph | rlim)=true;
+        warning('seizmo:cut:illegalFiletype',...
+            ['Record(s): ' sprintf('%d ',find(amph | rlim)) ...
+            '\nIllegal operation on spectral record(s)!']);
+    elseif(any(xyz))
+        failed(xyz)=true;
+        warning('seizmo:cut:illegalFiletype',...
+            ['Record(s): ' sprintf('%d ',find(xyz)) ...
+            '\nIllegal operation on xyz record(s)!']);
+    end
+    
+    % check uneven & fill
+    if(any(uneven & option.FILL))
+        warning('seizmo:cut:noFillUneven',...
+            ['Record(s): ' sprintf('%d ',find(uneven & option.FILL)) ...
+            '\nCannot fill unevenly sampled record(s)!']);
+    end
 
-% window start point/time
-if(strcmpi(option.REF1,'z'))
-    bt=option.OFFSET1;
-    bp=round((bt-b)./delta)+1;
-elseif(strcmpi(option.REF1,'x'))
-    bp=round(option.OFFSET1);
-else
-    bt=getheader(data,option.REF1)+option.OFFSET1;
-    bp=round((bt-b)./delta)+1;
-end
+    % window start point/time
+    if(strcmpi(option.REF1,'z'))
+        bt=option.OFFSET1;
+        bp=round((bt-b)./delta)+1;
+    elseif(strcmpi(option.REF1,'x'))
+        bp=round(option.OFFSET1);
+    else
+        bt=getheader(data,option.REF1)+option.OFFSET1;
+        bp=round((bt-b)./delta)+1;
+    end
 
-% window end point/time
-if(strcmpi(option.REF2,'z'))
-    et=option.OFFSET2;
-    ep=round((et-b)./delta)+1;
-elseif(strcmpi(option.REF2,'x'))
-    ep=round(option.OFFSET2);
-elseif(strcmpi(option.REF2,'n'))
-    ep=bp+round(option.OFFSET2)-1;
-else
-    et=getheader(data,option.REF2)+option.OFFSET2;
-    ep=round((et-b)./delta)+1;
+    % window end point/time
+    if(strcmpi(option.REF2,'z'))
+        et=option.OFFSET2;
+        ep=round((et-b)./delta)+1;
+    elseif(strcmpi(option.REF2,'x'))
+        ep=round(option.OFFSET2);
+    elseif(strcmpi(option.REF2,'n'))
+        ep=bp+round(option.OFFSET2)-1;
+    else
+        et=getheader(data,option.REF2)+option.OFFSET2;
+        ep=round((et-b)./delta)+1;
+    end
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
 
 % boundary conditions
@@ -208,29 +246,15 @@ if(any(~nnp))
     nep(~nnp)=nan;
 end
 
-% evenly spaced record list
-even=strcmpi(leven,'true');
+% detail message
+if(verbose)
+    disp('Cutting Record(s)');
+    print_time_left(0,nrecs);
+end
 
 % loop through each file
-failed=false(nrecs,1);
 [depmen,depmin,depmax]=deal(nan(nrecs,1));
-for i=1:nrecs
-    % check for unsupported filetypes
-    if(strcmpi(iftype(i),'General XYZ (3-D) file'))
-        failed(i)=true;
-        warning('seizmo:cut:illegalFiletype',...
-            ['Record: %d \n' ...
-            'Illegal operation on xyz file!'],i);
-        continue;
-    elseif(any(strcmpi(iftype(i),{'Spectral File-Real/Imag'...
-            'Spectral File-Ampl/Phase'})))
-        failed(i)=true;
-        warning('seizmo:cut:illegalFiletype',...
-            ['Record: %d \n' ...
-            'Illegal operation on spectral file!'],i);
-        continue;
-    end
-    
+for i=find(~failed')
     % evenly spaced
     if(even(i))
         % cut
@@ -259,8 +283,7 @@ for i=1:nrecs
         else
             failed(i)=true;
         end
-    % unevenly spaced
-    else
+    else % unevenly spaced
         % get begin point for window
         if(~strcmpi(ref1,'x'))
             % find first point after beginning of window
@@ -327,17 +350,15 @@ for i=1:nrecs
         % get ncmp
         ncmp(i)=size(data(i).dep,2);
         
-        % toss warning on fill
-        if(option.FILL(i))
-            warning('seizmo:cut:noFillUneven',...
-                ['Record: %d \n' ...
-                'Cannot fill unevenly-spaced record!'],i);
-        end
-        
         % handle empty
         if(~npts(i))
             b(i)=nan; e(i)=nan; 
             failed(i)=true;
+            
+            % detail message
+            if(verbose)
+                print_time_left(i,nrecs);
+            end
             continue;
         end
         
@@ -351,6 +372,16 @@ for i=1:nrecs
             delta(i)=(e(i)-b(i))/(npts(i)-1);
         end
     end
+    
+    % detail message
+    if(verbose)
+        print_time_left(i,nrecs);
+    end
+end
+
+% detail message
+if(verbose && (isempty(i) || i~=nrecs))
+    print_time_left(nrecs,nrecs);
 end
 
 % get new b/e/npts for evenly spaced
@@ -368,17 +399,26 @@ elseif(any(nfe))
     npts(nfe)=nnp(nfe);
 end
 
-% update headers
-warning('off','seizmo:changeheader:fieldInvalid')
-data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
-    'ncmp',ncmp,'depmen',depmen,'depmin',depmin,'depmax',depmax);
-warning('off','seizmo:changeheader:fieldInvalid')
+% try update headers
+try
+    % toggle checking off
+    seizmocheck_state(false);
+    
+    % update headers
+    data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
+        'ncmp',ncmp,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+    
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 % removed failed/empty cut records
 if(option.TRIM); data(failed)=[]; end
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
-set_checkheader_state(oldcheckheaderstate);
 
 end

@@ -94,9 +94,11 @@ function [data]=changeheader(data,varargin)
 %        Sep. 18, 2009 - 2nd pass at abs time support
 %        Oct.  6, 2009 - dropped use of LOGICAL function
 %        Oct. 16, 2009 - reftime code only used when necessary
+%        Jan. 28, 2010 - eliminate extra struct checks
+%        Jan. 29, 2010 - added VERSIONINFO cache support/hack
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2009 at 18:35 GMT
+%     Last Updated Jan. 29, 2010 at 01:50 GMT
 
 % todo:
 
@@ -105,9 +107,8 @@ if (mod(nargin-1,2))
     error('seizmo:changeheader:badNargs','Unpaired Field/Value!');
 end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+% check data structure & get version info
+[h,idx]=versioninfo(data);
 
 % quick exit
 if(nargin==1); return; end
@@ -115,35 +116,66 @@ if(nargin==1); return; end
 % number of records
 nrecs=numel(data);
 
+% load SEIZMO info
+global SEIZMO
+
 % recursive section
 % - break up into single filetype calls
-[h,idx]=versioninfo(data);
 nver=numel(h);
 if(nver>1)
-    for i=1:nver
-        % need to parse varargin
-        temp=cell(1,nargin-1);
-        for j=1:2:nargin-2
-            temp{j}=varargin{j};
-        end
-        for j=2:2:nargin-1
-            sz=size(varargin{j});
-            if(any(prod(sz)==[0 1]))
+    % turn off struct checking
+    oldseizmocheckstate=seizmocheck_state(false);
+    oldversioninfocache=versioninfo_cache(true);
+    
+    try
+        for i=1:nver
+            % versioninfo cache hack
+            SEIZMO.VERSIONINFO.H=h(i);
+            SEIZMO.VERSIONINFO.IDX=ones(sum(idx==i),1);
+            
+            % need to parse varargin
+            temp=cell(1,nargin-1);
+            for j=1:2:nargin-2
                 temp{j}=varargin{j};
-            elseif(sz(1)==nrecs)
-                % dice up input only if a column vector
-                % - this prevents splitting up text unexpectedly
-                % - this is more stringent than previously
-                temp{j}=varargin{j}(idx==i,:);
-            elseif(sz(1)==1)
-                temp{j}=varargin{j};
-            else
-                error('seizmo:changeheader:invalidInputSize',...
-                    'Value array for field %s incorrect size!',...
-                    varargin{j-1});
             end
+            for j=2:2:nargin-1
+                sz=size(varargin{j});
+                if(any(prod(sz)==[0 1]))
+                    temp{j}=varargin{j};
+                elseif(sz(1)==nrecs)
+                    % dice up input only if a column vector
+                    % - this prevents splitting up text unexpectedly
+                    % - this is more stringent than previously
+                    temp{j}=varargin{j}(idx==i,:);
+                elseif(sz(1)==1)
+                    temp{j}=varargin{j};
+                else
+                    error('seizmo:changeheader:invalidInputSize',...
+                        'Value array for field %s incorrect size!',...
+                        varargin{j-1});
+                end
+            end
+            data(idx==i)=changeheader(data(idx==i),temp{:});
         end
-        data(idx==i)=changeheader(data(idx==i),temp{:});
+        
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        versioninfo_cache(oldversioninfocache);
+        
+        % fix cache hack
+        SEIZMO.VERSIONINFO.H=h;
+        SEIZMO.VERSIONINFO.IDX=idx;
+    catch
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        versioninfo_cache(oldversioninfocache);
+        
+        % fix cache hack
+        SEIZMO.VERSIONINFO.H=h;
+        SEIZMO.VERSIONINFO.IDX=idx;
+        
+        % rethrow error
+        error(lasterror)
     end
     return;
 end

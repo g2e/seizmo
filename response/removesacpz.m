@@ -116,12 +116,26 @@ global SEIZMO
 
 % attempt rest
 try
+    % verbosity
+    verbose=seizmoverbose;
+    
     % attempt to access has_sacpz
     try
         pz=getsubfield([data.misc],'has_sacpz');
     catch
+        % detail message
+        if(verbose)
+            disp('Not All Records Indicate PoleZero Status.');
+            disp('Attempting to Find SAC PoleZeros for All Records.');
+        end
         data=getsacpz(data);
         pz=getsubfield([data.misc],'has_sacpz');
+    end
+    
+    % detail message
+    if(verbose && any(~pz))
+        disp(sprintf(['Record(s):\n' sprintf('%d ',find(~pz)) ...
+            '\nDo Not Have SAC PoleZero Info.  Deleting!']));
     end
     
     % only use those with polezero info
@@ -146,13 +160,15 @@ try
     % cannot do xyz records
     if(any(strcmpi(iftype,'ixyz')))
         error('seizmo:removesacpz:badIFTYPE',...
-            'Illegal operation on XYZ record(s)!');
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(iftype,'ixyz')))
+            '\nIllegal operation on XYZ record(s)!']);
     end
     
     % cannot do unevenly sampled records
     if(any(strcmpi(leven,'false')))
         error('seizmo:removesacpz:badLEVEN',...
-            'Invalid operation on unevenly sampled records!');
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false')))
+            '\nInvalid operation on unevenly sampled records!']);
     end
     
     % valid values for strings
@@ -260,11 +276,23 @@ try
     % sort freqlimits
     flim=sort(option.FREQLIMITS,2);
     
+    % detail message
+    if(verbose)
+        disp('Removing SAC PoleZero Response');
+        print_time_left(0,nrecs);
+    end
+    
     % loop over records
     depmin=nan(nrecs,1); depmen=depmin; depmax=depmin;
     for i=1:nrecs
         % skip dataless
-        if(isempty(data(i).dep)); continue; end
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose)
+                print_time_left(i,nrecs);
+            end
+            continue;
+        end
         
         % save class and convert to double precision
         oclass=str2func(class(data(i).dep));
@@ -331,6 +359,11 @@ try
         depmen(i)=mean(data(i).dep(:)); 
         depmin(i)=min(data(i).dep(:)); 
         depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose)
+            print_time_left(i,nrecs);
+        end
     end
     
     % update header info

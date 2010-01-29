@@ -84,15 +84,12 @@ function [data]=bseizmo(varargin)
 %                        fix
 %        Oct.  5, 2009 - reordered struct fields, added .ind
 %        Oct.  7, 2009 - appropriate extension for filetype
+%        Jan. 27, 2010 - seizmoverbose support, proper SEIZMO handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2009 at 16:35 GMT
+%     Last Updated Jan. 27, 2010 at 17:35 GMT
 
 % todo:
-
-% turn off checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
 
 % check number of inputs
 if (mod(nargin,2)) 
@@ -148,33 +145,51 @@ end
 % get the version definition
 h=seizmodef(option.FILETYPE,option.VERSION);
 
+% set extension for output filenames
+switch upper(option.FILETYPE)
+    case 'SAC BINARY'
+        ext='.SAC';
+    case 'SEIZMO BINARY'
+        ext='.SZ';
+end
+
 % undefine numeric header
 undef=nan(h.size,1,h.store);
-for i=1:length(h.ntype)
-    for j=1:length(h.(h.ntype{i}))
+for i=1:numel(h.ntype)
+    for j=1:numel(h.(h.ntype{i}))
         undef(h.(h.ntype{i})(j).minpos:h.(h.ntype{i})(j).maxpos)=...
             h.undef.ntype;
     end
 end
 
 % undefine char header
-for i=1:length(h.stype)
-    for j=1:length(h.(h.stype{i}))
+for i=1:numel(h.stype)
+    for j=1:numel(h.(h.stype{i}))
         sfields=fieldnames(h.(h.stype{i})(j).pos);
         for k=1:length(sfields)
             m=h.(h.stype{i})(j).pos.(sfields{k});
-            n=m(2)-m(1)+1; o=length(h.undef.stype);
+            n=m(2)-m(1)+1; o=numel(h.undef.stype);
             undef(m(1):m(2))=[h.undef.stype repmat(32,1,n-o)];
         end
     end
 end
 
 % create structure
-nrecs=nargin/2; format=['%0' num2str(ceil(log10(nrecs+1))) 'd'];
+nrecs=nargin/2;
+format=['%0' num2str(ceil(log10(nrecs+1))) 'd'];
 data(1:nrecs,1)=struct('path','.','name',[],...
     'filetype',option.FILETYPE,'version',option.VERSION,...
     'byteorder',option.BYTEORDER,'head',undef,'hasdata',true,...
     'ind',[],'dep',[],'misc',[]);
+
+% verbosity
+verbose=seizmoverbose;
+
+% detail message
+if(verbose)
+    disp('Creating SEIZMO Record(s)');
+    print_time_left(0,nrecs);
+end
 
 % loop for each pair
 nvhdr=option.VERSION(ones(nrecs,1),1);
@@ -200,12 +215,12 @@ for i=1:2:nargin
     end
     
     % get npts
-    npts(j)=length(varargin{i});
+    npts(j)=numel(varargin{i});
     
     % cross check
     if(isvector(varargin{i+1}))
         % vectors can be row or column vectors
-        if(npts(j)~=length(varargin{i+1}))
+        if(npts(j)~=numel(varargin{i+1}))
             error('seizmo:bseizmo:badInput',...
                 ['Dependent data does not match independent data length'...
                  ': pair %d !'],j);
@@ -229,7 +244,12 @@ for i=1:2:nargin
     
     % edit name
     kstnm{j}=['R' sprintf(format,j)];
-    data(j).name=['SEIZMO.' sprintf(format,j)];
+    data(j).name=['SEIZMO.' sprintf(format,j) ext];
+    
+    % detail message
+    if(verbose)
+        print_time_left(j,nrecs);
+    end
     
     % handle 0pt
     if(npts(j)==0); continue; end
@@ -247,7 +267,8 @@ for i=1:2:nargin
     % get delta and handle uneven
     delta(j)=diff(varargin{i}([1 end]))/(npts(j)-1);
     if(any(abs(delta(j)-diff(varargin{i}))>10*max(varargin{i})*eps))
-        data(j).ind=varargin{i}(:); leven(j)=false;
+        data(j).ind=varargin{i}(:);
+        leven(j)=false;
     end
 end
 
@@ -263,18 +284,7 @@ if(~h.mulcmp.valid && any(ncmp>1))
     nvhdr(mcmp)=h.mulcmp.altver;
 end
 
-% append appropriate extension
-sz=strcmpi('SEIZMO Binary',{data.filetype});
-sac=strcmpi('SAC Binary',{data.filetype});
-if(any(sz))
-    data(sz)=changename(data(sz),'append','.SZ');
-end
-if(any(sac))
-    data(sac)=changename(data(sac),'append','.SAC');
-end
-
 % write header changes
-warning('off','seizmo:changeheader:fieldInvalid')
 data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
     'depmen',depmen,'depmin',depmin,'depmax',depmax,'ncmp',ncmp,...
     'nzyear',dt(1),'nzjday',dt(2),'nzhour',dt(3),'nzmin',dt(4),...
@@ -283,9 +293,5 @@ data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
     'idep','iunkn','iztype','iunkn','nvhdr',nvhdr,...
     'knetwk','SZ','kcmpnm','Q','khole','XX','kstnm',kstnm,...
     'lcalda',true);
-warning('on','seizmo:changeheader:fieldInvalid')
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

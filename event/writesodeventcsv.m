@@ -6,11 +6,15 @@ function []=writesodeventcsv(file,events,varargin)
 %
 %    Description: WRITESODEVENTCSV(FILE,EVENTS) writes out a CSV (comma-
 %     separated values) file similar to that of event .csv files produced
-%     with SOD (Standing Order for Data).
+%     with SOD (Standing Order for Data).  FILE is the path/filename of the
+%     .csv file.  EVENTS is a struct with the fields indicated in the Notes
+%     section below.  If FILE is an empty string a graphical file creation
+%     menu is presented.
 %
-%     WRITESODEVENTCSV(FILE,STRUCT,OVERWRITE) quietly overwrites pre-
+%     WRITESODEVENTCSV(FILE,EVENTS,OVERWRITE) quietly overwrites pre-
 %     existing CSV files without confirmation when OVERWRITE is set to
-%     TRUE.  By default OVERWRITE is FALSE.
+%     TRUE.  By default OVERWRITE is FALSE.  OVERWRITE is ignored in the
+%     graphical file creation menu.
 %
 %    Notes:
 %     - converts latitude, longitude, depth and magnitude from numeric form
@@ -44,9 +48,10 @@ function []=writesodeventcsv(file,events,varargin)
 %     Version History:
 %        Sep. 16, 2009 - initial version
 %        Sep. 22, 2009 - overwrite confirmation skip option added
+%        Jan. 26, 2010 - minor doc update, graphical file creation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2009 at 06:40 GMT
+%     Last Updated Jan. 26, 2010 at 22:35 GMT
 
 % todo:
 

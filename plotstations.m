@@ -21,13 +21,14 @@ function [varargout]=plotstations(data,fh)
 %     Show locations of stations in a dataset:
 %      h=plotstations(data);
 %
-%    See also: PLOT0, PLOT1, PLOT2, RECORDSECTION
+%    See also: PLOT0, PLOT1, PLOT2, RECORDSECTION, PLOTSTATIONS2
 
 %     Version History:
 %        Dec.  2, 2009 - initial version
+%        Dec.  8, 2009 - event grid plotting now PLOTSTATIONS2
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  2, 2009 at 22:45 GMT
+%     Last Updated Dec.  8, 2009 at 05:00 GMT
 
 % todo:
 
@@ -61,7 +62,7 @@ try
     m_proj('hammer','clon',clon);
     %m_proj('get')
     set(gca,'color',[0.6 0.96 1]);
-    m_grid('xticklabels',[]);
+    m_grid('xticklabels',[],'ytick',-90:15:90,'xtick',-180:15:180);
     m_coast('patch',[0.6 1 0.6]);
 
     % hackery to color oceans at large
@@ -102,24 +103,6 @@ try
     m_line(evlalo(:,2),evlalo(:,1),'marker','p',...
        'markerfacecolor','r','markersize',14,'markeredgecolor','k',...
        'linestyle','none');
-
-    % event-based gridding parameters
-    %ranges=90:10:170;
-    %azims=0:30:360;
-
-    % plot azimuthal lines
-    %[azisla,azislo]=sphericalfwd(evlalo(1,1),evlalo(1,2),ranges(1),azims);
-    %[aziela,azielo]=sphericalfwd(evlalo(1,1),evlalo(1,2),ranges(end),azims);
-    %[azimla,azimlo]=...
-    %    sphericalfwd(evlalo(1,1),evlalo(1,2),sum(ranges([1 end]))/2,azims);
-    %[lat,lon]=gcarc2latlon(azisla,azislo,azimla,azimlo,200);
-    %m_line(lon',lat','color','b','linewi',2)
-    %[lat,lon]=gcarc2latlon(aziela,azielo,azimla,azimlo,200);
-    %m_line(lon',lat','color','b','linewi',2)
-
-    % plot range rings
-    %m_range_ring(evlalo(1,2),evlalo(1,1),6371*pi/180*ranges,200,...
-    %    'color','b','linewi',2);
     
     % return figure handle
     if(nargout); varargout{1}=fh; end

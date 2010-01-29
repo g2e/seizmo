@@ -44,9 +44,11 @@ function [data]=fixdelta(data,tol)
 %        Nov. 26, 2009 - document RAT bug, change default to not vary with
 %                        input (RAT's default does so we choose a default)
 %        Dec.  4, 2009 - update E, only fix evenly spaced
+%        Jan. 25, 2010 - fixed LEVEN bug (only fixed first record)
+%        Jan. 29, 2010 - minor code cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2009 at 06:35 GMT
+%     Last Updated Jan. 29, 2010 at 03:15 GMT
 
 % todo:
 
@@ -59,34 +61,20 @@ msg=seizmocheck(data);
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% attempt header check
+% attempt delta fix
 try
     % check header
     data=checkheader(data);
     
-    % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
-catch
-    % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror)
-end
-
-% attempt rest
-try
     % grab header info
-    [leven,delta,b,npts]=getheader(data,'leven','delta','b','npts');
+    leven=getlgc(data,'leven');
+    [delta,b,npts]=getheader(data,'delta','b','npts');
     
     % only work on evenly spaced
     es=strcmpi(leven,'false');
-    v=seizmoverbose;
-    if(any(es) && v)
+    if(seizmoverbose && any(es))
         warning('seizmo:fixdelta:Uneven',...
             ['Record(s):\n' sprintf('%d ',find(es)) ...
             '\nNot fixing DELTA field for unevenly sampled record(s)!']);
@@ -105,12 +93,10 @@ try
         'e',b(es)+(npts(es)-1).*n(es)./d(es));
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)

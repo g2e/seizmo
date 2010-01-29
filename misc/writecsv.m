@@ -7,11 +7,13 @@ function []=writecsv(file,lines,o)
 %    Description: WRITECSV(FILE,STRUCT) writes a comma-separated values
 %     (CSV) text file FILE using the struct array STRUCT.  STRUCT is
 %     expected to be a single-level structure with all character string
-%     values.
+%     values.  If FILE is an empty string a graphical file creation menu is
+%     presented.
 %
 %     WRITECSV(FILE,STRUCT,OVERWRITE) quietly overwrites pre-existing CSV
 %     files without confirmation when OVERWRITE is set to TRUE.  By default
-%     OVERWRITE is FALSE.
+%     OVERWRITE is FALSE.  OVERWRITE is ignored in the graphical file
+%     creation menu.
 %
 %    Notes:
 %     - Look out for text entries with commas or line terminators.  They
@@ -35,16 +37,16 @@ function []=writecsv(file,lines,o)
 %     Version History:
 %        Sep. 16, 2009 - initial version
 %        Sep. 22, 2009 - fixed dir check bug, skip confirmation option
+%        Jan. 26, 2010 - add graphical selection
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2009 at 06:05 GMT
+%     Last Updated Jan. 26, 2010 at 23:00 GMT
 
 % todo:
 
 % check nargin
 msg=nargchk(2,3,nargin);
 if(~isempty(msg)); error(msg); end;
-
 
 % default overwrite to false
 if(nargin==2 || isempty(o)); o=false; end
@@ -55,24 +57,36 @@ if(~isstruct(lines))
         'STRUCT must be a struct array!');
 end
 
-% check file
-if(~ischar(file))
-    error('seizmo:writecsv:fileNotString',...
-        'FILE must be a string!');
-end
-if(exist(file,'file'))
-    if(exist(file,'dir'))
-        error('seizmo:writecsv:dirConflict',...
-            'CSV File: %s\nIs A Directory!',file);
+% graphical selection
+if(isempty(file))
+    [file,path]=uiputfile(...
+        {'*.csv;*.CSV' 'CSV Files (*.csv,*.CSV)';
+        '*.*' 'All Files (*.*)'},...
+        'Save CSV File as');
+    if(isequal(0,file))
+        error('seizmo:writecsv:noFileSelected','No output file selected!');
     end
-    if(~o)
-        disp(sprintf('CSV File: %s\nFile Exists!',file));
-        reply=input('Overwrite? Y/N [N]: ','s');
-        if(isempty(reply) || ~strncmpi(reply,'y',1))
-            disp('Not overwriting!');
-            return;
+    file=strcat(path,filesep,file);
+else
+    % check file
+    if(~ischar(file))
+        error('seizmo:writecsv:fileNotString',...
+            'FILE must be a string!');
+    end
+    if(exist(file,'file'))
+        if(exist(file,'dir'))
+            error('seizmo:writecsv:dirConflict',...
+                'CSV File: %s\nIs A Directory!',file);
         end
-        disp('Overwriting!');
+        if(~o)
+            disp(sprintf('CSV File: %s\nFile Exists!',file));
+            reply=input('Overwrite? Y/N [N]: ','s');
+            if(isempty(reply) || ~strncmpi(reply,'y',1))
+                disp('Not overwriting!');
+                return;
+            end
+            disp('Overwriting!');
+        end
     end
 end
 

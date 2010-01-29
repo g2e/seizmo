@@ -67,9 +67,11 @@ function [data]=deconvolve(data,tf,delay,h2o,frange,zi,zf)
 %        Oct. 21, 2009 - forced dim arg in fft/ifft
 %        Oct. 28, 2009 - worked out (a)causal stuff, adds delay option,
 %                        doubles initial conditions and final conditions
+%        Jan. 27, 2010 - seizmoverbose support, proper SEIZMO handling,
+%                        fixed offset bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 28, 2009 at 22:45 GMT
+%     Last Updated Jan. 27, 2010 at 07:15 GMT
 
 % todo:
 
@@ -82,208 +84,240 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
+% attempt deconvolution
+try
+    % check headers
+    data=checkheader(data);
 
-% get header info
-leven=getlgc(data,'leven');
-iftype=getenumid(data,'iftype');
-[npts,ncmp,delta]=getheader(data,'npts','ncmp','delta');
-nyq=1./(2*delta);
+    % verbosity
+    verbose=seizmoverbose;
 
-% cannot do spectral/xyz records
-if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-    error('seizmo:deconvolve:badIFTYPE',...
-        'Datatype of records in DATA must be Timeseries or XY!');
-end
+    % number of records
+    nrecs=numel(data);
 
-% cannot do unevenly sampled records
-if(any(strcmpi(leven,'false')))
-    error('seizmo:deconvolve:badLEVEN',...
-        'Invalid operation on unevenly sampled records!');
-end
+    % get header info
+    leven=getlgc(data,'leven');
+    iftype=getenumid(data,'iftype');
+    [npts,ncmp,delta]=getheader(data,'npts','ncmp','delta');
+    nyq=1./(2*delta);
 
-% number of records
-nrecs=numel(data);
-
-% check time function
-if(iscell(tf))
-    if(numel(tf)~=nrecs)
-        error('seizmo:deconvolve:badTF',...
-            'TF must be a cell array with one element per record!');
+    % cannot do spectral/xyz records
+    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:deconvolve:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
     end
-    ntf=nan(nrecs,1);
-    for i=1:nrecs
-        if(~isnumeric(tf{i}) || ~isvector(tf{i}) || isempty(tf{i}))
+
+    % cannot do unevenly sampled records
+    if(any(strcmpi(leven,'false')))
+        error('seizmo:deconvolve:badLEVEN',...
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
+            '\nInvalid operation on unevenly sampled record(s)!']);
+    end
+
+    % check time function
+    if(iscell(tf))
+        if(numel(tf)~=nrecs)
             error('seizmo:deconvolve:badTF',...
-                'TF elements must be non-empty numeric vectors!');
-        else
-            ntf(i)=numel(tf{i});
-            tf{i}=double(tf{i}(:));
+                'TF must be a cell array with one element per record!');
+        end
+        ntf=nan(nrecs,1);
+        for i=1:nrecs
+            if(~isnumeric(tf{i}) || ~isvector(tf{i}) || isempty(tf{i}))
+                error('seizmo:deconvolve:badTF',...
+                    'TF elements must be non-empty numeric vectors!');
+            else
+                ntf(i)=numel(tf{i});
+                tf{i}=double(tf{i}(:));
+            end
+        end
+        tfidx=1:nrecs;
+    else
+        if(~isnumeric(tf) || ~isvector(tf) || isempty(tf))
+            error('seizmo:deconvolve:badTF',...
+                'TF must be a non-empty numeric vector!');
+        end
+        ntf=numel(tf);
+        tf={double(tf(:))};
+        tfidx=ones(nrecs,1);
+    end
+
+    % check delay
+    if(nargin<3 || isempty(delay)); delay=0; end
+    if(~isreal(delay) || ~any(numel(delay)==[1 nrecs]) ...
+            || ~all(delay==fix(delay)))
+        error('seizmo:deconvolve:badDelay',...
+            ['DELAY must be a scalar integer or an array\n' ...
+            'of integers, one per record in DATA!']);
+    end
+    if(isscalar(delay)); delay=delay(ones(nrecs,1),1); end
+    offset=max(0,delay);
+
+    % check water level
+    if(nargin<4 || isempty(h2o))
+        h2o=0;
+    elseif(~isreal(h2o) || (~isscalar(h2o) && numel(h2o)~=nrecs))
+        error('seizmo:deconvolve:badH2O',...
+            'H2O must be a scalar real or an array w/ 1 element/record!');
+    elseif(any(h2o<0))
+        error('seizmo:deconvolve:badH2O','H2O must be positive!');
+    end
+    if(isscalar(h2o)); h2o=h2o(ones(nrecs,1),1); end
+
+    % check frequency range
+    if(nargin<5 || isempty(frange))
+        frange=[zeros(nrecs,1) nyq];
+    elseif(~isnumeric(frange) || (~isequal(size(frange),[1 2]) ...
+            && ~isequal(size(frange),[nrecs 2])))
+        error('seizmo:deconvolve:badFRANGE',...
+            'FRANGE must be a numeric array of size 1x2 or Nx2!')
+    end
+    if(size(frange,1)==1); frange=frange(ones(nrecs,1),:); end
+
+    % get expected lengths
+    nfz=max(0,ntf(tfidx)+delay-1);
+    nbz=abs(min(0,delay));
+
+    % check initial conditions
+    haszi=nargin>5 && ~isempty(zi);
+    if(haszi)
+        % expand single columns
+        if(iscell(zi) && size(zi,2)==1); zi{end,2}=[]; end
+        if(~iscell(zi) || ~isequal(size(zi),[nrecs 2]))
+            error('seizmo:deconvolve:badZI',...
+                ['ZI must be a Nx2 cell array where\n'...
+                'N is the number of records in DATA!']);
+        end
+        % allow empty if empty desired
+        if(~all(cellfun('isreal',zi(:))) ...
+                || ~all(...
+                (cellfun('prodofsize',zi(:,1))==0 & nfz.*ncmp==0) ...
+                | sum(([cellfun('size',zi(:,1),1) ...
+                cellfun('size',zi(:,1),2)]==[nfz ncmp]),2)==2) ...
+                || ~all(...
+                (cellfun('prodofsize',zi(:,2))==0 & nbz.*ncmp==0) ...
+                | sum(([cellfun('size',zi(:,2),1) ...
+                cellfun('size',zi(:,2),2)]==[nbz ncmp]),2))==2)
+            error('seizmo:deconvolve:badZI',...
+                'ZI elements are improperly sized!');
+        end
+        for i=1:nrecs
+            zi{i,1}=double(zi{i,1});
+            zi{i,2}=double(zi{i,2});
         end
     end
-    tfidx=1:nrecs;
-else
-    if(~isnumeric(tf) || ~isvector(tf) || isempty(tf))
-        error('seizmo:deconvolve:badTF',...
-            'TF must be a non-empty numeric vector!');
-    end
-    ntf=numel(tf);
-    tf={double(tf(:))};
-    tfidx=ones(nrecs,1);
-end
 
-% check delay
-if(nargin<3 || isempty(delay)); delay=0; end
-if(~isreal(delay) || ~any(numel(delay)==[1 nrecs]) ...
-        || ~all(delay==fix(delay)))
-    error('seizmo:deconvolve:badDelay',...
-        ['DELAY must be a scalar integer or an array\n' ...
-        'of integers, one per record in DATA!']);
-end
-if(isscalar(delay)); delay=delay(ones(nrecs,1),1); end
-offset=max(0,delay);
-
-% check water level
-if(nargin<4 || isempty(h2o))
-    h2o=0;
-elseif(~isreal(h2o) || (~isscalar(h2o) && numel(h2o)~=nrecs))
-    error('seizmo:deconvolve:badH2O',...
-        'H2O must be a numeric scalar or an array w/ 1 element/record!');
-elseif(any(h2o<0))
-    error('seizmo:deconvolve:badH2O','H2O must be positive!');
-end
-if(isscalar(h2o)); h2o=h2o(ones(nrecs,1),1); end
-
-% check frequency range
-if(nargin<5 || isempty(frange))
-    frange=[zeros(nrecs,1) nyq];
-elseif(~isnumeric(frange) || (~isequal(size(frange),[1 2]) ...
-        && ~isequal(size(frange),[nrecs 2])))
-    error('seizmo:deconvolve:badFRANGE',...
-        'FRANGE must be a numeric array of size 1x2 or Nx2!')
-end
-if(size(frange,1)==1); frange=frange(ones(nrecs,1),:); end
-
-% get expected lengths
-nfz=max(0,ntf(tfidx)+delay-1);
-nbz=abs(min(0,delay));
-
-% check initial conditions
-haszi=nargin>5 && ~isempty(zi);
-if(haszi)
-    % expand single columns
-    if(iscell(zi) && size(zi,2)==1); zi{end,2}=[]; end
-    if(~iscell(zi) || ~isequal(size(zi),[nrecs 2]))
-        error('seizmo:deconvolve:badZI',...
-            ['ZI must be a Nx2 cell array where\n'...
-            'N is the number of records in DATA!']);
-    end
-    % allow empty if empty desired
-    if(~all(cellfun('isreal',zi(:))) ...
-            || ~all((cellfun('prodofsize',zi(:,1))==0 & nfz.*ncmp==0) ...
-            | sum(([cellfun('size',zi(:,1),1) ...
-            cellfun('size',zi(:,1),2)]==[nfz ncmp]),2)==2) ...
-            || ~all((cellfun('prodofsize',zi(:,2))==0 & nbz.*ncmp==0) ...
-            | sum(([cellfun('size',zi(:,2),1) ...
-            cellfun('size',zi(:,2),2)]==[nbz ncmp]),2))==2)
-        error('seizmo:deconvolve:badZI',...
-            'ZI elements are improperly sized!');
-    end
-    for i=1:nrecs
-        zi{i,1}=double(zi{i,1});
-        zi{i,2}=double(zi{i,2});
-    end
-end
-
-% check final conditions
-haszf=nargin>6 && ~isempty(zf);
-if(haszf)
-    % expand single columns
-    if(iscell(zf) && size(zf,2)==1); zf{end,2}=[]; end
-    if(~iscell(zf) || ~isequal(size(zf),[nrecs 2]))
-        error('seizmo:deconvolve:badZF',...
-            ['ZF must be a Nx2 cell array where\n'...
-            'N is the number of records in DATA!']);
-    end
-    % allow empty if empty desired
-    if(~all(cellfun('isreal',zf(:))) ...
-            || ~all((cellfun('prodofsize',zf(:,1))==0 & nfz.*ncmp==0) ...
-            | sum(([cellfun('size',zf(:,1),1) ...
-            cellfun('size',zf(:,1),2)]==[nfz ncmp]),2)==2) ...
-            || ~all((cellfun('prodofsize',zf(:,2))==0 & nbz.*ncmp==0) ...
-            | sum(([cellfun('size',zf(:,2),1) ...
-            cellfun('size',zf(:,2),2)]==[nbz ncmp]),2))==2)
-        error('seizmo:deconvolve:badZF',...
-            'ZF elements are improperly sized!');
-    end
-    for i=1:nrecs
-        zf{i,1}=double(zf{i,1});
-        zf{i,2}=double(zf{i,2});
-    end
-end
-
-% loop through records
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:nrecs
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
-    
-    % get data class, convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
-    
-    % approach differs slightly for case with final conditions
+    % check final conditions
+    haszf=nargin>6 && ~isempty(zf);
     if(haszf)
-        % attach final conditions
-        data(i).dep=[zf{i,2}; data(i).dep; zf{i,1}];
-    else
-        % pad w/ zeros
-        data(i).dep=[zeros(nbz(i),ncmp(i)); ...
-            data(i).dep; zeros(nfz(i),ncmp(i))];
+        % expand single columns
+        if(iscell(zf) && size(zf,2)==1); zf{end,2}=[]; end
+        if(~iscell(zf) || ~isequal(size(zf),[nrecs 2]))
+            error('seizmo:deconvolve:badZF',...
+                ['ZF must be a Nx2 cell array where\n'...
+                'N is the number of records in DATA!']);
+        end
+        % allow empty if empty desired
+        if(~all(cellfun('isreal',zf(:))) ...
+                || ~all(...
+                (cellfun('prodofsize',zf(:,1))==0 & nfz.*ncmp==0) ...
+                | sum(([cellfun('size',zf(:,1),1) ...
+                cellfun('size',zf(:,1),2)]==[nfz ncmp]),2)==2) ...
+                || ~all(...
+                (cellfun('prodofsize',zf(:,2))==0 & nbz.*ncmp==0) ...
+                | sum(([cellfun('size',zf(:,2),1) ...
+                cellfun('size',zf(:,2),2)]==[nbz ncmp]),2))==2)
+            error('seizmo:deconvolve:badZF',...
+                'ZF elements are improperly sized!');
+        end
+        for i=1:nrecs
+            zf{i,1}=double(zf{i,1});
+            zf{i,2}=double(zf{i,2});
+        end
     end
     
-    % start/stop indices of record
-    start=nbz(i)+1;
-    stop=nbz(i)+npts(i);
-    
-    % now remove initial conditions
-    if(haszi)
-        data(i).dep(start:(start+nfz(i)-1),:)=...
-            data(i).dep(start:(start+nfz(i)-1),:)-zi{i,1};
-        data(i).dep((stop-nbz(i)+1):stop,:)=...
-            data(i).dep((stop-nbz(i)+1):stop,:)-zi{i,2};
+    % detail message
+    if(verbose)
+        disp('Deconvolving Time Function(s) from Record(s)');
+        print_time_left(0,nrecs);
     end
     
-    % waterleveled spectral division
-    nspts=2^(nextpow2(npts(i)+ntf(tfidx(i))-1)+1);
-    sdelta=2*nyq(i)./nspts;
-    freq=abs([0:(nspts/2) (1-nspts/2):-1].*sdelta);
-    good=freq>=frange(i,1) & freq<=frange(i,2);
-    tmp1=fft(data(i).dep,nspts,1);
-    tmp2=fft(tf{tfidx(i)}(:,ones(1,ncmp(i))),nspts,1);
-    tmp2=(abs(tmp2)+h2o(i)).*exp(j*angle(tmp2));
-    tmp=complex(zeros(nspts,ncmp(i)));
-    tmp(good,:)=tmp1(good,:)./tmp2(good,:);
-    tmp=ifft(tmp,[],1,'symmetric');
-    data(i).dep=tmp(offset+(1:npts(i)),:);
-    
-    % dep*
-    depmen(i)=mean(data(i).dep(:));
-    depmin(i)=min(data(i).dep(:));
-    depmax(i)=max(data(i).dep(:));
-    
-    % restore class
-    data(i).dep=oclass(data(i).dep);
-end    
+    % loop through records
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:nrecs
+        % skip dataless
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue; 
+        end
 
-% update header
-data=changeheader(data,'depmax',depmax,'depmin',depmin,'depmen',depmen);
+        % get data class, convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
 
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
+        % approach differs slightly for case with final conditions
+        if(haszf)
+            % attach final conditions
+            data(i).dep=[zf{i,2}; data(i).dep; zf{i,1}];
+        else
+            % pad w/ zeros
+            data(i).dep=[zeros(nbz(i),ncmp(i)); ...
+                data(i).dep; zeros(nfz(i),ncmp(i))];
+        end
+
+        % start/stop indices of record
+        start=nbz(i)+1;
+        stop=nbz(i)+npts(i);
+
+        % now remove initial conditions
+        if(haszi)
+            data(i).dep(start:(start+nfz(i)-1),:)=...
+                data(i).dep(start:(start+nfz(i)-1),:)-zi{i,1};
+            data(i).dep((stop-nbz(i)+1):stop,:)=...
+                data(i).dep((stop-nbz(i)+1):stop,:)-zi{i,2};
+        end
+
+        % waterleveled spectral division
+        nspts=2^(nextpow2(npts(i)+ntf(tfidx(i))-1)+1);
+        sdelta=2*nyq(i)./nspts;
+        freq=abs([0:(nspts/2) (1-nspts/2):-1].*sdelta);
+        good=freq>=frange(i,1) & freq<=frange(i,2);
+        tmp1=fft(data(i).dep,nspts,1);
+        tmp2=fft(tf{tfidx(i)}(:,ones(1,ncmp(i))),nspts,1);
+        tmp2=(abs(tmp2)+h2o(i)).*exp(j*angle(tmp2));
+        tmp=complex(zeros(nspts,ncmp(i)));
+        tmp(good,:)=tmp1(good,:)./tmp2(good,:);
+        tmp=ifft(tmp,[],1,'symmetric');
+        data(i).dep=tmp(offset(i)+(1:npts(i)),:);
+
+        % dep*
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+
+        % restore class
+        data(i).dep=oclass(data(i).dep);
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % update header
+    data=changeheader(data,...
+        'depmax',depmax,'depmin',depmin,'depmen',depmen);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

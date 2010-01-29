@@ -53,11 +53,14 @@ function [data]=addarrivals(data,varargin)
 %        June 29, 2009 - initial version
 %        Aug. 25, 2009 - description update (forgot fields option)
 %        Sep.  2, 2009 - now uses tauptime
+%        Dec.  9, 2009 - works with newer tauptime
+%        Jan. 26, 2010 - seizmoverbose support, properly handle states
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  2, 2009 at 11:30 GMT
+%     Last Updated Jan. 26, 2010 at 08:30 GMT
 
 % todo:
+% - really need to block taup messages
 
 % check nargin
 if(mod(nargin-1,2))
@@ -65,149 +68,173 @@ if(mod(nargin-1,2))
         'Bad number of arguments!');
 end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
-
-% toggle off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% check headers
-data=checkheader(data);
-
-% turn off header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(false);
-
-% grab header setup
+% check data structure & grab header setup
 [h,vi]=versioninfo(data);
 
-% default options
-option.MODEL='iasp91';
-option.PHASES='ttall';
-option.FIELDS=0:9;
+% toggle off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
 
-% get options from SEIZMO global
-me=mfilename;
+% import SEIZMO info
 global SEIZMO
+
+% attempt adding arrivals
 try
-    fields=fieldnames(SEIZMO.(me));
-    for i=1:numel(fields)
-        if(~isempty(SEIZMO.(me).(fields{i})))
-            option.(fields{i})=SEIZMO.(me).(fields{i});
+    % check headers
+    data=checkheader(data);
+    
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % default options
+    option.MODEL='iasp91';
+    option.PHASES='ttall';
+    option.FIELDS=0:9;
+
+    % get options from SEIZMO global
+    me=mfilename;
+    try
+        fields=fieldnames(SEIZMO.(me));
+        for i=1:numel(fields)
+            if(~isempty(SEIZMO.(me).(fields{i})))
+                option.(fields{i})=SEIZMO.(me).(fields{i});
+            end
+        end
+    catch
+    end
+
+    % get options from command line
+    for i=1:2:nargin-1
+        if(~ischar(varargin{i}))
+            error('seizmo:addarrivals:badInput',...
+                'Options must be specified as a strings!');
+        end
+        if(~isempty(varargin{i+1}))
+            option.(upper(varargin{i}))=varargin{i+1};
         end
     end
+
+    % check options
+    nrecs=numel(data);
+    fields=fieldnames(option);
+    for i=1:numel(fields)
+        % specific checks
+        switch lower(fields{i})
+            case 'model'
+                if(iscellstr(option.(fields{i})))
+                    option.(fields{i})=char(option.(fields{i}));
+                end
+                if(~ischar(option.(fields{i})) ...
+                        || ~any(size(option.(fields{i}),1)==[1 nrecs]))
+                    error('seizmo:addarrivals:badInput',...
+                        ['MODEL must be a cellstr/char array with one\n'...
+                        'model per record or a single model for all!']);
+                end
+                if(size(option.(fields{i}),1)==1)
+                    option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
+                end
+                option.(fields{i})=cellstr(option.(fields{i}));
+            case 'phases'
+                if(iscellstr(option.(fields{i})))
+                    option.(fields{i})=char(option.(fields{i}));
+                end
+                if(isempty(option.(fields{i})) || ...
+                        ~ischar(option.(fields{i})) ...
+                        || ~any(size(option.(fields{i}),1)==[1 nrecs]))
+                    error('seizmo:addarrivals:badInput',...
+                        ['PHASES must be a cellstr/char array w/ one\n'...
+                        'comma-separated phase list per record or a\n'...
+                        'single comma-separated phase list for all!']);
+                end
+                if(size(option.(fields{i}),1)==1)
+                    option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
+                end
+                option.(fields{i})=cellstr(option.(fields{i}));
+            case 'fields'
+                if(~isempty(option.(fields{i})) ...
+                        && (numel(option.(fields{i}))>10 ...
+                            || any(fix(option.(fields{i})) ...
+                                ~=option.(fields{i})) ...
+                            || any(option.(fields{i})<0 ...
+                                | option.(fields{i})>9)))
+                    error('seizmo:addarrivals:badInput',...
+                        ['FIELDS must be a index array w/ values from\n'...
+                        '0 to 9 indicating the kt,t,user fields to be\n'...
+                        'overwrote.  List is common to all records!']);
+                end
+        end
+    end
+
+    % get relevant header info
+    [evdp,gcarc,dist,stla,stlo,evla,evlo,o,t,kt,user]=getheader(data,...
+        'evdp','gcarc','dist','stla','stlo',...
+        'evla','evlo','o','t','kt','user');
+    
+    % detail message
+    if(verbose)
+        disp('Adding Arrival Info to Record(s)');
+        %print_time_left(0,nrecs);
+    end
+    
+    % loop over records adding info to header
+    idx=option.FIELDS;
+    for i=1:nrecs
+        % set progress bar to overwrite
+        %redraw=false;
+        
+        % check header info
+        if(evdp(i)==h(vi(i)).undef.ntype)
+            %redraw=true;
+            warning('seizmo:addarrivals:badEVDP',...
+                'Record: %d\nEVDP undefined! Treating as zero.',i);
+            evdp(i)=0;
+        end
+        if(o(i)==h(vi(i)).undef.ntype)
+            %redraw=true;
+            warning('seizmo:addarrivals:badO',...
+                'Record: %d\nO field undefined! Treating as zero.',i);
+            o(i)=0;
+        end
+        if(gcarc(i)~=h(vi(i)).undef.ntype)
+            location={'deg' gcarc(i)};
+        elseif(dist(i)~=h(vi(i)).undef.ntype)
+            location={'km' dist(i)};
+        elseif(all([stla(i) stlo(i) evla(i) evlo(i)]...
+                ~=h(vi(i)).undef.ntype))
+            location={'sta' [stla(i) stlo(i)] 'evt' [evla(i) evlo(i)]};
+        else
+            error('seizmo:addarrivals:badLocation',...
+                ['Record: %d\nGCARC, DIST, or '...
+                'STLA+STLO+EVLA+EVLO must be set to get arrivals!'],i)
+        end
+
+        % get arrivals
+        arrivals=tauptime('mod',option.MODEL{i},'h',evdp(i)/1000,...
+            'ph',option.PHASES{i},location{:});
+
+        % add arrivals
+        for j=1:min(numel(idx),numel(arrivals))
+            t(i,idx(j)+1)=arrivals(j).time+o(i);
+            kt{i,idx(j)+1}=arrivals(j).phase;
+            user(i,idx(j)+1)=arrivals(j).rayparameter;
+        end
+        
+        % detail message
+        %if(verbose)
+        %    print_time_left(i,nrecs,redraw);
+        %end
+    end
+
+    % update header
+    data=changeheader(data,'t',t,'kt',kt,'user',user);
+    
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
 catch
-end
-
-% get options from command line
-for i=1:2:nargin-1
-    if(~ischar(varargin{i}))
-        error('seizmo:addarrivals:badInput',...
-            'Options must be specified as a strings!');
-    end
-    if(~isempty(varargin{i+1}))
-        option.(upper(varargin{i}))=varargin{i+1};
-    end
-end
-
-% check options
-nrecs=numel(data);
-fields=fieldnames(option);
-for i=1:numel(fields)
-    % specific checks
-    switch lower(fields{i})
-        case 'model'
-            if(iscellstr(option.(fields{i})))
-                option.(fields{i})=char(option.(fields{i}));
-            end
-            if(~ischar(option.(fields{i})) ...
-                    || ~any(size(option.(fields{i}),1)==[1 nrecs]))
-                error('seizmo:addarrivals:badInput',...
-                    ['MODEL must be a cellstr/char array with one\n'...
-                    'model per record or a single model for all!']);
-            end
-            if(size(option.(fields{i}),1)==1)
-                option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
-            end
-            option.(fields{i})=cellstr(option.(fields{i}));
-        case 'phases'
-            if(iscellstr(option.(fields{i})))
-                option.(fields{i})=char(option.(fields{i}));
-            end
-            if(isempty(option.(fields{i})) || ...
-                    ~ischar(option.(fields{i})) ...
-                    || ~any(size(option.(fields{i}),1)==[1 nrecs]))
-                error('seizmo:addarrivals:badInput',...
-                    ['PHASES must be a cellstr/char array with one\n'...
-                    'comma-separated phase list per record or a\n'...
-                    'single comma-separated phase list for all!']);
-            end
-            if(size(option.(fields{i}),1)==1)
-                option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
-            end
-            option.(fields{i})=cellstr(option.(fields{i}));
-        case 'fields'
-            if(~isempty(option.(fields{i})) && (...
-                    numel(option.(fields{i}))>10 || ...
-                    any(fix(option.(fields{i}))~=option.(fields{i})) || ...
-                    any(option.(fields{i})<0 | option.(fields{i})>9)))
-                error('seizmo:addarrivals:badInput',...
-                    ['FIELDS must be a index array with values\n'...
-                    'from 0 to 9 indicating the kt,t,user fields\n'...
-                    'to be overwrote.  List is common to all records!']);
-            end
-    end
-end
-
-% get relevant header info
-[evdp,gcarc,dist,stla,stlo,evla,evlo,o,t,kt,user]=getheader(data,...
-    'evdp','gcarc','dist','stla','stlo','evla','evlo','o','t','kt','user');
-
-% loop over records adding info to header
-idx=option.FIELDS;
-for i=1:nrecs
-    % check header info
-    if(evdp(i)==h(vi(i)).undef.ntype)
-        warning('seizmo:addarrivals:badEVDP',...
-            'Record: %d\nEVDP undefined! Treating as zero.',i);
-        evdp(i)=0;
-    end
-    if(o(i)==h(vi(i)).undef.ntype)
-        warning('seizmo:addarrivals:badO',...
-            'Record: %d\nO field undefined! Treating as zero.',i);
-        o(i)=0;
-    end
-    if(gcarc(i)~=h(vi(i)).undef.ntype)
-        location={'deg' gcarc(i)};
-    elseif(dist(i)~=h(vi(i)).undef.ntype)
-        location={'km' dist(i)};
-    elseif(all([stla(i) stlo(i) evla(i) evlo(i)]~=h(vi(i)).undef.ntype))
-        location={'sta' [stla(i) stlo(i)] 'evt' [evla(i) evlo(i)]};
-    else
-        error('seizmo:addarrivals:badLocation',...
-            ['Record: %d\nGCARC, DIST, or '...
-            'STLA+STLO+EVLA+EVLO must be set to get arrivals!'],i)
-    end
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
     
-    % get arrivals
-    arrivals=tauptime('mod',option.MODEL{i},'h',evdp(i)/1000,...
-        'ph',option.PHASES{i},location{:});
-    
-    % add arrivals
-    for j=1:min(numel(idx),numel(arrivals))
-        t(i,idx(j)+1)=arrivals(j).time+o(i);
-        kt{i,idx(j)+1}=arrivals(j).phaseName;
-        user(i,idx(j)+1)=arrivals(j).rayParam;
-    end
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'t',t,'kt',kt,'user',user);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
-set_checkheader_state(oldcheckheaderstate);
 
 end

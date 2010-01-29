@@ -122,9 +122,10 @@ try
         sacpzdb=load('sacpzdb',nets{:});
         if(~isequal(fieldnames(sacpzdb),nets))
             badnets=nets(~ismember(nets,fieldnames(sacpzdb)));
-            error('seizmo:getsacpz:badKNETWK',...
+            warning('seizmo:getsacpz:badKNETWK',...
                 ['These networks have no response info ' ...
                 'in the IRIS database:\n' sprintf('%s ',badnets{:})]);
+            nets=nets(ismember(nets,fieldnames(sacpzdb)));
         end
         
         % get db info
@@ -215,11 +216,12 @@ try
         db.CUSTOM.kcmpnm={sacpzdb.CUSTOM.kcmpnm}.';
         db.CUSTOM.khole={sacpzdb.CUSTOM.khole}.';
         NET(1:nrecs,1)={'CUSTOM'};
+        nets={'CUSTOM'};
     end
     
     % detail message
     if(verbose)
-        disp('Getting Relevant SAC PoleZeros');
+        disp('Getting Relevant SAC PoleZero(s)');
         print_time_left(0,nrecs);
     end
     
@@ -228,33 +230,40 @@ try
         % set progress bar to overwrite
         redraw=false;
         
-        % find sacpz file(s) for this record by name
-        % - includes handling khole goofiness
-        ok=find(strcmpi(knetwk{i},db.(NET{i}).knetwk) ...
-            & strcmpi(kstnm{i},db.(NET{i}).kstnm) ...
-            & strcmpi(kcmpnm{i},db.(NET{i}).kcmpnm) ...
-            & (strcmpi(khole{i},db.(NET{i}).khole) ...
-            | strcmpi(khole2{i},db.(NET{i}).khole)));
-        
-        % now find sacpz file(s) for this record by time
-        % - find sacpz surrounding record's b & e
-        % - warn if overlaps boundary
-        okb=timediff(db.(NET{i}).b(ok,:),b{i})>0 ...
-            & timediff(db.(NET{i}).e(ok,:),b{i})<0;
-        oke=timediff(db.(NET{i}).b(ok,:),e{i})>0 ...
-            & timediff(db.(NET{i}).e(ok,:),e{i})<0;
-        halfbaked=(okb & ~oke) | (~okb & oke);
-        if(any(halfbaked))
-            redraw=true;
-            warning('seizmo:getsacpz:halfbaked',...
-                ['Record: %d\n' ...
-                'Record overlaps SAC PoleZero file time boundary!'],i);
+        % skip records with network not in db
+        if(ismember(NET{i},nets))
+            % find sacpz file(s) for this record by name
+            % - includes handling khole goofiness
+            ok=find(strcmpi(knetwk{i},db.(NET{i}).knetwk) ...
+                & strcmpi(kstnm{i},db.(NET{i}).kstnm) ...
+                & strcmpi(kcmpnm{i},db.(NET{i}).kcmpnm) ...
+                & (strcmpi(khole{i},db.(NET{i}).khole) ...
+                | strcmpi(khole2{i},db.(NET{i}).khole)));
+
+            % now find sacpz file(s) for this record by time
+            % - find sacpz surrounding record's b & e
+            % - warn if overlaps boundary
+            okb=timediff(db.(NET{i}).b(ok,:),b{i})>0 ...
+                & timediff(db.(NET{i}).e(ok,:),b{i})<0;
+            oke=timediff(db.(NET{i}).b(ok,:),e{i})>0 ...
+                & timediff(db.(NET{i}).e(ok,:),e{i})<0;
+            halfbaked=(okb & ~oke) | (~okb & oke);
+            if(any(halfbaked))
+                redraw=true;
+                warning('seizmo:getsacpz:halfbaked',...
+                    ['Record: %d\n' ...
+                    'Record overlaps SAC PoleZero file time boundary!'],i);
+            end
+            ok=ok(okb & oke);
+        else
+            % no polezero in db
+            ok=[];
         end
-        ok=ok(okb & oke);
         
         % warn if no files found
         if(isempty(ok))
             data(i).misc.has_sacpz=false;
+            data(i).misc.sacpz=[];
             redraw=true;
             warning('seizmo:getsacpz:noGoodSACPZ',['Record: %d\n' ...
                 'Could not find a matching SAC PoleZero file!'],i);
