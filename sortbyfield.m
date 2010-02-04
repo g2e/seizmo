@@ -34,9 +34,11 @@ function [data]=sortbyfield(data,field,mode)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Oct. 13, 2009 - minor doc update, added .misc to bad fields
+%        Feb.  3, 2010 - proper SEIZMO handling, versioninfo caching,
+%                        seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 13, 2009 at 06:30 GMT
+%     Last Updated Feb.  3, 2010 at 17:00 GMT
 
 % todo:
 
@@ -45,36 +47,68 @@ msg=nargchk(2,3,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data);
 
-% set mode if none
-if(nargin==2 || isempty(mode)); mode='ascend'; end
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% get field values (or filenames/byte-orders/versions)
-bad={'head' 'dep' 'ind' 'misc'};
-if(~ischar(field) || any(strcmpi(field,bad)))
-    error('seizmo:sortbyfield:badField','FIELD is bad!');
-elseif(isfield(data,field))
-    if(isnumeric([data.(field)]))
-        [values,indices]=sort([data.(field)]);
-    else
-        [values,indices]=sort({data.(field)});
+% attempt sort
+try
+    % verbosity
+    verbose=seizmoverbose;
+
+    % number of records
+    nrecs=numel(data);
+    
+    % detail message
+    if(verbose)
+        disp('Sorting Record(s)');
+        print_time_left(0,nrecs);
     end
-else
-    [values,indices]=sort(getheader(data,field));
+    
+    % set mode if none
+    if(nargin==2 || isempty(mode)); mode='ascend'; end
+
+    % get field values (or filenames/byte-orders/versions)
+    bad={'head' 'dep' 'ind' 'misc'};
+    if(~ischar(field) || any(strcmpi(field,bad)))
+        error('seizmo:sortbyfield:badField','FIELD is bad!');
+    elseif(isfield(data,field))
+        if(isnumeric([data.(field)]))
+            [values,indices]=sort([data.(field)]);
+        else
+            [values,indices]=sort({data.(field)});
+        end
+    else
+        [values,indices]=sort(getheader(data,field));
+    end
+
+    % check indices size
+    if(numel(indices)~=nrecs)
+        error('seizmo:sortbyfield:tooManyIndices',...
+            'Too many elements to sort by!')
+    end
+
+    % flip if descend mode
+    if(strcmpi(mode,'descend')); indices=indices(end:-1:1); end
+
+    % sort data
+    data=data(indices);
+    
+    % detail message
+    if(verbose); print_time_left(nrecs,nrecs); end
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
 end
-
-% check indices size
-if(numel(indices)~=numel(data))
-    error('seizmo:sortbyfield:tooManyIndices',...
-        'Too many elements to sort by!')
-end
-
-% flip if descend mode
-if(strcmpi(mode,'descend')); indices=indices(end:-1:1); end
-
-% sort data
-data=data(indices);
 
 end

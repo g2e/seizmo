@@ -46,9 +46,10 @@ function [data]=setasiday(data)
 
 %     Version History:
 %        Dec.  2, 2009 - initial version
+%        Feb.  3, 2010 - versioninfo caching, seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  2, 2009 at 23:25 GMT
+%     Last Updated Feb.  3, 2010 at 18:10 GMT
 
 % todo:
 
@@ -64,11 +65,19 @@ undef=getsubfield(h,'undef','ntype').';
 undef=undef(idx);
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
 % attempt rest
 try
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % detail message
+    if(verbose)
+        disp('Shifting Reference Times of Record(s) to a Day Boundary');
+    end
+    
     % get reference time
     [nz]=getheader(data,'nz');
 
@@ -80,15 +89,17 @@ try
             '\nOne or more NZ fields are undefined!']);
     end
 
-    % now shift the records that can be
+    % now shift the records
     data=timeshift(data,...
         nz(:,3)*3600+nz(:,4)*60+nz(:,5)+nz(:,6)/1000,'iday');
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

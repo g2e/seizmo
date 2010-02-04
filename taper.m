@@ -100,9 +100,11 @@ function [data]=taper(data,w,o,type,opt)
 %                        1 entry per record, more checks, use new taperfun
 %                        function to handle taper building
 %        Dec.  4, 2009 - drop linspace usage (speed/accuracy decision)
+%        Jan. 30, 2010 - seizmoverbose support, proper SEIZMO handling
+%        Feb.  2, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2009 at 18:45 GMT
+%     Last Updated Feb.  2, 2010 at 21:00 GMT
 
 % todo:
 
@@ -111,177 +113,212 @@ msg=nargchk(1,5,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% check headers
-data=checkheader(data);
-
-% defaults
-if(nargin<5 || isempty(opt)); opt=nan; end
-if(nargin<4 || isempty(type)); type='hann'; end
-if(nargin<3 || isempty(o)); o=[0 0]; end
-if(nargin<2 || isempty(w)); w=[0.05 0.05]; end
-
-% number of records
-nrecs=numel(data);
-
-% check width (class, # of rows, # of columns)
-if(~isreal(w)); error('seizmo:taper:badInput','WIDTH must be real!'); end
-sz=size(w);
-if(sz(1)==1)
-    w=w(ones(nrecs,1),:);
-elseif(sz(1)~=nrecs)
-    error('seizmo:taper:badInput',...
-        'WIDTH must have 1 row or 1 row per record!');
-end
-if(sz(2)==1)
-    w=[w w];
-elseif(sz(2)~=2)
-    error('seizmo:taper:badInput',...
-        'WIDTH must have 1 or 2 columns!');
-end
-
-% fix negative width
-if(any(w<0)); w(w<0)=0; end
-
-% check offsets (class, # of rows, # of columns)
-if(~isreal(o)); error('seizmo:taper:badInput','OFFSET must be real!'); end
-sz=size(o);
-if(sz(1)==1)
-    o=o(ones(nrecs,1),:);
-elseif(sz(1)~=nrecs)
-    error('seizmo:taper:badInput',...
-        'OFFSET must have 1 row or 1 row per record!');
-end
-if(sz(2)==1)
-    o=[o o];
-elseif(sz(2)~=2)
-    error('seizmo:taper:badInput',...
-        'OFFSET must have 1 or 2 columns!');
-end
-
-% convert width to limit
-lim1=[o(:,1) o(:,1)+w(:,1)];
-lim2=[o(:,2) o(:,2)+w(:,2)];
-
-% check type (class, # of rows, # of columns)
-if(ischar(type)); type=cellstr(type); end
-sz=size(type);
-if(~iscellstr(type))
-    error('seizmo:taper:badInput',...
-        'TYPE must be a char or cellstr array!');
-end
-if(sz(1)==1)
-    type=type(ones(nrecs,1),:);
-elseif(sz(1)~=nrecs)
-    error('seizmo:taper:badInput',...
-        'TYPE must have 1 row or 1 row per record!');
-end
-if(sz(2)==1)
-    type=[type type];
-elseif(sz(2)~=2)
-    error('seizmo:taper:badInput',...
-        'TYPE cell array must have 1 or 2 columns!');
-end
-
-% check option (class, # of rows, # of columns)
-if(~isreal(opt))
-    error('seizmo:taper:badInput','OPTION must be real!');
-end
-sz=size(opt);
-if(sz(1)==1)
-    opt=opt(ones(nrecs,1),:);
-elseif(sz(1)~=nrecs)
-    error('seizmo:taper:badInput',...
-        'OPTON must have 1 row or 1 row per record!');
-end
-if(sz(2)==1)
-    opt=[opt opt];
-elseif(sz(2)~=2)
-    error('seizmo:taper:badInput',...
-        'OPTION must have 1 or 2 columns!');
-end
-
-% header info
-[b,e,delta,npts,ncmp]=getheader(data,'b','e','delta','npts','ncmp');
-leven=getlgc(data,'leven');
-iftype=getenumid(data,'iftype');
-
-% check for unsupported filetypes
-if(any(strcmpi(iftype,'ixyz')))
-    error('seizmo:taper:illegalFiletype',...
-        'Illegal operation on xyz file');
-end
-
-% work through each file
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:nrecs
-    % save class and convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
+% attempt taper
+try
+    % check headers (versioninfo cache update)
+    data=checkheader(data);
     
-    % unevenly spaced
-    if(strcmp(leven(i),'false'))
-        % get normalized time
-        times=(data(i).ind-b(i))/(e(i)-b(i));
+    % verbosity
+    verbose=seizmoverbose;
+
+    % number of records
+    nrecs=numel(data);
+
+    % defaults
+    if(nargin<5 || isempty(opt)); opt=nan; end
+    if(nargin<4 || isempty(type)); type='hann'; end
+    if(nargin<3 || isempty(o)); o=[0 0]; end
+    if(nargin<2 || isempty(w)); w=[0.05 0.05]; end
+
+    % check width (class, # of rows, # of columns)
+    if(~isreal(w))
+        error('seizmo:taper:badInput','WIDTH must be real!');
+    end
+    sz=size(w);
+    if(sz(1)==1)
+        w=w(ones(nrecs,1),:);
+    elseif(sz(1)~=nrecs)
+        error('seizmo:taper:badInput',...
+            'WIDTH must have 1 row or 1 row per record!');
+    end
+    if(sz(2)==1)
+        w=[w w];
+    elseif(sz(2)~=2)
+        error('seizmo:taper:badInput',...
+            'WIDTH must have 1 or 2 columns!');
+    end
+
+    % fix negative width
+    if(any(w<0)); w(w<0)=0; end
+
+    % check offsets (class, # of rows, # of columns)
+    if(~isreal(o))
+        error('seizmo:taper:badInput','OFFSET must be real!');
+    end
+    sz=size(o);
+    if(sz(1)==1)
+        o=o(ones(nrecs,1),:);
+    elseif(sz(1)~=nrecs)
+        error('seizmo:taper:badInput',...
+            'OFFSET must have 1 row or 1 row per record!');
+    end
+    if(sz(2)==1)
+        o=[o o];
+    elseif(sz(2)~=2)
+        error('seizmo:taper:badInput',...
+            'OFFSET must have 1 or 2 columns!');
+    end
+
+    % convert width to limit
+    lim1=[o(:,1) o(:,1)+w(:,1)];
+    lim2=[o(:,2) o(:,2)+w(:,2)];
+
+    % check type (class, # of rows, # of columns)
+    if(ischar(type)); type=cellstr(type); end
+    sz=size(type);
+    if(~iscellstr(type))
+        error('seizmo:taper:badInput',...
+            'TYPE must be a char or cellstr array!');
+    end
+    if(sz(1)==1)
+        type=type(ones(nrecs,1),:);
+    elseif(sz(1)~=nrecs)
+        error('seizmo:taper:badInput',...
+            'TYPE must have 1 row or 1 row per record!');
+    end
+    if(sz(2)==1)
+        type=[type type];
+    elseif(sz(2)~=2)
+        error('seizmo:taper:badInput',...
+            'TYPE cell array must have 1 or 2 columns!');
+    end
+
+    % check option (class, # of rows, # of columns)
+    if(~isreal(opt))
+        error('seizmo:taper:badInput','OPTION must be real!');
+    end
+    sz=size(opt);
+    if(sz(1)==1)
+        opt=opt(ones(nrecs,1),:);
+    elseif(sz(1)~=nrecs)
+        error('seizmo:taper:badInput',...
+            'OPTON must have 1 row or 1 row per record!');
+    end
+    if(sz(2)==1)
+        opt=[opt opt];
+    elseif(sz(2)~=2)
+        error('seizmo:taper:badInput',...
+            'OPTION must have 1 or 2 columns!');
+    end
+
+    % header info
+    [b,e,delta,npts,ncmp]=getheader(data,'b','e','delta','npts','ncmp');
+    leven=getlgc(data,'leven');
+    iftype=getenumid(data,'iftype');
+
+    % check for unsupported filetypes
+    if(any(strcmpi(iftype,'ixyz')))
+        error('seizmo:taper:illegalFiletype',...
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(iftype,'ixyz'))) ...
+            '\nIllegal operation on XYZ record(s)!']);
+    end
+    
+    % detail message
+    if(verbose)
+        disp('Tapering Record(s)');
+        print_time_left(0,nrecs);
+    end
+
+    % work through each file
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:nrecs
+        % skip dataless
+        if(~npts(i))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
         
-        % get tapers
-        taper1=taperfun(type{i,1},times,lim1(i,:),opt(i,1));
-        taper2=taperfun(type{i,2},1-times,lim2(i,:),opt(i,2));
-        taper1=taper1(:); taper2=taper2(:);
-        
-        % apply tapers
-        data(i).dep=data(i).dep.*taper1(:,ones(1,ncmp(i))) ...
-            .*taper2(:,ones(1,ncmp(i)));
-    % evenly spaced
-    else
-        % time series and general xy records
-        if(strcmp(iftype(i),'itime') || strcmp(iftype(i),'ixy'))
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+
+        % unevenly spaced
+        if(strcmp(leven(i),'false'))
             % get normalized time
-            times=((0:(npts(i)-1))*delta(i))/(e(i)-b(i));
-            
+            times=(data(i).ind-b(i))/(e(i)-b(i));
+
             % get tapers
             taper1=taperfun(type{i,1},times,lim1(i,:),opt(i,1));
             taper2=taperfun(type{i,2},1-times,lim2(i,:),opt(i,2));
             taper1=taper1(:); taper2=taper2(:);
-            
+
             % apply tapers
             data(i).dep=data(i).dep.*taper1(:,ones(1,ncmp(i))) ...
                 .*taper2(:,ones(1,ncmp(i)));
-        else % spectral
-            % get normalized frequency
-            freq=[(0:(npts(i)/2))*delta(i) ...
-                ((npts(i)/2-1):-1:1)*delta(i)]/e(i);
-            
-            % get tapers
-            taper1=taperfun(type{i,1},freq,lim1(i,:),opt(i,1));
-            taper2=taperfun(type{i,2},1-freq,lim2(i,:),opt(i,2));
-            taper1=taper1(:); taper2=taper2(:);
-            
-            % apply tapers
-            data(i).dep=data(i).dep.*taper1(:,ones(1,2*ncmp(i))) ...
-                .*taper2(:,ones(1,2*ncmp(i)));
+            % evenly spaced
+        else
+            % time series and general xy records
+            if(strcmp(iftype(i),'itime') || strcmp(iftype(i),'ixy'))
+                % get normalized time
+                times=((0:(npts(i)-1))*delta(i))/(e(i)-b(i));
+
+                % get tapers
+                taper1=taperfun(type{i,1},times,lim1(i,:),opt(i,1));
+                taper2=taperfun(type{i,2},1-times,lim2(i,:),opt(i,2));
+                taper1=taper1(:); taper2=taper2(:);
+
+                % apply tapers
+                data(i).dep=data(i).dep.*taper1(:,ones(1,ncmp(i))) ...
+                    .*taper2(:,ones(1,ncmp(i)));
+            else % spectral
+                % get normalized frequency
+                freq=[(0:(npts(i)/2))*delta(i) ...
+                    ((npts(i)/2-1):-1:1)*delta(i)]/e(i);
+
+                % get tapers
+                taper1=taperfun(type{i,1},freq,lim1(i,:),opt(i,1));
+                taper2=taperfun(type{i,2},1-freq,lim2(i,:),opt(i,2));
+                taper1=taper1(:); taper2=taper2(:);
+
+                % apply tapers
+                data(i).dep=data(i).dep.*taper1(:,ones(1,2*ncmp(i))) ...
+                    .*taper2(:,ones(1,2*ncmp(i)));
+            end
         end
+
+        % change class back
+        data(i).dep=oclass(data(i).dep);
+
+        % get dep* values
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
     end
+
+    % update header
+    data=changeheader(data,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
-    % change class back
-    data(i).dep=oclass(data(i).dep);
-    
-    % get dep* values
-    depmen(i)=mean(data(i).dep(:)); 
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

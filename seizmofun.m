@@ -41,9 +41,11 @@ function [data]=seizmofun(data,fun)
 %        Oct. 15, 2009 - no header checking, updates header for npts, ncmp,
 %                        dep*, catches errors to keep checking correct
 %        Dec.  4, 2009 - whoops, forgot NRECS
+%        Feb.  3, 2010 - proper SEIZMO handling, versioninfo caching,
+%                        seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2009 at 17:45 GMT
+%     Last Updated Feb.  3, 2010 at 17:05 GMT
 
 % todo:
 
@@ -52,15 +54,17 @@ msg=nargchk(2,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
 % try applying function
 try
+    % verbosity
+    verbose=seizmoverbose;
+
     % number of records
     nrecs=numel(data);
     
@@ -70,8 +74,15 @@ try
             'FUN must be a function handle!');
     end
     
+    % detail message
+    if(verbose)
+        disp('Applying Function to the Dependent Data of Record(s)');
+        print_time_left(0,nrecs);
+    end
+    
     % apply function to records
-    ncmp=nan(nrecs,1); npts=ncmp; depmen=ncmp; depmin=ncmp; depmax=ncmp;
+    ncmp=nan(nrecs,1); npts=ncmp;
+    depmen=ncmp; depmin=ncmp; depmax=ncmp;
     for i=1:nrecs
         oclass=str2func(class(data(i).dep));
         data(i).dep=oclass(fun(double(data(i).dep)));
@@ -83,6 +94,9 @@ try
             depmin(i)=min(data(i).dep(:)); 
             depmax(i)=max(data(i).dep(:));
         end
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
     end
     
     % update header
@@ -90,10 +104,12 @@ try
         'depmen',depmen,'depmin',depmin,'depmax',depmax);
     
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

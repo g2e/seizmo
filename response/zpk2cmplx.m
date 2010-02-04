@@ -36,7 +36,7 @@ function [h]=zpk2cmplx(f,z,p,k,wpow)
 %     and plot the amplitude and phase response in velocity:
 %      [z,p,k]=readsacpz('some/pz/file')
 %      f=logspace(-3,1,1000);
-%      h=zpk2ap(f,z,p,k,1);
+%      h=zpk2cmplx(f,z,p,k,1);
 %      figure; loglog(f,abs(h));
 %      figure; plot(f,angle(a)); set(gca,'xscale','log');
 %

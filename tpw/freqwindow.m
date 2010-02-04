@@ -118,7 +118,7 @@ for i=s(:)'
         disp(band(j,:));
         
         % filter data
-        data2=iirfilter(data1,'bandpass','butter',bank(j,2:3),4,2);
+        data2=iirfilter(data1,'bandpass','butter','c',bank(j,2:3),'o',4,'p',2);
         
         % loop until user is happy with this band
         ssatisfied=0;

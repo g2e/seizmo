@@ -24,7 +24,7 @@ function [data,removed]=removedeadrecords(data,option)
 %
 %    Notes:
 %
-%    Header changes: NONE (may use CHECKHEADER)
+%    Header changes: NONE
 %
 %    Examples:
 %     Remove dead records before reading in data from current directory:
@@ -40,9 +40,10 @@ function [data,removed]=removedeadrecords(data,option)
 %        Dec.  8, 2008 - 2nd output lists removed indices
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Jan. 30, 2010 - slimmed the code (no checkheader call)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Jan. 30, 2010 at 18:35 GMT
 
 % todo:
 
@@ -57,28 +58,17 @@ elseif(~islogical(option) || ~isscalar(option))
     error('seizmo:removedeadrecords','OPTION must be true or false!');
 end
 
+% detail message
+if(seizmoverbose); disp('Removing Dead Record(s)'); end
+
 % proceed by option
 if(option)
-    % check data structure
-	msg=seizmocheck(data);
-	if(~isempty(msg)); error(msg.identifier,msg.message); end
-    
-    % turn off struct checking
-    oldseizmocheckstate=get_seizmocheck_state;
-    set_seizmocheck_state(false);
-
-    % check headers
-    data=checkheader(data);
-    
     % get depmax, depmin
     [depmax,depmin]=getheader(data,'depmax','depmin');
     
     % remove dead records
     removed=((depmax-depmin)==0);
     data(removed)=[];
-    
-    % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
 else
     % check data structure
 	msg=seizmocheck(data,'dep');

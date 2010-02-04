@@ -46,7 +46,7 @@ function [data,removed]=removeduplicates(data,varargin)
 %     - it is recommended to run FIXDELTA first to take care of floating
 %       point accuracy causing false-negatives
 %
-%    Header changes: NONE (does use CHECKHEADER though)
+%    Header changes: see CHECKHEADER
 %
 %    Examples:
 %     Datasets sometimes include duplicates and partial pieces.  Usually
@@ -60,9 +60,12 @@ function [data,removed]=removeduplicates(data,varargin)
 %        Dec.  8, 2008 - more options
 %        Apr.  1, 2009 - changed TIMING default to UTC to match MERGE
 %        Apr. 23, 2009 - move usage up
+%        Feb.  2, 2010 - state function update, drop getncmp, versioninfo
+%                        caching, proper SEIZMO handling, seizmoverbose
+%                        support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Feb.  2, 2010 at 21:50 GMT
 
 % todo:
 
@@ -72,170 +75,195 @@ if(mod(nargin-1,2))
         'Bad number of arguments!');
 end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+% retrieve SEIZMO settings
+global SEIZMO
 
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% check headers
+% check struct/header
 data=checkheader(data);
 
-% turn off header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(false);
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% defaults
-option.TIMING='utc';
-option.USEABSOLUTETIMING=true;
-option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
-option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};
+% try removing time duplicates
+try
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % detail message
+    if(verbose)
+        disp('Removing Duplicate Record(s)');
+    end
+    
+    % number of records
+    nrecs=numel(data);
+    
+    % defaults
+    option.TIMING='utc';
+    option.USEABSOLUTETIMING=true;
+    option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
+    option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};
 
-% get options from SEIZMO global
-global SEIZMO
-fields=fieldnames(option);
-for i=fields
-    try
-        option.(i)=SEIZMO.REMOVEDUPLICATES.(i);
-    catch
-        % do nothing
+    % get options from SEIZMO global
+    fields=fieldnames(option);
+    for i=fields
+        try
+            option.(i)=SEIZMO.REMOVEDUPLICATES.(i);
+        catch
+            % do nothing
+        end
     end
-end
 
-% parse options
-for i=1:2:nargin-1
-    if(~ischar(varargin{i}))
-        error('seizmo:removeduplicates:badInput',...
-            'Options must be specified as a strings!');
-    end
-    if((isnumeric(varargin{i+1}) && ~isscalar(varargin{i+1}))...
-        || (ischar(varargin{i+1}) && size(varargin{i+1},1)~=1))
-        error('seizmo:removeduplicates:badInput',...
-            'Bad value for option %s !',varargin{i});
-    end
-    switch lower(varargin{i})
-        case 'timing'
-            if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
-                    {'tai' 'utc'})))
-                error('seizmo:removeduplicates:badInput',...
-                    ['TIMING option must be '...
-                    '''tai'' or ''utc''!']);
-            end
-            option.TIMING=lower(varargin{i+1});
-        case 'useabsolutetiming'
-            if(~islogical(varargin{i+1}) || ~isscalar(varargin{i+1}))
-                error('seizmo:removeduplicates:badInput',...
-                    'USEABSOLUTETIMING option must be a logical!');
-            end
-            option.USEABSOLUTETIMING=varargin{i+1};
-        case 'requiredcharfields'
-            if(~iscellstr(varargin{i+1}))
-                error('seizmo:removeduplicates:badInput',...
-                    ['REQUIREDCHARFIELDS option must be '...
-                    'a cellstr array of header fields!']);
-            end
-            option.REQUIREDCHARFIELDS=varargin{i+1};
-        case 'requiredrealfields'
-            if(~iscellstr(varargin{i+1}))
-                error('seizmo:removeduplicates:badInput',...
-                    ['REQUIREDREALFIELDS option must be '...
-                    'a cellstr array of header fields!']);
-            end
-            option.REQUIREDREALFIELDS=varargin{i+1};
-        otherwise
+    % parse options
+    for i=1:2:nargin-1
+        if(~ischar(varargin{i}))
             error('seizmo:removeduplicates:badInput',...
-                'Unknown option: %s !',varargin{i});
+                'Options must be specified as a strings!');
+        end
+        if((isnumeric(varargin{i+1}) && ~isscalar(varargin{i+1}))...
+                || (ischar(varargin{i+1}) && size(varargin{i+1},1)~=1))
+            error('seizmo:removeduplicates:badInput',...
+                'Bad value for option %s !',varargin{i});
+        end
+        switch lower(varargin{i})
+            case 'timing'
+                if(~ischar(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
+                        {'tai' 'utc'})))
+                    error('seizmo:removeduplicates:badInput',...
+                        ['TIMING option must be '...
+                        '''tai'' or ''utc''!']);
+                end
+                option.TIMING=lower(varargin{i+1});
+            case 'useabsolutetiming'
+                if(~islogical(varargin{i+1}) || ~isscalar(varargin{i+1}))
+                    error('seizmo:removeduplicates:badInput',...
+                        'USEABSOLUTETIMING option must be a logical!');
+                end
+                option.USEABSOLUTETIMING=varargin{i+1};
+            case 'requiredcharfields'
+                if(~iscellstr(varargin{i+1}))
+                    error('seizmo:removeduplicates:badInput',...
+                        ['REQUIREDCHARFIELDS option must be '...
+                        'a cellstr array of header fields!']);
+                end
+                option.REQUIREDCHARFIELDS=varargin{i+1};
+            case 'requiredrealfields'
+                if(~iscellstr(varargin{i+1}))
+                    error('seizmo:removeduplicates:badInput',...
+                        ['REQUIREDREALFIELDS option must be '...
+                        'a cellstr array of header fields!']);
+                end
+                option.REQUIREDREALFIELDS=varargin{i+1};
+            otherwise
+                error('seizmo:removeduplicates:badInput',...
+                    'Unknown option: %s !',varargin{i});
+        end
     end
-end
 
-% get header fields
-ncmp=getncmp(data);
-if(option.USEABSOLUTETIMING)
-    [b,e,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=getheader(data,...
-        'b','e','nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
-else
-    [b,e]=getheader(data,'b','e');
-end
-szreal=size(option.REQUIREDREALFIELDS); reqreal=cell(szreal);
-szchar=size(option.REQUIREDCHARFIELDS); reqchar=cell(szchar);
-if(prod(szreal)~=0)
-    [reqreal{:}]=getheader(data,option.REQUIREDREALFIELDS{:});
-end
-if(prod(szchar)~=0)
-    [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
-end
-iftype=getenumid(data,'iftype');
-leven=strcmp(getlgc(data,'leven'),'true');
-
-% require timeseries and general x vs y
-if(any(~strcmp(iftype,'itime') & ~strcmp(iftype,'ixy')))
-    error('seizmo:removeduplicates:badRecordType',...
-        'Records must be Time Series or General X vs Y !');
-end
-
-% get start and end of records in absolute time
-nrecs=numel(data);
-if(option.USEABSOLUTETIMING)
-    if(strcmp(option.TIMING,'utc'))
-        ab=gregorian2modserial(utc2tai(...
-            [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+b]));
-        ae=gregorian2modserial(utc2tai(...
-            [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+e]));
+    % get header fields
+    if(option.USEABSOLUTETIMING)
+        [b,e,ncmp,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=...
+            getheader(data,'b','e','ncmp','nzyear','nzjday','nzhour',...
+            'nzmin','nzsec','nzmsec');
     else
-        ab=gregorian2modserial(...
-            [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+b]);
-        ae=gregorian2modserial(...
-            [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+e]);
+        [b,e,ncmp]=getheader(data,'b','e','ncmp');
     end
-else
-    ab=[zeros(nrecs,1) b];
-    ae=[zeros(nrecs,1) e];
-end
+    szreal=size(option.REQUIREDREALFIELDS); reqreal=cell(szreal);
+    szchar=size(option.REQUIREDCHARFIELDS); reqchar=cell(szchar);
+    if(prod(szreal)~=0)
+        [reqreal{:}]=getheader(data,option.REQUIREDREALFIELDS{:});
+    end
+    if(prod(szchar)~=0)
+        [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
+    end
+    iftype=getenumid(data,'iftype');
+    leven=~strcmpi(getlgc(data,'leven'),'false');
 
-% change real to char
-for i=1:prod(szreal)
-    reqreal{i}=num2str(reqreal{i},'%16.16e');
-end
+    % cannot do spectral/xyz records
+    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:removeduplicates:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
+    end
 
-% make groups (require at least leven and ncmp to be the same)
-[f,h,h]=unique(char(strcat(strcat('',reqchar{:}),'_',...
-    strcat('',reqreal{:}),'_',num2str(leven),'_',num2str(ncmp))),...
-    'rows');
+    % get start and end of records in absolute time
+    if(option.USEABSOLUTETIMING)
+        if(strcmp(option.TIMING,'utc'))
+            ab=gregorian2modserial(utc2tai(...
+                [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+b]));
+            ae=gregorian2modserial(utc2tai(...
+                [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+e]));
+        else
+            ab=gregorian2modserial(...
+                [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+b]);
+            ae=gregorian2modserial(...
+                [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+e]);
+        end
+    else
+        ab=[zeros(nrecs,1) b];
+        ae=[zeros(nrecs,1) e];
+    end
 
-% loop through each group
-destroy=false(numel(data),1);
-for i=1:size(f,1)
-    % get group member indices
-    gidx=find(h==i);
-    ng=numel(gidx);
+    % change real to char
+    for i=1:prod(szreal)
+        reqreal{i}=num2str(reqreal{i},'%16.16e');
+    end
+
+    % make groups (require at least leven and ncmp to be the same)
+    [f,h,h]=unique(char(strcat(strcat('',reqchar{:}),'_',...
+        strcat('',reqreal{:}),'_',num2str(leven),'_',num2str(ncmp))),...
+        'rows');
+
+    % loop through each group
+    destroy=false(numel(data),1);
+    for i=1:size(f,1)
+        % get group member indices
+        gidx=find(h==i);
+        ng=numel(gidx);
+
+        % no records to removeduplicates with
+        if(ng==1); continue; end
+
+        % find duplicates
+        dups=(ab(gidx,ones(ng,1))>ab(gidx,ones(ng,1)).' ...
+            | (ab(gidx,ones(ng,1))==ab(gidx,ones(ng,1)).' ...
+            & ab(gidx,2*ones(ng,1))>=ab(gidx,2*ones(ng,1)).')) ...
+            & (ae(gidx,ones(ng,1))<ae(gidx,ones(ng,1)).' ...
+            | (ae(gidx,ones(ng,1))==ae(gidx,ones(ng,1)).' ...
+            & ae(gidx,2*ones(ng,1))<=ae(gidx,2*ones(ng,1)).'));
+        dupsu=(dups-dups.')>0;    % only delete if other not deleted
+        dupsu(tril(true(ng)))=0;  % upper triangle
+        dups(triu(true(ng)))=0;   % lower triangle
+        dups=sum(dups+dupsu,2)>0; % logical indices in group
+
+        % remove duplicates
+        destroy(gidx(dups))=true;
+    end
     
-    % no records to removeduplicates with
-    if(ng==1); continue; end
+    % detail message
+    if(verbose)
+        disp(['Found ' num2str(sum(destroy)) ' Duplicate(s)']);
+    end
+
+    % remove unwanted data
+    data(destroy)=[];
+    removed=find(destroy);
+    % the following requires all calling functions using versioninfo
+    % caching to update their variables to the cached version
+    % - this requires keeping track of who calls removeduplicates
+    SEIZMO.VERSIONINFO.IDX(destroy)=[];
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
-    % find duplicates
-    dups=(ab(gidx,ones(ng,1))>ab(gidx,ones(ng,1)).' ...
-        | (ab(gidx,ones(ng,1))==ab(gidx,ones(ng,1)).' ...
-        & ab(gidx,2*ones(ng,1))>=ab(gidx,2*ones(ng,1)).')) ...
-        & (ae(gidx,ones(ng,1))<ae(gidx,ones(ng,1)).' ...
-        | (ae(gidx,ones(ng,1))==ae(gidx,ones(ng,1)).' ...
-        & ae(gidx,2*ones(ng,1))<=ae(gidx,2*ones(ng,1)).'));
-    dupsu=(dups-dups.')>0;    % only delete if other not deleted
-    dupsu(tril(true(ng)))=0;  % upper triangle
-    dups(triu(true(ng)))=0;   % lower triangle
-    dups=sum(dups+dupsu,2)>0; % logical indices in group
-    
-    % remove duplicates
-    destroy(gidx(dups))=true;
+    % rethrow error
+    error(lasterror)
 end
-
-% remove unwanted data
-data(destroy)=[];
-removed=find(destroy);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
-set_checkheader_state(oldcheckheaderstate);
 
 end

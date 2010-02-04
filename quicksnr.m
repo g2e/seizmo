@@ -4,11 +4,11 @@ function [snr]=quicksnr(data,nwin,swin)
 %    Usage:    snr=quicksnr(data,noisewindow,signalwindow)
 %
 %    Description: QUICKSNR(DATA,NOISEWINDOW,SIGNALWINDOW) estimates the
-%     signal to noise ratio for SEIZMO records by calculating the ratio of
+%     signal-to-noise ratio for SEIZMO records by calculating the ratio of
 %     the maximum-minimum amplitudes of two data windows that represent the
 %     'noise' and the 'signal'.  NOISEWINDOW & SIGNALWINDOW need to be 2
 %     element numeric arrays that specify the start and end of the window
-%     relative to the records reference time.
+%     relative to the records' reference times.
 %
 %    Notes:
 %
@@ -32,9 +32,11 @@ function [snr]=quicksnr(data,nwin,swin)
 %        Dec. 13, 2008 - allow different window for each record (whoops)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Jan. 29, 2010 - proper SEIZMO handling
+%        Feb.  3, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:55 GMT
+%     Last Updated Feb.  3, 2010 at 18:40 GMT
 
 % todo:
 
@@ -42,36 +44,76 @@ function [snr]=quicksnr(data,nwin,swin)
 msg=nargchk(3,3,nargin);
 if(~isempty(msg)); error(msg); end
 
+% get SEIZMO setup
+global SEIZMO
+
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+[h,idx]=versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% check headers
-data=checkheader(data);
-
-% turn off header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(false);
-
-% check windows
-if(~isnumeric(nwin) || ~isnumeric(swin)...
-        || size(nwin,2)~=2 || size(swin,2)~=2 ...
-        || size(nwin,1)~=size(swin,1))
-    error('seizmo:quicksnr:badInput',...
-        'NOISEWINDOW & SIGNALWINDOW must be Nx2 numeric arrays!');
+% attempt header check
+try
+    % check headers
+    data=checkheader(data);
+    
+    % turn off header checking
+    oldcheckheaderstate=checkheader_state(false);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
 end
 
-% snr=(max-min of signal)/(max-min of noise)
-[nmax,nmin]=getheader(cut(data,nwin(:,1),nwin(:,2),'trim',false),'depmax','depmin');
-[smax,smin]=getheader(cut(data,swin(:,1),swin(:,2),'trim',false),'depmax','depmin');
-snr=(smax-smin)./(nmax-nmin);
+% attempt snr estimation
+try
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % check windows
+    if(~isnumeric(nwin) || ~isnumeric(swin)...
+            || size(nwin,2)~=2 || size(swin,2)~=2 ...
+            || size(nwin,1)~=size(swin,1))
+        error('seizmo:quicksnr:badInput',...
+            'NOISEWINDOW & SIGNALWINDOW must be Nx2 numeric arrays!');
+    end
+    
+    % detail message
+    if(verbose)
+        disp('Estimating SNR of Record(s)');
+    end
+    
+    % turn caching off
+    versioninfo_cache(false);
 
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
-set_checkheader_state(oldcheckheaderstate);
+    % snr=(max-min of signal)/(max-min of noise)
+    [nmax,nmin]=getheader(...
+        cut(data,nwin(:,1),nwin(:,2),'trim',false),'depmax','depmin');
+    [smax,smin]=getheader(...
+        cut(data,swin(:,1),swin(:,2),'trim',false),'depmax','depmin');
+    snr=(smax-smin)./(nmax-nmin);
+    
+    % fix versioninfo cache
+    SEIZMO.VERSIONINFO.H=h;
+    SEIZMO.VERSIONINFO.IDX=idx;
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
+    versioninfo_cache(oldversioninfocache);
+
+    % rethrow error
+    error(lasterror)
+end
 
 end

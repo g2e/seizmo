@@ -18,9 +18,6 @@ function [data]=fixdelta(data,tol)
 %     is 1e-5 (0.001% of the original sample spacing).
 %
 %    Notes:
-%     - Matlab r2007b function RAT has a bug in it - change line 116ish to:
-%        if(x==0) || (abs((C(1,1)/C(2,1)-X(j))/X(j))<=max(tol,eps(X(j))))
-%       This will force RAT to function as described.
 %
 %    Header changes: DELTA, E
 %
@@ -46,9 +43,10 @@ function [data]=fixdelta(data,tol)
 %        Dec.  4, 2009 - update E, only fix evenly spaced
 %        Jan. 25, 2010 - fixed LEVEN bug (only fixed first record)
 %        Jan. 29, 2010 - minor code cleaning
+%        Jan. 30, 2010 - one less call to SEIZMOCHECK, use RRAT
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 03:15 GMT
+%     Last Updated Jan. 30, 2010 at 19:45 GMT
 
 % todo:
 
@@ -56,18 +54,14 @@ function [data]=fixdelta(data,tol)
 msg=nargchk(1,2,nargin);
 if(~isempty(msg)); error(msg); end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+% check data structure & header
+data=checkheader(data);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt delta fix
 try
-    % check header
-    data=checkheader(data);
-    
     % grab header info
     leven=getlgc(data,'leven');
     [delta,b,npts]=getheader(data,'delta','b','npts');
@@ -83,9 +77,9 @@ try
 
     % default tolerance
     if(nargin==1 || ~isscalar(tol) || ~isreal(tol))
-        [n,d]=rat(delta,1e-5);
+        [n,d]=rrat(delta,1e-5);
     else
-        [n,d]=rat(delta,tol);
+        [n,d]=rrat(delta,tol);
     end
 
     % fix delta

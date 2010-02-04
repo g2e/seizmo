@@ -66,9 +66,11 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %        Sep. 24, 2009 - added iztype field parameter
 %        Sep. 25, 2009 - better fix for reftime millisec limit, true sync
 %        Oct. 17, 2009 - added direct absolute time input
+%        Feb.  3, 2010 - proper SEIZMO handling, seizmoverbose support, fix
+%                        xy datatype bug, fix checking order bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 17, 2009 at 15:20 GMT
+%     Last Updated Feb.  3, 2010 at 16:20 GMT
 
 % todo:
 
@@ -76,161 +78,186 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
-% get undefined value
-[h,idx]=versioninfo(data);
-undef=getsubfield(h,'undef','ntype').';
-undef=undef(idx);
-
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
 % check headers
 data=checkheader(data);
 
-% number of records
-nrecs=numel(data);
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% valid option values
-valid.TIMING={'UTC' 'TAI'};
-valid.OPTION={'LAST' 'FIRST'};
+% attempt time synchronization
+try
+    % get undefined value
+    [h,idx]=versioninfo(data);
+    undef=getsubfield(h,'undef','ntype').';
+    undef=undef(idx);
 
-% default/check field (catching warnings)
-abstime=false;
-if(nargin>1 && iscell(field) && isscalar(field)); field=field{1}; end
-if(nargin<2 || isempty(field))
-    field='b';
-    values=getheader(data,field);
-elseif(isnumeric(field))
-    if((~isequal(size(field),[1 5]) && ~isequal(size(field),[1 6])) ...
-            || any(isnan(field) | isinf(field)) ...
-            || ~isequal(field(1:end-1),round(field(1:end-1))))
-        error('seizmo:synchronize:badField',...
-            'Numeric FIELD must be 1x5 or 1x6 and not be NaN or Inf!');
+    % verbosity
+    verbose=seizmoverbose;
+
+    % number of records
+    nrecs=numel(data);
+    
+    % detail message
+    if(verbose)
+        disp('Sychronizing Record(s)');
+        print_time_left(0,nrecs);
     end
-    abstime=true;
-elseif(~ischar(field) || size(field,1)~=1)
-    error('seizmo:synchronize:badField',...
-        'FIELD must be a character string!');
-else
-    if(isequal(size(field),[1 29]))
-        num=true(1,29);
-        num(1,[5 8 11 12 16 17 20 23 26])=false;
-        if(~strcmp(field(~num),'-- () ::.') ...
-            || ~all(isstrprop(field(num),'digit')))
-            error('seizmo:synchronize:badField',...
-                'FIELD kzdttm-style string improperly formatted!');
-        end
-        field=str2double([cellstr(field(1:4)) cellstr(field(13:15)) ...
-            cellstr(field(18:19)) cellstr(field(21:22)) ...
-            cellstr(field(24:25)) cellstr(field(27:29))]);
-        abstime=true;
-    elseif(strcmpi(field,'z'))
-        values=zeros(nrecs,1);
-    else
-        warning('off','seizmo:getheader:fieldInvalid')
+
+    % valid option values
+    valid.TIMING={'UTC' 'TAI'};
+    valid.OPTION={'LAST' 'FIRST'};
+
+    % default/check field (catching warnings)
+    abstime=false;
+    if(nargin>1 && iscell(field) && isscalar(field)); field=field{1}; end
+    if(nargin<2 || isempty(field))
+        field='b';
         values=getheader(data,field);
-        warning('on','seizmo:getheader:fieldInvalid')
-        if(any(isnan(values)) || ~isnumeric(values) || size(values,2)>1)
-            error('seizmo:synchronize:badOption',...
-                'FIELD must be a valid numeric header field string!');
+    elseif(isnumeric(field))
+        if((~isequal(size(field),[1 5]) && ~isequal(size(field),[1 6])) ...
+                || any(isnan(field) | isinf(field)) ...
+                || ~isequal(field(1:end-1),round(field(1:end-1))))
+            error('seizmo:synchronize:badField',...
+                'Numeric FIELD must be 1x5 or 1x6 and not be NaN or Inf!');
+        end
+        abstime=true;
+    elseif(~ischar(field) || size(field,1)~=1)
+        error('seizmo:synchronize:badField',...
+            'FIELD must be a character string!');
+    else
+        if(isequal(size(field),[1 29]))
+            num=true(1,29);
+            num(1,[5 8 11 12 16 17 20 23 26])=false;
+            if(~strcmp(field(~num),'-- () ::.') ...
+                    || ~all(isstrprop(field(num),'digit')))
+                error('seizmo:synchronize:badField',...
+                    'FIELD kzdttm-style string improperly formatted!');
+            end
+            field=str2double([cellstr(field(1:4)) cellstr(field(13:15)) ...
+                cellstr(field(18:19)) cellstr(field(21:22)) ...
+                cellstr(field(24:25)) cellstr(field(27:29))]);
+            abstime=true;
+        elseif(strcmpi(field,'z'))
+            values=zeros(nrecs,1);
+        else
+            warning('off','seizmo:getheader:fieldInvalid')
+            values=getheader(data,field);
+            warning('on','seizmo:getheader:fieldInvalid')
+            if(any(isnan(values)) || ~isnumeric(values) || size(values,2)>1)
+                error('seizmo:synchronize:badOption',...
+                    'FIELD must be a valid numeric header field string!');
+            end
         end
     end
-end
 
-% force values to nearest millisecond
-if(~abstime); values=round(values*1000)/1000; end
+    % force values to nearest millisecond
+    if(~abstime); values=round(values*1000)/1000; end
 
-% default/check option
-if(nargin<3 || isempty(option))
-    option='last';
-elseif(~ischar(option) || size(option,1)~=1 ...
-        || ~any(strcmpi(option,valid.OPTION)))
-    error('seizmo:synchronize:badOption',...
-        ['OPTION must be a string of one of the following:\n'...
-         sprintf('%s ',valid.OPTION{:})]);
-end
-
-% default iztype
-if(nargin<4 || isempty(iztype))
-    iztype='iunkn';
-end
-
-% default/check timing
-if(nargin<5 || isempty(timing))
-    timing='utc';
-elseif(~ischar(timing) || size(timing,1)~=1 ...
-        || ~any(strcmpi(timing,valid.TIMING)))
-    error('seizmo:synchronize:badTiming',...
-        ['TIMING must be a string of one of the following:\n'...
-        sprintf('%s ',valid.TIMING{:})]);
-end
-
-% get header fields
-nvararg=numel(varargin);
-user=cell(1,nvararg);
-[a,b,e,f,o,t,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec,user{:}]=...
-    getheader(data,'a','b','e','f','o','t',...
-    'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec',varargin{:});
-
-% only itime, ixy
-iftype=getenumid(data,'iftype');
-if(any(~(strcmp(iftype,'itime') | strcmp(iftype,'ixy'))))
-    error('seizmo:synchronize:badFiletype',...
-        'Filetypes for records must be Times Series or General X vs Y !');
-end
-
-% get shift
-reftimes=[nzyear nzjday nzhour nzmin nzsec+nzmsec/1000];
-if(abstime)
-    synctime=fixtimes(field,timing);
-    if(strcmpi(timing,'tai'))
-        reftimes=fixtimes(reftimes);
+    % default/check option
+    if(nargin<3 || isempty(option))
+        option='last';
+    elseif(~ischar(option) || size(option,1)~=1 ...
+            || ~any(strcmpi(option,valid.OPTION)))
+        error('seizmo:synchronize:badOption',...
+            ['OPTION must be a string of one of the following:\n'...
+            sprintf('%s ',valid.OPTION{:})]);
     end
-else
-    times=sortrows(fixtimes(...
-        [reftimes(:,1:4) reftimes(:,5)+values],timing));
-    times(:,5)=fix(1000*(times(:,5)+1e-9))/1000; % account 4 millisec limit
-    switch lower(option)
-        case 'last'
-            synctime=times(end,:);
-        case 'first'
-            synctime=times(1,:);
+
+    % default iztype
+    if(nargin<4 || isempty(iztype))
+        iztype='iunkn';
     end
-end
 
-% get shift
-shift=timediff(synctime,reftimes,timing);
-
-% undefined to NaN (so undefined fields are not shifted from undefined)
-a(a==undef)=nan; b(b==undef)=nan;
-e(e==undef)=nan; f(f==undef)=nan;
-o(o==undef)=nan; t(t==undef(:,ones(10,1)))=nan;
-
-% shift user fields, but not undefined user fields
-for i=1:nvararg
-    if(~isnumeric(user{i}))
-        error('seizmo:synchronize:badUserField',...
-            'User given fields must return numeric arrays!');
+    % default/check timing
+    if(nargin<5 || isempty(timing))
+        timing='utc';
+    elseif(~ischar(timing) || size(timing,1)~=1 ...
+            || ~any(strcmpi(timing,valid.TIMING)))
+        error('seizmo:synchronize:badTiming',...
+            ['TIMING must be a string of one of the following:\n'...
+            sprintf('%s ',valid.TIMING{:})]);
     end
-    sz=size(user{i},2);
-    user{i}(user{i}==undef(:,ones(sz,1)))=nan;
-    user{i}=user{i}+shift(:,ones(sz,1));
+
+    % get header fields
+    nvararg=numel(varargin);
+    user=cell(1,nvararg);
+    [a,b,e,f,o,t,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec,user{:}]=...
+        getheader(data,'a','b','e','f','o','t',...
+        'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec',varargin{:});
+
+    % only itime, ixy
+    iftype=getenumid(data,'iftype');
+    if(any(~(strcmp(iftype,'itime') | ~strcmp(iftype,'ixy'))))
+        error('seizmo:synchronize:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
+    end
+
+    % get shift
+    reftimes=[nzyear nzjday nzhour nzmin nzsec+nzmsec/1000];
+    if(abstime)
+        synctime=fixtimes(field,timing);
+        if(strcmpi(timing,'tai'))
+            reftimes=fixtimes(reftimes);
+        end
+    else
+        times=sortrows(fixtimes(...
+            [reftimes(:,1:4) reftimes(:,5)+values],timing));
+        times(:,5)=fix(1000*(times(:,5)+1e-9))/1000; % handle msec limit
+        switch lower(option)
+            case 'last'
+                synctime=times(end,:);
+            case 'first'
+                synctime=times(1,:);
+        end
+    end
+
+    % get shift
+    shift=timediff(synctime,reftimes,timing);
+
+    % undefined to NaN (so undefined fields are not shifted from undefined)
+    a(a==undef)=nan; b(b==undef)=nan;
+    e(e==undef)=nan; f(f==undef)=nan;
+    o(o==undef)=nan; t(t==undef(:,ones(10,1)))=nan;
+
+    % shift user fields, but not undefined user fields
+    for i=1:nvararg
+        if(~isnumeric(user{i}))
+            error('seizmo:synchronize:badUserField',...
+                'User given fields must return numeric arrays!');
+        end
+        sz=size(user{i},2);
+        user{i}(user{i}==undef(:,ones(sz,1)))=nan;
+        user{i}=user{i}+shift(:,ones(sz,1));
+    end
+
+    % combine field and values for changeheader call
+    user=[varargin; user];
+
+    % change header fields
+    data=changeheader(data,'iztype',iztype,...
+        'nzyear',synctime(1),'nzjday',synctime(2),...
+        'nzhour',synctime(3),'nzmin',synctime(4),...
+        'nzsec',fix(synctime(5)+1e-9),...
+        'nzmsec',fix(1000*mod(synctime(5)+1e-9,1)),...
+        'a',a+shift,'b',b+shift,'e',e+shift,'f',f+shift,...
+        'o',o+shift,'t',t+shift(:,ones(10,1)),user{:});
+    
+    % detail message
+    if(verbose); print_time_left(nrecs,nrecs); end
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
 end
-
-% combine field and values for changeheader call
-user=[varargin; user];
-
-% change header fields
-data=changeheader(data,'iztype',iztype,...
-    'nzyear',synctime(1),'nzjday',synctime(2),...
-    'nzhour',synctime(3),'nzmin',synctime(4),...
-    'nzsec',fix(synctime(5)+1e-9),...
-    'nzmsec',fix(1000*mod(synctime(5)+1e-9,1)),...
-    'a',a+shift,'b',b+shift,'e',e+shift,'f',f+shift,...
-    'o',o+shift,'t',t+shift(:,ones(10,1)),user{:});
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

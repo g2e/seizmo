@@ -25,9 +25,11 @@ function [data]=getspectralcmp(data,cmp)
 %        June 25, 2009 - initial version
 %        Oct. 13, 2009 - does fftshift and adjusts B
 %        Oct. 14, 2009 - just return positive freqs, no B or E adjust
+%        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
+%                        improved messaging
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2009 at 05:55 GMT
+%     Last Updated Jan. 29, 2010 at 23:00 GMT
 
 % todo:
 
@@ -40,113 +42,138 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
+% attempt cmp extraction
+try
+    % check headers
+    data=checkheader(data);
 
-% number of records
-nrecs=numel(data);
+    % verbosity
+    verbose=seizmoverbose;
 
-% valid cmp
-valid.CMP={'am' 'ph' 'rl' 'im' 'cmplx'};
+    % number of records
+    nrecs=numel(data);
 
-% check/prepare cmp
-if(iscellstr(cmp))
-    cmp=char(cmp);
-end
-if(isempty(cmp) || ~ischar(cmp) || ~any(size(cmp,1)==[1 nrecs]) ...
-        || ~isempty(setdiff(lower(cmp),valid.CMP)))
-    error('seizmo:dft:badInput',...
-        ['CMP must be one of the following:\n' ...
-        sprintf('%s ',valid.CMP{:})]);
-end
-if(size(cmp,1)==1)
-    cmp=cmp(ones(nrecs,1),:);
-end
-cmp=cellstr(lower(cmp));
+    % valid cmp
+    valid.CMP={'am' 'ph' 'rl' 'im' 'cmplx'};
 
-% get header info
-iftype=getenumdesc(data,'iftype');
-[npts,ncmp]=getheader(data,'npts','ncmp');
-npts=npts/2+1; % new npts
-
-% require spectral records
-if(any(~strcmpi(iftype,'Spectral File-Real/Imag')...
-        & ~strcmpi(iftype,'Spectral File-Ampl/Phase')))
-    error('seizmo:idft:illegalOperation',...
-        'Illegal operation on non-spectral file!');
-end
-
-% logical array for filetype
-isrlim=strcmpi(iftype,'Spectral File-Real/Imag');
-
-% loop over records
-iftype='ixy';
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:nrecs
-    % skip dataless (but decrease columns)
-    if(isempty(data(i).dep)); data(i).dep=zeros(0,ncmp(i)); continue; end
-    
-    % save class and convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
-    
-    % which component
-    switch cmp{i}
-        case 'am'
-            if(isrlim(i))
-                data(i).dep=abs(complex(...
-                    data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)));
-            else
-                data(i).dep=data(i).dep(:,1:2:end);
-            end
-        case 'ph'
-            if(isrlim(i))
-                data(i).dep=angle(complex(...
-                    data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)));
-            else
-                data(i).dep=data(i).dep(:,2:2:end);
-            end
-        case 'rl'
-            if(isrlim(i))
-                data(i).dep=data(i).dep(:,1:2:end);
-            else
-                data(i).dep=real(...
-                    data(i).dep(:,1:2:end).*exp(j*data(i).dep(:,2:2:end)));
-            end
-        case 'im'
-            if(isrlim(i))
-                data(i).dep=data(i).dep(:,2:2:end);
-            else
-                data(i).dep=imag(...
-                    data(i).dep(:,1:2:end).*exp(j*data(i).dep(:,2:2:end)));
-            end
-        case 'cmplx'
-            if(isrlim(i))
-                data(i).dep=complex(...
-                    data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
-            else
-                data(i).dep=...
-                    data(i).dep(:,1:2:end).*exp(j*data(i).dep(:,2:2:end));
-            end
+    % check/prepare cmp
+    if(iscellstr(cmp))
+        cmp=char(cmp);
     end
+    if(isempty(cmp) || ~ischar(cmp) || ~any(size(cmp,1)==[1 nrecs]) ...
+            || ~isempty(setdiff(lower(cmp),valid.CMP)))
+        error('seizmo:getspectralcmp:badInput',...
+            ['CMP must be one of the following:\n' ...
+            sprintf('%s ',valid.CMP{:})]);
+    end
+    if(size(cmp,1)==1)
+        cmp=cmp(ones(nrecs,1),:);
+    end
+    cmp=cellstr(lower(cmp));
+
+    % get header info
+    iftype=getenumid(data,'iftype');
+    [npts,ncmp]=getheader(data,'npts','ncmp');
+    npts=npts/2+1; % new npts
+
+    % require spectral records
+    if(any(~strcmpi(iftype,'irlim') & ~strcmpi(iftype,'iamph')))
+        error('seizmo:getspectralcmp:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'irlim') & ~strcmpi(iftype,'iamph'))) ...
+            '\nDatatype of record(s) in DATA must be spectral!']);
+    end
+
+    % logical array for filetype
+    isrlim=strcmpi(iftype,'irlim');
     
-    % change class back
-    data(i).dep=oclass(data(i).dep(1:npts(i),:));
+    % detail message
+    if(verbose)
+        disp('Extracting Component from Spectral Record(s)');
+        print_time_left(0,nrecs);
+    end
+
+    % loop over records
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:nrecs
+        % skip dataless (but decrease columns)
+        if(isempty(data(i).dep))
+            data(i).dep=zeros(0,ncmp(i));
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+
+        % which component
+        switch cmp{i}
+            case 'am'
+                if(isrlim(i))
+                    data(i).dep=abs(complex(...
+                        data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)));
+                else
+                    data(i).dep=data(i).dep(:,1:2:end);
+                end
+            case 'ph'
+                if(isrlim(i))
+                    data(i).dep=angle(complex(...
+                        data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)));
+                else
+                    data(i).dep=data(i).dep(:,2:2:end);
+                end
+            case 'rl'
+                if(isrlim(i))
+                    data(i).dep=data(i).dep(:,1:2:end);
+                else
+                    data(i).dep=real(data(i).dep(:,1:2:end)...
+                        .*exp(j*data(i).dep(:,2:2:end)));
+                end
+            case 'im'
+                if(isrlim(i))
+                    data(i).dep=data(i).dep(:,2:2:end);
+                else
+                    data(i).dep=imag(data(i).dep(:,1:2:end)...
+                        .*exp(j*data(i).dep(:,2:2:end)));
+                end
+            case 'cmplx'
+                if(isrlim(i))
+                    data(i).dep=complex(...
+                        data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
+                else
+                    data(i).dep=data(i).dep(:,1:2:end)...
+                        .*exp(j*data(i).dep(:,2:2:end));
+                end
+        end
+
+        % change class back
+        data(i).dep=oclass(data(i).dep(1:npts(i),:));
+
+        % dep*
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % update header
+    data=changeheader(data,'iftype','ixy','npts',npts,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
     
-    % dep*
-    depmen(i)=mean(data(i).dep(:)); 
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax,...
-    'iftype',iftype,'npts',npts);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

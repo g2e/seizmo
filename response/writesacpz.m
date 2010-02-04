@@ -15,7 +15,6 @@ function []=writesacpz(file,z,p,k,o)
 %     By default OVERWRITE is FALSE.
 %
 %    Notes:
-%     - Will overwrite any existing file with the same name!
 %     - The format of a SAC PoleZero file is free format and is keyword
 %       driven.  The keywords are 'ZEROS' 'POLES' and 'CONSTANT'.  Specify
 %       the number of zeros by using the keyword 'ZEROS' followed by an
@@ -49,8 +48,7 @@ function []=writesacpz(file,z,p,k,o)
 %      writesacpz('SAC_PZs_XB_CM32_BHZ_02',z,p,k);
 %
 %    See also: READSACPZ, GETSACPZ, APPLYSACPZ, REMOVESACPZ, MAKESACPZDB,
-%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME, READRESP,
-%              WRITERESP
+%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME
 
 %     Version History:
 %        Apr.  7, 2009 - initial version

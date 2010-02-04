@@ -26,9 +26,10 @@ function [data]=fix_cameroon(data)
 
 %     Version History:
 %        Dec.  1, 2009 - initial version
+%        Jan. 30, 2010 - reduce CHECKHEADER calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  1, 2009 at 22:45 GMT
+%     Last Updated Jan. 30, 2010 at 21:05 GMT
 
 % todo:
 
@@ -46,14 +47,28 @@ undef=undef(idx);
 sundef=sundef(idx);
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% get verbosity
-v=seizmoverbose;
+% attempt header check
+try
+    % check header
+    data=checkheader(data);
+    
+    % turn off header checking
+    oldcheckheaderstate=checkheader_state(false);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 % attempt rest
 try
+    % get verbosity
+    verbose=seizmoverbose;
+    
     % get header info
     [b,kname]=getheader(data,'b utc','kname');
 
@@ -64,12 +79,11 @@ try
     bad=sum(b==undef(:,ones(1,5)),2)>0 ...
         | sum(strcmpi(kname,sundef(:,ones(1,4))),2)>0;
     if(any(bad))
-        v=seizmoverbose;
-        if(v)
+        if(verbose)
             warning('seizmo:fix_cameroon:badHeader',...
-                ['Records:\n' sprintf('%d ',find(bad)) ...
+                ['Record(s):\n' sprintf('%d ',find(bad)) ...
                 '\nOne or more of the following fields are undefined:\n'...
-                'B NZ KNAME\nThe records will likely not be corrected!']);
+                'B NZ KNAME\nThe record(s) will not be corrected!']);
         end
         b(bad,:)=nan;
     end
@@ -86,9 +100,9 @@ try
     fixme=strcmpi(kname(:,1),'XB') & strcmpi(kname(:,2),'CM02') ...
         & ((b(:,1)==2006 & b(:,2)>135) | b(:,1)==2007);
     if(any(fixme))
-        if(v)
+        if(verbose)
             warning('seizmo:fix_cameroon:CM02',...
-                ['Records:\n' sprintf('%d ',find(fixme)) ...
+                ['Record(s):\n' sprintf('%d ',find(fixme)) ...
                 '\nXB.CM02 amplitudes divided by 32!']);
         end
         data(fixme)=divide(data(fixme),32);
@@ -120,9 +134,9 @@ try
     fixme=strcmpi(kname(:,1),'XB') & strcmpi(kname(:,2),'CM08') ...
         & b(:,1)==2006 & b(:,2)<185;
     if(any(fixme))
-        if(v)
+        if(verbose)
             warning('seizmo:fix_cameroon:CM08',...
-                ['Records:\n' sprintf('%d ',find(fixme)) ...
+                ['Record(s):\n' sprintf('%d ',find(fixme)) ...
                 '\nXB.CM08 timing adjusted significantly (>600s)!']);
         end
         % get time since 2006.001 00:00:00.000
@@ -155,19 +169,21 @@ try
         & (strcmpi(kname(:,4),'BHE') | strcmpi(kname(:,4),'LHE')) ...
         & (b(:,1)==2006 | b(:,1)==2007);
     if(any(fixme))
-        if(v)
+        if(verbose)
             warning('seizmo:fix_cameroon:CM14',...
-                ['Records:\n' sprintf('%d ',find(fixme)) ...
+                ['Record(s):\n' sprintf('%d ',find(fixme)) ...
                 '\nXB.CM14.0?.?HE amplitudes multiplied by 78.3!']);
         end
         data(fixme)=multiply(data(fixme),78.3);
     end
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

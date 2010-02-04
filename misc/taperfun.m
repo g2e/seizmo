@@ -8,8 +8,7 @@ function [pts]=taperfun(type,pts,limits,varargin)
 %     TYPE.  The taper goes from 0 to 1 within the time limits defined in
 %     LIM as [lower_bound upper_bound].  T is an array of time points for
 %     which corresponding taper values are returned as TPR.  Points below
-%     the lower bound return 0, while points above the upper bound return
-%     1.
+%     the lower bound return 0, while points above the upper bound give 1.
 %
 %     TPR=TAPERFUN(TYPE,T,LIM,OPT) passes taper option OPT.  Only
 %     'chebwin', 'gausswin', 'kaiser', and 'tukeywin' have options.  See
@@ -21,6 +20,10 @@ function [pts]=taperfun(type,pts,limits,varargin)
 %      tukeywin  0.5
 %
 %    Notes:
+%     - Valid Types:
+%        BARTHANNWIN, BARTLETT, BLACKMAN, BLACKMANHARRIS, BOHMANWIN,
+%        CHEBWIN, COSINE, FLATTOPWIN, GAUSSWIN, HAMMING, HANN, KAISER,
+%        NUTTALLWIN, PARZENWIN, RECTWIN, TUKEYWIN
 %
 %    Examples:
 %     Plot random values for a gaussian taper:
@@ -32,9 +35,10 @@ function [pts]=taperfun(type,pts,limits,varargin)
 %     Version History:
 %        Sep. 23, 2009 - initial version
 %        Sep. 24, 2009 - fix no taper gives nan bug
+%        Feb.  4, 2010 - added cosine taper (points to Hann), doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 24, 2009 at 02:20 GMT
+%     Last Updated Feb.  4, 2010 at 02:20 GMT
 
 % todo:
 
@@ -84,6 +88,10 @@ if(nargin==1 || isempty(r) || isnan(r)); r=100; end
 % pass to signal toolbox and interpolate
 w=chebwin(201,r); w=w(1:101);
 pts=interp1(0:0.01:1,w,pts);
+end
+
+function [pts]=taper_cosine(pts,varargin)
+pts=taper_hann(pts);
 end
 
 function [pts]=taper_flattopwin(pts,varargin)

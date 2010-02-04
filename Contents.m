@@ -93,6 +93,7 @@
 %SETASIDAY           - Sets the reference times of records to the start of the day
 %SLIDINGABSMEAN      - Returns sliding-window absolute-mean of SEIZMO records
 %SLIDINGFUN          - Apply a sliding window function to SEIZMO records
+%SLIDINGMEAN         - Returns sliding-window mean of SEIZMO records
 %SLIDINGRMS          - Returns sliding-window root-mean-square of SEIZMO records
 %SORTBYFIELD         - Sort SEIZMO records by a header or SEIZMO struct field
 %SPLITRECORDS        - Split up components into separate records

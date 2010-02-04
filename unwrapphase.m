@@ -1,13 +1,19 @@
-function [data]=unwrapphase(data)
+function [data]=unwrapphase(data,tol)
 %UNWRAPPHASE    Unwraps the phase of SEIZMO records
 %
 %    Usage:    data=unwrapphase(data)
+%              data=unwrapphase(data,tol)
 %
 %    Description: DATA=UNWRAPPHASE(DATA) unwraps phase data stored in
-%    SEIZMO struct DATA by changing absolute jumps greater than or equal to
-%    PI to their 2*PI complement.  Note that spectral files are converted
-%    from Real-Imaginary data format to the Amplitude-Phase data format in
-%    this process.
+%     the record(s) of SEIZMO struct DATA by changing absolute jumps (aka
+%     phase discontinuities) greater than or equal to PI to their 2*PI
+%     complement.  Note that spectral files are converted from Real-
+%     Imaginary data format to the Amplitude-Phase data format.  Time
+%     Series and XY records may also be "unwrapped" as if their data are
+%     phase data.
+%
+%     DATA=UNWRAPPHASE(DATA,TOL) allows changing the phase jump tolerance
+%     TOL from PI (the default) to something else.
 %
 %    Notes:
 %     - Records with IFTYPE 'irlim' are converted to 'iamph'
@@ -18,23 +24,24 @@ function [data]=unwrapphase(data)
 %
 %    Examples:
 %     Plot the unwrapped phase of time series data:
-%      plot1(unwrapphase(keepph(dft(data)));
+%      plot2(unwrapphase(keepph(dft(data))));
 %
 %     Plot the unwrapped instantaneous phase of time series data:
-%      plot1(unwrapphase(instantphase(data)));
+%      plot2(unwrapphase(instantphase(data)));
 %
 %    See also: INSTANTPHASE, KEEPPH, GETSPECTRALCMP, DFT
 
 %     Version History:
 %        Oct. 20, 2009 - initial version
+%        Feb.  3, 2010 - seizmoverbose support, added tol option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 20, 2009 at 23:45 GMT
+%     Last Updated Feb.  3, 2010 at 14:15 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
+msg=nargchk(1,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
@@ -42,8 +49,7 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt header check
 try
@@ -51,11 +57,10 @@ try
     data=checkheader(data);
     
     % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
+    oldcheckheaderstate=checkheader_state(false);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)
@@ -63,6 +68,20 @@ end
 
 % attempt unwrapping of phase
 try
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % number of records
+    nrecs=numel(data);
+    
+    % check/expand tol
+    if(nargin==1 || isempty(tol)); tol=pi; end
+    if(~isreal(tol) || ~any(numel(tol)==[1 nrecs]))
+        error('seizmo:unwrapphase:badTol',...
+            'TOL must be real scalar or an array w/ 1 real per record!');
+    end
+    if(isscalar(tol)); tol=tol(ones(nrecs,1),1); end
+    
     % get header info
     iftype=getenumid(data,'iftype');
     
@@ -73,18 +92,28 @@ try
     % cannot do xyz records
     if(any(strcmpi(iftype,'ixyz')))
         error('seizmo:instantphase:badIFTYPE',...
-            'Illegal operation on XYZ data!');
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(iftype,'ixyz'))) ...
+            '\nIllegal operation on XYZ data!']);
+    end
+    
+    % detail message
+    if(verbose)
+        disp('Unwrapping Phase Data of Record(s)');
+        print_time_left(0,nrecs);
     end
     
     % convert spectral to amph
     if(any(rlim)); data(rlim)=rlim2amph(data(rlim)); end
     
     % loop over records
-    nrecs=numel(data);
     depmin=nan(nrecs,1); depmen=depmin; depmax=depmin;
     for i=1:nrecs
         % skip dataless
-        if(isempty(data(i).dep)); continue; end
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
         
         % save class and convert to double precision
         oclass=str2func(class(data(i).dep));
@@ -94,16 +123,19 @@ try
         if(spectral(i))
             % only the phase component of spectral data
             data(i).dep(:,2:2:end)=...
-                oclass(unwrap(data(i).dep(:,2:2:end),[],1));
+                oclass(unwrap(data(i).dep(:,2:2:end),tol(i),1));
         else
             % time-series and general xy data
-            data(i).dep=oclass(unwrap(data(i).dep,[],1));
+            data(i).dep=oclass(unwrap(data(i).dep,tol(i),1));
         end
     
         % dep*
         depmen(i)=mean(data(i).dep(:)); 
         depmin(i)=min(data(i).dep(:)); 
         depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
     end
     
     % update header
@@ -111,12 +143,12 @@ try
         'depmen',depmen,'depmin',depmin,'depmax',depmax);
     
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

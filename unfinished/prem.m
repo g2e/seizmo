@@ -36,6 +36,7 @@ function [mout]=prem(varargin)
 %   - g=Gm/r
 % - pressure polynomials
 %   - 
+% - dv/dr
 
 % id funtion
 me=mfilename;

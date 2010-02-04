@@ -25,7 +25,7 @@
 % 2. Fixed 70 bad poles for PN network:
 %    Reason: Unpaired complex value turns out to be a typo based on
 %            comparison with BK.FARB..BHZ (drop imag part of last pole).
-%            Note that I left the other response descrepancies noticed.
+%            Note that I left the other response descrepancies.
 %    Fix: p(4)=real(p(4));
 %    from:
 %                    -0.1486 +                0.1486i
@@ -103,7 +103,7 @@
 %                    -0.0371 +                0.0368i
 %                    -0.0371 -                0.0368i
 %    to:
-%    for sacpzdb.AF(idx) where idx is
+%    for sacpzdb.BK(idx) where idx is
 %    idx=[4106        4115        4126        4146];
 %
 % 6. Fixed 4 bad poles for network BK:
@@ -122,7 +122,7 @@
 %                    -0.0371 +                0.0368i
 %                    -0.0371 -                0.0368i
 %    to:
-%    for sacpzdb.AF(idx) where idx is
+%    for sacpzdb.BK(idx) where idx is
 %    idx=[4108        4117        4128        4148];
 %
 % 7. Fixed 4 bad poles for network BK:
@@ -141,7 +141,7 @@
 %                    -0.0371 +                0.0368i
 %                    -0.0371 -                0.0368i
 %    to:
-%    for sacpzdb.AF(idx) where idx is
+%    for sacpzdb.BK(idx) where idx is
 %    idx=[4110        4119        4130        4150];
 %
 % 8. Fixed 2 bad poles for network BK:
@@ -175,7 +175,7 @@
 %                   -15.5132                         
 %                    -0.0371 +                0.0367i
 %                    -0.0371 -                0.0367i
-%    for sacpzdb.AF(idx) where idx is
+%    for sacpzdb.BK(idx) where idx is
 %    idx=[4155        4161];
 %
 

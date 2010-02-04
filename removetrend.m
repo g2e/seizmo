@@ -40,9 +40,11 @@ function [data]=removetrend(data)
 %                        move usage up
 %        June 24, 2009 - minor doc update
 %        Dec.  6, 2009 - workaround: remove mean first for stability
+%        Jan. 30, 2010 - seizmoverbose support, proper SEIZMO handling
+%        Feb.  2, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  6, 2009 at 22:20 GMT
+%     Last Updated Feb.  2, 2010 at 21:25 GMT
 
 % todo:
 
@@ -51,60 +53,58 @@ msg=nargchk(1,1,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% attempt header check
+% attempt trend removal
 try
-    % check header
+    % check header (versioninfo cache update)
     data=checkheader(data);
     
-    % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
-catch
-    % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror)
-end
-
-% attempt rest
-try
-    % header info
-    leven=getlgc(data,'leven');
+    % verbosity
+    verbose=seizmoverbose;
 
     % number of records
     nrecs=numel(data);
+    
+    % header info
+    leven=getlgc(data,'leven');
+    
+    % detail message
+    if(verbose)
+        disp('Removing Trend from Record(s)');
+        print_time_left(0,nrecs);
+    end
 
     % remove trend and update header
     depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
     for i=1:numel(data)
         % skip dataless
-        if(isempty(data(i).dep)); continue; end
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
 
         % save class and convert to double precision
         oclass=str2func(class(data(i).dep));
         data(i).dep=double(data(i).dep);
 
-        % evenly spaced
-        if(strcmp(leven(i),'true'))
-            for j=1:size(data(i).dep,2)
-                data(i).dep(:,j)=detrend(...
-                    data(i).dep(:,j)-mean(data(i).dep(:,j)));
-            end
-            % unevenly spaced
-        else
+        % unevenly spaced
+        if(strcmp(leven(i),'false'))
             for j=1:size(data(i).dep,2)
                 data(i).dep(:,j)=data(i).dep(:,j) ...
                     -polyval(polyfit(double(data(i).ind),...
                     data(i).dep(:,j),1)-mean(data(i).dep(:,j)),...
                     double(data(i).ind));
+            end
+        else % evenly spaced
+            for j=1:size(data(i).dep,2)
+                data(i).dep(:,j)=detrend(...
+                    data(i).dep(:,j)-mean(data(i).dep(:,j)));
             end
         end
 
@@ -115,6 +115,9 @@ try
         depmen(i)=mean(data(i).dep(:));
         depmin(i)=min(data(i).dep(:));
         depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
     end
 
     % adjust header
@@ -122,12 +125,12 @@ try
         'depmen',depmen,'depmin',depmin,'depmax',depmax);
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

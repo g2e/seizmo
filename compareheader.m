@@ -46,9 +46,10 @@ function []=compareheader(data,varargin)
 %        Sep. 15, 2009 - doc update
 %        Sep. 18, 2009 - 2nd pass at abs time support
 %        Oct.  6, 2009 - dropped use of LOGICAL function
+%        Jan. 30, 2010 - use VF_GH_Z to get reference time
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 21:00 GMT
+%     Last Updated Jan. 30, 2010 at 19:20 GMT
 
 % todo:
 
@@ -82,7 +83,7 @@ end
 % gather all possible fields and reftimes
 fields=cell(2,5,nh); % just a guess
 utcf=fields; taif=fields; utc6f=fields; tai6f=fields;
-ref=nan(nrecs,5); bad=true(nrecs,1); good=false(nrecs,1);
+ref=nan(nrecs,5); good=false(nrecs,1);
 vf=cell(nh,1); 
 for i=1:nh
     % vf in wildcard search
@@ -112,25 +113,10 @@ for i=1:nh
     end
     
     % get reference times hack
-    % (skips getheader)
     vidx=find(idx==i);
-    head=[data(vidx).head];
-    tmp=head(h.reftime,:);
-    bad(vidx,1)=sum(isnan(tmp) | isinf(tmp) ...
-        | tmp==h.undef.ntype | tmp~=round(tmp) ...
-        | [false(1,numel(vidx)); (tmp(2,:)<1 | tmp(2,:)>366); ...
-        (tmp(3,:)<0 | tmp(3,:)>23); (tmp(4,:)<0 | tmp(4,:)>59); ...
-        (tmp(5,:)<0 | tmp(5,:)>60); (tmp(6,:)<0 | tmp(6,:)>999)])~=0;
-    good(vidx,1)=~bad(vidx,1).';
-    if(any(bad(vidx,1)))
-        tmp(:,bad(vidx,1))=h.undef.ntype;
-    end
-    if(any(good(vidx,1)))
-        tmp(5,good(vidx,1))=tmp(5,good(vidx,1))+tmp(6,good(vidx,1))/1000;
-        tmp(1:5,good(vidx,1))=utc2tai(tmp(1:5,good(vidx,1)).').';
-    end
-    ref(vidx,:)=tmp(1:5,:).';
+    [ref(vidx,:),good(vidx,1)]=vf_gh_z(h(i),[data(vidx).head]);
 end
+
 % only list each field once
 % - this forces an alphabetical listing
 fields=unique([[fields{:}].'; [vf{:}].']);
@@ -155,9 +141,9 @@ disp('---------------------------')
 disp(' ')
 
 % table header
-disp(sprintf('%15s','\    '))
-disp([sprintf('%15s','FIELD    \   ') '   RECORD NUMBER'])
-disp([sprintf('%15s','\  ') sprintf(['%' cs 'd'],1:nrecs)])
+disp(sprintf('%16s','\    '))
+disp([sprintf('%16s','FIELD    \   ') '   RECORD NUMBER'])
+disp([sprintf('%16s','\  ') sprintf(['%' cs 'd'],1:nrecs)])
 disp(char(45*ones(1,15+cn*nrecs)))
 
 % loop over fields
@@ -264,7 +250,7 @@ for i=1:nvarg
         
         % display
         values=values.';
-        disp([sprintf('%17s | ',upper(f)) char(values(:).')])
+        disp([sprintf('%13s | ',upper(f)) char(values(:).')])
     end
 end
 

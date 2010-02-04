@@ -8,7 +8,7 @@ function [data]=addarrivals(data,varargin)
 %
 %    Description: ADDARRIVALS(DATA) calls TAUPTIME to insert phase arrival
 %     times into the headers of records in SEIZMO struct DATA.  The model
-%     used to find phase arrival times is IASP91.  The phase list is
+%     used to find phase arrival times is IASP91. The default phase list is
 %     'ttall', which grabs nearly all phases of interest (more than can be
 %     put into the SAC data header).  The first 10 arrivals from this list
 %     are inserted into the t, kt, and user fields (t gets arrival times,
@@ -54,13 +54,14 @@ function [data]=addarrivals(data,varargin)
 %        Aug. 25, 2009 - description update (forgot fields option)
 %        Sep.  2, 2009 - now uses tauptime
 %        Dec.  9, 2009 - works with newer tauptime
-%        Jan. 26, 2010 - seizmoverbose support, properly handle states
+%        Jan. 26, 2010 - seizmoverbose support, properly SEIZMO handling
+%        Feb.  3, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 08:30 GMT
+%     Last Updated Feb.  3, 2010 at 14:30 GMT
 
 % todo:
-% - really need to block taup messages
+% - really need to catch taup messages
 
 % check nargin
 if(mod(nargin-1,2))
@@ -68,19 +69,20 @@ if(mod(nargin-1,2))
         'Bad number of arguments!');
 end
 
-% check data structure & grab header setup
-[h,vi]=versioninfo(data);
-
-% toggle off struct checking
-oldseizmocheckstate=seizmocheck_state(false);
-
 % import SEIZMO info
 global SEIZMO
 
+% check data structure & headers
+data=checkheader(data);
+
+% toggle off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
+
 % attempt adding arrivals
 try
-    % check headers
-    data=checkheader(data);
+    % get header setup
+    [h,vi]=versioninfo(data);
     
     % verbosity
     verbose=seizmoverbose;
@@ -172,14 +174,14 @@ try
     % detail message
     if(verbose)
         disp('Adding Arrival Info to Record(s)');
-        %print_time_left(0,nrecs);
+        print_time_left(0,nrecs);
     end
     
     % loop over records adding info to header
     idx=option.FIELDS;
     for i=1:nrecs
         % set progress bar to overwrite
-        %redraw=false;
+        redraw=false;
         
         % check header info
         if(evdp(i)==h(vi(i)).undef.ntype)
@@ -219,9 +221,7 @@ try
         end
         
         % detail message
-        %if(verbose)
-        %    print_time_left(i,nrecs,redraw);
-        %end
+        if(verbose); print_time_left(i,nrecs,redraw); end
     end
 
     % update header
@@ -229,9 +229,11 @@ try
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

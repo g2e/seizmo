@@ -80,9 +80,10 @@ function [data]=slidingabsmean(data,varargin)
 %        June  9, 2009 - nsamples now in varargin, toggle seizmocheck,
 %                        up nargin allowed
 %        Oct. 13, 2009 - minor doc update
+%        Feb.  3, 2010 - proper SEIZMO handling, versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 13, 2009 at 06:05 GMT
+%     Last Updated Feb.  3, 2010 at 17:05 GMT
 
 % todo:
 
@@ -91,17 +92,27 @@ msg=nargchk(2,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% alias to other functions
-data=seizmofun(data,@(x)slidingavg(abs(x),varargin{:}));
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
+% attempt sliding rms
+try
+    % alias to other functions
+    data=seizmofun(data,@(x)slidingavg(abs(x),varargin{:}));
+    
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

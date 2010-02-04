@@ -42,9 +42,12 @@ function [data]=squish(data,factor)
 %        Nov. 23, 2008 - update for new name schema (now SQUISH)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support,
+%                        improved error messages
+%        Feb.  2, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Feb.  2, 2010 at 21:30 GMT
 
 % todo:
 
@@ -53,98 +56,122 @@ msg=nargchk(2,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
-
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% check headers
-data=checkheader(data);
+versioninfo(data,'dep');
 
 % empty factor
 if(isempty(factor)); return; end
 
-% check factor
-if(~isnumeric(factor) || any(factor<1) || any(fix(factor)~=factor))
-    error('seizmo:squish:badInput',...
-        'FACTOR must be one or more positive integers!')
-end
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% number of factors
-factor=factor(:);
-nf=numel(factor);
-
-% overall factor
-of=prod(factor);
-
-% check filetype
-iftype=getenumdesc(data,'iftype');
-if(strcmpi(iftype,'General XYZ (3-D) file'))
-    error('seizmo:squish:illegalFiletype',...
-        'Illegal operation on xyz records!');
-elseif(any(strcmpi(iftype,'Spectral File-Real/Imag') | ...
-        strcmpi(iftype,'Spectral File-Ampl/Phase')))
-    error('seizmo:squish:illegalFiletype',...
-        'Illegal operation on spectral records!');
-end
-
-% check spacing
-if(any(~strcmpi(getlgc(data,'leven'),'true')))
-    error('seizmo:squish:evenlySpacedOnly',...
-        'Illegal operation on unevenly spaced records!');
-end
-
-% header info
-[b,delta]=getheader(data,'b','delta');
-delta=delta*of;
-
-% number of records
-nrecs=numel(data);
-
-% decimate and update header
-e=nan(nrecs,1); npts=e; 
-depmen=e; depmin=e; depmax=e;
-for i=1:nrecs
-    % dataless support
-    [npts(i),ncmp]=size(data(i).dep);
-    if(any([npts(i) ncmp]==0)); npts(i)=0; continue; end
+% attempt convolution
+try
+    % check headers (versioninfo cache update)
+    data=checkheader(data);
     
-    % save class and convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
+    % verbosity
+    verbose=seizmoverbose;
     
-    % loop over components (because decimate can't handle arrays)
-    for j=1:ncmp
-        temp=data(i).dep(:,j);
-        % loop over factors
-        for k=1:nf
-            temp=decimate(temp,factor(k));
-        end
-        % preallocate after we know length
-        if(j==1)
-            npts(i)=size(temp,1);
-            e(i)=b(i)+(npts(i)-1)*delta(i);
-            save=zeros(npts(i),ncmp);
-        end
-        save(:,j)=temp;
+    % number of records
+    nrecs=numel(data);
+
+    % get header info
+    [b,delta,npts,ncmp]=getheader(data,'b','delta','npts','ncmp');
+    iftype=getenumid(data,'iftype');
+    leven=getlgc(data,'leven');
+    
+    % check factor
+    if(~isnumeric(factor) || any(factor<1) || any(fix(factor)~=factor))
+        error('seizmo:squish:badInput',...
+            'FACTOR must be one or more positive integers!')
+    end
+
+    % number of factors
+    factor=factor(:);
+    nf=numel(factor);
+
+    % overall factor
+    of=prod(factor);
+    delta=delta*of;
+
+    % cannot do spectral/xyz records
+    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:squish:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
+    end
+
+    % cannot do unevenly sampled records
+    if(any(strcmpi(leven,'false')))
+        error('seizmo:squish:badLEVEN',...
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
+            '\nInvalid operation on unevenly sampled record(s)!']);
     end
     
-    % change class back
-    data(i).dep=oclass(save);
+    % detail message
+    if(verbose)
+        disp('Decimating Record(s)');
+        print_time_left(0,nrecs);
+    end
+
+    % decimate and update header
+    e=nan(nrecs,1); depmen=e; depmin=e; depmax=e;
+    for i=1:nrecs
+        % dataless support
+        if(~npts(i))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+
+        % loop over components (because decimate can't handle arrays)
+        for j=1:ncmp(i)
+            temp=data(i).dep(:,j);
+            % loop over factors
+            for k=1:nf
+                temp=decimate(temp,factor(k));
+            end
+            % preallocate after we know length
+            if(j==1)
+                npts(i)=size(temp,1);
+                e(i)=b(i)+(npts(i)-1)*delta(i);
+                save=zeros(npts(i),ncmp(i));
+            end
+            save(:,j)=temp;
+        end
+
+        % change class back
+        data(i).dep=oclass(save);
+
+        % dep* stats
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % update header
+    data=changeheader(data,'npts',npts,'delta',delta,'e',e,...
+        'depmin',depmin,'depmen',depmen,'depmax',depmax);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
-    % dep* stats
-    depmen(i)=mean(data(i).dep(:));
-    depmin(i)=min(data(i).dep(:));
-    depmax(i)=max(data(i).dep(:));
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data(i)=changeheader(data(i),'npts',npts,'delta',delta,'e',e,...
-    'depmin',depmin,'depmen',depmen,'depmax',depmax);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

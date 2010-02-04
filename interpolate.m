@@ -53,115 +53,140 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Sep. 11, 2009 - minor doc update
+%        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
+%        Feb.  3, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 11, 2009 at 08:05 GMT
+%     Last Updated Feb.  3, 2010 at 15:55 GMT
 
 % check number of arguments
 msg=nargchk(2,5,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% check headers
-data=checkheader(data);
-
-% get timing info
-leven=getlgc(data,'leven');
-[b,e,npts,delta]=getheader(data,'b','e','npts','delta');
-
-% defaults
-if(nargin<5 || isempty(new_e)); new_e=e; end
-if(nargin<4 || isempty(new_b)); new_b=b; end
-if(nargin<3 || isempty(method)); method{1}='spline'; end
-
-% number of records
-nrecs=numel(data);
-
-% check and expand inputs
-if(~isnumeric(new_b))
-    error('seizmo:interpolate:badInput',...
-        'NEW_B must be numeric!');
-elseif(isscalar(new_b))
-    new_b(1:nrecs,1)=new_b;
-elseif(numel(new_b)~=nrecs)
-    error('seizmo:interpolate:badInput',...
-        'NEW_B must be scalar or have the same num of elements as DATA!');
-end
-if(~isnumeric(new_e))
-    error('seizmo:interpolate:badInput',...
-        'NEW_E must be numeric!');
-elseif(isscalar(new_e))
-    new_e(1:nrecs,1)=new_e;
-elseif(numel(new_e)~=nrecs)
-    error('seizmo:interpolate:badInput',...
-        'NEW_E must be scalar or have the same num of elements as DATA!');
-end
-if(~isnumeric(sr))
-    error('seizmo:interpolate:badInput',...
-        'SR must be numeric!');
-elseif(isscalar(sr))
-    sr(1:nrecs,1)=sr;
-elseif(numel(sr)~=nrecs)
-    error('seizmo:interpolate:badInput',...
-        'SR must be scalar or have the same num of elements as DATA!');
-end
-if(ischar(method)); method=cellstr(method); end
-if(~iscellstr(method))
-    error('seizmo:interpolate:badInput','METHOD must be char/cellstr!')
-end
-if(isscalar(method))
-    method(1:nrecs,1)=method;
-elseif(numel(method)~=nrecs)
-    error('seizmo:interpolate:badInput',...
-        'METHOD must be scalar or have the same num of elements as DATA!');
-end
-
-% sampling interval
-dt=1./sr;
-
-% looping for each file
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:nrecs
-    % save class and convert to double precision
-    oclass=str2func(class(data(i).dep));
+% attempt interpolation
+try
+    % check headers (versioninfo cache update)
+    data=checkheader(data);
     
-    % old timing of data
-    if(strcmp(leven(i),'true')); ot=b(i)+(0:npts(i)-1).'*delta(i);
-    else ot=data(i).ind; data(i).ind=[]; end
+    % verbosity
+    verbose=seizmoverbose;
     
-    % make new timing array
-    nt=(new_b(i):dt(i):new_e(i)).';
-    
-    % interpolate and convert class back
-    data(i).dep=oclass(interp1(...
-        double(ot),double(data(i).dep),double(nt),method{i},'extrap'));
-    
-    % get values (handling dataless)
-    npts(i)=numel(nt);
-    if(npts(i)==0)
-        b(i)=nan;
-        e(i)=nan;
-    else
-        b(i)=nt(1);
-        e(i)=nt(end);
-        depmen(i)=mean(data(i).dep(:)); 
-        depmin(i)=min(data(i).dep(:)); 
-        depmax(i)=max(data(i).dep(:));
+    % number of records
+    nrecs=numel(data);
+
+    % get timing info
+    leven=~strcmpi(getlgc(data,'leven'),'false');
+    [b,e,npts,delta]=getheader(data,'b','e','npts','delta');
+
+    % defaults
+    if(nargin<5 || isempty(new_e)); new_e=e; end
+    if(nargin<4 || isempty(new_b)); new_b=b; end
+    if(nargin<3 || isempty(method)); method{1}='spline'; end
+
+    % check and expand inputs
+    if(~isnumeric(new_b))
+        error('seizmo:interpolate:badInput',...
+            'NEW_B must be numeric!');
+    elseif(isscalar(new_b))
+        new_b(1:nrecs,1)=new_b;
+    elseif(numel(new_b)~=nrecs)
+        error('seizmo:interpolate:badInput',...
+            'NEW_B must be scalar or have the same size as DATA!');
     end
+    if(~isnumeric(new_e))
+        error('seizmo:interpolate:badInput',...
+            'NEW_E must be numeric!');
+    elseif(isscalar(new_e))
+        new_e(1:nrecs,1)=new_e;
+    elseif(numel(new_e)~=nrecs)
+        error('seizmo:interpolate:badInput',...
+            'NEW_E must be scalar or have the same size as DATA!');
+    end
+    if(~isnumeric(sr))
+        error('seizmo:interpolate:badInput',...
+            'SR must be numeric!');
+    elseif(isscalar(sr))
+        sr(1:nrecs,1)=sr;
+    elseif(numel(sr)~=nrecs)
+        error('seizmo:interpolate:badInput',...
+            'SR must be scalar or have the same size as DATA!');
+    end
+    if(ischar(method)); method=cellstr(method); end
+    if(~iscellstr(method))
+        error('seizmo:interpolate:badInput',...
+            'METHOD must be char/cellstr!');
+    end
+    if(isscalar(method))
+        method(1:nrecs,1)=method;
+    elseif(numel(method)~=nrecs)
+        error('seizmo:interpolate:badInput',...
+            'METHOD must be scalar or have the same size as DATA!');
+    end
+
+    % sampling interval
+    dt=1./sr;
+    
+    % detail message
+    if(verbose)
+        disp('Interpolating Record(s)');
+        print_time_left(0,nrecs);
+    end
+
+    % looping for each file
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:nrecs
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+
+        % old timing of data
+        if(leven(i)); ot=b(i)+(0:npts(i)-1).'*delta(i);
+        else ot=data(i).ind; data(i).ind=[]; end
+
+        % make new timing array
+        nt=(new_b(i):dt(i):new_e(i)).';
+
+        % interpolate and convert class back
+        data(i).dep=oclass(interp1(...
+            double(ot),double(data(i).dep),double(nt),method{i},'extrap'));
+
+        % get values (handling dataless)
+        npts(i)=numel(nt);
+        if(npts(i)==0)
+            b(i)=nan;
+            e(i)=nan;
+        else
+            b(i)=nt(1);
+            e(i)=nt(end);
+            depmen(i)=mean(data(i).dep(:));
+            depmin(i)=min(data(i).dep(:));
+            depmax(i)=max(data(i).dep(:));
+        end
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % update header
+    data=changeheader(data,'delta',dt,'b',b,'e',e,'npts',npts,...
+        'leven',true,'depmin',depmin,'depmax',depmax,'depmen',depmen);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'delta',dt,'b',b,'e',e,'npts',npts,...
-    'leven',true,'depmin',depmin,'depmax',depmax,'depmen',depmen);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

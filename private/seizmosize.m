@@ -1,12 +1,17 @@
-function [bytes]=seizmosize(data)
+function [bytes,hbytes,dbytes]=seizmosize(data)
 %SEIZMOSIZE    Returns header-estimated disksize of SEIZMO records in bytes
 %
 %    Usage:    bytes=seizmosize(data)
+%              [bytes,hbytes,dbytes]=seizmosize(data)
 %
-%    Description: SEIZMOSIZE(DATA) returns the expected on-disk size in
-%     bytes of each record in DATA using only the header info.  This is
+%    Description: BYTES=SEIZMOSIZE(DATA) returns the expected on-disk size
+%     in bytes for each record in DATA using only the header info.  This is
 %     mainly to detect files on disk that are inconsistent in size from
 %     that expected given their header info.
+%
+%    [BYTES,HBYTES,DBYTES]=SEIZMOSIZE(DATA) also returns the expected
+%    on-disk size of the header and data portions of the record(s) in DATA
+%    in the arrays HBYTES and DBYTES.
 %
 %    Notes:
 %
@@ -29,9 +34,11 @@ function [bytes]=seizmosize(data)
 %        Nov. 15, 2008 - update for new naming scheme (now SEIZMOSIZE)
 %        Apr. 23, 2009 - fix nargchk for octave
 %        Oct. 15, 2009 - speed boost
+%        Jan. 30, 2010 - drop CHECKHEADER use, proper SEIZMO handling,
+%                        versioninfo_cache support, added extra outputs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 15, 2009 at 23:45 GMT
+%     Last Updated Jan. 30, 2010 at 23:55 GMT
 
 % todo:
 
@@ -41,38 +48,45 @@ if(~isempty(msg)); error(msg); end
 
 % headers setup (check struct too)
 [h,vi]=versioninfo(data);
-hdata=[h.data];
+h=[h.data];
 
 % turn off struct checking
-oldstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% check header
-data=checkheader(data);
+% attempt size estimation
+try
+    % header info
+    [npts,ncmp]=getheader(data,'npts','ncmp');
+    iftype=getenumid(data,'iftype');
+    leven=getlgc(data,'leven');
+    
+    % filetype
+    count=strcmpi(iftype,'itime')...
+        +strcmpi(iftype,'ixy')+strcmpi(iftype,'ixyz')...
+        +2*strcmpi(iftype,'irlim')+2*strcmpi(iftype,'iamph');
 
-% header info
-ncmp=getncmp(data);
-npts=getheader(data,'npts');
-iftype=getenumdesc(data,'iftype');
-leven=getlgc(data,'leven');
+    % multi-component
+    count=ncmp.*count;
 
-% filetype
-count=strcmpi(iftype,'Time Series File')...
-    +strcmpi(iftype,'General X vs Y file')...
-    +strcmpi(iftype,'General XYZ (3-D) file')...
-    +2*strcmpi(iftype,'Spectral File-Real/Imag')...
-    +2*strcmpi(iftype,'Spectral File-Ampl/Phase');
+    % uneven sampling
+    count=count+strcmpi(leven,'false');
 
-% multi-component
-count=ncmp.*count;
+    % final tally
+    hbytes=[h(vi).startbyte].';
+    dbytes=count.*npts.*[h(vi).bytesize].';
+    bytes=hbytes+dbytes;
 
-% uneven sampling
-count=count+strcmpi(leven,'false');
-
-% final tally
-bytes=[hdata(vi).startbyte].'+count.*npts.*[hdata(vi).bytesize].';
-
-% toggle struct checking back
-set_seizmocheck_state(oldstate);
+    % toggle struct checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle struct checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

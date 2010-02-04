@@ -145,9 +145,10 @@ function [data]=recordfun(fun,varargin)
 %                        with mixed xy and timeseries data
 %        Oct.  6, 2009 - dropped use of LOGICAL function
 %        Jan. 26, 2010 - seizmoverbose support, properly handle states
+%        Feb.  2, 2010 - dropped quick exit
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 19:45 GMT
+%     Last Updated Feb.  2, 2010 at 21:25 GMT
 
 % todo:
 % - could use some code re-ordering
@@ -298,12 +299,11 @@ try
     nzyear=b; nzjday=b; nzhour=b; nzmin=b; nzsec=b; nzmsec=b;
     for i=1:ndatasets
         data{i}=checkheader(data{i});
-        ncmp{i}=getncmp(data{i});
         leven{i}=getlgc(data{i},'leven');
-        iftype{i}=getenumdesc(data{i},'iftype');
-        [npts{i},delta{i},b{i},nzyear{i},nzjday{i},...
+        iftype{i}=getenumid(data{i},'iftype');
+        [npts{i},ncmp{i},delta{i},b{i},nzyear{i},nzjday{i},...
             nzhour{i},nzmin{i},nzsec{i},nzmsec{i}]=...
-            getheader(data{i},'npts','delta','b',...
+            getheader(data{i},'npts','ncmp','delta','b',...
             'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
     end
 
@@ -475,9 +475,7 @@ try
             end
             
             % detail message
-            if(verbose)
-                print_time_left(i,maxrecs);
-            end
+            if(verbose); print_time_left(i,maxrecs); end
         end
 
         % reduce to first dataset
@@ -485,9 +483,6 @@ try
     else % 1 dataset
         % uncell
         data=data{:};
-
-        % no records to add on
-        if(isscalar(data)); return; end
 
         % check records
         if(~isscalar(unique(iftype{:})))
@@ -502,7 +497,7 @@ try
         if(any(~strcmpi(leven{:},'true')))
             report.identifier='seizmo:recordfun:illegalOperation';
             report.message=...
-                'illegal operation on unevenly spaced record(s)!';
+                'Illegal operation on unevenly spaced record(s)!';
             if(strcmpi(option.LEVEN,'error'))
                 error(report);
             elseif(strcmpi(option.LEVEN,'warn'))
@@ -603,9 +598,7 @@ try
             data(1).dep=fun(data(1).dep,data(i).dep);
             
             % detail message
-            if(verbose)
-                print_time_left(i,nrecs);
-            end
+            if(verbose); print_time_left(i,nrecs); end
         end
 
         % copy header if newhdr set

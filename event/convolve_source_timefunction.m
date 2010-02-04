@@ -46,9 +46,10 @@ function [data,x,t]=convolve_source_timefunction(data,varargin)
 %        Oct. 19, 2009 - export source function too
 %        Oct. 22, 2009 - fixed time adjust (only adjust b & e)
 %        Oct. 28, 2009 - works with new convolve
+%        Jan. 30, 2010 - fix checking state functions, better messages
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 28, 2009 at 16:10 GMT
+%     Last Updated Jan. 30, 2010 at 20:15 GMT
 
 % todo:
 
@@ -61,8 +62,7 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt header check
 try
@@ -70,17 +70,16 @@ try
     data=checkheader(data);
     
     % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
+    oldcheckheaderstate=checkheader_state(false);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)
 end
 
-% attempt rest
+% attempt convolution
 try
     % verbosity
     verbose=seizmoverbose;
@@ -96,13 +95,16 @@ try
     % cannot do spectral/xyz records
     if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
         error('seizmo:convolve_source_timefunction:badIFTYPE',...
-            'Datatype of records in DATA must be Timeseries or XY!');
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
     end
     
     % cannot do unevenly sampled records
     if(any(strcmpi(leven,'false')))
         error('seizmo:convolve_source_timefunction:badLEVEN',...
-            'Invalid operation on unevenly sampled records!');
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
+            '\nInvalid operation on unevenly sampled record(s)!']);
     end
     
     % pass to make_source_timefunction
@@ -123,12 +125,12 @@ try
     data=attach(attach(data,'ending',zf(:,1)),'beginning',zf(:,2));
     
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

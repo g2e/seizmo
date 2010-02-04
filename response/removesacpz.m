@@ -28,8 +28,8 @@ function [data,pz]=removesacpz(data,varargin)
 %     Default FREQLIMITS is [-1 -1 2*NYQ 2*NYQ] where NYQ is the nyquist
 %     frequency for any particularly record.  The defaults will not apply
 %     any tapering to the records.  Note that FREQLIMITS may be specified
-%     as F1 or [F1 F2] or [F1 F2 F3].  In these cases the remaining unset
-%     values are set to the defaults.
+%     also as F1 or [F1 F2] or [F1 F2 F3].  In these cases the remaining
+%     unset values are kept as the defaults.
 %
 %     [...]=REMOVESACPZ(...,'UNITS',UNITS,...) sets the output units.  It
 %     is expected that SAC Polezero files will give displacement in meters
@@ -77,9 +77,10 @@ function [data,pz]=removesacpz(data,varargin)
 %     Version History:
 %        Oct. 22, 2009 - initial version
 %        Oct. 30, 2009 - added informative output on error
+%        Feb.  3, 2010 - proper SEIZMO handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 30, 2009 at 18:50 GMT
+%     Last Updated Feb.  3, 2010 at 23:50 GMT
 
 % todo:
 
@@ -87,13 +88,15 @@ function [data,pz]=removesacpz(data,varargin)
 msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
+% import SEIZMO info
+global SEIZMO
+
 % check data structure
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt header check
 try
@@ -101,18 +104,14 @@ try
     data=checkheader(data);
     
     % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
+    oldcheckheaderstate=checkheader_state(false);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)
 end
-
-% import SEIZMO info
-global SEIZMO
 
 % attempt rest
 try
@@ -278,7 +277,7 @@ try
     
     % detail message
     if(verbose)
-        disp('Removing SAC PoleZero Response');
+        disp('Removing SAC PoleZero Response from Record(s)');
         print_time_left(0,nrecs);
     end
     
@@ -288,9 +287,7 @@ try
         % skip dataless
         if(isempty(data(i).dep))
             % detail message
-            if(verbose)
-                print_time_left(i,nrecs);
-            end
+            if(verbose); print_time_left(i,nrecs); end
             continue;
         end
         
@@ -361,9 +358,7 @@ try
         depmax(i)=max(data(i).dep(:));
         
         % detail message
-        if(verbose)
-            print_time_left(i,nrecs);
-        end
+        if(verbose); print_time_left(i,nrecs); end
     end
     
     % update header info
@@ -371,8 +366,8 @@ try
         'depmax',depmax,'depmin',depmin,'depmen',depmen);
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
 catch
     % since apply/remove sacpz bomb out so often...
     if(exist('i','var'))
@@ -380,8 +375,8 @@ catch
     end
     
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

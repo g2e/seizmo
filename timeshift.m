@@ -68,9 +68,11 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %                        improved checks on options
 %        Sep. 25, 2009 - added iztype field parameter, better fixes for
 %                        reftime millisec limit
+%        Feb.  2, 2010 - proper SEIZMO handling, seizmoverbose support,
+%                        versioninfo caching, fix bug disallowing xy data
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 25, 2009 at 05:30 GMT
+%     Last Updated Feb.  2, 2010 at 21:45 GMT
 
 % todo:
 
@@ -78,134 +80,159 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 msg=nargchk(2,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
-% get undefined value
-[h,idx]=versioninfo(data);
-undef=getsubfield(h,'undef','ntype').';
-undef=undef(idx);
-
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% update header
+% check struct/header (versioninfo cache update)
 data=checkheader(data);
 
-% number of records
-nrecs=numel(data);
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% valid option values
-valid.TIMING={'UTC' 'TAI'};
-valid.OPTION={'BOTH' 'REFERENCE' 'RELATIVE' 'USER'};
+% attempt timeshift
+try
+    % get undefined value
+    [h,idx]=versioninfo(data);
+    undef=getsubfield(h,'undef','ntype').';
+    undef=undef(idx);
 
-% check shift is numeric
-if(~isreal(shift))
-    error('seizmo:timeshift:badShift',...
-        'SHIFT option must be a numeric array!');
-elseif(~any(numel(shift)==[1 nrecs]))
-    error('seizmo:timeshift:badShift',...
-        ['SHIFT option must be a scalar or have '...
-        'the same number of elements as DATA!']);
-end
+    % verbosity
+    verbose=seizmoverbose;
 
-% expand scalar shift, make column vector
-if(numel(shift)==1)
-    shift(1:nrecs,1)=shift;
-else
-    shift=shift(:);
-end
+    % number of records
+    nrecs=numel(data);
 
-% default iztype
-if(nargin<3 || isempty(iztype))
-    iztype='iunkn';
-end
-
-% default/check timing
-if(nargin<4 || isempty(timing))
-    timing='utc';
-elseif(~ischar(timing) || size(timing,1)~=1 ...
-        || ~any(strcmpi(timing,valid.TIMING)))
-    error('seizmo:timeshift:badTiming',...
-        ['TIMING must be a string of one of the following:\n'...
-        sprintf('%s ',valid.TIMING{:})]);
-end
-
-% default/check/implement shift option
-if(nargin<5 || isempty(option)); option='both'; end
-if(~ischar(option) || size(option,1)~=1 ...
-        || ~any(strcmpi(option,valid.OPTION)))
-    error('seizmo:timeshift:badOption',...
-        ['OPTION must be a string of one of the following:\n'...
-         sprintf('%s ',valid.OPTION{:})]);
-end
-switch lower(option)
-    case 'both'
-        % force shift to nearest millisecond
-        shift=round(shift*1000)/1000;
-        refshift=-shift;
-        relshift=shift;
-        usershift=shift;
-    case 'reference'
-        % force shift to nearest millisecond
-        shift=round(shift*1000)/1000;
-        refshift=shift;
-        relshift=0.*shift;
-        usershift=shift;
-    case 'relative'
-        refshift=0.*shift;
-        relshift=shift;
-        usershift=shift;
-    case 'user'
-        refshift=0.*shift;
-        relshift=0.*shift;
-        usershift=shift;
-end
-
-% get header fields
-nvararg=numel(varargin);
-user=cell(1,nvararg);
-[a,b,e,f,o,t,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec,user{:}]=...
-    getheader(data,'a','b','e','f','o','t',...
-    'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec',varargin{:});
-
-% only itime, ixy
-iftype=getenumid(data,'iftype');
-if(any(~(strcmp(iftype,'itime') | strcmp(iftype,'ixy'))))
-    error('seizmo:timeshift:badFiletype',...
-        'Filetypes for records must be Times Series or General X vs Y !');
-end
-
-% get new absolute timing
-times=fixtimes( ...
-    [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+refshift],timing);
-
-% undefined to NaN
-a(a==undef)=nan; b(b==undef)=nan;
-e(e==undef)=nan; f(f==undef)=nan;
-o(o==undef)=nan; t(t==undef(:,ones(10,1)))=nan;
-
-% deal with user fields
-for i=1:nvararg
-    if(~isnumeric(user{i}))
-        error('seizmo:timeshift:badUserField',...
-            'User given fields must return numeric arrays!');
+    % detail message
+    if(verbose)
+        disp('Time-Shifting Record(s)');
+        print_time_left(0,nrecs);
     end
-    sz=size(user{i},2);
-    user{i}(user{i}==undef(:,ones(sz,1)))=nan;
-    user{i}=user{i}+usershift(:,ones(sz,1));
+    
+    % valid option values
+    valid.TIMING={'UTC' 'TAI'};
+    valid.OPTION={'BOTH' 'REFERENCE' 'RELATIVE' 'USER'};
+
+    % check shift is numeric
+    if(~isreal(shift))
+        error('seizmo:timeshift:badShift',...
+            'SHIFT option must be a numeric array!');
+    elseif(~any(numel(shift)==[1 nrecs]))
+        error('seizmo:timeshift:badShift',...
+            ['SHIFT option must be a scalar or have '...
+            'the same number of elements as DATA!']);
+    end
+
+    % expand scalar shift, make column vector
+    if(numel(shift)==1)
+        shift(1:nrecs,1)=shift;
+    else
+        shift=shift(:);
+    end
+
+    % default iztype
+    if(nargin<3 || isempty(iztype))
+        iztype='iunkn';
+    end
+
+    % default/check timing
+    if(nargin<4 || isempty(timing))
+        timing='utc';
+    elseif(~ischar(timing) || size(timing,1)~=1 ...
+            || ~any(strcmpi(timing,valid.TIMING)))
+        error('seizmo:timeshift:badTiming',...
+            ['TIMING must be a string of one of the following:\n'...
+            sprintf('%s ',valid.TIMING{:})]);
+    end
+
+    % default/check/implement shift option
+    if(nargin<5 || isempty(option)); option='both'; end
+    if(~ischar(option) || size(option,1)~=1 ...
+            || ~any(strcmpi(option,valid.OPTION)))
+        error('seizmo:timeshift:badOption',...
+            ['OPTION must be a string of one of the following:\n'...
+            sprintf('%s ',valid.OPTION{:})]);
+    end
+    switch lower(option)
+        case 'both'
+            % force shift to nearest millisecond
+            shift=round(shift*1000)/1000;
+            refshift=-shift;
+            relshift=shift;
+            usershift=shift;
+        case 'reference'
+            % force shift to nearest millisecond
+            shift=round(shift*1000)/1000;
+            refshift=shift;
+            relshift=0.*shift;
+            usershift=shift;
+        case 'relative'
+            refshift=0.*shift;
+            relshift=shift;
+            usershift=shift;
+        case 'user'
+            refshift=0.*shift;
+            relshift=0.*shift;
+            usershift=shift;
+    end
+
+    % get header fields
+    nvararg=numel(varargin);
+    user=cell(1,nvararg);
+    [a,b,e,f,o,t,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec,user{:}]=...
+        getheader(data,'a','b','e','f','o','t',...
+        'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec',varargin{:});
+
+    % only itime, ixy
+    iftype=getenumid(data,'iftype');
+    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:timeshift:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
+    end
+
+    % get new absolute timing
+    times=fixtimes( ...
+        [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+refshift],timing);
+
+    % undefined to NaN
+    a(a==undef)=nan; b(b==undef)=nan;
+    e(e==undef)=nan; f(f==undef)=nan;
+    o(o==undef)=nan; t(t==undef(:,ones(10,1)))=nan;
+
+    % deal with user fields
+    for i=1:nvararg
+        if(~isnumeric(user{i}))
+            error('seizmo:timeshift:badUserField',...
+                'User given fields must return numeric arrays!');
+        end
+        sz=size(user{i},2);
+        user{i}(user{i}==undef(:,ones(sz,1)))=nan;
+        user{i}=user{i}+usershift(:,ones(sz,1));
+    end
+
+    % combine field and values for changeheader call
+    user=[varargin; user];
+
+    % change header fields
+    data=changeheader(data,'iztype',iztype,...
+        'nzyear',times(:,1),'nzjday',times(:,2),'nzhour',times(:,3),...
+        'nzmin',times(:,4),'nzsec',fix(times(:,5)+1e-9),...
+        'nzmsec',fix(1000*mod(times(:,5)+1e-9,1)),...
+        'a',a+relshift,'b',b+relshift,'e',e+relshift,'f',f+relshift,...
+        'o',o+relshift,'t',t+relshift(:,ones(10,1)),user{:});
+    
+    % detail message
+    if(verbose); print_time_left(nrecs,nrecs); end
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
 end
-
-% combine field and values for changeheader call
-user=[varargin; user];
-
-% change header fields
-data=changeheader(data,'iztype',iztype,...
-    'nzyear',times(:,1),'nzjday',times(:,2),'nzhour',times(:,3),...
-    'nzmin',times(:,4),'nzsec',fix(times(:,5)+1e-9),...
-    'nzmsec',fix(1000*mod(times(:,5)+1e-9,1)),...
-    'a',a+relshift,'b',b+relshift,'e',e+relshift,'f',f+relshift,...
-    'o',o+relshift,'t',t+relshift(:,ones(10,1)),user{:});
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

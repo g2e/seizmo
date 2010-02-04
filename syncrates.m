@@ -10,20 +10,17 @@ function [data]=syncrates(data,sr,tol)
 %     deviate from zero strongly at the start/end of the record.  Typically
 %     using REMOVETREND and TAPER on records beforehand helps to limit the
 %     edge effects.  Uses the Matlab function RESAMPLE (Signal Processing
-%     Toolbox) and RAT (see Notes below!).
+%     Toolbox).
 %
 %     SYNCRATES(DATA,SR,TOL) specifies the maximum tolerance TOL that the
 %     fraction of 2 small integers must match the ratio of the old and new
 %     sample rates of a record.  The integers specify the upsampling and
-%     downsampling portions of the resampling operation.  See function RAT
+%     downsampling portions of the resampling operation.  See function RRAT
 %     for more details.  The default TOL is 1e-6:
 %       abs(Up/Down - New/Old) / (New/Old) <= 1e-6
 %
 %    Notes:
 %     - requires evenly sampled data (use INTERPOLATE for uneven data)
-%     - Matlab r2007b function RAT has a bug in it - change line 116ish to:
-%        if(x==0) || (abs((C(1,1)/C(2,1)-X(j))/X(j))<=max(tol,eps(X(j))))
-%       This will force RAT to function as described.
 %
 %    Header Changes: DELTA, NPTS, DEPMEN, DEPMIN, DEPMAX, E
 %
@@ -52,9 +49,12 @@ function [data]=syncrates(data,sr,tol)
 %        Nov. 26, 2009 - document RAT bug, alter RAT call slightly to force
 %                        better accuracy of the resampling operation, add
 %                        TOL argument, fix NPTS handling
+%        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support,
+%                        improved error messages, use RRAT (fixed RAT)
+%        Feb.  3, 2010 - make sure checkheader is skipped for trouble case
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 26, 2009 at 15:20 GMT
+%     Last Updated Feb.  3, 2010 at 15:55 GMT
 
 % todo:
 
@@ -67,89 +67,133 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% check headers
-data=checkheader(data);
-
-% check rate
-if(~isnumeric(sr) || ~isscalar(sr) || sr<=0)
-    error('seizmo:syncrates:badInput',...
-        'SR must be a positive numeric scalar!');
-end
-
-% check tol
-if(nargin==2 || isempty(tol)); tol=1e-6; end
-if(~isscalar(tol) || ~isreal(tol))
-    error('seizmo:syncrates:badInput','TOL must be a scalar real!');
-end
-
-% require evenly sampled records only
-if(any(~strcmpi(getlgc(data,'leven'),'true')))
-    error('seizmo:syncrates:evenlySpacedOnly',...
-        'Illegal operation on unevenly spaced data!');
-end
-
-% require non-xyz records
-iftype=getenumdesc(data,'iftype');
-if(any(strcmp(iftype,'General XYZ (3-D) file')))
-    error('seizmo:syncrates:illegalOperation',...
-        'Illegal operation on xyz files!');
-end
-
-% get header info
-[delta,b]=getheader(data,'delta','b');
-
-% find fraction numerator/denominator of sampling
-% rate ratio expressed as integers
-[n,d]=rat(delta*sr,tol);
-
-% loop over every record
-nrecs=numel(data);
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen; npts=depmen;
-for i=1:nrecs
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
+% attempt header check
+try
+    % check headers
+    data=checkheader(data);
     
-    % save class
-    oclass=str2func(class(data(i).dep));
+    % turn off header checking
+    oldcheckheaderstate=checkheader_state(false);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
     
-    % try resample
-    try
-        data(i).dep=oclass(resample(double(data(i).dep),n(i),d(i)));
-    catch
-        disp(['Had some trouble resampling record: ' num2str(i)])
-        % interpolate to a sample rate at least 4 times the current
-        % AND the desired sample rates to preserve the data and allow
-        % for decimation.  here we find the lowest multiple of the
-        % desired rate that is 4x the current rate...hopefully that
-        % integer is fairly factorable...if not the function crashes
-        lm=max([4 ceil(4/(delta(i)*sr))]);
-        
-        % interpolate temporarily to higher rate
-        data(i)=interpolate(data(i),lm*sr,'spline');
-        
-        % now resample
-        data(i).dep=oclass(resample(double(data(i).dep),1,lm));
+    % rethrow error
+    error(lasterror)
+end
+
+% attept synchronization of sample rates
+try
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % number of records
+    nrecs=numel(data);
+
+    % get header info
+    [delta,b]=getheader(data,'delta','b');
+    iftype=getenumid(data,'iftype');
+    leven=~strcmpi(getlgc(data,'leven'),'false');
+
+    % check rate
+    if(~isnumeric(sr) || ~isscalar(sr) || sr<=0)
+        error('seizmo:syncrates:badInput',...
+            'SR must be a positive numeric scalar!');
     end
-    
-    % get npts
-    npts(i)=size(data(i).dep,1);
-    
-    % get dep*
-    if(npts(i))
-        depmen(i)=mean(data(i).dep(:));
-        depmin(i)=min(data(i).dep(:));
-        depmax(i)=max(data(i).dep(:));
+
+    % check tol
+    if(nargin==2 || isempty(tol)); tol=1e-6; end
+    if(~isscalar(tol) || ~isreal(tol))
+        error('seizmo:syncrates:badInput',...
+            'TOL must be a scalar real!');
     end
+
+    % require evenly sampled records only
+    if(any(~leven))
+        error('seizmo:syncrates:badLEVEN',...
+            ['Record(s):\n' sprintf('%d ',find(~leven)) ...
+            '\nInvalid operation on unevenly sampled record(s)!']);
+    end
+
+    % require non-xyz records
+    if(any(strcmpi(iftype,'ixyz')))
+        error('seizmo:syncrates:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(iftype,'ixyz'))) ...
+            '\nInvalid operation on XYZ record(s)!']);
+    end
+
+    % find fraction numerator/denominator of sampling
+    % rate ratio expressed as integers
+    [n,d]=rrat(delta*sr,tol);
+    
+    % detail message
+    if(verbose)
+        disp('Syncing Sample Rates of Record(s)');
+        print_time_left(0,nrecs);
+    end
+
+    % loop over every record
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen; npts=depmen;
+    for i=1:nrecs
+        % skip dataless
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % save class
+        oclass=str2func(class(data(i).dep));
+
+        % try resample
+        try
+            data(i).dep=oclass(resample(double(data(i).dep),n(i),d(i)));
+        catch
+            disp(['Had some trouble resampling record: ' num2str(i)])
+            % interpolate to a sample rate at least 4 times the current
+            % AND the desired sample rates to preserve the data and allow
+            % for decimation.  here we find the lowest multiple of the
+            % desired rate that is 4x the current rate...hopefully that
+            % integer is fairly factorable...if not, the function crashes!
+            lm=max([4 ceil(4/(delta(i)*sr))]);
+
+            % interpolate temporarily to higher rate
+            data(i)=interpolate(data(i),lm*sr,'spline');
+
+            % now resample
+            data(i).dep=oclass(resample(double(data(i).dep),1,lm));
+        end
+
+        % get npts
+        npts(i)=size(data(i).dep,1);
+
+        % get dep*
+        if(npts(i))
+            depmen(i)=mean(data(i).dep(:));
+            depmin(i)=min(data(i).dep(:));
+            depmax(i)=max(data(i).dep(:));
+        end
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % update header
+    data=changeheader(data,'delta',1/sr,'npts',npts,'e',b+(npts-1)./sr,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
+    
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'delta',1/sr,'npts',npts,'e',b+(npts-1)./sr,...
-    'depmen',depmen,'depmin',depmin,'depmax',depmax);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

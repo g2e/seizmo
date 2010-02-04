@@ -61,9 +61,10 @@ function [data]=readheader(varargin)
 %        Oct.  5, 2009 - reordered struct fields, minor doc update
 %        Oct. 16, 2009 - dropped fullfile usage, took filesep out of loop
 %                        (for speed), reduced seizmodef calls
+%        Jan. 30, 2010 - seizmoverbose support, update for XDIR fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2009 at 17:15 GMT
+%     Last Updated Jan. 30, 2010 at 18:30 GMT
 
 % todo:
 
@@ -82,24 +83,35 @@ data(nfiles,1)=struct('path',[],'name',[],'filetype',[],...
     'ind',[],'dep',[],'misc',[]);
 
 % getting file separator
-fs=filesep;
+%fs=filesep;
 
 % "preallocate" definition info
 filetypes(1:1,1)={''};
 versions=zeros(1,1);
 def=cell(1,1); c=1;
 
+% verbosity
+verbose=seizmoverbose;
+
+% detail message
+if(verbose)
+    disp('Reading in Header of Record(s)');
+    print_time_left(0,nfiles);
+end
+
 % loop for each file
 destroy=false(nfiles,1);
 for i=1:nfiles
     % get filetype, version and byte-order
-    name=[varargin(i).path fs varargin(i).name];
+    name=[varargin(i).path varargin(i).name];
     [filetype,version,endian]=getfileversion(name);
     
     % validity check
     if(isempty(filetype))
         % invalid - jump to next file
         destroy(i)=true;
+        % detail message
+        if(verbose); print_time_left(i,nfiles,true); end
         continue;
     end
     
@@ -128,6 +140,8 @@ for i=1:nfiles
             warning('seizmo:readheader:badFID',...
                 'File not openable, %s !',name);
             destroy(i)=true;
+            % detail message
+            if(verbose); print_time_left(i,nfiles,true); end
             continue;
         end
         
@@ -142,13 +156,12 @@ for i=1:nfiles
             warning('seizmo:readheader:fileTooShort',...
                 'File too short, %s !',name);
             destroy(i)=true;
+            % detail message
+            if(verbose); print_time_left(i,nfiles,true); end
             continue;
         end
         
         % save directory and filename
-        if(isempty(varargin(i).path))
-            varargin(i).path=['.' fs];
-        end
         data(i).path=varargin(i).path;
         data(i).name=varargin(i).name;
         
@@ -174,6 +187,9 @@ for i=1:nfiles
         % closing file
         fclose(fid);
     end
+    
+    % detail message
+    if(verbose); print_time_left(i,nfiles); end
 end
 
 % remove unread entries

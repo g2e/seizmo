@@ -41,9 +41,10 @@ function [data]=attach(data,option,dep,ind)
 %        Oct. 26, 2009 - added 'prepend' and 'append' as valid options,
 %                        fixed bug in matrix entry
 %        Jan. 26, 2010 - seizmoverbose support
+%        Feb.  2, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 08:55 GMT
+%     Last Updated Feb.  2, 2010 at 22:05 GMT
 
 % todo:
 
@@ -52,11 +53,11 @@ msg=nargchk(3,4,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
 % attempt attach
 try
@@ -222,9 +223,7 @@ try
         end
         
         % detail message
-        if(verbose)
-            print_time_left(i,nrecs);
-        end
+        if(verbose); print_time_left(i,nrecs); end
     end
 
     % update header
@@ -233,9 +232,11 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

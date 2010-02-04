@@ -28,9 +28,10 @@ function [data]=fix_sod_v222(data)
 %        Dec.  1, 2009 - minor doc update
 %        Dec.  2, 2009 - no data requirement now
 %        Dec.  4, 2009 - minor doc update
+%        Jan. 30, 2010 - fixes for checking state functions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2009 at 05:55 GMT
+%     Last Updated Jan. 30, 2010 at 20:45 GMT
 
 % todo:
 
@@ -46,8 +47,7 @@ undef=getsubfield(h,'undef','ntype').';
 undef=undef(idx);
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt header check
 try
@@ -62,11 +62,10 @@ try
     data=checkheader(data);
     
     % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
+    oldcheckheaderstate=checkheader_state(false);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)
@@ -93,12 +92,12 @@ try
     data=changeheader(data,'kcmpnm',kcmpnm,'khole',khole);
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

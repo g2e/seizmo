@@ -64,12 +64,13 @@ function [data]=joinrecords(varargin)
 %     JOINRECORDS(...,'ncmp','error|warn|truncate|pad|ignore') sets the
 %     reaction to records with different numbers of components.  If the
 %     option is set to 'warn' or 'ignore', the number of components in the
-%     records is not altered - which will likely lead to an error.  If the
-%     option is set to 'truncate', the number of components in the records
-%     being operated on will be equal to that with the least.  Option 'pad'
-%     will make the number of components for records in the operation equal
-%     to that of the record with the most (note that padding is done with
-%     zeros).  By default 'ncmp' is set to 'error'.
+%     records is not altered before the operation.  If the option is set to
+%     'truncate', the number of components in the records being operated on
+%     will be equal to that with the least.  Option 'pad' will make the
+%     number of components for records in the operation equal to that of
+%     the record with the most (note that padding is done with zeros).  By
+%     default 'ncmp' is set to 'ignore' for JOINRECORDS and should not be
+%     changed.
 %     
 %     JOINRECORDS(...,'delta','error|warn|ignore') sets the reaction to
 %     records with different sample rates.  If the option is set to 'warn'
@@ -120,9 +121,10 @@ function [data]=joinrecords(varargin)
 
 %     Version History:
 %        June 28, 2009 - initial version
+%        Jan. 30, 2010 - minor doc update
 %     
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:25 GMT
+%     Last Updated Jan. 30, 2010 at 20:05 GMT
 
 % todo:
 

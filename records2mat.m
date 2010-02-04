@@ -40,9 +40,11 @@ function [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 %                        move usage up
 %        June 12, 2009 - minor doc update
 %        June 25, 2009 - name change from COMBINERECORDS to RECORDS2MAT
+%        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
+%        Feb.  3, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Feb.  3, 2010 at 18:20 GMT
 
 % todo:
 
@@ -51,61 +53,83 @@ msg=nargchk(1,1,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% check headers
-data=checkheader(data);
+% attempt matrix creation
+try
+    % check headers (versioninfo cache update)
+    data=checkheader(data);
+    
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % number of records
+    nrecs=numel(data);
 
-% get header fields
-[b,npts,delta]=getheader(data,'b','npts','delta');
+    % get header fields
+    [b,npts,delta]=getheader(data,'b','npts','delta');
+    
+    % detail message
+    if(verbose)
+        disp('Exporting Record(s) as Matrices');
+        print_time_left(0,nrecs);
+    end
 
-% number of records
-nrecs=numel(data);
-
-% loop through records
-store=cell(nrecs,1);
-npts=zeros(nrecs,1);
-ncol=zeros(nrecs,1);
-for i=1:nrecs
-    store{i}=class(data(i).dep);
-    [npts(i),ncol(i)]=size(data(i).dep);
-    if(npts(i)*ncol(i)==0); npts(i)=0; ncol(i)=0; end
-end
-leven=true(nrecs,1);
-if(isfield(data,'ind'))
+    % loop through records
+    store=cell(nrecs,1);
+    npts=zeros(nrecs,1);
+    ncol=zeros(nrecs,1);
     for i=1:nrecs
-        if(~isempty(data(i).ind))
-            leven(i)=false;
+        store{i}=class(data(i).dep);
+        [npts(i),ncol(i)]=size(data(i).dep);
+        if(npts(i)*ncol(i)==0); npts(i)=0; ncol(i)=0; end
+    end
+    leven=true(nrecs,1);
+    if(isfield(data,'ind'))
+        for i=1:nrecs
+            if(~isempty(data(i).ind))
+                leven(i)=false;
+            end
         end
     end
-end
 
-% preallocate dep matrix (as double precision)
-col2=cumsum(ncol); col=[1; col2+1];
-dep=zeros(max(npts),col2(end));
-idx1=zeros(1,col2(end));
+    % preallocate dep matrix (as double precision)
+    col2=cumsum(ncol); col=[1; col2+1];
+    dep=zeros(max(npts),col2(end));
+    idx1=zeros(1,col2(end));
 
-% preallocate ind matrix
-ind=zeros(max(npts),nrecs);
-idx2=1:nrecs;
+    % preallocate ind matrix
+    ind=zeros(max(npts),nrecs);
+    idx2=1:nrecs;
 
-% loop through records
-for i=1:nrecs
-    idx1(col(i):col2(i))=i;
-    dep(1:npts(i),col(i):col2(i))=data(i).dep;
-    if(leven(i))
-        ind(1:npts(i),i)=b(i)+(0:npts(i)-1)*delta(i);
-    else
-        ind(1:npts(i),i)=data(i).ind;
+    % loop through records
+    for i=1:nrecs
+        idx1(col(i):col2(i))=i;
+        dep(1:npts(i),col(i):col2(i))=data(i).dep;
+        if(leven(i))
+            ind(1:npts(i),i)=b(i)+(0:npts(i)-1)*delta(i);
+        else
+            ind(1:npts(i),i)=data(i).ind;
+        end
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
     end
-end
 
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

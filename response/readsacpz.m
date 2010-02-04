@@ -42,17 +42,18 @@ function [z,p,k]=readsacpz(file)
 %       that append to SAC PoleZero files rather than overwriting them.
 %
 %    Examples:
-%     Read in a SAC PoleZero file, and convert into a filter structure:
+%     Read in a SAC PoleZero file, and convert into a filter object:
 %      [z,p,k]=readsacpz('SAC_PZs_XB_CM32_BHZ_02');
-%      [sos,g]=zp2sos(z,p,k);       % converting to a
-%      fs=dfilt.df2tsos(sos,g);     % filter structure
+%      fs=40; % sampling frequency - 40 samples per second
+%      [zd,pd,kd]=bilinear(z,p,k,fs); % analog to discrete
+%      [sos,g]=zp2sos(zd,pd,kd);      % converting to a
+%      fo=dfilt.df2tsos(sos,g);       % filter object
 %
 %     Now take a look at the details of the PoleZero filter:
 %      fvtool(fs)
 %
 %    See also: WRITESACPZ, GETSACPZ, APPLYSACPZ, REMOVESACPZ, MAKESACPZDB,
-%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME, READRESP,
-%              WRITERESP
+%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME
 
 %     Version History:
 %        Apr.  7, 2009 - initial version
@@ -60,9 +61,10 @@ function [z,p,k]=readsacpz(file)
 %        June 11, 2009 - add asterisk comment support, octave support
 %        Sep.  8, 2009 - minor doc update, fix error ids
 %        Sep. 20, 2009 - throw error on blank file
+%        Feb.  3, 2010 - fixed example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 20, 2009 at 06:40 GMT
+%     Last Updated Feb.  3, 2010 at 23:25 GMT
 
 % todo:
 

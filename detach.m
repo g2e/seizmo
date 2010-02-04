@@ -27,9 +27,11 @@ function [data,dep,ind]=detach(data,option,dpts)
 %     Version History:
 %        Oct. 10, 2009 - initial version
 %        Jan. 26, 2010 - seizmoverbose support
+%        Jan. 30, 2010 - minor message update
+%        Feb.  2, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 18:55 GMT
+%     Last Updated Feb.  2, 2010 at 22:05 GMT
 
 % todo:
 
@@ -38,15 +40,15 @@ msg=nargchk(3,4,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
 % attempt detach
 try
-    % check headers
+    % check headers (versioninfo cache update)
     data=checkheader(data);
 
     % verbosity
@@ -81,7 +83,7 @@ try
     % check npts
     if(~isnumeric(dpts) || (~isscalar(dpts) && numel(dpts)~=nrecs))
         error('seizmo:detach:badDPTS',...
-            'DPTS must be a numeric scalar or an array w/ 1 element/record!');
+            'DPTS must be an integer or an array w/ 1 integer/record!');
     end
     if(isscalar(dpts)); dpts=dpts(ones(nrecs,1),1); end
     if(any(dpts>npts))
@@ -150,9 +152,7 @@ try
         end
         
         % detail message
-        if(verbose)
-            print_time_left(i,nrecs);
-        end
+        if(verbose); print_time_left(i,nrecs); end
     end
 
     % update header
@@ -161,9 +161,11 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

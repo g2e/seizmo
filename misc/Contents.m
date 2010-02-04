@@ -2,6 +2,7 @@
 % Version 0.6.0-r106 Ararat 7-Dec-2009
 %
 % Miscellaneous Support functions
+%BUTTORD2            - Butterworth filter order selection. (Honors passband corners)
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
 %FISHER              - Converts correlation coefficients to the Z statistic
 %GAUSSIANTF          - Returns a gaussian time function
@@ -9,6 +10,7 @@
 %GETSUBFIELD         - Get substructure field contents
 %GETWORDS            - Returns a cell array of words from a string
 %IFISHER             - Converts Z statistics to correlation coefficients
+%IIRDESIGN           - Designs an iir filter with the given constraints
 %ISORTHOGONAL        - TRUE if orientations are orthogonal
 %ISPARALLEL          - TRUE if orientations are parallel
 %JOINWORDS           - Combines a cellstr into a space-separated string
@@ -23,7 +25,7 @@
 %NEXTPOW2N           - Returns the next higher power of 2 for all array elements
 %ONEFILELIST         - Compiles multiple filelists into one
 %PRINT_TIME_LEFT     - Ascii progress bar
-%RAT                 - Rational approximation. (UNBUGGED VERSION)
+%RRAT                - Rational approximation. (UNBUGGED VERSION)
 %READCSV             - Read in .csv formatted file as a structure
 %READTXT             - Reads in a text file as a single string
 %SLIDINGAVG          - Returns sliding-window average of data

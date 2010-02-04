@@ -56,13 +56,13 @@ function []=listheader(data,varargin)
 %        Sep. 14, 2009 - vlists, abs time vgrp, vf, vf via wildcards
 %        Sep. 15, 2009 - doc updated
 %        Sep. 18, 2009 - 2nd pass at abs time support
+%        Jan. 30, 2010 - use VF_GH_Z to get reference time
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 18, 2009 at 20:20 GMT
+%     Last Updated Jan. 30, 2010 at 19:20 GMT
 
 % todo:
 % - skip undefined (set via global)
-% - multiple columns? (just like cmph)
 
 % check nargin
 msg=nargchk(1,inf,nargin);
@@ -84,7 +84,7 @@ nutcf=nfields; ntaif=nfields; nutc6f=nfields; ntai6f=nfields;
 tmpfields=cell(2,5); % just a guess
 tmputcf=tmpfields; tmptaif=tmpfields;
 tmputc6f=tmpfields; tmptai6f=tmpfields;
-ref=nan(nrecs,5); bad=true(nrecs,1); good=false(nrecs,1);
+ref=nan(nrecs,5); good=false(nrecs,1);
 for i=1:nh
     % add virtual fields to wildcard search
     vf=fieldnames(h(i).vf);
@@ -125,24 +125,8 @@ for i=1:nh
     tmptai6f=tmpfields;
     
     % get reference times hack
-    % (skips getheader)
     vidx=find(idx==i);
-    head=[data(vidx).head];
-    tmp=head(h.reftime,:);
-    bad(vidx,1)=logical(sum(isnan(tmp) | isinf(tmp) ...
-        | tmp==h.undef.ntype | tmp~=round(tmp) ...
-        | [false(1,numel(vidx)); (tmp(2,:)<1 | tmp(2,:)>366); ...
-        (tmp(3,:)<0 | tmp(3,:)>23); (tmp(4,:)<0 | tmp(4,:)>59); ...
-        (tmp(5,:)<0 | tmp(5,:)>60); (tmp(6,:)<0 | tmp(6,:)>999)]));
-    good(vidx,1)=~bad(vidx,1).';
-    if(any(bad(vidx,1)))
-        tmp(:,bad(vidx,1))=h.undef.ntype;
-    end
-    if(any(good(vidx,1)))
-        tmp(5,good(vidx,1))=tmp(5,good(vidx,1))+tmp(6,good(vidx,1))/1000;
-        tmp(1:5,good(vidx,1))=utc2tai(tmp(1:5,good(vidx,1)).').';
-    end
-    ref(vidx,:)=tmp(1:5,:).';
+    [ref(vidx,:),good(vidx,1)]=vf_gh_z(h(i),[data(vidx).head]);
 end
 
 % loop over files

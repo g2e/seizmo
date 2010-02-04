@@ -51,9 +51,11 @@ function [data]=mat2records(data,dep,idx1,ind,idx2,store,npts)
 %                        move usage up
 %        June 25, 2009 - name change from DISTRIBUTERECORDS to MAT2RECORDS
 %        Oct.  5, 2009 - update checkheader call, force checking
+%        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
+%        Feb.  3, 2010 - reduced seizmocheck usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 22:15 GMT
+%     Last Updated Feb.  3, 2010 at 18:15 GMT
 
 % todo:
 
@@ -65,8 +67,20 @@ if(~isempty(msg)); error(msg); end
 msg=seizmocheck(data);
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
+% verbosity
+verbose=seizmoverbose;
+
+% number of records
+nrecs=numel(data);
+
+% detail message
+if(verbose)
+    disp('Importing Matrix Data into Record(s)');
+    print_time_left(0,nrecs);
+end
+
 % loop through records
-for i=1:numel(data)
+for i=1:nrecs
     % retrieve dependent components from matrix
     oclass=str2func(store{i});
     data(i).dep=oclass(dep(1:npts(i),i==idx1));
@@ -75,16 +89,30 @@ for i=1:numel(data)
     if(~isempty(i==idx2))
         data(i).ind=oclass(ind(1:npts(i),i==idx2));
     end
+
+    % detail message
+    if(verbose); print_time_left(i,nrecs); end
 end
 
 % turn on header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(true);
+oldcheckheaderstate=checkheader_state(true);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% update header
-data=checkheader(data);
-
-% toggle checking back
-set_checkheader_state(oldcheckheaderstate);
+% attempt header check
+try
+    % update header
+    data=checkheader(data);
+    
+    % toggle checking back
+    checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

@@ -30,9 +30,10 @@ function [data]=fix_trexcerpt_v48(data,knetwk)
 
 %     Version History:
 %        Dec.  4, 2009 - initial version
+%        Jan. 30, 2010 - reduced calls to seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2009 at 05:45 GMT
+%     Last Updated Jan. 30, 2010 at 20:45 GMT
 
 % todo:
 
@@ -40,31 +41,14 @@ function [data]=fix_trexcerpt_v48(data,knetwk)
 msg=nargchk(2,2,nargin);
 if(~isempty(msg)); error(msg); end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+% check data structure & header
+data=checkheader(data);
 
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+% turn off checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldcheckheaderstate=checkheader_state(false);
 
-% attempt header check
-try
-    % check header
-    data=checkheader(data);
-    
-    % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
-catch
-    % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror)
-end
-
-% attempt rest
+% attempt fixes
 try
     % fix delta
     data=fixdelta(data);
@@ -89,12 +73,12 @@ try
         'nevid',nan,'norid',nan);
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

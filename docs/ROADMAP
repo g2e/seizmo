@@ -1,16 +1,9 @@
 0.6.0 - stable, helpful and functional
 ----------------------------------------
 document every function (working on)
-	- iirfilter (waiting on rewrite)
 	- plotting (waiting on rewrite)
 	- align/cluster (waiting on rewrite)
 	- tpw (waiting on rewrite)
-	- eqdb (queued after above)
-fix iirfilter
-	- modularize
-		- separate design from implementation
-	- allow filter struct or polezero in/out
-	- filterdesign function
 fix plotting
 	- better global setting (like binoperr?)
 	- better option passing
@@ -42,17 +35,13 @@ possible extras
 	- cut on absolute times
 	- amph2rlim/rlim2amph 2nd output is converted logicals
 	- merge uneven & multi-rate
-changeheader
-	- output nan for undefined? (nan already output for unknown field)
 3-cmp records
 	force as ZNE
 	how to handle gaps/overlaps
 	how to handle non-synced breaks in components
 	movies/plots of 3-d particle motion
 	movies/plots of 2-d particle motion
-listheader/compareheader - fix reftime hack
-getheader/changeheader - versioninfo caching
-versioninfo caching for other functions (only if getheader/changeheader done)
+versioninfo caching for other functions
 getpeaks
 markpeaks
 verbosity support

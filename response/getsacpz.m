@@ -55,9 +55,12 @@ function [data]=getsacpz(data,varargin)
 %        Oct. 22, 2009 - add info about required header fields
 %        Nov.  2, 2009 - seizmoverbose support, network specific searching,
 %                        fixed example to reflect improvements
+%        Jan. 26, 2010 - do not error if no matching polezero found in db
+%        Jan. 30, 2010 - fixes for checking state function
+%        Feb.  3, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2009 at 16:45 GMT
+%     Last Updated Feb.  3, 2010 at 23:15 GMT
 
 % todo:
 
@@ -65,31 +68,14 @@ function [data]=getsacpz(data,varargin)
 msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+% check data structure & header
+data=checkheader(data);
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% attempt header check
-try
-    % check header
-    data=checkheader(data);
-    
-    % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
-catch
-    % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror)
-end
-
-% attempt rest
+% attempt sac polezero lookup
 try
     % verbosity
     verbose=seizmoverbose;
@@ -277,18 +263,16 @@ try
         end
         
         % detail message
-        if(verbose)
-            print_time_left(i,nrecs,redraw);
-        end
+        if(verbose); print_time_left(i,nrecs,redraw); end
     end
     
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

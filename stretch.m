@@ -33,9 +33,12 @@ function [data]=stretch(data,factor)
 %                        .dep rather than .x
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support,
+%                        improved error messages
+%        Feb.  2, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Feb.  2, 2010 at 21:30 GMT
 
 % todo:
 
@@ -44,97 +47,122 @@ msg=nargchk(2,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
-
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% check headers
-data=checkheader(data);
+versioninfo(data,'dep');
 
 % empty factor
 if(isempty(factor)); return; end
 
-% check factor
-if(~isnumeric(factor) || any(factor<1) || any(fix(factor)~=factor))
-    error('seizmo:stretch:badInput',...
-        'FACTOR must be one or more positive integers!');
-end
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% number of factors
-factor=factor(:);
-nf=numel(factor);
+% attempt convolution
+try
+    % check headers (versioninfo cache update)
+    data=checkheader(data);
 
-% overall factor
-of=prod(factor);
+    % verbosity
+    verbose=seizmoverbose;
 
-% check filetype
-iftype=getenumdesc(data,'iftype');
-if(strcmpi(iftype,'General XYZ (3-D) file'))
-    error('seizmo:deci:illegalFiletype',...
-        'Illegal operation on xyz records!');
-elseif(any(strcmpi(iftype,'Spectral File-Real/Imag') | ...
-        strcmpi(iftype,'Spectral File-Ampl/Phase')))
-    error('seizmo:deci:illegalFiletype',...
-        'Illegal operation on spectral records!');
-end
+    % number of records
+    nrecs=numel(data);
 
-% check spacing
-if(any(~strcmpi(getlgc(data,'leven'),'true')))
-    error('seizmo:stretch:evenlySpacedOnly',...
-        'Illegal operation on unevenly spaced records!');
-end
+    % get header info
+    [delta,npts,ncmp]=getheader(data,'delta','npts','ncmp');
+    iftype=getenumid(data,'iftype');
+    leven=getlgc(data,'leven');
 
-% header info
-delta=getheader(data,'delta');
-delta=delta*of;
-
-% number of records
-nrecs=numel(data);
-
-% decimate and update header
-npts=nan(nrecs,1); depmen=npts; depmin=npts; depmax=npts;
-for i=1:nrecs
-    % skip dataless
-    if(isempty(data(i).dep)); npts(i)=0; continue; end
-    
-    % save class and convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).x=double(data(i).dep);
-    
-    % loop over components (b/c interp can't handle arrays)
-    [len,ncmp]=size(data(i).dep);
-    npts(i)=(len-1)*of+1;
-    save=zeros(npts(i),ncmp);
-    for j=1:ncmp
-        temp=data(i).dep(:,j);
-        % loop over factors
-        for k=1:nf
-            % stretch (filter length 4, cutoff freq is nyquist)
-            temp=interp(temp,factor(k),4,1);
-        end
-        
-        % Matlab extrapolates past the end, so here
-        % we truncate the extrapolated values off
-        save(:,j)=temp(1:npts(i),1);
+    % check factor
+    if(~isnumeric(factor) || any(factor<1) || any(fix(factor)~=factor))
+        error('seizmo:stretch:badInput',...
+            'FACTOR must be one or more positive integers!');
     end
+
+    % number of factors
+    factor=factor(:);
+    nf=numel(factor);
+
+    % overall factor
+    of=prod(factor);
+    delta=delta*of;
+
+    % cannot do spectral/xyz records
+    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
+        error('seizmo:stretch:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
+    end
+
+    % cannot do unevenly sampled records
+    if(any(strcmpi(leven,'false')))
+        error('seizmo:stretch:badLEVEN',...
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
+            '\nInvalid operation on unevenly sampled record(s)!']);
+    end
+
+    % detail message
+    if(verbose)
+        disp('Upsampling Record(s)');
+        print_time_left(0,nrecs);
+    end
+
+    % decimate and update header
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:nrecs
+        % skip dataless
+        if(~npts(i))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).x=double(data(i).dep);
+
+        % loop over components (b/c interp can't handle arrays)
+        npts(i)=(npts(i)-1)*of+1;
+        save=zeros(npts(i),ncmp(i));
+        for j=1:ncmp(i)
+            temp=data(i).dep(:,j);
+            % loop over factors
+            for k=1:nf
+                % stretch (filter length 4, cutoff freq is nyquist)
+                temp=interp(temp,factor(k),4,1);
+            end
+
+            % Matlab extrapolates past the end, so here
+            % we truncate the extrapolated values off
+            save(:,j)=temp(1:npts(i),1);
+        end
+
+        % change class back
+        data(i).dep=oclass(save);
+
+        % get dep*
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % update header
+    data=changeheader(data,'npts',npts,'delta',delta,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
-    % change class back
-    data(i).dep=oclass(save);
-    
-    % get dep*
-    depmen(i)=mean(data(i).dep(:)); 
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'npts',npts,'delta',delta,...
-    'depmen',depmen,'depmin',depmin,'depmax',depmax);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

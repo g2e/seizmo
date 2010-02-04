@@ -35,9 +35,10 @@ function [data]=removemean(data)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        June 24, 2009 - minor doc fix
+%        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:30 GMT
+%     Last Updated Jan. 29, 2010 at 23:55 GMT
 
 % todo:
 
@@ -50,40 +51,65 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
-% number of records
-nrecs=numel(data);
+% attempt mean removal
+try
+    % verbosity
+    verbose=seizmoverbose;
 
-% remove mean and update header
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:nrecs
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
+    % number of records
+    nrecs=numel(data);
     
-    % save class and convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
-    
-    % loop through components
-    for j=1:size(data(i).dep,2)
-        data(i).dep(:,j)=data(i).dep(:,j)-mean(data(i).dep(:,j));
+    % detail message
+    if(verbose)
+        disp('Removing Mean from Record(s)');
+        print_time_left(0,nrecs);
     end
-    
-    % change class back
-    data(i).dep=oclass(data(i).dep);
-    
+
+    % remove mean and update header
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:nrecs
+        % skip dataless
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+
+        % loop through components
+        for j=1:size(data(i).dep,2)
+            data(i).dep(:,j)=data(i).dep(:,j)-mean(data(i).dep(:,j));
+        end
+
+        % change class back
+        data(i).dep=oclass(data(i).dep);
+
+        % adjust header
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
     % adjust header
-    depmen(i)=mean(data(i).dep(:));
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
+    data=changeheader(data,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
-
-% adjust header
-data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

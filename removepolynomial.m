@@ -23,9 +23,11 @@ function [data]=removepolynomial(data,order)
 %     Version History:
 %        June 24, 2009 - initial version
 %        Dec.  4, 2009 - drop linspace usage (speed/accuracy decision)
+%        Jan. 30, 2010 - seizmoverbose support, proper SEIZMO handling
+%        Feb.  2, 2010 - fix verbose bug, versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2009 at 18:55 GMT
+%     Last Updated Feb.  2, 2010 at 21:25 GMT
 
 % todo:
 
@@ -34,72 +36,99 @@ msg=nargchk(2,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% check headers
-data=checkheader(data);
-
-% number of records
-nrecs=numel(data);
-
-% check order
-if(~isnumeric(order) || any(order~=fix(order)) ...
-        || ~any(numel(order)==[1 nrecs]))
-    error('seizmo:removepolynomial:badOrder',...
-        'ORDER must be a scalar or an array of integers.');
-end
-if(isscalar(order))
-    order(1:nrecs,1)=order;
-end
-
-% header info
-[delta,npts]=getheader(data,'delta','npts');
-leven=getlgc(data,'leven');
-
-% remove trend and update header
-depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-for i=1:numel(data)
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
+% attempt polynomial removal
+try
+    % check headers (versioninfo cache update)
+    data=checkheader(data);
     
-    % save class and convert to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
-    
-    % evenly spaced
-    if(strcmp(leven(i),'true'))
-        time=((0:npts(i)-1)*delta(i)).';
-        for j=1:size(data(i).dep,2)
-            data(i).dep(:,j)=data(i).dep(:,j) ...
-                -polyval(polyfit(time,data(i).dep(:,j),order(i)),time);
-        end
-    % unevenly spaced
-    else
-        for j=1:size(data(i).dep,2)
-            data(i).dep(:,j)=data(i).dep(:,j)-polyval(...
-                polyfit(double(data(i).ind),data(i).dep(:,j),order(i)),...
-                double(data(i).ind));
-        end
+    % verbosity
+    verbose=seizmoverbose;
+
+    % number of records
+    nrecs=numel(data);
+
+    % check order
+    if(~isnumeric(order) || any(order~=fix(order)) ...
+            || ~any(numel(order)==[1 nrecs]))
+        error('seizmo:removepolynomial:badOrder',...
+            'ORDER must be a scalar or an array of integers.');
     end
+    if(isscalar(order))
+        order(1:nrecs,1)=order;
+    end
+
+    % header info
+    [delta,npts,ncmp]=getheader(data,'delta','npts','ncmp');
+    leven=getlgc(data,'leven');
     
-    % change class back
-    data(i).dep=oclass(data(i).dep);
-    
+    % detail message
+    if(verbose)
+        disp('Removing Polynomial from Record(s)');
+        print_time_left(0,nrecs);
+    end
+
+    % remove trend and update header
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:numel(data)
+        % skip dataless
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % save class and convert to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+
+        % evenly spaced
+        if(strcmp(leven(i),'true'))
+            time=((0:npts(i)-1)*delta(i)).';
+            for j=1:ncmp(i)
+                data(i).dep(:,j)=data(i).dep(:,j) ...
+                    -polyval(polyfit(time,data(i).dep(:,j),order(i)),time);
+            end
+            % unevenly spaced
+        else
+            for j=1:ncmp(i)
+                data(i).dep(:,j)=data(i).dep(:,j)...
+                    -polyval(polyfit(double(data(i).ind),...
+                    data(i).dep(:,j),order(i)),double(data(i).ind));
+            end
+        end
+
+        % change class back
+        data(i).dep=oclass(data(i).dep);
+
+        % adjust header
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
     % adjust header
-    depmen(i)=mean(data(i).dep(:));
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
+    data=changeheader(data,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
 end
-
-% adjust header
-data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

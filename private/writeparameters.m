@@ -37,9 +37,10 @@ function [data]=writeparameters(data,varargin)
 
 %     Version History:
 %        May  29, 2009 - initial version
+%        Feb.  2, 2010 - proper SEIZMO handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Feb.  2, 2010 at 18:45 GMT
 
 % check nargin
 if(mod(nargin-1,2))
@@ -51,29 +52,44 @@ end
 msg=seizmocheck(data);
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
-% get options from command line
-pathidx=false(nargin-1,1);
-nameidx=false(nargin-1,1);
-for i=1:2:nargin-1
-    if(~ischar(varargin{i}))
-        error('seizmo:writeparameters:badInput',...
-            'Options must be specified as a string!');
-    end
-    if(strcmpi(varargin{i},'byteorder'))
-        data=changebyteorder(data,varargin{i+1});
-    elseif(strncmpi(varargin{i},'path',4))
-        % remove path from string unless string is path
-        if(~strcmpi(varargin{i},'path'))
-            varargin{i}=varargin{i}(5:end);
-        end
-        pathidx([i i+1])=true;
-    else
-        nameidx([i i+1])=true;
-    end
-end
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
 
-% make name and path changes
-data=changename(data,varargin{nameidx});
-data=changepath(data,varargin{pathidx});
+% attempt name/path/endian changes
+try
+    % get options from command line
+    pathidx=false(nargin-1,1);
+    nameidx=false(nargin-1,1);
+    for i=1:2:nargin-1
+        if(~ischar(varargin{i}))
+            error('seizmo:writeparameters:badInput',...
+                'Options must be specified as a string!');
+        end
+        if(strcmpi(varargin{i},'byteorder'))
+            data=changebyteorder(data,varargin{i+1});
+        elseif(strncmpi(varargin{i},'path',4))
+            % remove path from string unless string is path
+            if(~strcmpi(varargin{i},'path'))
+                varargin{i}=varargin{i}(5:end);
+            end
+            pathidx([i i+1])=true;
+        else
+            nameidx([i i+1])=true;
+        end
+    end
+
+    % make name and path changes
+    data=changename(data,varargin{nameidx});
+    data=changepath(data,varargin{pathidx});
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

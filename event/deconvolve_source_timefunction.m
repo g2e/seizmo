@@ -51,9 +51,10 @@ function [data,x,t]=deconvolve_source_timefunction(data,varargin)
 
 %     Version History:
 %        Oct. 29, 2009 - initial version
+%        Jan. 30, 2010 - fix checking state functions, better messages
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 29, 2009 at 01:45 GMT
+%     Last Updated Jan. 30, 2010 at 20:15 GMT
 
 % todo:
 
@@ -66,8 +67,7 @@ msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt header check
 try
@@ -75,17 +75,16 @@ try
     data=checkheader(data);
     
     % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
+    oldcheckheaderstate=checkheader_state(false);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)
 end
 
-% attempt rest
+% attempt deconvolution
 try
     % number of records
     nrecs=numel(data);
@@ -98,13 +97,16 @@ try
     % cannot do spectral/xyz records
     if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
         error('seizmo:deconvolve_source_timefunction:badIFTYPE',...
-            'Datatype of records in DATA must be Timeseries or XY!');
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
     end
     
     % cannot do unevenly sampled records
     if(any(strcmpi(leven,'false')))
         error('seizmo:deconvolve_source_timefunction:badLEVEN',...
-            'Invalid operation on unevenly sampled records!');
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
+            '\nInvalid operation on unevenly sampled record(s)!']);
     end
     
     % pass to make_source_timefunction
@@ -119,12 +121,12 @@ try
     data=deconvolve(data,x,delay,varargin{3:min(nargin-1,6)});
     
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

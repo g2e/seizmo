@@ -419,9 +419,9 @@ try
                 'evla',evla,'evlo',evlo,'evel',evel,'evdp',evdp);
 
             % update delaz stuff
-            set_seizmocheck_state(true);
+            seizmocheck_state(true);
             data=checkheader(data,'all','ignore','old_delaz','fix');
-            set_seizmocheck_state(false);
+            seizmocheck_state(false);
         else % correlograms from two datasets
             % extract header info needed
             [mknetwk,mkstnm,mkhole,mkcmpnm,mb,mstla,mstlo,mstdp,mstel]=...
@@ -534,9 +534,9 @@ try
                 'evla',mstla,'evlo',mstlo,'evel',mstel,'evdp',mstdp);
 
             % update delaz stuff
-            set_seizmocheck_state(true);
+            seizmocheck_state(true);
             data=checkheader(data,'all','ignore','old_delaz','fix');
-            set_seizmocheck_state(false);
+            seizmocheck_state(false);
         end
     end
 

@@ -47,9 +47,9 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %
 %    Notes:
 %     - The number of components in the output record need not match that
-%       of the input record
-%     - Centered windows are of length 2N+1, while the others are just N
-%     - SLIDINGFUN is much slower than SLIDINGABSMEAN or SLIDINGRMS
+%       of the input record.
+%     - Centered windows are of length 2N+1, while the others are just N.
+%     - SLIDINGFUN is _much_ _slooower_ than SLIDINGABSMEAN or SLIDINGRMS.
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NCMP
 %
@@ -87,9 +87,11 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %                        move usage up
 %        Oct.  6, 2009 - dropped use of LOGICAL function
 %        Oct. 15, 2009 - increased nargin allowance
+%        Feb.  3, 2010 - seizmoverbose support, proper SEIZMO handling,
+%                        versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 15, 2009 at 17:00 GMT
+%     Last Updated Feb.  3, 2010 at 23:50 GMT
 
 % todo:
 
@@ -98,14 +100,16 @@ msg=nargchk(3,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % check input fun is a function
 if(~isa(fun,'function_handle'))
     error('seizmo:slidingfun:badInput',...
         'FUN must be a function handle!')
 end
+
+% verbosity
+verbose=seizmoverbose;
 
 % number of records
 nrecs=numel(data);
@@ -134,7 +138,7 @@ if(isfield(SEIZMO,'SLIDINGFUN'))
 end
 
 % options must be field-value pairs
-nargopt=length(varargin);
+nargopt=numel(varargin);
 if(mod(nargopt,2))
     error('seizmo:slidingfun:badNumOptions','Unpaired option!')
 end
@@ -170,11 +174,21 @@ if(~ischar(option.EDGE) || ...
         'EDGE option must be ''PAD'' or ''TRUNCATE''');
 end
 
+% detail message
+if(verbose)
+    disp('Applying Sliding Function to Record(s)');
+    print_time_left(0,nrecs);
+end
+
 % loop through each record
 ncmp=nan(nrecs,1); depmen=ncmp; depmin=ncmp; depmax=ncmp;
 for i=1:nrecs
     % skip dataless
-    if(isempty(data(i).dep)); continue; end
+    if(isempty(data(i).dep))
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+        continue;
+    end
     
     % get storage class of data
     oclass=str2func(class(data(i).dep));
@@ -227,10 +241,31 @@ for i=1:nrecs
     depmin(i)=min(data(i).dep(:)); 
     depmax(i)=max(data(i).dep(:));
     ncmp(i)=size(data(i).dep,2);
+
+    % detail message
+    if(verbose); print_time_left(i,nrecs); end
 end
 
-% update header
-data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax,...
-    'ncmp',ncmp);
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
+
+% attempt convolution
+try
+    % update header
+    data=changeheader(data,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax,'ncmp',ncmp);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

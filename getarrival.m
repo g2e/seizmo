@@ -43,9 +43,10 @@ function [times,n]=getarrival(data,phase)
 %        June 29, 2009 - doc update
 %        June 30, 2009 - second output: t index
 %        Dec.  8, 2009 - minor doc fix
+%        Jan. 29, 2010 - dropped most checks, seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  8, 2009 at 01:15 GMT
+%     Last Updated Jan. 29, 2010 at 23:30 GMT
 
 % todo:
 
@@ -53,16 +54,11 @@ function [times,n]=getarrival(data,phase)
 msg=nargchk(2,2,nargin);
 if(~isempty(msg)); error(msg); end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+% verbosity
+verbose=seizmoverbose;
 
-% toggle off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% check headers
-data=checkheader(data);
+% number of records
+nrecs=numel(data);
 
 % grab header values
 [kt,t]=getheader(data,'kt','t');
@@ -70,8 +66,11 @@ data=checkheader(data);
 % remove spaces from kt
 kt=strtrim(kt);
 
-% number of records
-nrecs=numel(data);
+% detail message
+if(verbose)
+    disp('Finding Phase Info in Record Header(s)');
+    print_time_left(0,nrecs);
+end
 
 % do operations individually
 times=nan(nrecs,1); n=times;
@@ -83,15 +82,17 @@ for i=1:nrecs
     if(isempty(pos))
         warning('seizmo:getarrival:noPhase',...
             'Could not find phase %s for record %d !',phase,i);
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
         continue;
     end
     
     % add time
     times(i)=t(i,pos);
     n(i)=pos-1;
+    
+    % detail message
+    if(verbose); print_time_left(i,nrecs); end
 end
-
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
 
 end

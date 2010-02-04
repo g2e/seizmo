@@ -303,9 +303,14 @@ function [data]=checkheader(data,varargin)
 %        Jan. 29, 2010 - forgot to predefine destruction arrays, minor
 %                        changing of messages, proper SEIZMO handling,
 %                        fixed EVEN_IND bug, VERSIONINFO caching
+%        Feb.  2, 2010 - updates VERSIONINFO cache (requires calling
+%                        function to update its variables), error if empty
+%                        dataset is created
+%        Feb.  3, 2010 - no longer remove records w/ nans or infs - they
+%                        are converted to zero (if fix/warnfix)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 02:55 GMT
+%     Last Updated Feb.  3, 2010 at 18:10 GMT
 
 % todo:
 
@@ -315,15 +320,15 @@ if(nargin<1)
         'Not enough input arguments.');
 end
 
-disp('debug checkheader 1!')
 % check SEIZMO global for quick exit
+if(seizmodebug); disp('debug checkheader 1!'); end
 global SEIZMO
 try
     if(~SEIZMO.CHECKHEADER.ON); return; end
 catch
     % checks data below
 end
-disp('debug checkheader 2!')
+if(seizmodebug); disp('debug checkheader 2!'); end
 
 % check data structure & grab header setup
 [h,vi]=versioninfo(data);
@@ -343,10 +348,6 @@ try
     [nvhdr,delta,npts,ncmp,nz,b,e,sb,sdelta,nspts,st,ev,delaz,dep]=...
         getheader(data,'nvhdr','delta','npts','ncmp','nz','b','e','sb',...
         'sdelta','nspts','st','ev','delaz','dep');
-
-    % predefine destruction arrays
-    destroy1=[];
-    destroy2=[];
 
     % logicals
     xyz=strcmp(iftype,'ixyz');
@@ -651,12 +652,12 @@ try
 
     % check for nan dep
     if(~strcmp(option.NAN_DEP,'IGNORE'))
-        [destroy1]=nan_dep(option.NAN_DEP,data);
+        [data]=nan_dep(option.NAN_DEP,data);
     end
 
     % check for inf dep
     if(~strcmp(option.INF_DEP,'IGNORE'))
-        [destroy2]=inf_dep(option.INF_DEP,data);
+        [data]=inf_dep(option.INF_DEP,data);
     end
 
     % check for old dep stats
@@ -683,11 +684,6 @@ try
         'npts',npts,'ncmp',ncmp,'nz',nz,'b',b,'e',e,'sb',sb,...
         'sdelta',sdelta,'nspts',nspts,'st',st,'ev',ev,'delaz',delaz,...
         'dep',dep);
-
-    % remove unwanted records
-    if(any(destroy1 | destroy2))
-        data(destroy1 | destroy2)=[];
-    end
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
@@ -2174,10 +2170,9 @@ end
 
 end
 
-function [destroy]=nan_dep(opt,data)
+function [data]=nan_dep(opt,data)
 nrecs=numel(data);
 bad=false(nrecs,1);
-destroy=bad;
 for i=1:nrecs
     bad(i)=any(isnan(data(i).dep(:)));
 end
@@ -2192,20 +2187,25 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
-            destroy=bad;
+            for i=1:nrecs
+                nans=isnan(data(i).dep(:));
+                data(i).dep(nans)=0;
+            end
         case 'WARNFIX'
             warning(report.identifier,report.message);
-            disp('==> Removing record(s) with NaN values!');
-            destroy=bad;
+            disp('==> Changing NaN values to 0 (zero)!');
+            for i=1:nrecs
+                nans=isnan(data(i).dep(:));
+                data(i).dep(nans)=0;
+            end
     end
 end
 
 end
 
-function [destroy]=inf_dep(opt,data)
+function [data]=inf_dep(opt,data)
 nrecs=numel(data);
 bad=false(nrecs,1);
-destroy=bad;
 for i=1:nrecs
     bad(i)=any(isinf(data(i).dep(:)));
 end
@@ -2220,11 +2220,17 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
-            destroy=bad;
+            for i=1:nrecs
+                infs=isinf(data(i).dep(:));
+                data(i).dep(infs)=0;
+            end
         case 'WARNFIX'
             warning(report.identifier,report.message);
-            disp('==> Removing record(s) with Inf values!');
-            destroy=bad;
+            disp('==> Changing Inf values to 0 (zero)!');
+            for i=1:nrecs
+                infs=isinf(data(i).dep(:));
+                data(i).dep(infs)=0;
+            end
     end
 end
 

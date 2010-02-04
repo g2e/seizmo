@@ -46,10 +46,10 @@ for i=s(:)'
     
     % filter data at 4 different bands
     % what bands? 20s-40s, 35s-60s, 55s-100s, 95s-200s
-    data1=iirfilter(data0,'bandpass','butter',[1/40 1/20],4,2);
-    data2=iirfilter(data0,'bandpass','butter',[1/60 1/35],4,2);
-    data3=iirfilter(data0,'bandpass','butter',[1/100 1/55],4,2);
-    data4=iirfilter(data0,'bandpass','butter',[1/200 1/95],4,2);
+    data1=iirfilter(data0,'bandpass','butter','c',[1/40 1/20],'o',4,'p',2);
+    data2=iirfilter(data0,'bandpass','butter','c',[1/60 1/35],'o',4,'p',2);
+    data3=iirfilter(data0,'bandpass','butter','c',[1/100 1/55],'o',4,'p',2);
+    data4=iirfilter(data0,'bandpass','butter','c',[1/200 1/95],'o',4,'p',2);
     
     % loop until user is satisfied
     still_looking=1; xwin=[];

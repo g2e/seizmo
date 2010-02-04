@@ -66,9 +66,10 @@ function [data,pz]=applysacpz(data,varargin)
 %     Version History:
 %        Oct. 22, 2009 - initial version
 %        Oct. 30, 2009 - added informative output on error
+%        Feb.  3, 2010 - seizmoverbose support, proper SEIZMO handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 30, 2009 at 18:50 GMT
+%     Last Updated Feb.  3, 2010 at 23:50 GMT
 
 % todo:
 
@@ -76,13 +77,15 @@ function [data,pz]=applysacpz(data,varargin)
 msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
+% import SEIZMO info
+global SEIZMO
+
 % check data structure
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt header check
 try
@@ -90,27 +93,37 @@ try
     data=checkheader(data);
     
     % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
+    oldcheckheaderstate=checkheader_state(false);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)
 end
 
-% import SEIZMO info
-global SEIZMO
-
 % attempt rest
 try
+    % verbosity
+    verbose=seizmoverbose;
+    
     % attempt to access has_sacpz
     try
         pz=getsubfield([data.misc],'has_sacpz');
     catch
+        % detail message
+        if(verbose)
+            disp('Not All Records Indicate PoleZero Status.');
+            disp('Attempting to Find SAC PoleZeros for All Records.');
+        end
         data=getsacpz(data);
         pz=getsubfield([data.misc],'has_sacpz');
+    end
+    
+    % detail message
+    if(verbose && any(~pz))
+        disp(sprintf(['Record(s):\n' sprintf('%d ',find(~pz)) ...
+            '\nDo Not Have SAC PoleZero Info.  Deleting!']));
     end
     
     % only use those with polezero info
@@ -135,13 +148,15 @@ try
     % cannot do xyz records
     if(any(strcmpi(iftype,'ixyz')))
         error('seizmo:applysacpz:badIFTYPE',...
-            'Illegal operation on XYZ record(s)!');
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(iftype,'ixyz')))
+            '\nIllegal operation on XYZ record(s)!']);
     end
     
     % cannot do unevenly sampled records
     if(any(strcmpi(leven,'false')))
         error('seizmo:applysacpz:badLEVEN',...
-            'Invalid operation on unevenly sampled records!');
+            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false')))
+            '\nInvalid operation on unevenly sampled records!']);
     end
     
     % valid values for strings
@@ -235,11 +250,21 @@ try
     % sort freqlimits
     flim=sort(option.FREQLIMITS,2);
     
+    % detail message
+    if(verbose)
+        disp('Applying SAC PoleZero Response to Record(s)');
+        print_time_left(0,nrecs);
+    end
+    
     % loop over records
     depmin=nan(nrecs,1); depmen=depmin; depmax=depmin;
     for i=1:nrecs
         % skip dataless
-        if(isempty(data(i).dep)); continue; end
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
         
         % save class and convert to double precision
         oclass=str2func(class(data(i).dep));
@@ -306,6 +331,9 @@ try
         depmen(i)=mean(data(i).dep(:)); 
         depmin(i)=min(data(i).dep(:)); 
         depmax(i)=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
     end
     
     % update header info
@@ -313,8 +341,8 @@ try
         'depmax',depmax,'depmin',depmin,'depmen',depmen);
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
 catch
     % since apply/remove sacpz bomb out so often...
     if(exist('i','var'))
@@ -322,8 +350,8 @@ catch
     end
     
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

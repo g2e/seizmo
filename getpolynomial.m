@@ -22,9 +22,12 @@ function [p]=getpolynomial(data,order)
 %     Version History:
 %        June 24, 2009 - initial version
 %        Dec.  4, 2009 - drop linspace usage (speed/accuracy decision)
+%        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
+%                        improved messaging
+%        Feb.  2, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  4, 2009 at 18:55 GMT
+%     Last Updated Feb.  2, 2010 at 21:35 GMT
 
 % todo:
 
@@ -33,58 +36,85 @@ msg=nargchk(2,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% check headers
-data=checkheader(data);
+% attempt polynomial fit
+try
+    % check headers (versioninfo cache update)
+    data=checkheader(data);
 
-% number of records
-nrecs=numel(data);
+    % verbosity
+    verbose=seizmoverbose;
 
-% check order
-if(~isnumeric(order) || any(order~=fix(order)) ...
-        || ~any(numel(order)==[1 nrecs]))
-    error('seizmo:removepolynomial:badOrder',...
-        'ORDER must be a scalar or an array of integers.');
-end
-if(isscalar(order))
-    order(1:nrecs,1)=order;
-end
+    % number of records
+    nrecs=numel(data);
 
-% header info
-[delta,npts]=getheader(data,'delta','npts');
-leven=getlgc(data,'leven');
-
-% remove trend and update header
-p=cell(nrecs,1);
-for i=1:numel(data)
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
-    
-    % convert to double precision
-    data(i).dep=double(data(i).dep);
-    
-    % evenly spaced
-    if(strcmp(leven(i),'true'))
-        time=((0:npts(i)-1)*delta(i)).';
-        for j=1:size(data(i).dep,2)
-            p{i}(j,1:order(i)+1)=polyfit(time,data(i).dep(:,j),order(i));
-        end
-    % unevenly spaced
-    else
-        for j=1:size(data(i).dep,2)
-            p{i}(j,1:order(i)+1)=...
-                polyfit(double(data(i).ind),data(i).dep(:,j),order(i));
-        end
+    % check order
+    if(~isnumeric(order) || any(order~=fix(order)) ...
+            || ~any(numel(order)==[1 nrecs]))
+        error('seizmo:getpolynomial:badOrder',...
+            'ORDER must be a scalar or an array of integers.');
     end
-end
+    if(isscalar(order))
+        order(1:nrecs,1)=order;
+    end
 
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
+    % header info
+    [delta,npts]=getheader(data,'delta','npts');
+    leven=getlgc(data,'leven');
+    
+    % detail message
+    if(verbose)
+        disp('Getting Polynomial Fit to Record(s)');
+        print_time_left(0,nrecs);
+    end
+
+    % remove trend and update header
+    p=cell(nrecs,1);
+    for i=1:numel(data)
+        % skip dataless
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % convert to double precision
+        data(i).dep=double(data(i).dep);
+
+        % evenly spaced
+        if(strcmp(leven(i),'true'))
+            time=((0:npts(i)-1)*delta(i)).';
+            for j=1:size(data(i).dep,2)
+                p{i}(j,1:order(i)+1)=...
+                    polyfit(time,data(i).dep(:,j),order(i));
+            end
+            % unevenly spaced
+        else
+            for j=1:size(data(i).dep,2)
+                p{i}(j,1:order(i)+1)=...
+                    polyfit(double(data(i).ind),data(i).dep(:,j),order(i));
+            end
+        end
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

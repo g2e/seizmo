@@ -59,9 +59,10 @@ function [data]=prewhiten(data,order)
 %        Oct. 19, 2009 - global access to order
 %        Jan. 27, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        better error messages, force dim stuff
+%        Feb.  2, 2010 - update for state functions, versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2010 at 23:30 GMT
+%     Last Updated Feb.  2, 2010 at 19:55 GMT
 
 % todo:
 
@@ -69,35 +70,21 @@ function [data]=prewhiten(data,order)
 msg=nargchk(1,2,nargin);
 if(~isempty(msg)); error(msg); end
 
-% check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
-
-% turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% attempt header check
-try
-    % check headers
-    data=checkheader(data);
-    
-    % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
-catch
-    % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror)
-end
-
 % retrieve global settings
 global SEIZMO
 
+% check data structure
+versioninfo(data,'dep');
+
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
+
 % attempt prewhitening
 try
+    % check headers (versioninfo cache update)
+    data=checkheader(data);
+    
     % verbosity
     verbose=seizmoverbose;
 
@@ -105,8 +92,7 @@ try
     nrecs=numel(data);
 
     % get some header fields
-    npts=getheader(data,'npts');
-    ncmp=getncmp(data);
+    [npts,ncmp]=getheader(data,'npts','ncmp');
     leven=getlgc(data,'leven');
     iftype=getenumid(data,'iftype');
 
@@ -146,7 +132,7 @@ try
     if(any(idx))
         i=find(idx);
         error('seizmo:prewhiten:recordsNotWhitened',...
-            ['Record(s): ' sprintf('%d ',i) ...
+            ['Record(s):\n' sprintf('%d ',i) ...
             '\nPREWHITEN will not prewhiten prewhitened records!']);
     end
 
@@ -226,12 +212,12 @@ try
     end
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

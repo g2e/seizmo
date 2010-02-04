@@ -139,9 +139,10 @@ function [data,failed]=cut(data,varargin)
 %                        move usage up
 %        Jan. 28, 2010 - proper SEIZMO handling, seizmoverbose support,
 %                        better warning messages
+%        Feb.  2, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2010 at 21:55 GMT
+%     Last Updated Feb.  2, 2010 at 22:05 GMT
 
 % todo:
 
@@ -149,12 +150,15 @@ function [data,failed]=cut(data,varargin)
 msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
+% retreive SEIZMO info
+global SEIZMO
+
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
 % make sure global settings are kept
 try
@@ -187,19 +191,19 @@ try
     if(any(amph | rlim))
         failed(amph | rlim)=true;
         warning('seizmo:cut:illegalFiletype',...
-            ['Record(s): ' sprintf('%d ',find(amph | rlim)) ...
+            ['Record(s):\n' sprintf('%d ',find(amph | rlim)) ...
             '\nIllegal operation on spectral record(s)!']);
     elseif(any(xyz))
         failed(xyz)=true;
         warning('seizmo:cut:illegalFiletype',...
-            ['Record(s): ' sprintf('%d ',find(xyz)) ...
+            ['Record(s):\n' sprintf('%d ',find(xyz)) ...
             '\nIllegal operation on xyz record(s)!']);
     end
     
     % check uneven & fill
     if(any(uneven & option.FILL))
         warning('seizmo:cut:noFillUneven',...
-            ['Record(s): ' sprintf('%d ',find(uneven & option.FILL)) ...
+            ['Record(s):\n' sprintf('%d ',find(uneven & option.FILL)) ...
             '\nCannot fill unevenly sampled record(s)!']);
     end
 
@@ -229,9 +233,11 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)
@@ -356,9 +362,7 @@ for i=find(~failed')
             failed(i)=true;
             
             % detail message
-            if(verbose)
-                print_time_left(i,nrecs);
-            end
+            if(verbose); print_time_left(i,nrecs); end
             continue;
         end
         
@@ -374,9 +378,7 @@ for i=find(~failed')
     end
     
     % detail message
-    if(verbose)
-        print_time_left(i,nrecs);
-    end
+    if(verbose); print_time_left(i,nrecs); end
 end
 
 % detail message
@@ -403,6 +405,7 @@ end
 try
     % toggle checking off
     seizmocheck_state(false);
+    versioninfo_cache(true);
     
     % update headers
     data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
@@ -410,15 +413,23 @@ try
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)
 end
 
 % removed failed/empty cut records
-if(option.TRIM); data(failed)=[]; end
+if(option.TRIM)
+    data(failed)=[];
+    % the following requires all calling functions using versioninfo
+    % caching to update their variables to the cached version
+    % - this requires keeping track of who calls cut
+    SEIZMO.VERSIONINFO.IDX(failed)=[];
+end
 
 end

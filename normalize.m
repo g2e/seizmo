@@ -37,9 +37,10 @@ function [data,scale]=normalize(data)
 %                        schema, .dep over .x, one changeheader call
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Jan. 30, 2010 at 22:35 GMT
 
 % todo:
 
@@ -51,32 +52,64 @@ if(~isempty(msg)); error(msg); end
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
-% number of records
-nrecs=numel(data);
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
 
-% normalize data
-scale=nan(nrecs,1); depmen=scale; depmin=scale; depmax=scale;
-for i=1:nrecs
-    % skip dataless
-    if(isempty(data(i).dep)); continue; end
+% attempt normalization
+try
+    % verbosity
+    verbose=seizmoverbose;
+
+    % number of records
+    nrecs=numel(data);
     
-    % get class and change to double precision
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
+    % detail message
+    if(verbose)
+        disp('Normalizing Record(s)')
+        print_time_left(0,nrecs);
+    end
+
+    % normalize data
+    scale=nan(nrecs,1); depmen=scale; depmin=scale; depmax=scale;
+    for i=1:nrecs
+        % skip dataless
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % get class and change to double precision
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+
+        % get norm
+        scale(i)=max(sqrt(sum((data(i).dep).^2,2)));
+
+        % scale data and change class back
+        data(i).dep=oclass(data(i).dep/scale(i));
+
+        % get dep*
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
     
-    % get norm
-    scale(i)=max(sqrt(sum((data(i).dep).^2,2)));
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % update header
+    data=changeheader(data,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
     
-    % scale data and change class back
-    data(i).dep=oclass(data(i).dep/scale(i));
-    
-    % get dep*
-    depmen(i)=mean(data(i).dep(:)); 
-    depmin(i)=min(data(i).dep(:)); 
-    depmax(i)=max(data(i).dep(:));
+    % rethrow error
+    error(lasterror)
 end
-
-% update header
-data=changeheader(data,'depmen',depmen,'depmin',depmin,'depmax',depmax);
 
 end

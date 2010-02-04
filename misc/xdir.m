@@ -37,12 +37,12 @@ function [varargout]=xdir(str,depth)
 %
 %     D=XDIR(...) returns the results in an M-by-1 structure with the
 %     fields:
+%       path    -- path to the file or directory
 %       name    -- filename or directory name
 %       date    -- modification date
 %       bytes   -- number of bytes allocated to the file or directory
 %       isdir   -- 1 if is a directory, 0 otherwise
 %       datenum -- modification date as a MATLAB serial date number
-%       path    -- path to the file or directory
 %
 %    Notes:
 %     - XDIR uses self-recursion to extend down directory structures, so
@@ -71,10 +71,11 @@ function [varargout]=xdir(str,depth)
 %        June  4, 2009 - use GLOB to preempt or replace octave's dir
 %        Aug.  4, 2009 - fix dir listing for Octave when no path given
 %        Sep. 12, 2009 - doc update
+%        Jan. 30, 2010 - fix empty path output, order fields so path on top
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated Sep. 12, 2009 at 04:40 GMT
+%     Last Updated Jan. 30, 2010 at 19:00 GMT
 
 % todo:
 % - see unfinished xdir todo
@@ -260,8 +261,8 @@ else
   end
 end
 
-% to make all entries have a path (use './' or '.\' if there is none)
-%[D(strcmp({D.path},'')).path]=deal(['.' filesep]);
+% order fields
+D=orderfields(D,emptylist);
 
 % display listing if no output variables are specified
 if(nargout==0)
@@ -270,7 +271,11 @@ if(nargout==0)
         D(i).isdir,D(i).bytes,D(i).date,[D(i).path D(i).name]));
   end
 else
+  % to make all entries have a path (use './' or '.\' if there is none)
+  [D(strcmp({D.path},'')).path]=deal(['.' filesep]);
+  
   % send list out
   varargout{1}=D;
 end
 
+end

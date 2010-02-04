@@ -24,9 +24,10 @@ function [data]=setevent(data,event)
 %     Version History:
 %        Dec.  1, 2009 - initial version
 %        Jan. 26, 2010 - seizmoverbose support
+%        Jan. 30, 2010 - fixed bug in call to CHECKHEADER
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 19:55 GMT
+%     Last Updated Jan. 30, 2010 at 20:15 GMT
 
 % todo:
 
@@ -34,25 +35,11 @@ function [data]=setevent(data,event)
 msg=nargchk(2,2,nargin);
 if(~isempty(msg)); error(msg); end
 
-% check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+% check data structure & header
+data=checkheader(data);
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
-
-% attempt header check
-try
-    % check header
-    data=checkheader(data);
-catch
-    % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror)
-end
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt rest
 try
@@ -107,10 +94,10 @@ try
     end
     
     % update gcarc, az, baz, dist
-    oldcheckheaderstate=get_checkheader_state;
-    set_seizmocheck_state(true);
+    oldcheckheaderstate=checkheader_state;
+    checkheader_state(true);
     data=checkheader(data,'all','ignore','old_delaz','fix');
-    set_checkheader_state(oldcheckheaderstate);
+    checkheader_state(oldcheckheaderstate);
     
     % detail message
     if(verbose)
@@ -118,10 +105,10 @@ try
     end
     
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)

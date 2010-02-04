@@ -97,9 +97,7 @@ for i=1:nrecs
     % skip dataless
     if(isempty(data(i).dep))
         % detail message
-        if(verbose)
-            print_time_left(i,nrecs);
-        end
+        if(verbose); print_time_left(i,nrecs); end
         continue;
     end
     
@@ -115,9 +113,7 @@ for i=1:nrecs
     depmax(i)=max(data(i).dep(:));
     
     % detail message
-    if(verbose)
-        print_time_left(i,nrecs);
-    end
+    if(verbose); print_time_left(i,nrecs); end
 end
 
 % turn off struct checking

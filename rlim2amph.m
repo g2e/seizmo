@@ -35,9 +35,10 @@ function [data]=rlim2amph(data)
 %        Oct. 21, 2009 - only touches rlim (maybe a bit faster)
 %        Dec.  4, 2009 - handle no rlim case
 %        Jan. 26, 2010 - seizmoverbose support
+%        Feb.  2, 2010 - versioninfo caching (required some code changes)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 18:50 GMT
+%     Last Updated Feb.  2, 2010 at 21:15 GMT
 
 % todo:
 
@@ -46,15 +47,15 @@ msg=nargchk(1,1,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
 % attempt conversion
 try
-    % check header
+    % check header (versioninfo cache update)
     data=checkheader(data);
     
     % verbosity
@@ -69,7 +70,6 @@ try
     % find spectral
     amph=strcmpi(iftype,'iamph');
     rlim=strcmpi(iftype,'irlim');
-    irlim=find(rlim); nrlim=numel(irlim);
 
     % records must be spectral
     if(any(~amph & ~rlim))
@@ -83,63 +83,47 @@ try
         disp('Converting RLIM Record(s) to AMPH');
         print_time_left(0,nrecs);
     end
-    
-    % quick exit if all amph
-    if(nrlim==0)
-        % detail message
-        if(verbose)
-            print_time_left(nrecs,nrecs);
-        end
-        return;
-    end
 
     % loop through records
-    depmen=nan(nrlim,1); depmin=depmen; depmax=depmen;
-    for i=1:nrlim
-        k=irlim(i);
-
+    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    for i=1:nrecs
         % skip dataless
-        if(isempty(data(k).dep))
+        if(isempty(data(i).dep))
             % detail message
-            if(verbose)
-                print_time_left(k,nrecs);
-            end
+            if(verbose); print_time_left(i,nrecs); end
             continue;
         end
-
-        % convert
-        oclass=str2func(class(data(k).dep));
-        data(k).dep=double(data(k).dep);
-        temp=complex(data(k).dep(:,1:2:end),data(k).dep(:,2:2:end));
-        data(k).dep(:,1:2:end)=abs(temp);
-        data(k).dep(:,2:2:end)=angle(temp);
-        data(k).dep=oclass(data(k).dep);
+        
+        % convert rlim
+        if(rlim(i))
+            oclass=str2func(class(data(i).dep));
+            data(i).dep=double(data(i).dep);
+            temp=complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
+            data(i).dep(:,1:2:end)=abs(temp);
+            data(i).dep(:,2:2:end)=angle(temp);
+            data(i).dep=oclass(data(k).dep);
+        end
 
         % dep*
-        depmen(i)=mean(data(k).dep(:));
-        depmin(i)=min(data(k).dep(:));
-        depmax(i)=max(data(k).dep(:));
+        depmen(i)=mean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
         
         % detail message
-        if(verbose)
-            print_time_left(k,nrecs);
-        end
-    end
-    
-    % detail message
-    if(verbose && k~=nrecs)
-        print_time_left(nrecs,nrecs);
+        if(verbose); print_time_left(i,nrecs); end
     end
 
     % update filetype
-    data(rlim)=changeheader(data(rlim),'iftype','iamph',...
+    data=changeheader(data,'iftype','iamph',...
         'depmax',depmax,'depmin',depmin,'depmen',depmen);
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

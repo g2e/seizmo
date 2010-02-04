@@ -70,15 +70,15 @@ function [data]=dft(data,format,pow2pad)
 msg=nargchk(1,3,nargin);
 if(~isempty(msg)); error(msg); end
 
+% get SEIZMO info
+global SEIZMO
+
 % check data structure
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-
-% get SEIZMO info
-global SEIZMO
 
 % attempt fast fourier transform
 try

@@ -256,13 +256,15 @@ if(mod(nargin-1,2))
         'Bad number of arguments!');
 end
 
+% get global
+global SEIZMO
+
 % check data structure
 msg=seizmocheck(data,'dep');
 if(~isempty(msg)); error(msg.identifier,msg.message); end
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt header check
 try
@@ -270,20 +272,16 @@ try
     data=checkheader(data);
     
     % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
+    oldcheckheaderstate=checkheader_state(false);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)
 end
 
-% get global
-global SEIZMO
-
-% attempt rest
+% attempt merge
 try
     % valid values for string options
     valid.TOLERANCEUNITS={'seconds' 'intervals'};
@@ -313,7 +311,7 @@ try
     option.MERGEGAPS=true; % on/off switch for merging gaps
     option.MERGEOVERLAPS=true; % on/off switch for merging overlaps
     option.VERBOSE=seizmoverbose; % default to seizmoverbose state
-    option.DEBUG=false; % turn on/off debugging messages
+    option.DEBUG=seizmodebug; % default to seizmodebug state
 
     % get options from SEIZMO global
     ME=upper(mfilename);
@@ -399,21 +397,20 @@ try
 
     % get full filenames (for verbose or debugging output)
     nrecs=numel(data);
-    if(option.VERBOSE || option.DEBUG)
+    if(option.VERBOSE)
         fullname=strcat({data.path}.',{data.name}.');
     end
 
     % get header fields
-    ncmp=getncmp(data);
     if(option.USEABSOLUTETIMING)
-        [b,e,delta,npts,depmin,depmax,depmen,...
+        [b,e,ncmp,delta,npts,depmin,depmax,depmen,...
             nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=getheader(data,...
-            'b','e','delta','npts','depmin','depmax','depmen',...
+            'b','e','ncmp','delta','npts','depmin','depmax','depmen',...
             'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
         dt=[nzyear nzjday nzhour nzmin nzsec nzmsec];
     else
-        [b,e,delta,npts,depmin,depmax,depmen]=getheader(data,...
-            'b','e','delta','npts','depmin','depmax','depmen');
+        [b,e,ncmp,delta,npts,depmin,depmax,depmen]=getheader(data,...
+            'b','e','ncmp','delta','npts','depmin','depmax','depmen');
         dt=nan(nrecs,6);
     end
     szreal=size(option.REQUIREDREALFIELDS); reqreal=cell(szreal);
@@ -488,7 +485,7 @@ try
         origng=ng;
 
         % detail message
-        if(option.VERBOSE || option.DEBUG)
+        if(option.VERBOSE)
             disp(' '); disp(' ');
             disp(sprintf('Processing Group: %d',i));
             disp(['Members: ' sprintf('%d ',gidx)]);
@@ -499,7 +496,7 @@ try
         bad=flagexactdupes(ab(gidx,:),ae(gidx,:));
 
         % detail message
-        if(option.VERBOSE || option.DEBUG)
+        if(option.VERBOSE)
             disp(' ');
             disp('Deleting Duplicate(s):');
             disp(sprintf(' %d',gidx(bad)));
@@ -573,7 +570,7 @@ try
         end
 
         % detail message
-        if(option.VERBOSE || option.DEBUG)
+        if(option.VERBOSE)
             disp(' ');
             disp(sprintf('Finished Merging Group: %d',i));
             disp(['Members: ' sprintf('%d ',newgidx)]);
@@ -587,7 +584,7 @@ try
         goodidx=1:ngood;
 
         % detail message
-        if(option.VERBOSE || option.DEBUG)
+        if(option.VERBOSE)
             disp('Deleting Duplicate(s) and/or Partial Piece(s):');
             disp(sprintf(' %d',newgidx(~good)));
             disp('Changing Indices Of Good Record(s):');
@@ -649,12 +646,12 @@ try
     data(destroy)=[];
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)
@@ -717,7 +714,7 @@ for i=1:nrecs
     end
     
     % detail message
-    if(option.VERBOSE || option.DEBUG)
+    if(option.VERBOSE)
         disp(sprintf(...
             ['\nMerging Record:\n'...
              ' %d - %s\n'...
@@ -753,7 +750,7 @@ for i=1:nrecs
     end
     
     % detail message
-    if(option.VERBOSE || option.DEBUG)
+    if(option.VERBOSE)
         disp(sprintf(...
             ['Output Record:\n'...
              ' %d - %s\n'...
@@ -796,7 +793,7 @@ end
 kill=3-keep;
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Adjusting: %s (%d - %s)',...
         option.ADJUST,idx(kill),name{kill}));
 end
@@ -883,7 +880,7 @@ switch option.GAP
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
             % detail message
-            if(option.VERBOSE || option.DEBUG)
+            if(option.VERBOSE)
                 disp('Adjust Method: shift');
             end
             
@@ -899,7 +896,7 @@ switch option.GAP
             end
         else
             % detail message
-            if(option.VERBOSE || option.DEBUG)
+            if(option.VERBOSE)
                 disp(sprintf(...
                     ['Adjust Method: interpolate\n'...
                      'Interpolate Method: %s'],option.INTERPOLATE));
@@ -918,7 +915,7 @@ switch option.GAP
         end
     case 'fill'
         % detail message
-        if(option.VERBOSE || option.DEBUG)
+        if(option.VERBOSE)
             disp(sprintf(...
                 ['Filler: %d\n',...
                  'Adjusting: %s (%d - %s)\n'...
@@ -934,7 +931,7 @@ switch option.GAP
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
             % detail message
-            if(option.VERBOSE || option.DEBUG)
+            if(option.VERBOSE)
                 disp('Adjust Method: shift');
             end
             
@@ -950,7 +947,7 @@ switch option.GAP
             end
         else
             % detail message
-            if(option.VERBOSE || option.DEBUG)
+            if(option.VERBOSE)
                 disp(sprintf(...
                     ['Adjust Method: interpolate\n'...
                      'Interpolate Method: %s'],option.INTERPOLATE));
@@ -1005,7 +1002,7 @@ end
 kill=3-keep;
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Overlap Method: %s',option.OVERLAP));
 end
 
@@ -1018,7 +1015,7 @@ switch option.OVERLAP
     case 'truncate'
         % truncate overlap from option.ADJUST record
         % detail message
-        if(option.VERBOSE || option.DEBUG)
+        if(option.VERBOSE)
             disp(sprintf(...
                 ['Adjusting:  %s (%d - %s)\n'...
                  'Adjustment: %f seconds (%f samples)'],...
@@ -1032,7 +1029,7 @@ switch option.OVERLAP
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
             % detail message
-            if(option.VERBOSE || option.DEBUG)
+            if(option.VERBOSE)
                 disp('Adjust Method: shift');
             end
             
@@ -1048,7 +1045,7 @@ switch option.OVERLAP
             end
         else
             % detail message
-            if(option.VERBOSE || option.DEBUG)
+            if(option.VERBOSE)
                 disp(sprintf(...
                     ['Adjust Method: interpolate\n'...
                      'Interpolate Method: %s'],option.INTERPOLATE));
@@ -1072,7 +1069,7 @@ switch option.OVERLAP
         d=1; if(strcmpi(option.OVERLAP,'average')); d=2; end
         
         % detail message
-        if(option.VERBOSE || option.DEBUG)
+        if(option.VERBOSE)
             disp(sprintf(...
                 ['Adjusting:  %s (%d - %s)\n'...
                  'Adjustment: %f seconds (%f samples)'],...
@@ -1086,7 +1083,7 @@ switch option.OVERLAP
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
             % detail message
-            if(option.VERBOSE || option.DEBUG)
+            if(option.VERBOSE)
                 disp('Adjust Method: shift');
             end
             
@@ -1102,7 +1099,7 @@ switch option.OVERLAP
             end
         else
             % detail message
-            if(option.VERBOSE || option.DEBUG)
+            if(option.VERBOSE)
                 disp(sprintf(...
                     ['Adjust Method: interpolate\n'...
                      'Interpolate Method: %s'],option.INTERPOLATE));
@@ -1150,7 +1147,7 @@ sae=ae(first,:)+[0 shift];
 nsamples=round((ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1195,7 +1192,7 @@ sae=ae(last,:)-[0 shift];
 nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1240,7 +1237,7 @@ sae=ae(first,:)+[0 shift];
 nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1286,7 +1283,7 @@ sae=ae(last,:)-[0 shift];
 nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1332,7 +1329,7 @@ sae=ae(first,:)+[0 shift];
 nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1370,7 +1367,7 @@ sae=ae(last,:)-[0 shift];
 nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1415,7 +1412,7 @@ data(first).dep=data(first).dep.';
 nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1460,7 +1457,7 @@ data(last).dep=data(last).dep.';
 nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1499,7 +1496,7 @@ nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 ns=min(nsamples,npts(last));
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Truncated: %d',nsamples));
 end
 
@@ -1537,7 +1534,7 @@ nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 nsamples=min(nsamples,npts(last));
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Truncated: %d',nsamples));
 end
 
@@ -1581,7 +1578,7 @@ nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 ns=min(nsamples,npts(last));
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Truncated: %d',ns));
 end
 
@@ -1626,7 +1623,7 @@ nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 nsamples=min(nsamples,npts(last));
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Truncated: %d',nsamples));
 end
 
@@ -1665,7 +1662,7 @@ b2=min(nsamples,npts(last));
 ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Truncated: %d',nsamples));
 end
 
@@ -1707,7 +1704,7 @@ b2=min(nsamples,npts(last));
 ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1756,7 +1753,7 @@ b2=min(nsamples,npts(last));
 ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1805,7 +1802,7 @@ b2=min(nsamples,npts(last));
 ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.VERBOSE)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 

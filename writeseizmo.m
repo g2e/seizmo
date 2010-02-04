@@ -72,9 +72,11 @@ function []=writeseizmo(data,varargin)
 %        Sep.  5, 2009 - improved the examples
 %        Sep. 18, 2009 - added empty data shortcut
 %        Dec.  6, 2009 - bug fix: moved hasdata check after name formation
+%        Feb.  2, 2010 - proper SEIZMO handling, seizmoverbose support,
+%                        versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  6, 2009 at 21:45 GMT
+%     Last Updated Feb.  2, 2010 at 19:20 GMT
 
 % todo:
 
@@ -90,159 +92,186 @@ if(isempty(data))
     return;
 end
 
-% handle options
-data=writeparameters(data,varargin{:});
-
-% check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+% check data structure & get headers setup
+versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
-% headers setup
-[h,vi]=versioninfo(data);
-
-% check headers
-data=checkheader(data);
-
-% turn off header checking
-oldcheckheaderstate=get_checkheader_state;
-set_checkheader_state(false);
-
-% estimated filesize from header
-est_bytes=seizmosize(data);
-
-% header info
-ncmp=getncmp(data);
-npts=getheader(data,'npts');
-iftype=getenumdesc(data,'iftype');
-[leven,lovrok]=getlgc(data,'leven','lovrok');
-
-% loop over records
-for i=1:length(data)
-    % construct fullname
-    name=fullfile(data(i).path,data(i).name);
+% attempt write
+try
+    % check headers (versioninfo cache update)
+    data=checkheader(data);
     
-    % skip writing if dataless
-    if(~data(i).hasdata)
-        warning('seizmo:writeseizmo:dataless',...
-            ['Record: %d, File: %s\n' ...
-            'Use WRITEHEADER to write only headers!'],i,name);
-        continue; 
-    end
+    % get updated versioninfo cache
+    [h,vi]=versioninfo(data);
     
-    % make sure directory exists
-    [ok,msg,msgid]=mkdir(data(i).path);
-    if(~ok)
-        warning(msgid,msg);
-        error('seizmo:writeseizmo:pathBad',...
-            ['Record: %d, File: %s\n' ...
-            'Cannot write record to path!'],i,name);
+    % handle options
+    data=writeparameters(data,varargin{:});
+
+    % estimated filesize from header
+    est_bytes=seizmosize(data);
+    
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % number of records
+    nrecs=numel(data);
+
+    % header info
+    [npts,ncmp]=getheader(data,'npts','ncmp');
+    iftype=getenumid(data,'iftype');
+    [leven,lovrok]=getlgc(data,'leven','lovrok');
+    
+    % detail message
+    if(verbose)
+        disp('Writing Record(s)');
+        print_time_left(0,nrecs);
     end
 
-    % check if existing file
-    if(exist(name,'file'))
-        % check lovrok
-        if(strcmpi(lovrok(i),'false'))
-            warning('seizmo:writeseizmo:lovrokBlock',...
+    % loop over records
+    for i=1:nrecs
+        % construct fullname
+        name=fullfile(data(i).path,data(i).name);
+
+        % skip writing if dataless
+        if(~data(i).hasdata)
+            warning('seizmo:writeseizmo:dataless',...
                 ['Record: %d, File: %s\n' ...
-                'LOVROK set to FALSE!\n' ...
-                'Cannot Overwrite ==> Skipping!'],i,name);
+                'Use WRITEHEADER to write only headers!'],i,name);
+            % detail message
+            if(verbose); print_time_left(i,nrecs,true); end
             continue;
         end
-        
-        % check if directory
-        if(exist(name,'dir'))
+
+        % make sure directory exists
+        [ok,msg,msgid]=mkdir(data(i).path);
+        if(~ok)
+            warning(msgid,msg);
+            error('seizmo:writeseizmo:pathBad',...
+                ['Record: %d, File: %s\n' ...
+                'Cannot write record to path!'],i,name);
+        end
+
+        % check if existing file
+        if(exist(name,'file'))
+            % check lovrok
+            if(strcmpi(lovrok(i),'false'))
+                warning('seizmo:writeseizmo:lovrokBlock',...
+                    ['Record: %d, File: %s\n' ...
+                    'LOVROK set to FALSE!\n' ...
+                    'Cannot Overwrite ==> Skipping!'],i,name);
+                % detail message
+                if(verbose); print_time_left(i,nrecs,true); end
+                continue;
+            end
+
+            % check if directory
+            if(exist(name,'dir'))
+                error('seizmo:writeseizmo:badFID',...
+                    ['Record: %d, File: %s\n' ...
+                    'File not openable for writing!\n'...
+                    '(Directory Conflict!)'],i,name);
+            end
+        end
+
+        % open file for writing
+        fid=fopen(name,'w',data(i).byteorder);
+
+        % check fid
+        if(fid<0)
+            % unopenable file for writing (permissions/directory?)
             error('seizmo:writeseizmo:badFID',...
                 ['Record: %d, File: %s\n' ...
                 'File not openable for writing!\n'...
-                '(Directory Conflict!)'],i,name);
+                '(Permissions problem?)'],i,name);
         end
-    end
-    
-    % open file for writing
-    fid=fopen(name,'w',data(i).byteorder);
-    
-    % check fid
-    if(fid<0)
-        % unopenable file for writing (permissions/directory?)
-        error('seizmo:writeseizmo:badFID',...
-            ['Record: %d, File: %s\n' ...
-            'File not openable for writing!\n'...
-            '(Permissions problem?)'],i,name);
-    end
-    
-    % fill header with dummy bytes (so we can seek around)
-    fseek(fid,0,'bof');
-    count=fwrite(fid,zeros(h(vi(i)).data.startbyte,1),'char');
-    
-    % verify write
-    if(count<h(vi(i)).data.startbyte)
-        % write failed
-        fclose(fid);
-        error('seizmo:writeseizmo:writeFailed',...
-            'Record: %d, File: %s\nWriting failed!',i,name);
-    end
-    
-    % write header
-    n=h(vi(i)).types;
-    for m=1:length(n)
-        for k=1:length(h(vi(i)).(n{m}))
-            fseek(fid,h(vi(i)).(n{m})(k).startbyte,'bof');
-            fwrite(fid,data(i).head(h(vi(i)).(n{m})(k).minpos:...
-                h(vi(i)).(n{m})(k).maxpos),h(vi(i)).(n{m})(k).store);
-        end
-    end
-    
-    % skip data writing if npts==0
-    if(npts(i)==0); fclose(fid); continue; end
-    
-    % act by file type (new filetypes will have to be added here)
-    fseek(fid,h(vi(i)).data.startbyte,'bof');
-    if(any(strcmpi(iftype(i),{'Time Series File' 'General X vs Y file'})))
-        % dependent component(s) of data
-        for k=1:ncmp(i)
-            fwrite(fid,data(i).dep(:,k),h(vi(i)).data.store);
-        end
-        
-        % independent component of data if uneven
-        if(strcmpi(leven(i),'false'))
-            fwrite(fid,data(i).ind(:),h(vi(i)).data.store);
-        end
-    elseif(any(strcmpi(iftype(i),...
-            {'Spectral File-Real/Imag' 'Spectral File-Ampl/Phase'})))
-        % spectral file
-        for k=1:ncmp(i)
-            fwrite(fid,data(i).dep(:,2*k-1),h(vi(i)).data.store);
-            fwrite(fid,data(i).dep(:,2*k),h(vi(i)).data.store);
-        end
-    elseif(any(strcmpi(iftype(i),'General XYZ (3-D) file')))
-        % general xyz (3D) grid - nodes are evenly spaced
-        for k=1:ncmp(i)
-            fwrite(fid,data(i).dep(:,k),h(vi(i)).data.store);
-        end
-    end
-    
-    % verify written file's size
-    fseek(fid,0,'eof');
-    bytes=ftell(fid);
-    if(bytes~=est_bytes(i))
-        % write failed/incomplete
-        fclose(fid);
-        error('seizmo:writeseizmo:badFileSize',...
-            ['Record: %d, File: %s\n'...
-            'Output file disksize does not match expected size!\n'],...
-            i,name);
-    end
-    
-    % close file
-    fclose(fid);
-end
 
-% toggle checking back
-set_seizmocheck_state(oldseizmocheckstate);
-set_checkheader_state(oldcheckheaderstate);
+        % fill header with dummy bytes (so we can seek around)
+        fseek(fid,0,'bof');
+        count=fwrite(fid,zeros(h(vi(i)).data.startbyte,1),'char');
+
+        % verify write
+        if(count<h(vi(i)).data.startbyte)
+            % write failed
+            fclose(fid);
+            error('seizmo:writeseizmo:writeFailed',...
+                'Record: %d, File: %s\nWriting failed!',i,name);
+        end
+
+        % write header
+        n=h(vi(i)).types;
+        for m=1:length(n)
+            for k=1:length(h(vi(i)).(n{m}))
+                fseek(fid,h(vi(i)).(n{m})(k).startbyte,'bof');
+                fwrite(fid,data(i).head(h(vi(i)).(n{m})(k).minpos:...
+                    h(vi(i)).(n{m})(k).maxpos),h(vi(i)).(n{m})(k).store);
+            end
+        end
+
+        % skip data writing if npts==0
+        if(npts(i)==0)
+            fclose(fid);
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
+
+        % act by file type (new filetypes will have to be added here)
+        fseek(fid,h(vi(i)).data.startbyte,'bof');
+        if(any(strcmpi(iftype(i),{'itime' 'ixy'})))
+            % dependent component(s) of data
+            for k=1:ncmp(i)
+                fwrite(fid,data(i).dep(:,k),h(vi(i)).data.store);
+            end
+
+            % independent component of data if uneven
+            if(strcmpi(leven(i),'false'))
+                fwrite(fid,data(i).ind(:),h(vi(i)).data.store);
+            end
+        elseif(any(strcmpi(iftype(i),{'irlim' 'iamph'})))
+            % spectral file
+            for k=1:ncmp(i)
+                fwrite(fid,data(i).dep(:,2*k-1),h(vi(i)).data.store);
+                fwrite(fid,data(i).dep(:,2*k),h(vi(i)).data.store);
+            end
+        elseif(any(strcmpi(iftype(i),'ixyz')))
+            % general xyz (3D) grid - nodes are evenly spaced
+            for k=1:ncmp(i)
+                fwrite(fid,data(i).dep(:,k),h(vi(i)).data.store);
+            end
+        end
+
+        % verify written file's size
+        fseek(fid,0,'eof');
+        bytes=ftell(fid);
+        if(bytes~=est_bytes(i))
+            % write failed/incomplete
+            fclose(fid);
+            error('seizmo:writeseizmo:badFileSize',...
+                ['Record: %d, File: %s\n'...
+                'Output file disksize does not match expected size!\n'],...
+                i,name);
+        end
+
+        % close file
+        fclose(fid);
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

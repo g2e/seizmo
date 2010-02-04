@@ -69,9 +69,10 @@ function [data]=deconvolve(data,tf,delay,h2o,frange,zi,zf)
 %                        doubles initial conditions and final conditions
 %        Jan. 27, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        fixed offset bug
+%        Feb.  2, 2010 - versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2010 at 07:15 GMT
+%     Last Updated Feb.  2, 2010 at 21:50 GMT
 
 % todo:
 
@@ -80,15 +81,15 @@ msg=nargchk(2,7,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
+oldversioninfocache=versioninfo_cache(true);
 
 % attempt deconvolution
 try
-    % check headers
+    % check headers (versioninfo cache update)
     data=checkheader(data);
 
     % verbosity
@@ -312,9 +313,11 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

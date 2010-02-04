@@ -83,15 +83,15 @@ elseif(nargin>1)
     end
 end
 
-disp('debug seizmocheck 1!')
 % check SEIZMO global for quick exit
 global SEIZMO
+if(seizmodebug); disp('debug seizmocheck 1!'); end
 try
     if(~SEIZMO.SEIZMOCHECK.ON); return; end
 catch
     % checks data below
 end
-disp('debug seizmocheck 2!')
+if(seizmodebug); disp('debug seizmocheck 2!'); end
 
 % check data structure
 if(~isstruct(data))

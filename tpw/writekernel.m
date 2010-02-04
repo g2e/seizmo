@@ -1,14 +1,12 @@
-function []=writekernel(filename,x,y,sp,sa)
+function []=writekernel(filename,Kph,Kam,x,y)
 % write out sensitivity kernel
 
 % combine (note the switch)
-sp=sp.'; sa=sa.';
-m=[y(:) x(:) sp(:) sa(:)];
+m=[x(:) y(:) Kph(:) Kam(:)];
 
 % write out header portion
-n=size(x,1);
-dx=x(2)-x(1);
-dlmwrite(filename,[n x(1) dx; n x(1) dx],' ')
+n=size(x,1); d=y(2)-y(1);
+dlmwrite(filename,[n x(1) d; n x(1) d],' ')
 
 % write kernels
 dlmwrite(filename,m,'-append','delimiter',' ');
