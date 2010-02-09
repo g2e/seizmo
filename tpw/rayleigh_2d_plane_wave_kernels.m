@@ -15,7 +15,7 @@ function [Kph,Kam,x,y]=rayleigh_2d_plane_wave_kernels(w,d,f,a,v,show)
 %     width of the grid (ie the local region) in kilometers, SPACING gives
 %     the node spacing of the grid in kilometers, FREQ & AMP contain the
 %     frequencies and their corresponding weight in the kernel, and VELO is
-%     the average Rayleigh wave phase velocity at the frequencies in FREQ.
+%     the average Rayleigh wave phase velocity for the frequencies in FREQ.
 %     The phase and amplitude kernels are returned in Kph and Kam,
 %     respectively. The grid coordinates are in X and Y, which are in a
 %     local, receiver-centered system where the positive x-axis points
@@ -42,7 +42,7 @@ function [Kph,Kam,x,y]=rayleigh_2d_plane_wave_kernels(w,d,f,a,v,show)
 %      [f,a]=getmainlobe(1/100,1,[1000 2000],200/1000,[1000 1000]);
 %
 %     Show the corresponding kernels assuming a Vph=4km/s:
-%      rayleigh_2d_plane_wave_kernels(3000,10,f,a,4);     
+%      rayleigh_2d_plane_wave_kernels(3000,10,f,a,4,true);
 %
 %    See also: GETMAINLOBE, SMOOTH2D
 

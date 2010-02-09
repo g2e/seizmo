@@ -57,9 +57,10 @@ function []=writesacpz(file,z,p,k,o)
 %        Sep. 20, 2009 - minor doc update
 %        Sep. 22, 2009 - dropped looped writing of zeros/poles,
 %                        confirmation for overwrite with skip option
+%        Feb.  5, 2010 - graphical file creation menu
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2009 at 05:35 GMT
+%     Last Updated Feb.  5, 2010 at 16:15 GMT
 
 % todo:
 
@@ -69,26 +70,9 @@ if(~isempty(msg)); error(msg); end;
 
 % default overwrite to false
 if(nargin==4 || isempty(o)); o=false; end
-
-% check file
-if(~ischar(file))
-    error('seizmo:writesacpz:fileNotString',...
-        'FILE must be a string!');
-end
-if(exist(file,'file'))
-    if(exist(file,'dir'))
-        error('seizmo:writesacpz:dirConflict',...
-            'SAC PoleZero File: %s\nIs A Directory!',file);
-    end
-    if(~o)
-        disp(sprintf('SAC PoleZero File: %s\nFile Exists!',file));
-        reply=input('Overwrite? Y/N [N]: ','s');
-        if(isempty(reply) || ~strncmpi(reply,'y',1))
-            disp('Not overwriting!');
-            return;
-        end
-        disp('Overwriting!');
-    end
+if(~isscalar(o) || ~islogical(o))
+    error('seizmo:writesacpz:badInput',...
+        'OVERWRITE flag must be a scalar logical!');
 end
 
 % check z, p, k
@@ -101,6 +85,40 @@ elseif(~isvector(p) || ~isnumeric(p))
 elseif(~isreal(k))
     error('seizmo:writesacpz:badConstant',...
         'CONSTANT must be a real scalar!');
+end
+
+% graphical selection
+if(isempty(file))
+    [file,path]=uiputfile(...
+        {'SAC_PZs_*;sac_pzs_*' 'SAC_PZs Files (SAC_PZs_*,sac_pzs_*)';
+        '*.*' 'All Files (*.*)'},...
+        'Save SAC PoleZero File as');
+    if(isequal(0,file))
+        error('seizmo:writesacpz:noFileSelected',...
+            'No output file selected!');
+    end
+    file=strcat(path,filesep,file);
+else
+    % check file
+    if(~ischar(file) || ~isvector(file))
+        error('seizmo:writesacpz:fileNotString',...
+            'FILE must be a string!');
+    end
+    if(exist(file,'file'))
+        if(exist(file,'dir'))
+            error('seizmo:writesacpz:dirConflict',...
+                'SAC PoleZero File: %s\nIs A Directory!',file);
+        end
+        if(~o)
+            disp(sprintf('SAC PoleZero File: %s\nFile Exists!',file));
+            reply=input('Overwrite? Y/N [N]: ','s');
+            if(isempty(reply) || ~strncmpi(reply,'y',1))
+                disp('Not overwriting!');
+                return;
+            end
+            disp('Overwriting!');
+        end
+    end
 end
 
 % get total number of poles/zeros

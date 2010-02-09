@@ -15,6 +15,8 @@ function [bank]=filter_bank(range,option,width,offset)
 %     given as a fraction of the center frequency).
 %
 %    Notes:
+%     - The 'variable' case gives a constant width and offset in
+%       logarithmic space.
 %
 %    Examples:
 %      Build a filter bank over the range 0.01 to 0.1 Hz with filter widths
@@ -29,10 +31,13 @@ function [bank]=filter_bank(range,option,width,offset)
 %    See also: IIRFILTER
 
 %     Version History:
+%        Mar.  6, 2009 - initial version
+%        Apr. 23, 2009 - octave compat fix, minor doc fix
 %        Sep.  7, 2009 - doc update
+%        Feb.  5, 2010 - fixed constant width filter bug, added note
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  7, 2009 at 08:00 GMT
+%     Last Updated Feb.  5, 2010 at 19:20 GMT
 
 % todo:
 
@@ -59,7 +64,7 @@ range=sort(range(:));
 if(isequal(option,'constant'))
     bank(:,1)=range(1):offset:range(2);
     bank(:,2)=bank(:,1)-width/2;
-    bank(:,3)=bank(:,1)+width/3;
+    bank(:,3)=bank(:,1)+width/2;
 elseif(isequal(option,'variable'))
     bank(1,1)=range(1);
     width1=1-width/2;

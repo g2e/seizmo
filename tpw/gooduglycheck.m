@@ -1,4 +1,6 @@
 function [ok]=gooduglycheck(indir,outdir)
+%GOODUGLYCHECK    Graphical Pass/Fail Tool for Surface Wave Data
+
 % did we finish ok?
 ok=false;
 

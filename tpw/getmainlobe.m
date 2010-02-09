@@ -19,7 +19,7 @@ function [f,a]=getmainlobe(f0,fs,swin,tprfrac,zpad,show)
 %
 %     [F,A]=GETMAINLOBE(F0,FS,SWIN,TPRFRAC,ZPAD,SHOW) toggles the plotting
 %     of the sinusoid using SHOW.  Plots are of the sinusoid after
-%     windowing, tapering and padding and of the corresponding spectra
+%     windowing, tapering and padding and of the corresponding spectral
 %     amplitudes.  SHOW must be TRUE (make plots) or FALSE (no plotting,
 %     the default).
 %
@@ -89,7 +89,7 @@ x(end-ntpts+1:end)=x(end-ntpts+1:end).*tpr(end:-1:1);
 %figure; plot(t,x);
 
 % zero pad
-nzp=zpad*fs;
+nzp=round(zpad*fs);
 t=[t(1)-(nzp(1):-1:1)/fs t t(end)+(1:nzp(2))/fs];
 x=[zeros(1,nzp(1)) x zeros(1,nzp(2))];
 npts=nzp(1)+nzp(2)+npts;

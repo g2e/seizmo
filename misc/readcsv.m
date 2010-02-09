@@ -24,9 +24,10 @@ function [lines]=readcsv(file)
 %     Version History:
 %        Sep. 16, 2009 - initial version
 %        Jan. 26, 2010 - add graphical selection
+%        Feb.  5, 2010 - improved file checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 22:45 GMT
+%     Last Updated Feb.  5, 2010 at 17:25 GMT
 
 % todo:
 
@@ -41,22 +42,23 @@ if(nargin<1 || isempty(file))
         '*.*' 'All Files (*.*)'},...
         'Select CSV File');
     if(isequal(0,file))
-        error('seizmo:readcsv:noFileSelected','No input file selected!');
+        error('seizmo:readcsv:noFileSelected',...
+            'No input file selected!');
     end
     file=strcat(path,filesep,file);
-end
-
-% check file
-if(~ischar(file))
-    error('seizmo:readcsv:fileNotString',...
-        'FILE must be a string!');
-end
-if(~exist(file,'file'))
-    error('seizmo:readcsv:fileDoesNotExist',...
-        'CSV File: %s\nDoes Not Exist!',file);
-elseif(exist(file,'dir'))
-    error('seizmo:readcsv:dirConflict',...
-        'CSV File: %s\nIs A Directory!',file);
+else
+    % check file
+    if(~ischar(file))
+        error('seizmo:readcsv:fileNotString',...
+            'FILE must be a string!');
+    end
+    if(~exist(file,'file'))
+        error('seizmo:readcsv:fileDoesNotExist',...
+            'CSV File: %s\nDoes Not Exist!',file);
+    elseif(exist(file,'dir'))
+        error('seizmo:readcsv:dirConflict',...
+            'CSV File: %s\nIs A Directory!',file);
+    end
 end
 
 % open file for reading

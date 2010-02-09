@@ -38,9 +38,10 @@ function []=writecsv(file,lines,o)
 %        Sep. 16, 2009 - initial version
 %        Sep. 22, 2009 - fixed dir check bug, skip confirmation option
 %        Jan. 26, 2010 - add graphical selection
+%        Feb.  5, 2010 - add check for overwrite flag
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 23:00 GMT
+%     Last Updated Feb.  5, 2010 at 17:25 GMT
 
 % todo:
 
@@ -50,6 +51,10 @@ if(~isempty(msg)); error(msg); end;
 
 % default overwrite to false
 if(nargin==2 || isempty(o)); o=false; end
+if(~isscalar(o) || ~islogical(o))
+    error('seizmo:writecsv:badInput',...
+        'OVERWRITE flag must be a scalar logical!');
+end
 
 % check structure
 if(~isstruct(lines))
@@ -69,7 +74,7 @@ if(isempty(file))
     file=strcat(path,filesep,file);
 else
     % check file
-    if(~ischar(file))
+    if(~ischar(file) || ~isvector(file))
         error('seizmo:writecsv:fileNotString',...
             'FILE must be a string!');
     end

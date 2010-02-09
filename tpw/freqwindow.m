@@ -1,5 +1,5 @@
 function [ok]=freqwindow(indir,outdir)
-%window surface wave data at several frequencies
+%FREQWINDOW    Window Surface Wave Data at Several Frequencies
 %
 % how to adjust for your data
 % - learn filter_bank and adjust line 42ish
