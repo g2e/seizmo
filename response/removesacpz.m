@@ -9,12 +9,16 @@ function [data,pz]=removesacpz(data,varargin)
 %
 %    Description: [DATAOUT,GOOD]=REMOVESACPZ(DATAIN) removes the instrument
 %     response from records in DATAIN based on the associated SAC PoleZero
-%     info.  If this info has not been added using GETSACPZ, then GETSACPZ
-%     is called.  If any records in DATA do not have any associated SAC
-%     PoleZero info (as is set in the .misc.has_sacpz struct field by
-%     GETSACPZ), the records are not returned in DATAOUT.  The secondary
-%     output, GOOD, is a logical array indicating the records in DATAIN
-%     that had SAC PoleZero info (.misc.has_sacpz set TRUE).
+%     info.  If this info has not been added, then GETSACPZ is called.  If
+%     any records in DATA do not have any associated SAC PoleZero info (as
+%     is set in the .misc.has_sacpz struct field by GETSACPZ), the records
+%     are not returned in DATAOUT.  The secondary output, GOOD, is a
+%     logical array indicating the records in DATAIN that had SAC PoleZero
+%     info (.misc.has_sacpz set TRUE).  You may use a customized PoleZero
+%     response on records by placing the info in the .misc.sacpz struct
+%     field and making sure _ALL_ records in DATA have the .misc.has_sacpz
+%     struct field set to TRUE or FALSE.  See GETSACPZ for info on the
+%     PoleZero layout.
 %
 %     [...]=REMOVESACPZ(...,'FREQLIMITS',[F1 F2 F3 F4],...) applies a
 %     lowpass and a highpass taper that limits the spectrum of the
@@ -78,9 +82,10 @@ function [data,pz]=removesacpz(data,varargin)
 %        Oct. 22, 2009 - initial version
 %        Oct. 30, 2009 - added informative output on error
 %        Feb.  3, 2010 - proper SEIZMO handling
+%        Feb. 16, 2010 - added info about custom PoleZero usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 23:50 GMT
+%     Last Updated Feb. 16, 2010 at 02:30 GMT
 
 % todo:
 

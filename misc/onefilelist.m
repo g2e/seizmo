@@ -14,7 +14,9 @@ function [list]=onefilelist(varargin)
 %     LIST=ONEFILELIST presents a gui to select files.
 %
 %    Notes:
-%     - XDIR is derived from RDIR (taken from the Matlab File Exchange)
+%     - The global SEIZMO.ONEFILELIST.FILTERSPEC allows access to the
+%     filetype filtering in the gui menu.  See UIGETFILE for details.  An
+%     all files spec is added to the bottom of the list automatically.
 %
 %    Examples:
 %     Compile a list of files from several directories
@@ -37,18 +39,31 @@ function [list]=onefilelist(varargin)
 %        Sep.  8, 2009 - minor doc fix
 %        Oct. 16, 2009 - file select ui if no input
 %        Jan. 27, 2010 - file select ui if empty first arg & only 1 arg
+%        Feb. 14, 2010 - added SEIZMO global access to filterspec
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2010 at 08:05 GMT
+%     Last Updated Feb. 14, 2010 at 16:05 GMT
 
 % todo:
+
+% retrieve global settings
+global SEIZMO
+
+% grab filterspec
+filterspec={};
+try
+    if(~isempty(SEIZMO.ONEFILELIST.FILTERSPEC) ...
+            && iscellstr(SEIZMO.ONEFILELIST.FILTERSPEC) ...
+            && size(SEIZMO.ONEFILELIST.FILTERSPEC,2)==2)
+        filterspec=SEIZMO.ONEFILELIST.FILTERSPEC;
+    end
+catch
+end
 
 % check nargin
 if(nargin<1 || (nargin==1 && isempty(varargin{1})))
     [files,path]=uigetfile(...
-        {'*.*' 'All Files (*.*)';
-        '*.sac;*.SAC;sac.*;SAC.*' 'SAC Files (*.sac,*.SAC,sac.*,SAC.*)';
-        '*.sz;*.SZ;sz.*;SZ.*' 'SEIZMO Files (*.sz,*.SZ,sz.*,SZ.*)'},...
+        [filterspec; {'*.*;*' 'All Files (*.* , *)'}],...
         'Select File(s)','MultiSelect','on');
     if(isequal(0,files))
         error('seizmo:onefilelist:noFilesSelected','No files selected!');

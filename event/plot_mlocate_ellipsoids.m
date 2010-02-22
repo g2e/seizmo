@@ -23,11 +23,18 @@ function [varargout]=plot_mlocate_ellipsoids(varargin)
 %        Apr. 23, 2009 - works with updated ONEFILELIST
 %        Jan. 27, 2010 - allow no input (select files graphically), added
 %                        history and documentation, clean up code a bit
+%        Feb. 14, 2010 - use ONEFILELIST filterspec global option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2010 at 08:40 GMT
+%     Last Updated Feb. 14, 2010 at 16:05 GMT
 
 % todo:
+
+% set filterspec appropriately
+global SEIZMO
+SEIZMO.ONEFILELIST.FILTERSPEC=...
+    {'*.ellipse;*.ELLIPSE' 'ELLIPSE Files (*.ellipse,*.ELLIPSE)';
+     '*.mlocate;*.MLOCATE' 'MLOCATE Files (*.mlocate,*.MLOCATE)'};
 
 % parse input
 files=onefilelist(varargin);

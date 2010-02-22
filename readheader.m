@@ -62,11 +62,18 @@ function [data]=readheader(varargin)
 %        Oct. 16, 2009 - dropped fullfile usage, took filesep out of loop
 %                        (for speed), reduced seizmodef calls
 %        Jan. 30, 2010 - seizmoverbose support, update for XDIR fixes
+%        Feb. 14, 2010 - use ONEFILELIST filterspec global option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 18:30 GMT
+%     Last Updated Feb. 14, 2010 at 16:05 GMT
 
 % todo:
+
+% set filterspec appropriately
+global SEIZMO
+SEIZMO.ONEFILELIST.FILTERSPEC=...
+    {'*.sac;*.SAC;sac.*;SAC.*' 'SAC Files (*.sac,*.SAC,sac.*,SAC.*)';
+     '*.sz;*.SZ;sz.*;SZ.*' 'SEIZMO Files (*.sz,*.SZ,sz.*,SZ.*)'};
 
 % compile file lists
 varargin=onefilelist(varargin{:});
@@ -81,9 +88,6 @@ end
 data(nfiles,1)=struct('path',[],'name',[],'filetype',[],...
     'version',[],'byteorder',[],'head',[],'hasdata',[],...
     'ind',[],'dep',[],'misc',[]);
-
-% getting file separator
-%fs=filesep;
 
 % "preallocate" definition info
 filetypes(1:1,1)={''};

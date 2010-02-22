@@ -1,10 +1,11 @@
 % Seismology Toolbox - position
 % Version 0.6.0-r106 Ararat 7-Dec-2009
 %
-% Position functions
+% Global Position functions
 %AUTHALIC2GEOGRAPHICLAT   - Convert latitude from authalic to geographic
 %CLOSEST_POINT_ON_GC      - Return closest point on great circle to a point
 %DEGDIST_FROM_GC          - Distance from a point on a sphere to a great circle
+%FIXLATLON                - Returns latitudes & longitudes in reasonable ranges
 %GC2LATLON                - Returns points along great circle(s)
 %GCARC2LATLON             - Returns points along great circle arc(s)
 %GC_INTERSECT             - Return intersection points between great circles
@@ -17,6 +18,8 @@
 %GEOGRAPHIC2GEOCENTRIC    - Converts coordinates from geographic to geocentric
 %GEOGRAPHIC2XYZ           - Converts coordinates from geographic to cartesian
 %GEOGRAPHICLAT2RADIUS     - Returns the radius at a geographic latitude
+%LATMOD                   - Returns a latitude modulus (ie unwraps latitudes)
+%LONMOD                   - Returns a longitude modulus (ie unwraps longitudes)
 %HAVERSINE                - Returns distance between 2 points using the Haversine formula
 %MEAN_ELLIPSOID_RADIUS    - Returns the mean radius of an ellipsoid
 %SPH_POLY_AREA            - Finds area of a polygon on a sphere

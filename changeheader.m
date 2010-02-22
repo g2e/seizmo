@@ -96,9 +96,10 @@ function [data]=changeheader(data,varargin)
 %        Oct. 16, 2009 - reftime code only used when necessary
 %        Jan. 28, 2010 - eliminate extra struct checks
 %        Jan. 29, 2010 - added VERSIONINFO cache support/hack
+%        Feb. 16, 2010 - added informative errors for UTC/TAI fields
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 01:50 GMT
+%     Last Updated Feb. 16, 2010 at 03:10 GMT
 
 % todo:
 
@@ -152,7 +153,7 @@ if(nver>1)
                 else
                     error('seizmo:changeheader:invalidInputSize',...
                         'Value array for field %s incorrect size!',...
-                        varargin{j-1});
+                        upper(varargin{j-1}));
                 end
             end
             data(idx==i)=changeheader(data(idx==i),temp{:});
@@ -234,7 +235,7 @@ for i=1:2:(nargin-2)
                 error('seizmo:changeheader:invalidInputSize',...
                     ['\nFiletype: %s, Version: %d\n'...
                     'Group value vector for field %s incorrect size!'],...
-                    h.filetype,h.version,varargin{i});
+                    h.filetype,h.version,upper(varargin{i}));
             end
         elseif(prod(sz)==nrecs)
             % assure column vector
@@ -244,7 +245,7 @@ for i=1:2:(nargin-2)
             error('seizmo:changeheader:invalidInputSize',...
                 ['\nFiletype: %s, Version: %d\n'...
                 'Value vector for field %s incorrect size!'],...
-                h.filetype,h.version,varargin{i});
+                h.filetype,h.version,upper(varargin{i}));
         end
     % array
     else
@@ -257,7 +258,7 @@ for i=1:2:(nargin-2)
             error('seizmo:changeheader:invalidInputSize',...
                 ['\nFiletype: %s, Version: %d\n'...
                 'Group value array for field %s not correct size'],...
-                h.filetype,h.version,varargin{i})
+                h.filetype,h.version,upper(varargin{i}))
         end
     end
     
@@ -322,7 +323,7 @@ for m=1:numel(h.enum)
                         warning('seizmo:changeheader:enumBad',...
                             ['\nFiletype: %s, Version: %d\n'...
                             'Enum ID/Desc Invalid for field %s !'],...
-                            h.filetype,h.version,f);
+                            h.filetype,h.version,upper(f));
                     end
                 end
             else % not all are the same (slow b/c looped)
@@ -341,7 +342,7 @@ for m=1:numel(h.enum)
                             warning('seizmo:changeheader:enumBad',...
                                 ['\nFiletype: %s, Version: %d\n'...
                                 'Enum ID/Desc Invalid for field %s !'],...
-                                h.filetype,h.version,f);
+                                h.filetype,h.version,upper(f));
                         end
                     end
                 end
@@ -442,18 +443,31 @@ for n=1:numel(h.ntype)
                     good5=false(nv,1);
                     good6=good5;
                     for i=1:nv
-                        % must be 1x5 or 1x6 numeric array
-                        if(isnumeric(v{i}))
-                            if(isequal(size(v{i}),[1 5]) ...
-                                    && ~any(v{i}==h.undef.ntype) ...
-                                    && ~any(isnan(v{i}) | isinf(v{i})) ...
-                                    && isequal(v{i}(1:4),round(v{i}(1:4))))
+                        sv=size(v{i});
+                        % - need errors to remind myself how this works
+                        if(~isreal(v{i}))
+                            error('seizmo:changeheader:badValue',...
+                                ['Field: %s\nVALUE for a UTC/TAI ' ...
+                                'field must be real!'],upper(f));
+                        elseif(~isequal(v{i}(1:end-1),fix(v{i}(1:end-1))))
+                            error('seizmo:changeheader:badValue',...
+                                ['Field: %s\nVALUE for a UTC/TAI ' ...
+                                'field must be whole numbers except ' ...
+                                'for the seconds element!'],upper(f));
+                        end
+                        % leave as undef if undef, nan, or inf
+                        if(~any(v{i}==h.undef.ntype) ...
+                                && ~any(isnan(v{i}) | isinf(v{i})))
+                            % require 1x5/6
+                            if(isequal(sv,[1 5]))
                                 good5(i)=true;
-                            elseif(isequal(size(v{i}),[1 6]) ...
-                                    && ~any(v{i}==h.undef.ntype) ...
-                                    && ~any(isnan(v{i}) | isinf(v{i})) ...
-                                    && isequal(v{i}(1:5),round(v{i}(1:5))))
+                            elseif(isequal(sv,[1 6]))
                                 good6(i)=true;
+                            else
+                                error('seizmo:changeheader:badValue',...
+                                    ['Field: %s\nVALUE for a UTC/TAI ' ...
+                                    'field must be celled 1x5 or 1x6 ' ...
+                                    'arrays!'],upper(f));
                             end
                         end
                     end
@@ -497,6 +511,6 @@ end
 % field not found
 warning('seizmo:changeheader:fieldInvalid',...
     'Filetype: %s, Version: %d\nInvalid field: %s !',...
-    h.filetype,h.version,f);
+    h.filetype,h.version,upper(f));
 
 end

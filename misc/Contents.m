@@ -14,8 +14,6 @@
 %ISORTHOGONAL        - TRUE if orientations are orthogonal
 %ISPARALLEL          - TRUE if orientations are parallel
 %JOINWORDS           - Combines a cellstr into a space-separated string
-%LATMOD              - Returns a latitude modulus
-%LONMOD              - Returns a longitude modulus
 %LTI2SUB             - Square matrix lower triangle linear indices to subscripts
 %MATCHSORT           - Replicates a sort operation using the returned permutation indices
 %MCXC                - Multi-channel cross correlation with built-in peak picker

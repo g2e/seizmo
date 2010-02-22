@@ -1,0 +1,294 @@
+  POLEZERO OPTION:
+        One of the instrument types is called POLEZERO.  This type lets you
+  describe a general instrument response by specifying a file which contains
+  its poles and zeros.  The options in the file are keyword driven and the
+  numbers are in free format.  You may specify a multiplicative scaling
+  constant A0 by putting a line in the file containing the keyword "CONSTANT"
+  followed by a floating point number.  The default for this constant is 1.0 if
+  you omit this line.  You specify the number of poles by putting a line in the
+  file with the keyword "POLES" following by an integer number.  The next lines
+  in the file until another keyword is read become the poles for this
+  instrument.  Each such line contains two floating point numbers specifying
+  the real and imaginary parts of each of the poles.  If you have fewer lines
+  specifying poles than you stated on the "POLES" line, the remaining poles are
+  assumed to be numerically zero.  You specify the zeros in the same way with
+  a "ZEROS" keyword line following by lines specifying the non-zero zeros.  You
+  may specify up to 15 poles and 15 zeros.  For example, the following is the
+  specification for the SRO broadband seismometer:
+
+        ZEROS 4
+        -0.125  0.0
+        -50.0  0.0
+
+        POLES 4
+        -0.13 0.0
+        -6.02 0.0
+        -8.66 0.0
+        -35.2 0.0
+
+        CONSTANT -394.0
+
+  Notice that since two of the zeros are at the origin, they don't have to be
+  specified in the file.  Also notice that the options may appear in any order
+  in the file.  If there are any nonzero imaginary parts to a pole or zero, they
+  must appear as conjugate pairs to make the response purely real.
+        SAC uses the omega convention for the pole-zero response:  the frequency
+  w = 2*pi*i*f, where f is frequency in Hz and i is the imaginary unit
+  (sqrt(-1)).  Thus, if an instrument manufacturer specifies that a pole is at 1
+  Hz on the real axis, the SAC pole's real and imaginary parts would be
+  (6.28, 0).  The response H(w) is the ratio of the product of the difference
+  between w and each of the np poles and nz zeros:
+
+               (w-z )*(w-z )*...*(w-z  )
+                   1      2          nz
+        H(w) = -------------------------
+               (w-p )*(w-p )*...*(w-p  )
+                   1      2          np
+
+        For conversion of a seismometer's analog output to a physical unit
+  (m, m/sec, m/sec**2), there are two specific frequencies that are important:
+  the normalization frequency wn, and the sensitivity frequency, ws.  The
+  normalization frequency is the frequency at which the product A0*H(wn) = 1.0
+  A0 is the CONSTANT value specified in the response.  The sensitivity S of the
+  instrument is the value by which A0*H(w) should be multiplied to get the
+  appropriate physical unit.  To avoid unnecessary complications in applying
+  instrument corrections, wn and ws should be equal.  If they are, then by
+  multiplying the signal by S before applying the transfer function, the correct
+  physical units are produced.  If not, you must multiply by S*H(ws)/H(wn).  If
+  convenient, you can combine S and A0 and set CONSTANT to be their product S*A0.
+        SAC assumes that when you apply your pole-zero instrument correction,
+  it will yield displacement.  If this is not the physical unit yielded in your
+  instrument response, dividing or multiplying by w will respectively integrate
+  or differentiate the response.  Thus if your instrument response is velocity
+  (m/sec), then adding an extra zero with value zero will yield displacement.
+  Conversely, if your instrument response is displacement and you want velocity
+  as your physical unit, add an extra pole with value zero (but this is not
+  what SAC would expect of the response).
+        To use this option you specify the type to be POLEZERO and the subtype
+  to be the name of the file.  This may be a file in the current directory or in
+  some other directory if you specify the absolute or relative pathname.   It may
+  also the the name of a global file contained in the "polezero" subdirectory
+  of the "sacaux" directory.  By putting a file in this global directory, anyone
+  on your system can easily use it.
+
+  REFERENCES:
+     Hutt, C. R., "Specifying and using channel response information", Appendix
+      C, SEED Reference Manual, version 2.4, 2006; available online from
+      <http://www.iris.edu/software/downloads/seed_tools/>.
+     Nakanishi, K., "Computer code for the transfer function of seismic
+      systems", Lawrence Livermore National Lab., UCID-18071, 1979.
+
+  EXAMPLE:  suppose the file was named sro.pz and you want to remove the
+  instrument response from station ABC.Z.
+
+        u:  READ ABC.Z
+
+        u:  TRANSFER FROM POLEZERO SUBTYPE SRO.PZ TO NONE
+
+------
+
+
+Here are the few points that add to the confusion in my opinion:
+
+1) Transfer's SAC HELP says that the NONE type is Displacment.
+
+If NONE is as I interpret it, namely, don't deconvolve or convolve with 
+anything, then there is no longer a units issue. You can just use the 
+native response units as specified in de SEED file and get out the units 
+you'd expect. You could even leave out the extra zero(s) and get velocity 
+or acceleration, whichever you want.
+
+2) The fact that SAC defaults to Displacement in nm, is only relevant if 
+you want to put in, or take out, one of the pre-programmed instrument 
+types.
+
+3) rdseed does add the extra zeros to its SAC_PZ files to result in a 
+Displacement response, however, it outputs a CONSTANT that is A0*S that 
+results in the signal that are usually (THANK GOODNESS) in SI, m/s or 
+m/s**2 (depending on the units-in field of the SEED file) if you use 
+TRANSFER FROM POLEZERO rdseed-output-file TO NONE.
+
+To make all this clear, you don't only need to edit the POLEZERO part of 
+the transfer help, but also the other parts of TRANSFER. And Rdseed could 
+use some more information about the SAC_PZ output file in its man-page.
+
+-Renate
+
+Renate Hartog
+PNSN/UW Seismology lab.
+
+------
+
+Responding to the aside, there are 3 generations of electronics for  
+STS-2s and three different sets of poles and zeros to represent them.   
+To figure out which generation sensor you might have there are some  
+general guidelines based on date of manufacture, but it remains  
+possible that the electronics were upgraded if the sensor was returned  
+to the factory.  The nominal responses for the 3 generations are  
+available in SEED RESP format here:
+
+http://www.iris.edu/NRL/sensors/streckeisen/streckeisen_sts2_sensors.html
+
+The responses of the different generations only differ significantly  
+at high frequencies.  I'm not quite sure how high is too high, I have  
+heard 35Hz signals and above are where the differences between  
+generations become significant.
+
+To further complicate matters a "truncated" pole and zero response for  
+STS-2s has been in common use for many years and it is different than  
+any of the factory nominal responses.  It generally works fine for all  
+the generations of sensors with the same caveat that it does not  
+represent the sensor at high frequencies.
+
+Apologies for the off topic message, seems like useful information to  
+spread around.
+
+Chad Trabant
+IRIS Data Management Center
+
+-------
+
+POLEZERO OPTION:
+
+POLEZERO is an instrument type that can be used to put in or take out the 
+(analog) seismometer response.  A good reference is Appendix C in the SEED
+manual.  The current version can be downloaded from IRIS at URL
+<http://www.iris.edu/software/downloads/seed_tools/>, and a good way to get a
+polezero file in the correct format is to download data as a SEED volume and use
+program rdseed to extract the data, the polezero file(s) and the response file. 
+Program rdseed can be downloaded from the same Web site.  The response file for
+a specified channel/station is useful to see the "response in" and "response
+out" units for the transfer function.  Typically, the "response in" listed in
+the response file is velocity, in m/s, but the polezero file has a "response in"
+of displacement.
+
+      A polezero file is a listing of complex zeros and poles of a causal filter
+that represents the seismometer.  The transfer function is of the form
+
+(s-z1)(s-z2)...*s-zn)
+_____________________
+
+s-p1))(s-p2)...*s-pm) 
+
+where the z1 ... zn are the N zeros and the p1 ... pm are the m poles of the
+transfer function.  The convention used is a Laplacian transform, with  s = 2\pi
+i f with f the frequency in Hz.  The sign convention is e^{-st} for the forward
+transform (from the t domain to the s domain). 
+      Here is a polezero file for the LHZ channel from station JCC returned by program rdseed for a 28 June 2007 teleseism:
+
+ZEROS 3
+POLES 5
+-0.0370  0.0370
+-0.0370  -0.0370
+-118.7520  423.4880
+-118.7520  -423.4880
+-251.3270  0.0000
+CONSTANT 3.056572e+16
+
+For this transfer function, there are five poles, for which the complex values
+are listed on the five lines following the line POLES 5.  Also there are three
+zeros.  None are listed, and the convention is that an unlisted zero has the
+value of zero.  Hence if there were five zeros, for which three were actually
+zero, one could either write out five lines for which three of them would be
+0.00 0.00 and the other two the complex, nonzero values, or one could have ZEROs
+5 with only the two nonzero zeros explicitly written out.  In the response file
+for this channel, there are only two zeros because the "response in" is velocity
+but rdseed "knows" that the user wants to work with waveforms corrected to
+displacement. The CONSTANT is a multiplicative factor that rescales the
+"response in" units to the "response out" units at the normalization frequency. 
+The derivation of CONSTANT is described in the SEED manual and can be pieced
+together for a particular channel from that channel's response file.  
+
+     The default for CONSTANT is 1.0, the options can be written in any order,
+and one can add a comment line by starting that line with a * (asterisk).
+
+      To use this option you specify the type to be POLEZERO and the subtype to
+be the name of the file.  This may be a file in the current directory or in some
+other directory if you specify the absolute or relative pathname.  It may also
+the the name of a global file contained in the sac subdirectory
+sac/aux/polezero/.  By putting a file in this global directory, anyone on your
+system can easily use it. 
+
+EXAMPLE:  suppose the file was named sro.pz and you want to remove the
+instrument response from station ABC.Z.  
+
+      u:  READ ABC.Z
+
+      u:  TRANSFER FROM POLEZERO SUBTYPE SRO.PZ TO NONE
+
+-------
+
+Reftek 130 has 24 bit digitizer. and the min and max count values are  +-2^(24-1) = 6291456 count for +- 20V
+20/(2*6291456) = 1.5895microVolt/count.
+
+We use ref2segy and seg2sac programs to convert the files.
+segy2sac (without -g parameter)  removes the Reftek gain and its output is in Volts.
+
+--------
+
+I am forwarding this to the sac-help list in the hopes that it may  
+garner the attention of more expertise.
+
+Your calculation of CONSTANT looks generally correct with the  
+exception of the 2*pi, it should not be included.
+
+A standard gain STS-2 should be nominally 1500 Volts/meters/second,  
+which needs to be scaled if you want nanometers.  I have no idea what  
+the digitizer gain for a RefTek 130 is, but lets assume your number is  
+correct for now.
+
+CONSTANT = A0 * SensorGain * Digitizer Gain
+
+CONSTANT = 5.92e+07 * 1500 / 1.589e-06 = 5.588e+16 (so it looks like  
+2*pi is not in there after all).
+
+That CONSTANT results in units of meters.  So scale it by a factor of  
+1e9 for nanometers = 5.588e25
+
+Hopefully someone more knowledgeable will correct any mistakes I've  
+made.
+
+On a slight related note, the poles and zeros you are using are the  
+"truncated"/"simplified" STS-2 response and not the STS-2 nominal  
+responses (you can access the nominal responses for each of 3  
+generations of STS-2 here: http://www.iris.edu/NRL/sensors/streckeisen/streckeisen_sts2_sensors.html) 
+.  This is not a critical problem unless you are working with high  
+frequency data, I have heard that it's not important below 35 Hz.
+
+Chad
+
+On Apr 9, 2009, at 3:11 PM, Melaku Ayenew wrote:
+
+> Hello Chad,
+> Thank you for your response
+> I am just starting to learn sac for my research, I was trying to  
+> remove STS-2 broadband instrument and convolute the Wood-Anderson  
+> response. This is the STS2.pz file I came up with would you check it  
+> for me please
+>
+> ZEROS 2 (rad/sec)
+> 0.000   0.000
+> 0.000   0.000
+>
+> POLES 5 (rad/sec)
+>
+> -0.03701        0.03701
+> -0.03701       -0.03701
+> -251.3          0.0000
+> -131.0          467.30
+> -131.0         -467.30
+>
+> CONSTANT  5.5884E+16
+>
+> This is how I calculate the the Constant
+> CONSTANT=A0 X SensorGain X Digitizer Gain X 2*pi
+> Where A0 is normalization factor =5.92 E+07
+> The digitizer is REF TEC 130 data logger with bit weight  
+> 1.589E-06volts which I figure the digitizer gain would be 1/1.589  
+> E-06 ( I am not sure about this step)
+>
+> And from SAC>transfer from polezero subtype STS2.pz to WA
+>
+> when I plot this I got a  waveform with amplitude in the order of  
+> 10E-4 nm (transfer returns values in nm)
+

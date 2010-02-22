@@ -1,0 +1,82 @@
+wide spread changes:
+=======================
+usage first!
+combine get/set state scripts and update functions using them
+testing table
+
+bugs:
+========
+- slidingavg doesn't handle offset out of range (entire result goes nan)
+- check slidingavg against other running mean functions
+- checkheader description needs update
+- plotting is shit
+	- allow pass-through of all properties
+	- cleaner plotting routines
+	- more options (like flags on bottom or on top)
+	- more plot types
+- iirfilter is shit
+	- better description (a table would really help here)
+	- connect with sacpz??
+
+need to get done:
+=================
+decimate cascades should go greatest to least for efficiency
+better polezero docs
+	- units of poles and zeros
+		- sac radians
+	- what makes the constant
+		- (2*pi)^(np-nz)
+		- a0 (normalization constant - at wn the transfer function is 1 with a0)
+		- sensor gain (sensitivity - gives appropriate units) 
+		- digitizer gain (volts/bit - bit/volts)
+	- dis 2 vel
+		- add pole at 0
+	- vel 2 dis
+		- add zero at 0
+make compatible with earliest matlab 7
+	- grab a copy from somewhere
+make work with octave
+	- error needs to support structs
+	- error needs to not error on blank messages
+	- cell array of function handles should handle space separated (not require commas)
+	- way to assign new field to empty struct
+	- setdiff does not handle mixed char/cell
+	- switch/case does not handle multi-case
+	- replace textscan with fscanf/sscanf/fgetl
+
+new function short list:
+=========================
+correlate
+rotate
+convolve
+plotting
+	- better properties handling
+	- spectral
+	- station map
+	- station map movie (frame through samples)
+	- cmp vs cmp (plot 2 components with time)
+    - particle motion (color changing line to show time progression? how?)
+    - true gui buttons could make this really nice
+		- drop down(s) to select component (!!!)
+		- phase picking
+		- show predicted phase times
+		- so much more...
+read/write fixed format
+seizmofilter
+filterdesign
+
+wait listed:
+================
+remove polezeros
+apply polezeros
+virtual fields
+sac-like date handling
+ttbox integration
+move cmb codes in
+merge (uneven records)
+find sacpz/resp
+rpoly/gpoly
+getvalue
+mtconvert
+mtrotate
+

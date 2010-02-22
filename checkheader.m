@@ -308,9 +308,10 @@ function [data]=checkheader(data,varargin)
 %                        dataset is created
 %        Feb.  3, 2010 - no longer remove records w/ nans or infs - they
 %                        are converted to zero (if fix/warnfix)
+%        Feb. 16, 2010 - OUTOFRANGE_LAT now shifts (ev/st)lo as necessary
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 18:10 GMT
+%     Last Updated Feb. 16, 2010 at 01:20 GMT
 
 % todo:
 
@@ -1508,13 +1509,25 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
-            ev(badev,1)=latmod(ev(badev,1),90);
-            st(badst,1)=latmod(st(badst,1),90);
+            % unwrap lats and shift lons appropriately
+            % but do not shift undefined lons!
+            undefevlo=ev(:,2)==undef; ev(badev & undefevlo,2)=nan;
+            undefstlo=st(:,2)==undef; st(badst & undefstlo,2)=nan;
+            [ev(badev,1),ev(badev,2)]=fixlatlon(ev(badev,1),ev(badev,2));
+            [st(badst,1),st(badst,2)]=fixlatlon(st(badst,1),st(badst,2));
+            ev(badev & undefevlo,2)=undef(badev & undefevlo);
+            st(badst & undefstlo,2)=undef(badst & undefstlo);
         case 'WARNFIX'
             warning(report.identifier,report.message);
             disp('==> Unwrapping out of range latitudes!');
-            ev(badev,1)=latmod(ev(badev,1),90);
-            st(badst,1)=latmod(st(badst,1),90);
+            % unwrap lats and shift lons appropriately
+            % but do not shift undefined lons!
+            undefevlo=ev(:,2)==undef; ev(badev & undefevlo,2)=nan;
+            undefstlo=st(:,2)==undef; st(badst & undefstlo,2)=nan;
+            [ev(badev,1),ev(badev,2)]=fixlatlon(ev(badev,1),ev(badev,2));
+            [st(badst,1),st(badst,2)]=fixlatlon(st(badst,1),st(badst,2));
+            ev(badev & undefevlo,2)=undef(badev & undefevlo);
+            st(badst & undefstlo,2)=undef(badst & undefstlo);
     end
 end
 

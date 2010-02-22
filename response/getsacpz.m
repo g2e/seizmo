@@ -11,7 +11,8 @@ function [data]=getsacpz(data,varargin)
 %     under DATA.misc.sacpz and the format is described in MAKESACPZDB.
 %     Records without SAC PoleZero info have the field DATA.misc.has_sacpz
 %     set to FALSE (otherwise it is set to TRUE).  This particular case
-%     uses the default SAC PoleZero database that comes with SEIZMO.
+%     uses the default SAC PoleZero database that comes with SEIZMO.  See
+%     the Notes section below for header field requirements!
 %
 %     DATA=GETSACPZ(DATA,SACPZDB1,...,SACPZDBN) searches in the alternative
 %     databases SACPZDB1 thru SACPZDBN for info relevant to DATA.  See
@@ -26,12 +27,21 @@ function [data]=getsacpz(data,varargin)
 %
 %    Notes:
 %     - In order for GETSACPZ to identify the appropriate SAC PoleZero file
-%       for each record, the following fields must be set correctly:
+%       for each record, the following fields must be set appropriately:
 %        KNETWK, KSTNM, KHOLE, KCMPNM
 %        NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC, B, E
 %     - you may mix the last three usage forms (note that structs are put
 %       in front, followed by sacpzs from dirs, and finally dbs on disk)
 %     - warns if no files are found or a record straddles a time boundary
+%     - If you have entered the necessary header fields and GETSACPZ does
+%       not find a match there are several possibilities:
+%        1) the instrument response is not at IRIS
+%        2) the instrument response is not in a Poles & Zeros format
+%           (this is true for ~25% of the responses at IRIS)
+%        3) I haven't updated the sacpzdb recently enough to include your
+%           site's new response info.  I update after about 3 months.
+%
+%    Header changes: see CHECKHEADER
 %
 %    Examples:
 %     Working with the full IRIS database (default) is somewhat slow
@@ -58,9 +68,10 @@ function [data]=getsacpz(data,varargin)
 %        Jan. 26, 2010 - do not error if no matching polezero found in db
 %        Jan. 30, 2010 - fixes for checking state function
 %        Feb.  3, 2010 - versioninfo caching
+%        Feb. 16, 2010 - require header fields are set
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 23:15 GMT
+%     Last Updated Feb. 16, 2010 at 02:15 GMT
 
 % todo:
 
@@ -77,6 +88,12 @@ oldversioninfocache=versioninfo_cache(true);
 
 % attempt sac polezero lookup
 try
+    % get undef values
+    [h,vi]=versioninfo(data);
+    sundef=[h(vi).undef];
+    nundef=[sundef.ntype]';
+    sundef={sundef.stype}';
+    
     % verbosity
     verbose=seizmoverbose;
     
@@ -86,6 +103,28 @@ try
     % get header info
     [b,e,knetwk,kstnm,kcmpnm,khole]=getheader(data,'b utc','e utc',...
         'knetwk','kstnm','kcmpnm','khole');
+    
+    % uncell b/e
+    b=cell2mat(b);
+    e=cell2mat(e);
+    
+    % require all fields to be defined
+    % - all name fields should not be undefined
+    badname=strcmpi(sundef,knetwk) | strcmpi(sundef,kstnm) ...
+        | strcmpi(sundef,kcmpnm) | strcmpi(sundef,khole);
+    if(any(badname))
+        error('seizmo:getsacpz:badName',...
+            ['Record(s):\n' sprintf('%d ',find(badname)) ...
+            '\nKNETWK, KSTNM, KHOLE, and/or KCMPNM fields not set!']);
+    end
+    % - all time fields should not be undef, nan, inf
+    badtime=sum(nundef(:,ones(5,1))==b | isnan(b) | isinf(b) ...
+        | nundef(:,ones(5,1))==e | isnan(e) | isinf(e),2)>0;
+    if(any(badtime))
+        error('seizmo:getsacpz:badName',...
+            ['Record(s):\n' sprintf('%d ',find(badtime)) ...
+            '\nB, E, and/or NZ* header fields not set!']);
+    end
     
     % handle khole goofiness
     khole2=khole; badhole=strcmpi(khole,'__');
@@ -229,10 +268,10 @@ try
             % now find sacpz file(s) for this record by time
             % - find sacpz surrounding record's b & e
             % - warn if overlaps boundary
-            okb=timediff(db.(NET{i}).b(ok,:),b{i})>0 ...
-                & timediff(db.(NET{i}).e(ok,:),b{i})<0;
-            oke=timediff(db.(NET{i}).b(ok,:),e{i})>0 ...
-                & timediff(db.(NET{i}).e(ok,:),e{i})<0;
+            okb=timediff(db.(NET{i}).b(ok,:),b(i,:))>0 ...
+                & timediff(db.(NET{i}).e(ok,:),b(i,:))<0;
+            oke=timediff(db.(NET{i}).b(ok,:),e(i,:))>0 ...
+                & timediff(db.(NET{i}).e(ok,:),e(i,:))<0;
             halfbaked=(okb & ~oke) | (~okb & oke);
             if(any(halfbaked))
                 redraw=true;
@@ -255,7 +294,7 @@ try
                 'Could not find a matching SAC PoleZero file!'],i);
         else
             % get file with latest b
-            [idx,idx]=min(timediff(db.(NET{i}).b(ok,:),b{i}));
+            [idx,idx]=min(timediff(db.(NET{i}).b(ok,:),b(i,:)));
             
             % assign to data.misc.sacpz
             data(i).misc.has_sacpz=true;

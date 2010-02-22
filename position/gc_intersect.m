@@ -10,7 +10,7 @@ function [lat1,lon1,lat2,lon2]=gc_intersect(lat1,lon1,lat2,lon2,lat3,lon3,lat4,l
 %     great circles given by points LAT3/LON3 and LAT4/LON4.  Great circles
 %     either intersect twice or are equal.  ILAT1/ILON1 gives one
 %     intersection point and ILAT2/ILON2 gives the other (antipodal to the
-%     first).  When two great circles are equal both intersections points
+%     first).  When two great circles are equal both intersection points
 %     are set to NaN.  All LAT/LON must either be scalar or arrays with the
 %     same number of elements.  This allows finding intersections between
 %     one great circle and several others or to find intersections between

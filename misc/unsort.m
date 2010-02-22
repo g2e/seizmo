@@ -3,7 +3,7 @@ function [x,li]=unsort(x,i,dim)
 %
 %    Usage:    y=unsort(x,sort_idx)
 %              y=unsort(x,sort_idx,dim)
-%              y=unsort(...)
+%              [y,li]=unsort(...)
 %
 %    Description: Y=UNSORT(X,SORT_IDX) undoes a previous sort operation
 %     using the permutation matrix from that previous sort.  Really this
@@ -33,9 +33,10 @@ function [x,li]=unsort(x,i,dim)
 
 %     Version History:
 %        Sep. 21, 2009 - initial version
+%        Feb. 16, 2010 - fixed usage section in docs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2009 at 20:35 GMT
+%     Last Updated Feb. 16, 2010 at 01:25 GMT
 
 % todo:
 

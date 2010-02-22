@@ -9,12 +9,17 @@ function [data,pz]=applysacpz(data,varargin)
 %
 %    Description: [DATAOUT,GOOD]=APPLYSACPZ(DATAIN) applies an instrument
 %     response to records in DATAIN based on the associated SAC PoleZero
-%     info.  If this info has not been added using GETSACPZ, then GETSACPZ
-%     is called.  If any records in DATA do not have any associated SAC
-%     PoleZero info (as is indicated by the .misc.has_sacpz struct field
-%     set by GETSACPZ), the records are not returned in DATAOUT.  The
-%     secondary output, GOOD, is a logical array indicating the records in
-%     DATAIN that had SAC PoleZero info (.misc.has_sacpz set TRUE).
+%     info.  If this info has not been added, then GETSACPZ is called.  If
+%     any records in DATA do not have any associated SAC PoleZero info (as
+%     is indicated by the .misc.has_sacpz struct field set by GETSACPZ),
+%     the records are not returned in DATAOUT.  The secondary output, GOOD,
+%     is a logical array indicating the records in DATAIN that had SAC
+%     PoleZero info (.misc.has_sacpz set TRUE).  You may use a customized
+%     PoleZero response on records by placing the info in the .misc.sacpz
+%     struct field and making sure all records in DATA have the 
+%     .misc.has_sacpz struct field set to TRUE or FALSE.  Otherwise
+%     GETSACPZ is called on the entire dataset and the customized PoleZero
+%     info is lost.  See GETSACPZ for info on the PoleZero layout.
 %
 %     [...]=APPLYSACPZ(...,'FREQLIMITS',[F1 F2 F3 F4],...) applies a
 %     lowpass and a highpass taper that limits the spectrum of the
@@ -61,15 +66,16 @@ function [data,pz]=applysacpz(data,varargin)
 %     Apply instrument responses to velocity (nm/sec) records:
 %      data=applysacpz(data,'units','vel');
 %
-%    See also: APPLYSACPZ, GETSACPZ, DECONVOLVE
+%    See also: REMOVESACPZ, GETSACPZ, CONVOLVE
 
 %     Version History:
 %        Oct. 22, 2009 - initial version
 %        Oct. 30, 2009 - added informative output on error
 %        Feb.  3, 2010 - seizmoverbose support, proper SEIZMO handling
+%        Feb. 16, 2010 - doc update, fixed related function list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 23:50 GMT
+%     Last Updated Feb. 16, 2010 at 02:25 GMT
 
 % todo:
 
@@ -113,8 +119,8 @@ try
     catch
         % detail message
         if(verbose)
-            disp('Not All Records Indicate PoleZero Status.');
-            disp('Attempting to Find SAC PoleZeros for All Records.');
+            disp('Not All Records Indicate PoleZero Status');
+            disp('Attempting to Find SAC PoleZeros for All Records');
         end
         data=getsacpz(data);
         pz=getsubfield([data.misc],'has_sacpz');
