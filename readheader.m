@@ -99,7 +99,7 @@ verbose=seizmoverbose;
 
 % detail message
 if(verbose)
-    disp('Reading in Header of Record(s)');
+    disp('Reading in Header Portion of Record(s)');
     print_time_left(0,nfiles);
 end
 

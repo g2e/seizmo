@@ -44,9 +44,10 @@ function [times,n]=getarrival(data,phase)
 %        June 30, 2009 - second output: t index
 %        Dec.  8, 2009 - minor doc fix
 %        Jan. 29, 2010 - dropped most checks, seizmoverbose support
+%        Feb. 24, 2010 - 1 warning for unfound arrivals
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 23:30 GMT
+%     Last Updated Feb. 24, 2010 at 17:40 GMT
 
 % todo:
 
@@ -80,8 +81,6 @@ for i=1:nrecs
     
     % check for failure
     if(isempty(pos))
-        warning('seizmo:getarrival:noPhase',...
-            'Could not find phase %s for record %d !',phase,i);
         % detail message
         if(verbose); print_time_left(i,nrecs); end
         continue;
@@ -93,6 +92,20 @@ for i=1:nrecs
     
     % detail message
     if(verbose); print_time_left(i,nrecs); end
+end
+
+% throw warning for missed arrivals
+if(any(isnan(n)))
+    if(all(isnan(n)))
+        tmp=['ALL OF THEM: 1 to ' num2str(numel(n))];
+    elseif(sum(isnan(n))>20)
+        tmp=[sprintf('%d ',find(isnan(n),10,'first')) ...
+            '... ' sprintf('%d ',find(isnan(n),10,'last'))];
+    else
+        tmp=sprintf('%d ',find(isnan(n)));
+    end
+    warning('seizmo:getarrival:noPhase',...
+        ['Record(s):\n' tmp '\nCould not find phase %s!'],phase);
 end
 
 end

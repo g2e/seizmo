@@ -28,9 +28,10 @@ function [lgc]=isparallel(o1,o2)
 
 %     Version History:
 %        Nov.  2, 2009 - initial version
+%        Feb. 22, 2010 - bug fix for size checks, single-prec tolerance
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2009 at 19:15 GMT
+%     Last Updated Feb. 22, 2010 at 21:35 GMT
 
 % todo:
 
@@ -52,10 +53,12 @@ end
 % tile scalar & check size matches
 if(prod(sz1([1 3:end]))==1)
     o1=repmat(o1,[sz2(1) 1 sz2(3:end)]);
+    sz1=sz2;
 elseif(prod(sz2([1 3:end]))==1)
     o2=repmat(o2,[sz1(1) 1 sz1(3:end)]);
+    sz2=sz1;
 end
-if(~isequal(sz1([1 3:end]),sz1([1 3:end])))
+if(~isequal(sz1,sz2))
     error('seizmo:isparallel:badInput',...
         'O1 & O2 must be single orientations or equal sized!');
 end
@@ -73,6 +76,6 @@ o2=cat(1,sin(o2(2,:)).*sin(o2(1,:)),...
     cos(o2(2,:)).*sin(o2(1,:)),cos(o2(1,:)));
 
 % check parallel
-lgc=ipermute(sum(abs(o1-o2)<(2*pi*eps),1)==3,[2 1 3:nd]);
+lgc=ipermute(sum(abs(o1-o2)<(2*pi*eps(single(1))),1)==3,[2 1 3:nd]);
 
 end

@@ -67,9 +67,10 @@ function [def]=seizmodef(filetype,version,usecache)
 %        Oct.  2, 2009 - added gcp vgrp (just baz)
 %        Oct. 16, 2009 - removed rmfield usage (its slow)
 %        Nov.  2, 2009 - added cmp vgrp ([cmpinc cmpaz])
+%        Feb. 23, 2010 - GCP is now a vf rather than vgrp (baz+180)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2009 at 18:15 GMT
+%     Last Updated Feb. 23, 2010 at 15:50 GMT
 
 % todo:
 
@@ -169,7 +170,6 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.vgrp.ev={'evla' 'evlo' 'evel' 'evdp'};
     def.vgrp.cmp={'cmpinc' 'cmpaz'};
     def.vgrp.delaz={'gcarc' 'az' 'baz' 'dist'};
-    def.vgrp.gcp={'baz'};
     def.vgrp.nz={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec'};
     def.vgrp.nzdttm={'nzyear' 'nzjday' 'nzhour' 'nzmin' 'nzsec' 'nzmsec'};
     def.vgrp.kname={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
@@ -231,6 +231,9 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.vf.z6tai.ch=@vf_ch_z6tai;
     def.vf.z6tai.gh=@vf_gh_z6tai;
     def.vf.z6tai.lh=@vf_lh_z6tai;
+    def.vf.gcp.type='real';
+    def.vf.gcp.ch=@vf_ch_gcp;
+    def.vf.gcp.gh=@vf_gh_gcp;
     % ncmp virtual field only for non-mulcmp versions
     if(version==6 || version==200)
         def.vf.ncmp.type='int';
@@ -249,6 +252,9 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     %   return any useful reference timing info from the header
     % - currently assumed to go year,jday,hour,min,sec,msec
     def.reftime=71:76;
+    
+    % another hack like the above
+    def.baz=53;
     
     % begin header section descriptions
     def.real.startbyte=0;

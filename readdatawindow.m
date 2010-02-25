@@ -252,7 +252,7 @@ try
     
     % detail message
     if(verbose)
-        disp('Reading Window of Evenly Sampled Record(s)');
+        disp('Reading Data Window of Evenly Sampled Record(s)');
         print_time_left(0,nrecs);
     end
 

@@ -1,0 +1,49 @@
+% how?
+%
+% need to decide on inputs
+% - best if we can have the first input be all the data
+% - rest of the inputs would be options
+%
+% need to decide on options
+% - 'to' (sac compatible)
+%   - only horizontals + orthogonal
+%   - allow 'gcp' or any numeric header field
+%       - who's header?  ...only 'gcp' until this is decided
+%   - allow any real number (reduce to 0-360)
+% - 'through'
+%   - require orthogonal
+%   - this could get confusing...how do we decide which 2 channels to pick?
+%       - option should denote this ('pair')
+%           - we need a system here...
+%
+%              1
+%              ^   2
+%              |  7
+%              | /
+%              |/
+%              +------> 3
+%             
+%             so the 3 options are:
+%             12, 13, 23 (default)
+%
+%             but what defines 1,2,3?
+%               easy case:
+%               - if exist a vertical it is 1
+%               - if 2 horizontals - 2 is 90deg ccw from 3
+%               general case:
+%               - 3 channels:
+%                   - 1 is most vertical: max(abs(90-abs(cmpinc)))
+%                   - failing that -- the most northward
+%                   - 2 and 3 follow from finding 1
+%               - 2 channels:
+%                   - 1 vs 2 vs 3?
+%                       - only handle 2 horizontal case
+%                           - might be better to keep dead channels around!
+% - '3d'
+%   - require 3 linearly independent components
+%       - throw warning if not and move on to next
+%   - just specify the output axis orientations (allow 1+ channel output)
+%       - [inc az] -> [0 0 90 0 90 90 ...]
+%       - how could we handle 'gcp' here?
+%           - eval?
+

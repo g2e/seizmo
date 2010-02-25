@@ -9,7 +9,8 @@ function []=print_time_left(act_step,tot_step,redraw)
 %     estimated based on having ACT_STEP steps out of TOT_STEPS completed.
 %     The progress bar shows the rounded percentage completed within the
 %     progress bar along with the steps and the estimated time remaining.
-%     Subsequent calls update the previous.  If any outside text is written
+%     Subsequent calls update the previous.  On completion of the final
+%     step, the total time taken is shown.  If any outside text is written
 %     between calls, use the next usage form to draw a new progress bar
 %     that avoids overwriting the outside text.
 %
@@ -36,10 +37,11 @@ function []=print_time_left(act_step,tot_step,redraw)
 %        Jan. 26, 2010 - fixed bug where no redraw is done when specified,
 %                        now updates when last and current steps differ in
 %                        percent, some caller detection added
+%        Feb. 22, 2010 - prints total time spent on last step
 %
 %     Written by Nicolas Le Roux (lerouxni at iro dot umontreal dot ca)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 17:25 GMT
+%     Last Updated Feb. 22, 2010 at 21:55 GMT
 
 % todo:
 % - preceeding warning message links are missing occasionally?
@@ -88,11 +90,14 @@ if(old_perc_complete~=perc_complete || ~act_step || redraw)
     % time spent so far
     time_spent=toc(i);
     
-    % estimated time per step
-    est_time_per_step=time_spent/act_step;
-    
-    % estimated remaining time
-    est_rem_time=(tot_step-act_step)*est_time_per_step;
+    % print total time taken if final step
+    if(act_step==tot_step);
+        % total time spent
+        est_rem_time=time_spent;
+    else % normal behavior
+        % estimated remaining time
+        est_rem_time=(tot_step-act_step)*time_spent/act_step;
+    end
     
     % create steps string
     str_steps=[' ' num2str(act_step) '/' num2str(tot_step)];

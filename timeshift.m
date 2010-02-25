@@ -70,9 +70,10 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %                        reftime millisec limit
 %        Feb.  2, 2010 - proper SEIZMO handling, seizmoverbose support,
 %                        versioninfo caching, fix bug disallowing xy data
+%        Feb. 24, 2010 - require a finite shift
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 21:45 GMT
+%     Last Updated Feb. 24, 2010 at 18:00 GMT
 
 % todo:
 
@@ -111,9 +112,9 @@ try
     valid.OPTION={'BOTH' 'REFERENCE' 'RELATIVE' 'USER'};
 
     % check shift is numeric
-    if(~isreal(shift))
+    if(~isreal(shift) || any(isnan(shift) | isinf(shift)))
         error('seizmo:timeshift:badShift',...
-            'SHIFT option must be a numeric array!');
+            'SHIFT option must be a finite real-valued array!');
     elseif(~any(numel(shift)==[1 nrecs]))
         error('seizmo:timeshift:badShift',...
             ['SHIFT option must be a scalar or have '...

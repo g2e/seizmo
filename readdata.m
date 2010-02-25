@@ -176,7 +176,7 @@ try
     
     % detail message
     if(verbose)
-        disp('Reading in Data of Record(s)');
+        disp('Reading in Data Portion of Record(s)');
         print_time_left(0,nrecs);
     end
 

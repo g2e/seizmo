@@ -168,13 +168,12 @@ function [data]=merge(data,varargin)
 %     maximum number of merged records created for a merge group.  The
 %     default value is 10.  Not really worth changing.
 %
-%     DATA=MERGE(...,'VERBOSE',LOGICAL,...) turns on/off detailed
-%     messages about the merges.  Useful for seeing what is happening.
-%     Default is FALSE (off).
+%     DATA=MERGE(...,'VERBOSE',LOGICAL,...) turns on/off showing the merge
+%     progress bar.  Useful for seeing how far along we are & how long
+%     there is to finish.  Default is TRUE (on).
 %
-%     DATA=MERGE(...,'DEBUG',LOGICAL,...) turns on/off detailed
-%     messages and some debugging messages.  Not really useful for anyone
-%     but me.  Default is FALSE (off).
+%     DATA=MERGE(...,'DEBUG',LOGICAL,...) turns on/off detailed debugging
+%     messages.  Default is FALSE (off).
 %
 %    Notes:
 %     - MERGE is a rather complicated function 'under the hood' as it tries
@@ -220,8 +219,8 @@ function [data]=merge(data,varargin)
 %     Merge gaps by inserting NaNs:
 %      data=merge(data,'gap','fill','filler',nan)
 %
-%     Try it before you buy it:
-%      merge(data,'verbose',true);
+%     Merge details (lots):
+%      merge(data,'debug',true);
 %
 %    See also: REMOVEDUPLICATES, CUT
 
@@ -242,9 +241,11 @@ function [data]=merge(data,varargin)
 %        Nov.  2, 2009 - toleranceunits, try/catch, seizmoverbose as
 %                        default for verbose
 %        Nov.  3, 2009 - minor doc update
+%        Feb. 23, 2010 - moved verbose to debugging messages
+%        Feb. 24, 2010 - fixed switch statements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  3, 2009 at 19:45 GMT
+%     Last Updated Feb. 24, 2010 at 13:05 GMT
 
 % todo:
 %   - uneven support - just toss together and sort after?
@@ -312,6 +313,9 @@ try
     option.MERGEOVERLAPS=true; % on/off switch for merging overlaps
     option.VERBOSE=seizmoverbose; % default to seizmoverbose state
     option.DEBUG=seizmodebug; % default to seizmodebug state
+    
+    % turn off verbose if debugging
+    if(option.DEBUG); option.VERBOSE=false; end
 
     % get options from SEIZMO global
     ME=upper(mfilename);
@@ -341,10 +345,6 @@ try
     for i=1:numel(fields)
         % get value of field and do a basic check
         value=option.(fields{i});
-        if((ischar(value) && size(value,1)~=1))
-            error('seizmo:merge:badInput',...
-                'Bad value for option %s !',value);
-        end
 
         % specific checks
         switch lower(fields{i})
@@ -367,6 +367,11 @@ try
                         sprintf('%s ',valid.(fields{i}){:})],fields{i});
                 end
             case {'requiredcharfields' 'requiredrealfields'}
+                % fix char arrays
+                if(ischar(value))
+                    value=cellstr(value);
+                    option.(fields{i})=value;
+                end
                 if(~iscellstr(value))
                     error('seizmo:merge:badInput',...
                         '%s option must be a cellstr of header fields!',...
@@ -395,9 +400,9 @@ try
     end
     option.TOLERANCE=sort(option.TOLERANCE);
 
-    % get full filenames (for verbose or debugging output)
+    % get full filenames (for debugging output)
     nrecs=numel(data);
-    if(option.VERBOSE)
+    if(option.DEBUG)
         fullname=strcat({data.path}.',{data.name}.');
     end
 
@@ -426,8 +431,10 @@ try
 
     % require timeseries and general x vs y
     if(any(~strcmp(iftype,'itime') & ~strcmp(iftype,'ixy')))
-        error('seizmo:merge:badRecordType',...
-            'Records must be Time Series or General X vs Y !');
+        error('seizmo:merge:badIFTYPE',...
+            ['Record(s):\n' sprintf('%d ',...
+            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
+            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
     end
 
     % get start and end of records in absolute time
@@ -457,6 +464,7 @@ try
     [f,h,h]=unique(char(strcat(strcat('',reqchar{:}),'_',...
         strcat('',reqreal{:}),'_',num2str(leven),'_',num2str(ncmp))),...
         'rows');
+    ngrp=size(f,1);
 
     % add temp space to arrays
     alloc=(nrecs+1):(nrecs+option.ALLOCATE);
@@ -473,10 +481,16 @@ try
         disp('Lookup Table:')
         disp(sprintf('%d - %d\n',[1:nrecs; h.']));
     end
+    
+    % detail message
+    if(option.VERBOSE)
+        disp('Merging Record(s)');
+        print_time_left(0,ngrp);
+    end
 
     % loop through each group
     destroy=false(nrecs+option.ALLOCATE,1);
-    for i=1:size(f,1)
+    for i=1:ngrp
         % get group member indices
         gidx=find(h==i);
         ng=numel(gidx);
@@ -485,7 +499,7 @@ try
         origng=ng;
 
         % detail message
-        if(option.VERBOSE)
+        if(option.DEBUG)
             disp(' '); disp(' ');
             disp(sprintf('Processing Group: %d',i));
             disp(['Members: ' sprintf('%d ',gidx)]);
@@ -496,7 +510,7 @@ try
         bad=flagexactdupes(ab(gidx,:),ae(gidx,:));
 
         % detail message
-        if(option.VERBOSE)
+        if(option.DEBUG)
             disp(' ');
             disp('Deleting Duplicate(s):');
             disp(sprintf(' %d',gidx(bad)));
@@ -509,7 +523,11 @@ try
         gidx(bad)=[];
 
         % no records to merge with
-        if(ng==1); continue; end
+        if(ng==1)
+            % detail message
+            if(option.VERBOSE); print_time_left(i,ngrp); end
+            continue;
+        end
 
         % handle uneven / differing sample rates (NEEDS TO BE WRITTEN)
         if(any(~leven(gidx)) || numel(unique(delta(gidx)))~=1)
@@ -570,7 +588,7 @@ try
         end
 
         % detail message
-        if(option.VERBOSE)
+        if(option.DEBUG)
             disp(' ');
             disp(sprintf('Finished Merging Group: %d',i));
             disp(['Members: ' sprintf('%d ',newgidx)]);
@@ -584,7 +602,7 @@ try
         goodidx=1:ngood;
 
         % detail message
-        if(option.VERBOSE)
+        if(option.DEBUG)
             disp('Deleting Duplicate(s) and/or Partial Piece(s):');
             disp(sprintf(' %d',newgidx(~good)));
             disp('Changing Indices Of Good Record(s):');
@@ -606,6 +624,9 @@ try
         depmen(newgidx(goodidx))=depmen(newgidx(good));
         dt(newgidx(goodidx),:)=dt(newgidx(good),:);
         destroy(newgidx(ngood+1:end))=true;
+        
+        % detail message
+        if(option.VERBOSE); print_time_left(i,ngrp); end
     end
 
     % trim off temp space
@@ -714,7 +735,7 @@ for i=1:nrecs
     end
     
     % detail message
-    if(option.VERBOSE)
+    if(option.DEBUG)
         disp(sprintf(...
             ['\nMerging Record:\n'...
              ' %d - %s\n'...
@@ -750,7 +771,7 @@ for i=1:nrecs
     end
     
     % detail message
-    if(option.VERBOSE)
+    if(option.DEBUG)
         disp(sprintf(...
             ['Output Record:\n'...
              ' %d - %s\n'...
@@ -776,7 +797,7 @@ function [data,ab,ae,npts,dt,name]=mseq(...
 
 % who do we keep
 last=3-first;
-switch option.ADJUST
+switch lower(option.ADJUST)
     case 'first'
         keep=last;
     case 'last'
@@ -793,7 +814,7 @@ end
 kill=3-keep;
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Adjusting: %s (%d - %s)',...
         option.ADJUST,idx(kill),name{kill}));
 end
@@ -835,7 +856,7 @@ end
 
 % who do we keep
 last=3-first;
-switch option.ADJUST
+switch lower(option.ADJUST)
     case 'first'
         keep=last;
     case 'last'
@@ -852,19 +873,19 @@ end
 kill=3-keep;
 
 % detail message
-if(option.VERBOSE || option.DEBUG)
+if(option.DEBUG)
     disp(sprintf('Gap Method: %s',option.GAP));
 end
 
 % how to handle gap?
-switch option.GAP
+switch lower(option.GAP)
     case 'sequential'
         % just shift the option.ADJUST record to make sequential
         [data,ab,ae,npts,dt,name]=mseq(...
             data,ab,ae,delta,npts,dt,option,first,idx,name);
     case 'interpolate'
         % detail message
-        if(option.VERBOSE || option.DEBUG)
+        if(option.DEBUG)
             disp(sprintf(...
                 ['Interpolate Method: %s\n',...
                  'Adjusting: %s (%d - %s)\n'...
@@ -880,7 +901,7 @@ switch option.GAP
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
             % detail message
-            if(option.VERBOSE)
+            if(option.DEBUG)
                 disp('Adjust Method: shift');
             end
             
@@ -896,7 +917,7 @@ switch option.GAP
             end
         else
             % detail message
-            if(option.VERBOSE)
+            if(option.DEBUG)
                 disp(sprintf(...
                     ['Adjust Method: interpolate\n'...
                      'Interpolate Method: %s'],option.INTERPOLATE));
@@ -915,7 +936,7 @@ switch option.GAP
         end
     case 'fill'
         % detail message
-        if(option.VERBOSE)
+        if(option.DEBUG)
             disp(sprintf(...
                 ['Filler: %d\n',...
                  'Adjusting: %s (%d - %s)\n'...
@@ -931,7 +952,7 @@ switch option.GAP
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
             % detail message
-            if(option.VERBOSE)
+            if(option.DEBUG)
                 disp('Adjust Method: shift');
             end
             
@@ -947,7 +968,7 @@ switch option.GAP
             end
         else
             % detail message
-            if(option.VERBOSE)
+            if(option.DEBUG)
                 disp(sprintf(...
                     ['Adjust Method: interpolate\n'...
                      'Interpolate Method: %s'],option.INTERPOLATE));
@@ -985,7 +1006,7 @@ end
 
 % who do we keep
 last=3-first;
-switch option.ADJUST
+switch lower(option.ADJUST)
     case 'first'
         keep=last;
     case 'last'
@@ -1002,12 +1023,12 @@ end
 kill=3-keep;
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Overlap Method: %s',option.OVERLAP));
 end
 
 % how to handle overlap?
-switch option.OVERLAP
+switch lower(option.OVERLAP)
     case 'sequential'
         % just shift the option.ADJUST record to make sequential
         [data,ab,ae,npts,dt,name]=mseq(...
@@ -1015,7 +1036,7 @@ switch option.OVERLAP
     case 'truncate'
         % truncate overlap from option.ADJUST record
         % detail message
-        if(option.VERBOSE)
+        if(option.DEBUG)
             disp(sprintf(...
                 ['Adjusting:  %s (%d - %s)\n'...
                  'Adjustment: %f seconds (%f samples)'],...
@@ -1029,7 +1050,7 @@ switch option.OVERLAP
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
             % detail message
-            if(option.VERBOSE)
+            if(option.DEBUG)
                 disp('Adjust Method: shift');
             end
             
@@ -1045,7 +1066,7 @@ switch option.OVERLAP
             end
         else
             % detail message
-            if(option.VERBOSE)
+            if(option.DEBUG)
                 disp(sprintf(...
                     ['Adjust Method: interpolate\n'...
                      'Interpolate Method: %s'],option.INTERPOLATE));
@@ -1069,7 +1090,7 @@ switch option.OVERLAP
         d=1; if(strcmpi(option.OVERLAP,'average')); d=2; end
         
         % detail message
-        if(option.VERBOSE)
+        if(option.DEBUG)
             disp(sprintf(...
                 ['Adjusting:  %s (%d - %s)\n'...
                  'Adjustment: %f seconds (%f samples)'],...
@@ -1083,7 +1104,7 @@ switch option.OVERLAP
         % shift or interpolate option.ADJUST record to align?
         if(abs(shift)<=maxshift)
             % detail message
-            if(option.VERBOSE)
+            if(option.DEBUG)
                 disp('Adjust Method: shift');
             end
             
@@ -1099,7 +1120,7 @@ switch option.OVERLAP
             end
         else
             % detail message
-            if(option.VERBOSE)
+            if(option.DEBUG)
                 disp(sprintf(...
                     ['Adjust Method: interpolate\n'...
                      'Interpolate Method: %s'],option.INTERPOLATE));
@@ -1147,7 +1168,7 @@ sae=ae(first,:)+[0 shift];
 nsamples=round((ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1192,7 +1213,7 @@ sae=ae(last,:)-[0 shift];
 nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1237,7 +1258,7 @@ sae=ae(first,:)+[0 shift];
 nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1283,7 +1304,7 @@ sae=ae(last,:)-[0 shift];
 nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1329,7 +1350,7 @@ sae=ae(first,:)+[0 shift];
 nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1367,7 +1388,7 @@ sae=ae(last,:)-[0 shift];
 nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1412,7 +1433,7 @@ data(first).dep=data(first).dep.';
 nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1457,7 +1478,7 @@ data(last).dep=data(last).dep.';
 nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1496,7 +1517,7 @@ nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 ns=min(nsamples,npts(last));
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Truncated: %d',nsamples));
 end
 
@@ -1534,7 +1555,7 @@ nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 nsamples=min(nsamples,npts(last));
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Truncated: %d',nsamples));
 end
 
@@ -1578,7 +1599,7 @@ nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 ns=min(nsamples,npts(last));
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Truncated: %d',ns));
 end
 
@@ -1623,7 +1644,7 @@ nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 nsamples=min(nsamples,npts(last));
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Truncated: %d',nsamples));
 end
 
@@ -1662,7 +1683,7 @@ b2=min(nsamples,npts(last));
 ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Truncated: %d',nsamples));
 end
 
@@ -1704,7 +1725,7 @@ b2=min(nsamples,npts(last));
 ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1753,7 +1774,7 @@ b2=min(nsamples,npts(last));
 ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
@@ -1802,7 +1823,7 @@ b2=min(nsamples,npts(last));
 ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
-if(option.VERBOSE)
+if(option.DEBUG)
     disp(sprintf('Samples Added: %d',nsamples));
 end
 
