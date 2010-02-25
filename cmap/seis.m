@@ -1,5 +1,5 @@
 function [map]=seis(m)
-%SEIS    Color map for seismology
+%SEIS    Colormap for seismology
 %
 %    Usage:    map=seis(m)
 %

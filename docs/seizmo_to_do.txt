@@ -1,7 +1,5 @@
 idkeep
 iddelete
-gcp vf
-cmph improved
 3cmp pairs
 makeuneven
 getheader returns nan
@@ -9,8 +7,6 @@ getheader returns nan
 
 wide spread changes:
 =======================
-usage first!
-combine get/set state scripts and update functions using them
 testing table
 
 bugs:
@@ -51,7 +47,6 @@ make work with octave
 
 new function short list:
 =========================
-rotate
 plotting
 	- better properties handling
 	- spectral
@@ -71,7 +66,6 @@ wait listed:
 ttbox integration
 move cmb codes in
 merge (uneven records)
-find sacpz/resp
 getvalue
 mtconvert
 mtrotate

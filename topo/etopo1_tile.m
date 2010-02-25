@@ -1,5 +1,5 @@
 function []=etopo1_tile(version)
-%SRTM30PLUS_TILE    Tiles ETOPO1 into 10x10 tiles
+%ETOPO1_TILE    Tiles ETOPO1 into 10x10 tiles
 %
 %    Usage:    etopo1_tile(version)
 %
@@ -21,9 +21,10 @@ function []=etopo1_tile(version)
 
 %     Version History:
 %        Feb. 16, 2010 - initial version
+%        Feb. 25, 2010 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2010 at 17:30 GMT
+%     Last Updated Feb. 25, 2010 at 00:30 GMT
 
 % todo:
 

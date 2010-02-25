@@ -7,10 +7,10 @@ absolutevalue		seizmofun(data,@abs)
 add					add(data,value)
 addf				addrecords(data1,data2)
 apk					N/A
-arraymap			N/A
+arraymap			N/A, (plotstations, plotstations2)
 axes				See axes properties
-bandpass			iirfilter(data,'bandpass',...)
-bandrej				iirfilter(data,'notch',...)
+bandpass			iirfilter(data,'bp',...)
+bandrej				iirfilter(data,'br',...)
 bbfk				N/A
 beam				N/A
 begindevices		N/A (ever)
@@ -27,21 +27,21 @@ comcor				N/A (maybe available through debugging)
 commit				unnecessary!
 contour				N/A (can be done with matlab)
 convert				changetype (n/a), changeversion (n/a), changebyteorder
-convolve			convolve (n/a)
-copyhdr				copyheader (n/a), otherwise use getheader/changeheader
-correlate			correlate (n/a)
+convolve			convolve
+copyhdr				copyheader
+correlate			correlate
 cut					readdatawindow
 cuterr				N/A, see readdatawindow
 cutim				cut
-datagen				N/A, see bseizmo
+datagen				N/A, use bseizmo
 decimate			squish
-deletechannel		deleterecords (n/a)
-deltacheck			binoperr
+deletechannel		deleterecords
+deltacheck			binoperr, checkoperr('multiple_delta',value), fixdelta
 dif					differentiate
 div					divide
 divf				dividerecords
 divomega			divideomega
-echo				N/A, (maybe warning on/off)
+echo				echo, maybe warning on/off, seizmoverbose, seizmodebug
 enddevices			N/A (ever)
 endframe			unnecessary!
 envelope			envelope
@@ -53,32 +53,32 @@ external			see path, function, script
 external_interface	N/A, see various SEIZMO functions to learn
 external_howto		N/A, see various SEIZMO functions to learn
 fft					dft
-fileid				N/A, see text
-filenumber			N/A, see text
-filterdesign		filterdesign (n/a)
-fir					N/A
+fileid				N/A, see title,text
+filenumber			N/A, see title,text
+filterdesign		iirdesign, filterbuilder
+fir					N/A (use filterbuilder)
 floor				see xlim, ylim
 funcgen				N/A, see bseizmo
 getbb				unnecessary!
-gmap				N/A, to be covered by m_map
-gmtmap				N/A, to be covered by m_map
-grayscale			N/A (can be done with matlab)
+gmap				plotstations, plotstations2
+gmtmap				plotstations, plotstations2
+grayscale			use gray colormap function
 grid				set(gca,'xgrid','on')
 gtext				see xlabel, ylabel, title
-hanning				N/A, see slidingavg + seizmofun
-help				help seizmo
-help_intro			
-highpass			iirfilter(data,'high',...)
+hanning				N/A, can be done with slidingavg + seizmofun
+help				help seizmo (or any sub-directory)
+help_intro			N/A (good luck!)
+highpass			iirfilter(data,'hi',...)
 hilbert				hilbrt
 history				use the command history window, commandhistory
 howto_external		N/A, see various SEIZMO functions to learn
 ifft				idft
-image				N/A (can be done with matlab)
+image				N/A (can be done with matlab), imagesc
 inicm				see clear (also global SEIZMO)
 installmacro		N/A, see path, function, script
 int					integrate
 interpolate			interpolate
-keepam				keepam (n/a)
+keepam				keepam
 khronhite			N/A
 line				see plot properties
 linefit				getpolynomial
@@ -87,125 +87,125 @@ linlog				see plot properties
 listhdr				listheader
 load				unnecessary!
 loadctable			see colormap
-log					
-log10
-loglab
-loglin
-loglog
-lowpass				iirfilter(data,'low',...)
-macro
-map
-mat
-markptp
-marktimes
-markvalue
+log					seizmofun(data,@log)
+log10               seizmofun(data,@log10)
+loglab              see plot properties
+loglin              see plot properties
+loglog              see plot properties
+lowpass				iirfilter(data,'lo',...)
+macro               N/A, see path, function, script
+map                 plotstations, plotstations2
+mat                 unnecessary (sorry no sac)
+markptp             N/A
+marktimes           N/A
+markvalue           N/A
 merge				merge
-message
-mtw
+message             disp, printf, etc
+mtw                 use CUT
 mul					multiply
 mulf				multiplyrecords
 mulomega			multiplyomega
-news
-nplotc
-null
-oapf
-ohpf
-pause
-pickauthor
-pickphase
-picks
-plabel
-plot
+news                bzr log | more
+nplotc              use "hold on" and other plot commands
+null                set the null values to nan
+oapf                
+ohpf                
+pause               pause, waitfor, uiwait
+pickauthor          
+pickphase           
+picks               
+plabel              
+plot                N/A
 plot1				plot1
 plot2				plot2
-plotalpha
-plotc
-plotctable
-plotdy
-plotpk
-plotpktable
-plotpm
-plotsp
-plotxy
-print
-printhelp
-production
+plotalpha           
+plotc               
+plotctable          
+plotdy              
+plotpk              
+plotpktable         
+plotpm              
+plotsp              
+plotxy              
+print               
+printhelp           
+production          
 qdp					unnecessary!
-quantize
-quit
-quitsub
+quantize            
+quit                
+quitsub             
 read				readseizmo
-readbbf
-readcss
-readdb
-readerr	
-readgse
+readbbf             
+readcss             
+readdb              
+readerr	            
+readgse             
 readhdr				readheader
-readsdd
-readsp
-readsuds	
-readtable
-recalltrace
-report
+readsdd             
+readsp              
+readsuds	        
+readtable           
+recalltrace         
+report              
 reverse				reverse
-rglitches
+rglitches           N/A
 rmean				removemean
-rms
-rollback
-rotate				rotate (n/a)
-rq
+rms                 N/A
+rollback            unnecessary!
+rotate				rotate
+rq                  N/A
 rtrend				removetrend
-scallop
-setbb
-setdevice
-setmacro
-sgf
-smooth
-sonogram
+scallop             
+setbb               
+setdevice           
+setmacro            
+sgf                 
+smooth              
+sonogram            
 sort				sortbyfield
-spe
-spectrogram
-sqr
-sqrt
-sss
+spe                 
+spectrogram         
+sqr                 seizmofun(data,@(x)x.^2)
+sqrt                seizmofun(data,@sqrt)
+sss                 
 stretch				stretch
 sub					subtract
 subf				subtractrecords
-symbol
+symbol              
 synchronize			synchronize
-syntax
-systemcommand		try !
+syntax              
+systemcommand		try "!command"
 taper				taper
-ticks
-title
-trace
-transcript
-transfer
-transfertable
-tsize
-tutorial
-unsetbb
-unwrap
-vspace
-wait
-whpf
-width
-wiener
-wild
-window
+ticks               
+title               
+trace               
+transcript          
+transfer            applysacpz, removesacpz
+transfertable       
+tsize               
+tutorial            
+unsetbb             
+unwrap              unwrapphase
+vspace              
+wait                waitfor, uiwait, pause
+whpf                
+width               
+wiener              
+wild                
+window              
 write				writeseizmo
-writebbf
-writecss
-writegse	
+writebbf            
+writecss            
+writegse	        
 writehdr			writeheader
-writesdd
-writesp
-xdiv
-xfudge
-xfull
-xgrid
-xlabel
-xlim
+writesdd            
+writesp             
+xdiv                
+xfudge              
+xfull               
+xgrid               
+xlabel              
+xlim                
 xlin
 xlog
 xvport

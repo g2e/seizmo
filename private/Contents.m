@@ -1,5 +1,5 @@
 % Seismology Toolbox - seizmo_internal
-% Version 0.6.0-r106 Ararat 7-Dec-2009
+% Version 0.6.0-r112 Annapurna 25-Feb-2010
 %
 % Low-level internal functions
 %CHECKHEADER_STATE     - Check/Change if CHECKHEADER is ON=TRUE / OFF=FALSE
@@ -11,6 +11,7 @@
 %PLOTCONFIGFIX         - Fixes the SEIZMO plot configuration struct
 %SEIZMOCHECK           - Validate SEIZMO data structure
 %SEIZMOCHECK_STATE     - Check/Change if SEIZMOCHECK is ON=TRUE / OFF=FALSE
+%SEIZMODEBUG           - Turn SEIZMO debugging output on (TRUE) or off (FALSE)
 %SEIZMODEF             - Returns specified SEIZMO definition structure
 %SEIZMOSIZE            - Returns header-estimated disksize of SEIZMO records in bytes
 %SEIZMOVERBOSE         - Turn verbose SEIZMO output on (TRUE) or off (FALSE)

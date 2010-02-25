@@ -1,5 +1,5 @@
 function [map]=topo_land(m)
-%TOPO_LAND    Color map used for topography in tectonic maps
+%TOPO_LAND    Colormap used for topography in tectonic maps
 %
 %    Usage:    map=topo_land(m)
 %

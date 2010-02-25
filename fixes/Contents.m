@@ -1,5 +1,5 @@
 % Seismology Toolbox - fixes
-% Version 0.6.0-r106 Ararat 7-Dec-2009
+% Version 0.6.0-r112 Annapurna 25-Feb-2010
 %
 % Specific fixes for records
 %FIX_CAMEROON        - Makes data corrections for the Cameroon Seismic Experiment

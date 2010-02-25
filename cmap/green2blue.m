@@ -1,5 +1,5 @@
 function [map]=green2blue(m)
-%GREEN2BLUE    Green-White-Blue color map
+%GREEN2BLUE    Green-White-Blue colormap
 %
 %    Usage:    map=green2blue(m)
 %

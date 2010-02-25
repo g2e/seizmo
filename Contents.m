@@ -1,5 +1,5 @@
 % Seismology Toolbox - seizmo
-% Version 0.6.0-r106 Ararat 7-Dec-2009
+% Version 0.6.0-r112 Annapurna 25-Feb-2010
 %
 % Alphabetical list of SEIZMO functions
 %ADD                 - Add a constant to SEIZMO records
@@ -16,7 +16,8 @@
 %CHANGEPATH          - Change the filepath of SEIZMO records
 %CHECKHEADER         - Check and fix header values of SEIZMO records
 %CHECKOPERR          - Controls behavior of SEIZMO CHECKHEADER function
-%COMPAREHEADER       - List SEIZMO data headers side-by-side for easy comparison
+%COMPAREHEADER       - List SEIZMO headers side-by-side for easy comparison
+%COMPAREHEADER2      - List SEIZMO headers side-by-side for easy comparison
 %CONVOLVE            - Convolve SEIZMO records with a time function
 %COPYHEADER          - Copy one record's header to all records
 %CORRELATE           - Compute cross correlograms of SEIZMO data records
@@ -46,6 +47,7 @@
 %GETSTATIONIDX       - Returns index array for separating dataset into stations
 %GETSTREAMIDX        - Returns index array for separating dataset into streams
 %HILBRT              - Return Hilbert transform of SEIZMO records
+%HORZPAIRS           - Returns indice arrays for pairing horizontal SEIZMO records
 %IDFT                - Performs an inverse discrete fourier transform on SEIZMO records
 %IIRFILTER           - Apply an IIR filter to SEIZMO data records
 %INSTANTPHASE        - Return instantaneous phase of SEIZMO records
@@ -87,6 +89,7 @@
 %REMOVETREND         - Remove linear trend from SEIZMO records
 %REVERSE             - Reverse SEIZMO records
 %RLIM2AMPH           - Convert SEIZMO spectral records from RLIM to AMPH
+%ROTATE              - Rotates SEIZMO records that are horizontal pairs
 %SEIZMOFUN           - Apply function to SEIZMO records
 %SEIZMORESET         - Resets saved SEIZMO settings
 %SELECTRECORDS       - Select or delete SEIZMO data records graphically

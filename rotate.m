@@ -175,6 +175,8 @@ function [data]=rotate(data,varargin)
 %     Last Updated Feb. 24, 2010 at 14:50 GMT
 
 % todo:
+% - more debugging messages
+% - more extensive testing
 
 % check nargin
 if(mod(nargin-1,2))

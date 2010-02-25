@@ -1,5 +1,5 @@
 function [map]=gebco(m)
-%GEBCO    Color map approximating GEBCO bathymetry charts
+%GEBCO    Colormap approximating GEBCO bathymetry charts
 %
 %    Usage:    map=gebco(m)
 %

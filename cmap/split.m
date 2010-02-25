@@ -1,5 +1,5 @@
 function [map]=split(m)
-%SPLIT    Lightblue-Blue-Black-Red-Lightred color map
+%SPLIT    Lightblue-Blue-Black-Red-Lightred colormap
 %
 %    Usage:    map=split(m)
 %

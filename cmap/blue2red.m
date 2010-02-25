@@ -1,5 +1,5 @@
 function [map]=blue2red(m)
-%BLUE2RED    Blue-White-Red (aka Polar) color map
+%BLUE2RED    Blue-White-Red (aka Polar) colormap
 %
 %    Usage:    map=blue2red(m)
 %

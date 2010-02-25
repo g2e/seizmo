@@ -1,5 +1,5 @@
 function [map]=sealand(m)
-%SEALAND    Color map for ocean and land
+%SEALAND    Colormap for ocean and land
 %
 %    Usage:    map=sealand(m)
 %

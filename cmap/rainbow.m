@@ -1,5 +1,5 @@
 function [map]=rainbow(m)
-%RAINBOW    Standard rainbow color map going from magenta to red
+%RAINBOW    Standard rainbow colormap going from magenta to red
 %
 %    Usage:    map=rainbow(m)
 %

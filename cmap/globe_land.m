@@ -1,5 +1,5 @@
 function [map]=globe_land(m)
-%GLOBE_LAND    Color map for global topography
+%GLOBE_LAND    Colormap for global topography
 %
 %    Usage:    map=globe_land(m)
 %

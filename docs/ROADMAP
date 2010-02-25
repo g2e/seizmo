@@ -3,7 +3,6 @@
 document every function (working on)
 	- plotting (waiting on rewrite)
 	- align/cluster (waiting on rewrite)
-	- tpw (waiting on rewrite)
 fix plotting
 	- better global setting (like binoperr?)
 	- better option passing
@@ -29,8 +28,6 @@ other new functions
 	- changeversion/filetype
 	- spectral plotting
 	- particle motion plots (cmp vs cmp)
-	- check orientation
-	- rotate
 possible extras
 	- cut on absolute times
 	- amph2rlim/rlim2amph 2nd output is converted logicals

@@ -1,5 +1,5 @@
 function [map]=relief(m)
-%RELIEF    Color map for global topography
+%RELIEF    Colormap for global topography
 %
 %    Usage:    map=relief(m)
 %

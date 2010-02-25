@@ -1,5 +1,5 @@
 function [map]=globe_sea(m)
-%GLOBE_SEA    Color map for global bathymetry
+%GLOBE_SEA    Colormap for global bathymetry
 %
 %    Usage:    map=globe_sea(m)
 %

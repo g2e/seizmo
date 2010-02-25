@@ -1,5 +1,5 @@
 % Seismology Toolbox - response
-% Version 0.6.0-r106 Ararat 7-Dec-2009
+% Version 0.6.0-r112 Annapurna 25-Feb-2010
 %
 % Instrument Response functions
 %APPLYSACPZ              - Applies SAC PoleZero responses to SEIZMO records

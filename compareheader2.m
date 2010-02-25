@@ -1,17 +1,17 @@
-function []=compareheader(data,varargin)
-%COMPAREHEADER    List SEIZMO headers side-by-side for easy comparison
+function []=compareheader2(data,varargin)
+%COMPAREHEADER2    List SEIZMO headers side-by-side for easy comparison
 %
-%    Usage:    compareheader(data)
-%              compareheader(data,'field1',...,'fieldN')
+%    Usage:    compareheader2(data)
+%              compareheader2(data,'field1',...,'fieldN')
 %
-%    Description: COMPAREHEADER(DATA) prints out a table comparing all of
+%    Description: COMPAREHEADER2(DATA) prints out a table comparing all of
 %     the header fields of records in DATA.  Rows in the table correspond
-%     to a specific header field (see the first column for the field name)
-%     and the columns correspond to different records (there is a record
-%     path and filename listing above the table as an aid).  See
-%     COMPAREHEADER2 for a transposed version of the header value table.
+%     to a specific record (see the first column for the record index and
+%     the lookup table above the header value table for the record's path
+%     & filename) while the columns correspond to different header fields.
+%     This is basically like COMPAREHEADER but transposed.
 %
-%     COMPAREHEADER(DATA,'FIELD1',...,'FIELDN') prints out the header
+%     COMPAREHEADER2(DATA,'FIELD1',...,'FIELDN') prints out the header
 %     fields FIELD1 to FIELDN for records in DATA as a table.  FIELDS may
 %     be normal fields ('b' 'kt1' 'xmaximum' etc), group fields ('t' 'kt'
 %     etc), absolute fields ('t9 utc' 'user3 tai' 'resp utc' etc), or
@@ -26,29 +26,20 @@ function []=compareheader(data,varargin)
 %
 %    Examples:
 %     Some simple cases:
-%      compareheader(data)          % compare all header variables
-%      compareheader(data,'t')      % compare t group
+%      compareheader2(data)          % compare all header variables
+%      compareheader2(data,'t')      % compare t group
 %
 %     Fields are case independent:
-%      compareheader(data,'dEltA')
-%      compareheader(data,'StLA','stLo')
+%      compareheader2(data,'dEltA')
+%      compareheader2(data,'StLA','stLo')
 %
 %     Compare picks:
-%      compareheader(data,'picks')
+%      compareheader2(data,'picks')
 %
-%    See also: COMPAREHEADER2, LISTHEADER, GETHEADER, CHANGEHEADER
+%    See also: COMPAREHEADER, LISTHEADER, GETHEADER, CHANGEHEADER
 
 %     Version History:
-%        Sep. 11, 2009 - initial version
-%        Sep. 12, 2009 - support vgrp addition, use regexptranslate
-%        Sep. 13, 2009 - added utc/tai abs time fields, added abs time
-%                        vgrp, added vf support, global option to set
-%                        column width, vf show up in wildcards
-%        Sep. 15, 2009 - doc update
-%        Sep. 18, 2009 - 2nd pass at abs time support
-%        Oct.  6, 2009 - dropped use of LOGICAL function
-%        Jan. 30, 2010 - use VF_GH_Z to get reference time
-%        Feb. 24, 2010 - doc update for compareheader2
+%        Feb. 24, 2010 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 24, 2010 at 23:00 GMT
@@ -65,22 +56,6 @@ nh=numel(h);
 
 % number of records
 nrecs=numel(data);
-
-% allow changing column width via global
-global SEIZMO
-try
-    cn=SEIZMO.COMPAREHEADER.COLUMNWIDTH;
-    cs=num2str(cn);
-catch
-    % define default column width
-    cn=35; cs=num2str(cn);
-end
-
-% check column width
-if(~isscalar(cn) || cn~=round(cn) || cn<=0)
-    error('seizmo:compareheader:badColumnWidth',...
-        'COLUMNWIDTH must be a scalar integer >0!');
-end
 
 % gather all possible fields and reftimes
 fields=cell(2,5,nh); % just a guess
@@ -142,13 +117,8 @@ end
 disp('---------------------------')
 disp(' ')
 
-% table header
-disp(sprintf('%16s','\    '))
-disp([sprintf('%16s','FIELD    \   ') '   RECORD NUMBER'])
-disp([sprintf('%16s','\  ') sprintf(['%' cs 'd'],1:nrecs)])
-disp(char(45*ones(1,15+cn*nrecs)))
-
 % loop over fields
+v=cell(1,0); hf=cell(1,0); cw=nan(1,0); cnt=0;
 nvarg=numel(varargin);
 for i=1:nvarg
     % force lowercase
@@ -235,30 +205,45 @@ for i=1:nvarg
         else f=gf;
         end
         
+        % get minimum column width required by field name
+        cn=numel(f)+2; cs=num2str(cn);
+        
         % get value formatted as string (right justified)
-        values=nan(nrecs,cn);
+        values=cell(nrecs,1);
         for k=1:nrecs
-            tmp=cmph_disp(h(idx(k)),f,data(k),cs,cn,ref(k,:),good(k));
-            
-            % check for oversized output
-            if(numel(tmp)>cn)
-                % replace oversized output with *
-                tmp=[];
-                tmp(1)=' ';
-                tmp(2:cn)='*';
-            end
-            values(k,:)=tmp;
+            values{k}=cmph_disp(h(idx(k)),f,data(k),cs,ref(k,:),good(k));
         end
         
-        % display
-        values=values.';
-        disp([sprintf('%13s | ',upper(f)) char(values(:).')])
+        % justify
+        values=strtrim(strjust(char(values),'right'));
+        
+        % now get minimum column width
+        cn=max(cn,size(values,2)+2); cs=num2str(cn);
+        
+        % fill new cell
+        cnt=cnt+1;
+        cw(cnt)=cn;
+        hf{cnt}=sprintf(['%' cs 's'],upper(f));
+        v{cnt}=char(strcat({32*ones(1,cn-size(values,2))},values));
     end
 end
 
+% table header
+disp( sprintf('%14s','      \ HEADER'))
+disp( sprintf('%14s','RECORD \ FIELD'))
+disp([sprintf('%11s',' NUMBER \  ') hf{:}])
+disp(char(45*ones(1,11+sum(cw))))
+
+% make record number column
+rnc=num2str((1:nrecs)');
+rnc=strcat({char(32*ones(1,11-size(rnc,2)-3))},rnc,{' | '});
+
+% display table
+disp([char(rnc),v{:}]);
+
 end
 
-function [string]=cmph_disp(h,f,data,cs,cn,reftime,good)
+function [string]=cmph_disp(h,f,data,cs,reftime,good)
 %CMPH_DISP    Returns the value of a header field as a string
 
 % virtual fields
@@ -352,13 +337,9 @@ for m=1:numel(h.stype)
             q=p(2)-p(1)+1; u=numel(h.undef.stype);
             if(strcmp([h.undef.stype ones(1,q-u)*32],...
                     char(data.head(p(1):p(2)).')))
-                % give 2 char padding
-                p(2)=p(1)+min(cn-15,p(2)-p(1));
                 string=sprintf(['%' cs 's'],sprintf('UNDEFINED (%s)',...
                     char(data.head(p(1):p(2)))));
             else
-                % give 2 char padding
-                p(2)=p(1)+min(cn-3,p(2)-p(1));
                 string=sprintf(['%' cs 's'],char(data.head(p(1):p(2))));
             end
             return;

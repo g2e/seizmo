@@ -1,5 +1,5 @@
 function [map]=drywet(m)
-%DRYWET    Color map for hydrology
+%DRYWET    Colormap for hydrology
 %
 %    Usage:    map=drywet(m)
 %

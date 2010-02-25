@@ -1,10 +1,11 @@
 % Seismology Toolbox - shortnames
-% Version 0.6.0-r106 Ararat 7-Dec-2009
+% Version 0.6.0-r112 Annapurna 25-Feb-2010
 %
 % Shortcut function names
 %ADDF   - ADDRECORDS                     - Add SEIZMO records
 %CH     - CHANGEHEADER                   - Change SEIZMO data header values
-%CMPH   - COMPAREHEADER                  - List SEIZMO data headers side-by-side for easy comparison
+%CMPH   - COMPAREHEADER                  - List SEIZMO headers side-by-side for easy comparison
+%CMPH2  - COMPAREHEADER2                 - List SEIZMO headers side-by-side for easy comparison
 %CSTF   - CONVOLVE_SOURCE_TIMEFUNCTION   - Convolve source function on SEIZMO records
 %DSTF   - DECONVOLVE_SOURCE_TIMEFUNCTION - Deconvolve source from SEIZMO records
 %DIF    - DIFFERENTIATE                  - Differentiate SEIZMO records

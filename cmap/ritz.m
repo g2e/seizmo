@@ -1,5 +1,5 @@
 function [map]=ritz(m)
-%RITZ    Color map popularized by Mike Ritzwoller's seismology group
+%RITZ    Colormap popularized by Mike Ritzwoller's seismology group
 %
 %    Usage:    map=ritz(m)
 %

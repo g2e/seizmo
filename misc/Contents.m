@@ -1,5 +1,5 @@
 % Seismology Toolbox - misc
-% Version 0.6.0-r106 Ararat 7-Dec-2009
+% Version 0.6.0-r112 Annapurna 25-Feb-2010
 %
 % Miscellaneous Support functions
 %BUTTORD2            - Butterworth filter order selection. (Honors passband corners)
@@ -23,9 +23,9 @@
 %NEXTPOW2N           - Returns the next higher power of 2 for all array elements
 %ONEFILELIST         - Compiles multiple filelists into one
 %PRINT_TIME_LEFT     - Ascii progress bar
-%RRAT                - Rational approximation. (UNBUGGED VERSION)
 %READCSV             - Read in .csv formatted file as a structure
 %READTXT             - Reads in a text file as a single string
+%RRAT                - Rational approximation. (UNBUGGED VERSION)
 %SLIDINGAVG          - Returns sliding-window average of data
 %SNR2MAXPHASEERROR   - Returns maximum narrow-band phase error based on SNR 
 %SORT2LI             - Transforms permutation indices from sort to linear indices

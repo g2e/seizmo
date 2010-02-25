@@ -1,5 +1,5 @@
 % Seismology Toolbox - tpw
-% Version 0.6.0-r106 Ararat 7-Dec-2009
+% Version 0.6.0-r112 Annapurna 25-Feb-2010
 %
 % Two Plane Wave Method functions
 %FREQWINDOW                        - Window Surface Wave Data at Several Frequencies

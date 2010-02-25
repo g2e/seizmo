@@ -1,5 +1,5 @@
 function [map]=ocean(m)
-%OCEAN    Color map for bathymetry
+%OCEAN    Colormap for bathymetry
 %
 %    Usage:    map=ocean(m)
 %
