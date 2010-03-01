@@ -39,7 +39,6 @@
 %GETHEADER           - Get SEIZMO data header values
 %GETLGC              - Get logical string from SEIZMO logical header field
 %GETMEDIAN           - Returns median of each SEIZMO record
-%GETNCMP             - Return the number of dependent components for SEIZMO records
 %GETNETWORKIDX       - Returns index array for separating dataset into networks
 %GETNORM             - Return normalizers for SEIZMO records
 %GETPOLYNOMIAL       - Get polynomial fit to SEIZMO records
@@ -113,4 +112,21 @@
 %WHITEN              - Spectral whitening/normalization of SEIZMO data records
 %WRITEHEADER         - Write SEIZMO data header info to datafiles
 %WRITESEIZMO         - Write SEIZMO records to datafile
+%
+% Sub-Toolboxes
+%CMAP                - colormaps
+%EVENT               - functions related to earthquake info
+%FIXES               - functions to fix headers
+%GUI                 - simple gui functions
+%INVERT              - simple inversion functions
+%MATTAUP             - TauP functions
+%MISC                - useful miscellaneous functions
+%POSITION            - global positioning functions
+%RESPONSE            - instrument response functions
+%SEIZMO_INTERNAL     - internal functions
+%SHORTNAMES          - shortcut names for functions
+%TIME                - absolute time functions
+%TOPO                - topography functions
+%TOMO                - simple tomography functions
+%TPW                 - two plane wave functions
 

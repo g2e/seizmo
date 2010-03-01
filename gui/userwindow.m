@@ -47,9 +47,10 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %     Version History:
 %        Sep.  5, 2009 - rewrite
 %        Sep.  9, 2009 - added documentation
+%        Mar.  1, 2010 - updated for newer checking methods
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  9, 2009 at 03:45 GMT
+%     Last Updated Mar.  1, 2010 at 01:55 GMT
 
 % todo:
 
@@ -58,167 +59,195 @@ msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
-% check fill
-if(nargin<2 || isempty(fill)); fill=false; end
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
 
-% check function handle
-if(nargin<3 || isempty(func))
-    func=@deal;
-elseif(~isa(func,'function_handle'))
-    error('seizmo:userwindow:badInput','FUNC must be a function handle!');
+% attempt header check
+try
+    % check headers
+    data=checkheader(data);
+    
+    % turn off header checking
+    oldcheckheaderstate=checkheader_state(false);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
 end
 
-% outer loop - only breaks free by user command
-happy_user=false; fh=[-1 -1];
-while(~happy_user)
-    % explain to the user how this works with a little prompt
-    % and make them decide what kind of plot to use for the
-    % windowing, offering them back out options.  This prompt
-    % looks like trash because of default menu fonts.
-    prompt={'+-------------------------------------------------------+'
-            '|                Welcome to SEIZMO''s interactive windowing function             |'
-            '+-------------------------------------------------------+'
-            '|                                                                                                                |'
-            '|                                             MOUSE USAGE                                             |'
-            '|                                                                                                                |'
-            '|    LEFT CLICK                       MIDDLE CLICK                      RIGHT CLICK   |'
-            '+-----------+                +------------+               +------------+'
-            '|   Mark Window                     Finalize Marks                     Mark Window   |'
-            '|          Start                                                                              End           |'
-            '+-------------------------------------------------------+'
-            '|                                                                                                                |'
-            '|                                                   NOTES                                                   |'
-            '|                                                                                                                |'
-            '|          + You may refine window marks until you finalize                        |'
-            '|          + When finalized, a new plot with the windowed                           |'
-            '|              waveforms will appear, as well as a confirmation                      |'
-            '|              prompt.  You will have the option to re-window.                      |'
-            '|                                                                                                                |'
-            '+-------------------------------------------------------+'
-            '|                                                                                                                |'
-            '|                 PLEASE CHOOSE AN OPTION BELOW TO PROCEED!                 |'
-            '|                                                                                                                |'
-            '+-------------------------------------------------------+'};
-    
-    
-    % way cooler menu -- if only matlab gui's used fixed width
-    %{
-    prompt={'+-------------------------------------------------------+'
-            '|  Welcome to SEIZMO''s interactive windowing function   |'
-            '+-------------------------------------------------------+'
-            '|                                                       |'
-            '|                     MOUSE USAGE:                      |'
-            '|                                                       |'
-            '| LEFT CLICK          MIDDLE CLICK          RIGHT CLICK |'
-            '+------------+      +--------------+      +-------------+'
-            '| Mark Window        Finalize Marks         Mark Window |'
-            '|   Start                                      End      |'
-            '+-------------------------------------------------------+'
-            '|                                                       |'
-            '|                        NOTES:                         |'
-            '|                                                       |'
-            '|  + You may refine window marks until you finalize     |'
-            '|  + When finalized, a new plot with the windowed       |'
-            '|    waveforms will appear, as well as a confirmation   |'
-            '|    prompt.  You will have the option to re-window.    |'
-            '|                                                       |'
-            '+-------------------------------------------------------+'
-            '|                                                       |'
-            '|        PLEASE CHOOSE AN OPTION BELOW TO PROCEED!      |'
-            '|                                                       |'
-            '+-------------------------------------------------------+'};
-    %}
-    
-    % display prompt and get user choice
-    choice=menu(prompt,'OVERLAY PLOT','EVENLY SPACED PLOT',...
-        'DISTANCE SPACED PLOT','DO NOT WINDOW','DIE!');
-    
-    % proceed by user choice
-    switch choice
-        case 1 % overlay
-            fh(1)=plot2(data,varargin{:});
-        case 2 % evenly spaced
-            fh(1)=plot0(data,varargin{:});
-        case 3 % distance spaced
-            fh(1)=recordsection(data,varargin{:});
-        case 4 % no window
-            win=[];
-            return
-        case 5 % immediate death
-            error('seizmo:userwindow:killYourSelf',...
-                'User demanded Seppuku!')
+% attempt windowing
+try
+    % check fill
+    if(nargin<2 || isempty(fill)); fill=false; end
+
+    % check function handle
+    if(nargin<3 || isempty(func))
+        func=@deal;
+    elseif(~isa(func,'function_handle'))
+        error('seizmo:userwindow:badInput','FUNC must be a function handle!');
     end
-    
-    % add window limit markers
-    figure(fh(1));
-    span=ylim;
-    win=xlim;
-    hold on
-    goh(1)=plot([win(1) win(1)],span,'g','linewidth',4);
-    goh(2)=plot([win(2) win(2)],span,'r','linewidth',4);
-    hold off
-    
-    % loop until user finalizes markers
-    final=false;
-    while(~final)
-        % focus plot and let user pick
+
+    % outer loop - only breaks free by user command
+    happy_user=false; fh=[-1 -1];
+    while(~happy_user)
+        % explain to the user how this works with a little prompt
+        % and make them decide what kind of plot to use for the
+        % windowing, offering them back out options.  This prompt
+        % looks like trash because of default menu fonts.
+        prompt={'+-------------------------------------------------------+'
+                '|                Welcome to SEIZMO''s interactive windowing function             |'
+                '+-------------------------------------------------------+'
+                '|                                                                                                                |'
+                '|                                             MOUSE USAGE                                             |'
+                '|                                                                                                                |'
+                '|    LEFT CLICK                       MIDDLE CLICK                      RIGHT CLICK   |'
+                '+-----------+                +------------+               +------------+'
+                '|   Mark Window                     Finalize Marks                     Mark Window   |'
+                '|          Start                                                                              End           |'
+                '+-------------------------------------------------------+'
+                '|                                                                                                                |'
+                '|                                                   NOTES                                                   |'
+                '|                                                                                                                |'
+                '|          + You may refine window marks until you finalize                        |'
+                '|          + When finalized, a new plot with the windowed                           |'
+                '|              waveforms will appear, as well as a confirmation                      |'
+                '|              prompt.  You will have the option to re-window.                      |'
+                '|                                                                                                                |'
+                '+-------------------------------------------------------+'
+                '|                                                                                                                |'
+                '|                 PLEASE CHOOSE AN OPTION BELOW TO PROCEED!                 |'
+                '|                                                                                                                |'
+                '+-------------------------------------------------------+'};
+
+
+        % way cooler menu -- if only matlab gui's used fixed width
+        %{
+        prompt={'+-------------------------------------------------------+'
+                '|  Welcome to SEIZMO''s interactive windowing function   |'
+                '+-------------------------------------------------------+'
+                '|                                                       |'
+                '|                     MOUSE USAGE:                      |'
+                '|                                                       |'
+                '| LEFT CLICK          MIDDLE CLICK          RIGHT CLICK |'
+                '+------------+      +--------------+      +-------------+'
+                '| Mark Window        Finalize Marks         Mark Window |'
+                '|   Start                                      End      |'
+                '+-------------------------------------------------------+'
+                '|                                                       |'
+                '|                        NOTES:                         |'
+                '|                                                       |'
+                '|  + You may refine window marks until you finalize     |'
+                '|  + When finalized, a new plot with the windowed       |'
+                '|    waveforms will appear, as well as a confirmation   |'
+                '|    prompt.  You will have the option to re-window.    |'
+                '|                                                       |'
+                '+-------------------------------------------------------+'
+                '|                                                       |'
+                '|        PLEASE CHOOSE AN OPTION BELOW TO PROCEED!      |'
+                '|                                                       |'
+                '+-------------------------------------------------------+'};
+        %}
+
+        % display prompt and get user choice
+        choice=menu(prompt,'OVERLAY PLOT','EVENLY SPACED PLOT',...
+            'DISTANCE SPACED PLOT','DO NOT WINDOW','CRASH!');
+
+        % proceed by user choice
+        switch choice
+            case 1 % overlay
+                fh(1)=plot2(data,varargin{:});
+            case 2 % evenly spaced
+                fh(1)=plot0(data,varargin{:});
+            case 3 % distance spaced
+                fh(1)=recordsection(data,varargin{:});
+            case 4 % no window
+                win=[];
+                return
+            case 5 % immediate death
+                error('seizmo:userwindow:killYourSelf',...
+                    'User demanded Seppuku!')
+        end
+
+        % add window limit markers
         figure(fh(1));
-        [x,y,button]=ginput(1);
-        
-        % which mouse button?
-        switch button
-            case 1
-                % left click - update window start
-                win(1)=x;
-                set(goh(1),'xdata',[x x])
-            case 3
-                % right click - update window end
-                win(2)=x;
-                set(goh(2),'xdata',[x x])
-            case 2
-            % middle click - finalize markers
-            if (win(1)>win(2))
-                % start and end reversed - fix
-                win=win([2 1]);
-                set(goh(1),'xdata',[win(1) win(1)])
-                set(goh(2),'xdata',[win(2) win(2)])
+        span=ylim;
+        win=xlim;
+        hold on
+        goh(1)=plot([win(1) win(1)],span,'g','linewidth',4);
+        goh(2)=plot([win(2) win(2)],span,'r','linewidth',4);
+        hold off
+
+        % loop until user finalizes markers
+        final=false;
+        while(~final)
+            % focus plot and let user pick
+            figure(fh(1));
+            [x,y,button]=ginput(1);
+
+            % which mouse button?
+            switch button
+                case 1
+                    % left click - update window start
+                    win(1)=x;
+                    set(goh(1),'xdata',[x x])
+                case 3
+                    % right click - update window end
+                    win(2)=x;
+                    set(goh(2),'xdata',[x x])
+                case 2
+                    % middle click - finalize markers
+                    if (win(1)>win(2))
+                        % start and end reversed - fix
+                        win=win([2 1]);
+                        set(goh(1),'xdata',[win(1) win(1)])
+                        set(goh(2),'xdata',[win(2) win(2)])
+                    end
+                    final=true;
             end
-            final=true;
+        end
+
+        % get windowed data
+        data2=cut(data,'z',win(1),win(2),'fill',fill);
+
+        % apply function post cut
+        data2=func(data2);
+
+        % proceed by user choice
+        switch choice
+            case 1 % overlay
+                fh(2)=plot2(data2,varargin{:});
+            case 2 % evenly spaced
+                fh(2)=plot0(data2,varargin{:});
+            case 3 % distance spaced
+                fh(2)=recordsection(data2,varargin{:});
+        end
+
+        % confirm results
+        choice=menu('KEEP WINDOW?','YES','NO - TRY AGAIN','NO - CRASH!');
+        switch choice
+            case 1 % rainbow's end
+                data=data2;
+                happy_user=true;
+            case 2 % never never quit!
+                close(fh);
+                fh=[-1 -1];
+            case 3 % i bear too great a shame to go on
+                error('seizmo:userwindow:killYourSelf',...
+                    'User demanded Seppuku!')
         end
     end
-    
-    % get windowed data
-    data2=cut(data,'z',win(1),win(2),'fill',fill);
-    
-    % apply function post cut
-    data2=func(data2);
 
-    % proceed by user choice
-    switch choice
-        case 1 % overlay
-            fh(2)=plot2(data2,varargin{:});
-        case 2 % evenly spaced
-            fh(2)=plot0(data2,varargin{:});
-        case 3 % distance spaced
-            fh(2)=recordsection(data2,varargin{:});
-    end
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
-    % confirm results
-    choice=menu('KEEP WINDOW?','YES','NO - TRY AGAIN','NO - DIE!');
-    switch choice
-        case 1 % all done!
-            data=data2;
-            happy_user=true;
-        case 2 % please try again
-            close(fh);
-            fh=[-1 -1];
-        case 3 % i bear too great a shame to go on
-            error('seizmo:userwindow:killYourSelf',...
-                'User demanded Seppuku!')
-    end
+    % rethrow error
+    error(lasterror)
 end
 
 end

@@ -10,7 +10,10 @@ function [times,n]=getarrival(data,phase)
 %     case of multiple entries for the same phase, only the first match
 %     found for each record is returned - lower index has preference.  Note
 %     that the returned time is based on the reference time and is not
-%     relative to the origin (see example below).
+%     relative to the origin (see example below).  Phase may be a string
+%     like 'Pn' or a cell array of strings like {'P' 'Pdiff'}.  Note that
+%     in the case of a list of phases only the first match is returned for
+%     each record.
 %
 %     [TIMES,N]=GETARRIVAL(DATA,PHASE) also returns an index array that
 %     indicates the header field from which the time was found for each
@@ -29,7 +32,7 @@ function [times,n]=getarrival(data,phase)
 %     Get arrival time that is relative to origin time:
 %      Ptimes=getarrival(data,'P')-getheader(data,'o');
 %
-%    See also: QUICKSNR, GETHEADER, ADDARRIVALS
+%    See also: QUICKSNR, GETHEADER, ADDARRIVALS, TIMESHIFT
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -45,9 +48,10 @@ function [times,n]=getarrival(data,phase)
 %        Dec.  8, 2009 - minor doc fix
 %        Jan. 29, 2010 - dropped most checks, seizmoverbose support
 %        Feb. 24, 2010 - 1 warning for unfound arrivals
+%        Mar.  1, 2010 - allow multi-phase search
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2010 at 17:40 GMT
+%     Last Updated Mar.  1, 2010 at 01:00 GMT
 
 % todo:
 
@@ -67,6 +71,14 @@ nrecs=numel(data);
 % remove spaces from kt
 kt=strtrim(kt);
 
+% check phase
+if(ischar(phase)); phase=cellstr(phase); end
+if(~iscellstr(phase))
+    error('seizmo:getarrival:badInput',...
+        'PHASE must be a string or cellstr of phases!');
+end
+nphases=numel(phase);
+
 % detail message
 if(verbose)
     disp('Finding Phase Info in Record Header(s)');
@@ -76,8 +88,14 @@ end
 % do operations individually
 times=nan(nrecs,1); n=times;
 for i=1:nrecs
-    % find first match
-    pos=find(strcmp(phase,kt(i,:)),1);
+    % loop over each phase until something is found
+    for j=1:nphases
+        % find first match
+        pos=find(strcmp(phase{j},kt(i,:)),1);
+        
+        % check for something
+        if(~isempty(pos)); break; end
+    end
     
     % check for failure
     if(isempty(pos))

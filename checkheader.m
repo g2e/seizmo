@@ -239,6 +239,10 @@ function [data]=checkheader(data,varargin)
 %           CHECKS:     DEP HAS INFINITE VALUES
 %           FIX:        REMOVE RECORD
 %           DEFAULT:    ERROR
+%       REPEAT_DEP
+%           CHECKS:     DEP HAS SUCCESSIVE REPEATED VALUES
+%           FIX:        NONE
+%           DEFAULT:    IGNORE
 %       OLD_DEP_STATS
 %           CHECKS:     DEPMAX/DEPMEN/DEPMIN
 %           FIX:        UPDATE DEP* STATS
@@ -309,9 +313,11 @@ function [data]=checkheader(data,varargin)
 %        Feb.  3, 2010 - no longer remove records w/ nans or infs - they
 %                        are converted to zero (if fix/warnfix)
 %        Feb. 16, 2010 - OUTOFRANGE_LAT now shifts (ev/st)lo as necessary
+%        Feb. 28, 2010 - added REPEAT_DEP, all FIX with no solution are now
+%                        WARNFIX equivalent
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2010 at 01:20 GMT
+%     Last Updated Feb. 28, 2010 at 13:20 GMT
 
 % todo:
 
@@ -660,6 +666,11 @@ try
     if(~strcmp(option.INF_DEP,'IGNORE'))
         [data]=inf_dep(option.INF_DEP,data);
     end
+    
+    % check for repeat dep
+    if(~strcmp(option.REPEAT_DEP,'IGNORE'))
+        [data]=repeat_dep(option.REPEAT_DEP,data);
+    end
 
     % check for old dep stats
     if(~strcmp(option.OLD_DEP_STATS,'IGNORE'))
@@ -760,6 +771,7 @@ if(~isscalar(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO AUTOFIX FOR MULTIPLE DATA TYPES!\n' ...
                 'CONSIDER CONVERTING ALL RECORDS IN\n' ...
                 'YOUR DATASET TO A SINGLE FILETYPE.']);
@@ -808,6 +820,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp('NO AUTOFIX FOR UNEVEN SPECTRAL/XYZ! FIX IT MANUALLY.');
         case 'WARNFIX'
             warning(report.identifier,report.message);
@@ -912,6 +925,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO AUTOFIX FOR OUT OF RANGE REFERENCE TIME!\n' ...
                 'CONSIDER USING fixtimes.']);
         case 'WARNFIX'
@@ -978,6 +992,7 @@ if(~isscalar(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO AUTOFIX FOR MULTIPLE REFERENCE TIME TYPES! ' ...
                 'CONSIDER SETTING ALL TO ''iunkn'' ' ...
                 'OR USING synchronize.']);
@@ -1030,6 +1045,7 @@ if(~isscalar(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO AUTOFIX FOR MULTIPLE DEPENDENT COMPONENT TYPES! ' ...
                 'CONSIDER SETTING ALL TO ''iunkn'' ' ...
                 'OR USING integrate & differentiate.']);
@@ -1056,6 +1072,7 @@ if(~isscalar(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO AUTOFIX FOR MULTIPLE SAMPLING TYPES!\n' ...
                 'CONSIDER USING interpolate TO EVENLY SAMPLE UNEVEN.']);
         case 'WARNFIX'
@@ -1079,6 +1096,7 @@ if(~isscalar(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO AUTOFIX FOR MULTIPLE SAMPLE INTERVALS! ' ...
                 'CONSIDER USING syncrates.']);
         case 'WARNFIX'
@@ -1105,6 +1123,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO AUTOFIX FOR NEGATIVE SAMPLE INTERVALS!\n' ...
                 'CONSIDER USING reverse & changing B, E, DELTA']);
         case 'WARNFIX'
@@ -1130,6 +1149,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO AUTOFIX FOR ZERO DELTA! '...
                 'TRY TO FIGURE OUT THE CAUSE.']);
         case 'WARNFIX'
@@ -1174,6 +1194,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp('NO AUTOFIX FOR ZERO NPTS! TRY TO FIGURE OUT THE CAUSE.');
         case 'WARNFIX'
             warning(report.identifier,report.message);
@@ -1194,6 +1215,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp('NO AUTOFIX FOR NCMP>1! CONSIDER USING splitrecords.');
         case 'WARNFIX'
             warning(report.identifier,report.message);
@@ -1271,6 +1293,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp('NO AUTOFIX FOR ZERO NCMP! TRY TO FIGURE OUT THE CAUSE.');
         case 'WARNFIX'
             warning(report.identifier,report.message);
@@ -1320,6 +1343,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp('NO AUTOFIX FOR INACCURATE TIMING!');
         case 'WARNFIX'
             warning(report.identifier,report.message);
@@ -1414,6 +1438,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO FIX FOR SPECTRAL NPTS NOT A POWER OF 2!\n' ...
                 'TRY TO FIGURE OUT THE CAUSE.']);
         case 'WARNFIX'
@@ -1755,6 +1780,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO FIX FOR IMPROPERLY SIZED SPECTRAL DATA!\n' ...
                 'THIS WILL HAVE TO BE DELT WITH MANUALLY.']);
         case 'WARNFIX'
@@ -1843,6 +1869,7 @@ if(~isempty(bad))
         case 'WARN'
             warning(report.identifier,report.message);
         case 'FIX'
+            warning(report.identifier,report.message);
             disp(['NO FIX FOR 2+ INDEPENDENT COMPONENTS!\n' ...
                 'THIS WILL HAVE TO BE DELT WITH MANUALLY.']);
         case 'WARNFIX'
@@ -2192,8 +2219,8 @@ end
 bad=find(bad).';
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:nanDEP';
-    report.message=['Record(s):\n' sprintf('%d ',bad) ...
-                '\nDependent data has NaNs!'];
+    report.message=['Dependent data has NaNs!' ...
+        '\nRecord(s):\n' sprintf('%d ',bad)];
     switch opt
         case 'ERROR'
             error(report.identifier,report.message);
@@ -2225,8 +2252,8 @@ end
 bad=find(bad).';
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:infDEP';
-    report.message=['Record(s):\n' sprintf('%d ',bad) ...
-                '\nDependent data has infinite values!'];
+    report.message=['Dependent data has infinite values!' ...
+        '\nRecord(s):\n' sprintf('%d ',bad)];
     switch opt
         case 'ERROR'
             error(report.identifier,report.message);
@@ -2244,6 +2271,42 @@ if(~isempty(bad))
                 infs=isinf(data(i).dep(:));
                 data(i).dep(infs)=0;
             end
+    end
+end
+
+end
+
+function [data]=repeat_dep(opt,data)
+nrecs=numel(data);
+bad=false(nrecs,1);
+for i=1:nrecs
+    % double any for multi-cmp records
+    bad(i)=any(any(~diff(data(i).dep,1,1)));
+end
+bad=find(bad).';
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:repeatDEP';
+    report.message=['Dependent data has successive repeated values!\n' ...
+        'Record(s):\n' sprintf('%d ',bad)];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTO-FIX FOR SUCCESSIVE REPEATED VALUES!\n' ...
+                'THIS MAY INDICATE DATA CLIPPING, FILLING, DROPOUTS,\n' ...
+                'OR A MERGING ISSUE.  IT ALSO COULD JUST BE RANDOM\n' ...
+                'CHANCE (ACTUALLY THIS IS USUALLY THE CASE).\n' ...
+                'THIS WILL HAVE TO BE CHECKED & DELT WITH MANUALLY.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTO-FIX FOR SUCCESSIVE REPEATED VALUES!\n' ...
+                'THIS MAY INDICATE DATA CLIPPING, FILLING, DROPOUTS,\n' ...
+                'OR A MERGING ISSUE.  IT ALSO COULD JUST BE RANDOM\n' ...
+                'CHANCE (ACTUALLY THIS IS USUALLY THE CASE).\n' ...
+                'THIS WILL HAVE TO BE CHECKED & DELT WITH MANUALLY.']);
     end
 end
 

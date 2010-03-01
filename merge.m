@@ -313,9 +313,6 @@ try
     option.MERGEOVERLAPS=true; % on/off switch for merging overlaps
     option.VERBOSE=seizmoverbose; % default to seizmoverbose state
     option.DEBUG=seizmodebug; % default to seizmodebug state
-    
-    % turn off verbose if debugging
-    if(option.DEBUG); option.VERBOSE=false; end
 
     % get options from SEIZMO global
     ME=upper(mfilename);
@@ -393,6 +390,9 @@ try
                     'Unknown option: %s !',fields{i});
         end
     end
+    
+    % turn off verbose if debugging
+    if(option.DEBUG); option.VERBOSE=false; end
 
     % handle tolerance
     if(numel(option.TOLERANCE)==1)
@@ -427,7 +427,7 @@ try
         [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
     end
     iftype=getenumid(data,'iftype');
-    leven=strcmp(getlgc(data,'leven'),'true');
+    leven=~strcmp(getlgc(data,'leven'),'false');
 
     % require timeseries and general x vs y
     if(any(~strcmp(iftype,'itime') & ~strcmp(iftype,'ixy')))
@@ -544,6 +544,8 @@ try
             error('seizmo:merge:unevenUnsupported',...
                 ['Merging Uneven Records or Records with differing\n'...
                 'DELTA is unsupported at the moment!']);
+            [data,ab,ae,npts,dt,name]=mseq(...
+                data,ab,ae,delta,npts,dt,option,first,idx,name,varargin);
             % uneven flag
             % gomerge_uneven
         end

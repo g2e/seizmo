@@ -45,9 +45,10 @@ function [option]=checkparameters(setglobal,varargin)
 %                        line settings when SETGLOBAL was set FALSE
 %        Dec.  8, 2009 - new options NAN_DEP & INF_DEP
 %        Jan. 28, 2010 - doc update
+%        Feb. 28, 2010 - added REPEAT_DEP
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2010 at 00:55 GMT
+%     Last Updated Feb. 28, 2010 at 13:20 GMT
 
 % todo:
 
@@ -124,6 +125,7 @@ option.INCONSISTENT_IND_DELTA='FIX';
 option.CMPLX_DEP='ERROR';
 option.NAN_DEP='ERROR';
 option.INF_DEP='ERROR';
+option.REPEAT_DEP='IGNORE';
 option.OLD_DEP_STATS='FIX';
 option.CMPLX_HEAD='ERROR';
 

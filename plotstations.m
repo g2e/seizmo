@@ -26,9 +26,10 @@ function [varargout]=plotstations(data,fh)
 %     Version History:
 %        Dec.  2, 2009 - initial version
 %        Dec.  8, 2009 - event grid plotting now PLOTSTATIONS2
+%        Mar.  1, 2010 - update for new checking state function names
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  8, 2009 at 05:00 GMT
+%     Last Updated Mar.  1, 2010 at 01:45 GMT
 
 % todo:
 
@@ -44,8 +45,7 @@ undef=getsubfield(h,'undef','ntype').';
 undef=undef(idx);
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt rest
 try
@@ -108,10 +108,10 @@ try
     if(nargout); varargout{1}=fh; end
 
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)

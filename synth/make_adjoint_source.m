@@ -13,6 +13,7 @@ function [data]=make_adjoint_source(data,win)
 %     timeseries or xy data.
 %
 %    Notes:
+%     - Really just for SPECFEM3D.
 %
 %    Header changes: DEPMIN, DEPMEN, DEPMAX
 %
@@ -31,9 +32,10 @@ function [data]=make_adjoint_source(data,win)
 
 %     Version History:
 %        Dec.  8, 2009 - initial version
+%        Mar.  1, 2010 - updated for newer checking methods
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  8, 2009 at 01:00 GMT
+%     Last Updated Mar.  1, 2010 at 02:15 GMT
 
 % todo:
 
@@ -42,12 +44,10 @@ msg=nargchk(2,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
-oldseizmocheckstate=get_seizmocheck_state;
-set_seizmocheck_state(false);
+oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt header check
 try
@@ -55,11 +55,10 @@ try
     data=checkheader(data);
     
     % turn off header checking
-    oldcheckheaderstate=get_checkheader_state;
-    set_checkheader_state(false);
+    oldcheckheaderstate=checkheader_state(false);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
+    seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
     error(lasterror)
@@ -137,12 +136,12 @@ try
         'depmin',depmin,'depmen',depmen,'depmax',depmax);
     
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
-    set_seizmocheck_state(oldseizmocheckstate);
-    set_checkheader_state(oldcheckheaderstate);
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

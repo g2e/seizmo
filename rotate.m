@@ -170,13 +170,13 @@ function [data]=rotate(data,varargin)
 
 %     Version History:
 %        Feb. 24, 2010 - initial version
+%        Feb. 25, 2010 - significantly more debugging messages, some code
+%                        cleaning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2010 at 14:50 GMT
+%     Last Updated Feb. 25, 2010 at 23:18 GMT
 
 % todo:
-% - more debugging messages
-% - more extensive testing
 
 % check nargin
 if(mod(nargin-1,2))
@@ -243,9 +243,6 @@ try
     option.ALLOCATE=nrecs; % size of tmp space
     option.VERBOSE=seizmoverbose; % default to seizmoverbose state
     option.DEBUG=seizmodebug; % default to seizmodebug state
-    
-    % turn off verbose if debugging
-    if(option.DEBUG); option.VERBOSE=false; end
     
     % get options from SEIZMO global
     ME=upper(mfilename);
@@ -346,6 +343,9 @@ try
         end
     end
     
+    % turn off verbose if debugging
+    if(option.DEBUG); option.VERBOSE=false; end
+    
     % get azimuth of secondary output component
     if(option.REVERSE)
         % second component trails by 90deg
@@ -368,6 +368,11 @@ try
     end
     iftype=getenumid(data,'iftype');
     leven=getlgc(data,'leven');
+    
+    % get filenames (for debug output)
+    if(option.DEBUG)
+        name=strcat({data.path}.',{data.name}.');
+    end
 
     % require timeseries and general x vs y
     if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
@@ -437,8 +442,8 @@ try
                 ['Record(s):\n' sprintf('%d ',pidx) ...
                 '\nAzimuth(s): ' sprintf('%f ',unique(to1(pidx))) ...
                 '\nOnly 1 azimuth allowed to rotate to per pair!' ...
-                '\n(For great circle path rotations this means' ...
-                '\n your station location info is inconsistent!)']);
+                '\n(For great circle path rotations this means the ' ...
+                '\n station/earthquake location info is inconsistent!)']);
         end
         pto1=unique(to1(pidx));
         pto2=unique(to2(pidx));
@@ -456,8 +461,10 @@ try
         
         % adjust absolute times of pair to be based on same day
         day1=ab(pidx(1),1); % may not be the best choice but it is easy
-        ab(pidx,:)=[day1(ones(np,1)) ab(pidx,2)+86400*(ab(pidx,1)-day1)];
-        ae(pidx,:)=[day1(ones(np,1)) ae(pidx,2)+86400*(ae(pidx,1)-day1)];
+        cb1=ab(cidx1,2)+86400*(ab(cidx1,1)-day1);
+        ce1=ae(cidx1,2)+86400*(ae(cidx1,1)-day1);
+        cb2=ab(cidx2,2)+86400*(ab(cidx2,1)-day1);
+        ce2=ae(cidx2,2)+86400*(ae(cidx2,1)-day1);
         
         % rotate subfunction based on leven/delta
         % unevenly spaced or delta unmatched
@@ -467,22 +474,61 @@ try
             t1=cell(n1,1); t2=cell(n2,1);
             for j=1:n1
                 t1{j}=data(cidx1(j)).ind(:)...
-                    -data(cidx1(j)).ind(1)+ab(cidx1(j),2);
+                    -data(cidx1(j)).ind(1)+cb1(j);
             end
             for j=1:n2
                 t2{j}=data(cidx2(j)).ind(:)...
-                    -data(cidx2(j)).ind(1)+ab(cidx2(j),2);
+                    -data(cidx2(j)).ind(1)+cb2(j);
             end
             
             % loop over all possible pairings
             for j=1:n1
                 for k=1:n2
+                    % get overlap info
+                    [ob,oe,ol,t]=...
+                        get_overlap(cb1(j),ce1(j),cb2(k),ce2(k),...
+                        [t1{j}; t2{k}],true);
+                    
                     % skip if unacceptable overlap
-                    if(~overlap_ok(ab(cidx1(j),2),ae(cidx1(j),2),...
-                            ab(cidx2(k),2),ae(cidx2(k),2),...
-                            option.OVERLAPUNITS,option.MINOVERLAP,...
-                            [t1{j}; t2{k}],true))
-                        continue;
+                    switch lower(option.OVERLAPUNITS)
+                        case 'intervals' % actually samples
+                            if(ol(2)<option.MINOVERLAP); continue; end
+                        case 'seconds'
+                            if(ol(1)<option.MINOVERLAP); continue; end
+                    end
+                    
+                    % detail message
+                    if(option.DEBUG)
+                        % input reversal flag
+                        if(rf1); tmp='REVERSE';
+                        else tmp='NORMAL';
+                        end
+                        
+                        % lots of info
+                        disp(sprintf(...
+                            ['\nRotating Record:\n'...
+                            ' %d - %s\n'...
+                            ' azimuth: %f degrees\n'...
+                            ' begin: Day: %d Second: %f\n'...
+                            ' end:   Day: %d Second: %f\n'...
+                            ' avg. delta: %f seconds\n'...
+                            ' npts:  %d\n'...
+                            'with\n'...
+                            ' %d - %s\n'...
+                            ' azimuth: %f degrees (%s)\n'...
+                            ' begin: Day: %d Second: %f\n'...
+                            ' end:   Day: %d Second: %f\n'...
+                            ' avg. delta: %f seconds\n'...
+                            ' npts:  %d\n'...
+                            'Overlap: %f seconds (%d samples)\n'],...
+                            cidx1(j),name{cidx1(j)},cmpaz(cidx1(j)),...
+                            ab(cidx1(j),1),ab(cidx1(j),2),...
+                            ae(cidx1(j),1),ae(cidx1(j),2),...
+                            delta(cidx1(j)),npts(cidx1(j)),...
+                            cidx2(k),name{cidx2(k)},cmpaz(cidx2(k)),tmp,...
+                            ab(cidx2(k),1),ab(cidx2(k),2),...
+                            ae(cidx2(k),1),ae(cidx2(k),2),...
+                            delta(cidx2(k)),npts(cidx2(k)),ol(1),ol(2)));
                     end
                     
                     % increment counters
@@ -491,26 +537,34 @@ try
                     % copy records
                     ndata([c1 c2],1)=data([cidx1(j) cidx2(k)]);
                     
-                    % rotate
-                    [t,ndata(c1).dep,ndata(c2).dep]=...
-                        rotate_uneven(...
-                        t1{j},data(cidx1(j)).dep,cmpaz(cidx1(j)),pto1,...
-                        t2{k},data(cidx2(k)).dep,rf1,rf2,...
-                        option);
+                    % interpolate values
+                    ndata(c1).dep=interp1(...
+                        t1{j},data(cidx1(j)).dep,t,option.INTERPOLATE);
+                    ndata(c2).dep=interp1(...
+                        t2{k},data(cidx2(k)).dep,t,option.INTERPOLATE);
+
+                    % now rotate!!!
+                    [ndata(c1).dep,ndata(c2).dep]=go_rotate(...
+                        ndata(c1).dep,ndata(c2).dep,...
+                        cmpaz(cidx1(j)),rf1,pto1,rf2);
                     
                     % update independent cmp
-                    ndata(c1).ind=t+data(cidx1(j)).ind(1)-ab(cidx1(j),2);
-                    ndata(c2).ind=t+data(cidx2(k)).ind(1)-ab(cidx2(k),2);
+                    ndata(c1).ind=t+data(cidx1(j)).ind(1)-cb1(j);
+                    ndata(c2).ind=t+data(cidx2(k)).ind(1)-cb2(k);
                     
                     % get updated header values
                     nnpts([c1 c2])=numel(ndata(c1).dep);
                     ndelta([c1 c2])=(t(end)-t(1))/nnpts(c1);
                     nnz([c1 c2],:)=nz([cidx1(j) cidx2(k)],:);
-                    nab([c1 c2],1)=day1; nae([c1 c2],1)=day1;
-                    nab([c1 c2],2)=t(1); nae([c1 c2],2)=t(end);
                     nkcmpnm([c1 c2])=kcmpnm([cidx1(j) cidx2(k)]);
                     nleven([c1 c2])={'false'};
                     ncmpaz([c1 c2])=[pto1 pto2];
+                    
+                    % get updated times
+                    nab([c1 c2],1)=day1+floor(t(1)/86400);
+                    nae([c1 c2],1)=day1+floor(t(end)/86400);
+                    nab([c1 c2],2)=mod(t(1),86400);
+                    nae([c1 c2],2)=mod(t(end),86400);
                     
                     % dep*
                     if(nnpts(c1))
@@ -521,27 +575,98 @@ try
                         ndepmen(c2)=mean(ndata(c2).dep(:));
                         ndepmax(c2)=max(ndata(c2).dep(:));
                     end
+                    
+                    % detail message
+                    if(option.DEBUG)
+                        % output reversal flag
+                        if(rf2); tmp='REVERSE';
+                        else tmp='NORMAL';
+                        end
+                        
+                        % lots of info
+                        disp(sprintf(...
+                            ['\nOutput Records:\n'...
+                            ' %d - %s\n'...
+                            ' azimuth: %f degrees\n'...
+                            ' begin: Day: %d Second: %f\n'...
+                            ' end:   Day: %d Second: %f\n'...
+                            ' avg. delta: %f seconds\n'...
+                            ' npts:  %d\n'...
+                            'and\n'...
+                            ' %d - %s\n'...
+                            ' azimuth: %f degrees (%s)\n'...
+                            ' begin: Day: %d Second: %f\n'...
+                            ' end:   Day: %d Second: %f\n'...
+                            ' avg. delta: %f seconds\n'...
+                            ' npts:  %d\n'],...
+                            c1,name{cidx1(j)},pto1,...
+                            nab(c1,1),nab(c1,2),...
+                            nae(c1,1),nae(c1,2),...
+                            ndelta(c1),nnpts(c1),...
+                            c2,name{cidx2(k)},pto2,tmp,...
+                            nab(c2,1),nab(c2,2),...
+                            nae(c2,1),nae(c2,2),...
+                            ndelta(c2),nnpts(c2)));
+                    end
                 end
             end
         else % evenly spaced, delta matched
             % get independent component
             t1=cell(n1,1); t2=cell(n2,1);
             for j=1:n1
-                t1{j}=ab(cidx1(j),2)+(0:npts(cidx1(j))-1).'*delta(pidx(1));
+                t1{j}=cb1(j)+(0:npts(cidx1(j))-1).'*delta(pidx(1));
             end
             for j=1:n2
-                t2{j}=ab(cidx2(j),2)+(0:npts(cidx2(j))-1).'*delta(pidx(1));
+                t2{j}=cb2(j)+(0:npts(cidx2(j))-1).'*delta(pidx(1));
             end
             
             % loop over all possible pairings
             for j=1:n1
                 for k=1:n2
+                    % get overlap info
+                    [ob,oe,ol]=get_overlap(cb1(j),ce1(j),cb2(k),ce2(k),...
+                        delta(pidx(1)),false);
+                    
                     % skip if unacceptable overlap
-                    if(~overlap_ok(ab(cidx1(j),2),ae(cidx1(j),2),...
-                            ab(cidx2(k),2),ae(cidx2(k),2),...
-                            option.OVERLAPUNITS,option.MINOVERLAP,...
-                            delta(pidx(1)),false))
-                        continue;
+                    switch lower(option.OVERLAPUNITS)
+                        case 'intervals'
+                            if(ol(2)<option.MINOVERLAP); continue; end
+                        case 'seconds'
+                            if(ol(1)<option.MINOVERLAP); continue; end
+                    end
+                    
+                    % detail message
+                    if(option.DEBUG)
+                        % input reversal flag
+                        if(rf1); tmp='REVERSE';
+                        else tmp='NORMAL';
+                        end
+                        
+                        % lots of info
+                        disp(sprintf(...
+                            ['\nRotating Record:\n'...
+                            ' %d - %s\n'...
+                            ' azimuth: %f degrees\n'...
+                            ' begin: Day: %d Second: %f\n'...
+                            ' end:   Day: %d Second: %f\n'...
+                            ' delta: %f seconds\n'...
+                            ' npts:  %d\n'...
+                            'with\n'...
+                            ' %d - %s\n'...
+                            ' azimuth: %f degrees (%s)\n'...
+                            ' begin: Day: %d Second: %f\n'...
+                            ' end:   Day: %d Second: %f\n'...
+                            ' delta: %f seconds\n'...
+                            ' npts:  %d\n'...
+                            'Overlap: %f seconds (%f intervals)'],...
+                            cidx1(j),name{cidx1(j)},cmpaz(cidx1(j)),...
+                            ab(cidx1(j),1),ab(cidx1(j),2),...
+                            ae(cidx1(j),1),ae(cidx1(j),2),...
+                            delta(cidx1(j)),npts(cidx1(j)),...
+                            cidx2(k),name{cidx2(k)},cmpaz(cidx2(k)),tmp,...
+                            ab(cidx2(k),1),ab(cidx2(k),2),...
+                            ae(cidx2(k),1),ae(cidx2(k),2),...
+                            delta(cidx2(k)),npts(cidx2(k)),ol(1),ol(2)));
                     end
                     
                     % increment counters
@@ -551,11 +676,10 @@ try
                     ndata([c1 c2],1)=data([cidx1(j) cidx2(k)]);
                     
                     % rotate
-                    [t,ndata(c1).dep,ndata(c2).dep]=...
-                        rotate_even(...
+                    [t,ndata(c1).dep,ndata(c2).dep]=rotate_even(...
                         t1{j},data(cidx1(j)).dep,cmpaz(cidx1(j)),pto1,...
-                        t2{k},data(cidx2(k)).dep,rf1,rf2,...
-                        option);
+                        t2{k},data(cidx2(k)).dep,rf1,rf2,ob,oe,...
+                        delta(pidx(1)),option);
                     
                     % get updated header values
                     nnz([c1 c2],:)=nz([cidx1(j) cidx2(k)],:);
@@ -575,6 +699,39 @@ try
                         ndepmin(c2)=min(ndata(c2).dep(:));
                         ndepmen(c2)=mean(ndata(c2).dep(:));
                         ndepmax(c2)=max(ndata(c2).dep(:));
+                    end
+                    
+                    % detail message
+                    if(option.DEBUG)
+                        % output reversal flag
+                        if(rf2); tmp='REVERSE';
+                        else tmp='NORMAL';
+                        end
+                        
+                        % lots of info
+                        disp(sprintf(...
+                            ['\nOutput Records:\n'...
+                            ' %d - %s\n'...
+                            ' azimuth: %f degrees\n'...
+                            ' begin: Day: %d Second: %f\n'...
+                            ' end:   Day: %d Second: %f\n'...
+                            ' delta: %f seconds\n'...
+                            ' npts:  %d\n'...
+                            'and\n'...
+                            ' %d - %s\n'...
+                            ' azimuth: %f degrees (%s)\n'...
+                            ' begin: Day: %d Second: %f\n'...
+                            ' end:   Day: %d Second: %f\n'...
+                            ' delta: %f seconds\n'...
+                            ' npts:  %d\n'],...
+                            c1,name{cidx1(j)},pto1,...
+                            nab(c1,1),nab(c1,2),...
+                            nae(c1,1),nae(c1,2),...
+                            ndelta(c1),nnpts(c1),...
+                            c2,name{cidx2(k)},pto2,tmp,...
+                            nab(c2,1),nab(c2,2),...
+                            nae(c2,1),nae(c2,2),...
+                            ndelta(c2),nnpts(c2)));
                     end
                 end
             end
@@ -641,37 +798,8 @@ end
 
 end
 
-function [t,x1,x2]=rotate_uneven(t1,x1,az1,naz1,t2,x2,rf1,rf2,option)
-
-% t is just the ones in the overlapping time range
-b1=t1(1); b2=t2(1); e1=t1(end); e2=t2(end);
-t=unique([t1(t1>=b2 & t1<=e2); t2(t2>=b1 & t2<=e1)]);
-
-% interpolate values
-x1=interp1(t1,x1,t,option.INTERPOLATE);
-x2=interp1(t2,x2,t,option.INTERPOLATE);
-
-% now rotate!!!
-[x1,x2]=go_rotate(x1,x2,az1,rf1,naz1,rf2);
-
-end
-
-function [t,x1,x2]=rotate_even(t1,x1,az1,naz1,t2,x2,rf1,rf2,option)
-
-% options to implement
-% option.INTERPOLATE='spline'; % spline/pchip/linear/nearest
-% option.ADJUST='shorter'; % longer/shorter/first/last
-% option.SHIFTMAX=0.01; % interval: 0-0.5 , seconds: 0+
-% option.SHIFTUNITS='intervals'; % seconds/intervals
-
-% get delta
-delta=t1(2)-t1(1);
-
-% overlap limits
-ob=min(t1(find(t1>=t2(1) & t1<=t2(end),1,'first')),...
-    t2(find(t2>=t1(1) & t2<=t1(end),1,'first')));
-oe=max(t1(find(t1>=t2(1) & t1<=t2(end),1,'last')),...
-    t2(find(t2>=t1(1) & t2<=t1(end),1,'last')));
+function [t,x1,x2]=rotate_even(...
+    t1,x1,az1,naz1,t2,x2,rf1,rf2,ob,oe,delta,option)
 
 % points basically in overlap
 bidx1=find(abs(t1-ob)<=delta/2,1,'first');
@@ -681,6 +809,10 @@ npts=round((oe-ob)/delta)+1;
 % what is the necessary shift
 shift=mod(abs(t1(1)-t2(1)),delta);
 if(shift>delta/2); shift=delta-shift; end
+if(option.DEBUG)
+    disp(sprintf('Misalignment: %f seconds (%f intervals)',...
+        shift,shift/delta));
+end
 
 % shiftmax
 switch lower(option.SHIFTUNITS)
@@ -721,13 +853,15 @@ else % move 2
     t=t1(bidx1+(0:npts-1));
 end
 
-% get x1,x2 (god why is this so difficult)
+% get x1,x2
 if(shift<=shiftmax)
     % ok we are just shifting one record to time align
+    if(option.DEBUG); disp('Adjust Method: SHIFT'); end
     x1=x1(bidx1+(0:npts-1));
     x2=x2(bidx2+(0:npts-1));
 else % interpolate
     % interpolating one record to time align
+    if(option.DEBUG); disp('Adjust Method: INTERPOLATE'); end
     if(move1)
         x1=interp1(t1,x1,t,option.INTERPOLATE,'extrap');
         x2=x2(bidx2+(0:npts-1));
@@ -775,18 +909,20 @@ m=[           cos(theta)     (-1)^(1+rf1)*sin(theta);
 
 end
 
-function [lgc]=overlap_ok(b1,e1,b2,e2,units,mino,delta,flag)
-% check that overlap is significant
+function [ob,oe,ol,varargout]=get_overlap(b1,e1,b2,e2,delta,flag)
+% get overlap range/length
 
-switch lower(units)
-    case 'intervals'
-        if(flag) % unevenly sampled (# samp. in overlap range)
-            lgc=sum(delta>=b1 & delta<=e1 & delta>=b2 & delta<=e2)>mino;
-        else % evenly sampled
-            lgc=min(min(e1-b1,e2-b2),min(e2-b1,e1-b2))>mino*delta;
-        end
-    case 'seconds'
-        lgc=min(min(e1-b1,e2-b2),min(e2-b1,e1-b2))>mino;
+if(flag) % unevenly sampled
+    % what samples are within range
+    t=unique(delta(delta>=b1 & delta<=e1 & delta>=b2 & delta<=e2));
+    ob=t(1);
+    oe=t(end);
+    ol=[t(end)-t(1) numel(t)];
+    varargout{1}=t;
+else % evenly sampled
+    ob=max(b1,b2);
+    oe=min(e1,e2);
+    ol=[oe-ob (oe-ob)/delta];
 end
 
 end
