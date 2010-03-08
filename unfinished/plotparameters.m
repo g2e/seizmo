@@ -1,4 +1,4 @@
-function [option]=plotparameters(fname,varargin)
+function [option]=plotparameters(setglobal,varargin)
 %PLOTPARAMETERS    Handles SEIZMO plot function options
 
 % wishlist:
@@ -33,6 +33,10 @@ if(~mod(nargin,2))
     error('seizmo:plotparameters:noValue',...
         'Plotting parameters must be field / value pairs!');
 end
+
+% who is calling?
+fname=dbstack;
+fname=fname.name(min(2,size(fname)));
 
 % group field setup
 gf={'all' 'figure' 'subplot' 'plot' 'record' ...

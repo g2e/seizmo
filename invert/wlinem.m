@@ -12,7 +12,7 @@ function [m,covm] = wlinem(dd,tt,power,covd,We)
 %     is the y-intercept and slope organized in M as : [y-intercept slope].
 %     The second output is the corresponding model covariance matrix COVM
 %     assuming that the data are uncorrelated and all have equal variances
-%     of 1 (gives the identity matrix).  The weighting matrix is also set
+%     of 1 (ie the identity matrix).  The weighting matrix is also set
 %     equal to the identity matrix for this case.
 %
 %     [M,COVM]=WLINEM(DD,TT,POWER) fits the travel times using an nth
@@ -48,9 +48,10 @@ function [m,covm] = wlinem(dd,tt,power,covd,We)
 %        Aug. 25, 2009 - initial version
 %        Sep.  9, 2009 - minor doc fix, fix weighting matrix checks
 %        Oct. 13, 2009 - minor doc update, add power option
+%        Mar.  2, 2010 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 13, 2009 at 18:30 GMT
+%     Last Updated Mar.  2, 2010 at 00:40 GMT
 
 % todo:
 

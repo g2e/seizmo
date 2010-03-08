@@ -140,9 +140,10 @@ function [data,failed]=cut(data,varargin)
 %        Jan. 28, 2010 - proper SEIZMO handling, seizmoverbose support,
 %                        better warning messages
 %        Feb.  2, 2010 - versioninfo caching
+%        Mar.  8, 2010 - dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 22:05 GMT
+%     Last Updated Mar.  8, 2010 at 13:25 GMT
 
 % todo:
 
@@ -150,15 +151,11 @@ function [data,failed]=cut(data,varargin)
 msg=nargchk(1,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
-% retreive SEIZMO info
-global SEIZMO
-
 % check data structure
 versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % make sure global settings are kept
 try
@@ -233,11 +230,9 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)
@@ -405,7 +400,6 @@ end
 try
     % toggle checking off
     seizmocheck_state(false);
-    versioninfo_cache(true);
     
     % update headers
     data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
@@ -413,23 +407,15 @@ try
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)
 end
 
 % removed failed/empty cut records
-if(option.TRIM)
-    data(failed)=[];
-    % the following requires all calling functions using versioninfo
-    % caching to update their variables to the cached version
-    % - this requires keeping track of who calls cut
-    SEIZMO.VERSIONINFO.IDX(failed)=[];
-end
+if(option.TRIM); data(failed)=[]; end
 
 end

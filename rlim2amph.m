@@ -36,9 +36,10 @@ function [data]=rlim2amph(data)
 %        Dec.  4, 2009 - handle no rlim case
 %        Jan. 26, 2010 - seizmoverbose support
 %        Feb.  2, 2010 - versioninfo caching (required some code changes)
+%        Mar.  8, 2010 - versioninfo caching dropped
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 21:15 GMT
+%     Last Updated Mar.  8, 2010 at 12:45 GMT
 
 % todo:
 
@@ -51,7 +52,6 @@ versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt conversion
 try
@@ -119,11 +119,9 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

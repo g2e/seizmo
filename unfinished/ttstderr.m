@@ -1,0 +1,87 @@
+function [std]=ttstderr(m,lag,lagw)
+%TTSTDERR    Weighted standard error of arrival times
+%
+%    Usage:    stderr=ttstderr(m,lag)
+%              stderr=ttstderr(m,lag,lagw)
+%
+%    Description: STDERR=TTSTDERR(M,LAG) returns the standard error of the
+%     arrival times in M to the lags in LAG.  M is expected to be formatted
+%     like the output of TTSOLVE.  Note that this error measurement is more
+%     of a measure of the inconsistency of the lags rather than an accurate
+%     assessment of the true arrival time error.
+%
+%     STDERR=TTSTDERR(M,LAG,LAGW) allows weighting the standard error
+%     solution using LAGW.  LAGW and LAG should correspond to one another.
+%
+%    Notes:
+%     - For narrow band situations, SNR2MAXPHASEERROR is likely a better
+%       measure of the error although even this has assumptions (that the
+%       waveforms being correlated have a strong similarity).
+%
+%    Examples:
+%     Get arrival time solution and standard error:
+%      m=ttsolve(lag);
+%      mstd=ttstderr(m,lag);
+%
+%    See also: TTSOLVE, WLINEM, SNR2MAXPHASEERROR
+
+%     Version History:
+%        Mar.  2, 2010 - initial version (from dtwalign)
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Mar.  2, 2010 at 03:50 GMT
+
+% todo:
+
+% check nargin
+msg=nargchk(2,3,nargin);
+if(~isempty(msg)); error(msg); end
+
+% check inputs
+if(~isreal(m) || ~isvector(m))
+    error('seizmo:ttwstd:badInput',...
+        'M must be a real-valued vector!');
+elseif(~isreal(lag))
+    error('seizmo:ttwstd:badInput',...
+        'LAG must be a real-valued array!');
+end
+
+% vector to grid
+if(isvector(lag))
+    lag=ndsquareform(lag,'tomatrix');
+end
+
+% number of records
+nr=size(lag,1);
+if(nr~=numel(m))
+    error('seizmo:ttwstd:badInput',...
+        'M & LAG are inconsistent in size!');
+end
+
+% handle weights
+if(nargin==2 || isempty(lagw)); lagw=ones(size(lag)); end
+if(isscalar(lagw)); lagw=lagw(ones(size(lag))); end
+if(~isreal(lagw))
+    error('seizmo:ttwstd:badInput',...
+        'LAGW must be a real-valued array!');
+end
+
+% vector to grid
+if(isvector(lagw))
+    lagw=ndsquareform(lagw,'tomatrix');
+end
+
+% number of records
+nr=size(lagw,1);
+if(nr~=numel(m))
+    error('seizmo:ttwstd:badInput',...
+        'LAG & LAGW are inconsistent in size!');
+end
+
+% force m to be column vector
+m=m(:);
+
+% get standard error of arrivals
+std=sqrt(nanvariance(lag+m(:,ones(nr,1))-m(:,ones(nr,1)).',0,1,lagw));
+
+end

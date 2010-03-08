@@ -34,9 +34,10 @@ function [snr]=quicksnr(data,nwin,swin)
 %                        move usage up
 %        Jan. 29, 2010 - proper SEIZMO handling
 %        Feb.  3, 2010 - versioninfo caching
+%        Mar.  8, 2010 - versioninfo caching dropped
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 18:40 GMT
+%     Last Updated Mar.  8, 2010 at 12:45 GMT
 
 % todo:
 
@@ -44,15 +45,11 @@ function [snr]=quicksnr(data,nwin,swin)
 msg=nargchk(3,3,nargin);
 if(~isempty(msg)); error(msg); end
 
-% get SEIZMO setup
-global SEIZMO
-
 % check data structure
-[h,idx]=versioninfo(data,'dep');
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt header check
 try
@@ -64,7 +61,6 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)
@@ -84,12 +80,7 @@ try
     end
     
     % detail message
-    if(verbose)
-        disp('Estimating SNR of Record(s)');
-    end
-    
-    % turn caching off
-    versioninfo_cache(false);
+    if(verbose); disp('Estimating SNR of Record(s)'); end
 
     % snr=(max-min of signal)/(max-min of noise)
     [nmax,nmin]=getheader(...
@@ -97,20 +88,14 @@ try
     [smax,smin]=getheader(...
         cut(data,swin(:,1),swin(:,2),'trim',false),'depmax','depmin');
     snr=(smax-smin)./(nmax-nmin);
-    
-    % fix versioninfo cache
-    SEIZMO.VERSIONINFO.H=h;
-    SEIZMO.VERSIONINFO.IDX=idx;
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
     checkheader_state(oldcheckheaderstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
     checkheader_state(oldcheckheaderstate);
-    versioninfo_cache(oldversioninfocache);
 
     % rethrow error
     error(lasterror)

@@ -397,14 +397,14 @@ function [str,dip,rake] = mij2sdr(mxx,myy,mzz,mxy,mxz,myz)
 %
 
 a = [mxx mxy mxz; mxy myy myz; mxz myz mzz];
-[V,d] = eig(a);
+[V,d] = eig(a)
 
 D = [d(3,3) d(1,1) d(2,2)];
 V(2:3,1:3) = -V(2:3,1:3);
-V = [V(2,3) V(2,1) V(2,2); V(3,3) V(3,1) V(3,2); V(1,3) V(1,1) V(1,2)];
+V = [V(2,3) V(2,1) V(2,2); V(3,3) V(3,1) V(3,2); V(1,3) V(1,1) V(1,2)]
 
-IMAX = find(D == max(D));
-IMIN = find(D == min(D));
+IMAX = find(D == max(D))
+IMIN = find(D == min(D))
 AE = (V(:,IMAX)+V(:,IMIN))/sqrt(2.0);
 AN = (V(:,IMAX)-V(:,IMIN))/sqrt(2.0);
 AER = sqrt(AE(1)^2+AE(2)^2+AE(3)^2);
@@ -417,8 +417,11 @@ if (AN(3) <= 0.)
 else
 	AN1 = -AN;
 	AE1 = -AE;
-end 
+end
 [ft,fd,fl] = TDL(AN1,AE1);
+a
+[AN1 AE1]
+[ft fd fl]
 str = 360 - ft;
 dip = fd;
 rake = 180 - fl;
@@ -441,29 +444,29 @@ if (abs(ZN) < AAA)
 	FT=asin(AXN)*CON;
 	ST=-XN;
 	CT=YN;
-	if (ST >= 0. & CT < 0) 
+	if (ST >= 0. && CT < 0) 
 		FT=180.-FT;
 	end
-	if (ST < 0. & CT <= 0) 
+	if (ST < 0. && CT <= 0) 
 		FT=180.+FT;
 	end
-	if (ST < 0. & CT > 0) 
+	if (ST < 0. && CT > 0) 
 		FT=360.-FT;
 	end
 	FL=asin(abs(ZE))*CON;
 	SL=-ZE;
-	if (abs(XN) < AAA) THEN
+	if (abs(XN) < AAA)
 		CL=XE/YN;
 	else
 		CL=-YE/XN;
 	end 
-	if (SL >= 0. & CL < 0) 
+	if (SL >= 0. && CL < 0) 
 		FL=180.-FL;
 	end
-	if (SL < 0. & CL <= 0) 
+	if (SL < 0. && CL <= 0) 
 		FL=FL-180.;
 	end
-	if (SL < 0. & CL > 0) 
+	if (SL < 0. && CL > 0) 
 		FL=-FL;
 	end
 else
@@ -474,6 +477,10 @@ else
 	FD=FDH*CON;
 	SD=sin(FDH);
 	if  (SD == 0)
+        % this is just wrong
+        %error('fail by Chen Ji')
+        FT=0;
+        FL=0;
 		return;
 	end 
 	ST=-XN/SD;
@@ -483,13 +490,13 @@ else
 		SX=1.0;
 	end
 	FT=asin(SX)*CON;
-	if (ST >= 0. & CT < 0) 
+	if (ST >= 0. && CT < 0) 
 		FT=180.-FT;
 	end
-	if (ST < 0. & CT <= 0) 
+	if (ST < 0. && CT <= 0) 
 		FT=180.+FT;
 	end
-	if (ST < 0. & CT > 0) 
+	if (ST < 0. && CT > 0) 
 		FT=360.-FT;
 	end
 	SL=-ZE/SD;
@@ -498,7 +505,7 @@ else
 		SX=1.0;
 	end
 	FL=asin(SX)*CON;
-	if (ST == 0) THEN
+	if (ST == 0)
 		CL=XE/CT;
 	else
 		XXX=YN*ZN*ZE/SD/SD+YE;
@@ -507,13 +514,13 @@ else
 			CL=YE/ST;
 		end
 	end 
-	if (SL >= 0. & CL < 0) 
+	if (SL >= 0. && CL < 0) 
 		FL=180.-FL;
 	end
-	if (SL < 0. & CL <= 0) 
+	if (SL < 0. && CL <= 0) 
 		FL=FL-180.;
 	end
-	if (SL < 0. & CL > 0) 
+	if (SL < 0. && CL > 0) 
 		FL=-FL;
 	end
 end 

@@ -38,10 +38,11 @@ function []=print_time_left(act_step,tot_step,redraw)
 %                        now updates when last and current steps differ in
 %                        percent, some caller detection added
 %        Feb. 22, 2010 - prints total time spent on last step
+%        Mar.  7, 2010 - no error if called from the cmd line
 %
 %     Written by Nicolas Le Roux (lerouxni at iro dot umontreal dot ca)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 22, 2010 at 21:55 GMT
+%     Last Updated Mar.  7, 2010 at 17:55 GMT
 
 % todo:
 % - preceeding warning message links are missing occasionally?
@@ -65,7 +66,9 @@ if(~exist('old_step','var') || isempty(old_step)); old_step=act_step-1; end
 
 % who called last time & this time
 [st]=dbstack;
-cur_fun=st(2).name;
+if(numel(st)==1); cur_fun='cmdline';
+else cur_fun=st(2).name;
+end
 if(~exist('old_fun','var') || isempty(old_fun)); old_fun=cur_fun; end
 
 % default redraw

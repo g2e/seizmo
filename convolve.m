@@ -56,9 +56,10 @@ function [data,zf]=convolve(data,tf,delay,zi)
 %                        fixed a couple bugs (dataless, zi applied wrong)
 %        Jan. 27, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb.  2, 2010 - versioninfo caching
+%        Mar.  8, 2010 - dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 21:50 GMT
+%     Last Updated Mar.  8, 2010 at 13:15 GMT
 
 % todo:
 
@@ -71,7 +72,6 @@ versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt convolution
 try
@@ -256,11 +256,9 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

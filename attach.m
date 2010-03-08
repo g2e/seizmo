@@ -42,9 +42,10 @@ function [data]=attach(data,option,dep,ind)
 %                        fixed bug in matrix entry
 %        Jan. 26, 2010 - seizmoverbose support
 %        Feb.  2, 2010 - versioninfo caching
+%        Mar.  8, 2010 - versioninfo caching dropped
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 22:05 GMT
+%     Last Updated Mar.  8, 2010 at 12:45 GMT
 
 % todo:
 
@@ -57,7 +58,6 @@ versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt attach
 try
@@ -232,11 +232,9 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

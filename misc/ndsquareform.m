@@ -46,7 +46,7 @@ function [x]=ndsquareform(x,method,flag)
 %
 %    Note:
 %     - 1x1x... is always assumed a vector unless METHOD is set to
-%       'ismatrix'!
+%       'tovector'!
 %     - The diagonal is NOT required to be zeros.
 %
 %    Example:
@@ -88,9 +88,10 @@ function [x]=ndsquareform(x,method,flag)
 %        Sep.  8, 2009 - rewrite and added documentation
 %        Oct. 14, 2009 - (fully?) compatible with SQUAREFORM, note switch
 %                        to lower triangle, lots of fixes
+%        Mar.  2, 2010 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 14, 2009 at 01:20 GMT
+%     Last Updated Mar.  2, 2010 at 00:40 GMT
 
 % todo:
 

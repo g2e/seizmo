@@ -56,9 +56,10 @@ function [data]=addarrivals(data,varargin)
 %        Dec.  9, 2009 - works with newer tauptime
 %        Jan. 26, 2010 - seizmoverbose support, properly SEIZMO handling
 %        Feb.  3, 2010 - versioninfo caching
+%        Mar.  8, 2010 - versioninfo caching dropped
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 14:30 GMT
+%     Last Updated Mar.  8, 2010 at 12:45 GMT
 
 % todo:
 % - really need to catch taup messages
@@ -77,7 +78,6 @@ data=checkheader(data);
 
 % toggle off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt adding arrivals
 try
@@ -229,11 +229,9 @@ try
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

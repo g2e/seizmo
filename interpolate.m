@@ -55,9 +55,10 @@ function [data]=interpolate(data,sr,method,new_b,new_e)
 %        Sep. 11, 2009 - minor doc update
 %        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
 %        Feb.  3, 2010 - versioninfo caching
+%        Mar.  4, 2010 - keep things consistent in case the e field is off
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 15:55 GMT
+%     Last Updated Mar.  4, 2010 at 16:25 GMT
 
 % check number of arguments
 msg=nargchk(2,5,nargin);
@@ -86,7 +87,7 @@ try
     [b,e,npts,delta]=getheader(data,'b','e','npts','delta');
 
     % defaults
-    if(nargin<5 || isempty(new_e)); new_e=e; end
+    if(nargin<5 || isempty(new_e)); new_e=b+(npts-1).*delta; end
     if(nargin<4 || isempty(new_b)); new_b=b; end
     if(nargin<3 || isempty(method)); method{1}='spline'; end
 

@@ -39,8 +39,15 @@ switch method
             C=sum(repmat(permute(A,[2 3 1]),[1 sz(1) 1]).*repmat(permute(A,[3 2 1]),[sz(1) 1 1]).*repmat(B,[1 1 sz(1)]),3);
             C=B.*sign(C);
         end
-    %case 3
-        % mode
+    case 3
+        % eigenvector method
+        % - solve Bv=vd
+        % - choose eigenvector with largest eigenvalue
+        % - take sign of eigenvector
+        [v,d]=eig(B);
+        [d,idx]=max(diag(d));
+        v=sign(v(:,idx));
+        A=v*v.';
     otherwise
         error('what:the:hell','Unknown method');
 end

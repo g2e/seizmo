@@ -71,9 +71,10 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %        Feb.  2, 2010 - proper SEIZMO handling, seizmoverbose support,
 %                        versioninfo caching, fix bug disallowing xy data
 %        Feb. 24, 2010 - require a finite shift
+%        Mar.  8, 2010 - drop versioninfo caching (too difficult to debug)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2010 at 18:00 GMT
+%     Last Updated Mar.  8, 2010 at 12:40 GMT
 
 % todo:
 
@@ -81,12 +82,11 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 msg=nargchk(2,inf,nargin);
 if(~isempty(msg)); error(msg); end
 
-% check struct/header (versioninfo cache update)
+% check struct/header
 data=checkheader(data);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt timeshift
 try
@@ -226,11 +226,9 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)
