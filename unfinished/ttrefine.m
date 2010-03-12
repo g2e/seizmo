@@ -30,10 +30,11 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %     STD are from TTSTDERR (ie weighted).
 %
 %     [CG,LG,PG,NC]=TTREFINE(CG,LG,PG,DT,STD,POL,WG,MINSTD,PFLAG) sets if
-%     peaks with the wrong polarity are allowed or not.  By default PFLAG
-%     is TRUE and this indicates the peaks must match the polarities in
-%     POL.  Setting PFLAG to FALSE will allow the polarity to be refined
-%     too.
+%     peaks with the wrong polarity are included in the reordered results
+%     or not.  By default, PFLAG is TRUE and this indicates that the peaks
+%     must match the polarities in POL to be included in the 1st page of
+%     the reordered results.  Setting PFLAG to FALSE will essentially allow
+%     the polarity to be refined too.
 %
 %    Notes:
 %     - Why reorder peak info?  Re-solving the reordered peak info gives a
@@ -71,11 +72,13 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 
 %     Version History:
 %        Mar. 11, 2010 - initial version (derived from dtwrefine)
+%        Mar. 12, 2010 - doc update, fix checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2010 at 17:45 GMT
+%     Last Updated Mar. 12, 2010 at 12:45 GMT
 
 % todo:
+% - there could be a sign error in the misfit formula
 
 % check nargin
 msg=nargchk(7,10,nargin);
@@ -152,7 +155,7 @@ if(~SKIP && NCHANGED==0); return; end
 % LINEAR INDICES OF BEST PEAKS
 best=li+(mi(li)-1)*nxc;
 
-% SPECIAL EXIT (FOR DEBUGGING & EDGE CASES)
+% SPECIAL EXIT
 if(SKIP)
     % output li, best, M, NCHANGED
     cg=li;
@@ -240,10 +243,10 @@ else % matrix form
     if(~isequal(cg,permute(cg,[2 1 3])) || any(abs(cg(:))>1))
         error('seizmo:ttrefine:badInput',...
             'CG must be a symmetric matrix of real values within -1 & 1!');
-    elseif(~isequal(lg,-lg'))
+    elseif(~isequal(lg,permute(-lg,[2 1 3])))
         error('seizmo:ttrefine:badInput',...
             'LG must be a anti-symmetric matrix of real values!');
-    elseif(~isequal(pg,pg') || any(abs(pg(:))~=1))
+    elseif(~isequal(pg,permute(pg,[2 1 3])) || any(abs(pg(:))~=1))
         error('seizmo:ttrefine:badInput',...
             'PG must be a symmetric matrix of 1s & -1s!');
     end

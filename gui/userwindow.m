@@ -48,9 +48,10 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %        Sep.  5, 2009 - rewrite
 %        Sep.  9, 2009 - added documentation
 %        Mar.  1, 2010 - updated for newer checking methods
+%        Mar. 12, 2010 - pretty text menu for Octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2010 at 01:55 GMT
+%     Last Updated Mar. 12, 2010 at 02:15 GMT
 
 % todo:
 
@@ -122,32 +123,33 @@ try
 
 
         % way cooler menu -- if only matlab gui's used fixed width
-        %{
-        prompt={'+-------------------------------------------------------+'
-                '|  Welcome to SEIZMO''s interactive windowing function   |'
-                '+-------------------------------------------------------+'
-                '|                                                       |'
-                '|                     MOUSE USAGE:                      |'
-                '|                                                       |'
-                '| LEFT CLICK          MIDDLE CLICK          RIGHT CLICK |'
-                '+------------+      +--------------+      +-------------+'
-                '| Mark Window        Finalize Marks         Mark Window |'
-                '|   Start                                      End      |'
-                '+-------------------------------------------------------+'
-                '|                                                       |'
-                '|                        NOTES:                         |'
-                '|                                                       |'
-                '|  + You may refine window marks until you finalize     |'
-                '|  + When finalized, a new plot with the windowed       |'
-                '|    waveforms will appear, as well as a confirmation   |'
-                '|    prompt.  You will have the option to re-window.    |'
-                '|                                                       |'
-                '+-------------------------------------------------------+'
-                '|                                                       |'
-                '|        PLEASE CHOOSE AN OPTION BELOW TO PROCEED!      |'
-                '|                                                       |'
-                '+-------------------------------------------------------+'};
-        %}
+        if(strcmpi(getapplication,'OCTAVE'))
+            prompt={'+-------------------------------------------------------+'
+                    '|  Welcome to SEIZMO''s interactive windowing function   |'
+                    '+-------------------------------------------------------+'
+                    '|                                                       |'
+                    '|                     MOUSE USAGE:                      |'
+                    '|                                                       |'
+                    '| LEFT CLICK          MIDDLE CLICK          RIGHT CLICK |'
+                    '+------------+      +--------------+      +-------------+'
+                    '| Mark Window        Finalize Marks         Mark Window |'
+                    '|   Start                                      End      |'
+                    '+-------------------------------------------------------+'
+                    '|                                                       |'
+                    '|                        NOTES:                         |'
+                    '|                                                       |'
+                    '|  + You may refine window marks until you finalize     |'
+                    '|  + When finalized, a new plot with the windowed       |'
+                    '|    waveforms will appear, as well as a confirmation   |'
+                    '|    prompt.  You will have the option to re-window.    |'
+                    '|                                                       |'
+                    '+-------------------------------------------------------+'
+                    '|                                                       |'
+                    '|        PLEASE CHOOSE AN OPTION BELOW TO PROCEED!      |'
+                    '|                                                       |'
+                    '+-------------------------------------------------------+'};
+        end
+        
 
         % display prompt and get user choice
         choice=menu(prompt,'OVERLAY PLOT','EVENLY SPACED PLOT',...

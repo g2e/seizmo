@@ -42,9 +42,10 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 %        Sep.  9, 2009 - rewrite and added documentation
 %        Sep. 23, 2009 - updated for taper changes
 %        Mar.  1, 2010 - updated for newer checking methods
+%        Mar. 12, 2010 - pretty text menu for Octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2010 at 01:40 GMT
+%     Last Updated Mar. 12, 2010 at 02:15 GMT
 
 % todo:
 % - subplot showing taper
@@ -130,32 +131,32 @@ try
 
 
         % way cooler menu -- if only matlab gui's used fixed width
-        %{
-        prompt={'+-------------------------------------------------------+'
-                '|   Welcome to SEIZMO''s interactive tapering function   |'
-                '+-------------------------------------------------------+'
-                '|                                                       |'
-                '|                     MOUSE USAGE:                      |'
-                '|                                                       |'
-                '|   LEFT CLICK        MIDDLE CLICK         RIGHT CLICK  |'
-                '+---------------+   +--------------+    +---------------+'
-                '| Mark Untapered     Finalize Marks      Mark Untapered |'
-                '|     Start                                    End      |'
-                '+-------------------------------------------------------+'
-                '|                                                       |'
-                '|                        NOTES:                         |'
-                '|                                                       |'
-                '|  + You may refine tapering limits until you finalize  |'
-                '|  + When finalized, a new plot with the tapered        |'
-                '|    waveforms will appear, as well as a confirmation   |'
-                '|    prompt.  You will have the option to re-window.    |'
-                '|                                                       |'
-                '+-------------------------------------------------------+'
-                '|                                                       |'
-                '|        PLEASE CHOOSE AN OPTION BELOW TO PROCEED!      |'
-                '|                                                       |'
-                '+-------------------------------------------------------+'};
-        %}
+        if(strcmpi(getapplication,'OCTAVE'))
+            prompt={'+-------------------------------------------------------+'
+                    '|   Welcome to SEIZMO''s interactive tapering function   |'
+                    '+-------------------------------------------------------+'
+                    '|                                                       |'
+                    '|                     MOUSE USAGE:                      |'
+                    '|                                                       |'
+                    '|   LEFT CLICK        MIDDLE CLICK         RIGHT CLICK  |'
+                    '+---------------+   +--------------+    +---------------+'
+                    '| Mark Untapered     Finalize Marks      Mark Untapered |'
+                    '|     Start                                    End      |'
+                    '+-------------------------------------------------------+'
+                    '|                                                       |'
+                    '|                        NOTES:                         |'
+                    '|                                                       |'
+                    '|  + You may refine tapering limits until you finalize  |'
+                    '|  + When finalized, a new plot with the tapered        |'
+                    '|    waveforms will appear, as well as a confirmation   |'
+                    '|    prompt.  You will have the option to re-window.    |'
+                    '|                                                       |'
+                    '+-------------------------------------------------------+'
+                    '|                                                       |'
+                    '|        PLEASE CHOOSE AN OPTION BELOW TO PROCEED!      |'
+                    '|                                                       |'
+                    '+-------------------------------------------------------+'};
+        end
 
         % display prompt and get user choice
         choice=menu(prompt,'SELECT TAPER','OVERLAY PLOT',...

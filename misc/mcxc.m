@@ -191,9 +191,10 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %        Jan. 27, 2010 - killed convolve option, forced fft/ifft/sum/max to
 %                        work on dimension 1, added a simple example, added
 %                        a verbose option (requires PRINT_TIME_LEFT)
+%        Mar. 12, 2010 - fix for precision issue in normalized case
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2010 at 20:10 GMT
+%     Last Updated Mar. 12, 2010 at 10:10 GMT
 
 % todo:
 % - vectorized gives different lag result if no peaks left (DO NOT CARE)
@@ -425,6 +426,12 @@ else
         end
     end
 end
+
+% Due to autocorrelations being calced in the time domain while cross
+% correlations are found in the frequency domain, normalization might be
+% a hair off.  This results in values just above/below 1/-1 and they need
+% to be shifted to 1/-1.
+if(normxc); cg(abs(cg)>1)=sign(cg(abs(cg)>1)); end
 
 end
 

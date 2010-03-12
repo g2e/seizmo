@@ -58,11 +58,13 @@ function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %        Sep. 25, 2009 - rewrite and added documentation
 %        Mar.  1, 2010 - minor doc update, better comments, updated for
 %                        newer checking methods
+%        Mar. 12, 2010 - pretty text menu for Octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2010 at 01:05 GMT
+%     Last Updated Mar. 12, 2010 at 02:15 GMT
 
 % todo:
+% - options to change method/criterion
 
 % check nargin
 msg=nargchk(1,inf,nargin);
@@ -127,7 +129,6 @@ try
         % dendrogram/waveforms
         [grp.perm,grp.color,fh,sfh]=plotdendro(data,Z,varargin{:},...
             'treelimit',grp.cutoff);
-        drawnow;
         prompt={'+-------------------------------------------------------+'
             '|               Welcome to SEIZMO''s interactive clustering function              |'
             '+-------------------------------------------------------+'
@@ -140,19 +141,19 @@ try
             '|         Limit                                                                                              |'
             '+-------------------------------------------------------+'};
         % way cooler menu -- if only matlab gui's used fixed width
-        %{
-        prompt={'+-------------------------------------------------------+'
-                '|  Welcome to SEIZMO''s interactive clustering function  |'
-                '+-------------------------------------------------------+'
-                '|                                                       |'
-                '|                     MOUSE USAGE:                      |'
-                '|                                                       |'
-                '|   LEFT CLICK        MIDDLE CLICK         RIGHT CLICK  |'
-                '+---------------+   +--------------+    +---------------+'
-                '|  Set Cluster       Finalize Limit                     |'
-                '|     Limit                                             |'
-                '+-------------------------------------------------------+'};
-        %}
+        if(strcmpi(getapplication,'OCTAVE'))
+            prompt={'+-------------------------------------------------------+'
+                    '|  Welcome to SEIZMO''s interactive clustering function  |'
+                    '+-------------------------------------------------------+'
+                    '|                                                       |'
+                    '|                     MOUSE USAGE:                      |'
+                    '|                                                       |'
+                    '|   LEFT CLICK        MIDDLE CLICK         RIGHT CLICK  |'
+                    '+---------------+   +--------------+    +---------------+'
+                    '|  Set Cluster       Finalize Limit                     |'
+                    '|     Limit                                             |'
+                    '+-------------------------------------------------------+'};
+        end
         menu(prompt,'OK');
 
         % loop until right click

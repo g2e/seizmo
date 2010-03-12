@@ -16,7 +16,7 @@ function [x]=ndsquareform(x,method,flag)
 %     section of the matrix form and thus consumes less space.  The
 %     primary disadvantage to the vector form is that one does not
 %     immediately know what a specific element corresponds to in the matrix
-%     form.  Vectors are always returned as column vectors.  Matrices are
+%     form.  Vectors are always returned as row vectors.  Matrices are
 %     always returned with the diagonal elements set to zero.
 %
 %     M=NDSQUAREFORM(V,'TOMATRIX') requires NDSQUAREFORM to interpret the
@@ -28,9 +28,9 @@ function [x]=ndsquareform(x,method,flag)
 %     input as a matrix to be transformed into a vector.  This is necessary
 %     if the matrix is 1x1x..., as this will be auto-detected as a vector.  
 %     Leaving this field empty sets NDSQUAREFORM to auto-detect (the
-%     default).
+%     default).  V is a multi-page row vector.
 %
-%     M=NDSQUAREFORM(V,METHOD,FLAG) allows switching between creation of a
+%     M=NDSQUAREFORM(V,'TOMATRIX',FLAG) switches between creation of a
 %     symmetric and an anti-symmetric matrix.  Setting FLAG to TRUE (the
 %     default) converts V to an n-d symmetric, square matrix.  With FLAG
 %     set to FALSE, V is converted to an n-d anti-symmetric, square matrix
@@ -39,10 +39,10 @@ function [x]=ndsquareform(x,method,flag)
 %     triangles have opposite logical values in the anti-symmetric case.
 %     Remember that V always corresponds to the lower triangle values in M!
 %
-%     V=NDSQUAREFORM(M,METHOD,FLAG) allows switching between extraction of
+%     V=NDSQUAREFORM(M,'TOVECTOR',FLAG) switches between extraction of
 %     the lower and upper triangle portions of M.  When FLAG is set to TRUE
 %     (the default), the lower triangle portion of M is returned in vector
-%     form as V.  Setting FLAG to FALSE returns the upper triangle portion.
+%     form as V.  Setting FLAG to FALSE returns the upper triangle section.
 %
 %    Note:
 %     - 1x1x... is always assumed a vector unless METHOD is set to
@@ -89,9 +89,10 @@ function [x]=ndsquareform(x,method,flag)
 %        Oct. 14, 2009 - (fully?) compatible with SQUAREFORM, note switch
 %                        to lower triangle, lots of fixes
 %        Mar.  2, 2010 - minor doc update
+%        Mar. 12, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  2, 2010 at 00:40 GMT
+%     Last Updated Mar. 12, 2010 at 13:15 GMT
 
 % todo:
 

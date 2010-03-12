@@ -72,10 +72,11 @@ function [varargout]=xdir(str,depth)
 %        Aug.  4, 2009 - fix dir listing for Octave when no path given
 %        Sep. 12, 2009 - doc update
 %        Jan. 30, 2010 - fix empty path output, order fields so path on top
+%        Mar. 12, 2010 - fix for Octave when setting empty path
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 19:00 GMT
+%     Last Updated Mar. 12, 2010 at 00:20 GMT
 
 % todo:
 % - see unfinished xdir todo
@@ -272,7 +273,9 @@ if(nargout==0)
   end
 else
   % to make all entries have a path (use './' or '.\' if there is none)
-  [D(strcmp({D.path},'')).path]=deal(['.' filesep]);
+  if(any(strcmp({D.path},'')))
+    [D(strcmp({D.path},'')).path]=deal(['.' filesep]);
+  end
   
   % send list out
   varargout{1}=D;

@@ -28,9 +28,11 @@ function [std]=ttstderr(m,lag,lagw)
 %     Version History:
 %        Mar.  2, 2010 - initial version (from dtwresid)
 %        Mar. 11, 2010 - doc update, column vector output
+%        Mar. 12, 2010 - better way to get column vector output, more
+%                        input checking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2010 at 12:15 GMT
+%     Last Updated Mar. 12, 2010 at 14:10 GMT
 
 % todo:
 
@@ -49,7 +51,12 @@ end
 
 % vector to grid
 if(isvector(lag))
-    lag=ndsquareform(lag,'tomatrix');
+    lag=ndsquareform(lag,'tomatrix',false);
+else
+    if(~isequal(lag,permute(-lag,[2 1 3])))
+        error('seizmo:ttstderr:badInput',...
+            'LAG must be a anti-symmetric matrix of real values!');
+    end
 end
 
 % number of records
@@ -70,6 +77,11 @@ end
 % vector to grid
 if(isvector(lagw))
     lagw=ndsquareform(lagw,'tomatrix');
+else
+    if(~isequal(lagw,permute(lagw,[2 1 3])))
+        error('seizmo:ttstderr:badInput',...
+            'LAGW must be a symmetric matrix of real values!');
+    end
 end
 
 % number of records
@@ -83,7 +95,6 @@ end
 m=m(:);
 
 % get standard error of arrivals
-std=sqrt(nanvariance(lag+m(:,ones(nr,1))-m(:,ones(nr,1)).',0,1,lagw));
-std=std(:);
+std=sqrt(nanvariance(lag+m(:,ones(nr,1))-m(:,ones(nr,1)).',0,2,lagw));
 
 end
