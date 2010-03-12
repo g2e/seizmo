@@ -13,18 +13,21 @@ function [R]=ifisher(Z)
 %    Examples:
 %     Convert correlations to z statistic get the mean and std dev and
 %      convert them back to correlation values:
-%       z=fisher(r)
-%       z_mean=mean(z)
-%       z_std=sqrt(var(z))
-%       [r_lower,r_mean,r_upper]=ifisher(z_mean-z_std,z_mean,z_mean+z_std)
+%       z=fisher(r);
+%       z_mean=mean(z);
+%       z_std=std(z);
+%       r_lower=ifisher(z_mean-z_std);
+%       r_mean=ifisher(z_mean);
+%       r_upper=ifisher(z_mean+z_std);
 %
 %    See also: FISHER
 
 %     Version History:
 %        Sep.  9, 2009 - minor doc update
+%        Mar. 11, 2010 - fixed example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  9, 2009 at 01:50 GMT
+%     Last Updated Mar. 11, 2010 at 10:35 GMT
 
 % todo:
 

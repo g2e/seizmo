@@ -6,7 +6,7 @@ function [std]=ttstderr(m,lag,lagw)
 %
 %    Description: STDERR=TTSTDERR(M,LAG) returns the standard error of the
 %     arrival times in M to the lags in LAG.  M is expected to be formatted
-%     like the output of TTSOLVE.  Note that this error measurement is more
+%     like the output of TTALIGN.  Note that this error measurement is more
 %     of a measure of the inconsistency of the lags rather than an accurate
 %     assessment of the true arrival time error.
 %
@@ -20,16 +20,17 @@ function [std]=ttstderr(m,lag,lagw)
 %
 %    Examples:
 %     Get arrival time solution and standard error:
-%      m=ttsolve(lag);
+%      m=ttalign(lag);
 %      mstd=ttstderr(m,lag);
 %
-%    See also: TTSOLVE, WLINEM, SNR2MAXPHASEERROR
+%    See also: TTALIGN, TTPOLAR, TTREFINE, TTSOLVE, SNR2MAXPHASEERROR
 
 %     Version History:
-%        Mar.  2, 2010 - initial version (from dtwalign)
+%        Mar.  2, 2010 - initial version (from dtwresid)
+%        Mar. 11, 2010 - doc update, column vector output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  2, 2010 at 03:50 GMT
+%     Last Updated Mar. 11, 2010 at 12:15 GMT
 
 % todo:
 
@@ -83,5 +84,6 @@ m=m(:);
 
 % get standard error of arrivals
 std=sqrt(nanvariance(lag+m(:,ones(nr,1))-m(:,ones(nr,1)).',0,1,lagw));
+std=std(:);
 
 end

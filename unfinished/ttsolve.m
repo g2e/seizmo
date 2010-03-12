@@ -1,162 +1,44 @@
-function [m,Gg]=ttsolve(lag,lagw,abstt,absw,absidx)
-%TTSOLVE    Solves for Relative/Absolute Travel Times via Weighted Least Sq
-%
-%    Usage:    [m,Gg]=ttsolve(lag)
-%              [m,Gg]=ttsolve(lag,lagw)
-%              [m,Gg]=ttsolve(lag,lagw,abstt,absw,absidx)
-%
-%    Description: [M,Gg]=TTSOLVE(LAG) solves the matrix of relative lag
-%     times LAG in a least-squares sense for the optimal relative arrival
-%     times M (zero-centered).  Secondary output Gg is the generalized
-%     inverse of G in the equation G*M=LAG (so M=Gg*LAG).  This is an
-%     overdetermined problem so Gg=inv(G.'*G)*G.'.
-%
-%     [M,Gg]=TTSOLVE(LAG,LAGW) assigns weights LAGW to the corresponding
-%     elements in LAG when solving for M.  Higher weights forces the
-%     solution to respect the corresponding lags while lower weights can be
-%     used to dampen the effect of outliers.  One might use signal to noise
-%     ratio and/or peak cross correlation values for weighting.
-%
-%     [M,Gg]=TTSOLVE(LAG,LAGW,ABSTT,ABSW,ABSIDX) ties the cross correlation
-%     relative lag times to some absolute travel times in ABSTT.  The
-%     travel times may be weighted using ABSW.  ABSIDX indicates which
-%     arrivals correspond to ABSTT.  This is useful for shifting relative
-%     arrival times to align with absolute arrival times in a least squares
-%     sense.
-%
-%    Notes:
-%     - If using cross correlation values for weighting, it is better to
-%       first convert them to z-values (see FISHER).  This gives a better
-%       approximation to a normal distribution that will enhance weights.
-%
-%    Examples:
-%     A simple case (synthetic arrivals at
-%     1 to 10 sec hidden in some noise):
-%      arr=1:10;
-%      lg=arr(ones(10,1),:)-arr(ones(10,1),:)'+2*rand(10)-1;
-%      ttsolve(lg)
-%
-%     Get the covariance of the arrivals assuming the variance of the data
-%     is the square of 1/4 the sample interval of records (sampled at 5Hz
-%     here) and that there is no data covariance:
-%      [m,Gg]=ttsolve(lags);
-%      covd=((0.2/4)^2)*eye(numel(lg));
-%      covm=Gg*covd*Gg.';
-%
-%     Tie cross correlation results to some absolute time picks:
-%      ttsolve(lags,[],[725.5 801.1],1,[22 30])
-%
-%    See also: WLINEM, TTSTDERR
+function []=ttsolve(xc,mri,pd,snr,info)
+%TTSOLVE    Solves relative arrival times & polarities
 
-%     Version History:
-%        Mar.  2, 2010 - initial version (from dtwalign)
-%
-%     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  2, 2010 at 02:10 GMT
+% additional parameters
+% - max number of iterations
+% - when to force polarity consistency
+%   - can we delay this?
+%     - 0 == no delay
+%     - 1 == force consistency after first refinement
+%     - >mri == never force consistency
+% - verbosity
+verbose=seizmoverbose;
 
-% todo:
+% check inputs
 
-% check nargin
-msg=nargchk(1,5,nargin);
-if(~isempty(msg)); error(msg); end
+% convert correlation values to z-statistic
+% - more appropriate for weighting
+% - more appropriate for error estimation
+xc.zg=fisher(xc.cg);
+xc.zg(abs(xc.cg)>1-eps)=nan; % ignore perfect correlations
 
-% check lag
-[lag,nr,len,i,j]=m2v(lag,'LAG');
-
-% default lagw
-if(nargin<2 || isempty(lagw)); lagw=ones(size(lag)); end
-
-% check lagw
-[lagw,nr2]=m2v(lagw,'LAGW');
-if(nr~=nr2)
-    error('seizmo:ttsolve:badInput',...
-        'LAG & LAGW are inconsistent in size!');
+% initial alignment & polarity estimate
+% - 2 choices:
+%   - based on best correlating peaks (weighted by snr & z)
+%   - times & polarities given as input
+if(isempty(info))
+    if(verbose); disp('Inverting for Initial Alignment & Polarity'); end
+    [dt]=ttsolve(lag,lagw);
+else
+    if(verbose); disp('Initial Alignment & Polarity Given as Input'); end
+    dt=info(:,1);
+    pol=info(:,2);
 end
 
-% are we just using relative arrivals?
-if(nargin<3)
-    % BUILDING KERNEL MATRIX (G)
-    totlen=len+1;
-    G=sparse([1:len 1:len],[i j],...
-        [-ones(1,len) ones(1,len)],totlen,nr,2*len+nr);
-    G(totlen,:)=1;
-    
-    % BUILDING THE WEIGHTING MATRIX (W)
-    W=sparse(1:totlen,1:totlen,[lagw(:); 1],totlen,totlen);
-    
-    % GENERALIZED INVERSE (Gg) (OVERDETERMINED CASE)
-    Gg=full(inv(G.'*W*G)*G.'*W);
-    
-    % FINDING LEAST SQUARES RELATIVE ARRIVALS (m)
-    m=Gg*[lag(:); 0];
-else % some absolute timing info also
-    % check abstt/absw/absidx
-    if(nargin==3 || isempty(absw)); absw=1; end
-    if(isscalar(absw)); absw=absw(ones(size(abstt))); end
-    if(~isreal(abstt) || ~isreal(absw) || ~isreal(absidx))
-        error('seizmo:ttsolve:badInput',...
-            'ABSTT, ABSW, ABSIDX must be real-valued arrays!');
-    elseif(~isequal(numel(abstt),numel(absw),numel(absidx)))
-        error('seizmo:ttsolve:badInput',...
-            'ABSTT, ABSW, ABSIDX must be equal-sized arrays!');
-    end
-    
-    % BUILDING KERNEL MATRIX (G)
-    alen=numel(absidx); totlen=alen+len;
-    G=sparse([1:len 1:len len+1:totlen],[i; j; absidx(:)]',...
-        [-ones(1,len) ones(1,len) ones(1,alen)],totlen,nr,2*len+alen);
-    
-    % BUILDING THE WEIGHTING MATRIX (W)
-    W=sparse(1:totlen,1:totlen,...
-        [lagw(:); absw(:)],totlen,totlen);
-    
-    % GENERALIZED INVERSE (Gg) (OVERDETERMINED CASE)
-    Gg=full(inv(G.'*W*G)*G.'*W);
-    
-    % FINDING LEAST SQUARES ABSOLUTE ARRIVALS (m)
-    m=Gg*[lag(:); abstt(:)];
-end
+% refine alignment estimate
+% - selects lag with minimum weighted misfit to initial alignment among the
+%   peaks with the same polarity as the initial estimate
+% - reinvert using with these more consistent peaks
+% - repeat until max number of iterations or converged
 
-end
+% now get weighted errors based on consistency of lags to estimate
 
-function [x,nr,len,i,j]=m2v(x,str)
-
-% check lag
-if(~isreal(x))
-    error('seizmo:ttsolve:badInput',...
-        '%s option must be a real-valued array!',str);
-end
-
-% allow either vector or matrix form
-if(isvector(x))
-    len=numel(x);                         % NUMBER OF LAGS
-    nr=ceil(sqrt(2*len));                 % NUMBER OF RECORDS (FAST)
-    %nr=round(max(roots([1 -1 -2*len]))); % NUMBER OF RECORDS (OLD)
-    
-    % assure length is ok
-    if((nr^2-nr)/2~=len)
-        error('seizmo:ttsolve:badInput',...
-            '%s option is not a properly lengthed vector!',str);
-    end
-    
-    % matrix subscripts
-    [i,j]=ind2sub([nr nr],find(tril(true(nr),-1)));
-else % matrix/grid form
-    % grid size
-    xs=size(x); nr=xs(1); len=(nr^2-nr)/2;
-    
-    % check that grid is square & 2D
-    if(numel(xs)>2 || xs(1)~=xs(2))
-        error('seizmo:ttsolve:badInput',...
-            '%s option is not a 2D square matrix!',str);
-    end
-    
-    % grid to vector
-    li=tril(true(xs(1)),-1);
-    x=x(li);
-    
-    % matrix subscripts
-    [i,j]=ind2sub(xs,find(li));
-end
 
 end
