@@ -73,12 +73,12 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %     Version History:
 %        Mar. 11, 2010 - initial version (derived from dtwrefine)
 %        Mar. 12, 2010 - doc update, fix checks
+%        Mar. 14, 2010 - fixed bug in forced polarity code
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 12, 2010 at 12:45 GMT
+%     Last Updated Mar. 14, 2010 at 01:45 GMT
 
 % todo:
-% - there could be a sign error in the misfit formula
 
 % check nargin
 msg=nargchk(7,10,nargin);
@@ -140,7 +140,10 @@ end
 % IGNORE ANY PEAKS NOT OF THE CORRECT POLARITY
 if(FORCEPOLAR)
     pol=pol*pol';
-    pol=pol(:,:,ones(npeaks,1));
+    if(vector)
+        pol=ndsquareform(pol,'tovector')';
+    end
+    pol=pol(:,:,ones(np,1));
     M(pg~=pol)=nan;
 end
 

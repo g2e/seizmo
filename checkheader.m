@@ -315,9 +315,10 @@ function [data]=checkheader(data,varargin)
 %        Feb. 16, 2010 - OUTOFRANGE_LAT now shifts (ev/st)lo as necessary
 %        Feb. 28, 2010 - added REPEAT_DEP, all FIX with no solution are now
 %                        WARNFIX equivalent
+%        Mar. 15, 2010 - allow NZMSEC to be 1000
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 28, 2010 at 13:20 GMT
+%     Last Updated Mar. 15, 2010 at 13:20 GMT
 
 % todo:
 
@@ -913,7 +914,7 @@ bad2=nz(:,2)<1 | nz(:,2)>366 | (nz(:,2)==366 & ~isleapyear(nz(:,1)));
 bad3=nz(:,3)<0 | nz(:,3)>23;
 bad4=nz(:,4)<0 | nz(:,4)>59;
 bad5=nz(:,5)<0 | nz(:,5)>60; % allow for leapsecond & precision error
-bad6=nz(:,6)<0 | nz(:,6)>999;
+bad6=nz(:,6)<0 | nz(:,6)>1000; % allow nzmsec to be 1000
 bad=find(bad1 | bad2 | bad3 | bad4 | bad5 | bad6);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:outofrangeRef';

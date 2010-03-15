@@ -1,9 +1,9 @@
-function [x]=rescale_snr(snr,inlimit,outlimit)
+function [x]=rescale_snr(snr,inrange,outrange)
 %RESCALE_SNR    Rescales SNR using an error function
 %
 %    Usage:    x=rescale_snr(snr)
-%              x=rescale_snr(snr,inlimit)
-%              x=rescale_snr(snr,inlimit,outlimit)
+%              x=rescale_snr(snr,inrange)
+%              x=rescale_snr(snr,inrange,outrange)
 %
 %    Description: X=RESCALE_SNR(SNR) rescales SNR so it varies according to
 %     an error function.  This is to de-emphasizing high signal-to-noise
@@ -13,12 +13,12 @@ function [x]=rescale_snr(snr,inlimit,outlimit)
 %     strongest transition in X occurs for SNR from 5 to 8 where X goes
 %     from about 1.1 to 1.9.
 %
-%     X=RESCALE_SNR(SNR,INLIMIT) sets the SNR limits over which the X
-%     output goes from 1 to 2.  The default is [3 10].  INLIMIT must be a
+%     X=RESCALE_SNR(SNR,INRANGE) sets the SNR range over which the X
+%     output goes from 1 to 2.  The default is [3 10].  INRANGE must be a
 %     1x2 vector of positive reals.
 %
-%     X=RESCALE_SNR(SNR,INLIMIT,OUTLIMIT) sets the output range of X to
-%     OUTLIMIT.  The default is [1 2].
+%     X=RESCALE_SNR(SNR,INRANGE,OUTRANGE) sets the output range of X to
+%     OUTRANGE.  The default is [1 2].
 %
 %    Notes:
 %     - This is mainly for using SNR values in weighting schemes.
@@ -34,9 +34,10 @@ function [x]=rescale_snr(snr,inlimit,outlimit)
 
 %     Version History:
 %        Mar. 12, 2010 - initial version
+%        Mar. 14, 2010 - doc update, limit to range
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 12, 2010 at 16:05 GMT
+%     Last Updated Mar. 14, 2010 at 01:05 GMT
 
 % todo:
 
@@ -44,29 +45,29 @@ function [x]=rescale_snr(snr,inlimit,outlimit)
 msg=nargchk(1,3,nargin);
 if(~isempty(msg)); error(msg); end
 
-% default limits
-if(nargin<2 || isempty(inlimit)); inlimit=[3 10]; end
-if(nargin<3 || isempty(outlimit)); outlimit=[1 2]; end
+% default ranges
+if(nargin<2 || isempty(inrange)); inrange=[3 10]; end
+if(nargin<3 || isempty(outrange)); outrange=[1 2]; end
 
 % check inputs
 if(~isreal(snr) || any(snr(:)<0))
     error('seizmo:rescale_snr:badInput',...
         'SNR must be an array of positive reals!');
-elseif(~isequal(size(inlimit),[1 2]) || ~isreal(inlimit) || any(inlimit<0))
+elseif(~isequal(size(inrange),[1 2]) || ~isreal(inrange) || any(inrange<0))
     error('seizmo:rescale_snr:badInput',...
         'INLIMIT must be a 1x2 positive real array!');
-elseif(~isequal(size(outlimit),[1 2]) || ~isnumeric(outlimit))
+elseif(~isequal(size(outrange),[1 2]) || ~isnumeric(outrange))
     error('seizmo:rescale_snr:badInput',...
         'OUTLIMIT must be a 1x2 numeric array!');
 end
 
 % rescale/recenter snr
-x=4/abs(diff(inlimit))*(snr-mean(inlimit));
+x=4/abs(diff(inrange))*(snr-mean(inrange));
 
 % apply error function
 x=erf(x);
 
-% rescale/recenter x to outlimit
-x=x*abs(diff(outlimit))/2+mean(outlimit);
+% rescale/recenter x to outrange
+x=x*abs(diff(outrange))/2+mean(outrange);
 
 end
