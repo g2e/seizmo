@@ -74,6 +74,7 @@
 %PLOTSTATIONS        - Plots station and earthquake locations of SEIZMO records
 %PREWHITEN           - Prewhiten SEIZMO data records for spectral operations
 %QUICKSNR            - Quick estimation of SNR for SEIZMO records
+%RAISE               - Raises the dependent component of SEIZMO records by a given power
 %READDATA            - Read SEIZMO data from datafiles
 %READDATAWINDOW      - Read data window into SEIZMO data structure
 %READHEADER          - Read header info from SEIZMO datafiles
@@ -115,6 +116,7 @@
 %
 % Sub-Toolboxes
 %CMAP                - colormaps
+%CMT                 - various moment tensor functions
 %EVENT               - functions related to earthquake info
 %FIXES               - functions to fix headers
 %GUI                 - simple gui functions
@@ -125,6 +127,7 @@
 %RESPONSE            - instrument response functions
 %SEIZMO_INTERNAL     - internal functions
 %SHORTNAMES          - shortcut names for functions
+%SYNTH               - functions for synthetics
 %TIME                - absolute time functions
 %TOPO                - topography functions
 %TOMO                - simple tomography functions

@@ -7,7 +7,7 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 %              [data,tpr]=usertaper(...)
 %              [data,tpr,fh]=usertaper(...)
 %
-%    Description: DATA=USERTAPER(DATA) presents a interactive menu and
+%    Description: DATA=USERTAPER(DATA) presents an interactive menu and
 %     plot interface to taper records in a dataset with a few mouse clicks.
 %     The default taper type is that set by function TAPER.  This may be
 %     modified using the menu presented.  By default no mean or trend
@@ -21,10 +21,15 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 %     DATA=USERTAPER(DATA,FUNC,'FIELD',VALUE,...) passes field/value pairs
 %     to the plotting function, to allow further customization.
 %
-%     [DATA,TPR]=USERTAPER(...) also returns the taper properties in a
-%     struct TPR.  TPR contains fields type, width, and option which are
-%     arguments passed to the TAPER function.  Note that these fields are
-%     returned as empty unless set interactively.  
+%     [DATA,TPR]=USERTAPER(...) returns a struct TPR with the following
+%     fields:
+%      TPR.type    --  type of taper utilized (string)
+%      TPR.width   --  width of tapers applied as [LEADING TRAILING]
+%      TPR.option  --  taper option if applicible
+%      TPR.func    --  post-taper function ran on the data
+%     Note that the .type & .option will be empty unless set interactively
+%     (see TAPER for defaults).  The .width field will be an empty array if
+%     no tapering is performed.
 %
 %     [DATA,TPR,FH]=USERTAPER(...) returns the figure handles in FH.
 %
@@ -43,9 +48,10 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 %        Sep. 23, 2009 - updated for taper changes
 %        Mar.  1, 2010 - updated for newer checking methods
 %        Mar. 12, 2010 - pretty text menu for Octave
+%        Mar. 15, 2010 - added graphical selection/entry of func
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 12, 2010 at 02:15 GMT
+%     Last Updated Mar. 15, 2010 at 15:30 GMT
 
 % todo:
 % - subplot showing taper
@@ -88,10 +94,11 @@ try
         'bohmanwin','chebwin','flattopwin','gausswin','hamming','hann',...
         'kaiser','nuttallwin','parzenwin','rectwin','triang','tukeywin'};
 
-    % taper defaults
+    % taper parameters
     tpr.type=[];
-    tpr.width=[];
+    tpr.width=[0 0];
     tpr.option=[];
+    tpr.func=func;
 
     % length normalization
     [b,e,npts,delta]=getheader(data,'b','e','npts','delta');
@@ -159,13 +166,14 @@ try
         end
 
         % display prompt and get user choice
-        choice=menu(prompt,'SELECT TAPER','OVERLAY PLOT',...
+        choice=menu(prompt,'RESELECT TAPER TYPE',...
+            'RESELECT POST-TAPER FUNCTION','OVERLAY PLOT',...
             'EVENLY SPACED PLOT','DISTANCE SPACED PLOT',...
             'DO NOT TAPER','CRASH!');
 
         % proceed by user choice
         switch choice
-            case 1 % taper select
+            case 1 % reselect taper type
                 j=menu('SELECT A TAPER TYPE','DEFAULT','BARTHANN',...
                     'BARTLETT','BLACKMAN','BLACKMAN-HARRIS','BOHMAN',...
                     'CHEBYCHEV','FLAT TOP','GAUSSIAN','HAMMING','HANN',...
@@ -226,19 +234,51 @@ try
                 end
                 % go back to main menu
                 continue;
-            case 2 % overlay
+            case 2 % reselect post-taper function
+                j=menu('SELECT A FUNCTION TO APPLY POST-TAPER',...
+                    ['CURRENT (' upper(func2str(tpr.func)) ')'],...
+                    'NONE (DEAL)','REMOVEMEAN','REMOVETREND','CUSTOM');
+                
+                % set function
+                switch j
+                    case 1 % current
+                        % leave function alone
+                    case 2 % none (use deal)
+                        tpr.func=@deal;
+                    case 3 % rmean
+                        tpr.func=@removemean;
+                    case 4 % rtrend
+                        tpr.func=@removetrend;
+                    case 5 % custom/cmdline
+                        tmp=inputdlg(...
+                            ['Custom Post-Taper Function? [' ...
+                            func2str(tpr.func) ']:'],...
+                            'Custom Post-Taper Function',1,...
+                            {func2str(tpr.func)});
+                        if(~isempty(tmp))
+                            try
+                                tpr.func=str2func(tmp{:});
+                            catch
+                                % do not change tpr.func
+                            end
+                        end
+                end
+                
+                % go back to main menu
+                continue;
+            case 3 % overlay
                 fh(1)=plot2(data,varargin{:});
-            case 3 % evenly spaced
+            case 4 % evenly spaced
                 fh(1)=plot0(data,varargin{:});
-            case 4 % distance spaced
+            case 5 % distance spaced
                 fh(1)=recordsection(data,varargin{:});
-            case 5 % no taper
+            case 6 % no taper
                 tpr.type=[];
                 tpr.width=[];
                 tpr.option=[];
                 data=changeheader(data,'b',b,'e',e,'delta',delta);
                 return;
-            case 6 % immediate death
+            case 7 % immediate death
                 error('seizmo:usertaper:killYourSelf',...
                     'User demanded Seppuku!')
         end
@@ -288,15 +328,15 @@ try
         data2=taper(data,tpr.width,0,tpr.type,tpr.option);
 
         % apply function post cut
-        data2=func(data2);
+        data2=tpr.func(data2);
 
         % proceed by user choice
         switch choice
-            case 2 % overlay
+            case 3 % overlay
                 fh(2)=plot2(data2,varargin{:});
-            case 3 % evenly spaced
+            case 4 % evenly spaced
                 fh(2)=plot0(data2,varargin{:});
-            case 4 % distance spaced
+            case 5 % distance spaced
                 fh(2)=recordsection(data2,varargin{:});
         end
 
@@ -307,7 +347,7 @@ try
                 data=changeheader(data2,'b',b,'e',e,'delta',delta);
                 happy_user=true;
             case 2 % never, never quit!
-                close(fh);
+                close(fh(ishandle(fh)));
                 fh=[-1 -1];
             case 3 % i bear too great a shame to go on
                 error('seizmo:usertaper:killYourSelf',...

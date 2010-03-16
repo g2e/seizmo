@@ -49,9 +49,10 @@ function [times,n]=getarrival(data,phase)
 %        Jan. 29, 2010 - dropped most checks, seizmoverbose support
 %        Feb. 24, 2010 - 1 warning for unfound arrivals
 %        Mar.  1, 2010 - allow multi-phase search
+%        Mar. 16, 2010 - fixed error message
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2010 at 01:00 GMT
+%     Last Updated Mar. 16, 2010 at 18:00 GMT
 
 % todo:
 
@@ -123,7 +124,8 @@ if(any(isnan(n)))
         tmp=sprintf('%d ',find(isnan(n)));
     end
     warning('seizmo:getarrival:noPhase',...
-        ['Record(s):\n' tmp '\nCould not find phase %s!'],phase);
+        ['Could not find phase(s):\n ' sprintf('%s ',phase{:}) ...
+        '\nRecord(s):\n ' tmp]);
 end
 
 end

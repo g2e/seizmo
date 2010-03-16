@@ -1,7 +1,7 @@
-function [dt,std,pol,zmean,zstd,nc]=ttsolve(xc,varargin)
+function [dt,std,pol,zmean,zstd,nc,opt]=ttsolve(xc,varargin)
 %TTSOLVE    Solves relative arrival times & polarities
 %
-%    Usage:    [arr,err,pol,zmean,zstd,nc]=ttsolve(xc)
+%    Usage:    [arr,err,pol,zmean,zstd,nc,options]=ttsolve(xc)
 %
 %            weighting options:
 %              [...]=ttsolve(...,'snr',snr,...)
@@ -21,7 +21,7 @@ function [dt,std,pol,zmean,zstd,nc]=ttsolve(xc,varargin)
 %              [...]=ttsolve(...,'mpri',niter,...)
 %              [...]=ttsolve(...,'noncnv',method,...)
 %
-%    Description: [ARR,ERR,POL,ZMEAN,ZSTD,NC]=TTSOLVE(XC) takes the
+%    Description: [ARR,ERR,POL,ZMEAN,ZSTD,NC,OPTIONS]=TTSOLVE(XC) takes the
 %     cross-correlation struct from a CORRELATE call that was passed with
 %     option 'NPEAKS' set to 1 or above and solves for the relative arrival
 %     times and polarities between the correlated signals.  The inversion
@@ -30,7 +30,12 @@ function [dt,std,pol,zmean,zstd,nc]=ttsolve(xc,varargin)
 %     suited for aligning noisy, narrow-band signals.  There are a
 %     multitude of options that allow for adjusting the weighting in the
 %     inversion, the starting conditions of the inversion, and the style
-%     and depth of the inversion.
+%     and depth of the inversion.  ARR is the relative arrival times (zero
+%     mean).  ERR is the standard error of the relative arrival times.  POL
+%     is the relative polarities.  ZMEAN is the mean z-statistics.  ZSTD is
+%     the standard error in the z-statistics.  NC is the number of peaks
+%     changed in each refinement iteration.  OPTIONS is a struct containing
+%     info on the parameters controlling the inversion.
 %
 %     %%%%%%%%%%%%%%%%%%%%%%%%
 %     SOLVER WEIGHTING OPTIONS
@@ -155,9 +160,10 @@ function [dt,std,pol,zmean,zstd,nc]=ttsolve(xc,varargin)
 %     Version History:
 %        Mar. 12, 2010 - initial version (derived from groupeval)
 %        Mar. 14, 2010 - options worked out, documentation added
+%        Mar. 15, 2010 - output option struct too, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 14, 2010 at 04:05 GMT
+%     Last Updated Mar. 15, 2010 at 23:25 GMT
 
 % todo:
 

@@ -26,8 +26,13 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %     DATA=USERWINDOW(DATA,FILL,FUNC,'FIELD',VALUE,...) passes field/value
 %     pairs to the plotting function, to allow further customization.
 %
-%     [DATA,WIN]=USERWINDOW(...) also returns the window limits in WIN as
-%     [start end].
+%     [DATA,WIN]=USERWINDOW(...) returns a struct WIN with the following
+%     fields:
+%       WIN.limits  --  limits of the window applied as [START END]
+%       WIN.fill    --  fill gaps in data window with zeros (TRUE/FALSE)
+%       WIN.func    --  post-windowing function ran on the data
+%     Note that the .limits field will be an empty array if no windowing is
+%     performed.
 %
 %     [DATA,WIN,FH]=USERWINDOW(...) returns the figure handles in FH.
 %
@@ -49,9 +54,11 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %        Sep.  9, 2009 - added documentation
 %        Mar.  1, 2010 - updated for newer checking methods
 %        Mar. 12, 2010 - pretty text menu for Octave
+%        Mar. 15, 2010 - added graphical selection/entry of fill & func,
+%                        win is now a struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 12, 2010 at 02:15 GMT
+%     Last Updated Mar. 15, 2010 at 17:15 GMT
 
 % todo:
 
@@ -88,6 +95,11 @@ try
     elseif(~isa(func,'function_handle'))
         error('seizmo:userwindow:badInput','FUNC must be a function handle!');
     end
+    
+    % window parameters
+    win.limits=[];
+    win.func=func;
+    win.fill=fill;
 
     % outer loop - only breaks free by user command
     happy_user=false; fh=[-1 -1];
@@ -152,21 +164,73 @@ try
         
 
         % display prompt and get user choice
-        choice=menu(prompt,'OVERLAY PLOT','EVENLY SPACED PLOT',...
+        choice=menu(prompt,'RESELECT FILL OPTION',...
+            'RESELECT POST-WINDOW FUNCTION',...
+            'OVERLAY PLOT','EVENLY SPACED PLOT',...
             'DISTANCE SPACED PLOT','DO NOT WINDOW','CRASH!');
 
         % proceed by user choice
         switch choice
-            case 1 % overlay
+            case 1 % reselect fill option
+                fillstr='NO';
+                if(win.fill); fillstr='YES'; end
+                j=menu('FILL MISSING DATA WITH ZEROS?',...
+                    ['CURRENT (' fillstr ')'],'YES','NO');
+                
+                % set function
+                switch j
+                    case 1 % current
+                        % leave fill alone
+                    case 2 % fill
+                        win.fill=true;
+                    case 3 % no fill
+                        win.fill=false;
+                end
+                
+                % go back to main menu
+                continue;
+            case 2 % reselect post-window function
+                j=menu('SELECT A FUNCTION TO APPLY POST-WINDOW',...
+                    ['CURRENT (' upper(func2str(win.func)) ')'],...
+                    'NONE (DEAL)','REMOVEMEAN','REMOVETREND','CUSTOM');
+                
+                % set function
+                switch j
+                    case 1 % current
+                        % leave function alone
+                    case 2 % none (use deal)
+                        win.func=@deal;
+                    case 3 % rmean
+                        win.func=@removemean;
+                    case 4 % rtrend
+                        win.func=@removetrend;
+                    case 5 % custom/cmdline
+                        tmp=inputdlg(...
+                            ['Custom Post-Window Function? [' ...
+                            func2str(win.func) ']:'],...
+                            'Custom Post-Window Function',1,...
+                            {func2str(win.func)});
+                        if(~isempty(tmp))
+                            try
+                                win.func=str2func(tmp{:});
+                            catch
+                                % do not change win.func
+                            end
+                        end
+                end
+                
+                % go back to main menu
+                continue;
+            case 3 % overlay
                 fh(1)=plot2(data,varargin{:});
-            case 2 % evenly spaced
+            case 4 % evenly spaced
                 fh(1)=plot0(data,varargin{:});
-            case 3 % distance spaced
+            case 5 % distance spaced
                 fh(1)=recordsection(data,varargin{:});
-            case 4 % no window
-                win=[];
+            case 6 % no window
+                win.limits=[];
                 return
-            case 5 % immediate death
+            case 7 % immediate death
                 error('seizmo:userwindow:killYourSelf',...
                     'User demanded Seppuku!')
         end
@@ -174,10 +238,10 @@ try
         % add window limit markers
         figure(fh(1));
         span=ylim;
-        win=xlim;
+        win.limits=xlim;
         hold on
-        goh(1)=plot([win(1) win(1)],span,'g','linewidth',4);
-        goh(2)=plot([win(2) win(2)],span,'r','linewidth',4);
+        goh(1)=plot([win.limits(1) win.limits(1)],span,'g','linewidth',4);
+        goh(2)=plot([win.limits(2) win.limits(2)],span,'r','linewidth',4);
         hold off
 
         % loop until user finalizes markers
@@ -191,37 +255,37 @@ try
             switch button
                 case 1
                     % left click - update window start
-                    win(1)=x;
+                    win.limits(1)=x;
                     set(goh(1),'xdata',[x x])
                 case 3
                     % right click - update window end
-                    win(2)=x;
+                    win.limits(2)=x;
                     set(goh(2),'xdata',[x x])
                 case 2
                     % middle click - finalize markers
-                    if (win(1)>win(2))
+                    if (win.limits(1)>win.limits(2))
                         % start and end reversed - fix
-                        win=win([2 1]);
-                        set(goh(1),'xdata',[win(1) win(1)])
-                        set(goh(2),'xdata',[win(2) win(2)])
+                        win.limits=win.limits([2 1]);
+                        set(goh(1),'xdata',[win.limits(1) win.limits(1)])
+                        set(goh(2),'xdata',[win.limits(2) win.limits(2)])
                     end
                     final=true;
             end
         end
 
         % get windowed data
-        data2=cut(data,'z',win(1),win(2),'fill',fill);
+        data2=cut(data,'z',win.limits(1),win.limits(2),'fill',win.fill);
 
         % apply function post cut
-        data2=func(data2);
+        data2=win.func(data2);
 
         % proceed by user choice
         switch choice
-            case 1 % overlay
+            case 3 % overlay
                 fh(2)=plot2(data2,varargin{:});
-            case 2 % evenly spaced
+            case 4 % evenly spaced
                 fh(2)=plot0(data2,varargin{:});
-            case 3 % distance spaced
+            case 5 % distance spaced
                 fh(2)=recordsection(data2,varargin{:});
         end
 
@@ -232,7 +296,7 @@ try
                 data=data2;
                 happy_user=true;
             case 2 % never never quit!
-                close(fh);
+                close(fh(ishandle(fh)));
                 fh=[-1 -1];
             case 3 % i bear too great a shame to go on
                 error('seizmo:userwindow:killYourSelf',...
