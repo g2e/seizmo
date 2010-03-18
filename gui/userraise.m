@@ -40,9 +40,10 @@ function [data,rai,fh]=userraise(data,varargin)
 
 %     Version History:
 %        Mar. 16, 2010 - initial version
+%        Mar. 18, 2010 - made robust to menu closing
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 16, 2010 at 15:25 GMT
+%     Last Updated Mar. 18, 2010 at 10:25 GMT
 
 % todo:
 
@@ -86,47 +87,53 @@ try
             pstr ')?'],'YES','NO');
         
         % act on choice
-        if(choice==1)
-            % ask user for a particular value
-            choice=menu('Scale data by what power?',...
-                ['CURRENT (' pstr ')'],...
-                '4','3','2','1/2','1/3','1/4','CUSTOM');
-            
-            switch choice
-                case 1 % current
-                    % do nothing
-                case 2
-                    rai.power=4;
-                case 3
-                    rai.power=3;
-                case 4
-                    rai.power=2;
-                case 5
-                    rai.power=1/2;
-                case 6
-                    rai.power=1/3;
-                case 7
-                    rai.power=1/4;
-                case 8 % custom
-                    tmp=inputdlg(...
-                        ['Scale data by what power? [' pstr ']:'],...
-                        'Custom Power Scaling',1,{pstr});
-                    if(~isempty(tmp))
-                        try
-                            tmp=str2double(tmp{:});
-                            if(isscalar(tmp) && isreal(tmp))
-                                rai.power=tmp;
+        switch choice
+            case 0
+                % close old figure
+                close(fh(ishandle(fh)));
+            case 1
+                % ask user for a particular value
+                choice=menu('Scale data by what power?',...
+                    ['CURRENT (' pstr ')'],...
+                    '4','3','2','1','1/2','1/3','1/4','CUSTOM');
+
+                switch choice
+                    case 1 % current
+                        % do nothing
+                    case 2
+                        rai.power=4;
+                    case 3
+                        rai.power=3;
+                    case 4
+                        rai.power=2;
+                    case 5
+                        rai.power=1;
+                    case 6
+                        rai.power=1/2;
+                    case 7
+                        rai.power=1/3;
+                    case 8
+                        rai.power=1/4;
+                    case 9 % custom
+                        tmp=inputdlg(...
+                            ['Scale data by what power? [' pstr ']:'],...
+                            'Custom Power Scaling',1,{pstr});
+                        if(~isempty(tmp))
+                            try
+                                tmp=str2double(tmp{:});
+                                if(isscalar(tmp) && isreal(tmp))
+                                    rai.power=tmp;
+                                end
+                            catch
+                                % do not change rai.power
                             end
-                        catch
-                            % do not change rai.power
                         end
-                    end
-            end
-            
-            % close old figure
-            close(fh(ishandle(fh)));
-        else
-            happy_user=true;
+                end
+
+                % close old figure
+                close(fh(ishandle(fh)));
+            case 2
+                happy_user=true;
         end
     end
     

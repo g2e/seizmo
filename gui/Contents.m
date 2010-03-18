@@ -6,6 +6,7 @@
 %USERCLUSTER  - Interactively cluster SEIZMO records
 %USERMOVEOUT  - Interactively add a distance-dependent moveout
 %USERRAISE    - Interactively scale SEIZMO records by a power
+%USERSNR      - Interactively select windows for SNR estimation
 %USERTAPER    - Interactively taper SEIZMO records
 %USERWINDOW   - Interactively window SEIZMO records
 

@@ -47,7 +47,7 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %     records in the window and remove the trend after windowing:
 %      data=userwindow(data,true,@removetrend);
 %
-%    See also: USERTAPER, USERCLUSTER, SELECTRECORDS
+%    See also: CUT, USERTAPER, USERCLUSTER, SELECTRECORDS
 
 %     Version History:
 %        Sep.  5, 2009 - rewrite
@@ -56,9 +56,10 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %        Mar. 12, 2010 - pretty text menu for Octave
 %        Mar. 15, 2010 - added graphical selection/entry of fill & func,
 %                        win is now a struct
+%        Mar. 18, 2010 - robust to menu/figure closing
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2010 at 17:15 GMT
+%     Last Updated Mar. 18, 2010 at 10:25 GMT
 
 % todo:
 
@@ -161,7 +162,6 @@ try
                     '|                                                       |'
                     '+-------------------------------------------------------+'};
         end
-        
 
         % display prompt and get user choice
         choice=menu(prompt,'RESELECT FILL OPTION',...
@@ -171,6 +171,8 @@ try
 
         % proceed by user choice
         switch choice
+            case 0 % closed menu
+                continue;
             case 1 % reselect fill option
                 fillstr='NO';
                 if(win.fill); fillstr='YES'; end
@@ -229,10 +231,10 @@ try
                 fh(1)=recordsection(data,varargin{:});
             case 6 % no window
                 win.limits=[];
-                return
+                return;
             case 7 % immediate death
                 error('seizmo:userwindow:killYourSelf',...
-                    'User demanded Seppuku!')
+                    'User demanded Seppuku!');
         end
 
         % add window limit markers
@@ -247,9 +249,37 @@ try
         % loop until user finalizes markers
         final=false;
         while(~final)
-            % focus plot and let user pick
-            figure(fh(1));
-            [x,y,button]=ginput(1);
+            % bring plot to focus (redraw if closed)
+            if(~ishandle(fh(1)))
+                % redraw (pretty rare to get here)
+                switch choice
+                    case 3 % overlay
+                        fh(1)=plot2(data,varargin{:});
+                    case 4 % evenly spaced
+                        fh(1)=plot0(data,varargin{:});
+                    case 5 % distance spaced
+                        fh(1)=recordsection(data,varargin{:});
+                end
+                span=ylim;
+                win.width=xlim;
+                hold on
+                goh(1)=plot([win.width(1) win.width(1)],span,'g',...
+                    'linewidth',4);
+                goh(2)=plot([win.width(2) win.width(2)],span,'r',...
+                    'linewidth',4);
+                hold off
+            else
+                % bring figure to focus
+                figure(fh(1));
+            end
+            
+            % get user click/key
+            try
+                [x,y,button]=ginput(1);
+            catch
+                % user closed window - break from loop
+                button=2;
+            end
 
             % which mouse button?
             switch button
@@ -290,17 +320,21 @@ try
         end
 
         % confirm results
-        choice=menu('KEEP WINDOW?','YES','NO - TRY AGAIN','NO - CRASH!');
-        switch choice
-            case 1 % rainbow's end
-                data=data2;
-                happy_user=true;
-            case 2 % never never quit!
-                close(fh(ishandle(fh)));
-                fh=[-1 -1];
-            case 3 % i bear too great a shame to go on
-                error('seizmo:userwindow:killYourSelf',...
-                    'User demanded Seppuku!')
+        choice=0;
+        while(~choice)
+            choice=menu('KEEP WINDOW?',...
+                'YES','NO - TRY AGAIN','NO - CRASH!');
+            switch choice
+                case 1 % rainbow's end
+                    data=data2;
+                    happy_user=true;
+                case 2 % never never quit!
+                    close(fh(ishandle(fh)));
+                    fh=[-1 -1];
+                case 3 % i bear too great a shame to go on
+                    error('seizmo:userwindow:killYourSelf',...
+                        'User demanded Seppuku!');
+            end
         end
     end
 

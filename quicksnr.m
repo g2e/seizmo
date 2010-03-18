@@ -1,7 +1,8 @@
-function [snr]=quicksnr(data,nwin,swin)
+function [snr]=quicksnr(data,nwin,swin,method)
 %QUICKSNR    Quick estimation of SNR for SEIZMO records
 %
 %    Usage:    snr=quicksnr(data,noisewindow,signalwindow)
+%              snr=quicksnr(data,noisewindow,signalwindow,method)
 %
 %    Description: QUICKSNR(DATA,NOISEWINDOW,SIGNALWINDOW) estimates the
 %     signal-to-noise ratio for SEIZMO records by calculating the ratio of
@@ -9,6 +10,12 @@ function [snr]=quicksnr(data,nwin,swin)
 %     'noise' and the 'signal'.  NOISEWINDOW & SIGNALWINDOW need to be 2
 %     element numeric arrays that specify the start and end of the window
 %     relative to the records' reference times.
+%
+%     QUICKSNR(DATA,NOISEWINDOW,SIGNALWINDOW,METHOD) specifies the SNR
+%     calculation method using METHOD.  METHOD must be one of the following
+%     strings: 'PEAK2PEAK', 'RMS', or 'ROBUSTRMS'.  The default is
+%     'PEAK2PEAK'.  The RMS methods give the ratio of the RMS values.  The
+%     RMS is de-meaned (or de-medianed in the 'ROBUSTRMS' case).
 %
 %    Notes:
 %
@@ -35,14 +42,16 @@ function [snr]=quicksnr(data,nwin,swin)
 %        Jan. 29, 2010 - proper SEIZMO handling
 %        Feb.  3, 2010 - versioninfo caching
 %        Mar.  8, 2010 - versioninfo caching dropped
+%        Mar. 18, 2010 - added METHOD argument (new methods: RMS, ROBUSTRMS
+%                        are included), input check fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 12:45 GMT
+%     Last Updated Mar. 18, 2010 at 14:15 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(3,3,nargin);
+msg=nargchk(3,4,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
@@ -71,23 +80,53 @@ try
     % verbosity
     verbose=seizmoverbose;
     
+    % number of records
+    nrecs=numel(data);
+    
     % check windows
-    if(~isnumeric(nwin) || ~isnumeric(swin)...
+    if(~isreal(nwin) || ~isreal(swin)...
             || size(nwin,2)~=2 || size(swin,2)~=2 ...
-            || size(nwin,1)~=size(swin,1))
+            || ~any(size(nwin,1)==[1 nrecs]) ...
+            || ~any(size(swin,1)==[1 nrecs]))
         error('seizmo:quicksnr:badInput',...
-            'NOISEWINDOW & SIGNALWINDOW must be Nx2 numeric arrays!');
+            'NOISEWINDOW & SIGNALWINDOW must be 1x2 or Nx2 arrays!');
+    end
+    
+    % check SNR method
+    if(nargin==3 || isempty(method)); method='peak2peak'; end
+    snrmethods={'peak2peak' 'rms' 'robustrms'};
+    if(~ischar(method) || size(method,1)~=1 || ...
+            ~any(strcmpi(method,snrmethods)))
+        error('seizmo:quicksnr:badInput',...
+            ['METHOD must be one of the following:\n' ...
+            upper(sprintf('%s ',snrmethods{:}))]);
     end
     
     % detail message
     if(verbose); disp('Estimating SNR of Record(s)'); end
-
-    % snr=(max-min of signal)/(max-min of noise)
-    [nmax,nmin]=getheader(...
-        cut(data,nwin(:,1),nwin(:,2),'trim',false),'depmax','depmin');
-    [smax,smin]=getheader(...
-        cut(data,swin(:,1),swin(:,2),'trim',false),'depmax','depmin');
-    snr=(smax-smin)./(nmax-nmin);
+    
+    % which method?
+    switch lower(method)
+        case 'peak2peak'
+            % snr=(max-min of signal)/(max-min of noise)
+            [nmax,nmin]=getheader(cut(data,nwin(:,1),nwin(:,2),...
+                'trim',false),'depmax','depmin');
+            [smax,smin]=getheader(cut(data,swin(:,1),swin(:,2),...
+                'trim',false),'depmax','depmin');
+            snr=(smax-smin)./(nmax-nmin);
+        case 'rms'
+            nrms=getvaluefun(cut(data,nwin(:,1),nwin(:,2),...
+                'trim',false),@(x)sqrt(mean((x(:)-mean(x(:))).^2)));
+            srms=getvaluefun(cut(data,swin(:,1),swin(:,2),...
+                'trim',false),@(x)sqrt(mean((x(:)-mean(x(:))).^2)));
+            snr=srms./nrms;
+        case 'robustrms'
+            nrms=getvaluefun(cut(data,nwin(:,1),nwin(:,2),...
+                'trim',false),@(x)sqrt(median((x(:)-median(x(:))).^2)));
+            srms=getvaluefun(cut(data,swin(:,1),swin(:,2),...
+                'trim',false),@(x)sqrt(median((x(:)-median(x(:))).^2)));
+            snr=srms./nrms;
+    end
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

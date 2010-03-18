@@ -14,7 +14,6 @@
 %SEIZMODEBUG           - Turn SEIZMO debugging output on (TRUE) or off (FALSE)
 %SEIZMODEF             - Returns specified SEIZMO definition structure
 %SEIZMOSIZE            - Returns header-estimated disksize of SEIZMO records in bytes
-%SEIZMOVERBOSE         - Turn verbose SEIZMO output on (TRUE) or off (FALSE)
 %VALIDSEIZMO           - Returns valid SEIZMO datafile filetypes or versions
 %VERSIONINFO           - Returns version info for SEIZMO data records
 %VERSIONINFO_CACHE     - Check/Change VERSIONINFO caching ON=TRUE / OFF=FALSE

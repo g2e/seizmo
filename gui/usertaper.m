@@ -49,9 +49,10 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 %        Mar.  1, 2010 - updated for newer checking methods
 %        Mar. 12, 2010 - pretty text menu for Octave
 %        Mar. 15, 2010 - added graphical selection/entry of func
+%        Mar. 18, 2010 - robust to menu/figure closing
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2010 at 15:30 GMT
+%     Last Updated Mar. 18, 2010 at 10:25 GMT
 
 % todo:
 % - subplot showing taper
@@ -173,13 +174,15 @@ try
 
         % proceed by user choice
         switch choice
+            case 0 % closed menu
+                continue;
             case 1 % reselect taper type
                 j=menu('SELECT A TAPER TYPE','DEFAULT','BARTHANN',...
                     'BARTLETT','BLACKMAN','BLACKMAN-HARRIS','BOHMAN',...
                     'CHEBYCHEV','FLAT TOP','GAUSSIAN','HAMMING','HANN',...
                     'KAISER','NUTTALL','PARZEN','RECTANGULAR',...
                     'TRIANGULAR','TUKEY');
-                tpr.type=types{j};
+                if(j); tpr.type=types{j}; end
 
                 % taper options
                 switch j
@@ -280,7 +283,7 @@ try
                 return;
             case 7 % immediate death
                 error('seizmo:usertaper:killYourSelf',...
-                    'User demanded Seppuku!')
+                    'User demanded Seppuku!');
         end
 
         % add taper limit markers
@@ -295,9 +298,37 @@ try
         % loop until user finalizes markers
         final=false;
         while(~final)
-            % focus plot and let user pick
-            figure(fh(1));
-            [x,y,button]=ginput(1);
+            % bring plot to focus (redraw if closed)
+            if(~ishandle(fh(1)))
+                % redraw (pretty rare to get here)
+                switch choice
+                    case 3 % overlay
+                        fh(1)=plot2(data,varargin{:});
+                    case 4 % evenly spaced
+                        fh(1)=plot0(data,varargin{:});
+                    case 5 % distance spaced
+                        fh(1)=recordsection(data,varargin{:});
+                end
+                span=ylim;
+                tpr.width=xlim;
+                hold on
+                goh(1)=plot([tpr.width(1) tpr.width(1)],span,'g',...
+                    'linewidth',4);
+                goh(2)=plot([tpr.width(2) tpr.width(2)],span,'r',...
+                    'linewidth',4);
+                hold off
+            else
+                % bring figure to focus
+                figure(fh(1));
+            end
+            
+            % get user click/key
+            try
+                [x,y,button]=ginput(1);
+            catch
+                % user closed window - break from loop
+                button=2;
+            end
 
             % which mouse button?
             switch button
@@ -341,17 +372,21 @@ try
         end
 
         % confirm results
-        choice=menu('KEEP TAPER?','YES','NO - TRY AGAIN','NO - CRASH!');
-        switch choice
-            case 1 % rainbow's end
-                data=changeheader(data2,'b',b,'e',e,'delta',delta);
-                happy_user=true;
-            case 2 % never, never quit!
-                close(fh(ishandle(fh)));
-                fh=[-1 -1];
-            case 3 % i bear too great a shame to go on
-                error('seizmo:usertaper:killYourSelf',...
-                    'User demanded Seppuku!')
+        choice=0;
+        while(~choice)
+            choice=menu('KEEP TAPER?',...
+                'YES','NO - TRY AGAIN','NO - CRASH!');
+            switch choice
+                case 1 % rainbow's end
+                    data=changeheader(data2,'b',b,'e',e,'delta',delta);
+                    happy_user=true;
+                case 2 % never, never quit!
+                    close(fh(ishandle(fh)));
+                    fh=[-1 -1];
+                case 3 % i bear too great a shame to go on
+                    error('seizmo:usertaper:killYourSelf',...
+                        'User demanded Seppuku!');
+            end
         end
     end
 

@@ -38,13 +38,13 @@
 %GETENUMID           - Get enum string id from SEIZMO data header enum field
 %GETHEADER           - Get SEIZMO data header values
 %GETLGC              - Get logical string from SEIZMO logical header field
-%GETMEDIAN           - Returns median of each SEIZMO record
 %GETNETWORKIDX       - Returns index array for separating dataset into networks
 %GETNORM             - Return normalizers for SEIZMO records
 %GETPOLYNOMIAL       - Get polynomial fit to SEIZMO records
 %GETSPECTRALCMP      - Returns the indicated portion of spectral records
 %GETSTATIONIDX       - Returns index array for separating dataset into stations
 %GETSTREAMIDX        - Returns index array for separating dataset into streams
+%GETVALUEFUN         - Applies a function to SEIZMO records and returns the value
 %HILBRT              - Return Hilbert transform of SEIZMO records
 %HORZPAIRS           - Returns indice arrays for pairing horizontal SEIZMO records
 %IDFT                - Performs an inverse discrete fourier transform on SEIZMO records
@@ -92,6 +92,7 @@
 %ROTATE              - Rotates SEIZMO records that are horizontal pairs
 %SEIZMOFUN           - Apply function to SEIZMO records
 %SEIZMORESET         - Resets saved SEIZMO settings
+%SEIZMOVERBOSE       - Turn verbose SEIZMO output on (TRUE) or off (FALSE)
 %SELECTRECORDS       - Select or delete SEIZMO data records graphically
 %SETASIDAY           - Sets the reference times of records to the start of the day
 %SLIDINGABSMEAN      - Returns sliding-window absolute-mean of SEIZMO records

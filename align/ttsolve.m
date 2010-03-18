@@ -1,7 +1,7 @@
-function [dt,std,pol,zmean,zstd,nc,opt]=ttsolve(xc,varargin)
+function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %TTSOLVE    Solves relative arrival times & polarities
 %
-%    Usage:    [arr,err,pol,zmean,zstd,nc,options]=ttsolve(xc)
+%    Usage:    [arr,err,pol,zmean,zstd,nc,options,xc]=ttsolve(xc)
 %
 %            weighting options:
 %              [...]=ttsolve(...,'snr',snr,...)
@@ -21,10 +21,10 @@ function [dt,std,pol,zmean,zstd,nc,opt]=ttsolve(xc,varargin)
 %              [...]=ttsolve(...,'mpri',niter,...)
 %              [...]=ttsolve(...,'noncnv',method,...)
 %
-%    Description: [ARR,ERR,POL,ZMEAN,ZSTD,NC,OPTIONS]=TTSOLVE(XC) takes the
-%     cross-correlation struct from a CORRELATE call that was passed with
-%     option 'NPEAKS' set to 1 or above and solves for the relative arrival
-%     times and polarities between the correlated signals.  The inversion
+%    Description: [ARR,ERR,POL,ZMEAN,ZSTD,NC,OPTIONS,XC]=TTSOLVE(XC) takes
+%     a cross-correlation struct produced by a CORRELATE call with option
+%     'NPEAKS' set to 1 or higher and solves for the relative arrival times
+%     and polarities between the correlated signals.  The inversion
 %     utilizes an iterative, weighted least-squares approach that makes use
 %     of multiple peaks in a correlogram.  This approach is particularly
 %     suited for aligning noisy, narrow-band signals.  There are a
@@ -35,7 +35,8 @@ function [dt,std,pol,zmean,zstd,nc,opt]=ttsolve(xc,varargin)
 %     is the relative polarities.  ZMEAN is the mean z-statistics.  ZSTD is
 %     the standard error in the z-statistics.  NC is the number of peaks
 %     changed in each refinement iteration.  OPTIONS is a struct containing
-%     info on the parameters controlling the inversion.
+%     info on the parameters controlling the inversion.  Output XC is the
+%     reordered input XC with a couple more fields used in the inversion.
 %
 %     %%%%%%%%%%%%%%%%%%%%%%%%
 %     SOLVER WEIGHTING OPTIONS
@@ -161,9 +162,10 @@ function [dt,std,pol,zmean,zstd,nc,opt]=ttsolve(xc,varargin)
 %        Mar. 12, 2010 - initial version (derived from groupeval)
 %        Mar. 14, 2010 - options worked out, documentation added
 %        Mar. 15, 2010 - output option struct too, doc update
+%        Mar. 18, 2010 - output xc as well
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2010 at 23:25 GMT
+%     Last Updated Mar. 18, 2010 at 09:45 GMT
 
 % todo:
 

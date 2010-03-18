@@ -41,9 +41,10 @@ function [data,mvo,fh]=usermoveout(data,varargin)
 
 %     Version History:
 %        Mar. 16, 2010 - initial version
+%        Mar. 18, 2010 - made robust to menu closing, reorder menu buttons
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 16, 2010 at 14:30 GMT
+%     Last Updated Mar. 18, 2010 at 10:35 GMT
 
 % todo:
 
@@ -89,73 +90,76 @@ try
         choice=menu('Adjust Moveout of the Data?','YES','NO');
         
         % act on choice
-        if(choice==1)
-            % ask user how much
-            choice=menu('Adjust moveout by how much?',...
-                '+0.500 sec/deg',...
-                '+0.250 sec/deg',...
-                '+0.100 sec/deg',...
-                '+0.050 sec/deg',...
-                '+0.025 sec/deg',...
-                '+0.010 sec/deg',...
-                ['KEEP CURRENT (' num2str(mvo.moveout) ')'],...
-                '-0.010 sec/deg',...
-                '-0.025 sec/deg',...
-                '-0.050 sec/deg',...
-                '-0.100 sec/deg',...
-                '-0.250 sec/deg',...
-                '-0.500 sec/deg',...
-                'ADD CUSTOM');
-            
-            switch choice
-                case 1
-                    mvo.moveout=mvo.moveout+0.5;
-                case 2
-                    mvo.moveout=mvo.moveout+0.25;
-                case 3
-                    mvo.moveout=mvo.moveout+0.1;
-                case 4
-                    mvo.moveout=mvo.moveout+0.05;
-                case 5
-                    mvo.moveout=mvo.moveout+0.025;
-                case 6
-                    mvo.moveout=mvo.moveout+0.01;
-                case 7
-                    % do nothing
-                case 8
-                    mvo.moveout=mvo.moveout-0.01;
-                case 9
-                    mvo.moveout=mvo.moveout-0.025;
-                case 10
-                    mvo.moveout=mvo.moveout-0.05;
-                case 11
-                    mvo.moveout=mvo.moveout-0.1;
-                case 12
-                    mvo.moveout=mvo.moveout-0.25;
-                case 13
-                    mvo.moveout=mvo.moveout-0.5;
-                case 14
-                    % customized
-                    tmp=inputdlg(...
-                        'Add how much moveout (in sec/deg)? [0]:',...
-                        'Custom Moveout',1,{'0'});
-                    if(~isempty(tmp))
-                        try
-                            tmp=str2double(tmp{:});
-                            if(isscalar(tmp) && isreal(tmp))
-                                mvo.moveout=mvo.moveout+tmp;
+        switch choice
+            case 0 % menu closed
+                close(fh(ishandle(fh)));
+            case 1
+                % ask user how much
+                choice=menu('Adjust moveout by how much?',...
+                    ['NONE - KEEP CURRENT (' num2str(mvo.moveout) ')'],...
+                    '+0.500 sec/deg',...
+                    '+0.250 sec/deg',...
+                    '+0.100 sec/deg',...
+                    '+0.050 sec/deg',...
+                    '+0.025 sec/deg',...
+                    '+0.010 sec/deg',...
+                    '-0.010 sec/deg',...
+                    '-0.025 sec/deg',...
+                    '-0.050 sec/deg',...
+                    '-0.100 sec/deg',...
+                    '-0.250 sec/deg',...
+                    '-0.500 sec/deg',...
+                    'ADD CUSTOM');
+
+                switch choice
+                    case 1
+                        % do nothing
+                    case 2
+                        mvo.moveout=mvo.moveout+0.5;
+                    case 3
+                        mvo.moveout=mvo.moveout+0.25;
+                    case 4
+                        mvo.moveout=mvo.moveout+0.1;
+                    case 5
+                        mvo.moveout=mvo.moveout+0.05;
+                    case 6
+                        mvo.moveout=mvo.moveout+0.025;
+                    case 7
+                        mvo.moveout=mvo.moveout+0.01;
+                    case 8
+                        mvo.moveout=mvo.moveout-0.01;
+                    case 9
+                        mvo.moveout=mvo.moveout-0.025;
+                    case 10
+                        mvo.moveout=mvo.moveout-0.05;
+                    case 11
+                        mvo.moveout=mvo.moveout-0.1;
+                    case 12
+                        mvo.moveout=mvo.moveout-0.25;
+                    case 13
+                        mvo.moveout=mvo.moveout-0.5;
+                    case 14
+                        % customized
+                        tmp=inputdlg(...
+                            'Add how much moveout (in sec/deg)? [0]:',...
+                            'Custom Moveout',1,{'0'});
+                        if(~isempty(tmp))
+                            try
+                                tmp=str2double(tmp{:});
+                                if(isscalar(tmp) && isreal(tmp))
+                                    mvo.moveout=mvo.moveout+tmp;
+                                end
+                            catch
+                                % do not change mvo.moveout
                             end
-                        catch
-                            % do not change mvo.moveout
                         end
-                    end
-            end
-            mvo.adjust=-(gcarc-mindist)*mvo.moveout;
-            
-            % close old figure
-            close(fh(ishandle(fh)));
-        else
-            happy_user=true;
+                end
+                mvo.adjust=-(gcarc-mindist)*mvo.moveout;
+
+                % close old figure
+                close(fh(ishandle(fh)));
+            case 2
+                happy_user=true;
         end
     end
     

@@ -73,13 +73,49 @@ function [varargout]=xdir(str,depth)
 %        Sep. 12, 2009 - doc update
 %        Jan. 30, 2010 - fix empty path output, order fields so path on top
 %        Mar. 12, 2010 - fix for Octave when setting empty path
+%        Mar. 16, 2010 - added todo list (mainly about ? wildcard)
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated Mar. 12, 2010 at 00:20 GMT
+%     Last Updated Mar. 16, 2010 at 20:00 GMT
 
 % todo:
-% - see unfinished xdir todo
+% - be mindful of octave/matlab differences in DIR
+%   - wildcards before last pathsep
+%       - matlab doesn't expand
+%       - octave does
+%       - xdir accounts for this!
+%   - ? wildcard
+%       - matlab doesn't treat as wild
+%       - octave does
+%       - xdir does NOT account for this!
+%   - if wildcard entry is a directory
+%       - octave expands the entry
+%       - matlab lists the entry but does not expand it
+%       - xdir accounts for this discrepancy!
+%
+% - handle '?' wildcard (only for matlab - octave already does this!)
+%  * => .*     42 => 46 42
+%  ? => .      63 => 46
+%  . => \.     46 => 92 46
+% \? => \?  92 63 => 92 63
+%  \ => \\     92 => 92 92
+%  ] => \]     93 => 92 93
+%  [ => \[     91 => 92 91
+%  $ => \$     36 => 92 36
+%
+%  *     ?     .     [     ]     $     \
+% 42    63    46    91    93    36    92
+%
+% c:\/?\*  how to do this?
+%
+%   - something along the lines of:
+%      d=dir('*')
+%      for ...
+%        regexp(filename,regexptranslate('wildcard',string),'match')
+%      end
+%   - but how to allow for '?' in a filename too?
+%   - really we just need a glob for matlab too!
 
 % take care of common tasks
 persistent emptylist octave
