@@ -38,6 +38,9 @@ r2d = 180/pi;
 d2r = pi/180;
 ampy = cos(mean(centerY)*d2r);
 
+if isscalar(diam)
+    diam=diam(ones(ne,1));
+end
 if ne > 1
 	[ds,i] = sort(diam,1,'descend');
 	diam = diam(i);

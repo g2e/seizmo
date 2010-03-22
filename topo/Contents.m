@@ -1,5 +1,5 @@
 % Seismology Toolbox - topo
-% Version 0.6.0-r112 Annapurna 25-Feb-2010
+% Version 0.6.0-r120 Blackburn 20-Mar-2010
 %
 % Topography Data functions
 %ETOPO1_TILE     - Tiles ETOPO1 into 10x10 tiles

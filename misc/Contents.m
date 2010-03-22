@@ -1,5 +1,5 @@
 % Seismology Toolbox - misc
-% Version 0.6.0-r112 Annapurna 25-Feb-2010
+% Version 0.6.0-r120 Blackburn 20-Mar-2010
 %
 % Miscellaneous Support functions
 %BUTTORD2            - Butterworth filter order selection. (Honors passband corners)

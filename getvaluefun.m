@@ -40,9 +40,10 @@ function [value]=getvaluefun(data,func,type,scalar)
 
 %     Version History:
 %        Mar. 18, 2010 - initial version
+%        Mar. 20, 2010 - fixed bug that added extra time point
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2010 at 13:40 GMT
+%     Last Updated Mar. 20, 2010 at 00:10 GMT
 
 % todo:
 
@@ -126,7 +127,7 @@ try
                 % loop over even, add .ind
                 idx=find(even);
                 for i=1:sum(even)
-                    data(idx(i)).ind=b(i)+(0:npts(i))'*delta(i);
+                    data(idx(i)).ind=b(i)+(0:npts(i)-1)'*delta(i);
                 end
             end
             
@@ -163,4 +164,5 @@ catch
     % rethrow error
     error(lasterror)
 end
+
 end

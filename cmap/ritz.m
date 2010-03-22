@@ -5,8 +5,8 @@ function [map]=ritz(m)
 %
 %    Description: MAP=RITZ(M) returns a Mx3 matrix of RGB color values
 %     going from black to red, pink, orange, yellow, white, lightgreen,
-%     light-bluegray, cyan, blue, & magenta.  RITZ by itself sets M to
-%     match the current figure's colormap size.  If no figure exists, one
+%     bluegray, cyan, blue, & magenta.  RITZ by itself sets M to match
+%     the current figure's colormap size.  If no figure exists, one
 %     is created.
 %
 %    Notes:
@@ -25,15 +25,16 @@ function [map]=ritz(m)
 
 %     Version History:
 %        Feb. 17, 2010 - initial version
+%        Mar. 22, 2010 - made bluegrey darker to balance better with orange
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 17, 2010 at 00:40 GMT
+%     Last Updated Mar. 22, 2010 at 13:15 GMT
 
 if nargin < 1, m = size(get(gcf,'colormap'),1); end
 x=(0:0.1:1)';
 map=[interp1q(x,[0 0 0    1 2 3 4   6    6 8 10]'/12,(0:m-1)'/(m-1)) ...
      interp1q(x,[0 1 0.25 1 1 0 0.5 0.25 1 1 1 ]',(0:m-1)'/(m-1)) ...
-     interp1q(x,[0 1 1    1 1 1 1   0.9  1 1 1 ]',(0:m-1)'/(m-1))];
+     interp1q(x,[0 1 1    1 1 1 1   0.75 1 1 1 ]',(0:m-1)'/(m-1))];
 
 % fix out-of-bounds due to interpolation
 map(map<0)=0;

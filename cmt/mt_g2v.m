@@ -1,21 +1,28 @@
 function [v]=mt_g2v(g)
 %MT_G2V    Convert moment tensor from 3x3xN to Nx6
 %
-%    Usage:
+%    Usage:    mt=mt_g2v(momten)
 %
-%    Description:
+%    Description: MT=MT_G2V(MOMTEN) converts moment tensors in tensor form
+%     (3x3xN) to a compact lower triangle form (Nx6).  This reduces memory
+%     burden (uses 2/3rds the memory) without losing any information.
 %
 %    Notes:
 %
 %    Examples:
+%     Compare tensor and compact forms:
+%      momten=mt_v2g(elementary_mt(1:6));
+%      momten(:,:,:)
+%      mt_g2v(momten)
 %
-%    See also:
+%    See also: MT_62V, MT_V26, MT_V2G
 
 %     Version History:
 %        Mar.  8, 2010 - initial version
+%        Mar. 21, 2010 - added docs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 13:50 GMT
+%     Last Updated Mar. 21, 2010 at 11:45 GMT
 
 % todo:
 

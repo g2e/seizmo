@@ -1,21 +1,43 @@
 function [strike,dip,rake]=auxplane(varargin)
 %AUXPLANE    Returns strike-dip-slip of 2nd (auxiliary) focal plane
 %
-%    Usage:
+%    Usage:  [strike,dip,rake]=auxplane(strike,dip,rake)
+%            [strike,dip,rake]=auxplane(sdr)
+%            sdr=auxplane(...)
 %
-%    Description:
+%    Description: [STRIKE,DIP,RAKE]=AUXPLANE(STRIKE,DIP,RAKE) finds the
+%     corresponding auxilary plane(s) and rake(s) that are able to match
+%     the strain(s) produced by the input plane(s) and rake(s).  STRIKE,
+%     DIP, & RAKE should be column vectors of equal length or scalars
+%     (scalar expansion is performed).  The auxilary plane is perpendicular
+%     to the input fault plane.  The plane that is perpendicular to both
+%     the fault plane and the auxilary plane has a normal along the null
+%     axis of the focal mechanism.
+%
+%     [STRIKE,DIP,RAKE]=AUXPLANE(SDR) does the above with a combined array
+%     SDR that is Nx3 where the array is equal to [STRIKE DIP RAKE].
+%
+%     SDR=AUXPLANE(...) outputs a combined array of [STRIKE DIP RAKE] for
+%     the auxilary plane.
 %
 %    Notes:
+%     - The auxilary plane is perpendicular to the input fault plane.
+%     - The plane perpendicular to both the fault plane and the auxilary
+%       plane has its normal along the null axis of the focal mechanism.
 %
 %    Examples:
+%     Corresponding fault plane and rake for dip-slip on a normal fault
+%     that strikes North-South:
+%      [strike,dip,rake]=auxplane(0,45,-90)
 %
-%    See also:
+%    See also: STRIKEDIP, NS2SDR, SDR2NS, MT2SDR, SDR2MT
 
 %     Version History:
 %        Mar.  8, 2010 - initial version
+%        Mar. 22, 2010 - added docs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 13:50 GMT
+%     Last Updated Mar. 22, 2010 at 15:05 GMT
 
 % todo:
 

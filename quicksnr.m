@@ -18,6 +18,9 @@ function [snr]=quicksnr(data,nwin,swin,method)
 %     RMS is de-meaned (or de-medianed in the 'ROBUSTRMS' case).
 %
 %    Notes:
+%     - Some initial testing showed that the rms method typically gave
+%       estimates that were 3/4th that of the peak2peak method while the
+%       robustrms method was roughly 1/2.
 %
 %    Examples:
 %     To get SNR estimates of P (assuming times are stored in header):

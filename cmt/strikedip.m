@@ -1,21 +1,36 @@
 function [strike,dip]=strikedip(varargin)
 %STRIKEDIP    Returns strike & dip given normal vector to plane
 %
-%    Usage:
+%    Usage:    [strike,dip]=strikedip(north,east,up)
+%              [strike,dip]=strikedip(neu)
+%              sdr=strikedip(...)
 %
-%    Description:
+%    Description: [STRIKE,DIP]=STRIKEDIP(NORTH,EAST,UP) finds the strike
+%     and dip of a plane with a normal vector given by NORTH, EAST, & UP.
+%     The inputs NORTH, EAST, & UP must be equal-sized column vectors or
+%     scalars.
+%
+%     [STRIKE,DIP]=STRIKEDIP(NEU) does the above with a combined array NEU
+%     that is Nx3 where the array is equal to [NORTH EAST UP].
+%
+%     SDR=STRIKEDIP(...) outputs a combined array of [STRIKE DIP RAKE] for
+%     the auxilary plane.
 %
 %    Notes:
 %
 %    Examples:
+%     What are the strikes and dips of the planes for a series of normals
+%     going from North to South through the up axis:
+%      [strike,dip]=strikedip(cos(0:pi/6:pi)',0,sin(0:pi/6:pi)')
 %
-%    See also:
+%    See also: AUXPLANE
 
 %     Version History:
 %        Mar.  8, 2010 - initial version
+%        Mar. 22, 2010 - added docs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 13:50 GMT
+%     Last Updated Mar. 22, 2010 at 15:05 GMT
 
 % todo:
 
