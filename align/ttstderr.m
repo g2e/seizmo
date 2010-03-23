@@ -17,6 +17,9 @@ function [std]=ttstderr(m,lag,lagw)
 %     - For narrow band situations, SNR2MAXPHASEERROR is likely a better
 %       measure of the error although even this has assumptions (that the
 %       waveforms being correlated have a strong similarity).
+%     - Diagonal elements of LAG are ignored because they are assumed to
+%       correspond to autocorrelations.  These always have 0 lag and 0
+%       residual and are not useful error measures.
 %
 %    Examples:
 %     Get arrival time solution and standard error:
@@ -30,9 +33,11 @@ function [std]=ttstderr(m,lag,lagw)
 %        Mar. 11, 2010 - doc update, column vector output
 %        Mar. 12, 2010 - better way to get column vector output, more
 %                        input checking
+%        Mar. 22, 2010 - account for ttalign fix, ignore diagonal elements
+%                        in error calculation (makes error slightly higher)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 12, 2010 at 14:10 GMT
+%     Last Updated Mar. 22, 2010 at 23:35 GMT
 
 % todo:
 
@@ -94,7 +99,10 @@ end
 % force m to be column vector
 m=m(:);
 
+% ignore diagonal
+lag=lag+diag(nan(nr,1));
+
 % get standard error of arrivals
-std=sqrt(nanvariance(lag+m(:,ones(nr,1))-m(:,ones(nr,1)).',0,2,lagw));
+std=sqrt(nanvariance(lag-m(:,ones(nr,1))+m(:,ones(nr,1)).',0,2,lagw));
 
 end

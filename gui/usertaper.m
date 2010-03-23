@@ -50,9 +50,10 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 %        Mar. 12, 2010 - pretty text menu for Octave
 %        Mar. 15, 2010 - added graphical selection/entry of func
 %        Mar. 18, 2010 - robust to menu/figure closing
+%        Mar. 23, 2010 - preserve last taper widths
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2010 at 10:25 GMT
+%     Last Updated Mar. 23, 2010 at 01:25 GMT
 
 % todo:
 % - subplot showing taper
@@ -289,7 +290,7 @@ try
         % add taper limit markers
         figure(fh(1));
         span=ylim;
-        tpr.width=xlim;
+        if(isempty(tpr.width)); tpr.width=xlim; end
         hold on
         goh(1)=plot([tpr.width(1) tpr.width(1)],span,'g','linewidth',4);
         goh(2)=plot([tpr.width(2) tpr.width(2)],span,'r','linewidth',4);

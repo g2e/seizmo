@@ -57,9 +57,10 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %        Mar. 15, 2010 - added graphical selection/entry of fill & func,
 %                        win is now a struct
 %        Mar. 18, 2010 - robust to menu/figure closing
+%        Mar. 23, 2010 - preserve last window limits
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2010 at 10:25 GMT
+%     Last Updated Mar. 23, 2010 at 01:25 GMT
 
 % todo:
 
@@ -240,7 +241,7 @@ try
         % add window limit markers
         figure(fh(1));
         span=ylim;
-        win.limits=xlim;
+        if(isempty(win.limits)); win.limits=xlim; end
         hold on
         goh(1)=plot([win.limits(1) win.limits(1)],span,'g','linewidth',4);
         goh(2)=plot([win.limits(2) win.limits(2)],span,'r','linewidth',4);

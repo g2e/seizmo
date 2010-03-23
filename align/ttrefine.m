@@ -54,7 +54,7 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %      plot0(data);
 %      xc=correlate(data,'npeaks',3,'spacing',10);
 %      dt=ttalign(xc.lg(:,:,1));
-%      data1=timeshift(data,dt);
+%      data1=timeshift(data,-dt);
 %      pol=ttpolar(xc.pg(:,:,1));
 %      data1=multiply(data1,pol);
 %      std=ttstderr(dt,xc.lg(:,:,1));
@@ -62,7 +62,7 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %      [xc2.cg,xc2.lg,xc2.pg,nc]=...
 %          ttrefine(xc.cg,xc.lg,xc.pg,dt,std,pol,[],0.1,0);
 %      dt=ttalign(xc2.lg(:,:,1));
-%      data1=timeshift(data,dt);
+%      data1=timeshift(data,-dt);
 %      pol=ttpolar(xc2.pg(:,:,1));
 %      data1=multiply(data1,pol);
 %      std=ttstderr(dt,xc2.lg(:,:,1));
@@ -74,9 +74,11 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %        Mar. 11, 2010 - initial version (derived from dtwrefine)
 %        Mar. 12, 2010 - doc update, fix checks
 %        Mar. 14, 2010 - fixed bug in forced polarity code
+%        Mar. 22, 2010 - account for ttalign change, use abs rather than
+%                        sqrt the square
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 14, 2010 at 01:45 GMT
+%     Last Updated Mar. 22, 2010 at 23:45 GMT
 
 % todo:
 
@@ -109,6 +111,9 @@ elseif(~isscalar(SKIP) || (~islogical(SKIP) && ~isreal(SKIP)))
         'SKIP must be a logical scalar!');
 end
 
+% square standard deviations to be variances so we can add them
+std=std.^2;
+
 % find misfit
 % - essentially the number of standard deviations the measured lag is from
 %    the expected lag
@@ -120,18 +125,18 @@ if(vector)
     
     % misfit
     M=1./wg.*max(MINSTD,...
-        sqrt(((lg+dt(i,1,ones(1,np))-dt(j,1,ones(1,np)))...
-        ./(std(i,1,ones(1,np))+std(j,1,ones(1,np)))).^2));
+        abs((lg-dt(i,1,ones(1,np))+dt(j,1,ones(1,np)))...
+        ./sqrt(std(i,1,ones(1,np))+std(j,1,ones(1,np)))));
     
     % to get number adjusted
     factor=1;
 else
     % misfit
     M=1./wg.*max(MINSTD,...
-        sqrt(((lg+dt(:,ones(1,nr),ones(1,np))...
-        -permute(dt(:,ones(1,nr),ones(1,np)),[2 1 3]))...
-        ./(std(:,ones(1,nr),ones(1,np))...
-        +permute(std(:,ones(1,nr),ones(1,np)),[2 1 3]))).^2));
+        abs((lg-dt(:,ones(1,nr),ones(1,np))...
+        +permute(dt(:,ones(1,nr),ones(1,np)),[2 1 3]))...
+        ./sqrt(std(:,ones(1,nr),ones(1,np))...
+        +permute(std(:,ones(1,nr),ones(1,np)),[2 1 3]))));
     
     % to get number adjusted
     factor=2;

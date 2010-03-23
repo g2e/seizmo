@@ -59,6 +59,7 @@
 %KEEPRECORDS         - Keeps indicated records in SEIZMO data structure
 %KEEPRL              - Returns the real component of spectral records
 %LISTHEADER          - List SEIZMO data headers
+%MAKEUNEVEN          - Makes evenly-sampled SEIZMO records look like uneven ones
 %MAT2RECORDS         - Distributes a record matrix back into a SEIZMO struct
 %MERGE               - Merge SEIZMO records
 %MIRRORFLIP          - Returns a mirror-flip of SEIZMO records
@@ -100,6 +101,7 @@
 %SLIDINGMEAN         - Returns sliding-window mean of SEIZMO records
 %SLIDINGRMS          - Returns sliding-window root-mean-square of SEIZMO records
 %SORTBYFIELD         - Sort SEIZMO records by a header or SEIZMO struct field
+%SPLITPAD            - Splits and zero pads SEIZMO data records
 %SPLITRECORDS        - Split up components into separate records
 %SQUISH              - Downsample SEIZMO records by an integer factor
 %STRETCH             - Upsample SEIZMO records by an integer factor

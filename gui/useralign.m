@@ -43,9 +43,10 @@ function [arr,err,pol,zmean,zstd,nc,info,xc,data0]=useralign(data,varargin)
 %        Mar. 17, 2010 - add xc, data0 to output, more crash options
 %        Mar. 18, 2010 - output reordered xc (new TTSOLVE output), robust
 %                        to menu closing
+%        Mar. 22, 2010 - account for TTALIGN change, increase NPEAKS to 5
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2010 at 10:25 GMT
+%     Last Updated Mar. 22, 2010 at 23:55 GMT
 
 % todo:
 
@@ -83,7 +84,7 @@ try
     end
     
     % default correlate options
-    info.correlate.npeaks=3;
+    info.correlate.npeaks=5;
     info.correlate.spacing=10;
     info.correlate.absxc=true;
     
@@ -150,7 +151,8 @@ try
             switch choice
                 case 1 % npeaks
                     choice=menu('NUMBER OF PEAKS TO PICK',...
-                        ['CURRENT (' tmp1 ')'],'1','3','5','CUSTOM');
+                        ['CURRENT (' tmp1 ')'],...
+                        '1','3','5','7','9','CUSTOM');
                     switch choice
                         case 1 % CURRENT
                             % leave alone
@@ -160,7 +162,11 @@ try
                             info.correlate.npeaks=3;
                         case 4 % 5
                             info.correlate.npeaks=5;
-                        case 5 % CUSTOM
+                        case 5 % 7
+                            info.correlate.npeaks=7;
+                        case 6 % 9
+                            info.correlate.npeaks=9;
+                        case 7 % CUSTOM
                             tmp=inputdlg(...
                                 ['Number of Peaks to Pick? [' tmp1 ']:'],...
                                 'Custom Number of Peaks',1,{tmp1});
@@ -220,7 +226,7 @@ try
             varargin{:});
 
         % plot alignment
-        data0=multiply(timeshift(data0,arr),pol);
+        data0=multiply(timeshift(data0,-arr),pol);
         info.figurehandles(7)=recordsection(data0);
         
         % force user to decide

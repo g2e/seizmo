@@ -63,9 +63,10 @@ function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %        Mar. 12, 2010 - pretty text menu for Octave
 %        Mar. 17, 2010 - redesigned interface, several more options,
 %                        grp.color lists group colors
+%        Mar. 22, 2010 - make sure input CG sizes up
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 17, 2010 at 16:15 GMT
+%     Last Updated Mar. 23, 2010 at 03:45 GMT
 
 % todo:
 
@@ -91,10 +92,13 @@ try
         peaks=correlate(data,'npeaks',1);
         cg=peaks.cg;
     end
+    
+    % number of records
+    nrecs=numel(data);
 
     % check correlation grid
     cg=squeeze(cg); sz=size(cg);
-    if(sz(2)~=1 || numel(sz)>2)
+    if(sz(2)~=1 || numel(sz)>2 || (nrecs^2-nrecs)/2~=sz(1))
         error('seizmo:usercluster:badCorrGrid',...
             'CG does not have proper dimensions!');
     end

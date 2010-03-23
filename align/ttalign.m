@@ -51,9 +51,12 @@ function [m,Gg]=ttalign(lag,lagw,abstt,absw,absidx)
 %     Version History:
 %        Mar.  2, 2010 - initial version (from dtwalign)
 %        Mar. 11, 2010 - renamed to TTALIGN from TTSOLVE
+%        Mar. 22, 2010 - huge bugfix (incorrect sign for output relative
+%                        times and completely wrong times for absolute
+%                        times)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2010 at 02:10 GMT
+%     Last Updated Mar. 22, 2010 at 23:20 GMT
 
 % todo:
 
@@ -78,7 +81,7 @@ end
 if(nargin<3)
     % BUILDING KERNEL MATRIX (G)
     totlen=len+1;
-    G=sparse([1:len 1:len],[i j],...
+    G=sparse([1:len 1:len],[j i],...
         [-ones(1,len) ones(1,len)],totlen,nr,2*len+nr);
     G(totlen,:)=1;
     
@@ -104,7 +107,7 @@ else % some absolute timing info also
     
     % BUILDING KERNEL MATRIX (G)
     alen=numel(absidx); totlen=alen+len;
-    G=sparse([1:len 1:len len+1:totlen],[i; j; absidx(:)]',...
+    G=sparse([1:len 1:len len+1:totlen],[j; i; absidx(:)]',...
         [-ones(1,len) ones(1,len) ones(1,alen)],totlen,nr,2*len+alen);
     
     % BUILDING THE WEIGHTING MATRIX (W)

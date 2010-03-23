@@ -81,6 +81,7 @@ try
         'orientation','left','colorthreshold',P.TREELIMIT,...
         'colormap',P.TREECOLORMAP,'defaultcolor',P.TREEDEFCOLOR);
 catch
+    error(lasterror)
     % Matlab's dendrogram
     [H,H2,perm]=dendrogram(Z,0,'labels',S,...
         'orientation','left','colorthreshold',P.TREELIMIT);

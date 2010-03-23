@@ -11,6 +11,14 @@ revision series names
 180-189  --  Hayes
 190-199  --  Ichinsky
 
+shortterm goals
+----------------
+make guis for cut functions
+make user clustered align
+make multiband align
+cmt convert functions
+
+
 0.6.0 - stable, helpful and functional
 ----------------------------------------
 document every function (working on)

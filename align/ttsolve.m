@@ -16,7 +16,9 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %              [...]=ttsolve(...,'esterr',stderr,...)
 %              [...]=ttsolve(...,'estpol',relpol,...)
 %
-%            style/depth options:
+%            solver style/depth options:
+%              [...]=ttsolve(...,'method',method,...)
+%              [...]=ttsolve(...,'thresh',threshhold,...)
 %              [...]=ttsolve(...,'mtri',niter,...)
 %              [...]=ttsolve(...,'mpri',niter,...)
 %              [...]=ttsolve(...,'noncnv',method,...)
@@ -114,6 +116,28 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     SOLVER STYLE/DEPTH OPTIONS
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%
 %
+%     [...]=TTSOLVE(...,'METHOD',METHOD,...) specifies the solution
+%     refinement method METHOD.  Currently available methods are: 'REORDER'
+%     (the default), 'REWEIGHT', and 'BOTH'.  REORDER is adapted to refine
+%     to a consistent solution utilizing information about multiple peaks
+%     in the cross correlograms.  REWEIGHT is adapted to refine to a
+%     consistent solution using information on a single peak in each
+%     correlogram.  Both of these methods have their benefits (REORDER can
+%     refine the polarities, is non-linear, has lower errors while REWEIGHT
+%     requires only a single peak from the correlogram and is simpler but
+%     may converge quite slowly).  BOTH uses REORDER then REWEIGHT to
+%     refine a solution.  They all tend to provide very similar solutions.
+%
+%     [...]=TTSOLVE(...,'THRESH',THRESHHOLD,...) defines the threshhold
+%     THRESHHOLD when the REWEIGHT method has converged enough on a
+%     solution.  Note that this in terms of change from the previous
+%     iteration's solution.  The default is 0.1 seconds and I have found
+%     that solutions with this threshhold tend to match well with results
+%     from the REORDER method (it will take some time for the solution to
+%     converge to this threshhold though).  You will probably want to limit
+%     the MTRI option to a finite value in case the method is not
+%     converging fast enough (see below).
+%
 %     [...]=TTSOLVE(...,'MTRI',NITER,...) sets the maximum number of
 %     relative arrival time refinement iterations to NITER.  If NITER
 %     iterations are performed, the solver will exit with the most refined
@@ -121,22 +145,25 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     Setting NITER to 0 will perform no refinement while setting it to 10
 %     will allow up to 10 iterations.  TTSOLVE may exit before NITER
 %     iterations if no more peaks are to be reordered or non-convergence is
-%     detected (see option 'NONCNV').
+%     detected (see option 'NONCNV') or (if using the REWEIGHT/BOTH method)
+%     the max change from the last iteration is below THRESH.  Generally,
+%     MTRI should always be greater than MPRI (see below) to get a
+%     consistent solution.
 %
 %     [...]=TTSOLVE(...,'MPRI',NITER,...) sets the maximum number of
-%     relative polarity refinement iterations to NITER.  The default is 0
-%     which means the polarity is not refined from the initial estimate
-%     (see option 'ESTPOL').  In fact, the solution is forced to be
-%     consistent with the polarity estimate after NITER iterations.  This
-%     allows for strong consistency between the polarity and arrival
-%     solutions.  It is extremely rare for the polarity to be refined so
-%     this is best left alone.  It is also a strong driving force for
-%     solution convergence.
+%     relative polarity refinement iterations to NITER.  The default is 1
+%     which means the polarity is refined only once from the initial
+%     estimate (see option 'ESTPOL').  After NITER iterations, the solution
+%     is forced to be consistent with the estimated relative polarities.
+%     This allows for strong consistency between the polarity and arrival
+%     solutions.  It is exceeding rare for the polarity to be refined after
+%     the first iteration so it is usually safe left alone.  It is also a
+%     strong driving force for solution convergence.
 %
 %     [...]=TTSOLVE(...,'NONCNV',METHOD,...) alters how non-convergence is
-%     handled.  The default METHOD is 'BREAK' which just exits with the
-%     last solution when the non-convergence was detected.  Other options
-%     are 'IGNORE' & 'REWEIGHT'.  The 'IGNORE' method do nothing when a
+%     handled in the REORDER method.  The default METHOD is 'BREAK' which
+%     stops iterating when the non-convergence was detected.  Other options
+%     are 'IGNORE' & 'REWEIGHT'.  The 'IGNORE' method does nothing when a
 %     non-convergence is detected (not setting option 'MTRI' to a finite
 %     number when using the 'IGNORE' method may lead to an infinite loop).
 %     The 'REWEIGHT' method will downweight the troubled peaks (those that
@@ -163,9 +190,10 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %        Mar. 14, 2010 - options worked out, documentation added
 %        Mar. 15, 2010 - output option struct too, doc update
 %        Mar. 18, 2010 - output xc as well
+%        Mar. 23, 2010 - added reweight/both methods, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2010 at 09:45 GMT
+%     Last Updated Mar. 23, 2010 at 09:45 GMT
 
 % todo:
 
@@ -185,6 +213,14 @@ end
 
 % get options
 opt=parse_ttsolve_args(nr,varargin{:});
+
+% emphasize the error of thy ways
+if(strcmpi(opt.METHOD,'reorder') && np==1)
+    warning('seizmo:ttsolve:badMethod',...
+        ['REORDER method is use when only a single peak picked!' ...
+        '\nThe solution can not be refined.  Specifying a method' ...
+        '\nsuch as REWEIGHT or BOTH is more appropriate here.']);
+end
 
 % force correlations to be under some maximum
 % - this stabilizes the inversion for cases
@@ -230,98 +266,168 @@ else
     pol=opt.ESTPOL;
 end
 
-% refine alignment estimate
-% - selects lag with minimum weighted misfit to initial alignment among the
-%   peaks with the same polarity as the initial estimate
-% - reinvert using with these more consistent peaks
-% - repeat until max number of iterations or converged
+% reorder section
 iter=1; nc=nan(0,1);
-while(iter<=opt.MTRI)
-    % are we refining polarities?
-    if(iter<=opt.MPRI)
-        % yes
-        if(verbose)
-            disp('Refining Relative Arrivals & Errors & Polarities');
-        end
-        pflag=false;
-    else
-        % no
-        if(verbose); disp('Refining Relative Arrivals & Errors'); end
-        pflag=true;
-    end
-    
-    % refine
-    [li,best]=ttrefine(...
-        xc.cg,xc.lg,xc.pg,dt,std,pol,xc.wg,opt.MINLAG,pflag,true);
-    [xc.cg,xc.lg,xc.pg,nc(iter,1)]=ttrefine(...
-        xc.cg,xc.lg,xc.pg,dt,std,pol,xc.wg,opt.MINLAG,pflag);
-    
-    % check for change
-    if(nc(iter,1)>0)
-        if(verbose)
-            disp(['Reordered ' num2str(nc(iter,1)) ' Peaks']);
-        end
-    else
-        % drop this iteration
-        nc(iter)=[];
-        break;
-    end
-    
-    % reorder z-stats & weights
-    tmp=xc.zg(best);
-    xc.zg(best)=xc.zg(li);
-    xc.zg(li)=tmp;
-    tmp=xc.wg(best);
-    xc.wg(best)=xc.wg(li);
-    xc.wg(li)=tmp;
-    
-    % reinvert
-    if(verbose); disp('Reinverting Reordered Peak Info'); end
-    dt=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
-    std=ttstderr(dt,xc.lg(:,:,1),xc.wg(:,:,1));
-    if(pflag)
-        % check that polarity solution did not change
-        % - this is just to make sure I coded this right
-        if(~isequal(pol,ttpolar(xc.pg(:,:,1))))
-            error('seizmo:ttsolve:brokenPolarities',...
-                'Polarity solution changed when it should not have!');
-        end
-    else
-        % new polarity solution
-        pol=ttpolar(xc.pg(:,:,1));
-    end
-    
-    % detect non-convergence (after at least 3 iterations)
-    % - number peaks reordered stays constant over 3 iterations
-    %   ie 2, 2, 2
-    % - number changed alternates between 2 numbers twice
-    %   ie 5, 4, 5, 4
-    if((iter>=3 && isscalar(unique(nc(iter-2:iter,1)))) ...
-            || (iter>=4 && isequal(nc(iter-3:iter-2,1),nc(iter-1:iter,1))))
-        % handle non-convergence
-        switch lower(opt.NONCNV)
-            case 'break'
-                % just break
-                if(verbose); disp('Non-Convergence Detected'); end
-                if(verbose); disp('Immediately Breaking Refinement'); end
+switch lower(opt.METHOD)
+    case {'reorder' 'both'}
+        % refine alignment estimate
+        % - selects lag with minimum weighted misfit to initial alignment
+        %   among the peaks with the same polarity as the initial estimate
+        % - reinvert using with these more consistent peaks
+        % - repeat until max number of iterations or converged
+        while(iter<=opt.MTRI)
+            % are we refining polarities?
+            if(iter<=opt.MPRI)
+                % yes
+                if(verbose)
+                    disp('Refining Relative Arrival & Error & Polarity');
+                end
+                pflag=false;
+            else
+                % no
+                if(verbose); disp('Refining Relative Arrival & Error'); end
+                pflag=true;
+            end
+
+            % refine
+            [li,best]=ttrefine(...
+                xc.cg,xc.lg,xc.pg,dt,std,pol,xc.wg,opt.MINLAG,pflag,true);
+            [xc.cg,xc.lg,xc.pg,nc(iter,1)]=ttrefine(...
+                xc.cg,xc.lg,xc.pg,dt,std,pol,xc.wg,opt.MINLAG,pflag);
+
+            % check for change
+            if(nc(iter,1)>0)
+                if(verbose)
+                    disp(['Reordered ' num2str(nc(iter,1)) ' Peaks']);
+                end
+            else
+                % drop this iteration
+                nc(iter)=[];
                 break;
-            case 'reweight'
-                % downweight troubled peaks, re-solve, continue on
-                if(verbose); disp('Non-Convergence Detected'); end
-                if(verbose); disp('Downweighting Troubled Peaks'); end
-                tmp=xc.wg(li);
-                xc.wg(li)=0;
-                if(verbose); disp('Reinverting Downweighted Version'); end
-                dt=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
-                std=ttstderr(dt,xc.lg(:,:,1),xc.wg(:,:,1));
-                xc.wg(li)=tmp;
-            case 'ignore'
-                % free as can be
+            end
+
+            % reorder z-stats & weights
+            tmp=xc.zg(best);
+            xc.zg(best)=xc.zg(li);
+            xc.zg(li)=tmp;
+            tmp=xc.wg(best);
+            xc.wg(best)=xc.wg(li);
+            xc.wg(li)=tmp;
+
+            % reinvert
+            if(verbose); disp('Reinverting Reordered Peak Info'); end
+            dt=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
+            std=ttstderr(dt,xc.lg(:,:,1),xc.wg(:,:,1));
+            if(pflag)
+                % check that polarity solution did not change
+                % - this is just to make sure I coded this right
+                if(~isequal(pol,ttpolar(xc.pg(:,:,1))))
+                    error('seizmo:ttsolve:brokenPolarities',...
+                        'Polarity solution changed! It should not have!');
+                end
+            else
+                % new polarity solution
+                if(verbose)
+                    if(~isequal(pol,ttpolar(xc.pg(:,:,1))))
+                        disp('Polarity Solution Changed!!!');
+                    else
+                        disp('Polarity Solution Unchanged');
+                    end
+                end
+                pol=ttpolar(xc.pg(:,:,1));
+            end
+
+            % detect non-convergence (after at least 3 iterations)
+            % - number peaks reordered stays constant over 3 iterations
+            %   ie 2, 2, 2
+            % - number changed alternates between 2 numbers twice
+            %   ie 5, 4, 5, 4
+            if((iter>=3 && isscalar(unique(nc(iter-2:iter,1)))) ...
+                    || (iter>=4 && isequal(nc(iter-3:iter-2,1),...
+                    nc(iter-1:iter,1))))
+                % handle non-convergence
+                switch lower(opt.NONCNV)
+                    case 'break'
+                        % just break
+                        if(verbose); disp('Non-Convergence Detected'); end
+                        if(verbose); disp('Breaking Refinement'); end
+                        break;
+                    case 'reweight'
+                        % downweight troubled peaks, re-solve, continue on
+                        if(verbose)
+                            disp('Non-Convergence Detected');
+                        	disp('Downweighting Troubled Peaks');
+                        end
+                        tmp=xc.wg(li);
+                        xc.wg(li)=0;
+                        if(verbose);
+                            disp('Reinverting Downweighted Version');
+                        end
+                        dt=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
+                        std=ttstderr(dt,xc.lg(:,:,1),xc.wg(:,:,1));
+                        xc.wg(li)=tmp;
+                    case 'ignore'
+                        % free as can be
+                end
+            end
+
+            % increment counter
+            iter=iter+1;
         end
-    end
-    
-    % increment counter
-    iter=iter+1;
+end
+
+% reweight section
+switch lower(opt.METHOD)
+    case {'reweight' 'both'}
+        while(iter<=opt.MTRI)
+            % detail message
+            if(verbose)
+                disp(['Reweighting Peaks on Iteration ' num2str(iter)]);
+            end
+
+            % get # std dev of lags to previous solution
+            numdev=max(opt.MINLAG,ttnumdev(xc.lg(:,:,1),dt,std));
+
+            % polarity-based weights
+            if(iter<=opt.MPRI)
+                % no differential weighting based on polarities
+                def=ones(size(xc.wg(:,:,1)));
+            else
+                % find peaks with incorrect polarity
+                if(vector)
+                    def=(pol*pol')...
+                        .*(diag(ones(nr,1))+ndsquareform(xc.pg(:,:,1)));
+                    def=ndsquareform(def)';
+                else % matrix
+                    def=(pol*pol').*xc.pg(:,:,1);
+                end
+
+                % weight them down significantly
+                def(def==-1)=1e-5;
+            end
+
+            % get reweights
+            xc.rg=xc.wg(:,:,1).*numdev.*def;
+
+            % solve with reweighted lags
+            dt_old=dt;
+            dt=ttalign(xc.lg(:,:,1),xc.rg);
+            std=ttstderr(dt,xc.lg(:,:,1),xc.rg);
+
+            % check if we have converged
+            nc(iter,1)=max(abs(dt_old-dt));
+            if(verbose)
+                disp(['Largest Relative Arrival Change: ' ...
+                    num2str(nc(iter))]);
+                disp(['Mean Relative Arrival Change: ' ...
+                    num2str(mean(abs(dt_old-dt)))]);
+            end
+            if(nc(iter,1)<opt.THRESH); break; end
+
+            % increment counter & skip the reorder code
+            iter=iter+1;
+            continue;
+        end
 end
 
 % get zmean, zstd for reordered matrices
@@ -422,20 +528,23 @@ end
 
 % valid string options
 valid.NONCNV={'break' 'reweight' 'ignore'};
+valid.METHOD={'reorder' 'reweight' 'both'};
 
 % option defaults
-opt.MTRI=inf;       % max relative arrival refinement iterations
-opt.MPRI=0;         % max relative polarity refinement iterations
-opt.MINLAG=0.100;   % min standard error of lags (keeps misfit sane)
-opt.MAXCOR=0.999;   % max correlation value (keeps misfit/stats sane)
-opt.NONCNV='break'; % break/reweight/ignore
-opt.WGTPOW=1;       % power to apply to misfit weights
-opt.ESTARR=[];      % initial relative arrival estimate
-opt.ESTERR=[];      % initial relative arrival error estimate
-opt.ESTPOL=[];      % initial relative polarity estimate
-opt.SNR=ones(nr,1); % snr (for misfit weights)
-opt.INRANGE=[];     % snr range over which rescaling varies
-opt.OUTRANGE=[];    % range of rescaled snr values
+opt.METHOD='reorder'; % iterate method to refine solution
+opt.THRESH=0.1;       % threshhold to converge in reweighted case (in sec)
+opt.MTRI=inf;         % max relative arrival refinement iterations
+opt.MPRI=1;           % max relative polarity refinement iterations
+opt.MINLAG=0.100;     % min standard error of lags (keeps misfit sane)
+opt.MAXCOR=0.999;     % max correlation value (keeps misfit/stats sane)
+opt.NONCNV='break';   % break/reweight/ignore
+opt.WGTPOW=1;         % power to apply to misfit weights
+opt.ESTARR=[];        % initial relative arrival estimate
+opt.ESTERR=[];        % initial relative arrival error estimate
+opt.ESTPOL=[];        % initial relative polarity estimate
+opt.SNR=ones(nr,1);   % snr (for misfit weights)
+opt.INRANGE=[];       % snr range over which rescaling varies
+opt.OUTRANGE=[];      % range of rescaled snr values
 
 % option must be specified by a string
 if(~iscellstr(varargin(1:2:end)))
@@ -452,6 +561,20 @@ for i=1:2:nargin-1
     
     % check and add
     switch lower(varargin{i})
+        case {'meth' 'method'}
+            if(~ischar(varargin{i+1}) || ...
+                    ~ismember(varargin{i+1},valid.METHOD))
+                error('seizmo:ttsolve:badInput',...
+                    ['METHOD option must be one of the following:\n' ...
+                    sprintf('''%s'' ',valid.NONCNV)]);
+            end
+            opt.METHOD=varargin{i+1};
+        case {'th' 'thresh' 'threshhold'}
+            if(~isscalar(varargin{i+1}) || varargin{i+1}<0)
+                error('seizmo:ttsolve:badInput',...
+                    'THRESH option must be a scalar >=0!');
+            end
+            opt.THRESH=varargin{i+1};
         case {'mt' 'mtri' 'maxtimeiter'}
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
                     || varargin{i+1}~=fix(varargin{i+1}))

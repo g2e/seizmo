@@ -90,9 +90,10 @@ function [x]=ndsquareform(x,method,flag)
 %                        to lower triangle, lots of fixes
 %        Mar.  2, 2010 - minor doc update
 %        Mar. 12, 2010 - doc update
+%        Mar. 22, 2010 - improved checking of anti-symmetric matrices
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 12, 2010 at 13:15 GMT
+%     Last Updated Mar. 22, 2010 at 23:55 GMT
 
 % todo:
 
@@ -124,7 +125,8 @@ switch lower(method)
             error('seizmo:ndsquareform:badInput',...
                 'M must be a square numeric or logical array!');
         elseif(isnumeric(x) && (~isequal(x(:,:,1),x(:,:,1).') && ...
-                ~isequal(x(:,:,1)-diag(xd),diag(xd)-x(:,:,1).')))
+                any(any(((x(:,:,1)-diag(xd))-(diag(xd)-x(:,:,1).'))...
+                >max(max(x(:,:,1)))*eps))))
             % the above uses diag to ignore the diagonal
             error('seizmo:ndsquareform:badInput',...
                 'M must be a(n) (anti-)symmetric matrix!');
