@@ -2,6 +2,7 @@
 % Version 0.6.0-r120 Blackburn 20-Mar-2010
 %
 % Interactive functions
+%PICKSTACK    - Interactive picking of signal onset in SEIZMO record stack
 %USERALIGN    - Interactive alignment of a signal for SEIZMO records
 %USERCLUSTER  - Interactively cluster SEIZMO records
 %USERMOVEOUT  - Interactively add a distance-dependent moveout

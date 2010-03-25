@@ -44,9 +44,11 @@ function [arr,err,pol,zmean,zstd,nc,info,xc,data0]=useralign(data,varargin)
 %        Mar. 18, 2010 - output reordered xc (new TTSOLVE output), robust
 %                        to menu closing
 %        Mar. 22, 2010 - account for TTALIGN change, increase NPEAKS to 5
+%        Mar. 24, 2010 - include stack picking to deal with dc-offset,
+%                        user-driven cluster analysis for more info
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 22, 2010 at 23:55 GMT
+%     Last Updated Mar. 24, 2010 at 16:35 GMT
 
 % todo:
 
@@ -120,11 +122,22 @@ try
     end
     varargin=varargin(keep);
     
+    % require o field is set to the same value (within +/- 2 millisec)
+    o=getheader(data,'o');
+    outc=cell2mat(getheader(data,'o utc'));
+    if(any(abs(timediff(outc(1,:),outc))>0.002))
+        error('seizmo:useralign:oFieldVaries',...
+            'O field must correspond to one UTC time for all records!');
+    end
+    
+    % copy data to working dataset (so user can go back)
+    data0=data;
+    
     % outer loop - only breaks free on user command
     happy_user=false;
     while(~happy_user)
         % usermoveout
-        [data0,info.usermoveout,info.figurehandles(1)]=usermoveout(data);
+        [data0,info.usermoveout,info.figurehandles(1)]=usermoveout(data0);
 
         % userwindow
         [data0,info.userwindow,info.figurehandles(2:3)]=userwindow(data0);
@@ -133,7 +146,7 @@ try
         [data0,info.usertaper,info.figurehandles(4:5)]=usertaper(data0);
         
         % userraise
-        [data0,info.userraise,info.figurehandles(6)]=userraise(data0);
+        %[data0,info.userraise,info.figurehandles(6)]=userraise(data0);
 
         % menu for correlate options
         while(1)
@@ -224,30 +237,53 @@ try
         % solve alignment
         [arr,err,pol,zmean,zstd,nc,info.ttsolve,xc]=ttsolve(xc,...
             varargin{:});
+        
+        % align records
+        data0=multiply(timeshift(data0,-arr),pol);
+        
+        % allow picking the stack to deal with dc-shift from onset
+        [b,e,delta]=getheader(data0,'b','e','delta');
+        [onset,info.figurehandles(6)]=pickstack(normalize(data0),...
+            2/min(delta),[],min(b),max(e),0);
 
         % plot alignment
-        data0=multiply(timeshift(data0,-arr),pol);
+        data0=timeshift(data0,-onset);
         info.figurehandles(7)=recordsection(data0);
+        
+        % origin time gives absolute time position
+        arr=-getheader(data0,'o');
         
         % force user to decide
         choice=0;
         while(~choice)
             % ask user if they are happy with alignment
             choice=menu('KEEP THIS ALIGNMENT?',...
-                'YES','NO - TRY AGAIN','NO - CRASH!');
+                'YES',...
+                'NO - TRY AGAIN',...
+                'NO - TRY AGAIN WITH THESE OFFSETS',...
+                'NO - CRASH!');
             switch choice
                 case 1 % rainbow's end
                     happy_user=true;
                 case 2 % never never quit!
+                    data0=data;
                     close(info.figurehandles(...
                         ishandle(info.figurehandles)));
-                case 3 % i bear too great a shame to go on
+                case 3 % standing on the shoulders of those before me
+                    data0=timeshift(data,-o-arr);
+                    close(info.figurehandles(...
+                        ishandle(info.figurehandles)));
+                case 4 % i bear too great a shame to go on
                     error('seizmo:useralign:killYourSelf',...
                         'User demanded Seppuku!');
             end
         end
     end
-
+    
+    % perform cluster analysis on results
+    [info.usercluster,info.figurehandles(8)]=usercluster(data0,...
+        xc.cg(:,:,1));
+    
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
     checkheader_state(oldcheckheaderstate);

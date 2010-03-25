@@ -13,9 +13,18 @@ revision series names
 
 shortterm goals
 ----------------
+plotting options!!!
 make guis for cut functions
-make user clustered align
+	- popcut
+	- arrcut
+	- errcut
+	- ampcut
 make multiband align
+	- how do we save all this info?
+		- need to save all the figures
+		- need to save all the arrival info
+			- should be easy to reaccess
+		- can we export it all?
 cmt convert functions
 
 
@@ -23,7 +32,6 @@ cmt convert functions
 ----------------------------------------
 document every function (working on)
 	- plotting (waiting on rewrite)
-	- align/cluster (waiting on rewrite)
 fix plotting
 	- better global setting (like binoperr?)
 	- better option passing
@@ -31,6 +39,11 @@ fix plotting
 	- allow setting markers above/below
 	- ditto for tt curves (only recsec)
 	- flags or line for predicted?
+	- spectral plotting
+	- plot clusters
+	- plotvs
+	- plotxy
+	- particle motion plots (cmp vs cmp)
 travel time correction
 	- get more models
 		- where to put them
@@ -43,15 +56,10 @@ signal cleaning (to do)
 	- steps (get, remove)
 other new functions
 	- autopick
-	- useralign
-	- usercluster
 	- pick
 	- changeversion/filetype
-	- spectral plotting
-	- particle motion plots (cmp vs cmp)
 possible extras
 	- cut on absolute times
-	- amph2rlim/rlim2amph 2nd output is converted logicals
 	- merge uneven & multi-rate
 3-cmp records
 	force as ZNE
@@ -59,11 +67,8 @@ possible extras
 	how to handle non-synced breaks in components
 	movies/plots of 3-d particle motion
 	movies/plots of 2-d particle motion
-versioninfo caching for other functions
 getpeaks
 markpeaks
-verbosity support
-try/catch
 routines to plot models
 routines to plot raypaths
 function to make g matrix for sph tri stuff

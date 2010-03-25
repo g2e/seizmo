@@ -64,9 +64,10 @@ function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %        Mar. 17, 2010 - redesigned interface, several more options,
 %                        grp.color lists group colors
 %        Mar. 22, 2010 - make sure input CG sizes up
+%        Mar. 24, 2010 - minor whitespace fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 23, 2010 at 03:45 GMT
+%     Last Updated Mar. 24, 2010 at 18:30 GMT
 
 % todo:
 
@@ -275,7 +276,6 @@ try
                     [grp.perm,grp.color,fh]=plotdendro(data,Z,...
                         varargin{:},'treelimit',grp.cutoff);
                 end
-                
                 
                 % get clusters
                 grp.T=cluster(Z,'cutoff',grp.cutoff,...

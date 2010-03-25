@@ -104,6 +104,7 @@
 %SPLITPAD            - Splits and zero pads SEIZMO data records
 %SPLITRECORDS        - Split up components into separate records
 %SQUISH              - Downsample SEIZMO records by an integer factor
+%STACK               - Stacks SEIZMO records
 %STRETCH             - Upsample SEIZMO records by an integer factor
 %SUBTRACT            - Subtract a constant from SEIZMO records
 %SUBTRACTRECORDS     - Subtract SEIZMO records

@@ -1,7 +1,6 @@
 idkeep
 iddelete
 3cmp pairs
-makeuneven
 getheader returns nan
 
 
@@ -66,7 +65,6 @@ wait listed:
 ttbox integration
 move cmb codes in
 merge (uneven records)
-getvalue
 mtconvert
 mtrotate
 
