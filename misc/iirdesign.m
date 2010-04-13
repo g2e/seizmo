@@ -59,16 +59,16 @@ function [fo,passes,mirror]=iirdesign(nyq,type,style,varargin)
 %             positioning.
 %
 %      AT LEAST ONE OF THE FOLLOWING OPTIONS IS REQUIRED:
-%       IIRFILTER(...,'PCORNER',CORNERS,...)
-%       IIRFILTER(...,'SCORNER',CORNERS,...)
+%       IIRDESIGN(...,'PCORNER',CORNERS,...)
+%       IIRDESIGN(...,'SCORNER',CORNERS,...)
 %
 %      THE REST ARE OPTIONAL:
-%       IIRFILTER(...,'NPOLES',NUMBER_OF_POLES,...)
-%       IIRFILTER(...,'PASSES',PASSES_OPTION,...)
-%       IIRFILTER(...,'PATTEN',PASSBAND_ATTENUATION,...)
-%       IIRFILTER(...,'SATTEN',STOPBAND_ATTENUATION,...)
-%       IIRFILTER(...,'MIRROR',TRUE_OR_FALSE,...)
-%       IIRFILTER(...,'TRANBW',FRACTION_OF_PASSBAND,...)
+%       IIRDESIGN(...,'NPOLES',NUMBER_OF_POLES,...)
+%       IIRDESIGN(...,'PASSES',PASSES_OPTION,...)
+%       IIRDESIGN(...,'PATTEN',PASSBAND_ATTENUATION,...)
+%       IIRDESIGN(...,'SATTEN',STOPBAND_ATTENUATION,...)
+%       IIRDESIGN(...,'MIRROR',TRUE_OR_FALSE,...)
+%       IIRDESIGN(...,'TRANBW',FRACTION_OF_PASSBAND,...)
 %
 %      PCORNER: Array of passband corner(s). Must be 1 element for low/high
 %       pass filters and 2 elements for bandpass/stop filters.  There is no
@@ -175,9 +175,10 @@ function [fo,passes,mirror]=iirdesign(nyq,type,style,varargin)
 
 %     Version History:
 %        Feb.  2, 2010 - initial version
+%        Mar. 25, 2010 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 17:00 GMT
+%     Last Updated Mar. 25, 2010 at 23:40 GMT
 
 % todo:
 

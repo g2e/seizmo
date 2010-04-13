@@ -37,9 +37,10 @@ function [data]=rlim2amph(data)
 %        Jan. 26, 2010 - seizmoverbose support
 %        Feb.  2, 2010 - versioninfo caching (required some code changes)
 %        Mar.  8, 2010 - versioninfo caching dropped
+%        Apr.  9, 2010 - minor bug fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 12:45 GMT
+%     Last Updated Apr.  9, 2010 at 08:35 GMT
 
 % todo:
 
@@ -101,7 +102,7 @@ try
             temp=complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
             data(i).dep(:,1:2:end)=abs(temp);
             data(i).dep(:,2:2:end)=angle(temp);
-            data(i).dep=oclass(data(k).dep);
+            data(i).dep=oclass(data(i).dep);
         end
 
         % dep*

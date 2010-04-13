@@ -36,14 +36,19 @@ function [value]=getvaluefun(data,func,type,scalar)
 %     Get a robust RMS:
 %      rms=getvaluefun(data,@(x)sqrt(median(x.^2-median(x).^2)));
 %
+%     Get maximum amplitude of multi-cmp records assuming each component is
+%     orthogonal (was an old function called getnorm):
+%      normalizers=getvaluefun(data,@(x)max(sqrt(sum(x.^2,2))));
+%
 %    See also: SEIZMOFUN, SLIDINGFUN, RECORDFUN
 
 %     Version History:
 %        Mar. 18, 2010 - initial version
 %        Mar. 20, 2010 - fixed bug that added extra time point
+%        Mar. 26, 2010 - added example to copy GETNORM (now deprecated)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 20, 2010 at 00:10 GMT
+%     Last Updated Mar. 26, 2010 at 17:45 GMT
 
 % todo:
 

@@ -1,22 +1,23 @@
-function [arr,err,pol,zmean,zstd,nc,info,xc,data0]=useralign(data,varargin)
+function [info,xc,data0]=useralign(data,varargin)
 %USERALIGN    Interactive alignment of a signal for SEIZMO records
 %
-%    Usage:    [arr,err,pol,zmean,zstd,nc,info,xc,data0]=useralign(data)
+%    Usage:    [info,xc,data0]=useralign(data)
 %              [...]=useralign(data,'option1',value1,...,'optionN',valueN)
 %
-%    Description: [ARR,ERR,POL,ZMEAN,ZSTD,NC,INFO,XC,DATA0]=USERALIGN(DATA)
-%     presents an interactive set of menus & plots to guide the aligning
-%     records in SEIZMO struct DATA on a particular signal.  The workflow
-%     includes the ability to apply a moveout, window, taper, scale by a
-%     power, and adjust correlation options.  Once the alignment is
-%     complete a plot will present the results and the user may decide to
-%     accept those results, redo the processing, or exit with an error.
-%     Outputs match that of TTSOLVE (see that function for details) except
-%     there are 3 additional outputs: INFO, XC, DATA0.  INFO is a struct
-%     containing substructs providing details for the options used in each
-%     subfunction (USERMOVEOUT, USERWINDOW, USERTAPER, USERRAISE,
-%     CORRELATE, TTSOLVE).  XC is the struct from CORRELATE reordered by
-%     TTSOLVE.  DATA0 is the processed dataset.
+%    Description: [INFO,XC,DATA0]=USERALIGN(DATA) presents an interactive
+%     set of menus & plots to guide the aligning of records in SEIZMO
+%     struct DATA on a particular signal.  The workflow includes
+%     interactively applying a moveout, windowing, tapering, adjusting
+%     correlation options.  Once the solving is complete the user is
+%     allowed to dc-shift the results so that the stack onset is at 0, thus
+%     converting the relative arrival times to absolute arrival times.
+%     Afterwards, a plot presents the results and a menu asks the user to
+%     decide to accept those results, redo the processing, or exit with an
+%     error.  INFO is a struct containing substructs providing details for
+%     the options used in each subfunction (USERMOVEOUT, USERWINDOW,
+%     USERTAPER, CORRELATE, TTSOLVE) and the final solution is within
+%     INFO.SOLUTION.  XC is the struct from CORRELATE reordered by TTSOLVE.
+%     DATA0 is the processed dataset.
 %
 %     [...]=USERALIGN(DATA,'OPTION1',VALUE1,...,'OPTIONN',VALUEN) passes
 %     options to CORRELATE & TTSOLVE for enhanced control of the workflow.
@@ -33,7 +34,7 @@ function [arr,err,pol,zmean,zstd,nc,info,xc,data0]=useralign(data,varargin)
 %     align the signals:
 %      data=timeshift(data,-getarrival(data,'Pdiff'));
 %      snr=quicksnr(data,[-100 -10],[-10 60]);
-%      [arr,err,pol,zmean,zstd,nc,info]=useralign(data,'snr',snr);
+%      [info,xc,data0]=useralign(data,'snr',snr);
 %
 %    See also: TTSOLVE, CORRELATE, USERWINDOW, USERTAPER, USERRAISE,
 %              USERMOVEOUT, USERCLUSTEREDALIGN, MULTIBANDALIGN
@@ -46,9 +47,11 @@ function [arr,err,pol,zmean,zstd,nc,info,xc,data0]=useralign(data,varargin)
 %        Mar. 22, 2010 - account for TTALIGN change, increase NPEAKS to 5
 %        Mar. 24, 2010 - include stack picking to deal with dc-offset,
 %                        user-driven cluster analysis for more info
+%        Mar. 26, 2010 - drop cluster analysis (can be done separately),
+%                        changed output (moved into info.solution)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2010 at 16:35 GMT
+%     Last Updated Mar. 26, 2010 at 18:25 GMT
 
 % todo:
 
@@ -134,7 +137,7 @@ try
     data0=data;
     
     % outer loop - only breaks free on user command
-    happy_user=false;
+    happy_user=false; info.iteration=1;
     while(~happy_user)
         % usermoveout
         [data0,info.usermoveout,info.figurehandles(1)]=usermoveout(data0);
@@ -144,9 +147,6 @@ try
 
         % usertaper
         [data0,info.usertaper,info.figurehandles(4:5)]=usertaper(data0);
-        
-        % userraise
-        %[data0,info.userraise,info.figurehandles(6)]=userraise(data0);
 
         % menu for correlate options
         while(1)
@@ -270,6 +270,7 @@ try
                     close(info.figurehandles(...
                         ishandle(info.figurehandles)));
                 case 3 % standing on the shoulders of those before me
+                    info.iteration=info.iteration+1;
                     data0=timeshift(data,-o-arr);
                     close(info.figurehandles(...
                         ishandle(info.figurehandles)));
@@ -280,9 +281,13 @@ try
         end
     end
     
-    % perform cluster analysis on results
-    [info.usercluster,info.figurehandles(8)]=usercluster(data0,...
-        xc.cg(:,:,1));
+    % put results in info
+    info.solution.arr=arr;
+    info.solution.arrerr=err;
+    info.solution.pol=pol;
+    info.solution.zmean=zmean;
+    info.solution.zstd=zstd;
+    info.solution.nc=nc;
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

@@ -6,14 +6,13 @@ function [data]=fix_db2sac_v48(data,knetwk)
 %    Description: DATA=FIX_DB2SAC_V48(DATA,KNETWK) fixes the headers of SAC
 %     files exported using DB2SAC from ANTELOPE version 4.8.  The fixes
 %     are:
-%     1. adjusts DELTA field slightly (single to double precision issue)
-%     2. sets IDEP field to 'IUNKN' (unknown units) - for db2sac -counts
-%     3. sets IZTYPE field to 'IB'
-%     4. sets KNETWK field to KNETWK (note this is the 2nd input argument)
-%     5. splits KCMPNM field to set KHOLE and KCMPNM
-%     6. sets empty KHOLE to '__'
-%     7. sets LOVROK to TRUE (allow overwrite)
-%     8. set USER7, USER8, NORID, NEVID to undefined
+%     1. sets IDEP field to 'IUNKN' (unknown units) - for db2sac -counts
+%     2. sets IZTYPE field to 'IB'
+%     3. sets KNETWK field to KNETWK (note this is the 2nd input argument)
+%     4. splits KCMPNM field to set KHOLE and KCMPNM
+%     5. sets empty KHOLE to '__'
+%     6. sets LOVROK to TRUE (allow overwrite)
+%     7. set USER7, USER8, NORID, NEVID to undefined
 %
 %    Notes:
 %     - SAC records created with DB2SAC may be off by 1 millisecond
@@ -21,7 +20,7 @@ function [data]=fix_db2sac_v48(data,knetwk)
 %       for this discrepancy.  A check appeared to show that TREXCERPT is
 %       accurate.
 %
-%    Header changes: DELTA, IDEP, IZTYPE, KNETWK, KCMPNM, KHOLE, LOVROK,
+%    Header changes: IDEP, IZTYPE, KNETWK, KCMPNM, KHOLE, LOVROK,
 %                    USER7, USER8, NORID, NEVID
 %
 %    Examples:
@@ -29,16 +28,17 @@ function [data]=fix_db2sac_v48(data,knetwk)
 %      w(fix_db2sac_v48(r('*')))
 %
 %    See also: FIX_SOD_V222, FIX_RDSEED_V48, FIX_TREXCERPT_V48,
-%              FIX_CAMEROON
+%              FIX_CAMEROON, FIXDELTA
 
 %     Version History:
 %        Dec.  1, 2009 - initial version
 %        Dec.  2, 2009 - no data requirement now
 %        Dec.  4, 2009 - USER7, USER8, NORID, NEVID unset
 %        Jan. 30, 2010 - reduced calls to seizmocheck
+%        Mar. 24, 2010 - drop fixdelta call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 20:45 GMT
+%     Last Updated Mar. 24, 2010 at 22:25 GMT
 
 % todo:
 
@@ -51,13 +51,9 @@ data=checkheader(data);
 
 % turn off checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldcheckheaderstate=checkheader_state(false);
 
 % attempt fixes
 try
-    % fix delta
-    data=fixdelta(data);
-    
     % fix kname
     kcmpnm=getheader(data,'kcmpnm');
     khole=kcmpnm;
@@ -79,11 +75,9 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

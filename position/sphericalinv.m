@@ -33,9 +33,10 @@ function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %        Oct. 14, 2008 - initial version
 %        Oct. 26, 2008 - improved scalar expansion, doc and comment update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Apr. 10, 2010 - fix for colocated positions giving complex gcarc
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Apr. 10, 2010 at 13:15 GMT
 
 % todo:
 
@@ -91,7 +92,8 @@ coslo=cos(stlo-evlo);
 sinlo=sin(stlo-evlo);
 
 % get law-of-cosines distance
-gcarc=acosd(sinlat1.*sinlat2+coslat1.*coslat2.*coslo);
+% - use real to avoid occasional complex values when points coincide
+gcarc=real(acosd(sinlat1.*sinlat2+coslat1.*coslat2.*coslo));
 
 % azimuths
 az=mod(r2d.*atan2(sinlo.*coslat2,...

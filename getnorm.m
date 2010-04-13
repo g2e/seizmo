@@ -21,7 +21,7 @@ function [scale]=getnorm(data)
 %     Find the maximum amplitude of ground motion for a 3 component record:
 %       amp_max=getnorm(data)
 %
-%    See also: MULTIPLY, NORMALIZE, GETMEDIAN
+%    See also: MULTIPLY, NORMALIZE, GETVALUEFUN
 
 %     Version History:
 %        Feb. 12, 2008 - initial version
@@ -33,9 +33,10 @@ function [scale]=getnorm(data)
 %        Nov. 16, 2008 - renamed from GNRM to GETNORM
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
+%        Mar. 26, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:45 GMT
+%     Last Updated Mar. 26, 2010 at 17:45 GMT
 
 % check nargin
 msg=nargchk(1,1,nargin);

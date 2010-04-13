@@ -75,9 +75,10 @@ function [data]=changepath(data,varargin)
 %        Jan. 28, 2010 - drop global options, options are implemented in
 %                        the order given, multiple calls for the same
 %                        option are all done, seizmoverbose support
+%        Apr. 10, 2010 - fix bug where path was written as a cellstr
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2010 at 22:45 GMT
+%     Last Updated Apr. 10, 2010 at 12:45 GMT
 
 % todo:
 
@@ -174,7 +175,7 @@ for i=1:2:nargin-1
     % implement
     switch lower(varargin{i})
         case {'pathname' 'path' 'name' 'filepath'}
-            [data.path]=deal(varargin{i+1});
+            [data.path]=deal(varargin{i+1}{:});
         case 'prepend'
             varargin{i+1}=strcat(varargin{i+1},{data.path}');
             [data.path]=deal(varargin{i+1}{:});

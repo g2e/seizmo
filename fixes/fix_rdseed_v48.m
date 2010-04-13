@@ -10,22 +10,21 @@ function [data]=fix_rdseed_v48(data)
 %     3. setting LOVROK to TRUE (allow overwrite)
 %     4. setting EVEL to 0 (if EVLA/EVLO/EVDP defined)
 %     5. rounding MAG to the nearest hundredth (if defined)
-%     6. adjusting DELTA slightly (single to double precision issue)
-%     7. setting empty KHOLE to '__'
+%     6. setting empty KHOLE to '__'
 %
 %    Notes:
 %     - DEPMIN, DEPMEN, DEPMAX are set if the data is also read in
 %
-%    Header changes: DEPMIN, DEPMEN, DEPMAX, DELTA, IZTYPE, EVEL, KHOLE,
-%     LOVROK, MAG, NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC, A, F, O,
-%     B, E, Tn
+%    Header changes: DEPMIN, DEPMEN, DEPMAX, IZTYPE, EVEL, KHOLE,
+%     LOVROK, MAG, NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC,
+%     A, F, O, B, E, Tn
 %
 %    Examples:
 %     Read, clean up, and overwrite some RDSEED-made SAC files:
 %      w(fix_rdseed_v48(r('*SAC)))
 %
 %    See also: FIX_SOD_V222, FIX_DB2SAC_V48, FIX_TREXCERPT_V48,
-%              FIX_CAMEROON
+%              FIX_CAMEROON, FIXDELTA
 
 %     Version History:
 %        Nov. 23, 2009 - initial version
@@ -33,9 +32,10 @@ function [data]=fix_rdseed_v48(data)
 %        Dec.  2, 2009 - no data requirement now
 %        Dec.  4, 2009 - minor doc update
 %        Jan. 30, 2010 - fixes for checking state functions
+%        Mar. 24, 2010 - drop fixdelta call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 20:45 GMT
+%     Last Updated Mar. 24, 2010 at 22:25 GMT
 
 % todo:
 
@@ -70,9 +70,6 @@ end
 
 % attempt rest
 try
-    % fix delta
-    data=fixdelta(data);
-
     % get origin info
     [o,ev,mag]=getheader(data,'o','ev','mag');
     

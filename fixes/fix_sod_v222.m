@@ -9,19 +9,18 @@ function [data]=fix_sod_v222(data)
 %     2. setting IZTYPE to IO (if o field is zero)
 %     3. fix KCMPNM to not include the stream code
 %     4. setting EVEL to 0 (if EVLA/EVLO/EVDP defined)
-%     5. adjusting DELTA slightly (single to double precision issue)
-%     6. setting empty KHOLE to '__'
+%     5. setting empty KHOLE to '__'
 %
 %    Notes:
 %
-%    Header changes: E, DELTA, IZTYPE, KCMPNM, KHOLE, EVEL
+%    Header changes: E, IZTYPE, KCMPNM, KHOLE, EVEL
 %
 %    Examples:
 %     Read, clean up, and overwrite some SOD-made SAC files:
 %      w(fix_sod_v222(r('*)))
 %
 %    See also: FIX_RDSEED_V48, FIX_DB2SAC_V48, FIX_TREXCERPT_V48,
-%              FIX_CAMEROON
+%              FIX_CAMEROON, FIXDELTA
 
 %     Version History:
 %        Nov. 23, 2009 - initial version
@@ -29,9 +28,10 @@ function [data]=fix_sod_v222(data)
 %        Dec.  2, 2009 - no data requirement now
 %        Dec.  4, 2009 - minor doc update
 %        Jan. 30, 2010 - fixes for checking state functions
+%        Mar. 24, 2010 - drop fixdelta call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 20:45 GMT
+%     Last Updated Mar. 24, 2010 at 22:25 GMT
 
 % todo:
 
@@ -61,21 +61,6 @@ try
     % check header
     data=checkheader(data);
     
-    % turn off header checking
-    oldcheckheaderstate=checkheader_state(false);
-catch
-    % toggle checking back
-    seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror)
-end
-
-% attempt rest
-try
-    % fix delta
-    data=fixdelta(data);
-    
     % fix evel
     ev=getheader(data,'ev');
     evdef=ev~=undef(:,[1 1 1 1]);
@@ -93,11 +78,9 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror)

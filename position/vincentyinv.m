@@ -64,9 +64,10 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        May   8, 2009 - minor doc fix
 %        Nov. 13, 2009 - name change: geodetic to geographic
+%        Apr. 10, 2010 - return 0s rather than NaNs for equal positions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 20:15 GMT
+%     Last Updated Apr. 10, 2010 at 13:15 GMT
 
 % todo:
 
@@ -231,5 +232,13 @@ az=mod(atan2(cosU2.*sin(lamda),...
     cosU1.*sinU2-sinU1.*cosU2.*cos(lamda)).*R2D,360);
 baz=mod(atan2(-cosU1.*sin(lamda),...
     sinU1.*cosU2-cosU1.*sinU2.*cos(lamda)).*R2D,360);
+
+% avoids NaNs when getting geometry between 2 equal positions
+eqpo=(evla==stla & evlo==stlo);
+if(any(eqpo))
+    dist(eqpo)=0;
+    az(eqpo)=0;
+    baz(eqpo)=0;
+end
 
 end

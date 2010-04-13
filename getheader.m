@@ -75,9 +75,10 @@ function [varargout]=getheader(data,varargin)
 %        Oct. 16, 2009 - reftime code only used when necessary
 %        Jan. 28, 2010 - eliminate extra struct checks
 %        Jan. 29, 2010 - added VERSIONINFO cache support/hack
+%        Apr. 13, 2010 - actually require fields are strings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 01:45 GMT
+%     Last Updated Apr. 13, 2010 at 12:00 GMT
 
 % todo:
 
@@ -168,6 +169,12 @@ head=[data.head];
 
 % push out entire header
 if(nargin==1); varargout{1}=head.'; return; end
+
+% require all fields be strings
+if(~iscellstr(varargin))
+    error('seizmo:getheader:badInput',...
+        'FIELD(s) must be strings!');
+end
 
 % preallocate ref
 ref=[]; ref6=[]; good=[];

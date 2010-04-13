@@ -20,7 +20,6 @@ function []=writesodeventcsv(file,events,varargin)
 %     - converts latitude, longitude, depth and magnitude from numeric form
 %       to strings (for function WRITECSV)
 %     - converts time from [yr mon cday hr min secs] to string
-%     - SOD (Standing Order for Data) was written by Philip Crotwell
 %     - fields of a standard SOD Event CSV file (in this order too):
 %           time
 %           latitude
@@ -34,6 +33,9 @@ function []=writesodeventcsv(file,events,varargin)
 %           name
 %           flinnEngdahlRegion
 %           flinnEngdahlRegionType
+%
+%     - SOD (Standing Order for Data) is written/maintained by
+%       Philip Crotwell.  Website: http://www.seis.sc.edu/sod/
 %
 %    Examples:
 %     Using READSODEVENTCSV and WRITESODEVENTCSV together allows for
@@ -49,15 +51,25 @@ function []=writesodeventcsv(file,events,varargin)
 %        Sep. 16, 2009 - initial version
 %        Sep. 22, 2009 - overwrite confirmation skip option added
 %        Jan. 26, 2010 - minor doc update, graphical file creation
+%        Mar. 30, 2010 - check fields are available to modify, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 22:35 GMT
+%     Last Updated Mar. 30, 2010 at 01:30 GMT
 
 % todo:
 
 % check nargin
 msg=nargchk(2,3,nargin);
 if(~isempty(msg)); error(msg); end;
+
+% require certain fields are present
+req={'time' 'latitude' 'longitude' 'depth' 'magnitude'};
+fields=fieldnames(events);
+if(~all(ismember(req,fields)))
+    error('seizmo:readsodeventcsv:missingFields',...
+        ['CSV file must have the following fields:\n' ...
+        sprintf('%s ',req{:})]);
+end
 
 % convert some fields from numbers to strings
 f={'latitude' 'longitude' 'depth' 'magnitude'};

@@ -9,15 +9,34 @@ function [data]=fixdelta(data,tol)
 %     fraction of 2 small integers.  This is particularly useful for
 %     upgrading the sample spacing from single to double precision when the
 %     original sample spacing can be expressed as the fraction of two small
-%     integers, as it extends the precision significantly.
+%     integers, as it extends the precision significantly.  NOTE THAT
+%     EXTENDING THE PRECISION IS USELESS IF YOU DESTROY THE ACCURACY IN THE
+%     PROCESS (IE DON'T CHANGE THE SAMPLE RATE TO A VALUE NOT FAITHFUL TO
+%     THE DATA).  See the Notes section below for more ranting.
 %
 %     DATA=FIXDELTA(DATA,TOL) allows specifying the maximum tolerance TOL
 %     that the fraction of 2 small integers must match DELTA within.  For
 %     example, a tolerance of 1e-4 requires the new sample spacing to be
 %     within 0.01% of the original sample spacing.  The default tolerance
-%     is 1e-5 (0.001% of the original sample spacing).
+%     is 1e-6 (0.0001% of the original sample spacing).  See the Notes
+%     section below to understand the consequences of changing TOL.
 %
 %    Notes:
+%     - FIXDELTA adjusts the sample spacing slightly to remove inaccuracy
+%       caused by storing it as a single precision value.  This also can be
+%       used to 'clean up' sample rates that can not be expressed nicely
+%       (like 40sps, etc) but THIS DOES LEAD TO LARGE TIMING ERRORS.
+%       For instance:
+%        TOL=1e-4 on a day file   = up to +/-8.64s of error
+%        TOL=1e-5 on a day file   = up to +/-.864s of error
+%        TOL=1e-6 on a day file   = up to +/-.0864s of error (default)
+%        TOL=1e-4 on an hour file = up to +/-.36s of error
+%        TOL=1e-5 on an hour file = up to +/-.036s of error
+%        TOL=1e-6 on an hour file = up to +/-.0036s of error (default)
+%       Use FIXDELTA wisely by setting TOL to a level that keeps the error
+%       introduced to an acceptable level.  SYNCRATES & INTERPOLATE may
+%       be used to modify the sample spacing while getting new data values
+%       for each of the new time points.
 %
 %    Header changes: DELTA, E
 %
@@ -44,9 +63,10 @@ function [data]=fixdelta(data,tol)
 %        Jan. 25, 2010 - fixed LEVEN bug (only fixed first record)
 %        Jan. 29, 2010 - minor code cleaning
 %        Jan. 30, 2010 - one less call to SEIZMOCHECK, use RRAT
+%        Mar. 24, 2010 - added rants to docs, default tol set to 1e-6
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 19:45 GMT
+%     Last Updated Mar. 24, 2010 at 23:05 GMT
 
 % todo:
 
@@ -77,7 +97,7 @@ try
 
     % default tolerance
     if(nargin==1 || ~isscalar(tol) || ~isreal(tol))
-        [n,d]=rrat(delta,1e-5);
+        [n,d]=rrat(delta,1e-6);
     else
         [n,d]=rrat(delta,tol);
     end

@@ -243,9 +243,10 @@ function [data]=merge(data,varargin)
 %        Nov.  3, 2009 - minor doc update
 %        Feb. 23, 2010 - moved verbose to debugging messages
 %        Feb. 24, 2010 - fixed switch statements
+%        Apr.  1, 2010 - progress bar shows nrecs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2010 at 13:05 GMT
+%     Last Updated Apr.  1, 2010 at 01:55 GMT
 
 % todo:
 %   - uneven support - just toss together and sort after?
@@ -465,6 +466,8 @@ try
         strcat('',reqreal{:}),'_',num2str(leven),'_',num2str(ncmp))),...
         'rows');
     ngrp=size(f,1);
+    grppop=histc(h,1:ngrp);
+    cumpop=cumsum(grppop);
 
     % add temp space to arrays
     alloc=(nrecs+1):(nrecs+option.ALLOCATE);
@@ -485,7 +488,7 @@ try
     % detail message
     if(option.VERBOSE)
         disp('Merging Record(s)');
-        print_time_left(0,ngrp);
+        print_time_left(0,nrecs);
     end
 
     % loop through each group
@@ -525,7 +528,7 @@ try
         % no records to merge with
         if(ng==1)
             % detail message
-            if(option.VERBOSE); print_time_left(i,ngrp); end
+            if(option.VERBOSE); print_time_left(cumpop(i),nrecs); end
             continue;
         end
 
@@ -628,7 +631,7 @@ try
         destroy(newgidx(ngood+1:end))=true;
         
         % detail message
-        if(option.VERBOSE); print_time_left(i,ngrp); end
+        if(option.VERBOSE); print_time_left(cumpop(i),nrecs); end
     end
 
     % trim off temp space

@@ -12,7 +12,7 @@ function [data]=setevent(data,event)
 %    Notes:
 %
 %    Header changes: O, EVLA, EVLO, EVEL, EVDP, MAG, IMAGTYP, GCARC, AZ,
-%     BAZ, DIST, KEVNM (for NDK events only)
+%                    BAZ, DIST, KEVNM
 %
 %    Examples:
 %     Import basic info from a quick CMT into some records:
@@ -25,9 +25,11 @@ function [data]=setevent(data,event)
 %        Dec.  1, 2009 - initial version
 %        Jan. 26, 2010 - seizmoverbose support
 %        Jan. 30, 2010 - fixed bug in call to CHECKHEADER
+%        Mar. 30, 2010 - imagtyp for sod is optional, kevnm/name for sod is
+%                        new optional, use mw for ndk
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 20:15 GMT
+%     Last Updated Mar. 30, 2010 at 02:25 GMT
 
 % todo:
 
@@ -55,10 +57,9 @@ try
             'EVENT must be a scalar struct!');
     end
     fields=fieldnames(event);
-    sodfields={'time' 'latitude' 'longitude' ...
-        'depth' 'magnitude' 'magnitudeType'};
+    sodfields={'time' 'latitude' 'longitude' 'depth' 'magnitude'};
     ndkfields={'year' 'month' 'day' 'hour' 'minute' 'seconds' ...
-        'latitude' 'longitude' 'depth' 'mb' 'ms' 'name'};
+        'latitude' 'longitude' 'depth' 'scalarmoment' 'exponent' 'name'};
     if(all(ismember(sodfields,fields)))
         % detail message
         if(verbose)
@@ -66,10 +67,22 @@ try
             print_time_left(0,nrecs);
         end
         
+        % check for magtype
+        imagtyp=nan;
+        if(ismember('magnitudeType',fields))
+            imagtyp=['i' event.magnitudeType];
+        end
+        
+        % check for name
+        kevnm=nan;
+        if(ismember('name',fields))
+            kevnm=event.name;
+        end
+        
         % add info to header
         data=changeheader(data,'o 6utc',mat2cell(event.time,1),...
             'ev',[event.latitude event.longitude 0 event.depth*1000],...
-            'mag',event.magnitude,'imagtyp',['i' event.magnitudeType]);
+            'mag',event.magnitude,'imagtyp',imagtyp,'kevnm',kevnm);
     elseif(all(ismember(ndkfields,fields)))
         % detail message
         if(verbose)
@@ -78,16 +91,15 @@ try
         end
         
         % get the magnitude
-        magtype='ims'; mag=event.ms;
-        body=event.mb>event.ms;
-        if(body); magtype='imb'; mag=event.mb; end
+        mw=(2/3)*log10(event.scalarmoment*10^event.exponent)-10.7;
+        mw=round(mw*10)/10;
         
         % add info to header
         data=changeheader(data,...
             'o 6utc',{[event.year event.month event.day ...
             event.hour event.minute event.seconds]},...
             'ev',[event.latitude event.longitude 0 event.depth*1000],...
-            'mag',mag,'imagtyp',magtype,'kevnm',event.name);
+            'mag',mw,'imagtyp','imw','kevnm',event.name);
     else
         error('seizmo:setevent:badInput',...
             'EVENT struct type unknown!');
@@ -100,9 +112,7 @@ try
     checkheader_state(oldcheckheaderstate);
     
     % detail message
-    if(verbose)
-        print_time_left(nrecs,nrecs);
-    end
+    if(verbose); print_time_left(nrecs,nrecs); end
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

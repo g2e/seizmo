@@ -97,9 +97,10 @@ function [data]=changeheader(data,varargin)
 %        Jan. 28, 2010 - eliminate extra struct checks
 %        Jan. 29, 2010 - added VERSIONINFO cache support/hack
 %        Feb. 16, 2010 - added informative errors for UTC/TAI fields
+%        Apr. 13, 2010 - actually require fields are strings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2010 at 03:10 GMT
+%     Last Updated Apr. 13, 2010 at 12:00 GMT
 
 % todo:
 
@@ -179,6 +180,12 @@ if(nver>1)
         error(lasterror)
     end
     return;
+end
+
+% require all fields be strings
+if(~iscellstr(varargin(1:2:end)))
+    error('seizmo:changeheader:badInput',...
+        'FIELD(s) must be strings!');
 end
 
 % pull entire header

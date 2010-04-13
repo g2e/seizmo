@@ -12,10 +12,13 @@ function [snr]=quicksnr(data,nwin,swin,method)
 %     relative to the records' reference times.
 %
 %     QUICKSNR(DATA,NOISEWINDOW,SIGNALWINDOW,METHOD) specifies the SNR
-%     calculation method using METHOD.  METHOD must be one of the following
-%     strings: 'PEAK2PEAK', 'RMS', or 'ROBUSTRMS'.  The default is
-%     'PEAK2PEAK'.  The RMS methods give the ratio of the RMS values.  The
-%     RMS is de-meaned (or de-medianed in the 'ROBUSTRMS' case).
+%     calculation method using METHOD.  METHOD must be one of the
+%     following: 'PEAK2PEAK', 'RMS', 'ROBUSTRMS', 'PEAK2RMS', or
+%     'PEAK2ROBUSTRMS'.  The default is 'PEAK2PEAK'.  The RMS methods
+%     ('RMS' 'ROBUSTRMS') give the ratio of the RMS values.  The RMS is
+%     de-meaned (or de-medianed in the 'ROBUSTRMS' case).  The last two
+%     methods ('PEAK2RMS' 'PEAK2ROBUSTRMS') compare one-half the
+%     peak-to-peak amplitude of the signal to the rms of the noise.
 %
 %    Notes:
 %     - Some initial testing showed that the rms method typically gave
@@ -47,9 +50,10 @@ function [snr]=quicksnr(data,nwin,swin,method)
 %        Mar.  8, 2010 - versioninfo caching dropped
 %        Mar. 18, 2010 - added METHOD argument (new methods: RMS, ROBUSTRMS
 %                        are included), input check fix
+%        Mar. 31, 2010 - added two more methods: PEAK2RMS, PEAK2ROBUSTRMS
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2010 at 14:15 GMT
+%     Last Updated Mar. 31, 2010 at 18:00 GMT
 
 % todo:
 
@@ -97,7 +101,7 @@ try
     
     % check SNR method
     if(nargin==3 || isempty(method)); method='peak2peak'; end
-    snrmethods={'peak2peak' 'rms' 'robustrms'};
+    snrmethods={'peak2peak' 'rms' 'robustrms' 'peak2rms' 'peak2robustrms'};
     if(~ischar(method) || size(method,1)~=1 || ...
             ~any(strcmpi(method,snrmethods)))
         error('seizmo:quicksnr:badInput',...
@@ -129,6 +133,22 @@ try
             srms=getvaluefun(cut(data,swin(:,1),swin(:,2),...
                 'trim',false),@(x)sqrt(median((x(:)-median(x(:))).^2)));
             snr=srms./nrms;
+        case 'peak2rms'
+            % peak2peak amplitude of signal divided
+            % by two compared to the rms of the noise
+            nrms=getvaluefun(cut(data,nwin(:,1),nwin(:,2),...
+                'trim',false),@(x)sqrt(mean((x(:)-mean(x(:))).^2)));
+            [smax,smin]=getheader(cut(data,swin(:,1),swin(:,2),...
+                'trim',false),'depmax','depmin');
+            snr=(smax-smin)./(2*nrms);
+        case 'peak2robustrms'
+            % peak2peak amplitude of signal divided by
+            % two compared to the robust rms of the noise
+            nrms=getvaluefun(cut(data,nwin(:,1),nwin(:,2),...
+                'trim',false),@(x)sqrt(median((x(:)-median(x(:))).^2)));
+            [smax,smin]=getheader(cut(data,swin(:,1),swin(:,2),...
+                'trim',false),'depmax','depmin');
+            snr=(smax-smin)./(2*nrms);
     end
 
     % toggle checking back

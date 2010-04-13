@@ -41,9 +41,10 @@ function [data,removed]=removedeadrecords(data,option)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Jan. 30, 2010 - slimmed the code (no checkheader call)
+%        Apr.  1, 2010 - detail message indicates number removed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 18:35 GMT
+%     Last Updated Apr.  1, 2010 at 02:00 GMT
 
 % todo:
 
@@ -85,6 +86,11 @@ else
     % remove dead records
     removed=((dmax-dmin)==0);
     data(removed)=[];
+end
+
+% detail message
+if(seizmoverbose)
+    disp([' --> Found ' num2str(sum(removed)) ' Dead Record(s)']);
 end
 
 end
