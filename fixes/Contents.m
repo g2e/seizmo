@@ -1,5 +1,5 @@
 % Seismology Toolbox - fixes
-% Version 0.6.0-r120 Blackburn 20-Mar-2010
+% Version 0.6.0-r124 Blackburn 20-Apr-2010
 %
 % Specific fixes for records
 %FIX_CAMEROON        - Makes data corrections for the Cameroon Seismic Experiment

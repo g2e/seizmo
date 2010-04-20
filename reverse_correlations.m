@@ -39,9 +39,10 @@ function [data]=reverse_correlations(data)
 
 %     Version History:
 %        Apr. 12, 2010 - initial version
+%        Apr. 15, 2010 - resets name field, includes scrollbar if verbose
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 12, 2010 at 21:45 GMT
+%     Last Updated Apr. 15, 2010 at 13:45 GMT
 
 % todo:
 
@@ -69,8 +70,14 @@ end
 
 % attempt reversal
 try
+    % number of records
+    nrecs=numel(data);
+    
+    % check verbosity
+    verbose=seizmoverbose;
+    
     % detail message
-    if(seizmoverbose); disp('Reversing Correlogram(s)'); end
+    if(verbose); disp('Reversing Correlogram(s)'); end
     
     % get header info
     [kuser0,kuser1,user0,user1,st,ev,knetwk,kstnm,khole,kcmpnm,...
@@ -81,8 +88,11 @@ try
     % correlogram signature
     if(~all(strcmp('MASTER',kuser0) & strcmp('SLAVE',kuser1)))
         warning('seizmo:reverse_correlations:notCorrelogram',...
-            '');
+            'Some records are probably not correlograms!');
     end
+    
+    % detail message
+    if(verbose); print_time_left(0,nrecs); end
     
     % fix header info
     data=changeheader(data,'b',-e,'e',-b,'st',ev,'ev',st,'user0',user1,...
@@ -96,6 +106,14 @@ try
     checkheader_state(true);
     data=checkheader(data,'all','ignore','old_delaz','fix');
     checkheader_state(false);
+    
+    % rename
+    digits=['%0' num2str(fix(log10(max([user0; user1])))+1) 'd'];
+    name=strcat('CORR_-_MASTER_-_REC',num2str(user1,digits),'_-_',knetwk,'.',kstnm,'.',khole,'.',kcmpnm,'_-_SLAVE_-_REC',num2str(user0,digits),'_-_',kt0,'.',kt1,'.',kt2,'.',kt3);
+    [data.name]=deal(name{:});
+    
+    % detail message
+    if(verbose); print_time_left(nrecs,nrecs); end
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

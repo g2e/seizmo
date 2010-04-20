@@ -1,5 +1,5 @@
 % Seismology Toolbox - cmap
-% Version 0.6.0-r120 Blackburn 20-Mar-2010
+% Version 0.6.0-r124 Blackburn 20-Apr-2010
 %
 % Various Colormaps
 %BLUE2RED     - Blue-White-Red (aka Polar) colormap
