@@ -1,4 +1,4 @@
-% Seismology Toolbox - align
+% Seismology Toolbox - xcalign
 % Version 0.6.0-r124 Blackburn 20-Apr-2010
 %
 % Functions for Cross-Correlation Based Signal Alignment

@@ -136,4 +136,5 @@
 %TOPO                - topography functions
 %TOMO                - simple tomography functions
 %TPW                 - two plane wave functions
+%XCALIGN             - cross correlation signal alignment functions
 

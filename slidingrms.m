@@ -1,4 +1,4 @@
-function [data]=slidingrms(data,varargin)
+function [data]=slidingrms(data,n,varargin)
 %SLIDINGRMS    Returns sliding-window root-mean-square of SEIZMO records
 %
 %    Usage:    data=slidingrms(data,n)
@@ -84,9 +84,11 @@ function [data]=slidingrms(data,varargin)
 %        June  9, 2009 - nsamples now in varargin, toggle seizmocheck,
 %                        up nargin allowed
 %        Feb.  3, 2010 - proper SEIZMO handling, versioninfo caching
+%        Apr. 22, 2010 - allow multiple N as advertised
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 17:05 GMT
+%     Last Updated Apr. 22, 2010 at 09:45 GMT
+
 % todo:
 
 % check nargin
@@ -102,8 +104,48 @@ oldversioninfocache=versioninfo_cache(true);
 
 % attempt sliding rms
 try
-    % alias to other functions
-    data=seizmofun(data,@(x)sqrt(slidingavg(x.^2,varargin{:})));
+    % verbosity
+    verbose=seizmoverbose;
+
+    % number of records
+    nrecs=numel(data);
+    
+    % check n
+    if(~isreal(n) || ~any(numel(n)==[1 nrecs]) || any(n<1))
+        error('seizmo:slidingrms:badInput',...
+            'N must be a positive real scalar or vector!');
+    end
+    if(isscalar(n)); n(1:nrecs,1)=n; end
+    
+    % detail message
+    if(verbose)
+        disp('Appyling Sliding RMS to Dependent Data of Record(s)');
+        print_time_left(0,nrecs);
+    end
+    
+    % apply function to records
+    ncmp=nan(nrecs,1); npts=ncmp;
+    depmen=ncmp; depmin=ncmp; depmax=ncmp;
+    for i=1:nrecs
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=oclass(...
+            sqrt(slidingavg(double(data(i).dep).^2,n(i),varargin{:})));
+        
+        % get npts, ncmp, dep*
+        [npts(i),ncmp(i)]=size(data(i).dep);
+        if(npts(i)) % skip dep* for empty
+            depmen(i)=mean(data(i).dep(:)); 
+            depmin(i)=min(data(i).dep(:)); 
+            depmax(i)=max(data(i).dep(:));
+        end
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+    
+    % update header
+    data=changeheader(data,'npts',npts,'ncmp',ncmp,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

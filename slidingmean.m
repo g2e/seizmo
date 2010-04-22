@@ -1,4 +1,4 @@
-function [data]=slidingmean(data,varargin)
+function [data]=slidingmean(data,n,varargin)
 %SLIDINGMEAN    Returns sliding-window mean of SEIZMO records
 %
 %    Usage:    data=slidingmean(data,n)
@@ -72,9 +72,10 @@ function [data]=slidingmean(data,varargin)
 
 %     Version History:
 %        Feb.  3, 2010 - initial version
+%        Apr. 22, 2010 - allow multiple N as advertised
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 17:05 GMT
+%     Last Updated Apr. 22, 2010 at 09:45 GMT
 
 % todo:
 
@@ -89,10 +90,50 @@ versioninfo(data,'dep');
 oldseizmocheckstate=seizmocheck_state(false);
 oldversioninfocache=versioninfo_cache(true);
 
-% attempt sliding rms
+% attempt sliding mean
 try
-    % alias to other functions
-    data=seizmofun(data,@(x)slidingavg(x,varargin{:}));
+    % verbosity
+    verbose=seizmoverbose;
+
+    % number of records
+    nrecs=numel(data);
+    
+    % check n
+    if(~isreal(n) || ~any(numel(n)==[1 nrecs]) || any(n<1))
+        error('seizmo:slidingmean:badInput',...
+            'N must be a positive real scalar or vector!');
+    end
+    if(isscalar(n)); n(1:nrecs,1)=n; end
+    
+    % detail message
+    if(verbose)
+        disp('Appyling Sliding Mean to Dependent Data of Record(s)');
+        print_time_left(0,nrecs);
+    end
+    
+    % apply function to records
+    ncmp=nan(nrecs,1); npts=ncmp;
+    depmen=ncmp; depmin=ncmp; depmax=ncmp;
+    for i=1:nrecs
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=oclass(...
+            slidingavg(double(data(i).dep),n(i),varargin{:}));
+        
+        % get npts, ncmp, dep*
+        [npts(i),ncmp(i)]=size(data(i).dep);
+        if(npts(i)) % skip dep* for empty
+            depmen(i)=mean(data(i).dep(:)); 
+            depmin(i)=min(data(i).dep(:)); 
+            depmax(i)=max(data(i).dep(:));
+        end
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+    end
+    
+    % update header
+    data=changeheader(data,'npts',npts,'ncmp',ncmp,...
+        'depmen',depmen,'depmin',depmin,'depmax',depmax);
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

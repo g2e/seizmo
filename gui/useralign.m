@@ -49,9 +49,10 @@ function [info,xc,data0]=useralign(data,varargin)
 %                        user-driven cluster analysis for more info
 %        Mar. 26, 2010 - drop cluster analysis (can be done separately),
 %                        changed output (moved into info.solution)
+%        Apr. 22, 2010 - replace crash with exit (but still crash)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 26, 2010 at 18:25 GMT
+%     Last Updated Apr. 22, 2010 at 11:00 GMT
 
 % todo:
 
@@ -158,7 +159,7 @@ try
                 ['NUMBER OF PEAKS (' tmp1 ')'],...
                 ['PEAK SPACING (' tmp2 's)'],...
                 ['ALL POLARITIES ARE MATCHED (' tmp3 ')'],...
-                'NO, GO AHEAD AND CORRELATE DATA','NO - CRASH!');
+                'NO, GO AHEAD AND CORRELATE DATA','EXIT');
 
             % proceed by user choice
             switch choice
@@ -224,7 +225,7 @@ try
                     break;
                 case 5  % i bear too great a shame to go on
                     error('seizmo:usertaper:killYourSelf',...
-                        'User demanded Seppuku!');
+                        'User demanded early exit!');
             end
         end
 
@@ -261,7 +262,7 @@ try
                 'YES',...
                 'NO - TRY AGAIN',...
                 'NO - TRY AGAIN WITH THESE OFFSETS',...
-                'NO - CRASH!');
+                'EXIT');
             switch choice
                 case 1 % rainbow's end
                     happy_user=true;
@@ -276,7 +277,7 @@ try
                         ishandle(info.figurehandles)));
                 case 4 % i bear too great a shame to go on
                     error('seizmo:useralign:killYourSelf',...
-                        'User demanded Seppuku!');
+                        'User demanded early exit!');
             end
         end
     end

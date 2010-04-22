@@ -2,9 +2,9 @@ function [data]=addarrivals(data,varargin)
 %ADDARRIVALS    Adds the indicated phases to the SEIZMO data header
 %
 %    Usage:    data=addarrivals(data)
-%              data=addarrivals(...,'model',modelname,...)
-%              data=addarrivals(...,'phases',phaselist,...)
-%              data=addarrivals(...,'fields',indices,...)
+%              data=addarrivals(...,'m|mod|model',modelname,...)
+%              data=addarrivals(...,'p|ph|phase|phases',phaselist,...)
+%              data=addarrivals(...,'f|field|fields',indices,...)
 %
 %    Description: ADDARRIVALS(DATA) calls TAUPTIME to insert phase arrival
 %     times into the headers of records in SEIZMO struct DATA.  The model
@@ -16,22 +16,21 @@ function [data]=addarrivals(data,varargin)
 %     depth and distance are determined from the header fields evdp and
 %     gcarc or dist or stla+stlo+evla+evlo.
 %
-%     ADDARRIVALS(...,'MODEL',MODELNAME,...) sets the model used in the
+%     ADDARRIVALS(...,'M|MOD|MODEL',MODELNAME,...) sets the model for the
 %     arrival time calculation to MODELNAME.  MODELNAME must be a cellstr
 %     or char array of one model per record or a single model for all
 %     records.  Accepts lots of different 1D models (see TauP for how to
-%     add more models).  By default the MODELNAME is 'iasp91'.
+%     add more models).  By default MODELNAME is 'iasp91'.
 %
-%     ADDARRIVALS(...,'PHASES',PHASELIST,...) sets the phases to be added
-%     to the header.  PHASELIST must be a cellstr or char array with one
-%     comma-separated phase list per record or a single comma-separated
-%     list for all records.  Accepts lots of different phases (see TauP for
-%     a list and conventions).  By default PHASELIST is 'ttall', which
-%     returns a large list similar to Brian Kennett's ttimes program would
-%     when told to list all.
+%     ADDARRIVALS(...,'P|PHASE|PHASES',PHASELIST,...) sets the phases to be
+%     added.  PHASELIST must be a cellstr or char array with one comma-
+%     separated phase list per record or a single comma-separated list for
+%     all records.  Accepts lots of different phases (see TauP for a list
+%     and conventions).  By default PHASELIST is 'ttbasic', which returns
+%     a list similar to Brian Kennett's ttimes program.
 %
-%     ADDARRIVALS(...,'FIELDS',INDICES,...) indicates the header field
-%     indices of the t,kt,user fields to put arrivals in.  The default is
+%     ADDARRIVALS(...,'F|FIELD|FIELDS',INDICES,...) indicates the indices
+%     of the t,kt,user header fields to put arrivals in.  The default is
 %     0:9.  The indices are for all records and can not be individually
 %     set.
 %
@@ -57,9 +56,10 @@ function [data]=addarrivals(data,varargin)
 %        Jan. 26, 2010 - seizmoverbose support, properly SEIZMO handling
 %        Feb.  3, 2010 - versioninfo caching
 %        Mar.  8, 2010 - versioninfo caching dropped
+%        Apr. 20, 2010 - doc update, flexible option fields, drop global
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 12:45 GMT
+%     Last Updated Apr. 20, 2010 at 23:45 GMT
 
 % todo:
 % - really need to catch taup messages
@@ -69,9 +69,6 @@ if(mod(nargin-1,2))
     error('seizmo:addarrivals:badNumInputs',...
         'Bad number of arguments!');
 end
-
-% import SEIZMO info
-global SEIZMO
 
 % check data structure & headers
 data=checkheader(data);
@@ -87,82 +84,63 @@ try
     % verbosity
     verbose=seizmoverbose;
     
-    % default options
-    option.MODEL='iasp91';
-    option.PHASES='ttall';
-    option.FIELDS=0:9;
-
-    % get options from SEIZMO global
-    me=mfilename;
-    try
-        fields=fieldnames(SEIZMO.(me));
-        for i=1:numel(fields)
-            if(~isempty(SEIZMO.(me).(fields{i})))
-                option.(fields{i})=SEIZMO.(me).(fields{i});
-            end
-        end
-    catch
+    % check all options preceeded by char field
+    if(~iscellstr(varargin(1:2:end)))
+        error('seizmo:addarrivals:badInput',...
+            'Options must be specified as a strings!');
     end
-
-    % get options from command line
-    for i=1:2:nargin-1
-        if(~ischar(varargin{i}))
-            error('seizmo:addarrivals:badInput',...
-                'Options must be specified as a strings!');
-        end
-        if(~isempty(varargin{i+1}))
-            option.(upper(varargin{i}))=varargin{i+1};
-        end
-    end
+    
+    % throw defaults in front
+    varargin=[{'m' 'iasp91' 'p' 'ttbasic' 'f' 0:9} varargin];
 
     % check options
     nrecs=numel(data);
-    fields=fieldnames(option);
-    for i=1:numel(fields)
+    for i=1:2:numel(varargin)
         % specific checks
-        switch lower(fields{i})
-            case 'model'
-                if(iscellstr(option.(fields{i})))
-                    option.(fields{i})=char(option.(fields{i}));
+        switch lower(varargin{i})
+            case {'m' 'mod' 'model'}
+                if(iscellstr(varargin{i+1}))
+                    varargin{i+1}=char(varargin{i+1});
                 end
-                if(~ischar(option.(fields{i})) ...
-                        || ~any(size(option.(fields{i}),1)==[1 nrecs]))
+                if(~ischar(varargin{i+1}) ...
+                        || ~any(size(varargin{i+1},1)==[1 nrecs]))
                     error('seizmo:addarrivals:badInput',...
                         ['MODEL must be a cellstr/char array with one\n'...
                         'model per record or a single model for all!']);
                 end
-                if(size(option.(fields{i}),1)==1)
-                    option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
+                if(size(varargin{i+1},1)==1)
+                    varargin{i+1}=varargin{i+1}(ones(nrecs,1),:);
                 end
-                option.(fields{i})=cellstr(option.(fields{i}));
-            case 'phases'
-                if(iscellstr(option.(fields{i})))
-                    option.(fields{i})=char(option.(fields{i}));
+                model=cellstr(varargin{i+1});
+            case {'p' 'ph' 'phase' 'phases'}
+                if(iscellstr(varargin{i+1}))
+                    varargin{i+1}=char(varargin{i+1});
                 end
-                if(isempty(option.(fields{i})) || ...
-                        ~ischar(option.(fields{i})) ...
-                        || ~any(size(option.(fields{i}),1)==[1 nrecs]))
+                if(isempty(varargin{i+1}) || ...
+                        ~ischar(varargin{i+1}) ...
+                        || ~any(size(varargin{i+1},1)==[1 nrecs]))
                     error('seizmo:addarrivals:badInput',...
                         ['PHASES must be a cellstr/char array w/ one\n'...
                         'comma-separated phase list per record or a\n'...
                         'single comma-separated phase list for all!']);
                 end
-                if(size(option.(fields{i}),1)==1)
-                    option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
+                if(size(varargin{i+1},1)==1)
+                    varargin{i+1}=varargin{i+1}(ones(nrecs,1),:);
                 end
-                option.(fields{i})=cellstr(option.(fields{i}));
-            case 'fields'
-                if(~isempty(option.(fields{i})) ...
-                        && (numel(option.(fields{i}))>10 ...
-                            || any(fix(option.(fields{i})) ...
-                                ~=option.(fields{i})) ...
-                            || any(option.(fields{i})<0 ...
-                                | option.(fields{i})>9)))
+                phases=cellstr(varargin{i+1});
+            case {'f' 'field' 'fields'}
+                if(~isempty(varargin{i+1}) && (numel(varargin{i+1})>10 ...
+                        || any(fix(varargin{i+1})~=varargin{i+1}) ...
+                        || any(varargin{i+1}<0 | varargin{i+1}>9)))
                     error('seizmo:addarrivals:badInput',...
                         ['FIELDS must be a index array w/ values from\n'...
                         '0 to 9 indicating the kt,t,user fields to be\n'...
                         'overwrote.  List is common to all records!']);
                 end
+                fields=varargin{i+1};
+            otherwise
+                error('seizmo:addarrivals:badOption',...
+                    'Unknown Option: %s',varargin{i});
         end
     end
 
@@ -178,7 +156,6 @@ try
     end
     
     % loop over records adding info to header
-    idx=option.FIELDS;
     for i=1:nrecs
         % set progress bar to overwrite
         redraw=false;
@@ -210,14 +187,14 @@ try
         end
 
         % get arrivals
-        arrivals=tauptime('mod',option.MODEL{i},'h',evdp(i)/1000,...
-            'ph',option.PHASES{i},location{:});
+        arrivals=tauptime('mod',model{i},'h',evdp(i)/1000,...
+            'ph',phases{i},location{:});
 
         % add arrivals
-        for j=1:min(numel(idx),numel(arrivals))
-            t(i,idx(j)+1)=arrivals(j).time+o(i);
-            kt{i,idx(j)+1}=arrivals(j).phase;
-            user(i,idx(j)+1)=arrivals(j).rayparameter;
+        for j=1:min(numel(fields),numel(arrivals))
+            t(i,fields(j)+1)=arrivals(j).time+o(i);
+            kt{i,fields(j)+1}=arrivals(j).phase;
+            user(i,fields(j)+1)=arrivals(j).rayparameter;
         end
         
         % detail message

@@ -1,9 +1,10 @@
-function [data]=whiten(data,halfwindow,varargin)
+function [data]=whiten(data,width,units,varargin)
 %WHITEN    Spectral whitening/normalization of SEIZMO data records
 %
 %    Usage:    data=whiten(data)
-%              data=whiten(data,halfwindow)
-%              data=whiten(...,'optionname',optionvalue,...)
+%              data=whiten(data,width)
+%              data=whiten(data,width,units)
+%              data=whiten(data,width,units,'optionname',optionvalue,...)
 %
 %    Description: WHITEN(DATA) will perform spectral normalization (aka
 %     whitening) on records in the SEIZMO structure DATA.  Normalization is
@@ -13,13 +14,20 @@ function [data]=whiten(data,halfwindow,varargin)
 %     PREWHITEN).  This operation is particularly suited for ambient noise
 %     studies.
 %
-%     WHITEN(DATA,N) allows changing the half-width of the smoothing window
-%     (the width is actually 2N+1).  The default N is 20.  See the function
-%     SLIDINGMEAN for more information.
+%     WHITEN(DATA,WIDTH) sets the width of the smoothing window.  WIDTH is
+%     in Hz.  The default value is 0.001 Hz (1 mHz).  Note this width is
+%     converted to number of samples, which may lead to a slightly larger
+%     smoothing width.
 %
-%     WHITEN(...,'OPTIONNAME',OPTIONVALUE,...) will pass sliding average
-%     options on to the SLIDINGMEAN call.  See SLIDINGMEAN for more
-%     information.
+%     WHITEN(DATA,WIDTH,UNITS) provides access to the units of WIDTH.
+%     UNITS may be either 'Hz' or 'samples'.  The default is 'Hz'.  If
+%     UNITS is 'samples', WIDTH must be a positive integer.  Even integers
+%     are rounded up to the next higher odd integer so the window is
+%     centered on a point.
+%
+%     WHITEN(DATA,WIDTH,UNITS,'OPTIONNAME',OPTIONVALUE,...) will pass
+%     additional sliding options on to the SLIDINGMEAN call.  See
+%     SLIDINGMEAN for more information.
 %
 %    Notes:
 %     - Suggested Reading:
@@ -42,9 +50,11 @@ function [data]=whiten(data,halfwindow,varargin)
 %        Dec.  4, 2009 - fixed rlim handling
 %        Dec.  7, 2009 - no divide by zero by adding eps to smooth spectra
 %        Feb.  3, 2010 - proper SEIZMO handling
+%        Apr. 21, 2010 - doc update, need to update code to match
+%        Apr. 22, 2010 - code now matches docs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 18:25 GMT
+%     Last Updated Apr. 22, 2010 at 10:05 GMT
 
 % todo:
 
@@ -76,6 +86,9 @@ end
 
 % attempt spectral whitening
 try
+    % number of records
+    nrecs=numel(data);
+    
     % verbosity
     verbose=seizmoverbose;
     
@@ -100,9 +113,23 @@ try
             ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
             '\nInvalid operation on unevenly sampled record(s)!']);
     end
-
-    % default centered window half size
-    if(nargin==1 || isempty(halfwindow)); halfwindow=20; end
+    
+    % check window options
+    if(nargin<2 || isempty(width)); width=0.001; end
+    if(nargin<3 || isempty(units)); units='hz'; end
+    if(~isreal(width) || width<=0 || ~any(numel(width)==[1 nrecs]))
+        error('seizmo:whiten:badWidth',...
+            'WIDTH must be a positive real!');
+    end
+    if(isscalar(width)); width(1:nrecs,1)=width; end
+    if(ischar(units)); units=cellstr(units); end
+    if(~iscellstr(units) || ~any(numel(width)==[1 nrecs]) ...
+            || any(~ismember(lower(units),{'hz' 'samples'})))
+        error('seizmo:whiten:badUnits',...
+            'UNITS must be ''Hz'' or ''samples''!');
+    end
+    if(isscalar(units)); units(1:nrecs,1)=units; end
+    hz=strcmpi(units,'hz');
 
     % get filetype logical arrays
     istime=strcmpi(iftype,'itime');
@@ -122,12 +149,17 @@ try
         amph(isamph)=data(isamph);
         data(isamph)=amph2rlim(data(isamph));
     end
+    
+    % set halfwidth
+    sdelta=getheader(amph,'delta');
+    width(hz)=ceil(width(hz)./sdelta(hz)+1);
+    width=ceil((width-1)/2);
 
     % fake amph records as rlim (to get by dividerecords checks/fixes)
     amph=changeheader(amph,'iftype','irlim');
 
     % get smoothed amplitude records
-    amph=slidingmean(amph,halfwindow,varargin{:});
+    amph=slidingmean(amph,width,varargin{:});
 
     % copy amplitude over phase & add eps to avoid divide by zero
     amph=seizmofun(amph,@(x)x(:,[1:2:end; 1:2:end])+eps);
@@ -139,11 +171,10 @@ try
     if(any(isamph))
         data(isamph)=rlim2amph(data(isamph));
     end
-    if(any(istime))
-        data(istime)=idft(data(istime));
+    if(any(istime | isxy))
+        data(istime | isxy)=idft(data(istime | isxy));
     end
     if(any(isxy))
-        data(isxy)=idft(data(isxy));
         data(isxy)=changeheader(data(isxy),'iftype','ixy');
     end
     

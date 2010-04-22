@@ -58,9 +58,10 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %                        win is now a struct
 %        Mar. 18, 2010 - robust to menu/figure closing
 %        Mar. 23, 2010 - preserve last window limits
+%        Apr. 22, 2010 - replace crash with exit (but still crash)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 23, 2010 at 01:25 GMT
+%     Last Updated Apr. 22, 2010 at 11:00 GMT
 
 % todo:
 
@@ -168,7 +169,7 @@ try
         choice=menu(prompt,'RESELECT FILL OPTION',...
             'RESELECT POST-WINDOW FUNCTION',...
             'OVERLAY PLOT','EVENLY SPACED PLOT',...
-            'DISTANCE SPACED PLOT','DO NOT WINDOW','CRASH!');
+            'DISTANCE SPACED PLOT','DO NOT WINDOW','EXIT');
 
         % proceed by user choice
         switch choice
@@ -235,7 +236,7 @@ try
                 return;
             case 7 % immediate death
                 error('seizmo:userwindow:killYourSelf',...
-                    'User demanded Seppuku!');
+                    'User demanded early exit!');
         end
 
         % add window limit markers
@@ -324,7 +325,7 @@ try
         choice=0;
         while(~choice)
             choice=menu('KEEP WINDOW?',...
-                'YES','NO - TRY AGAIN','NO - CRASH!');
+                'YES','NO - TRY AGAIN','EXIT');
             switch choice
                 case 1 % rainbow's end
                     data=data2;
@@ -334,7 +335,7 @@ try
                     fh=[-1 -1];
                 case 3 % i bear too great a shame to go on
                     error('seizmo:userwindow:killYourSelf',...
-                        'User demanded Seppuku!');
+                        'User demanded early exit!');
             end
         end
     end

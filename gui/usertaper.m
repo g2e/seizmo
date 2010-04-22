@@ -51,9 +51,10 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 %        Mar. 15, 2010 - added graphical selection/entry of func
 %        Mar. 18, 2010 - robust to menu/figure closing
 %        Mar. 23, 2010 - preserve last taper widths
+%        Apr. 22, 2010 - replace crash with exit (but still crash)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 23, 2010 at 01:25 GMT
+%     Last Updated Apr. 22, 2010 at 11:00 GMT
 
 % todo:
 % - subplot showing taper
@@ -171,7 +172,7 @@ try
         choice=menu(prompt,'RESELECT TAPER TYPE',...
             'RESELECT POST-TAPER FUNCTION','OVERLAY PLOT',...
             'EVENLY SPACED PLOT','DISTANCE SPACED PLOT',...
-            'DO NOT TAPER','CRASH!');
+            'DO NOT TAPER','EXIT');
 
         % proceed by user choice
         switch choice
@@ -284,7 +285,7 @@ try
                 return;
             case 7 % immediate death
                 error('seizmo:usertaper:killYourSelf',...
-                    'User demanded Seppuku!');
+                    'User demanded early exit!');
         end
 
         % add taper limit markers
@@ -376,7 +377,7 @@ try
         choice=0;
         while(~choice)
             choice=menu('KEEP TAPER?',...
-                'YES','NO - TRY AGAIN','NO - CRASH!');
+                'YES','NO - TRY AGAIN','EXIT');
             switch choice
                 case 1 % rainbow's end
                     data=changeheader(data2,'b',b,'e',e,'delta',delta);
@@ -386,7 +387,7 @@ try
                     fh=[-1 -1];
                 case 3 % i bear too great a shame to go on
                     error('seizmo:usertaper:killYourSelf',...
-                        'User demanded Seppuku!');
+                        'User demanded early exit!');
             end
         end
     end

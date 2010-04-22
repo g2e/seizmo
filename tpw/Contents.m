@@ -2,6 +2,7 @@
 % Version 0.6.0-r124 Blackburn 20-Apr-2010
 %
 % Two Plane Wave Method functions
+%AK135_DISPERSION                  - Returns fundamental mode AK135 dispersion
 %FREQWINDOW                        - Window Surface Wave Data at Several Frequencies
 %GETMAINLOBE                       - Returns the main spectral lobe of a windowed sinusoid
 %GOODUGLYCHECK                     - Graphical Pass/Fail Tool for Surface Wave Data

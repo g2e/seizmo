@@ -25,10 +25,10 @@ function [snr,s,fh]=usersnr(data,nwin,swin,method,varargin)
 %     are just the initial values).
 %
 %     SNR=USERSNR(DATA,NOISEWIN,SIGNALWIN,METHOD) specifies the SNR
-%     estimation method to use.  METHOD must be 'PEAK2PEAK', 'RMS' or
-%     'ROBUSTRMS'.  The default is 'PEAK2PEAK'.  See QUICKSNR for more
-%     details.  The method may be changed by the user (it is just the
-%     initial value).
+%     estimation method to use.  METHOD must be 'PEAK2PEAK', 'RMS',
+%     'ROBUSTRMS', 'PEAK2RMS', or 'PEAK2ROBUSTRMS'.  The default is
+%     'PEAK2PEAK'.  See QUICKSNR for more details.  The method may be
+%     changed by the user (this is the initial value).
 %
 %     SNR=USERSNR(DATA,NOISEWIN,SIGNALWIN,METHOD,'FIELD',VALUE,...) passes
 %     field/value pairs to the plotting function to allow customization.
@@ -52,9 +52,10 @@ function [snr,s,fh]=usersnr(data,nwin,swin,method,varargin)
 
 %     Version History:
 %        Mar. 18, 2010 - initial version
+%        Apr. 21, 2010 - set plot name & add additional methods
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2010 at 13:40 GMT
+%     Last Updated Apr. 21, 2010 at 10:00 GMT
 
 % todo:
 
@@ -95,7 +96,7 @@ try
     if(nargin<4 || isempty(method)); method='peak2peak'; end
     
     % check options
-    snrmethods={'PEAK2PEAK' 'RMS' 'ROBUSTRMS'};
+    snrmethods={'PEAK2PEAK' 'RMS' 'ROBUSTRMS' 'PEAK2RMS' 'PEAK2ROBUSTRMS'};
     if(~isequal(size(nwin),[1 2]) || ~isreal(nwin))
         error('seizmo:usersnr:badInput',...
             'NOISEWIN must be a 1x2 real-valued array!');
@@ -177,7 +178,8 @@ try
                 '    Red Solid Line -- Signal Window End  '};
             
             % plot records
-            fh=s.plottype(data,'title',ptitle,varargin{:});
+            name='USERSNR - INTERACTIVE SNR ESTIMATION';
+            fh=s.plottype(data,'name',name,'title',ptitle,varargin{:});
             
             % add window limit markers
             % - yellow/blue dashed == noise window
@@ -193,12 +195,12 @@ try
         
         % get user choice
         choice=menu(prompt,...
-            ['CHANGE SNR METHOD (' upper(s.method) ')'],...
-            ['CHANGE NOISE WINDOW ([' num2str(s.noisewin) '])'],...
-            ['CHANGE SIGNAL WINDOW ([' num2str(s.signalwin) '])'],...
-            ['CHANGE PLOT TYPE (' upper(func2str(s.plottype)) ')'],...
-            'GET SNR WITH THESE SETTINGS',...
-            'CRASH!');
+            ['SELECT SNR METHOD (' upper(s.method) ')'],...
+            ['ADJUST NOISE WINDOW ([' num2str(s.noisewin) '])'],...
+            ['ADJUST SIGNAL WINDOW ([' num2str(s.signalwin) '])'],...
+            ['SELECT PLOT TYPE (' upper(func2str(s.plottype)) ')'],...
+            'RETRIEVE SNR WITH THESE SETTINGS',...
+            'EXIT');
         
         % proceed by user choice
         switch choice
@@ -209,7 +211,7 @@ try
                 
                 % set method
                 switch choice
-                    case {2 3 4}
+                    case {2 3 4 5 6}
                         s.method=snrmethods{choice-1};
                 end
                 
@@ -356,7 +358,7 @@ try
                 happy_user=true;
             case 6 % immediate death
                 error('seizmo:usersnr:killYourSelf',...
-                    'User demanded Seppuku!');
+                    'User demanded early exit!');
         end
     end
     

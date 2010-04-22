@@ -65,9 +65,10 @@ function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %                        grp.color lists group colors
 %        Mar. 22, 2010 - make sure input CG sizes up
 %        Mar. 24, 2010 - minor whitespace fix
+%        Apr. 21, 2010 - replace crash with exit (but still crash)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2010 at 18:30 GMT
+%     Last Updated Apr. 21, 2010 at 10:20 GMT
 
 % todo:
 
@@ -148,8 +149,8 @@ try
             ['DISSIMILARITY CUTOFF (' num2str(grp.cutoff) ')'],...
             ['LINKAGE METHOD (' upper(grp.method) ')'],...
             ['CLUSTERING CRITERION (' upper(grp.criterion) ')'],...
-            'CHECK LINKAGE FAITHFULNESS TO OBSERVATIONS',...
-            'NO, CLUSTER AND RETURN INFO','CRASH!');
+            'CHECK LINKAGE FAITHFULNESS',...
+            'CLUSTER AND RETURN INFO','EXIT');
         
         % act on user choice
         switch choice
@@ -287,7 +288,7 @@ try
                 happy_user=true;
             case 6 % crash
                 error('seizmo:usertaper:killYourSelf',...
-                    'User demanded Seppuku!');
+                    'User demanded an early exit!');
         end
     end
     

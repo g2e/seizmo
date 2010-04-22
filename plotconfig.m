@@ -34,7 +34,7 @@ function [conf]=plotconfig()
 % SETTING CONFIGURE STRUCTURE DEFAULTS
 conf=struct(...
 ...% FIGURE PROPERTIES
-'NAME','Seismogram Plotting Utility',...    % FIGURE NAME
+'NAME',[],...                               % FIGURE NAME
 'MENUBAR','figure',...                      % DISPLAY MENUBAR
 'TOOLBAR','auto',...                        % DISPLAY TOOLBAR
 'NUMBERTITLE','off',...                     % DISPLAY FIGURE NUMBER

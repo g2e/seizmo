@@ -191,9 +191,10 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %        Mar. 15, 2010 - output option struct too, doc update
 %        Mar. 18, 2010 - output xc as well
 %        Mar. 23, 2010 - added reweight/both methods, doc update
+%        Apr. 21, 2010 - scalar expansion for est(arr,err,pol) & snr
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 23, 2010 at 09:45 GMT
+%     Last Updated Apr. 21, 2010 at 09:45 GMT
 
 % todo:
 
@@ -617,6 +618,9 @@ for i=1:2:nargin-1
             end
             opt.WGTPOW=varargin{i+1};
         case {'ra' 'relarr' 'dt' 'estarr' 'arr'}
+            if(isscalar(varargin{i+1}))
+                varargin{i+1}(1:nr,1)=varargin{i+1};
+            end
             if(~isreal(varargin{i+1}) ...
                     || ~isequal(size(varargin{i+1}),[nr 1]))
                 error('seizmo:ttsolve:badInput',...
@@ -625,6 +629,9 @@ for i=1:2:nargin-1
             end
             opt.ESTARR=varargin{i+1};
         case {'se' 'std' 'stderr' 'esterr' 'err'}
+            if(isscalar(varargin{i+1}))
+                varargin{i+1}(1:nr,1)=varargin{i+1};
+            end
             if(~isreal(varargin{i+1}) || any(varargin{i+1}(:)<0) ...
                     || ~isequal(size(varargin{i+1}),[nr 1]))
                 error('seizmo:ttsolve:badInput',...
@@ -633,6 +640,9 @@ for i=1:2:nargin-1
             end
             opt.ESTERR=varargin{i+1};
         case {'rp' 'pol' 'relpol' 'estpol' 'pol'}
+            if(isscalar(varargin{i+1}))
+                varargin{i+1}(1:nr,1)=varargin{i+1};
+            end
             if(~isreal(varargin{i+1}) || any(abs(varargin{i+1}(:))~=1) ...
                     || ~isequal(size(varargin{i+1}),[nr 1]))
                 error('seizmo:ttsolve:badInput',...
@@ -641,6 +651,9 @@ for i=1:2:nargin-1
             end
             opt.ESTPOL=varargin{i+1};
         case {'snr'}
+            if(isscalar(varargin{i+1}))
+                varargin{i+1}(1:nr,1)=varargin{i+1};
+            end
             if(~isreal(varargin{i+1}) || any(varargin{i+1}(:)<0) ...
                     || ~isequal(size(varargin{i+1}),[nr 1]))
                 error('seizmo:ttsolve:badInput',...
