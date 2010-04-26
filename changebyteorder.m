@@ -7,7 +7,8 @@ function [data]=changebyteorder(data,endianness)
 %     that the records in the SEIZMO struct DATA will be written as to
 %     ENDIANNESS.  ENDIANNESS must be the string 'ieee-le' or 'ieee-be' or
 %     it may be a char/cellstr array of those strings to define each
-%     record's endianness individually.
+%     record's endianness individually.  ENDIANNESS may also be specified
+%     as 'little', 'big', 'intel', 'pc', or 'sun'.
 %
 %    Notes:
 %     - empty string ('') will preserve the byteorder of records
@@ -27,9 +28,10 @@ function [data]=changebyteorder(data,endianness)
 %        May  28, 2009 - fixed to update byteorder field, minor doc update
 %        May  29, 2009 - allow empty endianness (no change)
 %        Jan. 28, 2010 - seizmoverbose support
+%        Apr. 25, 2010 - added new strings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2010 at 00:05 GMT
+%     Last Updated Apr. 25, 2010 at 14:05 GMT
 
 % todo:
 
@@ -84,7 +86,11 @@ preserve=strcmp(endianness,'');
 
 % check endianness
 endianness=lower(endianness);
-if(any(~strcmp(endianness,'ieee-le') & ~strcmp(endianness,'ieee-be')))
+little=ismember(endianness,{'ieee-le' 'intel' 'little' 'pc'});
+endianness(little)={'ieee-le'};
+big=ismember(endianness,{'ieee-be' 'sun' 'big'});
+endianness(big)={'ieee-be'};
+if(any(~(little | big)))
     error('seizmo:changebyteorder:badEndian',...
         'ENDIANNESS must be ''ieee-le'' or ''ieee-be''!');
 end

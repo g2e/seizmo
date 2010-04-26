@@ -19,7 +19,7 @@ function [map]=green2blue(m)
 %
 %    See also: RED2GREEN, BLUE2RED, SPLIT, SEIS, OCEAN, DRYWET,
 %              GEBCO, SEALAND, RAINBOW, RELIEF, GLOBE_SEA, GLOBE_LAND,
-%              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ
+%              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ, FIRE
 
 %     Version History:
 %        Feb. 17, 2010 - initial version

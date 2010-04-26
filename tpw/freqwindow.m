@@ -1,5 +1,65 @@
-function [ok]=freqwindow(indir,outdir)
-%FREQWINDOW    Window Surface Wave Data at Several Frequencies
+function [ok]=freqwindow(indir,outdir,varargin)
+%FREQWINDOW    Interactive multi-frequency QCing & windowing of event data
+%
+%    Usage:    freqwindow(indir,outdir)
+%              ok=freqwindow(...)
+%
+%    Description: FREQWINDOW(INDIR,OUTDIR)
+%
+%     OK=FREQWINDOW(...) returns OK as FALSE if the user exited before
+%     finishing the selected events or TRUE if all selected events were
+%     processed.
+%
+%    Notes:
+%     - The directory structure should look as follows (the names are
+%       allowed to be different ie. EVENTDIR1 may be 2006.044.04.03.55.9):
+%        INDIR
+%          |
+%          --> EVENTDIR1
+%          .
+%          .
+%          --> EVENTDIRN
+%                   |
+%                   --> RECORD1
+%                   .
+%                   .
+%                   --> RECORDN
+%     - The output directory structure:
+%        OUTDIR
+%           |
+%           --> EVENTDIR1
+%           .
+%           .
+%           --> EVENTDIRN
+%                    |
+%                    --> 01
+%                    .
+%                    .
+%                    --> NN
+%                        |
+%                        --> RECORD1
+%                        .
+%                        .
+%                        --> RECORDN
+%
+%    Examples:
+%     
+%
+%    See also: GOODUGLYCHECK
+
+%     Version History:
+%        Apr. 22, 2010 - major code cleanup and added documentation
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Apr. 22, 2010 at 20:00 GMT
+
+% todo:
+% - options
+%   - taper width relative to window [0.2]
+%   - snr cutoff [3]
+%   - zero pad window [-2000 7000]
+%   - snr window size relative to signal window [0.2]
+
 %
 % how to adjust for your data
 % - learn filter_bank and adjust line 42ish

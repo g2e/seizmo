@@ -51,7 +51,7 @@ function [data]=joinrecords(varargin)
 %     The following options may also be controlled by BINOPERR.
 %     *********************************************************
 %     
-%     JOINRECORDS(...,'npts','error|warn|ignore') sets the
+%     JOINRECORDS(...,'npts','error|warn|truncate|pad|ignore') sets the
 %     reaction to records with different numbers of points.  If the option
 %     is set to 'warn' or 'ignore', the number of points in the records is
 %     not altered - which will likely cause an error during the operation.
@@ -122,13 +122,22 @@ function [data]=joinrecords(varargin)
 %     Version History:
 %        June 28, 2009 - initial version
 %        Jan. 30, 2010 - minor doc update
+%        Apr. 25, 2010 - updates ncmp stuff now, doc fix
 %     
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 20:05 GMT
+%     Last Updated Apr. 25, 2010 at 10:25 GMT
 
 % todo:
 
 % pass on to recordfun
 data=recordfun(@(x,y)([x y]),'ncmp','ignore',varargin{:});
+
+% fix ncmp
+old=checkheader_state(true);
+data=checkheader(data,...
+    'all','ignore',...
+    'inconsistent_dep_ncmp','fix',...
+    'invalid_mulcmp_dep','fix');
+checkheader_state(old);
 
 end

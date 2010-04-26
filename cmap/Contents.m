@@ -4,6 +4,7 @@
 % Various Colormaps
 %BLUE2RED     - Blue-White-Red (aka Polar) colormap
 %DRYWET       - Colormap for hydrology
+%FIRE         - Black-Blue-Violet-Red-Yellow-White colormap
 %GEBCO        - Colormap approximating GEBCO bathymetry charts
 %GLOBE_LAND   - Colormap for global topography
 %GLOBE_SEA    - Colormap for global bathymetry

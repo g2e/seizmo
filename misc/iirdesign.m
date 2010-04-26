@@ -176,9 +176,10 @@ function [fo,passes,mirror]=iirdesign(nyq,type,style,varargin)
 %     Version History:
 %        Feb.  2, 2010 - initial version
 %        Mar. 25, 2010 - minor doc update
+%        Apr. 25, 2010 - allow 'lp'/'hp' as filter types
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 25, 2010 at 23:40 GMT
+%     Last Updated Apr. 25, 2010 at 08:00 GMT
 
 % todo:
 
@@ -242,9 +243,9 @@ else
             'TYPE must be a string!');
     end
     switch lower(type)
-        case {'low' 'lo' 'l'}
+        case {'low' 'lo' 'l' 'lp'}
             type='low';
-        case {'high' 'hi' 'h'}
+        case {'high' 'hi' 'h' 'hp'}
             type='high';
         case {'bandpass' 'pass' 'bp'}
             type='bandpass';

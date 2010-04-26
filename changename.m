@@ -76,9 +76,10 @@ function [data]=changename(data,varargin)
 %                        the order given, multiple calls for the same
 %                        option are all done, seizmoverbose support
 %        Apr. 10, 2010 - fixed bug where name was written as a cellstr
+%        Apr. 25, 2010 - allow several more strings to specify options
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 10, 2010 at 12:45 GMT
+%     Last Updated Apr. 25, 2010 at 12:45 GMT
 
 % todo:
 
@@ -112,7 +113,8 @@ for i=1:2:nargin-1
     
     % check
     switch lower(varargin{i})
-        case {'filename' 'file' 'name' 'append' 'prepend'}
+        case {'filename' 'file' 'name' 'namefile' 'append' 'prepend'...
+                'nameappend' 'appendname' 'prependname' 'nameprepend'}
             if(isempty(varargin{i+1})); continue; end
             if(ischar(varargin{i+1}))
                 varargin{i+1}=cellstr(varargin{i+1});
@@ -128,7 +130,7 @@ for i=1:2:nargin-1
                     'with a single string or one for each record!'],...
                     upper(varargin{i}));
             end
-        case 'delete'
+        case {'delete' 'namedelete' 'deletename'}
             if(isempty(varargin{i+1})); continue; end
             if(ischar(varargin{i+1}))
                 varargin{i+1}=cellstr(varargin{i+1});
@@ -149,7 +151,7 @@ for i=1:2:nargin-1
             if(size(varargin{i+1},1)==1)
                 varargin{i+1}=varargin{i+1}(ones(nrecs,1),:);
             end
-        case 'change'
+        case {'change' 'namechange' 'changename'}
             if(isempty(varargin{i+1})); continue; end
             if(~iscellstr(varargin{i+1}) || ...
                     numel(size(varargin{i+1}))~=2 || ...
@@ -174,22 +176,22 @@ for i=1:2:nargin-1
     
     % implement
     switch lower(varargin{i})
-        case {'filename' 'file' 'name'}
+        case {'filename' 'file' 'name' 'namefile'}
             [data.name]=deal(varargin{i+1}{:});
-        case 'prepend'
+        case {'prepend' 'prependname' 'nameprepend'}
             varargin{i+1}=strcat(varargin{i+1},{data.name}');
             [data.name]=deal(varargin{i+1}{:});
-        case 'append'
+        case {'append' 'appendname' 'nameappend'}
             varargin{i+1}=strcat({data.name}',varargin{i+1});
             [data.name]=deal(varargin{i+1}{:});
-        case 'delete'
+        case {'delete' 'deletename' 'namedelete'}
             for j=1:nrecs
                 for k=1:size(varargin{i+1},2)
                     data(j).name=...
                         strrep(data(j).name,varargin{i+1}{j,k},'');
                 end
             end
-        case 'change'
+        case {'change' 'changename' 'namechange'}
             for j=1:nrecs
                 for k=1:2:size(varargin{i+1},2)
                     data(j).name=strrep(data(j).name,...

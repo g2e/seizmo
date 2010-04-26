@@ -67,6 +67,7 @@
 %MULTIPLYOMEGA        - Differentiate SEIZMO records in the frequency domain
 %MULTIPLYRECORDS      - Multiply SEIZMO records
 %NORMALIZE            - Normalizes SEIZMO records
+%PLAYSEIZMO           - Plays SEIZMO records as sound
 %PLOT0                - Plot SEIZMO data records in an evenly spaced record section
 %PLOT1                - Plot SEIZMO data records in individual subplots
 %PLOT2                - Overlay plot of SEIZMO data records
@@ -92,6 +93,7 @@
 %REVERSE_CORRELATIONS - Reverses correlations (switch master & slave)
 %RLIM2AMPH            - Convert SEIZMO spectral records from RLIM to AMPH
 %ROTATE               - Rotates SEIZMO records that are horizontal pairs
+%SEIZMO2WAV           - Writes SEIZMO records as WAV files
 %SEIZMOFUN            - Apply function to SEIZMO records
 %SEIZMORESET          - Resets saved SEIZMO settings
 %SEIZMOVERBOSE        - Turn verbose SEIZMO output on (TRUE) or off (FALSE)

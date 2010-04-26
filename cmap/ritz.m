@@ -21,7 +21,7 @@ function [map]=ritz(m)
 %
 %    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, OCEAN, DRYWET,
 %              GEBCO, SEALAND, RAINBOW, RELIEF, GLOBE_SEA, GLOBE_LAND,
-%              SEALAND_SEA, SEALAND_LAND, TOPO_LAND
+%              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, FIRE
 
 %     Version History:
 %        Feb. 17, 2010 - initial version

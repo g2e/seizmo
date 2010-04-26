@@ -113,7 +113,7 @@ function [data]=multiplyrecords(varargin)
 %      idft(multiplyrecords(dft(data([1 1]))))
 %     
 %    See also: DIVIDERECORDS, ADDRECORDS, SUBTRACTRECORDS, BINOPERR
-%
+
 %     Version History:
 %        June 10, 2008 - initial version
 %        June 11, 2008 - full filetype and class support
