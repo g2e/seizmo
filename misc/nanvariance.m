@@ -23,14 +23,13 @@ function [var]=nanvariance(x,biased,dim,w)
 %     weighted variance.  W must be equal in size to X.  The formula for
 %     the unbiased weighted variance is as follows:
 %
-%               SUM(W(NN).*ABS((X(NN)-X0(NN))).^2,DIM)
-%        VAR = ________________________________________
-%                SUM(W(NN),DIM)-(SUM(W(NN),DIM)/NNN)
+%               SUM(W(NN),DIM)*SUM(W(NN).*ABS((X(NN)-X0(NN))).^2,DIM)
+%        VAR = _______________________________________________________
+%                        SUM(W(NN),DIM)^2-SUM(W(NN)^2,DIM)
 %
-%     where X0 is the weighted mean, NN are the non-NaN element indices,
-%     and NNN is the number of non-NaN elements.  Note the usage of ABS,
-%     which assures a real-valued variance.  Also note that elements with a
-%     weight on NaN are ignored.
+%     where X0 is the weighted mean and NN are the non-NaN element indices.
+%     Note the usage of ABS, which assures a real-valued variance.  Also
+%     note that elements with a weight on NaN are ignored.
 %
 %    Notes:
 %     - nanvar incompatibilities:
@@ -58,9 +57,10 @@ function [var]=nanvariance(x,biased,dim,w)
 %        Oct. 14, 2009 - brought back, added checks, better documentation
 %        Oct. 15, 2009 - working version (checks out with nanvar), dropped
 %                        nanmean calls
+%        Apr. 28, 2010 - appropriate formula for unbiased weighted variance
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 15, 2009 at 21:35 GMT
+%     Last Updated Apr. 28, 2010 at 17:30 GMT
 
 % todo:
 
@@ -118,6 +118,7 @@ if(nargin<4 || isempty(w))
     % RETURN NaN WHEN DOING UNBIASED VARIANCE WITH ONLY ONE ELEMENT
     % --> NOTE THAT THE MEAN RETURNS NaN IF THERE ARE ZERO ELEMENTS, SO
     %     THE VARIANCE WILL ALREADY BE NaN IN THESE CASES.
+    % --> THIS IS ONLY NECESSARY TO AVOID DIVIDE BY ZERO WARNINGS
     nne(nne<1)=nan;
     
     % GET VARIANCE
@@ -136,6 +137,7 @@ else
     % GET WEIGHTED DEGREES OF FREEDOM (IGNORING NaNs)
     w(nans)=0;
     wnne=sum(w,dim);
+    w2nne=sum(w.^2,dim);
     
     % WEIGHTED MEAN
     x(nans)=0;
@@ -148,11 +150,12 @@ else
     resid(nans)=0;
     
     % UNBIASED WEIGHTED VARIANCE
-    if(~biased); wnne=wnne-wnne./sum(~nans,dim); end
+    if(~biased); wnne=(wnne.^2-w2nne)/wnne; end
     
     % RETURN NaN WHEN DOING UNBIASED VARIANCE WITH ONLY ONE ELEMENT
     % --> NOTE THAT THE MEAN RETURNS NaN IF THERE ARE ZERO ELEMENTS, SO
     %     THE VARIANCE WILL ALREADY BE NaN IN THESE CASES.
+    % --> THIS IS ONLY NECESSARY TO AVOID DIVIDE BY ZERO WARNINGS
     wnne(wnne==0)=nan;
     
     % GET VARIANCE

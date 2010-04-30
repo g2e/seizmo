@@ -40,7 +40,7 @@ function [info,xc,data0]=useralign(data,varargin)
 %              USERMOVEOUT, USERCLUSTEREDALIGN, MULTIBANDALIGN
 
 %     Version History:
-%        Mar. 16, 2010 - initial version
+%        Mar. 16, 2010 - initial version (not really but whatever)
 %        Mar. 17, 2010 - add xc, data0 to output, more crash options
 %        Mar. 18, 2010 - output reordered xc (new TTSOLVE output), robust
 %                        to menu closing

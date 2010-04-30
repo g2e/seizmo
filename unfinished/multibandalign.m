@@ -1,7 +1,8 @@
 function []=multibandalign(data,bank,projname,varargin)
 %MULTIBANDALIGN    Aligns signal at multiple frequency bands
 %
-%    Usage:
+%    Usage:    []=multibandalign(data,bank,projname)
+%              []=multibandalign(data,bank,projname,...,useralign_options,...)
 %
 %    Description:
 %
@@ -9,7 +10,7 @@ function []=multibandalign(data,bank,projname,varargin)
 %
 %    Examples:
 %
-%    See also:
+%    See also: USERALIGN
 
 %     Version History:
 %        Mar. 25, 2010 - initial version
