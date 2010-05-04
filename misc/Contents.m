@@ -12,6 +12,7 @@
 %GETWORDS            - Returns a cell array of words from a string
 %IFISHER             - Converts Z statistics to correlation coefficients
 %IIRDESIGN           - Designs an iir filter with the given constraints
+%ISEQUALSIZEORSCALAR - True if all input arrays are equal size or scalar
 %ISORTHOGONAL        - TRUE if orientations are orthogonal
 %ISPARALLEL          - TRUE if orientations are parallel
 %JOINWORDS           - Combines a cellstr into a space-separated string

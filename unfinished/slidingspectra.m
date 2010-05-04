@@ -250,6 +250,9 @@ try
         'npts',npts,'iftype','ixyz','nxsize',nxsize,'nysize',nysize,...
         'depmen',depmen,'depmin',depmin,'depmax',depmax,...
         'xminimum',b,'xmaximum',e,'yminimum',0,'ymaximum',1./(2*delta));
+    
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

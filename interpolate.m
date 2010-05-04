@@ -9,9 +9,12 @@ function [data]=interpolate(data,sr,method,new_b,new_e,extrap)
 %    Description: INTERPOLATE(DATA,RATE) interpolates SEIZMO records in
 %     DATA to a new sample rate RATE.  As this is interpolation (the
 %     default method is spline), edge effects are not an issue as they are
-%     for SYNCSR, DECI, and STRETCH.  RATE can be a vector of rates with 
-%     one element per record in DATA to interpolate records to different 
-%     rates.
+%     for SYNCRATES, SQUISH, and STRETCH but aliasing of high frequency
+%     energy to lower frequencies is an issue when interpolating to a lower
+%     sample rate.  Therefore, it is not recommended to downsample records
+%     with INTERPOLATE (use SYNCRATES or squish).  RATE can be a vector of
+%     rates with one element per record in DATA to interpolate records to
+%     different rates.
 %
 %     INTERPOLATE(DATA,RATE,METHOD) allows selection of the interpolation
 %     method from one of the following: 'nearest' (Nearest Neighbor),

@@ -32,9 +32,10 @@ function [x,y,z]=geographic2xyz(lat,lon,depth,ellipsoid)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
 %        Nov. 13, 2009 - name change: geodetic to geographic, minor doc fix
+%        May   3, 2010 - better checking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 20:15 GMT
+%     Last Updated May   3, 2010 at 15:45 GMT
 
 % todo:
 
@@ -50,7 +51,7 @@ if(nargin==3 || isempty(ellipsoid))
     f=1/298.257223563;
 else
     % manually specify ellipsoid (will accept almanac output)
-    if(isnumeric(ellipsoid) && numel(ellipsoid)==2 && ellipsoid(2)<1)
+    if(isreal(ellipsoid) && numel(ellipsoid)==2 && ellipsoid(2)<1)
         a=ellipsoid(1);
         f=ellipsoid(2);
     else
@@ -65,7 +66,7 @@ sx=size(lat); sy=size(lon); sz=size(depth);
 nx=prod(sx); ny=prod(sy); nz=prod(sz);
 
 % basic check inputs
-if(~isnumeric(lat) || ~isnumeric(lon) || ~isnumeric(depth))
+if(~isreal(lat) || ~isreal(lon) || ~isreal(depth))
     error('seizmo:geographic2xyz:nonNumeric',...
         'All inputs must be numeric!');
 elseif(any([nx ny nz]==0))

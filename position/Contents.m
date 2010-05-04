@@ -2,9 +2,11 @@
 % Version 0.6.0-r124 Blackburn 20-Apr-2010
 %
 % Global Position functions
+%ARRAYCENTER              - Returns the geographic center of an array of positions
 %AUTHALIC2GEOGRAPHICLAT   - Convert latitude from authalic to geographic
 %CLOSEST_POINT_ON_GC      - Return closest point on great circle to a point
 %DEGDIST_FROM_GC          - Distance from a point on a sphere to a great circle
+%ENU2GEOGRAPHIC           - Converts local East/North/Up system to geographic
 %FIXLATLON                - Returns latitudes & longitudes in reasonable ranges
 %GC2LATLON                - Returns points along great circle(s)
 %GCARC2LATLON             - Returns points along great circle arc(s)
@@ -14,13 +16,14 @@
 %GEOCENTRIC2GEOGRAPHIC    - Converts coordinates from geocentric to geographic
 %GEOCENTRIC2XYZ           - Converts coordinates from geocentric to cartesian
 %GEOGRAPHIC2AUTHALICLAT   - Convert latitude from geographic to authalic
+%GEOGRAPHIC2ENU           - Converts geographic to local East/North/Up system
 %GEOGRAPHIC2GEOCENTRICLAT - Convert latitude from geographic to geocentric
 %GEOGRAPHIC2GEOCENTRIC    - Converts coordinates from geographic to geocentric
 %GEOGRAPHIC2XYZ           - Converts coordinates from geographic to cartesian
 %GEOGRAPHICLAT2RADIUS     - Returns the radius at a geographic latitude
+%HAVERSINE                - Returns distance between 2 points using the Haversine formula
 %LATMOD                   - Returns a latitude modulus (ie unwraps latitudes)
 %LONMOD                   - Returns a longitude modulus (ie unwraps longitudes)
-%HAVERSINE                - Returns distance between 2 points using the Haversine formula
 %MEAN_ELLIPSOID_RADIUS    - Returns the mean radius of an ellipsoid
 %SPH_POLY_AREA            - Finds area of a polygon on a sphere
 %SPH_POLY_IN              - Returns indexing for which polygon some points are in
