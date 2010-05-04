@@ -76,9 +76,10 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s,baz,f,arf)
 %     Version History:
 %        May   1, 2010 - initial version
 %        May   3, 2010 - show slowness nyquist ring, doc update
+%        May   4, 2010 - circle is its own function now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   3, 2010 at 21:50 GMT
+%     Last Updated May   4, 2010 at 10:40 GMT
 
 % todo:
 
@@ -229,11 +230,17 @@ snyq=snyquist(min(dist),f); % closest 2 stations
 
 % plotting slowness space
 
-% first plot the bull's eye
+% first plot the slowness map
+figure;
+imagesc(sx*d2km,fliplr(sx*d2km),arf.response);
+set(gca,'ydir','normal');
+set(gca,'clim',[-12 0]);
+hold on
+
+% next plot the bull's eye
 % Phase:       Rg    Lg    Sn    Pn    Sdiff  Pdiff  PKPcdiff
 % Vel (km/s):  3.0   4.0   4.5   8.15  13.3   25.1   54.0
 % S (s/deg):   37.0  27.8  24.7  13.6  8.36   4.43   2.06
-figure;
 smax=smax*d2km;
 if(smax>=37)
     ph=[37 27.8 24.7 13.6 8.36 4.43];
@@ -250,28 +257,21 @@ elseif(smax>=4.5)
 else
     ph=2.06;
 end
-[x,y]=circle2(ph(1),12);
-[x2,y2]=circle2(ph(end),12);
-plot([x; x2],[y; y2],'k','linewidth',2);
-hold on
+[x,y]=circle(ph(1),12);
+[x2,y2]=circle(ph(end),12);
+plot([x; x2],[y; y2],'w','linewidth',1,'tag','bullseye');
 for i=ph
     [x,y]=circle(i);
-    plot(x,y,'k','linewidth',2);
+    plot(x,y,'w','linewidth',1,'tag','bullseye');
 end
-
-% now plot the slowness map
-imagesc(sx*d2km,fliplr(sx*d2km),arf.response);
-set(gca,'ydir','normal');
-set(gca,'fontweight','bold');
-alpha(0.9)
 
 % last plot the nyquist ring about the plane wave location
 [x,y]=circle(snyq);
 x=x+sx0*d2km; y=y+sy0*d2km;
-plot(x,y,'r','linewidth',2);
+plot(x,y,'r','linewidth',2,'tag','nyquist ring');
 hold off
 
-% finally take care of coloring and labels
+% finally take care of coloring/labels/etc
 title(['Array Response Function @ ' ...
     num2str(f) 'Hz (' num2str(1/f) 's)'],'fontweight','bold');
 xlabel('East/West Slowness (s/deg)','fontweight','bold');
@@ -279,21 +279,10 @@ ylabel('North/South Slowness (s/deg)','fontweight','bold');
 colormap(ritz);
 c=colorbar('eastoutside','fontweight','bold');
 set(c,'xaxislocation','top');
+set(gca,'fontweight','bold');
 xlabel(c,'dB')
 axis equal
 xlim([-smax smax])
 ylim([-smax smax])
 
-end
-
-function [cx,cy]=circle(r)
-    ang=0:0.002:pi*2;
-    cx=sin(ang)*r;
-    cy=cos(ang)*r;
-end
-
-function [cx,cy]=circle2(r,steps)
-    ang=0:2*pi/steps:pi*2;
-    cx=sin(ang)*r;
-    cy=cos(ang)*r;
 end

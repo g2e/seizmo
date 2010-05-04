@@ -125,6 +125,7 @@
 %CMT                 - various moment tensor functions
 %EVENT               - functions related to earthquake info
 %FIXES               - functions to fix headers
+%FK                  - frequency-wavenumber analysis functions
 %GUI                 - simple gui functions
 %INVERT              - simple inversion functions
 %MATTAUP             - TauP functions

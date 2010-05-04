@@ -3,6 +3,7 @@
 %
 % Miscellaneous Support functions
 %BUTTORD2            - Butterworth filter order selection. (Honors passband corners)
+%CIRCLE              - Returns points on a circle in cartesian space
 %DDENDROGRAM         - Generate dendrogram plot (with some extra color options)
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
 %FISHER              - Converts correlation coefficients to the Z statistic

@@ -1,4 +1,4 @@
-function [smap]=fkmap(data,smax,spts,frng)
+function [varargout]=fkmap(data,smax,spts,frng)
 %FKMAP    Returns a map of energy in frequency-wavenumber space
 %
 %    Usage:    map=fkmap(data,smax,spts,frng)
@@ -243,6 +243,9 @@ try
         % plot if no output
         if(~nargout); plotfkmap(smap(a)); drawnow; end
     end
+    
+    % return struct
+    if(nargout); varargout{1}=smap; end
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
