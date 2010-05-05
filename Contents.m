@@ -1,5 +1,5 @@
 % Seismology Toolbox - seizmo
-% Version 0.6.0-r124 Blackburn 20-Apr-2010
+% Version 0.6.0-r130 Chimborazo 05-May-2010
 %
 % Alphabetical list of SEIZMO functions
 %ADD                  - Add a constant to SEIZMO records
@@ -107,6 +107,7 @@
 %SPLITRECORDS         - Split up components into separate records
 %SQUISH               - Downsample SEIZMO records by an integer factor
 %STACK                - Stacks SEIZMO records
+%STFT                 - Short Time Fourier Transform (aka Sliding Spectra) of SEIZMO data
 %STRETCH              - Upsample SEIZMO records by an integer factor
 %SUBTRACT             - Subtract a constant from SEIZMO records
 %SUBTRACTRECORDS      - Subtract SEIZMO records

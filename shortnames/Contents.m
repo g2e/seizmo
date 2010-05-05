@@ -1,5 +1,5 @@
 % Seismology Toolbox - shortnames
-% Version 0.6.0-r124 Blackburn 20-Apr-2010
+% Version 0.6.0-r130 Chimborazo 05-May-2010
 %
 % Shortcut function names
 %ADDF   - ADDRECORDS                     - Add SEIZMO records

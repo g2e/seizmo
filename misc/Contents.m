@@ -1,5 +1,5 @@
 % Seismology Toolbox - misc
-% Version 0.6.0-r124 Blackburn 20-Apr-2010
+% Version 0.6.0-r130 Chimborazo 05-May-2010
 %
 % Miscellaneous Support functions
 %BUTTORD2            - Butterworth filter order selection. (Honors passband corners)
@@ -13,6 +13,7 @@
 %GETWORDS            - Returns a cell array of words from a string
 %IFISHER             - Converts Z statistics to correlation coefficients
 %IIRDESIGN           - Designs an iir filter with the given constraints
+%INVERTCOLOR         - Inverts colors given as rgb triplet or as short/long names
 %ISEQUALSIZEORSCALAR - True if all input arrays are equal size or scalar
 %ISORTHOGONAL        - TRUE if orientations are orthogonal
 %ISPARALLEL          - TRUE if orientations are parallel

@@ -1,5 +1,5 @@
 % Seismology Toolbox - gui
-% Version 0.6.0-r124 Blackburn 20-Apr-2010
+% Version 0.6.0-r130 Chimborazo 05-May-2010
 %
 % Interactive functions
 %PICKSTACK     - Interactive picking of signal onset in SEIZMO record stack

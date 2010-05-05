@@ -1,5 +1,5 @@
 % Seismology Toolbox - tpw
-% Version 0.6.0-r124 Blackburn 20-Apr-2010
+% Version 0.6.0-r130 Chimborazo 05-May-2010
 %
 % Two Plane Wave Method functions
 %AK135_DISPERSION                  - Returns fundamental mode AK135 dispersion
