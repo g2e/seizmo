@@ -53,11 +53,15 @@ function [varargout]=fkmap(data,smax,spts,frng)
 
 %     Version History:
 %        May   3, 2010 - initial version
+%        May   7, 2010 - only doing one triangle gives better response and
+%                        takes less than half the time
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   3, 2010 at 21:50 GMT
+%     Last Updated May   7, 2010 at 02:30 GMT
 
 % todo:
+% - ability to define an array center vs coarray
+% - full coarray vs 1 triangle
 
 % check nargin
 msg=nargchk(4,4,nargin);
@@ -198,12 +202,28 @@ try
     [smap(1:nrng,1).smax]=deal(smax*d2km);
     [smap(1:nrng,1).spts]=deal(spts);
     
+    % get indices to go through
+    % (upper/lower/both triangles give the same result)
+    idx=find(triu(true(nrecs),1))';   % upper triangle
+    %idx=find(tril(true(nrecs),-1))'; % lower triangle
+    %idx=find(~eye(nrecs))';          % both triangles (no diagonal)
+    %idx=find(true(nrecs))';          % everything
+    nidx=numel(idx);
+    
     % loop over frequency ranges
     for a=1:nrng
         % get frequencies
         fidx=find(f>=frng(a,1) & f<=frng(a,2));
         smap(a).freqs=f(fidx);
         nfreq=numel(fidx);
+        
+        % warning if no frequencies
+        if(~nfreq)
+            warning('seizmo:fkmap:noFreqs',...
+                'No frequencies within the range %g to %g Hz!',...
+                frng(a,1),frng(a,2));
+            continue;
+        end
         
         % trim data to necessary freqs, normalize
         fd=data(fidx,:);
@@ -214,28 +234,28 @@ try
         if(verbose)
             fprintf('Getting fk Map for %g to %g Hz\n',...
                 f(fidx(1)),f(fidx(end)));
-            print_time_left(0,nrecs^2*nfreq);
+            print_time_left(0,nidx*nfreq);
         end
         
         % loop over frequencies
         smap(a).map=zeros(spts,spts);
         for b=1:nfreq
             % loop over station pairs
-            for c=1:nrecs^2
-                d=mod(c,nrecs);
+            for c=1:nidx
+                d=mod(idx(c),nrecs);
                 if(d==0); d=nrecs; end
-                e=ceil(c/nrecs);
+                e=ceil(idx(c)/nrecs);
                 smap(a).map=smap(a).map+fd(b,d)*cd(b,e)...
-                    *exp(f(fidx(b))*(kx*x(c)+ky*y(c)));
+                    *exp(f(fidx(b))*(kx*x(idx(c))+ky*y(idx(c))));
                 if(verbose)
-                    print_time_left(c+nrecs^2*(b-1),nrecs^2*nfreq);
+                    print_time_left(c+nidx*(b-1),nidx*nfreq);
                 end
             end
         end
         
         % convert to dB
         % - note the use of abs to handle slightly negative terms
-        smap(a).map=10*log10(abs(real(smap(a).map))/(nfreq*nrecs^2));
+        smap(a).map=10*log10(abs(real(smap(a).map))/(nfreq*nidx));
         
         % normalize so max peak is at 0dB
         smap(a).map=smap(a).map-max(smap(a).map(:));

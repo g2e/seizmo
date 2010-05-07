@@ -154,7 +154,7 @@ conf=struct(...
 'TREELIMIT',0.03,...                        % DISSIMILARITY LIMIT FOR COLORING
 'TREELIMITCOLOR','r',...                    % COLOR OF DISSIMILARITY LIMIT MARKER
 'DISSIM',true,...                           % X-AXIS AS DISSIMILARITY (FALSE = SIMILARITY)
-'TREECOLORMAP','hsv',...                    % GROUP COLORING IN DENDROGRAM
+'TREECOLORMAP','hsvspin',...                % GROUP COLORING IN DENDROGRAM
 'TREEDEFCOLOR',[0.5 0.5 0.5],...            % DEFAULT COLORING OF TREE
 'TREETITLE',[],...                          % TITLE FOR DENDROGRAM PLOT
 'TREEXLABEL',[],...                         % XLABEL FOR DENDROGRAM PLOT

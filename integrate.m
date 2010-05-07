@@ -51,9 +51,11 @@ function [data]=integrate(data,option)
 %        Sep.  8, 2009 - drop SWAP for DEAL
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        improved messaging, forced dim on some functions
+%        May   6, 2010 - fixed ncmp bug, slimmer code for units exchange,
+%                        fixed interaction of midpoint warning & scrollbar
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 20:05 GMT
+%     Last Updated May   6, 2010 at 23:05 GMT
 
 % todo:
 
@@ -62,8 +64,7 @@ msg=nargchk(1,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -138,15 +139,15 @@ try
             % or just to npts for uneven (we can't get the time of npts+1)
             case {'rect' 'rectangular'}
                 if (even(i))
-                    data(i).dep=[zeros(1,ncmp); ...
+                    data(i).dep=[zeros(1,ncmp(i)); ...
                         delta(i)*cumsum(data(i).dep,1)];
                     e(i)=e(i)+delta(i);
                     npts(i)=npts(i)+1;
                 else
                     dt=diff(double(data(i).ind),1,1);
                     data(i).dep(1:end-1,:)=data(i).dep(1:end-1,:)...
-                        .*dt(:,ones(1,ncmp));
-                    data(i).dep=[zeros(1,ncmp); cumsum(data(i).dep,1)];
+                        .*dt(:,ones(1,ncmp(i)));
+                    data(i).dep=[zeros(1,ncmp(i)); cumsum(data(i).dep,1)];
                     data(i).dep(end,:)=[];
                 end
             case {'rect-sac' 'rectangular-sac'}
@@ -158,7 +159,7 @@ try
                 else
                     dt=diff(double(data(i).ind),1,1);
                     data(i).dep(2:end,:)=data(i).dep(2:end,:)...
-                        .*dt(:,ones(1,ncmp));
+                        .*dt(:,ones(1,ncmp(i)));
                     data(i).dep=cumsum(data(i).dep,1);
                 end
             case {'trap' 'trapezoidal'}
@@ -205,7 +206,7 @@ try
                 % before the first input point) to zero, we
                 % use the slope to get to the subsequent points
                 if(even(i))
-                    data(i).dep=[zeros(1,ncmp); ...
+                    data(i).dep=[zeros(1,ncmp(i)); ...
                         delta(i)*cumsum(data(i).dep,1)];
                     b(i)=b(i)-delta(i)/2;
                     e(i)=e(i)+delta(i)/2;
@@ -242,7 +243,7 @@ try
                         depmin(i)=min(data(i).dep(:));
                         depmax(i)=max(data(i).dep(:));
                         % detail message
-                        if(verbose); print_time_left(i,nrecs); end
+                        if(verbose); print_time_left(i,nrecs,true); end
                         continue;
                     end
 
@@ -270,14 +271,14 @@ try
                         depmin(i)=min(data(i).dep(:));
                         depmax(i)=max(data(i).dep(:));
                         % detail message
-                        if(verbose); print_time_left(i,nrecs); end
+                        if(verbose); print_time_left(i,nrecs,true); end
                         continue;
                     end
 
                     % cumsum
                     data(i).ind=oclass(orig);
-                    data(i).dep=[zeros(1,ncmp);...
-                        cumsum(dto(:,ones(1,ncmp)).*data(i).dep,1)];
+                    data(i).dep=[zeros(1,ncmp(i));...
+                        cumsum(dto(:,ones(1,ncmp(i))).*data(i).dep,1)];
                     npts(i)=npts(i)+1;
                     b(i)=data(i).ind(1);
                     e(i)=data(i).ind(end);
@@ -300,35 +301,11 @@ try
     end
 
     % change dependent component type
-    ispop=strcmpi(idep,'ipop');
-    iscrackle=strcmpi(idep,'icrackle');
-    issnap=strcmpi(idep,'isnap');
-    isjerk=strcmpi(idep,'ijerk');
-    isacc=strcmpi(idep,'iacc');
-    isvel=strcmpi(idep,'ivel');
-    isdisp=strcmpi(idep,'idisp');
-    isabsmnt=strcmpi(idep,'iabsmnt');
-    isabsity=strcmpi(idep,'iabsity');
-    isabseler=strcmpi(idep,'iabseler');
-    isabserk=strcmpi(idep,'iabserk');
-    isabsnap=strcmpi(idep,'iabsnap');
-    isabsackl=strcmpi(idep,'iabsackl');
-    idep(ispop)={'icrackle'};
-    idep(iscrackle)={'isnap'};
-    idep(issnap)={'ijerk'};
-    idep(isjerk)={'iacc'};
-    idep(isacc)={'ivel'};
-    idep(isvel)={'idisp'};
-    idep(isdisp)={'iabsmnt'};
-    idep(isabsmnt)={'iabsity'};
-    idep(isabsity)={'iabseler'};
-    idep(isabseler)={'iabserk'};
-    idep(isabserk)={'iabsnap'};
-    idep(isabsnap)={'iabsackle'};
-    idep(isabsackl)={'iabspop'};
-    idep(~(ispop | iscrackle | issnap | isjerk | isacc | isvel ...
-        | isdisp | isabsmnt | isabsity | isabseler | isabserk ...
-        | isabsnap | isabsackl))={'iunkn'};
+    newunit={'icrackle' 'isnap' 'ijerk' 'iacc' 'ivel' 'idisp' 'iabsmnt' ...
+        'iabsity' 'iabseler' 'iabserk' 'iabsnap' 'iabsackle' 'iabspop'};
+    [tf,idx]=ismember(idep,[{'ipop'} newunit(1:end-1)]);
+    idep(tf)=newunit(idx(tf));
+    idep(~tf)={'iunkn'};
 
     % update headers
     data=changeheader(data,...

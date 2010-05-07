@@ -56,9 +56,10 @@ function [data]=differentiate(data,option)
 %        May   8, 2009 - uses expanded idep unit set
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        improved messaging, forced dim on some functions
+%        May   6, 2010 - slimmer code for units exchange
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 19:30 GMT
+%     Last Updated May   6, 2010 at 23:10 GMT
 
 % todo:
 % - add 'five' option for uneven
@@ -73,8 +74,7 @@ msg=nargchk(1,2,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -219,35 +219,11 @@ try
     end
 
     % change dependent component type
-    iscrackle=strcmpi(idep,'icrackle');
-    issnap=strcmpi(idep,'isnap');
-    isjerk=strcmpi(idep,'ijerk');
-    isacc=strcmpi(idep,'iacc');
-    isvel=strcmpi(idep,'ivel');
-    isdisp=strcmpi(idep,'idisp');
-    isabsmnt=strcmpi(idep,'iabsmnt');
-    isabsity=strcmpi(idep,'iabsity');
-    isabseler=strcmpi(idep,'iabseler');
-    isabserk=strcmpi(idep,'iabserk');
-    isabsnap=strcmpi(idep,'iabsnap');
-    isabsackl=strcmpi(idep,'iabsackl');
-    isabspop=strcmpi(idep,'iabspop');
-    idep(iscrackle)={'ipop'};
-    idep(issnap)={'icrackle'};
-    idep(isjerk)={'isnap'};
-    idep(isacc)={'ijerk'};
-    idep(isvel)={'iacc'};
-    idep(isdisp)={'ivel'};
-    idep(isabsmnt)={'idisp'};
-    idep(isabsity)={'iabsmnt'};
-    idep(isabseler)={'iabsity'};
-    idep(isabserk)={'iabseler'};
-    idep(isabsnap)={'iabserk'};
-    idep(isabsackl)={'iabsnap'};
-    idep(isabspop)={'iabsackl'};
-    idep(~(iscrackle | issnap | isjerk | isacc | isvel | isdisp ...
-        | isabsmnt | isabsity | isabseler | isabserk | isabsnap ...
-        | isabsackl | isabspop))={'iunkn'};
+    newunit={'ipop' 'icrackle' 'isnap' 'ijerk' 'iacc' 'ivel' 'idisp' ...
+        'iabsmnt' 'iabsity' 'iabseler' 'iabserk' 'iabsnap' 'iabsackle'};
+    [tf,idx]=ismember(idep,[newunit(2:end) {'iabspop'}]);
+    idep(tf)=newunit(idx(tf));
+    idep(~tf)={'iunkn'};
 
     % update header
     data=changeheader(data,...

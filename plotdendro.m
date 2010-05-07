@@ -167,4 +167,7 @@ if(P.MARKERLABELS)
 end
 hold off
 
+% now reorder so dendrogram plot is "ontop"
+set(fh,'children',sfh);
+
 end

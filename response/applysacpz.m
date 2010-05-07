@@ -43,8 +43,8 @@ function [data,pz]=applysacpz(data,varargin)
 %
 %     [...]=APPLYSACPZ(...,'IDEP',IDEP,...) sets the output dependent
 %     component label stored in the header field 'idep' to IDEP.  Typically
-%     this is 'iunkn' or 'ivolts'.  May be a cell array of strings to set
-%     each record separately.  The default is 'ivolts'.
+%     this is 'iunkn', 'ivolts', or 'icounts'.  IDEP may be a cell array of
+%     strings to set each record separately.  The default is 'icounts'.
 %
 %     [...]=APPLYSACPZ(...,'H2O',H2O,...) applies a waterlevel factor to
 %     the SAC PoleZero response.  H2O by default is 0, which has no effect.
@@ -73,11 +73,13 @@ function [data,pz]=applysacpz(data,varargin)
 %        Oct. 30, 2009 - added informative output on error
 %        Feb.  3, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb. 16, 2010 - doc update, fixed related function list
+%        May   5, 2010 - fixed upper frequency taper (thanks dsh)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2010 at 02:25 GMT
+%     Last Updated May   5, 2010 at 20:35 GMT
 
 % todo:
+% - update docs
 
 % check nargin
 msg=nargchk(1,inf,nargin);
@@ -87,8 +89,7 @@ if(~isempty(msg)); error(msg); end
 global SEIZMO
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -140,7 +141,7 @@ try
     
     % get header info
     leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
+    [iftype,idep]=getenumid(data,'iftype','idep');
     [npts,ncmp,delta,e]=getheader(data,'npts','ncmp','delta','e');
     
     % get spectral
@@ -166,95 +167,106 @@ try
     end
     
     % valid values for strings
-    valid.UNITS={'n' 'none' 'd' 'dis' 'disp' 'displacement' ...
-        'v' 'vel' 'velo' 'velocity' 'a' 'acc' 'accel' 'acceleration'};
-    
-    % default options
-    option.FREQLIMITS=... % set to be outside range that matters
-        [-1*ones(nrecs,2) 2*nyq(:,[1 1])]; % frequency limits, Hz
-    option.UNITS='none'; % none/dis/vel/acc
-    option.IDEP='ivolts'; % iunkn/idisp/ivel/iacc/ivolts
-    option.H2O=zeros(nrecs,1); % 0+
-    flim=option.FREQLIMITS; % backup (for partial freqlimits entries)
+    % - this should be expanded to include all units
+    % - need a matching wpow for each string
+    % - and a matching idep unit
+    valid.UNITS={...
+        'n' 'none' ...
+        'd' 'dis' 'disp' 'displacement' 'idisp' ...
+        'v' 'vel' 'velo' 'velocity' 'ivel' ...
+        'a' 'acc' 'accel' 'acceleration' 'iacc' ...
+        'j' 'jerk' 'ijerk' ...
+        's' 'snap' 'isnap' ...
+        'c' 'crackle' 'icrackle' ...
+        'p' 'pop' 'ipop' ...
+        'absmnt' 'iabsmnt' 'absity' 'iabsity' 'abseler' 'iabseler' ...
+        'abserk' 'iabserk' 'absnap' 'iabsnap' 'absackl' 'iabsackl' ...
+        'abspop' 'iabspop' 'u' 'unkn' 'unknown' 'iunkn' 'volts' ...
+        'ivolts' 'counts' 'icounts'};
+    valid.WPOW=[0 0 0 0 0 0 0 1 1 1 1 1 2 2 2 2 2 3 3 3 4 4 4 5 5 5 ...
+        6 6 6 -1 -1 -2 -2 -3 -3 -4 -4 -5 -5 -6 -6 -7 -7 0 0 0 0 0 0 0 0];
     
     % get options from SEIZMO global
     ME=upper(mfilename);
     try
-        fields=fieldnames(SEIZMO.(ME));
-        for i=1:numel(fields)
-            if(~isempty(SEIZMO.(ME).(fields{i})))
-                option.(fields{i})=SEIZMO.(ME).(fields{i});
-            end
-        end
+        varargin=[SEIZMO.(ME) varargin];
     catch
     end
     
-    % get options from command line
-    for i=1:2:nargin-1
-        if(~ischar(varargin{i}))
-            error('seizmo:applysacpz:badInput',...
-                'Options must be specified as a string!');
-        end
-        if(~isempty(varargin{i+1}))
-            option.(upper(varargin{i}))=varargin{i+1};
-        end
+    % default options
+    flimbu=[-1*ones(nrecs,2) 2*nyq(:,[1 1])];
+    varargin=[{'f' flimbu 'u' idep ...
+        'id' 'icounts' 'h2o' zeros(nrecs,1)} varargin];
+    
+    % require all options to be strings
+    if(~iscellstr(varargin(1:2:end)))
+        error('seizmo:removesacpz:badInput',...
+            'OPTIONS must be specified as strings!');
     end
     
     % check options
-    fields=fieldnames(option);
-    for i=1:numel(fields)
-        value=option.(fields{i});
+    for i=1:2:numel(varargin)
+        value=varargin{i+1};
         
         % which option
-        switch lower(fields{i})
-            case 'freqlimits'
+        j=strmatch(lower(varargin{i}),{'freqlimits' 'units' 'idep' 'h2o'});
+        switch j
+            case 1 % freqlimits
                 % assure real and correct size
                 if(isreal(value) && any(size(value,1)==[1 nrecs]) ...
                         && size(value,2)<=4 && ndims(value)==2)
+                    if(~isequal(value,sort(value,2)))
+                        error('seizmo:applysacpz:badInput',...
+                            ['FREQLIMITS must be [F1 F2 F3 F4]\n' ...
+                            'where F1 <= F2 <= F3 <= F4!']);
+                    end
                     if(size(value,1)==1)
-                        option.FREQLIMITS=[value(ones(nrecs,1),:) ...
-                            flim(:,(size(value,2)+1):4)];
+                        flim=[value(ones(nrecs,1),:) ...
+                            flimbu(:,(size(value,2)+1):4)];
                     else
-                        option.FREQLIMITS=[value ...
-                            flim(:,(size(value,2)+1):4)];
+                        flim=[value flimbu(:,(size(value,2)+1):4)];
                     end
                 else
                     error('seizmo:applysacpz:badInput',...
                         'FREQLIMITS must be [F1 F2 F3 F4]!');
                 end
-            case 'units'
+            case 2 % units
                 if(ischar(value)); value=cellstr(value); end
                 if(~iscellstr(value) ...
                         || ~any(numel(value)==[1 nrecs]) ...
                         || any(~ismember(value,valid.UNITS)))
                     error('seizmo:applysacpz:badInput',...
-                        'UNITS has wrong class, size, and/or value(s)!');
+                        'UNITS must be ''DISP'' ''VEL'' or ''ACC''!');
                 end
                 if(isscalar(value)); value=value(ones(nrecs,1),1); end
-                option.UNITS=value;
-            case 'idep'
+                units=value;
+                
+                % get associated WPOW
+                [idx,idx]=ismember(units,valid.UNITS);
+                wpow=valid.WPOW(idx);
+            case 3 % idep
                 if(ischar(value)); value=cellstr(value); end
-                if(~any(numel(value)==[1 nrecs]))
+                if(~iscellstr(value) || ~any(numel(value)==[1 nrecs]))
                     error('seizmo:applysacpz:badInput',...
-                        ['IDEP must be scalar or have\n' ...
-                        '1 element per record in DATA!']);
+                        ['IDEP must be single string or have\n' ...
+                        '1 string per record in DATA!']);
                 end
-                option.IDEP=value;
-            case 'h2o'
+                if(isscalar(value)); value=value(ones(nrecs,1),1); end
+                idep=value;
+            case 4 % h2o
                 if(~isreal(value) ...
                         || (~isscalar(value) && numel(value)~=nrecs) ...
                         || any(value<0))
                     error('seizmo:applysacpz:badInput',...
                         'H2O must be a real positive scalar or array!');
                 end
+                if(isscalar(value)); value=value(ones(nrecs,1),1); end
+                h2o=value;
             otherwise
                 error('seizmo:applysacpz:badInput',...
                     'Unknown option: %s !',varargin{i});
         end
     end
-    
-    % sort freqlimits
-    flim=sort(option.FREQLIMITS,2);
     
     % detail message
     if(verbose)
@@ -280,7 +292,7 @@ try
         if(amph(i))
             nspts=npts(i);
             sdelta=delta(i);
-            tmp=data(i).dep(:,1:2:end).*exp(j*data(i).dep(:,2:2:end));
+            tmp=data(i).dep(:,1:2:end).*exp(1i*data(i).dep(:,2:2:end));
         elseif(rlim(i))
             nspts=npts(i);
             sdelta=delta(i);
@@ -298,21 +310,13 @@ try
         
         % taper
         taper1=taperfun('hann',freq,flim(i,1:2)).';
-        taper2=taperfun('hann',nyq(i)-freq,nyq(i)-flim(i,3:4)).';
+        taper2=taperfun('hann',nyq(i)-freq,nyq(i)-flim(i,[4 3])).';
         tmp=tmp.*taper1(:,ones(ncmp(1),1)).*taper2(:,ones(ncmp(1),1));
         
         % convert zpk to fap
-        switch lower(option.UNITS{i})
-            case {'n' 'none' 'd' 'dis' 'disp' 'displacement'}
-                wpow=0;
-            case {'v' 'vel' 'velo' 'velocity'}
-                wpow=1;
-            case {'a' 'acc' 'accel' 'acceleration'}
-                wpow=2;
-        end
         [a,p]=zpk2ap(freq,data(i).misc.sacpz.z,data(i).misc.sacpz.p,...
-            data(i).misc.sacpz.k,wpow);
-        h=((a+option.H2O(i)).*exp(j*p)).';
+            data(i).misc.sacpz.k,wpow(i));
+        h=((a+h2o(i)).*exp(1i*p)).';
         
         % apply response (over limited freqrange)
         % - divide by 1e9 to account for SAC PoleZero in meters
@@ -343,7 +347,7 @@ try
     end
     
     % update header info
-    data=changeheader(data,'scale',1,'idep',option.IDEP,...
+    data=changeheader(data,'scale',1,'idep',idep,...
         'depmax',depmax,'depmin',depmin,'depmen',depmen);
 
     % toggle checking back

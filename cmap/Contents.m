@@ -9,6 +9,7 @@
 %GLOBE_LAND   - Colormap for global topography
 %GLOBE_SEA    - Colormap for global bathymetry
 %GREEN2BLUE   - Green-White-Blue colormap
+%HSVSPIN      - HSV colormap with random circular shift
 %OCEAN        - Colormap for bathymetry
 %RAINBOW      - Standard rainbow colormap going from magenta to red
 %RED2GREEN    - Red-White-Green colormap

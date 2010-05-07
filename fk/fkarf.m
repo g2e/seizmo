@@ -77,11 +77,15 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s,baz,f,arf)
 %        May   1, 2010 - initial version
 %        May   3, 2010 - show slowness nyquist ring, doc update
 %        May   4, 2010 - circle is its own function now
+%        May   7, 2010 - only doing one triangle gives better response and
+%                        takes less than half the time
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   4, 2010 at 10:40 GMT
+%     Last Updated May   7, 2010 at 02:30 GMT
 
 % todo:
+% - ability to define an array center vs coarray
+% - full coarray vs 1 triangle
 
 % check nargin
 msg=nargchk(3,8,nargin);
@@ -196,24 +200,32 @@ sy=fliplr(sx)';
 kk0x=2*pi*f*1i*(sx(ones(spts,1),:)-sx0);
 kk0y=2*pi*f*1i*(sy(:,ones(spts,1))-sy0);
 
+% get indices to go through
+% (upper/lower/both triangles give the same result)
+idx=find(triu(true(nsta),1))';   % upper triangle
+%idx=find(tril(true(nsta),-1))'; % lower triangle
+%idx=find(~eye(nsta))';          % both triangles (no diagonal)
+%idx=find(true(nsta))';          % everything
+nidx=numel(idx);
+
 % detail message
 verbose=seizmoverbose;
 if(verbose)
     disp('Generating Array Response Function');
-    print_time_left(0,nsta^2);
+    print_time_left(0,nidx);
 end
 
 % get array response
 %  2*pi*i*(k-k0)r
 % e
-for i=1:nsta^2
-    arf.response=arf.response+exp(kk0x*x(i)+kk0y*y(i));
-    if(verbose); print_time_left(i,nsta^2); end
+for i=1:nidx
+    arf.response=arf.response+exp(kk0x*x(idx(i))+kk0y*y(idx(i)));
+    if(verbose); print_time_left(i,nidx); end
 end
 
 % convert to dB
 % - note the use of abs to handle slightly negative terms
-arf.response=10*log10(abs(real(arf.response))/(arf.npw*nsta^2));
+arf.response=10*log10(abs(real(arf.response))/(arf.npw*nidx));
 
 % return if output
 if(nargout); varargout{1}=arf; return; end

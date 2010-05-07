@@ -215,7 +215,7 @@ try
                     end
 
                     % action on left click
-                    if (button==1)
+                    if (button==1 && gca==sfh(1))
                         grp.cutoff=x;
 
                         % redraw subplots (to show new grouping)

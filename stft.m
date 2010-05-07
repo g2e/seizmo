@@ -92,9 +92,10 @@ function [varargout]=stft(data,varargin)
 %     Version History:
 %        Apr. 26, 2010 - initial version
 %        May   5, 2010 - fully working version
+%        May   7, 2010 - fix overlap bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   5, 2010 at 02:35 GMT
+%     Last Updated May   7, 2010 at 02:55 GMT
 
 % todo:
 
@@ -290,7 +291,7 @@ try
     if(any(pw)); width(pw)=ceil(width(pw).*npts(pw)/100); end
     if(any(nw)); width(nw)=ceil(width(nw)); end
     if(any(sw)); width(sw)=ceil(width./delta); end
-    overlap=ceil(overlap.*width/100);
+    overlap=min(width-1,ceil(overlap.*width/100));
     pow2pad=2.^(nextpow2n(width)+pow2pad);
     
     % plotting setup

@@ -316,9 +316,10 @@ function [data]=checkheader(data,varargin)
 %        Feb. 28, 2010 - added REPEAT_DEP, all FIX with no solution are now
 %                        WARNFIX equivalent
 %        Mar. 15, 2010 - allow NZMSEC to be 1000
+%        May   5, 2010 - allow icounts for idep field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2010 at 13:20 GMT
+%     Last Updated May   5, 2010 at 13:20 GMT
 
 % todo:
 
@@ -1010,7 +1011,7 @@ end
 function [idep]=invalid_idep(opt,idep)
 validdep={'iunkn' 'idisp' 'ivel' 'iacc' 'ivolts' 'iabsmnt' ...
         'iabsity' 'iabseler' 'iabserk' 'iabsnap' 'iabsackl' 'iabspop' ...
-        'ijerk' 'isnap' 'icrackle' 'ipop'};
+        'ijerk' 'isnap' 'icrackle' 'ipop' 'icounts'};
 bad=find(~ismember(idep,validdep));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:IDEPbad';

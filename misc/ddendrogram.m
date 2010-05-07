@@ -43,11 +43,11 @@ function [hout,T,perm] = ddendrogram(Z,varargin)
 %   maximum linkage i.e. 0.7 * max(Z(:,3)).
 %
 %   [...] = DDENDROGRAM(...,'COLORMAP',CMAPSTR) accepts a string corresponding
-%   to a colormap type.  Node groups are assigned colors from that colormap.
-%   The default colormap is hsv.
+%   to a colormap function.  Node groups are assigned colors from that colormap.
+%   The default colormap is hsvspin.
 %
 %   [...] = DDENDROGRAM(...,'DEFAULTCOLOR',RGBTRIP) accepts a numeric rgb
-%   triplet [x y z] where x,y,z are scalars in the range 0 to 1.  Nodes 
+%   triplet [r g b] where r,g,b are scalars in the range 0 to 1.  Nodes 
 %   outside of the 'COLORTHRESHOLD' will be colored with RGBTRIP.
 %
 %   [...] = DDENDROGRAM(...,'ORIENTATION',ORIENT) will orient the dendrogram 
@@ -92,7 +92,7 @@ color = false;
 obslabels = [];
 threshold = 0.7 * max(Z(:,3));
 leafOrder = [];
-cmapfunc=@hsv;
+cmapfunc=@hsvspin;
 defcolor=[0 0 0];
 
 if nargin > 2
@@ -293,11 +293,23 @@ end
 
 theGroups = 1;
 groups = 0;
-cmap = [0 0 1];
 
 if color
+    %threshold
+    %Z(:,3)
+    %m-1
     groups = sum(Z(:,3)< threshold);
-    if groups > 1 && groups < (m-1)
+    if groups == 0
+        % threshold below all nodes
+        % - all singletons
+        cmap=defcolor;
+        groups=1;
+    elseif groups == m-1
+        % threshold above all nodes
+        % - single group
+        cmap=cmapfunc(1);
+        groups=1;
+    else
         theGroups = zeros(m-1,1);
         numColors = 0;
         for count = groups:-1:1
@@ -312,8 +324,6 @@ if color
         end 
         cmap = cmapfunc(numColors);
         cmap(end+1,:) = defcolor;
-    else
-        groups = 1;
     end
     
 end  
