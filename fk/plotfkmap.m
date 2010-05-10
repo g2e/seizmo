@@ -31,14 +31,17 @@ function [varargout]=plotfkmap(map)
 %     Last Updated May   4, 2010 at 11:00 GMT
 
 % todo:
+% - increase checks for new fields
+% - plotting for rose style
+% - verify pcolor works for polar by using very pixelated versions
 
 % check nargin
 msg=nargchk(1,1,nargin);
 if(~isempty(msg)); error(msg); end
 
 % check map is proper struct
-fields={'map' 'nsta' 'stla' 'stlo' 'stel' 'stdp' ...
-    'butc' 'eutc' 'npts' 'delta' 'smax' 'spts' 'freqs'};
+fields={'map' 'nsta' 'stla' 'stlo' 'stel' 'stdp' 'butc' 'eutc' ...
+    'npts' 'delta' 'smax' 'spts' 'freqs' 'rose' 'center' 'normdb'};
 if(~isstruct(map) || ~isscalar(map) ...
         || ~all(ismember(fields,fieldnames(map))))
     error('seizmo:plotfkmap:badInput',...
@@ -69,6 +72,7 @@ if(~isreal(map.map) || ~isequal(size(map.map),[map.spts map.spts]) ...
 end
 
 % get pertinent info
+rose=map.rose;
 smax=map.smax;
 spts=size(map.map,1);
 sx=-smax:2*smax/(spts-1):smax;
@@ -76,6 +80,37 @@ fmin=min(map.freqs);
 fmax=max(map.freqs);
 
 % plotting slowness space
+if(rose)
+    bazpts=map.bazpts;
+    figure('color','default');
+    defaultaxescolor=get(0,'defaultaxescolor');
+    defaultaxesxcolor=get(0,'defaultaxesxcolor');
+    defaultaxesycolor=get(0,'defaultaxesycolor');
+    set(0,'defaultaxescolor','w');
+    set(0,'defaultaxesxcolor','w')
+    set(0,'defaultaxesycolor','w')
+    ph=polar([0 2*pi],[0 smax]);
+    axis('ij');
+    %ph=mmpolar([0 2*pi],[0 smax],'style','compass',...
+    %    'backgroundcolor','k','bordercolor','w');
+    set(0,'defaultaxescolor',defaultaxescolor);
+    set(0,'defaultaxesxcolor',defaultaxesxcolor)
+    set(0,'defaultaxesycolor',defaultaxesycolor)
+    delete(ph);
+    hold on;
+    view([-90 90]);
+    smag=(0:spts-1)/(spts-1)*smax;
+    smag=smag(ones(bazpts,1),:)';
+    baz=(0:bazpts-1)/(bazpts-1)*360*pi/180;
+    baz=baz(ones(spts,1),:);
+    [x,y]=pol2cart(baz,smag);
+    pcolor(x,y,map.map);
+    colormap(ritz);
+    set(gca,'clim',[-12 0]);
+    shading flat;
+    colorbar;
+    die
+end
 
 % first plot the map
 h=figure;

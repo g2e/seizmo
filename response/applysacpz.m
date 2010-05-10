@@ -19,7 +19,15 @@ function [data,pz]=applysacpz(data,varargin)
 %     struct field and making sure all records in DATA have the 
 %     .misc.has_sacpz struct field set to TRUE or FALSE.  Otherwise
 %     GETSACPZ is called on the entire dataset and the customized PoleZero
-%     info is lost.  See GETSACPZ for info on the PoleZero layout.
+%     info is lost.  See GETSACPZ for info on the PoleZero layout.  Please
+%     note that the polezero response is expected to convert records in
+%     displacement (meters) to machine units (counts).  The response is
+%     adjusted for records that are in ground units other than displacement
+%     (as indicated by the IDEP header field) so they are in the same
+%     machine units (counts) as a displacement would be.  Also note that
+%     records are assumed to be nanometers-based (which does not match the
+%     polezero assumption) and so they are scaled internally to correct for
+%     this.
 %
 %     [...]=APPLYSACPZ(...,'FREQLIMITS',[F1 F2 F3 F4],...) applies a
 %     lowpass and a highpass taper that limits the spectrum of the
@@ -30,16 +38,12 @@ function [data,pz]=applysacpz(data,varargin)
 %     spectral domain.  This is an acausal filter and should not be used if
 %     you want to preserve seismic phase onsets.
 %
-%     [...]=APPLYSACPZ(...,'UNITS',UNITS,...) sets the input units of
-%     records.  By default, the SAC Polezero files will only give the
-%     appropriate machine units when the response is applied if the input
-%     records are in displacement in nanometers (a nanometers to meters
-%     conversion is done internally before the response is applied).
-%     Setting UNITS to 'vel' will properly convert any input records that
-%     are in velocity to their instrument units based upon this assumption.
-%     Valid strings are:
-%      'none', 'dis', 'vel', and 'acc'.
-%     The default units is 'none' (the same as 'dis').
+%     [...]=APPLYSACPZ(...,'UNITS',UNITS,...) overrides the units found in
+%     the IDEP header field with UNITS.  This could also be done by setting
+%     the IDEP field for the records prior to calling APPLYSACPZ.  This is
+%     mainly useful for handling special cases like polezero info that
+%     is not set to convert between displacement & counts (see the Examples
+%     section below).  The default is found from the records' IDEP field.
 %
 %     [...]=APPLYSACPZ(...,'IDEP',IDEP,...) sets the output dependent
 %     component label stored in the header field 'idep' to IDEP.  Typically
@@ -51,9 +55,11 @@ function [data,pz]=applysacpz(data,varargin)
 %     This is provided for completeness with the option in REMOVESACPZ.
 %
 %    Notes:
-%     - SAC PoleZero info should be set to convert machine units to
+%     - SAC PoleZero info should be set to convert between machine units &
 %       displacement in meters
-%     - Output by default is machine units (IDEP is set to volts)
+%     - Records should be in nanometers-based ground units (records in
+%       non-ground units are treated as displacement records in nanometers) 
+%     - Output by default is machine units (IDEP is set to counts)
 %     - the SCALE field is set to 1
 %     - In order for GETSACPZ to identify the appropriate SAC PoleZero file
 %       for each record, the following fields must be set correctly:
@@ -63,8 +69,26 @@ function [data,pz]=applysacpz(data,varargin)
 %    Header changes: DEPMIN, DEPMEN, DEPMAX, IDEP, SCALE
 %
 %    Examples:
-%     Apply instrument responses to velocity (nm/sec) records:
-%      data=applysacpz(data,'units','vel');
+%     Apply instrument responses to velocity (nm/sec) records or in any
+%     other ground unit:
+%      data=applysacpz(data);
+%
+%     Say your response info converts between velocity & counts.  Assume
+%     your records are in velocity and you want them in counts.  Using the
+%     default will improperly convert your records to displacement as part
+%     of the response removal (because we assume the response converts
+%     between displacement & counts).  To get the proper action set UNITS
+%     to 'dis' so no adjustment is made:
+%      data=applysacpz(data,'units','dis');
+%
+%     These should all give nearly exactly the same result (error is due to
+%     the discrete integration/differentiation):
+%      data=applysacpz(data);
+%      data=applysacpz(differentiate(data));
+%      data=applysacpz(integrate(data));
+%
+%     My records are in meters!  What do I do?  Convert to nanometers:
+%      data=applysacpz(divide(data,1e9));
 %
 %    See also: REMOVESACPZ, GETSACPZ, CONVOLVE
 
@@ -74,12 +98,17 @@ function [data,pz]=applysacpz(data,varargin)
 %        Feb.  3, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb. 16, 2010 - doc update, fixed related function list
 %        May   5, 2010 - fixed upper frequency taper (thanks dsh)
+%        May   7, 2010 - doc update, changed global option passing,
+%                        can now pass partial option strings, fix bug in
+%                        idep/units, allow many more ground units
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   5, 2010 at 20:35 GMT
+%     Last Updated May   7, 2010 at 13:35 GMT
 
 % todo:
-% - update docs
+% - standard responses
+% - maybe we should just have a wpow option rather than units
+% - meters/nanometers flag
 
 % check nargin
 msg=nargchk(1,inf,nargin);

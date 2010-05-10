@@ -60,6 +60,9 @@
 %KEEPRL               - Returns the real component of spectral records
 %LISTHEADER           - List SEIZMO data headers
 %MAKEUNEVEN           - Makes evenly-sampled SEIZMO records look like uneven ones
+%MAPCLUSTERS          - Map station locations colored by cluster
+%MAPSTATIONS          - Map station/earthquake locations of SEIZMO records
+%MAPSTATIONS2         - Map station/earthquake locations w/ AZ & DIST grid
 %MAT2RECORDS          - Distributes a record matrix back into a SEIZMO struct
 %MERGE                - Merge SEIZMO records
 %MIRRORFLIP           - Returns a mirror-flip of SEIZMO records
@@ -73,7 +76,6 @@
 %PLOT2                - Overlay plot of SEIZMO data records
 %PLOTCONFIG           - Returns default configuration structure for SEIZMO plotting
 %PLOTDENDRO           - Plots correlation linkage and seismograms
-%PLOTSTATIONS         - Plots station and earthquake locations of SEIZMO records
 %PREWHITEN            - Prewhiten SEIZMO data records for spectral operations
 %QUICKSNR             - Quick estimation of SNR for SEIZMO records
 %RAISE                - Raises the dependent component of SEIZMO records by a given power

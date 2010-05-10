@@ -65,10 +65,11 @@ function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %                        grp.color lists group colors
 %        Mar. 22, 2010 - make sure input CG sizes up
 %        Mar. 24, 2010 - minor whitespace fix
-%        Apr. 21, 2010 - replace crash with exit (but still crash)
+%        Apr. 21, 2010 - replace crash button with exit (but still crash)
+%        May   7, 2010 - button to draw cluster map
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 21, 2010 at 10:20 GMT
+%     Last Updated May   7, 2010 at 17:20 GMT
 
 % todo:
 
@@ -139,10 +140,11 @@ try
     grp.criterion=criterion;
     
     % outer loop - only breaks free on user command
-    happy_user=false; fh=-1; cfh=-1; oldfh=[]; save=false;
+    happy_user=false; fh=-1; cfh=-1; mfh=-1; oldfh=[]; save=false;
     while(~happy_user)
         % list of extra plots
-        oldfh=[oldfh(ishandle(oldfh)) cfh(ishandle(cfh)) fh(ishandle(fh))];
+        oldfh=[oldfh(ishandle(oldfh)) cfh(ishandle(cfh)) ...
+            mfh(ishandle(mfh)) fh(ishandle(fh))];
         
         % get choice from user
         choice=menu('CHANGE CLUSTERING SETTINGS?',...
@@ -150,6 +152,7 @@ try
             ['LINKAGE METHOD (' upper(grp.method) ')'],...
             ['CLUSTERING CRITERION (' upper(grp.criterion) ')'],...
             'CHECK LINKAGE FAITHFULNESS',...
+            'VIEW CLUSTER MAP',...
             'CLUSTER AND RETURN INFO','EXIT');
         
         % act on user choice
@@ -265,7 +268,32 @@ try
                 ylabel('COPHENETIC DISTANCE');
                 title({['LINKAGE METHOD: ''' upper(grp.method) '''']
                        ['SPEARMAN''S RANK COEFFICIENT: ' num2str(rho)]});
-            case 5 % cluster
+            case 5 % map
+                % get linkage
+                Z=linkage(1-cg.',grp.method);
+                
+                % delete all old cluster plots & plot new if needed
+                if(save)
+                    close(oldfh(ishandle(oldfh) & oldfh~=fh));
+                else
+                    close(oldfh(ishandle(oldfh)));
+                    [grp.perm,grp.color,fh]=plotdendro(data,Z,...
+                        varargin{:},'treelimit',grp.cutoff);
+                end
+                
+                % get clusters
+                grp.T=cluster(Z,'cutoff',grp.cutoff,...
+                    'criterion',grp.criterion);
+                [idx,idx]=ismember(1:max(grp.T),grp.T(grp.perm));
+                colorsave=grp.color;
+                grp.color=grp.color(idx,:);
+                
+                % map clusters
+                mfh=figure;
+                mapclusters(data,grp,gca);
+                grp.color=colorsave;
+                clear colorsave
+            case 6 % cluster
                 % get linkage
                 Z=linkage(1-cg.',grp.method);
                 
@@ -286,7 +314,7 @@ try
                 
                 % break loop
                 happy_user=true;
-            case 6 % crash
+            case 7 % crash
                 error('seizmo:usertaper:killYourSelf',...
                     'User demanded an early exit!');
         end

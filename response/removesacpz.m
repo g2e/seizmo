@@ -93,6 +93,9 @@ function [data,pz]=removesacpz(data,varargin)
 %     Last Updated May   5, 2010 at 20:30 GMT
 
 % todo:
+% - standard responses
+% - maybe we should just have a wpow option rather than units
+% - meters/nanometers flag
 
 % check nargin
 msg=nargchk(1,inf,nargin);

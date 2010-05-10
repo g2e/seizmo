@@ -1,23 +1,22 @@
-function [varargout]=fkmap(data,smax,spts,frng,polar,center)
-%FKMAP    Returns a map of energy in frequency-wavenumber space
+function [varargout]=fkvolume(data,smax,spts,frng,polar,center)
+%FKVOLUME    Returns a map of energy in frequency-wavenumber space
 %
-%    Usage:    smap=fkmap(data,smax,spts,frng)
-%              smap=fkmap(data,smax,spts,frng,polar)
-%              smap=fkmap(data,smax,spts,frng,polar,center)
+%    Usage:    svol=fkvolume(data,smax,spts,frng)
+%              svol=fkvolume(data,smax,spts,frng,polar)
+%              svol=fkvolume(data,smax,spts,frng,polar,center)
 %
-%    Description: SMAP=FKMAP(DATA,SMAX,SPTS,FRNG) calculates the energy
+%    Description: SVOL=FKVOLUME(DATA,SMAX,SPTS,FRNG) calculates the energy
 %     moving through an array in frequency-wavenumber space.  Actually, to
-%     allow for easier interpretation and averaging across frequencies, the
-%     energy is mapped into slowness space.  The array info and data are
+%     allow for easier interpretation between frequencies, the energy is
+%     mapped into frequency-slowness space.  The array info and data are
 %     derived from the SEIZMO struct DATA.  Make sure station location and
 %     timing fields are set!  The range of the slowness space is given by
 %     SMAX (in s/deg) and extends from -SMAX to SMAX for both East/West and
 %     North/South directions.  SPTS controls the number of slowness points
 %     for both directions (SPTSxSPTS grid).  FRNG gives the frequency range
-%     to average over as [FREQLOW FREQHIGH] in Hz.  SMAP is a struct
-%     containing relevant info and the slowness map itself.  The struct
-%     layout is:
-%          .response - slowness map
+%     as [FREQLOW FREQHIGH] in Hz.  SVOL is a struct containing relevant
+%     info and the frequency-slowness volume itself.  The struct layout is:
+%          .response - frequency-slowness array response
 %          .nsta     - number of stations utilized in making map
 %          .stla     - station latitudes
 %          .stlo     - station longitudes
@@ -30,22 +29,22 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,center)
 %          .x        - east/west slowness or azimuth values
 %          .y        - north/south or radial slowness values
 %          .z        - frequency values
-%          .polar    - true if slowness is sampled in polar coordinates
+%          .polar    - true if slowness is sampled in polar coordinates 
 %          .center   - array center or method
 %          .normdb   - what 0dB actually corresponds to
 %          .volume   - true if frequency-slowness volume (false for FKMAP)
 %
-%     Calling FKMAP with no outputs will automatically plot the slowness
-%     map using PLOTFKMAP.
+%     Calling FKVOLUME with no outputs will automatically plot the
+%     frequency-slowness volume using PLAYFKVOLUME.
 %
-%     SMAP=FKMAP(DATA,SMAX,SPTS,FRNG,POLAR) specifies if the slowness map
-%     is sampled regularly in cartesian or polar coordinates.  Polar coords
-%     are useful for slicing the volume by azimuth (pie slice) or slowness
-%     (rings).  Cartesian coords (the default) samples the slowness space
-%     regularly in the East/West & North/South directions and so exhibits
-%     less distortion of the slowness space.
+%     SVOL=FKVOLUME(DATA,SMAX,SPTS,FRNG,POLAR) specifies if the slowness
+%     space is sampled regularyly in cartesian or polar coordinates.  Polar
+%     coords are useful for slicing the volume by azimuth (pie slice) or
+%     slowness magnitude (rings).  Cartesian coords (the default) samples
+%     the slowness space regularly in the East/West & North/South
+%     directions and so exhibits less distortion of the slowness space.
 %
-%     SMAP=FKMAP(DATA,SMAX,SPTS,FRNG,POLAR,CENTER) defines the array
+%     SVOL=FKVOLUME(DATA,SMAX,SPTS,FRNG,POLAR,CENTER) defines the array
 %     center.  CENTER may be [LAT LON], 'center', 'coarray', or 'full'.
 %     The default is 'coarray'.  The 'center' option finds the center
 %     position of the array by averaging the station positions (using
@@ -62,21 +61,14 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,center)
 %       & INTERPOLATE to get the timing/sampling the same.
 %
 %    Examples:
-%     Show slowness map for a dataset at about 50s periods:
-%      fkmap(data,50,201,[1/51 1/49])
+%     Show frequency-slowness volume for a dataset at 20-50s periods:
+%      fkvolume(data,50,201,[1/50 1/20])
 %
-%    See also: FKARF, SNYQUIST, PLOTFKMAP, KXY2SLOWBAZ, SLOWBAZ2KXY
+%    See also: PLOTFKVOLUME, FKMAP, FKARF,
+%              SNYQUIST, KXY2SLOWBAZ, SLOWBAZ2KXY
 
 %     Version History:
-%        May   3, 2010 - initial version
-%        May   7, 2010 - only doing one triangle gives better response and
-%                        takes less than half the time
-%        May   8, 2010 - array math version (another big speed jump), added
-%                        a couple options for doing rose vs grid slowness
-%                        plots, also allow changing between coarray & a
-%                        specified array center (specified is hugely faster
-%                        but suffers in resolution)
-%        May   9, 2010 - struct changes
+%        May   9, 2010 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated May   9, 2010 at 15:30 GMT
@@ -104,20 +96,20 @@ valid.CENTER={'center' 'coarray' 'full'};
 % check inputs
 sf=size(frng);
 if(~isreal(smax) || ~isscalar(smax) || smax<=0)
-    error('seizmo:fkmap:badInput',...
+    error('seizmo:fkvolume:badInput',...
         'SMAX must be a positive real scalar in s/deg!');
 elseif(~any(numel(spts)==[1 2]) || any(fix(spts)~=spts) || any(spts<=2))
-    error('seizmo:fkmap:badInput',...
+    error('seizmo:fkvolume:badInput',...
         'SPTS must be a positive scalar integer >2!');
 elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<=0))
-    error('seizmo:fkmap:badInput',...
+    error('seizmo:fkvolume:badInput',...
         'FRNG must be a Nx2 array of [FREQLOW FREQHIGH] in Hz!');
 elseif(~isscalar(polar) || (~islogical(polar) && ~isnumeric(polar)))
-    error('seizmo:fkmap:badInput',...
+    error('seizmo:fkvolume:badInput',...
         'POLAR must be TRUE or FALSE!');
 elseif((isnumeric(center) && (~isreal(center) || ~numel(center)==2)) ...
         || (ischar(center) && ~any(strcmpi(center,valid.CENTER))))
-    error('seizmo:fkmap:badInput',...
+    error('seizmo:fkvolume:badInput',...
         'CENTER must be [LAT LON], ''CENTER'', ''COARRAY'' or ''FULL''');
 end
 nrng=sf(1);
@@ -149,11 +141,11 @@ try
     iftype=getenumid(data,'iftype');
     leven=getlgc(data,'leven');
     if(any(strcmpi(leven,'false')))
-        error('seizmo:fkmap:badLEVEN',...
+        error('seizmo:fkvolume:badLEVEN',...
             ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
             '\nInvalid operation on unevenly sampled record(s)!']);
     elseif(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:fkmap:badIFTYPE',...
+        error('seizmo:fkvolume:badIFTYPE',...
             ['Record(s):\n' sprintf('%d ',...
             find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
             '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
@@ -168,34 +160,34 @@ try
     butc=cell2mat(butc); eutc=cell2mat(eutc);
     if(numel(unique(npts))~=1 || numel(unique(delta))~=1 ...
             || size(unique(butc,'rows'),1)~=1)
-        error('seizmo:fkmap:badData',...
+        error('seizmo:fkvolume:badData',...
             'Records in DATA must have equal NPTS, DELTA, & B (UTC)!');
     elseif(any(ncmp)~=1)
-        error('seizmo:fkmap:badNCMP',...
+        error('seizmo:fkvolume:badNCMP',...
             'Records in DATA must be single component only!');
     end
     
     % check nyquist
     fnyq=1/(2*delta(1));
     if(any(frng>=fnyq))
-        error('seizmo:fkmap:badFRNG',...
+        error('seizmo:fkvolume:badFRNG',...
             ['FRNG frequencies must be under the nyquist frequency (' ...
             num2str(fnyq) ')!']);
     end
     
     % setup output
-    [smap(1:nrng,1).nsta]=deal(nrecs);
-    [smap(1:nrng,1).stla]=deal(stla);
-    [smap(1:nrng,1).stlo]=deal(stlo);
-    [smap(1:nrng,1).stel]=deal(stel);
-    [smap(1:nrng,1).stdp]=deal(stdp);
-    [smap(1:nrng,1).butc]=deal(butc(1,:));
-    [smap(1:nrng,1).eutc]=deal(eutc(1,:));
-    [smap(1:nrng,1).delta]=deal(delta(1));
-    [smap(1:nrng,1).npts]=deal(npts(1));
-    [smap(1:nrng,1).polar]=deal(polar);
-    [smap(1:nrng,1).center]=deal(center);
-    [smap(1:nrng,1).volume]=deal(false);
+    [svol(1:nrng,1).nsta]=deal(nrecs);
+    [svol(1:nrng,1).stla]=deal(stla);
+    [svol(1:nrng,1).stlo]=deal(stlo);
+    [svol(1:nrng,1).stel]=deal(stel);
+    [svol(1:nrng,1).stdp]=deal(stdp);
+    [svol(1:nrng,1).butc]=deal(butc(1,:));
+    [svol(1:nrng,1).eutc]=deal(eutc(1,:));
+    [svol(1:nrng,1).delta]=deal(delta(1));
+    [svol(1:nrng,1).npts]=deal(npts(1));
+    [svol(1:nrng,1).polar]=deal(polar);
+    [svol(1:nrng,1).center]=deal(center);
+    [svol(1:nrng,1).volume]=deal(true);
     
     % fix center
     if(ischar(center))
@@ -277,36 +269,37 @@ try
             bazpts=181;
         end
         smag=(0:spts-1)/(spts-1)*smax;
-        [smap(1:nrng,1).y]=deal(smag'*d2km);
+        [svol(1:nrng,1).y]=deal(smag'*d2km);
         smag=smag(ones(bazpts,1),:)';
         baz=(0:bazpts-1)/(bazpts-1)*360*d2r;
-        [smap(1:nrng,1).x]=deal(baz/d2r);
+        [svol(1:nrng,1).x]=deal(baz/d2r);
         baz=baz(ones(spts,1),:);
         p=2*pi*1i*[smag(:).*sin(baz(:)) smag(:).*cos(baz(:))]*r;
         clear smag baz
-        [smap(1:nrng,1).map]=deal(zeros(spts,bazpts));
     else % square
-        spts=spts(1);
+        spts=spts(1); bazpts=spts;
         sx=-smax:2*smax/(spts-1):smax;
-        [smap(1:nrng,1).x]=deal(sx*d2km);
-        [smap(1:nrng,1).y]=deal(fliplr(sx*d2km)');
+        [svol(1:nrng,1).x]=deal(sx*d2km);
+        [svol(1:nrng,1).y]=deal(fliplr(sx*d2km)');
         sx=sx(ones(spts,1),:);
         sy=fliplr(sx)';
         p=2*pi*1i*[sx(:) sy(:)]*r;
         clear sx sy
-        [smap(1:nrng,1).map]=deal(zeros(spts));
     end
     
     % loop over frequency ranges
     for a=1:nrng
         % get frequencies
         fidx=find(f>=frng(a,1) & f<=frng(a,2));
-        smap(a).z=f(fidx);
+        svol(a).z=f(fidx);
         nfreq=numel(fidx);
+        
+        % preallocate fk space
+        svol(a).response=zeros(spts,bazpts,nfreq);
         
         % warning if no frequencies
         if(~nfreq)
-            warning('seizmo:fkmap:noFreqs',...
+            warning('seizmo:fkvolume:noFreqs',...
                 'No frequencies within the range %g to %g Hz!',...
                 frng(a,1),frng(a,2));
             continue;
@@ -328,7 +321,7 @@ try
         
         % detail message
         if(verbose)
-            fprintf('Getting fk Map for %g to %g Hz\n',...
+            fprintf('Getting fk Volume for %g to %g Hz\n',...
                 frng(a,1),frng(a,2));
             print_time_left(0,nfreq);
         end
@@ -336,14 +329,8 @@ try
         % loop over frequencies
         for b=1:nfreq
             % get response
-            switch center
-                case {'full' 'coarray'}
-                    smap(a).response(:)=smap(a).response(:)...
-                        +exp(f(fidx(b))*p)*cs(:,b);
-                otherwise
-                    smap(a).response(:)=smap(a).response(:)...
-                        +10*log10(abs(exp(f(fidx(b))*p)*cs(:,b)).^2/nidx);
-            end
+            svol(a).response(:,:,b)=reshape(...
+                exp(f(fidx(b))*p)*cs(:,b),spts,bazpts);
             
             % detail message
             if(verbose); print_time_left(b,nfreq); end
@@ -354,22 +341,23 @@ try
             case {'full' 'coarray'}
                 % using full and real here gives the exact plots of
                 % Koper, Seats, and Benz 2010 in BSSA
-                smap(a).response=...
-                    10*log10(abs(real(smap(a).response))/(nfreq*nidx));
+                svol(a).response=...
+                    10*log10(abs(real(svol(a).response))/nidx);
             otherwise
-                smap(a).response=smap(a).response/nfreq;
+                svol(a).response=...
+                    10*log10(abs(svol(a).response).^2/nidx);
         end
         
         % normalize so max peak is at 0dB
-        smap(a).normdb=max(smap(a).response(:));
-        smap(a).response=smap(a).response-smap(a).normdb;
+        svol(a).normdb=max(svol(a).response(:));
+        svol(a).response=svol(a).response-svol(a).normdb;
         
         % plot if no output
-        if(~nargout); plotfkmap(smap(a)); drawnow; end
+        if(~nargout); playfkvolume(svol(a)); drawnow; end
     end
     
     % return struct
-    if(nargout); varargout{1}=smap; end
+    if(nargout); varargout{1}=svol; end
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

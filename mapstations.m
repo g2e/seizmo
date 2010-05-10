@@ -1,35 +1,37 @@
-function [varargout]=plotstations(data,fh)
-%PLOTSTATIONS    Plots station and earthquake locations of SEIZMO records
+function [varargout]=mapstations(data,han)
+%MAPSTATIONS    Map station/earthquake locations of SEIZMO records
 %
-%    Usage:    plotstations(data)
-%              plotstations(data,h)
-%              h=plotstations(...)
+%    Usage:    mapstations(data)
+%              mapstations(data,h)
+%              h=mapstations(...)
 %
-%    Description: PLOTSTATIONS(DATA) creates a map showing the station and
+%    Description: MAPSTATIONS(DATA) creates a map showing the station and
 %     earthquake locations stored in the headers of records of SEIZMO
 %     struct DATA.  The map is a global map using the Hammer projection.
 %     Stations are plotted as yellow circles and events are plotted as
 %     5-pointed stars.
 %     
-%     PLOTSTATIONS(DATA,H) uses the figure handle H for the map.
+%     MAPSTATIONS(DATA,H) uses the axes given by handle H for the map.
 %
-%     H=PLOTSTATIONS(DATA) returns the figure handle of the map figure.
+%     H=MAPSTATIONS(DATA) returns the axes handle for the map.
 %
 %    Notes:
 %
 %    Examples:
 %     Show locations of stations in a dataset:
-%      h=plotstations(data);
+%      h=mapstations(data);
 %
-%    See also: PLOT0, PLOT1, PLOT2, RECORDSECTION, PLOTSTATIONS2
+%    See also: PLOT0, PLOT1, PLOT2, RECORDSECTION, MAPSTATIONS2,
+%              MAPCLUSTERS
 
 %     Version History:
 %        Dec.  2, 2009 - initial version
-%        Dec.  8, 2009 - event grid plotting now PLOTSTATIONS2
+%        Dec.  8, 2009 - event grid plotting now MAPSTATIONS2
 %        Mar.  1, 2010 - update for new checking state function names
+%        May   7, 2010 - changed name to MAPSTATIONS
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2010 at 01:45 GMT
+%     Last Updated May   7, 2010 at 17:00 GMT
 
 % todo:
 
@@ -49,24 +51,32 @@ oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt rest
 try
-    % get figure
-    if(nargin==2 && isscalar(fh) && fh==fix(fh))
-        figure(fh);
+    % check axes handle
+    if(nargin==2 && ~isempty(han) && (~isreal(han) || ~isscalar(han)))
+        error('seizmo:mapclusters:badInput',...
+            'H must be an axis handle!');
+    end
+    
+    % make new figure if no axes handle passed
+    if(nargin<2 || isempty(han) || ~ishandle(han))
+        figure();
+        han=gca;
     else
-        fh=figure;
+        axes(han);
     end
     
     % plot map
     clon=0; % the default center longitude
     alon=[clon-180 clon+180]; % longitude boundaries
     m_proj('hammer','clon',clon);
+    title('STATION MAP','fontweight','bold')
     %m_proj('get')
-    set(gca,'color',[0.6 0.96 1]);
+    set(han,'color',[0.6 0.96 1]);
     m_grid('xticklabels',[],'ytick',-90:15:90,'xtick',-180:15:180);
     m_coast('patch',[0.6 1 0.6]);
 
     % hackery to color oceans at large
-    child=get(gca,'children');
+    child=get(han,'children');
     try
         set(child(end),'facecolor',[0.6 0.96 1]);
     catch
@@ -79,6 +89,11 @@ try
     % remove undefined
     badst=stla==undef | stlo==undef;
     stla(badst)=[]; stlo(badst)=[];
+    if(any(badst))
+        warning('seizmo:mapstations:badLocation',...
+            ['Station location not set for Records:\n' ...
+            sprintf('%d ',find(badst))]);
+    end
     badev=evla==undef | evlo==undef;
     evla(badev)=[]; evlo(badev)=[];
 
@@ -97,15 +112,16 @@ try
     end
 
     % plot locations
-    m_line(stlalo(:,2),stlalo(:,1),'marker','o',...
-       'markerfacecolor','y','markersize',6,'markeredgecolor','k',...
-       'linestyle','none');
-    m_line(evlalo(:,2),evlalo(:,1),'marker','p',...
-       'markerfacecolor','r','markersize',14,'markeredgecolor','k',...
-       'linestyle','none');
+    axes(han);
+    hold on
+    m_scatter(stlalo(:,2),stlalo(:,1),[],'y','filled',...
+        'markeredgecolor','k');
+    m_scatter(evlalo(:,2),evlalo(:,1),200,'r','filled','p',...
+        'markeredgecolor','k');
+    hold off
     
     % return figure handle
-    if(nargout); varargout{1}=fh; end
+    if(nargout); varargout{1}=han; end
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

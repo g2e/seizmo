@@ -225,7 +225,7 @@ end
 
 % convert to dB
 % - note the use of abs to handle slightly negative terms
-arf.response=10*log10(abs(real(arf.response))/(arf.npw*nidx));
+arf.response=10*log10(abs(abs(arf.response))/(arf.npw*nidx));
 
 % return if output
 if(nargout); varargout{1}=arf; return; end
