@@ -1,38 +1,36 @@
-function [varargout]=plotfkmap(map,varargin)
-%PLOTFKMAP    Plots the frequency-wavenumber output from FKMAP
+function [varargout]=plotfkarf(arf,varargin)
+%PLOTFKARF    Plots an fk array response function
 %
-%    Usage:    h=plotfkmap(map)
-%              h=plotfkmap(map,fgcolor,bgcolor)
-%              h=plotfkmap(map,fgcolor,bgcolor,h)
+%    Usage:    h=plotfkarf(arf)
+%              h=plotfkmap(arf,fgcolor,bgcolor)
+%              h=plotfkmap(arf,fgcolor,bgcolor,h)
 %
-%    Description: H=PLOTFKMAP(MAP) plots a slowness map using the struct
-%     MAP which was output from FKMAP.  See FKMAP for details on the
+%    Description: H=PLOTFKARF(ARF) plots a slowness map using the struct
+%     ARF which was output from FKARF.  See FKARF for details on the
 %     struct.  This is mainly so you can save the results and replot them
-%     later (because FKMAP is quite slow).  H is the handle to the axes
-%     that the map was plotted in.
+%     later (because FKARF is slow).  H is the handle to the axes that the
+%     map was plotted in.
 %
-%     H=PLOTFKMAP(MAP,FGCOLOR,BGCOLOR) specifies the foreground and
+%     H=PLOTFKARF(ARF,FGCOLOR,BGCOLOR) specifies the foreground and
 %     background colors of the plot.  The default is 'w' for FGCOLOR and
 %     'k' for BGCOLOR.  Note that if one is specified and the other is not,
 %     an opposing color is found using INVERTCOLOR.  The color scale is
 %     also changed so the noise clip is at BGCOLOR.
 %
-%     H=PLOTFKMAP(MAP,FGCOLOR,BGCOLOR,H) sets the axes that the map is
+%     H=PLOTFKARF(ARF,FGCOLOR,BGCOLOR,H) sets the axes that the map is
 %     drawn in.  This is useful for subplots, guis, etc.
 %
 %    Notes:
 %
 %    Examples:
-%     Show slowness map for a dataset at about 50s periods:
-%      map=fkmap(data,50,201,[1/51 1/49]);
-%      plotfkmap(map);
+%     Show a array response function for 12 plane waves:
+%      arfpolar=fkarf(stla,stlo,50,201,20,[0:30:330],1/30,true);
+%      plotfkarf(arfpolar);
 %
-%    See also: FKMAP, FKARF
+%    See also: FKMAP, FKARF, PLOTFKMAP
 
 %     Version History:
-%        May   4, 2010 - initial version
-%        May  11, 2010 - updated for struct changes, got polar working,
-%                        coloring options, option for setting axes handle
+%        May  11, 2010 - initial version (outside of FKARF
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated May  11, 2010 at 11:00 GMT
@@ -43,25 +41,24 @@ function [varargout]=plotfkmap(map,varargin)
 error(nargchk(1,4,nargin));
 
 % check fk struct
-error(chkfkstruct(map));
+error(chkfkarfstruct(arf));
 
 % don't allow array/volume
-if(~isscalar(map) || map.volume)
+if(~isscalar(arf))
     error('seizmo:plotfkmap:badInput',...
-        'MAP must be a scalar fk struct and not a volume!');
+        'ARF must be a scalar FKARF struct!');
 end
 
 % plotting function call depends on polar
-if(map.polar)
-    [ax]=plotfkpolarmap(map,varargin{:});
+if(arf.polar)
+    varargout{1}=plotfkarfpolarmap(arf,varargin{:});
 else % cartesian
-    [ax]=plotfkcartmap(map,varargin{:});
-end
-if(nargout); varargout{1}=ax; end
-
+    varargout{1}=plotfkarfcartmap(arf,varargin{:});
 end
 
-function ax=plotfkpolarmap(map,fgcolor,bgcolor,ax)
+end
+
+function ax=plotfkarfpolarmap(map,fgcolor,bgcolor,ax)
 
 % check colors
 if(nargin<2); fgcolor='w'; bgcolor='k'; end
@@ -102,9 +99,16 @@ else
 end
 
 % pertinent info
-fmin=min(map.z);
-fmax=max(map.z);
 smax=max(abs(map.y));
+
+% get nearest neighbor station distances
+[clat,clon]=arraycenter(map.stla,map.stlo);
+[e,n]=geographic2enu(map.stla,map.stlo,0,clat,clon,0);
+tri=delaunay(e,n);
+friends=[tri(:,1:2); tri(:,2:3); tri(:,[3 1])];
+friends=unique([min(friends,[],2) max(friends,[],2)],'rows');
+dist=vincentyinv(map.stla(friends(:,1)),map.stlo(friends(:,1)),...
+                 map.stla(friends(:,2)),map.stlo(friends(:,2)));
 
 % get root defaults
 defaulttextcolor=get(0,'defaulttextcolor');
@@ -147,13 +151,21 @@ ny=numel(map.y);
 % plot polar grid
 pcolor(x,y,map.response);
 
+% last plot the nyquist rings about the plane wave locations
+titstr=cell(map.npw,1);
+for i=1:map.npw
+    snyq=snyquist(min(dist),map.f(i)); % closest 2 stations
+    [x,y]=circle(snyq);
+    x=x+map.s(i)*sin(map.baz(i)*pi/180);
+    y=y+map.s(i)*cos(map.baz(i)*pi/180);
+    plot(x,y,'r:','linewidth',2,'tag','nyquist_rings');
+    titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, FREQ: %gHz',...
+            map.s(i),map.baz(i),map.f(i));
+end
+
 % add title color etc
 hold off;
-title({['Number of Stations:  ' num2str(map.nsta)] ...
-    ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
-    ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
-    ['Frequency Range:    ' num2str(fmin) 'Hz to ' num2str(fmax) 'Hz'] ...
-    '' '' ''},...
+title([{'Array Response Function @ '}; titstr; {''; ''; ''}],...
     'fontweight','bold','color',fgcolor);
 set(ax,'clim',[-12 0]);
 shading flat;
@@ -186,7 +198,7 @@ set(0,'defaultsurfaceedgecolor',defaultsurfaceedgecolor);
 
 end
 
-function ax=plotfkcartmap(map,fgcolor,bgcolor,ax)
+function ax=plotfkarfcartmap(map,fgcolor,bgcolor,ax)
 
 % check colors
 if(nargin<2); fgcolor='w'; bgcolor='k'; end
@@ -227,9 +239,16 @@ else
 end
 
 % get pertinent info
-fmin=min(map.z);
-fmax=max(map.z);
 smax=max(max(abs(map.x)),max(abs(map.y)));
+
+% get nearest neighbor station distances
+[clat,clon]=arraycenter(map.stla,map.stlo);
+[e,n]=geographic2enu(map.stla,map.stlo,0,clat,clon,0);
+tri=delaunay(e,n);
+friends=[tri(:,1:2); tri(:,2:3); tri(:,[3 1])];
+friends=unique([min(friends,[],2) max(friends,[],2)],'rows');
+dist=vincentyinv(map.stla(friends(:,1)),map.stlo(friends(:,1)),...
+                 map.stla(friends(:,2)),map.stlo(friends(:,2)));
 
 % first plot the map
 imagesc(map.x,map.y,map.response);
@@ -269,19 +288,28 @@ ph=(1:rings(idx))*pot(idx);
 [x2,y2]=circle(ph(end),12);
 plot([x; x2],[y; y2],'color',fgcolor,...
     'linewidth',1,'linestyle',':','tag','bullseye');
-% second are the rings
+% next the rings
 for i=ph
     [x,y]=circle(i);
     plot(x,y,'color',fgcolor,'linewidth',1,'linestyle',':',...
         'tag','bullseye');
 end
+
+% last plot the nyquist rings about the plane wave locations
+titstr=cell(map.npw,1);
+for i=1:map.npw
+    snyq=snyquist(min(dist),map.f(i)); % closest 2 stations
+    [x,y]=circle(snyq);
+    x=x+map.s(i)*sin(map.baz(i)*pi/180);
+    y=y+map.s(i)*cos(map.baz(i)*pi/180);
+    plot(x,y,'r:','linewidth',2,'tag','nyquist_rings');
+    titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, FREQ: %gHz',...
+            map.s(i),map.baz(i),map.f(i));
+end
 hold off
 
 % finally take care of labels/coloring/etc
-title({['Number of Stations:  ' num2str(map.nsta)] ...
-    ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
-    ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
-    ['Frequency Range:    ' num2str(fmin) 'Hz to ' num2str(fmax) 'Hz']},...
+title([{'Array Response Function @ '}; titstr],...
     'fontweight','bold','color',fgcolor);
 xlabel('East/West Slowness (s/deg)',...
     'fontweight','bold','color',fgcolor);

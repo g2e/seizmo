@@ -19,6 +19,22 @@ function [c]=invertcolor(c,flag)
 %
 %    Notes:
 %     - 'bl' is assumed to be 'blue' as Matlab does
+%     - Supports an extended set of color names:
+%       SHORTNAME   LONGNAME         RGB
+%       r           red              [1   0   0  ]
+%       o           orange           [1   0.5 0  ]
+%       y           yellow           [1   1   0  ]
+%       l           limegreen        [0.5 1   0  ]
+%       g           green            [0   1   0  ]
+%       a           aquamarine       [0   1   0.5]
+%       c           cyan             [0   1   1  ]
+%       s           skyblue          [0   0.5 1  ]
+%       b           blue             [0   0   1  ]
+%       v           violet           [0.5 0   1  ]
+%       m           magenta          [1   0   1  ]
+%       p           pink             [1   0   0.5]
+%       k           black            [0   0   0  ]
+%       w           white            [1   1   1  ]
 %
 %    Examples:
 %     invertcolor('rgb')
@@ -32,9 +48,10 @@ function [c]=invertcolor(c,flag)
 
 %     Version History:
 %        May   4, 2010 - initial version
+%        May  11, 2010 - added support for the extended color name set
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   4, 2010 at 19:15 GMT
+%     Last Updated May  11, 2010 at 14:15 GMT
 
 % todo:
 
@@ -51,14 +68,16 @@ if(~isscalar(flag) || (~isnumeric(flag) && ~islogical(flag)))
 end
 
 % valid short names
-sn='bcgkmrwy';
-sni='yrmwgckb';
+sn='roylgacsbvmpkw';
+sni='csbvmproylgawk';
 
 % cell string of long+short names
-ln={'b' 'c' 'g' 'k' 'm' 'r' 'w' 'y' ...
-    'blue' 'cyan' 'green' 'black' 'magenta' 'red' 'white' 'yellow'};
-lni={'y' 'r' 'm' 'w' 'g' 'c' 'k' 'b' ...
-    'yellow' 'red' 'magenta' 'white' 'green' 'cyan' 'black' 'blue'};
+ln={'r' 'o' 'y' 'l' 'g' 'a' 'c' 's' 'b' 'v' 'm' 'p' 'k' 'w' ...
+    'red' 'orange' 'yellow' 'limegreen' 'green' 'aquamarine' 'cyan' ...
+    'skyblue' 'blue' 'violet' 'magenta' 'pink' 'black' 'white'};
+lni={'c' 's' 'b' 'v' 'm' 'p' 'r' 'o' 'y' 'l' 'g' 'a' 'w' 'k' ...
+    'cyan' 'skyblue' 'blue' 'violet' 'magenta' 'pink' 'red' 'orange' ...
+    'yellow' 'limegreen' 'green' 'aquamarine' 'white' 'black'};
 
 % allow Nx3 (must be between 0 & 1)
 if(isreal(c) && size(c,2)==3 && all(c(:)<=1 & c(:)>=0))

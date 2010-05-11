@@ -77,9 +77,10 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,center)
 %                        specified array center (specified is hugely faster
 %                        but suffers in resolution)
 %        May   9, 2010 - struct changes
+%        May  10, 2010 - use checkheader more effectively
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   9, 2010 at 15:30 GMT
+%     Last Updated May  10, 2010 at 15:50 GMT
 
 % todo:
 
@@ -128,7 +129,16 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'MULCMP_DEP','ERROR',...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR',...
+        'MULTIPLE_DELTA','ERROR',...
+        'MULTIPLE_NPTS','ERROR',...
+        'NONINTEGER_REFTIME','ERROR',...
+        'UNSET_REFTIME','ERROR',...
+        'OUTOFRANGE_REFTIME','ERROR',...
+        'UNSET_ST_LATLON','ERROR');
     
     % turn off header checking
     oldcheckheaderstate=checkheader_state(false);
@@ -142,37 +152,25 @@ try
     % number of records
     nrecs=numel(data);
     
+    % need 2+ records
+    if(nrecs<2)
+        error('seizmo:fkmap:arrayTooSmall',...
+            'DATA must have 2+ records!');
+    end
+    
     % verbosity
     verbose=seizmoverbose;
-    
-    % require evenly spaced time series
-    iftype=getenumid(data,'iftype');
-    leven=getlgc(data,'leven');
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:fkmap:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    elseif(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:fkmap:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
     
     % require all records to have equal npts, delta, b utc, and 1 cmp
     % - we could drop the b UTC requirement but that would require having a
     %   shift term for each record (might be useful for surface waves and
     %   large aperture arrays)
-    [npts,delta,butc,eutc,ncmp,stla,stlo,stel,stdp]=getheader(data,...
-        'npts','delta','b utc','e utc','ncmp','stla','stlo','stel','stdp');
+    [npts,delta,butc,eutc,stla,stlo,stel,stdp]=getheader(data,...
+        'npts','delta','b utc','e utc','stla','stlo','stel','stdp');
     butc=cell2mat(butc); eutc=cell2mat(eutc);
-    if(numel(unique(npts))~=1 || numel(unique(delta))~=1 ...
-            || size(unique(butc,'rows'),1)~=1)
+    if(size(unique(butc,'rows'),1)~=1)
         error('seizmo:fkmap:badData',...
-            'Records in DATA must have equal NPTS, DELTA, & B (UTC)!');
-    elseif(any(ncmp)~=1)
-        error('seizmo:fkmap:badNCMP',...
-            'Records in DATA must be single component only!');
+            'Records in DATA must have equal B (UTC)!');
     end
     
     % check nyquist
@@ -284,8 +282,8 @@ try
         baz=baz(ones(spts,1),:);
         p=2*pi*1i*[smag(:).*sin(baz(:)) smag(:).*cos(baz(:))]*r;
         clear smag baz
-        [smap(1:nrng,1).map]=deal(zeros(spts,bazpts));
-    else % square
+        [smap(1:nrng,1).response]=deal(zeros(spts,bazpts));
+    else % cartesian
         spts=spts(1);
         sx=-smax:2*smax/(spts-1):smax;
         [smap(1:nrng,1).x]=deal(sx*d2km);
@@ -294,7 +292,7 @@ try
         sy=fliplr(sx)';
         p=2*pi*1i*[sx(:) sy(:)]*r;
         clear sx sy
-        [smap(1:nrng,1).map]=deal(zeros(spts));
+        [smap(1:nrng,1).response]=deal(zeros(spts));
     end
     
     % loop over frequency ranges

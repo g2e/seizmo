@@ -46,9 +46,10 @@ function [value]=getvaluefun(data,func,type,scalar)
 %        Mar. 18, 2010 - initial version
 %        Mar. 20, 2010 - fixed bug that added extra time point
 %        Mar. 26, 2010 - added example to copy GETNORM (now deprecated)
+%        May  10, 2010 - better SCALAROUTPUT implementation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 26, 2010 at 17:45 GMT
+%     Last Updated May  10, 2010 at 16:15 GMT
 
 % todo:
 
@@ -88,11 +89,7 @@ try
     nrecs=numel(data);
 
     % preallocate value
-    if(scalar)
-        value=nan(nrecs,1);
-    else
-        value=cell(nrecs,1);
-    end
+    value=cell(nrecs,1);
 
     % which cmp are we working on?
     type=lower(type);
@@ -105,20 +102,11 @@ try
             end
             
             % apply function
-            if(scalar)
-                for i=1:nrecs
-                    value(i)=func(double(data(i).dep));
-                    
-                    % detail message
-                    if(verbose); print_time_left(i,nrecs); end
-                end
-            else
-                for i=1:nrecs
-                    value{i}=func(double(data(i).dep));
-                    
-                    % detail message
-                    if(verbose); print_time_left(i,nrecs); end
-                end
+            for i=1:nrecs
+                value{i}=func(double(data(i).dep));
+                
+                % detail message
+                if(verbose); print_time_left(i,nrecs); end
             end
         case 'ind'
             % fill .ind for evenly spaced arrays
@@ -143,21 +131,23 @@ try
             end
 
             % apply function
-            if(scalar)
-                for i=1:nrecs
-                    value(i)=func(double(data(i).ind));
-                    
-                    % detail message
-                    if(verbose); print_time_left(i,nrecs); end
-                end
-            else
-                for i=1:nrecs
-                    value{i}=func(double(data(i).ind));
-                    
-                    % detail message
-                    if(verbose); print_time_left(i,nrecs); end
-                end
+            for i=1:nrecs
+                value{i}=func(double(data(i).ind));
+                
+                % detail message
+                if(verbose); print_time_left(i,nrecs); end
             end
+    end
+    
+    % error if not scalar
+    if(scalar)
+        if(any(cellfun('prodofsize',value)~=1))
+            error('seizmo:getvaluefun:nonScalarOutput',...
+                ['Non-scalar output when scalar output expected!\n' ...
+                'Please set SCALAROUTPUT option to FALSE!']);
+        else
+            value=cell2mat(value);
+        end
     end
 
     % toggle checking back

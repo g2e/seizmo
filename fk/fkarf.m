@@ -1,12 +1,13 @@
-function [varargout]=fkarf(stla,stlo,smax,spts,s,baz,f,arf)
+function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
 %FKARF    Returns the fk array response function for a seismic array
 %
 %    Usage:    fkarf(stla,stlo,smax)
 %              fkarf(stla,stlo,smax,spts)
 %              fkarf(stla,stlo,smax,spts,s,baz)
 %              fkarf(stla,stlo,smax,spts,s,baz,f)
+%              fkarf(stla,stlo,smax,spts,s,baz,f,polar)
+%              fkarf(stla,stlo,smax,spts,s,baz,f,polar,center)
 %              arf=fkarf(...)
-%              fkarf(stla,stlo,smax,spts,s,baz,f,arf)
 %
 %    Description: FKARF(STLA,STLO,SMAX) shows the array response function
 %     (ARF) for a 1Hz plane wave incoming from directly below an array of
@@ -26,10 +27,28 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s,baz,f,arf)
 %     degree.  BAZ is in degrees clockwise from North and indicates the
 %     direction from the array to the wave (180 degree from the direction
 %     the plane wave is heading through the array).  The default values are
-%     S=0 & BAZ=0.
+%     S=0 & BAZ=0.  You may specify multiple plane waves by giving vectors
+%     of values for S & BAZ.
 %
 %     FKARF(STLA,STLO,SMAX,SPTS,S,BAZ,F) alters the frequency of the plane
 %     wave to F.  F is expected to be in Hz.  The default value is 1.
+%
+%     FKARF(STLA,STLO,SMAX,SPTS,S,BAZ,F,POLAR) decides if the slowness map
+%     is sampled regularly in cartesian or polar coordinates.  Polar coords
+%     are useful for slicing the volume by azimuth (pie slice) or slowness
+%     (rings).  Cartesian coords (the default) samples the slowness space
+%     regularly in the East/West & North/South directions and so exhibits
+%     less distortion of the slowness space.
+%
+%     FKARF(STLA,STLO,SMAX,SPTS,S,BAZ,F,POLAR,CENTER) defines the array
+%     center.  CENTER may be [LAT LON], 'center', 'coarray', or 'full'.
+%     The default is 'coarray'.  The 'center' option finds the center
+%     position of the array by averaging the station positions (using
+%     ARRAYCENTER).  Both 'coarray' and 'full' are essentially centerless
+%     methods using the relative positioning between every possible pairing
+%     of stations in the array.  The 'full' method includes redundant and
+%     same station pairings (and will always give poorer results compared
+%     to 'coarray').
 %
 %     ARF=FKARF(...) returns the array response function in struct ARF
 %     without plotting it.  This is useful for stacking ARFs for a multiple
@@ -38,16 +57,15 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s,baz,f,arf)
 %      ARF.nsta      --  number of stations
 %      ARF.stla      --  station latitudes
 %      ARF.stlo      --  station longitudes
-%      ARF.smax      --  max slowness in the array response
+%      ARF.x         --  east/west slowness or azimuth values
+%      ARF.y         --  north/south or radial slowness values
 %      ARF.npw       --  number of plane waves
 %      ARF.s         --  plane wave slownesses
 %      ARF.baz       --  plane wave backazimuths
 %      ARF.f         --  plane wave frequencies
-%
-%     FKARF(STLA,STLO,SMAX,SPTS,S,BAZ,F,ARF) combines a previous array
-%     response function ARF with the current run's.  See the previous usage
-%     form for the structure of ARF.  Note that STLO, STLA, SMAX & SPTS
-%     should be equal to that in ARF.
+%      ARF.polar     --  true if slowness is sampled in polar coordinates
+%      ARF.center    --  array center or method
+%      ARF.normdb    --  what 0dB actually corresponds to
 %
 %    Notes:
 %     - The circles of the bull's eye in the plot correspond to several
@@ -67,11 +85,10 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s,baz,f,arf)
 %      fkarf(stla,stlo,5);
 %
 %     Get a multi-plane wave response:
-%      arf=fkarf(stla,stlo,50,201,20,0,0.03);
-%      arf=fkarf(stla,stlo,50,201,10,0,0.03);
-%      fkarf(stla,stlo,50,201,20,45,0.03);
+%      arf=fkarf(stla,stlo,50,201,[20 10 20],[0 0 45],0.03);
 %
-%    See also: FKMAP, SNYQUIST, PLOTFKMAP, KXY2SLOWBAZ, SLOWBAZ2KXY
+%    See also: FKMAP, PLOTFKMAP, FKVOLUME, PLAYFKVOLUME, FK4D
+%              KXY2SLOWBAZ, SLOWBAZ2KXY, SNYQUIST
 
 %     Version History:
 %        May   1, 2010 - initial version
@@ -79,16 +96,15 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s,baz,f,arf)
 %        May   4, 2010 - circle is its own function now
 %        May   7, 2010 - only doing one triangle gives better response and
 %                        takes less than half the time
+%        May  10, 2010 - added in options available to FKMAP
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   7, 2010 at 02:30 GMT
+%     Last Updated May  10, 2010 at 17:30 GMT
 
 % todo:
-% - ability to define an array center vs coarray
-% - full coarray vs 1 triangle
 
 % check nargin
-msg=nargchk(3,8,nargin);
+msg=nargchk(3,10,nargin);
 if(~isempty(msg)); error(msg); end
 
 % constants
@@ -97,9 +113,14 @@ d2km=6371*d2r;
 
 % defaults
 if(nargin<4 || isempty(spts)); spts=101; end
-if(nargin<5 || isempty(s)); s=0; end
-if(nargin<6 || isempty(baz)); baz=0; end
-if(nargin<7 || isempty(f)); f=1; end
+if(nargin<5 || isempty(s0)); s0=0; end
+if(nargin<6 || isempty(baz0)); baz0=0; end
+if(nargin<7 || isempty(f0)); f0=1; end
+if(nargin<8 || isempty(polar)); polar=false; end
+if(nargin<9 || isempty(center)); center='coarray'; end
+
+% valid center strings
+valid.CENTER={'center' 'coarray' 'full'};
 
 % check inputs
 if(~isreal(stla) || ~isreal(stlo) || ~isequalsizeorscalar(stla,stlo))
@@ -111,190 +132,201 @@ elseif(~isreal(smax) || ~isscalar(smax) || smax<=0)
 elseif(~isscalar(spts) || fix(spts)~=spts || spts<=0)
     error('seizmo:fkarf:badInput',...
         'SPTS must be a positive scalar integer!');
-elseif(~isreal(s) || ~isscalar(s) || s<0)
+elseif(~isreal(s0) || any(s0<0))
     error('seizmo:fkarf:badInput',...
-        'S must be a positive real scalar in s/deg!');
-elseif(~isreal(baz) || ~isscalar(baz))
+        'S must be a positive slowness in s/deg!');
+elseif(~isreal(baz0))
     error('seizmo:fkarf:badInput',...
-        'BAZ must be a real scalar in degrees!');
-elseif(~isreal(f) || ~isscalar(f) || f<=0)
+        'BAZ must be in degrees!');
+elseif(~isreal(f0) || any(f0<=0))
     error('seizmo:fkarf:badInput',...
-        'F must be a positive real scalar in Hz!');
+        'F must be positive frequency in Hz!');
+elseif(~isequalsizeorscalar(s0,baz0,f0))
+    error('seizmo:fkarf:badInput',...
+        'S, BAZ, F must be equal sized or scalar!');
+elseif(~isscalar(polar) || (~islogical(polar) && ~isnumeric(polar)))
+    error('seizmo:fkarf:badInput',...
+        'POLAR must be TRUE or FALSE!');
+elseif((isnumeric(center) && (~isreal(center) || ~numel(center)==2)) ...
+        || (ischar(center) && ~any(strcmpi(center,valid.CENTER))))
+    error('seizmo:fkarf:badInput',...
+        'CENTER must be [LAT LON], ''CENTER'', ''COARRAY'' or ''FULL''');
 end
 
 % number of stations
-nsta=max(numel(stla),numel(stlo));
-if(isscalar(stla)); stla(1:nsta,1)=stla; end
-if(isscalar(stlo)); stlo(1:nsta,1)=stlo; end
+nrecs=max(numel(stla),numel(stlo));
+if(isscalar(stla)); stla(1:nrecs,1)=stla; end
+if(isscalar(stlo)); stlo(1:nrecs,1)=stlo; end
 
-% handle arf
-arffields={'response' 'nsta' 'stla' 'stlo' 'smax' 'npw' 's' 'baz' 'f'};
-if(nargin<8 || isempty(arf))
-    % create arf
-    arf.response=zeros(spts);
-    arf.nsta=nsta;
-    arf.stla=stla;
-    arf.stlo=stlo;
-    arf.smax=smax;
-    arf.npw=1;
-    arf.s=s;
-    arf.baz=baz;
-    arf.f=f;
-else
-    % check old arf
-    if(~isstruct(arf) || any(~ismember(arffields,fieldnames(arf))))
-        error('seizmo:fkarf:badInput',...
-            'ARF is not a proper struct!');
-    elseif(arf.nsta~=nsta || ~isequal(arf.stla,stla) ...
-            || ~isequal(arf.stlo,stlo))
-        warning('seizmo:fkarf:badInput',...
-            'Station list has changed!');
-    elseif(~isequal(size(arf.response),[spts spts]) ...
-            || arf.smax~=smax || arf.npw~=fix(arf.npw) || arf.npw<0 ...
-            || isinf(arf.npw) || isnan(arf.npw) ...
-            || numel(arf.s)~=arf.npw || numel(arf.baz)~=arf.npw ...
-            || numel(arf.f)~=arf.npw)
-        error('seizmo:fkarf:badInput',...
-            'ARF does not match current inputs or is corrupt!');
-    end
-    arf.response=10.^(arf.response/10)*arf.npw*nsta^2;
-    arf.npw=arf.npw+1;
-    arf.s=[arf.s(:); s];
-    arf.baz=[arf.baz(:); baz];
-    arf.f=[arf.f(:); f];
+% require 2+ stations
+if(nrecs<2)
+    error('seizmo:fkarf:arrayTooSmall',...
+            'FKARF requires 2+ station locations!');
 end
 
-% calculate coarray (relative positions)
+% expand plane wave details
+npw=max([numel(s0) numel(baz0) numel(f0)]);
+if(isscalar(s0)); s0(1:npw,1)=s0; end
+if(isscalar(baz0)); baz0(1:npw,1)=baz0; end
+if(isscalar(f0)); f0(1:npw,1)=f0; end
+s0=s0(:);
+baz0=baz0(:);
+f0=f0(:);
+
+% create arf
+arf.nsta=nrecs;
+arf.stla=stla;
+arf.stlo=stlo;
+arf.npw=npw;
+arf.s=s0;
+arf.baz=baz0;
+arf.f=f0;
+arf.polar=polar;
+arf.center=center;
+
+% fix center
+if(ischar(center))
+    center=lower(center);
+else
+    clat=center(1);
+    clon=center(2);
+    center='user';
+end
+
+% get relative positions from center
 % r=(x  ,y  )
 %     ij  ij
 %
 % x is km east
 % y is km north
 %
-% [ r   r   ... r
-%    11  12      1N
-%   r   r   ... r
-%    21  22      2N
-%    .   .  .    .
-%    .   .   .   .
-%    .   .    .  .
-%   r   r   ... r   ]
-%    N1  N2      NN
-%
-[dist,az]=vincentyinv(stla(:,ones(nsta,1)),stlo(:,ones(nsta,1)),...
-    stla(:,ones(nsta,1))',stlo(:,ones(nsta,1))');
+% r is 2xNR
+switch center
+    case 'coarray'
+        % centerless (make coarray)
+        % [ r   r   ... r
+        %    11  12      1N
+        %   r   r   ... r
+        %    21  22      2N
+        %    .   .  .    .
+        %    .   .   .   .
+        %    .   .    .  .
+        %   r   r   ... r   ]
+        %    N1  N2      NN
+        [dist,az]=vincentyinv(...
+            stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))',...
+            stla(:,ones(nrecs,1)),stlo(:,ones(nrecs,1)));
+        idx=triu(true(nrecs),1);
+        dist=dist(idx);
+        az=az(idx);
+    case 'full'
+        % centerless too
+        [dist,az]=vincentyinv(...
+            stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))',...
+            stla(:,ones(nrecs,1)),stlo(:,ones(nrecs,1)));
+    case 'center'
+        % get array center
+        [clat,clon]=arraycenter(stla,stlo);
+        [dist,az]=vincentyinv(clat,clon,stla,stlo);
+    otherwise % user
+        % array center was specified
+        [dist,az]=vincentyinv(clat,clon,stla,stlo);
+end
 az=az*d2r;
-x=dist.*sin(az);
-y=dist.*cos(az);
+r=[dist(:).*sin(az(:)) dist(:).*cos(az(:))]';
+nidx=size(r,2);
+clear dist az
 
-% break down plane wave slowness/baz to sx/sy
-s=s/d2km; % s/km
-baz=baz*d2r;
-sx0=s*sin(baz);
-sy0=s*cos(baz);
-
-% make wavenumber arrays
+% make projection arrays
+% p=2*pi*i*s*r
+%
+% where s is the slowness vector s=(s ,s ) and is NSx2
+%                                    x  y
+% p is NSxNR
 smax=smax/d2km;
-sx=-smax:2*smax/(spts-1):smax;
-sy=fliplr(sx)';
-kk0x=2*pi*f*1i*(sx(ones(spts,1),:)-sx0);
-kk0y=2*pi*f*1i*(sy(:,ones(spts,1))-sy0);
+if(polar)
+    if(numel(spts)==2)
+        bazpts=spts(2);
+        spts=spts(1);
+    else
+        bazpts=181;
+    end
+    smag=(0:spts-1)/(spts-1)*smax;
+    arf.y=smag'*d2km;
+    smag=smag(ones(bazpts,1),:)';
+    baz=(0:bazpts-1)/(bazpts-1)*360*d2r;
+    arf.x=baz/d2r;
+    baz=baz(ones(spts,1),:);
+    p=2*pi*1i*[smag(:).*sin(baz(:)) smag(:).*cos(baz(:))]*r;
+    clear smag baz
+    arf.response=zeros(spts,bazpts);
+else % cartesian
+    spts=spts(1);
+    sx=-smax:2*smax/(spts-1):smax;
+    arf.x=sx*d2km;
+    arf.y=fliplr(sx*d2km)';
+    sx=sx(ones(spts,1),:);
+    sy=fliplr(sx)';
+    p=2*pi*1i*[sx(:) sy(:)]*r;
+    clear sx sy
+    arf.response=zeros(spts);
+end
+ns=size(p,1);
 
-% get indices to go through
-% (upper/lower/both triangles give the same result)
-idx=find(triu(true(nsta),1))';   % upper triangle
-%idx=find(tril(true(nsta),-1))'; % lower triangle
-%idx=find(~eye(nsta))';          % both triangles (no diagonal)
-%idx=find(true(nsta))';          % everything
-nidx=numel(idx);
+% offset projection by plane wave locations
+s=2*pi*1i*[s0(:).*sin(d2r*baz0(:)) s0(:).*cos(d2r*baz0(:))]/d2km;
 
 % detail message
 verbose=seizmoverbose;
 if(verbose)
-    disp('Generating Array Response Function');
-    print_time_left(0,nidx);
+    fprintf('Getting fk Map for plane wave at:\n');
 end
 
-% get array response
-%  2*pi*i*(k-k0)r
-% e
-for i=1:nidx
-    arf.response=arf.response+exp(kk0x*x(idx(i))+kk0y*y(idx(i)));
-    if(verbose); print_time_left(i,nidx); end
+% loop over plane waves
+for a=1:npw
+    % detail message
+    if(verbose)
+        fprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, FREQ: %gHz\n',...
+            s0(a),baz0(a),f0(a));
+    end
+    
+    % projection of plane wave
+    p0=s(a,:)*r;
+    p0=p0(ones(ns,1),:);
+
+    % get response
+    switch center
+        case {'full' 'coarray'}
+            arf.response(:)=arf.response(:)...
+                +sum(exp(f0(a)*(p-p0)),2);
+        otherwise
+            arf.response(:)=arf.response(:)...
+                +10*log10(abs(sum(exp(f0(a)*(p-p0)),2)).^2/nidx);
+    end
 end
 
 % convert to dB
-% - note the use of abs to handle slightly negative terms
-arf.response=10*log10(abs(abs(arf.response))/(arf.npw*nidx));
+switch center
+    case {'full' 'coarray'}
+        % using full and real here gives the exact plots of
+        % Koper, Seats, and Benz 2010 in BSSA
+        arf.response=...
+            10*log10(abs(real(arf.response))/(npw*nidx));
+    otherwise
+        arf.response=arf.response/npw;
+end
+
+% normalize so max peak is at 0dB
+arf.normdb=max(arf.response(:));
+arf.response=arf.response-arf.normdb;
 
 % return if output
-if(nargout); varargout{1}=arf; return; end
-
-% get nyquist slowness (plot in a bit)
-[clat,clon]=arraycenter(stla,stlo);
-[e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
-tri=delaunay(e,n);
-friends=[tri(:,1:2); tri(:,2:3); tri(:,[3 1])];
-friends=unique([min(friends,[],2) max(friends,[],2)],'rows');
-dist=vincentyinv(stla(friends(:,1)),stlo(friends(:,1)),...
-                 stla(friends(:,2)),stlo(friends(:,2)));
-snyq=snyquist(min(dist),f); % closest 2 stations
-
-% plotting slowness space
-
-% first plot the slowness map
-figure;
-imagesc(sx*d2km,fliplr(sx*d2km),arf.response);
-set(gca,'ydir','normal');
-set(gca,'clim',[-12 0]);
-hold on
-
-% next plot the bull's eye
-% Phase:       Rg    Lg    Sn    Pn    Sdiff  Pdiff  PKPcdiff
-% Vel (km/s):  3.0   4.0   4.5   8.15  13.3   25.1   54.0
-% S (s/deg):   37.0  27.8  24.7  13.6  8.36   4.43   2.06
-smax=smax*d2km;
-if(smax>=37)
-    ph=[37 27.8 24.7 13.6 8.36 4.43];
-elseif(smax>=28)
-    ph=[27.8 24.7 13.6 8.36 4.43];
-elseif(smax>=25)
-    ph=[24.7 13.6 8.36 4.43];
-elseif(smax>=14)
-    ph=[13.6 8.36 4.43 2.06];
-elseif(smax>=8.5)
-    ph=[8.36 4.43 2.06];
-elseif(smax>=4.5)
-    ph=[4.43 2.06];
+if(nargout)
+    varargout{1}=arf;
+    return;
 else
-    ph=2.06;
+    figure;
+    plotfkarf(arf);
 end
-[x,y]=circle(ph(1),12);
-[x2,y2]=circle(ph(end),12);
-plot([x; x2],[y; y2],'w','linewidth',1,'tag','bullseye');
-for i=ph
-    [x,y]=circle(i);
-    plot(x,y,'w','linewidth',1,'tag','bullseye');
-end
-
-% last plot the nyquist ring about the plane wave location
-[x,y]=circle(snyq);
-x=x+sx0*d2km; y=y+sy0*d2km;
-plot(x,y,'r','linewidth',2,'tag','nyquist ring');
-hold off
-
-% finally take care of coloring/labels/etc
-title(['Array Response Function @ ' ...
-    num2str(f) 'Hz (' num2str(1/f) 's)'],'fontweight','bold');
-xlabel('East/West Slowness (s/deg)','fontweight','bold');
-ylabel('North/South Slowness (s/deg)','fontweight','bold');
-colormap(ritz);
-c=colorbar('eastoutside','fontweight','bold');
-set(c,'xaxislocation','top');
-set(gca,'fontweight','bold');
-xlabel(c,'dB')
-axis equal
-xlim([-smax smax])
-ylim([-smax smax])
 
 end

@@ -1,4 +1,4 @@
-function [varargout]=fk4d(data,width,overlap,smax,spts,frng,polar,center)
+function [s4d]=fk4d(data,width,overlap,varargin)
 %FK4D    Returns a map of energy in frequency-wavenumber-time space
 %
 %    Usage:    s4d=fk4d(data,width,overlap,smax,spts,frng)
@@ -75,19 +75,117 @@ function [varargout]=fk4d(data,width,overlap,smax,spts,frng,polar,center)
 
 %     Version History:
 %        May   9, 2010 - initial version
+%        May  10, 2010 - first working version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   9, 2010 at 15:30 GMT
+%     Last Updated May  10, 2010 at 15:50 GMT
 
 % todo:
-% - require 6 to 8 inputs
-% - check the dataset (needs fields defined)
-% - check inputs
-% - get earliest and latest times
-% - interpolate window based on those times and width and overlap
-% - do we set data outside window to zero or do we throw it out?
-%   - i think dropping would be more accurate (if not the same)
-% - then just pass to fkvolume
-% - the end
+
+% check nargin
+msg=nargchk(6,8,nargin);
+if(~isempty(msg)); error(msg); end
+
+% check struct
+versioninfo(data,'dep');
+
+% defaults for width/overlap
+if(isempty(width)); width=1; end
+if(isempty(overlap)); overlap=0; end
+
+% check width/overlap
+if(~isreal(width) || ~isscalar(width) || width<0 || width>100)
+    error('seizmo:fk4d:badInput',...
+        'WIDTH must be a percent value between 0 & 100!');
+elseif(~isreal(overlap) || ~isscalar(overlap) || overlap<0 || overlap>100)
+    error('seizmo:fk4d:badInput',...
+        'OVERLAP must be a percent value between 0 & 100!');
+end
+
+% turn off struct checking
+oldseizmocheckstate=seizmocheck_state(false);
+
+% attempt header check
+try
+    % check headers
+    data=checkheader(data,...
+        'MULCMP_DEP','ERROR',...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR',...
+        'MULTIPLE_DELTA','ERROR',...
+        'NONINTEGER_REFTIME','ERROR',...
+        'UNSET_REFTIME','ERROR',...
+        'OUTOFRANGE_REFTIME','ERROR',...
+        'UNSET_ST_LATLON','ERROR');
+    
+    % turn off header checking
+    oldcheckheaderstate=checkheader_state(false);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+end
+
+% do fk analysis
+try
+    % verbosity
+    verbose=seizmoverbose;
+    
+    % synchronize to start of first record
+    data=synchronize(data,'b','first');
+    
+    % get time range
+    [b,e,delta]=getheader(data,'b','e','delta');
+    b=min(b);
+    e=max(e);
+    delta=delta(1); % required all the same
+    
+    % get time frame setup
+    width=width/100;
+    overlap=overlap/100;
+    nframes=fix((1-width*overlap)/(width-width*overlap));
+    width=width*(e-b);
+    tstep=width*(1-overlap);
+    
+    % loop over time windows
+    skip=0;
+    for i=1:nframes
+        % detail message
+        if(verbose)
+            fprintf('Getting fk Response Window %d of %d\n',i,nframes);
+        end
+        
+        % get data window
+        start=b+(i-1)*tstep;
+        finish=start+width;
+        data0=interpolate(data,1/delta,[],start,finish,nan);
+        
+        % throw out incomplete records (those with nans)
+        data0(getvaluefun(data0,@(x)any(isnan(x(:)))))=[];
+        
+        % skip if <2 records
+        if(numel(data0)<2); skip=skip+1; continue; end
+        
+        % pass to fkvolume
+        % - each column corresponds to a time range
+        % - each row corresponds to a frequency range
+        if((i-skip)==1)
+            s4d=fkvolume(data0,varargin{:});
+            s4d=s4d(:);
+        else
+            s4d(:,i-skip)=fkvolume(data0,varargin{:});
+        end
+    end
+    
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
+catch
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
+    checkheader_state(oldcheckheaderstate);
+    
+    % rethrow error
+    error(lasterror)
+end
 
 end

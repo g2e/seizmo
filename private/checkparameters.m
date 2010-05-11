@@ -46,9 +46,14 @@ function [option]=checkparameters(setglobal,varargin)
 %        Dec.  8, 2009 - new options NAN_DEP & INF_DEP
 %        Jan. 28, 2010 - doc update
 %        Feb. 28, 2010 - added REPEAT_DEP
+%        May  10, 2010 - added NONTIME_IFTYPE, NONSPECTRAL_IFTYPE,
+%                        NONXYZ_IFTYPE, UNSET_B, UNSET_NPTS, UNSET_DELTA,
+%                        UNSET_ST_LATLON, UNSET_EV_LATLON, FALSE_LEVEN,
+%                        XYZ_IFTYPE, MULTIPLE_REFTIME, MULTIPLE_NPTS,
+%                        MULTIPLE_B.  Edited several defaults.
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 28, 2010 at 13:20 GMT
+%     Last Updated May  10, 2010 at 13:20 GMT
 
 % todo:
 
@@ -67,6 +72,10 @@ option.INVALID_NVHDR='ERROR';
 %enums
 option.INVALID_IFTYPE='ERROR';
 option.INVALID_UNEVEN='ERROR';
+option.NONSPECTRAL_IFTYPE='IGNORE';
+option.NONXYZ_IFTYPE='IGNORE';
+option.NONTIME_IFTYPE='IGNORE';
+option.XYZ_IFTYPE='IGNORE';
 option.MULTIPLE_IFTYPE='WARN';
 option.INVALID_IZTYPE='WARN';
 option.NONZERO_IZTYPE='WARN';
@@ -75,13 +84,20 @@ option.INVALID_IDEP='WARN';
 option.MULTIPLE_IDEP='WARN';
 %delta
 option.UNSET_LEVEN='ERROR';
+option.FALSE_LEVEN='IGNORE';
 option.MULTIPLE_LEVEN='WARN'; %CHECK W/ VSDATA TOO
+option.UNSET_DELTA='ERROR';
 option.MULTIPLE_DELTA='WARN';
 option.NEGATIVE_DELTA='ERROR';
 option.ZERO_DELTA='ERROR'; % CHECK W/ VSDATA TOO
+%b
+option.UNSET_B='ERROR';
+option.MULTIPLE_B='IGNORE';
 %npts
-option.NEGATIVE_NPTS='WARNFIX';
-option.ZERO_NPTS='WARN'; % CHECK W/ VSDATA TOO
+option.UNSET_NPTS='ERROR';
+option.NEGATIVE_NPTS='ERROR';
+option.ZERO_NPTS='IGNORE'; % CHECK W/ VSDATA TOO
+option.MULTIPLE_NPTS='IGNORE'; 
 %ncmp
 option.MULCMP_DEP='IGNORE'; % CHECK W/ VSDATA TOO
 option.INVALID_MULCMP_DEP='WARNFIX'; % CHECK W/ VSDATA TOO
@@ -96,12 +112,15 @@ option.BAD_SPECTRAL_NSPTS='ERROR';
 option.BAD_SPECTRAL_DELTA='ERROR';
 option.BAD_SPECTRAL_E='ERROR';
 %timing
-option.NONINTEGER_REFTIME='WARN';
 option.UNSET_REFTIME='WARN';
+option.NONINTEGER_REFTIME='WARN';
 option.OUTOFRANGE_REFTIME='WARN';
+option.MULTIPLE_REFTIME='IGNORE';
 option.INCONSISTENT_E='FIX';
 option.INACCURATE_TIMING='WARN';
 %location
+option.UNSET_ST_LATLON='WARN';
+option.UNSET_EV_LATLON='IGNORE';
 option.OUTOFRANGE_LAT='WARNFIX';
 option.OUTOFRANGE_LON='WARNFIX';
 option.OLD_DELAZ='FIX';
