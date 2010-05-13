@@ -75,12 +75,15 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,center)
 %                        a couple options for doing rose vs grid slowness
 %                        plots, also allow changing between coarray & a
 %                        specified array center (specified is hugely faster
-%                        but suffers in resolution)
+%                        but suffers in resolution slightly)
 %        May   9, 2010 - struct changes
 %        May  10, 2010 - use checkheader more effectively
+%        May  12, 2010 - fixed an annoying bug (2 wrongs giving the right
+%                        answer), minor code touches while debugging
+%                        fkxcvolume
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  10, 2010 at 15:50 GMT
+%     Last Updated May  12, 2010 at 15:50 GMT
 
 % todo:
 
@@ -214,12 +217,13 @@ try
     seizmoverbose(verbose);
     
     % get fft
-    data=delta(1)*fft(data,nspts,1); % delta for Parseval's
+    data=fft(data,nspts,1);
     
-    % get relative positions from center
+    % get relative positions of center
     % r=(x  ,y  )
     %     ij  ij
     %
+    % position of j as seen from i
     % x is km east
     % y is km north
     %
@@ -236,35 +240,46 @@ try
             %    .   .    .  .
             %   r   r   ... r   ]
             %    N1  N2      NN
+            %
+            % then we just use the
+            % upper triangle of that
             [dist,az]=vincentyinv(...
-                stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))',...
-                stla(:,ones(nrecs,1)),stlo(:,ones(nrecs,1)));
+                stla(:,ones(nrecs,1)),stlo(:,ones(nrecs,1)),...
+                stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))');
             idx=triu(true(nrecs),1);
             dist=dist(idx);
             az=az(idx);
         case 'full'
-            % centerless too 
+            % centerless too but retain full coarray
             [dist,az]=vincentyinv(...
-                stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))',...
-                stla(:,ones(nrecs,1)),stlo(:,ones(nrecs,1)));
+                stla(:,ones(nrecs,1)),stlo(:,ones(nrecs,1)),...
+                stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))');
         case 'center'
             % get array center
             [clat,clon]=arraycenter(stla,stlo);
-            [dist,az]=vincentyinv(clat,clon,stla,stlo);
+            [dist,az]=vincentyinv(stla,stlo,clat,clon);
         otherwise % user
             % array center was specified
-            [dist,az]=vincentyinv(clat,clon,stla,stlo);
+            [dist,az]=vincentyinv(stla,stlo,clat,clon);
     end
     az=az*d2r;
     r=[dist(:).*sin(az(:)) dist(:).*cos(az(:))]';
     nidx=size(r,2);
     clear dist az
     
-    % make projection arrays
+    % make projection array
     % p=2*pi*i*s*r
     %
     % where s is the slowness vector s=(s ,s ) and is NSx2
     %                                    x  y
+    %
+    % Note s is actually a collection of slowness vectors who
+    % correspond to the slownesses that we want to inspect in
+    % the fk analysis.  So p is actually the projection of all
+    % slownesses onto all of the position vectors (multiplied
+    % by 2*pi*i so we don't have to do that for each frequency
+    % later)
+    %
     % p is NSxNR
     smax=smax/d2km;
     if(polar)
@@ -310,16 +325,20 @@ try
             continue;
         end
         
-        % build complex spectra array
+        % build complex cross spectra array, cs
+        % cs is normalized by the auto spectra.
+        %
+        % note that center/user do not require
+        % an array but do need normalization
+        %
         % cs is NRxNF
-        cs=data(fidx,:)';
+        cs=data(fidx,:).';
+        cs=cs./abs(cs);
         switch center
             case 'coarray'
-                cs=cs./sqrt(cs.*conj(cs));
                 [row,col]=find(triu(true(nrecs),1));
                 cs=cs(row,:).*conj(cs(col,:));
             case 'full'
-                cs=cs./sqrt(cs.*conj(cs));
                 [row,col]=find(true(nrecs));
                 cs=cs(row,:).*conj(cs(col,:));
         end
@@ -331,7 +350,7 @@ try
             print_time_left(0,nfreq);
         end
         
-        % loop over frequencies
+        % loop over frequencies, adding them together
         for b=1:nfreq
             % get response
             switch center
@@ -340,14 +359,14 @@ try
                         +exp(f(fidx(b))*p)*cs(:,b);
                 otherwise
                     smap(a).response(:)=smap(a).response(:)...
-                        +10*log10(abs(exp(f(fidx(b))*p)*cs(:,b)).^2/nidx);
+                        +abs(exp(f(fidx(b))*p)*cs(:,b)).^2;
             end
             
             % detail message
             if(verbose); print_time_left(b,nfreq); end
         end
         
-        % convert to dB
+        % convert sum to mean and convert to dB
         switch center
             case {'full' 'coarray'}
                 % using full and real here gives the exact plots of
@@ -355,7 +374,7 @@ try
                 smap(a).response=...
                     10*log10(abs(real(smap(a).response))/(nfreq*nidx));
             otherwise
-                smap(a).response=smap(a).response/nfreq;
+                smap(a).response=10*log10(smap(a).response/(nfreq*nidx));
         end
         
         % normalize so max peak is at 0dB

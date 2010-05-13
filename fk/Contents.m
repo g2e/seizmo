@@ -11,6 +11,7 @@
 %FKTIMESLIDE    - Slides through a sequence of fk maps plotting each one
 %FKVOL2MAP      - Converts a fk volume to a fk map
 %FKVOLUME       - Returns a 3D map of energy in frequency-wavenumber space
+%FKXCVOLUME     - Returns energy map in frequency-wavenumber space for xc data
 %KXY2SLOWBAZ    - Converts wavenumbers in x & y to slowness and back-azimuth
 %PLOTFKARF      - Plots an fk array response function
 %PLOTFKMAP      - Plots the frequency-wavenumber output from FKMAP

@@ -19,9 +19,10 @@ function [report]=chkfkstruct(fk)
 
 %     Version History:
 %        May  11, 2010 - initial version
+%        May  12, 2010 - allow single frequency volume
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  11, 2010 at 01:00 GMT
+%     Last Updated May  12, 2010 at 01:00 GMT
 
 % todo:
 
@@ -98,8 +99,8 @@ for i=1:numel(fk)
         report.message='FK xyz info appears corrupt!';
         return;
     elseif(~isreal(fk(i).response) ...
-            || (fk(i).volume && ~isequal(sfk,[sy sx sz])) ...
-            || (~fk(i).volume && ~isequal(sfk,[sy sx])))
+            || (fk(i).volume && sz~=1 && ~isequal(sfk,[sy sx sz])) ...
+            || (sz==1 && ~isequal(sfk,[sy sx])))
         report.identifier='seizmo:chkfkstruct:fkResponseCorrupt';
         report.message='FK response data size wrong or data invalid!';
         return;
