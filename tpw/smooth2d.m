@@ -7,11 +7,13 @@ function [v]=smooth2d(v,nx,ny,edge)
 %              sv=smooth2d(v,n,[],edge)
 %
 %    Description: SV=SMOOTH2D(V,N) smooths the values in the 2D array V
-%     by convolving it with a Gaussian with a characteristic falloff of N.
-%     V is assumed to be an evenly spaced grid with spacing equal in both
-%     directions.  N is the distance (in grid spacings) from the Gaussian's
-%     center to reach a value of 1/e.  Edge effects are accounted for by
-%     using a equally smoothed unit surface for averaging.
+%     by convolving it with a Gaussian with a characteristic falloff
+%     distance of N rows or columns.  V is assumed to be a regularly spaced
+%     grid with equal spacing in both the row and column directions.  N
+%     defines the distance from the Gaussian's center (of unit amplitude)
+%     to the point where the values have fallen off to 1/e.  Edge effects
+%     are accounted for by using a equally smoothed unit surface for
+%     averaging.
 %
 %     SV=SMOOTH2D(V,NX,NY) allows for unequal spacing between the x
 %     (column spacing) and the y (row spacing) directions.  For example,
@@ -24,7 +26,7 @@ function [v]=smooth2d(v,nx,ny,edge)
 %     just zero pads the array to be smoothed with zeros along the edges so
 %     that the returned array has a tapered edge.  The truncate option will
 %     truncate the gaussian smoother when it extends outside the array,
-%     which makes the edges untapered but potentially under smoothed.  The
+%     which makes the edges untapered but also under-smoothed.  The
 %     default value of EDGE is 'truncate'.
 %
 %    Notes:
@@ -39,9 +41,10 @@ function [v]=smooth2d(v,nx,ny,edge)
 
 %     Version History:
 %        Feb.  4, 2010 - rewrite and added documentation
+%        May  17, 2010 - updated documentation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  4, 2010 at 17:10 GMT
+%     Last Updated May  17, 2010 at 17:10 GMT
 
 % todo:
 

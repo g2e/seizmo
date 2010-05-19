@@ -1,5 +1,5 @@
 % Seismology Toolbox - time
-% Version 0.6.0-r130 Chimborazo 05-May-2010
+% Version 0.6.0-r135 Chimborazo 18-May-2010
 %
 % Time functions
 %CAL2DOY             - Convert Year & Month & Day of Month to Year & Day of Year

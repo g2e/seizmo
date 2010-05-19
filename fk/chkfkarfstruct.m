@@ -14,13 +14,14 @@ function [report]=chkfkarfstruct(fk)
 %      sarf=fkarf(data,50,201,0,0,[1/30 1/20]);
 %      error(chkfkarfstruct(sarf));
 %
-%    See also: CHKFKARFSTRUCT, PLOTFKARF, FKARF, FKMAP, PLOTFKMAP
+%    See also: CHKFKSTRUCT, PLOTFKARF, FKARF, FKMAP, PLOTFKMAP
 
 %     Version History:
 %        May  11, 2010 - initial version
+%        May  13, 2010 - minor bug fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  11, 2010 at 01:00 GMT
+%     Last Updated May  13, 2010 at 01:30 GMT
 
 % todo:
 
@@ -57,7 +58,7 @@ for i=1:numel(fk)
         report.message='FK station info appears corrupt!';
         return;
     elseif(~isreal(fk(i).npw) || ~isscalar(fk(i).npw) ...
-            || fk(i).npw~=fix(fk(i).npw) || fk(i).npw<2 ...
+            || fk(i).npw~=fix(fk(i).npw) || fk(i).npw<1 ...
             || ~isequal(size(fk(i).s),[fk(i).npw 1]) ...
             || ~isequal(size(fk(i).baz),[fk(i).npw 1]) ...
             || ~isequal(size(fk(i).f),[fk(i).npw 1]) ...

@@ -1,10 +1,11 @@
 % Seismology Toolbox - misc
-% Version 0.6.0-r130 Chimborazo 05-May-2010
+% Version 0.6.0-r135 Chimborazo 18-May-2010
 %
 % Miscellaneous Support functions
 %BUTTORD2            - Butterworth filter order selection. (Honors passband corners)
 %CIRCLE              - Returns points on a circle in cartesian space
 %DDENDROGRAM         - Generate dendrogram plot (with some extra color options)
+%EXPANDSCALARS       - Expands scalars to match size of array inputs
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
 %FISHER              - Converts correlation coefficients to the Z statistic
 %GAUSSIANTF          - Returns a gaussian time function
@@ -14,6 +15,7 @@
 %IFISHER             - Converts Z statistics to correlation coefficients
 %IIRDESIGN           - Designs an iir filter with the given constraints
 %INVERTCOLOR         - Inverts colors given as rgb triplet or as short/long names
+%INTERPDC1           - 1D interpolation (table lookup) with discontinuity support
 %ISEQUALSIZEORSCALAR - True if all input arrays are equal size or scalar
 %ISORTHOGONAL        - TRUE if orientations are orthogonal
 %ISPARALLEL          - TRUE if orientations are parallel
@@ -43,6 +45,7 @@
 %TAPERFUN            - Returns a taper as specified
 %TRIANGLETF          - Returns a triangle time function
 %UNSORT              - Undoes a sort operation using the returned sort indices
+%UNIXCOMPRESSAVI     - Compress an AVI file in Unix with "MEncoder"
 %UTI2SUB             - Square matrix upper triangle linear indices to subscripts
 %VECNORM             - Returns vector norms
 %WRITECSV            - Write out .csv formatted file from a structure

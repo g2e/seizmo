@@ -25,15 +25,16 @@ function [topo,lat,lon]=topo_region(latrange,lonrange,toponame)
 %     The Bering Sea:
 %      [topo,lat,lon]=topo_region([64 49],[162 -166],'etopo1_bed');
 %      figure; surface(lon,lat,topo);
-%      shading interp; colormap colorcube; axis equal; axis tight;
+%      shading interp; topo_colormap(topo); axis equal tight;
 %
-%    See also: TOPO_POINTS
+%    See also: TOPO_POINTS, TOPO_COLORMAP
 
 %     Version History:
 %        Feb. 17, 2010 - initial version
+%        May  17, 2010 - slight improvement to example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 17, 2010 at 00:40 GMT
+%     Last Updated May  17, 2010 at 15:00 GMT
 
 % todo:
 

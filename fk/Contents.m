@@ -1,5 +1,5 @@
 % Seismology Toolbox - fk
-% Version 0.6.0-r130 Chimborazo 05-May-2010
+% Version 0.6.0-r135 Chimborazo 18-May-2010
 %
 % Frequency-Wavenumber analysis functions
 %CHKFKARFSTRUCT - True if is a struct as defined by FKARF

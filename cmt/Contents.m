@@ -1,5 +1,5 @@
 % Seismology Toolbox - cmt
-% Version 0.6.0-r130 Chimborazo 05-May-2010
+% Version 0.6.0-r135 Chimborazo 18-May-2010
 %
 % Various Moment Tensor functions
 %AR2HRV        - Convert moment tensor from Aki & Richards form to Harvard form

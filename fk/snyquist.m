@@ -19,9 +19,10 @@ function [snyq]=snyquist(d,f)
 %      tri=delaunay(e,n);
 %      friends=[tri(:,1:2); tri(:,2:3); tri(:,[3 1])];
 %      friends=unique([min(friends,[],2) max(friends,[],2)],'rows');
+%      figure; plot(e(friends)',n(friends)','o',e(friends)',n(friends)');
 %      dist=vincentyinv(stla(friends(:,1)),stlo(friends(:,1)),...
 %                       stla(friends(:,2)),stlo(friends(:,2)));
-%      [n,x]=hist(dist,30); % 30 equal station spacing bins
+%      [m,x]=hist(dist,30); % 30 equal station spacing bins
 %     
 %     Now there are several measures of station spacing (for an irregular
 %     array the best spacing measure for Snyq is not straight forward and
@@ -29,7 +30,7 @@ function [snyq]=snyquist(d,f)
 %     response functions with FKARF):
 %      closest=min(dist);    % closest 2 stations
 %      average=median(dist); % robust average station spacing
-%      usual=x(n==max(n));      % most frequent binned station spacing
+%      usual=x(m==max(m));      % most frequent binned station spacing
 %
 %     Once you have your typical station spacing, decide your frequency
 %     bands of interest.  Then the nyquist slowness is straightforward.
@@ -40,10 +41,11 @@ function [snyq]=snyquist(d,f)
 %    See also: KXY2SLOWBAZ, SLOWBAZ2KXY, FKARF, DELAUNAY
 
 %     Version History:
-%        May   3, 2010 - initial version
+%        May   3, 2010 - initial versionj
+%        May  18, 2010 - slight update to example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   3, 2010 at 20:35 GMT
+%     Last Updated May  18, 2010 at 12:00 GMT
 
 % todo:
 

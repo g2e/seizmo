@@ -87,7 +87,7 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
 %     Get a multi-plane wave response:
 %      arf=fkarf(stla,stlo,50,201,[20 10 20],[0 0 45],0.03);
 %
-%    See also: FKMAP, PLOTFKMAP, FKVOLUME, PLAYFKVOLUME, FK4D
+%    See also: FKMAP, PLOTFKMAP, FKVOLUME, FKFREQSLIDE, FK4D
 %              KXY2SLOWBAZ, SLOWBAZ2KXY, SNYQUIST
 
 %     Version History:
@@ -97,9 +97,10 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
 %        May   7, 2010 - only doing one triangle gives better response and
 %                        takes less than half the time
 %        May  10, 2010 - added in options available to FKMAP
+%        May  18, 2010 - minor doc touch
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  10, 2010 at 17:30 GMT
+%     Last Updated May  18, 2010 at 12:00 GMT
 
 % todo:
 

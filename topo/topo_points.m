@@ -29,13 +29,14 @@ function [topo]=topo_points(lat,lon,toponame)
 %      plot(-180:0.1:180,topo_points(0,-180:0.1:180),'r',...
 %           -180:0.1:180,topo_points(0,-180:0.1:180,'etopo1_bed'),'k:')
 %
-%    See also: TOPO_REGION
+%    See also: TOPO_REGION, TOPO_COLORMAP
 
 %     Version History:
 %        Feb. 16, 2010 - initial version
+%        May  17, 2010 - minor doc touch
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2010 at 16:40 GMT
+%     Last Updated May  17, 2010 at 15:00 GMT
 
 % todo:
 
