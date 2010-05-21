@@ -86,9 +86,10 @@ function [varargout]=interpdc1(x,y,varargin)
 
 %     Version History:
 %        May  18, 2010 - initial version
+%        May  19, 2010 - properly handle non-increasing case
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  18, 2010 at 17:40 GMT
+%     Last Updated May  19, 2010 at 01:30 GMT
 
 % todo:
 
@@ -147,14 +148,16 @@ elseif(any(isnan(y(:))))
     warning('seizmo:interpdc1:nanY',...
         'NaN Y values found! NaNs are not removed/interpolated!');
 end
-% - sort x/y so we are monotonically non-decreasing
-[x,xidx]=sort(x);
-y=y(xidx,:);
 
 % breaking into regions
 % - first require monotonicity of x
 dx=diff(x);
-if(~all(dx>=0))
+if(all(dx<=0))
+    % flip x/y so monotonically non-decreasing
+    x=flipud(x);
+    y=flipud(y);
+    dx=-flipud(dx);
+elseif(~all(dx>=0))
     % x must be non-decreasing
     error('seizmo:interpdc1:nonmonoX',...
         'X must be monotonically non-decreasing!');

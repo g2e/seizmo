@@ -177,9 +177,10 @@ function [fo,passes,mirror]=iirdesign(nyq,type,style,varargin)
 %        Feb.  2, 2010 - initial version
 %        Mar. 25, 2010 - minor doc update
 %        Apr. 25, 2010 - allow 'lp'/'hp' as filter types
+%        May  20, 2010 - allow 'n' to specify poles, 'bu' for butter
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2010 at 08:00 GMT
+%     Last Updated May  20, 2010 at 19:00 GMT
 
 % todo:
 
@@ -263,7 +264,7 @@ else
             'STYLE must be a string!');
     end
     switch lower(style)
-        case {'butter' 'butt' 'butterworth' 'b'}
+        case {'butter' 'butt' 'butterworth' 'bu' 'b'}
             style='butter';
         case {'cheby1' 'cheb1' 'chebychev1' 'c1'}
             style='cheby1';
@@ -313,7 +314,7 @@ for i=1:2:nargin-3
                     'Stopband CORNERS must be 1 to 2 reals >0 (in Hz)!');
             end
             sc=sort(varargin{i+1}(:)).';
-        case {'npoles' 'order' 'np' 'o'}
+        case {'npoles' 'order' 'np' 'n' 'o'}
             if(~isscalar(varargin{i+1}) ...
                     || ~isreal(varargin{i+1}) ...
                     || fix(varargin{i+1})~=varargin{i+1} ...

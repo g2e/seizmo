@@ -1,5 +1,58 @@
 function [mout]=ak135(varargin)
 %AK135    Returns the AK135 Earth model
+%
+%    Usage:    model=ak135
+%              model=ak135(...,'depths',depths,...)
+%              model=ak135(...,'range',[top bottom],...)
+%              model=ak135(...,'crust',true|false,...)
+%
+%    Description: MODEL=AK135 returns a struct containing the 1D radial
+%     Earth model AK135.  The struct has the following fields:
+%      MODEL.name  - model name ('AK135')
+%           .depth - km depths from 0 to 6371
+%           .vp    - isotropic p-wave velocity (km/s)
+%           .vs    - isotropic s-wave velocity (km/s)
+%           .rho   - density (g/cm^3)
+%     Note that the model includes repeated depths at discontinuities.
+%
+%     MODEL=AK135(...,'DEPTHS',DEPTHS,...) returns the model parameters
+%     only at the depths in DEPTHS.  DEPTHS is assumed to be in km.  The
+%     model parameters are found by linear interpolation between known
+%     values.  DEPTHS at discontinuities return values from the under side
+%     of the discontinuity (this currently cannot be adjusted).
+%
+%     MODEL=AK135(...,'RANGE',[TOP BOTTOM],...) specifies the range of
+%     depths that known model parameters are returned.  [TOP BOTTOM] must
+%     be a 2 element array in km.  Note this does not block depths given by
+%     the DEPTHS option.
+%
+%     MODEL=AK135(...,'CRUST',TRUE|FALSE,...) indicates if the crust of
+%     AK135 is to be removed or not.  Setting CRUST to FALSE will return a
+%     crustless model (the mantle is extended to the surface using linear
+%     interpolation).
+%
+%    Notes:
+%
+%    Examples:
+%     Plot parameters for the top 400km of the crustless version:
+%      model=ak135('r',[0 400],'c',false);
+%      figure;
+%      plot(model.depth,model.vp,'r',...
+%           model.depth,model.vs,'g',...
+%           model.depth,model.rho,'b','linewidth',2);
+%      title('AK135')
+%      legend({'Vp' 'Vs' '\rho'})
+%
+%    See also: IASP91, PREM
+
+%     Version History:
+%        May  19, 2010 - initial version
+%        May  20, 2010 - discon on edge handling, quicker
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated May  20, 2010 at 16:25 GMT
+
+% todo:
 
 % check nargin
 if(mod(nargin,2))
@@ -10,10 +63,46 @@ end
 % option defaults
 varargin=[{'d' [] 'c' true 'r' [0 6371]} varargin];
 
-% options
-% depths
-% crust
-% range
+% check options
+if(~iscellstr(varargin(1:2:end)))
+    error('seizmo:ak135:badOption',...
+        'All Options must be specified with a string!');
+end
+for i=1:2:numel(varargin)
+    % skip empty
+    skip=false;
+    if(isempty(varargin{i+1})); skip=true; end
+
+    % check option is available
+    switch lower(varargin{i})
+        case {'d' 'dep' 'depth' 'depths'}
+            if(~isempty(varargin{i+1}) && (~isreal(varargin{i+1}) ...
+                    || any(varargin{i+1}<0 | varargin{i+1}>6371)))
+                error('seizmo:ak135:badDEPTHS',...
+                    ['DEPTHS must be real-valued km depths within ' ...
+                    'the range [0 6371] in km!']);
+            end
+            depths=varargin{i+1}(:);
+        case {'c' 'cru' 'crust'}
+            if(skip); continue; end
+            if(~islogical(varargin{i+1}) || ~isscalar(varargin{i+1}))
+                error('seizmo:ak135:badCRUST',...
+                    'CRUST must be a TRUE or FALSE!');
+            end
+            crust=varargin{i+1};
+        case {'r' 'rng' 'range'}
+            if(skip); continue; end
+            if(~isreal(varargin{i+1}) || numel(varargin{i+1})~=2)
+                error('seizmo:ak135:badRANGE',...
+                    ['RANGE must be a 2 element vector specifying ' ...
+                    '[TOP BOTTOM] in km!']);
+            end
+            range=sort(varargin{i+1});
+        otherwise
+            error('seizmo:ak135:badOption',...
+                'Unknown Option: %s',varargin{i});
+    end
+end
 
 % the ak135 model
 model=[
@@ -153,7 +242,7 @@ model=[
   6269.570     11.2606      3.6667     13.0100
   6320.290     11.2618      3.6675     13.0117
   6371.000     11.2622      3.6678     13.0122];
-mout=model; return;
+
 % remove crust if desired
 if(~crust)
     % linear extrapolation to the surface
@@ -161,13 +250,43 @@ if(~crust)
     model(2:4,:)=[];
 end
 
-% interpolate depths if necessary
+% interpolate depths if desired
 if(~isempty(depths))
-    
+    %depths=depths(depths>=range(1) & depths<=range(2));
+    model=interpdc1(model(:,1),model(:,2:4),depths);
+    model=[depths model];
 else
+    % get index range (assumes depths are always non-decreasing in model)
+    idx1=find(model(:,1)>range(1),1);
+    idx2=find(model(:,1)<range(2),1,'last');
     
+    % are range points amongst the knots?
+    tf=ismember(range,model(:,1));
+    
+    % if they are, just use the knot, otherwise interpolate
+    if(tf(1))
+        idx1=idx1-1;
+    else
+        vtop=interp1q(model(idx1-1:idx1,1),model(idx1-1:idx1,2:end),range(1));
+    end
+    if(tf(2))
+        idx2=idx2+1;
+    else
+        vbot=interp1q(model(idx2:idx2+1,1),model(idx2:idx2+1,2:end),range(2));
+    end
+    
+    % clip model
+    model=model(idx1:idx2,:);
+    
+    % pad range knots if not there
+    if(~tf(1)); model=[range(1) vtop; model]; end
+    if(~tf(2)); model=[model; range(2) vbot]; end
 end
 
-
+% array to struct
+mout.depth=model(:,1);
+mout.vp=model(:,2);
+mout.vs=model(:,3);
+mout.rho=model(:,4);
 
 end

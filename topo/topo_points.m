@@ -34,11 +34,14 @@ function [topo]=topo_points(lat,lon,toponame)
 %     Version History:
 %        Feb. 16, 2010 - initial version
 %        May  17, 2010 - minor doc touch
+%        May  19, 2010 - return nothing when given nothing
+%        May  20, 2010 - added scrollbar (cause it is slow)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  17, 2010 at 15:00 GMT
+%     Last Updated May  20, 2010 at 15:00 GMT
 
 % todo:
+% - etopo2, etopo5, crust2
 
 % check nargin
 msg=nargchk(2,3,nargin);
@@ -67,6 +70,9 @@ if(isscalar(lat)); lat=lat(ones(size(lon))); end
 if(isscalar(lon)); lon=lon(ones(size(lat))); end
 npts=numel(lat);
 
+% quick return if no points
+if(~npts); topo=[]; return; end
+
 % take care of wrap-around
 [lat,lon]=fixlatlon(lat,lon);
 
@@ -94,8 +100,16 @@ lonidx(lonidx>36)=36;
 [tidx,idx,idx]=unique([lonidx(:) latidx(:)],'rows');
 tilenames=strcat(s.lonname(tidx(:,1))',s.latname(tidx(:,2))');
 
+% verbosity
+verbose=seizmoverbose;
+if(verbose)
+    cnt=0;
+    disp('Getting Topography at Location(s)');
+    print_time_left(cnt,npts);
+end
+
 % loop over tiles
-topo=nan(size(lat));
+topo=nan(size(lat)); cnt=0;
 for i=1:numel(tilenames)
     % load tile
     z=load(toponame,tilenames{i});
@@ -121,6 +135,9 @@ for i=1:numel(tilenames)
     
     % get values
     topo(pts)=interp2(zlon,zlat,z,lon(pts),lat(pts),'nearest');
+    
+    % detail message
+    if(verbose); cnt=cnt+sum(pts); print_time_left(cnt,npts); end
 end
 
 end

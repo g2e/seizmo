@@ -7,6 +7,7 @@
 %ADDRECORDS           - Add SEIZMO records
 %ATTACH               - Attach data to SEIZMO records
 %AMPH2RLIM            - Convert SEIZMO spectral records from AMPH to RLIM
+%AUTOWINDOW           - Automatic windowing of SEIZMO records
 %BINOPERR             - Controls behavior of SEIZMO binary functions
 %BSEIZMO              - Arranges xy data into a SEIZMO data structure
 %CHANGEBYTEORDER      - Change the byteorder of SEIZMO data records
@@ -142,5 +143,6 @@
 %TOPO                - topography functions
 %TOMO                - simple tomography functions
 %TPW                 - two plane wave functions
+%TTCORRECT           - travel time correction functions
 %XCALIGN             - cross correlation signal alignment functions
 

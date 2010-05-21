@@ -23,10 +23,6 @@ function [mout]=prem(varargin)
 %    Description:
 %
 %    Notes:
-%     - MODEL: depth rho vpv vsv qk qu vph vsh eta m g
-%              depth rho vp vs qk qu m g
-%
-%       to go: p k u y l dvp_dr dvs_dr d2vp_dr2 d2vs_dr2
 %
 %    Examples:
 %

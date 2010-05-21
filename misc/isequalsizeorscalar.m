@@ -36,9 +36,10 @@ function [lgc,sz,ns]=isequalsizeorscalar(varargin)
 %     Version History:
 %        May   1, 2010 - initial version
 %        May  16, 2010 - more outputs
+%        May  20, 2010 - no split based on matlab version (sloooow)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  16, 2010 at 21:50 GMT
+%     Last Updated May  20, 2010 at 13:40 GMT
 
 % todo:
 
@@ -65,16 +66,16 @@ end
 
 % compare nonscalars
 % - this breaks with early cellfun
-if(verLessThan('matlab', '7.1'))
-    nsi=find(ns);
-    sz=size(varargin{nsi(1)});
-    for i=nsi(2:end)
-        if(~isequal(sz,size(varargin{i}))); lgc=false; return; end
-    end
-else % 7.1+
+%if(verLessThan('matlab', '7.1'))
+%    nsi=find(ns);
+%    sz=size(varargin{nsi(1)});
+%    for i=nsi(2:end)
+%        if(~isequal(sz,size(varargin{i}))); lgc=false; return; end
+%    end
+%else % 7.1+
     sizes=cellfun(@size,varargin(ns),'UniformOutput',false);
     lgc=isequal(sizes{:});
     sz=sizes{1};
-end
+%end
 
 end
