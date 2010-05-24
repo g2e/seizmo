@@ -1,9 +1,9 @@
 function [report]=chkfkarfstruct(fk)
-%CHKFKARFSTRUCT    True if is a struct as defined by FKARF
+%CHKFKARFSTRUCT    Validate if a struct is as defined by FKARF
 %
 %    Usage:    msg=chkfkarfstruct(fk)
 %
-%    Description: MSG=CHKFKARFSTRUCT(FK) check that FK is a struct as
+%    Description: MSG=CHKFKARFSTRUCT(FK) checks that FK is a struct as
 %     output from FKARF.  See FKARF for details on the struct layout.  MSG
 %     is an error structure if a problem is found (otherwise it is empty).
 %
@@ -19,9 +19,10 @@ function [report]=chkfkarfstruct(fk)
 %     Version History:
 %        May  11, 2010 - initial version
 %        May  13, 2010 - minor bug fix
+%        May  24, 2010 - minor doc touch (don't forget to update Contents)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  13, 2010 at 01:30 GMT
+%     Last Updated May  24, 2010 at 16:00 GMT
 
 % todo:
 

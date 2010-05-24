@@ -1,5 +1,7 @@
 function [s]=scripps2matlab(dfile,bfile)
 %SCRIPPS2MATLAB    Creates a Matlab struct from a Scripps mantle model
+%
+%    Usage:    s=scripps2matlab(descfile,binfile)
 
 % read binary info
 s=read_scripps_binary(bfile);

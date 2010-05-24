@@ -73,9 +73,10 @@ function [varargout]=fkvolume(data,smax,spts,frng,polar,center)
 %        May  12, 2010 - fixed an annoying bug (2 wrongs giving the right
 %                        answer), minor code touches while debugging
 %                        fkxcvolume
+%        May  24, 2010 - response is now single precision
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  12, 2010 at 15:50 GMT
+%     Last Updated May  24, 2010 at 11:50 GMT
 
 % todo:
 
@@ -361,6 +362,9 @@ try
                 svol(a).response=...
                     10*log10(abs(svol(a).response).^2/nidx);
         end
+        
+        % double to single precision
+        svol(a).response=single(svol(a).response);
         
         % normalize so max peak is at 0dB
         svol(a).normdb=max(svol(a).response(:));

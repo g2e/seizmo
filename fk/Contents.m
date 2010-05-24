@@ -2,8 +2,8 @@
 % Version 0.6.0-r135 Chimborazo 18-May-2010
 %
 % Frequency-Wavenumber analysis functions
-%CHKFKARFSTRUCT - True if is a struct as defined by FKARF
-%CHKFKSTRUCT    - True if is a struct as defined by FKMAP/VOLUME/4D
+%CHKFKARFSTRUCT - Validate if a struct is as defined by FKARF
+%CHKFKSTRUCT    - Validate if a struct is as defined by FKMAP/VOLUME/4D
 %FK4D           - Returns a 4D map of energy in frequency-wavenumber-time space
 %FKARF          - Returns the fk array response function for a seismic array
 %FKFREQSLIDE    - Slides through a fk volume plotting each frequency

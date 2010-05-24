@@ -1,5 +1,7 @@
 function [info]=read_scripps_binary(file)
 %READ_SCRIPPS_BINARY    Reads a Scripps mantle model unformatted binary
+%
+%    Usage:    info=read_scripps_binary(binfile)
 
 % open the file
 fid=fopen(file,'r','ieee-be');

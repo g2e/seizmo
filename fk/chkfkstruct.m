@@ -1,9 +1,9 @@
 function [report]=chkfkstruct(fk)
-%CHKFKSTRUCT    True if is a struct as defined by FKMAP/VOLUME/4D
+%CHKFKSTRUCT    Validate if a struct is as defined by FKMAP/VOLUME/4D
 %
 %    Usage:    msg=chkfkstruct(fk)
 %
-%    Description: MSG=CHKFKSTRUCT(FK) check that FK is a struct as output
+%    Description: MSG=CHKFKSTRUCT(FK) checks that FK is a struct as output
 %     from FKMAP/FKVOLUME/FK4D.  See those functions for details on the
 %     struct layout.  MSG is an error structure if a problem is found
 %     (otherwise it is empty).
@@ -20,9 +20,10 @@ function [report]=chkfkstruct(fk)
 %     Version History:
 %        May  11, 2010 - initial version
 %        May  12, 2010 - allow single frequency volume
+%        May  24, 2010 - minor doc update (don't forget to update Contents)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  12, 2010 at 01:00 GMT
+%     Last Updated May  24, 2010 at 15:00 GMT
 
 % todo:
 

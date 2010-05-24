@@ -68,10 +68,10 @@ function [model]=perturb_model(model,varargin)
 %    See also: PREM, AK135, IASP91, PREM_PERFECT, IASP91_PERFECT
 
 %     Version History:
-%        May  24, 2010 - initial version
+%        May  24, 2010 - initial version, handle improved 1d model struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  24, 2010 at 00:45 GMT
+%     Last Updated May  24, 2010 at 16:05 GMT
 
 % todo:
 
@@ -82,11 +82,11 @@ if(mod(nargin-1,2))
         'All Option/Values must be paired!');
 end
 
-% check model & properties
-if(~isstruct(model) || ~isfield(model,'depth'))
-    error('seizmo:perturb_model:badInput',...
-        'MODEL appears not be a Earth model!');
-elseif(~iscellstr(varargin(1:2:end)))
+% check model
+error(chk1dmodel(model));
+
+% check properties
+if(~iscellstr(varargin(1:2:end)))
     error('seizmo:perturb_model:badInput',...
         'PROPERTY must be a string!');
 elseif(any(~ismember(varargin(1:2:end),fieldnames(model))))
@@ -97,12 +97,12 @@ end
 % assemble model into a matrix
 depths=model.depth;
 ndep=numel(depths);
-fields=fieldnames(model);
-fields(strcmp(fields,'depth'))=[];
+reqfields={'name' 'ocean' 'crust' 'isotropic' 'refperiod' 'flattened' ...
+    'depth'};
+fields=setdiff(fieldnames(model),reqfields);
 nf=numel(fields);
 modmat=nan(ndep,nf);
 for i=1:numel(fields)
-    % could break if field doesn't have ndep entries
     modmat(:,i)=model.(fields{i});
 end
 

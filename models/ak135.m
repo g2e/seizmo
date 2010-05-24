@@ -8,11 +8,16 @@ function [mout]=ak135(varargin)
 %
 %    Description: MODEL=AK135 returns a struct containing the 1D radial
 %     Earth model AK135.  The struct has the following fields:
-%      MODEL.name  - model name ('AK135')
-%           .depth - km depths from 0 to 6371
-%           .vp    - isotropic p-wave velocity (km/s)
-%           .vs    - isotropic s-wave velocity (km/s)
-%           .rho   - density (g/cm^3)
+%      MODEL.name      - model name ('AK135')
+%           .ocean     - always false here
+%           .crust     - true/false
+%           .isotropic - always true here
+%           .refperiod - always 1sec here
+%           .flattened - always false here (see FLATTEN_MODEL)
+%           .depth     - km depths from 0 to 6371
+%           .vp        - isotropic p-wave velocity (km/s)
+%           .vs        - isotropic s-wave velocity (km/s)
+%           .rho       - density (g/cm^3)
 %     Note that the model includes repeated depths at discontinuities.
 %
 %     MODEL=AK135(...,'DEPTHS',DEPTHS,...) returns the model parameters
@@ -48,9 +53,10 @@ function [mout]=ak135(varargin)
 %     Version History:
 %        May  19, 2010 - initial version
 %        May  20, 2010 - discon on edge handling, quicker
+%        May  24, 2010 - added several struct fields for info
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  20, 2010 at 16:25 GMT
+%     Last Updated May  24, 2010 at 14:45 GMT
 
 % todo:
 
@@ -284,6 +290,12 @@ else
 end
 
 % array to struct
+mout.name='AK135';
+mout.ocean=false;
+mout.crust=crust;
+mout.isotropic=true;
+mout.refperiod=1;
+mout.flattened=false;
 mout.depth=model(:,1);
 mout.vp=model(:,2);
 mout.vs=model(:,3);

@@ -81,9 +81,10 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,center)
 %        May  12, 2010 - fixed an annoying bug (2 wrongs giving the right
 %                        answer), minor code touches while debugging
 %                        fkxcvolume
+%        May  24, 2010 - response is now single precision
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  12, 2010 at 15:50 GMT
+%     Last Updated May  24, 2010 at 11:50 GMT
 
 % todo:
 
@@ -376,6 +377,9 @@ try
             otherwise
                 smap(a).response=10*log10(smap(a).response/(nfreq*nidx));
         end
+        
+        % double to single precision
+        smap(a).response=single(smap(a).response);
         
         % normalize so max peak is at 0dB
         smap(a).normdb=max(smap(a).response(:));

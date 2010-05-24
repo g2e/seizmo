@@ -34,9 +34,10 @@ function [varargout]=plotfkmap(map,varargin)
 %        May  11, 2010 - updated for struct changes, got polar working,
 %                        coloring options, option for setting axes handle
 %        May  21, 2010 - display period rather than frequency
+%        May  24, 2010 - labeling the top of colorbar is broken in r2009a
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  21, 2010 at 11:00 GMT
+%     Last Updated May  24, 2010 at 12:20 GMT
 
 % todo:
 
@@ -171,7 +172,7 @@ else
 end
 c=colorbar('eastoutside',...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
-set(c,'xaxislocation','top');
+%set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)
 
 % reset root values
@@ -301,7 +302,7 @@ else
 end
 c=colorbar('eastoutside',...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
-set(c,'xaxislocation','top');
+%set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)
 axis equal tight;
 

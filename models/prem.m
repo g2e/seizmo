@@ -11,13 +11,18 @@ function [mout]=prem(varargin)
 %     version of the 1D radial Earth model PREM.  Note that by default the
 %     ocean has been replaced with an extended upper crust.  The struct has
 %     the following fields:
-%      MODEL.name  - model name ('PREM')
-%           .depth - km depths from 0 to 6371
-%           .vp    - isotropic p-wave velocity at 1s periods (km/s)
-%           .vs    - isotropic s-wave velocity at 1s periods (km/s)
-%           .rho   - density (g/cm^3)
-%           .qk    - bulk moduli quality factor
-%           .qu    - shear moduli quality factor
+%      MODEL.name      - model name ('PREM')
+%           .ocean     - true if OCEAN & CRUST are both TRUE
+%           .crust     - true if CRUST is TRUE
+%           .isotropic - always true here
+%           .refperiod - always 1sec here
+%           .flattened - always false here (see FLATTEN_MODEL)
+%           .depth     - km depths from 0 to 6371
+%           .vp        - isotropic p-wave velocity at 1s periods (km/s)
+%           .vs        - isotropic s-wave velocity at 1s periods (km/s)
+%           .rho       - density (g/cm^3)
+%           .qk        - bulk moduli quality factor
+%           .qu        - shear moduli quality factor
 %     Note that the model includes repeated depths at discontinuities.
 %
 %     MODEL=PREM(...,'DEPTHS',DEPTHS,...) returns the model parameters
@@ -34,7 +39,7 @@ function [mout]=prem(varargin)
 %     MODEL=PREM(...,'CRUST',TRUE|FALSE,...) indicates if the crust of
 %     PREM is to be removed or not.  Setting CRUST to FALSE will return a
 %     crustless model (the mantle is extended to the surface using linear
-%     interpolation).
+%     interpolation).  This will also remove the ocean.
 %
 %     MODEL=PREM(...,'OCEAN',TRUE|FALSE,...) indicates if the ocean of
 %     PREM is to be removed or not.  Setting CRUST to FALSE will return a
@@ -43,7 +48,8 @@ function [mout]=prem(varargin)
 %     FALSE (no ocean).
 %
 %    Notes:
-%     - Note that this is not a perfect match to PREM
+%     - Note that this is just a linear interpolation of PREM isotropic at
+%       1 second reference period
 %
 %    Examples:
 %     Plot parameters for the CMB region:
@@ -63,9 +69,10 @@ function [mout]=prem(varargin)
 %        May  23, 2010 - use output from my prem_perfect routine rather
 %                        than using values from taup (bugged!), qk/qu
 %                        rather than qp/qs
+%        May  24, 2010 - added several struct fields for info
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  23, 2010 at 16:25 GMT
+%     Last Updated May  24, 2010 at 14:45 GMT
 
 % todo:
 
@@ -410,6 +417,12 @@ else
 end
 
 % array to struct
+mout.name='PREM';
+mout.ocean=ocean & crust;
+mout.crust=crust;
+mout.isotropic=true;
+mout.refperiod=1;
+mout.flattened=false;
 mout.depth=model(:,1);
 mout.vp=model(:,2);
 mout.vs=model(:,3);
