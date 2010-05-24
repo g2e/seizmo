@@ -56,9 +56,10 @@ function [db]=makesacpzdb(varargin)
 %        Sep. 20, 2009 - initial version
 %        Sep. 23, 2009 - added informative output
 %        Nov.  2, 2009 - seizmoverbose support, fixed example
+%        May  22, 2010 - progress bar only if verbose
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2009 at 20:15 GMT
+%     Last Updated May  22, 2010 at 22:15 GMT
 
 % todo:
 
@@ -119,11 +120,11 @@ for i=1:nin
     % detail message
     if(verbose)
         disp(['  Found ' sprintf('%d',n) ' Properly Formatted Filenames']);
+        print_time_left(0,n);
     end
     
     % now read in the PoleZero info
     good=true(n,1);
-    print_time_left(0,n);
     for j=1:n
         try
             [db{i}(j).z,db{i}(j).p,db{i}(j).k]=...
@@ -131,7 +132,7 @@ for i=1:nin
         catch
             good(j)=false;
         end
-        print_time_left(j,n);
+        if(verbose); print_time_left(j,n); end
     end
     
     % remove invalid

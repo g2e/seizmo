@@ -120,7 +120,7 @@ if(option.ANISOTROPY)
             model.ocean.vpv=1.45;
             model.ocean.vsv=0;
             model.ocean.qk=57823;
-            model.ocean.qu=99999.9;
+            model.ocean.qu=inf;
             model.ocean.vph=1.45;
             model.ocean.vsh=0;
             model.ocean.eta=1;
@@ -517,7 +517,7 @@ if(option.ANISOTROPY)
     model.outercore.vpv=[11.0487 -4.0362 4.8023 -13.5732];
     model.outercore.vsv=0;
     model.outercore.qk=57823;
-    model.outercore.qu=99999.9;
+    model.outercore.qu=inf;
     model.outercore.vph=[11.0487 -4.0362 4.8023 -13.5732];
     model.outercore.vsh=0;
     model.outercore.eta=1;
@@ -929,7 +929,7 @@ else % ISOTROPIC
             model.ocean.vp=1.45;
             model.ocean.vs=0;
             model.ocean.qk=57823;
-            model.ocean.qu=99999.9;
+            model.ocean.qu=inf;
             model.ocean.drho_dr=0;
             model.ocean.dvp_dr=0;
             model.ocean.dvs_dr=0;
@@ -1166,7 +1166,7 @@ else % ISOTROPIC
     model.outercore.vp=[11.0487 -4.0362 4.8023 -13.5732];
     model.outercore.vs=0;
     model.outercore.qk=57823;
-    model.outercore.qu=99999.9;
+    model.outercore.qu=inf;
     model.outercore.drho_dr=[-1.2638 2*-3.6526 3*-5.5281];
     model.outercore.dvp_dr=[-4.0362 2*4.8023 3*-13.5732];
     model.outercore.dvs_dr=0;

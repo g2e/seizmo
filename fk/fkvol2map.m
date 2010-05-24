@@ -21,6 +21,7 @@ function [vol]=fkvol2map(vol,frng)
 
 %     Version History:
 %        May  11, 2010 - initial version
+%        May  23, 2010 - renormalize (set normdb appropriately)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated May  11, 2010 at 14:50 GMT
@@ -33,7 +34,7 @@ error(nargchk(1,2,nargin));
 % check fk struct
 error(chkfkstruct(vol));
 
-% don't allow array/map
+% don't allow map
 if(any(~[vol.volume]))
     error('seizmo:fkvol2map:badInput',...
         'VOL must be a fk volume response!');
@@ -60,6 +61,9 @@ for i=1:numel(vol)
     vol(i).volume=false;
     fidx=vol(i).z>=fmin & vol(i).z<=fmax;
     vol(i).response=sum(vol(i).response(:,:,fidx),3)/sum(fidx);
+    maxdb=max(vol(i).response(:));
+    vol(i).response=vol(i).response-maxdb;
+    vol(i).normdb=vol(i).normdb+maxdb;
     vol(i).z=vol(i).z(fidx);
 end
 
