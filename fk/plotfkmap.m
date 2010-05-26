@@ -2,8 +2,10 @@ function [varargout]=plotfkmap(map,varargin)
 %PLOTFKMAP    Plots the frequency-wavenumber output from FKMAP
 %
 %    Usage:    h=plotfkmap(map)
-%              h=plotfkmap(map,fgcolor,bgcolor)
-%              h=plotfkmap(map,fgcolor,bgcolor,h)
+%              h=plotfkmap(map,dblim)
+%              h=plotfkmap(map,dblim,zerodb)
+%              h=plotfkmap(map,dblim,zerodb,fgcolor,bgcolor)
+%              h=plotfkmap(map,dblim,zerodb,fgcolor,bgcolor,h)
 %
 %    Description: H=PLOTFKMAP(MAP) plots a slowness map using the struct
 %     MAP which was output from FKMAP.  See FKMAP for details on the
@@ -11,14 +13,23 @@ function [varargout]=plotfkmap(map,varargin)
 %     later (because FKMAP is quite slow).  H is the handle to the axes
 %     that the map was plotted in.
 %
-%     H=PLOTFKMAP(MAP,FGCOLOR,BGCOLOR) specifies the foreground and
-%     background colors of the plot.  The default is 'w' for FGCOLOR and
+%     H=PLOTFKMAP(MAP,DBLIM) sets the dB limits for coloring the response
+%     info.  The default is [-12 0] for the default ZERODB (see next Usage
+%     form).  If ZERODB IS 'min' or 'median', the default DBLIM is [0 12].
+%     DBLIM must be a real-valued 2-element vector.
+%
+%     H=PLOTFKMAP(MAP,DBLIM,ZERODB) changes what 0dB corresponds to in the
+%     plot.  The allowed values are 'min', 'max', 'median', & 'abs'.  The
+%     default is 'max'.
+%
+%     H=PLOTFKMAP(MAP,DBLIM,ZERODB,FGCOLOR,BGCOLOR) specifies foreground
+%     and background colors of the plot.  The default is 'w' for FGCOLOR &
 %     'k' for BGCOLOR.  Note that if one is specified and the other is not,
 %     an opposing color is found using INVERTCOLOR.  The color scale is
 %     also changed so the noise clip is at BGCOLOR.
 %
-%     H=PLOTFKMAP(MAP,FGCOLOR,BGCOLOR,H) sets the axes that the map is
-%     drawn in.  This is useful for subplots, guis, etc.
+%     H=PLOTFKMAP(MAP,DBLIM,ZERODB,FGCOLOR,BGCOLOR,H) sets the axes to draw
+%     in.  This is useful for subplots, guis, etc.
 %
 %    Notes:
 %
@@ -35,14 +46,15 @@ function [varargout]=plotfkmap(map,varargin)
 %                        coloring options, option for setting axes handle
 %        May  21, 2010 - display period rather than frequency
 %        May  24, 2010 - labeling the top of colorbar is broken in r2009a
+%        May  26, 2010 - added dblim & zerodb args, updated docs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  24, 2010 at 12:20 GMT
+%     Last Updated May  26, 2010 at 10:00 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,4,nargin));
+error(nargchk(1,6,nargin));
 
 % check fk struct
 error(chkfkstruct(map));
@@ -63,18 +75,60 @@ if(nargout); varargout{1}=ax; end
 
 end
 
-function ax=plotfkpolarmap(map,fgcolor,bgcolor,ax)
+
+
+function ax=plotfkpolarmap(map,dblim,zerodb,fgcolor,bgcolor,ax)
+
+% default/check scaling type
+if(nargin<3 || isempty(zerodb)); zerodb='max'; end
+if(~ischar(zerodb) ...
+        || ~ismember(lower(zerodb),{'max' 'min' 'median' 'abs'}))
+    error('seizmo:plotfkmap:badSTYPE',...
+        'STYPE must be ''min'' ''max'' ''median'' or ''abs''!');
+end
+zerodb=lower(zerodb);
+
+% default/check dblim
+if(nargin<2 || isempty(dblim))
+    switch zerodb
+        case {'min' 'median'}
+            dblim=[0 12];
+        case {'max' 'abs'}
+            dblim=[-12 0];
+    end
+end
+if(~isreal(dblim) || numel(dblim)~=2)
+    error('seizmo:plotfkmap:badDBLIM',...
+        'DBLIM must be a real valued 2 element vector!');
+end
+dblim=sort([dblim(1) dblim(2)]);
+
+% rescale response
+switch zerodb
+    case 'min'
+        map.response=map.response-min(map.response(:));
+        map.normdb=map.normdb+min(map.response(:));
+    case 'max'
+        map.response=map.response-max(map.response(:));
+        map.normdb=map.normdb+max(map.response(:));
+    case 'median'
+        map.response=map.response-median(map.response(:));
+        map.normdb=map.normdb+median(map.response(:));
+    case 'abs'
+        map.response=map.response+map.normdb;
+        map.normdb=0;
+end
 
 % check colors
-if(nargin<2); fgcolor='w'; bgcolor='k'; end
-if(nargin<3)
+if(nargin<4); fgcolor='w'; bgcolor='k'; end
+if(nargin<5)
     if(isempty(fgcolor))
         fgcolor='w'; bgcolor='k';
     else
         bgcolor=invertcolor(fgcolor,true);
     end
 end
-if(nargin<4)
+if(nargin<6)
     if(isempty(fgcolor))
         if(isempty(bgcolor))
             fgcolor='w'; bgcolor='k';
@@ -95,7 +149,7 @@ if(ischar(fgcolor)); fgcolor=name2rgb(fgcolor); end
 if(ischar(bgcolor)); bgcolor=name2rgb(bgcolor); end
 
 % check handle
-if(nargin<4 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
+if(nargin<6 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
         || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
     figure('color',bgcolor);
     ax=gca;
@@ -155,9 +209,10 @@ title({['Number of Stations:  ' num2str(map.nsta)] ...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
     ['Period Range:    ' num2str(1/fmin) ' to ' num2str(1/fmax) 'Sec'] ...
+    ['0 dB = ' num2str(map.normdb) 'dB'] ...
     '' '' ''},...
     'fontweight','bold','color',fgcolor);
-set(ax,'clim',[-12 0]);
+set(ax,'clim',dblim);
 shading flat;
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
     colormap(flipud(fire));
@@ -186,20 +241,68 @@ set(0,'defaultpatchedgecolor',defaultpatchedgecolor);
 set(0,'defaultlinecolor',defaultlinecolor);
 set(0,'defaultsurfaceedgecolor',defaultsurfaceedgecolor);
 
+% set zerodb & dblim in userdata
+% - this is for updatefkmap
+userdata.zerodb=zerodb;
+userdata.dblim=dblim;
+set(ax,'userdata',userdata);
+
 end
 
-function ax=plotfkcartmap(map,fgcolor,bgcolor,ax)
+
+
+function ax=plotfkcartmap(map,dblim,zerodb,fgcolor,bgcolor,ax)
+
+% default/check scaling type
+if(nargin<3 || isempty(zerodb)); zerodb='max'; end
+if(~ischar(zerodb) ...
+        || ~ismember(lower(zerodb),{'max' 'min' 'median' 'abs'}))
+    error('seizmo:plotfkmap:badSTYPE',...
+        'STYPE must be ''min'' ''max'' ''median'' or ''abs''!');
+end
+zerodb=lower(zerodb);
+
+% default/check dblim
+if(nargin<2 || isempty(dblim))
+    switch zerodb
+        case {'min' 'median'}
+            dblim=[0 12];
+        case {'max' 'abs'}
+            dblim=[-12 0];
+    end
+end
+if(~isreal(dblim) || numel(dblim)~=2)
+    error('seizmo:plotfkmap:badDBLIM',...
+        'DBLIM must be a real valued 2 element vector!');
+end
+dblim=sort([dblim(1) dblim(2)]);
+
+% rescale response
+switch zerodb
+    case 'min'
+        map.response=map.response-min(map.response(:));
+        map.normdb=map.normdb+min(map.response(:));
+    case 'max'
+        map.response=map.response-max(map.response(:));
+        map.normdb=map.normdb+max(map.response(:));
+    case 'median'
+        map.response=map.response-median(map.response(:));
+        map.normdb=map.normdb+median(map.response(:));
+    case 'abs'
+        map.response=map.response+map.normdb;
+        map.normdb=0;
+end
 
 % check colors
-if(nargin<2); fgcolor='w'; bgcolor='k'; end
-if(nargin<3)
+if(nargin<4); fgcolor='w'; bgcolor='k'; end
+if(nargin<5)
     if(isempty(fgcolor))
         fgcolor='w'; bgcolor='k';
     else
         bgcolor=invertcolor(fgcolor,true);
     end
 end
-if(nargin<4)
+if(nargin<6)
     if(isempty(fgcolor))
         if(isempty(bgcolor))
             fgcolor='w'; bgcolor='k';
@@ -220,7 +323,7 @@ if(ischar(fgcolor)); fgcolor=name2rgb(fgcolor); end
 if(ischar(bgcolor)); bgcolor=name2rgb(bgcolor); end
 
 % check handle
-if(nargin<4 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
+if(nargin<6 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
         || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
     figure('color',bgcolor);
     ax=gca;
@@ -236,7 +339,7 @@ smax=max(max(abs(map.x)),max(abs(map.y)));
 % first plot the map
 imagesc(map.x,map.y,map.response);
 set(ax,'xcolor',fgcolor,'ycolor',fgcolor,'ydir','normal',...
-    'color',bgcolor,'fontweight','bold','clim',[-12 0]);
+    'color',bgcolor,'fontweight','bold','clim',dblim);
 hold on
 
 % phase specific bullseye
@@ -283,7 +386,8 @@ hold off
 title({['Number of Stations:  ' num2str(map.nsta)] ...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
-    ['Period Range:    ' num2str(1/fmin) ' to ' num2str(1/fmax) 'Sec']},...
+    ['Period Range:    ' num2str(1/fmin) ' to ' num2str(1/fmax) 'Sec'] ...
+    ['0 dB = ' num2str(map.normdb) 'dB']},...
     'fontweight','bold','color',fgcolor);
 xlabel('East/West Slowness (s/deg)',...
     'fontweight','bold','color',fgcolor);
@@ -305,5 +409,11 @@ c=colorbar('eastoutside',...
 %set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)
 axis equal tight;
+
+% set zerodb & dblim in userdata
+% - this is for updatefkmap
+userdata.zerodb=zerodb;
+userdata.dblim=dblim;
+set(ax,'userdata',userdata);
 
 end

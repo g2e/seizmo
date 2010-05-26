@@ -32,9 +32,11 @@ function [varargout]=updatefkmap(map,ax)
 %     Version History:
 %        May  11, 2010 - initial version
 %        May  21, 2010 - display period rather than frequency
+%        May  26, 2010 - updated for new plotfkmap args (requires passing
+%                        info through userdata)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  21, 2010 at 14:50 GMT
+%     Last Updated May  26, 2010 at 10:20 GMT
 
 % todo:
 
@@ -71,6 +73,33 @@ end
 
 function updatefkpolarmap(map,ax)
 
+% get zerodb/dblim
+userdata=get(ax,'userdata');
+if(isempty(userdata) || ~isstruct(userdata) ...
+        || any(~isfield(userdata,{'zerodb' 'dblim'})))
+    dblim=[-12 0];
+    zerodb='max';
+else
+    dblim=userdata.dblim;
+    zerodb=userdata.zerodb;
+end
+
+% rescale response
+switch zerodb
+    case 'min'
+        map.response=map.response-min(map.response(:));
+        map.normdb=map.normdb+min(map.response(:));
+    case 'max'
+        map.response=map.response-max(map.response(:));
+        map.normdb=map.normdb+max(map.response(:));
+    case 'median'
+        map.response=map.response-median(map.response(:));
+        map.normdb=map.normdb+median(map.response(:));
+    case 'abs'
+        map.response=map.response+map.normdb;
+        map.normdb=0;
+end
+
 axes(ax);
 h=get(ax,'children');
 delete(h);
@@ -86,12 +115,41 @@ set(get(ax,'Title'),'string',...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
     ['Period Range:    ' num2str(1/min(map.z)) ' to ' ...
-    num2str(1/max(map.z)) 'Sec'] '' '' ''})
+    num2str(1/max(map.z)) 'Sec'] ...
+    ['0 dB = ' num2str(map.normdb) 'dB'] ...
+    '' '' ''})
 
 end
 
 
 function updatefkcartmap(map,ax)
+
+% get zerodb/dblim
+userdata=get(ax,'userdata');
+if(isempty(userdata) || ~isstruct(userdata) ...
+        || any(~isfield(userdata,{'zerodb' 'dblim'})))
+    dblim=[-12 0];
+    zerodb='max';
+else
+    dblim=userdata.dblim;
+    zerodb=userdata.zerodb;
+end
+
+% rescale response
+switch zerodb
+    case 'min'
+        map.response=map.response-min(map.response(:));
+        map.normdb=map.normdb+min(map.response(:));
+    case 'max'
+        map.response=map.response-max(map.response(:));
+        map.normdb=map.normdb+max(map.response(:));
+    case 'median'
+        map.response=map.response-median(map.response(:));
+        map.normdb=map.normdb+median(map.response(:));
+    case 'abs'
+        map.response=map.response+map.normdb;
+        map.normdb=0;
+end
 
 axes(ax);
 h=findobj(ax,'type','image');
@@ -106,7 +164,8 @@ set(get(ax,'Title'),'string',...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
     ['Period Range:    ' num2str(1/min(map.z)) ' to ' ...
-    num2str(1/max(map.z)) 'Sec']})
+    num2str(1/max(map.z)) 'Sec'] ...
+    ['0 dB = ' num2str(map.normdb) 'dB']})
 
 end
 

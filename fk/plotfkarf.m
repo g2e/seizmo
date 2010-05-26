@@ -2,14 +2,25 @@ function [varargout]=plotfkarf(arf,varargin)
 %PLOTFKARF    Plots an fk array response function
 %
 %    Usage:    h=plotfkarf(arf)
-%              h=plotfkmap(arf,fgcolor,bgcolor)
-%              h=plotfkmap(arf,fgcolor,bgcolor,h)
+%              h=plotfkarf(arf,dblim)
+%              h=plotfkarf(arf,dblim,zerodb)
+%              h=plotfkarf(arf,dblim,zerodb,fgcolor,bgcolor)
+%              h=plotfkarf(arf,dblim,zerodb,fgcolor,bgcolor,h)
 %
 %    Description: H=PLOTFKARF(ARF) plots a slowness map using the struct
 %     ARF which was output from FKARF.  See FKARF for details on the
 %     struct.  This is mainly so you can save the results and replot them
 %     later (because FKARF is slow).  H is the handle to the axes that the
 %     map was plotted in.
+%
+%     H=PLOTFKARF(ARF,DBLIM) sets the dB limits for coloring the response
+%     info.  The default is [-12 0] for the default ZERODB (see next Usage
+%     form).  If ZERODB IS 'min' or 'median', the default DBLIM is [0 12].
+%     DBLIM must be a real-valued 2-element vector.
+%
+%     H=PLOTFKARF(ARF,DBLIM,ZERODB) changes what 0dB corresponds to in the
+%     plot.  The allowed values are 'min', 'max', 'median', & 'abs'.  The
+%     default is 'max'.
 %
 %     H=PLOTFKARF(ARF,FGCOLOR,BGCOLOR) specifies the foreground and
 %     background colors of the plot.  The default is 'w' for FGCOLOR and
@@ -30,22 +41,23 @@ function [varargout]=plotfkarf(arf,varargin)
 %    See also: FKMAP, FKARF, PLOTFKMAP
 
 %     Version History:
-%        May  11, 2010 - initial version (outside of FKARF
+%        May  11, 2010 - initial version (outside of FKARF)
+%        May  26, 2010 - update for new plotfkmap args
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  11, 2010 at 11:00 GMT
+%     Last Updated May  26, 2010 at 10:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,4,nargin));
+error(nargchk(1,6,nargin));
 
 % check fk struct
 error(chkfkarfstruct(arf));
 
 % don't allow array/volume
 if(~isscalar(arf))
-    error('seizmo:plotfkmap:badInput',...
+    error('seizmo:plotfkarf:badInput',...
         'ARF must be a scalar FKARF struct!');
 end
 
@@ -58,18 +70,60 @@ end
 
 end
 
-function ax=plotfkarfpolarmap(map,fgcolor,bgcolor,ax)
+
+
+function ax=plotfkarfpolarmap(map,dblim,zerodb,fgcolor,bgcolor,ax)
+
+% default/check scaling type
+if(nargin<3 || isempty(zerodb)); zerodb='max'; end
+if(~ischar(zerodb) ...
+        || ~ismember(lower(zerodb),{'max' 'min' 'median' 'abs'}))
+    error('seizmo:plotfkarf:badSTYPE',...
+        'STYPE must be ''min'' ''max'' ''median'' or ''abs''!');
+end
+zerodb=lower(zerodb);
+
+% default/check dblim
+if(nargin<2 || isempty(dblim))
+    switch zerodb
+        case {'min' 'median'}
+            dblim=[0 12];
+        case {'max' 'abs'}
+            dblim=[-12 0];
+    end
+end
+if(~isreal(dblim) || numel(dblim)~=2)
+    error('seizmo:plotfkarf:badDBLIM',...
+        'DBLIM must be a real valued 2 element vector!');
+end
+dblim=sort([dblim(1) dblim(2)]);
+
+% rescale response
+switch zerodb
+    case 'min'
+        map.response=map.response-min(map.response(:));
+        map.normdb=map.normdb+min(map.response(:));
+    case 'max'
+        map.response=map.response-max(map.response(:));
+        map.normdb=map.normdb+max(map.response(:));
+    case 'median'
+        map.response=map.response-median(map.response(:));
+        map.normdb=map.normdb+median(map.response(:));
+    case 'abs'
+        map.response=map.response+map.normdb;
+        map.normdb=0;
+end
 
 % check colors
-if(nargin<2); fgcolor='w'; bgcolor='k'; end
-if(nargin<3)
+if(nargin<4); fgcolor='w'; bgcolor='k'; end
+if(nargin<5)
     if(isempty(fgcolor))
         fgcolor='w'; bgcolor='k';
     else
         bgcolor=invertcolor(fgcolor,true);
     end
 end
-if(nargin<4)
+if(nargin<6)
     if(isempty(fgcolor))
         if(isempty(bgcolor))
             fgcolor='w'; bgcolor='k';
@@ -90,13 +144,19 @@ if(ischar(fgcolor)); fgcolor=name2rgb(fgcolor); end
 if(ischar(bgcolor)); bgcolor=name2rgb(bgcolor); end
 
 % check handle
-if(nargin<4 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
+if(nargin<6 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
         || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
     figure('color',bgcolor);
     ax=gca;
 else
     axes(ax);
 end
+
+% set zerodb & dblim in userdata
+% - this is for updatefkmap
+userdata.zerodb=zerodb;
+userdata.dblim=dblim;
+set(ax,'userdata',userdata);
 
 % pertinent info
 smax=max(abs(map.y));
@@ -165,9 +225,10 @@ end
 
 % add title color etc
 hold off;
-title([{'Array Response Function @ '}; titstr; {''; ''; ''}],...
+title({'Array Response Function @ '; titstr; ...
+    ['0db = ' num2str(map.normdb) 'dB']; ''; ''; ''},...
     'fontweight','bold','color',fgcolor);
-set(ax,'clim',[-12 0]);
+set(ax,'clim',dblim);
 shading flat;
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
     colormap(flipud(fire));
@@ -182,7 +243,7 @@ else
 end
 c=colorbar('eastoutside',...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
-set(c,'xaxislocation','top');
+%set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)
 
 % reset root values
@@ -198,18 +259,60 @@ set(0,'defaultsurfaceedgecolor',defaultsurfaceedgecolor);
 
 end
 
-function ax=plotfkarfcartmap(map,fgcolor,bgcolor,ax)
+
+
+function ax=plotfkarfcartmap(map,dblim,zerodb,fgcolor,bgcolor,ax)
+
+% default/check scaling type
+if(nargin<3 || isempty(zerodb)); zerodb='max'; end
+if(~ischar(zerodb) ...
+        || ~ismember(lower(zerodb),{'max' 'min' 'median' 'abs'}))
+    error('seizmo:plotfkarf:badSTYPE',...
+        'STYPE must be ''min'' ''max'' ''median'' or ''abs''!');
+end
+zerodb=lower(zerodb);
+
+% default/check dblim
+if(nargin<2 || isempty(dblim))
+    switch zerodb
+        case {'min' 'median'}
+            dblim=[0 12];
+        case {'max' 'abs'}
+            dblim=[-12 0];
+    end
+end
+if(~isreal(dblim) || numel(dblim)~=2)
+    error('seizmo:plotfkarf:badDBLIM',...
+        'DBLIM must be a real valued 2 element vector!');
+end
+dblim=sort([dblim(1) dblim(2)]);
+
+% rescale response
+switch zerodb
+    case 'min'
+        map.response=map.response-min(map.response(:));
+        map.normdb=map.normdb+min(map.response(:));
+    case 'max'
+        map.response=map.response-max(map.response(:));
+        map.normdb=map.normdb+max(map.response(:));
+    case 'median'
+        map.response=map.response-median(map.response(:));
+        map.normdb=map.normdb+median(map.response(:));
+    case 'abs'
+        map.response=map.response+map.normdb;
+        map.normdb=0;
+end
 
 % check colors
-if(nargin<2); fgcolor='w'; bgcolor='k'; end
-if(nargin<3)
+if(nargin<4); fgcolor='w'; bgcolor='k'; end
+if(nargin<5)
     if(isempty(fgcolor))
         fgcolor='w'; bgcolor='k';
     else
         bgcolor=invertcolor(fgcolor,true);
     end
 end
-if(nargin<4)
+if(nargin<6)
     if(isempty(fgcolor))
         if(isempty(bgcolor))
             fgcolor='w'; bgcolor='k';
@@ -230,13 +333,19 @@ if(ischar(fgcolor)); fgcolor=name2rgb(fgcolor); end
 if(ischar(bgcolor)); bgcolor=name2rgb(bgcolor); end
 
 % check handle
-if(nargin<4 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
+if(nargin<6 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
         || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
     figure('color',bgcolor);
     ax=gca;
 else
     axes(ax);
 end
+
+% set zerodb & dblim in userdata
+% - this is for updatefkmap
+userdata.zerodb=zerodb;
+userdata.dblim=dblim;
+set(ax,'userdata',userdata);
 
 % get pertinent info
 smax=max(max(abs(map.x)),max(abs(map.y)));
@@ -253,7 +362,7 @@ dist=vincentyinv(map.stla(friends(:,1)),map.stlo(friends(:,1)),...
 % first plot the map
 imagesc(map.x,map.y,map.response);
 set(ax,'xcolor',fgcolor,'ycolor',fgcolor,'ydir','normal',...
-    'color',bgcolor,'fontweight','bold','clim',[-12 0]);
+    'color',bgcolor,'fontweight','bold','clim',dblim);
 hold on
 
 % phase specific bullseye
@@ -309,7 +418,8 @@ end
 hold off
 
 % finally take care of labels/coloring/etc
-title([{'Array Response Function @ '}; titstr],...
+title({'Array Response Function @ '; titstr; ...
+    ['0 dB = ' num2str(map.normdb) 'dB']},...
     'fontweight','bold','color',fgcolor);
 xlabel('East/West Slowness (s/deg)',...
     'fontweight','bold','color',fgcolor);
@@ -328,7 +438,7 @@ else
 end
 c=colorbar('eastoutside',...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
-set(c,'xaxislocation','top');
+%set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)
 axis equal tight;
 

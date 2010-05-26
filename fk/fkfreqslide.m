@@ -3,8 +3,10 @@ function [varargout]=fkfreqslide(vol,delay,varargin)
 %
 %    Usage:    fkfreqslide(vol)
 %              fkfreqslide(vol,delay)
-%              fkfreqslide(vol,delay,fgcolor,bgcolor)
-%              fkfreqslide(vol,delay,fgcolor,bgcolor,ax)
+%              fkfreqslide(vol,delay,dblim)
+%              fkfreqslide(vol,delay,dblim,zerodb)
+%              fkfreqslide(vol,delay,dblim,zerodb,fgcolor,bgcolor)
+%              fkfreqslide(vol,delay,dblim,zerodb,fgcolor,bgcolor,ax)
 %              mov=fkfreqslide(...);
 %
 %    Description: FKFREQSLIDE(VOL) slides through a fk volume produced by
@@ -15,14 +17,23 @@ function [varargout]=fkfreqslide(vol,delay,varargin)
 %     FKFREQSLIDE(VOL,DELAY) specifies the delay between the plotting of
 %     each frequency in seconds.  The default DELAY is 0.33s.
 %
-%     FKFREQSLIDE(VOL,DELAY,FGCOLOR,BGCOLOR) specifies the foreground and
-%     background colors of the plot.  The default is 'w' for FGCOLOR and
-%     'k' for BGCOLOR.  Note that if one is specified and the other is not,
-%     an opposing color is found using INVERTCOLOR.  The color scale is
-%     also changed so the noise clip is at BGCOLOR.
+%     FKFREQSLIDE(VOL,DELAY,DBLIM) sets the dB limits for coloring the
+%     response info.  The default is [-12 0] for the default ZERODB (see
+%     next Usage form).  If ZERODB IS 'min' or 'median', the default DBLIM
+%     is [0 12].  DBLIM must be a real-valued 2-element vector.
 %
-%     FKFREQSLIDE(VOL,DELAY,FGCOLOR,BGCOLOR,AX) sets the axes that the map
-%     is drawn in.  This is useful for subplots, guis, etc.
+%     FKFREQSLIDE(VOL,DELAY,DBLIM,ZERODB) changes what 0dB corresponds to
+%     in the plot.  The allowed values are 'min', 'max', 'median', & 'abs'.
+%     The default is 'max'.
+%
+%     FKFREQSLIDE(VOL,DELAY,DBLIM,ZERODB,FGCOLOR,BGCOLOR) specifies the
+%     foreground and background colors of the plot.  The default is 'w' for
+%     FGCOLOR and 'k' for BGCOLOR.  Note that if one is specified and the
+%     other is not, an opposing color is found using INVERTCOLOR.  The
+%     color scale is also changed so the noise clip is at BGCOLOR.
+%
+%     FKFREQSLIDE(VOL,DELAY,DBLIM,ZERODB,FGCOLOR,BGCOLOR,AX) sets the axes
+%     that the map is drawn in.  This is useful for subplots, guis, etc.
 %
 %     MOV=FKFREQSLIDE(...) creates a Matlab movie MOV.  This can played
 %     using the function MOVIE.  See MOVIE2AVI for exporting as an AVI
@@ -39,14 +50,15 @@ function [varargout]=fkfreqslide(vol,delay,varargin)
 
 %     Version History:
 %        May  11, 2010 - initial version
+%        May  26, 2010 - update for new plotfkmap args
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  11, 2010 at 16:20 GMT
+%     Last Updated May  26, 2010 at 10:00 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,5,nargin));
+error(nargchk(1,7,nargin));
 
 % check fk struct
 error(chkfkstruct(vol));

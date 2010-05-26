@@ -70,15 +70,15 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %     Get frequency-slowness-time data for an array at 20-50s periods:
 %      s4d=fk4d(data,1,75,50,201,[1/50 1/20]);
 %
-%    See also: PLAYFKVOLUME, FKMAP, FKARF,
-%              SNYQUIST, KXY2SLOWBAZ, SLOWBAZ2KXY
+%    See also: FKFREQSLIDE, FKTIMESLIDE, FKVOLUME, FKMAP, FKARF
 
 %     Version History:
 %        May   9, 2010 - initial version
 %        May  10, 2010 - first working version
+%        May  26, 2010 - minor doc touch
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  10, 2010 at 15:50 GMT
+%     Last Updated May  26, 2010 at 10:40 GMT
 
 % todo:
 
