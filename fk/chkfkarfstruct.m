@@ -20,9 +20,10 @@ function [report]=chkfkarfstruct(fk)
 %        May  11, 2010 - initial version
 %        May  13, 2010 - minor bug fix
 %        May  24, 2010 - minor doc touch (don't forget to update Contents)
+%        May  27, 2010 - fixed an error message
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  24, 2010 at 16:00 GMT
+%     Last Updated May  27, 2010 at 18:45 GMT
 
 % todo:
 
@@ -36,8 +37,8 @@ fields={'response' 'nsta' 'stla' 'stlo' 'x' 'y' 'npw' 's' 'baz' 'f' ...
     'polar' 'center' 'normdb'};
 if(~isstruct(fk) || ~all(ismember(fields,fieldnames(fk))))
     report.identifier='seizmo:chkfkarfstruct:dataNotStruct';
-    report.message=['FK data must be a struct with fields:\n' ...
-        sprintf('%s ',fields{:})];
+    report.message=['FK data must be a struct with fields:' ...
+        sprintf('\n') sprintf('%s ',fields{:})];
     return;
 end
 

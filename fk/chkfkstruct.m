@@ -21,9 +21,10 @@ function [report]=chkfkstruct(fk)
 %        May  11, 2010 - initial version
 %        May  12, 2010 - allow single frequency volume
 %        May  24, 2010 - minor doc update (don't forget to update Contents)
+%        May  27, 2010 - fixed an error message
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  24, 2010 at 15:00 GMT
+%     Last Updated May  27, 2010 at 18:45 GMT
 
 % todo:
 
@@ -37,8 +38,8 @@ fields={'response' 'nsta' 'stla' 'stlo' 'stel' 'stdp' 'butc' 'eutc' ...
     'npts' 'delta' 'x' 'y' 'z' 'polar' 'center' 'normdb' 'volume'};
 if(~isstruct(fk) || ~all(ismember(fields,fieldnames(fk))))
     report.identifier='seizmo:chkfkstruct:dataNotStruct';
-    report.message=['FK data must be a struct with fields:\n' ...
-        sprintf('%s ',fields{:})];
+    report.message=['FK data must be a struct with fields:' ...
+        sprintf('\n') sprintf('%s ',fields{:})];
     return;
 end
 

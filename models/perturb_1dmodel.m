@@ -1,12 +1,12 @@
-function [model]=perturb_model(model,varargin)
-%PERTURB_MODEL    Perturbs 1D Earth models
+function [model]=perturb_1dmodel(model,newname,varargin)
+%PERTURB_1DMODEL    Perturbs 1D Earth models
 %
-%    Usage:    model=perturb_model(model,prop,value,...)
+%    Usage:    model=perturb_1dmodel(model,newname,prop,value,...)
 %
-%    Description: MODEL=PERTURB_MODEL(MODEL,PROP,VALUE,...) will perturb
-%     the property PROP of the 1D Earth model MODEL using the matrix VALUE
-%     to create new layers in the model.  VALUE is a Nx5 matrix with the
-%     following layout:
+%    Description: MODEL=PERTURB_1DMODEL(MODEL,NEWNAME,PROP,VALUE,...) will
+%     perturb the property PROP of the 1D Earth model MODEL using the
+%     matrix VALUE to create new layers in the model.  VALUE is a Nx5
+%     matrix with the following layout:
 %       [depth1 value1 vtype1 gtype12 npts12;
 %        depth2 value2 vtype2 gtype23 npts23;
 %        ...
@@ -35,10 +35,13 @@ function [model]=perturb_model(model,varargin)
 %     Properties not being perturbed by the new layer are linear
 %     interpolated at the new depth points.
 %
-%     Multiple PROP/VALUE pairs may be passed to PERTURB_MODEL so that
+%     Multiple PROP/VALUE pairs may be passed to PERTURB_1DMODEL so that
 %     multiple properties can be adjusted.  Note that the adjustments are
 %     performed in the order that they are given so it is possible to
 %     adjust a property and then readjust it several times.
+%
+%     NEWNAME sets the .name property of MODEL for encouraging altering the
+%     name of the model when altering the properties of the model.
 %
 %    Notes:
 %
@@ -48,49 +51,66 @@ function [model]=perturb_model(model,varargin)
 %     PREM.  The discontinuity is a 3% jump.  Afterwards the D" layer
 %     decays like an error function (that was given values from 0 to 2) to
 %     the CMB which is -0.2km/s slower than the top of the D" layer:
-%      mod=prem;
-%      newmod=perturb_model(mod,'vs',[2600    0 1 1 10;
-%                                     2700   -1 4 0  0;
-%                                     2700    2 4 2 10;
-%                                     2891 -0.2 1 0  0]);
-%      figure; plot(newmod.depth,newmod.vs,'.');
+%      newmod=perturb_1dmodel(prem,'prem+ddp',...
+%                             'vs',[2600    0 1 1 10;
+%                                   2700   -1 4 0  0;
+%                                   2700    2 4 2 10;
+%                                   2891 -0.2 1 0  0]);
+%      plot1dmodel([prem newmod],[],[2500 3000]);
 %
-%     Same but adding a 5-point, 25km thick ULVZ with a 10% drop in Vs:
-%      mod=prem;
-%      newmod=perturb_model(mod,'vs',[2600    0 1 1 10;
-%                                     2700   -1 4 0  0;
-%                                     2700    2 4 2 10;
-%                                     2891 -0.2 1 0  0],...
-%                               'vs',[2891-25 -10 4 1 5;
-%                                     2891    -10 4 0 0]);
-%      figure; plot(newmod.depth,newmod.vs,'.');
+%     Same but also adding a 5-point, 25km thick
+%     ULVZ with a 10% drop in Vs:
+%      newmod=perturb_1dmodel(prem,'prem+ddp+ulvz',...
+%                             'vs',[2600    0 1 1 10;
+%                                   2700   -1 4 0  0;
+%                                   2700    2 4 2 10;
+%                                   2891 -0.2 1 0  0],...
+%                             'vs',[2891-25 -10 4 1 5;
+%                                   2891    -10 4 0 0]);
+%      plot1dmodel([prem newmod],[],[2500 3000]);
 %
-%    See also: PREM, AK135, IASP91, PREM_PERFECT, IASP91_PERFECT
+%    See also: PREM, AK135, IASP91, PREM_PERFECT, IASP91_PERFECT,
+%              PLOT1DMODEL, FLATTEN_1DMODEL
 
 %     Version History:
 %        May  24, 2010 - initial version, handle improved 1d model struct
+%        May  27, 2010 - much better discontinuity support, add newname
+%                        arg so we set the model name too
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  24, 2010 at 16:05 GMT
+%     Last Updated May  27, 2010 at 18:15 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,inf,nargin));
-if(mod(nargin-1,2))
-    error('seizmo:perturb_model:unpairedOption',...
+error(nargchk(2,inf,nargin));
+if(mod(nargin,2))
+    error('seizmo:perturb_1dmodel:unpairedOption',...
         'All Option/Values must be paired!');
 end
 
 % check model
 error(chk1dmodel(model));
 
+% do not allow multiple models to be input
+if(~isscalar(model))
+    error('seizmo:perturb_1dmodel:badInput',...
+        'MODEL can not be an array of models!');
+end
+
+% check newname
+if(~ischar(newname) || ndims(newname)~=2 || size(newname,1)~=1)
+    error('seizmo:perturb_1dmodel:badInput',...
+        'NEWNAME must be a character string!');
+end
+model.name=newname;
+
 % check properties
 if(~iscellstr(varargin(1:2:end)))
-    error('seizmo:perturb_model:badInput',...
+    error('seizmo:perturb_1dmodel:badInput',...
         'PROPERTY must be a string!');
 elseif(any(~ismember(varargin(1:2:end),fieldnames(model))))
-    error('seizmo:perturb_model:badInput',...
+    error('seizmo:perturb_1dmodel:badInput',...
         'MODEL is missing 1 or more properties to be adjusted!');
 end
 
@@ -107,27 +127,27 @@ for i=1:numel(fields)
 end
 
 % loop over prop/value pairs
-for i=1:2:nargin-1
+for i=1:2:nargin-2
     % check value matrix is ok
     pidx=strcmp(fields,varargin{i});
     value=varargin{i+1};
     sz=size(value);
     if(~isreal(value))
-        error('seizmo:perturb_model:badInput',...
+        error('seizmo:perturb_1dmodel:badInput',...
             'VALUE matrix must be a real-valued Nx5 array!');
     elseif(numel(sz)~=2 || sz(2)~=5)
-        error('seizmo:perturb_model:badInput',...
+        error('seizmo:perturb_1dmodel:badInput',...
             'VALUE matrix must be [DEPTH VALUE VTYPE GTYPE NPTS]!');
     elseif(sz(1)<2 || any(value(end,4:5)~=0))
-        error('seizmo:perturb_model:badInput',...
+        error('seizmo:perturb_1dmodel:badInput',...
             ['VALUE matrix must have 2+ rows & ' ...
             'the last row must end with two 0s!']);
     elseif(any(value(:,1)<0 | value(:,1)>6371) || ~issorted(value(:,1)))
-        error('seizmo:perturb_model:badInput',...
+        error('seizmo:perturb_1dmodel:badInput',...
             'DEPTHS are out of range or out of order!');
     elseif(any(~ismember(value(:,3),0:4)) || any(value(:,5)<0) ...
             || any(value(:,5)~=fix(value(:,5))))
-        error('seizmo:perturb_model:badInput',...
+        error('seizmo:perturb_1dmodel:badInput',...
             'VTYPE must be 0 to 4 and NPTS must be positive integer!');
     end
     
@@ -136,6 +156,7 @@ for i=1:2:nargin-1
     dcd=depths(dci);
     
     % pull model above and below
+    % - top part
     dtop=value(1,1);
     dbot=value(end,1);
     if(any(dcd==dtop))
@@ -161,7 +182,12 @@ for i=1:2:nargin-1
         d1=value(j,1);
         d2=value(j+1,1);
         
+        % what side of the discontinuity is the first value on?
+        topside=false;
+        if(d1==d2); topside=true; end
+        
         % values on either end
+        % - this fails for discontinuities
         switch value(j,3)
             case 0
                 v1=value(j,2);
@@ -171,10 +197,10 @@ for i=1:2:nargin-1
                 v1=(value(j,2)+100)/100*v0;
             case 3
                 v1=value(j,2)...
-                    +getvalue(depths,modmat,value(j,1),pidx,false);
+                    +getvalue(depths,modmat,value(j,1),pidx,topside);
             case 4
                 v1=(value(j,2)+100)/100 ...
-                    *getvalue(depths,modmat,value(j,1),pidx,false);
+                    *getvalue(depths,modmat,value(j,1),pidx,topside);
         end
         v0=v1;
         switch value(j+1,3)
@@ -186,20 +212,101 @@ for i=1:2:nargin-1
                 v2=(value(j+1,2)+100)/100*v0;
             case 3
                 v2=value(j+1,2)...
-                    +getvalue(depths,modmat,value(j+1,1),pidx,true);
+                    +getvalue(depths,modmat,value(j+1,1),pidx,~topside);
             case 4
                 v2=(value(j+1,2)+100)/100 ...
-                    *getvalue(depths,modmat,value(j+1,1),pidx,true);
+                    *getvalue(depths,modmat,value(j+1,1),pidx,~topside);
         end
         v0=v2;
         
         % special handling of imposed discontinuity
+        %
+        % this needs serious help for some cases
+        % - need to handle discon by itself
+        % - "                   " at start/end of perturb
+        % - "                   " that is already there
+        % - "                   " 
         if(d1==d2)
-            depnew{j}=d2;
-            modnew{j}=nan(1,nf);
-            modnew{j}(1,pidx)=v2;
-            % this will give props at bottom of discon (what we want)
-            modnew{j}(1,~pidx)=interpdc1(depths,modmat(:,~pidx),d2);
+            % does this discontinuity already exist?
+            if(any(d1==dcd))
+                % yes
+                % - only make new entries if this is the only layer or if
+                %   this is the first or last layer.  Otherwise the discon
+                %   will be handled by the other layer steps
+                if(1==(sz(1)-1))
+                    % just altering the discontinuity here
+                    
+                    % replace discontinuity on both sides
+                    % values are known exactly for all
+                    depnew{j}=[d1; d2];
+                    modnew{j}=nan(2,nf);
+                    modnew{j}(:,pidx)=[v1; v2];
+                    modnew{j}(:,~pidx)=[modtop(end,~pidx);
+                                        modbot(1,~pidx)];
+                    
+                    % remove from dep/mod top/bot
+                    deptop=deptop(1:end-1,:);
+                    modtop=modtop(1:end-1,:);
+                    modbot=modbot(2:end,:);
+                    depbot=depbot(2:end,:);
+                elseif(j==1)
+                    % altering the discontinuity and region below
+                    
+                    % just include top as subsequent steps will do the
+                    % bottom side of the discon
+                    depnew{j}=d1;
+                    modnew{j}=nan(1,nf);
+                    modnew{j}(1,pidx)=v1;
+                    
+                    % grab values from discon
+                    modnew{j}(1,~pidx)=modtop(end,~pidx);
+                    
+                    % now delete the bottom of modtop & deptop
+                    modtop=modtop(1:end-1,:);
+                    deptop=deptop(1:end-1,:);
+                elseif(j==sz(1)-1)
+                    % altering the discontinuity and region above
+                    
+                    % just need to include bottom as the
+                    % step above did the top side already
+                    depnew{j}=d2;
+                    modnew{j}=nan(1,nf);
+                    modnew{j}(1,pidx)=v2;
+                    
+                    % grab values from discon
+                    modnew{j}(1,~pidx)=modbot(1,~pidx);
+                    
+                    % now delete the top of modbot & depbot
+                    modbot=modbot(2:end,:);
+                    depbot=depbot(2:end,:);
+                end
+            else
+                % no, now are what step are we in?
+                % - other layers will handle top side unless there are no
+                %   layers above the discon. so special for first layer,
+                %   otherwise just do the bottom side
+                if(j==1)
+                    % need to include top & bottom of discon
+                    depnew{j}=[d1; d2];
+                    modnew{j}=nan(2,nf);
+                    modnew{j}(:,pidx)=[v1; v2];
+                    
+                    % note that the discontinuity does not exist for
+                    % the other properties, so no problem with ppval
+                    modnew{j}(1,~pidx)=interpdc1(depths,modmat(:,~pidx),d2);
+                    modnew{j}(2,~pidx)=modnew{j}(1,~pidx);
+                else
+                    % just need to include bottom as the
+                    % step above did the top side already
+                    depnew{j}=d2;
+                    modnew{j}=nan(1,nf);
+                    modnew{j}(1,pidx)=v2;
+                    
+                    % this will get the value of the other props at the
+                    % bottom of discon (what we want)
+                    modnew{j}(1,~pidx)=interpdc1(depths,modmat(:,~pidx),d2);
+                end
+            end
             continue;
         end
         

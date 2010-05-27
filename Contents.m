@@ -134,6 +134,7 @@
 %INVERT              - simple inversion functions
 %MATTAUP             - TauP functions
 %MISC                - useful miscellaneous functions
+%MODELS              - 1D/3D Earth model functions
 %POSITION            - global positioning functions
 %RESPONSE            - instrument response functions
 %SEIZMO_INTERNAL     - internal functions

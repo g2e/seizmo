@@ -19,9 +19,10 @@ function [report]=chk1dmodel(model)
 
 %     Version History:
 %        May  24, 2010 - initial version
+%        May  27, 2010 - now allows arrays of models
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  24, 2010 at 15:40 GMT
+%     Last Updated May  27, 2010 at 15:05 GMT
 
 % todo:
 
@@ -39,44 +40,53 @@ if(~isstruct(model) || ~all(ismember(reqfields,fieldnames(model))))
     return;
 end
 
-% check each required field
-sz=size(model.name);
-if(~ischar(model.name) || numel(sz)>2 || sz(1)~=1)
-    report.identifier='seizmo:chk1dmodel:badName';
-    report.message='The .name field of MODEL must be a string!';
-    return;
-elseif(~islogical(model.ocean) || ~isscalar(model.ocean))
-    report.identifier='seizmo:chk1dmodel:badOcean';
-    report.message='The .ocean field of MODEL must be TRUE or FALSE!';
-    return;
-elseif(~islogical(model.crust) || ~isscalar(model.crust))
-    report.identifier='seizmo:chk1dmodel:badOcean';
-    report.message='The .crust field of MODEL must be TRUE or FALSE!';
-    return;
-elseif(~islogical(model.isotropic) || ~isscalar(model.isotropic))
-    report.identifier='seizmo:chk1dmodel:badOcean';
-    report.message='The .isotropic field of MODEL must be TRUE or FALSE!';
-    return;
-elseif(~islogical(model.flattened) || ~isscalar(model.flattened))
-    report.identifier='seizmo:chk1dmodel:badOcean';
-    report.message='The .flattened field of MODEL must be TRUE or FALSE!';
-    return;
-elseif(~isreal(model.refperiod) || ~isscalar(model.refperiod) ...
-        || model.refperiod<=0)
-    report.identifier='seizmo:chk1dmodel:badRefPeriod';
-    report.message='The .refperiod field of MODEL must be a scalar >0!';
-    return;
-end
-
-% make sure all other fields are the same size as depth
-sz=size(model.depth);
+% loop over each model
 fields=setdiff(fieldnames(model),reqfields);
-for i=1:numel(fields)
-    if(~isequal(sz,size(model.(fields{i}))))
-        report.identifier='seizmo:chk1dmodel:badPropSize';
-        report.message=['The .' fields{i} ' field of MODEL must have ' ...
-            'the same size as the .depth field!'];
+for i=1:numel(model)
+    % check each required field
+    sz=size(model(i).name);
+    if(~ischar(model(i).name) || numel(sz)>2 || sz(1)~=1)
+        report.identifier='seizmo:chk1dmodel:badName';
+        report.message=['The .name field of MODEL ' ...
+            num2str(i) ' must be a string!'];
         return;
+    elseif(~islogical(model(i).ocean) || ~isscalar(model(i).ocean))
+        report.identifier='seizmo:chk1dmodel:badOcean';
+        report.message=['The .ocean field of MODEL ' ...
+            num2str(i) ' must be TRUE or FALSE!'];
+        return;
+    elseif(~islogical(model(i).crust) || ~isscalar(model(i).crust))
+        report.identifier='seizmo:chk1dmodel:badOcean';
+        report.message=['The .crust field of MODEL ' ...
+            num2str(i) ' must be TRUE or FALSE!'];
+        return;
+    elseif(~islogical(model(i).isotropic) || ~isscalar(model(i).isotropic))
+        report.identifier='seizmo:chk1dmodel:badOcean';
+        report.message=['The .isotropic field of MODEL ' ...
+            num2str(i) ' must be TRUE or FALSE!'];
+        return;
+    elseif(~islogical(model(i).flattened) || ~isscalar(model(i).flattened))
+        report.identifier='seizmo:chk1dmodel:badOcean';
+        report.message=['The .flattened field of MODEL ' ...
+            num2str(i) ' must be TRUE or FALSE!'];
+        return;
+    elseif(~isreal(model(i).refperiod) || ~isscalar(model(i).refperiod) ...
+            || model(i).refperiod<=0)
+        report.identifier='seizmo:chk1dmodel:badRefPeriod';
+        report.message=['The .refperiod field of MODEL ' ...
+            num2str(i) ' must be a scalar >0!'];
+        return;
+    end
+
+    % make sure all other fields are the same size as depth
+    sz=size(model(i).depth);
+    for j=1:numel(fields)
+        if(~isequal(sz,size(model(i).(fields{j}))))
+            report.identifier='seizmo:chk1dmodel:badPropSize';
+            report.message=['The .' fields{j} ' field of MODEL ' ...
+                num2str(i) ' must be the same size as the .depth field!'];
+            return;
+        end
     end
 end
 

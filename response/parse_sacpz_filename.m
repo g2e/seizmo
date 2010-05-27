@@ -48,9 +48,10 @@ function [gd,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filename)
 
 %     Version History:
 %        Sep. 20, 2009 - initial version
+%        May  27, 2010 - seizmoverbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 20, 2009 at 06:45 GMT
+%     Last Updated May  27, 2010 at 16:35 GMT
 
 % todo:
 
@@ -70,13 +71,25 @@ elseif(~iscellstr(filename))
         'FILENAME must be a char or cellstr array!');
 end
 
+% verbosity
+verbose=seizmoverbose;
+if(verbose)
+    disp('Parsing SAC Polezero Filename(s)');
+end
+
 % allocating output
 npz=numel(filename);
 knetwk=cell(npz,1); kstnm=knetwk; kcmpnm=knetwk; khole=knetwk;
 b=[2999 365 23 59 59.99999]; b=b(ones(npz,1),:); e=b; gd=false(npz,1);
 
+% skip last step if empty
+if(npz==0); return; end
+
 % loop over filenames
-for i=1:numel(filename)
+for i=1:npz
+    % detail message
+    if(verbose); print_time_left(i-1,npz); end
+    
     % parse filename
     w=getwords(filename{i},'_');
     nw=numel(w);
@@ -116,8 +129,8 @@ for i=1:numel(filename)
     gd(i)=true;
 end
 
-% skip last step if empty
-if(npz==0); return; end
+% detail message
+if(verbose); print_time_left(i,npz); end
 
 % remove unworthy
 knetwk=knetwk(gd);

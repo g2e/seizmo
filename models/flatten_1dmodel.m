@@ -1,9 +1,9 @@
-function [model]=flatten_model(model)
-%FLATTEN_MODEL    Flattens a 1D Earth model
+function [model]=flatten_1dmodel(model)
+%FLATTEN_1DMODEL    Flattens a 1D Earth model
 %
-%    Usage:    model=flatten_model(model)
+%    Usage:    model=flatten_1dmodel(model)
 %
-%    Description: MODEL=FLATTEN_MODEL(MODEL) takes a spherical 1D Earth
+%    Description: MODEL=FLATTEN_1DMODEL(MODEL) takes a spherical 1D Earth
 %     model and performs an Earth-flattening transformation on it (converts
 %     it into a half-space).  Depth points at the center of the Earth will
 %     be at infinite depth.  For details see reference in Notes.
@@ -15,7 +15,7 @@ function [model]=flatten_model(model)
 %    Examples:
 %     Compare a flattened Earth model to a non-flat one:
 %      mod=prem;
-%      fmod=flatten_model(mod);
+%      fmod=flatten_1dmodel(mod);
 %      figure; plot(mod.depth(1:50),mod.vp(1:50),...
 %                  fmod.depth(1:50),fmod.vp(1:50))
 %
@@ -37,7 +37,7 @@ chk1dmodel(model);
 
 % already flattened?
 if(model.flattened)
-    warning('seizmo:flatten_model:alreadyFlat',...
+    warning('seizmo:flatten_1dmodel:alreadyFlat',...
         'MODEL is already flattened!');
     return;
 end

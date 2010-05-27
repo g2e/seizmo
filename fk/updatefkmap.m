@@ -77,10 +77,10 @@ function updatefkpolarmap(map,ax)
 userdata=get(ax,'userdata');
 if(isempty(userdata) || ~isstruct(userdata) ...
         || any(~isfield(userdata,{'zerodb' 'dblim'})))
-    dblim=[-12 0];
+    %dblim=[-12 0];
     zerodb='max';
 else
-    dblim=userdata.dblim;
+    %dblim=userdata.dblim;
     zerodb=userdata.zerodb;
 end
 
@@ -128,10 +128,10 @@ function updatefkcartmap(map,ax)
 userdata=get(ax,'userdata');
 if(isempty(userdata) || ~isstruct(userdata) ...
         || any(~isfield(userdata,{'zerodb' 'dblim'})))
-    dblim=[-12 0];
+    %dblim=[-12 0];
     zerodb='max';
 else
-    dblim=userdata.dblim;
+    %dblim=userdata.dblim;
     zerodb=userdata.zerodb;
 end
 
