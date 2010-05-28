@@ -1,5 +1,7 @@
 % Fixes to IRIS SAC PoleZero Database:
 %
+% THESE FIXES ARE IMPLEMENTED IN FIX_BAD_SACPZ!
+%
 % 1. Fixed 30 bad zeros for GE network:
 %    Reason: Conjugate pair sign error.
 %    Fix: z(4)=conj(z(4));
@@ -84,10 +86,26 @@
 %    for sacpzdb.AF(idx) where idx is
 %    idx=[118:123];
 %
+% 5. Fixed 6 bad poles for network AZ:
+%    Reason: Conjugate pair sign error.
+%    Fix: p(3)=conj(p(3))
+%    from:
+%                       -981 +                  1009i
+%                       -981 -                  1009i
+%                      -3290 -                  1263i
+%                      -3290 -                  1263i
+%    to:
+%                       -981 +                  1009i
+%                       -981 -                  1009i
+%                      -3290 +                  1263i
+%                      -3290 -                  1263i
+%    for sacpzdb.AZ(idx) where idx is
+%    idx=[2686:2691];
+%
 
 
-% WORKING ON:
-% 5. Fixed 4 bad poles for network BK:
+% NEED INFO:
+% 6. Fixed 4 bad poles for network BK:
 %    Reason: Typo in imaginary part of conjugate pair. Which is right?
 %    Fix: 
 %    from:
@@ -106,7 +124,7 @@
 %    for sacpzdb.BK(idx) where idx is
 %    idx=[4106        4115        4126        4146];
 %
-% 6. Fixed 4 bad poles for network BK:
+% 7. Fixed 4 bad poles for network BK:
 %    Reason: Typo in imaginary part of conjugate pair. Which is right?
 %    Fix: 432 is common
 %    from:
@@ -125,7 +143,7 @@
 %    for sacpzdb.BK(idx) where idx is
 %    idx=[4108        4117        4128        4148];
 %
-% 7. Fixed 4 bad poles for network BK:
+% 8. Fixed 4 bad poles for network BK:
 %    Reason: Typo in imaginary part of conjugate pair. Which is right?
 %    Fix: 814 is common
 %    from:
@@ -144,7 +162,7 @@
 %    for sacpzdb.BK(idx) where idx is
 %    idx=[4110        4119        4130        4150];
 %
-% 8. Fixed 2 bad poles for network BK:
+% 9. Fixed 2 bad poles for network BK:
 %    Reason: Typo in imaginary part of conjugate pair. The first is
 %            probably right as the second one matches a real value from an
 %            adjacent polezero file (I think they did an off-by-one-line
@@ -195,7 +213,6 @@
 %   9 p(1)~=conj(p(2))
 %  10 p(5)~=conj(p(6))
 %  11 p(1)~=conj(p(2))
-% AZ p(3)=conj(p(3))
 % BK HUGE.....
 % FA p(1)~=conj(p(2))    (HN[ZEN])
 %                     -220.8 +                   265i
@@ -248,3 +265,4 @@
 %                    -0.1053 +                 7.864i
 %                    -10.533 -                 7.864i
 
+% Last Updated: May 28, 2010 by Garrett Euler

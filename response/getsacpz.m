@@ -37,9 +37,9 @@ function [data]=getsacpz(data,varargin)
 %       not find a match there are several possibilities:
 %        1) the instrument response is not at IRIS
 %        2) the instrument response is not in a Poles & Zeros format
-%           (this is true for ~25% of the responses at IRIS)
+%           (this is true for ~20% of the responses at IRIS)
 %        3) I haven't updated the sacpzdb recently enough to include your
-%           site's new response info.  I update after about 3 months.
+%           site's new response info.  I update generally every few months.
 %
 %    Header changes: see CHECKHEADER
 %
@@ -69,9 +69,12 @@ function [data]=getsacpz(data,varargin)
 %        Jan. 30, 2010 - fixes for checking state function
 %        Feb.  3, 2010 - versioninfo caching
 %        Feb. 16, 2010 - require header fields are set
+%        May  28, 2010 - new code to handle networks starting with a digit
+%                        (they are stored in sacpzdb as 'A_**' where ** is
+%                        the network name)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2010 at 02:15 GMT
+%     Last Updated May  28, 2010 at 12:45 GMT
 
 % todo:
 
@@ -143,24 +146,31 @@ try
             disp('This May Take A Minute...');
         end
         
+        % handle networks starting with a digit
+        net1=char(strnlen(nets,1));
+        dig1=isstrprop(net1,'digit');
+        nn=nets;
+        nn(dig1)=strcat('A_',nn(dig1));
+        
         % load IRIS SAC PoleZero database
-        sacpzdb=load('sacpzdb',nets{:});
-        if(~isequal(fieldnames(sacpzdb),nets))
-            badnets=nets(~ismember(nets,fieldnames(sacpzdb)));
+        sacpzdb=load('sacpzdb',nn{:});
+        if(~isequal(fieldnames(sacpzdb),nn))
+            badnets=nets(~ismember(nn,fieldnames(sacpzdb)));
             warning('seizmo:getsacpz:badKNETWK',...
                 ['These networks have no response info ' ...
                 'in the IRIS database:\n' sprintf('%s ',badnets{:})]);
-            nets=nets(ismember(nets,fieldnames(sacpzdb)));
+            nn=nn(ismember(nn,fieldnames(sacpzdb)));
+            nets=nets(ismember(nn,fieldnames(sacpzdb)));
         end
         
         % get db info
         for i=1:numel(nets)
-            db.(nets{i}).b=cell2mat({sacpzdb.(nets{i}).b}.');
-            db.(nets{i}).e=cell2mat({sacpzdb.(nets{i}).e}.');
-            db.(nets{i}).knetwk={sacpzdb.(nets{i}).knetwk}.';
-            db.(nets{i}).kstnm={sacpzdb.(nets{i}).kstnm}.';
-            db.(nets{i}).kcmpnm={sacpzdb.(nets{i}).kcmpnm}.';
-            db.(nets{i}).khole={sacpzdb.(nets{i}).khole}.';
+            db.(nn{i}).b=cell2mat({sacpzdb.(nn{i}).b}.');
+            db.(nn{i}).e=cell2mat({sacpzdb.(nn{i}).e}.');
+            db.(nn{i}).knetwk={sacpzdb.(nn{i}).knetwk}.';
+            db.(nn{i}).kstnm={sacpzdb.(nn{i}).kstnm}.';
+            db.(nn{i}).kcmpnm={sacpzdb.(nn{i}).kcmpnm}.';
+            db.(nn{i}).khole={sacpzdb.(nn{i}).khole}.';
         end
     else
         % detail message
@@ -255,23 +265,30 @@ try
         % set progress bar to overwrite
         redraw=false;
         
+        % handle networks starting with a digit
+        if(isstrprop(NET{i}(1),'digit'))
+            NN=['A_' NET{i}];
+        else
+            NN=NET{i};
+        end
+        
         % skip records with network not in db
         if(ismember(NET{i},nets))
             % find sacpz file(s) for this record by name
             % - includes handling khole goofiness
-            ok=find(strcmpi(knetwk{i},db.(NET{i}).knetwk) ...
-                & strcmpi(kstnm{i},db.(NET{i}).kstnm) ...
-                & strcmpi(kcmpnm{i},db.(NET{i}).kcmpnm) ...
-                & (strcmpi(khole{i},db.(NET{i}).khole) ...
-                | strcmpi(khole2{i},db.(NET{i}).khole)));
+            ok=find(strcmpi(knetwk{i},db.(NN).knetwk) ...
+                & strcmpi(kstnm{i},db.(NN).kstnm) ...
+                & strcmpi(kcmpnm{i},db.(NN).kcmpnm) ...
+                & (strcmpi(khole{i},db.(NN).khole) ...
+                | strcmpi(khole2{i},db.(NN).khole)));
 
             % now find sacpz file(s) for this record by time
             % - find sacpz surrounding record's b & e
             % - warn if overlaps boundary
-            okb=timediff(db.(NET{i}).b(ok,:),b(i,:))>0 ...
-                & timediff(db.(NET{i}).e(ok,:),b(i,:))<0;
-            oke=timediff(db.(NET{i}).b(ok,:),e(i,:))>0 ...
-                & timediff(db.(NET{i}).e(ok,:),e(i,:))<0;
+            okb=timediff(db.(NN).b(ok,:),b(i,:))>0 ...
+                & timediff(db.(NN).e(ok,:),b(i,:))<0;
+            oke=timediff(db.(NN).b(ok,:),e(i,:))>0 ...
+                & timediff(db.(NN).e(ok,:),e(i,:))<0;
             halfbaked=(okb & ~oke) | (~okb & oke);
             if(any(halfbaked))
                 redraw=true;
@@ -294,11 +311,11 @@ try
                 'Could not find a matching SAC PoleZero file!'],i);
         else
             % get file with latest b
-            [idx,idx]=min(timediff(db.(NET{i}).b(ok,:),b(i,:)));
+            [idx,idx]=min(timediff(db.(NN).b(ok,:),b(i,:)));
             
             % assign to data.misc.sacpz
             data(i).misc.has_sacpz=true;
-            data(i).misc.sacpz=sacpzdb.(NET{i})(ok(idx));
+            data(i).misc.sacpz=sacpzdb.(NN)(ok(idx));
         end
         
         % detail message

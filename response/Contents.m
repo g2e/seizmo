@@ -1,9 +1,11 @@
 % Seismology Toolbox - response
-% Version 0.6.0-r135 Chimborazo 18-May-2010
+% Version 0.6.0-r140 Dhaulagiri 27-May-2010
 %
 % Instrument Response functions
 %APPLYSACPZ              - Applies SAC PoleZero responses to SEIZMO records
+%BAD_SACPZ_CPLXPAIR      - Finds SAC Polezero files with bad complex pairs
 %DB2SACPZ                - Writes out a SAC PoleZero database as PoleZero files
+%FIX_BAD_SACPZ           - Fixes SOME cases of bad SAC PoleZeros
 %GENSACPZNAME            - Generates SAC Polezero names based on sacpzdb info
 %GETSACPZ                - Finds, reads and adds SAC PoleZero info into a SEIZMO struct
 %IRIS_SACPZDB_FIXES      - Notes on fixes made to IRIS SAC PoleZero responses

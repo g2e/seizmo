@@ -1,5 +1,5 @@
 % Seismology Toolbox - seizmo_internal
-% Version 0.6.0-r135 Chimborazo 18-May-2010
+% Version 0.6.0-r140 Dhaulagiri 27-May-2010
 %
 % Low-level internal functions
 %CHECKHEADER_STATE     - Check/Change if CHECKHEADER is ON=TRUE / OFF=FALSE

@@ -1,5 +1,5 @@
 % Seismology Toolbox - seizmo
-% Version 0.6.0-r135 Chimborazo 18-May-2010
+% Version 0.6.0-r140 Dhaulagiri 27-May-2010
 %
 % Alphabetical list of SEIZMO functions
 %ADD                  - Add a constant to SEIZMO records
