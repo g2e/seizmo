@@ -56,9 +56,10 @@ function [varargout]=plot1dmodel(model,fields,drng,cmap,fgcolor,bgcolor,ax)
 
 %     Version History:
 %        May  27, 2010 - initial version
+%        May  29, 2010 - turn off tex interpretation of model names
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  27, 2010 at 17:00 GMT
+%     Last Updated May  29, 2010 at 15:50 GMT
 
 % todo:
 
@@ -219,7 +220,8 @@ for i=1:nf
         set(h(i),'yticklabel',[]);
     end
     if(i==nf)
-        legend(names,'textcolor',fgcolor,'edgecolor',fgcolor);
+        lh=legend(names,'textcolor',fgcolor,'edgecolor',fgcolor);
+        set(lh,'interpreter','none')
     end
     set(get(h(i),'YLabel'),'color',fgcolor);
     set(get(h(i),'title'),'color',fgcolor);

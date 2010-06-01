@@ -6,6 +6,7 @@
 %AVAILABLE_1DMODELS  - Returns available 1D Earth model functions
 %AVAILABLE_3DMODELS  - Returns available 3D Earth mantle model functions
 %CHK1DMODEL          - Validate if a struct is as defined by PREM/AK135/IASP91
+%CMB_1DMODEL_LIBRARY - Generates a library of CMB 1D Earth models
 %FLATTEN_1DMODEL     - Flattens a 1D Earth model
 %GETC2ELEV           - Returns Crust2.0 elevation at specified location(s)
 %GETC2MOHO           - Returns Crust2.0 Moho depth at specified location(s)

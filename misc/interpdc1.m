@@ -1,31 +1,34 @@
 function [varargout]=interpdc1(x,y,varargin)
 %INTERPDC1    1D interpolation (table lookup) with discontinuity support
 %
-%    Usage:    yi=interpdc1(x,y,xi)
-%              yi=interpdc1(x,y,xi,method)
-%              yi=interpdc1(x,y,xi,method,'extrap')
-%              yi=interpdc1(x,y,xi,method,extrapval)
-%              yi=interpdc1(x,y,xi,method,extrapval,clamp)
+%    Usage:    [yi_hi,yi_lo]=interpdc1(x,y,xi)
+%              [yi_hi,yi_lo]=interpdc1(x,y,xi,method)
+%              [yi_hi,yi_lo]=interpdc1(x,y,xi,method,'extrap')
+%              [yi_hi,yi_lo]=interpdc1(x,y,xi,method,extrapval)
+%              [yi_hi,yi_lo]=interpdc1(x,y,xi,method,extrapval,clamp)
 %              pp=interpdc1(x,y,method,'pp')
 %              pp=interpdc1(x,y,method,'pp',clamp)
 %
 %    Description:
-%     YI=INTERPDC1(X,Y,XI) will return values linearly interpolated at
-%     points XI utilizing the data Y at points X.  X must be a vector and
-%     may include repeat points for defining discontinuities in Y (note
+%     [YI_HI,YI_LO]=INTERPDC1(X,Y,XI) returns values linearly interpolated
+%     at points XI utilizing the data Y at points X.  X must be a vector
+%     and may include repeat points for defining discontinuities in Y (note
 %     that only 2 points in X are allowed to share the same coordinate but
 %     there may be multiple pairs defining multiple discontinuities).  Y
 %     may be a vector (equal length to X) or an array (same number of rows
 %     as elements in X).  Interpolation is done across the rows (ie along
-%     dimension 1) in Y if it is an array.  If Y is a vector, XI & YI will
-%     be the same size.  Otherwise, if XI is an array YI has dimensions
-%     [SIZE(XI) SIZE_Y(2:END)] or if XI is a vector YI has dimensions
-%     [LENGTH(XI) SIZE_Y(2:END)].  Points "interpolated" at the
-%     discontinuities will always return values from the upper side.  This
-%     is a limitation of PPVAL.
+%     dimension 1) in Y if it is an array.  YI_HI & YI_LO both give the
+%     values at each point in XI and so in general are equal except for
+%     points in XI that are on a discontinuity.  For those points YI_HI
+%     contains the values on the "upside" of the discontinuity and YI_LO
+%     contains the values on the "downside" of the discontinuity.  If Y is
+%     a vector, XI, YI_HI & YI_LO will be the same size.  Otherwise, if XI
+%     is an array YI_HI & YI_LO have dimensions [SIZE(XI) SIZE_Y(2:END)] or
+%     if XI is a vector YI_HI & YI_LO have dimensions
+%     [LENGTH(XI) SIZE_Y(2:END)].
 %
-%     YI=INTERPDC1(X,Y,XI,METHOD) sets the interpolation method.  May
-%     be any of the following:
+%     [YI_HI,YI_LO]=INTERPDC1(X,Y,XI,METHOD) sets the interpolation method.
+%     May be any of the following:
 %      'nearest' - nearest neighbor interp
 %      'linear'  - linear interp (THE DEFAULT)
 %      'spline'  - piecewise cubic spline interp
@@ -35,24 +38,24 @@ function [varargout]=interpdc1(x,y,varargin)
 %                  extrapolate (by default) and uses 'spline' if X is not
 %                  equally spaced.
 %
-%     YI=INTERPDC1(X,Y,XI,METHOD,'EXTRAP') extrapolates using METHOD to
-%     define values outside the range given by X.  This is the default for
-%     METHODs 'spline', 'pchip' & 'cubic'.
+%     [YI_HI,YI_LO]=INTERPDC1(X,Y,XI,METHOD,'EXTRAP') extrapolates using
+%     METHOD to define values outside the range given by X.  This is the
+%     default for METHODs 'spline', 'pchip' & 'cubic'.
 %
-%     YI=INTERPDC1(X,Y,XI,METHOD,EXTRAPVAL) replaces values outside the
-%     range spanned by X with EXTRAPVAL.  EXTRAPVAL=NaN is the default for
-%     METHODs 'nearest', 'linear' & 'v5cubic'.
+%     [YI_HI,YI_LO]=INTERPDC1(X,Y,XI,METHOD,EXTRAPVAL) replaces values
+%     outside the range spanned by X with EXTRAPVAL.  EXTRAPVAL=NaN is the
+%     default for METHODs 'nearest', 'linear' & 'v5cubic'.
 %
-%     YI=INTERPDC1(X,Y,XI,METHOD,EXTRAPVAL,CLAMP) forces the edges of
-%     individual sections to match the slopes given in CLAMP.  This option
-%     is only implemented when METHOD is 'spline'.  CLAMP must be a cell
-%     array of size NREGx1, where NREG is the number of continuous sections
-%     in X.  Each cell in CLAMP should match dimensions 2+ of Y, so it may
-%     be concatenated to it along dimension 1.  CLAMP is expected to have 2
-%     rows, the first gives the slope at the lower end of the section and
-%     the second row gives the slope at the upper end of the section.
-%     CLAMP may be a scalar cell to force equal slope boundary conditions
-%     to all continuous sections.
+%     [YI_HI,YI_LO]=INTERPDC1(X,Y,XI,METHOD,EXTRAPVAL,CLAMP) forces the
+%     edges of individual sections to match the slopes given in CLAMP.
+%     This option is only implemented when METHOD is 'spline'.  CLAMP must
+%     be a cell array of size NREGx1, where NREG is the number of
+%     continuous sections in X.  Each cell in CLAMP should match dimensions
+%     2+ of Y, so it may be concatenated to it along dimension 1.  CLAMP is
+%     expected to have 2 rows, the first gives the slope at the lower end
+%     of the section and the second row gives the slope at the upper end of
+%     the section. CLAMP may be a scalar cell to force equal slope boundary
+%     conditions to all continuous sections.
 %
 %     PP=INTERPDC1(X,Y,METHOD,'PP') uses the specified METHOD to create
 %     a piecewise polynomial struct PP.  PPVAL(PP,XI) is equivalent to
@@ -65,31 +68,36 @@ function [varargout]=interpdc1(x,y,varargin)
 %     CLAMP).
 %
 %    Notes:
-%     - YI for XI at any discontinuity is from the higher XI side of the
-%       discontinuity.  This limitation is due to PPVAL.  XI-eps(XI) will
-%       give a value close to the lower side of the discontinuity.
 %
 %    Examples:
-%     Create a dataset with a discontinuity:
-%      x=[1:10 10:15 15:27 27:40]'; % discon at 10, 15, 27
+%     Create a dataset with discontinuities:
+%      x=[1:10 10:15 15:27 27:40]; % discon at 10, 15, 27
 %      y=[rand(1,10) rand(1,6)+2 rand(1,13)-5 rand(1,14)];
 %      xi=0:0.1:41;
-%      figure; plot(xi,interpdc1(x,y,xi,'spline'));
+%      [yihi,yilo]=interpdc1(x,y,xi,'spline');
+%      xi=[xi; xi]; yi=[yilo; yihi];
+%      figure; plot(xi(:),yi(:));
 %
 %     Clamping in action (all sections must have slopes of 0 at the edges):
 %      x=[1:10 10:15 15:27 27:40]'; % discon at 10, 15, 27
 %      y=[rand(1,10) rand(1,6)+2 rand(1,13)-5 rand(1,14)];
 %      xi=0:0.1:41;
-%      figure; plot(xi,interpdc1(x,y,xi,'spline','',{[0; 0]}));
+%      [yihi,yilo]=interpdc1(x,y,xi,'spline','',{[0; 0]});
+%      xi=[xi; xi]; yi=[yilo; yihi];
+%      figure; plot(xi(:),yi(:),'g');
+%      [yihi,yilo]=interpdc1(x,y,xi,'spline');
+%      xi=[xi; xi]; yi=[yilo; yihi];
+%      hold on; plot(xi(:),yi(:),'r');
 %
 %    See also: INTERP1, INTERP1Q, MKPP, PPVAL
 
 %     Version History:
 %        May  18, 2010 - initial version
 %        May  19, 2010 - properly handle non-increasing case
+%        June  1, 2010 - finally true discontinuity support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  19, 2010 at 01:30 GMT
+%     Last Updated June  1, 2010 at 03:20 GMT
 
 % todo:
 
@@ -252,7 +260,8 @@ pp=ppcombine(pp);
 if(ppout); varargout{1}=pp; return; end
 
 % get values
-varargout{1}=ppval(pp,xi);
+varargout{1}=ppdcval(pp,xi);
+varargout{2}=ppdcval(pp,xi,false);
 
 % undo extrap if wanted
 if(~exist('extrap','var'))
@@ -272,10 +281,12 @@ if(~strcmpi(extrap,'extrap'))
             'EXTRAP must be scalar!');
     end
     varargout{1}(xi<min(x) | xi>max(x),:)=extrap;
+    varargout{2}(xi<min(x) | xi>max(x),:)=extrap;
 end
 
 % reshape to match xi
 varargout{1}=reshape(varargout{1},syi);
+varargout{2}=reshape(varargout{2},syi);
 
 end
 

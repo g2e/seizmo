@@ -29,6 +29,7 @@
 %NDSQUAREFORM        - Reshapes between an n-d distance matrix and "vector"
 %NEXTPOW2N           - Returns the next higher power of 2 for all array elements
 %ONEFILELIST         - Compiles multiple filelists into one
+%PPDCVAL             - Evaluate piecewise polynomial (w/ discontinuity support)
 %PRINT_TIME_LEFT     - Ascii progress bar
 %READCSV             - Read in .csv formatted file as a structure
 %READTXT             - Reads in a text file as a single string

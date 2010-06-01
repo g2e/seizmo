@@ -76,9 +76,10 @@ function [model]=perturb_1dmodel(model,newname,varargin)
 %        May  24, 2010 - initial version, handle improved 1d model struct
 %        May  27, 2010 - much better discontinuity support, add newname
 %                        arg so we set the model name too
+%        May  29, 2010 - fixed a bug in perturbing relative to value above
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  27, 2010 at 18:15 GMT
+%     Last Updated May  29, 2010 at 14:45 GMT
 
 % todo:
 
@@ -217,7 +218,9 @@ for i=1:2:nargin-2
                 v2=(value(j+1,2)+100)/100 ...
                     *getvalue(depths,modmat,value(j+1,1),pidx,~topside);
         end
-        v0=v2;
+        
+        % debug
+        %[j d1 v1 d2 v2]
         
         % special handling of imposed discontinuity
         %
