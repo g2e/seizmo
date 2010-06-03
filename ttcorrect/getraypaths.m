@@ -25,9 +25,10 @@ function [paths]=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
 
 %     Version History:
 %        May  31, 2010 - initial version
+%        June  3, 2010 - verbose support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  31, 2010 at 20:05 GMT
+%     Last Updated June  3, 2010 at 04:50 GMT
 
 % todo:
 
@@ -64,16 +65,25 @@ nph=numel(evla);
 evla=geographic2geocentriclat(evla);
 stla=geographic2geocentriclat(stla);
 
+% verbose
+verbose=seizmoverbose;
+if(verbose)
+    disp('Getting Ray Path(s)');
+    print_time_left(0,nph)
+end
+
 % loop over each set
 try
     i=nph;
     tmp=tauppath('ph',phase{i},'mod',mod{i},'dep',evdp(i),...
         'ev',[evla(i) evlo(i)],'st',[stla(i) stlo(i)]);
     paths(i)=tmp(1); % return only the first arrival for each set
+    if(verbose); print_time_left(1,nph); end
     for i=1:nph-1
         tmp=tauppath('ph',phase{i},'mod',mod{i},'dep',evdp(i),...
             'ev',[evla(i) evlo(i)],'st',[stla(i) stlo(i)]);
         paths(i)=tmp(1); % return only the first arrival for each set
+        if(verbose); print_time_left(i+1,nph); end
     end
 catch
     error('seizmo:getraypaths:badPath',...

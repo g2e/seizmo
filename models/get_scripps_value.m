@@ -1,5 +1,5 @@
 function [val]=get_scripps_value(s,lat,lon,depth)
-%GET_SCRIPPS_VALUE    Returns dv% value for a Scripps mantle model
+%GET_SCRIPPS_VALUE    Returns dv value for a Scripps mantle model
 %
 %    Usage:    dv=get_scripps_value(mod,lat,lon,depth)
 %
@@ -13,8 +13,9 @@ function [val]=get_scripps_value(s,lat,lon,depth)
 %
 %    Examples:
 %     Get a depth slice at 2800km (with an extra 90deg of longitude):
+%      sb4l18=load('SB4L18');
 %      [x,y]=meshgrid(0:2:450,90:2:-90);
-%      imagesc(0:2:450,90:-2:-90,get_scripps_value(test,y,x,2800));
+%      imagesc(0:2:450,90:-2:-90,get_scripps_value(sb4l18,y,x,2800));
 %      axis xy equal tight;
 %      colormap(seis);
 %
@@ -22,9 +23,10 @@ function [val]=get_scripps_value(s,lat,lon,depth)
 
 %     Version History:
 %        May  16, 2010 - initial version
+%        June  1, 2010 - dv rather than dv%, fixed example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  16, 2010 at 10:35 GMT
+%     Last Updated June  1, 2010 at 23:35 GMT
 
 % todo
 
@@ -82,6 +84,6 @@ end
 % put it all together
 % (note found variable sets points outside range to 0)
 val=reshape(found.'.*s.model((layer-1)*s.blocks_per_layer...
-    +s.lat_block_idx(latidx,1).'+(lonidx-1)),sz)*100;
+    +s.lat_block_idx(latidx,1).'+(lonidx-1)),sz);
 
 end

@@ -15,15 +15,22 @@ function [paths]=get_upswing_raypaths(depth,varargin)
 %    Notes:
 %
 %    Examples:
-%     There really is nothing worth putting here yet...
+%     Construct a large group of diffracted upswing paths and plot them:
+%      evla=31.5; evlo=140.07; evdp=35;
+%      [stla,stlo]=sphericalfwd(evla,evlo,...
+%                               90+70*rand(100,1),360*rand(100,1));
+%      paths=get_upswing_raypaths(2891-500,'P,Pdiff','prem',...
+%                               evla,evlo,evdp,stla,stlo);
+%      plotraypaths(paths);
 %
 %    See also: GETRAYPATHS, CRUST2LESS_RAYPATHS, MANCOR, TAUPPATH
 
 %     Version History:
 %        May  31, 2010 - initial version
+%        June  3, 2010 - updated the example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  31, 2010 at 20:05 GMT
+%     Last Updated June  3, 2010 at 02:45 GMT
 
 % todo:
 

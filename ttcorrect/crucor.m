@@ -402,7 +402,7 @@ for i=1:npts
     nlay=numel(radii)-1;
     a=diff(v)./diff(radii);
     b=v(1:nlay)-a.*radii(1:nlay);
-    good=find(~diff(radii)==0)';
+    good=find(diff(radii))';
     for j=good
         ttref(i)=ttref(i)+quad(...
             @(r)(r./(a(j)*r+b(j))).^2./(r.*sqrt((r./(a(j)*r+b(j))).^2-rayp(i)^2)),...

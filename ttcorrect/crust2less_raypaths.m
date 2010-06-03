@@ -15,16 +15,19 @@ function [paths]=crust2less_raypaths(paths)
 %       adjustment is done (actually the crossing segment is removed).
 %
 %    Examples:
-%     This is mainly meant for MANCOR.  Once plotting is up, I'll add an
-%     example here.
+%     Plot some paths without the crustal portions:
+%      paths=tauppath('ev',[5 129],'st',[41 -1]);
+%      plotraypaths(crust2less_raypaths(paths));
 %
-%    See also: GETRAYPATHS, GET_UPSWING_RAYPATHS, MANCOR, TAUPPATH
+%    See also: GETRAYPATHS, GET_UPSWING_RAYPATHS, MANCOR, TAUPPATH,
+%              TRIM_DEPTHS_RAYPATHS, INSERT_DEPTHS_IN_RAYPATHS
 
 %     Version History:
 %        May  31, 2010 - initial version
+%        June  3, 2010 - updated example, handle nans
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  31, 2010 at 20:05 GMT
+%     Last Updated June  3, 2010 at 02:45 GMT
 
 % todo:
 % - test for lat/lon less paths
@@ -61,10 +64,15 @@ for i=1:numel(paths)
             'PATHS appears to be missing lat/lon info!');
     end
     
+    % check for nans
+    nn=~isnan(paths(i).path.depth);
+    npts=numel(paths(i).path.depth);
+    
     % find points below moho
-    moho=getc2moho(paths(i).path.latitude,paths(i).path.longitude);
+    moho=nan(npts,1);
+    moho(nn)=getc2moho(paths(i).path.latitude(nn),...
+        paths(i).path.longitude(nn));
     below=moho<paths(i).path.depth;
-    npts=numel(moho);
     
     % now get start/end indices of sections
     trans=diff([false; below; false]);
@@ -109,7 +117,15 @@ for i=1:numel(paths)
             % - warning b/c I don't handle this properly yet
             % - this is not the definitive test for sidewall but is
             %   the case that can break things
-            if(all(newdep{j}(1:2)<=moho(s(j))))
+            if(isnan(newdep{j}(1)))
+                % just chop off first point and move on
+                newdep{j}(1)=[];
+                newrp{j}(1)=[];
+                newt{j}(1)=[];
+                newdist{j}(1)=[];
+                newlat{j}(1)=[];
+                newlon{j}(1)=[];
+            elseif(all(newdep{j}(1:2)<=moho(s(j))))
                 warning('seizmo:crust2less_raypaths:sidewall',...
                     'Hit a crust side wall: path %d, section %d start!',...
                     i,j);
@@ -148,7 +164,15 @@ for i=1:numel(paths)
             % - warning b/c I don't handle this properly yet
             % - this is not the definitive test for sidewall but is
             %   the case that can break things
-            if(all(newdep{j}(end-1:end)<=moho(e(j))))
+            if(isnan(newdep{j}(end)))
+                % just chop off last point and move on
+                newdep{j}(end)=[];
+                newrp{j}(end)=[];
+                newt{j}(end)=[];
+                newdist{j}(end)=[];
+                newlat{j}(end)=[];
+                newlon{j}(end)=[];
+            elseif(all(newdep{j}(end-1:end)<=moho(e(j))))
                 warning('seizmo:crust2less_raypaths:sidewall',...
                     'Hit a crust side wall: path %d, section %d end!',...
                     i,j);
