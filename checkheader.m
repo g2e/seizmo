@@ -374,9 +374,10 @@ function [data]=checkheader(data,varargin)
 %                        UNSET_ST_LATLON, UNSET_EV_LATLON, FALSE_LEVEN,
 %                        XYZ_IFTYPE, MULTIPLE_REFTIME, MULTIPLE_NPTS,
 %                        MULTIPLE_B.  Edited several defaults.
+%        June 10, 2010 - fixed bug in MULTIPLE_B
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  10, 2010 at 15:00 GMT
+%     Last Updated June 10, 2010 at 22:10 GMT
 
 % todo:
 
@@ -1393,7 +1394,7 @@ end
 
 function multiple_b(opt,b)
 bad=unique(b);
-if(~isscalar(b))
+if(~isscalar(bad))
     report.identifier='seizmo:checkheader:multiB';
     report.message=['Dataset has multiple begin times:\n' ...
         sprintf('%d ',bad)];

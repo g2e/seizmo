@@ -58,15 +58,15 @@ function [var]=nanvariance(x,biased,dim,w)
 %        Oct. 15, 2009 - working version (checks out with nanvar), dropped
 %                        nanmean calls
 %        Apr. 28, 2010 - appropriate formula for unbiased weighted variance
+%        June  4, 2010 - fixed bug in unbiased weights
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 28, 2010 at 17:30 GMT
+%     Last Updated June  4, 2010 at 14:45 GMT
 
 % todo:
 
 % CHECK NARGIN
-msg=nargchk(1,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,4,nargin));
 
 % CHECK X
 if(~isnumeric(x) && ~islogical(x))
@@ -150,7 +150,7 @@ else
     resid(nans)=0;
     
     % UNBIASED WEIGHTED VARIANCE
-    if(~biased); wnne=(wnne.^2-w2nne)/wnne; end
+    if(~biased); wnne=(wnne.^2-w2nne)./wnne; end
     
     % RETURN NaN WHEN DOING UNBIASED VARIANCE WITH ONLY ONE ELEMENT
     % --> NOTE THAT THE MEAN RETURNS NaN IF THERE ARE ZERO ELEMENTS, SO

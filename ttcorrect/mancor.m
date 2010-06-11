@@ -1,8 +1,7 @@
-function [corr,tt3d,tt1d]=mancor(paths,mod3d,amp)
+function [corr,tt1d,tt3d]=mancor(paths,mod3d)
 %MANCOR    Returns mantle travel time corrections for a set of raypaths
 %
 %    Usage:    corr=mancor(paths,mod3d)
-%              corr=mancor(paths,mod3d,amp)
 %              [corr,tt3d,tt1d]=mancor(...)
 %
 %    Description: CORR=MANCOR(PATHS,MOD3D) calculates travel time
@@ -16,12 +15,7 @@ function [corr,tt3d,tt1d]=mancor(paths,mod3d,amp)
 %     CORR is in seconds and gives TT3D=TT1D+CORR.  Combining MANCOR with
 %     ELLCOR and CRUCOR will provide a more complete 3D correction.
 %
-%     CORR=MANCOR(PATHS,MOD3D,AMP) amplifies MOD3D by AMP when calculating
-%     the travel time corrections.  Setting AMP to 2 will double the
-%     strength of the velocity deviations in the model while setting amp to
-%     1/3 would reduce the amplitude of the anomalies by 1/3.
-%
-%     [CORR,TT3D,TT1D]=MANCOR(...) returns the total travel time for the
+%     [CORR,TT1D,TT3D]=MANCOR(...) returns the total travel time for the
 %     paths in the 3D model (TT3D) and in the 1D model (TT1D).
 %
 %    Notes:
@@ -39,19 +33,20 @@ function [corr,tt3d,tt1d]=mancor(paths,mod3d,amp)
 
 %     Version History:
 %        June  2, 2010 - initial version
+%        June  3, 2010 - Fermat's principle formulation
+%        June  4, 2010 - drop amp input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  2, 2010 at 23:15 GMT
+%     Last Updated June  4, 2010 at 15:45 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,3,nargin));
+error(nargchk(2,2,nargin));
 
 % check inputs
 sm3d=size(mod3d);
 test=tauppath('ph','P','deg',10);
-if(nargin==2 || isempty(amp)); amp=1; end
 if(~isstruct(paths) || any(~ismember(fieldnames(paths),fieldnames(test))))
     error('seizmo:mancor:badStruct',...
         'PATHS does not appear to be a valid raypath struct!');
@@ -61,9 +56,6 @@ elseif(any(~ismember(fieldnames(paths(1).path),fieldnames(test(1).path))))
 elseif(~ischar(mod3d) || numel(sm3d)~=2 || sm3d(1)~=1)
     error('seizmo:mancor:badInput',...
         'MOD3D must be a string!');
-elseif(~isreal(amp) || ~isscalar(amp) || amp<=0)
-    error('seizmo:mancor:badInput',...
-        'AMP must be a positive real-valued scalar!');
 end
 
 % number of ray paths
@@ -77,7 +69,7 @@ if(verbose)
 end
 
 % loop over each raypath
-corr=zeros(size(paths)); tt3d=corr; tt1d=corr;
+corr=zeros(size(paths)); tt1d=corr;
 for i=1:nrp
     % look out for nan depths
     npts=numel(paths(i).path.depth);
@@ -92,21 +84,19 @@ for i=1:nrp
     % get travel time for each good segment
     tt=paths(i).path.time(gseg+1)-paths(i).path.time(gseg);
     
-    % get total travel times
-    % - 3d uses average of travel times based on starting and ending
-    %   dlnv for each segment to account for velocity gradients
-    tt1d(i)=sum(tt);
-    tt3d(i)=sum(tt./(1+amp*dlnv(gseg))+tt./(1+amp*dlnv(gseg+1)))/2;
+    % get correction
+    % - using formulation based on Fermat's principle
+    % - average perturbation effect of dlnv on each end of every segment
+    corr(i)=-sum(tt.*(dlnv(gseg)+dlnv(gseg+1)))/2;
+    
+    % 1D total travel time (if desired)
+    if(nargout>1); tt1d(i)=sum(tt); end
     
     % detail message
     if(verbose); print_time_left(i,nrp); end
-    
-    % debug
-    %disp(['PHASE: ' paths(i).phase ' TAUP: ' num2str(paths(i).time) ...
-    %      's TT1D: ' num2str(tt1d(i)) 's TT3D: ' num2str(tt3d(i)) 's']);
 end
 
-% corrections
-corr=tt3d-tt1d;
+% 3D total travel time (if desired)
+if(nargout==3); tt3d=tt1d+corr; end
 
 end

@@ -1,16 +1,14 @@
-function [paths]=get_upswing_raypaths(depth,varargin)
-%GET_UPSWING_RAYPATHS    Returns the "upswing" portion of seismic raypaths
+function [paths]=extract_upswing_raypaths(paths,depth)
+%EXTRACT_UPSWING_RAYPATHS    Returns the "upswing" portion of raypaths
 %
-%    Usage:    paths=get_upswing_raypaths(depth,phase,mod,...
-%                                      evla,evlo,evdp,stla,stlo)
+%    Usage:    paths=extract_upswing_raypaths(paths,depth)
 %
-%    Description:
-%     PATHS=GET_UPSWING_RAYPATHS(DEPTH,PHASE,MOD,EVLA,EVLO,EVDP,STLA,STLO)
-%     returns the "upswing" portion of a ray path (which is just the last
-%     section of the path on the receiver side that is above the cutoff
-%     depth DEPTH).  This is mainly for getting core-diffracted mantle
-%     corrections.  Depths must be in kilometers, lat/lons must be in
-%     degrees.  PHASE & MOD must be recognizable by TAUPPATH!
+%    Description: PATHS=EXTRACT_UPSWING_RAYPATHS(PATHS,DEPTH) returns the
+%     "upswing" portion of raypaths in PATHS.  The "upswing" is just the
+%     last section of the path on the receiver side that is above the
+%     cutoff depth DEPTH.  This is primarily for getting core-diffracted
+%     mantle corrections for azimuthal profiles.  DEPTH must be in
+%     kilometers & PATHS is expected to conform to the TAUPPATH format.
 %
 %    Notes:
 %
@@ -19,32 +17,40 @@ function [paths]=get_upswing_raypaths(depth,varargin)
 %      evla=31.5; evlo=140.07; evdp=35;
 %      [stla,stlo]=sphericalfwd(evla,evlo,...
 %                               90+70*rand(100,1),360*rand(100,1));
-%      paths=get_upswing_raypaths(2891-500,'P,Pdiff','prem',...
-%                               evla,evlo,evdp,stla,stlo);
+%      paths=getraypaths('P,Pdiff','prem',evla,evlo,evdp,stla,stlo);
+%      paths=extract_upswing_raypaths(paths,2891-500);
 %      plotraypaths(paths);
 %
 %    See also: GETRAYPATHS, CRUST2LESS_RAYPATHS, MANCOR, TAUPPATH
 
 %     Version History:
 %        May  31, 2010 - initial version
-%        June  3, 2010 - updated the example
+%        June  3, 2010 - updated the example, name changed from GET_*,
+%                        reduced number of inputs by making path generation
+%                        external
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  3, 2010 at 02:45 GMT
+%     Last Updated June  3, 2010 at 17:45 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(8,8,nargin));
+error(nargchk(2,2,nargin));
 
-% pass to get_phase_paths
-paths=getraypaths(varargin{:});
+% input should be a tauppath struct
+test=tauppath('ph','P','deg',10);
+if(~isstruct(paths) || any(~ismember(fieldnames(paths),fieldnames(test))))
+    error('seizmo:extract_upswing_raypaths:badStruct',...
+        'PATHS does not appear to be a valid raypath struct!');
+elseif(any(~ismember(fieldnames(paths(1).path),fieldnames(test(1).path))))
+    error('seizmo:extract_upswing_raypaths:badStruct',...
+        'PATHS does not appear to be a valid raypath struct!');
+end
 
 % check the depth
 if(~isreal(depth) || ~isequalsizeorscalar(paths,depth))
-    error('seizmo:get_upswing_raypaths:badDEPTH',...
-        ['DEPTH must be a real valued & must be scalar ' ...
-        'or equal-sized with the other inputs!']);
+    error('seizmo:extract_upswing_raypaths:badDEPTH',...
+        'DEPTH must be a real-valued scalar or array (1 depth per path)!');
 end
 if(isscalar(depth)); depth=depth(ones(numel(paths),1),1); end
 

@@ -24,21 +24,24 @@ function [caldates]=doy2cal(doydates)
 %        Oct. 31, 2008 - initial version
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
+%        June 10, 2010 - handle empty
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 19:15 GMT
+%     Last Updated June 10, 2010 at 23:45 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(1,1,nargin));
 
 % require Nx2 numeric
 sz=size(doydates);
 if(~isnumeric(doydates) || sz(2)~=2)
     error('seizmo:doy2cal:badInput',...
         'DATES array must have Nx2 elements: [years dayofyears]');
+elseif(sz(1)==0)
+    caldates=zeros(0,3,class(doydates));
+    return;
 end
 
 % fix dates
@@ -47,7 +50,7 @@ doydates=fixdates(doydates);
 % permute to make things easier
 ndates=prod(sz)/2;
 doydates=permute(doydates,[2 1 3:numel(sz)]);
-caldates=zeros([3 sz(1) sz(3:end)]);
+caldates=zeros([3 sz(1) sz(3:end)],class(doydates));
 
 % year is good
 caldates(1,:)=doydates(1,:);

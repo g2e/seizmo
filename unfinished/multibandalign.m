@@ -22,8 +22,7 @@ function []=multibandalign(data,bank,projname,varargin)
 % - menu to utilize alignment for subsequent bands
 
 % check nargin
-msg=nargchk(3,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,inf,nargin));
 
 % check data (dep)
 versioninfo(data,'dep');
@@ -41,6 +40,9 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
 
 % attempt multi-band align

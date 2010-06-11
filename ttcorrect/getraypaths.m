@@ -21,14 +21,16 @@ function [paths]=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
 %      evdp=evdp/1000; % m2km
 %      paths=getraypaths('P','prem',evla,evlo,evdp,stla,stlo);
 %
-%    See also: TAUPPATH, MANCOR, CRUST2LESS_RAYPATHS, GET_UPSWING_RAYPATHS
+%    See also: TAUPPATH, MANCOR, CRUST2LESS_RAYPATHS, TRIM_DEPTHS_RAYPATHS,
+%              EXTRACT_UPSWING_RAYPATHS
 
 %     Version History:
 %        May  31, 2010 - initial version
 %        June  3, 2010 - verbose support
+%        June  4, 2010 - paths reshapes to match inputs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  3, 2010 at 04:50 GMT
+%     Last Updated June  4, 2010 at 13:45 GMT
 
 % todo:
 
@@ -85,6 +87,9 @@ try
         paths(i)=tmp(1); % return only the first arrival for each set
         if(verbose); print_time_left(i+1,nph); end
     end
+    
+    % reshape to match input size
+    paths=reshape(paths,size(evla));
 catch
     error('seizmo:getraypaths:badPath',...
         'Could not retrieve path for EQ/STA pair: %d',i);

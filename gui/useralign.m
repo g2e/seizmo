@@ -76,6 +76,9 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
 
 % attempt align
