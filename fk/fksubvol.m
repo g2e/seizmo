@@ -59,7 +59,7 @@ for i=1:numel(vol)
         fmax=frng(2);
     end
     fidx=vol(i).z>=fmin & vol(i).z<=fmax;
-    vol(i).response=svol(i).response(:,:,fidx);
+    vol(i).response=vol(i).response(:,:,fidx);
     maxdb=max(vol(i).response(:));
     vol(i).response=vol(i).response-maxdb;
     vol(i).normdb=vol(i).normdb+maxdb;

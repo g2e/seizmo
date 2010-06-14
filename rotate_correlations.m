@@ -14,6 +14,10 @@ function [data]=rotate_correlations(data)
 %
 %    Notes:
 %     - Correlogram .name fields are altered.
+%     - Currently requires all records to have the same number of points,
+%       the same sample rate and the same starting lag time.  You will want
+%       your records to be symmetrical with respect to zero lag time too so
+%       that REVERSE_CORRELATIONS will work correctly.
 %
 %    Header changes:
 %     Master & Slave Fields may be switched.
@@ -21,17 +25,19 @@ function [data]=rotate_correlations(data)
 %     USER0 & USER1 reflect the stream pair indices.
 %
 %    Examples:
-%     
+%     NONE UNTIL I GET MORE DONE
 %
 %    See also: CORRELATE, REVERSE_CORRELATIONS
 
 %     Version History:
 %        June 10, 2010 - initial version
+%        June 13, 2010 - major bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 10, 2010 at 22:30 GMT
+%     Last Updated June 13, 2010 at 12:10 GMT
 
 % todo:
+% - example
 
 % check nargin
 error(nargchk(1,1,nargin));
@@ -168,44 +174,65 @@ try
     mi=idx(1:end/2);
     si=idx(end/2+1:end);
     
-    % get azis
-    [az,baz]=getheader(data,'az','baz');
+    % get azis (use last record of each quad)
+    [az,baz]=getheader(data(4:4:end),'az','baz');
     az=az*pi/180;
     baz=baz*pi/180;
     
-    % combine quads (memory expensive)
-    horz=joinrecords(data(1:4:end),data(2:4:end),...
-                     data(3:4:end),data(4:4:end));
-    
-    % loop over quads, rotating to RR/RT/TR/TT
-    % - see Lin et al 2008
-    % - note NE/NN order is switched
-    nquads=numel(horz);
+    % detail message
+    nquads=numel(data)/4;
     if(verbose)
         disp('Rotating Horizontal Correlogram Set(s)');
         print_time_left(0,nquads);
     end
+    
+    % loop over quads, rotating to RR/RT/TR/TT
+    % - see Lin et al 2008
+    % - note NE/NN order is switched
+    depmin=nan(nquads*4,1); depmax=depmin; depmen=depmin;
     for i=1:nquads
-        data((i-1)*4+1)=seizmofun(horz(i),...
-            @(x)(-sin(az(i))*sin(baz(i)).*x(:,1)...
+        % combine components into separate array
+        % (so we don't use rotated for rotating)
+        x=[data((i-1)*4+(1:4)).dep];
+        
+        % rotate
+        data((i-1)*4+1).dep=...
+            -sin(az(i))*sin(baz(i)).*x(:,1)...
             -sin(az(i))*cos(baz(i)).*x(:,2)...
             -cos(az(i))*sin(baz(i)).*x(:,3)...
-            -cos(az(i))*cos(baz(i)).*x(:,4)));
-        data((i-1)*4+2)=seizmofun(horz(i),...
-            @(x)(-sin(az(i))*cos(baz(i)).*x(:,1)...
+            -cos(az(i))*cos(baz(i)).*x(:,4);
+        data((i-1)*4+2).dep=...
+            -sin(az(i))*cos(baz(i)).*x(:,1)...
             +sin(az(i))*sin(baz(i)).*x(:,2)...
             -cos(az(i))*cos(baz(i)).*x(:,3)...
-            +cos(az(i))*sin(baz(i)).*x(:,4)));
-        data((i-1)*4+3)=seizmofun(horz(i),...
-            @(x)(-cos(az(i))*sin(baz(i)).*x(:,1)...
+            +cos(az(i))*sin(baz(i)).*x(:,4);
+        data((i-1)*4+3).dep=...
+            -cos(az(i))*sin(baz(i)).*x(:,1)...
             -cos(az(i))*cos(baz(i)).*x(:,2)...
             +sin(az(i))*sin(baz(i)).*x(:,3)...
-            +sin(az(i))*cos(baz(i)).*x(:,4)));
-        data((i-1)*4+4)=seizmofun(horz(i),...
-            @(x)(-cos(az(i))*sin(baz(i)).*x(:,1)...
+            +sin(az(i))*cos(baz(i)).*x(:,4);
+        data((i-1)*4+4).dep=...
+            -cos(az(i))*sin(baz(i)).*x(:,1)...
             +cos(az(i))*sin(baz(i)).*x(:,2)...
             +sin(az(i))*cos(baz(i)).*x(:,3)...
-            -sin(az(i))*sin(baz(i)).*x(:,4)));
+            -sin(az(i))*sin(baz(i)).*x(:,4);
+        
+        % update dep*
+        if(size(x,1))
+            depmin((i-1)*4+1)=min(data((i-1)*4+1).dep);
+            depmax((i-1)*4+1)=max(data((i-1)*4+1).dep);
+            depmen((i-1)*4+1)=mean(data((i-1)*4+1).dep);
+            depmin((i-1)*4+2)=min(data((i-1)*4+2).dep);
+            depmax((i-1)*4+2)=max(data((i-1)*4+2).dep);
+            depmen((i-1)*4+2)=mean(data((i-1)*4+2).dep);
+            depmin((i-1)*4+3)=min(data((i-1)*4+3).dep);
+            depmax((i-1)*4+3)=max(data((i-1)*4+3).dep);
+            depmen((i-1)*4+3)=mean(data((i-1)*4+3).dep);
+            depmin((i-1)*4+4)=min(data((i-1)*4+4).dep);
+            depmax((i-1)*4+4)=max(data((i-1)*4+4).dep);
+            depmen((i-1)*4+4)=mean(data((i-1)*4+4).dep);
+        end
+        
         if(verbose); print_time_left(i,nquads); end
     end
     
@@ -217,7 +244,8 @@ try
     kscmp([1:4:end 3:4:end])=strcat(kscmp([1:4:end 3:4:end]),'R');
     kscmp([2:4:end 4:4:end])=strcat(kscmp([2:4:end 4:4:end]),'T');
     data=changeheader(data,'kt3',kmcmp,'kcmpnm',kscmp,...
-        'user0',mi,'user1',si);
+        'user0',mi,'user1',si,'depmin',depmin,'depmax',depmax,...
+        'depmen',depmen);
     
     % fix names
     k2=strtrim(k2);

@@ -58,10 +58,10 @@ function [varargout]=fkhorzxcvolume(rr,rt,tr,tt,smax,spts,frng,polar)
 %
 %    Notes:
 %     - Records in RR, RT, TR & TT must have equal number of points, equal
-%       sample spacing, the same start time (in absolute time), and be
-%       evenly spaced "timeseries" records.  Use functions SYNCHRONIZE,
-%       SYNCRATES, & INTERPOLATE to get the timing/sampling the same.
-%       Afterwards, use CORRELATE to generate the correlograms.
+%       sample spacing, the same starting lag time, and be evenly spaced
+%       "timeseries" records.  Use functions SYNCHRONIZE, SYNCRATES, &
+%       INTERPOLATE to get the timing/sampling the same.  Afterwards, use
+%       CORRELATE to generate the correlograms.
 %     - RR, RT, TR & TT should only contain one "triangle" of the cross
 %       correlation matrix (the one with master record indices that are
 %       always lower than the slave record indices).  So for a N station
@@ -85,20 +85,13 @@ function [varargout]=fkhorzxcvolume(rr,rt,tr,tt,smax,spts,frng,polar)
 
 %     Version History:
 %        June  9, 2010 - initial version
+%        June 12, 2010 - math is sound now
+%        June 13, 2010 - passes several eq verifications
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  9, 2010 at 01:25 GMT
+%     Last Updated June 13, 2010 at 23:45 GMT
 
 % todo:
-% - test against earthquakes
-%   - rotate to R/T and run through FKMAP
-%   - correlate, rotate, and run through here
-%   - do results match?
-% - things that might be off
-%   - u & v are absolute values
-%   - if u & v are not absolute values then v may be opposite sign
-%   - all the xc components just added
-%     - i'm betting this is wrong
 
 % check nargin
 error(nargchk(7,8,nargin));
@@ -359,11 +352,11 @@ try
     tt=records2mat(tt);
     seizmoverbose(verbose);
     
-    % get fft
-    rr=fft(rr,nspts,1);
-    rt=fft(rt,nspts,1);
-    tr=fft(tr,nspts,1);
-    tt=fft(tt,nspts,1);
+    % get fft (conjugate is b/c my xc is flipped?)
+    rr=conj(fft(rr,nspts,1));
+    rt=conj(fft(rt,nspts,1));
+    tr=conj(fft(tr,nspts,1));
+    tt=conj(fft(tt,nspts,1));
     
     % get relative positions of center
     % r=(x  ,y  )
@@ -372,6 +365,8 @@ try
     % position of j as seen from i
     % x is km east
     % y is km north
+    %
+    % Note: this does NOT handle polar arrays!
     %
     % r is 2xNR
     %
@@ -390,8 +385,7 @@ try
         stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))');
     idx=triu(true(nrecs),1);
     dist=dist(idx);
-    az=az(idx);
-    az=az*d2r;
+    az=az(idx)*d2r;
     r=[dist(:).*sin(az(:)) dist(:).*cos(az(:))]';
     nidx=size(r,2);
     clear dist az
@@ -399,12 +393,6 @@ try
     % make slowness projection arrays
     %
     % p=2*pi*i*s*r
-    %
-    %     ^   ^
-    % u = s * r  (unit vectors dotted)
-    %
-    %     ^   ^
-    % v = s x r  (unit vectors crossed)
     %
     % where s is the slowness vector s=(s ,s ) and is NSx2
     %                                    x  y
@@ -415,6 +403,14 @@ try
     % slownesses onto all of the position vectors (multiplied
     % by 2*pi*i so we don't have to do that for each frequency
     % later)
+    %
+    % u=cos(theta)
+    % v=sin(theta)
+    %
+    % where theta is the angle from the position vector to the slowness
+    % vector with positive being in the counter-clockwise direction
+    % 
+    % ie. theta = atan2(sy,sx)-atan2(ry,rx)
     %
     % p,u,v are NSxNR
     smax=smax/d2km;
@@ -432,13 +428,19 @@ try
         [rvol(1:nrng,1).x]=deal(baz/d2r);
         baz=baz(ones(spts,1),:);
         p=2*pi*1i*[smag(:).*sin(baz(:)) smag(:).*cos(baz(:))]*r;
-        runit=sqrt(r(1,:).^2+r(2,:).^2);
-        runit=[r(1,:)./runit; r(2,:)./runit];
-        u=abs([sin(baz(:)) cos(baz(:))]*runit);
-        v=abs([sin(baz(:)) -cos(baz(:))]*flipud(runit));
-        u(isinf(u) | isnan(u))=1;
-        v(isinf(v) | isnan(v))=1;
-        clear smag baz
+        % u = cos theta
+        % v = sin theta
+        theta1=atan2(r(2,:),r(1,:));
+        theta2=baz(:);
+        theta=theta2(:,ones(nidx,1))-theta1(ones(spts*bazpts,1),:);
+        u=cos(theta);
+        v=sin(theta);
+        % fix for s==0 (accept all azimuths b/c no directional dependance
+        % in response on vertical traveling waves)
+        zeroslow=smag(:)==0;
+        u(zeroslow,:)=1;
+        v(zeroslow,:)=1;
+        clear r smag baz zeroslow theta theta1 theta2
     else % cartesian
         spts=spts(1); bazpts=spts;
         sx=-smax:2*smax/(spts-1):smax;
@@ -447,17 +449,19 @@ try
         sx=sx(ones(spts,1),:);
         sy=fliplr(sx)';
         p=2*pi*1i*[sx(:) sy(:)]*r;
-        sunit=sqrt(sx(:).^2+sy(:).^2);
-        sunit=[sx(:)./sunit sy(:)./sunit];
-        runit=sqrt(r(1,:).^2+r(2,:).^2);
-        runit=[r(1,:)./runit; r(2,:)./runit];
-        %u=(sunit*runit);
-        %v=([sunit(:,1) -sunit(:,2)]*flipud(runit));
-        u=abs(sunit*runit);
-        v=abs([sunit(:,1) -sunit(:,2)]*flipud(runit));
-        u(isinf(u) | isnan(u))=1;
-        v(isinf(v) | isnan(v))=1;
-        clear sx sy
+        % u = cos theta
+        % v = sin theta
+        theta1=atan2(r(2,:),r(1,:));
+        theta2=atan2(sy(:),sx(:));
+        theta=theta2(:,ones(nidx,1))-theta1(ones(spts^2,1),:);
+        u=cos(theta);
+        v=sin(theta);
+        % fix for s==0 (accept all azimuths b/c no directional dependance
+        % in response on vertical traveling waves)
+        zeroslow=sy(:)==0 & sx(:)==0;
+        u(zeroslow,:)=1;
+        v(zeroslow,:)=1;
+        clear r sx sy zeroslow theta theta1 theta2
     end
     
     % copy rvol to lvol
@@ -483,22 +487,6 @@ try
             continue;
         end
         
-        % build complex cross spectra array, cs
-        % cs is normalized by the auto spectra.
-        %
-        % Note: the complex conjugate indicates a bug somewhere...
-        %       probably my correlations are reversed but meh...
-        %
-        % cs is NRxNF
-        rrcs=rr(fidx,:)';
-        rrcs=rrcs./abs(rrcs);
-        rtcs=rt(fidx,:)';
-        rtcs=rtcs./abs(rtcs);
-        trcs=tr(fidx,:)';
-        trcs=trcs./abs(trcs);
-        ttcs=tt(fidx,:)';
-        ttcs=ttcs./abs(ttcs);
-        
         % detail message
         if(verbose)
             fprintf('Getting fk Volume for %g to %g Hz\n',...
@@ -508,6 +496,9 @@ try
         
         % loop over frequencies
         for b=1:nfreq
+            % current freq idx
+            cf=fidx(b);
+            
             % get response
             % - Following Koper, Seats, and Benz 2010 in BSSA
             %   by only using the real component.  This matches
@@ -516,20 +507,32 @@ try
             %   slightly better results (at the cost of x(N-1)/2
             %   more operations).  This is required when using
             %   multi-channel correlation datasets.
-            rvol(a).response(:,:,b)=reshape(...
-                10*log10(abs(real(...
-                (exp(f(fidx(b))*p).*u.*u)*rrcs(:,b)...
-                +(exp(f(fidx(b))*p).*u.*v)*rtcs(:,b)...
-                +(exp(f(fidx(b))*p).*v.*u)*trcs(:,b)...
-                +(exp(f(fidx(b))*p).*v.*v)*ttcs(:,b)))/nidx),...
-                spts,bazpts);
-            lvol(a).response(:,:,b)=reshape(...
-                10*log10(abs(real(...
-                (exp(f(fidx(b))*p).*u.*u)*ttcs(:,b)...
-                +(exp(f(fidx(b))*p).*u.*v)*trcs(:,b)...
-                +(exp(f(fidx(b))*p).*v.*u)*rtcs(:,b)...
-                +(exp(f(fidx(b))*p).*v.*v)*rrcs(:,b)))/nidx),...
-                spts,bazpts);
+            
+            % rotate data into direction of plane wave for every pairing
+            data=u.*u.*rr(cf*ones(1,spts*bazpts),:) ...
+                -u.*v.*rt(cf*ones(1,spts*bazpts),:) ...
+                -v.*u.*tr(cf*ones(1,spts*bazpts),:) ...
+                +v.*v.*tt(cf*ones(1,spts*bazpts),:);
+            
+            % normalize by auto spectra
+            data=data./abs(data);
+            
+            % now getting fk response for radial (rayleigh)
+            rvol(a).response(:,:,b)=reshape(10*log10(abs(real(...
+                sum(data.*exp(f(cf)*p),2)))/nidx),spts,bazpts);
+            
+            % rotate data perpendicular to plane wave direction for all
+            data=v.*v.*rr(cf*ones(1,spts*bazpts),:) ...
+                +v.*u.*rt(cf*ones(1,spts*bazpts),:) ...
+                +u.*v.*tr(cf*ones(1,spts*bazpts),:) ...
+                +u.*u.*tt(cf*ones(1,spts*bazpts),:);
+            
+            % normalize by auto spectra
+            data=data./abs(data);
+            
+            % now getting fk response for tangential (love)
+            lvol(a).response(:,:,b)=reshape(10*log10(abs(real(...
+                sum(data.*exp(f(cf)*p),2)))/nidx),spts,bazpts);
             
             % detail message
             if(verbose); print_time_left(b,nfreq); end

@@ -106,14 +106,14 @@ dblim=sort([dblim(1) dblim(2)]);
 % rescale response
 switch zerodb
     case 'min'
-        map.response=map.response-min(map.response(:));
         map.normdb=map.normdb+min(map.response(:));
+        map.response=map.response-min(map.response(:));
     case 'max'
-        map.response=map.response-max(map.response(:));
         map.normdb=map.normdb+max(map.response(:));
+        map.response=map.response-max(map.response(:));
     case 'median'
-        map.response=map.response-median(map.response(:));
         map.normdb=map.normdb+median(map.response(:));
+        map.response=map.response-median(map.response(:));
     case 'abs'
         map.response=map.response+map.normdb;
         map.normdb=0;
@@ -280,14 +280,14 @@ dblim=sort([dblim(1) dblim(2)]);
 % rescale response
 switch zerodb
     case 'min'
-        map.response=map.response-min(map.response(:));
         map.normdb=map.normdb+min(map.response(:));
+        map.response=map.response-min(map.response(:));
     case 'max'
-        map.response=map.response-max(map.response(:));
         map.normdb=map.normdb+max(map.response(:));
+        map.response=map.response-max(map.response(:));
     case 'median'
-        map.response=map.response-median(map.response(:));
         map.normdb=map.normdb+median(map.response(:));
+        map.response=map.response-median(map.response(:));
     case 'abs'
         map.response=map.response+map.normdb;
         map.normdb=0;
