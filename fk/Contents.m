@@ -6,12 +6,15 @@
 %CHKFKSTRUCT    - Validate if a struct is as defined by FKMAP/VOLUME/4D
 %FK4D           - Returns a 4D map of energy in frequency-wavenumber-time space
 %FKARF          - Returns the fk array response function for a seismic array
+%FKD2S          - Convert fk response from double to single precision
 %FKDBINFO       - Returns the min/median/max dB for a FK struct
 %FKFREQSLIDE    - Slides through a fk volume plotting each frequency
 %FKMAP          - Returns a 2D map of energy in frequency-wavenumber space
+%FKSUBVOL       - Extracts a frequency-based subvolume of a fk volume
 %FKTIMESLIDE    - Slides through a sequence of fk maps plotting each one
 %FKVOL2MAP      - Converts a fk volume to a fk map
 %FKVOLUME       - Returns a 3D map of energy in frequency-wavenumber space
+%FKXCHORZVOLUME - Returns frequency-wavenumber space for horz. xc data
 %FKXCVOLUME     - Returns energy map in frequency-wavenumber space for xc data
 %KXY2SLOWBAZ    - Converts wavenumbers in x & y to slowness and back-azimuth
 %PLOTFKARF      - Plots an fk array response function

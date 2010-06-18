@@ -1,12 +1,14 @@
-function [data]=instantphase(data)
-%INSTANTPHASE    Return instantaneous phase of SEIZMO records
+function [data]=instantfreq(data)
+%INSTANTFREQ    Returns estimated instantaneous frequency of SEIZMO records
 %
-%    Usage:    data=instantphase(data)
+%    Usage:    data=instantfreq(data)
 %
-%    Description: INSTANTPHASE(DATA) returns the instantaneous phase (the
-%     point-by-point phase of a record's analytic signal) of records in
-%     SEIZMO struct DATA.  The instantaneous phase is related to the
-%     Hilbert transform and the envelope of a signal by the following:
+%    Description: INSTANTFREQ(DATA) returns the instantaneous frequency
+%     (the point-by-point frequency of a record's analytic signal) of 
+%     records in SEIZMO struct DATA.  The instantaneous frequency is
+%     estimated from a discrete derivative of the unwrapped instantaneous
+%     phase, which is related to the Hilbert transform and the envelope of
+%     a signal by the following:
 %
 %       A(X) = X + iH(X)
 %
@@ -15,7 +17,12 @@ function [data]=instantphase(data)
 %
 %     where X is the records' data, i is sqrt(-1), H() denotes a Hilbert
 %     transform, A is the analytic signal, ENV is the envelope of the
-%     signal and PHI is the instantaneous phase.
+%     signal and PHI is the instantaneous phase.  The instantaneous
+%     frequency is related to the phase by:
+%
+%     FREQ(X)=d(UNWRAP(PHI(X)))/(2*PI*dX)
+%
+%     where d stands for differentiation.
 %
 %    Notes:
 %
@@ -23,17 +30,16 @@ function [data]=instantphase(data)
 %
 %    Examples:
 %     Plot up the various components of the analytic signal:
-%      plot1([data hilbrt(data) envelope(data) instantphase(data)])
+%      plot1([data hilbrt(data) envelope(data) ...
+%             instantphase(data) instantfreq(data)])
 %
-%    See also: HILBRT, ENVELOPE, INSTANTFREQ
+%    See also: HILBRT, ENVELOPE, INSTANTPHASE
 
 %     Version History:
-%        Oct. 19, 2009 - initial version
-%        Jan. 29, 2010 - seizmoverbose support, better warnings
-%        June 16, 2010 - code reduction
+%        June 16, 2010 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 10:20 GMT
+%     Last Updated June 16, 2010 at 10:50 GMT
 
 % todo:
 
@@ -58,12 +64,12 @@ try
     nrecs=numel(data);
     
     % get header info
-    [npts,ncmp]=getheader(data,'npts','ncmp');
+    [npts,ncmp,delta]=getheader(data,'npts','ncmp','delta');
     nspts=2.^(nextpow2n(npts)+1);
     
     % detail message
     if(verbose)
-        disp('Getting Instantaneous Phase of Record(s)');
+        disp('Getting Instantaneous Frequency of Record(s)');
         print_time_left(0,nrecs);
     end
     
@@ -93,6 +99,10 @@ try
         % truncate to original length and change class back
         data(i).dep=oclass(data(i).dep(1:npts(i),:));
         
+        % get instantaneous frequency (gradient of unwrapped phase)
+        % - using discrete approx to derivative
+        data(i).dep=qgrad(unwrap(data(i).dep,[],1))/(2*pi*delta(i));
+        
         % dep*
         depmen(i)=mean(data(i).dep(:)); 
         depmin(i)=min(data(i).dep(:)); 
@@ -117,3 +127,21 @@ catch
 end
 
 end
+
+function [x]=qgrad(x)
+%QGRAD    Quick gradient along 1st dimension
+
+[n,c]=size(x);
+if(n>2)
+    x=[x(2,:)-x(1,:);
+       x(3:n,:)-x(1:n-2,:);
+       x(n,:)-x(n-1,:)];
+elseif(n>1)
+    x=[x(2,:)-x(1,:);
+       x(n,:)-x(n-1,:)];
+else
+    x=zeros([n c],class(x));
+end
+
+end
+

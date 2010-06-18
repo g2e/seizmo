@@ -50,6 +50,7 @@
 %HORZPAIRS            - Returns indice arrays for pairing horizontal SEIZMO records
 %IDFT                 - Performs an inverse discrete fourier transform on SEIZMO records
 %IIRFILTER            - Apply an IIR filter to SEIZMO data records
+%INSTANTFREQ          - Returns estimated instantaneous frequency of SEIZMO records
 %INSTANTPHASE         - Return instantaneous phase of SEIZMO records
 %INTEGRATE            - Integrate SEIZMO records
 %INTERPOLATE          - Interpolate SEIZMO records to a new samplerate

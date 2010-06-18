@@ -58,14 +58,14 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,center)
 %    Notes:
 %     - Records in DATA must have equal number of points, equal sample
 %       spacing, the same start time (in absolute time), and be evenly
-%       spaced time series records.  Use functions SYNCHRONIZE, SYNCRATES,
-%       & INTERPOLATE to get the timing/sampling the same.
+%       spaced time series records.
 %
 %    Examples:
 %     Show slowness map for a dataset at about 50s periods:
 %      fkmap(data,50,201,[1/51 1/49])
 %
-%    See also: FKARF, SNYQUIST, PLOTFKMAP, KXY2SLOWBAZ, SLOWBAZ2KXY
+%    See also: FKARF, SNYQUIST, PLOTFKMAP, KXY2SLOWBAZ, SLOWBAZ2KXY,
+%              FKVOLUME, FK4D, FKVOL2MAP
 
 %     Version History:
 %        May   3, 2010 - initial version
@@ -82,15 +82,16 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,center)
 %                        answer), minor code touches while debugging
 %                        fkxcvolume
 %        May  24, 2010 - response is now single precision
+%        June 16, 2010 - fixed nargchk, better verbose msg, improved see
+%                        also section, create response as s.p. array
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  24, 2010 at 11:50 GMT
+%     Last Updated June 16, 2010 at 14:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(4,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,6,nargin));
 
 % define some constants
 d2r=pi/180;
@@ -149,6 +150,9 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
 
 % do fk analysis
@@ -297,8 +301,8 @@ try
         [smap(1:nrng,1).x]=deal(baz/d2r);
         baz=baz(ones(spts,1),:);
         p=2*pi*1i*[smag(:).*sin(baz(:)) smag(:).*cos(baz(:))]*r;
-        clear smag baz
-        [smap(1:nrng,1).response]=deal(zeros(spts,bazpts));
+        clear r smag baz
+        [smap(1:nrng,1).response]=deal(zeros(spts,bazpts),'single');
     else % cartesian
         spts=spts(1);
         sx=-smax:2*smax/(spts-1):smax;
@@ -307,8 +311,8 @@ try
         sx=sx(ones(spts,1),:);
         sy=fliplr(sx)';
         p=2*pi*1i*[sx(:) sy(:)]*r;
-        clear sx sy
-        [smap(1:nrng,1).response]=deal(zeros(spts));
+        clear r sx sy
+        [smap(1:nrng,1).response]=deal(zeros(spts),'single');
     end
     
     % loop over frequency ranges
@@ -346,8 +350,8 @@ try
         
         % detail message
         if(verbose)
-            fprintf('Getting fk Map for %g to %g Hz\n',...
-                frng(a,1),frng(a,2));
+            fprintf('Getting fk Map %d for %g to %g Hz\n',...
+                a,frng(a,1),frng(a,2));
             print_time_left(0,nfreq);
         end
         
@@ -377,9 +381,6 @@ try
             otherwise
                 smap(a).response=10*log10(smap(a).response/(nfreq*nidx));
         end
-        
-        % double to single precision
-        smap(a).response=single(smap(a).response);
         
         % normalize so max peak is at 0dB
         smap(a).normdb=max(smap(a).response(:));

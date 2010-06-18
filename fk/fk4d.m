@@ -61,10 +61,9 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %     poorer results compared to 'coarray').
 %
 %    Notes:
-%     - Records in DATA must have equal number of points, equal sample
-%       spacing, the same start time (in absolute time), and be evenly
-%       spaced time series records.  Use functions SYNCHRONIZE, SYNCRATES,
-%       & INTERPOLATE to get the timing/sampling the same.
+%     - Records do NOT have to start at the same time (they are windowed
+%       here).  They do need to have a common sample rate and their
+%       reference time and station location must be set in the header.
 %
 %    Examples:
 %     Get frequency-slowness-time data for an array at 20-50s periods:
@@ -76,15 +75,16 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %        May   9, 2010 - initial version
 %        May  10, 2010 - first working version
 %        May  26, 2010 - minor doc touch
+%        June 16, 2010 - fix nargchk, error for no windows, improved note
+%                        section, removed meaningless line
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  26, 2010 at 10:40 GMT
+%     Last Updated June 16, 2010 at 14:45 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(6,8,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(6,8,nargin));
 
 % check struct
 versioninfo(data,'dep');
@@ -123,6 +123,9 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
 
 % do fk analysis
@@ -170,10 +173,15 @@ try
         % - each row corresponds to a frequency range
         if((i-skip)==1)
             s4d=fkvolume(data0,varargin{:});
-            s4d=s4d(:);
         else
             s4d(:,i-skip)=fkvolume(data0,varargin{:});
         end
+    end
+    
+    % throw error if no output
+    if((i-skip)==0)
+        error('seizmo:fk4d:badData',...
+            'No windows contained 2 or more records!');
     end
     
     % toggle checking back

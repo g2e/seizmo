@@ -46,14 +46,16 @@ function [varargout]=fkfreqslide(vol,delay,varargin)
 %      svol=fkvolume(data,50,201,[1/50 1/20]);
 %      fkfreqslide(svol);
 %
-%    See also: FKVOLUME, PLOTFKMAP, UPDATEFKMAP, FKMAP, FK4D
+%    See also: FKVOLUME, PLOTFKMAP, UPDATEFKMAP, FKMAP, FK4D, FKTIMESLIDE,
+%              FKVOL2MAP, FKSUBVOL
 
 %     Version History:
 %        May  11, 2010 - initial version
 %        May  26, 2010 - update for new plotfkmap args
+%        June 16, 2010 - fix see also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  26, 2010 at 10:00 GMT
+%     Last Updated June 16, 2010 at 15:00 GMT
 
 % todo:
 

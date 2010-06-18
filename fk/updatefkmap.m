@@ -27,16 +27,17 @@ function [varargout]=updatefkmap(map,ax)
 %          updatefkmap(spolar(i),ax);
 %      end
 %
-%    See also: PLOTFKMAP, FKMAP, FKVOLUME, FK4D
+%    See also: PLOTFKMAP, FKMAP, FKVOLUME, FK4D, FKFREQSLIDE, FKTIMESLIDE
 
 %     Version History:
 %        May  11, 2010 - initial version
 %        May  21, 2010 - display period rather than frequency
 %        May  26, 2010 - updated for new plotfkmap args (requires passing
 %                        info through userdata)
+%        June 16, 2010 - better see also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  26, 2010 at 10:20 GMT
+%     Last Updated June 16, 2010 at 14:25 GMT
 
 % todo:
 

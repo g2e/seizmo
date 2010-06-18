@@ -26,15 +26,15 @@ function [s,baz]=kxy2slowbaz(kx,ky,f)
 
 %     Version History:
 %        May   1, 2010 - initial version
+%        June 16, 2010 - fixed nargchk
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   1, 2010 at 07:25 GMT
+%     Last Updated June 16, 2010 at 14:15 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,3,nargin));
 
 % check inputs
 if(nargin==2 || isempty(f)); f=1; end

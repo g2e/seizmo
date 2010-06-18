@@ -44,19 +44,18 @@ function [data]=envelope(data)
 %        Oct. 19, 2009 - added checks for IFTYPE and LEVEN
 %        Oct. 20, 2009 - doc update
 %        Jan. 29, 2010 - seizmoverbose support, better warnings
+%        June 16, 2010 - code reduction
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 17:50 GMT
+%     Last Updated June 16, 2010 at 11:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -64,7 +63,7 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt envelope
 try
     % check header
-    data=checkheader(data);
+    data=checkheader(data,'NONTIME_IFTYPE','ERROR','FALSE_LEVEN','ERROR');
 
     % verbosity
     verbose=seizmoverbose;
@@ -75,23 +74,6 @@ try
     % get header info
     [npts,ncmp]=getheader(data,'npts','ncmp');
     nspts=2.^(nextpow2n(npts)+1);
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
-    
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:envelope:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
-    
-    % cannot do unevenly sampled records
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:envelope:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    end
     
     % detail message
     if(verbose)
@@ -113,7 +95,7 @@ try
         oclass=str2func(class(data(i).dep));
         data(i).dep=double(data(i).dep);
         
-        % multiplier to give analytic signal
+        % frequency domain multiplier to give analytic signal
         h=zeros(nspts(i),1);
         h([1 nspts(i)/2+1])=1;
         h(2:(nspts(i)/2))=2;

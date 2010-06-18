@@ -32,9 +32,10 @@ function [data]=rotate_correlations(data)
 %     Version History:
 %        June 10, 2010 - initial version
 %        June 13, 2010 - major bugfix
+%        June 17, 2010 - more checks for no rotatible records
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 13, 2010 at 12:10 GMT
+%     Last Updated June 17, 2010 at 23:50 GMT
 
 % todo:
 % - example
@@ -115,6 +116,14 @@ try
     ac=mi==si;
     data(ac)=[];
     
+    % skip if nothing left
+    if(~numel(data))
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        checkheader_state(oldcheckheaderstate);
+        return;
+    end
+    
     % re-get station indices
     kmname(ac,:)=[];
     ksname(ac,:)=[];
@@ -138,6 +147,14 @@ try
     ksname=ksname(idx,:);
     data=data(idx);
     
+    % skip if nothing left
+    if(~numel(data))
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        checkheader_state(oldcheckheaderstate);
+        return;
+    end
+    
     % remove incomplete sets
     k2=[kmname ksname];
     k2(:,[4 8])=strnlen(k2(:,[4 8]),2);
@@ -152,6 +169,14 @@ try
     data(bad)=[];
     kmname(bad,:)=[];
     ksname(bad,:)=[];
+    
+    % skip if nothing left
+    if(~numel(data))
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        checkheader_state(oldcheckheaderstate);
+        return;
+    end
     
     % reorder one last time (to quads of EE, EN, NE, NN)
     k2=[kmname ksname];

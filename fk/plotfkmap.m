@@ -38,7 +38,7 @@ function [varargout]=plotfkmap(map,varargin)
 %      map=fkmap(data,50,201,[1/51 1/49]);
 %      plotfkmap(map);
 %
-%    See also: FKMAP, FKARF, UPDATEFKMAP
+%    See also: FKMAP, PLOTFKARF, UPDATEFKMAP, FKFREQSLIDE, FKTIMESLIDE
 
 %     Version History:
 %        May   4, 2010 - initial version
@@ -47,9 +47,10 @@ function [varargout]=plotfkmap(map,varargin)
 %        May  21, 2010 - display period rather than frequency
 %        May  24, 2010 - labeling the top of colorbar is broken in r2009a
 %        May  26, 2010 - added dblim & zerodb args, updated docs
+%        June 16, 2010 - labels call correct axes, update see also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  26, 2010 at 10:00 GMT
+%     Last Updated June 16, 2010 at 10:00 GMT
 
 % todo:
 
@@ -205,7 +206,7 @@ pcolor(x,y,map.response);
 
 % add title color etc
 hold off;
-title({['Number of Stations:  ' num2str(map.nsta)] ...
+title(ax,{['Number of Stations:  ' num2str(map.nsta)] ...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
     ['Period Range:    ' num2str(1/fmin) ' to ' num2str(1/fmax) 'Sec'] ...
@@ -225,7 +226,7 @@ else
     hsv=rgb2hsv(bgcolor);
     colormap(hsvcustom(hsv));
 end
-c=colorbar('eastoutside',...
+c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
 %set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)
@@ -383,15 +384,15 @@ end
 hold off
 
 % finally take care of labels/coloring/etc
-title({['Number of Stations:  ' num2str(map.nsta)] ...
+title(ax,{['Number of Stations:  ' num2str(map.nsta)] ...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
     ['Period Range:    ' num2str(1/fmin) ' to ' num2str(1/fmax) 'Sec'] ...
     ['0 dB = ' num2str(map.normdb) 'dB']},...
     'fontweight','bold','color',fgcolor);
-xlabel('East/West Slowness (s/deg)',...
+xlabel(ax,'East/West Slowness (s/deg)',...
     'fontweight','bold','color',fgcolor);
-ylabel('North/South Slowness (s/deg)',...
+ylabel(ax,'North/South Slowness (s/deg)',...
     'fontweight','bold','color',fgcolor);
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
     colormap(flipud(fire));
@@ -404,7 +405,7 @@ else
     hsv=rgb2hsv(bgcolor);
     colormap(hsvcustom(hsv));
 end
-c=colorbar('eastoutside',...
+c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
 %set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)

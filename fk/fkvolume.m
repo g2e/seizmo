@@ -57,15 +57,13 @@ function [varargout]=fkvolume(data,smax,spts,frng,polar,center)
 %    Notes:
 %     - Records in DATA must have equal number of points, equal sample
 %       spacing, the same start time (in absolute time), and be evenly
-%       spaced time series records.  Use functions SYNCHRONIZE, SYNCRATES,
-%       & INTERPOLATE to get the timing/sampling the same.
+%       spaced time series records.
 %
 %    Examples:
 %     Show frequency-slowness volume for a dataset at 20-50s periods:
 %      fkvolume(data,50,201,[1/50 1/20])
 %
-%    See also: FKFREQSLIDE, FK4D, FKMAP, FKARF, PLOTFKMAP, PLOTFKARF,
-%              SNYQUIST, KXY2SLOWBAZ, SLOWBAZ2KXY, FKTIMESLIDE, FKVOL2MAP
+%    See also: FKFREQSLIDE, FKVOL2MAP, FKSUBVOL, FK4D, FKMAP, PLOTFKMAP
 
 %     Version History:
 %        May   9, 2010 - initial version
@@ -74,15 +72,16 @@ function [varargout]=fkvolume(data,smax,spts,frng,polar,center)
 %                        answer), minor code touches while debugging
 %                        fkxcvolume
 %        May  24, 2010 - response is now single precision
+%        June 16, 2010 - fixed nargchk, better verbose message, improved
+%                        see also section, create response as s.p. array
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  24, 2010 at 11:50 GMT
+%     Last Updated June 16, 2010 at 14:20 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(4,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,6,nargin));
 
 % define some constants
 d2r=pi/180;
@@ -141,6 +140,9 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror)
 end
 
 % do fk analysis
@@ -286,7 +288,7 @@ try
         [svol(1:nrng,1).x]=deal(baz/d2r);
         baz=baz(ones(spts,1),:);
         p=2*pi*1i*[smag(:).*sin(baz(:)) smag(:).*cos(baz(:))]*r;
-        clear smag baz
+        clear r smag baz
     else % cartesian
         spts=spts(1); bazpts=spts;
         sx=-smax:2*smax/(spts-1):smax;
@@ -295,7 +297,7 @@ try
         sx=sx(ones(spts,1),:);
         sy=fliplr(sx)';
         p=2*pi*1i*[sx(:) sy(:)]*r;
-        clear sx sy
+        clear r sx sy
     end
     
     % loop over frequency ranges
@@ -306,7 +308,7 @@ try
         nfreq=numel(fidx);
         
         % preallocate fk space
-        svol(a).response=zeros(spts,bazpts,nfreq);
+        svol(a).response=zeros(spts,bazpts,nfreq,'single');
         
         % warning if no frequencies
         if(~nfreq)
@@ -336,8 +338,8 @@ try
         
         % detail message
         if(verbose)
-            fprintf('Getting fk Volume for %g to %g Hz\n',...
-                frng(a,1),frng(a,2));
+            fprintf('Getting fk Volume %d for %g to %g Hz\n',...
+                a,frng(a,1),frng(a,2));
             print_time_left(0,nfreq);
         end
         
@@ -362,9 +364,6 @@ try
                 svol(a).response=...
                     10*log10(abs(svol(a).response).^2/nidx);
         end
-        
-        % double to single precision
-        svol(a).response=single(svol(a).response);
         
         % normalize so max peak is at 0dB
         svol(a).normdb=max(svol(a).response(:));

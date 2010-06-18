@@ -68,16 +68,10 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
 %      ARF.normdb    --  what 0dB actually corresponds to
 %
 %    Notes:
-%     - The circles of the bull's eye in the plot correspond to several
-%       surface/diffracted/head seismic phases (which appear depends on the
-%       plot's maximum slowness):
-%        Phase:       Rg    Lg    Sn    Pn    Sdiff  Pdiff  PKPcdiff
-%        Vel (km/s):  3.0   4.0   4.5   8.15  13.3   25.1   54.0
-%        S (s/deg):   37.0  27.8  24.7  13.6  8.36   4.43   2.06
-%       The radial lines correspond to 30deg steps in backazimuth.
 %     - The red circle around the expected location of the plane wave on
 %       the slowness diagram indicates the range of slownesses within the
-%       nyquist slowness from that location.
+%       nyquist slowness from that location.  The slowness nyquist is
+%       determined by the minimum interstation spacing.
 %
 %    Examples:
 %     Show the array response function for +/-5s/deg for a dataset:
@@ -87,8 +81,7 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
 %     Get a multi-plane wave response:
 %      arf=fkarf(stla,stlo,50,201,[20 10 20],[0 0 45],0.03);
 %
-%    See also: FKMAP, PLOTFKMAP, FKVOLUME, FKFREQSLIDE, FK4D
-%              KXY2SLOWBAZ, SLOWBAZ2KXY, SNYQUIST
+%    See also: PLOTFKARF, FKMAP, KXY2SLOWBAZ, SLOWBAZ2KXY, SNYQUIST
 
 %     Version History:
 %        May   1, 2010 - initial version
@@ -98,15 +91,15 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
 %                        takes less than half the time
 %        May  10, 2010 - added in options available to FKMAP
 %        May  18, 2010 - minor doc touch
+%        June 16, 2010 - fixed nargchk, improved see also section and notes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  18, 2010 at 12:00 GMT
+%     Last Updated June 16, 2010 at 14:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(3,10,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,10,nargin));
 
 % constants
 d2r=pi/180;

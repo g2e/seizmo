@@ -15,25 +15,25 @@ function [report]=chkfkstruct(fk)
 %      smap=fkmap(data,50,201,[1/30 1/20]);
 %      error(chkfkstruct(smap));
 %
-%    See also: PLOTFKMAP, FKMAP, FKVOLUME, FK4D
+%    See also: CHKFKARFSTRUCT, PLOTFKMAP, FKMAP, FKVOLUME, FK4D
 
 %     Version History:
 %        May  11, 2010 - initial version
 %        May  12, 2010 - allow single frequency volume
 %        May  24, 2010 - minor doc update (don't forget to update Contents)
 %        May  27, 2010 - fixed an error message
+%        June 16, 2010 - minor code update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  27, 2010 at 18:45 GMT
+%     Last Updated June 16, 2010 at 14:05 GMT
 
 % todo:
 
 % check nargin
-report=[];
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check map is proper struct
+report=[];
 fields={'response' 'nsta' 'stla' 'stlo' 'stel' 'stdp' 'butc' 'eutc' ...
     'npts' 'delta' 'x' 'y' 'z' 'polar' 'center' 'normdb' 'volume'};
 if(~isstruct(fk) || ~all(ismember(fields,fieldnames(fk))))

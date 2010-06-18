@@ -43,9 +43,10 @@ function [varargout]=plotfkarf(arf,varargin)
 %     Version History:
 %        May  11, 2010 - initial version (outside of FKARF)
 %        May  26, 2010 - update for new plotfkmap args
+%        June 16, 2010 - labels call correct axes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  26, 2010 at 10:35 GMT
+%     Last Updated June 16, 2010 at 14:00 GMT
 
 % todo:
 
@@ -225,7 +226,7 @@ end
 
 % add title color etc
 hold off;
-title({'Array Response Function @ '; titstr; ...
+title(ax,{'Array Response Function @ '; titstr; ...
     ['0db = ' num2str(map.normdb) 'dB']; ''; ''; ''},...
     'fontweight','bold','color',fgcolor);
 set(ax,'clim',dblim);
@@ -241,7 +242,7 @@ else
     hsv=rgb2hsv(bgcolor);
     colormap(hsvcustom(hsv));
 end
-c=colorbar('eastoutside',...
+c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
 %set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)
@@ -418,12 +419,12 @@ end
 hold off
 
 % finally take care of labels/coloring/etc
-title({'Array Response Function @ '; titstr; ...
+title(ax,{'Array Response Function @ '; titstr; ...
     ['0 dB = ' num2str(map.normdb) 'dB']},...
     'fontweight','bold','color',fgcolor);
-xlabel('East/West Slowness (s/deg)',...
+xlabel(ax,'East/West Slowness (s/deg)',...
     'fontweight','bold','color',fgcolor);
-ylabel('North/South Slowness (s/deg)',...
+ylabel(ax,'North/South Slowness (s/deg)',...
     'fontweight','bold','color',fgcolor);
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
     colormap(flipud(fire));
@@ -436,7 +437,7 @@ else
     hsv=rgb2hsv(bgcolor);
     colormap(hsvcustom(hsv));
 end
-c=colorbar('eastoutside',...
+c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
 %set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)
