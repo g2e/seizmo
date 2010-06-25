@@ -18,7 +18,7 @@ function m_grid(varargin);
 %  19/6/97 - set visibility of titles and so forth to 'on' (they
 %            default to 'off' when axes visibility is turned off)
 %  2/11/97 - for M5.1, the old way of making the patch at the bottom (i.e.
-%            by rearranging the axes children) instead causes matlab to loose
+%            by rearranging the axes children) instead causes matlab to lose
 %            track of titles. Try a different fix.
 % 11/01/98 - Added way of making longitude lines cut off to prevent crowding near poles (you have
 %            to specify a vector for allowabale latitudes for this to work).
@@ -198,23 +198,53 @@ end;
 % but sneakily I can set it's width to (effectively) 0 so it doesn't actually show!
 
 
+% This is a very problematic part of the code. It turns out the the interaction between
+% PATCH objects and CONTOURF objects does not work correctly in the Painters renderer -
+% this is true in all versions up to 7.7 at least. Patches with large negative Z just
+% don't get drawn under contourgroup patches.
+% 
+% There are several possible workarounds:
+%
+%  1) Make sure you use the 'v6' option in contourf calls (see m_contourf.m to see
+%     how I have tried to do that for some versions of matlab)
+%      - problem: the 'v6' option is going away soon, also you may want the
+%                contourgroup object that the v6 option destroys.
+%
+%  2) Change the renderer to something else:
+%        set(gcf,'renderer','opengl') or
+%        set(gcf,'renderer','zbuffer')
+%      - problem: These other renderers are not available on all systems, they may also
+%                give less-precise results.
+%
+%  3) Use the painters renderer, but reorder the children so that the patch is at the
+%     bottom of the list (painters cares about child order)
+%      - problem: sometimes the child order is rearranged if you click on the figure,
+%                 also (at least in some versions of matlab) this causes labels to
+%                 disappear.
+%
+% With version 7.4 onwards I have discovered that reordering the children apparently
+% is Mathworks-blessed (c.f. the UISTACK function).  So I am going to try to implement
+% the latter as a default.
+
+
 % Now, putting in a white background works under linux (at least) and
 % NOT under windows...I don't know about macs.
 %%a=ver('matlab');  % Ver doesn't return stuff under v5!
 a=version;
-%%if  sscanf(a.Version,'%f') >6.0 & ~ispc,
-if  sscanf(a(1:3),'%f') >6.0 & ~ispc,
-  patch('xdata',X(:),'ydata',Y(:),'zdata',-bitmax*ones(size(X(:))),'facecolor',gbackcolor,...
-	'edgecolor','k','linest','none','tag','m_grid_color');
-
-else
+%if  (sscanf(a(1:3),'%f') >6.0 & sscanf(a(1:3),'%f') <7.4)  & ~ispc,
+%  patch('xdata',X(:),'ydata',Y(:),'zdata',-bitmax*ones(size(X(:))),'facecolor',gbackcolor,...
+%	'edgecolor','k','linest','none','tag','m_grid_color');
+%
+%else
 % Now, I used to set this at a large (negative) zdata, but this didn't work for PC users,
 % so now I just draw a patch...but I have decided to go back to the old
 % way (above) with higher versions. Maybe the PC version works now?
 % Unfortunately this kludge has some strange side-effects.
 
-  patch('xdata',X(:),'ydata',Y(:),'facecolor',gbackcolor,...
+  patch('xdata',X(:),'ydata',Y(:),'zdata',-bitmax*ones(size(X(:))),'facecolor',gbackcolor,...
 	'edgecolor','k','linest','none','tag','m_grid_color');
+ % patch('xdata',X(:),'ydata',Y(:),'facecolor',gbackcolor,...
+ %	'edgecolor','k','linest','none','tag','m_grid_color');
 
   % Now I set it at the bottom of the children list so it gets drawn first (i.e. doesn't
   % cover anything)
@@ -228,7 +258,7 @@ else
    hh = [hh;hht(k)];
    set(gca,'children',hh);
    set(0, 'ShowHiddenHandles', show);
-end;
+%end;
 
 
 % X-axis labels and grid

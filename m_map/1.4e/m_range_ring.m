@@ -18,7 +18,7 @@ function h=m_range_ring(long,lat,range,varargin);
 %    edge of certian projections). THis can be done using
 %    M_RANGE_RING(LONG,LAT,RANGE,NPTS, <line property/value pairs>)
 %
-%    NB: Earth radius is assumed to 6371km, and
+%    GGE: Earth radius is assumed to 6371km since
 %    calculations are for spherical geometry.
 
 % Rich Pawlowicz (rich@ocgy.ubc.ca) 18/Dec/1998
@@ -27,11 +27,14 @@ function h=m_range_ring(long,lat,range,varargin);
 % it's mine, so you can't sell it.
 
 % 6/Nov/00 - eliminate returned stuff if ';' neglected (thx to D Byrne)
+% 21/June/10 - use appropriate radius and redraw lines at several
+%              equivalent longitudes (gge)
 
 global MAP_VAR_LIST
 
 pi180=pi/180;
 earth_radius=6371;
+%earth_radius=6378.137; % this is wrong for a spherical earth
 n=72;
 
 if length(varargin)>0 & ~ischar(varargin{1}),
@@ -46,14 +49,11 @@ h=[];
 for k=1:length(long),
   rlat=lat(k)*pi180;
   rlong=long(k)*pi180;
-  while(long(k)<MAP_VAR_LIST.longs(1))
-      long(k)=long(k)+360;
-      rlong=rlong+2*pi;
-  end
-  while(long(k)>MAP_VAR_LIST.longs(2))
-      long(k)=long(k)-360;
-      rlong=rlong-2*pi;
-  end
+  % make sure longitude is in map range
+  while(rlong<MAP_VAR_LIST.longs(1)*pi180); rlong=rlong+2*pi; end
+  while(rlong>MAP_VAR_LIST.longs(2)*pi180); rlong=rlong-2*pi; end
+  %if long(k)<MAP_VAR_LIST.longs(1), rlong=rlong+2*pi; end;
+  %if long(k)>MAP_VAR_LIST.longs(2), rlong=rlong-2*pi; end;
 
   x=sin([0:n-1]'/(n-1)*2*pi)*c;
   y=cos([0:n-1]'/(n-1)*2*pi)*c;
@@ -71,7 +71,10 @@ for k=1:length(long),
  
   nz=zeros(1,length(range(:)));
   X=X+cumsum([nz;diff(X)<-300]-[nz;diff(X)>300])*360;
-
+  
+  % redraw each line thrice (with different but equivalent longitudes)
+  % - this fixes most of the truncation problem of lines on maps
+  % - this fixes the wrap-around problem of lines on maps
   X2=X+360;
   X2(X2>MAP_VAR_LIST.longs(2))=NaN;
   X2(X2<MAP_VAR_LIST.longs(1))=NaN;
@@ -80,8 +83,11 @@ for k=1:length(long),
   X3(X3>MAP_VAR_LIST.longs(2))=NaN;
   X(X>MAP_VAR_LIST.longs(2))=NaN;
   X(X<MAP_VAR_LIST.longs(1))=NaN;
-  
   [XX,YY]=m_ll2xy([X,X2,X3],[Y,Y,Y],'clip','on');
+  %kk=find(X(1,:)~=X(end,:));
+  %X2=X(:,kk)+360;X2(X2>MAP_VAR_LIST.longs(2))=NaN;
+  %X3=X(:,kk)-360;X3(X3<MAP_VAR_LIST.longs(1))=NaN;
+  %[XX,YY]=m_ll2xy([X,X2,X3],[Y,Y(:,kk),Y(:,kk)],'clip','on');
   
   % Get rid of 2-point lines (these are probably clipped lines spanning the window)
   fk=isfinite(XX(:));        

@@ -56,7 +56,7 @@ function [ncst,Area,k]=mu_coast(optn,varargin);
 %        15/Dec/05  - speckle additions
 %        21/Mar/06  - handling of gshhs v1.3 (developed from suggestions by
 %                     Martin Borgh)
-%        26/Nov/07 - changed 'finite' to 'isfinite; after warnings
+%        26/Nov/07 - changed 'finite' to 'isfinite' after warnings
 %
 
 % This software is provided "as is" without warranty of any kind. But
@@ -403,9 +403,10 @@ mblim=MAP_VAR_LIST.lats(1);
 
 % decfac is for decimation of areas outside the lat/long bdys.
 % Sizes updated for gshhs v1.3
+% Sizes updated for v1.10, and for river/border databases.
 switch optn(1),
   case 'f',   % 'full' (undecimated) database
-    ncst=NaN+zeros(2063513,2);Area=zeros(153545,1);k=ones(153546,1);
+    ncst=NaN+zeros(10561669,2);Area=zeros(188611,1);k=ones(188612,1);
     decfac=12500;
   case 'h',
     ncst=NaN+zeros(2063513,2);Area=zeros(153545,1);k=ones(153546,1);
@@ -414,10 +415,10 @@ switch optn(1),
     ncst=NaN+zeros(493096,2);Area=zeros(41529,1);k=ones(41530,1);
     decfac=500;
   case 'l',
-    ncst=NaN+zeros(101207,2);Area=zeros(10775,1);k=ones(10776,1);
+    ncst=NaN+zeros(124871,2);Area=zeros(20776,1);k=ones(27524,1);
     decfac=100;
   case 'c',
-    ncst=NaN+zeros(14884,2);Area=zeros(1870,1);k=ones(1871,1);
+    ncst=NaN+zeros(110143,2);Area=zeros(20871,1);k=ones(27524,1);
     decfac=20;
 end;
 fid=fopen(file,'r','ieee-be');
@@ -430,7 +431,7 @@ if fid==-1,
   return
 end;
 
-
+%%size(ncst)
 Area2=Area;
 
 % Read the File header
@@ -485,21 +486,32 @@ while cnt>0,
      x=[  180; 180 ;x(x<=-180)+360;x(x>-180);-180; [-180:20:160]'];
    end;
 
-   % First and last point should be the same.
+   % First and last point should be the same IF THIS IS A POLYGON
+   % if the Area=0 then this is a line, and don't add points!
    
-   if x(end)~=x(1) | y(end)~=y(1), x=[x;x(1)];y=[y;y(1)]; end;
+   if A(8)>0,
+    
+     if x(end)~=x(1) | y(end)~=y(1), x=[x;x(1)];y=[y;y(1)]; end;
+    
+     % get correct curve orientation for patch-fill algorithm.
 
-   % get correct curve orientation for patch-fill algorithm.
-   
-   Area2(l)=sum( diff(x).*(y(1:(end-1))+y(2:end))/2 );
-   Area(l)=A(8)/10;
+     Area2(l)=sum( diff(x).*(y(1:(end-1))+y(2:end))/2 );
+     Area(l)=A(8)/10;
 
-   if rem(A(3),2)==0; 
-     Area(l)=-abs(Area(l)); 
-     if Area2(l)>0, x=x(end:-1:1);y=y(end:-1:1); end;
-   else
-     if Area2(l)<0, x=x(end:-1:1);y=y(end:-1:1); end; 
-   end;
+     if rem(A(3),2)==0; 
+       Area(l)=-abs(Area(l)); 
+       if Area2(l)>0, x=x(end:-1:1);y=y(end:-1:1); end;
+     else
+       if Area2(l)<0, x=x(end:-1:1);y=y(end:-1:1); end; 
+     end;
+  else
+   % Later on 2 point lines are clipped so we want to avoid that
+   if length(x)==2,
+    x=[x(1);mean(x);x(2)];y=[y(1);mean(y);y(2)];
+   end; 
+   % disp('0');
+   % line(x,y);pause;   
+  end;
 
    % Here we try to reduce the number of points.
    
@@ -591,6 +603,10 @@ fclose(fid);
 ncst((k(l+1)+1):end,:)=[];  % get rid of unused part of data matrices
 Area((l+1):end)=[];
 k((l+2):end)=[];
+
+%size(ncst)
+%size(Area)
+%size(k)
  
 %%%
 function [A,cnt]=get_gheader(fid);

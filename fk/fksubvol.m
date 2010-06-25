@@ -6,7 +6,7 @@ function [vol]=fksubvol(vol,frng)
 %    Description: VOL=FKSUBVOL(VOL,FRNG) extracts the fk response data in
 %     VOL for the frequency range given by FRNG, returning the result.  VOL
 %     is a fk struct produced either by FKVOLUME or FK4D.  FRNG gives the
-%     frequency range to average over as [FREQLOW FREQHIGH] in Hz.
+%     frequency range to extract as [FREQLOW FREQHIGH] in Hz.
 %
 %    Notes:
 %

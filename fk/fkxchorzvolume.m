@@ -89,9 +89,10 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %        June 16, 2010 - allow any form of cross correlation matrix (not
 %                        just one triangle), doc update, add example
 %        June 18, 2010 - add weights
+%        June 22, 2010 - default weights
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 18, 2010 at 12:55 GMT
+%     Last Updated June 22, 2010 at 21:00 GMT
 
 % todo:
 
@@ -120,6 +121,7 @@ end
 
 % defaults for optionals
 if(nargin<8 || isempty(polar)); polar=false; end
+if(nargin<9 || isempty(w)); w=ones(numel(data),1); end
 center='coarray';
 
 % check inputs

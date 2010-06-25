@@ -25,6 +25,7 @@ function [X,Y,I]=m_ll2xy(varargin);
 global MAP_PROJECTION MAP_COORDS
 
 
+
 if nargin==0 | isstr(varargin{1}),
   disp(' Usage');
   disp(' [X,Y]=m_ll2xy(LONGITUDES,LATITUDES <,''clip'',( ''on''|''off''|''patch'' | ''point'' ) >)');

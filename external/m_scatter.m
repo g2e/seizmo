@@ -17,7 +17,7 @@ function han = m_scatter(varargin)
 %
 %    See also: SCATTER
 
-global MAP_PROJECTION MAP_VAR_LIST
+global MAP_PROJECTION
 
 if isempty(MAP_PROJECTION),
   disp('No Map Projection initialized - call M_PROJ first!');
@@ -42,7 +42,8 @@ if ~isempty(msg);
 end
 
 % convert lon/lat to x/y
-[args{1:2}] = m_ll2xy(args{1:2});
+% - clips points outside map boundaries
+[args{1:2}] = m_ll2xy(args{1:2},'clip','point');
 
 % pass arguments to scatter
 if(start==1)

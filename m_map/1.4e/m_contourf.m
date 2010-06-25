@@ -50,10 +50,14 @@ if any(i(:)), [X,Y]=m_ll2xy(long,lat,'clip','patch'); end;
 if any(~i(:)),
 
  % Bug in contourf call - Solution Number: 1-1W36E8
+ % (that involved whether or not the X/Y matrices were handled
+ % correctly). In later versions a problem comes up with the renderer
+ % that could be solved here, but is better handled in m_grid (see comments
+ % in code there).
   if any(strfind(version,'(R14) Service Pack 3')) | ...
      any(strfind(version,'7.2.0.294 (R2006a)')) | ....
-     any(strfind(version,'7.2.0.294 (R2006a)')) | ....
-     any(strfind(version,'7.4.0.336 (R2007a)')),
+     any(strfind(version,'7.2.0.294 (R2006a)')) %%| ....
+   %%  any(strfind(version,'7.4.0.336 (R2007a)')),
    [cs,h]=contourf('v6',X,Y,data,varargin{:});
   else
    [cs,h]=contourf(X,Y,data,varargin{:});

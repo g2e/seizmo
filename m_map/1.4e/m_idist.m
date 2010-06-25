@@ -76,7 +76,8 @@ function [s,a12,a21] = m_idist(lon1,lat1,lon2,lat2,spheroid)
 %  R. Pawlowicz
 %   9/jan/2005  - changed name, altered inputs to m_map style (lon first),
 %                added ellipses, many minor simplifications to tighten code.
-
+%   9/apr/2009  - distances was NaN if start and end points are the same,
+%                 and I have fixed this.
 
 pi180=pi/180;
 
@@ -189,6 +190,7 @@ while any(k)  % force at least one execution
     cossigma(k) = real(  sin(U1(k)).*sin(U2(k))+cos(U1(k)).*cos(U2(k)).*cos(lambda(k))  );
     sigma(k) = atan2(sinsigma(k),cossigma(k));
     alpha(k) = asin(cos(U1(k)).*cos(U2(k)).*sin(lambda(k))./sinsigma(k));
+    if isnan(alpha(k)), alpha(k)=0; end; % this occurs when points are colocated (RP 9/apr/09)
     cos2sigmam(k) = cossigma(k)-2*sin(U1(k)).*sin(U2(k))./cos(alpha(k)).^2;
     C(k) = f/16*cos(alpha(k)).^2.*(4+f*(4-3*cos(alpha(k)).^2));
     lambdaold(k) = lambda(k);

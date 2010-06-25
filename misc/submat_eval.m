@@ -24,7 +24,7 @@ function [X]=submat_eval(X,varargin)
 %
 %      These are equivalent:
 %      x=repmat(x,[1 2 ones(1,ndims(x)-2)])
-%      x=submat_eval(x,2,'1:end 1:end')
+%      x=submat_eval(x,2,'[1:end 1:end]')
 %
 %    See also: SUBMAT, EVAL, COLON OPERATOR (:), END, REPMAT
 
@@ -33,9 +33,10 @@ function [X]=submat_eval(X,varargin)
 %        Apr. 23, 2009 - move usage up
 %        Sep.  8, 2009 - fixed error message
 %        Sep. 21, 2009 - updated one-liner, removed unnecessary brackets
+%        June 24, 2010 - error in example fixed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2009 at 23:05 GMT
+%     Last Updated June 24, 2010 at 01:05 GMT
 
 % todo:
 

@@ -97,17 +97,17 @@ that, a given map must only be initialized once. </p>
 <p> In order to get a list of the current projections, </p>
 <pre>m_proj get<br></pre>
 or
-<pre>m_proj('get');<br></pre>
+<pre>m_proj('set');<br></pre>
 Which currently return the following list:
 <pre>Available projections are:<br>     Stereographic<br>     Orthographic <br>     Azimuthal Equal-area<br>     Azimuthal Equidistant<br>     Gnomonic<br>     Satellite<br>     Albers Equal-Area Conic<br>     Lambert Conformal Conic<br>     Mercator<br>     Miller Cylindrical<br>     Equidistant Cylindrical<br>     Oblique Mercator<br>     Transverse Mercator<br>     Sinusoidal<br>     Gall-Peters<br>     Hammer-Aitoff<br>     Mollweide<br>   Robinson<br>  UTM<br></pre>
 If you want details about the possible options for any of these
 projections, add its name to the above command, e.g.
-<pre>m_proj('get','stereographic');<br>     'Stereographic'                                   <br>     &lt;,'lon&lt;gitude&gt;',center_long&gt;                      <br>     &lt;,'lat&lt;itude&gt;', center_lat&gt;                       <br>     &lt;,'rad&lt;ius&gt;', ( degrees | [longitude latitude] )&gt;<br>     &lt;,'rec&lt;tbox&gt;', ( 'on' | 'off' )&gt;                  <br></pre>
+<pre>m_proj('set','stereographic');<br>     'Stereographic'                                   <br>     &lt;,'lon&lt;gitude&gt;',center_long&gt;                      <br>     &lt;,'lat&lt;itude&gt;', center_lat&gt;                       <br>     &lt;,'rad&lt;ius&gt;', ( degrees | [longitude latitude] )&gt;<br>     &lt;,'rec&lt;tbox&gt;', ( 'on' | 'off' )&gt;                  <br></pre>
 You can also get details about the current projection. For example, in
 order to see what the default parameters are for the sinusoidal
 projection, we first initialize it, and then use the <code> 'set' </code>
 option:
-<pre>m_proj('sinusoidal');<br>m_proj set<br>Current mapping parameters -<br> Projection: Sinusoidal  (function: mp_tmerc)<br> longitudes: -90  30 (centered at -30)       <br> latitudes: -65  65                          <br> Rectangular border: off                     <br></pre>
+<pre>m_proj('sinusoidal');<br>m_proj get<br>Current mapping parameters -<br> Projection: Sinusoidal  (function: mp_tmerc)<br> longitudes: -90  30 (centered at -30)       <br> latitudes: -65  65                          <br> Rectangular border: off                     <br></pre>
 In order to initialize a projection, you usually specify some location
 parameters that define the geometry of the projection (longitudinal
 limits, central parallel, etc.), as well as parameters that define the
@@ -123,8 +123,12 @@ projection can be both. Many projections (especially global
 projections)
 are neither, instead an attempt has been made to aesthetically balance
 the errors in both conditions. </p>
-<p> Note: All projections (except UTM) are currently <em> spherical </em>
-rather than ellipsoidal. It is unlikely that this will be a problem in
+<p> Note: Most projections  are currently <em> spherical </em>
+rather than ellipsoidal. UTM is an ellipsoidal projection, and both the lambert conformal
+conic and albers equal-area conic can be specified with ellipses if desired. This
+is sometime useful when you have data (e.g. from a GIS package) at scales of Canadian provinces
+or US states, which are often mapped using one of these projections. 
+It is unlikely that this will be a problem in
 normal usage. </p>
 <ol>
   <h3><li> <a name="p2.1"> Azimuthal projections </a></li>
@@ -1169,6 +1173,8 @@ should be able to figure this out.</li>
 m_map/private </code>, you must edit the <code>FILNAME</code>
 settings in <code>m_gshhs_c.m, m_gshhs_l.m, m_gshhs_i.m, m_gshhs_h.m</code>
 and/or <code>m_gshhs_f.m</code> to point to the appropriate files. </li>
+<li> NOTE - as of May 2010 only the version 1.X gshhs files are supported (format
+was changed for 2.X; I have not yet added code to recognize this)
   </ol>
   <h3> <a name="p9.7"> <li> Using GSHHS effectively </li>
   </a></h3>
@@ -1319,18 +1325,23 @@ background to white, i.e.
     <pre>set(gcf,'color','white')<br></pre>
     <p> </p>
   </li>
-  <li><b>Screen plot in colour, printed output black and white.</b>
-If you are using filled contours, and the plot becomes "complicated"
-above
-a certain level, it sometimes appears as if the contours are not
-filling properly, i.e. you get a white map with contour lines but no
-colour.
-    <p> However, if you print the figure, the resulting postscript
-file
-(or plot) will show the colours as expected. This appears to be a bug
-of some sort in Matlab. </p>
-    <p> If you want to see the colours in Matlab itself, try this: </p>
-    <pre> set(findobj('tag','m_grid_color'),'facecolor','none')&nbsp;</pre>
+  <li><b>Generally weird-looking stuff that happens when you use filled contours.</b>
+  For some reason this has been a glory-hole for all kinds of weird bugs in MATLAB. Most
+  of them relate somehow to the way in which the map background interacts with
+  contourf patches, and how the 'renderer' (the internal matlab code that figures out what
+  goes on top of what) works, or doesn't work. Unfortunately I can't think of way that 
+  works around the problem in
+  all cases, but if you asee something weird, try:
+  
+  
+     <pre> set(findobj('tag','m_grid_color'),'facecolor','none')&nbsp;</pre>
+     
+   <p> after the <pre>m_grid</pre> call, or
+   
+   <pre> set(gcf,'renderer','opengl'); </pre>
+     
+    (under Unix you may have to do this one on starting MATLAB)
+     
   </li>
   <li>
     <p><b>Things not appearing correctly in tiff output</b>. Matlab
@@ -1351,7 +1362,7 @@ conversion
   <li>Finally including m_pcolor. Actually I could have done this a
 long time ago, but there are some philosophical reasons not to - it
 doesn't
-really do the "right" thing. But on the other hand it doesn do
+really do the "right" thing. But on the other hand it does do
 *something*
 (and I give examples)
     <p> </p>
@@ -1364,7 +1375,7 @@ time...
   </li>
 </ol>
 <hr> <a href="../map.html"> Back to home page </a>
-<hr> <i> Last changed 29/Sep/2005. Questions and comments to <a
+<hr> <i> Last changed 3/Mar/2009. Questions and comments to <a
  href="mailto:rich@eos.ubc.ca">rich@eos.ubc.ca</a> </i><br>
 <br>
 </body>

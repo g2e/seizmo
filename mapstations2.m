@@ -1,42 +1,71 @@
-function [varargout]=mapstations2(data,han)
-%MAPSTATIONS2    Map station/earthquake locations w/ AZ & DIST grid
+function [varargout]=mapstations2(data,varargin)
+%MAPSTATIONS2    Map station/earthquake locations of SEIZMO records
 %
 %    Usage:    mapstations2(data)
-%              mapstations2(data,h)
-%              h=mapstations2(...)
+%              mapstations2(data,gshhs)
+%              mapstations2(data,gshhs,proj)
+%              mapstations2(data,gshhs,proj,'opt1',val1,...,'optN',valN)
+%              mapstations2(...,ax)
+%              ax=mapstations2(...)
 %
 %    Description: MAPSTATIONS2(DATA) creates a map showing the station and
 %     earthquake locations stored in the headers of records of SEIZMO
 %     struct DATA.  The map is a global map using the Hammer projection.
 %     Stations are plotted as yellow circles and events are plotted as
-%     5-pointed stars.  Also overlays a distance & azimuth grid relative to
-%     the first event location on the map.
-%     
-%     MAPSTATIONS2(DATA,H) uses the axes given by handle H for the map.
+%     5-pointed stars.  MAPSTATION2 differs from MAPSTATION in that it also
+%     overlays a distance & azimuth grid relative to the first event
+%     location found.
 %
-%     H=MAPSTATIONS2(DATA) returns the axes handle for the map.
+%     MAPSTATIONS2(DATA,GSHHS) sets the GSHHS coastline and political
+%     boundaries resolution.  The values can be 'c', 'l', 'i', 'h', 'f'.
+%     The default GSHHS resolution is 'l' (low).
+%
+%     MAPSTATIONS2(DATA,GSHHS,PROJ) defines the map projection.  See
+%     M_PROJ('SET') for possible projections.  The default PROJ is
+%     'Hammer-Aitoff'.
+%
+%     MAPSTATIONS2(DATA,GSHHS,PROJ,'OPT1',VAL1,...,'OPTN',VALN) passes
+%     additional options to M_PROJ.  See M_PROJ('get',PROJ) for a list of
+%     possible options for this projection.  The default is no options,
+%     which will create a global map.
+%     
+%     MAPSTATIONS2(...,AX) uses the axes given by handle AX for the map.
+%     This is the last input.  The default draws the map in a new figure.
+%
+%     AX=MAPSTATIONS2(DATA) returns the axes handle for the map.
 %
 %    Notes:
 %
 %    Examples:
-%     Show locations of stations in a dataset relative to an event:
-%      h=mapstations2(data);
+%     Show locations of stations in a dataset:
+%      mapstations2(data);
 %
-%    See also: PLOT0, PLOT1, PLOT2, RECORDSECTION, MAPSTATIONS, MAPCLUSTERS
+%    See also: PLOT0, PLOT1, PLOT2, RECORDSECTION, MAPSTATIONS2,
+%              MAPCLUSTERS
 
 %     Version History:
-%        Dec.  8, 2009 - initial version
+%        Dec.  2, 2009 - initial version
+%        Dec.  8, 2009 - event grid plotting now MAPSTATIONS2
 %        Mar.  1, 2010 - update for new checking state function names
 %        May   7, 2010 - changed name to MAPSTATIONS2
+%        June 21, 2010 - use gshhs coastline & boarders
+%        June 23, 2010 - proj & proj opt args
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   7, 2010 at 17:00 GMT
+%     Last Updated June 23, 2010 at 18:50 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
+
+% access to m_map globals for map boundaries
+global MAP_VAR_LIST
+
+% ocean/land/border colors
+ocean=[0.3 0.6 1];
+land=[0.4 0.6 0.2];
+border=[0.5 0 0];
 
 % check data structure
 [h,idx]=versioninfo(data);
@@ -50,37 +79,122 @@ oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt rest
 try
-    % check axes handle
-    if(nargin==2 && ~isempty(han) && (~isreal(han) || ~isscalar(han)))
-        error('seizmo:mapclusters:badInput',...
-            'H must be an axis handle!');
-    end
-    
-    % make new figure if no axes handle passed
-    if(nargin<2 || isempty(han) || ~ishandle(han))
-        figure();
-        han=gca;
+    % handle additional inputs
+    skip=false;
+    if(numel(varargin))
+        % test if resolution or handle
+        if(ischar(varargin{1}) || isempty(varargin{1}))
+            % resolution
+            if(isempty(varargin{1}))
+                gshhs='l';
+            else
+                gshhs=varargin{1};
+            end
+            varargin(1)=[];
+        else
+            % default map
+            gshhs='c';
+            proj='hammer';
+            varargin={'clon' 0};
+            ax=varargin{1};
+            varargin(1)=[];
+            skip=true;
+            
+            % check if really a handle, otherwise ignore
+            if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
+                    || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
+                % new figure
+                figure;
+                ax=gca;
+            else
+                axes(ax);
+            end
+            
+            % if any more inputs then error
+            if(numel(varargin))
+                error('seizmo:mapstations2:badInputs',...
+                    'H must be the final input arg!');
+            end
+        end
     else
-        axes(han);
+        % new figure and default map
+        figure;
+        ax=gca;
+        gshhs='c';
+        proj='hammer';
+        varargin={'clon' 0};
+        skip=true;
+    end
+    if(~skip && numel(varargin))
+        % test if projection or handle
+        if(ischar(varargin{1}) || isempty(varargin{1}))
+            % projection
+            if(isempty(varargin{1}))
+                proj='hammer';
+            else
+                proj=varargin{1};
+            end
+            varargin(1)=[];
+            
+            % extract axes handle if it is there
+            if(mod(numel(varargin),2))
+                ax=varargin{end};
+                varargin(end)=[];
+                
+                % check if really a handle, otherwise ignore
+                if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
+                        || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
+                    % new figure
+                    figure;
+                    ax=gca;
+                else
+                    axes(ax);
+                end
+            else
+                % new figure
+                figure;
+                ax=gca;
+            end
+        else % handle
+            % default map
+            proj='hammer';
+            varargin={'clon' 0};
+            ax=varargin{1};
+            varargin(1)=[];
+            
+            % check if really a handle, otherwise ignore
+            if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
+                    || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
+                % new figure
+                figure;
+                ax=gca;
+            else
+                axes(ax);
+            end
+            
+            % if any more inputs then error
+            if(numel(varargin))
+                error('seizmo:mapstations2:badInputs',...
+                    'H must be the final input arg!');
+            end
+        end
+    elseif(~skip)
+        % new figure and default map
+        figure;
+        ax=gca;
+        proj='hammer';
+        varargin={'clon' 0};
     end
     
     % plot map
-    clon=0; % the default center longitude
-    alon=[clon-180 clon+180]; % longitude boundaries
-    m_proj('hammer','clon',clon);
-    title('STATION MAP','fontweight','bold')
-    %m_proj('get')
-    set(han,'color',[0.6 0.96 1]);
-    m_grid('xticklabels',[],'ytick',-90:15:90,'xtick',-180:15:180);
-    m_coast('patch',[0.6 1 0.6]);
-
-    % hackery to color oceans at large
-    child=get(han,'children');
-    try
-        set(child(end),'facecolor',[0.6 0.96 1]);
-    catch
-        set(child(end-1),'facecolor',[0.6 0.96 1]);
-    end
+    m_proj(proj,varargin{:});
+    set(ax,'color',ocean);
+    m_gshhs([gshhs 'c'],'patch',land);
+    m_gshhs([gshhs 'b'],'color',border);
+    m_grid();
+    
+    % hackery to color oceans at large when the above fails
+    set(findobj(ax,'tag','m_grid_color'),'facecolor',ocean);
 
     % get header info
     [stla,stlo,evla,evlo]=getheader(data,'stla','stlo','evla','evlo');
@@ -101,22 +215,26 @@ try
     evlalo=unique([evla evlo],'rows');
 
     % wrap longitudes to plot
-    while(any(abs(stlalo(:,2)-clon)>180))
-        stlalo(stlalo(:,2)<alon(1),2)=stlalo(stlalo(:,2)<alon(1),2)+360;
-        stlalo(stlalo(:,2)>alon(2),2)=stlalo(stlalo(:,2)>alon(2),2)-360;
+    while(any(abs(stlalo(:,2)-mean(MAP_VAR_LIST.longs))>180))
+        stlalo(stlalo(:,2)<MAP_VAR_LIST.longs(1),2)=...
+            stlalo(stlalo(:,2)<MAP_VAR_LIST.longs(1),2)+360;
+        stlalo(stlalo(:,2)>MAP_VAR_LIST.longs(2),2)=...
+            stlalo(stlalo(:,2)>MAP_VAR_LIST.longs(2),2)-360;
     end
-    while(any(abs(evlalo(:,2)-clon)>180))
-        evlalo(evlalo(:,2)<alon(1),2)=evlalo(evlalo(:,2)<alon(1),2)+360;
-        evlalo(evlalo(:,2)>alon(2),2)=evlalo(evlalo(:,2)>alon(2),2)-360;
+    while(any(abs(evlalo(:,2)-mean(MAP_VAR_LIST.longs))>180))
+        evlalo(evlalo(:,2)<MAP_VAR_LIST.longs(1),2)=...
+            evlalo(evlalo(:,2)<MAP_VAR_LIST.longs(1),2)+360;
+        evlalo(evlalo(:,2)>MAP_VAR_LIST.longs(2),2)=...
+            evlalo(evlalo(:,2)>MAP_VAR_LIST.longs(2),2)-360;
     end
-    
     % event-based gridding parameters
     ranges=10:10:170;
     azims=0:15:360;
 
     % plot azimuthal lines
     [azisla,azislo]=sphericalfwd(evlalo(1,1),evlalo(1,2),ranges(1),azims);
-    [aziela,azielo]=sphericalfwd(evlalo(1,1),evlalo(1,2),ranges(end),azims);
+    [aziela,azielo]=sphericalfwd(evlalo(1,1),evlalo(1,2),...
+        ranges(end),azims);
     [azimla,azimlo]=sphericalfwd(evlalo(1,1),evlalo(1,2),...
         sum(ranges([1 end]))/2,azims);
     [lat,lon]=gcarc2latlon(azisla,azislo,azimla,azimlo,200);
@@ -136,16 +254,18 @@ try
         200,'color','b','linewi',2);
 
     % plot locations
-    axes(han);
+    axes(ax);
     hold on
-    m_scatter(stlalo(:,2),stlalo(:,1),[],'y','filled',...
+    h=m_scatter(evlalo(:,2),evlalo(:,1),200,'r','filled','p',...
         'markeredgecolor','k');
-    m_scatter(evlalo(:,2),evlalo(:,1),200,'r','filled','p',...
+    set(h,'tag','events');
+    h=m_scatter(stlalo(:,2),stlalo(:,1),[],'y','filled',...
         'markeredgecolor','k');
+    set(h,'tag','stations');
     hold off
     
     % return figure handle
-    if(nargout); varargout{1}=han; end
+    if(nargout); varargout{1}=ax; end
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
