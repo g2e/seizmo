@@ -62,9 +62,8 @@
 %KEEPRL               - Returns the real component of spectral records
 %LISTHEADER           - List SEIZMO data headers
 %MAKEUNEVEN           - Makes evenly-sampled SEIZMO records look like uneven ones
-%MAPCLUSTERS          - Map station locations colored by cluster
+%MAPEVENTGRID         - Draws range/azimuth grid (relative to an event) on a map
 %MAPSTATIONS          - Map station/earthquake locations of SEIZMO records
-%MAPSTATIONS2         - Map station/earthquake locations w/ AZ & DIST grid
 %MAT2RECORDS          - Distributes a record matrix back into a SEIZMO struct
 %MERGE                - Merge SEIZMO records
 %MIRRORFLIP           - Returns a mirror-flip of SEIZMO records

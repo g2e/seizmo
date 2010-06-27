@@ -67,9 +67,10 @@ function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %        Mar. 24, 2010 - minor whitespace fix
 %        Apr. 21, 2010 - replace crash button with exit (but still crash)
 %        May   7, 2010 - button to draw cluster map
+%        June 26, 2010 - mapclusters deprecated (uses mapstations)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   7, 2010 at 17:20 GMT
+%     Last Updated June 26, 2010 at 19:50 GMT
 
 % todo:
 
@@ -284,13 +285,19 @@ try
                 % get clusters
                 grp.T=cluster(Z,'cutoff',grp.cutoff,...
                     'criterion',grp.criterion);
+                
+                % hack to get colors as they would be on output
                 [idx,idx]=ismember(1:max(grp.T),grp.T(grp.perm));
                 colorsave=grp.color;
                 grp.color=grp.color(idx,:);
                 
                 % map clusters
-                mfh=figure;
-                mapclusters(data,grp,gca);
+                mfh=figure('color','k');
+                ax=mapstations(data,'ax',gca);
+                set(findobj(ax,'tag','stations'),...
+                    'cdata',grp.color(grp.T,:));
+                
+                % put color matrix back into internal format
                 grp.color=colorsave;
                 clear colorsave
             case 6 % cluster

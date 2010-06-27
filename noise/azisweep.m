@@ -135,8 +135,9 @@ loc=unique([st; ev],'rows');
 dist=max(sphericalinv(clat,clon,loc(:,1),loc(:,2)));
 figure(fh);
 map_ax=axes('position',[0.03 0.03 0.3 0.3]);
-mapstations(data,[],'stereo',...
-    'lat',clat,'lon',clon,'rad',dist*1.25,map_ax);
+mapstations(data,'proj','stereo',...
+    'po',{'lat',clat,'lon',clon,'rad',dist*1.25},...
+    'gshhs','c','axis',map_ax);
 
 % add lines between station pairs
 [lat,lon]=gcarc2latlon(ev(:,1),ev(:,2),st(:,1),st(:,2),20);

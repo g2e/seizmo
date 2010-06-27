@@ -33,7 +33,7 @@ function [lat3,lon3]=closest_point_on_gc(lat1,lon1,lat2,lon2,lat3,lon3)
 %      m_line(gclon',gclat','linewi',3,'color','b');
 %      % draw gc arc from points to closest point on gc
 %      [gclat,gclon]=gcarc2latlon(lat,lon,lat3,lon3);
-%      gclon=unwrap(gclon,180,2); % avoid streak from wrap-around
+%      gclon=unwrap(gclon*pi/180,[],2)*180/pi; % avoid wraparound streak
 %      m_line(gclon',gclat','linewi',3,'color','r');
 %      % draw circles at points
 %      m_line(lon3,lat3,'marker','o',...
@@ -49,15 +49,15 @@ function [lat3,lon3]=closest_point_on_gc(lat1,lon1,lat2,lon2,lat3,lon3)
 %     Version History:
 %        Nov. 15, 2009 - initial version
 %        Dec.  2, 2009 - improved example
+%        June 26, 2010 - fix unwrap call in example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  2, 2009 at 17:15 GMT
+%     Last Updated June 26, 2010 at 02:55 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(6,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(6,6,nargin));
 
 % lat/lon to column vector
 lat1=lat1(:); lon1=lon1(:);

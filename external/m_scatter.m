@@ -17,6 +17,13 @@ function han = m_scatter(varargin)
 %
 %    See also: SCATTER
 
+%     Version History:
+%        May   9, 2010 - initial version (based on M_PLOT & SCATTER)
+%        June 25, 2010 - point clipping to eliminate off-map points
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated June 25, 2010 at 22:15 GMT
+
 global MAP_PROJECTION
 
 if isempty(MAP_PROJECTION),
