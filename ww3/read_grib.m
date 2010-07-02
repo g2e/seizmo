@@ -1,6 +1,5 @@
 function grib_struct=read_grib(gribname,irec,varargin)
-%READ_GRIB read certain WMO GRiB-formatted binary data files (Revision 3 - Feb 2010)
-% READ_GRIB reads certain WMO GRiB-formatted binary data files 
+%READ_GRIB    Reads certain WMO GRiB-formatted binary data files
 %
 %  Inputs: The first 2 arguments are required:
 %          gribname - filename containing GRiB records.

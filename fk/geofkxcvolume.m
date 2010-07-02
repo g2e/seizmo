@@ -1,4 +1,4 @@
-function [varargout]=geofkxcvolume(data,ll,s,frng,w)
+function [svol]=geofkxcvolume(data,ll,s,frng,w)
 %GEOFKXCVOLUME    Geographic FK beamforming
 %
 %    Usage:    sgeo=geofkxcvolume(xcdata,latlon,horzslow,frng)
@@ -68,6 +68,7 @@ function [varargout]=geofkxcvolume(data,ll,s,frng,w)
 
 % check nargin
 error(nargchk(4,5,nargin));
+error(nargchk(1,1,nargout));
 
 % define some constants
 d2r=pi/180;
@@ -171,13 +172,14 @@ try
     [svol(1:nrng,1).latlon]=deal(ll);
     [svol(1:nrng,1).horzslow]=deal(s*d2km);
     
-    % get frequencies (note no extra power for correlations)
-    nspts=2^nextpow2(npts(1));
+    % get frequencies
+    pow2pad=0; % 0 is the default
+    nspts=2^(pow2pad+nextpow2(npts(1)));
     f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
     
     % extract data (silently)
     seizmoverbose(false);
-    data=splitpad(data,0);
+    data=splitpad(data,pow2pad);
     data=records2mat(data);
     seizmoverbose(verbose);
     
@@ -246,9 +248,6 @@ try
         svol(a).normdb=max(svol(a).response(:));
         svol(a).response=svol(a).response-svol(a).normdb;
     end
-    
-    % return struct
-    if(nargout); varargout{1}=svol; end
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

@@ -90,9 +90,10 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %                        just one triangle), doc update, add example
 %        June 18, 2010 - add weights
 %        June 22, 2010 - default weights
+%        July  1, 2010 - high latitude fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 22, 2010 at 21:00 GMT
+%     Last Updated July  1, 2010 at 14:05 GMT
 
 % todo:
 
@@ -121,7 +122,7 @@ end
 
 % defaults for optionals
 if(nargin<8 || isempty(polar)); polar=false; end
-if(nargin<9 || isempty(w)); w=ones(numel(data),1); end
+if(nargin<9 || isempty(w)); w=ones(ncorr,1); end
 center='coarray';
 
 % check inputs
@@ -319,10 +320,11 @@ try
     % Note: this does NOT handle polar arrays!
     %
     % r is 2xNCORR
-    [dist,az]=vincentyinv(ev1(:,1),ev1(:,2),st1(:,1),st1(:,2));
-    az=az*d2r;
-    r=[dist.*sin(az) dist.*cos(az)]';
-    clear dist az
+    [clat,clon]=arraycenter(loc(:,1),loc(:,2));
+    [e_ev,n_ev]=geographic2enu(ev1(:,1),ev1(:,2),0,clat,clon,0);
+    [e_st,n_st]=geographic2enu(st1(:,1),st1(:,2),0,clat,clon,0);
+    r=[e_st-e_ev n_st-n_ev]';
+    clear e_ev e_st n_ev n_st
     
     % make slowness projection arrays
     %

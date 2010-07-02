@@ -31,15 +31,15 @@ function [e,n,u]=geographic2enu(lat,lon,depth,lat0,lon0,depth0,ellipsoid)
 
 %     Version History:
 %        May   3, 2010 - initial version
+%        June 28, 2010 - fix nargchk
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   3, 2010 at 18:50 GMT
+%     Last Updated June 28, 2010 at 12:50 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(6,7,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(6,7,nargin));
 
 % default ellipsoid
 if(nargin==6 || isempty(ellipsoid)); ellipsoid=[]; end

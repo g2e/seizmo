@@ -1,5 +1,5 @@
 function [varargout]=ww3mov(file,delay,varargin)
-%WW3MOV    Create movie from WaveWatch III data (requires READ_GRIB)
+%WW3MOV    Create movie from a WaveWatch III file
 %
 %    Usage:    mov=ww3mov(gribfile)
 %              mov=ww3mov(gribfile,delay)
@@ -35,13 +35,15 @@ function [varargout]=ww3mov(file,delay,varargin)
 %     Calling WW3MOV with no args lets you graphically choose a file:
 %      mov=ww3mov();
 %
-%    See also: READ_GRIB, PLOTWW3, MOVIE2AVI, UNIXCOMPRESSAVI
+%    See also: READ_GRIB, PLOTWW3, MOVIE2AVI, UNIXCOMPRESSAVI, WW3MAT,
+%              WW3TS
 
 %     Version History:
 %        June 15, 2010 - initial version
+%        July  2, 2010 - adjusted oneliner description
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 15, 2010 at 22:00 GMT
+%     Last Updated July  2, 2010 at 00:40 GMT
 
 % todo:
 

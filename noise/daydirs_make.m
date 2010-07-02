@@ -27,11 +27,13 @@ function []=daydirs_make(indir,outdir,o)
 
 %     Version History:
 %        June 18, 2010 - initial version
+%        June 30, 2010 - better catching of errors
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 18, 2010 at 12:55 GMT
+%     Last Updated June 30, 2010 at 12:55 GMT
 
 % todo:
+% - figure out leapsecond problem
 
 % check nargin
 error(nargchk(2,3,nargin));
@@ -119,16 +121,29 @@ parfor i=1:nrecs
     
     % loop over days 
     for j=1:ndays
-        % cut out day
-        dayrec=cut(rec,ts(j),te(j));
-        
-        % set reference time to start of day
-        dayrec=timeshift(dayrec,-ts(j),'iday');
-        
-        % write
-        writeseizmo(dayrec,'path',...
-            [outdir fs num2str(dates(j,1)) fs ...
-            num2str(dates(j,2),'%03d') fs]);
+        try
+            % cut out day
+            dayrec=cut(rec,ts(j),te(j));
+            
+            % set reference time to start of day
+            dayrec=timeshift(dayrec,-ts(j),'iday');
+            
+            % write
+            writeseizmo(dayrec,'path',...
+                [outdir fs num2str(dates(j,1)) fs ...
+                num2str(dates(j,2),'%03d') fs]);
+        catch
+            disp(i)
+            disp(z(i,:))
+            disp(data(i).name)
+            disp(j)
+            disp(days(j))
+            disp(dates(j,:))
+            disp(ts(j))
+            disp(te(j))
+            bad=lasterror;
+            warning(bad.message)    
+        end
     end
     
     % detail message

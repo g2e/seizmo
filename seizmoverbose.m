@@ -12,10 +12,10 @@ if(nargout)
             warning('seizmo:seizmoverbose:badState',...
                 ['STATE of SEIZMOVERBOSE must be TRUE or FALSE!\n' ...
                 'Using default verbosity (TRUE)!']);
-            varargout{1}=true;
+            varargout{1}=false;
         end
     catch
-        varargout{1}=true;
+        varargout{1}=false;
     end
 end
 

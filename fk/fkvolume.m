@@ -74,9 +74,10 @@ function [varargout]=fkvolume(data,smax,spts,frng,polar,center)
 %        May  24, 2010 - response is now single precision
 %        June 16, 2010 - fixed nargchk, better verbose message, improved
 %                        see also section, create response as s.p. array
+%        July  1, 2010 - high latitude fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 14:20 GMT
+%     Last Updated July  1, 2010 at 14:20 GMT
 
 % todo:
 
@@ -235,29 +236,48 @@ try
             %    .   .    .  .
             %   r   r   ... r   ]
             %    N1  N2      NN
-            [dist,az]=vincentyinv(...
-                stla(:,ones(nrecs,1)),stlo(:,ones(nrecs,1)),...
-                stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))');
+            %
+            % then we just use the
+            % upper triangle of that
+            [clat,clon]=arraycenter(stla,stlo);
+            [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
+            e=e(:,ones(nrecs,1))'-e(:,ones(nrecs,1));
+            n=n(:,ones(nrecs,1))'-n(:,ones(nrecs,1));
+            %dist=sqrt((e(:,ones(nrecs,1))'-e(:,ones(nrecs,1))).^2 ...
+            %    +(n(:,ones(nrecs,1))'-n(:,ones(nrecs,1))).^2);
+            %az=atan2(e(:,ones(nrecs,1))'-e(:,ones(nrecs,1)),...
+            %    n(:,ones(nrecs,1))'-n(:,ones(nrecs,1)));
             idx=triu(true(nrecs),1);
-            dist=dist(idx);
-            az=az(idx);
+            e=e(idx);
+            n=n(idx);
+            %dist=dist(idx);
+            %az=az(idx);
         case 'full'
-            % centerless too 
-            [dist,az]=vincentyinv(...
-                stla(:,ones(nrecs,1)),stlo(:,ones(nrecs,1)),...
-                stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))');
+            % centerless too but retain full coarray
+            [clat,clon]=arraycenter(stla,stlo);
+            [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
+            e=e(:,ones(nrecs,1))'-e(:,ones(nrecs,1));
+            n=n(:,ones(nrecs,1))'-n(:,ones(nrecs,1));
+            %dist=sqrt((e(:,ones(nrecs,1))'-e(:,ones(nrecs,1))).^2 ...
+            %    +(n(:,ones(nrecs,1))'-n(:,ones(nrecs,1))).^2);
+            %az=atan2(e(:,ones(nrecs,1))'-e(:,ones(nrecs,1)),...
+            %    n(:,ones(nrecs,1))'-n(:,ones(nrecs,1)));
         case 'center'
             % get array center
             [clat,clon]=arraycenter(stla,stlo);
-            [dist,az]=vincentyinv(stla,stlo,clat,clon);
+            [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
+            %dist=sqrt(e.^2+n.^2);
+            %az=atan2(e,n);
         otherwise % user
             % array center was specified
-            [dist,az]=vincentyinv(stla,stlo,clat,clon);
+            [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
+            %dist=sqrt(e.^2+n.^2);
+            %az=atan2(e,n);
     end
-    az=az*d2r;
-    r=[dist(:).*sin(az(:)) dist(:).*cos(az(:))]';
+    r=[e(:) n(:)]';
+    %r=[dist(:).*sin(az(:)) dist(:).*cos(az(:))]';
     nidx=size(r,2);
-    clear dist az
+    clear e n dist az
     
     % make projection array
     % p=2*pi*i*s*r

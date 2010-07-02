@@ -132,12 +132,14 @@ hold off
 [st,ev]=getheader(data,'st','ev');
 loc=unique([st; ev],'rows');
 [clat,clon]=arraycenter(loc(:,1),loc(:,2));
-dist=max(sphericalinv(clat,clon,loc(:,1),loc(:,2)));
+%dist=max(sphericalinv(clat,clon,loc(:,1),loc(:,2)));
 figure(fh);
 map_ax=axes('position',[0.03 0.03 0.3 0.3]);
 mapstations(data,'proj','stereo',...
-    'po',{'lat',clat,'lon',clon,'rad',dist*1.25},...
-    'gshhs','c','axis',map_ax);
+    'po',{'lat',clat,'lon',clon,'rad',1.1*max(degrng)},...
+    'gshhs','c',...
+    'fgcolor','k',...
+    'axis',map_ax);
 
 % add lines between station pairs
 [lat,lon]=gcarc2latlon(ev(:,1),ev(:,2),st(:,1),st(:,2),20);

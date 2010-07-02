@@ -1,75 +1,69 @@
-function []=daydirs_rinst(indir,outdir,freqlim,o)
-%DAYDIRS_RINST    Remove instrument response from records in day dirs
+function []=daydirs_ampspectra(indir,outdir,cmp,o)
+%DAYDIRS_AMPSPECTRA    Stacks amplitude spectra of day directories
 %
-%    Usage:    daydirs_rinst(indir,outdir)
-%              daydirs_rinst(indir,outdir,freqlimits)
-%              daydirs_rinst(indir,outdir,freqlimits,overwrite)
+%    Usage:    daydirs_ampspectra(indir,outdir,cmp)
+%              daydirs_ampspectra(indir,outdir,cmp,overwrite)
 %
-%    Description: DAYDIRS_RINST(INDIR,OUTDIR) removes the response from
-%     records in day directory layout under directory INDIR.  A highpass
-%     taper is applied with fullstop at 250s and fullpass at 150s to
-%     stabilize the deconvolution.  Processed records are output in an
-%     equivalent directory layout under OUTDIR.
+%    Description: DAYDIRS_AMPSPECTRA(INDIR,OUTDIR,CMP) calculates the
+%     stacked amplitude spectra for records in a day directory layout under
+%     directory INDIR.  The amplitude spectra are output in OUTDIR.  CMP is
+%     the record component name CMP and is used as a file pattern.
+%     Examples are 'LHZ', 'BHZ', 'LHN', etc.
 %
-%     DAYDIRS_RINST(INDIR,OUTDIR,FREQLIMITS) adjusts the frequency limits
-%     of the tapers utilized to stabilize the response removal.  See
-%     REMOVESACPZ for details on this option.  The default value for
-%     FREQLIMITS is [1/250 1/150].
-%
-%     DAYDIRS_RINST(INDIR,OUTDIR,FREQLIMITS,OVERWRITE) quietly overwrites
+%     DAYDIRS_AMPSPECTRA(INDIR,OUTDIR,OVERWRITE) quietly overwrites
 %     pre-existing records in OUTDIR when OVERWRITE is set to TRUE.  By
 %     default OVERWRITE is FALSE.
 %
 %    Notes:
+%     - Output is general xy records with the filename YYYY.DDD.CMP.SAC
 %
-%    Header changes: DEP*, IDEP
+%    Header changes: TOTAL
 %
 %    Examples:
 %
-%    See also: DAYDIRS_MERGECUT_25HRS, DAYDIRS_RESAMPLE, DAYDIRS_NORMALIZE,
+%    See also: DAYDIRS_MERGECUT_25HRS, DAYDIRS_RINST, DAYDIRS_NORMALIZE,
 %              DAYDIRS_CORRELATE, DAYDIRS_ROTCORR, DAYDIRS_STACKCORR,
-%              DAYDIRS_MAKE
+%              DAYDIRS_MAKE, DAYDIRS_RESAMPLE
 
 %     Version History:
-%        June 18, 2010 - initial version
+%        June 30, 2010 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 18, 2010 at 12:55 GMT
+%     Last Updated June 30, 2010 at 12:55 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,4,nargin));
+error(nargchk(3,4,nargin));
 
 % defaults
-if(nargin<3 || isempty(freqlim)); freqlim=[1/250 1/150]; end
 if(nargin<4 || isempty(o)); o=false; end
-if(numel(freqlim)>4 || ~isreal(freqlim) || any(freqlim<=0))
-    error('seizmo:daydirs_rinst:badInput',...
-        'FREQLIM must be a positive real-valued vector!');
+if(~ischar(cmp) || ~isequal(size(cmp),[1 3]))
+    error('seizmo:daydirs_ampspectra:badInput',...
+        'CMP1 must be a 3 character component code!');
 end
 if(~isscalar(o) || ~islogical(o))
-    error('seizmo:daydirs_rinst:badInput',...
+    error('seizmo:daydirs_ampspectra:badInput',...
         'OVERWRITE flag must be a scalar logical!');
 end
 
 % check directories
 if(~ischar(indir) || ~isvector(indir))
-    error('seizmo:daydirs_rinst:fileNotString',...
+    error('seizmo:daydirs_ampspectra:fileNotString',...
         'INDIR must be a string!');
 end
 if(~exist(indir,'dir'))
-    error('seizmo:daydirs_rinst:dirConflict',...
+    error('seizmo:daydirs_ampspectra:dirConflict',...
         ['Input Directory: %s\n' ...
         'Does not exist (or is not a directory)!'],indir);
 end
 if(~ischar(outdir) || ~isvector(outdir))
-    error('seizmo:daydirs_rinst:fileNotString',...
+    error('seizmo:daydirs_resample:fileNotString',...
         'OUTDIR must be a string!');
 end
 if(exist(outdir,'file'))
     if(~exist(outdir,'dir'))
-        error('seizmo:daydirs_rinst:dirConflict',...
+        error('seizmo:daydirs_ampspectra:dirConflict',...
             'Output Directory: %s\nIs a file!',outdir);
     end
     if(~o)
@@ -83,7 +77,7 @@ if(exist(outdir,'file'))
     end
 end
 
-% directory separator
+% get directory separator
 fs=filesep;
 
 % parallel processing setup (8 instances)
@@ -95,7 +89,7 @@ dirs=dirs([dirs.isdir]' & ~strncmp({dirs.name}','.',1)); % unhidden dirs
 years=str2double({dirs.name});
 nyears=numel(years);
 if(any(isnan(years)))
-    error('seizmo:daydirs_rinst:badLayout',...
+    error('seizmo:daydirs_ampspectra:badLayout',...
         'Improper directory layout!');
 end
 jdays=cell(size(years));
@@ -105,14 +99,14 @@ for i=1:nyears
     dirs=dirs([dirs.isdir]' & ~strncmp({dirs.name}','.',1)); % unhidden dir
     jdays{i}=str2double({dirs.name});
     if(any(isnan(jdays{i})))
-        error('seizmo:daydirs_rinst:badLayout',...
+        error('seizmo:daydirs_ampspectra:badLayout',...
             'Improper directory layout!');
     end
 end
 
 % verbosity (turn it off for the loop)
 verbose=seizmoverbose(false);
-if(verbose); disp('Removing instrument response from record(s)'); end
+if(verbose); disp('Getting amplitude spectra of array record(s)'); end
 
 % loop over years
 for i=1:nyears
@@ -129,26 +123,31 @@ for i=1:nyears
         % detail message
         if(verbose); disp(['PROCESSING DAY ' syr '.' sjday]); end
         
-        % attempt response removal
+        % attempt resample
         try
             % read in data
             try
-                data=readseizmo([indir fs syr fs sjday fs]);
+                data=readseizmo([indir fs syr fs sjday fs '*' cmp '*']);
             catch
                 % empty day
                 continue;
             end
             
-            % remove response
-            data=removesacpz(data,'freqlimits',freqlim);
+            % get stacked amp spectra
+            nrecs=numel(data);
+            data=divide(stack(keepam(dft(data))),nrecs);
             
-            % skip if no rotated output
-            if(~numel(data)); continue; end
+            % clear out header info that will confuse
+            data=changeheader(data,'st',nan,'ev',nan,'cmp',nan,...
+                'kname',nan,'scale',nrecs);
             
             % write
-            writeseizmo(data,'pathchange',{indir outdir});
+            writeseizmo(data,'path',outdir,...
+                'name',[syr '.' sjday '.' cmp '.SAC']);
         catch
             % close pool & fix verbosity
+            tmp=lasterror;
+            warning(tmp.message);
             matlabpool close;
             seizmoverbose(verbose);
             

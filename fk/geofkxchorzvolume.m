@@ -1,4 +1,4 @@
-function [varargout]=geofkxchorzvolume(rr,rt,tr,tt,ll,s,frng,w)
+function [rvol,tvol]=geofkxchorzvolume(rr,rt,tr,tt,ll,s,frng,w)
 %GEOFKXCHORZVOLUME    Geographic FK beamforming of horizontals
 %
 %    Usage:    [rgeo,tgeo]=geofkxchorzvolume(rr,rt,tr,tt,...
@@ -11,7 +11,7 @@ function [varargout]=geofkxchorzvolume(rr,rt,tr,tt,ll,s,frng,w)
 %     computes the spherical wave coherency (beam strength) through an
 %     array as a function of frequency, horizontal slowness & geographic
 %     location. The array info and correlograms between sets of horizontal
-%     components are contained in the SEIZMO structs RR, RT, TR, & TTT.
+%     components are contained in the SEIZMO structs RR, RT, TR, & TT.
 %     This differs from FKXCHORZVOLUME in that the waves are assumed to be
 %     spherical rather than planar.  This is essential for handling sources
 %     that are near the array (my rule of thumb is that if it is within 1
@@ -63,14 +63,16 @@ function [varargout]=geofkxchorzvolume(rr,rt,tr,tt,ll,s,frng,w)
 
 %     Version History:
 %        June 22, 2010 - initial version
+%        July  1, 2010 - freq field bug fix, d2r bug fixed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 22, 2010 at 21:35 GMT
+%     Last Updated July  1, 2010 at 15:35 GMT
 
 % todo:
 
-% check nargin
+% check nargin/nargout
 error(nargchk(7,8,nargin));
+error(nargchk(1,2,nargout));
 
 % define some constants
 d2r=pi/180;
@@ -93,7 +95,7 @@ if(~isequal(ncorr,ncorr1,ncorr2,ncorr3))
 end
 
 % defaults for optionals
-if(nargin<8 || isempty(w)); w=ones(numel(rr),1); end
+if(nargin<8 || isempty(w)); w=ones(ncorr,1); end
 
 % check inputs
 sf=size(frng);
@@ -299,8 +301,8 @@ try
     % v = sin theta
     az=az.'; az=az(ones(nll,1),:);
     baz=baz.'; baz=baz(ones(nll,1),:);
-    thetam=bazm-az+180;
-    thetas=bazs-baz;
+    thetam=d2r*(bazm-az+180);
+    thetas=d2r*(bazs-baz);
     um=cos(thetam);
     vm=sin(thetam);
     us=cos(thetas);
@@ -313,8 +315,8 @@ try
     for a=1:nrng
         % get frequencies
         fidx=find(f>=frng(a,1) & f<=frng(a,2));
-        rvol(a).z=f(fidx);
-        tvol(a).z=f(fidx);
+        rvol(a).freq=f(fidx);
+        tvol(a).freq=f(fidx);
         nfreq=numel(fidx);
         
         % preallocate fk space
@@ -387,16 +389,7 @@ try
         rvol(a).response=rvol(a).response-rvol(a).normdb;
         tvol(a).normdb=max(tvol(a).response(:));
         tvol(a).response=tvol(a).response-tvol(a).normdb;
-        
-        % plot if no output
-        %if(~nargout)
-        %    fkfreqslide(rvol(a));
-        %    fkfreqslide(tvol(a));
-        %end
     end
-    
-    % return struct
-    if(nargout); varargout{1}=rvol; varargout{2}=tvol; end
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

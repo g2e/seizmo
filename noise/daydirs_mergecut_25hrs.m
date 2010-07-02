@@ -42,9 +42,10 @@ function []=daydirs_mergecut_25hrs(indir,outdir,sec,per,tap,o)
 
 %     Version History:
 %        June 18, 2010 - initial version
+%        June 30, 2010 - bugfixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 18, 2010 at 12:55 GMT
+%     Last Updated June 30, 2010 at 12:55 GMT
 
 % todo:
 
@@ -169,10 +170,10 @@ for i=1:nyears
         % attempt merge & cut
         try
             % read in data
-            disp([indir fs syr fs sjday fs]);
+            if(verbose); disp(['DAY 1: ' indir fs syr fs sjday fs]); end
             data1=readseizmo([indir fs syr fs sjday fs]);
             if(~oneday)
-                disp([indir fs syr2 fs sjday2 fs]);
+                if(verbose); disp(['DAY 2: ' indir fs syr2 fs sjday2 fs]); end
                 data2=readseizmo([indir fs syr2 fs sjday2 fs]);
                 
                 % adjust ref time to match 1st day
@@ -205,11 +206,15 @@ for i=1:nyears
             if(oneday)
                 data=merge(data1,'tolerance',1.1,'adjust','last');
             else
-                data=merge([data1; data2],'tolerance',1.1,'adjust','last');
+                data=merge([data1; data2],...
+                    'tolerance',1.1,'adjust','last');
             end
             
             % window records to some number of seconds (default is 25hrs)
             data=cut(data,0,sec);
+            
+            % skip if none left
+            if(isempty(data)); continue; end
             
             % remove records with less than 70% of 25 hours (17.5)
             [b,e]=getheader(data,'b','e');
@@ -225,6 +230,9 @@ for i=1:nyears
             writeseizmo(data,'pathchange',{indir outdir});
         catch
             % close pool & fix verbosity
+            disp([syr '.' sjday])
+            tmp=lasterror;
+            warning(tmp.message);
             matlabpool close;
             seizmoverbose(verbose);
             

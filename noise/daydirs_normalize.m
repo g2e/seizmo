@@ -140,6 +140,7 @@ for i=1:nyears
     % working year
     yr=years(i);
     syr=num2str(yr);
+    disp(['PROCESSING YEAR ' syr]);
     
     % loop over days
     parfor j=1:numel(jdays{i})
@@ -148,15 +149,18 @@ for i=1:nyears
         sjday=num2str(jday,'%03d');
         
         % detail message
-        if(verbose); disp(['PROCESSING DAY ' syr '.' sjday]); end
+        disp(['PROCESSING DAY ' syr '.' sjday]);
         
         % attempt normalization
         try
             % read verticals
             skip=false;
             try
-                data=readseizmo([indir fs syr fs sjday fs '*LHZ*']);
+                data=readseizmo([indir fs syr fs sjday fs '*LHZ*'],...
+                    [indir fs syr fs sjday fs '*BHZ*']);
             catch
+                tmp=lasterror;
+                warning(tmp.message);
                 skip=true;
             end
             
@@ -190,9 +194,13 @@ for i=1:nyears
             skip=false;
             try
                 data=readseizmo([indir fs syr fs sjday fs '*LHE*'],...
-                    [indir fs syr fs sjday fs '*LHN*']);
+                    [indir fs syr fs sjday fs '*LHN*'],...
+                    [indir fs syr fs sjday fs '*BHE*'],...
+                    [indir fs syr fs sjday fs '*BHN*']);
             catch
                 skip=true;
+                tmp=lasterror;
+                warning(tmp.message);
             end
             
             if(~skip)
@@ -217,7 +225,7 @@ for i=1:nyears
                     @(x,y)max(x,y),weights(1:2:end),weights(2:2:end));
                 data=dividerecords(data,weights([1:end; 1:end]));
                 weights=add(slidingabsmean(...
-                    iirfilter(data,'bp','b','c',1./eqper,'o',4,'p',2),...
+                    iirfilter(data,'bp','b','c',eqband,'o',4,'p',2),...
                     tw),eps);
                 weights=recordfun(...
                     @(x,y)max(x,y),weights(1:2:end),weights(2:2:end));
@@ -228,7 +236,7 @@ for i=1:nyears
                 % - roughly 2mhz sliding window
                 data=dft(data,'rlim');
                 amph=rlim2amph(data);
-                amph=slidingmean(amph,fsw./getheader(data,'delta'));
+                amph=slidingmean(amph,ceil(fsw./getheader(data,'delta')));
                 amph=seizmofun(amph,@(x)x(:,[1:2:end; 1:2:end])+eps);
                 amph=recordfun(@(x,y)(x+y)/2,amph(1:2:end),amph(2:2:end));
                 amph=changeheader(amph,'iftype','irlim');
@@ -242,6 +250,8 @@ for i=1:nyears
             end
         catch
             % close pool & fix verbosity
+            tmp=lasterror;
+            warning(tmp.message);
             matlabpool close;
             seizmoverbose(verbose);
             

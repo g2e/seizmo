@@ -286,7 +286,7 @@ try
                         || any(isinf(value)) || any(value==undef))
                     error('seizmo:rotate:badInput',...
                         ['%s option must be a real or a ' ...
-                        'real-valued header field!']);
+                        'real-valued header field!'],fields{i});
                 end
                 
                 % expand scalar values

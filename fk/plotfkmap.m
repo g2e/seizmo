@@ -202,7 +202,7 @@ ny=numel(map.y);
 [x,y]=pol2cart(pi/180*map.x(ones(ny,1),:),map.y(:,ones(nx,1)));
 
 % plot polar grid
-pcolor(x,y,map.response);
+pcolor(x,y,double(map.response));
 
 % add title color etc
 hold off;

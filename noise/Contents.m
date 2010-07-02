@@ -2,7 +2,9 @@
 % Version 0.6.0-r140 Dhaulagiri 27-May-2010
 %
 % Ambient noise analysis functions
+%ARRAY_STATION_NAMES       - Returns station names for an array
 %AZISWEEP                  - Sliding azimuthal window record section of correlograms
+%DAYDIRS_AMPSPECTRA        - Stacks amplitude spectra of day directories
 %DAYDIRS_CORRELATE         - Correlates records in day directories
 %DAYDIRS_MAKE              - Convert a directory of data to a dir/year/day/file system
 %DAYDIRS_MERGECUT_25HRS    - Creates 25 hour records from a day directories

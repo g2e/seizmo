@@ -73,7 +73,7 @@ end
 % default/check months
 if(nargin==1 || isempty(months)); months=1:12; end
 if(~isreal(months) || any(months(:)~=fix(months(:))) ...
-        || any(months(:)<1 || months(:)>12))
+        || any(months(:)<1 | months(:)>12))
     error('seizmo:make_monthly_horz_volumes:badMonths',...
         'MONTHS must be an array of integers within 1 & 12!');
 end

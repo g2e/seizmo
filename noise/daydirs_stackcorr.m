@@ -266,7 +266,7 @@ for m=1:nstn
                  x(floor(end/2):-1:1,:)+x(ceil(end/2)+1:end,:)]);
         
         % write it all
-        disp('WRITING')
+        if(verbose); disp('WRITING'); end
         w(stack_full,'path',[outdir fs cname fs 'CORR_FULLSTACK' fs]);
         w(stack_1mon,'path',[outdir fs cname fs 'CORR_1MONSTACK' fs]);
         w(stack_mon,'path',[outdir fs cname fs 'CORR_MONSTACK' fs]);

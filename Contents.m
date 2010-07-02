@@ -145,5 +145,6 @@
 %TOMO                - simple tomography functions
 %TPW                 - two plane wave functions
 %TTCORRECT           - travel time correction functions
+%WW3                 - WaveWatch III functions
 %XCALIGN             - cross correlation signal alignment functions
 

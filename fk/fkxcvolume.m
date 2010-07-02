@@ -79,9 +79,10 @@ function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
 %        June 16, 2010 - allows any form of cross correlation matrix (not
 %                        just one triangle), fix see also section
 %        June 18, 2010 - add weights
+%        July  1, 2010 - high latitude fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 18, 2010 at 12:55 GMT
+%     Last Updated July  1, 2010 at 14:05 GMT
 
 % todo:
 
@@ -210,10 +211,11 @@ try
     % y is km north
     %
     % r is 2xNCORR
-    [dist,az]=vincentyinv(ev(:,1),ev(:,2),st(:,1),st(:,2));
-    az=az*d2r;
-    r=[dist.*sin(az) dist.*cos(az)]';
-    clear dist az
+    [clat,clon]=arraycenter(loc(:,1),loc(:,2));
+    [e_ev,n_ev]=geographic2enu(ev(:,1),ev(:,2),0,clat,clon,0);
+    [e_st,n_st]=geographic2enu(st(:,1),st(:,2),0,clat,clon,0);
+    r=[e_st-e_ev n_st-n_ev]';
+    clear e_ev e_st n_ev n_st
     
     % make projection array
     % p=2*pi*i*s*r

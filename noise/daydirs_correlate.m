@@ -139,7 +139,8 @@ for i=1:nyears
             % read verticals
             skip=false;
             try
-                data=readseizmo([indir fs syr fs sjday fs '*LHZ*']);
+                data=readseizmo([indir fs syr fs sjday fs '*.LHZ.*'],...
+                    [indir fs syr fs sjday fs '*.BHZ.*']);
             catch
                 skip=true;
             end
@@ -165,8 +166,10 @@ for i=1:nyears
             % read horizontals
             skip=false;
             try
-                data=readseizmo([indir fs syr fs sjday fs '*LHE*'],...
-                    [indir fs syr fs sjday fs '*LHN*']);
+                data=readseizmo([indir fs syr fs sjday fs '*.LHE.*'],...
+                    [indir fs syr fs sjday fs '*.LHN.*'],...
+                    [indir fs syr fs sjday fs '*.BHE.*'],...
+                    [indir fs syr fs sjday fs '*.BHN.*']);
             catch
                 skip=true;
             end
@@ -188,6 +191,8 @@ for i=1:nyears
             end
         catch
             % close pool & fix verbosity
+            tmp=lasterror;
+            warning(tmp.message);
             matlabpool close;
             seizmoverbose(verbose);
             

@@ -56,9 +56,10 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 
 %     Version History:
 %        June 25, 2010 - initial version
+%        July  1, 2010 - no land cover
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2010 at 01:45 GMT
+%     Last Updated July  1, 2010 at 15:45 GMT
 
 % todo:
 
@@ -152,10 +153,13 @@ else
 end
 
 % map colors & coast/border res
-gshhs='l';
-ocean=[0.3 0.6 1];
-land=[0.4 0.6 0.2];
-border=[0.5 0 0];
+gshhs='c';
+%ocean=[0.3 0.6 1];
+%land=[0.4 0.6 0.2];
+%border=[0.5 0 0];
+ocean=bgcolor;
+land=fgcolor;
+border=fgcolor;
 
 % access to m_map globals for map boundaries
 global MAP_VAR_LIST
@@ -226,7 +230,9 @@ set(ax,'clim',dblim);
 hold off
 
 % now add coastlines and political boundaries
-m_gshhs([gshhs 'c'],'patch',land);
+%m_gshhs([gshhs 'c'],'patch',land);
+%m_gshhs([gshhs 'b'],'color',border);
+m_gshhs([gshhs 'c'],'color',land);
 m_gshhs([gshhs 'b'],'color',border);
 m_grid('color',fgcolor);
 

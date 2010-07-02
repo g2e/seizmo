@@ -1,5 +1,5 @@
 function [varargout]=plotww3(ww3,rng,fgcolor,bgcolor,ax)
-%PLOTWW3    Plots WaveWatch III data (requires READ_GRIB struct)
+%PLOTWW3    Plots WaveWatch III data read in by READ_GRIB
 %
 %    Usage:    h=plotww3(ww3)
 %              h=plotww3(ww3,rng)
@@ -30,13 +30,14 @@ function [varargout]=plotww3(ww3,rng,fgcolor,bgcolor,ax)
 %      ww3=read_grib('nww3.hs.200607.grb',1);
 %      ax=plotww3(ww3);
 %
-%    See also: READ_GRIB, WW3MOV
+%    See also: READ_GRIB, WW3MOV, WW3TS, WW3MAT
 
 %     Version History:
 %        June 15, 2010 - initial version
+%        July  2, 2010 - adjusted oneliner description
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 15, 2010 at 22:00 GMT
+%     Last Updated July  2, 2010 at 00:40 GMT
 
 % todo:
 
