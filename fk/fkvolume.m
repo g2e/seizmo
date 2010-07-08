@@ -1,11 +1,11 @@
-function [varargout]=fkvolume(data,smax,spts,frng,polar,center)
-%FKVOLUME    Returns a map of energy in frequency-wavenumber space
+function [varargout]=fkvolume(data,smax,spts,frng,polar,method)
+%FKVOLUME    Returns beamformer volume in frequency-wavenumber space
 %
 %    Usage:    svol=fkvolume(data,smax,spts,frng)
 %              svol=fkvolume(data,smax,spts,frng,polar)
-%              svol=fkvolume(data,smax,spts,frng,polar,center)
+%              svol=fkvolume(data,smax,spts,frng,polar,method)
 %
-%    Description: SVOL=FKVOLUME(DATA,SMAX,SPTS,FRNG) calculates the energy
+%    Description: SVOL=FKVOLUME(DATA,SMAX,SPTS,FRNG) beamforms wave energy
 %     moving through an array in frequency-wavenumber space.  Actually, to
 %     allow for easier interpretation between frequencies, the energy is
 %     mapped into frequency-slowness space.  The array info and data are
@@ -16,7 +16,7 @@ function [varargout]=fkvolume(data,smax,spts,frng,polar,center)
 %     for both directions (SPTSxSPTS grid).  FRNG gives the frequency range
 %     as [FREQLOW FREQHIGH] in Hz.  SVOL is a struct containing relevant
 %     info and the frequency-slowness volume itself.  The struct layout is:
-%          .response - frequency-slowness array response
+%          .beam     - frequency-slowness beamforming volume
 %          .nsta     - number of stations utilized in making map
 %          .stla     - station latitudes
 %          .stlo     - station longitudes
@@ -28,9 +28,11 @@ function [varargout]=fkvolume(data,smax,spts,frng,polar,center)
 %          .delta    - number of seconds between each time point
 %          .x        - east/west slowness or azimuth values
 %          .y        - north/south or radial slowness values
-%          .z        - frequency values
-%          .polar    - true if slowness is sampled in polar coordinates 
-%          .center   - array center or method
+%          .freq     - frequency values
+%          .polar    - true if slowness is sampled in polar coordinates
+%          .npairs   - number of pairs
+%          .method   - beamforming method (center, coarray, full, user)
+%          .center   - array center as [lat lon]
 %          .normdb   - what 0dB actually corresponds to
 %          .volume   - true if frequency-slowness volume (false for FKMAP)
 %
@@ -44,15 +46,19 @@ function [varargout]=fkvolume(data,smax,spts,frng,polar,center)
 %     the slowness space regularly in the East/West & North/South
 %     directions and so exhibits less distortion of the slowness space.
 %
-%     SVOL=FKVOLUME(DATA,SMAX,SPTS,FRNG,POLAR,CENTER) defines the array
-%     center.  CENTER may be [LAT LON], 'center', 'coarray', or 'full'.
-%     The default is 'coarray'.  The 'center' option finds the center
-%     position of the array by averaging the station positions (using
-%     ARRAYCENTER).  Both 'coarray' and 'full' are essentially centerless
-%     methods using the relative positioning between every possible pairing
-%     of stations in the array.  The 'full' method includes redundant and
-%     same station pairings (and will always give poorer results compared
-%     to 'coarray').
+%     SVOL=FKVOLUME(DATA,SMAX,SPTS,FRNG,POLAR,METHOD) defines the beamform
+%     method.  METHOD may be 'center', 'coarray', 'full', or [LAT LON].
+%     The default is 'coarray' which utilizes information from all unique
+%     record pairings in the beamforming and is the default.  The 'full'
+%     method will utilize all possible pairings including pairing records
+%     with themselves and pairing records as (1st, 2nd) & (2nd, 1st) making
+%     this method quite redundant and slow.  The 'center' option only pairs
+%     each record against the array center (found using ARRAYCENTER) and is
+%     extremely fast for large arrays compared to the 'coarray' & 'full'
+%     methods.  Both 'center' and 'full' methods give slightly degraded
+%     results compared to 'coarray'.  Using [LAT LON] for method is
+%     essentially the same as the 'center' method but uses the defined
+%     coordinates as the center for the array.
 %
 %    Notes:
 %     - Records in DATA must have equal number of points, equal sample
@@ -71,13 +77,14 @@ function [varargout]=fkvolume(data,smax,spts,frng,polar,center)
 %        May  12, 2010 - fixed an annoying bug (2 wrongs giving the right
 %                        answer), minor code touches while debugging
 %                        fkxcvolume
-%        May  24, 2010 - response is now single precision
+%        May  24, 2010 - beam is now single precision
 %        June 16, 2010 - fixed nargchk, better verbose message, improved
-%                        see also section, create response as s.p. array
+%                        see also section, create beam as s.p. array
 %        July  1, 2010 - high latitude fix
+%        July  6, 2010 - major update to struct, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  1, 2010 at 14:20 GMT
+%     Last Updated July  6, 2010 at 14:05 GMT
 
 % todo:
 
@@ -93,10 +100,10 @@ versioninfo(data,'dep');
 
 % defaults for optionals
 if(nargin<5 || isempty(polar)); polar=false; end
-if(nargin<6 || isempty(center)); center='coarray'; end
+if(nargin<6 || isempty(method)); method='coarray'; end
 
-% valid center strings
-valid.CENTER={'center' 'coarray' 'full'};
+% valid method strings
+valid.METHOD={'center' 'coarray' 'full'};
 
 % check inputs
 sf=size(frng);
@@ -112,10 +119,10 @@ elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<=0))
 elseif(~isscalar(polar) || (~islogical(polar) && ~isnumeric(polar)))
     error('seizmo:fkvolume:badInput',...
         'POLAR must be TRUE or FALSE!');
-elseif((isnumeric(center) && (~isreal(center) || ~numel(center)==2)) ...
-        || (ischar(center) && ~any(strcmpi(center,valid.CENTER))))
+elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
+        || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
     error('seizmo:fkvolume:badInput',...
-        'CENTER must be [LAT LON], ''CENTER'', ''COARRAY'' or ''FULL''');
+        'METHOD must be ''CENTER'', ''COARRAY'', ''FULL'', or [LAT LON]!');
 end
 nrng=sf(1);
 
@@ -180,6 +187,25 @@ try
             num2str(fnyq) ')!']);
     end
     
+    % fix method/center/npairs
+    if(ischar(method))
+        method=lower(method);
+        [clat,clon]=arraycenter(stla,stlo);
+        switch method
+            case 'coarray'
+                npairs=nrecs*(nrecs-1)/2;
+            case 'full'
+                npairs=nrecs*nrecs;
+            case 'center'
+                npairs=nrecs;
+        end
+    else
+        clat=method(1);
+        clon=method(2);
+        method='user';
+        npairs=nrecs;
+    end
+    
     % setup output
     [svol(1:nrng,1).nsta]=deal(nrecs);
     [svol(1:nrng,1).stla]=deal(stla);
@@ -191,17 +217,10 @@ try
     [svol(1:nrng,1).delta]=deal(delta(1));
     [svol(1:nrng,1).npts]=deal(npts(1));
     [svol(1:nrng,1).polar]=deal(polar);
-    [svol(1:nrng,1).center]=deal(center);
+    [svol(1:nrng,1).npairs]=deal(npairs);
+    [svol(1:nrng,1).method]=deal(method);
+    [svol(1:nrng,1).center]=deal([clat clon]);
     [svol(1:nrng,1).volume]=deal(true);
-    
-    % fix center
-    if(ischar(center))
-        center=lower(center);
-    else
-        clat=center(1);
-        clon=center(2);
-        center='user';
-    end
     
     % get frequencies
     nspts=2^(nextpow2(npts(1))+1);
@@ -215,7 +234,7 @@ try
     % get fft
     data=fft(data,nspts,1);
     
-    % get relative positions of center
+    % get relative positions for each pair
     % r=(x  ,y  )
     %     ij  ij
     %
@@ -223,10 +242,9 @@ try
     % x is km east
     % y is km north
     %
-    % r is 2xNR
-    switch center
+    % r is a 2xNPAIRS matrix
+    switch method
         case 'coarray'
-            % centerless (make coarray)
             % [ r   r   ... r
             %    11  12      1N
             %   r   r   ... r
@@ -239,60 +257,41 @@ try
             %
             % then we just use the
             % upper triangle of that
-            [clat,clon]=arraycenter(stla,stlo);
             [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
             e=e(:,ones(nrecs,1))'-e(:,ones(nrecs,1));
             n=n(:,ones(nrecs,1))'-n(:,ones(nrecs,1));
-            %dist=sqrt((e(:,ones(nrecs,1))'-e(:,ones(nrecs,1))).^2 ...
-            %    +(n(:,ones(nrecs,1))'-n(:,ones(nrecs,1))).^2);
-            %az=atan2(e(:,ones(nrecs,1))'-e(:,ones(nrecs,1)),...
-            %    n(:,ones(nrecs,1))'-n(:,ones(nrecs,1)));
             idx=triu(true(nrecs),1);
             e=e(idx);
             n=n(idx);
-            %dist=dist(idx);
-            %az=az(idx);
         case 'full'
-            % centerless too but retain full coarray
-            [clat,clon]=arraycenter(stla,stlo);
+            % retain full coarray
             [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
             e=e(:,ones(nrecs,1))'-e(:,ones(nrecs,1));
             n=n(:,ones(nrecs,1))'-n(:,ones(nrecs,1));
-            %dist=sqrt((e(:,ones(nrecs,1))'-e(:,ones(nrecs,1))).^2 ...
-            %    +(n(:,ones(nrecs,1))'-n(:,ones(nrecs,1))).^2);
-            %az=atan2(e(:,ones(nrecs,1))'-e(:,ones(nrecs,1)),...
-            %    n(:,ones(nrecs,1))'-n(:,ones(nrecs,1)));
         case 'center'
-            % get array center
-            [clat,clon]=arraycenter(stla,stlo);
-            [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
-            %dist=sqrt(e.^2+n.^2);
-            %az=atan2(e,n);
+            % each record relative to array center
+            [e,n]=geographic2enu(clat,clon,0,stla,stlo,0);
         otherwise % user
-            % array center was specified
-            [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
-            %dist=sqrt(e.^2+n.^2);
-            %az=atan2(e,n);
+            % each record relative to define array center
+            [e,n]=geographic2enu(clat,clon,0,stla,stlo,0);
     end
     r=[e(:) n(:)]';
-    %r=[dist(:).*sin(az(:)) dist(:).*cos(az(:))]';
-    nidx=size(r,2);
-    clear e n dist az
+    clear e n
     
-    % make projection array
+    % get phasors corresponding to each wave speed+direction (slowness)
+    % to slant stack in the frequency domain
     % p=2*pi*i*s*r
     %
-    % where s is the slowness vector s=(s ,s ) and is NSx2
+    % where s is the slowness vector s=(s ,s ) and is NSLOWx2
     %                                    x  y
     %
-    % Note s is actually a collection of slowness vectors who
-    % correspond to the slownesses that we want to inspect in
-    % the fk analysis.  So p is actually the projection of all
-    % slownesses onto all of the position vectors (multiplied
-    % by 2*pi*i so we don't have to do that for each frequency
-    % later)
+    % x is sec/km east
+    % y is sec/km north
     %
-    % p is NSxNR
+    % p is the projection of all slownesses onto all of the position
+    % vectors (multiplied by 2*pi*i for efficiency reasons)
+    %
+    % p is NSLOWxNPAIRS
     smax=smax/d2km;
     if(polar)
         if(numel(spts)==2)
@@ -324,11 +323,11 @@ try
     for a=1:nrng
         % get frequencies
         fidx=find(f>=frng(a,1) & f<=frng(a,2));
-        svol(a).z=f(fidx);
+        svol(a).freq=f(fidx);
         nfreq=numel(fidx);
         
         % preallocate fk space
-        svol(a).response=zeros(spts,bazpts,nfreq,'single');
+        svol(a).beam=zeros(spts,bazpts,nfreq,'single');
         
         % warning if no frequencies
         if(~nfreq)
@@ -344,10 +343,10 @@ try
         % note that center/user do not require
         % an array but do need normalization
         %
-        % cs is NRxNF
+        % cs is NPAIRSxNFREQ
         cs=data(fidx,:).';
         cs=cs./abs(cs);
-        switch center
+        switch method
             case 'coarray'
                 [row,col]=find(triu(true(nrecs),1));
                 cs=cs(row,:).*conj(cs(col,:));
@@ -365,8 +364,8 @@ try
         
         % loop over frequencies
         for b=1:nfreq
-            % get response
-            svol(a).response(:,:,b)=reshape(...
+            % form beam
+            svol(a).beam(:,:,b)=reshape(...
                 exp(f(fidx(b))*p)*cs(:,b),spts,bazpts);
             
             % detail message
@@ -374,20 +373,20 @@ try
         end
         
         % convert to dB
-        switch center
+        switch method
             case {'full' 'coarray'}
                 % using full and real here gives the exact plots of
                 % Koper, Seats, and Benz 2010 in BSSA
-                svol(a).response=...
-                    10*log10(abs(real(svol(a).response))/nidx);
+                svol(a).beam=...
+                    10*log10(abs(real(svol(a).beam))/npairs);
             otherwise
-                svol(a).response=...
-                    10*log10(abs(svol(a).response).^2/nidx);
+                svol(a).beam=...
+                    10*log10(abs(svol(a).beam).^2/npairs);
         end
         
         % normalize so max peak is at 0dB
-        svol(a).normdb=max(svol(a).response(:));
-        svol(a).response=svol(a).response-svol(a).normdb;
+        svol(a).normdb=max(svol(a).beam(:));
+        svol(a).beam=svol(a).beam-svol(a).normdb;
         
         % plot if no output
         if(~nargout); fkfreqslide(svol(a)); drawnow; end

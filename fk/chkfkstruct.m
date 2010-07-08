@@ -23,9 +23,10 @@ function [report]=chkfkstruct(fk)
 %        May  24, 2010 - minor doc update (don't forget to update Contents)
 %        May  27, 2010 - fixed an error message
 %        June 16, 2010 - minor code update
+%        July  6, 2010 - major update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 14:05 GMT
+%     Last Updated July  6, 2010 at 14:05 GMT
 
 % todo:
 
@@ -34,8 +35,9 @@ error(nargchk(1,1,nargin));
 
 % check map is proper struct
 report=[];
-fields={'response' 'nsta' 'stla' 'stlo' 'stel' 'stdp' 'butc' 'eutc' ...
-    'npts' 'delta' 'x' 'y' 'z' 'polar' 'center' 'normdb' 'volume'};
+fields={'beam' 'nsta' 'stla' 'stlo' 'stel' 'stdp' 'butc' 'eutc' 'npts' ...
+    'delta' 'x' 'y' 'freq' 'polar' 'npairs' 'method' 'center' 'normdb' ...
+    'volume'};
 if(~isstruct(fk) || ~all(ismember(fields,fieldnames(fk))))
     report.identifier='seizmo:chkfkstruct:dataNotStruct';
     report.message=['FK data must be a struct with fields:' ...
@@ -43,16 +45,16 @@ if(~isstruct(fk) || ~all(ismember(fields,fieldnames(fk))))
     return;
 end
 
-% valid center strings
-valid.CENTER={'center' 'coarray' 'full'};
+% valid method strings
+valid.METHOD={'center' 'coarray' 'full' 'user'};
 
 % loop over each frame/volume/map
 for i=1:numel(fk)
     % check consistency
-    sfk=size(fk(i).response);
+    sfk=size(fk(i).beam);
     sx=numel(fk(i).x);
     sy=numel(fk(i).y);
-    sz=numel(fk(i).z);
+    sf=numel(fk(i).freq);
     if(~isreal(fk(i).nsta) || ~isscalar(fk(i).nsta) ...
             || fk(i).nsta~=fix(fk(i).nsta) || fk(i).nsta<2 ...
             || ~isequal(size(fk(i).stla),[fk(i).nsta 1]) ...
@@ -62,7 +64,7 @@ for i=1:numel(fk)
             || ~isreal(fk(i).stla) || ~isreal(fk(i).stdp) ...
             || ~isreal(fk(i).stlo) || ~isreal(fk(i).stel))
         report.identifier='seizmo:chkfkstruct:fkStnInfoCorrupt';
-        report.message='FK station info appears corrupt!';
+        report.message='FK station info fields appear corrupt!';
         return;
     elseif(~isequal(size(fk(i).butc),[1 5]) || ~isreal(fk(i).butc) ...
             || ~isequal(size(fk(i).eutc),[1 5]) || ~isreal(fk(i).eutc))
@@ -74,37 +76,45 @@ for i=1:numel(fk)
             || ~isreal(fk(i).delta) || ~isscalar(fk(i).delta) ...
             || fk(i).delta<=0)
         report.identifier='seizmo:chkfkstruct:fkWaveformInfoCorrupt';
-        report.message='FK waveform info appears corrupt!';
+        report.message='FK npts/delta fields appear corrupt!';
         return;
     elseif(~islogical(fk(i).polar))
         report.identifier='seizmo:chkfkstruct:polarInvalid';
         report.message='FK polar field must be TRUE/FALSE!';
         return;
+    elseif(~isreal(fk(i).npairs) || fk(i).npairs~=fix(fk(i).npairs) ...
+            || fk(i).npairs<0)
+        report.identifier='seizmo:chkfkstruct:npairsInvalid';
+        report.message='FK npairs field must be a positive integer!';
+        return;
+    elseif(~any(strcmpi(fk(i).method,valid.METHOD)))
+        report.identifier='seizmo:chkfkstruct:methodInvalid';
+        report.message=['FK method field must be ''USER'', ' ...
+            '''CENTER'', ''COARRAY'' or ''FULL'''];
+        return;
+    elseif(isnumeric(fk(i).center) && (~isreal(fk(i).center) ...
+            || ~numel(fk(i).center)==2))
+        report.identifier='seizmo:chkfkstruct:centerInvalid';
+        report.message='FK center field must be [LAT LON]!';
+        return;
     elseif(~islogical(fk(i).volume))
         report.identifier='seizmo:chkfkstruct:volumeInvalid';
         report.message='FK volume field must be TRUE/FALSE!';
-        return;
-    elseif((isnumeric(fk(i).center) && (~isreal(fk(i).center) ...
-            || ~numel(fk(i).center)==2)) || (ischar(fk(i).center) ...
-            && ~any(strcmpi(fk(i).center,valid.CENTER))))
-        report.identifier='seizmo:chkfkstruct:centerInvalid';
-        report.message=['CENTER must be [LAT LON], ''CENTER'', ' ...
-            '''COARRAY'' or ''FULL'''];
         return;
     elseif(~isreal(fk(i).normdb) || ~isscalar(fk(i).normdb))
         report.identifier='seizmo:chkfkstruct:normdbInvalid';
         report.message='FK normdb field must be a real-valued scalar!';
         return;
-    elseif(~isreal(fk(i).x) || ~isreal(fk(i).y) || ~isreal(fk(i).z) ...
-            || any(fk(i).z<0))
+    elseif(~isreal(fk(i).x) || ~isreal(fk(i).y) || ~isreal(fk(i).freq) ...
+            || any(fk(i).freq<0))
         report.identifier='seizmo:chkfkstruct:xyzCorrupt';
-        report.message='FK xyz info appears corrupt!';
+        report.message='FK x/y/freq fields appear corrupt!';
         return;
-    elseif(~isreal(fk(i).response) ...
-            || (fk(i).volume && sz~=1 && ~isequal(sfk,[sy sx sz])) ...
-            || (sz==1 && ~isequal(sfk,[sy sx])))
+    elseif(~isreal(fk(i).beam) ...
+            || (fk(i).volume && sf~=1 && ~isequal(sfk,[sy sx sf])) ...
+            || (sf==1 && ~isequal(sfk,[sy sx])))
         report.identifier='seizmo:chkfkstruct:fkResponseCorrupt';
-        report.message='FK response data size wrong or data invalid!';
+        report.message='FK beam field has wrong size or invalid data!';
         return;
     end
 end

@@ -27,7 +27,7 @@ function [rvol,tvol]=geofkxchorzvolume(rr,rt,tr,tt,ll,s,frng,w)
 %     wavefronts respectively.  They are structs containing relevant info
 %     and the frequency-slowness-position volume itself (with size
 %     NPOSxNSLOWxNFREQ).  The struct layout is:
-%          .response - frequency-slowness-position array response
+%          .beam     - frequency-slowness-position beamforming volume
 %          .nsta     - number of stations utilized in making map
 %          .stla     - station latitudes
 %          .stlo     - station longitudes
@@ -37,11 +37,15 @@ function [rvol,tvol]=geofkxchorzvolume(rr,rt,tr,tt,ll,s,frng,w)
 %          .eutc     - UTC end time of data (set to all zeros)
 %          .npts     - number of time points
 %          .delta    - number of seconds between each time point
-%          .latlon   - latitude/longitude source positions (deg)
+%          .latlon   - latitude/longitude positions (deg)
 %          .horzslow - horizontal slowness (sec/deg)
 %          .freq     - frequency values (Hz)
+%          .npairs   - number of pairs (aka correlograms)
+%          .method   - beamforming method (user, center, coarray, full)
+%          .center   - array center as [LAT LON]
 %          .normdb   - what 0dB actually corresponds to
 %          .volume   - true if frequency-slowness-position volume
+%          .weights  - weights used in beamforming
 %
 %     SGEO=GEOFKXCVOLUME(DATA,LATLON,HORZSLOW,FRNG,WEIGHTS) specifies
 %     weights for each correlogram in XCDATA (must match size of XCDATA).
@@ -55,18 +59,22 @@ function [rvol,tvol]=geofkxchorzvolume(rr,rt,tr,tt,ll,s,frng,w)
 %       same index in the other datasets (ie RR(3), RT(3), TR(3) & TT(3)
 %       must correspond to the same station pair).
 %     - Best/quickest results are obtained when RR, RT, TR, & TT is one
-%       "triangle" of the cross correlation matrix.
+%       "triangle" of the cross correlation matrix.  This corresponds to
+%       the 'coarray' method.
 %
 %    Examples:
 %
-%    See also: FKXCHORZVOLUME, GEOFKXCVOLUME, CHKGEOFKSTRUCT
+%    See also: FKXCHORZVOLUME, GEOFKXCVOLUME, CHKGEOFKSTRUCT, PLOTGEOFKMAP,
+%              GEOFKFREQSLIDE, GEOFKSLOWSLIDE, GEOFKSUBVOL, GEOFKVOL2MAP
 
 %     Version History:
 %        June 22, 2010 - initial version
 %        July  1, 2010 - freq field bug fix, d2r bug fixed
+%        July  6, 2010 - major update to struct, doc update
+%        July  7, 2010 - removed deg to km conversions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  1, 2010 at 15:35 GMT
+%     Last Updated July  7, 2010 at 15:15 GMT
 
 % todo:
 
@@ -76,7 +84,6 @@ error(nargchk(1,2,nargout));
 
 % define some constants
 d2r=pi/180;
-d2km=6371*d2r;
 
 % check struct
 versioninfo(rr,'dep');
@@ -96,6 +103,7 @@ end
 
 % defaults for optionals
 if(nargin<8 || isempty(w)); w=ones(ncorr,1); end
+method='coarray';
 
 % check inputs
 sf=size(frng);
@@ -114,8 +122,8 @@ elseif(numel(w)~=ncorr || any(w(:)<0) || ~isreal(w) || sum(w(:))==0)
 end
 nrng=sf(1);
 
-% column vector slownesses (convert to sec/km and count)
-s=s(:)/d2km;
+% column vector slownesses
+s=s(:);
 nslow=numel(s);
 
 % fix lat/lon
@@ -124,7 +132,7 @@ nll=size(ll,1);
 
 % convert weights to row vector
 w=w(:).';
-sw=sum(w);
+w=w./sum(w);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -230,6 +238,9 @@ try
     loc=unique([st1; ev1],'rows');
     nsta=size(loc,1);
     
+    % array center
+    [clat,clon]=arraycenter([st1(:,1); ev1(:,1)],[st1(:,2); ev1(:,2)]);
+    
     % require all records to have equal b, npts, delta
     [b,npts,delta]=getheader([rr(:); rt(:); tr(:); tt(:)],...
         'b','npts','delta');
@@ -261,7 +272,11 @@ try
     [rvol(1:nrng,1).npts]=deal(npts);
     [rvol(1:nrng,1).volume]=deal(true(1,2));
     [rvol(1:nrng,1).latlon]=deal(ll);
-    [rvol(1:nrng,1).horzslow]=deal(s*d2km);
+    [rvol(1:nrng,1).horzslow]=deal(s);
+    [rvol(1:nrng,1).npairs]=deal(ncorr);
+    [rvol(1:nrng,1).method]=deal(method);
+    [rvol(1:nrng,1).center]=deal([clat clon]);
+    [rvol(1:nrng,1).weights]=deal(w);
     
     % get frequencies (note no extra power for correlations)
     nspts=2^nextpow2(npts);
@@ -294,7 +309,7 @@ try
         ll(:,2*ones(ncorr,1)),ev1(ones(nll,1),:),ev1(2*ones(nll,1),:));
     [dists,azs,bazs]=sphericalinv(ll(:,ones(ncorr,1)),...
         ll(:,2*ones(ncorr,1)),st1(ones(nll,1),:),st1(2*ones(nll,1),:));
-    dd=2*pi*1i*(distm-dists)*d2km;
+    dd=2*pi*1i*(distm-dists);
     
     % rotators
     % u = cos theta
@@ -320,8 +335,8 @@ try
         nfreq=numel(fidx);
         
         % preallocate fk space
-        rvol(a).response=zeros(nll,nslow,nfreq,'single');
-        tvol(a).response=zeros(nll,nslow,nfreq,'single');
+        rvol(a).beam=zeros(nll,nslow,nfreq,'single');
+        tvol(a).beam=zeros(nll,nslow,nfreq,'single');
         
         % warning if no frequencies
         if(~nfreq)
@@ -345,7 +360,7 @@ try
             
             % loop over slownesses
             for c=1:nslow
-                % get response
+                % get beam
                 
                 % rotate data into direction of plane wave for all pairs
                 data=um.*us.*rr(cf*ones(1,nll),:) ...
@@ -359,9 +374,9 @@ try
                 % apply weights
                 data=data.*w(ones(1,nll),:);
                 
-                % now getting fk response for radial (rayleigh)
-                rvol(a).response(:,c,b)=10*log10(abs(real(...
-                    sum(data.*exp(f(cf)*s(c)*dd),2)))/sw);
+                % now getting fk beam for radial (rayleigh)
+                rvol(a).beam(:,c,b)=10*log10(abs(real(...
+                    sum(data.*exp(f(cf)*s(c)*dd),2))));
                 
                 % rotate data ortho to plane wave direction for all pairs
                 data=vm.*vs.*rr(cf*ones(1,nll),:) ...
@@ -375,9 +390,9 @@ try
                 % apply weights
                 data=data.*w(ones(1,nll),:);
                 
-                % now getting fk response for tangential (love)
-                tvol(a).response(:,c,b)=10*log10(abs(real(...
-                    sum(data.*exp(f(cf)*s(c)*dd),2)))/sw);
+                % now getting fk beam for tangential (love)
+                tvol(a).beam(:,c,b)=10*log10(abs(real(...
+                    sum(data.*exp(f(cf)*s(c)*dd),2))));
             end
             
             % detail message
@@ -385,10 +400,10 @@ try
         end
         
         % normalize so max peak is at 0dB
-        rvol(a).normdb=max(rvol(a).response(:));
-        rvol(a).response=rvol(a).response-rvol(a).normdb;
-        tvol(a).normdb=max(tvol(a).response(:));
-        tvol(a).response=tvol(a).response-tvol(a).normdb;
+        rvol(a).normdb=max(rvol(a).beam(:));
+        rvol(a).beam=rvol(a).beam-rvol(a).normdb;
+        tvol(a).normdb=max(tvol(a).beam(:));
+        tvol(a).beam=tvol(a).beam-tvol(a).normdb;
     end
     
     % toggle checking back

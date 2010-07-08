@@ -3,7 +3,7 @@ function [vol]=fkvol2map(vol,frng)
 %
 %    Usage:    map=fkvol2map(vol,frng)
 %
-%    Description: MAP=FKVOL2MAP(VOL,FRNG) averages the fk response data in
+%    Description: MAP=FKVOL2MAP(VOL,FRNG) averages the fk beam data in
 %     VOL across the frequency range given by FRNG, returning the result in
 %     MAP.  MAP may be then plotted using PLOTFKMAP.  VOL is a fk struct
 %     produced either by FKVOLUME or FK4D.  FRNG gives the frequency range
@@ -22,9 +22,10 @@ function [vol]=fkvol2map(vol,frng)
 %     Version History:
 %        May  11, 2010 - initial version
 %        May  23, 2010 - renormalize (set normdb appropriately)
+%        July  6, 2010 - update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  11, 2010 at 14:50 GMT
+%     Last Updated July  6, 2010 at 16:05 GMT
 
 % todo:
 
@@ -37,7 +38,7 @@ error(chkfkstruct(vol));
 % don't allow map
 if(any(~[vol.volume]))
     error('seizmo:fkvol2map:badInput',...
-        'VOL must be a fk volume response!');
+        'VOL must be a fk beam volume!');
 end
 
 % check frequency range
@@ -52,19 +53,19 @@ end
 % average frequencies in frng
 for i=1:numel(vol)
     if(isempty(frng))
-        fmin=min(vol(i).z);
-        fmax=max(vol(i).z);
+        fmin=min(vol(i).freq);
+        fmax=max(vol(i).freq);
     else
         fmin=frng(1);
         fmax=frng(2);
     end
     vol(i).volume=false;
-    fidx=vol(i).z>=fmin & vol(i).z<=fmax;
-    vol(i).response=sum(vol(i).response(:,:,fidx),3)/sum(fidx);
-    maxdb=max(vol(i).response(:));
-    vol(i).response=vol(i).response-maxdb;
+    fidx=vol(i).freq>=fmin & vol(i).freq<=fmax;
+    vol(i).beam=sum(vol(i).beam(:,:,fidx),3)/sum(fidx);
+    maxdb=max(vol(i).beam(:));
+    vol(i).beam=vol(i).beam-maxdb;
     vol(i).normdb=vol(i).normdb+maxdb;
-    vol(i).z=vol(i).z(fidx);
+    vol(i).freq=vol(i).freq(fidx);
 end
 
 end

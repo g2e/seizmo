@@ -15,7 +15,7 @@ function [list]=available_3dmodels
 %     list of available models:
 %      available_3dmodels
 %
-%    See also: GET_SCRIPPS_POINT, HMSL06S, HMSL06P, SB4L18
+%    See also: GET_SCRIPPS_VALUE, HMSL06S, HMSL06P, SB4L18
 
 %     Version History:
 %        May  19, 2010 - initial version

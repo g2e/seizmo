@@ -4,7 +4,7 @@ function [vol]=geofkvol2map(vol,frng,srng)
 %    Usage:    map=geofkvol2map(vol,frng,srng)
 %
 %    Description: MAP=GEOFKVOL2MAP(VOL,FRNG,SRNG) averages the geofk
-%     response data in VOL across the frequency range given by FRNG and the
+%     beam data in VOL across the frequency range given by FRNG and the
 %     horizontal slowness range SRNG, returning the result in MAP.  MAP may
 %     be then plotted using PLOTGEOFKMAP.  VOL is a geofk struct produced
 %     by a geofk function (like GEOFKXCVOLUME).  FRNG gives the frequency
@@ -21,9 +21,10 @@ function [vol]=geofkvol2map(vol,frng,srng)
 
 %     Version History:
 %        June 24, 2010 - initial version
+%        July  6, 2010 - update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 24, 2010 at 14:50 GMT
+%     Last Updated July  6, 2010 at 19:05 GMT
 
 % todo:
 
@@ -36,7 +37,7 @@ error(chkgeofkstruct(vol));
 % don't allow map
 if(any(~sum(reshape([vol.volume],[2 numel(vol)]))))
     error('seizmo:geofkvol2map:badInput',...
-        'VOL must be a geofk volume response!');
+        'VOL must be a geofk beam volume!');
 end
 
 % check frequency range
@@ -86,19 +87,19 @@ for i=1:numel(vol)
     % average (if possible)
     if(vol(i).volume(2))
         fidx=vol(i).freq>=fmin & vol(i).freq<=fmax;
-        vol(i).response=sum(vol(i).response(:,:,fidx),3)/sum(fidx);
+        vol(i).beam=sum(vol(i).beam(:,:,fidx),3)/sum(fidx);
         vol(i).freq=vol(i).freq(fidx);
     end
     if(vol(i).volume(1))
         sidx=vol(i).horzslow>=smin & vol(i).horzslow<=smax;
-        vol(i).response=sum(vol(i).response(:,sidx),2)/sum(sidx);
+        vol(i).beam=sum(vol(i).beam(:,sidx),2)/sum(sidx);
         vol(i).horzslow=vol(i).horzslow(sidx);
     end
     vol(i).volume=[false false];
     
     % rescale
-    maxdb=max(vol(i).response(:));
-    vol(i).response=vol(i).response-maxdb;
+    maxdb=max(vol(i).beam(:));
+    vol(i).beam=vol(i).beam-maxdb;
     vol(i).normdb=vol(i).normdb+maxdb;
 end
 

@@ -1,5 +1,5 @@
 % Seismology Toolbox - response
-% Version 0.6.0-r140 Dhaulagiri 27-May-2010
+% Version 0.6.0-r150 Everest 8-July-2010
 %
 % Instrument Response functions
 %APPLYSACPZ              - Applies SAC PoleZero responses to SEIZMO records

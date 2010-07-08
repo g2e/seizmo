@@ -1,42 +1,42 @@
-function [varargout]=fktimeslide(map,delay,varargin)
-%FKTIMESLIDE    Slides through a sequence of fk maps plotting each one
+function [varargout]=fkframeslide(map,delay,varargin)
+%FKFRAMESLIDE    Slides through a sequence of fk maps plotting each one
 %
-%    Usage:    fktimeslide(map)
-%              fktimeslide(map,delay)
-%              fktimeslide(map,delay,dblim)
-%              fktimeslide(map,delay,dblim,zerodb)
-%              fktimeslide(map,delay,dblim,zerodb,fgcolor,bgcolor)
-%              fktimeslide(map,delay,dblim,zerodb,fgcolor,bgcolor,ax)
-%              mov=fktimeslide(...);
+%    Usage:    fkframeslide(map)
+%              fkframeslide(map,delay)
+%              fkframeslide(map,delay,dblim)
+%              fkframeslide(map,delay,dblim,zerodb)
+%              fkframeslide(map,delay,dblim,zerodb,fgcolor,bgcolor)
+%              fkframeslide(map,delay,dblim,zerodb,fgcolor,bgcolor,ax)
+%              mov=fkframeslide(...);
 %
-%    Description: FKTIMESLIDE(MAP) slides through an array of fk maps
+%    Description: FKFRAMESLIDE(MAP) slides through an array of fk maps
 %     produced by FKMAP or FKVOLUME/FK4D+FKVOL2MAP by plotting each
 %     map sequentially in a single plot.  There is a 1/3 second delay
 %     between each replotting by default (see next Usage form to adjust
 %     this).
 %
-%     FKTIMESLIDE(MAP,DELAY) specifies the delay between the plotting of
+%     FKFRAMESLIDE(MAP,DELAY) specifies the delay between the plotting of
 %     each map in seconds.  The default DELAY is 0.33s.
 %
-%     FKTIMESLIDE(MAP,DELAY,DBLIM) sets the dB limits for coloring the
+%     FKFRAMESLIDE(MAP,DELAY,DBLIM) sets the dB limits for coloring the
 %     response info.  The default is [-12 0] for the default ZERODB (see
 %     next Usage form).  If ZERODB IS 'min' or 'median', the default DBLIM
 %     is [0 12].  DBLIM must be a real-valued 2-element vector.
 %
-%     FKTIMESLIDE(MAP,DELAY,DBLIM,ZERODB) changes what 0dB corresponds to
+%     FKFRAMESLIDE(MAP,DELAY,DBLIM,ZERODB) changes what 0dB corresponds to
 %     in the plot.  The allowed values are 'min', 'max', 'median', & 'abs'.
 %     The default is 'max'.
 %
-%     FKTIMESLIDE(MAP,DELAY,DBLIM,ZERODB,FGCOLOR,BGCOLOR) specifies the
+%     FKFRAMESLIDE(MAP,DELAY,DBLIM,ZERODB,FGCOLOR,BGCOLOR) specifies the
 %     foreground and background colors of the plot.  The default is 'w' for
 %     FGCOLOR and 'k' for BGCOLOR.  Note that if one is specified and the
 %     other is not, an opposing color is found using INVERTCOLOR.  The
 %     color scale is also changed so the noise clip is at BGCOLOR.
 %
-%     FKTIMESLIDE(MAP,DELAY,DBLIM,ZERODB,FGCOLOR,BGCOLOR,AX) sets the axes
+%     FKFRAMESLIDE(MAP,DELAY,DBLIM,ZERODB,FGCOLOR,BGCOLOR,AX) sets the axes
 %     that the map is drawn in.  This is useful for subplots, guis, etc.
 %
-%     MOV=FKTIMESLIDE(...) creates a Matlab movie MOV.  This can played
+%     MOV=FKFRAMESLIDE(...) creates a Matlab movie MOV.  This can played
 %     using the function MOVIE.  See MOVIE2AVI for exporting as an AVI
 %     file.
 %
@@ -46,7 +46,7 @@ function [varargout]=fktimeslide(map,delay,varargin)
 %     Get a 4D fk dataset, average over frequencies, and play:
 %      s4d=fk4d(data,1,75,50,201,[1/50 1/20]);
 %      s3d=fkvol2map(s4d);
-%      fktimeslide(s3d);
+%      fkframeslide(s3d);
 %
 %    See also: FK4D, FKFREQSLIDE, PLOTFKMAP, UPDATEFKMAP, FKVOL2MAP,
 %              FKSUBVOL, FKVOLUME
@@ -55,9 +55,10 @@ function [varargout]=fktimeslide(map,delay,varargin)
 %        May  11, 2010 - initial version
 %        May  26, 2010 - update for new plotfkmap args
 %        June 16, 2010 - fix see also section
+%        July  6, 2010 - update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 15:00 GMT
+%     Last Updated July  6, 2010 at 16:05 GMT
 
 % todo:
 
@@ -69,8 +70,8 @@ error(chkfkstruct(map));
 
 % don't allow array/volume
 if(any([map.volume]))
-    error('seizmo:fktimeslide:badInput',...
-        'MAP must be an array of fk response maps!');
+    error('seizmo:fkframeslide:badInput',...
+        'MAP must be an array of fk beam maps!');
 end
 
 % do we make the movie
@@ -80,7 +81,7 @@ if(nargout); makemovie=true; end
 % check delay
 if(nargin<2 || isempty(delay)); delay=0.33; end
 if(~isreal(delay) || ~isscalar(delay) || delay<0)
-    error('seizmo:fktimeslide:badDelay',...
+    error('seizmo:fkframeslide:badDelay',...
         'DELAY must be a positive scalar in seconds!');
 end
 

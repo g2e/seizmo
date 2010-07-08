@@ -1,12 +1,12 @@
 function [s4d]=fk4d(data,width,overlap,varargin)
-%FK4D    Returns a map of energy in frequency-wavenumber-time space
+%FK4D    Returns beamformer volumes in frequency-wavenumber-time space
 %
 %    Usage:    s4d=fk4d(data,width,overlap,smax,spts,frng)
 %              s4d=fk4d(data,width,overlap,smax,spts,frng,polar)
-%              s4d=fk4d(data,width,overlap,smax,spts,frng,polar,center)
+%              s4d=fk4d(data,width,overlap,smax,spts,frng,polar,method)
 %
-%    Description: S4D=FK4D(DATA,WIDTH,OVERLAP,SMAX,SPTS,FRNG) calculates
-%     the energy passing through an array in frequency-wavenumber-time
+%    Description: S4D=FK4D(DATA,WIDTH,OVERLAP,SMAX,SPTS,FRNG) beamforms the
+%     wave energy passing through an array in frequency-wavenumber-time
 %     space.  Actually, to allow for easier interpretation between
 %     frequencies, the energy is mapped into frequency-slowness-time space.
 %     The addition of the time dimension (compared to FKVOLUME) is made
@@ -24,7 +24,7 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %     whose elements are essentially time frames of the frequency-slowness
 %     space and contain relevant info as well as the frequency-slowness
 %     data.  The struct layout is:
-%          .response - frequency-slowness array response
+%          .beam     - frequency-slowness beamforming volume
 %          .nsta     - number of stations utilized in making map
 %          .stla     - station latitudes
 %          .stlo     - station longitudes
@@ -36,9 +36,11 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %          .delta    - number of seconds between each time point
 %          .x        - east/west slowness or azimuth values
 %          .y        - north/south or radial slowness values
-%          .z        - frequency values
-%          .polar    - true if slowness is sampled in polar coordinates 
-%          .center   - array center or method
+%          .freq     - frequency values
+%          .polar    - true if slowness is sampled in polar coordinates
+%          .npairs   - number of pairs
+%          .method   - beamforming method (center, coarray, full, user)
+%          .center   - array center as [lat lon]
 %          .normdb   - what 0dB actually corresponds to
 %          .volume   - true if frequency-slowness volume (false for FKMAP)
 %
@@ -50,15 +52,19 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %     North/South directions and so exhibits less distortion of the
 %     slowness space.
 %
-%     S4D=FK4D(DATA,WIDTH,OVERLAP,SMAX,SPTS,FRNG,POLAR,CENTER) defines the
-%     array center.  CENTER may be [LAT LON], 'center', 'coarray', or
-%     'full'.  The default is 'coarray'.  The 'center' option finds the
-%     center position of the array by averaging the station positions
-%     (using ARRAYCENTER).  Both 'coarray' and 'full' are essentially
-%     centerless methods using the relative positioning between every
-%     possible pairing of stations in the array.  The 'full' method
-%     includes redundant and same station pairings (and will always give
-%     poorer results compared to 'coarray').
+%     SVOL=FK4D(DATA,WIDTH,OVERLAP,SMAX,SPTS,FRNG,POLAR,METHOD) defines the
+%     beamforming method.  METHOD may be 'center', 'coarray', 'full', or
+%     [LAT LON].  The default is 'coarray' which utilizes information from
+%     all unique record pairings in the beamforming and is the default.
+%     The 'full' method will utilize all possible pairings including
+%     pairing records with themselves and pairing records as (1st, 2nd) &
+%     (2nd, 1st) making this method quite redundant and slow.  The 'center'
+%     option only pairs each record against the array center (found using
+%     ARRAYCENTER) and is extremely fast for large arrays compared to the
+%     'coarray' & 'full' methods.  Both 'center' and 'full' methods give
+%     slightly degraded results compared to 'coarray'.  Using [LAT LON] for
+%     method is essentially the same as the 'center' method but uses the
+%     defined coordinates as the center for the array.
 %
 %    Notes:
 %     - Records do NOT have to start at the same time (they are windowed
@@ -69,7 +75,7 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %     Get frequency-slowness-time data for an array at 20-50s periods:
 %      s4d=fk4d(data,1,75,50,201,[1/50 1/20]);
 %
-%    See also: FKFREQSLIDE, FKTIMESLIDE, FKVOLUME, FKMAP, FKARF
+%    See also: FKFREQSLIDE, FKFRAMESLIDE, FKVOLUME, FKMAP, FKARF
 
 %     Version History:
 %        May   9, 2010 - initial version
@@ -77,9 +83,10 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %        May  26, 2010 - minor doc touch
 %        June 16, 2010 - fix nargchk, error for no windows, improved note
 %                        section, removed meaningless line
+%        July  6, 2010 - major update to struct, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 14:45 GMT
+%     Last Updated July  6, 2010 at 14:05 GMT
 
 % todo:
 

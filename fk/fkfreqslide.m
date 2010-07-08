@@ -46,16 +46,17 @@ function [varargout]=fkfreqslide(vol,delay,varargin)
 %      svol=fkvolume(data,50,201,[1/50 1/20]);
 %      fkfreqslide(svol);
 %
-%    See also: FKVOLUME, PLOTFKMAP, UPDATEFKMAP, FKMAP, FK4D, FKTIMESLIDE,
+%    See also: FKVOLUME, PLOTFKMAP, UPDATEFKMAP, FKMAP, FK4D, FKFRAMESLIDE,
 %              FKVOL2MAP, FKSUBVOL
 
 %     Version History:
 %        May  11, 2010 - initial version
 %        May  26, 2010 - update for new plotfkmap args
 %        June 16, 2010 - fix see also section
+%        July  6, 2010 - update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 15:00 GMT
+%     Last Updated July  6, 2010 at 16:05 GMT
 
 % todo:
 
@@ -68,7 +69,7 @@ error(chkfkstruct(vol));
 % don't allow array/volume
 if(~isscalar(vol) || ~vol.volume)
     error('seizmo:fkfreqslide:badInput',...
-        'VOL must be a scalar fk struct and a volume response!');
+        'VOL must be a scalar fk struct and a beam volume!');
 end
 
 % do we make the movie
@@ -83,7 +84,7 @@ if(~isreal(delay) || ~isscalar(delay) || delay<0)
 end
 
 % get frequencies
-freqs=vol.z;
+freqs=vol.freq;
 nfreq=numel(freqs);
 
 % make initial plot

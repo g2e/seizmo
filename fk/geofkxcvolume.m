@@ -21,7 +21,7 @@ function [svol]=geofkxcvolume(data,ll,s,frng,w)
 %     [FREQLOW FREQHIGH] in Hz.  The output SGEO is a struct containing
 %     relevant info and the frequency-slowness-position volume itself (with
 %     size NPOSxNSLOWxNFREQ).  The struct layout is:
-%          .response - frequency-slowness-position array response
+%          .beam     - frequency-slowness-position beamforming volume
 %          .nsta     - number of stations utilized in making map
 %          .stla     - station latitudes
 %          .stlo     - station longitudes
@@ -31,11 +31,15 @@ function [svol]=geofkxcvolume(data,ll,s,frng,w)
 %          .eutc     - UTC end time of data (set to all zeros)
 %          .npts     - number of time points
 %          .delta    - number of seconds between each time point
-%          .latlon   - latitude/longitude source positions (deg)
+%          .latlon   - latitude/longitude positions (deg)
 %          .horzslow - horizontal slowness (sec/deg)
 %          .freq     - frequency values (Hz)
+%          .npairs   - number of pairs (aka correlograms)
+%          .method   - beamforming method (user, center, coarray, full)
+%          .center   - array center as [LAT LON]
 %          .normdb   - what 0dB actually corresponds to
 %          .volume   - true if frequency-slowness-position volume
+%          .weights  - weights used in beamforming
 %
 %     SGEO=GEOFKXCVOLUME(DATA,LATLON,HORZSLOW,FRNG,WEIGHTS) specifies
 %     weights for each correlogram in XCDATA (must match size of XCDATA).
@@ -46,7 +50,8 @@ function [svol]=geofkxcvolume(data,ll,s,frng,w)
 %       from CORRELATE.  The records must have the same lag range & sample
 %       spacing.
 %     - Best/quickest results are obtained when XCDATA is only one
-%       "triangle" of the cross correlation matrix.
+%       "triangle" of the cross correlation matrix.  This corresponds to
+%       the 'coarray' method.
 %
 %    Examples:
 %     Do you see the 26s microseism in your data?:
@@ -55,13 +60,16 @@ function [svol]=geofkxcvolume(data,ll,s,frng,w)
 %      frng=[1/27 1/26];
 %      sgeo=geofkxcvolume(xcdata,[lat(:) lon(:)],hs,frng);
 %
-%    See also: FKXCVOLUME, GEOFKXCVOLUME, CHKGEOFKSTRUCT
+%    See also: FKXCVOLUME, GEOFKXCHORZVOLUME, CHKGEOFKSTRUCT, PLOTGEOFKMAP,
+%              GEOFKFREQSLIDE, GEOFKSLOWSLIDE, GEOFKSUBVOL, GEOFKVOL2MAP
 
 %     Version History:
 %        June 22, 2010 - initial version
+%        July  6, 2010 - major update to struct, doc update
+%        July  7, 2010 - removed deg to km conversions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 22, 2010 at 12:55 GMT
+%     Last Updated July  7, 2010 at 15:15 GMT
 
 % todo:
 % - geometrical spreading & Q would be nice
@@ -69,10 +77,6 @@ function [svol]=geofkxcvolume(data,ll,s,frng,w)
 % check nargin
 error(nargchk(4,5,nargin));
 error(nargchk(1,1,nargout));
-
-% define some constants
-d2r=pi/180;
-d2km=6371*d2r;
 
 % check struct
 versioninfo(data,'dep');
@@ -82,12 +86,13 @@ ncorr=numel(data);
 
 % defaults for optionals
 if(nargin<5 || isempty(w)); w=ones(numel(data),1); end
+method='coarray';
 
 % check inputs
 sf=size(frng);
 if(~isreal(ll) || ndims(ll)~=2 || size(ll,2)~=2)
     error('seizmo:geofkxcvolume:badInput',...
-        'LATLON must be a Nx2 positive real matrix of [LAT LON]!');
+        'LATLON must be a Nx2 real matrix of [LAT LON]!');
 elseif(~isreal(s) || ~isvector(s) || any(s<=0))
     error('seizmo:geofkxcvolume:badInput',...
         'HORZSLOW must be a positive real vector in sec/deg!');
@@ -100,8 +105,8 @@ elseif(numel(w)~=ncorr || any(w(:)<0) ||  ~isreal(w) || sum(w(:))==0)
 end
 nrng=sf(1);
 
-% column vector slownesses (convert to sec/km and count)
-s=s(:)/d2km;
+% column vector slownesses
+s=s(:);
 nslow=numel(s);
 
 % fix lat/lon
@@ -110,7 +115,7 @@ nll=size(ll,1);
 
 % convert weights to column vector
 w=w(:);
-sw=sum(w);
+w=w./sum(w);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -158,6 +163,9 @@ try
             num2str(fnyq) ')!']);
     end
     
+    % array center
+    [clat,clon]=arraycenter([st(:,1); ev(:,1)],[st(:,2); ev(:,2)]);
+    
     % setup output
     [svol(1:nrng,1).nsta]=deal(nsta);
     [svol(1:nrng,1).stla]=deal(loc(:,1));
@@ -170,7 +178,11 @@ try
     [svol(1:nrng,1).npts]=deal(npts(1));
     [svol(1:nrng,1).volume]=deal(true(1,2));
     [svol(1:nrng,1).latlon]=deal(ll);
-    [svol(1:nrng,1).horzslow]=deal(s*d2km);
+    [svol(1:nrng,1).horzslow]=deal(s);
+    [svol(1:nrng,1).npairs]=deal(ncorr);
+    [svol(1:nrng,1).method]=deal(method);
+    [svol(1:nrng,1).center]=deal([clat clon]);
+    [svol(1:nrng,1).weights]=deal(w);
     
     % get frequencies
     pow2pad=0; % 0 is the default
@@ -194,7 +206,7 @@ try
         ev(ones(nll,1),:),ev(2*ones(nll,1),:));
     dists=sphericalinv(ll(:,ones(ncorr,1)),ll(:,2*ones(ncorr,1)),...
         st(ones(nll,1),:),st(2*ones(nll,1),:));
-    dd=2*pi*1i*(distm-dists)*d2km;
+    dd=2*pi*1i*(distm-dists);
     
     % loop over frequency ranges
     for a=1:nrng
@@ -204,7 +216,7 @@ try
         nfreq=numel(fidx);
         
         % preallocate fk space
-        svol(a).response=zeros(nll,nslow,nfreq,'single');
+        svol(a).beam=zeros(nll,nslow,nfreq,'single');
         
         % warning if no frequencies
         if(~nfreq)
@@ -236,8 +248,8 @@ try
             % loop over slownesses
             for c=1:nslow
                 % get response
-                svol(a).response(:,c,b)=10*log10(abs(real(...
-                    exp(f(fidx(b))*s(c)*dd)*cs(:,b)))/sw);
+                svol(a).beam(:,c,b)=10*log10(abs(real(...
+                    exp(f(fidx(b))*s(c)*dd)*cs(:,b))));
             end
             
             % detail message
@@ -245,8 +257,8 @@ try
         end
         
         % normalize so max peak is at 0dB
-        svol(a).normdb=max(svol(a).response(:));
-        svol(a).response=svol(a).response-svol(a).normdb;
+        svol(a).normdb=max(svol(a).beam(:));
+        svol(a).beam=svol(a).beam-svol(a).normdb;
     end
     
     % toggle checking back

@@ -25,7 +25,6 @@ function [data]=rotate_correlations(data)
 %     USER0 & USER1 reflect the stream pair indices.
 %
 %    Examples:
-%     NONE UNTIL I GET MORE DONE
 %
 %    See also: CORRELATE, REVERSE_CORRELATIONS
 
@@ -33,9 +32,10 @@ function [data]=rotate_correlations(data)
 %        June 10, 2010 - initial version
 %        June 13, 2010 - major bugfix
 %        June 17, 2010 - more checks for no rotatible records
+%        July  2, 2010 - fix cat warnings (dumb Matlab feature)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 17, 2010 at 23:50 GMT
+%     Last Updated July  2, 2010 at 13:30 GMT
 
 % todo:
 % - example
@@ -104,7 +104,9 @@ try
         'kname','kt0','kt1','kt2','kt3');
     kmname=[kt0 kt1 kt2 kt3];
     kmname=strnlen(kmname,8); % force 8 character fields
+    kmname(cellfun('prodofsize',kmname)==0)={'        '}; % and again
     ksname=strnlen(ksname,8); % force 8 character fields
+    ksname(cellfun('prodofsize',ksname)==0)={'        '}; % and again
     kstream=[kmname; ksname];
     kstream(:,4)=strnlen(kstream(:,4),2);
     [idx,idx,idx]=unique(strcat(kstream(:,1),kstream(:,2),...
@@ -136,8 +138,10 @@ try
     
     % reverse correlations where master<slave
     rc=mi>si;
-    data(rc)=reverse_correlations(data(rc));
-    [kmname(rc,:),ksname(rc,:)]=deal(ksname(rc,:),kmname(rc,:));
+    if(any(rc))
+        data(rc)=reverse_correlations(data(rc));
+        [kmname(rc,:),ksname(rc,:)]=deal(ksname(rc,:),kmname(rc,:));
+    end
     
     % remove repeats
     [idx,idx]=unique(strcat(kmname(:,1),kmname(:,2),kmname(:,3),...

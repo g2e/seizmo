@@ -1,5 +1,5 @@
 % Seismology Toolbox - tpw
-% Version 0.6.0-r140 Dhaulagiri 27-May-2010
+% Version 0.6.0-r150 Everest 8-July-2010
 %
 % Two Plane Wave Method functions
 %AK135_DISPERSION                  - Returns fundamental mode AK135 dispersion

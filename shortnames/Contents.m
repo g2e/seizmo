@@ -1,5 +1,5 @@
 % Seismology Toolbox - shortnames
-% Version 0.6.0-r140 Dhaulagiri 27-May-2010
+% Version 0.6.0-r150 Everest 8-July-2010
 %
 % Shortcut function names
 %ADDF   - ADDRECORDS                     - Add SEIZMO records

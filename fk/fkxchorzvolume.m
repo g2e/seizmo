@@ -3,6 +3,8 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %
 %    Usage:    [rvol,tvol]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng)
 %              [rvol,tvol]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar)
+%              [rvol,tvol]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,...
+%                                         polar,weights)
 %
 %    Description: [RVOL,TVOL]=FKXCHORZVOLUME(RR,RT,TR,TT,SMAX,SPTS,FRNG)
 %     calculates the Rayleigh & Love energy moving through an array in
@@ -27,7 +29,7 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %     as [FREQLOW FREQHIGH] in Hz.  RVOL & TVOL are structs containing
 %     relevant info and the frequency-slowness volume itself.  The struct
 %     layout is:
-%          .response - frequency-slowness array response
+%          .beam     - frequency-slowness beamforming volume
 %          .nsta     - number of stations utilized in making map
 %          .stla     - station latitudes
 %          .stlo     - station longitudes
@@ -44,6 +46,7 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %          .center   - array center or method
 %          .normdb   - what 0dB actually corresponds to
 %          .volume   - true if frequency-slowness volume (false for FKMAP)
+%          .weights  - weights used in beamforming
 %
 %     Calling FKXCHORZVOLUME with no outputs will automatically slide
 %     through the frequency-slowness volumes using FKFREQSLIDE.
@@ -56,6 +59,11 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %     & North/South directions and so exhibits less distortion of the
 %     slowness space.
 %
+%     [RVOL,TVOL]=FKXCHORZVOLUME(RR,RT,TR,TT,SMAX,SPTS,FRNG,POLAR,WEIGHTS)
+%     specifies weights for each correlogram in RR/RT/TR/TT (must match
+%     size of RR all) for use in beamforming.  The weights are normalized
+%     internally to sum to 1.
+%
 %    Notes:
 %     - Records in RR, RT, TR, & TT must be correlograms following the
 %       formatting from CORRELATE.  The records must have the same lag
@@ -64,9 +72,8 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %       same index in the other datasets (ie RR(3), RT(3), TR(3) & TT(3)
 %       must correspond to the same station pair).
 %     - Best/quickest results are obtained when RR, RT, TR, & TT is one
-%       "triangle" of the cross correlation matrix.
-%     - The CENTER option (from FKVOLUME) is essentially 'coarray' here and
-%       cannot be changed.
+%       "triangle" of the cross correlation matrix.  This corresponds to
+%       the 'coarray' method from FKVOLUME.
 %
 %    Examples:
 %     One way to perform horizontal fk analysis:
@@ -91,9 +98,10 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %        June 18, 2010 - add weights
 %        June 22, 2010 - default weights
 %        July  1, 2010 - high latitude fix
+%        July  6, 2010 - major update to struct, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  1, 2010 at 14:05 GMT
+%     Last Updated July  6, 2010 at 15:25 GMT
 
 % todo:
 
@@ -123,7 +131,7 @@ end
 % defaults for optionals
 if(nargin<8 || isempty(polar)); polar=false; end
 if(nargin<9 || isempty(w)); w=ones(ncorr,1); end
-center='coarray';
+method='coarray';
 
 % check inputs
 sf=size(frng);
@@ -147,7 +155,7 @@ nrng=sf(1);
 
 % convert weights to row vector
 w=w(:).';
-sw=sum(w);
+w=w./sum(w);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -253,6 +261,9 @@ try
     loc=unique([st1; ev1],'rows');
     nsta=size(loc,1);
     
+    % array center
+    [clat,clon]=arraycenter([st1(:,1); ev1(:,1)],[st1(:,2); ev1(:,2)]);
+    
     % require all records to have equal b, npts, delta
     [b,npts,delta]=getheader([rr(:); rt(:); tr(:); tt(:)],...
         'b','npts','delta');
@@ -283,8 +294,11 @@ try
     [rvol(1:nrng,1).delta]=deal(delta);
     [rvol(1:nrng,1).npts]=deal(npts);
     [rvol(1:nrng,1).polar]=deal(polar);
-    [rvol(1:nrng,1).center]=deal(center);
+    [rvol(1:nrng,1).npairs]=deal(ncorr);
+    [rvol(1:nrng,1).method]=deal(method);
+    [rvol(1:nrng,1).center]=deal([clat clon]);
     [rvol(1:nrng,1).volume]=deal(true);
+    [svol(1:nrng,1).weights]=deal(w);
     
     % get frequencies (note no extra power for correlations)
     nspts=2^nextpow2(npts);
@@ -309,7 +323,7 @@ try
     tr=conj(fft(tr,nspts,1));
     tt=conj(fft(tt,nspts,1));
     
-    % get relative positions of center
+    % get relative positions for each pair
     % r=(x  ,y  )
     %     ij  ij
     %
@@ -317,28 +331,28 @@ try
     % x is km east
     % y is km north
     %
-    % Note: this does NOT handle polar arrays!
-    %
-    % r is 2xNCORR
-    [clat,clon]=arraycenter(loc(:,1),loc(:,2));
+    % r is a 2xNCORR matrix
     [e_ev,n_ev]=geographic2enu(ev1(:,1),ev1(:,2),0,clat,clon,0);
     [e_st,n_st]=geographic2enu(st1(:,1),st1(:,2),0,clat,clon,0);
     r=[e_st-e_ev n_st-n_ev]';
     clear e_ev e_st n_ev n_st
     
-    % make slowness projection arrays
-    %
+    % get phasors corresponding to each wave speed+direction (slowness)
+    % to slant stack in the frequency domain
     % p=2*pi*i*s*r
     %
-    % where s is the slowness vector s=(s ,s ) and is NSx2
+    % where s is the slowness vector s=(s ,s ) and is NSLOWx2
     %                                    x  y
     %
-    % Note s is actually a collection of slowness vectors who
-    % correspond to the slownesses that we want to inspect in
-    % the fk analysis.  So p is actually the projection of all
-    % slownesses onto all of the position vectors (multiplied
-    % by 2*pi*i so we don't have to do that for each frequency
-    % later)
+    % x is sec/km east
+    % y is sec/km north
+    %
+    % p is the projection of all slownesses onto all of the position
+    % vectors (multiplied by 2*pi*i for efficiency reasons)
+    %
+    % p is NSLOWxNPAIRS
+    %
+    % Also get rotators for each slowness/pair set
     %
     % u=cos(theta)
     % v=sin(theta)
@@ -348,7 +362,7 @@ try
     % 
     % ie. theta = atan2(sy,sx)-atan2(ry,rx)
     %
-    % p,u,v are NSxNCORR
+    % p,u,v are NSLOWxNCORR
     smax=smax/d2km;
     if(polar)
         if(numel(spts)==2)
@@ -372,7 +386,7 @@ try
         u=cos(theta);
         v=sin(theta);
         % fix for s==0 (accept all azimuths b/c no directional dependance
-        % in response on vertical traveling waves)
+        % in beam on vertical traveling waves)
         zeroslow=smag(:)==0;
         u(zeroslow,:)=1;
         v(zeroslow,:)=1;
@@ -393,7 +407,7 @@ try
         u=cos(theta);
         v=sin(theta);
         % fix for s==0 (accept all azimuths b/c no directional dependance
-        % in response on vertical traveling waves)
+        % in beam on vertical traveling waves)
         zeroslow=sy(:)==0 & sx(:)==0;
         u(zeroslow,:)=1;
         v(zeroslow,:)=1;
@@ -407,13 +421,13 @@ try
     for a=1:nrng
         % get frequencies
         fidx=find(f>=frng(a,1) & f<=frng(a,2));
-        rvol(a).z=f(fidx);
-        tvol(a).z=f(fidx);
+        rvol(a).freq=f(fidx);
+        tvol(a).freq=f(fidx);
         nfreq=numel(fidx);
         
         % preallocate fk space
-        rvol(a).response=zeros(spts,bazpts,nfreq,'single');
-        tvol(a).response=zeros(spts,bazpts,nfreq,'single');
+        rvol(a).beam=zeros(spts,bazpts,nfreq,'single');
+        tvol(a).beam=zeros(spts,bazpts,nfreq,'single');
         
         % warning if no frequencies
         if(~nfreq)
@@ -435,15 +449,6 @@ try
             % current freq idx
             cf=fidx(b);
             
-            % get response
-            % - Following Koper, Seats, and Benz 2010 in BSSA
-            %   by only using the real component.  This matches
-            %   best with the beam from doing a 'center' style
-            %   beam like the Gerstoft group does but gives
-            %   slightly better results (at the cost of (N-1)/2
-            %   times more operations).  This is required when
-            %   using correlation datasets.
-            
             % rotate data into direction of plane wave for every pairing
             data=u.*u.*rr(cf*ones(1,spts*bazpts),:) ...
                 -u.*v.*rt(cf*ones(1,spts*bazpts),:) ...
@@ -456,9 +461,9 @@ try
             % apply weights
             data=data.*w(ones(1,spts*bazpts),:);
             
-            % now getting fk response for radial (rayleigh)
-            rvol(a).response(:,:,b)=reshape(10*log10(abs(real(...
-                sum(data.*exp(f(cf)*p),2)))/sw),spts,bazpts);
+            % now getting fk beam for radial (rayleigh)
+            rvol(a).beam(:,:,b)=reshape(10*log10(abs(real(...
+                sum(data.*exp(f(cf)*p),2)))),spts,bazpts);
             
             % rotate data perpendicular to plane wave direction for all
             data=v.*v.*rr(cf*ones(1,spts*bazpts),:) ...
@@ -472,19 +477,19 @@ try
             % apply weights
             data=data.*w(ones(1,spts*bazpts),:);
             
-            % now getting fk response for tangential (love)
-            tvol(a).response(:,:,b)=reshape(10*log10(abs(real(...
-                sum(data.*exp(f(cf)*p),2)))/sw),spts,bazpts);
+            % now getting fk beam for tangential (love)
+            tvol(a).beam(:,:,b)=reshape(10*log10(abs(real(...
+                sum(data.*exp(f(cf)*p),2)))),spts,bazpts);
             
             % detail message
             if(verbose); print_time_left(b,nfreq); end
         end
         
         % normalize so max peak is at 0dB
-        rvol(a).normdb=max(rvol(a).response(:));
-        rvol(a).response=rvol(a).response-rvol(a).normdb;
-        tvol(a).normdb=max(tvol(a).response(:));
-        tvol(a).response=tvol(a).response-tvol(a).normdb;
+        rvol(a).normdb=max(rvol(a).beam(:));
+        rvol(a).beam=rvol(a).beam-rvol(a).normdb;
+        tvol(a).normdb=max(tvol(a).beam(:));
+        tvol(a).beam=tvol(a).beam-tvol(a).normdb;
         
         % plot if no output
         if(~nargout)

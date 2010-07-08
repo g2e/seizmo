@@ -5,6 +5,7 @@ function [varargout]=geofkfreqslide(vol,frng,srng,delay,varargin)
 %              geofkfreqslide(vol,frng)
 %              geofkfreqslide(vol,frng,srng)
 %              geofkfreqslide(vol,frng,srng,delay)
+%              geofkfreqslide(vol,frng,srng,delay,projopt)
 %              geofkfreqslide(vol,frng,srng,delay,projopt,dblim)
 %              geofkfreqslide(vol,frng,srng,delay,projopt,dblim,zerodb)
 %              geofkfreqslide(vol,frng,srng,delay,projopt,dblim,zerodb,...
@@ -32,26 +33,31 @@ function [varargout]=geofkfreqslide(vol,frng,srng,delay,varargin)
 %     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY) specifies the delay between the
 %     plotting of each frequency in seconds.  The default DELAY is 0.33s.
 %
-%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM) sets the dB limits for
-%     coloring the response info.  The default is [-12 0] for the default
+%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT) allows passing options to
+%     M_PROJ.  See M_PROJ('SET') for possible projections and see
+%     M_PROJ('GET',PROJ) for a list of possible additional options specific
+%     to that projection.
+%
+%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM) sets the dB limits
+%     for coloring the beam data.  The default is [-12 0] for the default
 %     ZERODB (see next Usage form).  If ZERODB IS 'min' or 'median', the
 %     default DBLIM is [0 12].  DBLIM must be a real-valued 2-element
 %     vector.
 %
-%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM,ZERODB) changes what 0dB
-%     corresponds to in the plot.  The allowed values are 'min', 'max',
+%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB) changes what
+%     0dB corresponds to in the plot.  The allowed values are 'min', 'max',
 %     'median', & 'abs'.  The default is 'max'.
 %
-%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM,ZERODB,FGCOLOR,BGCOLOR)
-%     specifies the foreground and background colors of the plot.  The
-%     default is 'w' for FGCOLOR and 'k' for BGCOLOR.  Note that if one is
-%     specified and the other is not, an opposing color is found using
+%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB,FGCOLOR,...
+%     BGCOLOR) specifies the foreground and background colors of the plot. 
+%     The default is 'w' for FGCOLOR and 'k' for BGCOLOR.  Note that if one
+%     is specified and the other is not, an opposing color is found using
 %     INVERTCOLOR.  The color scale is also changed so the noise clip is at
 %     BGCOLOR.
 %
-%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM,ZERODB,FGCOLOR,BGCOLOR,AX)
-%     sets the axes that the map is drawn in.  This is useful for subplots,
-%     guis, etc.
+%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB,FGCOLOR,...
+%     BGCOLOR,AX) sets the axes that the map is drawn in.  This is useful
+%     for subplots, guis, etc.
 %
 %     MOV=GEOFKFREQSLIDE(...) creates a Matlab movie MOV.  This can played
 %     using the function MOVIE.  See MOVIE2AVI for exporting as an AVI
@@ -66,9 +72,10 @@ function [varargout]=geofkfreqslide(vol,frng,srng,delay,varargin)
 
 %     Version History:
 %        June 25, 2010 - initial version
+%        July  6, 2010 - update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2010 at 15:00 GMT
+%     Last Updated July  6, 2010 at 19:05 GMT
 
 % todo:
 
@@ -81,7 +88,7 @@ error(chkgeofkstruct(vol));
 % don't allow array/volume
 if(~isscalar(vol) || ~all(vol.volume))
     error('seizmo:geofkfreqslide:badInput',...
-        'VOL must be a scalar geofk struct and a volume response!');
+        'VOL must be a scalar geofk struct and a beam volume!');
 end
 
 % do we make the movie
@@ -113,8 +120,8 @@ end
 vol=geofksubvol(vol,frng,srng);
 
 % average across slowness
-nslow=size(vol.response,2);
-vol.response=sum(vol.response,2)/nslow;
+nslow=size(vol.beam,2);
+vol.beam=sum(vol.beam,2)/nslow;
 vol.volume(1)=false;
 
 % get frequencies

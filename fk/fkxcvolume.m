@@ -1,11 +1,11 @@
 function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
-%FKXCVOLUME    Returns energy map in frequency-wavenumber space for xc data
+%FKXCVOLUME    Returns beam map in frequency-wavenumber space for xc data
 %
 %    Usage:    svol=fkxcvolume(xcdata,smax,spts,frng)
 %              svol=fkxcvolume(xcdata,smax,spts,frng,polar)
 %              svol=fkxcvolume(xcdata,smax,spts,frng,polar,weights)
 %
-%    Description: SVOL=FKXCVOLUME(XCDATA,SMAX,SPTS,FRNG) calculates the
+%    Description: SVOL=FKXCVOLUME(XCDATA,SMAX,SPTS,FRNG) beamforms the wave
 %     energy moving through an array in frequency-wavenumber space.
 %     Actually, to allow for easier interpretation between frequencies,
 %     the energy is mapped into frequency-slowness space.  The array info
@@ -21,7 +21,7 @@ function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
 %     for both directions (SPTSxSPTS grid).  FRNG gives the frequency range
 %     as [FREQLOW FREQHIGH] in Hz.  SVOL is a struct containing relevant
 %     info and the frequency-slowness volume itself.  The struct layout is:
-%          .response - frequency-slowness array response
+%          .beam     - frequency-slowness beamforming volume
 %          .nsta     - number of stations utilized in making map
 %          .stla     - station latitudes
 %          .stlo     - station longitudes
@@ -33,11 +33,14 @@ function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
 %          .delta    - number of seconds between each time point
 %          .x        - east/west slowness or azimuth values
 %          .y        - north/south or radial slowness values
-%          .z        - frequency values
-%          .polar    - true if slowness is sampled in polar coordinates 
-%          .center   - array center or method
+%          .freq     - frequency values
+%          .polar    - true if slowness is sampled in polar coordinates
+%          .npairs   - number of pairs (aka correlograms)
+%          .method   - beamforming method (center, coarray, full, user)
+%          .center   - array center as [lat lon]
 %          .normdb   - what 0dB actually corresponds to
 %          .volume   - true if frequency-slowness volume (false for FKMAP)
+%          .weights  - weights used in beamforming
 %
 %     Calling FKXCVOLUME with no outputs will automatically plot the
 %     frequency-slowness volume using FKFREQSLIDE.
@@ -50,17 +53,17 @@ function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
 %     directions and so exhibits less distortion of the slowness space.
 %     
 %     SVOL=FKXCVOLUME(XCDATA,SMAX,SPTS,FRNG,POLAR,WEIGHTS) specifies
-%     weights for each correlogram in XCDATA (must match size of XCDATA).
-%     The weights are normalized internally to sum to 1.
+%     weights for each correlogram in XCDATA (must match size of XCDATA)
+%     for use in beamforming.  The weights are normalized internally to sum
+%     to 1.
 %
 %    Notes:
 %     - Records in XCDATA must be correlograms following the formatting
 %       from CORRELATE.  The records must have the same lag range & sample
 %       spacing.
 %     - Best/quickest results are obtained when XCDATA is only one
-%       "triangle" of the cross correlation matrix.
-%     - The CENTER option (from FKVOLUME) is essentially 'coarray' here and
-%       cannot be changed.
+%       "triangle" of the cross correlation matrix.  This corresponds to
+%       the 'coarray' method from FKVOLUME.
 %
 %    Examples:
 %     Show frequency-slowness volume for a dataset at 20-50s periods:
@@ -80,9 +83,10 @@ function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
 %                        just one triangle), fix see also section
 %        June 18, 2010 - add weights
 %        July  1, 2010 - high latitude fix
+%        July  6, 2010 - major update to struct, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  1, 2010 at 14:05 GMT
+%     Last Updated July  6, 2010 at 15:25 GMT
 
 % todo:
 
@@ -102,7 +106,7 @@ ncorr=numel(data);
 % defaults for optionals
 if(nargin<5 || isempty(polar)); polar=false; end
 if(nargin<6 || isempty(w)); w=ones(numel(data),1); end
-center='coarray';
+method='coarray';
 
 % check inputs
 sf=size(frng);
@@ -124,9 +128,9 @@ elseif(numel(w)~=ncorr || any(w(:)<0) ||  ~isreal(w) || sum(w(:))==0)
 end
 nrng=sf(1);
 
-% convert weights to column vector
+% convert weights to column vector and normalize
 w=w(:);
-sw=sum(w);
+w=w./sum(w);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -166,6 +170,9 @@ try
     loc=unique([st; ev],'rows');
     nsta=size(loc,1);
     
+    % array center
+    [clat,clon]=arraycenter([st(:,1); ev(:,1)],[st(:,2); ev(:,2)]);
+    
     % check nyquist
     fnyq=1/(2*delta(1));
     if(any(frng>=fnyq))
@@ -185,8 +192,11 @@ try
     [svol(1:nrng,1).delta]=deal(delta(1));
     [svol(1:nrng,1).npts]=deal(npts(1));
     [svol(1:nrng,1).polar]=deal(polar);
-    [svol(1:nrng,1).center]=deal(center);
+    [svol(1:nrng,1).npairs]=deal(ncorr);
+    [svol(1:nrng,1).method]=deal(method);
+    [svol(1:nrng,1).center]=deal([clat clon]);
     [svol(1:nrng,1).volume]=deal(true);
+    [svol(1:nrng,1).weights]=deal(w);
     
     % get frequencies (note no extra power for correlations)
     nspts=2^nextpow2(npts(1));
@@ -202,7 +212,7 @@ try
     % - this is the true cross spectra
     data=conj(fft(data,nspts,1));
     
-    % get relative positions of center
+    % get relative positions for each pair
     % r=(x  ,y  )
     %     ij  ij
     %
@@ -210,27 +220,26 @@ try
     % x is km east
     % y is km north
     %
-    % r is 2xNCORR
-    [clat,clon]=arraycenter(loc(:,1),loc(:,2));
+    % r is a 2xNCORR matrix
     [e_ev,n_ev]=geographic2enu(ev(:,1),ev(:,2),0,clat,clon,0);
     [e_st,n_st]=geographic2enu(st(:,1),st(:,2),0,clat,clon,0);
     r=[e_st-e_ev n_st-n_ev]';
     clear e_ev e_st n_ev n_st
     
-    % make projection array
+    % get phasors corresponding to each wave speed+direction (slowness)
+    % to slant stack in the frequency domain
     % p=2*pi*i*s*r
     %
-    % where s is the slowness vector s=(s ,s ) and is NSx2
+    % where s is the slowness vector s=(s ,s ) and is NSLOWx2
     %                                    x  y
     %
-    % Note s is actually a collection of slowness vectors who
-    % correspond to the slownesses that we want to inspect in
-    % the fk analysis.  So p is actually the projection of all
-    % slownesses onto all of the position vectors (multiplied
-    % by 2*pi*i so we don't have to do that for each frequency
-    % later)
+    % x is sec/km east
+    % y is sec/km north
     %
-    % p is NSxNCORR
+    % p is the projection of all slownesses onto all of the position
+    % vectors (multiplied by 2*pi*i for efficiency reasons)
+    %
+    % p is NSLOWxNPAIRS
     smax=smax/d2km;
     if(polar)
         if(numel(spts)==2)
@@ -262,11 +271,11 @@ try
     for a=1:nrng
         % get frequencies
         fidx=find(f>=frng(a,1) & f<=frng(a,2));
-        svol(a).z=f(fidx);
+        svol(a).freq=f(fidx);
         nfreq=numel(fidx);
         
         % preallocate fk space
-        svol(a).response=zeros(spts,bazpts,nfreq,'single');
+        svol(a).beam=zeros(spts,bazpts,nfreq,'single');
         
         % warning if no frequencies
         if(~nfreq)
@@ -295,11 +304,11 @@ try
         
         % loop over frequencies
         for b=1:nfreq
-            % get response
+            % form beam & convert to dB
             % - following Koper, Seats, and Benz 2010 in BSSA
             %   by only using the real component
-            svol(a).response(:,:,b)=reshape(...
-                10*log10(abs(real(exp(f(fidx(b))*p)*cs(:,b)))/sw),...
+            svol(a).beam(:,:,b)=reshape(...
+                10*log10(abs(real(exp(f(fidx(b))*p)*cs(:,b)))),...
                 spts,bazpts);
             
             % detail message
@@ -307,8 +316,8 @@ try
         end
         
         % normalize so max peak is at 0dB
-        svol(a).normdb=max(svol(a).response(:));
-        svol(a).response=svol(a).response-svol(a).normdb;
+        svol(a).normdb=max(svol(a).beam(:));
+        svol(a).beam=svol(a).beam-svol(a).normdb;
         
         % plot if no output
         if(~nargout); fkfreqslide(svol(a)); drawnow; end

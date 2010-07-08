@@ -5,7 +5,7 @@ function [mindb,meddb,maxdb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
 %             [mindb,meddb,maxdb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
 %
 %    Description: [MINDB,MEDDB,MAXDB]=FKDBINFO(FK) returns the limits and
-%     median of the response(s) in FK in decibels.  This is useful for
+%     median of the beam(s) in FK in decibels.  This is useful for
 %     quick identification of elements with strong plane wave coherency.
 %
 %     [MINDB,MEDDB,MAXDB]=FKDBINFO(FK,FRNG,BAZRNG,SRNG,ESRNG,NSRNG) returns
@@ -32,9 +32,10 @@ function [mindb,meddb,maxdb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
 %        May  26, 2010 - initial version
 %        June 30, 2010 - added range arguments
 %        July  1, 2010 - range bugfix
+%        July  6, 2010 - update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  1, 2010 at 17:05 GMT
+%     Last Updated July  6, 2010 at 16:45 GMT
 
 % todo:
 
@@ -104,9 +105,9 @@ for i=1:numel(fk)
     % get extraction indices
     if(fk(i).volume)
         if(isempty(frng))
-            fidx=true(1,numel(fk(i).z));
+            fidx=true(1,numel(fk(i).freq));
         else
-            fidx=fk(i).z>=frng(1) & fk(i).z<=frng(2);
+            fidx=fk(i).freq>=frng(1) & fk(i).freq<=frng(2);
         end
     else
         if(~isempty(frng))
@@ -139,7 +140,7 @@ for i=1:numel(fk)
     % subsection
     idx=repmat(bazidx & sidx & esidx & nsidx,[1 1 numel(fidx)]);
     idx(:,:,~fidx)=false;
-    sub=fk(i).response(idx);
+    sub=fk(i).beam(idx);
     
     % stats
     mindb(i)=min(sub(:))+fk(i).normdb;

@@ -1,5 +1,5 @@
 % Seismology Toolbox - cmap
-% Version 0.6.0-r140 Dhaulagiri 27-May-2010
+% Version 0.6.0-r150 Everest 8-July-2010
 %
 % Various Colormaps
 %BLUE2RED     - Blue-White-Red (aka Polar) colormap

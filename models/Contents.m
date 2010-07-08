@@ -1,5 +1,5 @@
 % Seismology Toolbox - models
-% Version 0.6.0-r140 Dhaulagiri 27-May-2010
+% Version 0.6.0-r150 Everest 8-July-2010
 %
 % 1D/3D Earth model functions
 %AK135               - Returns the AK135 Earth model

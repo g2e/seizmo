@@ -4,7 +4,7 @@ function [vol]=geofksubvol(vol,frng,srng,latrng,lonrng)
 %    Usage:    vol=geofksubvol(vol,frng,srng,latrng,lonrng)
 %
 %    Description: VOL=GEOFKSUBVOL(VOL,FRNG,SRNG,LATRNG,LONRNG) extracts the
-%     geofk response data in VOL for the ranges given by FRNG, SRNG,
+%     geofk beam data in VOL for the ranges given by FRNG, SRNG,
 %     LATRNG, & LONRNG and returns the reduced volume with all pertinent
 %     info updated.  VOL is a geofk struct (see GEOFKXCVOLUME for details).
 %     FRNG gives the frequency range to extract as [FREQLOW FREQHIGH] in
@@ -12,7 +12,7 @@ function [vol]=geofksubvol(vol,frng,srng,latrng,lonrng)
 %     degree as [SLOWLOW SLOWHIGH].  LATRNG & LONRNG provide the parallels
 %     and meridians that define a window in the geographic domain and they
 %     are expected to be in degrees as [LOW HIGH].  Note that longitudes in
-%     the response positions will be wrapped so all possible points are
+%     the beam data positions will be wrapped so all possible points are
 %     included in the LONRNG.
 %
 %     By default all ranges are set to [] (full range).
@@ -34,9 +34,10 @@ function [vol]=geofksubvol(vol,frng,srng,latrng,lonrng)
 
 %     Version History:
 %        June 25, 2010 - initial version
+%        July  6, 2010 - update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2010 at 14:50 GMT
+%     Last Updated July  6, 2010 at 19:05 GMT
 
 % todo:
 
@@ -49,7 +50,7 @@ error(chkgeofkstruct(vol));
 % don't allow map
 if(any(~sum(reshape([vol.volume],[2 numel(vol)]))))
     error('seizmo:geofksubvol:badInput',...
-        'VOL must be a geofk volume response!');
+        'VOL must be a geofk beam volume!');
 end
 
 % check frequency range
@@ -149,11 +150,11 @@ for i=1:numel(vol)
     lonidx=vol(i).latlon(:,2)>=lonmin & vol(i).latlon(:,2)<=lonmax;
     
     % extract subvolume
-    vol(i).response=vol(i).response(latidx & lonidx,sidx,fidx);
+    vol(i).beam=vol(i).beam(latidx & lonidx,sidx,fidx);
     
     % update info
-    maxdb=max(vol(i).response(:));
-    vol(i).response=vol(i).response-maxdb;
+    maxdb=max(vol(i).beam(:));
+    vol(i).beam=vol(i).beam-maxdb;
     vol(i).normdb=vol(i).normdb+maxdb;
     if(vol(i).volume(2))
         vol(i).freq=vol(i).freq(fidx);

@@ -1,4 +1,4 @@
-function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
+function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,method)
 %FKARF    Returns the fk array response function for a seismic array
 %
 %    Usage:    fkarf(stla,stlo,smax)
@@ -6,7 +6,7 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
 %              fkarf(stla,stlo,smax,spts,s,baz)
 %              fkarf(stla,stlo,smax,spts,s,baz,f)
 %              fkarf(stla,stlo,smax,spts,s,baz,f,polar)
-%              fkarf(stla,stlo,smax,spts,s,baz,f,polar,center)
+%              fkarf(stla,stlo,smax,spts,s,baz,f,polar,method)
 %              arf=fkarf(...)
 %
 %    Description: FKARF(STLA,STLO,SMAX) shows the array response function
@@ -40,20 +40,23 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
 %     regularly in the East/West & North/South directions and so exhibits
 %     less distortion of the slowness space.
 %
-%     FKARF(STLA,STLO,SMAX,SPTS,S,BAZ,F,POLAR,CENTER) defines the array
-%     center.  CENTER may be [LAT LON], 'center', 'coarray', or 'full'.
-%     The default is 'coarray'.  The 'center' option finds the center
-%     position of the array by averaging the station positions (using
-%     ARRAYCENTER).  Both 'coarray' and 'full' are essentially centerless
-%     methods using the relative positioning between every possible pairing
-%     of stations in the array.  The 'full' method includes redundant and
-%     same station pairings (and will always give poorer results compared
-%     to 'coarray').
+%     FKARF(STLA,STLO,SMAX,SPTS,S,BAZ,F,POLAR,METHOD) defines the
+%     beamforming method.  METHOD may be 'center', 'coarray', 'full', or
+%     [LAT LON].  The default is 'coarray' which utilizes information from
+%     all unique record pairings in the beamforming and is the default.
+%     The 'full' method will utilize all possible pairings including
+%     pairing records with themselves and pairing records as (1st, 2nd) &
+%     (2nd, 1st) making this method quite redundant and slow.  The 'center'
+%     option only pairs each record against the array center (found using
+%     ARRAYCENTER) and is extremely fast for large arrays compared to the
+%     'coarray' & 'full' methods.  Both 'center' and 'full' methods give
+%     slightly degraded results compared to 'coarray'.  Using [LAT LON] for
+%     method is essentially the same as the 'center' method but uses the
+%     defined coordinates as the center for the array.
 %
 %     ARF=FKARF(...) returns the array response function in struct ARF
-%     without plotting it.  This is useful for stacking ARFs for a multiple
-%     plane wave response.  ARF has the following fields:
-%      ARF.response  --  the array response
+%     without plotting it.  ARF has the following fields:
+%      ARF.beam      --  the array beam response function
 %      ARF.nsta      --  number of stations
 %      ARF.stla      --  station latitudes
 %      ARF.stlo      --  station longitudes
@@ -64,7 +67,9 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
 %      ARF.baz       --  plane wave backazimuths
 %      ARF.f         --  plane wave frequencies
 %      ARF.polar     --  true if slowness is sampled in polar coordinates
-%      ARF.center    --  array center or method
+%      ARF.npairs    --  number of pairs
+%      ARF.method    --  beamforming method (center, coarray, full, user)
+%      ARF.center    --  array center as [LAT LON]
 %      ARF.normdb    --  what 0dB actually corresponds to
 %
 %    Notes:
@@ -87,14 +92,18 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,center)
 %        May   1, 2010 - initial version
 %        May   3, 2010 - show slowness nyquist ring, doc update
 %        May   4, 2010 - circle is its own function now
-%        May   7, 2010 - only doing one triangle gives better response and
+%        May   7, 2010 - only doing one triangle gives better beam and
 %                        takes less than half the time
 %        May  10, 2010 - added in options available to FKMAP
 %        May  18, 2010 - minor doc touch
 %        June 16, 2010 - fixed nargchk, improved see also section and notes
+%        July  6, 2010 - major update to struct, doc update, high latitude
+%                        fix, arf data is now single precision
+%        July  7, 2010 - center/user method for multi-plane wave ARF now is
+%                        fixed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 14:00 GMT
+%     Last Updated July  7, 2010 at 14:40 GMT
 
 % todo:
 
@@ -111,10 +120,10 @@ if(nargin<5 || isempty(s0)); s0=0; end
 if(nargin<6 || isempty(baz0)); baz0=0; end
 if(nargin<7 || isempty(f0)); f0=1; end
 if(nargin<8 || isempty(polar)); polar=false; end
-if(nargin<9 || isempty(center)); center='coarray'; end
+if(nargin<9 || isempty(method)); method='coarray'; end
 
-% valid center strings
-valid.CENTER={'center' 'coarray' 'full'};
+% valid method strings
+valid.METHOD={'center' 'coarray' 'full'};
 
 % check inputs
 if(~isreal(stla) || ~isreal(stlo) || ~isequalsizeorscalar(stla,stlo))
@@ -141,10 +150,10 @@ elseif(~isequalsizeorscalar(s0,baz0,f0))
 elseif(~isscalar(polar) || (~islogical(polar) && ~isnumeric(polar)))
     error('seizmo:fkarf:badInput',...
         'POLAR must be TRUE or FALSE!');
-elseif((isnumeric(center) && (~isreal(center) || ~numel(center)==2)) ...
-        || (ischar(center) && ~any(strcmpi(center,valid.CENTER))))
+elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
+        || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
     error('seizmo:fkarf:badInput',...
-        'CENTER must be [LAT LON], ''CENTER'', ''COARRAY'' or ''FULL''');
+        'METHOD must be [LAT LON], ''CENTER'', ''COARRAY'' or ''FULL''');
 end
 
 % number of stations
@@ -176,28 +185,39 @@ arf.s=s0;
 arf.baz=baz0;
 arf.f=f0;
 arf.polar=polar;
-arf.center=center;
 
-% fix center
-if(ischar(center))
-    center=lower(center);
+% fix method/center
+if(ischar(method))
+    method=lower(method);
+    [clat,clon]=arraycenter(stla,stlo);
+    switch method
+        case 'coarray'
+            npairs=nrecs*(nrecs-1)/2;
+        case 'full'
+            npairs=nrecs*nrecs;
+        case 'center'
+            npairs=nrecs;
+    end
 else
-    clat=center(1);
-    clon=center(2);
-    center='user';
+    clat=method(1);
+    clon=method(2);
+    method='user';
+    npairs=nrecs;
 end
+arf.npairs=npairs;
+arf.method=method;
+arf.center=[clat clon];
 
-% get relative positions from center
+% get relative positions for each pair
 % r=(x  ,y  )
 %     ij  ij
 %
 % x is km east
 % y is km north
 %
-% r is 2xNR
-switch center
+% r is a 2xNPAIRS matrix
+switch method
     case 'coarray'
-        % centerless (make coarray)
         % [ r   r   ... r
         %    11  12      1N
         %   r   r   ... r
@@ -207,36 +227,44 @@ switch center
         %    .   .    .  .
         %   r   r   ... r   ]
         %    N1  N2      NN
-        [dist,az]=vincentyinv(...
-            stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))',...
-            stla(:,ones(nrecs,1)),stlo(:,ones(nrecs,1)));
+        %
+        % then we just use the
+        % upper triangle of that
+        [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
+        e=e(:,ones(nrecs,1))'-e(:,ones(nrecs,1));
+        n=n(:,ones(nrecs,1))'-n(:,ones(nrecs,1));
         idx=triu(true(nrecs),1);
-        dist=dist(idx);
-        az=az(idx);
+        e=e(idx);
+        n=n(idx);
     case 'full'
-        % centerless too
-        [dist,az]=vincentyinv(...
-            stla(:,ones(nrecs,1))',stlo(:,ones(nrecs,1))',...
-            stla(:,ones(nrecs,1)),stlo(:,ones(nrecs,1)));
+        % retain full coarray
+        [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
+        e=e(:,ones(nrecs,1))'-e(:,ones(nrecs,1));
+        n=n(:,ones(nrecs,1))'-n(:,ones(nrecs,1));
     case 'center'
-        % get array center
-        [clat,clon]=arraycenter(stla,stlo);
-        [dist,az]=vincentyinv(clat,clon,stla,stlo);
+        % each record relative to array center
+        [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
     otherwise % user
-        % array center was specified
-        [dist,az]=vincentyinv(clat,clon,stla,stlo);
+        % each record relative to defined array center
+        [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
 end
-az=az*d2r;
-r=[dist(:).*sin(az(:)) dist(:).*cos(az(:))]';
-nidx=size(r,2);
-clear dist az
+r=[e(:) n(:)]';
+clear e n
 
-% make projection arrays
+% get phasors corresponding to each wave speed+direction (slowness)
+% to slant stack in the frequency domain
 % p=2*pi*i*s*r
 %
-% where s is the slowness vector s=(s ,s ) and is NSx2
+% where s is the slowness vector s=(s ,s ) and is NSLOWx2
 %                                    x  y
-% p is NSxNR
+%
+% x is sec/km east
+% y is sec/km north
+%
+% p is the projection of all slownesses onto all of the position
+% vectors (multiplied by 2*pi*i for efficiency reasons)
+%
+% p is NSLOWxNPAIRS
 smax=smax/d2km;
 if(polar)
     if(numel(spts)==2)
@@ -253,7 +281,7 @@ if(polar)
     baz=baz(ones(spts,1),:);
     p=2*pi*1i*[smag(:).*sin(baz(:)) smag(:).*cos(baz(:))]*r;
     clear smag baz
-    arf.response=zeros(spts,bazpts);
+    arf.beam=zeros(spts,bazpts,'single');
 else % cartesian
     spts=spts(1);
     sx=-smax:2*smax/(spts-1):smax;
@@ -263,17 +291,17 @@ else % cartesian
     sy=fliplr(sx)';
     p=2*pi*1i*[sx(:) sy(:)]*r;
     clear sx sy
-    arf.response=zeros(spts);
+    arf.beam=zeros(spts,'single');
 end
 ns=size(p,1);
 
-% offset projection by plane wave locations
+% slowness offsets based on plane wave locations
 s=2*pi*1i*[s0(:).*sin(d2r*baz0(:)) s0(:).*cos(d2r*baz0(:))]/d2km;
 
 % detail message
 verbose=seizmoverbose;
 if(verbose)
-    fprintf('Getting fk Map for plane wave at:\n');
+    fprintf('Getting fk ARF for plane wave at:\n');
 end
 
 % loop over plane waves
@@ -288,38 +316,34 @@ for a=1:npw
     p0=s(a,:)*r;
     p0=p0(ones(ns,1),:);
 
-    % get response
-    switch center
+    % get beam
+    switch method
         case {'full' 'coarray'}
-            arf.response(:)=arf.response(:)...
-                +sum(exp(f0(a)*(p-p0)),2);
+            arf.beam(:)=arf.beam(:)+sum(exp(f0(a)*(p-p0)),2);
         otherwise
-            arf.response(:)=arf.response(:)...
-                +10*log10(abs(sum(exp(f0(a)*(p-p0)),2)).^2/nidx);
+            arf.beam(:)=arf.beam(:)+abs(sum(exp(f0(a)*(p-p0)),2)).^2;
     end
 end
 
 % convert to dB
-switch center
+switch method
     case {'full' 'coarray'}
         % using full and real here gives the exact plots of
         % Koper, Seats, and Benz 2010 in BSSA
-        arf.response=...
-            10*log10(abs(real(arf.response))/(npw*nidx));
+        arf.beam=10*log10(abs(real(arf.beam))/(npw*npairs));
     otherwise
-        arf.response=arf.response/npw;
+        arf.beam=10*log10(arf.beam/(npw*npairs));
 end
 
 % normalize so max peak is at 0dB
-arf.normdb=max(arf.response(:));
-arf.response=arf.response-arf.normdb;
+arf.normdb=max(arf.beam(:));
+arf.beam=arf.beam-arf.normdb;
 
 % return if output
 if(nargout)
     varargout{1}=arf;
     return;
 else
-    figure;
     plotfkarf(arf);
 end
 

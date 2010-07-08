@@ -1,16 +1,16 @@
-function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
-%PLOTGEOFKMAP    Plots frequency-slowness-position beam data
+function [varargout]=plotgeofkarf(arf,popt,dblim,zerodb,fgcolor,bgcolor,ax)
+%PLOTGEOFKARF    Plots geofk array response
 %
-%    Usage:    plotgeofkmap(map)
-%              plotgeofkmap(map,projopt)
-%              plotgeofkmap(map,projopt,dblim)
-%              plotgeofkmap(map,projopt,dblim,zerodb)
-%              plotgeofkmap(map,projopt,dblim,zerodb,fgcolor,bgcolor)
-%              plotgeofkmap(map,projopt,dblim,zerodb,fgcolor,bgcolor,ax)
-%              ax=plotgeofkmap(...)
+%    Usage:    plotgeofkarf(arf)
+%              plotgeofkarf(arf,projopt)
+%              plotgeofkarf(arf,projopt,dblim)
+%              plotgeofkarf(arf,projopt,dblim,zerodb)
+%              plotgeofkarf(arf,projopt,dblim,zerodb,fgcolor,bgcolor)
+%              plotgeofkarf(arf,projopt,dblim,zerodb,fgcolor,bgcolor,ax)
+%              ax=plotgeofkarf(...)
 %
-%    Description: PLOTGEOFKMAP(MAP) plots the frequency-slowness-position
-%     beam data in geofk struct MAP.  See a geofk function like
+%    Description: PLOTGEOFKARF(ARF) plots the frequency-slowness-position
+%     beam data in geofk struct ARF.  See a geofk function like
 %     GEOFKXCVOLUME for details on the struct.  The data is plotted on a
 %     map with a Hammer-Aitoff projection and the map limits are scaled to
 %     fit the beam data & station positions.  Note that the beam data
@@ -18,49 +18,42 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %     MESHGRID).  This plots GSHHS coastlines and borders in low-resolution
 %     which may take a few moments - please be patient.
 %
-%     PLOTGEOFKMAP(MAP,PROJOPT) allows passing options to M_PROJ.  See
+%     PLOTGEOFKARF(ARF,PROJOPT) allows passing options to M_PROJ.  See
 %     M_PROJ('SET') for possible projections and See M_PROJ('GET',PROJ) for
 %     a list of possible additional options specific to that projection.
 %
-%     PLOTGEOFKMAP(MAP,PROJOPT,DBLIM) sets the dB limits for coloring the
+%     PLOTGEOFKARF(ARF,PROJOPT,DBLIM) sets the dB limits for coloring the
 %     response info.  The default is [-12 0] for the default ZERODB (see
 %     next Usage form).  If ZERODB IS 'min' or 'median', the default DBLIM
 %     is [0 12].  DBLIM must be a real-valued 2-element vector.
 %
-%     PLOTGEOFKMAP(MAP,PROJOPT,DBLIM,ZERODB) changes what 0dB corresponds
+%     PLOTGEOFKARF(ARF,PROJOPT,DBLIM,ZERODB) changes what 0dB corresponds
 %     to in the plot.  The allowed values are 'min', 'max', 'median', &
 %     'abs'.  The default is 'max'.
 %
-%     PLOTGEOFKMAP(MAP,PROJOPT,DBLIM,ZERODB,FGCOLOR,BGCOLOR) specifies
+%     PLOTGEOFKARF(ARF,PROJOPT,DBLIM,ZERODB,FGCOLOR,BGCOLOR) specifies
 %     foreground and background colors of the plot.  The default is 'w' for
 %     FGCOLOR & 'k' for BGCOLOR.  Note that if one is specified and the
 %     other is not, an opposing color is found using INVERTCOLOR.  The
 %     color scale is also changed so the noise clip is at BGCOLOR.
 %
-%     PLOTGEOFKMAP(MAP,PROJOPT,DBLIM,ZERODB,FGCOLOR,BGCOLOR,AX) sets the
+%     PLOTGEOFKARF(ARF,PROJOPT,DBLIM,ZERODB,FGCOLOR,BGCOLOR,AX) sets the
 %     axes to draw in.  This is useful for subplots, guis, etc.
 %
-%     AX=PLOTGEOFKMAP(...)
+%     AX=PLOTGEOFKARF(...)
 %
 %    Notes:
 %
 %    Examples:
-%     In search of the 26s microseism:
-%      [lat,lon]=meshgrid(-60:60,-60:60);
-%      zgeo=geofkxcvolume(xcdata,[lat(:) lon(:)],27:33,[1/26.3 1/26]);
-%      zgeo0=geofkvol2map(zgeo);
-%      plotgeofkmap(zgeo0);
 %
-%    See also: GEOFKFREQSLIDE, GEOFKSLOWSLIDE, GEOFKVOL2MAP, GEOFKXCVOLUME,
-%              GEOFKXCHORZVOLUME, CHKGEOFKSTRUCT, UPDATEGEOFKMAP
+%    See also: GEOFKARF, GEOFKARF2MAP, GEOFKSUBARF, UPDATEGEOFKARF,
+%              GEOFKARFSLOWSLIDE, CHKGEOFKARFSTRUCT
 
 %     Version History:
-%        June 25, 2010 - initial version
-%        July  1, 2010 - no land cover
-%        July  6, 2010 - update for new struct
+%        July  7, 2010 - update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 19:05 GMT
+%     Last Updated July  7, 2010 at 18:25 GMT
 
 % todo:
 
@@ -68,19 +61,19 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 error(nargchk(1,7,nargin));
 
 % check fk struct
-error(chkgeofkstruct(map));
+error(chkgeofkarfstruct(arf));
 
 % don't allow array/volume
-if(~isscalar(map) || any(map.volume))
-    error('seizmo:plotgeofkmap:badInput',...
-        'MAP must be a scalar geofk struct and not a volume!');
+if(~isscalar(arf) || any(arf.volume))
+    error('seizmo:plotgeofkarf:badInput',...
+        'ARF must be a scalar geofk struct and not a volume!');
 end
 
 % default/check scaling type
 if(nargin<3 || isempty(zerodb)); zerodb='max'; end
 if(~ischar(zerodb) ...
         || ~ismember(lower(zerodb),{'max' 'min' 'median' 'abs'}))
-    error('seizmo:plotgeofkmap:badSTYPE',...
+    error('seizmo:plotgeofkarf:badSTYPE',...
         'STYPE must be ''min'' ''max'' ''median'' or ''abs''!');
 end
 zerodb=lower(zerodb);
@@ -95,7 +88,7 @@ if(nargin<3 || isempty(dblim))
     end
 end
 if(~isreal(dblim) || numel(dblim)~=2)
-    error('seizmo:plotgeofkmap:badDBLIM',...
+    error('seizmo:plotgeofkarf:badDBLIM',...
         'DBLIM must be a real valued 2 element vector!');
 end
 dblim=sort([dblim(1) dblim(2)]);
@@ -103,17 +96,17 @@ dblim=sort([dblim(1) dblim(2)]);
 % rescale response
 switch zerodb
     case 'min'
-        map.normdb=map.normdb+min(map.beam(:));
-        map.beam=map.beam-min(map.beam(:));
+        arf.normdb=arf.normdb+min(arf.beam(:));
+        arf.beam=arf.beam-min(arf.beam(:));
     case 'max'
-        map.normdb=map.normdb+max(map.beam(:));
-        map.beam=map.beam-max(map.beam(:));
+        arf.normdb=arf.normdb+max(arf.beam(:));
+        arf.beam=arf.beam-max(arf.beam(:));
     case 'median'
-        map.normdb=map.normdb+median(map.beam(:));
-        map.beam=map.beam-median(map.beam(:));
+        arf.normdb=arf.normdb+median(arf.beam(:));
+        arf.beam=arf.beam-median(arf.beam(:));
     case 'abs'
-        map.beam=map.beam+map.normdb;
-        map.normdb=0;
+        arf.beam=arf.beam+arf.normdb;
+        arf.normdb=0;
 end
 
 % check colors
@@ -168,24 +161,24 @@ border=fgcolor;
 global MAP_VAR_LIST
 
 % reshape beam & account for pcolor
-nlat=numel(unique(map.latlon(:,1)));
-nlon=numel(unique(map.latlon(:,2)));
-map.latlon=reshape(map.latlon,[nlon nlat 2]);
-map.beam=reshape(map.beam,[nlon nlat]);
-latstep=map.latlon(1,2,1)-map.latlon(1,1,1);
-lonstep=map.latlon(2,1,2)-map.latlon(1,1,2);
-map.latlon(:,:,1)=map.latlon(:,:,1)-latstep/2;
-map.latlon(:,:,2)=map.latlon(:,:,2)-lonstep/2;
-map.latlon=map.latlon([1:end end],[1:end end],:);
-map.latlon(:,end,1)=map.latlon(:,end,1)+latstep;
-map.latlon(end,:,2)=map.latlon(end,:,2)+lonstep;
-map.beam=map.beam([1:end end],[1:end end]);
+nlat=numel(unique(arf.latlon(:,1)));
+nlon=numel(unique(arf.latlon(:,2)));
+arf.latlon=reshape(arf.latlon,[nlon nlat 2]);
+arf.beam=reshape(arf.beam,[nlon nlat]);
+latstep=arf.latlon(1,2,1)-arf.latlon(1,1,1);
+lonstep=arf.latlon(2,1,2)-arf.latlon(1,1,2);
+arf.latlon(:,:,1)=arf.latlon(:,:,1)-latstep/2;
+arf.latlon(:,:,2)=arf.latlon(:,:,2)-lonstep/2;
+arf.latlon=arf.latlon([1:end end],[1:end end],:);
+arf.latlon(:,end,1)=arf.latlon(:,end,1)+latstep;
+arf.latlon(end,:,2)=arf.latlon(end,:,2)+lonstep;
+arf.beam=arf.beam([1:end end],[1:end end]);
 
-% get max/min lat/lon of map & stations
-minlat=min([map.stla; min(map.latlon(:,:,1))']);
-maxlat=max([map.stla; max(map.latlon(:,:,1))']);
-minlon=min([map.stlo; min(map.latlon(:,:,2))']);
-maxlon=max([map.stlo; max(map.latlon(:,:,2))']);
+% get max/min lat/lon of arf & stations
+minlat=min([arf.stla; min(arf.latlon(:,:,1))']);
+maxlat=max([arf.stla; max(arf.latlon(:,:,1))']);
+minlon=min([arf.stlo; min(arf.latlon(:,:,2))']);
+maxlon=max([arf.stlo; max(arf.latlon(:,:,2))']);
 
 % default/check projopt
 if(nargin<2 || isempty(popt))
@@ -193,7 +186,7 @@ if(nargin<2 || isempty(popt))
 end
 if(ischar(popt)); popt=cellstr(popt); end
 if(~iscell(popt))
-    error('seizmo:plotgeofkmap:badInput',...
+    error('seizmo:plotgeofkarf:badInput',...
         'PROJOPT must be a cell array of args for M_PROJ!');
 end
 
@@ -203,17 +196,17 @@ set(ax,'color',ocean);
 
 % plot geofk beam
 hold on
-if(any(map.latlon(:,:,2)>MAP_VAR_LIST.longs(1) ...
-        & map.latlon(:,:,2)<MAP_VAR_LIST.longs(2)))
-    m_pcolor(map.latlon(:,:,2),map.latlon(:,:,1),double(map.beam));
+if(any(arf.latlon(:,:,2)>MAP_VAR_LIST.longs(1) ...
+        & arf.latlon(:,:,2)<MAP_VAR_LIST.longs(2)))
+    m_pcolor(arf.latlon(:,:,2),arf.latlon(:,:,1),double(arf.beam));
 end
-if(any(map.latlon(:,:,2)-360>MAP_VAR_LIST.longs(1) ...
-        & map.latlon(:,:,2)-360<MAP_VAR_LIST.longs(2)))
-    m_pcolor(map.latlon(:,:,2)-360,map.latlon(:,:,1),double(map.beam));
+if(any(arf.latlon(:,:,2)-360>MAP_VAR_LIST.longs(1) ...
+        & arf.latlon(:,:,2)-360<MAP_VAR_LIST.longs(2)))
+    m_pcolor(arf.latlon(:,:,2)-360,arf.latlon(:,:,1),double(arf.beam));
 end
-if(any(map.latlon(:,:,2)+360>MAP_VAR_LIST.longs(1) ...
-        & map.latlon(:,:,2)+360<MAP_VAR_LIST.longs(2)))
-    m_pcolor(map.latlon(:,:,2)+360,map.latlon(:,:,1),double(map.beam));
+if(any(arf.latlon(:,:,2)+360>MAP_VAR_LIST.longs(1) ...
+        & arf.latlon(:,:,2)+360<MAP_VAR_LIST.longs(2)))
+    m_pcolor(arf.latlon(:,:,2)+360,arf.latlon(:,:,1),double(arf.beam));
 end
 
 % modify
@@ -243,16 +236,16 @@ m_grid('color',fgcolor);
 set(findobj(ax,'tag','m_grid_color'),'facecolor',ocean);
 
 % wrap station longitudes to within 180deg of plot center
-while(any(abs(map.stlo-mean(MAP_VAR_LIST.longs))>180))
-    map.stlo(map.stlo<MAP_VAR_LIST.longs(1))=...
-        map.stlo(map.stlo<MAP_VAR_LIST.longs(1))+360;
-    map.stlo(map.stlo>MAP_VAR_LIST.longs(2))=...
-        map.stlo(map.stlo>MAP_VAR_LIST.longs(2))-360;
+while(any(abs(arf.stlo-mean(MAP_VAR_LIST.longs))>180))
+    arf.stlo(arf.stlo<MAP_VAR_LIST.longs(1))=...
+        arf.stlo(arf.stlo<MAP_VAR_LIST.longs(1))+360;
+    arf.stlo(arf.stlo>MAP_VAR_LIST.longs(2))=...
+        arf.stlo(arf.stlo>MAP_VAR_LIST.longs(2))-360;
 end
 
 % add stations
 hold on
-h=m_scatter(map.stlo,map.stla,[],'y','filled',...
+h=m_scatter(arf.stlo,arf.stla,[],'y','filled',...
     'markeredgecolor','k');
 set(h,'tag','stations');
 hold off
@@ -260,17 +253,20 @@ hold off
 % colorbar & title
 c=colorbar('eastoutside','peer',ax,'xcolor',fgcolor,'ycolor',fgcolor);
 xlabel(c,'dB','color',fgcolor);
-fmin=min(map.freq); fmax=max(map.freq);
-smn=min(map.horzslow); smx=max(map.horzslow);
-title(ax,{[] ['Number of Stations:  ' num2str(map.nsta)] ...
-    ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
-    ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
-    ['Period    :  ' num2str(1/fmax) ' to ' num2str(1/fmin) ' s'] ...
-    ['Horiz. Slowness :  ' num2str(smn) ' to ' num2str(smx) ' s/\circ'] ...
-    ['0 dB = ' num2str(map.normdb) 'dB'] []},'color',fgcolor);
+smn=min(arf.horzslow); smx=max(arf.horzslow);
+titstr=cell(arf.nsw,1);
+for i=1:arf.nsw
+    titstr{i}=sprintf(['SLOWNESS: %gs/deg, LAT: %gdeg, ' ...
+        'LON: %gdeg, PERIOD: %gs'],arf.horzslow0(i),...
+        arf.latlon0(i,1),arf.latlon0(i,2),1/arf.freq0(i));
+end
+title(ax,[{[]}; 'Array Response Function @ '; titstr; ...
+    ['Number of Stations: ' num2str(arf.nsta)]; ...
+    ['Horiz. Slowness : ' num2str(smn) ' to ' num2str(smx) ' s/\circ']; ...
+    ['0 dB = ' num2str(arf.normdb) 'dB']; {[]}],'color',fgcolor);
 
 % set zerodb & dblim in userdata
-% - this is for updategeofkmap
+% - this is for updategeofkarf
 userdata.zerodb=zerodb;
 userdata.dblim=dblim;
 set(ax,'userdata',userdata);

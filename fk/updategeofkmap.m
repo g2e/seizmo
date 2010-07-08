@@ -4,7 +4,7 @@ function [varargout]=updategeofkmap(map,ax)
 %    Usage:    updategeofkmap(map,ax)
 %              ax=updategeofkmap(map)
 %
-%    Description: UPDATEGEOFKMAP(MAP,AX) draws an new geofk response map
+%    Description: UPDATEGEOFKMAP(MAP,AX) draws a new geofk beam data map
 %     given by MAP in an existing axes AX.  This is mainly intended for
 %     exploring geofk datasets and for making movies in a faster fashion.
 %
@@ -20,9 +20,10 @@ function [varargout]=updategeofkmap(map,ax)
 
 %     Version History:
 %        June 25, 2010 - initial version
+%        July  6, 2010 - update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2010 at 02:25 GMT
+%     Last Updated July  6, 2010 at 19:05 GMT
 
 % todo:
 
@@ -57,27 +58,27 @@ else
     zerodb=userdata.zerodb;
 end
 
-% rescale response
+% rescale beam
 switch zerodb
     case 'min'
-        map.response=map.response-min(map.response(:));
-        map.normdb=map.normdb+min(map.response(:));
+        map.beam=map.beam-min(map.beam(:));
+        map.normdb=map.normdb+min(map.beam(:));
     case 'max'
-        map.response=map.response-max(map.response(:));
-        map.normdb=map.normdb+max(map.response(:));
+        map.beam=map.beam-max(map.beam(:));
+        map.normdb=map.normdb+max(map.beam(:));
     case 'median'
-        map.response=map.response-median(map.response(:));
-        map.normdb=map.normdb+median(map.response(:));
+        map.beam=map.beam-median(map.beam(:));
+        map.normdb=map.normdb+median(map.beam(:));
     case 'abs'
-        map.response=map.response+map.normdb;
+        map.beam=map.beam+map.normdb;
         map.normdb=0;
 end
 
-% reshape response & account for pcolor
+% reshape beam data & account for pcolor
 nlat=numel(unique(map.latlon(:,1)));
 nlon=numel(unique(map.latlon(:,2)));
 map.latlon=reshape(map.latlon,[nlon nlat 2]);
-map.response=reshape(map.response,[nlon nlat]);
+map.beam=reshape(map.beam,[nlon nlat]);
 latstep=map.latlon(1,2,1)-map.latlon(1,1,1);
 lonstep=map.latlon(2,1,2)-map.latlon(1,1,2);
 map.latlon(:,:,1)=map.latlon(:,:,1)-latstep/2;
@@ -85,7 +86,7 @@ map.latlon(:,:,2)=map.latlon(:,:,2)-lonstep/2;
 map.latlon=map.latlon([1:end end],[1:end end],:);
 map.latlon(:,end,1)=map.latlon(:,end,1)+latstep;
 map.latlon(end,:,2)=map.latlon(end,:,2)+lonstep;
-map.response=map.response([1:end end],[1:end end]);
+map.beam=map.beam([1:end end],[1:end end]);
 
 % convert to map coordinates
 [map.latlon(:,:,2),map.latlon(:,:,1)]=m_ll2xy(...
@@ -97,7 +98,7 @@ pc=findobj(ax,'tag','m_pcolor');
 % slip in new data
 set(pc(1),...
     'xdata',map.latlon(:,:,2),'ydata',map.latlon(:,:,1),...
-    'zdata',0*map.latlon(:,:,2),'cdata',double(map.response));
+    'zdata',0*map.latlon(:,:,2),'cdata',double(map.beam));
 
 % adjust title
 fmin=min(map.freq); fmax=max(map.freq);

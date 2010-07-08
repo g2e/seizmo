@@ -4,7 +4,7 @@ function [varargout]=updatefkmap(map,ax)
 %    Usage:    updatefkmap(map,ax)
 %              ax=updatefkmap(map)
 %
-%    Description: UPDATEFKMAP(MAP,AX) draws an new fk response map given by
+%    Description: UPDATEFKMAP(MAP,AX) draws an new fk beam map given by
 %     MAP in an existing axes AX.  This is mainly intended for exploring 3D
 %     and 4D fk datasets and for making movies in a faster fashion.
 %
@@ -14,7 +14,7 @@ function [varargout]=updatefkmap(map,ax)
 %    Notes:
 %
 %    Examples:
-%     Slide through a few fk responses:
+%     Slide through a few fk beams:
 %      spolar(1)=fkmap(data,25,201,[1/50 1/45],true);
 %      spolar(2)=fkmap(data,25,201,[1/45 1/40],true);
 %      spolar(3)=fkmap(data,25,201,[1/40 1/35],true);
@@ -27,7 +27,7 @@ function [varargout]=updatefkmap(map,ax)
 %          updatefkmap(spolar(i),ax);
 %      end
 %
-%    See also: PLOTFKMAP, FKMAP, FKVOLUME, FK4D, FKFREQSLIDE, FKTIMESLIDE
+%    See also: PLOTFKMAP, FKMAP, FKVOLUME, FK4D, FKFREQSLIDE, FKFRAMESLIDE
 
 %     Version History:
 %        May  11, 2010 - initial version
@@ -35,9 +35,10 @@ function [varargout]=updatefkmap(map,ax)
 %        May  26, 2010 - updated for new plotfkmap args (requires passing
 %                        info through userdata)
 %        June 16, 2010 - better see also section
+%        July  6, 2010 - major update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 14:25 GMT
+%     Last Updated July  6, 2010 at 16:05 GMT
 
 % todo:
 
@@ -85,19 +86,19 @@ else
     zerodb=userdata.zerodb;
 end
 
-% rescale response
+% rescale beam
 switch zerodb
     case 'min'
-        map.response=map.response-min(map.response(:));
-        map.normdb=map.normdb+min(map.response(:));
+        map.beam=map.beam-min(map.beam(:));
+        map.normdb=map.normdb+min(map.beam(:));
     case 'max'
-        map.response=map.response-max(map.response(:));
-        map.normdb=map.normdb+max(map.response(:));
+        map.beam=map.beam-max(map.beam(:));
+        map.normdb=map.normdb+max(map.beam(:));
     case 'median'
-        map.response=map.response-median(map.response(:));
-        map.normdb=map.normdb+median(map.response(:));
+        map.beam=map.beam-median(map.beam(:));
+        map.normdb=map.normdb+median(map.beam(:));
     case 'abs'
-        map.response=map.response+map.normdb;
+        map.beam=map.beam+map.normdb;
         map.normdb=0;
 end
 
@@ -108,15 +109,15 @@ hold on
 nx=numel(map.x);
 ny=numel(map.y);
 [x,y]=pol2cart(pi/180*map.x(ones(ny,1),:),map.y(:,ones(nx,1)));
-pcolor(x,y,map.response);
+pcolor(x,y,double(map.beam));
 shading flat;
 hold off
 set(get(ax,'Title'),'string',...
     {['Number of Stations:  ' num2str(map.nsta)] ...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
-    ['Period Range:    ' num2str(1/min(map.z)) ' to ' ...
-    num2str(1/max(map.z)) 'Sec'] ...
+    ['Period Range:    ' num2str(1/min(map.freq)) ' to ' ...
+    num2str(1/max(map.freq)) 'Sec'] ...
     ['0 dB = ' num2str(map.normdb) 'dB'] ...
     '' '' ''})
 
@@ -136,19 +137,19 @@ else
     zerodb=userdata.zerodb;
 end
 
-% rescale response
+% rescale beam
 switch zerodb
     case 'min'
-        map.response=map.response-min(map.response(:));
-        map.normdb=map.normdb+min(map.response(:));
+        map.beam=map.beam-min(map.beam(:));
+        map.normdb=map.normdb+min(map.beam(:));
     case 'max'
-        map.response=map.response-max(map.response(:));
-        map.normdb=map.normdb+max(map.response(:));
+        map.beam=map.beam-max(map.beam(:));
+        map.normdb=map.normdb+max(map.beam(:));
     case 'median'
-        map.response=map.response-median(map.response(:));
-        map.normdb=map.normdb+median(map.response(:));
+        map.beam=map.beam-median(map.beam(:));
+        map.normdb=map.normdb+median(map.beam(:));
     case 'abs'
-        map.response=map.response+map.normdb;
+        map.beam=map.beam+map.normdb;
         map.normdb=0;
 end
 
@@ -156,7 +157,7 @@ axes(ax);
 h=findobj(ax,'type','image');
 delete(h);
 hold on
-imagesc(map.x,map.y,map.response);
+imagesc(map.x,map.y,map.beam);
 childs=get(ax,'children');
 set(ax,'children',[childs(2:end); childs(1)]);
 hold off
@@ -164,8 +165,8 @@ set(get(ax,'Title'),'string',...
     {['Number of Stations:  ' num2str(map.nsta)] ...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
-    ['Period Range:    ' num2str(1/min(map.z)) ' to ' ...
-    num2str(1/max(map.z)) 'Sec'] ...
+    ['Period Range:    ' num2str(1/min(map.freq)) ' to ' ...
+    num2str(1/max(map.freq)) 'Sec'] ...
     ['0 dB = ' num2str(map.normdb) 'dB']});
 
 end

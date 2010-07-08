@@ -13,7 +13,7 @@ function [varargout]=plotfkmap(map,varargin)
 %     later (because FKMAP is quite slow).  H is the handle to the axes
 %     that the map was plotted in.
 %
-%     H=PLOTFKMAP(MAP,DBLIM) sets the dB limits for coloring the response
+%     H=PLOTFKMAP(MAP,DBLIM) sets the dB limits for coloring the beam
 %     info.  The default is [-12 0] for the default ZERODB (see next Usage
 %     form).  If ZERODB IS 'min' or 'median', the default DBLIM is [0 12].
 %     DBLIM must be a real-valued 2-element vector.
@@ -38,7 +38,7 @@ function [varargout]=plotfkmap(map,varargin)
 %      map=fkmap(data,50,201,[1/51 1/49]);
 %      plotfkmap(map);
 %
-%    See also: FKMAP, PLOTFKARF, UPDATEFKMAP, FKFREQSLIDE, FKTIMESLIDE
+%    See also: FKMAP, PLOTFKARF, UPDATEFKMAP, FKFREQSLIDE, FKFRAMESLIDE
 
 %     Version History:
 %        May   4, 2010 - initial version
@@ -48,9 +48,10 @@ function [varargout]=plotfkmap(map,varargin)
 %        May  24, 2010 - labeling the top of colorbar is broken in r2009a
 %        May  26, 2010 - added dblim & zerodb args, updated docs
 %        June 16, 2010 - labels call correct axes, update see also section
+%        July  6, 2010 - major update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 10:00 GMT
+%     Last Updated July  6, 2010 at 16:05 GMT
 
 % todo:
 
@@ -104,32 +105,32 @@ if(~isreal(dblim) || numel(dblim)~=2)
 end
 dblim=sort([dblim(1) dblim(2)]);
 
-% rescale response
+% rescale beam
 switch zerodb
     case 'min'
-        map.normdb=map.normdb+min(map.response(:));
-        map.response=map.response-min(map.response(:));
+        map.normdb=map.normdb+min(map.beam(:));
+        map.beam=map.beam-min(map.beam(:));
     case 'max'
-        map.normdb=map.normdb+max(map.response(:));
-        map.response=map.response-max(map.response(:));
+        map.normdb=map.normdb+max(map.beam(:));
+        map.beam=map.beam-max(map.beam(:));
     case 'median'
-        map.normdb=map.normdb+median(map.response(:));
-        map.response=map.response-median(map.response(:));
+        map.normdb=map.normdb+median(map.beam(:));
+        map.beam=map.beam-median(map.beam(:));
     case 'abs'
-        map.response=map.response+map.normdb;
+        map.beam=map.beam+map.normdb;
         map.normdb=0;
 end
 
 % check colors
-if(nargin<4); fgcolor='w'; bgcolor='k'; end
-if(nargin<5)
+if(nargin<4);
+    fgcolor='w'; bgcolor='k';
+elseif(nargin<5)
     if(isempty(fgcolor))
         fgcolor='w'; bgcolor='k';
     else
         bgcolor=invertcolor(fgcolor,true);
     end
-end
-if(nargin<6)
+else
     if(isempty(fgcolor))
         if(isempty(bgcolor))
             fgcolor='w'; bgcolor='k';
@@ -159,8 +160,8 @@ else
 end
 
 % pertinent info
-fmin=min(map.z);
-fmax=max(map.z);
+fmin=min(map.freq);
+fmax=max(map.freq);
 smax=max(abs(map.y));
 
 % get root defaults
@@ -202,7 +203,7 @@ ny=numel(map.y);
 [x,y]=pol2cart(pi/180*map.x(ones(ny,1),:),map.y(:,ones(nx,1)));
 
 % plot polar grid
-pcolor(x,y,double(map.response));
+pcolor(x,y,double(map.beam));
 
 % add title color etc
 hold off;
@@ -278,32 +279,32 @@ if(~isreal(dblim) || numel(dblim)~=2)
 end
 dblim=sort([dblim(1) dblim(2)]);
 
-% rescale response
+% rescale beam
 switch zerodb
     case 'min'
-        map.normdb=map.normdb+min(map.response(:));
-        map.response=map.response-min(map.response(:));
+        map.normdb=map.normdb+min(map.beam(:));
+        map.beam=map.beam-min(map.beam(:));
     case 'max'
-        map.normdb=map.normdb+max(map.response(:));
-        map.response=map.response-max(map.response(:));
+        map.normdb=map.normdb+max(map.beam(:));
+        map.beam=map.beam-max(map.beam(:));
     case 'median'
-        map.normdb=map.normdb+median(map.response(:));
-        map.response=map.response-median(map.response(:));
+        map.normdb=map.normdb+median(map.beam(:));
+        map.beam=map.beam-median(map.beam(:));
     case 'abs'
-        map.response=map.response+map.normdb;
+        map.beam=map.beam+map.normdb;
         map.normdb=0;
 end
 
 % check colors
-if(nargin<4); fgcolor='w'; bgcolor='k'; end
-if(nargin<5)
+if(nargin<4);
+    fgcolor='w'; bgcolor='k';
+elseif(nargin<5)
     if(isempty(fgcolor))
         fgcolor='w'; bgcolor='k';
     else
         bgcolor=invertcolor(fgcolor,true);
     end
-end
-if(nargin<6)
+else
     if(isempty(fgcolor))
         if(isempty(bgcolor))
             fgcolor='w'; bgcolor='k';
@@ -333,12 +334,12 @@ else
 end
 
 % get pertinent info
-fmin=min(map.z);
-fmax=max(map.z);
+fmin=min(map.freq);
+fmax=max(map.freq);
 smax=max(max(abs(map.x)),max(abs(map.y)));
 
 % first plot the map
-imagesc(map.x,map.y,map.response);
+imagesc(map.x,map.y,map.beam);
 set(ax,'xcolor',fgcolor,'ycolor',fgcolor,'ydir','normal',...
     'color',bgcolor,'fontweight','bold','clim',dblim);
 hold on

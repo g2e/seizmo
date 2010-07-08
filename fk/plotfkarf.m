@@ -7,7 +7,7 @@ function [varargout]=plotfkarf(arf,varargin)
 %              h=plotfkarf(arf,dblim,zerodb,fgcolor,bgcolor)
 %              h=plotfkarf(arf,dblim,zerodb,fgcolor,bgcolor,h)
 %
-%    Description: H=PLOTFKARF(ARF) plots a slowness map using the struct
+%    Description: H=PLOTFKARF(ARF) plots the slowness map within the struct
 %     ARF which was output from FKARF.  See FKARF for details on the
 %     struct.  This is mainly so you can save the results and replot them
 %     later (because FKARF is slow).  H is the handle to the axes that the
@@ -22,14 +22,14 @@ function [varargout]=plotfkarf(arf,varargin)
 %     plot.  The allowed values are 'min', 'max', 'median', & 'abs'.  The
 %     default is 'max'.
 %
-%     H=PLOTFKARF(ARF,FGCOLOR,BGCOLOR) specifies the foreground and
+%     H=PLOTFKARF(ARF,DBLIM,ZERODB,FGCOLOR,BGCOLOR) sets the foreground and
 %     background colors of the plot.  The default is 'w' for FGCOLOR and
 %     'k' for BGCOLOR.  Note that if one is specified and the other is not,
 %     an opposing color is found using INVERTCOLOR.  The color scale is
 %     also changed so the noise clip is at BGCOLOR.
 %
-%     H=PLOTFKARF(ARF,FGCOLOR,BGCOLOR,H) sets the axes that the map is
-%     drawn in.  This is useful for subplots, guis, etc.
+%     H=PLOTFKARF(ARF,DBLIM,ZERODB,FGCOLOR,BGCOLOR,H) sets the axes that
+%     the map is drawn in.  This is useful for subplots, guis, etc.
 %
 %    Notes:
 %
@@ -44,9 +44,10 @@ function [varargout]=plotfkarf(arf,varargin)
 %        May  11, 2010 - initial version (outside of FKARF)
 %        May  26, 2010 - update for new plotfkmap args
 %        June 16, 2010 - labels call correct axes
+%        July  6, 2010 - major update for new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 14:00 GMT
+%     Last Updated July  6, 2010 at 17:05 GMT
 
 % todo:
 
@@ -99,32 +100,32 @@ if(~isreal(dblim) || numel(dblim)~=2)
 end
 dblim=sort([dblim(1) dblim(2)]);
 
-% rescale response
+% rescale beam
 switch zerodb
     case 'min'
-        map.response=map.response-min(map.response(:));
-        map.normdb=map.normdb+min(map.response(:));
+        map.beam=map.beam-min(map.beam(:));
+        map.normdb=map.normdb+min(map.beam(:));
     case 'max'
-        map.response=map.response-max(map.response(:));
-        map.normdb=map.normdb+max(map.response(:));
+        map.beam=map.beam-max(map.beam(:));
+        map.normdb=map.normdb+max(map.beam(:));
     case 'median'
-        map.response=map.response-median(map.response(:));
-        map.normdb=map.normdb+median(map.response(:));
+        map.beam=map.beam-median(map.beam(:));
+        map.normdb=map.normdb+median(map.beam(:));
     case 'abs'
-        map.response=map.response+map.normdb;
+        map.beam=map.beam+map.normdb;
         map.normdb=0;
 end
 
 % check colors
-if(nargin<4); fgcolor='w'; bgcolor='k'; end
-if(nargin<5)
+if(nargin<4);
+    fgcolor='w'; bgcolor='k';
+elseif(nargin<5)
     if(isempty(fgcolor))
         fgcolor='w'; bgcolor='k';
     else
         bgcolor=invertcolor(fgcolor,true);
     end
-end
-if(nargin<6)
+else
     if(isempty(fgcolor))
         if(isempty(bgcolor))
             fgcolor='w'; bgcolor='k';
@@ -164,7 +165,7 @@ smax=max(abs(map.y));
 
 % get nearest neighbor station distances
 [clat,clon]=arraycenter(map.stla,map.stlo);
-[e,n]=geographic2enu(map.stla,map.stlo,0,clat,clon,0);
+[e,n]=geographic2enu(clat,clon,0,map.stla,map.stlo,0);
 tri=delaunay(e,n);
 friends=[tri(:,1:2); tri(:,2:3); tri(:,[3 1])];
 friends=unique([min(friends,[],2) max(friends,[],2)],'rows');
@@ -210,7 +211,7 @@ ny=numel(map.y);
 [x,y]=pol2cart(pi/180*map.x(ones(ny,1),:),map.y(:,ones(nx,1)));
 
 % plot polar grid
-pcolor(x,y,map.response);
+pcolor(x,y,double(map.beam));
 
 % last plot the nyquist rings about the plane wave locations
 titstr=cell(map.npw,1);
@@ -219,15 +220,15 @@ for i=1:map.npw
     [x,y]=circle(snyq);
     x=x+map.s(i)*sin(map.baz(i)*pi/180);
     y=y+map.s(i)*cos(map.baz(i)*pi/180);
-    plot(x,y,'r:','linewidth',2,'tag','nyquist_rings');
-    titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, FREQ: %gHz',...
-            map.s(i),map.baz(i),map.f(i));
+    plot(y,x,'r:','linewidth',2,'tag','nyquist_rings');
+    titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, PERIOD: %gs',...
+            map.s(i),map.baz(i),1/map.f(i));
 end
 
 % add title color etc
 hold off;
-title(ax,{'Array Response Function @ '; titstr; ...
-    ['0db = ' num2str(map.normdb) 'dB']; ''; ''; ''},...
+title(ax,['Array Response Function @ '; titstr; ...
+    ['0db = ' num2str(map.normdb) 'dB']; {''}; {''}; {''}],...
     'fontweight','bold','color',fgcolor);
 set(ax,'clim',dblim);
 shading flat;
@@ -288,32 +289,32 @@ if(~isreal(dblim) || numel(dblim)~=2)
 end
 dblim=sort([dblim(1) dblim(2)]);
 
-% rescale response
+% rescale beam
 switch zerodb
     case 'min'
-        map.response=map.response-min(map.response(:));
-        map.normdb=map.normdb+min(map.response(:));
+        map.beam=map.beam-min(map.beam(:));
+        map.normdb=map.normdb+min(map.beam(:));
     case 'max'
-        map.response=map.response-max(map.response(:));
-        map.normdb=map.normdb+max(map.response(:));
+        map.beam=map.beam-max(map.beam(:));
+        map.normdb=map.normdb+max(map.beam(:));
     case 'median'
-        map.response=map.response-median(map.response(:));
-        map.normdb=map.normdb+median(map.response(:));
+        map.beam=map.beam-median(map.beam(:));
+        map.normdb=map.normdb+median(map.beam(:));
     case 'abs'
-        map.response=map.response+map.normdb;
+        map.beam=map.beam+map.normdb;
         map.normdb=0;
 end
 
 % check colors
-if(nargin<4); fgcolor='w'; bgcolor='k'; end
-if(nargin<5)
+if(nargin<4);
+    fgcolor='w'; bgcolor='k';
+elseif(nargin<5)
     if(isempty(fgcolor))
         fgcolor='w'; bgcolor='k';
     else
         bgcolor=invertcolor(fgcolor,true);
     end
-end
-if(nargin<6)
+else
     if(isempty(fgcolor))
         if(isempty(bgcolor))
             fgcolor='w'; bgcolor='k';
@@ -361,7 +362,7 @@ dist=vincentyinv(map.stla(friends(:,1)),map.stlo(friends(:,1)),...
                  map.stla(friends(:,2)),map.stlo(friends(:,2)));
 
 % first plot the map
-imagesc(map.x,map.y,map.response);
+imagesc(map.x,map.y,map.beam);
 set(ax,'xcolor',fgcolor,'ycolor',fgcolor,'ydir','normal',...
     'color',bgcolor,'fontweight','bold','clim',dblim);
 hold on
@@ -413,14 +414,14 @@ for i=1:map.npw
     x=x+map.s(i)*sin(map.baz(i)*pi/180);
     y=y+map.s(i)*cos(map.baz(i)*pi/180);
     plot(x,y,'r:','linewidth',2,'tag','nyquist_rings');
-    titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, FREQ: %gHz',...
-            map.s(i),map.baz(i),map.f(i));
+    titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, PERIOD: %gs',...
+            map.s(i),map.baz(i),1/map.f(i));
 end
 hold off
 
 % finally take care of labels/coloring/etc
-title(ax,{'Array Response Function @ '; titstr; ...
-    ['0 dB = ' num2str(map.normdb) 'dB']},...
+title(ax,['Array Response Function @ '; titstr; ...
+    ['0 dB = ' num2str(map.normdb) 'dB']],...
     'fontweight','bold','color',fgcolor);
 xlabel(ax,'East/West Slowness (s/deg)',...
     'fontweight','bold','color',fgcolor);

@@ -1,5 +1,5 @@
 % Seismology Toolbox - position
-% Version 0.6.0-r140 Dhaulagiri 27-May-2010
+% Version 0.6.0-r150 Everest 8-July-2010
 %
 % Global Position functions
 %ARRAYCENTER              - Returns the geographic center of an array of positions

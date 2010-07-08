@@ -28,9 +28,10 @@ function []=daydirs_rotcorr(indir,outdir,o)
 
 %     Version History:
 %        June 20, 2010 - initial version
+%        July  2, 2010 - fix jday loop issue, more warnings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 20, 2010 at 12:55 GMT
+%     Last Updated July  2, 2010 at 13:55 GMT
 
 % todo:
 
@@ -112,7 +113,7 @@ for i=1:nyears
     syr=num2str(yr);
     
     % loop over days
-    parfor j=1:numel(jdays)
+    parfor j=1:numel(jdays{i})
         % working julian day
         jday=jdays{i}(j);
         sjday=num2str(jday,'%03d');
@@ -132,6 +133,8 @@ for i=1:nyears
                 data=readseizmo([indir fs syr fs sjday fs]);
             catch
                 % empty day
+                tmp=lasterror;
+                warning(tmp.message);
                 continue;
             end
             
@@ -145,6 +148,8 @@ for i=1:nyears
             writeseizmo(data,'pathchange',{indir outdir});
         catch
             % close pool & fix verbosity
+            tmp=lasterror;
+            warning(tmp.message);
             matlabpool close;
             seizmoverbose(verbose);
             

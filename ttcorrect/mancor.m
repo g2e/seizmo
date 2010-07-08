@@ -29,7 +29,7 @@ function [corr,tt1d,tt3d]=mancor(paths,mod3d)
 %      corr=mancor(gpaths,'hmsl06p')
 %
 %    See also: AVAILABLE_3DMODELS, GETRAYPATHS, TRIM_DEPTHS_RAYPATHS,
-%              CRUST2LESS_RAYPATHS, GET_UPSWING_RAYPATHS
+%              CRUST2LESS_RAYPATHS, EXTRACT_UPSWING_RAYPATHS
 
 %     Version History:
 %        June  2, 2010 - initial version

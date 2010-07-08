@@ -5,6 +5,7 @@ function [varargout]=geofkslowslide(vol,frng,srng,delay,varargin)
 %              geofkslowslide(vol,frng)
 %              geofkslowslide(vol,frng,srng)
 %              geofkslowslide(vol,frng,srng,delay)
+%              geofkslowslide(vol,frng,srng,delay,projopt)
 %              geofkslowslide(vol,frng,srng,delay,projopt,dblim)
 %              geofkslowslide(vol,frng,srng,delay,projopt,dblim,zerodb)
 %              geofkslowslide(vol,frng,srng,delay,projopt,dblim,zerodb,...
@@ -14,8 +15,8 @@ function [varargout]=geofkslowslide(vol,frng,srng,delay,varargin)
 %              mov=geofkslowslide(...);
 %
 %    Description: GEOFKSLOWSLIDE(VOL) slides through a geofk volume by
-%     plotting each of the frequencies in sequence in a single plot.  Note
-%     that the volume is averaged across all slownesses (see the following
+%     plotting each of the slownesses in sequence in a single plot.  Note
+%     that the volume is averaged across all frequencies (see the following
 %     Usage forms to adjust this).  There is a 1/3 second delay between
 %     each replotting by default (see the following Usage forms to adjust
 %     this).
@@ -30,28 +31,33 @@ function [varargout]=geofkslowslide(vol,frng,srng,delay,varargin)
 %     slownesses in the VOL.
 %
 %     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY) specifies the delay between the
-%     plotting of each frequency in seconds.  The default DELAY is 0.33s.
+%     plotting of each slowness in seconds.  The default DELAY is 0.33s.
 %
-%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM) sets the dB limits for
-%     coloring the response info.  The default is [-12 0] for the default
+%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT) allows passing options to
+%     M_PROJ.  See M_PROJ('SET') for possible projections and see
+%     M_PROJ('GET',PROJ) for a list of possible additional options specific
+%     to that projection.
+%
+%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM) sets the dB limits
+%     for coloring the beam data.  The default is [-12 0] for the default
 %     ZERODB (see next Usage form).  If ZERODB IS 'min' or 'median', the
 %     default DBLIM is [0 12].  DBLIM must be a real-valued 2-element
 %     vector.
 %
-%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM,ZERODB) changes what 0dB
-%     corresponds to in the plot.  The allowed values are 'min', 'max',
+%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB) changes what
+%     0dB corresponds to in the plot.  The allowed values are 'min', 'max',
 %     'median', & 'abs'.  The default is 'max'.
 %
-%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM,ZERODB,FGCOLOR,BGCOLOR)
-%     specifies the foreground and background colors of the plot.  The
-%     default is 'w' for FGCOLOR and 'k' for BGCOLOR.  Note that if one is
-%     specified and the other is not, an opposing color is found using
+%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB,FGCOLOR,...
+%     BGCOLOR) specifies the foreground and background colors of the plot. 
+%     The default is 'w' for FGCOLOR and 'k' for BGCOLOR.  Note that if one
+%     is specified and the other is not, an opposing color is found using
 %     INVERTCOLOR.  The color scale is also changed so the noise clip is at
 %     BGCOLOR.
 %
-%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM,ZERODB,FGCOLOR,BGCOLOR,AX)
-%     sets the axes that the map is drawn in.  This is useful for subplots,
-%     guis, etc.
+%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB,FGCOLOR,...
+%     BGCOLOR,AX) sets the axes that the map is drawn in.  This is useful
+%     for subplots, guis, etc.
 %
 %     MOV=GEOFKSLOWSLIDE(...) creates a Matlab movie MOV.  This can played
 %     using the function MOVIE.  See MOVIE2AVI for exporting as an AVI
@@ -66,9 +72,11 @@ function [varargout]=geofkslowslide(vol,frng,srng,delay,varargin)
 
 %     Version History:
 %        June 25, 2010 - initial version
+%        July  6, 2010 - update for new struct
+%        July  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2010 at 15:00 GMT
+%     Last Updated July  8, 2010 at 10:25 GMT
 
 % todo:
 
@@ -81,7 +89,7 @@ error(chkgeofkstruct(vol));
 % don't allow array/volume
 if(~isscalar(vol) || ~all(vol.volume))
     error('seizmo:geofkslowslide:badInput',...
-        'VOL must be a scalar geofk struct and a volume response!');
+        'VOL must be a scalar geofk struct and a beam volume!');
 end
 
 % do we make the movie
@@ -113,8 +121,8 @@ end
 vol=geofksubvol(vol,frng,srng);
 
 % average across frequency
-nfreq=size(vol.response,3);
-vol.response=sum(vol.response,3)/nfreq;
+nfreq=size(vol.beam,3);
+vol.beam=sum(vol.beam,3)/nfreq;
 vol.volume(2)=false;
 
 % get slownesses
