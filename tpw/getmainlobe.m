@@ -36,19 +36,20 @@ function [f,a]=getmainlobe(f0,fs,swin,tprfrac,zpad,show)
 %      [f1,a1]=getmainlobe(1/100,1,[1000 2000],0,[1000 1000]);
 %      plot(f,a,f1,a1)
 %
-%    See also:
+%    See also: RAYLEIGH_2D_PLANE_WAVE_KERNELS, SMOOTH2D, READKERNELS,
+%              WRITEKERNELS, MAKEKERNELS, PLOTKERNELS
 
 %     Version History:
 %        Feb.  4, 2010 - initial version
+%        July  9, 2010 - fixed see also section, fixed nargchk
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  4, 2010 at 01:45 GMT
+%     Last Updated July  9, 2010 at 17:10 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(5,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(5,6,nargin));
 
 % check inputs
 if(nargin==5 || isempty(show)); show=false; end

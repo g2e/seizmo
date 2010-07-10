@@ -93,15 +93,15 @@ function [varargout]=stft(data,varargin)
 %        Apr. 26, 2010 - initial version
 %        May   5, 2010 - fully working version
 %        May   7, 2010 - fix overlap bug
+%        July  8, 2010 - plot name fix & nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   7, 2010 at 02:55 GMT
+%     Last Updated July  8, 2010 at 18:25 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 if(mod(nargin-1,2))
     error('seizmo:stft:badNumInputs',...
         'Unpaired Option/Value!');
@@ -438,7 +438,7 @@ try
             end
             
             % plot spectrogram ourselves
-            figure(fh);
+            figure(fh,'name','STFT -- SEIZMO');
             h2=axes('outerposition',...
                 [left(i) bottom(i) sw*pwidth sh*height],...
                 'position',[left(i)+tpl bottom(i)+tpl ...

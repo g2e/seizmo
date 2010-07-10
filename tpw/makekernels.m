@@ -37,9 +37,10 @@ function []=makekernels(f0,v,fs,swin,tprfrac,twin,w,d,lambda,path,post)
 %     frequencies and NL is the number of smoothing lengths).
 %
 %    Notes:
-%     - Filename format:  kernel.XXXsYYYkm
+%     - Filename format:  kernel.XXXsYYYkmZZZZv
 %        where XXX is the period (1/f0)
 %              YYY is the smoothing length
+%              ZZZZ is the velocity in m/s
 %     - More details can be found by reading the help info for related
 %       functions in the See Also section below.
 %
@@ -50,8 +51,12 @@ function []=makekernels(f0,v,fs,swin,tprfrac,twin,w,d,lambda,path,post)
 %     Second, get some phase velocities at those frequencies:
 %      phvel=prem_dispersion(bank(:,1));
 %
-%     Third, use the beat length as a typical window width:
+%     Third, use the beat length as a window width:
 %      L_beat=1./(bank(:,3)-bank(:,2));
+%
+%     Fourth, modify that window width by an empirically derived power law
+%     to get a more typical window width:
+%      win=L_beat*(2.5+1000*bank(:,1).^2);
 %
 %     Now get the kernels for a windowed sinusoid sampled at 1Hz, tapered
 %     on the outer 20% of the window, and zero-padded to a length of 9000s
@@ -59,23 +64,24 @@ function []=makekernels(f0,v,fs,swin,tprfrac,twin,w,d,lambda,path,post)
 %     grid centered on the receiver, grid points are every 10km and a
 %     Gaussian smoother with a characteristic distance of 100km is applied.
 %     The kernel names are appended with '.example'.
-%      makekernels(band(:,1),phvel,1,L_beat*[0 1],0.2,[-2000 7000],...
+%      makekernels(band(:,1),phvel,1,win*[0 1],0.2,[-2000 7000],...
 %                  5000,10,100,[],'.example');
 %
 %    See also: WRITEKERNELS, READKERNELS, RAYLEIGH_2D_PLANE_WAVE_KERNELS,
-%              GETMAINLOBE, SMOOTH2D
+%              GETMAINLOBE, SMOOTH2D, PLOTKERNELS
 
 %     Version History:
 %        Feb.  5, 2010 - rewrite and added documentation
+%        July  9, 2010 - fixed nargchk, improved example, output filename
+%                        includes velocity in m/s now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2010 at 22:10 GMT
+%     Last Updated July  9, 2010 at 22:10 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(9,11,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(9,11,nargin));
 
 % number of frequencies
 nf=numel(f0); nl=size(lambda,2);
@@ -206,7 +212,8 @@ for i=1:nf
             Kam2=smooth2d(Kam,lambda(i,j)/d(i),[],'zeropad');
         end
         file=[path{i,j} sep 'kernel.' sprintf('%03d',round(1/f0(i))) ...
-            's' sprintf('%03d',round(lambda(i,j))) 'km' post{i,j}];
+            's' sprintf('%03d',round(lambda(i,j))) 'km' ...
+            sprintf('%04d',round(v(i)*1000)) 'v' post{i,j}];
         writekernels(file,Kph2,Kam2,x,y);
     end
     % detail message

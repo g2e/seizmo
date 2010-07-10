@@ -42,15 +42,15 @@ function [v]=smooth2d(v,nx,ny,edge)
 %     Version History:
 %        Feb.  4, 2010 - rewrite and added documentation
 %        May  17, 2010 - updated documentation
+%        July  9, 2010 - fixed nargchk
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  17, 2010 at 17:10 GMT
+%     Last Updated July  9, 2010 at 17:10 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,4,nargin));
 
 % check inputs
 if(nargin<4); edge='truncate'; end

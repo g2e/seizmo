@@ -27,19 +27,19 @@ function []=writekernels(file,Kph,Kam,x,y,o)
 %      writekernels([],Kph,Kam,x,y); % choose your own filename
 %
 %    See also: READKERNELS, RAYLEIGH_2D_PLANE_WAVE_KERNELS, GETMAINLOBE,
-%              SMOOTH2D, MAKEKERNELS
+%              SMOOTH2D, MAKEKERNELS, PLOTKERNELS
 
 %     Version History:
 %        Feb.  5, 2010 - rewrite and added documentation
+%        July  9, 2010 - fixed nargchk
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2010 at 17:10 GMT
+%     Last Updated July  9, 2010 at 17:10 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(5,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(5,6,nargin));
 
 % check inputs
 if(nargin==5 || isempty(o)); o=false; end

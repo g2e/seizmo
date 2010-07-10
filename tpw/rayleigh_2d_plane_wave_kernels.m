@@ -44,19 +44,21 @@ function [Kph,Kam,x,y]=rayleigh_2d_plane_wave_kernels(w,d,f,a,v,show)
 %     Show the corresponding kernels assuming a Vph=4km/s:
 %      rayleigh_2d_plane_wave_kernels(3000,10,f,a,4,true);
 %
-%    See also: GETMAINLOBE, SMOOTH2D
+%    See also: GETMAINLOBE, SMOOTH2D, READKERNELS, WRITEKERNELS,
+%              MAKEKERNELS, PLOTKERNELS
 
 %     Version History:
 %        Feb.  4, 2010 - rewrite and added documentation
+%        July  9, 2010 - fixed see also section, fixed major bug (thanks to
+%                        davidh), fixed nargchk
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  4, 2010 at 17:10 GMT
+%     Last Updated July  9, 2010 at 16:30 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(5,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(5,6,nargin));
 
 % check inputs
 if(nargin==5 || isempty(show)); show=false; end
@@ -86,6 +88,7 @@ end
 % setup the grid
 x=d:d:w/2;
 x=[-x(end:-1:1) 0 x];
+x0=x;
 n=numel(x);
 x=x(ones(n,1),:);
 y=x';
@@ -96,8 +99,8 @@ a=a/sum(a);
 % make sensitivity kernel
 k=2*pi*6371*f/v;
 r=sqrt(x.^2+y.^2);
-r(floor(n*n/2)+1)=d; % avoid divide by zero at receiver
-c=1./(4*r.^2*sqrt(2*pi*abs(sin(r./6371)))./(d^2));
+r(floor(n*n/2)+1)=sqrt(2)*d; % avoid divide by zero at receiver
+c=d^2./(4*6371.^2*sqrt(2*pi*abs(sin(r./6371))));
 Kph=zeros(n); Kam=zeros(n);
 for i=1:numel(f)
     Kph=Kph-c.*a(i).*k(i).^1.5.*sin(k(i).*(x+r)./6371+pi/4);
@@ -111,9 +114,8 @@ if(show)
     
     % first plot the phase kernel
     figure;
-    surface(x,y,Kph);
-    colormap(jet(1024));
-    shading interp;
+    imagesc(x0,x0,Kph);
+    colormap(jet);
     xlabel('RADIAL POSITION (KM)');
     ylabel('TRANSVERSE POSITION (KM)');
     zlabel('SENSITIVITY (S/KM^2)');
@@ -122,13 +124,12 @@ if(show)
         [sprintf('PERIOD: %gS ',p) sprintf('VELOCITY: %gKM/S',v)]});
     box on
     grid on
-    rotate3d
+    colorbar
     
     % now plot the amplitude kernel
     figure;
-    surface(x,y,Kam);
-    colormap(jet(1024));
-    shading interp;
+    imagesc(x0,x0,Kam);
+    colormap(jet);
     xlabel('RADIAL POSITION (KM)');
     ylabel('TRANSVERSE POSITION (KM)');
     zlabel('SENSITIVITY (S/KM^2)');
@@ -137,7 +138,7 @@ if(show)
         [sprintf('PERIOD: %gS ',p) sprintf('VELOCITY: %gKM/S',v)]});
     box on
     grid on
-    rotate3d
+    colorbar
 end
 
 end

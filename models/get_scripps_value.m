@@ -13,9 +13,9 @@ function [val]=get_scripps_value(s,lat,lon,depth)
 %
 %    Examples:
 %     Get a depth slice at 2800km (with an extra 90deg of longitude):
-%      sb4l18=load('SB4L18');
-%      [x,y]=meshgrid(0:2:450,90:2:-90);
-%      imagesc(0:2:450,90:-2:-90,get_scripps_value(sb4l18,y,x,2800));
+%      hmsl06p=load('HMSL06P');
+%      [x,y]=meshgrid(0:2:450,90:-2:-90);
+%      imagesc(0:2:450,90:-2:-90,get_scripps_value(hmsl06p,y,x,2800));
 %      axis xy equal tight;
 %      colormap(seis);
 %
@@ -24,9 +24,10 @@ function [val]=get_scripps_value(s,lat,lon,depth)
 %     Version History:
 %        May  16, 2010 - initial version
 %        June  1, 2010 - dv rather than dv%, fixed example
+%        July  8, 2010 - really fixed example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  1, 2010 at 23:35 GMT
+%     Last Updated July  8, 2010 at 18:35 GMT
 
 % todo
 

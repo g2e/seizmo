@@ -20,13 +20,14 @@ function [Kph,Kam,x,y]=readkernels(file)
 %      readkernels('my.kernel');
 %
 %    See also: WRITEKERNELS, MAKEKERNELS, RAYLEIGH_2D_PLANE_WAVE_KERNELS,
-%              GETMAINLOBE, SMOOTH2D
+%              GETMAINLOBE, SMOOTH2D, PLOTKERNELS
 
 %     Version History:
 %        Feb.  5, 2010 - initial version
+%        July  9, 2010 - fixed nargchk
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2010 at 18:00 GMT
+%     Last Updated July  9, 2010 at 18:00 GMT
 
 % todo:
 

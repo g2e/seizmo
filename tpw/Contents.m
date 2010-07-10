@@ -7,6 +7,7 @@
 %GETMAINLOBE                       - Returns the main spectral lobe of a windowed sinusoid
 %GOODUGLYCHECK                     - Interactive QC tool for event data
 %MAKEKERNELS                       - Makes sensitivity kernels for Yang & Forsyth codes
+%PLOTKERNELS                       - Plots Rayleigh wave sensitivity kernels
 %PREM_DISPERSION                   - Returns fundamental mode PREM dispersion
 %RAYLEIGH_2D_PLANE_WAVE_KERNELS    - Makes Rayleigh wave sensitivity kernels
 %READKERNELS                       - Reads sensitivity kernels for Yang & Forsyth codes
