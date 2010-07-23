@@ -16,18 +16,15 @@ revision series names
 230-239  --  Meru
 240-249  --  NangaParbat
 
-shortterm goals
+goals on my mind
 ----------------
 ffmancor
+    - main problem is not having dynamic raytracing
 	- stretch/squish gradually starting at some depth
 	- period sets up radial cos
     - define azimuthal cos
 	- reflect off cmb
     - can we make this something like 1e-6 s/km^3 ?
-fk update
-	- save old versions to oldfk for now
-	- fk needs to return complex
-    - plotting will extract component of choice (rl/im/am/ph)
 make_reflect_input
 	- custom readwr.f
 	- read_reflect_output
@@ -36,10 +33,6 @@ more mantle models
 	- handle sph models
 more cmb models
 	- rjk
-
-
-
-
 plotting options!!!
 make guis for cut functions
 	- popcut
@@ -92,12 +85,11 @@ possible extras
 getpeaks
 markpeaks
 routines to plot models
-routines to plot raypaths
 function to make g matrix for sph tri stuff
-array functions
-	stacks
-	beams
-	vespa
+vespagrams
+ftan
+slantstacking
+spectrum estimation
 
 0.7.0 - css?
 ------------

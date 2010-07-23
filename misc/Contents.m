@@ -21,6 +21,7 @@
 %ISPARALLEL          - TRUE if orientations are parallel
 %JOINWORDS           - Combines a cellstr into a space-separated string
 %LTI2SUB             - Square matrix lower triangle linear indices to subscripts
+%MAPLOCATIONS        - Map station/event locations
 %MATCHSORT           - Replicates a sort operation using the returned permutation indices
 %MCXC                - Multi-channel cross correlation with built-in peak picker
 %NAME2RGB            - Converts short/long color names to RGB triplets

@@ -23,9 +23,10 @@ function [vol]=fksubvol(vol,frng)
 %     Version History:
 %        June 11, 2010 - initial version
 %        July  6, 2010 - update for new struct
+%        July 14, 2010 - bugfix related to new struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 16:45 GMT
+%     Last Updated July 14, 2010 at 12:55 GMT
 
 % todo:
 
@@ -64,7 +65,7 @@ for i=1:numel(vol)
     maxdb=max(vol(i).beam(:));
     vol(i).beam=vol(i).beam-maxdb;
     vol(i).normdb=vol(i).normdb+maxdb;
-    vol(i).freq=vol(i).z(fidx);
+    vol(i).freq=vol(i).freq(fidx);
 end
 
 end

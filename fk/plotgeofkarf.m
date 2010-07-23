@@ -149,7 +149,7 @@ else
 end
 
 % map colors & coast/border res
-gshhs='c';
+gshhs='l';
 %ocean=[0.3 0.6 1];
 %land=[0.4 0.6 0.2];
 %border=[0.5 0 0];

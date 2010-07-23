@@ -43,16 +43,16 @@ function []=seizmo2wav(data,factor,varargin)
 
 %     Version History:
 %        Apr. 25, 2010 - initial version
+%        July 15, 2010 - nargchk fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2010 at 12:25 GMT
+%     Last Updated July 15, 2010 at 12:25 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
-if(mod(nargin,2))
+error(nargchk(1,inf,nargin));
+if(nargin>2 && mod(nargin,2))
     error('seizmo:seizmo2wav:badNumInputs',...
         'Bad number of arguments!');
 end

@@ -8,6 +8,7 @@
 %CHKGEOFKSTRUCT    - Validate if a struct is as defined by GEOFK functions
 %FK4D              - Returns beamformer volumes in frequency-wavenumber-time space
 %FKARF             - Returns the fk array response function for a seismic array
+%FKCART2POL        - Converts a cartesian space based fk grid to polar space
 %FKDBINFO          - Returns the min/median/max dB for a FK struct
 %FKFRAMESLIDE      - Slides through a sequence of fk maps plotting each one
 %FKFREQSLIDE       - Slides through a fk volume plotting each frequency
@@ -20,8 +21,10 @@
 %GEOFKARF          - Returns the geofk array response function for a seismic array
 %GEOFKARF2MAP      - Converts a geofk ARF volume to a geofk ARF map
 %GEOFKARFSLOWSLIDE - Slides through the slownesses of a geofkarf volume
+%GEOFKDBINFO       - Returns the min/median/max dB for a geofk struct
 %GEOFKFRAMESLIDE   - Slides through a set of geofk maps plotting each one
 %GEOFKFREQSLIDE    - Slides through a geofk volume plotting each frequency
+%GEOFKFREQSLIDEX   - Marks peak while sliding through geofk frequencies
 %GEOFKSLOWSLIDE    - Slides through a geofk volume plotting each slowness
 %GEOFKSUBARF       - Extracts a subARF of a geofkarf volume
 %GEOFKSUBVOL       - Extracts a subvolume of a geofk volume
@@ -30,6 +33,7 @@
 %GEOFKXCVOLUME     - Geographic FK beamforming
 %KXY2SLOWBAZ       - Converts wavenumbers in x & y to slowness and back-azimuth
 %PLOTFKARF         - Plots an fk array response function
+%PLOTFKAZIFREQ     - Plots beam intensity as a function of azimuth & frequency
 %PLOTFKMAP         - Plots the frequency-wavenumber output from FKMAP
 %PLOTGEOFKARF      - Plots a geofk array response
 %PLOTGEOFKMAP      - Plots frequency-slowness-position response info

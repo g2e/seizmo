@@ -58,9 +58,10 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %        June 25, 2010 - initial version
 %        July  1, 2010 - no land cover
 %        July  6, 2010 - update for new struct
+%        July 14, 2010 - added some lines for not plotting stations
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 19:05 GMT
+%     Last Updated July 14, 2010 at 15:05 GMT
 
 % todo:
 
@@ -156,7 +157,7 @@ else
 end
 
 % map colors & coast/border res
-gshhs='c';
+gshhs='l';
 %ocean=[0.3 0.6 1];
 %land=[0.4 0.6 0.2];
 %border=[0.5 0 0];
@@ -186,6 +187,10 @@ minlat=min([map.stla; min(map.latlon(:,:,1))']);
 maxlat=max([map.stla; max(map.latlon(:,:,1))']);
 minlon=min([map.stlo; min(map.latlon(:,:,2))']);
 maxlon=max([map.stlo; max(map.latlon(:,:,2))']);
+%minlat=min(min(map.latlon(:,:,1)));
+%maxlat=max(max(map.latlon(:,:,1)));
+%minlon=min(min(map.latlon(:,:,2)));
+%maxlon=max(max(map.latlon(:,:,2)));
 
 % default/check projopt
 if(nargin<2 || isempty(popt))

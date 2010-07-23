@@ -45,9 +45,11 @@ function [varargout]=plotfkarf(arf,varargin)
 %        May  26, 2010 - update for new plotfkmap args
 %        June 16, 2010 - labels call correct axes
 %        July  6, 2010 - major update for new struct
+%        July 18, 2010 - fix db info, commented out nyquist ring code,
+%                        fixed axis output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 17:05 GMT
+%     Last Updated July 18, 2010 at 10:50 GMT
 
 % todo:
 
@@ -65,10 +67,11 @@ end
 
 % plotting function call depends on polar
 if(arf.polar)
-    varargout{1}=plotfkarfpolarmap(arf,varargin{:});
+    ax=plotfkarfpolarmap(arf,varargin{:});
 else % cartesian
-    varargout{1}=plotfkarfcartmap(arf,varargin{:});
+    ax=plotfkarfcartmap(arf,varargin{:});
 end
+if(nargout); varargout{1}=ax; end
 
 end
 
@@ -103,14 +106,14 @@ dblim=sort([dblim(1) dblim(2)]);
 % rescale beam
 switch zerodb
     case 'min'
-        map.beam=map.beam-min(map.beam(:));
         map.normdb=map.normdb+min(map.beam(:));
+        map.beam=map.beam-min(map.beam(:));
     case 'max'
-        map.beam=map.beam-max(map.beam(:));
         map.normdb=map.normdb+max(map.beam(:));
+        map.beam=map.beam-max(map.beam(:));
     case 'median'
-        map.beam=map.beam-median(map.beam(:));
         map.normdb=map.normdb+median(map.beam(:));
+        map.beam=map.beam-median(map.beam(:));
     case 'abs'
         map.beam=map.beam+map.normdb;
         map.normdb=0;
@@ -292,14 +295,14 @@ dblim=sort([dblim(1) dblim(2)]);
 % rescale beam
 switch zerodb
     case 'min'
-        map.beam=map.beam-min(map.beam(:));
         map.normdb=map.normdb+min(map.beam(:));
+        map.beam=map.beam-min(map.beam(:));
     case 'max'
-        map.beam=map.beam-max(map.beam(:));
         map.normdb=map.normdb+max(map.beam(:));
+        map.beam=map.beam-max(map.beam(:));
     case 'median'
-        map.beam=map.beam-median(map.beam(:));
         map.normdb=map.normdb+median(map.beam(:));
+        map.beam=map.beam-median(map.beam(:));
     case 'abs'
         map.beam=map.beam+map.normdb;
         map.normdb=0;
@@ -409,11 +412,11 @@ end
 % last plot the nyquist rings about the plane wave locations
 titstr=cell(map.npw,1);
 for i=1:map.npw
-    snyq=snyquist(min(dist),map.f(i)); % closest 2 stations
-    [x,y]=circle(snyq);
-    x=x+map.s(i)*sin(map.baz(i)*pi/180);
-    y=y+map.s(i)*cos(map.baz(i)*pi/180);
-    plot(x,y,'r:','linewidth',2,'tag','nyquist_rings');
+    %snyq=snyquist(min(dist),map.f(i)); % closest 2 stations
+    %[x,y]=circle(snyq);
+    %x=x+map.s(i)*sin(map.baz(i)*pi/180);
+    %y=y+map.s(i)*cos(map.baz(i)*pi/180);
+    %plot(x,y,'r:','linewidth',2,'tag','nyquist_rings');
     titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, PERIOD: %gs',...
             map.s(i),map.baz(i),1/map.f(i));
 end

@@ -1,21 +1,26 @@
-function []=playseizmo(data,factor)
+function []=playseizmo(data,speedup,playrate)
 %PLAYSEIZMO    Plays SEIZMO records as sound
 %
 %    Usage:    playseizmo(data)
-%              playseizmo(data,factor)
+%              playseizmo(data,speedup)
+%              playseizmo(data,speedup,playrate)
 %
 %    Description: PLAYSEIZMO(DATA) plays the records in SEIZMO struct DATA
 %     as sound files.  Note that each record is played separately, so this
-%     may take a while.  The records are compressed time-wise by a factor
-%     of 1000 so that 20Hz corresponds to 20KHz and 20mHz corresponds to
-%     20Hz.  We do this because the range 20Hz-20KHz is roughly the range
-%     of human hearing and will make much of the seismic spectrum audible.
+%     may take a while.  The records are sped up by a factor of 1000 so
+%     that 20Hz corresponds to 20KHz and 20mHz corresponds to 20Hz.  We do
+%     this because the range 20Hz-20KHz is roughly the range of human
+%     hearing and will make much of the seismic spectrum audible.
 %
-%     PLAYSEIZMO(DATA,FACTOR) time-compresses records by FACTOR.  See the
-%     Notes section below for help when using FACTOR to target a specific
-%     frequency range.  After scaling by FACTOR, all records are resampled
+%     PLAYSEIZMO(DATA,SPEEDUP) speeds up records by SPEEDUP.  See the
+%     Notes section below for help when using SPEEDUP to target a specific
+%     frequency range.  After scaling by SPEEDUP, all records are resampled
 %     to 44.1KHz to avoid playback issues.  This step unfortunately takes
 %     some time.
+%
+%     PLAYSEIZMO(DATA,SPEEDUP,PLAYRATE) adjusts the sample rate of the
+%     sound output.  The default is 44.1KHz.  Other rates that might be
+%     more compatible: 8192Hz, 48KHz.  PLAYRATE is in Hz.
 %
 %    Notes:
 %     - FACTOR vs Audible Frequency Range (Periods)
@@ -37,15 +42,15 @@ function []=playseizmo(data,factor)
 
 %     Version History:
 %        Apr. 25, 2010 - initial version
+%        July 15, 2010 - add playrate arg, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2010 at 12:25 GMT
+%     Last Updated July 15, 2010 at 09:25 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,3,nargin));
 
 % check data (dep)
 versioninfo(data,'dep');
@@ -61,18 +66,27 @@ try
     % verbosity
     verbose=seizmoverbose;
     
-    % check factor
-    if(nargin==1 || isempty(nargin)); factor=1000; end
-    if(~isreal(factor) || any(factor<=0) || ~any(numel(factor)==[1 nrecs]))
-        error('seizmo:playseizmo:badFactor',...
-            ['FACTOR must be a positve real scalar or a vector of\n' ...
+    % check speedup
+    if(nargin<2 || isempty(speedup)); speedup=1000; end
+    if(nargin<3 || isempty(playrate)); playrate=44100; end
+    if(~isreal(speedup) || any(speedup<=0) ...
+            || ~any(numel(speedup)==[1 nrecs]))
+        error('seizmo:playseizmo:badSpeedUp',...
+            ['SPEEDUP must be a positve real scalar or a vector of\n' ...
             'positive reals with one value per record in DATA!']);
     end
-    if(isscalar(factor)); factor(1:nrecs,1)=factor; end
+    if(~isreal(playrate) || any(playrate<=0) ...
+            || ~any(numel(playrate)==[1 nrecs]))
+        error('seizmo:playseizmo:badPlayRate',...
+            ['PLAYRATE must be a positve real scalar or a vector of\n' ...
+            'positive reals with one value per record in DATA!']);
+    end
+    if(isscalar(speedup)); speedup(1:nrecs,1)=speedup; end
+    if(isscalar(playrate)); playrate(1:nrecs,1)=playrate; end
     
     % get up/down resampling factors to achieve 44.1KHz
     delta=getheader(data,'delta');
-    [n,d]=rrat(delta./factor*44100,1e-6);
+    [n,d]=rrat(delta./speedup*playrate,1e-6);
     
     % detail message
     if(verbose)
@@ -85,7 +99,8 @@ try
         % extract, resample, play
         try
             % scaling between +/-1.1 b/c it seems to avoid popping 4 me
-            playsound(resample(double(data(i).dep),n(i),d(i)),44100,1.1);
+            playsound(resample(double(data(i).dep),...
+                n(i),d(i)),playrate(i),1.1);
         catch
             error(lasterror)
         end
@@ -105,5 +120,6 @@ end
 
 function []=playsound(record,rate,scale)
 % play record scaled between +/-scale (to avoid popping)
-sound(record/(scale*max(abs(record(:)))),rate);
+playblocking(audioplayer(record/(scale*max(abs(record(:)))),rate,16));
+%sound(record/(scale*max(abs(record(:)))),rate);
 end

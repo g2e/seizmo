@@ -7,12 +7,12 @@ absolutevalue		seizmofun(data,@abs)
 add					add(data,value)
 addf				addrecords(data1,data2)
 apk					N/A
-arraymap			N/A, (plotstations, plotstations2)
+arraymap			mapstations
 axes				See axes properties
 bandpass			iirfilter(data,'bp',...)
 bandrej				iirfilter(data,'br',...)
-bbfk				N/A
-beam				N/A
+bbfk				see fk functions
+beam				see fk functions
 begindevices		N/A (ever)
 beginframe			See subplot
 beginwindow			See figure & figure properties
@@ -22,7 +22,7 @@ border				set(gca,'box','on')
 capf				N/A
 chnhdr				changeheader(data,'field',value,...)
 chpf				N/A
-color				plot[012](data,'colormap',['r';'w';'b'])
+color				plot0(data,'colormap',['r';'w';'b']), etc
 comcor				N/A (maybe available through debugging)
 commit				unnecessary!
 contour				N/A (can be done with matlab)
@@ -33,7 +33,7 @@ correlate			correlate
 cut					readdatawindow
 cuterr				N/A, see readdatawindow
 cutim				cut
-datagen				N/A, use bseizmo
+datagen				N/A, use bseizmo to convert custom signals to sac files
 decimate			squish
 deletechannel		deleterecords
 deltacheck			binoperr, checkoperr('multiple_delta',value), fixdelta
@@ -60,14 +60,14 @@ fir					N/A (use filterbuilder)
 floor				see xlim, ylim
 funcgen				N/A, see bseizmo
 getbb				unnecessary!
-gmap				plotstations, plotstations2
-gmtmap				plotstations, plotstations2
+gmap				mapstations
+gmtmap				mapstations
 grayscale			use gray colormap function
 grid				set(gca,'xgrid','on')
 gtext				see xlabel, ylabel, title
 hanning				N/A, can be done with slidingavg + seizmofun
 help				help seizmo (or any sub-directory)
-help_intro			N/A (good luck!)
+help_intro			see doc/README
 highpass			iirfilter(data,'hi',...)
 hilbert				hilbrt
 history				use the command history window, commandhistory
@@ -94,13 +94,13 @@ loglin              see plot properties
 loglog              see plot properties
 lowpass				iirfilter(data,'lo',...)
 macro               N/A, see path, function, script
-map                 plotstations, plotstations2
-mat                 unnecessary (sorry no sac)
+map                 mapstations
+mat                 unnecessary (!sac goes the other way)
 markptp             N/A
 marktimes           N/A
 markvalue           N/A
 merge				merge
-message             disp, printf, etc
+message             disp, fprintf, etc
 mtw                 use CUT
 mul					multiply
 mulf				multiplyrecords
@@ -108,118 +108,118 @@ mulomega			multiplyomega
 news                bzr log | more
 nplotc              use "hold on" and other plot commands
 null                set the null values to nan
-oapf                
-ohpf                
+oapf                N/A
+ohpf                N/A
 pause               pause, waitfor, uiwait
-pickauthor          
-pickphase           
-picks               
-plabel              
+pickauthor          N/A
+pickphase           N/A
+picks               see plot0(data,'markers',true|false)
+plabel              see title/xlabel/ylabel
 plot                N/A
 plot1				plot1
 plot2				plot2
-plotalpha           
-plotc               
-plotctable          
-plotdy              
-plotpk              
-plotpktable         
-plotpm              
-plotsp              
-plotxy              
-print               
-printhelp           
-production          
-qdp					unnecessary!
-quantize            
-quit                
-quitsub             
+plotalpha           N/A
+plotc               N/A (unnecessary?)
+plotctable          N/A (unnecessary?)
+plotdy              unnecessary (use Matlab functions)
+plotpk              N/A
+plotpktable         N/A
+plotpm              N/A
+plotsp              plot1(keeprl(data)), etc
+plotxy              unnecessary (use Matlab functions)
+print               see Matlab help on printing
+printhelp           see Matlab help on printing
+production          see Matlab debugger stuff (breakpoints)
+qdp					N/A
+quantize            N/A
+quit                exit
+quitsub             unnecessary
 read				readseizmo
-readbbf             
-readcss             
-readdb              
-readerr	            
-readgse             
+readbbf             N/A (load for Matlab variables)
+readcss             N/A
+readdb              N/A
+readerr	            N/A
+readgse             N/A
 readhdr				readheader
-readsdd             
-readsp              
-readsuds	        
-readtable           
-recalltrace         
-report              
+readsdd             N/A
+readsp              N/A
+readsuds	        N/A
+readtable           textscan, dlmread, readtxt+getwords
+recalltrace         unnecessary
+report              N/A (maybe 'global SEIZMO; SEIZMO')
 reverse				reverse
 rglitches           N/A
 rmean				removemean
-rms                 N/A
+rms                 getvaluefun(data,@(x)sqrt(mean(x.^2)))
 rollback            unnecessary!
 rotate				rotate
 rq                  N/A
 rtrend				removetrend
-scallop             
-setbb               
-setdevice           
-setmacro            
-sgf                 
-smooth              
-sonogram            
+scallop             N/A
+setbb               unnecessary
+setdevice           unnecessary
+setmacro            set path
+sgf                 N/A
+smooth              slidingmean
+sonogram            N/A
 sort				sortbyfield
-spe                 
-spectrogram         
+spe                 N/A (Sig Proc Toolbox has functions)
+spectrogram         stft
 sqr                 seizmofun(data,@(x)x.^2)
 sqrt                seizmofun(data,@sqrt)
-sss                 
+sss                 N/A (fk does similar)
 stretch				stretch
 sub					subtract
 subf				subtractrecords
-symbol              
+symbol              see plot properties
 synchronize			synchronize
-syntax              
+syntax              pops up automatically (otherwise help function_name)
 systemcommand		try "!command"
 taper				taper
-ticks               
-title               
-trace               
-transcript          
+ticks               see plot properties
+title               title
+trace               see Matlab debugger info
+transcript          diary, Matlab command history
 transfer            applysacpz, removesacpz
-transfertable       
-tsize               
-tutorial            
-unsetbb             
+transfertable       N/A
+tsize               see plot properties
+tutorial            N/A
+unsetbb             unnecessary (clear)
 unwrap              unwrapphase
-vspace              
+vspace              see plot properties
 wait                waitfor, uiwait, pause
-whpf                
-width               
-wiener              
-wild                
-window              
+whpf                N/A
+width               see plot properties
+wiener              N/A
+wild                N/A (ever)
+window              see plot properties
 write				writeseizmo
-writebbf            
-writecss            
-writegse	        
+writebbf            N/A (save for Matlab variables)
+writecss            N/A
+writegse	        N/A
 writehdr			writeheader
-writesdd            
-writesp             
-xdiv                
-xfudge              
-xfull               
-xgrid               
-xlabel              
-xlim                
-xlin
-xlog
-xvport
-ydiv
-yfudge
-yfull
-ygrid
-ylabel
-ylim
-ylin
-ylog
-yvport
-zcolors
-zlabels
-zlevels
-zlines
-zticks
+writesdd            N/A
+writesp             N/A
+xdiv                see plot properties
+xfudge              see plot properties
+xfull               see plot properties
+xgrid               see plot properties
+xlabel              xlabel
+xlim                see plot properties
+xlin				see plot properties
+xlog				see plot properties
+xvport				see axis properties
+ydiv				see plot properties
+yfudge				see plot properties
+yfull				see plot properties
+ygrid				see plot properties
+ylabel				ylabel
+ylim				see plot properties
+ylin				see plot properties
+ylog				see plot properties
+yvport				see axis properties
+zcolors				see contour
+zlabels				see contour
+zlevels				see contour
+zlines				see contour
+zticks				see contour

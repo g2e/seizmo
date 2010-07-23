@@ -1,14 +1,23 @@
-function [mindb,meddb,maxdb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
-%FKDBINFO    Returns the min/median/max dB for a FK struct
+function [maxdb,meddb,mindb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
+%FKDBINFO    Returns the min/median/max dB for a fk struct
 %
-%    Usage:    [mindb,meddb,maxdb]=fkdbinfo(fk)
-%             [mindb,meddb,maxdb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
+%    Usage:    [maxdb,meddb,mindb]=fkdbinfo(fk)
+%             [maxdb,meddb,mindb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
 %
-%    Description: [MINDB,MEDDB,MAXDB]=FKDBINFO(FK) returns the limits and
-%     median of the beam(s) in FK in decibels.  This is useful for
-%     quick identification of elements with strong plane wave coherency.
+%    Description: [MAXDB,MEDDB,MINDB]=FKDBINFO(FK) returns the decibel
+%     limits and median of the beam(s) in the fk struct FK.  This is useful
+%     for quick identification for strong plane wave coherency.  The
+%     outputs are actually structs with the following format:
+%       .db        == decibel value
+%       .horzslow  == magnitude of the horizontal slowness (in sec/deg)
+%       .backazi   == backazimuth (in degrees)
+%       .freq      == frequency (in Hz)
+%     Each field is equal in size to the input struct FK.  So MAXDB.db(3),
+%     MAXDB.horzslow(3), MAXDB.backazi(3), & MAXDB.freq(3) give info about
+%     the max peak in FK(3).  Please note that MEDDB does not return any
+%     location info as a median's location is not useful/straightfoward.
 %
-%     [MINDB,MEDDB,MAXDB]=FKDBINFO(FK,FRNG,BAZRNG,SRNG,ESRNG,NSRNG) returns
+%     [MAXDB,MEDDB,MINDB]=FKDBINFO(FK,FRNG,BAZRNG,SRNG,ESRNG,NSRNG) returns
 %     dB info about a particular subsection of the slowness volume(s) or
 %     map(s).  FRNG is the frequency range in Hz.  BAZRNG is the back-
 %     azimuth range in degrees.  SRNG is the horizontal slowness magnitude
@@ -20,22 +29,25 @@ function [mindb,meddb,maxdb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
 %    Examples:
 %     Analyze a 4D fk dataset:
 %      s4d=fk4d(data,[],[],50,201,[1/100 1/4]);
-%      [mindb,meddb,maxdb]=fkdbinfo(s4d);
-%      figure; plot(mindb);
+%      [maxdb,meddb,mindb]=fkdbinfo(s4d);
+%      figure; plot(mindb.db);
 %      hold on;
-%      plot(maxdb);
-%      plot(meddb);
+%      plot(maxdb.db);
+%      plot(meddb.db);
+%      hold off;
 %
-%    See also: FKMAP, FKVOLUME, FK4D
+%    See also: GEOFKDBINFO, FKMAP, FKVOLUME, FK4D
 
 %     Version History:
 %        May  26, 2010 - initial version
 %        June 30, 2010 - added range arguments
 %        July  1, 2010 - range bugfix
 %        July  6, 2010 - update for new struct
+%        July 12, 2010 - baz range issue bugfix (for sane ranges)
+%        July 16, 2010 - output structs with db point info
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 16:45 GMT
+%     Last Updated July 16, 2010 at 14:25 GMT
 
 % todo:
 
@@ -83,10 +95,12 @@ if(~isempty(nsrng) && (~isreal(nsrng) || numel(sns)~=2 || sns(1)~=1 ...
 end
 
 % loop over every element
-mindb=nan(size(fk));
+nfk=numel(fk);
+mindb=struct('db',nan(nfk,1,'single'),'horzslow',nan(nfk,1),...
+    'backazi',nan(nfk,1),'freq',nan(nfk,1));
 meddb=mindb;
 maxdb=mindb;
-for i=1:numel(fk)
+for i=1:nfk
     % get backazimuths and slownesses
     if(fk(i).polar)
         nx=numel(fk(i).x);
@@ -119,7 +133,9 @@ for i=1:numel(fk)
     if(isempty(bazrng))
         bazidx=true(size(baz));
     else
-        bazidx=baz>=bazrng(1) & baz<=bazrng(2);
+        bazidx=(baz>=bazrng(1) & baz<=bazrng(2)) ...
+            | (baz>=(bazrng(1)-360) & baz<=(bazrng(2)-360)) ...
+            | (baz>=(bazrng(1)+360) & baz<=(bazrng(2)+360));
     end
     if(isempty(srng))
         sidx=true(size(s));
@@ -141,11 +157,22 @@ for i=1:numel(fk)
     idx=repmat(bazidx & sidx & esidx & nsidx,[1 1 numel(fidx)]);
     idx(:,:,~fidx)=false;
     sub=fk(i).beam(idx);
+    lind=find(idx);
+    [r,c,p]=ind2sub(size(fk(i).beam),lind);
     
     % stats
-    mindb(i)=min(sub(:))+fk(i).normdb;
-    meddb(i)=median(sub(:))+fk(i).normdb;
-    maxdb(i)=max(sub(:))+fk(i).normdb;
+    % median point cannot be located so it has no point info
+    meddb.db(i)=median(sub(:))+fk(i).normdb;
+    [mindb.db(i),idx]=min(sub(:));
+    mindb.db(i)=mindb.db(i)+fk(i).normdb;
+    mindb.horzslow(i)=s(r(idx),c(idx));
+    mindb.backazi(i)=baz(r(idx),c(idx));
+    mindb.freq(i)=fk(i).freq(p(idx));
+    [maxdb.db(i),idx]=max(sub(:));
+    maxdb.db(i)=maxdb.db(i)+fk(i).normdb;
+    maxdb.horzslow(i)=s(r(idx),c(idx));
+    maxdb.backazi(i)=baz(r(idx),c(idx));
+    maxdb.freq(i)=fk(i).freq(p(idx));
 end
 
 end

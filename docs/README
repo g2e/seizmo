@@ -1,48 +1,78 @@
 <·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>Installing SEIZMO<·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>
 
 
-To install:
+How I install SEIZMO for Matlab on our machines:
 
-1. download and extract the tar volume in the directory
+1. Download and extract the tar volume in the directory
    you want the SEIZMO directory tree to reside:
         cd ~   (your home directory for example)
-	tar jxvf seizmo-devel-rXX.tar.bz2
+        mv seizmo seizmo-old  (move old seizmo install out of the way)
+        tar jxvf seizmo-devel-rXXX.tar.gz
 
-2. this will create a directory tree under seizmo full of useful mfiles
+2. This creates the directory "seizmo" in the current directory.
+   Beneath that directory is another called "devel" that is the actual
+   root directory.  I move "devel" out of "seizmo" and rename it.
+        cd seizmo
+        mv devel ..
+        rmdir seizmo
+        mv devel seizmo
 
-3. add the following folders to your Matlab path (as admin):
-   seizmo/devel            (main stuff)
-   seizmo/devel/misc       (necessary various functions)
-   seizmo/devel/position   (for earth positioning)
-   seizmo/devel/time       (for data timing)
-   seizmo/devel/mattaup    (taup access)
+3. Add the following folders to your Matlab path:
+        seizmo/           (main stuff)
+        seizmo/misc       (some (un)necessary various functions)
+        seizmo/position   (some (un)necessary earth positioning functions)
+        seizmo/time       (some (un)necessary time functions)
 
-4. add the mattaup jar-file in matlab using 'edit classpath.txt' (as admin):
-   seizmo/devel/mattaup/lib/matTaup.jar
+4. Add mattaup & m_map functionality by including the following
+   folders in your Matlab path too.  These are not necessary for
+   basic functions but not having them will break plenty of others.
+   Note that custom versions of both are currently included (m_map
+   edits are minor so you CAN use your own but you will probably hit
+   some issues I fixed).
+        seizmo/mattaup     (taup access)
+        seizmo/m_map/1.4e  (m_map routines)
+
+   Add the mattaup jar-file in Matlab using 'edit classpath.txt' (as admin):
+        seizmo/devel/mattaup/lib/matTaup.jar
+
+   Make sure the GSHHS binary files are on the Matlab path too!  I have a
+   folder named 'gshhs' in the same directory as seizmo that holds all the
+   coastline/border/river files.
+
 
 Thats it! The rest is optional. Good luck!
 
-5. the following directories are optional, but recommended:
-   seizmo/devel/shortnames      (short-named links to longer-named functions)
-   seizmo/devel/gui             (for working with data graphically)
-   seizmo/devel/seizmo_internal (link to seizmo private functions)
+The following directories are optional, but highly recommended:
+   seizmo/cmap                  (color maps - useful if you like GMT colors)
+   seizmo/event                 (useful functions for cmt & mlocate stuff)
+   seizmo/fk                    (fk analysis functions)
+   seizmo/gui                   (interactive plot/menu functions)
+   seizmo/models                (earth model functions)
+   seizmo/response              (instrument response functions & database)
+   seizmo/shortnames            (short-named links to longer-named functions)
+   seizmo/ttcorrect             (travel time correction + raypath routines)
+   seizmo/xcalign               (multichannel xc arrival alignment functions)
 
-6. these are often broken but may be useful
-   seizmo/devel/align        (for aligning data on a phase)
-   seizmo/devel/cluster      (waveform clustering for multi-channel cross correlation)
-   seizmo/devel/eqdb         (for working with earthquake lists)
-   seizmo/devel/invert       (some inversion scripts)
-   seizmo/devel/tomo         (tomography functions from GDA)
-   seizmo/devel/tpw          (some functions related to two plane wave work)
+These may also be of help:
+   seizmo/fixes                 (header fixing routines for extraction utilities)
+   seizmo/invert                (some inversion scripts)
+   seizmo/seizmo_internal       (link to seizmo private functions)
+   seizmo/ww3                   (WaveWatch III routines)
 
-7. these directories are external packages included for your convenience
-   seizmo/devel/external     (misc stuff I thought was cool or might come in handy)
-   seizmo/devel/ttbox        (a free travel time toolbox)
-   seizmo/devel/m_map        (a free mapping toolbox)
+These are currently unfinished/broken but are useful:
+   seizmo/cmt                (cmt functions)
+   seizmo/noise              (ambient noise analysis functions)
+   seizmo/synth              (functions for working with synthetics)
+   seizmo/tomo               (tomography functions from GDA)
+   seizmo/topo               (topo data functions)
+   seizmo/tpw                (some functions related to two plane wave analysis)
 
-8. these should be left alone
-   seizmo/devel/deprecated   (old and forgotten)
-   seizmo/devel/unfinished   (for development)
+These directories are external scripts included for your convenience:
+   seizmo/external           (misc stuff I thought was cool or might come in handy)
+
+These should be left off of your path:
+   seizmo/docs               (just text files)
+   seizmo/unfinished         (for development)
 
 
 <·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>Using SEIZMO<·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>
@@ -53,7 +83,7 @@ in browsing the functions using Matlab's 'help' command.
 To get a list of all the main functions along with a quick
 description:
 
-help devel
+help seizmo
 
 You can list functions from other directories as well:
 help misc
@@ -85,7 +115,7 @@ read just the data (headers must have been read already):
 data=readdata(data)
 
 read a partial data window (headers must have been read already):
-data=readdatawindow(data)
+data=readdatawindow(data,100,200)
 
 write files:
 writeseizmo(data)
@@ -101,8 +131,19 @@ rdw = readdatawindow
 w   = writeseizmo
 wh  = writeheader
 
-for more info type:
-help <function>
- or
-help <directory>
+<·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>Working with Metadata of SAC Files<·.¸¸.+¤®°¨¯¨°®¤+.¸¸.·>
+
+if the shortnames directory has been added:
+ch    = changeheader
+gh    = getheader
+lh    = listheader
+cmph  = compareheader
+cmph2 = compareheader2
+
+other useful header field extraction routines:
+getlgc      = returns a logical as a string (ie 'true', 'false', 'undefined', 'unknown')
+getenumid   = returns enum id (ie iamph, iunkn, etc)
+getenumdesc = returns description of enum id
+copyheader  = wholesale header copying
+
 

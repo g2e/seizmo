@@ -21,6 +21,7 @@
 %GEOGRAPHIC2GEOCENTRIC    - Converts coordinates from geographic to geocentric
 %GEOGRAPHIC2XYZ           - Converts coordinates from geographic to cartesian
 %GEOGRAPHICLAT2RADIUS     - Returns the radius at a geographic latitude
+%GRIDCONV                 - Calculates grid convergence for orthographic projection
 %HAVERSINE                - Returns distance between 2 points using the Haversine formula
 %LATMOD                   - Returns a latitude modulus (ie unwraps latitudes)
 %LONMOD                   - Returns a longitude modulus (ie unwraps longitudes)
