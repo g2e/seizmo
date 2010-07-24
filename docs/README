@@ -45,7 +45,7 @@ Thats it! The rest is optional. Good luck!
 The following directories are optional, but highly recommended:
    seizmo/cmap                  (color maps - useful if you like GMT colors)
    seizmo/event                 (useful functions for cmt & mlocate stuff)
-   seizmo/fk                    (fk analysis functions)
+   seizmo/fk                    (fk beamforming functions)
    seizmo/gui                   (interactive plot/menu functions)
    seizmo/models                (earth model functions)
    seizmo/response              (instrument response functions & database)
@@ -57,6 +57,7 @@ These may also be of help:
    seizmo/fixes                 (header fixing routines for extraction utilities)
    seizmo/invert                (some inversion scripts)
    seizmo/seizmo_internal       (link to seizmo private functions)
+   seizmo/sphpoly               (spherical polygon functions)
    seizmo/ww3                   (WaveWatch III routines)
 
 These are currently unfinished/broken but are useful:

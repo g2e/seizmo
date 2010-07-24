@@ -1,5 +1,5 @@
 function [clat,clon]=arraycenter(lat,lon,ellipsoid)
-%ARRAYCENTER    Returns the geographic center of an array of positions
+%ARRAYCENTER    Returns the geographic center of an array
 %
 %    Usage:    [clat,clon]=arraycenter(lat,lon)
 %              [clat,clon]=arraycenter(lat,lon,[a f])
@@ -29,15 +29,15 @@ function [clat,clon]=arraycenter(lat,lon,ellipsoid)
 
 %     Version History:
 %        May   1, 2010 - initial version
+%        July 23, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   1, 2010 at 10:00 GMT
+%     Last Updated July 23, 2010 at 19:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,3,nargin));
 
 % ellipsoid given or not
 if(nargin==2 || isempty(ellipsoid))

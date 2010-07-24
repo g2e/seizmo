@@ -1,5 +1,5 @@
 % Seismology Toolbox - ttcorrect
-% Version 0.6.0-r150 Everest 8-July-2010
+% Version 0.6.0-r153 Everest 24-July-2010
 %
 % Seismic phase travel time correction functions
 %AK135_ELLIP_TABLES        - Returns tables for ellipticity corrections

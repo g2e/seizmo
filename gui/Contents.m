@@ -1,5 +1,5 @@
 % Seismology Toolbox - gui
-% Version 0.6.0-r150 Everest 8-July-2010
+% Version 0.6.0-r153 Everest 24-July-2010
 %
 % Interactive functions
 %PICKSTACK     - Interactive picking of signal onset in SEIZMO record stack

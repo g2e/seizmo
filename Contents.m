@@ -1,5 +1,5 @@
 % Seismology Toolbox - seizmo
-% Version 0.6.0-r150 Everest 8-July-2010
+% Version 0.6.0-r153 Everest 24-July-2010
 %
 % Alphabetical list of SEIZMO functions
 %ADD                  - Add a constant to SEIZMO records
@@ -129,7 +129,7 @@
 %CMT                 - various moment tensor functions
 %EVENT               - functions related to earthquake info
 %FIXES               - functions to fix headers
-%FK                  - frequency-wavenumber analysis functions
+%FK                  - frequency-wavenumber beamforming functions
 %GUI                 - simple gui functions
 %INVERT              - simple inversion functions
 %MATTAUP             - TauP functions
@@ -139,6 +139,7 @@
 %RESPONSE            - instrument response functions
 %SEIZMO_INTERNAL     - internal functions
 %SHORTNAMES          - shortcut names for functions
+%SPHPOLY             - Spherical Polygon functions
 %SYNTH               - functions for synthetics
 %TIME                - absolute time functions
 %TOPO                - topography functions

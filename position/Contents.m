@@ -1,8 +1,9 @@
 % Seismology Toolbox - position
-% Version 0.6.0-r150 Everest 8-July-2010
+% Version 0.6.0-r153 Everest 24-July-2010
 %
 % Global Position functions
-%ARRAYCENTER              - Returns the geographic center of an array of positions
+%ARRAYCENTER              - Returns the geographic center of an array
+%ARRAYAPERTURE            - Returns the aperture of an array
 %AUTHALIC2GEOGRAPHICLAT   - Convert latitude from authalic to geographic
 %CLOSEST_POINT_ON_GC      - Return closest point on great circle to a point
 %DEGDIST_FROM_GC          - Distance from a point on a sphere to a great circle
@@ -26,13 +27,6 @@
 %LATMOD                   - Returns a latitude modulus (ie unwraps latitudes)
 %LONMOD                   - Returns a longitude modulus (ie unwraps longitudes)
 %MEAN_ELLIPSOID_RADIUS    - Returns the mean radius of an ellipsoid
-%SPH_POLY_AREA            - Finds area of a polygon on a sphere
-%SPH_POLY_IN              - Returns indexing for which polygon some points are in
-%SPH_TRI_AUTO             - Automatically create spherical triangle polyhedra
-%SPH_TRI_INIT             - Returns vertices for regular spherical triangle polyhedra
-%SPH_TRI_LATLON           - Convert spherical triangle xyz arrays to lat/lon
-%SPH_TRI_SPLIT            - Splits up faces of spherical triangle polyhedra
-%SPH_TRI_VERTICES         - Unique vertices of a spherical triangle polyhedra
 %SPHERICALFWD             - Finds a point on a sphere relative to another point
 %SPHERICALINV             - Return distance and azimuth between 2 locations on sphere
 %VINCENTYFWD              - Find destination point on an ellipsoid relative to a point

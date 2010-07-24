@@ -1,5 +1,5 @@
 % Seismology Toolbox - xcalign
-% Version 0.6.0-r150 Everest 8-July-2010
+% Version 0.6.0-r153 Everest 24-July-2010
 %
 % Functions for Cross-Correlation Based Signal Alignment
 %RESCALE_SNR    - Rescales SNR using an error function
