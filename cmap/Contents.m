@@ -4,6 +4,8 @@
 % Various Colormaps
 %BLUE2RED     - Blue-White-Red (aka Polar) colormap
 %DRYWET       - Colormap for hydrology
+%DAWN         - Black-Blue-Violet-Pink-Orange-Red colormap
+%DUSK         - Black-Blue-Violet-Pink-Tan-White colormap
 %FIRE         - Black-Blue-Violet-Red-Yellow-White colormap
 %GEBCO        - Colormap approximating GEBCO bathymetry charts
 %GLOBE_LAND   - Colormap for global topography
@@ -11,6 +13,7 @@
 %GREEN2BLUE   - Green-White-Blue colormap
 %HSVCUSTOM    - HSV colormap with start/end at color specified
 %HSVSPIN      - HSV colormap with random circular shift
+%NIGHTTIME    - For NASA nighttime lights maps
 %OCEAN        - Colormap for bathymetry
 %RAINBOW      - Standard rainbow colormap going from magenta to red
 %RED2GREEN    - Red-White-Green colormap

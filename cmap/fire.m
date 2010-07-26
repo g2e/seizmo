@@ -15,9 +15,10 @@ function [map]=fire(m)
 %     Set the current figure's colormap:
 %      colormap(fire)
 %
-%    See also: BLUE2RED, GREEN2BLUE, SPLIT, SEIS, OCEAN, DRYWET,
+%    See also: BLUE2RED, GREEN2BLUE, SPLIT, SEIS, OCEAN, DRYWET, NIGHTTIME,
 %              GEBCO, SEALAND, RAINBOW, RELIEF, GLOBE_SEA, GLOBE_LAND,
-%              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ, RED2GREEN
+%              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ, RED2GREEN, DUSK,
+%              DAWN, HSVSPIN, HSVCUSTOM
 
 %     Version History:
 %        Apr. 26, 2010 - initial version

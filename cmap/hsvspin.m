@@ -22,7 +22,7 @@ function map=hsvspin(m)
 %    See also: HSV, HSV2RGB, RGB2HSV, RED2GREEN, BLUE2RED, GREEN2BLUE,
 %              SPLIT, SEIS, OCEAN, DRYWET, GEBCO, SEALAND, RAINBOW, RELIEF,
 %              GLOBE_SEA, GLOBE_LAND, SEALAND_SEA, SEALAND_LAND, TOPO_LAND,
-%              FIRE
+%              FIRE, NIGHTTIME, DUSK, DAWN, HSVSPIN
 
 %     Version History:
 %        May   7, 2010 - initial version
