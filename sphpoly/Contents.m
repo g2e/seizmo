@@ -1,5 +1,5 @@
 % Seismology Toolbox - sphpoly
-% Version 0.6.0-r153 Everest 24-July-2010
+% Version 0.6.0-r155 Everest 30-July-2010
 %
 % Spherical Polygon functions
 %SPH_POLY_AREA            - Finds area of a polygon on a sphere

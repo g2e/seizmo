@@ -1,11 +1,10 @@
 % Seismology Toolbox - shortnames
-% Version 0.6.0-r153 Everest 24-July-2010
+% Version 0.6.0-r155 Everest 30-July-2010
 %
 % Shortcut function names
 %ADDF   - ADDRECORDS                     - Add SEIZMO records
 %CH     - CHANGEHEADER                   - Change SEIZMO data header values
 %CMPH   - COMPAREHEADER                  - List SEIZMO headers side-by-side for easy comparison
-%CMPH2  - COMPAREHEADER2                 - List SEIZMO headers side-by-side for easy comparison
 %CSTF   - CONVOLVE_SOURCE_TIMEFUNCTION   - Convolve source function on SEIZMO records
 %DSTF   - DECONVOLVE_SOURCE_TIMEFUNCTION - Deconvolve source from SEIZMO records
 %DIF    - DIFFERENTIATE                  - Differentiate SEIZMO records
@@ -22,6 +21,7 @@
 %P0     - PLOT0                          - Plot SEIZMO data records in an evenly spaced record section
 %P1     - PLOT1                          - Plot SEIZMO data records in individual subplots
 %P2     - PLOT2                          - Overlay plot of SEIZMO data records
+%QH     - QUERYHEADER                    - List SEIZMO headers side-by-side for easy comparison
 %QSNR   - QUICKSNR                       - Quick estimation of SNR for SEIZMO records
 %RD     - READDATA                       - Read SEIZMO data from datafiles
 %RDW    - READDATAWINDOW                 - Read data window into SEIZMO data structure

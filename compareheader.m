@@ -9,7 +9,7 @@ function []=compareheader(data,varargin)
 %     to a specific header field (see the first column for the field name)
 %     and the columns correspond to different records (there is a record
 %     path and filename listing above the table as an aid).  See
-%     COMPAREHEADER2 for a transposed version of the header value table.
+%     QUERYHEADER for a transposed version of the header value table.
 %
 %     COMPAREHEADER(DATA,'FIELD1',...,'FIELDN') prints out the header
 %     fields FIELD1 to FIELDN for records in DATA as a table.  FIELDS may
@@ -36,7 +36,7 @@ function []=compareheader(data,varargin)
 %     Compare picks:
 %      compareheader(data,'picks')
 %
-%    See also: COMPAREHEADER2, LISTHEADER, GETHEADER, CHANGEHEADER
+%    See also: QUERYHEADER, LISTHEADER, GETHEADER, CHANGEHEADER
 
 %     Version History:
 %        Sep. 11, 2009 - initial version
@@ -50,15 +50,15 @@ function []=compareheader(data,varargin)
 %        Jan. 30, 2010 - use VF_GH_Z to get reference time
 %        Feb. 24, 2010 - doc update for compareheader2
 %        Mar. 12, 2010 - fixes for Octave (explicit celling)
+%        July 30, 2010 - update for compareheader2=>queryheader change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 12, 2010 at 01:40 GMT
+%     Last Updated July 30, 2010 at 22:40 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % headers setup
 [h,idx]=versioninfo(data);

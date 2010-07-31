@@ -1,5 +1,5 @@
 % Seismology Toolbox - seizmo
-% Version 0.6.0-r153 Everest 24-July-2010
+% Version 0.6.0-r155 Everest 30-July-2010
 %
 % Alphabetical list of SEIZMO functions
 %ADD                  - Add a constant to SEIZMO records
@@ -18,7 +18,6 @@
 %CHECKHEADER          - Check and fix header values of SEIZMO records
 %CHECKOPERR           - Controls behavior of SEIZMO CHECKHEADER function
 %COMPAREHEADER        - List SEIZMO headers side-by-side for easy comparison
-%COMPAREHEADER2       - List SEIZMO headers side-by-side for easy comparison
 %CONVOLVE             - Convolve SEIZMO records with a time function
 %COPYHEADER           - Copy one record's header to all records
 %CORRELATE            - Compute cross correlograms of SEIZMO data records
@@ -78,6 +77,7 @@
 %PLOTCONFIG           - Returns default configuration structure for SEIZMO plotting
 %PLOTDENDRO           - Plots correlation linkage and seismograms
 %PREWHITEN            - Prewhiten SEIZMO data records for spectral operations
+%QUERYHEADER          - List SEIZMO headers side-by-side for easy comparison
 %QUICKSNR             - Quick estimation of SNR for SEIZMO records
 %RAISE                - Raises the dependent component of SEIZMO records by a given power
 %READDATA             - Read SEIZMO data from datafiles

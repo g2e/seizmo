@@ -16,10 +16,10 @@ function [data]=setevent(data,event)
 %
 %    Examples:
 %     Import basic info from a quick CMT into some records:
-%      ndk=readndk('quick.ndk');
-%      data=setevent(data,ndk(33));
+%      cmt=load('globalcmt_quick');
+%      data=setevent(data,ssidx(cmt,33));
 %
-%    See also: READSODEVENTCSV, READNDK
+%    See also: READSODEVENTCSV, READNDK, SSIDX
 
 %     Version History:
 %        Dec.  1, 2009 - initial version
@@ -27,15 +27,15 @@ function [data]=setevent(data,event)
 %        Jan. 30, 2010 - fixed bug in call to CHECKHEADER
 %        Mar. 30, 2010 - imagtyp for sod is optional, kevnm/name for sod is
 %                        new optional, use mw for ndk
+%        July 30, 2010 - minor touches for new ndk setup
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 30, 2010 at 02:25 GMT
+%     Last Updated July 30, 2010 at 22:25 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check data structure & header
 data=checkheader(data);

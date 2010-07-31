@@ -139,7 +139,7 @@ ch    = changeheader
 gh    = getheader
 lh    = listheader
 cmph  = compareheader
-cmph2 = compareheader2
+qh    = queryheader
 
 other useful header field extraction routines:
 getlgc      = returns a logical as a string (ie 'true', 'false', 'undefined', 'unknown')

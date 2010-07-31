@@ -1,11 +1,12 @@
 % Seismology Toolbox - event
-% Version 0.6.0-r153 Everest 24-July-2010
+% Version 0.6.0-r155 Everest 30-July-2010
 %
 % Earthquake functions
 %CONVOLVE_SOURCE_TIMEFUNCTION   - Convolve source function on SEIZMO records
 %DECONVOLVE_SOURCE_TIMEFUNCTION - Deconvolve source from SEIZMO records
 %FINDCMT                        - Returns Global CMT that is closest to input time & position
 %MAKE_SOURCE_TIMEFUNCTION       - Returns source time functions for convolution
+%PARSE_ISC_ORIGIN               - Parses origin output from the ISC bulletin
 %PLOT_MLOCATE_ELLIPSOIDS        - Plots MLOCATE confidence ellipsoids
 %READNDK                        - Reads a GlobalCMT Project NDK-format text file into a struct
 %READSODEVENTCSV                - Read in a SOD event .csv formatted file as a structure

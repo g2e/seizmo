@@ -1,11 +1,63 @@
 function [isc]=parse_isc_origin(file,hlines)
+%PARSE_ISC_ORIGIN    Parses origin output from the ISC bulletin
+%
+%    Usage:    isc=parse_isc_origin(file)
+%              isc=parse_isc_origin(file,headerlines)
+%
+%    Description:
+%     ISC=PARSE_ISC_ORIGIN(FILE) reads an ascii file containing origin
+%     output from the ISC bulletin.  To create your own file go here:
+%       http://www.isc.ac.uk/search/bulletin/rectang.html
+%     and make sure the format is set to ISC1.0 and to unselect the
+%     check boxes for Headers, Comments, Links, Secondaries, Magnitudes and
+%     Phases.  Once you have entered and submitted your query, copy the
+%     output events (do not include anything else) to a text file.  FILE
+%     should be the filename (and path if necessary) input as a string.
+%     The output is a scalar struct with fields for all of the ISC origin
+%     datums.  Each field will be NORIGINSx1 and will either be a double
+%     array or a cellstr array.
+%
+%     ISC=PARSE_ISC_ORIGIN(FILE,HEADERLINES) allows skipping HEADERLINES
+%     number of header lines in FILE.  This can be useful for personal
+%     notes etc.
+%
+%    Notes:
+%     - Empty numeric fields have a NaN placeholder and empty string fields
+%       are left as empty strings.
+%
+%    Examples:
+%     Passing no arguments brings up a graphical menu to select a file:
+%      isc=parse_isc_origin();
+%
+%     Do a test run:
+%      isc=parse_isc_origin('test_isc.txt')
+%
+%     Extract a single origin (replace EVENTIDX):
+%      fields=fieldnames(isc);
+%      for i=1:numel(fields)
+%          origin.(fields{i})=isc.(fields{i})(EVENTIDX);
+%      end
+%
+%    See also: READNDK, READSODEVENTCSV
+
+%     Version History:
+%        July 26, 2010 - initial version by Erica, added code to allow for
+%                        graphical file selection and handling blank fields
+%        July 28, 2010 - added documentation
+%
+%     Written by Erica Emry (ericae at wustl dot edu)
+%                Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated July 28, 2010 at 17:25 GMT
+
+% todo:
+
 % Parse ISC origin output -
 %   Input file should be: 
 %       Bulletin Type - Comprehensive
 %       Format - IMS1.0
 %       No headers, comments, links, secondaries, magnitudes, or phases
 %           selected
-
+%
 % Record 	Position 	Format 	Description
 % Origin Sub-block 		
 % 1 	4-7 	a4 	Date
@@ -100,7 +152,7 @@ else % file given so check it exists
 end
 
 % default/check header lines
-if (nargin==1); hlines=0; end
+if(nargin<2 || isempty(hlines)); hlines=0; end
 if(~isreal(hlines) || ~isscalar(hlines) || hlines~=fix(hlines) || hlines<0)
     error('seizmo:parse_isc:badInput',...
         'HEADERLINES must be a positive scalar interger!');

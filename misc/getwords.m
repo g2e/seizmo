@@ -38,15 +38,15 @@ function [words]=getwords(str,delimiter,collapse)
 %        Sep. 13, 2009 - minor doc update, added input check
 %        Sep. 16, 2009 - add delimiter option
 %        Nov. 20, 2009 - make multi-delimiter collapse optional
+%        July 30, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 20, 2009 at 07:20 GMT
+%     Last Updated July 30, 2010 at 13:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,3,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(1,3,nargin));
 
 % check str
 if(~ischar(str) || ~isvector(str))

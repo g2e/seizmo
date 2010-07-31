@@ -1,5 +1,5 @@
 % Seismology Toolbox - noise
-% Version 0.6.0-r153 Everest 24-July-2010
+% Version 0.6.0-r155 Everest 30-July-2010
 %
 % Ambient noise analysis functions
 %ARRAY_STATION_NAMES       - Returns station names for an array

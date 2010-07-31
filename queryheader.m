@@ -1,17 +1,17 @@
-function []=compareheader2(data,varargin)
-%COMPAREHEADER2    List SEIZMO headers side-by-side for easy comparison
+function []=queryheader(data,varargin)
+%QUERYHEADER    List SEIZMO headers side-by-side for easy comparison
 %
-%    Usage:    compareheader2(data)
-%              compareheader2(data,'field1',...,'fieldN')
+%    Usage:    queryheader(data)
+%              queryheader(data,'field1',...,'fieldN')
 %
-%    Description: COMPAREHEADER2(DATA) prints out a table comparing all of
+%    Description: QUERYHEADER(DATA) prints out a table comparing all of
 %     the header fields of records in DATA.  Rows in the table correspond
 %     to a specific record (see the first column for the record index and
 %     the lookup table above the header value table for the record's path
 %     & filename) while the columns correspond to different header fields.
 %     This is basically like COMPAREHEADER but transposed.
 %
-%     COMPAREHEADER2(DATA,'FIELD1',...,'FIELDN') prints out the header
+%     QUERYHEADER(DATA,'FIELD1',...,'FIELDN') prints out the header
 %     fields FIELD1 to FIELDN for records in DATA as a table.  FIELDS may
 %     be normal fields ('b' 'kt1' 'xmaximum' etc), group fields ('t' 'kt'
 %     etc), absolute fields ('t9 utc' 'user3 tai' 'resp utc' etc), or
@@ -26,15 +26,15 @@ function []=compareheader2(data,varargin)
 %
 %    Examples:
 %     Some simple cases:
-%      compareheader2(data)          % compare all header variables
-%      compareheader2(data,'t')      % compare t group
+%      queryheader(data)          % compare all header variables
+%      queryheader(data,'t')      % compare t group
 %
 %     Fields are case independent:
-%      compareheader2(data,'dEltA')
-%      compareheader2(data,'StLA','stLo')
+%      queryheader(data,'dEltA')
+%      queryheader(data,'StLA','stLo')
 %
 %     Compare picks:
-%      compareheader2(data,'picks')
+%      queryheader(data,'picks')
 %
 %    See also: COMPAREHEADER, LISTHEADER, GETHEADER, CHANGEHEADER
 
@@ -48,8 +48,7 @@ function []=compareheader2(data,varargin)
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % headers setup
 [h,idx]=versioninfo(data);
@@ -113,7 +112,7 @@ disp(' ')
 disp(' RECORDS:')
 disp('---------------------------')
 for i=1:nrecs
-    disp(sprintf('%d - %s',i,fullfile(data(i).path,data(i).name)))
+    fprintf('%d - %s\n',i,fullfile(data(i).path,data(i).name))
 end
 disp('---------------------------')
 disp(' ')
@@ -230,8 +229,8 @@ for i=1:nvarg
 end
 
 % table header
-disp( sprintf('%14s','      \ HEADER'))
-disp( sprintf('%14s','RECORD \ FIELD'))
+fprintf('%14s\n','      \ HEADER');
+fprintf('%14s\n','RECORD \ FIELD');
 disp([sprintf('%11s',' NUMBER \  ') hf{:}])
 disp(char(45*ones(1,11+sum(cw))))
 

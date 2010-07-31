@@ -1,5 +1,5 @@
 % Seismology Toolbox - time
-% Version 0.6.0-r153 Everest 24-July-2010
+% Version 0.6.0-r155 Everest 30-July-2010
 %
 % Time functions
 %CAL2DOY             - Convert Year & Month & Day of Month to Year & Day of Year

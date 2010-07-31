@@ -1,5 +1,5 @@
 % Seismology Toolbox - fixes
-% Version 0.6.0-r153 Everest 24-July-2010
+% Version 0.6.0-r155 Everest 30-July-2010
 %
 % Specific fixes for records
 %FIX_CAMEROON        - Makes data corrections for the Cameroon Seismic Experiment

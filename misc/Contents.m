@@ -1,5 +1,5 @@
 % Seismology Toolbox - misc
-% Version 0.6.0-r153 Everest 24-July-2010
+% Version 0.6.0-r155 Everest 30-July-2010
 %
 % Miscellaneous Support functions
 %BUTTORD2            - Butterworth filter order selection. (Honors passband corners)
@@ -38,6 +38,7 @@
 %SLIDINGAVG          - Returns sliding-window average of data
 %SNR2MAXPHASEERROR   - Returns maximum narrow-band phase error based on SNR 
 %SORT2LI             - Transforms permutation indices from sort to linear indices
+%SSIDX               - Scalar struct database indexing
 %STRNLEN             - Pad/truncate char/cellstr array to n character columns
 %SUB2LTI             - Square matrix lower triangle linear indices from subscripts
 %SUB2UTI             - Square matrix upper triangle linear indices from subscripts

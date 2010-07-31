@@ -21,15 +21,15 @@ function [txt]=readtxt(file)
 %        Dec. 30, 2009 - initial version
 %        Jan. 26, 2010 - add graphical selection
 %        Feb.  5, 2010 - improved file checks
+%        July 30, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2010 at 17:25 GMT
+%     Last Updated July 30, 2010 at 13:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(0,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(0,1,nargin));
 
 % graphical selection
 if(nargin<1 || isempty(file))

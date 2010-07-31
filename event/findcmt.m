@@ -12,7 +12,7 @@ function [cmt]=findcmt(varargin)
 %      MAGNITUDE -- look for cmts near this moment magnitude
 %      TIMESCALE -- scales time discrepancy to distance (default is 5 km/s)
 %      MAGSCALE  -- scales magnitude discrepancy to distance (see Notes)
-%      CATALOG   -- 'full' (default), 'quick', 'monthly', 'legacy'
+%      CATALOG   -- 'full' (default) or 'quick' (note these are exclusive)
 %      NUMCMT    -- integer>0 (default is 1)
 %
 %    Notes:
@@ -36,13 +36,14 @@ function [cmt]=findcmt(varargin)
 %     Find largest cmt:
 %      findcmt('magnitude',10)
 %
-%    See also: SETEVENT, READNDK
+%    See also: SETEVENT, READNDK, SSIDX
 
 %     Version History:
-%        Mar. 30, 2009 - initial version
+%        Mar. 30, 2010 - initial version
+%        July 30, 2010 - update for new ndk structs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 30, 2010 at 09:30 GMT
+%     Last Updated July 30, 2010 at 21:30 GMT
 
 % todo:
 
@@ -52,31 +53,31 @@ opt=check_findcmt_options(varargin{:});
 % get distances
 dd=0;
 if(~isempty(opt.DEPTH))
-    dd=abs([opt.CATALOG.centroiddep]'-opt.DEPTH);
+    dd=abs(opt.CATALOG.centroiddep-opt.DEPTH);
 end
 ld=0;
 if(~isempty(opt.LOCATION))
     ld=vincentyinv(opt.LOCATION(1),opt.LOCATION(2),...
-        [opt.CATALOG.centroidlat]',[opt.CATALOG.centroidlon]');
+        opt.CATALOG.centroidlat,opt.CATALOG.centroidlon);
 end
 td=0;
 if(~isempty(opt.TIME))
     td=opt.TIMESCALE*abs(timediff(opt.TIME,...
-        [[opt.CATALOG.year]' [opt.CATALOG.month]' [opt.CATALOG.day]' ...
-        [opt.CATALOG.hour]' [opt.CATALOG.minute]' ...
-        [opt.CATALOG.seconds]'+[opt.CATALOG.centroidtime]']));
+        [opt.CATALOG.year opt.CATALOG.month opt.CATALOG.day ...
+        opt.CATALOG.hour opt.CATALOG.minute ...
+        opt.CATALOG.seconds+opt.CATALOG.centroidtime]));
 end
 md=0;
 if(~isempty(opt.MAGNITUDE))
     md=10.^(opt.MAGSCALE*...
-        abs((2/3)*log10([opt.CATALOG.scalarmoment]'...
-        .*10.^[opt.CATALOG.exponent]')-10.7-opt.MAGNITUDE));
+        abs((2/3)*log10(opt.CATALOG.scalarmoment...
+        .*10.^opt.CATALOG.exponent)-10.7-opt.MAGNITUDE));
 end
 
 % sort by cumulative distance and pull asked amount
 d=sqrt(dd.^2+ld.^2+td.^2+md.^2);
 [d,idx]=sort(d);
-cmt=opt.CATALOG(idx(1:opt.NUMCMT));
+cmt=ssidx(opt.CATALOG,idx(1:opt.NUMCMT));
 
 end
 
@@ -102,11 +103,11 @@ opt.DEPTH=[]; % optional
 opt.MAGNITUDE=[]; % optional
 opt.TIMESCALE=5; % x km/s
 opt.MAGSCALE=4; % 10^(y*abs(mw-mag))
-opt.CATALOG='full'; % full/quick/monthly/legacy
+opt.CATALOG='full'; % full/quick
 opt.NUMCMT=1; % number of cmts returned
 
 % valid strings
-valid.CATALOG={'full' 'quick' 'monthly' 'legacy'};
+valid.CATALOG={'full' 'quick'};
 valid.TIMES={'[YEAR JDAY]' '[YEAR MONTH CDAY]' ...
     '[YEAR JDAY HOUR MINUTE SECONDS]' ...
     '[YEAR MONTH CDAY HOUR MINUTE SECONDS]'};
@@ -152,7 +153,7 @@ for i=1:2:nargin
             opt.DEPTH=varargin{i+1};
         case {'catalog' 'cat' 'c'}
             % check
-            if(isstruct(varargin{i+1}) && ~all(ismember(valid.NDKFIELDS,...
+            if(isstruct(varargin{i+1}) && all(ismember(valid.NDKFIELDS,...
                     fieldnames(varargin{i+1}))))
                 opt.CATALOG=varargin{i+1};
             elseif(ischar(varargin{i+1}) ...
@@ -200,11 +201,9 @@ end
 if(ischar(opt.CATALOG))
     try
         if(seizmoverbose)
-            disp('Loading Catalog (May take a minute...)');
+            disp('Loading Catalog (May take a second...)');
         end
-        tmp=load([opt.CATALOG 'cmt']);
-        opt.CATALOG=tmp.([opt.CATALOG 'cmt']);
-        clear tmp
+        opt.CATALOG=load(['globalcmt_' opt.CATALOG]);
     catch
         error('seizmo:findcmt:badCatalog',...
             'NDK Catalogs are misconfigured!');
@@ -214,11 +213,8 @@ if(ischar(opt.CATALOG))
         error('seizmo:findcmt:badCatalog',...
             'NDK Catalogs are misconfigured!');
     end
-    if(seizmoverbose)
-        disp('Loaded Catalog!');
-    end
+    if(seizmoverbose); disp('Loaded Catalog!'); end
 end
-
 
 end
 
