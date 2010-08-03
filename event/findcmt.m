@@ -12,7 +12,7 @@ function [cmt]=findcmt(varargin)
 %      MAGNITUDE -- look for cmts near this moment magnitude
 %      TIMESCALE -- scales time discrepancy to distance (default is 5 km/s)
 %      MAGSCALE  -- scales magnitude discrepancy to distance (see Notes)
-%      CATALOG   -- 'full' (default) or 'quick' (note these are exclusive)
+%      CATALOG   -- 'both' (default),'full', 'quick'
 %      NUMCMT    -- integer>0 (default is 1)
 %
 %    Notes:
@@ -20,8 +20,9 @@ function [cmt]=findcmt(varargin)
 %                     [YEAR MONTH CALDAY] (start of day)
 %                     [YEAR JULDAY HOUR MINUTE SECONDS]
 %                     [YEAR MONTH CALDAY HOUR MINUTE SECONDS]
-%     - MAGSCALE: 10^(MAGSCALE*abs(Mw-MAGNITUDE)) km
-%     - CATALOG may be an NDK struct (so you can skip repeated loading)
+%     - MAGSCALE: 10^(MAGSCALE*abs(Mw-MAGNITUDE)) km (default is 4)
+%     - CATALOG may be an NDK struct
+%     - GlobalCMT catalogs are cached under global SEIZMO.GLOBALCMT
 %
 %    Examples:
 %     Find the event closest to the new millinium:
@@ -41,9 +42,10 @@ function [cmt]=findcmt(varargin)
 %     Version History:
 %        Mar. 30, 2010 - initial version
 %        July 30, 2010 - update for new ndk structs
+%        Aug.  2, 2010 - catalog caching, both catalogs option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 30, 2010 at 21:30 GMT
+%     Last Updated Aug.  2, 2010 at 21:30 GMT
 
 % todo:
 
@@ -84,6 +86,9 @@ end
 
 function [opt]=check_findcmt_options(varargin)
 
+% global SEIZMO access for catalog caching
+global SEIZMO
+
 % require option/value pairings
 if(mod(nargin,2))
     error('seizmo:findcmt:badInput',...
@@ -107,7 +112,7 @@ opt.CATALOG='full'; % full/quick
 opt.NUMCMT=1; % number of cmts returned
 
 % valid strings
-valid.CATALOG={'full' 'quick'};
+valid.CATALOG={'full' 'quick' 'both'};
 valid.TIMES={'[YEAR JDAY]' '[YEAR MONTH CDAY]' ...
     '[YEAR JDAY HOUR MINUTE SECONDS]' ...
     '[YEAR MONTH CDAY HOUR MINUTE SECONDS]'};
@@ -157,7 +162,7 @@ for i=1:2:nargin
                     fieldnames(varargin{i+1}))))
                 opt.CATALOG=varargin{i+1};
             elseif(ischar(varargin{i+1}) ...
-                    && ismember(varargin{i+1},valid.CATALOG))
+                    && ismember(lower(varargin{i+1}),valid.CATALOG))
                 opt.CATALOG=varargin{i+1};
             else
                 error('seizmo:findcmt:badInput',...
@@ -194,26 +199,90 @@ for i=1:2:nargin
                     'NUMCMT must be an integer >0!');
             end
             opt.NUMCMT=varargin{i+1};
+        otherwise
+            error('seizmo:findcmt:badInput',...
+                'Unknown Option: %s !',varargin{i});
     end
 end
 
 % get catalog
 if(ischar(opt.CATALOG))
-    try
-        if(seizmoverbose)
-            disp('Loading Catalog (May take a second...)');
-        end
-        opt.CATALOG=load(['globalcmt_' opt.CATALOG]);
-    catch
-        error('seizmo:findcmt:badCatalog',...
-            'NDK Catalogs are misconfigured!');
+    switch lower(opt.CATALOG)
+        case 'both'
+            % try loading cached version
+            if(seizmoverbose)
+                disp('Loading Catalog (May take a second...)');
+            end
+            try
+                tmp1=SEIZMO.GLOBALCMT.FULL;
+            catch
+                % not there so load and cache
+                try
+                    tmp1=load('globalcmt_full');
+                    SEIZMO.GLOBALCMT.FULL=tmp1;
+                catch
+                    error('seizmo:findcmt:badCatalog',...
+                        'GlobalCMT catalogs are misconfigured!');
+                end
+            end
+            try
+                tmp2=SEIZMO.GLOBALCMT.QUICK;
+            catch
+                % not there so load and cache
+                try
+                    tmp2=load('globalcmt_quick');
+                    SEIZMO.GLOBALCMT.QUICK=tmp2;
+                catch
+                    error('seizmo:findcmt:badCatalog',...
+                        'GlobalCMT catalogs are misconfigured!');
+                end
+            end
+            if(isstruct(tmp1) && ~all(ismember(valid.NDKFIELDS,...
+                    fieldnames(tmp1))))
+                error('seizmo:findcmt:badCatalog',...
+                    'GlobalCMT catalog is corrupt!');
+            end
+            if(isstruct(tmp2) && ~all(ismember(valid.NDKFIELDS,...
+                    fieldnames(tmp2))))
+                error('seizmo:findcmt:badCatalog',...
+                    'GlobalCMT catalog is corrupt!');
+            end
+            fields=fieldnames(tmp1);
+            if(~isequal(fields,fieldnames(tmp2)))
+                error('seizmo:findcmt:badCatalog',...
+                    'GlobalCMT catalogs are misconfigured!');
+            end
+            opt.CATALOG=[];
+            for i=1:numel(fields)
+                opt.CATALOG.(fields{i})=...
+                    [tmp1.(fields{i}); tmp2.(fields{i})];
+            end
+            if(seizmoverbose); disp('Loaded Catalog!'); end
+        case {'full' 'quick'}
+            % try loading cached version
+            try
+                opt.CATALOG=SEIZMO.GLOBALCMT.(upper(opt.CATALOG));
+            catch
+                % not there so load and cache
+                try
+                    if(seizmoverbose)
+                        disp('Loading Catalog (May take a second...)');
+                    end
+                    cattype=upper(opt.CATALOG);
+                    opt.CATALOG=load(['globalcmt_' opt.CATALOG]);
+                    SEIZMO.GLOBALCMT.(cattype)=opt.CATALOG;
+                    if(seizmoverbose); disp('Loaded Catalog!'); end
+                catch
+                    error('seizmo:findcmt:badCatalog',...
+                        'GlobalCMT catalogs are misconfigured!');
+                end
+            end
+            if(isstruct(opt.CATALOG) && ~all(ismember(valid.NDKFIELDS,...
+                    fieldnames(opt.CATALOG))))
+                error('seizmo:findcmt:badCatalog',...
+                    'GlobalCMT catalog is corrupt!');
+            end
     end
-    if(isstruct(opt.CATALOG) && ~all(ismember(valid.NDKFIELDS,...
-            fieldnames(opt.CATALOG))))
-        error('seizmo:findcmt:badCatalog',...
-            'NDK Catalogs are misconfigured!');
-    end
-    if(seizmoverbose); disp('Loaded Catalog!'); end
 end
 
 end

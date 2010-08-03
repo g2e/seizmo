@@ -16,7 +16,7 @@ function [list]=available_3dmodels
 %      available_3dmodels
 %
 %    See also: GET_SCRIPPS_VALUE, DZ04, HMSL06S, HMSL06P, PRI05, S20RTS,
-%              SAW24B16, SB4L18, TX2006, TX2007
+%              SAW24B16, SB4L18, TX2006, TX2007, MIT08
 
 %     Version History:
 %        May  19, 2010 - initial version
@@ -28,7 +28,7 @@ function [list]=available_3dmodels
 % todo:
 
 % available
-list={'DZ04' 'HMSL06S' 'HMSL06P' 'PRI-P05' 'PRI-S05' 'S20RTS' ...
+list={'DZ04' 'HMSL06S' 'HMSL06P' 'MIT-P08' 'PRI-P05' 'PRI-S05' 'S20RTS' ...
       'SAW24B16' 'SB4L18' 'TX2006' 'TX2007'};
 
 end

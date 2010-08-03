@@ -101,12 +101,25 @@ function [events]=readndk(file)
 %     This is how I create the "full" cmt catalog:
 %      legacy=readndk('legacy.ndk');
 %      monthly=readndk('monthly.ndk');
-%      drop=ismember(monthly.name,legacy.name);
+%      % combine
 %      fields=fieldnames(legacy);
 %      for i=1:numel(fields)
-%        full.(fields{i})=[legacy.(fields{i}); monthly.(fields{i})(~drop)];
+%        full.(fields{i})=[legacy.(fields{i}); monthly.(fields{i})];
 %      end
+%      % delete dupes
+%      [keep,keep]=unique(full.name);
+%      full=ssidx(full,sort(keep));
+%      % remove 1976 deep (there are 6 - these are dupes too)
+%      name=char(full.name);
+%      full=ssidx(full,~(full.year==1976 & name(:,8)=='X'));
+%      % save
 %      save('globalcmt_full.mat','-struct','full');
+%
+%     This is how I remove the overlap between the full & quick catalogs:
+%      quick=readndk('quick.ndk');
+%      keep=(quick.year==2010 & quick.month>=4) | quick.year>2010;
+%      quick=ssidx(quick,keep);
+%      save('globalcmt_quick.mat','-struct','quick');
 %
 %    See also: READSODEVENTCSV, READTXT, SETEVENT, SSIDX, PARSE_ISC_ORIGIN
 
@@ -117,9 +130,10 @@ function [events]=readndk(file)
 %                        history and documentation, clean up code a bit
 %        July 30, 2010 - change strik2 to strike2, now outputs a scalar
 %                        struct, nargchk fix, use readtxt/getwords
+%        Aug.  2, 2010 - updated catalog examples
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 30, 2010 at 15:40 GMT
+%     Last Updated Aug.  2, 2010 at 15:40 GMT
 
 % todo:
 % - Currently no numeric fields have missing values that would need to be

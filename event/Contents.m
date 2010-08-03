@@ -5,6 +5,7 @@
 %CONVOLVE_SOURCE_TIMEFUNCTION   - Convolve source function on SEIZMO records
 %DECONVOLVE_SOURCE_TIMEFUNCTION - Deconvolve source from SEIZMO records
 %FINDCMT                        - Returns Global CMT that is closest to input time & position
+%FINDCMTS                       - Returns Global CMTs in specified time & position ranges
 %MAKE_SOURCE_TIMEFUNCTION       - Returns source time functions for convolution
 %PARSE_ISC_ORIGIN               - Parses origin output from the ISC bulletin
 %PLOT_MLOCATE_ELLIPSOIDS        - Plots MLOCATE confidence ellipsoids

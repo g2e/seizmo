@@ -32,11 +32,14 @@ function [dlnv]=mantledv(model,lat,lon,depth)
 %        June  2, 2010 - changed variable name to reflect the truth,
 %                        adjusts deplimits for variability in moho/cmb
 %        July 25, 2010 - added several models
+%        Aug.  2, 2010 - add mit-p08, minor dz04 fix, change cache local
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 25, 2010 at 16:05 GMT
+%     Last Updated Aug.  2, 2010 at 16:05 GMT
 
 % todo:
+% - sph harm models
+% - ani models
 
 % check nargin
 error(nargchk(4,4,nargin));
@@ -68,12 +71,12 @@ switch lower(model)
     case {'dz04'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEDV.DZ04;
+            model=SEIZMO.MANTLEMODEL.DZ04;
         catch
             % not there so load and cache
             model=load('DZ04');
-            model.dvs=model.dvp/100;
-            SEIZMO.MANTLEDV.DZ04=model;
+            model.dvp=model.dvp/100;
+            SEIZMO.MANTLEMODEL.DZ04=model;
         end
         
         % get dlnv
@@ -81,11 +84,11 @@ switch lower(model)
     case {'sb4l18'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEDV.SB4L18;
+            model=SEIZMO.MANTLEMODEL.SB4L18;
         catch
             % not there so load and cache
             model=load('SB4L18');
-            SEIZMO.MANTLEDV.SB4L18=model;
+            SEIZMO.MANTLEMODEL.SB4L18=model;
         end
         
         % allow depths between 0 & 2900 to allow for variable moho and cmb
@@ -97,11 +100,11 @@ switch lower(model)
     case {'hmsl06p' 'hmslp06' 'hmsl-p06' 'hmsl-06p'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEDV.HMSL06P;
+            model=SEIZMO.MANTLEMODEL.HMSL06P;
         catch
             % not there so load and cache
             model=load('HMSL06P');
-            SEIZMO.MANTLEDV.HMSL06P=model;
+            SEIZMO.MANTLEMODEL.HMSL06P=model;
         end
         
         % allow depths between 0 & 2900 to allow for variable moho and cmb
@@ -113,11 +116,11 @@ switch lower(model)
     case {'hmsl06s' 'hmsls06' 'hmsl-s06' 'hmsl-06s'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEDV.HMSL06S;
+            model=SEIZMO.MANTLEMODEL.HMSL06S;
         catch
             % not there so load and cache
             model=load('HMSL06S');
-            SEIZMO.MANTLEDV.HMSL06S=model;
+            SEIZMO.MANTLEMODEL.HMSL06S=model;
         end
         
         % allow depths between 0 & 2900 to allow for variable moho and cmb
@@ -126,16 +129,28 @@ switch lower(model)
         
         % get dlnv
         dlnv=get_scripps_value(model,lat,lon,depth);
-    case {'mit06' 'mit06p' 'mit-p06' 'mitp06'}
     case {'mit08' 'mit08p' 'mit-p08' 'mitp08'}
+        % load cached model if it exists
+        try
+            model=SEIZMO.MANTLEMODEL.MIT08;
+        catch
+            % not there so load and cache
+            model=load('MIT08');
+            model.dvp=model.dvp/100;
+            SEIZMO.MANTLEMODEL.MIT08=model;
+        end
+        
+        % get dlnv
+        dlnv=get_mit_value(model,lat,lon,depth);
     case {'pri05p' 'pri-p05' 'pri-05p' 'prip05'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEDV.PRI05P;
+            model=SEIZMO.MANTLEMODEL.PRI05P;
         catch
             % not there so load and cache
-            model=load('PRI05','ppts');
-            SEIZMO.MANTLEDV.PRI05P=model;
+            model=load('PRI05','ppts','refmod','name','reference');
+            model.name=model.name.dvp;
+            SEIZMO.MANTLEMODEL.PRI05P=model;
         end
         
         % get dlnv
@@ -143,11 +158,12 @@ switch lower(model)
     case {'pri05s' 'pri-s05' 'pri-05s' 'pris05'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEDV.PRI05S;
+            model=SEIZMO.MANTLEMODEL.PRI05S;
         catch
             % not there so load and cache
-            model=load('PRI05','spts');
-            SEIZMO.MANTLEDV.PRI05S=model;
+            model=load('PRI05','spts','refmod','name','reference');
+            model.name=model.name.dvs;
+            SEIZMO.MANTLEMODEL.PRI05S=model;
         end
         
         % get dlnv
@@ -155,12 +171,12 @@ switch lower(model)
     case {'s20rtsb' 's20rts'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEDV.S20RTS;
+            model=SEIZMO.MANTLEMODEL.S20RTS;
         catch
             % not there so load and cache
             model=load('S20RTS');
             model.dvs=model.dvs/100;
-            SEIZMO.MANTLEDV.S20RTS=model;
+            SEIZMO.MANTLEMODEL.S20RTS=model;
         end
         
         % get dlnv
@@ -168,12 +184,12 @@ switch lower(model)
     case {'saw24b16'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEDV.SAW24B16;
+            model=SEIZMO.MANTLEMODEL.SAW24B16;
         catch
             % not there so load and cache
             model=load('SAW24B16');
             model.dvs=model.dvs/100;
-            SEIZMO.MANTLEDV.SAW24B16=model;
+            SEIZMO.MANTLEMODEL.SAW24B16=model;
         end
         
         % get dlnv
@@ -181,12 +197,12 @@ switch lower(model)
     case {'tx2006'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEDV.TX2006;
+            model=SEIZMO.MANTLEMODEL.TX2006;
         catch
             % not there so load and cache
             model=load('TX2006');
             model.dvs=model.dvs/100;
-            SEIZMO.MANTLEDV.TX2006=model;
+            SEIZMO.MANTLEMODEL.TX2006=model;
         end
         
         % get dlnv
@@ -194,12 +210,12 @@ switch lower(model)
     case {'tx2007'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEDV.TX2007;
+            model=SEIZMO.MANTLEMODEL.TX2007;
         catch
             % not there so load and cache
             model=load('TX2007');
             model.dvs=model.dvs/100;
-            SEIZMO.MANTLEDV.TX2007=model;
+            SEIZMO.MANTLEMODEL.TX2007=model;
         end
         
         % get dlnv
@@ -213,7 +229,7 @@ end
 
 function dlnv=get_texas_value(model,lat,lon,depth)
 % get dlnv
-% - find layer
+% - find layer first (b/c they are of variable thickness)
 % - nearest neighbor interpolation
 dlnv=nan(size(depth));
 for i=1:size(model.depth,1)
@@ -249,4 +265,27 @@ else % ppts
 end
 [x,y,z]=geographic2xyz(lat,lon,depth);
 dlnv=f(x,y,z);
+end
+
+function dlnv=get_mit_value(model,lat,lon,depth)
+
+% fix lon
+lon(lon<0)=lon(lon<0)+360;
+
+% get dlnv
+% - nearest neighbor interpolation
+% - get linear indices
+lat=floor((90-lat)/(180/256))+1;
+lat(lat==257)=256; % handle south pole
+lon=floor(lon/(360/512));
+lon(lon==512)=511; % handle meridian
+depth=floor(depth/(2891.5/64));
+depth(depth<0)=0; % handle surface
+depth(depth>63)=63; % handle cmb
+dlnv=model.dvp(lat+lon*256+depth*256*512);
+
+% this would be ok if the south pole returned non-nan ...
+%dlnv=interp3(model.lon,model.lat,model.depth,model.dvp,...
+%    lon,lat,depth,'*nearest');
+
 end

@@ -20,9 +20,10 @@ function [s]=ssidx(s,idx)
 
 %     Version History:
 %        July 30, 2010 - initial version
+%        Aug.  2, 2010 - logical indexing support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 30, 2010 at 15:40 GMT
+%     Last Updated Aug.  2, 2010 at 15:40 GMT
 
 % todo:
 
@@ -46,10 +47,15 @@ for i=1:numel(s)
                 i,fields{j});
         end
     end
-    if(~isempty(idx) && (~isreal(idx) || any(idx~=fix(idx)) ...
-            || any(idx<1) || any(idx>maxidx)))
-        error('seizmo:ssidx:badInput',...
-            'IDX does not have valid indices!');
+    if(~isempty(idx))
+        if((islogical(idx) && isequal(numel(idx),maxidx)) ...
+                || (isreal(idx) && all(idx==fix(idx)) ...
+                && all(idx>0) && all(idx<=maxidx)))
+            % good
+        else
+            error('seizmo:ssidx:badInput',...
+                'IDX does not have valid indices!');
+        end
     end
     
     % extract
