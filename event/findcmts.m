@@ -38,7 +38,7 @@ function [cmts]=findcmts(varargin)
 %
 %    Examples:
 %
-%    See also: FINDCMT, SETEVENT, READNDK, SSIDX
+%    See also: FINDCMT, SETEVENT, READNDK, SSIDX, GLOBALCMT_UPDATE
 
 %     Version History:
 %        Aug.  2, 2010 - initial version

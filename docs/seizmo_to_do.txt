@@ -1,12 +1,34 @@
-idkeep
-iddelete
-3cmp pairs
-getheader returns nan
+main things needing done
+%%%%%%%%%%%%%%%%%%%%%%%%%
+improved plotting (seriously)
+3cmp support
+getheader returns nan for undefined
+standard instrument responses database
+cmt subtoolbox
+xcalign subtoolbox
+ffmancor
+reflect routines
+sph harm mantle models
+ani mantle models
+plotting routines for models
+more cmb models (rjk)
+cub2 functions
+absolute time windowing
+picking
+autopicking
+glitch & step removal
+smooth spline removal
+vespagrams
+ftan
+slantstacking
+power spectrum estimation
+merge (uneven)
 
 
-wide spread changes:
-=======================
-testing table
+
+
+older lists follow below:
+%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 bugs:
 ========
@@ -67,4 +89,79 @@ move cmb codes in
 merge (uneven records)
 mtconvert
 mtrotate
+
+goals on my mind
+----------------
+ffmancor
+    - main problem is not having dynamic raytracing
+	- stretch/squish gradually starting at some depth
+	- period sets up radial cos
+    - define azimuthal cos
+	- reflect off cmb
+    - can we make this something like 1e-6 s/km^3 ?
+make_reflect_input
+	- custom readwr.f
+	- read_reflect_output
+more mantle models
+	- handle rg models
+	- handle sph models
+more cmb models
+	- rjk
+plotting options!!!
+make guis for cut functions
+	- popcut
+	- arrcut
+	- errcut
+	- ampcut
+make multiband align
+	- how do we save all this info?
+		- need to save all the figures
+		- need to save all the arrival info
+			- should be easy to reaccess
+		- can we export it all?
+cmt convert functions
+
+
+0.6.0 - stable, helpful and functional
+----------------------------------------
+document every function (working on)
+	- plotting (waiting on rewrite)
+fix plotting
+	- better global setting (like binoperr?)
+	- better option passing
+	- allow turning markers on/off
+	- allow setting markers above/below
+	- ditto for tt curves (only recsec)
+	- flags or line for predicted?
+	- spectral plotting
+	- plot clusters
+	- plotvs
+	- plotxy
+	- particle motion plots (cmp vs cmp)
+signal cleaning (to do)
+	- robust poly (get, remove)
+	- smooth splines (get, remove)
+	- glitches (get, remove)
+	- steps (get, remove)
+other new functions
+	- autopick
+	- pick
+	- changeversion/filetype
+possible extras
+	- cut on absolute times
+	- merge uneven & multi-rate
+3-cmp records
+	force as ZNE
+	how to handle gaps/overlaps
+	how to handle non-synced breaks in components
+	movies/plots of 3-d particle motion
+	movies/plots of 2-d particle motion
+getpeaks
+markpeaks
+routines to plot models
+function to make g matrix for sph tri stuff
+vespagrams
+ftan
+slantstacking
+spectrum estimation
 

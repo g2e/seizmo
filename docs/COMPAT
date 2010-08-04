@@ -1,5 +1,10 @@
 Things to worry about across Matlab versions:
 
+Prior to 7.8(?):
+- delaunay triangulation struct support not there
+	- this only affects princeton model interpolation so far
+		- should include method for older versions
+
 Prior to 7.3:
 1. struct assignment bug
 	affects
@@ -27,10 +32,8 @@ Prior to 7.1:
 5. logical on not 0 or 1 throws warning
 
 Current issues with Octave:
-	- error needs to support structs
-		- worked around
-	- error needs to not error on blank messages
-		- worked around
+	- error needs to support structs and empty strings
+		- fixed 3.2.4+
 	- cell array of function handles should handle space separated (not require commas)
 		- worked around?
 	- way to assign new field to empty struct
@@ -38,6 +41,6 @@ Current issues with Octave:
 	- setdiff does not handle mixed char/cell
 		- does now? (worked around)
 	- switch case didn't handle cells prior to 3.2.2
-		- friggin update it
+		- update
 
 

@@ -18,7 +18,7 @@
 %RAINBOW      - Standard rainbow colormap going from magenta to red
 %RED2GREEN    - Red-White-Green colormap
 %RELIEF       - Colormap for global topography
-%RITZ         - Colormap popularized by Mike Ritzwoller's seismology group
+%RITZ         - Colormap of Mike Ritzwoller's seismology group
 %SEALAND_LAND - Land portion of the sealand colormap
 %SEALAND      - Colormap for ocean and land
 %SEALAND_SEA  - Sea portion of the sealand colormap

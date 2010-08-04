@@ -148,4 +148,11 @@
 %TTCORRECT           - travel time correction functions
 %WW3                 - WaveWatch III functions
 %XCALIGN             - cross correlation signal alignment functions
-
+%
+%
+% Found a bug?  Something not quite right?
+% Email me: ggeuler@seismo.wustl.edu
+%
+% Garrett Euler, Ph.D. Candidate
+% Department of Earth & Planetary Sciences
+% Washington University in Saint Louis

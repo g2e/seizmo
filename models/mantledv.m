@@ -33,9 +33,11 @@ function [dlnv]=mantledv(model,lat,lon,depth)
 %                        adjusts deplimits for variability in moho/cmb
 %        July 25, 2010 - added several models
 %        Aug.  2, 2010 - add mit-p08, minor dz04 fix, change cache local
+%        Aug.  4, 2010 - all mantle models are stored as single precision
+%                        now for additional space savings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  2, 2010 at 16:05 GMT
+%     Last Updated Aug.  4, 2010 at 16:05 GMT
 
 % todo:
 % - sph harm models
@@ -132,12 +134,12 @@ switch lower(model)
     case {'mit08' 'mit08p' 'mit-p08' 'mitp08'}
         % load cached model if it exists
         try
-            model=SEIZMO.MANTLEMODEL.MIT08;
+            model=SEIZMO.MANTLEMODEL.MITP08;
         catch
             % not there so load and cache
-            model=load('MIT08');
+            model=load('MITP08');
             model.dvp=model.dvp/100;
-            SEIZMO.MANTLEMODEL.MIT08=model;
+            SEIZMO.MANTLEMODEL.MITP08=model;
         end
         
         % get dlnv
@@ -225,6 +227,9 @@ switch lower(model)
             'Unknown mantle model: %s',model);
 end
 
+% single to double precision
+dlnv=double(dlnv);
+
 end
 
 function dlnv=get_texas_value(model,lat,lon,depth)
@@ -257,9 +262,11 @@ function dlnv=get_princeton_value(model,lat,lon,depth)
 % get dlnv
 % - natural interpolation from tetrahedral mesh
 if(isfield(model,'spts'))
+    model.spts=double(model.spts);
     dt=DelaunayTri(model.spts(:,1:3));
     f=TriScatteredInterp(dt,model.spts(:,4),'natural');
 else % ppts
+    model.ppts=double(model.ppts);
     dt=DelaunayTri(model.ppts(:,1:3));
     f=TriScatteredInterp(dt,model.ppts(:,4),'natural');
 end

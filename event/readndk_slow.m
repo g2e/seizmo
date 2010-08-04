@@ -1,7 +1,8 @@
-function [events]=readndk_slow(file)
+function [events]=readndk_slow(file,flag)
 %READNDK_SLOW    Reads a GlobalCMT Project NDK text file into a struct
 %
 %    Usage:    events=readndk_slow(file)
+%              events=readndk(string,true)
 %
 %    Description: EVENTS=READNDK_SLOW(FILE) reads in an NDK-formatted text
 %     file from the Global CMT project (www.globalcmt.org).  All event info
@@ -12,6 +13,12 @@ function [events]=readndk_slow(file)
 %     text is safer and robust but is significantly slower (15x here).
 %     This function is currently unnecessary but I keep it as a template
 %     for building other similar functions that do need this robustness.
+%
+%     EVENTS=READNDK_SLOW(STRING,TRUE) will take the first input to be a
+%     string of an NDK file (rather than the filename) if the second input
+%     is set to logical TRUE.  The string should be the same as if the NDK
+%     file was read with READTXT (a single row char vector with linefeeds
+%     included).
 %
 %    Notes:
 %     - Details of the NDK format may be found using the Global CMT
@@ -105,7 +112,8 @@ function [events]=readndk_slow(file)
 %     Import info from the CMT into some records:
 %      data=setevent(data,cmt);
 %
-%    See also: READSODEVENTCSV, READTXT, SETEVENT, READNDK
+%    See also: READSODEVENTCSV, READTXT, SETEVENT, READNDK, FINDCMTS,
+%              FINDCMT, GLOBALCMT_UPDATE, SSIDX, PARSE_ISC_ORIGIN
 
 %     Version History:
 %        Mar.  6, 2009 - initial version (in SEIZMO)
@@ -114,41 +122,56 @@ function [events]=readndk_slow(file)
 %                        history and documentation, clean up code a bit
 %        July 30, 2010 - change strik2 to strike2, now outputs a scalar
 %                        struct, nargchk fix, use readtxt/getwords
+%        Aug.  3, 2010 - allow string input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 30, 2010 at 15:40 GMT
+%     Last Updated Aug.  3, 2010 at 15:40 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(0,1,nargin));
+error(nargchk(0,2,nargin));
 
-% graphical selection
-if(nargin<1 || isempty(file))
-    [file,path]=uigetfile(...
-        {'*.ndk;*.NDK' 'NDK Files (*.ndk,*.NDK)';
-        '*.*' 'All Files (*.*)'},...
-        'Select NDK File');
-    if(isequal(0,file))
-        error('seizmo:readndk_slow:noFileSelected','No input file selected!');
+% default flag
+if(nargin<2 || isempty(flag)); flag=false; end
+
+% skip if string input
+if(~flag)
+    % graphical selection
+    if(nargin<1 || isempty(file))
+        [file,path]=uigetfile(...
+            {'*.ndk;*.NDK' 'NDK Files (*.ndk,*.NDK)';
+            '*.*' 'All Files (*.*)'},...
+            'Select NDK File');
+        if(isequal(0,file))
+            error('seizmo:readndk_slow:noFileSelected','No input file selected!');
+        end
+        file=strcat(path,filesep,file);
+    else % check file
+        if(~ischar(file))
+            error('seizmo:readndk_slow:fileNotString',...
+                'FILE must be a string!');
+        end
+        if(~exist(file,'file'))
+            error('seizmo:readndk_slow:fileDoesNotExist',...
+                'CSV File: %s\nDoes Not Exist!',file);
+        elseif(exist(file,'dir'))
+            error('seizmo:readndk_slow:dirConflict',...
+                'CSV File: %s\nIs A Directory!',file);
+        end
     end
-    file=strcat(path,filesep,file);
-else % check file
-    if(~ischar(file))
-        error('seizmo:readndk_slow:fileNotString',...
-            'FILE must be a string!');
-    end
-    if(~exist(file,'file'))
-        error('seizmo:readndk_slow:fileDoesNotExist',...
-            'CSV File: %s\nDoes Not Exist!',file);
-    elseif(exist(file,'dir'))
-        error('seizmo:readndk_slow:dirConflict',...
-            'CSV File: %s\nIs A Directory!',file);
+    
+    % read in ndk file
+    txt=readtxt(file);
+else
+    % just copy file to txt
+    if(nargin<1 || isempty(file))
+        error('seizmo:readndk_slow:emptyStr',...
+            'STRING must be non-empty!');
+    else
+        txt=file;
     end
 end
-
-% read in ndk file
-txt=readtxt(file);
 
 % delete carriage return characters
 txt(txt==13)=[];
