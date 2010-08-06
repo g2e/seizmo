@@ -129,7 +129,7 @@ function [varargout]=mantlemap(varargin)
 %      for i=1:4
 %        ax=subplot(2,2,i);
 %        mantlemap('clim',[-2 2],'mo',model{i},...
-%          'ax',ax,'cb',false,'fg','w');
+%          'ax',ax,'cb',false,'fg','k');
 %      end
 %
 %    See also: MANTLEDV, AVAILABLE_3DMODELS

@@ -2,10 +2,15 @@
 % Version 0.6.0-r155 Everest 30-July-2010
 %
 % Miscellaneous Support functions
+%AXEXPAND            - Expands axes by factor
+%AXMOVE              - Moves a set of axes by the specified amount
 %BUTTORD2            - Butterworth filter order selection. (Honors passband corners)
 %CIRCLE              - Returns points on a circle in cartesian space
+%CLONEFIGURE         - Makes a clone of a figure
+%COMPACTAXES         - Compacts (resizes) a set of axes in a specific direction
 %DDENDROGRAM         - Generate dendrogram plot (with some extra color options)
 %EXPANDSCALARS       - Expands scalars to match size of array inputs
+%FIG2PRINT           - Adjusts figures to be as printed (aka print preview-ish)
 %FILTER_BANK         - Makes a set of narrow-band bandpass filters
 %FISHER              - Converts correlation coefficients to the Z statistic
 %GAUSSIANTF          - Returns a gaussian time function
@@ -20,7 +25,10 @@
 %ISORTHOGONAL        - TRUE if orientations are orthogonal
 %ISPARALLEL          - TRUE if orientations are parallel
 %JOINWORDS           - Combines a cellstr into a space-separated string
+%LRTB2LBWH           - Convert left-bottom-width-height to left-right-bottom-top
+%LRTB2LBWH           - Convert left-right-bottom-top to left-bottom-width-height
 %LTI2SUB             - Square matrix lower triangle linear indices to subscripts
+%MAKESUBPLOTS        - Makes subplots in current figure returning axes handles
 %MAPLOCATIONS        - Map station/event locations
 %MATCHSORT           - Replicates a sort operation using the returned permutation indices
 %MCXC                - Multi-channel cross correlation with built-in peak picker
@@ -29,12 +37,18 @@
 %NATIVEBYTEORDER     - Returns native endianness of present platform
 %NDSQUAREFORM        - Reshapes between an n-d distance matrix and "vector"
 %NEXTPOW2N           - Returns the next higher power of 2 for all array elements
+%NOCOLORBARS         - Removes colorbars associated with the specified axes
+%NOINVERT            - Turns off hardcopy black/white inversion
+%NOLABELS            - Removes tick and axis labels
+%NOTICKS             - Removes ticks and tick labels from axes
+%NOTITLES            - Removes titles from specified axes
 %ONEFILELIST         - Compiles multiple filelists into one
 %PPDCVAL             - Evaluate piecewise polynomial (w/ discontinuity support)
 %PRINT_TIME_LEFT     - Ascii progress bar
 %READCSV             - Read in .csv formatted file as a structure
 %READTXT             - Reads in a text file as a single string
 %RRAT                - Rational approximation. (UNBUGGED VERSION)
+%SETFONTS            - Sets font props for all text objects in the specified axes
 %SLIDINGAVG          - Returns sliding-window average of data
 %SNR2MAXPHASEERROR   - Returns maximum narrow-band phase error based on SNR 
 %SORT2LI             - Transforms permutation indices from sort to linear indices
@@ -44,6 +58,10 @@
 %SUB2UTI             - Square matrix upper triangle linear indices from subscripts
 %SUBMAT              - Returns a submatrix reduced along indicated dimensions
 %SUBMAT_EVAL         - Returns a submatrix using eval
+%SUPERCOLORBAR       - Makes a colorbar spanning multiple axes
+%SUPERTITLE          - Makes a title spanning multiple axes
+%SUPERXLABEL         - Makes an x-axis label spanning multiple axes
+%SUPERYLABEL         - Makes a y-axis label spanning multiple axes
 %SWAP                - Swap values
 %TAPERFUN            - Returns a taper as specified
 %TRIANGLETF          - Returns a triangle time function

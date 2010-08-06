@@ -14,11 +14,14 @@
 %GETCRUST2           - Returns Crust2.0 info at specified location(s)
 %GET_SCRIPPS_VALUE   - Returns dv% value for a Scripps mantle model
 %IASP91              - Returns the IASP91 Earth Model
+%MANTLEDV            - Returns the seismic velocity deviation for a mantle model
+%MANTLEMAP           - 3D mantle model map (aka depth slice)
 %PERTURB_1DMODEL     - Perturbs 1D Earth models
 %PLOT1DMODEL         - Plots 1D model properties
 %PREM                - Returns the PREM Earth Model
 %QKQU2QP             - Calculate corresponding Qalpha for given Qk, Qu, Vp, Vs
 %QPQS2QK             - Calculate corresponding Qkappa for given Qp, Qs, Vp, Vs
+%READCRUST2          - Reads Crust2.0 files, putting them into a struct
 %READ_SCRIPPS_BINARY - Reads a Scripps mantle model unformatted binary
-%SCRIPPS2MATLAB      - Creates a Matlab struct from a Scripps mantle models
+%SCRIPPS2MATLAB      - Creates a Matlab struct from a Scripps mantle model
 
