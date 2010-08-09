@@ -4,12 +4,14 @@ function [paths]=insert_depths_in_raypaths(paths,depths)
 %    Usage:    paths=insert_depths_in_raypaths(paths,depths)
 %
 %    Description: PATHS=INSERT_DEPTHS_IN_RAYPATHS(PATHS,DEPTHS) adds points
-%     to the raypaths in struct PATHS at the depths indicated in DEPTHS.
-%     PATHS should conform to the output from TAUPPATH.  DEPTHS is expected
-%     to be in units of km.  Notes that depths are only added if they are
-%     crossed by the raypaths.
+%     to the raypaths in struct PATHS at the depths indicated in DEPTHS
+%     using linear interpolation.  PATHS should conform to the output from
+%     TAUPPATH.  DEPTHS is expected to be in units of km.  Notes that
+%     depths are only added if they are crossed by the raypaths.
 %
 %    Notes:
+%     - SPHERICALFWD & SPHERICALINV are used to make sure the raypaths do
+%       not have issues at the poles.
 %
 %    Examples:
 %     Insert some points at all PREM discontinuities:
@@ -21,13 +23,14 @@ function [paths]=insert_depths_in_raypaths(paths,depths)
 %      paths=insert_depths_in_raypaths(paths,0:5:2890);
 %
 %    See also: GETRAYPATHS, TRIM_DEPTHS_RAYPATHS, TAUPPATH,
-%              CRUST2LESS_RAYPATHS, GET_UPSWING_RAYPATHS
+%              CRUST2LESS_RAYPATHS, EXTRACT_UPSWING_RAYPATHS
 
 %     Version History:
 %        June  3, 2010 - initial version
+%        Aug.  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  3, 2010 at 23:15 GMT
+%     Last Updated Aug.  8, 2010 at 23:15 GMT
 
 % todo:
 

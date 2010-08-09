@@ -5,10 +5,8 @@ function [X]=submat_eval(X,varargin)
 %
 %    Description: Y=SUBMAT_EVAL(X,DIM,LIST) creates a matrix Y that is the
 %     matrix X reduced along dimension DIM to the indices in LIST.  If DIM
-%     is a list of dimensions, LIST is used to reduce each dimension.  LIST
-%     also may be any string that can be evaluated to valid indices along 
-%     DIM such as '1:end-1', '[2 4]', 'X(2,:)', and 'some_other_function'.
-%     DIM can not be a string!
+%     is a list of dimensions, LIST is used to reduce each dimension.  DIM
+%     and LIST may be strings that can be evaluated such as '1:end-1'.
 %
 %     Y=SUBMAT_EVAL(X,DIM1,LIST1,DIM2,LIST2,...) allows for access to
 %     multiple dimensions independently.
@@ -16,11 +14,12 @@ function [X]=submat_eval(X,varargin)
 %    Notes:
 %
 %    Examples:
-%      Return x reduced to only the elements in index 1 of dimension 5:
-%      x=submat_eval(x,5,1)
+%      Return a matrix reduced on the last dimension to the last 3
+%      elements:
+%      x=submat_eval(x,'end','end-2:end')
 %
-%      Remove the last elements along dimensions 2 and 3 of x:
-%      x=submat_eval(x,[2 3],'1:end-1')
+%      Remove the last elements along all dimensions:
+%      x=submat_eval(x,':','1:end-1')
 %
 %      These are equivalent:
 %      x=repmat(x,[1 2 ones(1,ndims(x)-2)])
@@ -34,19 +33,31 @@ function [X]=submat_eval(X,varargin)
 %        Sep.  8, 2009 - fixed error message
 %        Sep. 21, 2009 - updated one-liner, removed unnecessary brackets
 %        June 24, 2010 - error in example fixed
+%        Aug.  9, 2010 - DIM now takes strings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 24, 2010 at 01:05 GMT
+%     Last Updated Aug.  9, 2010 at 01:05 GMT
 
 % todo:
 
 % CHECK VARARGIN
 if(~mod(nargin,2))
-    error('seizmo:submat_eval:badNumArgs','Unpaired DIM,LIST!');
+    error('misc:submat_eval:badNumArgs','Unpaired DIM,LIST!');
+end
+
+% FIX ':' DIMENSION
+NsD=ndims(X); % non-singleton dimensions
+varargin(2.*find(strcmp(':',varargin(1:2:end)))-1)={1:NsD};
+for i=1:2:nargin-2
+    if(ischar(varargin{i}))
+        % replace the word 'end' with final non-singleton dimension
+        varargin{i}=regexprep(varargin{i},'\<end\>',num2str(NsD));
+        varargin{i}=eval(varargin{i});
+    end
 end
 
 % DEFAULT TO ENTIRE MATRIX AND EXPAND TO MAX INPUT DIMENSION
-[list{1:max([ndims(X) [varargin{1:2:end}]])}]=deal(':');
+list(1:max([ndims(X) [varargin{1:2:end}]]))={':'};
 
 % REDUCTION/REPLICATION OF DIMENSIONS
 for i=1:2:nargin-2

@@ -3,6 +3,7 @@ function [mout]=prem(varargin)
 %
 %    Usage:    model=prem
 %              model=prem(...,'depths',depths,...)
+%              model=prem(...,'dcbelow',false,...)
 %              model=prem(...,'range',[top bottom],...)
 %              model=prem(...,'crust',true|false,...)
 %              model=prem(...,'ocean',true|false,...)
@@ -16,7 +17,7 @@ function [mout]=prem(varargin)
 %           .crust     - true if CRUST is TRUE
 %           .isotropic - always true here
 %           .refperiod - always 1sec here
-%           .flattened - always false here (see FLATTEN_MODEL)
+%           .flattened - always false here (see FLATTEN_1DMODEL)
 %           .depth     - km depths from 0 to 6371
 %           .vp        - isotropic p-wave velocity at 1s periods (km/s)
 %           .vs        - isotropic s-wave velocity at 1s periods (km/s)
@@ -28,8 +29,12 @@ function [mout]=prem(varargin)
 %     MODEL=PREM(...,'DEPTHS',DEPTHS,...) returns the model parameters
 %     only at the depths in DEPTHS.  DEPTHS is assumed to be in km.  The
 %     model parameters are found by linear interpolation between known
-%     values.  DEPTHS at discontinuities return values from the under side
-%     of the discontinuity (this currently cannot be adjusted).
+%     values.  DEPTHS at discontinuities return values from the deeper side
+%     of the discontinuity.
+%
+%     MODEL=PREM(...,'DCBELOW',FALSE,...) returns values from the shallow
+%     (top) side of the discontinuity if a depth is specified at one using
+%     the DEPTHS option.
 %
 %     MODEL=PREM(...,'RANGE',[TOP BOTTOM],...) specifies the range of
 %     depths that known model parameters are returned.  [TOP BOTTOM] must
@@ -70,9 +75,10 @@ function [mout]=prem(varargin)
 %                        than using values from taup (bugged!), qk/qu
 %                        rather than qp/qs
 %        May  24, 2010 - added several struct fields for info
+%        Aug.  8, 2010 - minor doc touch, dcbelow option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  24, 2010 at 14:45 GMT
+%     Last Updated Aug.  8, 2010 at 14:45 GMT
 
 % todo:
 
@@ -83,7 +89,7 @@ if(mod(nargin,2))
 end
 
 % option defaults
-varargin=[{'d' [] 'c' true 'o' false 'r' [0 6371]} varargin];
+varargin=[{'d' [] 'b' true 'c' true 'o' false 'r' [0 6371]} varargin];
 
 % check options
 if(~iscellstr(varargin(1:2:end)))
@@ -112,6 +118,13 @@ for i=1:2:numel(varargin)
                     'the range [0 6371] in km!']);
             end
             depths=varargin{i+1}(:);
+        case {'dcb' 'dc' 'below' 'b' 'dcbelow'}
+            if(skip); continue; end
+            if(~islogical(varargin{i+1}) || ~isscalar(varargin{i+1}))
+                error('seizmo:prem:badDCBELOW',...
+                    'DCBELOW must be a TRUE or FALSE!');
+            end
+            dcbelow=varargin{i+1};
         case {'c' 'cru' 'crust'}
             if(skip); continue; end
             if(~islogical(varargin{i+1}) || ~isscalar(varargin{i+1}))
@@ -374,7 +387,7 @@ if(~ocean)
     model(2:3,:)=[];
 end
 
-% remove crust if desired
+% remove crust & ocean if desired
 if(~crust)
     % linearly extrapolated to the surface
     model(1,:)=[      0    8.1257       4.5    3.3834     57823       600];
@@ -384,7 +397,11 @@ end
 % interpolate depths if desired
 if(~isempty(depths))
     %depths=depths(depths>=range(1) & depths<=range(2));
-    model=interpdc1(model(:,1),model(:,2:end),depths);
+    if(dcbelow)
+        model=interpdc1(model(:,1),model(:,2:end),depths);
+    else
+        [model,model]=interpdc1(model(:,1),model(:,2:end),depths);
+    end
     model=[depths model];
 else
     % get index range (assumes depths are always non-decreasing in model)

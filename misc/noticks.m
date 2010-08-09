@@ -7,9 +7,10 @@ function noticks(ax,xy)
 %              noticks(ax,'y')
 %
 %    Description:
-%     NOTICKS() removes x/y ticks (and tick labels) from the current axis.
+%     NOTICKS() removes x/y ticks and tick labels from the current axis.
 %
-%     NOTICKS(AX) removes x/y ticks+labels from the specified axis/axes.
+%     NOTICKS(AX) removes x/y ticks and tick labels from the specified
+%     axis or axes.
 %
 %     NOTICKS(AX,'X') only removes the x-axis ticks and their labels.
 %
@@ -18,34 +19,27 @@ function noticks(ax,xy)
 %    Notes:
 %
 %    Examples:
-%     % make a figure with 4x3 arrangement of subplots, then expand them by
-%     % 15% and drop labels on any axes not at the figure edge
+%     % make a figure with 4x3 arrangement of
+%     % subplots and edit labels and ticks
 %     figure;
 %     ax=makesubplots(5,3,1:12);
 %     ax=reshape(ax,3,4);
 %     tax=ax';
-%     axexpand(ax,15);
 %     nolabels(tax(5:12),'y');
 %     nolabels(ax(1:9),'x');
 %     noticks(tax(5:12),'y');
 %     noticks(ax(1:9),'x');
-%     th=supertitle(ax,'This is a sooooooooooooooooooooooooper title!');
-%     ax0=get(th,'parent'); % make title,colorbar,ylabel share same axis
-%     superxlabel(ax0,'This is a sooooooooooooooooooooooooper xlabel!');
-%     superylabel(ax0,'This is a sooooooooooooooooooooooooper ylabel!');
-%     cb=supercolorbar(ax,'location','south');
-%     cpos=get(cb,'position');
-%     set(cb,'position',[cpos(1) cpos(2)-.15 cpos(3) cpos(4)/2]);
-%     set(cb,'xaxislocation','bottom');
 %
-%    See also: NOLABELS, MAKESUBPLOTS, COMPACTAXES, AXEXPAND, AXMOVE,
-%              SUPERTITLE, SUPERXLABEL, SUPERYLABEL, SUPERCOLORBAR
+%    See also: NOLABELS, NOCOLORBARS, NOTITLES, SETFONTS, MAKESUBPLOTS
+%              SUPERTITLE, SUPERXLABEL, SUPERYLABEL, SUPERCOLORBAR,
+%              AXSTRETCH, AXEXPAND, AXMOVE
 
 %     Version History:
 %        Aug.  4, 2010 - initial version
+%        Aug.  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  4, 2010 at 12:25 GMT
+%     Last Updated Aug.  8, 2010 at 12:25 GMT
 
 % todo:
 

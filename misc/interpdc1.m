@@ -11,21 +11,21 @@ function [varargout]=interpdc1(x,y,varargin)
 %
 %    Description:
 %     [YI_HI,YI_LO]=INTERPDC1(X,Y,XI) returns values linearly interpolated
-%     at points XI utilizing the data Y at points X.  X must be a vector
-%     and may include repeat points for defining discontinuities in Y (note
-%     that only 2 points in X are allowed to share the same coordinate but
-%     there may be multiple pairs defining multiple discontinuities).  Y
-%     may be a vector (equal length to X) or an array (same number of rows
-%     as elements in X).  Interpolation is done across the rows (ie along
-%     dimension 1) in Y if it is an array.  YI_HI & YI_LO both give the
-%     values at each point in XI and so in general are equal except for
-%     points in XI that are on a discontinuity.  For those points YI_HI
-%     contains the values on the "upside" of the discontinuity and YI_LO
-%     contains the values on the "downside" of the discontinuity.  If Y is
-%     a vector, XI, YI_HI & YI_LO will be the same size.  Otherwise, if XI
-%     is an array YI_HI & YI_LO have dimensions [SIZE(XI) SIZE_Y(2:END)] or
-%     if XI is a vector YI_HI & YI_LO have dimensions
-%     [LENGTH(XI) SIZE_Y(2:END)].
+%     at positions XI utilizing the data Y at positions X.  X must be a
+%     vector and may include repeat points for defining discontinuities in
+%     Y (note that 3 or more points in X can not share the same position
+%     but there may be multiple pairs defining multiple discontinuities at
+%     different positions).  Y may be a vector (equal length to X) or an
+%     array (same number of rows as elements in X).  Interpolation is done
+%     across the rows (ie along dimension 1) in Y if it is an array.  YI_HI
+%     & YI_LO both give the values at each point in XI and so in general
+%     are equal except for points in XI that are on a discontinuity.  For
+%     those points YI_HI contains the values on the "upside" of the
+%     discontinuity and YI_LO contains the values on the "downside" of the
+%     discontinuity.  If Y is a vector, XI, YI_HI & YI_LO will be the same
+%     size.  Otherwise, if XI is an array YI_HI & YI_LO have dimensions
+%     [SIZE(XI) SIZE_Y(2:END)] or if XI is a vector YI_HI & YI_LO have
+%     dimensions [LENGTH(XI) SIZE_Y(2:END)].
 %
 %     [YI_HI,YI_LO]=INTERPDC1(X,Y,XI,METHOD) sets the interpolation method.
 %     May be any of the following:
@@ -59,9 +59,11 @@ function [varargout]=interpdc1(x,y,varargin)
 %
 %     PP=INTERPDC1(X,Y,METHOD,'PP') uses the specified METHOD to create
 %     a piecewise polynomial struct PP.  PPVAL(PP,XI) is equivalent to
-%     INTERPDC1(X,Y,XI,METHOD,'EXTRAP').  This is useful when you want
-%     to call INTERPDC1 on the same X & Y for several XI sets.  Note
-%     that the piecewise polynomial spans all discontinuities.
+%     PPDCVAL(PP,XI) & INTERPDC1(X,Y,XI,METHOD,'EXTRAP') first output.
+%     PPDCVAL(PP,XI,FALSE) is equal to the second output of
+%     INTERPDC1(X,Y,XI,METHOD,'EXTRAP').  This is useful when you want to
+%     call INTERPDC1 on the same X & Y for several XI sets.  Note that the
+%     piecewise polynomial spans all discontinuities.
 %
 %     PP=INTERPDC1(X,Y,METHOD,'PP',CLAMP) returns a piecewise polynomial
 %     struct that has clamped edges (see description above for details on
@@ -89,15 +91,16 @@ function [varargout]=interpdc1(x,y,varargin)
 %      xi=[xi; xi]; yi=[yilo; yihi];
 %      hold on; plot(xi(:),yi(:),'r');
 %
-%    See also: INTERP1, INTERP1Q, MKPP, PPVAL
+%    See also: PPDCVAL, INTERP1, INTERP1Q, MKPP, PPVAL
 
 %     Version History:
 %        May  18, 2010 - initial version
 %        May  19, 2010 - properly handle non-increasing case
 %        June  1, 2010 - finally true discontinuity support
+%        Aug.  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  1, 2010 at 03:20 GMT
+%     Last Updated Aug.  8, 2010 at 03:20 GMT
 
 % todo:
 

@@ -14,13 +14,16 @@ function notitles(ax)
 %     title('hi...bye')
 %     notitles
 %
-%    See also: NOLABELS, NOTICKS, NOCOLORBARS, SETFONTS
+%    See also: NOLABELS, NOTICKS, NOCOLORBARS, SETFONTS, MAKESUBPLOTS,
+%              SUPERTITLE, SUPERXLABEL, SUPERYLABEL, SUPERCOLORBAR,
+%              AXSTRETCH, AXEXPAND, AXMOVE
 
 %     Version History:
 %        Aug.  5, 2010 - initial version
+%        Aug.  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  5, 2010 at 12:25 GMT
+%     Last Updated Aug.  8, 2010 at 12:25 GMT
 
 % todo:
 

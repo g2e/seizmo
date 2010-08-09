@@ -34,14 +34,16 @@ function axexpand(ax,wf,hf)
 %     nolabels(tax(5:12),'y');
 %     nolabels(ax(1:9),'x');
 %
-%    See also: MAKESUBPLOTS, COMPACTAXES, AXMOVE, NOLABELS, NOTICKS,
-%              SUPERTITLE, SUPERXLABEL, SUPERYLABEL, SUPERCOLORBAR
+%    See also: AXSTRETCH, AXMOVE, MAKESUBPLOTS, NOLABELS, NOTICKS,
+%              NOTITLES, NOCOLORBARS, SUPERTITLE, SUPERXLABEL, SUPERYLABEL,
+%              SUPERCOLORBAR
 
 %     Version History:
 %        Aug.  4, 2010 - initial version
+%        Aug.  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  4, 2010 at 12:25 GMT
+%     Last Updated Aug.  8, 2010 at 12:25 GMT
 
 % todo:
 

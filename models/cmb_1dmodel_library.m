@@ -33,9 +33,10 @@ function [models]=cmb_1dmodel_library(varargin)
 
 %     Version History:
 %        May  30, 2010 - initial version
+%        Aug.  8, 2010 - fixed case for GQu & GPSQu
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  30, 2010 at 23:00 GMT
+%     Last Updated Aug.  8, 2010 at 23:00 GMT
 
 % todo:
 % - more p-wave models!
@@ -653,7 +654,7 @@ for i=1:nargin
                                2891 dv(b) 4 0 0]};
                 end
             end
-        case 'GQu'
+        case 'GQU'
             hng=[2000 2400 2600 2650 2700 2750];
             dv=-4:4;
             nhng=numel(hng);
@@ -669,7 +670,7 @@ for i=1:nargin
                                2891 100*dv(b)/5 4 0 0]};
                 end
             end
-        case 'GPSQu'
+        case 'GPSQU'
             hng=[2000 2400 2600 2650 2700 2750];
             dv=-4:4;
             nhng=numel(hng);

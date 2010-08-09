@@ -3,8 +3,7 @@ function nolabels(ax,xy)
 %
 %    Usage:    nolabels()
 %              nolabels(ax)
-%              nolabels(ax,'x')
-%              nolabels(ax,'y')
+%              nolabels(ax,option)
 %
 %    Description:
 %     NOLABELS() removes x/y tick labels and axis labels for the current
@@ -13,17 +12,22 @@ function nolabels(ax,xy)
 %     NOLABELS(AX) removes x/y tick labels and axis labels for the
 %     specified axes.
 %
-%     NOLABELS(AX,'X') only removes the x-axis tick labels and x-axis
-%     label.
-%
-%     NOLABELS(AX,'Y') only removes the y-axis tick labels and y-axis
-%     label.
+%     NOLABELS(AX,OPTION) specifies the labels to be removed:
+%      'xy'      -- (DEFAULT) removes x & y axes & tick labels
+%      'x'       -- removes x axis & tick labels
+%      'y'       -- removes y axis & tick labels
+%      'xytick'  -- removes x & y axes tick labels
+%      'xtick'   -- removes x axis tick labels
+%      'ytick'   -- removes y axis tick labels
+%      'xylabel' -- removes x & y axes labels
+%      'xlabel'  -- removes x axis label
+%      'ylabel'  -- removes y axis label
 %
 %    Notes:
 %
 %    Examples:
-%     % make a figure with 4x3 arrangement of subplots, then expand them by
-%     % 15% and drop labels on any axes not at the figure edge
+%     % make a figure with 4x3 arrangement of
+%     % subplots and edit labels and ticks
 %     figure;
 %     ax=makesubplots(5,3,1:12);
 %     ax=reshape(ax,3,4);
@@ -33,23 +37,19 @@ function nolabels(ax,xy)
 %     nolabels(ax(1:9),'x');
 %     noticks(tax(5:12),'y');
 %     noticks(ax(1:9),'x');
-%     th=supertitle(ax,'This is a sooooooooooooooooooooooooper title!');
-%     ax0=get(th,'parent'); % make title,colorbar,ylabel share same axis
-%     superxlabel(ax0,'This is a sooooooooooooooooooooooooper xlabel!');
-%     superylabel(ax0,'This is a sooooooooooooooooooooooooper ylabel!');
-%     cb=supercolorbar(ax,'location','south');
-%     cpos=get(cb,'position');
-%     set(cb,'position',[cpos(1) cpos(2)-.15 cpos(3) cpos(4)/2]);
-%     set(cb,'xaxislocation','bottom');
 %
-%    See also: NOTICKS, MAKESUBPLOTS, COMPACTAXES, AXEXPAND, AXMOVE,
-%              SUPERTITLE, SUPERXLABEL, SUPERYLABEL, SUPERCOLORBAR
+%    See also: NOTICKS, NOCOLORBARS, NOTITLES, SETFONTS, MAKESUBPLOTS,
+%              SUPERTITLE, SUPERXLABEL, SUPERYLABEL, SUPERCOLORBAR,
+%              AXSTRETCH, AXEXPAND, AXMOVE
 
 %     Version History:
 %        Aug.  4, 2010 - initial version
+%        Aug.  7, 2010 - added 'xtick' 'ytick' 'xytick' 'xlabel' 'ylabel' &
+%                        'xylabel' options
+%        Aug.  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  4, 2010 at 12:25 GMT
+%     Last Updated Aug.  8, 2010 at 17:25 GMT
 
 % todo:
 
@@ -90,6 +90,27 @@ switch lower(xy)
         tmp=get(ax,'ylabel');
         if(iscell(tmp)); tmp=cat(1,tmp{:}); end
         set(tmp,'string',[]);
+    case 'xylabel'
+        tmp=get(ax,'xlabel');
+        if(iscell(tmp)); tmp=cat(1,tmp{:}); end
+        set(tmp,'string',[]);
+        tmp=get(ax,'ylabel');
+        if(iscell(tmp)); tmp=cat(1,tmp{:}); end
+        set(tmp,'string',[]);
+    case 'xlabel'
+        tmp=get(ax,'xlabel');
+        if(iscell(tmp)); tmp=cat(1,tmp{:}); end
+        set(tmp,'string',[]);
+    case 'ylabel'
+        tmp=get(ax,'ylabel');
+        if(iscell(tmp)); tmp=cat(1,tmp{:}); end
+        set(tmp,'string',[]);
+    case 'xytick'
+        set(ax,'xticklabel',[],'yticklabel',[]);
+    case 'xtick'
+        set(ax,'xticklabel',[]);
+    case 'ytick'
+        set(ax,'yticklabel',[]);
     otherwise
         error('seizmo:nolabels:badInput',...
             'XY must be either ''x'' ''y'' or ''xy''!');

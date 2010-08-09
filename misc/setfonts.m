@@ -14,13 +14,16 @@ function setfonts(ax,varargin)
 %     % change font size and weight for all axes in a figure
 %      setfonts(get(gcf,'children'),'fontsize',16,'fontweight','bold')
 %
-%    See also: SET, FINDALL
+%    See also: SET, FINDALL, NOTICKS, NOCOLORBARS, NOTITLES, NOLABELS,
+%              SUPERTITLE, SUPERXLABEL, SUPERYLABEL, SUPERCOLORBAR,
+%              AXSTRETCH, AXEXPAND, AXMOVE, MAKESUBPLOTS
 
 %     Version History:
 %        Aug.  5, 2010 - initial version
+%        Aug.  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  5, 2010 at 12:25 GMT
+%     Last Updated Aug.  8, 2010 at 12:25 GMT
 
 % todo:
 

@@ -4,10 +4,10 @@
 % Miscellaneous Support functions
 %AXEXPAND            - Expands axes by factor
 %AXMOVE              - Moves a set of axes by the specified amount
+%AXSTRETCH           - Stretches a set of axes as a group (resizing+moving)
 %BUTTORD2            - Butterworth filter order selection. (Honors passband corners)
 %CIRCLE              - Returns points on a circle in cartesian space
 %CLONEFIGURE         - Makes a clone of a figure
-%COMPACTAXES         - Compacts (resizes) a set of axes in a specific direction
 %DDENDROGRAM         - Generate dendrogram plot (with some extra color options)
 %EXPANDSCALARS       - Expands scalars to match size of array inputs
 %FIG2PRINT           - Adjusts figures to be as printed (aka print preview-ish)
@@ -25,8 +25,9 @@
 %ISORTHOGONAL        - TRUE if orientations are orthogonal
 %ISPARALLEL          - TRUE if orientations are parallel
 %JOINWORDS           - Combines a cellstr into a space-separated string
-%LRTB2LBWH           - Convert left-bottom-width-height to left-right-bottom-top
-%LRTB2LBWH           - Convert left-right-bottom-top to left-bottom-width-height
+%LIND                - Returns a linear indices matrix
+%LBWH2LRBT           - Convert left-bottom-width-height to left-right-bottom-top
+%LRBT2LBWH           - Convert left-right-bottom-top to left-bottom-width-height
 %LTI2SUB             - Square matrix lower triangle linear indices to subscripts
 %MAKESUBPLOTS        - Makes subplots in current figure returning axes handles
 %MAPLOCATIONS        - Map station/event locations

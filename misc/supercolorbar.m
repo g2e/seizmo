@@ -18,37 +18,35 @@ function [h]=supercolorbar(ax,varargin)
 %     handle to the invisible axis for the colorbar use GET(H,'PARENT').
 %
 %    Notes:
-%     - Note that this does not move the axes to make space for the
-%       colorbar.  You will have to do this yourself.
+%     - Note that this does not move the given axes to make space for the
+%       colorbar.  In fact, we also make sure it doesn't move the invisible
+%       axis it is peered with so things stay aligned.
 %
 %    Examples:
-%     % make a figure with 4x3 arrangement of subplots, then expand them by
-%     % 15% and drop labels on any axes not at the figure edge
-%     figure;
-%     ax=makesubplots(5,3,1:12);
-%     ax=reshape(ax,3,4);
-%     tax=ax';
-%     axexpand(ax,15);
-%     nolabels(tax(5:12),'y');
-%     nolabels(ax(1:9),'x');
-%     noticks(tax(5:12),'y');
-%     noticks(ax(1:9),'x');
-%     th=supertitle(ax,'This is a sooooooooooooooooooooooooper title!');
-%     ax0=get(th,'parent'); % make title,colorbar,ylabel share same axis
-%     superxlabel(ax0,'This is a sooooooooooooooooooooooooper xlabel!');
-%     superylabel(ax0,'This is a sooooooooooooooooooooooooper ylabel!');
-%     cb=supercolorbar(ax,'location','south');
-%     cpos=get(cb,'position');
-%     set(cb,'position',[cpos(1) cpos(2)-.15 cpos(3) cpos(4)/2]);
-%     set(cb,'xaxislocation','bottom');
+%     % make a figure with 4 2x2 groups of subplots and add super
+%     % labeling and super colorbars to each group
+%     fh=figure;
+%     set(fh,'position',get(fh,'position').*[1 1 1.5 1.5]);
+%     ax=makesubplots(5,5,submat(lind(5),1:2,[1 2 4 5]),'parent',fh);
+%     ax=mat2cell(reshape(ax,4,4),[2 2],[2 2]);
+%     for i=1:4
+%         supertitle(ax{i},['super title ' num2str(i)]);
+%         superxlabel(ax{i},['super xlabel ' num2str(i)]);
+%         superylabel(ax{i},['super ylabel ' num2str(i)]);
+%         supercolorbar(ax{i},'location','eastoutside');
+%     end
 %
-%    See also: SUPERTITLE, SUPERXLABEL, SUPERYLABEL
+%    See also: SUPERTITLE, SUPERXLABEL, SUPERYLABEL, MAKESUBPLOTS,
+%              NOLABELS, NOTICKS, NOTITLES, NOCOLORBARS, AXMOVE, AXEXPAND,
+%              AXSTRETCH
 
 %     Version History:
 %        Aug.  5, 2010 - initial version
+%        Aug.  8, 2010 - move super axis below, tag & userdata used to
+%                        replace on subsequent calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  5, 2010 at 12:25 GMT
+%     Last Updated Aug.  8, 2010 at 12:25 GMT
 
 % todo:
 
@@ -74,6 +72,7 @@ elseif(~isreal(ax) || any(~ishandle(ax(:))) ...
         ['AX must be valid axes handles all in the same figure' ...
         '& sharing the same clim!']);
 end
+p=get(ax(1),'parent');
 
 % get position of new axis
 lbwh=get(ax,'position');
@@ -81,12 +80,24 @@ if(iscell(lbwh)); lbwh=cat(1,lbwh{:}); end
 newpos=[min(lbwh(:,1:2)) max(lbwh(:,1:2)+lbwh(:,3:4))]; % LBRT
 newpos(3:4)=newpos(3:4)-newpos(1:2); % LBWH
 
-% create axis, set colorbar, make invisible
-clim=get(ax(1),'clim');
-ax=axes('position',newpos);
-set(ax,'clim',clim);
-h=colorbar('peer',ax,varargin{:});
-set(ax,'visible','off');
-set(h,'visible','on');
+% create axis, set colorbar, move below & make invisible
+sax=findobj(p,'type','axes','tag','super','userdata',ax);
+if(isempty(sax))
+    sax=axes('position',newpos);
+    pos=get(sax,'position'); % to beat colorbar
+    set(sax,'clim',get(ax(1),'clim'));
+    h=colorbar('peer',sax,varargin{:});
+    kids=get(p,'children');
+    set(p,'children',[kids(2:end); kids(1)]);
+    set(sax,'visible','off','tag','super','userdata',ax);
+    set(sax,'position',pos);
+    set(h,'visible','on');
+else
+    pos=get(sax,'position'); % to beat colorbar
+    set(sax,'clim',get(ax(1),'clim'));
+    h=colorbar('peer',sax,varargin{:});
+    set(sax,'position',pos);
+    set(h,'visible','on');
+end
 
 end

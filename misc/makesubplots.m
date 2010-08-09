@@ -23,35 +23,29 @@ function [ax]=makesubplots(r,c,p,varargin)
 %    Notes:
 %
 %    Examples:
-%     % make a figure with 4x3 arrangement of subplots, then expand them by
-%     % 15% and drop labels on any axes not at the figure edge
-%     figure;
-%     ax=makesubplots(5,3,1:12);
-%     ax=reshape(ax,3,4);
-%     tax=ax';
-%     axexpand(ax,15);
-%     nolabels(tax(5:12),'y');
-%     nolabels(ax(1:9),'x');
-%     noticks(tax(5:12),'y');
-%     noticks(ax(1:9),'x');
-%     th=supertitle(ax,'This is a sooooooooooooooooooooooooper title!');
-%     ax0=get(th,'parent'); % make title,colorbar,ylabel share same axis
-%     superxlabel(ax0,'This is a sooooooooooooooooooooooooper xlabel!');
-%     superylabel(ax0,'This is a sooooooooooooooooooooooooper ylabel!');
-%     cb=supercolorbar(ax,'location','south');
-%     cpos=get(cb,'position');
-%     set(cb,'position',[cpos(1) cpos(2)-.15 cpos(3) cpos(4)/2]);
-%     set(cb,'xaxislocation','bottom');
+%     % make a figure with 4 2x2 groups of subplots and add super
+%     % labeling and super colorbars to each group
+%     fh=figure;
+%     set(fh,'position',get(fh,'position').*[1 1 1.5 1.5]);
+%     ax=makesubplots(5,5,submat(lind(5),1:2,[1 2 4 5]),'parent',fh);
+%     ax=mat2cell(reshape(ax,4,4),[2 2],[2 2]);
+%     for i=1:4
+%         supertitle(ax{i},['super title ' num2str(i)]);
+%         superxlabel(ax{i},['super xlabel ' num2str(i)]);
+%         superylabel(ax{i},['super ylabel ' num2str(i)]);
+%         supercolorbar(ax{i},'location','eastoutside');
+%     end
 %
-%    See also: SUBPLOT, FIGURE, AXEXPAND, AXMOVE, NOLABELS, NOTICKS,
-%              SUPERTITLE, SUPERXLABEL, SUPERYLABEL, SUPERCOLORBAR,
-%              COMPACTAXES
+%    See also: SUBPLOT, FIGURE, AXEXPAND, AXMOVE, AXSTRETCH, NOLABELS,
+%              NOTICKS, NOTITLES, NOCOLORBARS, SUPERTITLE, SUPERXLABEL,
+%              SUPERYLABEL, SUPERCOLORBAR
 
 %     Version History:
 %        Aug.  4, 2010 - initial version
+%        Aug.  8, 2010 - bugfix: support p as matrix, logical support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  4, 2010 at 12:25 GMT
+%     Last Updated Aug.  8, 2010 at 12:25 GMT
 
 % todo:
 
@@ -72,9 +66,15 @@ axarray=false;
 if(nargin<3 || isempty(p)); p=1:r*c; axarray=true; end
 
 % check p
-if(~isreal(p) || any(p~=fix(p)) || any(p<1 | p>r*c))
+if(islogical(p))
+    if(~isequal(size(p),[r c]))
+        error('seizmo:makesubplots:badInput',...
+            'P must be an array of indices (logical or linear)!');
+    end
+    p=find(p');
+elseif(~isreal(p) || any(p(:)~=fix(p(:))) || any(p(:)<1 | p(:)>r*c))
     error('seizmo:makesubplots:badInput',...
-        'P must be an array of positive integers!');
+        'P must be an array of indices (logical or linear)!');
 end
 
 % setup output

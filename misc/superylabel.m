@@ -1,4 +1,4 @@
-function [h]=superylabel(ax,varargin)
+function [varargout]=superylabel(ax,varargin)
 %SUPERYLABEL    Makes a y-axis label spanning multiple axes
 %
 %    Usage:    superylabel(ax,'text')
@@ -19,33 +19,30 @@ function [h]=superylabel(ax,varargin)
 %    Notes:
 %
 %    Examples:
-%     % make a figure with 4x3 arrangement of subplots, then expand them by
-%     % 15% and drop labels on any axes not at the figure edge
-%     figure;
-%     ax=makesubplots(5,3,1:12);
-%     ax=reshape(ax,3,4);
-%     tax=ax';
-%     axexpand(ax,15);
-%     nolabels(tax(5:12),'y');
-%     nolabels(ax(1:9),'x');
-%     noticks(tax(5:12),'y');
-%     noticks(ax(1:9),'x');
-%     th=supertitle(ax,'This is a sooooooooooooooooooooooooper title!');
-%     ax0=get(th,'parent'); % make title,colorbar,ylabel share same axis
-%     superxlabel(ax0,'This is a sooooooooooooooooooooooooper xlabel!');
-%     superylabel(ax0,'This is a sooooooooooooooooooooooooper ylabel!');
-%     cb=supercolorbar(ax,'location','south');
-%     cpos=get(cb,'position');
-%     set(cb,'position',[cpos(1) cpos(2)-.15 cpos(3) cpos(4)/2]);
-%     set(cb,'xaxislocation','bottom');
+%     % make a figure with 4 2x2 groups of subplots and add super
+%     % labeling and super colorbars to each group
+%     fh=figure;
+%     set(fh,'position',get(fh,'position').*[1 1 1.5 1.5]);
+%     ax=makesubplots(5,5,submat(lind(5),1:2,[1 2 4 5]),'parent',fh);
+%     ax=mat2cell(reshape(ax,4,4),[2 2],[2 2]);
+%     for i=1:4
+%         supertitle(ax{i},['super title ' num2str(i)]);
+%         superxlabel(ax{i},['super xlabel ' num2str(i)]);
+%         superylabel(ax{i},['super ylabel ' num2str(i)]);
+%         supercolorbar(ax{i},'location','eastoutside');
+%     end
 %
-%    See also: SUPERTITLE, SUPERXLABEL, SUPERCOLORBAR
+%    See also: SUPERTITLE, SUPERXLABEL, SUPERCOLORBAR, MAKESUBPLOTS,
+%              NOLABELS, NOTICKS, NOTITLES, NOCOLORBARS, AXMOVE, AXEXPAND,
+%              AXSTRETCH
 
 %     Version History:
 %        Aug.  5, 2010 - initial version
+%        Aug.  8, 2010 - move super axis below, tag & userdata used to
+%                        replace on subsequent calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  5, 2010 at 12:25 GMT
+%     Last Updated Aug.  8, 2010 at 12:25 GMT
 
 % todo:
 
@@ -65,6 +62,7 @@ elseif(~isreal(ax) || any(~ishandle(ax(:))) ...
     error('seizmo:superylabel:badInput',...
         'AX must be valid axes handles all in the same figure!');
 end
+p=get(ax(1),'parent');
 
 % get position of new axis
 lbwh=get(ax,'position');
@@ -72,10 +70,22 @@ if(iscell(lbwh)); lbwh=cat(1,lbwh{:}); end
 newpos=[min(lbwh(:,1:2)) max(lbwh(:,1:2)+lbwh(:,3:4))]; % LBRT
 newpos(3:4)=newpos(3:4)-newpos(1:2); % LBWH
 
-% create axis, set xlabel, make invisible
-ax=axes('position',newpos);
-h=ylabel(ax,varargin{:});
-set(ax,'visible','off');
-set(h,'visible','on');
+% create axis, set ylabel, move below & make invisible
+sax=findobj(p,'type','axes','tag','super','userdata',ax);
+if(isempty(sax))
+    sax=axes('position',newpos);
+    h=ylabel(sax,varargin{:});
+    kids=get(p,'children');
+    set(p,'children',[kids(2:end); kids(1)]);
+    set(sax,'visible','off','tag','super','userdata',ax);
+    set(h,'visible','on');
+else
+    % everything should be fine, so just set the ylabel
+    h=ylabel(sax,varargin{:});
+    set(h,'visible','on');
+end
+
+% output
+if(nargout); varargout{1}=h; end
 
 end

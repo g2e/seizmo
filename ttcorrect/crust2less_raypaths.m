@@ -6,41 +6,49 @@ function [paths]=crust2less_raypaths(paths)
 %    Description: PATHS=CRUST2LESS_RAYPATHS(PATHS) will remove the
 %     portions of the raypaths that are above the Crust2.0 moho.  To avoid
 %     plotting functions connecting across segments where the crust was
-%     removed, NaNs are inserted.  Segments that cross the moho are
-%     adjusted so that the last point is at the moho boundary.
+%     removed, NaNs are inserted to isolate the mantle raypath sections
+%     from each other.  Segments that cross the moho are adjusted so that
+%     the segments end at the moho boundary.  Linear interpolation is used
+%     to estimate these positions.
 %
 %    Notes:
 %     - Currently this isn't very smart.  It will have trouble if it
-%       encounters a crust2.0 sidewall.  A warning is issued and no
-%       adjustment is done (actually the crossing segment is removed).
+%       encounters a crust2.0 sidewall.  This condition occurs when a
+%       raypath segment crosses a block boundary AND the both ends of the
+%       segment are above the moho depth of the block that the segment ends
+%       in.  To work around this case the crossing segment is removed.  A
+%       warning is issued so you know if this happens.
 %
 %    Examples:
 %     Plot some paths without the crustal portions:
 %      paths=tauppath('ev',[5 129],'st',[41 -1]);
 %      plotraypaths(crust2less_raypaths(paths));
 %
-%    See also: GETRAYPATHS, GET_UPSWING_RAYPATHS, MANCOR, TAUPPATH,
+%    See also: GETRAYPATHS, EXTRACT_UPSWING_RAYPATHS, MANCOR, TAUPPATH,
 %              TRIM_DEPTHS_RAYPATHS, INSERT_DEPTHS_IN_RAYPATHS
 
 %     Version History:
 %        May  31, 2010 - initial version
 %        June  3, 2010 - updated example, handle nans
+%        Aug.  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  3, 2010 at 02:45 GMT
+%     Last Updated Aug.  8, 2010 at 02:45 GMT
 
 % todo:
 % - test for lat/lon less paths
 %
 % We don't handle the case where the path intersects the side of a
-% crustal wall.  How to do it?  If moho is below both points then
-% we have this case.  Then we need to find intersection with wall (not
-% really easy).  Currently we just drop the crossing segment.
+% crustal wall.  How to do it?  If one of the moho depths is below both
+% points then we have this case.  Then we need to find intersection with
+% wall (not really easy and this is not even correct to match crust and
+% mantle corrections).  Currently we just drop the crossing segment.
 %
+% Both of these segments would be dropped:
 %  ___   
 %   x |    ___
 %     | x  |
-%     |____|
+%     |____| x
 
 % check nargin
 error(nargchk(1,1,nargin));

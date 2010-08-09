@@ -14,13 +14,16 @@ function axmove(ax,r,u)
 %     % move the current axis up by 10% of the figure height
 %      axmove(gca,0,.1);
 %
-%    See also: AXEXPAND, COMPACTAXES
+%    See also: AXEXPAND, AXSTRETCH, MAKESUBPLOTS, NOLABELS, NOTICKS,
+%              NOTITLES, NOCOLORBARS, SUPERTITLE, SUPERXLABEL, SUPERYLABEL,
+%              SUPERCOLORBAR
 
 %     Version History:
 %        Aug.  5, 2010 - initial version
+%        Aug.  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  5, 2010 at 12:25 GMT
+%     Last Updated Aug.  8, 2010 at 12:25 GMT
 
 % todo:
 

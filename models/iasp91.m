@@ -3,6 +3,7 @@ function [mout]=iasp91(varargin)
 %
 %    Usage:    model=iasp91
 %              model=iasp91(...,'depths',depths,...)
+%              model=iasp91(...,'dcbelow',false,...)
 %              model=iasp91(...,'range',[top bottom],...)
 %              model=iasp91(...,'crust',true|false,...)
 %
@@ -13,7 +14,7 @@ function [mout]=iasp91(varargin)
 %           .crust     - true/false
 %           .isotropic - always true here
 %           .refperiod - always 1sec here
-%           .flattened - always false here (see FLATTEN_MODEL)
+%           .flattened - always false here (see FLATTEN_1DMODEL)
 %           .depth     - km depths from 0 to 6371
 %           .vp        - isotropic p-wave velocity (km/s)
 %           .vs        - isotropic s-wave velocity (km/s)
@@ -23,8 +24,12 @@ function [mout]=iasp91(varargin)
 %     MODEL=IASP91(...,'DEPTHS',DEPTHS,...) returns the model parameters
 %     only at the depths in DEPTHS.  DEPTHS is assumed to be in km.  The
 %     model parameters are found by linear interpolation between known
-%     values.  DEPTHS at discontinuities return values from the under side
-%     of the discontinuity (this currently cannot be adjusted).
+%     values.  DEPTHS at discontinuities return values from the deeper side
+%     of the discontinuity.
+%
+%     MODEL=IASP91(...,'DCBELOW',FALSE,...) returns values from the shallow
+%     (top) side of the discontinuity if a depth is specified at one using
+%     the DEPTHS option.
 %
 %     MODEL=IASP91(...,'RANGE',[TOP BOTTOM],...) specifies the range of
 %     depths that known model parameters are returned.  [TOP BOTTOM] must
@@ -54,9 +59,10 @@ function [mout]=iasp91(varargin)
 %        May  19, 2010 - initial version
 %        May  20, 2010 - discon on edge handling, quicker
 %        May  24, 2010 - added several struct fields for info
+%        Aug.  8, 2010 - minor doc touch, dcbelow option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  24, 2010 at 14:45 GMT
+%     Last Updated Aug.  8, 2010 at 14:45 GMT
 
 % todo:
 
@@ -67,7 +73,7 @@ if(mod(nargin,2))
 end
 
 % option defaults
-varargin=[{'d' [] 'c' true 'r' [0 6371]} varargin];
+varargin=[{'d' [] 'b' true 'c' true 'r' [0 6371]} varargin];
 
 % check options
 if(~iscellstr(varargin(1:2:end)))
@@ -89,6 +95,13 @@ for i=1:2:numel(varargin)
                     'the range [0 6371] in km!']);
             end
             depths=varargin{i+1}(:);
+        case {'dcb' 'dc' 'below' 'b' 'dcbelow'}
+            if(skip); continue; end
+            if(~islogical(varargin{i+1}) || ~isscalar(varargin{i+1}))
+                error('seizmo:iasp91:badDCBELOW',...
+                    'DCBELOW must be a TRUE or FALSE!');
+            end
+            dcbelow=varargin{i+1};
         case {'c' 'cru' 'crust'}
             if(skip); continue; end
             if(~islogical(varargin{i+1}) || ~isscalar(varargin{i+1}))
@@ -261,7 +274,11 @@ end
 % interpolate depths if desired
 if(~isempty(depths))
     %depths=depths(depths>=range(1) & depths<=range(2));
-    model=interpdc1(model(:,1),model(:,2:4),depths);
+    if(dcbelow)
+        model=interpdc1(model(:,1),model(:,2:end),depths);
+    else
+        [model,model]=interpdc1(model(:,1),model(:,2:end),depths);
+    end
     model=[depths model];
 else
     % get index range (assumes depths are always non-decreasing in model)

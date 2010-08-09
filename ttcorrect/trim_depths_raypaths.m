@@ -9,9 +9,9 @@ function [paths]=trim_depths_raypaths(paths,range)
 %     from TAUPPATH (GETRAYPATH conforms).  PATHS is adjusted so that
 %     points outside the depth range are removed and segments of the path
 %     that cross the depth boundary are adjusted so that they are on the
-%     boundary.  Individual path sections within the range are separated by
-%     NaNs as to avoid inappropriate connection during plotting (or in
-%     MANCOR).
+%     boundary using linear interpolation.  Individual path sections within
+%     the range are separated by NaNs as to avoid inappropriate connection
+%     during plotting (or in MANCOR).
 %
 %    Notes:
 %
@@ -22,13 +22,14 @@ function [paths]=trim_depths_raypaths(paths,range)
 %      plotraypaths(paths);
 %
 %    See also: CRUST2LESS_RAYPATHS, GETRAYPATHS, PLOTRAYPATHS,
-%              INSERT_DEPTHS_IN_RAYPATHS, GET_UPSWING_RAYPATHS, MANCOR
+%              INSERT_DEPTHS_IN_RAYPATHS, EXTRACT_UPSWING_RAYPATHS, MANCOR
 
 %     Version History:
 %        June  2, 2010 - initial version
+%        Aug.  8, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  2, 2010 at 23:15 GMT
+%     Last Updated Aug.  8, 2010 at 23:15 GMT
 
 % todo:
 

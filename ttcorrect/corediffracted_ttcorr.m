@@ -14,9 +14,11 @@ function [ecor,ccor,mcorf,mcoru]=corediffracted_ttcorr(data,phase,mod)
 %     raypath mantle travel time correction and MCORUP is the upswing
 %     raypath mantle travel time correction.  Corrections follow this rule:
 %                         TT3D=TT1D+CORRECTIONS
-%     All corrections are in seconds.
+%     All corrections are in seconds.  If you do not choose a model, PREM
+%     is the default.
 %
 %    Notes:
+%     - Ellipticity corrections use AK135, not the selected model.
 %
 %    Examples:
 %     Get corrections for a core-diffracted dataset and apply them:
@@ -26,12 +28,20 @@ function [ecor,ccor,mcorf,mcoru]=corediffracted_ttcorr(data,phase,mod)
 %      cddata=timeshift(data,-(Pdiff+ecor+ccor+mcorfull));
 %      plot0(cddata);
 %
-%    See also: ELLCOR, CRUCOR, MANCOR, GETRAYPATHS,
-%              EXTRACT_UPSWING_RAYPATHS
+%    See also: ELLCOR, CRUCOR, MANCOR, GETRAYPATHS, PLOTRAYPATHS,
+%              EXTRACT_UPSWING_RAYPATHS, CRUST2LESS_RAYPATHS
 
-
+%     Version History:
+%        June 11, 2010 - initial version
+%        Aug.  8, 2010 - cleaned up docs & code
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Aug.  8, 2010 at 14:25 GMT
 
 % todo:
+
+% check nargin
+error(nargchk(2,3,nargin));
 
 % check struct & header
 data=checkheader(data,...
@@ -55,12 +65,12 @@ end
 
 % cmb depth
 switch lower(mod)
-    case 'prem'
-        cmb=2891;
     case 'iasp91'
         cmb=2889;
     case 'ak135'
         cmb=2891.5;
+    case 'prem'
+        cmb=2891;
 end
 
 % get info from header

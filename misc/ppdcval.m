@@ -6,7 +6,8 @@ function v=ppdcval(pp,xx,up)
 %
 %   V is obtained by replacing each entry of XX by the value of f there.
 %   If an entry in XX is on a breakpoint in PP, then it is evaluated within
-%   the context of the upper piecewise polynomial.
+%   the context of the upper piecewise polynomial.  This is equivalent to
+%   the behavior of PPVAL(PP,XX).
 %
 %   V = PPDCVAL(PP,XX,FALSE) will evaluate entries in XX that are on
 %   breakpoints in the context of the lower piecewise polynomial.
@@ -22,8 +23,8 @@ function v=ppdcval(pp,xx,up)
 %   [D1,...,Dr, N1,...,Ns], with V(:,...,:, J1,...,Js) the value of f at
 %   XX(J1,...,Js).
 %
-%   If PP was constructed by INTERP1 using the orientation of non-scalar
-%   function values specified for that function, then:
+%   If PP was constructed by INTERP1 or INTERPDC1 using the orientation of
+%   non-scalar function values specified for that function, then:
 %
 %   If f is [D1,..,Dr]-valued, and XX is a scalar, then V has size
 %   [D1,...,Dr], with V the value of f at XX.
@@ -50,7 +51,8 @@ function v=ppdcval(pp,xx,up)
 %   Class support for input X and the fields of PP:
 %      float: double, single
 %
-%   See also SPLINE, PCHIP, INTERP1, MKPP, UNMKPP, SPLINES (The Spline Toolbox).
+%   See also PPVAL, SPLINE, PCHIP, INTERP1, MKPP, UNMKPP,
+%            SPLINES (The Spline Toolbox).
 
 %   Carl de Boor 7-2-86
 %   Copyright 1984-2006 The MathWorks, Inc.
@@ -58,6 +60,10 @@ function v=ppdcval(pp,xx,up)
 
 % Made PPDCVAL from PPVAL
 % June 1, 2010 by Garrett Euler
+% Aug. 8, 2010 - minor doc updates
+%
+% I should replace the example with one with a square wave
+% or some other discontinuous function.
 
 if isstruct(xx) % we assume that ppdcval(xx,pp) was used
    temp = xx; xx = pp; pp = temp;
@@ -75,7 +81,7 @@ if length(sizexx)==2&&sizexx(1)==1, sizexx(1) = []; end
 % (mindful of the possibility that xx might be empty)
 % - allowing choice of which interval if eval site is at breakpoint
 if(nargin==2 || isempty(up) || up)
-    % default is the upside of the discontinuity
+    % default is the upside of the discontinuity (like ppval)
     if lx, [ignored,index] = histc(xs,[-inf,b(2:l),inf]);
     else index = ones(1,lx);
     end
