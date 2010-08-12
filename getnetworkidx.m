@@ -21,20 +21,20 @@ function [idx,networkcode]=getnetworkidx(data)
 %          networkdata{i}=data(idx==i);
 %      end
 %
-%    See also: GETSTREAMIDX, GETSTATIONIDX, GETCOMPONENTIDX
+%    See also: GETSTREAMIDX, GETSTATIONIDX, GETCOMPONENTIDX, GETSITEIDX
 
 %     Version History:
 %        June 28, 2009 - initial version
 %        Jan. 29, 2010 - cleaned up unnecessary code
+%        Aug. 11, 2010 - nargchk fix, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 23:20 GMT
+%     Last Updated Aug. 11, 2010 at 22:55 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % get network groups
 [networkcode,idx,idx]=unique(upper(getheader(data,'knetwk')));

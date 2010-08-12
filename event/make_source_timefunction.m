@@ -36,15 +36,15 @@ function [x,t]=make_source_timefunction(delta,hwidth,type)
 %        Oct. 17, 2009 - initial version
 %        Oct. 29, 2009 - minor doc update
 %        Jan. 27, 2010 - seizmoverbose support
+%        Aug.  9, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2010 at 07:05 GMT
+%     Last Updated Aug.  9, 2010 at 07:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,3,nargin));
 
 % check delta
 if(isempty(delta) || ~isreal(delta) || any(delta<=0))

@@ -20,9 +20,10 @@ function [report]=chk1dmodel(model)
 %     Version History:
 %        May  24, 2010 - initial version
 %        May  27, 2010 - now allows arrays of models
+%        Aug. 10, 2010 - require monotoniticity of depths
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  27, 2010 at 15:05 GMT
+%     Last Updated Aug. 10, 2010 at 15:05 GMT
 
 % todo:
 
@@ -75,6 +76,11 @@ for i=1:numel(model)
         report.identifier='seizmo:chk1dmodel:badRefPeriod';
         report.message=['The .refperiod field of MODEL ' ...
             num2str(i) ' must be a scalar >0!'];
+        return;
+    elseif(any(diff(model(i).depth)<0))
+        report.identifier='seizmo:chk1dmodel:badDepth';
+        report.message=['The .depth field of MODEL ' ...
+            num2str(i) ' must be monotonically non-decreasing!'];
         return;
     end
 

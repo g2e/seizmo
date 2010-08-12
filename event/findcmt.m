@@ -10,17 +10,21 @@ function [cmt]=findcmt(varargin)
 %      LOCATION  -- look for cmts near this location ([deg_lat deg_lon])
 %      DEPTH     -- look for cmts near this depth (in kilometers)
 %      MAGNITUDE -- look for cmts near this moment magnitude
+%      MAGTYPE   -- magnitude type: 'mb' 'ms' or 'mw' (default)
 %      TIMESCALE -- scales time discrepancy to distance (default is 5 km/s)
 %      MAGSCALE  -- scales magnitude discrepancy to distance (see Notes)
 %      CATALOG   -- 'both' (default),'full', 'quick'
-%      NUMCMT    -- integer>0 (default is 1)
+%      NUMCMT    -- returns this many cmts, integer>0 (default is 1)
+%      NAME      -- limits search to cmt(s) who's name satisfies the given
+%                   regular expression (see REGEXP for details)
 %
 %    Notes:
+%     - Using the NAME option ignores all options but CATALOG
 %     - TIME formats: [YEAR JULDAY] (start of day)
 %                     [YEAR MONTH CALDAY] (start of day)
 %                     [YEAR JULDAY HOUR MINUTE SECONDS]
 %                     [YEAR MONTH CALDAY HOUR MINUTE SECONDS]
-%     - MAGSCALE: 10^(MAGSCALE*abs(Mw-MAGNITUDE)) km (default is 4)
+%     - MAGSCALE: MAGSCALE*abs(Mw-MAGNITUDE) km (default is 100)
 %     - CATALOG may be an NDK struct
 %     - GlobalCMT catalogs are cached under global SEIZMO.GLOBALCMT
 %
@@ -37,20 +41,32 @@ function [cmt]=findcmt(varargin)
 %     Find largest cmt:
 %      findcmt('magnitude',10)
 %
-%    See also: SETEVENT, READNDK, SSIDX
+%     Find largest cmt from Jan 2008:
+%      findcmt('name','^\w200801','magnitude',10)
+%
+%    See also: FINDCMTS, SETEVENT, READNDK, SSIDX
 
 %     Version History:
 %        Mar. 30, 2010 - initial version
 %        July 30, 2010 - update for new ndk structs
 %        Aug.  2, 2010 - catalog caching, both catalogs option
+%        Aug. 10, 2010 - add name option, handle large numcmt gracefully
+%        Aug. 11, 2010 - altered/fixed magnitude scaling, added magtype opt
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  2, 2010 at 21:30 GMT
+%     Last Updated Aug. 11, 2010 at 21:30 GMT
 
 % todo:
 
 % check optional inputs
 opt=check_findcmt_options(varargin{:});
+
+% name shortcut
+if(~isempty(opt.NAME))
+    idx=~cellfun('isempty',regexp(opt.CATALOG.name,opt.NAME));
+    opt.CATALOG=ssidx(opt.CATALOG,idx);
+    if(~sum(idx)); cmt=opt.CATALOG; return; end
+end
 
 % get distances
 dd=0;
@@ -71,15 +87,22 @@ if(~isempty(opt.TIME))
 end
 md=0;
 if(~isempty(opt.MAGNITUDE))
-    md=10.^(opt.MAGSCALE*...
-        abs((2/3)*log10(opt.CATALOG.scalarmoment...
-        .*10.^opt.CATALOG.exponent)-10.7-opt.MAGNITUDE));
+    switch lower(opt.MAGTYPE)
+        case 'mw'
+            m=(2/3).*(log10(opt.CATALOG.scalarmoment...
+                .*10.^opt.CATALOG.exponent)-16.1);
+        case 'ms'
+            m=opt.CATALOG.ms;
+        case 'mb'
+            m=opt.CATALOG.ms;
+    end
+    md=opt.MAGSCALE.*abs(m-opt.MAGNITUDE);
 end
 
 % sort by cumulative distance and pull asked amount
 d=sqrt(dd.^2+ld.^2+td.^2+md.^2);
 [d,idx]=sort(d);
-cmt=ssidx(opt.CATALOG,idx(1:opt.NUMCMT));
+cmt=ssidx(opt.CATALOG,idx(1:min(numel(idx),opt.NUMCMT)));
 
 end
 
@@ -102,17 +125,20 @@ if(~iscellstr(varargin(1:2:end)))
 end
 
 % defaults (not checked, so must be good)
+opt.NAME=[]; % optional
 opt.TIME=[]; % optional
 opt.LOCATION=[]; % optional
 opt.DEPTH=[]; % optional
 opt.MAGNITUDE=[]; % optional
+opt.MAGTYPE='mw'; % ms, mb, mw
 opt.TIMESCALE=5; % x km/s
-opt.MAGSCALE=4; % 10^(y*abs(mw-mag))
+opt.MAGSCALE=100; % km/mag
 opt.CATALOG='full'; % full/quick
 opt.NUMCMT=1; % number of cmts returned
 
 % valid strings
 valid.CATALOG={'full' 'quick' 'both'};
+valid.MAGTYPE={'mb' 'ms' 'mw'};
 valid.TIMES={'[YEAR JDAY]' '[YEAR MONTH CDAY]' ...
     '[YEAR JDAY HOUR MINUTE SECONDS]' ...
     '[YEAR MONTH CDAY HOUR MINUTE SECONDS]'};
@@ -123,6 +149,13 @@ valid.NDKFIELDS={'scalarmoment' 'exponent' 'year' 'month' 'day' 'hour' ...
 % loop over options
 for i=1:2:nargin
     switch lower(varargin{i})
+        case {'name' 'na'}
+            if(~ischar(varargin{i+1}) || ndims(varargin{i+1})~=2 ...
+                    || size(varargin{i+1},1)~=1)
+                error('seizmo:findcmt:badInput',...
+                    'NAME must be a string!');
+            end
+            opt.NAME=varargin{i+1};
         case {'time' 't'}
             % check
             sz=size(varargin{i+1});
@@ -156,6 +189,15 @@ for i=1:2:nargin
                 varargin{i+1}=varargin{i+1}/1000;
             end
             opt.DEPTH=varargin{i+1};
+        case {'magtype' 'mt'}
+            if(ischar(varargin{i+1}) ...
+                    && ismember(lower(varargin{i+1}),valid.MAGTYPE))
+                opt.MAGTYPE=varargin{i+1};
+            else
+                error('seizmo:findcmt:badInput',...
+                    ['MAGTYPE must be one of the following:\n' ...
+                    sprintf('''%s'' ',valid.MAGTYPE{:})]);
+            end
         case {'catalog' 'cat' 'c'}
             % check
             if(isstruct(varargin{i+1}) && all(ismember(valid.NDKFIELDS,...

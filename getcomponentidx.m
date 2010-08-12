@@ -24,20 +24,20 @@ function [idx,componentcode]=getcomponentidx(data)
 %          componentdata{i}=data(idx==i);
 %      end
 %
-%    See also: GETNETWORKIDX, GETSTATIONIDX, GETSTREAMIDX
+%    See also: GETNETWORKIDX, GETSTATIONIDX, GETSTREAMIDX, GETSITEIDX
 
 %     Version History:
 %        June 28, 2009 - initial version
 %        Jan. 29, 2010 - cleaned up unnecessary code
+%        Aug. 11, 2010 - nargchk fix, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 23:20 GMT
+%     Last Updated Aug. 11, 2010 at 23:15 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % get header info
 kname=upper(getheader(data,'kname'));

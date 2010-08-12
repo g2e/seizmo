@@ -438,7 +438,8 @@ try
             end
             
             % plot spectrogram ourselves
-            figure(fh,'name','STFT -- SEIZMO');
+            figure(fh);
+            set(fh,'name','STFT -- SEIZMO');
             h2=axes('outerposition',...
                 [left(i) bottom(i) sw*pwidth sh*height],...
                 'position',[left(i)+tpl bottom(i)+tpl ...

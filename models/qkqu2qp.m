@@ -20,13 +20,14 @@ function [Qp]=qkqu2qp(Qk,Qu,Vp,Vs)
 %       Qp =
 %           1349.94731733252
 %
-%    See also: QKQU2QP
+%    See also: QPQS2QK
 
 %     Version History:
 %        May  19, 2010 - initial version
+%        Aug.  9, 2010 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  19, 2010 at 02:55 GMT
+%     Last Updated Aug.  9, 2010 at 02:55 GMT
 
 % todo:
 

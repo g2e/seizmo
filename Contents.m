@@ -32,6 +32,7 @@
 %DIVIDERECORDS        - Divide SEIZMO records
 %ENVELOPE             - Return envelopes of SEIZMO records
 %FIXDELTA             - Fix sample spacing for SEIZMO records
+%GENNAME              - Generic filenames for SEIZMO records
 %GETARRIVAL           - Returns stored phase arrival time from SEIZMO data header
 %GETCOMPONENTIDX      - Returns index array to separate dataset into components
 %GETENUMDESC          - Get enum string description from SEIZMO header enum field
@@ -41,6 +42,7 @@
 %GETNETWORKIDX        - Returns index array for separating dataset into networks
 %GETNORM              - Return normalizers for SEIZMO records
 %GETPOLYNOMIAL        - Get polynomial fit to SEIZMO records
+%GETSITEIDX           - Returns index array for separating dataset by sites
 %GETSPECTRALCMP       - Returns the indicated portion of spectral records
 %GETSTATIONIDX        - Returns index array for separating dataset into stations
 %GETSTREAMIDX         - Returns index array for separating dataset into streams

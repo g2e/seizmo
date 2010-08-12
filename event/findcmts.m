@@ -19,6 +19,8 @@ function [cmts]=findcmts(varargin)
 %      CENTROIDSHIFT -- centroid time shift range in seconds ([lo hi])
 %      TAXISPLUNGE   -- tension axis plunge in degrees ([lo hi])
 %      NAXISPLUNGE   -- null axis plunge in degrees  ([lo hi])
+%      NAME          -- limit CMTs to those with names matching the given
+%                       regular expression (see REGEXP for details)
 %     
 %     Note that NUMDAYS & NUMSECS set ENDTIME indirectly so only the last
 %     call to one of the 3 will be honored.  So if you set NUMDAYS to 3 and
@@ -42,9 +44,10 @@ function [cmts]=findcmts(varargin)
 
 %     Version History:
 %        Aug.  2, 2010 - initial version
+%        Aug. 10, 2010 - add name option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  2, 2010 at 21:30 GMT
+%     Last Updated Aug. 10, 2010 at 21:30 GMT
 
 % todo:
 % - add % double couple
@@ -89,6 +92,11 @@ idx=(timediff(opt.STARTTIME,[opt.CATALOG.year opt.CATALOG.month ...
     & (opt.NAXISPLUNGE(1)<=opt.CATALOG.plunge2) ...
     & (opt.NAXISPLUNGE(2)>=opt.CATALOG.plunge2);
 
+% name idx
+if(~isempty(opt.NAME))
+    idx=idx & ~cellfun('isempty',regexp(opt.CATALOG.name,opt.NAME));
+end
+
 % extract cmts
 cmts=ssidx(opt.CATALOG,idx);
 
@@ -108,7 +116,7 @@ end
 
 % defaults
 varargin=[{'st' [1976 1] 'nd' 1 'cat' 'both' 'mw' [0 10] 'ms' [0 10] ...
-    'mb' [0 10] 'lat' [-90 90] 'lon' [-180 180] 'dep' [0 1000] ...
+    'mb' [0 10] 'lat' [-90 90] 'lon' [-180 180] 'dep' [0 1000] 'na' [] ...
     'hd' [-9999 9999] 'cs' [-9999 9999] 'tax' [0 90] 'nax' [0 90]} ...
     varargin];
 
@@ -130,6 +138,14 @@ valid.NDKFIELDS={'scalarmoment' 'exponent' 'year' 'month' 'day' 'hour' ...
 % loop over options
 for i=1:2:numel(varargin)
     switch lower(varargin{i})
+        case {'name' 'na'}
+            if(~isempty(varargin{i+1}) && (~ischar(varargin{i+1}) ...
+                    || ndims(varargin{i+1})~=2 ...
+                    || size(varargin{i+1},1)~=1))
+                error('seizmo:findcmts:badInput',...
+                    'NAME must be a string!');
+            end
+            opt.NAME=varargin{i+1};
         case {'starttime' 'st'}
             % check
             sz=size(varargin{i+1});

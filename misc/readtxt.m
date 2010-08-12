@@ -1,13 +1,21 @@
-function [txt]=readtxt(file)
+function [txt]=readtxt(file,filterspec)
 %READTXT    Reads in a text file as a single string
 %
 %    Usage:    txt=readtxt(file)
+%              txt=readtxt([],filterspec)
 %
 %    Description: TXT=READTXT(FILE) reads in the ascii file given by FILE
 %     (the location of the file on the filesystem) as a single string TXT.
 %     TXT his a row vector of characters.  End of line characters are not
 %     removed.  Calling READTXT without FILE or with FILE set to '' will
 %     present a graphical file selection menu.
+%
+%     TXT=READTXT([],FILTERSPEC) sets the file filter specifier for gui-
+%     based file selection.  The default FILTERSPEC is:
+%      {'*.txt;*.TXT' 'TXT Files (*.txt,*.TXT)';
+%       '*.*' 'All Files (*.*)'}
+%     This is mainly so other functions do not need to include their own ui
+%     to select an ascii file (that will get passed to here anyways).
 %
 %    Notes:
 %
@@ -22,21 +30,29 @@ function [txt]=readtxt(file)
 %        Jan. 26, 2010 - add graphical selection
 %        Feb.  5, 2010 - improved file checks
 %        July 30, 2010 - nargchk fix
+%        Aug. 10, 2010 - filterspec option added
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 30, 2010 at 13:00 GMT
+%     Last Updated Aug. 10, 2010 at 13:00 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(0,1,nargin));
+error(nargchk(0,2,nargin));
+
+% default/check filterspec
+if(nargin<2 || isempty(filterspec))
+    filterspec={'*.txt;*.TXT' 'TXT Files (*.txt,*.TXT)';
+        '*.*' 'All Files (*.*)'};
+end
+if(~iscellstr(filterspec))
+    error('seizmo:readtxt:badFilterSpec',...
+        'FILTERSPEC must be a cellstr array for UIGETFILE!');
+end
 
 % graphical selection
 if(nargin<1 || isempty(file))
-    [file,path]=uigetfile(...
-        {'*.txt;*.TXT' 'TXT Files (*.txt,*.TXT)';
-        '*.*' 'All Files (*.*)'},...
-        'Select TXT File');
+    [file,path]=uigetfile(filterspec,'Select File');
     if(isequal(0,file))
         error('seizmo:readtxt:noFileSelected','No input file selected!');
     end

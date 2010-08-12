@@ -85,9 +85,10 @@ function [data]=bseizmo(varargin)
 %        Oct.  5, 2009 - reordered struct fields, added .ind
 %        Oct.  7, 2009 - appropriate extension for filetype
 %        Jan. 27, 2010 - seizmoverbose support, proper SEIZMO handling
+%        Aug. 10, 2010 - allow empty ind cmp (b=0, e=npts-1, delta=1)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2010 at 17:35 GMT
+%     Last Updated Aug. 10, 2010 at 17:35 GMT
 
 % todo:
 
@@ -217,6 +218,16 @@ for i=1:2:nargin
     % get npts
     npts(j)=numel(varargin{i});
     
+    % unspecified times hack
+    if(~npts(j) && ~isempty(varargin{i+1}))
+        if(isvector(varargin{i+1}))
+            npts(j)=numel(varargin{i+1});
+        else
+            npts(j)=size(varargin{i+1},1);
+        end
+        varargin{i}=0:npts(j)-1;
+    end
+    
     % cross check
     if(isvector(varargin{i+1}))
         % vectors can be row or column vectors
@@ -270,6 +281,10 @@ for i=1:2:nargin
         data(j).ind=varargin{i}(:);
         leven(j)=false;
     end
+    
+    % clear varargin to save some memory
+    varargin{i}=[];
+    varargin{i+1}=[];
 end
 
 % change records with ncmp>1 to alternative version
