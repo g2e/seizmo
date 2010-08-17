@@ -94,9 +94,10 @@ function [varargout]=stft(data,varargin)
 %        May   5, 2010 - fully working version
 %        May   7, 2010 - fix overlap bug
 %        July  8, 2010 - plot name fix & nargchk fix
+%        Aug. 15, 2010 - linked x axes of record & spectragram, short idep
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  8, 2010 at 18:25 GMT
+%     Last Updated Aug. 15, 2010 at 18:25 GMT
 
 % todo:
 
@@ -324,6 +325,7 @@ try
         
         % for amplitude labeling
         idep=getenumdesc(data,'idep');
+        idep=shortidep(idep);
         
         % record coloring
         colors=hsv(nrecs);
@@ -461,6 +463,9 @@ try
             % turn off tick labels on timeseries
             set(h1,'xticklabel',[]);
             
+            % now lets link the x axes together
+            linkaxes([h1 h2],'x');
+            
             % plot colorbar
             % entire height
             % 25% of width
@@ -494,3 +499,21 @@ catch
 end
 
 end
+
+
+function [idep]=shortidep(idep)
+%SHORTIDEP    Converts idep long description to just units
+long={'Unknown' 'Displacement (nm)' 'Velocity (nm/sec)' ...
+      'Acceleration (nm/sec^2)' 'Velocity (volts)' 'Absement (nm*sec)' ...
+      'Absity (nm*sec^2)' 'Abseleration (nm*sec^3)' 'Abserk (nm*sec^4)' ...
+      'Absnap (nm*sec^5)' 'Absackle (nm*sec^6)' 'Abspop (nm*sec^7)' ...
+      'Jerk (nm/sec^3)' 'Snap (nm/sec^4)' 'Crackle (nm/sec^5)' ...
+      'Pop (nm/sec^6)' 'Counts'};
+short={'unknown' 'nm' 'nm/sec' 'nm/sec^2' 'volts' 'nm*sec' 'nm*sec^2' ...
+       'nm*sec^3' 'nm*sec^4' 'nm*sec^5' 'nm*sec^6' 'nm*sec^7' ...
+       'nm/sec^3' 'nm/sec^4' 'nm/sec^5' 'nm/sec^6' 'counts'};
+[tf,i]=ismember(idep,long);
+idep(~tf)={'unknown'};
+idep(tf)=short(i(tf));
+end
+

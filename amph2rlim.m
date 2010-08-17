@@ -38,15 +38,15 @@ function [data]=amph2rlim(data)
 %        Jan. 26, 2010 - seizmoverbose support
 %        Feb.  2, 2010 - versioninfo caching (required some code changes)
 %        Mar.  8, 2010 - versioninfo caching dropped
+%        Aug. 16, 2010 - nargchk fix, better checkheader utilization
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 12:45 GMT
+%     Last Updated Aug. 16, 2010 at 12:45 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -57,7 +57,8 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt conversion
 try
     % check header (versioninfo cache update)
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONSPECTRAL_IFTYPE','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -70,14 +71,6 @@ try
 
     % find spectral
     amph=strcmpi(iftype,'iamph');
-    rlim=strcmpi(iftype,'irlim');
-
-    % records must be spectral
-    if(any(~amph & ~rlim))
-        error('seizmo:amph2rlim:illegalOperation',...
-            ['Record(s):\n' sprintf('%d ',find(~amph & ~rlim)) ...
-            '\nIllegal operation on non-spectral record(s)!']);
-    end
     
     % detail message
     if(verbose)
@@ -99,7 +92,7 @@ try
         if(amph(i))
             oclass=str2func(class(data(i).dep));
             data(i).dep=double(data(i).dep);
-            temp=data(i).dep(:,1:2:end).*exp(j*data(i).dep(:,2:2:end));
+            temp=data(i).dep(:,1:2:end).*exp(1j*data(i).dep(:,2:2:end));
             data(i).dep(:,1:2:end)=real(temp);
             data(i).dep(:,2:2:end)=imag(temp);
             data(i).dep=oclass(data(i).dep);

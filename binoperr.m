@@ -99,9 +99,10 @@ function []=binoperr(varargin)
 %        Aug. 21, 2009 - changed IFTYPE from ERROR to WARN to allow working
 %                        with mixed xy and timeseries data
 %        Oct. 21, 2009 - dropped rmfield usage (slow)
+%        Aug. 16, 2010 - fprintf fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 21, 2009 at 07:25 GMT
+%     Last Updated Aug. 16, 2010 at 07:25 GMT
 
 % todo:
 
@@ -142,7 +143,7 @@ end
 
 % no inputs = display options
 if(nargin==0)
-    for i=fields; disp(sprintf('%12s = %s',i{:},option.(i{:}))); end
+    for i=fields; fprintf('%12s = %s\n',i{:},option.(i{:})); end
 % one input = 'defaults'
 elseif(nargin==1)
     % check input is 'defaults'

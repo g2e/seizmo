@@ -21,15 +21,15 @@ function [data]=keepim(data)
 
 %     Version History:
 %        June 25, 2009 - initial version
+%        Aug. 15, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 20:25 GMT
+%     Last Updated Aug. 15, 2010 at 20:25 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 data=getspectralcmp(data,'im');
 

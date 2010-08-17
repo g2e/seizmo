@@ -29,19 +29,18 @@ function [data]=changebyteorder(data,endianness)
 %        May  29, 2009 - allow empty endianness (no change)
 %        Jan. 28, 2010 - seizmoverbose support
 %        Apr. 25, 2010 - added new strings
+%        Aug. 16, 2010 - fix error usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2010 at 14:05 GMT
+%     Last Updated Aug. 16, 2010 at 14:05 GMT
 
 % todo:
 
 % check number of inputs
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data));
 
 % verbosity
 verbose=seizmoverbose;

@@ -43,15 +43,15 @@ function [data]=attach(data,option,dep,ind)
 %        Jan. 26, 2010 - seizmoverbose support
 %        Feb.  2, 2010 - versioninfo caching
 %        Mar.  8, 2010 - versioninfo caching dropped
+%        Aug. 16, 2010 - nargchk fix, better checkheader utilization
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 12:45 GMT
+%     Last Updated Aug. 16, 2010 at 12:45 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(3,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,4,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -62,7 +62,8 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt attach
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -72,16 +73,7 @@ try
 
     % get header info
     leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
     [npts,ncmp,b,delta,e]=getheader(data,'npts','ncmp','b','delta','e');
-
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:attach:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) must be Timeseries or XY!']);
-    end
 
     % check option
     validopt={'beginning' 'ending' 'prepend' 'append'};

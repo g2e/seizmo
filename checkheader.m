@@ -35,7 +35,7 @@ function [data]=checkheader(data,varargin)
 %           CHECKS:     DATASET HAS NON-TIMESERIES/XY DATATYPES
 %           FIX:        NONE
 %           DEFAULT:    IGNORE
-%       NONTIME_IFTYPE
+%       NONSPECTRAL_IFTYPE
 %           CHECKS:     DATASET HAS NON-SPECTRAL DATATYPES
 %           FIX:        NONE
 %           DEFAULT:    IGNORE

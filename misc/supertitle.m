@@ -74,6 +74,7 @@ newpos(3:4)=newpos(3:4)-newpos(1:2); % LBWH
 sax=findobj(p,'type','axes','tag','super','userdata',ax);
 if(isempty(sax))
     sax=axes('position',newpos);
+    set(sax,'parent',p);
     h=title(sax,varargin{:});
     kids=get(p,'children');
     set(p,'children',[kids(2:end); kids(1)]);

@@ -36,19 +36,18 @@ function [data]=changeclass(data,class)
 %                        move usage up
 %        Oct.  5, 2009 - doc update
 %        Jan. 28, 2010 - seizmoverbose support
+%        Aug. 16, 2010 - fix error usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2010 at 00:05 GMT
+%     Last Updated Aug. 16, 2010 at 14:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data,'dep'));
 
 % verbosity
 verbose=seizmoverbose;

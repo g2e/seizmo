@@ -1,1 +1,1 @@
-../plot2.m
+../plotting/plot2.m

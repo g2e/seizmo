@@ -49,19 +49,18 @@ function [data]=add(data,constant,cmp)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Jan. 26, 2010 - seizmoverbose support, properly handle states
+%        Aug. 16, 2010 - nargchk fix, versioninfo instead of seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 08:05 GMT
+%     Last Updated Aug. 16, 2010 at 08:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,3,nargin));
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % no constant case
 if(isempty(constant) || (nargin==3 && isempty(cmp))); return; end

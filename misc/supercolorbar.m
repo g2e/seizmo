@@ -69,7 +69,7 @@ elseif(~isreal(ax) || any(~ishandle(ax(:))) ...
         || ~isscalar(unique(cell2mat(get(ax(:),'parent')))) ...
         || ~isvector(unique(cell2mat(get(ax(:),'clim')),'rows')))
     error('seizmo:supercolorbar:badInput',...
-        ['AX must be valid axes handles all in the same figure' ...
+        ['AX must be valid axes handles all in the same figure ' ...
         '& sharing the same clim!']);
 end
 p=get(ax(1),'parent');
@@ -84,6 +84,7 @@ newpos(3:4)=newpos(3:4)-newpos(1:2); % LBWH
 sax=findobj(p,'type','axes','tag','super','userdata',ax);
 if(isempty(sax))
     sax=axes('position',newpos);
+    set(sax,'parent',p);
     pos=get(sax,'position'); % to beat colorbar
     set(sax,'clim',get(ax(1),'clim'));
     h=colorbar('peer',sax,varargin{:});

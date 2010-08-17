@@ -27,15 +27,15 @@ function [data]=getspectralcmp(data,cmp)
 %        Oct. 14, 2009 - just return positive freqs, no B or E adjust
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        improved messaging
+%        Aug. 15, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 23:00 GMT
+%     Last Updated Aug. 15, 2010 at 20:25 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check data structure
 msg=seizmocheck(data,'dep');
@@ -131,14 +131,14 @@ try
                     data(i).dep=data(i).dep(:,1:2:end);
                 else
                     data(i).dep=real(data(i).dep(:,1:2:end)...
-                        .*exp(j*data(i).dep(:,2:2:end)));
+                        .*exp(1j*data(i).dep(:,2:2:end)));
                 end
             case 'im'
                 if(isrlim(i))
                     data(i).dep=data(i).dep(:,2:2:end);
                 else
                     data(i).dep=imag(data(i).dep(:,1:2:end)...
-                        .*exp(j*data(i).dep(:,2:2:end)));
+                        .*exp(1j*data(i).dep(:,2:2:end)));
                 end
             case 'cmplx'
                 if(isrlim(i))
@@ -146,7 +146,7 @@ try
                         data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
                 else
                     data(i).dep=data(i).dep(:,1:2:end)...
-                        .*exp(j*data(i).dep(:,2:2:end));
+                        .*exp(1j*data(i).dep(:,2:2:end));
                 end
         end
 
@@ -173,7 +173,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

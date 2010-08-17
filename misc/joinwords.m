@@ -8,7 +8,7 @@ function [str]=joinwords(words,delimiter)
 %     returns a single rowed char array STR with the elements of WORDS
 %     delimited by spaces.
 %
-%     STR=JOINWORDS(WORDS,DELIMITER) uses the single character DELIMITER to
+%     STR=JOINWORDS(WORDS,DELIMITER) uses the string DELIMITER to
 %     separate words in the output string.
 %
 %    Notes:
@@ -25,9 +25,10 @@ function [str]=joinwords(words,delimiter)
 %     Version History:
 %        Sep. 13, 2009 - initial version
 %        Sep. 16, 2009 - add delimiter option
+%        Aug. 14, 2010 - allow multi-character delimiter
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2009 at 04:50 GMT
+%     Last Updated Aug. 14, 2010 at 04:50 GMT
 
 % todo:
 
@@ -39,13 +40,15 @@ end
 % delimit based on nargin
 if(nargin==2)
     % check delimiter
-    if(~ischar(delimiter) || ~isscalar(delimiter))
-        error('seizmo:joinwords:badInput','DELIMITER must be a char!');
+    if(~ischar(delimiter) || ndims(delimiter)~=2 || size(delimiter,1)~=1)
+        error('seizmo:joinwords:badInput','DELIMITER must be a string!');
     end
     str=sprintf(['%s' delimiter],words{:});
+    n=numel(delimiter);
 else
     str=sprintf('%s ',words{:});
+    n=1;
 end
-str=str(1:end-1);
+str=str(1:end-n);
 
 end

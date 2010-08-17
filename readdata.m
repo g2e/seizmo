@@ -104,15 +104,15 @@ function [data,failed]=readdata(data,varargin)
 %        Jan. 30, 2010 - better SAC bug workaround, versioninfo caching,
 %                        proper SEIZMO handling, seizmoverbose support
 %        Feb.  3, 2010 - update for XDIR fixes, fix for npts==0
+%        Aug. 16, 2010 - fixed typo bug, nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 23:10 GMT
+%     Last Updated Aug. 16, 2010 at 23:10 GMT
 
 % todo:
 
 % check number of inputs
-msg=nargchk(1,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,3,nargin));
 
 % default trim
 trim=true;
@@ -131,7 +131,7 @@ end
 % trim option
 if(nargin==3)
     if(strcmpi(varargin{1},'trim'))
-        if(~iscalar(varargin{2}) || ...
+        if(~isscalar(varargin{2}) || ...
                 (~islogical(varargin{2}) && ~isnumeric(varargin{2})))
             error('seizmo:readdata:badInput',...
                 'TRIM option must be logical!');

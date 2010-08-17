@@ -10,11 +10,12 @@ function [o]=read_reflect_input(file)
 %     either go smoothly or burn.
 %
 %    Notes:
-%     - This is a reads a local format - don't expect this to read
-%       reflectivity input files for other reflectivity programs.
-%     - Reflect code can be found in the same directory as this mfile in
-%       the gzipped tarball reflect.tar.gz.  Please don't expect me to get
-%       this running for you.
+%     - THIS READS A LOCAL FORMAT!  Do not expect this to read reflectivity
+%       input files for your reflectivity programs!
+%     - The reflect code that works with these functions can be found in
+%       the same directory as this mfile in the gzipped tarball
+%       reflect.tar.gz.  Please don't expect me to get this running for
+%       you.
 %
 %    Examples:
 %

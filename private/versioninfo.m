@@ -36,15 +36,15 @@ function [h,idx]=versioninfo(data,varargin)
 %        Sep.  7, 2009 - fixed multi-filetype bottleneck
 %        Nov. 18, 2009 - allow extra input into seizmocheck
 %        Jan. 29, 2010 - add export to SEIZMO and caching
+%        Aug. 16, 2010 - fix error usages
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 00:05 GMT
+%     Last Updated Aug. 16, 2010 at 00:05 GMT
 
 % todo:
 
 % check number of inputs
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % get global info
 global SEIZMO
@@ -60,8 +60,7 @@ catch
 end
 
 % check data structure
-msg=seizmocheck(data,varargin{:});
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data,varargin{:}));
 
 % get filetype and version
 ft={data.filetype}.';

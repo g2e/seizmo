@@ -23,8 +23,11 @@ ftan
 slantstacking
 power spectrum estimation
 merge (uneven)
-
-
+drop restrictive copyright functions
+	buttord2
+	ddendrogram
+	mmpolar
+	ppdcval
 
 
 older lists follow below:
