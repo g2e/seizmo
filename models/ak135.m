@@ -42,6 +42,9 @@ function [mout]=ak135(varargin)
 %     interpolation).
 %
 %    Notes:
+%     - AK135 reference:
+%        Kennett, Engdahl, & Buland 1995, Constraints on seismic velocities
+%        in the Earth from traveltimes, Geophys. J. Int. 122, pp. 108-124
 %
 %    Examples:
 %     Plot parameters for the top 400km of the crustless version:
@@ -60,9 +63,10 @@ function [mout]=ak135(varargin)
 %        May  20, 2010 - discon on edge handling, quicker
 %        May  24, 2010 - added several struct fields for info
 %        Aug.  8, 2010 - minor doc touch, dcbelow option
+%        Aug. 17, 2010 - added reference
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 14:45 GMT
+%     Last Updated Aug. 17, 2010 at 14:45 GMT
 
 % todo:
 

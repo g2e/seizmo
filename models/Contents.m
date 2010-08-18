@@ -19,6 +19,8 @@
 %PERTURB_1DMODEL     - Perturbs 1D Earth models
 %PLOT1DMODEL         - Plots 1D model properties
 %PREM                - Returns the PREM Earth Model
+%PREM_PERFECT        - Returns the PREM model
+%PREM2_PERFECT       - Returns the PREM2 model
 %QKQU2QP             - Calculate corresponding Qalpha for given Qk, Qu, Vp, Vs
 %QPQS2QK             - Calculate corresponding Qkappa for given Qp, Qs, Vp, Vs
 %READCRUST2          - Reads Crust2.0 files, putting them into a struct

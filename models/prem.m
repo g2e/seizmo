@@ -1,5 +1,5 @@
 function [mout]=prem(varargin)
-%PREM    Returns the PREM Earth Model
+%PREM    Returns the isotropic PREM Earth Model at a reference period of 1s
 %
 %    Usage:    model=prem
 %              model=prem(...,'depths',depths,...)
@@ -55,6 +55,9 @@ function [mout]=prem(varargin)
 %    Notes:
 %     - Note that this is just a linear interpolation of PREM isotropic at
 %       1 second reference period
+%     - PREM reference:
+%        Dziewonski & Anderson 1981, Preliminary reference earth model,
+%        Phys. Earth planet. Inter. 25, pp. 297-356
 %
 %    Examples:
 %     Plot parameters for the CMB region:
@@ -77,9 +80,10 @@ function [mout]=prem(varargin)
 %        May  24, 2010 - added several struct fields for info
 %        Aug.  8, 2010 - minor doc touch, dcbelow option
 %        Aug.  9, 2010 - fix Qu to be 1e10 in the ocean & outercore
+%        Aug. 17, 2010 - added reference
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  9, 2010 at 14:45 GMT
+%     Last Updated Aug. 17, 2010 at 14:45 GMT
 
 % todo:
 

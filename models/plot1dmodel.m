@@ -33,7 +33,8 @@ function [varargout]=plot1dmodel(model,fields,drng,cmap,fgcolor,bgcolor,ax)
 %     be a color name or a 1x3 RGB triplet.
 %
 %     PLOT1DMODEL(MODEL,FIELDS,DRNG,CMAP,FGCOLOR,BGCOLOR,AX) indicates the
-%     axes that the plotting should be done in.  The axis will be replaced.
+%     axes that the plotting should be done in.  There should be as many
+%     axes as there are fields in FIELDS.  The axes will be replaced.
 %
 %     AX=PLOT1DMODEL(...) outputs the handles to all the axes.
 %
@@ -51,15 +52,17 @@ function [varargout]=plot1dmodel(model,fields,drng,cmap,fgcolor,bgcolor,ax)
 %      h=plot1dmodel([prem newmod],[],[2500 3000]);
 %      set(findobj(h,'tag','vs'),'xlim',[6 8]); % resetting due to core
 %
-%    See also: PREM, AK135, IASP91, PERTURB_1DMODEL, AVAILABLE_1DMODELS,
-%              CHK1DMODEL, FLATTEN_1DMODEL
+%    See also: PREM, AK135, IASP91, PREM_PERFECT, PREM2_PERFECT,
+%              PERTURB_1DMODEL, AVAILABLE_1DMODELS, CHK1DMODEL,
+%              FLATTEN_1DMODEL
 
 %     Version History:
 %        May  27, 2010 - initial version
 %        May  29, 2010 - turn off tex interpretation of model names
+%        Aug. 17, 2010 - fancy titles in LaTeX
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  29, 2010 at 15:50 GMT
+%     Last Updated Aug. 17, 2010 at 15:50 GMT
 
 % todo:
 
@@ -83,7 +86,7 @@ ofields=setdiff(fieldnames(model),reqfields);
 % default options
 if(nargin<2 || isempty(fields)); fields=ofields; end
 if(nargin<3 || isempty(drng)); drng=[0 6371]; end
-if(nargin<4 || isempty(cmap)); cmap=@hsvspin; end
+if(nargin<4 || isempty(cmap)); cmap='hsv'; end
 
 % check options
 if(ischar(fields)); fields=cellstr(fields); end
@@ -104,6 +107,11 @@ if(ischar(cmap)); cmap=str2func(cmap); end
 
 % number of fields
 nf=numel(fields);
+
+% nrows/ncols
+ncols=fix(5*sqrt(nf/5));
+if(ncols>nf); ncols=nf; end
+nrows=ceil(nf/ncols);
 
 % get line colors
 if(isa(cmap,'function_handle'))
@@ -155,33 +163,11 @@ elseif(~isreal(bgcolor) || ~isequal(size(bgcolor),[1 3]) ...
 end
 
 % check handle
-if(nargin<7 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
-        || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
-    figure('color',bgcolor,'name','1D EARTH MODEL PROPERTIES');
-    ax=gca;
-else
-    axes(ax);
+if(nargin<7 || isempty(ax) || numel(ax)~=numel(fields) || ~isreal(ax) ...
+        || any(~ishandle(ax)) || any(~strcmp('axes',get(ax,'type'))))
+    fh=figure('color',bgcolor,'name','1D EARTH MODEL PROPERTIES');
+    ax=makesubplots(nrows,ncols,1:nf,'parent',fh);
 end
-
-% get axis perimeter & figure, then delete
-op=get(ax,'outerposition');
-fh=get(ax,'parent');
-delete(ax);
-
-% get outer position of each subplot
-tpl=min([0.0875 0.2*op(3) 0.2*op(4)]);
-jt=2*tpl;
-width=(op(3)-tpl)/nf;
-height=op(4);
-left=[op(1) op(1)+width+tpl:width:op(1)+op(3)-width];
-bottom=op(2)*ones(nf,1);
-ops=[left(:) bottom(:) ...
-    [width+tpl; width*ones(nf-1,1)] height*ones(nf,1)];
-
-% get inner position of each subplot
-ipad=0.1;
-ips=[ops(:,1)+ipad*width+[tpl; zeros(nf-1,1)] ops(:,2)+jt ...
-    width*ones(nf,1)-2*ipad*width ops(:,4)-2*jt];
 
 % get logical array of depths in range
 didx=cell(nmod,1);
@@ -189,45 +175,91 @@ for i=1:nmod
     didx{i}=model(i).depth>=drng(1) | model(i).depth<=drng(2);
 end
 
-% each property is another column subplot
+% field to title
+fancyfield={'rho' 'vp' 'vs' 'vb' 'qk' 'qu' 'shear' 'bulk' 'youngs' ...
+    'lambda' 'poisson' 'm' 'g' 'vpv' 'vph' 'vsv' 'vsh' 'eta' 'vbv' 'vbh'...
+    'poissonv' 'poissonh' 'shearv' 'shearh' 'bulkv' 'bulkh' 'youngsv' ...
+    'youngsh' 'lambdav' 'lambdah' 'drho_dr' 'dvp_dr' 'dvs_dr' 'dvb_dr' ...
+    'deta_dr' 'dvpv_dr' 'dvsv_dr' 'dvbv_dr' 'dvph_dr' 'dvsh_dr' ...
+    'dvbh_dr' 'd2rho_dr2' 'd2vp_dr2' 'd2vs_dr2' 'd2vb_dr2' 'd2vpv_dr2' ...
+    'd2vph_dr2' 'd2vsv_dr2' 'd2vsh_dr2' 'd2vbv_dr2' 'd2vbh_dr2' ...
+    'd2eta_dr2' 'radius'};
+fancytitle={'\rho' '\alpha' '\beta' '\Phi' 'Q_\kappa' 'Q_\mu' ...
+    '\mu' '\kappa' 'E' '\lambda' '\gamma' 'm' 'g' '\alpha_V' '\alpha_H' ...
+    '\beta_V' '\beta_H' '\eta' '\Phi_V' '\Phi_H' '\gamma_V' '\gamma_H' ...
+    '\mu_V' '\mu_H' '\kappa_V' '\kappa_H' 'E_V' 'E_H' '\lambda_V' ...
+    '\lambda_H' '\displaystyle\frac{\delta\rho}{\delta{r}}' ...
+    '\displaystyle\frac{\delta\alpha}{\delta{r}}' ...
+    '\displaystyle\frac{\delta\beta}{\delta{r}}' ...
+    '\displaystyle\frac{\delta\Phi}{\delta{r}}' ...
+    '\displaystyle\frac{\delta\eta}{\delta{r}}' ...
+    '\displaystyle\frac{\delta\alpha_V}{\delta{r}}' ...
+    '\displaystyle\frac{\delta\beta_V}{\delta{r}}' ...
+    '\displaystyle\frac{\delta\Phi_V}{\delta{r}}' ...
+    '\displaystyle\frac{\delta\alpha_H}{\delta{r}}' ...
+    '\displaystyle\frac{\delta\beta_H}{\delta{r}}' ...
+    '\displaystyle\frac{\delta\Phi_H}{\delta{r}}' ...
+    '\displaystyle\frac{\delta^{2}\rho}{\delta{r}^2}' ...
+    '\displaystyle\frac{\delta^{2}\alpha}{\delta{r}^2}' ...
+    '\displaystyle\frac{\delta^{2}\beta}{\delta{r}^2}' ...
+    '\displaystyle\frac{\delta^{2}\Phi}{\delta{r}^2}' ...
+    '\displaystyle\frac{\delta^{2}\alpha_V}{\delta{r}^2}' ...
+    '\displaystyle\frac{\delta^{2}\alpha_H}{\delta{r}^2}' ...
+    '\displaystyle\frac{\delta^{2}\beta_V}{\delta{r}^2}' ...
+    '\displaystyle\frac{\delta^{2}\beta_H}{\delta{r}^2}' ...
+    '\displaystyle\frac{\delta^{2}\Phi_V}{\delta{r}^2}' ...
+    '\displaystyle\frac{\delta^{2}\Phi_H}{\delta{r}^2}' ...
+    '\displaystyle\frac{\delta^{2}\eta}{\delta{r}^2}' 'r'};
+
+% each property is another subplot
 % only far left shows depth values
-% make sure depths are synced
-h=nan(nf,1);
+% make sure depths are synced (linked)
 for i=1:nf
+    % adjust current axis
+    cla(ax(i),'reset');
+    
     % make plot
-    figure(fh);
-    h(i)=axes('outerposition',ops(i,:),'position',ips(i,:));
-    plot(model(1).(fields{i})(didx{1}),model(1).depth(didx{1}),...
-        'color',cmap(1,:));
-    set(h(i),'ydir','reverse','tag',fields{i});
-    hold on
-    for j=2:nmod
-        plot(model(j).(fields{i})(didx{j}),model(j).depth(didx{j}),...
+    hold(ax(i),'on');
+    for j=1:nmod
+        plot(ax(i),model(j).(fields{i})(didx{j}),...
+            model(j).depth(didx{j}),...
             'color',cmap(j,:));
     end
-    hold off
-    ylim(drng);
+    hold(ax(i),'off');
     
-    % color & label (or delabel)
-    fncyttl=texlabel(fields{i});
-    fncyttl(2)=upper(fncyttl(2));
-    title(fncyttl);
-    set(h(i),'color',bgcolor,'xcolor',fgcolor,'ycolor',fgcolor);
-    if(i==1)
-        ylabel('Depth (km)');
+    % clean up axes
+    set(ax(i),'color',bgcolor,'xcolor',fgcolor,'ycolor',fgcolor);
+    set(ax(i),'ydir','reverse','tag',fields{i});
+    ylim(ax(i),drng);
+    box(ax(i),'on');
+    
+    % title
+    if(ismember(fields{i},fancyfield))
+        title(ax(i),...
+            ['$' fancytitle{ismember(fancyfield,fields{i})} '$'],...
+            'interpreter','latex','color',fgcolor,'fontsize',16);
     else
+        title(fields{i});
+    end
+    
+    % y tick labels
+    if(mod(i-1,ncols))
         % only the first plot has depths labeled
-        set(h(i),'yticklabel',[]);
+        set(ax(i),'yticklabel',[]);
     end
     if(i==nf)
-        lh=legend(names,'textcolor',fgcolor,'edgecolor',fgcolor);
+        lh=legend(ax(i),names,'textcolor',fgcolor,'edgecolor',fgcolor);
         set(lh,'interpreter','none')
     end
-    set(get(h(i),'YLabel'),'color',fgcolor);
-    set(get(h(i),'title'),'color',fgcolor);
 end
 
+% link y axes
+linkaxes(ax,'y');
+
+% super ylabel
+superylabel(ax,'Depth (km)','color',fgcolor,'fontsize',16);
+
 % output
-if(nargout); varargout{1}=h; end
+if(nargout); varargout{1}=ax; end
 
 end

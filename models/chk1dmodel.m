@@ -21,9 +21,10 @@ function [report]=chk1dmodel(model)
 %        May  24, 2010 - initial version
 %        May  27, 2010 - now allows arrays of models
 %        Aug. 10, 2010 - require monotoniticity of depths
+%        Aug. 17, 2010 - require nonempty, fix error message
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 10, 2010 at 15:05 GMT
+%     Last Updated Aug. 17, 2010 at 15:05 GMT
 
 % todo:
 
@@ -34,9 +35,11 @@ error(nargchk(1,1,nargin));
 % check model has the required fields
 reqfields={'name' 'ocean' 'crust' 'isotropic' 'refperiod' 'flattened' ...
     'depth'};
-if(~isstruct(model) || ~all(ismember(reqfields,fieldnames(model))))
+if(~isstruct(model) || ~all(ismember(reqfields,fieldnames(model))) ...
+        || isempty(model))
     report.identifier='seizmo:chk1dmodel:dataNotStruct';
-    report.message=['MODEL must be a struct with fields:\n' ...
+    report.message=[...
+        sprintf('MODEL must be a non-empty struct with fields:\n') ...
         sprintf('%s ',reqfields{:})];
     return;
 end

@@ -42,6 +42,9 @@ function [mout]=iasp91(varargin)
 %     interpolation).
 %
 %    Notes:
+%     - IASP91 reference:
+%        Kennett & Engdahl 1991, Traveltimes for global earthquake location
+%        and phase identification, Geophys. J. Int. 105, pp. 429-465
 %
 %    Examples:
 %     Plot parameters for the CMB region:
@@ -60,9 +63,10 @@ function [mout]=iasp91(varargin)
 %        May  20, 2010 - discon on edge handling, quicker
 %        May  24, 2010 - added several struct fields for info
 %        Aug.  8, 2010 - minor doc touch, dcbelow option
+%        Aug. 17, 2010 - added reference
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 14:45 GMT
+%     Last Updated Aug. 17, 2010 at 14:45 GMT
 
 % todo:
 

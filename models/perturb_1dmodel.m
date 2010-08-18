@@ -69,7 +69,7 @@ function [model]=perturb_1dmodel(model,newname,varargin)
 %                                   2891    -10 4 0 0]);
 %      plot1dmodel([prem newmod],[],[2500 3000]);
 %
-%    See also: PREM, AK135, IASP91, PREM_PERFECT, IASP91_PERFECT,
+%    See also: PREM, AK135, IASP91, PREM_PERFECT, CMB_1DMODEL_LIBRARY,
 %              PLOT1DMODEL, FLATTEN_1DMODEL
 
 %     Version History:
