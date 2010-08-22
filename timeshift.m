@@ -72,29 +72,26 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %                        versioninfo caching, fix bug disallowing xy data
 %        Feb. 24, 2010 - require a finite shift
 %        Mar.  8, 2010 - drop versioninfo caching (too difficult to debug)
+%        Aug. 21, 2010 - nargchk fix, better checkheader usage, update
+%                        undef checking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 12:40 GMT
+%     Last Updated Aug. 21, 2010 at 12:40 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,inf,nargin));
 
 % check struct/header
-data=checkheader(data);
+data=checkheader(data,...
+    'NONTIME_IFTYPE','ERROR');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt timeshift
 try
-    % get undefined value
-    [h,idx]=versioninfo(data);
-    undef=getsubfield(h,'undef','ntype').';
-    undef=undef(idx);
-
     % verbosity
     verbose=seizmoverbose;
 
@@ -181,23 +178,9 @@ try
         getheader(data,'a','b','e','f','o','t',...
         'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec',varargin{:});
 
-    % only itime, ixy
-    iftype=getenumid(data,'iftype');
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:timeshift:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
-
     % get new absolute timing
     times=fixtimes( ...
         [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+refshift],timing);
-
-    % undefined to NaN
-    a(a==undef)=nan; b(b==undef)=nan;
-    e(e==undef)=nan; f(f==undef)=nan;
-    o(o==undef)=nan; t(t==undef(:,ones(10,1)))=nan;
 
     % deal with user fields
     for i=1:nvararg
@@ -206,7 +189,6 @@ try
                 'User given fields must return numeric arrays!');
         end
         sz=size(user{i},2);
-        user{i}(user{i}==undef(:,ones(sz,1)))=nan;
         user{i}=user{i}+usershift(:,ones(sz,1));
     end
 

@@ -44,15 +44,15 @@ function [data]=idft(data)
 %        Oct. 15, 2009 - force ifft down columns
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        improved messaging
+%        Aug. 19, 2010 - removed ifft symmetric flag, real conversion
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 18:30 GMT
+%     Last Updated Aug. 19, 2010 at 18:30 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
 msg=seizmocheck(data,'dep');
@@ -114,13 +114,13 @@ try
 
         % turn back into time domain
         if(strcmpi(iftype(i),'irlim'))
-            data(i).dep=1/sdelta(i)*ifft(...
+            data(i).dep=real(1/sdelta(i)*ifft(...
                 complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)),...
-                [],1,'symmetric');
+                [],1));
         else % iamph
-            data(i).dep=1/sdelta(i)*ifft(...
-                data(i).dep(:,1:2:end).*exp(j*data(i).dep(:,2:2:end)),...
-                [],1,'symmetric');
+            data(i).dep=real(1/sdelta(i)*ifft(...
+                data(i).dep(:,1:2:end).*exp(1j*data(i).dep(:,2:2:end)),...
+                [],1));
         end
 
         % truncate to original length and change class back

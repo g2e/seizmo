@@ -27,24 +27,19 @@ function [data]=fix_cameroon(data)
 %     Version History:
 %        Dec.  1, 2009 - initial version
 %        Jan. 30, 2010 - reduce CHECKHEADER calls
+%        Aug. 21, 2010 - nargchk fix, updated undef/nan handling, fixed
+%                        warnings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 21:05 GMT
+%     Last Updated Aug. 21, 2010 at 21:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
-[h,idx]=versioninfo(data,'dep');
-
-% get undefined values
-undef=getsubfield(h,'undef','ntype').';
-sundef=getsubfield(h,'undef','stype').';
-undef=undef(idx);
-sundef=sundef(idx);
+versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -71,22 +66,7 @@ try
     
     % get header info
     [b,kname]=getheader(data,'b utc','kname');
-
-    % unwrap cells
     b=cell2mat(b);
-    
-    % check that b, kname are defined
-    bad=sum(b==undef(:,ones(1,5)),2)>0 ...
-        | sum(strcmpi(kname,sundef(:,ones(1,4))),2)>0;
-    if(any(bad))
-        if(verbose)
-            warning('seizmo:fix_cameroon:badHeader',...
-                ['Record(s):\n' sprintf('%d ',find(bad)) ...
-                '\nOne or more of the following fields are undefined:\n'...
-                'B NZ KNAME\nThe record(s) will not be corrected!']);
-        end
-        b(bad,:)=nan;
-    end
 
     % fix CM02 - AMPLITUDE OF ALL CHANNELS ARE OFF
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -102,8 +82,8 @@ try
     if(any(fixme))
         if(verbose)
             warning('seizmo:fix_cameroon:CM02',...
-                ['Record(s):\n' sprintf('%d ',find(fixme)) ...
-                '\nXB.CM02 amplitudes divided by 32!']);
+                ['XB.CM02 amplitudes divided by 32!' ...
+                '\nRecord(s):\n' sprintf('%d ',find(fixme))]);
         end
         data(fixme)=divide(data(fixme),32);
     end
@@ -136,8 +116,8 @@ try
     if(any(fixme))
         if(verbose)
             warning('seizmo:fix_cameroon:CM08',...
-                ['Record(s):\n' sprintf('%d ',find(fixme)) ...
-                '\nXB.CM08 timing adjusted significantly (>600s)!']);
+                ['XB.CM08 timing adjusted significantly (>600s)!' ...
+                '\nRecord(s):\n' sprintf('%d ',find(fixme))]);
         end
         % get time since 2006.001 00:00:00.000
         % multiply by 0.0000012594763 to get drift
@@ -171,8 +151,8 @@ try
     if(any(fixme))
         if(verbose)
             warning('seizmo:fix_cameroon:CM14',...
-                ['Record(s):\n' sprintf('%d ',find(fixme)) ...
-                '\nXB.CM14.0?.?HE amplitudes multiplied by 78.3!']);
+                ['XB.CM14.0?.?HE amplitudes multiplied by 78.3!' ...
+                '\nRecord(s):\n' sprintf('%d ',find(fixme))]);
         end
         data(fixme)=multiply(data(fixme),78.3);
     end

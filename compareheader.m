@@ -51,9 +51,10 @@ function []=compareheader(data,varargin)
 %        Feb. 24, 2010 - doc update for compareheader2
 %        Mar. 12, 2010 - fixes for Octave (explicit celling)
 %        July 30, 2010 - update for compareheader2=>queryheader change
+%        Aug. 21, 2010 - minor printing fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 30, 2010 at 22:40 GMT
+%     Last Updated Aug. 21, 2010 at 22:40 GMT
 
 % todo:
 
@@ -134,20 +135,18 @@ if(nargin==1)
 end
 
 % list file-lookup list
-disp(' ')
-disp(' RECORDS:')
-disp('---------------------------')
+fprintf('\n RECORDS:\n')
+fprintf('---------------------------\n')
 for i=1:nrecs
-    disp(sprintf('%d - %s',i,fullfile(data(i).path,data(i).name)))
+    fprintf('%d - %s\n',i,fullfile(data(i).path,data(i).name));
 end
-disp('---------------------------')
-disp(' ')
+fprintf('---------------------------\n\n')
 
 % table header
-disp(sprintf('%16s','\    '))
+fprintf('%16s\n','\    ')
 disp([sprintf('%16s','FIELD    \   ') '   RECORD NUMBER'])
 disp([sprintf('%16s','\  ') sprintf(['%' cs 'd'],1:nrecs)])
-disp(char(45*ones(1,15+cn*nrecs)))
+disp(char(45*ones(1,16+cn*nrecs)))
 
 % loop over fields
 nvarg=numel(varargin);

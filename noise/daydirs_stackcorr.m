@@ -124,7 +124,7 @@ end
 fs=filesep;
 
 % parallel processing setup (8 instances)
-matlabpool(8);
+%matlabpool(8);
 
 % number of stations
 nstn=numel(stns);
@@ -137,7 +137,8 @@ verbose=seizmoverbose(false);
 if(verbose); disp('Stacking Correlograms'); end
 
 for m=1:nstn
-    parfor s=1:nstn
+    for s=1:nstn
+    %parfor s=1:nstn
         % skip if equal
         if(m==s); continue; end
         
@@ -307,7 +308,7 @@ for m=1:nstn
 end
 
 % parallel processing takedown
-matlabpool close;
+%matlabpool close;
 seizmoverbose(verbose);
 
 end

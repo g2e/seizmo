@@ -70,15 +70,15 @@ function [data]=deconvolve(data,tf,delay,h2o,frange,zi,zf)
 %        Jan. 27, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        fixed offset bug
 %        Feb.  2, 2010 - versioninfo caching
+%        Aug. 19, 2010 - removed ifft symmetric flag, real conversion
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 21:50 GMT
+%     Last Updated Aug. 19, 2010 at 20:30 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,7,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,7,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -289,10 +289,10 @@ try
         good=freq>=frange(i,1) & freq<=frange(i,2);
         tmp1=fft(data(i).dep,nspts,1);
         tmp2=fft(tf{tfidx(i)}(:,ones(1,ncmp(i))),nspts,1);
-        tmp2=(abs(tmp2)+h2o(i)).*exp(j*angle(tmp2));
+        tmp2=(abs(tmp2)+h2o(i)).*exp(1j*angle(tmp2));
         tmp=complex(zeros(nspts,ncmp(i)));
         tmp(good,:)=tmp1(good,:)./tmp2(good,:);
-        tmp=ifft(tmp,[],1,'symmetric');
+        tmp=real(ifft(tmp,[],1));
         data(i).dep=tmp(offset(i)+(1:npts(i)),:);
 
         % dep*

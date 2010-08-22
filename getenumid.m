@@ -4,10 +4,11 @@ function [varargout]=getenumid(data,varargin)
 %    Usage: cellstr=getenumid(data,'field')
 %           [cellstr1,...,cellstrN]=getenumid(data,'field1',...,'fieldN')
 %
-%    Description: GETENUMID(DATA,FIELD) returns a cellstring array filled
-%     with the enum id strings associated with the enum field FIELD stored
-%     in the SEIZMO structure DATA.  This is more useful/readible than the 
-%     magic number (enumerator integer) returned with GETHEADER.
+%    Description: GETENUMID(DATA,FIELD) returns a cellstring array
+%    containing the enum id strings associated with the values of the enum
+%     header field FIELD stored in the SEIZMO structure DATA.  This offers
+%     useful & readible output compared to the raw magic number returned by
+%     GETHEADER.
 %
 %     GETENUMID(DATA,FIELD1,...,FIELDN) returns a cellstring array for each
 %     field supplied.
@@ -17,9 +18,8 @@ function [varargout]=getenumid(data,varargin)
 %       if they were enum fields with GETENUMID.  This gives the user the 
 %       ability to have more enum fields if needed.  Character fields are
 %       NOT able to be treated as enum fields.
-%     - Nonexistent header fields return 'NaN'
-%     - Invalid enum values return 'nan'
-%     - Undefined fields return 'Undefined'
+%     - Nonexistant header fields and undefined/invalid enum values return
+%       'NaN'.
 %
 %    Examples:
 %     To check if all records are timeseries data:
@@ -45,9 +45,10 @@ function [varargout]=getenumid(data,varargin)
 %        Apr. 23, 2009 - move usage up
 %        Oct.  6, 2009 - change special output to work with CHANGEHEADER
 %        Jan. 29, 2010 - elimate extra VERSIONINFO call
+%        Aug. 21, 2010 - all unknown fields/values return 'NaN', doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 00:25 GMT
+%     Last Updated Aug. 21, 2010 at 00:25 GMT
 
 % require at least two inputs
 if(nargin<2)
@@ -83,22 +84,15 @@ for i=1:numel(h)
         end
         
         % compare
-        bad=isnan(nvarargout{j}(ind));
-        undef=nvarargout{j}(ind)==h(i).undef.ntype;
-        unknown=~(bad | undef) & (nvarargout{j}(ind)<h(i).enum(1).minval...
-                | nvarargout{j}(ind)>h(i).enum(1).maxval ...
-                | fix(nvarargout{j}(ind))~=nvarargout{j}(ind));
-        good=~(bad | undef | unknown);
+        bad=isnan(nvarargout{j}(ind)) ...
+            | nvarargout{j}(ind)<h(i).enum(1).minval...
+            | nvarargout{j}(ind)>h(i).enum(1).maxval ...
+            | fix(nvarargout{j}(ind))~=nvarargout{j}(ind);
+        good=~bad;
         
         % assign enum descriptions
         if(any(bad))
             varargout{j}(ind(bad))={'NaN'};
-        end
-        if(any(undef))
-            varargout{j}(ind(undef))={'Undefined'};
-        end
-        if(any(unknown))
-            varargout{j}(ind(unknown))={'nan'};
         end
         if(any(good))
             varargout{j}(ind(good))=...

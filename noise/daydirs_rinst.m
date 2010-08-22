@@ -1,9 +1,9 @@
-function []=daydirs_rinst(indir,outdir,freqlim,o)
+function []=daydirs_rinst(indir,outdir,varargin)
 %DAYDIRS_RINST    Remove instrument response from records in day dirs
 %
 %    Usage:    daydirs_rinst(indir,outdir)
-%              daydirs_rinst(indir,outdir,freqlimits)
-%              daydirs_rinst(indir,outdir,freqlimits,overwrite)
+%              daydirs_rinst(...,'option',value,...)
+%              daydirs_rinst(...,overwrite)
 %
 %    Description: DAYDIRS_RINST(INDIR,OUTDIR) removes the response from
 %     records in day directory layout under directory INDIR.  A highpass
@@ -11,14 +11,12 @@ function []=daydirs_rinst(indir,outdir,freqlim,o)
 %     stabilize the deconvolution.  Processed records are output in an
 %     equivalent directory layout under OUTDIR.
 %
-%     DAYDIRS_RINST(INDIR,OUTDIR,FREQLIMITS) adjusts the frequency limits
-%     of the tapers utilized to stabilize the response removal.  See
-%     REMOVESACPZ for details on this option.  The default value for
-%     FREQLIMITS is [1/250 1/150].
+%     DAYDIRS_RINST(...,'OPTION',VALUE,...) passes options to REMOVESACPZ.
+%     See that function for available options.
 %
-%     DAYDIRS_RINST(INDIR,OUTDIR,FREQLIMITS,OVERWRITE) quietly overwrites
-%     pre-existing records in OUTDIR when OVERWRITE is set to TRUE.  By
-%     default OVERWRITE is FALSE.
+%     DAYDIRS_RINST(...,OVERWRITE) quietly overwrites pre-existing records
+%     in OUTDIR when OVERWRITE is set to TRUE.  By default OVERWRITE is
+%     FALSE.  OVERWRITE must be the final argument.
 %
 %    Notes:
 %
@@ -39,15 +37,17 @@ function []=daydirs_rinst(indir,outdir,freqlim,o)
 % todo:
 
 % check nargin
-error(nargchk(2,4,nargin));
+error(nargchk(2,inf,nargin));
 
-% defaults
-if(nargin<3 || isempty(freqlim)); freqlim=[1/250 1/150]; end
-if(nargin<4 || isempty(o)); o=false; end
-if(numel(freqlim)>4 || ~isreal(freqlim) || any(freqlim<=0))
-    error('seizmo:daydirs_rinst:badInput',...
-        'FREQLIM must be a positive real-valued vector!');
+% extract overwrite option
+if(mod(nargin,2))
+    o=varargin{end};
+    varargin(end)=[];
+else
+    o=false;
 end
+
+% check o
 if(~isscalar(o) || ~islogical(o))
     error('seizmo:daydirs_rinst:badInput',...
         'OVERWRITE flag must be a scalar logical!');
@@ -87,7 +87,7 @@ end
 fs=filesep;
 
 % parallel processing setup (8 instances)
-matlabpool(8);
+%matlabpool(8);
 
 % get year directories and day directories
 dirs=xdir([indir fs]);
@@ -121,7 +121,8 @@ for i=1:nyears
     syr=num2str(yr);
     
     % loop over days
-    parfor j=1:numel(jdays{i})
+    for j=1:numel(jdays{i})
+    %parfor j=1:numel(jdays{i})
         % working julian day
         jday=jdays{i}(j);
         sjday=num2str(jday,'%03d');
@@ -140,7 +141,7 @@ for i=1:nyears
             end
             
             % remove response
-            data=removesacpz(data,'freqlimits',freqlim);
+            data=removesacpz(data,'f',[1/250 1/150],varargin{:});
             
             % skip if no rotated output
             if(~numel(data)); continue; end
@@ -149,7 +150,7 @@ for i=1:nyears
             writeseizmo(data,'pathchange',{indir outdir});
         catch
             % close pool & fix verbosity
-            matlabpool close;
+            %matlabpool close;
             seizmoverbose(verbose);
             
             % ???
@@ -159,7 +160,7 @@ for i=1:nyears
 end
 
 % parallel processing takedown
-matlabpool close;
+%matlabpool close;
 seizmoverbose(verbose);
 
 end

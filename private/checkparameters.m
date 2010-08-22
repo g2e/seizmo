@@ -51,15 +51,15 @@ function [option]=checkparameters(setglobal,varargin)
 %                        UNSET_ST_LATLON, UNSET_EV_LATLON, FALSE_LEVEN,
 %                        XYZ_IFTYPE, MULTIPLE_REFTIME, MULTIPLE_NPTS,
 %                        MULTIPLE_B.  Edited several defaults.
+%        Aug. 21, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  10, 2010 at 13:20 GMT
+%     Last Updated Aug. 21, 2010 at 13:20 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % check setglobal
 if(~islogical(setglobal))

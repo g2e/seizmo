@@ -45,15 +45,15 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %        June 12, 2009 - minor error msg change
 %        Sep.  7, 2009 - minor doc update
 %        Oct. 16, 2009 - added persistent vars to speed things up
+%        Aug. 21, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2009 at 02:45 GMT
+%     Last Updated Aug. 21, 2010 at 02:45 GMT
 
 % todo:
 
 % check input
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,2,nargin));
 
 if(~ischar(filename))
     error('seizmo:getfileversion:badInput','FILENAME must be a string!');

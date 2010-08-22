@@ -29,22 +29,18 @@ function [data]=fix_sod_v222(data)
 %        Dec.  4, 2009 - minor doc update
 %        Jan. 30, 2010 - fixes for checking state functions
 %        Mar. 24, 2010 - drop fixdelta call
+%        Aug. 21, 2010 - nargchk fix, updated undef/nan handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2010 at 22:25 GMT
+%     Last Updated Aug. 21, 2010 at 22:25 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
-[h,idx]=versioninfo(data);
-
-% get undefined values
-undef=getsubfield(h,'undef','ntype').';
-undef=undef(idx);
+versioninfo(data);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -52,8 +48,7 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % do iztype fix before checkheader to avoid warning
-    o=getheader(data,'o');
-    zo=o==0;
+    zo=getheader(data,'o')==0;
     if(any(zo))
         data(zo)=changeheader(data(zo),'iztype','io');
     end
@@ -62,8 +57,7 @@ try
     data=checkheader(data);
     
     % fix evel
-    ev=getheader(data,'ev');
-    evdef=ev~=undef(:,[1 1 1 1]);
+    evdef=~isnan(getheader(data,'ev'));
     fixel=evdef(:,1) & evdef(:,2) & ~evdef(:,3) & evdef(:,4);
     if(any(fixel))
         data(fixel)=changeheader(data(fixel),'evel',0);

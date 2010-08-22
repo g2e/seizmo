@@ -36,15 +36,15 @@ function [bytes,hbytes,dbytes]=seizmosize(data)
 %        Oct. 15, 2009 - speed boost
 %        Jan. 30, 2010 - drop CHECKHEADER use, proper SEIZMO handling,
 %                        versioninfo_cache support, added extra outputs
+%        Aug. 21, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 23:55 GMT
+%     Last Updated Aug. 21, 2010 at 23:55 GMT
 
 % todo:
 
 % check number of inputs
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % headers setup (check struct too)
 [h,vi]=versioninfo(data);

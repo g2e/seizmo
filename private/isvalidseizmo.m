@@ -26,15 +26,15 @@ function [lgc]=isvalidseizmo(filetype,version)
 
 %     Version History:
 %        Oct.  6, 2009 - initial version
+%        Aug. 21, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 18:10 GMT
+%     Last Updated Aug. 21, 2010 at 18:10 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check filetype/version
 if(ischar(filetype)); filetype=cellstr(filetype); end

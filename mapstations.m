@@ -78,14 +78,15 @@ function [varargout]=mapstations(data,varargin)
 %        June 26, 2010 - opt/val pair inputs, several more options,
 %                        plots all stations (undefined are set to NaN)
 %        July 22, 2010 - uses MAPLOCATIONS
+%        Aug. 21, 2010 - update undef usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 22, 2010 at 22:00 GMT
+%     Last Updated Aug. 21, 2010 at 22:00 GMT
 
 % todo:
 % - msg on click features would be nice
 %   - kname, lat, lon, depth, elevation
-% - need a way to scatter dense on click (like googleearth)
+%   - a way to scatter dense on click (like googleearth)
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -95,11 +96,7 @@ if(mod(nargin-1,2))
 end
 
 % check data structure
-[h,idx]=versioninfo(data);
-
-% get undefined values
-undef=getsubfield(h,'undef','ntype').';
-undef=undef(idx);
+error(seizmocheck(data));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -110,15 +107,12 @@ try
     [stla,stlo,evla,evlo]=getheader(data,'stla','stlo','evla','evlo');
     
     % remove undefined
-    badst=stla==undef | stlo==undef;
-    stla(badst)=nan; stlo(badst)=nan;
+    badst=isnan(stla) | isnan(stlo);
     if(any(badst))
         warning('seizmo:mapstations:badLocation',...
             ['Station location not set for Records:\n' ...
             sprintf('%d ',find(badst))]);
     end
-    badev=evla==undef | evlo==undef;
-    evla(badev)=nan; evlo(badev)=nan;
 
     % plot locations
     ax=maplocations('st',[stla stlo],'ev',[evla evlo],varargin{:});

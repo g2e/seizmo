@@ -3,6 +3,8 @@ function [data,pz]=applysacpz(data,varargin)
 %
 %    Usage:    [dataout,good]=applysacpz(datain)
 %              [...]=applysacpz(...,'freqlimits',[f1 f2 f3 f4],...)
+%              [...]=applysacpz(...,'tapertype',TYPE,...)
+%              [...]=applysacpz(...,'taperopt',VALUE,...)
 %              [...]=applysacpz(...,'units',UNITS,...)
 %              [...]=applysacpz(...,'idep',IDEP,...)
 %              [...]=applysacpz(...,'h2o',H2O,...)
@@ -37,6 +39,13 @@ function [data,pz]=applysacpz(data,varargin)
 %     and unity below F3.  The tapers are cosine tapers applied in the
 %     spectral domain.  This is an acausal filter and should not be used if
 %     you want to preserve seismic phase onsets.
+%
+%     [...]=APPLYSACPZ(...,'TAPERTYPE',TYPE,...) alters the taper type of
+%     the frequency limiting.  The default type is 'hann' and is a cosine
+%     taper.  TYPE may be any offered by the TAPERFUN function.
+%
+%     [...]=APPLYSACPZ(...,'TAPEROPT',VALUE,...) adjusts the taper option
+%     if there is one.  See TAPERFUN for details.
 %
 %     [...]=APPLYSACPZ(...,'UNITS',UNITS,...) overrides the units found in
 %     the IDEP header field with UNITS.  This could also be done by setting
@@ -101,9 +110,13 @@ function [data,pz]=applysacpz(data,varargin)
 %        May   7, 2010 - doc update, changed global option passing,
 %                        can now pass partial option strings, fix bug in
 %                        idep/units, allow many more ground units
+%        Aug. 19, 2010 - removed ifft symmetric flag and do real conversion
+%                        afterwards, no longer use strmatch for options
+%        Aug. 20, 2010 - taperopt/tapertype options added, better
+%                        checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   7, 2010 at 13:35 GMT
+%     Last Updated Aug. 20, 2010 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -111,8 +124,7 @@ function [data,pz]=applysacpz(data,varargin)
 % - meters/nanometers flag
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % import SEIZMO info
 global SEIZMO
@@ -126,7 +138,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check header
-    data=checkheader(data);
+    data=checkheader(data,...
+        'FALSE_LEVEN','ERROR',...
+        'XYZ_IFTYPE','ERROR');
     
     % turn off header checking
     oldcheckheaderstate=checkheader_state(false);
@@ -158,8 +172,8 @@ try
     
     % detail message
     if(verbose && any(~pz))
-        disp(sprintf(['Record(s):\n' sprintf('%d ',find(~pz)) ...
-            '\nDo Not Have SAC PoleZero Info.  Deleting!']));
+        fprintf(['Record(s):\n' sprintf('%d ',find(~pz)) ...
+            '\nDo Not Have SAC PoleZero Info.  Deleting!\n']);
     end
     
     % only use those with polezero info
@@ -169,7 +183,6 @@ try
     nrecs=numel(data);
     
     % get header info
-    leven=getlgc(data,'leven');
     [iftype,idep]=getenumid(data,'iftype','idep');
     [npts,ncmp,delta,e]=getheader(data,'npts','ncmp','delta','e');
     
@@ -180,20 +193,6 @@ try
     % get nyquist frequency
     nyq=1./(2*delta);
     if(any(rlim | amph)); nyq(rlim | amph)=e(rlim | amph); end
-    
-    % cannot do xyz records
-    if(any(strcmpi(iftype,'ixyz')))
-        error('seizmo:applysacpz:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(iftype,'ixyz')))
-            '\nIllegal operation on XYZ record(s)!']);
-    end
-    
-    % cannot do unevenly sampled records
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:applysacpz:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false')))
-            '\nInvalid operation on unevenly sampled records!']);
-    end
     
     % valid values for strings
     % - this should be expanded to include all units
@@ -224,7 +223,7 @@ try
     
     % default options
     flimbu=[-1*ones(nrecs,2) 2*nyq(:,[1 1])];
-    varargin=[{'f' flimbu 'u' idep ...
+    varargin=[{'f' flimbu 't' 'hann' 'o' [] 'u' idep ...
         'id' 'icounts' 'h2o' zeros(nrecs,1)} varargin];
     
     % require all options to be strings
@@ -238,9 +237,9 @@ try
         value=varargin{i+1};
         
         % which option
-        j=strmatch(lower(varargin{i}),{'freqlimits' 'units' 'idep' 'h2o'});
-        switch j
-            case 1 % freqlimits
+        switch lower(varargin{i})
+            case {'fl' 'freq' 'fr' 'freqlim' 'freql' 'freqlimits' 'frq' ...
+                    'freqlimit' 'frqlim' 'f'}
                 % assure real and correct size
                 if(isreal(value) && any(size(value,1)==[1 nrecs]) ...
                         && size(value,2)<=4 && ndims(value)==2)
@@ -259,7 +258,7 @@ try
                     error('seizmo:applysacpz:badInput',...
                         'FREQLIMITS must be [F1 F2 F3 F4]!');
                 end
-            case 2 % units
+            case {'u' 'un' 'unit' 'units'}
                 if(ischar(value)); value=cellstr(value); end
                 if(~iscellstr(value) ...
                         || ~any(numel(value)==[1 nrecs]) ...
@@ -273,7 +272,7 @@ try
                 % get associated WPOW
                 [idx,idx]=ismember(units,valid.UNITS);
                 wpow=valid.WPOW(idx);
-            case 3 % idep
+            case {'i' 'id' 'dep' 'idep'}
                 if(ischar(value)); value=cellstr(value); end
                 if(~iscellstr(value) || ~any(numel(value)==[1 nrecs]))
                     error('seizmo:applysacpz:badInput',...
@@ -282,7 +281,7 @@ try
                 end
                 if(isscalar(value)); value=value(ones(nrecs,1),1); end
                 idep=value;
-            case 4 % h2o
+            case {'h' 'h2' 'h2o'}
                 if(~isreal(value) ...
                         || (~isscalar(value) && numel(value)~=nrecs) ...
                         || any(value<0))
@@ -291,6 +290,22 @@ try
                 end
                 if(isscalar(value)); value=value(ones(nrecs,1),1); end
                 h2o=value;
+            case {'tapertype' 't' 'tt' 'ttype'}
+                if(ischar(value)); value=cellstr(value); end
+                if(~iscellstr(value) || ~any(numel(value)==[1 nrecs]))
+                    error('seizmo:applysacpz:badInput',...
+                        ['TAPERTYPE must be a single string or have\n' ...
+                        '1 string per record in DATA!']);
+                end
+                ttype=value;
+                if(isscalar(ttype)); ttype(1:nrecs,1)=ttype; end
+            case {'taperoption' 'o' 'to' 'topt'}
+                if(~isreal(value) || ~any(numel(value)==[1 nrecs]))
+                    error('seizmo:applysacpz:badInput',...
+                        'TAPEROPT must be a real-valued scalar or array!');
+                end
+                topt=value;
+                if(isscalar(topt)); topt(1:nrecs,1)=topt; end
             otherwise
                 error('seizmo:applysacpz:badInput',...
                     'Unknown option: %s !',varargin{i});
@@ -333,13 +348,16 @@ try
         end
         
         % get limited frequency range
-        freq=abs([linspace(0,nyq(i),nspts/2+1) ...
-            linspace(-nyq(i)+sdelta,-sdelta,nspts/2-1)]);
-        good=freq>=flim(i,1) & freq<=flim(i,4);
+        freq=[linspace(0,nyq(i),nspts/2+1) ...
+            linspace(-nyq(i)+sdelta,-sdelta,nspts/2-1)];
+        afreq=abs(freq);
+        good=afreq>=flim(i,1) & afreq<=flim(i,4);
         
         % taper
-        taper1=taperfun('hann',freq,flim(i,1:2)).';
-        taper2=taperfun('hann',nyq(i)-freq,nyq(i)-flim(i,[4 3])).';
+        taper1=taperfun(ttype{i},afreq,...
+            flim(i,1:2),topt(i)).';
+        taper2=taperfun(ttype{i},nyq(i)-afreq,...
+            nyq(i)-flim(i,[4 3]),topt(i)).';
         tmp=tmp.*taper1(:,ones(ncmp(1),1)).*taper2(:,ones(ncmp(1),1));
         
         % convert zpk to fap
@@ -359,7 +377,7 @@ try
             data(i).dep(:,1:2:end)=real(tmp);
             data(i).dep(:,2:2:end)=imag(tmp);
         else
-            tmp=ifft(tmp,[],1,'symmetric');
+            tmp=real(ifft(tmp,[],1));
             data(i).dep=tmp(1:npts(i),:);
         end
         
@@ -385,7 +403,7 @@ try
 catch
     % since apply/remove sacpz bomb out so often...
     if(exist('i','var'))
-        disp(sprintf('APPLYSACPZ bombed out on record: %d',i));
+        fprintf('APPLYSACPZ bombed out on record: %d\n',i);
     end
     
     % toggle checking back

@@ -92,7 +92,7 @@ end
 fs=filesep;
 
 % parallel processing setup (8 instances)
-matlabpool(8);
+%matlabpool(8);
 
 % get year directories and day directories
 dirs=xdir([indir fs]);
@@ -126,7 +126,8 @@ for i=1:nyears
     syr=num2str(yr);
     
     % loop over days
-    parfor j=1:numel(jdays{i})
+    for j=1:numel(jdays{i})
+    %parfor j=1:numel(jdays{i})
         % working julian day
         jday=jdays{i}(j);
         sjday=num2str(jday,'%03d');
@@ -193,7 +194,7 @@ for i=1:nyears
             % close pool & fix verbosity
             tmp=lasterror;
             warning(tmp.message);
-            matlabpool close;
+            %matlabpool close;
             seizmoverbose(verbose);
             
             % ???
@@ -203,7 +204,7 @@ for i=1:nyears
 end
 
 % parallel processing takedown
-matlabpool close;
+%matlabpool close;
 seizmoverbose(verbose);
 
 end

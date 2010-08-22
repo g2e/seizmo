@@ -5,52 +5,52 @@ function [varargout]=getheader(data,varargin)
 %            values=getheader(data,'field1')
 %            [values1,...,valuesN]=getheader(data,'field1',...,'fieldN')
 %
-%    Description: GETHEADER(DATA) will return header values for all records
-%     in DATA as a single numeric array.  Rows in the output array
-%     correspond to the header values of individual records.  The order of
-%     the fields follows that of how they are stored in the SEIZMO struct
-%     (see SEIZMO's function SEISMODEF for details).  Character fields are 
-%     returned as a series of their ascii number equivalents (0-255).
+%    Description: GETHEADER(DATA) returns ALL header values for all records
+%     in SEIZMO struct DATA as a single numeric array.  Rows in the output
+%     array correspond to the header values of individual records.  The
+%     order of the fields follows that of how they are stored in the SEIZMO
+%     struct (see SEIZMO's function SEISMODEF for details).
 %
 %     GETHEADER(DATA,FIELD) returns the specified header field FIELD's
-%     values for each record stored in the SEIZMO data structure DATA.
+%     values for all records stored in the SEIZMO data structure DATA.
 %     FIELD must be a string corresponding to a valid header field or a
 %     valid group field (ie. t,kt,resp,user,kuser).  Values are returned in
 %     numeric arrays or cellstring arrays oriented such that each column
 %     corresponds to an individual header field and each row to an
-%     individual record.  So the group field 't' would return a numeric
-%     array with 10 columns and as many rows as records in DATA while group
-%     field 'kuser' would return a cellstring array with 3 columns and as
-%     many rows as records in DATA.
+%     individual record.  For example, the group field 't' would return a
+%     numeric array with 10 columns (for t0 through t9) and as many rows as
+%     there are records in DATA.  Group field 'kuser' would return a
+%     cellstring array with 3 columns (for kuser0 thru kuser2) and as many
+%     rows as there are records in DATA.  FIELD is case-insensitive.
 %     
-%     GETHEADER(DATA,FIELD1,...,FIELDN) returns one array of values per
-%     field or group field.
+%     [VALUES1,...,VALUESN]=GETHEADER(DATA,FIELD1,...,FIELDN) returns the
+%     values for each specified field or group field.
 %
 %    Notes:
 %     - Enumerated fields return the value actually stored, an integer used
 %       to look up the enum string id and description in a table.  To 
-%       retrieve the associated string id or description use the functions 
-%       GETENUM or GETENUMDESC.
+%       retrieve the associated string id or description see the functions 
+%       GETENUMID or GETENUMDESC.
 %     - Logical fields return the value actually stored, not a logical.  To
-%       get a more useful value use GETLGC.
+%       get a more useful value see GETLGC.
 %     - group fields:    t, kt, user, kuser, resp, dep, st, ev, nz, nzdttm,
 %                         kname, {real group} utc, {real group} tai
 %     - virtual fields:  nzmonth, nzcday, kzdttm, kzdate, kztime, z, ztai
 %     - abs time fields: {real field} utc, {real field} tai
 %
 %    Examples:
-%     Put all t series values in one array:
-%      times=getheader(data,'t')
+%     % Retrieve all t series values as one array:
+%     times=getheader(data,'t')
 %
-%     Pull just the sample rates for records (fields are case insensitive):
-%      dt=getheader(data,'DeLtA')
+%     % Extract the sample rates of records:
+%     dt=getheader(data,'DeLtA')
 %
-%     Get the station lat and lon for records:
-%      [stla,stlo]=getheader(data,'stla','STLO')
+%     % Get the station lat and lon for records:
+%     [stla,stlo]=getheader(data,'stla','STLO')
 %
-%     Enumerated fields return the table lookup index which is
-%     the value stored in the header:
-%      getheader(data,'iftype')
+%     % Enumerated fields return the table lookup index,
+%     % which is the value stored in the header:
+%     getheader(data,'iftype')
 %
 %    See also:  CHANGEHEADER, LISTHEADER, READHEADER, WRITEHEADER, GETLGC,
 %               GETENUMID, GETENUMDESC, GETNCMP, GETARRIVAL, COMPAREHEADER
@@ -76,9 +76,10 @@ function [varargout]=getheader(data,varargin)
 %        Jan. 28, 2010 - eliminate extra struct checks
 %        Jan. 29, 2010 - added VERSIONINFO cache support/hack
 %        Apr. 13, 2010 - actually require fields are strings
+%        Aug. 21, 2010 - doc update, NaN output masks undef (-12345)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 13, 2010 at 12:00 GMT
+%     Last Updated Aug. 21, 2010 at 12:00 GMT
 
 % todo:
 
@@ -164,7 +165,7 @@ if(nver>1)
     return;
 end
 
-% pull entire header
+% push all headers into a single matrix
 head=[data.head];
 
 % push out entire header
@@ -212,7 +213,16 @@ for i=1:nargin-1
         end
         
         % assign to varargout
+        % - note this forces columnar output
         varargout{i}(:,j)=val;
+    end
+    
+    % convert undefined values to nans
+    if(type)
+        varargout{i}(strcmpi(varargout{i},h.undef.stype))={'NaN'};
+    else
+        varargout{i}(varargout{i}==h.undef.ntype ...
+            | isinf(varargout{i}))=nan;
     end
 end
 
@@ -252,7 +262,7 @@ for n=1:numel(h.ntype)
         elseif(strcmpi(h.ntype{n},'real'))
             % absolute time fields section
             wf=getwords(f);
-            if(isfield(h.real(m).pos,wf{1}))
+            if(numel(wf)>1 && isfield(h.real(m).pos,wf{1}))
                 if(any(strcmpi(joinwords(wf(2:end)),{'utc' 'tai'})))
                     % get reftimes
                     if(isempty(ref))
@@ -266,8 +276,8 @@ for n=1:numel(h.ntype)
                     value=zeros(nrecs,5);
                     value(:,5)=head(h.(h.ntype{n})(m).pos.(wf{1}),:).';
                     
-                    % default output to undef
-                    head=ones(size(value,1),5)*h.undef.ntype;
+                    % default output to nan
+                    head=nan(size(value,1),5);
                     
                     % who's (un)defined
                     good=good & value(:,5)~=h.undef.ntype ...
@@ -299,8 +309,8 @@ for n=1:numel(h.ntype)
                     value=zeros(nrecs,6);
                     value(:,6)=head(h.(h.ntype{n})(m).pos.(wf{1}),:).';
                     
-                    % default output to undef
-                    head=ones(size(value,1),6)*h.undef.ntype;
+                    % default output to nan
+                    head=nan(size(value,1),6);
                     
                     % who's (un)defined
                     good=good & value(:,6)~=h.undef.ntype ...

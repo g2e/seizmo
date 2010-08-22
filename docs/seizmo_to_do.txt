@@ -2,15 +2,13 @@ main things needing done
 %%%%%%%%%%%%%%%%%%%%%%%%%
 improved plotting (seriously)
 3cmp support
-getheader returns nan for undefined
 standard instrument responses database
 cmt subtoolbox
 xcalign subtoolbox
 ffmancor
-reflect routines
 sph harm mantle models
 ani mantle models
-plotting routines for models
+plotting profiles for models
 more cmb models (rjk)
 cub2 functions
 absolute time windowing
@@ -37,15 +35,9 @@ bugs:
 ========
 - slidingavg doesn't handle offset out of range (entire result goes nan)
 - check slidingavg against other running mean functions
-- plotting is shit
-	- allow pass-through of all properties
-	- cleaner plotting routines
-	- more options (like flags on bottom or on top)
-	- more plot types
 
 need to get done:
 =================
-decimate cascades should go greatest to least for efficiency
 better polezero docs
 	- units of poles and zeros
 		- sac radians
@@ -58,23 +50,7 @@ better polezero docs
 		- add pole at 0
 	- vel 2 dis
 		- add zero at 0
-make compatible with earliest matlab 7
-	- grab a copy from somewhere
-make work with octave
-	- error needs to support structs
-	- error needs to not error on blank messages
-	- cell array of function handles should handle space separated (not require commas)
-	- way to assign new field to empty struct
-	- setdiff does not handle mixed char/cell
-	- switch/case does not handle multi-case
-	- replace textscan with fscanf/sscanf/fgetl
-
-new function short list:
-=========================
 plotting
-	- better properties handling
-	- spectral
-	- station map
 	- station map movie (frame through samples)
 	- cmp vs cmp (plot 2 components with time)
     - particle motion (color changing line to show time progression? how?)
@@ -83,12 +59,10 @@ plotting
 		- phase picking
 		- show predicted phase times
 		- so much more...
-read/write fixed format
 
 wait listed:
 ================
 ttbox integration
-move cmb codes in
 merge (uneven records)
 mtconvert
 mtrotate
@@ -102,15 +76,6 @@ ffmancor
     - define azimuthal cos
 	- reflect off cmb
     - can we make this something like 1e-6 s/km^3 ?
-make_reflect_input
-	- custom readwr.f
-	- read_reflect_output
-more mantle models
-	- handle rg models
-	- handle sph models
-more cmb models
-	- rjk
-plotting options!!!
 make guis for cut functions
 	- popcut
 	- arrcut
@@ -122,25 +87,10 @@ make multiband align
 		- need to save all the arrival info
 			- should be easy to reaccess
 		- can we export it all?
-cmt convert functions
 
 
 0.6.0 - stable, helpful and functional
 ----------------------------------------
-document every function (working on)
-	- plotting (waiting on rewrite)
-fix plotting
-	- better global setting (like binoperr?)
-	- better option passing
-	- allow turning markers on/off
-	- allow setting markers above/below
-	- ditto for tt curves (only recsec)
-	- flags or line for predicted?
-	- spectral plotting
-	- plot clusters
-	- plotvs
-	- plotxy
-	- particle motion plots (cmp vs cmp)
 signal cleaning (to do)
 	- robust poly (get, remove)
 	- smooth splines (get, remove)
@@ -149,10 +99,6 @@ signal cleaning (to do)
 other new functions
 	- autopick
 	- pick
-	- changeversion/filetype
-possible extras
-	- cut on absolute times
-	- merge uneven & multi-rate
 3-cmp records
 	force as ZNE
 	how to handle gaps/overlaps
@@ -161,10 +107,5 @@ possible extras
 	movies/plots of 2-d particle motion
 getpeaks
 markpeaks
-routines to plot models
 function to make g matrix for sph tri stuff
-vespagrams
-ftan
-slantstacking
-spectrum estimation
 

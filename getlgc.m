@@ -5,10 +5,10 @@ function [varargout]=getlgc(data,varargin)
 %              [cellstr1,...,cellstrN]=getlgc(data,'field1',...,'fieldN')
 %
 %    Description: GETLGC(DATA,FIELD) returns a cellstring array containing
-%     'true' 'false' 'undefined' or 'unknown' corresponding to values of
-%     the logical field FIELD in the SEIZMO structure DATA.  This provides
-%     a more consistent logic framework than the output of GETHEADER for
-%     working with multiple datafile versions.
+%     'true' 'false' or 'NaN' corresponding to values of the logical field
+%     FIELD in the SEIZMO structure DATA.  This provides a more consistent
+%     logic framework than the output of GETHEADER for working with
+%     multiple datafile versions.
 %
 %     GETLGC(DATA,FIELD1,...,FIELDN) returns a cellstring array for each
 %     field supplied.
@@ -18,9 +18,8 @@ function [varargout]=getlgc(data,varargin)
 %       GETLGC as if they were logical fields.  This gives the user the 
 %       ability to have more logical fields if needed.  Character fields 
 %       are NOT able to be treated as logical fields.
-%     - Nonexistent header fields return 'NaN'
-%     - Invalid logical values return 'nan'
-%     - Undefined fields return 'Undefined'
+%     - Nonexistant header fields and undefined/invalid logical values
+%       return 'NaN'.
 %
 %    Examples:
 %     To check if all records are evenly spaced:
@@ -49,9 +48,10 @@ function [varargout]=getlgc(data,varargin)
 %        Sep. 12, 2009 - minor doc update
 %        Oct.  6, 2009 - change special output to work with CHANGEHEADER
 %        Jan. 29, 2010 - elimate extra VERSIONINFO call
+%        Aug. 21, 2010 - all unknown fields/values return 'NaN', doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 00:25 GMT
+%     Last Updated Aug. 21, 2010 at 00:25 GMT
 
 % todo:
 
@@ -91,9 +91,7 @@ for i=1:numel(h)
         % compare
         tru=nvarargout{j}(ind)==h(i).true;
         fals=nvarargout{j}(ind)==h(i).false;
-        undef=nvarargout{j}(ind)==h(i).undef.ntype;
-        bad=isnan(nvarargout{j}(ind));
-        unknown=~(tru | fals | undef | bad);
+        bad=~(tru | fals);
         
         % assign logic words
         if(any(tru))
@@ -102,14 +100,8 @@ for i=1:numel(h)
         if(any(fals))
             varargout{j}(ind(fals))={'false'};
         end
-        if(any(undef))
-            varargout{j}(ind(undef))={'Undefined'};
-        end
         if(any(bad))
             varargout{j}(ind(bad))={'NaN'};
-        end
-        if(any(unknown))
-            varargout{j}(ind(unknown))={'nan'};
         end
     end
 end

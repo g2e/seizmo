@@ -72,31 +72,25 @@ function [data]=getsacpz(data,varargin)
 %        May  28, 2010 - new code to handle networks starting with a digit
 %                        (they are stored in sacpzdb as 'A_**' where ** is
 %                        the network name)
+%        Aug. 21, 2010 - dropped versioninfo caching (not warranted),
+%                        updated undef checks, fixed warnings/errors
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  28, 2010 at 12:45 GMT
+%     Last Updated Aug. 21, 2010 at 12:45 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % check data structure & header
 data=checkheader(data);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt sac polezero lookup
 try
-    % get undef values
-    [h,vi]=versioninfo(data);
-    sundef=[h(vi).undef];
-    nundef=[sundef.ntype]';
-    sundef={sundef.stype}';
-    
     % verbosity
     verbose=seizmoverbose;
     
@@ -113,20 +107,19 @@ try
     
     % require all fields to be defined
     % - all name fields should not be undefined
-    badname=strcmpi(sundef,knetwk) | strcmpi(sundef,kstnm) ...
-        | strcmpi(sundef,kcmpnm) | strcmpi(sundef,khole);
+    badname=strcmpi('NaN',knetwk) | strcmpi('NaN',kstnm) ...
+        | strcmpi('NaN',kcmpnm) | strcmpi('NaN',khole);
     if(any(badname))
         error('seizmo:getsacpz:badName',...
-            ['Record(s):\n' sprintf('%d ',find(badname)) ...
-            '\nKNETWK, KSTNM, KHOLE, and/or KCMPNM fields not set!']);
+            ['KNETWK, KSTNM, KHOLE, and/or KCMPNM fields not set!' ...
+            '\nRecord(s):\n' sprintf('%d ',find(badname))]);
     end
     % - all time fields should not be undef, nan, inf
-    badtime=sum(nundef(:,ones(5,1))==b | isnan(b) | isinf(b) ...
-        | nundef(:,ones(5,1))==e | isnan(e) | isinf(e),2)>0;
+    badtime=sum(isnan(b) | isinf(b) | isnan(e) | isinf(e),2)>0;
     if(any(badtime))
         error('seizmo:getsacpz:badName',...
-            ['Record(s):\n' sprintf('%d ',find(badtime)) ...
-            '\nB, E, and/or NZ* header fields not set!']);
+            ['B, E, and/or NZ* header fields not set!' ...
+            '\nRecord(s):\n' sprintf('%d ',find(badtime))]);
     end
     
     % handle khole goofiness
@@ -238,7 +231,7 @@ try
                 if(~isfield(sacpzdb.CUSTOM,reqf{i}))
                     error('seizmo:getsacpz:badSACPZ',...
                         ['SACPZDBs must contain fields:\n' ...
-                        sprintf('%s ',reqf)]);
+                        sprintf('%s ',reqf{:})]);
                 end
             end
         end
@@ -293,8 +286,8 @@ try
             if(any(halfbaked))
                 redraw=true;
                 warning('seizmo:getsacpz:halfbaked',...
-                    ['Record: %d\n' ...
-                    'Record overlaps SAC PoleZero file time boundary!'],i);
+                    ['Record overlaps SAC PoleZero file time boundary!' ...
+                    '\nRecord: %d'],i);
             end
             ok=ok(okb & oke);
         else
@@ -307,8 +300,9 @@ try
             data(i).misc.has_sacpz=false;
             data(i).misc.sacpz=[];
             redraw=true;
-            warning('seizmo:getsacpz:noGoodSACPZ',['Record: %d\n' ...
-                'Could not find a matching SAC PoleZero file!'],i);
+            warning('seizmo:getsacpz:noGoodSACPZ',...
+                ['Could not find a matching SAC PoleZero file!' ...
+                '\nRecord: %d'],i);
         else
             % get file with latest b
             [idx,idx]=min(timediff(db.(NN).b(ok,:),b(i,:)));
@@ -324,11 +318,9 @@ try
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

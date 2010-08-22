@@ -38,9 +38,10 @@ function []=daydirs_normalize(indir,outdir,eqband,pband,tsw,fsw,o)
 
 %     Version History:
 %        June 21, 2010 - initial version
+%        Aug. 19, 2010 - bit more useful warning messages
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 21, 2010 at 12:55 GMT
+%     Last Updated Aug. 19, 2010 at 12:55 GMT
 
 % todo:
 
@@ -108,7 +109,7 @@ end
 fs=filesep;
 
 % parallel processing setup (8 instances)
-matlabpool(8);
+%matlabpool(8);
 
 % get year directories and day directories
 dirs=xdir([indir fs]);
@@ -133,7 +134,7 @@ end
 
 % verbosity (turn it off for the loop)
 verbose=seizmoverbose(false);
-if(verbose); disp('Removing instrument response from record(s)'); end
+if(verbose); disp('Temporally & spectrally normalizing record(s)'); end
 
 % loop over years
 for i=1:nyears
@@ -143,7 +144,8 @@ for i=1:nyears
     disp(['PROCESSING YEAR ' syr]);
     
     % loop over days
-    parfor j=1:numel(jdays{i})
+    for j=1:numel(jdays{i})
+    %parfor j=1:numel(jdays{i})
         % working julian day
         jday=jdays{i}(j);
         sjday=num2str(jday,'%03d');
@@ -159,8 +161,8 @@ for i=1:nyears
                 data=readseizmo([indir fs syr fs sjday fs '*LHZ*'],...
                     [indir fs syr fs sjday fs '*BHZ*']);
             catch
-                tmp=lasterror;
-                warning(tmp.message);
+                warning('seizmo:noise:missingRecords',...
+                    'No vertical records found for this day!');
                 skip=true;
             end
             
@@ -198,9 +200,9 @@ for i=1:nyears
                     [indir fs syr fs sjday fs '*BHE*'],...
                     [indir fs syr fs sjday fs '*BHN*']);
             catch
+                warning('seizmo:noise:missingRecords',...
+                    'No horizontal records found for this day!');
                 skip=true;
-                tmp=lasterror;
-                warning(tmp.message);
             end
             
             if(~skip)
@@ -252,7 +254,7 @@ for i=1:nyears
             % close pool & fix verbosity
             tmp=lasterror;
             warning(tmp.message);
-            matlabpool close;
+            %matlabpool close;
             seizmoverbose(verbose);
             
             % ???
@@ -262,7 +264,7 @@ for i=1:nyears
 end
 
 % parallel processing takedown
-matlabpool close;
+%matlabpool close;
 seizmoverbose(verbose);
 
 end

@@ -68,30 +68,26 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %        Oct. 17, 2009 - added direct absolute time input
 %        Feb.  3, 2010 - proper SEIZMO handling, seizmoverbose support, fix
 %                        xy datatype bug, fix checking order bug
+%        Aug. 21, 2010 - nargchk fix, better checkheader usage, update
+%                        undef checking, drop versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 16:20 GMT
+%     Last Updated Aug. 21, 2010 at 16:20 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % check headers
-data=checkheader(data);
+data=checkheader(data,...
+    'NONTIME_IFTYPE','ERROR');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt time synchronization
 try
-    % get undefined value
-    [h,idx]=versioninfo(data);
-    undef=getsubfield(h,'undef','ntype').';
-    undef=undef(idx);
-
     % verbosity
     verbose=seizmoverbose;
 
@@ -186,15 +182,6 @@ try
         getheader(data,'a','b','e','f','o','t',...
         'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec',varargin{:});
 
-    % only itime, ixy
-    iftype=getenumid(data,'iftype');
-    if(any(~(strcmp(iftype,'itime') | ~strcmp(iftype,'ixy'))))
-        error('seizmo:synchronize:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
-
     % get shift
     reftimes=[nzyear nzjday nzhour nzmin nzsec+nzmsec/1000];
     if(abstime)
@@ -217,11 +204,6 @@ try
     % get shift
     shift=timediff(synctime,reftimes,timing);
 
-    % undefined to NaN (so undefined fields are not shifted from undefined)
-    a(a==undef)=nan; b(b==undef)=nan;
-    e(e==undef)=nan; f(f==undef)=nan;
-    o(o==undef)=nan; t(t==undef(:,ones(10,1)))=nan;
-
     % shift user fields, but not undefined user fields
     for i=1:nvararg
         if(~isnumeric(user{i}))
@@ -229,7 +211,6 @@ try
                 'User given fields must return numeric arrays!');
         end
         sz=size(user{i},2);
-        user{i}(user{i}==undef(:,ones(sz,1)))=nan;
         user{i}=user{i}+shift(:,ones(sz,1));
     end
 
@@ -250,11 +231,9 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

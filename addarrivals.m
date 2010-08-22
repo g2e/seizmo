@@ -57,9 +57,10 @@ function [data]=addarrivals(data,varargin)
 %        Feb.  3, 2010 - versioninfo caching
 %        Mar.  8, 2010 - versioninfo caching dropped
 %        Apr. 20, 2010 - doc update, flexible option fields, drop global
+%        Aug. 21, 2010 - update undef checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 20, 2010 at 23:45 GMT
+%     Last Updated Aug. 21, 2010 at 23:45 GMT
 
 % todo:
 % - really need to catch taup messages
@@ -78,9 +79,6 @@ oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt adding arrivals
 try
-    % get header setup
-    [h,vi]=versioninfo(data);
-    
     % verbosity
     verbose=seizmoverbose;
     
@@ -161,24 +159,23 @@ try
         redraw=false;
         
         % check header info
-        if(evdp(i)==h(vi(i)).undef.ntype)
+        if(isnan(evdp(i)))
             %redraw=true;
             warning('seizmo:addarrivals:badEVDP',...
                 'Record: %d\nEVDP undefined! Treating as zero.',i);
             evdp(i)=0;
         end
-        if(o(i)==h(vi(i)).undef.ntype)
+        if(isnan(o(i)))
             %redraw=true;
             warning('seizmo:addarrivals:badO',...
                 'Record: %d\nO field undefined! Treating as zero.',i);
             o(i)=0;
         end
-        if(gcarc(i)~=h(vi(i)).undef.ntype)
+        if(~isnan(gcarc(i)))
             location={'deg' gcarc(i)};
-        elseif(dist(i)~=h(vi(i)).undef.ntype)
+        elseif(~isnan(dist(i)))
             location={'km' dist(i)};
-        elseif(all([stla(i) stlo(i) evla(i) evlo(i)]...
-                ~=h(vi(i)).undef.ntype))
+        elseif(all(~isnan([stla(i) stlo(i) evla(i) evlo(i)])))
             location={'sta' [stla(i) stlo(i)] 'evt' [evla(i) evlo(i)]};
         else
             error('seizmo:addarrivals:badLocation',...

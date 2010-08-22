@@ -47,26 +47,22 @@ function [data]=setasiday(data)
 %     Version History:
 %        Dec.  2, 2009 - initial version
 %        Feb.  3, 2010 - versioninfo caching, seizmoverbose support
+%        Aug. 21, 2010 - drop versioninfo caching, nargchk fix, update
+%                        undef checking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 18:10 GMT
+%     Last Updated Aug. 21, 2010 at 18:10 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
-[h,idx]=versioninfo(data);
-
-% get undefined values
-undef=getsubfield(h,'undef','ntype').';
-undef=undef(idx);
+error(seizmocheck(data));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt rest
 try
@@ -79,14 +75,14 @@ try
     end
     
     % get reference time
-    [nz]=getheader(data,'nz');
+    nz=getheader(data,'nz');
 
     % find those with reftime undefined
-    bad=sum(nz==undef(:,ones(1,6)),2)>0;
+    bad=sum(isnan(nz) | isinf(nz),2)>0;
     if(any(bad))
         error('seizmo:setiday:NZUndefined',...
-            ['Records:\n' sprintf('%d ',find(bad)) ...
-            '\nOne or more NZ fields are undefined!']);
+            ['One or more NZ fields are undefined!' ...
+            '\nRecords:\n' sprintf('%d ',find(bad))]);
     end
 
     % now shift the records
@@ -95,11 +91,9 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
     error(lasterror)

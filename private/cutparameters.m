@@ -32,15 +32,15 @@ function [option]=cutparameters(varargin)
 %        Apr. 23, 2009 - move usage up
 %        May  29, 2009 - minor doc update, add nargin check
 %        Oct.  6, 2009 - drop use of LOGICAL function
+%        Aug. 21, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 20:45 GMT
+%     Last Updated Aug. 21, 2010 at 20:45 GMT
 
 % todo:
 
 % check number of inputs
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % option defaults
 option.TRIM=true;

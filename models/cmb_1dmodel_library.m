@@ -20,6 +20,32 @@ function [models]=cmb_1dmodel_library(varargin)
 %
 %      M1P, M1P2, M1PQ, M1/3P, PKNA1, GPS, GQu, GPSQu
 %
+%      From Raul Wong Thesis (1996)
+%       A - decrease from PREM d" to 6.95
+%       B - increase from PREM d" to 7.35
+%       C - step at PREM d" to 7.3
+%       D - 2605, 2.95% to 7.19 linear
+%       E - 2605, 2.95% to 7.19 parabolic
+%       F02 - 2605, 2.95% to 7.19 error function
+%       G02 - 2605, 2.95% to 7.0 error function
+%       H - 2605, 2.95% to 6.9 error function
+%       I2505/2555/2605/2655/2705 (2605 is G02) - note values above and
+%            below the discontinuity are the same so they are not % of PREM
+%       J724/J734/J744 (J734 is G02) - values are at the bottom of the
+%            discontinuity (7.13 is the value at the top)
+%       K2655/2705 (jump to 7.44)
+%       KE2655/2705 (jump to 7.4)
+%       N690/695/700/706/710/713
+%       QE 39 7228 in PREM d"
+%       QH 78 14456
+%       QK 156 28912
+%       QQ 624 99999.99
+%       QT 1248 99999.99
+%       L2705 gradient version of K2705 (gradient from ~2630 to ~2730)
+%       M2705 clipped version of K2705 (~7.34 at d", linear to 2790)
+%       
+%       
+%
 %    Examples:
 %     Reproduce Figure 4 of Wysession et al 1998:
 %      plot1dmodel([prem cmb_1dmodel_library('syl1','slhe','slha',...

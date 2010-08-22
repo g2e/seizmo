@@ -6,7 +6,7 @@ function [data]=changeheader(data,varargin)
 %
 %    Description: CHANGEHEADER(DATA,FIELD,VALUE) changes the header field 
 %     FIELD to the value(s) in VALUE for each record in DATA and returns
-%     an updated SEIZMO data structure.  FIELD must be a string 
+%     the updated SEIZMO data structure.  FIELD must be a string 
 %     corresponding to a valid header field.  A VALUE for normal header
 %     fields may be a scalar (assigns same value to all), a column vector
 %     of length equal to the number of records (assigns a separate value to

@@ -375,9 +375,11 @@ function [data]=checkheader(data,varargin)
 %                        XYZ_IFTYPE, MULTIPLE_REFTIME, MULTIPLE_NPTS,
 %                        MULTIPLE_B.  Edited several defaults.
 %        June 10, 2010 - fixed bug in MULTIPLE_B
+%        Aug. 21, 2010 - update for getheader no longer returning undefined
+%                        values specific to a filetype, KM_DEPTH fixed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 10, 2010 at 22:10 GMT
+%     Last Updated Aug. 21, 2010 at 22:10 GMT
 
 % todo:
 
@@ -419,7 +421,6 @@ try
     % logicals
     xyz=strcmp(iftype,'ixyz');
     spectral=(strcmp(iftype,'irlim') | strcmp(iftype,'iamph'));
-    undef=getsubfield(h(vi),'undef','ntype').';
 
     % fudge factor
     try
@@ -485,12 +486,12 @@ try
 
     % check for invalid reftime fields
     if(~strcmp(option.UNSET_REFTIME,'IGNORE'))
-        nz=unset_reftime(option.UNSET_REFTIME,undef,nz);
+        nz=unset_reftime(option.UNSET_REFTIME,nz);
     end
     
     % check for invalid reftime fields
     if(~strcmp(option.NONINTEGER_REFTIME,'IGNORE'))
-        nz=noninteger_reftime(option.NONINTEGER_REFTIME,undef,nz);
+        nz=noninteger_reftime(option.NONINTEGER_REFTIME,nz);
     end
 
     % check for invalid reftime fields
@@ -532,7 +533,7 @@ try
     % START TIMING
     % check for unset b
     if(~strcmp(option.UNSET_B,'IGNORE'))
-        b=unset_b(option.UNSET_B,undef,b);
+        b=unset_b(option.UNSET_B,b);
     end
     
     % check for inconsistent e
@@ -556,7 +557,7 @@ try
     % check for bad spectral sdelta
     if(~strcmp(option.BAD_SPECTRAL_SDELTA,'IGNORE'))
         sdelta=bad_spectral_sdelta(...
-            option.BAD_SPECTRAL_SDELTA,spectral,undef,e,sdelta);
+            option.BAD_SPECTRAL_SDELTA,spectral,e,sdelta);
     end
 
     % check for bad spectral e
@@ -583,49 +584,49 @@ try
 
     % check for bad spectral sb
     if(~strcmp(option.BAD_SPECTRAL_SB,'IGNORE'))
-        sb=bad_spectral_sb(option.BAD_SPECTRAL_SB,spectral,undef,sb);
+        sb=bad_spectral_sb(option.BAD_SPECTRAL_SB,spectral,sb);
     end
     % END SPECTRAL
 
     % START LOCATION
     % check for unset station lat/lon
     if(~strcmp(option.UNSET_ST_LATLON,'IGNORE'))
-        unset_st_latlon(option.UNSET_ST_LATLON,undef,st);
+        unset_st_latlon(option.UNSET_ST_LATLON,st);
     end
     
     % check for unset event lat/lon
     if(~strcmp(option.UNSET_EV_LATLON,'IGNORE'))
-        unset_ev_latlon(option.UNSET_EV_LATLON,undef,ev);
+        unset_ev_latlon(option.UNSET_EV_LATLON,ev);
     end
     
     % check for bad lat
     if(~strcmp(option.OUTOFRANGE_LAT,'IGNORE'))
-        [ev,st]=outofrange_lat(option.OUTOFRANGE_LAT,undef,ev,st);
+        [ev,st]=outofrange_lat(option.OUTOFRANGE_LAT,ev,st);
     end
 
     % check for bad lon
     if(~strcmp(option.OUTOFRANGE_LON,'IGNORE'))
-        [ev,st]=outofrange_lon(option.OUTOFRANGE_LON,undef,ev,st);
+        [ev,st]=outofrange_lon(option.OUTOFRANGE_LON,ev,st);
     end
 
     % check for undef depth
     if(~strcmp(option.UNSET_DEPTH,'IGNORE'))
-        [ev,st]=unset_depth(option.UNSET_DEPTH,undef,ev,st);
+        [ev,st]=unset_depth(option.UNSET_DEPTH,ev,st);
     end
 
     % check for undef elev
     if(~strcmp(option.UNSET_ELEV,'IGNORE'))
-        [ev,st]=unset_elev(option.UNSET_ELEV,undef,ev,st);
+        [ev,st]=unset_elev(option.UNSET_ELEV,ev,st);
     end
 
     % check for km depths
     if(~strcmp(option.KM_DEPTH,'IGNORE'))
-        ev=km_depth(option.KM_DEPTH,undef,ev);
+        ev=km_depth(option.KM_DEPTH,ev);
     end
 
     % check for old delaz
     if(~strcmp(option.OLD_DELAZ,'IGNORE'))
-        delaz=old_delaz(option.OLD_DELAZ,undef,lcalda,st,ev,delaz);
+        delaz=old_delaz(option.OLD_DELAZ,lcalda,st,ev,delaz);
     end
     % END LOCATION
 
@@ -643,6 +644,11 @@ try
 
     % check for multiple component records using a non-multi-cmp filetype
     if(~strcmp(option.INVALID_MULCMP_DEP,'IGNORE'))
+        % NOTE THAT THIS UPDATES H & VI BOTH HERE AND IN THE SEIZMO CACHE
+        % - ANY FUNCTION THAT CALLS CHECKHEADER WILL THUS NEED TO UPDATE
+        %   ITS LOCAL H & VI TO MATCH THE CACHE!
+        % - IGNORE THE UNUSED VARIABLE MLINT MESSAGE B/C WE MAY NEED H & VI
+        %   FOR A TO-BE-ADDED TEST BELOW THIS ONE
         [data,h,vi,nvhdr]=invalid_mulcmp_dep(...
             option.INVALID_MULCMP_DEP,data,h,vi,nvhdr,ncmp);
     end
@@ -716,7 +722,7 @@ try
     
     % check for unset npts
     if(~strcmp(option.UNSET_NPTS,'IGNORE'))
-        npts=unset_npts(option.UNSET_NPTS,undef,npts);
+        npts=unset_npts(option.UNSET_NPTS,npts);
     end
     % check for multiple npts
     if(~strcmp(option.MULTIPLE_NPTS,'IGNORE'))
@@ -736,13 +742,13 @@ try
     % check for mismatch between b and ind
     if(~strcmp(option.INCONSISTENT_IND_B,'IGNORE'))
         b=inconsistent_ind_b(...
-            option.INCONSISTENT_IND_B,undef,leven,data,b);
+            option.INCONSISTENT_IND_B,leven,data,b);
     end
 
     % check for mismatch between e and ind
     if(~strcmp(option.INCONSISTENT_IND_E,'IGNORE'))
         e=inconsistent_ind_e(...
-            option.INCONSISTENT_IND_E,undef,leven,data,e);
+            option.INCONSISTENT_IND_E,leven,data,e);
     end
     
     % multiple b
@@ -758,7 +764,7 @@ try
     
     % check for unset delta
     if(~strcmp(option.UNSET_DELTA,'IGNORE'))
-        delta=unset_delta(option.UNSET_DELTA,undef,delta);
+        delta=unset_delta(option.UNSET_DELTA,delta);
     end
 
     % check for negative delta
@@ -798,7 +804,7 @@ try
 
     % check for old dep stats
     if(~strcmp(option.OLD_DEP_STATS,'IGNORE'))
-        dep=old_dep_stats(option.OLD_DEP_STATS,undef,data,dep);
+        dep=old_dep_stats(option.OLD_DEP_STATS,data,dep);
     end
 
     % check for complex head
@@ -1115,9 +1121,8 @@ end
 
 end
 
-function [nz]=noninteger_reftime(opt,undef,nz)
-bad=nz~=fix(nz) ...
-    & ~(nz==undef(:,ones(size(nz,2),1)) | isnan(nz) | isinf(nz));
+function [nz]=noninteger_reftime(opt,nz)
+bad=nz~=fix(nz) & ~(isnan(nz) | isinf(nz));
 badrec=find(sum(bad,2)~=0);
 if(~isempty(badrec))
     report.identifier='seizmo:checkheader:nonintREF';
@@ -1140,8 +1145,8 @@ end
 
 end
 
-function [nz]=unset_reftime(opt,undef,nz)
-bad=nz==undef(:,ones(size(nz,2),1)) | isnan(nz) | isinf(nz);
+function [nz]=unset_reftime(opt,nz)
+bad=isnan(nz) | isinf(nz);
 badrec=find(sum(bad,2)~=0);
 bad=find(bad);
 column=1+fix((bad-1)/size(bad,1));
@@ -1203,7 +1208,7 @@ bad=unique(nz,'rows');
 if(size(bad,1)~=1)
     report.identifier='seizmo:checkheader:multiREFTIME';
     report.message=['Dataset has multiple reference times:\n' ...
-        sprintf('%04d:%03d %02d:%02d:%02d.%03d ',bad)];
+        sprintf('%04d:%03d@%02d:%02d:%02d.%03d ',bad')];
     switch opt
         case 'ERROR'
             error(report.identifier,report.message);
@@ -1635,8 +1640,8 @@ end
 
 end
 
-function b=unset_b(opt,undef,b)
-bad=find(b==undef | isnan(b) | isinf(b));
+function b=unset_b(opt,b)
+bad=find(isnan(b) | isinf(b));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:undefB';
     report.message=['B field for record(s):\n' ...
@@ -1658,8 +1663,8 @@ end
 
 end
 
-function npts=unset_npts(opt,undef,npts)
-bad=find(npts==undef | isnan(npts) | isinf(npts));
+function npts=unset_npts(opt,npts)
+bad=find(isnan(npts) | isinf(npts));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:undefNPTS';
     report.message=['NPTS field for record(s):\n' ...
@@ -1681,8 +1686,8 @@ end
 
 end
 
-function delta=unset_delta(opt,undef,delta)
-bad=find(delta==undef | isnan(delta) | isinf(delta));
+function delta=unset_delta(opt,delta)
+bad=find(isnan(delta) | isinf(delta));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:undefDELTA';
     report.message=['DELTA field for record(s):\n' ...
@@ -1776,9 +1781,9 @@ end
 
 end
 
-function [sdelta]=bad_spectral_sdelta(opt,spectral,undef,e,sdelta)
-bad=spectral & (sdelta==undef | isnan(sdelta) | isinf(sdelta));
-badd=find(bad & (e==undef | isnan(e) | isinf(e)));
+function [sdelta]=bad_spectral_sdelta(opt,spectral,e,sdelta)
+bad=spectral & (isnan(sdelta) | isinf(sdelta));
+badd=find(bad & (isnan(e) | isinf(e)));
 bad=find(bad);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badSpectralSDELTA';
@@ -1897,8 +1902,8 @@ end
 
 end
 
-function [sb]=bad_spectral_sb(opt,spectral,undef,sb)
-bad=find(spectral & (sb==undef | isnan(sb) | isinf(sb)));
+function [sb]=bad_spectral_sb(opt,spectral,sb)
+bad=find(spectral & (isnan(sb) | isinf(sb)));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badSpectralSB';
     report.message=['Record(s):\n' sprintf('%d ',bad) ...
@@ -1919,8 +1924,8 @@ end
 
 end
 
-function unset_st_latlon(opt,undef,st)
-bad=st==undef(:,ones(size(st,2),1)) | isnan(st) | isinf(st);
+function unset_st_latlon(opt,st)
+bad=isnan(st(:,1:2)) | isinf(st(:,1:2));
 bad=find(sum(bad,2)~=0);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:undefSTLALO';
@@ -1942,8 +1947,8 @@ end
 
 end
 
-function unset_ev_latlon(opt,undef,ev)
-bad=ev==undef(:,ones(size(ev,2),1)) | isnan(ev) | isinf(ev);
+function unset_ev_latlon(opt,ev)
+bad=isnan(ev(:,1:2)) | isinf(ev(:,1:2));
 bad=find(sum(bad,2)~=0);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:undefEVLALO';
@@ -1964,11 +1969,11 @@ if(~isempty(bad))
 end
 end
 
-function [ev,st]=outofrange_lat(opt,undef,ev,st)
+function [ev,st]=outofrange_lat(opt,ev,st)
 badev=abs(ev(:,1))>90 & ...
-    ~(ev(:,1)==undef | isnan(ev(:,1)) | isinf(ev(:,1)));
+    ~(isnan(ev(:,1)) | isinf(ev(:,1)));
 badst=abs(st(:,1))>90 & ...
-    ~(st(:,1)==undef | isnan(st(:,1)) | isinf(st(:,1)));
+    ~(isnan(st(:,1)) | isinf(st(:,1)));
 bad=find(badev | badst);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:outOfRangeLat';
@@ -1981,34 +1986,24 @@ if(~isempty(bad))
             warning(report.identifier,report.message);
         case 'FIX'
             % unwrap lats and shift lons appropriately
-            % but do not shift undefined lons!
-            undefevlo=ev(:,2)==undef; ev(badev & undefevlo,2)=nan;
-            undefstlo=st(:,2)==undef; st(badst & undefstlo,2)=nan;
             [ev(badev,1),ev(badev,2)]=fixlatlon(ev(badev,1),ev(badev,2));
             [st(badst,1),st(badst,2)]=fixlatlon(st(badst,1),st(badst,2));
-            ev(badev & undefevlo,2)=undef(badev & undefevlo);
-            st(badst & undefstlo,2)=undef(badst & undefstlo);
         case 'WARNFIX'
             warning(report.identifier,report.message);
             disp('==> Unwrapping out of range latitudes!');
             % unwrap lats and shift lons appropriately
-            % but do not shift undefined lons!
-            undefevlo=ev(:,2)==undef; ev(badev & undefevlo,2)=nan;
-            undefstlo=st(:,2)==undef; st(badst & undefstlo,2)=nan;
             [ev(badev,1),ev(badev,2)]=fixlatlon(ev(badev,1),ev(badev,2));
             [st(badst,1),st(badst,2)]=fixlatlon(st(badst,1),st(badst,2));
-            ev(badev & undefevlo,2)=undef(badev & undefevlo);
-            st(badst & undefstlo,2)=undef(badst & undefstlo);
     end
 end
 
 end
 
-function [ev,st]=outofrange_lon(opt,undef,ev,st)
+function [ev,st]=outofrange_lon(opt,ev,st)
 badev=abs(ev(:,2))>180 & ...
-    ~(ev(:,2)==undef | isnan(ev(:,2)) | isinf(ev(:,2)));
+    ~(isnan(ev(:,2)) | isinf(ev(:,2)));
 badst=abs(st(:,2))>180 & ...
-    ~(st(:,2)==undef | isnan(st(:,2)) | isinf(st(:,2)));
+    ~(isnan(st(:,2)) | isinf(st(:,2)));
 bad=find(badev | badst);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:outOfRangeLon';
@@ -2032,9 +2027,9 @@ end
 
 end
 
-function [ev,st]=unset_depth(opt,undef,ev,st)
-badev=ev(:,4)==undef | isnan(ev(:,4)) | isinf(ev(:,4));
-badst=st(:,4)==undef | isnan(st(:,4)) | isinf(st(:,4));
+function [ev,st]=unset_depth(opt,ev,st)
+badev=isnan(ev(:,4)) | isinf(ev(:,4));
+badst=isnan(st(:,4)) | isinf(st(:,4));
 bad=find(badst | badev);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:unsetDepth';
@@ -2058,9 +2053,9 @@ end
 
 end
 
-function [ev,st]=unset_elev(opt,undef,ev,st)
-badev=ev(:,3)==undef | isnan(ev(:,3)) | isinf(ev(:,3));
-badst=st(:,3)==undef | isnan(st(:,3)) | isinf(st(:,3));
+function [ev,st]=unset_elev(opt,ev,st)
+badev=isnan(ev(:,3)) | isinf(ev(:,3));
+badst=isnan(st(:,3)) | isinf(st(:,3));
 bad=find(badst | badev);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:unsetElevation';
@@ -2084,9 +2079,8 @@ end
 
 end
 
-function [ev]=km_depth(opt,undef,ev)
-bad=find(ev(:,4)<1000 & ev(:,4)>0 & ...
-    (ev(:,4)==undef | isnan(ev(:,4)) | isinf(ev(:,4))));
+function [ev]=km_depth(opt,ev)
+bad=find(ev(:,4)<1000 & ev(:,4)>0);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:possibleKmDepth';
     report.message=['Record(s):\n' sprintf('%d ',bad) ...
@@ -2107,13 +2101,11 @@ end
 
 end
 
-function [delaz]=old_delaz(opt,undef,lcalda,st,ev,delaz)
+function [delaz]=old_delaz(opt,lcalda,st,ev,delaz)
 
 % get defined st/ev
-def=0==sum( ...
-    st(:,1:2)==undef(:,[1 1]) | isnan(st(:,1:2)) | isinf(st(:,1:2)),2) ...
-    & 0==sum( ...
-    ev(:,1:2)==undef(:,[1 1]) | isnan(ev(:,1:2)) | isinf(ev(:,1:2)),2);
+def=0==sum(isnan(st(:,1:2)) | isinf(st(:,1:2)),2) ...
+    & 0==sum(isnan(ev(:,1:2)) | isinf(ev(:,1:2)),2);
 
 % get lcalda (don't mess with those with lcalda == 'false')
 chk=~strcmp(lcalda,'false');
@@ -2435,8 +2427,8 @@ end
 
 end
 
-function [b]=inconsistent_ind_b(opt,undef,leven,data,b)
-newb=undef;
+function [b]=inconsistent_ind_b(opt,leven,data,b)
+newb=nan(size(b));
 ok=find(strcmp(leven,'false') & [data.hasdata].');
 for i=ok.'
     if(~isempty(data(i).ind)); newb(i)=double(data(i).ind(1)); end
@@ -2463,8 +2455,8 @@ end
 
 end
 
-function [e]=inconsistent_ind_e(opt,undef,leven,data,e)
-newe=undef;
+function [e]=inconsistent_ind_e(opt,leven,data,e)
+newe=nan(size(e));
 ok=find(strcmp(leven,'false') & [data.hasdata].');
 for i=ok.'
     if(~isempty(data(i).ind)); newe(i)=double(data(i).ind(end)); end
@@ -2526,9 +2518,8 @@ end
 
 end
 
-function [dep]=old_dep_stats(opt,undef,data,dep)
-undef=undef(:,[1 1 1]); newdep=undef;
-dep(isinf(dep) | isnan(dep))=undef(isinf(dep) | isnan(dep));
+function [dep]=old_dep_stats(opt,data,dep)
+newdep=nan(numel(data),3);
 ok=find([data.hasdata].');
 for i=ok.'
     if(~isempty(data(i).dep))

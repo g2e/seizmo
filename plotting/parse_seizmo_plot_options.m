@@ -40,11 +40,11 @@ switch pf
             'xdir' 'normal' 'ydir' 'reverse' 'xscale' 'linear' ...
             'yscale' 'linear' 'ampscale' 'linear' 'clustercutoff' 0.2 ...
             'othercolor' [.5 .5 .5] 'clustercutoffcolor' 'r'} varargin];
-    case {'psp0' 'plotsp0' 'plotspectra0'}
+    case {'pspec0' 'plotspectra0'}
         varargin=[{'fg' [] 'bg' [] 'unwrap' false 'cmp' 'a'} varargin];
-    case {'psp1' 'plotsp1' 'plotspectra1'}
+    case {'pspec1' 'plotspectra1'}
         varargin=[{'fg' [] 'bg' [] 'unwrap' false 'cmp' 'a'} varargin];
-    case {'psp2' 'plotsp2' 'plotspectra2'}
+    case {'pspec2' 'plotspectra2'}
         varargin=[{'fg' [] 'bg' [] 'unwrap' false 'cmp' 'a'} varargin];
     case {'recsec' 'recordsection'}
         varargin=[{'fg' [] 'bg' [] 'ax' [] 'cmap' 'hsv' 'xlabel' [] ...
@@ -54,7 +54,7 @@ switch pf
             'normstyle' 'group' 'normmax' 1/3 'norm2yaxis' true ...
             'xdir' 'normal' 'ydir' 'normal' 'xscale' 'linear' ...
             'yscale' 'linear' 'ampscale' 'linear'} varargin];
-    case {'spsec' 'spectrasection'}
+    case {'specsec' 'spectrasection'}
         varargin=[{'fg' [] 'bg' [] 'unwrap' false 'cmp' 'a'} varargin];
     otherwise
         error('seizmo:parse_seizmo_plot_options:badInput',...
