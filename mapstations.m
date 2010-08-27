@@ -22,7 +22,7 @@ function [varargout]=mapstations(data,varargin)
 %
 %    Description: MAPSTATIONS(DATA) creates a map showing the station and
 %     earthquake locations stored in the headers of records of SEIZMO
-%     struct DATA.  The map is a global map using the Hammer projection.
+%     struct DATA.  The map is a global map using the Robinson projection.
 %     Stations are plotted as yellow circles and events are plotted as
 %     5-pointed stars.
 %
@@ -127,7 +127,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

@@ -19,7 +19,7 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %     controlling the clustering cutoff.  Available options are:
 %      FGCOLOR      -- foreground color (axes, text, labels)
 %      BGCOLOR      -- background color (does not set figure color)
-%      AXIS         -- axes to plot in
+%      AXIS         -- axes to plot in (need 2)
 %      COLORMAP     -- colormap for coloring data
 %      XLABEL       -- x axis label
 %      YLABEL       -- y axis label
@@ -41,8 +41,8 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %      XSCALE       -- 'linear' or 'log'
 %      YSCALE       -- 'linear' or 'log'
 %      AMPSCALE     -- 'linear' or 'log'
-%      CLUCUT       -- 0 to 1 (default of 0.2)
-%      CLUCUTCOLOR  -- default is 'r' (red)
+%      CUTOFF       -- 0 to 1 (default of 0.2)
+%      CUTOFFCOLOR  -- default is 'r' (red)
 %      OTHERCOLOR   -- color of unclustered records/nodes ([.5 .5 .5])
 %
 %    Notes:
@@ -52,16 +52,18 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %     % and visualize the heirarchy using plotdendro:
 %     peaks=correlate(data,'npeaks',1);
 %     Z=linkage(1-peaks.cg.','average');
-%     plotdendro(data,Z,'clustercutoff',1);
+%     plotdendro(data,Z,'cutoff',1);
 %
 %    See also: PLOT0, PLOT1, PLOT2, RECORDSECTION, CORRELATE,
 %              DENDROGRAM, LINKAGE, CLUSTER (Statistics Toolbox)
 
 %     Version History:
 %        Aug. 15, 2010 - rewrite
+%        Aug. 24, 2010 - require two axes handles
+%        Aug. 26, 2010 - cutoff/cutoffcolor options (ie renamed them)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 15, 2010 at 23:00 GMT
+%     Last Updated Aug. 26, 2010 at 23:00 GMT
 
 % todo:
 
@@ -82,18 +84,17 @@ end
 opt=parse_seizmo_plot_options(varargin{:});
 
 % all in one plot
-if(isempty(opt.AXIS) || ~isscalar(opt.AXIS) || ~isreal(opt.AXIS) ...
-        || ~ishandle(opt.AXIS) || ~strcmp('axes',get(opt.AXIS,'type')))
+if(isempty(opt.AXIS) || numel(opt.AXIS)~=2 || ~isreal(opt.AXIS) ...
+        || any(~ishandle(opt.AXIS)) ...
+        || any(~strcmp('axes',get(opt.AXIS,'type'))))
     % new figure
     figure('color',opt.BGCOLOR);
     ax(2)=subplot('position',[0.5 0.1 0.4 0.8]);
     ax(1)=subplot('position',[0.1 0.1 0.4 0.8]);
 else
     % take axis, get pos, delete, make two inside
-    pos=get(opt.AXIS,'position');
-    delete(opt.AXIS);
-    ax(2)=subplot('position',pos+[.5*pos(3) 0 -.5*pos(3) 0]);
-    ax(1)=subplot('position',pos+[        0 0 -.5*pos(3) 0]);
+    ax=opt.AXIS;
+    subplot(ax(1));
 end
 
 % dendrogram subplot (note it uses gca)
@@ -101,12 +102,12 @@ S=cell(1,nrecs); S(:)={''}; % no labels
 try
     % my modified dendrogram (for coloring)
     [H,H2,perm]=ddendrogram(Z,0,'labels',S,...
-        'orientation','left','colorthreshold',opt.CLUSTERCUTOFF,...
+        'orientation','left','colorthreshold',opt.CUTOFF,...
         'colormap',opt.CMAP,'defaultcolor',opt.OTHERCOLOR);
 catch
     % Matlab's dendrogram
     [H,H2,perm]=dendrogram(Z,0,'labels',S,...
-        'orientation','left','colorthreshold',opt.CLUSTERCUTOFF);
+        'orientation','left','colorthreshold',opt.CUTOFF);
 end
 perm=perm.';
 
@@ -146,10 +147,10 @@ linkaxes(ax([2 1]),'y');
 
 % add cluster cutoff bar
 hold(ax(1),'on');
-plot(ax(1),opt.CLUSTERCUTOFF*ones(1,2),span,...
-    opt.CLUSTERCUTOFFCOLOR,'linewidth',opt.LINEWIDTH);
-text(opt.CLUSTERCUTOFF,span(2)-0.02*diff(span),'DISSIMILARITY LIMIT',...
-    'fontsize',opt.FONTSIZE,'color',opt.CLUSTERCUTOFFCOLOR,...
+plot(ax(1),opt.CUTOFF*ones(1,2),span,...
+    opt.CUTOFFCOLOR,'linewidth',opt.LINEWIDTH);
+text(opt.CUTOFF,span(2)-0.02*diff(span),'DISSIMILARITY LIMIT',...
+    'fontsize',opt.FONTSIZE,'color',opt.CUTOFFCOLOR,...
     'verticalalignment','bottom','rotation',90);
 hold(ax(1),'off');
 

@@ -102,22 +102,21 @@ function [data]=taper(data,w,o,type,opt)
 %        Dec.  4, 2009 - drop linspace usage (speed/accuracy decision)
 %        Jan. 30, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb.  2, 2010 - versioninfo caching
+%        Aug. 25, 2010 - drop versioninfo caching, nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 21:00 GMT
+%     Last Updated Aug. 25, 2010 at 21:00 GMT
 
 % todo:
 
 % check input
-msg=nargchk(1,5,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,5,nargin));
 
 % check data structure
 versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt taper
 try
@@ -208,7 +207,7 @@ try
         opt=opt(ones(nrecs,1),:);
     elseif(sz(1)~=nrecs)
         error('seizmo:taper:badInput',...
-            'OPTON must have 1 row or 1 row per record!');
+            'OPTION must have 1 row or 1 row per record!');
     end
     if(sz(2)==1)
         opt=[opt opt];
@@ -311,14 +310,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

@@ -20,31 +20,7 @@ function [models]=cmb_1dmodel_library(varargin)
 %
 %      M1P, M1P2, M1PQ, M1/3P, PKNA1, GPS, GQu, GPSQu
 %
-%      From Raul Wong Thesis (1996)
-%       A - decrease from PREM d" to 6.95
-%       B - increase from PREM d" to 7.35
-%       C - step at PREM d" to 7.3
-%       D - 2605, 2.95% to 7.19 linear
-%       E - 2605, 2.95% to 7.19 parabolic
-%       F02 - 2605, 2.95% to 7.19 error function
-%       G02 - 2605, 2.95% to 7.0 error function
-%       H - 2605, 2.95% to 6.9 error function
-%       I2505/2555/2605/2655/2705 (2605 is G02) - note values above and
-%            below the discontinuity are the same so they are not % of PREM
-%       J724/J734/J744 (J734 is G02) - values are at the bottom of the
-%            discontinuity (7.13 is the value at the top)
-%       K2655/2705 (jump to 7.44)
-%       KE2655/2705 (jump to 7.4)
-%       N690/695/700/706/710/713
-%       QE 39 7228 in PREM d"
-%       QH 78 14456
-%       QK 156 28912
-%       QQ 624 99999.99
-%       QT 1248 99999.99
-%       L2705 gradient version of K2705 (gradient from ~2630 to ~2730)
-%       M2705 clipped version of K2705 (~7.34 at d", linear to 2790)
-%       
-%       
+%      RAUL (Models from Raul Wong's PhD Thesis Chp. 3)
 %
 %    Examples:
 %     Reproduce Figure 4 of Wysession et al 1998:
@@ -60,15 +36,15 @@ function [models]=cmb_1dmodel_library(varargin)
 %     Version History:
 %        May  30, 2010 - initial version
 %        Aug.  8, 2010 - fixed case for GQu & GPSQu
+%        Aug. 22, 2010 - added models from Raul's thesis
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 23:00 GMT
+%     Last Updated Aug. 22, 2010 at 23:00 GMT
 
 % todo:
 % - more p-wave models!
 %   - weber
 %   - models from michael
-% - valenzuela's models
 % - convection model series
 % - ppv model series
 % - ulvz series
@@ -180,7 +156,7 @@ for i=1:nargin
                          2891   -3 4 0 0]};
         case 'LL2700'''
             % note that LL2700'_-3% is M1
-            name={'LL2750''_-2%' 'LL2750''_-3%' 'LL2750''_-4%'};
+            name={'LL2700''_-2%' 'LL2700''_-3%' 'LL2700''_-4%'};
             pv{1}={'vs' [2000   0 4 0 ceil(1+700*kpkm);
                          2700 -.5 4 0 ceil(1+191*kpkm);
                          2891  -2 4 0 0]};
@@ -671,29 +647,29 @@ for i=1:nargin
             pv=cell(nhng*ndv,1);
             for a=1:nhng;
                 for b=1:ndv;
-                    name{(a-1)*nhng+b}=['GPS' num2str(hng(a)) '_' ...
+                    name{(a-1)*ndv+b}=['GPS' num2str(hng(a)) '_' ...
                         num2str(dv(b)) '%'];
-                    pv{(a-1)*nhng+b}=...
+                    pv{(a-1)*ndv+b}=...
                         {'vs' [hng(a) 0 4 0 ceil(1+(2891-hng(a))*kpkm);
-                               2891 dv(b) 4 0 0]
+                               2891 dv(b) 4 0 0],...
                          'vp' [hng(a) 0 4 0 ceil(1+(2891-hng(a))*kpkm);
                                2891 dv(b) 4 0 0]};
                 end
             end
         case 'GQU'
             hng=[2000 2400 2600 2650 2700 2750];
-            dv=-4:4;
+            dv=-80:20:80;
             nhng=numel(hng);
             ndv=numel(dv);
             name=cell(nhng*ndv,1);
             pv=cell(nhng*ndv,1);
             for a=1:nhng;
                 for b=1:ndv;
-                    name{(a-1)*nhng+b}=['GQu' num2str(hng(a)) '_' ...
+                    name{(a-1)*ndv+b}=['GQu' num2str(hng(a)) '_' ...
                         num2str(dv(b)) '%'];
-                    pv{(a-1)*nhng+b}=...
+                    pv{(a-1)*ndv+b}=...
                         {'qu' [hng(a) 0 4 0 ceil(1+(2891-hng(a))*kpkm);
-                               2891 100*dv(b)/5 4 0 0]};
+                               2891 dv(b) 4 0 0]};
                 end
             end
         case 'GPSQU'
@@ -705,20 +681,76 @@ for i=1:nargin
             pv=cell(nhng*ndv,1);
             for a=1:nhng;
                 for b=1:ndv;
-                    name{(a-1)*nhng+b}=['GPSQu' num2str(hng(a)) '_' ...
-                        num2str(dv(b)) '%'];
-                    pv{(a-1)*nhng+b}=...
+                    name{(a-1)*ndv+b}=['GPSQu' num2str(hng(a)) '_' ...
+                        num2str(dv(b)) '%V_' num2str(100*dv(b)/5) '%Qu'];
+                    pv{(a-1)*ndv+b}=...
                         {'vs' [hng(a) 0 4 0 ceil(1+(2891-hng(a))*kpkm);
-                               2891 dv(b) 4 0 0]
+                               2891 dv(b) 4 0 0],...
                          'vp' [hng(a) 0 4 0 ceil(1+(2891-hng(a))*kpkm);
-                               2891 dv(b) 4 0 0]
+                               2891 dv(b) 4 0 0],...
                          'qu' [hng(a) 0 4 0 ceil(1+(2891-hng(a))*kpkm);
                                2891 100*dv(b)/5 4 0 0]};
                 end
             end
-        %case 'GGPS'
-        %case 'GGPSQu'
-        %case 'GDGPS'
+        case 'RAUL'
+            % Models from Raul Valenzuela Wong's PhD Thesis (1996) Chp. 3
+            % Note: Density & Vp is NOT adjusted from PREM.
+            %  A - decrease from PREM d" to 6.95
+            %  B - increase from PREM d" to 7.35
+            %  C - step at PREM d" to 7.3
+            %  D - 2605, 2.95% to 7.19 linear
+            %  E - 2605, 2.95% to 7.19 parabolic
+            %  F02 - 2605, 2.95% to 7.19 error function
+            %  G02 - 2605, 2.95% to 7.0 error function
+            %  H - 2605, 2.95% to 6.9 error function
+            %  I2505/2555/2605/2655/2705 (2605 is G02) - note values above and
+            %      below the discontinuity are the same so they are not % of PREM
+            %  J724/J734/J744 (J734 is G02) - values are at the bottom of the
+            %      discontinuity (7.13 is the value at the top)
+            %  K2655/2705 - like I models w/ jump to 7.44
+            %  KE2655/2705 - like I models w/ jump to 7.4
+            %  N690/695/700/706/710/713 - K2705 variations
+            %  QE 39 7228 in PREM d" - N706 with various Qu
+            %  QH 78 14456
+            %  QK 156 28912
+            %  QQ 624 99999.99
+            %  QT 1248 99999.99
+            %  L2705 - gradient version of K2705 (gradient from ~2630 to ~2730)
+            %  M2705 - clipped version of K2705 (~7.34 at d", linear to 2790)
+            name={'A' 'B' 'C' 'D' 'E' 'F02' 'G02' 'H' 'I2505' 'I2555' ...
+                'I2655' 'I2705' 'J724' 'J744' 'K2655' 'K2705' 'KE2655' ...
+                'KE2705' 'N690' 'N695' 'N700' 'N706' 'N710' 'QE' 'QH' ...
+                'QK' 'QQ' 'QT' 'L2705' 'M2705'};
+            pv={{'vs' [2741 0 4 0 thk2n(150,kpkm); 2891 6.95 0 0 0]} ...
+                {'vs' [2741 0 4 0 thk2n(150,kpkm); 2891 7.35 0 0 0]} ...
+                {'vs' [2741 0 4 0 0; 2741 7.3 0 0 thk2n(150,kpkm); 2891 7.3 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(305,kpkm); 2605 7.13 0 0 0; 2605 7.34 0 0 thk2n(286,kpkm); 2891 7.19 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(305,kpkm); 2605 7.13 0 0 0; 2605 7.34 0 2 thk2n(286,kpkm); 2891 7.19 0 0 0]} ... % this one needs to be fixed
+                {'vs' [2300 0 4 0 thk2n(305,kpkm); 2605 7.13 0 0 0; 2605 7.34 0 2 thk2n(286,kpkm); 2891 7.19 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(305,kpkm); 2605 7.13 0 0 0; 2605 7.34 0 2 thk2n(286,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(305,kpkm); 2605 7.13 0 0 0; 2605 7.34 0 2 thk2n(286,kpkm); 2891 6.9 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(205,kpkm); 2505 7.13 0 0 0; 2505 7.34 0 2 thk2n(386,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(255,kpkm); 2555 7.13 0 0 0; 2555 7.34 0 2 thk2n(336,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(355,kpkm); 2655 7.13 0 0 0; 2655 7.34 0 2 thk2n(236,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.13 0 0 0; 2705 7.34 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(305,kpkm); 2605 7.13 0 0 0; 2605 7.24 0 2 thk2n(286,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(305,kpkm); 2605 7.13 0 0 0; 2605 7.44 0 2 thk2n(286,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(355,kpkm); 2655 7.13 0 0 0; 2655 7.44 0 2 thk2n(236,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.13 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(355,kpkm); 2655 7.13 0 0 0; 2655 7.4 0 2 thk2n(236,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.13 0 0 0; 2705 7.4 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 6.9 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 6.95 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.06 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.1 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'qu' [2705 0 4 0 0; 2705 39 0 0 thk2n(186,kpkm); 2891 0 2 0 0] 'qk' [2705 0 4 0 0; 2705 7228 0 0 thk2n(186,kpkm); 2891 0 2 0 0] 'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.06 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'qu' [2705 0 4 0 0; 2705 78 0 0 thk2n(186,kpkm); 2891 0 2 0 0] 'qk' [2705 0 4 0 0; 2705 14456 0 0 thk2n(186,kpkm); 2891 0 2 0 0] 'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.06 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'qu' [2705 0 4 0 0; 2705 156 0 0 thk2n(186,kpkm); 2891 0 2 0 0] 'qk' [2705 0 4 0 0; 2705 28912 0 0 thk2n(186,kpkm); 2891 0 2 0 0] 'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.06 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'qu' [2705 0 4 0 0; 2705 624 0 0 thk2n(186,kpkm); 2891 0 2 0 0] 'qk' [2705 0 4 0 0; 2705 99999.99 0 0 thk2n(186,kpkm); 2891 0 2 0 0] 'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.06 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'qu' [2705 0 4 0 0; 2705 1248 0 0 thk2n(186,kpkm); 2891 0 2 0 0] 'qk' [2705 0 4 0 0; 2705 99999.99 0 0 thk2n(186,kpkm); 2891 0 2 0 0] 'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.06 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.13 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0] 'vs' [2630 0 4 0 thk2n(100,kpkm); 2730 0 4 0 0]} ...
+                {'vs' [2300 0 4 0 thk2n(405,kpkm); 2705 7.13 0 0 0; 2705 7.44 0 2 thk2n(186,kpkm); 2891 7 0 0 0] 'vs' [2705 7.34 0 0 thk2n(85,kpkm); 2790 0 4 0 0]}};
         otherwise
             error('seizmo:cmb_1dmodel_library:badMODNAME',...
                 'Unknown MODNAME: %s',varargin{i});
@@ -733,3 +765,10 @@ for i=1:nargin
 end
 
 end
+
+
+function [n]=thk2n(thk,kpkm)
+n=ceil(1+thk*kpkm);
+end
+
+

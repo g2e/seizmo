@@ -1,11 +1,11 @@
-function [data,tpr,fh]=usertaper(data,func,varargin)
+function [data,tpr,ax]=usertaper(data,func,varargin)
 %USERTAPER    Interactively taper SEIZMO records
 %
 %    Usage:    data=usertaper(data)
 %              data=usertaper(data,func)
 %              data=usertaper(data,func,'field',value,...)
 %              [data,tpr]=usertaper(...)
-%              [data,tpr,fh]=usertaper(...)
+%              [data,tpr,ax]=usertaper(...)
 %
 %    Description: DATA=USERTAPER(DATA) presents an interactive menu and
 %     plot interface to taper records in a dataset with a few mouse clicks.
@@ -31,7 +31,7 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 %     (see TAPER for defaults).  The .width field will be an empty array if
 %     no tapering is performed.
 %
-%     [DATA,TPR,FH]=USERTAPER(...) returns the figure handles in FH.
+%     [DATA,TPR,AX]=USERTAPER(...) returns the axes handle in AX.
 %
 %    Notes:
 %
@@ -52,17 +52,17 @@ function [data,tpr,fh]=usertaper(data,func,varargin)
 %        Mar. 18, 2010 - robust to menu/figure closing
 %        Mar. 23, 2010 - preserve last taper widths
 %        Apr. 22, 2010 - replace crash with exit (but still crash)
+%        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2010 at 11:00 GMT
+%     Last Updated Aug. 26, 2010 at 11:00 GMT
 
 % todo:
 % - subplot showing taper
 % - option for wvtool
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -80,6 +80,9 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror);
 end
 
 % attempt tapering
@@ -99,16 +102,19 @@ try
 
     % taper parameters
     tpr.type=[];
-    tpr.width=[0 0];
+    tpr.width=[0 1];
     tpr.option=[];
     tpr.func=func;
+    
+    % fix x axis label
+    varargin=[{'xlabel' 'Normalized Length'} varargin];
 
     % length normalization
     [b,e,npts,delta]=getheader(data,'b','e','npts','delta');
     data=changeheader(data,'b',0,'e',1,'delta',1./(npts-1));
 
     % outer loop - only breaks free by user command
-    happy_user=false; fh=[-1 -1];
+    happy_user=false; ax=-1; reax={};
     while(~happy_user)
         % explain to the user how this works with a little prompt
         % and make them decide what kind of plot to use for the
@@ -272,11 +278,11 @@ try
                 % go back to main menu
                 continue;
             case 3 % overlay
-                fh(1)=plot2(data,varargin{:});
+                ax=plot2(data,varargin{:},reax{:});
             case 4 % evenly spaced
-                fh(1)=plot0(data,varargin{:});
+                ax=plot0(data,varargin{:},reax{:});
             case 5 % distance spaced
-                fh(1)=recordsection(data,varargin{:});
+                ax=recordsection(data,varargin{:},reax{:});
             case 6 % no taper
                 tpr.type=[];
                 tpr.width=[];
@@ -287,41 +293,46 @@ try
                 error('seizmo:usertaper:killYourSelf',...
                     'User demanded early exit!');
         end
+        
+        % use this axis
+        reax={'ax' ax};
 
         % add taper limit markers
-        figure(fh(1));
-        span=ylim;
+        span=ylim(ax);
         if(isempty(tpr.width)); tpr.width=xlim; end
-        hold on
-        goh(1)=plot([tpr.width(1) tpr.width(1)],span,'g','linewidth',4);
-        goh(2)=plot([tpr.width(2) tpr.width(2)],span,'r','linewidth',4);
-        hold off
+        hold(ax,'on');
+        goh(1)=plot(ax,[tpr.width(1) tpr.width(1)],span,'g',...
+            'linewidth',4);
+        goh(2)=plot(ax,[tpr.width(2) tpr.width(2)],span,'r',...
+            'linewidth',4);
+        hold(ax,'off')
 
         % loop until user finalizes markers
         final=false;
         while(~final)
             % bring plot to focus (redraw if closed)
-            if(~ishandle(fh(1)))
+            if(~ishandle(ax))
                 % redraw (pretty rare to get here)
                 switch choice
                     case 3 % overlay
-                        fh(1)=plot2(data,varargin{:});
+                        ax=plot2(data,varargin{:});
                     case 4 % evenly spaced
-                        fh(1)=plot0(data,varargin{:});
+                        ax=plot0(data,varargin{:});
                     case 5 % distance spaced
-                        fh(1)=recordsection(data,varargin{:});
+                        ax=recordsection(data,varargin{:});
                 end
-                span=ylim;
-                tpr.width=xlim;
-                hold on
-                goh(1)=plot([tpr.width(1) tpr.width(1)],span,'g',...
+                reax={'ax' ax};
+                span=ylim(ax);
+                tpr.width=xlim(ax);
+                hold(ax,'on');
+                goh(1)=plot(ax,[tpr.width(1) tpr.width(1)],span,'g',...
                     'linewidth',4);
-                goh(2)=plot([tpr.width(2) tpr.width(2)],span,'r',...
+                goh(2)=plot(ax,[tpr.width(2) tpr.width(2)],span,'r',...
                     'linewidth',4);
-                hold off
+                hold(ax,'off');
             else
-                % bring figure to focus
-                figure(fh(1));
+                % bring axes to focus
+                axes(ax);
             end
             
             % get user click/key
@@ -354,11 +365,10 @@ try
             end
         end
 
-        % fix end taper
+        % get tapered data
         tpr.width(2)=1-tpr.width(2);
-
-        % get windowed data
         data2=taper(data,tpr.width,0,tpr.type,tpr.option);
+        tpr.width(2)=1-tpr.width(2);
 
         % apply function post cut
         data2=tpr.func(data2);
@@ -366,11 +376,11 @@ try
         % proceed by user choice
         switch choice
             case 3 % overlay
-                fh(2)=plot2(data2,varargin{:});
+                ax=plot2(data2,varargin{:},reax{:});
             case 4 % evenly spaced
-                fh(2)=plot0(data2,varargin{:});
+                ax=plot0(data2,varargin{:},reax{:});
             case 5 % distance spaced
-                fh(2)=recordsection(data2,varargin{:});
+                ax=recordsection(data2,varargin{:},reax{:});
         end
 
         % confirm results
@@ -383,8 +393,12 @@ try
                     data=changeheader(data2,'b',b,'e',e,'delta',delta);
                     happy_user=true;
                 case 2 % never, never quit!
-                    close(fh(ishandle(fh)));
-                    fh=[-1 -1];
+                    if(ishandle(ax))
+                        reax={'ax' ax};
+                    else
+                        reax={};
+                        ax=-1;
+                    end
                 case 3 % i bear too great a shame to go on
                     error('seizmo:usertaper:killYourSelf',...
                         'User demanded early exit!');

@@ -1,4 +1,4 @@
-function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
+function [grp,ax]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %USERCLUSTER    Interactively cluster SEIZMO records
 %
 %    Usage:    grp=usercluster(data)
@@ -8,7 +8,7 @@ function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %              grp=usercluster(data,cg,cutoff,method,criterion)
 %              grp=usercluster(data,cg,cutoff,method,criterion,...
 %                              'field1',value1,...,'fieldN',valueN)
-%              [grp,fh]=usercluster(...)
+%              [grp,ax]=usercluster(...)
 %
 %    Description: GRP=USERCLUSTER(DATA) cross correlates the records in
 %     DATA and passes the maximum correlation values to clustering routines
@@ -45,7 +45,7 @@ function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %     passes field and value pairs on to PLOTDENDRO for further
 %     customization.
 %
-%     [GRP,FH]=USERCLUSTER(...) returns the figure handle in FH.
+%     [GRP,AX]=USERCLUSTER(...) returns the axes handle in AX.
 %
 %    Notes:
 %
@@ -68,15 +68,15 @@ function [grp,fh]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %        Apr. 21, 2010 - replace crash button with exit (but still crash)
 %        May   7, 2010 - button to draw cluster map
 %        June 26, 2010 - mapclusters deprecated (uses mapstations)
+%        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 26, 2010 at 19:50 GMT
+%     Last Updated Aug. 26, 2010 at 10:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 if(nargin>5 && ~mod(nargin,2))
     error('seizmo:usercluster:badNumInputs',...
         'Bad number of arguments!');
@@ -141,12 +141,8 @@ try
     grp.criterion=criterion;
     
     % outer loop - only breaks free on user command
-    happy_user=false; fh=-1; cfh=-1; mfh=-1; oldfh=[]; save=false;
+    happy_user=false; ax=[-1 -1]; cx=-1; mx=-1; oldax=[]; save=false;
     while(~happy_user)
-        % list of extra plots
-        oldfh=[oldfh(ishandle(oldfh)) cfh(ishandle(cfh)) ...
-            mfh(ishandle(mfh)) fh(ishandle(fh))];
-        
         % get choice from user
         choice=menu('CHANGE CLUSTERING SETTINGS?',...
             ['DISSIMILARITY CUTOFF (' num2str(grp.cutoff) ')'],...
@@ -163,9 +159,9 @@ try
                 Z=linkage(1-cg.',grp.method);
                 
                 % plot dendrogram/waveforms
-                if(~save || ~ishandle(fh))
-                    [grp.perm,grp.color,fh,sfh]=plotdendro(data,Z,...
-                        varargin{:},'treelimit',grp.cutoff);
+                if(~save || any(~ishandle(ax)))
+                    [grp.perm,grp.color,ax]=plotdendro(data,Z,...
+                        varargin{:},'cutoff',grp.cutoff);
                 end
                 
                 % menu telling user how to interactively adjust cutoff
@@ -200,15 +196,12 @@ try
                 button=1;
                 while (button~=2)
                     % bring plot to focus (redraw if closed)
-                    if(~ishandle(fh))
+                    if(any(~ishandle(ax)))
                         % redraw figure
-                        [grp.perm,grp.color,fh,sfh]=plotdendro(data,Z,...
-                            varargin{:},'treelimit',grp.cutoff);
-                    else
-                        % bring figure to focus
-                        figure(fh);
+                        [grp.perm,grp.color,ax]=plotdendro(data,Z,...
+                            varargin{:},'cutoff',grp.cutoff);
                     end
-                    subplot(sfh(1));
+                    axes(ax(1));
                     
                     % get user click/key
                     try
@@ -219,14 +212,12 @@ try
                     end
 
                     % action on left click
-                    if (button==1 && gca==sfh(1))
+                    if (button==1 && gca==ax(1))
                         grp.cutoff=x;
 
                         % redraw subplots (to show new grouping)
-                        delete(sfh);
-                        [grp.perm,grp.color,fh,sfh]=plotdendro(data,Z,...
-                            varargin{:},'treelimit',grp.cutoff,...
-                            'fighandle',fh);
+                        [grp.perm,grp.color,ax]=plotdendro(data,Z,...
+                            varargin{:},'cutoff',grp.cutoff,'ax',ax);
                     end
                 end
                 
@@ -261,25 +252,30 @@ try
                 rho=corr(1-cg,D','type','spearman');
                 
                 % plot against one another
-                cfh=figure;
-                plot([0 1],[0 1],'r','linewidth',3);
-                hold on
-                plot(1-cg.',D,'.');
-                xlabel('TRUE DISTANCE (1 - Corr. Coeff.)');
-                ylabel('COPHENETIC DISTANCE');
-                title({['LINKAGE METHOD: ''' upper(grp.method) '''']
-                       ['SPEARMAN''S RANK COEFFICIENT: ' num2str(rho)]});
+                if(~ishandle(cx))
+                    cfh=figure;
+                    cx=axes('parent',cfh);
+                end
+                plot(cx,[0 1],[0 1],'r','linewidth',3);
+                hold(cx,'on');
+                plot(cx,1-cg.',D,'.');
+                hold(cx,'off');
+                xlabel(cx,'TRUE DISTANCE (1 - Corr. Coeff.)');
+                ylabel(cx,'COPHENETIC DISTANCE');
+                title(cx,{['LINKAGE METHOD: ''' upper(grp.method) '''']
+                    ['SPEARMAN''S RANK COEFFICIENT: ' num2str(rho)]});
+                save=true;
             case 5 % map
                 % get linkage
                 Z=linkage(1-cg.',grp.method);
                 
                 % delete all old cluster plots & plot new if needed
-                if(save)
-                    close(oldfh(ishandle(oldfh) & oldfh~=fh));
-                else
-                    close(oldfh(ishandle(oldfh)));
-                    [grp.perm,grp.color,fh]=plotdendro(data,Z,...
-                        varargin{:},'treelimit',grp.cutoff);
+                if(~save)
+                    oldfh=get(oldax(ishandle(oldax)),'parent');
+                    if(iscell(oldfh)); oldfh=cell2mat(oldfh); end
+                    close(oldfh);
+                    [grp.perm,grp.color,ax]=plotdendro(data,Z,...
+                        varargin{:},'cutoff',grp.cutoff);
                 end
                 
                 % get clusters
@@ -292,25 +288,28 @@ try
                 grp.color=grp.color(idx,:);
                 
                 % map clusters
-                mfh=figure('color','k');
-                ax=mapstations(data,'ax',gca);
-                set(findobj(ax,'tag','stations'),...
+                if(~ishandle(mx))
+                    mfh=figure('color','k');
+                    mx=axes('parent',mfh);
+                end
+                mx=mapstations(data,'ax',mx);
+                set(findobj(mx,'tag','stations'),...
                     'cdata',grp.color(grp.T,:));
                 
                 % put color matrix back into internal format
                 grp.color=colorsave;
-                clear colorsave
+                save=true;
             case 6 % cluster
                 % get linkage
                 Z=linkage(1-cg.',grp.method);
                 
                 % delete all old cluster plots & plot new if needed
-                if(save)
-                    close(oldfh(ishandle(oldfh) & oldfh~=fh));
-                else
-                    close(oldfh(ishandle(oldfh)));
-                    [grp.perm,grp.color,fh]=plotdendro(data,Z,...
-                        varargin{:},'treelimit',grp.cutoff);
+                if(~save)
+                    oldfh=get(oldax(ishandle(oldax)),'parent');
+                    if(iscell(oldfh)); oldfh=cell2mat(oldfh); end
+                    close(oldfh);
+                    [grp.perm,grp.color,ax]=plotdendro(data,Z,...
+                        varargin{:},'cutoff',grp.cutoff);
                 end
                 
                 % get clusters
@@ -325,6 +324,10 @@ try
                 error('seizmo:usertaper:killYourSelf',...
                     'User demanded an early exit!');
         end
+        
+        % list of extra plots
+        oldax=[oldax(ishandle(oldax)) cx(ishandle(cx)) ...
+            mx(ishandle(mx)) ax(ishandle(ax))];
     end
     
     % toggle checking back
@@ -334,7 +337,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

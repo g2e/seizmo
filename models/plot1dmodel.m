@@ -65,14 +65,6 @@ function [varargout]=plot1dmodel(model,fields,drng,cmap,fgcolor,bgcolor,ax)
 %     Last Updated Aug. 17, 2010 at 15:50 GMT
 
 % todo:
-% - moduli are in Passcals
-% - density is in g/cm3 or Gg/km3
-% - velocity in km/s
-% - derivatives are per earth radius
-% - mass is in kg
-% - gravity in m/s2
-% - Q is in ... its raw form
-
 
 % check nargin
 error(nargchk(1,7,nargin));

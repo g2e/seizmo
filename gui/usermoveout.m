@@ -1,10 +1,10 @@
-function [data,mvo,fh]=usermoveout(data,varargin)
+function [data,mvo,ax]=usermoveout(data,varargin)
 %USERMOVEOUT    Interactivly add a distance-dependent moveout
 %
 %    Usage:    data=usermoveout(data)
 %              data=usermoveout(data,'field1',value1,...,'fieldN',valueN)
 %              [data,mvo]=usermoveout(...)
-%              [data,mvo,fh]=usermoveout(...)
+%              [data,mvo,ax]=usermoveout(...)
 %
 %    Description: DATA=USERMOVEOUT(DATA) presents an interactive menu and
 %     record section plot (arranged by degree distance) to facilitate
@@ -22,8 +22,8 @@ function [data,mvo,fh]=usermoveout(data,varargin)
 %      MVO.moveout  --  moveout used in calculating the shifts (in sec/deg)
 %      MVO.shift    --  actual time shifts applied to the data (in sec)
 %
-%     [DATA,MVO,FH]=USERMOVEOUT(...) returns the record section's figure
-%      handle in FH.
+%     [DATA,MVO,AX]=USERMOVEOUT(...) returns the record section's axes
+%      handle in AX.
 %
 %    Notes:
 %     - Make sure you have the GCARC field set for all records!
@@ -33,24 +33,24 @@ function [data,mvo,fh]=usermoveout(data,varargin)
 %
 %    Examples:
 %     Typically one runs this followed by USERWINDOW & USERTAPER:
-%      [data,mvo,fh(1)]=usermoveout(data);
-%      [data,win,fh(2:3)]=userwindow(data);
-%      [data,tpr,fh(4:5)]=usertaper(data);
+%      [data,mvo,ax]=usermoveout(data);
+%      [data,win,ax(2:3)]=userwindow(data);
+%      [data,tpr,ax(4:5)]=usertaper(data);
 %
 %    See also: USERWINDOW, USERTAPER, USERALIGN
 
 %     Version History:
 %        Mar. 16, 2010 - initial version
 %        Mar. 18, 2010 - made robust to menu closing, reorder menu buttons
+%        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2010 at 10:35 GMT
+%     Last Updated Aug. 26, 2010 at 10:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -68,6 +68,9 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror);
 end
 
 % attempt to add moveout
@@ -78,13 +81,13 @@ try
     
     % default moveout
     mvo.moveout=0;
-    mvo.adjust=-(gcarc-mindist)*mvo.moveout;
+    mvo.adjust=(gcarc-mindist)*mvo.moveout;
     
     % outer loop - only breaks free on user command
-    happy_user=false;
+    happy_user=false; reax={};
     while(~happy_user)
         % plot records vs distance
-        fh=recordsection(timeshift(data,mvo.adjust),varargin{:});
+        ax=recordsection(timeshift(data,mvo.adjust),varargin{:},reax{:});
         
         % get choice from user
         choice=menu('Adjust Moveout of the Data?','YES','NO');
@@ -92,7 +95,11 @@ try
         % act on choice
         switch choice
             case 0 % menu closed
-                close(fh(ishandle(fh)));
+                if(ishandle(ax))
+                    reax={'ax' ax};
+                else
+                    reax={};
+                end
             case 1
                 % ask user how much
                 choice=menu('Adjust moveout by how much?',...
@@ -154,10 +161,14 @@ try
                             end
                         end
                 end
-                mvo.adjust=-(gcarc-mindist)*mvo.moveout;
+                mvo.adjust=(gcarc-mindist)*mvo.moveout;
 
                 % close old figure
-                close(fh(ishandle(fh)));
+                if(ishandle(ax))
+                    reax={'ax' ax};
+                else
+                    reax={};
+                end
             case 2
                 happy_user=true;
         end

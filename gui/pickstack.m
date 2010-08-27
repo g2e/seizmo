@@ -1,9 +1,10 @@
-function [onset,fh]=pickstack(data,varargin)
+function [onset,ax]=pickstack(data,varargin)
 %PICKSTACK    Interactive picking of signal onset in SEIZMO record stack
 %
 %    Usage:    onset=pickstack(data)
 %              onset=pickstack(data,...)
-%              [onset,fh]=pickstack(...)
+%              [onset,ax]=pickstack(...)
+%              pickstack(ax,data,...)
 %
 %    Description: ONSET=PICKSTACK(DATA) presents an interactive menu and
 %     plot to facilitate picking the onset of a signal in the stack of
@@ -18,8 +19,11 @@ function [onset,fh]=pickstack(data,varargin)
 %     thus on to INTERPOLATE).  This is the typical usage form.  See
 %     INTERPOLATE for argument details.
 %
-%     [ONSET,FH]=PICKSTACK(...) also returns the plot's figure handle as
-%     the second output argument FH.
+%     [ONSET,FH]=PICKSTACK(...) also returns the plot's axis handle as
+%     the second output argument AX.
+%
+%     PICKSTACK(AX,DATA,...) specifies the axes to plot in using the handle
+%     in AX.
 %
 %    Notes:
 %
@@ -31,18 +35,26 @@ function [onset,fh]=pickstack(data,varargin)
 
 %     Version History:
 %        Mar. 24, 2010 - initial version
+%        Aug. 26, 2010 - nargchk fix, update for new plotting functions,
+%                        onset line plots in correct place on redraw
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2010 at 23:55 GMT
+%     Last Updated Aug. 26, 2010 at 23:55 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,7,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+if(isseizmo(data,'dep'))
+    ax=-1;
+else
+    ax=data;
+    data=varargin{1};
+    varargin(1)=[];
+    versioninfo(data,'dep');
+end
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -56,15 +68,16 @@ try
     onset=0;
     
     % outer loop - only breaks free on user command
-    happy_user=false; fh=-1;
+    happy_user=false; firsttime=true;
     while(~happy_user)
         % plot stack if necessary
-        if(~ishandle(fh))
-            fh=plot1(data,'title','STACKED RECORD');
-            span=ylim;
-            hold on
-            goh=plot([0 0],span,'y--','linewidth',2);
-            hold off
+        if(~ishandle(ax) || firsttime)
+            ax=plot1(data,'title','STACKED RECORD','ax',ax);
+            span=ylim(ax);
+            hold(ax,'on');
+            goh=plot(ax,[onset onset],span,'y--','linewidth',2);
+            hold(ax,'off');
+            firsttime=false;
         end
         
         % get user choice
@@ -76,12 +89,12 @@ try
         switch choice
             case 1 % adjust
                 % plot stack if necessary
-                if(~ishandle(fh))
-                    fh=plot1(data,'title','STACKED RECORD');
-                    span=ylim;
-                    hold on
-                    goh=plot([0 0],span,'y--','linewidth',2);
-                    hold off
+                if(~ishandle(ax))
+                    ax=plot1(data,'title','STACKED RECORD');
+                    span=ylim(ax);
+                    hold(ax,'on');
+                    goh=plot(ax,[onset onset],span,'y--','linewidth',2);
+                    hold(ax,'off');
                 end
                 
                 % menu telling user how to interactively adjust onset
@@ -116,16 +129,17 @@ try
                 button=1;
                 while (button~=2)
                     % bring plot to focus (redraw if closed)
-                    if(~ishandle(fh))
+                    if(~ishandle(ax))
                         % redraw figure
-                        fh=plot1(data,'title','STACKED RECORD');
-                        span=ylim;
-                        hold on
-                        goh=plot([0 0],span,'y--','linewidth',2);
-                        hold off
+                        ax=plot1(data,'title','STACKED RECORD');
+                        span=ylim(ax);
+                        hold(ax,'on');
+                        goh=plot(ax,[onset onset],span,'y--',...
+                            'linewidth',2);
+                        hold(ax,'off');
                     else
-                        % bring figure to focus
-                        figure(fh);
+                        % bring plot to focus
+                        axes(ax);
                     end
 
                     % get user click/key
@@ -154,7 +168,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

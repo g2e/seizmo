@@ -1,4 +1,4 @@
-function [data,win,fh]=userwindow(data,fill,func,varargin)
+function [data,win,ax]=userwindow(data,fill,func,varargin)
 %USERWINDOW    Interactively window SEIZMO records
 %
 %    Usage:    data=userwindow(data)
@@ -6,7 +6,7 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %              data=userwindow(data,fill,func)
 %              data=userwindow(data,fill,func,'field',value,...)
 %              [data,win]=userwindow(...)
-%              [data,win,fh]=userwindow(...)
+%              [data,win,ax]=userwindow(...)
 %
 %    Description: DATA=USERWINDOW(DATA) presents an interactive menu and
 %     plot to facilitate windowing a dataset with a few mouse clicks.  By
@@ -19,7 +19,7 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %     extend across the window.
 %
 %     DATA=USERWINDOW(DATA,FILL,FUNC) applies function FUNC to records in
-%     DATA after windowing and before the confirmation window.  FUNC must
+%     DATA after windowing and before the confirmation menu.  FUNC must
 %     be a function handle.  Some common function handles for this are
 %     @removemean and @removetrend.
 %
@@ -34,7 +34,7 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %     Note that the .limits field will be an empty array if no windowing is
 %     performed.
 %
-%     [DATA,WIN,FH]=USERWINDOW(...) returns the figure handles in FH.
+%     [DATA,WIN,AX]=USERWINDOW(...) returns the axes handle in AX.
 %
 %    Notes:
 %     - automatically switches start and end window limits if they are not
@@ -59,15 +59,15 @@ function [data,win,fh]=userwindow(data,fill,func,varargin)
 %        Mar. 18, 2010 - robust to menu/figure closing
 %        Mar. 23, 2010 - preserve last window limits
 %        Apr. 22, 2010 - replace crash with exit (but still crash)
+%        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2010 at 11:00 GMT
+%     Last Updated Aug. 26, 2010 at 11:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -85,6 +85,9 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror);
 end
 
 % attempt windowing
@@ -105,7 +108,7 @@ try
     win.fill=fill;
 
     % outer loop - only breaks free by user command
-    happy_user=false; fh=[-1 -1];
+    happy_user=false; ax=-1; reax={};
     while(~happy_user)
         % explain to the user how this works with a little prompt
         % and make them decide what kind of plot to use for the
@@ -226,11 +229,11 @@ try
                 % go back to main menu
                 continue;
             case 3 % overlay
-                fh(1)=plot2(data,varargin{:});
+                ax=plot2(data,varargin{:},reax{:});
             case 4 % evenly spaced
-                fh(1)=plot0(data,varargin{:});
+                ax=plot0(data,varargin{:},reax{:});
             case 5 % distance spaced
-                fh(1)=recordsection(data,varargin{:});
+                ax=recordsection(data,varargin{:},reax{:});
             case 6 % no window
                 win.limits=[];
                 return;
@@ -238,41 +241,46 @@ try
                 error('seizmo:userwindow:killYourSelf',...
                     'User demanded early exit!');
         end
+        
+        % use this axis
+        reax={'ax' ax};
 
         % add window limit markers
-        figure(fh(1));
-        span=ylim;
+        span=ylim(ax);
         if(isempty(win.limits)); win.limits=xlim; end
-        hold on
-        goh(1)=plot([win.limits(1) win.limits(1)],span,'g','linewidth',4);
-        goh(2)=plot([win.limits(2) win.limits(2)],span,'r','linewidth',4);
-        hold off
+        hold(ax,'on');
+        goh(1)=plot(ax,[win.limits(1) win.limits(1)],span,'g',...
+            'linewidth',4);
+        goh(2)=plot(ax,[win.limits(2) win.limits(2)],span,'r',...
+            'linewidth',4);
+        hold(ax,'off');
 
         % loop until user finalizes markers
         final=false;
         while(~final)
             % bring plot to focus (redraw if closed)
-            if(~ishandle(fh(1)))
+            if(~ishandle(ax))
                 % redraw (pretty rare to get here)
                 switch choice
                     case 3 % overlay
-                        fh(1)=plot2(data,varargin{:});
+                        ax=plot2(data,varargin{:});
                     case 4 % evenly spaced
-                        fh(1)=plot0(data,varargin{:});
+                        ax=plot0(data,varargin{:});
                     case 5 % distance spaced
-                        fh(1)=recordsection(data,varargin{:});
+                        ax=recordsection(data,varargin{:});
                 end
-                span=ylim;
-                win.width=xlim;
-                hold on
-                goh(1)=plot([win.width(1) win.width(1)],span,'g',...
+                reax={'ax' ax};
+                span=ylim(ax);
+                win.width=xlim(ax);
+                hold(ax,'on');
+                goh(1)=plot(ax,[win.width(1) win.width(1)],span,'g',...
                     'linewidth',4);
-                goh(2)=plot([win.width(2) win.width(2)],span,'r',...
+                goh(2)=plot(ax,[win.width(2) win.width(2)],span,'r',...
                     'linewidth',4);
-                hold off
+                hold(ax,'off');
             else
-                % bring figure to focus
-                figure(fh(1));
+                % bring axes to focus
+                axes(ax);
             end
             
             % get user click/key
@@ -314,11 +322,11 @@ try
         % proceed by user choice
         switch choice
             case 3 % overlay
-                fh(2)=plot2(data2,varargin{:});
+                ax=plot2(data2,varargin{:},reax{:});
             case 4 % evenly spaced
-                fh(2)=plot0(data2,varargin{:});
+                ax=plot0(data2,varargin{:},reax{:});
             case 5 % distance spaced
-                fh(2)=recordsection(data2,varargin{:});
+                ax=recordsection(data2,varargin{:},reax{:});
         end
 
         % confirm results
@@ -331,8 +339,12 @@ try
                     data=data2;
                     happy_user=true;
                 case 2 % never never quit!
-                    close(fh(ishandle(fh)));
-                    fh=[-1 -1];
+                    if(ishandle(ax))
+                        reax={'ax' ax};
+                    else
+                        reax={};
+                        ax=-1;
+                    end
                 case 3 % i bear too great a shame to go on
                     error('seizmo:userwindow:killYourSelf',...
                         'User demanded early exit!');
@@ -349,7 +361,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

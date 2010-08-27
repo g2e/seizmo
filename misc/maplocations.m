@@ -70,7 +70,7 @@ function [varargout]=maplocations(varargin)
 %
 %     MAPLOCATIONS(...,'PROJ',PROJ,...) defines the map projection.  See
 %     M_PROJ('SET') for possible projections.  The default PROJ is
-%     'Hammer-Aitoff'.
+%     'Robinson'.
 %
 %     MAPLOCATIONS(...,'PROJOPT',{'opt',val,...},...) passes additional
 %     options to M_PROJ (like the lat/lon boundaries of the map).  The
@@ -121,9 +121,11 @@ function [varargout]=maplocations(varargin)
 
 %     Version History:
 %        July 13, 2010 - initial version
+%        Aug. 27, 2010 - adapts to figure color if no color is given and an
+%                        axis is given, improved axis usage, Robinson proj
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 13, 2010 at 20:30 GMT
+%     Last Updated Aug. 27, 2010 at 20:30 GMT
 
 % todo:
 
@@ -138,7 +140,7 @@ global MAP_VAR_LIST
 
 % option defaults
 varargin=[{'st' [] 'sm' 'yo' 'ss' [] 'ev' [] 'em' 'rp' 'es' [] 'g' 'o' ...
-    'p' 'hammer' 'po' [] 'go' [] 'fg' [] 'bg' [] 's' [.3 .6 1] ...
+    'p' 'robinson' 'po' [] 'go' [] 'fg' [] 'bg' [] 's' [.3 .6 1] ...
     'l' [.4 .6 .2] 'b' [.5 0 0] 'a' []} varargin];
 
 % check options
@@ -309,7 +311,13 @@ end
 % fix fg/bg colors
 if(isempty(fg))
     if(isempty(bg))
-        fg='w'; bg='k';
+        if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
+                || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
+            fg='w'; bg='k';
+        else
+            bg=get(get(ax,'parent'),'color');
+            fg=invertcolor(bg,true);
+        end
     else
         fg=invertcolor(bg,true);
     end
@@ -328,8 +336,8 @@ if(ischar(border)); border=name2rgb(border); end
 if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
         || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
     % new figure
-    figure('color',bg);
-    ax=gca;
+    fh=figure('color',bg);
+    ax=axes('parent',fh);
 else
     axes(ax);
     h=get(ax,'children'); delete(h);
@@ -353,25 +361,24 @@ set(findobj(ax,'tag','m_grid_color'),'facecolor',sea);
 % wrap longitudes to plot
 while(any(abs(stlo-mean(MAP_VAR_LIST.longs))>180))
     stlo(stlo<MAP_VAR_LIST.longs(1))=...
-        stlo(stlo<MAP_VAR_LIST.longs(1))+360;
+        stlo(stlo<MAP_VAR_LIST.longs(1))+360; %#ok
     stlo(stlo>MAP_VAR_LIST.longs(2))=...
-        stlo(stlo>MAP_VAR_LIST.longs(2))-360;
+        stlo(stlo>MAP_VAR_LIST.longs(2))-360; %#ok
 end
 while(any(abs(evlo-mean(MAP_VAR_LIST.longs))>180))
     evlo(evlo<MAP_VAR_LIST.longs(1))=...
-        evlo(evlo<MAP_VAR_LIST.longs(1))+360;
+        evlo(evlo<MAP_VAR_LIST.longs(1))+360; %#ok
     evlo(evlo>MAP_VAR_LIST.longs(2))=...
-        evlo(evlo>MAP_VAR_LIST.longs(2))-360;
+        evlo(evlo>MAP_VAR_LIST.longs(2))-360; %#ok
 end
 
 % plot locations
-axes(ax);
-hold on
-h=m_scatter(evlo,evla,evs,evm,'filled','markeredgecolor','k');
+hold(ax,'on');
+h=m_scatter(ax,evlo,evla,evs,evm,'filled','markeredgecolor','k');
 set(h,'tag','events');
-h=m_scatter(stlo,stla,sts,stm,'filled','markeredgecolor','k');
+h=m_scatter(ax,stlo,stla,sts,stm,'filled','markeredgecolor','k');
 set(h,'tag','stations');
-hold off
+hold(ax,'off');
 
 % return figure handle
 set(ax,'tag','locationmap');

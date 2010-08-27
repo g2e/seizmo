@@ -57,7 +57,7 @@ function [info,xc,data0]=useralign(data,varargin)
 %      data=timeshift(data,-getarrival(data,'Pdiff'));
 %      [info,xc,data0]=useralign(data);
 %
-%     I usually like to get a SNR estimate of the waveforms to help the
+%     I usually like to give a SNR estimate of the waveforms to help the
 %     cross-correlation solution decide which waveforms are more reliable:
 %      data=timeshift(data,-getarrival(data,'Pdiff'));
 %      snr=quicksnr(data,[-100 -10],[-10 60]);
@@ -78,13 +78,13 @@ function [info,xc,data0]=useralign(data,varargin)
 %                        changed output (moved into info.solution)
 %        Apr. 22, 2010 - replace crash with exit (but still crash)
 %        Aug.  8, 2010 - doc update and slight code adjustments
+%        Aug. 27, 2010 - update for new plotting functions, all in one
+%                        figure
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 11:00 GMT
+%     Last Updated Aug. 27, 2010 at 11:00 GMT
 
 % todo:
-% - Honestly I would prefer this to be a single gui with a tabbed interface
-%   but I don't have any experience with making them yet.
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -107,7 +107,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % attempt align
@@ -172,15 +172,24 @@ try
     
     % outer loop - only breaks free on user command
     happy_user=false; info.iteration=1;
+    fh=figure('color','k');
+    ax=makesubplots(2,3,1:5,...
+        'parent',fh,'visible','off');
     while(~happy_user)
         % usermoveout
-        [data0,info.usermoveout,info.figurehandles(1)]=usermoveout(data0);
+        set(ax(1),'visible','on');
+        [data0,info.usermoveout,info.handles(1)]=usermoveout(data0,...
+            'ax',ax(1));
 
         % userwindow
-        [data0,info.userwindow,info.figurehandles(2:3)]=userwindow(data0);
+        set(ax(2),'visible','on');
+        [data0,info.userwindow,info.handles(2)]=userwindow(data0,...
+            [],[],'ax',ax(2));
 
         % usertaper
-        [data0,info.usertaper,info.figurehandles(4:5)]=usertaper(data0);
+        set(ax(3),'visible','on');
+        [data0,info.usertaper,info.handles(3)]=usertaper(data0,...
+            [],'ax',ax(3));
 
         % menu for correlate options
         while(1)
@@ -278,12 +287,14 @@ try
         
         % allow picking the stack to deal with dc-shift from onset
         [b,e,delta]=getheader(data0,'b','e','delta');
-        [onset,info.figurehandles(6)]=pickstack(normalize(data0),...
+        set(ax(4),'visible','on');
+        [onset,info.handles(4)]=pickstack(ax(4),normalize(data0),...
             2/min(delta),[],min(b),max(e),0);
 
         % plot alignment
         data0=timeshift(data0,-onset);
-        info.figurehandles(7)=recordsection(data0);
+        set(ax(5),'visible','on');
+        info.handles(5)=recordsection(data0,'ax',ax(5));
         
         % origin time gives absolute time position
         arr=-getheader(data0,'o');
@@ -302,13 +313,15 @@ try
                     happy_user=true;
                 case 2 % never never quit!
                     data0=data;
-                    close(info.figurehandles(...
-                        ishandle(info.figurehandles)));
+                    fh=get(info.handles(ishandle(info.handles)),'parent');
+                    if(iscell(fh)); fh=cell2mat(fh); end
+                    close(fh);
                 case 3 % standing on the shoulders of those before me
                     info.iteration=info.iteration+1;
                     data0=timeshift(data,-o-arr);
-                    close(info.figurehandles(...
-                        ishandle(info.figurehandles)));
+                    fh=get(info.handles(ishandle(info.handles)),'parent');
+                    if(iscell(fh)); fh=cell2mat(fh); end
+                    close(fh);
                 case 4 % i bear too great a shame to go on
                     error('seizmo:useralign:killYourSelf',...
                         'User demanded early exit!');
@@ -333,7 +346,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

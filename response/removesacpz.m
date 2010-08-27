@@ -101,9 +101,10 @@ function [data,pz]=removesacpz(data,varargin)
 %                        afterwards, no longer use strmatch for options
 %        Aug. 20, 2010 - taperopt/tapertype options added, better
 %                        checkheader usage
+%        Aug. 25, 2010 - drop SEIZMO global, fix taper option bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 20, 2010 at 20:30 GMT
+%     Last Updated Aug. 25, 2010 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -112,9 +113,6 @@ function [data,pz]=removesacpz(data,varargin)
 
 % check nargin
 error(nargchk(1,inf,nargin));
-
-% import SEIZMO info
-global SEIZMO
 
 % check data structure
 versioninfo(data,'dep');
@@ -136,7 +134,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % attempt rest
@@ -208,13 +206,6 @@ try
         'iabserk' 'iabsnap' 'iabsnap' 'iabsackl' 'iabsackl' 'iabspop' ...
         'iabspop' 'iunkn' 'iunkn' 'iunkn' 'iunkn' 'ivolts' 'ivolts' ...
         'icounts' 'icounts'};
-    
-    % get options from SEIZMO global
-    ME=upper(mfilename);
-    try
-        varargin=[SEIZMO.(ME) varargin];
-    catch
-    end
     
     % default options
     flimbu=[-1*ones(nrecs,2) 2*nyq(:,[1 1])];
@@ -297,6 +288,7 @@ try
                 ttype=value;
                 if(isscalar(ttype)); ttype(1:nrecs,1)=ttype; end
             case {'taperoption' 'o' 'to' 'topt'}
+                if(isempty(value)); topt=cell(nrecs,1); continue; end
                 if(~isreal(value) || ~any(numel(value)==[1 nrecs]))
                     error('seizmo:removesacpz:badInput',...
                         'TAPEROPT must be a real-valued scalar or array!');
@@ -411,7 +403,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

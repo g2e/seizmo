@@ -1,10 +1,10 @@
-function [data,rai,fh]=userraise(data,varargin)
+function [data,rai,ax]=userraise(data,varargin)
 %USERRAISE    Interactively scale SEIZMO records by a power
 %
 %    Usage:    data=userraise(data)
 %              data=userraise(data,'field1',value1,...,'fieldN',valueN)
 %              [data,ray]=userraise(...)
-%              [data,ray,fh]=userraise(...)
+%              [data,ray,ax]=userraise(...)
 %
 %    Description: DATA=USERRAISE(DATA) presents an interactive menu and
 %     record section plot (arranged by degree distance) to facilitate
@@ -22,8 +22,8 @@ function [data,rai,fh]=userraise(data,varargin)
 %     fields:
 %      RAI.power  --  power applied to data
 %
-%     [DATA,RAI,FH]=USERRAISE(...) returns the record section's figure
-%      handle in FH.
+%     [DATA,RAI,AX]=USERRAISE(...) returns the record section's axes
+%      handle in AX.
 %
 %    Notes:
 %
@@ -41,15 +41,15 @@ function [data,rai,fh]=userraise(data,varargin)
 %     Version History:
 %        Mar. 16, 2010 - initial version
 %        Mar. 18, 2010 - made robust to menu closing
+%        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2010 at 10:25 GMT
+%     Last Updated Aug. 26, 2010 at 10:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -67,31 +67,40 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror);
 end
 
 % attempt scaling
 try
     % default power
     rai.power=1;
+    rai.plottype=@plot0;
     
     % outer loop - only breaks free on user command
-    happy_user=false;
+    happy_user=false; ax=-1; reax={};
     while(~happy_user)
         % plot records
-        fh=recordsection(raise(data,rai.power),varargin{:});
+        ax=rai.plottype(raise(data,rai.power),varargin{:},reax{:});
         
         % get choice from user
         pstr=num2str(rai.power);
         choice=menu(...
             ['Alter Power-law Scaling of Data (Currently Power=' ...
-            pstr ')?'],'YES','NO');
+            pstr ')?'],'YES','NO',...
+            ['SELECT PLOT TYPE (' upper(func2str(rai.plottype)) ')']);
         
         % act on choice
         switch choice
-            case 0
-                % close old figure
-                close(fh(ishandle(fh)));
-            case 1
+            case 0 % MENU WAS CLOSED
+                % handle disappearing axes
+                if(ishandle(ax))
+                    reax={'ax' ax};
+                else
+                    reax={};
+                end
+            case 1 % YES
                 % ask user for a particular value
                 choice=menu('Scale data by what power?',...
                     ['CURRENT (' pstr ')'],...
@@ -130,10 +139,38 @@ try
                         end
                 end
 
-                % close old figure
-                close(fh(ishandle(fh)));
-            case 2
+                % handle disappearing axes
+                if(ishandle(ax))
+                    reax={'ax' ax};
+                else
+                    reax={};
+                end
+            case 2 % NO
                 happy_user=true;
+            case 3 % PLOT TYPE
+                % at some point we should allow custom
+                choice=menu('SELECT PLOT TYPE',...
+                    ['CURRENT (' upper(func2str(rai.plottype)) ')'],...
+                    'OVERLAY PLOT (PLOT2)',...
+                    'EVENLY SPACED PLOT (PLOT0)',...
+                    'DISTANCE SPACED PLOT (RECORDSECTION)');
+                
+                % set plot type
+                switch choice
+                    case 2
+                        rai.plottype=@plot2;
+                    case 3
+                        rai.plottype=@plot0;
+                    case 4
+                        rai.plottype=@recordsection;
+                end
+                
+                % handle disappearing axes
+                if(ishandle(ax))
+                    reax={'ax' ax};
+                else
+                    reax={};
+                end
         end
     end
     

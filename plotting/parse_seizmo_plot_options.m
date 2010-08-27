@@ -38,8 +38,8 @@ switch pf
             'namesonyaxis' false  'fontsize' 6 ...
             'normstyle' 'group' 'normmax' 1/3 'norm2yaxis' true ...
             'xdir' 'normal' 'ydir' 'reverse' 'xscale' 'linear' ...
-            'yscale' 'linear' 'ampscale' 'linear' 'clustercutoff' 0.2 ...
-            'othercolor' [.5 .5 .5] 'clustercutoffcolor' 'r'} varargin];
+            'yscale' 'linear' 'ampscale' 'linear' 'cutoff' 0.2 ...
+            'othercolor' [.5 .5 .5] 'cutoffcolor' 'r'} varargin];
     case {'pspec0' 'plotspectra0'}
         varargin=[{'fg' [] 'bg' [] 'unwrap' false 'cmp' 'a'} varargin];
     case {'pspec1' 'plotspectra1'}
@@ -138,10 +138,10 @@ for i=1:2:np
             opt.SPECTRALCMP=val;
         case {'unwrap' 'unwrapphase'}
             opt.UNWRAP=val;
-        case {'clucut' 'clustercutoff'}
-            opt.CLUSTERCUTOFF=val;
-        case {'clucutcolor' 'clustercutoffcolor'}
-            opt.CLUSTERCUTOFFCOLOR=val;
+        case {'clucut' 'clustercutoff' 'cutoff'}
+            opt.CUTOFF=val;
+        case {'clucutcolor' 'clustercutoffcolor' 'cutoffcolor'}
+            opt.CUTOFFCOLOR=val;
         case {'othercolor'}
             opt.OTHERCOLOR=val;
         otherwise

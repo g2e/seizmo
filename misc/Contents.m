@@ -35,6 +35,7 @@
 %MAT2VEC              - Converts matrices to column vectors
 %MATCHSORT            - Replicates a sort operation using the returned permutation indices
 %MCXC                 - Multi-channel cross correlation with built-in peak picker
+%MOVEKIDS             - Moves the specified children plot objects
 %NAME2RGB             - Converts short/long color names to RGB triplets
 %NANVARIANCE          - Return variance excluding NaNs
 %NATIVEBYTEORDER      - Returns native endianness of present platform

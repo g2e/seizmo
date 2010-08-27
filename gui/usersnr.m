@@ -1,4 +1,4 @@
-function [snr,s,fh]=usersnr(data,nwin,swin,method,varargin)
+function [snr,s,ax]=usersnr(data,nwin,swin,method,varargin)
 %USERSNR    Interactively select windows for SNR estimation
 %
 %    Usage:    snr=usersnr(data)
@@ -6,7 +6,7 @@ function [snr,s,fh]=usersnr(data,nwin,swin,method,varargin)
 %              usersnr(data,noisewin,signalwin,method)
 %              usersnr(data,noisewin,signalwin,method,'field',value,...)
 %              [snr,s]=usersnr(...)
-%              [snr,s,fh]=usersnr(...)
+%              [snr,s,ax]=usersnr(...)
 %
 %    Description: SNR=USERSNR(DATA) presents an interactive menu and plot
 %     to facilitate the signal-to-noise ratio estimation of records in
@@ -39,29 +39,29 @@ function [snr,s,fh]=usersnr(data,nwin,swin,method,varargin)
 %      S.method     --  SNR estimation method
 %      S.plottype   --  function handle of plotting function
 %
-%     [SNR,S,FH]=USERSNR(...) returns the figure handle, FH, of the plot.
+%     [SNR,S,AX]=USERSNR(...) returns the axes handle, AX, of the plot.
 %
 %    Notes:
 %
 %    Examples:
 %     Specify the default window limits and method and let the user modify
 %     them if they desire:
-%      [snr,s,fh]=usersnr(data,[-90 -15],[-15 60],'robustrms');
+%      [snr,s,ax]=usersnr(data,[-90 -15],[-15 60],'robustrms');
 %
 %    See also: QUICKSNR, USERWINDOW, CUT
 
 %     Version History:
 %        Mar. 18, 2010 - initial version
 %        Apr. 21, 2010 - set plot name & add additional methods
+%        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 21, 2010 at 10:00 GMT
+%     Last Updated Aug. 26, 2010 at 10:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -79,6 +79,9 @@ try
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % rethrow error
+    error(lasterror);
 end
 
 % attempt snr
@@ -117,7 +120,7 @@ try
     s.plottype=@plot0;
     
     % loop until user is satisfied
-    happy_user=false; fh=-1;
+    happy_user=false; ax=-1; reax={};
     while(~happy_user)
         % create prompt to explain to the user how window selection works
         % This prompt looks like trash because of default menu fonts.
@@ -169,7 +172,7 @@ try
         end
         
         % plot only if new plot type or no plot
-        if(~ishandle(fh))
+        if(~ishandle(ax))
             % make title
             ptitle={['SNR Estimation Method: ' upper(s.method)]
                 'Yellow Dashed Line --  Noise Window Start'
@@ -178,19 +181,26 @@ try
                 '    Red Solid Line -- Signal Window End  '};
             
             % plot records
-            name='USERSNR - INTERACTIVE SNR ESTIMATION';
-            fh=s.plottype(data,'name',name,'title',ptitle,varargin{:});
+            ax=s.plottype(data,'title',ptitle,...
+                varargin{:},reax{:});
+            
+            % use this axis
+            reax={'ax' ax};
             
             % add window limit markers
             % - yellow/blue dashed == noise window
             % - red/green == signal window
-            span=ylim;
-            hold on
-            gh(1)=plot([s.noisewin(1) s.noisewin(1)],span,'--y','linewidth',4);
-            gh(2)=plot([s.noisewin(2) s.noisewin(2)],span,'--b','linewidth',4);
-            gh(3)=plot([s.signalwin(1) s.signalwin(1)],span,'g','linewidth',4);
-            gh(4)=plot([s.signalwin(2) s.signalwin(2)],span,'r','linewidth',4);
-            hold off
+            span=ylim(ax);
+            hold(ax,'on');
+            gh(1)=plot(ax,[s.noisewin(1) s.noisewin(1)],span,'--y',...
+                'linewidth',4);
+            gh(2)=plot(ax,[s.noisewin(2) s.noisewin(2)],span,'--b',...
+                'linewidth',4);
+            gh(3)=plot(ax,[s.signalwin(1) s.signalwin(1)],span,'g',...
+                'linewidth',4);
+            gh(4)=plot(ax,[s.signalwin(2) s.signalwin(2)],span,'r',...
+                'linewidth',4);
+            hold(ax,'off');
         end
         
         % get user choice
@@ -216,7 +226,7 @@ try
                 end
                 
                 % update title
-                if(ishandle(fh))
+                if(ishandle(ax))
                     % make title
                     ptitle={['SNR Estimation Method: ' upper(s.method)]
                         'Yellow Dashed Line --  Noise Window Start'
@@ -225,31 +235,31 @@ try
                         '    Red Solid Line -- Signal Window End  '};
                     
                     % update title
-                    figure(fh);
-                    set(get(gca,'Title'),'string',ptitle);
+                    set(get(ax,'Title'),'string',ptitle);
                 end
             case 2 % change noise window
                 % loop until user finalizes markers
                 final=false;
                 while(~final)
                     % bring plot to focus (redraw if closed)
-                    if(~ishandle(fh))
+                    if(~ishandle(ax))
                         % redraw (pretty rare to get here)
-                        fh=s.plottype(data,'title',ptitle,varargin{:});
+                        ax=s.plottype(data,'title',ptitle,varargin{:});
+                        reax={'ax' ax};
 
                         % add window limit markers
                         % - yellow/blue dashed == noise window
                         % - red/green == signal window
-                        span=ylim;
-                        hold on
-                        gh(1)=plot([s.noisewin(1) s.noisewin(1)],span,'--y','linewidth',4);
-                        gh(2)=plot([s.noisewin(2) s.noisewin(2)],span,'--b','linewidth',4);
-                        gh(3)=plot([s.signalwin(1) s.signalwin(1)],span,'g','linewidth',4);
-                        gh(4)=plot([s.signalwin(2) s.signalwin(2)],span,'r','linewidth',4);
-                        hold off
+                        span=ylim(ax);
+                        hold(ax,'on');
+                        gh(1)=plot(ax,[s.noisewin(1) s.noisewin(1)],span,'--y','linewidth',4);
+                        gh(2)=plot(ax,[s.noisewin(2) s.noisewin(2)],span,'--b','linewidth',4);
+                        gh(3)=plot(ax,[s.signalwin(1) s.signalwin(1)],span,'g','linewidth',4);
+                        gh(4)=plot(ax,[s.signalwin(2) s.signalwin(2)],span,'r','linewidth',4);
+                        hold(ax,'off');
                     else
                         % bring figure to focus
-                        figure(fh);
+                        axes(ax);
                     end
 
                     % get user click/key
@@ -286,23 +296,24 @@ try
                 final=false;
                 while(~final)
                     % bring plot to focus (redraw if closed)
-                    if(~ishandle(fh))
+                    if(~ishandle(ax))
                         % redraw (pretty rare to get here)
-                        fh=s.plottype(data,'title',ptitle,varargin{:});
+                        ax=s.plottype(data,'title',ptitle,varargin{:});
+                        reax={'ax' ax};
 
                         % add window limit markers
                         % - yellow/blue dashed == noise window
                         % - red/green == signal window
-                        span=ylim;
-                        hold on
-                        gh(1)=plot([s.noisewin(1) s.noisewin(1)],span,'--y','linewidth',4);
-                        gh(2)=plot([s.noisewin(2) s.noisewin(2)],span,'--b','linewidth',4);
-                        gh(3)=plot([s.signalwin(1) s.signalwin(1)],span,'g','linewidth',4);
-                        gh(4)=plot([s.signalwin(2) s.signalwin(2)],span,'r','linewidth',4);
-                        hold off
+                        span=ylim(ax);
+                        hold(ax,'on');
+                        gh(1)=plot(ax,[s.noisewin(1) s.noisewin(1)],span,'--y','linewidth',4);
+                        gh(2)=plot(ax,[s.noisewin(2) s.noisewin(2)],span,'--b','linewidth',4);
+                        gh(3)=plot(ax,[s.signalwin(1) s.signalwin(1)],span,'g','linewidth',4);
+                        gh(4)=plot(ax,[s.signalwin(2) s.signalwin(2)],span,'r','linewidth',4);
+                        hold(ax,'off');
                     else
                         % bring figure to focus
-                        figure(fh);
+                        axes(ax);
                     end
 
                     % get user click/key
@@ -352,8 +363,13 @@ try
                         s.plottype=@recordsection;
                 end
                 
-                % close plot
-                close(fh(ishandle(fh)));
+                % handle disappearing axes
+                if(ishandle(ax))
+                    reax={'ax' ax};
+                else
+                    reax={};
+                    ax=-1;
+                end
             case 5 % get snr
                 happy_user=true;
             case 6 % immediate death
@@ -374,7 +390,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

@@ -1,20 +1,20 @@
-function [data,selected,h]=selectrecords(data,varargin)
+function [data,selected,ax]=selectrecords(data,opt,type,selected,varargin)
 %SELECTRECORDS    Select or delete SEIZMO data records graphically
 %
-%    Usage:    [data,selected,h]=selectrecords(data)
+%    Usage:    [data,selected,ax]=selectrecords(data)
 %              data=selectrecords(data,option)
 %              data=selectrecords(data,option,type)
 %              data=selectrecords(data,option,type,selected)
 %              data=selectrecords(data,option,type,selected,plotoptions)
 %
-%    Description: [DATA,SELECTED,H]=SELECTRECORDS(DATA) returns the records
+%    Description: [DATA,SELECTED,AX]=SELECTRECORDS(DATA) returns records
 %     in SEIZMO data structure DATA that are graphically selected by the
 %     user.  By default the plottype is PLOT1 and no records are
 %     preselected.  Selection/unselection of records is performed by left-
 %     clicking over a record.  Complete dataset selection by middle-
 %     clicking over the plot or closing the figure.  Optional additional
 %     outputs are the logical array SELECTED which indicates the records
-%     that were selected and the plot handle H.
+%     that were selected and AX gives the plot handle(s).
 %
 %     SELECTRECORDS(DATA,OPTION) sets whether selected records from DATA
 %     are kept or deleted.  OPTION must be either 'keep' or 'delete'.  When
@@ -60,9 +60,11 @@ function [data,selected,h]=selectrecords(data,varargin)
 %        June 25, 2009 - minor doc fixes, allow numeric array for selected
 %        Sep. 16, 2009 - fix for getting bgcolor for single record
 %        Oct.  6, 2009 - dropped use of LOGICAL function
+%        Aug. 26, 2010 - no SEIZMO global, use movekids over uistack for
+%                        Octave, update for new plotting routines
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2009 at 20:50 GMTs
+%     Last Updated Aug. 26, 2010 at 20:50 GMTs
 
 % todo:
 
@@ -76,109 +78,68 @@ elseif(nargin>4 && mod(nargin,2))
 end
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+versioninfo(data,'dep');
 
 % number of records
 nrecs=numel(data);
 
 % valid values for options
-valid.OPERATION={'keep' 'delete'};
+valid.OPT={'keep' 'delete'};
 valid.TYPE={'plot0' 'plot1' 'p0' 'p1'};
 
-% defaults
-option.OPERATION='keep';
-option.TYPE='plot1';
-option.SELECTED=false;
-option.DELETECOLOR=[0.3 0 0];
-option.KEEPCOLOR=[0 0.3 0];
+% default inputs
+if(nargin<2 || isempty(opt)); opt='keep'; end
+if(nargin<3 || isempty(type)); type='plot1'; end
+if(nargin<4 || isempty(selected)); selected=false; end
 
-% get options from SEIZMO global
-global SEIZMO
-try
-    fields=fieldnames(SEIZMO.SELECTRECORDS);
-    for i=1:numel(fields)
-        if(~isempty(SEIZMO.SELECTRECORDS.(fields{i})))
-            option.(fields{i})=SEIZMO.SELECTRECORDS.(fields{i});
-        end
-    end
-catch
+% check inputs
+if(~ischar(opt) || size(opt,1)~=1 || ndims(opt)~=2 ...
+        || isempty(strmatch(lower(opt),valid.OPT)))
+    error('seizmo:selectrecords:badInput',...
+        ['OPT must be one of the following strings:\n' ...
+        sprintf('''%s'' ',valid.OPT{:})]);
+elseif(~ischar(type) || size(type,1)~=1 || ndims(type)~=2 ...
+        || ~any(strcmpi(type,valid.TYPE)))
+    error('seizmo:selectrecords:badInput',...
+        ['TYPE must be one of the following strings:\n' ...
+        sprintf('''%s'' ',valid.TYPE{:})]);
+elseif((isnumeric(selected) && (any(selected~=fix(selected)) ...
+        || any(selected<1 | selected>nrecs))) || (islogical(selected) ...
+        && ~any(numel(selected)~=[1 nrecs])))
+    error('seizmo:selectrecords:badInput',...
+        'SELECTED must be TRUE, FALSE, logical array or linear indices!');
 end
 
-% get options from command line
-for i=1:min([3 numel(varargin)])
-    if(~isempty(varargin{i}))
-        switch i
-            case 1
-                option.OPERATION=varargin{i};
-            case 2
-                option.TYPE=varargin{i};
-            case 3
-                option.SELECTED=varargin{i};
-        end
-    end
-end
-varargin(1:min([3 numel(varargin)]))=[];
-
-% check options
-fields=fieldnames(option);
-for i=1:numel(fields)
-    % specific checks
-    switch lower(fields{i})
-        case {'operation' 'type'}
-            if(~ischar(option.(fields{i})) || ...
-                    size(option.(fields{i}),1)~=1 || ...
-                    ~any(strcmpi(option.(fields{i}),valid.(fields{i}))))
-                error('seizmo:selectrecords:badInput',...
-                    ['%s option must be one of the following:\n'...
-                    sprintf('%s ',valid.(fields{i}){:})],fields{i});
-            end
-        case 'selected'
-            if(isnumeric(option.SELECTED))
-                if(option.SELECTED>0 && option.SELECTED<=nrecs)
-                    temp=option.SELECTED;
-                    option.SELECTED=false(nrecs,1);
-                    option.SELECTED(temp)=true;
-                else
-                    option.SELECTED=option.SELECTED~=0;
-                end
-            end
-            if(~islogical(option.SELECTED) || ...
-                    ~any(numel(option.SELECTED)==[1 nrecs]))
-                error('seizmo:selectrecords:badInput',...
-                    ['SELECTED option must be a logical scalar or a\n' ...
-                    'logical array with one element per record!']);
-            end
-            if(isscalar(option.SELECTED))
-                option.SELECTED=option.SELECTED(ones(nrecs,1),1);
-            end
-        case {'keepcolor' 'deletecolor'}
-            % let plot routines handle this
-    end
+% fix selected
+if(islogical(selected) && isscalar(selected))
+    selected(1:nrecs,1)=selected;
+elseif(isnumeric(selected))
+    lidx=selected;
+    selected=false(nrecs,1);
+    selected(lidx)=true;
 end
 
 % set color
-if(strcmpi(option.OPERATION,'keep'))
-    color=option.KEEPCOLOR;
-else
-    color=option.DELETECOLOR;
+keep=~isempty(strmatch(opt,'keep'));
+if(keep)
+    color=[0 .3 0];
+else % delete
+    color=[.3 0 0];
 end
 
 % proceed by plot type
 button=0; handles=ones(nrecs,1)*-1;
-selected=option.SELECTED;
-switch option.TYPE
+switch lower(type)
     case {'plot0' 'p0'}
-        h=plot0(data,varargin{:});
-        handle=gca;
+        ax=plot0(data,varargin{:});
         
         % patch under all
-        xlims=xlim(handle);
+        xlims=xlim(ax);
         for i=1:nrecs
             handles(i)=patch([xlims(ones(1,2)) xlims(2*ones(1,2))],...
-                [i+0.5 i-0.5 i-0.5 i+0.5],color);
-            uistack(handles(i),'bottom');
+                [i+0.5 i-0.5 i-0.5 i+0.5],color,'parent',ax);
         end
+        movekids(handles,'back');
         set(handles(~selected),'visible','off')
         
         while(button~=2)
@@ -186,10 +147,10 @@ switch option.TYPE
             try
                 [x,y,button]=ginput(1);
             catch
-                h=[];
+                ax=-1;
                 button=2;
             end
-            if(button==1 && isequal(handle,gca))
+            if(button==1)
                 % figure out which record from y position
                 clicked=round(y);
                 
@@ -209,21 +170,21 @@ switch option.TYPE
         end
     case {'plot1' 'p1'}
         % plot type 1
-        [h,sh]=plot1(data,varargin{:});
+        ax=plot1(data,varargin{:});
         
         % color preselected
-        bgcolors=get(sh,'color');
+        bgcolors=get(ax,'color');
         if(iscell(bgcolors))
             bgcolors=cell2mat(bgcolors);
         end
-        set(sh(selected),'color',color);
+        set(ax(selected),'color',color);
         
         while(button~=2)
             % get mouse button pressed
             try
                 [x,y,button]=ginput(1);
             catch
-                h=[];
+                ax=-1;
                 button=2;
             end
             if(button==1)
@@ -231,7 +192,8 @@ switch option.TYPE
                 handle=gca;
                 
                 % figure out which record
-                clicked=find(handle==sh,1);
+                clicked=find(handle==ax,1);
+                if(isempty(clicked)); continue; end
                 
                 % remove from list if in list and change color
                 if(selected(clicked))
@@ -247,9 +209,9 @@ switch option.TYPE
 end
 
 % handle data
-if(strcmpi(option.OPERATION,'keep'))
+if(keep)
     data=data(selected);
-else
+else % delete
     data(selected)=[];
 end
 
