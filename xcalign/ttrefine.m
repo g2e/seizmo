@@ -76,15 +76,15 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %        Mar. 14, 2010 - fixed bug in forced polarity code
 %        Mar. 22, 2010 - account for ttalign change, use abs rather than
 %                        sqrt the square
+%        Sep. 13, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 22, 2010 at 23:45 GMT
+%     Last Updated Sep. 13, 2010 at 01:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(7,10,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(7,10,nargin));
 
 % defaults
 if(nargin<7 || isempty(wg)); wg=1; end

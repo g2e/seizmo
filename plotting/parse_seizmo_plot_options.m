@@ -9,11 +9,16 @@ function [opt]=parse_seizmo_plot_options(varargin)
 % defaults
 pf=star69;
 switch pf
+    case {'drawmarkers' 'dm'}
+        varargin=[{'m' true 'mac' 'g' 'mfc' 'r' 'moc' [1 .5 0] ...
+            'mtc' 'y' 'mha' 'left' 'mva' 'top' 'mlw' 1 'mfs' 6 ...
+            'mfw' 'normal' 'mfn' 'helvetica' 'mh' 50 'fm' 100 ...
+            'fg' [] 'bg' []} varargin];
     case {'p0' 'plot0'}
         varargin=[{'fg' [] 'bg' [] 'ax' [] 'cmap' 'hsv' 'xlabel' [] ...
             'ylabel' [] 'title' [] 'xlim' [] 'ylim' [] 'linewidth' 1 ...
             'linestyle' '-' 'abs' false 'dateformat' [] ...
-            'namesonyaxis' false  'fontsize' 6 ...
+            'namesonyaxis' false  'fontsize' 6  'markers' false ...
             'normstyle' 'group' 'normmax' 1/3 'norm2yaxis' true ...
             'xdir' 'normal' 'ydir' 'reverse' 'xscale' 'linear' ...
             'yscale' 'linear' 'ampscale' 'linear'} varargin];
@@ -22,7 +27,7 @@ switch pf
             'ylabel' [] 'title' [] 'xlim' [] 'ylim' [] 'linewidth' 1 ...
             'linestyle' '-' 'ncols' [] 'abs' false 'dateformat' [] ...
             'xdir' 'normal' 'ydir' 'normal' 'fontsize' 6 'align' false ...
-            'xscale' 'linear' 'yscale' 'linear'} ...
+            'xscale' 'linear' 'yscale' 'linear' 'markers' false} ...
             varargin];
     case {'p2' 'plot2'}
         varargin=[{'fg' [] 'bg' [] 'ax' [] 'cmap' 'hsv' 'xlabel' [] ...
@@ -53,7 +58,8 @@ switch pf
             'namesonyaxis' false  'fontsize' 6 'yfield' 'gcarc' ...
             'normstyle' 'group' 'normmax' 1/3 'norm2yaxis' true ...
             'xdir' 'normal' 'ydir' 'normal' 'xscale' 'linear' ...
-            'yscale' 'linear' 'ampscale' 'linear'} varargin];
+            'yscale' 'linear' 'ampscale' 'linear' 'markers' false} ...
+            varargin];
     case {'specsec' 'spectrasection'}
         varargin=[{'fg' [] 'bg' [] 'unwrap' false 'cmp' 'a'} varargin];
     otherwise
@@ -144,6 +150,32 @@ for i=1:2:np
             opt.CUTOFFCOLOR=val;
         case {'othercolor'}
             opt.OTHERCOLOR=val;
+        case {'markers' 'showmarkers' 'drawmarkers' 'm'}
+            opt.MARKERS=val;
+        case {'markeracolor' 'mac'}
+            opt.MARKERACOLOR=val;
+        case {'markerfcolor' 'mfc'}
+            opt.MARKERFCOLOR=val;
+        case {'markerocolor' 'moc'}
+            opt.MARKEROCOLOR=val;
+        case {'markertcolor' 'mtc'}
+            opt.MARKERTCOLOR=val;
+        case {'markerhorzalign' 'mha'}
+            opt.MARKERHORZALIGN=val;
+        case {'markervertalign' 'mva'}
+            opt.MARKERVERTALIGN=val;
+        case {'markerlinewidth' 'mlw'}
+            opt.MARKERLINEWIDTH=val;
+        case {'markerfontsize' 'mfs'}
+            opt.MARKERFONTSIZE=val;
+        case {'markerfontweight' 'mfw'}
+            opt.MARKERFONTWEIGHT=val;
+        case {'markerfontname' 'mfn'}
+            opt.MARKERFONTNAME=val;
+        case {'markerheight' 'mh'}
+            opt.MARKERHEIGHT=val;
+        case {'flagmast' 'mastflags' 'fm' 'mf'}
+            opt.FLAGMAST=val;
         otherwise
             error('seizmo:parse_seizmo_plot_options:badInput',...
                 'Unknown Option: %s !',varargin{i});

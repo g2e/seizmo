@@ -9,10 +9,16 @@ function [pol,def]=ttpolar(pg)
 %                           PG=(POL*POL').*DEFECTS
 %     where PG is an NxN matrix, POL is an Nx1 column vector, and DEFECTS
 %     is an NxN matrix.  All contain only 1s and -1s.  DEFECTS indicates
-%     the relative polarities in PG that are not matched by POL.
+%     the relative polarities in PG that are not matched by POL.  The
+%     solution is the polarities that minimize the number of defects.
 %
 %    Notes:
-%     - solved as an eigenvalue/eigenvector problem
+%     - The problem is posed as an eigenvalue/eigenvector case.  We
+%       seek a vector POL that produces a rank 1 matrix POL*POL' that is
+%       minimally different from the relative polarity matrix PG.  The
+%       eigenvector of PG with the highest eigenvalue is the most
+%       significant component of PG and it's signs may be used as a
+%       solution for POL.
 %
 %    Examples:
 %     Correlate records, solve for alignment & polarities, plot results:
@@ -28,23 +34,24 @@ function [pol,def]=ttpolar(pg)
 
 %     Version History:
 %        Mar. 11, 2010 - initial version (from clean_polarities)
+%        Sep. 13, 2010 - doc update, highest abs eigenvalue, nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2010 at 11:10 GMT
+%     Last Updated Sep. 13, 2010 at 11:10 GMT
 
 % todo:
-% - it would really be nice if this was a weighted inversion
+% - it would really be nice if this was a weighted inversion, then it could
+%   done in conjunction with the arrival determination
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check input
 pg=v2m(pg,'PG');
 
-% get signs of eigenvector with largest eignevalue
+% get signs of eigenvector with largest eigenvalue
 [v,d]=eig(pg);
-[d,idx]=max(diag(d));
+[d,idx]=max(abs(diag(d)));
 pol=sign(v(:,idx));
 
 % return defect if necessary

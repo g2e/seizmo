@@ -30,9 +30,10 @@ function [varargout]=movekids(kids,move)
 
 %     Version History:
 %        Aug. 26, 2010 - initial version
+%        Sep. 14, 2010 - handle arrays of handles better
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2010 at 20:50 GMTs
+%     Last Updated Sep. 14, 2010 at 20:50 GMTs
 
 % todo:
 
@@ -44,12 +45,12 @@ if(nargin<2 || isempty(move)); move='top'; end
 %if(nargin<3 || isempty(dist)); dist=0; end
 
 % check kids (are handles, same parent)
+kids=kids(:); % force as column vector
 if(~isreal(kids) || any(~ishandle(kids)) ...
         || ~isscalar(unique(cell2mat(get(kids,'parent')))))
      error('seizmo:movekids:kidsOver12',...
          'Some of your kids are not!');
 end
-kids=kids(:);
 
 % check move/dist
 if(~ischar(move) || ndims(move)~=2 || size(move,1)~=1)

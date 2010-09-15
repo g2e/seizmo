@@ -49,15 +49,15 @@ function [m,covm] = wlinem(dd,tt,power,covd,We)
 %        Sep.  9, 2009 - minor doc fix, fix weighting matrix checks
 %        Oct. 13, 2009 - minor doc update, add power option
 %        Mar.  2, 2010 - minor doc update
+%        Sep. 13, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  2, 2010 at 00:40 GMT
+%     Last Updated Sep. 13, 2010 at 18:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,5,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,5,nargin));
 
 % default power, covd, We
 ndd=numel(dd);

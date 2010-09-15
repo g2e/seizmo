@@ -1,9 +1,10 @@
 % Seismology Toolbox - noise
-% Version 0.6.0-r155 Everest 30-July-2010
+% Version 0.6.0-r165 Fuji 15-Sept-2010
 %
 % Ambient noise analysis functions
 %ARRAY_STATION_NAMES       - Returns station names for an array
 %AZISWEEP                  - Sliding azimuthal window record section of correlograms
+%AZIWINDOW                 - Azimuthal window record section of correlograms
 %DAYDIRS_AMPSPECTRA        - Stacks amplitude spectra of day directories
 %DAYDIRS_CORRELATE         - Correlates records in day directories
 %DAYDIRS_MAKE              - Convert a directory of data to a dir/year/day/file system

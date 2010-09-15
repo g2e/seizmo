@@ -14,19 +14,19 @@ function [varargout]=ww3mov(file,delay,varargin)
 %     There is a 1/3 second delay between each frame by default (see next
 %     Usage form to adjust this).
 %
-%     H=PLOTWW3(WW3,DELAY) specifies the delay between the plotting of
+%     MOV=WW3MOV(WW3,DELAY) specifies the delay between the plotting of
 %     each frequency in seconds.  The default DELAY is 0.33s.
 %
-%     H=PLOTWW3(WW3,DELAY,RNG) sets the limits for coloring the data. The
+%     MOV=WW3MOV(WW3,DELAY,RNG) sets the limits for coloring the data. The
 %     default is [0 15] which works well for significant wave height.
 %
-%     H=PLOTWW3(WW3,DELAY,RNG,FGCOLOR,BGCOLOR) specifies foreground and
+%     MOV=WW3MOV(WW3,DELAY,RNG,FGCOLOR,BGCOLOR) specifies foreground and
 %     background colors of the movie.  The default is 'w' for FGCOLOR & 'k'
 %     for BGCOLOR.  Note that if one is specified and the other is not, an
 %     opposing color is found using INVERTCOLOR.  The color scale is also
 %     changed so the noise clip is at BGCOLOR.
 %
-%     H=PLOTWW3(WW3,DELAY,RNG,FGCOLOR,BGCOLOR,H) sets the axes to draw in.
+%     MOV=WW3MOV(WW3,DELAY,RNG,FGCOLOR,BGCOLOR,H) sets the axes to draw in.
 %     This is useful for subplots, guis, etc.  The default is a new plot.
 %
 %    Notes:
@@ -41,9 +41,10 @@ function [varargout]=ww3mov(file,delay,varargin)
 %     Version History:
 %        June 15, 2010 - initial version
 %        July  2, 2010 - adjusted oneliner description
+%        Aug. 30, 2010 - fix documentation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  2, 2010 at 00:40 GMT
+%     Last Updated Aug. 30, 2010 at 00:40 GMT
 
 % todo:
 

@@ -51,15 +51,15 @@ function [snr]=quicksnr(data,nwin,swin,method)
 %        Mar. 18, 2010 - added METHOD argument (new methods: RMS, ROBUSTRMS
 %                        are included), input check fix
 %        Mar. 31, 2010 - added two more methods: PEAK2RMS, PEAK2ROBUSTRMS
+%        Sep. 13, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 31, 2010 at 18:00 GMT
+%     Last Updated Sep. 13, 2010 at 18:00 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(3,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,4,nargin));
 
 % check data structure
 versioninfo(data,'dep');

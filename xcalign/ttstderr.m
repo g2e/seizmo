@@ -35,15 +35,15 @@ function [std]=ttstderr(m,lag,lagw)
 %                        input checking
 %        Mar. 22, 2010 - account for ttalign fix, ignore diagonal elements
 %                        in error calculation (makes error slightly higher)
+%        Sep. 13, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 22, 2010 at 23:35 GMT
+%     Last Updated Sep. 13, 2010 at 01:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,3,nargin));
 
 % check inputs
 if(~isreal(m) || ~isvector(m))

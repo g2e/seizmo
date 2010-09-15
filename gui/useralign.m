@@ -80,9 +80,11 @@ function [info,xc,data0]=useralign(data,varargin)
 %        Aug.  8, 2010 - doc update and slight code adjustments
 %        Aug. 27, 2010 - update for new plotting functions, all in one
 %                        figure
+%        Sep. 15, 2010 - added code to better handle matched polarities,
+%                        fixed new iteration bug (clear axes, not delete)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 27, 2010 at 11:00 GMT
+%     Last Updated Sep. 15, 2010 at 11:00 GMT
 
 % todo:
 
@@ -174,7 +176,7 @@ try
     happy_user=false; info.iteration=1;
     fh=figure('color','k');
     ax=makesubplots(2,3,1:5,...
-        'parent',fh,'visible','off');
+        'parent',fh,'visible','off','color','k');
     while(~happy_user)
         % usermoveout
         set(ax(1),'visible','on');
@@ -279,8 +281,14 @@ try
             'absxc',info.correlate.absxc);
 
         % solve alignment
-        [arr,err,pol,zmean,zstd,nc,info.ttsolve,xc]=ttsolve(xc,...
-            varargin{:});
+        if(info.correlate.absxc)
+            [arr,err,pol,zmean,zstd,nc,info.ttsolve,xc]=ttsolve(xc,...
+                varargin{:});
+        else
+            % force polarity solution
+            [arr,err,pol,zmean,zstd,nc,info.ttsolve,xc]=ttsolve(xc,...
+                varargin{:},'mpri',0,'estpol',1);
+        end
         
         % align records
         data0=multiply(timeshift(data0,-arr),pol);
@@ -294,7 +302,7 @@ try
         % plot alignment
         data0=timeshift(data0,-onset);
         set(ax(5),'visible','on');
-        info.handles(5)=recordsection(data0,'ax',ax(5));
+        info.handles(5)=plot2(data0,'ax',ax(5));
         
         % origin time gives absolute time position
         arr=-getheader(data0,'o');
@@ -313,15 +321,17 @@ try
                     happy_user=true;
                 case 2 % never never quit!
                     data0=data;
-                    fh=get(info.handles(ishandle(info.handles)),'parent');
-                    if(iscell(fh)); fh=cell2mat(fh); end
-                    close(fh);
+                    for a=1:numel(ax)
+                        cla(ax(a),'reset');
+                    end
+                    set(ax,'visible','off','color','k');
                 case 3 % standing on the shoulders of those before me
                     info.iteration=info.iteration+1;
                     data0=timeshift(data,-o-arr);
-                    fh=get(info.handles(ishandle(info.handles)),'parent');
-                    if(iscell(fh)); fh=cell2mat(fh); end
-                    close(fh);
+                    for a=1:numel(ax)
+                        cla(ax(a),'reset');
+                    end
+                    set(ax,'visible','off','color','k');
                 case 4 % i bear too great a shame to go on
                     error('seizmo:useralign:killYourSelf',...
                         'User demanded early exit!');

@@ -1,5 +1,5 @@
 % Seismology Toolbox - misc
-% Version 0.6.0-r155 Everest 30-July-2010
+% Version 0.6.0-r165 Fuji 15-Sept-2010
 %
 % Miscellaneous Support functions
 %AXEXPAND             - Expands axes by factor
@@ -25,6 +25,7 @@
 %ISEQUALSIZEORSCALAR  - True if all input arrays are equal size or scalar
 %ISORTHOGONAL         - TRUE if orientations are orthogonal
 %ISPARALLEL           - TRUE if orientations are parallel
+%ISSTRING             - True for a string (row vector) of characters
 %JOINWORDS            - Combines a cellstr into a space-separated string
 %LIND                 - Returns a linear indices matrix
 %LBWH2LRBT            - Convert left-bottom-width-height to left-right-bottom-top
@@ -37,6 +38,7 @@
 %MCXC                 - Multi-channel cross correlation with built-in peak picker
 %MOVEKIDS             - Moves the specified children plot objects
 %NAME2RGB             - Converts short/long color names to RGB triplets
+%NANMEAN              - Return mean excluding NaNs
 %NANVARIANCE          - Return variance excluding NaNs
 %NATIVEBYTEORDER      - Returns native endianness of present platform
 %NDSQUAREFORM         - Reshapes between an n-d distance matrix and "vector"

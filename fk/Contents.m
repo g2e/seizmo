@@ -1,5 +1,5 @@
 % Seismology Toolbox - fk
-% Version 0.6.0-r155 Everest 30-July-2010
+% Version 0.6.0-r165 Fuji 15-Sept-2010
 %
 % Frequency-Wavenumber analysis functions
 %CHKFKARFSTRUCT    - Validate if a struct is as defined by FKARF
@@ -38,6 +38,7 @@
 %PLOTGEOFKARF      - Plots a geofk array response
 %PLOTGEOFKMAP      - Plots frequency-slowness-position response info
 %SLOWBAZ2KXY       - Converts slowness and back-azimuth to wavenumbers in x & y
+%SLOWNESS2DEG      - Converts horizontal slowness (s/deg) to distance (deg)
 %SNYQUIST          - Returns the nyquist slowness for an array
 %UPDATEFKMAP       - Quickly updates an existing fk plot with a new map
 %UPDATEGEOFKARF    - Quickly updates an existing geofkarf plot with a new arf

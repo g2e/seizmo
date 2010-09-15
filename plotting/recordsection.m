@@ -39,6 +39,7 @@ function [varargout]=recordsection(data,varargin)
 %      XSCALE       -- 'linear' or 'log'
 %      YSCALE       -- 'linear' or 'log'
 %      AMPSCALE     -- 'linear' or 'log'
+%      MARKERS      -- true/false where true draws the markers
 %
 %     AX=RECORDSECTION(...) returns the handles for all the axes drawn in.
 %     This is useful for more detailed plot manipulation.
@@ -56,9 +57,10 @@ function [varargout]=recordsection(data,varargin)
 
 %     Version History:
 %        Aug. 14, 2010 - rewrite
+%        Sep. 14, 2010 - added marker support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 14, 2010 at 23:00 GMT
+%     Last Updated Sep. 14, 2010 at 23:00 GMT
 
 % todo:
 % - names on opposite yaxis
@@ -116,6 +118,15 @@ leven=getlgc(data,'leven');
 depmin=abs(depmin);
 depmax=abs(depmax);
 z6=datenum(cell2mat(z6));
+
+% get markers info
+[marknames,marktimes]=getmarkers(data);
+
+% convert markers to absolute time if used
+if(opt.ABSOLUTE)
+    marktimes=marktimes/86400+z6(:,ones(1,size(marktimes,2)));
+end
+
 
 % normalize
 if(opt.NORM2YAXIS)
@@ -219,10 +230,27 @@ for i=goodfiles
 end
 hold(opt.AXIS,'off');
 
+% tag records
+rh=get(opt.AXIS,'children');
+set(rh,'tag','record');
+
 % extras
 box(opt.AXIS,'on');
 grid(opt.AXIS,'on');
 axis(opt.AXIS,'tight');
+
+% add markers to axis userdata
+userdata.markers.records=nan(nrecs,1);
+userdata.markers.records(goodfiles)=flipud(rh);
+userdata.markers.names=marknames;
+userdata.markers.times=marktimes;
+userdata.function='recordsection';
+set(opt.AXIS,'userdata',userdata);
+
+% draw markers
+if(opt.MARKERS)
+    drawmarkers(opt.AXIS,varargin{:});
+end
 
 % axis zooming
 if(~isempty(opt.XLIM))

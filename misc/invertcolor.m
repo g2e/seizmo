@@ -44,15 +44,16 @@ function [c]=invertcolor(c,flag)
 %     invertcolor([0.5 0.5 0.5],true)
 %     invertcolor(jet)
 %
-%    See also: COLORMAP, INVERTCOLOR, NAME2RGB
+%    See also: COLORMAP, NAME2RGB
 
 %     Version History:
 %        May   4, 2010 - initial version
 %        May  11, 2010 - added support for the extended color name set
 %        Aug.  4, 2010 - see also NAME2RGB
+%        Sep. 13, 2010 - remove see also itself
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  4, 2010 at 14:15 GMT
+%     Last Updated Sep. 13, 2010 at 14:15 GMT
 
 % todo:
 % - hsv support

@@ -2,7 +2,7 @@ function [varargout]=azisweep(data,lagrng,degrng,azwin,azstep)
 %AZISWEEP    Sliding azimuthal window record section of correlograms
 %
 %    Usage:    mov=azisweep(data)
-%              mov=azisweep(data,lagrng,degrng,)
+%              mov=azisweep(data,lagrng,degrng)
 %              mov=azisweep(data,lagrng,degrng,azwin,azstep)
 %
 %    Description: MOV=AZISWEEP(DATA) creates a movie by plotting

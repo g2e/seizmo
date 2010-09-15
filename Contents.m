@@ -1,5 +1,5 @@
 % Seismology Toolbox - seizmo
-% Version 0.6.0-r155 Everest 30-July-2010
+% Version 0.6.0-r165 Fuji 15-Sept-2010
 %
 % Alphabetical list of SEIZMO functions
 %ADD                  - Add a constant to SEIZMO records
@@ -73,11 +73,6 @@
 %MULTIPLYRECORDS      - Multiply SEIZMO records
 %NORMALIZE            - Normalizes SEIZMO records
 %PLAYSEIZMO           - Plays SEIZMO records as sound
-%PLOT0                - Plot SEIZMO data records in an evenly spaced record section
-%PLOT1                - Plot SEIZMO data records in individual subplots
-%PLOT2                - Overlay plot of SEIZMO data records
-%PLOTCONFIG           - Returns default configuration structure for SEIZMO plotting
-%PLOTDENDRO           - Plots correlation linkage and seismograms
 %PREWHITEN            - Prewhiten SEIZMO data records for spectral operations
 %QUERYHEADER          - List SEIZMO headers side-by-side for easy comparison
 %QUICKSNR             - Quick estimation of SNR for SEIZMO records
@@ -88,7 +83,6 @@
 %READSEIZMO           - Read datafiles into SEIZMO data structure
 %RECORDFUN            - Perform basic function between SEIZMO records
 %RECORDS2MAT          - Combines SEIZMO data records into a single numeric matrix
-%RECORDSECTION        - Plots SEIZMO data records in a distance spaced record section
 %REMOVEDEADRECORDS    - Removes constant SEIZMO records
 %REMOVEDUPLICATES     - Remove duplicate SEIZMO records
 %REMOVEMEAN           - Remove mean from SEIZMO records
@@ -127,29 +121,30 @@
 %WRITESEIZMO          - Write SEIZMO records to datafile
 %
 % Sub-Toolboxes
-%CMAP                - colormaps
-%CMT                 - various moment tensor functions
-%EVENT               - functions related to earthquake info
-%FIXES               - functions to fix headers
-%FK                  - frequency-wavenumber beamforming functions
-%GUI                 - simple gui functions
-%INVERT              - simple inversion functions
-%MATTAUP             - TauP functions
-%MISC                - useful miscellaneous functions
-%MODELS              - 1D/3D Earth model functions
-%POSITION            - global positioning functions
-%RESPONSE            - instrument response functions
-%SEIZMO_INTERNAL     - internal functions
-%SHORTNAMES          - shortcut names for functions
-%SPHPOLY             - Spherical Polygon functions
-%SYNTH               - functions for synthetics
-%TIME                - absolute time functions
-%TOPO                - topography functions
-%TOMO                - simple tomography functions
-%TPW                 - two plane wave functions
-%TTCORRECT           - travel time correction functions
-%WW3                 - WaveWatch III functions
-%XCALIGN             - cross correlation signal alignment functions
+%<a href="matlab:help cmap">cmap</a>                - colormaps
+%<a href="matlab:help cmt">cmt</a>                 - various moment tensor functions
+%<a href="matlab:help event">event</a>               - functions related to earthquake info
+%<a href="matlab:help fixes">fixes</a>               - functions to fix headers
+%<a href="matlab:help fk">fk</a>                  - frequency-wavenumber beamforming functions
+%<a href="matlab:help gui">gui</a>                 - simple gui functions
+%<a href="matlab:help invert">invert</a>              - simple inversion functions
+%<a href="matlab:help mattaup">mattaup</a>             - TauP functions
+%<a href="matlab:help misc">misc</a>                - useful miscellaneous functions
+%<a href="matlab:help models">models</a>              - 1D/3D Earth model functions
+%<a href="matlab:help plotting">plotting</a>            - SEIZMO plotting routines
+%<a href="matlab:help position">position</a>            - global positioning functions
+%<a href="matlab:help response">response</a>            - instrument response functions
+%<a href="matlab:help seizmo_internal">seizmo_internal</a>     - internal functions
+%<a href="matlab:help shortnames">shortnames</a>          - shortcut names for functions
+%<a href="matlab:help sphpoly">sphpoly</a>             - Spherical Polygon functions
+%<a href="matlab:help synth">synth</a>               - functions for synthetics
+%<a href="matlab:help time">time</a>                - absolute time functions
+%<a href="matlab:help topo">topo</a>                - topography functions
+%<a href="matlab:help tomo">tomo</a>                - simple tomography functions
+%<a href="matlab:help tpw">tpw</a>                 - two plane wave functions
+%<a href="matlab:help ttcorrect">ttcorrect</a>           - travel time correction functions
+%<a href="matlab:help ww3">ww3</a>                 - WaveWatch III functions
+%<a href="matlab:help xcalign">xcalign</a>             - cross correlation signal alignment functions
 %
 %
 % Found a bug?  Something not quite right?

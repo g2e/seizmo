@@ -1,8 +1,9 @@
 % Seismology Toolbox - ww3
-% Version 0.6.0-r155 Everest 30-July-2010
+% Version 0.6.0-r165 Fuji 15-Sept-2010
 %
 % WaveWatch III functions
-%%PLOTWW3   - Plots WaveWatch III data read in by READ_GRIB
+%PLOTWW3    - Plots WaveWatch III data read in by READ_GRIB
+%PLOTWW3AVG - Plots an average WaveWatch III data map
 %READ_GRIB  - Read certain WMO GRiB-formatted binary data files
 %WW3MAT     - Converts WaveWatch III data from struct to matrix form
 %WW3MOV     - Create movie from a WaveWatch III file

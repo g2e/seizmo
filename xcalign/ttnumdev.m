@@ -4,10 +4,12 @@ function [numdev]=ttnumdev(lg,dt,std)
 %    Usage:    numdev=ttnumdev(lg,m,stderr)
 %
 %    Description: NUMDEV=TTNUMDEV(LG,M,STDERR) returns the number of
-%     standard deviations, STDERR, each of the lags in LG are from the
+%     standard deviations, NUMDEV, each of the lags in LG are from the
 %     lags estimated by relative arrivals in M.  This is useful for
 %     identifying outliers and for converting lags to a measure that is
-%     more effective in weighting schemes.
+%     more effective in weighting schemes.  STDERR is the standard error
+%     for each of the relative arrivals in M and must be equal sized with
+%     M.
 %
 %    Notes:
 %
@@ -23,15 +25,15 @@ function [numdev]=ttnumdev(lg,dt,std)
 
 %     Version History:
 %        Mar. 22, 2010 - initial version
+%        Sep. 13, 2010 - nargchk fix, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 22, 2010 at 21:20 GMT
+%     Last Updated Sep. 13, 2010 at 01:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(3,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,3,nargin));
 
 % check inputs
 [nr,nxc,np,vector]=check_xc_info(lg);

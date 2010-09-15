@@ -123,9 +123,10 @@ function [varargout]=maplocations(varargin)
 %        July 13, 2010 - initial version
 %        Aug. 27, 2010 - adapts to figure color if no color is given and an
 %                        axis is given, improved axis usage, Robinson proj
+%        Aug. 30, 2010 - allow individual sizing & coloring of st/ev
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 27, 2010 at 20:30 GMT
+%     Last Updated Aug. 30, 2010 at 20:30 GMT
 
 % todo:
 
@@ -182,6 +183,8 @@ for i=1:2:numel(varargin)
             if(skip); continue; end
             if(ischar(val) && numel(val)<3)
                 stm=val;
+            elseif(isreal(val) && size(val,2)==3 && all(val>=0 & val<=1))
+                stm=val;
             else
                 error('seizmo:maplocations:badInput',...
                     'STATIONMARKER must be a 1 or 2 char string!');
@@ -190,6 +193,8 @@ for i=1:2:numel(varargin)
             if(skip); continue; end
             if(ischar(val) && numel(val)<3)
                 evm=val;
+            elseif(isreal(val) && size(val,2)==3 && all(val>=0 & val<=1))
+                evm=val;
             else
                 error('seizmo:maplocations:badInput',...
                     'EVENTMARKER must be a 1 or 2 char string!');
@@ -197,7 +202,7 @@ for i=1:2:numel(varargin)
         case {'eventmarkersize' 'eventsize' 'evs' 'evms' 'ems' 'es'}
             if(skip)
                 evs=val;
-            elseif(isreal(val) && isscalar(val))
+            elseif(isreal(val))
                 evs=val;
             else
                 error('seizmo:maplocations:badInput',...
@@ -206,7 +211,7 @@ for i=1:2:numel(varargin)
         case {'stationmarkersize' 'stationsize' 'sts' 'stms' 'sms' 'ss'}
             if(skip)
                 sts=val;
-            elseif(isreal(val) && isscalar(val))
+            elseif(isreal(val))
                 sts=val;
             else
                 error('seizmo:maplocations:badInput',...

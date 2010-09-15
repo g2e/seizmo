@@ -6,7 +6,8 @@ function [var]=nanvariance(x,biased,dim,w)
 %           var=nanvariance(x,biased,dim)
 %           var=nanvariance(x,biased,dim,w)
 %
-%    Description: VAR=NANVARIANCE(X) calculates the variance of X ignoring
+%    Description:
+%     VAR=NANVARIANCE(X) calculates the variance of X ignoring
 %     NaN elements.  The variance(s) are taken across the first non-
 %     singleton dimension and VAR is equal in size to X except for the
 %     dimension that the variance is found for, which has a size of 1.
@@ -45,11 +46,11 @@ function [var]=nanvariance(x,biased,dim,w)
 %         (nanvar replicates the weights for array cases)
 %
 %    Examples:
-%     Unbiased variance down the 3rd dimension
-%     of a random valued matrix with some NaNs:
-%      x=rand(10,10,10);
-%      x(x>0.4 & x<0.6)=nan;
-%      var=nanvariance(x,[],3);
+%     % Unbiased variance down the 3rd dimension
+%     % of a random valued matrix with some NaNs:
+%     x=rand(10,10,10);
+%     x(x>0.4 & x<0.6)=nan;
+%     var=nanvariance(x,[],3)
 %
 %    See also: VAR, NANMEAN, NANVAR
 
@@ -59,9 +60,10 @@ function [var]=nanvariance(x,biased,dim,w)
 %                        nanmean calls
 %        Apr. 28, 2010 - appropriate formula for unbiased weighted variance
 %        June  4, 2010 - fixed bug in unbiased weights
+%        Sep. 13, 2010 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  4, 2010 at 14:45 GMT
+%     Last Updated Sep. 13, 2010 at 14:45 GMT
 
 % todo:
 

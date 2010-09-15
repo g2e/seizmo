@@ -35,15 +35,15 @@ function [x]=rescale_snr(snr,inrange,outrange)
 %     Version History:
 %        Mar. 12, 2010 - initial version
 %        Mar. 14, 2010 - doc update, limit to range
+%        Sep. 13, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 14, 2010 at 01:05 GMT
+%     Last Updated Sep. 13, 2010 at 01:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,3,nargin));
 
 % default ranges
 if(nargin<2 || isempty(inrange)); inrange=[3 10]; end

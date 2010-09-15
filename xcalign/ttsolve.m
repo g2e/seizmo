@@ -1,5 +1,5 @@
 function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
-%TTSOLVE    Solves relative arrival times & polarities
+%TTSOLVE    Iteratively solves for relative arrival times & polarities
 %
 %    Usage:    [arr,err,pol,zmean,zstd,nc,options,xc]=ttsolve(xc)
 %
@@ -51,13 +51,12 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     its default ranges.  Use options 'INRANGE' & 'OUTRANGE' to adjust the
 %     rescaling.  SNR must be a column vector of positive values.
 %
-%     [...]=TTSOLVE(...,'WGTPOW',POWER,...) applies raises the weights used
-%     in the inversion by POWER.  The default is 1 (no change in weight).
-%     Setting POWER to 0 will cause the inversion to be completely driven
-%     by lag misfit and polarities (ie SNR and cross-correlation
-%     coefficient will have no influence).  Setting POWER to 2+ will cause
-%     the SNR and cross-correlation coefficients to have a stronger
-%     influence in the inversion.
+%     [...]=TTSOLVE(...,'WGTPOW',POWER,...) raises the weights used in the
+%     inversion by POWER.  The default is 1 (no change in weight).  Setting
+%     POWER to 0 will cause the inversion to be completely driven by lag
+%     misfit and polarities (ie SNR and cross-correlation coefficient will
+%     have no influence).  Higher POWER will increase the influence of the
+%     SNR and cross-correlation coefficients on the inversion.
 %
 %     [...]=TTSOLVE(...,'INRANGE',[LOW HIGH],...) sets the in rescale range
 %     to [LOW HIGH] for rescaling SNR values to weights (see option 'SNR'
@@ -101,7 +100,7 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     [...]=TTSOLVE(...,'ESTERR',STDERR,...) sets the initial estimate of
 %     error in the relative arrival times to STDERR.  This can be useful
 %     for driving the first iteration of the refinement.  The default is no
-%     estimate, which cause TTSOLVE to estimate the error using the
+%     estimate, which forces TTSOLVE to estimate the error using the
 %     consistency of the lags in XC to the estimated relative arrival times
 %     (see option 'ESTARR' above).
 %
@@ -109,7 +108,7 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     the relative polarity to RELPOL.  This will guide the refinement of
 %     relative arrival times (see option 'MPRI' for more information on
 %     solving for relative polarities).  The default is no estimate, which
-%     causes TTSOLVE to get an estimate using the relative polarities given
+%     forces TTSOLVE to get an estimate using the relative polarities given
 %     in XC.
 %
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -121,12 +120,12 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     (the default), 'REWEIGHT', and 'BOTH'.  REORDER is adapted to refine
 %     to a consistent solution utilizing information about multiple peaks
 %     in the cross correlograms.  REWEIGHT is adapted to refine to a
-%     consistent solution using information on a single peak in each
+%     favored solution using information on the strongest peak in each
 %     correlogram.  Both of these methods have their benefits (REORDER can
 %     refine the polarities, is non-linear, has lower errors while REWEIGHT
 %     requires only a single peak from the correlogram and is simpler but
 %     may converge quite slowly).  BOTH uses REORDER then REWEIGHT to
-%     refine a solution.  They all tend to provide very similar solutions.
+%     refine a solution.  They all provide similar solutions in easy cases.
 %
 %     [...]=TTSOLVE(...,'THRESH',THRESHHOLD,...) defines the threshhold
 %     THRESHHOLD when the REWEIGHT method has converged enough on a
@@ -156,13 +155,13 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     estimate (see option 'ESTPOL').  After NITER iterations, the solution
 %     is forced to be consistent with the estimated relative polarities.
 %     This allows for strong consistency between the polarity and arrival
-%     solutions.  It is exceeding rare for the polarity to be refined after
-%     the first iteration so it is usually safe left alone.  It is also a
-%     strong driving force for solution convergence.
+%     solutions.  I have found that it is exceedingly rare for the polarity
+%     to need refinement after the first iteration, so it is safe to leave
+%     this alone.  MPRI is a strong force in solution convergence.
 %
 %     [...]=TTSOLVE(...,'NONCNV',METHOD,...) alters how non-convergence is
 %     handled in the REORDER method.  The default METHOD is 'BREAK' which
-%     stops iterating when the non-convergence was detected.  Other options
+%     stops iterating when the non-convergence is detected.  Other options
 %     are 'IGNORE' & 'REWEIGHT'.  The 'IGNORE' method does nothing when a
 %     non-convergence is detected (not setting option 'MTRI' to a finite
 %     number when using the 'IGNORE' method may lead to an infinite loop).
@@ -192,15 +191,17 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %        Mar. 18, 2010 - output xc as well
 %        Mar. 23, 2010 - added reweight/both methods, doc update
 %        Apr. 21, 2010 - scalar expansion for est(arr,err,pol) & snr
+%        Sep. 13, 2010 - doc update
+%        Sep. 15, 2010 - force inversion for reorder without change on
+%                        first iteration to replace given values (if any)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 21, 2010 at 09:45 GMT
+%     Last Updated Sep. 15, 2010 at 09:45 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % verbosity
 verbose=seizmoverbose;
@@ -218,7 +219,7 @@ opt=parse_ttsolve_args(nr,varargin{:});
 % emphasize the error of thy ways
 if(strcmpi(opt.METHOD,'reorder') && np==1)
     warning('seizmo:ttsolve:badMethod',...
-        ['REORDER method is use when only a single peak picked!' ...
+        ['REORDER method in use when only a single peak picked!' ...
         '\nThe solution can not be refined.  Specifying a method' ...
         '\nsuch as REWEIGHT or BOTH is more appropriate here.']);
 end
@@ -233,7 +234,7 @@ xc.cg(xc.cg>opt.MAXCOR)=opt.MAXCOR;
 % - more appropriate for error estimation
 xc.zg=fisher(xc.cg);
 
-% now get weights (z-statistic * root of product of rescaled snr)
+% now get weights (z-statistic * root of matrix product of rescaled snr)
 opt.SNR=rescale_snr(opt.SNR,opt.INRANGE,opt.OUTRANGE);
 xc.wg=sqrt(opt.SNR*opt.SNR');
 xc.wg=xc.wg(:,:,ones(np,1));
@@ -301,6 +302,12 @@ switch lower(opt.METHOD)
                 if(verbose)
                     disp(['Reordered ' num2str(nc(iter,1)) ' Peaks']);
                 end
+            elseif(~isempty(opt.ESTARR) || ~isempty(opt.ESTERR) ...
+                    || ~isempty(opt.ESTPOL))
+                % need to replace given values with computed ones
+                if(verbose)
+                    disp('Forcing Reinversion to Replace Given Values');
+                end
             else
                 % drop this iteration
                 nc(iter)=[];
@@ -316,10 +323,12 @@ switch lower(opt.METHOD)
             xc.wg(li)=tmp;
 
             % reinvert
-            if(verbose); disp('Reinverting Reordered Peak Info'); end
+            if(verbose && nc(iter,1))
+                disp('Reinverting Reordered Peak Info');
+            end
             dt=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
             std=ttstderr(dt,xc.lg(:,:,1),xc.wg(:,:,1));
-            if(pflag)
+            if(pflag && ~(iter==1 && ~isempty(opt.ESTPOL)))
                 % check that polarity solution did not change
                 % - this is just to make sure I coded this right
                 if(~isequal(pol,ttpolar(xc.pg(:,:,1))))
@@ -337,6 +346,9 @@ switch lower(opt.METHOD)
                 end
                 pol=ttpolar(xc.pg(:,:,1));
             end
+            
+            % ok values replaced, so break now if there was no reordering
+            if(nc(iter,1)==0); break; end
 
             % detect non-convergence (after at least 3 iterations)
             % - number peaks reordered stays constant over 3 iterations

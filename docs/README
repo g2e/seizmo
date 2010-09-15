@@ -19,9 +19,10 @@ How I install SEIZMO for Matlab on our machines:
 
 3. Add the following folders to your Matlab path:
         seizmo/           (main stuff)
-        seizmo/misc       (some (un)necessary various functions)
-        seizmo/position   (some (un)necessary earth positioning functions)
-        seizmo/time       (some (un)necessary time functions)
+        seizmo/plotting   (plotting routines)
+        seizmo/misc       (essential uncatagorized functions)
+        seizmo/position   (essential earth positioning functions)
+        seizmo/time       (essential time functions)
 
 4. Add mattaup & m_map functionality by including the following
    folders in your Matlab path too.  These are not necessary for
@@ -55,12 +56,12 @@ The following directories are optional, but highly recommended:
 
 These may also be of help:
    seizmo/fixes                 (header fixing routines for extraction utilities)
-   seizmo/invert                (some inversion scripts)
+   seizmo/invert                (some inversion scripts ... not much here currently)
    seizmo/seizmo_internal       (link to seizmo private functions)
    seizmo/sphpoly               (spherical polygon functions)
    seizmo/ww3                   (WaveWatch III routines)
 
-These are currently unfinished/broken but are useful:
+These have less finish but can be useful:
    seizmo/cmt                (cmt functions)
    seizmo/noise              (ambient noise analysis functions)
    seizmo/synth              (functions for working with synthetics)

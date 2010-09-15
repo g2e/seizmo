@@ -1,7 +1,10 @@
 % Seismology Toolbox - plotting
-% Version 0.6.0-r155 Everest 30-July-2010
+% Version 0.6.0-r165 Fuji 15-Sept-2010
 %
 % SEIZMO plotting routines
+%DRAWMARKERS      - Draw markers in SEIZMO plot deleting any existing ones
+%FLIPFLAGS        - Flips the flag direction in SEIZMO plots
+%MASTFLAGS        - Masts marker flags in SEIZMO plots
 %PLOT0            - Evenly spaced plot of SEIZMO records
 %PLOT1            - Plot SEIZMO data records in individual subplots
 %PLOT2            - Overlay plot of SEIZMO data records
@@ -10,5 +13,7 @@
 %PLOTSPECTRA1     - Plot SEIZMO data record spectra in individual subplots
 %PLOTSPECTRA2     - Overlay plot of SEIZMO data record spectra
 %RECORDSECTION    - Plots SEIZMO data records in a record section
+%SHOWFLAGS        - Toggle visibility of marker flags in SEIZMO plot
+%SHOWMARKERS      - Toggle visibility of markers & flags in SEIZMO plot
 %SPECTRASECTION   - Plots SEIZMO data record spectra in a record section
-
+%STRETCHMARKERS   - Stretches markers vertically by specified percent

@@ -58,7 +58,7 @@ function [ok]=gooduglycheck(indir,outdir,varargin)
 %       DELETING WILL DELETE ONLY THE EVENT DIRECTORIES SELECTED _NOT_ THE
 %       ENTIRE OUTDIR.  This allows for inplace quality control by setting
 %       OUTDIR equal to INDIR.  Using overwrite in this case would not do
-%       anything (except change the modification time).
+%       anything (except change the creation time).
 %
 %    Examples:
 %     Use only 1 filter band:
@@ -79,8 +79,7 @@ function [ok]=gooduglycheck(indir,outdir,varargin)
 % todo
 
 % check nargin
-msg=nargchk(2,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,inf,nargin));
 if(mod(nargin,2))
     error('seizmo:gooduglycheck:uppairedOption',...
         'One (or more) input OPTION/VALUE is unpaired!');
@@ -107,7 +106,7 @@ elseif(exist(outdir,'file') && ~isdir(outdir))
     error('seizmo:gooduglycheck:badInput',...
         'OUTDIR location is a file!');
 elseif(isdir(outdir))
-    disp(sprintf('Directory: %s\nDirectory Exists!',outdir));
+    fprintf('Directory: %s\nDirectory Exists!\n',outdir);
     reply=input('Overwrite/Delete/Quit? O/D/Q [Q]: ','s');
     if(strncmpi(reply,'o',1))
         disp(['Overwriting (But Not Deleting) ' ...
@@ -138,7 +137,7 @@ if(nvargin && ~iscellstr(varargin(1:2:end)))
 end
 for i=1:2:numel(varargin)
     switch lower(varargin{i})
-        case {'fb' 'freqband' 'freqbands'}
+        case {'f' 'fb' 'freq' 'freqband' 'freqbands'}
             if(~isempty(varargin{i+1}) && (~isreal(varargin{i+1}) ...
                     || size(varargin{i+1},2)~=2 ...
                     || any(varargin{i+1}(:)<=0)))
@@ -151,7 +150,7 @@ for i=1:2:numel(varargin)
             freqbands=[min(freqbands(:,1),freqbands(:,2)) ...
                 max(freqbands(:,1),freqbands(:,2))];
             nfb=size(freqbands,1);
-        case {'m' 'moveout' 'moveouts'}
+        case {'m' 'mo' 'move' 'moveout' 'moveouts'}
             if(~isreal(varargin{i+1}) || numel(varargin{i+1})>10)
                 error('seizmo:gooduglycheck:badInput',...
                     'MOVEOUTS must be real numbers (up to 10 allowed)!');
@@ -213,18 +212,21 @@ for i=s(:)'
     user_happy=false; win=[min(b) max(e)];
     while(~user_happy)
         % plot up filtered data
-        f=nan(nfb,1);
+        fh=nan(nfb,1); ax=fh;
         for j=1:nfb
-            f(j)=plot1(fdata{j},...
-                'name',[num2str(1/freqbands(j,2)) '-' ...
+            fh(j)=figure('name',[num2str(1/freqbands(j,2)) '-' ...
                 num2str(1/freqbands(j,1)) 's  ' events(i).name],...
-                'xlimits',win,'markers',true);
+                'color','k');
+            ax(j)=axes('parent',fh(j));
+            ax(j)=plot1(fdata{j},'ax',ax(j),...
+                'xlim',win,'markers',true);
         end
         
         % get user selection
-        [data,deleted,f(nfb+1)]=selectrecords(data0,'delete','p1',[],...
-            'name',['UNFILTERED  ' events(i).name],...
-            'xlimits',win,'markers',true);
+        fh(j+1)=figure('name',['UNFILTERED  ' events(i).name],'color','k');
+        ax(j+1)=axes('parent',fh(j+1));
+        [data,deleted,ax(j+1)]=selectrecords(data0,'delete','p1',[],...
+            'xlim',win,'markers',true);
         
         % get user action
         choice=0;
@@ -257,7 +259,8 @@ for i=s(:)'
                 case 3 % redo
                     % do nothing
                 case 4 % change time
-                    [win,win,f(nfb+(2:3))]=userwindow(data0);
+                    [win,win,ax(j+2)]=userwindow(data0);
+                    fh(j+2)=get(ax(j+2),'parent');
                     win=win.limits;
                 case 5 % exit
                     return;
@@ -265,7 +268,7 @@ for i=s(:)'
         end
         
         % close figure handles
-        close(f(ishandle(f)))
+        close(fh(ishandle(fh)));
     end
 end
 

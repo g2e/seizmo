@@ -33,6 +33,7 @@ function [varargout]=plot1(data,varargin)
 %      ALIGN      -- ignore label and tick overlaps when aligning subplots
 %      XSCALE     -- 'linear' or 'log'
 %      YSCALE     -- 'linear' or 'log'
+%      MARKERS    -- true/false where true draws the markers
 %
 %     AX=PLOT1(...) returns the handles for all the axes drawn in.  This is
 %     useful for more detailed plot manipulation.
@@ -55,11 +56,25 @@ function [varargout]=plot1(data,varargin)
 
 %     Version History:
 %        Aug. 14, 2010 - rewrite
+%        Sep. 14, 2010 - added marker support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 14, 2010 at 23:00 GMT
+%     Last Updated Sep. 14, 2010 at 23:00 GMT
 
 % todo:
+% - markers & flags
+%   - need to store marker info
+%     - p0, p1, recsec only
+%     - eliminate those with nan values
+%     - replace NaN strings with field name
+%     - store in userdata under a struct
+%       - axis, record, name, time, type
+%     - need to come up with a tagging system
+%       - tags: marker, flag
+%       - tags: (a,f,o,t)
+%   - drawmarkers will actually draw the markers (visible on)
+%   - showmarkers flips visibility
+%   - showflags flips flags off/on
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -109,7 +124,15 @@ idep=shortidep(getenumdesc(data,'idep'));
     'b','npts','delta','z6','kname');
 z6=datenum(cell2mat(z6));
 
-% subplot style
+% get markers info
+[marknames,marktimes]=getmarkers(data);
+
+% convert markers to absolute time if used
+if(opt.ABSOLUTE)
+    marktimes=marktimes/86400+z6(:,ones(1,size(marktimes,2)));
+end
+
+ % subplot style
 if(isempty(opt.AXIS) || numel(opt.AXIS)~=nrecs || ~isreal(opt.AXIS) ...
         || any(~ishandle(opt.AXIS)) ...
         || any(~strcmp('axes',get(opt.AXIS,'type'))))
@@ -165,10 +188,24 @@ for i=goodfiles
     end
     hold(opt.AXIS(i),'off');
     
+    % tag records
+    set(get(opt.AXIS(i),'children'),'tag','record');
+    
     % extras
     box(opt.AXIS(i),'on');
     grid(opt.AXIS(i),'on');
     axis(opt.AXIS(i),'tight');
+    
+    % add markers to axis userdata
+    userdata.markers.names=marknames(i,:);
+    userdata.markers.times=marktimes(i,:);
+    userdata.function='plot1';
+    set(opt.AXIS(i),'userdata',userdata);
+    
+    % draw markers
+    if(opt.MARKERS)
+        drawmarkers(opt.AXIS(i),varargin{:});
+    end
     
     % axis zooming
     if(~isempty(opt.XLIM))

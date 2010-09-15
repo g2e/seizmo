@@ -54,15 +54,15 @@ function [m,Gg]=ttalign(lag,lagw,abstt,absw,absidx)
 %        Mar. 22, 2010 - huge bugfix (incorrect sign for output relative
 %                        times and completely wrong times for absolute
 %                        times)
+%        Sep. 13, 2010 - nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 22, 2010 at 23:20 GMT
+%     Last Updated Sep. 13, 2010 at 01:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,5,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,5,nargin));
 
 % check lag
 [lag,nr,len,i,j]=m2v(lag,'LAG');
