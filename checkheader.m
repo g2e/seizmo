@@ -215,6 +215,10 @@ function [data]=checkheader(data,varargin)
 %           CHECKS:     GCARC/AZ/BAZ/DIST (IF LCALDA TRUE)
 %           FIX:        UPDATE GCARC/AZ/BAZ/DIST
 %           DEFAULT:    FIX
+%       UNSET_DELAZ
+%           CHECKS:     DELAZ FIELDS ARE DEFINED
+%           FIX:        NONE
+%           DEFAULT:    IGNORE
 %       KM_DEPTH
 %           CHECKS:     EVDP >0m & <1000m
 %           FIX:        MULTIPLY EVDP BY 1000
@@ -377,9 +381,10 @@ function [data]=checkheader(data,varargin)
 %        June 10, 2010 - fixed bug in MULTIPLE_B
 %        Aug. 21, 2010 - update for getheader no longer returning undefined
 %                        values specific to a filetype, KM_DEPTH fixed
+%        Sep. 16, 2010 - added UNSET_DELAZ
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 22:10 GMT
+%     Last Updated Sep. 16, 2010 at 22:10 GMT
 
 % todo:
 
@@ -627,6 +632,11 @@ try
     % check for old delaz
     if(~strcmp(option.OLD_DELAZ,'IGNORE'))
         delaz=old_delaz(option.OLD_DELAZ,lcalda,st,ev,delaz);
+    end
+    
+    % check for unset delaz
+    if(~strcmp(option.UNSET_DELAZ,'IGNORE'))
+        unset_delaz(option.UNSET_DELAZ,delaz);
     end
     % END LOCATION
 
@@ -2144,6 +2154,30 @@ if(~isempty(bad))
     end
 end
 
+end
+
+function unset_delaz(opt,delaz)
+baddelaz=sum(isnan(delaz) | isinf(delaz),2)>0;
+bad=find(baddelaz);
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:unsetDelAz';
+    report.message=['DELAZ must be defined!\n' ...
+        'Record(s):\n' sprintf('%d ',bad)];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR UNSET DELAZ!\n' ...
+                'SETTING THE LCALDA FIELD TO TRUE MAY FIX THIS.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR UNSET DELAZ!\n' ...
+                'SETTING THE LCALDA FIELD TO TRUE MAY FIX THIS.']);
+    end
+end
 end
 
 function [npts]=inconsistent_dep_npts(opt,data,npts)

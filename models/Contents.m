@@ -26,4 +26,5 @@
 %READCRUST2          - Reads Crust2.0 files, putting them into a struct
 %READ_SCRIPPS_BINARY - Reads a Scripps mantle model unformatted binary
 %SCRIPPS2MATLAB      - Creates a Matlab struct from a Scripps mantle model
+%WRITE_1DMODEL_ND    - Writes a 1D model struct in .nd format
 

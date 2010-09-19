@@ -37,6 +37,7 @@
 %MATCHSORT            - Replicates a sort operation using the returned permutation indices
 %MCXC                 - Multi-channel cross correlation with built-in peak picker
 %MOVEKIDS             - Moves the specified children plot objects
+%M_SCATTER            - Scatter/Bubble plot on an M_MAP plot
 %NAME2RGB             - Converts short/long color names to RGB triplets
 %NANMEAN              - Return mean excluding NaNs
 %NANVARIANCE          - Return variance excluding NaNs
@@ -49,6 +50,7 @@
 %NOTICKS              - Removes ticks and tick labels from axes
 %NOTITLES             - Removes titles from specified axes
 %ONEFILELIST          - Compiles multiple filelists into one
+%POLYSTR              - Converts polynomial coefficients into string form
 %PPDCVAL              - Evaluate piecewise polynomial (w/ discontinuity support)
 %PRINT_TIME_LEFT      - Ascii progress bar
 %READCSV              - Read in .csv formatted file as a structure

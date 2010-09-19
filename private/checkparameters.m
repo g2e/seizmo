@@ -52,9 +52,10 @@ function [option]=checkparameters(setglobal,varargin)
 %                        XYZ_IFTYPE, MULTIPLE_REFTIME, MULTIPLE_NPTS,
 %                        MULTIPLE_B.  Edited several defaults.
 %        Aug. 21, 2010 - nargchk fix
+%        Sep. 16, 2010 - added UNSET_DELAZ
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 13:20 GMT
+%     Last Updated Sep. 16, 2010 at 13:20 GMT
 
 % todo:
 
@@ -124,6 +125,7 @@ option.UNSET_EV_LATLON='IGNORE';
 option.OUTOFRANGE_LAT='WARNFIX';
 option.OUTOFRANGE_LON='WARNFIX';
 option.OLD_DELAZ='FIX';
+option.UNSET_DELAZ='IGNORE';
 option.KM_DEPTH='WARN';
 option.UNSET_ELEV='IGNORE';
 option.UNSET_DEPTH='IGNORE';

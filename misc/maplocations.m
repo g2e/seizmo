@@ -60,8 +60,8 @@ function [varargout]=maplocations(varargin)
 %     pentagram.  See option STATIONMARKER for other possibilities.
 %
 %     MAPLOCATIONS(...,'EVENTMARKERSIZE',VAL,...) sets the event marker
-%     size to VAL.  The default is [], which uses the default size
-%     determined dynamically (I think).
+%     size to VAL.  The default is 75 as this scales better with the
+%     defaults.
 %
 %     MAPLOCATIONS(...,'GSHHS',RES,...) sets the GSHHS coastline and
 %     political boundaries resolution.  The values can be 'c', 'l', 'i',
@@ -124,9 +124,10 @@ function [varargout]=maplocations(varargin)
 %        Aug. 27, 2010 - adapts to figure color if no color is given and an
 %                        axis is given, improved axis usage, Robinson proj
 %        Aug. 30, 2010 - allow individual sizing & coloring of st/ev
+%        Sep. 16, 2010 - changed eventmarkersize to 75 for looks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 30, 2010 at 20:30 GMT
+%     Last Updated Sep. 16, 2010 at 20:30 GMT
 
 % todo:
 
@@ -140,7 +141,7 @@ end
 global MAP_VAR_LIST
 
 % option defaults
-varargin=[{'st' [] 'sm' 'yo' 'ss' [] 'ev' [] 'em' 'rp' 'es' [] 'g' 'o' ...
+varargin=[{'st' [] 'sm' 'yo' 'ss' [] 'ev' [] 'em' 'rp' 'es' 75 'g' 'o' ...
     'p' 'robinson' 'po' [] 'go' [] 'fg' [] 'bg' [] 's' [.3 .6 1] ...
     'l' [.4 .6 .2] 'b' [.5 0 0] 'a' []} varargin];
 

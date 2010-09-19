@@ -70,7 +70,7 @@ if(~isscalar(arf) || any(arf.volume))
 end
 
 % default/check scaling type
-if(nargin<3 || isempty(zerodb)); zerodb='max'; end
+if(nargin<4 || isempty(zerodb)); zerodb='max'; end
 if(~ischar(zerodb) ...
         || ~ismember(lower(zerodb),{'max' 'min' 'median' 'abs'}))
     error('seizmo:plotgeofkarf:badSTYPE',...

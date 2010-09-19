@@ -1,5 +1,5 @@
-function han = m_scatter(varargin)
-% M_SCATTER    Scatter/Bubble plot on an M_MAP plot
+function [han]=m_scatter(varargin)
+%M_SCATTER    Scatter/Bubble plot on an M_MAP plot
 %
 %    Usage: M_SCATTER(LON,LAT)
 %           M_SCATTER(LON,LAT,SIZE)

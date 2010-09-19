@@ -63,9 +63,10 @@ function [varargout]=plot2(varargin)
 
 %     Version History:
 %        Aug. 14, 2010 - rewrite
+%        Sep. 16, 2010 - tagged record handles as 'record'
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 14, 2010 at 23:00 GMT
+%     Last Updated Sep. 16, 2010 at 23:00 GMT
 
 % todo:
 % xlim should allow datestr (convert to datenum)
@@ -208,6 +209,10 @@ if(nd>1)
             end
         end
         hold(opt.AXIS(i),'off');
+        
+        % tag records
+        rh=get(opt.AXIS(i),'children');
+        set(rh,'tag','record');
         
         % extras
         box(opt.AXIS(i),'on');
@@ -354,6 +359,10 @@ else
         end
     end
     hold(opt.AXIS,'off');
+    
+    % tag records
+    rh=get(opt.AXIS,'children');
+    set(rh,'tag','record');
     
     % extras
     box(opt.AXIS,'on');
