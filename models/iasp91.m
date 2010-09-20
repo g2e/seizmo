@@ -1,13 +1,13 @@
 function [mout]=iasp91(varargin)
 %IASP91    Returns the IASP91 Earth Model
 %
-%    Usage:    model=iasp91
+%    Usage:    model=iasp91()
 %              model=iasp91(...,'depths',depths,...)
 %              model=iasp91(...,'dcbelow',false,...)
 %              model=iasp91(...,'range',[top bottom],...)
 %              model=iasp91(...,'crust',true|false,...)
 %
-%    Description: MODEL=IASP91 returns a struct containing the 1D radial
+%    Description: MODEL=IASP91() returns a struct containing the 1D radial
 %     Earth model IASP91.  The struct has the following fields:
 %      MODEL.name      - model name ('IASP91')
 %           .ocean     - always false here
@@ -24,12 +24,16 @@ function [mout]=iasp91(varargin)
 %     MODEL=IASP91(...,'DEPTHS',DEPTHS,...) returns the model parameters
 %     only at the depths in DEPTHS.  DEPTHS is assumed to be in km.  The
 %     model parameters are found by linear interpolation between known
-%     values.  DEPTHS at discontinuities return values from the deeper side
-%     of the discontinuity.
+%     values.  DEPTHS at discontinuities return values from the deeper
+%     (bottom) side of the discontinuity for the first time and from the
+%     top side for the second time.  Depths can not be repeated more than
+%     twice and must be monotonically non-decreasing.
 %
-%     MODEL=IASP91(...,'DCBELOW',FALSE,...) returns values from the shallow
-%     (top) side of the discontinuity if a depth is specified at one using
-%     the DEPTHS option.
+%     MODEL=IASP91(...,'DCBELOW',FALSE,...) returns values from the
+%     shallow (top) side of the discontinuity the first time a depth is
+%     given at one (using the DEPTHS option) if DCBELOW is FALSE.  The
+%     default is TRUE (returns value from bottom-side the first time).  The
+%     second time a depth is used, the opposite side is given.
 %
 %     MODEL=IASP91(...,'RANGE',[TOP BOTTOM],...) specifies the range of
 %     depths that known model parameters are returned.  [TOP BOTTOM] must
@@ -64,9 +68,10 @@ function [mout]=iasp91(varargin)
 %        May  24, 2010 - added several struct fields for info
 %        Aug.  8, 2010 - minor doc touch, dcbelow option
 %        Aug. 17, 2010 - added reference
+%        Sep. 19, 2010 - doc update, better discontinuity support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2010 at 14:45 GMT
+%     Last Updated Sep. 19, 2010 at 14:45 GMT
 
 % todo:
 
@@ -92,11 +97,20 @@ for i=1:2:numel(varargin)
     % check option is available
     switch lower(varargin{i})
         case {'d' 'dep' 'depth' 'depths'}
-            if(~isempty(varargin{i+1}) && (~isreal(varargin{i+1}) ...
-                    || any(varargin{i+1}<0 | varargin{i+1}>6371)))
-                error('seizmo:iasp91:badDEPTHS',...
-                    ['DEPTHS must be real-valued km depths within ' ...
-                    'the range [0 6371] in km!']);
+            if(~isempty(varargin{i+1}))
+                if(~isreal(varargin{i+1}) || any(varargin{i+1}<0 ...
+                        | varargin{i+1}>6371) || any(isnan(varargin{i+1})))
+                    error('seizmo:iasp91:badDEPTHS',...
+                        ['DEPTHS must be real-valued km depths within ' ...
+                        'the range [0 6371] in km!']);
+                elseif(any(diff(varargin{i+1})<0))
+                    error('seizmo:iasp91:badDEPTHS',...
+                        'DEPTHS must be monotonically non-increasing!');
+                elseif(any(histc(varargin{i+1},...
+                        varargin{i+1}([find(diff(varargin{i+1}));end]))>3))
+                    error('seizmo:iasp91:badDEPTHS',...
+                        'DEPTHS has values repeated 3+ times!');
+                end
             end
             depths=varargin{i+1}(:);
         case {'dcb' 'dc' 'below' 'b' 'dcbelow'}
@@ -278,12 +292,16 @@ end
 % interpolate depths if desired
 if(~isempty(depths))
     %depths=depths(depths>=range(1) & depths<=range(2));
+    [bot,top]=interpdc1(model(:,1),model(:,2:end),depths);
     if(dcbelow)
-        model=interpdc1(model(:,1),model(:,2:end),depths);
+        [tidx,tidx]=unique(depths);
+        top(tidx,:)=bot(tidx,:);
+        model=[depths top];
     else
-        [model,model]=interpdc1(model(:,1),model(:,2:end),depths);
+        [tidx,tidx]=unique(depths,'first');
+        bot(tidx,:)=top(tidx,:);
+        model=[depths bot];
     end
-    model=[depths model];
 else
     % get index range (assumes depths are always non-decreasing in model)
     idx1=find(model(:,1)>range(1),1);

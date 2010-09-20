@@ -20,11 +20,12 @@ function [report]=chk1dmodel(model)
 %     Version History:
 %        May  24, 2010 - initial version
 %        May  27, 2010 - now allows arrays of models
-%        Aug. 10, 2010 - require monotoniticity of depths
+%        Aug. 10, 2010 - require monotoniticity of .depth
 %        Aug. 17, 2010 - require nonempty, fix error message
+%        Sep. 19, 2010 - more .depth checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2010 at 15:05 GMT
+%     Last Updated Sep. 19, 2010 at 15:05 GMT
 
 % todo:
 
@@ -80,10 +81,23 @@ for i=1:numel(model)
         report.message=['The .refperiod field of MODEL ' ...
             num2str(i) ' must be a scalar >0!'];
         return;
+    elseif(isempty(model(i).depth) || ~isreal(model(i).depth) ...
+            || any(isnan(model(i).depth)) ...
+            || ~isvector(model(i).depth) || size(model(i).depth,2)~=1)
+        report.identifier='seizmo:chk1dmodel:badDepth';
+        report.message=['The .depth field of MODEL ' ...
+            num2str(i) ' must be a non-empty real-valued column vector!'];
+        return;
     elseif(any(diff(model(i).depth)<0))
         report.identifier='seizmo:chk1dmodel:badDepth';
         report.message=['The .depth field of MODEL ' ...
             num2str(i) ' must be monotonically non-decreasing!'];
+        return;
+    elseif(any(histc(model(i).depth,...
+                    model(i).depth([find(diff(model(i).depth));end]))>3))
+        report.identifier='seizmo:chk1dmodel:badDepth';
+        report.message=['The .depth field of MODEL ' ...
+            num2str(i) ' must not have values repeated 3+ times!'];
         return;
     end
 

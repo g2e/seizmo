@@ -44,6 +44,7 @@ function [model]=perturb_1dmodel(model,newname,varargin)
 %     name of the model when altering the properties of the model.
 %
 %    Notes:
+%     - values that are 
 %
 %    Examples:
 %     PREM with a D" discontinuity in Vs.  There is a 100km thick layer
@@ -77,9 +78,10 @@ function [model]=perturb_1dmodel(model,newname,varargin)
 %        May  27, 2010 - much better discontinuity support, add newname
 %                        arg so we set the model name too
 %        May  29, 2010 - fixed a bug in perturbing relative to value above
+%        Sep. 19, 2010 - change NaN values to Inf (for Inf Q factor)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  29, 2010 at 14:45 GMT
+%     Last Updated Sep. 19, 2010 at 14:45 GMT
 
 % todo:
 
@@ -366,6 +368,11 @@ for i=1:2:nargin-2
     modmat=[modtop; cat(1,modnew{:}); modbot];
     depths=[deptop; cat(1,depnew{:}); depbot];
 end
+
+% change NaNs to Inf
+% - this is to catch Q factors that should be Inf
+% - this might also change problemed sections too 
+modmat(isnan(modmat))=inf;
 
 % back into struct
 model.depth=depths;

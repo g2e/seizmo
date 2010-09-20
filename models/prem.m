@@ -1,14 +1,14 @@
 function [mout]=prem(varargin)
 %PREM    Returns the isotropic PREM Earth Model at a reference period of 1s
 %
-%    Usage:    model=prem
+%    Usage:    model=prem()
 %              model=prem(...,'depths',depths,...)
 %              model=prem(...,'dcbelow',false,...)
 %              model=prem(...,'range',[top bottom],...)
 %              model=prem(...,'crust',true|false,...)
 %              model=prem(...,'ocean',true|false,...)
 %
-%    Description: MODEL=PREM returns a struct containing the isotropic
+%    Description: MODEL=PREM() returns a struct containing the isotropic
 %     version of the 1D radial Earth model PREM.  Note that by default the
 %     ocean has been replaced with an extended upper crust.  The struct has
 %     the following fields:
@@ -29,12 +29,16 @@ function [mout]=prem(varargin)
 %     MODEL=PREM(...,'DEPTHS',DEPTHS,...) returns the model parameters
 %     only at the depths in DEPTHS.  DEPTHS is assumed to be in km.  The
 %     model parameters are found by linear interpolation between known
-%     values.  DEPTHS at discontinuities return values from the deeper side
-%     of the discontinuity.
+%     values.  DEPTHS at discontinuities return values from the deeper
+%     (bottom) side of the discontinuity for the first time and from the
+%     top side for the second time.  Depths can not be repeated more than
+%     twice and must be monotonically non-decreasing.
 %
-%     MODEL=PREM(...,'DCBELOW',FALSE,...) returns values from the shallow
-%     (top) side of the discontinuity if a depth is specified at one using
-%     the DEPTHS option.
+%     MODEL=PREM(...,'DCBELOW',FALSE,...) returns values from the
+%     shallow (top) side of the discontinuity the first time a depth is
+%     given at one (using the DEPTHS option) if DCBELOW is FALSE.  The
+%     default is TRUE (returns value from bottom-side the first time).  The
+%     second time a depth is used, the opposite side is given.
 %
 %     MODEL=PREM(...,'RANGE',[TOP BOTTOM],...) specifies the range of
 %     depths that known model parameters are returned.  [TOP BOTTOM] must
@@ -81,9 +85,11 @@ function [mout]=prem(varargin)
 %        Aug.  8, 2010 - minor doc touch, dcbelow option
 %        Aug.  9, 2010 - fix Qu to be 1e10 in the ocean & outercore
 %        Aug. 17, 2010 - added reference
+%        Sep. 19, 2010 - back to Inf Qu in ocean & outercore, doc update,
+%                        better discontinuity support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2010 at 14:45 GMT
+%     Last Updated Sep. 19, 2010 at 14:45 GMT
 
 % todo:
 
@@ -116,11 +122,20 @@ for i=1:2:numel(varargin)
             end
             ocean=varargin{i+1};
         case {'d' 'dep' 'depth' 'depths'}
-            if(~isempty(varargin{i+1}) && (~isreal(varargin{i+1}) ...
-                    || any(varargin{i+1}<0 | varargin{i+1}>6371)))
-                error('seizmo:prem:badDEPTHS',...
-                    ['DEPTHS must be real-valued km depths within ' ...
-                    'the range [0 6371] in km!']);
+            if(~isempty(varargin{i+1}))
+                if(~isreal(varargin{i+1}) || any(varargin{i+1}<0 ...
+                        | varargin{i+1}>6371) || any(isnan(varargin{i+1})))
+                    error('seizmo:prem:badDEPTHS',...
+                        ['DEPTHS must be real-valued km depths within ' ...
+                        'the range [0 6371] in km!']);
+                elseif(any(diff(varargin{i+1})<0))
+                    error('seizmo:prem:badDEPTHS',...
+                        'DEPTHS must be monotonically non-increasing!');
+                elseif(any(histc(varargin{i+1},...
+                        varargin{i+1}([find(diff(varargin{i+1}));end]))>3))
+                    error('seizmo:prem:badDEPTHS',...
+                        'DEPTHS has values repeated 3+ times!');
+                end
             end
             depths=varargin{i+1}(:);
         case {'dcb' 'dc' 'below' 'b' 'dcbelow'}
@@ -154,8 +169,8 @@ end
 % the prem model
 % - extracted from my perfect prem routine :P
 model=[
-      0      1.45         0      1.02     57823      1e10
-      3      1.45         0      1.02     57823      1e10
+      0      1.45         0      1.02     57823       inf
+      3      1.45         0      1.02     57823       inf
       3       5.8       3.2       2.6     57823       600
      15       5.8       3.2       2.6     57823       600
      15       6.8       3.9       2.9     57823       600
@@ -265,56 +280,56 @@ model=[
 2849.98   13.7066   7.26502   5.54591     57823       312
 2886.31   13.7155   7.26465    5.5641     57823       312
    2891   13.7166    7.2646   5.56646     57823       312
-   2891   8.06479         0   9.90045     57823      1e10
-2931.32   8.13333         0   9.96452     57823      1e10
-2971.99   8.20106         0   10.0281     57823      1e10
-   3013   8.26796         0   10.0912     57823      1e10
-3054.34     8.334         0   10.1538     57823      1e10
-3096.01   8.39918         0   10.2158     57823      1e10
-   3138   8.46347         0   10.2772     57823      1e10
-3180.32   8.52686         0   10.3381     57823      1e10
-3222.95   8.58933         0   10.3983     57823      1e10
- 3265.9   8.65087         0   10.4579     57823      1e10
-3309.15   8.71148         0   10.5169     57823      1e10
-3352.71   8.77113         0   10.5752     57823      1e10
-3396.57   8.82982         0   10.6328     57823      1e10
-3440.72   8.88754         0   10.6897     57823      1e10
-3485.15   8.94429         0   10.7458     57823      1e10
-3529.88   9.00006         0   10.8013     57823      1e10
-3574.88   9.05485         0    10.856     57823      1e10
-3620.15   9.10866         0   10.9099     57823      1e10
-3665.69   9.16149         0    10.963     57823      1e10
- 3711.5   9.21334         0   11.0153     57823      1e10
-3757.57    9.2642         0   11.0669     57823      1e10
-3803.89    9.3141         0   11.1176     57823      1e10
-3850.46   9.36302         0   11.1675     57823      1e10
-3897.27   9.41099         0   11.2165     57823      1e10
-3944.33     9.458         0   11.2647     57823      1e10
-3991.62   9.50407         0   11.3121     57823      1e10
-4039.14   9.54921         0   11.3586     57823      1e10
-4086.89   9.59343         0   11.4042     57823      1e10
-4134.85   9.63675         0   11.4489     57823      1e10
-4183.04   9.67919         0   11.4928     57823      1e10
-4231.43   9.72075         0   11.5358     57823      1e10
-4280.04   9.76146         0   11.5778     57823      1e10
-4328.84   9.80133         0   11.6191     57823      1e10
-4377.85    9.8404         0   11.6594     57823      1e10
-4427.05   9.87868         0   11.6988     57823      1e10
-4476.45   9.91619         0   11.7373     57823      1e10
-4526.03   9.95296         0   11.7749     57823      1e10
-4575.79   9.98901         0   11.8117     57823      1e10
-4625.74   10.0244         0   11.8476     57823      1e10
-4675.86   10.0591         0   11.8825     57823      1e10
-4726.15   10.0932         0   11.9166     57823      1e10
-4776.62   10.1266         0   11.9498     57823      1e10
-4827.25   10.1596         0   11.9822     57823      1e10
-4878.05   10.1919         0   12.0136     57823      1e10
-4929.01   10.2238         0   12.0442     57823      1e10
-4980.13   10.2552         0    12.074     57823      1e10
-5031.41   10.2862         0   12.1029     57823      1e10
-5082.84   10.3167         0    12.131     57823      1e10
-5134.42    10.347         0   12.1582     57823      1e10
- 5149.5   10.3557         0    12.166     57823      1e10
+   2891   8.06479         0   9.90045     57823       inf
+2931.32   8.13333         0   9.96452     57823       inf
+2971.99   8.20106         0   10.0281     57823       inf
+   3013   8.26796         0   10.0912     57823       inf
+3054.34     8.334         0   10.1538     57823       inf
+3096.01   8.39918         0   10.2158     57823       inf
+   3138   8.46347         0   10.2772     57823       inf
+3180.32   8.52686         0   10.3381     57823       inf
+3222.95   8.58933         0   10.3983     57823       inf
+ 3265.9   8.65087         0   10.4579     57823       inf
+3309.15   8.71148         0   10.5169     57823       inf
+3352.71   8.77113         0   10.5752     57823       inf
+3396.57   8.82982         0   10.6328     57823       inf
+3440.72   8.88754         0   10.6897     57823       inf
+3485.15   8.94429         0   10.7458     57823       inf
+3529.88   9.00006         0   10.8013     57823       inf
+3574.88   9.05485         0    10.856     57823       inf
+3620.15   9.10866         0   10.9099     57823       inf
+3665.69   9.16149         0    10.963     57823       inf
+ 3711.5   9.21334         0   11.0153     57823       inf
+3757.57    9.2642         0   11.0669     57823       inf
+3803.89    9.3141         0   11.1176     57823       inf
+3850.46   9.36302         0   11.1675     57823       inf
+3897.27   9.41099         0   11.2165     57823       inf
+3944.33     9.458         0   11.2647     57823       inf
+3991.62   9.50407         0   11.3121     57823       inf
+4039.14   9.54921         0   11.3586     57823       inf
+4086.89   9.59343         0   11.4042     57823       inf
+4134.85   9.63675         0   11.4489     57823       inf
+4183.04   9.67919         0   11.4928     57823       inf
+4231.43   9.72075         0   11.5358     57823       inf
+4280.04   9.76146         0   11.5778     57823       inf
+4328.84   9.80133         0   11.6191     57823       inf
+4377.85    9.8404         0   11.6594     57823       inf
+4427.05   9.87868         0   11.6988     57823       inf
+4476.45   9.91619         0   11.7373     57823       inf
+4526.03   9.95296         0   11.7749     57823       inf
+4575.79   9.98901         0   11.8117     57823       inf
+4625.74   10.0244         0   11.8476     57823       inf
+4675.86   10.0591         0   11.8825     57823       inf
+4726.15   10.0932         0   11.9166     57823       inf
+4776.62   10.1266         0   11.9498     57823       inf
+4827.25   10.1596         0   11.9822     57823       inf
+4878.05   10.1919         0   12.0136     57823       inf
+4929.01   10.2238         0   12.0442     57823       inf
+4980.13   10.2552         0    12.074     57823       inf
+5031.41   10.2862         0   12.1029     57823       inf
+5082.84   10.3167         0    12.131     57823       inf
+5134.42    10.347         0   12.1582     57823       inf
+ 5149.5   10.3557         0    12.166     57823       inf
  5149.5   11.0283   3.50431   12.7636    1327.7      84.6
 5167.02   11.0349   3.50897   12.7729    1327.7      84.6
 5184.57   11.0415   3.51356    12.782    1327.7      84.6
@@ -399,15 +414,23 @@ if(~crust)
     model(2:(4+2*ocean),:)=[];
 end
 
+% replace infinity with a high value
+% - this is mainly for so interpolation doesn't produce NaNs
+%model(isinf(model))=1e10;
+
 % interpolate depths if desired
 if(~isempty(depths))
     %depths=depths(depths>=range(1) & depths<=range(2));
+    [bot,top]=interpdc1(model(:,1),model(:,2:end),depths);
     if(dcbelow)
-        model=interpdc1(model(:,1),model(:,2:end),depths);
+        [tidx,tidx]=unique(depths);
+        top(tidx,:)=bot(tidx,:);
+        model=[depths top];
     else
-        [model,model]=interpdc1(model(:,1),model(:,2:end),depths);
+        [tidx,tidx]=unique(depths,'first');
+        bot(tidx,:)=top(tidx,:);
+        model=[depths bot];
     end
-    model=[depths model];
 else
     % get index range (assumes depths are always non-decreasing in model)
     idx1=find(model(:,1)>range(1),1);
@@ -437,6 +460,9 @@ else
     if(~tf(1)); model=[range(1) vtop; model]; end
     if(~tf(2)); model=[model; range(2) vbot]; end
 end
+
+% fix interpolation of infinity
+model(isnan(model))=inf;
 
 % array to struct
 mout.name='PREM';

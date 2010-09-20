@@ -1,13 +1,26 @@
-function [models]=cmb_1dmodel_library(varargin)
-%CMB_1DMODEL_LIBRARY    Generates a library of CMB 1D Earth models
+function [varargout]=cmb_1dmodel_library(varargin)
+%CMB_1DMODEL_LIBRARY    A library of CMB 1D Earth models
 %
 %    Usage:    models=cmb_1dmodel_library(modname1,modname2,...)
+%              [name,pv]=cmb_1dmodel_library(modname1,modname2,...)
 %
-%    Description: MODELS=CMB_1DMODEL_LIBRARY(MODNAME1,MODNAME2,...) returns
-%     a struct array of 1D models corresponding to the model names given by
+%    Description:
+%     MODELS=CMB_1DMODEL_LIBRARY(MODNAME1,MODNAME2,...) returns a struct
+%     array of 1D models corresponding to the model names given by
 %     MODNAMEs.  These models are all PREM perturbations of the lower
 %     mantle.  Some model names correspond to a set of models.  The list of
 %     currently supported models is in the Notes section below.
+%
+%     [NAMES,PV]=CMB_1DMODEL_LIBRARY(MODNAME1,MODNAME2,...) returns outputs
+%     for creating the models given the by MODNAME inputs. These outputs
+%     (NAMES & PV) can be passed to PERTURB_1DMODEL with a standard 1D
+%     model (such as PREM) to create the model.  See the examples below to
+%     learn how this can be done.  NAMES is a cell array of the model names
+%     and PV is a cell array of cell arrays that contain the inputs
+%     property/value pairs to be passed to PERTURB_1DMODEL.  These models
+%     are all PREM perturbations of the lower mantle, so using another
+%     model will likely produce different results -- look out for
+%     differences in core-mantle boundary depth!!!
 %
 %    Notes:
 %     Current valid model names:
@@ -37,6 +50,7 @@ function [models]=cmb_1dmodel_library(varargin)
 %        May  30, 2010 - initial version
 %        Aug.  8, 2010 - fixed case for GQu & GPSQu
 %        Aug. 22, 2010 - added models from Raul's thesis
+%        Sep. 19, 2010 - 1 or 2 outputs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Aug. 22, 2010 at 23:00 GMT
@@ -756,11 +770,16 @@ for i=1:nargin
                 'Unknown MODNAME: %s',varargin{i});
     end
     
-    % make model
+    % make sure name is a cell array
     if(ischar(name)); name=cellstr(name); end
-    for j=1:numel(pv)
-        cnt=cnt+1;
-        models(cnt)=perturb_1dmodel(startmod,name{j},pv{j}{:});
+    if(nargout<2)
+        for j=1:numel(pv)
+            cnt=cnt+1;
+            models(cnt)=perturb_1dmodel(startmod,name{j},pv{j}{:});
+        end
+        varargout={models};
+    else
+        varargout={name pv};
     end
 end
 

@@ -41,9 +41,10 @@ function []=write_1dmodel_nd(file,model,o)
 
 %     Version History:
 %        Sep. 18, 2010 - initial version
+%        Sep. 19, 2010 - support for inf Q output as 0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 18, 2010 at 10:35 GMT
+%     Last Updated Sep. 19, 2010 at 10:35 GMT
 
 % todo
 
@@ -176,6 +177,9 @@ elseif(isequal(props,[1 1 1 1 1 1 0 0]))
     % depth vp vs rho qk qu
     % convert qk qu vp vs to qp
     qp=qkqu2qp(model.qk,model.qu,model.vp,model.vs);
+    % change inf qp qs to 0
+    qp(isinf(qp))=0;
+    model.qu(isinf(model.qu))=0;
     fprintf(fid,'%9.3f %10.5f %10.5f %10.5f %10.1f %10.1f\n',...
         [model.depth(1:moho) model.vp(1:moho) model.vs(1:moho) ...
         model.rho(1:moho) qp(1:moho) model.qu(1:moho)]');
@@ -197,24 +201,27 @@ elseif(isequal(props,[1 1 1 1 1 1 0 0]))
 elseif(isequal(props,[1 1 1 1 1 1 1 1]) ...
         || isequal(props,[1 1 1 1 0 0 1 1]))
     % depth vp vs rho qp qs
+    % change inf qp qs to 0
+    model.qp(isinf(model.qp))=0;
+    model.qs(isinf(model.qs))=0;
     fprintf(fid,'%9.3f %10.5f %10.5f %10.5f %10.1f %10.1f\n',...
         [model.depth(1:moho) model.vp(1:moho) model.vs(1:moho) ...
-        model.rho(1:moho) model.qp(1:moho) model.qu(1:moho)]');
+        model.rho(1:moho) model.qp(1:moho) model.qs(1:moho)]');
     fprintf(fid,'mantle\n');
     fprintf(fid,'%9.3f %10.5f %10.5f %10.5f %10.1f %10.1f\n',...
         [model.depth(moho+1:cmb) model.vp(moho+1:cmb) ...
         model.vs(moho+1:cmb) model.rho(moho+1:cmb) ...
-        model.qp(moho+1:cmb) model.qu(moho+1:cmb)]');
+        model.qp(moho+1:cmb) model.qs(moho+1:cmb)]');
     fprintf(fid,'outer-core\n');
     fprintf(fid,'%9.3f %10.5f %10.5f %10.5f %10.1f %10.1f\n',...
         [model.depth(cmb+1:icb) model.vp(cmb+1:icb) ...
         model.vs(cmb+1:icb) model.rho(cmb+1:icb) ...
-        model.qp(cmb+1:icb) model.qu(cmb+1:icb)]');
+        model.qp(cmb+1:icb) model.qs(cmb+1:icb)]');
     fprintf(fid,'inner-core\n');
     fprintf(fid,'%9.3f %10.5f %10.5f %10.5f %10.1f %10.1f\n',...
         [model.depth(icb+1:end) model.vp(icb+1:end) ...
         model.vs(icb+1:end) model.rho(icb+1:end) ...
-        model.qp(icb+1:end) model.qu(icb+1:end)]');
+        model.qp(icb+1:end) model.qs(icb+1:end)]');
 else
     error('seizmo:write_1dmodel_nd:unsupported',...
         'Unsupported set of model properties for .nd file creation!');

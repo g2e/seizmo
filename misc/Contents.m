@@ -50,6 +50,7 @@
 %NOTICKS              - Removes ticks and tick labels from axes
 %NOTITLES             - Removes titles from specified axes
 %ONEFILELIST          - Compiles multiple filelists into one
+%POLYSQRT             - Returns the square root of a polynomial if it exists
 %POLYSTR              - Converts polynomial coefficients into string form
 %PPDCVAL              - Evaluate piecewise polynomial (w/ discontinuity support)
 %PRINT_TIME_LEFT      - Ascii progress bar

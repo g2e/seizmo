@@ -22,6 +22,8 @@
 %PREM_PERFECT        - Returns the PREM model
 %PREM2_PERFECT       - Returns the PREM2 model
 %QKQU2QP             - Calculate corresponding Qalpha for given Qk, Qu, Vp, Vs
+%QL6                 - Quality factor model of the Earth by Durek & Ekstrom 1996
+%QLM9                - Quality factor model of the Earth by Lawrence & Wysession 2006
 %QPQS2QK             - Calculate corresponding Qkappa for given Qp, Qs, Vp, Vs
 %READCRUST2          - Reads Crust2.0 files, putting them into a struct
 %READ_SCRIPPS_BINARY - Reads a Scripps mantle model unformatted binary
