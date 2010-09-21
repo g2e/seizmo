@@ -1,31 +1,54 @@
-function []=multibandalign(data,bank,projname,varargin)
+function [info]=multibandalign(data,bank,varargin)
 %MULTIBANDALIGN    Aligns signal at multiple frequency bands
 %
-%    Usage:    []=multibandalign(data,bank,projname)
-%              []=multibandalign(data,bank,projname,...,useralign_options,...)
+%    Usage:    info=multibandalign(data,bank)
+%              info=multibandalign(data,bank,'option',value,...)
 %
 %    Description:
+%     INFO=MULTIBANDALIGN(DATA,BANK) presents the user with an interface to
+%     align the data given in SEIZMO struct DATA at the frequency bands
+%     specified in the filter bank BANK.  BANK should be formatted as
+%     output from FILTER_BANK.  DATA should be records where the phase of
+%     interest has already been isolated (not necessary but saves you from
+%     having to do it for every frequency band).  You can do this using a
+%     combination of USERMOVEOUT, USERWINDOW, and USERTAPER.  The output is
+%     a struct containing the USERALIGN output from each aligned frequency
+%     as well as SNR info and filter info.  All figures are automatically
+%     saved to the current directory as .fig files.
+%
+%     INFO=MULTIBANDALIGN(DATA,BANK,'OPTION',VALUE,...) passes additional
+%     options to USERALIGN.  See that function for details.
 %
 %    Notes:
 %
 %    Examples:
+%     % 
 %
-%    See also: USERALIGN
+%    See also: USERALIGN, USERSNR, FILTER_BANK, IIRFILTER
 
 %     Version History:
 %        Mar. 25, 2010 - initial version
+%        Sep. 21, 2010 - working version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 25, 2010 at 12:25 GMT
+%     Last Updated Sep. 21, 2010 at 12:25 GMT
 
 % todo:
-% - menu to utilize alignment for subsequent bands
 
 % check nargin
-error(nargchk(3,inf,nargin));
+if(nargin<2)
+    error('seizmo:multibandalign:notEnoughInputs',...
+        'Not enough input arguments.');
+elseif(nargin>4 && mod(nargin,2))
+    error('seizmo:multbandalign:optionMustBePaired',...
+        'Options must be paired with a value!');
+end
 
 % check data (dep)
 versioninfo(data,'dep');
+
+% number of records
+nrecs=numel(data);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -47,25 +70,16 @@ end
 
 % attempt multi-band align
 try
-    % check required inputs (bank, projname)
+    % check filter bank
     if(size(bank,2)~=3 ...
             || any(bank(:)<=0 | isnan(bank(:)) | isinf(bank(:))) ...
             || any(bank(:,1)<=bank(:,2) | bank(:,3)<=bank(:,1)))
         error('seizmo:multibandalign:badInput',...
             'BANK must be in the format from FILTER_BANK!');
     end
-    if(~ischar(projname) || size(projname,1)~=1)
-        error('seizmo:multibandalign:badInput',...
-            'PROJNAME must be a string!');
-    end
     
-    % fix projname
-    [projpath,name,ext]=fileparts(projname);
-    if(isempty(ext)); ext='.mat'; end
-    projname=fullfile(projpath,name);
-    
-    % save inputs to a file
-    save([projname ext],'data','bank','projname','varargin');
+    % preallocate output
+    info([])=struct('info',[],'xc',[],'data',[],'filter',[],'snr',[]);
     
     % require o field is set to the same value (within +/- 2 millisec)
     o=getheader(data,'o');
@@ -75,18 +89,15 @@ try
             'O field must correspond to one UTC time for all records!');
     end
     
-    % get additional filter info
+    % get additional filter info (default to 4th order 1-pass butterworth)
     filt=bandpass_parameters('butter',4,1);
     
     % get snr cut (default to 3)
     snrcut=get_snr_cutoff(3);
     
-    % number of records
-    nrecs=numel(data);
-    
-    % build align table (for pre-aligning each band using previous align)
+    % build lag table (for pre-aligning each band using previous lags)
     lags=o(:,ones(1,nrecs))'-o(:,ones(1,nrecs));
-    idx=zeros(nrecs);
+    idx=ones(nrecs);
     goodarr=-o;
     goodidx=1:nrecs;
     
@@ -94,19 +105,22 @@ try
     for i=1:size(bank,1)
         % get new relative arrivals & prealign
         % - lags are absolute
-        % - use 10^idx as weight
+        % - use 10^idx as weight (higher weight to more recent freqs)
         % - use latest "good" arrivals to get absolute times
-        tt=ttalign(lags,10.^idx,goodarr,1,goodidx);
-        data0=timeshift(data,-o-tt);
+        tt=ttalign(lags,10.^(idx-i),goodarr,1,goodidx);
+        data0=timeshift(data,-o-tt); % shift to origin then new times
+        info(i).tt_start=tt;
         
         % filter the records
         data0=iirfilter(data0,'bp',filt.style,'c',bank(i,2:3),...
             'o',filt.order,'p',filt.passes);
         filt.corners=bank(i,2:3);
+        info(i).filter=filt;
         
-        % plot records
-        fh0=p0(data0,'title',['FILTER: ' num2str(bank(i,2)) 'Hz  to  ' ...
-            num2str(bank(i,3)) 'Hz']);
+        % plot records (so user can decide to skip or not)
+        ax=plot0(data0,'title',...
+            ['FILTER CORNERS: ' num2str(1/bank(i,3)) 's  to  ' ...
+            num2str(1/bank(i,2)) 's']);
         
         % ask the user if they wish to continue
         skip=false; skipall=false;
@@ -127,11 +141,19 @@ try
         end
         
         % handle skipping
+        istr=num2str(i);
+        saveas(get(ax,'parent'),['multibandalign_' istr '_preview.fig']);
+        close(get(ax,'parent'));
         if(skip); continue; end
         if(skipall); break; end
         
         % user estimated snr
-        [snr,s,fh]=usersnr(data0);
+        [snr,s,ax]=usersnr(data0);
+        info(i).snr=s;
+        info(i).snr.snrcut=snrcut;
+        info(i).snr.snr=snr;
+        saveas(get(ax,'parent'),['multibandalign_' istr '_usersnr.fig']);
+        close(get(ax,'parent'));
         
         % trimming dataset to snr significant
         snridx=snr>=snrcut;
@@ -140,18 +162,15 @@ try
         nn=numel(data0);
         
         % align
-        [info,xc,data1]=useralign(data0,...
+        [tmp,xc,data1]=useralign(data0,...
             'estarr',zeros(nn,1),'snr',snr,varargin{:});
-        
-        % add snr params to info
-        info.usersnr=s;
-        info.figurehandles(end+1)=fh;
-        info.snrcut.value=snrcut;
-        info.snrcut.snridx=snridx;
-    
-        % perform cluster analysis on results
-        [info.usercluster,info.figurehandles(end+1)]=usercluster(data1,...
-            xc.cg(:,:,1));
+        info(i).info=tmp;
+        info(i).xc=xc;
+        info(i).data=data1;
+        clear tmp xc data1
+        ax=info.handles(ishandle(info.handles));
+        saveas(get(ax(1),'parent'),['multibandalign_' istr '_useralign.fig']);
+        close(get(ax(1),'parent'));
         
         % amplitude analysis
         % - need peak2peak amplitude
@@ -159,23 +178,13 @@ try
         
         % ask to utilize for subsequent bands
         if(use_align)
-            % biggest cluster only
-            pop=histc(info.usercluster.T,1:max(info.usercluster.T));
-            [idx,idx]=max(pop);
-            biggestclusteridx=idx==info.usercluster.T;
+            goodarr=info(i).info.solution.arr;
             goodidx=find(snridx);
-            goodidx=goodidx(biggestclusteridx);
-            goodarr=info.solution.arr(biggestclusteridx);
-            lags(goodidx,goodidx)=info.solution.arr(:,ones(1,nn))'...
+            lags(goodidx,goodidx)=...
+                info(i).info.solution.arr(:,ones(1,nn))'...
                 -info.solution.arr(:,ones(1,nn));
             idx(goodidx,goodidx)=i;
         end
-        
-        % save everything (add in filter info, align table too!)
-        info.iirfilter=filt;
-        save([projname '_' num2str(i,'%02d') ext],...
-            'info','xc','data1',...
-            'goodidx','goodarr','lags','idx');
     end
     
     % toggle checking back
@@ -253,20 +262,6 @@ end
 end
 
 
-function [lgc]=use_align()
-happy_user=false;
-while(~happy_user)
-    choice=menu('Utilize alignment for subsequent filters?','YES','NO');
-    switch choice
-        case 1
-            lgc=true;
-        case 2
-            lgc=false;
-    end
-end
-end
-
-
 function [snrcut]=get_snr_cutoff(snrcut)
 happy_user=false;
 while(~happy_user)
@@ -288,6 +283,20 @@ while(~happy_user)
             end
         case 2
             happy_user=true;
+    end
+end
+end
+
+
+function [lgc]=use_align()
+happy_user=false;
+while(~happy_user)
+    choice=menu('Utilize alignment for subsequent filters?','YES','NO');
+    switch choice
+        case 1
+            lgc=true;
+        case 2
+            lgc=false;
     end
 end
 end

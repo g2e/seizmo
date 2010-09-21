@@ -151,9 +151,9 @@ for i=1:2:np
             opt.SPECTRALCMP=val;
         case {'unwrap' 'unwrapphase'}
             opt.UNWRAP=val;
-        case {'clucut' 'clustercutoff' 'cutoff'}
+        case {'clucut' 'cutoff' 'distcut'}
             opt.CUTOFF=val;
-        case {'clucutcolor' 'clustercutoffcolor' 'cutoffcolor'}
+        case {'clucutcolor' 'distcutcolor' 'cutoffcolor'}
             opt.CUTOFFCOLOR=val;
         case {'othercolor'}
             opt.OTHERCOLOR=val;

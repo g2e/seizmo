@@ -1,5 +1,5 @@
 % Seismology Toolbox - position
-% Version 0.6.0-r165 Fuji 15-Sept-2010
+% Version 0.6.0-r168 Fuji 21-Sept-2010
 %
 % Global Position functions
 %ARRAYCENTER              - Returns the geographic center of an array

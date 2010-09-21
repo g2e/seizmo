@@ -1,13 +1,12 @@
-function [selected,ax]=selectclusters(data,grp,opt,selected,varargin)
+function [grp,ax]=selectclusters(data,grp,opt,varargin)
 %SELECTCLUSTERS    Select clustered SEIZMO data records graphically
 %
-%    Usage:    [selected,ax]=selectclusters(data,grp)
-%              selectclusters(data,grp,option)
-%              selectclusters(data,grp,option,selected)
-%              selectclusters(data,grp,option,selected,'option',value,...)
+%    Usage:    [grp,ax]=selectclusters(data,grp)
+%              [grp,ax]=selectclusters(data,grp,option)
+%              [grp,ax]=selectclusters(data,grp,option,'option',value,...)
 %
 %    Description:
-%     [SELECTED,AX]=SELECTCLUSTERS(DATA,GRP) returns the clusters that are
+%     [GRP,AX]=SELECTCLUSTERS(DATA,GRP) returns the clusters that are
 %     graphically selected by the user.  Clusters are defined by the struct
 %     GRP (see USERCLUSTER for more details).  The associated waveforms are
 %     in SEIZMO struct DATA.  Selection/unselection of clusters is done by
@@ -16,34 +15,34 @@ function [selected,ax]=selectclusters(data,grp,opt,selected,varargin)
 %     the logical array SELECTED which indicates the clusters that were
 %     selected and AX gives the plot handle(s).
 %
-%     SELECTCLUSTERS(DATA,GRP,OPTION) sets whether selected clusters are
-%     kept or deleted.  OPTION must be either 'keep' or 'delete'.  When
-%     OPTION is 'keep', the background color for selected records is set to
-%     a dark green.  For OPTION set to 'delete', the background color is
-%     set to a dark red for selected clusters.  The default is 'keep'.
+%     [GRP,AX]=SELECTCLUSTERS(DATA,GRP,OPTION) sets whether selected
+%     clusters are kept (good) or deleted (bad).  OPTION must be either
+%     'keep' or 'delete'.  When OPTION is 'keep', the background color for
+%     selected records is set to a dark green.  For OPTION set to 'delete',
+%     the background color is set to a dark red for selected clusters.  The
+%     default is 'keep'.
 %
-%     SELECTCLUSTERS(DATA,GRP,OPTION,SELECTED) allows preselecting clusters
-%     using the array SELECTED.  SELECTED must be either true (all
-%     selected), false (none selected), a logical array with the same
-%     number of clusters as defined in GRP, or an array of linear indices.
-%     The default is false.
-%
-%     SELECTCLUSTERS(DATA,GRP,OPTION,SELECTED,'OPTION',VALUE,...) passes
+%     [GRP,AX]=SELECTCLUSTERS(DATA,GRP,OPTION,'OPTION',VALUE,...) passes
 %     plotting options (all arguments after SELECTED) to PLOTCLUSTERS.
 %
 %    Notes:
 %
 %    Examples:
 %     % Only allow selection of the first three clusters:
-%     selectclusters(data,grp,'keep',false,'clusters',1:3)
+%     selectclusters(data,grp,'keep','clusters',1:3)
+%
+%     % Alter the cluster pre-selection (no kept/good):
+%     grp.good=false;
+%     grp=selectclusters(data,grp);
 %
 %    See also: PLOTCLUSTERS, USERCLUSTER, SELECTRECORDS
 
 %     Version History:
 %        Sep. 18, 2010 - initial version
+%        Sep. 21, 2010 - altered inputs/outputs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 18, 2010 at 20:00 GMT
+%     Last Updated Sep. 21, 2010 at 20:00 GMT
 
 % todo:
 
@@ -51,7 +50,7 @@ function [selected,ax]=selectclusters(data,grp,opt,selected,varargin)
 if(nargin<1)
     error('seizmo:selectclusters:notEnoughInputs',...
         'Not enough input arguments.');
-elseif(nargin>4 && mod(nargin,2))
+elseif(nargin>3 && ~mod(nargin,2))
     error('seizmo:selectclusters:plotOptionMustBePaired',...
         'Plot options must be paired with a value!');
 end
@@ -63,8 +62,10 @@ versioninfo(data,'dep');
 nrecs=numel(data);
 
 % check cluster struct
-if(~isstruct(grp) || any(~ismember({'T' 'color'},fieldnames(grp))) ...
-        || numel(grp.T)~=nrecs || ~isequal([max(grp.T) 3],size(grp.color)))
+if(~isstruct(grp) ...
+        || any(~ismember({'T' 'color' 'good'},fieldnames(grp))) ...
+        || numel(grp.T)~=nrecs ...
+        || ~isequal([max(grp.T) 3],size(grp.color)))
     error('seizmo:selectclusters:badInput',...
         'GRP must be a struct with fields T & color!');
 end
@@ -72,12 +73,14 @@ end
 % number of groups
 ngrp=max(grp.T);
 
+% selected
+selected=grp.good;
+
 % valid values for options
-valid.OPT={'keep' 'delete'};
+valid.OPT={'keep' 'delete' 'good' 'bad'};
 
 % default inputs
 if(nargin<3 || isempty(opt)); opt='keep'; end
-if(nargin<4 || isempty(selected)); selected=false; end
 
 % check inputs
 if(~isstring(opt) || isempty(strmatch(lower(opt),valid.OPT)))
@@ -88,7 +91,7 @@ elseif((isnumeric(selected) && (any(selected~=fix(selected)) ...
         || any(selected<1 | selected>ngrp))) || (islogical(selected) ...
         && ~any(numel(selected)~=[1 ngrp])))
     error('seizmo:selectclusters:badInput',...
-        'SELECTED must be TRUE, FALSE, logical array or linear indices!');
+        'GRP.GOOD must be TRUE, FALSE, logical array or linear indices!');
 end
 
 % fix selected
@@ -100,12 +103,13 @@ elseif(isnumeric(selected))
     selected(lidx)=true;
 end
 
-% set color
-keep=~isempty(strmatch(opt,'keep'));
+% set color and flip selected if delete
+keep=~isempty(strmatch(opt,{'keep' 'good'}));
 if(keep)
     color=[0 .3 0];
 else % delete
     color=[.3 0 0];
+    selected=~selected;
 end
 
 % plot clusters
@@ -146,6 +150,13 @@ while(button~=2)
             set(handle,'color',color);
         end
     end
+end
+
+% push selected into struct
+if(keep)
+    grp.good=selected;
+else % delete
+    grp.good=~selected;
 end
 
 end

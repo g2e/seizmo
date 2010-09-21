@@ -41,8 +41,8 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %      XSCALE       -- 'linear' or 'log'
 %      YSCALE       -- 'linear' or 'log'
 %      AMPSCALE     -- 'linear' or 'log'
-%      CUTOFF       -- 0 to 1 (default of 0.2)
-%      CUTOFFCOLOR  -- default is 'r' (red)
+%      DISTOFF      -- 0 to 1 (default of 0.2)
+%      DISTCUTCOLOR -- default is 'r' (red)
 %      OTHERCOLOR   -- color of unclustered records/nodes ([.5 .5 .5])
 %
 %    Notes:
@@ -61,9 +61,10 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %        Aug. 15, 2010 - rewrite
 %        Aug. 24, 2010 - require two axes handles
 %        Aug. 26, 2010 - cutoff/cutoffcolor options (ie renamed them)
+%        Sep. 21, 2010 - distcut/distcutcolor
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2010 at 23:00 GMT
+%     Last Updated Sep. 21, 2010 at 23:00 GMT
 
 % todo:
 

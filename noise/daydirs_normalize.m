@@ -39,9 +39,10 @@ function []=daydirs_normalize(indir,outdir,eqband,pband,tsw,fsw,o)
 %     Version History:
 %        June 21, 2010 - initial version
 %        Aug. 19, 2010 - bit more useful warning messages
+%        Sep. 21, 2010 - commented out parallel processing lines
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 19, 2010 at 12:55 GMT
+%     Last Updated Sep. 21, 2010 at 11:15 GMT
 
 % todo:
 

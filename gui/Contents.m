@@ -1,10 +1,11 @@
 % Seismology Toolbox - gui
-% Version 0.6.0-r165 Fuji 15-Sept-2010
+% Version 0.6.0-r168 Fuji 21-Sept-2010
 %
 % Interactive functions
 %AMPCUT         - Cut amplitude outliers interactively
 %ARRCUT         - Cut arrival time outliers interactively
 %ERRCUT         - Cut high error outliers interactively
+%MULTIBANDALIGN - Aligns signal at multiple frequency bands
 %PICKSTACK      - Interactive picking of signal onset in SEIZMO record stack
 %POPCUT         - Cut low POP values interactively
 %SELECTCLUSTERS - Select clustered SEIZMO data records graphically

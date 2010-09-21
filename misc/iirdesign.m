@@ -97,10 +97,10 @@ function [fo,passes,mirror]=iirdesign(nyq,type,style,varargin)
 %       (aka ringing).  Note that automatic order determination MAY ALTER
 %       CORNER POSITIONING SIGNIFICANTLY (a warning is issued).
 %
-%      PASSES: Default is 1.  Accepts 1,2,3 or 4.  Option 1 is a simple
+%      PASSES: Default is 1.  Accepts 1, 2, -1 or -2.  Option 1 is a simple
 %       forward filter (single pass).  Option 2 filters forwards then
-%       backwards to perform zero-phase filtering.  Option 3 is for
-%       backwards filtering only and option 4 forward filters after
+%       backwards to perform zero-phase filtering.  Option -1 is for
+%       backwards filtering only and option -2 forward filters after
 %       backwards filtering - aka a 2-pass in reverse order).  Two-pass
 %       filtering is convenient for zero-phase filtering as a single-pass
 %       IIR filter causes phase/group dispersion.  However, backwards
@@ -178,9 +178,10 @@ function [fo,passes,mirror]=iirdesign(nyq,type,style,varargin)
 %        Mar. 25, 2010 - minor doc update
 %        Apr. 25, 2010 - allow 'lp'/'hp' as filter types
 %        May  20, 2010 - allow 'n' to specify poles, 'bu' for butter
+%        Sep. 20, 2010 - alter 3,4 pass to -1,-2 for simplicity
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  20, 2010 at 19:00 GMT
+%     Last Updated Sep. 20, 2010 at 19:00 GMT
 
 % todo:
 
@@ -326,9 +327,9 @@ for i=1:2:nargin-3
         case {'passes' 'pass' 'p'}
             if(~isscalar(varargin{i+1}) ...
                     || ~isreal(varargin{i+1}) ...
-                    || ~any(varargin{i+1}==[1 2 3 4]))
+                    || ~any(abs(varargin{i+1})==[1 2]))
                 error('seizmo:iirdesign:badInput',...
-                    'PASSES must be 1, 2, 3 or 4 !');
+                    'PASSES must be 1, 2, -1 or -2 !');
             end
             passes=varargin{i+1};
         case {'patten' 'pa' 'pripple' 'pr' 'ripple' 'r'}

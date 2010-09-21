@@ -30,9 +30,10 @@ function []=daydirs_rinst(indir,outdir,varargin)
 
 %     Version History:
 %        June 18, 2010 - initial version
+%        Sep. 21, 2010 - commented out parallel processing lines
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 18, 2010 at 12:55 GMT
+%     Last Updated Sep. 21, 2010 at 11:15 GMT
 
 % todo:
 

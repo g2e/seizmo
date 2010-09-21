@@ -5,7 +5,7 @@ function []=daydirs_make(indir,outdir,o)
 %              daydirs_make(indir,outdir,overwrite)
 %
 %    Description: DAYDIRS_MAKE(INDIR,OUTDIR) takes SEIZMO records in
-%     directory INDIR and cuts them up into day-lon records in a directory
+%     directory INDIR and cuts them up into day-long records in a directory
 %     layout under OUTDIR.  The directory layout goes:
 %      OUTDIR/YEAR/JULDAY/RECORDS
 %
@@ -28,12 +28,13 @@ function []=daydirs_make(indir,outdir,o)
 %     Version History:
 %        June 18, 2010 - initial version
 %        June 30, 2010 - better catching of errors
+%        Sep. 21, 2010 - commented out parallel processing lines
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 30, 2010 at 12:55 GMT
+%     Last Updated Sep. 21, 2010 at 11:15 GMT
 
 % todo:
-% - figure out leapsecond problem
+% - there appears to be a leapsecond problem in this that I haven't solved
 
 % check nargin
 error(nargchk(2,3,nargin));
@@ -79,7 +80,7 @@ end
 fs=filesep;
 
 % parallel processing setup (8 instances)
-matlabpool(8);
+%matlabpool(8);
 
 % read in data headers
 data=readheader(indir);
@@ -104,7 +105,8 @@ if(verbose)
 end
 
 % loop over every record
-parfor i=1:nrecs
+for i=1:nrecs
+%parfor i=1:nrecs
     % read in record
     rec=readdata(data(i));
     
@@ -151,7 +153,7 @@ parfor i=1:nrecs
 end
 
 % parallel processing takedown & fix verbosity
-matlabpool close;
+%matlabpool close;
 seizmoverbose(verbose);
 
 end

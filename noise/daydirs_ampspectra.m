@@ -27,9 +27,10 @@ function []=daydirs_ampspectra(indir,outdir,cmp,o)
 
 %     Version History:
 %        June 30, 2010 - initial version
+%        Sep. 21, 2010 - commented out parallel processing lines
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 30, 2010 at 12:55 GMT
+%     Last Updated Sep. 21, 2010 at 11:15 GMT
 
 % todo:
 
@@ -81,7 +82,7 @@ end
 fs=filesep;
 
 % parallel processing setup (8 instances)
-matlabpool(8);
+%matlabpool(8);
 
 % get year directories and day directories
 dirs=xdir([indir fs]);
@@ -115,7 +116,8 @@ for i=1:nyears
     syr=num2str(yr);
     
     % loop over days
-    parfor j=1:numel(jdays{i})
+    for j=1:numel(jdays{i})
+    %parfor j=1:numel(jdays{i})
         % working julian day
         jday=jdays{i}(j);
         sjday=num2str(jday,'%03d');
@@ -148,7 +150,7 @@ for i=1:nyears
             % close pool & fix verbosity
             tmp=lasterror;
             warning(tmp.message);
-            matlabpool close;
+            %matlabpool close;
             seizmoverbose(verbose);
             
             % ???
@@ -158,7 +160,7 @@ for i=1:nyears
 end
 
 % parallel processing takedown
-matlabpool close;
+%matlabpool close;
 seizmoverbose(verbose);
 
 end

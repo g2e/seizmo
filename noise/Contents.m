@@ -1,5 +1,5 @@
 % Seismology Toolbox - noise
-% Version 0.6.0-r165 Fuji 15-Sept-2010
+% Version 0.6.0-r168 Fuji 21-Sept-2010
 %
 % Ambient noise analysis functions
 %ARRAY_STATION_NAMES       - Returns station names for an array

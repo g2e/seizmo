@@ -92,10 +92,10 @@ function [data,fo,nyq]=iirfilter(data,varargin)
 %       (aka ringing).  Note that automatic order determination MAY ALTER
 %       CORNER POSITIONING SIGNIFICANTLY (a warning is issued if so).
 %
-%      PASSES: Default is 1.  Accepts 1,2,3 or 4.  Option 1 is a simple
+%      PASSES: Default is 1.  Accepts 1, 2, -1 or -2.  Option 1 is a simple
 %       forward filter (single pass).  Option 2 filters forwards then
-%       backwards to perform zero-phase filtering.  Option 3 is for
-%       backwards filtering only and option 4 forward filters after
+%       backwards to perform zero-phase filtering.  Option -1 is for
+%       backwards filtering only and option -2 forward filters after
 %       backwards filtering - aka a 2-pass in reverse order).  Two-pass
 %       filtering is convenient for zero-phase filtering as a single-pass
 %       IIR filter causes phase/group dispersion.  However, backwards
@@ -193,9 +193,10 @@ function [data,fo,nyq]=iirfilter(data,varargin)
 %                        record, seizmoverbose support, proper SEIZMO
 %                        handling, versioninfo caching, better checks,
 %                        added version history, complete doc reformat
+%        Sep. 20, 2010 - passes arg now uses -1,-2 rather than 3,4
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 17:00 GMT
+%     Last Updated Sep. 20, 2010 at 17:00 GMT
 
 % todo:
 
@@ -279,9 +280,9 @@ try
         elseif(passes==2)
             data(i).dep=impfilt(data(i).dep,fo{idx(i)},mirror,true);
             data(i).dep=impfilt(data(i).dep,fo{idx(i)},mirror,false);
-        elseif(passes==3)
+        elseif(passes==-1)
             data(i).dep=impfilt(data(i).dep,fo{idx(i)},mirror,false);
-        elseif(passes==4)
+        elseif(passes==-2)
             data(i).dep=impfilt(data(i).dep,fo{idx(i)},mirror,false);
             data(i).dep=impfilt(data(i).dep,fo{idx(i)},mirror,true);
         end

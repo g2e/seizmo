@@ -1,12 +1,13 @@
-function [grp,ax]=usercluster(data,cg,cutoff,method,criterion,varargin)
+function [grp,ax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %USERCLUSTER    Interactively cluster SEIZMO records
 %
 %    Usage:    grp=usercluster(data)
 %              grp=usercluster(data,cg)
-%              grp=usercluster(data,cg,cutoff)
-%              grp=usercluster(data,cg,cutoff,method)
-%              grp=usercluster(data,cg,cutoff,method,criterion)
-%              grp=usercluster(data,cg,cutoff,method,criterion,...
+%              grp=usercluster(data,cg,distcut)
+%              grp=usercluster(data,cg,distcut,method)
+%              grp=usercluster(data,cg,distcut,method,criterion)
+%              grp=usercluster(data,cg,distcut,method,criterion,popcut)
+%              grp=usercluster(data,cg,distcut,method,criterion,popcut,...
 %                              'field1',value1,...,'fieldN',valueN)
 %              [grp,ax]=usercluster(...)
 %
@@ -16,9 +17,11 @@ function [grp,ax]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %     mouse clicks.  GRP is a struct containing several fields providing
 %     the parameters used in the analysis and some related info.  The
 %     layout is as follows:
-%       GRP.cutoff    = clustering limit
+%       GRP.distcut   = clustering distance limit
 %       GRP.method    = linkage method
 %       GRP.criterion = cluster formation method
+%       GRP.popcut    = "good" cluster population threshhold
+%       GRP.good      = "good" clusters (logical array)
 %       GRP.perm      = permutation indices to match dendrogram ordering
 %       GRP.color     = coloring for each cluster in the plot
 %       GRP.T         = cluster index for each record
@@ -27,34 +30,38 @@ function [grp,ax]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %     should be N(N-1)/2 x 1 where N is the number of records in DATA.  CG
 %     may be empty ([]) to trigger cross-correlation of records in DATA.
 %
-%     GRP=USERCLUSTER(DATA,CG,CUTOFF) sets the initial dissimilarity cutoff
-%     for forming clusters to CUTOFF.  This should be a value between 0 and
-%     1.  The default value is 0.2.
+%     GRP=USERCLUSTER(DATA,CG,DISTCUT) sets the initial dissimilarity cut
+%     for forming clusters to DISTCUT.  This should be a value between 0
+%     and 1.  The default value is 0.2.
 %
-%     GRP=USERCLUSTER(DATA,CG,CUTOFF,METHOD) alters the method for forming
+%     GRP=USERCLUSTER(DATA,CG,DISTCUT,METHOD) alters the method for forming
 %     the dendrogram.  See the function LINKAGE for details.  The default
 %     is 'average'.
 %
-%     GRP=USERCLUSTER(DATA,CG,CUTOFF,METHOD,CRITERION) sets the method for
+%     GRP=USERCLUSTER(DATA,CG,DISTCUT,METHOD,CRITERION) sets the method for
 %     forming clusters to CRITERION.  The default value is 'distance'.
 %     Another valid value is 'inconsistent' although it is NOT RECOMMENDED
 %     as it will be inconsistent with the dendrogram.  See CLUSTER for more
 %     info.
 %
-%     GRP=USERCLUSTER(DATA,CG,CUTOFF,METHOD,CRITERION,'FIELD',VALUE,...)
-%     passes field and value pairs on to PLOTDENDRO for further
-%     customization.
+%     GRP=USERCLUSTER(DATA,CG,DISTCUT,METHOD,CRITERION,POPCUT) sets the
+%     default population cutoff.  The default is set at 3 otherwise. 
+%
+%     GRP=USERCLUSTER(DATA,CG,DISTCUT,METHOD,CRITERION,POPCUT,...
+%     'FIELD1',VALUE1,...,'FIELDN',VALUEN) passes field and value pairs on
+%     to PLOTDENDRO for further customization.
 %
 %     [GRP,AX]=USERCLUSTER(...) returns the axes handle in AX.
 %
 %    Notes:
 %
 %    Examples:
-%     Cluster starting with a dissimilarity cutoff of 0.05:
-%      grp=usercluster(data,[],0.05);
+%     % Cluster starting with a dissimilarity cutoff of 0.05:
+%     grp=usercluster(data,[],0.05);
 %
 %    See also: USERWINDOW, USERTAPER, USERALIGN, PLOTDENDRO,
 %              CLUSTER, LINKAGE, PDIST, INCONSISTENT, DENDROGRAM
+%              POPCUT, PLOTPOP, PLOTCLUSTERS, SELECTCLUSTERS
 
 %     Version History:
 %        Sep. 25, 2009 - rewrite and added documentation
@@ -69,15 +76,17 @@ function [grp,ax]=usercluster(data,cg,cutoff,method,criterion,varargin)
 %        May   7, 2010 - button to draw cluster map
 %        June 26, 2010 - mapclusters deprecated (uses mapstations)
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
+%        Sep. 21, 2010 - added POPCUT & SELECTRECORDS into the fold,
+%                        changed CUTOFF to DISTCUT
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2010 at 10:00 GMT
+%     Last Updated Sep. 21, 2010 at 10:00 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,inf,nargin));
-if(nargin>5 && ~mod(nargin,2))
+if(nargin>6 && mod(nargin,2))
     error('seizmo:usercluster:badNumInputs',...
         'Bad number of arguments!');
 end
@@ -107,14 +116,14 @@ try
             'CG does not have proper dimensions!');
     end
 
-    % default dendrogram cutoff
-    if(nargin<3 || isempty(cutoff)); cutoff=0.2; end
-    if(~isreal(cutoff) || ~isscalar(cutoff))
+    % default dendrogram dissimilarity cutoff
+    if(nargin<3 || isempty(distcut)); distcut=0.2; end
+    if(~isreal(distcut) || ~isscalar(distcut))
         error('seizmo:usercluster:badCutoff',...
-            'CUTOFF must be a real-valued scalar in the range 0 to 1!');
+            'DISTCUT must be a real-valued scalar in the range 0 to 1!');
     end
-    if(cutoff<0); cutoff=0; end
-    if(cutoff>1); cutoff=1; end
+    if(distcut<0); distcut=0; end
+    if(distcut>1); distcut=1; end
 
     % default/check method
     methods={'average' 'centroid' 'complete' ...
@@ -128,24 +137,64 @@ try
 
     % default/check criterion
     criterions={'inconsistent' 'distance'};
-    if(nargin<5 || isempty(criterion)); criterion='distance'; end
-    if(~any(strcmpi(criterion,criterions)))
+    if(nargin<5 || isempty(crit)); crit='distance'; end
+    if(~any(strcmpi(crit,criterions)))
         error('seizmo:usercluster:badCriterion',...
             ['CRITERION must be one of the following:\n' ...
             sprintf('''%s'' ',criterions{:})]);
     end
     
+    % default/check population cutoff
+    if(nargin<6 || isempty(pcut)); pcut=3; end
+    if(~isreal(pcut) || ~isscalar(pcut) || pcut<0)
+        error('seizmo:usercluster:badPopulationCutoff',...
+            'POPCUT must be a positive real-valued scalar!');
+    end
+    
     % save parameters
-    grp.cutoff=cutoff;
+    grp.distcut=distcut;
     grp.method=method;
-    grp.criterion=criterion;
+    grp.criterion=crit;
+    grp.popcut=pcut;
+    grp.good=[];
     
     % outer loop - only breaks free on user command
-    happy_user=false; ax=[-1 -1]; cx=-1; mx=-1; oldax=[]; save=false;
+    happy_user=false;
+    ax=[-1 -1]; % dendrogram & waveform axes
+    cx=-1;      % cophenetic distance vs actual distance
+    mx=-1;      % cluster map
+    px=[];      % popcut axes
+    sx=[];      % selectclusters axes
+    oldax=[];   % axes from previous loop
+    save=false;
     while(~happy_user)
+        % get linkage
+        Z=linkage(1-cg.',grp.method);
+        
+        % delete all old cluster plots & plot dendrogram if needed
+        if(~save)
+            oldfh=get(oldax(ishandle(oldax)),'parent');
+            if(iscell(oldfh)); oldfh=cell2mat(oldfh); end
+            close(oldfh);
+            [grp.perm,grp.color,ax]=plotdendro(data,Z,...
+                varargin{:},'distcut',grp.distcut);
+        end
+        
+        % get clusters
+        grp.T=cluster(Z,'cutoff',grp.distcut,...
+            'criterion',grp.criterion);
+        [idx,idx]=ismember(1:max(grp.T),grp.T(grp.perm));
+        grp.color=grp.color(idx,:);
+        
+        % get good clusters
+        pop=histc(grp.T,1:max(grp.T));
+        grp.good=pop>=grp.popcut;
+        
         % get choice from user
         choice=menu('CHANGE CLUSTERING SETTINGS?',...
-            ['DISSIMILARITY CUTOFF (' num2str(grp.cutoff) ')'],...
+            ['DISSIMILARITY CUTOFF (' num2str(grp.distcut) ')'],...
+            ['POPULATION CUTOFF (' num2str(grp.popcut) ')'],...
+            'MANUALLY PICK GOOD CLUSTERS',...
             ['LINKAGE METHOD (' upper(grp.method) ')'],...
             ['CLUSTERING CRITERION (' upper(grp.criterion) ')'],...
             'CHECK LINKAGE FAITHFULNESS',...
@@ -154,17 +203,14 @@ try
         
         % act on user choice
         switch choice
-            case 1 % cutoff
-                % get linkage
-                Z=linkage(1-cg.',grp.method);
-                
+            case 1 % distcut
                 % plot dendrogram/waveforms
-                if(~save || any(~ishandle(ax)))
+                if(any(~ishandle(ax)))
                     [grp.perm,grp.color,ax]=plotdendro(data,Z,...
-                        varargin{:},'cutoff',grp.cutoff);
+                        varargin{:},'distcut',grp.distcut);
                 end
                 
-                % menu telling user how to interactively adjust cutoff
+                % menu telling user how to interactively adjust distcut
                 prompt={'+-------------------------------------------------------+'
                     '|               Welcome to SEIZMO''s interactive clustering function              |'
                     '+-------------------------------------------------------+'
@@ -173,7 +219,7 @@ try
                     '|                                                                                                               |'
                     '|    LEFT CLICK                      MIDDLE CLICK                      RIGHT CLICK   |'
                     '+-------------+          +-------------+          +--------------+'
-                    '|     Set Cluster                      Finalize Limit                                              |'
+                    '|     Set Distance                    Finalize Limit                                              |'
                     '|         Limit                                                                                              |'
                     '+-------------------------------------------------------+'};
                 % way cooler menu -- if only matlab gui's used fixed width
@@ -186,7 +232,7 @@ try
                             '|                                                       |'
                             '|   LEFT CLICK        MIDDLE CLICK         RIGHT CLICK  |'
                             '+---------------+   +--------------+    +---------------+'
-                            '|  Set Cluster       Finalize Limit                     |'
+                            '|  Set Distance       Finalize Limit                    |'
                             '|     Limit                                             |'
                             '+-------------------------------------------------------+'};
                 end
@@ -199,7 +245,7 @@ try
                     if(any(~ishandle(ax)))
                         % redraw figure
                         [grp.perm,grp.color,ax]=plotdendro(data,Z,...
-                            varargin{:},'cutoff',grp.cutoff);
+                            varargin{:},'distcut',grp.distcut);
                     end
                     axes(ax(1));
                     
@@ -213,17 +259,32 @@ try
 
                     % action on left click
                     if (button==1 && gca==ax(1))
-                        grp.cutoff=x;
+                        grp.distcut=x;
 
                         % redraw subplots (to show new grouping)
                         [grp.perm,grp.color,ax]=plotdendro(data,Z,...
-                            varargin{:},'cutoff',grp.cutoff,'ax',ax);
+                            varargin{:},'distcut',grp.distcut,'ax',ax);
                     end
                 end
                 
                 % indicate plot is current
                 save=true;
-            case 2 % method
+            case 2 % popcut
+                % cut clusters by population
+                if(ishandle(px(1)))
+                    close(get(px(1),'parent'));
+                end
+                [grp,px]=popcut(data,grp);
+                save=true;
+            case 3 % select clusters manually
+                % cut clusters manually
+                if(any(ishandle(sx)))
+                    sx=sx(ishandle(sx));
+                    close(get(sx(1),'parent'));
+                end
+                [grp,sx]=selectclusters(data,grp);
+                save=true;
+            case 4 % method
                 % change method
                 choice=menu('SELECT A LINKAGE METHOD',...
                     ['CURRENT (' upper(grp.method) ')'],...
@@ -232,7 +293,7 @@ try
                     grp.method=methods{choice-1};
                     save=false;
                 end
-            case 3 % criterion
+            case 5 % criterion
                 % change criterion
                 choice=menu('SELECT A CLUSTERING CRITERION',...
                     ['CURRENT (' upper(grp.method) ')'],...
@@ -241,11 +302,8 @@ try
                     grp.criterion=criterions{choice-1};
                     save=false;
                 end
-            case 4 % cophenetic inspection
-                % get linkage
-                Z=linkage(1-cg.',grp.method);
-                
-                % now get cophenetic stats
+            case 6 % cophenetic inspection
+                % get cophenetic stats
                 [C,D]=cophenet(Z,1-cg.');
                 
                 % calculate Spearman's rank correlation
@@ -253,8 +311,9 @@ try
                 
                 % plot against one another
                 if(~ishandle(cx))
-                    cfh=figure;
-                    cx=axes('parent',cfh);
+                    cfh=figure('color','k');
+                    cx=axes('parent',cfh,...
+                        'color','k','xcolor','w','ycolor','w');
                 end
                 plot(cx,[0 1],[0 1],'r','linewidth',3);
                 hold(cx,'on');
@@ -265,28 +324,7 @@ try
                 title(cx,{['LINKAGE METHOD: ''' upper(grp.method) '''']
                     ['SPEARMAN''S RANK COEFFICIENT: ' num2str(rho)]});
                 save=true;
-            case 5 % map
-                % get linkage
-                Z=linkage(1-cg.',grp.method);
-                
-                % delete all old cluster plots & plot new if needed
-                if(~save)
-                    oldfh=get(oldax(ishandle(oldax)),'parent');
-                    if(iscell(oldfh)); oldfh=cell2mat(oldfh); end
-                    close(oldfh);
-                    [grp.perm,grp.color,ax]=plotdendro(data,Z,...
-                        varargin{:},'cutoff',grp.cutoff);
-                end
-                
-                % get clusters
-                grp.T=cluster(Z,'cutoff',grp.cutoff,...
-                    'criterion',grp.criterion);
-                
-                % hack to get colors as they would be on output
-                [idx,idx]=ismember(1:max(grp.T),grp.T(grp.perm));
-                colorsave=grp.color;
-                grp.color=grp.color(idx,:);
-                
+            case 7 % map
                 % map clusters
                 if(~ishandle(mx))
                     mfh=figure('color','k');
@@ -295,38 +333,17 @@ try
                 mx=mapstations(data,'ax',mx);
                 set(findobj(mx,'tag','stations'),...
                     'cdata',grp.color(grp.T,:));
-                
-                % put color matrix back into internal format
-                grp.color=colorsave;
                 save=true;
-            case 6 % cluster
-                % get linkage
-                Z=linkage(1-cg.',grp.method);
-                
-                % delete all old cluster plots & plot new if needed
-                if(~save)
-                    oldfh=get(oldax(ishandle(oldax)),'parent');
-                    if(iscell(oldfh)); oldfh=cell2mat(oldfh); end
-                    close(oldfh);
-                    [grp.perm,grp.color,ax]=plotdendro(data,Z,...
-                        varargin{:},'cutoff',grp.cutoff);
-                end
-                
-                % get clusters
-                grp.T=cluster(Z,'cutoff',grp.cutoff,...
-                    'criterion',grp.criterion);
-                [idx,idx]=ismember(1:max(grp.T),grp.T(grp.perm));
-                grp.color=grp.color(idx,:);
-                
-                % break loop
+            case 8 % break loop
                 happy_user=true;
-            case 7 % crash
+            case 9 % crash
                 error('seizmo:usertaper:killYourSelf',...
                     'User demanded an early exit!');
         end
         
-        % list of extra plots
+        % list of valid plots from previous run
         oldax=[oldax(ishandle(oldax)) cx(ishandle(cx)) ...
+            px(ishandle(px)) sx(ishandle(sx))
             mx(ishandle(mx)) ax(ishandle(ax))];
     end
     

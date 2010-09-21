@@ -58,9 +58,10 @@ function []=daydirs_stackcorr(indir,outdir,stns,cmp1,cmp2,o)
 %        June 20, 2010 - added to seizmo, fixed bug that would replace
 %                        correlograms rather than combine with reversed
 %                        ones, added docs
+%        Sep. 21, 2010 - commented out parallel processing lines
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 20, 2010 at 12:55 GMT
+%     Last Updated Sep. 21, 2010 at 11:15 GMT
 
 % todo:
 
