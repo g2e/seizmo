@@ -194,9 +194,10 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %        Sep. 13, 2010 - doc update
 %        Sep. 15, 2010 - force inversion for reorder without change on
 %                        first iteration to replace given values (if any)
+%        Oct.  3, 2010 - fix polarity reversal bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 15, 2010 at 09:45 GMT
+%     Last Updated Oct.  3, 2010 at 09:45 GMT
 
 % todo:
 
@@ -328,23 +329,25 @@ switch lower(opt.METHOD)
             end
             dt=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
             std=ttstderr(dt,xc.lg(:,:,1),xc.wg(:,:,1));
+            newpol=ttpolar(xc.pg(:,:,1));
             if(pflag && ~(iter==1 && ~isempty(opt.ESTPOL)))
                 % check that polarity solution did not change
                 % - this is just to make sure I coded this right
-                if(~isequal(pol,ttpolar(xc.pg(:,:,1))))
+                % - allow the exact opposite (rare but happens)
+                if(~isequal(pol,newpol) && ~isequal(pol,newpol*-1))
                     error('seizmo:ttsolve:brokenPolarities',...
                         'Polarity solution changed! It should not have!');
                 end
             else
                 % new polarity solution
                 if(verbose)
-                    if(~isequal(pol,ttpolar(xc.pg(:,:,1))))
+                    if(~isequal(pol,newpol) && ~isequal(pol,newpol*-1))
                         disp('Polarity Solution Changed!!!');
                     else
                         disp('Polarity Solution Unchanged');
                     end
                 end
-                pol=ttpolar(xc.pg(:,:,1));
+                pol=newpol;
             end
             
             % ok values replaced, so break now if there was no reordering

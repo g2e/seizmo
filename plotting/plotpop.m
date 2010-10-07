@@ -27,11 +27,13 @@ function [varargout]=plotpop(grp,ax)
 %     Version History:
 %        Mar. 23, 2010 - initial version
 %        Sep. 18, 2010 - major update
+%        Oct.  6, 2010 - handle 0 pop clusters
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 18, 2010 at 17:35 GMT
+%     Last Updated Oct.  6, 2010 at 17:35 GMT
 
 % todo:
+% - fix scatter color issues
 
 % check nargin
 error(nargchk(1,2,nargin));
@@ -62,15 +64,18 @@ end
 % cluster info
 ngrp=max(grp.T);
 pop=histc(grp.T,1:ngrp);
+ok=find(pop>0);
+ok=ok(:)';
+nok=numel(ok);
 
 % style plot
 set(ax,'colororder',grp.color,'nextplot','replacechildren');
 
 % plot stems & stars
-plot(ax,[1:ngrp; 1:ngrp],[pop.'; 0.9*ones(1,ngrp)],'-.','linewidth',2);
+plot(ax,[ok; ok],[pop(ok).'; 0.9*ones(1,nok)],'-.','linewidth',2);
 hold(ax,'on');
 colormap(ax,grp.color);
-scatter(ax,1:ngrp,pop,200,1:ngrp,'p','filled');
+scatter(ax,ok,pop(ok),200,ok,'p','filled');
 xlabel(ax,'Cluster ID','fontweight','bold','fontsize',10);
 ylabel(ax,'Population','fontweight','bold','fontsize',10);
 set(ax,'xlim',[0 ngrp+1])

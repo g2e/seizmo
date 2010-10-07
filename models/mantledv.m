@@ -35,9 +35,11 @@ function [dlnv]=mantledv(model,lat,lon,depth)
 %        Aug.  2, 2010 - add mit-p08, minor dz04 fix, change cache local
 %        Aug.  4, 2010 - all mantle models are stored as single precision
 %                        now for additional space savings
+%        Oct.  6, 2010 - 'old matlab' method for princeton model, linear
+%                        interpolation, smearing to 0 & 2900
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  4, 2010 at 16:05 GMT
+%     Last Updated Oct.  6, 2010 at 16:05 GMT
 
 % todo:
 % - sph harm models
@@ -156,7 +158,11 @@ switch lower(model)
         end
         
         % get dlnv
-        dlnv=get_princeton_value(model,lat,lon,depth);
+        try
+            dlnv=get_princeton_value(model,lat,lon,depth);
+        catch
+            dlnv=get_princeton_value_old(model,lat,lon,depth);
+        end
     case {'pri05s' 'pri-s05' 'pri-05s' 'pris05'}
         % load cached model if it exists
         try
@@ -169,7 +175,11 @@ switch lower(model)
         end
         
         % get dlnv
-        dlnv=get_princeton_value(model,lat,lon,depth);
+        try
+            dlnv=get_princeton_value(model,lat,lon,depth);
+        catch
+            dlnv=get_princeton_value_old(model,lat,lon,depth);
+        end
     case {'s20rtsb' 's20rts'}
         % load cached model if it exists
         try
@@ -248,13 +258,13 @@ end
 
 function dlnv=get_interp_value(model,lat,lon,depth)
 % get dlnv
-% - spline interpolation
+% - linear interpolation
 if(isfield(model,'dvs'))
-    dlnv=interp3(model.lon,model.lat,model.depth,model.dvs,...
-        lon,lat,depth,'spline');
+    dlnv=interp3(model.lon,model.lat,[0; model.depth; 2900],...
+        model.dvs(:,:,[1 1:end end]),lon,lat,depth,'linear');
 else % dvp
-    dlnv=interp3(model.lon,model.lat,model.depth,model.dvp,...
-        lon,lat,depth,'spline');
+    dlnv=interp3(model.lon,model.lat,[0; model.depth; 2900],...
+        model.dvp(:,:,[1 1:end end]),lon,lat,depth,'linear');
 end
 end
 
@@ -272,6 +282,21 @@ else % ppts
 end
 [x,y,z]=geographic2xyz(lat,lon,depth);
 dlnv=f(x,y,z);
+end
+
+function dlnv=get_princeton_value_old(model,lat,lon,depth)
+% get dlnv
+% - linear interpolation from tetrahedral mesh
+[x,y,z]=geographic2xyz(lat,lon,depth);
+if(isfield(model,'spts'))
+    model.spts=double(model.spts);
+    dlnv=griddata3(model.spts(:,1),model.spts(:,2),model.spts(:,3),...
+        model.spts(:,4),x,y,z);
+else % ppts
+    model.ppts=double(model.ppts);
+    dlnv=griddata3(model.ppts(:,1),model.ppts(:,2),model.ppts(:,3),...
+        model.ppts(:,4),x,y,z);
+end
 end
 
 function dlnv=get_mit_value(model,lat,lon,depth)

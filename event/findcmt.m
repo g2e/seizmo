@@ -1,7 +1,8 @@
-function [cmt]=findcmt(varargin)
+function [cmt,d]=findcmt(varargin)
 %FINDCMT    Returns Global CMT that is closest to input time & position
 %
 %    Usage:    cmt=findcmt('option1',value1,...,'optionN',valueN)
+%              [cmt,dist]=findcmt(...)
 %
 %    Description: CMT=FINDCMT('OPTION1',VALUE1,...,'OPTIONN',VALUEN) finds
 %     the Global CMT(s) (www.globalcmt.org) using the parameters provided.
@@ -17,6 +18,9 @@ function [cmt]=findcmt(varargin)
 %      NUMCMT    -- returns this many cmts, integer>0 (default is 1)
 %      NAME      -- limits search to cmt(s) who's name satisfies the given
 %                   regular expression (see REGEXP for details)
+%
+%     [CMT,DIST]=FINDCMT(...) returns the total distance factor used in
+%     determining the best CMT for the inputs given.
 %
 %    Notes:
 %     - Using the NAME option ignores all options but CATALOG
@@ -52,9 +56,10 @@ function [cmt]=findcmt(varargin)
 %        Aug.  2, 2010 - catalog caching, both catalogs option
 %        Aug. 10, 2010 - add name option, handle large numcmt gracefully
 %        Aug. 11, 2010 - altered/fixed magnitude scaling, added magtype opt
+%        Sep. 28, 2010 - also output total distance
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 11, 2010 at 21:30 GMT
+%     Last Updated Sep. 28, 2010 at 21:30 GMT
 
 % todo:
 
@@ -65,7 +70,7 @@ opt=check_findcmt_options(varargin{:});
 if(~isempty(opt.NAME))
     idx=~cellfun('isempty',regexp(opt.CATALOG.name,opt.NAME));
     opt.CATALOG=ssidx(opt.CATALOG,idx);
-    if(~sum(idx)); cmt=opt.CATALOG; return; end
+    if(~sum(idx)); cmt=opt.CATALOG; d=[]; return; end
 end
 
 % get distances
@@ -103,6 +108,7 @@ end
 d=sqrt(dd.^2+ld.^2+td.^2+md.^2);
 [d,idx]=sort(d);
 cmt=ssidx(opt.CATALOG,idx(1:min(numel(idx),opt.NUMCMT)));
+d=d(1:min(numel(idx),opt.NUMCMT));
 
 end
 

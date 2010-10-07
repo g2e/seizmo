@@ -174,9 +174,11 @@ function [data]=rotate(data,varargin)
 %                        cleaning
 %        Aug. 21, 2010 - error usage fix, better checkheader usage, updated
 %                        undef checks, minor fixes of debug messages
+%        Sep. 29, 2010 - warn & skip rather than error on bad TO info
+%        Oct.  6, 2010 - error if no output records
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 23:18 GMT
+%     Last Updated Oct.  6, 2010 at 23:18 GMT
 
 % todo:
 
@@ -426,12 +428,15 @@ try
         
         % check "to" azimuths
         if(numel(unique(to1(pidx)))>1)
-            error('seizmo:rotate:badInput',...
+            warning('seizmo:rotate:badInput',...
                 ['Record(s):\n' sprintf('%d ',pidx) ...
+                '\nFilename(s):\n' sprintf('%s\n',data(pidx).name) ...
                 '\nAzimuth(s): ' sprintf('%f ',unique(to1(pidx))) ...
                 '\nOnly 1 azimuth allowed to rotate to per pair!' ...
                 '\n(For great circle path rotations this means the ' ...
                 '\n station/earthquake location info is inconsistent!)']);
+            if(option.VERBOSE); print_time_left(i,npairs,true); end
+            continue;
         end
         pto1=unique(to1(pidx));
         pto2=unique(to2(pidx));
@@ -764,6 +769,12 @@ try
     nkcmpnm=strnlen(nkcmpnm,2);
     nkcmpnm(1:2:end)=strcat(nkcmpnm(1:2:end),option.KCMPNM1);
     nkcmpnm(2:2:end)=strcat(nkcmpnm(2:2:end),option.KCMPNM2);
+    
+    % error if no output records
+    if(~numel(ndata))
+        error('seizmo:rotate:noRotatedRecords',...
+            'No rotatable horizontal pairs found!');
+    end
     
     % update header
     data=changeheader(ndata,'b',nb,'e',ne,'npts',nnpts,...

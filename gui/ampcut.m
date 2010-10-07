@@ -54,9 +54,10 @@ function [bad,varargout]=ampcut(dd,amp,cutoff,pow,err,w,ax)
 
 %     Version History:
 %        Sep. 17, 2010 - initial version
+%        Sep. 28, 2010 - natural log not log base 10
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 17, 2010 at 20:00 GMT
+%     Last Updated Sep. 28, 2010 at 20:00 GMT
 
 % todo:
 
@@ -102,10 +103,10 @@ if(isscalar(err)); err=expandscalars(err,amp); end
 if(isscalar(w)); w=expandscalars(w,amp); end
 
 % get the fit
-m=wlinem(dd,log10(amp),pow,diag(err),diag(w))';
+m=wlinem(dd,log(amp),pow,diag(log(amp)-log(amp+err)),diag(w))';
 
 % residuals
-resid=log10(amp)-polyval(fliplr(m),dd);
+resid=log(amp)-polyval(fliplr(m),dd);
 std=sqrt(var(resid));
 resid=abs(resid);
 
@@ -124,32 +125,29 @@ maxdd=max(dd(:));
 mindd=min(dd(:));
 pdd=linspace(mindd-0.1*(maxdd-mindd),maxdd+0.1*(maxdd-mindd),100)';
 pamp=polyval(fliplr(m),pdd);
-hfit=plot(pdd,10.^pamp,'b','linewidth',2);
+hfit=plot(pdd,pamp,'b','linewidth',2);
 hold(ax,'on');
-hcut=plot(pdd,10.^[pamp+cutoff*std pamp-cutoff*std],'r--','linewidth',2);
+hcut=plot(pdd,[pamp+cutoff*std pamp-cutoff*std],'r--','linewidth',2);
 
 % draw the points (w/ or w/o errorbars)
 if(isempty(err))
-    hpnts=plot(dd,amp,'ko');
+    hpnts=plot(dd,log(amp),'ko');
 else
-    h=ploterr(dd,amp,[],err,'ko');
+    h=ploterr(dd,log(amp),[],{log(amp-err) log(amp+err)},'ko');
     hpnts=h(1);
     hy=h(2);
 end
 hold(ax,'off');
 
-% log y scale
-set(ax,'yscale','log');
-
 % label plot
 set(ax,'fontsize',10,'fontweight','bold');
 xlabel('Distance (^o)','fontsize',10,'fontweight','bold');
-ylabel('Amplitude','fontsize',10,'fontweight','bold');
+ylabel('ln(A)','fontsize',10,'fontweight','bold');
 title({'Left Click = Change Cutoff';
     'Middle Click = Implement Cut';
     ['Cutoff = ' num2str(cutoff) ' stddev'];
     '';
-    ['log_{10}(A) = ' polystr(fliplr(m),'\Delta')]},...
+    ['ln(A) = ' polystr(fliplr(m),'\Delta')]},...
     'fontsize',10,'fontweight','bold');
 
 % let user adjust the limits
@@ -160,11 +158,11 @@ while(unhappy)
     switch button
         case 1
             % get cutoff
-            cutoff=abs(log10(y)-polyval(fliplr(m),x))/std;
+            cutoff=abs(y-polyval(fliplr(m),x))/std;
             
             % adjust limits
-            set(hcut(1),'ydata',10.^(pamp+cutoff*std));
-            set(hcut(2),'ydata',10.^(pamp-cutoff*std));
+            set(hcut(1),'ydata',pamp+cutoff*std);
+            set(hcut(2),'ydata',pamp-cutoff*std);
             
             % reset title
             set(get(ax,'title'),'string',...
@@ -172,7 +170,7 @@ while(unhappy)
                 'Middle Click = Implement Cut';
                 ['Cutoff = ' num2str(cutoff) ' stddev'];
                 '';
-                ['log_{10}(A) = ' polystr(fliplr(m),'\Delta')]});
+                ['ln(A) = ' polystr(fliplr(m),'\Delta')]});
         case 2
             bad=find(resid>cutoff*std);
             unhappy=false;

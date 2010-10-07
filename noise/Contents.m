@@ -18,3 +18,5 @@
 %MAKE_FULL_Z_VOLUMES       - Computes fk volumes for vertical full stacks
 %MAKE_MONTHLY_HORZ_VOLUMES - Computes fk volumes for horiz. monthly stacks
 %MAKE_MONTHLY_Z_VOLUMES    - Computes fk volumes for vertical monthly stacks
+%PLOT_MONTHLY_VOLUMES      - Makes 4x3 grid of monthly fk spectra plots
+

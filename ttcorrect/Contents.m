@@ -7,6 +7,7 @@
 %CRUST2LESS_RAYPATHS       - Removes ray path above Crust2.0 moho
 %ELLCOR                    - Returns ellipticity corrections
 %EXTRACT_UPSWING_RAYPATHS  - Returns the "upswing" portion of raypaths
+%GEOMSPRCOR                - Geometrical spreading factor for amplitudes
 %GETRAYPATHS               - Returns seismic phase paths for a set of stations
 %INSERT_DEPTHS_IN_RAYPATHS - Add specific depths to raypath points
 %MANCOR                    - Returns mantle travel time corrections for a set of raypaths

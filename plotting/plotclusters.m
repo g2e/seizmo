@@ -13,8 +13,8 @@ function [varargout]=plotclusters(data,grp,varargin)
 %     PLOTCLUSTERS(DATA,GRP,'OPTION',VALUE,...) sets certain plotting
 %     options to do simple manipulation of the plots.  Available options
 %     are (beyond those available to PLOT2):
-%      POPRNG   -- only plot clusters with a population
-%                  within the given range (default is [0 inf])
+%      POPRNG   -- only plot clusters with a population within the given
+%                  range (default is [1 inf] - cannot plot 0 pop clusters)
 %      CLUSTERS -- only plot clusters in this group
 %
 %     [AX,CLUSTERS]=PLOTCLUSTERS(...) returns the handles for all the axes
@@ -32,9 +32,10 @@ function [varargout]=plotclusters(data,grp,varargin)
 
 %     Version History:
 %        Sep. 18, 2010 - initial version
+%        Oct.  6, 2010 - handle 0 pop clusters (do not plot)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 18, 2010 at 17:35 GMT
+%     Last Updated Oct.  6, 2010 at 17:35 GMT
 
 % todo:
 
@@ -65,7 +66,7 @@ pop=histc(grp.T,1:ngrp);
 if(isempty(opt.CLUSTERS)); opt.CLUSTERS=1:ngrp; end
 
 % groups to plot
-good=find(pop>=opt.POPRNG(1) & pop<=opt.POPRNG(2));
+good=find(pop>=opt.POPRNG(1) & pop<=opt.POPRNG(2) & pop>=1);
 good=intersect(good,opt.CLUSTERS);
 ngrp=numel(good);
 

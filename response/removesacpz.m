@@ -102,9 +102,10 @@ function [data,pz]=removesacpz(data,varargin)
 %        Aug. 20, 2010 - taperopt/tapertype options added, better
 %                        checkheader usage
 %        Aug. 25, 2010 - drop SEIZMO global, fix taper option bug
+%        Sep. 28, 2010 - more info when response bombs out
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 25, 2010 at 20:30 GMT
+%     Last Updated Sep. 28, 2010 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -396,6 +397,11 @@ catch
     % since apply/remove sacpz bomb out so often...
     if(exist('i','var'))
         fprintf('REMOVESACPZ bombed out on record: %d\n',i);
+        data(i)
+        data(i).misc.sacpz
+        data(i).misc.sacpz.z
+        data(i).misc.sacpz.p
+        data(i).misc.sacpz.k
     end
     
     % toggle checking back

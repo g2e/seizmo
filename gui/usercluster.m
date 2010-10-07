@@ -1,4 +1,4 @@
-function [grp,ax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
+function [grp,oldax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %USERCLUSTER    Interactively cluster SEIZMO records
 %
 %    Usage:    grp=usercluster(data)
@@ -20,6 +20,7 @@ function [grp,ax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %       GRP.distcut   = clustering distance limit
 %       GRP.method    = linkage method
 %       GRP.criterion = cluster formation method
+%       GRP.pop       = cluster population
 %       GRP.popcut    = "good" cluster population threshhold
 %       GRP.good      = "good" clusters (logical array)
 %       GRP.perm      = permutation indices to match dendrogram ordering
@@ -51,7 +52,7 @@ function [grp,ax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %     'FIELD1',VALUE1,...,'FIELDN',VALUEN) passes field and value pairs on
 %     to PLOTDENDRO for further customization.
 %
-%     [GRP,AX]=USERCLUSTER(...) returns the axes handle in AX.
+%     [GRP,AX]=USERCLUSTER(...) returns the axes handles in AX.
 %
 %    Notes:
 %
@@ -78,11 +79,20 @@ function [grp,ax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %        Sep. 21, 2010 - added POPCUT & SELECTRECORDS into the fold,
 %                        changed CUTOFF to DISTCUT
+%        Sep. 22, 2010 - a host of bug fixes
+%        Sep. 30, 2010 - added pop field, fixed nasty bug
+%        Oct.  1, 2010 - fixed no left click distcut bug
+%        Oct.  2, 2010 - return all axes handles
+%        Oct.  6, 2010 - combine clusters option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2010 at 10:00 GMT
+%     Last Updated Oct.  6, 2010 at 10:00 GMT
 
 % todo:
+% x combine groups interface
+% - flip groups interface
+% - time shift group interface
+% - dist/az map
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -155,6 +165,7 @@ try
     grp.distcut=distcut;
     grp.method=method;
     grp.criterion=crit;
+    grp.pop=[];
     grp.popcut=pcut;
     grp.good=[];
     
@@ -178,23 +189,27 @@ try
             close(oldfh);
             [grp.perm,grp.color,ax]=plotdendro(data,Z,...
                 varargin{:},'distcut',grp.distcut);
+            
+            % get clusters
+            grp.T=cluster(Z,'cutoff',grp.distcut,...
+                'criterion',grp.criterion);
+            grp.T_backup=grp.T;
+            
+            % fix color matrix
+            [idx,idx]=ismember(1:max(grp.T),grp.T(grp.perm));
+            grp.color=grp.color(idx,:);
+            
+            % get good clusters
+            grp.pop=histc(grp.T,1:max(grp.T));
+            grp.good=grp.pop>=grp.popcut;
         end
-        
-        % get clusters
-        grp.T=cluster(Z,'cutoff',grp.distcut,...
-            'criterion',grp.criterion);
-        [idx,idx]=ismember(1:max(grp.T),grp.T(grp.perm));
-        grp.color=grp.color(idx,:);
-        
-        % get good clusters
-        pop=histc(grp.T,1:max(grp.T));
-        grp.good=pop>=grp.popcut;
         
         % get choice from user
         choice=menu('CHANGE CLUSTERING SETTINGS?',...
             ['DISSIMILARITY CUTOFF (' num2str(grp.distcut) ')'],...
             ['POPULATION CUTOFF (' num2str(grp.popcut) ')'],...
             'MANUALLY PICK GOOD CLUSTERS',...
+            'COMBINE CLUSTERS',...
             ['LINKAGE METHOD (' upper(grp.method) ')'],...
             ['CLUSTERING CRITERION (' upper(grp.criterion) ')'],...
             'CHECK LINKAGE FAITHFULNESS',...
@@ -208,6 +223,10 @@ try
                 if(any(~ishandle(ax)))
                     [grp.perm,grp.color,ax]=plotdendro(data,Z,...
                         varargin{:},'distcut',grp.distcut);
+                else
+                    % redraw subplots (to get perm & color)
+                    [grp.perm,grp.color,ax]=plotdendro(data,Z,...
+                        varargin{:},'distcut',grp.distcut,'ax',ax);
                 end
                 
                 % menu telling user how to interactively adjust distcut
@@ -266,12 +285,26 @@ try
                             varargin{:},'distcut',grp.distcut,'ax',ax);
                     end
                 end
+            
+                % get clusters
+                grp.T=cluster(Z,'cutoff',grp.distcut,...
+                    'criterion',grp.criterion);
+                grp.T_backup=grp.T;
+                
+                % fix color matrix
+                [idx,idx]=ismember(1:max(grp.T),grp.T(grp.perm));
+                grp.color=grp.color(idx,:);
+            
+                % get good clusters
+                grp.pop=histc(grp.T,1:max(grp.T));
+                grp.good=grp.pop>=grp.popcut;
                 
                 % indicate plot is current
                 save=true;
             case 2 % popcut
                 % cut clusters by population
-                if(ishandle(px(1)))
+                if(any(ishandle(px)))
+                    px=px(ishandle(px));
                     close(get(px(1),'parent'));
                 end
                 [grp,px]=popcut(data,grp);
@@ -283,8 +316,55 @@ try
                     close(get(sx(1),'parent'));
                 end
                 [grp,sx]=selectclusters(data,grp);
+                sx=sx';
                 save=true;
-            case 4 % method
+            case 4 % combine
+                % loop until user says
+                happy=false;
+                while(~happy)
+                    % - let user select clusters
+                    tmp=grp;
+                    tmp.good=false;
+                    [tmp,tmpax]=selectclusters(data,tmp);
+                    close(get(tmpax(1),'parent'));
+                    cgrps=find(tmp.good);
+                    
+                    % who is in these groups
+                    crecs=ismember(grp.T,cgrps);
+                    
+                    % combined colormap
+                    ccmap=grp.color(grp.T(crecs),:);
+                    
+                    % show a combined plot
+                    tmpax=plot2(data(crecs),'cmap',ccmap);
+                    
+                    % ask if that is ok or not (cannot undo!)
+                    choice=menu({'Combine Clusters?' ...
+                        'Note 1: Cannot be Undone!' ...
+                        'Note 2: Undoes manual cluster selection'},...
+                        'YES','NO','RETRY');
+                    
+                    % close tmp plot
+                    close(get(tmpax,'parent'));
+                    
+                    % action
+                    switch choice
+                        case 1 % combine
+                            % change grp.T, grp.pop to all lowest
+                            % - do we shift numbers? no
+                            % - do we lose manual grp selection? yes
+                            grp.T(crecs)=min(cgrps);
+                            grp.pop=histc(grp.T,1:max(grp.T));
+                            grp.good=grp.pop>=grp.popcut;
+                            happy=true;
+                        case 2 % don't
+                            happy=true;
+                    end
+                end
+                
+                % no reclustering
+                save=true;
+            case 5 % method
                 % change method
                 choice=menu('SELECT A LINKAGE METHOD',...
                     ['CURRENT (' upper(grp.method) ')'],...
@@ -293,7 +373,7 @@ try
                     grp.method=methods{choice-1};
                     save=false;
                 end
-            case 5 % criterion
+            case 6 % criterion
                 % change criterion
                 choice=menu('SELECT A CLUSTERING CRITERION',...
                     ['CURRENT (' upper(grp.method) ')'],...
@@ -302,7 +382,7 @@ try
                     grp.criterion=criterions{choice-1};
                     save=false;
                 end
-            case 6 % cophenetic inspection
+            case 7 % cophenetic inspection
                 % get cophenetic stats
                 [C,D]=cophenet(Z,1-cg.');
                 
@@ -312,19 +392,20 @@ try
                 % plot against one another
                 if(~ishandle(cx))
                     cfh=figure('color','k');
-                    cx=axes('parent',cfh,...
-                        'color','k','xcolor','w','ycolor','w');
+                    cx=axes('parent',cfh);
                 end
                 plot(cx,[0 1],[0 1],'r','linewidth',3);
                 hold(cx,'on');
                 plot(cx,1-cg.',D,'.');
                 hold(cx,'off');
+                set(cx,'color','k','xcolor','w','ycolor','w');
                 xlabel(cx,'TRUE DISTANCE (1 - Corr. Coeff.)');
                 ylabel(cx,'COPHENETIC DISTANCE');
                 title(cx,{['LINKAGE METHOD: ''' upper(grp.method) '''']
-                    ['SPEARMAN''S RANK COEFFICIENT: ' num2str(rho)]});
+                    ['SPEARMAN''S RANK COEFFICIENT: ' num2str(rho)]},...
+                    'color','w');
                 save=true;
-            case 7 % map
+            case 8 % map
                 % map clusters
                 if(~ishandle(mx))
                     mfh=figure('color','k');
@@ -334,16 +415,16 @@ try
                 set(findobj(mx,'tag','stations'),...
                     'cdata',grp.color(grp.T,:));
                 save=true;
-            case 8 % break loop
+            case 9 % break loop
                 happy_user=true;
-            case 9 % crash
+            case 10 % crash
                 error('seizmo:usertaper:killYourSelf',...
                     'User demanded an early exit!');
         end
         
         % list of valid plots from previous run
         oldax=[oldax(ishandle(oldax)) cx(ishandle(cx)) ...
-            px(ishandle(px)) sx(ishandle(sx))
+            px(ishandle(px)) sx(ishandle(sx)) ...
             mx(ishandle(mx)) ax(ishandle(ax))];
     end
     

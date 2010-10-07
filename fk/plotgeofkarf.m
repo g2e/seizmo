@@ -51,9 +51,10 @@ function [varargout]=plotgeofkarf(arf,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 
 %     Version History:
 %        July  7, 2010 - update for new struct
+%        Oct.  6, 2010 - truncate title if too many ARF locations
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  7, 2010 at 18:25 GMT
+%     Last Updated Oct.  6, 2010 at 18:25 GMT
 
 % todo:
 
@@ -254,11 +255,15 @@ hold off
 c=colorbar('eastoutside','peer',ax,'xcolor',fgcolor,'ycolor',fgcolor);
 xlabel(c,'dB','color',fgcolor);
 smn=min(arf.horzslow); smx=max(arf.horzslow);
-titstr=cell(arf.nsw,1);
-for i=1:arf.nsw
-    titstr{i}=sprintf(['SLOWNESS: %gs/deg, LAT: %gdeg, ' ...
-        'LON: %gdeg, PERIOD: %gs'],arf.horzslow0(i),...
-        arf.latlon0(i,1),arf.latlon0(i,2),1/arf.freq0(i));
+if(arf.nsw<=5)
+    titstr=cell(arf.nsw,1);
+    for i=1:arf.nsw
+        titstr{i}=sprintf(['SLOWNESS: %gs/deg, LAT: %gdeg, ' ...
+            'LON: %gdeg, PERIOD: %gs'],arf.horzslow0(i),...
+            arf.latlon0(i,1),arf.latlon0(i,2),1/arf.freq0(i));
+    end
+else
+    titstr{1}=[num2str(arf.nsw) ' Locations'];
 end
 title(ax,[{[]}; 'Array Response Function @ '; titstr; ...
     ['Number of Stations: ' num2str(arf.nsta)]; ...

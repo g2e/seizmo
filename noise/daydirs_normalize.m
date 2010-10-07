@@ -40,9 +40,10 @@ function []=daydirs_normalize(indir,outdir,eqband,pband,tsw,fsw,o)
 %        June 21, 2010 - initial version
 %        Aug. 19, 2010 - bit more useful warning messages
 %        Sep. 21, 2010 - commented out parallel processing lines
+%        Oct.  6, 2010 - catch rotate error (when no records)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2010 at 11:15 GMT
+%     Last Updated Oct.  6, 2010 at 11:15 GMT
 
 % todo:
 
@@ -215,9 +216,15 @@ for i=1:nyears
                 
                 % rotate horz pairs to north and east
                 % - this also removes unpaired and cuts pairs to match
-                data=rotate(data,'to',0,'kcmpnm1','N','kcmpnm2','E');
+                try
+                    data=rotate(data,'to',0,'kcmpnm1','N','kcmpnm2','E');
+                catch
+                    tmp=lasterror;
+                    warning(tmp.message);
+                    continue;
+                end
                 
-                % skip if none left
+                % skip if none left (this shouldn't happen)
                 if(~numel(data)); continue; end
                 
                 % horz cmp time normalization

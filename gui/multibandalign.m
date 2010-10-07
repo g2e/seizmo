@@ -1,12 +1,12 @@
-function [info]=multibandalign(data,bank,varargin)
+function [info]=multibandalign(data,bank,runname,varargin)
 %MULTIBANDALIGN    Aligns signal at multiple frequency bands
 %
-%    Usage:    info=multibandalign(data,bank)
-%              info=multibandalign(data,bank,'option',value,...)
+%    Usage:    results=multibandalign(data,bank,runname)
+%              results=multibandalign(data,bank,runname,'option',value,...)
 %
 %    Description:
-%     INFO=MULTIBANDALIGN(DATA,BANK) presents the user with an interface to
-%     align the data given in SEIZMO struct DATA at the frequency bands
+%     RESULTS=MULTIBANDALIGN(DATA,BANK,RUNNAME) presents an interface
+%     to align the data given in SEIZMO struct DATA at the frequency bands
 %     specified in the filter bank BANK.  BANK should be formatted as
 %     output from FILTER_BANK.  DATA should be records where the phase of
 %     interest has already been isolated (not necessary but saves you from
@@ -16,30 +16,35 @@ function [info]=multibandalign(data,bank,varargin)
 %     as well as SNR info and filter info.  All figures are automatically
 %     saved to the current directory as .fig files.
 %
-%     INFO=MULTIBANDALIGN(DATA,BANK,'OPTION',VALUE,...) passes additional
+%     RESULTS=MULTIBANDALIGN(DATA,BANK,RUNNAME,'OPTION',VALUE,...) passes
 %     options to USERALIGN.  See that function for details.
 %
 %    Notes:
 %
 %    Examples:
-%     % 
+%     % This is my typical usage form (for really nice quakes the upper
+%     % limit of the filter bank can be raised to something like 0.2Hz):
+%     bank=filter_bank([0.0125 0.125],'variable',0.2,0.1);
+%     results=multibandalign(data,bank,'examplerun');
 %
 %    See also: USERALIGN, USERSNR, FILTER_BANK, IIRFILTER
 
 %     Version History:
 %        Mar. 25, 2010 - initial version
 %        Sep. 21, 2010 - working version
+%        Sep. 30, 2010 - added amplitude measurements, adjust output
+%        Oct.  1, 2010 - added runname input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2010 at 12:25 GMT
+%     Last Updated Oct.  1, 2010 at 12:25 GMT
 
 % todo:
 
 % check nargin
-if(nargin<2)
+if(nargin<3)
     error('seizmo:multibandalign:notEnoughInputs',...
         'Not enough input arguments.');
-elseif(nargin>4 && mod(nargin,2))
+elseif(nargin>3 && ~mod(nargin,2))
     error('seizmo:multbandalign:optionMustBePaired',...
         'Options must be paired with a value!');
 end
@@ -78,8 +83,14 @@ try
             'BANK must be in the format from FILTER_BANK!');
     end
     
+    % check runname
+    if(~isstring(runname))
+        error('seizmo:multibandalign:badInput',...
+            'RUNNAME must be a string!');
+    end
+    
     % preallocate output
-    info([])=struct('info',[],'xc',[],'data',[],'filter',[],'snr',[]);
+    info([])=struct('useralign',[],'filter',[],'usersnr',[]);
     
     % require o field is set to the same value (within +/- 2 millisec)
     o=getheader(data,'o');
@@ -92,8 +103,8 @@ try
     % get additional filter info (default to 4th order 1-pass butterworth)
     filt=bandpass_parameters('butter',4,1);
     
-    % get snr cut (default to 3)
-    snrcut=get_snr_cutoff(3);
+    % get snr cut (default to 10)
+    snrcut=get_snr_cutoff(10);
     
     % build lag table (for pre-aligning each band using previous lags)
     lags=o(:,ones(1,nrecs))'-o(:,ones(1,nrecs));
@@ -117,42 +128,23 @@ try
         filt.corners=bank(i,2:3);
         info(i).filter=filt;
         
-        % plot records (so user can decide to skip or not)
-        ax=plot0(data0,'title',...
-            ['FILTER CORNERS: ' num2str(1/bank(i,3)) 's  to  ' ...
-            num2str(1/bank(i,2)) 's']);
-        
-        % ask the user if they wish to continue
-        skip=false; skipall=false;
-        happy_user=false;
-        while(~happy_user)
-            choice=menu('What to do with this filter band?',...
-                'Process','Skip','Skip All Remaining');
-            switch choice
-                case 1
-                    happy_user=true;
-                case 2
-                    happy_user=true;
-                    skip=true;
-                case 3
-                    happy_user=true;
-                    skipall=true;
-            end
-        end
+        % initial window and assessment
+        [data0,info(i),skip,skipall,ax]=get_initial_window(data0,info(i));
         
         % handle skipping
         istr=num2str(i);
-        saveas(get(ax,'parent'),['multibandalign_' istr '_preview.fig']);
+        saveas(get(ax,'parent'),[runname '_band_' istr '_preview.fig']);
         close(get(ax,'parent'));
         if(skip); continue; end
         if(skipall); break; end
         
         % user estimated snr
-        [snr,s,ax]=usersnr(data0);
-        info(i).snr=s;
-        info(i).snr.snrcut=snrcut;
-        info(i).snr.snr=snr;
-        saveas(get(ax,'parent'),['multibandalign_' istr '_usersnr.fig']);
+        [snr,s,ax]=usersnr(data0,[-300 -20],[-10 70],'peak2rms',...
+            'normstyle','single');
+        info(i).usersnr=s;
+        info(i).usersnr.snrcut=snrcut;
+        info(i).usersnr.snr=snr;
+        saveas(get(ax,'parent'),[runname '_band_' istr '_usersnr.fig']);
         close(get(ax,'parent'));
         
         % trimming dataset to snr significant
@@ -161,28 +153,36 @@ try
         snr=snr(snridx);
         nn=numel(data0);
         
+        % skip if less than 3
+        if(nn<3)
+            disp([runname ' band ' num2str(istr) ': Too Few High SNR data!']);
+            continue;
+        end
+        
         % align
-        [tmp,xc,data1]=useralign(data0,...
+        [info(i).useralign,info(i).useralign.xc,...
+            info(i).useralign.data]=useralign(data0,...
+            'spacing',1/(4*bank(i,3)),'absxc',false,...
             'estarr',zeros(nn,1),'snr',snr,varargin{:});
-        info(i).info=tmp;
-        info(i).xc=xc;
-        info(i).data=data1;
-        clear tmp xc data1
-        ax=info.handles(ishandle(info.handles));
-        saveas(get(ax(1),'parent'),['multibandalign_' istr '_useralign.fig']);
+        ax=info(i).useralign.handles(ishandle(info(i).useralign.handles));
+        saveas(get(ax(1),'parent'),[runname '_band_' istr '_useralign.fig']);
         close(get(ax(1),'parent'));
         
         % amplitude analysis
-        % - need peak2peak amplitude
-        % - amplitude "standard error" is given my amp/(2*snr)
+        % - amplitude "standard error" is given my amp/snr
+        %   where snr is the peak2peak amplitude of the signal
+        %   to the rms of the noise
+        [info(i).useralign.data,scale]=normalize(info(i).useralign.data);
+        info(i).useralign.solution.amp=scale;
+        info(i).useralign.solution.amperr=scale./snr;
         
         % ask to utilize for subsequent bands
-        if(use_align)
-            goodarr=info(i).info.solution.arr;
+        if(i<size(bank,1) && use_align)
+            goodarr=info(i).useralign.solution.arr;
             goodidx=find(snridx);
             lags(goodidx,goodidx)=...
-                info(i).info.solution.arr(:,ones(1,nn))'...
-                -info.solution.arr(:,ones(1,nn));
+                info(i).useralign.solution.arr(:,ones(1,nn))'...
+                -info(i).useralign.solution.arr(:,ones(1,nn));
             idx(goodidx,goodidx)=i;
         end
     end
@@ -295,10 +295,50 @@ while(~happy_user)
     switch choice
         case 1
             lgc=true;
+            happy_user=true;
         case 2
             lgc=false;
+            happy_user=true;
     end
 end
 end
 
 
+function [data,info,skip,skipall,ax]=get_initial_window(data,info)
+
+% default initial window
+win=[-300 300];
+
+% ask the user if they wish to continue
+skip=false; skipall=false;
+happy_user=false;
+while(~happy_user)
+    % plot records (so user can decide to skip or not)
+    ax=plot0(cut(data,win(1),win(2)),...
+        'normstyle','single','xlim',win,'title',...
+        ['FILTER CORNERS: ' num2str(1/info.filter.corners(2)) 's  to  ' ...
+        num2str(1/info.filter.corners(1)) 's']);
+
+    choice=menu('What to do with this filter band?',...
+        'Process','Adjust Initial Window','Skip','Skip All Remaining');
+    switch choice
+        case 1
+            happy_user=true;
+        case 2
+            close(get(ax,'parent'));
+            [win,win,ax]=userwindow(data);
+            close(get(ax,'parent'));
+            win=win.limits;
+        case 3
+            happy_user=true;
+            skip=true;
+        case 4
+            happy_user=true;
+            skipall=true;
+    end
+end
+
+% implement window
+data=cut(data,win(1),win(2));
+
+end

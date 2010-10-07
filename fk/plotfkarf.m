@@ -47,9 +47,10 @@ function [varargout]=plotfkarf(arf,varargin)
 %        July  6, 2010 - major update for new struct
 %        July 18, 2010 - fix db info, commented out nyquist ring code,
 %                        fixed axis output
+%        Oct.  6, 2010 - truncate title if too many ARF locations
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 18, 2010 at 10:50 GMT
+%     Last Updated Oct.  6, 2010 at 10:50 GMT
 
 % todo:
 
@@ -217,15 +218,24 @@ ny=numel(map.y);
 pcolor(x,y,double(map.beam));
 
 % last plot the nyquist rings about the plane wave locations
-titstr=cell(map.npw,1);
-for i=1:map.npw
-    snyq=snyquist(min(dist),map.f(i)); % closest 2 stations
-    [x,y]=circle(snyq);
-    x=x+map.s(i)*sin(map.baz(i)*pi/180);
-    y=y+map.s(i)*cos(map.baz(i)*pi/180);
-    plot(y,x,'r:','linewidth',2,'tag','nyquist_rings');
-    titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, PERIOD: %gs',...
-            map.s(i),map.baz(i),1/map.f(i));
+%for i=1:map.npw
+%    snyq=snyquist(min(dist),map.f(i)); % closest 2 stations
+%    [x,y]=circle(snyq);
+%    x=x+map.s(i)*sin(map.baz(i)*pi/180);
+%    y=y+map.s(i)*cos(map.baz(i)*pi/180);
+%    plot(y,x,'r:','linewidth',2,'tag','nyquist_rings');
+%end
+
+% create title
+if(map.npw<=5)
+    titstr=cell(map.npw,1);
+    for i=1:map.npw
+        titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, PERIOD: %gs',...
+                map.s(i),map.baz(i),1/map.f(i));
+    end
+else
+    % elimate too much title
+    titstr{1}=[num2str(map.npw) ' Locations'];
 end
 
 % add title color etc
@@ -410,15 +420,24 @@ for i=ph
 end
 
 % last plot the nyquist rings about the plane wave locations
-titstr=cell(map.npw,1);
-for i=1:map.npw
-    %snyq=snyquist(min(dist),map.f(i)); % closest 2 stations
-    %[x,y]=circle(snyq);
-    %x=x+map.s(i)*sin(map.baz(i)*pi/180);
-    %y=y+map.s(i)*cos(map.baz(i)*pi/180);
-    %plot(x,y,'r:','linewidth',2,'tag','nyquist_rings');
-    titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, PERIOD: %gs',...
-            map.s(i),map.baz(i),1/map.f(i));
+%for i=1:map.npw
+%    snyq=snyquist(min(dist),map.f(i)); % closest 2 stations
+%    [x,y]=circle(snyq);
+%    x=x+map.s(i)*sin(map.baz(i)*pi/180);
+%    y=y+map.s(i)*cos(map.baz(i)*pi/180);
+%    plot(x,y,'r:','linewidth',2,'tag','nyquist_rings');
+%end
+
+% create title
+if(map.npw<=5)
+    titstr=cell(map.npw,1);
+    for i=1:map.npw
+        titstr{i}=sprintf('SLOWNESS: %gs/deg, BAZ: %gdeg, PERIOD: %gs',...
+                map.s(i),map.baz(i),1/map.f(i));
+    end
+else
+    % elimate too much title
+    titstr{1}=[num2str(map.npw) ' Locations'];
 end
 hold off
 

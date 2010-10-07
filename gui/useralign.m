@@ -82,9 +82,10 @@ function [info,xc,data0]=useralign(data,varargin)
 %                        figure
 %        Sep. 15, 2010 - added code to better handle matched polarities,
 %                        fixed new iteration bug (clear axes, not delete)
+%        Oct.  2, 2010 - normalize amplitudes in plots
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 15, 2010 at 11:00 GMT
+%     Last Updated Oct.  2, 2010 at 11:00 GMT
 
 % todo:
 
@@ -181,17 +182,17 @@ try
         % usermoveout
         set(ax(1),'visible','on');
         [data0,info.usermoveout,info.handles(1)]=usermoveout(data0,...
-            'ax',ax(1));
+            'ax',ax(1),'normstyle','single');
 
         % userwindow
         set(ax(2),'visible','on');
         [data0,info.userwindow,info.handles(2)]=userwindow(data0,...
-            [],[],'ax',ax(2));
+            [],[],'ax',ax(2),'normstyle','single');
 
         % usertaper
         set(ax(3),'visible','on');
         [data0,info.usertaper,info.handles(3)]=usertaper(data0,...
-            [],'ax',ax(3));
+            [],'ax',ax(3),'normstyle','single');
 
         % menu for correlate options
         while(1)
@@ -302,7 +303,7 @@ try
         % plot alignment
         data0=timeshift(data0,-onset);
         set(ax(5),'visible','on');
-        info.handles(5)=plot2(data0,'ax',ax(5));
+        info.handles(5)=plot2(normalize(data0),'ax',ax(5));
         
         % origin time gives absolute time position
         arr=-getheader(data0,'o');

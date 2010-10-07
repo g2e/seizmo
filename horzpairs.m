@@ -57,9 +57,11 @@ function [idx1,idx2,idx3]=horzpairs(data,varargin)
 %     Version History:
 %        Feb. 22, 2010 - initial version
 %        Feb. 24, 2010 - more checks, 1st cmp lags 2nd by 90deg
+%        Sep. 29, 2010 - add filename output to warnings, more warnings for
+%                        verticals, check for multiple inclinations
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2010 at 16:00 GMT
+%     Last Updated Sep. 29, 2010 at 16:00 GMT
 
 % todo:
 
@@ -181,6 +183,7 @@ try
             %    | strcmpi(cmpstr(stream),'E'));
             warning('seizmo:horzpairs:verticalHorizontal',...
                 ['Record(s):\n' sprintf('%d ',find(stream)) ...
+                '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
                 '\nNorth/East components oriented vertically!']);
             offset=offset+1;
             continue;
@@ -191,10 +194,58 @@ try
             %tmp=stream(cmpinc(stream)~=0 & cmpinc(stream)~=180);
             warning('seizmo:horzpairs:verticalHorizontal',...
                 ['Record(s):\n' sprintf('%d ',find(stream)) ...
+                '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
                 '\nComponent(s) oriented at strange incline!']);
             offset=offset+1;
             continue;
         end
+        
+        % check for multiple vertical components in stream
+        if(numel(unique(cmpstr(stream)))>1)
+            warning('seizmo:horzpairs:multipleVerticals',...
+                ['Record(s):\n' sprintf('%d ',find(stream)) ...
+                '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
+                '\nMultiple vertical components!']);
+            offset=offset+1;
+            continue;
+        end
+        
+        % check that there is only one orientation per component
+        if(numel(unique(cmpaz(stream)))>1)
+            warning('seizmo:horzpairs:multiOrientCmp',...
+                ['Record(s):\n' ...
+                sprintf('%d ',find(stream)) ...
+                '\nFilename(s):\n' sprintf('%s\n',data(stream).name)...
+                '\nOrientation for component not consistent!']);
+            offset=offset+1;
+            continue;
+        end
+        
+        % now on to either
+        stream=(idx2==i);
+        
+        % get component index
+        [componentcode,tmp,idx3(stream)]=unique(cname(stream));
+
+        % get number of horizontal components
+        ncmp=max(idx3(stream));
+
+        % check that there is only one inclination per component
+        badcmp=false;
+        for j=1:ncmp
+            if(numel(unique(cmpinc(stream & idx3==j)))>1)
+                warning('seizmo:horzpairs:multiOrientCmp',...
+                    ['Record(s):\n' ...
+                    sprintf('%d ',find(stream & idx3==j)) ...
+                    '\nFilename(s):\n' ...
+                    sprintf('%s\n',data(stream & idx3==j).name)...
+                    '\nOrientation for single component not consistent!']);
+                badcmp=true;
+            end
+        end
+
+        % skip if cmp w/ 2+ inclinations
+        if(badcmp); offset=offset+1; continue; end
         
         % now on to the horizontals
         stream=(idx2==i & ishorz);
@@ -210,13 +261,11 @@ try
             %tmp=stream(strcmpi(cmpstr(stream),'Z'));
             warning('seizmo:horzpairs:horizontalVertical',...
                 ['Record(s):\n' sprintf('%d ',find(stream)) ...
+                '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
                 '\nZ component oriented horizontally!']);
             offset=offset+1;
             continue;
         end
-
-        % update pair number
-        idx2(stream)=i-offset;
 
         % get component index
         [componentcode,tmp,idx3(stream)]=unique(cname(stream));
@@ -231,6 +280,8 @@ try
                 warning('seizmo:horzpairs:multiOrientCmp',...
                     ['Record(s):\n' ...
                     sprintf('%d ',find(stream & idx3==j)) ...
+                    '\nFilename(s):\n' ...
+                    sprintf('%s\n',data(stream & idx3==j).name)...
                     '\nOrientation for single component not consistent!']);
                 badcmp=true;
             end
@@ -243,6 +294,7 @@ try
         if(ncmp>2)
             warning('seizmo:horzpairs:multiHorzCmp',...
                 ['Record(s):\n' sprintf('%d ',find(stream)) ...
+                '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
                 '\nMore than 2 horizontal components for this station!']);
             offset=offset+1;
             continue;
@@ -253,6 +305,7 @@ try
         if(numel(az)==1)
             warning('seizmo:horzpairs:nonOrthoHorz',...
                 ['Record(s):\n' sprintf('%d ',find(stream)) ...
+                '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
                 '\nAzimuth(s): ' sprintf('%g ',az) ...
                 '\nHorizontal pair shares the same azimuth!']);
             offset=offset+1;
@@ -263,6 +316,7 @@ try
         if(~isorthogonal([90 az(1)],[90 az(2)]))
             warning('seizmo:horzpairs:nonOrthoHorz',...
                 ['Record(s):\n' sprintf('%d ',find(stream)) ...
+                '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
                 '\nAzimuth(s): ' sprintf('%g ',az) ...
                 '\nHorizontal pair is not orthogonal!']);
             offset=offset+1;
@@ -270,6 +324,9 @@ try
         else
             ispair(stream)=true;
         end
+        
+        % update pair number
+        idx2(stream)=i-offset;
         
         % force second cmp to lead by 90deg
         % - this keeps things predictable

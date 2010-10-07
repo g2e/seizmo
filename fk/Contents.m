@@ -9,6 +9,7 @@
 %FK4D              - Returns beamformer volumes in frequency-wavenumber-time space
 %FKARF             - Returns the fk array response function for a seismic array
 %FKCART2POL        - Converts a cartesian space based fk grid to polar space
+%FKCORR            - Zero lag correlation coefficient between fk spectra
 %FKDBINFO          - Returns the min/median/max dB for a FK struct
 %FKFRAMESLIDE      - Slides through a sequence of fk maps plotting each one
 %FKFREQSLIDE       - Slides through a fk volume plotting each frequency
@@ -21,6 +22,7 @@
 %GEOFKARF          - Returns the geofk array response function for a seismic array
 %GEOFKARF2MAP      - Converts a geofk ARF volume to a geofk ARF map
 %GEOFKARFSLOWSLIDE - Slides through the slownesses of a geofkarf volume
+%GEOFKCORR         - Zero lag correlation coefficient between geofk spectra
 %GEOFKDBINFO       - Returns the min/median/max dB for a geofk struct
 %GEOFKFRAMESLIDE   - Slides through a set of geofk maps plotting each one
 %GEOFKFREQSLIDE    - Slides through a geofk volume plotting each frequency

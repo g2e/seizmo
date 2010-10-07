@@ -74,9 +74,10 @@ function [data]=getsacpz(data,varargin)
 %                        the network name)
 %        Aug. 21, 2010 - dropped versioninfo caching (not warranted),
 %                        updated undef checks, fixed warnings/errors
+%        Sep. 28, 2010 - improved warning message if no sac pz found
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 12:45 GMT
+%     Last Updated Sep. 28, 2010 at 12:45 GMT
 
 % todo:
 
@@ -302,7 +303,13 @@ try
             redraw=true;
             warning('seizmo:getsacpz:noGoodSACPZ',...
                 ['Could not find a matching SAC PoleZero file!' ...
-                '\nRecord: %d'],i);
+                '\nRecord: %d' ...
+                '\nKNAME : %s.%s.%s.%s' ...
+                '\nB     : %04d.%03d.%02d.%02d.%06.3f' ...
+                '\nE     : %04d.%03d.%02d.%02d.%06.3f'],...
+                i,knetwk{i},kstnm{i},khole{i},kcmpnm{i},...
+                b(i,1),b(i,2),b(i,3),b(i,4),b(i,5),...
+                e(i,1),e(i,2),e(i,3),e(i,4),e(i,5));
         else
             % get file with latest b
             [idx,idx]=min(timediff(db.(NN).b(ok,:),b(i,:)));

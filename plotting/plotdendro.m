@@ -62,9 +62,10 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %        Aug. 24, 2010 - require two axes handles
 %        Aug. 26, 2010 - cutoff/cutoffcolor options (ie renamed them)
 %        Sep. 21, 2010 - distcut/distcutcolor
+%        Oct.  1, 2010 - better axis handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2010 at 23:00 GMT
+%     Last Updated Oct.  1, 2010 at 23:00 GMT
 
 % todo:
 
@@ -95,7 +96,7 @@ if(isempty(opt.AXIS) || numel(opt.AXIS)~=2 || ~isreal(opt.AXIS) ...
 else
     % take axis, get pos, delete, make two inside
     ax=opt.AXIS;
-    subplot(ax(1));
+    axes(ax(1));
 end
 
 % dendrogram subplot (note it uses gca)
@@ -117,8 +118,8 @@ set(H,'linewidth',opt.LINEWIDTH);
 set(ax(1),'xcolor',opt.FGCOLOR,'ycolor',opt.FGCOLOR,'color',opt.BGCOLOR,...
     'fontsize',opt.FONTSIZE,'ytick',[],'xminortick','on',...
     'ydir',opt.YDIR,'linewidth',opt.LINEWIDTH);
-box on;
-grid on;
+box(ax(1),'on');
+grid(ax(1),'on');
 
 % label dendrogram plot
 title(ax(1),'LINKAGE DENDOGRAM',...
@@ -152,7 +153,7 @@ plot(ax(1),opt.CUTOFF*ones(1,2),span,...
     opt.CUTOFFCOLOR,'linewidth',opt.LINEWIDTH);
 text(opt.CUTOFF,span(2)-0.02*diff(span),'DISSIMILARITY LIMIT',...
     'fontsize',opt.FONTSIZE,'color',opt.CUTOFFCOLOR,...
-    'verticalalignment','bottom','rotation',90);
+    'verticalalignment','bottom','rotation',90,'parent',ax(1));
 hold(ax(1),'off');
 
 % put dendrogram on top so interactivity isn't impaired
