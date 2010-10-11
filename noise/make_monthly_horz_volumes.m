@@ -23,9 +23,10 @@ function []=make_monthly_horz_volumes(indir,months)
 
 %     Version History:
 %        June 24, 2010 - initial version
+%        Oct. 10, 2010 - svol to fkvol
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 24, 2010 at 15:55 GMT
+%     Last Updated Oct. 10, 2010 at 15:55 GMT
 
 % todo:
 
@@ -101,8 +102,8 @@ for i=months
     
     % get fk volume
     [rvol,tvol]=fkxchorzvolume(rr,rt,tr,tt,50,301,[1/100 1/4]);
-    save(['svol.r.' num2str(i,'%02d') '.mat'],'-struct','rvol');
-    save(['svol.t.' num2str(i,'%02d') '.mat'],'-struct','tvol');
+    save(['fkvol.r.' num2str(i,'%02d') '.mat'],'-struct','rvol');
+    save(['fkvol.t.' num2str(i,'%02d') '.mat'],'-struct','tvol');
 end
 
 end

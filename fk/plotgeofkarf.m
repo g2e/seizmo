@@ -52,9 +52,11 @@ function [varargout]=plotgeofkarf(arf,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %     Version History:
 %        July  7, 2010 - update for new struct
 %        Oct.  6, 2010 - truncate title if too many ARF locations
+%        Oct. 10, 2010 - all plotting functions use proper ax calls, tagged
+%                        plots as 'fkmap'
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2010 at 18:25 GMT
+%     Last Updated Oct. 10, 2010 at 18:25 GMT
 
 % todo:
 
@@ -192,41 +194,46 @@ if(~iscell(popt))
 end
 
 % setup projection
+axes(ax);
 m_proj(popt{:});
 set(ax,'color',ocean);
 
 % plot geofk beam
-hold on
+hold(ax,'on');
 if(any(arf.latlon(:,:,2)>MAP_VAR_LIST.longs(1) ...
         & arf.latlon(:,:,2)<MAP_VAR_LIST.longs(2)))
-    m_pcolor(arf.latlon(:,:,2),arf.latlon(:,:,1),double(arf.beam));
+    m_pcolor(arf.latlon(:,:,2),arf.latlon(:,:,1),double(arf.beam),...
+        'parent',ax);
 end
 if(any(arf.latlon(:,:,2)-360>MAP_VAR_LIST.longs(1) ...
         & arf.latlon(:,:,2)-360<MAP_VAR_LIST.longs(2)))
-    m_pcolor(arf.latlon(:,:,2)-360,arf.latlon(:,:,1),double(arf.beam));
+    m_pcolor(arf.latlon(:,:,2)-360,arf.latlon(:,:,1),double(arf.beam),...
+        'parent',ax);
 end
 if(any(arf.latlon(:,:,2)+360>MAP_VAR_LIST.longs(1) ...
         & arf.latlon(:,:,2)+360<MAP_VAR_LIST.longs(2)))
-    m_pcolor(arf.latlon(:,:,2)+360,arf.latlon(:,:,1),double(arf.beam));
+    m_pcolor(arf.latlon(:,:,2)+360,arf.latlon(:,:,1),double(arf.beam),...
+        'parent',ax);
 end
 
 % modify
-shading flat;
+shading(ax,'flat');
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
-    colormap(flipud(fire));
+    colormap(ax,flipud(fire));
 elseif(strcmp(bgcolor,'k') || isequal(bgcolor,[0 0 0]))
-    colormap(fire);
+    colormap(ax,fire);
 else
     if(ischar(bgcolor))
         bgcolor=name2rgb(bgcolor);
     end
     hsv=rgb2hsv(bgcolor);
-    colormap(hsvcustom(hsv));
+    colormap(ax,hsvcustom(hsv));
 end
 set(ax,'clim',dblim);
-hold off
+hold(ax,'off');
 
 % now add coastlines and political boundaries
+axes(ax);
 %m_gshhs([gshhs 'c'],'patch',land);
 %m_gshhs([gshhs 'b'],'color',border);
 m_gshhs([gshhs 'c'],'color',land);
@@ -245,11 +252,11 @@ while(any(abs(arf.stlo-mean(MAP_VAR_LIST.longs))>180))
 end
 
 % add stations
-hold on
-h=m_scatter(arf.stlo,arf.stla,[],'y','filled',...
+hold(ax,'on');
+h=m_scatter(ax,arf.stlo,arf.stla,[],'y','filled',...
     'markeredgecolor','k');
 set(h,'tag','stations');
-hold off
+hold(ax,'off');
 
 % colorbar & title
 c=colorbar('eastoutside','peer',ax,'xcolor',fgcolor,'ycolor',fgcolor);
@@ -274,7 +281,7 @@ title(ax,[{[]}; 'Array Response Function @ '; titstr; ...
 % - this is for updategeofkarf
 userdata.zerodb=zerodb;
 userdata.dblim=dblim;
-set(ax,'userdata',userdata);
+set(ax,'userdata',userdata,'tag','geofkarf');
 
 % return figure handle
 if(nargout); varargout{1}=ax; end

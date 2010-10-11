@@ -1,5 +1,5 @@
 % Seismology Toolbox - plotting
-% Version 0.6.0-r168 Fuji 21-Sept-2010
+% Version 0.6.0-r170 Gunnbjørnfjeld 11-Oct-2010
 %
 % SEIZMO plotting routines
 %DRAWMARKERS      - Draw markers in SEIZMO plot deleting any existing ones

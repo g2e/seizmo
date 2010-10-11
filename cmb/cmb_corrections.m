@@ -102,6 +102,6 @@ switch phase
 end
 
 % get geometrical spreading corrections
-corrections.geomsprcor=geomsprcor(delaz(1));
+corrections.geomsprcor=geomsprcor(delaz(:,1));
 
 end

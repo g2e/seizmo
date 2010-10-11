@@ -1,5 +1,5 @@
 % Seismology Toolbox - response
-% Version 0.6.0-r168 Fuji 21-Sept-2010
+% Version 0.6.0-r170 Gunnbjørnfjeld 11-Oct-2010
 %
 % Instrument Response functions
 %APPLYSACPZ              - Applies SAC PoleZero responses to SEIZMO records

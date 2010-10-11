@@ -40,9 +40,10 @@ function [grp,ax]=selectclusters(data,grp,opt,varargin)
 %     Version History:
 %        Sep. 18, 2010 - initial version
 %        Sep. 21, 2010 - altered inputs/outputs
+%        Oct. 10, 2010 - minor warning fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2010 at 20:00 GMT
+%     Last Updated Oct. 10, 2010 at 20:00 GMT
 
 % todo:
 
@@ -67,7 +68,7 @@ if(~isstruct(grp) ...
         || numel(grp.T)~=nrecs ...
         || ~isequal([max(grp.T) 3],size(grp.color)))
     error('seizmo:selectclusters:badInput',...
-        'GRP must be a struct with fields T & color!');
+        'GRP must be a struct with fields T, good & color!');
 end
 
 % number of groups

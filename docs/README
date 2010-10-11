@@ -19,6 +19,7 @@ How I install SEIZMO for Matlab on our machines:
 
 3. Add the following folders to your Matlab path:
         seizmo/           (main stuff)
+        seizmo/lowlevel   (internal functions)
         seizmo/plotting   (plotting routines)
         seizmo/misc       (essential uncatagorized functions)
         seizmo/position   (essential earth positioning functions)
@@ -57,7 +58,6 @@ The following directories are optional, but highly recommended:
 These may also be of help:
    seizmo/fixes                 (header fixing routines for extraction utilities)
    seizmo/invert                (some inversion scripts ... not much here currently)
-   seizmo/seizmo_internal       (link to seizmo private functions)
    seizmo/sphpoly               (spherical polygon functions)
    seizmo/ww3                   (WaveWatch III routines)
 
@@ -68,6 +68,7 @@ These have less finish but can be useful:
    seizmo/tomo               (tomography functions from GDA)
    seizmo/topo               (topo data functions)
    seizmo/tpw                (some functions related to two plane wave analysis)
+   seizmo/cmb                (some functions related to core-diffracted analysis)
 
 These directories are external scripts included for your convenience:
    seizmo/external           (misc stuff I thought was cool or might come in handy)

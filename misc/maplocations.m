@@ -125,9 +125,10 @@ function [varargout]=maplocations(varargin)
 %                        axis is given, improved axis usage, Robinson proj
 %        Aug. 30, 2010 - allow individual sizing & coloring of st/ev
 %        Sep. 16, 2010 - changed eventmarkersize to 75 for looks
+%        Oct. 10, 2010 - changed eventmarkersize to 150 for looks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2010 at 20:30 GMT
+%     Last Updated Oct. 10, 2010 at 20:30 GMT
 
 % todo:
 
@@ -141,7 +142,7 @@ end
 global MAP_VAR_LIST
 
 % option defaults
-varargin=[{'st' [] 'sm' 'yo' 'ss' [] 'ev' [] 'em' 'rp' 'es' 75 'g' 'o' ...
+varargin=[{'st' [] 'sm' 'yo' 'ss' [] 'ev' [] 'em' 'rp' 'es' 150 'g' 'o' ...
     'p' 'robinson' 'po' [] 'go' [] 'fg' [] 'bg' [] 's' [.3 .6 1] ...
     'l' [.4 .6 .2] 'b' [.5 0 0] 'a' []} varargin];
 

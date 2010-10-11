@@ -1,7 +1,7 @@
-function [results]=cmb_first_pass(phase,indir)
-%CMB_FIRST_PASS    Initial core-diff alignment + normalization + clustering
+function [results]=cmb_1st_pass(phase,indir)
+%CMB_1ST_PASS    Initial core-diff alignment + normalization + clustering
 %
-%    Usage:    results=cmb_first_pass(phase,indir)
+%    Usage:    results=cmb_1st_pass(phase,indir)
 
 % todo:
 
@@ -11,7 +11,7 @@ error(nargchk(2,2,nargin));
 % check phase
 valid={'Pdiff' 'SHdiff' 'SVdiff'};
 if(~isstring(phase) || ~ismember(phase,valid))
-    error('seizmo:cmb_first_pass:badPhase',...
+    error('seizmo:cmb_1st_pass:badPhase',...
         ['PHASE must be one of the following:\n' ...
         sprintf('''%s'' ',valid{:}) '!']);
 end
@@ -102,7 +102,7 @@ for i=1:numel(s)
         'runname' 'dirname' 'corrections'};
     if(any(~isfield(tmp0,reqfields)))
         disp(runname);
-        error('seizmo:cmb_first_pass:badWrite',...
+        error('seizmo:cmb_1st_pass:badWrite',...
             'Saving results to file failed!')
     end
     

@@ -1,5 +1,5 @@
 % Seismology Toolbox - fk
-% Version 0.6.0-r168 Fuji 21-Sept-2010
+% Version 0.6.0-r170 Gunnbjørnfjeld 11-Oct-2010
 %
 % Frequency-Wavenumber analysis functions
 %CHKFKARFSTRUCT    - Validate if a struct is as defined by FKARF
@@ -33,6 +33,10 @@
 %GEOFKVOL2MAP      - Converts a geofk volume to a geofk map
 %GEOFKXCHORZVOLUME - Geographic FK beamforming of horizontals
 %GEOFKXCVOLUME     - Geographic FK beamforming
+%ISFKARFSTRUCT     - True if input is a fk struct as defined by FKARF
+%ISFKSTRUCT        - True if input is a fk struct as defined by FKMAP/VOLUME/4D
+%ISGEOFKARFSTRUCT  - True if input is a fk struct as defined by GEOFKARF
+%ISGEOFKSTRUCT     - True if input is a fk struct as defined by GEOFK
 %KXY2SLOWBAZ       - Converts wavenumbers in x & y to slowness and back-azimuth
 %PLOTFKARF         - Plots an fk array response function
 %PLOTFKAZIFREQ     - Plots beam intensity as a function of azimuth & frequency

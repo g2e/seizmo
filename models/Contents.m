@@ -1,5 +1,5 @@
 % Seismology Toolbox - models
-% Version 0.6.0-r168 Fuji 21-Sept-2010
+% Version 0.6.0-r170 Gunnbjørnfjeld 11-Oct-2010
 %
 % 1D/3D Earth model functions
 %AK135               - Returns the AK135 Earth model

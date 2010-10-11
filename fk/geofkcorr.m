@@ -4,37 +4,50 @@ function [r]=geofkcorr(vol1,vol2)
 %    Usage:    r=geofkcorr(vol1,vol2)
 %
 %    Description:
-%     R=GEOFKCORR(VOL1,VOL2)
+%     R=GEOFKCORR(VOL1,VOL2) computes the correlation coeffient between the
+%     two geofk structs VOL1 & VOL2.  VOL1 & VOL2 must have the same input
+%     dimensions (number of slowness points, latlon points, and frequency
+%     points).  VOL1 and VOL2 may also be geofk maps or geofk ARFs.
 %
 %    Notes:
 %
 %    Examples:
+%     % Compare geofk results for 2 different frequency bands:
+%     vol1=geofkxcvolume(data,50,201,1./[20 15]);
+%     vol2=geofkarf(data,50,201,1./[15 10]);
+%     r=fkcorr(vol1,vol2)
 %
 %    See also: FKCORR
 
 %     Version History:
 %        Sep. 23, 2010 - initial version
+%        Oct. 10, 2010 - add docs, better checking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 23, 2010 at 20:00 GMT
+%     Last Updated Oct. 10, 2010 at 20:00 GMT
 
 % todo:
-% - point source correlation map
-%   - loop over lat/lon creating arfs
-%   - correlate arf with data
-%   - make similar map showing correlation
 
 % check nargin
 error(nargchk(2,2,nargin));
 
 % check inputs
-error(chkgeofkstruct(vol1));
-error(chkgeofkstruct(vol2));
+if(~isgeofkstruct(vol1) && ~isgeofkarfstruct(vol1))
+    error(chkgeofkstruct(vol1));
+elseif(~isgeofkstruct(vol1) && ~isgeofkarfstruct(vol1))
+    error(chkgeofkstruct(vol2));
+end
 
 % require volumes are equal in size
 if(~isequal(size(vol1.beam),size(vol2.beam)))
-    error('seizmo:fkcorr:badInput',...
-        'FK volumes must have equal dimensions!');
+    error('seizmo:geofkcorr:badInput',...
+        'GEOFK volumes must have equal dimensions!');
+end
+
+% require volumes are equal in size
+if(~isequal(size(vol1.beam),size(vol2.beam)))
+    error('seizmo:geofkcorr:badInput',...
+        'GEOFK volumes must have equal dimensions!');
 end
 
 % to correlate we need to convert to linear space

@@ -84,15 +84,13 @@ function [grp,oldax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %        Oct.  1, 2010 - fixed no left click distcut bug
 %        Oct.  2, 2010 - return all axes handles
 %        Oct.  6, 2010 - combine clusters option
+%        Oct. 10, 2010 - combine clusters now in ADJUSTCLUSTERS, drop exit
+%                        and crash option, event grid for map
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2010 at 10:00 GMT
+%     Last Updated Oct. 10, 2010 at 10:00 GMT
 
 % todo:
-% x combine groups interface
-% - flip groups interface
-% - time shift group interface
-% - dist/az map
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -161,6 +159,10 @@ try
             'POPCUT must be a positive real-valued scalar!');
     end
     
+    % event location
+    [evla,evlo]=getheader(data,'evla','evlo');
+    ev=unique([evla evlo],'rows');
+    
     % save parameters
     grp.distcut=distcut;
     grp.method=method;
@@ -193,7 +195,6 @@ try
             % get clusters
             grp.T=cluster(Z,'cutoff',grp.distcut,...
                 'criterion',grp.criterion);
-            grp.T_backup=grp.T;
             
             % fix color matrix
             [idx,idx]=ismember(1:max(grp.T),grp.T(grp.perm));
@@ -205,16 +206,15 @@ try
         end
         
         % get choice from user
-        choice=menu('CHANGE CLUSTERING SETTINGS?',...
+        choice=menu('CLUSTERING OPTIONS',...
             ['DISSIMILARITY CUTOFF (' num2str(grp.distcut) ')'],...
             ['POPULATION CUTOFF (' num2str(grp.popcut) ')'],...
             'MANUALLY PICK GOOD CLUSTERS',...
-            'COMBINE CLUSTERS',...
             ['LINKAGE METHOD (' upper(grp.method) ')'],...
             ['CLUSTERING CRITERION (' upper(grp.criterion) ')'],...
             'CHECK LINKAGE FAITHFULNESS',...
             'VIEW CLUSTER MAP',...
-            'CLUSTER AND RETURN INFO','EXIT');
+            'RETURN');
         
         % act on user choice
         switch choice
@@ -289,7 +289,6 @@ try
                 % get clusters
                 grp.T=cluster(Z,'cutoff',grp.distcut,...
                     'criterion',grp.criterion);
-                grp.T_backup=grp.T;
                 
                 % fix color matrix
                 [idx,idx]=ismember(1:max(grp.T),grp.T(grp.perm));
@@ -318,53 +317,7 @@ try
                 [grp,sx]=selectclusters(data,grp);
                 sx=sx';
                 save=true;
-            case 4 % combine
-                % loop until user says
-                happy=false;
-                while(~happy)
-                    % - let user select clusters
-                    tmp=grp;
-                    tmp.good=false;
-                    [tmp,tmpax]=selectclusters(data,tmp);
-                    close(get(tmpax(1),'parent'));
-                    cgrps=find(tmp.good);
-                    
-                    % who is in these groups
-                    crecs=ismember(grp.T,cgrps);
-                    
-                    % combined colormap
-                    ccmap=grp.color(grp.T(crecs),:);
-                    
-                    % show a combined plot
-                    tmpax=plot2(data(crecs),'cmap',ccmap);
-                    
-                    % ask if that is ok or not (cannot undo!)
-                    choice=menu({'Combine Clusters?' ...
-                        'Note 1: Cannot be Undone!' ...
-                        'Note 2: Undoes manual cluster selection'},...
-                        'YES','NO','RETRY');
-                    
-                    % close tmp plot
-                    close(get(tmpax,'parent'));
-                    
-                    % action
-                    switch choice
-                        case 1 % combine
-                            % change grp.T, grp.pop to all lowest
-                            % - do we shift numbers? no
-                            % - do we lose manual grp selection? yes
-                            grp.T(crecs)=min(cgrps);
-                            grp.pop=histc(grp.T,1:max(grp.T));
-                            grp.good=grp.pop>=grp.popcut;
-                            happy=true;
-                        case 2 % don't
-                            happy=true;
-                    end
-                end
-                
-                % no reclustering
-                save=true;
-            case 5 % method
+            case 4 % method
                 % change method
                 choice=menu('SELECT A LINKAGE METHOD',...
                     ['CURRENT (' upper(grp.method) ')'],...
@@ -373,7 +326,7 @@ try
                     grp.method=methods{choice-1};
                     save=false;
                 end
-            case 6 % criterion
+            case 5 % criterion
                 % change criterion
                 choice=menu('SELECT A CLUSTERING CRITERION',...
                     ['CURRENT (' upper(grp.method) ')'],...
@@ -382,7 +335,7 @@ try
                     grp.criterion=criterions{choice-1};
                     save=false;
                 end
-            case 7 % cophenetic inspection
+            case 6 % cophenetic inspection
                 % get cophenetic stats
                 [C,D]=cophenet(Z,1-cg.');
                 
@@ -405,21 +358,23 @@ try
                     ['SPEARMAN''S RANK COEFFICIENT: ' num2str(rho)]},...
                     'color','w');
                 save=true;
-            case 8 % map
+            case 7 % map
                 % map clusters
                 if(~ishandle(mx))
                     mfh=figure('color','k');
                     mx=axes('parent',mfh);
                 end
                 mx=mapstations(data,'ax',mx);
+                if(size(ev,1)==1 && ~any(isnan(ev)))
+                    mapeventgrid(mx,ev(1),ev(2));
+                end
                 set(findobj(mx,'tag','stations'),...
                     'cdata',grp.color(grp.T,:));
+                movekids(findobj(mx,'tag','stations'),'front');
+                movekids(findobj(mx,'tag','events'),'front');
                 save=true;
-            case 9 % break loop
+            case 8 % break loop
                 happy_user=true;
-            case 10 % crash
-                error('seizmo:usertaper:killYourSelf',...
-                    'User demanded an early exit!');
         end
         
         % list of valid plots from previous run

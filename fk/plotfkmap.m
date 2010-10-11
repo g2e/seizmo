@@ -49,9 +49,11 @@ function [varargout]=plotfkmap(map,varargin)
 %        May  26, 2010 - added dblim & zerodb args, updated docs
 %        June 16, 2010 - labels call correct axes, update see also section
 %        July  6, 2010 - major update for new struct
+%        Oct. 10, 2010 - all plotting functions use proper ax calls, tagged
+%                        plots as 'fkmap'
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 16:05 GMT
+%     Last Updated Oct. 10, 2010 at 16:05 GMT
 
 % todo:
 
@@ -187,15 +189,15 @@ set(0,'defaultlinecolor',fgcolor);
 set(0,'defaultsurfaceedgecolor',fgcolor);
 
 % initialize polar plot
-ph=polar([0 2*pi],[0 smax]);
+ph=polar(ax,[0 2*pi],[0 smax]);
 %ph=mmpolar([0 2*pi],[0 smax],'style','compass',...
 %    'backgroundcolor','k','bordercolor','w');
 
 % adjust to proper orientation
-axis('ij');
+axis(ax,'ij');
 delete(ph);
-view([-90 90]);
-hold on;
+view(ax,[-90 90]);
+hold(ax,'on');
 
 % get cartesian coords
 nx=numel(map.x);
@@ -203,10 +205,10 @@ ny=numel(map.y);
 [x,y]=pol2cart(pi/180*map.x(ones(ny,1),:),map.y(:,ones(nx,1)));
 
 % plot polar grid
-pcolor(x,y,double(map.beam));
+pcolor(ax,x,y,double(map.beam));
 
 % add title color etc
-hold off;
+hold(ax,'off');
 title(ax,{['Number of Stations:  ' num2str(map.nsta)] ...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
@@ -215,17 +217,17 @@ title(ax,{['Number of Stations:  ' num2str(map.nsta)] ...
     '' '' ''},...
     'fontweight','bold','color',fgcolor);
 set(ax,'clim',dblim);
-shading flat;
+shading(ax,'flat');
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
-    colormap(flipud(fire));
+    colormap(ax,flipud(fire));
 elseif(strcmp(bgcolor,'k') || isequal(bgcolor,[0 0 0]))
-    colormap(fire);
+    colormap(ax,fire);
 else
     if(ischar(bgcolor))
         bgcolor=name2rgb(bgcolor);
     end
     hsv=rgb2hsv(bgcolor);
-    colormap(hsvcustom(hsv));
+    colormap(ax,hsvcustom(hsv));
 end
 c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
@@ -247,7 +249,7 @@ set(0,'defaultsurfaceedgecolor',defaultsurfaceedgecolor);
 % - this is for updatefkmap
 userdata.zerodb=zerodb;
 userdata.dblim=dblim;
-set(ax,'userdata',userdata);
+set(ax,'userdata',userdata,'tag','fkmap');
 
 end
 
@@ -339,10 +341,10 @@ fmax=max(map.freq);
 smax=max(max(abs(map.x)),max(abs(map.y)));
 
 % first plot the map
-imagesc(map.x,map.y,map.beam);
+imagesc(map.x,map.y,map.beam,'parent',ax);
 set(ax,'xcolor',fgcolor,'ycolor',fgcolor,'ydir','normal',...
     'color',bgcolor,'fontweight','bold','clim',dblim);
-hold on
+hold(ax,'on');
 
 % phase specific bullseye
 % Phase:       Rg    Lg    Sn    Pn    Sdiff  Pdiff  PKPcdiff
@@ -374,15 +376,15 @@ ph=(1:rings(idx))*pot(idx);
 % first the radial lines
 [x,y]=circle(0,12);
 [x2,y2]=circle(ph(end),12);
-plot([x; x2],[y; y2],'color',fgcolor,...
+plot(ax,[x; x2],[y; y2],'color',fgcolor,...
     'linewidth',1,'linestyle',':','tag','bullseye');
 % second are the rings
 for i=ph
     [x,y]=circle(i);
-    plot(x,y,'color',fgcolor,'linewidth',1,'linestyle',':',...
+    plot(ax,x,y,'color',fgcolor,'linewidth',1,'linestyle',':',...
         'tag','bullseye');
 end
-hold off
+hold(ax,'off');
 
 % finally take care of labels/coloring/etc
 title(ax,{['Number of Stations:  ' num2str(map.nsta)] ...
@@ -396,26 +398,26 @@ xlabel(ax,'East/West Slowness (s/deg)',...
 ylabel(ax,'North/South Slowness (s/deg)',...
     'fontweight','bold','color',fgcolor);
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
-    colormap(flipud(fire));
+    colormap(ax,flipud(fire));
 elseif(strcmp(bgcolor,'k') || isequal(bgcolor,[0 0 0]))
-    colormap(fire);
+    colormap(ax,fire);
 else
     if(ischar(bgcolor))
         bgcolor=name2rgb(bgcolor);
     end
     hsv=rgb2hsv(bgcolor);
-    colormap(hsvcustom(hsv));
+    colormap(ax,hsvcustom(hsv));
 end
 c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
 %set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)
-axis equal tight;
+axis(ax,'equal','tight');
 
 % set zerodb & dblim in userdata
 % - this is for updatefkmap
 userdata.zerodb=zerodb;
 userdata.dblim=dblim;
-set(ax,'userdata',userdata);
+set(ax,'userdata',userdata,'tag','fkmap');
 
 end

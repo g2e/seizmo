@@ -48,9 +48,11 @@ function [varargout]=plotfkarf(arf,varargin)
 %        July 18, 2010 - fix db info, commented out nyquist ring code,
 %                        fixed axis output
 %        Oct.  6, 2010 - truncate title if too many ARF locations
+%        Oct. 10, 2010 - all plotting commands use proper ax call, tagged
+%                        as 'fkarf'
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2010 at 10:50 GMT
+%     Last Updated Oct. 10, 2010 at 10:50 GMT
 
 % todo:
 
@@ -162,7 +164,7 @@ end
 % - this is for updatefkmap
 userdata.zerodb=zerodb;
 userdata.dblim=dblim;
-set(ax,'userdata',userdata);
+set(ax,'userdata',userdata,'tag','fkarf');
 
 % pertinent info
 smax=max(abs(map.y));
@@ -199,15 +201,15 @@ set(0,'defaultlinecolor',fgcolor);
 set(0,'defaultsurfaceedgecolor',fgcolor);
 
 % initialize polar plot
-ph=polar([0 2*pi],[0 smax]);
+ph=polar(ax,[0 2*pi],[0 smax]);
 %ph=mmpolar([0 2*pi],[0 smax],'style','compass',...
 %    'backgroundcolor','k','bordercolor','w');
 
 % adjust to proper orientation
-axis('ij');
+axis(ax,'ij');
 delete(ph);
-view([-90 90]);
-hold on;
+view(ax,[-90 90]);
+hold(ax,'on');
 
 % get cartesian coords
 nx=numel(map.x);
@@ -215,7 +217,7 @@ ny=numel(map.y);
 [x,y]=pol2cart(pi/180*map.x(ones(ny,1),:),map.y(:,ones(nx,1)));
 
 % plot polar grid
-pcolor(x,y,double(map.beam));
+pcolor(ax,x,y,double(map.beam));
 
 % last plot the nyquist rings about the plane wave locations
 %for i=1:map.npw
@@ -239,22 +241,22 @@ else
 end
 
 % add title color etc
-hold off;
+hold(ax,'off');
 title(ax,['Array Response Function @ '; titstr; ...
     ['0db = ' num2str(map.normdb) 'dB']; {''}; {''}; {''}],...
     'fontweight','bold','color',fgcolor);
 set(ax,'clim',dblim);
-shading flat;
+shading(ax,'flat');
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
-    colormap(flipud(fire));
+    colormap(ax,flipud(fire));
 elseif(strcmp(bgcolor,'k') || isequal(bgcolor,[0 0 0]))
-    colormap(fire);
+    colormap(ax,fire);
 else
     if(ischar(bgcolor))
         bgcolor=name2rgb(bgcolor);
     end
     hsv=rgb2hsv(bgcolor);
-    colormap(hsvcustom(hsv));
+    colormap(ax,hsvcustom(hsv));
 end
 c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
@@ -360,7 +362,7 @@ end
 % - this is for updatefkmap
 userdata.zerodb=zerodb;
 userdata.dblim=dblim;
-set(ax,'userdata',userdata);
+set(ax,'userdata',userdata,'tag','fkarf');
 
 % get pertinent info
 smax=max(max(abs(map.x)),max(abs(map.y)));
@@ -375,10 +377,10 @@ dist=vincentyinv(map.stla(friends(:,1)),map.stlo(friends(:,1)),...
                  map.stla(friends(:,2)),map.stlo(friends(:,2)));
 
 % first plot the map
-imagesc(map.x,map.y,map.beam);
+imagesc(map.x,map.y,map.beam,'parent',ax);
 set(ax,'xcolor',fgcolor,'ycolor',fgcolor,'ydir','normal',...
     'color',bgcolor,'fontweight','bold','clim',dblim);
-hold on
+hold(ax,'on');
 
 % phase specific bullseye
 % Phase:       Rg    Lg    Sn    Pn    Sdiff  Pdiff  PKPcdiff
@@ -410,12 +412,12 @@ ph=(1:rings(idx))*pot(idx);
 % first the radial lines
 [x,y]=circle(0,12);
 [x2,y2]=circle(ph(end),12);
-plot([x; x2],[y; y2],'color',fgcolor,...
+plot(ax,[x; x2],[y; y2],'color',fgcolor,...
     'linewidth',1,'linestyle',':','tag','bullseye');
 % next the rings
 for i=ph
     [x,y]=circle(i);
-    plot(x,y,'color',fgcolor,'linewidth',1,'linestyle',':',...
+    plot(ax,x,y,'color',fgcolor,'linewidth',1,'linestyle',':',...
         'tag','bullseye');
 end
 
@@ -439,7 +441,7 @@ else
     % elimate too much title
     titstr{1}=[num2str(map.npw) ' Locations'];
 end
-hold off
+hold(ax,'off');
 
 % finally take care of labels/coloring/etc
 title(ax,['Array Response Function @ '; titstr; ...
@@ -450,20 +452,20 @@ xlabel(ax,'East/West Slowness (s/deg)',...
 ylabel(ax,'North/South Slowness (s/deg)',...
     'fontweight','bold','color',fgcolor);
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
-    colormap(flipud(fire));
+    colormap(ax,flipud(fire));
 elseif(strcmp(bgcolor,'k') || isequal(bgcolor,[0 0 0]))
-    colormap(fire);
+    colormap(ax,fire);
 else
     if(ischar(bgcolor))
         bgcolor=name2rgb(bgcolor);
     end
     hsv=rgb2hsv(bgcolor);
-    colormap(hsvcustom(hsv));
+    colormap(ax,hsvcustom(hsv));
 end
 c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
 %set(c,'xaxislocation','top');
 xlabel(c,'dB','fontweight','bold','color',fgcolor)
-axis equal tight;
+axis(ax,'equal','tight');
 
 end

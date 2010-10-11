@@ -18,9 +18,10 @@ function []=make_full_horz_volumes(indir)
 
 %     Version History:
 %        June 24, 2010 - initial version
+%        Oct. 10, 2010 - svol to fkvol
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 24, 2010 at 15:55 GMT
+%     Last Updated Oct. 10, 2010 at 15:55 GMT
 
 % todo:
 
@@ -82,7 +83,7 @@ tt(mi>si)=[];
 
 % get fk volume
 [rvol,tvol]=fkxchorzvolume(rr,rt,tr,tt,50,301,[1/100 1/4]);
-save('svol.r.fullstack.mat','-struct','rvol');
-save('svol.t.fullstack.mat','-struct','tvol');
+save('fkvol.r.fullstack.mat','-struct','rvol');
+save('fkvol.t.fullstack.mat','-struct','tvol');
 
 end

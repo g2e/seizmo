@@ -1,5 +1,5 @@
 % Seismology Toolbox - cmap
-% Version 0.6.0-r168 Fuji 21-Sept-2010
+% Version 0.6.0-r170 Gunnbjørnfjeld 11-Oct-2010
 %
 % Various Colormaps
 %BLUE2RED     - Blue-White-Red (aka Polar) colormap

@@ -1,5 +1,5 @@
 % Seismology Toolbox - shortnames
-% Version 0.6.0-r168 Fuji 21-Sept-2010
+% Version 0.6.0-r170 Gunnbjørnfjeld 11-Oct-2010
 %
 % Shortcut function names
 %ADDF    - ADDRECORDS                     - Add SEIZMO records

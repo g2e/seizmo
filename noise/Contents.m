@@ -1,7 +1,8 @@
 % Seismology Toolbox - noise
-% Version 0.6.0-r168 Fuji 21-Sept-2010
+% Version 0.6.0-r170 Gunnbjørnfjeld 11-Oct-2010
 %
 % Ambient noise analysis functions
+%ADJUST_MONTHLY_PLOTS      - Adjust monthly fk spectra figures for printing
 %ARRAY_STATION_NAMES       - Returns station names for an array
 %AZISWEEP                  - Sliding azimuthal window record section of correlograms
 %AZIWINDOW                 - Azimuthal window record section of correlograms

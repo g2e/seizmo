@@ -18,9 +18,10 @@ function []=make_full_z_volumes(indir)
 
 %     Version History:
 %        June 24, 2010 - initial version
+%        Oct. 10, 2010 - svol to fkvol
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 24, 2010 at 15:55 GMT
+%     Last Updated Oct. 10, 2010 at 15:55 GMT
 
 % todo:
 
@@ -58,6 +59,6 @@ data(mi>si)=[];
 
 % get fk volume
 vol=fkxcvolume(data,50,301,[1/100 1/4]);
-save('svol.z.fullstack.mat','-struct','vol');
+save('fkvol.z.fullstack.mat','-struct','vol');
 
 end

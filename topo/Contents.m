@@ -1,5 +1,5 @@
 % Seismology Toolbox - topo
-% Version 0.6.0-r168 Fuji 21-Sept-2010
+% Version 0.6.0-r170 Gunnbjørnfjeld 11-Oct-2010
 %
 % Topography Data functions
 %ETOPO1_TILE     - Tiles ETOPO1 into 10x10 tiles

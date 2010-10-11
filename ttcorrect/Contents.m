@@ -1,5 +1,5 @@
 % Seismology Toolbox - ttcorrect
-% Version 0.6.0-r168 Fuji 21-Sept-2010
+% Version 0.6.0-r170 Gunnbjørnfjeld 11-Oct-2010
 %
 % Seismic phase travel time correction functions
 %AK135_ELLIP_TABLES        - Returns tables for ellipticity corrections
