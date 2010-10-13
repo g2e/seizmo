@@ -28,9 +28,10 @@ function [fh]=plot_monthly_volumes(band,cmp,dblim,zerodb)
 
 %     Version History:
 %        Oct. 10, 2010 - initial version
+%        Oct. 11, 2010 - several bug fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 16:05 GMT
+%     Last Updated Oct. 11, 2010 at 16:05 GMT
 
 % todo:
 
@@ -57,12 +58,16 @@ if(~isstring(cmp) || ~ismember(lower(cmp),{'z' 'r' 't'}))
 end
 
 % initialize plots and axes
-nb=size(bands,1);
+nb=size(band,1);
 fh=nan(nb,1); ax=cell(nb,1); tax=ax;
 for i=1:nb
+    userdata.band=band(i,:);
+    userdata.cmp=cmp;
+    userdata.dblim=dblim;
+    userdata.zerodb=zerodb;
     fh(i)=figure('color','w','tag','fkmonthly','name',...
-        [name '   ' num2str(band(i,2)) 's-' num2str(band(i,1)) 's'],...
-        'userdata',band(i,:));
+        [num2str(1./band(i,2)) 's-' num2str(1./band(i,1)) 's'],...
+        'userdata',userdata);
     ax{i}=makesubplots(4,3,[],'align','parent',fh(i));
     tax{i}=ax{i}';
     drawnow;

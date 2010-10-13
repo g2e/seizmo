@@ -21,6 +21,7 @@
 %FKXCVOLUME        - Returns energy map in frequency-wavenumber space for xc data
 %GEOFKARF          - Returns the geofk array response function for a seismic array
 %GEOFKARF2MAP      - Converts a geofk ARF volume to a geofk ARF map
+%GEOFKARFCORR      - Computes correlation with ARFs in the parameter space
 %GEOFKARFSLOWSLIDE - Slides through the slownesses of a geofkarf volume
 %GEOFKCORR         - Zero lag correlation coefficient between geofk spectra
 %GEOFKDBINFO       - Returns the min/median/max dB for a geofk struct

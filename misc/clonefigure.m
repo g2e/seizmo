@@ -33,9 +33,12 @@ function [varargout]=clonefigure(in,out)
 
 %     Version History:
 %        Aug.  5, 2010 - initial version
+%        Oct. 11, 2010 - skip 'FixedColors', better colorbar cloning, fix
+%                        crash when adjusting text visibility (may cause
+%                        regression!)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  5, 2010 at 12:25 GMT
+%     Last Updated Oct. 11, 2010 at 12:25 GMT
 
 % todo:
 
@@ -66,6 +69,7 @@ end
 [in,out]=expandscalars(in,out);
 
 % loop over each output figure
+hin=cell(numel(out),1); hout=hin;
 for i=1:numel(out)
     % bring to front
     if(isnan(out(i)))
@@ -78,28 +82,33 @@ for i=1:numel(out)
     clf(out(i));
     
     % recursive object copy
-    rcopyobj(in(i),out(i));
+    [hin{i},hout{i}]=rcopyobj(in(i),out(i));
     
     % copy all figure props minus a few fields
     set(out(i),rmfield(get(in(i)),{'BeingDeleted' 'Children' ...
         'CurrentAxes' 'CurrentCharacter' 'CurrentObject' 'CurrentPoint' ...
-        'Type'}));
+        'Type' 'FixedColors'}));
     
     % MATLAB BUG WORKAROUNDS
     %%%%%%%%%%%%%%%%%%%%%%%%%%
     % need to force drawing to get actual values
     drawnow;
-    % colorbar position fixes
+    % colorbar position & axes fixes
     cbin=findobj(in(i),'tag','Colorbar');
     cbout=findobj(out(i),'tag','Colorbar');
     for j=1:numel(cbin)
-        set(cbout(j),'position',get(cbin(j),'position'));
+        set(cbout(j),'position',get(cbin(j),'position'),...
+            'axes',hout{i}(hin{i}==get(cbin(j),'axes')));
     end
     % text visibility fixes
     tin=findall(in(i),'type','text');
     tout=findall(out(i),'type','text');
-    for j=1:numel(tin)
-        set(tout(j),'visible',get(tin(j),'visible'));
+    if(numel(tin)==numel(tout))
+        for j=1:numel(tin)
+            set(tout(j),'visible',get(tin(j),'visible'));
+        end
+    else
+        % not sure yet
     end
 end
 
@@ -108,13 +117,21 @@ if(nargout); varargout{1}=out; end
 
 end
 
-function rcopyobj(oldparent,newparent)
+function [kids,newkids]=rcopyobj(oldparent,newparent)
 %RCOPYOBJ    Recursive object copy
 kids=get(oldparent,'children');
 if(~isempty(kids))
     newkids=copyobj(kids,newparent);
+    nkids=numel(newkids);
+    k=cell(1,nkids); nk=k;
     for i=1:numel(newkids)
-        rcopyobj(kids(i),newkids(i));
+        [k{i},nk{i}]=rcopyobj(kids(i),newkids(i));
+        k{i}=k{i}(:)';
+        nk{i}=nk{i}(:)';
     end
+    kids=[kids(:); cell2mat(k)'];
+    newkids=[newkids(:); cell2mat(nk)'];
+else
+    newkids=kids;
 end
 end

@@ -21,9 +21,10 @@ function nocolorbars(ax)
 %     Version History:
 %        Aug.  5, 2010 - initial version
 %        Aug.  8, 2010 - doc update
+%        Oct. 11, 2010 - delete colorbar handles
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 12:25 GMT
+%     Last Updated Oct. 11, 2010 at 12:25 GMT
 
 % todo:
 
@@ -43,8 +44,7 @@ end
 % remove titles
 for i=1:numel(ax)
     cbh=findobj(get(ax(i),'parent'),'tag','Colorbar','axes',ax(i));
-    if(~isempty(cbh)); colorbar(cbh,'off'); end
-    
+    if(~isempty(cbh)); delete(cbh); end
 end
 
 end

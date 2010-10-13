@@ -22,9 +22,10 @@ function [r]=fkcorr(vol1,vol2)
 %     Version History:
 %        Sep. 23, 2010 - initial version
 %        Oct. 10, 2010 - add docs, better checking, allow ARFs
+%        Oct. 12, 2010 - proper output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 20:00 GMT
+%     Last Updated Oct. 12, 2010 at 20:00 GMT
 
 % todo:
 
@@ -53,5 +54,6 @@ end
 % to correlate we need to convert to linear space
 % - y=10*log10(x) => x=10.^(y/10);
 r=corrcoef([10.^(vol1.beam(:)/10) 10.^(vol2.beam(:)/10)]);
+r=r(2); % only want the correlation coeff for VOL1 vs VOL2
 
 end

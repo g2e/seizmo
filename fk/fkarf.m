@@ -301,7 +301,7 @@ s=2*pi*1i*[s0(:).*sin(d2r*baz0(:)) s0(:).*cos(d2r*baz0(:))]/d2km;
 % detail message
 verbose=seizmoverbose;
 if(verbose)
-    fprintf('Getting fk ARF for plane wave at:\n');
+    fprintf('Getting fk ARF for plane wave source:\n');
 end
 
 % loop over plane waves

@@ -61,7 +61,7 @@ for i=1:numel(results0)
     for j=find(results0(i).usercluster.good(:)')
         % get cluster info
         sj=num2str(j);
-        good=find(results(i).usercluster.T==j ...
+        good=find(results0(i).usercluster.T==j ...
             & gcarc>=gcrng(1) & gcarc<gcrng(2));
         
         % census
@@ -70,7 +70,7 @@ for i=1:numel(results0)
         
         % extract appropriate corrections
         correct=results0(i).corrections;
-        correct=fixcorrstruct(correct);
+        correct=fixcorrstruct(correct,good);
         
         % multiband alignment
         results=multibandalign(data(good),bank,[runname '_cluster_' sj],...

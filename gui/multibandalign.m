@@ -180,9 +180,7 @@ try
         if(i<size(bank,1) && use_align)
             goodarr=info(i).useralign.solution.arr;
             goodidx=find(snridx);
-            lags(goodidx,goodidx)=...
-                info(i).useralign.solution.arr(:,ones(1,nn))'...
-                -info(i).useralign.solution.arr(:,ones(1,nn));
+            lags(goodidx,goodidx)=goodarr(:,ones(1,nn))-goodarr(:,ones(1,nn))';
             idx(goodidx,goodidx)=i;
         end
     end

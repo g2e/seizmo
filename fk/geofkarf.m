@@ -205,7 +205,7 @@ clear dist cdist
 % detail message
 verbose=seizmoverbose;
 if(verbose)
-    fprintf('Getting geofk ARF for spherical wave at:\n');
+    fprintf('Getting geofk ARF for spherical wave source:\n');
 end
 
 % loop over spherical wave emitters

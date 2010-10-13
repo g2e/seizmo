@@ -17,10 +17,12 @@ function [lgc]=isstring(str)
 
 %     Version History:
 %        Sep. 13, 2010 - initial version (added docs)
+%        Oct. 11, 2010 - allow empty string
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2010 at 11:00 GMT
+%     Last Updated Oct. 11, 2010 at 11:00 GMT
 
-lgc=ischar(str) && ndims(str==2) && size(str,1)==1;
+lgc=ischar(str) && ndims(str==2) ...
+    && (size(str,1)==1 || isequal(size(str),[0 0]));
 
 end
