@@ -17,7 +17,9 @@
 %FKSUBVOL          - Extracts a frequency-based subvolume of a fk volume
 %FKVOL2MAP         - Converts a fk volume to a fk map
 %FKVOLUME          - Returns beamformer volume in frequency-wavenumber space
+%FKXCHORZMAP       - Returns frequency-wavenumber space for horz. xc data
 %FKXCHORZVOLUME    - Returns frequency-wavenumber space for horz. xc data
+%FKXCMAP           - Returns beam map in frequency-wavenumber space for xc data
 %FKXCVOLUME        - Returns energy map in frequency-wavenumber space for xc data
 %GEOFKARF          - Returns the geofk array response function for a seismic array
 %GEOFKARF2MAP      - Converts a geofk ARF volume to a geofk ARF map

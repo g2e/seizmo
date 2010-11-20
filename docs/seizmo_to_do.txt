@@ -11,6 +11,8 @@ ani mantle models
 plotting profiles for models
 more cmb models (rjk)
 cub2 functions
+	rayleigh travel times
+	love travel times
 absolute time windowing
 picking
 autopicking
@@ -26,6 +28,30 @@ drop restrictive copyright functions
 	ddendrogram
 	mmpolar
 	ppdcval
+fk stuff
+x	add weighting to all
+	weight optimization function
+		capon 1969, etc
+		haubrich 1968
+	verify horzizontal algorithm vs Haubrich and McCamy 1969
+	make scripts for
+		3hour
+		daily
+		1mon
+        vol/map set 2 mov
+	x	fkxcmap
+	x	fkxchorzmap
+		fkhorzmap
+		fkhorzvolume
+		geofkmap
+		geofkhorzmap
+		geofkvolume
+		geofkhorzvolume
+		geofkxcmap
+		geofkxchorzmap
+expand sph tri stuff
+	use delaunay codes
+database of station info (mda query?)
 
 
 older lists follow below:
@@ -50,6 +76,7 @@ better polezero docs
 		- add pole at 0
 	- vel 2 dis
 		- add zero at 0
+	- SERIOUSLY FOLKS, why is there not a simple gui for this?
 plotting
 	- station map movie (frame through samples)
 	- cmp vs cmp (plot 2 components with time)
@@ -76,17 +103,6 @@ ffmancor
     - define azimuthal cos
 	- reflect off cmb
     - can we make this something like 1e-6 s/km^3 ?
-make guis for cut functions
-	- popcut
-	- arrcut
-	- errcut
-	- ampcut
-make multiband align
-	- how do we save all this info?
-		- need to save all the figures
-		- need to save all the arrival info
-			- should be easy to reaccess
-		- can we export it all?
 
 
 0.6.0 - stable, helpful and functional

@@ -1,4 +1,4 @@
-function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,method)
+function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,method,w)
 %FKARF    Returns the fk array response function for a seismic array
 %
 %    Usage:    fkarf(stla,stlo,smax)
@@ -7,16 +7,17 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,method)
 %              fkarf(stla,stlo,smax,spts,s,baz,f)
 %              fkarf(stla,stlo,smax,spts,s,baz,f,polar)
 %              fkarf(stla,stlo,smax,spts,s,baz,f,polar,method)
+%              fkarf(stla,stlo,smax,spts,s,baz,f,polar,method,weights)
 %              arf=fkarf(...)
 %
-%    Description: FKARF(STLA,STLO,SMAX) shows the array response function
-%     (ARF) for a 1Hz plane wave incoming from directly below an array of
-%     sensors at geographic positions given by latitudes STLA and
-%     longitudes STLO.  The ARF is shown in East/West and North/South
-%     slowness space from -SMAX to SMAX where SMAX is expected to be in
-%     seconds per degree.  It is sampled 101 times in both the East/West
-%     and North/South directions giving a 101x101 image.  ARF is plotted
-%     in units of decibels.
+%    Description:
+%     FKARF(STLA,STLO,SMAX) shows the array response function (ARF) for a
+%     1Hz plane wave incoming from directly below an array of sensors at
+%     geographic positions given by latitudes STLA and longitudes STLO.
+%     The ARF is shown in East/West and North/South slowness space from
+%     -SMAX to SMAX where SMAX is expected to be in seconds per degree.  It
+%     is sampled 101 times in both the East/West and North/South directions
+%     giving a 101x101 image.  ARF is plotted in units of decibels.
 %
 %     FKARF(STLA,STLO,SMAX,SPTS) changes the number of samples in slowness
 %     space to SPTSxSPTS.  Higher values will provide better resolution at
@@ -54,6 +55,13 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,method)
 %     method is essentially the same as the 'center' method but uses the
 %     defined coordinates as the center for the array.
 %
+%     FKARF(STLA,STLO,SMAX,SPTS,S,BAZ,F,POLAR,METHOD,WEIGHTS) specifies
+%     weights for each station pair in the array (this depends on the
+%     method) for use in beamforming.  For example, the 'center' method 
+%     requires N weights whereas 'coarray' requires (N*N-N)/2 weights.  The
+%     weights are normalized internally to sum to 1.  See the Examples
+%     section for coarray weight indexing.
+%
 %     ARF=FKARF(...) returns the array response function in struct ARF
 %     without plotting it.  ARF has the following fields:
 %      ARF.beam      --  the array beam response function
@@ -71,20 +79,23 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,method)
 %      ARF.method    --  beamforming method (center, coarray, full, user)
 %      ARF.center    --  array center as [LAT LON]
 %      ARF.normdb    --  what 0dB actually corresponds to
+%      ARF.weights   --  weights used in beam response function
 %
 %    Notes:
-%     - The red circle around the expected location of the plane wave on
-%       the slowness diagram indicates the range of slownesses within the
-%       nyquist slowness from that location.  The slowness nyquist is
-%       determined by the minimum interstation spacing.
 %
 %    Examples:
-%     Show the array response function for +/-5s/deg for a dataset:
-%      [stla,stlo]=getheader(data,'stla','stlo');
-%      fkarf(stla,stlo,5);
+%     % Show the array response function for +/-5s/deg for a dataset:
+%     [stla,stlo]=getheader(data,'stla','stlo');
+%     fkarf(stla,stlo,5);
 %
-%     Get a multi-plane wave response:
-%      arf=fkarf(stla,stlo,50,201,[20 10 20],[0 0 45],0.03);
+%     % Get a multi-plane wave response:
+%     arf=fkarf(stla,stlo,50,201,[20 10 20],[0 0 45],0.03);
+%
+%     % Indices (into station weights) for coarray weights:
+%     [i,j]=find(triu(true(nsta),1));
+%     w=ones(nsta,1); % start with uniform weighting
+%     w(2:2:end)=2;   % even index stations are weighted up
+%     w=w(i).*w(j);   % get weights for coarray
 %
 %    See also: PLOTFKARF, FKMAP, KXY2SLOWBAZ, SLOWBAZ2KXY, SNYQUIST
 
@@ -101,9 +112,12 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,method)
 %                        fix, arf data is now single precision
 %        July  7, 2010 - center/user method for multi-plane wave ARF now is
 %                        fixed
+%        Nov. 16, 2010 - added weighting (franklin witnessed)
+%        Nov. 17, 2010 - forgot .weights field
+%        Nov. 18, 2010 - coarray weight indexing example, fixed scaling bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  7, 2010 at 14:40 GMT
+%     Last Updated Nov. 18, 2010 at 14:40 GMT
 
 % todo:
 
@@ -121,6 +135,7 @@ if(nargin<6 || isempty(baz0)); baz0=0; end
 if(nargin<7 || isempty(f0)); f0=1; end
 if(nargin<8 || isempty(polar)); polar=false; end
 if(nargin<9 || isempty(method)); method='coarray'; end
+if(nargin<10); w=[]; end
 
 % valid method strings
 valid.METHOD={'center' 'coarray' 'full'};
@@ -154,7 +169,14 @@ elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
         || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
     error('seizmo:fkarf:badInput',...
         'METHOD must be [LAT LON], ''CENTER'', ''COARRAY'' or ''FULL''');
+elseif(~isempty(w) && (any(w(:)<0) || ~isreal(w) || sum(w(:))==0))
+    error('seizmo:fkarf:badInput',...
+        'WEIGHTS must be positive real values!');
 end
+
+% convert weights to column vector and normalize
+w=w(:);
+w=w./sum(w);
 
 % number of stations
 nrecs=max(numel(stla),numel(stlo));
@@ -207,6 +229,15 @@ end
 arf.npairs=npairs;
 arf.method=method;
 arf.center=[clat clon];
+
+% check that number of weights is equal to number of pairs
+if(isempty(w)); w=ones(npairs,1)/npairs; end
+if(numel(w)~=npairs)
+    error('seizmo:fkarf:badInput',...
+        ['WEIGHTS must have ' num2str(npairs) ...
+        ' elements for method: ' method '!']);
+end
+arf.weights=w;
 
 % get relative positions for each pair
 % r=(x  ,y  )
@@ -319,9 +350,9 @@ for a=1:npw
     % get beam
     switch method
         case {'full' 'coarray'}
-            arf.beam(:)=arf.beam(:)+sum(exp(f0(a)*(p-p0)),2);
+            arf.beam(:)=arf.beam(:)+exp(f0(a)*(p-p0))*w;
         otherwise
-            arf.beam(:)=arf.beam(:)+abs(sum(exp(f0(a)*(p-p0)),2)).^2;
+            arf.beam(:)=arf.beam(:)+abs(exp(f0(a)*(p-p0))*w).^2;
     end
 end
 
@@ -330,9 +361,9 @@ switch method
     case {'full' 'coarray'}
         % using full and real here gives the exact plots of
         % Koper, Seats, and Benz 2010 in BSSA
-        arf.beam=10*log10(abs(real(arf.beam))/(npw*npairs));
+        arf.beam=10*log10(abs(real(arf.beam))/npw);
     otherwise
-        arf.beam=10*log10(arf.beam/(npw*npairs));
+        arf.beam=10*log10(arf.beam/npw);
 end
 
 % normalize so max peak is at 0dB

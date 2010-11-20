@@ -4,7 +4,8 @@ function [svol]=geofkxcvolume(data,ll,s,frng,w)
 %    Usage:    sgeo=geofkxcvolume(xcdata,latlon,horzslow,frng)
 %              sgeo=geofkxcvolume(xcdata,latlon,horzslow,frng,weights)
 %
-%    Description: SGEO=GEOFKXCVOLUME(XCDATA,LATLON,HORZSLOW,FRNG) computes
+%    Description:
+%     SGEO=GEOFKXCVOLUME(XCDATA,LATLON,HORZSLOW,FRNG) computes
 %     the spherical wave coherency (beam strength) through an array as a
 %     function of frequency, horizontal slowness & geographic location.
 %     The array info and correlograms are contained in the SEIZMO struct

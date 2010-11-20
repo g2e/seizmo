@@ -71,13 +71,13 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 error(nargchk(1,7,nargin));
 
 % check fk struct
-error(chkgeofkstruct(map));
+%error(chkgeofkstruct(map));
 
 % don't allow array/volume
-if(~isscalar(map) || any(map.volume))
-    error('seizmo:plotgeofkmap:badInput',...
-        'MAP must be a scalar geofk struct and not a volume!');
-end
+%if(~isscalar(map) || any(map.volume))
+%    error('seizmo:plotgeofkmap:badInput',...
+%        'MAP must be a scalar geofk struct and not a volume!');
+%end
 
 % default/check scaling type
 if(nargin<4 || isempty(zerodb)); zerodb='max'; end
@@ -271,14 +271,14 @@ hold(ax,'off');
 % colorbar & title
 c=colorbar('eastoutside','peer',ax,'xcolor',fgcolor,'ycolor',fgcolor);
 xlabel(c,'dB','color',fgcolor);
-fmin=min(map.freq); fmax=max(map.freq);
-smn=min(map.horzslow); smx=max(map.horzslow);
-title(ax,{[] ['Number of Stations:  ' num2str(map.nsta)] ...
-    ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
-    ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
-    ['Period    :  ' num2str(1/fmax) ' to ' num2str(1/fmin) ' s'] ...
-    ['Horiz. Slowness :  ' num2str(smn) ' to ' num2str(smx) ' s/\circ'] ...
-    ['0 dB = ' num2str(map.normdb) 'dB'] []},'color',fgcolor);
+%fmin=min(map.freq); fmax=max(map.freq);
+%smn=min(map.horzslow); smx=max(map.horzslow);
+%title(ax,{[] ['Number of Stations:  ' num2str(map.nsta)] ...
+%    ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
+%    ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
+%    ['Period    :  ' num2str(1/fmax) ' to ' num2str(1/fmin) ' s'] ...
+%    ['Horiz. Slowness :  ' num2str(smn) ' to ' num2str(smx) ' s/\circ'] ...
+%    ['0 dB = ' num2str(map.normdb) 'dB'] []},'color',fgcolor);
 
 % set zerodb & dblim in userdata
 % - this is for updategeofkmap

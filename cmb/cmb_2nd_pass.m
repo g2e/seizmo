@@ -1,14 +1,19 @@
-function [results2]=cmb_2nd_pass(results0,bank,gcrng)
+function [results2]=cmb_2nd_pass(results0,bank,gcrng,sr)
 %CMB_2ND_PASS    Narrow-band core-diff alignment + normalization
 %
 %    Usage:    results=cmb_2nd_pass(results,bank,gcrng)
+%              results=cmb_2nd_pass(results,bank,gcrng,sr)
 %
 %    Notes:
 %     bank=filter_bank([0.0125 0.125],'variable',0.2,0.1);
 %     gcrng=[90 155];
-%     results2=cmb_2nd_pass(results,bank,gcrng);
+%     sr=5; % 5sps
+%     results2=cmb_2nd_pass(results,bank,gcrng,sr);
 
 % todo:
+
+% check nargin
+error(nargchk(3,4,nargin));
 
 % check results (needs 1st pass, outlier, corrections)
 reqfields={'useralign' 'filter' 'usersnr' 'corrections' 'outliers' ...
@@ -34,6 +39,13 @@ if(~isreal(gcrng) || numel(gcrng)~=2 || gcrng(1)>gcrng(2) ...
         'GCRNG must be [MIN MAX] in degree distance!');
 end
 
+% check sample rate
+if(nargin<4); sr=[]; end
+if(~isempty(sr) && (~isscalar(sr) || sr<=0))
+    error('seizmo:cmb_2nd_pass:badInput',...
+        'SR must be the new sample rate (in samples/second)!');
+end
+
 % loop over each event
 cnt=0;
 for i=1:numel(results0)
@@ -47,6 +59,9 @@ for i=1:numel(results0)
     % read in data
     data=readseizmo(strcat(results0(i).dirname,filesep,...
         {results0(i).useralign.data.name}'));
+    
+    % resample
+    if(~isempty(sr)); data=syncrates(data,sr); end
     
     % great circle distance
     gcarc=getheader(data,'gcarc');

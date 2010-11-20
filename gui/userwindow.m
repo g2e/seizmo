@@ -1,10 +1,11 @@
-function [data,win,ax]=userwindow(data,fill,func,varargin)
+function [data,win,ax]=userwindow(data,limits,fill,func,varargin)
 %USERWINDOW    Interactively window SEIZMO records
 %
 %    Usage:    data=userwindow(data)
-%              data=userwindow(data,fill)
-%              data=userwindow(data,fill,func)
-%              data=userwindow(data,fill,func,'field',value,...)
+%              data=userwindow(data,initwin)
+%              data=userwindow(data,initwin,fill)
+%              data=userwindow(data,initwin,fill,func)
+%              data=userwindow(data,initwin,fill,func,'field',value,...)
 %              [data,win]=userwindow(...)
 %              [data,win,ax]=userwindow(...)
 %
@@ -13,18 +14,23 @@ function [data,win,ax]=userwindow(data,fill,func,varargin)
 %     default, the windowed data is not padded with zeros nor is the mean
 %     or trend removed.
 %
-%     DATA=USERWINDOW(DATA,FILL) toggles zero-padding of records in DATA.
-%     If FILL is FALSE or empty (the default), no zero-padding is done.
-%     Set FILL to TRUE to pad incomplete records with zeros so that they
-%     extend across the window.
+%     DATA=USERWINDOW(DATA,INITWIN) sets the initial window limits to
+%     INITWIN.  INITWIN should be a 1x2 vector of real numbers ordered as
+%     [START END].  The values are in relative time.
 %
-%     DATA=USERWINDOW(DATA,FILL,FUNC) applies function FUNC to records in
-%     DATA after windowing and before the confirmation menu.  FUNC must
-%     be a function handle.  Some common function handles for this are
-%     @removemean and @removetrend.
+%     DATA=USERWINDOW(DATA,INITWIN,FILL) toggles zero-padding of records in
+%     DATA.  If FILL is FALSE or empty (the default), no zero-padding is
+%     done.  Set FILL to TRUE to pad incomplete records with zeros so that
+%     they extend across the window.
 %
-%     DATA=USERWINDOW(DATA,FILL,FUNC,'FIELD',VALUE,...) passes field/value
-%     pairs to the plotting function, to allow further customization.
+%     DATA=USERWINDOW(DATA,INITWIN,FILL,FUNC) applies function FUNC to
+%     records in DATA after windowing and before the confirmation menu.
+%     FUNC must be a function handle.  Some common function handles for
+%     this are @removemean and @removetrend.
+%
+%     DATA=USERWINDOW(DATA,INITWIN,FILL,FUNC,'FIELD',VALUE,...) passes
+%     field/value pairs to the plotting function, to allow further
+%     customization.
 %
 %     [DATA,WIN]=USERWINDOW(...) returns a struct WIN with the following
 %     fields:
@@ -43,9 +49,9 @@ function [data,win,ax]=userwindow(data,fill,func,varargin)
 %    Header changes: B, E, NPTS, DELTA, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Let the user window the data, adding zeros to fill any incomplete
-%     records in the window and remove the trend after windowing:
-%      data=userwindow(data,true,@removetrend);
+%     % Let the user window the data, adding zeros to fill any incomplete
+%     % records in the window and remove the trend after windowing:
+%     data=userwindow(data,true,@removetrend);
 %
 %    See also: CUT, USERTAPER, USERCLUSTER, SELECTRECORDS
 
@@ -60,9 +66,11 @@ function [data,win,ax]=userwindow(data,fill,func,varargin)
 %        Mar. 23, 2010 - preserve last window limits
 %        Apr. 22, 2010 - replace crash with exit (but still crash)
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
+%        Nov.  4, 2010 - couple minor bugfixes
+%        Nov. 12, 2010 - added initial window argument
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2010 at 11:00 GMT
+%     Last Updated Nov. 12, 2010 at 11:00 GMT
 
 % todo:
 
@@ -92,18 +100,31 @@ end
 
 % attempt windowing
 try
+    % check limits
+    if(nargin<2)
+        limits=[];
+    elseif(~isempty(limits) && (numel(limits)~=2 || ~isreal(limits)))
+        error('seizmo:userwindow:badInput',...
+            'INITWIN must be 1x2 vector as [START END]!');
+    end
+    
     % check fill
-    if(nargin<2 || isempty(fill)); fill=false; end
+    if(nargin<3 || isempty(fill))
+        fill=false;
+    elseif(~isscalar(fill) || (~islogical(fill) && ~isnumeric(fill)))
+        error('seizmo:userwindow:badInput',...
+            'FILL must be TRUE or FALSE!');
+    end
 
     % check function handle
-    if(nargin<3 || isempty(func))
+    if(nargin<4 || isempty(func))
         func=@deal;
     elseif(~isa(func,'function_handle'))
         error('seizmo:userwindow:badInput','FUNC must be a function handle!');
     end
     
     % window parameters
-    win.limits=[];
+    win.limits=limits;
     win.func=func;
     win.fill=fill;
 
@@ -247,7 +268,7 @@ try
 
         % add window limit markers
         span=ylim(ax);
-        if(isempty(win.limits)); win.limits=xlim; end
+        if(isempty(win.limits)); win.limits=xlim(ax); end
         hold(ax,'on');
         goh(1)=plot(ax,[win.limits(1) win.limits(1)],span,'g',...
             'linewidth',4);
@@ -271,11 +292,11 @@ try
                 end
                 reax={'ax' ax};
                 span=ylim(ax);
-                win.width=xlim(ax);
+                win.limits=xlim(ax);
                 hold(ax,'on');
-                goh(1)=plot(ax,[win.width(1) win.width(1)],span,'g',...
+                goh(1)=plot(ax,[win.limits(1) win.limits(1)],span,'g',...
                     'linewidth',4);
-                goh(2)=plot(ax,[win.width(2) win.width(2)],span,'r',...
+                goh(2)=plot(ax,[win.limits(2) win.limits(2)],span,'r',...
                     'linewidth',4);
                 hold(ax,'off');
             else

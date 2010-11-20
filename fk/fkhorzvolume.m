@@ -1,25 +1,22 @@
-function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
-%FKXCHORZVOLUME    Returns frequency-wavenumber space for horz. xc data
+function [varargout]=fkhorzvolume(edat,ndat,smax,spts,frng,polar,method,w)
+%FKHORZVOLUME    Returns frequency-wavenumber space for horz. data
 %
-%    Usage:    [rvol,tvol]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng)
-%              [rvol,tvol]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar)
-%              [rvol,tvol]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,...
-%                                         polar,weights)
+%    Usage:    [rvol,tvol]=fkhorzvolume(e,n,smax,spts,frng)
+%              [rvol,tvol]=fkhorzvolume(e,n,smax,spts,frng,polar)
+%              [rvol,tvol]=fkhorzvolume(e,n,smax,spts,frng,polar,method)
+%              [rvol,tvol]=fkhorzvolume(...
+%                   e,n,smax,spts,frng,polar,method,weights)
 %
 %    Description:
-%     [RVOL,TVOL]=FKXCHORZVOLUME(RR,RT,TR,TT,SMAX,SPTS,FRNG) calculates
-%     the Rayleigh & Love energy moving through an array in
-%     frequency-wavenumber space utilizing the horizontal cross correlation
-%     datasets RR, RT, TR & TT.  To allow for easier interpretation between
-%     frequencies, the energy is mapped into frequency-slowness space.  The
-%     array info and correlograms are contained in the SEIZMO structs RR,
-%     RT, TR, & TT.  RR is expected to contain the pairwise radial-radial
-%     correlations and TT is expected to contain the pairwise transverse
-%     -transverse correlations (RT/TR give the radial-tranverse & the
-%     transverse-radial components - energy on these records is indicative
-%     of an anisotropic source distribution).  This also differs from
-%     FKXCVOLUME in that horizontals are utilized to retreive both the
-%     radial (RVOL) & transverse (TVOL) energy distributions.  FKXCVOLUME
+%     [RVOL,TVOL]=FKHORZVOLUME(E,N,SMAX,SPTS,FRNG) calculates the Rayleigh
+%     & Love energy moving through an array in frequency-wavenumber space
+%     utilizing the horizontal datasets E & N.  To allow for easier
+%     interpretation between frequencies, the energy is mapped into
+%     frequency-slowness space.  The array info is contained in the SEIZMO
+%     structs E & N.  It is expected that E contains the East-oriented
+%     horizontal data and N has the North-oriented data.  This differs from
+%     FKVOLUME in that horizontals are utilized to retreive both the
+%     radial (RVOL) & transverse (TVOL) energy distributions.  FKVOLUME
 %     does not account for the directional sensitivity of horizontals - it
 %     is better suited for vertical components that do not vary in
 %     directional sensitivity to plane waves with different propagation
@@ -52,38 +49,43 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %     Calling FKXCHORZVOLUME with no outputs will automatically slide
 %     through the frequency-slowness volumes using FKFREQSLIDE.
 %
-%     [RVOL,TVOL]=FKXCHORZVOLUME(RR,RT,TR,TT,SMAX,SPTS,FRNG,POLAR) sets
-%     if the slowness space is sampled regularly in cartesian or polar
+%     [RVOL,TVOL]=FKXCHORZVOLUME(E,N,SMAX,SPTS,FRNG,POLAR) sets if the
+%     slowness space is sampled regularly in cartesian or polar
 %     coordinates.  Polar coords are useful for slicing the volume by
 %     azimuth (pie slice) or slowness magnitude (rings).  Cartesian coords
 %     (the default) samples the slowness space regularly in the East/West
 %     & North/South directions and so exhibits less distortion of the
 %     slowness space.
 %
-%     [RVOL,TVOL]=FKXCHORZVOLUME(RR,RT,TR,TT,SMAX,SPTS,FRNG,POLAR,WEIGHTS)
-%     specifies weights for each correlogram in RR/RT/TR/TT (must match
-%     size of RR all) for use in beamforming.  The weights are normalized
-%     internally to sum to 1.
+%     [RVOL,TVOL]=FKXCHORZVOLUME(E,N,SMAX,SPTS,FRNG,POLAR,METHOD) defines
+%     the beamform method.  METHOD may be 'center', 'coarray', 'full', or
+%     [LAT LON].  The default is 'coarray' which utilizes information from
+%     all unique record pairings in the beamforming and is the default.
+%     The 'full' method will utilize all possible pairings including
+%     pairing records with themselves and pairing records as (1st, 2nd) &
+%     (2nd, 1st) making this method quite redundant and slow.  The 'center'
+%     option only pairs each record against the array center (found using
+%     ARRAYCENTER) and is extremely fast for large arrays compared to the
+%     'coarray' & 'full' methods.  Both 'center' and 'full' methods give
+%     slightly degraded results compared to 'coarray'.  Using [LAT LON] for
+%     method is essentially the same as the 'center' method but uses the
+%     defined coordinates as the center for the array.
+%
+%     [RVOL,TVOL]=FKXCHORZVOLUME(E,N,SMAX,SPTS,FRNG,POLAR,METHOD,WEIGHTS)
+%     specifies weights for each seismogram in E/N (the size of E, N, &
+%     WEIGHTS must be the same) for use in beamforming.  The weights are
+%     normalized internally to sum to 1.
 %
 %    Notes:
-%     - Records in RR, RT, TR, & TT must be correlograms following the
-%       formatting from CORRELATE.  The records must have the same lag
-%       range & sample spacing.  Furthermore, the datasets must be equal
-%       sized and every record should correspond to the records with the
-%       same index in the other datasets (ie RR(3), RT(3), TR(3) & TT(3)
-%       must correspond to the same station pair).
-%     - Best/quickest results are obtained when RR, RT, TR, & TT is one
-%       "triangle" of the cross correlation matrix.  This corresponds to
-%       the 'coarray' method from FKVOLUME.
+%     - Records in E & N Tmust have the same sample spacing, number of
+%       points, start time and stop time.  Furthermore, the datasets must
+%       be equal sized and every record should correspond to the record
+%       with the same index in the other dataset (ie E(3) & N(3) must
+%       correspond to the same station pair).
 %
 %    Examples:
 %     One way to perform horizontal fk analysis:
-%      enxc=correlate(e,n);
-%      [b,e,delta]=getheader(enxc,'b','e','delta');
-%      enxc=interpolate(enxc,delta(1),'spline',max(b),min(e));
-%      rtxc=rotate_correlations(enxc);
-%      [rvol,tvol]=fkxchorzvolume(rtxc(1:4:end),rtxc(2:4:end),...
-%          rtxc(3:4:end),rtxc(4:4:end),50,101,[1/50 1/20]);
+%      [rvol,tvol]=fkhorzvolume(e,n,50,101,[1/50 1/20]);
 %      fkfreqslide(rvol,0);
 %      fkfreqslide(tvol,0);
 %
@@ -91,16 +93,7 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %              FKVOLUME, CORRELATE, ROTATE_CORRELATIONS
 
 %     Version History:
-%        June  9, 2010 - initial version
-%        June 12, 2010 - math is sound now
-%        June 13, 2010 - passes several eq verifications
-%        June 16, 2010 - allow any form of cross correlation matrix (not
-%                        just one triangle), doc update, add example
-%        June 18, 2010 - add weights
-%        June 22, 2010 - default weights
-%        July  1, 2010 - high latitude fix
-%        July  6, 2010 - major update to struct, doc update
-%        Nov. 18, 2010 - .weights bugfix
+%        Nov. 18, 2010 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Nov. 18, 2010 at 15:25 GMT
@@ -108,50 +101,50 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 % todo:
 
 % check nargin
-error(nargchk(7,9,nargin));
+error(nargchk(5,8,nargin));
 
 % define some constants
 d2r=pi/180;
 d2km=6371*d2r;
 
 % check struct
-versioninfo(rr,'dep');
-versioninfo(rt,'dep');
-versioninfo(tr,'dep');
-versioninfo(tt,'dep');
+versioninfo(edat,'dep');
+versioninfo(ndat,'dep');
 
 % make sure rr/tt are the same size
-ncorr=numel(rr);
-ncorr1=numel(tt);
-ncorr2=numel(tt);
-ncorr3=numel(tt);
-if(~isequal(ncorr,ncorr1,ncorr2,ncorr3))
-    error('seizmo:fkxchorzvolume:unmatchedXCdata',...
-        'XC datasets do not match in size!');
+nrecs=numel(edat);
+nrecs1=numel(ndat);
+if(~isequal(nrecs,nrecs1))
+    error('seizmo:fkhorzvolume:unmatchedXCdata',...
+        'Datasets do not match in size!');
 end
 
 % defaults for optionals
-if(nargin<8 || isempty(polar)); polar=false; end
-if(nargin<9 || isempty(w)); w=ones(ncorr,1); end
-method='coarray';
+if(nargin<6 || isempty(polar)); polar=false; end
+if(nargin<7 || isempty(method)); method='coarray'; end
+if(nargin<8 || isempty(w)); w=ones(ncorr,1); end
 
 % check inputs
 sf=size(frng);
 if(~isreal(smax) || ~isscalar(smax) || smax<=0)
-    error('seizmo:fkxchorzvolume:badInput',...
+    error('seizmo:fkhorzvolume:badInput',...
         'SMAX must be a positive real scalar in s/deg!');
 elseif(~any(numel(spts)==[1 2]) || any(fix(spts)~=spts) || any(spts<=2))
-    error('seizmo:fkxchorzvolume:badInput',...
+    error('seizmo:fkhorzvolume:badInput',...
         'SPTS must be a positive scalar integer >2!');
 elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<=0))
-    error('seizmo:fkxchorzvolume:badInput',...
+    error('seizmo:fkhorzvolume:badInput',...
         'FRNG must be a Nx2 array of [FREQLOW FREQHIGH] in Hz!');
 elseif(~isscalar(polar) || (~islogical(polar) && ~isnumeric(polar)))
-    error('seizmo:fkxchorzvolume:badInput',...
+    error('seizmo:fkhorzvolume:badInput',...
         'POLAR must be TRUE or FALSE!');
-elseif(numel(w)~=ncorr || any(w(:)<0) || ~isreal(w) || sum(w(:))==0)
-    error('seizmofkxchorzvolume:badInput',...
-        'WEIGHTS must be equal sized with XCDATA & be positive numbers!');
+elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
+        || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
+    error('seizmo:fkhorzvolume:badInput',...
+        'METHOD must be ''CENTER'', ''COARRAY'', ''FULL'', or [LAT LON]!');
+elseif(~isempty(w) && (any(w(:)<0) || ~isreal(w) || sum(w(:))==0))
+    error('seizmofkhorzvolume:badInput',...
+        'WEIGHTS must be positive real numbers!');
 end
 nrng=sf(1);
 
@@ -165,42 +158,22 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check headers
-    rr=checkheader(rr,...
+    e=checkheader(edat,...
         'MULCMP_DEP','ERROR',...
         'NONTIME_IFTYPE','ERROR',...
         'FALSE_LEVEN','ERROR',...
         'MULTIPLE_DELTA','ERROR',...
         'MULTIPLE_NPTS','ERROR',...
         'MULTIPLE_B','ERROR',...
-        'UNSET_ST_LATLON','ERROR',...
-        'UNSET_EV_LATLON','ERROR');
-    rt=checkheader(rt,...
+        'UNSET_ST_LATLON','ERROR');
+    n=checkheader(ndat,...
         'MULCMP_DEP','ERROR',...
         'NONTIME_IFTYPE','ERROR',...
         'FALSE_LEVEN','ERROR',...
         'MULTIPLE_DELTA','ERROR',...
         'MULTIPLE_NPTS','ERROR',...
         'MULTIPLE_B','ERROR',...
-        'UNSET_ST_LATLON','ERROR',...
-        'UNSET_EV_LATLON','ERROR');
-    tr=checkheader(tr,...
-        'MULCMP_DEP','ERROR',...
-        'NONTIME_IFTYPE','ERROR',...
-        'FALSE_LEVEN','ERROR',...
-        'MULTIPLE_DELTA','ERROR',...
-        'MULTIPLE_NPTS','ERROR',...
-        'MULTIPLE_B','ERROR',...
-        'UNSET_ST_LATLON','ERROR',...
-        'UNSET_EV_LATLON','ERROR');
-    tt=checkheader(tt,...
-        'MULCMP_DEP','ERROR',...
-        'NONTIME_IFTYPE','ERROR',...
-        'FALSE_LEVEN','ERROR',...
-        'MULTIPLE_DELTA','ERROR',...
-        'MULTIPLE_NPTS','ERROR',...
-        'MULTIPLE_B','ERROR',...
-        'UNSET_ST_LATLON','ERROR',...
-        'UNSET_EV_LATLON','ERROR');
+        'UNSET_ST_LATLON','ERROR');
     
     % turn off header checking
     oldcheckheaderstate=checkheader_state(false);
@@ -209,7 +182,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % do fk analysis
@@ -217,86 +190,83 @@ try
     % verbosity
     verbose=seizmoverbose;
     
-    % require radial & transverse components
-    [rrmcn,rrscn]=getheader(rr,'kt3','kcmpnm');
-    [rtmcn,rtscn]=getheader(rt,'kt3','kcmpnm');
-    [trmcn,trscn]=getheader(tr,'kt3','kcmpnm');
-    [ttmcn,ttscn]=getheader(tt,'kt3','kcmpnm');
-    rrmcn=char(rrmcn); rrmcn=rrmcn(:,3);
-    rrscn=char(rrscn); rrscn=rrscn(:,3);
-    rtmcn=char(rtmcn); rtmcn=rtmcn(:,3);
-    rtscn=char(rtscn); rtscn=rtscn(:,3);
-    trmcn=char(trmcn); trmcn=trmcn(:,3);
-    trscn=char(trscn); trscn=trscn(:,3);
-    ttmcn=char(ttmcn); ttmcn=ttmcn(:,3);
-    ttscn=char(ttscn); ttscn=ttscn(:,3);
-    if(~isequal(lower(unique(rrmcn)),'r') ...
-            || ~isequal(lower(unique(rrscn)),'r'))
-        error('seizmo:fkxchorzvolume:badRR',...
-            'RR does not appear to be Radial-Radial XC data!');
-    elseif(~isequal(lower(unique(rtmcn)),'r') ...
-            || ~isequal(lower(unique(rtscn)),'t'))
-        error('seizmo:fkxchorzvolume:badRT',...
-            'RT does not appear to be Radial-Transverse XC data!');
-    elseif(~isequal(lower(unique(trmcn)),'t') ...
-            || ~isequal(lower(unique(trscn)),'r'))
-        error('seizmo:fkxchorzvolume:badTR',...
-            'TR does not appear to be Transverse-Radial XC data!');
-    elseif(~isequal(lower(unique(ttmcn)),'t') ...
-            || ~isequal(lower(unique(ttscn)),'t'))
-        error('seizmo:fkxchorzvolume:badTT',...
-            'TT does not appear to be Transverse-Transverse XC data!');
+    % require east & north components
+    [eaz,einc]=getheader(edat,'cmpaz','cmpinc');
+    [naz,ninc]=getheader(ndat,'cmpaz','cmpinc');
+    if(any(eaz~=90) || any(einc~=90))
+        error('seizmo:fkhorzvolume:badE',...
+            'E does not appear to be East horizontal data!');
+    elseif(any(naz~=90) || any(ninc~=90))
+        error('seizmo:fkhorzvolume:badN',...
+            'N does not appear to be North horizontal data!');
     end
     
     % get station locations & require that they match
-    [st1,ev1]=getheader(rr,'st','ev');
-    [st2,ev2]=getheader(rt,'st','ev');
-    [st3,ev3]=getheader(tr,'st','ev');
-    [st4,ev4]=getheader(tt,'st','ev');
-    if(~isequal([st1; ev1],[st2; ev2],[st3; ev3],[st4; ev4]))
-        error('seizmo:fkxchorzvolume:xcDataMismatch',...
-            'XC Datasets have different station locations!');
+    est=getheader(edat,'st');
+    nst=getheader(ndat,'st');
+    stla=est(:,1); stlo=est(:,2);
+    if(~isequal(est,nst))
+        error('seizmo:fkhorzvolume:DataMismatch',...
+            'Datasets have different station locations!');
     end
-    clear st2 st3 st4 ev2 ev3 ev4
-    
-    % find unique station locations
-    loc=unique([st1; ev1],'rows');
-    nsta=size(loc,1);
-    
-    % array center
-    [clat,clon]=arraycenter([st1(:,1); ev1(:,1)],[st1(:,2); ev1(:,2)]);
     
     % require all records to have equal b, npts, delta
-    [b,npts,delta]=getheader([rr(:); rt(:); tr(:); tt(:)],...
-        'b','npts','delta');
+    [b,npts,delta]=getheader([edat(:); ndat(:)],'b','npts','delta');
     if(~isscalar(unique(b)) ...
             || ~isscalar(unique(npts)) ...
             || ~isscalar(unique(delta)))
-        error('seizmo:fkxchorzvolume:badData',...
-            'XC records must have equal B, NPTS & DELTA fields!');
+        error('seizmo:fkhorzvolume:badData',...
+            'Records must have equal B, NPTS & DELTA fields!');
     end
     npts=npts(1); delta=delta(1);
     
     % check nyquist
-    fnyq=1/(2*delta(1));
+    fnyq=1/(2*delta);
     if(any(frng>=fnyq))
-        error('seizmo:fkxchorzvolume:badFRNG',...
+        error('seizmo:fkhorzvolume:badFRNG',...
             ['FRNG frequencies must be under the nyquist frequency (' ...
             num2str(fnyq) ')!']);
     end
     
+    % fix method/center/npairs
+    if(ischar(method))
+        method=lower(method);
+        [clat,clon]=arraycenter(stla,stlo);
+        switch method
+            case 'coarray'
+                npairs=nrecs*(nrecs-1)/2;
+            case 'full'
+                npairs=nrecs*nrecs;
+            case 'center'
+                npairs=nrecs;
+        end
+    else
+        clat=method(1);
+        clon=method(2);
+        method='user';
+        npairs=nrecs;
+    end
+
+    % check that number of weights is equal to number of pairs
+    if(isempty(w)); w=ones(npairs,1)/npairs; end
+    if(numel(w)~=npairs)
+        error('seizmo:fkhorzvolume:badInput',...
+            ['WEIGHTS must have ' num2str(npairs) ...
+            ' elements for method: ' method '!']);
+    end
+    
     % setup output
-    [rvol(1:nrng,1).nsta]=deal(nsta);
-    [rvol(1:nrng,1).stla]=deal(loc(:,1));
-    [rvol(1:nrng,1).stlo]=deal(loc(:,2));
-    [rvol(1:nrng,1).stel]=deal(loc(:,3));
-    [rvol(1:nrng,1).stdp]=deal(loc(:,4));
+    [rvol(1:nrng,1).nsta]=deal(nrecs);
+    [rvol(1:nrng,1).stla]=deal(est(:,1));
+    [rvol(1:nrng,1).stlo]=deal(est(:,2));
+    [rvol(1:nrng,1).stel]=deal(est(:,3));
+    [rvol(1:nrng,1).stdp]=deal(est(:,4));
     [rvol(1:nrng,1).butc]=deal([0 0 0 0 0]);
     [rvol(1:nrng,1).eutc]=deal([0 0 0 0 0]);
     [rvol(1:nrng,1).delta]=deal(delta);
     [rvol(1:nrng,1).npts]=deal(npts);
     [rvol(1:nrng,1).polar]=deal(polar);
-    [rvol(1:nrng,1).npairs]=deal(ncorr);
+    [rvol(1:nrng,1).npairs]=deal(npairs);
     [rvol(1:nrng,1).method]=deal(method);
     [rvol(1:nrng,1).center]=deal([clat clon]);
     [rvol(1:nrng,1).volume]=deal(true);
@@ -308,22 +278,13 @@ try
     
     % extract data (silently)
     seizmoverbose(false);
-    rr=splitpad(rr,0);
-    rr=records2mat(rr);
-    rt=splitpad(rt,0);
-    rt=records2mat(rt);
-    tr=splitpad(tr,0);
-    tr=records2mat(tr);
-    tt=splitpad(tt,0);
-    tt=records2mat(tt);
+    e=records2mat(e);
+    n=records2mat(n);
     seizmoverbose(verbose);
     
-    % get fft (conjugate is b/c my xc is flipped?)
-    % - this is the true cross spectra
-    rr=conj(fft(rr,nspts,1));
-    rt=conj(fft(rt,nspts,1));
-    tr=conj(fft(tr,nspts,1));
-    tt=conj(fft(tt,nspts,1));
+    % get fft
+    e=fft(e,nspts,1);
+    n=fft(n,nspts,1);
     
     % get relative positions for each pair
     % r=(x  ,y  )
@@ -333,11 +294,45 @@ try
     % x is km east
     % y is km north
     %
-    % r is a 2xNCORR matrix
-    [e_ev,n_ev]=geographic2enu(ev1(:,1),ev1(:,2),0,clat,clon,0);
-    [e_st,n_st]=geographic2enu(st1(:,1),st1(:,2),0,clat,clon,0);
-    r=[e_st-e_ev n_st-n_ev]';
-    clear e_ev e_st n_ev n_st
+    % r is a 2xNPAIRS matrix
+    switch method
+        case 'coarray'
+            % [ r   r   ... r
+            %    11  12      1N
+            %   r   r   ... r
+            %    21  22      2N
+            %    .   .  .    .
+            %    .   .   .   .
+            %    .   .    .  .
+            %   r   r   ... r   ]
+            %    N1  N2      NN
+            %
+            % then we just use the
+            % upper triangle of that
+            [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
+            e=e(:,ones(nrecs,1))'-e(:,ones(nrecs,1));
+            n=n(:,ones(nrecs,1))'-n(:,ones(nrecs,1));
+            idx=triu(true(nrecs),1);
+            e=e(idx);
+            n=n(idx);
+        case 'full'
+            % retain full coarray
+            [e,n]=geographic2enu(stla,stlo,0,clat,clon,0);
+            e=e(:,ones(nrecs,1))'-e(:,ones(nrecs,1));
+            n=n(:,ones(nrecs,1))'-n(:,ones(nrecs,1));
+        case 'center'
+            % each record relative to array center
+            [e,n]=geographic2enu(clat,clon,0,stla,stlo,0);
+        otherwise % user
+            % each record relative to define array center
+            [e,n]=geographic2enu(clat,clon,0,stla,stlo,0);
+    end
+    r=[e(:) n(:)]';
+    clear e n
+    
+    %%%%%%%%%%%%%%
+    %%%%%%%%%%%%%% CODE NEEDS WORK BELOW HERE
+    %%%%%%%%%%%%%%
     
     % get phasors corresponding to each wave speed+direction (slowness)
     % to slant stack in the frequency domain
@@ -352,8 +347,6 @@ try
     % p is the projection of all slownesses onto all of the position
     % vectors (multiplied by 2*pi*i for efficiency reasons)
     %
-    % p is NSLOWxNPAIRS
-    %
     % Also get rotators for each slowness/pair set
     %
     % u=cos(theta)
@@ -364,7 +357,7 @@ try
     % 
     % ie. theta = atan2(sy,sx)-atan2(ry,rx)
     %
-    % p,u,v are NSLOWxNCORR
+    % p,u,v are NSLOWxNPAIRS
     smax=smax/d2km;
     if(polar)
         if(numel(spts)==2)

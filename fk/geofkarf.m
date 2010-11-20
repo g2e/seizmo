@@ -1,12 +1,14 @@
-function [varargout]=geofkarf(stlalo,lalo,s,lalo0,s0,f0,method)
+function [varargout]=geofkarf(stlalo,lalo,s,lalo0,s0,f0,method,w)
 %GEOFKARF    Returns the geofk array response function for a seismic array
 %
 %    Usage:    geofkarf(stlalo,latlon,s,latlon0,s0)
 %              geofkarf(stlalo,latlon,s,latlon0,s0,f0)
 %              geofkarf(stlalo,latlon,s,latlon0,s0,f0,method)
+%              geofkarf(stlalo,latlon,s,latlon0,s0,f0,method,weights)
 %              arf=geofkarf(...)
 %
-%    Description: GEOFKARF(STLALO,LATLON,S,lalo0,s0) computes the array
+%    Description:
+%     GEOFKARF(STLALO,LATLON,S,lalo0,s0) computes the array
 %     response function (ARF) for an array at the locations in STLALO with
 %     spherical waves passing through the array defined by latlon0 & s0.
 %     The ARF is specifically computed at the positions and slownesses
@@ -34,6 +36,13 @@ function [varargout]=geofkarf(stlalo,lalo,s,lalo0,s0,f0,method)
 %     method is essentially the same as the 'center' method but uses the
 %     defined coordinates as the center for the array.
 %
+%     GEOFKARF(STLALO,LATLON,S,latlon0,s0,f0,METHOD,WEIGHTS) specifies
+%     weights for each station pair in the array (this depends on the
+%     method) for use in beamforming.  For example, the 'center' method 
+%     requires N weights whereas 'coarray' requires (N*N-N)/2 weights.  The
+%     weights are normalized internally to sum to 1.  See the Examples
+%     section of FKARF for coarray weight indexing.
+%
 %     ARF=GEOFKARF(...)  returns the array response function in struct ARF
 %     without plotting it.  ARF has the following fields:
 %      ARF.beam      --  the array beam response function
@@ -51,6 +60,7 @@ function [varargout]=geofkarf(stlalo,lalo,s,lalo0,s0,f0,method)
 %      ARF.center    --  array center as [LAT LON]
 %      ARF.normdb    --  what 0dB actually corresponds to
 %      ARF.volume    --  [true false] (slowness volume, not freq volume)
+%      ARF.weights   --  weights used in beam response function
 %
 %    Notes:
 %
@@ -61,18 +71,20 @@ function [varargout]=geofkarf(stlalo,lalo,s,lalo0,s0,f0,method)
 
 %     Version History:
 %        July  7, 2010 - initial version
+%        Nov. 18, 2010 - add weighting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  7, 2010 at 17:00 GMT
+%     Last Updated Nov. 18, 2010 at 17:00 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(5,7,nargin));
+error(nargchk(5,8,nargin));
 
 % defaults
 if(nargin<6 || isempty(f0)); f0=1; end
 if(nargin<7 || isempty(method)); method='coarray'; end
+if(nargin<8); w=[]; end
 
 % valid method strings
 valid.METHOD={'center' 'coarray' 'full'};
@@ -103,7 +115,14 @@ elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
         || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
     error('seizmo:geofkarf:badInput',...
         'METHOD must be [LAT LON], ''CENTER'', ''COARRAY'' or ''FULL''');
+elseif(~isempty(w) && (any(w(:)<0) || ~isreal(w) || sum(w(:))==0))
+    error('seizmo:geofkarf:badInput',...
+        'WEIGHTS must be positive real values!');
 end
+
+% convert weights to column vector and normalize
+w=w(:);
+w=w./sum(w);
 
 % number of stations
 nrecs=size(stlalo,1);
@@ -141,6 +160,14 @@ else
     npairs=nrecs;
 end
 
+% check that number of weights is equal to number of pairs
+if(isempty(w)); w=ones(npairs,1)/npairs; end
+if(numel(w)~=npairs)
+    error('seizmo:geofkarf:badInput',...
+        ['WEIGHTS must have ' num2str(npairs) ...
+        ' elements for method: ' method '!']);
+end
+
 % fix lat/lon
 [stlalo(:,1),stlalo(:,2)]=fixlatlon(stlalo(:,1),stlalo(:,2));
 [lalo0(:,1),lalo0(:,2)]=fixlatlon(lalo0(:,1),lalo0(:,2));
@@ -164,6 +191,7 @@ arf.freq0=f0;
 arf.npairs=npairs;
 arf.method=method;
 arf.center=[clat clon];
+arf.weights=w;
 arf.volume=[true false]; % summed across freq, but not slowness
 arf.beam=zeros(nll,nslow,'single');
 
@@ -240,10 +268,10 @@ for a=1:nsw
         switch method
             case {'full' 'coarray'}
                 arf.beam(:,b)=arf.beam(:,b)...
-                    +exp(f0(a)*(s(b)*dd-p0(ones(nll,1),:)))*ones(npairs,1);
+                    +exp(f0(a)*(s(b)*dd-p0(ones(nll,1),:)))*w;
             otherwise
                 arf.beam(:,b)=arf.beam(:,b)...
-                    +abs(sum(exp(f0(a)*(s(b)*dd-p0(ones(nll,1),:))),2)).^2;
+                    +abs(exp(f0(a)*(s(b)*dd-p0(ones(nll,1),:)))*w).^2;
         end
     end
 end
@@ -253,9 +281,9 @@ switch method
     case {'full' 'coarray'}
         % using full and real here gives the exact plots of
         % Koper, Seats, and Benz 2010 in BSSA
-        arf.beam=10*log10(abs(real(arf.beam))/(nsw*npairs));
+        arf.beam=10*log10(abs(real(arf.beam))/nsw);
     otherwise
-        arf.beam=10*log10(arf.beam/(nsw*npairs));
+        arf.beam=10*log10(arf.beam/nsw);
 end
 
 % normalize so max peak is at 0dB

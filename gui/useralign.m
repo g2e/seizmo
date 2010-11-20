@@ -83,9 +83,11 @@ function [info,xc,data0]=useralign(data,varargin)
 %        Sep. 15, 2010 - added code to better handle matched polarities,
 %                        fixed new iteration bug (clear axes, not delete)
 %        Oct.  2, 2010 - normalize amplitudes in plots
+%        Nov. 13, 2010 - reverse order of aligned plot and stacking, update
+%                        for userwindow arg change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  2, 2010 at 11:00 GMT
+%     Last Updated Nov. 13, 2010 at 11:00 GMT
 
 % todo:
 
@@ -174,7 +176,9 @@ try
     data0=data;
     
     % outer loop - only breaks free on user command
-    happy_user=false; info.iteration=1;
+    happy_user=false;
+    info.iteration=1;
+    info.userwindow.limits=[];
     fh=figure('color','k');
     ax=makesubplots(2,3,1:5,...
         'parent',fh,'visible','off','color','k');
@@ -187,7 +191,7 @@ try
         % userwindow
         set(ax(2),'visible','on');
         [data0,info.userwindow,info.handles(2)]=userwindow(data0,...
-            [],[],'ax',ax(2),'normstyle','single');
+            info.userwindow.limits,[],[],'ax',ax(2),'normstyle','single');
 
         % usertaper
         set(ax(3),'visible','on');
@@ -293,20 +297,10 @@ try
         
         % align records
         data0=multiply(timeshift(data0,-arr),pol);
-        
-        % allow picking the stack to deal with dc-shift from onset
-        [b,e,delta]=getheader(data0,'b','e','delta');
-        set(ax(4),'visible','on');
-        [onset,info.handles(4)]=pickstack(ax(4),normalize(data0),...
-            2/min(delta),[],min(b),max(e),0);
 
         % plot alignment
-        data0=timeshift(data0,-onset);
-        set(ax(5),'visible','on');
-        info.handles(5)=plot2(normalize(data0),'ax',ax(5));
-        
-        % origin time gives absolute time position
-        arr=-getheader(data0,'o');
+        set(ax(4),'visible','on');
+        info.handles(4)=plot2(normalize(data0),'ax',ax(4));
         
         % force user to decide
         choice=0;
@@ -319,6 +313,13 @@ try
                 'EXIT WITH ERROR');
             switch choice
                 case 1 % rainbow's end
+                    % allow picking the stack to deal with dc-shift
+                    [b,e,delta]=getheader(data0,'b','e','delta');
+                    set(ax(5),'visible','on');
+                    [onset,info.handles(5)]=pickstack(ax(5),...
+                        normalize(data0),2/min(delta),[],min(b),max(e),0);
+                    data0=timeshift(data0,-onset);
+                    arr=-getheader(data0,'o');
                     happy_user=true;
                 case 2 % never never quit!
                     data0=data;
@@ -328,6 +329,7 @@ try
                     set(ax,'visible','off','color','k');
                 case 3 % standing on the shoulders of those before me
                     info.iteration=info.iteration+1;
+                    arr=-getheader(data0,'o');
                     data0=timeshift(data,-o-arr);
                     for a=1:numel(ax)
                         cla(ax(a),'reset');

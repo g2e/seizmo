@@ -1,17 +1,17 @@
-function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
-%FKXCVOLUME    Returns beam map in frequency-wavenumber space for xc data
+function [varargout]=fkxcmap(data,smax,spts,frng,polar,w)
+%FKXCMAP    Returns beam map in frequency-wavenumber space for xc data
 %
-%    Usage:    svol=fkxcvolume(xcdata,smax,spts,frng)
-%              svol=fkxcvolume(xcdata,smax,spts,frng,polar)
-%              svol=fkxcvolume(xcdata,smax,spts,frng,polar,weights)
+%    Usage:    smap=fkxcmap(xcdata,smax,spts,frng)
+%              smap=fkxcmap(xcdata,smax,spts,frng,polar)
+%              smap=fkxcmap(xcdata,smax,spts,frng,polar,weights)
 %
 %    Description:
-%     SVOL=FKXCVOLUME(XCDATA,SMAX,SPTS,FRNG) beamforms the wave
+%     SMAP=FKXCMAP(XCDATA,SMAX,SPTS,FRNG) beamforms the wave
 %     energy moving through an array in frequency-wavenumber space.
 %     Actually, to allow for easier interpretation between frequencies,
 %     the energy is mapped into frequency-slowness space.  The array info
 %     and correlograms are contained in the SEIZMO struct XCDATA.  This
-%     differs from FKVOLUME in that DATA is expected to be correlograms
+%     differs from FKMAP in that DATA is expected to be correlograms
 %     resulting from a multi-channel cross correlation with CORRELATE
 %     rather than actual records.  This has the advantage of allowing time
 %     averaging (aka stacking) of the cross spectra to improve resolution
@@ -20,9 +20,9 @@ function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
 %     SMAX (in s/deg) and extends from -SMAX to SMAX for both East/West and
 %     North/South directions.  SPTS controls the number of slowness points
 %     for both directions (SPTSxSPTS grid).  FRNG gives the frequency range
-%     as [FREQLOW FREQHIGH] in Hz.  SVOL is a struct containing relevant
+%     as [FREQLOW FREQHIGH] in Hz.  SMAP is a struct containing relevant
 %     info and the frequency-slowness volume itself.  The struct layout is:
-%          .beam     - frequency-slowness beamforming volume
+%          .beam     - frequency-slowness beamforming map
 %          .nsta     - number of stations utilized in making map
 %          .stla     - station latitudes
 %          .stlo     - station longitudes
@@ -43,17 +43,17 @@ function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
 %          .volume   - true if frequency-slowness volume (false for FKMAP)
 %          .weights  - weights used in beamforming
 %
-%     Calling FKXCVOLUME with no outputs will automatically plot the
-%     frequency-slowness volume using FKFREQSLIDE.
+%     Calling FKXCMAP with no outputs will automatically plot the slowness
+%     map using PLOTFKMAP.
 %
-%     SVOL=FKXCVOLUME(XCDATA,SMAX,SPTS,FRNG,POLAR) sets if the slowness
+%     SMAP=FKXCMAP(XCDATA,SMAX,SPTS,FRNG,POLAR) specifies if the slowness
 %     space is sampled regularly in cartesian or polar coordinates.  Polar
 %     coords are useful for slicing the volume by azimuth (pie slice) or
 %     slowness magnitude (rings).  Cartesian coords (the default) samples
 %     the slowness space regularly in the East/West & North/South
 %     directions and so exhibits less distortion of the slowness space.
 %     
-%     SVOL=FKXCVOLUME(XCDATA,SMAX,SPTS,FRNG,POLAR,WEIGHTS) specifies
+%     SMAP=FKXCMAP(XCDATA,SMAX,SPTS,FRNG,POLAR,WEIGHTS) specifies
 %     weights for each correlogram in XCDATA (must match size of XCDATA)
 %     for use in beamforming.  The weights are normalized internally to sum
 %     to 1.
@@ -64,30 +64,21 @@ function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
 %       spacing.
 %     - Best/quickest results are obtained when XCDATA is only one
 %       "triangle" of the cross correlation matrix.  This corresponds to
-%       the 'coarray' method from FKVOLUME.
+%       the 'coarray' method from FKMAP.
 %
 %    Examples:
-%     Show frequency-slowness volume for a dataset at 20-50s periods:
+%     Show frequency-slowness map for a dataset at 20-50s periods:
 %      xcdata=correlate(data);
-%      svol=fkxcvolume(xcdata,50,201,[1/50 1/20]);
-%      mov=fkfreqslide(svol,0); % show once with no delay (make movie too)
-%      h=figure; % open figure so movie consumes figure
-%      movie(h,mov,10); % show 10 times
+%      fkxcmap(xcdata,50,201,[1/50 1/20]);
 %
-%    See also: FKVOLUME, FKFREQSLIDE, FKMAP, FK4D, FKVOL2MAP, FKSUBVOL,
-%              FKXCHORZVOLUME, CORRELATE
+%    See also: FKMAP, FKFREQSLIDE, FKMAP, FK4D, FKVOL2MAP, FKSUBVOL,
+%              FKXCHORZMAP, CORRELATE
 
 %     Version History:
-%        May  13, 2010 - initial version
-%        June  8, 2010 - minor touches
-%        June 16, 2010 - allows any form of cross correlation matrix (not
-%                        just one triangle), fix see also section
-%        June 18, 2010 - add weights
-%        July  1, 2010 - high latitude fix
-%        July  6, 2010 - major update to struct, doc update
+%        Nov. 18, 2010 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 15:25 GMT
+%     Last Updated Nov. 18, 2010 at 15:25 GMT
 
 % todo:
 
@@ -112,19 +103,19 @@ method='coarray';
 % check inputs
 sf=size(frng);
 if(~isreal(smax) || ~isscalar(smax) || smax<=0)
-    error('seizmo:fkxcvolume:badInput',...
+    error('seizmo:fkxcmap:badInput',...
         'SMAX must be a positive real scalar in s/deg!');
 elseif(~any(numel(spts)==[1 2]) || any(fix(spts)~=spts) || any(spts<=2))
-    error('seizmo:fkxcvolume:badInput',...
+    error('seizmo:fkxcmap:badInput',...
         'SPTS must be a positive scalar integer >2!');
 elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<=0))
-    error('seizmo:fkxcvolume:badInput',...
+    error('seizmo:fkxcmap:badInput',...
         'FRNG must be a Nx2 array of [FREQLOW FREQHIGH] in Hz!');
 elseif(~isscalar(polar) || (~islogical(polar) && ~isnumeric(polar)))
-    error('seizmo:fkxcvolume:badInput',...
+    error('seizmo:fkxcmap:badInput',...
         'POLAR must be TRUE or FALSE!');
 elseif(numel(w)~=ncorr || any(w(:)<0) ||  ~isreal(w) || sum(w(:))==0)
-    error('seizmo:fkxcvolume:badInput',...
+    error('seizmo:fkxcmap:badInput',...
         'WEIGHTS must be equal sized with XCDATA & be positive numbers!');
 end
 nrng=sf(1);
@@ -177,27 +168,27 @@ try
     % check nyquist
     fnyq=1/(2*delta(1));
     if(any(frng>=fnyq))
-        error('seizmo:fkxcvolume:badFRNG',...
+        error('seizmo:fkxcmap:badFRNG',...
             ['FRNG frequencies must be under the nyquist frequency (' ...
             num2str(fnyq) ')!']);
     end
     
     % setup output
-    [svol(1:nrng,1).nsta]=deal(nsta);
-    [svol(1:nrng,1).stla]=deal(loc(:,1));
-    [svol(1:nrng,1).stlo]=deal(loc(:,2));
-    [svol(1:nrng,1).stel]=deal(loc(:,3));
-    [svol(1:nrng,1).stdp]=deal(loc(:,4));
-    [svol(1:nrng,1).butc]=deal([0 0 0 0 0]);
-    [svol(1:nrng,1).eutc]=deal([0 0 0 0 0]);
-    [svol(1:nrng,1).delta]=deal(delta(1));
-    [svol(1:nrng,1).npts]=deal(npts(1));
-    [svol(1:nrng,1).polar]=deal(polar);
-    [svol(1:nrng,1).npairs]=deal(ncorr);
-    [svol(1:nrng,1).method]=deal(method);
-    [svol(1:nrng,1).center]=deal([clat clon]);
-    [svol(1:nrng,1).volume]=deal(true);
-    [svol(1:nrng,1).weights]=deal(w);
+    [smap(1:nrng,1).nsta]=deal(nsta);
+    [smap(1:nrng,1).stla]=deal(loc(:,1));
+    [smap(1:nrng,1).stlo]=deal(loc(:,2));
+    [smap(1:nrng,1).stel]=deal(loc(:,3));
+    [smap(1:nrng,1).stdp]=deal(loc(:,4));
+    [smap(1:nrng,1).butc]=deal([0 0 0 0 0]);
+    [smap(1:nrng,1).eutc]=deal([0 0 0 0 0]);
+    [smap(1:nrng,1).delta]=deal(delta(1));
+    [smap(1:nrng,1).npts]=deal(npts(1));
+    [smap(1:nrng,1).polar]=deal(polar);
+    [smap(1:nrng,1).npairs]=deal(ncorr);
+    [smap(1:nrng,1).method]=deal(method);
+    [smap(1:nrng,1).center]=deal([clat clon]);
+    [smap(1:nrng,1).volume]=deal(false);
+    [smap(1:nrng,1).weights]=deal(w);
     
     % get frequencies (note no extra power for correlations)
     nspts=2^nextpow2(npts(1));
@@ -250,37 +241,36 @@ try
             bazpts=181;
         end
         smag=(0:spts-1)/(spts-1)*smax;
-        [svol(1:nrng,1).y]=deal(smag'*d2km);
+        [smap(1:nrng,1).y]=deal(smag'*d2km);
         smag=smag(ones(bazpts,1),:)';
         baz=(0:bazpts-1)/(bazpts-1)*360*d2r;
-        [svol(1:nrng,1).x]=deal(baz/d2r);
+        [smap(1:nrng,1).x]=deal(baz/d2r);
         baz=baz(ones(spts,1),:);
         p=2*pi*1i*[smag(:).*sin(baz(:)) smag(:).*cos(baz(:))]*r;
         clear r smag baz
+        [smap(1:nrng,1).beam]=deal(zeros(spts,bazpts,'single'));
     else % cartesian
-        spts=spts(1); bazpts=spts;
+        spts=spts(1);
         sx=-smax:2*smax/(spts-1):smax;
-        [svol(1:nrng,1).x]=deal(sx*d2km);
-        [svol(1:nrng,1).y]=deal(fliplr(sx*d2km)');
+        [smap(1:nrng,1).x]=deal(sx*d2km);
+        [smap(1:nrng,1).y]=deal(fliplr(sx*d2km)');
         sx=sx(ones(spts,1),:);
         sy=fliplr(sx)';
         p=2*pi*1i*[sx(:) sy(:)]*r;
         clear r sx sy
+        [smap(1:nrng,1).beam]=deal(zeros(spts,'single'));
     end
     
     % loop over frequency ranges
     for a=1:nrng
         % get frequencies
         fidx=find(f>=frng(a,1) & f<=frng(a,2));
-        svol(a).freq=f(fidx);
+        smap(a).freq=f(fidx);
         nfreq=numel(fidx);
-        
-        % preallocate fk space
-        svol(a).beam=zeros(spts,bazpts,nfreq,'single');
         
         % warning if no frequencies
         if(~nfreq)
-            warning('seizmo:fkxcvolume:noFreqs',...
+            warning('seizmo:fkxcmap:noFreqs',...
                 'No frequencies within the range %g to %g Hz!',...
                 frng(a,1),frng(a,2));
             continue;
@@ -298,34 +288,34 @@ try
         
         % detail message
         if(verbose)
-            fprintf('Getting fk Volume %d for %g to %g Hz\n',...
+            fprintf('Getting fk Map %d for %g to %g Hz\n',...
                 a,frng(a,1),frng(a,2));
             print_time_left(0,nfreq);
         end
         
         % loop over frequencies
         for b=1:nfreq
-            % form beam & convert to dB
-            % - following Koper, Seats, and Benz 2010 in BSSA
-            %   by only using the real component
-            svol(a).beam(:,:,b)=reshape(...
-                10*log10(abs(real(exp(f(fidx(b))*p)*cs(:,b)))),...
-                spts,bazpts);
+            % form beam
+            smap(a).beam(:)=smap(a).beam(:)+exp(f(fidx(b))*p)*cs(:,b);
             
             % detail message
             if(verbose); print_time_left(b,nfreq); end
         end
         
+        % using full and real here gives the exact plots of
+        % Koper, Seats, and Benz 2010 in BSSA
+        smap(a).beam=10*log10(abs(real(smap(a).beam))/nfreq);
+        
         % normalize so max peak is at 0dB
-        svol(a).normdb=max(svol(a).beam(:));
-        svol(a).beam=svol(a).beam-svol(a).normdb;
+        smap(a).normdb=max(smap(a).beam(:));
+        smap(a).beam=smap(a).beam-smap(a).normdb;
         
         % plot if no output
-        if(~nargout); fkfreqslide(svol(a)); drawnow; end
+        if(~nargout); plotfkmap(smap(a)); drawnow; end
     end
     
     % return struct
-    if(nargout); varargout{1}=svol; end
+    if(nargout); varargout{1}=smap; end
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

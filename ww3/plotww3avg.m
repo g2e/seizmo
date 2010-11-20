@@ -2,9 +2,9 @@ function [varargout]=plotww3avg(file,varargin)
 %PLOTWW3AVG    Plots an average WaveWatch III data map
 %
 %    Usage:    plotww3avg(files)
-%              plotww3avg(ww3,rng)
-%              plotww3avg(ww3,rng,fgcolor,bgcolor)
-%              plotww3avg(ww3,rng,fgcolor,bgcolor,ax)
+%              plotww3avg(files,rng)
+%              plotww3avg(files,rng,fgcolor,bgcolor)
+%              plotww3avg(files,rng,fgcolor,bgcolor,ax)
 %              ax=plotww3avg(...)
 %
 %    Description:
@@ -12,17 +12,17 @@ function [varargout]=plotww3avg(file,varargin)
 %     contained in the GRIB files given by FILES and plots it.  This is for
 %     making monthly, seasonal, or longer averages.
 %
-%     PLOTWW3AVG(WW3,RNG) sets the limits for coloring the data. The
+%     PLOTWW3AVG(FILES,RNG) sets the limits for coloring the data. The
 %     default is [0 15] which works well for significant wave height.
 %
-%     PLOTWW3AVG(WW3,RNG,FGCOLOR,BGCOLOR) specifies foreground and
+%     PLOTWW3AVG(FILES,RNG,FGCOLOR,BGCOLOR) specifies foreground and
 %     background colors of the plot.  The default is 'w' for FGCOLOR & 'k'
 %     for BGCOLOR.  Note that if one is specified and the other is not, an
 %     opposing color is found using INVERTCOLOR.  The color scale is also
 %     changed so the noise clip is at BGCOLOR.
 %
-%     PLOTWW3AVG(WW3,RNG,FGCOLOR,BGCOLOR,AX) sets the axes to draw in. This
-%     is useful for subplots, guis, etc.
+%     PLOTWW3AVG(FILES,RNG,FGCOLOR,BGCOLOR,AX) sets the axes to draw in.
+%     This is useful for subplots, guis, etc.
 %
 %     AX=PLOTWW3AVG(...) returns the axes drawn in.  This is useful for
 %     after-touching.
@@ -38,9 +38,10 @@ function [varargout]=plotww3avg(file,varargin)
 
 %     Version History:
 %        Aug. 30, 2010 - initial version
+%        Nov. 18, 2010 - doc update, fix files bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 30, 2010 at 11:00 GMT
+%     Last Updated Nov. 18, 2010 at 11:00 GMT
 
 % todo:
 
@@ -63,7 +64,7 @@ if(nargin<1 || isempty(file))
     nfiles=numel(file);
 else
     % check file
-    if(~ischar(file) || ~iscellstr(file))
+    if(~ischar(file) && ~iscellstr(file))
         error('seizmo:plotww3avg:fileNotString',...
             'FILES must be a string or a cell array of strings!');
     end

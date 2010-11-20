@@ -1,20 +1,22 @@
-function [varargout]=fkmap(data,smax,spts,frng,polar,method)
+function [varargout]=fkmap(data,smax,spts,frng,polar,method,w)
 %FKMAP    Returns beamformer map in frequency-wavenumber space
 %
 %    Usage:    smap=fkmap(data,smax,spts,frng)
 %              smap=fkmap(data,smax,spts,frng,polar)
 %              smap=fkmap(data,smax,spts,frng,polar,method)
+%              smap=fkmap(data,smax,spts,frng,polar,method,weights)
 %
-%    Description: SMAP=FKMAP(DATA,SMAX,SPTS,FRNG) beamforms wave energy
-%     moving through an array in frequency-wavenumber space.  Actually, to
-%     allow for easier interpretation and averaging across frequencies, the
-%     energy is mapped into slowness space.  The array info and data are
-%     derived from the SEIZMO struct DATA.  Make sure station location and
-%     timing fields are set!  The range of the slowness space is given by
-%     SMAX (in s/deg) and extends from -SMAX to SMAX for both East/West and
-%     North/South directions.  SPTS controls the number of slowness points
-%     for both directions (SPTSxSPTS grid).  FRNG gives the frequency range
-%     to average over as [FREQLOW FREQHIGH] in Hz.  SMAP is a struct
+%    Description:
+%     SMAP=FKMAP(DATA,SMAX,SPTS,FRNG) beamforms wave energy moving through
+%     an array in frequency-wavenumber space.  Actually, to allow for
+%     easier interpretation and averaging across frequencies, the energy is
+%     mapped into slowness space.  The array info and data are derived from
+%     the SEIZMO struct DATA.  Make sure station location and timing fields
+%     are set!  The range of the slowness space is given by SMAX (in s/deg)
+%     and extends from -SMAX to SMAX for both East/West and North/South
+%     directions.  SPTS controls the number of slowness points for both
+%     directions (SPTSxSPTS grid).  FRNG gives the frequency range to
+%     average over as [FREQLOW FREQHIGH] in Hz.  SMAP is a struct
 %     containing relevant info and the slowness map itself.  The struct
 %     layout is:
 %          .beam     - slowness beamforming map
@@ -36,6 +38,7 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,method)
 %          .center   - array center as [lat lon]
 %          .normdb   - what 0dB actually corresponds to
 %          .volume   - true if frequency-slowness volume (false for FKMAP)
+%          .weights  - weights used in beamforming
 %
 %     Calling FKMAP with no outputs will automatically plot the slowness
 %     map using PLOTFKMAP.
@@ -61,14 +64,21 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,method)
 %     essentially the same as the 'center' method but uses the defined
 %     coordinates as the center for the array.
 %
+%     SMAP=FKMAP(DATA,SMAX,SPTS,FRNG,POLAR,METHOD,WEIGHTS) specifies
+%     weights for each station pair in the array (this depends on the
+%     method) for use in beamforming.  For example, the 'center' method 
+%     requires N weights whereas 'coarray' requires (N*N-N)/2 weights.  The
+%     weights are normalized internally to sum to 1.  See the Examples
+%     section of FKARF for coarray weight indexing.
+%
 %    Notes:
 %     - Records in DATA must have equal number of points, equal sample
 %       spacing, the same start time (in absolute time), and be evenly
 %       spaced time series records.
 %
 %    Examples:
-%     Show slowness map for a dataset at about 50s periods:
-%      fkmap(data,50,201,[1/51 1/49])
+%     % Show slowness map for a dataset at about 50s periods:
+%     fkmap(data,50,201,[1/51 1/49])
 %
 %    See also: FKARF, SNYQUIST, PLOTFKMAP, KXY2SLOWBAZ, SLOWBAZ2KXY,
 %              FKVOLUME, FK4D, FKVOL2MAP
@@ -92,14 +102,15 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,method)
 %                        also section, create beam as s.p. array
 %        July  1, 2010 - high latitude fix, allocation fix
 %        July  6, 2010 - major update to struct, doc update
+%        Nov. 18, 2010 - added weighting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 14:05 GMT
+%     Last Updated Nov. 18, 2010 at 14:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(4,6,nargin));
+error(nargchk(4,7,nargin));
 
 % define some constants
 d2r=pi/180;
@@ -111,6 +122,7 @@ versioninfo(data,'dep');
 % defaults for optionals
 if(nargin<5 || isempty(polar)); polar=false; end
 if(nargin<6 || isempty(method)); method='coarray'; end
+if(nargin<7); w=[]; end
 
 % valid center strings
 valid.METHOD={'center' 'coarray' 'full'};
@@ -133,6 +145,9 @@ elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
         || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
     error('seizmo:fkmap:badInput',...
         'METHOD must be ''CENTER'', ''COARRAY'', ''FULL'', or [LAT LON]!');
+elseif(~isempty(w) && (any(w(:)<0) || ~isreal(w) || sum(w(:))==0))
+    error('seizmo:fkmap:badInput',...
+        'WEIGHTS must be positive real values!');
 end
 nrng=sf(1);
 
@@ -177,6 +192,10 @@ try
     % verbosity
     verbose=seizmoverbose;
     
+    % convert weights to column vector and normalize
+    w=w(:);
+    w=w./sum(w);
+    
     % require all records to have equal npts, delta, b utc, and 1 cmp
     % - we could drop the b UTC requirement but that would require having a
     %   shift term for each record (might be useful for surface waves and
@@ -215,6 +234,14 @@ try
         method='user';
         npairs=nrecs;
     end
+
+    % check that number of weights is equal to number of pairs
+    if(isempty(w)); w=ones(npairs,1)/npairs; end
+    if(numel(w)~=npairs)
+        error('seizmo:fkmap:badInput',...
+            ['WEIGHTS must have ' num2str(npairs) ...
+            ' elements for method: ' method '!']);
+    end
     
     % setup output
     [smap(1:nrng,1).nsta]=deal(nrecs);
@@ -231,6 +258,7 @@ try
     [smap(1:nrng,1).method]=deal(method);
     [smap(1:nrng,1).center]=deal([clat clon]);
     [smap(1:nrng,1).volume]=deal(false);
+    [smap(1:nrng,1).weights]=deal(w);
     
     % get frequencies
     nspts=2^(nextpow2(npts(1))+1);
@@ -364,6 +392,9 @@ try
                 cs=cs(row,:).*conj(cs(col,:));
         end
         
+        % apply weighting
+        cs=cs.*w(:,ones(1,nfreq));
+        
         % detail message
         if(verbose)
             fprintf('Getting fk Map %d for %g to %g Hz\n',...
@@ -393,9 +424,9 @@ try
                 % using full and real here gives the exact plots of
                 % Koper, Seats, and Benz 2010 in BSSA
                 smap(a).beam=...
-                    10*log10(abs(real(smap(a).beam))/(nfreq*npairs));
+                    10*log10(abs(real(smap(a).beam))/nfreq);
             otherwise
-                smap(a).beam=10*log10(smap(a).beam/(nfreq*npairs));
+                smap(a).beam=10*log10(smap(a).beam/nfreq);
         end
         
         % normalize so max peak is at 0dB

@@ -34,9 +34,17 @@ function [info]=multibandalign(data,bank,runname,varargin)
 %        Sep. 21, 2010 - working version
 %        Sep. 30, 2010 - added amplitude measurements, adjust output
 %        Oct.  1, 2010 - added runname input
+%        Nov.  5, 2010 - userwinnow added
+%        Nov.  9, 2010 - prints filter corners for each band, save
+%                        adjustment to initial window for subsequent bands,
+%                        workaround for ill-conditioning of pre-alignment,
+%                        better capture of erroring out and useralign,
+%                        allow redo of a an entire filter band sequence,
+%                        save snr windows for subsequent bands
+%        Nov. 13, 2010 - update for userwindow arg change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  1, 2010 at 12:25 GMT
+%     Last Updated Nov. 13, 2010 at 12:25 GMT
 
 % todo:
 
@@ -90,7 +98,8 @@ try
     end
     
     % preallocate output
-    info([])=struct('useralign',[],'filter',[],'usersnr',[]);
+    info([])=struct('useralign',[],'filter',[],'initwin',[],...
+        'usersnr',[],'userwinnow',[]);
     
     % require o field is set to the same value (within +/- 2 millisec)
     o=getheader(data,'o');
@@ -113,12 +122,18 @@ try
     goodidx=1:nrecs;
     
     % loop over each filter
-    for i=1:size(bank,1)
+    i=1; % starting with first band
+    while(i<=size(bank,1))
+        % display filter info
+        disp(['BAND ' num2str(i,'%02d') ' FILTER CORNERS: ' ...
+            num2str(1/bank(i,3)) 's  to  ' num2str(1/bank(i,2)) 's']);
+        
         % get new relative arrivals & prealign
         % - lags are absolute
         % - use 10^idx as weight (higher weight to more recent freqs)
+        %   - limit to >10^-5 for stability (-5 may be changed)
         % - use latest "good" arrivals to get absolute times
-        tt=ttalign(lags,10.^(idx-i),goodarr,1,goodidx);
+        tt=ttalign(lags,10.^(max(idx-i,-5)),goodarr,1,goodidx);
         data0=timeshift(data,-o-tt); % shift to origin then new times
         info(i).tt_start=tt;
         
@@ -129,17 +144,22 @@ try
         info(i).filter=filt;
         
         % initial window and assessment
+        if(i>1); info(i).initwin=info(i-1).initwin; end
         [data0,info(i),skip,skipall,ax]=get_initial_window(data0,info(i));
         
         % handle skipping
         istr=num2str(i);
         saveas(get(ax,'parent'),[runname '_band_' istr '_preview.fig']);
         close(get(ax,'parent'));
-        if(skip); continue; end
+        if(skip); i=i+1; continue; end
         if(skipall); break; end
         
         % user estimated snr
-        [snr,s,ax]=usersnr(data0,[-300 -20],[-10 70],'peak2rms',...
+        if(~exist('s','var'))
+            s.noisewin=[-300 -20];
+            s.signalwin=[-10 70];
+        end
+        [snr,s,ax]=usersnr(data0,s.noisewin,s.signalwin,'peak2rms',...
             'normstyle','single');
         info(i).usersnr=s;
         info(i).usersnr.snrcut=snrcut;
@@ -159,14 +179,40 @@ try
             continue;
         end
         
+        % distance winnow
+        [data0,info(i).userwinnow,ax]=userwinnow(data0);
+        snr(info(i).userwinnow.cut)=[];
+        tmp=find(snridx);
+        snridx(tmp(info(i).userwinnow.cut))=false;
+        saveas(get(ax,'parent'),[runname '_band_' istr '_userwinnow.fig']);
+        close(get(ax,'parent'));
+        nn=numel(data0);
+        
+        % skip if less than 3
+        if(nn<3)
+            disp([runname ' band ' num2str(istr) ...
+                ': Too Few data in distance range!']);
+            continue;
+        end
+        
         % align
-        [info(i).useralign,info(i).useralign.xc,...
-            info(i).useralign.data]=useralign(data0,...
-            'spacing',1/(4*bank(i,3)),'absxc',false,...
-            'estarr',zeros(nn,1),'snr',snr,varargin{:});
-        ax=info(i).useralign.handles(ishandle(info(i).useralign.handles));
-        saveas(get(ax(1),'parent'),[runname '_band_' istr '_useralign.fig']);
-        close(get(ax(1),'parent'));
+        try
+            [info(i).useralign,info(i).useralign.xc,...
+                info(i).useralign.data]=useralign(data0,...
+                'spacing',1/(4*bank(i,3)),'absxc',false,...
+                'estarr',zeros(nn,1),'snr',snr,varargin{:});
+            ax=info(i).useralign.handles(ishandle(info(i).useralign.handles));
+            saveas(get(ax(1),'parent'),[runname '_band_' istr '_useralign.fig']);
+            close(get(ax(1),'parent'));
+        catch
+            % ask if we want a redo
+            if(redo_align)
+                continue;
+            else
+                i=i+1;
+                continue;
+            end
+        end
         
         % amplitude analysis
         % - amplitude "standard error" is given my amp/snr
@@ -176,13 +222,19 @@ try
         info(i).useralign.solution.amp=scale;
         info(i).useralign.solution.amperr=scale./snr;
         
+        % ask if we want a redo
+        if(redo_align)
+            continue;
+        end
+        
         % ask to utilize for subsequent bands
         if(i<size(bank,1) && use_align)
             goodarr=info(i).useralign.solution.arr;
             goodidx=find(snridx);
             lags(goodidx,goodidx)=goodarr(:,ones(1,nn))-goodarr(:,ones(1,nn))';
-            idx(goodidx,goodidx)=i;
+            idx(goodidx,goodidx)=i+1;
         end
+        i=i+1;
     end
     
     % toggle checking back
@@ -302,10 +354,30 @@ end
 end
 
 
+function [lgc]=redo_align()
+happy_user=false;
+while(~happy_user)
+    choice=menu('Redo alignment for this filter band?','YES','NO');
+    switch choice
+        case 1
+            lgc=true;
+            happy_user=true;
+        case 2
+            lgc=false;
+            happy_user=true;
+    end
+end
+end
+
+
 function [data,info,skip,skipall,ax]=get_initial_window(data,info)
 
 % default initial window
-win=[-300 300];
+if(isempty(info.initwin))
+    win=[-300 300];
+else
+    win=info.initwin;
+end
 
 % ask the user if they wish to continue
 skip=false; skipall=false;
@@ -323,10 +395,13 @@ while(~happy_user)
         case 1
             happy_user=true;
         case 2
-            close(get(ax,'parent'));
-            [win,win,ax]=userwindow(data);
-            close(get(ax,'parent'));
-            win=win.limits;
+            try
+                close(get(ax,'parent'));
+                [win,win,ax]=userwindow(data,win);
+                close(get(ax,'parent'));
+                win=win.limits;
+            catch
+            end
         case 3
             happy_user=true;
             skip=true;
@@ -337,6 +412,7 @@ while(~happy_user)
 end
 
 % implement window
-data=cut(data,win(1),win(2));
+info.initwin=win;
+if(choice<3); data=cut(data,win(1),win(2)); end
 
 end

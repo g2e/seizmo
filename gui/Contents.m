@@ -19,4 +19,5 @@
 %USERSNR        - Interactively select windows for SNR estimation
 %USERTAPER      - Interactively taper SEIZMO records
 %USERWINDOW     - Interactively window SEIZMO records
+%USERWINNOW     - Interactively winnow SEIZMO records by distance
 
