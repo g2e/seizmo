@@ -1,1 +1,1 @@
-../syncrates.m
+../resampling/syncrates.m

@@ -1,1 +1,1 @@
-../reverse.m
+../solo/reverse.m

@@ -1,1 +1,1 @@
-../removepolynomial.m
+../solo/removepolynomial.m

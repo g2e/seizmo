@@ -1,1 +1,1 @@
-../synchronize.m
+../hdr/synchronize.m

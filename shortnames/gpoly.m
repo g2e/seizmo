@@ -1,1 +1,1 @@
-../getpolynomial.m
+../solo/getpolynomial.m

@@ -1,1 +1,1 @@
-../squish.m
+../resampling/squish.m

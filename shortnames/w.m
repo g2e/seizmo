@@ -1,1 +1,1 @@
-../writeseizmo.m
+../rw/writeseizmo.m

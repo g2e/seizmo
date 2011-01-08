@@ -1,1 +1,1 @@
-../readdata.m
+../rw/readdata.m

@@ -1,1 +1,1 @@
-../subtract.m
+../solo/subtract.m

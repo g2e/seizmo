@@ -70,7 +70,6 @@ merge (uneven)
 drop restrictive copyright functions
 	buttord2 (edit of buttord)
 	ddendrogram (edit of dendrogram)
-	mmpolar (no longer open)
 	ppdcval (edit of ppval)
 fk stuff
 x	add weighting to all

@@ -59,9 +59,10 @@ function []=daydirs_stackcorr(indir,outdir,stns,cmp1,cmp2,o)
 %                        correlograms rather than combine with reversed
 %                        ones, added docs
 %        Sep. 21, 2010 - commented out parallel processing lines
+%        Jan.  6, 2010 - update for seizmofun/solofun name change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2010 at 11:15 GMT
+%     Last Updated Jan.  6, 2011 at 11:15 GMT
 
 % todo:
 
@@ -242,9 +243,9 @@ for m=1:nstn
         if(verbose); disp('GETTING COMPONENTS'); end
         
         % negative time derivative gives empirical green's function
-        dif_stack_full=seizmofun(stack_full,@(x)(-gradient(x)));
-        dif_stack_1mon=seizmofun(stack_1mon,@(x)(-gradient(x)));
-        dif_stack_mon=seizmofun(stack_mon,@(x)(-gradient(x)));
+        dif_stack_full=solofun(stack_full,@(x)(-gradient(x)));
+        dif_stack_1mon=solofun(stack_1mon,@(x)(-gradient(x)));
+        dif_stack_mon=solofun(stack_mon,@(x)(-gradient(x)));
         
         % get positive component
         dif_pos_stack_full=cut(dif_stack_full,0);
@@ -257,13 +258,13 @@ for m=1:nstn
         dif_neg_stack_mon=cut(reverse(dif_stack_mon),0);
         
         % get symmetric component
-        dif_sym_stack_full=seizmofun(ch(dif_stack_full,'b',0),...
+        dif_sym_stack_full=solofun(ch(dif_stack_full,'b',0),...
             @(x)[x(ceil(end/2),:); ...
                  x(floor(end/2):-1:1,:)+x(ceil(end/2)+1:end,:)]);
-        dif_sym_stack_1mon=seizmofun(ch(dif_stack_1mon,'b',0),...
+        dif_sym_stack_1mon=solofun(ch(dif_stack_1mon,'b',0),...
             @(x)[x(ceil(end/2),:); ...
                  x(floor(end/2):-1:1,:)+x(ceil(end/2)+1:end,:)]);
-        dif_sym_stack_mon=seizmofun(ch(dif_stack_mon,'b',0),...
+        dif_sym_stack_mon=solofun(ch(dif_stack_mon,'b',0),...
             @(x)[x(ceil(end/2),:); ...
                  x(floor(end/2):-1:1,:)+x(ceil(end/2)+1:end,:)]);
         

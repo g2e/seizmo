@@ -41,13 +41,25 @@ function []=taup()
 
 %     Version History:
 %        Sep.  5, 2009 - major doc update
+%        Jan.  7, 2011 - add matTaup.jar to dynamic java classpath if
+%                        necessary
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 21:40 GMT
+%     Last Updated Jan.  7, 2011 at 21:40 GMT
 
 % todo:
 
+% initialize java code
 import edu.sc.seis.TauP.*
+
+% try adding matTaup.jar if no MatTauP class exists
+if(~exist('TauP','class'))
+    fs=filesep;
+    mypath=fileparts(mfilename('fullpath'));
+    javaaddpath([mypath fs 'lib' fs 'matTaup.jar']);
+end
+
+% attempt run (note the potential for infinite recursion!)
 t=TauP;
 t.show;
 

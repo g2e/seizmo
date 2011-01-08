@@ -1,1 +1,1 @@
-../multiplyrecords.m
+../multi/multiplyrecords.m

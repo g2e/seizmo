@@ -1,1 +1,1 @@
-../removemean.m
+../solo/removemean.m

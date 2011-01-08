@@ -1,1 +1,1 @@
-../compareheader.m
+../hdr/compareheader.m

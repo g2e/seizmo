@@ -41,9 +41,10 @@ function []=daydirs_normalize(indir,outdir,eqband,pband,tsw,fsw,o)
 %        Aug. 19, 2010 - bit more useful warning messages
 %        Sep. 21, 2010 - commented out parallel processing lines
 %        Oct.  6, 2010 - catch rotate error (when no records)
+%        Jan.  6, 2010 - seizmofun/solofun & recordfun/multifun renames
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2010 at 11:15 GMT
+%     Last Updated Jan.  6, 2011 at 11:15 GMT
 
 % todo:
 
@@ -231,13 +232,13 @@ for i=1:nyears
                 % - divide by max weight
                 % - target glitches then quakes
                 weights=add(slidingabsmean(data,tw),eps);
-                weights=recordfun(...
+                weights=multifun(...
                     @(x,y)max(x,y),weights(1:2:end),weights(2:2:end));
                 data=dividerecords(data,weights([1:end; 1:end]));
                 weights=add(slidingabsmean(...
                     iirfilter(data,'bp','b','c',eqband,'o',4,'p',2),...
                     tw),eps);
-                weights=recordfun(...
+                weights=multifun(...
                     @(x,y)max(x,y),weights(1:2:end),weights(2:2:end));
                 data=dividerecords(data,weights([1:end; 1:end]));
                 
@@ -247,8 +248,8 @@ for i=1:nyears
                 data=dft(data,'rlim');
                 amph=rlim2amph(data);
                 amph=slidingmean(amph,ceil(fsw./getheader(data,'delta')));
-                amph=seizmofun(amph,@(x)x(:,[1:2:end; 1:2:end])+eps);
-                amph=recordfun(@(x,y)(x+y)/2,amph(1:2:end),amph(2:2:end));
+                amph=solofun(amph,@(x)x(:,[1:2:end; 1:2:end])+eps);
+                amph=multifun(@(x,y)(x+y)/2,amph(1:2:end),amph(2:2:end));
                 amph=changeheader(amph,'iftype','irlim');
                 data=dividerecords(data,amph([1:end; 1:end]));
                 data=taper(data,tnorm,[],'gausswin',10);

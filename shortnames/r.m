@@ -1,1 +1,1 @@
-../readseizmo.m
+../rw/readseizmo.m

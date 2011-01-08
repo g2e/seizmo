@@ -1,1 +1,1 @@
-../multiplyomega.m
+../intdif/multiplyomega.m

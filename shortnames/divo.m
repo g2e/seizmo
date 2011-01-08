@@ -1,1 +1,1 @@
-../divideomega.m
+../intdif/divideomega.m

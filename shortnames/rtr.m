@@ -1,1 +1,1 @@
-../removetrend.m
+../solo/removetrend.m

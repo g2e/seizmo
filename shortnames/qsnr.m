@@ -1,1 +1,1 @@
-../quicksnr.m
+../solo/quicksnr.m
