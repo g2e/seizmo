@@ -1,11 +1,11 @@
 % The following gives a rough compatibility chart
 % between SEIZMO and SAC.  
 
-about				about=ver('seizmo')
-abs					seizmofun(data,@abs)
-absolutevalue		seizmofun(data,@abs)
+about				about=ver('seizmo') or about_seizmo
+abs					solofun(data,@abs)
+absolutevalue		solofun(data,@abs)
 add					add(data,value)
-addf				addrecords(data1,data2)
+addf				addrecords(data1,data2) (shortcut is addf)
 apk					N/A
 arraymap			mapstations
 axes				See axes properties
@@ -14,41 +14,41 @@ bandrej				iirfilter(data,'br',...)
 bbfk				see fk functions
 beam				see fk functions
 begindevices		N/A (ever)
-beginframe			See subplot
+beginframe			See subplot or makesubplots
 beginwindow			See figure & figure properties
 benioff				N/A
 binoperr			binoperr
 border				set(gca,'box','on')
 capf				N/A
-chnhdr				changeheader(data,'field',value,...)
+chnhdr				changeheader(data,'field',value,...) (shortcut is ch)
 chpf				N/A
 color				plot0(data,'colormap',['r';'w';'b']), etc
-comcor				N/A (maybe available through debugging)
-commit				unnecessary!
+comcor				N/A (maybe available through debugging?)
+commit				N/A (use good practices) 
 contour				N/A (can be done with matlab)
 convert				changetype (n/a), changeversion (n/a), changebyteorder
 convolve			convolve
 copyhdr				copyheader
-correlate			correlate
+correlate			correlate (SEIZMOs is VERY different though)
 cut					readdatawindow
 cuterr				N/A, see readdatawindow
 cutim				cut
-datagen				N/A, use bseizmo to convert custom signals to sac files
-decimate			squish
+datagen				N/A, use bseizmo to convert a custom matrix to SEIZMO
+decimate			squish (or deci shortname)
 deletechannel		deleterecords
 deltacheck			binoperr, checkoperr('multiple_delta',value), fixdelta
-dif					differentiate
-div					divide
-divf				dividerecords
-divomega			divideomega
+dif					differentiate (shortname is dif)
+div					divide (shortname is div)
+divf				dividerecords (shortname is divf)
+divomega			divideomega (shortname is divo)
 echo				echo, maybe warning on/off, seizmoverbose, seizmodebug
 enddevices			N/A (ever)
 endframe			unnecessary!
 envelope			envelope
 erase				see close/clear
 evaluate			simple arithmetic is builtin
-exp					seizmofun(data,@exp)
-exp10				seizmofun(data,@(x)10.^x)
+exp					solofun(data,@exp)
+exp10				solofun(data,@(x)10.^x)
 external			see path, function, script
 external_interface	N/A, see various SEIZMO functions to learn
 external_howto		N/A, see various SEIZMO functions to learn
@@ -59,17 +59,17 @@ filterdesign		iirdesign, filterbuilder
 fir					N/A (use filterbuilder)
 floor				see xlim, ylim
 funcgen				N/A, see bseizmo
-getbb				unnecessary!
+getbb				unnecessary! or use getheader / gh / getvaluefun
 gmap				mapstations
 gmtmap				mapstations
 grayscale			use gray colormap function
 grid				set(gca,'xgrid','on')
-gtext				see xlabel, ylabel, title
-hanning				N/A, can be done with slidingavg + seizmofun
+gtext				see xlabel, ylabel, title, text ...
+hanning				N/A, can be done with slidingavg + solofun
 help				help seizmo (or any sub-directory)
 help_intro			see doc/README
 highpass			iirfilter(data,'hi',...)
-hilbert				hilbrt
+hilbert				hilbrt (note the misspelling)
 history				use the command history window, commandhistory
 howto_external		N/A, see various SEIZMO functions to learn
 ifft				idft
@@ -77,35 +77,35 @@ image				N/A (can be done with matlab), imagesc
 inicm				see clear (also global SEIZMO)
 installmacro		N/A, see path, function, script
 int					integrate
-interpolate			interpolate
-keepam				keepam
+interpolate			interpolate (FAR BETTER) & syncrates
+keepam				keepam (see also keepph, keeprl, keepim)
 khronhite			N/A
 line				see plot properties
 linefit				getpolynomial
 linlin				see plot properties
 linlog				see plot properties
-listhdr				listheader
-load				unnecessary!
+listhdr				listheader & compareheader & queryheader
+load				learn how to add scripts/functions to the matlab path
 loadctable			see colormap
-log					seizmofun(data,@log)
-log10               seizmofun(data,@log10)
+log					solofun(data,@log)
+log10               solofun(data,@log10)
 loglab              see plot properties
 loglin              see plot properties
 loglog              see plot properties
 lowpass				iirfilter(data,'lo',...)
 macro               N/A, see path, function, script
 map                 mapstations
-mat                 unnecessary (!sac goes the other way)
+mat                 unnecessary! (!sac goes the other way)
 markptp             N/A
 marktimes           N/A
 markvalue           N/A
 merge				merge
 message             disp, fprintf, etc
 mtw                 use CUT
-mul					multiply
-mulf				multiplyrecords
-mulomega			multiplyomega
-news                bzr log | more
+mul					multiply (mul)
+mulf				multiplyrecords (mulf)
+mulomega			multiplyomega (mulo)
+news                see the seizmo website
 nplotc              use "hold on" and other plot commands
 null                set the null values to nan
 oapf                N/A
@@ -116,16 +116,16 @@ pickphase           N/A
 picks               see plot0(data,'markers',true|false)
 plabel              see title/xlabel/ylabel
 plot                N/A
-plot1				plot1
+plot1				plot1 or plot0
 plot2				plot2
-plotalpha           N/A
+plotalpha           unnecessary (use Matlab functions)
 plotc               N/A (unnecessary?)
 plotctable          N/A (unnecessary?)
 plotdy              unnecessary (use Matlab functions)
 plotpk              N/A
 plotpktable         N/A
 plotpm              N/A
-plotsp              plot1(keeprl(data)), etc
+plotsp              see plotspectra0 1 or 2 & spectrasection
 plotxy              unnecessary (use Matlab functions)
 print               see Matlab help on printing
 printhelp           see Matlab help on printing
@@ -146,15 +146,15 @@ readsp              N/A
 readsuds	        N/A
 readtable           textscan, dlmread, readtxt+getwords
 recalltrace         unnecessary
-report              N/A (maybe 'global SEIZMO; SEIZMO')
+report              N/A ('global SEIZMO; SEIZMO' for the hardcore)
 reverse				reverse
 rglitches           N/A
-rmean				removemean
+rmean				removemean (rmean)
 rms                 getvaluefun(data,@(x)sqrt(mean(x.^2)))
 rollback            unnecessary!
 rotate				rotate
 rq                  N/A
-rtrend				removetrend
+rtrend				removetrend (rtr)
 scallop             N/A
 setbb               unnecessary
 setdevice           unnecessary
@@ -165,22 +165,22 @@ sonogram            N/A
 sort				sortbyfield
 spe                 N/A (Sig Proc Toolbox has functions)
 spectrogram         stft
-sqr                 seizmofun(data,@(x)x.^2)
-sqrt                seizmofun(data,@sqrt)
+sqr                 solofun(data,@(x)x.^2)
+sqrt                solofun(data,@sqrt)
 sss                 N/A (fk does similar)
 stretch				stretch
-sub					subtract
-subf				subtractrecords
+sub					subtract (sub)
+subf				subtractrecords (subf)
 symbol              see plot properties
-synchronize			synchronize
+synchronize			synchronize (sync)
 syntax              pops up automatically (otherwise help function_name)
-systemcommand		try "!command"
-taper				taper
+systemcommand		try "!command" at the command window
+taper				taper (FAR BETTER)
 ticks               see plot properties
 title               title
 trace               see Matlab debugger info
 transcript          diary, Matlab command history
-transfer            applysacpz, removesacpz
+transfer            applysacpz, removesacpz (pole-zeros only)
 transfertable       N/A
 tsize               see plot properties
 tutorial            N/A

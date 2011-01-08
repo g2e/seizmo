@@ -1,35 +1,80 @@
-main things needing done
-%%%%%%%%%%%%%%%%%%%%%%%%%
-improved plotting (seriously)
+my todo list
+%%%%%%%%%%%%
+improved plotting
+    - moving into the gui department would be nice for plotting only
+      some records (like for pages of 20 records), changing axes, etc
+    - select records where you can actually select the record
+    - header info on selection
+    - station map movie (frame through samples)
+	- cmp vs cmp (plot 2 components with time)
+    - particle motion (color changing line to show time progression? how?)
+    - true gui buttons could make this really nice
+		- drop down(s) to select component (!!!)
+		- phase picking
+		- show predicted phase times
+		- so much more...
 3cmp support
+    - how do we indicate 3cmp? iftype?
+    - need functions to go from 1-cmp to 3-cmp and back
+    - what to do if not all 3 exist?
+    - this is great for rotations and particle motions
+	- force as ZNE
+	- how to handle gaps/overlaps
+	- how to handle non-synced breaks in components
+	- movies/plots of 3-d particle motion
+	- movies/plots of 2-d particle motion
 standard instrument responses database
+    - this leads into inst resp checking
+      ie. this is a STS-2 but the response
+          is not as expected...
 cmt subtoolbox
-xcalign subtoolbox
+    - lots of work needed here
 ffmancor
+    - dynamic ray tracing is a must (see princeton group)
+	- stretch/squish gradually starting at some depth
+	- period sets up radial cos
+    - define azimuthal cos
+	- reflect off cmb
+    - can we make this something like 1e-6 s/km^3 ?
 sph harm mantle models
+    - really need codes to synthesize info at points
 ani mantle models
+    - 
 plotting profiles for models
+    - need a decent polar plotting program to plot slices of the pie
+      with inner & outer radii specified.  Not even mmpolar does it.
 more cmb models (rjk)
 cub2 functions
-	rayleigh travel times
-	love travel times
+    - functions to get phase/group speed at point/period
+    - functions for depth model
+	- rayleigh & love travel times!
 absolute time windowing
+    - add abs time windowing to CUT
 picking
+    - better understanding of ppk in SAC
+    - mimic it as much as possible
 autopicking
+    - sta/lta style
 glitch & step removal
+    - SAC has glitch detection ... implement it?
 smooth spline removal
+    - requires spline toolbox
 vespagrams
+    - need slant-stacking first
 ftan
+    - how is the filtering done?
 slantstacking
 power spectrum estimation
 merge (uneven)
+    - simple in theory, but the coding will be tough
 drop restrictive copyright functions
-	buttord2
-	ddendrogram
-	mmpolar
-	ppdcval
+	buttord2 (edit of buttord)
+	ddendrogram (edit of dendrogram)
+	mmpolar (no longer open)
+	ppdcval (edit of ppval)
 fk stuff
 x	add weighting to all
+    rayleigh/love dispersion estimation
 	weight optimization function
 		capon 1969, etc
 		haubrich 1968
@@ -52,18 +97,6 @@ x	add weighting to all
 expand sph tri stuff
 	use delaunay codes
 database of station info (mda query?)
-
-
-older lists follow below:
-%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-bugs:
-========
-- slidingavg doesn't handle offset out of range (entire result goes nan)
-- check slidingavg against other running mean functions
-
-need to get done:
-=================
 better polezero docs
 	- units of poles and zeros
 		- sac radians
@@ -77,50 +110,22 @@ better polezero docs
 	- vel 2 dis
 		- add zero at 0
 	- SERIOUSLY FOLKS, why is there not a simple gui for this?
-plotting
-	- station map movie (frame through samples)
-	- cmp vs cmp (plot 2 components with time)
-    - particle motion (color changing line to show time progression? how?)
-    - true gui buttons could make this really nice
-		- drop down(s) to select component (!!!)
-		- phase picking
-		- show predicted phase times
-		- so much more...
-
-wait listed:
-================
+improve top-level help file
+make noise processing more flexible (file length & overlap)
+fix freqwindow & gooduglycheck
+add in pwave picking fk routines
+taup improvements
+    clean up tauppierce extra output
+    taup* functions should handle args that are vectors (ie multi-station)
+    drop mattaup, use taup jar directly
+    .taup support (use global?)
+    some way to add, list, export models (ie taupcreate++)
+slidingavg
+    - nan support
+    - check against other running mean functions
 ttbox integration
-merge (uneven records)
-mtconvert
-mtrotate
-
-goals on my mind
-----------------
-ffmancor
-    - main problem is not having dynamic raytracing
-	- stretch/squish gradually starting at some depth
-	- period sets up radial cos
-    - define azimuthal cos
-	- reflect off cmb
-    - can we make this something like 1e-6 s/km^3 ?
-
-
-0.6.0 - stable, helpful and functional
-----------------------------------------
-signal cleaning (to do)
-	- robust poly (get, remove)
-	- smooth splines (get, remove)
-	- glitches (get, remove)
-	- steps (get, remove)
-other new functions
-	- autopick
-	- pick
-3-cmp records
-	force as ZNE
-	how to handle gaps/overlaps
-	how to handle non-synced breaks in components
-	movies/plots of 3-d particle motion
-	movies/plots of 2-d particle motion
+    - needs HUGE revamping for speed & output
+    - this would give us Octave support!
 getpeaks
 markpeaks
 function to make g matrix for sph tri stuff

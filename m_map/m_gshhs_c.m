@@ -22,7 +22,7 @@ function m_gshhs_c(varargin);
 % it's mine, so you can't sell it.
 
 
-FILNAME='private/gshhs_c.b';
+FILNAME='gshhs_c.b';
 
 % Set current projection to geographic
 Currentmap=m_coord('set');

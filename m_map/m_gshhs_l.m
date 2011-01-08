@@ -1,18 +1,18 @@
-function m_gshhs_h(varargin);
-% M_GSHHS_H Add a coastline to a given map using the 'high' resolution of
+function m_gshhs_l(varargin);
+% M_GSHHS_L Add a coastline to a given map using the 'low' resolution of
 %           the Global Self-consistant Hierarchical High-resolution 
 %           Shorelines.
 %
-%         M_GSHHS_H( (standard line option,...,...) ) draws the coastline
+%         M_GSHHS_L( (standard line option,...,...) ) draws the coastline
 %         as a simple line.
-%         M_GSHHS_H('patch' ( ,standard patch options,...,...) ) draws the 
+%         M_GSHHS_L('patch' ( ,standard patch options,...,...) ) draws the 
 %         coastline as a number of patches. 
 %
-%         M_GSHHS_H('save',FILENAME) saves the extracted coastline data
+%         M_GSHHS_L('save',FILENAME) saves the extracted coastline data
 %         for the current projection in a file FILENAME. This allows 
 %         speedier replotting using M_USERCOAST(FILENAME). 
 %    
-%         See also M_PROJ, M_GRID, M_COAST, M_GSHHS_L, M_GSHHS_I, M_GSHHS_C 
+%         See also M_PROJ, M_GRID, M_COAST, M_GSHHS_H, M_GSHHS_I, M_GSHHS_C 
 %         M_USERCOAST    
 
 % Rich Pawlowicz (rich@ocgy.ubc.ca) 15/June/98
@@ -22,20 +22,19 @@ function m_gshhs_h(varargin);
 % it's mine, so you can't sell it.
 
 
-FILNAME='private/gshhs_h.b';
+FILNAME='gshhs_l.b';
 
 % Set current projection to geographic
 Currentmap=m_coord('set');
 m_coord('geographic');
 
+
 if length(varargin)>1 & strcmp(varargin{1},'save'),
-  [ncst,Area,k]=mu_coast('h',FILNAME);
+  [ncst,Area,k]=mu_coast('l',FILNAME);
   eval(['save ' varargin{2} ' ncst k Area']);
 else
-  mu_coast('h',FILNAME,varargin{:},'tag','m_gshhs_h');
+  mu_coast('l',FILNAME,varargin{:},'tag','m_gshhs_l');
 end;
 
 m_coord(Currentmap.name);
-
-
 
