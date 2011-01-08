@@ -121,9 +121,11 @@ function tt=tauptime(varargin)
 %        Sep. 30, 2009 - changed abssawmod to abslatmod
 %        Nov. 13, 2009 - dropped abslatmod for getModuloDistDeg, dropped
 %                        some import calls
+%        Jan.  6, 2011 - add matTaup.jar to dynamic java classpath if
+%                        necessary
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 17:15 GMT
+%     Last Updated Jan.  6, 2011 at 17:15 GMT
 
 % todo:
 
@@ -134,6 +136,13 @@ end
 
 % initialize java code
 import edu.sc.seis.TauP.*;
+
+% try adding matTaup.jar if no MatTauP class exists
+if(~exist('MatTauP_Time','class'))
+    fs=filesep;
+    mypath=fileparts(mfilename('fullpath'));
+    javaaddpath([mypath fs 'lib' fs 'matTaup.jar']);
+end
 
 % default options
 model='iasp91';
@@ -256,17 +265,9 @@ end
 
 % debug
 %disp(inArgs);
-%arrivals=MatTauP_Time.run_time(inArgs);
 
 % attempt run
-try
-    arrivals=MatTauP_Time.run_time(inArgs);
-catch
-    % oops!
-    error('matTaup:tauptime:runFailed',...
-        ['Java exception occurred! Please check input options and\n'...
-        'make sure your classpath.txt file includes matTaup.jar!']);
-end
+arrivals=MatTauP_Time.run_time(inArgs);
 
 % conversion
 R2D=180/pi;

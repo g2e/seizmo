@@ -95,9 +95,11 @@ function tt=taupcurve(varargin)
 %                        calls to PHASES allowed
 %        Sep.  5, 2009 - minor doc update
 %        Nov. 13, 2009 - dropped some import calls
+%        Jan.  6, 2011 - add matTaup.jar to dynamic java classpath if
+%                        necessary
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 17:25 GMT
+%     Last Updated Jan.  6, 2011 at 17:15 GMT
 
 % todo:
 
@@ -108,6 +110,13 @@ end
 
 % initialize java code
 import edu.sc.seis.TauP.*;
+
+% try adding matTaup.jar if no MatTauP class exists
+if(~exist('MatTauP_Curve','class'))
+    fs=filesep;
+    mypath=fileparts(mfilename('fullpath'));
+    javaaddpath([mypath fs 'lib' fs 'matTaup.jar']);
+end
 
 % default options
 model='iasp91';
@@ -187,17 +196,9 @@ if(d || k); inArgs=[inArgs dargs]; end
 
 % debug
 %disp(inArgs);
-%arrivals=MatTauP_Curve.run_curve(inArgs);
 
 % attempt run
-try
-    arrivals=MatTauP_Curve.run_curve(inArgs);
-catch
-    % oops!
-    error('matTaup:taupcurve:runFailed',...
-        ['Java exception occurred! Please check input options and\n'...
-        'make sure your classpath.txt file includes matTaup.jar!']);
-end
+arrivals=MatTauP_Curve.run_curve(inArgs);
 
 % conversion
 R2D=180/pi;

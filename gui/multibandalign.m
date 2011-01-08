@@ -42,9 +42,10 @@ function [info]=multibandalign(data,bank,runname,varargin)
 %                        allow redo of a an entire filter band sequence,
 %                        save snr windows for subsequent bands
 %        Nov. 13, 2010 - update for userwindow arg change
+%        Nov. 21, 2010 - force userwinnow single trace normstyle
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2010 at 12:25 GMT
+%     Last Updated Nov. 21, 2010 at 12:25 GMT
 
 % todo:
 
@@ -180,12 +181,14 @@ try
         end
         
         % distance winnow
-        [data0,info(i).userwinnow,ax]=userwinnow(data0);
+        [data0,info(i).userwinnow,ax]=userwinnow(data0,'normstyle','single');
         snr(info(i).userwinnow.cut)=[];
         tmp=find(snridx);
         snridx(tmp(info(i).userwinnow.cut))=false;
-        saveas(get(ax,'parent'),[runname '_band_' istr '_userwinnow.fig']);
-        close(get(ax,'parent'));
+        if(ishandle(ax))
+            saveas(get(ax,'parent'),[runname '_band_' istr '_userwinnow.fig']);
+            close(get(ax,'parent'));
+        end
         nn=numel(data0);
         
         % skip if less than 3

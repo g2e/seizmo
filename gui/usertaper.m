@@ -53,9 +53,10 @@ function [data,tpr,ax]=usertaper(data,func,varargin)
 %        Mar. 23, 2010 - preserve last taper widths
 %        Apr. 22, 2010 - replace crash with exit (but still crash)
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
+%        Jan.  6, 2011 - use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2010 at 11:00 GMT
+%     Last Updated Jan.  6, 2011 at 11:00 GMT
 
 % todo:
 % - subplot showing taper
@@ -308,7 +309,7 @@ try
         hold(ax,'off')
 
         % loop until user finalizes markers
-        final=false;
+        final=false; xzoom=false; yzoom=false;
         while(~final)
             % bring plot to focus (redraw if closed)
             if(~ishandle(ax))
@@ -362,6 +363,8 @@ try
                         set(goh(2),'xdata',[tpr.width(2) tpr.width(2)])
                     end
                     final=true;
+                otherwise
+                    key2zoompan(button,ax);
             end
         end
 

@@ -41,9 +41,10 @@ function [grp,ax]=selectclusters(data,grp,opt,varargin)
 %        Sep. 18, 2010 - initial version
 %        Sep. 21, 2010 - altered inputs/outputs
 %        Oct. 10, 2010 - minor warning fix
+%        Jan.  6, 2011 - use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 20:00 GMT
+%     Last Updated Jan.  6, 2011 at 20:00 GMT
 
 % todo:
 
@@ -131,25 +132,29 @@ while(button~=2)
         [x,y,button]=ginput(1);
     catch
         ax=-1;
-        button=2;
+        break;
     end
+    
+    % grab axis handle
+    handle=gca;
+    
+    % figure out which record
+    clicked=shown(find(handle==ax,1));
+    if(isempty(clicked)); continue; end
+    
+    % act based on button
     if(button==1)
-        % grab axis handle
-        handle=gca;
-
-        % figure out which record
-        clicked=shown(find(handle==ax,1));
-        if(isempty(clicked)); continue; end
-
         % remove from list if in list and change color
         if(selected(clicked))
             selected(clicked)=false;
             set(handle,'color',bgcolors(clicked,:));
-            % otherwise add to list and change color
+        % otherwise add to list and change color
         else
             selected(clicked)=true;
             set(handle,'color',color);
         end
+    else
+        key2zoompan(button,handle);
     end
 end
 

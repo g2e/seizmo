@@ -1,8 +1,51 @@
 function [cmt]=prep_cmb_data(indir,outdir,sodcsv)
 %PREP_CMB_DATA    Prepare Core-Diffracted Dataset
 %
-%    Usage:    cmt=prep_cmb_data(indir,outdir)
-%              cmt=prep_cmb_data(indir,outdir,sodcsvfile)
+%    Usage:    cmt=prep_cmb_data(indir,outdir,sodcsvfile)
+%
+%    Description:
+%     CMT=PREP_CMB_DATA(INDIR,OUTDIR,SODCSVFILE) prepares the SEIZMO data
+%     files in INDIR (which contains directories of data corresponding to
+%     individual earthquakes).  Preparation includes:
+%      EVENT SELECTION (by user)
+%      CMT SELECTION (based on sodcsvfile)
+%      HEADER CORRECTIONS
+%      MERGING
+%      WINNOWING (>600s records only)
+%      DETRENDING
+%      TAPERING
+%      RESAMPLING (1Hz)
+%      RESPONSE REMOVAL
+%      ROTATION (into radial & transverse)
+%      ALIGNMENT (on Pdiff or Sdiff)
+%      WINNOWING (require 300s about arrival)
+%      RENAMING (rdseed based naming)
+%     SODCSVFILE should match the directory list in INDIR.  If it does not
+%     then things will fail.  So basically you must use SOD if you want to
+%     proceed.  Sorry.  CMT is the globalcmt moment tensors used.
+%
+%    Notes:
+%     - INDIR example layout:
+%                INDIR
+%                 |
+%                 +-> DAYDIR1
+%                 +-> DAYDIR2
+%                      |
+%                      +-> FILE1
+%                      +-> FILE2
+%
+%    Examples:
+%
+%    See also: CMB_1ST_PASS, CMB_OUTLIERS, CMB_2ND_PASS, SLOWDECAYPAIRS,
+%              SLOWDECAYPROFILES, MAP_CMB_PROFILES
+
+%     Version History:
+%        Dec. 12, 2010 - added docs
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Dec. 12, 2010 at 13:35 GMT
+
+% todo:
 
 % check nargin
 error(nargchk(2,3,nargin));

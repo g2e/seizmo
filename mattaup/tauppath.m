@@ -142,9 +142,11 @@ function [tt]=tauppath(varargin)
 %        Sep. 30, 2009 - changed abssawmod to abslatmod
 %        Nov. 13, 2009 - dropped abslatmod for getModuloDistDeg, dropped
 %                        some import calls
+%        Jan.  6, 2011 - add matTaup.jar to dynamic java classpath if
+%                        necessary, 2x speedup by turning off a debug line
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 17:15 GMT
+%     Last Updated Jan.  6, 2011 at 17:15 GMT
 
 % todo:
 
@@ -155,6 +157,13 @@ end
 
 % initialize java code
 import edu.sc.seis.TauP.*;
+
+% try adding matTaup.jar if no MatTauP class exists
+if(~exist('MatTauP_Path','class'))
+    fs=filesep;
+    mypath=fileparts(mfilename('fullpath'));
+    javaaddpath([mypath fs 'lib' fs 'matTaup.jar']);
+end
 
 % default options
 model='iasp91';
@@ -290,17 +299,9 @@ end
 
 % debug
 %disp(inArgs);
-arrivals=MatTauP_Path.run_path(inArgs);
 
 % attempt run
-try
-    arrivals=MatTauP_Path.run_path(inArgs);
-catch
-    % oops!
-    error('matTaup:tauppath:runFailed',...
-        ['Java exception occurred! Please check input options and\n'...
-        'make sure your classpath.txt file includes matTaup.jar!']);
-end
+arrivals=MatTauP_Path.run_path(inArgs);
 
 % get distance
 if(~isempty(arrivals))

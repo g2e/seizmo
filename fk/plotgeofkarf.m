@@ -54,9 +54,10 @@ function [varargout]=plotgeofkarf(arf,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %        Oct.  6, 2010 - truncate title if too many ARF locations
 %        Oct. 10, 2010 - all plotting functions use proper ax calls, tagged
 %                        plots as 'fkmap'
+%        Dec.  8, 2010 - use '^o' for deg symbol rather than \circ
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 18:25 GMT
+%     Last Updated Dec.  8, 2010 at 18:25 GMT
 
 % todo:
 
@@ -265,8 +266,8 @@ smn=min(arf.horzslow); smx=max(arf.horzslow);
 if(arf.nsw<=5)
     titstr=cell(arf.nsw,1);
     for i=1:arf.nsw
-        titstr{i}=sprintf(['SLOWNESS: %gs/deg, LAT: %gdeg, ' ...
-            'LON: %gdeg, PERIOD: %gs'],arf.horzslow0(i),...
+        titstr{i}=sprintf(['SLOWNESS: %gs/^o, LAT: %g^o, ' ...
+            'LON: %g^o, PERIOD: %gs'],arf.horzslow0(i),...
             arf.latlon0(i,1),arf.latlon0(i,2),1/arf.freq0(i));
     end
 else
@@ -274,7 +275,7 @@ else
 end
 title(ax,[{[]}; 'Array Response Function @ '; titstr; ...
     ['Number of Stations: ' num2str(arf.nsta)]; ...
-    ['Horiz. Slowness : ' num2str(smn) ' to ' num2str(smx) ' s/\circ']; ...
+    ['Horiz. Slowness : ' num2str(smn) ' to ' num2str(smx) ' s/^o']; ...
     ['0 dB = ' num2str(arf.normdb) 'dB']; {[]}],'color',fgcolor);
 
 % set zerodb & dblim in userdata

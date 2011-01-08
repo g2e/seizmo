@@ -43,9 +43,10 @@ function axstretch(ax,varargin)
 %        Aug.  7, 2010 - added more options, flipped meaning of percent
 %                        sign, changed name to axstretch
 %        Aug.  8, 2010 - doc update
+%        Dec. 17, 2010 - fixed buggy calls to min/max
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 12:25 GMT
+%     Last Updated Dec. 17, 2010 at 12:25 GMT
 
 % todo:
 % - maybe add units triggers
@@ -78,7 +79,7 @@ end
 % get position of "group axis"
 lbwh=get(ax,'position');
 if(iscell(lbwh)); lbwh=cat(1,lbwh{:}); end
-gpos=[min(lbwh(:,1:2)) max(lbwh(:,1:2)+lbwh(:,3:4))]; % LBRT
+gpos=[min(lbwh(:,1:2),[],1) max(lbwh(:,1:2)+lbwh(:,3:4),[],1)]; % LBRT
 gpos(5:6)=gpos(3:4)-gpos(1:2); % LBRTWH
 
 % get lbrtwh for lbwh

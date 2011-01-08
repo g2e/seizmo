@@ -50,9 +50,10 @@ function [varargout]=plotfkarf(arf,varargin)
 %        Oct.  6, 2010 - truncate title if too many ARF locations
 %        Oct. 10, 2010 - all plotting commands use proper ax call, tagged
 %                        as 'fkarf'
+%        Jan.  7, 2011 - delete commented mmpolar lines
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 10:50 GMT
+%     Last Updated Jan.  7, 2011 at 10:50 GMT
 
 % todo:
 
@@ -202,8 +203,6 @@ set(0,'defaultsurfaceedgecolor',fgcolor);
 
 % initialize polar plot
 ph=polar(ax,[0 2*pi],[0 smax]);
-%ph=mmpolar([0 2*pi],[0 smax],'style','compass',...
-%    'backgroundcolor','k','bordercolor','w');
 
 % adjust to proper orientation
 axis(ax,'ij');

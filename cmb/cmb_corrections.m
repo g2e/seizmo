@@ -1,12 +1,69 @@
-function [corrections]=cmb_corrections(phase,data)
+function [varargout]=cmb_corrections(varargin)
 %CMB_CORRECTIONS    Gets travel time and amplitude corrections
 %
-%    Usage:    corrections=cmb_corrections(phase,data)
+%    Usage:    results=cmb_corrections(results)
+%              corrections=cmb_corrections(phase,data)
+%
+%    Description:
+%     RESULTS=CMB_CORRECTIONS(RESULTS) addes travel time and amplitude
+%     correction info to the struct RESULTS (created by CMB_1ST_PASS,
+%     CMB_OUTLIERS, or CMB_2ND_PASS).  Please note that this is called by
+%     CMB_1ST_PASS already, so there is no need to recompute the
+%     corrections unless you have changed the corrections in some manner.
+%     The corrections are stored in the RESULTS struct under the field
+%     ".corrections".
+%
+%     CORRECTIONS=CMB_CORRECTIONS(PHASE,DATA) returns a struct CORRECTIONS
+%     containing travel time and amplitude corrections for the seismic
+%     phase given by PHASE contained in the seismic records in DATA.  PHASE
+%     is a string such as 'Pdiff' or 'Sdiff'.  DATA is a SEIZMO data struct
+%     (use "help seizmo" for more info).
+%
+%    Notes:
+%     - Currently only supports phases:
+%        Pdiff  &  Sdiff
+%
+%    Examples:
+%     % Get corrections for Pdiff for your dataset:
+%     corrections=cmb_corrections('Pdiff',data);
+%
+%    See also: CMB_1ST_PASS, CMB_OUTLIERS, CMB_2ND_PASS, SLOWDECAYPAIRS,
+%              SLOWDECAYPROFILES, MAP_CMB_PROFILES, PREP_CMB_DATA,
+%              TEST_SCALED_MANTLE_CORRECTIONS
+
+%     Version History:
+%        Oct.  7, 2010 - initial version
+%        Oct. 11, 2010 - fix bug in populating geom spreading corrections
+%        Dec. 29, 2010 - added docs, 2nd usage type simplifies my life
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Dec. 29, 2010 at 15:25 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,2,nargin));
+error(nargchk(1,2,nargin));
+
+% check results struct if single input
+% - then extract appropriate info and set output flag
+if(nargin==1)
+    % checking
+    reqfields={'useralign' 'filter' 'usersnr' 'tt_start' ...
+        'phase' 'runname' 'dirname'};
+    if(~isstruct(varargin{1}) || any(~isfield(varargin{1},reqfields)))
+        error('seizmo:cmb_corrections:badInput',...
+            ['RESULTS must be a struct with the fields:\n' ...
+            sprintf('''%s'' ',reqfields{:}) '!']);
+    end
+    
+    % recall using appropriate fields
+    varargout{1}=varargin{1};
+    for i=1:numel(varargin{1})
+        varargout{1}.corrections=...
+            cmb_corrections(varargin{1}.phase,varargin{1}.useralign.data);
+    end
+    return;
+end
 
 % check phase
 valid={'Pdiff' 'SHdiff' 'SVdiff'};
@@ -103,5 +160,8 @@ end
 
 % get geometrical spreading corrections
 corrections.geomsprcor=geomsprcor(delaz(:,1));
+
+% output
+varargout{1}=corrections;
 
 end

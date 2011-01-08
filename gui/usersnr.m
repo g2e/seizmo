@@ -54,9 +54,10 @@ function [snr,s,ax]=usersnr(data,nwin,swin,method,varargin)
 %        Mar. 18, 2010 - initial version
 %        Apr. 21, 2010 - set plot name & add additional methods
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
+%        Jan.  6, 2011 - use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2010 at 10:00 GMT
+%     Last Updated Jan.  6, 2011 at 11:00 GMT
 
 % todo:
 
@@ -289,6 +290,8 @@ try
                                 set(gh(2),'xdata',[s.noisewin(2) s.noisewin(2)])
                             end
                             final=true;
+                        otherwise
+                            key2zoompan(button,ax);
                     end
                 end
             case 3 % change signal window
@@ -343,6 +346,8 @@ try
                                 set(gh(4),'xdata',[s.signalwin(2) s.signalwin(2)])
                             end
                             final=true;
+                        otherwise
+                            key2zoompan(button,ax);
                     end
                 end
             case 4 % change plot type

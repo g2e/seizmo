@@ -1,7 +1,28 @@
 function [results]=cmb_1st_pass(phase,indir)
-%CMB_1ST_PASS    Initial core-diff alignment + normalization + clustering
+%CMB_1ST_PASS    Initial (wideband) core-diff rel. arrivals + amplitudes
 %
 %    Usage:    results=cmb_1st_pass(phase,indir)
+%
+%    Description:
+%     RESULTS=CMB_1ST_PASS(PHASE,INDIR) presents the user with a series of
+%     menus and plots to processes the data in INDIR, aligning and
+%     normalizing the seismic phase PHASE to get the relative arrival times
+%     and amplitudes.  PHASE must be one of the following:
+%      'Pdiff', 'SHdiff', 'SVdiff'.
+%     INDIR should have been created using PREP_CMB_DATA.
+%
+%    Notes:
+%
+%    Examples:
+%
+%    See also: PREP_CMB_DATA, CMB_2ND_PASS, CMB_OUTLIERS, SLOWDECAYPAIRS,
+%              SLOWDECAYPROFILES, MAP_CMB_PROFILES
+
+%     Version History:
+%        Dec. 12, 2010 - added docs
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Dec. 12, 2010 at 13:35 GMT
 
 % todo:
 
@@ -65,6 +86,12 @@ for i=1:numel(s)
     
     % read data
     data=readdata(data);
+    
+    % subset by azimuth
+    %az=getheader(data,'az');
+    %minaz=str2double(char(inputdlg('Enter minimum Event=>Station Azimuth:')));
+    %maxaz=str2double(char(inputdlg('Enter maximum Event=>Station Azimuth:')));
+    %data=data(az>minaz & az<maxaz);
     
     % sort by distance
     data=sortbyfield(data,'gcarc');

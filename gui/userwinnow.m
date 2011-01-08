@@ -33,9 +33,10 @@ function [data,dist,ax]=userwinnow(data,varargin)
 %        Nov.  4, 2010 - initial version
 %        Nov.  5, 2010 - cut field added to DIST struct
 %        Nov.  9, 2010 - minor bug fixes
+%        Jan.  6, 2011 - use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  9, 2010 at 11:00 GMT
+%     Last Updated Jan.  6, 2011 at 11:00 GMT
 
 % todo:
 
@@ -212,6 +213,8 @@ try
                         set(goh(2),'ydata',[dist.limits(2) dist.limits(2)])
                     end
                     final=true;
+                otherwise
+                    key2zoompan(button,ax);
             end
         end
 

@@ -24,6 +24,7 @@ function [lat,lon]=gcarc2latlon(lat1,lon1,lat2,lon2,npts)
 %      m_proj('robinson');
 %      m_coast('color',[0 .6 0]);
 %      [lat,lon]=gcarc2latlon(lat1,lon1,lat2,lon2);
+%      lon=unwrap(lon*pi/180,[],2)*180/pi; % avoid wraparound streak
 %      m_line(lon',lat','linewi',3);
 %      m_grid('linestyle','none','box','fancy','tickdir','out');
 %
@@ -32,9 +33,10 @@ function [lat,lon]=gcarc2latlon(lat1,lon1,lat2,lon2,npts)
 
 %     Version History:
 %        Nov. 15, 2009 - initial version
+%        Dec. 13, 2010 - fix wrap-around bug in example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2009 at 19:35 GMT
+%     Last Updated Dec. 13, 2009 at 19:35 GMT
 
 % todo:
 

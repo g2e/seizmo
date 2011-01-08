@@ -31,9 +31,10 @@ function [varargout]=movekids(kids,move)
 %     Version History:
 %        Aug. 26, 2010 - initial version
 %        Sep. 14, 2010 - handle arrays of handles better
+%        Nov. 20, 2010 - better siblings check
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2010 at 20:50 GMTs
+%     Last Updated Nov. 20, 2010 at 20:50 GMTs
 
 % todo:
 
@@ -46,10 +47,20 @@ if(nargin<2 || isempty(move)); move='top'; end
 
 % check kids (are handles, same parent)
 kids=kids(:); % force as column vector
-if(~isreal(kids) || any(~ishandle(kids)) ...
-        || ~isscalar(unique(cell2mat(get(kids,'parent')))))
+if(~isreal(kids) || any(~ishandle(kids)))
      error('seizmo:movekids:kidsOver12',...
          'Some of your kids are not!');
+end
+
+% check kids are siblings
+if(isscalar(kids))
+    p=get(kids,'parent');
+else
+    p=unique(cell2mat(get(kids,'parent')));
+    if(~isscalar(p))
+        error('seizmo:movekids:notSiblings',...
+            'KIDS must be siblings!');
+    end
 end
 
 % check move/dist
@@ -63,7 +74,6 @@ end
 %end
 
 % parent and other kids
-p=unique(cell2mat(get(kids,'parent')));
 allkids=get(p,'children');
 bastards=~ismember(allkids,kids);
 %nk=numel(allkids);

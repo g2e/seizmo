@@ -62,9 +62,10 @@ function [data,selected,ax]=selectrecords(data,opt,type,selected,varargin)
 %        Oct.  6, 2009 - dropped use of LOGICAL function
 %        Aug. 26, 2010 - no SEIZMO global, use movekids over uistack for
 %                        Octave, update for new plotting routines
+%        Jan.  6, 2011 - use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2010 at 20:50 GMTs
+%     Last Updated Jan.  6, 2011 at 20:50 GMTs
 
 % todo:
 
@@ -148,7 +149,7 @@ switch lower(type)
                 [x,y,button]=ginput(1);
             catch
                 ax=-1;
-                button=2;
+                break;
             end
             if(button==1)
                 % figure out which record from y position
@@ -166,6 +167,8 @@ switch lower(type)
                     selected(clicked)=true;
                     set(handles(clicked),'visible','on');
                 end
+            else
+                key2zoompan(button,ax);
             end
         end
     case {'plot1' 'p1'}
@@ -185,16 +188,18 @@ switch lower(type)
                 [x,y,button]=ginput(1);
             catch
                 ax=-1;
-                button=2;
+                break;
             end
+            
+            % grab axis handle
+            handle=gca;
+            
+            % figure out which record
+            clicked=find(handle==ax,1);
+            if(isempty(clicked)); continue; end
+            
+            % act based on button
             if(button==1)
-                % grab axis handle
-                handle=gca;
-                
-                % figure out which record
-                clicked=find(handle==ax,1);
-                if(isempty(clicked)); continue; end
-                
                 % remove from list if in list and change color
                 if(selected(clicked))
                     selected(clicked)=false;
@@ -204,6 +209,8 @@ switch lower(type)
                     selected(clicked)=true;
                     set(handle,'color',color);
                 end
+            else
+                key2zoompan(button,handle);
             end
         end
 end

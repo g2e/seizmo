@@ -68,9 +68,10 @@ function [data,win,ax]=userwindow(data,limits,fill,func,varargin)
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %        Nov.  4, 2010 - couple minor bugfixes
 %        Nov. 12, 2010 - added initial window argument
+%        Jan.  6, 2011 - use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 12, 2010 at 11:00 GMT
+%     Last Updated Jan.  6, 2011 at 11:00 GMT
 
 % todo:
 
@@ -331,6 +332,8 @@ try
                         set(goh(2),'xdata',[win.limits(2) win.limits(2)])
                     end
                     final=true;
+                otherwise
+                    key2zoompan(button,ax);
             end
         end
 

@@ -21,9 +21,10 @@ function [varargout]=updategeofkmap(map,ax)
 %     Version History:
 %        June 25, 2010 - initial version
 %        July  6, 2010 - update for new struct
+%        Dec.  8, 2010 - improved degrees symbol usage (^o)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 19:05 GMT
+%     Last Updated Dec.  8, 2010 at 19:05 GMT
 
 % todo:
 
@@ -108,7 +109,7 @@ set(get(ax,'Title'),'string',...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
     ['Period    :  ' num2str(1/fmax) ' to ' num2str(1/fmin) ' s'] ...
-    ['Horiz. Slowness :  ' num2str(smn) ' to ' num2str(smx) ' s/\circ'] ...
+    ['Horiz. Slowness :  ' num2str(smn) ' to ' num2str(smx) ' s/^o'] ...
     ['0 dB = ' num2str(map.normdb) 'dB'] []});
 
 if(nargout); varargout{1}=ax; end

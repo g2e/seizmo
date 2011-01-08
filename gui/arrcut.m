@@ -54,9 +54,12 @@ function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,ax)
 
 %     Version History:
 %        Sep. 17, 2010 - initial version
+%        Dec. 12, 2010 - fixed several plotting bugs, no error input to
+%                        WLINEM (improperly used anyway)
+%        Jan.  6, 2011 - proper ginput handling, use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 17, 2010 at 20:00 GMT
+%     Last Updated Jan.  6, 2011 at 23:55 GMT
 
 % todo:
 
@@ -102,7 +105,7 @@ if(isscalar(err)); err=expandscalars(err,arr); end
 if(isscalar(w)); w=expandscalars(w,arr); end
 
 % get the fit
-m=wlinem(dd,arr,pow,diag(err),diag(w))';
+m=wlinem(dd,arr,pow,[],diag(w))';
 
 % residuals
 resid=arr-polyval(fliplr(m),dd);
@@ -127,25 +130,30 @@ maxdd=max(dd(:));
 mindd=min(dd(:));
 pdd=linspace(mindd-0.1*(maxdd-mindd),maxdd+0.1*(maxdd-mindd),100)';
 parr=polyval(fliplr(m),pdd);
-hfit=plot(pdd,parr,'b','linewidth',2);
+hfit=plot(ax,pdd,parr,'b','linewidth',2);
+set(hfit,'tag','fit');
 hold(ax,'on');
-hcut=plot(pdd,[parr+cutoff parr-cutoff],'r--','linewidth',2);
+hcut=plot(ax,pdd,[parr+cutoff parr-cutoff],'r--','linewidth',2);
+set(hcut,'tag','cut');
 
 % draw the points (w/ or w/o errorbars)
 if(isempty(err))
     hpnts=plot(dd,arr,'ko');
+    set(hpnts,'tag','points');
 else
     h=ploterr(dd,arr,[],err,'ko');
     hpnts=h(1);
     hy=h(2);
+    set(hpnts,'tag','points');
+    set(hy,'tag','errorbars');
 end
 hold(ax,'off');
 
 % label plot
 set(ax,'fontsize',10,'fontweight','bold');
-xlabel('Distance (^o)','fontsize',10,'fontweight','bold');
-ylabel('Arrival Time (s)','fontsize',10,'fontweight','bold');
-title({'Left Click = Change Cutoff';
+xlabel(ax,'Distance (^o)','fontsize',10,'fontweight','bold');
+ylabel(ax,'Arrival Time (s)','fontsize',10,'fontweight','bold');
+title(ax,{'Left Click = Change Cutoff';
     'Middle Click = Implement Cut';
     ['Cutoff = ' num2str(cutoff) 's (' num2str(cutoff/std) ' stddev)'];
     '';
@@ -155,8 +163,19 @@ title({'Left Click = Change Cutoff';
 % let user adjust the limits
 unhappy=true;
 while(unhappy)
+    % get arrival time outlier limits
     axis(ax);
-    [x,y,button]=ginput(1);
+    try
+        [x,y,button]=ginput(1);
+    catch
+        % plot closed - break out
+        break;
+    end
+    
+    % skip if not correct axis
+    if(ax~=gca); continue; end
+    
+    % act based on button
     switch button
         case 1
             % get cutoff
@@ -175,10 +194,14 @@ while(unhappy)
                 '';
                 ['t_{arr} = ' polystr(fliplr(m),'\Delta')]});
         case 2
-            bad=find(resid>cutoff);
             unhappy=false;
+        otherwise
+            key2zoompan(button,ax);
     end
 end
+
+% find bad
+bad=find(resid>cutoff);
 
 % output if desired
 if(nargout>1); varargout={cutoff ax}; end

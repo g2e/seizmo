@@ -51,9 +51,10 @@ function [varargout]=plotfkmap(map,varargin)
 %        July  6, 2010 - major update for new struct
 %        Oct. 10, 2010 - all plotting functions use proper ax calls, tagged
 %                        plots as 'fkmap'
+%        Jan.  7, 2011 - delete commented mmpolar lines
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 16:05 GMT
+%     Last Updated Jan.  7, 2011 at 10:50 GMT
 
 % todo:
 
@@ -190,8 +191,6 @@ set(0,'defaultsurfaceedgecolor',fgcolor);
 
 % initialize polar plot
 ph=polar(ax,[0 2*pi],[0 smax]);
-%ph=mmpolar([0 2*pi],[0 smax],'style','compass',...
-%    'backgroundcolor','k','bordercolor','w');
 
 % adjust to proper orientation
 axis(ax,'ij');

@@ -61,9 +61,10 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %        July 14, 2010 - added some lines for not plotting stations
 %        Oct. 10, 2010 - all plotting functions use proper ax calls, tagged
 %                        plots as 'fkmap'
+%        Dec.  8, 2010 - use '^o' for deg symbol rather than \circ
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 15:05 GMT
+%     Last Updated Dec.  8, 2010 at 15:05 GMT
 
 % todo:
 
@@ -277,7 +278,7 @@ title(ax,{[] ['Number of Stations:  ' num2str(map.nsta)] ...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
     ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
     ['Period    :  ' num2str(1/fmax) ' to ' num2str(1/fmin) ' s'] ...
-    ['Horiz. Slowness :  ' num2str(smn) ' to ' num2str(smx) ' s/\circ'] ...
+    ['Horiz. Slowness :  ' num2str(smn) ' to ' num2str(smx) ' s/^o'] ...
     ['0 dB = ' num2str(map.normdb) 'dB'] []},'color',fgcolor);
 
 % set zerodb & dblim in userdata

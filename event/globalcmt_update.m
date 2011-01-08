@@ -6,26 +6,28 @@ function []=globalcmt_update()
 %    Description:
 %     GLOBALCMT_UPDATE will search the GlobalCMT Project's website for
 %     updates to their catalogs and will add any new CMTs found to SEIZMO's
-%     catalogs.  This does not do a back-search so if any old portions of
-%     the catalog are updated they are not applied here.  Try not to use
-%     this too often as it does grap the full quick CMT catalog every time.
+%     catalogs.  GLOBALCMT_UPDATE does not check for changes in the old
+%     catalogs from the GlobalCMT Project (old being those that are already
+%     a part of the SEIZMO catalogs).  Try not to use GLOBALCMT_UPDATE too
+%     often as it downloads & updates the quick CMT catalog every run.
 %
 %    Notes:
 %     - needs write permission to SEIZMO directories
 %     - also updates the cached catalogs under SEIZMO.GLOBALCMT
 %
 %    Examples:
-%     % update your catalog then find CMTs from the last week:
-%       globalcmt_update
-%       findcmts('st',datevec(now-7),'nd',7)
+%     % Update your catalog, then find CMTs from the last week:
+%     globalcmt_update
+%     findcmts('st',datevec(now-7),'nd',7)
 %
 %    See also: READNDK, FINDCMTS, FINDCMT, SSIDX, SETEVENT
 
 %     Version History:
 %        Aug.  3, 2010 - initial version
+%        Jan.  5, 2011 - improved docs, fixed download bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  3, 2010 at 21:30 GMT
+%     Last Updated Jan.  5, 2011 at 21:30 GMT
 
 % todo:
 
@@ -71,7 +73,7 @@ url='http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_MONTHLY/';
 if(lastyr==maxyr)
     for j=lastmon:maxmon
         [ndk,ok]=urlread([url '/' num2str(maxyr+2000) '/' ...
-            month{j} maxyr '.ndk']);
+            month{j} num2str(maxyr,'%02d') '.ndk']);
         if(~ok || isempty(ndk))
             break;
         else

@@ -86,9 +86,10 @@ function [grp,oldax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %        Oct.  6, 2010 - combine clusters option
 %        Oct. 10, 2010 - combine clusters now in ADJUSTCLUSTERS, drop exit
 %                        and crash option, event grid for map
+%        Jan.  6, 2011 - use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 10:00 GMT
+%     Last Updated Jan.  6, 2011 at 10:00 GMT
 
 % todo:
 
@@ -273,16 +274,21 @@ try
                         [x,y,button]=ginput(1);
                     catch
                         % user closed window - break from loop
-                        button=2;
+                        break;
                     end
+                    
+                    % skip if not dendrogram axis
+                    if(ax(1)~=gca); continue; end
 
                     % action on left click
-                    if (button==1 && gca==ax(1))
+                    if (button==1)
                         grp.distcut=x;
 
                         % redraw subplots (to show new grouping)
                         [grp.perm,grp.color,ax]=plotdendro(data,Z,...
                             varargin{:},'distcut',grp.distcut,'ax',ax);
+                    else
+                        key2zoompan(button,ax(1));
                     end
                 end
             

@@ -55,9 +55,12 @@ function [bad,varargout]=ampcut(dd,amp,cutoff,pow,err,w,ax)
 %     Version History:
 %        Sep. 17, 2010 - initial version
 %        Sep. 28, 2010 - natural log not log base 10
+%        Dec. 12, 2010 - fixed several plotting bugs, no error input to
+%                        WLINEM (improperly used anyway)
+%        Jan.  6, 2011 - proper ginput handling, use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 28, 2010 at 20:00 GMT
+%     Last Updated Jan.  6, 2011 at 23:55 GMT
 
 % todo:
 
@@ -103,7 +106,7 @@ if(isscalar(err)); err=expandscalars(err,amp); end
 if(isscalar(w)); w=expandscalars(w,amp); end
 
 % get the fit
-m=wlinem(dd,log(amp),pow,diag(log(amp)-log(amp+err)),diag(w))';
+m=wlinem(dd,log(amp),pow,[],diag(w))';
 
 % residuals
 resid=log(amp)-polyval(fliplr(m),dd);
@@ -125,25 +128,31 @@ maxdd=max(dd(:));
 mindd=min(dd(:));
 pdd=linspace(mindd-0.1*(maxdd-mindd),maxdd+0.1*(maxdd-mindd),100)';
 pamp=polyval(fliplr(m),pdd);
-hfit=plot(pdd,pamp,'b','linewidth',2);
+hfit=plot(ax,pdd,pamp,'b','linewidth',2);
+set(hfit,'tag','fit');
 hold(ax,'on');
-hcut=plot(pdd,[pamp+cutoff*std pamp-cutoff*std],'r--','linewidth',2);
+hcut=plot(ax,pdd,[pamp+cutoff*std pamp-cutoff*std],'r--','linewidth',2);
+set(hcut,'tag','cut');
 
 % draw the points (w/ or w/o errorbars)
 if(isempty(err))
-    hpnts=plot(dd,log(amp),'ko');
+    hpnts=plot(ax,dd,log(amp),'ko');
+    set(hpnts,'tag','points');
 else
+    axes(ax);
     h=ploterr(dd,log(amp),[],{log(amp-err) log(amp+err)},'ko');
     hpnts=h(1);
     hy=h(2);
+    set(hpnts,'tag','points');
+    set(hy,'tag','errorbars');
 end
 hold(ax,'off');
 
 % label plot
 set(ax,'fontsize',10,'fontweight','bold');
-xlabel('Distance (^o)','fontsize',10,'fontweight','bold');
-ylabel('ln(A)','fontsize',10,'fontweight','bold');
-title({'Left Click = Change Cutoff';
+xlabel(ax,'Distance (^o)','fontsize',10,'fontweight','bold');
+ylabel(ax,'ln(A)','fontsize',10,'fontweight','bold');
+title(ax,{'Left Click = Change Cutoff';
     'Middle Click = Implement Cut';
     ['Cutoff = ' num2str(cutoff) ' stddev'];
     '';
@@ -153,8 +162,19 @@ title({'Left Click = Change Cutoff';
 % let user adjust the limits
 unhappy=true;
 while(unhappy)
+    % get amplitude outlier limits
     axis(ax);
-    [x,y,button]=ginput(1);
+    try
+        [x,y,button]=ginput(1);
+    catch
+        % plot closed - break out
+        break;
+    end
+    
+    % skip if not correct axis
+    if(ax~=gca); continue; end
+    
+    % act based on button
     switch button
         case 1
             % get cutoff
@@ -172,10 +192,14 @@ while(unhappy)
                 '';
                 ['ln(A) = ' polystr(fliplr(m),'\Delta')]});
         case 2
-            bad=find(resid>cutoff*std);
             unhappy=false;
+        otherwise
+            key2zoompan(button,ax);
     end
 end
+
+% find bad
+bad=find(resid>cutoff*std);
 
 % output if desired
 if(nargout>1); varargout={cutoff ax}; end

@@ -35,23 +35,27 @@ function [varargout]=plotraypaths(paths,shells,cmap,ax)
 %    Notes:
 %
 %    Examples:
-%     Get several phases for an array and plot them up:
-%      [stla,stlo,evla,evlo,evdp]=getheader(data,'stla','stlo',...
-%                                          'evla','evlo','evdp');
-%      evdp=evdp/1000; % m2km
-%      Ppaths=getraypaths('P','prem',evla,evlo,evdp,stla,stlo);
-%      PcPpaths=getraypaths('PcP','prem',evla,evlo,evdp,stla,stlo);
-%      PPpaths=getraypaths('PP','prem',evla,evlo,evdp,stla,stlo);
-%      plotraypaths([Ppaths PcPpaths PPpaths]);
+%     % Plot some seismic phases between a random station & event:
+%     plotraypaths(tauppath('s',randlatlon,'e',randlatlon,'z',700*rand))
+%
+%     % Get several phases for a SEIZMO array dataset and plot them up:
+%     [stla,stlo,evla,evlo,evdp]=getheader(data,'stla','stlo',...
+%                                         'evla','evlo','evdp');
+%     evdp=evdp/1000; % m2km
+%     Ppaths=getraypaths('P','prem',evla,evlo,evdp,stla,stlo);
+%     PcPpaths=getraypaths('PcP','prem',evla,evlo,evdp,stla,stlo);
+%     PPpaths=getraypaths('PP','prem',evla,evlo,evdp,stla,stlo);
+%     plotraypaths([Ppaths PcPpaths PPpaths]);
 %
 %    See also: GETRAYPATHS, TAUPPATH
 
 %     Version History:
 %        June  1, 2010 - initial version
 %        June  3, 2010 - handle empty path
+%        Jan.  4, 2011 - added example, improved plot calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  3, 2010 at 02:15 GMT
+%     Last Updated Jan.  4, 2011 at 02:15 GMT
 
 % todo:
 
@@ -119,10 +123,13 @@ end
 % check axis
 if(nargin<4 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
         || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
-    figure('color','k','name','Ray Paths','tag','plotraypaths');
-    ax=gca;
+    fh=figure('color','k','name','3D Ray Paths','tag','plotraypaths');
+    ax=axes('parent',fh);
 else
+    fh=get(ax,'parent');
     axes(ax);
+    h=get(ax,'children'); delete(h);
+    h=findobj(get(fh,'children'),'peer',ax); delete(h);
 end
 
 % constants
@@ -141,64 +148,73 @@ for i=1:nrp
         paths(i).path.longitude,paths(i).path.depth,Re);
     
     % plot path
-    rph(i)=plot3(-x,-y,z,'color',cmap(i,:));
-    if(cnt==1); hold on; end
+    rph(i)=plot3(-x,-y,z,'color',cmap(i,:),'parent',ax);
+    if(cnt==1); hold(ax,'on'); end
     
     % plot start/end points
     if(cnt==1)
-        h1=plot3(-x(1),-y(1),z(1),'yp',...
+        h1=plot3(-x(1),-y(1),z(1),'yp','parent',ax,...
             'markersize',10,'markerfacecolor','y');
-        h2=plot3(-x(end),-y(end),z(end),'r^',...
+        h2=plot3(-x(end),-y(end),z(end),'r^','parent',ax,...
             'markersize',4,'markerfacecolor','r');
     else
-        plot3(-x(1),-y(1),z(1),'yp',...
+        plot3(-x(1),-y(1),z(1),'yp','parent',ax,...
             'markersize',10,'markerfacecolor','y');
-        plot3(-x(end),-y(end),z(end),'r^',...
+        plot3(-x(end),-y(end),z(end),'r^','parent',ax,...
             'markersize',4,'markerfacecolor','r');
     end
 end
 
 % plot x y z axes
 %[x,y,z]=geocentric2xyz(0,0,[-629 6371],6371);
-%plot3(-x,-y,z,'g','linewidth',2);
+%plot3(-x,-y,z,'g','linewidth',2,'parent',ax);
 %[x,y,z]=geocentric2xyz(0,90,[-629 6371],6371);
-%plot3(-x,-y,z,'b','linewidth',2);
+%plot3(-x,-y,z,'b','linewidth',2,'parent',ax);
 %[x,y,z]=geocentric2xyz(90,0,[-629 6371],6371);
-%plot3(-x,-y,z,'r','linewidth',2);
+%plot3(-x,-y,z,'r','linewidth',2,'parent',ax);
 
 % plot cmb/icb
-[x y z] = sphere(45);
+[x,y,z]=sphere(45);
 for i=1:nsh
     r=Re-shells{i,1};
     surface(r*x,r*y,r*z,...
+        'parent',ax,...
         'facecolor',shells{i,2},...
         'facealpha',shells{i,3},...
         'backfacelighting','unlit',...
         'edgecolor','none');
 end
 
+% load topography
+tmp=load('topo.mat');
+if(~isfield(tmp,'topo') || ~isreal(tmp.topo) || ndims(tmp.topo)~=2 ...
+        || size(tmp.topo,1)<8 || size(tmp.topo,2)<16)
+    error('seizmo:plotraypaths:badTOPO',...
+        'The file topo.mat appears corrupted!');
+end
+
 % tranparent globe with continents
-%cla reset;
-load topo;
-s = surface(Re*x,Re*y,Re*z,'facecolor','texturemap','cdata',topo);
-set(s,'edgecolor','none','facealpha','texture','alphadata',topo);
+s=surface(Re*x,Re*y,Re*z,...
+    'facecolor','texturemap','cdata',tmp.topo,'parent',ax);
+set(s,'edgecolor','none','facealpha','texture','alphadata',tmp.topo);
 set(s,'backfacelighting','unlit');
-colormap(sealand);
-alpha('direct');
-alphamap([.1;.8])
-axis off vis3d;
-%campos([2 13 10]);
-camlight;
-lighting gouraud;
-view([-90 0])
-rotate3d on;
-zoom(1.5);
+colormap(ax,sealand);
+alpha(s,'direct');
+alphamap(fh,[.1;.8])
+axis(ax,'off','vis3d');
+%campos(ax,[2 13 10]);
+camlight(ax);
+lighting(ax,'gouraud');
+view(ax,[-90 0])
+rotate3d(ax,'on');
+zoom(ax,1.5);
 
 % legend
-lh=legend([h1 h2],{'event' 'station'},...
+lh=legend(ax,[h1 h2],{'event' 'station'},...
     'location','westoutside','textcolor','w');
 set(lh,'color','none','edgecolor','w',...
-    'fontsize',6,'interpreter','none')
+    'fontsize',6,'interpreter','none');
+hold(ax,'off');
 
 % output
 if(nargout); varargout{1}=ax; end

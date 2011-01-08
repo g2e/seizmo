@@ -33,23 +33,23 @@ function [lat,lon,radius]=xyz2geocentric(x,y,z,r)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
 %        Nov. 13, 2009 - name change: geodetic to geographic
+%        Jan.  4, 2011 - minor code improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 20:15 GMT
+%     Last Updated Jan.  4, 2011 at 20:15 GMT
 
 % todo:
 
 % require 3 or 4 inputs
-msg=nargchk(3,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,4,nargin));
 
 % size up inputs
 sx=size(x); sy=size(y); sz=size(z);
 nx=prod(sx); ny=prod(sy); nz=prod(sz);
 
 % basic check inputs
-if(~isnumeric(x) || ~isnumeric(y) || ~isnumeric(z))
-    error('seizmo:xyz2geocentric:nonNumeric','All inputs must be numeric!');
+if(~isreal(x) || ~isreal(y) || ~isreal(z))
+    error('seizmo:xyz2geocentric:nonReals','All inputs must be reals!');
 elseif(any([nx ny nz]==0))
     error('seizmo:xyz2geocentric:unpairedCoord',...
         'Coordinate inputs must be nonempty arrays!');
@@ -84,9 +84,9 @@ lat=asind(z./radius);
 
 % check input (converts radius to depth)
 if(nargin==4)
-    if(~isnumeric(r) || ~isscalar(r))
+    if(~isreal(r) || ~isscalar(r))
         error('seizmo:xyz2geocentric:badR',...
-        'R input must be numerical scalar!');
+        'R input must be a real-valued scalar!');
     end
     radius=r-radius; 
 end

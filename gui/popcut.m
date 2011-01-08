@@ -33,9 +33,10 @@ function [grp,ax]=popcut(data,grp)
 %     Version History:
 %        Sep. 18, 2010 - initial version
 %        Sep. 21, 2010 - altered inputs/outputs
+%        Jan.  6, 2011 - proper ginput handling, use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2010 at 20:00 GMT
+%     Last Updated Jan.  6, 2011 at 23:55 GMT
 
 % todo:
 
@@ -118,10 +119,21 @@ title(ax(1),['Left Click = Change Cutoff, ' ...
 % let user adjust the limits
 unhappy=true;
 while(unhappy)
+    % get population cutoff
     axis(ax(1));
-    [x,y,button]=ginput(1);
+    try
+        [x,y,button]=ginput(1);
+    catch
+        % plot closed - break out
+        break;
+    end
+    
+    % act based on button
     switch button
         case 1
+            % skip if not correct axis
+            if(ax(1)~=gca); continue; end
+            
             % get cutoff
             cutoff=abs(y);
             
@@ -161,7 +173,13 @@ while(unhappy)
             ax(2:1+ngrp)=plotclusters(data,grp,...
                 'clusters',fgood,'ax',ax(2:1+ngrp));
         case 2
+            % skip if not correct axis
+            if(ax(1)~=gca); continue; end
+            
+            % break out
             unhappy=false;
+        otherwise
+            key2zoompan(button);
     end
 end
 

@@ -37,9 +37,10 @@ function [onset,ax]=pickstack(data,varargin)
 %        Mar. 24, 2010 - initial version
 %        Aug. 26, 2010 - nargchk fix, update for new plotting functions,
 %                        onset line plots in correct place on redraw
+%        Jan.  6, 2011 - use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2010 at 23:55 GMT
+%     Last Updated Jan.  6, 2011 at 23:55 GMT
 
 % todo:
 
@@ -154,6 +155,8 @@ try
                     if (button==1)
                         onset=x;
                         set(goh,'xdata',[x x]);
+                    else
+                        key2zoompan(button,ax);
                     end
                 end
             case 2 % exit

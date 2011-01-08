@@ -36,9 +36,11 @@ function [bad,varargout]=errcut(dd,err,cutoff,ax)
 
 %     Version History:
 %        Sep. 17, 2010 - initial version
+%        Dec. 12, 2010 - fixed several plotting bugs
+%        Jan.  6, 2011 - proper ginput handling, use key2zoompan
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 17, 2010 at 20:00 GMT
+%     Last Updated Jan.  6, 2011 at 23:55 GMT
 
 % todo:
 
@@ -81,14 +83,14 @@ set(hpts,'markerfacecolor','g','linewidth',1,'color','k');
 % add cutoff bar
 hold(ax,'on');
 xlimits=get(ax,'xlim');
-hcut=plot(xlimits,[cutoff cutoff],'r--','linewidth',2);
+hcut=plot(ax,xlimits,[cutoff cutoff],'r--','linewidth',2);
 hold(ax,'off');
 
 % label plot
 set(ax,'fontsize',10,'fontweight','bold');
-xlabel('Distance (^o)','fontsize',10,'fontweight','bold');
-ylabel('Error (s)','fontsize',10,'fontweight','bold');
-title({'Left Click = Change Cutoff';
+xlabel(ax,'Distance (^o)','fontsize',10,'fontweight','bold');
+ylabel(ax,'Error (s)','fontsize',10,'fontweight','bold');
+title(ax,{'Left Click = Change Cutoff';
     'Middle Click = Implement Cut';
     ['Cutoff = ' num2str(cutoff) 's']},...
     'fontsize',10,'fontweight','bold');
@@ -96,8 +98,19 @@ title({'Left Click = Change Cutoff';
 % let user adjust the limits
 unhappy=true;
 while(unhappy)
+    % get error cutoff
     axis(ax);
-    [x,y,button]=ginput(1);
+    try
+        [x,y,button]=ginput(1);
+    catch
+        % plot closed - break out
+        break;
+    end
+    
+    % skip if not correct axis
+    if(ax~=gca); continue; end
+    
+    % act based on button
     switch button
         case 1
             % get cutoff
@@ -112,10 +125,14 @@ while(unhappy)
                 'Middle Click = Implement Cut';
                 ['Cutoff = ' num2str(cutoff) 's']});
         case 2
-            bad=find(err>cutoff);
             unhappy=false;
+        otherwise
+            key2zoompan(button,ax);
     end
 end
+
+% find bad
+bad=find(err>cutoff);
 
 % output if desired
 if(nargout>1); varargout={cutoff ax}; end

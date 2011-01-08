@@ -1,16 +1,21 @@
-function [data,grp,arr,pol]=adjustclusters(data,grp,arr,pol)
+function [data,grp,arr,pol,units]=adjustclusters(data,grp,arr,pol)
 %ADJUSTCLUSTERS    Combine & Adjust timing/polarity of clusters graphically
 %
-%    Usage:    [data,grp,arr,pol]=adjustclusters(data,grp,arr,pol)
+%    Usage:    [data,grp,arr,pol,units]=adjustclusters(data,grp,arr,pol)
 %
 %    Description:
-%     [DATA,GRP,ARR,POL]=ADJUSTCLUSTERS(DATA,GRP,ARR,POL) presents an
-%     interface for adjusting and combining clusters given by SEIZMO struct
-%     DATA and cluster struct GRP (see USERCLUSTER for more details).  ARR
-%     & POL are vectors equal in size to DATA that contain the timing and
-%     polarity of the records.
+%     [DATA,GRP,ARR,POL,UNITS]=ADJUSTCLUSTERS(DATA,GRP,ARR,POL) presents an
+%     interface for adjusting, combining, and splitting clusters given by
+%     SEIZMO struct DATA and cluster struct GRP (see USERCLUSTER for more
+%     details).  ARR & POL are vectors equal in size to DATA that contain
+%     the timing and polarity of the records.  UNITS is a NRECSx1 matrix of
+%     integer values ranging from -2 to 2 that indicate how many times the
+%     data was/needs to be integrated -- negative numbers indicate
+%     differentiation.
 %
 %    Notes:
+%     - Combining/Splitting clusters will reset manual "good" cluster
+%       selection to those above the population cutoff given by GRP.POPCUT.
 %
 %    Examples:
 %     % Use ADJUSTCLUSTERS after USERCLUSTER to allow for advanced
@@ -22,9 +27,12 @@ function [data,grp,arr,pol]=adjustclusters(data,grp,arr,pol)
 
 %     Version History:
 %        Oct. 10, 2010 - initial version
+%        Nov. 20, 2010 - fix manual picking bug
+%        Dec. 12, 2010 - added split clusters by polarity, add Note
+%        Dec. 17, 2010 - added groundunits code calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 10:00 GMT
+%     Last Updated Dec. 17, 2010 at 10:00 GMT
 
 % todo:
 
@@ -72,6 +80,8 @@ try
         % get choice from user
         choice=menu('ADJUST/COMBINE CLUSTERS OPTIONS',...
             'COMBINE CLUSTERS',...
+            'SPLIT CLUSTERS BY RECORD POLARITIES',...
+            'ADJUST GROUND UNITS',...
             'FLIP CLUSTER POLARITY',...
             'TIME SHIFT CLUSTER',...
             'MANUALLY PICK GOOD CLUSTERS',...
@@ -122,7 +132,13 @@ try
                             happy=true;
                     end
                 end
-            case 2 % flip
+            case 2 % polarity split
+                grp=split_clusters_by_polarity(grp,pol);
+            case 3 % ground units
+                [data,grp,units,tmpax]=...
+                    selectclusters_and_groundunits(data,grp);
+                close(get(tmpax(1),'parent'));
+            case 4 % flip
                 % let user select clusters
                 tmp=grp;
                 tmp.good=false;
@@ -136,7 +152,7 @@ try
                 % flip polarity
                 pol(crecs)=pol(crecs).*(-1);
                 data(crecs)=multiply(data(crecs),-1);
-            case 3 % timeshift
+            case 5 % timeshift
                 % let user select clusters
                 tmp=grp;
                 tmp.good=false;
@@ -166,15 +182,11 @@ try
                 % apply time shift
                 arr(crecs)=arr(crecs)+shift;
                 data(crecs)=timeshift(data(crecs),shift);
-            case 4 % select clusters manually
+            case 6 % select clusters manually
                 % cut clusters manually
-                if(any(ishandle(sx)))
-                    sx=sx(ishandle(sx));
-                    close(get(sx(1),'parent'));
-                end
                 [grp,tmpax]=selectclusters(data,grp);
                 close(get(tmpax(1),'parent'));
-            case 5 % break loop
+            case 7 % break loop
                 happy_user=true;
         end
     end

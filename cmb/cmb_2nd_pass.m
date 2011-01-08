@@ -1,14 +1,36 @@
 function [results2]=cmb_2nd_pass(results0,bank,gcrng,sr)
-%CMB_2ND_PASS    Narrow-band core-diff alignment + normalization
+%CMB_2ND_PASS    Narrow-band core-diff relative arrivals + amplitudes
 %
 %    Usage:    results=cmb_2nd_pass(results,bank,gcrng)
 %              results=cmb_2nd_pass(results,bank,gcrng,sr)
 %
+%    Description:
+%     RESULTS=CMB_2ND_PASS(RESULTS,BANK,GCRNG) processes the data in
+%     RESULTS (returned from CMB_OUTLIERS) at each of the frequency bands
+%     given in BANK (see FILTER_BANK to generate this).  GCRNG is a
+%     prefilter by great circle distance and should be [GCMIN GCMAX] in
+%     degree distance.
+%
+%     RESULTS=CMB_2ND_PASS(RESULTS,BANK,GCRNG,SR) resamples records to a
+%     sample rate of SR.  SR must be in Hz (ie SR==5 is 5Hz sample rate).
+%
 %    Notes:
+%
+%    Examples:
+%     % This is the typical usage case for me:
 %     bank=filter_bank([0.0125 0.125],'variable',0.2,0.1);
 %     gcrng=[90 155];
 %     sr=5; % 5sps
 %     results2=cmb_2nd_pass(results,bank,gcrng,sr);
+%
+%    See also: PREP_CMB_DATA, CMB_1ST_PASS, CMB_OUTLIERS, SLOWDECAYPAIRS,
+%              SLOWDECAYPROFILES, MAP_CMB_PROFILES
+
+%     Version History:
+%        Dec. 12, 2010 - added docs
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Dec. 12, 2010 at 13:35 GMT
 
 % todo:
 

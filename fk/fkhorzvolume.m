@@ -119,10 +119,16 @@ if(~isequal(nrecs,nrecs1))
         'Datasets do not match in size!');
 end
 
+% need 2+ records
+if(nrecs<2)
+    error('seizmo:fkhorzvolume:arrayTooSmall',...
+        'DATA must have 2+ records!');
+end
+
 % defaults for optionals
 if(nargin<6 || isempty(polar)); polar=false; end
 if(nargin<7 || isempty(method)); method='coarray'; end
-if(nargin<8 || isempty(w)); w=ones(ncorr,1); end
+if(nargin<8); w=[]; end
 
 % check inputs
 sf=size(frng);
@@ -158,21 +164,25 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check headers
-    e=checkheader(edat,...
+    edat=checkheader(edat,...
         'MULCMP_DEP','ERROR',...
         'NONTIME_IFTYPE','ERROR',...
         'FALSE_LEVEN','ERROR',...
         'MULTIPLE_DELTA','ERROR',...
         'MULTIPLE_NPTS','ERROR',...
-        'MULTIPLE_B','ERROR',...
+        'NONINTEGER_REFTIME','ERROR',...
+        'UNSET_REFTIME','ERROR',...
+        'OUTOFRANGE_REFTIME','ERROR',...
         'UNSET_ST_LATLON','ERROR');
-    n=checkheader(ndat,...
+    ndat=checkheader(ndat,...
         'MULCMP_DEP','ERROR',...
         'NONTIME_IFTYPE','ERROR',...
         'FALSE_LEVEN','ERROR',...
         'MULTIPLE_DELTA','ERROR',...
         'MULTIPLE_NPTS','ERROR',...
-        'MULTIPLE_B','ERROR',...
+        'NONINTEGER_REFTIME','ERROR',...
+        'UNSET_REFTIME','ERROR',...
+        'OUTOFRANGE_REFTIME','ERROR',...
         'UNSET_ST_LATLON','ERROR');
     
     % turn off header checking
@@ -211,12 +221,16 @@ try
     end
     
     % require all records to have equal b, npts, delta
-    [b,npts,delta]=getheader([edat(:); ndat(:)],'b','npts','delta');
-    if(~isscalar(unique(b)) ...
-            || ~isscalar(unique(npts)) ...
-            || ~isscalar(unique(delta)))
+    [butc,eutc,npts,delta]=getheader([edat(:); ndat(:)],...
+        'b utc','e utc','npts','delta');
+    butc=cell2mat(butc); eutc=cell2mat(eutc);
+    if(size(unique(butc,'rows'),1)~=1)
         error('seizmo:fkhorzvolume:badData',...
-            'Records must have equal B, NPTS & DELTA fields!');
+            'Records in DATA must have equal B (UTC)!');
+    end
+    if(~isscalar(unique(npts)) || ~isscalar(unique(delta)))
+        error('seizmo:fkhorzvolume:badData',...
+            'Records must have equal NPTS & DELTA fields!');
     end
     npts=npts(1); delta=delta(1);
     
@@ -261,8 +275,8 @@ try
     [rvol(1:nrng,1).stlo]=deal(est(:,2));
     [rvol(1:nrng,1).stel]=deal(est(:,3));
     [rvol(1:nrng,1).stdp]=deal(est(:,4));
-    [rvol(1:nrng,1).butc]=deal([0 0 0 0 0]);
-    [rvol(1:nrng,1).eutc]=deal([0 0 0 0 0]);
+    [rvol(1:nrng,1).butc]=deal(butc(1,:));
+    [rvol(1:nrng,1).eutc]=deal(eutc(1,:));
     [rvol(1:nrng,1).delta]=deal(delta);
     [rvol(1:nrng,1).npts]=deal(npts);
     [rvol(1:nrng,1).polar]=deal(polar);
@@ -272,19 +286,19 @@ try
     [rvol(1:nrng,1).volume]=deal(true);
     [rvol(1:nrng,1).weights]=deal(w);
     
-    % get frequencies (note no extra power for correlations)
-    nspts=2^nextpow2(npts);
+    % get frequencies
+    nspts=2^(nextpow2(npts)+1);
     f=(0:nspts/2)/(delta*nspts);  % only +freq
     
     % extract data (silently)
     seizmoverbose(false);
-    e=records2mat(e);
-    n=records2mat(n);
+    edat=records2mat(edat);
+    ndat=records2mat(ndat);
     seizmoverbose(verbose);
     
     % get fft
-    e=fft(e,nspts,1);
-    n=fft(n,nspts,1);
+    edat=fft(edat,nspts,1);
+    ndat=fft(ndat,nspts,1);
     
     % get relative positions for each pair
     % r=(x  ,y  )
