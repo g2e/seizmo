@@ -1,142 +1,156 @@
-function v=ppdcval(pp,xx,up)
-%PPDCVAL  Evaluate piecewise polynomial (w/ discontinuity support)
-%   V = PPDCVAL(PP,XX) returns the value, at the entries of XX, of the 
-%   piecewise polynomial f contained in PP, as constructed by PCHIP, SPLINE,
-%   INTERP1, or the spline utility MKPP.
+function [y]=ppdcval(pp,x,dcpos)
+%PPDCVAL    Evaluate piecewise polynomial with discontinuity support
 %
-%   V is obtained by replacing each entry of XX by the value of f there.
-%   If an entry in XX is on a breakpoint in PP, then it is evaluated within
-%   the context of the upper piecewise polynomial.  This is equivalent to
-%   the behavior of PPVAL(PP,XX).
+%    Usage:    y=ppdcval(pp,x)
+%              y=ppdcval(pp,x,dcpos)
 %
-%   V = PPDCVAL(PP,XX,FALSE) will evaluate entries in XX that are on
-%   breakpoints in the context of the lower piecewise polynomial.
+%    Description:
+%     Y=PPDCVAL(PP,X) or Y=PPDCVAL(X,PP) works exactly like PPVAL.  In
+%     terms of handling discontinuities in the piecewise polynomial, that
+%     means that sites occurring on a break point (potential discontinuity)
+%     in the piecewise polynomial are evaluated on the polynomial to the
+%     positive side of the break point (discontinuity).
 %
-%   If f is scalar-valued, then V is of the same size as XX. XX may be ND.
+%     Y=PPDCVAL(PP,X,DCPOS) allows changing to which side a site on a
+%     discontinuity is evaluated.  The default DCPOS is TRUE and works
+%     exactly like PPVAL or PPDCVAL without the third input.  Setting DCPOS
+%     to FALSE will return values evaluated using the polynomial on the
+%     negative side of the break point (discontinuity).
 %
-%   If PP was constructed by PCHIP, SPLINE or MKPP using the orientation of
-%   non-scalar function values specified for those functions, then:
+%    Notes:
 %
-%   If f is [D1,..,Dr]-valued, and XX is a vector of length N, then V has
-%   size [D1,...,Dr, N], with V(:,...,:,J) the value of f at XX(J).
-%   If f is [D1,..,Dr]-valued, and XX has size [N1,...,Ns], then V has size
-%   [D1,...,Dr, N1,...,Ns], with V(:,...,:, J1,...,Js) the value of f at
-%   XX(J1,...,Js).
+%    Examples:
+%     % Simple step function piecewise polynomial that is -1 below 0 and
+%     % 1 above.  PPVAL assumes 0 occurs on the positive side while PPDCVAL
+%     % allows you to choose on which side the break point evaluates:
+%     pp=mkpp([-inf 0 inf],[-1 1]);
+%     y=ppval(pp,0)
+%     y=ppdcval(pp,0,true)
+%     y=ppdcval(pp,0,false)
 %
-%   If PP was constructed by INTERP1 or INTERPDC1 using the orientation of
-%   non-scalar function values specified for that function, then:
-%
-%   If f is [D1,..,Dr]-valued, and XX is a scalar, then V has size
-%   [D1,...,Dr], with V the value of f at XX.
-%   If f is [D1,..,Dr]-valued, and XX is a vector of length N, then V has
-%   size [N,D1,...,Dr], with V(J,:,...,:) the value of f at XX(J).
-%   If f is [D1,..,Dr]-valued, and XX has size [N1,...,Ns], then V has size
-%   [N1,...,Ns,D1,...,Dr], with V(J1,...,Js,:,...,:) the value of f at
-%   XX(J1,...,Js).
-%
-%   Example:
-%   Compare the results of integrating the function cos and its spline
-%   interpolant:
-%
-%     a = 0; b = 10;
-%     int1 = quad(@cos,a,b);
-%     x = a:b; y = cos(x); pp = spline(x,y); 
-%     int2 = quad(@(x)ppdcval(pp,x),a,b);
-%
-%   int1 provides the integral of the cosine function over the interval [a,b]
-%   while int2 provides the integral, over the same interval, of the piecewise
-%   polynomial pp that approximates the cosine function by interpolating the
-%   computed x,y values.
-%
-%   Class support for input X and the fields of PP:
-%      float: double, single
-%
-%   See also PPVAL, SPLINE, PCHIP, INTERP1, MKPP, UNMKPP,
-%            SPLINES (The Spline Toolbox).
+%    See also: INTERPDC1, INTERP1, SPLINE, PCHIP, PPVAL, MKPP, UNMKPP
 
-%   Carl de Boor 7-2-86
-%   Copyright 1984-2006 The MathWorks, Inc.
-%   $Revision: 5.16.4.10 $  $Date: 2006/10/02 16:32:51 $
-
-% Made PPDCVAL from PPVAL
-% June 1, 2010 by Garrett Euler
-% Aug. 8, 2010 - minor doc updates
+%     Version History:
+%        June  1, 2010 - initial version
+%        Aug.  8, 2010 - minor doc updates
+%        Jan. 11, 2011 - code refactor & doc rewrite, fixes bug in PPVAL
+%                        for n-dimension poly & scalar input
 %
-% I should replace the example with one with a square wave
-% or some other discontinuous function.
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Jan. 11, 2011 at 13:00 GMT
 
-if isstruct(xx) % we assume that ppdcval(xx,pp) was used
-   temp = xx; xx = pp; pp = temp;
+% todo:
+
+% check number of inputs
+error(nargchk(2,3,nargin));
+
+% for compatibility with Matlab, allow first two inputs to be switched
+if(isstruct(x)); [pp,x]=deal(x,pp); end
+
+% default discontinuity flag
+if(nargin<3 || isempty(dcpos)); dcpos=true; end
+
+% check inputs
+if(~isscalar(dcpos) || (~isreal(dcpos) && ~islogical(dcpos)))
+    error('seizmo:ppdcval:badInput',...
+        'DCPOS must be TRUE or FALSE!');
 end
 
-%  obtain the row vector xs equivalent to XX
-sizexx = size(xx); lx = numel(xx); xs = reshape(xx,1,lx);
-%  if XX is row vector, suppress its first dimension
-if length(sizexx)==2&&sizexx(1)==1, sizexx(1) = []; end
+% x => row vector
+nx=numel(x);
+sx=size(x);
+xv=x(:).';
 
-% take apart PP
-[b,c,l,k,dd]=unmkpp(pp);
+% hide 1st dim of x if was a row vector
+% - this suppresses the first dimension (1) for row vector input
+%   when evaluating polynomials that return multiple values per site
+%   thus making it equivalent to if it had been input as a column vector
+if(sx(1)==1 && numel(sx)==2); sx(1)=[]; end
 
-% for each evaluation site, compute its breakpoint interval
-% (mindful of the possibility that xx might be empty)
-% - allowing choice of which interval if eval site is at breakpoint
-if(nargin==2 || isempty(up) || up)
-    % default is the upside of the discontinuity (like ppval)
-    if lx, [ignored,index] = histc(xs,[-inf,b(2:l),inf]);
-    else index = ones(1,lx);
+% extract info about polynomial
+% break points, coefficients, number of pieces, order, dimension
+[breaks,coef,l,k,d]=unmkpp(pp);
+
+% figure out which piece each site is in
+% - action depends on discontinuity flag choice
+% - zero evaluation points handling
+if(dcpos) % positive side
+    % empty case check
+    if(nx)
+        % histc returns the positive side so no adjustment necessary
+        [p,p]=histc(xv,[-inf breaks(2:l) inf]);
+    else % empty (set to 1 so no indexing error)
+        p=ones(1,nx);
     end
-else
-    % shift sites on breakpoints to downside of discontinuity
-    if lx
-        [ignored,index] = histc(xs,[-inf,b(2:l),inf]);
-        onbp=ismember(xs,b(2:l));
-        index(onbp)=index(onbp)-1;
-    else index = ones(1,lx);
-    end
-end
-
-% adjust for troubles, like evaluation sites that are NaN or +-inf
-infxs = find(xs==inf); if ~isempty(infxs), index(infxs) = l; end
-nogoodxs = find(index==0);
-if ~isempty(nogoodxs), xs(nogoodxs) = NaN; index(nogoodxs) = 1; end
-
-% now go to local coordinates ...
-xs = xs-b(index);
-
-d = prod(dd);
-if d>1 % ... replicate xs and index in case PP is vector-valued ...
-   xs = reshape(xs(ones(d,1),:),1,d*lx);
-   index = d*index; temp = (-d:-1).';
-   index = reshape(1+index(ones(d,1),:)+temp(:,ones(1,lx)), d*lx, 1 );
-else
-   if length(sizexx)>1, dd = []; else dd = 1; end
-end
-
-% ... and apply nested multiplication:
-v = c(index,1);
-for i=2:k
-   v = xs(:).*v + c(index,i);
-end
-
-% If evaluating a piecewise constant with more than one piece at NaN, return
-% NaN.  With one piece return the constant.
-if ~isempty(nogoodxs) && k==1 && l>1
-   v = reshape(v,d,lx); v(:,nogoodxs) = NaN;
-end
-v = reshape(v,[dd,sizexx]);
-
-if isfield(pp,'orient') && strcmp(pp.orient,'first')
-    % spline orientation returns    size(yi) == [d1 ... dk m1 ... mj]
-    % but the interp1 usage prefers size(yi) == [m1 ... mj d1 ... dk]
-    if ~(isempty(dd) || (isscalar(dd) && dd == 1))
-        % The function is non-scalar valued
-        if isvector(xx)&&~isscalar(xx)
-            permVec = [ndims(v) 1:(ndims(v)-1)];
-        else
-            ndimsxx = ndims(xx);
-            permVec = [(ndims(v)-ndimsxx+1) : ndims(v) 1:(ndims(v)-ndimsxx)];
-        end
-        v = permute(v,permVec);
+else % negative side
+    % empty case check
+    if(nx)
+        % adjust sites on break points down one
+        [p,p]=histc(xv,[-inf breaks(2:l) inf]);
+        onbp=ismember(xv,breaks(2:l));
+        p(onbp)=p(onbp)-1;
+    else % empty (set to 1 so no indexing error)
+        p=ones(1,nx);
     end
 end
 
+% go ahead and pre-evaluate NaN/Inf values as NaN
+% - -inf is in correct piece
+%   +inf needs correction (down one)
+%    nan is in none
+p(xv==inf)=l;
+nans=find(p==0);
+p(nans)=1;
+
+% shift site to be relative to minimum site of the piece
+xv=xv-breaks(p);
+
+% tile sites and pieces for polynomials that produce non-scalar output
+nd=prod(d);
+if(nd>1) % vector output
+    % replicate downward
+    xv=xv(ones(nd,1),:);
+    
+    % correct piece indexing for site replication
+    p=nd*p;
+    poff=(nd:-1:1).'-1;
+    p=p(ones(nd,1),:)-poff(:,ones(1,nx));
+else % scalar output
+    % check for row vector case
+    if(numel(sx)==1) % row vector
+        d=1; % makes output match input
+    else
+        d=[];
+    end
+end
+
+% make column vectors
+xv=xv(:);
+p=p(:);
+
+% evaluate (((a0)*v+a1)*v+a2)*...
+y=coef(p,1);
+for a=2:k; y=xv.*y+c(p,a); end
+
+% if the piecewise polynomial is just a single constant
+% then c=ppdcval(nan).  If not, then nan=ppdcval(nan).
+if(k==1 && l>1); y=reshape(y,[nd nx]); y(:,nans)=nan; end
+
+% shape output with polynomial dimensions followed by input dimensions
+y=reshape(y,[d sx]);
+
+% correct orientation if interp was used
+% & both polynomial/input are non-scalar
+if(nd>1 && nx>1 && isfield(pp,'orient') && strcmpi(pp.orient,'first'))
+    % check for vector
+    ny=ndims(y);
+    if(isvector(x))
+        py=[ny 1:ny-1];
+    else
+        ndx=ndims(x);
+        py=[(ny-ndx+1):ny 1:(ny-ndx)];
+    end
+    y=permute(y,py);
+end
+
+end

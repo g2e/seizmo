@@ -6,7 +6,7 @@ function []=sz_toc_shortnames()
 %<a href="matlab:help cstf">cstf</a>    - CONVOLVE_SOURCE_TIMEFUNCTION - Convolve source function on SEIZMO records
 %<a href="matlab:help dstf">dstf</a>    - DECONVOLVE_SOURCE_TIMEFUNCTION - Deconvolve source from SEIZMO records
 %<a href="matlab:help dif">dif</a>     - DIFFERENTIATE - Differentiate SEIZMO records
-%div                            - DIVIDE - Divide SEIZMO records by a constant
+%<a href="matlab:help div">div</a>     - DIVIDE - Divide SEIZMO records by a constant
 %<a href="matlab:help divo">divo</a>    - DIVIDEOMEGA - Integrate SEIZMO records in the frequency domain
 %<a href="matlab:help divf">divf</a>    - DIVIDERECORDS - Divide SEIZMO records
 %<a href="matlab:help gh">gh</a>      - GETHEADER - Get SEIZMO data header values

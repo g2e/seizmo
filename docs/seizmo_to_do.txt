@@ -129,3 +129,12 @@ getpeaks
 markpeaks
 function to make g matrix for sph tri stuff
 
+test Octave java package
+    - no import ... how to do this otherwise?
+fix stft conflict in octave
+
+plate boundaries datasets
+	- have subsets of divergent, convergent, transform
+impacts/volcanoes/historical eq location datasets
+
+

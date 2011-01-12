@@ -1,23 +1,44 @@
-Things to worry about across Matlab versions:
+Currently, I think r2006b and later are well
+supported.  There may be some minor issues
+but nothing too worrisome.  Matlab 7.1 or
+later is a must.  Below is my list of changes
+to Matlab & Octave that can cause compatibility
+issues.
 
-Prior to 7.8(?):
-- delaunay triangulation struct support not there
+Prior to 7.8 (R2009a):
+%%%%%%%%%%%%%%%%%%%%%%
+1. no delaunay triangulation objects
 	- this only affects princeton model interpolation so far
-		- should include method for older versions
+	- method for older versions is included (but far slower)
 
-Prior to 7.3:
-1. struct assignment bug
-	affects
-	- ???
 
-Prior to 7.2:
+Prior to 7.3 (R2006b):
+%%%%%%%%%%%%%%%%%%%%%%
+1. struct assignment bug (back to R14)
+#############################################################
+% Assigning only S(1).A should work, but does not.
+x = S.A;
+??? Illegal right hand side in assignment. Too many elements.
+#############################################################
+	affects:
+	- unknown (can be worked around when found I think)
+2. no unique 'first'/'last' flag
+	affects:
+	- 1D model codes
+
+
+Prior to 7.2 (R2006a):
+%%%%%%%%%%%%%%%%%%%%%%
 1. character encoding via fread/fwrite
-	affects (???)
-	- readheader
-	- writeheader
-	- writeseizmo
+	affects:
+	- anything that uses '*char' will behave differently
+2. no regexptranslate
+	affects:
+	- cmph, lh, qh, xdir (NO WILDCARDS!)
 
-Prior to 7.1:
+
+Prior to 7.1 (R14SP3):
+%%%%%%%%%%%%%%%%%%%%%%
 1. isfield did not handle cell input
 	affects:
 	- lots... :(
@@ -31,7 +52,16 @@ Prior to 7.1:
 4. divide by zero throws warning
 5. logical on not 0 or 1 throws warning
 
-Current issues with Octave:
+
+
+
+Issues with Octave:
+	- Plotting is an awful mess
+	- No support for jar files
+	- Does M_Map work?  Probably not!
+	- Help system not so good (no link support in terminal)
+	- Needs profiler/mlint
+	- struct view is too verbose
 	- error needs to support structs and empty strings
 		- fixed 3.2.4+
 	- cell array of function handles should handle space separated (not require commas)

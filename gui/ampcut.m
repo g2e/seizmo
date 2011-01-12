@@ -58,9 +58,10 @@ function [bad,varargout]=ampcut(dd,amp,cutoff,pow,err,w,ax)
 %        Dec. 12, 2010 - fixed several plotting bugs, no error input to
 %                        WLINEM (improperly used anyway)
 %        Jan.  6, 2011 - proper ginput handling, use key2zoompan
+%        Jan.  7, 2011 - using errorbar now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 23:55 GMT
+%     Last Updated Jan.  7, 2011 at 23:55 GMT
 
 % todo:
 
@@ -139,12 +140,9 @@ if(isempty(err))
     hpnts=plot(ax,dd,log(amp),'ko');
     set(hpnts,'tag','points');
 else
-    axes(ax);
-    h=ploterr(dd,log(amp),[],{log(amp-err) log(amp+err)},'ko');
-    hpnts=h(1);
-    hy=h(2);
-    set(hpnts,'tag','points');
-    set(hy,'tag','errorbars');
+    h=errorbar(ax,dd,log(amp),...
+        log(amp)-log(amp-err),log(amp+err)-log(amp),'ko');
+    set(h,'tag','errorbars');
 end
 hold(ax,'off');
 

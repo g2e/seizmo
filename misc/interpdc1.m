@@ -98,9 +98,10 @@ function [varargout]=interpdc1(x,y,varargin)
 %        May  19, 2010 - properly handle non-increasing case
 %        June  1, 2010 - finally true discontinuity support
 %        Aug.  8, 2010 - doc update
+%        Jan. 11, 2011 - do not compute negative side if < 2 outputs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 03:20 GMT
+%     Last Updated Jan. 11, 2011 at 03:20 GMT
 
 % todo:
 
@@ -264,7 +265,7 @@ if(ppout); varargout{1}=pp; return; end
 
 % get values
 varargout{1}=ppdcval(pp,xi);
-varargout{2}=ppdcval(pp,xi,false);
+if(nargout>1); varargout{2}=ppdcval(pp,xi,false); end
 
 % undo extrap if wanted
 if(~exist('extrap','var'))
@@ -284,12 +285,12 @@ if(~strcmpi(extrap,'extrap'))
             'EXTRAP must be scalar!');
     end
     varargout{1}(xi<min(x) | xi>max(x),:)=extrap;
-    varargout{2}(xi<min(x) | xi>max(x),:)=extrap;
+    if(nargout>1); varargout{2}(xi<min(x) | xi>max(x),:)=extrap; end
 end
 
 % reshape to match xi
 varargout{1}=reshape(varargout{1},syi);
-varargout{2}=reshape(varargout{2},syi);
+if(nargout>1); varargout{2}=reshape(varargout{2},syi); end
 
 end
 

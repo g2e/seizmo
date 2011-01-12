@@ -57,9 +57,10 @@ function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,ax)
 %        Dec. 12, 2010 - fixed several plotting bugs, no error input to
 %                        WLINEM (improperly used anyway)
 %        Jan.  6, 2011 - proper ginput handling, use key2zoompan
+%        Jan.  7, 2011 - using errorbar now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 23:55 GMT
+%     Last Updated Jan.  7, 2011 at 23:55 GMT
 
 % todo:
 
@@ -138,14 +139,11 @@ set(hcut,'tag','cut');
 
 % draw the points (w/ or w/o errorbars)
 if(isempty(err))
-    hpnts=plot(dd,arr,'ko');
+    hpnts=plot(ax,dd,arr,'ko');
     set(hpnts,'tag','points');
 else
-    h=ploterr(dd,arr,[],err,'ko');
-    hpnts=h(1);
-    hy=h(2);
-    set(hpnts,'tag','points');
-    set(hy,'tag','errorbars');
+    h=errorbar(ax,dd,arr,err,'ko');
+    set(h,'tag','errorbars');
 end
 hold(ax,'off');
 

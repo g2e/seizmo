@@ -28,49 +28,46 @@ function [varargout]=ellcor(evla,evdp,gcarc,az,varargin)
 %       add more phases to the tabulation.
 %
 %    Examples:
-%     Plot up an ellipticity correction cloud for P-wave arrivals (note we
-%     use RANDSPHERE to get a spacially uniform random distribution of
-%     events and stations):
-%      n=100000;
-%      xyz=randsphere(n,3,1);
-%      [evla,evlo]=xyz2geocentric(xyz(:,1),xyz(:,2),xyz(:,3));
-%      xyz=randsphere(n,3,1);
-%      [stla,stlo]=xyz2geocentric(xyz(:,1),xyz(:,2),xyz(:,3));
-%      [gcarc,az]=sphericalinv(evla,evlo,stla,stlo);
-%      evdp=700*rand(n,1);
-%      [m,c]=hist3([evla ellcor(evla,evdp,gcarc,az,'P')],[100 100]);
-%      figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
-%      [m,c]=hist3([evdp ellcor(evla,evdp,gcarc,az,'P')],[100 100]);
-%      figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
-%      [m,c]=hist3([gcarc ellcor(evla,evdp,gcarc,az,'P')],[100 100]);
-%      figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
-%      [m,c]=hist3([az ellcor(evla,evdp,gcarc,az,'P')],[100 100]);
-%      figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
+%     % Plot up an ellipticity correction cloud for P-wave arrivals (note
+%     % we use RANDLATLON to get a spacially uniform random distribution of
+%     % events and stations):
+%     n=100000;
+%     [evla,evlo]=randlatlon(n);
+%     [stla,stlo]=randlatlon(n);
+%     [gcarc,az]=sphericalinv(evla,evlo,stla,stlo);
+%     evdp=700*rand(n,1);
+%     [m,c]=hist3([evla ellcor(evla,evdp,gcarc,az,'P')],[100 100]);
+%     figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
+%     [m,c]=hist3([evdp ellcor(evla,evdp,gcarc,az,'P')],[100 100]);
+%     figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
+%     [m,c]=hist3([gcarc ellcor(evla,evdp,gcarc,az,'P')],[100 100]);
+%     figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
+%     [m,c]=hist3([az ellcor(evla,evdp,gcarc,az,'P')],[100 100]);
+%     figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
 %
-%     Same, but for Pdiff:
-%      n=100000;
-%      xyz=randsphere(n,3,1);
-%      [evla,evlo]=xyz2geocentric(xyz(:,1),xyz(:,2),xyz(:,3));
-%      xyz=randsphere(n,3,1);
-%      [stla,stlo]=xyz2geocentric(xyz(:,1),xyz(:,2),xyz(:,3));
-%      [gcarc,az]=sphericalinv(evla,evlo,stla,stlo);
-%      evdp=700*rand(n,1);
-%      [m,c]=hist3([evla ellcor(evla,evdp,gcarc,az,'Pdiff')],[100 100]);
-%      figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
-%      [m,c]=hist3([evdp ellcor(evla,evdp,gcarc,az,'Pdiff')],[100 100]);
-%      figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
-%      [m,c]=hist3([gcarc ellcor(evla,evdp,gcarc,az,'Pdiff')],[100 100]);
-%      figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
-%      [m,c]=hist3([az ellcor(evla,evdp,gcarc,az,'Pdiff')],[100 100]);
-%      figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
+%     % Same, but for Pdiff:
+%     n=100000;
+%     [evla,evlo]=randlatlon(n);
+%     [stla,stlo]=randlatlon(n);
+%     [gcarc,az]=sphericalinv(evla,evlo,stla,stlo);
+%     evdp=700*rand(n,1);
+%     [m,c]=hist3([evla ellcor(evla,evdp,gcarc,az,'Pdiff')],[100 100]);
+%     figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
+%     [m,c]=hist3([evdp ellcor(evla,evdp,gcarc,az,'Pdiff')],[100 100]);
+%     figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
+%     [m,c]=hist3([gcarc ellcor(evla,evdp,gcarc,az,'Pdiff')],[100 100]);
+%     figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
+%     [m,c]=hist3([az ellcor(evla,evdp,gcarc,az,'Pdiff')],[100 100]);
+%     figure; imagesc(c{1},fliplr(c{2}),rot90(m)); axis xy;
 %
 %    See also: AK135_ELLIP_TABLES, CRUCOR, MANCOR
 
 %     Version History:
 %        May  16, 2010 - initial version
+%        Jan.  7, 2011 - update example to use RANDLATLON
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  16, 2010 at 12:25 GMT
+%     Last Updated Jan.  7, 2011 at 12:25 GMT
 
 % todo:
 

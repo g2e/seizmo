@@ -85,8 +85,9 @@
 
         u:  TRANSFER FROM POLEZERO SUBTYPE SRO.PZ TO NONE
 
-------
-
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%
 
 Here are the few points that add to the confusion in my opinion:
 
@@ -146,7 +147,7 @@ spread around.
 Chad Trabant
 IRIS Data Management Center
 
--------
+
 
 POLEZERO OPTION:
 
@@ -291,4 +292,170 @@ On Apr 9, 2009, at 3:11 PM, Melaku Ayenew wrote:
 >
 > when I plot this I got a  waveform with amplitude in the order of  
 > 10E-4 nm (transfer returns values in nm)
+
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%
+
+I had a go some time ago to understand the meaning of RESP files and
+wrote some notes, which follow.  Please note that they might not
+be correct, or might be incorrect for data from other stations or
+instruments.  I was trying to establish the relationship between
+the parameters in RESP files and the parameters in headers of
+IMS (GSE)-format data from the CTBTO International Data Centre.
+
+Sheila Peacock
+Blacknest.
+
+Meaning of numbers in rdseed RESP files
+
+Here is a sample rdseed RESP file, which is output if you ask rdseed to output responses:
+
+    * RESP.IU.FURI.00.BHE: "RESP" file for FURI component BHE
+
+The topmost part is like this:
+
+#               << IRIS SEED Reader, Release 4.6 >>
+#
+#               ======== CHANNEL RESPONSE DATA ========
+B050F03     Station:     FURI
+B050F16     Network:     IU
+B052F03     Location:    00
+B052F04     Channel:     BHE
+B052F22     Start date:  1999,111,00:00:00
+B052F23     End date:    No Ending Time
+#               =======================================
+#               +               +--------------------------------------------+
+              +
+#               +               |   Response (Poles & Zeros),  FURI ch BHE   |
+              +
+#               +               +--------------------------------------------+
+              +
+#
+B053F03     Transfer function type:                A [Laplace Transform (Rad/sec)]
+B053F04     Stage sequence number:                 1
+B053F05     Response in units lookup:              M/S - Velocity in Meters Per
+Second
+B053F06     Response out units lookup:             V - Volts
+B053F07     A0 normalization factor:               3948.58
+B053F08     Normalization frequency:               0.02
+B053F09     Number of zeroes:                      2
+B053F14     Number of poles:                       4
+#               Complex zeroes:
+#                 i  real          imag          real_error    imag_error
+B053F10-13    0  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+B053F10-13    1  0.000000E+00  0.000000E+00  0.000000E+00  0.000000E+00
+#               Complex poles:
+#                 i  real          imag          real_error    imag_error
+B053F15-18    0 -1.234000E-02  1.234000E-02  0.000000E+00  0.000000E+00
+B053F15-18    1 -1.234000E-02 -1.234000E-02  0.000000E+00  0.000000E+00
+B053F15-18    2 -3.918000E+01  4.912000E+01  0.000000E+00  0.000000E+00
+B053F15-18    3 -3.918000E+01 -4.912000E+01  0.000000E+00  0.000000E+00
+#
+#               +                  +---------------------------------------+
+              +
+#               +                  |       Channel Gain,  FURI ch BHE      |
+              +
+#               +                  +---------------------------------------+
+              +
+#
+B058F03     Stage sequence number:                 1
+B058F04     Gain:                                  2.296000E+03
+B058F05     Frequency of gain:                     2.000000E-02 HZ
+B058F06     Number of calibrations:                0
+#
+#               +               +-------------------------------------------+               +
+#               +               |   Response (Coefficients),  FURI ch BHE   |               +
+#               +               +-------------------------------------------+               +
+#
+B054F03     Transfer function type:                D
+B054F04     Stage sequence number:                 2
+B054F05     Response in units lookup:              V - Volts
+B054F06     Response out units lookup:             COUNTS - Digital Counts
+B054F07     Number of numerators:                  0
+B054F10     Number of denominators:                0
+#
+#               +                      +------------------------------+               +
+#               +                      |   Decimation,  FURI ch BHE   |               +
+#               +                      +------------------------------+               +
+#
+B057F03     Stage sequence number:                 2
+B057F04     Input sample rate:                     5.120000E+03
+B057F05     Decimation factor:                     1
+B057F06     Decimation offset:                     0
+B057F07     Estimated delay (seconds):             0.000000E+00
+B057F08     Correction applied (seconds):          0.000000E+00
+#
+#               +                  +---------------------------------------+               +
+#               +                  |       Channel Gain,  FURI ch BHE      |               +
+#               +                  +---------------------------------------+               +
+#
+B058F03     Stage sequence number:                 2
+B058F04     Gain:                                  4.194300E+05
+B058F05     Frequency of gain:                     0.000000E+00 HZ
+B058F06     Number of calibrations:                0
+#
+
+And the very end is like this:
+
+#               +                  +---------------------------------------+
+              +
+#               +                  |   Channel Sensitivity,  FURI ch BHE   |
+              +
+#               +                  +---------------------------------------+
+              +
+#
+B058F03     Stage sequence number:                 0
+B058F04     Sensitivity:                           9.630000E+08
+B058F05     Frequency of sensitivity:              2.000000E-02 HZ
+B058F06     Number of calibrations:                0
+#
+
+The corresponding poles-zeros file, which is output if you ask rdseed to put it out, is:
+
+ZEROS 3
+POLES 4
+-0.0123  0.0123
+-0.0123  -0.0123
+-39.1800  49.1200
+-39.1800  -49.1200
+CONSTANT 3.802483e+12
+
+The "RESP" file represents the velocity response, and hence the poles and zeros listed there
+include two zeros while the pole-zero file immediately above has three since it represents the
+displacement response.
+
+The "Sensitivity" at the end of the "RESP" file is the product of all the gains in the file
+(all the numbers in lines containing "Gain": in this case, 9.63e8 = 2.296e3 V/(m/s) x 4.1943e5
+counts/V). It is in the velocity domain and has units of counts per (metre per second) so to
+convert it to displacement sensitivity (counts per metre) you would MULTIPLY by 2pi times the
+calibration frequency (0.02 Hz in this case). This gives you 10^9 / the value of "calib" that
+would be found in GSE/IMS format files, CSS .wfdisc files and "static.instrument" IDC database
+table (8.263497 in this case). "Calib" is in units of nanometres per count.
+
+The number "A0 normalization factor" (value 3948.58 in this case) is said in the SEED manual
+to be "set such that when you evaluate the polynomial at the reference frequency the result
+will be one". It is the "poles-and-zeros constant" for the velocity poles-zeros in the "RESP"
+file. If you calculate the poles-zeros constant (a hefty job best done in fortran for
+the complex arithmetic required - beware of floating-point overflow, though!)
+from the displacement poles-zeros file output by rdseed, rather than take the "RESP" file value,
+you should get the "displacement" poles-and-zeros constant, which is equal to the A0 normalization
+factor value divided by (2pi times the calibration frequency) (in this case 0.02 Hz, which
+gives 31421.7).
+
+If you multiply the A0 normalization factor by the "sensitivity" (9.63e8 counts/(m/s)), you
+get the value of the poles-zeros constant at the end of the poles-zeros file produced by
+rdseed (3.802483e12 in this case). Note that because this constant consists of the product
+of a velocity sensitivity (a displacement sensitivity divided by 2pi x calibration frequency)
+and a velocity poles-zeros constant (a displacement poles-zeros constant multiplied by
+2pi x calibration frequency), the factors of 2pi x calibration frequency cancel out and
+it is correctly a displacement poles-zeros constant (albeit multiplied by the sensitivity)
+and accompanies a set of displacement poles-zeros, as expected by SAC.
+
+Since the poles-zeros file written by rdseed contains a constant that has already been
+multiplied by the sensitivity and the sensitivity is equivalent to 1/(calibration factor
+"calib" in IDC parlance x 2pi x frequency), it is not necessary to multiply the seismogram
+by the calibration factor.
+
 
