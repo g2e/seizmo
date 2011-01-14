@@ -33,9 +33,10 @@ function [varargout]=plotclusters(data,grp,varargin)
 %     Version History:
 %        Sep. 18, 2010 - initial version
 %        Oct.  6, 2010 - handle 0 pop clusters (do not plot)
+%        Jan. 13, 2011 - fix no plot varargout bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2010 at 17:35 GMT
+%     Last Updated Jan. 13, 2011 at 17:35 GMT
 
 % todo:
 
@@ -71,7 +72,7 @@ good=intersect(good,opt.CLUSTERS);
 ngrp=numel(good);
 
 % return if none
-if(~ngrp); if(nargout); varargout={}; end; return; end
+if(~ngrp); if(nargout); varargout={[] []}; end; return; end
 
 % check axes
 if(numel(opt.AXIS)<ngrp || ~isreal(opt.AXIS(1:ngrp)) ...

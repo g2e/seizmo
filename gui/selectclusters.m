@@ -8,24 +8,26 @@ function [grp,ax]=selectclusters(data,grp,opt,varargin)
 %    Description:
 %     [GRP,AX]=SELECTCLUSTERS(DATA,GRP) returns the clusters that are
 %     graphically selected by the user.  Clusters are defined by the struct
-%     GRP (see USERCLUSTER for more details).  The associated waveforms are
-%     in SEIZMO struct DATA.  Selection/unselection of clusters is done by
-%     left-clicking over a cluster.  Complete the cluster selection by
-%     middle-clicking over a cluster or closing the figure.  Outputs are
-%     the logical array SELECTED which indicates the clusters that were
-%     selected and AX gives the plot handle(s).
+%     GRP (see USERCLUSTER for struct details).  The associated waveforms
+%     are in SEIZMO struct DATA.  Selection/unselection of clusters is
+%     performed by left-clicking a cluster.  Complete the cluster selection
+%     by middle-clicking over a cluster or closing the figure.  Outputs are
+%     the modified struct GRP which indicates the clusters that were
+%     selected in field GRP.good and AX gives the plot handle(s).
 %
 %     [GRP,AX]=SELECTCLUSTERS(DATA,GRP,OPTION) sets whether selected
 %     clusters are kept (good) or deleted (bad).  OPTION must be either
 %     'keep' or 'delete'.  When OPTION is 'keep', the background color for
 %     selected records is set to a dark green.  For OPTION set to 'delete',
 %     the background color is set to a dark red for selected clusters.  The
-%     default is 'keep'.
+%     default is 'keep'.  Output GRP.good indicates the "kept" clusters
+%     with a corresponding TRUE element while "deleted" clusters are FALSE.
 %
-%     [GRP,AX]=SELECTCLUSTERS(DATA,GRP,OPTION,'OPTION',VALUE,...) passes
-%     plotting options (all arguments after SELECTED) to PLOTCLUSTERS.
+%     [GRP,AX]=SELECTCLUSTERS(DATA,GRP,OPTION,'PARAMETER',VALUE,...) passes
+%     plotting options (all arguments after OPTION) to PLOTCLUSTERS.
 %
 %    Notes:
+%     - Preselection is done using the input GRP.good values
 %
 %    Examples:
 %     % Only allow selection of the first three clusters:
@@ -42,9 +44,11 @@ function [grp,ax]=selectclusters(data,grp,opt,varargin)
 %        Sep. 21, 2010 - altered inputs/outputs
 %        Oct. 10, 2010 - minor warning fix
 %        Jan.  6, 2011 - use key2zoompan
+%        Jan. 13, 2011 - doc cleanup, handle plotcluster no plot case, fix
+%                        bugs in cases with empty clusters
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 20:00 GMT
+%     Last Updated Jan. 13, 2011 at 20:00 GMT
 
 % todo:
 
@@ -117,12 +121,23 @@ end
 % plot clusters
 [ax,shown]=plotclusters(data,grp,varargin{:});
 
+% check if no plot
+if(isempty(ax))
+    % push pre-selected into struct
+    if(keep)
+        grp.good=selected;
+    else % delete
+        grp.good=~selected;
+    end
+    return;
+end
+
 % color preselected
 bgcolors=get(ax,'color');
 if(iscell(bgcolors))
     bgcolors=cell2mat(bgcolors);
 end
-set(ax(selected(shown)),'color',color);
+set(ax(ismember(shown,find(selected))),'color',color);
 
 % loop until user is done
 button=0;
@@ -139,7 +154,7 @@ while(button~=2)
     handle=gca;
     
     % figure out which record
-    clicked=shown(find(handle==ax,1));
+    clicked=shown(handle==ax);
     if(isempty(clicked)); continue; end
     
     % act based on button
@@ -147,7 +162,7 @@ while(button~=2)
         % remove from list if in list and change color
         if(selected(clicked))
             selected(clicked)=false;
-            set(handle,'color',bgcolors(clicked,:));
+            set(handle,'color',bgcolors(handle==ax,:));
         % otherwise add to list and change color
         else
             selected(clicked)=true;

@@ -13,6 +13,7 @@ function []=sz_toc_gui()
 %<a href="matlab:help snrcut">snrcut</a>                         - Cut low SNR values interactively
 %<a href="matlab:help split_clusters_by_polarity">split_clusters_by_polarity</a>     - Split clusters by relative polarity
 %<a href="matlab:help useralign">useralign</a>                      - Interactive alignment of a signal for SEIZMO records
+%<a href="matlab:help useralign_quiet">useralign_quiet</a>                - NONinteractive alignment of a signal for SEIZMO records
 %<a href="matlab:help usercluster">usercluster</a>                    - Interactively cluster SEIZMO records
 %<a href="matlab:help usermoveout">usermoveout</a>                    - Interactively add a distance-dependent moveout
 %<a href="matlab:help userraise">userraise</a>                      - Interactively scale SEIZMO records by a power

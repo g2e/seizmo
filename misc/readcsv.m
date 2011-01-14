@@ -25,15 +25,15 @@ function [lines]=readcsv(file)
 %        Sep. 16, 2009 - initial version
 %        Jan. 26, 2010 - add graphical selection
 %        Feb.  5, 2010 - improved file checks
+%        Jan. 12, 2011 - nargchk fix, fix for stricter getwords
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2010 at 17:25 GMT
+%     Last Updated Jan. 12, 2011 at 17:25 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(0,1,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(0,1,nargin));
 
 % graphical selection
 if(nargin<1 || isempty(file))
@@ -71,7 +71,7 @@ if(fid<0)
 end
 
 % read in file and close
-str=fread(fid,'*char');
+str=fread(fid,'*char').';
 fclose(fid);
 
 % replace last lf/cr with nothing

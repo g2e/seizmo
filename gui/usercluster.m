@@ -87,9 +87,10 @@ function [grp,oldax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %        Oct. 10, 2010 - combine clusters now in ADJUSTCLUSTERS, drop exit
 %                        and crash option, event grid for map
 %        Jan.  6, 2011 - use key2zoompan
+%        Jan. 13, 2011 - finally fixed cluster map warning issue
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 10:00 GMT
+%     Last Updated Jan. 13, 2011 at 10:00 GMT
 
 % todo:
 
@@ -376,6 +377,7 @@ try
                 end
                 set(findobj(mx,'tag','stations'),...
                     'cdata',grp.color(grp.T,:));
+                drawnow;
                 movekids(findobj(mx,'tag','stations'),'front');
                 movekids(findobj(mx,'tag','events'),'front');
                 save=true;

@@ -15,6 +15,9 @@ function [results2]=cmb_2nd_pass(results0,bank,gcrng,sr)
 %     sample rate of SR.  SR must be in Hz (ie SR==5 is 5Hz sample rate).
 %
 %    Notes:
+%     - If you have corrected the ground units of the underlying data in
+%       the .dirname directory using .adjustclusters.units then you should
+%       also set .adjustclusters.units to all zeros!
 %
 %    Examples:
 %     % This is the typical usage case for me:
@@ -28,9 +31,12 @@ function [results2]=cmb_2nd_pass(results0,bank,gcrng,sr)
 
 %     Version History:
 %        Dec. 12, 2010 - added docs
+%        Jan. 14, 2011 - corrections are properly edited to match output,
+%                        support for .adjustclusters.units, fixed outlier
+%                        bug (forgot to remove them)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 12, 2010 at 13:35 GMT
+%     Last Updated Jan. 14, 2011 at 13:35 GMT
 
 % todo:
 
@@ -39,7 +45,8 @@ error(nargchk(3,4,nargin));
 
 % check results (needs 1st pass, outlier, corrections)
 reqfields={'useralign' 'filter' 'usersnr' 'corrections' 'outliers' ...
-    'tt_start' 'phase' 'runname' 'dirname' 'cluster' 'usercluster'};
+    'tt_start' 'phase' 'runname' 'dirname' 'cluster' 'usercluster' ...
+    'adjustclusters'};
 if(~isstruct(results0) || any(~isfield(results0,reqfields)))
     error('seizmo:cmb_2nd_pass:badInput',...
         ['RESULTS must be a struct with the fields:\n' ...
@@ -82,6 +89,23 @@ for i=1:numel(results0)
     data=readseizmo(strcat(results0(i).dirname,filesep,...
         {results0(i).useralign.data.name}'));
     
+    % adjust ground units
+    if(any(results0(i).adjustclusters.units~=0))
+        units=results0(i).adjustclusters.units;
+        if(any(units==-2))
+            data(units==-2)=differentiate(differentiate(data(units==-2)));
+        end
+        if(any(units==-1))
+            data(units==-1)=differentiate(data(units==-1));
+        end
+        if(any(units==1))
+            data(units==1)=integrate(data(units==1));
+        end
+        if(any(units==2))
+            data(units==2)=integrate(integrate(data(units==2)));
+        end
+    end
+    
     % resample
     if(~isempty(sr)); data=syncrates(data,sr); end
     
@@ -99,6 +123,7 @@ for i=1:numel(results0)
         % get cluster info
         sj=num2str(j);
         good=find(results0(i).usercluster.T==j ...
+            & ~results0(i).outliers ...
             & gcarc>=gcrng(1) & gcarc<gcrng(2));
         
         % census
@@ -126,8 +151,17 @@ for i=1:numel(results0)
             results(k).runname=runname;
             results(k).dirname=results0(i).dirname;
 
-            % add corrections
-            results(k).corrections=correct;
+            % fix corrections
+            if(~isempty(results(k).usersnr))
+                good=find(...
+                    results(k).usersnr.snr>=results(k).usersnr.snrcut);
+                good(results(k).userwinnow.cut)=[];
+                correct0=fixcorrstruct(correct,good);
+                results(k).corrections=correct0;
+            else
+                correct0=fixcorrstruct(correct,[]);
+                results(k).corrections=correct0;
+            end
         end
 
         % save results

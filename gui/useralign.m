@@ -64,7 +64,7 @@ function [info,xc,data0]=useralign(data,varargin)
 %      [info,xc,data0]=useralign(data,'snr',snr);
 %
 %    See also: TTSOLVE, CORRELATE, USERWINDOW, USERTAPER, USERRAISE,
-%              USERMOVEOUT, USERCLUSTEREDALIGN, MULTIBANDALIGN
+%              USERMOVEOUT, USERALIGN_QUIET, MULTIBANDALIGN
 
 %     Version History:
 %        Mar. 16, 2010 - initial version (not really but whatever)
@@ -85,9 +85,10 @@ function [info,xc,data0]=useralign(data,varargin)
 %        Oct.  2, 2010 - normalize amplitudes in plots
 %        Nov. 13, 2010 - reverse order of aligned plot and stacking, update
 %                        for userwindow arg change
+%        Jan. 14, 2011 - add useralign_quiet to See also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2010 at 11:00 GMT
+%     Last Updated Jan. 14, 2011 at 11:00 GMT
 
 % todo:
 

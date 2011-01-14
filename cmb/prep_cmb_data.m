@@ -16,6 +16,7 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv)
 %      TAPERING
 %      RESAMPLING (1Hz)
 %      RESPONSE REMOVAL
+%      FORCE VERTICALS TO BE ORIENTED UPWARD
 %      ROTATION (into radial & transverse)
 %      ALIGNMENT (on Pdiff or Sdiff)
 %      WINNOWING (require 300s about arrival)
@@ -41,9 +42,10 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv)
 
 %     Version History:
 %        Dec. 12, 2010 - added docs
+%        Jan. 12, 2011 - use point_vecticals_upward
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 12, 2010 at 13:35 GMT
+%     Last Updated Jan. 12, 2011 at 13:35 GMT
 
 % todo:
 
@@ -129,6 +131,9 @@ for i=s(:)'
     
     % work with verticals
     vdata=data(vertcmp(data));
+    
+    % flip polarity of verticals if pointing down
+    vdata=point_verticals_upward(vdata);
     
     % add arrivals
     vdata=addarrivals(vdata,'ph','P,Pdiff,PKP');

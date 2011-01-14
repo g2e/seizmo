@@ -1,5 +1,5 @@
 function []=alphabetical_list()
-% Alphabetical List of SEIZMO Functions
+%<a href="matlab:help Alphabetical">Alphabetical</a>                   - List of SEIZMO Functions
 %<a href="matlab:help add">add</a>                            - Add a constant to SEIZMO records
 %<a href="matlab:help addarrivals">addarrivals</a>                    - Adds the indicated phases to the SEIZMO data header
 %<a href="matlab:help addrecords">addrecords</a>                     - Add SEIZMO records
@@ -329,6 +329,7 @@ function []=alphabetical_list()
 %<a href="matlab:help plotspectra2">plotspectra2</a>                   - Overlay plot of SEIZMO data record spectra
 %<a href="matlab:help plotww3">plotww3</a>                        - Plots WaveWatch III data read in by READ_GRIB
 %<a href="matlab:help plotww3avg">plotww3avg</a>                     - Plots an average WaveWatch III data map
+%<a href="matlab:help point_verticals_upward">point_verticals_upward</a>         - Adjusts vertically downward SEIZMO records
 %<a href="matlab:help polysqrt">polysqrt</a>                       - Returns the square root of a polynomial if it exists
 %<a href="matlab:help polystr">polystr</a>                        - Converts polynomial coefficients into string form
 %<a href="matlab:help popcut">popcut</a>                         - Cut low POP values interactively
@@ -494,6 +495,7 @@ function []=alphabetical_list()
 %<a href="matlab:help updategeofkarf">updategeofkarf</a>                 - Quickly updates an existing geofkarf plot with a new arf
 %<a href="matlab:help updategeofkmap">updategeofkmap</a>                 - Quickly updates an existing geofk plot with a new map
 %<a href="matlab:help useralign">useralign</a>                      - Interactive alignment of a signal for SEIZMO records
+%<a href="matlab:help useralign_quiet">useralign_quiet</a>                - NONinteractive alignment of a signal for SEIZMO records
 %<a href="matlab:help usercluster">usercluster</a>                    - Interactively cluster SEIZMO records
 %<a href="matlab:help usermoveout">usermoveout</a>                    - Interactively add a distance-dependent moveout
 %<a href="matlab:help userraise">userraise</a>                      - Interactively scale SEIZMO records by a power
@@ -529,5 +531,5 @@ function []=alphabetical_list()
 %<a href="matlab:help zpk2ap">zpk2ap</a>                         - Zeros-Poles-Constant to Amplitude & Phase
 %<a href="matlab:help zpk2cmplx">zpk2cmplx</a>                      - Zeros-Poles-Constant to Complex Spectra
 %
-% <a href="matlab:help seizmo">SEIZMO - Passive Seismology Toolbox</a>
+%<a href="matlab:help seizmo">SEIZMO                           - Passive Seismology Toolbox</a>
 end

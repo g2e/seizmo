@@ -35,9 +35,10 @@ function [corr,tt1d,tt3d]=mancor(paths,mod3d)
 %        June  2, 2010 - initial version
 %        June  3, 2010 - Fermat's principle formulation
 %        June  4, 2010 - drop amp input
+%        Jan. 14, 2011 - improved verbose message
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  4, 2010 at 15:45 GMT
+%     Last Updated Jan. 14, 2011 at 15:45 GMT
 
 % todo:
 
@@ -64,7 +65,7 @@ nrp=numel(paths);
 % verbosity
 verbose=seizmoverbose;
 if(verbose)
-    disp('Getting Mantle Correction(s)');
+    disp(['Getting Mantle Correction(s) For ' upper(mod3d)]);
     print_time_left(0,nrp);
 end
 

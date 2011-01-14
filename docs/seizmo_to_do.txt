@@ -111,7 +111,9 @@ better polezero docs
 	- SERIOUSLY FOLKS, why is there not a simple gui for this?
 improve top-level help file
 make noise processing more flexible (file length & overlap)
-fix freqwindow & gooduglycheck
+******************************************
+***** FIX FREQWINDOW & GOODUGLYCHECK *****
+******************************************
 add in pwave picking fk routines
 taup improvements
     clean up tauppierce extra output
@@ -136,5 +138,11 @@ fix stft conflict in octave
 plate boundaries datasets
 	- have subsets of divergent, convergent, transform
 impacts/volcanoes/historical eq location datasets
+
+two plane wave phase velocity maps
+	- anisotropy
+	- station corrections
+	- attenuation
+
 
 

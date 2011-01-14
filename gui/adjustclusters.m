@@ -30,11 +30,13 @@ function [data,grp,arr,pol,units]=adjustclusters(data,grp,arr,pol)
 %        Nov. 20, 2010 - fix manual picking bug
 %        Dec. 12, 2010 - added split clusters by polarity, add Note
 %        Dec. 17, 2010 - added groundunits code calls
+%        Jan. 13, 2011 - added in map clusters option, fixed many bugs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 17, 2010 at 10:00 GMT
+%     Last Updated Jan. 13, 2011 at 10:00 GMT
 
 % todo:
+% - output all figures for saving
 
 % check nargin
 error(nargchk(4,4,nargin));
@@ -70,12 +72,16 @@ try
             'POL must be a vector of 1s & -1s!');
     end
     
+    % event location
+    [evla,evlo]=getheader(data,'evla','evlo');
+    ev=unique([evla evlo],'rows');
+    
     % expand scalars
     if(isscalar(arr)); arr(1:nrecs,1)=arr; end
     if(isscalar(pol)); pol(1:nrecs,1)=pol; end
     
     % outer loop
-    happy_user=false;
+    happy_user=false; mx=-1;
     while(~happy_user)
         % get choice from user
         choice=menu('ADJUST/COMBINE CLUSTERS OPTIONS',...
@@ -85,6 +91,7 @@ try
             'FLIP CLUSTER POLARITY',...
             'TIME SHIFT CLUSTER',...
             'MANUALLY PICK GOOD CLUSTERS',...
+            'MAP CLUSTERS',...
             'RETURN');
         
         % act on choice
@@ -97,8 +104,14 @@ try
                     tmp=grp;
                     tmp.good=false;
                     [tmp,tmpax]=selectclusters(data,tmp);
-                    close(get(tmpax(1),'parent'));
+                    if(any(ishandle(tmpax)))
+                        close(unique(cell2mat(get(...
+                            tmpax(ishandle(tmpax)),'parent'))));
+                    end
                     cgrps=find(tmp.good);
+                    
+                    % skip if <2 selected
+                    if(numel(cgrps)<2); happy=true; continue; end
                     
                     % who is in these groups
                     crecs=ismember(grp.T,cgrps);
@@ -112,7 +125,7 @@ try
                     % ask if that is ok or not (cannot undo!)
                     choice=menu({'Combine Clusters?' ...
                         'Note 1: Cannot be Undone!' ...
-                        'Note 2: Undoes manually selected good clusters!'},...
+                        'Note 2: Resets good cluster selection!'},...
                         'YES','NO','RETRY');
                     
                     % close tmp plot
@@ -121,10 +134,18 @@ try
                     % action
                     switch choice
                         case 1 % combine
-                            % change grp.T, grp.pop to all lowest
+                            % change grp.T to lowest 2+ group
+                            % - if no 2+ then lowest group
                             % - do we shift numbers? no
                             % - do we lose manual grp selection? yes
-                            grp.T(crecs)=min(cgrps);
+                            mingrp=min(cgrps(grp.pop(cgrps)>1));
+                            if(isempty(mingrp))
+                                mingrp=min(cgrps);
+                                % make group randomly whiter
+                                grp.color(mingrp,:)=...
+                                    (1+rand).*grp.color(mingrp,:);
+                            end
+                            grp.T(crecs)=mingrp;
                             grp.pop=histc(grp.T,1:max(grp.T));
                             grp.good=grp.pop>=grp.popcut;
                             happy=true;
@@ -137,14 +158,23 @@ try
             case 3 % ground units
                 [data,grp,units,tmpax]=...
                     selectclusters_and_groundunits(data,grp);
-                close(get(tmpax(1),'parent'));
+                if(any(ishandle(tmpax)))
+                    close(unique(cell2mat(get(...
+                        tmpax(ishandle(tmpax)),'parent'))));
+                end
             case 4 % flip
                 % let user select clusters
                 tmp=grp;
                 tmp.good=false;
                 [tmp,tmpax]=selectclusters(data,tmp);
-                close(get(tmpax(1),'parent'));
+                if(any(ishandle(tmpax)))
+                    close(unique(cell2mat(get(...
+                        tmpax(ishandle(tmpax)),'parent'))));
+                end
                 cgrps=find(tmp.good);
+                
+                % skip if none selected
+                if(isempty(cgrps)); continue; end
                 
                 % who is in these groups
                 crecs=ismember(grp.T,cgrps);
@@ -158,6 +188,9 @@ try
                 tmp.good=false;
                 [tmp,tmpax]=selectclusters(data,tmp);
                 cgrps=find(tmp.good);
+                
+                % skip if none selected
+                if(isempty(cgrps)); continue; end
                 
                 % who is in these groups
                 crecs=ismember(grp.T,cgrps);
@@ -177,7 +210,10 @@ try
                         % do not change
                     end
                 end
-                close(get(tmpax(1),'parent'));
+                if(any(ishandle(tmpax)))
+                    close(unique(cell2mat(get(...
+                        tmpax(ishandle(tmpax)),'parent'))));
+                end
                 
                 % apply time shift
                 arr(crecs)=arr(crecs)+shift;
@@ -185,8 +221,25 @@ try
             case 6 % select clusters manually
                 % cut clusters manually
                 [grp,tmpax]=selectclusters(data,grp);
-                close(get(tmpax(1),'parent'));
-            case 7 % break loop
+                if(any(ishandle(tmpax)))
+                    close(unique(cell2mat(get(...
+                        tmpax(ishandle(tmpax)),'parent'))));
+                end
+            case 7 % map clusters
+                if(~ishandle(mx))
+                    mfh=figure('color','k');
+                    mx=axes('parent',mfh);
+                end
+                mx=mapstations(data,'ax',mx);
+                if(size(ev,1)==1 && ~any(isnan(ev)))
+                    mapeventgrid(mx,ev(1),ev(2));
+                end
+                set(findobj(mx,'tag','stations'),...
+                    'cdata',grp.color(grp.T,:));
+                drawnow;
+                movekids(findobj(mx,'tag','stations'),'front');
+                movekids(findobj(mx,'tag','events'),'front');
+            case 8 % break loop
                 happy_user=true;
         end
     end

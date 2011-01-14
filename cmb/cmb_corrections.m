@@ -35,9 +35,10 @@ function [varargout]=cmb_corrections(varargin)
 %        Oct.  7, 2010 - initial version
 %        Oct. 11, 2010 - fix bug in populating geom spreading corrections
 %        Dec. 29, 2010 - added docs, 2nd usage type simplifies my life
+%        Jan. 12, 2010 - fixed several bugs from new usage format
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 29, 2010 at 15:25 GMT
+%     Last Updated Jan. 12, 2011 at 15:25 GMT
 
 % todo:
 
@@ -59,35 +60,40 @@ if(nargin==1)
     % recall using appropriate fields
     varargout{1}=varargin{1};
     for i=1:numel(varargin{1})
-        varargout{1}.corrections=...
-            cmb_corrections(varargin{1}.phase,varargin{1}.useralign.data);
+        if(~isempty(varargin{1}(i).useralign))
+            varargout{1}(i).corrections=...
+                cmb_corrections(varargin{1}(i).phase,...
+                varargin{1}(i).useralign.data);
+        else
+            varargout{1}(i).corrections=[];
+        end
     end
     return;
 end
 
 % check phase
 valid={'Pdiff' 'SHdiff' 'SVdiff'};
-if(~isstring(phase) || ~ismember(phase,valid))
+if(~isstring(varargin{1}) || ~ismember(varargin{1},valid))
     error('seizmo:cmb_corrections:badPhase',...
         ['PHASE must be one of the following:\n' ...
         sprintf('''%s'' ',valid{:}) '!']);
 end
 
 % check data
-error(seizmocheck(data));
+error(seizmocheck(varargin{2}));
 
 % necessary header info
 % ev - evla evlo evel evdp
 % st - stla stlo stel stdp
 % delaz - gcarc az baz dist
-[ev,delaz,st]=getheader(data,'ev','delaz','st');
+[ev,delaz,st]=getheader(varargin{2},'ev','delaz','st');
 
 % convert meters to kilometers
 ev(:,3:4)=ev(:,3:4)/1000;
 st(:,3:4)=st(:,3:4)/1000;
 
 % operation depends on phase
-switch phase
+switch varargin{1}
     case 'Pdiff'
         % get ellipticity corrections
         corrections.ellcor=ellcor(ev(:,1),ev(:,4),delaz(:,1),delaz(:,2),'Pdiff');

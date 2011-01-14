@@ -25,9 +25,10 @@ function [grp]=split_clusters_by_polarity(grp,pol)
 %        Dec. 12, 2010 - initial version
 %        Dec. 17, 2010 - update .color too (split clusters retain original
 %                        coloring)
+%        Jan. 12, 2011 - fix indexing bug, 1/2 color brightness on split
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 17, 2010 at 13:35 GMT
+%     Last Updated Jan. 12, 2011 at 13:35 GMT
 
 % todo:
 
@@ -61,17 +62,17 @@ urows=unique([grp.T pol],'rows');
 for a=1:max(grp.T)
     % only need to split if 2
     if(sum(urows(:,1)==a)==2)
-        % get index of second polarity
+        % get index of second polarity (always positive)
         idx=find(urows==a,1,'last');
         
         % find records to reassign
         rec=grp.T==urows(idx,1) & pol==urows(idx,2);
         
+        % set color (1/2 brightness)
+        grp.color(max(grp.T)+1,:)=grp.color(a,:)/2;
+        
         % reassign
         grp.T(rec)=max(grp.T)+1;
-        
-        % set color
-        grp.color(max(grp.T)+1,:)=grp.color(a,:);
     end
 end
 
