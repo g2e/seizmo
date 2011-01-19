@@ -75,7 +75,7 @@ function [corr,ttc2,ttref]=crucor(lat,lon,rayp,wtype,varargin)
 
 %     Version History:
 %        May  20, 2010 - initial version
-%        Jan. 14, 2011 - improved verbose message
+%        Jan. 14, 2011 - improved verbose message, fixed message bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Jan. 14, 2011 at 15:45 GMT
@@ -260,7 +260,8 @@ end
 % verbosity
 verbose=seizmoverbose;
 if(verbose)
-    disp(['Getting Crustal Correction(s) for Crust2.0 vs ' upper(refmod)]);
+    disp(['Getting Crustal Correction(s) for Crust2.0 vs ' ...
+        upper(joinwords(mod1dnames,' & '))]);
     print_time_left(0,npts);
 end
 

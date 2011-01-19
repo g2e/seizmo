@@ -1,5 +1,5 @@
 function []=alphabetical_list()
-%<a href="matlab:help Alphabetical">Alphabetical</a>                   - List of SEIZMO Functions
+% Alphabetical List of SEIZMO Functions
 %<a href="matlab:help add">add</a>                            - Add a constant to SEIZMO records
 %<a href="matlab:help addarrivals">addarrivals</a>                    - Adds the indicated phases to the SEIZMO data header
 %<a href="matlab:help addrecords">addrecords</a>                     - Add SEIZMO records
@@ -36,6 +36,7 @@ function []=alphabetical_list()
 %<a href="matlab:help changeheader">changeheader</a>                   - Change SEIZMO data header values
 %<a href="matlab:help changename">changename</a>                     - Change the filename of SEIZMO records
 %<a href="matlab:help changepath">changepath</a>                     - Change the filepath of SEIZMO records
+%<a href="matlab:help check_cmb_results">check_cmb_results</a>              - Validates a core-diffracted wave analysis struct
 %<a href="matlab:help checkheader">checkheader</a>                    - Check and fix header values of SEIZMO records
 %<a href="matlab:help checkheader_state">checkheader_state</a>              - Check/Change if CHECKHEADER is ON=TRUE / OFF=FALSE
 %<a href="matlab:help checkoperr">checkoperr</a>                     - Controls behavior of SEIZMO CHECKHEADER function
@@ -52,6 +53,7 @@ function []=alphabetical_list()
 %<a href="matlab:help cmb_1dmodel_library">cmb_1dmodel_library</a>            - Generates a library of CMB 1D Earth models
 %<a href="matlab:help cmb_1st_pass">cmb_1st_pass</a>                   - Initial core-diff alignment + normalization + clustering
 %<a href="matlab:help cmb_2nd_pass">cmb_2nd_pass</a>                   - Narrow-band core-diff alignment + normalization
+%<a href="matlab:help cmb_clustering">cmb_clustering</a>                 - Cluster analysis of core-diffracted data
 %<a href="matlab:help cmb_corrections">cmb_corrections</a>                - Gets travel time and amplitude corrections
 %<a href="matlab:help cmb_outliers">cmb_outliers</a>                   - Outlier analysis of core-diffracted data
 %<a href="matlab:help compareheader">compareheader</a>                  - Multicolumn listing of SEIZMO headers for easy comparison
@@ -377,7 +379,6 @@ function []=alphabetical_list()
 %<a href="matlab:help removepolynomial">removepolynomial</a>               - Remove polynomial trend from SEIZMO records
 %<a href="matlab:help removesacpz">removesacpz</a>                    - Removes SAC PoleZero responses from SEIZMO records
 %<a href="matlab:help removetrend">removetrend</a>                    - Remove linear trend from SEIZMO records
-%<a href="matlab:help rescale_snr">rescale_snr</a>                    - Rescales SNR using an error function
 %<a href="matlab:help reverse">reverse</a>                        - Reverse SEIZMO records
 %<a href="matlab:help reverse_correlations">reverse_correlations</a>           - Reverses correlations (switch master & slave)
 %<a href="matlab:help ritz">ritz</a>                           - Colormap of Mike Ritzwoller's seismology group
@@ -385,6 +386,7 @@ function []=alphabetical_list()
 %<a href="matlab:help rotate">rotate</a>                         - Rotates SEIZMO records that are horizontal pairs
 %<a href="matlab:help rotate_correlations">rotate_correlations</a>            - Rotates EE/EN/NE/NN correlations to RR/RT/TR/TT
 %<a href="matlab:help rrat">rrat</a>                           - Relative rational approximation
+%<a href="matlab:help scaled_erf">scaled_erf</a>                     - Scale input using an error function
 %<a href="matlab:help scripps2matlab">scripps2matlab</a>                 - Creates a Matlab struct from a Scripps mantle model
 %<a href="matlab:help sealand">sealand</a>                        - Colormap for ocean and land
 %<a href="matlab:help sealand_land">sealand_land</a>                   - Land portion of the sealand colormap
@@ -468,7 +470,6 @@ function []=alphabetical_list()
 %<a href="matlab:help tauppath">tauppath</a>                       - Calculate ray paths using the TauP toolkit
 %<a href="matlab:help tauppierce">tauppierce</a>                     - Calculate ray path pierce points using the TauP toolkit
 %<a href="matlab:help tauptime">tauptime</a>                       - Calculate travel times using the TauP toolkit
-%<a href="matlab:help test_scaled_mantle_corrections">test_scaled_mantle_corrections</a> - Tests variance reduction of scaled mantle corrections
 %<a href="matlab:help timediff">timediff</a>                       - Return number of seconds between times
 %<a href="matlab:help timeshift">timeshift</a>                      - Shift timing of SEIZMO records
 %<a href="matlab:help tomo_old">tomo_old</a>                       - Predecessor to EASYTOMO, not recommended
@@ -528,8 +529,9 @@ function []=alphabetical_list()
 %<a href="matlab:help xdir">xdir</a>                           - Cross-app compatible directory listing with recursion
 %<a href="matlab:help xyz2geocentric">xyz2geocentric</a>                 - Converts coordinates from cartesian to geocentric
 %<a href="matlab:help xyz2geographic">xyz2geographic</a>                 - Converts coordinates from cartesian to geographic
+%<a href="matlab:help zerocrossings">zerocrossings</a>                  - Returns the zero-crossing times of SEIZMO records
 %<a href="matlab:help zpk2ap">zpk2ap</a>                         - Zeros-Poles-Constant to Amplitude & Phase
 %<a href="matlab:help zpk2cmplx">zpk2cmplx</a>                      - Zeros-Poles-Constant to Complex Spectra
 %
-%<a href="matlab:help seizmo">SEIZMO                           - Passive Seismology Toolbox</a>
+%<a href="matlab:help seizmo">SEIZMO - Passive Seismology Toolbox</a>
 end

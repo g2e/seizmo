@@ -3,7 +3,8 @@ function [phase]=snr2maxphaseerror(snr)
 %
 %    Usage:    phase=snr2maxphaseerror(snr)
 %
-%    Description: SNR2MAXPHASEERROR(SNR) calculates the maximum phase shift
+%    Description:
+%     SNR2MAXPHASEERROR(SNR) calculates the maximum phase shift
 %     that can be caused by noise when the signal to noise ratio is SNR.
 %     The algorithm assumes the signal and noise are simple sinusoidal
 %     functions with different phase and amplitude (basically limiting the
@@ -21,20 +22,21 @@ function [phase]=snr2maxphaseerror(snr)
 %       it in measurement error though.
 %
 %    Examples:
-%     Get max effect of noise on P arrival phase:
-%       Ptimes=getarrival(data,'P');
-%       snr=quicksnr(data,Ptimes+[-100 -20],Ptimes+[-20 40])
-%       period=10; % Assume 10sec is dominant period
-%       arrivalerror=period/(2*pi).*snr2maxphaseerror(snr);
+%     % Get max effect of noise on P arrival phase:
+%     Ptimes=getarrival(data,'P');
+%     snr=quicksnr(data,Ptimes+[-100 -20],Ptimes+[-20 40])
+%     period=10; % Assume 10sec is dominant period
+%     arrivalerror=period/(2*pi).*snr2maxphaseerror(snr);
 %
-%    See also: QUICKSNR
+%    See also: QUICKSNR, TTSOLVE
 
 %     Version History:
 %        Aug. 22, 2009 - initial version
 %        Sep.  8, 2009 - minor doc update
+%        Jan. 18, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 06:55 GMT
+%     Last Updated Jan. 18, 2011 at 06:55 GMT
 
 % todo:
 

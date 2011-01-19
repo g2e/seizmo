@@ -39,17 +39,17 @@ function []=print_time_left(act_step,tot_step,redraw)
 %                        percent, some caller detection added
 %        Feb. 22, 2010 - prints total time spent on last step
 %        Mar.  7, 2010 - no error if called from the cmd line
+%        Jan. 18, 2011 - find 0 tot_step bug, nargchk fix
 %
 %     Written by Nicolas Le Roux (lerouxni at iro dot umontreal dot ca)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  7, 2010 at 17:55 GMT
+%     Last Updated Jan. 18, 2011 at 17:55 GMT
 
 % todo:
 % - preceeding warning message links are missing occasionally?
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,3,nargin));
 
 % check steps
 if(~isscalar(act_step) || ~isnumeric(act_step))
@@ -79,8 +79,13 @@ if(~strcmpi(old_fun,cur_fun)); redraw=true; end
 old_fun=cur_fun;
 
 % percent complete
-old_perc_complete=floor(100*old_step/tot_step);
-perc_complete=floor(100*act_step/tot_step);
+if(tot_step)
+    old_perc_complete=floor(100*old_step/tot_step);
+    perc_complete=floor(100*act_step/tot_step);
+else % 0 tot_step
+    old_perc_complete=0;
+    perc_complete=100;
+end
 old_step=act_step;
 
 % update if redrawing or new percent or if 0th step

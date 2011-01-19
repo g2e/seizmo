@@ -1,5 +1,5 @@
 function []=sz_toc_solo()
-%<a href="matlab:help Single-Record">Single-Record</a>          - Operations
+% Single-Record Operations
 %<a href="matlab:help add">add</a>                    - Add a constant to SEIZMO records
 %<a href="matlab:help divide">divide</a>                 - Divide SEIZMO records by a constant
 %<a href="matlab:help envelope">envelope</a>               - Return envelopes of SEIZMO records
@@ -27,6 +27,7 @@ function []=sz_toc_solo()
 %<a href="matlab:help subtract">subtract</a>               - Subtract a constant from SEIZMO records
 %<a href="matlab:help taper">taper</a>                  - Taper SEIZMO records
 %<a href="matlab:help whiten">whiten</a>                 - Spectral whitening/normalization of SEIZMO data records
+%<a href="matlab:help zerocrossings">zerocrossings</a>          - Returns the zero-crossing times of SEIZMO records
 %
-%<a href="matlab:help seizmo">SEIZMO                   - Passive Seismology Toolbox</a>
+%<a href="matlab:help seizmo">SEIZMO - Passive Seismology Toolbox</a>
 end

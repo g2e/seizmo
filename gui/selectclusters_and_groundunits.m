@@ -31,9 +31,12 @@ function [data0,grp,units,ax]=selectclusters_and_groundunits(data,grp,varargin)
 %     Version History:
 %        Dec. 17, 2010 - initial version
 %        Jan.  6, 2011 - use key2zoompan
+%        Jan. 16, 2011 - fix data not matching choice if we alter the units
+%                        and then go back to the original (note plot did
+%                        not even show correct data)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 20:00 GMT
+%     Last Updated Jan. 16, 2011 at 20:00 GMT
 
 % todo:
 
@@ -142,7 +145,7 @@ while(button~=2)
             case -1 % diff
                 data0(recs)=differentiate(data(recs));
             case 0 % nada
-                
+                data0(recs)=data(recs);
             case 1 % int
                 data0(recs)=integrate(data(recs));
             case 2 % double int
@@ -163,7 +166,7 @@ while(button~=2)
             case -1 % diff
                 data0(recs)=differentiate(data(recs));
             case 0 % nada
-                
+                data0(recs)=data(recs);
             case 1 % int
                 data0(recs)=integrate(data(recs));
             case 2 % double int

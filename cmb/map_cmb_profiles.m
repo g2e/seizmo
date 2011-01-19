@@ -32,11 +32,13 @@ function [varargout]=map_cmb_profiles(pf,field,clim,varargin)
 %     Version History:
 %        Dec. 12, 2010 - initial version
 %        Dec. 13, 2010 - fix wrap-around issue
+%        Jan. 18, 2011 - new pf fields, fix single profile bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 13, 2010 at 13:35 GMT
+%     Last Updated Jan. 18, 2011 at 13:35 GMT
 
 % todo:
+% - handle single profiles
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -48,7 +50,8 @@ end
 % check profiles struct
 reqfields={'gcdist','azwidth','slow','slowerr','decay','decayerr',...
     'cslow','cslowerr','cdecay','cdecayerr','cluster','kname','st','ev',...
-    'delaz','freq','phase','runname','dirname','time'};
+    'delaz','corrections','corrcoef','freq','phase','runname','dirname',...
+    'time'};
 if(~isstruct(pf) || any(~isfield(pf,reqfields)))
     error('seizmo:map_cmb_profiles:badInput',...
         ['PF must be a struct with the fields:\n' ...
@@ -70,7 +73,14 @@ switch field
         % flip polarity for ease
         slow=-slow;
 end
-if(nargin<3 || isempty(clim)); clim=[min(slow) max(slow)]; end
+if(nargin<3 || isempty(clim))
+    if(numel(pf)>1)
+        clim=[min(slow) max(slow)];
+    else
+        % only fails if zero
+        clim=[slow*.9 slow*1.1];
+    end
+end
 sv=(slow-clim(1))/(clim(2)-clim(1));
 sv(sv<0)=0;
 sv(sv>1)=1;

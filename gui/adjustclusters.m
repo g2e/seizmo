@@ -31,12 +31,15 @@ function [data,grp,arr,pol,units]=adjustclusters(data,grp,arr,pol)
 %        Dec. 12, 2010 - added split clusters by polarity, add Note
 %        Dec. 17, 2010 - added groundunits code calls
 %        Jan. 13, 2011 - added in map clusters option, fixed many bugs
+%        Jan. 14, 2011 - fixed unassigned units bug
+%        Jan. 16, 2011 - fix combine clusters not removing 0 pop clusters
+%                        that are last in the set (ie make sure max(grp.T)
+%                        points to a non-zero group), close cluster map
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 13, 2011 at 10:00 GMT
+%     Last Updated Jan. 16, 2011 at 10:00 GMT
 
 % todo:
-% - output all figures for saving
 
 % check nargin
 error(nargchk(4,4,nargin));
@@ -53,6 +56,9 @@ oldcheckheaderstate=checkheader_state(false);
 try
     % number of records
     nrecs=numel(data);
+    
+    % default units
+    units=zeros(nrecs,1);
     
     % check grp struct
     if(~isstruct(grp) ...
@@ -137,6 +143,7 @@ try
                             % change grp.T to lowest 2+ group
                             % - if no 2+ then lowest group
                             % - do we shift numbers? no
+                            % - truncate off 0 pop groups on end
                             % - do we lose manual grp selection? yes
                             mingrp=min(cgrps(grp.pop(cgrps)>1));
                             if(isempty(mingrp))
@@ -148,6 +155,7 @@ try
                             grp.T(crecs)=mingrp;
                             grp.pop=histc(grp.T,1:max(grp.T));
                             grp.good=grp.pop>=grp.popcut;
+                            grp.color((max(grp.T)+1):end,:)=[];
                             happy=true;
                         case 2 % don't
                             happy=true;
@@ -243,6 +251,9 @@ try
                 happy_user=true;
         end
     end
+    
+    % close map figure
+    if(ishandle(mx)); close(get(mx,'parent')); end
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

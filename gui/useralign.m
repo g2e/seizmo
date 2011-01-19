@@ -4,28 +4,30 @@ function [info,xc,data0]=useralign(data,varargin)
 %    Usage:    [info,xc,data0]=useralign(data)
 %              [...]=useralign(data,'option1',value1,...,'optionN',valueN)
 %
-%    Description: [INFO,XC,DATA0]=USERALIGN(DATA) presents an interactive
-%     set of menus & plots to guide the aligning of records in SEIZMO
-%     struct DATA on a particular signal.  The workflow includes
-%     interactively applying a moveout, windowing, tapering, adjusting
-%     correlation options.  Once the solving is complete the user is
-%     allowed to pick the onset of the stack to get the arrival times as
-%     close as possible to "picked" times.  Afterwards, a plot presents the
-%     results and a menu asks the user to decide to accept those results,
-%     redo the processing, or exit with an error (to break any chance of
-%     doing subsequent processing).  INFO is a struct containing several
-%     substructs providing details for the options used in each subfunction
-%     (USERMOVEOUT, USERWINDOW, USERTAPER, CORRELATE, TTSOLVE) as well as
-%     the final solution within INFO.SOLUTION.  XC is the struct from
-%     CORRELATE reordered by TTSOLVE (contains the correlogram peaks used
-%     to find the solution).  DATA0 is the processed dataset (windowed,
-%     tapered & aligned).
+%    Description:
+%     [INFO,XC,DATA0]=USERALIGN(DATA) presents an interactive set of menus
+%     & plots to guide the aligning of records in SEIZMO struct DATA on a
+%     particular signal.  The workflow includes interactively applying a
+%     moveout, windowing, tapering, adjusting correlation options.  Once
+%     the solving is complete the user is allowed to pick the onset of the
+%     stack to get the arrival times as close as possible to "picked"
+%     times.  Afterwards, a plot presents the results and a menu asks the
+%     user to decide to accept those results or redo the processing.  INFO
+%     is a struct containing several substructs providing details for the
+%     options used in each subfunction (USERMOVEOUT, USERWINDOW, USERTAPER,
+%     CORRELATE, TTSOLVE) as well as the final solution within
+%     INFO.SOLUTION.  XC is the struct from CORRELATE reordered by TTSOLVE
+%     (contains the correlogram peaks used to find the solution).  DATA0 is
+%     the processed dataset (windowed, tapered & aligned).
 %
 %     [...]=USERALIGN(DATA,'OPTION1',VALUE1,...,'OPTIONN',VALUEN) passes
-%     options to CORRELATE & TTSOLVE for enhanced control of the workflow.
-%     Currently available options are all options in TTSOLVE and 3 options
-%     in CORRELATE: 'NPEAKS', 'SPACING', & 'ABSXC'.  See those functions
-%     for details about the options.  Note that NPEAKS must be >=1!
+%     options to CUT, TAPER, CORRELATE & TTSOLVE for enhanced control of
+%     the workflow.  Currently available are all options in TTSOLVE, 3
+%     options in CORRELATE ('NPEAKS', 'SPACING', & 'ABSXC'), 'WINDOW' &
+%     'TAPER.  'WINDOW' specifies the window passed to CUT and should be a
+%     1x2 vector of [START END].  'TAPER' specifies the taper width passed
+%     to TAPER.  See those functions for details about the options.  Note
+%     that NPEAKS must be >=1!
 %
 %    Notes:
 %
@@ -86,9 +88,10 @@ function [info,xc,data0]=useralign(data,varargin)
 %        Nov. 13, 2010 - reverse order of aligned plot and stacking, update
 %                        for userwindow arg change
 %        Jan. 14, 2011 - add useralign_quiet to See also section
+%        Jan. 17, 2011 - allow specifying window & taper, altered menus
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2011 at 11:00 GMT
+%     Last Updated Jan. 17, 2011 at 11:00 GMT
 
 % todo:
 
@@ -131,6 +134,8 @@ try
     info.correlate.npeaks=5;
     info.correlate.spacing=10;
     info.correlate.absxc=true;
+    info.userwindow.limits=[-inf inf];
+    info.usertaper.width=[0 0];
     
     % parse out the correlate options
     keep=true(nargin-1,1);
@@ -159,6 +164,22 @@ try
                         'ABSXC must be a logical value!');
                 end
                 info.correlate.absxc=varargin{i+1};
+                keep(i:i+1)=false;
+            case 'window'
+                if(~isempty(varargin{i+1}) && (numel(varargin{i+1})~=2 ...
+                        || ~isreal(varargin{i+1})))
+                    error('seizmo:useralign_quiet:badInput',...
+                        'WINDOW must be 1x2 vector as [START END]!');
+                end
+                info.userwindow.limits=varargin{i+1};
+                keep(i:i+1)=false;
+            case 'taper'
+                if(~isempty(varargin{i+1}) && (~isreal(varargin{i+1}) ...
+                        || numel(varargin{i+1})>2))
+                    error('seizmo:useralign_quiet:badInput',...
+                        'TAPER must be a scalar width like 0.05!');
+                end
+                info.usertaper.width=varargin{i+1};
                 keep(i:i+1)=false;
         end
     end
@@ -197,26 +218,24 @@ try
         % usertaper
         set(ax(3),'visible','on');
         [data0,info.usertaper,info.handles(3)]=usertaper(data0,...
-            [],'ax',ax(3),'normstyle','single');
+            info.usertaper.width,[],'ax',ax(3),'normstyle','single');
 
         % menu for correlate options
         while(1)
             % present current settings
             tmp1=num2str(info.correlate.npeaks);
             tmp2=num2str(info.correlate.spacing);
-            tmp3='YES'; if(info.correlate.absxc); tmp3='NO'; end
-            choice=menu('CORRELATE SETTINGS',...
-                'GO AHEAD AND CORRELATE DATA',...
-                ['NUMBER OF PEAKS (' tmp1 ')'],...
-                ['PEAK SPACING (' tmp2 's)'],...
-                ['ARE POLARITIES ARE MATCHED? (' tmp3 ')'],...
-                'EXIT WITH AN ERROR');
+            tmp3='POLARITIES ARE MATCHED';
+            if(info.correlate.absxc); tmp3='POLARITIES ARE UNKNOWN'; end
+            choice=menu('ALTER CORRELATE SETTINGS?',...
+                ['CHANGE NUMBER OF PEAKS (' tmp1 ')'],...
+                ['CHANGE PEAK SPACING (' tmp2 's)'],...
+                ['CHANGE POLARITY ASSUMPTION (' tmp3 ')'],...
+                'NO - CORRELATE DATA');
 
             % proceed by user choice
             switch choice
-                case 1 % all good
-                    break;
-                case 2 % npeaks
+                case 1 % npeaks
                     choice=menu('NUMBER OF PEAKS TO PICK',...
                         ['CURRENT (' tmp1 ')'],...
                         '1','3','5','7','9','CUSTOM');
@@ -249,7 +268,7 @@ try
                                 end
                             end
                     end
-                case 3 % spacing
+                case 2 % spacing
                     tmp=inputdlg(...
                         ['Minimum Spacing Between Peaks (in seconds)? [' ...
                         tmp2 ']:'],'Peak Spacing',1,{tmp2});
@@ -263,7 +282,7 @@ try
                             % do not change info.correlate.spacing
                         end
                     end
-                case 4 % absxc
+                case 3 % absxc
                     choice=menu('DO THE POLARITIES ALL MATCH?',...
                         ['CURRENT (' tmp3 ')'],'YES','NO');
                     switch choice
@@ -274,9 +293,8 @@ try
                         case 3 % looking at both pos/neg peaks
                             info.correlate.absxc=true;
                     end
-                case 5  % i bear too great a shame to go on
-                    error('seizmo:usertaper:killYourSelf',...
-                        'User demanded early exit!');
+                case 4 % correlate
+                    break;
             end
         end
 
@@ -310,8 +328,7 @@ try
             choice=menu('KEEP THIS ALIGNMENT?',...
                 'YES',...
                 'NO - TRY AGAIN',...
-                'NO - TRY AGAIN WITH THESE OFFSETS',...
-                'EXIT WITH ERROR');
+                'NO - TRY AGAIN WITH THESE OFFSETS');
             switch choice
                 case 1 % rainbow's end
                     % allow picking the stack to deal with dc-shift
@@ -336,9 +353,6 @@ try
                         cla(ax(a),'reset');
                     end
                     set(ax,'visible','off','color','k');
-                case 4 % i bear too great a shame to go on
-                    error('seizmo:useralign:killYourSelf',...
-                        'User demanded early exit!');
             end
         end
     end

@@ -6,8 +6,6 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %            weighting options:
 %              [...]=ttsolve(...,'snr',snr,...)
 %              [...]=ttsolve(...,'wgtpow',value,...)
-%              [...]=ttsolve(...,'inrange',[low high],...)
-%              [...]=ttsolve(...,'outrange',[low high],...)
 %              [...]=ttsolve(...,'minlag',stddev,...)
 %              [...]=ttsolve(...,'maxcor',rval,...)
 %
@@ -47,9 +45,8 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     [...]=TTSOLVE(...,'SNR',SNR,...) sets the signal to noise ratio to
 %     something other than one (the default).  This is for weighting when
 %     inverting for relative arrival times and errors.  Please note that
-%     the values given in SNR will be rescaled utilizing RESCALE_SNR with
-%     its default ranges.  Use options 'INRANGE' & 'OUTRANGE' to adjust the
-%     rescaling.  SNR must be a column vector of positive values.
+%     the values given in SNR will be rescaled utilizing SNR2MAXPHASEERROR.
+%     SNR must be a column vector of positive values.
 %
 %     [...]=TTSOLVE(...,'WGTPOW',POWER,...) raises the weights used in the
 %     inversion by POWER.  The default is 1 (no change in weight).  Setting
@@ -57,15 +54,6 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     misfit and polarities (ie SNR and cross-correlation coefficient will
 %     have no influence).  Higher POWER will increase the influence of the
 %     SNR and cross-correlation coefficients on the inversion.
-%
-%     [...]=TTSOLVE(...,'INRANGE',[LOW HIGH],...) sets the in rescale range
-%     to [LOW HIGH] for rescaling SNR values to weights (see option 'SNR'
-%     to set the SNR values).  See function RESCALE_SNR for more details.
-%
-%     [...]=TTSOLVE(...,'OUTRANGE',[LOW HIGH],...) sets the out rescale
-%     range to [LOW HIGH] for rescaling SNR values to weights (see option
-%     'SNR' to set the SNR values).  See function RESCALE_SNR for more
-%     details.
 %
 %     [...]=TTSOLVE(...,'MINLAG',STDDEV,...) resets any lag's standard
 %     deviation that is lower than STDDEV to STDDEV.  This allows for
@@ -173,14 +161,14 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %    Notes:
 %
 %    Examples:
-%     Get the SNR of some signals roughly aligned near 0:
-%      snr=quicksnr(data,[-100 -10],[-10 100]);
-%     Correlate the records:
-%      xc=correlate(data,'npeaks',3,'spacing',10);
-%     Solve using signal-to-noise info in the weights:
-%      [arr,err,pol,zmean,zstd,nc]=ttsolve(xc,'snr',snr);
-%     Now plot the alignment:
-%      recordsection(multiply(timeshift(normalize(data),dt),pol));
+%     % Get the SNR of some signals roughly aligned near 0:
+%     snr=quicksnr(data,[-100 -10],[-10 100]);
+%     % Correlate the records:
+%     xc=correlate(data,'npeaks',3,'spacing',10);
+%     % Solve using signal-to-noise info in the weights:
+%     [arr,err,pol,zmean,zstd,nc]=ttsolve(xc,'snr',snr);
+%     % Now plot the alignment:
+%     recordsection(multiply(timeshift(normalize(data),dt),pol));
 %
 %    See also: TTALIGN, TTREFINE, TTPOLAR, TTSTDERR
 
@@ -195,9 +183,10 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %        Sep. 15, 2010 - force inversion for reorder without change on
 %                        first iteration to replace given values (if any)
 %        Oct.  3, 2010 - fix polarity reversal bug
+%        Jan. 18, 2011 - drop rescale_snr for snr2maxphaseerror
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  3, 2010 at 09:45 GMT
+%     Last Updated Jan. 18, 2011 at 09:45 GMT
 
 % todo:
 
@@ -236,7 +225,7 @@ xc.cg(xc.cg>opt.MAXCOR)=opt.MAXCOR;
 xc.zg=fisher(xc.cg);
 
 % now get weights (z-statistic * root of matrix product of rescaled snr)
-opt.SNR=rescale_snr(opt.SNR,opt.INRANGE,opt.OUTRANGE);
+opt.SNR=1-snr2maxphaseerror(opt.SNR)/pi;
 xc.wg=sqrt(opt.SNR*opt.SNR');
 xc.wg=xc.wg(:,:,ones(np,1));
 if(vector)
@@ -559,8 +548,6 @@ opt.ESTARR=[];        % initial relative arrival estimate
 opt.ESTERR=[];        % initial relative arrival error estimate
 opt.ESTPOL=[];        % initial relative polarity estimate
 opt.SNR=ones(nr,1);   % snr (for misfit weights)
-opt.INRANGE=[];       % snr range over which rescaling varies
-opt.OUTRANGE=[];      % range of rescaled snr values
 
 % option must be specified by a string
 if(~iscellstr(varargin(1:2:end)))
@@ -654,7 +641,7 @@ for i=1:2:nargin-1
                     'sized column vector of positive reals!']);
             end
             opt.ESTERR=varargin{i+1};
-        case {'rp' 'pol' 'relpol' 'estpol' 'pol'}
+        case {'rp' 'pol' 'relpol' 'estpol'}
             if(isscalar(varargin{i+1}))
                 varargin{i+1}(1:nr,1)=varargin{i+1};
             end
@@ -676,20 +663,6 @@ for i=1:2:nargin-1
                     'sized column vector of positive reals!']);
             end
             opt.SNR=varargin{i+1};
-        case {'in' 'inrange' 'rescale_inrange'}
-            if(~isequal(size(varargin{i+1}),[1 2]) ...
-                    || ~isreal(varargin{i+1}) || any(varargin{i+1}<0))
-                error('seizmo:ttsolve:badInput',...
-                    'RESCALE_INRANGE must be a 1x2 positive real array!');
-            end
-            opt.INRANGE=varargin{i+1};
-        case {'out' 'outrange' 'rescale_outrange'}
-            if(~isequal(size(varargin{i+1}),[1 2]) ...
-                    || ~isreal(varargin{i+1}) || any(varargin{i+1}<0))
-                error('seizmo:ttsolve:badInput',...
-                    'RESCALE_OUTRANGE must be a 1x2 positive real array!');
-            end
-            opt.OUTRANGE=varargin{i+1};
         otherwise
             error('seizmo:ttsolve:badInput',...
                 'Unknown Option: %s',varargin{i});

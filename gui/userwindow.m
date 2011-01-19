@@ -53,7 +53,8 @@ function [data,win,ax]=userwindow(data,limits,fill,func,varargin)
 %     % records in the window and remove the trend after windowing:
 %     data=userwindow(data,true,@removetrend);
 %
-%    See also: CUT, USERTAPER, USERCLUSTER, SELECTRECORDS
+%    See also: CUT, USERTAPER, USERCLUSTER, SELECTRECORDS, USERWINNOW,
+%              USERMOVEOUT
 
 %     Version History:
 %        Sep.  5, 2009 - rewrite
@@ -69,14 +70,19 @@ function [data,win,ax]=userwindow(data,limits,fill,func,varargin)
 %        Nov.  4, 2010 - couple minor bugfixes
 %        Nov. 12, 2010 - added initial window argument
 %        Jan.  6, 2011 - use key2zoompan
+%        Jan. 17, 2011 - altered the menus (no more crashing exit)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 11:00 GMT
+%     Last Updated Jan. 17, 2011 at 11:00 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,inf,nargin));
+if(nargin>4 && mod(nargin,2))
+    error('seizmo:userwindow:badNumInputs',...
+        'Bad number of arguments!');
+end
 
 % check data structure
 versioninfo(data,'dep');
@@ -191,10 +197,13 @@ try
         end
 
         % display prompt and get user choice
-        choice=menu(prompt,'RESELECT FILL OPTION',...
+        choice=menu(prompt,...
+            'RESELECT FILL OPTION',...
             'RESELECT POST-WINDOW FUNCTION',...
-            'OVERLAY PLOT','EVENLY SPACED PLOT',...
-            'DISTANCE SPACED PLOT','DO NOT WINDOW','EXIT');
+            'SELECTION IN AN OVERLAY PLOT',...
+            'SELECTION IN AN EVENLY SPACED PLOT',...
+            'SELECTION IN AN DISTANCE SPACED PLOT',...
+            'DO NOT WINDOW');
 
         % proceed by user choice
         switch choice
@@ -259,9 +268,6 @@ try
             case 6 % no window
                 win.limits=[];
                 return;
-            case 7 % immediate death
-                error('seizmo:userwindow:killYourSelf',...
-                    'User demanded early exit!');
         end
         
         % use this axis
@@ -357,7 +363,7 @@ try
         choice=0;
         while(~choice)
             choice=menu('KEEP WINDOW?',...
-                'YES','NO - TRY AGAIN','EXIT');
+                'YES','NO - TRY AGAIN');
             switch choice
                 case 1 % rainbow's end
                     data=data2;
@@ -369,9 +375,6 @@ try
                         reax={};
                         ax=-1;
                     end
-                case 3 % i bear too great a shame to go on
-                    error('seizmo:userwindow:killYourSelf',...
-                        'User demanded early exit!');
             end
         end
     end

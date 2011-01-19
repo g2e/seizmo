@@ -71,24 +71,23 @@ function [data]=interpolate(data,sr,method,new_b,new_e,extrap)
 %        Feb.  3, 2010 - versioninfo caching
 %        Mar.  4, 2010 - keep things consistent in case the e field is off
 %        Mar. 24, 2010 - add extrap option (useful for stacking)
+%        Jan. 18, 2011 - drop versioninfo & caching, nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2010 at 14:05 GMT
+%     Last Updated Jan. 18, 2011 at 14:05 GMT
 
 % check number of arguments
-msg=nargchk(2,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,6,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt interpolation
 try
-    % check headers (versioninfo cache update)
+    % check headers
     data=checkheader(data);
     
     % verbosity
@@ -219,14 +218,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

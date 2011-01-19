@@ -1,75 +1,64 @@
-function [results2]=cmb_2nd_pass(results0,bank,gcrng,sr)
+function [results2]=cmb_2nd_pass(results,sr,varargin)
 %CMB_2ND_PASS    Narrow-band core-diff relative arrivals + amplitudes
 %
-%    Usage:    results=cmb_2nd_pass(results,bank,gcrng)
-%              results=cmb_2nd_pass(results,bank,gcrng,sr)
+%    Usage:    results=cmb_2nd_pass(results)
+%              results=cmb_2nd_pass(results,sr)
+%              results=cmb_2nd_pass(results,sr,'option',value,...)
 %
 %    Description:
-%     RESULTS=CMB_2ND_PASS(RESULTS,BANK,GCRNG) processes the data in
-%     RESULTS (returned from CMB_OUTLIERS) at each of the frequency bands
-%     given in BANK (see FILTER_BANK to generate this).  GCRNG is a
-%     prefilter by great circle distance and should be [GCMIN GCMAX] in
-%     degree distance.
+%     RESULTS=CMB_2ND_PASS(RESULTS) aligns the data in RESULTS (returned
+%     from CMB_1ST_PASS, CMB_CLUSTERING, or CMB_OUTLIERS) for a series of
+%     25 frequency bands from 80s to 8s.  See the last usage form to adjust
+%     the frequency bands and filters.
 %
-%     RESULTS=CMB_2ND_PASS(RESULTS,BANK,GCRNG,SR) resamples records to a
-%     sample rate of SR.  SR must be in Hz (ie SR==5 is 5Hz sample rate).
+%     RESULTS=CMB_2ND_PASS(RESULTS,SR) resamples records to a sample rate
+%     of SR.  SR must be in Hz (ie SR==5 is 5Hz sample rate).  The default
+%     is no resampling.
+%
+%     RESULTS=CMB_2ND_PASS(RESULTS,SR,'OPTION',VALUE,...) passes
+%     option/value pairs to MULTIBANDALIGN to adjust its parameters.  See
+%     MULTIBANDALIGN for more details.
 %
 %    Notes:
 %     - If you have corrected the ground units of the underlying data in
-%       the .dirname directory using .adjustclusters.units then you should
-%       also set .adjustclusters.units to all zeros!
+%       the .dirname directory using .usercluster.units then you should
+%       also set .usercluster.units to all zeros!
 %
 %    Examples:
 %     % This is the typical usage case for me:
-%     bank=filter_bank([0.0125 0.125],'variable',0.2,0.1);
-%     gcrng=[90 155];
 %     sr=5; % 5sps
-%     results2=cmb_2nd_pass(results,bank,gcrng,sr);
+%     results2=cmb_2nd_pass(results,sr);
 %
-%    See also: PREP_CMB_DATA, CMB_1ST_PASS, CMB_OUTLIERS, SLOWDECAYPAIRS,
-%              SLOWDECAYPROFILES, MAP_CMB_PROFILES
+%    See also: PREP_CMB_DATA, CMB_1ST_PASS, CMB_CLUSTERING, CMB_OUTLIERS,
+%              SLOWDECAYPAIRS, SLOWDECAYPROFILES, MAP_CMB_PROFILES
 
 %     Version History:
 %        Dec. 12, 2010 - added docs
 %        Jan. 14, 2011 - corrections are properly edited to match output,
 %                        support for .adjustclusters.units, fixed outlier
 %                        bug (forgot to remove them)
+%        Jan. 18, 2011 - update for results struct and multibandalign
+%                        updates, edit output names & runname to keep
+%                        further output informative if we cluster/outlier a
+%                        narrow band result
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2011 at 13:35 GMT
+%     Last Updated Jan. 18, 2011 at 13:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(3,4,nargin));
-
-% check results (needs 1st pass, outlier, corrections)
-reqfields={'useralign' 'filter' 'usersnr' 'corrections' 'outliers' ...
-    'tt_start' 'phase' 'runname' 'dirname' 'cluster' 'usercluster' ...
-    'adjustclusters'};
-if(~isstruct(results0) || any(~isfield(results0,reqfields)))
-    error('seizmo:cmb_2nd_pass:badInput',...
-        ['RESULTS must be a struct with the fields:\n' ...
-        sprintf('''%s'' ',reqfields{:}) '!']);
+error(nargchk(1,inf,nargin));
+if(nargin>2 && mod(nargin,2))
+    error('seizmo:cmb_2nd_pass:badNumInputs',...
+        'OPTIONS must be paired with a value!');
 end
 
-% check filter bank
-if(size(bank,2)~=3 ...
-        || any(bank(:)<=0 | isnan(bank(:)) | isinf(bank(:))) ...
-        || any(bank(:,1)<=bank(:,2) | bank(:,3)<=bank(:,1)))
-    error('seizmo:cmb_2nd_pass:badInput',...
-        'BANK must be in the format from FILTER_BANK!');
-end
-
-% check gcrng
-if(~isreal(gcrng) || numel(gcrng)~=2 || gcrng(1)>gcrng(2) ...
-        || any(gcrng)<0)
-    error('seizmo:cmb_2nd_pass:badInput',...
-        'GCRNG must be [MIN MAX] in degree distance!');
-end
+% check results
+error(check_cmb_results(results));
 
 % check sample rate
-if(nargin<4); sr=[]; end
+if(nargin<2); sr=[]; end
 if(~isempty(sr) && (~isscalar(sr) || sr<=0))
     error('seizmo:cmb_2nd_pass:badInput',...
         'SR must be the new sample rate (in samples/second)!');
@@ -77,21 +66,21 @@ end
 
 % loop over each event
 cnt=0;
-for i=1:numel(results0)
+for i=1:numel(results)
     % run name
-    runname=regexprep(results0(i).runname,'1stPass','2ndPass');
+    runname=regexprep(results(i).runname,'1stPass','2ndPass');
     disp(runname);
     
     % skip if no useralign
-    if(isempty(results0(i).useralign)); continue; end
+    if(isempty(results(i).useralign)); continue; end
     
     % read in data
-    data=readseizmo(strcat(results0(i).dirname,filesep,...
-        {results0(i).useralign.data.name}'));
+    data=readseizmo(strcat(results(i).dirname,filesep,...
+        {results(i).useralign.data.name}'));
     
     % adjust ground units
-    if(any(results0(i).adjustclusters.units~=0))
-        units=results0(i).adjustclusters.units;
+    if(any(results(i).usercluster.units~=0))
+        units=results0(i).usercluster.units;
         if(any(units==-2))
             data(units==-2)=differentiate(differentiate(data(units==-2)));
         end
@@ -109,67 +98,85 @@ for i=1:numel(results0)
     % resample
     if(~isempty(sr)); data=syncrates(data,sr); end
     
-    % great circle distance
-    gcarc=getheader(data,'gcarc');
-    
     % align data using 1stPass results
-    arr=results0(i).useralign.solution.arr;
-    pol=results0(i).useralign.solution.pol;
+    arr=results(i).useralign.solution.arr;
+    pol=results(i).useralign.solution.pol;
     data=multiply(data,pol);
     data=timeshift(data,-getheader(data,'o')-arr);
     
     % loop over good clusters
-    for j=find(results0(i).usercluster.good(:)')
+    for j=find(results(i).usercluster.good(:)')
         % get cluster info
         sj=num2str(j);
-        good=find(results0(i).usercluster.T==j ...
-            & ~results0(i).outliers ...
-            & gcarc>=gcrng(1) & gcarc<gcrng(2));
+        disp(['Aligning cluster ' sj]);
+        good=find(results(i).usercluster.T==j ...
+            & ~(results(i).outliers.bad));
         
         % census
         pop=numel(good);
-        if(pop<3); continue; end
+        if(pop<3)
+            warning('seizmo:cmb_2nd_pass:tooFewGood',...
+                ['Cluster ' sj ' has <3 good members. Skipping!']);
+            continue;
+        end
         
         % extract appropriate corrections
-        correct=results0(i).corrections;
+        correct=results(i).corrections;
         correct=fixcorrstruct(correct,good);
         
         % multiband alignment
-        results=multibandalign(data(good),bank,[runname '_cluster_' sj],...
-            'absxc',false,'estarr',0,'estpol',1,'wgtpow',2);
+        tmp=multibandalign(data(good),...
+            'runname',[runname '_cluster_' sj],...
+            'absxc',false,'estarr',0,'estpol',1,'wgtpow',2,...
+            varargin{:});
 
         % loop over each band in the result to add more info
-        for k=1:numel(results)
+        for k=1:numel(tmp)
             % matlab bug workaround
             % - see cmb_1st_pass
-            if(isempty(results(k).usersnr))
-                results(k).usersnr=[];
+            if(isempty(tmp(k).usersnr))
+                tmp(k).usersnr=[];
             end
 
             % add run name, quake name
-            results(k).phase=results0(i).phase;
-            results(k).runname=runname;
-            results(k).dirname=results0(i).dirname;
+            tmp(k).phase=results(i).phase;
+            tmp(k).runname=[runname '_cluster_' sj ...
+                '_band_' num2str(k,'%02d')];
+            tmp(k).dirname=results(i).dirname;
 
             % fix corrections
-            if(~isempty(results(k).usersnr))
-                good=find(...
-                    results(k).usersnr.snr>=results(k).usersnr.snrcut);
-                good(results(k).userwinnow.cut)=[];
-                correct0=fixcorrstruct(correct,good);
-                results(k).corrections=correct0;
+            if(~isempty(tmp(k).usersnr))
+                good=find(tmp(k).usersnr.snr>=tmp(k).usersnr.snrcut);
+                good(tmp(k).userwinnow.cut)=[];
+                tmp(k).corrections=fixcorrstruct(correct,good);
             else
-                correct0=fixcorrstruct(correct,[]);
-                results(k).corrections=correct0;
+                tmp(k).corrections=fixcorrstruct(correct,[]);
             end
+            
+            % add in clustering info (all belong to 1 cluster)
+            if(isempty(tmp(k).useralign))
+                nrecs=0;
+            else
+                nrecs=numel(tmp(k).useralign.data);
+            end
+            tmp(k).usercluster.T=ones(nrecs,1);
+            tmp(k).usercluster.units=zeros(nrecs,1);
+            tmp(k).usercluster.good=true;
+            tmp(k).usercluster.color=[1 0 0]; % default to red
+            
+            % add in outlier info (no outliers)
+            tmp(k).outliers.bad=false(nrecs,1);
+            
+            % time of run
+            tmp(k).time=datestr(now);
         end
 
-        % save results
-        save([runname '_cluster_' sj '_results.mat'],'results');
+        % save results (all bands together)
+        save([runname '_cluster_' sj '_allband_results.mat'],'tmp');
 
         % export to command line too
         cnt=cnt+1;
-        results2(:,cnt)=results;
+        results2(1:k,cnt)=tmp;
     end
 end
 

@@ -58,6 +58,7 @@ function []=sz_toc_misc()
 %<a href="matlab:help readcsv">readcsv</a>              - Read in .csv formatted file as a structure
 %<a href="matlab:help readtxt">readtxt</a>              - Reads in a text file as a single string
 %<a href="matlab:help rrat">rrat</a>                 - Relative rational approximation
+%<a href="matlab:help scaled_erf">scaled_erf</a>           - Scale input using an error function
 %<a href="matlab:help setfonts">setfonts</a>             - Sets font props for all text objects in the specified axes
 %<a href="matlab:help slidingavg">slidingavg</a>           - Returns sliding-window average of data
 %<a href="matlab:help snr2maxphaseerror">snr2maxphaseerror</a>    - Returns maximum narrow-band phase error based on SNR

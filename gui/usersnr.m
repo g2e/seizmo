@@ -55,14 +55,19 @@ function [snr,s,ax]=usersnr(data,nwin,swin,method,varargin)
 %        Apr. 21, 2010 - set plot name & add additional methods
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %        Jan.  6, 2011 - use key2zoompan
+%        Jan. 18, 2011 - remove exit button
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 11:00 GMT
+%     Last Updated Jan. 18, 2011 at 11:00 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,inf,nargin));
+if(nargin>4 && mod(nargin,2))
+    error('seizmo:usersnr:badNumInputs',...
+        'Bad number of arguments!');
+end
 
 % check data structure
 versioninfo(data,'dep');
@@ -210,8 +215,7 @@ try
             ['ADJUST NOISE WINDOW ([' num2str(s.noisewin) '])'],...
             ['ADJUST SIGNAL WINDOW ([' num2str(s.signalwin) '])'],...
             ['SELECT PLOT TYPE (' upper(func2str(s.plottype)) ')'],...
-            'RETRIEVE SNR WITH THESE SETTINGS',...
-            'EXIT');
+            'RETRIEVE SNR WITH THESE SETTINGS');
         
         % proceed by user choice
         switch choice
@@ -377,9 +381,6 @@ try
                 end
             case 5 % get snr
                 happy_user=true;
-            case 6 % immediate death
-                error('seizmo:usersnr:killYourSelf',...
-                    'User demanded early exit!');
         end
     end
     

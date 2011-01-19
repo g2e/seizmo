@@ -33,24 +33,29 @@ function [data,mvo,ax]=usermoveout(data,varargin)
 %
 %    Examples:
 %     Typically one runs this followed by USERWINDOW & USERTAPER:
-%      [data,mvo,ax]=usermoveout(data);
-%      [data,win,ax(2:3)]=userwindow(data);
-%      [data,tpr,ax(4:5)]=usertaper(data);
+%      [data,mvo,ax(1)]=usermoveout(data);
+%      [data,win,ax(2)]=userwindow(data);
+%      [data,tpr,ax(3)]=usertaper(data);
 %
-%    See also: USERWINDOW, USERTAPER, USERALIGN
+%    See also: USERWINDOW, USERTAPER, USERALIGN, USERWINNOW
 
 %     Version History:
 %        Mar. 16, 2010 - initial version
 %        Mar. 18, 2010 - made robust to menu closing, reorder menu buttons
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
+%        Jan. 17, 2011 - better nargin checking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2010 at 10:00 GMT
+%     Last Updated Jan. 17, 2011 at 10:00 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,inf,nargin));
+if(nargin>1 && ~mod(nargin,2))
+    error('seizmo:usermoveout:badNumInputs',...
+        'Bad number of arguments!');
+end
 
 % check data structure
 versioninfo(data,'dep');

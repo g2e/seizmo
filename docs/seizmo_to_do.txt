@@ -70,7 +70,6 @@ merge (uneven)
 drop restrictive copyright functions
 	buttord2 (edit of buttord)
 	ddendrogram (edit of dendrogram)
-	ppdcval (edit of ppval)
 fk stuff
 x	add weighting to all
     rayleigh/love dispersion estimation
@@ -144,5 +143,13 @@ two plane wave phase velocity maps
 	- station corrections
 	- attenuation
 
+cmb_1st_pass should have mock clustering and outlier info
+make cmb_clustering, cmb_outliers, cmb_2nd_pass nondependent
+add correlations & corrections to profile measures
+2-station dispersion assembly
+title on core-diff map
+defaults for 2ndPass
+dispersion curve pdf plotting
+some way of selecting records by clicking (to split clusters etc)
 
 

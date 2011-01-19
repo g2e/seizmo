@@ -22,13 +22,16 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng)
 %     pf=slowdecayprofiles(results,[200 220],[90 160])
 %
 %    See also: PREP_CMB_DATA, CMB_1ST_PASS, CMB_OUTLIERS, CMB_2ND_PASS,
-%              SLOWDECAYPAIRS
+%              SLOWDECAYPAIRS, CMB_CLUSTERING
 
 %     Version History:
 %        Dec. 12, 2010 - initial version
+%        Jan. 18, 2011 - update for results struct standardization, added
+%                        corrections & correlation coefficients to output,
+%                        time is now a string, require common event
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 12, 2010 at 13:35 GMT
+%     Last Updated Jan. 18, 2011 at 13:35 GMT
 
 % todo:
 
@@ -36,13 +39,7 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng)
 error(nargchk(1,3,nargin));
 
 % check results struct
-reqfields={'useralign' 'filter' 'usersnr' 'tt_start' ...
-    'corrections' 'phase' 'runname' 'dirname'};
-if(~isstruct(results) || any(~isfield(results,reqfields)))
-    error('seizmo:slowdecayprofiles:badInput',...
-        ['RESULTS must be a struct with the fields:\n' ...
-        sprintf('''%s'' ',reqfields{:}) '!']);
-end
+error(check_cmb_results(results));
 
 % default azrng & gcrng
 if(nargin<2 || isempty(azrng)); azrng=[0 360]; end
@@ -76,6 +73,13 @@ for a=1:numel(results)
     [st,ev,delaz,kname]=getheader(results(a).useralign.data,...
         'st','ev','delaz','kname');
     
+    % check event info matches
+    ev=unique(ev,'rows');
+    if(size(ev,1)>1)
+        error('seizmo:slowdecaypairs:badInput',...
+            'EVENT location varies between records!');
+    end
+    
     % corrected relative arrival times and amplitudes
     rtime=results(a).useralign.solution.arr;
     crtime=results(a).useralign.solution.arr...
@@ -89,20 +93,11 @@ for a=1:numel(results)
     ramplerr=results(a).useralign.solution.amperr;
     
     % get cluster indexing
-    if(isfield(results,'usercluster'))
-        cidx=results.usercluster.T;
-        good=results.usercluster.good';
-    else
-        cidx=ones(nrecs,1);
-        good=true;
-    end
+    cidx=results.usercluster.T;
+    good=results.usercluster.good';
     
     % get outliers
-    if(isfield(results,'outliers'))
-        outliers=results.outliers;
-    else
-        outliers=false(nrecs,1);
-    end
+    outliers=results.outliers.bad;
     
     % loop over "good" clusters
     for b=find(good)
@@ -115,7 +110,7 @@ for a=1:numel(results)
             & delaz(:,2)>=azrng(1) & delaz(:,2)<=azrng(2));
         nsta=numel(idx);
         
-        % skip if none
+        % skip if none/one
         if(nsta<2)
             continue;
         else
@@ -127,19 +122,27 @@ for a=1:numel(results)
             'slow',[],'slowerr',[],'decay',[],'decayerr',[],...
             'cslow',[],'cslowerr',[],'cdecay',[],'cdecayerr',[],...
             'cluster',b,'kname',[],'st',[],'ev',[],'delaz',[],...
+            'corrections',[],'corrcoef',[],...
             'freq',results(a).filter.corners,'phase',results(a).phase,...
             'runname',results(a).runname,'dirname',results(a).dirname,...
-            'time',now);
+            'time',datestr(now));
         
         % insert known info
         pf(total).kname=kname(idx,:);
         pf(total).st=st(idx,:);
-        pf(total).ev=ev(idx,:);
+        pf(total).ev=ev;
         pf(total).delaz=delaz(idx,:);
         
         % great circle distance and width
         pf(total).gcdist=max(delaz(idx,1))-min(delaz(idx,1));
         pf(total).azwidth=max(delaz(idx,2))-min(delaz(idx,2));
+        
+        % corrections
+        pf(total).corrections=fixcorrstruct(results(a).corrections,idx);
+        
+        % correlation coefficients
+        pf(total).corrcoef=...
+            submat(ndsquareform(results(a).useralign.xc.cg),1:2,idx,3,1);
         
         % find slowness & decay rate
         [m,covm]=wlinem(delaz(idx,1),rtime(idx),1,diag(rtimeerr(idx).^2));
@@ -159,4 +162,16 @@ for a=1:numel(results)
     end
 end
 
+end
+
+
+function [s]=fixcorrstruct(s,good)
+fields=fieldnames(s);
+for i=1:numel(fields)
+    if(isstruct(s.(fields{i})))
+        s.(fields{i})=fixcorrstruct(s.(fields{i}),good);
+    else
+        s.(fields{i})=s.(fields{i})(good);
+    end
+end
 end

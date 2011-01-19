@@ -42,9 +42,10 @@ function [varargout]=install_seizmo(varargin)
 %     % Matlab/Octave.  All you need is an internet connection so you
 %     % can grab the SEIZMO package, extract the contents and install:
 %     url='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/';
-%     url=[url 'seizmo-devel-r175.tar.gz'];
+%     latest=strtrim(urlread([url 'latest']));
+%     url=[url latest];
 %     gunzip(url,'seizmo')
-%     untar('seizmo/seizmo-devel-r175.tar','seizmo')
+%     untar(['seizmo/' latest],'seizmo')
 %     cd seizmo/seizmo
 %     install_seizmo
 %
@@ -59,12 +60,12 @@ function [varargout]=install_seizmo(varargin)
 %        Dec. 30, 2010 - initial version
 %        Jan.  1, 2011 - added msgs, detects more issues
 %        Jan.  4, 2011 - improved docs (examples needs more work)
+%        Jan. 14, 2011 - example improved to get current release
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  4, 2011 at 15:25 GMT
+%     Last Updated Jan. 14, 2011 at 15:25 GMT
 
 % todo:
-% - make example grab current release by using urlread
 
 % check nargin
 error(nargchk(0,1,nargin));

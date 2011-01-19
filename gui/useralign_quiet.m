@@ -18,7 +18,7 @@ function [info,xc,data0]=useralign_quiet(data,varargin)
 %
 %     [...]=USERALIGN_QUIET(DATA,'OPTION1',VALUE1,...) allows passing
 %     options on to CUT, TAPER, CORRELATE & TTSOLVE for enhanced control of
-%     the workflow.  Currently available options are all options in TTSOLVE
+%     the workflow.  Currently available are all options in TTSOLVE, 3
 %     3 options in CORRELATE ('NPEAKS', 'SPACING', & 'ABSXC'), 'WINDOW' &
 %     'TAPER'.  'WINDOW' specifies the window passed to CUT and should be a
 %     1x2 vector of [START END].  'TAPER' specifies the taper width passed

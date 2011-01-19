@@ -1,9 +1,10 @@
-function [data,tpr,ax]=usertaper(data,func,varargin)
+function [data,tpr,ax]=usertaper(data,width,func,varargin)
 %USERTAPER    Interactively taper SEIZMO records
 %
 %    Usage:    data=usertaper(data)
-%              data=usertaper(data,func)
-%              data=usertaper(data,func,'field',value,...)
+%              data=usertaper(data,width)
+%              data=usertaper(data,width,func)
+%              data=usertaper(data,width,func,'field',value,...)
 %              [data,tpr]=usertaper(...)
 %              [data,tpr,ax]=usertaper(...)
 %
@@ -13,13 +14,18 @@ function [data,tpr,ax]=usertaper(data,func,varargin)
 %     modified using the menu presented.  By default no mean or trend
 %     removal is done after tapering.
 %
-%     DATA=USERTAPER(DATA,FUNC) applies function FUNC to records in DATA
-%     after tapering and before the confirmation window.  FUNC must be a
-%     function handle.  Some common function handles for this are
+%     DATA=USERTAPER(DATA,WIDTH) alters the default taper width.  Note that
+%     the default here is [0 0] which means no leading or trailing tapers. 
+%     This differs from the default WIDTH in the function TAPER.  For more
+%     details on how WIDTH is specified see there.
+%
+%     DATA=USERTAPER(DATA,WIDTH,FUNC) applies function FUNC to records in
+%     DATA after tapering and before the confirmation window.  FUNC must be
+%     a function handle.  Some common function handles for this are
 %     @removemean and @removetrend.
 %
-%     DATA=USERTAPER(DATA,FUNC,'FIELD',VALUE,...) passes field/value pairs
-%     to the plotting function, to allow further customization.
+%     DATA=USERTAPER(DATA,WIDTH,FUNC,'FIELD',VALUE,...) passes field/value
+%     pairs to the plotting function, to allow further customization.
 %
 %     [DATA,TPR]=USERTAPER(...) returns a struct TPR with the following
 %     fields:
@@ -38,10 +44,11 @@ function [data,tpr,ax]=usertaper(data,func,varargin)
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Taper and remove the trend afterwards (before confirmation window):
-%      data=usertaper(data,@removetrend);
+%     % Taper and remove the trend afterwards (before confirmation window):
+%     data=usertaper(data,[],@removetrend);
 %
-%    See also: TAPER, USERWINDOW, USERCLUSTER, SELECTRECORDS
+%    See also: TAPER, USERWINDOW, USERCLUSTER, SELECTRECORDS, USERWINNOW,
+%              USERMOVEOUT
 
 %     Version History:
 %        Sep.  9, 2009 - rewrite and added documentation
@@ -54,9 +61,11 @@ function [data,tpr,ax]=usertaper(data,func,varargin)
 %        Apr. 22, 2010 - replace crash with exit (but still crash)
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %        Jan.  6, 2011 - use key2zoompan
+%        Jan. 17, 2011 - allow specifying the default taper width, altered
+%                        the menus (no more crashing exit)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 11:00 GMT
+%     Last Updated Jan. 17, 2011 at 11:00 GMT
 
 % todo:
 % - subplot showing taper
@@ -64,6 +73,10 @@ function [data,tpr,ax]=usertaper(data,func,varargin)
 
 % check nargin
 error(nargchk(1,inf,nargin));
+if(nargin>3 && ~mod(nargin,2))
+    error('seizmo:usertaper:badNumInputs',...
+        'Bad number of arguments!');
+end
 
 % check data structure
 versioninfo(data,'dep');
@@ -88,8 +101,24 @@ end
 
 % attempt tapering
 try
+    % check taper width
+    if(nargin<2 || isempty(width))
+        width=[0 0];
+    elseif(numel(width)>2 || ~isreal(width))
+        error('seizmo:usertaper:badInput',...
+            'WIDTH must be a scalar or 1x2 vector of taper widths!');
+    end
+    
+    % force into untapered limits
+    % - this is how I work with it internally
+    if(isscalar(width))
+        width=[width 1-width];
+    else
+        width(2)=1-width(2);
+    end
+    
     % check function handle
-    if(nargin<2 || isempty(func))
+    if(nargin<3 || isempty(func))
         func=@deal;
     elseif(~isa(func,'function_handle'))
         error('seizmo:usertaper:badInput',...
@@ -103,7 +132,7 @@ try
 
     % taper parameters
     tpr.type=[];
-    tpr.width=[0 1];
+    tpr.width=width;
     tpr.option=[];
     tpr.func=func;
     
@@ -176,10 +205,13 @@ try
         end
 
         % display prompt and get user choice
-        choice=menu(prompt,'RESELECT TAPER TYPE',...
-            'RESELECT POST-TAPER FUNCTION','OVERLAY PLOT',...
-            'EVENLY SPACED PLOT','DISTANCE SPACED PLOT',...
-            'DO NOT TAPER','EXIT');
+        choice=menu(prompt,...
+            'RESELECT TAPER TYPE',...
+            'RESELECT POST-TAPER FUNCTION',...
+            'SELECTION IN AN OVERLAY PLOT',...
+            'SELECTION IN AN EVENLY SPACED PLOT',...
+            'SELECTION IN AN DISTANCE SPACED PLOT',...
+            'DO NOT TAPER');
 
         % proceed by user choice
         switch choice
@@ -290,9 +322,6 @@ try
                 tpr.option=[];
                 data=changeheader(data,'b',b,'e',e,'delta',delta);
                 return;
-            case 7 % immediate death
-                error('seizmo:usertaper:killYourSelf',...
-                    'User demanded early exit!');
         end
         
         % use this axis
@@ -309,7 +338,7 @@ try
         hold(ax,'off')
 
         % loop until user finalizes markers
-        final=false; xzoom=false; yzoom=false;
+        final=false;
         while(~final)
             % bring plot to focus (redraw if closed)
             if(~ishandle(ax))
@@ -390,7 +419,7 @@ try
         choice=0;
         while(~choice)
             choice=menu('KEEP TAPER?',...
-                'YES','NO - TRY AGAIN','EXIT');
+                'YES','NO - TRY AGAIN');
             switch choice
                 case 1 % rainbow's end
                     data=changeheader(data2,'b',b,'e',e,'delta',delta);
@@ -402,9 +431,6 @@ try
                         reax={};
                         ax=-1;
                     end
-                case 3 % i bear too great a shame to go on
-                    error('seizmo:usertaper:killYourSelf',...
-                        'User demanded early exit!');
             end
         end
     end
@@ -418,7 +444,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

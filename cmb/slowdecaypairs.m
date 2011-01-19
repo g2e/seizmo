@@ -30,23 +30,21 @@ function [pf]=slowdecaypairs(results,azrng,gcrng)
 
 %     Version History:
 %        Dec. 12, 2010 - initial version
+%        Jan. 18, 2011 - update for results struct standardization, added
+%                        corrections & correlation coefficients to output,
+%                        time is now a string, require common event
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 12, 2010 at 13:35 GMT
+%     Last Updated Jan. 18, 2010 at 13:35 GMT
 
 % todo:
+% - add corrections & correlations to output
 
 % check nargin
 error(nargchk(3,3,nargin));
 
 % check results struct
-reqfields={'useralign' 'filter' 'usersnr' 'tt_start' ...
-    'corrections' 'phase' 'runname' 'dirname'};
-if(~isstruct(results) || any(~isfield(results,reqfields)))
-    error('seizmo:slowdecaypairs:badInput',...
-        ['RESULTS must be a struct with the fields:\n' ...
-        sprintf('''%s'' ',reqfields{:}) '!']);
-end
+error(check_cmb_results(results));
 
 % check azrng & gcrng
 if(~isreal(azrng) || ~any(numel(azrng)==[1 2]))
@@ -77,6 +75,13 @@ for a=1:numel(results)
     [st,ev,delaz,kname]=getheader(results(a).useralign.data,...
         'st','ev','delaz','kname');
     
+    % check event info matches
+    ev=unique(ev,'rows');
+    if(size(ev,1)>1)
+        error('seizmo:slowdecaypairs:badInput',...
+            'EVENT location varies between records!');
+    end
+    
     % corrected relative arrival times and amplitudes
     rtime=results(a).useralign.solution.arr;
     crtime=results(a).useralign.solution.arr...
@@ -90,20 +95,11 @@ for a=1:numel(results)
     ramplerr=results(a).useralign.solution.amperr;
     
     % get cluster indexing
-    if(isfield(results,'usercluster'))
-        cidx=results(a).usercluster.T;
-        good=results(a).usercluster.good;
-    else
-        cidx=ones(nrecs,1);
-        good=true;
-    end
+    cidx=results(a).usercluster.T;
+    good=results(a).usercluster.good;
     
     % get outliers
-    if(isfield(results,'outliers'))
-        outliers=results(a).outliers;
-    else
-        outliers=false(nrecs,1);
-    end
+    outliers=results(a).outliers.bad;
     
     % get pairs within range (need the indices)
     dgc=abs(delaz(:,ones(nrecs,1))-delaz(:,ones(nrecs,1)).')...
@@ -125,9 +121,10 @@ for a=1:numel(results)
         'slow',[],'slowerr',[],'decay',[],'decayerr',[],...
         'cslow',[],'cslowerr',[],'cdecay',[],'cdecayerr',[],...
         'cluster',[],'kname',[],'st',[],'ev',[],'delaz',[],...
+        'corrections',[],'corrcoef',[],...
         'freq',results(a).filter.corners,'phase',results(a).phase,...
         'runname',results(a).runname,'dirname',results(a).dirname,...
-        'time',now);
+        'time',datestr(now));
     
     % detail message
     if(verbose); print_time_left(0,npairs); end
@@ -138,12 +135,21 @@ for a=1:numel(results)
         pf(total+b).cluster=cidx(idx1(b));
         pf(total+b).kname=kname([idx1(b) idx2(b)],:);
         pf(total+b).st=st([idx1(b) idx2(b)],:);
-        pf(total+b).ev=ev([idx1(b) idx2(b)],:);
+        pf(total+b).ev=ev;
         pf(total+b).delaz=delaz([idx1(b) idx2(b)],:);
         
         % great circle distance and width
         pf(total+b).gcdist=dgc(idx1(b),idx2(b));
         pf(total+b).azwidth=daz(idx1(b),idx2(b));
+        
+        % corrections
+        pf(total+b).corrections=fixcorrstruct(results(a).corrections,...
+            [idx1(b) idx2(b)]);
+        
+        % correlation coefficients
+        pf(total+b).corrcoef=...
+            submat(ndsquareform(results(a).useralign.xc.cg),...
+            1:2,[idx1(b) idx2(b)],3,1);
         
         % find slowness & decay rate
         [m,covm]=wlinem(delaz([idx1(b) idx2(b)],1),...
@@ -179,4 +185,16 @@ for a=1:numel(results)
     total=total+npairs;
 end
 
+end
+
+
+function [s]=fixcorrstruct(s,good)
+fields=fieldnames(s);
+for i=1:numel(fields)
+    if(isstruct(s.(fields{i})))
+        s.(fields{i})=fixcorrstruct(s.(fields{i}),good);
+    else
+        s.(fields{i})=s.(fields{i})(good);
+    end
+end
 end
