@@ -34,15 +34,15 @@ function [lat,lon]=gcarc2latlon(lat1,lon1,lat2,lon2,npts)
 %     Version History:
 %        Nov. 15, 2009 - initial version
 %        Dec. 13, 2010 - fix wrap-around bug in example
+%        Jan. 22, 2011 - nargchk fix, code formatting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 13, 2009 at 19:35 GMT
+%     Last Updated Jan. 22, 2011 at 19:35 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(4,5,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,5,nargin));
 
 % default/check npts
 if(nargin==4 || isempty(npts)); npts=100; end
@@ -84,8 +84,12 @@ if(~isequal(sz1,sz2) || ~isequal(sz3,sz4))
 end
 
 % expand scalars
-if(n1==1 && n3~=1); lat1=repmat(lat1,sz3); lon1=repmat(lon1,sz3); n1=n3; sz1=sz3; end
-if(n3==1 && n1~=1); lat2=repmat(lat2,sz1); lon2=repmat(lon2,sz1); sz3=sz1; end
+if(n1==1 && n3~=1)
+    lat1=repmat(lat1,sz3); lon1=repmat(lon1,sz3); n1=n3; sz1=sz3;
+end
+if(n3==1 && n1~=1);
+    lat2=repmat(lat2,sz1); lon2=repmat(lon2,sz1); sz3=sz1;
+end
 
 % cross check inputs
 if(~isequal(sz1,sz3))

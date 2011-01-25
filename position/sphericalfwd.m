@@ -32,15 +32,16 @@ function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 %        Oct. 26, 2008 - improved scalar expansion, doc and comment update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        May   8, 2009 - minor doc fix
+%        Jan. 22, 2011 - use degrees functions, fix pole result giving
+%                        complex occasionally, nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Jan. 22, 2011 at 21:15 GMT
 
 % todo:
 
 % require 4 inputs
-msg=nargchk(4,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,4,nargin));
 
 % size up inputs
 sz1=size(evla); sz2=size(evlo);
@@ -74,25 +75,21 @@ end
 if(n2==1); evla=repmat(evla,sz3); evlo=repmat(evlo,sz3); end
 if(n4==1); gcarc=repmat(stla,sz1); az=repmat(stlo,sz1); end
 
-% convert to radians
-d2r=pi/180; r2d=180/pi;
-evla=evla.*d2r;
-evlo=evlo.*d2r;
-gcarc=gcarc.*d2r;
-az=az.*d2r;
+% for conversion
+r2d=180/pi;
 
 % get destination point
-stla=asin(sin(evla).*cos(gcarc)+cos(evla).*sin(gcarc).*cos(az));
-stlo=mod(evlo+atan2(sin(az).*sin(gcarc).*cos(evla),...
-    cos(gcarc)-sin(evla).*sin(stla)),2*pi);
+stla=real(asind(sind(evla).*cosd(gcarc)...
+    +cosd(evla).*sind(gcarc).*cosd(az)));
+stlo=mod(evlo+r2d.*atan2(sind(az).*sind(gcarc).*cosd(evla),...
+    cosd(gcarc)-sind(evla).*sind(stla)),360);
 
 % get back azimuth
-baz=mod(r2d.*atan2(sin(evlo-stlo).*cos(evla),...
-        cos(stla).*sin(evla)-sin(stla).*cos(evla).*cos(evlo-stlo)),360);
+baz=mod(r2d.*atan2(sind(evlo-stlo).*cosd(evla),...
+        cosd(stla).*sind(evla)-sind(stla).*cosd(evla).*cosd(evlo-stlo)),...
+        360);
 
-% proper units/range
-stla=stla.*r2d;
-stlo=stlo.*r2d;
+% proper range
 stlo(stlo>180)=stlo(stlo>180)-360;
 
 end

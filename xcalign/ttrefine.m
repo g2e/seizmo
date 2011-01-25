@@ -77,9 +77,10 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %        Mar. 22, 2010 - account for ttalign change, use abs rather than
 %                        sqrt the square
 %        Sep. 13, 2010 - nargchk fix
+%        Jan. 23, 2011 - allow zero polarity if FORCEPOLAR is false
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2010 at 01:05 GMT
+%     Last Updated Jan. 23, 2011 at 01:05 GMT
 
 % todo:
 
@@ -97,7 +98,7 @@ if(nargin<10 || isempty(SKIP)); SKIP=false; end
 %   - wg can be scalar (expanded)
 % - dt, std, pol should all be the same
 [nr,nxc,np,vector]=check_xc_info(cg,lg,pg);
-check_xc_solutions(nr,dt,std,pol);
+check_xc_solutions(nr,dt,std,pol,FORCEPOLAR);
 wg=check_xc_weights(cg,wg);
 if(~isscalar(MINSTD) || ~isreal(MINSTD))
     error('seizmo:ttrefine:badInput',...
@@ -279,7 +280,7 @@ end
 
 end
 
-function []=check_xc_solutions(nr,dt,std,pol)
+function []=check_xc_solutions(nr,dt,std,pol,FORCEPOLAR)
 % checking that all are correctly sized and valued
 if(~isreal(dt) || ~isequal(size(dt),[nr 1]))
     error('seizmo:ttrefine:badInput',...
@@ -287,7 +288,10 @@ if(~isreal(dt) || ~isequal(size(dt),[nr 1]))
 elseif(~isreal(std) || ~isequal(size(std),[nr 1]))
     error('seizmo:ttrefine:badInput',...
         'STD is not a properly sized real-valued column vector!');
-elseif(~isreal(pol) || any(abs(pol)~=1) || ~isequal(size(pol),[nr 1]))
+elseif(~isreal(pol) || any(abs(pol)~=1 & (pol | (~pol & FORCEPOLAR))) ...
+        || ~isequal(size(pol),[nr 1]))
+    % we allow zero polarity if FORCEPOLAR is false
+    % this is to handle edge cases
     error('seizmo:ttrefine:badInput',...
         'POL is not a properly sized column vector of 1s & -1s!');
 end

@@ -1,0 +1,253 @@
+function [gmt]=readgmt(file,type,marker)
+%READGMT    Reads the GMT vector file-format (ascii)
+%
+%    Usage:    gmt=readgmt(file)
+%              gmt=readgmt(file,type)
+%              gmt=readgmt(file,type,marker)
+%
+%    Description:
+%     GMT=READGMT(FILE) reads in a GMT ascii data file (sometimes called
+%     the GMT vector ascii file).  These files are almost always denoted
+%     with a .gmt extension.  The contents (usually 1 or more lines) is
+%     output as the struct GMT which contains the following fields:
+%      .type        - segment type (default is 'line')
+%      .comments    - full line comments before/in this segment
+%      .header      - text on segment's header line (denoted with a '>')
+%      .latitude    - latitude position(s) of this segment
+%      .longitude   - longitude position(s) of this segment
+%      .text        - remaining text on lon/lat line(s) of this segment
+%
+%     GMT=READGMT(FILE,TYPE) alters the feature type to TYPE.  The default
+%     is 'line' and is currently unused.
+%
+%     GMT=READGMT(FILE,TYPE,MARKER) alters the segment separator (aka
+%     marker) to MARKER, a single ascii character.  The default is '>'.
+%
+%    Notes:
+%     - Currently only handles the old GMT format.  OGM extensions are not
+%       handled yet (ie they are ignored).
+%
+%    Examples:
+%     % Read plate boundary .gmt file:
+%     file=[fileparts(which('readgmt.m')) filesep 'plate_boundaries.gmt'];
+%     plates=readgmt(file);
+%
+%    See also: WRITEGMT
+
+%     Version History:
+%        Jan. 20, 2011 - initial version
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Jan. 20, 2011 at 10:35 GMT
+
+% todo
+
+% check nargin
+error(nargchk(0,3,nargin));
+
+% default type/marker
+if(nargin<2 || isempty(type)); type=[]; end
+if(nargin<3 || isempty(marker)); marker='>'; end
+
+% check type/marker
+validtype={...
+    'point' 'multipoint' ...
+    'line' 'multiline' ...
+    'polygon' 'multipolygon'};
+if(~isempty(type) && (~isstring(type) || ~any(strcmpi(type,validtype))))
+    error('seizmo:readgmt:badInput',...
+        ['TYPE must be one of the following:\n' ...
+        sprintf('''%s'' ',validtype{:})]);
+elseif(~ischar(marker) || ~isscalar(marker))
+    error('seizmo:readgmt:badInput',...
+        'MARKER must be a single character (like ''>'')!');
+end
+
+% file input
+filterspec={
+    '*.gmt;*.GMT' 'GMT Files (*.gmt,*.GMT)';
+    '*.txt;*.TXT' 'TXT Files (*.txt,*.TXT)';
+    '*.*' 'All Files (*.*)'};
+if(nargin<1 || isempty(file))
+    [file,path]=uigetfile(filterspec,'Select GMT File');
+    if(isequal(0,file))
+        error('seizmo:readgmt:noFileSelected','No input file selected!');
+    end
+    file=strcat(path,filesep,file);
+else
+    % check file
+    if(~isstring(file))
+        error('seizmo:readgmt:fileNotString',...
+            'FILE must be a string!');
+    end
+    if(~exist(file,'file'))
+        error('seizmo:readgmt:fileDoesNotExist',...
+            'File: %s\nDoes Not Exist!',file);
+    elseif(exist(file,'dir'))
+        error('seizmo:readgmt:dirConflict',...
+            'File: %s\nIs A Directory!',file);
+    end
+end
+
+% initialize output
+gmt([])=struct('type',[],'comments',[],'header',[],...
+    'latitude',[],'longitude',[],'text',[]);
+
+% read in file
+line=getwords(readtxt(file),sprintf('\n'));
+
+% keep processing until through all lines
+a=1; obj=1; nc=0; d=0;
+nlines=numel(line);
+while(a<=nlines)
+    % skip line if blank
+    if(isempty(line{a}))
+        a=a+1;
+        continue;
+    end
+    
+    % process line
+    words=getwords(line{a});
+    
+    % skip line if blank
+    if(isempty(words))
+        a=a+1;
+        continue;
+    end
+    
+    % record comments
+    % - we need to handle multi-segment comments
+    %   - requires moving comments to next segment
+    if(strcmp(words{1}(1),'#'))
+        % remove comment character
+        words{1}=words{1}(2:end);
+        if(isempty(words{1})); words(1)=[]; end
+        nc=nc+1;
+        gmt(obj).comment{nc,1}=joinwords(words);
+        a=a+1;
+        continue;
+    end
+    
+    % if marker encountered => new line/polygon
+    if(strcmp(words{1}(1),marker))
+        % set type
+        if(isempty(type)); type='line'; end
+        if(~strcmp(type,'line'))
+            error('seizmo:readgmt:badGMT',...
+                ['GMT File: %s\nLine %d: %s\n'...
+                'File must not have multiple data types!'],...
+                file,a,line{a});
+        end
+        gmt(obj).type=type;
+        
+        % extract header
+        words{1}=words{1}(2:end);
+        if(isempty(words{1})); words(1)=[]; end
+        gmt(obj).header=joinwords(words);
+        
+        % read in data until next segment or end
+        a=a+1; d=0; nextsegment=false; csd=0;
+        while(a<=nlines && ~nextsegment)
+            % skip line if blank
+            if(isempty(line{a}))
+                a=a+1;
+                continue;
+            end
+            
+            % process line
+            words=getwords(line{a});
+            
+            % skip line if blank
+            if(isempty(words))
+                a=a+1;
+                continue;
+            end
+            
+            % record comments
+            if(strcmp(words{1}(1),'#'))
+                % remove comment character
+                words{1}=words{1}(2:end);
+                if(isempty(words{1})); words(1)=[]; end
+                nc=nc+1;
+                csd=csd+1;
+                gmt(obj).comment{nc,1}=joinwords(words);
+                a=a+1;
+                continue;
+            end
+            
+            % data or new segment?
+            if(strcmp(words{1}(1),marker))
+                nextsegment=true;
+            else
+                % check has at least 2 numbers
+                % - does not work with complex dd:mm:ss like positions
+                if(numel(words)<2)
+                    error('seizmo:readgmt:badData',...
+                        ['GMT File: %s\nLine %d: %s\n'...
+                        'Line must have at least LON LAT!'],...
+                        file,a,line{a});
+                elseif(isnan(str2double(words{1})) ...
+                        || isnan(str2double(words{1})))
+                    error('seizmo:readgmt:badData',...
+                        ['GMT File: %s\nLine %d: %s\n'...
+                        'LON LAT must not be in DMS or have E/W/N/S!'],...
+                        file,a,line{a});
+                end
+                d=d+1;
+                gmt(obj).longitude(d,1)=str2double(words{1});
+                gmt(obj).latitude(d,1)=str2double(words{2});
+                gmt(obj).text{d,1}=joinwords(words(3:end));
+                a=a+1;
+                csd=0;
+            end
+        end
+        
+        % clean up segment (incrementing, moving comments)
+        if(csd)
+            gmt(obj+1).comment(1:csd,1)=gmt(obj).comment(end-csd+1:end,1);
+            gmt(obj).comment(end-csd+1:end,1)=[];
+            nc=csd;
+        else
+            nc=0;
+        end
+        obj=obj+1;
+    else % hmmm...points then?
+        % set type
+        if(isempty(type)); type='point'; end
+        if(~strcmp(type,'point'))
+            error('seizmo:readgmt:badGMT',...
+                ['GMT File: %s\nLine %d: %s\n'...
+                'File must not have multiple data types!'],...
+                file,a,line{a});
+        end
+        gmt(obj).type=type;
+        
+        % check has at least 2 numbers
+        % - does not work with complex dd:mm:ss like positions
+        if(numel(words)<2)
+            error('seizmo:readgmt:badData',...
+                ['GMT File: %s\nLine %d: %s\n'...
+                'Line must have at least LON LAT!'],...
+                file,a,line{a});
+        elseif(isnan(str2double(words{1})) ...
+                || isnan(str2double(words{1})))
+            error('seizmo:readgmt:badData',...
+                ['GMT File: %s\nLine %d: %s\n'...
+                'LON LAT must not be in DMS or have E/W/N/S!'],...
+                file,a,line{a});
+        end
+        d=d+1;
+        gmt(obj).longitude(d,1)=str2double(words{1});
+        gmt(obj).latitude(d,1)=str2double(words{2});
+        gmt(obj).text{d,1}=joinwords(words(3:end));
+        a=a+1;
+        obj=obj+1;
+    end
+end
+
+% delete last object if just a terminator
+if(isempty(gmt(end).header) && isempty(gmt(end).latitude))
+    gmt(end)=[];
+end
+
+end

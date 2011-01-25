@@ -1,0 +1,1536 @@
+VOLCANO	LOCATION	ELEV_M	LAT	LONG	ERUPTED	VNUM
+West Eifel Volc Field	Germany	600	50.17	6.85	Holocene	0100-01-
+Chaîne des Puys	France	1464	45.5	2.75	Holocene	0100-02-
+Olot Volc Field	Spain	893	42.17	2.53	Uncertain	0100-03-
+Larderello	Italy	500	43.25	10.87	AD 0-1899	0101-001
+Amiata	Italy	1738	42.9	11.63	Uncertain	0101-002
+Vulsini	Italy	800	42.6	11.93	Holocene	0101-003
+Albano, Monte	Italy	949	41.73	12.7	Uncertain	0101-004
+Campi Flegrei	Italy	458	40.83	14.14	AD 0-1899	0101-01=
+Vesuvius	Italy	1281	40.82	14.43	AD 1900-2005	0101-02=
+Ischia	Italy	789	40.73	13.9	AD 0-1899	0101-03=
+Panarea	Italy	421	38.63	15.07	Uncertain	0101-041
+Lipari	Italy	602	38.48	14.95	AD 0-1899	0101-042
+Stromboli	Italy	926	38.79	15.21	AD 1900-2005	0101-04=
+Vulcano	Italy	500	38.4	14.96	AD 0-1899	0101-05=
+Etna	Italy	3350	37.73	15	AD 1900-2005	0101-06=
+Pantelleria	Italy	836	36.77	12.02	AD 0-1899	0101-071
+Campi Flegrei Mar Sicilia	Italy	-8	37.1	12.7	AD 0-1899	0101-07=
+Methana	Greece	760	37.62	23.34	Holocene	0102-02=
+Mílos	Greece	751	36.7	24.44	AD 0-1899	0102-03=
+Santorini	Greece	367	36.4	25.4	AD 1900-2005	0102-04=
+Yali	Greece	176	36.63	27.1	Holocene	0102-051
+Nisyros	Greece	698	36.58	27.18	AD 0-1899	0102-05=
+Kos	Greece	430	36.83	27.26	Uncertain	0102-06=
+Kula	Turkey	750	38.58	28.52	Holocene	0103-00-
+Karapinar Field	Turkey	1302	37.67	33.65	Holocene	0103-001
+Hasan Dagi	Turkey	3253	38.13	34.17	Holocene	0103-002
+Göllü Dag	Turkey	2143	38.25	34.57	Uncertain	0103-003
+Acigöl-Nevsehir	Turkey	1689	38.57	34.52	Holocene	0103-004
+Karaca Dag	Turkey	1957	37.67	39.83	Holocene	0103-011
+Erciyes Dagi	Turkey	3916	38.52	35.48	Holocene	0103-01=
+Süphan Dagi	Turkey	4158	38.92	42.82	Holocene	0103-021
+Girekol	Turkey	0	39.17	43.33	Holocene	0103-022
+Nemrut Dagi	Turkey	2935	38.65	42.02	AD 0-1899	0103-02=
+Tendürek Dagi	Turkey	3584	39.33	43.83	AD 0-1899	0103-03=
+Ararat	Turkey	5165	39.7	44.28	AD 0-1899	0103-04-
+Kars Plateau	Turkey	3000	40.75	42.9	Uncertain	0103-05-
+Elbrus	Russia-SW	5633	43.33	42.45	AD 0-1899	0104-01-
+Kasbek	Georgia	5050	42.7	44.5	Holocene	0104-02-
+Kabargin Oth Group	Georgia	3650	42.55	44	Holocene	0104-03-
+Unnamed	Georgia	3750	42.45	44.25	Holocene	0104-04-
+Unnamed	Georgia	3400	41.55	43.6	Holocene	0104-05-
+Aragats	Armenia	4090	40.55	44.12	Holocene	0104-06-
+Agmagan-Karadag	Armenia	3560	40.28	44.75	Uncertain	0104-07-
+Dar-Alages	Armenia	3329	39.7	45.54	Holocene	0104-08-
+Porak	Armenia	2800	40.02	45.78	Holocene	0104-09-
+Tskhouk-Karckar	Armenia	3000	35.73	46.02	Holocene	0104-10-
+Tair, Jebel at	Red Sea	244	15.7	41.74	AD 0-1899	0201-01=
+Zukur	Red Sea	624	14.02	42.75	Holocene	0201-021
+Hanish	Red Sea	422	13.72	42.73	Holocene	0201-022
+Zubair, Jebel	Red Sea	191	15.05	42.18	AD 0-1899	0201-02=
+Jalua	Ethiopia	713	15.04	39.82	Holocene	0201-03=
+Dallol	Ethiopia	-48	14.24	40.3	AD 1900-2005	0201-041
+Alid	Ethiopia	904	14.88	39.92	Holocene	0201-04=
+Gada Ale	Ethiopia	287	13.98	40.41	Holocene	0201-05=
+Alu	Ethiopia	429	13.82	40.55	Holocene	0201-06=
+Borale Ale	Ethiopia	668	13.73	40.6	Holocene	0201-071
+Dalaffilla	Ethiopia	613	13.79	40.55	Holocene	0201-07=
+Erta Ale	Ethiopia	613	13.6	40.67	AD 1900-2005	0201-08=
+Hayli Gubbi	Ethiopia	521	13.5	40.72	Holocene	0201-091
+Ale Bagu	Ethiopia	1031	13.52	40.63	Holocene	0201-09=
+Nabro	Ethiopia	2218	13.37	41.7	Uncertain	0201-101
+Mallahle	Ethiopia	1875	13.27	41.65	Uncertain	0201-102
+Sorkale	Ethiopia	1611	13.18	41.73	Uncertain	0201-103
+Asavyo	Ethiopia	1200	13.07	41.6	Holocene	0201-104
+Mat Ala	Ethiopia	523	13.1	41.15	Holocene	0201-105
+Tat Ali	Ethiopia	700	13.28	41.07	Holocene	0201-106
+Borawli	Ethiopia	812	13.3	40.98	Holocene	0201-107
+Dubbi	Ethiopia	1625	13.58	41.81	AD 0-1899	0201-10=
+Ma Alalta	Ethiopia	1815	13.02	40.2	Holocene	0201-111
+Alayta	Ethiopia	1501	12.88	40.57	AD 1900-2005	0201-112
+Dabbahu	Ethiopia	1442	12.6	40.48	Holocene	0201-113
+Dabbayra	Ethiopia	1302	12.38	40.07	Holocene	0201-114
+Manda Hararo	Ethiopia	600	12.17	40.82	Holocene	0201-115
+Groppo	Ethiopia	930	11.73	40.25	Holocene	0201-116
+Afderà	Ethiopia	1295	13.08	40.85	Uncertain	0201-11=
+Borawli	Ethiopia	875	11.63	41.45	Holocene	0201-121
+Manda-Inakir	Ethiopia	600	12.38	42.2	AD 1900-2005	0201-122
+Mousa Alli	Ethiopia	2028	12.47	42.4	Holocene	0201-123
+Gufa	Ethiopia	600	12.55	42.53	Holocene	0201-124
+Assab Volc Field	Ethiopia	987	12.95	42.43	Holocene	0201-125
+Ardoukôba	Djibouti	298	11.58	42.47	AD 1900-2005	0201-126
+Tiho	Djibouti	500	11.53	42.05	Uncertain	0201-127
+Kurub	Ethiopia	625	11.88	41.21	Holocene	0201-12=
+Garbes	Djibouti	1000	11.42	42.2	Uncertain	0201-13=
+Dama Ali	Ethiopia	1068	11.28	41.63	AD 0-1899	0201-141
+Asmara	Ethiopia	500	11.27	41.52	Holocene	0201-142
+Boina	Djibouti	300	11.25	41.83	Uncertain	0201-14=
+Yangudi	Ethiopia	1383	10.58	41.04	Holocene	0201-151
+Gabillema	Ethiopia	1459	11.08	41.27	Holocene	0201-15=
+Ayelu	Ethiopia	2145	10.08	40.7	Holocene	0201-16=
+Hertali	Ethiopia	900	9.78	40.33	Holocene	0201-171
+Liado Hayk	Ethiopia	878	9.57	40.28	Uncertain	0201-172
+Adwa	Ethiopia	1733	10.07	40.84	Holocene	0201-17=
+Dofen	Ethiopia	1151	9.35	40.13	Holocene	0201-18=
+Beru	Ethiopia	1100	8.95	39.75	Holocene	0201-191
+Fentale	Ethiopia	2007	8.98	39.93	AD 0-1899	0201-19=
+Kone	Ethiopia	1619	8.8	39.69	AD 0-1899	0201-20-
+Unnamed	Ethiopia	1300	8.7	39.63	Holocene	0201-201
+Boset-Bericha	Ethiopia	2447	8.56	39.48	Holocene	0201-21-
+Bishoftu Volc Field	Ethiopia	1850	8.78	38.98	Holocene	0201-22-
+Unnamed	Ethiopia	1800	8.62	38.95	Holocene	0201-221
+Sodore	Ethiopia	1765	8.43	39.35	Holocene	0201-222
+Gedamsa Caldera	Ethiopia	1984	8.35	39.18	Holocene	0201-23-
+Bora-Bericcio	Ethiopia	2285	8.27	39.03	Holocene	0201-24-
+Tullu Moje	Ethiopia	2349	8.16	39.13	AD 1900-2005	0201-25-
+Unnamed	Ethiopia	1800	8.07	39.07	Holocene	0201-251
+East Zway	Ethiopia	1889	7.95	38.93	Holocene	0201-252
+Butajiri-Silti Field	Ethiopia	2281	8.05	38.35	Holocene	0201-26-
+Alutu	Ethiopia	2335	7.77	38.78	Holocene	0201-27-
+O'a Caldera	Ethiopia	2075	7.47	38.58	Holocene	0201-28-
+Corbetti Caldera	Ethiopia	2320	7.18	38.43	Holocene	0201-29-
+Bilate River Field	Ethiopia	1700	7.07	38.1	Holocene	0201-291
+Tepi	Ethiopia	2728	7.42	35.43	Holocene	0201-292
+Hobicha Caldera	Ethiopia	1800	6.78	37.83	Uncertain	0201-293
+Chiracha	Ethiopia	1650	6.65	38.12	Uncertain	0201-30-
+Tosa Sucha	Ethiopia	1650	5.92	37.57	Holocene	0201-31-
+Unnamed	Ethiopia	1200	5.65	37.67	Holocene	0201-311
+Korath Range	Ethiopia	912	5.1	35.88	Uncertain	0201-32-
+Mega Basalt Field	Ethiopia	1067	4.08	37.42	Holocene	0201-33-
+North Island	Africa-E	520	4.07	36.05	Holocene	0202-001
+Central Island	Africa-E	550	3.5	36.04	Holocene	0202-01=
+Marsabit	Africa-E	1707	2.32	37.97	Uncertain	0202-021
+South Island	Africa-E	800	2.63	36.6	AD 0-1899	0202-02=
+Barrier, The	Africa-E	1032	2.32	36.57	AD 1900-2005	0202-03=
+Namarunu	Africa-E	817	1.9	36.27	Holocene	0202-04-
+Segererua Plateau	Africa-E	699	1.57	37.9	Holocene	0202-05-
+Emuruangogolak	Africa-E	1328	1.5	36.33	AD 1900-2005	0202-051
+Silali	Africa-E	1528	1.15	36.23	Holocene	0202-052
+Paka	Africa-E	1697	0.92	36.18	Holocene	0202-053
+Korosi	Africa-E	1446	0.77	36.12	Holocene	0202-054
+Ol Kokwe	Africa-E	1130	0.62	36.08	Holocene	0202-055
+Nyambeni Hills	Africa-E	750	0.23	37.87	Holocene	0202-056
+Menengai	Africa-E	2278	-0.2	36.07	Holocene	0202-06=
+Elmenteita Badlands	Africa-E	2126	-0.52	36.27	Holocene	0202-071
+Homa Mountain	Africa-E	1751	-0.38	34.5	Holocene	0202-07=
+Eburru, Ol Doinyo	Africa-E	2856	-0.63	36.23	Holocene	0202-08=
+Olkaria	Africa-E	2434	-0.9	36.29	AD 0-1899	0202-09=
+Longonot	Africa-E	2776	-0.92	36.45	AD 0-1899	0202-10=
+Suswa	Africa-E	2356	-1.18	36.35	Holocene	0202-11=
+Lengai, Ol Doinyo	Africa-E	2890	-2.75	35.9	AD 1900-2005	0202-12=
+Chyulu Hills	Africa-E	2188	-2.68	37.88	AD 0-1899	0202-13=
+Kilimanjaro	Africa-E	5895	-3.07	37.35	Holocene	0202-15=
+Igwisi Hills	Africa-E	0	-4.87	31.92	Holocene	0202-161
+Unnamed	Africa-E	0	-8.63	33.57	Holocene	0202-162
+SW Usangu Basin	Africa-E	2179	-8.75	33.8	Holocene	0202-163
+Ngozi	Africa-E	2622	-8.97	33.57	Holocene	0202-164
+Izumbwe-Mpoli	Africa-E	1568	-8.93	33.4	Holocene	0202-165
+Rungwe	Africa-E	2961	-9.13	33.67	Holocene	0202-166
+Meru	Africa-E	4565	-3.25	36.75	AD 1900-2005	0202-16=
+Kieyo	Africa-E	2175	-9.23	33.78	AD 0-1899	0202-17=
+Fort Portal Field	Africa-C	1524	0.7	30.25	Holocene	0203-001
+Kyatwa Volc Field	Africa-C	1430	0.45	30.25	Uncertain	0203-002
+Katwe-Kikorongo Field	Africa-C	1067	-0.08	29.92	Holocene	0203-003
+Bunyaruguru Field	Africa-C	1554	-0.2	30.08	Holocene	0203-004
+Katunga	Africa-C	1707	-0.47	30.18	Holocene	0203-005
+May-ya-moto	Africa-C	950	-0.93	29.33	Uncertain	0203-01=
+Nyamuragira	Africa-C	3058	-1.41	29.2	AD 1900-2005	0203-02=
+Nyiragongo	Africa-C	3470	-1.52	29.25	AD 1900-2005	0203-03=
+Karisimbi	Africa-C	4507	-1.5	29.45	Holocene	0203-04-
+Visoke	Africa-C	3711	-1.47	29.49	AD 1900-2005	0203-05-
+Muhavura	Africa-C	4127	-1.38	29.67	Holocene	0203-06-
+Bufumbira	Africa-C	2440	-1.23	29.72	Uncertain	0203-07-
+Tshibinda	Africa-C	1460	-2.32	28.75	Holocene	0203-08-
+Sao Tome	Africa-W	2024	0.32	6.72	Uncertain	0204-001
+San Carlos	Africa-W	2260	3.35	8.52	Holocene	0204-002
+San Joaquin	Africa-W	2009	3.35	8.63	Holocene	0204-003
+Santa Isabel	Africa-W	2972	3.58	8.75	AD 1900-2005	0204-004
+Cameroon	Africa-W	4095	4.2	9.17	AD 1900-2005	0204-01=
+Manengouba	Africa-W	2411	5.03	9.83	Holocene	0204-02-
+Oku Volc Field	Africa-W	3011	6.25	10.5	Uncertain	0204-03-
+Ngaoundere Plateau	Africa-W	0	7.25	13.67	Uncertain	0204-04-
+Biu Plateau	Africa-W	0	10.75	12	Uncertain	0204-05-
+Haruj	Africa-N	1200	27.25	17.5	Holocene	0205-00-
+Tôh, Tarso	Africa-N	2000	21.33	16.33	Holocene	0205-001
+Toussidé, Tarso	Africa-N	3265	21.03	16.45	Holocene	0205-01=
+Koussi, Emi	Africa-N	3415	19.8	18.53	Holocene	0205-021
+Voon, Tarso	Africa-N	3100	20.92	17.28	Holocene	0205-02=
+Marra, Jebel	Africa-N	3042	12.95	24.27	Holocene	0205-03-
+Kutum Volc Field	Africa-N	0	14.5	25.8	Uncertain	0205-04-
+Meidob Volc Field	Africa-N	2000	15.32	26.47	Holocene	0205-05-
+Bayuda Volc Field	Africa-N	670	18.33	32.75	AD 0-1899	0205-06-
+Umm Arafieb, Jebel	Africa-N	0	18.17	33.83	Uncertain	0205-07-
+Sharat Kovakab	Syria	534	36.53	40.85	Holocene	0300-01-
+Unnamed	Syria	0	36.67	37	AD 0-1899	0300-02-
+Unnamed	Syria	945	33.31	36.93	Holocene	0300-03-
+Unnamed	Syria	1197	33.15	36.26	Holocene	0300-04-
+Es Safa	Syria	979	33.08	37.15	AD 0-1899	0300-05-
+Unnamed	Syria	1436	32.66	36.43	Holocene	0300-06-
+Rahah, Harrat ar	Arabia-W	1660	27.8	36.17	Holocene	0301-01=
+'Uwayrid, Harrat	Arabia-W	1900	27.08	37.25	AD 0-1899	0301-02=
+Lunayyir, Harrat	Arabia-W	1370	25.17	37.75	AD 0-1899	0301-04-
+Ithnayn, Harrat	Arabia-W	1625	26.58	40.2	Holocene	0301-05=
+Khaybar, Harrat	Arabia-W	2093	25	39.92	AD 0-1899	0301-06=
+Kishb, Harrat	Arabia-W	1475	22.8	41.38	Holocene	0301-071
+Rahat, Harrat	Arabia-W	1744	23.08	39.78	AD 0-1899	0301-07=
+Yar, Jabal	Arabia-W	305	17.05	42.83	AD 0-1899	0301-08-
+Arhab, Harra of	Arabia-S	3100	15.63	44.08	AD 0-1899	0301-09-
+Marha, Jabal el-	Arabia-S	2650	15.28	44.22	Holocene	0301-10-
+Haylan, Jabal	Arabia-S	1550	15.43	44.78	Holocene	0301-11-
+Dhamar, Harras of	Arabia-S	3500	14.57	44.67	AD 1900-2005	0301-12-
+Hamman Demt, Jabal	Arabia-S	1500	14.05	44.75	Holocene	0301-13-
+Unnamed	Arabia-S	0	12.25	45	Uncertain	0301-15-
+Sawâd, Harra es-	Arabia-S	1737	13.58	46.12	AD 0-1899	0301-16-
+Bal Haf, Harra of	Arabia-S	233	14.05	48.33	Holocene	0301-17-
+Bir Borhut	Arabia-S	0	15.55	50.63	Uncertain	0301-18-
+Unnamed	Iran	0	39.33	45.17	Holocene	0302-00-
+Sahand	Iran	3707	37.75	46.43	Holocene	0302-001
+Sabalan	Iran	4811	38.25	47.92	Holocene	0302-002
+Damavand	Iran	5670	35.95	52.11	Holocene	0302-01-
+Qal'eh Hasan Ali	Iran	0	29.4	57.57	Uncertain	0302-02-
+Bazman	Iran	3490	28.07	60	Holocene	0302-03-
+Unnamed	Iran	0	28.17	60.67	Uncertain	0302-04-
+Taftan	Iran	4050	28.6	61.6	AD 1900-2005	0302-05-
+Dacht-i-Navar Group	Afghanistan	3800	33.95	67.92	Holocene	0302-06-
+Vakak Group	Afghanistan	3190	34.25	67.97	Holocene	0302-07-
+Grille, La	Indian O.-W	1087	-11.47	43.33	Holocene	0303-001
+Ambre-Bobaomby	Madagascar	1475	-12.48	49.1	Holocene	0303-011
+Nosy-Be	Madagascar	214	-13.32	48.48	Holocene	0303-012
+Ankaizina Field	Madagascar	2878	-14.3	48.67	Holocene	0303-013
+Itasy Volc Field	Madagascar	1800	-19	46.77	Holocene	0303-014
+Ankaratra Field	Madagascar	2644	-19.4	47.2	Holocene	0303-015
+Karthala	Indian O.-W	2361	-11.75	43.38	AD 1900-2005	0303-01=
+Fournaise, Piton de la	Indian O.-W	2631	-21.23	55.71	AD 1900-2005	0303-02=
+Boomerang Seamount	Indian O.-S	-650	-37.72	77.83	AD 1900-2005	0304-00-
+Amsterdam Island	Indian O.-S	881	-37.83	77.52	Holocene	0304-001
+St. Paul	Indian O.-S	268	-38.72	77.53	AD 0-1899	0304-002
+McDonald Islands	Indian O.-S	230	-53.03	72.6	AD 1900-2005	0304-011
+Heard	Indian O.-S	2745	-53.11	73.51	AD 1900-2005	0304-01=
+Kerguelen Islands	Indian O.-S	1840	-49.58	69.5	Holocene	0304-02=
+Est, Ile de l'	Indian O.-S	1090	-46.43	52.2	Uncertain	0304-03-
+Possession, Ile de la	Indian O.-S	934	-46.42	51.63	Holocene	0304-04-
+Cochons, Ile aux	Indian O.-S	775	-46.1	50.23	Holocene	0304-05-
+Prince Edward Island	Indian O.-S	672	-46.63	37.95	Holocene	0304-06-
+Marion Island	Indian O.-S	1230	-46.9	37.75	AD 1900-2005	0304-07-
+Unnamed	Indian O.-E	0	11.75	80.75	Uncertain	0305-01=
+Whangarei	New Zealand	397	-35.75	174.27	Uncertain	0401-011
+Kaikohe-Bay of Islands	New Zealand	388	-35.3	173.9	AD 0-1899	0401-01=
+Mayor Island	New Zealand	355	-37.28	176.25	Holocene	0401-021
+Auckland Field	New Zealand	260	-36.9	174.87	AD 0-1899	0401-02=
+Egmont [Taranaki]	New Zealand	2518	-39.3	174.07	AD 0-1899	0401-03=
+Whale Island	New Zealand	354	-37.86	176.98	Uncertain	0401-041
+Rotorua	New Zealand	757	-38.08	176.27	Uncertain	0401-042
+White Island	New Zealand	321	-37.52	177.18	AD 1900-2005	0401-04=
+Okataina	New Zealand	1111	-38.12	176.5	AD 1900-2005	0401-05=
+Reporoa	New Zealand	592	-38.42	176.33	AD 0-1899	0401-06-
+Maroa	New Zealand	1156	-38.42	176.08	AD 0-1899	0401-061
+Taupo	New Zealand	760	-38.82	176	AD 0-1899	0401-07=
+Tongariro	New Zealand	1978	-39.13	175.64	AD 1900-2005	0401-08=
+Ruapehu	New Zealand	2797	-39.28	175.57	AD 1900-2005	0401-10=
+Rumble V	New Zealand	-700	-36.14	178.2	Holocene	0401-11-
+Rumble IV	New Zealand	-450	-36.13	178.05	Holocene	0401-12-
+Rumble III	New Zealand	-140	-35.75	178.48	AD 1900-2005	0401-13-
+Healy	New Zealand	950	-34.98	179	AD 0-1899	0401-14-
+Curtis Island	Kermadec Is	137	-30.54	-178.56	Uncertain	0402-01=
+Macauley Island	Kermadec Is	238	-30.2	-178.47	Holocene	0402-021
+Raoul Island	Kermadec Is	516	-29.27	-177.92	AD 1900-2005	0402-03=
+Monowai Seamount	Kermadec Is	-100	-25.89	-177.19	AD 1900-2005	0402-05-
+Unnamed	Tonga-SW Pacific	-500	-21.38	-175.65	AD 1900-2005	0403-01=
+Unnamed	Tonga-SW Pacific	-13	-20.85	-175.53	AD 1900-2005	0403-03=
+Hunga Tonga-Hunga Ha'apai	Tonga-SW Pacific	149	-20.57	-175.38	AD 1900-2005	0403-04=
+Falcon Island	Tonga-SW Pacific	-17	-20.32	-175.42	AD 1900-2005	0403-05=
+Kao	Tonga-SW Pacific	1030	-19.67	-175.03	Holocene	0403-061
+Tofua	Tonga-SW Pacific	515	-19.75	-175.07	AD 1900-2005	0403-06=
+Metis Shoal	Tonga-SW Pacific	43	-19.18	-174.87	AD 1900-2005	0403-07=
+Home Reef	Tonga-SW Pacific	-2	-18.99	-174.78	AD 1900-2005	0403-08=
+Unnamed	Tonga-SW Pacific	-300	-18.32	-174.37	AD 1900-2005	0403-091
+Late	Tonga-SW Pacific	540	-18.81	-174.65	AD 0-1899	0403-09=
+Tafahi	Tonga-SW Pacific	560	-15.85	-173.72	Uncertain	0403-101
+Curacoa	Tonga-SW Pacific	-33	-15.62	-173.67	AD 1900-2005	0403-102
+Fonualei	Tonga-SW Pacific	180	-18.02	-174.33	AD 1900-2005	0403-10=
+Niuafo'ou	Tonga-SW Pacific	260	-15.6	-175.63	AD 1900-2005	0403-11=
+Vailulu'u	Samoa-SW Pacific	-590	-14.22	-169.06	AD 1900-2005	0404-00-
+Ta'u	Samoa-SW Pacific	931	-14.23	-169.45	Holocene	0404-001
+Ofu-Olosega	Samoa-SW Pacific	639	-14.18	-169.62	AD 0-1899	0404-01=
+Tutuila	Samoa-SW Pacific	653	-14.3	-170.7	Holocene	0404-02-
+Upolu	Samoa-SW Pacific	1100	-13.94	-171.72	Holocene	0404-03-
+Savai'i	Samoa-SW Pacific	1858	-13.61	-172.53	AD 1900-2005	0404-04=
+Wallis Islands	SW Pacific	143	-13.3	-176.17	Holocene	0404-05-
+Taveuni	Fiji Is-SW Pacific	1241	-16.82	-179.97	AD 0-1899	0405-01-
+Koro	Fiji Is-SW Pacific	522	-17.32	179.4	Uncertain	0405-02-
+St. Andrew Strait	Admiralty Is-SW Pacific	270	-2.38	147.35	AD 1900-2005	0500-01=
+Baluan	Admiralty Is-SW Pacific	254	-2.57	147.28	Holocene	0500-02-
+Unnamed	Admiralty Is-SW Pacific	-1300	-3.03	147.78	AD 1900-2005	0500-03-
+Blup Blup	New Guinea-NE of	402	-3.51	144.62	Holocene	0501-001
+Kadovar	New Guinea-NE of	365	-3.62	144.62	Holocene	0501-002
+Boisa	New Guinea-NE of	240	-3.99	144.96	Holocene	0501-011
+Bam	New Guinea-NE of	685	-3.6	144.85	AD 1900-2005	0501-01=
+Manam	New Guinea-NE of	1807	-4.1	145.06	AD 1900-2005	0501-02=
+Karkar	New Guinea-NE of	1839	-4.65	145.96	AD 1900-2005	0501-03=
+Yomba	New Guinea-NE of	0	-4.92	146.75	Uncertain	0501-041
+Unnamed	New Guinea-NE of	-2000	-4.31	146.26	Uncertain	0501-04=
+Long Island	New Guinea-NE of	1280	-5.36	147.12	AD 1900-2005	0501-05=
+Umboi	New Guinea-NE of	1548	-5.59	147.88	Holocene	0501-06=
+Ritter Island	New Guinea-NE of	140	-5.52	148.12	AD 1900-2005	0501-07=
+Sakar	New Guinea-NE of	992	-5.41	148.09	Uncertain	0501-08=
+Unnamed	New Britain-SW Pac	0	-5.2	148.57	Uncertain	0502-001
+Langila	New Britain-SW Pac	1330	-5.53	148.42	AD 1900-2005	0502-01=
+Mundua	New Britain-SW Pac	179	-4.63	149.35	Holocene	0502-021
+Narage	New Britain-SW Pac	307	-4.55	149.13	Uncertain	0502-02=
+Garove	New Britain-SW Pac	368	-4.69	149.5	Holocene	0502-03=
+Dakataua	New Britain-SW Pac	400	-5.06	150.11	AD 0-1899	0502-04=
+Bola	New Britain-SW Pac	1155	-5.15	150.03	Holocene	0502-05=
+Garua Harbour	New Britain-SW Pac	565	-5.27	150.09	Uncertain	0502-06=
+Lolo	New Britain-SW Pac	805	-5.47	150.5	Uncertain	0502-071
+Garbuna Group	New Britain-SW Pac	564	-5.45	150.03	Holocene	0502-07=
+Pago	New Britain-SW Pac	742	-5.58	150.52	AD 1900-2005	0502-08=
+Walo	New Britain-SW Pac	15	-5.53	150.9	Uncertain	0502-09=
+Hargy	New Britain-SW Pac	1148	-5.33	151.1	AD 0-1899	0502-10=
+Bamus	New Britain-SW Pac	2248	-5.2	151.23	AD 0-1899	0502-11=
+Ulawun	New Britain-SW Pac	2334	-5.05	151.33	AD 1900-2005	0502-12=
+Unnamed	New Britain-SW Pac	0	-4.75	150.85	Uncertain	0502-131
+Lolobau	New Britain-SW Pac	858	-4.92	151.16	AD 1900-2005	0502-13=
+Rabaul	New Britain-SW Pac	688	-4.27	152.2	AD 1900-2005	0502-14=
+Doma Peaks	New Guinea	3568	-5.9	143.15	Uncertain	0503-00-
+Crater Mountain	New Guinea	3233	-6.58	145.08	Uncertain	0503-001
+Yelia	New Guinea	3384	-7.05	145.86	Uncertain	0503-002
+Koranga	New Guinea	1500	-7.33	146.71	Holocene	0503-003
+Madilogo	New Guinea	850	-9.2	147.57	Holocene	0503-004
+Hydrographers Range	New Guinea	1915	-9	148.37	Holocene	0503-011
+Lamington	New Guinea	1680	-8.95	148.15	AD 1900-2005	0503-01=
+Managlase Plateau	New Guinea	1342	-9.08	148.33	Holocene	0503-021
+Musa River	New Guinea	808	-9.31	148.13	Uncertain	0503-02=
+Sessagara	New Guinea	370	-9.48	149.13	Holocene	0503-031
+Victory	New Guinea	1925	-9.2	149.07	AD 1900-2005	0503-03=
+Goodenough	D'Entrecasteaux Is	220	-9.48	150.35	Holocene	0503-041
+Waiowa	New Guinea	640	-9.57	149.08	AD 1900-2005	0503-04=
+Iamalele	D'Entrecasteaux Is	200	-9.52	150.53	Holocene	0503-05=
+Dawson Strait Group	D'Entrecasteaux Is	500	-9.62	150.88	AD 0-1899	0503-06=
+Lihir	New Ireland-SW Pacific	700	-3.13	152.64	Holocene	0504-01=
+Ambitle	New Ireland-SW Pacific	450	-4.08	153.65	Holocene	0504-02=
+Tore	Bougainville-SW Pacific	2200	-5.83	154.93	Holocene	0505-00-
+Billy Mitchell	Bougainville-SW Pacific	1544	-6.09	155.23	AD 0-1899	0505-011
+Balbi	Bougainville-SW Pacific	2715	-5.83	154.98	Holocene	0505-01=
+Takuan Group	Bougainville-SW Pacific	2210	-6.44	155.61	Holocene	0505-021
+Bagana	Bougainville-SW Pacific	1750	-6.14	155.2	AD 1900-2005	0505-02=
+Loloru	Bougainville-SW Pacific	1887	-6.52	155.62	Holocene	0505-03=
+Nonda	Solomon Is-SW Pacific	760	-7.67	156.6	Uncertain	0505-04=
+Kana Keoki	Solomon Is-SW Pacific	-700	-8.75	157.03	Holocene	0505-052
+Coleman Seamount	Solomon Is-SW Pacific	0	-8.83	157.17	Holocene	0505-053
+Simbo	Solomon Is-SW Pacific	335	-8.29	156.52	Uncertain	0505-05=
+Unnamed	Solomon Is-SW Pacific	-240	-8.92	158.03	Holocene	0505-061
+Gallego	Solomon Is-SW Pacific	1000	-9.35	159.73	Uncertain	0505-062
+Kavachi	Solomon Is-SW Pacific	-20	-9.02	157.95	AD 1900-2005	0505-06=
+Savo	Solomon Is-SW Pacific	485	-9.13	159.82	AD 0-1899	0505-07=
+Tinakula	Santa Cruz Is-SW Pacific	851	-10.38	165.8	AD 1900-2005	0506-01=
+Motlav	Vanuatu-SW Pacific	411	-13.67	167.67	Holocene	0507-001
+Suretamatai	Vanuatu-SW Pacific	921	-13.8	167.47	AD 1900-2005	0507-01=
+Mere Lava	Vanuatu-SW Pacific	1028	-14.45	168.05	Holocene	0507-021
+Gaua	Vanuatu-SW Pacific	797	-14.27	167.5	AD 1900-2005	0507-02=
+Aoba	Vanuatu-SW Pacific	1496	-15.4	167.83	AD 1900-2005	0507-03=
+Ambrym	Vanuatu-SW Pacific	1334	-16.25	168.12	AD 1900-2005	0507-04=
+Lopevi	Vanuatu-SW Pacific	1413	-16.51	168.35	AD 1900-2005	0507-05=
+Epi	Vanuatu-SW Pacific	833	-16.68	168.37	AD 1900-2005	0507-06=
+Kuwae	Vanuatu-SW Pacific	-2	-16.83	168.54	AD 1900-2005	0507-07=
+Unnamed	Vanuatu-SW Pacific	216	-16.99	168.59	Uncertain	0507-08-
+North Vate	Vanuatu-SW Pacific	594	-17.45	168.33	Holocene	0507-081
+Traitor's Head	Vanuatu-SW Pacific	837	-18.75	169.23	AD 0-1899	0507-09=
+Yasur	Vanuatu-SW Pacific	361	-19.52	169.43	AD 1900-2005	0507-10=
+Aneityum	Vanuatu-SW Pacific	852	-20.2	169.83	Uncertain	0507-11-
+Eastern Gemini Seamount	SW Pacific	-80	-20.98	170.28	AD 1900-2005	0508-001
+Matthew Island	SW Pacific	177	-22.33	171.32	AD 1900-2005	0508-01=
+Hunter Island	SW Pacific	297	-22.4	172.05	AD 1900-2005	0508-02=
+Unnamed	SW Pacific	-2400	-25.78	168.63	AD 1900-2005	0508-03-
+Newer Volcanics Prov	Australia	1011	-37.77	142.5	Holocene	0509-01-
+Narcondum	Andaman Is-Indian O	710	13.43	94.25	Holocene	0600-001
+Barren Island	Andaman Is-Indian O	354	12.28	93.52	AD 1900-2005	0600-01=
+Pulau Weh	Sumatra	617	5.82	95.28	Uncertain	0601-01=
+Seulawah Agam	Sumatra	1810	5.45	95.66	AD 0-1899	0601-02=
+Peuet Sague	Sumatra	2801	4.91	96.33	AD 1900-2005	0601-03=
+Geureudong	Sumatra	2885	4.81	96.82	AD 1900-2005	0601-04=
+Kembar	Sumatra	2245	3.85	97.66	Uncertain	0601-06=
+Sibayak	Sumatra	2212	3.2	98.52	AD 0-1899	0601-07=
+Sinabung	Sumatra	2460	3.17	98.39	Holocene	0601-08=
+Toba	Sumatra	2157	2.58	98.83	Holocene	0601-09=
+Imun	Sumatra	1505	2.15	98.93	Uncertain	0601-101
+Helatoba-Tarutung	Sumatra	1100	2.03	98.93	Uncertain	0601-10=
+Lubukraya	Sumatra	1862	1.48	99.21	Uncertain	0601-111
+Sibualbuali	Sumatra	1819	1.56	99.26	Uncertain	0601-11=
+Sorikmarapi	Sumatra	2145	0.69	99.54	AD 1900-2005	0601-12=
+Sarik-Gajah	Sumatra	0	0.08	100.2	Uncertain	0601-131
+Talakmau	Sumatra	2919	0.08	99.98	Holocene	0601-13=
+Marapi	Sumatra	2891	-0.38	100.47	AD 1900-2005	0601-14=
+Tandikat	Sumatra	2438	-0.43	100.32	AD 1900-2005	0601-15=
+Talang	Sumatra	2597	-0.98	100.68	AD 1900-2005	0601-16=
+Hutapanjang	Sumatra	2021	-2.33	101.6	Holocene	0601-171
+Kerinci	Sumatra	3800	-1.81	101.26	AD 1900-2005	0601-17=
+Sumbing	Sumatra	2507	-2.41	101.73	AD 1900-2005	0601-18=
+Pendan	Sumatra	0	-2.82	102.02	Holocene	0601-191
+Kunyit	Sumatra	2151	-2.59	101.63	Holocene	0601-19=
+Belirang-Beriti	Sumatra	1958	-2.82	102.18	Holocene	0601-20=
+Daun, Bukit	Sumatra	2467	-3.38	102.37	Holocene	0601-21=
+Kaba	Sumatra	1952	-3.52	102.62	AD 1900-2005	0601-22=
+Patah	Sumatra	2817	-4.27	103.3	Uncertain	0601-231
+Dempo	Sumatra	3173	-4.03	103.13	AD 1900-2005	0601-23=
+Lumut Balai, Bukit	Sumatra	2055	-4.22	103.62	Holocene	0601-24=
+Ranau	Sumatra	1881	-4.83	103.92	Uncertain	0601-251
+Besar	Sumatra	1899	-4.43	103.67	AD 1900-2005	0601-25=
+Sekincau Belirang	Sumatra	1719	-5.12	104.32	Holocene	0601-26=
+Suoh	Sumatra	1000	-5.25	104.27	AD 1900-2005	0601-27=
+Hulubelu	Sumatra	1040	-5.35	104.6	Holocene	0601-28=
+Rajabasa	Sumatra	1281	-5.78	105.63	Holocene	0601-29=
+Krakatau	Indonesia	813	-6.1	105.42	AD 1900-2005	0602-00=
+Danau Complex	Java	1778	-6.2	105.97	Holocene	0603-01=
+Karang	Java	1778	-6.27	106.04	Uncertain	0603-02=
+Kiaraberes-Gagak	Java	1511	-6.73	106.65	AD 1900-2005	0603-03=
+Perbakti	Java	1699	-6.75	106.68	Holocene	0603-04=
+Salak	Java	2211	-6.72	106.73	AD 1900-2005	0603-05=
+Gede	Java	2958	-6.78	106.98	AD 1900-2005	0603-06=
+Patuha	Java	2434	-7.15	107.37	Holocene	0603-07=
+Malabar	Java	2343	-7.13	107.65	Uncertain	0603-081
+Wayang-Windu	Java	2182	-7.21	107.63	Holocene	0603-08=
+Tangkubanparahu	Java	2084	-6.77	107.6	AD 1900-2005	0603-09=
+Papandayan	Java	2665	-7.32	107.73	AD 1900-2005	0603-10=
+Kendang	Java	2608	-7.23	107.72	Holocene	0603-11=
+Kamojang, Kawah	Java	1730	-7.13	107.8	Holocene	0603-12=
+Tampomas	Java	1684	-6.77	107.95	Holocene	0603-131
+Guntur	Java	2249	-7.13	107.83	AD 0-1899	0603-13=
+Galunggung	Java	2168	-7.25	108.05	AD 1900-2005	0603-14=
+Talagabodas	Java	2201	-7.21	108.07	Holocene	0603-15=
+Karaha, Kawah	Java	1155	-7.12	108.08	Holocene	0603-16=
+Cereme	Java	3078	-6.89	108.4	AD 1900-2005	0603-17=
+Slamet	Java	3428	-7.24	109.21	AD 1900-2005	0603-18=
+Dieng Volc Complex	Java	2565	-7.2	109.92	AD 1900-2005	0603-20=
+Sundoro	Java	3136	-7.3	109.99	AD 1900-2005	0603-21=
+Sumbing	Java	3371	-7.38	110.06	AD 0-1899	0603-22=
+Telomoyo	Java	1894	-7.37	110.4	Holocene	0603-231
+Ungaran	Java	2050	-7.18	110.33	Holocene	0603-23=
+Merbabu	Java	3145	-7.45	110.43	AD 0-1899	0603-24=
+Merapi	Java	2968	-7.54	110.44	AD 1900-2005	0603-25=
+Lawu	Java	3265	-7.63	111.19	AD 0-1899	0603-26=
+Wilis	Java	2563	-7.81	111.76	Holocene	0603-27=
+Kawi-Butak	Java	2651	-7.92	112.45	Holocene	0603-281
+Kelut	Java	1731	-7.93	112.31	AD 1900-2005	0603-28=
+Penanggungan	Java	1653	-7.62	112.63	Holocene	0603-291
+Malang Plain	Java	680	-8.02	112.68	Holocene	0603-292
+Arjuno-Welirang	Java	3339	-7.73	112.58	AD 1900-2005	0603-29=
+Semeru	Java	3676	-8.11	112.92	AD 1900-2005	0603-30=
+Tengger Caldera	Java	2329	-7.94	112.95	AD 1900-2005	0603-31=
+Lurus	Java	539	-7.7	113.58	Uncertain	0603-321
+Lamongan	Java	1651	-8	113.34	AD 0-1899	0603-32=
+Iyang-Argapura	Java	3088	-7.97	113.57	Holocene	0603-33=
+Raung	Java	3332	-8.13	114.04	AD 1900-2005	0603-34=
+Baluran	Java	1247	-7.85	114.37	Uncertain	0603-351
+Ijen	Java	2799	-8.06	114.24	AD 1900-2005	0603-35=
+Bratan	Lesser Sunda Is	2276	-8.28	115.13	Holocene	0604-001
+Batur	Lesser Sunda Is	1717	-8.24	115.38	AD 1900-2005	0604-01=
+Agung	Lesser Sunda Is	3142	-8.34	115.51	AD 1900-2005	0604-02=
+Rinjani	Lesser Sunda Is	3726	-8.42	116.47	AD 1900-2005	0604-03=
+Tambora	Lesser Sunda Is	2850	-8.25	118	AD 1900-2005	0604-04=
+Sangeang Api	Lesser Sunda Is	1949	-8.18	119.06	AD 1900-2005	0604-05=
+Sano, Wai	Lesser Sunda Is	903	-8.68	120.03	Holocene	0604-06=
+Ranakah	Lesser Sunda Is	2100	-8.62	120.52	AD 1900-2005	0604-071
+Poco Leok	Lesser Sunda Is	1675	-8.68	120.48	Holocene	0604-07=
+Inierie	Lesser Sunda Is	2245	-8.88	120.95	Holocene	0604-08=
+Inielika	Lesser Sunda Is	1559	-8.73	120.98	AD 1900-2005	0604-09=
+Ebulobo	Lesser Sunda Is	2124	-8.81	121.18	AD 1900-2005	0604-10=
+Iya	Lesser Sunda Is	637	-8.88	121.63	AD 1900-2005	0604-11=
+Sukaria Caldera	Lesser Sunda Is	1500	-8.79	121.77	Holocene	0604-12=
+Ndete Napu	Lesser Sunda Is	750	-8.72	121.78	Uncertain	0604-13=
+Kelimutu	Lesser Sunda Is	1639	-8.76	121.83	AD 1900-2005	0604-14=
+Paluweh	Lesser Sunda Is	875	-8.32	121.71	AD 1900-2005	0604-15=
+Egon	Lesser Sunda Is	1703	-8.67	122.45	Holocene	0604-16=
+Ilimuda	Lesser Sunda Is	1100	-8.48	122.67	Holocene	0604-17=
+Lewotobi	Lesser Sunda Is	1703	-8.53	122.78	AD 1900-2005	0604-18=
+Leroboleng	Lesser Sunda Is	1117	-8.36	122.84	AD 1900-2005	0604-20=
+Riang Kotang	Lesser Sunda Is	200	-8.3	122.89	Uncertain	0604-21=
+Iliboleng	Lesser Sunda Is	1659	-8.34	123.26	AD 1900-2005	0604-22=
+Lewotolo	Lesser Sunda Is	1423	-8.27	123.51	AD 1900-2005	0604-23=
+Ililabalekan	Lesser Sunda Is	1018	-8.53	123.42	Holocene	0604-24=
+Iliwerung	Lesser Sunda Is	1018	-8.54	123.59	AD 1900-2005	0604-25=
+Tara, Batu	Lesser Sunda Is	748	-7.79	123.58	AD 0-1899	0604-26=
+Sirung	Lesser Sunda Is	862	-8.51	124.15	AD 1900-2005	0604-27=
+Yersey	Lesser Sunda Is	-3800	-7.53	123.95	Uncertain	0604-28=
+Emperor of China	Banda Sea	-2850	-6.62	124.22	Uncertain	0605-01=
+Nieuwerkerk	Banda Sea	-2285	-6.6	124.68	Uncertain	0605-02=
+Gunungapi Wetar	Banda Sea	282	-6.64	126.65	AD 0-1899	0605-03=
+Wurlali	Banda Sea	868	-7.13	128.68	AD 0-1899	0605-04=
+Teon	Banda Sea	655	-6.92	129.13	AD 1900-2005	0605-05=
+Nila	Banda Sea	781	-6.73	129.5	AD 1900-2005	0605-06=
+Serua	Banda Sea	641	-6.3	130	AD 1900-2005	0605-07=
+Manuk	Banda Sea	282	-5.53	130.29	Holocene	0605-08=
+Banda Api	Banda Sea	640	-4.53	129.87	AD 1900-2005	0605-09=
+Colo [Una Una]	Sulawesi-Indonesia	507	-0.17	121.61	AD 1900-2005	0606-01=
+Ambang	Sulawesi-Indonesia	1795	0.75	124.42	AD 0-1899	0606-02=
+Soputan	Sulawesi-Indonesia	1784	1.11	124.73	AD 1900-2005	0606-03=
+Sempu	Sulawesi-Indonesia	1549	1.14	124.73	Holocene	0606-04=
+Tondano Caldera	Sulawesi-Indonesia	1202	1.23	124.83	Holocene	0606-07-
+Lokon-Empung	Sulawesi-Indonesia	1580	1.36	124.79	AD 1900-2005	0606-10=
+Mahawu	Sulawesi-Indonesia	1324	1.36	124.86	AD 1900-2005	0606-11=
+Klabat	Sulawesi-Indonesia	1995	1.47	125.03	Holocene	0606-12=
+Tongkoko	Sulawesi-Indonesia	1149	1.52	125.2	AD 0-1899	0606-13=
+Ruang	Sangihe Is-Indonesia	725	2.28	125.43	AD 1900-2005	0607-01=
+Karangetang [Api Siau]	Sangihe Is-Indonesia	1784	2.78	125.48	AD 1900-2005	0607-02=
+Banua Wuhu	Sangihe Is-Indonesia	-5	3.14	125.49	AD 1900-2005	0607-03=
+Awu	Sangihe Is-Indonesia	1320	3.67	125.5	AD 1900-2005	0607-04=
+Unnamed	Sangihe Is-Indonesia	-5000	3.97	124.17	Uncertain	0607-05=
+Tarakan	Halmahera-Indonesia	318	1.78	127.79	Holocene	0608-001
+Dukono	Halmahera-Indonesia	1185	1.68	127.88	AD 1900-2005	0608-01=
+Tobaru	Halmahera-Indonesia	1035	1.63	127.68	Holocene	0608-02-
+Ibu	Halmahera-Indonesia	1325	1.48	127.64	AD 1900-2005	0608-03=
+Gamkonora	Halmahera-Indonesia	1635	1.38	127.52	AD 1900-2005	0608-04=
+Jailolo	Halmahera-Indonesia	1130	1.08	127.42	Holocene	0608-051
+Hiri	Halmahera-Indonesia	630	0.88	127.32	Holocene	0608-052
+Todoko-Ranu	Halmahera-Indonesia	979	1.22	127.43	Holocene	0608-05=
+Tidore	Halmahera-Indonesia	1730	0.65	127.4	Holocene	0608-061
+Mare	Halmahera-Indonesia	308	0.57	127.4	Holocene	0608-062
+Moti	Halmahera-Indonesia	950	0.45	127.4	Holocene	0608-063
+Gamalama	Halmahera-Indonesia	1715	0.8	127.33	AD 1900-2005	0608-06=
+Tigalalu	Halmahera-Indonesia	422	0.07	127.42	Holocene	0608-071
+Amasing	Halmahera-Indonesia	1030	-0.55	127.5	Holocene	0608-072
+Bibinoi	Halmahera-Indonesia	900	-0.78	127.72	Holocene	0608-073
+Makian	Halmahera-Indonesia	1357	0.32	127.4	AD 1900-2005	0608-07=
+Bombalai	Borneo	531	4.4	117.88	Uncertain	0610-01-
+Bud Dajo	Sulu Is-Philippines	440	5.95	121.07	AD 0-1899	0700-01=
+Parker	Mindanao-Philippines	1824	6.12	124.89	AD 0-1899	0701-011
+Balut	Mindanao-Philippines	852	5.4	125.38	Holocene	0701-01=
+Matutum	Mindanao-Philippines	2293	6.37	125.11	Holocene	0701-02=
+Leonard Range	Mindanao-Philippines	1190	7.39	126.4	Holocene	0701-031
+Unnamed	Mindanao-Philippines	1300	7.44	126.07	Holocene	0701-032
+Apo	Mindanao-Philippines	2954	6.99	125.27	Holocene	0701-03=
+Makaturing	Mindanao-Philippines	1940	7.65	124.32	Holocene	0701-04=
+Latukan	Mindanao-Philippines	2158	7.65	124.47	Holocene	0701-05=
+Kalatungan	Mindanao-Philippines	2824	7.95	124.8	Holocene	0701-061
+Ragang	Mindanao-Philippines	2815	7.67	124.5	AD 1900-2005	0701-06=
+Malindang	Mindanao-Philippines	2435	8.22	123.63	Holocene	0701-071
+Balatocan	Mindanao-Philippines	2450	8.8	124.92	Holocene	0701-072
+Calayo	Mindanao-Philippines	646	7.88	125.07	AD 0-1899	0701-07=
+Camiguin	Mindanao-Philippines	1552	9.2	124.67	AD 1900-2005	0701-08=
+Paco	Mindanao-Philippines	524	9.59	125.52	Holocene	0701-09-
+Magaso	Philippines-C	1904	9.26	123.18	Holocene	0702-01=
+Canlaon	Philippines-C	2435	10.41	123.13	AD 1900-2005	0702-02=
+Mandalagan	Philippines-C	1879	10.62	123.22	Holocene	0702-03=
+Silay	Philippines-C	1535	10.77	123.23	Holocene	0702-04=
+Cabalían	Philippines-C	945	10.29	125.22	Holocene	0702-05=
+Mahagnoa	Philippines-C	800	10.87	124.85	Holocene	0702-07=
+Biliran	Philippines-C	1187	11.52	124.53	AD 1900-2005	0702-08=
+Bulusan	Luzon-Philippines	1565	12.77	124.05	AD 1900-2005	0703-01=
+Pocdol Mountains	Luzon-Philippines	1102	13.05	123.96	Holocene	0703-02=
+Masaraga	Luzon-Philippines	1328	13.32	123.6	Holocene	0703-031
+Mayon	Luzon-Philippines	2462	13.26	123.69	AD 1900-2005	0703-03=
+Iriga	Luzon-Philippines	1196	13.46	123.46	AD 0-1899	0703-041
+Isarog	Luzon-Philippines	1966	13.66	123.37	Holocene	0703-042
+Labo	Luzon-Philippines	1544	14.02	122.79	Holocene	0703-043
+Malindig	Luzon-Philippines	1157	13.24	122.02	Holocene	0703-044
+Panay	Luzon-Philippines	501	13.72	120.89	Uncertain	0703-045
+Malinao	Luzon-Philippines	1548	13.42	123.6	Holocene	0703-04=
+Laguna Volc Field	Luzon-Philippines	654	14.12	121.3	AD 0-1899	0703-051
+Banahao	Luzon-Philippines	2158	14.07	121.48	Holocene	0703-05=
+Maquiling	Luzon-Philippines	1090	14.13	121.2	Holocene	0703-06=
+Taal	Luzon-Philippines	400	14	120.99	AD 1900-2005	0703-07=
+Mariveles	Luzon-Philippines	1420	14.5	120.5	Holocene	0703-081
+Natib	Luzon-Philippines	1287	14.71	120.4	Uncertain	0703-082
+Pinatubo	Luzon-Philippines	1486	15.13	120.35	AD 1900-2005	0703-083
+Arayat	Luzon-Philippines	1026	15.2	120.74	Uncertain	0703-084
+Amorong	Luzon-Philippines	376	15.83	120.81	Holocene	0703-085
+Santo Tomas	Luzon-Philippines	2260	16.33	120.55	Uncertain	0703-086
+Patoc	Luzon-Philippines	1865	17.15	120.98	Holocene	0703-087
+Ambalatungan Group	Luzon-Philippines	2329	17.32	121.1	Holocene	0703-088
+Jalajala	Luzon-Philippines	743	14.35	121.33	Uncertain	0703-08=
+Cagua	Luzon-Philippines	1133	18.22	122.12	Holocene	0703-09=
+Camiguin de Babuyanes	Luzon-N of	712	18.83	121.86	AD 0-1899	0704-01=
+Didicas	Luzon-N of	244	19.08	122.2	AD 1900-2005	0704-02=
+Babuyan Claro	Luzon-N of	1180	19.52	121.94	AD 1900-2005	0704-03=
+Unnamed	Luzon-N of	-24	20.33	121.75	AD 0-1899	0704-05=
+Iraya	Luzon-N of	1009	20.47	122.01	AD 0-1899	0704-06-
+Leizhou Bandao	SE Asia	259	20.83	109.78	Holocene	0705-01-
+Cù-Lao Ré Group	SE Asia	181	15.38	109.12	Holocene	0705-02-
+Toroeng Prong	SE Asia	800	14.93	108	Uncertain	0705-03-
+Haut Dong Nai	SE Asia	1000	11.6	108.2	Uncertain	0705-04-
+Bas Dong Nai	SE Asia	392	10.8	107.2	Uncertain	0705-05-
+Cendres, Ile des	SE Asia	-20	10.16	109.01	AD 1900-2005	0705-06-
+Veteran	SE Asia	0	9.83	109.05	Holocene	0705-07-
+Popa	SE Asia	1518	20.87	95.23	Holocene	0705-08-
+Lower Chindwin	SE Asia	385	22.28	95.1	Uncertain	0705-09-
+Singu Plateau	SE Asia	507	22.7	95.98	Holocene	0705-10-
+Tengchong	SE Asia	2865	25.32	98.47	AD 0-1899	0705-11-
+Unnamed	Taiwan-E of	-10	19.17	132.25	Uncertain	0801-011
+Unnamed	Taiwan-E of	-6000	20.93	134.75	Uncertain	0801-01=
+Unnamed	Taiwan-E of	-115	21.83	121.18	AD 0-1899	0801-02=
+Kueishantao	Taiwan	401	24.85	121.92	Uncertain	0801-031
+Tatun Group	Taiwan	1120	25.17	121.52	Uncertain	0801-032
+Unnamed	Taiwan-E of	0	24	121.83	AD 0-1899	0801-03=
+Pengchiahsu	Taiwan-N of	129	25.63	122.07	Uncertain	0801-041
+Unnamed	Taiwan-N of	-100	25.42	122.33	AD 0-1899	0801-04=
+Zengyu	Taiwan-N of	-418	26.18	122.46	AD 1900-2005	0801-05=
+Iriomote-jima	Ryukyu Is	-200	24.56	124	AD 1900-2005	0802-01=
+Akuseki-jima	Ryukyu Is	584	29.46	129.6	Holocene	0802-021
+Iwo-Tori-shima	Ryukyu Is	212	27.88	128.22	AD 1900-2005	0802-02=
+Suwanose-jima	Ryukyu Is	799	29.63	129.72	AD 1900-2005	0802-03=
+Kuchino-shima	Ryukyu Is	628	29.96	129.93	Holocene	0802-041
+Nakano-shima	Ryukyu Is	979	29.86	129.86	AD 1900-2005	0802-04=
+Kuchinoerabu-jima	Ryukyu Is	657	30.44	130.22	AD 1900-2005	0802-05=
+Kikai	Ryukyu Is	704	30.79	130.31	AD 1900-2005	0802-06=
+Ibusuki Volc Field	Kyushu-Japan	922	31.22	130.57	AD 0-1899	0802-07=
+Sumiyoshi-ike	Kyushu-Japan	100	31.77	130.59	Holocene	0802-081
+Sakura-jima	Kyushu-Japan	1117	31.59	130.66	AD 1900-2005	0802-08=
+Kirishima	Kyushu-Japan	1700	31.93	130.86	AD 1900-2005	0802-09=
+Unzen	Kyushu-Japan	1500	32.76	130.29	AD 1900-2005	0802-10=
+Aso	Kyushu-Japan	1592	32.88	131.11	AD 1900-2005	0802-11=
+Kuju	Kyushu-Japan	1791	33.08	131.25	AD 1900-2005	0802-12=
+Tsurumi	Kyushu-Japan	1584	33.28	131.43	AD 0-1899	0802-13=
+Abu	Honshu-Japan	571	34.5	131.6	Uncertain	0803-001
+Sanbe	Honshu-Japan	1126	35.13	132.62	Holocene	0803-002
+Oki-Dogo	Honshu-Japan	151	36.17	133.33	Holocene	0803-003
+Izu-Tobu	Honshu-Japan	1406	34.9	139.1	AD 1900-2005	0803-01=
+Hakone	Honshu-Japan	1438	35.23	139.02	Holocene	0803-02=
+Tateshina	Honshu-Japan	2530	36.1	138.3	Holocene	0803-031
+Fuji	Honshu-Japan	3776	35.36	138.73	AD 0-1899	0803-03=
+On-take	Honshu-Japan	3063	35.89	137.48	AD 1900-2005	0803-04=
+Haku-san	Honshu-Japan	2702	36.15	136.77	AD 0-1899	0803-05=
+Norikura	Honshu-Japan	3026	36.1	137.56	Holocene	0803-06=
+Washiba-Kumonotaira	Honshu-Japan	2924	36.4	137.5	Holocene	0803-071
+Yake-dake	Honshu-Japan	2455	36.22	137.59	AD 1900-2005	0803-07=
+Tate-yama	Honshu-Japan	2621	36.57	137.59	AD 0-1899	0803-08=
+Niigata-Yake-yama	Honshu-Japan	2400	36.92	138.04	AD 1900-2005	0803-09=
+Myoko	Honshu-Japan	2446	36.89	138.12	Holocene	0803-10=
+Asama	Honshu-Japan	2568	36.4	138.53	AD 1900-2005	0803-11=
+Shiga	Honshu-Japan	2041	36.7	138.52	Uncertain	0803-121
+Haruna	Honshu-Japan	1449	36.47	138.88	AD 0-1899	0803-122
+Kusatsu-Shirane	Honshu-Japan	2171	36.62	138.54	AD 1900-2005	0803-12=
+Hiuchi	Honshu-Japan	2346	36.95	139.28	AD 0-1899	0803-131
+Akagi	Honshu-Japan	1828	36.56	139.2	Uncertain	0803-13=
+Nantai	Honshu-Japan	2484	36.77	139.5	Holocene	0803-141
+Omanago Group	Honshu-Japan	2367	36.78	139.5	Holocene	0803-142
+Takahara	Honshu-Japan	1795	36.9	139.78	Holocene	0803-143
+Nikko-Shirane	Honshu-Japan	2578	36.8	139.38	AD 0-1899	0803-14=
+Numazawa	Honshu-Japan	1100	37.43	139.58	Holocene	0803-151
+Nasu	Honshu-Japan	1915	37.12	139.97	AD 1900-2005	0803-15=
+Bandai	Honshu-Japan	1819	37.6	140.08	AD 0-1899	0803-16=
+Adatara	Honshu-Japan	1718	37.64	140.29	AD 1900-2005	0803-17=
+Azuma	Honshu-Japan	2024	37.73	140.25	AD 1900-2005	0803-18=
+Hijiori	Honshu-Japan	516	38.6	140.18	Holocene	0803-191
+Zao	Honshu-Japan	1841	38.14	140.44	AD 1900-2005	0803-19=
+Narugo	Honshu-Japan	470	38.73	140.73	AD 0-1899	0803-20=
+Kurikoma	Honshu-Japan	1628	38.96	140.79	AD 1900-2005	0803-21=
+Chokai	Honshu-Japan	2233	39.1	140.05	AD 1900-2005	0803-22=
+Akita-Komaga-take	Honshu-Japan	1637	39.76	140.8	AD 1900-2005	0803-23=
+Iwate	Honshu-Japan	2041	39.85	141	AD 1900-2005	0803-24=
+Hachimantai	Honshu-Japan	1614	39.96	140.86	Uncertain	0803-25=
+Kanpu	Honshu-Japan	355	39.93	139.88	Holocene	0803-261
+Megata	Honshu-Japan	291	39.95	139.73	Holocene	0803-262
+Akita-Yake-yama	Honshu-Japan	1366	39.96	140.76	AD 1900-2005	0803-26=
+Towada	Honshu-Japan	1159	40.47	140.92	AD 0-1899	0803-271
+Iwaki	Honshu-Japan	1625	40.65	140.31	AD 0-1899	0803-27=
+Hakkoda Group	Honshu-Japan	1585	40.66	140.88	Holocene	0803-28=
+Osore-yama	Honshu-Japan	879	41.28	141.12	AD 0-1899	0803-29=
+Mutsu-Hiuchi-dake	Honshu-Japan	781	41.43	141.07	Uncertain	0803-30-
+To-shima	Izu Is-Japan	508	34.52	139.28	Holocene	0804-011
+Oshima	Izu Is-Japan	764	34.72	139.4	AD 1900-2005	0804-01=
+Nii-jima	Izu Is-Japan	432	34.39	139.27	AD 0-1899	0804-02=
+Kozu-shima	Izu Is-Japan	572	34.22	139.16	AD 0-1899	0804-03=
+Mikura-jima	Izu Is-Japan	851	33.87	139.43	Holocene	0804-041
+Kurose Hole	Izu Is-Japan	-107	33.4	139.68	Uncertain	0804-042
+Miyake-jima	Izu Is-Japan	815	34.08	139.53	AD 1900-2005	0804-04=
+Hachijo-jima	Izu Is-Japan	854	33.13	139.77	AD 0-1899	0804-05=
+Myojin Knoll	Izu Is-Japan	360	32.1	139.85	Uncertain	0804-061
+Aoga-shima	Izu Is-Japan	423	32.45	139.76	AD 0-1899	0804-06=
+Bayonnaise Rocks	Izu Is-Japan	11	31.88	139.92	AD 1900-2005	0804-07=
+Smith Rock	Izu Is-Japan	136	31.43	140.05	AD 1900-2005	0804-08=
+Omachi Seamount	Izu Is-Japan	-1700	29.22	140.8	Uncertain	0804-091
+Nishino-shima	Volcano Is-Japan	38	27.27	140.88	AD 1900-2005	0804-092
+Unnamed	Volcano Is-Japan	-3200	26.13	144.48	Uncertain	0804-093
+Tori-shima	Izu Is-Japan	394	30.48	140.31	AD 1900-2005	0804-09=
+Kaitoku Seamount	Volcano Is-Japan	-103	26.12	141.1	AD 1900-2005	0804-10=
+Kita-Iwo-jima	Volcano Is-Japan	792	25.43	141.23	AD 1900-2005	0804-11=
+Kita-Fukutokutai	Volcano Is-Japan	-73	24.41	141.42	Holocene	0804-121
+Iwo-jima	Volcano Is-Japan	161	24.75	141.29	AD 1900-2005	0804-12=
+Minami-Hiyoshi	Volcano Is-Japan	-30	23.5	141.94	AD 1900-2005	0804-131
+Nikko	Volcano Is-Japan	-391	23.08	142.31	Uncertain	0804-132
+Fukujin	Volcano Is-Japan	-217	21.93	143.47	AD 1900-2005	0804-133
+Kasuga	Volcano Is-Japan	-598	21.77	143.71	AD 1900-2005	0804-134
+Minami Kasuga	Volcano Is-Japan	-170	21.6	143.64	Holocene	0804-135
+Unnamed	Mariana Is-C Pacific	0	21	142.9	Uncertain	0804-136
+Unnamed	Mariana Is-C Pacific	0	20.3	143.2	Uncertain	0804-137
+Fukutoku-Okanoba	Volcano Is-Japan	-14	24.28	141.49	AD 1900-2005	0804-13=
+Ahyi	Mariana Is-C Pacific	-137	20.42	145.03	AD 1900-2005	0804-141
+Supply Reef	Mariana Is-C Pacific	-8	20.13	145.1	AD 1900-2005	0804-142
+Maug Islands	Mariana Is-C Pacific	227	20.02	145.22	Uncertain	0804-143
+Farallon de Pajaros	Mariana Is-C Pacific	360	20.53	144.9	AD 1900-2005	0804-14=
+Asuncion	Mariana Is-C Pacific	857	19.67	145.4	AD 1900-2005	0804-15=
+Agrigan	Mariana Is-C Pacific	965	18.77	145.67	AD 1900-2005	0804-16=
+Pagan	Mariana Is-C Pacific	570	18.13	145.8	AD 1900-2005	0804-17=
+Alamagan	Mariana Is-C Pacific	744	17.6	145.83	AD 0-1899	0804-18=
+Sarigan	Mariana Is-C Pacific	538	16.71	145.78	Holocene	0804-191
+Guguan	Mariana Is-C Pacific	287	17.32	145.85	AD 0-1899	0804-19=
+Ruby	Mariana Is-C Pacific	-230	15.62	145.57	AD 1900-2005	0804-201
+Anatahan	Mariana Is-C Pacific	788	16.35	145.67	AD 1900-2005	0804-20=
+Esmeralda Bank	Mariana Is-C Pacific	-43	15	145.25	Holocene	0804-21=
+E-san	Hokkaido-Japan	618	41.8	141.17	AD 0-1899	0805-011
+Oshima-Oshima	Hokkaido-Japan	737	41.51	139.37	AD 0-1899	0805-01=
+Nigorigawa	Hokkaido-Japan	356	42.12	140.45	Uncertain	0805-021
+Komaga-take	Hokkaido-Japan	1140	42.06	140.68	AD 1900-2005	0805-02=
+Niseko	Hokkaido-Japan	1154	42.88	140.63	Holocene	0805-031
+Yotei	Hokkaido-Japan	1893	42.83	140.82	Holocene	0805-032
+Shiribetsu	Hokkaido-Japan	1107	42.77	140.92	Holocene	0805-033
+Kuttara	Hokkaido-Japan	581	42.49	141.16	AD 0-1899	0805-034
+Usu	Hokkaido-Japan	737	42.54	140.84	AD 1900-2005	0805-03=
+Rishiri	Hokkaido-Japan	1719	45.18	141.25	Holocene	0805-041
+Shikotsu	Hokkaido-Japan	1320	42.7	141.33	AD 1900-2005	0805-04=
+Tokachi	Hokkaido-Japan	2077	43.42	142.69	AD 1900-2005	0805-05=
+Nipesotsu-Upepesanke	Hokkaido-Japan	2013	43.45	143.03	AD 0-1899	0805-061
+Shikaribetsu Group	Hokkaido-Japan	1430	43.28	143.08	Holocene	0805-062
+Daisetsu	Hokkaido-Japan	2290	43.66	142.86	AD 0-1899	0805-06=
+Akan	Hokkaido-Japan	1499	43.38	144.01	AD 1900-2005	0805-07=
+Mashu	Hokkaido-Japan	855	43.57	144.57	AD 0-1899	0805-081
+Rausu	Hokkaido-Japan	1660	44.07	145.13	AD 0-1899	0805-082
+Kutcharo	Hokkaido-Japan	999	43.55	144.43	AD 0-1899	0805-08=
+Shiretoko-Iwo-zan	Hokkaido-Japan	1563	44.13	145.17	AD 1900-2005	0805-09=
+Golovnin	Kuril Is	543	43.84	145.51	AD 0-1899	0900-01=
+Smirnov	Kuril Is	1189	44.43	146.13	Holocene	0900-021
+Mendeleev	Kuril Is	888	43.98	145.74	AD 0-1899	0900-02=
+Tiatia	Kuril Is	1819	44.35	146.26	AD 1900-2005	0900-03=
+Lvinaya Past	Kuril Is	528	44.62	147	Holocene	0900-041
+Berutarube	Kuril Is	1221	44.46	146.94	Holocene	0900-04=
+Atsonupuri	Kuril Is	1206	44.81	147.14	AD 1900-2005	0900-05=
+Bogatyr Ridge	Kuril Is	1634	44.83	147.37	Holocene	0900-06-
+Unnamed	Kuril Is	-930	45.03	147.21	Uncertain	0900-061
+Grozny Group	Kuril Is	1211	45.03	147.92	AD 1900-2005	0900-07=
+Baransky	Kuril Is	1132	45.1	148.02	AD 1900-2005	0900-08=
+Golets-Tornyi Group	Kuril Is	442	45.25	148.35	Uncertain	0900-091
+Chirip	Kuril Is	1587	45.34	147.93	AD 0-1899	0900-09=
+Medvezhia	Kuril Is	1125	45.39	148.84	AD 1900-2005	0900-10=
+Demon	Kuril Is	1205	45.5	148.85	Holocene	0900-11-
+Ivao Group	Kuril Is	1426	45.77	149.68	Holocene	0900-111
+Rudakov	Kuril Is	542	45.88	149.83	Uncertain	0900-112
+Tri Sestry	Kuril Is	998	45.93	149.92	Uncertain	0900-113
+Kolokol Group	Kuril Is	1328	46.04	150.05	AD 1900-2005	0900-12=
+Unnamed	Kuril Is	-100	46.1	150.5	Uncertain	0900-13-
+Chirpoi	Kuril Is	742	46.53	150.88	AD 1900-2005	0900-15=
+Unnamed	Kuril Is	-502	46.47	151.28	AD 1900-2005	0900-16-
+Milne	Kuril Is	1540	46.82	151.78	Holocene	0900-161
+Goriaschaia Sopka	Kuril Is	891	46.83	151.75	AD 1900-2005	0900-17=
+Zavaritzki Caldera	Kuril Is	624	46.93	151.95	AD 1900-2005	0900-18=
+Urataman	Kuril Is	678	47.12	152.23	Holocene	0900-191
+Prevo Peak	Kuril Is	1360	47.02	152.12	AD 0-1899	0900-19=
+Ketoi	Kuril Is	1172	47.35	152.48	AD 1900-2005	0900-20=
+Srednii	Kuril Is	36	47.6	152.92	Holocene	0900-211
+Ushishur	Kuril Is	401	47.52	152.8	AD 0-1899	0900-21=
+Rasshua	Kuril Is	956	47.77	153.02	AD 1900-2005	0900-22=
+Unnamed	Kuril Is	-150	48.08	153.33	AD 1900-2005	0900-23=
+Sarychev Peak	Kuril Is	1496	48.09	153.2	AD 1900-2005	0900-24=
+Raikoke	Kuril Is	551	48.29	153.25	AD 1900-2005	0900-25=
+Chirinkotan	Kuril Is	724	48.98	153.48	AD 1900-2005	0900-26=
+Ekarma	Kuril Is	1170	48.96	153.93	AD 1900-2005	0900-27=
+Kuntomintar	Kuril Is	828	48.77	154.02	Uncertain	0900-28=
+Sinarka	Kuril Is	934	48.88	154.18	AD 0-1899	0900-29=
+Kharimkotan	Kuril Is	1145	49.12	154.51	AD 1900-2005	0900-30=
+Tao-Rusyr Caldera	Kuril Is	1325	49.35	154.7	AD 1900-2005	0900-31=
+Nemo Peak	Kuril Is	1018	49.57	154.81	AD 1900-2005	0900-32=
+Shirinki	Kuril Is	761	50.2	154.98	Holocene	0900-331
+Fuss Peak	Kuril Is	1772	50.27	155.25	AD 0-1899	0900-34=
+Lomonosov Group	Kuril Is	1681	50.25	155.43	Holocene	0900-351
+Karpinsky Group	Kuril Is	1345	50.13	155.37	AD 1900-2005	0900-35=
+Chikurachki	Kuril Is	1816	50.33	155.46	AD 1900-2005	0900-36=
+Vernadskii Ridge	Kuril Is	1183	50.55	155.97	Holocene	0900-37-
+Ebeko	Kuril Is	1156	50.68	156.02	AD 1900-2005	0900-38=
+Alaid	Kuril Is	2339	50.86	155.55	AD 1900-2005	0900-39=
+Mashkovtsev	Kamchatka	503	51.1	156.72	Holocene	1000-001
+Kambalny	Kamchatka	2156	51.3	156.87	Holocene	1000-01=
+Unnamed	Kamchatka	298	51.6	156.55	Holocene	1000-021
+Diky Greben	Kamchatka	1070	51.43	157	AD 0-1899	1000-022
+Kurile Lake	Kamchatka	104	51.45	157.12	Holocene	1000-023
+Koshelev	Kamchatka	1812	51.36	156.75	AD 0-1899	1000-02=
+Ilyinsky	Kamchatka	1578	51.49	157.2	AD 1900-2005	1000-03=
+Kell	Kamchatka	900	51.65	157.35	Holocene	1000-041
+Belenkaya	Kamchatka	892	51.75	157.27	Holocene	1000-042
+Zheltovsky	Kamchatka	1953	51.57	157.32	AD 1900-2005	1000-04=
+Ozernoy	Kamchatka	562	51.88	157.38	Holocene	1000-051
+Plosky Volc Group	Kamchatka	681	52.02	157.53	Holocene	1000-052
+Khodutka	Kamchatka	2090	52.06	157.7	Holocene	1000-053
+Piratkovsky	Kamchatka	1322	52.11	157.85	Holocene	1000-054
+Olkoviy	Kamchatka	636	52.08	157.48	Holocene	1000-055
+Ostanets	Kamchatka	719	52.15	157.32	Holocene	1000-056
+Otdelniy	Kamchatka	791	52.22	157.43	Holocene	1000-057
+Unnamed	Kamchatka	638	52.33	157.33	Holocene	1000-058
+Tundroviy	Kamchatka	739	52.25	157.6	Holocene	1000-059
+Ksudach	Kamchatka	1079	51.8	157.53	AD 1900-2005	1000-05=
+Golaya	Kamchatka	858	52.26	157.79	Holocene	1000-061
+Asacha	Kamchatka	1910	52.36	157.83	Holocene	1000-062
+Visokiy	Kamchatka	1234	52.43	157.93	Holocene	1000-063
+Mutnovsky	Kamchatka	2322	52.45	158.2	AD 1900-2005	1000-06=
+Gorely	Kamchatka	1829	52.56	158.03	AD 1900-2005	1000-07=
+Unnamed	Kamchatka	610	52.57	157.02	Holocene	1000-081
+Tolmachev Dol	Kamchatka	1021	52.63	157.58	AD 0-1899	1000-082
+Vilyuchik	Kamchatka	2173	52.68	158.3	Holocene	1000-083
+Barkhatnaya Sopka	Kamchatka	870	52.82	158.27	Holocene	1000-084
+Unnamed	Kamchatka	450	52.92	158.52	Holocene	1000-085
+Unnamed	Kamchatka	700	52.88	158.3	Holocene	1000-086
+Bolshe-Bannaya	Kamchatka	1200	52.9	157.78	Holocene	1000-087
+Opala	Kamchatka	2475	52.54	157.34	AD 0-1899	1000-08=
+Koryaksky	Kamchatka	3456	53.32	158.69	AD 1900-2005	1000-09=
+Avachinsky	Kamchatka	2741	53.26	158.83	AD 1900-2005	1000-10=
+Dzenzursky	Kamchatka	2285	53.64	158.92	Holocene	1000-11=
+Veer	Kamchatka	520	53.75	158.45	AD 0-1899	1000-121
+Kostakan	Kamchatka	1150	53.83	158.05	AD 0-1899	1000-122
+Bakening	Kamchatka	2278	53.91	158.07	Holocene	1000-123
+Zavaritsky	Kamchatka	1567	53.91	158.39	Holocene	1000-124
+Akademia Nauk	Kamchatka	1180	53.98	159.45	AD 1900-2005	1000-125
+Zhupanovsky	Kamchatka	2958	53.59	159.15	AD 1900-2005	1000-12=
+Karymsky	Kamchatka	1536	54.05	159.43	AD 1900-2005	1000-13=
+Maly Semiachik	Kamchatka	1560	54.13	159.67	AD 1900-2005	1000-14=
+Bolshoi Semiachik	Kamchatka	1720	54.32	160.02	Holocene	1000-15=
+Taunshits	Kamchatka	2353	54.53	159.8	Holocene	1000-16-
+Uzon	Kamchatka	1617	54.5	159.97	Holocene	1000-17=
+Kikhpinych	Kamchatka	1552	54.49	160.25	AD 0-1899	1000-18=
+Krasheninnikov	Kamchatka	1856	54.59	160.27	AD 0-1899	1000-19=
+Schmidt	Kamchatka	2020	54.92	160.63	Holocene	1000-201
+Kronotsky	Kamchatka	3528	54.75	160.53	AD 1900-2005	1000-20=
+Gamchen	Kamchatka	2576	54.97	160.7	Holocene	1000-21=
+Vysoky	Kamchatka	2161	55.07	160.77	Holocene	1000-221
+Komarov	Kamchatka	2070	55.03	160.72	AD 0-1899	1000-22=
+Unnamed	Kamchatka	0	55.92	161.75	Uncertain	1000-232
+Kizimen	Kamchatka	2376	55.13	160.32	AD 1900-2005	1000-23=
+Udina	Kamchatka	2923	55.76	160.53	Holocene	1000-241
+Zimina	Kamchatka	3081	55.86	160.6	Holocene	1000-242
+Tolbachik	Kamchatka	3682	55.83	160.33	AD 1900-2005	1000-24=
+Kamen	Kamchatka	4585	56.02	160.59	Holocene	1000-251
+Bezymianny	Kamchatka	2882	55.98	160.59	AD 1900-2005	1000-25=
+Ushkovsky	Kamchatka	3943	56.11	160.47	AD 0-1899	1000-261
+Kliuchevskoi	Kamchatka	4835	56.06	160.64	AD 1900-2005	1000-26=
+Piip	Kamchatka-E of	-300	55.42	167.33	Holocene	1000-271
+Khangar	Kamchatka	2000	54.75	157.38	AD 0-1899	1000-272
+Cherpuk Group	Kamchatka	1868	55.55	157.47	Holocene	1000-273
+Shiveluch	Kamchatka	3283	56.65	161.36	AD 1900-2005	1000-27=
+Ichinsky	Kamchatka	3621	55.68	157.73	Holocene	1000-28=
+Maly Payalpan	Kamchatka	1802	55.82	157.98	Uncertain	1000-29-
+Bolshoi Payalpan	Kamchatka	1906	55.88	157.78	Uncertain	1000-30-
+Plosky	Kamchatka	1236	55.2	158.47	Uncertain	1000-31-
+Akhtang	Kamchatka	1956	55.43	158.65	Uncertain	1000-32-
+Kozyrevsky	Kamchatka	2016	55.58	158.38	Uncertain	1000-33-
+Romanovka	Kamchatka	1442	55.65	158.8	Uncertain	1000-34-
+Uksichan	Kamchatka	1692	56.08	158.38	Uncertain	1000-35-
+Bolshoi-Kekuknaysky	Kamchatka	1401	56.47	157.8	Uncertain	1000-36-
+Kulkev	Kamchatka	915	56.37	158.37	Uncertain	1000-37-
+Geodesistoy	Kamchatka	1170	56.33	158.67	Uncertain	1000-38-
+Anaun	Kamchatka	1828	56.32	158.83	Uncertain	1000-39-
+Krainy	Kamchatka	1554	56.37	159.03	Uncertain	1000-40-
+Kekurny	Kamchatka	1377	56.4	158.85	Uncertain	1000-41-
+Eggella	Kamchatka	1046	56.57	158.52	Uncertain	1000-42-
+Unnamed	Kamchatka	1185	56.82	158.95	Uncertain	1000-43-
+Verkhovoy	Kamchatka	1400	56.52	159.53	Uncertain	1000-44-
+Alney-Chashakondzha	Kamchatka	2598	56.7	159.65	Holocene	1000-45-
+Cherny	Kamchatka	1778	56.82	159.67	Uncertain	1000-46-
+Pogranychny	Kamchatka	1427	56.85	159.8	Uncertain	1000-47-
+Zaozerny	Kamchatka	1349	56.88	159.95	Uncertain	1000-48-
+Bliznets	Kamchatka	1244	56.97	159.78	Uncertain	1000-49-
+Kebeney	Kamchatka	1527	57.1	159.93	Uncertain	1000-50-
+Fedotych	Kamchatka	965	57.13	160.4	Uncertain	1000-51-
+Sedankinsky	Kamchatka	1241	57.23	160.08	Uncertain	1000-52-
+Gorny Institute	Kamchatka	2125	57.33	160.2	Uncertain	1000-53-
+Leutongey	Kamchatka	1333	57.3	159.83	Uncertain	1000-54-
+Tuzovsky	Kamchatka	1533	57.32	159.97	Uncertain	1000-55-
+Titila	Kamchatka	1559	57.4	160.1	Uncertain	1000-56-
+Mezhdusopochny	Kamchatka	1641	57.47	160.25	Uncertain	1000-57-
+Shishel	Kamchatka	2525	57.45	160.37	Uncertain	1000-58-
+Elovsky	Kamchatka	1381	57.53	160.53	Holocene	1000-59-
+Alngey	Kamchatka	1853	57.7	160.4	Uncertain	1000-60-
+Uka	Kamchatka	1643	57.7	160.58	Uncertain	1000-61-
+Kaileney	Kamchatka	1582	57.8	160.67	Uncertain	1000-62-
+Plosky	Kamchatka	1255	57.83	160.25	Uncertain	1000-63-
+Bely	Kamchatka	2080	57.88	160.53	Uncertain	1000-64-
+Atlasova	Kamchatka	1764	57.97	160.65	Uncertain	1000-65-
+Snezhniy	Kamchatka	2169	58.02	160.75	Uncertain	1000-66-
+Iktunup	Kamchatka	2300	58.08	160.77	Uncertain	1000-67-
+Ostry	Kamchatka	2552	58.18	160.82	Uncertain	1000-68-
+Snegovoy	Kamchatka	2169	58.2	160.97	Uncertain	1000-69-
+Severny	Kamchatka	1936	58.28	160.87	Uncertain	1000-70-
+Iettunup	Kamchatka	1340	58.4	161.08	Uncertain	1000-71-
+Voyampolsky	Kamchatka	1225	58.37	160.62	Uncertain	1000-72-
+Balagan-Tas	Russia-NE	993	66.43	143.73	AD 0-1899	1001-03-
+Sikhote-Alin	Russia-SE	0	47	137.5	Holocene	1002-01-
+Udokan Plateau	Russia-SE	2180	56.28	117.77	Holocene	1002-03-
+Tunkin Depression	Russia-SE	1200	51.5	102.5	Uncertain	1002-05-
+Oka Plateau	Russia-SE	2077	52.7	98.98	Holocene	1002-06-
+Azas Plateau	Russia-SE	2765	52.52	98.6	Holocene	1002-07-
+Taryatu-Chulutu	Mongolia	2400	48.17	99.7	Holocene	1003-01-
+Khanuy Gol	Mongolia	1886	48.67	102.75	Holocene	1003-02-
+Bus-Obo	Mongolia	1162	47.12	109.08	Uncertain	1003-03-
+Dariganga Volc Field	Mongolia	1778	45.33	114	Holocene	1003-04-
+Middle Gobi	Mongolia	1120	45.28	106.7	Uncertain	1003-05-
+Turfan	China-W	0	42.9	89.25	AD 0-1899	1004-01-
+Tianshan Volc Group	China-W	0	42.5	82.5	AD 0-1899	1004-02-
+Kunlun Volc Group	China-W	5808	35.52	80.2	AD 1900-2005	1004-03-
+Unnamed	China-W	5400	35.85	91.7	Holocene	1004-04-
+Honggeertu	China-E	1700	41.47	113	Uncertain	1005-01-
+Keluo Group	China-E	670	49.37	125.92	Holocene	1005-02-
+Wudalianchi	China-E	597	48.72	126.12	AD 0-1899	1005-03-
+Jingpohu	China-E	500	44.08	128.83	Holocene	1005-04-
+Longgang Group	China-E	1000	42.33	126.5	AD 0-1899	1005-05-
+Baitoushan	China-E	2744	41.98	128.08	AD 0-1899	1005-06-
+Xianjindao	Korea	0	41.33	128	AD 0-1899	1006-01-
+Ch'uga-ryong	Korea	452	38.33	127.33	Uncertain	1006-02-
+Ulreung	Korea	984	37.5	130.87	Holocene	1006-03-
+Halla	Korea	1950	33.37	126.53	AD 0-1899	1006-04-
+Buldir	Aleutian Is	656	52.35	175.91	Uncertain	1101-01-
+Kiska	Aleutian Is	1220	52.1	177.6	AD 1900-2005	1101-02-
+Segula	Aleutian Is	1160	52.02	178.14	Holocene	1101-03-
+Davidof	Aleutian Is	328	51.97	178.33	Uncertain	1101-04-
+Little Sitkin	Aleutian Is	1174	51.95	178.54	AD 0-1899	1101-05-
+Semisopochnoi	Aleutian Is	1221	51.93	179.58	AD 1900-2005	1101-06-
+Gareloi	Aleutian Is	1573	51.79	-178.79	AD 1900-2005	1101-07-
+Tanaga	Aleutian Is	1806	51.89	-178.15	AD 1900-2005	1101-08-
+Takawangha	Aleutian Is	1449	51.87	-178.01	Holocene	1101-09-
+Bobrof	Aleutian Is	738	51.91	-177.44	Uncertain	1101-10-
+Kanaga	Aleutian Is	1307	51.92	-177.17	AD 1900-2005	1101-11-
+Moffett	Aleutian Is	1196	51.94	-176.75	Uncertain	1101-111
+Adagdak	Aleutian Is	610	51.99	-176.59	Uncertain	1101-112
+Great Sitkin	Aleutian Is	1740	52.08	-176.13	AD 1900-2005	1101-12-
+Kasatochi	Aleutian Is	314	52.18	-175.51	AD 0-1899	1101-13-
+Koniuji	Aleutian Is	273	52.22	-175.13	Uncertain	1101-14-
+Sergief	Aleutian Is	560	52.03	-174.93	Uncertain	1101-15-
+Atka	Aleutian Is	1533	52.38	-174.15	AD 1900-2005	1101-16-
+Seguam	Aleutian Is	1054	52.32	-172.51	AD 1900-2005	1101-18-
+Amukta	Aleutian Is	1066	52.5	-171.25	AD 1900-2005	1101-19-
+Chagulak	Aleutian Is	1142	52.58	-171.13	Holocene	1101-20-
+Yunaska	Aleutian Is	550	52.64	-170.63	AD 1900-2005	1101-21-
+Herbert	Aleutian Is	1280	52.74	-170.11	Holocene	1101-22-
+Carlisle	Aleutian Is	1620	52.89	-170.05	AD 0-1899	1101-23-
+Cleveland	Aleutian Is	1730	52.83	-169.94	AD 1900-2005	1101-24-
+Uliaga	Aleutian Is	888	53.07	-169.77	Holocene	1101-25-
+Kagamil	Aleutian Is	893	52.97	-169.72	AD 1900-2005	1101-26-
+Vsevidof	Aleutian Is	2149	53.13	-168.69	AD 0-1899	1101-27-
+Recheschnoi	Aleutian Is	1984	53.16	-168.54	Holocene	1101-28-
+Okmok	Aleutian Is	1073	53.43	-168.13	AD 1900-2005	1101-29-
+Bogoslof	Aleutian Is	150	53.93	-168.03	AD 1900-2005	1101-30-
+Makushin	Aleutian Is	1800	53.89	-166.92	AD 1900-2005	1101-31-
+Table Top-Wide Bay	Aleutian Is	792	53.97	-166.68	Holocene	1101-311
+Akutan	Aleutian Is	1303	54.13	-165.99	AD 1900-2005	1101-32-
+Westdahl	Aleutian Is	1654	54.52	-164.65	AD 1900-2005	1101-34-
+Fisher	Aleutian Is	1112	54.65	-164.43	AD 0-1899	1101-35-
+Shishaldin	Aleutian Is	2857	54.76	-163.97	AD 1900-2005	1101-36-
+Isanotski	Aleutian Is	2446	54.77	-163.72	Holocene	1101-37-
+Roundtop	Aleutian Is	1871	54.8	-163.59	Holocene	1101-38-
+Amak	Aleutian Is	488	55.42	-163.15	AD 0-1899	1101-39-
+Frosty	Alaska Peninsula	2012	55.08	-162.81	Holocene	1102-01-
+Dutton	Alaska Peninsula	1506	55.17	-162.27	Holocene	1102-011
+Emmons Lake	Alaska Peninsula	1436	55.34	-162.08	Holocene	1102-02-
+Pavlof	Alaska Peninsula	2519	55.42	-161.89	AD 1900-2005	1102-03-
+Pavlof Sister	Alaska Peninsula	2142	55.45	-161.84	AD 0-1899	1102-04-
+Dana	Alaska Peninsula	1354	55.64	-161.21	Holocene	1102-05-
+Stepovak	Alaska Peninsula	1555	55.93	-160	Holocene	1102-051
+Kupreanof	Alaska Peninsula	1895	56.01	-159.8	AD 1900-2005	1102-06-
+Veniaminof	Alaska Peninsula	2507	56.17	-159.38	AD 1900-2005	1102-07-
+Black Peak	Alaska Peninsula	1032	56.55	-158.78	Holocene	1102-08-
+Aniakchak	Alaska Peninsula	1341	56.88	-158.17	AD 1900-2005	1102-09-
+Yantarni	Alaska Peninsula	1345	57.02	-157.19	Holocene	1102-10-
+Chiginagak	Alaska Peninsula	2221	57.14	-156.99	AD 1900-2005	1102-11-
+Kialagvik	Alaska Peninsula	1677	57.2	-156.75	Holocene	1102-12-
+Ugashik-Peulik	Alaska Peninsula	1474	57.75	-156.37	AD 0-1899	1102-13-
+Ukinrek Maars	Alaska Peninsula	91	57.83	-156.51	AD 1900-2005	1102-131
+Unnamed	Alaska Peninsula	300	57.87	-155.42	Holocene	1102-132
+Martin	Alaska Peninsula	1863	58.17	-155.36	AD 1900-2005	1102-14-
+Mageik	Alaska Peninsula	2165	58.19	-155.25	Holocene	1102-15-
+Trident	Alaska Peninsula	1864	58.24	-155.1	AD 1900-2005	1102-16-
+Katmai	Alaska Peninsula	2047	58.28	-154.96	AD 1900-2005	1102-17-
+Novarupta	Alaska Peninsula	841	58.27	-155.16	AD 1900-2005	1102-18-
+Griggs	Alaska Peninsula	2317	58.35	-155.09	Holocene	1102-19-
+Snowy Mountain	Alaska Peninsula	2162	58.34	-154.68	Holocene	1102-20-
+Denison	Alaska Peninsula	2287	58.42	-154.45	Uncertain	1102-21-
+Steller	Alaska Peninsula	2272	58.43	-154.4	Holocene	1102-22-
+Kukak	Alaska Peninsula	2043	58.45	-154.36	Holocene	1102-23-
+Kaguyak	Alaska Peninsula	901	58.61	-154.03	Holocene	1102-25-
+Fourpeaked	Alaska Peninsula	2105	58.77	-153.67	Uncertain	1102-26-
+Douglas	Alaska Peninsula	2140	58.86	-153.54	Holocene	1102-27-
+Augustine	Alaska-SW	1252	59.36	-153.43	AD 1900-2005	1103-01-
+Iliamna	Alaska-SW	3053	60.03	-153.09	AD 0-1899	1103-02-
+Redoubt	Alaska-SW	3108	60.49	-152.74	AD 1900-2005	1103-03-
+Spurr	Alaska-SW	3374	61.3	-152.25	AD 1900-2005	1103-04-
+Hayes	Alaska-SW	3034	61.64	-152.41	AD 0-1899	1103-05-
+St. Paul Island	Alaska-W	203	57.18	-170.3	Holocene	1104-01-
+Nunivak Island	Alaska-W	511	60.02	-166.33	Holocene	1104-02-
+Ingakslugwat Hills	Alaska-W	190	61.43	-164.47	Holocene	1104-03-
+St. Michael	Alaska-W	715	63.45	-162.12	Holocene	1104-04-
+Kookooligit Mountains	Alaska-W	673	63.6	-170.43	Holocene	1104-05-
+Imuruk Lake	Alaska-W	610	65.6	-163.92	AD 0-1899	1104-06-
+Buzzard Creek	Alaska-E	830	64.07	-148.42	Holocene	1105-001
+Sanford	Alaska-E	4949	62.22	-144.13	Uncertain	1105-01-
+Wrangell	Alaska-E	4317	62	-144.02	AD 1900-2005	1105-02-
+Gordon	Alaska-E	2755	62.13	-143.08	Uncertain	1105-021
+Churchill	Alaska-E	5005	61.38	-141.75	AD 0-1899	1105-03-
+Edgecumbe	Alaska-E	970	57.05	-135.75	Holocene	1105-04-
+Duncan Canal	Alaska-E	15	56.5	-133.1	Holocene	1105-05-
+Tlevak Strait-Suemez Is.	Alaska-E	50	55.25	-133.3	Holocene	1105-06-
+Behm Canal-Rudyerd Bay	Alaska-E	500	55.32	-131.05	Uncertain	1105-07-
+Fort Selkirk	Canada	1239	62.93	-137.38	Holocene	1200-01-
+Alligator Lake	Canada	2217	60.42	-135.42	Holocene	1200-02-
+Atlin Volc Field	Canada	1880	59.68	-133.32	Holocene	1200-03-
+Tuya Volc Field	Canada	2123	59.37	-130.58	Holocene	1200-031
+Heart Peaks	Canada	2012	58.6	-131.97	Uncertain	1200-04-
+Level Mountain	Canada	2190	58.42	-131.35	Uncertain	1200-05-
+Edziza	Canada	2786	57.72	-130.63	AD 0-1899	1200-06-
+Spectrum Range	Canada	2430	57.43	-130.68	Holocene	1200-07-
+Hoodoo Mountain	Canada	1850	56.78	-131.28	Holocene	1200-08-
+Iskut-Unuk River Cones	Canada	1880	56.58	-130.55	AD 0-1899	1200-09-
+Tseax River Cone	Canada	609	55.12	-128.9	AD 0-1899	1200-10-
+Crow Lagoon	Canada	335	54.7	-130.23	Holocene	1200-11-
+Milbanke Sound Group	Canada	335	52.5	-128.73	Holocene	1200-12-
+Satah Mountain	Canada	1921	52.47	-124.7	Holocene	1200-13-
+Nazko	Canada	1230	52.9	-123.73	Holocene	1200-14-
+Wells Gray-Clearwater	Canada	2015	52.33	-120.57	AD 0-1899	1200-15-
+Silverthrone	Canada	3160	51.43	-126.3	Holocene	1200-16-
+Bridge River Cones	Canada	2500	50.8	-123.4	Holocene	1200-17-
+Meager	Canada	2680	50.63	-123.5	Holocene	1200-18-
+Garibaldi Lake	Canada	2316	49.92	-123.03	Holocene	1200-19-
+Garibaldi	Canada	2678	49.85	-123	Holocene	1200-20-
+Baker	US-Washington	3285	48.78	-121.81	AD 0-1899	1201-01=
+Glacier Peak	US-Washington	3213	48.11	-121.11	AD 0-1899	1201-02-
+Rainier	US-Washington	4392	46.87	-121.76	AD 0-1899	1201-03-
+Adams	US-Washington	3742	46.21	-121.49	AD 0-1899	1201-04-
+St. Helens	US-Washington	2549	46.2	-122.18	AD 1900-2005	1201-05-
+West Crater	US-Washington	1329	45.88	-122.08	Holocene	1201-06-
+Indian Heaven	US-Washington	1806	45.93	-121.82	Holocene	1201-07-
+Hood	US-Oregon	3426	45.37	-121.69	AD 0-1899	1202-01-
+Jefferson	US-Oregon	3199	44.69	-121.8	AD 0-1899	1202-02-
+Blue Lake Crater	US-Oregon	1230	44.42	-121.77	Holocene	1202-03-
+Sand Mountain Field	US-Oregon	1664	44.38	-121.93	Holocene	1202-04-
+Washington	US-Oregon	2376	44.33	-121.84	AD 0-1899	1202-05-
+Belknap	US-Oregon	2095	44.29	-121.84	AD 0-1899	1202-06-
+North Sister Field	US-Oregon	3074	44.17	-121.77	AD 0-1899	1202-07-
+South Sister	US-Oregon	3157	44.1	-121.77	Holocene	1202-08-
+Bachelor	US-Oregon	2763	43.98	-121.69	Holocene	1202-09-
+Davis Lake	US-Oregon	2163	43.57	-121.82	Holocene	1202-10-
+Newberry Volcano	US-Oregon	2434	43.72	-121.23	AD 0-1899	1202-11-
+Devils Garden	US-Oregon	1698	43.51	-120.86	Uncertain	1202-12-
+Squaw Ridge Lava Field	US-Oregon	1711	43.47	-120.75	Uncertain	1202-13-
+Four Craters Lava Field	US-Oregon	1501	43.36	-120.67	Uncertain	1202-14-
+Cinnamon Butte	US-Oregon	1956	43.24	-122.11	Uncertain	1202-15-
+Crater Lake	US-Oregon	2487	42.93	-122.12	Holocene	1202-16-
+Diamond Craters	US-Oregon	1435	43.1	-118.75	Uncertain	1202-17-
+Saddle Butte	US-Oregon	1700	43	-117.8	Uncertain	1202-18-
+Jordan Craters	US-Oregon	1473	43.15	-117.47	Holocene	1202-19-
+Jackies Butte	US-Oregon	1418	42.61	-117.59	Uncertain	1202-20-
+Shasta	US-California	4317	41.42	-122.2	AD 0-1899	1203-01-
+Medicine Lake	US-California	2412	41.58	-121.57	AD 0-1899	1203-02-
+Brushy Butte	US-California	1174	41.18	-121.44	Uncertain	1203-03-
+Big Cave	US-California	1259	40.96	-121.37	Uncertain	1203-04-
+Twin Buttes	US-California	1631	40.78	-121.6	Uncertain	1203-05-
+Tumble Buttes	US-California	2191	40.68	-121.55	Uncertain	1203-06-
+Lassen Volc Center	US-California	3187	40.49	-121.51	AD 1900-2005	1203-08-
+Eagle Lake Field	US-California	1652	40.63	-120.83	Uncertain	1203-09-
+Clear Lake	US-California	1439	38.97	-122.77	Holocene	1203-10-
+Mono Lake Volc Field	US-California	2121	38	-119.03	AD 0-1899	1203-11-
+Mono Craters	US-California	2796	37.88	-119	AD 0-1899	1203-12-
+Inyo Craters	US-California	2629	37.69	-119.02	AD 0-1899	1203-13-
+Long Valley	US-California	3390	37.7	-118.87	Uncertain	1203-14-
+Red Cones	US-California	2748	37.58	-119.05	Holocene	1203-15-
+Ubehebe Craters	US-California	752	37.02	-117.45	Holocene	1203-16-
+Golden Trout Creek	US-California	2886	36.36	-118.32	Holocene	1203-17-
+Coso Volc Field	US-California	2400	36.03	-117.82	Uncertain	1203-18-
+Lavic Lake	US-California	1495	34.75	-116.63	Uncertain	1203-19-
+Amboy	US-California	288	34.55	-115.78	Holocene	1203-20-
+Shoshone Lava Field	US-Idaho	1478	43.18	-114.35	Holocene	1204-01-
+Craters of the Moon	US-Idaho	2005	43.42	-113.5	Holocene	1204-02-
+Wapi Lava Field	US-Idaho	1604	42.88	-113.22	Holocene	1204-03-
+Hell's Half Acre	US-Idaho	1631	43.5	-112.45	Holocene	1204-04-
+Yellowstone	US-Wyoming	2805	44.43	-110.67	Holocene	1205-01-
+Steamboat Springs	US-Nevada	1415	39.38	-119.72	Uncertain	1206-01-
+Santa Clara	US-Utah	1465	37.26	-113.63	Uncertain	1207-01-
+Bald Knoll	US-Utah	2135	37.33	-112.41	Holocene	1207-03-
+Markagunt Plateau	US-Utah	2840	37.58	-112.67	AD 0-1899	1207-04-
+Black Rock Desert	US-Utah	1800	38.97	-112.5	AD 0-1899	1207-05-
+Dotsero	US-Colorado	2230	39.65	-107.03	Holocene	1208-01-
+Uinkaret Field	US-Arizona	1555	36.38	-113.13	AD 0-1899	1209-01-
+Sunset Crater	US-Arizona	2447	35.37	-111.5	AD 0-1899	1209-02-
+Carrizozo	US-New Mexico	1731	33.78	-105.93	Holocene	1210-01-
+Zuni-Bandera	US-New Mexico	2550	34.8	-108	Holocene	1210-02-
+Valles Caldera	US-New Mexico	3430	35.87	-106.57	Uncertain	1210-03-
+CoAxial Segment	Pacific-NE	-2400	46.52	-129.58	AD 1900-2005	1301-01-
+Axial Seamount	Pacific-NE	-1410	45.95	-130	AD 1900-2005	1301-011
+Cleft Segment	Pacific-NE	-2140	44.83	-130.3	AD 1900-2005	1301-02-
+North Gorda Ridge	Pacific-NE	-3000	42.67	-126.78	AD 1900-2005	1301-021
+Unnamed	Pacific-NE	-2533	31.75	-124.25	Uncertain	1301-03-
+Loihi	Hawaiian Is	-975	18.92	-155.27	AD 1900-2005	1302-00-
+Kilauea	Hawaiian Is	1222	19.43	-155.29	AD 1900-2005	1302-01-
+Mauna Loa	Hawaiian Is	4170	19.48	-155.61	AD 1900-2005	1302-02=
+Mauna Kea	Hawaiian Is	4205	19.82	-155.47	Holocene	1302-03-
+Hualalai	Hawaiian Is	2523	19.69	-155.87	AD 0-1899	1302-04-
+Kahoolawe	Hawaiian Is	450	20.57	-156.57	Uncertain	1302-05-
+Haleakala	Hawaiian Is	3055	20.71	-156.25	AD 0-1899	1302-06-
+Koolau	Hawaiian Is	941	21.37	-157.8	Uncertain	1302-07-
+Unnamed	Hawaiian Is	-3000	21.75	-158.75	Uncertain	1302-08-
+Unnamed	Hawaiian Is	-4000	23.58	-163.83	AD 1900-2005	1302-09-
+Unnamed	Pacific-E	-2500	9.82	-104.3	AD 1900-2005	1303-01-
+Galápagos Rift	Pacific-E	-2430	0.79	-86.15	AD 1900-2005	1303-02-
+Teahitia	Society Is-C Pacific	-1600	-17.57	-148.85	Holocene	1303-03-
+Rocard	Society Is-C Pacific	-2100	-17.64	-148.6	Holocene	1303-04-
+Moua Pihaa	Society Is-C Pacific	-180	-18.32	-148.67	Holocene	1303-05-
+Mehetia	Society Is-C Pacific	435	-17.87	-148.07	Holocene	1303-06-
+Unnamed	Pacific-E	-2566	-17.44	-113.21	AD 1900-2005	1303-061
+Easter Island	Pacific-C	530	-27.12	-109.45	Holocene	1303-07-
+Adams Seamount	Pacific-C	-59	-25.37	-129.27	Holocene	1303-071
+Macdonald	Austral Is-C Pacific	-27	-28.98	-140.25	AD 1900-2005	1303-08-
+Antipodes Island	Pacific-S	402	-49.68	178.77	Uncertain	1304-01-
+Unnamed	Pacific-S	-1000	-53.9	-140.3	Uncertain	1304-02-
+Unnamed	Pacific-S	0	-55.97	-143.17	Uncertain	1304-03-
+Prieto, Cerro	México	223	32.42	-115.31	Uncertain	1401-00-
+Pinacate	México	1200	31.77	-113.5	Holocene	1401-001
+San Quintín Volc Field	México	260	30.47	-116	Uncertain	1401-002
+San Luis, Isla	México	180	29.81	-114.38	Holocene	1401-003
+Jaraguay Volc Field	México	960	29.33	-114.5	Holocene	1401-004
+Coronado	México	440	29.08	-113.51	Holocene	1401-005
+Guadalupe	México	1100	29.07	-118.28	Holocene	1401-006
+San Borja Volc Field	México	1360	28.5	-113.75	Holocene	1401-007
+Unnamed	México	0	28	-115	Uncertain	1401-008
+Tortuga, Isla	México	210	27.39	-111.86	Holocene	1401-011
+Comondú-La Purísima	México	780	26	-111.92	Uncertain	1401-012
+Tres Vírgenes	México	1940	27.47	-112.59	Holocene	1401-01=
+Socorro	México-Is	1050	18.78	-110.95	AD 1900-2005	1401-021
+Durango Volc Field	México	2075	24.15	-104.45	Holocene	1401-022
+Sangangüey	México	2340	21.45	-104.73	Holocene	1401-023
+Bárcena	México-Is	332	19.3	-110.82	AD 1900-2005	1401-02=
+Mascota Volc Field	México	2560	20.62	-104.83	Holocene	1401-031
+Ceboruco	México	2280	21.13	-104.51	AD 0-1899	1401-03=
+Colima	México	3850	19.51	-103.62	AD 1900-2005	1401-04=
+Zitácuaro-Valle de Bravo	México	3500	19.4	-100.25	Holocene	1401-061
+Jocotitlán	México	3900	19.72	-99.76	AD 0-1899	1401-062
+Michoacán-Guanajuato	México	3860	19.48	-102.25	AD 1900-2005	1401-06=
+Toluca, Nevado de	México	4680	19.11	-99.76	Holocene	1401-07-
+Papayo	México	3600	19.31	-98.7	Holocene	1401-081
+Iztaccíhuatl	México	5230	19.18	-98.64	Holocene	1401-082
+Chichinautzin	México	3930	19.08	-99.13	AD 0-1899	1401-08=
+Malinche, La	México	4503	19.23	-98.03	Holocene	1401-091
+Serdán-Oriental	México	3485	19.27	-97.47	Holocene	1401-092
+Humeros, Los	México	3150	19.68	-97.45	Uncertain	1401-093
+Atlixcos, Los	México	800	19.81	-96.53	Holocene	1401-094
+Naolinco Volc Field	México	2000	19.67	-96.75	Holocene	1401-095
+Cofre de Perote	México	4282	19.49	-97.15	AD 0-1899	1401-096
+Gloria, La	México	3500	19.33	-97.25	Holocene	1401-097
+Cumbres,  Las	México	3940	19.15	-97.27	Holocene	1401-098
+Popocatépetl	México	5426	19.02	-98.62	AD 1900-2005	1401-09=
+Orizaba, Pico de	México	5675	19.03	-97.27	AD 0-1899	1401-10=
+San Martín	México	1650	18.57	-95.17	AD 0-1899	1401-11=
+Chichón, El	México	1150	17.36	-93.23	AD 1900-2005	1401-12=
+Tacaná	México	4060	15.13	-92.11	AD 1900-2005	1401-13=
+Tajumulco	Guatemala	4220	15.03	-91.9	Holocene	1402-02=
+Santa María	Guatemala	3772	14.76	-91.55	AD 1900-2005	1402-03=
+Almolonga	Guatemala	3197	14.82	-91.48	AD 0-1899	1402-04=
+Santo Tomás	Guatemala	3542	14.71	-91.48	Uncertain	1402-05=
+Atitlán	Guatemala	3535	14.58	-91.19	AD 0-1899	1402-06=
+Tolimán	Guatemala	3158	14.61	-91.19	Holocene	1402-07=
+Acatenango	Guatemala	3976	14.5	-90.88	AD 1900-2005	1402-08=
+Fuego	Guatemala	3763	14.47	-90.88	AD 1900-2005	1402-09=
+Agua	Guatemala	3760	14.46	-90.74	Holocene	1402-10=
+Cuilapa-Barbarena	Guatemala	1454	14.33	-90.4	Holocene	1402-111
+Pacaya	Guatemala	2552	14.38	-90.6	AD 1900-2005	1402-11=
+Tecuamburro	Guatemala	1845	14.16	-90.41	Holocene	1402-12=
+Moyuta	Guatemala	1662	14.03	-90.1	Holocene	1402-13-
+Flores	Guatemala	1600	14.3	-90	Holocene	1402-14-
+Tahual	Guatemala	1716	14.43	-89.9	Holocene	1402-141
+Santiago, Cerro	Guatemala	1192	14.33	-89.87	Holocene	1402-15-
+Suchitán	Guatemala	2042	14.4	-89.78	Holocene	1402-16-
+Chingo	Guatemala	1775	14.12	-89.73	Holocene	1402-17-
+Ixtepeque	Guatemala	1292	14.42	-89.68	Holocene	1402-18-
+Ipala	Guatemala	1650	14.55	-89.63	Holocene	1402-19-
+Chiquimula Volc Field	Guatemala	1192	14.83	-89.55	Holocene	1402-20-
+Quezaltepeque	Guatemala	1200	14.65	-89.35	Holocene	1402-21-
+San Diego	El Salvador	781	14.27	-89.48	Holocene	1403-001
+Singüil, Cerro	El Salvador	957	14.05	-89.65	Holocene	1403-002
+Apaneca Range	El Salvador	2036	13.89	-89.79	Holocene	1403-01=
+Santa Ana	El Salvador	2381	13.85	-89.63	AD 1900-2005	1403-02=
+Izalco	El Salvador	1950	13.81	-89.63	AD 1900-2005	1403-03=
+Coatepeque Caldera	El Salvador	746	13.87	-89.55	Holocene	1403-041
+Cinotepeque, Cerro	El Salvador	665	14.02	-89.25	Holocene	1403-051
+Guazapa	El Salvador	1438	13.9	-89.12	Uncertain	1403-052
+San Salvador	El Salvador	1893	13.73	-89.29	AD 1900-2005	1403-05=
+Ilopango	El Salvador	450	13.67	-89.05	AD 0-1899	1403-06=
+Apastepeque Field	El Salvador	700	13.72	-88.77	Holocene	1403-071
+Taburete	El Salvador	1172	13.44	-88.53	Uncertain	1403-072
+San Vicente	El Salvador	2182	13.6	-88.84	Holocene	1403-07=
+Usulután	El Salvador	1449	13.42	-88.47	Holocene	1403-081
+Tigre, El	El Salvador	1640	13.47	-88.43	Holocene	1403-082
+Tecapa	El Salvador	1593	13.49	-88.5	Holocene	1403-08=
+Chinameca	El Salvador	1228	13.48	-88.32	Holocene	1403-09=
+Aramuaca, Laguna	El Salvador	181	13.43	-88.11	Holocene	1403-101
+San Miguel	El Salvador	2130	13.43	-88.27	AD 1900-2005	1403-10=
+Conchagua	El Salvador	1225	13.28	-87.85	Uncertain	1403-11=
+Conchagüita	El Salvador	505	13.22	-87.77	AD 0-1899	1403-12=
+Tigre, Isla el	Honduras	783	13.27	-87.63	Holocene	1403-13-
+Zacate Grande, Isla	Honduras	640	13.33	-87.63	Holocene	1403-14-
+Yojoa, Lake	Honduras	1090	14.98	-87.98	Holocene	1403-15-
+Utila Island	Honduras	74	16.1	-86.9	Holocene	1403-16-
+Cosigüina	Nicaragua	872	12.98	-87.57	AD 0-1899	1404-01=
+San Cristóbal	Nicaragua	1745	12.7	-87	AD 1900-2005	1404-02=
+Telica	Nicaragua	1061	12.6	-86.85	AD 1900-2005	1404-04=
+Rota	Nicaragua	832	12.55	-86.75	Holocene	1404-06-
+Negro, Cerro	Nicaragua	728	12.51	-86.7	AD 1900-2005	1404-07=
+Pilas, Las	Nicaragua	1088	12.49	-86.69	AD 1900-2005	1404-08=
+Apoyeque	Nicaragua	518	12.24	-86.34	Holocene	1404-091
+Nejapa-Miraflores	Nicaragua	360	12.12	-86.32	Holocene	1404-092
+Momotombo	Nicaragua	1297	12.42	-86.54	AD 1900-2005	1404-09=
+Granada	Nicaragua	300	11.92	-85.98	Holocene	1404-101
+Masaya	Nicaragua	635	11.98	-86.16	AD 1900-2005	1404-10=
+Zapatera	Nicaragua	629	11.73	-85.82	Holocene	1404-111
+Mombacho	Nicaragua	1344	11.83	-85.97	Holocene	1404-11=
+Concepción	Nicaragua	1700	11.54	-85.62	AD 1900-2005	1404-12=
+Maderas	Nicaragua	1394	11.45	-85.52	Holocene	1404-13-
+Estelí	Nicaragua	899	13.17	-86.4	Uncertain	1404-131
+Ciguatepe, Cerro el	Nicaragua	603	12.53	-86.14	Uncertain	1404-132
+Lajas, Las	Nicaragua	926	12.3	-85.73	Uncertain	1404-133
+Azul, Volcán	Nicaragua	201	12.53	-83.87	Holocene	1404-14-
+Orosí	Costa Rica	1659	10.98	-85.47	Uncertain	1405-01=
+Rincón de la Vieja	Costa Rica	1916	10.83	-85.32	AD 1900-2005	1405-02=
+Tenorio	Costa Rica	1916	10.67	-85.02	Holocene	1405-031
+Tilarán, Cerro	Costa Rica	634	10.45	-84.98	Uncertain	1405-032
+Arenal	Costa Rica	1657	10.46	-84.7	AD 1900-2005	1405-033
+Platanar	Costa Rica	2267	10.3	-84.37	Holocene	1405-034
+Miravalles	Costa Rica	2028	10.75	-85.15	AD 1900-2005	1405-03=
+Poás	Costa Rica	2708	10.2	-84.23	AD 1900-2005	1405-04=
+Barva	Costa Rica	2906	10.14	-84.1	Holocene	1405-05=
+Irazú	Costa Rica	3432	9.98	-83.85	AD 1900-2005	1405-06=
+Turrialba	Costa Rica	3340	10.03	-83.77	AD 0-1899	1405-07=
+Barú	Panamá	3474	8.81	-82.54	AD 0-1899	1406-01-
+Yeguada, La	Panamá	1297	8.47	-80.82	AD 0-1899	1406-02-
+Valle, El	Panamá	1185	8.58	-80.17	Uncertain	1406-03-
+Bravo, Cerro	Colombia	4000	5.09	-75.3	AD 0-1899	1501-011
+Santa Isabel	Colombia	4950	4.82	-75.37	Holocene	1501-021
+Ruiz, Nevado del	Colombia	5321	4.9	-75.32	AD 1900-2005	1501-02=
+Tolima, Nevado del	Colombia	5200	4.67	-75.33	AD 1900-2005	1501-03=
+Machín	Colombia	2650	4.48	-75.4	AD 0-1899	1501-04=
+Huila, Nevado del	Colombia	5365	2.92	-76.05	AD 0-1899	1501-05=
+Sotará	Colombia	4400	2.12	-76.58	Holocene	1501-061
+Petacas	Colombia	4054	1.57	-76.78	Uncertain	1501-062
+Puracé	Colombia	4650	2.32	-76.4	AD 1900-2005	1501-06=
+Doña Juana	Colombia	4150	1.47	-76.92	AD 1900-2005	1501-07=
+Galeras	Colombia	4276	1.22	-77.37	AD 1900-2005	1501-08=
+Azufral	Colombia	4070	1.08	-77.68	Holocene	1501-09=
+Cumbal	Colombia	4764	0.98	-77.88	AD 1900-2005	1501-10=
+Negro de Mayasquer, Cerro	Colombia	4445	0.83	-77.96	AD 1900-2005	1501-11=
+Soche	Ecuador	3955	0.55	-77.58	Holocene	1502-001
+Cuicocha	Ecuador	3246	0.31	-78.36	Holocene	1502-002
+Mojanda	Ecuador	4263	0.13	-78.27	Uncertain	1502-003
+Cayambe	Ecuador	5790	0.03	-77.99	AD 0-1899	1502-004
+Pululagua	Ecuador	3356	0.04	-78.46	Holocene	1502-011
+Reventador	Ecuador	3562	-0.08	-77.66	AD 1900-2005	1502-01=
+Atacazo	Ecuador	4463	-0.35	-78.62	Holocene	1502-021
+Chacana	Ecuador	4643	-0.38	-78.25	AD 0-1899	1502-022
+Guagua Pichincha	Ecuador	4784	-0.17	-78.6	AD 1900-2005	1502-02=
+Pan de Azúcar	Ecuador	3482	-0.43	-77.72	Holocene	1502-031
+Antisana	Ecuador	5753	-0.48	-78.14	AD 0-1899	1502-03=
+Illiniza	Ecuador	5248	-0.66	-78.71	Holocene	1502-041
+Sumaco	Ecuador	3990	-0.54	-77.63	AD 0-1899	1502-04=
+Cotopaxi	Ecuador	5911	-0.68	-78.44	AD 1900-2005	1502-05=
+Quilotoa	Ecuador	3914	-0.85	-78.9	AD 0-1899	1502-06=
+Chimborazo	Ecuador	6310	-1.46	-78.82	Holocene	1502-071
+Tulabug	Ecuador	3336	-1.78	-78.61	Holocene	1502-081
+Tungurahua	Ecuador	5023	-1.47	-78.44	AD 1900-2005	1502-08=
+Sangay	Ecuador	5230	-2	-78.33	AD 1900-2005	1502-09=
+Ecuador	Galápagos	790	-0.02	-91.55	Holocene	1503-011
+Fernandina	Galápagos	1476	-0.37	-91.55	AD 1900-2005	1503-01=
+Wolf	Galápagos	1710	0.02	-91.35	AD 1900-2005	1503-02=
+Darwin	Galápagos	1330	-0.18	-91.28	AD 0-1899	1503-03=
+Alcedo	Galápagos	1130	-0.43	-91.12	AD 1900-2005	1503-04=
+Negra, Sierra	Galápagos	1490	-0.83	-91.17	AD 1900-2005	1503-05=
+Azul, Cerro	Galápagos	1640	-0.9	-91.42	AD 1900-2005	1503-06=
+Pinta	Galápagos	780	0.58	-90.75	AD 1900-2005	1503-07=
+Genovesa	Galápagos	64	0.32	-89.96	Holocene	1503-081
+Marchena	Galápagos	343	0.33	-90.47	AD 1900-2005	1503-08=
+Santa Cruz	Galápagos	864	-0.62	-90.33	Holocene	1503-091
+Santiago	Galápagos	920	-0.22	-90.77	AD 1900-2005	1503-09=
+Floreana	Galápagos	640	-1.3	-90.45	Holocene	1503-10=
+San Cristóbal	Galápagos	759	-0.88	-89.5	Holocene	1503-12-
+Firura, Nevados	Perú	5498	-15.23	-72.63	Holocene	1504-00-
+Coropuna	Perú	6377	-15.52	-72.65	Holocene	1504-001
+Andahua Valley	Perú	4713	-15.42	-72.33	Holocene	1504-002
+Sabancaya	Perú	5967	-15.78	-71.85	AD 1900-2005	1504-003
+Quimsachata	Perú	3923	-14.2	-71.33	Holocene	1504-004
+Chachani, Nevado	Perú	6057	-16.19	-71.53	Holocene	1504-005
+Misti, El	Perú	5822	-16.29	-71.41	AD 0-1899	1504-01=
+Ubinas	Perú	5672	-16.36	-70.9	AD 1900-2005	1504-02=
+Ticsani	Perú	5408	-16.76	-70.6	Holocene	1504-031
+Huaynaputina	Perú	4850	-16.61	-70.85	AD 0-1899	1504-03=
+Tutupaca	Perú	5815	-17.03	-70.36	Holocene	1504-04=
+Yucamane	Perú	5550	-17.18	-70.2	AD 1900-2005	1504-05-
+Casiri, Nevados	Perú	5650	-17.47	-69.82	Holocene	1504-06-
+Lexone	Chile-N	5340	-17.87	-69.48	Holocene	1505-011
+Anallajsi, Nevado	Bolivia	5750	-17.92	-68.92	Uncertain	1505-012
+Patilla Pata	Bolivia	5300	-18.05	-69.03	Uncertain	1505-013
+Sajama, Nevado del	Bolivia	6542	-18.1	-68.88	Holocene	1505-014
+Parinacota	Chile-N	6348	-18.17	-69.15	AD 0-1899	1505-015
+Taapacá	Chile-N	5861	-18.08	-69.43	Uncertain	1505-016
+Tacora	Chile-N	5980	-17.72	-69.77	Holocene	1505-01=
+Acotango	Chile-N	6052	-18.37	-69.05	Holocene	1505-021
+Macizo de Pacuni	Bolivia	5400	-18.32	-68.8	Uncertain	1505-022
+Macizo de Larancagua	Bolivia	5520	-18.25	-68.53	Uncertain	1505-023
+Colluma, Cerro	Bolivia	3876	-18.5	-68.07	Uncertain	1505-024
+Sacabaya	Bolivia	4215	-18.62	-68.75	Holocene	1505-025
+Arintica	Chile-N	5597	-18.73	-69.05	Uncertain	1505-026
+Guallatiri	Chile-N	6071	-18.42	-69.17	AD 1900-2005	1505-02=
+Cabaray	Chile-N	5860	-19.13	-68.68	Uncertain	1505-031
+Tata Sabaya	Bolivia	5430	-19.13	-68.5	Holocene	1505-032
+Puchuldiza	Chile-N	4500	-19.42	-68.97	Uncertain	1505-033
+Piña, Cerro	Chile-N	4037	-19.49	-68.65	Uncertain	1505-034
+Jayu Khota, Laguna	Bolivia	3650	-19.45	-67.42	Holocene	1505-035
+Nuevo Mundo	Bolivia	5438	-19.78	-66.48	Holocene	1505-036
+Isluga	Chile-N	5550	-19.15	-68.83	AD 1900-2005	1505-03=
+Unnamed	Chile-N	4200	-20.83	-68.63	Uncertain	1505-041
+Pampa Luxsar	Bolivia	5543	-20.85	-68.2	Holocene	1505-042
+Irruputuncu	Chile-N	5163	-20.73	-68.55	AD 1900-2005	1505-04=
+Aucanquilcha	Chile-N	6176	-21.22	-68.47	Uncertain	1505-051
+San Agustín, Cerro	Bolivia	4980	-21.25	-67.75	Uncertain	1505-052
+Olca-Paruma	Chile-N	5407	-20.93	-68.48	AD 0-1899	1505-05=
+Yumia, Cerro	Bolivia	4050	-21.5	-67.5	Uncertain	1505-061
+Escala	Bolivia	4000	-21.6	-66.88	Holocene	1505-062
+Santa Isabel, Cerro	Bolivia	5100	-21.67	-66.5	Uncertain	1505-063
+Moiro, Cerro	Bolivia	4250	-21.68	-67.47	Uncertain	1505-064
+Azufre, Cerro del	Chile-N	5846	-21.78	-68.23	Holocene	1505-065
+Ollagüe	Chile-N	5868	-21.3	-68.18	Uncertain	1505-06=
+Paniri	Chile-N	5946	-22.08	-68.25	Uncertain	1505-071
+Leon, Cerro del	Chile-N	5760	-22.18	-68.12	Uncertain	1505-072
+Linzor	Chile-N	5680	-22.18	-67.95	Uncertain	1505-073
+Jorcada	Chile-N	5750	-22.08	-67.77	Holocene	1505-074
+Quetena	Bolivia	5730	-22.25	-67.42	Uncertain	1505-075
+Uturuncu	Bolivia	6008	-22.27	-67.22	Uncertain	1505-076
+San Pedro	Chile-N	6145	-21.88	-68.4	AD 1900-2005	1505-07=
+Volcán, El	Chile-N	5100	-22.33	-67.97	Uncertain	1505-081
+Tocorpuri, Cerros de	Chile-N	5808	-22.43	-67.92	Uncertain	1505-082
+Tatio, El	Chile-N	4280	-22.35	-68.03	Uncertain	1505-08=
+Sairecabur	Chile-N	5971	-22.73	-67.88	Holocene	1505-091
+Licancabur	Chile-N	5916	-22.83	-67.88	Holocene	1505-092
+Guayaques	Chile-N	5598	-22.88	-67.58	Holocene	1505-093
+Purico Complex	Chile-N	5703	-23	-67.75	Holocene	1505-094
+Colachi	Chile-N	5631	-23.23	-67.65	Holocene	1505-095
+Verde, Laguna	Chile-N	5464	-23.25	-67.72	Uncertain	1505-096
+Acamarachi	Chile-N	6046	-23.3	-67.62	Holocene	1505-097
+Chiliques	Chile-N	5778	-23.58	-67.7	Holocene	1505-098
+Putana	Chile-N	5890	-22.57	-67.87	AD 0-1899	1505-09=
+Cordón de Puntas Negras	Chile-N	5852	-23.75	-67.53	Holocene	1505-101
+Miñiques	Chile-N	5910	-23.82	-67.77	Holocene	1505-102
+Tujle, Cerro	Chile-N	3550	-23.83	-67.95	Holocene	1505-103
+Caichinque	Chile-N	4450	-23.95	-67.73	Holocene	1505-104
+Tilocalar	Chile-N	3116	-23.97	-68.13	Uncertain	1505-105
+Negrillar, El	Chile-N	3500	-24.18	-68.25	Uncertain	1505-106
+Púlar	Chile-N	6233	-24.18	-68.05	Holocene	1505-107
+Negrillar, La	Chile-N	4109	-24.28	-68.6	Uncertain	1505-108
+Socompa	Chile-N	6051	-24.4	-68.25	Holocene	1505-109
+Lascar	Chile-N	5592	-23.37	-67.73	AD 1900-2005	1505-10=
+Escorial, Cerro	Chile-N	5447	-25.08	-68.37	Uncertain	1505-112
+Llullaillaco	Chile-N	6739	-24.72	-68.53	AD 0-1899	1505-11=
+Cordón del Azufre	Chile-N	5463	-25.33	-68.52	Holocene	1505-121
+Bayo, Cerro	Chile-N	5401	-25.42	-68.58	Holocene	1505-122
+Nevada, Sierra	Chile	6127	-26.48	-68.58	Holocene	1505-123
+Falso Azufre	Chile-N	5890	-26.8	-68.37	Holocene	1505-124
+Incahuasi, Nevado de	Chile-N	6621	-27.04	-68.28	Holocene	1505-125
+Lastarria	Chile-N	5697	-25.17	-68.5	Holocene	1505-12=
+Solo, El	Chile-N	6190	-27.12	-68.72	Holocene	1505-131
+Ojos del Salado, Nevados	Chile-N	6887	-27.12	-68.55	AD 0-1899	1505-13=
+Copiapó	Chile-N	6052	-27.3	-69.13	Uncertain	1505-14-
+Tuzgle, Cerro	Argentina	5500	-24.05	-66.48	Uncertain	1505-15-
+Aracar	Argentina	6082	-24.25	-67.77	AD 1900-2005	1505-16-
+Unnamed	Argentina	0	-25.1	-68.27	Uncertain	1505-161
+Antofalla	Argentina	6100	-25.53	-68	Holocene	1505-17-
+Antofagasta de la Sierra	Argentina	4000	-26.08	-67.5	Holocene	1505-18-
+Cóndor, Cerro el	Argentina	6532	-26.62	-68.35	Holocene	1505-19-
+Peinado	Argentina	5740	-26.62	-68.15	Holocene	1505-20-
+Robledo	Argentina	4400	-26.77	-67.72	Holocene	1505-21-
+Tipas	Argentina	6660	-27.2	-68.55	Holocene	1505-22-
+San Félix	Chile-Is	193	-26.28	-80.12	Holocene	1506-01=
+Robinson Crusoe	Chile-Is	922	-33.66	-78.85	AD 0-1899	1506-02=
+Unnamed	Chile-Is	-642	-33.62	-76.83	Uncertain	1506-04=
+Tupungatito	Chile-C	6000	-33.4	-69.8	AD 1900-2005	1507-01=
+Maipo	Chile-C	5264	-34.16	-69.83	AD 1900-2005	1507-021
+Palomo	Chile-C	4860	-34.61	-70.3	Holocene	1507-022
+Atuel, Caldera del	Argentina	5189	-34.65	-70.05	Holocene	1507-023
+Risco Plateado	Argentina	4999	-34.93	-70	Uncertain	1507-024
+San José	Chile-C	5856	-33.78	-69.9	AD 1900-2005	1507-02=
+Tinguiririca	Chile-C	4280	-34.81	-70.35	AD 1900-2005	1507-03=
+Calabozos	Chile-C	3508	-35.56	-70.5	Holocene	1507-042
+Planchón-Peteroa	Chile-C	4107	-35.24	-70.57	AD 1900-2005	1507-04=
+Descabezado Grande	Chile-C	3953	-35.58	-70.75	AD 1900-2005	1507-05=
+Maule, Laguna del	Chile-C	3092	-36.02	-70.58	Holocene	1507-061
+San Pedro-Pellado	Chile-C	3621	-35.99	-70.85	Holocene	1507-062
+Longaví, Nevado de	Chile-C	3242	-36.19	-71.16	Holocene	1507-063
+Blancas, Lomas	Chile-C	2268	-36.29	-71.01	Holocene	1507-064
+Resago	Chile-C	1890	-36.45	-70.92	Holocene	1507-065
+Payún Matru	Argentina	3680	-36.42	-69.2	Holocene	1507-066
+Domuyo	Argentina	4709	-36.58	-70.42	Uncertain	1507-067
+Azul, Cerro	Chile-C	3788	-35.65	-70.76	AD 1900-2005	1507-06=
+Cochiquito Volc Group	Argentina	1435	-36.77	-69.82	Holocene	1507-071
+Tromen	Argentina	3978	-37.14	-70.03	Holocene	1507-072
+Puesto Cortaderas	Argentina	970	-37.55	-69.62	Holocene	1507-073
+Chillán, Nevados de	Chile-C	3212	-36.86	-71.38	AD 1900-2005	1507-07=
+Trocon	Argentina	0	-37.75	-69.88	Uncertain	1507-081
+Antuco	Chile-C	2979	-37.41	-71.35	AD 0-1899	1507-08=
+Callaqui	Chile-C	3164	-37.92	-71.45	AD 1900-2005	1507-091
+Mariñaqui, Laguna	Chile-C	2050	-38.27	-71.1	Holocene	1507-092
+Tolguaca	Chile-C	2806	-38.31	-71.65	Holocene	1507-093
+Copahué	Chile-C	2997	-37.85	-71.17	AD 1900-2005	1507-09=
+Chapulul, Cerro	Chile-C	2143	-38.37	-71.08	Holocene	1507-101
+Nevada, Sierra	Chile-C	2554	-38.58	-71.58	Uncertain	1507-102
+Lonquimay	Chile-C	2865	-38.38	-71.58	AD 1900-2005	1507-10=
+Sollipulli	Chile-C	2282	-38.97	-71.52	AD 0-1899	1507-111
+Caburgua-Huelemolle	Chile-C	1496	-39.25	-71.7	Holocene	1507-112
+Llaima	Chile-C	3125	-38.69	-71.73	AD 1900-2005	1507-11=
+Quetrupillan	Chile-C	2360	-39.5	-71.75	AD 0-1899	1507-121
+Lanín	Chile-C	3747	-39.63	-71.5	Holocene	1507-122
+Huanquihue Group	Argentina	1400	-39.87	-71.55	AD 0-1899	1507-123
+Villarrica	Chile-C	2847	-39.42	-71.93	AD 1900-2005	1507-12=
+Mocho-Choshuenco	Chile-C	2422	-39.93	-72.03	AD 1900-2005	1507-13=
+Cordón Caulle	Chile-C	1798	-40.52	-72.2	AD 1900-2005	1507-141
+Carrán-Los Venados	Chile-C	1114	-40.35	-72.07	AD 1900-2005	1507-14=
+Mencheca	Chile-C	1840	-40.53	-72.04	Holocene	1507-151
+Pantoja, Cerro	Chile-C	2020	-40.77	-71.98	Holocene	1507-152
+Antillanca Group	Chile-C	1990	-40.77	-72.15	Holocene	1507-153
+Puyehue	Chile-C	2236	-40.59	-72.12	Holocene	1507-15=
+Puntiagudo-Cordón Cenizos	Chile-C	2493	-40.97	-72.26	AD 0-1899	1507-16-
+Osorno	Chile-S	2652	-41.1	-72.49	AD 0-1899	1508-01=
+Cayutué-La Viguería	Chile-S	506	-41.25	-72.27	Holocene	1508-021
+Volcanico, Cerro	Argentina	1930	-41.28	-71.65	Uncertain	1508-022
+Cuernos del Diablo	Chile-S	1862	-41.4	-72	Holocene	1508-023
+Yate	Chile-S	2187	-41.75	-72.4	Holocene	1508-024
+Hornopirén	Chile-S	1572	-41.87	-72.43	Holocene	1508-025
+Hualiaque	Chile-S	1670	-41.88	-72.62	Holocene	1508-026
+Calbuco	Chile-S	2003	-41.33	-72.61	AD 1900-2005	1508-02=
+Huequi	Chile-S	1318	-42.38	-72.58	AD 1900-2005	1508-03=
+Chaitén	Chile-S	1122	-42.83	-72.65	Holocene	1508-041
+Minchinmávida	Chile-S	2404	-42.78	-72.43	AD 0-1899	1508-04=
+Yanteles	Chile-S	2042	-43.5	-72.8	AD 0-1899	1508-051
+Palena Volc Group	Chile-S	0	-43.78	-72.47	Holocene	1508-052
+Melimoyu	Chile-S	2400	-44.08	-72.88	Holocene	1508-053
+Puyuhuapi	Chile-S	524	-44.3	-72.53	Holocene	1508-054
+Mentolat	Chile-S	1660	-44.67	-73.08	AD 0-1899	1508-055
+Cay	Chile-S	2200	-45.05	-73	Holocene	1508-056
+Maca	Chile-S	2960	-45.1	-73.2	Holocene	1508-057
+Hudson, Cerro	Chile-S	1905	-45.9	-72.97	AD 1900-2005	1508-058
+Corcovado	Chile-S	2300	-43.18	-72.8	AD 0-1899	1508-05=
+Viedma	Argentina	1500	-49.36	-73.28	AD 1900-2005	1508-061
+Aguilera	Chile-S	2546	-50.33	-73.75	Holocene	1508-062
+Reclus	Chile-S	1000	-50.96	-73.58	AD 1900-2005	1508-063
+Lautaro	Chile-S	3380	-49.02	-73.55	AD 1900-2005	1508-06=
+Burney, Monte	Chile-S	1758	-52.33	-73.4	AD 1900-2005	1508-07=
+Palei-Aike Volc Field	Chile-S	282	-52	-70	Holocene	1508-08-
+Fueguino	Chile-S	150	-54.95	-70.27	AD 0-1899	1508-09-
+Saba	W Indies	887	17.63	-63.23	AD 0-1899	1600-01=
+Quill, The	W Indies	601	17.48	-62.95	AD 0-1899	1600-02=
+Liamuiga	W Indies	1156	17.37	-62.8	AD 0-1899	1600-03=
+Nevis Peak	W Indies	985	17.15	-62.58	Holocene	1600-04=
+Soufrière Hills	W Indies	915	16.72	-62.18	AD 1900-2005	1600-05=
+Soufrière Guadeloupe	W Indies	1467	16.05	-61.67	AD 1900-2005	1600-06=
+Diables, Morne aux	W Indies	861	15.62	-61.45	Holocene	1600-08=
+Diablotins, Morne	W Indies	1430	15.5	-61.42	Uncertain	1600-09=
+Watt, Morne	W Indies	1224	15.3	-61.32	AD 1900-2005	1600-101
+Trois Pitons, Morne	W Indies	1387	15.37	-61.33	AD 0-1899	1600-10=
+Plat Pays, Morne	W Indies	940	15.22	-61.37	AD 0-1899	1600-11=
+Pelée	W Indies	1397	14.82	-61.17	AD 1900-2005	1600-12=
+Qualibou	W Indies	777	13.83	-61.05	AD 0-1899	1600-14=
+Soufriere St. Vincent	W Indies	1220	13.33	-61.18	AD 1900-2005	1600-15=
+Kick-'em-Jenny	W Indies	-182	12.3	-61.64	AD 1900-2005	1600-16=
+St. Catherine	W Indies	840	12.15	-61.67	Holocene	1600-17=
+Snaefellsjökull	Iceland-W	1448	64.8	-23.78	AD 0-1899	1700-01=
+Lysuhóll	Iceland-W	540	64.87	-23.25	Holocene	1700-02=
+Ljósufjöll	Iceland-W	988	64.87	-22.23	AD 0-1899	1700-03=
+Reykjaneshryggur	Iceland-SW	80	63.67	-23.33	AD 1900-2005	1701-01=
+Reykjanes	Iceland-SW	230	63.88	-22.5	AD 0-1899	1701-02=
+Krísuvík	Iceland-SW	379	63.93	-22.1	AD 0-1899	1701-03=
+Brennisteinsfjöll	Iceland-SW	626	63.92	-21.83	AD 0-1899	1701-04=
+Hengill	Iceland-SW	803	64.18	-21.33	AD 0-1899	1701-05=
+Grímsnes	Iceland-SW	214	64.03	-20.87	Holocene	1701-06=
+Prestahnukur	Iceland-SW	1390	64.6	-20.58	Holocene	1701-07=
+Langjökull	Iceland-SW	1360	64.75	-19.98	AD 0-1899	1701-08=
+Hofsjökull	Iceland-SW	1782	64.78	-18.92	Holocene	1701-09=
+Kerlingarfjöll	Iceland-SW	1488	64.63	-19.32	Holocene	1701-10=
+Vestmannaeyjar	Iceland-S	279	63.43	-20.28	AD 1900-2005	1702-01=
+Eyjafjöll	Iceland-S	1666	63.63	-19.62	AD 0-1899	1702-02=
+Katla	Iceland-S	1512	63.63	-19.05	AD 1900-2005	1702-03=
+Tindfjallajökull	Iceland-S	1463	63.78	-19.57	Holocene	1702-04=
+Torfajökull	Iceland-S	1259	63.92	-19.17	AD 0-1899	1702-05=
+Vatnafjöll	Iceland-S	1235	63.92	-19.67	AD 0-1899	1702-06=
+Hekla	Iceland-S	1491	63.98	-19.7	AD 1900-2005	1702-07=
+Grímsvötn	Iceland-NE	1725	64.42	-17.33	AD 1900-2005	1703-01=
+Loki-Fögrufjöll	Iceland-NE	1570	64.48	-17.8	AD 1900-2005	1703-02=
+Bárdarbunga	Iceland-NE	2000	64.63	-17.53	AD 1900-2005	1703-03=
+Tungnafellsjökull	Iceland-NE	1535	64.73	-17.92	Holocene	1703-04=
+Kverkfjöll	Iceland-NE	1920	64.65	-16.72	AD 1900-2005	1703-05=
+Askja	Iceland-NE	1516	65.03	-16.75	AD 1900-2005	1703-06=
+Fremrinamur	Iceland-NE	939	65.43	-16.65	Holocene	1703-07=
+Krafla	Iceland-NE	650	65.73	-16.78	AD 1900-2005	1703-08=
+Theistareykjarbunga	Iceland	564	65.88	-16.83	Holocene	1703-09=
+Tjörnes Fracture Zone	Iceland-N of	0	66.3	-17.1	AD 0-1899	1703-10=
+Öraefajökull	Iceland-SE	2119	64	-16.65	AD 0-1899	1704-01=
+Esjufjöll	Iceland-SE	1760	64.27	-16.65	AD 1900-2005	1704-02=
+Kolbeinsey Ridge	Iceland-N of	0	66.67	-18.5	AD 0-1899	1705-01=
+Jan Mayen	Atlantic-N-Jan Mayen	2277	71.08	-8.17	AD 1900-2005	1706-01=
+Unnamed	Arctic Ocean	-1500	88.27	-65.6	Uncertain	1707-01-
+Unnamed	Atlantic-N	-1650	49	-34.5	AD 0-1899	1801-02=
+Unnamed	Atlantic-N	-2835	39.95	-25.83	Uncertain	1801-03=
+Unnamed	Atlantic-N	-4200	38.75	-38.08	AD 0-1899	1801-04=
+Flores	Azores	915	39.4	-31.17	Holocene	1802-001
+Corvo	Azores	715	39.67	-31.07	Holocene	1802-002
+Fayal	Azores	1043	38.6	-28.73	AD 1900-2005	1802-01=
+Pico	Azores	2351	38.47	-28.4	AD 0-1899	1802-02=
+San Jorge	Azores	1053	38.65	-28.08	AD 1900-2005	1802-03=
+Graciosa	Azores	402	39.02	-27.97	Holocene	1802-04=
+Terceira	Azores	1023	38.73	-27.32	AD 1900-2005	1802-05=
+Don Joao de Castro Bank	Azores	-14	38.23	-26.63	AD 0-1899	1802-07=
+Unnamed	Azores	350	37.78	-25.67	AD 0-1899	1802-081
+Sete Cidades	Azores	856	37.87	-25.78	AD 0-1899	1802-08=
+Agua de Pau	Azores	947	37.77	-25.47	AD 0-1899	1802-09=
+Furnas	Azores	805	37.77	-25.32	AD 0-1899	1802-10=
+Monaco Bank	Azores	-197	37.6	-25.88	AD 1900-2005	1802-11=
+La Palma	Canary Is	2426	28.57	-17.83	AD 1900-2005	1803-01-
+Hierro	Canary Is	1500	27.73	-18.03	AD 0-1899	1803-02-
+Tenerife	Canary Is	3715	28.27	-16.64	AD 1900-2005	1803-03-
+Gran Canaria	Canary Is	1950	28	-15.58	Holocene	1803-04-
+Fuerteventura	Canary Is	529	28.36	-14.02	Holocene	1803-05-
+Lanzarote	Canary Is	670	29.03	-13.63	AD 0-1899	1803-06-
+Fogo	Cape Verde Is	2829	14.95	-24.35	AD 1900-2005	1804-01=
+Brava	Cape Verde Is	900	14.85	-24.72	Holocene	1804-02-
+Sao Vicente	Cape Verde Is	725	16.85	-24.97	Holocene	1804-04-
+Unnamed	Atlantic-C	-1415	7	-21.83	Uncertain	1805-01=
+Unnamed	Atlantic-C	-2900	4.2	-21.45	Uncertain	1805-02=
+Unnamed	Atlantic-C	-1528	-0.58	-15.83	AD 0-1899	1805-03=
+Unnamed	Atlantic-C	-5300	-3.5	-24.5	Uncertain	1805-04=
+Ascensión	Atlantic-C	858	-7.95	-14.37	Holocene	1805-05-
+Trindade	Atlantic-C	600	-20.51	-29.33	Holocene	1805-051
+Tristan da Cunha	Atlantic-S	2060	-37.09	-12.28	AD 1900-2005	1806-01=
+Bouvet	Atlantic-S	780	-54.42	3.35	Holocene	1806-02-
+Thompson Island	Atlantic-S	0	-53.93	5.5	Uncertain	1806-03-
+Young Island	Antarctica	1340	-66.42	162.45	Holocene	1900-011
+Sturge Island	Antarctica	1167	-67.4	164.83	Uncertain	1900-012
+Buckle Island	Antarctica	1239	-66.8	163.25	AD 0-1899	1900-01=
+Peter I Island	Antarctica	1640	-68.85	-90.58	Holocene	1900-029
+Penguin Island	Antarctica	180	-62.1	-57.93	AD 1900-2005	1900-031
+Deception Island	Antarctica	576	-62.97	-60.65	AD 1900-2005	1900-03=
+Paulet	Antarctica	353	-63.58	-55.77	Holocene	1900-041
+Bridgeman Island	Antarctica	240	-62.05	-56.75	Uncertain	1900-04=
+Seal Nunataks Group	Antarctica	368	-65.03	-60.05	Uncertain	1900-05=
+Thule Islands	Antarctica	1075	-59.45	-27.37	AD 1900-2005	1900-07=
+Montagu Island	Antarctica	1370	-58.42	-26.33	AD 1900-2005	1900-081
+Bristol Island	Antarctica	1100	-59.03	-26.58	AD 1900-2005	1900-08=
+Michael	Antarctica	990	-57.78	-26.45	AD 1900-2005	1900-09=
+Candlemas Island	Antarctica	550	-57.08	-26.67	AD 1900-2005	1900-10=
+Hodson	Antarctica	1005	-56.7	-27.15	Holocene	1900-11=
+Leskov Island	Antarctica	190	-56.67	-28.13	Holocene	1900-12=
+Zavodovski	Antarctica	551	-56.3	-27.57	AD 0-1899	1900-13=
+Protector Shoal	Antarctica	-27	-55.92	-28.08	AD 1900-2005	1900-14-

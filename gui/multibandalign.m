@@ -58,9 +58,11 @@ function [info]=multibandalign(data,varargin)
 %        Jan. 18, 2011 - multibandalign options added, winnowing memory,
 %                        improved snr codes, bank & runname are optional,
 %                        zero-crossing feature added
+%        Jan. 23, 2011 - save window positions on iter 2+ of first band,
+%                        phase input allows for a bit more
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 12:25 GMT
+%     Last Updated Jan. 23, 2011 at 12:25 GMT
 
 % todo:
 
@@ -100,7 +102,8 @@ end
 % attempt multi-band align
 try
     % parse inputs
-    [bank,runname,snrcut,filt,varargin]=parse_mba_params(varargin{:});
+    [bank,runname,snrcut,filt,phase,varargin]=parse_mba_params(...
+        varargin{:});
     
     % preallocate output
     info([])=struct('useralign',[],'filter',[],'initwin',[],...
@@ -148,7 +151,7 @@ try
         % initial window and assessment
         if(i>1); info(i).initwin=info(i-1).initwin; end
         [data0,info(i),skip,skipall,snrcut,fast,ax]=...
-            get_initial_window(data0,info(i),snrcut,fast);
+            get_initial_window(data0,info(i),snrcut,fast,phase);
         if(ishandle(ax))
             saveas(get(ax,'parent'),...
                 [runname '_band_' istr '_preview.fig']);
@@ -164,7 +167,14 @@ try
             info(i).usersnr.noisewin=[-300 -20];
             info(i).usersnr.signalwin=[-10 70];
             info(i).usersnr.method='peak2rms';
-        else
+        elseif(last==i)
+            % just update signal window if we used useralign
+            if(~isempty(info(last).useralign) ...
+                    && ~isempty(info(last).useralign.userwindow.limits))
+                info(i).usersnr.signalwin=...
+                    info(last).useralign.userwindow.limits;
+            end
+        else % look for zero-crossing
             info(i).usersnr.noisewin=info(last).usersnr.noisewin;
             if(~isempty(info(last).useralign) ...
                     && ~isempty(info(last).useralign.userwindow.limits))
@@ -256,12 +266,13 @@ try
             % ask if satisfied
             if(~user_satisfied)
                 close(get(ax,'parent'));
+                last=i;
                 continue;
             else
                 close(get(ax,'parent'));
             end
             
-            % use alignment for next band?
+            % use alignment for next band
             if(i<size(bank,1))
                 goodarr=info(i).useralign.solution.arr;
                 goodidx=find(snridx);
@@ -383,7 +394,7 @@ end
 
 
 function [data,info,skip,skipall,snrcut,fast,ax]=get_initial_window(...
-    data,info,snrcut,fast)
+    data,info,snrcut,fast,phase)
 
 % default initial window
 if(isempty(info.initwin))
@@ -399,16 +410,38 @@ else
     modestr='FAST';
 end
 
+% shift if phase given
+if(~isempty(phase))
+    [t,n]=getarrival(data,phase);
+    data=timeshift(data,-t,strcat('it',num2str(n)));
+end
+
 % ask the user if they wish to continue
 skip=false; skipall=false;
 happy_user=false; ax=-1;
 while(~happy_user)
     % plot records (so user can decide to skip or not)
     if(~ishandle(ax))
-        ax=plot0(cut(data,win(1),win(2)),...
+        % record section
+        ax=recordsection(cut(data,win(1),win(2)),...
             'normstyle','single','xlim',win,'title',...
             ['FILTER CORNERS: ' num2str(1/info.filter.corners(2)) ...
             's  to  ' num2str(1/info.filter.corners(1)) 's']);
+        
+        % this all assumes the phase is shifted to 0
+        if(~isempty(phase))
+            evdp=getheader(data(1),'evdp')/1000;
+            tt=taupcurve('dep',evdp);
+            idx=find(strcmp(phase,{tt.phase}));
+            intrcpt=tt(idx).time(1)...
+                -tt(idx).distance(1)*tt(idx).rayparameter(1);
+            tt=taupcurve('dep',evdp,...
+                         'reddeg',1/tt(idx).rayparameter(1),'ph','ttall');
+            hold(ax,'on');
+            h=plot_taupcurve(tt,-intrcpt,true,'parent',ax,'linewidth',5);
+            movekids(h,'back');
+            hold(ax,'off');
+        end
     end
 
     choice=menu('What to do with this filter band?',...
@@ -470,12 +503,12 @@ end
 
 % implement window
 info.initwin=win;
-if(choice<3); data=cut(data,win(1),win(2)); end
+if(choice==1); data=cut(data,win(1),win(2)); end
 
 end
 
 
-function [bank,runname,snrcut,filt,varargin]=parse_mba_params(varargin)
+function [bank,run,snrcut,filt,phase,varargin]=parse_mba_params(varargin)
 %PARSE_MBA_PARAMS  Parses out multibandalign parameters
 
 % basic checks on optional inputs
@@ -486,12 +519,13 @@ end
 
 % defaults
 bank=filter_bank([0.0125 0.125],'variable',0.2,0.1);
-runname=['multibandalign_' datestr(now,30)];
-snrcut=5;
+run=['multibandalign_' datestr(now,30)];
+snrcut=3;
 filt.type='bandpass';
 filt.style='butter';
 filt.order=4;
 filt.passes=1;
+phase=[];
 
 % valid filter types & styles (grabbed from iirdesign)
 validtypes={'low' 'lo' 'l' 'lp' 'high' 'hi' 'h' 'hp' 'bandpass' 'pass' ...
@@ -521,7 +555,7 @@ for i=1:2:nargin
                 error('seizmo:multibandalign:badInput',...
                     'RUNNAME must be a string!');
             end
-            runname=varargin{i+1};
+            run=varargin{i+1};
             keep(i:i+1)=false;
         case {'sc' 'snrcutoff' 'snrcut'}
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
@@ -564,6 +598,14 @@ for i=1:2:nargin
                     'FILTERPASSES must be 1 or 2!');
             end
             filt.passes=varargin{i+1};
+            keep(i:i+1)=false;
+        case {'phase'}
+            if(~isstring(varargin{i+1}) ...
+                    || ~any(strcmpi(varargin{i+1},{'Pdiff' 'Sdiff'})))
+                error('seizmo:multibandalign:badInput',...
+                    'PHASE must be a ''Pdiff'' or ''Sdiff''!');
+            end
+            phase=varargin{i+1};
             keep(i:i+1)=false;
     end
 end

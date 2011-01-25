@@ -1,10 +1,10 @@
-function [ok]=gooduglycheck(indir,outdir,varargin)
+function []=gooduglycheck(indir,outdir,varargin)
 %GOODUGLYCHECK    Interactive QC tool for event data
 %
 %    Usage:    gooduglycheck(indir,outdir)
 %              gooduglycheck(...,'freqbands',corners,...)
 %              gooduglycheck(...,'moveouts',kmps,...)
-%              ok=gooduglycheck(...)
+%              gooduglycheck(...,'option',value,...)
 %
 %    Description: GOODUGLYCHECK(INDIR,OUTDIR) is used to inspect the
 %     quality of records in the directory structure under directory INDIR.
@@ -14,26 +14,26 @@ function [ok]=gooduglycheck(indir,outdir,varargin)
 %     series of menus and interactive plots to select which events to
 %     look at and to delete poor records from those events.  By default,
 %     this is oriented to the quality control of surface wave recordings as
-%     for each event 5 plots are produced displaying the unfiltered and
-%     filtered recordings.  The filter ranges are 20-40s, 35-60s, 55-100s,
-%     and 95-200s periods which are right in line for regional and global
-%     surface wave analysis.  Records that are not deleted are written
-%     within the directory OUTDIR with the same directory layout.  
+%     for each event 3 plots are produced displaying the recordings
+%     filtered at various bands.  The filter ranges are 20-40s, 95-200s,
+%     and 35-120s which are right in line for regional and global surface
+%     wave analysis.  The last plot is interactive to allow record deletion
+%     -- use left-click to select/deselect & middle-click to complete
+%     selection).  Records that are not deleted are written within the
+%     directory OUTDIR with the same directory layout.  
 %
 %     GOODUGLYCHECK(...,'FREQBANDS',CORNERS,...) indicates filtered bands
 %     to be inspected (in addition to the unfiltered records).  The filters
 %     are implemented as 2-pass 4-pole butterworth bandpasses.  The default
-%     value of CORNERS is [1/40 1/20; 1/60 1/35; 1/100 1/55; 1/200 1/95].
-%     This gives 4 addtional bands looking at the period ranges of 20-40s,
-%     35-60s, 55-100s, and 95-200s.  Note that CORNERS must be in Hz!
+%     value of CORNERS is [1/40 1/20; 1/200 1/95].  This plots the period
+%     ranges of 20-40s and 95-200s.  Note that CORNERS must be in Hz!
 %
 %     GOODUGLYCHECK(...,'MOVEOUTS',KMPS,...) indicates the moveouts to be
-%     shown as markers in the plots.  Moveouts should be in units of
+%     shown in the filtered record plots.  Moveouts should be in units of
 %     kilometers per second.  The default value of KMPS is 3:5.
 %
-%     OK=GOODUGLYCHECK(...) returns OK as FALSE if the user exited before
-%     finishing the selected events or TRUE if all selected events were
-%     processed.
+%     GOODUGLYCHECK(...,'OPTION',VALUE,...) passes additional options on to
+%     PLOT1 for plot manipulation.
 %
 %    Notes:
 %     - The directory structure should look as follows (the names are
@@ -61,22 +61,25 @@ function [ok]=gooduglycheck(indir,outdir,varargin)
 %       anything (except change the creation time).
 %
 %    Examples:
-%     Use only 1 filter band:
-%      gooduglycheck('unchecked','qced','freqbands',[1/100 1/50])
+%     % Use only 1 filter band:
+%     gooduglycheck('unchecked','qced','freqbands',[1/40 1/20])
 %
-%     No filters, no moveouts:
-%      gooduglycheck('unchecked','qced','fb',[],'m',[])
+%     % No filters, no moveouts (for speed):
+%     gooduglycheck('unchecked','qced','fb',[],'m',[])
 %
-%    See also: FREQWINDOW
+%    See also: FREQWINDOW, MAKEKERNELS, PLOTKERNELS
 
 %     Version History:
 %        Apr. 22, 2010 - major code cleanup and added documentation
 %        Apr. 23, 2010 - lots of debugging
+%        Jan. 19, 2011 - updated for all the recent gui changes
+%        Jan. 21, 2011 - further tweaking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2010 at 10:35 GMT
+%     Last Updated Jan. 21, 2011 at 10:35 GMT
 
 % todo
+% - something like freqwindow may be better?
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -85,21 +88,18 @@ if(mod(nargin,2))
         'One (or more) input OPTION/VALUE is unpaired!');
 end
 
-% did we finish ok? assume no at the start
-ok=false;
-
 % directory separator
 fs=filesep;
 
 % check indir
-if(~ischar(indir) || size(indir,1)~=1 || ~isdir(indir))
+if(~isstring(indir) || ~isdir(indir))
     error('seizmo:gooduglycheck:badInput',...
         'INDIR must be a directory location!');
 end
 
 % check outdir
 reply='o';
-if(~ischar(outdir) || size(outdir,1)~=1)
+if(~isstring(outdir))
     error('seizmo:gooduglycheck:badInput',...
         'OUTDIR must be a valid directory path!');
 elseif(exist(outdir,'file') && ~isdir(outdir))
@@ -115,7 +115,7 @@ elseif(isdir(outdir))
         % only delete selected event directories
         disp('Deleting Contents of To-Be-Selected Event Directories!');
         
-        % this deletes the entire superdirectory (too dangerous)
+        % the code below deletes the entire superdirectory (too dangerous)
         %if(~rmdir(outdir,'s'))
         %    error('seizmo:gooduglycheck:couldNotDelete',...
         %        'Could Not Delete Directory: %s',outdir);
@@ -127,7 +127,7 @@ elseif(isdir(outdir))
 end
 
 % default options (pass through checks)
-varargin=[{'m' 3:5 'fb' 1./[40 20; 60 35; 100 55; 200 95]} varargin];
+varargin=[{'m' 3:5 'fb' 1./[40 20; 200 95]} varargin];
 
 % check optional inputs
 nvargin=numel(varargin);
@@ -135,7 +135,8 @@ if(nvargin && ~iscellstr(varargin(1:2:end)))
     error('seizmo:gooduglycheck:badInput',...
         'OPTION must be a string!');
 end
-for i=1:2:numel(varargin)
+keep=true(nvargin,1);
+for i=1:2:nvargin
     switch lower(varargin{i})
         case {'f' 'fb' 'freq' 'freqband' 'freqbands'}
             if(~isempty(varargin{i+1}) && (~isreal(varargin{i+1}) ...
@@ -146,22 +147,24 @@ for i=1:2:numel(varargin)
                     ' specifying ranges in Hz [LOW HIGH]!']);
             end
             freqbands=varargin{i+1};
-            % force into [LOW HIGH] (so plot names look right)
-            freqbands=[min(freqbands(:,1),freqbands(:,2)) ...
-                max(freqbands(:,1),freqbands(:,2))];
-            nfb=size(freqbands,1);
-        case {'m' 'mo' 'move' 'moveout' 'moveouts'}
-            if(~isreal(varargin{i+1}) || numel(varargin{i+1})>10)
-                error('seizmo:gooduglycheck:badInput',...
-                    'MOVEOUTS must be real numbers (up to 10 allowed)!');
+            if(~isempty(freqbands))
+                % force into [LOW HIGH] (so plot names look right)
+                freqbands=[min(freqbands(:,1),freqbands(:,2)) ...
+                    max(freqbands(:,1),freqbands(:,2))];
             end
-            moveouts=varargin{i+1};
+            nfb=size(freqbands,1);
+            keep(i:i+1)=false;
+        case {'m' 'mo' 'move' 'moveout' 'moveouts'}
+            if(~isreal(varargin{i+1}))
+                error('seizmo:gooduglycheck:badInput',...
+                    'MOVEOUTS must be positive reals!');
+            end
+            moveouts=varargin{i+1}(:);
             nmo=numel(moveouts);
-        otherwise
-            error('seizmo:gooduglycheck:unknownOption',...
-                'Unknown Option: %s',varargin{i});
+            keep(i:i+1)=false;
     end
 end
+varargin=varargin(keep);
 
 % get event directories
 events=dir(indir);
@@ -182,9 +185,10 @@ for i=s(:)'
     
     % read in data
     data0=readseizmo([indir fs events(i).name fs '*']);
+    nrecs=numel(data0);
     
     % check event info matches
-    [ev,outc,dist,b,e]=getheader(data0,'ev','o utc','dist','b','e');
+    [ev,outc,dist]=getheader(data0,'ev','o utc','dist');
     outc=cell2mat(outc);
     if(size(unique(ev,'rows'),1)>1)
         error('seizmo:gooduglycheck:muddledHeader',...
@@ -194,55 +198,73 @@ for i=s(:)'
             'ORIGIN time varies among records!');
     end
     
-    % insert moveouts
-    for j=0:(nmo-1)
-        t=['t' num2str(j)];
-        kt=['kt' num2str(j)];
-        kmps=[num2str(moveouts(j+1)) 'km/s'];
-        data0=changeheader(data0,t,dist/moveouts(j+1),kt,kmps);
-    end
-    
     % implement filters
     fdata=cell(nfb,1);
     for j=1:nfb
         fdata{j}=iirfilter(data0,'bp','b','c',freqbands(j,:),'o',4,'p',2);
     end
     
-    % loop until user is satisfied
-    user_happy=false; win=[min(b) max(e)];
-    while(~user_happy)
-        % plot up filtered data
-        fh=nan(nfb,1); ax=fh;
+    % filter for deletion window
+    ddata=iirfilter(data0,'bp','b','c',[1/120 1/35],'o',4,'p',2);
+    
+    % loop until user satisfied
+    win=[min(dist/10) max(dist/2)];
+    unsatisfied=true; ffh=-1;
+    while(unsatisfied)
+        % plot filtered records
         for j=1:nfb
-            fh(j)=figure('name',[num2str(1/freqbands(j,2)) '-' ...
-                num2str(1/freqbands(j,1)) 's  ' events(i).name],...
-                'color','k');
-            ax(j)=axes('parent',fh(j));
-            ax(j)=plot1(fdata{j},'ax',ax(j),...
-                'xlim',win,'markers',true);
+            % p1 style plots
+            ax=plot1(cut(fdata{j},win(1),win(2)),...
+                'xlabel',' ','ylabel',' ','align',true,varargin{:});
+            if(ishandle(ax(1))); ffh(j)=get(ax(1),'parent'); end
+            drawnow;
+            
+            % moveout lines -- not flags
+            for k=1:nrecs
+                hold(ax(k),'on');
+                yrng=ylim(ax(k));
+                xrng=dist(k)./moveouts;
+                mh=plot(ax(k),xrng(:,[1 1])',yrng','linewidth',2);
+                movekids(mh,'back');
+                for m=1:nmo
+                    text(xrng(m),yrng(2),num2str(moveouts(m)),...
+                        'color',get(mh(m),'color'),'parent',ax(k));
+                end
+                hold(ax(k),'off');
+            end
+            
+            % figure title
+            set(ffh(j),'name',[events(i).name '  ' ...
+                num2str(1/freqbands(j,2)) '-' ...
+                num2str(1/freqbands(j,1)) 's']);
         end
         
-        % get user selection
-        fh(j+1)=figure('name',['UNFILTERED  ' events(i).name],'color','k');
-        ax(j+1)=axes('parent',fh(j+1));
-        [data,deleted,ax(j+1)]=selectrecords(data0,'delete','p1',[],...
-            'xlim',win,'markers',true);
+        % use specific filter for record deletion
+        ufh=figure('color','k','name',[events(i).name ' 35-120s']);
+        ncols=fix(sqrt(nrecs));
+        nrows=ceil(nrecs/ncols);
+        ax=makesubplots(nrows,ncols,1:nrecs,'align','parent',ufh);
+        [deleted,deleted]=selectrecords(cut(ddata,win(1),win(2)),...
+            'delete','p1',[],...
+            'xlim',win,'ax',ax,'xlabel',' ','ylabel',' ',varargin{:});
+        data=data0;
+        data(deleted)=[];
         
         % get user action
         choice=0;
         while(~choice)
-            mymenu={'Choose An Option'};
+            mymenu={'Choose An Option:'};
             choice=menu(mymenu,...
-                'Write Kept Records and Proceed To Next Event',...
-                'Skip Event (Write No Records)',...
-                'Redo Record Selection',...
+                'Write and Continue To Next Event',...
+                'Skip Event (No Write)',...
+                'Redo Record Deletion',...
                 'Redefine Time Limits',...
                 'Exit');
 
             % handle user choice
             switch choice
                 case 1 % write and proceed
-                    user_happy=true;
+                    unsatisfied=false;
                     % delete if indicated
                     if(strncmpi(reply,'d',1))
                         if(isdir([outdir fs events(i).name]))
@@ -255,12 +277,12 @@ for i=s(:)'
                     end
                     writeseizmo(data,'path',[outdir fs events(i).name fs]);
                 case 2 % skip
-                    user_happy=true;
+                    unsatisfied=false;
                 case 3 % redo
                     % do nothing
                 case 4 % change time
-                    [win,win,ax(j+2)]=userwindow(data0);
-                    fh(j+2)=get(ax(j+2),'parent');
+                    [win,win,ax]=userwindow(data0);
+                    if(ishandle(ax)); close(get(ax,'parent')); end
                     win=win.limits;
                 case 5 % exit
                     return;
@@ -268,11 +290,9 @@ for i=s(:)'
         end
         
         % close figure handles
-        close(fh(ishandle(fh)));
+        close(ffh(ishandle(ffh)));
+        close(ufh(ishandle(ufh)));
     end
 end
-
-% success!
-ok=true;
 
 end

@@ -11,6 +11,7 @@ function []=sz_toc_ttcorrect()
 %<a href="matlab:help mancor">mancor</a>                    - Returns mantle travel time corrections for a set of raypaths
 %<a href="matlab:help plotraypaths">plotraypaths</a>              - 3D plot of the Globe with raypaths
 %<a href="matlab:help trim_depths_raypaths">trim_depths_raypaths</a>      - Removes sections of raypaths outside depth range
+%<a href="matlab:help ttsurf">ttsurf</a>                    - Return surface wave travel time from event(s) to station(s)
 %
 % <a href="matlab:help seizmo">SEIZMO - Passive Seismology Toolbox</a>
 end

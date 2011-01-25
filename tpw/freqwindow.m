@@ -1,275 +1,371 @@
-function [ok]=freqwindow(indir,outdir,varargin)
+function []=freqwindow(indir,outdir,varargin)
 %FREQWINDOW    Interactive multi-frequency QCing & windowing of event data
 %
 %    Usage:    freqwindow(indir,outdir)
-%              ok=freqwindow(...)
+%              freqwindow(indir,outdir,'option',value,...)
 %
-%    Description: FREQWINDOW(INDIR,OUTDIR)
+%    Description:
+%     FREQWINDOW(INDIR,OUTDIR) provides an interface aiding in windowing &
+%     quality control management of surface wave array data for a series of
+%     narrow frequency bands.  This is useful to eliminate noisy data from
+%     two-plane wave analysis and get the windows "just right".  Starting
+%     windows are determined using the CUB2 model and an empirical formula.
+%     The surface waves are cut out using the window, tapered and then
+%     subjected to SNR-based quality control.  The taper width is 0.2, the
+%     SNR cutoff is 3 (using the peak2rms method), & the noise windows are
+%     0.5 the signal window on either side.  Output records are written
+%     under OUTDIR (see the Notes section for directory structure details)
+%     and are padded with zeros so that the records extend from -2000 to
+%     7000 seconds relative to the origin time.  The filter bank is created
+%     using the following:
+%      flipud(filter_bank([0.0055 0.055],'variable',0.2,0.1))
+%     This means that filters proceed from short period to long period.
 %
-%     OK=FREQWINDOW(...) returns OK as FALSE if the user exited before
-%     finishing the selected events or TRUE if all selected events were
-%     processed.
+%     FREQWINDOW(INDIR,OUTDIR,'OPTION',VALUE,...) alters the specified
+%     parameter(s) given by 'OPTION' to VALUE.  The following are valid:
+%      'bank'       - filter bank (FILTER_BANK format)
+%      'snrcut'     - SNR cutoff (3)
+%      'snrwin'     - SNR noise window relative width (0.5)
+%      'snrmethod'  - SNR method ('peak2rms')
+%      'taperwidth' - Taper width (0.2)
+%      'padwin'     - Zero-Padding limits ([-2000 7000])
+%      'model'      - surface wave travel time model ('CUB2' - see TTSURF)
+%      'wave'       - surface wave type ('Rayleigh')
+%      'speed'      - surface wave speed type ('group')
 %
 %    Notes:
+%     - If OUTDIR exists the user is presented with the opportunity to
+%       overwrite or delete the contents of OUTDIR or to exit the program.
+%       DELETING WILL DELETE ONLY THE DIRECTORIES CORRESPONDING TO THE
+%       EVENT+FILTER WHEN IT IS BEING SAVED.  This minimizes the impact of
+%       this operation, allowing focused reprocessing.
 %     - The directory structure should look as follows (the names are
 %       allowed to be different ie. EVENTDIR1 may be 2006.044.04.03.55.9):
 %        INDIR
 %          |
 %          --> EVENTDIR1
+%          --> EVENTDIR2
 %          .
 %          .
 %          --> EVENTDIRN
 %                   |
 %                   --> RECORD1
+%                   --> RECORD2
 %                   .
 %                   .
 %                   --> RECORDN
-%     - The output directory structure:
+%     - The output directory structure (note the extra layer of directories
+%       for each narrow-band filter):
 %        OUTDIR
 %           |
 %           --> EVENTDIR1
+%           --> EVENTDIR2
 %           .
 %           .
 %           --> EVENTDIRN
 %                    |
-%                    --> 01
+%                    --> 01-CPERIOD1
+%                    --> 02-CPERIOD2
 %                    .
 %                    .
-%                    --> NN
+%                    --> XX-CPERIODX
 %                        |
 %                        --> RECORD1
+%                        --> RECORD2
 %                        .
 %                        .
 %                        --> RECORDN
 %
 %    Examples:
-%     
+%     % Be a little stricter on noise allowance:
+%     freqwindow(INDIR,OUTDIR,'snrcut',5);
 %
-%    See also: GOODUGLYCHECK
+%    See also: GOODUGLYCHECK, MAKEKERNELS, PLOTKERNELS
 
 %     Version History:
 %        Apr. 22, 2010 - major code cleanup and added documentation
+%        Jan. 23, 2011 - full rewrite
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2010 at 20:00 GMT
+%     Last Updated Jan. 23, 2011 at 20:00 GMT
 
 % todo:
-% - options
-%   - taper width relative to window [0.2]
-%   - snr cutoff [3]
-%   - zero pad window [-2000 7000]
-%   - snr window size relative to signal window [0.2]
 
-%
-% how to adjust for your data
-% - learn filter_bank and adjust line 42ish
-% - adjust 1D models (prem to array, custom in array) at line 50ish
-% - change taper parameter below
-% - change SNR cutoff/window parameters below
-% - change final padded start/stop below
-taperwidth=0.2; % taper 20% on each edge
-snrcut=3; % trim records with signal to noise ratio < 3
-padstart=-2000; % start padding at -2000s
-padend=7000; % pad to 7000s
-snrwin=0.2; % size of noise window relative to signal
+% check nargin
+error(nargchk(2,inf,nargin));
+if(mod(nargin,2))
+    error('seizmo:freqwindow:uppairedOption',...
+        'One (or more) input OPTION/VALUE is unpaired!');
+end
 
-% did we finish ok?
-ok=false;
+% directory separator
+fs=filesep;
 
 % check indir
-if(~ischar(indir) || size(indir,1)~=1)
-    error('INDIR must be a string giving one directory!');
-elseif(~isdir(indir))
-    error('INDIR must be a directory!');
+if(~isstring(indir) || ~isdir(indir))
+    error('seizmo:freqwindow:badInput',...
+        'INDIR must be a directory location!');
 end
 
 % check outdir
-if(~ischar(outdir) || size(outdir,1)~=1)
-    error('OUTDIR must be a string giving one directory!');
+reply='o';
+if(~isstring(outdir))
+    error('seizmo:freqwindow:badInput',...
+        'OUTDIR must be a valid directory path!');
 elseif(exist(outdir,'file') && ~isdir(outdir))
-    error('OUTDIR must be a directory!');
+    error('seizmo:freqwindow:badInput',...
+        'OUTDIR location is a file!');
+elseif(isdir(outdir))
+    fprintf('Directory: %s\nDirectory Exists!\n',outdir);
+    reply=input('Overwrite/Delete/Quit? O/D/Q [Q]: ','s');
+    if(strncmpi(reply,'o',1))
+        disp(['Overwriting (But Not Deleting) ' ...
+            'To-Be-Selected Event Directories!']);
+    elseif(strncmpi(reply,'d',1))
+        % only delete selected event directories
+        disp('Deleting Contents of Processed Filter Directories!');
+        
+        % the code below deletes the entire superdirectory (too dangerous)
+        %if(~rmdir(outdir,'s'))
+        %    error('seizmo:freqwindow:couldNotDelete',...
+        %        'Could Not Delete Directory: %s',outdir);
+        %end
+    else % quiting
+        disp('Quiting!');
+        return;
+    end
 end
 
+% default parameters / user-supplied alterations
+p=parse_freqwindow_param(varargin{:});
+nfilt=size(p.bank,1);
+
 % get date directories
-dates=dir(indir);
-dates(strcmp({dates.name},'.') | strcmp({dates.name},'..'))=[];
-dates(~[dates.isdir])=[];
-datelist=char(strcat({dates.name}.'));
+events=dir(indir);
+events(strcmp({events.name},'.') | strcmp({events.name},'..'))=[];
+events(~[events.isdir])=[];
+eventlist=char(strcat({events.name}.'));
 
 % get user selected start date
 s=listdlg('PromptString','Select events:',...
-          'InitialValue',1:numel(dates),...
+          'InitialValue',1:numel(events),...
           'ListSize',[170 300],...
-          'ListString',datelist);
-
-% get filter bank
-bank=flipud(filter_bank([0.0055 0.055],'variable',0.2,0.1));
-nf=size(bank,1);
-fs=num2str((1:nf)','%02d');
-band=char(strcat({'   '},fs,{' - '},num2str(1./bank(:,2),'%5.1f'),...
-    {'s  to  '},num2str(1./bank(:,3),'%5.1f'),'s'));
-
-% initial moveout models
-prem=[ % from a random paper
- 15.0000    3.8600
- 20.0000    3.9650
- 25.0000    3.9900
- 30.0000    4.0120
- 35.0000    4.0220
- 40.0000    4.0300
- 45.0000    4.0350
- 50.0000    4.0400
- 55.0000    4.0450
- 60.0000    4.0500
- 65.0000    4.0580
- 70.0000    4.0670
- 75.0000    4.0770
- 80.0000    4.0880
- 85.0000    4.1010
- 90.0000    4.1150
- 95.0000    4.1330
-100.0000    4.1500
-105.0000    4.1660
-110.0000    4.1820
-115.0000    4.1980
-120.0000    4.2140
-125.0000    4.2300
-130.0000    4.2460
-135.0000    4.2620
-140.0000    4.2780
-145.0000    4.2940
-150.0000    4.3100
-155.0000    4.3260
-160.0000    4.3420
-165.0000    4.3580
-170.0000    4.3740
-175.0000    4.3900
-180.0000    4.4060
-185.0000    4.4220];
-local=[ % simple fit to 1D results
- 18.5000    3.6000
- 35.0000    3.8800
-170.0000    4.3500];
-
-% get moveout for each filter (linear interpolation from above)
-moveto=interp1(prem(:,1),prem(:,2),1./bank(:,1),[],'extrap');
-movein=interp1(local(:,1),local(:,2),1./bank(:,1),[],'extrap');
-adj=[1.5 1.25 1.1 1.05 1.01 .99 .95 .9 .75 .5 1];
+          'ListString',eventlist);
 
 % loop over user selected events
-cwd=pwd;
 for i=s(:)'
-    % get data
-    cd([indir filesep dates(i).name]);
-    data1=sortbyfield(r('*'),'gcarc');
-    cd(cwd);
-    nrecs=numel(data1);
-    
     % display event name
-    disp([dates(i).name '  -  ' num2str(nrecs) ' records']);
+    disp(events(i).name);
+    
+    % get data
+    data=readseizmo([indir fs events(i).name fs '*']);
+    data=sortbyfield(data,'gcarc');
+    nrecs=numel(data);
+    
+    % record coloring
+    cmap=hsv(nrecs);
     
     % get some header info
-    [dist,b,e,o,t,iztype]=gh(data1,'dist','b','e','o','t','iztype');
-    mind=min(dist);
+    [st,ev,delaz,outc,o0]=getheader(data,'st','ev','delaz','o utc','o');
+    outc=cell2mat(outc);
+    ev=unique(ev,'rows');
+    if(size(ev,1)>1)
+        error('seizmo:freqwindow:muddledHeader',...
+            'EVENT location info varies among records!');
+    elseif(any(abs(timediff(outc(1,:),outc))>0.002))
+        error('seizmo:freqwindow:oUTCFieldVaries',...
+            'ORIGIN time varies among records!');
+    end
+    
+    % get array center
+    % - kinda wonky as it changes the center with each event's
+    %   data but this makes sense for a more general case
+    [clat,clon]=arraycenter(st(:,1),st(:,2));
+    [caz,caz]=sphericalinv(ev(1),ev(2),clat,clon);
+    
+    % "closest"/"farthest" station on event/center path
+    [minlat,minlon]=sphericalfwd(ev(1),ev(2),min(delaz(:,1)),caz);
+    [maxlat,maxlon]=sphericalfwd(ev(1),ev(2),max(delaz(:,1)),caz);
+    stlalo=[minlat minlon; maxlat maxlon];
     
     % loop over each filter (short period to long)
-    for j=1:nf
+    skipall=false;
+    for j=1:nfilt
         % display filter
-        disp(band(j,:));
+        sfilt=num2str(j,'%02d');
+        disp(['Band: ' sfilt '  Period: ' num2str(1/p.bank(j,3)) '-' ...
+            num2str(1/p.bank(j,2)) 's']);
         
         % filter data
-        data2=iirfilter(data1,'bandpass','butter','c',bank(j,2:3),'o',4,'p',2);
+        fdata=iirfilter(data,'bp','butter','c',p.bank(j,2:3),'o',4,'p',2);
+        
+        % reset origin time
+        o=o0;
+        
+        % initial window width
+        L_beat=1./(p.bank(j,3)-p.bank(j,2));
+        win=L_beat*(2.5+1000*p.bank(j,1).^2);
+        win=[-win/2 win/2];
+        xlimits=win+[-1 1]*diff(win);
+        
+        % travel time to "closest"/"farthest"
+        tt=ttsurf(p.model,p.wave,p.speed,1/p.bank(j,1),ev(1:2),stlalo);
+        
+        % moveout across array
+        mvin=6371*pi/180*(max(delaz(:,1))-min(delaz(:,1)))/diff(tt);
         
         % loop until user is happy with this band
-        ssatisfied=0;
-        while(~ssatisfied)
-            % make temp variables
-            a=max(1000,1/bank(j,1)*20);
-            iwin=[-a a];
-            mvto=moveto(j);
-            mvin=movein(j);
-            good=true(nrecs,1);
-            f2=[];
+        unsatisfied=true; good=true(nrecs,1); deleting=false;
+        while(unsatisfied)
+            % skipping calculations if we just deleted some records
+            if(~deleting)
+                % timeshift records
+                z=o+tt(1)+(delaz(:,4)-min(delaz(:,4)))./mvin;
+                fdata=timeshift(fdata,-z);
+                o=getheader(fdata,'o');
+                
+                % window, taper, snrcut
+                gdata=cut(fdata,win(1),win(2),'fill',true);
+                gdata=taper(gdata,p.taperwidth);
+                gdata=cut(gdata,o+p.pad(1),o+p.pad(2),'fill',true);
+                gdata=changeheader(gdata,'a',win(1),'ka','winbgn',...
+                    'f',win(2),'kf','winend');
+                twin1=[win(1) win(1)+p.taperwidth*diff(win)];
+                twin2=[win(2)-p.taperwidth*diff(win) win(2)];
+                nwin1=[win(1)-p.snrwin*diff(win) win(1)]-eps;
+                nwin2=[win(2) win(2)+p.snrwin*diff(win)]+eps;
+                bad1=p.snrcut>quicksnr(fdata,nwin1,win,p.snrmethod);
+                bad2=p.snrcut>quicksnr(fdata,nwin2,win,p.snrmethod);
+                good=~(bad1 | bad2) & good;
+            end
             
-            % loop until user is happy with initial window/winnow
-            redo=0;
-            skipthis=0;
-            skiprest=0;
-            satisfied=0;
-            while(~satisfied)
-                % handle no good left
-                if(~any(good))
-                    % get choice from user
-                    choice=menu('No Good Traces Left -- what to do?',...
-                        'Redo this filter band',...
-                        'Skip this filter band',...
-                        'Skip all remaining filter bands',...
-                        'QUIT!!!');
-                    
-                    % act on choice
-                    switch choice
-                        case 1 % redo initial and final window
-                            satisfied=1;
-                            continue;
-                        case 2 % skip one
-                            satisfied=1;
-                            ssatisfied=1;
-                            continue;
-                        case 3 % skip all
-                            skiprest=1;
-                            satisfied=1;
-                            ssatisfied=1;
-                            continue;
-                        case 4 % quit
-                            return;
-                    end
+            % plot raw filtered data beside good, clean records
+            fh=figure('name',['FREQWINDOW - ' events(i).name ...
+                ' - ' num2str(1/p.bank(j,1)) 's'],'color','k');
+            ax(1)=makesubplots(1,2,1,'parent',fh);
+            ax(1)=recordsection(fdata,...
+                'xlim',xlimits,'ax',ax(1),'cmap',cmap);
+            ylimits1=ylim(ax(1));
+            
+            % plotting good, cleaned records if any
+            if(sum(good))
+                % only set ylimits if sum(good)==1
+                if(sum(good)==1)
+                    tmp={'ylim' ylimits1};
+                else
+                    tmp={};
                 end
                 
-                % adjust timing of data for moveout
-                z=o+mind./mvto+(dist-mind)./mvin;
-                data3=timeshift(data2,-z);
-                data3=ch(data3,'iztype','iunkn');
+                % plot good & cleaned records
+                ax(2)=makesubplots(1,2,2,'parent',fh);
+                ax(2)=recordsection(gdata(good),...
+                    'xlim',xlimits,tmp{:},...
+                    'ax',ax(2),'cmap',cmap(good,:));
+                ylimits2=ylim(ax(2));
                 
-                % initial window about arrival
-                data3=cut(data3,iwin(1),iwin(2));
+                % get best ylimits
+                ylimits(1)=min(ylimits1(1),ylimits2(1));
+                ylimits(2)=max(ylimits1(2),ylimits2(2));
                 
-                % make record section plot
-                f1=recsec(data3(good),'xlimits',iwin,...
-                    'name',[dates(i).name '  Period band: ' band(j,:)]);
+                % fix ylimits, link axes
+                ylim(ax(1),ylimits);
+                linkaxes(ax);
                 
-                % get choice from user
-                choice=menu('what to do?',...
-                    'Window Phase',...
-                    ['Adjust moveout to array (Currently ' num2str(mvto) 'km/s'],...
-                    ['Adjust moveout within array (Currently ' num2str(mvin) 'km/s'],...
-                    'Adjust initial window',...
-                    'Remove some records',...
-                    'Redo this filter band',...
-                    'Skip this filter band',...
-                    'Skip all remaining filter bands',...
-                    'QUIT!!!');
+                % plot noise/taper sections
+                hold(ax(2),'on');
+                ph(1)=patch(nwin1([1 2 2 1]),ylimits([1 1 2 2]),...
+                    [.3 0 0],'parent',ax(2));
+                ph(2)=patch(nwin2([1 2 2 1]),ylimits([1 1 2 2]),...
+                    [.3 0 0],'parent',ax(2));
+                ph(3)=patch(twin1([1 2 2 1]),ylimits([1 1 2 2]),...
+                    [.7 .6 0],'parent',ax(2));
+                ph(4)=patch(twin2([1 2 2 1]),ylimits([1 1 2 2]),...
+                    [.7 .6 0],'parent',ax(2));
+                movekids(ph,'back');
+                hold(ax(2),'off');
+            else % no records meet conditions!
+                % would be cool to put some text in its place
+                warning('seizmo:freqwindow:noRecordsPass',...
+                    'No records meet the SNR/user specifications!');
+            end
+            
+            % plot noise/taper sections
+            hold(ax(1),'on');
+            ph(1)=patch(nwin1([1 2 2 1]),ylimits([1 1 2 2]),...
+                [.3 0 0],'parent',ax(1));
+            ph(2)=patch(nwin2([1 2 2 1]),ylimits([1 1 2 2]),...
+                [.3 0 0],'parent',ax(1));
+            ph(3)=patch(twin1([1 2 2 1]),ylimits([1 1 2 2]),...
+                [.7 .6 0],'parent',ax(1));
+            ph(4)=patch(twin2([1 2 2 1]),ylimits([1 1 2 2]),...
+                [.7 .6 0],'parent',ax(1));
+            movekids(ph,'back');
+            hold(ax(1),'off');
+            
+            % super title
+            axmove(ax,[],-.03);
+            supertitle(ax,{[events(i).name ' - ' ...
+                num2str(1/p.bank(j,1)) 's'] ''},'color','w');
+            
+            % ask user
+            choice=0;
+            while(~choice)
+                choice=menu('Choose An Option:',...
+                    'Write & Continue',...
+                    'Delete Records',...
+                    'Adjust Window',...
+                    'Adjust Moveout',...
+                    'Skip This Filter',...
+                    'Skip Remaining Filters');
                 
-                % act on choice
                 switch choice
-                    case 1 % window phase
-                        satisfied=1;
-                    case 2 % moveout to array
-                        choice=menu(['ADJUST MOVEOUT TO ARRAY?  (CURRENTLY '...
-                            num2str(mvto) 'km/s)'],...
-                            ['+50% = ' num2str(mvto*1.50) 'km/s)'],...
-                            ['+25% = ' num2str(mvto*1.25) 'km/s)'],...
-                            ['+10% = ' num2str(mvto*1.10) 'km/s)'],...
-                            [' +5% = ' num2str(mvto*1.05) 'km/s)'],...
-                            [' +1% = ' num2str(mvto*1.01) 'km/s)'],...
-                            [' -1% = ' num2str(mvto*0.99) 'km/s)'],...
-                            [' -5% = ' num2str(mvto*0.95) 'km/s)'],...
-                            ['-10% = ' num2str(mvto*0.90) 'km/s)'],...
-                            ['-25% = ' num2str(mvto*0.75) 'km/s)'],...
-                            ['-50% = ' num2str(mvto*0.50) 'km/s)'],...
-                            'KEEP AS IS!');
-                        mvto=mvto*adj(choice);
-                    case 3 % moveout within array
-                        choice=menu(['ADJUST MOVEOUT WITHIN ARRAY?  (CURRENTLY '...
+                    case 1 % write
+                        % save plot
+                        if(ishandle(fh))
+                            saveas(fh,['freqwindow_' events(i).name ...
+                                '_band' sfilt '_' ...
+                                num2str(1/p.bank(j,1)) 's.fig']);
+                        end
+                        
+                        % shift to origin
+                        gdata=timeshift(gdata,-o,'io');
+                        
+                        % delete filter directory if exists
+                        % and user wanted that to happen
+                        fdir=[outdir fs events(i).name fs sfilt '-' ...
+                            num2str(1/p.bank(j,1)) 's'];
+                        if(strncmpi(reply,'d',1))
+                            if(isdir(fdir))
+                                if(~rmdir(fdir,'s'))
+                                    error('seizmo:freqwindow:dirFail',...
+                                        'Can Not Delete Directory: %s',...
+                                        fdir);
+                                end
+                            end
+                        end
+                        writeseizmo(gdata,'path',fdir);
+                        unsatisfied=false;
+                    case 2 % adjust good
+                        [bad,bad,tmpax]=selectrecords(fdata,'delete',...
+                            'p1',~good,'xlim',xlimits,...
+                            'align',true,'xlabel',' ','ylabel',' ');
+                        if(ishandle(tmpax(1)))
+                            close(get(tmpax(1),'parent'));
+                        end
+                        good=~bad;
+                        deleting=true;
+                    case 3 % adjust win
+                        [win,win,tmpax]=userwindow(fdata,win,true,@deal,...
+                            'xlim',xlimits);
+                        if(ishandle(tmpax))
+                            close(get(tmpax,'parent'));
+                        end
+                        win=win.limits;
+                        xlimits=win+[-1 1]*diff(win);
+                        deleting=false;
+                    case 4 % adjust mvin
+                        mvchoice=menu(...
+                            ['ADJUST MOVEOUT WITHIN ARRAY?  (CURRENTLY '...
                             num2str(mvin) 'km/s)'],...
                             ['+50% = ' num2str(mvin*1.50) 'km/s)'],...
                             ['+25% = ' num2str(mvin*1.25) 'km/s)'],...
@@ -282,178 +378,127 @@ for i=s(:)'
                             ['-25% = ' num2str(mvin*0.75) 'km/s)'],...
                             ['-50% = ' num2str(mvin*0.50) 'km/s)'],...
                             'KEEP AS IS!');
-                        mvin=mvin*adj(choice);
-                    case 4 % initial window
-                        choice=menu(['ADJUST INITIAL WINDOW?  (CURRENTLY '...
-                            num2str(diff(iwin)) 's)'],...
-                            ['+50% = ' num2str(diff(iwin)*1.50) 's)'],...
-                            ['+25% = ' num2str(diff(iwin)*1.25) 's)'],...
-                            ['+10% = ' num2str(diff(iwin)*1.10) 's)'],...
-                            [' +5% = ' num2str(diff(iwin)*1.05) 's)'],...
-                            [' +1% = ' num2str(diff(iwin)*1.01) 's)'],...
-                            [' -1% = ' num2str(diff(iwin)*0.99) 's)'],...
-                            [' -5% = ' num2str(diff(iwin)*0.95) 's)'],...
-                            ['-10% = ' num2str(diff(iwin)*0.90) 's)'],...
-                            ['-25% = ' num2str(diff(iwin)*0.75) 's)'],...
-                            ['-50% = ' num2str(diff(iwin)*0.50) 's)'],...
-                            'KEEP AS IS!');
-                        iwin=iwin*adj(choice);
-                    case 5 % select
-                        [data3,bad,f2]=selectrecords(data3,'delete','p1',~good,...
-                            'name',[dates(i).name '  Period band: ' band(j,:)]);
-                        good=~bad;
-                    case 6 % redo
-                        redo=1;
-                        satisfied=1;
-                    case 7 % skip one
-                        skipthis=1;
-                        satisfied=1;
-                    case 8 % skip all
-                        skiprest=1;
-                        satisfied=1;
-                    case 9 % quit
-                        return;
-                end
-                
-                % close figures
-                try
-                    close([f1 f2]);
-                    f2=[];
-                catch
+                        adj=[1.5 1.25 1.1 1.05 1.01 .99 .95 .9 .75 .5 1];
+                        mvin=mvin*adj(mvchoice);
+                        deleting=false;
+                    case 5 % skip one
+                        unsatisfied=false;
+                    case 6 % skip all
+                        unsatisfied=false;
+                        skipall=true;
                 end
             end
             
-            % check redo/skip
-            if(redo); continue; end
-            if(skiprest || skipthis); break; end
-            
-            % loop until user satisfied with final window/winnow
-            satisfied=0; f3=[]; f4=[]; f5=[];
-            while(~satisfied)
-                % handle no good left
-                if(isempty(good))
-                    % get choice from user
-                    choice=menu('No Good Traces Left -- what to do?',...
-                        'Redo this filter band',...
-                        'Skip this filter band',...
-                        'Skip all remaining filter bands',...
-                        'QUIT!!!');
-                    
-                    % act on choice
-                    switch choice
-                        case 1 % redo initial and final window
-                            satisfied=1;
-                            continue;
-                        case 2 % skip one
-                            satisfied=1;
-                            ssatisfied=1;
-                            continue;
-                        case 3 % skip all
-                            skiprest=1;
-                            satisfied=1;
-                            ssatisfied=1;
-                            continue;
-                        case 4 % quit
-                            return;
-                    end
-                end
-                
-                % window
-                [data4,win,f1,f2]=userwindow(data3(good));
-                data4=removemean(cut(data3,'z',win(1),win(2),'fill',true,'filler',0));
-                
-                % insert window limits into header
-                data4=ch(data4,'a',win(1),'ka','winbgn',...
-                    'f',win(2),'kf','winend');
-                
-                % taper
-                data4=taper(data4,taperwidth);
-                
-                % snr cut (both sides!!)
-                bad1=snrcut>quicksnr(data3,[win(1)-snrwin*(win(2)-win(1)) win(1)]-eps,win);
-                bad2=snrcut>quicksnr(data3,[win(2) win(2)+snrwin*(win(2)-win(1))]+eps,win);
-                good1=~(bad1 | bad2) & good;
-                
-                % handle none left
-                if(~any(good1))
-                    % get choice from user
-                    choice=1+menu('No Good Traces Left -- what to do?',...
-                        'Redo final window (w/ taper and snr cut)',...
-                        'Remove some records, redo final window',...
-                        'Redo this filter band',...
-                        'Skip this filter band',...
-                        'Skip all remaining filter bands',...
-                        'QUIT!!!');
-                else
-                    % plot tapered and trimmed set
-                    f4=recsec(data4(good1),'xlimits',win);
-                    
-                    % undo time shift
-                    data4=timeshift(data4,z);
-                    data4=ch(data4,'iztype',iztype);
-                    
-                    % pad
-                    data4=cut(data4,padstart,padend,'fill',true);
-                    
-                    % plot padded data
-                    f5=recsec(data4(good1),'xlimits',[padstart padend]);
-                    
-                    % get choice from user
-                    choice=menu('what to do?',...
-                        'Write files and move on!',...
-                        'Redo final window (w/ taper and snr cut)',...
-                        'Remove some records, redo final window',...
-                        'Redo this filter band',...
-                        'Skip this filter band',...
-                        'Skip all remaining filter bands',...
-                        'QUIT!!!');
-                end
-                
-                % act on choice
-                switch choice
-                    case 1 % write files
-                        % make output directory, move into it
-                        mkdir([outdir filesep dates(i).name filesep fs(j,:)]);
-                        cd([outdir filesep dates(i).name filesep fs(j,:)]);
-                        
-                        % write data, move back to top
-                        w(data4(good1));
-                        cd(cwd);
-                        satisfied=1;
-                        ssatisfied=1;
-                    case 2 % redo final window
-                        % no action needed
-                    case 3 % remove some records
-                        [data4,bad,f3]=selectrecords(data4,'delete','p1',~good1,...
-                            'name',[dates(i).name '  Period band: ' band(j,:)]);
-                        good=~bad;
-                    case 4 % redo initial and final window
-                        satisfied=1;
-                    case 5 % skip one
-                        satisfied=1;
-                        ssatisfied=1;
-                    case 6 % skip all
-                        skiprest=1;
-                        satisfied=1;
-                        ssatisfied=1;
-                    case 7 % quit
-                        return;
-                end
-                
-                % close figures
-                try
-                    close([f1 f2 f3 f4 f5]);
-                    f3=[]; f4=[]; f5=[];
-                catch
-                end
-            end            
+            % close window
+            if(ishandle(fh)); close(fh); end
         end
         
         % check skip (skip rest of event)
-        if(skiprest); break; end
+        if(skipall); break; end
     end
 end
 
-ok=true;
+end
+
+
+function p=parse_freqwindow_param(varargin)
+%PARSE_FREQWINDOW_PARAM    Parse & default freqwindow parameters
+
+% defaults
+p.taperwidth=.2;        % taper 20% on each edge of windowed signal
+p.snrcut=3;             % require SNR>=3 on BOTH sides
+p.pad=[-2000 7000];     % final zero padding of records
+p.snrwin=.5;            % noise windows (both) are 50% of signal window
+p.snrmethod='peak2rms'; % this is the typical method
+p.model=[];             % use ttsurf default (CUB2)
+p.wave=[];              % use ttsurf default (Rayleigh)
+p.speed=[];             % use ttsurf default (group)
+p.bank=flipud(filter_bank([0.0055 0.055],'variable',0.2,0.1));
+
+% quick quit
+if(~nargin); return; end
+
+% require parameter options are strings
+if(~iscellstr(varargin(1:2:end)))
+    error('seizmo:gooduglycheck:badInput',...
+        'OPTION must be a string!');
+end
+
+% check/assign parameters
+for i=1:2:nargin
+    if(isempty(varargin{i+1})); continue; end
+    switch lower(varargin{i})
+        case {'taperwidth' 'taper' 'taperwin' 'tapwin'}
+            if(~isreal(varargin{i+1}) || numel(varargin{i+1})>2 ...
+                    || any(varargin{i+1}<0 | varargin{i+1}>.5))
+                error('seizmo:freqwindow:badInput',...
+                    'TAPERWIDTH must be valid for the TAPER function!');
+            end
+            p.taperwidth=varargin{i+1};
+        case {'snrcut' 'snrcutoff'}
+            if(~isreal(varargin{i+1}) || numel(varargin{i+1})~=1 ...
+                    || varargin{i+1}<0)
+                error('seizmo:freqwindow:badInput',...
+                    'SNRCUT must be a real-valued scalar!');
+            end
+            p.snrcut=varargin{i+1};
+        case {'padwin'}
+            if(numel(varargin{i+1})~=2 || ~isreal(varargin{i+1}) ...
+                    || varargin{i+1}(1)>=varargin{i+1}(2))
+                error('seizmo:useralign_quiet:badInput',...
+                    'PADWIN must be 1x2 vector as [START END]!');
+            end
+            p.pad=varargin{i+1};
+        case {'snrwin'}
+            if(~isreal(varargin{i+1}) || numel(varargin{i+1})~=1 ...
+                    || any(varargin{i+1}<0 | varargin{i+1}>1))
+                error('seizmo:freqwindow:badInput',...
+                    'SNRWIN must be real-valued scalar from 0 to 1!');
+            end
+            p.snrwin=varargin{i+1};
+        case {'snrmethod'}
+            if(~isstring(varargin{i+1}))
+                error('seizmo:freqwindow:badInput',...
+                    'SNRMETHOD must be a string!');
+            end
+            p.snrmethod=varargin{i+1};
+        case {'model'}
+            if(~isstring(varargin{i+1}))
+                error('seizmo:freqwindow:badInput',...
+                    'MODEL must be a string!');
+            end
+            p.model=varargin{i+1};
+        case {'wave'}
+            validwave={'rayleigh' 'love'};
+            if(~isstring(varargin{i+1}) ...
+                    || ~any(strcmpi(varargin{i+1},validwave)))
+                error('seizmo:freqwindow:badInput',...
+                    'WAVE must be a string!');
+            end
+            p.wave=varargin{i+1};
+        case {'speed'}
+            validspeed={'group' 'phase'};
+            if(~isstring(varargin{i+1}) ...
+                    || ~any(strcmpi(varargin{i+1},validspeed)))
+                error('seizmo:freqwindow:badInput',...
+                    'SPEED must be a string!');
+            end
+            p.speed=varargin{i+1};
+        case {'bank'}
+            if(size(varargin{i+1},2)~=3 || any(varargin{i+1}(:)<=0 ...
+                    | isnan(varargin{i+1}(:)) ...
+                    | isinf(varargin{i+1}(:))) ...
+                    || any(varargin{i+1}(:,1)<=varargin{i+1}(:,2) ...
+                    | varargin{i+1}(:,3)<=varargin{i+1}(:,1)))
+                error('seizmo:freqwindow:badInput',...
+                    'BANK must be in the format from FILTER_BANK!');
+            end
+            p.bank=varargin{i+1};
+        otherwise
+            error('seizmo:freqwindow:unknownOption',...
+                'Unknown Option: %s',varargin{i});
+    end
 
 end
+end
+

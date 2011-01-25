@@ -29,9 +29,10 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng)
 %        Jan. 18, 2011 - update for results struct standardization, added
 %                        corrections & correlation coefficients to output,
 %                        time is now a string, require common event
+%        Jan. 23, 2011 - fix indexing bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 13:35 GMT
+%     Last Updated Jan. 23, 2011 at 13:35 GMT
 
 % todo:
 
@@ -58,7 +59,7 @@ elseif(~isreal(gcrng) || numel(gcrng)~=2)
 end
 
 % verbosity
-verbose=seizmoverbose;
+%verbose=seizmoverbose;
 
 % loop over every result
 total=0;
@@ -67,7 +68,7 @@ for a=1:numel(results)
     if(isempty(results(a).useralign)); continue; end
     
     % number of records
-    nrecs=numel(results(a).useralign.data);
+    %nrecs=numel(results(a).useralign.data);
     
     % extract header details
     [st,ev,delaz,kname]=getheader(results(a).useralign.data,...
@@ -93,11 +94,11 @@ for a=1:numel(results)
     ramplerr=results(a).useralign.solution.amperr;
     
     % get cluster indexing
-    cidx=results.usercluster.T;
-    good=results.usercluster.good';
+    cidx=results(a).usercluster.T;
+    good=results(a).usercluster.good';
     
     % get outliers
-    outliers=results.outliers.bad;
+    outliers=results(a).outliers.bad;
     
     % loop over "good" clusters
     for b=find(good)

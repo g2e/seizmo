@@ -56,9 +56,10 @@ function [snr,s,ax]=usersnr(data,nwin,swin,method,varargin)
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %        Jan.  6, 2011 - use key2zoompan
 %        Jan. 18, 2011 - remove exit button
+%        Jan. 23, 2011 - redraw plot if plot type selected
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 11:00 GMT
+%     Last Updated Jan. 23, 2011 at 11:00 GMT
 
 % todo:
 
@@ -126,7 +127,7 @@ try
     s.plottype=@plot0;
     
     % loop until user is satisfied
-    happy_user=false; ax=-1; reax={};
+    happy_user=false; ax=-1; reax={}; newplot=false;
     while(~happy_user)
         % create prompt to explain to the user how window selection works
         % This prompt looks like trash because of default menu fonts.
@@ -178,7 +179,7 @@ try
         end
         
         % plot only if new plot type or no plot
-        if(~ishandle(ax))
+        if(~ishandle(ax) || newplot)
             % make title
             ptitle={['SNR Estimation Method: ' upper(s.method)]
                 'Yellow Dashed Line --  Noise Window Start'
@@ -207,6 +208,7 @@ try
             gh(4)=plot(ax,[s.signalwin(2) s.signalwin(2)],span,'r',...
                 'linewidth',4);
             hold(ax,'off');
+            newplot=false;
         end
         
         % get user choice
@@ -366,10 +368,13 @@ try
                 switch choice
                     case 2
                         s.plottype=@plot2;
+                        newplot=true;
                     case 3
                         s.plottype=@plot0;
+                        newplot=true;
                     case 4
                         s.plottype=@recordsection;
+                        newplot=true;
                 end
                 
                 % handle disappearing axes

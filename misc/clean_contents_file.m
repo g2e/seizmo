@@ -1,4 +1,4 @@
-function []=clean_contents_file(list,skip)
+function []=clean_contents_file(file,skip)
 %CLEAN_CONTENTS_FILE    Cleans up formatting of a Contents.m file
 %
 %    Usage:    clean_contents_file(file,[hlines tlines])
@@ -29,9 +29,10 @@ function []=clean_contents_file(list,skip)
 
 %     Version History:
 %        Jan.  2, 2011 - initial version
+%        Jan. 23, 2011 - allow files on path, fix path bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  2, 2011 at 23:00 GMT
+%     Last Updated Jan. 23, 2011 at 23:00 GMT
 
 % todo:
 
@@ -39,16 +40,33 @@ function []=clean_contents_file(list,skip)
 error(nargchk(0,2,nargin));
 
 % default inputs
-if(nargin<1); list=[]; end
+if(nargin<1); file=[]; end
 if(nargin<2); skip=[]; end
 
 % filespec
 global SEIZMO
 SEIZMO.ONEFILELIST.FILTERSPEC={'*.m;*.M' 'M Files (*.m,*.M)'};
 
-% check inputs
-list=onefilelist(list);
+% get files
+list=onefilelist(file);
 nfiles=numel(list);
+
+% if nothing listed, search on path
+if(~nfiles)
+    list=which(file);
+    
+    % error if none
+    if(isempty(list))
+        error('seizmo:clean_contents_file:noFiles',...
+            'Unknown File: %',file);
+    end
+    
+    % now replace with xdir output
+    list=xdir(list);
+    nfiles=1;
+end
+
+% check skip
 if(isempty(skip))
     skip=zeros(nfiles,2);
 elseif(any(size(skip,1)==[1 nfiles]) && any(size(skip,2)==[1 2]) ...
@@ -62,8 +80,11 @@ end
 
 % loop over files
 for a=1:nfiles
+    % make path/file
+    p2f=fullfile(list(a).path,list(a).name);
+    
     % read in file
-    lines=getwords(readtxt(list(a).name),sprintf('\n'));
+    lines=getwords(readtxt(p2f),sprintf('\n'));
     nlines=numel(lines);
     
     % figure out maximum characters for indent
@@ -110,7 +131,7 @@ for a=1:nfiles
     end
     
     % open for editing
-    fid=fopen(list(a).name,'w');
+    fid=fopen(p2f,'w');
     if(fid<0)
         error('seizmo:clean_contents_file:cannotOpenFile',...
             'File: %s\nNot Openable!',list(a).name);

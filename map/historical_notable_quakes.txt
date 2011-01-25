@@ -1,0 +1,6 @@
+EVENT	DATE	NOTE	LAT	LONG
+Shaanxi  (Eastern China)	1556	Record 830,000 confirmed dead and countless casualties; near Xian, China's ancient capital	35.5	109.7
+Cascadia  (Pacific NW, US)	1700	M=9 shock; associated downfaulting drowns coastal forests;  tsunami damage in Japan.	47.6	-125.1
+Lisbon  (Portugal)	1755	Offshore earthquake; associated tsunami and fire killed an estimated 60,000-70,000. 	36.45	-11.25
+Nobi (Japan)	1891	M 8, among first linked to ground faulting; first aftershock study (Omori).	35.4	136.8
+Assam (NE India)	1897	M>8 in Himalayan thrust belt; liquid iron core inferred by Oldham (1906) from seismic waves.	26	91

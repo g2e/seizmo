@@ -40,14 +40,15 @@ sph harm mantle models
     - really need codes to synthesize info at points
 ani mantle models
     - 
-plotting profiles for models
+plotting profiles for models #####
     - need a decent polar plotting program to plot slices of the pie
       with inner & outer radii specified.  Not even mmpolar does it.
 more cmb models (rjk)
-cub2 functions
-    - functions to get phase/group speed at point/period
-    - functions for depth model
-	- rayleigh & love travel times!
+cub2 functions #####
+    - need love dispersion & rayleigh phase dispersion
+    - functions for dispersion at position
+    - functions for depth model at position
+	x travel times!
 absolute time windowing
     - add abs time windowing to CUT
 picking
@@ -61,9 +62,9 @@ smooth spline removal
     - requires spline toolbox
 vespagrams
     - need slant-stacking first
-ftan
+ftan #####
     - how is the filtering done?
-slantstacking
+slantstacking #####
 power spectrum estimation
 merge (uneven)
     - simple in theory, but the coding will be tough
@@ -108,11 +109,8 @@ better polezero docs
 	- vel 2 dis
 		- add zero at 0
 	- SERIOUSLY FOLKS, why is there not a simple gui for this?
-improve top-level help file
+improve top-level help file #####
 make noise processing more flexible (file length & overlap)
-******************************************
-***** FIX FREQWINDOW & GOODUGLYCHECK *****
-******************************************
 add in pwave picking fk routines
 taup improvements
     clean up tauppierce extra output
@@ -134,22 +132,20 @@ test Octave java package
     - no import ... how to do this otherwise?
 fix stft conflict in octave
 
-plate boundaries datasets
-	- have subsets of divergent, convergent, transform
-impacts/volcanoes/historical eq location datasets
+historical quakes
+peter bird plate boundaries
+state boundaries
+##### NEED WRITEGMT #####
+mapfeature('feature')
 
 two plane wave phase velocity maps
 	- anisotropy
 	- station corrections
 	- attenuation
 
-cmb_1st_pass should have mock clustering and outlier info
-make cmb_clustering, cmb_outliers, cmb_2nd_pass nondependent
-add correlations & corrections to profile measures
-2-station dispersion assembly
-title on core-diff map
-defaults for 2ndPass
-dispersion curve pdf plotting
-some way of selecting records by clicking (to split clusters etc)
-
-
+cmb codes
+    - synthetic flag + model field
+        - model field for data should be data
+    - 2-station dispersion assembly
+    - title on core-diff map
+    - dispersion curve pdf plotting

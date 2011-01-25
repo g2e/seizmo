@@ -38,7 +38,6 @@ function [pf]=slowdecaypairs(results,azrng,gcrng)
 %     Last Updated Jan. 18, 2010 at 13:35 GMT
 
 % todo:
-% - add corrections & correlations to output
 
 % check nargin
 error(nargchk(3,3,nargin));

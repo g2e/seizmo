@@ -44,15 +44,19 @@ function [varargout]=install_seizmo(varargin)
 %     url='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/';
 %     latest=strtrim(urlread([url 'latest']));
 %     url=[url latest];
-%     gunzip(url,'seizmo')
-%     untar(['seizmo/' latest],'seizmo')
-%     cd seizmo/seizmo
+%     movefile('seizmo','seizmo-old');
+%     gunzip(url)
+%     untar(latest(1:end-3))
+%     cd seizmo/
 %     install_seizmo
 %
 %     % Now download the GSHHS package & extract the files onto path:
 %     url='http://www.ngdc.noaa.gov/mgg/shorelines/data/gshhs/';
 %     url=[url 'oldversions/version1.10/gshhs_1.10.zip'];
-%     unzip(url,'m_map'); % extracting into the m_map folder
+%     urlwrite(url,'gshhs_1.10.zip');
+%     unzip('gshhs_1.10.zip');
+%     addpath('gshhs');
+%     savepath
 %
 %    See also: ABOUT_SEIZMO, SEIZMO, UNINSTALL_SEIZMO, SAVEPATH_SEIZMO
 
@@ -61,9 +65,10 @@ function [varargout]=install_seizmo(varargin)
 %        Jan.  1, 2011 - added msgs, detects more issues
 %        Jan.  4, 2011 - improved docs (examples needs more work)
 %        Jan. 14, 2011 - example improved to get current release
+%        Jan. 19, 2011 - updated to fixed examples
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2011 at 15:25 GMT
+%     Last Updated Jan. 19, 2011 at 15:25 GMT
 
 % todo:
 

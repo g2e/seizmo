@@ -1,16 +1,19 @@
-function [pol,def]=ttpolar(pg)
+function [pol,def,ok]=ttpolar(pg)
 %TTPOLAR    Solves for polarities given relative polarities
 %
-%    Usage:  [pol,defects]=ttpolar(pg)
+%    Usage:  [pol,defects,ok]=ttpolar(pg)
 %
-%    Description: [POL,DEFECTS]=TTPOLAR(PG) returns the likely polarities
-%     POL that produced the matrix of relative polarities PG.  PG & POL are
-%     related by:
+%    Description: [POL,DEFECTS,OK]=TTPOLAR(PG) returns the likely
+%     polarities POL that produced the matrix of relative polarities PG.
+%     PG & POL are related by:
 %                           PG=(POL*POL').*DEFECTS
 %     where PG is an NxN matrix, POL is an Nx1 column vector, and DEFECTS
 %     is an NxN matrix.  All contain only 1s and -1s.  DEFECTS indicates
 %     the relative polarities in PG that are not matched by POL.  The
-%     solution is the polarities that minimize the number of defects.
+%     solution is the polarities that minimize the number of defects.  In
+%     some situations the relative polarities will balance exactly equal so
+%     that there is no solution for some polarities (they will be set as
+%     0).  In such cases a warning is issued and OK is set FALSE.
 %
 %    Notes:
 %     - The problem is posed as an eigenvalue/eigenvector case.  We
@@ -35,9 +38,10 @@ function [pol,def]=ttpolar(pg)
 %     Version History:
 %        Mar. 11, 2010 - initial version (from clean_polarities)
 %        Sep. 13, 2010 - doc update, highest abs eigenvalue, nargchk fix
+%        Jan. 23, 2011 - flag/warning for edge case
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2010 at 11:10 GMT
+%     Last Updated Jan. 23, 2011 at 11:10 GMT
 
 % todo:
 % - it would really be nice if this was a weighted inversion, then it could
@@ -52,10 +56,21 @@ pg=v2m(pg,'PG');
 % get signs of eigenvector with largest eigenvalue
 [v,d]=eig(pg);
 [d,idx]=max(abs(diag(d)));
+
+% this is inexact but works well
 pol=sign(v(:,idx));
 
+% check/fix polarity of zero
+ok=true;
+if(any(~pol))
+    warning('seizmo:ttpolar:noSolution',...
+        ['Polarity can not be solved for records:\n' ...
+        sprintf('%g ',find(~pol))]);
+    ok=false;
+end
+
 % return defect if necessary
-if(nargout==2)
+if(nargout>1)
     def=(pol*pol').*pg;
 end
 

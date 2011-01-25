@@ -45,9 +45,11 @@ function [results]=cmb_1st_pass(phase,indir,varargin)
 %                        allow data directory selection
 %        Jan. 16, 2011 - alterations for new uniform results struct
 %        Jan. 18, 2011 - update for improved multibandalign, .time field
+%        Jan. 23, 2011 - pre-align on waveform of interest, skip event if
+%                        no waveforms
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 13:35 GMT
+%     Last Updated Jan. 23, 2011 at 13:35 GMT
 
 % todo:
 
@@ -126,19 +128,33 @@ for i=1:numel(s)
         case 'Pdiff'
             % only vertical data
             data=data(vertcmp(data));
+            truephase='Pdiff';
         case 'SHdiff'
             % only transverse component
             kcmpnm=getheader(data,'kcmpnm');
             data=data(strcmp(kcmpnm,'BHT') ...
                 | strcmp(kcmpnm,'HHT') ...
                 | strcmp(kcmpnm,'LHT'));
+            truephase='Sdiff';
         case 'SVdiff'
             % only radial component
             kcmpnm=getheader(data,'kcmpnm');
             data=data(strcmp(kcmpnm,'BHR') ...
                 | strcmp(kcmpnm,'HHR') ...
                 | strcmp(kcmpnm,'LHR'));
+            truephase='Sdiff';
     end
+    
+    % skip if no waveforms
+    if(~numel(data))
+        warning('seizmo:cmb_1st_pass:noWaveforms',...
+            'No %s waveforms found for event: %s',phase,dates(s(i)).name)
+        continue;
+    end
+    
+    % time shift to phase
+    [t,n]=getarrival(data,truephase);
+    data=timeshift(data,-t,strcat('it',num2str(n)));
     
     % read data
     data=readdata(data);
@@ -151,6 +167,7 @@ for i=1:numel(s)
     
     % multibandalign
     tmp=multibandalign(data,...
+        'phase',truephase,...
         'bank',bank,...
         'runname',runname,...
         'absxc',true,...
@@ -200,6 +217,11 @@ for i=1:numel(s)
     
     % export to command line too
     results(i)=tmp;
+end
+
+if(~exist('results','var'))
+    error('seizmo:cmb_1st_pass:badIdea',...
+        'It appears there was no data available for this phase!');
 end
 
 end

@@ -35,9 +35,10 @@ function [y]=ppdcval(pp,x,dcpos)
 %        Aug.  8, 2010 - minor doc updates
 %        Jan. 11, 2011 - code refactor & doc rewrite, fixes bug in PPVAL
 %                        for n-dimension poly & scalar input
+%        Jan. 24, 2011 - fix variable name bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 11, 2011 at 13:00 GMT
+%     Last Updated Jan. 24, 2011 at 13:00 GMT
 
 % todo:
 
@@ -130,7 +131,7 @@ p=p(:);
 
 % evaluate (((a0)*v+a1)*v+a2)*...
 y=coef(p,1);
-for a=2:k; y=xv.*y+c(p,a); end
+for a=2:k; y=xv.*y+coef(p,a); end
 
 % if the piecewise polynomial is just a single constant
 % then c=ppdcval(nan).  If not, then nan=ppdcval(nan).

@@ -34,15 +34,15 @@ function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %        Oct. 26, 2008 - improved scalar expansion, doc and comment update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Apr. 10, 2010 - fix for colocated positions giving complex gcarc
+%        Jan. 22, 2011 - use degrees functions, nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 10, 2010 at 13:15 GMT
+%     Last Updated Jan. 22, 2011 at 13:15 GMT
 
 % todo:
 
 % require 4 inputs
-msg=nargchk(4,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,4,nargin));
 
 % size up inputs
 sz1=size(evla); sz2=size(evlo);
@@ -76,20 +76,16 @@ end
 if(n2==1); evla=repmat(evla,sz3); evlo=repmat(evlo,sz3); end
 if(n4==1); stla=repmat(stla,sz1); stlo=repmat(stlo,sz1); end
 
-% convert to radians
-d2r=pi/180; r2d=1/d2r;
-evla=evla.*d2r;
-evlo=evlo.*d2r;
-stla=stla.*d2r;
-stlo=stlo.*d2r;
+% for conversion
+r2d=180/pi;
 
 % optimize
-sinlat1=sin(evla);
-sinlat2=sin(stla);
-coslat1=cos(evla);
-coslat2=cos(stla);
-coslo=cos(stlo-evlo);
-sinlo=sin(stlo-evlo);
+sinlat1=sind(evla);
+sinlat2=sind(stla);
+coslat1=cosd(evla);
+coslat2=cosd(stla);
+coslo=cosd(stlo-evlo);
+sinlo=sind(stlo-evlo);
 
 % get law-of-cosines distance
 % - use real to avoid occasional complex values when points coincide

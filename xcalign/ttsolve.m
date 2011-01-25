@@ -184,9 +184,10 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %                        first iteration to replace given values (if any)
 %        Oct.  3, 2010 - fix polarity reversal bug
 %        Jan. 18, 2011 - drop rescale_snr for snr2maxphaseerror
+%        Jan. 23, 2011 - handle unsolvable polarity cases
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 09:45 GMT
+%     Last Updated Jan. 23, 2011 at 09:45 GMT
 
 % todo:
 
@@ -252,10 +253,11 @@ else
 end
 if(isempty(opt.ESTPOL))
     if(verbose); disp('Inverting for Initial Relative Polarities'); end
-    pol=ttpolar(xc.pg(:,:,1));
+    [pol,ok,ok]=ttpolar(xc.pg(:,:,1));
 else
     if(verbose); disp('Initial Relative Polarity Estimate Given'); end
     pol=opt.ESTPOL;
+    ok=true;
 end
 
 % reorder section
@@ -276,6 +278,17 @@ switch lower(opt.METHOD)
                 end
                 pflag=false;
             else
+                % check polarities
+                if(~ok)
+                    if(verbose)
+                        warning('seizmo:ttsolve:noPolaritySolution',...
+                            ['Polarity can not be solved for records:\n'...
+                            sprintf('%g ',find(~pol)) '\n' ...
+                            'Setting their polarity to 1']);
+                    end
+                    pol(~pol)=1;
+                end
+                
                 % no
                 if(verbose); disp('Refining Relative Arrival & Error'); end
                 pflag=true;
@@ -318,7 +331,7 @@ switch lower(opt.METHOD)
             end
             dt=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
             std=ttstderr(dt,xc.lg(:,:,1),xc.wg(:,:,1));
-            newpol=ttpolar(xc.pg(:,:,1));
+            [newpol,ok,ok]=ttpolar(xc.pg(:,:,1));
             if(pflag && ~(iter==1 && ~isempty(opt.ESTPOL)))
                 % check that polarity solution did not change
                 % - this is just to make sure I coded this right
@@ -379,6 +392,17 @@ switch lower(opt.METHOD)
             % increment counter
             iter=iter+1;
         end
+end
+
+% did we fail to solve for polarities?
+if(any(~pol))
+    if(verbose)
+        warning('seizmo:ttsolve:noPolaritySolution',...
+            ['Polarity can not be solved for records:\n' ...
+            sprintf('%g ',find(~pol)) '\n' ...
+            'Setting their polarity to 1']);
+    end
+    pol(~pol)=1;
 end
 
 % reweight section
