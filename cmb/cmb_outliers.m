@@ -30,9 +30,11 @@ function [results]=cmb_outliers(results)
 %        Jan. 16, 2011 - split off clustering to cmb_clustering, menu
 %                        rather than forcing user to cycle through
 %        Jan. 18, 2011 - .time field, no setting groups as bad
+%        Jan. 26, 2011 - no travel time corrections for synthetics, use 2
+%                        digit cluster numbers, update for 2 plot arrcut
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 13:35 GMT
+%     Last Updated Jan. 26, 2011 at 13:35 GMT
 
 % todo:
 % - coloring of outlier plots
@@ -54,9 +56,13 @@ for i=1:numel(results)
     % arrival & amplitude info
     dd=getheader(results(i).useralign.data,'gcarc');
     arr=results(i).useralign.solution.arr;
-    carr=arr-results(i).corrections.ellcor...
-        -results(i).corrections.crucor.prem...
-        -results(i).corrections.mancor.hmsl06p.upswing;
+    if(results(i).synthetics)
+        carr=arr;
+    else
+        carr=arr-results(i).corrections.ellcor...
+            -results(i).corrections.crucor.prem...
+            -results(i).corrections.mancor.hmsl06p.upswing;
+    end
     arrerr=results(i).useralign.solution.arrerr;
     amp=results(i).useralign.solution.amp;
     camp=amp./results(i).corrections.geomsprcor;
@@ -68,7 +74,7 @@ for i=1:numel(results)
     % loop over good clusters
     for j=find(results(i).usercluster.good(:)')
         % current cluster index as a string
-        sj=num2str(j);
+        sj=num2str(j,'%02d');
         
         % preallocate struct
         results(i).outliers.cluster(j).arrcut=...
@@ -115,11 +121,11 @@ for i=1:numel(results)
                     results(i).outliers.bad(good(bad))=true;
                     results(i).outliers.cluster(j).arrcut.bad{arrcnt}=good(bad);
                     results(i).outliers.cluster(j).arrcut.cutoff(arrcnt)=cutoff;
-                    if(ishandle(ax))
-                        saveas(get(ax,'parent'),...
+                    if(ishandle(ax(1)))
+                        saveas(get(ax(1),'parent'),...
                             [results(i).runname '_cluster_' ...
                             sj '_arrcut_' num2str(arrcnt) '.fig']);
-                        close(get(ax,'parent'));
+                        close(get(ax(1),'parent'));
                     end
                 case 2 % arrerr
                     errcnt=errcnt+1;

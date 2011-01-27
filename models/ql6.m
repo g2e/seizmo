@@ -72,9 +72,10 @@ function [mout]=ql6(varargin)
 
 %     Version History:
 %        Sep. 19, 2010 - initial version
+%        Jan. 25, 2011 - fix nan/inf bug when model given as input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 19, 2010 at 10:00 GMT
+%     Last Updated Jan. 25, 2011 at 10:00 GMT
 
 % todo:
 
@@ -212,10 +213,6 @@ if(~crust)
     model(2:(4+2*ocean),:)=[];
 end
 
-% replace infinity with a high value
-% - this is mainly for so interpolation doesn't produce NaNs
-%model(isinf(model))=1e10;
-
 % interpolate depths if desired
 if(~isempty(depths))
     if(~isempty(mout.name))
@@ -234,6 +231,14 @@ if(~isempty(depths))
         mout.name=[mout.name '+QL6'];
         mout.qu(idx)=bot(:,1);
         mout.qk(idx)=bot(:,2);
+        
+        % Inf values become NaNs in interpolation, so change back
+        mout.qu(isnan(mout.qu))=inf;
+        mout.qk(isnan(mout.qk))=inf;
+        
+        % update ocean & crust (possibly changed - we warned earlier)
+        mout.ocean=ocean & crust;
+        mout.crust=crust;
     else
         [bot,top]=interpdc1(model(:,1),model(:,2:end),depths);
         if(dcbelow)
@@ -276,14 +281,15 @@ else
     if(~tf(2)); model=[model; range(2) vbot]; end
 end
 
-% fix interpolation of infinity
-model(isnan(model))=inf;
-
 % array to struct
-mout.ocean=ocean & crust;
-mout.crust=crust;
 if(isempty(mout.name))
+    % fix interpolation of infinity
+    model(isnan(model))=inf;
+    
+    % make output struct
     mout.name='QL6';
+    mout.ocean=ocean & crust;
+    mout.crust=crust;
     mout.isotropic=true;
     mout.refperiod=1;
     mout.flattened=false;

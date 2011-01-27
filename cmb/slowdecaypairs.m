@@ -6,16 +6,56 @@ function [pf]=slowdecaypairs(results,azrng,gcrng)
 %    Description:
 %     PF=SLOWDECAYPAIRS(RESULTS,AZRNG,GCRNG) takes the relative arrival
 %     time and amplitude measurements contained in RESULTS produced by
-%     CMB_1ST_PASS or CMB_2ND_PASS and calculates the slowness and decay
-%     rate between every pair of stations within the criteria set by
-%     azimuthal range AZRNG and distance range GCRNG.  Note that AZRNG &
-%     GCRNG are relative ranges, meaning an AZRNG of [0 5] will find all
-%     pairs within 5 degrees of azimuth of one another.  As a special case,
-%     if AZRNG is scalar then the value is taken as the maximum azimuthal
-%     difference.  If GCRNG is scalar the value is taken as the minimum
-%     degree distance.
+%     CMB_1ST_PASS, CMB_CLUSTERING, CMB_OUTLIERS, or CMB_2ND_PASS and
+%     calculates the slowness and decay rate between every pair of stations
+%     within the criteria set by azimuthal range AZRNG and distance range
+%     GCRNG.  Note that AZRNG & GCRNG are relative ranges, meaning an AZRNG
+%     of [0 5] will find all pairs within 5 degrees of azimuth of one
+%     another.  As a special case, if AZRNG is scalar then the value is
+%     taken as the maximum azimuthal difference.  If GCRNG is scalar the
+%     value is taken as the minimum degree distance.  The output PF is a
+%     struct with as many elements as there are pairs found.  The format of
+%     the PF struct is described in the Notes section below.
 %
 %    Notes:
+%     - The PF struct has the following fields:
+%       .gcdist         - degree distance difference between stations
+%       .azwidth        - azimuthal difference between stations
+%       .slow           - horizontal slowness (s/deg)
+%       .slowerr        - horizontal slowness standard error
+%       .decay          - decay rate
+%       .decayerr       - decay rate standard error
+%       .cslow          - corrected horizontal slowness***
+%       .cslowerr       - corrected horizontal slowness standard error
+%       .cdecay         - corrected decay rate
+%       .cdecayerr      - corrected decay rate standard error
+%       .cluster        - cluster id
+%       .kname          - {net stn stream cmp}
+%       .st             - [lat lon elev(m) depth(m)]
+%       .ev             - [lat lon elev(m) depth(m)]
+%       .delaz          - [degdist az baz kmdist]
+%       .corrections    - traveltime & amplitude correction values
+%       .corrcoef       - max correlation coefficient between waveforms
+%       .synthetics     - TRUE if synthetic data (only reflect synthetics)
+%       .earthmodel     - model used to make synthetics or 'DATA'
+%       .freq           - filter corners of bandpass
+%       .phase          - core-diffracted wave type
+%       .runname        - name of this run, used for naming output
+%       .dirname        - directory containing the waveforms
+%       .time           - date string of time of this struct's creation
+%
+%      *** Correction is different between data and synthetics.  For data
+%          the .cslow value is found by subtracting out the corrections
+%          (and hence attempts to go from 3D to 1D by removing the lateral
+%          heterogeniety).  For synthetics the .cslow value is essentially
+%          the opposite (it is corrected to 3D).  So basically:
+%                     +----------+---------------+
+%                     |   DATA   |   SYNTHETICS  |
+%            +--------+----------+---------------+
+%            |  .slow |    3D    |       1D      |
+%            +--------+----------+---------------+
+%            | .cslow |    1D    |       3D      |
+%            +--------+----------+---------------+
 %
 %    Examples:
 %     % Return station pair profiles with an azimuth
@@ -33,9 +73,12 @@ function [pf]=slowdecaypairs(results,azrng,gcrng)
 %        Jan. 18, 2011 - update for results struct standardization, added
 %                        corrections & correlation coefficients to output,
 %                        time is now a string, require common event
+%        Jan. 26, 2011 - pass on new .synthetics & .earthmodel fields,
+%                        .cslow depends on .synthetics, added Notes
+%                        about PF struct format
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2010 at 13:35 GMT
+%     Last Updated Jan. 26, 2010 at 13:35 GMT
 
 % todo:
 
@@ -83,10 +126,19 @@ for a=1:numel(results)
     
     % corrected relative arrival times and amplitudes
     rtime=results(a).useralign.solution.arr;
-    crtime=results(a).useralign.solution.arr...
-        -results(a).corrections.ellcor...
-        -results(a).corrections.crucor.prem...
-        -results(a).corrections.mancor.hmsl06p.upswing;
+    if(results(a).synthetics)
+        % we add corrections here to go from 1D to 3D
+        crtime=results(a).useralign.solution.arr...
+            +results(a).corrections.ellcor...
+            +results(a).corrections.crucor.prem...
+            +results(a).corrections.mancor.hmsl06p.upswing;
+    else % data
+        % we subtract corrections here to go from 3D to 1D
+        crtime=results(a).useralign.solution.arr...
+            -results(a).corrections.ellcor...
+            -results(a).corrections.crucor.prem...
+            -results(a).corrections.mancor.hmsl06p.upswing;
+    end
     rtimeerr=results(a).useralign.solution.arrerr;
     rampl=results(a).useralign.solution.amp;
     crampl=results(a).useralign.solution.amp...
@@ -121,6 +173,8 @@ for a=1:numel(results)
         'cslow',[],'cslowerr',[],'cdecay',[],'cdecayerr',[],...
         'cluster',[],'kname',[],'st',[],'ev',[],'delaz',[],...
         'corrections',[],'corrcoef',[],...
+        'synthetics',results(a).synthetics,...
+        'earthmodel',results(a).earthmodel,...
         'freq',results(a).filter.corners,'phase',results(a).phase,...
         'runname',results(a).runname,'dirname',results(a).dirname,...
         'time',datestr(now));
@@ -148,7 +202,7 @@ for a=1:numel(results)
         % correlation coefficients
         pf(total+b).corrcoef=...
             submat(ndsquareform(results(a).useralign.xc.cg),...
-            1:2,[idx1(b) idx2(b)],3,1);
+            1,idx1(b),2,idx2(b),3,1);
         
         % find slowness & decay rate
         [m,covm]=wlinem(delaz([idx1(b) idx2(b)],1),...

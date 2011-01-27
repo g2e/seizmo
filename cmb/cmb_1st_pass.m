@@ -47,9 +47,10 @@ function [results]=cmb_1st_pass(phase,indir,varargin)
 %        Jan. 18, 2011 - update for improved multibandalign, .time field
 %        Jan. 23, 2011 - pre-align on waveform of interest, skip event if
 %                        no waveforms
+%        Jan. 26, 2011 - synthetics fields added (only reflectivity synth)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2011 at 13:35 GMT
+%     Last Updated Jan. 26, 2011 at 13:35 GMT
 
 % todo:
 
@@ -156,6 +157,17 @@ for i=1:numel(s)
     [t,n]=getarrival(data,truephase);
     data=timeshift(data,-t,strcat('it',num2str(n)));
     
+    % check if all synthetics (only reflectivity synthetics for now)
+    % - reflect2seizmo conventions here
+    isynth=unique(getenumid(data,'isynth'));
+    if(isscalar(isynth) && strcmpi(isynth,'ireflect'))
+        issynth=true;
+        synmodel=getheader(data(1),'kuser2');
+    else
+        issynth=false;
+        synmodel='DATA';
+    end
+    
     % read data
     data=readdata(data);
     
@@ -183,6 +195,8 @@ for i=1:numel(s)
     tmp.runname=runname;
     tmp.dirname=[indir filesep dates(s(i)).name];
     tmp.phase=phase;
+    tmp.synthetics=issynth;
+    tmp.earthmodel=synmodel;
     
     % add corrections
     if(~isempty(tmp.useralign))

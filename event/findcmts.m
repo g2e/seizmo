@@ -20,15 +20,18 @@ function [cmts]=findcmts(varargin)
 %      TAXISPLUNGE   -- tension axis plunge in degrees ([lo hi])
 %      NAXISPLUNGE   -- null axis plunge in degrees  ([lo hi])
 %      NAME          -- limit CMTs to those with names matching the given
-%                       regular expression (see REGEXP for details)
+%                       regular expression(s) (see REGEXP for details)
 %     
 %     Note that NUMDAYS & NUMSECS set ENDTIME indirectly so only the last
 %     call to one of the 3 will be honored.  So if you set NUMDAYS to 3 and
 %     then NUMSECS to 3600, the search range is only an hour NOT 3 days +
-%     1 hour.  The defaults are set to match the GlobalCMT site.  The
-%     longitude range may cross the the dateline.
+%     1 hour.  The defaults are set to match the GlobalCMT site except for
+%     the STARTTIME & ENDTIME -- they are set to return all as I find that
+%     more useful than defaulting to only returning results from the first
+%     day of 1976.
 %
 %    Notes:
+%     - Longitude range may cross the dateline
 %     - Time and location constraints are placed on the centroid time and
 %       location not the hypocenter.
 %     - TIME formats: [YEAR JULDAY] (start of day)
@@ -39,15 +42,24 @@ function [cmts]=findcmts(varargin)
 %     - GlobalCMT catalogs are cached under global SEIZMO.GLOBALCMT
 %
 %    Examples:
+%     % Return only events with the following names:
+%     cmtnames={'C031995G' 'M051695F' 'C062495A' 'C062995D'};
+%     cmts=findcmts('names',cmtnames);
+%
+%     % Now show info for only C031995G:
+%     ssidx(cmts,strcmp(cmts.name,'C031995G'))
 %
 %    See also: FINDCMT, SETEVENT, READNDK, SSIDX, GLOBALCMT_UPDATE
 
 %     Version History:
 %        Aug.  2, 2010 - initial version
 %        Aug. 10, 2010 - add name option
+%        Jan. 26, 2011 - support cellstr input into .name, altered
+%                        STARTTIME & ENDTIME to [1962 1] & now, added
+%                        examples
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 10, 2010 at 21:30 GMT
+%     Last Updated Jan. 26, 2011 at 21:30 GMT
 
 % todo:
 % - add % double couple
@@ -94,7 +106,12 @@ idx=(timediff(opt.STARTTIME,[opt.CATALOG.year opt.CATALOG.month ...
 
 % name idx
 if(~isempty(opt.NAME))
-    idx=idx & ~cellfun('isempty',regexp(opt.CATALOG.name,opt.NAME));
+    idx0=false(size(idx));
+    for i=1:numel(opt.NAME)
+        idx0=idx0 | ~cellfun('isempty',...
+            regexp(opt.CATALOG.name,opt.NAME{i}));
+    end
+    idx=idx & idx0;
 end
 
 % extract cmts
@@ -115,10 +132,10 @@ if(mod(nargin,2))
 end
 
 % defaults
-varargin=[{'st' [1976 1] 'nd' 1 'cat' 'both' 'mw' [0 10] 'ms' [0 10] ...
-    'mb' [0 10] 'lat' [-90 90] 'lon' [-180 180] 'dep' [0 1000] 'na' [] ...
-    'hd' [-9999 9999] 'cs' [-9999 9999] 'tax' [0 90] 'nax' [0 90]} ...
-    varargin];
+varargin=[{'st' [1962 1] 'et' datevec(now) 'cat' 'both' 'mw' [0 10] ...
+    'ms' [0 10] 'mb' [0 10] 'lat' [-90 90] 'lon' [-180 180] ...
+    'dep' [0 1000] 'na' [] 'hd' [-9999 9999] 'cs' [-9999 9999] ...
+    'tax' [0 90] 'nax' [0 90]} varargin];
 
 % require options are strings
 if(~iscellstr(varargin(1:2:end)))
@@ -138,12 +155,13 @@ valid.NDKFIELDS={'scalarmoment' 'exponent' 'year' 'month' 'day' 'hour' ...
 % loop over options
 for i=1:2:numel(varargin)
     switch lower(varargin{i})
-        case {'name' 'na'}
-            if(~isempty(varargin{i+1}) && (~ischar(varargin{i+1}) ...
-                    || ndims(varargin{i+1})~=2 ...
-                    || size(varargin{i+1},1)~=1))
+        case {'names' 'name' 'na'}
+            if(ischar(varargin{i+1}))
+                varargin{i+1}=cellstr(varargin{i+1});
+            end
+            if(~isempty(varargin{i+1}) && ~iscellstr(varargin{i+1}))
                 error('seizmo:findcmts:badInput',...
-                    'NAME must be a string!');
+                    'NAME must be a string or cell string array!');
             end
             opt.NAME=varargin{i+1};
         case {'starttime' 'st'}

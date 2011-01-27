@@ -1,0 +1,776 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML is auto-generated from an M-file.
+To make changes, update the M-file and republish this document.
+      --><title>An Introduction to SEIZMO - A Matlab &amp; Octave Toolbox for Earthquake Seismology</title><meta name="generator" content="MATLAB 7.10"><meta name="date" content="2011-01-14"><meta name="m-file" content="beginning_seizmo"><style type="text/css">
+
+body {
+  background-color: white;
+  margin:10px;
+}
+
+h1 {
+  color: #990000; 
+  font-size: x-large;
+}
+
+h2 {
+  color: #990000;
+  font-size: medium;
+}
+
+/* Make the text shrink to fit narrow windows, but not stretch too far in 
+wide windows. */ 
+p,h1,h2,div.content div {
+  max-width: 600px;
+  /* Hack for IE6 */
+  width: auto !important; width: 600px;
+}
+
+pre.codeinput {
+  background: #EEEEEE;
+  padding: 10px;
+}
+@media print {
+  pre.codeinput {word-wrap:break-word; width:100%;}
+} 
+
+span.keyword {color: #0000FF}
+span.comment {color: #228B22}
+span.string {color: #A020F0}
+span.untermstring {color: #B20000}
+span.syscmd {color: #B28C00}
+
+pre.codeoutput {
+  color: #666666;
+  padding: 10px;
+}
+
+pre.error {
+  color: red;
+}
+
+p.footer {
+  text-align: right;
+  font-size: xx-small;
+  font-weight: lighter;
+  font-style: italic;
+  color: gray;
+}
+
+  </style></head><body><div class="content"><h1>An Introduction to SEIZMO - A Matlab &amp; Octave Toolbox for Earthquake Seismology</h1><!--introduction--><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">What is SEIZMO?</a></li><li><a href="#2">Why use SEIZMO?</a></li><li><a href="#3">How to read a file into SEIZMO</a></li><li><a href="#6">How to save a file from SEIZMO</a></li><li><a href="#9">How to create a SEIZMO dataset from a matrix</a></li><li><a href="#10">The SEIZMO struct</a></li><li><a href="#13">Copying a SEIZMO struct</a></li><li><a href="#16">Altering SEIZMO struct fields</a></li><li><a href="#22">Extracting the data</a></li><li><a href="#23">Viewing header info</a></li><li><a href="#26">Extracting header info</a></li><li><a href="#32">Altering header info</a></li></ul></div><h2>What is SEIZMO?<a name="1"></a></h2><p>SEIZMO is a Matlab and GNU Octave based toolbox encompassing a collection of over 500 functions that provide a framework for seismic data preparation, quality control, and analysis akin to that of Seismic Analysis Code with a focus on passive source seismology at regional and global scales (where earthquakes and ambient noise are the sources).</p><h2>Why use SEIZMO?<a name="2"></a></h2><p>There are numerous functions for reading/writing standard seismic data formats, displaying and editing metadata, plotting seismograms, creating animations, data processing, and interactive analysis. Data processing capabilities include correlation, convolution, deconvolution, detrending, differentiation, integration, interpolation, resampling, filtering, merging, response transferring, rotation, stacking, spectral analysis, tapering, and windowing. The toolbox contains collections of functions for arrival time determination and quality control with cross correlation and cluster analysis, Rayleigh wave two plane-wave analysis, seismic ambient noise processing, and frequency-wavenumber analysis. SEIZMO utilizes direct access to the TauP toolkit to administer predicted arrival times, raypaths, pierce points, and travel time curves for several widely recognized 1D seismic earth models. Mapping in SEIZMO draws on the M_Map toolbox. The seismology toolbox also incorporates several 3D mantle models, a catalog of moment tensors from the Global CMT project, and a database of instrument responses available through IRIS. There are functions to aid in rapid prototyping and customization for new functions and documentation for every function is accessible through the inline help system.</p><h2>How to read a file into SEIZMO<a name="3"></a></h2><p>Currently SEIZMO only supports one type of seismic data format: SAC binary.  Reading in the SAC files is done with <tt>readseizmo</tt>.  For instance, to read in all the SAC files in a directory <tt>data/</tt> (on a Unix OS) into the Matlab variable called <tt>dataset</tt>:</p><pre class="codeinput">dataset=readseizmo(<span class="string">'data/*'</span>);
+</pre><pre class="codeoutput">Reading in Header Portion of Record(s)
+[######################### 100% #########################] 29/29 0s
+Reading in Data Portion of Record(s)
+[######################### 100% #########################] 29/29 0s
+</pre><p>Or using the shortcut form (replacing <tt>readseizmo</tt> with just <tt>r</tt>):</p><pre class="codeinput">dataset=r(<span class="string">'data/*'</span>);
+</pre><pre class="codeoutput">Reading in Header Portion of Record(s)
+[######################### 100% #########################] 29/29 0s
+Reading in Data Portion of Record(s)
+[######################### 100% #########################] 29/29 0s
+</pre><p>The data can then be plotted using one of SEIZMO's plotting commands:</p><pre class="codeinput">recordsection(dataset)
+</pre><img vspace="5" hspace="5" src="beginning_seizmo_01.png" alt=""> <h2>How to save a file from SEIZMO<a name="6"></a></h2><p>There are 2 options when saving SEIZMO datasets: as a <tt>.mat</tt> file or as SAC files.  The MAT file option allows you to save the entire dataset as well as any other variables you request into a single file.  The downside is that this file is not readable by other seismology programs such as SAC or PQLII.</p><pre class="codeinput">save <span class="string">myfile.mat</span> <span class="string">dataset</span>
+</pre><p>To save the records in the dataset individually as SAC files use the command <tt>writeseizmo</tt> (here we will use its shortcut <tt>w</tt>).  We also give a parameter &amp; value pair to change the path of the output files to <tt>data-new</tt>.</p><pre class="codeinput">w(dataset,<span class="string">'path'</span>,<span class="string">'data-new'</span>);
+</pre><pre class="codeoutput">Changing Paths of Record(s)
+Writing Record(s)
+[######################### 100% #########################] 29/29 0s
+</pre><p>Listing the 2 directories shows all is well:</p><pre class="codeinput">ls <span class="string">-n</span> <span class="string">data/</span> <span class="string">data-new/</span>
+</pre><pre class="codeoutput">data/:
+total 580
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM01.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM02.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM03.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM04.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM05.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM06.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM07.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM08.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM09.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM10.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM11.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM12.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM13.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM14.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM15.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM17.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM18.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM19.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM21.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM23.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM24.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM25.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM26.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM27.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM28.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM29.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM30.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM31.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-05 03:01 SAC.XB.CM32.02.BHZ.00
+
+data-new/:
+total 580
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM01.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM02.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM03.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM04.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM05.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM06.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM07.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM08.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM09.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM10.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM11.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM12.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM13.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM14.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM15.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM17.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM18.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM19.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM21.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM23.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM24.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM25.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM26.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM27.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM28.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM29.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM30.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM31.02.BHZ.00
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 SAC.XB.CM32.02.BHZ.00
+
+</pre><h2>How to create a SEIZMO dataset from a matrix<a name="9"></a></h2><p>Creating a SEIZMO dataset from a matrix is done with the <tt>bseizmo</tt> command.  For example, we can create a vector of points with random values and pass those to <tt>bseizmo</tt>.  The output is a SEIZMO dataset (we will explore the SEIZMO data format in detail in the following sections). We then can plot the matrix and SEIZMO dataset to verify.</p><pre class="codeinput">x=rand(1000,1);
+data=bseizmo(x);
+figure;
+subplot(2,1,1);
+plot(x);
+title(<span class="string">'normal Matlab matrix'</span>);
+subplot(2,1,2);
+plot1(data,<span class="string">'axis'</span>,gca);
+title(<span class="string">'now in SEIZMO'</span>)
+</pre><pre class="codeoutput">Creating SEIZMO Record(s)
+[######################### 100% #########################] 1/1 0s
+</pre><img vspace="5" hspace="5" src="beginning_seizmo_02.png" alt=""> <h2>The SEIZMO struct<a name="10"></a></h2><p>In this section we explore the main parts of a SEIZMO dataset.  First, the dataset is actually stored as a struct in Matlab.  A "struct" is simply a structured set of variables.  The SEIZMO struct contains 10 variables or "fields" that organize all the info in a record.  Those 10 fields are:</p><div><ul><li><tt>path</tt>      - directory of file</li><li><tt>name</tt>      - file name</li><li><tt>filetype</tt>  - type of file</li><li><tt>version</tt>   - version of filetype</li><li><tt>byteorder</tt> - byte-order of file (ieee-le or ieee-be)</li><li><tt>head</tt>      - header data</li><li><tt>hasdata</tt>   - logical indicating if data is read in</li><li><tt>ind</tt>       - independent component data (for uneven)</li><li><tt>dep</tt>       - dependent component data</li><li><tt>misc</tt>      - place for miscellaneous record info</li></ul></div><p>To list the fields and their values for a record, enter the dataset name and record index at the commandwindow.  For instance, record 3 of the dataset from our reading SAC files example (we saved the dataset to a variable called <tt>dataset</tt>) can be explored by entering:</p><pre class="codeinput">dataset(3)
+</pre><pre class="codeoutput">
+ans = 
+
+         path: 'data/'
+         name: 'SAC.XB.CM03.02.BHZ.00'
+     filetype: 'SAC Binary'
+      version: 6
+    byteorder: 'ieee-le'
+         head: [302x1 double]
+      hasdata: 1
+          ind: []
+          dep: [4500x1 single]
+         misc: []
+
+</pre><p>We quickly assess that this data is from the <tt>data</tt> folder and more specifically is the file <tt>SAC.XB.CM03.02.BHZ.00</tt> in that folder.  The filetype is <b>SAC binary version 6</b> as expected (all records will probably have those entries until I add support for other filetypes).  The <tt>head</tt> field contains all the metadata in a <tt>302x1</tt> double-precision array.  The <tt>hasdata</tt> field is <tt>1</tt> or logically <tt>TRUE</tt> and denotes that we have read in the data, which is stored in the <tt>dep</tt> field (ie dependent data component) as a <tt>4500x1</tt> single-precision array.  The <tt>ind</tt> field (ie independent data component) is empty, indicating that the data is evenly sampled in time because we do not need to store the timing of every sample for such a record.  The <tt>misc</tt> field contains nothing at this point but may be populated later by other SEIZMO functions for keeping track of related information (like the instrument response).</p><h2>Copying a SEIZMO struct<a name="13"></a></h2><p>To copy a dataset, assign it to a new variable:</p><pre class="codeinput">dataset2=dataset
+</pre><pre class="codeoutput">
+dataset2 = 
+
+29x1 struct array with fields:
+    path
+    name
+    filetype
+    version
+    byteorder
+    head
+    hasdata
+    ind
+    dep
+    misc
+
+</pre><p>If you are only interested in a single record, you can save that record to a new dataset by assigning that record to a new variable:</p><pre class="codeinput">new=dataset(3)
+</pre><pre class="codeoutput">
+new = 
+
+         path: 'data/'
+         name: 'SAC.XB.CM03.02.BHZ.00'
+     filetype: 'SAC Binary'
+      version: 6
+    byteorder: 'ieee-le'
+         head: [302x1 double]
+      hasdata: 1
+          ind: []
+          dep: [4500x1 single]
+         misc: []
+
+</pre><p>You may then assign it back by switching the two:</p><pre class="codeinput">dataset(3)=new;
+</pre><h2>Altering SEIZMO struct fields<a name="16"></a></h2><p>Now that you have a taste of the SEIZMO struct, the next step is to learn how to apply that knowledge by changing the struct fields.  While I do not recommend altering the <tt>filetype</tt> &amp; <tt>version</tt> fields as there is no reason, altering other fields is convenient.  For example, changing field values allows you to alter the filename &amp; path when the record is written out as a SAC file.  Altering record 3 of the dataset:</p><pre class="codeinput">dataset(3).name=<span class="string">'mynewname.sac'</span>;
+dataset(3).path=<span class="string">'data-new'</span>;
+</pre><p>Display the record fields to check:</p><pre class="codeinput">dataset(3)
+</pre><pre class="codeoutput">
+ans = 
+
+         path: 'data-new'
+         name: 'mynewname.sac'
+     filetype: 'SAC Binary'
+      version: 6
+    byteorder: 'ieee-le'
+         head: [302x1 double]
+      hasdata: 1
+          ind: []
+          dep: [4500x1 single]
+         misc: []
+
+</pre><p>And writing out to a SAC file:</p><pre class="codeinput">w(dataset(3));
+ls <span class="string">-n</span> <span class="string">data-new/*.sac</span>
+</pre><pre class="codeoutput">Writing Record(s)
+[######################### 100% #########################] 1/1 0s
+-rw-r--r--. 1 500 10 18632 2011-01-14 04:15 data-new/mynewname.sac
+
+</pre><p>In summary, to adjust a field for a record the format is as follows:</p><p><tt>datasetname(recordindex).field=value</tt></p><p>If there is only 1 record in a dataset then the <tt>(recordindex)</tt> may be omitted.</p><p>Another easy struct adjustment example is to change the data of a record.  Say you wanted to add some white noise to the record.  First, make a copy so you can compare the noisy signal to the original.  Then add some noise and plot the two records in an overlay using <tt>plot2</tt>:</p><pre class="codeinput">noisy=new;
+noisy.dep=noisy.dep+(rand(4500,1)-0.5);
+plot2(noisy,new)
+</pre><img vspace="5" hspace="5" src="beginning_seizmo_03.png" alt=""> <p>In this case, the noise is too weak to affect the character of the signal.  Enhance the noise <tt>2000x</tt> for a pronounced effect:</p><pre class="codeinput">noisy=new;
+noisy.dep=noisy.dep+2e3*(rand(4500,1)-0.5);
+plot2(noisy,new)
+</pre><img vspace="5" hspace="5" src="beginning_seizmo_04.png" alt=""> <h2>Extracting the data<a name="22"></a></h2><p>The quickest way to access the data in a SEIZMO record is to use a command with the following form:</p><p><tt>mymatrix=datasetname(recordindex).dep;</tt></p><p>For example, to extract the first 10 values from the noisy record:</p><pre class="codeinput">a=noisy.dep(1:10)
+</pre><pre class="codeoutput">
+a =
+
+   1.0e+03 *
+
+    0.3957
+   -0.2818
+    0.2142
+   -0.7634
+   -0.2710
+   -1.1170
+   -0.7431
+   -0.7470
+   -0.3002
+   -0.9714
+
+</pre><h2>Viewing header info<a name="23"></a></h2><p>There are 3 different header or metadata viewers included in SEIZMO:</p><div><ul><li><tt>listheader</tt>    - List SEIZMO data headers</li><li><tt>compareheader</tt> - Multicolumn listing of SEIZMO headers</li><li><tt>queryheader</tt>   - List SEIZMO headers in table form</li></ul></div><p>The difference between <tt>compareheader</tt> and <tt>queryheader</tt> is a tranposition of the table.  I personally prefer <tt>queryheader</tt>.</p><p>To list some header fields of the first 3 records in <tt>dataset</tt>:</p><pre class="codeinput">lh(dataset(1:3),<span class="string">'delta'</span>,<span class="string">'b'</span>,<span class="string">'e'</span>,<span class="string">'stla'</span>,<span class="string">'stlo'</span>)
+</pre><pre class="codeoutput"> 
+ 
+ FILE: data/SAC.XB.CM01.02.BHZ.00 - 1
+---------------------------
+            DELTA = 4
+                B = -3599.990967
+                E = 14396.00879
+             STLA = 2.388999939
+             STLO = 9.833999634
+ 
+ FILE: data/SAC.XB.CM02.02.BHZ.00 - 2
+---------------------------
+            DELTA = 4
+                B = -3600
+                E = 14396
+             STLA = 2.697999954
+             STLO = 13.28899956
+ 
+ FILE: data-new/mynewname.sac - 3
+---------------------------
+            DELTA = 4
+                B = -3599.990967
+                E = 14396.00879
+             STLA = 3.519000053
+             STLO = 15.0340004
+</pre><p>Compare that to <tt>queryheader</tt> output:</p><pre class="codeinput">qh(dataset(1:3),<span class="string">'delta'</span>,<span class="string">'b'</span>,<span class="string">'e'</span>,<span class="string">'stla'</span>,<span class="string">'stlo'</span>)
+</pre><pre class="codeoutput"> 
+ RECORDS:
+---------------------------
+1 - data/SAC.XB.CM01.02.BHZ.00
+2 - data/SAC.XB.CM02.02.BHZ.00
+3 - data-new/mynewname.sac
+---------------------------
+ 
+      \ HEADER
+RECORD \ FIELD
+ NUMBER \    DELTA             B            E         STLA         STLO
+-----------------------------------------------------------------------
+       1 |       4  -3599.990967  14396.00879  2.388999939  9.833999634
+       2 |       4         -3600        14396  2.697999954  13.28899956
+       3 |       4  -3599.990967  14396.00879  3.519000053   15.0340004
+</pre><p>Wildcards are also allowed:</p><pre class="codeinput">qh(dataset(1:3),<span class="string">'l*'</span>)
+</pre><pre class="codeoutput"> 
+ RECORDS:
+---------------------------
+1 - data/SAC.XB.CM01.02.BHZ.00
+2 - data/SAC.XB.CM02.02.BHZ.00
+3 - data-new/mynewname.sac
+---------------------------
+ 
+      \ HEADER
+RECORD \ FIELD
+ NUMBER \    LCALDA  LEVEN  LOVROK  LPSPOL
+------------------------------------------
+       1 |     TRUE   TRUE    TRUE    TRUE
+       2 |     TRUE   TRUE    TRUE    TRUE
+       3 |     TRUE   TRUE    TRUE    TRUE
+</pre><h2>Extracting header info<a name="26"></a></h2><p>4 functions allow for exporting header values:</p><div><ul><li><tt>getheader</tt>   - Get SEIZMO data header values</li><li><tt>getenumid</tt>   - Get enum id from enum field</li><li><tt>getenumdesc</tt> - Get enum description from enum field</li><li><tt>getlgc</tt>      - Get logical string from logical field</li></ul></div><p>For instance if you wanted to extract the beginning time of each record, you would ask for the <tt>b</tt> header field:</p><pre class="codeinput">values=gh(dataset,<span class="string">'b'</span>)
+</pre><pre class="codeoutput">
+values =
+
+   1.0e+03 *
+
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+   -3.6000
+
+</pre><p>Say you wanted to output a string header field such as <tt>kstnm</tt>. <tt>getheader</tt> returns a cell-string array in this case, which allows for simpler access to each record's string.  To access the 3rd record's <tt>kstnm</tt> value, index just like you would into the dataset:</p><pre class="codeinput">values=gh(dataset,<span class="string">'kstnm'</span>)
+values(3)
+</pre><pre class="codeoutput">
+values = 
+
+    'CM01'
+    'CM02'
+    'CM03'
+    'CM04'
+    'CM05'
+    'CM06'
+    'CM07'
+    'CM08'
+    'CM09'
+    'CM10'
+    'CM11'
+    'CM12'
+    'CM13'
+    'CM14'
+    'CM15'
+    'CM17'
+    'CM18'
+    'CM19'
+    'CM21'
+    'CM23'
+    'CM24'
+    'CM25'
+    'CM26'
+    'CM27'
+    'CM28'
+    'CM29'
+    'CM30'
+    'CM31'
+    'CM32'
+
+
+ans = 
+
+    'CM03'
+
+</pre><p>Converting a cell-string array to a character array is done as follows:</p><pre class="codeinput">values=char(values)
+</pre><pre class="codeoutput">
+values =
+
+CM01
+CM02
+CM03
+CM04
+CM05
+CM06
+CM07
+CM08
+CM09
+CM10
+CM11
+CM12
+CM13
+CM14
+CM15
+CM17
+CM18
+CM19
+CM21
+CM23
+CM24
+CM25
+CM26
+CM27
+CM28
+CM29
+CM30
+CM31
+CM32
+
+</pre><p>You can also return multiple header fields in the same call:</p><pre class="codeinput">[delta,e]=gh(dataset,<span class="string">'delta'</span>,<span class="string">'e'</span>)
+</pre><pre class="codeoutput">
+delta =
+
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+     4
+
+
+e =
+
+   1.0e+04 *
+
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+    1.4396
+
+</pre><p>Enumerated header fields are a little more complex. An integer is stored in the header location for an enum field.  This integer corresponds to a specific string in a lookup table that SEIZMO keeps internally.  SEIZMO's strings match those in SAC and include a few extensions.  To return the id &amp; description strings for a enum field, use the functions <tt>getenumid</tt> &amp; <tt>getenumdesc</tt>.  Please note that these also return cell-string arrays.</p><pre class="codeinput">getenumid(dataset(3),<span class="string">'idep'</span>)
+getenumdesc(dataset(3),<span class="string">'idep'</span>)
+</pre><pre class="codeoutput">
+ans = 
+
+    'idisp'
+
+
+ans = 
+
+    'Displacement (nm)'
+
+</pre><p>Usage of <tt>getlgc</tt> is rarely necessary.  The main thing to remember about logical fields is that the SAC format allows for these fields to be undefined (ie set as -12345).  Thus a non-zero value returned by <tt>getheader</tt> does not necessarily indicate the logical is <tt>TRUE</tt>.</p><h2>Altering header info<a name="32"></a></h2><p>Changing a header field to a new value is facilitated by <tt>changeheader</tt>. To change the <tt>kt0</tt> &amp; <tt>t0</tt> header fields of all to your 29 records in <tt>dataset</tt> to the same value (the values do not have to be as below):</p><pre class="codeinput">dataset=ch(dataset,<span class="string">'kt0'</span>,<span class="string">'nothing'</span>,<span class="string">'t0'</span>,8000);
+</pre><p>Note that <tt>changeheader</tt> requires you to assign the output to the input dataset.  You could have assigned the output to a new variable instead. To view the 'nothing' markers in an ammended <tt>plot1</tt> call:</p><pre class="codeinput">plot1(dataset(1:4),<span class="string">'showmarkers'</span>,true);
+</pre><img vspace="5" hspace="5" src="beginning_seizmo_05.png" alt=""> <p>You may use an array to give each record a diffent value.  To add a little randomness to the marker positions:</p><pre class="codeinput">dataset=ch(dataset,<span class="string">'t0'</span>,1e4+1e4*(rand(29,1)-0.5));
+plot1(dataset(1:4),<span class="string">'showmarkers'</span>,true);
+</pre><img vspace="5" hspace="5" src="beginning_seizmo_06.png" alt=""> <p class="footer"><br>
+      Published with MATLAB&reg; 7.10<br></p></div><!--
+##### SOURCE BEGIN #####
+%% An Introduction to SEIZMO - A Matlab & Octave Toolbox for Earthquake Seismology
+% 
+%% What is SEIZMO?
+% SEIZMO is a Matlab and GNU Octave based toolbox encompassing a collection
+% of over 500 functions that provide a framework for seismic data
+% preparation, quality control, and analysis akin to that of Seismic
+% Analysis Code with a focus on passive source seismology at regional and
+% global scales (where earthquakes and ambient noise are the sources).
+
+%% Why use SEIZMO?
+% There are numerous functions for reading/writing standard seismic data
+% formats, displaying and editing metadata, plotting seismograms, creating
+% animations, data processing, and interactive analysis. Data processing
+% capabilities include correlation, convolution, deconvolution, detrending,
+% differentiation, integration, interpolation, resampling, filtering,
+% merging, response transferring, rotation, stacking, spectral analysis,
+% tapering, and windowing. The toolbox contains collections of functions
+% for arrival time determination and quality control with cross correlation
+% and cluster analysis, Rayleigh wave two plane-wave analysis, seismic
+% ambient noise processing, and frequency-wavenumber analysis. SEIZMO
+% utilizes direct access to the TauP toolkit to administer predicted
+% arrival times, raypaths, pierce points, and travel time curves for
+% several widely recognized 1D seismic earth models. Mapping in SEIZMO
+% draws on the M_Map toolbox. The seismology toolbox also incorporates
+% several 3D mantle models, a catalog of moment tensors from the Global CMT
+% project, and a database of instrument responses available through IRIS.
+% There are functions to aid in rapid prototyping and customization for new
+% functions and documentation for every function is accessible through the
+% inline help system.
+
+%% How to read a file into SEIZMO
+% Currently SEIZMO only supports one type of seismic data format: SAC
+% binary.  Reading in the SAC files is done with |readseizmo|.  For
+% instance, to read in all the SAC files in a directory |data/| (on a Unix
+% OS) into the Matlab variable called |dataset|:
+dataset=readseizmo('data/*');
+
+%%
+% Or using the shortcut form (replacing |readseizmo| with just |r|):
+dataset=r('data/*');
+
+%%
+% The data can then be plotted using one of SEIZMO's plotting commands:
+recordsection(dataset)
+
+%% How to save a file from SEIZMO
+% There are 2 options when saving SEIZMO datasets: as a |.mat| file or as
+% SAC files.  The MAT file option allows you to save the entire dataset as
+% well as any other variables you request into a single file.  The downside
+% is that this file is not readable by other seismology programs such as
+% SAC or PQLII.
+save myfile.mat dataset
+
+%%
+% To save the records in the dataset individually as SAC files use the
+% command |writeseizmo| (here we will use its shortcut |w|).  We also give
+% a parameter & value pair to change the path of the output files to
+% |data-new|.
+w(dataset,'path','data-new');
+
+%%
+% Listing the 2 directories shows all is well:
+ls -n data/ data-new/
+
+%% How to create a SEIZMO dataset from a matrix
+% Creating a SEIZMO dataset from a matrix is done with the |bseizmo|
+% command.  For example, we can create a vector of points with random
+% values and pass those to |bseizmo|.  The output is a SEIZMO dataset (we
+% will explore the SEIZMO data format in detail in the following sections).
+% We then can plot the matrix and SEIZMO dataset to verify.
+x=rand(1000,1);
+data=bseizmo(x);
+figure;
+subplot(2,1,1);
+plot(x);
+title('normal Matlab matrix');
+subplot(2,1,2);
+plot1(data,'axis',gca);
+title('now in SEIZMO')
+
+%% The SEIZMO struct
+% In this section we explore the main parts of a SEIZMO dataset.  First,
+% the dataset is actually stored as a struct in Matlab.  A "struct" is
+% simply a structured set of variables.  The SEIZMO struct contains 10
+% variables or "fields" that organize all the info in a record.  Those 10
+% fields are:
+%
+% * |path|      - directory of file
+% * |name|      - file name
+% * |filetype|  - type of file
+% * |version|   - version of filetype
+% * |byteorder| - byte-order of file (ieee-le or ieee-be)
+% * |head|      - header data
+% * |hasdata|   - logical indicating if data is read in
+% * |ind|       - independent component data (for uneven)
+% * |dep|       - dependent component data
+% * |misc|      - place for miscellaneous record info
+
+%%
+% To list the fields and their values for a record, enter the dataset name
+% and record index at the commandwindow.  For instance, record 3 of the
+% dataset from our reading SAC files example (we saved the dataset to a
+% variable called |dataset|) can be explored by entering:
+dataset(3)
+
+%%
+% We quickly assess that this data is from the |data| folder and more
+% specifically is the file |SAC.XB.CM03.02.BHZ.00| in that folder.  The
+% filetype is *SAC binary version 6* as expected (all records will probably
+% have those entries until I add support for other filetypes).  The |head|
+% field contains all the metadata in a |302x1| double-precision array.  The
+% |hasdata| field is |1| or logically |TRUE| and denotes that we have read
+% in the data, which is stored in the |dep| field (ie dependent data
+% component) as a |4500x1| single-precision array.  The |ind| field (ie
+% independent data component) is empty, indicating that the data is evenly
+% sampled in time because we do not need to store the timing of every
+% sample for such a record.  The |misc| field contains nothing at this
+% point but may be populated later by other SEIZMO functions for keeping
+% track of related information (like the instrument response).
+
+%% Copying a SEIZMO struct
+% To copy a dataset, assign it to a new variable:
+dataset2=dataset
+
+%%
+% If you are only interested in a single record, you can save that record
+% to a new dataset by assigning that record to a new variable:
+new=dataset(3)
+
+%%
+% You may then assign it back by switching the two:
+dataset(3)=new;
+
+%% Altering SEIZMO struct fields
+% Now that you have a taste of the SEIZMO struct, the next step is to learn
+% how to apply that knowledge by changing the struct fields.  While I do
+% not recommend altering the |filetype| & |version| fields as there is no
+% reason, altering other fields is convenient.  For example, changing field
+% values allows you to alter the filename & path when the record is
+% written out as a SAC file.  Altering record 3 of the dataset:
+dataset(3).name='mynewname.sac';
+dataset(3).path='data-new';
+
+%%
+% Display the record fields to check:
+dataset(3)
+
+%%
+% And writing out to a SAC file:
+w(dataset(3));
+ls -n data-new/*.sac
+
+%%
+% In summary, to adjust a field for a record the format is as follows:
+%
+% |datasetname(recordindex).field=value|
+%
+% If there is only 1 record in a dataset then the |(recordindex)| may be
+% omitted.
+
+%%
+% Another easy struct adjustment example is to change the data of a
+% record.  Say you wanted to add some white noise to the record.  First,
+% make a copy so you can compare the noisy signal to the original.  Then
+% add some noise and plot the two records in an overlay using |plot2|:
+noisy=new;
+noisy.dep=noisy.dep+(rand(4500,1)-0.5);
+plot2(noisy,new)
+
+%%
+% In this case, the noise is too weak to affect the character of the
+% signal.  Enhance the noise |2000x| for a pronounced effect:
+noisy=new;
+noisy.dep=noisy.dep+2e3*(rand(4500,1)-0.5);
+plot2(noisy,new)
+
+%% Extracting the data
+% The quickest way to access the data in a SEIZMO record is to use a
+% command with the following form:
+%
+% |mymatrix=datasetname(recordindex).dep;|
+%
+% For example, to extract the first 10 values from the noisy record:
+a=noisy.dep(1:10)
+
+%% Viewing header info
+% There are 3 different header or metadata viewers included in SEIZMO:
+%
+% * |listheader|    - List SEIZMO data headers
+% * |compareheader| - Multicolumn listing of SEIZMO headers
+% * |queryheader|   - List SEIZMO headers in table form
+%
+% The difference between |compareheader| and |queryheader| is a
+% tranposition of the table.  I personally prefer |queryheader|.
+%
+% To list some header fields of the first 3 records in |dataset|:
+lh(dataset(1:3),'delta','b','e','stla','stlo')
+
+%%
+% Compare that to |queryheader| output:
+qh(dataset(1:3),'delta','b','e','stla','stlo')
+
+%%
+% Wildcards are also allowed:
+qh(dataset(1:3),'l*')
+
+%% Extracting header info
+% 4 functions allow for exporting header values:
+%
+% * |getheader|   - Get SEIZMO data header values
+% * |getenumid|   - Get enum id from enum field
+% * |getenumdesc| - Get enum description from enum field
+% * |getlgc|      - Get logical string from logical field
+%
+% For instance if you wanted to extract the beginning time of each record,
+% you would ask for the |b| header field:
+values=gh(dataset,'b')
+
+%%
+% Say you wanted to output a string header field such as |kstnm|.
+% |getheader| returns a cell-string array in this case, which allows for
+% simpler access to each record's string.  To access the 3rd record's
+% |kstnm| value, index just like you would into the dataset:
+values=gh(dataset,'kstnm')
+values(3)
+
+%%
+% Converting a cell-string array to a character array is done as follows:
+values=char(values)
+
+%%
+% You can also return multiple header fields in the same call:
+[delta,e]=gh(dataset,'delta','e')
+
+%%
+% Enumerated header fields are a little more complex. An integer is stored
+% in the header location for an enum field.  This integer corresponds to a
+% specific string in a lookup table that SEIZMO keeps internally.  SEIZMO's
+% strings match those in SAC and include a few extensions.  To return the
+% id & description strings for a enum field, use the functions |getenumid|
+% & |getenumdesc|.  Please note that these also return cell-string arrays.
+getenumid(dataset(3),'idep')
+getenumdesc(dataset(3),'idep')
+
+%%
+% Usage of |getlgc| is rarely necessary.  The main thing to remember about
+% logical fields is that the SAC format allows for these fields to be
+% undefined (ie set as -12345).  Thus a non-zero value returned by
+% |getheader| does not necessarily indicate the logical is |TRUE|.
+
+%% Altering header info
+% Changing a header field to a new value is facilitated by |changeheader|.
+% To change the |kt0| & |t0| header fields of all to your 29 records in
+% |dataset| to the same value (the values do not have to be as below):
+dataset=ch(dataset,'kt0','nothing','t0',8000);
+
+%%
+% Note that |changeheader| requires you to assign the output to the input
+% dataset.  You could have assigned the output to a new variable instead.
+% To view the 'nothing' markers in an ammended |plot1| call:
+plot1(dataset(1:4),'showmarkers',true);
+
+%%
+% You may use an array to give each record a diffent value.  To add a
+% little randomness to the marker positions:
+dataset=ch(dataset,'t0',1e4+1e4*(rand(29,1)-0.5));
+plot1(dataset(1:4),'showmarkers',true);
+
+
+##### SOURCE END #####
+--></body></html>

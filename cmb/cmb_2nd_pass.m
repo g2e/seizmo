@@ -41,9 +41,10 @@ function [results2]=cmb_2nd_pass(results,sr,varargin)
 %                        updates, edit output names & runname to keep
 %                        further output informative if we cluster/outlier a
 %                        narrow band result
+%        Jan. 26, 2011 - .synthetics & .earthmodel fields, 2-digit cluster
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 13:35 GMT
+%     Last Updated Jan. 26, 2011 at 13:35 GMT
 
 % todo:
 
@@ -107,7 +108,7 @@ for i=1:numel(results)
     % loop over good clusters
     for j=find(results(i).usercluster.good(:)')
         % get cluster info
-        sj=num2str(j);
+        sj=num2str(j,'%02d');
         disp(['Aligning cluster ' sj]);
         good=find(results(i).usercluster.T==j ...
             & ~(results(i).outliers.bad));
@@ -138,11 +139,13 @@ for i=1:numel(results)
                 tmp(k).usersnr=[];
             end
 
-            % add run name, quake name
+            % add run name, quake name, data directory name, syn stuff
             tmp(k).phase=results(i).phase;
             tmp(k).runname=[runname '_cluster_' sj ...
                 '_band_' num2str(k,'%02d')];
             tmp(k).dirname=results(i).dirname;
+            tmp(k).synthetics=results(i).synthetics;
+            tmp(k).earthmodel=results(i).earthmodel;
 
             % fix corrections
             if(~isempty(tmp(k).usersnr))

@@ -23,11 +23,15 @@ function [report]=chk1dmodel(model)
 %        Aug. 10, 2010 - require monotoniticity of .depth
 %        Aug. 17, 2010 - require nonempty, fix error message
 %        Sep. 19, 2010 - more .depth checks
+%        Jan. 25, 2011 - require .crust is true if .ocean is true, fix some
+%                        warning ids
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 19, 2010 at 15:05 GMT
+%     Last Updated Jan. 25, 2011 at 15:05 GMT
 
 % todo:
+% - models should have named discontinuities field
+%   ('moho' '410' '660' 'cmb' 'icb')
 
 % check nargin
 report=[];
@@ -61,17 +65,22 @@ for i=1:numel(model)
             num2str(i) ' must be TRUE or FALSE!'];
         return;
     elseif(~islogical(model(i).crust) || ~isscalar(model(i).crust))
-        report.identifier='seizmo:chk1dmodel:badOcean';
+        report.identifier='seizmo:chk1dmodel:badCrust';
         report.message=['The .crust field of MODEL ' ...
             num2str(i) ' must be TRUE or FALSE!'];
         return;
+    elseif(model(i).ocean && ~model(i).crust)
+        report.identifier='seizmo:chk1dmodel:badOceanCrust';
+        report.message=['The .ocean field of MODEL ' ...
+            num2str(i) ' is TRUE: .crust must be TRUE too!'];
+        return;
     elseif(~islogical(model(i).isotropic) || ~isscalar(model(i).isotropic))
-        report.identifier='seizmo:chk1dmodel:badOcean';
+        report.identifier='seizmo:chk1dmodel:badIso';
         report.message=['The .isotropic field of MODEL ' ...
             num2str(i) ' must be TRUE or FALSE!'];
         return;
     elseif(~islogical(model(i).flattened) || ~isscalar(model(i).flattened))
-        report.identifier='seizmo:chk1dmodel:badOcean';
+        report.identifier='seizmo:chk1dmodel:badFlat';
         report.message=['The .flattened field of MODEL ' ...
             num2str(i) ' must be TRUE or FALSE!'];
         return;

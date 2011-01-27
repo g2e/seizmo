@@ -12,6 +12,8 @@ function [report]=check_cmb_results(results)
 %      .runname         - name of this run, used for naming output
 %      .dirname         - directory containing the waveforms
 %      .phase           - core-diffracted wave type
+%      .synthetics      - TRUE if synthetic data (only reflect synthetics)
+%      .earthmodel      - synthetic earth model ('DATA' if not synthetics)
 %      .filter          - filter parameters
 %      .usersnr         - snr parameters & snr
 %      .tt_start        - starting relative arrival times
@@ -37,9 +39,10 @@ function [report]=check_cmb_results(results)
 %     Version History:
 %        Jan. 15, 2011 - initial version
 %        Jan. 18, 2011 - require .time field
+%        Jan. 26, 2011 - require .synthetics & .earthmodel
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 13:35 GMT
+%     Last Updated Jan. 26, 2011 at 13:35 GMT
 
 % todo:
 
@@ -47,7 +50,7 @@ function [report]=check_cmb_results(results)
 report=[];
 reqfields={'useralign' 'filter' 'initwin' 'usersnr' 'userwinnow' ...
     'corrections' 'outliers' 'tt_start' 'phase' 'runname' 'dirname' ...
-    'usercluster' 'time'};
+    'usercluster' 'time' 'synthetics' 'earthmodel'};
 if(~isstruct(results))
     report.identifier='seizmo:check_cmb_results:badInput';
     report.message='RESULTS must be a struct!';
@@ -206,6 +209,21 @@ else
         if(~isstring(results(a).time))
             report.identifier='seizmo:cmb_cmb_results:badTime';
             report.message='RESULTS.time must be a string!';
+            return;
+        end
+        
+        % check synthetics
+        if(~isscalar(results(a).synthetics) ...
+                || ~islogical(results(a).synthetics))
+            report.identifier='seizmo:cmb_cmb_results:badSynFlag';
+            report.message='RESULTS.synthetics must be TRUE/FALSE!';
+            return;
+        end
+        
+        % check earthmodel
+        if(~isstring(results(a).time))
+            report.identifier='seizmo:cmb_cmb_results:badMODEL';
+            report.message='RESULTS.earthmodel must be a string!';
             return;
         end
     end

@@ -61,9 +61,10 @@ function [mout]=qlm9(varargin)
 
 %     Version History:
 %        Sep. 19, 2010 - initial version
+%        Jan. 25, 2011 - minor code cleanup for inf values
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 19, 2010 at 10:00 GMT
+%     Last Updated Jan. 25, 2011 at 10:00 GMT
 
 % todo:
 
@@ -233,6 +234,10 @@ model(isnan(model))=inf;
 
 % array to struct
 if(isempty(mout.name))
+    % fix interpolation of infinity
+    model(isnan(model))=inf;
+    
+    % make output struct
     mout.name='QLM9';
     mout.ocean=false;
     mout.crust=false;

@@ -36,9 +36,10 @@ function [gmt]=readgmt(file,type,marker)
 
 %     Version History:
 %        Jan. 20, 2011 - initial version
+%        Jan. 24, 2011 - support comma delimited
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 20, 2011 at 10:35 GMT
+%     Last Updated Jan. 24, 2011 at 10:35 GMT
 
 % todo
 
@@ -179,6 +180,9 @@ while(a<=nlines)
             if(strcmp(words{1}(1),marker))
                 nextsegment=true;
             else
+                % attempt splitting 1st word by commas
+                words=[getwords(words{1},',') words(2:end)];
+                
                 % check has at least 2 numbers
                 % - does not work with complex dd:mm:ss like positions
                 if(numel(words)<2)
@@ -221,6 +225,9 @@ while(a<=nlines)
                 file,a,line{a});
         end
         gmt(obj).type=type;
+        
+        % attempt splitting 1st word by commas
+        words=[getwords(words{1},',') words(2:end)];
         
         % check has at least 2 numbers
         % - does not work with complex dd:mm:ss like positions

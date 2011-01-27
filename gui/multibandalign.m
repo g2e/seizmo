@@ -60,9 +60,10 @@ function [info]=multibandalign(data,varargin)
 %                        zero-crossing feature added
 %        Jan. 23, 2011 - save window positions on iter 2+ of first band,
 %                        phase input allows for a bit more
+%        Jan. 26, 2011 - use 2 digit band number
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2011 at 12:25 GMT
+%     Last Updated Jan. 26, 2011 at 12:25 GMT
 
 % todo:
 
@@ -129,7 +130,7 @@ try
     last=[];   % for memory (last band aligned)
     while(i<=size(bank,1))
         % display filter info
-        istr=num2str(i);
+        istr=num2str(i,'%02d');
         disp(['BAND ' istr ' FILTER CORNERS: ' ...
             num2str(1/bank(i,3)) 's  to  ' num2str(1/bank(i,2)) 's']);
         

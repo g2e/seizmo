@@ -1,7 +1,8 @@
-function []=clean_contents_file(file,skip)
+function []=clean_contents_file(file,skip,dbl)
 %CLEAN_CONTENTS_FILE    Cleans up formatting of a Contents.m file
 %
 %    Usage:    clean_contents_file(file,[hlines tlines])
+%              clean_contents_file(file,[hlines tlines],dbl)
 %
 %    Description:
 %     CLEAN_CONTENTS_FILE(FILE,[HLINES TLINES]) edits the mfile given by
@@ -11,6 +12,12 @@ function []=clean_contents_file(file,skip)
 %     indented consistently with the rest of the function descriptions.
 %     The number of header and trailing lines to skip may be set with the
 %     second arg [HLINES TLINES].
+%
+%     CLEAN_CONTENTS_FILE(FILE,[HLINES TLINES],DBL) passes the flag DBL
+%     (must be TRUE or FALSE -- default is FALSE) indicating if the
+%     Contents file is double indented.  The default (FALSE) is single
+%     indent, which is the usual case.  Double indenting is for listing
+%     shortcut function names by their longer counterparts.
 %
 %    Notes:
 %
@@ -30,18 +37,27 @@ function []=clean_contents_file(file,skip)
 %     Version History:
 %        Jan.  2, 2011 - initial version
 %        Jan. 23, 2011 - allow files on path, fix path bug
+%        Jan. 26, 2011 - allow help function to not match string, 3rd arg
+%                        allows for double indent content files
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2011 at 23:00 GMT
+%     Last Updated Jan. 26, 2011 at 23:00 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(0,2,nargin));
+error(nargchk(0,3,nargin));
 
 % default inputs
 if(nargin<1); file=[]; end
 if(nargin<2); skip=[]; end
+if(nargin<3); dbl=false; end
+
+% check double indent flag
+if(~isscalar(dbl) || (~islogical(dbl) && ~isreal(dbl)))
+    error('seizmo:clean_contents:file:badDoubleIndentFlag',...
+        'DBL must be TRUE or FALSE!');
+end
 
 % filespec
 global SEIZMO
@@ -88,7 +104,7 @@ for a=1:nfiles
     nlines=numel(lines);
     
     % figure out maximum characters for indent
-    maxchar=0;
+    maxchar=0; dblmax=0;
     for b=1:nlines
         % look only if in range
         if(b>skip(a,1) && b<nlines+1-skip(a,2))
@@ -113,17 +129,34 @@ for a=1:nfiles
                 % is it a href line or a raw one?
                 if(strcmp(words{1}(1),'<'))
                     % href line looks like follows:
-                    % <a href="matlab:help xxxx">xxxx</a>  - yyy yyyyy
+                    % <a href="matlab:help xxxx">zzzz</a>  - yyy yyyyy
                     %
-                    % We want xxxx length, which is length of the 3rd
-                    % "word" divided by 2 minus 3.
-                    if((numel(words{3})/2-3)>maxchar)
-                        maxchar=numel(words{3})/2-3;
+                    % We want zzzz length, which is length of the 3rd
+                    % "word" divided by 2 minus 3 if xxxx=zzzz.
+                    %if((numel(words{3})/2-3)>maxchar)
+                    %    maxchar=numel(words{3})/2-3;
+                    %end
+                    % This works when xxxx~=zzzz
+                    tmpwords=getwords(words{3},'>');
+                    if((numel(tmpwords{2})-3)>maxchar)
+                        maxchar=numel(tmpwords{2})-3;
+                    end
+                    
+                    % handle double indent
+                    % getting yyy from above
+                    if(dbl && numel(words{5})>dblmax)
+                        dblmax=numel(words{5});
                     end
                 else
                     % update maxchar if needed
                     if(numel(words{1})>maxchar)
                         maxchar=numel(words{1});
+                    end
+                    
+                    % handle double indent
+                    % XXXX - YYYY - zzz zzzzz zz
+                    if(dbl && numel(words{3})>dblmax)
+                        dblmax=numel(words{3});
                     end
                 end
             end
@@ -165,22 +198,52 @@ for a=1:nfiles
                 
                 % is it a href line or a raw one?
                 if(strcmp(words{1}(1),'<'))
-                    % href line looks like follows:
-                    % <a href="matlab:help xxxx">xxxx</a>  - yyy yyyyy
-                    wlen=numel(words{3})/2-3;
-                    lines{b}=['%' joinwords(words(1:3)) ...
-                       char(32*ones(1,1+maxchar-wlen)) ...
-                       joinwords(words(4:end))];
+                    % double indented?
+                    if(dbl) % double indent
+                        % href line looks like follows:
+                        % <a href="matlab:help xxx">zzz</a> - XXX - yyy yyy
+                        % wlen=numel(words{3})/2-3; % old way (xxxx==zzzz)
+                        tmpwords=getwords(words{3},'>');
+                        wlen=numel(tmpwords{2})-3;
+                        dbllen=numel(words{5});
+                        lines{b}=['%' joinwords(words(1:3)) ...
+                            char(32*ones(1,1+maxchar-wlen)) ...
+                            joinwords(words(4:5)) ...
+                            char(32*ones(1,1+dblmax-dbllen)) ...
+                            joinwords(words(6:end))];
+                    else % single indent
+                        % href line looks like follows:
+                        % <a href="matlab:help xxxx">zzzz</a>  - yyy yyyyy
+                        % wlen=numel(words{3})/2-3; % old way (xxxx==zzzz)
+                        tmpwords=getwords(words{3},'>');
+                        wlen=numel(tmpwords{2})-3;
+                        lines{b}=['%' joinwords(words(1:3)) ...
+                            char(32*ones(1,1+maxchar-wlen)) ...
+                            joinwords(words(4:end))];
+                    end
                 else
                     % strip separator if there is one
                     if(strcmp(words{2},'-')); words(2)=[]; end
                     
-                    % make new line
-                    wlen=numel(words{1});
-                    lines{b}=['%<a href="matlab:help ' words{1} ...
-                        '">' words{1} '</a>' ...
-                        char(32*ones(1,1+maxchar-wlen)) '- ' ...
-                        joinwords(words(2:end))];
+                    % double indent?
+                    if(dbl) % double indent
+                        % make new line
+                        wlen=numel(words{1});
+                        dbllen=numel(words{2});
+                        lines{b}=['%<a href="matlab:help ' words{1} ...
+                            '">' words{1} '</a>' ...
+                            char(32*ones(1,1+maxchar-wlen)) '- ' ...
+                            words(2) ...
+                            char(32*ones(1,1+dblmax-dbllen)) ...
+                            joinwords(words(3:end))];
+                    else % single indent
+                        % make new line
+                        wlen=numel(words{1});
+                        lines{b}=['%<a href="matlab:help ' words{1} ...
+                            '">' words{1} '</a>' ...
+                            char(32*ones(1,1+maxchar-wlen)) '- ' ...
+                            joinwords(words(2:end))];
+                    end
                 end
             end
         end

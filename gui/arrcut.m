@@ -35,12 +35,13 @@ function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,ax)
 %     determining the fit.  W should be the same size as ARR.
 %
 %     BAD=ARRCUT(DD,ARR,CUTOFF,POW,ERR,W,AX) draws the plot in the axes
-%     given by AX.
+%     given by AX.  AX should be 2 axes handles (the 1st is dist vs time,
+%     the 2nd is dist vs residual).
 %
 %     [BAD,CUTOFF]=ARRCUT(...) also returns the final outlier cutoff in
 %     seconds from the best fit.
 %
-%     [BAD,CUTOFF,AX]=ARRCUT(...) returns the axes of the plot.
+%     [BAD,CUTOFF,AX]=ARRCUT(...) returns the axes of the 2 plots.
 %
 %    Notes:
 %
@@ -58,9 +59,10 @@ function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,ax)
 %                        WLINEM (improperly used anyway)
 %        Jan.  6, 2011 - proper ginput handling, use key2zoompan
 %        Jan.  7, 2011 - using errorbar now
+%        Jan. 26, 2011 - draw small residual plot below dist vs time plot
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  7, 2011 at 23:55 GMT
+%     Last Updated Jan. 26, 2011 at 23:55 GMT
 
 % todo:
 
@@ -96,9 +98,9 @@ if(~isempty(w) && (~isreal(w) || ~isequalsizeorscalar(arr,w)))
     error('seizmo:arrcut:badInput',...
         'W & ARR must be equal sized real valued arrays!');
 end
-if(~isempty(ax) && (~isscalar(ax) || ~isreal(ax)))
+if(~isempty(ax) && (numel(ax)~=2 || ~isreal(ax)))
     error('seizmo:arrcut:badInput',...
-        'AX must be a handle to a single axis!');
+        'AX must be a handle to 2 axes!');
 end
 
 % expand scalars
@@ -111,47 +113,61 @@ m=wlinem(dd,arr,pow,[],diag(w))';
 % residuals
 resid=arr-polyval(fliplr(m),dd);
 std=sqrt(var(resid));
-resid=abs(resid);
+aresid=abs(resid);
 
 % default cutoff
 if(isnan(cutoff)); cutoff=3*std; end
 
 % check the axes
-if(isempty(ax) || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
+if(isempty(ax) || any(~ishandle(ax)) ...
+        || any(~strcmp('axes',get(ax,'type'))))
     % new figure
     fh=figure('color','w');
-    ax=axes('parent',fh);
+    ax(1)=subplot(5,1,2:3,'parent',fh);
+    ax(2)=subplot(5,1,4:5,'parent',fh);
 else
-    cla(ax,'reset');
-    axes(ax);
+    cla(ax(1),'reset');
+    cla(ax(2),'reset');
+    axes(ax(1));
 end
 
 % draw the fit and cutoff limits
 maxdd=max(dd(:));
 mindd=min(dd(:));
-pdd=linspace(mindd-0.1*(maxdd-mindd),maxdd+0.1*(maxdd-mindd),100)';
+pdd=[mindd-0.1*(maxdd-mindd); maxdd+0.1*(maxdd-mindd)];
 parr=polyval(fliplr(m),pdd);
-hfit=plot(ax,pdd,parr,'b','linewidth',2);
+hfit=plot(ax(1),pdd,parr,'b','linewidth',2);
 set(hfit,'tag','fit');
-hold(ax,'on');
-hcut=plot(ax,pdd,[parr+cutoff parr-cutoff],'r--','linewidth',2);
-set(hcut,'tag','cut');
+hold(ax(1),'on');
+hcut1=plot(ax(1),pdd,[parr+cutoff parr-cutoff],'r--','linewidth',2);
+hcut2=plot(ax(2),pdd,[0*parr+cutoff 0*parr-cutoff],'r--','linewidth',2);
+set(hcut1,'tag','cut');
+set(hcut2,'tag','cut');
+linkaxes(ax,'x');
+hold(ax(2),'on');
 
 % draw the points (w/ or w/o errorbars)
 if(isempty(err))
-    hpnts=plot(ax,dd,arr,'ko');
-    set(hpnts,'tag','points');
+    hpnts1=plot(ax(1),dd,arr,'ko');
+    set(hpnts1,'tag','points');
+    hpnts2=plot(ax(2),dd,resid,'ko');
+    set(hpnts2,'tag','points');
 else
-    h=errorbar(ax,dd,arr,err,'ko');
-    set(h,'tag','errorbars');
+    h1=errorbar(ax(1),dd,arr,err,'ko');
+    set(h1,'tag','errorbars');
+    h2=errorbar(ax(2),dd,resid,err,'ko');
+    set(h2,'tag','errorbars');
 end
-hold(ax,'off');
+hold(ax(1),'off');
+hold(ax(2),'off');
 
 % label plot
-set(ax,'fontsize',10,'fontweight','bold');
-xlabel(ax,'Distance (^o)','fontsize',10,'fontweight','bold');
-ylabel(ax,'Arrival Time (s)','fontsize',10,'fontweight','bold');
-title(ax,{'Left Click = Change Cutoff';
+set(ax(1),'fontsize',10,'fontweight','bold','xticklabel',[]);
+set(ax(2),'fontsize',10,'fontweight','bold');
+xlabel(ax(2),'Distance (^o)','fontsize',10,'fontweight','bold');
+ylabel(ax(1),'Arrival Time (s)','fontsize',10,'fontweight','bold');
+ylabel(ax(2),'Residual (s)','fontsize',10,'fontweight','bold');
+title(ax(1),{'Left Click = Change Cutoff';
     'Middle Click = Implement Cut';
     ['Cutoff = ' num2str(cutoff) 's (' num2str(cutoff/std) ' stddev)'];
     '';
@@ -162,7 +178,7 @@ title(ax,{'Left Click = Change Cutoff';
 unhappy=true;
 while(unhappy)
     % get arrival time outlier limits
-    axis(ax);
+    axis(ax(1));
     try
         [x,y,button]=ginput(1);
     catch
@@ -171,20 +187,28 @@ while(unhappy)
     end
     
     % skip if not correct axis
-    if(ax~=gca); continue; end
+    if(~any(gca==ax)); continue; end
+    idx=find(gca==ax);
     
     % act based on button
     switch button
         case 1
             % get cutoff
-            cutoff=abs(y-polyval(fliplr(m),x));
+            switch idx
+                case 1
+                    cutoff=abs(y-polyval(fliplr(m),x));
+                case 2
+                    cutoff=abs(y);
+            end
             
             % adjust limits
-            set(hcut(1),'ydata',parr+cutoff);
-            set(hcut(2),'ydata',parr-cutoff);
+            set(hcut1(1),'ydata',parr+cutoff);
+            set(hcut1(2),'ydata',parr-cutoff);
+            set(hcut2(1),'ydata',0*parr+cutoff);
+            set(hcut2(2),'ydata',0*parr-cutoff);
             
             % reset title
-            set(get(ax,'title'),'string',...
+            set(get(ax(1),'title'),'string',...
                 {'Left Click = Change Cutoff';
                 'Middle Click = Implement Cut';
                 ['Cutoff = ' num2str(cutoff) 's (' ...
@@ -194,12 +218,12 @@ while(unhappy)
         case 2
             unhappy=false;
         otherwise
-            key2zoompan(button,ax);
+            key2zoompan(button,ax(idx));
     end
 end
 
 % find bad
-bad=find(resid>cutoff);
+bad=find(aresid>cutoff);
 
 % output if desired
 if(nargout>1); varargout={cutoff ax}; end
