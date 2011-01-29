@@ -48,9 +48,11 @@ function [results]=cmb_1st_pass(phase,indir,varargin)
 %        Jan. 23, 2011 - pre-align on waveform of interest, skip event if
 %                        no waveforms
 %        Jan. 26, 2011 - synthetics fields added (only reflectivity synth)
+%        Jan. 29, 2011 - make earthmodel a string, datetime in front of
+%                        output (to avoid overwrite), fix absolute path bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2011 at 13:35 GMT
+%     Last Updated Jan. 29, 2011 at 13:35 GMT
 
 % todo:
 
@@ -95,6 +97,7 @@ if(isempty(dates))
     % you probably selected a single directory to work on
     % so lets just use that as the date directory
     pathdirs=getwords(indir,filesep);
+    if(strcmp(indir(1),filesep)); pathdirs{1}=[filesep pathdirs{1}]; end
     indir=joinwords(pathdirs(1:end-1),filesep);
     if(isempty(indir)); indir='.'; end
     dates=dir(indir);
@@ -162,7 +165,7 @@ for i=1:numel(s)
     isynth=unique(getenumid(data,'isynth'));
     if(isscalar(isynth) && strcmpi(isynth,'ireflect'))
         issynth=true;
-        synmodel=getheader(data(1),'kuser2');
+        synmodel=char(getheader(data(1),'kuser2'));
     else
         issynth=false;
         synmodel='DATA';
@@ -221,13 +224,19 @@ for i=1:numel(s)
     
     % time of run
     tmp.time=datestr(now);
+    timestr=datestr(now,30);
     
     % save results
-    save([runname '_results.mat'],'-struct','tmp');
+    save([timestr '_' runname '_results.mat'],'-struct','tmp');
     
     % read in to check
-    tmp=load([runname '_results.mat']);
-    error(check_cmb_results(tmp));
+    try
+        tmp=load([timestr '_' runname '_results.mat']);
+        error(check_cmb_results(tmp));
+    catch
+        warning('seizmo:cmb_1st_pass:failedWrite',...
+            'Had trouble writing RESULTS! Check directory permissions!');
+    end
     
     % export to command line too
     results(i)=tmp;

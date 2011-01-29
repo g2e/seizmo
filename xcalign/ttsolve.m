@@ -128,7 +128,7 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     [...]=TTSOLVE(...,'MTRI',NITER,...) sets the maximum number of
 %     relative arrival time refinement iterations to NITER.  If NITER
 %     iterations are performed, the solver will exit with the most refined
-%     (the last iteration's) solution. The default NITER is infinity.
+%     (the last iteration's) solution. The default NITER is 20 iterations.
 %     Setting NITER to 0 will perform no refinement while setting it to 10
 %     will allow up to 10 iterations.  TTSOLVE may exit before NITER
 %     iterations if no more peaks are to be reordered or non-convergence is
@@ -185,9 +185,10 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %        Oct.  3, 2010 - fix polarity reversal bug
 %        Jan. 18, 2011 - drop rescale_snr for snr2maxphaseerror
 %        Jan. 23, 2011 - handle unsolvable polarity cases
+%        Jan. 29, 2011 - default to 20 time refinements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2011 at 09:45 GMT
+%     Last Updated Jan. 29, 2011 at 09:45 GMT
 
 % todo:
 
@@ -562,7 +563,7 @@ valid.METHOD={'reorder' 'reweight' 'both'};
 % option defaults
 opt.METHOD='reorder'; % iterate method to refine solution
 opt.THRESH=0.1;       % threshhold to converge in reweighted case (in sec)
-opt.MTRI=inf;         % max relative arrival refinement iterations
+opt.MTRI=20;          % max relative arrival refinement iterations
 opt.MPRI=1;           % max relative polarity refinement iterations
 opt.MINLAG=0.100;     % min standard error of lags (keeps misfit sane)
 opt.MAXCOR=0.999;     % max correlation value (keeps misfit/stats sane)

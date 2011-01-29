@@ -32,9 +32,10 @@ function [results]=cmb_outliers(results)
 %        Jan. 18, 2011 - .time field, no setting groups as bad
 %        Jan. 26, 2011 - no travel time corrections for synthetics, use 2
 %                        digit cluster numbers, update for 2 plot arrcut
+%        Jan. 29, 2011 - prepend datetime to output names
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2011 at 13:35 GMT
+%     Last Updated Jan. 29, 2011 at 13:35 GMT
 
 % todo:
 % - coloring of outlier plots
@@ -122,8 +123,8 @@ for i=1:numel(results)
                     results(i).outliers.cluster(j).arrcut.bad{arrcnt}=good(bad);
                     results(i).outliers.cluster(j).arrcut.cutoff(arrcnt)=cutoff;
                     if(ishandle(ax(1)))
-                        saveas(get(ax(1),'parent'),...
-                            [results(i).runname '_cluster_' ...
+                        saveas(get(ax(1),'parent'),[datestr(now,30) ...
+                            '_' results(i).runname '_cluster_' ...
                             sj '_arrcut_' num2str(arrcnt) '.fig']);
                         close(get(ax(1),'parent'));
                     end
@@ -134,8 +135,8 @@ for i=1:numel(results)
                     results(i).outliers.cluster(j).errcut.bad{errcnt}=good(bad);
                     results(i).outliers.cluster(j).errcut.cutoff(errcnt)=cutoff;
                     if(ishandle(ax))
-                        saveas(get(ax,'parent'),...
-                            [results(i).runname '_cluster_' ...
+                        saveas(get(ax,'parent'),[datestr(now,30) ...
+                            '_' results(i).runname '_cluster_' ...
                             sj '_errcut_' num2str(errcnt) '.fig']);
                         close(get(ax,'parent'));
                     end
@@ -146,8 +147,8 @@ for i=1:numel(results)
                     results(i).outliers.cluster(j).ampcut.bad{ampcnt}=good(bad);
                     results(i).outliers.cluster(j).ampcut.cutoff(ampcnt)=cutoff;
                     if(ishandle(ax))
-                        saveas(get(ax,'parent'),...
-                            [results(i).runname '_cluster_' ...
+                        saveas(get(ax,'parent'),[datestr(now,30) ...
+                            '_' results(i).runname '_cluster_' ...
                             sj '_ampcut_' num2str(ampcnt) '.fig']);
                         close(get(ax,'parent'));
                     end
@@ -163,7 +164,8 @@ for i=1:numel(results)
     
     % save results
     tmp=results(i);
-    save([results(i).runname '_outliers_results.mat'],'-struct','tmp');
+    save([datestr(now,30) '_' results(i).runname ...
+        '_outliers_results.mat'],'-struct','tmp');
 end
 
 end

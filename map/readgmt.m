@@ -42,6 +42,7 @@ function [gmt]=readgmt(file,type,marker)
 %     Last Updated Jan. 24, 2011 at 10:35 GMT
 
 % todo
+% - support lat,lon too
 
 % check nargin
 error(nargchk(0,3,nargin));

@@ -34,9 +34,10 @@ function [results]=cmb_clustering(results)
 %        Jan. 15, 2011 - initial version
 %        Jan. 16, 2011 - fix for results standardization
 %        Jan. 18, 2011 - .time field
+%        Jan. 29, 2011 - prepend datetime to output names
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 13:35 GMT
+%     Last Updated Jan. 29, 2011 at 13:35 GMT
 
 % todo:
 
@@ -61,8 +62,8 @@ for i=1:numel(results)
     if(any(ishandle(ax)))
         fh=unique(cell2mat(get(ax(ishandle(ax)),'parent')));
         for j=1:numel(fh)
-            saveas(fh(j),...
-                [results(i).runname '_usercluster_' num2str(j) '.fig']);
+            saveas(fh(j),[datestr(now,30) '_' ...
+                results(i).runname '_usercluster_' num2str(j) '.fig']);
             close(fh(j));
         end
     end
@@ -81,7 +82,8 @@ for i=1:numel(results)
 
     % save results
     tmp=results(i);
-    save([results(i).runname '_clustering_results.mat'],'-struct','tmp');
+    save([datestr(now,30) '_' results(i).runname ...
+        '_clustering_results.mat'],'-struct','tmp');
 end
 
 end

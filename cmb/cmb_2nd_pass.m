@@ -42,9 +42,10 @@ function [results2]=cmb_2nd_pass(results,sr,varargin)
 %                        further output informative if we cluster/outlier a
 %                        narrow band result
 %        Jan. 26, 2011 - .synthetics & .earthmodel fields, 2-digit cluster
+%        Jan. 29, 2011 - output now has creation datetime string prepended
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2011 at 13:35 GMT
+%     Last Updated Jan. 29, 2011 at 13:35 GMT
 
 % todo:
 
@@ -175,7 +176,8 @@ for i=1:numel(results)
         end
 
         % save results (all bands together)
-        save([runname '_cluster_' sj '_allband_results.mat'],'tmp');
+        save([datestr(now,30) '_' ...
+            runname '_cluster_' sj '_allband_results.mat'],'tmp');
 
         % export to command line too
         cnt=cnt+1;

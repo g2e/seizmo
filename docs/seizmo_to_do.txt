@@ -32,7 +32,6 @@ add in pwave picking fk routines
 cmt subtoolbox
     - main thing is to plot CMTS!!!
 mapfeature('feature')
-cameroon volcanics, faults, margin, craton
 more cmb models (rjk)
 plotting profiles for models
     - need a decent polar plotting program to plot slices of the pie
@@ -45,6 +44,7 @@ cmb codes
     - 2-station dispersion assembly
     - title on core-diff map
     - dispersion curve pdf plotting
+    - superfast cheat for synthetics
 
 
 %%%%%%%

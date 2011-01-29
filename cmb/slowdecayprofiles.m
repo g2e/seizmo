@@ -79,9 +79,10 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng)
 %        Jan. 26, 2011 - pass on new .synthetics & .earthmodel fields,
 %                        .cslow depends on .synthetics, added Notes
 %                        about PF struct format
+%        Jan. 29, 2011 - save output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2010 at 13:35 GMT
+%     Last Updated Jan. 29, 2010 at 13:35 GMT
 
 % todo:
 
@@ -111,7 +112,7 @@ end
 %verbose=seizmoverbose;
 
 % loop over every result
-total=0;
+total=0; oldtotal=0;
 for a=1:numel(results)
     % skip if results.useralign is empty
     if(isempty(results(a).useralign)); continue; end
@@ -221,6 +222,11 @@ for a=1:numel(results)
         pf(total).cdecay=m(2);
         pf(total).cdecayerr=sqrt(covm(2,2));
     end
+    
+    % save profiles
+    tmp=pf(oldtotal+1:total);
+    save([datestr(now,30) '_' results(a).runname '_profiles.mat'],'tmp');
+    oldtotal=total;
 end
 
 end

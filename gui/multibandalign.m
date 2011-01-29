@@ -18,18 +18,28 @@ function [info]=multibandalign(data,varargin)
 %     RESULTS=MULTIBANDALIGN(DATA,BANK,RUNNAME,'OPTION',VALUE,...) allows
 %     altering certain parameters.  Those pertinent to MULTIBANDALIGN:
 %       runname         - Name used for saving figures
+%       initwin         - initial window limits (default is [-300 300])
+%       noisewin        - noise window (default is [-300 -20])
+%       signalwin       - signal window (default is [-10 70])
+%       snrmethod       - SNR method (default is 'peak2rms')
 %       snrcutoff       - Default cutoff (10) for removing low SNR records
 %       filterbank      - filter bank (use FILTER_BANK)
 %       filtertype      - filter type (default is 'bp')
 %       filterstyle     - filter style (default is 'butter')
 %       filterorder     - filter order (default is 4)
 %       filterpasses    - number of passes (default is 1)
+%       fast            - fast mode (true)
+%       auto            - fully automated mode (false)
+%       zxoffset        - auto mode: # zero xings from guess to win start
+%       zxwidth         - auto mode: window is # zero crossings wide
+%       winnowyfield    - header field to winnow by (default is 'gcarc')
+%       winnowlimits    - default winnow limits (default is [])
 %     The remaining options are passed to USERALIGN.  See that function for
 %     more details.
 %
 %    Notes:
 %     - The default filter bank is created using:
-%       filter_bank([0.0125 0.125],'variable',0.2,0.1)
+%       filter_bank([1/50 1/5],'variable',0.2,0.1)
 %
 %    Examples:
 %     % This is my typical usage form (for really nice quakes the upper
@@ -61,9 +71,11 @@ function [info]=multibandalign(data,varargin)
 %        Jan. 23, 2011 - save window positions on iter 2+ of first band,
 %                        phase input allows for a bit more
 %        Jan. 26, 2011 - use 2 digit band number
+%        Jan. 29, 2011 - alter filter bank from 1/80-1/8 to 1/50-1/5, fully
+%                        automated mode, more params added, fix stack bug 
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2011 at 12:25 GMT
+%     Last Updated Jan. 29, 2011 at 12:25 GMT
 
 % todo:
 
@@ -103,8 +115,8 @@ end
 % attempt multi-band align
 try
     % parse inputs
-    [bank,runname,snrcut,filt,phase,varargin]=parse_mba_params(...
-        varargin{:});
+    %[bank,runname,snrcut,filt,phase,varargin]=parse_mba_params(varargin{:});
+    [p,varargin]=parse_mba_params(varargin{:});
     
     % preallocate output
     info([])=struct('useralign',[],'filter',[],'initwin',[],...
@@ -125,14 +137,13 @@ try
     idx=ones(nrecs);
     
     % loop over each filter
-    i=1;       % starting with first band
-    fast=true; % start in fast mode (usersnr & userwinnow only)
-    last=[];   % for memory (last band aligned)
-    while(i<=size(bank,1))
+    i=1;         % starting with first band
+    last=[];     % for memory (last band aligned)
+    while(i<=size(p.bank,1))
         % display filter info
         istr=num2str(i,'%02d');
         disp(['BAND ' istr ' FILTER CORNERS: ' ...
-            num2str(1/bank(i,3)) 's  to  ' num2str(1/bank(i,2)) 's']);
+            num2str(1/p.bank(i,3)) 's  to  ' num2str(1/p.bank(i,2)) 's']);
         
         % get new relative arrivals & prealign
         % - lags are absolute
@@ -144,65 +155,109 @@ try
         info(i,1).tt_start=tt;
         
         % filter the records
-        data0=iirfilter(data0,filt.type,filt.style,'c',bank(i,2:3),...
-            'o',filt.order,'p',filt.passes);
-        filt.corners=bank(i,2:3);
-        info(i).filter=filt;
+        data0=iirfilter(data0,p.filt.type,p.filt.style,...
+            'c',p.bank(i,2:3),'o',p.filt.order,'p',p.filt.passes);
+        p.filt.corners=p.bank(i,2:3);
+        info(i).filter=p.filt;
         
         % initial window and assessment
-        if(i>1); info(i).initwin=info(i-1).initwin; end
-        [data0,info(i),skip,skipall,snrcut,fast,ax]=...
-            get_initial_window(data0,info(i),snrcut,fast,phase);
-        if(ishandle(ax))
-            saveas(get(ax,'parent'),...
-                [runname '_band_' istr '_preview.fig']);
-            close(get(ax,'parent'));
+        if(i>1)
+            info(i).initwin=info(i-1).initwin;
+        else
+            info(i).initwin=p.initwin;
+        end
+        if(p.auto) % skipping main menu
+            % no skipping filter bands
+            skip=0;
+            
+            % preview plot
+            ax=preview_plot(data0,info(i),p);
+            if(ishandle(ax))
+                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
+                    p.runname '_band_' istr '_preview.fig']);
+                close(get(ax,'parent'));
+            end
+            data0=cut(data0,info(i).initwin(1),info(i).initwin(2));
+        else % main menu
+            [data0,info(i),skip,p,ax]=get_initial_window(data0,...
+                info(i),p,i);
+            if(ishandle(ax))
+                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
+                    p.runname '_band_' istr '_preview.fig']);
+                close(get(ax,'parent'));
+            end
         end
         
         % handle skipping
-        if(skip); i=i+1; continue; end
-        if(skipall); break; end
+        if(skip); i=i+skip; continue; end
         
-        % user specified snr
-        if(isempty(last))
-            info(i).usersnr.noisewin=[-300 -20];
-            info(i).usersnr.signalwin=[-10 70];
-            info(i).usersnr.method='peak2rms';
-        elseif(last==i)
-            % just update signal window if we used useralign
-            if(~isempty(info(last).useralign) ...
-                    && ~isempty(info(last).useralign.userwindow.limits))
-                info(i).usersnr.signalwin=...
-                    info(last).useralign.userwindow.limits;
-            end
-        else % look for zero-crossing
-            info(i).usersnr.noisewin=info(last).usersnr.noisewin;
-            if(~isempty(info(last).useralign) ...
-                    && ~isempty(info(last).useralign.userwindow.limits))
-                info(i).usersnr.signalwin=...
-                    info(last).useralign.userwindow.limits;
-            else
-                info(i).usersnr.signalwin=info(last).usersnr.signalwin;
-            end
-            info(i).usersnr.method=info(last).usersnr.method;
+        % auto-window or user specified (usersnr interface)
+        if(p.auto)
+            % default settings
+            info(i).usersnr.noisewin=p.noisewin;
+            info(i).usersnr.signalwin=p.signalwin;
+            info(i).usersnr.method=p.snrmethod;
             
-            % use nearby zero crossing for new window limits
-            zx=zeroxing(data0,info(i));
-            info(i).usersnr.signalwin=[info(i).usersnr.signalwin(1) zx];
-        end
-        [snr,info(i).usersnr,ax]=usersnr(data0,...
-            info(i).usersnr.noisewin,info(i).usersnr.signalwin,...
-            info(i).usersnr.method,'normstyle','single');
-        info(i).usersnr.snr=snr;
-        info(i).usersnr.snrcut=snrcut;
-        if(ishandle(ax))
-            saveas(get(ax,'parent'),...
-                [runname '_band_' istr '_usersnr.fig']);
-            close(get(ax,'parent'));
+            % zx-based window
+            info(i).usersnr.signalwin=autozx(data0,info(i),p);
+            
+            % plot windows
+            info(i).usersnr.plottype=@plot0;
+            ax=windows_plot(data0,info(i));
+            if(ishandle(ax))
+                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
+                    p.runname '_band_' istr '_windows.fig']);
+                close(get(ax,'parent'));
+            end
+            
+            % get snr
+            snr=quicksnr(data0,info(i).usersnr.noisewin,...
+                info(i).usersnr.signalwin,info(i).usersnr.method);
+            info(i).usersnr.snr=snr;
+            info(i).usersnr.snrcut=p.snrcut;
+        else
+            % user specified snr
+            if(isempty(last))
+                info(i).usersnr.noisewin=p.noisewin;
+                info(i).usersnr.signalwin=p.signalwin;
+                info(i).usersnr.method=p.snrmethod;
+            elseif(last==i)
+                % just update signal window if we used useralign
+                if(~isempty(info(last).useralign) && ...
+                        ~isempty(info(last).useralign.userwindow.limits))
+                    info(i).usersnr.signalwin=...
+                        info(last).useralign.userwindow.limits;
+                end
+            else % look for zero-crossing
+                info(i).usersnr.noisewin=info(last).usersnr.noisewin;
+                if(~isempty(info(last).useralign) && ...
+                        ~isempty(info(last).useralign.userwindow.limits))
+                    info(i).usersnr.signalwin=...
+                        info(last).useralign.userwindow.limits;
+                else
+                    info(i).usersnr.signalwin=info(last).usersnr.signalwin;
+                end
+                info(i).usersnr.method=info(last).usersnr.method;
+                
+                % use nearby zero crossing for new window limits
+                zx=zeroxing(data0,info(i));
+                info(i).usersnr.signalwin=...
+                    [info(i).usersnr.signalwin(1) zx];
+            end
+            [snr,info(i).usersnr,ax]=usersnr(data0,...
+                info(i).usersnr.noisewin,info(i).usersnr.signalwin,...
+                info(i).usersnr.method,'normstyle','single');
+            info(i).usersnr.snr=snr;
+            info(i).usersnr.snrcut=p.snrcut;
+            if(ishandle(ax))
+                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
+                    p.runname '_band_' istr '_usersnr.fig']);
+                close(get(ax,'parent'));
+            end
         end
         
         % trimming dataset to those above snr cutoff
-        snridx=find(snr>=snrcut);
+        snridx=find(snr>=p.snrcut);
         data0=data0(snridx);
         snr=snr(snridx);
         nn=numel(data0);
@@ -213,37 +268,82 @@ try
             continue;
         end
         
-        % distance winnow
-        if(isempty(last));
-            info(i).userwinnow.limits=[];
+        % distance winnow only if manual
+        if(p.auto)
+            % fake userwinnow
+            info(i).userwinnow.yfield=p.winnowyfield;
+            if(isempty(p.winnowlimits))
+                info(i).userwinnow.limits=[];
+                info(i).userwinnow.cut=[];
+            else % winnow!
+                % get winnow
+                info(i).userwinnow.limits=p.winnowlimits;
+                yfield=getheader(data0,p.winnowyfield);
+                if(p.winnowlimits(1)>p.winnowlimits(2))
+                    info(i).userwinnow.cut=find(...
+                        yfield>=info(i).userwinnow.limits(1) ...
+                        | yfield<=info(i).userwinnow.limits(2));
+                else % normal case
+                    info(i).userwinnow.cut=find(...
+                        yfield<info(i).userwinnow.limits(1) ...
+                        | yfield>info(i).userwinnow.limits(2));
+                end
+                
+                % plot it
+                ax=recordsection(data0,'yfield',p.winnowyfield,...
+                    'normstyle','single');
+                span=xlim(ax);
+                hold(ax,'on');
+                plot(ax,span,[p.winnowlimits(1) p.winnowlimits(1)],'g',...
+                    'linewidth',4);
+                plot(ax,span,[p.winnowlimits(2) p.winnowlimits(2)],'r',...
+                    'linewidth',4);
+                hold(ax,'off');
+                if(ishandle(ax))
+                    saveas(get(ax,'parent'),[datestr(now,30) '_' ...
+                        p.runname '_band_' istr '_winnow.fig']);
+                    close(get(ax,'parent'));
+                end
+                
+                % winnow
+                data0(cut)=[];
+                snr(info(i).userwinnow.cut)=[];
+                snridx(info(i).userwinnow.cut)=[];
+                nn=numel(data0);
+            end
         else
-            info(i).userwinnow.limits=info(last).userwinnow.limits;
+            if(isempty(last));
+                info(i).userwinnow.limits=p.winnowlimits;
+            else
+                info(i).userwinnow.limits=info(last).userwinnow.limits;
+            end
+            [data0,info(i).userwinnow,ax]=userwinnow(data0,...
+                info(i).userwinnow.limits,...
+                'normstyle','single',...
+                'yfield',p.winnowyfield);
+            snr(info(i).userwinnow.cut)=[];
+            snridx(info(i).userwinnow.cut)=[];
+            if(ishandle(ax))
+                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
+                    p.runname '_band_' istr '_userwinnow.fig']);
+                close(get(ax,'parent'));
+            end
+            nn=numel(data0);
         end
-        [data0,info(i).userwinnow,ax]=userwinnow(data0,...
-            info(i).userwinnow.limits,...
-            'normstyle','single',...
-            'yfield','gcarc');
-        snr(info(i).userwinnow.cut)=[];
-        snridx(info(i).userwinnow.cut)=[];
-        if(ishandle(ax))
-            saveas(get(ax,'parent'),...
-                [runname '_band_' istr '_userwinnow.fig']);
-            close(get(ax,'parent'));
-        end
-        nn=numel(data0);
         
         % skip if less than 3
         if(nn<3)
-            disp(['BAND ' istr ': Too few data in distance range!']);
+            disp(['BAND ' istr ': Too few data in ' ...
+                p.winnowyfield ' range!']);
             continue;
         end
         
         % fast vs control
-        if(fast)
+        if(p.fast)
             % quiet align
             [info(i).useralign,info(i).useralign.xc,...
                 info(i).useralign.data]=useralign_quiet(data0,...
-                'spacing',1/(4*bank(i,3)),'absxc',false,...
+                'spacing',1/(4*p.bank(i,3)),'absxc',false,...
                 'estarr',zeros(nn,1),'snr',snr,...
                 'window',info(i).usersnr.signalwin,varargin{:});
             
@@ -260,12 +360,12 @@ try
             % plot alignment
             ax=plot2(info(i).useralign.data);
             if(ishandle(ax))
-                saveas(get(ax,'parent'),...
-                    [runname '_band_' istr '_aligned.fig']);
+                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
+                    p.runname '_band_' istr '_aligned.fig']);
             end
             
-            % ask if satisfied
-            if(~user_satisfied)
+            % only ask if satisfied if not auto
+            if(~p.auto && ~user_satisfied)
                 close(get(ax,'parent'));
                 last=i;
                 continue;
@@ -274,7 +374,7 @@ try
             end
             
             % use alignment for next band
-            if(i<size(bank,1))
+            if(i<size(p.bank,1))
                 goodarr=info(i).useralign.solution.arr;
                 goodidx=find(snridx);
                 lags(goodidx,goodidx)=goodarr(:,ones(1,nn))...
@@ -286,19 +386,19 @@ try
                 % detailed alignment
                 [info(i).useralign,info(i).useralign.xc,...
                     info(i).useralign.data]=useralign(data0,...
-                    'spacing',1/(4*bank(i,3)),'absxc',false,...
+                    'spacing',1/(4*p.bank(i,3)),'absxc',false,...
                     'estarr',zeros(nn,1),'snr',snr,...
                     'window',info(i).usersnr.signalwin,varargin{:});
                 if(any(ishandle(info(i).useralign.handles)))
                     ax=info(i).useralign.handles(...
                         ishandle(info(i).useralign.handles));
-                    saveas(get(ax(1),'parent'),...
-                        [runname '_band_' istr '_useralign.fig']);
+                    saveas(get(ax(1),'parent'),[datestr(now,30) '_' ...
+                        p.runname '_band_' istr '_useralign.fig']);
                     close(get(ax(1),'parent'));
                 end
             catch
-                % ask if user is satisfied with breakage
-                if(~user_satisfied)
+                % ask to try again
+                if(~broken_code)
                     continue;
                 else
                     i=i+1;
@@ -333,7 +433,7 @@ try
             info(i).useralign.solution.amperr=scale./snr;
             
             % ask to utilize for subsequent bands
-            if(i<size(bank,1) && use_align)
+            if(i<size(p.bank,1) && use_align)
                 goodarr=info(i).useralign.solution.arr;
                 goodidx=find(snridx);
                 lags(goodidx,goodidx)=goodarr(:,ones(1,nn))...
@@ -365,7 +465,7 @@ end
 function [lgc]=use_align()
 happy_user=false;
 while(~happy_user)
-    choice=menu('Use alignment for subsequent filters?','YES','NO');
+    choice=menu({'Use alignment for' 'subsequent filters?'},'YES','NO');
     switch choice
         case 1
             lgc=true;
@@ -381,7 +481,7 @@ end
 function [lgc]=user_satisfied()
 happy_user=false;
 while(~happy_user)
-    choice=menu('Satisfied with the alignment?','YES','NO');
+    choice=menu('Satisfied w/ alignment?','YES','NO');
     switch choice
         case 1
             lgc=true;
@@ -394,122 +494,128 @@ end
 end
 
 
-function [data,info,skip,skipall,snrcut,fast,ax]=get_initial_window(...
-    data,info,snrcut,fast,phase)
+function [lgc]=broken_code()
+happy_user=false;
+while(~happy_user)
+    choice=menu('Something broke. Try again?','YES','NO');
+    switch choice
+        case 1
+            lgc=true;
+            happy_user=true;
+        case 2
+            lgc=false;
+            happy_user=true;
+    end
+end
+end
+
+
+function [data,info,skip,p,ax]=get_initial_window(data,info,p,bandidx)
 
 % default initial window
 if(isempty(info.initwin))
-    win=[-300 300];
-else
-    win=info.initwin;
+    info.initwin=p.initwin;
 end
 
 % default modestr
-if(fast)
+if(p.fast)
     modestr='POWERUSER';
 else
     modestr='FAST';
 end
 
 % shift if phase given
-if(~isempty(phase))
-    [t,n]=getarrival(data,phase);
+if(~isempty(p.phase))
+    [t,n]=getarrival(data,p.phase);
     data=timeshift(data,-t,strcat('it',num2str(n)));
 end
 
 % ask the user if they wish to continue
-skip=false; skipall=false;
-happy_user=false; ax=-1;
+skip=0; happy_user=false; ax=-1;
 while(~happy_user)
     % plot records (so user can decide to skip or not)
     if(~ishandle(ax))
-        % record section
-        ax=recordsection(cut(data,win(1),win(2)),...
-            'normstyle','single','xlim',win,'title',...
-            ['FILTER CORNERS: ' num2str(1/info.filter.corners(2)) ...
-            's  to  ' num2str(1/info.filter.corners(1)) 's']);
-        
-        % this all assumes the phase is shifted to 0
-        if(~isempty(phase))
-            evdp=getheader(data(1),'evdp')/1000;
-            tt=taupcurve('dep',evdp);
-            idx=find(strcmp(phase,{tt.phase}));
-            intrcpt=tt(idx).time(1)...
-                -tt(idx).distance(1)*tt(idx).rayparameter(1);
-            tt=taupcurve('dep',evdp,...
-                         'reddeg',1/tt(idx).rayparameter(1),'ph','ttall');
-            hold(ax,'on');
-            h=plot_taupcurve(tt,-intrcpt,true,'parent',ax,'linewidth',5);
-            movekids(h,'back');
-            hold(ax,'off');
-        end
+        ax=preview_plot(data,info,p);
     end
-
+    
     choice=menu('What to do with this filter band?',...
         'Align The Waveforms!',...
         'Adjust Initial Window',...
-        ['Adjust SNR Cutoff (' num2str(snrcut) ')'],...
+        ['Adjust SNR Cutoff (' num2str(p.snrcut) ')'],...
         ['Change To ' modestr ' Mode'],...
         'Skip This Filter Band',...
-        'Skip All Remaining Filter Bands');
+        'Skip Remaining Filter Bands',...
+        'Jump To Filter Band ...');
     switch choice
         case 1 % process
             happy_user=true;
         case 2 % adjust window
             % get new initial window
             if(ishandle(ax)); close(get(ax,'parent')); end
-            [win,win,ax]=userwindow(data,win);
+            [win,win,ax]=userwindow(data,info.initwin);
             if(ishandle(ax)); close(get(ax,'parent')); end
             
             % default initial window if none
-            if(isempty(win.limits))
-                if(isempty(info.initwin))
-                    win=[-300 300];
-                else
-                    win=info.initwin;
-                end
-            else
-                win=win.limits;
+            if(~isempty(win.limits))
+                info.initwin=win.limits;
             end
         case 3 % snrcut
             tmp=inputdlg(...
-                ['SNR CutOff? [' num2str(snrcut) ']:'],...
-                'Enter SNR CutOff',1,{num2str(snrcut)});
+                ['SNR CutOff? [' num2str(p.snrcut) ']:'],...
+                'Enter SNR CutOff',1,{num2str(p.snrcut)});
             if(~isempty(tmp))
                 try
                     tmp=str2double(tmp{:});
                     if(~isnan(tmp) && ~isinf(tmp))
-                        snrcut=tmp;
+                        p.snrcut=tmp;
                     end
                 catch
                     % do not change snrcut
                 end
             end
         case 4 % switch mode
-            if(fast)
-                fast=false;
+            if(p.fast)
+                p.fast=false;
                 modestr='FAST';
             else
-                fast=true;
+                p.fast=true;
                 modestr='POWERUSER';
             end
-        case 5 % skip band
+        case 5 % skip this band
             happy_user=true;
-            skip=true;
+            skip=1;
         case 6 % skip all
             happy_user=true;
-            skipall=true;
+            skip=inf;
+        case 7 % skip to ...
+            nb=size(p.bank,1);
+            n=cellstr(num2str((1:nb)','%02d'));
+            p1=cellstr(num2str(1./p.bank(:,3),'%5.1f'));
+            p2=cellstr(num2str(1./p.bank(:,2),'%5.1f'));
+            cur={''}; cur=cur(ones(nb,1),1); cur{bandidx}='(current)';
+            skip=listdlg(...
+                'liststring',...
+                strcat({'BAND '},n,{':  '},p1,'-',p2,{'s '},cur),...
+                'selectionmode','single',...
+                'promptstring','Jump to bandpass:',...
+                'initialvalue',bandidx,...
+                'listsize',[240 400]);
+            if(isempty(skip) || skip==bandidx)
+                skip=0;
+            else
+                happy_user=true;
+                skip=skip-bandidx;
+            end
     end
 end
 
 % implement window
-info.initwin=win;
-if(choice==1); data=cut(data,win(1),win(2)); end
+if(choice==1); data=cut(data,info.initwin(1),info.initwin(2)); end
 
 end
 
 
-function [bank,run,snrcut,filt,phase,varargin]=parse_mba_params(varargin)
+function [p,varargin]=parse_mba_params(varargin)
 %PARSE_MBA_PARAMS  Parses out multibandalign parameters
 
 % basic checks on optional inputs
@@ -519,14 +625,24 @@ if(~iscellstr(varargin(1:2:end)))
 end
 
 % defaults
-bank=filter_bank([0.0125 0.125],'variable',0.2,0.1);
-run=['multibandalign_' datestr(now,30)];
-snrcut=3;
-filt.type='bandpass';
-filt.style='butter';
-filt.order=4;
-filt.passes=1;
-phase=[];
+p.initwin=[-300 300];
+p.noisewin=[-300 -20];
+p.signalwin=[-10 70];
+p.bank=filter_bank([1/50 1/5],'variable',0.2,0.1);
+p.runname=['multibandalign_' datestr(now,30)];
+p.snrcut=3;
+p.snrmethod='peak2rms';
+p.filt.type='bandpass';
+p.filt.style='butter';
+p.filt.order=4;
+p.filt.passes=1;
+p.phase=[];   % pre-align phase field (only for core-diff currently)
+p.fast=true;  % fast multibandalign flag
+p.auto=false; % auto multibandalign (uses zx window parameters)
+p.zxwidth=6;  % number of zero crossings increments in window if auto
+p.zxoffset=1; % number of zero crossings to window start from initial guess
+p.winnowyfield='gcarc';
+p.winnowlimits=[];
 
 % valid filter types & styles (grabbed from iirdesign)
 validtypes={'low' 'lo' 'l' 'lp' 'high' 'hi' 'h' 'hp' 'bandpass' 'pass' ...
@@ -549,14 +665,14 @@ for i=1:2:nargin
                 error('seizmo:multibandalign:badInput',...
                     'BANK must be in the format from FILTER_BANK!');
             end
-            bank=varargin{i+1};
+            p.bank=varargin{i+1};
             keep(i:i+1)=false;
         case {'rn' 'run' 'name' 'runname'}
             if(~isstring(varargin{i+1}))
                 error('seizmo:multibandalign:badInput',...
                     'RUNNAME must be a string!');
             end
-            run=varargin{i+1};
+            p.runname=varargin{i+1};
             keep(i:i+1)=false;
         case {'sc' 'snrcutoff' 'snrcut'}
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
@@ -564,7 +680,7 @@ for i=1:2:nargin
                 error('seizmo:multibandalign:badInput',...
                     'SNRCUTOFF must be a real-valued scalar!');
             end
-            snrcut=varargin{i+1};
+            p.snrcut=varargin{i+1};
             keep(i:i+1)=false;
         case {'ft' 'filtertype'}
             if(~isstring(varargin{i+1}) ...
@@ -572,7 +688,7 @@ for i=1:2:nargin
                 error('seizmo:multibandalign:badInput',...
                     'FILTERTYPE must be a filter type in IIRDESIGN!');
             end
-            filt.type=varargin{i+1};
+            p.filt.type=varargin{i+1};
             keep(i:i+1)=false;
         case {'fs' 'filterstyle'}
             if(~isstring(varargin{i+1}) ...
@@ -580,7 +696,7 @@ for i=1:2:nargin
                 error('seizmo:multibandalign:badInput',...
                     'FILTERSTYLE must be a filter style in IIRDESIGN!');
             end
-            filt.style=varargin{i+1};
+            p.filt.style=varargin{i+1};
             keep(i:i+1)=false;
         case {'fo' 'filterorder'}
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
@@ -589,7 +705,7 @@ for i=1:2:nargin
                 error('seizmo:multibandalign:badInput',...
                     'FILTERORDER must be a scalar integer >0!');
             end
-            filt.order=varargin{i+1};
+            p.filt.order=varargin{i+1};
             keep(i:i+1)=false;
         case {'fp' 'filterpasses' 'filterpass'}
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
@@ -598,7 +714,7 @@ for i=1:2:nargin
                 error('seizmo:multibandalign:badInput',...
                     'FILTERPASSES must be 1 or 2!');
             end
-            filt.passes=varargin{i+1};
+            p.filt.passes=varargin{i+1};
             keep(i:i+1)=false;
         case {'phase'}
             if(~isstring(varargin{i+1}) ...
@@ -606,11 +722,93 @@ for i=1:2:nargin
                 error('seizmo:multibandalign:badInput',...
                     'PHASE must be a ''Pdiff'' or ''Sdiff''!');
             end
-            phase=varargin{i+1};
+            p.phase=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'auto'
+            if(~isscalar(varargin{i+1}) || (~islogical(varargin{i+1}) ...
+                    && ~isreal(varargin{i+1})))
+                error('seizmo:multibandalign:badInput',...
+                    'AUTO must be TRUE or FALSE!');
+            end
+            p.auto=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'zxwidth'
+            if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
+                    || varargin{i+1}<=0 ...
+                    || varargin{i+1}~=fix(varargin{i+1}))
+                error('seizmo:multibandalign:badInput',...
+                    'ZXWIDTH must be a positive integer!');
+            end
+            p.zxwidth=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'zxoffset'
+            if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
+                    || varargin{i+1}~=fix(varargin{i+1}))
+                error('seizmo:multibandalign:badInput',...
+                    'ZXOFFSET must be an integer!');
+            end
+            p.zxoffset=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'fast'
+            if(~isscalar(varargin{i+1}) || (~islogical(varargin{i+1}) ...
+                    && ~isreal(varargin{i+1})))
+                error('seizmo:multibandalign:badInput',...
+                    'FAST must be TRUE or FALSE!');
+            end
+            p.fast=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'initwin'
+            if(~isequal(size(varargin{i+1}),[1 2]) ...
+                    || ~isreal(varargin{i+1}))
+                error('seizmo:multibandalign:badInput',...
+                    'INITWIN must be a 1x2 real-valued array!');
+            end
+            p.initwin=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'signalwin'
+            if(~isequal(size(varargin{i+1}),[1 2]) ...
+                    || ~isreal(varargin{i+1}))
+                error('seizmo:multibandalign:badInput',...
+                    'SIGNALWIN must be a 1x2 real-valued array!');
+            end
+            p.signalwin=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'noisewin'
+            if(~isequal(size(varargin{i+1}),[1 2]) ...
+                    || ~isreal(varargin{i+1}))
+                error('seizmo:multibandalign:badInput',...
+                    'NOISEWIN must be a 1x2 real-valued array!');
+            end
+            p.noisewin=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'snrmethod'
+            if(~isstring(varargin{i+1}))
+                error('seizmo:multibandalign:badInput',...
+                    'SNRMETHOD must be a string!');
+            end
+            p.snrmethod=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'winnowlimits'
+            if(~isequal(size(varargin{i+1}),[1 2]) ...
+                    || ~isreal(varargin{i+1}))
+                error('seizmo:multibandalign:badInput',...
+                    'WINNOWLIMITS must be a 1x2 real-valued array!');
+            end
+            p.winnowlimits=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'winnowyfield'
+            if(~isstring(varargin{i+1}))
+                error('seizmo:multibandalign:badInput',...
+                    'WINNOWYFIELD must be a string!');
+            end
+            p.winnowyfield=varargin{i+1};
             keep(i:i+1)=false;
     end
 end
 varargin=varargin(keep);
+
+% force fast to true if auto is true
+if(p.auto); p.fast=true; end
 
 end
 
@@ -625,34 +823,116 @@ if(~isscalar(delta))
 end
 
 % get stack
-dstack=stack(data,delta,[],info.initwin(1),info.initwin(2));
+dstack=stack(data,1/delta,[],info.initwin(1),info.initwin(2));
 
 % get zero crossings
 zx=zerocrossings(dstack);
-zx{1}=sort(zx{1}); % just in case
+zx=sort(zx{1}); % just in case
 
 % find closest within range
 sw=info.usersnr.signalwin;
-neg=find(zx{1}<sw(2) & zx{1}>=(sw(1)+sw(2))/2,1,'last');
-pos=find(zx{1}>=sw(2) & zx{1}<=(sw(2)+(sw(1)+sw(2))/2),1,'first');
+neg=find(zx<sw(2) & zx>=(sw(2)-(sw(1)+sw(2))/2),1,'last');
+pos=find(zx>=sw(2) & zx<=(sw(2)+(sw(1)+sw(2))/2),1,'first');
 
 % choose one
 if(isempty(neg) && isempty(pos))
     % use previous
     zx=sw(2);
 elseif(isempty(neg))
-    zx=zx{1}(pos);
+    zx=zx(pos);
 elseif(isempty(pos))
-    zx=zx{1}(neg);
+    zx=zx(neg);
 else
     % move positive only if < 1/3 negative distance
-    if((sw(2)-zx{1}(neg))/3<=(zx{1}(pos)-sw(2)))
-        zx=zx{1}(neg);
+    if((sw(2)-zx(neg))/3<=(zx(pos)-sw(2)))
+        zx=zx(neg);
     else
-        zx=zx{1}(pos);
+        zx=zx(pos);
     end
 end
 
 end
 
+
+function [win]=autozx(data,info,p)
+% get sample spacing
+delta=getheader(data,'delta');
+delta=unique(delta);
+if(~isscalar(delta))
+   error('seizmo:multibandalign:badInput',...
+       'DATA records must have the same sample rate!');
+end
+
+% get stack
+dstack=stack(data,1/delta,[],info.initwin(1),info.initwin(2));
+
+% get zero crossings
+zx=zerocrossings(dstack);
+zx=sort(zx{1}); % just in case
+
+% find closest within range
+pos=find(zx>info.usersnr.signalwin(1),1,'first');
+
+% window start
+if(p.zxoffset)
+    win(1)=zx(pos+p.zxoffset-1);
+    win(2)=zx(pos+p.zxoffset-1+p.zxwidth);
+else
+    win(1)=info.usersnr.signalwin(1);
+    win(2)=zx(pos+p.zxwidth-1);
+end
+
+end
+
+
+function [ax]=preview_plot(data,info,p)
+% record section
+ax=recordsection(cut(data,info.initwin(1),info.initwin(2)),...
+    'normstyle','single','xlim',info.initwin,'title',...
+    ['FILTER CORNERS: ' num2str(1/info.filter.corners(2)) ...
+    's  to  ' num2str(1/info.filter.corners(1)) 's']);
+
+% this all assumes the phase is shifted to 0
+if(~isempty(p.phase))
+    evdp=getheader(data(1),'evdp')/1000;
+    tt=taupcurve('dep',evdp);
+    idx=find(strcmp(p.phase,{tt.phase}));
+    intrcpt=tt(idx).time(1)...
+        -tt(idx).distance(1)*tt(idx).rayparameter(1);
+    tt=taupcurve('dep',evdp,...
+        'reddeg',1/tt(idx).rayparameter(1),'ph','ttall');
+    hold(ax,'on');
+    h=plot_taupcurve(tt,-intrcpt,true,'parent',ax,'linewidth',5);
+    movekids(h,'back');
+    hold(ax,'off');
+end
+end
+
+
+function [ax]=windows_plot(data,info)
+% make title
+ptitle={['SNR Estimation Method: ' upper(info.usersnr.method)]
+    'Yellow Dashed Line --  Noise Window Start'
+    '  Blue Dashed Line --  Noise Window End  '
+    '  Green Solid Line -- Signal Window Start'
+    '    Red Solid Line -- Signal Window End  '};
+
+% plot records
+ax=info.usersnr.plottype(data,'title',ptitle);
+
+% add window limit markers
+% - yellow/blue dashed == noise window
+% - red/green == signal window
+span=ylim(ax);
+hold(ax,'on');
+plot(ax,[info.usersnr.noisewin(1) info.usersnr.noisewin(1)],...
+    span,'--y','linewidth',4);
+plot(ax,[info.usersnr.noisewin(2) info.usersnr.noisewin(2)],...
+    span,'--b','linewidth',4);
+plot(ax,[info.usersnr.signalwin(1) info.usersnr.signalwin(1)],...
+    span,'g','linewidth',4);
+plot(ax,[info.usersnr.signalwin(2) info.usersnr.signalwin(2)],...
+    span,'r','linewidth',4);
+hold(ax,'off');
+end
 

@@ -50,9 +50,10 @@ function [data,win,ax]=userwinnow(data,limits,varargin)
 %        Jan.  6, 2011 - use key2zoompan
 %        Jan. 17, 2011 - initial limits arg, allow exclusion range, yfield
 %                        fully encouraged now
+%        Jan. 29, 2011 - fix empty yfield bug (default to gcarc)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 17, 2011 at 11:00 GMT
+%     Last Updated Jan. 29, 2011 at 11:00 GMT
 
 % todo:
 
@@ -103,7 +104,9 @@ try
     for i=1:2:nargin-2
         switch lower(varargin{i})
             case 'yfield'
-                yfield=varargin{i+1};
+                if(~isempty(varargin{i+1}))
+                    yfield=varargin{i+1};
+                end
         end
     end
     

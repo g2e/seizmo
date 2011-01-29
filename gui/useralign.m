@@ -89,9 +89,10 @@ function [info,xc,data0]=useralign(data,varargin)
 %                        for userwindow arg change
 %        Jan. 14, 2011 - add useralign_quiet to See also section
 %        Jan. 17, 2011 - allow specifying window & taper, altered menus
+%        Jan. 29, 2011 - fix window input bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 17, 2011 at 11:00 GMT
+%     Last Updated Jan. 29, 2011 at 11:00 GMT
 
 % todo:
 
@@ -200,7 +201,6 @@ try
     % outer loop - only breaks free on user command
     happy_user=false;
     info.iteration=1;
-    info.userwindow.limits=[];
     fh=figure('color','k');
     ax=makesubplots(2,3,1:5,...
         'parent',fh,'visible','off','color','k');
