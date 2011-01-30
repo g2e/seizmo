@@ -72,7 +72,8 @@ function [info]=multibandalign(data,varargin)
 %                        phase input allows for a bit more
 %        Jan. 26, 2011 - use 2 digit band number
 %        Jan. 29, 2011 - alter filter bank from 1/80-1/8 to 1/50-1/5, fully
-%                        automated mode, more params added, fix stack bug 
+%                        automated mode, more params added, fix stack bug,
+%                        fix phase bug, fixed alignment reuse bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Jan. 29, 2011 at 12:25 GMT
@@ -132,7 +133,7 @@ try
     
     % build lag table (for pre-aligning each band using previous lags)
     goodarr=-o;
-    goodidx=1:nrecs;
+    goodidx=(1:nrecs)';
     lags=o(:,ones(1,nrecs))'-o(:,ones(1,nrecs));
     idx=ones(nrecs);
     
@@ -145,20 +146,20 @@ try
         disp(['BAND ' istr ' FILTER CORNERS: ' ...
             num2str(1/p.bank(i,3)) 's  to  ' num2str(1/p.bank(i,2)) 's']);
         
+        % filter the records
+        data0=iirfilter(data,p.filt.type,p.filt.style,...
+            'c',p.bank(i,2:3),'o',p.filt.order,'p',p.filt.passes);
+        p.filt.corners=p.bank(i,2:3);
+        info(i,1).filter=p.filt;
+        
         % get new relative arrivals & prealign
         % - lags are absolute
         % - use 10^idx as weight (higher weight to more recent freqs)
         %   - limit to >10^-5 for stability (-5 may be changed)
         % - use latest "good" arrivals to get absolute times
         tt=ttalign(lags,10.^(max(idx-i,-5)),goodarr,1,goodidx);
-        data0=timeshift(data,-o-tt); % shift to origin then new times
+        data0=timeshift(data0,-o-tt); % shift to origin then new times
         info(i,1).tt_start=tt;
-        
-        % filter the records
-        data0=iirfilter(data0,p.filt.type,p.filt.style,...
-            'c',p.bank(i,2:3),'o',p.filt.order,'p',p.filt.passes);
-        p.filt.corners=p.bank(i,2:3);
-        info(i).filter=p.filt;
         
         % initial window and assessment
         if(i>1)
@@ -376,7 +377,7 @@ try
             % use alignment for next band
             if(i<size(p.bank,1))
                 goodarr=info(i).useralign.solution.arr;
-                goodidx=find(snridx);
+                goodidx=snridx;
                 lags(goodidx,goodidx)=goodarr(:,ones(1,nn))...
                     -goodarr(:,ones(1,nn))';
                 idx(goodidx,goodidx)=i+1;
@@ -435,7 +436,7 @@ try
             % ask to utilize for subsequent bands
             if(i<size(p.bank,1) && use_align)
                 goodarr=info(i).useralign.solution.arr;
-                goodidx=find(snridx);
+                goodidx=snridx;
                 lags(goodidx,goodidx)=goodarr(:,ones(1,nn))...
                     -goodarr(:,ones(1,nn))';
                 idx(goodidx,goodidx)=i+1;
@@ -526,7 +527,7 @@ end
 
 % shift if phase given
 if(~isempty(p.phase))
-    [t,n]=getarrival(data,p.phase);
+    [t,n]=getarrival(data,{p.phase p.phase(1)});
     data=timeshift(data,-t,strcat('it',num2str(n)));
 end
 

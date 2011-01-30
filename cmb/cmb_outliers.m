@@ -32,7 +32,8 @@ function [results]=cmb_outliers(results)
 %        Jan. 18, 2011 - .time field, no setting groups as bad
 %        Jan. 26, 2011 - no travel time corrections for synthetics, use 2
 %                        digit cluster numbers, update for 2 plot arrcut
-%        Jan. 29, 2011 - prepend datetime to output names
+%        Jan. 29, 2011 - prepend datetime to output names, fix Sdiff
+%                        corrections bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Jan. 29, 2011 at 13:35 GMT
@@ -60,9 +61,16 @@ for i=1:numel(results)
     if(results(i).synthetics)
         carr=arr;
     else
-        carr=arr-results(i).corrections.ellcor...
-            -results(i).corrections.crucor.prem...
-            -results(i).corrections.mancor.hmsl06p.upswing;
+        switch results(i).phase
+            case 'Pdiff'
+                carr=arr-results(i).corrections.ellcor...
+                    -results(i).corrections.crucor.prem...
+                    -results(i).corrections.mancor.hmsl06p.upswing;
+            case {'SHdiff' 'SVdiff'}
+                carr=arr-results(i).corrections.ellcor...
+                    -results(i).corrections.crucor.prem...
+                    -results(i).corrections.mancor.hmsl06s.upswing;
+        end
     end
     arrerr=results(i).useralign.solution.arrerr;
     amp=results(i).useralign.solution.amp;

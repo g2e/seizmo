@@ -49,7 +49,8 @@ function [results]=cmb_1st_pass(phase,indir,varargin)
 %                        no waveforms
 %        Jan. 26, 2011 - synthetics fields added (only reflectivity synth)
 %        Jan. 29, 2011 - make earthmodel a string, datetime in front of
-%                        output (to avoid overwrite), fix absolute path bug
+%                        output (to avoid overwrite), fix absolute path
+%                        bug, fix phase bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Jan. 29, 2011 at 13:35 GMT
@@ -157,7 +158,7 @@ for i=1:numel(s)
     end
     
     % time shift to phase
-    [t,n]=getarrival(data,truephase);
+    [t,n]=getarrival(data,{truephase truephase(1)});
     data=timeshift(data,-t,strcat('it',num2str(n)));
     
     % check if all synthetics (only reflectivity synthetics for now)

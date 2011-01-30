@@ -35,10 +35,11 @@ function [varargout]=cmb_corrections(varargin)
 %        Oct.  7, 2010 - initial version
 %        Oct. 11, 2010 - fix bug in populating geom spreading corrections
 %        Dec. 29, 2010 - added docs, 2nd usage type simplifies my life
-%        Jan. 12, 2010 - fixed several bugs from new usage format
+%        Jan. 12, 2011 - fixed several bugs from new usage format
+%        Jan. 29, 2011 - use check_cmb_results
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 12, 2011 at 15:25 GMT
+%     Last Updated Jan. 29, 2011 at 15:25 GMT
 
 % todo:
 
@@ -49,13 +50,7 @@ error(nargchk(1,2,nargin));
 % - then extract appropriate info and set output flag
 if(nargin==1)
     % checking
-    reqfields={'useralign' 'filter' 'usersnr' 'tt_start' ...
-        'phase' 'runname' 'dirname'};
-    if(~isstruct(varargin{1}) || any(~isfield(varargin{1},reqfields)))
-        error('seizmo:cmb_corrections:badInput',...
-            ['RESULTS must be a struct with the fields:\n' ...
-            sprintf('''%s'' ',reqfields{:}) '!']);
-    end
+    error(check_cmb_results(varargin{1}));
     
     % recall using appropriate fields
     varargout{1}=varargin{1};
