@@ -3,7 +3,8 @@ function [data]=fix_sod_v222(data)
 %
 %    Usage:    data=fix_sod_v222(data)
 %
-%    Description: DATA=FIX_SOD_V222(DATA) fixes the headers of SAC files
+%    Description:
+%     DATA=FIX_SOD_V222(DATA) fixes the headers of SAC files
 %     exported using SOD v2.2.2.  The fixes are:
 %     1. correctly set E field
 %     2. setting IZTYPE to IO (if o field is zero)
@@ -16,8 +17,8 @@ function [data]=fix_sod_v222(data)
 %    Header changes: E, IZTYPE, KCMPNM, KHOLE, EVEL
 %
 %    Examples:
-%     Read, clean up, and overwrite some SOD-made SAC files:
-%      w(fix_sod_v222(r('*)))
+%     % Read, clean up, and overwrite some SOD-made SAC files:
+%     w(fix_sod_v222(r('*')))
 %
 %    See also: FIX_RDSEED_V48, FIX_DB2SAC_V48, FIX_TREXCERPT_V48,
 %              FIX_CAMEROON, FIXDELTA
@@ -30,9 +31,10 @@ function [data]=fix_sod_v222(data)
 %        Jan. 30, 2010 - fixes for checking state functions
 %        Mar. 24, 2010 - drop fixdelta call
 %        Aug. 21, 2010 - nargchk fix, updated undef/nan handling
+%        Jan. 31, 2011 - minor doc fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 22:25 GMT
+%     Last Updated Jan. 31, 2011 at 22:25 GMT
 
 % todo:
 
@@ -77,7 +79,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

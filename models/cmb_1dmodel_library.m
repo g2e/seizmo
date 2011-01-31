@@ -68,9 +68,10 @@ function [varargout]=cmb_1dmodel_library(varargin)
 %                        models to allow easy transfer to other parameters,
 %                        use thk2n now, fixed a few cases of oversampling,
 %                        added ulvz, PYLO
+%        Jan. 30, 2011 - added GP & GS gradient series
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 25, 2011 at 23:00 GMT
+%     Last Updated Jan. 30, 2011 at 23:00 GMT
 
 % todo:
 % - models should have named discontinuities field
@@ -80,7 +81,6 @@ function [varargout]=cmb_1dmodel_library(varargin)
 % - convection model series
 % - ppv model series
 % - ulvz series
-% - single gradient + ulvz series
 % - two gradient series
 % - gradient + discon + gradient series
 % - lamellae series
@@ -741,6 +741,40 @@ for i=1:nargin
                          2648  2.6 2 0 thk2n(43,kpkm);
                          2691    0 2 0 thk2n(200,kpkm);
                          2891 -1.2 2 0 0]};
+        % gradient series (the L-series of Ritsema et al 1997)
+        case 'GS'
+            hng=[2000 2400 2600 2650 2700 2750];
+            dv=-4:4;
+            nhng=numel(hng);
+            ndv=numel(dv);
+            name=cell(nhng*ndv,1);
+            pv=cell(nhng*ndv,1);
+            for a=1:nhng;
+                for b=1:ndv;
+                    name{(a-1)*ndv+b}=['GS' num2str(hng(a)) '_' ...
+                        num2str(dv(b)) '%'];
+                    pv{(a-1)*ndv+b}=...
+                        {'vs' [hng(a) 0 4 0 thk2n(2891-hng(a),kpkm);
+                               2891 dv(b) 4 0 0]};
+                end
+            end
+        % gradient series (extension of Ritsema et al 1997)
+        case 'GP'
+            hng=[2000 2400 2600 2650 2700 2750];
+            dv=-4:4;
+            nhng=numel(hng);
+            ndv=numel(dv);
+            name=cell(nhng*ndv,1);
+            pv=cell(nhng*ndv,1);
+            for a=1:nhng;
+                for b=1:ndv;
+                    name{(a-1)*ndv+b}=['GP' num2str(hng(a)) '_' ...
+                        num2str(dv(b)) '%'];
+                    pv{(a-1)*ndv+b}=...
+                        {'vp' [hng(a) 0 4 0 thk2n(2891-hng(a),kpkm);
+                               2891 dv(b) 4 0 0]};
+                end
+            end
         % gradient series (extension of Ritsema et al 1997)
         case 'GPS'
             hng=[2000 2400 2600 2650 2700 2750];

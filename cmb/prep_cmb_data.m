@@ -1,7 +1,8 @@
-function [cmt]=prep_cmb_data(indir,outdir,sodcsv)
+function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %PREP_CMB_DATA    Prepare Core-Diffracted Dataset
 %
 %    Usage:    cmt=prep_cmb_data(indir,outdir,sodcsvfile)
+%              cmt=prep_cmb_data(indir,outdir,sodcsvfile,datasrc)
 %
 %    Description:
 %     CMT=PREP_CMB_DATA(INDIR,OUTDIR,SODCSVFILE) prepares the SEIZMO data
@@ -25,7 +26,16 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv)
 %     then things will fail.  So basically you must use SOD if you want to
 %     proceed.  Sorry.  CMT is the globalcmt moment tensors used.
 %
+%     CMT=PREP_CMB_DATA(INDIR,OUTDIR,SODCSVFILE,DATASRC) indicates where
+%     the SAC files came from: 'RDSEED' for SAC files output from a SEED
+%     volume by rdseed or 'SOD' for SAC files downloaded directly via sod.
+%     This is just to call the appropriate header fixing routine.  The
+%     default is 'RDSEED'.
+%
 %    Notes:
+%     - If response removal fails, a warning is issued (rather than an
+%       error) and the offending dataset is immediately returned rather
+%       than the cmts.
 %     - INDIR example layout:
 %                INDIR
 %                 |
@@ -43,17 +53,25 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv)
 %     Version History:
 %        Dec. 12, 2010 - added docs
 %        Jan. 12, 2011 - use point_vecticals_upward
+%        Jan. 30, 2011 - data source argument, note about response crashes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 12, 2011 at 13:35 GMT
+%     Last Updated Jan. 30, 2011 at 13:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,3,nargin));
+error(nargchk(2,4,nargin));
 
 % default sodcsv (user gui select)
 if(nargin==2); sodcsv=[]; end
+
+% default/check
+if(nargin<4 || isempty(src)); src='rdseed'; end
+if(~isstring(src) || ~any(strcmpi(src,{'rdseed' 'sod'})))
+    error('seizmo:prep_cmb_data:badInput',...
+        'DATASRC must be either ''RDSEED'' or ''SOD''!');
+end
 
 % check indir
 if(~isstring(indir))
@@ -105,7 +123,12 @@ for i=s(:)'
     
     % fix header info
     data=setevent(data,cmt(i));
-    data=fix_rdseed_v48(data);
+    switch lower(src)
+        case 'rdseed'
+            data=fix_rdseed_v48(data);
+        case 'sod'
+            data=fix_sod_v222(data);
+    end
     
     % merge data
     data=merge(data);

@@ -1,4 +1,4 @@
-function [gmt]=readgmt(file,type,marker)
+function [gmt]=readgmt(file,type,marker,ll)
 %READGMT    Reads the GMT vector file-format (ascii)
 %
 %    Usage:    gmt=readgmt(file)
@@ -23,6 +23,9 @@ function [gmt]=readgmt(file,type,marker)
 %     GMT=READGMT(FILE,TYPE,MARKER) alters the segment separator (aka
 %     marker) to MARKER, a single ascii character.  The default is '>'.
 %
+%     GMT=READGMT(FILE,TYPE,MARKER,LATLON) sets if the points are given as
+%     [lat lon] or [lon lat].  The default is FALSE ([lon lat]).
+%
 %    Notes:
 %     - Currently only handles the old GMT format.  OGM extensions are not
 %       handled yet (ie they are ignored).
@@ -37,12 +40,12 @@ function [gmt]=readgmt(file,type,marker)
 %     Version History:
 %        Jan. 20, 2011 - initial version
 %        Jan. 24, 2011 - support comma delimited
+%        Jan. 31, 2011 - latlon arg
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 24, 2011 at 10:35 GMT
+%     Last Updated Jan. 31, 2011 at 10:35 GMT
 
 % todo
-% - support lat,lon too
 
 % check nargin
 error(nargchk(0,3,nargin));
@@ -50,6 +53,7 @@ error(nargchk(0,3,nargin));
 % default type/marker
 if(nargin<2 || isempty(type)); type=[]; end
 if(nargin<3 || isempty(marker)); marker='>'; end
+if(nargin<4 || isempty(ll)); ll=false; end
 
 % check type/marker
 validtype={...
@@ -63,6 +67,9 @@ if(~isempty(type) && (~isstring(type) || ~any(strcmpi(type,validtype))))
 elseif(~ischar(marker) || ~isscalar(marker))
     error('seizmo:readgmt:badInput',...
         'MARKER must be a single character (like ''>'')!');
+elseif(~isscalar(ll) || (~islogical(ll) && ~isreal(ll)))
+    error('seizmo:readgmt:badInput',...
+        'LATLON must be either TRUE or FALSE!');
 end
 
 % file input
@@ -199,8 +206,13 @@ while(a<=nlines)
                         file,a,line{a});
                 end
                 d=d+1;
-                gmt(obj).longitude(d,1)=str2double(words{1});
-                gmt(obj).latitude(d,1)=str2double(words{2});
+                if(ll)
+                    gmt(obj).latitude(d,1)=str2double(words{1});
+                    gmt(obj).longitude(d,1)=str2double(words{2});
+                else
+                    gmt(obj).longitude(d,1)=str2double(words{1});
+                    gmt(obj).latitude(d,1)=str2double(words{2});
+                end
                 gmt(obj).text{d,1}=joinwords(words(3:end));
                 a=a+1;
                 csd=0;
@@ -245,8 +257,13 @@ while(a<=nlines)
                 file,a,line{a});
         end
         d=d+1;
-        gmt(obj).longitude(d,1)=str2double(words{1});
-        gmt(obj).latitude(d,1)=str2double(words{2});
+        if(ll) % lat lon
+            gmt(obj).latitude(d,1)=str2double(words{1});
+            gmt(obj).longitude(d,1)=str2double(words{2});
+        else % lon lat
+            gmt(obj).longitude(d,1)=str2double(words{1});
+            gmt(obj).latitude(d,1)=str2double(words{2});
+        end
         gmt(obj).text{d,1}=joinwords(words(3:end));
         a=a+1;
         obj=obj+1;

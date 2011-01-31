@@ -7,7 +7,7 @@ function [info]=multibandalign(data,varargin)
 %    Description:
 %     RESULTS=MULTIBANDALIGN(DATA) presents an interface to align the data
 %     given in SEIZMO struct DATA over a series of 25 frequency bands from
-%     80s to 8s.  Details on the default frequency bands can be found in
+%     50s to 5s.  Details on the default frequency bands can be found in
 %     the Notes section below.  To alter the frequency bands see the next
 %     usage form.  The pre-alignment processing includes a SNR-based data
 %     removal and distance based data removal.  Alignment uses USERALIGN.
@@ -22,7 +22,7 @@ function [info]=multibandalign(data,varargin)
 %       noisewin        - noise window (default is [-300 -20])
 %       signalwin       - signal window (default is [-10 70])
 %       snrmethod       - SNR method (default is 'peak2rms')
-%       snrcutoff       - Default cutoff (10) for removing low SNR records
+%       snrcutoff       - Default cutoff (3) for removing low SNR records
 %       filterbank      - filter bank (use FILTER_BANK)
 %       filtertype      - filter type (default is 'bp')
 %       filterstyle     - filter style (default is 'butter')
@@ -30,6 +30,7 @@ function [info]=multibandalign(data,varargin)
 %       filterpasses    - number of passes (default is 1)
 %       fast            - fast mode (true)
 %       auto            - fully automated mode (false)
+%       zxing           - zero-crossing windowing (true)
 %       zxoffset        - auto mode: # zero xings from guess to win start
 %       zxwidth         - auto mode: window is # zero crossings wide
 %       winnowyfield    - header field to winnow by (default is 'gcarc')
@@ -74,9 +75,13 @@ function [info]=multibandalign(data,varargin)
 %        Jan. 29, 2011 - alter filter bank from 1/80-1/8 to 1/50-1/5, fully
 %                        automated mode, more params added, fix stack bug,
 %                        fix phase bug, fixed alignment reuse bug
+%        Jan. 30, 2011 - zxing option allows turning on/off zx codes,
+%                        advance to next band if too few high snr or in
+%                        winnow range to avoid infinite loop in auto mode
+%        Jan. 31, 2011 - some doc fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2011 at 12:25 GMT
+%     Last Updated Jan. 31, 2011 at 12:25 GMT
 
 % todo:
 
@@ -200,7 +205,9 @@ try
             info(i).usersnr.method=p.snrmethod;
             
             % zx-based window
-            info(i).usersnr.signalwin=autozx(data0,info(i),p);
+            if(p.zxing);
+                info(i).usersnr.signalwin=autozx(data0,info(i),p);
+            end
             
             % plot windows
             info(i).usersnr.plottype=@plot0;
@@ -241,9 +248,11 @@ try
                 info(i).usersnr.method=info(last).usersnr.method;
                 
                 % use nearby zero crossing for new window limits
-                zx=zeroxing(data0,info(i));
-                info(i).usersnr.signalwin=...
-                    [info(i).usersnr.signalwin(1) zx];
+                if(p.zxing)
+                    zx=zeroxing(data0,info(i));
+                    info(i).usersnr.signalwin=...
+                        [info(i).usersnr.signalwin(1) zx];
+                end
             end
             [snr,info(i).usersnr,ax]=usersnr(data0,...
                 info(i).usersnr.noisewin,info(i).usersnr.signalwin,...
@@ -263,8 +272,9 @@ try
         snr=snr(snridx);
         nn=numel(data0);
         
-        % skip if less than 3
+        % skip to next band if less than 3
         if(nn<3)
+            i=i+1;
             disp(['BAND ' istr ': Too Few High SNR data!']);
             continue;
         end
@@ -332,8 +342,9 @@ try
             nn=numel(data0);
         end
         
-        % skip if less than 3
+        % skip to next band if less than 3
         if(nn<3)
+            i=i+1;
             disp(['BAND ' istr ': Too few data in ' ...
                 p.winnowyfield ' range!']);
             continue;
@@ -639,7 +650,8 @@ p.filt.order=4;
 p.filt.passes=1;
 p.phase=[];   % pre-align phase field (only for core-diff currently)
 p.fast=true;  % fast multibandalign flag
-p.auto=false; % auto multibandalign (uses zx window parameters)
+p.auto=false; % auto multibandalign (uses zx window parameters if zxing)
+p.zxing=true; % zero-crossing windowing flag (off uses signalwin or user)
 p.zxwidth=6;  % number of zero crossings increments in window if auto
 p.zxoffset=1; % number of zero crossings to window start from initial guess
 p.winnowyfield='gcarc';
@@ -732,6 +744,14 @@ for i=1:2:nargin
                     'AUTO must be TRUE or FALSE!');
             end
             p.auto=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'zxing'
+            if(~isscalar(varargin{i+1}) || (~islogical(varargin{i+1}) ...
+                    && ~isreal(varargin{i+1})))
+                error('seizmo:multibandalign:badInput',...
+                    'ZXING must be TRUE or FALSE!');
+            end
+            p.zxing=varargin{i+1};
             keep(i:i+1)=false;
         case 'zxwidth'
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...

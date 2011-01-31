@@ -111,6 +111,7 @@ else
               'InitialValue',1:numel(dates),...
               'ListSize',[170 300],...
               'ListString',datelist);
+    %s=1:numel(dates);
 end
 
 % error if none selected

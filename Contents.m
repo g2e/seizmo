@@ -1,5 +1,5 @@
 % SEIZMO - Passive Seismology Toolbox
-% Version 0.6.182 Haleakala 29-Jan-2011
+% Version 0.6.183 Haleakala 31-Jan-2011
 %
 % Help Info
 %  <a href="matlab:help install_seizmo">INSTALLATION</a>

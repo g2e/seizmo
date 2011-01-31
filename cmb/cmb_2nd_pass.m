@@ -43,9 +43,10 @@ function [results2]=cmb_2nd_pass(results,sr,varargin)
 %                        narrow band result
 %        Jan. 26, 2011 - .synthetics & .earthmodel fields, 2-digit cluster
 %        Jan. 29, 2011 - output now has creation datetime string prepended
+%        Jan. 31, 2011 - fix bug on too few high snr
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2011 at 13:35 GMT
+%     Last Updated Jan. 31, 2011 at 13:35 GMT
 
 % todo:
 
@@ -149,7 +150,7 @@ for i=1:numel(results)
             tmp(k).earthmodel=results(i).earthmodel;
 
             % fix corrections
-            if(~isempty(tmp(k).usersnr))
+            if(~isempty(tmp(k).usersnr) && ~isempty(tmp(k).userwinnow))
                 good=find(tmp(k).usersnr.snr>=tmp(k).usersnr.snrcut);
                 good(tmp(k).userwinnow.cut)=[];
                 tmp(k).corrections=fixcorrstruct(correct,good);

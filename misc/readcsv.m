@@ -42,7 +42,8 @@ function [lines]=readcsv(file,delimiter)
 % todo:
 % - text delimiter
 % - handle field delimiter in text
-%   - find delimiters between text delimiters and remove them
+%   - find delimiters between text delimiters and remove them from
+%     delimiters list
 %       - too advanced for getwords :(
 % - linefeeds are not allowed to be delimiters
 

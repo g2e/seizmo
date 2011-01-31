@@ -3,7 +3,8 @@ function [data]=fix_rdseed_v48(data)
 %
 %    Usage:    data=fix_rdseed_v48(data)
 %
-%    Description: DATA=FIX_RDSEED_V48(DATA) fixes the headers of SAC files
+%    Description:
+%     DATA=FIX_RDSEED_V48(DATA) fixes the headers of SAC files
 %     exported using RDSEED v4.8.  The fixes are:
 %     1. synchronizing reference time to the origin time (if o defined)
 %     2. setting IZTYPE to IO (if o defined)
@@ -20,8 +21,8 @@ function [data]=fix_rdseed_v48(data)
 %     A, F, O, B, E, Tn
 %
 %    Examples:
-%     Read, clean up, and overwrite some RDSEED-made SAC files:
-%      w(fix_rdseed_v48(r('*SAC)))
+%     % Read, clean up, and overwrite some RDSEED-made SAC files:
+%     w(fix_rdseed_v48(r('*')))
 %
 %    See also: FIX_SOD_V222, FIX_DB2SAC_V48, FIX_TREXCERPT_V48,
 %              FIX_CAMEROON, FIXDELTA
@@ -34,9 +35,10 @@ function [data]=fix_rdseed_v48(data)
 %        Jan. 30, 2010 - fixes for checking state functions
 %        Mar. 24, 2010 - drop fixdelta call
 %        Aug. 21, 2010 - nargchk fix, updated undef/nan handling
+%        Jan. 31, 2011 - minor doc fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 22:25 GMT
+%     Last Updated Jan. 31, 2011 at 22:25 GMT
 
 % todo:
 
@@ -102,7 +104,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

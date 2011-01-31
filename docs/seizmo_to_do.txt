@@ -44,7 +44,6 @@ cmb codes
     - 2-station dispersion assembly
     - title on core-diff map
     - dispersion curve pdf plotting
-    - superfast cheat for synthetics
 
 
 %%%%%%%
