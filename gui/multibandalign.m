@@ -35,6 +35,7 @@ function [info]=multibandalign(data,varargin)
 %       zxwidth         - auto mode: window is # zero crossings wide
 %       winnowyfield    - header field to winnow by (default is 'gcarc')
 %       winnowlimits    - default winnow limits (default is [])
+%       figdir          - directory to save figures to (default is '.')
 %     The remaining options are passed to USERALIGN.  See that function for
 %     more details.
 %
@@ -78,10 +79,11 @@ function [info]=multibandalign(data,varargin)
 %        Jan. 30, 2011 - zxing option allows turning on/off zx codes,
 %                        advance to next band if too few high snr or in
 %                        winnow range to avoid infinite loop in auto mode
-%        Jan. 31, 2011 - some doc fixes
+%        Jan. 31, 2011 - some doc fixes, figdir option
+%        Feb.  1, 2011 - added autozx checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 31, 2011 at 12:25 GMT
+%     Last Updated Feb.  1, 2011 at 12:25 GMT
 
 % todo:
 
@@ -179,8 +181,9 @@ try
             % preview plot
             ax=preview_plot(data0,info(i),p);
             if(ishandle(ax))
-                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
-                    p.runname '_band_' istr '_preview.fig']);
+                saveas(get(ax,'parent'),fullfile(p.figdir,...
+                    [datestr(now,30) '_' p.runname '_band_' istr ...
+                    '_preview.fig']));
                 close(get(ax,'parent'));
             end
             data0=cut(data0,info(i).initwin(1),info(i).initwin(2));
@@ -188,8 +191,9 @@ try
             [data0,info(i),skip,p,ax]=get_initial_window(data0,...
                 info(i),p,i);
             if(ishandle(ax))
-                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
-                    p.runname '_band_' istr '_preview.fig']);
+                saveas(get(ax,'parent'),fullfile(p.figdir,...
+                    [datestr(now,30) '_' p.runname '_band_' istr ...
+                    '_preview.fig']));
                 close(get(ax,'parent'));
             end
         end
@@ -213,8 +217,9 @@ try
             info(i).usersnr.plottype=@plot0;
             ax=windows_plot(data0,info(i));
             if(ishandle(ax))
-                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
-                    p.runname '_band_' istr '_windows.fig']);
+                saveas(get(ax,'parent'),fullfile(p.figdir,...
+                    [datestr(now,30) '_' p.runname '_band_' istr ...
+                    '_windows.fig']));
                 close(get(ax,'parent'));
             end
             
@@ -260,8 +265,9 @@ try
             info(i).usersnr.snr=snr;
             info(i).usersnr.snrcut=p.snrcut;
             if(ishandle(ax))
-                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
-                    p.runname '_band_' istr '_usersnr.fig']);
+                saveas(get(ax,'parent'),fullfile(p.figdir,...
+                    [datestr(now,30) '_' p.runname '_band_' istr ...
+                    '_usersnr.fig']));
                 close(get(ax,'parent'));
             end
         end
@@ -311,8 +317,9 @@ try
                     'linewidth',4);
                 hold(ax,'off');
                 if(ishandle(ax))
-                    saveas(get(ax,'parent'),[datestr(now,30) '_' ...
-                        p.runname '_band_' istr '_winnow.fig']);
+                    saveas(get(ax,'parent'),fullfile(p.figdir,...
+                        [datestr(now,30) '_' p.runname '_band_' istr ...
+                        '_winnow.fig']));
                     close(get(ax,'parent'));
                 end
                 
@@ -335,8 +342,9 @@ try
             snr(info(i).userwinnow.cut)=[];
             snridx(info(i).userwinnow.cut)=[];
             if(ishandle(ax))
-                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
-                    p.runname '_band_' istr '_userwinnow.fig']);
+                saveas(get(ax,'parent'),fullfile(p.figdir,...
+                        [datestr(now,30) '_' p.runname '_band_' istr ...
+                        '_userwinnow.fig']));
                 close(get(ax,'parent'));
             end
             nn=numel(data0);
@@ -372,8 +380,9 @@ try
             % plot alignment
             ax=plot2(info(i).useralign.data);
             if(ishandle(ax))
-                saveas(get(ax,'parent'),[datestr(now,30) '_' ...
-                    p.runname '_band_' istr '_aligned.fig']);
+                saveas(get(ax,'parent'),fullfile(p.figdir,...
+                    [datestr(now,30) '_' p.runname '_band_' istr ...
+                    '_aligned.fig']));
             end
             
             % only ask if satisfied if not auto
@@ -404,8 +413,9 @@ try
                 if(any(ishandle(info(i).useralign.handles)))
                     ax=info(i).useralign.handles(...
                         ishandle(info(i).useralign.handles));
-                    saveas(get(ax(1),'parent'),[datestr(now,30) '_' ...
-                        p.runname '_band_' istr '_useralign.fig']);
+                    saveas(get(ax(1),'parent'),fullfile(p.figdir,...
+                        [datestr(now,30) '_' p.runname '_band_' istr ...
+                        '_useralign.fig']));
                     close(get(ax(1),'parent'));
                 end
             catch
@@ -656,6 +666,7 @@ p.zxwidth=6;  % number of zero crossings increments in window if auto
 p.zxoffset=1; % number of zero crossings to window start from initial guess
 p.winnowyfield='gcarc';
 p.winnowlimits=[];
+p.figdir='.';
 
 % valid filter types & styles (grabbed from iirdesign)
 validtypes={'low' 'lo' 'l' 'lp' 'high' 'hi' 'h' 'hp' 'bandpass' 'pass' ...
@@ -824,12 +835,28 @@ for i=1:2:nargin
             end
             p.winnowyfield=varargin{i+1};
             keep(i:i+1)=false;
+        case {'fdir' 'figdir'}
+            if(~isstring(varargin{i+1}))
+                error('seizmo:multibandalign:badInput',...
+                    'FIGDIR must be a string!');
+            end
+            p.figdir=varargin{i+1};
+            keep(i:i+1)=false;
     end
 end
 varargin=varargin(keep);
 
 % force fast to true if auto is true
 if(p.auto); p.fast=true; end
+
+% create directory if it does not exist
+% check that this does not fail
+[ok,msg,msgid]=mkdir(p.figdir);
+if(~ok)
+    warning(msgid,msg);
+    error('seizmo:multibandalign:pathBad',...
+        'Cannot create directory: %s',p.figdir);
+end
 
 end
 
@@ -890,17 +917,72 @@ dstack=stack(data,1/delta,[],info.initwin(1),info.initwin(2));
 % get zero crossings
 zx=zerocrossings(dstack);
 zx=sort(zx{1}); % just in case
+nzx=numel(zx);
 
 % find closest within range
 pos=find(zx>info.usersnr.signalwin(1),1,'first');
 
-% window start
+% look out for empty
+if(isempty(pos))
+    % auto window fails (???) so just use default as fallback
+    error('seizmo:multibandalign:badAutoZX',...
+        'Could not find a suitable zero-crossing!');
+end
+
+% window start adjusted or not?
 if(p.zxoffset)
-    win(1)=zx(pos+p.zxoffset-1);
-    win(2)=zx(pos+p.zxoffset-1+p.zxwidth);
-else
+    % window start is offset by some number of zero-crossings
+    spos=pos+p.zxoffset-1;
+    epos=pos+p.zxoffset-1+p.zxwidth;
+    if(spos<1)
+        % bad inputs (something totally wrong)
+        warning('seizmo:multibandalign:badAutoZX',...
+            'Had to adjust auto-window start to initial window start!');
+        win(1)=info.initwin(1);
+    elseif(spos>nzx)
+        % bad inputs (something totally wrong)
+        warning('seizmo:multibandalign:badAutoZX',...
+            'Had to adjust auto-window start to initial window end!');
+        win(1)=info.initwin(2);
+    else
+        win(1)=zx(spos);
+    end
+    if(epos<1)
+        % bad inputs (something totally wrong)
+        warning('seizmo:multibandalign:badAutoZX',...
+            'Had to adjust auto-window end to initial window start!');
+        win(2)=info.initwin(1);
+    elseif(epos>nzx)
+        % bad inputs (this one does happen occasionally)
+        warning('seizmo:multibandalign:badAutoZX',...
+            'Had to adjust auto-window end to initial window end!');
+        win(2)=info.initwin(2);
+    else
+        win(2)=zx(epos);
+    end
+else % no adjust
+    % no offset for signal window start
+    epos=pos+p.zxwidth-1;
     win(1)=info.usersnr.signalwin(1);
-    win(2)=zx(pos+p.zxwidth-1);
+    if(epos<1)
+        % bad inputs (something totally wrong)
+        warning('seizmo:multibandalign:badAutoZX',...
+            'Had to adjust auto-window end to initial window start!');
+        win(2)=info.initwin(1);
+    elseif(epos>nzx)
+        % bad inputs (this one does happen occasionally)
+        warning('seizmo:multibandalign:badAutoZX',...
+            'Had to adjust auto-window end to initial window end!');
+        win(2)=info.initwin(2);
+    else
+        win(2)=zx(epos);
+    end
+end
+
+% sanity check
+if(~diff(win))
+    error('seizmo:multibandalign:badAutoZX',...
+        'Input parameters are improper!');
 end
 
 end

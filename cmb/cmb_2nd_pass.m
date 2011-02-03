@@ -1,4 +1,4 @@
-function [results2]=cmb_2nd_pass(results,sr,varargin)
+function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %CMB_2ND_PASS    Narrow-band core-diff relative arrivals + amplitudes
 %
 %    Usage:    results=cmb_2nd_pass(results)
@@ -43,7 +43,8 @@ function [results2]=cmb_2nd_pass(results,sr,varargin)
 %                        narrow band result
 %        Jan. 26, 2011 - .synthetics & .earthmodel fields, 2-digit cluster
 %        Jan. 29, 2011 - output now has creation datetime string prepended
-%        Jan. 31, 2011 - fix bug on too few high snr
+%        Jan. 31, 2011 - fix bug on too few high snr, allow no output, odir
+%                        catching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Jan. 31, 2011 at 13:35 GMT
@@ -65,6 +66,34 @@ if(nargin<2); sr=[]; end
 if(~isempty(sr) && (~isscalar(sr) || sr<=0))
     error('seizmo:cmb_2nd_pass:badInput',...
         'SR must be the new sample rate (in samples/second)!');
+end
+
+% default/extract odir
+odir='.';
+if(~iscellstr(varargin(1:2:end)))
+    error('seizmo:cmb_2nd_pass:badInput',...
+        'OPTION must all be strings!');
+end
+for i=1:2:nargin-2
+    switch lower(varargin{i})
+        case {'outdir' 'odir'}
+            varargin{i}='figdir';
+            odir=varargin{i+1};
+    end
+end
+
+% check odir
+if(~isstring(odir))
+    error('seizmo:cmb_2nd_pass:badInput',...
+        'ODIR must be a string!');
+end
+
+% create odir if not there
+[ok,msg,msgid]=mkdir(odir);
+if(~ok)
+    warning(msgid,msg);
+    error('seizmo:cmb_2nd_pass:pathBad',...
+        'Cannot create directory: %s',odir);
 end
 
 % loop over each event
@@ -177,12 +206,14 @@ for i=1:numel(results)
         end
 
         % save results (all bands together)
-        save([datestr(now,30) '_' ...
-            runname '_cluster_' sj '_allband_results.mat'],'tmp');
+        save(fullfile(odir,[datestr(now,30) '_' ...
+            runname '_cluster_' sj '_allband_results.mat']),'tmp');
 
         % export to command line too
-        cnt=cnt+1;
-        results2(1:k,cnt)=tmp;
+        if(nargout)
+            cnt=cnt+1;
+            varargout{1}(1:k,cnt)=tmp;
+        end
     end
 end
 

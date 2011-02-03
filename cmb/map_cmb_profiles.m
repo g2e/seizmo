@@ -27,18 +27,19 @@ function [varargout]=map_cmb_profiles(pf,field,clim,varargin)
 %     map_cmb_profiles(pf,'cslow',[4.4 4.7])
 %
 %    See also: MAPLOCATIONS, SLOWDECAYPAIRS, SLOWDECAYPROFILES,
-%              CMB_1ST_PASS, CMB_OUTLIERS, CMB_2ND_PASS
+%              CMB_PDF_MTX, PLOT_CMB_MEASUREMENTS
 
 %     Version History:
 %        Dec. 12, 2010 - initial version
 %        Dec. 13, 2010 - fix wrap-around issue
 %        Jan. 18, 2011 - new pf fields, fix single profile bug
+%        Feb.  1, 2011 - updated See also section, fix coloring of
+%                        colorbar, label colorbar, add title
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 13:35 GMT
+%     Last Updated Feb.  1, 2011 at 13:35 GMT
 
 % todo:
-% - handle single profiles
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -65,6 +66,13 @@ if(~ischar(field) || ...
         'FIELD must be ''SLOW'', ''CSLOW'', ''DECAY'', or ''CDECAY''!');
 end
 field=lower(field);
+
+% look out for multiple phases
+phases=unique({pf.phase}');
+if(~isscalar(phases))
+    error('seizmo:map_cmb_profiles:badInput',...
+        'Multiple phases in dataset not allowed!');
+end
 
 % slowness to color
 slow=[pf.(field)].';
@@ -114,10 +122,31 @@ for a=1:numel(pf)
 end
 hold(ax,'off');
 
+% add title
+tc=get(findobj(ax,'tag','m_grid_yticklabel'),'color');
+tc=tc{1};
+switch lower(field)
+    case 'slow'
+        title(ax,[phases{1} ' Ray Parameter'],'color',tc);
+    case 'cslow'
+        title(ax,[phases{1} ' Corrected Ray Parameter'],'color',tc);
+    case 'decay'
+        title(ax,[phases{1} ' Decay Constant'],'color',tc);
+    case 'cdecay'
+        title(ax,[phases{1} ' Corrected Decay Constant'],'color',tc);
+end
+
 % add colormap
 colormap(ax,blue2red);
 set(ax,'clim',clim);
-colorbar('peer',ax);
+cb=colorbar('peer',ax);
+set(cb,'xcolor',tc,'ycolor',tc);
+switch lower(field)
+    case {'slow' 'cslow'}
+        set(get(cb,'ylabel'),'string','Ray Parameter (s/^o)');
+    case {'decay' 'cdecay'}
+        set(get(cb,'ylabel'),'string','Decay Constant');
+end
 
 % move stations/events forward
 sta=findobj(ax,'tag','stations');

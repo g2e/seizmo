@@ -1,5 +1,5 @@
 function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
-%PREP_CMB_DATA    Prepare Core-Diffracted Dataset
+%PREP_CMB_DATA    Prepare core-diffracted dataset
 %
 %    Usage:    cmt=prep_cmb_data(indir,outdir,sodcsvfile)
 %              cmt=prep_cmb_data(indir,outdir,sodcsvfile,datasrc)

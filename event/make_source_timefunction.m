@@ -21,13 +21,13 @@ function [x,t]=make_source_timefunction(delta,hwidth,type)
 %     - triangle-type functions extend from about -HWIDTH to HWIDTH
 %
 %    Examples:
-%     Make source functions for all records in a SEIZMO dataset:
-%      delta=getheader(data,'delta');
-%      [x,t]=make_source_timefunction(delta,10);
+%     % Make source functions for all records in a SEIZMO dataset:
+%     delta=getheader(data,'delta');
+%     [x,t]=make_source_timefunction(delta,10);
 %
-%     Now plot all the functions together:
-%      tmp=[t x]';
-%      plot(tmp{:});
+%     % Now plot all the functions together:
+%     tmp=[t x]';
+%     plot(tmp{:});
 %
 %    See also: CONVOLVE_SOURCE_TIMEFUNCTION, TRIANGLETF, GAUSSIANTF,
 %              DECONVOLVE_SOURCE_TIMEFUNCTION
@@ -37,9 +37,10 @@ function [x,t]=make_source_timefunction(delta,hwidth,type)
 %        Oct. 29, 2009 - minor doc update
 %        Jan. 27, 2010 - seizmoverbose support
 %        Aug.  9, 2010 - nargchk fix
+%        Feb.  1, 2011 - update for gaussiantf & triangletf changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  9, 2010 at 07:05 GMT
+%     Last Updated Feb.  1, 2011 at 07:05 GMT
 
 % todo:
 
@@ -97,10 +98,6 @@ if(verbose)
     print_time_left(0,nstf);
 end
 
-% gaussian parameters
-a=exp(0.5)*sqrt(2);
-b=exp(0.5)/sqrt(pi);
-
 % loop over each
 x=cell(nstf,1);
 t=cell(nstf,1);
@@ -109,11 +106,11 @@ for i=1:nstf
         case 'GAUSSIAN'
             npts=ceil(1.5*hwidth(i)/delta(i));
             t{i}=delta(i).*(-npts:npts);
-            x{i}=gaussiantf(t{i},0,hwidth(i),a,b/hwidth(i));
+            x{i}=gaussiantf(t{i},0,hwidth(i));
         case 'TRIANGLE'
             npts=ceil(hwidth(i)/delta(i));
             t{i}=delta(i).*(-npts:npts);
-            x{i}=triangletf(t{i},0,hwidth(i),1/hwidth(i));
+            x{i}=triangletf(t{i},0,hwidth(i));
     end
     
     % detail message

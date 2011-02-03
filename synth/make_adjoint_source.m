@@ -33,15 +33,15 @@ function [data]=make_adjoint_source(data,win)
 %     Version History:
 %        Dec.  8, 2009 - initial version
 %        Mar.  1, 2010 - updated for newer checking methods
+%        Feb.  1, 2011 - update for triangletf changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2010 at 02:15 GMT
+%     Last Updated Feb.  1, 2011 at 02:15 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -61,7 +61,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % attempt rest
@@ -111,7 +111,8 @@ try
         data(i).dep=double(data(i).dep);
         
         % get window function (a triangle window)
-        tw=triangletf(b(i)+(0:npts(i)-1)*delta(i),cwin(i),hwin(i));
+        % - note need to set amp to 1 to better preserve amplitudes
+        tw=triangletf(b(i)+(0:npts(i)-1)*delta(i),cwin(i),hwin(i),1);
 
         % get derivative
         data(i).dep=gradient(data(i).dep,delta(i));
@@ -144,7 +145,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

@@ -1,7 +1,9 @@
-function [results]=cmb_clustering(results)
+function [results]=cmb_clustering(results,odir,figdir)
 %CMB_CLUSTERING    Cluster analysis of core-diffracted data
 %
 %    Usage:    results=cmb_clustering(results)
+%              results=cmb_clustering(results,odir)
+%              results=cmb_clustering(results,odir,figdir)
 %
 %    Description:
 %     RESULTS=CMB_CLUSTERING(RESULTS) provides a graphical interface for
@@ -10,6 +12,13 @@ function [results]=cmb_clustering(results)
 %     waveform sets from one another.  RESULTS is the output from either
 %     CMB_1ST_PASS, CMB_OUTLIERS or CMB_2ND_PASS.  Plots and the modified
 %     RESULTS struct are saved to the current directory.
+%
+%     RESULTS=CMB_CLUSTERING(RESULTS,ODIR) sets the output directory
+%     where the figures and RESULTS struct is saved.  By default ODIR is
+%     '.' (the current directory.
+%
+%     RESULTS=CMB_CLUSTERING(RESULTS,ODIR,FIGDIR) allows saving figures to
+%     a different directory than ODIR (where the RESULTS struct is saved).
 %
 %    Notes:
 %     - Redoing the alignment (from CMB_1ST_PASS) is probably necessary if
@@ -35,17 +44,45 @@ function [results]=cmb_clustering(results)
 %        Jan. 16, 2011 - fix for results standardization
 %        Jan. 18, 2011 - .time field
 %        Jan. 29, 2011 - prepend datetime to output names
+%        Jan. 31, 2011 - odir & figdir inputs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2011 at 13:35 GMT
+%     Last Updated Jan. 31, 2011 at 13:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+error(nargchk(1,3,nargin));
 
 % check results
 error(check_cmb_results(results));
+
+% default odir & figdir
+if(nargin<2 || isempty(odir)); odir='.'; end
+if(nargin<3 || isempty(figdir)); figdir=odir; end
+
+% check odir & figdir
+if(~isstring(odir))
+    error('seizmo:cmb_clustering:badInput',...
+        'ODIR must be a string!');
+elseif(~isstring(figdir))
+    error('seizmo:cmb_clustering:badInput',...
+        'FIGDIR must be a string!');
+end
+
+% make sure odir/figdir exists (create it if it does not)
+[ok,msg,msgid]=mkdir(odir);
+if(~ok)
+    warning(msgid,msg);
+    error('seizmo:cmb_clustering:pathBad',...
+        'Cannot create directory: %s',odir);
+end
+[ok,msg,msgid]=mkdir(figdir);
+if(~ok)
+    warning(msgid,msg);
+    error('seizmo:cmb_clustering:pathBad',...
+        'Cannot create directory: %s',figdir);
+end
 
 % loop over each event
 for i=1:numel(results)
@@ -62,8 +99,8 @@ for i=1:numel(results)
     if(any(ishandle(ax)))
         fh=unique(cell2mat(get(ax(ishandle(ax)),'parent')));
         for j=1:numel(fh)
-            saveas(fh(j),[datestr(now,30) '_' ...
-                results(i).runname '_usercluster_' num2str(j) '.fig']);
+            saveas(fh(j),fullfile(figdir,[datestr(now,30) '_' ...
+                results(i).runname '_usercluster_' num2str(j) '.fig']));
             close(fh(j));
         end
     end
@@ -82,8 +119,8 @@ for i=1:numel(results)
 
     % save results
     tmp=results(i);
-    save([datestr(now,30) '_' results(i).runname ...
-        '_clustering_results.mat'],'-struct','tmp');
+    save(fullfile(figdir,[datestr(now,30) '_' results(i).runname ...
+        '_clustering_results.mat']),'-struct','tmp');
 end
 
 end

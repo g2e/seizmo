@@ -41,9 +41,10 @@ expand sph tri stuff
 	- use delaunay codes
     - function to make g matrix for sph tri stuff
 cmb codes
-    - 2-station dispersion assembly
-    - title on core-diff map
-    - dispersion curve pdf plotting
+    - fix model trimming due to 8-char limit
+    - better labeling in plot_cmb_measurements
+      - separate by earthmodel field
+      - legend with earthmodel labels
 
 
 %%%%%%%

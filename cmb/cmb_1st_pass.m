@@ -1,4 +1,4 @@
-function [results]=cmb_1st_pass(phase,indir,varargin)
+function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %CMB_1ST_PASS    Initial (wideband) core-diff rel. arrivals + amplitudes
 %
 %    Usage:    results=cmb_1st_pass(phase,indir)
@@ -37,7 +37,7 @@ function [results]=cmb_1st_pass(phase,indir,varargin)
 %     results=cmb_1st_pass('Pdiff');
 %
 %    See also: PREP_CMB_DATA, CMB_2ND_PASS, CMB_OUTLIERS, SLOWDECAYPAIRS,
-%              SLOWDECAYPROFILES, MAP_CMB_PROFILES
+%              SLOWDECAYPROFILES, MAP_CMB_PROFILES, CMB_CLUSTERING
 
 %     Version History:
 %        Dec. 12, 2010 - added docs
@@ -51,9 +51,12 @@ function [results]=cmb_1st_pass(phase,indir,varargin)
 %        Jan. 29, 2011 - make earthmodel a string, datetime in front of
 %                        output (to avoid overwrite), fix absolute path
 %                        bug, fix phase bug
+%        Jan. 31, 2011 - allow no output, odir catching
+%        Feb.  2, 2011 - update for kuser0-2 containing split model name,
+%                        fix odir bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2011 at 13:35 GMT
+%     Last Updated Feb.  2, 2011 at 13:35 GMT
 
 % todo:
 
@@ -88,6 +91,34 @@ elseif(~isstring(indir))
 elseif(~isdir(indir))
     error('seizmo:cmb_1st_pass:badInput',...
         'INDIR must be a directory!');
+end
+
+% default/extract odir
+odir='.';
+if(~iscellstr(varargin(1:2:end)))
+    error('seizmo:cmb_1st_pass:badInput',...
+        'OPTION must all be strings!');
+end
+for i=1:2:nargin-2
+    switch lower(varargin{i})
+        case {'outdir' 'odir'}
+            varargin{i}='figdir';
+            odir=varargin{i+1};
+    end
+end
+
+% check odir
+if(~isstring(odir))
+    error('seizmo:cmb_1st_pass:badInput',...
+        'ODIR must be a string!');
+end
+
+% create odir if not there
+[ok,msg,msgid]=mkdir(odir);
+if(~ok)
+    warning(msgid,msg);
+    error('seizmo:cmb_1st_pass:pathBad',...
+        'Cannot create directory: %s',odir);
 end
 
 % get date directories
@@ -167,7 +198,8 @@ for i=1:numel(s)
     isynth=unique(getenumid(data,'isynth'));
     if(isscalar(isynth) && strcmpi(isynth,'ireflect'))
         issynth=true;
-        synmodel=char(getheader(data(1),'kuser2'));
+        [mod1,mod2,mod3]=getheader(data(1),'kuser0','kuser1','kuser2');
+        synmodel=strtrim(char(strcat(mod1,mod2,mod3)));
     else
         issynth=false;
         synmodel='DATA';
@@ -229,11 +261,12 @@ for i=1:numel(s)
     timestr=datestr(now,30);
     
     % save results
-    save([timestr '_' runname '_results.mat'],'-struct','tmp');
+    save(fullfile(odir,[timestr '_' runname '_results.mat']),...
+        '-struct','tmp');
     
     % read in to check
     try
-        tmp=load([timestr '_' runname '_results.mat']);
+        tmp=load(fullfile(odir,[timestr '_' runname '_results.mat']));
         error(check_cmb_results(tmp));
     catch
         warning('seizmo:cmb_1st_pass:failedWrite',...
@@ -241,10 +274,10 @@ for i=1:numel(s)
     end
     
     % export to command line too
-    results(i)=tmp;
+    if(nargout); varargout{1}(i)=tmp; end
 end
 
-if(~exist('results','var'))
+if(nargout && ~numel(varargout))
     error('seizmo:cmb_1st_pass:badIdea',...
         'It appears there was no data available for this phase!');
 end

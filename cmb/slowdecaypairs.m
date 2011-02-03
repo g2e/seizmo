@@ -1,7 +1,8 @@
-function [pf]=slowdecaypairs(results,azrng,gcrng)
+function [varargout]=slowdecaypairs(results,azrng,gcrng,odir)
 %SLOWDECAYPAIRS    Returns 2-station measurements of slowness & decay rate
 %
 %    Usage:    pf=slowdecaypairs(results,azrng,gcrng)
+%              pf=slowdecaypairs(results,azrng,gcrng,odir)
 %
 %    Description:
 %     PF=SLOWDECAYPAIRS(RESULTS,AZRNG,GCRNG) takes the relative arrival
@@ -16,6 +17,10 @@ function [pf]=slowdecaypairs(results,azrng,gcrng)
 %     value is taken as the minimum degree distance.  The output PF is a
 %     struct with as many elements as there are pairs found.  The format of
 %     the PF struct is described in the Notes section below.
+%
+%     PF=SLOWDECAYPAIRS(RESULTS,AZRNG,GCRNG,ODIR) sets the output directory
+%     where the PF struct is saved.  By default ODIR is '.' (the current
+%     directory.
 %
 %    Notes:
 %     - The PF struct has the following fields:
@@ -65,8 +70,8 @@ function [pf]=slowdecaypairs(results,azrng,gcrng)
 %     % This does the same as the last example:
 %     pf=slowdecaypairs(results,10,15)
 %
-%    See also: PREP_CMB_DATA, CMB_1ST_PASS, CMB_OUTLIERS, CMB_2ND_PASS,
-%              SLOWDECAYPROFILES
+%    See also: PREP_CMB_DATA, CMB_1ST_PASS, CMB_CLUSTERING, CMB_OUTLIERS,
+%              CMB_2ND_PASS, SLOWDECAYPROFILES
 
 %     Version History:
 %        Dec. 12, 2010 - initial version
@@ -77,17 +82,21 @@ function [pf]=slowdecaypairs(results,azrng,gcrng)
 %                        .cslow depends on .synthetics, added Notes
 %                        about PF struct format
 %        Jan. 29, 2011 - save output, fix corrections bug
+%        Jan. 31, 2011 - allow no output, odir input, better checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 13:35 GMT
+%     Last Updated Jan. 31, 2010 at 13:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(3,3,nargin));
+error(nargchk(3,4,nargin));
 
 % check results struct
 error(check_cmb_results(results));
+
+% default odir
+if(nargin<4 || isempty(odir)); odir='.'; end
 
 % check azrng & gcrng
 if(~isreal(azrng) || ~any(numel(azrng)==[1 2]))
@@ -96,6 +105,17 @@ if(~isreal(azrng) || ~any(numel(azrng)==[1 2]))
 elseif(~isreal(gcrng) || ~any(numel(gcrng)==[1 2]))
     error('seizmo:slowdecaypairs:badInput',...
         'GCRNG must be [MINGC MAXGC] or MINGC!');
+elseif(~isstring(odir))
+    error('seizmo:slowdecaypairs:badInput',...
+        'ODIR must be a string!');
+end
+
+% make sure odir exists (create it if it does not)
+[ok,msg,msgid]=mkdir(odir);
+if(~ok)
+    warning(msgid,msg);
+    error('seizmo:slowdecaypairs:pathBad',...
+        'Cannot create directory: %s',odir);
 end
 
 % expand scalar azrng & gcrng
@@ -106,7 +126,6 @@ if(isscalar(gcrng)); gcrng=[gcrng inf]; end
 verbose=seizmoverbose;
 
 % loop over every result
-total=0;
 for a=1:numel(results)
     % skip if results.useralign is empty
     if(isempty(results(a).useralign)); continue; end
@@ -184,8 +203,11 @@ for a=1:numel(results)
     idx2=idx2(gidx);
     npairs=numel(idx1);
     
+    % skip if none
+    if(~npairs); continue; end
+    
     % initialize struct
-    pf(total+(1:npairs))=struct('gcdist',[],'azwidth',[],...
+    tmp(1:npairs,1)=struct('gcdist',[],'azwidth',[],...
         'slow',[],'slowerr',[],'decay',[],'decayerr',[],...
         'cslow',[],'cslowerr',[],'cdecay',[],'cdecayerr',[],...
         'cluster',[],'kname',[],'st',[],'ev',[],'delaz',[],...
@@ -202,22 +224,22 @@ for a=1:numel(results)
     % loop over every pair, get values, fill in info
     for b=1:npairs
         % insert known info
-        pf(total+b).cluster=cidx(idx1(b));
-        pf(total+b).kname=kname([idx1(b) idx2(b)],:);
-        pf(total+b).st=st([idx1(b) idx2(b)],:);
-        pf(total+b).ev=ev;
-        pf(total+b).delaz=delaz([idx1(b) idx2(b)],:);
+        tmp(b).cluster=cidx(idx1(b));
+        tmp(b).kname=kname([idx1(b) idx2(b)],:);
+        tmp(b).st=st([idx1(b) idx2(b)],:);
+        tmp(b).ev=ev;
+        tmp(b).delaz=delaz([idx1(b) idx2(b)],:);
         
         % great circle distance and width
-        pf(total+b).gcdist=dgc(idx1(b),idx2(b));
-        pf(total+b).azwidth=daz(idx1(b),idx2(b));
+        tmp(b).gcdist=dgc(idx1(b),idx2(b));
+        tmp(b).azwidth=daz(idx1(b),idx2(b));
         
         % corrections
-        pf(total+b).corrections=fixcorrstruct(results(a).corrections,...
+        tmp(b).corrections=fixcorrstruct(results(a).corrections,...
             [idx1(b) idx2(b)]);
         
         % correlation coefficients
-        pf(total+b).corrcoef=...
+        tmp(b).corrcoef=...
             submat(ndsquareform(results(a).useralign.xc.cg),...
             1,idx1(b),2,idx2(b),3,1);
         
@@ -225,38 +247,50 @@ for a=1:numel(results)
         [m,covm]=wlinem(delaz([idx1(b) idx2(b)],1),...
             rtime([idx1(b) idx2(b)]),1,...
             diag(rtimeerr([idx1(b) idx2(b)]).^2));
-        pf(total+b).slow=m(2);
-        pf(total+b).slowerr=sqrt(covm(2,2));
+        tmp(b).slow=m(2);
+        tmp(b).slowerr=sqrt(covm(2,2));
         [m,covm]=wlinem(delaz([idx1(b) idx2(b)],1),...
             crtime([idx1(b) idx2(b)]),1,...
             diag(rtimeerr([idx1(b) idx2(b)]).^2));
-        pf(total+b).cslow=m(2);
-        pf(total+b).cslowerr=sqrt(covm(2,2));
+        tmp(b).cslow=m(2);
+        tmp(b).cslowerr=sqrt(covm(2,2));
         [m,covm]=wlinem(delaz([idx1(b) idx2(b)],1),...
             log(rampl([idx1(b) idx2(b)])),1,...
             diag(log(rampl([idx1(b) idx2(b)])...
             +ramplerr([idx1(b) idx2(b)]).^2)....
             -log(rampl([idx1(b) idx2(b)]))));
-        pf(total+b).decay=m(2);
-        pf(total+b).decayerr=sqrt(covm(2,2));
+        tmp(b).decay=m(2);
+        tmp(b).decayerr=sqrt(covm(2,2));
         [m,covm]=wlinem(delaz([idx1(b) idx2(b)],1),...
             log(crampl([idx1(b) idx2(b)])),1,...
             diag(log(crampl([idx1(b) idx2(b)])...
             +ramplerr([idx1(b) idx2(b)]).^2)...
             -log(crampl([idx1(b) idx2(b)]))));
-        pf(total+b).cdecay=m(2);
-        pf(total+b).cdecayerr=sqrt(covm(2,2));
+        tmp(b).cdecay=m(2);
+        tmp(b).cdecayerr=sqrt(covm(2,2));
         
         % detail message
         if(verbose); print_time_left(b,npairs); end
     end
     
     % save output
-    tmp=pf(total+1:end);
-    save([datestr(now,30) '_' results(a).runname '_pairs.mat'],'tmp');
+    save(fullfile(odir,[datestr(now,30) '_' ...
+        results(a).runname '_pairs.mat']),'tmp');
     
-    % increment total
-    total=total+npairs;
+    % output
+    if(nargout)
+        if(~exist('varargout','var'))
+            varargout{1}=tmp;
+        else
+            varargout{1}=[varargout{1}; tmp];
+        end
+    end
+end
+
+% check for output
+if(~exist('varargout','var'))
+    error('seizmo:slowdecaypairs:noPairs',...
+        'No station pairs meet the specified profile criteria!');
 end
 
 end

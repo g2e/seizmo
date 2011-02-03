@@ -1,7 +1,8 @@
-function [pf]=slowdecayprofiles(results,azrng,gcrng)
+function [varargout]=slowdecayprofiles(results,azrng,gcrng,odir)
 %SLOWDECAYPROFILES    Returns multi-station profile measurements
 %
 %    Usage:    pf=slowdecayprofiles(results,azrng,gcrng)
+%              pf=slowdecayprofiles(results,azrng,gcrng,odir)
 %
 %    Description:
 %     PF=SLOWDECAYPROFILES(RESULTS,AZRNG,GCRNG) takes the relative arrival
@@ -17,6 +18,10 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng)
 %     are profiles found (depends on number of clusters and how many
 %     elements the input RESULTS struct had).  The format of the PF struct
 %     is described in the Notes section below.
+%
+%     PF=SLOWDECAYPROFILES(RESULTS,AZRNG,GCRNG,ODIR) sets the output
+%     directory where the PF struct is saved.  By default ODIR is '.' (the
+%     current directory.
 %
 %    Notes:
 %     - The PF struct has the following fields:
@@ -80,21 +85,23 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng)
 %                        .cslow depends on .synthetics, added Notes
 %                        about PF struct format
 %        Jan. 29, 2011 - save output, fix corrections bug
+%        Jan. 31, 2011 - allow no output, odir input, better checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 13:35 GMT
+%     Last Updated Jan. 31, 2010 at 13:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,3,nargin));
+error(nargchk(1,4,nargin));
 
 % check results struct
 error(check_cmb_results(results));
 
-% default azrng & gcrng
+% default azrng, gcrng, odir
 if(nargin<2 || isempty(azrng)); azrng=[0 360]; end
 if(nargin<3 || isempty(gcrng)); gcrng=[0 180]; end
+if(nargin<4 || isempty(odir)); odir='.'; end
 
 % check azrng & gcrng
 if(~isreal(azrng) || numel(azrng)~=2)
@@ -106,13 +113,23 @@ elseif(any(abs(azrng)>540))
 elseif(~isreal(gcrng) || numel(gcrng)~=2)
     error('seizmo:slowdecayprofiles:badInput',...
         'GCRNG must be [GCMIN GCMAX]!');
+elseif(~isstring(odir))
+    error('seizmo:slowdecayprofiles:badInput',...
+        'ODIR must be a string!');
+end
+
+% make sure odir exists (create it if it does not)
+[ok,msg,msgid]=mkdir(odir);
+if(~ok)
+    warning(msgid,msg);
+    error('seizmo:slowdecayprofiles:pathBad',...
+        'Cannot create directory: %s',odir);
 end
 
 % verbosity
 %verbose=seizmoverbose;
 
 % loop over every result
-total=0; oldtotal=0;
 for a=1:numel(results)
     % skip if results.useralign is empty
     if(isempty(results(a).useralign)); continue; end
@@ -176,6 +193,7 @@ for a=1:numel(results)
     outliers=results(a).outliers.bad;
     
     % loop over "good" clusters
+    cnt=0;
     for b=find(good)
         % indices of members
         m=cidx==b & ~outliers;
@@ -187,14 +205,11 @@ for a=1:numel(results)
         nsta=numel(idx);
         
         % skip if none/one
-        if(nsta<2)
-            continue;
-        else
-            total=total+1;
-        end
+        if(nsta<2); continue; end
         
         % initialize struct
-        pf(total)=struct('gcdist',[],'azwidth',[],...
+        cnt=cnt+1;
+        tmp(cnt)=struct('gcdist',[],'azwidth',[],...
             'slow',[],'slowerr',[],'decay',[],'decayerr',[],...
             'cslow',[],'cslowerr',[],'cdecay',[],'cdecayerr',[],...
             'cluster',b,'kname',[],'st',[],'ev',[],'delaz',[],...
@@ -206,43 +221,60 @@ for a=1:numel(results)
             'time',datestr(now));
         
         % insert known info
-        pf(total).kname=kname(idx,:);
-        pf(total).st=st(idx,:);
-        pf(total).ev=ev;
-        pf(total).delaz=delaz(idx,:);
+        tmp(cnt).kname=kname(idx,:);
+        tmp(cnt).st=st(idx,:);
+        tmp(cnt).ev=ev;
+        tmp(cnt).delaz=delaz(idx,:);
         
         % great circle distance and width
-        pf(total).gcdist=max(delaz(idx,1))-min(delaz(idx,1));
-        pf(total).azwidth=max(delaz(idx,2))-min(delaz(idx,2));
+        tmp(cnt).gcdist=max(delaz(idx,1))-min(delaz(idx,1));
+        tmp(cnt).azwidth=max(delaz(idx,2))-min(delaz(idx,2));
         
         % corrections
-        pf(total).corrections=fixcorrstruct(results(a).corrections,idx);
+        tmp(cnt).corrections=fixcorrstruct(results(a).corrections,idx);
         
         % correlation coefficients
-        pf(total).corrcoef=...
+        tmp(cnt).corrcoef=...
             submat(ndsquareform(results(a).useralign.xc.cg),1:2,idx,3,1);
         
         % find slowness & decay rate
         [m,covm]=wlinem(delaz(idx,1),rtime(idx),1,diag(rtimeerr(idx).^2));
-        pf(total).slow=m(2);
-        pf(total).slowerr=sqrt(covm(2,2));
+        tmp(cnt).slow=m(2);
+        tmp(cnt).slowerr=sqrt(covm(2,2));
         [m,covm]=wlinem(delaz(idx,1),crtime(idx),1,diag(rtimeerr(idx).^2));
-        pf(total).cslow=m(2);
-        pf(total).cslowerr=sqrt(covm(2,2));
+        tmp(cnt).cslow=m(2);
+        tmp(cnt).cslowerr=sqrt(covm(2,2));
         [m,covm]=wlinem(delaz(idx,1),log(rampl(idx)),1,...
             diag(log(rampl(idx)+ramplerr(idx).^2)-log(rampl(idx))));
-        pf(total).decay=m(2);
-        pf(total).decayerr=sqrt(covm(2,2));
+        tmp(cnt).decay=m(2);
+        tmp(cnt).decayerr=sqrt(covm(2,2));
         [m,covm]=wlinem(delaz(idx,1),log(crampl(idx)),1,...
             diag(log(crampl(idx)+ramplerr(idx).^2)-log(crampl(idx))));
-        pf(total).cdecay=m(2);
-        pf(total).cdecayerr=sqrt(covm(2,2));
+        tmp(cnt).cdecay=m(2);
+        tmp(cnt).cdecayerr=sqrt(covm(2,2));
     end
     
+    % skip if none
+    if(~cnt); continue; end
+    
     % save profiles
-    tmp=pf(oldtotal+1:total);
-    save([datestr(now,30) '_' results(a).runname '_profiles.mat'],'tmp');
-    oldtotal=total;
+    save(fullfile(odir,[datestr(now,30) '_' ...
+        results(a).runname '_profiles.mat']),'tmp');
+    
+    % output
+    if(nargout)
+        if(~exist('varargout','var'))
+            varargout{1}=tmp;
+        else
+            varargout{1}=[varargout{1}; tmp];
+        end
+    end
+end
+
+% check for output
+if(~exist('varargout','var'))
+    error('seizmo:slowdecayprofiles:noPairs',...
+        'Not enough stations meet the specified profile criteria!');
 end
 
 end
