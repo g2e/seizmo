@@ -64,12 +64,13 @@ function [varargout]=plot2(varargin)
 %     Version History:
 %        Aug. 14, 2010 - rewrite
 %        Sep. 16, 2010 - tagged record handles as 'record'
+%        Feb. 10, 2011 - clear todo list (use datenum('datetime') to do
+%                        absolute time limits with strings)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2010 at 23:00 GMT
+%     Last Updated Feb. 10, 2011 at 23:00 GMT
 
 % todo:
-% xlim should allow datestr (convert to datenum)
 
 % check nargin
 error(nargchk(1,inf,nargin));

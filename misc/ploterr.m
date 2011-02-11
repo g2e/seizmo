@@ -45,18 +45,18 @@ function [varargout]=ploterr(varargin)
 %     be passed after LINESPEC, however, LINESPEC does not need to be
 %     passed.  The Following properties are available:
 %      'logx', 'logy', 'logxy'       - toggles for logarithmic scaling
-%      'hhx', 'hhy', 'hhxy'          - relative size of handlebars
-%      'abshhx', 'abshhy', 'abshhxy' - absolute size of handlebars
+%      'hhx', 'hhy', 'hhxy'          - relative size of handlebar height
+%      'abshhx', 'abshhy', 'abshhxy' - absolute size of handlebar height
 %
 %     The 'log' properties do not require an accompanying value.  On their
 %     own they are an "on" switch.  The values accompanying the 'log'
 %     properties must evaluate to either TRUE or FALSE where TRUE turns the
 %     log scale on and FALSE turns it off.
 %
-%     The default for 'hhx' and 'hhy' is 2/3, indicating a total width of
-%     the x-handlebars is 2/3 of the mean distance of datapoints in y and
+%     The default for 'hhx' and 'hhy' is 1/50, indicating a total width of
+%     the x-handlebars is 1/50 of the distance range of datapoints in y and
 %     vice-versa for the y-handlebars.  For logarithmic plots that is the
-%     mean distance on a logarithmic scale.
+%     distance range on a logarithmic scale.
 %
 %     Absolute size of errorbar handles for log scale is in units of power
 %     of 10 i.e. the command PLOTERR(...,'logy','abshhx',1.0) produces x
@@ -102,13 +102,13 @@ function [varargout]=ploterr(varargin)
 %     % used to set the color of the error bars and to display a legend.
 %     x=0:15;
 %     y=exp(-x).*(rand(1,16)*0.9+0.1);
-%     h=ploterr(x,y,0.3,{exp(-x)*0.1 exp(-x)},'r.','logy','hhxy',0.5);
+%     h=ploterr(x,y,0.3,{exp(-x)*0.1 exp(-x)},'r.','logy','hhxy',1e-2);
 %     set(h(2),'Color','b'), set(h(3),'Color','b');
 %     legend(h,{'data' 'error x' 'error y'});
 %
 %     % Plot normal x errorbars and tiny y errorbars
 %     % on a logarithmic y-scale and a linear x scale.
-%     ploterr(x,y,ex,ey,'logy','hhy',0.1);
+%     ploterr(x,y,ex,ey,'logy','hhy',1e-3);
 %
 %     % Show off ability to pass on prop/val pairs:
 %     ploterr(rand(50,1),rand(50,1),rand(50,1)/10,rand(50,1)/10,'sk',...
@@ -133,11 +133,12 @@ function [varargout]=ploterr(varargin)
 %                        pairs to PLOT.  Organized code & docs.  Output
 %                        with handles split up possible now.  Also allow
 %                        xy/yx to be at start or end of option.
+%        Feb. 10, 2011 - make hhx/hhy/hhxy based on range not mean
 %
 %     Written by Goetz Huesken (goetz.huesken(at)gmx.de)
 %                Felix Z�rgiebel (felix_z -> web.de)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2011 at 13:35 GMT
+%     Last Updated Feb. 10, 2011 at 13:35 GMT
 
 % todo:
 
@@ -274,13 +275,13 @@ end
 
 % calculate height of errorbar delimiters (handlebars)
 if(handleheight>0) % means handleheight was passed as a relative value
-    % Set width of ends of bars to handleheight times mean distance
-    % of the bars.  If number of points is under 15, space as if 15 points
+    % Set width of ends of bars to handleheight times distance range of
+    % points.  If number of points is under 15, space as if 15 points
     % were there.
     if(dist(max(v(:)),min(v(:)))==0)
-        dv=scale(abs(v),1/40)+(abs(v)==0);
+        dv=scale(abs(v),1/50)+(abs(v)==0);
     else
-        dv=scale(dist(max(v(:)),min(v(:))),1/max(15,npt-1)*handleheight/2);
+        dv=scale(dist(max(v(:)),min(v(:))),handleheight/2);
     end
 else % handleheight<=0 means handleheight was passed as an absolute value
     dv=handleheight/2;
@@ -393,8 +394,8 @@ if(nargin<4); yerr=[]; else yerr=varargin{1}; varargin(1)=[]; end
 sym='-';
 lx=0;
 ly=0;
-hx=2/3;
-hy=2/3;
+hx=1/50;
+hy=1/50;
 
 % skip rest if nothing left
 if(nargin<=4); return; end

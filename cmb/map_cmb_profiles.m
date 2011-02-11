@@ -16,7 +16,7 @@ function [varargout]=map_cmb_profiles(pf,field,clim,varargin)
 %     data limits.  CLIM should be specified as [MIN MAX].
 %
 %     MAP_CMB_PROFILES(PF,FIELD,CLIM,...,'OPTION',VALUE,...) allows passing
-%     options for mapping.  See MAPLOCATIONS for details.
+%     options for mapping.  See MMAP for details.
 %
 %     AX=MAP_CMB_PROFILES(...) returns the axis handle AX of the plot.
 %
@@ -26,7 +26,7 @@ function [varargout]=map_cmb_profiles(pf,field,clim,varargin)
 %     % Plot corrected profile slowness with color limits of 4.4-4.7:
 %     map_cmb_profiles(pf,'cslow',[4.4 4.7])
 %
-%    See also: MAPLOCATIONS, SLOWDECAYPAIRS, SLOWDECAYPROFILES,
+%    See also: MMAP, SLOWDECAYPAIRS, SLOWDECAYPROFILES,
 %              CMB_PDF_MTX, PLOT_CMB_MEASUREMENTS
 
 %     Version History:
@@ -35,9 +35,10 @@ function [varargout]=map_cmb_profiles(pf,field,clim,varargin)
 %        Jan. 18, 2011 - new pf fields, fix single profile bug
 %        Feb.  1, 2011 - updated See also section, fix coloring of
 %                        colorbar, label colorbar, add title
+%        Feb. 10, 2011 - update for maplocations=>mmap
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2011 at 13:35 GMT
+%     Last Updated Feb. 10, 2011 at 13:35 GMT
 
 % todo:
 
@@ -100,8 +101,8 @@ color(color>1)=1;
 st=unique(cell2mat({pf.st}'),'rows');
 ev=unique(cell2mat({pf.ev}'),'rows');
 
-% call maplocations
-ax=maplocations('stations',st(:,1:2),'events',ev(:,1:2),varargin{:});
+% call mmap
+ax=mmap('stations',st(:,1:2),'events',ev(:,1:2),varargin{:});
 
 % loop over profiles, plotting each
 hold(ax,'on');

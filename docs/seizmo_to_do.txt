@@ -29,22 +29,22 @@ x	add weighting to all
 		geofkxchorzmap
 make noise processing more flexible (file length & overlap)
 add in pwave picking fk routines
+
 cmt subtoolbox
     - main thing is to plot CMTS!!!
-mapfeature('feature')
-more cmb models (rjk)
 plotting profiles for models
     - need a decent polar plotting program to plot slices of the pie
       with inner & outer radii specified.  Not even mmpolar does it.
     - need to add raypath plotting support too
+
+more cmb models (rjk)
+    - we need to allow parameter setting (while loop rather than for)
+        - cell of numbers  {depths/heights  velo%s}
+        - inputs will change per model or series ...
+        - can never really do everything here ... just go for basics
 expand sph tri stuff
 	- use delaunay codes
     - function to make g matrix for sph tri stuff
-cmb codes
-    - fix model trimming due to 8-char limit
-    - better labeling in plot_cmb_measurements
-      - separate by earthmodel field
-      - legend with earthmodel labels
 
 
 %%%%%%%

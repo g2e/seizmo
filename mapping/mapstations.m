@@ -43,7 +43,7 @@ function [varargout]=mapstations(data,varargin)
 %     MAPSTATIONS(...,'BORDER',COLOR,...)
 %     MAPSTATIONS(...,'AXIS',AX,...)
 %     AX=MAPSTATIONS(...)
-%      see MAPLOCATIONS for details on these options.  Note that using the
+%      see MMAP for details on these options.  Note that using the
 %      STATIONS or EVENTS option overrides the info found in DATA.
 %
 %    Notes:
@@ -66,7 +66,7 @@ function [varargout]=mapstations(data,varargin)
 %      mapstations(data,'po',{'lat',[-40 40],'lon',[-30 60]},...
 %                       'go',{'box','fancy'})
 %
-%    See also: PLOT0, PLOT1, PLOT2, RECORDSECTION, MAPEVENTGRID
+%    See also: PLOT0, PLOT1, PLOT2, RECORDSECTION, MAPEVENTGRID, MMAP
 
 %     Version History:
 %        Dec.  2, 2009 - initial version
@@ -79,14 +79,12 @@ function [varargout]=mapstations(data,varargin)
 %                        plots all stations (undefined are set to NaN)
 %        July 22, 2010 - uses MAPLOCATIONS
 %        Aug. 21, 2010 - update undef usage
+%        Feb. 10, 2011 - update for maplocations=>mmap
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 22:00 GMT
+%     Last Updated Feb. 10, 2011 at 22:00 GMT
 
 % todo:
-% - msg on click features would be nice
-%   - kname, lat, lon, depth, elevation
-%   - a way to scatter dense on click (like googleearth)
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -115,7 +113,7 @@ try
     end
 
     % plot locations
-    ax=maplocations('st',[stla stlo],'ev',[evla evlo],varargin{:});
+    ax=mmap('st',[stla stlo],'ev',[evla evlo],varargin{:});
     
     % output
     if(nargout); varargout{1}=ax; end

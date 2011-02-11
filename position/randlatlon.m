@@ -14,21 +14,23 @@ function [varargout]=randlatlon(n)
 %     separate Nx1 column vectors.
 %
 %    Notes:
+%     - uses RANDSPHERE from Matlab File Exchange (included as subfunction)
 %
 %    Examples:
 %     % Get a single point in latitude & longitude:
 %     randlatlon
 %
 %     % Now return 1000 points & plot them on a map:
-%     maplocations('events',randlatlon(1000),'proj','hammer')
+%     mmap('events',randlatlon(1000),'proj','hammer')
 %
 %    See also: RANDSPHERE, XYZ2GEOCENTRIC, RAND
 
 %     Version History:
 %        Jan.  4, 2011 - initial version
+%        Feb. 10, 2011 - fix example for mmap
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  4, 2011 at 02:15 GMT
+%     Last Updated Feb. 10, 2011 at 02:15 GMT
 
 % todo:
 

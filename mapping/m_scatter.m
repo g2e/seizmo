@@ -1,5 +1,5 @@
 function [han]=m_scatter(varargin)
-%M_SCATTER    Scatter/Bubble plot on an M_MAP plot
+%M_SCATTER    Scatter/Bubble plot on an M_MAP map
 %
 %    Usage: M_SCATTER(LON,LAT)
 %           M_SCATTER(LON,LAT,SIZE)
@@ -20,9 +20,10 @@ function [han]=m_scatter(varargin)
 %     Version History:
 %        May   9, 2010 - initial version (based on M_PLOT & SCATTER)
 %        June 25, 2010 - point clipping to eliminate off-map points
+%        Feb. 10, 2011 - minor H1 change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2010 at 22:15 GMT
+%     Last Updated Feb. 10, 2011 at 22:15 GMT
 
 global MAP_PROJECTION
 

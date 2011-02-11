@@ -58,17 +58,13 @@ function [varargout]=recordsection(data,varargin)
 %     Version History:
 %        Aug. 14, 2010 - rewrite
 %        Sep. 14, 2010 - added marker support
+%        Feb.  6, 2011 - fixed new figure/axes call
+%        Feb. 10, 2011 - cleared todo list (2 axes is too problematic)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2010 at 23:00 GMT
+%     Last Updated Feb. 10, 2011 at 23:00 GMT
 
 % todo:
-% - names on opposite yaxis
-%   - this requires a second axis to work properly
-%     - this is really hard in matlab
-%       - using plotyy plots the data twice
-%       - otherwise need to do most of plotyy
-%   - could do text objects but they will not move with records
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -183,8 +179,8 @@ end
 if(isempty(opt.AXIS) || ~isscalar(opt.AXIS) || ~isreal(opt.AXIS) ...
         || ~ishandle(opt.AXIS) || ~strcmp('axes',get(opt.AXIS,'type')))
     % new figure
-    figure('color',opt.BGCOLOR);
-    opt.AXIS=gca;
+    fh=figure('color',opt.BGCOLOR);
+    opt.AXIS=axes('parent',fh);
 else
     cla(opt.AXIS,'reset');
 end

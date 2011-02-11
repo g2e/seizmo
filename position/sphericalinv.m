@@ -19,6 +19,7 @@ function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %     - Will always return the shorter great-circle-arc (GCARC<=180)
 %     - Accuracy degrades at very small distances (see HAVERSINE)
 %     - Azimuths are returned in the range 0<=az<=360
+%     - Error is about single precision levels
 %
 %    Examples:
 %     St. Louis, MO USA to Yaounde, Cameroon:
@@ -35,9 +36,10 @@ function [gcarc,az,baz]=sphericalinv(evla,evlo,stla,stlo)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Apr. 10, 2010 - fix for colocated positions giving complex gcarc
 %        Jan. 22, 2011 - use degrees functions, nargchk fix
+%        Feb. 10, 2011 - force equal positions to give gcarc=0,az=0,baz=0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 22, 2011 at 13:15 GMT
+%     Last Updated Feb. 10, 2011 at 13:15 GMT
 
 % todo:
 
@@ -96,5 +98,9 @@ az=mod(r2d.*atan2(sinlo.*coslat2,...
     coslat1.*sinlat2-sinlat1.*coslat2.*coslo),360);
 baz=mod(r2d.*atan2(-sinlo.*coslat1,...
     coslat2.*sinlat1-sinlat2.*coslat1.*coslo),360);
+
+% force equal points to be 0,0,0
+eqpo=(evla==stla & evlo==stlo);
+if(any(eqpo(:))); gcarc(eqpo)=0; az(eqpo)=0; baz(eqpo)=0; end
 
 end

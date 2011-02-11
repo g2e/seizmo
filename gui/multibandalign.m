@@ -33,6 +33,7 @@ function [info]=multibandalign(data,varargin)
 %       zxing           - zero-crossing windowing (true)
 %       zxoffset        - auto mode: # zero xings from guess to win start
 %       zxwidth         - auto mode: window is # zero crossings wide
+%       winnow          - prompt user to winnow (true)
 %       winnowyfield    - header field to winnow by (default is 'gcarc')
 %       winnowlimits    - default winnow limits (default is [])
 %       figdir          - directory to save figures to (default is '.')
@@ -81,9 +82,11 @@ function [info]=multibandalign(data,varargin)
 %                        winnow range to avoid infinite loop in auto mode
 %        Jan. 31, 2011 - some doc fixes, figdir option
 %        Feb.  1, 2011 - added autozx checks
+%        Feb.  6, 2011 - make userwinnow optional, adjust zxing code to be
+%                        more useful for the default filter bank
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2011 at 12:25 GMT
+%     Last Updated Feb.  6, 2011 at 12:25 GMT
 
 % todo:
 
@@ -254,9 +257,9 @@ try
                 
                 % use nearby zero crossing for new window limits
                 if(p.zxing)
-                    zx=zeroxing(data0,info(i));
-                    info(i).usersnr.signalwin=...
-                        [info(i).usersnr.signalwin(1) zx];
+                    zx(1)=zeroxing321(data0,info(i),1);
+                    zx(2)=zeroxing(data0,info,2);
+                    info(i).usersnr.signalwin=zx;
                 end
             end
             [snr,info(i).usersnr,ax]=usersnr(data0,...
@@ -286,7 +289,7 @@ try
         end
         
         % distance winnow only if manual
-        if(p.auto)
+        if(~p.userwinnow || p.auto)
             % fake userwinnow
             info(i).userwinnow.yfield=p.winnowyfield;
             if(isempty(p.winnowlimits))
@@ -664,6 +667,7 @@ p.auto=false; % auto multibandalign (uses zx window parameters if zxing)
 p.zxing=true; % zero-crossing windowing flag (off uses signalwin or user)
 p.zxwidth=6;  % number of zero crossings increments in window if auto
 p.zxoffset=1; % number of zero crossings to window start from initial guess
+p.userwinnow=true;
 p.winnowyfield='gcarc';
 p.winnowlimits=[];
 p.figdir='.';
@@ -820,6 +824,14 @@ for i=1:2:nargin
             end
             p.snrmethod=varargin{i+1};
             keep(i:i+1)=false;
+        case {'winnow' 'userwinnow'}
+            if(~isscalar(varargin{i+1}) || (~islogical(varargin{i+1}) ...
+                    && ~isreal(varargin{i+1})))
+                error('seizmo:multibandalign:badInput',...
+                    'WINNOW must be TRUE or FALSE!');
+            end
+            p.winnow=varargin{i+1};
+            keep(i:i+1)=false;
         case 'winnowlimits'
             if(~isequal(size(varargin{i+1}),[1 2]) ...
                     || ~isreal(varargin{i+1}))
@@ -861,7 +873,7 @@ end
 end
 
 
-function [zx]=zeroxing(data,info)
+function [zx]=zeroxing(data,info,idx)
 % get sample spacing
 delta=getheader(data,'delta');
 delta=unique(delta);
@@ -879,20 +891,51 @@ zx=sort(zx{1}); % just in case
 
 % find closest within range
 sw=info.usersnr.signalwin;
-neg=find(zx<sw(2) & zx>=(sw(2)-(sw(1)+sw(2))/2),1,'last');
-pos=find(zx>=sw(2) & zx<=(sw(2)+(sw(1)+sw(2))/2),1,'first');
+neg=find(zx<sw(idx) & zx>=(sw(idx)-(sw(1)+sw(2))/2),1,'last');
+
+% choose one
+if(isempty(neg))
+    % use previous
+    zx=sw(idx);
+else
+    zx=zx(neg);
+end
+
+end
+
+
+function [zx]=zeroxing321(data,info,idx)
+% get sample spacing
+delta=getheader(data,'delta');
+delta=unique(delta);
+if(~isscalar(delta))
+   error('seizmo:multibandalign:badInput',...
+       'DATA records must have the same sample rate!');
+end
+
+% get stack
+dstack=stack(data,1/delta,[],info.initwin(1),info.initwin(2));
+
+% get zero crossings
+zx=zerocrossings(dstack);
+zx=sort(zx{1}); % just in case
+
+% find closest within range
+sw=info.usersnr.signalwin;
+neg=find(zx<sw(idx) & zx>=(sw(idx)-(sw(1)+sw(2))/2),1,'last');
+pos=find(zx>=sw(idx) & zx<=(sw(idx)+(sw(1)+sw(2))/2),1,'first');
 
 % choose one
 if(isempty(neg) && isempty(pos))
     % use previous
-    zx=sw(2);
+    zx=sw(idx);
 elseif(isempty(neg))
     zx=zx(pos);
 elseif(isempty(pos))
     zx=zx(neg);
 else
     % move positive only if < 1/3 negative distance
-    if((sw(2)-zx(neg))/3<=(zx(pos)-sw(2)))
+    if((sw(idx)-zx(neg))/3<=(zx(pos)-sw(idx)))
         zx=zx(neg);
     else
         zx=zx(pos);

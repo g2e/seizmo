@@ -72,8 +72,8 @@ function [varargout]=slowdecayprofiles(results,azrng,gcrng,odir)
 %     % of 200-220deg and a distance of 90-160deg:
 %     pf=slowdecayprofiles(results,[200 220],[90 160])
 %
-%    See also: PREP_CMB_DATA, CMB_1ST_PASS, CMB_OUTLIERS, CMB_2ND_PASS,
-%              SLOWDECAYPAIRS, CMB_CLUSTERING
+%    See also: SLOWDECAYPAIRS, CMB_2ND_PASS, CMB_OUTLIERS, CMB_1ST_PASS,
+%              CMB_CLUSTERING, PREP_CMB_DATA
 
 %     Version History:
 %        Dec. 12, 2010 - initial version
@@ -86,9 +86,10 @@ function [varargout]=slowdecayprofiles(results,azrng,gcrng,odir)
 %                        about PF struct format
 %        Jan. 29, 2011 - save output, fix corrections bug
 %        Jan. 31, 2011 - allow no output, odir input, better checks
+%        Feb.  5, 2011 - fix bug when no output specified
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 31, 2010 at 13:35 GMT
+%     Last Updated Feb.  5, 2011 at 13:35 GMT
 
 % todo:
 
@@ -272,7 +273,7 @@ for a=1:numel(results)
 end
 
 % check for output
-if(~exist('varargout','var'))
+if(nargout && ~exist('varargout','var'))
     error('seizmo:slowdecayprofiles:noPairs',...
         'Not enough stations meet the specified profile criteria!');
 end

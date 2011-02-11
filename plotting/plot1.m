@@ -57,24 +57,12 @@ function [varargout]=plot1(data,varargin)
 %     Version History:
 %        Aug. 14, 2010 - rewrite
 %        Sep. 14, 2010 - added marker support
+%        Feb. 10, 2011 - clear todo list (was about markers)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2010 at 23:00 GMT
+%     Last Updated Feb. 10, 2011 at 23:00 GMT
 
 % todo:
-% - markers & flags
-%   - need to store marker info
-%     - p0, p1, recsec only
-%     - eliminate those with nan values
-%     - replace NaN strings with field name
-%     - store in userdata under a struct
-%       - axis, record, name, time, type
-%     - need to come up with a tagging system
-%       - tags: marker, flag
-%       - tags: (a,f,o,t)
-%   - drawmarkers will actually draw the markers (visible on)
-%   - showmarkers flips visibility
-%   - showflags flips flags off/on
 
 % check nargin
 error(nargchk(1,inf,nargin));

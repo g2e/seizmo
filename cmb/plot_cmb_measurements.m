@@ -12,7 +12,7 @@ function [varargout]=plot_cmb_measurements(pf,field,varargin)
 %     standard deviation.
 %
 %     PLOT_CMB_MEASUREMENTS(PF,FIELD,'PROP1',VAL1,...) passes
-%     property/value pairs on to PLOTERR.  May be lead with a LINESPEC
+%     property/value pairs on to PLOTERR.  May NOT lead with a LINESPEC
 %     string.  See PLOTERR for details.
 %
 %    Notes:
@@ -21,54 +21,22 @@ function [varargout]=plot_cmb_measurements(pf,field,varargin)
 %     % Plot corrected vs uncorrected of both slowness & decay constant:
 %     fh=figure;
 %     ax=makesubplots(2,1,1:2,'align','parent',fh);
-%     hold(ax(1),'on');
-%     hold(ax(2),'on');
-%     h(:,1)=plot_cmb_measurements(pf,'slow','sk',...
-%         'markerfacecolor','b','markersize',5,'parent',ax(1));
-%     h(:,2)=plot_cmb_measurements(pf,'cslow','ok',...
-%         'markerfacecolor','g','markersize',5,'parent',ax(1));
-%     h(:,3)=plot_cmb_measurements(pf,'decay','sk',...
-%         'markerfacecolor','b','markersize',5,'parent',ax(2));
-%     h(:,4)=plot_cmb_measurements(pf,'cdecay','ok',...
-%         'markerfacecolor','g','markersize',5,'parent',ax(2));
-%     movekids(h(2:3,1:2),'back')
-%     movekids(h(2:3,3:4),'back')
-%     drawnow;
-%     legend(h(1,1:2),'Raw','Corrected');
-%     legend(h(1,3:4),'Raw','Corrected');
-%     xlabel(ax(2),'Freq (Hz)');
-%     ylabel(ax(1),'Ray Parameter (s/^o)');
-%     ylabel(ax(2),'Decay Constant');
-%     title(ax(1),'Ray Parameter Dispersion');
-%     title(ax(2),'Decay Constant Dispersion');
-%     linkaxes(ax,'x');
-%     hold(ax(1),'off');
-%     hold(ax(2),'off');
+%     plot_cmb_measurements(pf,'slow','parent',ax(1));
+%     plot_cmb_measurements(pf,'cslow','parent',ax(1));
+%     plot_cmb_measurements(pf,'decay','parent',ax(2));
+%     plot_cmb_measurements(pf,'cdecay','parent',ax(2));
 %
 %    See also: CMB_PDF_MTX, MAP_CMB_PROFILES, SLOWDECAYPROFILES,
 %              SLOWDECAYPAIRS, PLOTERR
 
 %     Version History:
 %        Feb.  1, 2011 - initial version
+%        Feb. 10, 2011 - reusing axes works, better labeling, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2011 at 13:35 GMT
+%     Last Updated Feb. 10, 2011 at 13:35 GMT
 
 % todo:
-% - better labeling
-%   - plot each set of points from different sources separately
-%     x need a list of linestyle/color/marker combinations
-% - how to add to same plot
-%   - need to be able to show raw vs corrected easily
-%     - detect if axes is from plot_cmb_measurements
-%       - tag axes
-%     - extract legend info if is
-%       - [1,2,3,4]=legend(ax) -- 3 & 4 are what we need
-%       - append to it
-%     - do not allow mixed slow/decay
-%     - do allow mixed phase (may want to show decay together)
-%       - need to differentiate these
-%       - title loses phase info
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -92,9 +60,9 @@ if(~ischar(field) || ...
 end
 field=lower(field);
 
-% get frequencies
-f0=cell2mat({pf.freq}');
-lf=f0(:,1); uf=f0(:,2); f0=mean(f0,2);
+% get periods
+p0=1./cell2mat({pf.freq}');
+lp=p0(:,2); up=p0(:,1); p0=mean(p0,2);
 
 % get values & errors
 x0=[pf.(field)].';
@@ -105,23 +73,87 @@ emod={pf.earthmodel}';
 [umod,idx,idx]=unique(emod);
 nmod=max(idx);
 
-% loop over models
-h=nan(nmod,1); hyerr=h; hxerr=h;
-for i=1:max(idx)
-    % get random linespec
-    [l,m,c,mc]=randlinespec(i);
-    
-    % plot measurements
-    [h(i),hyerr(i),hxerr(i)]=ploterr(f0,x0,{lf uf},e0,[l m],...
-        'color',c,'markerfacecolor',mc,varargin{:});
+% new plot or use existing
+ax=axescheck(varargin{:});
+if(isempty(ax))
+    % new plot
+    fh=figure();
+    ax=axes('parent',fh);
+    oldpts=0;
+else
+    % bring to front
+    axes(ax);
+    oldpts=numel(findobj(ax,'tag','points'));
 end
 
-% move errorbars to rear
-movekids(h,'front');
+% get/set hold state
+held=ishold(ax);
+hold(ax,'on');
 
-% legend
-lh=legend(h,umod);
+% loop over models
+h=nan(nmod,1); hyerr=h; hxerr=h;
+for i=1:nmod
+    % measurements from this model
+    a=find(idx==i);
+    
+    % get random linespec (is a subfunction)
+    [l,m,c,mc]=randlinespec(i+oldpts);
+    
+    % plot measurements
+    [h(i),hyerr(i),hxerr(i)]=ploterr(ax,p0(a),x0(a),{lp(a) up(a)},e0(a),...
+        [l m],'color',c,'markerfacecolor',mc,'markersize',10,varargin{:});
+end
+
+% change names if corrected
+switch field
+    case {'cslow' 'cdecay'}
+        datas=strcmpi('data',umod);
+        umod(datas)={'CORRECTED'};
+        umod(~datas)=strcat(umod(~datas),{' (3D)'});
+end
+
+% tag handles
+set(h,'tag','points',{'displayname'},umod);
+set(hyerr,'tag','yerrorbars',{'displayname'},umod);
+set(hxerr,'tag','xerrorbars',{'displayname'},umod);
+
+% move errorbars to rear (they can clutter)
+movekids(findobj(ax,'tag','points'),'front');
+
+% labeling (if none exists)
+if(isempty(get(get(ax,'xlabel'),'string')))
+    xlabel(ax,'Period (s)');
+end
+if(isempty(get(get(ax,'ylabel'),'string')))
+    switch field
+        case {'slow' 'cslow'}
+            ylabel(ax,'Ray Parameter (s/^o)');
+        case {'decay' 'cdecay'}
+            ylabel(ax,'Decay Constant');
+    end
+end
+if(isempty(get(get(ax,'title'),'string')))
+    switch field
+        case 'slow'
+            title(ax,'Ray Parameter Dispersion');
+        case 'cslow'
+            title(ax,['Ray Parameter Dispersion Corrected ' ...
+                'for 3D Heterogeniety']);
+        case 'decay'
+            title(ax,'Decay Constant Dispersion');
+        case 'cdecay'
+            title(ax,['Decay Constant Dispersion Corrected ' ...
+                     'for Geometrical Spreading']);
+    end
+end
+
+% legend (regrab points objects to get those from previous plotting)
+drawnow; % legends can have issues if plot not drawn yet
+lh=legend(findobj(ax,'tag','points'));
 set(lh,'interpreter','none');
+
+% reset hold state
+if(~held); hold(ax,'off'); end
 
 % output
 if(nargout>1)

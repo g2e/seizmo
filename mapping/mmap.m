@@ -1,34 +1,34 @@
-function [varargout]=maplocations(varargin)
-%MAPLOCATIONS    Map station/event locations
+function [varargout]=mmap(varargin)
+%MMAP    Creates an M_Map map
 %
-%    Usage:    maplocations()
-%              maplocations(...,'stations',[lat lon],...)
-%              maplocations(...,'stationmarker',symstr,...)
-%              maplocations(...,'stationmarkersize',val,...)
-%              maplocations(...,'events',[lat lon],...)
-%              maplocations(...,'eventmarker',symstr,...)
-%              maplocations(...,'eventmarkersize',symstr,...)
-%              maplocations(...,'gshhs',res,...)
-%              maplocations(...,'proj',proj,...)
-%              maplocations(...,'projopt',{'opt',val,...},...)
-%              maplocations(...,'gridopt',{'opt',val,...},...)
-%              maplocations(...,'fgcolor',color,...)
-%              maplocations(...,'bgcolor',color,...)
-%              maplocations(...,'sea',color,...)
-%              maplocations(...,'land',color,...)
-%              maplocations(...,'border',color,...)
-%              maplocations(...,'axis',ax,...)
-%              ax=maplocations(...)
+%    Usage:    mmap()
+%              mmap(...,'stations',[lat lon],...)
+%              mmap(...,'stationmarker',symstr,...)
+%              mmap(...,'stationmarkersize',val,...)
+%              mmap(...,'events',[lat lon],...)
+%              mmap(...,'eventmarker',symstr,...)
+%              mmap(...,'eventmarkersize',symstr,...)
+%              mmap(...,'gshhs',res,...)
+%              mmap(...,'proj',proj,...)
+%              mmap(...,'projopt',{'opt',val,...},...)
+%              mmap(...,'gridopt',{'opt',val,...},...)
+%              mmap(...,'fgcolor',color,...)
+%              mmap(...,'bgcolor',color,...)
+%              mmap(...,'sea',color,...)
+%              mmap(...,'land',color,...)
+%              mmap(...,'border',color,...)
+%              mmap(...,'axis',ax,...)
+%              ax=mmap(...)
 %
-%    Description: MAPLOCATIONS() creates a global map using the Hammer
+%    Description: MMAP() creates a global map using the Hammer
 %     projection.  The map is quite basic without topography but does
 %     include coastlines.  Land is colored green and the oceans blue.  The
 %     figure is set to black and the map boundary is white.
 %
-%     MAPLOCATIONS(...,'STATIONS',[LAT LON],...) sets the station locations
+%     MMAP(...,'STATIONS',[LAT LON],...) sets the station locations
 %     to plot in the map.  The stations will be drawn as yellow circles.
 %
-%     MAPLOCATIONS(...,'STATIONMARKER',SYMSTR,...) sets the station symbol
+%     MMAP(...,'STATIONMARKER',SYMSTR,...) sets the station symbol
 %     type and color.  The default SYMSTR is 'yo' which stands for yellow
 %     circle.  SYMSTR can be any combination of the following color and
 %     symbol characters:
@@ -48,76 +48,76 @@ function [varargout]=maplocations(varargin)
 %                               p     pentagram
 %                               h     hexagram
 %
-%     MAPLOCATIONS(...,'STATIONMARKERSIZE',VAL,...) sets the station marker
+%     MMAP(...,'STATIONMARKERSIZE',VAL,...) sets the station marker
 %     size to VAL.  The default is [], which uses the default size
 %     determined dynamically (I think).
 %
-%     MAPLOCATIONS(...,'EVENTS',[LAT LON],...) sets the event locations to
+%     MMAP(...,'EVENTS',[LAT LON],...) sets the event locations to
 %     plot in the map.  The events will be drawn as red stars.
 %
-%     MAPLOCATIONS(...,'EVENTMARKER',SYMSTR,...) sets the station symbol
+%     MMAP(...,'EVENTMARKER',SYMSTR,...) sets the station symbol
 %     type and color.  The default SYMSTR is 'rp' which stands for red
 %     pentagram.  See option STATIONMARKER for other possibilities.
 %
-%     MAPLOCATIONS(...,'EVENTMARKERSIZE',VAL,...) sets the event marker
+%     MMAP(...,'EVENTMARKERSIZE',VAL,...) sets the event marker
 %     size to VAL.  The default is 75 as this scales better with the
 %     defaults.
 %
-%     MAPLOCATIONS(...,'GSHHS',RES,...) sets the GSHHS coastline and
+%     MMAP(...,'GSHHS',RES,...) sets the GSHHS coastline and
 %     political boundaries resolution.  The values can be 'c', 'l', 'i',
 %     'h', 'f', or 'o' (for 'off').  The default GSHHS resolution is 'o'
 %     (off) which calls M_COAST and does not draw political borders.
 %
-%     MAPLOCATIONS(...,'PROJ',PROJ,...) defines the map projection.  See
+%     MMAP(...,'PROJ',PROJ,...) defines the map projection.  See
 %     M_PROJ('SET') for possible projections.  The default PROJ is
 %     'Robinson'.
 %
-%     MAPLOCATIONS(...,'PROJOPT',{'opt',val,...},...) passes additional
+%     MMAP(...,'PROJOPT',{'opt',val,...},...) passes additional
 %     options to M_PROJ (like the lat/lon boundaries of the map).  The
 %     options must be wrapped in a cell array!  See M_PROJ('get',PROJ) for
 %     a list of possible options for the set projection (see 'PROJ' option
 %     for the default projection and altering it).  The default is no
 %     additional options, which will create a global map.
 %
-%     MAPLOCATIONS(...,'GRIDOPT',{'opt',val,...},...) passes options to
+%     MMAP(...,'GRIDOPT',{'opt',val,...},...) passes options to
 %     M_GRID (like the lat/lon ticks of the map, etc).  The options must be
 %     wrapped in a cell array!  See M_GRID('get') for a list of possible
 %     options and M_GRID('set') for their defaults.  The default is no
 %     options.
 %
-%     MAPLOCATIONS(...,'FGCOLOR',COLOR,...) specifies the foreground color
+%     MMAP(...,'FGCOLOR',COLOR,...) specifies the foreground color
 %     of the map.  The default is 'w'.  If BGCOLOR is specified and FGCOLOR
 %     is not, then FGCOLOR will be set using INVERTCOLOR.
 %
-%     MAPLOCATIONS(...,'BGCOLOR',COLOR,...) specifies the background color
+%     MMAP(...,'BGCOLOR',COLOR,...) specifies the background color
 %     of the map.  The default is 'k'.  If FGCOLOR is specified and BGCOLOR
 %     is not, then BGCOLOR will be set using INVERTCOLOR.
 %
-%     MAPLOCATIONS(...,'SEA',COLOR,...) specifies the color of the sea in
+%     MMAP(...,'SEA',COLOR,...) specifies the color of the sea in
 %     the map.  The default is [.3 .6 1].
 %
-%     MAPLOCATIONS(...,'LAND',COLOR,...) specifies the color of the land in
+%     MMAP(...,'LAND',COLOR,...) specifies the color of the land in
 %     the map.  The default is [.4 .6 .2].
 %
-%     MAPLOCATIONS(...,'BORDER',COLOR,...) specifies the color of the
+%     MMAP(...,'BORDER',COLOR,...) specifies the color of the
 %     political borders in the map.  The default is [.5 0 0].
 %
-%     MAPLOCATIONS(...,'AXIS',AX,...)  sets the axes to draw in.  This is
+%     MMAP(...,'AXIS',AX,...)  sets the axes to draw in.  This is
 %     useful for subplots, guis, etc.  The default draws the map in a new
 %     figure.
 %
-%     AX=MAPLOCATIONS(DATA) returns the axes handle for the map.
+%     AX=MMAP(DATA) returns the axes handle for the map.
 %
 %    Notes:
 %
 %    Examples:
 %     Show a grid of stations in a map with fancy border:
 %      [stla,stlo]=meshgrid(3:13,10:15);
-%      maplocations('st',[stla(:) stlo(:)],...
+%      mmap('st',[stla(:) stlo(:)],...
 %                   'po',{'lat',[-40 40],'lon',[-30 60]},...
 %                   'go',{'box','fancy'})
 %
-%    See also: M_PROJ, M_GRID, M_GSHHS, M_SCATTER
+%    See also: M_PROJ, M_GRID, M_GSHHS, M_SCATTER, MAPFEATURE, RAISEFANCY
 
 %     Version History:
 %        July 13, 2010 - initial version
@@ -126,15 +126,16 @@ function [varargout]=maplocations(varargin)
 %        Aug. 30, 2010 - allow individual sizing & coloring of st/ev
 %        Sep. 16, 2010 - changed eventmarkersize to 75 for looks
 %        Oct. 10, 2010 - changed eventmarkersize to 150 for looks
+%        Feb. 10, 2011 - namechange: maplocations => mmap, h1 line changed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 20:30 GMT
+%     Last Updated Feb. 10, 2011 at 20:30 GMT
 
 % todo:
 
 % check nargin
 if(mod(nargin,2))
-    error('seizmo:maplocations:badNumInputs',...
+    error('seizmo:mmap:badNumInputs',...
         'Unpaired Option/Value!');
 end
 
@@ -148,7 +149,7 @@ varargin=[{'st' [] 'sm' 'yo' 'ss' [] 'ev' [] 'em' 'rp' 'es' 150 'g' 'o' ...
 
 % check options
 if(~iscellstr(varargin(1:2:end)))
-    error('seizmo:maplocations:badOption',...
+    error('seizmo:mmap:badOption',...
         'All Options must be specified with a string!');
 end
 for i=1:2:numel(varargin)
@@ -167,7 +168,7 @@ for i=1:2:numel(varargin)
                 stla=val(:,1);
                 stlo=val(:,2);
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'STATIONS option must be [LAT LON] in degrees!');
             end
         case {'events' 'ev' 'e'}
@@ -178,7 +179,7 @@ for i=1:2:numel(varargin)
                 evla=val(:,1);
                 evlo=val(:,2);
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'EVENTS option must be [LAT LON] in degrees!');
             end
         case {'stationmarker' 'stm' 'sm'}
@@ -188,7 +189,7 @@ for i=1:2:numel(varargin)
             elseif(isreal(val) && size(val,2)==3 && all(val>=0 & val<=1))
                 stm=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'STATIONMARKER must be a 1 or 2 char string!');
             end
         case {'eventnmarker' 'evm' 'em'}
@@ -198,7 +199,7 @@ for i=1:2:numel(varargin)
             elseif(isreal(val) && size(val,2)==3 && all(val>=0 & val<=1))
                 evm=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'EVENTMARKER must be a 1 or 2 char string!');
             end
         case {'eventmarkersize' 'eventsize' 'evs' 'evms' 'ems' 'es'}
@@ -207,7 +208,7 @@ for i=1:2:numel(varargin)
             elseif(isreal(val))
                 evs=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'EVENTMARKERSIZE must be a positive real scalar!');
             end
         case {'stationmarkersize' 'stationsize' 'sts' 'stms' 'sms' 'ss'}
@@ -216,7 +217,7 @@ for i=1:2:numel(varargin)
             elseif(isreal(val))
                 sts=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'STATIONMARKERSIZE must be a positive real scalar!');
             end
         case {'gshhs' 'res' 'g'}
@@ -225,7 +226,7 @@ for i=1:2:numel(varargin)
                     && any(strcmpi(val,{'o' 'c' 'l' 'i' 'h' 'f'})))
                 gshhs=lower(val);
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'GSHHS option must be c, l, i, h, or f !');
             end
         case {'projection' 'proj' 'p'}
@@ -233,7 +234,7 @@ for i=1:2:numel(varargin)
             if(ischar(val) && ndims(val)==2 && size(val,1)==1)
                 proj=lower(val);
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'PROJECTION option must be a string!');
             end
         case {'projopt' 'popt' 'po'}
@@ -242,7 +243,7 @@ for i=1:2:numel(varargin)
             elseif(iscell(val) && iscellstr(val(1:2:end)))
                 popt=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     ['PROJOPT option must be a cell array of ' ...
                     '''option''/value pairs!']);
             end
@@ -252,7 +253,7 @@ for i=1:2:numel(varargin)
             elseif(iscell(val) && iscellstr(val(1:2:end)))
                 gopt=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     ['GRIDOPT option must be a cell array of ' ...
                     '''option''/value pairs!']);
             end
@@ -263,7 +264,7 @@ for i=1:2:numel(varargin)
                     || (isreal(val) && isequal(size(val),[1 3])))
                 fg=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'FGCOLOR must be a colorname or RGB triplet!');
             end
         case {'bgcolor' 'bg'}
@@ -273,7 +274,7 @@ for i=1:2:numel(varargin)
                     || (isreal(val) && isequal(size(val),[1 3])))
                 bg=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'BGCOLOR must be a colorname or RGB triplet!');
             end
         case {'seacolor' 'sea' 's'}
@@ -282,7 +283,7 @@ for i=1:2:numel(varargin)
                     || (isreal(val) && isequal(size(val),[1 3])))
                 sea=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'SEACOLOR must be a colorname or RGB triplet!');
             end
         case {'landcolor' 'land' 'l'}
@@ -291,7 +292,7 @@ for i=1:2:numel(varargin)
                     || (isreal(val) && isequal(size(val),[1 3])))
                 land=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'LANDCOLOR must be a colorname or RGB triplet!');
             end
         case {'bordercolor' 'border' 'b'}
@@ -300,7 +301,7 @@ for i=1:2:numel(varargin)
                     || (isreal(val) && isequal(size(val),[1 3])))
                 border=val;
             else
-                error('seizmo:maplocations:badInput',...
+                error('seizmo:mmap:badInput',...
                     'BORDERCOLOR must be a colorname or RGB triplet!');
             end
         case {'axis' 'ax' 'a'}
@@ -310,7 +311,7 @@ for i=1:2:numel(varargin)
                 ax=val;
             end
         otherwise
-            error('seizmo:maplocations:badOption',...
+            error('seizmo:mmap:badOption',...
                 'Unknown Option: %s',varargin{i});
     end
 end

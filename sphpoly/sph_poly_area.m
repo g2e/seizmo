@@ -40,31 +40,34 @@ function [area]=sph_poly_area(lat,lon,method,ellipsoid)
 %     the flattening.
 %
 %    Notes:
+%     - Are you getting weird areas?  Your polygon is probably crossing
+%       itself (not allowed with the default method -- use 'lines' if you
+%       want a reasonable area for such unreasonable polygons).  
 %
 %    Examples:
-%     Area of a polygon on the WGS-84 ellipsoid vs spherical earth:
-%      sph_poly_area([0 90 0],[0 0 90],[],[6378.137 1/298.257223563])
-%      sph_poly_area([0 90 0],[0 0 90],[],[6371 0])
+%     % Area of a polygon on the WGS-84 ellipsoid vs spherical earth:
+%     sph_poly_area([0 90 0],[0 0 90],[],[6378.137 1/298.257223563])
+%     sph_poly_area([0 90 0],[0 0 90],[],[6371 0])
 %
-%     Compare the area from the default method with that of 'lines' (the
-%     true area is 0.125):
-%      sph_poly_area([0 90 0],[0 0 90])
-%      sph_poly_area([0 90 0],[0 0 90],'lines')
+%     % Compare the area from the default method with that of 'lines' (the
+%     % true area is 0.125):
+%     sph_poly_area([0 90 0],[0 0 90])
+%     sph_poly_area([0 90 0],[0 0 90],'lines')
 %
 %    See also: SPH_POLY_IN, SPH_TRI_INIT, SPH_TRI_AUTO, SPH_TRI_VERTICES,
 %              SPH_TRI_LATLON, SPH_TRI_SPLIT
 
 %     Version History:
 %        Nov. 16, 2009 - initial version
+%        Feb.  7, 2011 - azimuths method works much better now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2009 at 19:30 GMT
+%     Last Updated Feb.  7, 2011 at 19:30 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,4,nargin));
 
 % check lat/lon
 if(isvector(lat)); lat=lat(:); end
@@ -130,10 +133,8 @@ switch lower(method)
         area=min(area,1-area);
     case 'planes'
         % wrap the polygon (for angles)
-        lat=[lat(end,:); lat];
-        lon=[lon(end,:); lon];
-        lat(end+1,:)=lat(2,:);
-        lon(end+1,:)=lon(2,:);
+        lat=[lat(end,:); lat; lat(1,:)];
+        lon=[lon(end,:); lon; lon(1,:)];
         
         % next dimension
         nd=ndims(lat)+1;
@@ -154,28 +155,38 @@ switch lower(method)
         % get area
         area=(sum(angles,1)-(v-2)*pi)/(4*pi);
     case 'azimuths'
-        % wrap the polygon (for angles)
-        lat=[lat(end,:); lat];
-        lon=[lon(end,:); lon];
-        lat(end+1,:)=lat(2,:);
-        lon(end+1,:)=lon(2,:);
-        
-        % get azimuths
-        [dist,az]=sphericalinv(lat(2:end-1,:),lon(2:end-1,:),...
-            lat(3:end,:),lon(3:end,:));
-        [baz,baz]=sphericalinv(lat(2:end-1,:),lon(2:end-1,:),...
-            lat(1:end-2,:),lon(1:end-2,:));
-        
-        % handle points at same position
-        bad=dist<10*eps;
-        if(any(bad(:))); az(bad)=180; end
-        
-        % force baz to be less than az (requires clockwise progression)
-        bad=baz<az;
-        if(any(bad(:))); az(bad)=az(bad)-360; end
-        
-        % get area
-        area=(pi/180*sum(baz-az,1)-(v-2)*pi)/(4*pi);
+        % loops are easy (leave me alone!)
+        area=nan(1,size(lat,2));
+        for i=1:size(lat,2)
+            % remove duplicate points
+            lat0=lat(:,i); lon0=lon(:,i);
+            dist=sphericalinv(lat0,lon0,lat0([2:end 1]),lon0([2:end 1]));
+            bad=dist<10*eps('single');
+            lat0(bad)=[]; lon0(bad)=[];
+            
+            % 0 area cheats (numel = 0 or 2)
+            if(numel(lat0)<3)
+                area(1,i)=0;
+                continue;
+            end
+            
+            % wrap the polygon (for angles)
+            lat0=[lat0(end); lat0; lat0(1)];
+            lon0=[lon0(end); lon0; lon0(1)];
+            
+            % get azimuths
+            [az,az]=sphericalinv(lat0(2:end-1),lon0(2:end-1),...
+                lat0(3:end),lon0(3:end));
+            [baz,baz]=sphericalinv(lat0(2:end-1),lon0(2:end-1),...
+                lat0(1:end-2),lon0(1:end-2));
+            
+            % force az to be less than baz (requires clockwise progression)
+            bad0=baz<az;
+            if(any(bad0(:))); az(bad0)=az(bad0)-360; end
+            
+            % get area
+            area(1,i)=(pi/180*sum(baz-az,1)-(v-2-sum(bad))*pi)/(4*pi);
+        end
     otherwise
         error('seizmo:sph_poly_area:badMethod',...
             'Unknown METHOD: %s',method);

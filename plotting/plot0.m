@@ -58,9 +58,10 @@ function [varargout]=plot0(data,varargin)
 %     Version History:
 %        Aug. 14, 2010 - rewrite
 %        Sep. 14, 2010 - added marker support
+%        Feb.  6, 2011 - fixed new figure/axes call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2010 at 23:00 GMT
+%     Last Updated Feb.  6, 2011 at 23:00 GMT
 
 % todo:
 
@@ -176,8 +177,8 @@ end
 if(isempty(opt.AXIS) || ~isscalar(opt.AXIS) || ~isreal(opt.AXIS) ...
         || ~ishandle(opt.AXIS) || ~strcmp('axes',get(opt.AXIS,'type')))
     % new figure
-    figure('color',opt.BGCOLOR);
-    opt.AXIS=gca;
+    fh=figure('color',opt.BGCOLOR);
+    opt.AXIS=axes('parent',fh);
 else
     cla(opt.AXIS,'reset');
 end

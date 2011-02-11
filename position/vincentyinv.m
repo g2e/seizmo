@@ -65,6 +65,7 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %        May   8, 2009 - minor doc fix
 %        Nov. 13, 2009 - name change: geodetic to geographic
 %        Apr. 10, 2010 - return 0s rather than NaNs for equal positions
+%        Feb. 10, 2011 - minor code formating changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Apr. 10, 2010 at 13:15 GMT
@@ -72,8 +73,7 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 % todo:
 
 % require 4 to 6 inputs
-msg=nargchk(4,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,6,nargin));
 
 % default - WGS-84 Reference Ellipsoid
 if(nargin==4 || isempty(ellipsoid))
@@ -235,10 +235,6 @@ baz=mod(atan2(-cosU1.*sin(lamda),...
 
 % avoids NaNs when getting geometry between 2 equal positions
 eqpo=(evla==stla & evlo==stlo);
-if(any(eqpo))
-    dist(eqpo)=0;
-    az(eqpo)=0;
-    baz(eqpo)=0;
-end
+if(any(eqpo(:))); dist(eqpo)=0; az(eqpo)=0; baz(eqpo)=0; end
 
 end

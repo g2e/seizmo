@@ -17,17 +17,19 @@ function h=m_patch(long,lat,C,varargin);
 
 %  10/Mar/99 - changed order of calls ('c' not handled correctly in mu_coast otherwise)
 % 6/Nov/00 - eliminate returned stuff if ';' neglected (thx to D Byrne)
+% 8/Feb/11 - draw at +/-360 too (gge)
 
+% row vector to column vector
+if(isvector(long)); long=long(:); end
+if(isvector(lat)); lat=lat(:); end
+
+% draw +/-360
+long=[long long+360 long-360];
+lat=[lat lat lat];
 [m,n]=size(long);
-
-if m==1 & n>1,
-  h=mu_coast('vector',[long' lat';long(1) lat(1)],'patch',C,'tag','m_patch',varargin{:});
-elseif m>1 & n==1,
-  h=mu_coast('vector',[long lat;long(1) lat(1)],'patch',C,'tag','m_patch',varargin{:});
-else
-  h=mu_coast('vector',[reshape([long;long(1,:);NaN+ones(1,n)],(m+2)*n,1),...
-                     reshape([lat;lat(1,:);NaN+ones(1,n)],(m+2)*n,1)],'patch',C,'tag','m_patch',varargin{:});
-end;
+h=mu_coast('vector',[reshape([long;long(1,:);NaN+ones(1,n)],(m+2)*n,1),...
+    reshape([lat;lat(1,:);NaN+ones(1,n)],(m+2)*n,1)],'patch',C,...
+    'tag','m_patch',varargin{:});
 
 if nargout==0,
  clear h

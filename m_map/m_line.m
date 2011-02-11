@@ -20,16 +20,18 @@ function h=m_line(long,lat,varargin);
 % 18/july/00 - Fixed m_line so you could do clipping through it.
 % 6/Nov/00 - eliminate returned stuff if ';' neglected (thx to D Byrne)
 % 21/June/10 - redraw lines at several equivalent longitudes (gge)
+% 8/Feb/11 - remove line indicating wraparound fixed (you have to do it),
+%            row vectors to column vectors, don't nan out lines (gge)
 
 %
 % This software is provided "as is" without warranty of any kind. But
 % it's mine, so you can't sell it.
 
-global MAP_VAR_LIST
 clp='on';
 
 k=1;
 while k<length(varargin),
+    if(numel(varargin{k})<3); k=k+2; continue; end
   switch lower(varargin{k}(1:3)),
     case 'cli',
       clp=varargin{k+1};
@@ -45,19 +47,13 @@ while k<length(varargin),
   end;
 end;
 
+% row vector to column vector
+if(isvector(long)); long=long(:); end
+if(isvector(lat)); lat=lat(:); end
+
 % redraw each line thrice (with different but equivalent longitudes)
 % - this fixes most of the truncation problem of lines on maps
-% - this fixes the wrap-around problem of lines on maps
-long2=long+360;
-long2(long2>MAP_VAR_LIST.longs(2))=NaN;
-long2(long2<MAP_VAR_LIST.longs(1))=NaN;
-long3=long-360;
-long3(long3<MAP_VAR_LIST.longs(1))=NaN;
-long3(long3>MAP_VAR_LIST.longs(2))=NaN;
-long(long>MAP_VAR_LIST.longs(2))=NaN;
-long(long<MAP_VAR_LIST.longs(1))=NaN;
-[X,Y]=m_ll2xy([long long2 long3],[lat lat lat],'clip',clp);
-%[X,Y]=m_ll2xy(long,lat,'clip',clp);
+[X,Y]=m_ll2xy([long long+360 long-360],[lat lat lat],'clip',clp);
 
 if nargout>0,
   h=line(X,Y,'tag','m_line',varargin{:});

@@ -83,9 +83,10 @@ function [varargout]=slowdecaypairs(results,azrng,gcrng,odir)
 %                        about PF struct format
 %        Jan. 29, 2011 - save output, fix corrections bug
 %        Jan. 31, 2011 - allow no output, odir input, better checks
+%        Feb.  5, 2011 - fix bug when no output specified
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 31, 2010 at 13:35 GMT
+%     Last Updated Feb.  5, 2011 at 13:35 GMT
 
 % todo:
 
@@ -288,7 +289,7 @@ for a=1:numel(results)
 end
 
 % check for output
-if(~exist('varargout','var'))
+if(nargout && ~exist('varargout','var'))
     error('seizmo:slowdecaypairs:noPairs',...
         'No station pairs meet the specified profile criteria!');
 end

@@ -1,4 +1,4 @@
-function [xi,yi,x,y]=m_hatch(lon,lat,varargin);
+function [xi,yi,lon,lat]=m_hatch(lon,lat,varargin);
 % M_HATCH Draws hatched or speckled interiors to a patch
 %       
 %    M_HATCH(LON,LAT,STYL,ANGLE,STEP,...line parameters);
@@ -30,6 +30,8 @@ function [xi,yi,x,y]=m_hatch(lon,lat,varargin);
 %
 % Hatch Algorithm originally by K. Pankratov, with a bit stolen from 
 % Iram Weinsteins 'fancification'. Speckle modifications by R. Pawlowicz.
+% 8/Feb/11 - draw at +/-360 too (gge)
+% 9/Feb/11 - support multiple polygon input (gge)
 %
 % R Pawlowicz 15/Dec/2005
   
@@ -49,83 +51,107 @@ if length(varargin)>0 & ~isstr(varargin{1}),
   step=varargin{1};
   varargin(1)=[];
 end;
-  
-[x,y,I]=m_ll2xy(lon,lat,'clip','patch');
+
+% get axis
+ax=axescheck(varargin{:});
+if(isempty(ax)); ax=gca; end
+
+% row vector to column vector
+if(isvector(lon)); lon=lon(:); end
+if(isvector(lat)); lat=lat(:); end
+
+% draw +/-360
+[lon,lat,I]=m_ll2xy([lon lon+360 lon-360],[lat lat lat],'clip','patch');
+
+% close polygon if necessary
+if(~isequal(lon(1,:),lon(end,:)) && ~isequal(lat(:,1),lat(end,:)))
+    lon=lon([1:end 1],:);
+    lat=lat([1:end 1],:);
+end
  
-  
-if x(end)~=x(1) & y(end)~=y(1),
-  x=x([1:end 1]);
-  y=y([1:end 1]);
-  I=I([1:end 1]);
-end;
-
-if strcmp(styl,'speckle') | strcmp(styl,'outspeckle'),
-  angle=angle*(1-I);
-end;
-
-if size(x,1)~=1,
- x=x(:)';
- angle=angle(:)';
-end;
-if size(y,1)~=1,
- y=y(:)';
-end;
- 
-
-% Code stolen from Weinstein hatch
-oldu = get(gca,'units');
-set(gca,'units','points');
-sza = get(gca,'pos'); sza = sza(3:4);
-set(gca,'units',oldu)   % Set axes units back
-
-xlim = get(gca,'xlim');
-ylim = get(gca,'ylim');
-xsc = sza(1)/(xlim(2)-xlim(1)+eps);
-ysc = sza(2)/(ylim(2)-ylim(1)+eps);
-
-switch lower(styl),
- case 'single',
-  [xi,yi]=drawhatch(x,y,angle,step,xsc,ysc,0);
-  if nargout<2,
-    xi=line(xi,yi,varargin{:});
-  end;  
- case 'cross',
-  [xi,yi]=drawhatch(x,y,angle,step,xsc,ysc,0);
-  [xi2,yi2]=drawhatch(x,y,angle+90,step,xsc,ysc,0);
-  xi=[xi,xi2];
-  yi=[yi,yi2];
-  if nargout<2,
-    xi=line(xi,yi,varargin{:});
-  end;  
- case 'speckle',
-  [xi,yi ]  =drawhatch(x,y,45,   step,xsc,ysc,angle);
-  [xi2,yi2 ]=drawhatch(x,y,45+90,step,xsc,ysc,angle);
-  xi=[xi,xi2];
-  yi=[yi,yi2];
-  if nargout<2,
-    if any(xi),
-      xi=line(xi,yi,'marker','.','linest','none','markersize',2,varargin{:});
-    else
-      xi=NaN;
-    end;    
-  end; 
- case 'outspeckle',
-  [xi,yi ]  =drawhatch(x,y,45,   step,xsc,ysc,-angle);
-  [xi2,yi2 ]=drawhatch(x,y,45+90,step,xsc,ysc,-angle);
-  xi=[xi,xi2];
-  yi=[yi,yi2];
-  inside=logical(inpolygon(xi,yi,x,y)); % logical needed for v6!
-  xi(inside)=[];yi(inside)=[];
-  if nargout<2,
-    if any(xi),
-      xi=line(xi,yi,'marker','.','linest','none','markersize',2,varargin{:});
-    else
-      xi=NaN;
-    end;    
-  end; 
+% loop over objects
+xi=[]; yi=[];
+for obj=1:size(lon,2)
+    % assign
+    x=lon(:,obj);
+    y=lat(:,obj);
     
-end;
+    if strcmp(styl,'speckle') | strcmp(styl,'outspeckle'),
+        angle=angle*(1-I(:,obj));
+    end;
+    
+    if size(x,1)~=1,
+        x=x(:)';
+        angle=angle(:)';
+    end;
+    if size(y,1)~=1,
+        y=y(:)';
+    end;
+    
+    
+    % Code stolen from Weinstein hatch
+    oldu = get(ax,'units');
+    set(ax,'units','points');
+    sza = get(ax,'pos'); sza = sza(3:4);
+    set(ax,'units',oldu)   % Set axes units back
+    
+    xlim = get(ax,'xlim');
+    ylim = get(ax,'ylim');
+    xsc = sza(1)/(xlim(2)-xlim(1)+eps);
+    ysc = sza(2)/(ylim(2)-ylim(1)+eps);
+    
+    switch lower(styl),
+        case 'single',
+            [xi1,yi1]=drawhatch(x,y,angle,step,xsc,ysc,0);
+            if nargout<2,
+                xi=[xi line(xi1,yi1,'parent',ax,varargin{:})];
+            else
+                xi=[xi,xi1];
+                yi=[yi,yi1];
+            end;
+        case 'cross',
+            [xi1,yi1]=drawhatch(x,y,angle,step,xsc,ysc,0);
+            [xi2,yi2]=drawhatch(x,y,angle+90,step,xsc,ysc,0);
+            if nargout<2,
+                xi=[xi line([xi1,xi2],[yi1,yi2],'parent',ax,varargin{:})];
+            else
+                xi=[xi,xi1,xi2];
+                yi=[yi,yi1,yi2];
+            end;
+        case 'speckle',
+            [xi1,yi1]=drawhatch(x,y,45,   step,xsc,ysc,angle);
+            [xi2,yi2]=drawhatch(x,y,45+90,step,xsc,ysc,angle);
+            if nargout<2,
+                if any(xi),
+                    xi=[xi line([xi1,xi2],[yi1,yi2],'parent',ax,'marker','.','linest','none','markersize',2,varargin{:})];
+                else
+                    xi=[xi NaN];
+                end;
+            else
+                xi=[xi,xi1,xi2];
+                yi=[yi,yi1,yi2];
+            end;
+        case 'outspeckle',
+            [xi1,yi1]=drawhatch(x,y,45,   step,xsc,ysc,-angle);
+            [xi2,yi2]=drawhatch(x,y,45+90,step,xsc,ysc,-angle);
+            inside=logical(inpolygon(xi1,yi1,x,y)); % logical needed for v6!
+            xi1(inside)=[];yi1(inside)=[];
+            inside=logical(inpolygon(xi2,yi2,x,y)); % logical needed for v6!
+            xi2(inside)=[];yi2(inside)=[];
+            if nargout<2,
+                if any(xi),
+                    xi=[xi line([xi1,xi2],[yi1,yi2],'parent',ax,'marker','.','linest','none','markersize',2,varargin{:})];
+                else
+                    xi=[xi NaN];
+                end;
+            else
+                xi=[xi,xi1,xi2];
+                yi=[yi,yi1,yi2];
+            end;
+            
+    end;
 
+end
 
 return
 
