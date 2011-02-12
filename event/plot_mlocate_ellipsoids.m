@@ -18,9 +18,9 @@ function [varargout]=plot_mlocate_ellipsoids(varargin)
 %       documentation and touched it up to make use of SEIZMO.
 %
 %    Examples:
-%     Plot up some ellipsoids (example.ellipse is a test set of ellipsoids
-%     for the Marianas subduction zone - dataset from Erica Emry):
-%      plot_mlocate_ellipsoids(which('example.ellipse'))
+%     % Plot some ellipsoids (example.ellipse is a test set of ellipsoids
+%     % for the Marianas subduction zone - dataset from Erica Emry):
+%     plot_mlocate_ellipsoids(which('example.ellipse'))
 %
 %    See also:
 
@@ -32,10 +32,11 @@ function [varargout]=plot_mlocate_ellipsoids(varargin)
 %        Feb. 14, 2010 - use ONEFILELIST filterspec global option
 %        Apr. 22, 2010 - more credit where credit is due
 %        June 24, 2010 - fix no path bug
+%        Feb. 11, 2011 - fix axes calls in plotting commands, no inv call
 %
 %     Written by Erica Emry (ericae at wustl dot edu)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 24, 2010 at 17:05 GMT
+%     Last Updated Feb. 11, 2011 at 17:05 GMT
 
 % todo:
 
@@ -49,7 +50,9 @@ SEIZMO.ONEFILELIST.FILTERSPEC=...
 files=onefilelist(varargin);
 
 % spawn figure
-h=figure;
+fh=figure;
+ax=axes('parent',fh);
+hold(ax,'on');
 
 % colormap
 cint=256;
@@ -91,15 +94,15 @@ for n=1:numel(files)
     nellips=numel(xx);
     for i=1:nellips
         % rotation matrix (to orient ellipsoid)
-        v=inv([xx(i) xy(i) xz(i);
-               yx(i) yy(i) yz(i);
-               zx(i) zy(i) zz(i)]);
+        v=[xx(i) xy(i) xz(i);
+           yx(i) yy(i) yz(i);
+           zx(i) zy(i) zz(i)];
         
         % ellipsoid (unoriented)
         [x,y,z]=ellipsoid(0,0,0,xdist(i),ydist(i),zdist(i),npts);
         
         % rotate ellipsoid
-        temp=[x(:) y(:) z(:)]*v;
+        temp=[x(:) y(:) z(:)]/v;
         
         % translate ellipsoid (to centroid reference frame)
         x(:)=temp(:,1)+latdev(i);
@@ -119,13 +122,12 @@ for n=1:numel(files)
         zmax=max([zmax; z(:)]);
         
         % draw ellipsoid (cycle ellipsoid coloring every 100km)
-        figure(h);
-        surf(x,y,z,'facecolor',...
+        surf(ax,x,y,z,'facecolor',...
             cmap(1+mod(round(cint*(dep+depdev(i))/repeatint),cint),:),...
             'edgecolor','none');
-        hold on;
     end
 end
+hold(ax,'off');
 
 % setup colormap used
 %zmin=round(zmin); zmax=round(zmax);
@@ -133,29 +135,26 @@ end
 %fmini=1+mod(round(cint*zmin/repeatint),cint);
 %fmaxi=1+mod(round(cint*zmax/repeatint),cint);
 %cmap=[cmap(fmini:end,:); repmat(cmap,[zmaxr-zminr 1]); cmap(1:fmaxi,:)];
-%colormap(cmap)
+%colormap(ax,cmap);
 
 % universal plotting parameters
-figure(h)
-%colorbar('location','eastoutside','ydir','reverse');
-set(gca,'ZDir','reverse')
-set(gca,'YDir','reverse')
-xlabel('Latitude (deg)')
-ylabel('Longitude (deg)')
-zlabel('Depth (km)')
-box on
-axis vis3d
-%lighting phong
-lighting gouraud
-material shiny
-light('Position',[ 1 -1  0],'Style','infinite')
-light('Position',[ 1  1  0],'Style','infinite')
-light('Position',[-1  0  0],'Style','infinite')
-hold off
-rotate3d
+%colorbar('location','eastoutside','ydir','reverse','peer',ax);
+set(ax,'ZDir','reverse');
+set(ax,'YDir','reverse');
+xlabel(ax,'Latitude (deg)');
+ylabel(ax,'Longitude (deg)');
+zlabel(ax,'Depth (km)');
+box(ax,'on');
+view(ax,3);
+rotate3d(ax,'on');
+axis(ax,'tight','vis3d');
+%lighting(ax,'phong');
+lighting(ax,'gouraud');
+material(ax,'shiny');
+light('parent',ax,'Position',[ 1 -1  0],'Style','infinite');
+light('parent',ax,'Position',[ 1  1  0],'Style','infinite');
+light('parent',ax,'Position',[-1  0  0],'Style','infinite');
 
-if(nargout)
-    varargout{1}=h;
-end
+if(nargout); varargout{1}=ax; end
 
 end

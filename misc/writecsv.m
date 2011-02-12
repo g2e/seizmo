@@ -39,7 +39,7 @@ function []=writecsv(file,lines,o)
 %        Sep. 22, 2009 - fixed dir check bug, skip confirmation option
 %        Jan. 26, 2010 - add graphical selection
 %        Feb.  5, 2010 - add check for overwrite flag
-%        Feb. 11, 2011 - mass nargchk fix
+%        Feb. 11, 2011 - mass nargchk fix, use fprintf
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 11, 2011 at 15:05 GMT
@@ -84,7 +84,7 @@ else
                 'CSV File: %s\nIs A Directory!',file);
         end
         if(~o)
-            disp(sprintf('CSV File: %s\nFile Exists!',file));
+            fprintf('CSV File: %s\nFile Exists!\n',file);
             reply=input('Overwrite? Y/N [N]: ','s');
             if(isempty(reply) || ~strncmpi(reply,'y',1))
                 disp('Not overwriting!');

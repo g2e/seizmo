@@ -43,9 +43,10 @@ function [varargout]=azisweep(data,lagrng,degrng,azwin,azstep)
 %        June 24, 2010 - initial version
 %        Sep. 16, 2010 - doc update, fixed plotting (much faster now),
 %                        fixed bug in azimuthal windowing and labeling
+%        Feb. 11, 2011 - minor mlint fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2010 at 14:15 GMT
+%     Last Updated Feb. 11, 2011 at 14:15 GMT
 
 % todo:
 
@@ -251,15 +252,15 @@ global MAP_VAR_LIST
 % wrap longitudes to plot
 while(any(abs(st(:,2)-mean(MAP_VAR_LIST.longs))>180))
     st(st(:,2)<MAP_VAR_LIST.longs(1),2)=...
-        st(st<MAP_VAR_LIST.longs(1),2)+360; %#ok
+        st(st<MAP_VAR_LIST.longs(1),2)+360;
     st(st(:,2)>MAP_VAR_LIST.longs(2),2)=...
-        st(st(:,2)>MAP_VAR_LIST.longs(2),2)-360; %#ok
+        st(st(:,2)>MAP_VAR_LIST.longs(2),2)-360;
 end
 while(any(abs(ev(:,2)-mean(MAP_VAR_LIST.longs))>180))
     ev(ev(:,2)<MAP_VAR_LIST.longs(1),2)=...
-        ev(ev(:,2)<MAP_VAR_LIST.longs(1),2)+360; %#ok
+        ev(ev(:,2)<MAP_VAR_LIST.longs(1),2)+360;
     ev(ev(:,2)>MAP_VAR_LIST.longs(2),2)=...
-        ev(ev(:,2)>MAP_VAR_LIST.longs(2),2)-360; %#ok
+        ev(ev(:,2)>MAP_VAR_LIST.longs(2),2)-360;
 end
 
 % replace station info

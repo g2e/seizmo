@@ -52,7 +52,8 @@ function [data,x,t]=deconvolve_source_timefunction(data,varargin)
 %     Version History:
 %        Oct. 29, 2009 - initial version
 %        Jan. 30, 2010 - fix checking state functions, better messages
-%        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
+%        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix, use
+%                        checkheader more effectively
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 11, 2011 at 15:05 GMT
@@ -71,7 +72,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check header
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
     
     % turn off header checking
     oldcheckheaderstate=checkheader_state(false);
@@ -89,24 +92,7 @@ try
     nrecs=numel(data);
     
     % get header info
-    [b,e,delta]=getheader(data,'b','e','delta');
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
-    
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:deconvolve_source_timefunction:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
-    
-    % cannot do unevenly sampled records
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:deconvolve_source_timefunction:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    end
+    delta=getheader(data,'delta');
     
     % pass to make_source_timefunction
     [x,t]=make_source_timefunction(delta,varargin{1:min(nargin-1,2)});

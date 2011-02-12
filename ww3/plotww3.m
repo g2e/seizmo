@@ -40,9 +40,10 @@ function [varargout]=plotww3(ww3,rng,fgcolor,bgcolor,ax)
 %        June 15, 2010 - initial version
 %        July  2, 2010 - adjusted oneliner description
 %        Aug. 30, 2010 - doc fixes
+%        Feb. 11, 2011 - improve axes calls for plotting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 30, 2010 at 00:40 GMT
+%     Last Updated Feb. 11, 2011 at 00:40 GMT
 
 % todo:
 
@@ -98,8 +99,8 @@ end
 % check handle
 if(nargin<5 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
         || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
-    figure('color',bgcolor);
-    ax=gca;
+    fh=figure('color',bgcolor);
+    ax=axes('parent',fh);
 else
     axes(ax);
 end
@@ -118,7 +119,7 @@ map=reshape(ww3.fltarray,ww3.gds.Ni,ww3.gds.Nj).';
 if(overlap); map=[map(:,end*3/4+1:end) map]; end
 
 % plot map
-imagesc(lon,lat,map);
+imagesc(lon,lat,map,'parent',ax);
 set(ax,'xcolor',fgcolor,'ycolor',fgcolor,...
     'color',bgcolor,'fontweight','bold','clim',rng);
 
@@ -135,18 +136,18 @@ ylabel(ax,'Latitude (deg)',...
 
 % colormap
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
-    colormap(flipud(fire));
+    colormap(ax,flipud(fire));
 elseif(strcmp(bgcolor,'k') || isequal(bgcolor,[0 0 0]))
-    colormap(fire);
+    colormap(ax,fire);
 else
-    colormap(fire);
+    colormap(ax,fire);
 end
 
 % colorbar
 c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
 xlabel(c,ww3.units,'fontweight','bold','color',fgcolor)
-axis equal tight;
+axis(ax,'equal','tight');
 
 % output if wanted
 if(nargout); varargout{1}=ax; end

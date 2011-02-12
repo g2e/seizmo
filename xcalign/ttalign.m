@@ -55,9 +55,10 @@ function [m,Gg]=ttalign(lag,lagw,abstt,absw,absidx)
 %                        times and completely wrong times for absolute
 %                        times)
 %        Sep. 13, 2010 - nargchk fix
+%        Feb. 11, 2011 - drop inv calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2010 at 01:05 GMT
+%     Last Updated Feb. 11, 2011 at 01:05 GMT
 
 % todo:
 
@@ -89,7 +90,7 @@ if(nargin<3)
     W=sparse(1:totlen,1:totlen,[lagw(:); 1],totlen,totlen);
     
     % GENERALIZED INVERSE (Gg) (OVERDETERMINED CASE)
-    Gg=full(inv(G.'*W*G)*G.'*W);
+    Gg=full((G.'*W*G)\G.'*W);
     
     % FINDING LEAST SQUARES RELATIVE ARRIVALS (m)
     m=Gg*[lag(:); 0];
@@ -115,7 +116,7 @@ else % some absolute timing info also
         [lagw(:); absw(:)],totlen,totlen);
     
     % GENERALIZED INVERSE (Gg) (OVERDETERMINED CASE)
-    Gg=full(inv(G.'*W*G)*G.'*W);
+    Gg=full((G.'*W*G)\G.'*W);
     
     % FINDING LEAST SQUARES ABSOLUTE ARRIVALS (m)
     m=Gg*[lag(:); abstt(:)];

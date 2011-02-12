@@ -29,6 +29,7 @@ x	add weighting to all
 		geofkxchorzmap
 make noise processing more flexible (file length & overlap)
 add in pwave picking fk routines
+fix plotbathyexcite
 
 cmt subtoolbox
     - main thing is to plot CMTS!!!
@@ -50,6 +51,11 @@ expand sph tri stuff
 %%%%%%%
 POSTDOC
 %%%%%%%
+
+fix doc formatting
+    - examples
+    - description
+fix checkheader calls (and remove redundant checks)
 
 improve top-level help file
     - some intros to basic signal processing tasks, cmts, plotting

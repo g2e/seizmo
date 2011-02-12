@@ -52,9 +52,10 @@ function [varargout]=checkoperr(varargin)
 %        Oct. 16, 2009 - added complex data checks
 %        Dec.  8, 2009 - new options NAN_DEP & INF_DEP
 %        Jan. 28, 2010 - doc update
+%        Feb. 11, 2011 - fprintf fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2010 at 00:55 GMT
+%     Last Updated Feb. 11, 2011 at 00:55 GMT
 
 % todo:
 
@@ -70,7 +71,7 @@ fields=fieldnames(option).';
 
 % no inputs/outputs = display options
 if(~nargin && ~nargout)
-    for i=fields; disp(sprintf('%25s = %s',i{:},option.(i{:}))); end
+    for i=fields; fprintf('%25s = %s\n',i{:},option.(i{:})); end
 end
 
 % output

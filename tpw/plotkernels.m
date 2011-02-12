@@ -31,9 +31,10 @@ function [ax]=plotkernels(Kph,Kam,x,y,ax)
 
 %     Version History:
 %        July  9, 2010 - initial version
+%        Feb. 11, 2011 - improve axes calls in plotting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  9, 2010 at 16:30 GMT
+%     Last Updated Feb. 11, 2011 at 16:30 GMT
 
 % todo:
 
@@ -77,36 +78,34 @@ x0=unique(x(:));
 
 % first plot the phase kernel
 if(badax)
-    figure;
-    ax(1)=gca;
+    fh=figure;
+    ax(1)=axes('parent',fh);
 end
-axes(ax(1));
-imagesc(x0,x0,Kph);
-colormap(jet);
-xlabel('RADIAL POSITION (KM)');
-ylabel('TRANSVERSE POSITION (KM)');
-zlabel('SENSITIVITY (S/KM^2)');
-title({'2D PLANE-WAVE PHASE DELAY KERNEL' ...
+imagesc(x0,x0,Kph,'parent',ax(1));
+colormap(ax(1),jet);
+xlabel(ax(1),'RADIAL POSITION (KM)');
+ylabel(ax(1),'TRANSVERSE POSITION (KM)');
+zlabel(ax(1),'SENSITIVITY (S/KM^2)');
+title(ax(1),{'2D PLANE-WAVE PHASE DELAY KERNEL' ...
     'FOR RAYLEIGH WAVE PHASE VELOCITIES'});
-box on
-grid on
-colorbar
+box(ax(1),'on');
+grid(ax(1),'on');
+colorbar('peer',ax(1));
 
 % now plot the amplitude kernel
 if(badax)
-    figure;
-    ax(2)=gca;
+    fh=figure;
+    ax(2)=axes('parent',fh);
 end
-axes(ax(2));
-imagesc(x0,x0,Kam);
-colormap(jet);
-xlabel('RADIAL POSITION (KM)');
-ylabel('TRANSVERSE POSITION (KM)');
-zlabel('SENSITIVITY (S/KM^2)');
-title({'2D PLANE-WAVE AMPLITUDE DEVIATION KERNEL' ...
+imagesc(x0,x0,Kam,'parent',ax(2));
+colormap(ax(2),jet);
+xlabel(ax(2),'RADIAL POSITION (KM)');
+ylabel(ax(2),'TRANSVERSE POSITION (KM)');
+zlabel(ax(2),'SENSITIVITY (S/KM^2)');
+title(ax(2),{'2D PLANE-WAVE AMPLITUDE DEVIATION KERNEL' ...
     'FOR RAYLEIGH WAVE PHASE VELOCITIES'});
-box on
-grid on
-colorbar
+box(ax(2),'on');
+grid(ax(2),'on');
+colorbar('peer',ax(2));
 
 end

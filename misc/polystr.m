@@ -29,9 +29,10 @@ function [str]=polystr(p,var)
 
 %     Version History:
 %        Sep. 17, 2010 - initial version
+%        Feb. 11, 2011 - minor mlint fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 17, 2010 at 20:00 GMT
+%     Last Updated Feb. 11, 2011 at 20:00 GMT
 
 % todo:
 
@@ -55,7 +56,7 @@ end
 np=numel(p);
 for i=1:np
     if(i==1)
-        str=[sprintf('%g',p(i))];
+        str=sprintf('%g',p(i));
     else
         str=[str sprintf('%+g',p(i))];
     end

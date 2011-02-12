@@ -50,9 +50,10 @@ function [m,covm] = wlinem(dd,tt,power,covd,We)
 %        Oct. 13, 2009 - minor doc update, add power option
 %        Mar.  2, 2010 - minor doc update
 %        Sep. 13, 2010 - nargchk fix
+%        Feb. 11, 2011 - drop inv call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2010 at 18:00 GMT
+%     Last Updated Feb. 11, 2011 at 18:00 GMT
 
 % todo:
 
@@ -105,7 +106,7 @@ p=1:power;
 G=[ones(ndd,1) dd(:,ones(power,1)).^p(ones(ndd,1),:)];
 
 % generalized inverse of kernel matrix, weighted least squares
-Gg=inv(G.'*We*G)*G.'*We;
+Gg=(G.'*We*G)\G.'*We;
 
 % covariance of model parameters
 covm=Gg*covd*Gg.';

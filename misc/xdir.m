@@ -74,10 +74,11 @@ function [varargout]=xdir(str,depth)
 %        Jan. 30, 2010 - fix empty path output, order fields so path on top
 %        Mar. 12, 2010 - fix for Octave when setting empty path
 %        Mar. 16, 2010 - added todo list (mainly about ? wildcard)
+%        Feb. 11, 2011 - use fprintf
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated Mar. 16, 2010 at 20:00 GMT
+%     Last Updated Feb. 11, 2011 at 20:00 GMT
 
 % todo:
 % - be mindful of octave/matlab differences in DIR
@@ -304,8 +305,8 @@ D=orderfields(D,emptylist);
 % display listing if no output variables are specified
 if(nargout==0)
   for i=1:numel(D)
-    disp(sprintf('%d %16d %20s %-s',...
-        D(i).isdir,D(i).bytes,D(i).date,[D(i).path D(i).name]));
+    fprintf('%d %16d %20s %-s\n',...
+        D(i).isdir,D(i).bytes,D(i).date,[D(i).path D(i).name]);
   end
 else
   % to make all entries have a path (use './' or '.\' if there is none)

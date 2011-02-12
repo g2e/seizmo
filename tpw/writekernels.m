@@ -32,9 +32,10 @@ function []=writekernels(file,Kph,Kam,x,y,o)
 %     Version History:
 %        Feb.  5, 2010 - rewrite and added documentation
 %        July  9, 2010 - fixed nargchk
+%        Feb. 11, 2011 - use fprintf
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  9, 2010 at 17:10 GMT
+%     Last Updated Feb. 11, 2011 at 17:10 GMT
 
 % todo:
 
@@ -97,7 +98,7 @@ else
     end
     if(exist(file,'file'))
         if(~o)
-            disp(sprintf('KERNEL File: %s\nFile Exists!',file));
+            fprintf('KERNEL File: %s\nFile Exists!\n',file);
             reply=input('Overwrite? Y/N [N]: ','s');
             if(isempty(reply) || ~strncmpi(reply,'y',1))
                 disp('Not overwriting!');

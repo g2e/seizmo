@@ -196,7 +196,7 @@ if(nargin<1)
 end
 
 % check data structure
-error(seizmocheck(data,'dep'));
+error(seizmocheck(data1,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

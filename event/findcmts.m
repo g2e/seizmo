@@ -57,9 +57,10 @@ function [cmts]=findcmts(varargin)
 %        Jan. 26, 2011 - support cellstr input into .name, altered
 %                        STARTTIME & ENDTIME to [1962 1] & now, added
 %                        examples
+%        Feb. 11, 2011 - fix name/nullaxis option conflict
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2011 at 21:30 GMT
+%     Last Updated Feb. 11, 2011 at 21:30 GMT
 
 % todo:
 % - add % double couple
@@ -155,7 +156,7 @@ valid.NDKFIELDS={'scalarmoment' 'exponent' 'year' 'month' 'day' 'hour' ...
 % loop over options
 for i=1:2:numel(varargin)
     switch lower(varargin{i})
-        case {'names' 'name' 'na'}
+        case {'names' 'name' 'n'}
             if(ischar(varargin{i+1}))
                 varargin{i+1}=cellstr(varargin{i+1});
             end
