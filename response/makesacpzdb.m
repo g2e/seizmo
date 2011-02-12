@@ -57,15 +57,15 @@ function [db]=makesacpzdb(varargin)
 %        Sep. 23, 2009 - added informative output
 %        Nov.  2, 2009 - seizmoverbose support, fixed example
 %        May  22, 2010 - progress bar only if verbose
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  22, 2010 at 22:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(0,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(0,1,nargin));
 nin=nargin;
 
 % default to current directory if none given

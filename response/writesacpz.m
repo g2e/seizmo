@@ -58,15 +58,15 @@ function []=writesacpz(file,z,p,k,o)
 %        Sep. 22, 2009 - dropped looped writing of zeros/poles,
 %                        confirmation for overwrite with skip option
 %        Feb.  5, 2010 - graphical file creation menu
+%        Feb. 11, 2011 - mass nargchk fix, fprintf fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2010 at 16:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(4,5,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(4,5,nargin));
 
 % default overwrite to false
 if(nargin==4 || isempty(o)); o=false; end
@@ -110,7 +110,7 @@ else
                 'SAC PoleZero File: %s\nIs A Directory!',file);
         end
         if(~o)
-            disp(sprintf('SAC PoleZero File: %s\nFile Exists!',file));
+            fprintf('SAC PoleZero File: %s\nFile Exists!\n',file);
             reply=input('Overwrite? Y/N [N]: ','s');
             if(isempty(reply) || ~strncmpi(reply,'y',1))
                 disp('Not overwriting!');

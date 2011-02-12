@@ -44,7 +44,7 @@ function [data]=fixdelta(data,tol)
 %     Force double precision and update the delta field:
 %      data=fixdelta(changeclass(data,'double'));
 %
-%    See also: RAT, CHANGECLASS
+%    See also: RRAT, CHANGECLASS
 
 %     Version History:
 %        Feb. 21, 2008 - initial version
@@ -64,15 +64,16 @@ function [data]=fixdelta(data,tol)
 %        Jan. 29, 2010 - minor code cleaning
 %        Jan. 30, 2010 - one less call to SEIZMOCHECK, use RRAT
 %        Mar. 24, 2010 - added rants to docs, default tol set to 1e-6
+%        Feb. 11, 2011 - mass nargchk fix, point to rrat not rat, todo list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2010 at 23:05 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
+% - option to set tolerance as max time skew
 
 % check nargin
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,2,nargin));
 
 % check data structure & header
 data=checkheader(data);
@@ -113,7 +114,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

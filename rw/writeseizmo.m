@@ -74,9 +74,10 @@ function []=writeseizmo(data,varargin)
 %        Dec.  6, 2009 - bug fix: moved hasdata check after name formation
 %        Feb.  2, 2010 - proper SEIZMO handling, seizmoverbose support,
 %                        versioninfo caching
+%        Feb. 11, 2011 - dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 19:20 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -93,15 +94,14 @@ if(isempty(data))
 end
 
 % check data structure & get headers setup
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt write
 try
-    % check headers (versioninfo cache update)
+    % check headers
     data=checkheader(data);
     
     % get updated versioninfo cache
@@ -264,14 +264,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

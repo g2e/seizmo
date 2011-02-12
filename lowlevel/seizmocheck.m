@@ -4,10 +4,11 @@ function [report]=seizmocheck(data,varargin)
 %    Usage:    msg=seizmocheck(data)
 %              msg=seizmocheck(data,'reqfield1',...,'reqfieldN')
 %
-%    Description: SEIZMOCHECK(DATA) returns an appropriate error message 
-%     structure if the input variable fails certain SEIZMO data structure 
-%     requirements.  The output structure contains the fields 'identifier'
-%     and 'message' following Matlab error report standards.
+%    Description:
+%     SEIZMOCHECK(DATA) returns an appropriate error message structure if
+%     the input variable fails certain SEIZMO data structure requirements.
+%     The output structure contains the fields 'identifier' and 'message'
+%     following Matlab error report standards.
 %
 %     SEIZMOCHECK(DATA,'REQFIELD1',...,'REQFIELDN') allows more fields to
 %     be required in addition to the default ones.
@@ -24,17 +25,9 @@ function [report]=seizmocheck(data,varargin)
 %       ambiguous, so the hasdata field is checked to be true).
 %
 %    Examples:
-%     Most functions require records have data stored in the field 'dep'.
-%     This will perform a regular check as well as assure the field exists:
-%      error(seizmocheck(data,'dep')
-%
-%     Octave does not handle structs passed to ERROR, nor does it handle
-%     the empty case like Matlab so the following should be done to force
-%     compatibility:
-%      msg=seizmocheck(data,...);
-%      if(~isempty(msg))
-%          error(msg.identifier,msg.message);
-%      end
+%     % Most functions require records have data stored in the field 'dep'.
+%     % To perform a regular check as well as assure the field exists:
+%     error(seizmocheck(data,'dep')
 %
 %    See also: ISSEIZMO, SEIZMODEF, ISVALIDSEIZMO, VALIDSEIZMO, CHECKHEADER
 
@@ -65,9 +58,10 @@ function [report]=seizmocheck(data,varargin)
 %        Oct.  5, 2009 - added warnings for multi-filetype/version/endian
 %        Oct.  6, 2009 - use new function ISVALIDSEIZMO (R14SP1 fix)
 %        Nov. 18, 2009 - minor doc update
+%        Feb. 11, 2011 - removed deprecated Octave example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 18, 2009 at 20:50 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 

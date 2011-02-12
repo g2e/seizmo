@@ -33,15 +33,15 @@ function [dates,leaps]=getleapseconds(option)
 %        June 11, 2009 - minor doc update
 %        Aug.  4, 2009 - strictly formatted string passed to datenum
 %        Sep.  5, 2009 - minor doc update
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 19:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(0,1,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(0,1,nargin));
 
 % check option
 if(nargin==0 || isempty(option))

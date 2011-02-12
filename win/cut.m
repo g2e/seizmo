@@ -141,15 +141,15 @@ function [data,failed]=cut(data,varargin)
 %                        better warning messages
 %        Feb.  2, 2010 - versioninfo caching
 %        Mar.  8, 2010 - dropped versioninfo caching
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 13:25 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % input check
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -235,7 +235,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % boundary conditions
@@ -412,7 +412,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % removed failed/empty cut records

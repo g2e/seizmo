@@ -39,15 +39,15 @@ function []=writecsv(file,lines,o)
 %        Sep. 22, 2009 - fixed dir check bug, skip confirmation option
 %        Jan. 26, 2010 - add graphical selection
 %        Feb.  5, 2010 - add check for overwrite flag
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2010 at 17:25 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(2,3,nargin));
 
 % default overwrite to false
 if(nargin==2 || isempty(o)); o=false; end

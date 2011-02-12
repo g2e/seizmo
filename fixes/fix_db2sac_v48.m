@@ -36,15 +36,15 @@ function [data]=fix_db2sac_v48(data,knetwk)
 %        Dec.  4, 2009 - USER7, USER8, NORID, NEVID unset
 %        Jan. 30, 2010 - reduced calls to seizmocheck
 %        Mar. 24, 2010 - drop fixdelta call
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2010 at 22:25 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check data structure & header
 data=checkheader(data);
@@ -80,7 +80,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

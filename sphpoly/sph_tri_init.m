@@ -5,12 +5,13 @@ function [varargout]=sph_tri_init(polygon)
 %              [a,b,c]=sph_tri_init(polygon)
 %              [vertices]=sph_tri_init(...)
 %
-%    Description: [A,B,C]=SPH_TRI_INIT() returns the vertices of the faces
-%     of a spherical icosahedron in A, B, & C.  A, B, & C are 20x3 arrays
-%     with the columns cooresponding to x y z coordinates and each row
-%     belongs to a separate face of the icosahedron.  So A(1,:), B(1,:), &
-%     C(1,:) give the vertices of the first face of the icosahedron.
-%     Coordinates are given such that all vertices lie on the unit circle.
+%    Description:
+%     [A,B,C]=SPH_TRI_INIT() returns the vertices of the faces of a
+%     spherical icosahedron in A, B, & C.  A, B, & C are 20x3 arrays with
+%     the columns cooresponding to x y z coordinates and each row belongs
+%     to a separate face of the icosahedron.  So A(1,:), B(1,:), & C(1,:)
+%     give the vertices of the first face of the icosahedron.  Coordinates
+%     are given such that all vertices lie on the unit circle.
 %
 %     [A,B,C]=SPH_TRI_INIT(POLYGON) allows specifying an alternative
 %     polygon to return vertices for.  POLYGON must be 'tetrahedron',
@@ -24,19 +25,19 @@ function [varargout]=sph_tri_init(polygon)
 %    Notes:
 %
 %    Examples:
-%     Returns the vertices associated with the indicated polygons:
-%      sph_tri_init('tetrahedron')
-%      sph_tri_init('octahedron')
-%      sph_tri_init('icosahedron')
+%     % Returns the vertices associated with the indicated polygons:
+%     sph_tri_init('tetrahedron')
+%     sph_tri_init('octahedron')
+%     sph_tri_init('icosahedron')
 %
-%     Plot an icosahedron:
-%      [a,b,c]=sph_tri_init;
-%      x=[a(:,1) b(:,1) c(:,1) a(:,1)]';
-%      y=[a(:,2) b(:,2) c(:,2) a(:,2)]';
-%      z=[a(:,3) b(:,3) c(:,3) a(:,3)]';
-%      plot3(x,y,z);
-%      axis vis3d
-%      axis off
+%     % Plot an icosahedron:
+%     [a,b,c]=sph_tri_init;
+%     x=[a(:,1) b(:,1) c(:,1) a(:,1)]';
+%     y=[a(:,2) b(:,2) c(:,2) a(:,2)]';
+%     z=[a(:,3) b(:,3) c(:,3) a(:,3)]';
+%     plot3(x,y,z);
+%     axis vis3d
+%     axis off
 %
 %    See also: SPH_TRI_SPLIT, SPH_TRI_AUTO, SPH_TRI_VERTICES,
 %              SPH_TRI_LATLON, SPH_POLY_AREA, SPH_POLY_IN
@@ -44,9 +45,10 @@ function [varargout]=sph_tri_init(polygon)
 %     Version History:
 %        Nov.  6, 2009 - initial version
 %        Nov. 16, 2009 - all triangles proceed clockwise
+%        Feb. 11, 2011 - minor doc formmatting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2009 at 22:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 

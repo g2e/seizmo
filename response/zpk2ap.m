@@ -49,15 +49,15 @@ function [a,p]=zpk2ap(f,z,p,k,wpow)
 %     Version History:
 %        Oct. 19, 2009 - initial version
 %        Oct. 22, 2009 - fixed NaN for 0Hz in vel/acc response
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 22, 2009 at 19:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(4,5,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,5,nargin));
 
 if(~isreal(f))
     error('seizmo:zpk2ap:badHz','F must be a real array!');

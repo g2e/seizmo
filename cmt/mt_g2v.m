@@ -20,15 +20,15 @@ function [v]=mt_g2v(g)
 %     Version History:
 %        Mar.  8, 2010 - initial version
 %        Mar. 21, 2010 - added docs
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 21, 2010 at 11:45 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check v
 sz=size(g);

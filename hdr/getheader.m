@@ -160,7 +160,7 @@ if(nver>1)
         SEIZMO.VERSIONINFO.IDX=idx;
         
         % rethrow error
-        error(lasterror)
+        error(lasterror);
     end
     return;
 end

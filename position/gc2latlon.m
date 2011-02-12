@@ -34,15 +34,15 @@ function [lat,lon]=gc2latlon(lat1,lon1,lat2,lon2,npts)
 %     Version History:
 %        Nov. 15, 2009 - initial version
 %        Dec. 13, 2010 - fix wrap-around bug in example
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 13, 2009 at 19:35 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(4,5,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,5,nargin));
 
 % default/check npts
 if(nargin==4 || isempty(npts)); npts=361; end

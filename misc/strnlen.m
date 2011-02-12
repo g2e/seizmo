@@ -20,15 +20,15 @@ function [A]=strnlen(A,n)
 %        Apr. 18, 2008 - fixed recursion
 %        Oct. 26, 2008 - code cleaning, comment and doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check n
 if(~isnumeric(n) || ~isscalar(n) || fix(n)~=n)

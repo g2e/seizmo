@@ -21,15 +21,15 @@ function []=srtm30plus_tile(version)
 %     Version History:
 %        Feb. 14, 2010 - initial version
 %        Feb. 16, 2010 - significant memory use reduction
+%        Feb. 11, 2011 - mass nargchk fix, fix etopo1_bed bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2010 at 17:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % verbosity
 verbose=seizmoverbose;
@@ -56,8 +56,8 @@ latoff=[zeros(1,9) 5*ones(1,9) 10*ones(1,9) 15*ones(1,6)];
 
 % set other fields
 srtm30plus.version=version;
-etopo1_bed.registration='pixel';
-etopo1_bed.pixelsperdegree=n;
+srtm30plus.registration='pixel';
+srtm30plus.pixelsperdegree=n;
 srtm30plus.latname=[strcat('n',cellstr(num2str((90:-w:w)','%02d'))); ...
     strcat('s',cellstr(num2str((0:w:90-w)','%02d')))];
 srtm30plus.lonname=[strcat('w',cellstr(num2str((180:-w:w)','%03d'))); ...

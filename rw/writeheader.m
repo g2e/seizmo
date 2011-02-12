@@ -66,9 +66,10 @@ function []=writeheader(data,varargin)
 %        Sep. 18, 2009 - added empty data shortcut
 %        Feb.  2, 2010 - proper SEIZMO handling, seizmoverbose support,
 %                        versioninfo caching
+%        Feb. 11, 2011 - dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 19:40 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -89,7 +90,6 @@ end
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt write
 try
@@ -240,14 +240,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

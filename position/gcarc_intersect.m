@@ -41,15 +41,15 @@ function [lat,lon]=gcarc_intersect(lat1,lon1,lat2,lon2,lat3,lon3,lat4,lon4)
 
 %     Version History:
 %        Nov. 15, 2009 - initial version
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 15, 2009 at 20:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(8,8,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(8,8,nargin));
 
 % lat/lon to column vector
 lat1=lat1(:); lon1=lon1(:);

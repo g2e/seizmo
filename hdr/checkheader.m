@@ -6,9 +6,10 @@ function [data]=checkheader(data,varargin)
 %                            'option1','error|warn|ignore|fix|warnfix',...,
 %                            'optionN','error|warn|ignore|fix|warnfix')
 %
-%    Description: CHECKHEADER(DATA) does a number of consistency checks on
-%     SEIZMO records in DATA.  Run CHECKOPERR() to get the current option
-%     states.  See the table below for a description of each option.  Run
+%    Description:
+%     CHECKHEADER(DATA) does a number of consistency checks on SEIZMO
+%     records in DATA.  Run CHECKOPERR() to get the current option states.
+%     See the table below for a description of each option.  Run
 %     checkoperr('defaults') to put CHECKHEADER into the default mode.
 %
 %     DATA=CHECKHEADER(DATA,'OPTION1','ERROR|WARN|IGNORE|FIX|WARNFIX',...,
@@ -316,8 +317,8 @@ function [data]=checkheader(data,varargin)
 %                    GCARC, AZ, BAZ, DIST
 %
 %    Examples:
-%     This may help point out header problems:
-%      checkheader(data,'all','warn')
+%     % This may help point out header problems:
+%     checkheader(data,'all','warn')
 %
 %    See also: LISTHEADER, CHANGEHEADER, GETHEADER, READHEADER, READDATA,
 %              SEIZMOCHECK, CHECKOPERR, CHECKPARAMETERS
@@ -382,9 +383,10 @@ function [data]=checkheader(data,varargin)
 %        Aug. 21, 2010 - update for getheader no longer returning undefined
 %                        values specific to a filetype, KM_DEPTH fixed
 %        Sep. 16, 2010 - added UNSET_DELAZ
+%        Feb. 11, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2010 at 22:10 GMT
+%     Last Updated Feb. 11, 2011 at 22:10 GMT
 
 % todo:
 
@@ -846,7 +848,7 @@ catch
 	versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

@@ -102,7 +102,7 @@ try
             playsound(resample(double(data(i).dep),...
                 n(i),d(i)),playrate(i),1.1);
         catch
-            error(lasterror)
+            error(lasterror);
         end
         
         % detail message
@@ -113,7 +113,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

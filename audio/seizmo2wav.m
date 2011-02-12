@@ -102,7 +102,7 @@ try
                 rescale(resample(double(data(i).dep),n(i),d(i)),1.1),...
                 44100,fullfile(data(i).path,data(i).name));
         catch
-            error(lasterror)
+            error(lasterror);
         end
         
         % detail message
@@ -113,7 +113,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

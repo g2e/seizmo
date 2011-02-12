@@ -32,15 +32,15 @@ function [lat,lon,depth]=geocentric2geographic(lat,lon,depth,ellipsoid)
 %        Sep.  5, 2009 - minor doc update
 %        Nov. 13, 2009 - name change: geodetic to geographic, fix calls to
 %                        missing functions
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 20:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % require 3 or 4 inputs
-msg=nargchk(3,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,4,nargin));
 
 % default - WGS-84 Reference Ellipsoid
 if(nargin==3 || isempty(ellipsoid))

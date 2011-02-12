@@ -50,15 +50,15 @@ function [times,n]=getarrival(data,phase)
 %        Feb. 24, 2010 - 1 warning for unfound arrivals
 %        Mar.  1, 2010 - allow multi-phase search
 %        Mar. 16, 2010 - fixed error message
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 16, 2010 at 18:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % verbosity
 verbose=seizmoverbose;

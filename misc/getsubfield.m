@@ -25,15 +25,15 @@ function [s]=getsubfield(s,varargin)
 %     Version History:
 %        Sep. 22, 2009 - initial version
 %        Sep. 25, 2009 - unwraps logical array now
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 25, 2009 at 07:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % check inputs
 if(~isstruct(s))

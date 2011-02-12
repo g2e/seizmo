@@ -36,22 +36,21 @@ function [data]=sortbyfield(data,field,mode)
 %        Oct. 13, 2009 - minor doc update, added .misc to bad fields
 %        Feb.  3, 2010 - proper SEIZMO handling, versioninfo caching,
 %                        seizmoverbose support
+%        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 17:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check number of args
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,3,nargin));
 
 % check data structure
 versioninfo(data);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt sort
 try
@@ -101,14 +100,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

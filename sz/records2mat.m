@@ -22,7 +22,8 @@ function [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 %      dep=records2mat(data);
 %      data=changeheader(data,'user3',iqr(dep));
 %
-%    See also: MAT2RECORDS, BSEIZMO
+%    See also: MAT2RECORDS, BSEIZMO, GETVALUEFUN, SOLOFUN, MULTIFUN,
+%              SLIDINGFUN
 
 %     Version History:
 %        Feb. 16, 2008 - initial version
@@ -42,22 +43,22 @@ function [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 %        June 25, 2009 - name change from COMBINERECORDS to RECORDS2MAT
 %        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
 %        Feb.  3, 2010 - versioninfo caching
+%        Feb. 11, 2011 - mass nargchk fix, see also section update, 
+%                        dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 18:20 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check input
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
 versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt matrix creation
 try
@@ -122,14 +123,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

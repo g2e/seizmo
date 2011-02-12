@@ -31,15 +31,15 @@ function [db]=gensacpzname(db)
 
 %     Version History:
 %        Sep. 22, 2009 - initial version
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2009 at 07:55 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check db
 if(~isstruct(db))

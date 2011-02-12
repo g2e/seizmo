@@ -43,15 +43,15 @@ function [diff]=timediff(times1,times2,option)
 %                         + returns empty matrix on empty input
 %                         + allow more cases with differing formats
 %        Sep. 25, 2009 - description update
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 25, 2009 at 03:45 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,3,nargin));
 
 % check times
 sz1=size(times1);

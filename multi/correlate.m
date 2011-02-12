@@ -182,9 +182,10 @@ function [data]=correlate(data1,varargin)
 %        Jan. 27, 2010 - proper SEIZMO handling, fixed bug where delaz info
 %                        does not get calculated, seizmoverbose support
 %        Jan. 29, 2010 - cleaned up cross_check_data subfunction
+%        Feb. 11, 2011 - mass seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 18:45 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -195,8 +196,7 @@ if(nargin<1)
 end
 
 % check data structure
-msg=seizmocheck(data1,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -226,7 +226,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % check varargin
@@ -549,7 +549,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

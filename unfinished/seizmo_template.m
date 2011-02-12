@@ -3,34 +3,34 @@ function []=seizmo_template(data,varargin)
 %
 %    Usage:    []=seizmo_template(data)
 %
-%    Description: []=SEIZMO_TEMPLATE(DATA) is a start point for a SEIZMO
-%     function.
+%    Description:
+%     []=SEIZMO_TEMPLATE(DATA) is a start point for a SEIZMO function.
 %
 %    Notes:
 %     - something not mentioned above but still important
 %
 %    Examples:
-%     Blah:
-%      seizmo_template
+%     % Blah:
+%     seizmo_template
 %
 %    See also: SOME_FUNCTION
 
 %     Version History:
 %        Jan.  1, 2009 - initial version
+%        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix, formatting
+%                        updates
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  1, 2009 at 00:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 % - stuff to do
 
 % check nargin
-msg=nargchk(2,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,4,nargin));
 
-% check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+% check data structure (require data points)
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -47,7 +47,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % get global
@@ -68,7 +68,7 @@ try
     
     % id funtion
     me=mfilename;
-    pkgme=['seizmo:' me ':'];
+    szme=['seizmo:' me ':'];
     
     % get options from SEIZMO global
     ME=upper(me);
@@ -85,7 +85,7 @@ try
     % get options from command line
     for i=1:2:nargin-1
         if(~ischar(varargin{i}))
-            error([pkgme 'badInput'],...
+            error([szme 'badInput'],...
                 'Options must be specified as a string!');
         end
         if(~isempty(varargin{i+1}))
@@ -128,7 +128,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

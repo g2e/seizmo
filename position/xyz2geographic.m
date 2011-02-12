@@ -39,15 +39,15 @@ function [lat,lon,depth]=xyz2geographic(x,y,z,ellipsoid)
 %        Sep.  5, 2009 - minor doc update
 %        Nov. 13, 2009 - name change: geodetic to geographic
 %        May   3, 2010 - better checking
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   3, 2010 at 15:45 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % require 3 or 4 inputs
-msg=nargchk(3,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,4,nargin));
 
 % default - WGS-84 Reference Ellipsoid
 if(nargin==3 || isempty(ellipsoid))

@@ -25,15 +25,15 @@ function [lat]=geocentric2geographiclat(lat,ecc)
 %        Nov. 10, 2008 - minor doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Nov. 13, 2009 - name change: geodetic to geographic
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 20:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % require 1 or 2 inputs
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,2,nargin));
 
 % assume WGS-84 ellipsoid if no eccentricity given
 if(nargin==1); ecc=8.181919084262149e-02; end

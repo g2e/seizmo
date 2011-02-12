@@ -193,7 +193,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

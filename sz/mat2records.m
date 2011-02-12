@@ -35,7 +35,8 @@ function [data]=mat2records(data,dep,idx1,ind,idx2,store,npts)
 %      ...non-seizmo commands...
 %      data=mat2records(data,dep,idx1,ind,idx2,store,npts);
 %
-%    See also: RECORDS2MAT, BSEIZMO
+%    See also: RECORDS2MAT, BSEIZMO, GETVALUEFUN, SOLOFUN, MULTIFUN,
+%              SLIDINGFUN
 
 %     Version History:
 %        Feb. 16, 2008 - initial version
@@ -53,19 +54,19 @@ function [data]=mat2records(data,dep,idx1,ind,idx2,store,npts)
 %        Oct.  5, 2009 - update checkheader call, force checking
 %        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
 %        Feb.  3, 2010 - reduced seizmocheck usage
+%        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix, see also
+%                        section update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 18:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check input
-msg=nargchk(7,7,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(7,7,nargin));
 
 % check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data));
 
 % verbosity
 verbose=seizmoverbose;
@@ -112,7 +113,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

@@ -60,22 +60,21 @@ function [data]=dft(data,format,pow2pad)
 %        Oct. 15, 2009 - force fft down columns
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        improved messaging, drop GETNCMP usage
+%        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 18:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,3,nargin));
 
 % get SEIZMO info
 global SEIZMO
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -251,7 +250,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

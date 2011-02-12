@@ -39,15 +39,15 @@ function [leaps]=leapsinday(dates,option)
 %                        minor doc update
 %        Sep.  5, 2009 - minor doc update
 %        Oct. 16, 2009 - major speed increase
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2009 at 02:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(1,2,nargin));
 
 % check option
 if(nargin==1 || isempty(option))

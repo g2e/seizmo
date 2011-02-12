@@ -52,15 +52,15 @@ function []=writesodeventcsv(file,events,varargin)
 %        Sep. 22, 2009 - overwrite confirmation skip option added
 %        Jan. 26, 2010 - minor doc update, graphical file creation
 %        Mar. 30, 2010 - check fields are available to modify, doc update
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 30, 2010 at 01:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(2,3,nargin));
 
 % require certain fields are present
 req={'time' 'latitude' 'longitude' 'depth' 'magnitude'};

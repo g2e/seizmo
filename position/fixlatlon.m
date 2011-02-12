@@ -17,19 +17,19 @@ function [lat,lon]=fixlatlon(lat,lon)
 %       lat =   80
 %       lon = -180
 %
-%    See also: LATMOD, FIXLATLON, MOD, REM
+%    See also: LATMOD, LONMOD, MOD, REM
 
 %     Version History:
 %        Feb. 16, 2010 - initial version
+%        Feb. 11, 2011 - mass nargchk fix, fix see also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2010 at 01:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check inputs
 if(~isreal(lat) || ~isreal(lon))

@@ -71,9 +71,10 @@ function [data]=deconvolve(data,tf,delay,h2o,frange,zi,zf)
 %                        fixed offset bug
 %        Feb.  2, 2010 - versioninfo caching
 %        Aug. 19, 2010 - removed ifft symmetric flag, real conversion
+%        Feb. 11, 2011 - dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 19, 2010 at 20:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -85,11 +86,10 @@ versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt deconvolution
 try
-    % check headers (versioninfo cache update)
+    % check headers
     data=checkheader(data);
 
     % verbosity
@@ -313,14 +313,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

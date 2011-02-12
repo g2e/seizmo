@@ -36,16 +36,16 @@ function [topo]=topo_points(lat,lon,toponame)
 %        May  17, 2010 - minor doc touch
 %        May  19, 2010 - return nothing when given nothing
 %        May  20, 2010 - added scrollbar (cause it is slow)
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  20, 2010 at 15:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 % - etopo2, etopo5, crust2
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,3,nargin));
 
 % valid topo list (add new topo here)
 validtopo={'srtm30plus' 'etopo1_bed' 'etopo1_ice' 'etopo1_thk'};

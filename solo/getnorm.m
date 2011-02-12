@@ -34,17 +34,16 @@ function [scale]=getnorm(data)
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
 %        Mar. 26, 2010 - doc update
+%        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 26, 2010 at 17:45 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data,'dep'));
 
 % number of records
 nrecs=numel(data);

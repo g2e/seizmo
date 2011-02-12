@@ -34,15 +34,15 @@ function [data]=splitpad(data,pow2pad)
 
 %     Version History:
 %        Mar. 19, 2010 - initial version
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 19, 2010 at 23:55 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,2,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -138,7 +138,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
 
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

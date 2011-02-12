@@ -143,15 +143,15 @@ function [data,failed]=readdatawindow(data,varargin)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Feb.  3, 2010 - update for XDIR fixes, better SAC bug workaround,
 %                        proper SEIZMO handling, seizmoverbose support
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 23:10 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % input check
-msg=nargchk(1,11,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,11,nargin));
 
 % headers setup (also checks struct)
 [h,vi]=versioninfo(data);
@@ -390,7 +390,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

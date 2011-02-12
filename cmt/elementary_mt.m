@@ -24,9 +24,10 @@ function [varargout]=elementary_mt(n)
 %     Version History:
 %        Mar.  8, 2010 - initial version
 %        Mar. 22, 2010 - added docs
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 22, 2010 at 15:05 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -39,8 +40,7 @@ m=[ 0  0  0  1  0  0
     1  1  1  0  0  0];
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check n
 if(~isreal(n) || any(~ismember(n,1:6)))

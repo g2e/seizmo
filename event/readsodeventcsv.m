@@ -46,15 +46,15 @@ function [events]=readsodeventcsv(varargin)
 %        Sep. 16, 2009 - initial version
 %        Jan. 26, 2010 - allow no input (select file graphically)
 %        Mar. 30, 2010 - check fields are available to modify, doc update
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 30, 2010 at 01:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(0,1,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(0,1,nargin));
 
 % send on to readcsv
 events=readcsv(varargin{:});

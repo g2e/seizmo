@@ -36,19 +36,18 @@ function [data]=removemean(data)
 %                        move usage up
 %        June 24, 2009 - minor doc fix
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling
+%        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 23:55 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check input
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -109,7 +108,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

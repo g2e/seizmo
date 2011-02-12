@@ -25,15 +25,15 @@ function [Kph,Kam,x,y]=readkernels(file)
 %     Version History:
 %        Feb.  5, 2010 - initial version
 %        July  9, 2010 - fixed nargchk
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  9, 2010 at 18:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(0,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(0,1,nargin));
 
 % graphical selection
 if(nargin<1 || isempty(file))

@@ -1,22 +1,24 @@
 function [data,failed]=readdata(data,varargin)
 %READDATA    Read SEIZMO data from datafiles
 %
-%    Usage: data=readdata(data)
-%           data=readdata(data,'trim',true|false)
-%           [data,failed]=readdata(...)
+%    Usage:    data=readdata(data)
+%              data=readdata(data,'trim',true|false)
+%              [data,failed]=readdata(...)
 %
-%    Description: [OUTDATA,FAILED]=READDATA(DATA) reads in data from SEIZMO 
-%     compatible datafiles utilizing the header info in DATA, and returns 
-%     the combined dataset as OUTDATA.  Datafiles that are not SEIZMO
-%     compatible or have errors will be removed from the returned dataset.
-%     Optional output FAILED returns a logical matrix equal in size to DATA
-%     with entries set to TRUE for those records which had reading errors.
+%    Description:
+%     [OUTDATA,FAILED]=READDATA(DATA) reads in data from SEIZMO compatible
+%     datafiles utilizing the header info in DATA, and returns the combined
+%     dataset as OUTDATA.  Datafiles that are not SEIZMO compatible or have
+%     errors will be removed from the returned dataset.  Optional output
+%     FAILED returns a logical matrix equal in size to DATA with entries
+%     set to TRUE for those records which had reading errors.
 %
 %     [OUTDATA,FAILED]=READDATA(DATA,'TRIM',LOGICAL) sets option parameter
 %     TRIM to determine how to handle data that had errors.  By default 
 %     TRIM is set to TRUE, which deletes any records from OUTDATA that had 
-%     errors while reading.  Setting TRIM to FALSE will preserve records in
-%     OUTDATA that had errors.
+%     errors while reading.  Setting TRIM to FALSE will also return the
+%     records in OUTDATA that had errors.  This will return records with
+%     missing data (ie the file was too short) filled with NaNs.
 %
 %     SEIZMO data structure setup:
 %
@@ -60,12 +62,12 @@ function [data,failed]=readdata(data,varargin)
 %    Header changes: see CHECKHEADER
 %
 %    Examples:
-%     Read in datafiles (headers only) from the current directory, subset
-%     it to include only time series files, and then read in the associated
-%     time series data:
-%      data=readheader('*')
-%      data=data(strcmpi(getenumid(data,'iftype'),'itime'))
-%      data=readdata(data)
+%     % Read in datafiles (headers only) from the current directory, subset
+%     % it to include only time series files, and then read in the
+%     % associated time series data:
+%     data=readheader('*')
+%     data=data(strcmpi(getenumid(data,'iftype'),'itime'))
+%     data=readdata(data)
 %
 %    See also: READHEADER, READDATAWINDOW, READSEIZMO, WRITESEIZMO, GETLGC,
 %              WRITEHEADER, BSEIZMO, SEIZMODEF, GETFILEVERSION, SEIZMOSIZE,
@@ -105,9 +107,11 @@ function [data,failed]=readdata(data,varargin)
 %                        proper SEIZMO handling, seizmoverbose support
 %        Feb.  3, 2010 - update for XDIR fixes, fix for npts==0
 %        Aug. 16, 2010 - fixed typo bug, nargchk fix
+%        Feb. 11, 2011 - dropped versioninfo caching, close fid bugfix,
+%                        read files with inconsistent size if desired
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 16, 2010 at 23:10 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -148,15 +152,11 @@ if(isempty(data))
     error('seizmo:readdata:noRecords','No records to read data from!');
 end
 
-% get SEIZMO settings
-global SEIZMO
-
 % headers setup (also checks struct)
 [h,vi]=versioninfo(data);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt reading in data
 try
@@ -207,33 +207,39 @@ try
         % byte size check
         if(bytes>est_bytes(i))
             if(bytes==(hbytes(i)+2*dbytes(i)))
-                % SAC BUG: converting a spectral record to a time series
-                %      record and then writing it out, writes out a 2nd
-                %      component that contains gibberish.
+                % SAC BUG: In SAC, converting a spectral record to a time
+                % series record and then writing it out, writes out a 2nd
+                % component that contains gibberish.  We skip the garbage.
             else
-                % size big enough but inconsistent - skip
+                % size big enough but inconsistent - skip if trim
+                % - note we do not read it all (set npts/ncmp to read more)
                 warning('seizmo:readdata:badFileSize',...
                     ['Record: %d\nFile: %s\n'...
                     'Filesize does not match header info!\n'...
-                    '%d (estimated) > %d (on disk) --> Skipping!'],...
+                    '%d (estimated) > %d (on disk)!'],...
                     i,name,est_bytes(i),bytes);
                 failed(i)=true;
-                % detail message
-                if(verbose); print_time_left(i,nrecs,true); end
-                continue;
+                if(trim)
+                    % detail message
+                    fclose(fid);
+                    if(verbose); print_time_left(i,nrecs,true); end
+                    continue;
+                end
             end
         elseif(bytes<est_bytes(i))
-            % size too small - skip
-            fclose(fid);
+            % size too small - skip if trim
             warning('seizmo:readdata:badFileSize',...
                 ['Record: %d\nFile: %s\n'...
                 'Filesize does not match header info!\n'...
-                '%d (estimated) < %d (on disk) --> Skipping!'],...
+                '%d (estimated) < %d (on disk)!'],...
                 i,name,est_bytes(i),bytes);
             failed(i)=true;
-            % detail message
-            if(verbose); print_time_left(i,nrecs,true); end
-            continue;
+            if(trim)
+                % detail message
+                fclose(fid);
+                if(verbose); print_time_left(i,nrecs,true); end
+                continue;
+            end
         end
 
         % preallocate data record with NaNs
@@ -296,25 +302,26 @@ try
         fclose(fid);
         
         % detail message
-        if(verbose); print_time_left(i,nrecs); end
+        if(verbose);
+            if(failed(i))
+                print_time_left(i,nrecs,true);
+            else
+                print_time_left(i,nrecs);
+            end
+        end
     end
 
     % remove unread entries
-    if(trim)
-        data(failed)=[];
-        SEIZMO.VERSIONINFO.IDX(failed)=[];
-    end
+    if(trim); data(failed)=[]; end
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle struct checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

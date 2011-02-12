@@ -36,15 +36,15 @@ function [times]=modserial2gregorian(modserial,option)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
 %        Sep. 23, 2009 - fixed serial conversion (year 0 bug)
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 23, 2009 at 08:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(1,2,nargin));
 
 % check days and seconds
 sz=size(modserial);

@@ -37,15 +37,15 @@ function [times]=fixtimes(times,option)
 %        June 11, 2009 - fix leap second bug (was in LEAPSINDAY)
 %        June 24, 2009 - minor doc update
 %        Sep.  5, 2009 - minor doc update
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 19:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(1,2,nargin));
 
 % check times
 sz=size(times);

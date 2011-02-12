@@ -53,15 +53,15 @@ function [data]=integrate(data,option)
 %                        improved messaging, forced dim on some functions
 %        May   6, 2010 - fixed ncmp bug, slimmer code for units exchange,
 %                        fixed interaction of midpoint warning & scrollbar
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   6, 2010 at 23:05 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,2,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -319,7 +319,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

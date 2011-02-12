@@ -4,14 +4,14 @@ function [a,b,c]=sph_tri_split(a,b,c,n,s)
 %    Usage:    [a,b,c]=sph_tri_split(a,b,c,n)
 %              [a,b,c]=sph_tri_split(a,b,c,n,s)
 %
-%    Description: [A,B,C]=SPH_TRI_SPLIT(A,B,C,N) splits the spherical
-%     triangle polyhedra faces defined by A, B, & C (vertex arrays of xyz
-%     values - see SPH_TRI_INIT for more details) into 4 approximately
-%     equal-area, equalaterial sub-triangles whos vertices are all on a
-%     unit sphere.  N gives the number of spliting iterations and must be
-%     an integer >=0.  An N of 2 would split each face of the original
-%     polyhedra into 4 and then each of those faces would be further split
-%     into 4 sub-triangles.
+%    Description:
+%     [A,B,C]=SPH_TRI_SPLIT(A,B,C,N) splits the spherical triangle
+%     polyhedra faces defined by A, B, & C (vertex arrays of xyz values -
+%     see SPH_TRI_INIT for more details) into 4 approximately equal-area,
+%     equalaterial sub-triangles whos vertices are all on a unit sphere.
+%     N gives the number of spliting iterations and must be an integer >=0.
+%     An N of 2 would split each face of the original polyhedra into 4 and
+%     then each of those faces would be further split into 4 sub-triangles.
 %
 %     [A,B,C]=SPH_TRI_SPLIT(A,B,C,N,S) specifies the splitting order(s) S.
 %     S must be a scalar or vector of length N.  Elements of S must be
@@ -26,18 +26,18 @@ function [a,b,c]=sph_tri_split(a,b,c,n,s)
 %    Notes:
 %
 %    Examples:
-%     Create a regular icosahedron and split each face into 9 triangle on
-%     the unit sphere:
-%      [a,b,c]=sph_tri_init;
-%      [a,b,c]=sph_tri_split(a,b,c,1,3);
+%     % Create a regular icosahedron and split each face into 9 triangle on
+%     % the unit sphere:
+%     [a,b,c]=sph_tri_init;
+%     [a,b,c]=sph_tri_split(a,b,c,1,3);
 %
-%     Now plot the 180-faceted polygon:
-%      x=[a(:,1) b(:,1) c(:,1) a(:,1)]';
-%      y=[a(:,2) b(:,2) c(:,2) a(:,2)]';
-%      z=[a(:,3) b(:,3) c(:,3) a(:,3)]';
-%      plot3(x,y,z);
-%      axis vis3d
-%      axis off
+%     % Now plot the 180-faceted polygon:
+%     x=[a(:,1) b(:,1) c(:,1) a(:,1)]';
+%     y=[a(:,2) b(:,2) c(:,2) a(:,2)]';
+%     z=[a(:,3) b(:,3) c(:,3) a(:,3)]';
+%     plot3(x,y,z);
+%     axis vis3d
+%     axis off
 %
 %    See also: SPH_TRI_INIT, SPH_TRI_AUTO, SPH_TRI_VERTICES,
 %              SPH_TRI_LATLON, SPH_POLY_AREA, SPH_POLY_IN
@@ -46,16 +46,16 @@ function [a,b,c]=sph_tri_split(a,b,c,n,s)
 %        Nov.  7, 2009 - initial version
 %        Nov. 12, 2009 - added doc
 %        Nov. 16, 2009 - all triangles proceed clockwise
+%        Feb. 11, 2011 - mass nargchk fix, minor doc formmatting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2009 at 23:20 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 % - really should use Tegmark's method
 
 % check nargin
-msg=nargchk(4,5,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,5,nargin));
 
 % default splitting order
 if(nargin==4 || isempty(s)); s=2; end

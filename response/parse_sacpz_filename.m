@@ -49,15 +49,15 @@ function [gd,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filename)
 %     Version History:
 %        Sep. 20, 2009 - initial version
 %        May  27, 2010 - seizmoverbose support
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  27, 2010 at 16:35 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check filename
 sz=size(filename);

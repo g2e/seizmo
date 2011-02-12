@@ -56,7 +56,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % attempt rest
@@ -166,7 +166,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

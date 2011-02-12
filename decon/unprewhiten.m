@@ -37,26 +37,25 @@ function [data]=unprewhiten(data)
 %        Jan. 27, 2010 - seizmoverbose support, better error messages,
 %                        force dim stuff
 %        Feb.  2, 2010 - update for state functions, versioninfo caching
+%        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 19:55 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check number of inputs
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
 versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt prewhitening
 try
-    % check headers (versioninfo cache update)
+    % check headers
     data=checkheader(data);
     
     % verbosity
@@ -160,14 +159,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

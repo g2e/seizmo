@@ -179,15 +179,15 @@ function [fo,passes,mirror]=iirdesign(nyq,type,style,varargin)
 %        Apr. 25, 2010 - allow 'lp'/'hp' as filter types
 %        May  20, 2010 - allow 'n' to specify poles, 'bu' for butter
 %        Sep. 20, 2010 - alter 3,4 pass to -1,-2 for simplicity
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 20, 2010 at 19:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check number of inputs
-msg=nargchk(2,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,inf,nargin));
 
 % defaults
 default.ORDER=0;    % filter order (null)

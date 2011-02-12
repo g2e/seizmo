@@ -3,35 +3,36 @@ function [lat,lon]=sph_tri_latlon(a,b,c)
 %
 %    Usage:    [lat,lon]=sph_tri_latlon(a,b,c)
 %
-%    Description: [LAT,LON]=SPH_TRI_LATLON(A,B,C) converts a spherical
-%     triangle polyhedra from xyz form to latitude and longitude.  A, B, &
-%     C are the xyz matrices of size Nx3 where N is the number of triangles
-%     of the polyhedra.  LAT & LON are 3xN where the first row corresponds
-%     to the vertices in A, the 2nd row corresponds to B and the 3rd row
-%     gives the lat/lon for C.
+%    Description:
+%     [LAT,LON]=SPH_TRI_LATLON(A,B,C) converts a spherical triangle
+%     polyhedra from xyz form to latitude and longitude.  A, B, & C are the
+%     xyz matrices of size Nx3 where N is the number of triangles of the
+%     polyhedra.  LAT & LON are 3xN where the first row corresponds to the
+%     vertices in A, the 2nd row corresponds to B and the 3rd row gives the
+%    lat/lon for C.
 %
 %    Notes:
 %
 %    Examples:
-%     Get the areas of the triangles for a polyhedra:
-%      [a,b,c]=sph_tri_init;
-%      [lat,lon]=sph_tri_latlon(a,b,c);
-%      sph_poly_area(lat,lon)'
+%     % Get the areas of the triangles for a polyhedra:
+%     [a,b,c]=sph_tri_init;
+%     [lat,lon]=sph_tri_latlon(a,b,c);
+%     sph_poly_area(lat,lon)'
 %
 %    See also: SPH_TRI_INIT, SPH_TRI_SPLIT, SPH_TRI_AUTO, SPH_TRI_VERTICES,
 %              SPH_POLY_AREA, SPH_POLY_IN
 
 %     Version History:
 %        Nov. 16, 2009 - initial version
+%        Feb. 11, 2011 - mass nargchk fix, minor doc formmatting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2009 at 19:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(3,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,3,nargin));
 
 % check arguments
 sa=size(a); sb=size(b); sc=size(c);

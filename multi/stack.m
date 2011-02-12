@@ -34,15 +34,15 @@ function [data]=stack(data,varargin)
 %     Version History:
 %        Mar. 24, 2010 - initial version
 %        Dec. 30, 2010 - improved 1-liner description
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 30, 2010 at 23:55 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,6,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -76,7 +76,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

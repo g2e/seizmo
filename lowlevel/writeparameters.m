@@ -37,9 +37,10 @@ function [data]=writeparameters(data,varargin)
 %        May  29, 2009 - initial version
 %        Feb.  2, 2010 - proper SEIZMO handling
 %        Apr. 25, 2010 - allow options like 'changepath', 'appendpath', etc
+%        Feb. 11, 2011 - mass seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2010 at 14:35 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % check nargin
 if(mod(nargin-1,2))
@@ -48,8 +49,7 @@ if(mod(nargin-1,2))
 end
 
 % check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -88,7 +88,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

@@ -53,9 +53,10 @@ function [data]=mirrorflip(data,varargin)
 %        June  3, 2009 - fixes for options checking
 %        Sep. 11, 2009 - minor doc update
 %        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
+%        Feb. 11, 2011 - mass seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 23:35 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -69,8 +70,7 @@ end
 global SEIZMO
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data,'dep'));
 
 % toggle off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -321,7 +321,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

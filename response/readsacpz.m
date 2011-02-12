@@ -62,15 +62,15 @@ function [z,p,k]=readsacpz(file)
 %        Sep.  8, 2009 - minor doc update, fix error ids
 %        Sep. 20, 2009 - throw error on blank file
 %        Feb.  3, 2010 - fixed example
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 23:25 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check file
 if(~ischar(file))
@@ -202,7 +202,7 @@ while(line<=nlines)
                 
                 % assign values
                 if(value2) % complex
-                    z(zero)=value1+value2*i;
+                    z(zero)=value1+value2*1i;
                 else % real
                     z(zero)=value1;
                 end
@@ -259,7 +259,7 @@ while(line<=nlines)
                 
                 % assign values
                 if(value2) % complex
-                    p(pole)=value1+value2*i;
+                    p(pole)=value1+value2*1i;
                 else % real
                     p(pole)=value1;
                 end

@@ -4,10 +4,11 @@ function [bytes,hbytes,dbytes]=seizmosize(data)
 %    Usage:    bytes=seizmosize(data)
 %              [bytes,hbytes,dbytes]=seizmosize(data)
 %
-%    Description: BYTES=SEIZMOSIZE(DATA) returns the expected on-disk size
-%     in bytes for each record in DATA using only the header info.  This is
-%     mainly to detect files on disk that are inconsistent in size from
-%     that expected given their header info.
+%    Description:
+%     BYTES=SEIZMOSIZE(DATA) returns the expected on-disk size in bytes for
+%     each record in DATA using only the header info.  This is mainly to
+%     detect files on disk that are inconsistent in size from that expected
+%     given their header info.
 %
 %    [BYTES,HBYTES,DBYTES]=SEIZMOSIZE(DATA) also returns the expected
 %    on-disk size of the header and data portions of the record(s) in DATA
@@ -16,8 +17,8 @@ function [bytes,hbytes,dbytes]=seizmosize(data)
 %    Notes:
 %
 %    Examples:
-%     Calculate expected filesizes for SAC files in current directory:
-%      seizmosize(readheader('*.SAC'))
+%     % Calculate expected filesizes for SAC files in current directory:
+%     seizmosize(readheader('*.SAC'))
 %
 %    See also: READHEADER, READDATA
 
@@ -35,11 +36,12 @@ function [bytes,hbytes,dbytes]=seizmosize(data)
 %        Apr. 23, 2009 - fix nargchk for octave
 %        Oct. 15, 2009 - speed boost
 %        Jan. 30, 2010 - drop CHECKHEADER use, proper SEIZMO handling,
-%                        versioninfo_cache support, added extra outputs
+%                        versioninfo caching support, added extra outputs
 %        Aug. 21, 2010 - nargchk fix
+%        Feb. 11, 2011 - minor doc reformatting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 23:55 GMT
+%     Last Updated Feb. 11, 2011 at 23:55 GMT
 
 % todo:
 
@@ -86,7 +88,7 @@ catch
     versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

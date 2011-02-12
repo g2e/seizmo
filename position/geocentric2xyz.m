@@ -31,15 +31,15 @@ function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
 %        Nov. 13, 2009 - name change: geodetic to geographic
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 20:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % require 3 or 4 inputs
-msg=nargchk(3,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,4,nargin));
 
 % size up inputs
 sx=size(lat); sy=size(lon); sz=size(radius);

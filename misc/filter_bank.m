@@ -35,15 +35,15 @@ function [bank]=filter_bank(range,option,width,offset)
 %        Apr. 23, 2009 - octave compat fix, minor doc fix
 %        Sep.  7, 2009 - doc update
 %        Feb.  5, 2010 - fixed constant width filter bug, added note
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2010 at 19:20 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check number of arguments
-msg=nargchk(4,4,nargin);
-if(~isempty(msg)); error(msg); end;
+error(nargchk(4,4,nargin));
 
 % check arguments
 if(numel(range)>2 || ~isnumeric(range) || any(range<0))

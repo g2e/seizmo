@@ -51,15 +51,15 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %                        tolerance, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Nov. 13, 2009 - name change: geodetic to geographic
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 13, 2009 at 20:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % require 4 to 6 inputs
-msg=nargchk(4,6,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,6,nargin));
 
 % default - WGS-84 Reference Ellipsoid
 if(nargin==4 || isempty(ellipsoid))

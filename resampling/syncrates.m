@@ -52,19 +52,18 @@ function [data]=syncrates(data,sr,tol)
 %        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support,
 %                        improved error messages, use RRAT (fixed RAT)
 %        Feb.  3, 2010 - make sure checkheader is skipped for trouble case
+%        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 15:55 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,3,nargin));
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -81,7 +80,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % attept synchronization of sample rates
@@ -193,7 +192,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

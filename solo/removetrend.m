@@ -42,22 +42,21 @@ function [data]=removetrend(data)
 %        Dec.  6, 2009 - workaround: remove mean first for stability
 %        Jan. 30, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb.  2, 2010 - versioninfo caching
+%        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 21:25 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check input
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
 versioninfo(data,'dep');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt trend removal
 try
@@ -126,14 +125,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

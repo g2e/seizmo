@@ -40,15 +40,15 @@ function [data]=reverse_correlations(data)
 %     Version History:
 %        Apr. 12, 2010 - initial version
 %        Apr. 15, 2010 - resets name field, includes scrollbar if verbose
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 15, 2010 at 13:45 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data (dep)
 versioninfo(data,'dep');
@@ -68,7 +68,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % attempt reversal
@@ -127,7 +127,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

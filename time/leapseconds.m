@@ -20,7 +20,8 @@ function [leaps]=leapseconds()
 %     - Since leapseconds were introduced in 1972, UTC times before that
 %       are not properly corrected here to maintain timing near UT1 (GMT).
 %       There was actually a different method implemented but that is not
-%       a matter for this function.
+%       a matter for this function.  The data for this is found here:
+%       http://maia.usno.navy.mil/ser7/tai-utc.dat
 %     - Q: How to properly handle data around leap seconds from equipment
 %          that doesn't handle leap seconds?  
 %       A: Leave the last data segment before a leap second alone.  The
@@ -35,8 +36,8 @@ function [leaps]=leapseconds()
 %          prior (until the clock locks to the correct UTC time).
 %
 %    Examples:
-%     Ever wondered when those pesky leap seconds were? Just run:
-%      leapseconds
+%     % Ever wondered when those pesky leap seconds were? Just run:
+%     leapseconds
 %
 %    See also: GETLEAPSECONDS, ISLEAPYEAR, LEAPSINDAY, TOTALLEAPS,
 %              FIXTIMES, TIMEDIFF, UTC2TAI, TAI2UTC
@@ -47,9 +48,10 @@ function [leaps]=leapseconds()
 %        Apr. 23, 2009 - move usage up
 %        June 10, 2009 - minor doc update
 %        Sep.  5, 2009 - minor doc update
+%        Feb. 11, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 19:05 GMT
+%     Last Updated Feb. 11, 2011 at 19:05 GMT
 
 % todo:
 

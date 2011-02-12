@@ -38,15 +38,15 @@ function [data]=rlim2amph(data)
 %        Feb.  2, 2010 - versioninfo caching (required some code changes)
 %        Mar.  8, 2010 - versioninfo caching dropped
 %        Apr.  9, 2010 - minor bug fix
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  9, 2010 at 08:35 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -125,7 +125,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

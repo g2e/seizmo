@@ -45,9 +45,10 @@ function [data]=idft(data)
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        improved messaging
 %        Aug. 19, 2010 - removed ifft symmetric flag, real conversion
+%        Feb. 11, 2011 - mass seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 19, 2010 at 18:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -55,8 +56,7 @@ function [data]=idft(data)
 error(nargchk(1,1,nargin));
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -147,7 +147,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

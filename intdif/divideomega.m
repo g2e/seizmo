@@ -40,15 +40,15 @@ function [data]=divideomega(data)
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        improved messaging
 %        May   6, 2010 - slimmer code for units exchange
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   6, 2010 at 23:10 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -156,7 +156,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

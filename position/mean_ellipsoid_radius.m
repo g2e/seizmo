@@ -33,15 +33,15 @@ function [r]=mean_ellipsoid_radius(method,ellipsoid)
 %     Version History:
 %        Nov. 13, 2009 - initial version
 %        Nov. 16, 2009 - divide by zero bug fixed in sphere 2 authalic
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 16, 2009 at 04:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(0,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(0,2,nargin));
 
 % default - WGS-84 Reference Ellipsoid
 if(nargin<2 || isempty(ellipsoid))

@@ -4,14 +4,15 @@ function [lgc]=sph_poly_in(vlat,vlon,plat,plon,overlap)
 %    Usage:    lgc=sph_poly_in(vlat,vlon,plat,plon)
 %              lgc=sph_poly_in(vlat,vlon,plat,plon,overlap)
 %
-%    Description: LGC=SPH_POLY_IN(VLAT,VLON,PLAT,PLON) returns a indexing
-%     array LGC indicating which polygon given in VLAT/VLON that the points
-%     given in PLAT/PLON are in.  Each point will only be found in one
-%     polygon (see the next option to allow points to be in multiple
-%     polygons).  VLAT/VLON must be equal sized and each column gives
-%     vertices for separate polygons.  PLAT/PLON must have the same number
-%     of elements.  LGC is a NPTSxNPOLY logical array where the each row is
-%     a logical vector indicating which polygon the point is in.
+%    Description:
+%     LGC=SPH_POLY_IN(VLAT,VLON,PLAT,PLON) returns an indexing array LGC
+%     indicating which polygon in VLAT/VLON contains the points given by
+%     PLAT/PLON.  Each point will only be found in one polygon (see the
+%     next option to a point to be in multiple polygons).  VLAT/VLON must
+%     be equal sized and each column gives vertices for separate polygons.
+%     PLAT/PLON must have the same number of elements.  LGC is a NPTSxNPOLY
+%     logical array where the each row is a logical vector indicating which
+%     polygon the point is in.
 %
 %     LGC=SPH_POLY_IN(VLAT,VLON,PLAT,PLON,OVERLAP) allows points to be in
 %     multiple polygons.  The default (FALSE) gives only the first polygon
@@ -22,25 +23,25 @@ function [lgc]=sph_poly_in(vlat,vlon,plat,plon,overlap)
 %    Notes:
 %
 %    Examples:
-%     Which polygon is St. Louis in?
-%      [a,b,c]=sph_tri_init;
-%      [lat,lon]=sph_tri_latlon(a,b,c);
-%      sph_poly_in(lat,lon,38.649,-90.305)
+%     % Which polygon is St. Louis in?
+%     [a,b,c]=sph_tri_init;
+%     [lat,lon]=sph_tri_latlon(a,b,c);
+%     sph_poly_in(lat,lon,38.649,-90.305)
 %
 %    See also: SPH_POLY_AREA, SPH_TRI_INIT, SPH_TRI_SPLIT, SPH_TRI_AUTO,
 %              SPH_TRI_LATLON, SPH_TRI_VERTICES
 
 %     Version History:
 %        Nov. 17, 2009 - initial version
+%        Feb. 11, 2011 - mass nargchk fix, minor doc formatting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 17, 2009 at 07:50 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(4,5,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,5,nargin));
 
 % check vlat/vlon (must be equal sized)
 if(~isreal(vlat) || ~isreal(vlon) || ~isequal(size(vlat),size(vlon)))

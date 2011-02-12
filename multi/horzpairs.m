@@ -59,9 +59,10 @@ function [idx1,idx2,idx3]=horzpairs(data,varargin)
 %        Feb. 24, 2010 - more checks, 1st cmp lags 2nd by 90deg
 %        Sep. 29, 2010 - add filename output to warnings, more warnings for
 %                        verticals, check for multiple inclinations
+%        Feb. 11, 2011 - dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 29, 2010 at 16:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -79,7 +80,6 @@ data=checkheader(data);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt pairing of horizontals
 try
@@ -347,14 +347,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

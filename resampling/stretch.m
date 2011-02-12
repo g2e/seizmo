@@ -36,15 +36,15 @@ function [data]=stretch(data,factor)
 %        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support,
 %                        improved error messages
 %        Feb.  2, 2010 - versioninfo caching
+%        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 21:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check inputs
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -54,11 +54,10 @@ if(isempty(factor)); return; end
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % attempt convolution
 try
-    % check headers (versioninfo cache update)
+    % check headers
     data=checkheader(data);
 
     % verbosity
@@ -155,14 +154,12 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

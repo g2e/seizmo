@@ -32,15 +32,15 @@ function [topo,lat,lon]=topo_region(latrange,lonrange,toponame)
 %     Version History:
 %        Feb. 17, 2010 - initial version
 %        May  17, 2010 - slight improvement to example
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  17, 2010 at 15:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(0,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(0,3,nargin));
 
 % valid topo list (add new topo here)
 validtopo={'srtm30plus' 'etopo1_bed' 'etopo1_ice' 'etopo1_thk'};

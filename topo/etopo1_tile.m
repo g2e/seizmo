@@ -22,15 +22,15 @@ function []=etopo1_tile(version)
 %     Version History:
 %        Feb. 16, 2010 - initial version
 %        Feb. 25, 2010 - minor doc update
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 25, 2010 at 00:30 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,1,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,1,nargin));
 
 % verbosity
 verbose=seizmoverbose;

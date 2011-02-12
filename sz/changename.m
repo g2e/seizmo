@@ -77,9 +77,10 @@ function [data]=changename(data,varargin)
 %                        option are all done, seizmoverbose support
 %        Apr. 10, 2010 - fixed bug where name was written as a cellstr
 %        Apr. 25, 2010 - allow several more strings to specify options
+%        Feb. 11, 2011 - mass seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2010 at 12:45 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -90,8 +91,7 @@ if(mod(nargin-1,2))
 end
 
 % check data structure
-msg=seizmocheck(data);
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data));
 
 % fast exit
 if(nargin==1); return; end

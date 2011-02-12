@@ -91,15 +91,15 @@ function [x]=ndsquareform(x,method,flag)
 %        Mar.  2, 2010 - minor doc update
 %        Mar. 12, 2010 - doc update
 %        Mar. 22, 2010 - improved checking of anti-symmetric matrices
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 22, 2010 at 23:55 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,3,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,3,nargin));
 
 % size up input
 sz=size(x);

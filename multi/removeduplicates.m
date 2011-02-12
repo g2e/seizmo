@@ -63,9 +63,10 @@ function [data,removed]=removeduplicates(data,varargin)
 %        Feb.  2, 2010 - state function update, drop getncmp, versioninfo
 %                        caching, proper SEIZMO handling, seizmoverbose
 %                        support
+%        Feb. 11, 2011 - dropped versioninfo caching
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2010 at 21:50 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
@@ -83,7 +84,6 @@ data=checkheader(data);
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
-oldversioninfocache=versioninfo_cache(true);
 
 % try removing time duplicates
 try
@@ -249,21 +249,15 @@ try
     % remove unwanted data
     data(destroy)=[];
     removed=find(destroy);
-    % the following requires all calling functions using versioninfo
-    % caching to update their variables to the cached version
-    % - this requires keeping track of who calls removeduplicates
-    SEIZMO.VERSIONINFO.IDX(destroy)=[];
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    versioninfo_cache(oldversioninfocache);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

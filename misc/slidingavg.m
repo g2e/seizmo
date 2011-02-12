@@ -80,16 +80,16 @@ function [y]=slidingavg(x,nsamples,varargin)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        May  10, 2009 - minor doc fix
 %        June  9, 2009 - allow for unlimited varargin
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 % - fix nan handling
 
 % check nargin
-msg=nargchk(2,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,inf,nargin));
 
 % quick return if empty
 if(isempty(x)); y=x; return; end

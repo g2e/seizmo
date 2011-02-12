@@ -32,15 +32,15 @@ function []=db2sacpz(db,varargin)
 %     Version History:
 %        Sep. 22, 2009 - initial version
 %        Feb.  3, 2010 - updated example
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2010 at 22:55 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,2,nargin));
 
 % check db
 if(~isstruct(db))

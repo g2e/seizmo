@@ -29,15 +29,15 @@ function [lgc]=isorthogonal(o1,o2)
 %     Version History:
 %        Nov.  2, 2009 - initial version
 %        Feb. 22, 2010 - bug fix for size checks, single-prec tolerance
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 22, 2010 at 21:35 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(2,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(2,2,nargin));
 
 % check orientations
 sz1=size(o1); sz2=size(o2);

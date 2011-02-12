@@ -43,15 +43,15 @@ function [varargout]=topo_colormap(z,m,sea,land)
 %     Version History:
 %        Feb. 19, 2010 - initial version
 %        Feb. 22, 2010 - output all z-values rather than limits
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 22, 2010 at 16:20 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(1,5,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,5,nargin));
 
 % check inputs
 if(nargin<2 || isempty(m)); m=size(get(gcf,'colormap'),1); end

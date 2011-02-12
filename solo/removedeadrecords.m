@@ -42,21 +42,22 @@ function [data,removed]=removedeadrecords(data,option)
 %                        move usage up
 %        Jan. 30, 2010 - slimmed the code (no checkheader call)
 %        Apr.  1, 2010 - detail message indicates number removed
+%        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix, warn fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  1, 2010 at 02:00 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check input
-msg=nargchk(1,2,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,2,nargin));
 
 % check option
 if(nargin==1 || isempty(option))
     option=true;
 elseif(~islogical(option) || ~isscalar(option))
-    error('seizmo:removedeadrecords','OPTION must be true or false!');
+    error('seizmo:removedeadrecords:badInput',...
+        'OPTION must be true or false!');
 end
 
 % detail message
@@ -72,8 +73,7 @@ if(option)
     data(removed)=[];
 else
     % check data structure
-	msg=seizmocheck(data,'dep');
-	if(~isempty(msg)); error(msg.identifier,msg.message); end
+    error(seizmocheck(data,'dep'));
     
     % get min/max of data
     nrecs=numel(data);

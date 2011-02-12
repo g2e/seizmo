@@ -244,9 +244,10 @@ function [data]=merge(data,varargin)
 %        Feb. 23, 2010 - moved verbose to debugging messages
 %        Feb. 24, 2010 - fixed switch statements
 %        Apr.  1, 2010 - progress bar shows nrecs
+%        Feb. 11, 2011 - mass seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  1, 2010 at 01:55 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 %   - uneven support - just toss together and sort after?
@@ -262,8 +263,7 @@ end
 global SEIZMO
 
 % check data structure
-msg=seizmocheck(data,'dep');
-if(~isempty(msg)); error(msg.identifier,msg.message); end
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -280,7 +280,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 % attempt merge
@@ -680,7 +680,7 @@ catch
     checkheader_state(oldcheckheaderstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

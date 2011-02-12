@@ -30,15 +30,15 @@ function [data,dep,ind]=detach(data,option,dpts)
 %        Jan. 30, 2010 - minor message update
 %        Feb.  2, 2010 - versioninfo caching
 %        Mar.  8, 2010 - versioninfo caching dropped
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 12:45 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-msg=nargchk(3,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(3,4,nargin));
 
 % check data structure
 versioninfo(data,'dep');
@@ -166,7 +166,7 @@ catch
     seizmocheck_state(oldseizmocheckstate);
     
     % rethrow error
-    error(lasterror)
+    error(lasterror);
 end
 
 end

@@ -30,15 +30,15 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 %        Oct. 14, 2008 - initial version
 %        Nov. 10, 2008 - improved scalar expansion, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2009 at 21:15 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 
 % require 4 inputs
-msg=nargchk(4,4,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(4,4,nargin));
 
 % size up inputs
 sz1=size(evla); sz2=size(evlo);

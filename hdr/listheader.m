@@ -57,16 +57,16 @@ function []=listheader(data,varargin)
 %        Sep. 15, 2009 - doc updated
 %        Sep. 18, 2009 - 2nd pass at abs time support
 %        Jan. 30, 2010 - use VF_GH_Z to get reference time
+%        Feb. 11, 2011 - mass nargchk fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2010 at 19:20 GMT
+%     Last Updated Feb. 11, 2011 at 15:05 GMT
 
 % todo:
 % - skip undefined (set via global)
 
 % check nargin
-msg=nargchk(1,inf,nargin);
-if(~isempty(msg)); error(msg); end
+error(nargchk(1,inf,nargin));
 
 % headers setup
 [h,idx]=versioninfo(data);
