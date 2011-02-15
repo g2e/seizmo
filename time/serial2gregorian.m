@@ -2,7 +2,7 @@ function [times]=serial2gregorian(serial,option)
 %SERIAL2GREGORIAN    Convert serial dates to Gregorian dates
 %
 %    Usage:    gregoriandates=serial2gregorian(serialdates)
-%              gregoriandates=serial2gregorian(serialdates)
+%              gregoriandates=serial2gregorian(serialdates,option)
 %
 %    Description: SERIAL2GREGORIAN(DATES) returns the equivalent Gregorian
 %     dates for the serial dates stored in DATES.  A serial date of 1
@@ -34,9 +34,10 @@ function [times]=serial2gregorian(serial,option)
 %        Sep.  5, 2009 - minor doc update
 %        Sep. 23, 2009 - fixed serial conversion (year 0 bug)
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb. 14, 2011 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb. 14, 2011 at 15:05 GMT
 
 % todo:
 

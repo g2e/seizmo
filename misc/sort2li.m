@@ -22,14 +22,15 @@ function [li]=sort2li(i,dim)
 %      d=b(sort2li(i))
 %      isequal(c,1./d)
 %
-%    See also: SORT, SUBMAT, MATCHSORT, UNSORT
+%    See also: SORT, SUBMAT, MATCHSORT, UNSORT, MIDX2LI
 
 %     Version History:
 %        Sep.  8, 2009 - doc cleanup, dropped submat subfunction
 %        Sep. 21, 2009 - dropped submat call (now uses only built-ins)
+%        Feb. 15, 2011 - added midx2li to See also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2009 at 21:00 GMT
+%     Last Updated Feb. 15, 2011 at 21:00 GMT
 
 % todo:
 

@@ -44,9 +44,10 @@ function [results]=cmb_outliers(results,odir,figdir)
 %        Jan. 29, 2011 - prepend datetime to output names, fix Sdiff
 %                        corrections bug
 %        Jan. 31, 2011 - odir & figdir inputs
+%        Feb. 12, 2011 - include snr-based arrival time error
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 31, 2011 at 13:35 GMT
+%     Last Updated Feb. 12, 2011 at 13:35 GMT
 
 % todo:
 % - coloring of outlier plots
@@ -109,7 +110,12 @@ for i=1:numel(results)
                     -results(i).corrections.mancor.hmsl06s.upswing;
         end
     end
-    arrerr=results(i).useralign.solution.arrerr;
+    snr=results(i).usersnr.snr;
+    snr=snr(snr>=results(i).usersnr.snrcut);
+    snr(results(i).userwinnow.cut)=[];
+    arrerr=sqrt((results(i).useralign.solution.arrerr).^2 ...
+        +(max(1./results(i).filter.corners)...
+        ./(2*pi).*snr2phaseerror(snr)).^2);
     amp=results(i).useralign.solution.amp;
     camp=amp./results(i).corrections.geomsprcor;
     amperr=results(i).useralign.solution.amperr;

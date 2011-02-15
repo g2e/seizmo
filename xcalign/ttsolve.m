@@ -186,9 +186,11 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %        Jan. 18, 2011 - drop rescale_snr for snr2maxphaseerror
 %        Jan. 23, 2011 - handle unsolvable polarity cases
 %        Jan. 29, 2011 - default to 20 time refinements
+%        Feb. 12, 2011 - update for snr2phaseerror name change, do not
+%                        alter opt.SNR (use a new variable)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2011 at 09:45 GMT
+%     Last Updated Feb. 12, 2011 at 09:45 GMT
 
 % todo:
 
@@ -227,8 +229,8 @@ xc.cg(xc.cg>opt.MAXCOR)=opt.MAXCOR;
 xc.zg=fisher(xc.cg);
 
 % now get weights (z-statistic * root of matrix product of rescaled snr)
-opt.SNR=1-snr2maxphaseerror(opt.SNR)/pi;
-xc.wg=sqrt(opt.SNR*opt.SNR');
+SNRr=1-snr2phaseerror(opt.SNR)/pi;
+xc.wg=sqrt(SNRr*SNRr');
 xc.wg=xc.wg(:,:,ones(np,1));
 if(vector)
     xc.wg=permute(ndsquareform(xc.wg),[2 1 3]).*(xc.zg);

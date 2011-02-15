@@ -6,11 +6,11 @@ function []=daydirs_stackcorr(indir,outdir,stns,cmp1,cmp2,o)
 %
 %    Description: DAYDIRS_STACKCORR(INDIR,OUTDIR,STNS,CMP1,CMP2) stacks
 %     correlations between stations with names given in char/cellstr array
-%     STNS and component names given by CMP1 & CMP2.  CMP1 & CMP2 must be a
-%     3 character component code like 'LHZ'.  There are several stack sets
-%     computed: ones for the full time, individual months and year-
-%     independent monthly stacks (for example Jan 2006 & 2007 are stacked
-%     together).  In addition, the stacks are returned as the raw
+%     STNS and component names given by CMP1 & CMP2.  CMP1 & CMP2 can be a
+%     3 character component code like 'LHZ' or just 'Z'.  There are several
+%     stack sets computed: ones for the full time, individual months and
+%     year-independent monthly stacks (for example Jan 2006 & 2007 are
+%     stacked together).  In addition, the stacks are returned as the raw
 %     correlograms or as empirical Green's functions (which is further
 %     broken down into the positive component, negative component,
 %     symmetric component and normal two-way Green's function).  As with
@@ -59,10 +59,11 @@ function []=daydirs_stackcorr(indir,outdir,stns,cmp1,cmp2,o)
 %                        correlograms rather than combine with reversed
 %                        ones, added docs
 %        Sep. 21, 2010 - commented out parallel processing lines
-%        Jan.  6, 2010 - update for seizmofun/solofun name change
+%        Jan.  6, 2011 - update for seizmofun/solofun name change
+%        Feb. 14, 2011 - no longer require 3char CMP
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 11:15 GMT
+%     Last Updated Feb. 14, 2011 at 11:15 GMT
 
 % todo:
 
@@ -113,13 +114,13 @@ if(~iscellstr(stns) || any(cellfun('ndims',stns)~=2) ...
     error('seizmo:daydirs_stackcorr:badInput',...
         'STNS must be a char/cellstr array of station names!');
 end
-if(~ischar(cmp1) || ~isequal(size(cmp1),[1 3]))
+if(~isstring(cmp1))
     error('seizmo:daydirs_stackcorr:badInput',...
-        'CMP1 must be a 3 character component code!');
+        'CMP1 must be a string!');
 end
-if(~ischar(cmp2) || ~isequal(size(cmp2),[1 3]))
+if(~isstring(cmp2))
     error('seizmo:daydirs_stackcorr:badInput',...
-        'CMP2 must be a 3 character component code!');
+        'CMP2 must be a string!');
 end
 
 % directory separator
@@ -132,7 +133,7 @@ fs=filesep;
 nstn=numel(stns);
 
 % get orientation codes for output
-cname=upper([cmp1(3) cmp2(3)]);
+cname=upper([cmp1(end) cmp2(end)]);
 
 % alter verbosity
 verbose=seizmoverbose(false);
@@ -151,14 +152,14 @@ for m=1:nstn
         skip=false;
         try
             data=readseizmo(...
-                [indir fs '*' fs '*' fs 'CORR_-_*' stns{m} '*' cmp1 '*' ...
-                stns{s} '*' cmp2]);
+                [indir fs '*' fs '*' fs 'CORR_-_MASTER_-_*' stns{m} '*' ...
+                cmp1 '_-_SLAVE_-_*' stns{s} '*' cmp2]);
         catch
             skip=true;
             try
                 data=reverse_correlations(readseizmo(...
-                    [indir fs '*' fs '*' fs 'CORR_-_*' stns{s} '*' ...
-                    cmp2 '*' stns{m} '*' cmp1]));
+                    [indir fs '*' fs '*' fs 'CORR_-_MASTER_-_*' stns{s} ...
+                    '*' cmp2 '_-_SLAVE_-_*' stns{m} '*' cmp1]));
             catch
                 continue;
             end
@@ -167,8 +168,8 @@ for m=1:nstn
             try
                 data=[data; ...
                     reverse_correlations(readseizmo(...
-                    [indir fs '*' fs '*' fs 'CORR_-_*' stns{s} ...
-                    '*' cmp2 '*' stns{m} '*' cmp1]))];
+                    [indir fs '*' fs '*' fs 'CORR_-_MASTER_-_*' stns{s} ...
+                    '*' cmp2 '_-_SLAVE_-_*' stns{m} '*' cmp1]))];
             catch
                 % no reverse
             end

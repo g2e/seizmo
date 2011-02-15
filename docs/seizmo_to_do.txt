@@ -14,8 +14,6 @@ x	add weighting to all
 	verify horzizontal algorithm vs Haubrich and McCamy 1969
 	make scripts for
 		3hour
-		daily
-		1mon
         vol/map set 2 mov
 	x	fkxcmap
 	x	fkxchorzmap

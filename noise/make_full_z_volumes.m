@@ -1,5 +1,5 @@
 function []=make_full_z_volumes(indir)
-%MAKE_FULL_Z_VOLUMES    Computes fk volumes for vertical full stacks
+%MAKE_FULL_Z_VOLUMES    Computes full-time fk volumes for verticals
 %
 %    Usage:    make_full_z_volumes(stack_dir)
 %
@@ -19,9 +19,10 @@ function []=make_full_z_volumes(indir)
 %     Version History:
 %        June 24, 2010 - initial version
 %        Oct. 10, 2010 - svol to fkvol
+%        Feb. 15, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 15:55 GMT
+%     Last Updated Feb. 15, 2011 at 15:55 GMT
 
 % todo:
 

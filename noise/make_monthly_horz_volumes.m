@@ -1,15 +1,15 @@
 function []=make_monthly_horz_volumes(indir,months)
-%MAKE_MONTHLY_HORZ_VOLUMES    Computes fk volumes for horiz. monthly stacks
+%MAKE_MONTHLY_HORZ_VOLUMES    Computes monthly fk volumes for horizontals
 %
 %    Usage:    make_monthly_horz_volumes(stack_dir)
 %              make_monthly_horz_volumes(stack_dir,months)
 %
 %    Description: MAKE_MONTHLY_HORZ_VOLUMES(STACK_DIR) creates fk-based
-%     slowness response volumes for an array on a month to month basis.
-%     This only works on a directory layout setup by DAYDIRS_STACKCORR.
-%     The period range is 4 to 100s, the maximum slowness is 50sec/deg and
-%     the slowness resolution is 1/3 sec/deg.  This will process all 12
-%     months of the year.
+%     slowness response volumes for an array on a month to month basis
+%     independent of year (eg stacked across years).  This only works on a
+%     directory layout setup by DAYDIRS_STACKCORR.  The period range is
+%     4 to 100s, the maximum slowness is 50sec/deg and the slowness
+%     resolution is 1/3 sec/deg.
 %
 %     MAKE_MONTHLY_HORZ_VOLUMES(STACK_DIR,MONTHS) explicitly sets the
 %     months to process.  This is useful for doing this parallel-ish.
@@ -19,14 +19,16 @@ function []=make_monthly_horz_volumes(indir,months)
 %    Examples:
 %
 %    See also: MAKE_FULL_HORZ_VOLUMES, MAKE_MONTHLY_Z_VOLUMES,
-%              FKXCHORZVOLUME, DAYDIRS_STACKCORR
+%              FKXCHORZVOLUME, DAYDIRS_STACKCORR, MAKE_YRMO_HORZ_VOLUMES,
+%              MAKE_DAILY_HORZ_VOLUMES
 
 %     Version History:
 %        June 24, 2010 - initial version
 %        Oct. 10, 2010 - svol to fkvol
+%        Feb. 14, 2011 - doc update, skip if no data for a month, verbosity
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 15:55 GMT
+%     Last Updated Feb. 14, 2011 at 15:55 GMT
 
 % todo:
 
@@ -79,17 +81,28 @@ if(~isreal(months) || any(months(:)~=fix(months(:))) ...
         'MONTHS must be an array of integers within 1 & 12!');
 end
 
+% verbosity
+verbose=seizmoverbose;
+if(verbose); disp('Computing monthly horizontal fk volumes'); end
+
 % loop over months
 for i=months
+    % detail message
+    if(verbose); disp(['PROCESSING MONTH ' num2str(i,'%02d')]); end
+    
     % read in data
-    rr=readseizmo([indir fs 'RR' fs 'CORR_MONSTACK' fs ...
-        'STACK_' num2str(i,'%02d') '_*']);
-    rt=readseizmo([indir fs 'RT' fs 'CORR_MONSTACK' fs ...
-        'STACK_' num2str(i,'%02d') '_*']);
-    tr=readseizmo([indir fs 'TR' fs 'CORR_MONSTACK' fs ...
-        'STACK_' num2str(i,'%02d') '_*']);
-    tt=readseizmo([indir fs 'TT' fs 'CORR_MONSTACK' fs ...
-        'STACK_' num2str(i,'%02d') '_*']);
+    try
+        rr=readseizmo([indir fs 'RR' fs 'CORR_MONSTACK' fs ...
+            'STACK_' num2str(i,'%02d') '_*_RR']);
+        rt=readseizmo([indir fs 'RT' fs 'CORR_MONSTACK' fs ...
+            'STACK_' num2str(i,'%02d') '_*_RT']);
+        tr=readseizmo([indir fs 'TR' fs 'CORR_MONSTACK' fs ...
+            'STACK_' num2str(i,'%02d') '_*_TR']);
+        tt=readseizmo([indir fs 'TT' fs 'CORR_MONSTACK' fs ...
+            'STACK_' num2str(i,'%02d') '_*_TT']);
+    catch
+        continue;
+    end
     
     % find incomplete/missing stations
     [mi,si]=getheader(rr,'user0','user1');

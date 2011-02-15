@@ -45,9 +45,10 @@ function [results]=cmb_clustering(results,odir,figdir)
 %        Jan. 18, 2011 - .time field
 %        Jan. 29, 2011 - prepend datetime to output names
 %        Jan. 31, 2011 - odir & figdir inputs
+%        Feb. 11, 2011 - results now output to odir not figdir
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 31, 2011 at 13:35 GMT
+%     Last Updated Feb. 11, 2011 at 13:35 GMT
 
 % todo:
 
@@ -119,7 +120,7 @@ for i=1:numel(results)
 
     % save results
     tmp=results(i);
-    save(fullfile(figdir,[datestr(now,30) '_' results(i).runname ...
+    save(fullfile(odir,[datestr(now,30) '_' results(i).runname ...
         '_clustering_results.mat']),'-struct','tmp');
 end
 

@@ -32,9 +32,10 @@ function [varargout]=plot_cmb_measurements(pf,field,varargin)
 %     Version History:
 %        Feb.  1, 2011 - initial version
 %        Feb. 10, 2011 - reusing axes works, better labeling, doc update
+%        Feb. 12, 2011 - altered line style code
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2011 at 13:35 GMT
+%     Last Updated Feb. 12, 2011 at 13:35 GMT
 
 % todo:
 
@@ -97,7 +98,7 @@ for i=1:nmod
     a=find(idx==i);
     
     % get random linespec (is a subfunction)
-    [l,m,c,mc]=randlinespec(i+oldpts);
+    [l,m,c,mc]=randlinespec(5+i+oldpts);
     
     % plot measurements
     [h(i),hyerr(i),hxerr(i)]=ploterr(ax,p0(a),x0(a),{lp(a) up(a)},e0(a),...
@@ -182,10 +183,14 @@ if(nargin)
     % pre-established but few repeats
     line=linestyles{mod(n-1,4)+1};
     tmp=mod(22-n,22)+1;
-    if(tmp>13); tmp=tmp-13; end
+    if(tmp>13); tmp=tmp-9; end
     marker=markers{tmp};
     color=name2rgb(colors{mod(n-1,7)+1});
-    mcolor=name2rgb(mcolors{mod(13-n,13)+1});
+    if(mod(n,2))
+        mcolor=name2rgb(mcolors{mod(9-n,13)+1});
+    else
+        mcolor=name2rgb(mcolors{mod(13-n,13)+1});
+    end
 else % random
     r=randperm(4);
     line=linestyles{r(1)};

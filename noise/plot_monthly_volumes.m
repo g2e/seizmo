@@ -24,14 +24,16 @@ function [fh]=plot_monthly_volumes(band,cmp,dblim,zerodb)
 %     fh=plot_monthly_volumes;
 %     adjust_monthly_plots(fh,'My Array Name');
 %
-%    See also: MAKE_MONTHLY_HORZ_VOLUMES, MAKE_MONTHLY_Z_VOLUMES
+%    See also: ADJUST_MONTHLY_PLOTS, MAKE_MONTHLY_HORZ_VOLUMES, 
+%              MAKE_MONTHLY_Z_VOLUMES
 
 %     Version History:
 %        Oct. 10, 2010 - initial version
 %        Oct. 11, 2010 - several bug fixes
+%        Feb. 12, 2011 - updated see also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 11, 2010 at 16:05 GMT
+%     Last Updated Feb. 12, 2011 at 16:05 GMT
 
 % todo:
 

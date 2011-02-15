@@ -87,9 +87,10 @@ function [varargout]=slowdecayprofiles(results,azrng,gcrng,odir)
 %        Jan. 29, 2011 - save output, fix corrections bug
 %        Jan. 31, 2011 - allow no output, odir input, better checks
 %        Feb.  5, 2011 - fix bug when no output specified
+%        Feb. 12, 2011 - include snr-based arrival time error
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2011 at 13:35 GMT
+%     Last Updated Feb. 12, 2011 at 13:35 GMT
 
 % todo:
 
@@ -180,7 +181,12 @@ for a=1:numel(results)
                     -results(a).corrections.mancor.hmsl06s.upswing;
         end
     end
-    rtimeerr=results(a).useralign.solution.arrerr;
+    snr=results(a).usersnr.snr;
+    snr=snr(snr>=results(a).usersnr.snrcut);
+    snr(results(a).userwinnow.cut)=[];
+    rtimeerr=sqrt((results(a).useralign.solution.arrerr).^2 ...
+        +(max(1./results(a).filter.corners)...
+        ./(2*pi).*snr2phaseerror(snr)).^2);
     rampl=results(a).useralign.solution.amp;
     crampl=results(a).useralign.solution.amp...
         ./results(a).corrections.geomsprcor;

@@ -9,7 +9,7 @@ function [m,Gg]=ttalign(lag,lagw,abstt,absw,absidx)
 %     times LAG in a least-squares sense for the optimal relative arrival
 %     times M (zero-centered).  Secondary output Gg is the generalized
 %     inverse of G in the equation G*M=LAG (so M=Gg*LAG).  This is an
-%     overdetermined problem so Gg=inv(G.'*G)*G.'.
+%     overdetermined problem so Gg=(G.'*G)\G.'.
 %
 %     [M,Gg]=TTALIGN(LAG,LAGW) assigns weights LAGW to the corresponding
 %     elements in LAG when solving for M.  Higher weights forces the
@@ -55,7 +55,7 @@ function [m,Gg]=ttalign(lag,lagw,abstt,absw,absidx)
 %                        times and completely wrong times for absolute
 %                        times)
 %        Sep. 13, 2010 - nargchk fix
-%        Feb. 11, 2011 - drop inv calls
+%        Feb. 11, 2011 - drop inv calls, minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 11, 2011 at 01:05 GMT
