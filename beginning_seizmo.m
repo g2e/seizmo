@@ -2,10 +2,10 @@
 % 
 %% What is SEIZMO?
 % SEIZMO is a Matlab and GNU Octave based toolbox encompassing a collection
-% of over 500 functions that provide a framework for seismic data
+% of over 650 functions that provide a framework for seismic data
 % preparation, quality control, and analysis akin to that of Seismic
 % Analysis Code with a focus on passive source seismology at regional and
-% global scales (where earthquakes and ambient noise are the sources).
+% global scales (where earthquakes and microseisms are the sources).
 
 %% Why use SEIZMO?
 % There are numerous functions for reading/writing standard seismic data
@@ -17,7 +17,7 @@
 % tapering, and windowing. The toolbox contains collections of functions
 % for arrival time determination and quality control with cross correlation
 % and cluster analysis, Rayleigh wave two plane-wave analysis, seismic
-% ambient noise processing, and frequency-wavenumber analysis. SEIZMO
+% seismic noise processing, and frequency-wavenumber analysis. SEIZMO
 % utilizes direct access to the TauP toolkit to administer predicted
 % arrival times, raypaths, pierce points, and travel time curves for
 % several widely recognized 1D seismic earth models. Mapping in SEIZMO

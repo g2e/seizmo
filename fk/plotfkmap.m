@@ -52,9 +52,10 @@ function [varargout]=plotfkmap(map,varargin)
 %        Oct. 10, 2010 - all plotting functions use proper ax calls, tagged
 %                        plots as 'fkmap'
 %        Jan.  7, 2011 - delete commented mmpolar lines
+%        Feb. 16, 2011 - fix pcolor offset in polar plots, color code fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  7, 2011 at 10:50 GMT
+%     Last Updated Feb. 16, 2011 at 10:50 GMT
 
 % todo:
 
@@ -141,11 +142,7 @@ else
             fgcolor=invertcolor(bgcolor,true);
         end
     elseif(isempty(bgcolor))
-        if(isempty(fgcolor))
-            fgcolor='w'; bgcolor='k';
-        else
-            bgcolor=invertcolor(fgcolor,true);
-        end
+        bgcolor=invertcolor(fgcolor,true);
     end
 end
 
@@ -198,13 +195,19 @@ delete(ph);
 view(ax,[-90 90]);
 hold(ax,'on');
 
+% offset for pcolor business
+degstep=map.x(2)-map.x(1);
+map.x=[map.x-degstep/2 map.x(end)+degstep/2];
+slowstep=map.y(2)-map.y(1);
+map.y=[map.y-slowstep/2; map.y(end)+slowstep/2];
+
 % get cartesian coords
 nx=numel(map.x);
 ny=numel(map.y);
 [x,y]=pol2cart(pi/180*map.x(ones(ny,1),:),map.y(:,ones(nx,1)));
 
 % plot polar grid
-pcolor(ax,x,y,double(map.beam));
+pcolor(ax,x,y,double(map.beam([1:end end],[1:end end])));
 
 % add title color etc
 hold(ax,'off');
@@ -313,11 +316,7 @@ else
             fgcolor=invertcolor(bgcolor,true);
         end
     elseif(isempty(bgcolor))
-        if(isempty(fgcolor))
-            fgcolor='w'; bgcolor='k';
-        else
-            bgcolor=invertcolor(fgcolor,true);
-        end
+        bgcolor=invertcolor(fgcolor,true);
     end
 end
 

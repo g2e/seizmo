@@ -35,7 +35,7 @@ function [varargout]=bathy_micro_excite(z,f,vs)
 %     imagesc(lon(1,:),lat(:,1),c);
 %     set(gca,'ydir','normal');
 %
-%    See also: SLOWNESS2DEG
+%    See also: SLOWNESS2DEG, PLOTBATHYEXCITE
 
 %     Version History:
 %        Sep. 22, 2010 - initial version

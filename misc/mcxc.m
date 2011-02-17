@@ -143,8 +143,8 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %
 %    Examples:
 %     The single dataset option is good for cases where correlations
-%     between all records are needed.  For instance, in a seismic ambient
-%     noise study.  This will produce correlograms for all pairs of records
+%     between all records are needed.  For instance, in a seismic noise
+%     study.  This will produce correlograms for all pairs of records
 %     in a dataset (Remember individual records should extend down the
 %     columns of X!):
 %      [correlograms,lags]=mcxc(X);
@@ -192,9 +192,10 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %                        work on dimension 1, added a simple example, added
 %                        a verbose option (requires PRINT_TIME_LEFT)
 %        Mar. 12, 2010 - fix for precision issue in normalized case
+%        Feb. 15, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 12, 2010 at 10:10 GMT
+%     Last Updated Feb. 15, 2011 at 10:05 GMT
 
 % todo:
 % - vectorized gives different lag result if no peaks left (DO NOT CARE)

@@ -11,7 +11,7 @@ function []=daydirs_normalize(indir,outdir,eqband,pband,tsw,fsw,o)
 %     The temporal normalization uses a 2-pass sliding-absolute-mean to
 %     de-emphasize glitches and earthquakes.  The spectral normalization
 %     applies a sliding-absolute-mean in the frequency domain with a window
-%     width of 2mHz.  This is tuned for ambient noise studies of 1sps data.
+%     width of 2mHz.  This is tuned for seismic noise studies of 1sps data.
 %
 %     DAYDIRS_NORMALIZE(INDIR,OUTDIR,EQBAND,PBAND) adjusts the earthquake
 %     band and the passband of the filter for output.  The default EQBAND
@@ -42,9 +42,10 @@ function []=daydirs_normalize(indir,outdir,eqband,pband,tsw,fsw,o)
 %        Sep. 21, 2010 - commented out parallel processing lines
 %        Oct.  6, 2010 - catch rotate error (when no records)
 %        Jan.  6, 2010 - seizmofun/solofun & recordfun/multifun renames
+%        Feb. 15, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 11:15 GMT
+%     Last Updated Feb. 15, 2011 at 10:05 GMT
 
 % todo:
 

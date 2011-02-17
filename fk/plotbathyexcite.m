@@ -1,128 +1,98 @@
-function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
-%PLOTGEOFKMAP    Plots frequency-slowness-position beam data
+function [varargout]=plotbathyexcite(c,la,lo,crng,popt,fgcolor,bgcolor,ax)
+%PLOTBATHYEXCITE    Plots 2ndary microseism bathymetric excitation coeff
 %
-%    Usage:    plotgeofkmap(map)
-%              plotgeofkmap(map,projopt)
-%              plotgeofkmap(map,projopt,dblim)
-%              plotgeofkmap(map,projopt,dblim,zerodb)
-%              plotgeofkmap(map,projopt,dblim,zerodb,fgcolor,bgcolor)
-%              plotgeofkmap(map,projopt,dblim,zerodb,fgcolor,bgcolor,ax)
-%              ax=plotgeofkmap(...)
+%    Usage:    plotbathyexcite(c,lat,lon)
+%              plotbathyexcite(c,lat,lon,clim)
+%              plotbathyexcite(c,lat,lon,clim,projopt)
+%              plotbathyexcite(c,lat,lon,clim,projopt,fgcolor,bgcolor)
+%              plotbathyexcite(c,lat,lon,clim,projopt,fgcolor,bgcolor,ax)
+%              ax=plotbathyexcite(...)
 %
-%    Description: PLOTGEOFKMAP(MAP) plots the frequency-slowness-position
-%     beam data in geofk struct MAP.  See a geofk function like
-%     GEOFKXCVOLUME for details on the struct.  The data is plotted on a
+%    Description:
+%     PLOTBATHYEXCITE(C,LAT,LON) plots bathymetric coefficient data given
+%     in the 2D array C.  The data should be regularly sampled in latitude
+%     and longitude (given by vectors LAT & LON).  The data is plotted on a
 %     map with a Hammer-Aitoff projection and the map limits are scaled to
-%     fit the beam data & station positions.  Note that the beam data
-%     positions should form a regular grid (using a function like
-%     MESHGRID).  This plots GSHHS coastlines and borders in low-resolution
-%     which may take a few moments - please be patient.
+%     fit the latitude and longitude limits.  This plots GSHHS coastlines
+%     and borders in crude-resolution which may take a few moments - please
+%     be patient. Dimensions of C should be NUMEL(LAT)xNUMEL(LON).
 %
-%     PLOTGEOFKMAP(MAP,PROJOPT) allows passing options to M_PROJ.  See
-%     M_PROJ('SET') for possible projections and See M_PROJ('GET',PROJ) for
-%     a list of possible additional options specific to that projection.
+%     PLOTBATHYEXCITE(C,LAT,LON,CLIM) sets the coloring limits of the
+%     coefficients limits for coloring.  The default is [0 1].  CLIM must
+%     be a real-valued 2-element vector.
 %
-%     PLOTGEOFKMAP(MAP,PROJOPT,DBLIM) sets the dB limits for coloring the
-%     response info.  The default is [-12 0] for the default ZERODB (see
-%     next Usage form).  If ZERODB IS 'min' or 'median', the default DBLIM
-%     is [0 12].  DBLIM must be a real-valued 2-element vector.
+%     PLOTBATHYEXCITE(C,LAT,LON,CLIM,PROJOPT) allows passing options to
+%     M_PROJ.  See M_PROJ('SET') for possible projections and see
+%     M_PROJ('GET',PROJ) for a list of possible additional options specific
+%     to that projection.
 %
-%     PLOTGEOFKMAP(MAP,PROJOPT,DBLIM,ZERODB) changes what 0dB corresponds
-%     to in the plot.  The allowed values are 'min', 'max', 'median', &
-%     'abs'.  The default is 'max'.
-%
-%     PLOTGEOFKMAP(MAP,PROJOPT,DBLIM,ZERODB,FGCOLOR,BGCOLOR) specifies
+%     PLOTBATHYEXCITE(C,LAT,LON,CLIM,PROJOPT,FGCOLOR,BGCOLOR) specifies
 %     foreground and background colors of the plot.  The default is 'w' for
 %     FGCOLOR & 'k' for BGCOLOR.  Note that if one is specified and the
 %     other is not, an opposing color is found using INVERTCOLOR.  The
-%     color scale is also changed so the noise clip is at BGCOLOR.
+%     color scale is also changed so the lower color clip is at BGCOLOR.
 %
-%     PLOTGEOFKMAP(MAP,PROJOPT,DBLIM,ZERODB,FGCOLOR,BGCOLOR,AX) sets the
+%     PLOTBATHYEXCITE(MAP,PROJOPT,DBLIM,ZERODB,FGCOLOR,BGCOLOR,AX) sets the
 %     axes to draw in.  This is useful for subplots, guis, etc.
 %
-%     AX=PLOTGEOFKMAP(...)
+%     AX=PLOTBATHYEXCITE(...)
 %
 %    Notes:
+%     - This function can be easily altered to work for any image data.
 %
 %    Examples:
-%     In search of the 26s microseism:
-%      [lat,lon]=meshgrid(-60:60,-60:60);
-%      zgeo=geofkxcvolume(xcdata,[lat(:) lon(:)],27:33,[1/26.3 1/26]);
-%      zgeo0=geofkvol2map(zgeo);
-%      plotgeofkmap(zgeo0);
+%     % Get bathymetric excitation coefficients for Crust2.0 and plot:
+%     [lon,lat]=meshgrid(-179:2:179,89:-2:-89);
+%     c2elev=getc2elev(lat,lon);
+%     c2elev(c2elev>0)=0; % mask out land
+%     c=bathy_micro_excite(-c2elev);
+%     ax=plotbathyexcite(c,lat,lon);
+%     title(ax,{[] 'Crust2.0 Bathymetric Excitation Coefficient Map' ...
+%         'Period: 6.28s   Vs: 2.8km/s' []},'color','w');
 %
-%    See also: GEOFKFREQSLIDE, GEOFKSLOWSLIDE, GEOFKVOL2MAP, GEOFKXCVOLUME,
-%              GEOFKXCHORZVOLUME, CHKGEOFKSTRUCT, UPDATEGEOFKMAP
+%    See also: BATHY_MICRO_EXCITE
 
 %     Version History:
-%        June 25, 2010 - initial version
-%        July  1, 2010 - no land cover
-%        July  6, 2010 - update for new struct
-%        July 14, 2010 - added some lines for not plotting stations
-%        Oct. 10, 2010 - all plotting functions use proper ax calls, tagged
-%                        plots as 'fkmap'
+%        Feb. 15, 2011 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2010 at 15:05 GMT
+%     Last Updated Feb. 15, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,7,nargin));
+error(nargchk(1,8,nargin));
 
-% check fk struct
-%error(chkgeofkstruct(map));
-
-% don't allow array/volume
-%if(~isscalar(map) || any(map.volume))
-%    error('seizmo:plotgeofkmap:badInput',...
-%        'MAP must be a scalar geofk struct and not a volume!');
-%end
-
-% default/check scaling type
-if(nargin<4 || isempty(zerodb)); zerodb='max'; end
-if(~ischar(zerodb) ...
-        || ~ismember(lower(zerodb),{'max' 'min' 'median' 'abs'}))
-    error('seizmo:plotgeofkmap:badSTYPE',...
-        'STYPE must be ''min'' ''max'' ''median'' or ''abs''!');
+% check coefficient array
+if(~isreal(c) || any(c(:)<0) || ndims(c)~=2)
+    error('seizmo:plotbathyexcite:badInput',...
+        'C must be a 2D array of real positive values!');
 end
-zerodb=lower(zerodb);
 
-% default/check dblim
-if(nargin<3 || isempty(dblim))
-    switch zerodb
-        case {'min' 'median'}
-            dblim=[0 12];
-        case {'max' 'abs'}
-            dblim=[-12 0];
-    end
+% check lat/lon match up
+if(~isreal(la) || ~isreal(lo) || any(abs(la(:))>90))
+    error('seizmo:plotbathyexcite:badInput',...
+        'LAT & LON must be real-valued arrays in the appropriate range!');
 end
-if(~isreal(dblim) || numel(dblim)~=2)
-    error('seizmo:plotgeofkmap:badDBLIM',...
-        'DBLIM must be a real valued 2 element vector!');
+if(~isvector(la)); la=flipud(unique(la(:))); end
+if(~isvector(lo)); lo=unique(lo(:)); end
+if(~isequal(size(c),[numel(la) numel(lo)]))
+    error('seizmo:plotbathyexcite:badInput',...
+        'LAT & LON must be vectors matching C dimensions!');
 end
-dblim=sort([dblim(1) dblim(2)]);
 
-% rescale response
-switch zerodb
-    case 'min'
-        map.normdb=map.normdb+min(map.beam(:));
-        map.beam=map.beam-min(map.beam(:));
-    case 'max'
-        map.normdb=map.normdb+max(map.beam(:));
-        map.beam=map.beam-max(map.beam(:));
-    case 'median'
-        map.normdb=map.normdb+median(map.beam(:));
-        map.beam=map.beam-median(map.beam(:));
-    case 'abs'
-        map.beam=map.beam+map.normdb;
-        map.normdb=0;
+% default/check crng
+if(nargin<4 || isempty(crng)); crng=[0 1]; end
+if(~isreal(crng) || numel(crng)~=2)
+    error('seizmo:plotbathyexcite:badInput',...
+        'CRNG must be a real valued 2 element vector!');
 end
+crng=sort([crng(1) crng(2)]);
 
 % check colors
-if(nargin<5);
+if(nargin<6);
     fgcolor='w'; bgcolor='k';
-elseif(nargin<6)
+elseif(nargin<7)
     if(isempty(fgcolor))
         fgcolor='w'; bgcolor='k';
     else
@@ -136,11 +106,7 @@ else
             fgcolor=invertcolor(bgcolor,true);
         end
     elseif(isempty(bgcolor))
-        if(isempty(fgcolor))
-            fgcolor='w'; bgcolor='k';
-        else
-            bgcolor=invertcolor(fgcolor,true);
-        end
+        bgcolor=invertcolor(fgcolor,true);
     end
 end
 
@@ -149,20 +115,18 @@ if(ischar(fgcolor)); fgcolor=name2rgb(fgcolor); end
 if(ischar(bgcolor)); bgcolor=name2rgb(bgcolor); end
 
 % check handle
-if(nargin<7 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
+if(nargin<8 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
         || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
     figure('color',bgcolor);
     ax=gca;
 else
     axes(ax);
     h=get(ax,'children'); delete(h);
+    h=findobj(get(get(ax,'parent'),'children'),'peer',ax); delete(h);
 end
 
 % map colors & coast/border res
-gshhs='l';
-%ocean=[0.3 0.6 1];
-%land=[0.4 0.6 0.2];
-%border=[0.5 0 0];
+gshhs='c';
 ocean=bgcolor;
 land=fgcolor;
 border=fgcolor;
@@ -171,36 +135,23 @@ border=fgcolor;
 global MAP_VAR_LIST
 
 % reshape beam & account for pcolor
-nlat=numel(unique(map.latlon(:,1)));
-nlon=numel(unique(map.latlon(:,2)));
-map.latlon=reshape(map.latlon,[nlon nlat 2]);
-map.beam=reshape(map.beam,[nlon nlat]);
-latstep=map.latlon(1,2,1)-map.latlon(1,1,1);
-lonstep=map.latlon(2,1,2)-map.latlon(1,1,2);
-map.latlon(:,:,1)=map.latlon(:,:,1)-latstep/2;
-map.latlon(:,:,2)=map.latlon(:,:,2)-lonstep/2;
-map.latlon=map.latlon([1:end end],[1:end end],:);
-map.latlon(:,end,1)=map.latlon(:,end,1)+latstep;
-map.latlon(end,:,2)=map.latlon(end,:,2)+lonstep;
-map.beam=map.beam([1:end end],[1:end end]);
+latstep=la(2)-la(1);
+lonstep=lo(2)-lo(1);
+la=[la(:)-latstep/2; la(end)+latstep/2];
+lo=[lo(:)'-lonstep/2 lo(end)+lonstep/2];
+c=c([1:end end],[1:end end]);
 
 % get max/min lat/lon of map & stations
-minlat=min([map.stla; min(map.latlon(:,:,1))']);
-maxlat=max([map.stla; max(map.latlon(:,:,1))']);
-minlon=min([map.stlo; min(map.latlon(:,:,2))']);
-maxlon=max([map.stlo; max(map.latlon(:,:,2))']);
-%minlat=min(min(map.latlon(:,:,1)));
-%maxlat=max(max(map.latlon(:,:,1)));
-%minlon=min(min(map.latlon(:,:,2)));
-%maxlon=max(max(map.latlon(:,:,2)));
+minlat=min(la); maxlat=max(la);
+minlon=min(lo); maxlon=max(lo);
 
 % default/check projopt
-if(nargin<2 || isempty(popt))
+if(nargin<5 || isempty(popt))
     popt={'robinson','lat',[minlat maxlat],'lon',[minlon maxlon]};
 end
 if(ischar(popt)); popt=cellstr(popt); end
 if(~iscell(popt))
-    error('seizmo:plotgeofkmap:badInput',...
+    error('seizmo:plotbathyexcite:badInput',...
         'PROJOPT must be a cell array of args for M_PROJ!');
 end
 
@@ -210,20 +161,14 @@ set(ax,'color',ocean);
 
 % plot geofk beam
 hold(ax,'on');
-if(any(map.latlon(:,:,2)>MAP_VAR_LIST.longs(1) ...
-        & map.latlon(:,:,2)<MAP_VAR_LIST.longs(2)))
-    m_pcolor(map.latlon(:,:,2),map.latlon(:,:,1),double(map.beam),...
-        'parent',ax);
+if(any(lo>MAP_VAR_LIST.longs(1) & lo<MAP_VAR_LIST.longs(2)))
+    m_pcolor(lo,la,c,'parent',ax);
 end
-if(any(map.latlon(:,:,2)-360>MAP_VAR_LIST.longs(1) ...
-        & map.latlon(:,:,2)-360<MAP_VAR_LIST.longs(2)))
-    m_pcolor(map.latlon(:,:,2)-360,map.latlon(:,:,1),double(map.beam),...
-        'parent',ax);
+if(any(lo-360>MAP_VAR_LIST.longs(1) & lo-360<MAP_VAR_LIST.longs(2)))
+    m_pcolor(lo-360,la,c,'parent',ax);
 end
-if(any(map.latlon(:,:,2)+360>MAP_VAR_LIST.longs(1) ...
-        & map.latlon(:,:,2)+360<MAP_VAR_LIST.longs(2)))
-    m_pcolor(map.latlon(:,:,2)+360,map.latlon(:,:,1),double(map.beam),...
-        'parent',ax);
+if(any(lo+360>MAP_VAR_LIST.longs(1) & lo+360<MAP_VAR_LIST.longs(2)))
+    m_pcolor(lo+360,la,c,'parent',ax);
 end
 
 % modify
@@ -239,13 +184,11 @@ else
     hsv=rgb2hsv(bgcolor);
     colormap(ax,hsvcustom(hsv));
 end
-set(ax,'clim',dblim);
+set(ax,'clim',crng);
 hold(ax,'off');
 
 % now add coastlines and political boundaries
 axes(ax);
-%m_gshhs([gshhs 'c'],'patch',land);
-%m_gshhs([gshhs 'b'],'color',border);
 m_gshhs([gshhs 'c'],'color',land);
 m_gshhs([gshhs 'b'],'color',border);
 m_grid('color',fgcolor);
@@ -253,38 +196,14 @@ m_grid('color',fgcolor);
 % hackery to color oceans at large when the above fails
 set(findobj(ax,'tag','m_grid_color'),'facecolor',ocean);
 
-% wrap station longitudes to within 180deg of plot center
-while(any(abs(map.stlo-mean(MAP_VAR_LIST.longs))>180))
-    map.stlo(map.stlo<MAP_VAR_LIST.longs(1))=...
-        map.stlo(map.stlo<MAP_VAR_LIST.longs(1))+360;
-    map.stlo(map.stlo>MAP_VAR_LIST.longs(2))=...
-        map.stlo(map.stlo>MAP_VAR_LIST.longs(2))-360;
-end
-
-% add stations
-hold(ax,'on');
-h=m_scatter(ax,map.stlo,map.stla,[],'y','filled',...
-    'markeredgecolor','k');
-set(h,'tag','stations');
-hold(ax,'off');
-
 % colorbar & title
 c=colorbar('eastoutside','peer',ax,'xcolor',fgcolor,'ycolor',fgcolor);
-xlabel(c,'dB','color',fgcolor);
-%fmin=min(map.freq); fmax=max(map.freq);
-%smn=min(map.horzslow); smx=max(map.horzslow);
-%title(ax,{[] ['Number of Stations:  ' num2str(map.nsta)] ...
-%    ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
-%    ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',map.eutc) ' UTC'] ...
-%    ['Period    :  ' num2str(1/fmax) ' to ' num2str(1/fmin) ' s'] ...
-%    ['Horiz. Slowness :  ' num2str(smn) ' to ' num2str(smx) ' s/\circ'] ...
-%    ['0 dB = ' num2str(map.normdb) 'dB'] []},'color',fgcolor);
+xlabel(c,'c','color',fgcolor);
+title(ax,{[] 'Bathymetric Excitation Coefficient Map' []},...
+    'color',fgcolor);
 
-% set zerodb & dblim in userdata
-% - this is for updategeofkmap
-userdata.zerodb=zerodb;
-userdata.dblim=dblim;
-set(ax,'userdata',userdata,'tag','geofk');
+% tag plot
+set(ax,'tag','bathyexcite');
 
 % return figure handle
 if(nargout); varargout{1}=ax; end

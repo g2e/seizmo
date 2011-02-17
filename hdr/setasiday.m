@@ -11,7 +11,7 @@ function [data]=setasiday(data)
 %     to preserve the timing of the data.  The IZTYPE field is set to IDAY.
 %
 %    Notes:
-%     - This is mainly useful for ambient noise studies for synchronizing
+%     - This is mainly useful for seismic noise studies for synchronizing
 %       records to the beginning of the day that the data is recorded on.
 %
 %    Header changes: NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC,
@@ -49,9 +49,10 @@ function [data]=setasiday(data)
 %        Feb.  3, 2010 - versioninfo caching, seizmoverbose support
 %        Aug. 21, 2010 - drop versioninfo caching, nargchk fix, update
 %                        undef checking
+%        Feb. 15, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 18:10 GMT
+%     Last Updated Feb. 15, 2011 at 10:05 GMT
 
 % todo:
 

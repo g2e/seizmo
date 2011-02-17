@@ -9,7 +9,7 @@ function [data]=splitpad(data,pow2pad)
 %     record(s).  The record(s) are zeropadded to a power of 2.  Basically
 %     the layout is: positive time data, zeros, negative time data.  This
 %     is to preserve the phase information when transforming correlations
-%     of ambient noise to the frequency domain.
+%     of seismic noise to the frequency domain.
 %
 %     DATA=SPLITPAD(DATA,POW2PAD) lets the power of 2 zero-padding be
 %     adjusted using an integer POW2PAD according to the formula:
@@ -35,9 +35,10 @@ function [data]=splitpad(data,pow2pad)
 %     Version History:
 %        Mar. 19, 2010 - initial version
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb. 15, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb. 15, 2011 at 10:05 GMT
 
 % todo:
 

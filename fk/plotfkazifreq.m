@@ -48,9 +48,10 @@ function [varargout]=plotfkazifreq(vol,srng,dblim,zerodb,fgcolor,bgcolor,ax)
 
 %     Version History:
 %        July 14, 2010 - initial version
+%        Feb. 16, 2011 - color code fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 14, 2010 at 16:05 GMT
+%     Last Updated Feb. 16, 2011 at 16:05 GMT
 
 % todo:
 
@@ -146,11 +147,7 @@ else
             fgcolor=invertcolor(bgcolor,true);
         end
     elseif(isempty(bgcolor))
-        if(isempty(fgcolor))
-            fgcolor='w'; bgcolor='k';
-        else
-            bgcolor=invertcolor(fgcolor,true);
-        end
+        bgcolor=invertcolor(fgcolor,true);
     end
 end
 

@@ -1,5 +1,5 @@
 function []=sz_toc_noise()
-% Ambient Noise Analysis Functions
+% Seismic Noise Analysis Functions
 %<a href="matlab:help adjust_daily_plots">adjust_daily_plots</a>        - Adjust day-by-day fk spectra figures for printing
 %<a href="matlab:help adjust_monthly_plots">adjust_monthly_plots</a>      - Adjust monthly fk spectra figures for printing
 %<a href="matlab:help adjust_yrmo_plots">adjust_yrmo_plots</a>         - Adjust year-month fk spectra figures for printing

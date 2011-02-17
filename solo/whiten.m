@@ -11,7 +11,7 @@ function [data]=whiten(data,width,units,varargin)
 %     performed by dividing the complex spectrum by a smoothed version of
 %     the amplitude spectrum.  Smoothing utilizes a 41-sample sliding mean.
 %     This is NOT equivalent to the 'whiten' command in SAC (see function
-%     PREWHITEN).  This operation is particularly suited for ambient noise
+%     PREWHITEN).  This operation is particularly suited for seismic noise
 %     studies.
 %
 %     WHITEN(DATA,WIDTH) sets the width of the smoothing window.  WIDTH is
@@ -54,9 +54,10 @@ function [data]=whiten(data,width,units,varargin)
 %        Apr. 22, 2010 - code now matches docs
 %        Jan.  6, 2011 - update for seizmofun/solofun name change, fix
 %                        nargchk, use versioninfo
+%        Feb. 15, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 10:05 GMT
+%     Last Updated Feb. 15, 2011 at 10:05 GMT
 
 % todo:
 

@@ -55,9 +55,10 @@ function [varargout]=plotgeofkarf(arf,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %        Oct. 10, 2010 - all plotting functions use proper ax calls, tagged
 %                        plots as 'fkmap'
 %        Dec.  8, 2010 - use '^o' for deg symbol rather than \circ
+%        Feb. 16, 2011 - color code fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  8, 2010 at 18:25 GMT
+%     Last Updated Feb. 16, 2011 at 15:05 GMT
 
 % todo:
 
@@ -130,11 +131,7 @@ else
             fgcolor=invertcolor(bgcolor,true);
         end
     elseif(isempty(bgcolor))
-        if(isempty(fgcolor))
-            fgcolor='w'; bgcolor='k';
-        else
-            bgcolor=invertcolor(fgcolor,true);
-        end
+        bgcolor=invertcolor(fgcolor,true);
     end
 end
 

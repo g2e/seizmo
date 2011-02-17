@@ -26,8 +26,6 @@ x	add weighting to all
 		geofkxcmap
 		geofkxchorzmap
 make noise processing more flexible (file length & overlap)
-add in pwave picking fk routines
-fix plotbathyexcite
 
 cmt subtoolbox
     - main thing is to plot CMTS!!!
