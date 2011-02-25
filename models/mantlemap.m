@@ -70,7 +70,7 @@ function [varargout]=mantlemap(varargin)
 %     map.  The default colormap is 'seis'.  The colormap may be a Nx3 RGB
 %     triplet array or a string that may be evaluated to a Nx3 RGB triplet.
 %
-%     MANTLEMAP(...,'CLIM',DVLIMITS,...) sets the coloring limits.
+%     MANTLEMAP(...,'DVRNG',DVLIMITS,...) sets the coloring limits.
 %     Anything outside of this range is set to either the maximum or
 %     minimum colors in the color map.  The default is set to the limits of
 %     the data.  The units are in % dlnv.
@@ -123,22 +123,26 @@ function [varargout]=mantlemap(varargin)
 %    Notes:
 %
 %    Examples:
-%     % compare the CMB region for 4 different P-wave models
-%      figure('color','w');
-%      model={'dz04' 'pri05p' 'hmsl06p' 'mitp08'};
-%      for i=1:4
-%        ax=subplot(2,2,i);
-%        mantlemap('clim',[-2 2],'mo',model{i},...
-%          'ax',ax,'cb',false,'fg','k');
-%      end
+%     % Turn off tick labels:
+%     mantlemap('dep',1000,'go',{'xticklabel',[],'yticklabel',[]});
 %
-%    See also: MANTLEDV, AVAILABLE_3DMODELS
+%     % Compare the CMB region for 4 different P-wave models:
+%     figure('color','w');
+%     model={'dz04' 'pri05p' 'hmsl06p' 'mitp08'};
+%     for i=1:4
+%         ax=subplot(2,2,i);
+%         mantlemap('clim',[-2 2],'mo',model{i},...
+%             'axis',ax,'cb',false,'fg','k');
+%     end
+%
+%    See also: MANTLEDV, AVAILABLE_3DMODELS, MANTLEPROFILE
 
 %     Version History:
 %        Aug.  4, 2010 - initial version
+%        Feb. 24, 2011 - slightly better axes handle code, better labels
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  4, 2010 at 20:30 GMT
+%     Last Updated Feb. 24, 2011 at 20:30 GMT
 
 % todo:
 
@@ -244,7 +248,7 @@ for i=1:2:numel(varargin)
                 dvrng=val;
             else
                 error('seizmo:mantlemap:badInput',...
-                    'DVRANGE must be [%%dv_lo %%dv_hi]!');
+                    'DVRNG must be [%%dv_lo %%dv_hi]!');
             end
         case {'colormap' 'cmap'}
             if(skip); continue; end
@@ -391,6 +395,7 @@ lon0=lonrng(1):lonstep:lonrng(2);
 % loop over depths, get average %dv
 dep=deprng(1):depstep:deprng(2);
 dv=zeros(size(lat));
+[wtype,wtype]=mantledv(model,lat(1),lon(1),dep(1));
 for i=1:numel(dep)
     dv=dv+mantledv(model,lat,lon,dep(i));
 end
@@ -423,8 +428,8 @@ end
 if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
         || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
     % new figure
-    figure('color',bg);
-    ax=gca;
+    fh=figure('color',bg);
+    ax=axes('parent',fh);
 else
     axes(ax);
     h=get(ax,'children'); delete(h);
@@ -436,25 +441,28 @@ m_proj(proj,popt{:});
 set(ax,'color',bg);
 
 % plot mantle map
-hold on
+hold(ax,'on');
 if(any(lon(:)>MAP_VAR_LIST.longs(1) ...
         & lon(:)<MAP_VAR_LIST.longs(2)))
-    m_pcolor(lon,lat,dv);
+    ph=m_pcolor(lon,lat,dv,'parent',ax);
+    set(ph,'clipping','off');
 end
 if(any(lon(:)-360>MAP_VAR_LIST.longs(1) ...
         & lon(:)-360<MAP_VAR_LIST.longs(2)))
-    m_pcolor(lon-360,lat,dv);
+    ph=m_pcolor(lon-360,lat,dv,'parent',ax);
+    set(ph,'clipping','off');
 end
 if(any(lon(:)+360>MAP_VAR_LIST.longs(1) ...
         & lon(:)+360<MAP_VAR_LIST.longs(2)))
-    m_pcolor(lon+360,lat,dv);
+    ph=m_pcolor(lon+360,lat,dv,'parent',ax);
+    set(ph,'clipping','off');
 end
 
 % pretty it up
-shading flat;
-colormap(cmap);
+shading(ax,'flat');
+colormap(ax,cmap);
 if(~isempty(dvrng)); set(ax,'clim',dvrng); end
-hold off
+hold(ax,'off');
 
 % plot coasts & borders
 if(strcmpi(gshhs,'o'))
@@ -471,12 +479,17 @@ set(findobj(ax,'tag','m_grid_color'),'facecolor',bg);
 % colorbar & title
 if(showcb)
     c=colorbar('southoutside','peer',ax,'xcolor',fg,'ycolor',fg);
-    xlabel(c,'% dlnv','color',fg);
+    xlabel(c,['% \delta{}lnv_' wtype],'color',fg);
 end
 switch titletype
     case 1
-        title(ax,[upper(model) '  ' num2str(deprng(1)) '-' ...
-            num2str(deprng(2)) 'km'],'color',fg);
+        if(diff(deprng))
+            title(ax,[upper(model) '  ' num2str(deprng(1)) '-' ...
+                num2str(deprng(2)) 'km'],'color',fg);
+        else
+            title(ax,[upper(model) '  ' num2str(deprng(1)) 'km'],...
+                'color',fg);
+        end
     case 2
         title(ax,[num2str(deprng(1)) '-' num2str(deprng(2)) 'km'],...
             'color',fg);

@@ -5,16 +5,17 @@ function [area]=sph_poly_area(lat,lon,method,ellipsoid)
 %              area=sph_poly_area(lat,lon,method)
 %              area=sph_poly_area(lat,lon,method,[a f])
 %
-%    Description: AREA=SPH_POLY_AREA(LAT,LON) calculates the fractional
-%     area on a sphere for a polygon whose vertices are given by LAT/LON.
-%     The method used is based on the angles at each of the vertices.  LAT
-%     & LON may be equal sized vectors or matrices.  In the case that LAT &
-%     LON are matrices, each column is considered a separate polygon (so
-%     the areas of multiple polygons with an equal number of vertices may
-%     be found).  The vertices of the polygon should proceed in a clockwise
-%     manner to retreive the area within the polygon.  Counter-clockwise
-%     progression will return the area outside a polygon.  A polygon's
-%     sides should not cross (separate it into distinct polygons).
+%    Description:
+%     AREA=SPH_POLY_AREA(LAT,LON) calculates the fractional area on a
+%     sphere for a polygon whose vertices are given by LAT/LON.  The method
+%     used is based on the angles at each of the vertices.  LAT & LON may
+%     be equal sized vectors or matrices.  In the case that LAT & LON are
+%     matrices, each column is considered a separate polygon (so the areas
+%     of multiple polygons with an equal number of vertices may be found).
+%     The vertices of the polygon should proceed in a clockwise manner to
+%     retreive the area within the polygon.  Counter-clockwise progression
+%     will return the area outside a polygon.  A polygon's sides should not
+%     cross (separate it into distinct polygons).
 %
 %     AREA=SPH_POLY_AREA(LAT,LON,METHOD) specifies the method to use in
 %     finding the fractional area of a polygon on a sphere.  Available
@@ -54,15 +55,15 @@ function [area]=sph_poly_area(lat,lon,method,ellipsoid)
 %     sph_poly_area([0 90 0],[0 0 90])
 %     sph_poly_area([0 90 0],[0 0 90],'lines')
 %
-%    See also: SPH_POLY_IN, SPH_TRI_INIT, SPH_TRI_AUTO, SPH_TRI_VERTICES,
-%              SPH_TRI_LATLON, SPH_TRI_SPLIT
+%    See also: SPH_POLY_IN, SPH_TRI_INIT, SPH_TRI_AUTO, SPH_TRI_SPLIT
 
 %     Version History:
 %        Nov. 16, 2009 - initial version
 %        Feb.  7, 2011 - azimuths method works much better now
+%        Feb. 18, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2011 at 19:30 GMT
+%     Last Updated Feb. 18, 2011 at 19:30 GMT
 
 % todo:
 

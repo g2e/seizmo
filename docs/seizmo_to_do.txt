@@ -29,10 +29,6 @@ make noise processing more flexible (file length & overlap)
 
 cmt subtoolbox
     - main thing is to plot CMTS!!!
-plotting profiles for models
-    - need a decent polar plotting program to plot slices of the pie
-      with inner & outer radii specified.  Not even mmpolar does it.
-    - need to add raypath plotting support too
 
 more cmb models (rjk)
     - we need to allow parameter setting (while loop rather than for)
@@ -40,8 +36,12 @@ more cmb models (rjk)
         - inputs will change per model or series ...
         - can never really do everything here ... just go for basics
 expand sph tri stuff
-	- use delaunay codes
     - function to make g matrix for sph tri stuff
+      - distance from polygon center to pnts on line
+        - simple logical for flat weighting
+        - distance based gaussian weighting
+      - inversion is % from prem?
+        - have to do synthetics for all events
 
 
 %%%%%%%

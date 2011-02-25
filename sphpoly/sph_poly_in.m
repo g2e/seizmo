@@ -1,66 +1,78 @@
-function [lgc]=sph_poly_in(vlat,vlon,plat,plon,overlap)
+function [lgc]=sph_poly_in(vlatlon,poly,plat,plon,overlap)
 %SPH_POLY_IN    Returns indexing for which polygon points are in
 %
-%    Usage:    lgc=sph_poly_in(vlat,vlon,plat,plon)
-%              lgc=sph_poly_in(vlat,vlon,plat,plon,overlap)
+%    Usage:    lgc=sph_poly_in(vlatlon,poly,plat,plon)
+%              lgc=sph_poly_in(vlatlon,poly,plat,plon,overlap)
 %
 %    Description:
-%     LGC=SPH_POLY_IN(VLAT,VLON,PLAT,PLON) returns an indexing array LGC
-%     indicating which polygon in VLAT/VLON contains the points given by
+%     LGC=SPH_POLY_IN(VLATLON,POLY,PLAT,PLON) returns an indexing array LGC
+%     indicating which polygon in POLY contains the points given by
 %     PLAT/PLON.  Each point will only be found in one polygon (see the
-%     next option to a point to be in multiple polygons).  VLAT/VLON must
-%     be equal sized and each column gives vertices for separate polygons.
-%     PLAT/PLON must have the same number of elements.  LGC is a NPTSxNPOLY
-%     logical array where the each row is a logical vector indicating which
+%     next option to a point to be in multiple polygons).  VLATLON is the
+%     vertex locations in latitude and longitude (N vertices as an Nx2
+%     array of [LAT LON]) while POLY is the vertex indices in each polygon
+%     (M polygons with Z vertices as an MxZ array).  PLAT/PLON must have
+%     the same number of elements.  LGC is a NPTSxNPOLY logical array where
+%     the each row is a logical vector indicating which
 %     polygon the point is in.
 %
-%     LGC=SPH_POLY_IN(VLAT,VLON,PLAT,PLON,OVERLAP) allows points to be in
+%     LGC=SPH_POLY_IN(VLATLON,POLY,PLAT,PLON,OVERLAP) allows points in
 %     multiple polygons.  The default (FALSE) gives only the first polygon
 %     to contain each point.  Setting OVERLAP to TRUE allows points that
 %     are in or on the edge of multiple polygons to return indexing
 %     indicating all polygons that contain those points.
 %
 %    Notes:
+%     - Polygons are always seen as the side with lesser area.
 %
 %    Examples:
 %     % Which polygon is St. Louis in?
-%     [a,b,c]=sph_tri_init;
-%     [lat,lon]=sph_tri_latlon(a,b,c);
-%     sph_poly_in(lat,lon,38.649,-90.305)
+%     [v,tri]=sph_tri_init;
+%     [lat,lon]=xyz2geocentric(v(:,1),v(:,2),v(:,3));
+%     sph_poly_in([lat lon],tri,38.649,-90.305)
 %
-%    See also: SPH_POLY_AREA, SPH_TRI_INIT, SPH_TRI_SPLIT, SPH_TRI_AUTO,
-%              SPH_TRI_LATLON, SPH_TRI_VERTICES
+%    See also: SPH_POLY_AREA, SPH_TRI_INIT, SPH_TRI_SPLIT, SPH_TRI_AUTO
 
 %     Version History:
 %        Nov. 17, 2009 - initial version
 %        Feb. 11, 2011 - mass nargchk fix, minor doc formatting
+%        Feb. 18, 2011 - major revision: use vertex & index input/output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb. 18, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(4,5,nargin));
 
-% check vlat/vlon (must be equal sized)
-if(~isreal(vlat) || ~isreal(vlon) || ~isequal(size(vlat),size(vlon)))
+% check vlatlon
+if(~isreal(vlatlon) || size(vlatlon,2)~=2)
     error('seizmo:sph_poly_in:badInput',...
-        'VLAT & VLON must be equal sized!');
+        'VLATLON must be a real-valued Nx2 array!');
+elseif(~isreal(poly) || size(poly,2)<3)
+    error('seizmo:sph_poly_in:badInput',...
+        'POLY must be a real-valued MxZ array where Z>=3!');
 end
 
-% convert row vector to column
-if(isvector(vlat)); vlat=vlat(:); end
-if(isvector(vlon)); vlat=vlon(:); end
+% check plat/plon (must be equal sized)
+if(~isreal(plat) || ~isreal(plon))
+    error('seizmo:sph_poly_in:badInput',...
+        'PLAT & PLON must be real-valued arrays!');
+end
 
 % force column vector for point lat/lon
 plat=plat(:); plon=plon(:);
-npts=size(plat,1);
 
-% check plat/plon (must be equal sized)
-if(~isreal(plat) || ~isreal(plon) || ~isequal(size(plat),size(plon)))
+% expand scalar point input
+if(isscalar(plat)); plat=plat(ones(numel(plon),1)); end
+if(isscalar(plon)); plon=plon(ones(numel(plat),1)); end
+npts=numel(plat);
+
+% require equal number of elements
+if(npts~=numel(plon))
     error('seizmo:sph_poly_in:badInput',...
-        'PLAT & PLON must be equal sized!');
+        'PLAT & PLON must be scalar or have the same number of elements!');
 end
 
 % default overlap
@@ -72,38 +84,36 @@ if(~islogical(overlap) || ~isscalar(overlap))
         'OVERLAP must be a scalar logical!');
 end
 
-% number of vertices
-[nv,npoly]=size(vlat);
+% number of vertices/polygons
+[npoly,nv]=size(poly);
+nvtot=size(vlatlon,1);
 
 % centers of polygons
-[x,y,z]=geocentric2xyz(vlat,vlon,1);
-[clat,clon]=xyz2geocentric(sum(x,1),sum(y,1),sum(z,1));
+[x,y,z]=geocentric2xyz(vlatlon(:,1),vlatlon(:,2),1);
+[clat,clon]=xyz2geocentric(sum(x(poly),2),sum(y(poly),2),sum(z(poly),2));
 
 % distances to vertices
-dv=sphericalinv(...
-    submat(clat,1,ones(nv,1)),submat(clon,1,ones(nv,1)),vlat,vlon);
+dv=sphericalinv(clat(:,ones(1,nv)),clon(:,ones(1,nv)),...
+    vlatlon(poly),vlatlon(nvtot+poly));
 
-% distances to points
-dp=sphericalinv(...
-    submat(clat,1,ones(npts,1)),submat(clon,1,ones(npts,1)),...
+% distances to points from centers
+dp=sphericalinv(clat(:,ones(1,npts))',clon(:,ones(1,npts))',...
     plat(:,ones(1,npoly)),plon(:,ones(1,npoly)));
 
 % which polygons may contain the point
-maxdv=max(dv);
-ok=dp<=submat(maxdv,1,ones(npts,1));
+maxdv=max(dv,[],2);
+maybe=dp<=maxdv(:,ones(1,npts))';
 
 % get xyz values
 [cx,cy,cz]=geocentric2xyz(clat,clon,1);
-[vx,vy,vz]=geocentric2xyz(vlat,vlon,1);
 [px,py,pz]=geocentric2xyz(plat,plon,1);
 
 % loop over each point
 lgc=false(npts,npoly);
 for i=1:npts
-    oki=ok(i,:);
-    for j=find(oki)
+    for j=find(maybe(i,:))
         if(winding([cx(j) cy(j) cz(j)],...
-                [vx(:,j) vy(:,j) vz(:,j)],...
+                [x(poly(j,:)) y(poly(j,:)) z(poly(j,:))],...
                 [px(i) py(i) pz(i)]))
             lgc(i,j)=true;
             if(~overlap); break; end

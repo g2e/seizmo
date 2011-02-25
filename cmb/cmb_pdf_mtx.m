@@ -59,9 +59,10 @@ function [varargout]=cmb_pdf_mtx(pf,field,p,x)
 %        Feb.  1, 2011 - initial version
 %        Feb. 10, 2011 - reduced plot code redundancy, use period not freq,
 %                        improved probability estimation, works with 1 pf
+%        Feb. 17, 2011 - aesthetic touches
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2011 at 13:35 GMT
+%     Last Updated Feb. 17, 2011 at 13:35 GMT
 
 % todo:
 
@@ -156,10 +157,12 @@ else
     imagesc(p,x,mtx','parent',ax);
     colormap(ax,fire);
     set(ax,'ydir','normal','color','k','xcolor','w','ycolor','w');
+    set(ax,'xminortick','on','yminortick','on');
+    set(ax,'xgrid','on','ygrid','on','linewidth',1);
     xlabel(ax,'Period (s)');
     cb=colorbar('peer',ax);
     ylabel(cb,'% Probability');
-    grid(ax,'on');
+    set(cb,'linewidth',1);
     switch field
         case 'slow'
             ylabel(ax,'Ray Parameter (s/^o)');

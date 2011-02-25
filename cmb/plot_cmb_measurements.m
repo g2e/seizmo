@@ -33,9 +33,10 @@ function [varargout]=plot_cmb_measurements(pf,field,varargin)
 %        Feb.  1, 2011 - initial version
 %        Feb. 10, 2011 - reusing axes works, better labeling, doc update
 %        Feb. 12, 2011 - altered line style code
+%        Feb. 17, 2011 - aesthetic touches
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 12, 2011 at 13:35 GMT
+%     Last Updated Feb. 17, 2011 at 13:35 GMT
 
 % todo:
 
@@ -78,7 +79,7 @@ nmod=max(idx);
 ax=axescheck(varargin{:});
 if(isempty(ax))
     % new plot
-    fh=figure();
+    fh=figure('color','w');
     ax=axes('parent',fh);
     oldpts=0;
 else
@@ -102,7 +103,8 @@ for i=1:nmod
     
     % plot measurements
     [h(i),hyerr(i),hxerr(i)]=ploterr(ax,p0(a),x0(a),{lp(a) up(a)},e0(a),...
-        [l m],'color',c,'markerfacecolor',mc,'markersize',10,varargin{:});
+        [l m],'color',c,'markerfacecolor',mc,'markersize',6,...
+        'linewidth',1,varargin{:});
 end
 
 % change names if corrected
@@ -151,7 +153,12 @@ end
 % legend (regrab points objects to get those from previous plotting)
 drawnow; % legends can have issues if plot not drawn yet
 lh=legend(findobj(ax,'tag','points'));
-set(lh,'interpreter','none');
+set(lh,'interpreter','none','linewidth',1);
+
+% polish
+box(ax,'on');
+set(ax,'xminortick','on','yminortick','on');
+set(ax,'xgrid','on','ygrid','on','linewidth',1);
 
 % reset hold state
 if(~held); hold(ax,'off'); end

@@ -1,14 +1,19 @@
-function [dlnv]=mantledv(model,lat,lon,depth)
+function [dlnv,wavetype]=mantledv(model,lat,lon,depth)
 %MANTLEDV    Returns the seismic velocity deviation for a mantle model
 %
 %    Usage:    dlnv=mantledv(model,lat,lon,depth)
+%              [dlnv,wavetype]=mantledv(model,lat,lon,depth)
 %
-%    Description: DLNV=MANTLEDV(MODEL,LAT,LON,DEPTH) returns the seismic
-%     velocity deviation (from a 1D reference) for the mantle model MODEL
-%     at the locations given by LAT/LON/DEPTH.  MODEL must be a string
-%     matching one of the models output by AVAILABLE_3DMODELS.  LAT & LON
-%     are in units of degrees.  DEPTH is in kilometers.  DLNV is the
-%     fractional deviation from the reference velocity: dv/v0.
+%    Description:
+%     DLNV=MANTLEDV(MODEL,LAT,LON,DEPTH) returns the seismic velocity
+%     deviation (from a 1D reference) for the mantle model MODEL at the
+%     locations given by LAT/LON/DEPTH.  MODEL must be a string matching
+%     one of the models output by AVAILABLE_3DMODELS.  LAT & LON are in
+%     units of degrees.  DEPTH is in kilometers.  DLNV is the fractional
+%     deviation from the reference velocity: dv/v0.
+%
+%     [DLNV,WAVETYPE]=MANTLEDV(MODEL,LAT,LON,DEPTH) indicates the wave type
+%     of the velocity model.  WAVETYPE is either 'p' or 's'.
 %
 %    Notes:
 %     - Model info is cached to speed up subsequent calls
@@ -37,9 +42,10 @@ function [dlnv]=mantledv(model,lat,lon,depth)
 %                        now for additional space savings
 %        Oct.  6, 2010 - 'old matlab' method for princeton model, linear
 %                        interpolation, smearing to 0 & 2900
+%        Feb. 24, 2011 - wavetype output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2010 at 16:05 GMT
+%     Last Updated Feb. 24, 2011 at 16:05 GMT
 
 % todo:
 % - sph harm models
@@ -85,6 +91,7 @@ switch lower(model)
         
         % get dlnv
         dlnv=get_interp_value(model,lat,lon,depth);
+        wavetype='p';
     case {'sb4l18'}
         % load cached model if it exists
         try
@@ -101,6 +108,7 @@ switch lower(model)
         
         % get dlnv
         dlnv=get_scripps_value(model,lat,lon,depth);
+        wavetype='s';
     case {'hmsl06p' 'hmslp06' 'hmsl-p06' 'hmsl-06p'}
         % load cached model if it exists
         try
@@ -117,6 +125,7 @@ switch lower(model)
         
         % get dlnv
         dlnv=get_scripps_value(model,lat,lon,depth);
+        wavetype='p';
     case {'hmsl06s' 'hmsls06' 'hmsl-s06' 'hmsl-06s'}
         % load cached model if it exists
         try
@@ -133,6 +142,7 @@ switch lower(model)
         
         % get dlnv
         dlnv=get_scripps_value(model,lat,lon,depth);
+        wavetype='s';
     case {'mit08' 'mit08p' 'mit-p08' 'mitp08'}
         % load cached model if it exists
         try
@@ -146,6 +156,7 @@ switch lower(model)
         
         % get dlnv
         dlnv=get_mit_value(model,lat,lon,depth);
+        wavetype='p';
     case {'pri05p' 'pri-p05' 'pri-05p' 'prip05'}
         % load cached model if it exists
         try
@@ -163,6 +174,7 @@ switch lower(model)
         catch
             dlnv=get_princeton_value_old(model,lat,lon,depth);
         end
+        wavetype='p';
     case {'pri05s' 'pri-s05' 'pri-05s' 'pris05'}
         % load cached model if it exists
         try
@@ -180,6 +192,7 @@ switch lower(model)
         catch
             dlnv=get_princeton_value_old(model,lat,lon,depth);
         end
+        wavetype='s';
     case {'s20rtsb' 's20rts'}
         % load cached model if it exists
         try
@@ -193,6 +206,7 @@ switch lower(model)
         
         % get dlnv
         dlnv=get_interp_value(model,lat,lon,depth);
+        wavetype='s';
     case {'saw24b16'}
         % load cached model if it exists
         try
@@ -206,6 +220,7 @@ switch lower(model)
         
         % get dlnv
         dlnv=get_interp_value(model,lat,lon,depth);
+        wavetype='s';
     case {'tx2006'}
         % load cached model if it exists
         try
@@ -219,6 +234,7 @@ switch lower(model)
         
         % get dlnv
         dlnv=get_texas_value(model,lat,lon,depth);
+        wavetype='s';
     case {'tx2007'}
         % load cached model if it exists
         try
@@ -232,6 +248,7 @@ switch lower(model)
         
         % get dlnv
         dlnv=get_texas_value(model,lat,lon,depth);
+        wavetype='s';
     otherwise
         error('seizmo:mantledv:badModelName',...
             'Unknown mantle model: %s',model);

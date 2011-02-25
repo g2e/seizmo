@@ -14,6 +14,7 @@ function []=sz_toc_models()
 %<a href="matlab:help iasp91">iasp91</a>              - Returns the IASP91 Earth Model
 %<a href="matlab:help mantledv">mantledv</a>            - Returns the seismic velocity deviation for a mantle model
 %<a href="matlab:help mantlemap">mantlemap</a>           - 3D mantle model map (aka depth slice)
+%<a href="matlab:help mantleprofile">mantleprofile</a>       - 3D mantle model profile (aka radial slice)
 %<a href="matlab:help perturb_1dmodel">perturb_1dmodel</a>     - Perturbs 1D Earth models
 %<a href="matlab:help plot1dmodel">plot1dmodel</a>         - Plots 1D model properties
 %<a href="matlab:help prem">prem</a>                - Returns the PREM Earth Model

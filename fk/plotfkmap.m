@@ -53,9 +53,11 @@ function [varargout]=plotfkmap(map,varargin)
 %                        plots as 'fkmap'
 %        Jan.  7, 2011 - delete commented mmpolar lines
 %        Feb. 16, 2011 - fix pcolor offset in polar plots, color code fix
+%        Feb. 23, 2011 - replace polar call with wedge, fix pcolor
+%                        out-of-bounds pixels
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2011 at 10:50 GMT
+%     Last Updated Feb. 23, 2011 at 10:50 GMT
 
 % todo:
 
@@ -164,50 +166,28 @@ fmin=min(map.freq);
 fmax=max(map.freq);
 smax=max(abs(map.y));
 
-% get root defaults
-defaulttextcolor=get(0,'defaulttextcolor');
-defaultaxescolor=get(0,'defaultaxescolor');
-defaultaxesxcolor=get(0,'defaultaxesxcolor');
-defaultaxesycolor=get(0,'defaultaxesycolor');
-defaultaxeszcolor=get(0,'defaultaxeszcolor');
-defaultpatchfacecolor=get(0,'defaultpatchfacecolor');
-defaultpatchedgecolor=get(0,'defaultpatchedgecolor');
-defaultlinecolor=get(0,'defaultlinecolor');
-defaultsurfaceedgecolor=get(0,'defaultsurfaceedgecolor');
+% initialize wedge plot
+ph=wedge(ax,0,smax,'rcolor',fgcolor,'azcolor',fgcolor,...
+                   'backgroundcolor',bgcolor,'gridcolor',fgcolor);
 
-% set root defaults
-set(0,'defaulttextcolor',fgcolor);
-set(0,'defaultaxescolor',bgcolor);
-set(0,'defaultaxesxcolor',fgcolor);
-set(0,'defaultaxesycolor',fgcolor);
-set(0,'defaultaxeszcolor',fgcolor);
-set(0,'defaultpatchfacecolor',bgcolor);
-set(0,'defaultpatchedgecolor',fgcolor);
-set(0,'defaultlinecolor',fgcolor);
-set(0,'defaultsurfaceedgecolor',fgcolor);
-
-% initialize polar plot
-ph=polar(ax,[0 2*pi],[0 smax]);
-
-% adjust to proper orientation
-axis(ax,'ij');
+% clear and hold
 delete(ph);
-view(ax,[-90 90]);
 hold(ax,'on');
 
 % offset for pcolor business
 degstep=map.x(2)-map.x(1);
 map.x=[map.x-degstep/2 map.x(end)+degstep/2];
 slowstep=map.y(2)-map.y(1);
-map.y=[map.y-slowstep/2; map.y(end)+slowstep/2];
+map.y=[map.y(1); map.y(2:end)-slowstep/2; map.y(end)]; % truncate 0 & smax
 
 % get cartesian coords
 nx=numel(map.x);
 ny=numel(map.y);
-[x,y]=pol2cart(pi/180*map.x(ones(ny,1),:),map.y(:,ones(nx,1)));
+[y,x]=pol2cart(pi/180*map.x(ones(ny,1),:),map.y(:,ones(nx,1)));
 
 % plot polar grid
-pcolor(ax,x,y,double(map.beam([1:end end],[1:end end])));
+ph=pcolor(ax,x,y,double(map.beam([1:end end],[1:end end])));
+set(ph,'clipping','off');
 
 % add title color etc
 hold(ax,'off');
@@ -234,18 +214,7 @@ end
 c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
 %set(c,'xaxislocation','top');
-xlabel(c,'dB','fontweight','bold','color',fgcolor)
-
-% reset root values
-set(0,'defaulttextcolor',defaulttextcolor);
-set(0,'defaultaxescolor',defaultaxescolor);
-set(0,'defaultaxesxcolor',defaultaxesxcolor);
-set(0,'defaultaxesycolor',defaultaxesycolor);
-set(0,'defaultaxeszcolor',defaultaxeszcolor);
-set(0,'defaultpatchfacecolor',defaultpatchfacecolor);
-set(0,'defaultpatchedgecolor',defaultpatchedgecolor);
-set(0,'defaultlinecolor',defaultlinecolor);
-set(0,'defaultsurfaceedgecolor',defaultsurfaceedgecolor);
+xlabel(c,'dB','fontweight','bold','color',fgcolor);
 
 % set zerodb & dblim in userdata
 % - this is for updatefkmap
@@ -409,7 +378,7 @@ end
 c=colorbar('eastoutside','peer',ax,...
     'fontweight','bold','xcolor',fgcolor,'ycolor',fgcolor);
 %set(c,'xaxislocation','top');
-xlabel(c,'dB','fontweight','bold','color',fgcolor)
+xlabel(c,'dB','fontweight','bold','color',fgcolor);
 axis(ax,'equal','tight');
 
 % set zerodb & dblim in userdata

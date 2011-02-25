@@ -85,6 +85,7 @@ function []=sz_toc_misc()
 %<a href="matlab:help unixcompressavi">unixcompressavi</a>      - Compress an AVI file in Unix with "MEncoder"
 %<a href="matlab:help uti2sub">uti2sub</a>              - Square matrix upper triangle linear indices to subscripts
 %<a href="matlab:help vecnorm">vecnorm</a>              - Returns vector norms
+%<a href="matlab:help wedge">wedge</a>                - Polar coordinate wedge plot
 %<a href="matlab:help writecsv">writecsv</a>             - Write out .csv formatted file from a structure
 %<a href="matlab:help xdir">xdir</a>                 - Cross-app compatible directory listing with recursion
 %

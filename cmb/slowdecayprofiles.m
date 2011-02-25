@@ -88,9 +88,10 @@ function [varargout]=slowdecayprofiles(results,azrng,gcrng,odir)
 %        Jan. 31, 2011 - allow no output, odir input, better checks
 %        Feb.  5, 2011 - fix bug when no output specified
 %        Feb. 12, 2011 - include snr-based arrival time error
+%        Feb. 17, 2011 - fixed decay constant error
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 12, 2011 at 13:35 GMT
+%     Last Updated Feb. 17, 2011 at 13:35 GMT
 
 % todo:
 
@@ -252,11 +253,11 @@ for a=1:numel(results)
         tmp(cnt).cslow=m(2);
         tmp(cnt).cslowerr=sqrt(covm(2,2));
         [m,covm]=wlinem(delaz(idx,1),log(rampl(idx)),1,...
-            diag(log(rampl(idx)+ramplerr(idx).^2)-log(rampl(idx))));
+            diag((log(rampl(idx)+ramplerr(idx))-log(rampl(idx))).^2));
         tmp(cnt).decay=m(2);
         tmp(cnt).decayerr=sqrt(covm(2,2));
         [m,covm]=wlinem(delaz(idx,1),log(crampl(idx)),1,...
-            diag(log(crampl(idx)+ramplerr(idx).^2)-log(crampl(idx))));
+            diag((log(crampl(idx)+ramplerr(idx))-log(crampl(idx))).^2));
         tmp(cnt).cdecay=m(2);
         tmp(cnt).cdecayerr=sqrt(covm(2,2));
     end

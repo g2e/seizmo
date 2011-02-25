@@ -1,10 +1,10 @@
-function [a,b,c]=sph_tri_auto(maxdeg)
+function [v,tri]=sph_tri_auto(maxdeg)
 %SPH_TRI_AUTO    Automatically create spherical triangle polyhedra
 %
-%    Usage:    [a,b,c]=sph_tri_auto(maxdeg)
+%    Usage:    [v,tri]=sph_tri_auto(maxdeg)
 %
 %    Description:
-%     [A,B,C]=SPH_TRI_AUTO(MAXDEG) automatically creates a spherical
+%     [V,TRI]=SPH_TRI_AUTO(MAXDEG) automatically creates a spherical
 %     triangle polyhedra where the vertices are all approximately less than
 %     MAXDEG degrees apart.  Distortion due to projection of the triangle
 %     vertices onto the unit sphere may lead to some vertices exceeding
@@ -17,22 +17,28 @@ function [a,b,c]=sph_tri_auto(maxdeg)
 %    Examples:
 %     % Make a polyhedra for Earth requiring ~50km spacing between vertices
 %     % (warning this makes a >400000 faceted polygon!):
-%     [a,b,c]=sph_tri_auto(50*180/(6371*pi));
-%     a=a*6371; b=b*6371; c=c*6371;
+%     [v,tri]=sph_tri_auto(50*180/(6371*pi));
+%     v=v*6371;
 %
 %     % Polyhedra with ~4deg vertex spacing:
-%     [a,b,c]=sph_tri_auto(4);
+%     [v,tri]=sph_tri_auto(4);
+%     tri=tri(:,[1:3 1]); % close triangles
+%     nv=size(v,1); % number of vertices
+%     patch(v(tri)',v(nv+tri)',v(2*nv+tri)','r');
+%     axis vis3d
+%     axis off
+%     rotate3d on
 %
-%    See also: SPH_TRI_INIT, SPH_TRI_SPLIT, SPH_TRI_VERTICES,
-%              SPH_TRI_LATLON, SPH_POLY_AREA, SPH_POLY_IN
+%    See also: SPH_TRI_INIT, SPH_TRI_SPLIT, SPH_POLY_AREA, SPH_POLY_IN
 
 %     Version History:
 %        Nov. 12, 2009 - initial version
 %        Nov. 17, 2009 - minor doc update
 %        Feb. 11, 2011 - mass nargchk fix, minor doc formmatting
+%        Feb. 18, 2011 - major revision: use vertex & index output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb. 18, 2011 at 15:05 GMT
 
 % todo:
 
@@ -60,7 +66,7 @@ s=ceil(vd/maxdeg);
 s=factor(s);
 
 % spherical triangle polyhedra
-[a,b,c]=sph_tri_init;
-[a,b,c]=sph_tri_split(a,b,c,numel(s),s);
+[v,tri]=sph_tri_init;
+[v,tri]=sph_tri_split(v,tri,numel(s),s);
 
 end
