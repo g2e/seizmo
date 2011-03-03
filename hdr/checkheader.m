@@ -384,9 +384,10 @@ function [data]=checkheader(data,varargin)
 %                        values specific to a filetype, KM_DEPTH fixed
 %        Sep. 16, 2010 - added UNSET_DELAZ
 %        Feb. 11, 2011 - minor doc update
+%        Feb. 25, 2011 - fix nonzero_iztype warning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 22:10 GMT
+%     Last Updated Feb. 25, 2011 at 22:10 GMT
 
 % todo:
 
@@ -1257,7 +1258,7 @@ else
     end
 end
 if(any(spectral & b)); iztype(spectral & b)={'ib'}; end
-bad=[bad(:); badday(:)];
+bad=[find(bad(:)); badday(:)];
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:nonzeroIZTYPE';
     report.message=['Header inconsistency found! Record(s):\n' ...

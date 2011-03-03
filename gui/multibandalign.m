@@ -45,12 +45,15 @@ function [info]=multibandalign(data,varargin)
 %       filter_bank([1/50 1/5],'variable',0.2,0.1)
 %
 %    Examples:
-%     % This is my typical usage form (for really nice quakes the upper
-%     % limit of the filter bank can be raised to something like 0.2Hz):
-%     bank=filter_bank([0.0125 0.125],'variable',0.2,0.1);
-%     results=multibandalign(data,'bank',bank,'runname','examplerun');
+%     % Use a filter bank with filters of 10mHz width and stepped at 5mHz:
+%     linbank=filter_bank([1/50 1/5],'constant',.01,.005);
+%     results=multibandalign(data,'bank',linbank,'runname','examplerun');
 %
-%    See also: USERALIGN, USERSNR, FILTER_BANK, IIRFILTER
+%     % Save figures to a separate directory and skip winnowing:
+%     results=multibandalign(data,'figdir','figs','winnow',false,...
+%                                 'runname','examplerun');
+%
+%    See also: USERALIGN, USERSNR, FILTER_BANK, IIRFILTER, CMB_2ND_PASS
 
 %     Version History:
 %        Mar. 25, 2010 - initial version
@@ -84,11 +87,15 @@ function [info]=multibandalign(data,varargin)
 %        Feb.  1, 2011 - added autozx checks
 %        Feb.  6, 2011 - make userwinnow optional, adjust zxing code to be
 %                        more useful for the default filter bank
+%        Feb. 26, 2011 - fix zeroxing bug
+%        Mar.  1, 2011 - fix winnow not using its state, better examples
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  6, 2011 at 12:25 GMT
+%     Last Updated Mar.  1, 2011 at 12:25 GMT
 
 % todo:
+% - smarter initial window is needed to reduce later arrivals messing up
+%   the amplitude scaling (or can we prescale using signal window???)
 
 % check nargin
 if(nargin<1)
@@ -258,7 +265,7 @@ try
                 % use nearby zero crossing for new window limits
                 if(p.zxing)
                     zx(1)=zeroxing321(data0,info(i),1);
-                    zx(2)=zeroxing(data0,info,2);
+                    zx(2)=zeroxing(data0,info(i),2);
                     info(i).usersnr.signalwin=zx;
                 end
             end
@@ -830,7 +837,7 @@ for i=1:2:nargin
                 error('seizmo:multibandalign:badInput',...
                     'WINNOW must be TRUE or FALSE!');
             end
-            p.winnow=varargin{i+1};
+            p.userwinnow=varargin{i+1};
             keep(i:i+1)=false;
         case 'winnowlimits'
             if(~isequal(size(varargin{i+1}),[1 2]) ...

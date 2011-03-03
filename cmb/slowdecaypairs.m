@@ -1,4 +1,4 @@
-function [varargout]=slowdecaypairs(results,azrng,gcrng,odir)
+function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %SLOWDECAYPAIRS    Returns 2-station measurements of slowness & decay rate
 %
 %    Usage:    pf=slowdecaypairs(results,azrng,gcrng)
@@ -23,6 +23,12 @@ function [varargout]=slowdecaypairs(results,azrng,gcrng,odir)
 %     directory.
 %
 %    Notes:
+%     - The PF struct is also written to disk as:
+%           TIMESTAMP_EARTHMODEL_2stn_profiles.mat
+%       where TIMESTAMP is the time when the file is written
+%       and uses format 30 from the DATESTR function.  EARTHMODEL is
+%       derived from the results.earthmodel field (if you give a results
+%       struct of 2+ elements with differing models then EARTHMODEL='misc'.
 %     - The PF struct has the following fields:
 %       .gcdist         - degree distance difference between stations
 %       .azwidth        - azimuthal difference between stations
@@ -62,6 +68,12 @@ function [varargout]=slowdecaypairs(results,azrng,gcrng,odir)
 %            | .cslow |    1D    |       3D      |
 %            +--------+----------+---------------+
 %
+%          To compare the data & sythetics you should compare 3D values of
+%          data to 3D values of synthetics or 1D values of data to 1D
+%          values of synthetics.  Drawing conclusions from comparison of 3D
+%          to 1D is not recommended (except to see the affect corrections
+%          have on data or synthetics).
+%
 %    Examples:
 %     % Return station pair profiles with an azimuth
 %     % of <10deg and a distance of >15deg:
@@ -86,9 +98,11 @@ function [varargout]=slowdecaypairs(results,azrng,gcrng,odir)
 %        Feb.  5, 2011 - fix bug when no output specified
 %        Feb. 12, 2011 - include snr-based arrival time error
 %        Feb. 17, 2011 - fixed decay constant error
+%        Mar.  1, 2011 - combined write rather than individually, added
+%                        notes about output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 17, 2011 at 13:35 GMT
+%     Last Updated Mar.  1, 2011 at 13:35 GMT
 
 % todo:
 
@@ -281,24 +295,28 @@ for a=1:numel(results)
         if(verbose); print_time_left(b,npairs); end
     end
     
-    % save output
-    save(fullfile(odir,[datestr(now,30) '_' ...
-        results(a).runname '_pairs.mat']),'tmp');
-    
     % output
-    if(nargout)
-        if(~exist('varargout','var'))
-            varargout{1}=tmp;
-        else
-            varargout{1}=[varargout{1}; tmp];
-        end
+    if(~exist('pf','var'))
+        pf=tmp;
+    else
+        pf=[pf; tmp];
     end
 end
 
+% save profiles
+if(exist('pf','var'))
+    name=unique({results.earthmodel}');
+    if(~isscalar(name)); name='misc'; else name=char(name); end
+    save(fullfile(odir,...
+        [datestr(now,30) '_' name '_2stn_profiles.mat']),'pf');
+end
+
 % check for output
-if(nargout && ~exist('varargout','var'))
+if(nargout && ~exist('pf','var'))
     error('seizmo:slowdecaypairs:noPairs',...
         'No station pairs meet the specified profile criteria!');
+elseif(~nargout && exist('pf','var'))
+    clear pf;
 end
 
 end

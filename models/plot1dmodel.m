@@ -60,9 +60,10 @@ function [varargout]=plot1dmodel(model,fields,drng,cmap,fgcolor,bgcolor,ax)
 %        May  27, 2010 - initial version
 %        May  29, 2010 - turn off tex interpretation of model names
 %        Aug. 17, 2010 - fancy titles in LaTeX
+%        Feb. 28, 2010 - fix default color code bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 17, 2010 at 15:50 GMT
+%     Last Updated Feb. 28, 2011 at 15:50 GMT
 
 % todo:
 
@@ -123,15 +124,15 @@ if(isa(cmap,'function_handle'))
 end
 
 % default colors
-if(nargin<5); fgcolor='w'; bgcolor='k'; end
-if(nargin<6)
+if(nargin<5)
+    fgcolor='w'; bgcolor='k';
+elseif(nargin<6)
     if(isempty(fgcolor))
         fgcolor='w'; bgcolor='k';
     else
         bgcolor=invertcolor(fgcolor,true);
     end
-end
-if(nargin<7)
+else
     if(isempty(fgcolor))
         if(isempty(bgcolor))
             fgcolor='w'; bgcolor='k';
@@ -139,11 +140,7 @@ if(nargin<7)
             fgcolor=invertcolor(bgcolor,true);
         end
     elseif(isempty(bgcolor))
-        if(isempty(fgcolor))
-            fgcolor='w'; bgcolor='k';
-        else
-            bgcolor=invertcolor(fgcolor,true);
-        end
+        bgcolor=invertcolor(fgcolor,true);
     end
 end
 

@@ -21,8 +21,9 @@ function [X,Y,I]=m_ll2xy(varargin);
 % it's mine, so you can't sell it.
 
 % 6/Nov/00 - eliminate returned stuff if ';' neglected (thx to D Byrne)
+% 27/Feb/11 - wrap longitudes outside of plot into plot (if possible)
 
-global MAP_PROJECTION MAP_COORDS
+global MAP_PROJECTION MAP_COORDS MAP_VAR_LIST
 
 
 
@@ -30,6 +31,19 @@ if nargin==0 | isstr(varargin{1}),
   disp(' Usage');
   disp(' [X,Y]=m_ll2xy(LONGITUDES,LATITUDES <,''clip'',( ''on''|''off''|''patch'' | ''point'' ) >)');
 else
+  % wrap longitudes to plot (gge)
+  if(nargin>3 && strncmpi(varargin{3},'clip',4) ...
+          && strcmpi(varargin{4},'point'))
+    while(any(varargin{1}(:)-MAP_VAR_LIST.longs(2)>0))
+      varargin{1}(varargin{1}(:)-MAP_VAR_LIST.longs(2)>0)=...
+        varargin{1}(varargin{1}(:)-MAP_VAR_LIST.longs(2)>0)-360;
+    end
+    while(any(varargin{1}(:)-MAP_VAR_LIST.longs(1)<0))
+      varargin{1}(varargin{1}(:)-MAP_VAR_LIST.longs(1)<0)=...
+        varargin{1}(varargin{1}(:)-MAP_VAR_LIST.longs(1)<0)+360;
+    end
+  end
+  
   if strcmp(MAP_COORDS.name,MAP_PROJECTION.coordsystem.name),
      % Sneaky way of making default clipping on (sneaky 'cause only the 4th
      % input parameter is checked for the clipping property)

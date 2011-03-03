@@ -40,7 +40,7 @@ function [varargout]=cmb_1dmodel_library(varargin)
 %
 %     Custom models:
 %      M1ps, M1ps2, M1pq, M1/3p, PSKNA1, PKNA1, PSLHE, PLHE, PSYLO, PYLO,
-%      ULVZ
+%      ULVZ, CONV
 %
 %     Custom model sets:
 %      GPS, GQu, GPSQu
@@ -69,13 +69,17 @@ function [varargout]=cmb_1dmodel_library(varargin)
 %                        use thk2n now, fixed a few cases of oversampling,
 %                        added ulvz, PYLO
 %        Jan. 30, 2011 - added GP & GS gradient series
+%        Feb. 28, 2011 - added CONV model
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2011 at 23:00 GMT
+%     Last Updated Feb. 28, 2011 at 23:00 GMT
 
 % todo:
 % - models should have named discontinuities field
 %   ('moho' '410' '660' 'cmb' 'icb')
+%   - this is tough to keep consistent with the model if we update it
+% - what about named regions?
+%   ('crust' 'lithosphere' 'asthenosphere' 'mantle' 'core' ...)
 %
 % - more p-wave models!
 % - convection model series
@@ -702,6 +706,18 @@ for i=1:nargin
                          2571   0.2 2 0 0;
                          2571  2.75 2 0 thk2n(320,kpkm);
                          2891 0.575 2 0 0]};
+        % slhe but with similar perturbations to p
+        % - triple knots in perturbed region
+        case 'PSLHE3'
+            name={'PSLHE'};
+            pv{1}={'vp' [2300     0 4 0 thk2n(271,3*kpkm);
+                         2571   0.2 2 0 0;
+                         2571  2.75 2 0 thk2n(320,3*kpkm);
+                         2891 0.575 2 0 0],...
+                   'vs' [2300     0 4 0 thk2n(271,3*kpkm);
+                         2571   0.2 2 0 0;
+                         2571  2.75 2 0 thk2n(320,3*kpkm);
+                         2891 0.575 2 0 0]};        
         % slhe perturbations but only in p
         case 'PLHE'
             name={'PLHE'};
@@ -718,6 +734,18 @@ for i=1:nargin
                    'vs' [2871   0 4 0 0;
                          2871 -30 4 0 thk2n(20,kpkm);
                          2891 -30 4 0 0]};
+        % CONV (d" convection)
+        % - based on Solomatov & Moresi 2002
+        case 'CONV'
+            name='CONV';
+            pv{1}={'vp' [2300     0 4   -2 thk2n(341,kpkm*2);
+                         2641    -2 4    0 0;
+                         2641     1 4 1.25 thk2n(250,kpkm*2);
+                         2891  1.25 4    0 0],...
+                   'vs' [2300     0 4   -2 thk2n(341,kpkm*2);
+                         2641    -2 4    0 0;
+                         2641     1 4 1.25 thk2n(250,kpkm*2);
+                         2891  1.25 4    0 0]};
         % SYLO with equal % P perturbations
         case 'PSYLO'
             name={'PSYLO'};

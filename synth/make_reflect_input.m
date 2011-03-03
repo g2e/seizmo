@@ -91,9 +91,10 @@ function [varargout]=make_reflect_input(...
 
 %     Version History:
 %        Aug. 10, 2010 - initial version
+%        Feb. 28, 2011 - fix overwrite crash
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 10, 2010 at 23:00 GMT
+%     Last Updated Feb. 28, 2011 at 23:00 GMT
 
 % todo:
 
@@ -313,7 +314,7 @@ else
             error('seizmo:make_reflect_input:dirConflict',...
                 'Reflect Input File: %s\nIs A Directory!',o.file);
         end
-        if(~o)
+        if(false)
             fprintf('Reflect Input File: %s\nFile Exists!\n',o.file);
             reply=input('Overwrite? Y/N [N]: ','s');
             if(isempty(reply) || ~strncmpi(reply,'y',1))

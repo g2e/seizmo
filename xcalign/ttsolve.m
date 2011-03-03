@@ -188,9 +188,11 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %        Jan. 29, 2011 - default to 20 time refinements
 %        Feb. 12, 2011 - update for snr2phaseerror name change, do not
 %                        alter opt.SNR (use a new variable)
+%        Mar.  3, 2011 - fix bug that reinverts the last iteration when not
+%                        necessary (improper apriori replacement)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 12, 2011 at 09:45 GMT
+%     Last Updated Mar.  3, 2011 at 09:45 GMT
 
 % todo:
 
@@ -287,7 +289,7 @@ switch lower(opt.METHOD)
                         warning('seizmo:ttsolve:noPolaritySolution',...
                             ['Polarity can not be solved for records:\n'...
                             sprintf('%g ',find(~pol)) '\n' ...
-                            'Setting their polarity to 1']);
+                            'Forced polarity=1 to end stalemate!']);
                     end
                     pol(~pol)=1;
                 end
@@ -308,11 +310,12 @@ switch lower(opt.METHOD)
                 if(verbose)
                     disp(['Reordered ' num2str(nc(iter,1)) ' Peaks']);
                 end
-            elseif(~isempty(opt.ESTARR) || ~isempty(opt.ESTERR) ...
-                    || ~isempty(opt.ESTPOL))
+            elseif(iter==1 && (~isempty(opt.ESTARR) ...
+                    || ~isempty(opt.ESTERR) || ~isempty(opt.ESTPOL)))
                 % need to replace given values with computed ones
                 if(verbose)
-                    disp('Forcing Reinversion to Replace Given Values');
+                    disp(['Reordered 0 Peaks, but Forcing Reinversion ' ...
+                        'to Replace apriori Values']);
                 end
             else
                 % drop this iteration

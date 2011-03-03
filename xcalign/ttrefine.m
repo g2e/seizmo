@@ -6,6 +6,7 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %              [cg,lg,pg,nc]=ttrefine(cg,lg,pg,dt,std,pol,wg)
 %              [cg,lg,pg,nc]=ttrefine(cg,lg,pg,dt,std,pol,wg,minstd)
 %              [cg,lg,pg,nc]=ttrefine(cg,lg,pg,dt,std,pol,wg,minstd,pflag)
+%              [li,best,M]=ttrefine(...,wg,minstd,pflag,false)
 %
 %    Description: [CG,LG,PG,NC]=TTREFINE(CG,LG,PG,DT,STD,POL) takes the
 %     output matrices from a multi-peak run of CORRELATE (CG, LG, PG) and
@@ -35,6 +36,13 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %     must match the polarities in POL to be included in the 1st page of
 %     the reordered results.  Setting PFLAG to FALSE will essentially allow
 %     the polarity to be refined too.
+%
+%     [LI,BEST,M]=TTREFINE(...,WG,MINSTD,PFLAG,FALSE) outputs internal info
+%     that may be useful for deeper inspection.  LI is a logical array
+%     indicating the correlograms with reordered peaks.  BEST is a index
+%     array with indices of the best peaks (of the ones being reordered).
+%     M is the array of misfits (when PFLAG=TRUE values of M will be NaN if
+%     they of the incorrect polarity).
 %
 %    Notes:
 %     - Why reorder peak info?  Re-solving the reordered peak info gives a
@@ -78,9 +86,10 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %                        sqrt the square
 %        Sep. 13, 2010 - nargchk fix
 %        Jan. 23, 2011 - allow zero polarity if FORCEPOLAR is false
+%        Mar.  3, 2011 - document special output option, fix reorder code
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2011 at 01:05 GMT
+%     Last Updated Mar.  3, 2011 at 01:05 GMT
 
 % todo:
 
@@ -166,27 +175,17 @@ best=li+(mi(li)-1)*nxc;
 
 % SPECIAL EXIT
 if(SKIP)
-    % output li, best, M, NCHANGED
+    % output li, best, M
     cg=li;
     lg=best;
     pg=M;
     return;
 end
 
-% MOVING BEST PEAKS NOT ON PAGE 1 TO TEMPORARY VECTOR
-ctmp=cg(best);
-ltmp=lg(best);
-ptmp=pg(best);
-
-% MOVING PAGE 1 PEAKS THAT ARE NOT THE BEST
-cg(best)=cg(li);
-lg(best)=lg(li);
-pg(best)=pg(li);
-
-% MOVING BEST PEAKS NOT ON PAGE 1 TO PAGE 1
-cg(li)=ctmp;
-lg(li)=ltmp;
-pg(li)=ptmp;
+% REORDERING
+[cg(best),cg(li)]=deal(cg(li),cg(best));
+[lg(best),lg(li)]=deal(lg(li),lg(best));
+[pg(best),pg(li)]=deal(pg(li),pg(best));
 
 end
 

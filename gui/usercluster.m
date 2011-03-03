@@ -88,9 +88,10 @@ function [grp,oldax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %                        and crash option, event grid for map
 %        Jan.  6, 2011 - use key2zoompan
 %        Jan. 13, 2011 - finally fixed cluster map warning issue
+%        Feb. 25, 2011 - fixed bug in criterion selection menu
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 13, 2011 at 10:00 GMT
+%     Last Updated Feb. 25, 2011 at 10:00 GMT
 
 % todo:
 
@@ -336,7 +337,7 @@ try
             case 5 % criterion
                 % change criterion
                 choice=menu('SELECT A CLUSTERING CRITERION',...
-                    ['CURRENT (' upper(grp.method) ')'],...
+                    ['CURRENT (' upper(grp.criterion) ')'],...
                     criterions{:});
                 if(choice>1)
                     grp.criterion=criterions{choice-1};
