@@ -1,4 +1,4 @@
-function [bad,varargout]=ampcut(dd,amp,cutoff,pow,err,w,ax)
+function [bad,varargout]=ampcut(dd,amp,cutoff,pow,err,w,color,ax)
 %AMPCUT    Cut amplitude outliers interactively
 %
 %    Usage:    bad=ampcut(dd,amp)
@@ -6,7 +6,8 @@ function [bad,varargout]=ampcut(dd,amp,cutoff,pow,err,w,ax)
 %              bad=ampcut(dd,amp,cutoff,pow)
 %              bad=ampcut(dd,amp,cutoff,pow,err)
 %              bad=ampcut(dd,amp,cutoff,pow,err,w)
-%              bad=ampcut(dd,amp,cutoff,pow,err,w,ax)
+%              bad=ampcut(dd,amp,cutoff,pow,err,w,color)
+%              bad=ampcut(dd,amp,cutoff,pow,err,w,color,ax)
 %              [bad,cutoff]=ampcut(...)
 %              [bad,cutoff,ax]=ampcut(...)
 %
@@ -34,8 +35,13 @@ function [bad,varargout]=ampcut(dd,amp,cutoff,pow,err,w,ax)
 %     BAD=AMPCUT(DD,AMP,CUTOFF,POW,ERR,W) uses the weights given in W for
 %     determining the fit.  W should be the same size as AMP.
 %
-%     BAD=AMPCUT(DD,AMP,CUTOFF,POW,ERR,W,AX) draws the plot in the axes
-%     given by AX.
+%     BAD=AMPCUT(DD,AMP,CUTOFF,POW,ERR,W,COLOR)  sets the facecolor of the
+%     points in the plots.  COLOR may be a color name, 'none', a rgb
+%     triplet, or an Nx3 array of triplets where N is the number of points.
+%     The default is 'none'.
+%
+%     BAD=AMPCUT(DD,AMP,CUTOFF,POW,ERR,W,COLOR,AX) draws the plot in the
+%     axes given by AX.
 %
 %     [BAD,CUTOFF]=AMPCUT(...) also returns the final outlier cutoff in
 %     standard deviations from the best fit.
@@ -59,21 +65,23 @@ function [bad,varargout]=ampcut(dd,amp,cutoff,pow,err,w,ax)
 %                        WLINEM (improperly used anyway)
 %        Jan.  6, 2011 - proper ginput handling, use key2zoompan
 %        Jan.  7, 2011 - using errorbar now
+%        Mar.  6, 2011 - coloring of marker faces
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  7, 2011 at 23:55 GMT
+%     Last Updated Mar.  6, 2011 at 23:55 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,7,nargin));
+error(nargchk(2,8,nargin));
 
 % defaults
 if(nargin<3 || isempty(cutoff)); cutoff=3; end
 if(nargin<4 || isempty(pow)); pow=1; end
 if(nargin<5); err=[]; end
 if(nargin<6); w=[]; end
-if(nargin<7); ax=[]; end
+if(nargin<7); color='none'; end
+if(nargin<8); ax=[]; end
 
 % check inputs
 if(~isreal(dd) || ~isreal(amp) || isempty(dd) ...
@@ -96,6 +104,16 @@ end
 if(~isempty(w) && (~isreal(w) || ~isequalsizeorscalar(amp,w)))
     error('seizmo:ampcut:badInput',...
         'W & AMP must be equal sized real valued arrays!');
+end
+if(ischar(color))
+    % keep 'none' or try name2rgb (it errors if not valid)
+    if(~strcmpi(color,'none'))
+        color=name2rgb(color);
+    end
+elseif(~isreal(color) || ndims(color)~=2 || any(color(:)<0 | color(:)>1)...
+        || size(color,2)~=3 || ~any(size(color,1)~=[1 numel(dd)]))
+    error('seizmo:ampcut:badInput',...
+        'Numeric COLOR must be a valid rgb triplet!');
 end
 if(~isempty(ax) && (~isscalar(ax) || ~isreal(ax)))
     error('seizmo:ampcut:badInput',...
@@ -137,12 +155,16 @@ set(hcut,'tag','cut');
 
 % draw the points (w/ or w/o errorbars)
 if(isempty(err))
-    hpnts=plot(ax,dd,log(amp),'ko');
+    hpnts=scatter(ax,dd,log(amp),[],color,'filled','markeredgecolor','k');
+    drawnow;
     set(hpnts,'tag','points');
 else
     h=errorbar(ax,dd,log(amp),...
-        log(amp)-log(amp-err),log(amp+err)-log(amp),'ko');
+        log(amp)-log(amp-err),log(amp+err)-log(amp),'k.');
     set(h,'tag','errorbars');
+    hpnts=scatter(ax,dd,log(amp),[],color,'filled','markeredgecolor','k');
+    drawnow;
+    set(hpnts,'tag','points');
 end
 hold(ax,'off');
 

@@ -100,9 +100,10 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %        Feb. 17, 2011 - fixed decay constant error
 %        Mar.  1, 2011 - combined write rather than individually, added
 %                        notes about output
+%        Mar.  3, 2011 - earthmodel in output name
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2011 at 13:35 GMT
+%     Last Updated Mar.  3, 2011 at 13:35 GMT
 
 % todo:
 

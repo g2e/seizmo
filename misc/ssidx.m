@@ -3,27 +3,29 @@ function [s]=ssidx(s,idx)
 %
 %    Usage:    s=ssidx(s,idx)
 %
-%    Description: S=SSIDX(S,IDX) indexes into a scalar struct db S using
-%     IDX.  S is expected to be a struct where every field has the same
-%     number of elements (can be of any type).  This will likely require
-%     char array fields to be converted to cellstr arrays.  S does not need
-%     to be scalar.
+%    Description:
+%     S=SSIDX(S,IDX) indexes into a scalar struct db S using IDX.  S is
+%     expected to be a struct where every field has the same number of
+%     elements (can be of any type).  This will likely require char array
+%     fields to be converted to cellstr arrays.  S does not need to be
+%     scalar.
 %
 %    Notes:
 %
 %    Examples:
-%     Extract 8 CMT solutions from the cmt database:
-%      cmt=load('globalcmt_full.cmt');
-%      cmt=ssidx(cmt,33:40);
+%     %Extract 8 CMT solutions from the cmt database:
+%     cmt=load('globalcmt_full.mat');
+%     cmt=ssidx(cmt,33:40);
 %
 %    See also: READNDK, PARSE_ISC_ORIGIN
 
 %     Version History:
 %        July 30, 2010 - initial version
 %        Aug.  2, 2010 - logical indexing support
+%        Mar.  7, 2011 - minor doc formatting
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  2, 2010 at 15:40 GMT
+%     Last Updated Mar.  7, 2011 at 15:40 GMT
 
 % todo:
 

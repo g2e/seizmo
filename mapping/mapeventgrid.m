@@ -35,9 +35,10 @@ function []=mapeventgrid(ax,evla,evlo,c,rrmajor,rrminor,azmajor,azminor)
 
 %     Version History:
 %        June 26, 2010 - initial version
+%        Mar.  6, 2011 - changed line width for aesthetics
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 26, 2010 at 03:15 GMT
+%     Last Updated Mar.  6, 2011 at 03:15 GMT
 
 % todo:
 
@@ -103,7 +104,7 @@ if(numel(azminor))
     [lat1,lon1]=gcarc2latlon(azsla,azslo,azmla,azmlo,npts);
     [lat2,lon2]=gcarc2latlon(azela,azelo,azmla,azmlo,npts);
     lon=unwrap([lon1; lon2].*d2r,[],2)./d2r; % avoid streak from wraparound
-    h=m_line(lon',[lat1; lat2]','color',c,'linewi',1);
+    h=m_line(lon',[lat1; lat2]','color',c,'linewi',.25);
     set(h,'tag','az_minor');
 end
 if(numel(azmajor))
@@ -113,18 +114,18 @@ if(numel(azmajor))
     [lat1,lon1]=gcarc2latlon(azsla,azslo,azmla,azmlo,npts);
     [lat2,lon2]=gcarc2latlon(azela,azelo,azmla,azmlo,npts);
     lon=unwrap([lon1; lon2].*d2r,[],2)./d2r; % avoid streak from wraparound
-    h=m_line(lon',[lat1; lat2]','color',c,'linewi',2);
+    h=m_line(lon',[lat1; lat2]','color',c,'linewi',.75);
     set(h,'tag','az_major');
 end
 
 % plot range rings
 d2r=pi/180;
 if(numel(rrminor))
-    h=m_range_ring(evlo,evla,6371*d2r*rrminor,npts,'color',c,'linewi',1);
+    h=m_range_ring(evlo,evla,6371*d2r*rrminor,npts,'color',c,'linewi',.25);
     set(h,'tag','rr_minor');
 end
 if(numel(rrmajor))
-    h=m_range_ring(evlo,evla,6371*d2r*rrmajor,npts,'color',c,'linewi',2);
+    h=m_range_ring(evlo,evla,6371*d2r*rrmajor,npts,'color',c,'linewi',.75);
     set(h,'tag','rr_major');
 end
 

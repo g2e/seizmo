@@ -45,12 +45,13 @@ function [results]=cmb_outliers(results,odir,figdir)
 %                        corrections bug
 %        Jan. 31, 2011 - odir & figdir inputs
 %        Feb. 12, 2011 - include snr-based arrival time error
+%        Mar.  6, 2011 - coloring in arrcut/ampcut, undo all button,
+%                        distance/azimuth window
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 12, 2011 at 13:35 GMT
+%     Last Updated Mar.  6, 2011 at 13:35 GMT
 
 % todo:
-% - coloring of outlier plots
 
 % check nargin
 error(nargchk(1,3,nargin));
@@ -94,7 +95,7 @@ for i=1:numel(results)
     if(isempty(results(i).useralign)); continue; end
     
     % arrival & amplitude info
-    dd=getheader(results(i).useralign.data,'gcarc');
+    [dd,az]=getheader(results(i).useralign.data,'gcarc','az');
     arr=results(i).useralign.solution.arr;
     if(results(i).synthetics)
         carr=arr;
@@ -162,6 +163,7 @@ for i=1:numel(results)
                 'Arrival Time',...
                 'Arrival Time Error',...
                 'Amplitude',...
+                'Undo All',...
                 'Continue');
             
             % action based on choice
@@ -169,7 +171,8 @@ for i=1:numel(results)
                 case 1 % arr
                     arrcnt=arrcnt+1;
                     [bad,cutoff,ax]=...
-                        arrcut(dd(good),carr(good),[],1,arrerr(good));
+                        arrcut(dd(good),carr(good),[],1,arrerr(good),[],...
+                        z2c(az(good),[0 360],hsv));
                     results(i).outliers.bad(good(bad))=true;
                     results(i).outliers.cluster(j).arrcut.bad{arrcnt}=good(bad);
                     results(i).outliers.cluster(j).arrcut.cutoff(arrcnt)=cutoff;
@@ -195,7 +198,8 @@ for i=1:numel(results)
                     end
                 case 3 % amp
                     ampcnt=ampcnt+1;
-                    [bad,cutoff,ax]=ampcut(dd(good),camp(good),[],1,amperr(good));
+                    [bad,cutoff,ax]=ampcut(dd(good),camp(good),[],1,amperr(good),[],...
+                        z2c(az(good),[0 360],hsv));
                     results(i).outliers.bad(good(bad))=true;
                     results(i).outliers.cluster(j).ampcut.bad{ampcnt}=good(bad);
                     results(i).outliers.cluster(j).ampcut.cutoff(ampcnt)=cutoff;
@@ -206,7 +210,16 @@ for i=1:numel(results)
                             '.fig']));
                         close(get(ax,'parent'));
                     end
-                case 4 % continue
+                case 4 % undo all
+                    results(i).outliers.cluster(j).arrcut=...
+                        struct('bad',[],'cutoff',[]);
+                    results(i).outliers.cluster(j).ampcut=...
+                        struct('bad',[],'cutoff',[]);
+                    results(i).outliers.cluster(j).errcut=...
+                        struct('bad',[],'cutoff',[]);
+                    arrcnt=0; ampcnt=0; errcnt=0;
+                    results(i).outliers.bad(good)=false;
+                case 5 % continue
                     happyoverall=true;
                     continue;
             end

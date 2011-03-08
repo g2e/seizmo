@@ -33,7 +33,7 @@ function [info]=multibandalign(data,varargin)
 %       zxing           - zero-crossing windowing (true)
 %       zxoffset        - auto mode: # zero xings from guess to win start
 %       zxwidth         - auto mode: window is # zero crossings wide
-%       winnow          - prompt user to winnow (true)
+%       winnow          - prompt user to winnow (false)
 %       winnowyfield    - header field to winnow by (default is 'gcarc')
 %       winnowlimits    - default winnow limits (default is [])
 %       figdir          - directory to save figures to (default is '.')
@@ -89,9 +89,10 @@ function [info]=multibandalign(data,varargin)
 %                        more useful for the default filter bank
 %        Feb. 26, 2011 - fix zeroxing bug
 %        Mar.  1, 2011 - fix winnow not using its state, better examples
+%        Mar.  7, 2011 - winnow is off by default (annoying)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2011 at 12:25 GMT
+%     Last Updated Mar.  7, 2011 at 12:25 GMT
 
 % todo:
 % - smarter initial window is needed to reduce later arrivals messing up
@@ -674,7 +675,7 @@ p.auto=false; % auto multibandalign (uses zx window parameters if zxing)
 p.zxing=true; % zero-crossing windowing flag (off uses signalwin or user)
 p.zxwidth=6;  % number of zero crossings increments in window if auto
 p.zxoffset=1; % number of zero crossings to window start from initial guess
-p.userwinnow=true;
+p.userwinnow=false;
 p.winnowyfield='gcarc';
 p.winnowlimits=[];
 p.figdir='.';

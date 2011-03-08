@@ -88,6 +88,7 @@ function []=sz_toc_misc()
 %<a href="matlab:help wedge">wedge</a>                - Polar coordinate wedge plot
 %<a href="matlab:help writecsv">writecsv</a>             - Write out .csv formatted file from a structure
 %<a href="matlab:help xdir">xdir</a>                 - Cross-app compatible directory listing with recursion
+%<a href="matlab:help z2c">z2c</a>                  - Converts z-values to a color array of given color mapping & limits
 %
 % <a href="matlab:help seizmo">SEIZMO - Passive Seismology Toolbox</a>
 end

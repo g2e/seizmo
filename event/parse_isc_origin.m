@@ -26,28 +26,26 @@ function [isc]=parse_isc_origin(file,hlines)
 %       are left as empty strings.
 %
 %    Examples:
-%     Passing no arguments brings up a graphical menu to select a file:
-%      isc=parse_isc_origin();
+%     % Passing no arguments brings up a graphical menu to select a file:
+%     isc=parse_isc_origin();
 %
-%     Do a test run:
-%      isc=parse_isc_origin('test_isc.txt')
+%     % Do a test run:
+%     isc=parse_isc_origin('test_isc.txt')
 %
-%     Extract a single origin (replace EVENTIDX):
-%      fields=fieldnames(isc);
-%      for i=1:numel(fields)
-%          origin.(fields{i})=isc.(fields{i})(EVENTIDX);
-%      end
+%     % Extract an origin from file of your choice (replace EVENTIDX):
+%     isc=ssidx(parse_isc_origin(),EVENTIDX);
 %
-%    See also: READNDK, READSODEVENTCSV
+%    See also: READNDK, READSODEVENTCSV, SSIDX
 
 %     Version History:
 %        July 26, 2010 - initial version by Erica, added code to allow for
 %                        graphical file selection and handling blank fields
 %        July 28, 2010 - added documentation
+%        Mar.  7, 2011 - mention ssidx
 %
 %     Written by Erica Emry (ericae at wustl dot edu)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 28, 2010 at 17:25 GMT
+%     Last Updated Mar.  7, 2011 at 17:25 GMT
 
 % todo:
 

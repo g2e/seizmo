@@ -50,9 +50,10 @@ function [gd,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filename)
 %        Sep. 20, 2009 - initial version
 %        May  27, 2010 - seizmoverbose support
 %        Feb. 11, 2011 - mass nargchk fix
+%        Mar.  5, 2011 - improved empty khole detection
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar.  5, 2011 at 15:05 GMT
 
 % todo:
 
@@ -109,7 +110,7 @@ for i=1:npz
     
     % handle blank khole
     khole{i}=w{6}; skip=0;
-    if(numel(khole{i})>2); skip=1; khole{i}=''; end
+    if(numel(khole{i})>5 && any(khole{i}(5:6)=='.')); skip=1; khole{i}=''; end
     
     % parse/check/convert begin time
     t=getwords(w{7-skip},'.');

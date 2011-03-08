@@ -30,9 +30,10 @@ function [data]=changebyteorder(data,endianness)
 %        Jan. 28, 2010 - seizmoverbose support
 %        Apr. 25, 2010 - added new strings
 %        Aug. 16, 2010 - fix error usage
+%        Mar.  5, 2011 - added le/be/l/b
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 16, 2010 at 14:05 GMT
+%     Last Updated Mar.  5, 2011 at 14:05 GMT
 
 % todo:
 
@@ -85,9 +86,9 @@ preserve=strcmp(endianness,'');
 
 % check endianness
 endianness=lower(endianness);
-little=ismember(endianness,{'ieee-le' 'intel' 'little' 'pc'});
+little=ismember(endianness,{'ieee-le' 'intel' 'little' 'pc' 'le' 'l'});
 endianness(little)={'ieee-le'};
-big=ismember(endianness,{'ieee-be' 'sun' 'big'});
+big=ismember(endianness,{'ieee-be' 'sun' 'big' 'be' 'b'});
 endianness(big)={'ieee-be'};
 if(any(~(little | big)))
     error('seizmo:changebyteorder:badEndian',...

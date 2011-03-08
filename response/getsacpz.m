@@ -75,9 +75,10 @@ function [data]=getsacpz(data,varargin)
 %        Aug. 21, 2010 - dropped versioninfo caching (not warranted),
 %                        updated undef checks, fixed warnings/errors
 %        Sep. 28, 2010 - improved warning message if no sac pz found
+%        Mar.  5, 2011 - fixed bug in when missing networks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 28, 2010 at 12:45 GMT
+%     Last Updated Mar.  5, 2011 at 12:45 GMT
 
 % todo:
 
@@ -153,8 +154,8 @@ try
             warning('seizmo:getsacpz:badKNETWK',...
                 ['These networks have no response info ' ...
                 'in the IRIS database:\n' sprintf('%s ',badnets{:})]);
-            nn=nn(ismember(nn,fieldnames(sacpzdb)));
             nets=nets(ismember(nn,fieldnames(sacpzdb)));
+            nn=nn(ismember(nn,fieldnames(sacpzdb)));
         end
         
         % get db info

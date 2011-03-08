@@ -1,4 +1,4 @@
-function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,ax)
+function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,color,ax)
 %ARRCUT    Cut arrival time outliers interactively
 %
 %    Usage:    bad=arrcut(dd,arr)
@@ -6,7 +6,8 @@ function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,ax)
 %              bad=arrcut(dd,arr,cutoff,pow)
 %              bad=arrcut(dd,arr,cutoff,pow,err)
 %              bad=arrcut(dd,arr,cutoff,pow,err,w)
-%              bad=arrcut(dd,arr,cutoff,pow,err,w,ax)
+%              bad=arrcut(dd,arr,cutoff,pow,err,w,color)
+%              bad=arrcut(dd,arr,cutoff,pow,err,w,color,ax)
 %              [bad,cutoff]=arrcut(...)
 %              [bad,cutoff,ax]=arrcut(...)
 %
@@ -34,9 +35,14 @@ function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,ax)
 %     BAD=ARRCUT(DD,ARR,CUTOFF,POW,ERR,W) uses the weights given in W for
 %     determining the fit.  W should be the same size as ARR.
 %
-%     BAD=ARRCUT(DD,ARR,CUTOFF,POW,ERR,W,AX) draws the plot in the axes
-%     given by AX.  AX should be 2 axes handles (the 1st is dist vs time,
-%     the 2nd is dist vs residual).
+%     BAD=ARRCUT(DD,ARR,CUTOFF,POW,ERR,W,COLOR) sets the facecolor of the
+%     points in the plots.  COLOR may be a color name, 'none', a rgb
+%     triplet, or an Nx3 array of triplets where N is the number of points.
+%     The default is 'none'.
+%
+%     BAD=ARRCUT(DD,ARR,CUTOFF,POW,ERR,W,COLOR,AX) draws the plot in the
+%     axes given by AX.  AX should be 2 axes handles (the 1st is dist vs
+%     time, the 2nd is dist vs residual).
 %
 %     [BAD,CUTOFF]=ARRCUT(...) also returns the final outlier cutoff in
 %     seconds from the best fit.
@@ -60,21 +66,23 @@ function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,ax)
 %        Jan.  6, 2011 - proper ginput handling, use key2zoompan
 %        Jan.  7, 2011 - using errorbar now
 %        Jan. 26, 2011 - draw small residual plot below dist vs time plot
+%        Mar.  6, 2011 - coloring of marker faces
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2011 at 23:55 GMT
+%     Last Updated Mar.  6, 2011 at 23:55 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,7,nargin));
+error(nargchk(2,8,nargin));
 
 % defaults
 if(nargin<3 || isempty(cutoff)); cutoff=nan; end
 if(nargin<4 || isempty(pow)); pow=1; end
 if(nargin<5); err=[]; end
 if(nargin<6); w=[]; end
-if(nargin<7); ax=[]; end
+if(nargin<7); color='none'; end
+if(nargin<8); ax=[]; end
 
 % check inputs
 if(~isreal(dd) || ~isreal(arr) || isempty(dd) ...
@@ -97,6 +105,16 @@ end
 if(~isempty(w) && (~isreal(w) || ~isequalsizeorscalar(arr,w)))
     error('seizmo:arrcut:badInput',...
         'W & ARR must be equal sized real valued arrays!');
+end
+if(ischar(color))
+    % keep 'none' or try name2rgb (it errors if not valid)
+    if(~strcmpi(color,'none'))
+        color=name2rgb(color);
+    end
+elseif(~isreal(color) || ndims(color)~=2 || any(color(:)<0 | color(:)>1)...
+        || size(color,2)~=3 || ~any(size(color,1)~=[1 numel(dd)]))
+    error('seizmo:arrcut:badInput',...
+        'Numeric COLOR must be a valid rgb triplet!');
 end
 if(~isempty(ax) && (numel(ax)~=2 || ~isreal(ax)))
     error('seizmo:arrcut:badInput',...
@@ -148,15 +166,23 @@ hold(ax(2),'on');
 
 % draw the points (w/ or w/o errorbars)
 if(isempty(err))
-    hpnts1=plot(ax(1),dd,arr,'ko');
+    hpnts1=scatter(ax(1),dd,arr,[],color,'filled','markeredgecolor','k');
+    drawnow;
     set(hpnts1,'tag','points');
-    hpnts2=plot(ax(2),dd,resid,'ko');
+    hpnts2=scatter(ax(2),dd,resid,[],color,'filled','markeredgecolor','k');
+    drawnow;
     set(hpnts2,'tag','points');
 else
-    h1=errorbar(ax(1),dd,arr,err,'ko');
+    h1=errorbar(ax(1),dd,arr,err,'k.');
     set(h1,'tag','errorbars');
-    h2=errorbar(ax(2),dd,resid,err,'ko');
+    hpnts1=scatter(ax(1),dd,arr,[],color,'filled','markeredgecolor','k');
+    drawnow;
+    set(hpnts1,'tag','points');
+    h2=errorbar(ax(2),dd,resid,err,'k.');
     set(h2,'tag','errorbars');
+    hpnts2=scatter(ax(2),dd,resid,[],color,'filled','markeredgecolor','k');
+    drawnow;
+    set(hpnts2,'tag','points');
 end
 hold(ax(1),'off');
 hold(ax(2),'off');

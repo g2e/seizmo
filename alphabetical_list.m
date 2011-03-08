@@ -558,6 +558,7 @@ function []=alphabetical_list()
 %<a href="matlab:help xdir">xdir</a>                           - Cross-app compatible directory listing with recursion
 %<a href="matlab:help xyz2geocentric">xyz2geocentric</a>                 - Converts coordinates from cartesian to geocentric
 %<a href="matlab:help xyz2geographic">xyz2geographic</a>                 - Converts coordinates from cartesian to geographic
+%<a href="matlab:help z2c">z2c</a>                            - Converts z-values to a color array of given color mapping & limits
 %<a href="matlab:help zerocrossings">zerocrossings</a>                  - Returns the zero-crossing times of SEIZMO records
 %<a href="matlab:help zpk2ap">zpk2ap</a>                         - Zeros-Poles-Constant to Amplitude & Phase
 %<a href="matlab:help zpk2cmplx">zpk2cmplx</a>                      - Zeros-Poles-Constant to Complex Spectra

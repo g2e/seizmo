@@ -127,9 +127,10 @@ function [varargout]=mmap(varargin)
 %        Sep. 16, 2010 - changed eventmarkersize to 75 for looks
 %        Oct. 10, 2010 - changed eventmarkersize to 150 for looks
 %        Feb. 10, 2011 - namechange: maplocations => mmap, h1 line changed
+%        Mar.  6, 2011 - fix bug in longitude wrapping
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2011 at 20:30 GMT
+%     Last Updated Mar.  6, 2011 at 20:30 GMT
 
 % todo:
 
@@ -367,17 +368,21 @@ m_grid('color',fg,gopt{:});
 set(findobj(ax,'tag','m_grid_color'),'facecolor',sea);
 
 % wrap longitudes to plot
-while(any(abs(stlo-mean(MAP_VAR_LIST.longs))>180))
-    stlo(stlo<MAP_VAR_LIST.longs(1))=...
-        stlo(stlo<MAP_VAR_LIST.longs(1))+360; %#ok
+while(any(stlo-MAP_VAR_LIST.longs(2)>0))
     stlo(stlo>MAP_VAR_LIST.longs(2))=...
         stlo(stlo>MAP_VAR_LIST.longs(2))-360; %#ok
 end
-while(any(abs(evlo-mean(MAP_VAR_LIST.longs))>180))
-    evlo(evlo<MAP_VAR_LIST.longs(1))=...
-        evlo(evlo<MAP_VAR_LIST.longs(1))+360; %#ok
+while(any(stlo-MAP_VAR_LIST.longs(1)<0))
+    stlo(stlo<MAP_VAR_LIST.longs(1))=...
+        stlo(stlo<MAP_VAR_LIST.longs(1))+360; %#ok
+end
+while(any(evlo-MAP_VAR_LIST.longs(2)>0))
     evlo(evlo>MAP_VAR_LIST.longs(2))=...
         evlo(evlo>MAP_VAR_LIST.longs(2))-360; %#ok
+end
+while(any(evlo-MAP_VAR_LIST.longs(1)<0))
+    evlo(evlo<MAP_VAR_LIST.longs(1))=...
+        evlo(evlo<MAP_VAR_LIST.longs(1))+360; %#ok
 end
 
 % plot locations

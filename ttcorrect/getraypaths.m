@@ -3,23 +3,24 @@ function [paths]=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
 %
 %    Usage:    paths=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
 %
-%    Description: PATHS=GETRAYPATHS(PHASE,MOD,EVLA,EVLO,EVDP,STLA,STLO)
-%     returns a struct array containing phase paths for each
-%     PHASE/MODEL/EQ/STA pair.  PHASE should be a char or cellstr array and
-%     is case sensitive (uses TauP to parse the phase name).  MOD must be a
-%     1D model name recognized by TauP.  Lat/Lon inputs must be in degrees.
-%     Depth is in kilometers (note that this is not like the SAC format)!
+%    Description:
+%     PATHS=GETRAYPATHS(PHASE,MOD,EVLA,EVLO,EVDP,STLA,STLO) returns a
+%     struct array containing phase paths for each PHASE/MODEL/EQ/STA pair.
+%     PHASE should be a char or cellstr array and is case sensitive (uses
+%     TauP to parse the phase name).  MOD must be a 1D model name
+%     recognized by TauP.  Lat/Lon inputs must be in degrees.  Depth is in
+%     kilometers (note that this is not like the SAC format)!
 %
 %     This just calls TAUPPATH in a loop.
 %
 %    Notes:
 %
 %    Examples:
-%     Get some phase paths corresponding to a dataset:
-%      [stla,stlo,evla,evlo,evdp]=getheader(data,'stla','stlo',...
+%     % Get some phase paths corresponding to a dataset:
+%     [stla,stlo,evla,evlo,evdp]=getheader(data,'stla','stlo',...
 %                                          'evla','evlo','evdp');
-%      evdp=evdp/1000; % m2km
-%      paths=getraypaths('P','prem',evla,evlo,evdp,stla,stlo);
+%     evdp=evdp/1000; % m2km
+%     paths=getraypaths('P','prem',evla,evlo,evdp,stla,stlo);
 %
 %    See also: TAUPPATH, MANCOR, CRUST2LESS_RAYPATHS, TRIM_DEPTHS_RAYPATHS,
 %              EXTRACT_UPSWING_RAYPATHS
@@ -28,9 +29,10 @@ function [paths]=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
 %        May  31, 2010 - initial version
 %        June  3, 2010 - verbose support
 %        June  4, 2010 - paths reshapes to match inputs
+%        Mar.  7, 2011 - don't cover up error for debugging
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  4, 2010 at 13:45 GMT
+%     Last Updated Mar.  7, 2011 at 13:45 GMT
 
 % todo:
 
@@ -79,11 +81,19 @@ try
     i=nph;
     tmp=tauppath('ph',phase{i},'mod',mod{i},'dep',evdp(i),...
         'ev',[evla(i) evlo(i)],'st',[stla(i) stlo(i)]);
+    if(isempty(tmp))
+        error('seizmo:getraypaths:badPath',...
+            'Could not retrieve path for EQ/STA pair: %d',i);
+    end
     paths(i)=tmp(1); % return only the first arrival for each set
     if(verbose); print_time_left(1,nph); end
     for i=1:nph-1
         tmp=tauppath('ph',phase{i},'mod',mod{i},'dep',evdp(i),...
             'ev',[evla(i) evlo(i)],'st',[stla(i) stlo(i)]);
+        if(isempty(tmp))
+            error('seizmo:getraypaths:badPath',...
+                'Could not retrieve path for EQ/STA pair: %d',i);
+        end
         paths(i)=tmp(1); % return only the first arrival for each set
         if(verbose); print_time_left(i+1,nph); end
     end
@@ -91,8 +101,7 @@ try
     % reshape to match input size
     paths=reshape(paths,size(evla));
 catch
-    error('seizmo:getraypaths:badPath',...
-        'Could not retrieve path for EQ/STA pair: %d',i);
+    error(lasterror);
 end
 
 end
