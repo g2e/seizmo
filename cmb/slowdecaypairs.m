@@ -1,22 +1,25 @@
 function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %SLOWDECAYPAIRS    Returns 2-station measurements of slowness & decay rate
 %
-%    Usage:    pf=slowdecaypairs(results,azrng,gcrng)
+%    Usage:    pf=slowdecaypairs(results,azmax,gcmin)
+%              pf=slowdecaypairs(results,azrng,gcrng)
 %              pf=slowdecaypairs(results,azrng,gcrng,odir)
 %
 %    Description:
-%     PF=SLOWDECAYPAIRS(RESULTS,AZRNG,GCRNG) takes the relative arrival
+%     PF=SLOWDECAYPAIRS(RESULTS,AZMAX,GCMIN) takes the relative arrival
 %     time and amplitude measurements contained in RESULTS produced by
 %     CMB_1ST_PASS, CMB_CLUSTERING, CMB_OUTLIERS, or CMB_2ND_PASS and
 %     calculates the slowness and decay rate between every pair of stations
-%     within the criteria set by azimuthal range AZRNG and distance range
-%     GCRNG.  Note that AZRNG & GCRNG are relative ranges, meaning an AZRNG
-%     of [0 5] will find all pairs within 5 degrees of azimuth of one
-%     another.  As a special case, if AZRNG is scalar then the value is
-%     taken as the maximum azimuthal difference.  If GCRNG is scalar the
-%     value is taken as the minimum degree distance.  The output PF is a
-%     struct with as many elements as there are pairs found.  The format of
-%     the PF struct is described in the Notes section below.
+%     with an azimuth difference less than AZMAX and great-circle distance
+%     difference greater than GCMIN.  The output PF is a struct with as
+%     many elements as there are pairs found.  The format of the PF struct
+%     is described in the Notes section below.
+%
+%     PF=SLOWDECAYPAIRS(RESULTS,AZRNG,GCRNG) sets profile criteria as
+%     azimuthal range AZRNG and distance range GCRNG.  Both are in degrees
+%     and given as [MIN MAX].  Note that AZRNG & GCRNG are relative ranges,
+%     meaning an AZRNG of [0 5] will find all pairs within 5 degrees of
+%     azimuth of one another.
 %
 %     PF=SLOWDECAYPAIRS(RESULTS,AZRNG,GCRNG,ODIR) sets the output directory
 %     where the PF struct is saved.  By default ODIR is '.' (the current
@@ -101,9 +104,10 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %        Mar.  1, 2011 - combined write rather than individually, added
 %                        notes about output
 %        Mar.  3, 2011 - earthmodel in output name
+%        Mar. 18, 2011 - handle raypaths in correction info
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  3, 2011 at 13:35 GMT
+%     Last Updated Mar. 18, 2011 at 13:35 GMT
 
 % todo:
 
@@ -326,7 +330,7 @@ end
 function [s]=fixcorrstruct(s,good)
 fields=fieldnames(s);
 for i=1:numel(fields)
-    if(isstruct(s.(fields{i})))
+    if(isstruct(s.(fields{i})) && isscalar(s.(fields{i})))
         s.(fields{i})=fixcorrstruct(s.(fields{i}),good);
     else
         s.(fields{i})=s.(fields{i})(good);

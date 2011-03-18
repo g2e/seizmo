@@ -28,9 +28,10 @@ function [data]=setevent(data,event)
 %        Mar. 30, 2010 - imagtyp for sod is optional, kevnm/name for sod is
 %                        new optional, use mw for ndk
 %        July 30, 2010 - minor touches for new ndk setup
+%        Mar. 17, 2011 - fixed moment magnitude formula, round to hundredth
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 30, 2010 at 22:25 GMT
+%     Last Updated Mar. 17, 2011 at 22:25 GMT
 
 % todo:
 
@@ -91,8 +92,8 @@ try
         end
         
         % get the magnitude
-        mw=(2/3)*log10(event.scalarmoment*10^event.exponent)-10.7;
-        mw=round(mw*10)/10;
+        mw=(2/3)*(log10(event.scalarmoment*10^event.exponent)-16.1);
+        mw=round(mw*100)/100;
         
         % add info to header
         data=changeheader(data,...

@@ -100,9 +100,10 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %        Mar.  1, 2011 - combined write rather than individually, added
 %                        notes about output
 %        Mar.  2, 2011 - earthmodel in output name
+%        Mar. 18, 2011 - handle raypaths in correction info
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  2, 2011 at 13:35 GMT
+%     Last Updated Mar. 18, 2011 at 13:35 GMT
 
 % todo:
 
@@ -306,7 +307,7 @@ end
 function [s]=fixcorrstruct(s,good)
 fields=fieldnames(s);
 for i=1:numel(fields)
-    if(isstruct(s.(fields{i})))
+    if(isstruct(s.(fields{i})) && isscalar(s.(fields{i})))
         s.(fields{i})=fixcorrstruct(s.(fields{i}),good);
     else
         s.(fields{i})=s.(fields{i})(good);

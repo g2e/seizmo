@@ -28,18 +28,22 @@ function [u]=radpat(mt,theta,phi,type)
 %     % Grab a cmt and get the P-wave displacement pattern:
 %     [theta,phi]=meshgrid(0:180,0:360);
 %     cmt=findcmt();
-%     u_p=radpat(cmt,theta,phi,'p');
-%     figure; s=surface(x,y,z,'facecolor','texturemap','cdata',u_p');
+%     u_p=radpat(cmt,theta(:),phi(:),'p');
+%     u_p=reshape(u_p,size(theta));
+%     [x,y,z]=sphere(50);
+%     figure;
+%     s=surface(x,y,z,'facecolor','texturemap','cdata',u_p');
 %     axis vis3d
 %
-%    See also: FINDCMT, BB
+%    See also: FINDCMT, BB, RAYP2INC
 
 %     Version History:
 %        Mar.  8, 2011 - initial version
+%        Mar. 11, 2011 - improved struct checking
 %
 %     Written by Ken Creager (kcc+ess/washington/edu)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2011 at 23:55 GMT
+%     Last Updated Mar. 11, 2011 at 23:55 GMT
 
 % todo:
 
@@ -55,8 +59,18 @@ if(isstruct(mt) && isscalar(mt)) % global cmt struct
     if(~all(isfield(mt,{'mrr', 'mtt' 'mpp' 'mrt' 'mrp' 'mtp'})))
         error('seizmo:radpat:badInput',...
             'MT struct must be have fields: mrr mtt mpp mrt mrp mtp !');
+    elseif(~isscalar(mt.mtt))
+        error('seizmo:radpat:badInput',...
+            'MT struct fields must be scalar!');
     end
-    mt=[mt.mtt mt.mtp mt.mrt; mt.mtp mt.mpp mt.mrp; mt.mrt mt.mrp mt.mrr];
+    try
+        mt=[mt.mtt mt.mtp mt.mrt;
+            mt.mtp mt.mpp mt.mrp;
+            mt.mrt mt.mrp mt.mrr];
+    catch
+        error('seizmo:radpat:badInput',...
+            'MT struct fields must be scalar!');
+    end
     mt(2:2:8)=-mt(2:2:8);
 elseif(isequal(size(mt),[1 6])) % (Mrr,Mtt,Mpp,Mrt,Mrp,Mtp)
     % convert to 3x3 in ray coordinates (aki & richards)

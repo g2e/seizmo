@@ -58,9 +58,10 @@ function [cmts]=findcmts(varargin)
 %                        STARTTIME & ENDTIME to [1962 1] & now, added
 %                        examples
 %        Feb. 11, 2011 - fix name/nullaxis option conflict
+%        Mar. 11, 2011 - fix null axis bug, add lonrng/latrng, fix name bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 21:30 GMT
+%     Last Updated Mar. 11, 2011 at 21:30 GMT
 
 % todo:
 % - add % double couple
@@ -106,7 +107,7 @@ idx=(timediff(opt.STARTTIME,[opt.CATALOG.year opt.CATALOG.month ...
     & (opt.NAXISPLUNGE(2)>=opt.CATALOG.plunge2);
 
 % name idx
-if(~isempty(opt.NAME))
+if(isfield(opt,'NAME') && ~isempty(opt.NAME))
     idx0=false(size(idx));
     for i=1:numel(opt.NAME)
         idx0=idx0 | ~cellfun('isempty',...
@@ -135,7 +136,7 @@ end
 % defaults
 varargin=[{'st' [1962 1] 'et' datevec(now) 'cat' 'both' 'mw' [0 10] ...
     'ms' [0 10] 'mb' [0 10] 'lat' [-90 90] 'lon' [-180 180] ...
-    'dep' [0 1000] 'na' [] 'hd' [-9999 9999] 'cs' [-9999 9999] ...
+    'dep' [0 1000] 'na' [0 90] 'hd' [-9999 9999] 'cs' [-9999 9999] ...
     'tax' [0 90] 'nax' [0 90]} varargin];
 
 % require options are strings
@@ -204,7 +205,7 @@ for i=1:2:numel(varargin)
                     'NUMSECS must be a real-valued positive scalar!');
             end
             et=varargin(i:i+1);
-        case {'latrange' 'lat' 'la'}
+        case {'latrange' 'latrng' 'lat' 'la'}
             % check
             if(~isreal(varargin{i+1}) ...
                     || ~isequal(size(varargin{i+1}),[1 2]) ...
@@ -213,7 +214,7 @@ for i=1:2:numel(varargin)
                     'LATRANGE must be in the format [LO HI]!');
             end
             opt.LATRANGE=varargin{i+1};
-        case {'lonrange' 'lon' 'lo'}
+        case {'lonrange' 'lonrng' 'lon' 'lo'}
             % check
             if(~isreal(varargin{i+1}) ...
                     || ~isequal(size(varargin{i+1}),[1 2]) ...

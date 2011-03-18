@@ -28,7 +28,6 @@ function [info]=multibandalign(data,varargin)
 %       filterstyle     - filter style (default is 'butter')
 %       filterorder     - filter order (default is 4)
 %       filterpasses    - number of passes (default is 1)
-%       fast            - fast mode (true)
 %       auto            - fully automated mode (false)
 %       zxing           - zero-crossing windowing (true)
 %       zxoffset        - auto mode: # zero xings from guess to win start
@@ -90,9 +89,11 @@ function [info]=multibandalign(data,varargin)
 %        Feb. 26, 2011 - fix zeroxing bug
 %        Mar.  1, 2011 - fix winnow not using its state, better examples
 %        Mar.  7, 2011 - winnow is off by default (annoying)
+%        Mar. 17, 2011 - only uses useralign_auto now (no poweruser mode),
+%                        usermoveout added to main menu
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  7, 2011 at 12:25 GMT
+%     Last Updated Mar. 17, 2011 at 12:25 GMT
 
 % todo:
 % - smarter initial window is needed to reduce later arrivals messing up
@@ -139,7 +140,7 @@ try
     
     % preallocate output
     info([])=struct('useralign',[],'filter',[],'initwin',[],...
-        'usersnr',[],'userwinnow',[]);
+        'usermoveout',[],'usersnr',[],'userwinnow',[]);
     
     % require o field is set to the same value (within +/- 2 millisec)
     o=getheader(data,'o');
@@ -369,110 +370,47 @@ try
             continue;
         end
         
-        % fast vs control
-        if(p.fast)
-            % quiet align
-            [info(i).useralign,info(i).useralign.xc,...
-                info(i).useralign.data]=useralign_quiet(data0,...
-                'spacing',1/(4*p.bank(i,3)),'absxc',false,...
-                'estarr',zeros(nn,1),'snr',snr,...
-                'window',info(i).usersnr.signalwin,varargin{:});
-            
-            % Get Amplitude Info
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % THIS IS THE MOST VISUALLY APPEALING
-            % BUT ERRORS TEND TO BE OVERESTIMATED BY ~10%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            [info(i).useralign.data,scale]=normalize(...
-                info(i).useralign.data);
-            info(i).useralign.solution.amp=scale;
-            info(i).useralign.solution.amperr=scale./snr;
-            
-            % plot alignment
-            ax=plot2(info(i).useralign.data);
-            if(ishandle(ax))
-                saveas(get(ax,'parent'),fullfile(p.figdir,...
-                    [datestr(now,30) '_' p.runname '_band_' istr ...
-                    '_aligned.fig']));
-            end
-            
-            % only ask if satisfied if not auto
-            if(~p.auto && ~user_satisfied)
-                close(get(ax,'parent'));
-                last=i;
-                continue;
-            else
-                close(get(ax,'parent'));
-            end
-            
-            % use alignment for next band
-            if(i<size(p.bank,1))
-                goodarr=info(i).useralign.solution.arr;
-                goodidx=snridx;
-                lags(goodidx,goodidx)=goodarr(:,ones(1,nn))...
-                    -goodarr(:,ones(1,nn))';
-                idx(goodidx,goodidx)=i+1;
-            end
+        % quiet align
+        [info(i).useralign,info(i).useralign.xc,...
+            info(i).useralign.data]=useralign_quiet(data0,...
+            'spacing',1/(4*p.bank(i,3)),'absxc',false,...
+            'estarr',zeros(nn,1),'snr',snr,...
+            'window',info(i).usersnr.signalwin,varargin{:});
+        
+        % Get Amplitude Info
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        % THIS IS THE MOST VISUALLY APPEALING
+        % BUT ERRORS TEND TO BE OVERESTIMATED BY ~10%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        [info(i).useralign.data,scale]=normalize(...
+            info(i).useralign.data);
+        info(i).useralign.solution.amp=scale;
+        info(i).useralign.solution.amperr=scale./snr;
+        
+        % plot alignment
+        ax=plot2(info(i).useralign.data);
+        if(ishandle(ax))
+            saveas(get(ax,'parent'),fullfile(p.figdir,...
+                [datestr(now,30) '_' p.runname '_band_' istr ...
+                '_aligned.fig']));
+        end
+        
+        % only ask if satisfied if not auto
+        if(~p.auto && ~user_satisfied)
+            close(get(ax,'parent'));
+            last=i;
+            continue;
         else
-            try
-                % detailed alignment
-                [info(i).useralign,info(i).useralign.xc,...
-                    info(i).useralign.data]=useralign(data0,...
-                    'spacing',1/(4*p.bank(i,3)),'absxc',false,...
-                    'estarr',zeros(nn,1),'snr',snr,...
-                    'window',info(i).usersnr.signalwin,varargin{:});
-                if(any(ishandle(info(i).useralign.handles)))
-                    ax=info(i).useralign.handles(...
-                        ishandle(info(i).useralign.handles));
-                    saveas(get(ax(1),'parent'),fullfile(p.figdir,...
-                        [datestr(now,30) '_' p.runname '_band_' istr ...
-                        '_useralign.fig']));
-                    close(get(ax(1),'parent'));
-                end
-            catch
-                % ask to try again
-                if(~broken_code)
-                    continue;
-                else
-                    i=i+1;
-                    continue;
-                end
-            end
-            
-            % amplitude analysis
-            % - amplitude is the peak2peak
-            % - amplitude "standard error" is given my amp/snr
-            %   where snr is the peak2peak amplitude of the signal
-            %   to the rms of the noise
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % THIS IS IF RMS OF THE SIGNAL IS USED FOR SNR
-            %scale=getvaluefun(info(i).useralign.data,@(x)sqrt(mean(x.^2)));
-            %info(i).useralign.data=divide(info(i).useralign.data,scale);
-            %info(i).useralign.solution.amp=scale;
-            %info(i).useralign.solution.amperr=scale./snr;
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % THIS IS IF PEAK2RMS IS USED FOR SNR
-            %scale=(gh(info(i).useralign.data,'depmax')...
-            %    -gh(info(i).useralign.data,'depmin'))/2;
-            %info(i).useralign.data=divide(info(i).useralign.data,scale);
-            %info(i).useralign.solution.amp=scale;
-            %info(i).useralign.solution.amperr=scale./snr;
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % THIS IS THE MOST VISUALLY APPEALING
-            % BUT ERRORS TEND TO BE OVERESTIMATED BY ~10%
-            [info(i).useralign.data,scale]=normalize(...
-                info(i).useralign.data);
-            info(i).useralign.solution.amp=scale;
-            info(i).useralign.solution.amperr=scale./snr;
-            
-            % ask to utilize for subsequent bands
-            if(i<size(p.bank,1) && use_align)
-                goodarr=info(i).useralign.solution.arr;
-                goodidx=snridx;
-                lags(goodidx,goodidx)=goodarr(:,ones(1,nn))...
-                    -goodarr(:,ones(1,nn))';
-                idx(goodidx,goodidx)=i+1;
-            end
+            close(get(ax,'parent'));
+        end
+        
+        % use alignment for next band
+        if(i<size(p.bank,1))
+            goodarr=info(i).useralign.solution.arr;
+            goodidx=snridx;
+            lags(goodidx,goodidx)=goodarr(:,ones(1,nn))...
+                -goodarr(:,ones(1,nn))';
+            idx(goodidx,goodidx)=i+1;
         end
         
         % we aligned this band so lets use its info for later bands
@@ -550,18 +488,15 @@ if(isempty(info.initwin))
     info.initwin=p.initwin;
 end
 
-% default modestr
-if(p.fast)
-    modestr='POWERUSER';
-else
-    modestr='FAST';
-end
-
 % shift if phase given
 if(~isempty(p.phase))
     [t,n]=getarrival(data,{p.phase p.phase(1)});
     data=timeshift(data,-t,strcat('it',num2str(n)));
 end
+
+% additional moveout/time shifts
+moveout=0;
+shift=zeros(size(data));
 
 % ask the user if they wish to continue
 skip=0; happy_user=false; ax=-1;
@@ -573,26 +508,16 @@ while(~happy_user)
     
     choice=menu('What to do with this filter band?',...
         'Align The Waveforms!',...
-        'Adjust Initial Window',...
         ['Adjust SNR Cutoff (' num2str(p.snrcut) ')'],...
-        ['Change To ' modestr ' Mode'],...
+        'Adjust Initial Window',...
+        'Adjust Moveout',...
         'Skip This Filter Band',...
         'Skip Remaining Filter Bands',...
         'Jump To Filter Band ...');
     switch choice
         case 1 % process
             happy_user=true;
-        case 2 % adjust window
-            % get new initial window
-            if(ishandle(ax)); close(get(ax,'parent')); end
-            [win,win,ax]=userwindow(data,info.initwin);
-            if(ishandle(ax)); close(get(ax,'parent')); end
-            
-            % default initial window if none
-            if(~isempty(win.limits))
-                info.initwin=win.limits;
-            end
-        case 3 % snrcut
+        case 2 % snrcut
             tmp=inputdlg(...
                 ['SNR CutOff? [' num2str(p.snrcut) ']:'],...
                 'Enter SNR CutOff',1,{num2str(p.snrcut)});
@@ -606,14 +531,27 @@ while(~happy_user)
                     % do not change snrcut
                 end
             end
-        case 4 % switch mode
-            if(p.fast)
-                p.fast=false;
-                modestr='FAST';
-            else
-                p.fast=true;
-                modestr='POWERUSER';
+        case 3 % adjust window
+            % get new initial window
+            if(ishandle(ax)); close(get(ax,'parent')); end
+            [win,win,ax]=userwindow(data,info.initwin);
+            if(ishandle(ax)); close(get(ax,'parent')); end
+            
+            % default initial window if none
+            if(~isempty(win.limits))
+                info.initwin=win.limits;
             end
+        case 4 % moveout
+            % get new initial window
+            if(ishandle(ax)); close(get(ax,'parent')); end
+            [mvo,mvo,ax]=usermoveout(...
+                cut(data,info.initwin(1),info.initwin(2)));
+            if(ishandle(ax)); close(get(ax,'parent')); end
+            data=timeshift(data,mvo.shift);
+            
+            % get total moveout and time shifts
+            shift=shift+mvo.shift;
+            moveout=moveout+mvo.moveout;
         case 5 % skip this band
             happy_user=true;
             skip=1;
@@ -644,6 +582,8 @@ end
 
 % implement window
 if(choice==1); data=cut(data,info.initwin(1),info.initwin(2)); end
+info.usermoveout.moveout=moveout;
+info.usermoveout.shift=shift;
 
 end
 
@@ -663,14 +603,13 @@ p.noisewin=[-300 -20];
 p.signalwin=[-10 70];
 p.bank=filter_bank([1/50 1/5],'variable',0.2,0.1);
 p.runname=['multibandalign_' datestr(now,30)];
-p.snrcut=3;
+p.snrcut=5;
 p.snrmethod='peak2rms';
 p.filt.type='bandpass';
 p.filt.style='butter';
 p.filt.order=4;
 p.filt.passes=1;
 p.phase=[];   % pre-align phase field (only for core-diff currently)
-p.fast=true;  % fast multibandalign flag
 p.auto=false; % auto multibandalign (uses zx window parameters if zxing)
 p.zxing=true; % zero-crossing windowing flag (off uses signalwin or user)
 p.zxwidth=6;  % number of zero crossings increments in window if auto
@@ -792,14 +731,6 @@ for i=1:2:nargin
                     'ZXOFFSET must be an integer!');
             end
             p.zxoffset=varargin{i+1};
-            keep(i:i+1)=false;
-        case 'fast'
-            if(~isscalar(varargin{i+1}) || (~islogical(varargin{i+1}) ...
-                    && ~isreal(varargin{i+1})))
-                error('seizmo:multibandalign:badInput',...
-                    'FAST must be TRUE or FALSE!');
-            end
-            p.fast=varargin{i+1};
             keep(i:i+1)=false;
         case 'initwin'
             if(~isequal(size(varargin{i+1}),[1 2]) ...

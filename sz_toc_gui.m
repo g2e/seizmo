@@ -3,6 +3,7 @@ function []=sz_toc_gui()
 %<a href="matlab:help adjustclusters">adjustclusters</a>                 - Combine & Adjust timing/polarity of clusters graphically
 %<a href="matlab:help ampcut">ampcut</a>                         - Cut amplitude outliers interactively
 %<a href="matlab:help arrcut">arrcut</a>                         - Cut arrival time outliers interactively
+%<a href="matlab:help delazcut">delazcut</a>                       - Interactively select degree-distance & azimuth range
 %<a href="matlab:help errcut">errcut</a>                         - Cut high error outliers interactively
 %<a href="matlab:help multibandalign">multibandalign</a>                 - Aligns signal at multiple frequency bands
 %<a href="matlab:help pickstack">pickstack</a>                      - Interactive picking of signal onset in SEIZMO record stack

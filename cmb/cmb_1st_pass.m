@@ -17,13 +17,20 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %     If one or both input arguments are omitted, then an interface is
 %     presented to graphically select them.
 %
-%     RESULTS=CMB_1ST_PASS(PHASE,INDIR,'OPTION',VALUE,...) passes
-%     option/value pairs to MULTIBANDALIGN to adjust its parameters.  See
+%     RESULTS=CMB_1ST_PASS(PHASE,INDIR,'OPTION',VALUE,...) sets specific
+%     options pertinent to the processing.  The options directly used by
+%     CMB_1ST_PASS are:
+%      'odir'       - output directory (current directory by default)
+%      'figdir'     - figure output directory (current dir by default)
+%      'minradampl' - minimum radiation pattern amplitude (0.2 by default)
+%      'delazcut'   - true/false, graphical dataset selection by dist/azi
+%     Addtional option/value pairs are assumed to be MULTIBANDALIGN options
+%     and so are passed on to it to adjust its parameters.  See
 %     MULTIBANDALIGN for more details.
 %
 %    Notes:
 %     - The data will be filtered between 25s & 80s.  This provides a
-%       frequency range that is common to core-diffracted waves from 90 to
+%       frequency range that is common to core-diffracted waves from 95 to
 %       170 degrees from the earthquake which improves the correlation
 %       between the waveforms.
 %     - All figures and results are saved in the current directory with a
@@ -54,9 +61,15 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %        Jan. 31, 2011 - allow no output, odir catching
 %        Feb.  2, 2011 - update for kuser0-2 containing split model name,
 %                        fix odir bug
+%        Mar. 10, 2011 - calculate corrections beforehand (to allow better
+%                        estimated alignment), use cmt radiation to cut out
+%                        near-nodal stations and set polarities, delaz cut
+%                        option
+%        Mar. 17, 2011 - corrections are not recalculated, fixed breakage
+%                        when no waveforms found
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2011 at 13:35 GMT
+%     Last Updated Mar. 17, 2011 at 13:35 GMT
 
 % todo:
 
@@ -93,24 +106,44 @@ elseif(~isdir(indir))
         'INDIR must be a directory!');
 end
 
-% default/extract odir
+% default/extract odir/minradampl/delazcut
 odir='.';
+minradampl=0.2;
+cut_by_delaz=false;
+figdir='';
 if(~iscellstr(varargin(1:2:end)))
     error('seizmo:cmb_1st_pass:badInput',...
         'OPTION must all be strings!');
 end
+keep=true(nargin-2,1);
 for i=1:2:nargin-2
     switch lower(varargin{i})
         case {'outdir' 'odir'}
-            varargin{i}='figdir';
             odir=varargin{i+1};
+            if(isempty(figdir))
+                varargin{i}='figdir';
+                figdir=odir;
+            end
+        case 'minradampl'
+            minradampl=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'delazcut'
+            cut_by_delaz=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'figdir'
+            figdir=varargin{i+1};
     end
 end
+varargin=varargin(keep);
+if(isempty(figdir)); figdir='.'; end
 
-% check odir
+% check odir/figdir
 if(~isstring(odir))
     error('seizmo:cmb_1st_pass:badInput',...
         'ODIR must be a string!');
+elseif(~isstring(figdir))
+    error('seizmo:cmb_1st_pass:badInput',...
+        'FIGDIR must be a string!');
 end
 
 % create odir if not there
@@ -119,6 +152,25 @@ if(~ok)
     warning(msgid,msg);
     error('seizmo:cmb_1st_pass:pathBad',...
         'Cannot create directory: %s',odir);
+end
+[ok,msg,msgid]=mkdir(figdir);
+if(~ok)
+    warning(msgid,msg);
+    error('seizmo:cmb_1st_pass:pathBad',...
+        'Cannot create directory: %s',figdir);
+end
+
+% check minimum radiation pattern amplitude
+if(~isreal(minradampl) || ~isscalar(minradampl) || minradampl<0 ...
+        || minradampl>1)
+    error('seizmo:cmb_1st_pass:badInput',...
+        'MINRADAMPL must be a scalar from 0 & 1 !');
+end
+
+% check delazcut
+if(~islogical(cut_by_delaz) || ~isscalar(cut_by_delaz))
+    error('seizmo:cmb_1st_pass:badInput',...
+        'DELAZCUT must be true or false!');
 end
 
 % get date directories
@@ -185,13 +237,68 @@ for i=1:numel(s)
     % skip if no waveforms
     if(~numel(data))
         warning('seizmo:cmb_1st_pass:noWaveforms',...
-            'No %s waveforms found for event: %s',phase,dates(s(i)).name)
+            'No %s waveforms found for event: %s',...
+            phase,dates(s(i)).name)
+        continue;
+    end
+    
+    % get corrections
+    corrections=cmb_corrections(phase,data);
+    
+    % remove stations near nodal planes
+    good=abs(corrections.radpatcor)>minradampl;
+    data=data(good);
+    corrections=fixcorrstruct(corrections,good);
+    disp([num2str(sum(~good)) ' Near-Nodal Stations Removed']);
+    
+    % skip if no waveforms
+    if(~numel(data))
+        warning('seizmo:cmb_1st_pass:noWaveforms',...
+            'No %s waveforms with fitting criteria found for event: %s',...
+            phase,dates(s(i)).name)
+        continue;
+    end
+    
+    % delazcut if desired
+    if(cut_by_delaz)
+        [ev,st]=getheader(data,'ev','st');
+        [bad,azlim,ddlim,ax]=delazcut(ev(1,1:2),st(:,1:2),[],[],[],...
+            'go',{'xaxislocation','middle'});
+        data(bad)=[];
+        corrections=fixcorrstruct(corrections,~bad);
+        disp([num2str(sum(bad)) ...
+            ' Stations Outside Distance-Azimuth Limits Removed']);
+        if(ishandle(ax))
+            saveas(get(ax,'parent'),fullfile(figdir,...
+                [datestr(now,30) '_' runname '_band_1_delazcut.fig']));
+            close(get(ax,'parent'));
+        end
+    else
+        azlim=[0 360];
+        ddlim=[0 180];
+    end
+    
+    % skip if no waveforms
+    if(~numel(data))
+        warning('seizmo:cmb_1st_pass:noWaveforms',...
+            'No %s waveforms with fitting criteria found for event: %s',...
+            phase,dates(s(i)).name)
         continue;
     end
     
     % time shift to phase
     [t,n]=getarrival(data,{truephase truephase(1)});
-    data=timeshift(data,-t,strcat('it',num2str(n)));
+    switch phase
+        case 'Pdiff'
+            t=t+corrections.ellcor ...
+                +corrections.crucor.prem ...
+                +corrections.mancor.hmsl06p.upswing;
+        case {'SHdiff' 'SVdiff'}
+            t=t+corrections.ellcor ...
+                +corrections.crucor.prem ...
+                +corrections.mancor.hmsl06s.upswing;
+    end
+    data=timeshift(data,-t);
     
     % check if all synthetics (only reflectivity synthetics for now)
     % - reflect2seizmo conventions here
@@ -208,10 +315,13 @@ for i=1:numel(s)
     % read data
     data=readdata(data);
     
+    % fix polarity
+    data=multiply(data,sign(corrections.radpatcor));
+    
     % sort by distance
     data=sortbyfield(data,'gcarc');
     
-    % set up a singleband for multibandalign
+    % set up a single bandpass for multibandalign
     bank=1./[42.5 80 25];
     
     % multibandalign
@@ -219,8 +329,9 @@ for i=1:numel(s)
         'phase',truephase,...
         'bank',bank,...
         'runname',runname,...
-        'absxc',true,...
+        'absxc',false,...
         'estarr',[],...
+        'estpol',1,...
         'wgtpow',2,varargin{:});
     
     % matlab bug workaround
@@ -234,10 +345,15 @@ for i=1:numel(s)
     tmp.phase=phase;
     tmp.synthetics=issynth;
     tmp.earthmodel=synmodel;
+    tmp.azlim=azlim;
+    tmp.ddlim=ddlim;
     
     % add corrections
     if(~isempty(tmp.useralign))
-        tmp.corrections=cmb_corrections(phase,tmp.useralign.data);
+        good=find(tmp.usersnr.snr>=tmp.usersnr.snrcut);
+        good(tmp.userwinnow.cut)=[];
+        tmp.corrections=fixcorrstruct(corrections,good);
+        %tmp.corrections=cmb_corrections(phase,tmp.useralign.data);
     else
         tmp.corrections=[];
     end
@@ -282,4 +398,16 @@ if(nargout && ~numel(varargout))
         'It appears there was no data available for this phase!');
 end
 
+end
+
+
+function [s]=fixcorrstruct(s,good)
+fields=fieldnames(s);
+for i=1:numel(fields)
+    if(isstruct(s.(fields{i})) && isscalar(s.(fields{i})))
+        s.(fields{i})=fixcorrstruct(s.(fields{i}),good);
+    else
+        s.(fields{i})=s.(fields{i})(good);
+    end
+end
 end

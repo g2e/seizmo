@@ -36,9 +36,9 @@ function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,color,ax)
 %     determining the fit.  W should be the same size as ARR.
 %
 %     BAD=ARRCUT(DD,ARR,CUTOFF,POW,ERR,W,COLOR) sets the facecolor of the
-%     points in the plots.  COLOR may be a color name, 'none', a rgb
-%     triplet, or an Nx3 array of triplets where N is the number of points.
-%     The default is 'none'.
+%     points in the plots.  COLOR may be a color name, a rgb triplet, or an
+%     Nx3 array of triplets where N is the number of points.  The default
+%     is 'w'.
 %
 %     BAD=ARRCUT(DD,ARR,CUTOFF,POW,ERR,W,COLOR,AX) draws the plot in the
 %     axes given by AX.  AX should be 2 axes handles (the 1st is dist vs
@@ -54,7 +54,7 @@ function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,color,ax)
 %    Examples:
 %     % Fit a sin curve with a 4th power polynomial and remove outliers:
 %     dd=5*rand(1,100);
-%     arr=sin(x)+randn(1,100);
+%     arr=sin(dd)+randn(1,100);
 %     arrcut(dd,arr,2,4,rand(1,100));
 %
 %    See also: AMPCUT, ERRCUT, SNRCUT, POPCUT
@@ -67,9 +67,10 @@ function [bad,varargout]=arrcut(dd,arr,cutoff,pow,err,w,color,ax)
 %        Jan.  7, 2011 - using errorbar now
 %        Jan. 26, 2011 - draw small residual plot below dist vs time plot
 %        Mar.  6, 2011 - coloring of marker faces
+%        Mar. 10, 2011 - fix color issues
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  6, 2011 at 23:55 GMT
+%     Last Updated Mar. 10, 2011 at 23:55 GMT
 
 % todo:
 
@@ -81,7 +82,7 @@ if(nargin<3 || isempty(cutoff)); cutoff=nan; end
 if(nargin<4 || isempty(pow)); pow=1; end
 if(nargin<5); err=[]; end
 if(nargin<6); w=[]; end
-if(nargin<7); color='none'; end
+if(nargin<7 || isempty(color)); color='w'; end
 if(nargin<8); ax=[]; end
 
 % check inputs
@@ -108,11 +109,14 @@ if(~isempty(w) && (~isreal(w) || ~isequalsizeorscalar(arr,w)))
 end
 if(ischar(color))
     % keep 'none' or try name2rgb (it errors if not valid)
-    if(~strcmpi(color,'none'))
+    if(strcmpi(color,'none'))
+        color='w';
+    else
         color=name2rgb(color);
     end
-elseif(~isreal(color) || ndims(color)~=2 || any(color(:)<0 | color(:)>1)...
-        || size(color,2)~=3 || ~any(size(color,1)~=[1 numel(dd)]))
+elseif(~isreal(color) || ndims(color)~=2 ...
+        || any(color(:)<0 | color(:)>1) || size(color,2)~=3 ...
+        || ~any(size(color,1)~=[1 numel(dd)]))
     error('seizmo:arrcut:badInput',...
         'Numeric COLOR must be a valid rgb triplet!');
 end

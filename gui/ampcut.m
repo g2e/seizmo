@@ -36,9 +36,9 @@ function [bad,varargout]=ampcut(dd,amp,cutoff,pow,err,w,color,ax)
 %     determining the fit.  W should be the same size as AMP.
 %
 %     BAD=AMPCUT(DD,AMP,CUTOFF,POW,ERR,W,COLOR)  sets the facecolor of the
-%     points in the plots.  COLOR may be a color name, 'none', a rgb
-%     triplet, or an Nx3 array of triplets where N is the number of points.
-%     The default is 'none'.
+%     points in the plots.  COLOR may be a color name, a rgb triplet, or an
+%     Nx3 array of triplets where N is the number of points.  The default
+%     is 'w'.
 %
 %     BAD=AMPCUT(DD,AMP,CUTOFF,POW,ERR,W,COLOR,AX) draws the plot in the
 %     axes given by AX.
@@ -66,9 +66,10 @@ function [bad,varargout]=ampcut(dd,amp,cutoff,pow,err,w,color,ax)
 %        Jan.  6, 2011 - proper ginput handling, use key2zoompan
 %        Jan.  7, 2011 - using errorbar now
 %        Mar.  6, 2011 - coloring of marker faces
+%        Mar. 10, 2011 - fix color issues
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  6, 2011 at 23:55 GMT
+%     Last Updated Mar. 10, 2011 at 23:55 GMT
 
 % todo:
 
@@ -80,7 +81,7 @@ if(nargin<3 || isempty(cutoff)); cutoff=3; end
 if(nargin<4 || isempty(pow)); pow=1; end
 if(nargin<5); err=[]; end
 if(nargin<6); w=[]; end
-if(nargin<7); color='none'; end
+if(nargin<7 || isempty(color)); color='w'; end
 if(nargin<8); ax=[]; end
 
 % check inputs
@@ -107,7 +108,9 @@ if(~isempty(w) && (~isreal(w) || ~isequalsizeorscalar(amp,w)))
 end
 if(ischar(color))
     % keep 'none' or try name2rgb (it errors if not valid)
-    if(~strcmpi(color,'none'))
+    if(strcmpi(color,'none'))
+        color='w';
+    else
         color=name2rgb(color);
     end
 elseif(~isreal(color) || ndims(color)~=2 || any(color(:)<0 | color(:)>1)...

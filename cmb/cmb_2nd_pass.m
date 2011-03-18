@@ -45,9 +45,10 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %        Jan. 29, 2011 - output now has creation datetime string prepended
 %        Jan. 31, 2011 - fix bug on too few high snr, allow no output, odir
 %                        catching
+%        Mar. 18, 2011 - handle raypaths in correction info
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 31, 2011 at 13:35 GMT
+%     Last Updated Mar. 18, 2011 at 13:35 GMT
 
 % todo:
 
@@ -223,7 +224,7 @@ end
 function [s]=fixcorrstruct(s,good)
 fields=fieldnames(s);
 for i=1:numel(fields)
-    if(isstruct(s.(fields{i})))
+    if(isstruct(s.(fields{i})) && isscalar(s.(fields{i})))
         s.(fields{i})=fixcorrstruct(s.(fields{i}),good);
     else
         s.(fields{i})=s.(fields{i})(good);

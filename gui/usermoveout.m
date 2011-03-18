@@ -44,9 +44,10 @@ function [data,mvo,ax]=usermoveout(data,varargin)
 %        Mar. 18, 2010 - made robust to menu closing, reorder menu buttons
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %        Jan. 17, 2011 - better nargin checking
+%        Mar. 17, 2011 - change .adjust to .shift as is originally in docs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 17, 2011 at 10:00 GMT
+%     Last Updated Mar. 17, 2011 at 10:00 GMT
 
 % todo:
 
@@ -86,13 +87,13 @@ try
     
     % default moveout
     mvo.moveout=0;
-    mvo.adjust=(gcarc-mindist)*mvo.moveout;
+    mvo.shift=(gcarc-mindist)*mvo.moveout;
     
     % outer loop - only breaks free on user command
     happy_user=false; reax={};
     while(~happy_user)
         % plot records vs distance
-        ax=recordsection(timeshift(data,mvo.adjust),varargin{:},reax{:});
+        ax=recordsection(timeshift(data,mvo.shift),varargin{:},reax{:});
         
         % get choice from user
         choice=menu('Adjust Moveout of the Data?','YES','NO');
@@ -166,7 +167,7 @@ try
                             end
                         end
                 end
-                mvo.adjust=(gcarc-mindist)*mvo.moveout;
+                mvo.shift=(gcarc-mindist)*mvo.moveout;
 
                 % close old figure
                 if(ishandle(ax))
@@ -181,7 +182,7 @@ try
     
     % apply moveout
     if(mvo.moveout)
-        data=timeshift(data,mvo.adjust);
+        data=timeshift(data,mvo.shift);
     end
     
     % toggle checking back

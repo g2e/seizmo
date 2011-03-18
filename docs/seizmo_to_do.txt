@@ -27,6 +27,18 @@ x	add weighting to all
 		geofkxchorzmap
 make noise processing more flexible (file length & overlap)
 
+plot_cmb_measurements
+    - no horizontal errorbars (combine into one?)
+    - use frequency?
+q tests on synthetics
+    - 160, 80, 40, 20, 10, 5
+affect of distance on measurements
+affect of azimuth width on measurements
+affect of minimum distance on measurements
+all Pdiff A/B/C 1st pass
+all SHdiff
+prep global on terra
+
 cmt subtoolbox
     - main thing is to plot CMTS!!!
 

@@ -190,9 +190,11 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %                        alter opt.SNR (use a new variable)
 %        Mar.  3, 2011 - fix bug that reinverts the last iteration when not
 %                        necessary (improper apriori replacement)
+%        Mar. 17, 2011 - fixed bug where est* fields could not be set to
+%                        empty once set non-empty
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  3, 2011 at 09:45 GMT
+%     Last Updated Mar. 17, 2011 at 09:45 GMT
 
 % todo:
 
@@ -587,14 +589,10 @@ end
 
 % loop over option/value pairs
 for i=1:2:nargin-1
-    % skip if empty (even unknown)
-    if(isempty(varargin{i+1}))
-        continue;
-    end
-    
     % check and add
     switch lower(varargin{i})
         case {'meth' 'method'}
+            if(isempty(varargin{i+1})); continue; end
             if(~ischar(varargin{i+1}) || ...
                     ~ismember(varargin{i+1},valid.METHOD))
                 error('seizmo:ttsolve:badInput',...
@@ -603,12 +601,14 @@ for i=1:2:nargin-1
             end
             opt.METHOD=varargin{i+1};
         case {'th' 'thresh' 'threshhold'}
+            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) || varargin{i+1}<0)
                 error('seizmo:ttsolve:badInput',...
                     'THRESH option must be a scalar >=0!');
             end
             opt.THRESH=varargin{i+1};
         case {'mt' 'mtri' 'maxtimeiter'}
+            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
                     || varargin{i+1}~=fix(varargin{i+1}))
                 error('seizmo:ttsolve:badInput',...
@@ -616,6 +616,7 @@ for i=1:2:nargin-1
             end
             opt.MTRI=varargin{i+1};
         case {'mp' 'mpri' 'maxpoliter'}
+            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
                     || varargin{i+1}~=fix(varargin{i+1}))
                 error('seizmo:ttsolve:badInput',...
@@ -623,12 +624,14 @@ for i=1:2:nargin-1
             end
             opt.MPRI=varargin{i+1};
         case {'ml' 'minlag' 'minlagerr'}
+            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) || varargin{i+1}<0)
                 error('seizmo:ttsolve:badInput',...
                     'MINLAG option must be a scalar >=0!');
             end
             opt.MINLAG=varargin{i+1};
         case {'mc' 'maxcor'}
+            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) ...
                     || varargin{i+1}<0 || varargin{i+1}>1)
                 error('seizmo:ttsolve:badInput',...
@@ -636,6 +639,7 @@ for i=1:2:nargin-1
             end
             opt.MAXCOR=varargin{i+1};
         case {'nc' 'noncon' 'nonconv' 'noncnv'}
+            if(isempty(varargin{i+1})); continue; end
             if(~ischar(varargin{i+1}) || ...
                     ~ismember(varargin{i+1},valid.NONCNV))
                 error('seizmo:ttsolve:badInput',...
@@ -644,12 +648,14 @@ for i=1:2:nargin-1
             end
             opt.NONCNV=varargin{i+1};
         case {'wp' 'wgtpow'}
+            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}))
                 error('seizmo:ttsolve:badInput',...
                     'WGTPOW option must be a real-valued scalar!');
             end
             opt.WGTPOW=varargin{i+1};
         case {'ra' 'relarr' 'dt' 'estarr' 'arr'}
+            if(isempty(varargin{i+1})); opt.ESTARR=[]; continue; end
             if(isscalar(varargin{i+1}))
                 varargin{i+1}(1:nr,1)=varargin{i+1};
             end
@@ -661,6 +667,7 @@ for i=1:2:nargin-1
             end
             opt.ESTARR=varargin{i+1};
         case {'se' 'std' 'stderr' 'esterr' 'err'}
+            if(isempty(varargin{i+1})); opt.ESTERR=[]; continue; end
             if(isscalar(varargin{i+1}))
                 varargin{i+1}(1:nr,1)=varargin{i+1};
             end
@@ -672,6 +679,7 @@ for i=1:2:nargin-1
             end
             opt.ESTERR=varargin{i+1};
         case {'rp' 'pol' 'relpol' 'estpol'}
+            if(isempty(varargin{i+1})); opt.ESTPOL=[]; continue; end
             if(isscalar(varargin{i+1}))
                 varargin{i+1}(1:nr,1)=varargin{i+1};
             end
@@ -683,6 +691,7 @@ for i=1:2:nargin-1
             end
             opt.ESTPOL=varargin{i+1};
         case {'snr'}
+            if(isempty(varargin{i+1})); continue; end
             if(isscalar(varargin{i+1}))
                 varargin{i+1}(1:nr,1)=varargin{i+1};
             end
