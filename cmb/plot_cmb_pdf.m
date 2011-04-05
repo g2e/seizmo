@@ -1,46 +1,46 @@
-function [varargout]=cmb_pdf_mtx(pf,field,p,x)
-%CMB_PDF_MTX    Plot probability space of slowness or decay constant
+function [varargout]=plot_cmb_pdf(pf,field,p,x)
+%PLOT_CMB_PDF    Plot probability space of slowness or decay constant
 %
-%    Usage:    cmb_pdf_mtx(pf,field)
-%              cmb_pdf_mtx(pf,field,ti,xi)
-%              mtx=cmb_pdf_mtx(...)
-%              [ti,xi,mtx]=cmb_pdf_mtx(...)
+%    Usage:    plot_cmb_pdf(pf,field)
+%              plot_cmb_pdf(pf,field,ti,xi)
+%              mtx=plot_cmb_pdf(...)
+%              [ti,xi,mtx]=plot_cmb_pdf(...)
 %
 %    Description:
-%     CMB_PDF_MTX(PF,FIELD) plots a PDF (probability density function) of
+%     PLOT_CMB_PDF(PF,FIELD) plots a PDF (probability density function) of
 %     the measurements indicated by FIELD stored in the profile struct PF.
 %     PF is expected to be in the format created by SLOWDECAYPROFILES or
 %     SLOWDECAYPAIRS.  FIELD is one of the following:
 %      'slow', 'cslow', 'decay', 'cdecay'
 %     where the 'c' in front means that the measurement has corrections
-%     applied for 3D heterogeneous structure of the Earth.  See
-%     SLOWDECAYPROFILES & SLOWDECAYPAIRS for more details.  The PDF is
-%     automatically scaled using the input data ranges (some padding is
-%     added to the y-range to account for the errors in the data).  The PDF
-%     is 100x100 pixels.
+%     applied (for 3D heterogeneous structure of the Earth or geometrical
+%     spreading).  See SLOWDECAYPROFILES & SLOWDECAYPAIRS for more details.
+%     The PDF is automatically scaled using the input data ranges (some
+%     padding is added to the y-range to account for the errors in the
+%     data).  The PDF is 100x100 pixels.
 %
-%     CMB_PDF_MTX(PF,FIELD,TI,XI) allows specifying the period and
+%     PLOT_CMB_PDF(PF,FIELD,TI,XI) allows specifying the period and
 %     measurement points at which PDF estimation is performed.  Values are
 %     estimated assuming the error is gaussian (the given error is 1
 %     standard deviation and the measurement itself is the mean).  XI must
 %     be regularly spaced (this is so pixel width can be established for
 %     probability determination).  Both TI & XI must be vectors.
 %
-%     PDF=CMB_PDF_MTX(...) outputs the PDF matrix.  PDF is NFxNX in size
+%     PDF=PLOT_CMB_PDF(...) outputs the PDF matrix.  PDF is NFxNX in size
 %     where NF is the number of frequency points and NX is the number of
 %     points in the measurement value space.  Use the next form if you did
 %     not supply FI & XI.
 %
-%     [TI,XI,PDF]=CMB_PDF_MTX(...) also returns the locations of the PDF in
-%     period (TI) and measurement value (XI).  See the Examples section
+%     [TI,XI,PDF]=PLOT_CMB_PDF(...) also returns the locations of the PDF
+%     in period (TI) and measurement value (XI).  See the Examples section
 %     below for how to plot this information
 %
 %    Notes:
-%     - Can be quite inaccurate when errors are subpixel.  
+%     - Can be quite inaccurate when standard deviations are subpixel.  
 %
 %    Examples:
-%     % How to plot the optional outputs:
-%     [p,x,pdf]=cmb_pdf_mtx(pf,'cslow');
+%     % A guide for how to plot the optional outputs:
+%     [p,x,pdf]=plot_cmb_pdf(pf,'cslow');
 %     fh=figure('color','k'); ax=axes('parent',fh);
 %     imagesc(p,x,pdf','parent',ax);
 %     colormap(ax,fire);
@@ -60,9 +60,10 @@ function [varargout]=cmb_pdf_mtx(pf,field,p,x)
 %        Feb. 10, 2011 - reduced plot code redundancy, use period not freq,
 %                        improved probability estimation, works with 1 pf
 %        Feb. 17, 2011 - aesthetic touches
+%        Mar. 30, 2011 - improve title and documentations
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 17, 2011 at 13:35 GMT
+%     Last Updated Mar. 30, 2011 at 13:35 GMT
 
 % todo:
 
@@ -75,7 +76,7 @@ reqfields={'gcdist','azwidth','slow','slowerr','decay','decayerr',...
     'delaz','synthetics','earthmodel','corrections','corrcoef','freq',...
     'phase','runname','dirname','time'};
 if(~isstruct(pf) || any(~isfield(pf,reqfields)))
-    error('seizmo:cmb_pdf_mtx:badInput',...
+    error('seizmo:plot_cmb_pdf:badInput',...
         ['PF must be a struct with the fields:\n' ...
         sprintf('''%s'' ',reqfields{:}) '!']);
 end
@@ -83,7 +84,7 @@ end
 % check field
 if(~ischar(field) || ...
         ~any(strcmpi(field,{'slow' 'cslow' 'decay' 'cdecay'})))
-    error('seizmo:cmb_pdf_mtx:badInput',...
+    error('seizmo:plot_cmb_pdf:badInput',...
         'FIELD must be ''SLOW'', ''CSLOW'', ''DECAY'', or ''CDECAY''!');
 end
 field=lower(field);
@@ -113,10 +114,10 @@ if(isscalar(x) && x==fix(x) && x>0); x=linspace(xmin-xpad,xmax+xpad,x); end
 % - value needs to be regularly spaced
 spacing=abs(unique(single(diff(x))));
 if(~isreal(p) || ~isvector(p) || any(p<=0))
-    error('seizmo:cmb_pdf_mtx:badInput',...
+    error('seizmo:plot_cmb_pdf:badInput',...
         'TI must be a vector of positive real-valued periods in seconds!');
 elseif(~isreal(x) || ~isvector(x) || ~isscalar(spacing))
-    error('seizmo:cmb_pdf_mtx:badInput',...
+    error('seizmo:plot_cmb_pdf:badInput',...
         'XI must be a vector of evenly spaced reals!');
 end
 
@@ -176,8 +177,8 @@ else
             title(ax,'Decay Constant Dispersion','color','w');
         case 'cdecay'
             ylabel(ax,'Decay Constant');
-            title(ax,['Decay Constant Dispersion Corrected ' ...
-                     'for Geometrical Spreading'],'color','w');
+            title(ax,['Decay Constant Dispersion without ' ...
+                     'Geometrical Spreading'],'color','w');
     end
 end
 

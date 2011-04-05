@@ -85,8 +85,9 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %     % This does the same as the last example:
 %     pf=slowdecaypairs(results,10,15)
 %
-%    See also: PREP_CMB_DATA, CMB_1ST_PASS, CMB_CLUSTERING, CMB_OUTLIERS,
-%              CMB_2ND_PASS, SLOWDECAYPROFILES
+%    See also: SLOWDECAYPROFILES, CMB_1ST_PASS, CMB_CLUSTERING,
+%              CMB_OUTLIERS, CMB_2ND_PASS, PREP_CMB_DATA, PLOT_CMB_PDF,
+%              MAP_CMB_PROFILES, PLOT_CMB_MEASUREMENTS
 
 %     Version History:
 %        Dec. 12, 2010 - initial version
@@ -105,9 +106,11 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %                        notes about output
 %        Mar.  3, 2011 - earthmodel in output name
 %        Mar. 18, 2011 - handle raypaths in correction info
+%        Mar. 24, 2011 - delay write if filename will be exactly the same
+%        Mar. 30, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2011 at 13:35 GMT
+%     Last Updated Mar. 30, 2011 at 13:35 GMT
 
 % todo:
 
@@ -234,6 +237,7 @@ for a=1:numel(results)
     if(~npairs); continue; end
     
     % initialize struct
+    if(exist('tmp','var')); clear('tmp'); end
     tmp(1:npairs,1)=struct('gcdist',[],'azwidth',[],...
         'slow',[],'slowerr',[],'decay',[],'decayerr',[],...
         'cslow',[],'cslowerr',[],'cdecay',[],'cdecayerr',[],...
@@ -312,6 +316,11 @@ end
 if(exist('pf','var'))
     name=unique({results.earthmodel}');
     if(~isscalar(name)); name='misc'; else name=char(name); end
+    % avoid clobber by waiting until unique time
+    if(exist(fullfile(odir,...
+            [datestr(now,30) '_' name '_2stn_profiles.mat']),'file'))
+        pause(1);
+    end
     save(fullfile(odir,...
         [datestr(now,30) '_' name '_2stn_profiles.mat']),'pf');
 end

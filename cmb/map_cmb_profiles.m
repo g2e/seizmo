@@ -27,7 +27,7 @@ function [varargout]=map_cmb_profiles(pf,field,clim,varargin)
 %     map_cmb_profiles(pf,'cslow',[4.4 4.7])
 %
 %    See also: MMAP, SLOWDECAYPAIRS, SLOWDECAYPROFILES,
-%              CMB_PDF_MTX, PLOT_CMB_MEASUREMENTS
+%              PLOT_CMB_PDF, PLOT_CMB_MEASUREMENTS
 
 %     Version History:
 %        Dec. 12, 2010 - initial version
@@ -36,9 +36,10 @@ function [varargout]=map_cmb_profiles(pf,field,clim,varargin)
 %        Feb.  1, 2011 - updated See also section, fix coloring of
 %                        colorbar, label colorbar, add title
 %        Feb. 10, 2011 - update for maplocations=>mmap
+%        Mar. 30, 2011 - remove sign flip of decay constant, doc updates
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2011 at 13:35 GMT
+%     Last Updated Mar. 30, 2011 at 13:35 GMT
 
 % todo:
 
@@ -77,11 +78,6 @@ end
 
 % slowness to color
 slow=[pf.(field)].';
-switch field
-    case {'decay' 'cdecay'}
-        % flip polarity for ease
-        slow=-slow;
-end
 if(nargin<3 || isempty(clim))
     if(numel(pf)>1)
         clim=[min(slow) max(slow)];

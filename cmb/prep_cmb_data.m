@@ -54,9 +54,11 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %        Dec. 12, 2010 - added docs
 %        Jan. 12, 2011 - use point_vecticals_upward
 %        Jan. 30, 2011 - data source argument, note about response crashes
+%        Mar. 19, 2011 - better catches when no data left, deal with
+%                        magnitude types that are not in globalcmt list 
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2011 at 13:35 GMT
+%     Last Updated Mar. 19, 2011 at 13:35 GMT
 
 % todo:
 
@@ -96,7 +98,7 @@ datelist=char(strcat({dates.name}.'));
 % get event list
 event=readsodeventcsv(sodcsv);
 
-% get user selected start date
+% get user selected events
 s=listdlg('PromptString','Select events:',...
           'InitialValue',1:numel(dates),...
           'ListSize',[170 300],...
@@ -115,11 +117,17 @@ for i=s(:)'
     data=readseizmo([indir filesep dates(i).name]);
     
     % find event csv
-    cmt(i)=findcmt('time',event(i).time,...
-        'location',[event(i).latitude event(i).longitude],...
-        'depth',event(i).depth,...
-        'magtype',event(i).magnitudeType,...
-        'magnitude',event(i).magnitude);
+    if(any(strcmpi(event(i).magnitudeType,{'mw' 'mb' 'ms'})))
+        cmt(i)=findcmt('time',event(i).time,...
+            'location',[event(i).latitude event(i).longitude],...
+            'depth',event(i).depth,...
+            'magtype',event(i).magnitudeType,...
+            'magnitude',event(i).magnitude);
+    else
+        cmt(i)=findcmt('time',event(i).time,...
+            'location',[event(i).latitude event(i).longitude],...
+            'depth',event(i).depth);
+    end
     
     % fix header info
     data=setevent(data,cmt(i));
@@ -136,6 +144,9 @@ for i=s(:)'
     % remove records less than 10 minutes in length
     [b,e]=getheader(data,'b','e');
     data(e-b<600)=[];
+    
+    % skip to next if none left
+    if(isempty(data)); continue; end
     
     % detrend, taper, resample
     data=removetrend(data);
@@ -154,37 +165,43 @@ for i=s(:)'
     
     % work with verticals
     vdata=data(vertcmp(data));
+    if(~isempty(vdata))
+        % rename vertical records to rdseed style
+        vdata=genname(vdata,'rdseed');
+        
+        % flip polarity of verticals if pointing down
+        vdata=point_verticals_upward(vdata);
+        
+        % add arrivals
+        vdata=addarrivals(vdata,'ph','P,Pdiff,PKP');
+        
+        % set Pdiff as reference time
+        vdata=timeshift(vdata,-getarrival(vdata,{'P' 'Pdiff'}));
+        
+        % remove records without 300s before & after Pdiff
+        [b,e]=getheader(vdata,'b','e');
+        vdata(b>-300 | e<300)=[];
+    end
     
-    % flip polarity of verticals if pointing down
-    vdata=point_verticals_upward(vdata);
-    
-    % add arrivals
-    vdata=addarrivals(vdata,'ph','P,Pdiff,PKP');
-    
-    % set Pdiff as reference time
-    vdata=timeshift(vdata,-getarrival(vdata,{'P' 'Pdiff'}));
-    
-    % remove records without 300s before & after Pdiff
-    [b,e]=getheader(vdata,'b','e');
-    vdata(b>-300 | e<300)=[];
-    
-    % rotate horizontals
+    % find/rotate horizontals
     rdata=rotate(data);
-    
-    % add arrivals
-    rdata=addarrivals(rdata,'ph','S,Sdiff,SKS,sSKS,pSKS');
-    
-    % set Sdiff as reference time
-    rdata=timeshift(rdata,-getarrival(rdata,{'S' 'Sdiff'}));
-    
-    % remove records without 300s before & after Sdiff
-    [b,e]=getheader(rdata,'b','e');
-    rdata(b>-300 | e<300)=[];
-    
-    % rename rotated records
-    rdata=genname(rdata,'rdseed');
+    if(~isempty(data))
+        % rename rotated records
+        rdata=genname(rdata,'rdseed');
+        
+        % add arrivals
+        rdata=addarrivals(rdata,'ph','S,Sdiff,SKS,sSKS,pSKS');
+        
+        % set Sdiff as reference time
+        rdata=timeshift(rdata,-getarrival(rdata,{'S' 'Sdiff'}));
+        
+        % remove records without 300s before & after Sdiff
+        [b,e]=getheader(rdata,'b','e');
+        rdata(b>-300 | e<300)=[];
+    end
     
     % save records
+    if(isempty([vdata; rdata])); continue; end
     writeseizmo([vdata; rdata],'path',[outdir filesep dates(i).name]);
 end
 

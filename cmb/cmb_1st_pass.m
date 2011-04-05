@@ -67,9 +67,12 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %                        option
 %        Mar. 17, 2011 - corrections are not recalculated, fixed breakage
 %                        when no waveforms found
+%        Mar. 21, 2011 - bugfix for out-of-range stations
+%        Mar. 24, 2011 - added detail msg for processing info
+%        Mar. 25, 2011 - fix corrections desync from data
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 17, 2011 at 13:35 GMT
+%     Last Updated Mar. 25, 2011 at 13:35 GMT
 
 % todo:
 
@@ -218,6 +221,7 @@ for i=1:numel(s)
             % only vertical data
             data=data(vertcmp(data));
             truephase='Pdiff';
+            disp(['Found ' num2str(numel(data)) ' Vertical Components']);
         case 'SHdiff'
             % only transverse component
             kcmpnm=getheader(data,'kcmpnm');
@@ -225,6 +229,7 @@ for i=1:numel(s)
                 | strcmp(kcmpnm,'HHT') ...
                 | strcmp(kcmpnm,'LHT'));
             truephase='Sdiff';
+            disp(['Found ' num2str(numel(data)) ' Transverse Components']);
         case 'SVdiff'
             % only radial component
             kcmpnm=getheader(data,'kcmpnm');
@@ -232,12 +237,29 @@ for i=1:numel(s)
                 | strcmp(kcmpnm,'HHR') ...
                 | strcmp(kcmpnm,'LHR'));
             truephase='Sdiff';
+            disp(['Found ' num2str(numel(data)) ' Radial Components']);
     end
     
     % skip if no waveforms
     if(~numel(data))
         warning('seizmo:cmb_1st_pass:noWaveforms',...
             'No %s waveforms found for event: %s',...
+            phase,dates(s(i)).name)
+        continue;
+    end
+    
+    % sort by distance
+    data=sortbyfield(data,'gcarc');
+    
+    % remove non-grazing/diffracted recordings
+    gcarc=getheader(data,'gcarc');
+    data(gcarc<90 | gcarc>170)=[];
+    disp(['Found ' num2str(numel(data)) ' components in 90-170deg range']);
+    
+    % skip if no waveforms
+    if(~numel(data))
+        warning('seizmo:cmb_1st_pass:noWaveforms',...
+            'No %s waveforms in 90-170deg range found for event: %s',...
             phase,dates(s(i)).name)
         continue;
     end
@@ -287,7 +309,7 @@ for i=1:numel(s)
     end
     
     % time shift to phase
-    [t,n]=getarrival(data,{truephase truephase(1)});
+    t=getarrival(data,{truephase truephase(1)});
     switch phase
         case 'Pdiff'
             t=t+corrections.ellcor ...
@@ -315,11 +337,8 @@ for i=1:numel(s)
     % read data
     data=readdata(data);
     
-    % fix polarity
+    % correct polarity from radiation pattern
     data=multiply(data,sign(corrections.radpatcor));
-    
-    % sort by distance
-    data=sortbyfield(data,'gcarc');
     
     % set up a single bandpass for multibandalign
     bank=1./[42.5 80 25];
@@ -353,7 +372,6 @@ for i=1:numel(s)
         good=find(tmp.usersnr.snr>=tmp.usersnr.snrcut);
         good(tmp.userwinnow.cut)=[];
         tmp.corrections=fixcorrstruct(corrections,good);
-        %tmp.corrections=cmb_corrections(phase,tmp.useralign.data);
     else
         tmp.corrections=[];
     end

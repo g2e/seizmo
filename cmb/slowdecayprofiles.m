@@ -81,7 +81,8 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %     pf=slowdecayprofiles(results,[200 220],[90 160])
 %
 %    See also: SLOWDECAYPAIRS, CMB_2ND_PASS, CMB_OUTLIERS, CMB_1ST_PASS,
-%              CMB_CLUSTERING, PREP_CMB_DATA
+%              CMB_CLUSTERING, PREP_CMB_DATA, PLOT_CMB_MEASUREMENTS,
+%              MAP_CMB_PROFILES, PLOT_CMB_PDF
 
 %     Version History:
 %        Dec. 12, 2010 - initial version
@@ -101,9 +102,10 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %                        notes about output
 %        Mar.  2, 2011 - earthmodel in output name
 %        Mar. 18, 2011 - handle raypaths in correction info
+%        Mar. 30, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2011 at 13:35 GMT
+%     Last Updated Mar. 30, 2011 at 13:35 GMT
 
 % todo:
 

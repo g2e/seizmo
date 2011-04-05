@@ -27,13 +27,14 @@ function [pf]=extractpair(pf,stn1,stn2)
 %     % Pull profiles for station CMB of the Berkeley network:
 %     newpf=extractpair(pf,{'BK' 'CMB'});
 %
-%    See also: SLOWDECAYPAIRS, PLOT_CMB_MEASUREMENTS, CMB_PDF_MTX
+%    See also: SLOWDECAYPAIRS, PLOT_CMB_MEASUREMENTS, PLOT_CMB_PDF
 
 %     Version History:
 %        Feb.  2, 2011 - initial version
+%        Mar. 30, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2011 at 13:35 GMT
+%     Last Updated Mar. 30, 2011 at 13:35 GMT
 
 % todo:
 

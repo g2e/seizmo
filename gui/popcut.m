@@ -34,9 +34,10 @@ function [grp,ax]=popcut(data,grp)
 %        Sep. 18, 2010 - initial version
 %        Sep. 21, 2010 - altered inputs/outputs
 %        Jan.  6, 2011 - proper ginput handling, use key2zoompan
+%        Mar. 31, 2011 - more columns than rows is more appealing
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 23:55 GMT
+%     Last Updated Mar. 31, 2011 at 23:55 GMT
 
 % todo:
 
@@ -81,8 +82,8 @@ fh=figure('color','k');
 % only draw waveform subplots if some meet cutoff
 if(ngrp)
     % figure out subplot indexing
-    ncols=fix(sqrt(ngrp));
-    nrows=ceil(ngrp/ncols);
+    nrows=round(sqrt(ngrp));
+    ncols=ceil(ngrp/nrows);
     anrows=ceil(nrows*3/2);
     sidx=ncols*(anrows-nrows)+1;
     ax(2:1+ngrp)=makesubplots(anrows,ncols,sidx:sidx+ngrp-1,...
@@ -162,8 +163,8 @@ while(unhappy)
             if(~ngrp); continue; end
             
             % figure out subplot indexing
-            ncols=fix(sqrt(ngrp));
-            nrows=ceil(ngrp/ncols);
+            nrows=round(sqrt(ngrp));
+            ncols=ceil(ngrp/nrows);
             anrows=ceil(nrows*3/2);
             sidx=ncols*(anrows-nrows)+1;
             ax(2:1+ngrp)=makesubplots(anrows,ncols,sidx:sidx+ngrp-1,...

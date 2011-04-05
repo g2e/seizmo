@@ -31,7 +31,7 @@ function [results]=cmb_outliers(results,odir,figdir)
 %     results=cmb_outliers(results);
 %
 %    See also: PREP_CMB_DATA, CMB_1ST_PASS, CMB_2ND_PASS, SLOWDECAYPAIRS,
-%              SLOWDECAYPROFILES, MAP_CMB_PROFILES
+%              SLOWDECAYPROFILES, MAP_CMB_PROFILES, CMB_CLUSTERING
 
 %     Version History:
 %        Dec. 12, 2010 - added docs
@@ -48,9 +48,11 @@ function [results]=cmb_outliers(results,odir,figdir)
 %        Feb. 12, 2011 - include snr-based arrival time error
 %        Mar.  6, 2011 - coloring in arrcut/ampcut, undo all button
 %        Mar. 10, 2011 - distance/azimuth window
+%        Mar. 30, 2011 - minor doc update
+%        Apr.  3, 2011 - update .time field of skipped
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 10, 2011 at 13:35 GMT
+%     Last Updated Apr.  3, 2011 at 13:35 GMT
 
 % todo:
 
@@ -91,6 +93,9 @@ end
 for i=1:numel(results)
     % display name
     disp(results(i).runname);
+    
+    % time (for skipped)
+    results(i).time=datestr(now);
     
     % abandon events we skipped
     if(isempty(results(i).useralign)); continue; end

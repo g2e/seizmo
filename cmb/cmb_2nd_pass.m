@@ -46,9 +46,10 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %        Jan. 31, 2011 - fix bug on too few high snr, allow no output, odir
 %                        catching
 %        Mar. 18, 2011 - handle raypaths in correction info
+%        Mar. 25, 2011 - handle new radiation pattern corrections
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 18, 2011 at 13:35 GMT
+%     Last Updated Mar. 25, 2011 at 13:35 GMT
 
 % todo:
 
@@ -156,6 +157,9 @@ for i=1:numel(results)
         % extract appropriate corrections
         correct=results(i).corrections;
         correct=fixcorrstruct(correct,good);
+        
+        % apply sign corrections for radiation pattern
+        data(good)=multiply(data(good),sign(correct.radpatcor));
         
         % multiband alignment
         tmp=multibandalign(data(good),...

@@ -35,9 +35,10 @@ function [data,grp,arr,pol,units]=adjustclusters(data,grp,arr,pol)
 %        Jan. 16, 2011 - fix combine clusters not removing 0 pop clusters
 %                        that are last in the set (ie make sure max(grp.T)
 %                        points to a non-zero group), close cluster map
+%        Mar. 31, 2011 - fix plot closing breakage when only 1 cluster
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 16, 2011 at 10:00 GMT
+%     Last Updated Mar. 31, 2011 at 10:00 GMT
 
 % todo:
 
@@ -111,8 +112,9 @@ try
                     tmp.good=false;
                     [tmp,tmpax]=selectclusters(data,tmp);
                     if(any(ishandle(tmpax)))
-                        close(unique(cell2mat(get(...
-                            tmpax(ishandle(tmpax)),'parent'))));
+                        fh=get(tmpax(ishandle(tmpax)),'parent');
+                        if(iscell(fh)); fh=cell2mat(fh); end
+                        close(unique(fh));
                     end
                     cgrps=find(tmp.good);
                     
@@ -176,8 +178,9 @@ try
                 tmp.good=false;
                 [tmp,tmpax]=selectclusters(data,tmp);
                 if(any(ishandle(tmpax)))
-                    close(unique(cell2mat(get(...
-                        tmpax(ishandle(tmpax)),'parent'))));
+                    fh=get(tmpax(ishandle(tmpax)),'parent');
+                    if(iscell(fh)); fh=cell2mat(fh); end
+                    close(unique(fh));
                 end
                 cgrps=find(tmp.good);
                 
@@ -219,8 +222,9 @@ try
                     end
                 end
                 if(any(ishandle(tmpax)))
-                    close(unique(cell2mat(get(...
-                        tmpax(ishandle(tmpax)),'parent'))));
+                    fh=get(tmpax(ishandle(tmpax)),'parent');
+                    if(iscell(fh)); fh=cell2mat(fh); end
+                    close(unique(fh));
                 end
                 
                 % apply time shift
@@ -230,8 +234,9 @@ try
                 % cut clusters manually
                 [grp,tmpax]=selectclusters(data,grp);
                 if(any(ishandle(tmpax)))
-                    close(unique(cell2mat(get(...
-                        tmpax(ishandle(tmpax)),'parent'))));
+                    fh=get(tmpax(ishandle(tmpax)),'parent');
+                    if(iscell(fh)); fh=cell2mat(fh); end
+                    close(unique(fh));
                 end
             case 7 % map clusters
                 if(~ishandle(mx))

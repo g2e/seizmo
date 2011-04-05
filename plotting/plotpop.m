@@ -28,12 +28,13 @@ function [varargout]=plotpop(grp,ax)
 %        Mar. 23, 2010 - initial version
 %        Sep. 18, 2010 - major update
 %        Oct.  6, 2010 - handle 0 pop clusters
+%        Mar. 31, 2011 - drawnow call avoids buggy matlab scatter issues,
+%                        improve ticking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2010 at 17:35 GMT
+%     Last Updated Mar. 31, 2011 at 17:35 GMT
 
 % todo:
-% - fix scatter color issues
 
 % check nargin
 error(nargchk(1,2,nargin));
@@ -74,8 +75,8 @@ set(ax,'colororder',grp.color,'nextplot','replacechildren');
 % plot stems & stars
 plot(ax,[ok; ok],[pop(ok).'; 0.9*ones(1,nok)],'-.','linewidth',2);
 hold(ax,'on');
-colormap(ax,grp.color);
-scatter(ax,ok,pop(ok),200,ok,'p','filled');
+scatter(ax,ok,pop(ok),200,grp.color,'p','filled');
+drawnow; % avoids matlab scatter bugs
 xlabel(ax,'Cluster ID','fontweight','bold','fontsize',10);
 ylabel(ax,'Population','fontweight','bold','fontsize',10);
 set(ax,'xlim',[0 ngrp+1])
@@ -86,6 +87,12 @@ hold(ax,'off');
 set(ax,'yscale','log','ticklength',[0 0],'ygrid','on','box','on',...
     'color','k','xcolor','w','ycolor','w',...
     'fontsize',10,'fontweight','bold');
+
+% manual yticks b/c matlab log ticks are a failure
+ylimits=ylim(ax);
+high=max(fix(log10(ylimits)));
+if(high<1); high=1; set(ax,'ylim',[ylimits(1) 10]); end
+set(ax,'ytick',10.^(0:high),'yticklabel',10.^(0:high));
 
 % output
 if(nargout); varargout={ax}; end

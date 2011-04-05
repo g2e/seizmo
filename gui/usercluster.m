@@ -89,9 +89,10 @@ function [grp,oldax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %        Jan.  6, 2011 - use key2zoompan
 %        Jan. 13, 2011 - finally fixed cluster map warning issue
 %        Feb. 25, 2011 - fixed bug in criterion selection menu
+%        Mar. 31, 2011 - prompt once quick fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 25, 2011 at 10:00 GMT
+%     Last Updated Mar. 31, 2011 at 10:00 GMT
 
 % todo:
 
@@ -107,6 +108,10 @@ versioninfo(data,'dep');
 
 % turn off checking
 oldseizmocheckstate=seizmocheck_state(false);
+
+% prompt state variable is persistent
+persistent showprompt
+if(isempty(showprompt)); showprompt=true; end
 
 % attempt clustering
 try
@@ -233,20 +238,21 @@ try
                 end
                 
                 % menu telling user how to interactively adjust distcut
-                prompt={'+-------------------------------------------------------+'
-                    '|               Welcome to SEIZMO''s interactive clustering function              |'
-                    '+-------------------------------------------------------+'
-                    '|                                                                                                               |'
-                    '|                                            MOUSE USAGE                                             |'
-                    '|                                                                                                               |'
-                    '|    LEFT CLICK                      MIDDLE CLICK                      RIGHT CLICK   |'
-                    '+-------------+          +-------------+          +--------------+'
-                    '|     Set Distance                    Finalize Limit                                              |'
-                    '|         Limit                                                                                              |'
-                    '+-------------------------------------------------------+'};
-                % way cooler menu -- if only matlab gui's used fixed width
-                if(strcmpi(getapplication,'OCTAVE'))
+                if(showprompt)
                     prompt={'+-------------------------------------------------------+'
+                        '|               Welcome to SEIZMO''s interactive clustering function              |'
+                        '+-------------------------------------------------------+'
+                        '|                                                                                                               |'
+                        '|                                            MOUSE USAGE                                             |'
+                        '|                                                                                                               |'
+                        '|    LEFT CLICK                      MIDDLE CLICK                      RIGHT CLICK   |'
+                        '+-------------+          +-------------+          +--------------+'
+                        '|     Set Distance                    Finalize Limit                                              |'
+                        '|         Limit                                                                                              |'
+                        '+-------------------------------------------------------+'};
+                    % way cooler menu -- if only matlab gui's used fixed width
+                    if(strcmpi(getapplication,'OCTAVE'))
+                        prompt={'+-------------------------------------------------------+'
                             '|  Welcome to SEIZMO''s interactive clustering function  |'
                             '+-------------------------------------------------------+'
                             '|                                                       |'
@@ -257,8 +263,10 @@ try
                             '|  Set Distance       Finalize Limit                    |'
                             '|     Limit                                             |'
                             '+-------------------------------------------------------+'};
+                    end
+                    menu(prompt,'I''M READY!');
+                    showprompt=false;
                 end
-                menu(prompt,'I''M READY!');
                 
                 % loop until right click
                 button=1;

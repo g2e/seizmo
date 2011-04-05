@@ -63,9 +63,10 @@ function [data,selected,ax]=selectrecords(data,opt,type,selected,varargin)
 %        Aug. 26, 2010 - no SEIZMO global, use movekids over uistack for
 %                        Octave, update for new plotting routines
 %        Jan.  6, 2011 - use key2zoompan
+%        Apr.  4, 2011 - fixed logical checking of selected
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 20:50 GMTs
+%     Last Updated Apr.  4, 2011 at 20:50 GMTs
 
 % todo:
 
@@ -106,7 +107,7 @@ elseif(~ischar(type) || size(type,1)~=1 || ndims(type)~=2 ...
         sprintf('''%s'' ',valid.TYPE{:})]);
 elseif((isnumeric(selected) && (any(selected~=fix(selected)) ...
         || any(selected<1 | selected>nrecs))) || (islogical(selected) ...
-        && ~any(numel(selected)~=[1 nrecs])))
+        && all(numel(selected)~=[1 nrecs])))
     error('seizmo:selectrecords:badInput',...
         'SELECTED must be TRUE, FALSE, logical array or linear indices!');
 end

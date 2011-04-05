@@ -32,9 +32,10 @@ function [data]=fix_sod_v222(data)
 %        Mar. 24, 2010 - drop fixdelta call
 %        Aug. 21, 2010 - nargchk fix, updated undef/nan handling
 %        Jan. 31, 2011 - minor doc fixes
+%        Mar. 19, 2011 - stream code fix was wrong (sigh)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 31, 2011 at 22:25 GMT
+%     Last Updated Mar. 19, 2011 at 22:25 GMT
 
 % todo:
 
@@ -69,7 +70,7 @@ try
     % 'fix' empty khole to '__' (for external scripts)
     [khole,kcmpnm]=getheader(data,'khole','kcmpnm');
     khole(strcmp(khole,''))={'__'};
-    kcmpnm=char(strnlen(kcmpnm,3));
+    for i=1:numel(kcmpnm); kcmpnm{i}=kcmpnm{i}(end-2:end); end
     data=changeheader(data,'kcmpnm',kcmpnm,'khole',khole);
 
     % toggle checking back

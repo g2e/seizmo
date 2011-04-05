@@ -46,9 +46,10 @@ function [results]=cmb_clustering(results,odir,figdir)
 %        Jan. 29, 2011 - prepend datetime to output names
 %        Jan. 31, 2011 - odir & figdir inputs
 %        Feb. 11, 2011 - results now output to odir not figdir
+%        Apr.  1, 2011 - update .time field of skipped
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 13:35 GMT
+%     Last Updated Apr.  1, 2011 at 13:35 GMT
 
 % todo:
 
@@ -89,6 +90,9 @@ end
 for i=1:numel(results)
     % display name
     disp(results(i).runname);
+    
+    % time (for skipped)
+    results(i).time=datestr(now);
     
     % abandon events we skipped
     if(isempty(results(i).useralign)); continue; end

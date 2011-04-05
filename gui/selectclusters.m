@@ -46,9 +46,10 @@ function [grp,ax]=selectclusters(data,grp,opt,varargin)
 %        Jan.  6, 2011 - use key2zoompan
 %        Jan. 13, 2011 - doc cleanup, handle plotcluster no plot case, fix
 %                        bugs in cases with empty clusters
+%        Mar. 31, 2011 - fix bug in checking of grp.good
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 13, 2011 at 20:00 GMT
+%     Last Updated Mar. 31, 2011 at 20:00 GMT
 
 % todo:
 
@@ -95,7 +96,7 @@ if(~isstring(opt) || isempty(strmatch(lower(opt),valid.OPT)))
         sprintf('''%s'' ',valid.OPT{:})]);
 elseif((isnumeric(selected) && (any(selected~=fix(selected)) ...
         || any(selected<1 | selected>ngrp))) || (islogical(selected) ...
-        && ~any(numel(selected)~=[1 ngrp])))
+        && ~any(numel(selected)==[1 ngrp])))
     error('seizmo:selectclusters:badInput',...
         'GRP.GOOD must be TRUE, FALSE, logical array or linear indices!');
 end
