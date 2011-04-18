@@ -18,12 +18,12 @@ function [info,xc,data0]=useralign_quiet(data,varargin)
 %
 %     [...]=USERALIGN_QUIET(DATA,'OPTION1',VALUE1,...) allows passing
 %     options on to CUT, TAPER, CORRELATE & TTSOLVE for enhanced control of
-%     the workflow.  Currently available are all options in TTSOLVE, 3
-%     3 options in CORRELATE ('NPEAKS', 'SPACING', & 'ABSXC'), 'WINDOW' &
-%     'TAPER'.  'WINDOW' specifies the window passed to CUT and should be a
-%     1x2 vector of [START END].  'TAPER' specifies the taper width passed
-%     to TAPER.  See those functions for details about the options.  Note
-%     that NPEAKS must be >=1!
+%     the workflow.  Currently available are all options in TTSOLVE, 4
+%     options in CORRELATE ('LAGS', 'NPEAKS', 'SPACING', & 'ABSXC'), as
+%     well as 'WINDOW' & 'TAPER'.  'WINDOW' specifies the window passed to
+%     CUT and should be a 1x2 vector of [START END].  'TAPER' specifies the
+%     taper width passed to TAPER.  See those functions for details about
+%     the options.  Note that NPEAKS must be >=1!
 %
 %    Notes:
 %
@@ -39,9 +39,10 @@ function [info,xc,data0]=useralign_quiet(data,varargin)
 
 %     Version History:
 %        Jan. 14, 2011 - initial version
+%        Apr. 16, 2011 - add lags option for correlate
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2011 at 11:00 GMT
+%     Last Updated Apr. 16, 2011 at 11:00 GMT
 
 % todo:
 
@@ -81,6 +82,7 @@ try
     end
     
     % default options
+    info.correlate.lags=[];
     info.correlate.npeaks=5;
     info.correlate.spacing=10;
     info.correlate.absxc=true;
@@ -91,6 +93,13 @@ try
     keep=true(nargin-1,1);
     for i=1:2:nargin-1
         switch lower(varargin{i})
+            case 'lags'
+                if(numel(varargin{i+1})>2 || ~isnumeric(varargin{i+1}))
+                    error('seizmo:useralign_quiet:badInput',...
+                        'LAGS must be given as [MINLAG MAXLAG]!');
+                end
+                info.correlate.lags=varargin{i+1};
+                keep(i:i+1)=false;
             case 'npeaks'
                 if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
                         || varargin{i+1}~=fix(varargin{i+1}) ...
@@ -170,7 +179,8 @@ try
     xc=correlate(data0,...
         'npeaks',info.correlate.npeaks,...
         'spacing',info.correlate.spacing,...
-        'absxc',info.correlate.absxc);
+        'absxc',info.correlate.absxc,...
+        'lags',info.correlate.lags);
     
     % solve alignment
     if(info.correlate.absxc)

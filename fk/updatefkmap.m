@@ -36,9 +36,10 @@ function [varargout]=updatefkmap(map,ax)
 %                        info through userdata)
 %        June 16, 2010 - better see also section
 %        July  6, 2010 - major update for new struct
+%        Apr. 13, 2011 - better axis handle usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 16:05 GMT
+%     Last Updated Apr. 13, 2011 at 16:05 GMT
 
 % todo:
 
@@ -105,13 +106,13 @@ end
 axes(ax);
 h=get(ax,'children');
 delete(h);
-hold on
+hold(ax,'on');
 nx=numel(map.x);
 ny=numel(map.y);
 [x,y]=pol2cart(pi/180*map.x(ones(ny,1),:),map.y(:,ones(nx,1)));
 pcolor(x,y,double(map.beam));
-shading flat;
-hold off
+shading(ax,'flat');
+hold(ax,'off');
 set(get(ax,'Title'),'string',...
     {['Number of Stations:  ' num2str(map.nsta)] ...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...
@@ -156,11 +157,11 @@ end
 axes(ax);
 h=findobj(ax,'type','image');
 delete(h);
-hold on
+hold(ax,'on');
 imagesc(map.x,map.y,map.beam);
 childs=get(ax,'children');
 set(ax,'children',[childs(2:end); childs(1)]);
-hold off
+hold(ax,'off');
 set(get(ax,'Title'),'string',...
     {['Number of Stations:  ' num2str(map.nsta)] ...
     ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',map.butc) ' UTC'] ...

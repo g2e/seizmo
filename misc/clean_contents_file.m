@@ -39,9 +39,10 @@ function []=clean_contents_file(file,skip,dbl)
 %        Jan. 23, 2011 - allow files on path, fix path bug
 %        Jan. 26, 2011 - allow help function to not match string, 3rd arg
 %                        allows for double indent content files
+%        Apr. 16, 2011 - better handling of dbl
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2011 at 23:00 GMT
+%     Last Updated Apr. 16, 2011 at 23:00 GMT
 
 % todo:
 
@@ -54,7 +55,7 @@ if(nargin<2); skip=[]; end
 if(nargin<3); dbl=false; end
 
 % check double indent flag
-if(~isscalar(dbl) || (~islogical(dbl) && ~isreal(dbl)))
+if(~isscalar(dbl) || ~islogical(dbl))
     error('seizmo:clean_contents:file:badDoubleIndentFlag',...
         'DBL must be TRUE or FALSE!');
 end

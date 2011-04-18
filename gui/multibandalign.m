@@ -91,13 +91,20 @@ function [info]=multibandalign(data,varargin)
 %        Mar.  7, 2011 - winnow is off by default (annoying)
 %        Mar. 17, 2011 - only uses useralign_auto now (no poweruser mode),
 %                        usermoveout added to main menu
+%        Apr.  6, 2011 - no error if aligned plot closed, fix normstyle for
+%                        editing initial window or moveout
+%        Apr.  7, 2011 - msg for pre-aligning step (can be time-consuming)
+%        Apr. 17, 2011 - lags option for correlate (input should be in # of
+%                        periods rather than lags), initwin bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 17, 2011 at 12:25 GMT
+%     Last Updated Apr. 17, 2011 at 12:25 GMT
 
 % todo:
 % - smarter initial window is needed to reduce later arrivals messing up
 %   the amplitude scaling (or can we prescale using signal window???)
+% - a fully integrated version with clustering and outlier analysis would
+%   be the best
 
 % check nargin
 if(nargin<1)
@@ -176,16 +183,13 @@ try
         % - use 10^idx as weight (higher weight to more recent freqs)
         %   - limit to >10^-5 for stability (-5 may be changed)
         % - use latest "good" arrivals to get absolute times
+        disp('Pre-aligning using info from previous alignment(s)');
         tt=ttalign(lags,10.^(max(idx-i,-5)),goodarr,1,goodidx);
         data0=timeshift(data0,-o-tt); % shift to origin then new times
         info(i,1).tt_start=tt;
         
         % initial window and assessment
-        if(i>1)
-            info(i).initwin=info(i-1).initwin;
-        else
-            info(i).initwin=p.initwin;
-        end
+        info(i).initwin=p.initwin;
         if(p.auto) % skipping main menu
             % no skipping filter bands
             skip=0;
@@ -374,7 +378,7 @@ try
         [info(i).useralign,info(i).useralign.xc,...
             info(i).useralign.data]=useralign_quiet(data0,...
             'spacing',1/(4*p.bank(i,3)),'absxc',false,...
-            'estarr',zeros(nn,1),'snr',snr,...
+            'estarr',zeros(nn,1),'snr',snr,'lags',p.lags/p.bank(i,3),...
             'window',info(i).usersnr.signalwin,varargin{:});
         
         % Get Amplitude Info
@@ -397,11 +401,11 @@ try
         
         % only ask if satisfied if not auto
         if(~p.auto && ~user_satisfied)
-            close(get(ax,'parent'));
+            if(ishandle(ax)); close(get(ax,'parent')); end
             last=i;
             continue;
         else
-            close(get(ax,'parent'));
+            if(ishandle(ax)); close(get(ax,'parent')); end
         end
         
         % use alignment for next band
@@ -433,42 +437,10 @@ end
 end
 
 
-function [lgc]=use_align()
-happy_user=false;
-while(~happy_user)
-    choice=menu({'Use alignment for' 'subsequent filters?'},'YES','NO');
-    switch choice
-        case 1
-            lgc=true;
-            happy_user=true;
-        case 2
-            lgc=false;
-            happy_user=true;
-    end
-end
-end
-
-
 function [lgc]=user_satisfied()
 happy_user=false;
 while(~happy_user)
     choice=menu('Satisfied w/ alignment?','YES','NO');
-    switch choice
-        case 1
-            lgc=true;
-            happy_user=true;
-        case 2
-            lgc=false;
-            happy_user=true;
-    end
-end
-end
-
-
-function [lgc]=broken_code()
-happy_user=false;
-while(~happy_user)
-    choice=menu('Something broke. Try again?','YES','NO');
     switch choice
         case 1
             lgc=true;
@@ -534,18 +506,21 @@ while(~happy_user)
         case 3 % adjust window
             % get new initial window
             if(ishandle(ax)); close(get(ax,'parent')); end
-            [win,win,ax]=userwindow(data,info.initwin);
+            [win,win,ax]=userwindow(data,info.initwin,[],[],...
+                'normstyle','single');
             if(ishandle(ax)); close(get(ax,'parent')); end
             
             % default initial window if none
             if(~isempty(win.limits))
                 info.initwin=win.limits;
+                p.initwin=win.limits;
             end
         case 4 % moveout
             % get new initial window
             if(ishandle(ax)); close(get(ax,'parent')); end
             [mvo,mvo,ax]=usermoveout(...
-                cut(data,info.initwin(1),info.initwin(2)));
+                cut(data,info.initwin(1),info.initwin(2)),...
+                'normstyle','single');
             if(ishandle(ax)); close(get(ax,'parent')); end
             data=timeshift(data,mvo.shift);
             
@@ -618,6 +593,7 @@ p.userwinnow=false;
 p.winnowyfield='gcarc';
 p.winnowlimits=[];
 p.figdir='.';
+p.lags=[];
 
 % valid filter types & styles (grabbed from iirdesign)
 validtypes={'low' 'lo' 'l' 'lp' 'high' 'hi' 'h' 'hp' 'bandpass' 'pass' ...
@@ -792,6 +768,13 @@ for i=1:2:nargin
                     'FIGDIR must be a string!');
             end
             p.figdir=varargin{i+1};
+            keep(i:i+1)=false;
+        case {'lag' 'lags'}
+            if(numel(varargin{i+1})>2 || ~isnumeric(varargin{i+1}))
+                error('seizmo:multibandalign:badInput',...
+                    'LAGS must be given as [MINLAG MAXLAG]!');
+            end
+            p.lags=varargin{i+1};
             keep(i:i+1)=false;
     end
 end

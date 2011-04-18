@@ -32,6 +32,7 @@ function []=freqwindow(indir,outdir,varargin)
 %      'model'      - surface wave travel time model ('CUB2' - see TTSURF)
 %      'wave'       - surface wave type ('Rayleigh')
 %      'speed'      - surface wave speed type ('group')
+%      'normstyle'  - record normalization style in plots ('single')
 %
 %    Notes:
 %     - If OUTDIR exists the user is presented with the opportunity to
@@ -85,9 +86,12 @@ function []=freqwindow(indir,outdir,varargin)
 %     Version History:
 %        Apr. 22, 2010 - major code cleanup and added documentation
 %        Jan. 23, 2011 - full rewrite
+%        Apr.  5, 2011 - warn on event location variation
+%        Apr. 17, 2011 - normstyle option, ylimit bugfix for zero good,
+%                        axes handle bugfix, userwindow bugfixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2011 at 20:00 GMT
+%     Last Updated Apr. 17, 2011 at 10:35 GMT
 
 % todo:
 
@@ -170,8 +174,8 @@ for i=s(:)'
     outc=cell2mat(outc);
     ev=unique(ev,'rows');
     if(size(ev,1)>1)
-        error('seizmo:freqwindow:muddledHeader',...
-            'EVENT location info varies among records!');
+        warning('seizmo:freqwindow:muddledHeader',...
+            'Looks like EVENT location info varies among records!');
     elseif(any(abs(timediff(outc(1,:),outc))>0.002))
         error('seizmo:freqwindow:oUTCFieldVaries',...
             'ORIGIN time varies among records!');
@@ -242,8 +246,8 @@ for i=s(:)'
             % plot raw filtered data beside good, clean records
             fh=figure('name',['FREQWINDOW - ' events(i).name ...
                 ' - ' num2str(1/p.bank(j,1)) 's'],'color','k');
-            ax(1)=makesubplots(1,2,1,'parent',fh);
-            ax(1)=recordsection(fdata,...
+            ax=makesubplots(1,2,1,'parent',fh);
+            ax(1)=recordsection(fdata,'normstyle',p.normstyle,...
                 'xlim',xlimits,'ax',ax(1),'cmap',cmap);
             ylimits1=ylim(ax(1));
             
@@ -259,7 +263,7 @@ for i=s(:)'
                 % plot good & cleaned records
                 ax(2)=makesubplots(1,2,2,'parent',fh);
                 ax(2)=recordsection(gdata(good),...
-                    'xlim',xlimits,tmp{:},...
+                    'xlim',xlimits,tmp{:},'normstyle',p.normstyle,...
                     'ax',ax(2),'cmap',cmap(good,:));
                 ylimits2=ylim(ax(2));
                 
@@ -284,9 +288,10 @@ for i=s(:)'
                 movekids(ph,'back');
                 hold(ax(2),'off');
             else % no records meet conditions!
-                % would be cool to put some text in its place
+                % would be cool to put some text in place of axes
                 warning('seizmo:freqwindow:noRecordsPass',...
                     'No records meet the SNR/user specifications!');
+                ylimits=ylimits1;
             end
             
             % plot noise/taper sections
@@ -347,22 +352,24 @@ for i=s(:)'
                         unsatisfied=false;
                     case 2 % adjust good
                         [bad,bad,tmpax]=selectrecords(fdata,'delete',...
-                            'p1',~good,'xlim',xlimits,...
-                            'align',true,'xlabel',' ','ylabel',' ');
+                            'p1',~good,'xlim',xlimits,'align',true,...
+                            'xlabel',' ','ylabel',' ');
                         if(ishandle(tmpax(1)))
                             close(get(tmpax(1),'parent'));
                         end
                         good=~bad;
                         deleting=true;
                     case 3 % adjust win
-                        [win,win,tmpax]=userwindow(fdata,win,true,@deal,...
-                            'xlim',xlimits);
+                        [tmp,tmp,tmpax]=userwindow(fdata,win,true,@deal,...
+                            'xlim',xlimits,'normstyle',p.normstyle);
                         if(ishandle(tmpax))
                             close(get(tmpax,'parent'));
                         end
-                        win=win.limits;
-                        xlimits=win+[-1 1]*diff(win);
-                        deleting=false;
+                        if(~isempty(tmp.limits))
+                            win=tmp.limits;
+                            xlimits=win+[-1 1]*diff(win);
+                            deleting=false;
+                        end
                     case 4 % adjust mvin
                         mvchoice=menu(...
                             ['ADJUST MOVEOUT WITHIN ARRAY?  (CURRENTLY '...
@@ -405,6 +412,16 @@ function p=parse_freqwindow_param(varargin)
 %PARSE_FREQWINDOW_PARAM    Parse & default freqwindow parameters
 
 % defaults
+%      'bank'       - filter bank (FILTER_BANK format)
+%      'snrcut'     - SNR cutoff (3)
+%      'snrwin'     - SNR noise window relative width (0.5)
+%      'snrmethod'  - SNR method ('peak2rms')
+%      'taperwidth' - Taper width (0.2)
+%      'padwin'     - Zero-Padding limits ([-2000 7000])
+%      'model'      - surface wave travel time model ('CUB2' - see TTSURF)
+%      'wave'       - surface wave type ('Rayleigh')
+%      'speed'      - surface wave speed type ('group')
+%      'normstyle'  - record normalization style in plots ('single')
 p.taperwidth=.2;        % taper 20% on each edge of windowed signal
 p.snrcut=3;             % require SNR>=3 on BOTH sides
 p.pad=[-2000 7000];     % final zero padding of records
@@ -413,6 +430,7 @@ p.snrmethod='peak2rms'; % this is the typical method
 p.model=[];             % use ttsurf default (CUB2)
 p.wave=[];              % use ttsurf default (Rayleigh)
 p.speed=[];             % use ttsurf default (group)
+p.normstyle='single';   % record normalization style in plots ('single')
 p.bank=flipud(filter_bank([0.0055 0.055],'variable',0.2,0.1));
 
 % quick quit
@@ -494,6 +512,14 @@ for i=1:2:nargin
                     'BANK must be in the format from FILTER_BANK!');
             end
             p.bank=varargin{i+1};
+        case 'normstyle'
+            if(~isstring(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
+                    {'single' 'individually' 'individual' 'one' ...
+        	        'separately' 'group' 'together' 'all'})))
+        	    error('seizmo:freqwindow:badInput',...
+                    'NORMSTYLE must be ''SINGLE'' or ''GROUP''!');
+            end
+            p.normstyle=varargin{i+1};
         otherwise
             error('seizmo:freqwindow:unknownOption',...
                 'Unknown Option: %s',varargin{i});

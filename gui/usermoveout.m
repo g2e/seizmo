@@ -45,9 +45,10 @@ function [data,mvo,ax]=usermoveout(data,varargin)
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %        Jan. 17, 2011 - better nargin checking
 %        Mar. 17, 2011 - change .adjust to .shift as is originally in docs
+%        Apr.  7, 2011 - drop first menu (straight to adjustment)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 17, 2011 at 10:00 GMT
+%     Last Updated Apr.  7, 2011 at 10:00 GMT
 
 % todo:
 
@@ -95,88 +96,73 @@ try
         % plot records vs distance
         ax=recordsection(timeshift(data,mvo.shift),varargin{:},reax{:});
         
-        % get choice from user
-        choice=menu('Adjust Moveout of the Data?','YES','NO');
+        % ask user how much
+        choice=menu('Adjust moveout by how much?',...
+            ['NONE - KEEP CURRENT (' num2str(mvo.moveout) ')'],...
+            '+0.500 sec/deg',...
+            '+0.250 sec/deg',...
+            '+0.100 sec/deg',...
+            '+0.050 sec/deg',...
+            '+0.025 sec/deg',...
+            '+0.010 sec/deg',...
+            '-0.010 sec/deg',...
+            '-0.025 sec/deg',...
+            '-0.050 sec/deg',...
+            '-0.100 sec/deg',...
+            '-0.250 sec/deg',...
+            '-0.500 sec/deg',...
+            'ADD CUSTOM');
         
-        % act on choice
         switch choice
-            case 0 % menu closed
-                if(ishandle(ax))
-                    reax={'ax' ax};
-                else
-                    reax={};
-                end
             case 1
-                % ask user how much
-                choice=menu('Adjust moveout by how much?',...
-                    ['NONE - KEEP CURRENT (' num2str(mvo.moveout) ')'],...
-                    '+0.500 sec/deg',...
-                    '+0.250 sec/deg',...
-                    '+0.100 sec/deg',...
-                    '+0.050 sec/deg',...
-                    '+0.025 sec/deg',...
-                    '+0.010 sec/deg',...
-                    '-0.010 sec/deg',...
-                    '-0.025 sec/deg',...
-                    '-0.050 sec/deg',...
-                    '-0.100 sec/deg',...
-                    '-0.250 sec/deg',...
-                    '-0.500 sec/deg',...
-                    'ADD CUSTOM');
-
-                switch choice
-                    case 1
-                        % do nothing
-                    case 2
-                        mvo.moveout=mvo.moveout+0.5;
-                    case 3
-                        mvo.moveout=mvo.moveout+0.25;
-                    case 4
-                        mvo.moveout=mvo.moveout+0.1;
-                    case 5
-                        mvo.moveout=mvo.moveout+0.05;
-                    case 6
-                        mvo.moveout=mvo.moveout+0.025;
-                    case 7
-                        mvo.moveout=mvo.moveout+0.01;
-                    case 8
-                        mvo.moveout=mvo.moveout-0.01;
-                    case 9
-                        mvo.moveout=mvo.moveout-0.025;
-                    case 10
-                        mvo.moveout=mvo.moveout-0.05;
-                    case 11
-                        mvo.moveout=mvo.moveout-0.1;
-                    case 12
-                        mvo.moveout=mvo.moveout-0.25;
-                    case 13
-                        mvo.moveout=mvo.moveout-0.5;
-                    case 14
-                        % customized
-                        tmp=inputdlg(...
-                            'Add how much moveout (in sec/deg)? [0]:',...
-                            'Custom Moveout',1,{'0'});
-                        if(~isempty(tmp))
-                            try
-                                tmp=str2double(tmp{:});
-                                if(isscalar(tmp) && isreal(tmp))
-                                    mvo.moveout=mvo.moveout+tmp;
-                                end
-                            catch
-                                % do not change mvo.moveout
-                            end
-                        end
-                end
-                mvo.shift=(gcarc-mindist)*mvo.moveout;
-
-                % close old figure
-                if(ishandle(ax))
-                    reax={'ax' ax};
-                else
-                    reax={};
-                end
-            case 2
                 happy_user=true;
+            case 2
+                mvo.moveout=mvo.moveout+0.5;
+            case 3
+                mvo.moveout=mvo.moveout+0.25;
+            case 4
+                mvo.moveout=mvo.moveout+0.1;
+            case 5
+                mvo.moveout=mvo.moveout+0.05;
+            case 6
+                mvo.moveout=mvo.moveout+0.025;
+            case 7
+                mvo.moveout=mvo.moveout+0.01;
+            case 8
+                mvo.moveout=mvo.moveout-0.01;
+            case 9
+                mvo.moveout=mvo.moveout-0.025;
+            case 10
+                mvo.moveout=mvo.moveout-0.05;
+            case 11
+                mvo.moveout=mvo.moveout-0.1;
+            case 12
+                mvo.moveout=mvo.moveout-0.25;
+            case 13
+                mvo.moveout=mvo.moveout-0.5;
+            case 14
+                % customized
+                tmp=inputdlg(...
+                    'Add how much moveout (in sec/deg)? [0]:',...
+                    'Custom Moveout',1,{'0'});
+                if(~isempty(tmp))
+                    try
+                        tmp=str2double(tmp{:});
+                        if(isscalar(tmp) && isreal(tmp))
+                            mvo.moveout=mvo.moveout+tmp;
+                        end
+                    catch
+                        % do not change mvo.moveout
+                    end
+                end
+        end
+        mvo.shift=(gcarc-mindist)*mvo.moveout;
+        
+        % figure closed?
+        if(ishandle(ax))
+            reax={'ax' ax};
+        else
+            reax={};
         end
     end
     

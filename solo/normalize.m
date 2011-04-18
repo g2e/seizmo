@@ -39,9 +39,10 @@ function [data,scale]=normalize(data)
 %                        move usage up
 %        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
+%        Apr. 14, 2011 - fix for record of all zeros returning nans
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr. 14, 2011 at 15:05 GMT
 
 % todo:
 
@@ -86,7 +87,9 @@ try
         scale(i)=max(sqrt(sum((data(i).dep).^2,2)));
 
         % scale data and change class back
-        data(i).dep=oclass(data(i).dep/scale(i));
+        if(scale(i))
+            data(i).dep=oclass(data(i).dep/scale(i));
+        end
 
         % get dep*
         depmen(i)=mean(data(i).dep(:));

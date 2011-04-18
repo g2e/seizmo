@@ -55,10 +55,11 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %        Jan. 12, 2011 - use point_vecticals_upward
 %        Jan. 30, 2011 - data source argument, note about response crashes
 %        Mar. 19, 2011 - better catches when no data left, deal with
-%                        magnitude types that are not in globalcmt list 
+%                        magnitude types that are not in globalcmt list
+%        Apr.  4, 2011 - remove response to displacement
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 19, 2011 at 13:35 GMT
+%     Last Updated Apr.  4, 2011 at 13:35 GMT
 
 % todo:
 
@@ -155,7 +156,7 @@ for i=s(:)'
     
     % remove response
     try
-        data=removesacpz(data,'f',1./[200 100],'units','vel');
+        data=removesacpz(data,'f',1./[200 100]);
     catch
         msg=lasterror;
         warning(msg.identifier,msg.message);

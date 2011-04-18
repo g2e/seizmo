@@ -60,9 +60,11 @@ function [varargout]=recordsection(data,varargin)
 %        Sep. 14, 2010 - added marker support
 %        Feb.  6, 2011 - fixed new figure/axes call
 %        Feb. 10, 2011 - cleared todo list (2 axes is too problematic)
+%        Apr. 16, 2011 - allow empty title/xlabel/ylabel, allow datetick
+%                        for non-absolute, single record bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2011 at 23:00 GMT
+%     Last Updated Apr. 16, 2011 at 23:00 GMT
 
 % todo:
 
@@ -123,10 +125,16 @@ if(opt.ABSOLUTE)
     marktimes=marktimes/86400+z6(:,ones(1,size(marktimes,2)));
 end
 
-
 % normalize
 if(opt.NORM2YAXIS)
     scale=(max(yfield)-min(yfield))*opt.NORMMAX/2;
+    if(scale==0) % single record fix
+        if(~isempty(opt.YLIM))
+            scale=(max(opt.YLIM)-min(opt.YLIM))*opt.NORMMAX/2;
+        else
+            scale=opt.NORMMAX/2;
+        end
+    end
 else
     scale=P.NORMMAX;
 end
@@ -273,14 +281,22 @@ if(opt.ABSOLUTE)
             datetick(opt.AXIS,'x',opt.DATEFORMAT,'keeplimits');
         end
     end
+else
+    if(~isempty(opt.DATEFORMAT))
+        if(isempty(opt.XLIM))
+            datetick(opt.AXIS,'x',opt.DATEFORMAT);
+        else
+            datetick(opt.AXIS,'x',opt.DATEFORMAT,'keeplimits');
+        end
+    end
 end
 
 % label
-if(isempty(opt.TITLE))
+if(isnumeric(opt.TITLE) && opt.TITLE==1)
     opt.TITLE=[num2str(numel(goodfiles)) ...
         '/' num2str(nrecs) ' Records'];
 end
-if(isempty(opt.XLABEL))
+if(isnumeric(opt.XLABEL) && opt.XLABEL==1)
     if(opt.ABSOLUTE)
         xlimits=get(opt.AXIS,'xlim');
         opt.XLABEL=joinwords(cellstr(datestr(unique(fix(xlimits)))),...
@@ -289,7 +305,7 @@ if(isempty(opt.XLABEL))
         opt.XLABEL='Time (sec)';
     end
 end
-if(isempty(opt.YLABEL))
+if(isnumeric(opt.YLABEL) && opt.YLABEL==1)
     switch lower(opt.YFIELD)
         case 'gcarc'
             opt.YLABEL='Distance (degrees)';

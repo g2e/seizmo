@@ -59,9 +59,11 @@ function [varargout]=plot0(data,varargin)
 %        Aug. 14, 2010 - rewrite
 %        Sep. 14, 2010 - added marker support
 %        Feb.  6, 2011 - fixed new figure/axes call
+%        Apr. 16, 2011 - allow empty title/xlabel/ylabel, added several new
+%                        nameonyaxis types, allow datetick for non-absolute
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  6, 2011 at 23:00 GMT
+%     Last Updated Apr. 16, 2011 at 23:00 GMT
 
 % todo:
 
@@ -252,7 +254,18 @@ if(~isempty(opt.NAMESONYAXIS) && any(opt.NAMESONYAXIS))
     switch opt.NAMESONYAXIS
         case {'kstnm' 'st' 'sta' 'station'}
             set(opt.AXIS,'yticklabel',kname(:,2));
-        case {'stcmp'}
+        case {'kcmpnm' 'cmp' 'component'}
+            set(opt.AXIS,'yticklabel',kname(:,4));
+        case {'shortcmp' 'short'}
+            kname=char(kname(:,4));
+            kname=cellstr(kname(:,3));
+            set(opt.AXIS,'yticklabel',kname);
+        case {'stshort' 'stashort' 'stationshort'}
+            tmp=char(kname(:,4));
+            tmp=cellstr(tmp(:,3));
+            kname=strcat(kname(:,2),'.',tmp);
+            set(opt.AXIS,'yticklabel',kname);
+        case {'stcmp' 'stacmp'}
             kname=strcat(kname(:,2),'.',kname(:,4));
             set(opt.AXIS,'yticklabel',kname);
         case {'kname'}
@@ -289,14 +302,22 @@ if(opt.ABSOLUTE)
             datetick(opt.AXIS,'x',opt.DATEFORMAT,'keeplimits');
         end
     end
+else
+    if(~isempty(opt.DATEFORMAT))
+        if(isempty(opt.XLIM))
+            datetick(opt.AXIS,'x',opt.DATEFORMAT);
+        else
+            datetick(opt.AXIS,'x',opt.DATEFORMAT,'keeplimits');
+        end
+    end
 end
 
 % label
-if(isempty(opt.TITLE))
+if(isnumeric(opt.TITLE) && opt.TITLE==1)
     opt.TITLE=[num2str(numel(goodfiles)) ...
         '/' num2str(nrecs) ' Records'];
 end
-if(isempty(opt.XLABEL))
+if(isnumeric(opt.XLABEL) && opt.XLABEL==1)
     if(opt.ABSOLUTE)
         xlimits=get(opt.AXIS,'xlim');
         opt.XLABEL=joinwords(cellstr(datestr(unique(fix(xlimits)))),...
@@ -305,7 +326,7 @@ if(isempty(opt.XLABEL))
         opt.XLABEL='Time (sec)';
     end
 end
-if(isempty(opt.YLABEL)); opt.YLABEL='Record'; end
+if(isnumeric(opt.YLABEL) && opt.YLABEL==1); opt.YLABEL='Record'; end
 title(opt.AXIS,opt.TITLE,'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);
 xlabel(opt.AXIS,opt.XLABEL,'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);
 ylabel(opt.AXIS,opt.YLABEL,'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);

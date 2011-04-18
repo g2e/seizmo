@@ -1,5 +1,5 @@
 function [lbwh]=lrbt2lbwh(lrbt)
-%LRTB2LBWH    Convert left-right-bottom-top to left-bottom-width-height
+%LRBT2LBWH    Convert left-right-bottom-top to left-bottom-width-height
 %
 %    Usage:    lbwh=lrbt2lbwh(lrbt)
 %
@@ -19,9 +19,10 @@ function [lbwh]=lrbt2lbwh(lrbt)
 
 %     Version History:
 %        Aug.  4, 2010 - initial version
+%        Apr. 13, 2011 - fix h1 line
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  4, 2010 at 12:25 GMT
+%     Last Updated Apr. 13, 2011 at 12:25 GMT
 
 % todo:
 

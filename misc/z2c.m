@@ -30,9 +30,10 @@ function [c]=z2c(z,cmap,clim)
 
 %     Version History:
 %        Mar.  6, 2011 - initial version
+%        Apr. 13, 2011 - fix bug when clim has no range
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  6, 2011 at 23:55 GMT
+%     Last Updated Apr. 13, 2011 at 23:55 GMT
 
 % todo:
 
@@ -41,6 +42,9 @@ error(nargchk(2,3,nargin));
 
 % default clim
 if(nargin==2 || isempty(clim)); clim=[min(z) max(z)]; end
+
+% fix equal color limits
+if(~diff(clim)); clim=clim(1)+[-eps eps]; end
 
 % check inputs
 if(~isreal(z) || ~isvector(z))

@@ -16,8 +16,13 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %     is no resampling.
 %
 %     RESULTS=CMB_2ND_PASS(RESULTS,SR,'OPTION',VALUE,...) passes
-%     option/value pairs to MULTIBANDALIGN to adjust its parameters.  See
-%     MULTIBANDALIGN for more details.
+%     option/value pairs.  Any options allowed by MULTIBANDALIGN may be
+%     set.  See MULTIBANDALIGN for a comprehensive list of those.  Some
+%     useful options:
+%      'odir'    - directory to save all output
+%      'figdir'  - directory to save figures (overrides odir option)
+%      'distrng' - specify a distance window as [DISTMIN DISTMAX]
+%      'azrng'   - specify an azimuth window as [AZMIN AZMAX]
 %
 %    Notes:
 %     - If you have corrected the ground units of the underlying data in
@@ -47,42 +52,68 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %                        catching
 %        Mar. 18, 2011 - handle raypaths in correction info
 %        Mar. 25, 2011 - handle new radiation pattern corrections
+%        Apr.  8, 2011 - more informative message if you forgot to input sr
+%        Apr. 11, 2011 - improve docs, add gcrng/azrng options
+%        Apr. 17, 2011 - optimizations for multibandalign, clear gc/azrng
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 25, 2011 at 13:35 GMT
+%     Last Updated Apr. 17, 2011 at 13:35 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,inf,nargin));
-if(nargin>2 && mod(nargin,2))
-    error('seizmo:cmb_2nd_pass:badNumInputs',...
-        'OPTIONS must be paired with a value!');
-end
 
 % check results
 error(check_cmb_results(results));
 
 % check sample rate
 if(nargin<2); sr=[]; end
-if(~isempty(sr) && (~isscalar(sr) || sr<=0))
+if(~isempty(sr) && (~isnumeric(sr) || ~isscalar(sr) || sr<=0))
     error('seizmo:cmb_2nd_pass:badInput',...
         'SR must be the new sample rate (in samples/second)!');
 end
 
+% require parameter/value pairs after sample rate
+if(nargin>2 && mod(nargin,2))
+    error('seizmo:cmb_2nd_pass:badNumInputs',...
+        'OPTIONS must be paired with a value!');
+end
+
 % default/extract odir
 odir='.';
+gcrng=[0 180];
+azrng=[0 360];
 if(~iscellstr(varargin(1:2:end)))
     error('seizmo:cmb_2nd_pass:badInput',...
         'OPTION must all be strings!');
 end
+keep=true(nargin-2,1);
 for i=1:2:nargin-2
     switch lower(varargin{i})
         case {'outdir' 'odir'}
             varargin{i}='figdir';
             odir=varargin{i+1};
+        case {'gcrng' 'distrng'}
+            if(~isnumeric(varargin{i+1}) || numel(varargin{i+1})~=2 ...
+                    || varargin{i+1}(1)>varargin{i+1}(2) ...
+                    || any(varargin{i+1})<0)
+                error('seizmo:cmb_2nd_pass:badInput',...
+                    'DISTRNG must be given as [DISTMIN DISTMAX]!');
+            end
+            gcrng=varargin{i+1};
+            keep(i:i+1)=false;
+        case 'azrng'
+            if(~isnumeric(varargin{i+1}) || numel(varargin{i+1})~=2 ...
+                    || varargin{i+1}(1)>varargin{i+1}(2))
+                error('seizmo:cmb_2nd_pass:badInput',...
+                    'AZRNG must be given as [AZMIN AZMAX]!');
+            end
+            azrng=varargin{i+1};
+            keep(i:i+1)=false;
     end
 end
+varargin=varargin(keep);
 
 % check odir
 if(~isstring(odir))
@@ -111,6 +142,9 @@ for i=1:numel(results)
     % read in data
     data=readseizmo(strcat(results(i).dirname,filesep,...
         {results(i).useralign.data.name}'));
+    
+    % get some header info
+    [gcarc,az]=getheader(data,'gcarc','az');
     
     % adjust ground units
     if(any(results(i).usercluster.units~=0))
@@ -144,7 +178,11 @@ for i=1:numel(results)
         sj=num2str(j,'%02d');
         disp(['Aligning cluster ' sj]);
         good=find(results(i).usercluster.T==j ...
-            & ~(results(i).outliers.bad));
+            & ~(results(i).outliers.bad) ...
+            & gcarc>=gcrng(1) & gcarc<=gcrng(2) ...
+            & ((az>=azrng(1) & az<=azrng(2)) ...
+            | (az>=azrng(1)-360 & az<=azrng(2)-360) ...
+            | (az>=azrng(1)+360 & az<=azrng(2)+360)));
         
         % census
         pop=numel(good);
@@ -163,9 +201,9 @@ for i=1:numel(results)
         
         % multiband alignment
         tmp=multibandalign(data(good),...
-            'runname',[runname '_cluster_' sj],...
-            'absxc',false,'estarr',0,'estpol',1,'wgtpow',2,...
-            varargin{:});
+            'runname',[runname '_cluster_' sj],'lags',1/2,'minlag',.01,...
+            'npeaks',1,'estarr',0,'estpol',1,'wgtpow',2,...
+            'method','reweight',varargin{:});
 
         % loop over each band in the result to add more info
         for k=1:numel(tmp)

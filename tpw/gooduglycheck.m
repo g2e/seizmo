@@ -74,9 +74,10 @@ function []=gooduglycheck(indir,outdir,varargin)
 %        Apr. 23, 2010 - lots of debugging
 %        Jan. 19, 2011 - updated for all the recent gui changes
 %        Jan. 21, 2011 - further tweaking
+%        Apr.  5, 2011 - warn on event location variation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 21, 2011 at 10:35 GMT
+%     Last Updated Apr.  5, 2011 at 10:35 GMT
 
 % todo
 % - something like freqwindow may be better?
@@ -191,8 +192,8 @@ for i=s(:)'
     [ev,outc,dist]=getheader(data0,'ev','o utc','dist');
     outc=cell2mat(outc);
     if(size(unique(ev,'rows'),1)>1)
-        error('seizmo:gooduglycheck:muddledHeader',...
-            'EVENT location info varies among records!');
+        warning('seizmo:gooduglycheck:muddledHeader',...
+            'Looks like EVENT location info varies among records!');
     elseif(any(abs(timediff(outc(1,:),outc))>0.002))
         error('seizmo:gooduglycheck:oUTCFieldVaries',...
             'ORIGIN time varies among records!');

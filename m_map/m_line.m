@@ -22,6 +22,7 @@ function h=m_line(long,lat,varargin);
 % 21/June/10 - redraw lines at several equivalent longitudes (gge)
 % 8/Feb/11 - remove line indicating wraparound fixed (you have to do it),
 %            row vectors to column vectors, don't nan out lines (gge)
+% 14/Apr/11 - separate calls (better memory, better coloring)
 
 %
 % This software is provided "as is" without warranty of any kind. But
@@ -51,13 +52,19 @@ end;
 if(isvector(long)); long=long(:); end
 if(isvector(lat)); lat=lat(:); end
 
-% redraw each line thrice (with different but equivalent longitudes)
-% - this fixes most of the truncation problem of lines on maps
-[X,Y]=m_ll2xy([long long+360 long-360],[lat lat lat],'clip',clp);
-
 if nargout>0,
+  [X,Y]=m_ll2xy(long,lat,'clip',clp);
   h=line(X,Y,'tag','m_line',varargin{:});
+  [X,Y]=m_ll2xy(long-360,lat,'clip',clp);
+  h=[h line(X,Y,'tag','m_line',varargin{:})];
+  [X,Y]=m_ll2xy(long+360,lat,'clip',clp);
+  h=[h line(X,Y,'tag','m_line',varargin{:})];
 else
+  [X,Y]=m_ll2xy(long,lat,'clip',clp);
+  line(X,Y,'tag','m_line',varargin{:});
+  [X,Y]=m_ll2xy(long-360,lat,'clip',clp);
+  line(X,Y,'tag','m_line',varargin{:});
+  [X,Y]=m_ll2xy(long+360,lat,'clip',clp);
   line(X,Y,'tag','m_line',varargin{:});
 end;
 

@@ -66,9 +66,11 @@ function [varargout]=plot2(varargin)
 %        Sep. 16, 2010 - tagged record handles as 'record'
 %        Feb. 10, 2011 - clear todo list (use datenum('datetime') to do
 %                        absolute time limits with strings)
+%        Apr. 16, 2011 - allow empty title/xlabel/ylabel, allow datetick
+%                        for non-absolute
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2011 at 23:00 GMT
+%     Last Updated Apr. 16, 2011 at 23:00 GMT
 
 % todo:
 
@@ -247,19 +249,33 @@ if(nd>1)
                         'keeplimits','keepticks');
                 end
             end
+        else
+            if(~isempty(opt.DATEFORMAT))
+                if(isempty(opt.XLIM))
+                    datetick(opt.AXIS(i),'x',opt.DATEFORMAT);
+                else
+                    datetick(opt.AXIS(i),'x',opt.DATEFORMAT,'keeplimits');
+                end
+            end
         end
         
         % label
-        if(isempty(opt.TITLE))
-            p2title=[num2str(sum(goodfiles(i,:))) ...
-                '/' num2str(nd) ' Records'];
-        elseif(isnumeric(opt.TITLE))
+        if(~isempty(opt.TITLE) && isnumeric(opt.TITLE))
             switch opt.TITLE
-                case 1 % kstnm
+                case 1 % x/y records
+                    p2title=[num2str(sum(goodfiles(i,:))) ...
+                        '/' num2str(nd) ' Records'];
+                case 2 % kstnm
                     p2title=kname(i,2);
-                case 2 % stcmp
+                case 3 % kcmpnm
+                    p2title=kname(i,4);
+                case 4 % shortcmp
+                    p2title=kname{i,4}(3);
+                case 5 % stashort
+                    p2title=strcat(kname(i,2),'.',kname{i,4}(3));
+                case 6 % stcmp
                     p2title=strcat(kname(i,2),'.',kname(i,4));
-                case 3 % kname
+                case 7 % kname
                     p2title=texlabel(strcat(kname(i,1),'.',kname(i,2),...
                         '.',kname(i,3),'.',kname(i,4)),'literal');
                 otherwise
@@ -268,7 +284,7 @@ if(nd>1)
         else
             p2title=opt.TITLE;
         end
-        if(isempty(opt.XLABEL))
+        if(isnumeric(opt.XLABEL) && opt.XLABEL==1)
             if(opt.ABSOLUTE)
                 xlimits=get(opt.AXIS(i),'xlim');
                 p2xlabel=...
@@ -280,7 +296,7 @@ if(nd>1)
         else
             p2xlabel=opt.XLABEL;
         end
-        if(isempty(opt.YLABEL))
+        if(isnumeric(opt.YLABEL) && opt.YLABEL==1)
             p2ylabel='Amplitude';
         else
             p2ylabel=opt.YLABEL;
@@ -395,14 +411,22 @@ else
                 datetick(opt.AXIS,'x',opt.DATEFORMAT,'keeplimits');
             end
         end
+    else
+        if(~isempty(opt.DATEFORMAT))
+            if(isempty(opt.XLIM))
+                datetick(opt.AXIS,'x',opt.DATEFORMAT);
+            else
+                datetick(opt.AXIS,'x',opt.DATEFORMAT,'keeplimits');
+            end
+        end
     end
     
     % label
-    if(isempty(opt.TITLE))
+    if(isnumeric(opt.TITLE) && opt.TITLE==1)
         opt.TITLE=[num2str(numel(goodfiles)) ...
             '/' num2str(nrecs) ' Records']; 
     end
-    if(isempty(opt.XLABEL))
+    if(isnumeric(opt.XLABEL) && opt.XLABEL==1)
         if(opt.ABSOLUTE)
             xlimits=get(opt.AXIS,'xlim');
             opt.XLABEL=joinwords(cellstr(datestr(unique(fix(xlimits)))),...
@@ -411,7 +435,7 @@ else
             opt.XLABEL='Time (sec)';
         end
     end
-    if(isempty(opt.YLABEL)); opt.YLABEL='Amplitude'; end
+    if(isnumeric(opt.YLABEL) && opt.YLABEL==1); opt.YLABEL='Amplitude'; end
     title(opt.AXIS,opt.TITLE,...
         'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);
     xlabel(opt.AXIS,opt.XLABEL,...

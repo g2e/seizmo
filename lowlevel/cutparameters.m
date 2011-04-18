@@ -33,9 +33,10 @@ function [option]=cutparameters(varargin)
 %        May  29, 2009 - minor doc update, add nargin check
 %        Oct.  6, 2009 - drop use of LOGICAL function
 %        Aug. 21, 2010 - nargchk fix
+%        Apr. 12, 2011 - allow pad/padding
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 20:45 GMT
+%     Last Updated Apr. 12, 2011 at 20:45 GMT
 
 % todo:
 
@@ -111,9 +112,9 @@ for i=1:nargin-1
         
         % options
         switch lower(varargin{i})
-            case 'fill'
+            case {'fill' 'pad'}
                 option.FILL=varargin{i+1}~=0;
-            case 'filler'
+            case {'filler' 'padding'}
                 option.FILLER=double(varargin{i+1});
             case 'trim'
                 if(~isscalar(varargin{i+1}))

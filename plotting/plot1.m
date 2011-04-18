@@ -58,9 +58,11 @@ function [varargout]=plot1(data,varargin)
 %        Aug. 14, 2010 - rewrite
 %        Sep. 14, 2010 - added marker support
 %        Feb. 10, 2011 - clear todo list (was about markers)
+%        Apr. 16, 2011 - allow empty title/xlabel/ylabel, allow datetick
+%                        for non-absolute
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2011 at 23:00 GMT
+%     Last Updated Apr. 16, 2011 at 23:00 GMT
 
 % todo:
 
@@ -220,22 +222,36 @@ for i=goodfiles
                 datetick(opt.AXIS(i),'x',opt.DATEFORMAT,'keeplimits');
             end
         end
+    else
+        if(~isempty(opt.DATEFORMAT))
+            if(isempty(opt.XLIM))
+                datetick(opt.AXIS(i),'x',opt.DATEFORMAT);
+            else
+                datetick(opt.AXIS(i),'x',opt.DATEFORMAT,'keeplimits');
+            end
+        end
     end
     
     % label
-    if(isempty(opt.TITLE))
-        if(~isempty(data(i).name))
-            p1title=texlabel(data(i).name,'literal');
-        else
-            p1title=['RECORD ' num2str(i)];
-        end
-    elseif(isnumeric(opt.TITLE))
+    if(~isempty(opt.TITLE) && isnumeric(opt.TITLE))
         switch opt.TITLE
-            case 1 % kstnm
+            case 1 % filename
+                if(~isempty(data(i).name))
+                    p1title=texlabel(data(i).name,'literal');
+                else
+                    p1title=['RECORD ' num2str(i)];
+                end
+            case 2 % kstnm
                 p1title=kname(i,2);
-            case 2 % stcmp
+            case 3 % kcmpnm
+                p1title=kname(i,4);
+            case 4 % shortcmp
+                p1title=kname{i,4}(3);
+            case 5 % stashort
+                p1title=strcat(kname(i,2),'.',kname{i,4}(3));
+            case 6 % stcmp
                 p1title=strcat(kname(i,2),'.',kname(i,4));
-            case 3 % kname
+            case 7 % kname
                 p1title=texlabel(strcat(kname(i,1),'.',kname(i,2),...
                 '.',kname(i,3),'.',kname(i,4)),'literal');
             otherwise
@@ -244,7 +260,7 @@ for i=goodfiles
     else
         p1title=opt.TITLE;
     end
-    if(isempty(opt.XLABEL))
+    if(isnumeric(opt.XLABEL) && opt.XLABEL==1)
         if(opt.ABSOLUTE)
             xlimits=get(opt.AXIS(i),'xlim');
             p1xlabel=joinwords(cellstr(datestr(unique(fix(xlimits)))),...
@@ -255,7 +271,7 @@ for i=goodfiles
     else
         p1xlabel=opt.XLABEL;
     end
-    if(isempty(opt.YLABEL))
+    if(isnumeric(opt.YLABEL) && opt.YLABEL==1)
         p1ylabel=idep(i);
     else
         p1ylabel=opt.YLABEL;

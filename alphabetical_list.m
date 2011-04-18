@@ -203,6 +203,7 @@ function []=alphabetical_list()
 %<a href="matlab:help globalcmt_update">globalcmt_update</a>               - Updates GlobalCMT catalogs (requires internet)
 %<a href="matlab:help globe_land">globe_land</a>                     - Colormap for global topography
 %<a href="matlab:help globe_sea">globe_sea</a>                      - Colormap for global bathymetry
+%<a href="matlab:help gmv">gmv</a>                            - Ground Motion Visualization via an evolving station map
 %<a href="matlab:help gooduglycheck">gooduglycheck</a>                  - Interactive QC tool for event data
 %<a href="matlab:help green2blue">green2blue</a>                     - Green-White-Blue colormap
 %<a href="matlab:help gregorian2modserial">gregorian2modserial</a>            - Convert Gregorian dates to modified serial dates

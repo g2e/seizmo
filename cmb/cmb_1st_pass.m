@@ -70,9 +70,10 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %        Mar. 21, 2011 - bugfix for out-of-range stations
 %        Mar. 24, 2011 - added detail msg for processing info
 %        Mar. 25, 2011 - fix corrections desync from data
+%        Apr.  6, 2011 - minor change to minradampl cut
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 25, 2011 at 13:35 GMT
+%     Last Updated Apr.  6, 2011 at 13:35 GMT
 
 % todo:
 
@@ -268,7 +269,7 @@ for i=1:numel(s)
     corrections=cmb_corrections(phase,data);
     
     % remove stations near nodal planes
-    good=abs(corrections.radpatcor)>minradampl;
+    good=abs(corrections.radpatcor)>=minradampl;
     data=data(good);
     corrections=fixcorrstruct(corrections,good);
     disp([num2str(sum(~good)) ' Near-Nodal Stations Removed']);
