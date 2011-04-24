@@ -3,6 +3,8 @@ function [varargout]=plot_cmb_measurements(pf,field,varargin)
 %
 %    Usage:    plot_cmb_measurements(pf,field)
 %              plot_cmb_measurements(pf,field,'prop1',val1,...)
+%              h=plot_cmb_measurements(...)
+%              [h,hyerr,hxerr]=plot_cmb_measurements(...)
 %
 %    Description:
 %     PLOT_CMB_MEASUREMENTS(PF,FIELD) plots the measurements given by FIELD
@@ -23,6 +25,19 @@ function [varargout]=plot_cmb_measurements(pf,field,varargin)
 %     property/value pairs on to PLOTERR.  May NOT lead with a LINESPEC
 %     string.  See PLOTERR for details.
 %
+%     H=PLOT_CMB_MEASUREMENTS(...) returns a vector of line handles in the
+%     order:
+%      H(1) = handle to datapoints
+%      H(2) = handle to errorbar y OR errorbar x if error y not specified
+%      H(3) = handle to errorbar x if error y specified
+%     If more than one line is plotted, the ordering is the following:
+%      H(1:n) = handle to lines with datapoints
+%      H(n+1:2*n) = handle to y errorbars
+%      H(2*n+1:3*n) = handle to x errorbars
+%
+%     [H,HYERR,HXERR]=PLOT_CMB_MEASUREMENTS(...) returns the line handles
+%     separately.
+%
 %    Notes:
 %
 %    Examples:
@@ -42,10 +57,11 @@ function [varargout]=plot_cmb_measurements(pf,field,varargin)
 %        Feb. 10, 2011 - reusing axes works, better labeling, doc update
 %        Feb. 12, 2011 - altered line style code
 %        Feb. 17, 2011 - aesthetic touches
-%        Mar. 30, 2011 - improve title and documentations
+%        Mar. 30, 2011 - improve title and documentation
+%        Apr. 22, 2011 - documented outputs, fix warning ids
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 30, 2011 at 13:35 GMT
+%     Last Updated Apr. 22, 2011 at 13:35 GMT
 
 % todo:
 
@@ -58,7 +74,7 @@ reqfields={'gcdist','azwidth','slow','slowerr','decay','decayerr',...
     'delaz','synthetics','earthmodel','corrections','corrcoef','freq',...
     'phase','runname','dirname','time'};
 if(~isstruct(pf) || any(~isfield(pf,reqfields)))
-    error('seizmo:cmb_pdf_mtx:badInput',...
+    error('seizmo:plot_cmb_measurements:badInput',...
         ['PF must be a struct with the fields:\n' ...
         sprintf('''%s'' ',reqfields{:}) '!']);
 end
@@ -66,7 +82,7 @@ end
 % check field
 if(~ischar(field) || ...
         ~any(strcmpi(field,{'slow' 'cslow' 'decay' 'cdecay'})))
-    error('seizmo:cmb_pdf_mtx:badInput',...
+    error('seizmo:plot_cmb_measurements:badInput',...
         'FIELD must be ''SLOW'', ''CSLOW'', ''DECAY'', or ''CDECAY''!');
 end
 field=lower(field);

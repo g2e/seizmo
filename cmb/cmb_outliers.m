@@ -50,9 +50,10 @@ function [results]=cmb_outliers(results,odir,figdir)
 %        Mar. 10, 2011 - distance/azimuth window
 %        Mar. 30, 2011 - minor doc update
 %        Apr.  3, 2011 - update .time field of skipped
+%        Apr. 22, 2011 - update for finalcut field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2011 at 13:35 GMT
+%     Last Updated Apr. 22, 2011 at 13:35 GMT
 
 % todo:
 
@@ -121,6 +122,7 @@ for i=1:numel(results)
     snr=results(i).usersnr.snr;
     snr=snr(snr>=results(i).usersnr.snrcut);
     snr(results(i).userwinnow.cut)=[];
+    if(isfield(results(i),'finalcut')); snr=snr(results(i).finalcut); end
     arrerr=sqrt((results(i).useralign.solution.arrerr).^2 ...
         +(max(1./results(i).filter.corners)...
         ./(2*pi).*snr2phaseerror(snr)).^2);

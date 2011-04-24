@@ -108,9 +108,10 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %        Mar. 18, 2011 - handle raypaths in correction info
 %        Mar. 24, 2011 - delay write if filename will be exactly the same
 %        Mar. 30, 2011 - doc update
+%        Apr. 22, 2011 - update for finalcut field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 30, 2011 at 13:35 GMT
+%     Last Updated Apr. 22, 2011 at 13:35 GMT
 
 % todo:
 
@@ -203,6 +204,7 @@ for a=1:numel(results)
     snr=results(a).usersnr.snr;
     snr=snr(snr>=results(a).usersnr.snrcut);
     snr(results(a).userwinnow.cut)=[];
+    if(isfield(results(a),'finalcut')); snr=snr(results(a).finalcut); end
     rtimeerr=sqrt((results(a).useralign.solution.arrerr).^2 ...
         +(max(1./results(a).filter.corners)...
         ./(2*pi).*snr2phaseerror(snr)).^2);

@@ -45,9 +45,6 @@ function [varargout]=plot0(data,varargin)
 %     useful for more detailed plot manipulation.
 %
 %    Notes:
-%     - Confusing: Positive values go in the opposite direction that record
-%       number increases.  This means positive amplitudes point to the top
-%       of the figure in the default case ('ydir' is 'reverse').
 %
 %    Examples:
 %     % add station+component names to the yaxis
@@ -61,9 +58,11 @@ function [varargout]=plot0(data,varargin)
 %        Feb.  6, 2011 - fixed new figure/axes call
 %        Apr. 16, 2011 - allow empty title/xlabel/ylabel, added several new
 %                        nameonyaxis types, allow datetick for non-absolute
+%        Apr. 19, 2011 - userdata for each record contains record metadata,
+%                        drop the confusing upside-down default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 16, 2011 at 23:00 GMT
+%     Last Updated Apr. 19, 2011 at 23:00 GMT
 
 % todo:
 
@@ -137,7 +136,7 @@ switch opt.NORMSTYLE
                 ampmax=max(depmin,depmax);
                 ampmax(ampmax==0)=1; % avoid NaNs
                 for i=goodfiles
-                    data(i).dep=i-data(i).dep/ampmax(i)*scale;
+                    data(i).dep=i+data(i).dep/ampmax(i)*scale;
                 end
             case 'log'
                 for i=goodfiles
@@ -145,7 +144,7 @@ switch opt.NORMSTYLE
                     logmax=max(log10(data(i).dep(data(i).dep>0)));
                     logrng=logmax-logmin;
                     if(~logrng); logrng=1; end % avoid NaNs
-                    data(i).dep=i-...
+                    data(i).dep=i+...
                         (2*((log10(data(i).dep)-logmin)/logrng)-1)*scale;
                 end
         end
@@ -155,7 +154,7 @@ switch opt.NORMSTYLE
                 ampmax=max([depmin; depmax]);
                 ampmax(ampmax==0)=1; % avoid NaNs
                 for i=goodfiles
-                    data(i).dep=i-data(i).dep/ampmax*scale;
+                    data(i).dep=i+data(i).dep/ampmax*scale;
                 end
             case 'log'
                 logmin=nan(nrecs,1);
@@ -169,7 +168,7 @@ switch opt.NORMSTYLE
                 logrng=logmax-logmin;
                 if(~logrng); logrng=1; end % avoid NaNs
                 for i=goodfiles
-                    data(i).dep=i-...
+                    data(i).dep=i+...
                         (2*((log10(data(i).dep)-logmin)/logrng)-1)*scale;
                 end
         end
@@ -197,31 +196,39 @@ for i=goodfiles
     switch leven{i}
         case 'false'
             if(opt.ABSOLUTE)
-                plot(opt.AXIS,z6(i)+data(i).ind/86400,data(i).dep,...
+                rh=plot(opt.AXIS,z6(i)+data(i).ind/86400,data(i).dep,...
                     'color',opt.CMAP(i,:),...
                     'linestyle',opt.LINESTYLE{i},...
                     'linewidth',opt.LINEWIDTH);
             else
-                plot(opt.AXIS,data(i).ind,data(i).dep,...
+                rh=plot(opt.AXIS,data(i).ind,data(i).dep,...
                     'color',opt.CMAP(i,:),...
                     'linestyle',opt.LINESTYLE{i},...
                     'linewidth',opt.LINEWIDTH);
             end
         otherwise
             if(opt.ABSOLUTE)
-                plot(opt.AXIS,...
+                rh=plot(opt.AXIS,...
                     z6(i)+(b(i)+(0:npts(i)-1)*delta(i)).'/86400,...
                     data(i).dep,...
                     'color',opt.CMAP(i,:),...
                     'linestyle',opt.LINESTYLE{i},...
                     'linewidth',opt.LINEWIDTH);
             else
-                plot(opt.AXIS,(b(i)+(0:npts(i)-1)*delta(i)).',...
+                rh=plot(opt.AXIS,(b(i)+(0:npts(i)-1)*delta(i)).',...
                     data(i).dep,...
                     'color',opt.CMAP(i,:),...
                     'linestyle',opt.LINESTYLE{i},...
                     'linewidth',opt.LINEWIDTH);
             end
+    end
+    
+    % set userdata to everything but data (cleared)
+    data(i).dep=[];
+    data(i).ind=[];
+    for ridx=1:numel(rh)
+        data(i).index=[i ridx];
+        set(rh(ridx),'userdata',data(i));
     end
 end
 hold(opt.AXIS,'off');

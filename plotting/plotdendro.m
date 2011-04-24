@@ -63,9 +63,10 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %        Aug. 26, 2010 - cutoff/cutoffcolor options (ie renamed them)
 %        Sep. 21, 2010 - distcut/distcutcolor
 %        Oct.  1, 2010 - better axis handling
+%        Apr. 19, 2011 - fixed cutoff text for plot0 ydir change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  1, 2010 at 23:00 GMT
+%     Last Updated Apr. 19, 2011 at 23:00 GMT
 
 % todo:
 
@@ -151,9 +152,10 @@ linkaxes(ax([2 1]),'y');
 hold(ax(1),'on');
 plot(ax(1),opt.CUTOFF*ones(1,2),span,...
     opt.CUTOFFCOLOR,'linewidth',opt.LINEWIDTH);
-text(opt.CUTOFF,span(2)-0.02*diff(span),'DISSIMILARITY LIMIT',...
+text(opt.CUTOFF,span(1)+0.02*diff(span),'DISSIMILARITY LIMIT',...
     'fontsize',opt.FONTSIZE,'color',opt.CUTOFFCOLOR,...
-    'verticalalignment','bottom','rotation',90,'parent',ax(1));
+    'verticalalignment','bottom','horizontalalignment','left',...
+    'rotation',90,'parent',ax(1));
 hold(ax(1),'off');
 
 % put dendrogram on top so interactivity isn't impaired

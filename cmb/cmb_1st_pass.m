@@ -71,9 +71,10 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %        Mar. 24, 2011 - added detail msg for processing info
 %        Mar. 25, 2011 - fix corrections desync from data
 %        Apr.  6, 2011 - minor change to minradampl cut
+%        Apr. 22, 2011 - update for finalcut field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  6, 2011 at 13:35 GMT
+%     Last Updated Apr. 22, 2011 at 13:35 GMT
 
 % todo:
 
@@ -372,6 +373,7 @@ for i=1:numel(s)
     if(~isempty(tmp.useralign))
         good=find(tmp.usersnr.snr>=tmp.usersnr.snrcut);
         good(tmp.userwinnow.cut)=[];
+        if(isfield(tmp,'finalcut')); good=good(tmp.finalcut); end
         tmp.corrections=fixcorrstruct(corrections,good);
     else
         tmp.corrections=[];

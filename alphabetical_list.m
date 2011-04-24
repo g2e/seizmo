@@ -104,6 +104,7 @@ function []=alphabetical_list()
 %<a href="matlab:help etopo1_tile">etopo1_tile</a>                    - Tiles ETOPO1 into 10x10 tiles
 %<a href="matlab:help expandscalars">expandscalars</a>                  - Expands scalars to match size of array inputs
 %<a href="matlab:help extract_upswing_raypaths">extract_upswing_raypaths</a>       - Returns the "upswing" portion of raypaths
+%<a href="matlab:help extract_plot_data">extract_plot_data</a>              - Extracts SEIZMO data struct from SEIZMO plot
 %<a href="matlab:help extractpair">extractpair</a>                    - Extracts profiles between the specified station pair
 %<a href="matlab:help fig2print">fig2print</a>                      - Adjusts figures to be as printed (aka print preview-ish)
 %<a href="matlab:help filter_bank">filter_bank</a>                    - Makes a set of narrow-band bandpass filters

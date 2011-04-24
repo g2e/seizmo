@@ -77,9 +77,10 @@ function [varargout]=getheader(data,varargin)
 %        Jan. 29, 2010 - added VERSIONINFO cache support/hack
 %        Apr. 13, 2010 - actually require fields are strings
 %        Aug. 21, 2010 - doc update, NaN output masks undef (-12345)
+%        Apr. 19, 2011 - bugfix for z6 & friends when 2+ header types
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 12:00 GMT
+%     Last Updated Apr. 19, 2011 at 12:00 GMT
 
 % todo:
 
@@ -122,7 +123,7 @@ if(nver>1)
             for j=1:nout
                 % preallocate by type
                 if(i==1)
-                    if(iscellstr(varargoutn{j}))
+                    if(iscell(varargoutn{j}))
                         varargout{j}=sfill; type=1;
                     else
                         varargout{j}=nfill; type=0;

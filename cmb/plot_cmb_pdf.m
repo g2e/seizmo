@@ -1,10 +1,10 @@
-function [varargout]=plot_cmb_pdf(pf,field,p,x)
+function [varargout]=plot_cmb_pdf(pf,field,y,p)
 %PLOT_CMB_PDF    Plot probability space of slowness or decay constant
 %
 %    Usage:    plot_cmb_pdf(pf,field)
-%              plot_cmb_pdf(pf,field,ti,xi)
-%              mtx=plot_cmb_pdf(...)
-%              [ti,xi,mtx]=plot_cmb_pdf(...)
+%              plot_cmb_pdf(pf,field,y,p)
+%              pdf=plot_cmb_pdf(...)
+%              [pdf,y,p]=plot_cmb_pdf(...)
 %
 %    Description:
 %     PLOT_CMB_PDF(PF,FIELD) plots a PDF (probability density function) of
@@ -19,35 +19,38 @@ function [varargout]=plot_cmb_pdf(pf,field,p,x)
 %     padding is added to the y-range to account for the errors in the
 %     data).  The PDF is 100x100 pixels.
 %
-%     PLOT_CMB_PDF(PF,FIELD,TI,XI) allows specifying the period and
-%     measurement points at which PDF estimation is performed.  Values are
-%     estimated assuming the error is gaussian (the given error is 1
-%     standard deviation and the measurement itself is the mean).  XI must
-%     be regularly spaced (this is so pixel width can be established for
-%     probability determination).  Both TI & XI must be vectors.
+%     PLOT_CMB_PDF(PF,FIELD,Y,P) allows specifying the measurement values
+%     Y and periods P at which the PDF is estimated.  PDF values are
+%     calculated assuming the error for the data is gaussian (the given
+%     error is 1 standard deviation and the measurement itself is the
+%     mean).  Y may be a scalar (sets the number of points in an automatic-
+%     ally determined range), a 2-element vector given as [MIN MAX], or a
+%     regularly spaced vector of values (this is so pixel width can be
+%     established for probability determination).  P inputs have similar
+%     constraints.
 %
-%     PDF=PLOT_CMB_PDF(...) outputs the PDF matrix.  PDF is NFxNX in size
-%     where NF is the number of frequency points and NX is the number of
-%     points in the measurement value space.  Use the next form if you did
-%     not supply FI & XI.
+%     PDF=PLOT_CMB_PDF(...) outputs the PDF matrix.  PDF is NYxNP in size
+%     where NY is the number of points in the measurement value space and
+%     NP is the number of points in period.  Use the next form if you want
+%     the actual Y & P grid corresponding to PDF.
 %
-%     [TI,XI,PDF]=PLOT_CMB_PDF(...) also returns the locations of the PDF
-%     in period (TI) and measurement value (XI).  See the Examples section
-%     below for how to plot this information
+%     [PDF,Y,P]=PLOT_CMB_PDF(...) also returns the locations of the PDF
+%     grid as measurement value (Y) and period (P).  See the Examples
+%     section below for how to plot this information
 %
 %    Notes:
 %     - Can be quite inaccurate when standard deviations are subpixel.  
 %
 %    Examples:
 %     % A guide for how to plot the optional outputs:
-%     [p,x,pdf]=plot_cmb_pdf(pf,'cslow');
+%     [pdf,y,p]=plot_cmb_pdf(pf,'cslow');
 %     fh=figure('color','k'); ax=axes('parent',fh);
-%     imagesc(p,x,pdf','parent',ax);
+%     imagesc(p,y,pdf,'parent',ax);
 %     colormap(ax,fire);
 %     set(ax,'ydir','normal','xcolor','w','ycolor','w');
 %     xlabel(ax,'Period (sec)');
 %     ylabel(ax,'Ray Parameter (s/^o)')
-%     title(ax,'Ray Parameter Dispersion Corrected for 3D Heterogeneity');
+%     title(ax,'Ray Parameter Dispersion w/ 3D Corrections');
 %     cb=colorbar('peer',ax);
 %     ylabel(cb,'% Probability');
 %     grid(ax,'on');
@@ -61,9 +64,10 @@ function [varargout]=plot_cmb_pdf(pf,field,p,x)
 %                        improved probability estimation, works with 1 pf
 %        Feb. 17, 2011 - aesthetic touches
 %        Mar. 30, 2011 - improve title and documentations
+%        Apr. 22, 2011 - fixed docs, input arg order, pdf output transposed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 30, 2011 at 13:35 GMT
+%     Last Updated Apr. 22, 2011 at 13:35 GMT
 
 % todo:
 
@@ -93,36 +97,40 @@ field=lower(field);
 p0=1./cell2mat({pf.freq}');
 
 % get values & errors
-x0=[pf.(field)].';
+y0=[pf.(field)].';
 e0=[pf.([field 'err'])].';
 
 % get min/max
 pmin=min(p0(:)); pmax=max(p0(:));
-xmin=min(x0-median(e0)); xmax=max(x0+median(e0));
-xpad=(xmax-xmin)/4;
+ymin=min(y0-median(e0)); ymax=max(y0+median(e0));
+ypad=(ymax-ymin)/4;
 
 % default period/value ranges
 % 100 pixels each way, scaled to data
-if(nargin<3 || isempty(p)); p=linspace(pmin,pmax,100); end
-if(nargin<4 || isempty(x)); x=linspace(xmin-xpad,xmax+xpad,100); end
+if(nargin<3 || isempty(y)); y=linspace(ymin-ypad,ymax+ypad,100); end
+if(nargin<4 || isempty(p)); p=linspace(pmin,pmax,100); end
+
+% special 2-element range
+if(numel(y)==2); y=linspace(y(1),y(2),100); end
+if(numel(p)==2); y=linspace(p(1),p(2),100); end
 
 % special positive scalar integer input
+if(isscalar(y) && y==fix(y) && y>0); y=linspace(ymin-ypad,ymax+ypad,y); end
 if(isscalar(p) && p==fix(p) && p>0); p=linspace(pmin,pmax,p); end
-if(isscalar(x) && x==fix(x) && x>0); x=linspace(xmin-xpad,xmax+xpad,x); end
 
 % check period/value
 % - value needs to be regularly spaced
-spacing=abs(unique(single(diff(x))));
+spacing=abs(unique(single(diff(y))));
 if(~isreal(p) || ~isvector(p) || any(p<=0))
     error('seizmo:plot_cmb_pdf:badInput',...
-        'TI must be a vector of positive real-valued periods in seconds!');
-elseif(~isreal(x) || ~isvector(x) || ~isscalar(spacing))
+        'P must be a vector of positive real-valued periods in seconds!');
+elseif(~isreal(y) || ~isvector(y) || ~isscalar(spacing))
     error('seizmo:plot_cmb_pdf:badInput',...
-        'XI must be a vector of evenly spaced reals!');
+        'Y must be a vector of evenly spaced reals!');
 end
 
 % preallocate output
-mtx=zeros(numel(p),numel(x));
+mtx=zeros(numel(p),numel(y));
 
 % loop over period
 for i=1:numel(p)
@@ -138,24 +146,27 @@ for i=1:numel(p)
     %   trapezoidal integration for each pixel's probability
     for j=1:nidx
         mtx(i,:)=mtx(i,:) ...
-            +2*gaussian(x,x0(idx(j)),e0(idx(j))) ...
-            +gaussian(x-spacing/2,x0(idx(j)),e0(idx(j))) ...
-            +gaussian(x+spacing/2,x0(idx(j)),e0(idx(j)));
+            +2*gaussian(y,y0(idx(j)),e0(idx(j))) ...
+            +gaussian(y-spacing/2,y0(idx(j)),e0(idx(j))) ...
+            +gaussian(y+spacing/2,y0(idx(j)),e0(idx(j)));
     end
     
     % finish average & integration
     mtx(i,:)=mtx(i,:)/nidx/4*spacing*100;
 end
 
+% transpose pdf
+mtx=mtx';
+
 % output depends on number out
 if(nargout>1)
-    varargout={p x mtx};
+    varargout={mtx y p};
 elseif(nargout)
     varargout={mtx};
 else
     % plot output
     fh=figure('color','k'); ax=axes('parent',fh);
-    imagesc(p,x,mtx','parent',ax);
+    imagesc(p,y,mtx,'parent',ax);
     colormap(ax,fire);
     set(ax,'ydir','normal','color','k','xcolor','w','ycolor','w');
     set(ax,'xminortick','on','yminortick','on');

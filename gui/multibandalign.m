@@ -96,15 +96,19 @@ function [info]=multibandalign(data,varargin)
 %        Apr.  7, 2011 - msg for pre-aligning step (can be time-consuming)
 %        Apr. 17, 2011 - lags option for correlate (input should be in # of
 %                        periods rather than lags), initwin bugfix
+%        Apr. 22, 2011 - added post-align deletion, delete useralign output
+%                        if user did not like it
+%        Apr. 23, 2011 - window presets are more appropriate to default
+%                        filter set, fix bug where window settings lost if
+%                        too few high-snr waveforms
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 17, 2011 at 12:25 GMT
+%     Last Updated Apr. 23, 2011 at 12:25 GMT
 
 % todo:
 % - smarter initial window is needed to reduce later arrivals messing up
 %   the amplitude scaling (or can we prescale using signal window???)
-% - a fully integrated version with clustering and outlier analysis would
-%   be the best
+% - smarter noise window would be nice
 
 % check nargin
 if(nargin<1)
@@ -296,6 +300,7 @@ try
         
         % skip to next band if less than 3
         if(nn<3)
+            last=i;
             i=i+1;
             disp(['BAND ' istr ': Too Few High SNR data!']);
             continue;
@@ -349,7 +354,16 @@ try
             if(isempty(last));
                 info(i).userwinnow.limits=p.winnowlimits;
             else
-                info(i).userwinnow.limits=info(last).userwinnow.limits;
+                try
+                    if(isempty(info(last).userwinnow.limits))
+                        info(i).userwinnow.limits=p.winnowlimits;
+                    else
+                        info(i).userwinnow.limits=...
+                            info(last).userwinnow.limits;
+                    end
+                catch
+                    info(i).userwinnow.limits=p.winnowlimits;
+                end
             end
             [data0,info(i).userwinnow,ax]=userwinnow(data0,...
                 info(i).userwinnow.limits,...
@@ -368,6 +382,7 @@ try
         
         % skip to next band if less than 3
         if(nn<3)
+            last=i;
             i=i+1;
             disp(['BAND ' istr ': Too few data in ' ...
                 p.winnowyfield ' range!']);
@@ -391,21 +406,66 @@ try
         info(i).useralign.solution.amp=scale;
         info(i).useralign.solution.amperr=scale./snr;
         
-        % plot alignment
-        ax=plot2(info(i).useralign.data);
-        if(ishandle(ax))
-            saveas(get(ax,'parent'),fullfile(p.figdir,...
-                [datestr(now,30) '_' p.runname '_band_' istr ...
-                '_aligned.fig']));
-        end
-        
         % only ask if satisfied if not auto
-        if(~p.auto && ~user_satisfied)
-            if(ishandle(ax)); close(get(ax,'parent')); end
-            last=i;
-            continue;
+        ax=plot2(info(i).useralign.data);
+        if(p.auto)
+            if(ishandle(ax))
+                saveas(get(ax,'parent'),fullfile(p.figdir,...
+                    [datestr(now,30) '_' p.runname '_band_' istr ...
+                    '_aligned.fig']));
+            end
         else
-            if(ishandle(ax)); close(get(ax,'parent')); end
+            satisfied=false;
+            deleted=false(nn,1);
+            while(~satisfied)
+                choice=user_satisfied;
+                if(ishandle(ax))
+                    saveas(get(ax,'parent'),fullfile(p.figdir,...
+                        [datestr(now,30) '_' p.runname '_band_' istr ...
+                        '_aligned.fig']));
+                        close(get(ax,'parent'));
+                end
+                switch choice
+                    case 'yes'
+                        satisfied=true;
+                        break; % skip replotting
+                    case 'no'
+                        info(i).useralign=[]; % user didn't like it
+                        last=i;
+                        break; % gets caught after while loop
+                    case 'delete'
+                        [deleted,deleted,ax]=selectrecords(...
+                            info(i).useralign.data,'delete','p2',deleted);
+                        if(ishandle(ax)); close(get(ax,'parent')); end
+                end
+                ax=plot2(info(i).useralign.data(~deleted));
+            end
+            % catch no from above (redo band)
+            if(~satisfied); continue; end
+            
+            % save/delete info
+            info(i).finalcut=~deleted;
+            info(i).useralign.solution.arr(deleted)=[];
+            info(i).useralign.solution.arrerr(deleted)=[];
+            info(i).useralign.solution.amp(deleted)=[];
+            info(i).useralign.solution.amperr(deleted)=[];
+            info(i).useralign.solution.pol(deleted)=[];
+            info(i).useralign.solution.zmean(deleted)=[];
+            info(i).useralign.solution.zstd(deleted)=[];
+            info(i).useralign.data(deleted)=[];
+            info(i).useralign.usermoveout.adjust(deleted)=[];
+            bigdeleted=ndsquareform(deleted(:,ones(nn,1)) ...
+                | deleted(:,ones(nn,1))');
+            info(i).useralign.xc.cg(bigdeleted)=[];
+            info(i).useralign.xc.lg(bigdeleted)=[];
+            info(i).useralign.xc.pg(bigdeleted)=[];
+            info(i).useralign.xc.zg(bigdeleted)=[];
+            info(i).useralign.xc.wg(bigdeleted)=[];
+            clear bigdeleted;
+            
+            % update variables
+            nn=sum(~deleted);
+            snridx=snridx(~deleted);
         end
         
         % use alignment for next band
@@ -437,18 +497,13 @@ end
 end
 
 
-function [lgc]=user_satisfied()
+function [choice]=user_satisfied()
 happy_user=false;
+answer={'yes' 'no' 'delete'};
 while(~happy_user)
-    choice=menu('Satisfied w/ alignment?','YES','NO');
-    switch choice
-        case 1
-            lgc=true;
-            happy_user=true;
-        case 2
-            lgc=false;
-            happy_user=true;
-    end
+    choice=menu('Satisfied w/ alignment?',...
+        'YES','NO','DELETE SOME RECORDS');
+    if(choice); choice=answer{choice}; happy_user=true; end
 end
 end
 
@@ -573,9 +628,9 @@ if(~iscellstr(varargin(1:2:end)))
 end
 
 % defaults
-p.initwin=[-300 300];
-p.noisewin=[-300 -20];
-p.signalwin=[-10 70];
+p.initwin=[-150 200];
+p.noisewin=[-125 25];
+p.signalwin=[35 135];
 p.bank=filter_bank([1/50 1/5],'variable',0.2,0.1);
 p.runname=['multibandalign_' datestr(now,30)];
 p.snrcut=5;

@@ -23,7 +23,12 @@ function [data,selected,ax]=selectrecords(data,opt,type,selected,varargin)
 %     set to a dark red for selected records.  The default is 'keep'.
 %
 %     SELECTRECORDS(DATA,OPTION,TYPE) sets the plot type to be used in
-%     record selection.  TYPE must be one of 'plot0','plot1','p0', or 'p1'.
+%     record selection.  TYPE may be any of the SEIZMO plotting functions.
+%     The list of allowed types:
+%       'plot0','plot1','plot2','recordsection','oldplot0',
+%       'plotspectra1','plotspectra2','spectrasection','plotspectra0'
+%       'p0','p1','p2','recsec','oldp0',
+%       'pspec0','pspec1','pspec2','specsec'
 %     The default is 'plot1'.
 %
 %     SELECTRECORDS(DATA,OPTION,TYPE,SELECTED) allows preselecting records
@@ -64,9 +69,12 @@ function [data,selected,ax]=selectrecords(data,opt,type,selected,varargin)
 %                        Octave, update for new plotting routines
 %        Jan.  6, 2011 - use key2zoompan
 %        Apr.  4, 2011 - fixed logical checking of selected
+%        Apr. 20, 2011 - proliferation of types (all main plot types ok)
+%        Apr. 22, 2011 - preselected needed to be colored as selected, fix
+%                        crash that occurs when gco is empty
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  4, 2011 at 20:50 GMTs
+%     Last Updated Apr. 22, 2011 at 20:50 GMTs
 
 % todo:
 
@@ -87,7 +95,9 @@ nrecs=numel(data);
 
 % valid values for options
 valid.OPT={'keep' 'delete'};
-valid.TYPE={'plot0' 'plot1' 'p0' 'p1'};
+valid.TYPE={'plot0' 'plot1' 'plot2' 'recordsection' 'plotspectra0' ...
+    'plotspectra1' 'plotspectra2' 'spectrasection' 'p0' 'p1' 'p2' ...
+    'recsec' 'pspec0' 'pspec1' 'pspec2' 'specsec' 'oldplot0' 'oldp0'};
 
 % default inputs
 if(nargin<2 || isempty(opt)); opt='keep'; end
@@ -132,7 +142,7 @@ end
 % proceed by plot type
 button=0; handles=ones(nrecs,1)*-1;
 switch lower(type)
-    case {'plot0' 'p0'}
+    case {'oldplot0' 'oldp0'}
         ax=plot0(data,varargin{:});
         
         % patch under all
@@ -172,9 +182,13 @@ switch lower(type)
                 key2zoompan(button,ax);
             end
         end
-    case {'plot1' 'p1'}
-        % plot type 1
-        ax=plot1(data,varargin{:});
+    case {'plot1' 'p1' 'plotspectra1' 'pspec1'}
+        switch lower(type)
+            case {'plot1' 'p1'}
+                ax=plot1(data,varargin{:});
+            case {'plotspectra1' 'pspec1'}
+                ax=plotspectra1(data,varargin{:});
+        end
         
         % color preselected
         bgcolors=get(ax,'color');
@@ -212,6 +226,80 @@ switch lower(type)
                 end
             else
                 key2zoompan(button,handle);
+            end
+        end
+    case {'plot0' 'plot2' 'recordsection' 'plotspectra0' 'plotspectra2' ...
+          'spectrasection' 'p0' 'p2' 'recsec' 'pspec0' 'pspec2' 'specsec'}
+        switch lower(type)
+            case {'plot0' 'p0'}
+                ax=plot0(data,varargin{:});
+            case {'plot2' 'p2'}
+                ax=plot2(data,varargin{:});
+            case {'recordsection' 'recsec'}
+                ax=recordsection(data,varargin{:});
+            case {'plotspectra0' 'pspec0'}
+                ax=plotspectra0(data,varargin{:});
+            case {'plotspectra2' 'pspec2'}
+                ax=plotspectra2(data,varargin{:});
+            case {'spectrasection' 'specsec'}
+                ax=spectrasection(data,varargin{:});
+        end
+        
+        % get record handles
+        rh=findobj(ax,'tag','record','type','line');
+        
+        % error if multi-component records
+        if(numel(rh)~=numel(selected))
+            error('seizmo:selectrecords:badInput',...
+                'SELECTRECORDS does not handle multicomponent data!');
+        end
+        
+        % reorder rh to match data
+        %tmp=get(rh,'userdata');
+        %tmp=cat(1,tmp{:});
+        %tmp=cat(1,tmp.index);
+        %tmp=tmp(:,1);
+        %[idx,idx]=sort(tmp);
+        %rh=rh(idx);
+        rh=flipud(rh);
+        
+        % line coloring
+        rcolors=cell2mat(get(rh,'color'));
+        
+        % color preselected
+        set(rh(selected),'color',color);
+        
+        % loop until middle button
+        while(button~=2)
+            % get mouse button pressed
+            try
+                axes(ax);
+                [x,y,button]=ginput(1);
+            catch
+                ax=-1;
+                break;
+            end
+            
+            % only process if clicked in desired axis
+            cr=gco; % currently selected record
+            if(isempty(gca) || isempty(cr) || gca~=ax || ~any(cr==rh))
+                continue;
+            end
+            cr=find(rh==cr); % index rather than handle
+            
+            % left click (un)selects, anything else handled by key2zoompan
+            if(button==1)
+                % toggle state of selected
+                selected(cr)=1-selected(cr);
+                
+                % toggle color of record
+                if(selected(cr))
+                    set(rh(cr),'color',color);
+                else
+                    set(rh(cr),'color',rcolors(cr,:));
+                end
+            else
+                key2zoompan(button,ax);
             end
         end
 end

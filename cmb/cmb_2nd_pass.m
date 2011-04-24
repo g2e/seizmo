@@ -55,9 +55,10 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %        Apr.  8, 2011 - more informative message if you forgot to input sr
 %        Apr. 11, 2011 - improve docs, add gcrng/azrng options
 %        Apr. 17, 2011 - optimizations for multibandalign, clear gc/azrng
+%        Apr. 22, 2011 - update for finalcut field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 17, 2011 at 13:35 GMT
+%     Last Updated Apr. 22, 2011 at 13:35 GMT
 
 % todo:
 
@@ -225,6 +226,9 @@ for i=1:numel(results)
             if(~isempty(tmp(k).usersnr) && ~isempty(tmp(k).userwinnow))
                 good=find(tmp(k).usersnr.snr>=tmp(k).usersnr.snrcut);
                 good(tmp(k).userwinnow.cut)=[];
+                if(isfield(tmp(k),'finalcut'))
+                    good=good(tmp(k).finalcut);
+                end
                 tmp(k).corrections=fixcorrstruct(correct,good);
             else
                 tmp(k).corrections=fixcorrstruct(correct,[]);
