@@ -51,9 +51,10 @@ function [results]=cmb_outliers(results,odir,figdir)
 %        Mar. 30, 2011 - minor doc update
 %        Apr.  3, 2011 - update .time field of skipped
 %        Apr. 22, 2011 - update for finalcut field
+%        May  19, 2011 - undo works now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2011 at 13:35 GMT
+%     Last Updated May  19, 2011 at 13:35 GMT
 
 % todo:
 
@@ -243,7 +244,8 @@ for i=1:numel(results)
                     results(i).outliers.cluster(j).errcut=...
                         struct('bad',[],'cutoff',[]);
                     arrcnt=0; ampcnt=0; errcnt=0;
-                    results(i).outliers.bad(good)=false;
+                    results(i).outliers.bad(...
+                        results(i).usercluster.T==j)=false;
                 case 6 % continue
                     happyoverall=true;
                     continue;

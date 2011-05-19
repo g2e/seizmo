@@ -57,9 +57,10 @@ function [cmt,d]=findcmt(varargin)
 %        Aug. 10, 2010 - add name option, handle large numcmt gracefully
 %        Aug. 11, 2010 - altered/fixed magnitude scaling, added magtype opt
 %        Sep. 28, 2010 - also output total distance
+%        Apr. 28, 2011 - return n when n asked for and nothing else
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 28, 2010 at 21:30 GMT
+%     Last Updated Apr. 28, 2011 at 21:30 GMT
 
 % todo:
 
@@ -74,7 +75,7 @@ if(~isempty(opt.NAME))
 end
 
 % get distances
-dd=0;
+dd=0*opt.CATALOG.centroiddep;
 if(~isempty(opt.DEPTH))
     dd=abs(opt.CATALOG.centroiddep-opt.DEPTH);
 end

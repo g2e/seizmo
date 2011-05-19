@@ -18,9 +18,9 @@ function [info]=multibandalign(data,varargin)
 %     RESULTS=MULTIBANDALIGN(DATA,BANK,RUNNAME,'OPTION',VALUE,...) allows
 %     altering certain parameters.  Those pertinent to MULTIBANDALIGN:
 %       runname         - Name used for saving figures
-%       initwin         - initial window limits (default is [-300 300])
-%       noisewin        - noise window (default is [-300 -20])
-%       signalwin       - signal window (default is [-10 70])
+%       initwin         - initial window limits (default is [-150 200])
+%       noisewin        - noise window (default is [-125 25])
+%       signalwin       - signal window (default is [35 135])
 %       snrmethod       - SNR method (default is 'peak2rms')
 %       snrcutoff       - Default cutoff (3) for removing low SNR records
 %       filterbank      - filter bank (use FILTER_BANK)
@@ -101,9 +101,10 @@ function [info]=multibandalign(data,varargin)
 %        Apr. 23, 2011 - window presets are more appropriate to default
 %                        filter set, fix bug where window settings lost if
 %                        too few high-snr waveforms
+%        May  19, 2011 - fixed error with .finalcut not always there
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 23, 2011 at 12:25 GMT
+%     Last Updated May  19, 2011 at 12:25 GMT
 
 % todo:
 % - smarter initial window is needed to reduce later arrivals messing up
@@ -219,6 +220,7 @@ try
         end
         
         % handle skipping
+        info(i).finalcut=[];
         if(skip); i=i+skip; continue; end
         
         % auto-window or user specified (usersnr interface)
@@ -407,6 +409,7 @@ try
         info(i).useralign.solution.amperr=scale./snr;
         
         % only ask if satisfied if not auto
+        info(i).finalcut=true(numel(info(i).useralign.data),1);
         ax=plot2(info(i).useralign.data);
         if(p.auto)
             if(ishandle(ax))
@@ -456,11 +459,21 @@ try
             info(i).useralign.usermoveout.adjust(deleted)=[];
             bigdeleted=ndsquareform(deleted(:,ones(nn,1)) ...
                 | deleted(:,ones(nn,1))');
-            info(i).useralign.xc.cg(bigdeleted)=[];
-            info(i).useralign.xc.lg(bigdeleted)=[];
-            info(i).useralign.xc.pg(bigdeleted)=[];
-            info(i).useralign.xc.zg(bigdeleted)=[];
-            info(i).useralign.xc.wg(bigdeleted)=[];
+            info(i).useralign.xc.cg(bigdeleted,:)=[];
+            info(i).useralign.xc.cg=...
+                permute(info(i).useralign.xc.cg,[1 3 2]);
+            info(i).useralign.xc.lg(bigdeleted,:)=[];
+            info(i).useralign.xc.lg=...
+                permute(info(i).useralign.xc.lg,[1 3 2]);
+            info(i).useralign.xc.pg(bigdeleted,:)=[];
+            info(i).useralign.xc.pg=...
+                permute(info(i).useralign.xc.pg,[1 3 2]);
+            info(i).useralign.xc.zg(bigdeleted,:)=[];
+            info(i).useralign.xc.zg=...
+                permute(info(i).useralign.xc.zg,[1 3 2]);
+            info(i).useralign.xc.wg(bigdeleted,:)=[];
+            info(i).useralign.xc.wg=...
+                permute(info(i).useralign.xc.wg,[1 3 2]);
             clear bigdeleted;
             
             % update variables

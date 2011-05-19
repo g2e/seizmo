@@ -9,8 +9,8 @@ function []=mapeventgrid(ax,evla,evlo,c,rrmajor,rrminor,azmajor,azminor)
 %    Description: MAPEVENTGRID(AX,EVLA,EVLO) plots a azimuth/range grid
 %     from a the lat/lon point given by EVLA/EVLO on the map with axes AX.
 %     EVLA & EVLO must be scalar and in units of degrees.  AX must be a
-%     handle for a map produced with MAPSTATIONS.  The grid steps at 10deg
-%     increments in range and 15deg increments in azimuth.
+%     handle for a map produced with MMAP or MAPSTATIONS.  The grid steps
+%     at 10deg increments in range and 15deg increments in azimuth.
 %
 %     MAPEVENTGRID(AX,EVLA,EVLO,C) sets the grid color.  C by default is
 %     'b' (blue).
@@ -24,21 +24,27 @@ function []=mapeventgrid(ax,evla,evlo,c,rrmajor,rrminor,azmajor,azminor)
 %     by default is [15:45:330 30:45:345].
 %
 %    Notes:
+%     - azimuthal lines are tagged as az_minor & az_major
+%     - range rings are tagged as rr_minor & rr_major
 %
 %    Examples:
-%     This replaces the old MAPSTATIONS2:
-%      ax=mapstations(data);
-%      ev=getheader(data(1),'ev');
-%      mapeventgrid(ax,ev(1),ev(2));
+%     % Quickly make a map and place an azimuth/range grid on it:
+%     mapeventgrid(mmap,0,0);
 %
-%    See also: MAPSTATIONS
+%     % This replaces the old MAPSTATIONS2:
+%     ax=mapstations(data);
+%     ev=getheader(data(1),'ev');
+%     mapeventgrid(ax,ev(1),ev(2));
+%
+%    See also: MAPSTATIONS, MMAP, MAPFEATURE, MAPCMT
 
 %     Version History:
 %        June 26, 2010 - initial version
 %        Mar.  6, 2011 - changed line width for aesthetics
+%        May  15, 2011 - updated docs 
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  6, 2011 at 03:15 GMT
+%     Last Updated May  15, 2011 at 03:15 GMT
 
 % todo:
 
@@ -50,7 +56,7 @@ if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
         || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')) ...
         || ~any(strcmpi(get(ax,'tag'),{'locationmap'})))
     error('seizmo:mapeventgrid:badAxes',...
-        'AX must be a handle to a appropriate map!');
+        'AX must be a handle to an appropriate map!');
 else
     axes(ax);
 end

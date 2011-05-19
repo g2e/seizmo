@@ -35,7 +35,7 @@ function [u]=radpat(mt,theta,phi,type)
 %     s=surface(x,y,z,'facecolor','texturemap','cdata',u_p');
 %     axis vis3d
 %
-%    See also: FINDCMT, BB, RAYP2INC
+%    See also: FINDCMT, PLOTMT, PLOTCMT, RAYP2INC
 
 %     Version History:
 %        Mar.  8, 2011 - initial version
