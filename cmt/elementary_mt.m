@@ -3,40 +3,43 @@ function [varargout]=elementary_mt(n)
 %
 %    Usage:    mt=elementary_mt(idx)
 %
-%    Description: MT=ELEMENTARY_MT(IDX) returns elementary moment tensors
-%     used in moment tensor inversion.  There are 6 different elementary
-%     moment tensors: 1 & 2 are strike-slip faults, 3 & 4 are dip-slip
-%     faults on vertical planes, 5 is a 45deg dip-slip fault, & 6 is an
-%     isotropic source (explosion).  IDX should be a scalar or vector of
-%     integers from 1 to 6.  MT is a Nx6 array of moment tensor components
-%     where N is the number of integers in IDX.  MT is in Aki & Richard's
-%     form (North, East, Up axis) giving [Mxx Myy Mzz Mxy Mxz Myz].
+%    Description:
+%     MT=ELEMENTARY_MT(IDX) returns elementary moment tensors used in
+%     moment tensor inversion.  There are 6 different elementary moment
+%     tensors: 1 & 2 are strike-slip faults, 3 & 4 are dip-slip faults on
+%     vertical planes, 5 is a 45deg dip-slip fault, & 6 is an isotropic
+%     source (explosion).  IDX should be a scalar or vector of integers
+%     from 1 to 6.  MT is a Nx6 array of moment tensor components where N
+%     is the number of integers in IDX.  MT is in the Harvard format
+%     (Up, South, East axis) giving [Mrr Mtt Mpp Mrt Mrp Mtp].
 %
 %    Notes:
+%     - Reference: Kikuchi and Kanamori (1991)
 %
 %    Examples:
-%     Show the 6 elementary focal mechanisms:
-%      bb(ar2hrv(elementary_mt(1:6)),1:6,ones(1,6),0.5,0,'b');
-%      axis equal off
+%     % Show the 6 elementary focal mechanisms:
+%     plotmt(1:6,zeros(1,6),elementary_mt(1:6));
+%     axis tight equal off
 %
-%    See also: AR2HRV
+%    See also: PLOTMT
 
 %     Version History:
 %        Mar.  8, 2010 - initial version
 %        Mar. 22, 2010 - added docs
 %        Feb. 11, 2011 - mass nargchk fix
+%        June  1, 2011 - improve docs, use harvard format
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated June  1, 2011 at 15:05 GMT
 
 % todo:
 
 % the six elementary moment tensors
-m=[ 0  0  0  1  0  0
+m=[ 0  0  0  0  0 -1
+    0  1 -1  0  0  0
+    0  0  0  0 -1  0
+    0  0  0  1  0  0
     1 -1  0  0  0  0
-    0  0  0  0  0  1
-    0  0  0  0  1  0
-   -1  0  1  0  0  0
     1  1  1  0  0  0];
 
 % check nargin

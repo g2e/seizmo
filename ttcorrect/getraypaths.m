@@ -30,9 +30,10 @@ function [paths]=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
 %        June  3, 2010 - verbose support
 %        June  4, 2010 - paths reshapes to match inputs
 %        Mar.  7, 2011 - don't cover up error for debugging
+%        May  19, 2011 - updated error message to reflect the usual issue
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  7, 2011 at 13:45 GMT
+%     Last Updated May  19, 2011 at 13:45 GMT
 
 % todo:
 
@@ -83,7 +84,8 @@ try
         'ev',[evla(i) evlo(i)],'st',[stla(i) stlo(i)]);
     if(isempty(tmp))
         error('seizmo:getraypaths:badPath',...
-            'Could not retrieve path for EQ/STA pair: %d',i);
+            ['Could not retrieve path for EQ/STA pair: %d\n' ...
+            'Maybe you do not have your ~/.taup file correct?'],i);
     end
     paths(i)=tmp(1); % return only the first arrival for each set
     if(verbose); print_time_left(1,nph); end

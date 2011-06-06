@@ -89,9 +89,10 @@ function []=freqwindow(indir,outdir,varargin)
 %        Apr.  5, 2011 - warn on event location variation
 %        Apr. 17, 2011 - normstyle option, ylimit bugfix for zero good,
 %                        axes handle bugfix, userwindow bugfixes
+%        June  5, 2011 - selectrecords has normstyle too
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 17, 2011 at 10:35 GMT
+%     Last Updated June  5, 2011 at 10:35 GMT
 
 % todo:
 
@@ -353,7 +354,8 @@ for i=s(:)'
                     case 2 % adjust good
                         [bad,bad,tmpax]=selectrecords(fdata,'delete',...
                             'p1',~good,'xlim',xlimits,'align',true,...
-                            'xlabel',' ','ylabel',' ');
+                            'xlabel',' ','ylabel',' ',...
+                            'normstyle',p.normstyle);
                         if(ishandle(tmpax(1)))
                             close(get(tmpax(1),'parent'));
                         end

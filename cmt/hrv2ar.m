@@ -2,35 +2,41 @@ function [varargout]=hrv2ar(varargin)
 %HRV2AR    Convert moment tensor from Harvard from to Aki & Richards form
 %
 %    Usage:    momten=hrv2ar(momten)
-%              [Mxx,Myy,Mzz,Mxy,Mxz,Myz]=hrv2ar(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp)
+%              momten=hrv2ar(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp)
+%              [Mxx,Myy,Mzz,Mxy,Mxz,Myz]=hrv2ar(...)
 %
-%    Description: MOMTEN=HRV2AR(MOMTEN) converts moment tensors stored in
-%     MOMTEN from Harvard/USGS form (Up, South, East) to Aki & Richards
-%     form (North, East, Up).  MOMTEN may be a 3x3xN array or a Nx6 array
-%     where the N allows for multiple moment tensors.  The Nx6 array case
-%     must have the layout [Mrr Mtt Mpp Mrt Mrp Mtp] which allows for
-%     compact moment tensor storage compared to the 3x3xN case which
-%     repeats Mrt, Mrp, Mtp elements in the upper triange.  The output
-%     moment tensor will have the same size as that of the input.
+%    Description:
+%     MOMTEN=HRV2AR(MOMTEN) converts moment tensors stored in MOMTEN from
+%     Harvard/USGS form (Up, South, East) to Aki & Richards form (North,
+%     East, Up).  MOMTEN may be a 3x3xN array or a Nx6 array where N allows
+%     for multiple moment tensors.  The Nx6 array case must have the layout
+%     [Mrr Mtt Mpp Mrt Mrp Mtp] which allows for compact moment tensor
+%     storage compared to the 3x3xN case which repeats the Mrt, Mrp, Mtp
+%     components in the upper triangle.  The output moment tensor will have
+%     the same size as that of the input.
 %
-%     [Mxx,Myy,Mzz,Mxy,Mxz,Myz]=HRV2AR(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp) lets the
-%     moment tensor elements be input and output separately.  There must be
-%     exactly six inputs and they must be column vectors!
+%     MOMTEN=HRV2AR(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp) allows inputing the components
+%     of the moment tensor separately.  Output is an Nx6 array.  There must
+%     be exactly six inputs and they must be column vectors or scalars!
+%
+%     [Mxx,Myy,Mzz,Mxy,Mxz,Myz]=HRV2AR(...) outputs the moment tensor
+%     components separately as 6 Nx1 column vectors.
 %
 %    Notes:
 %
 %    Examples:
-%     Converting to strike, dip, rake requires conversion of Harvard moment
-%     tensors to Aki & Richard form:
-%      sdr=mt2sdr(hrv2ar(mt));
+%     % Note the scalar moment and moment magnitude does not change:
+%     [momentmag(mt) momentmag(hrv2ar(mt))]
+%     [scalarmoment(mt) scalarmoment(hrv2ar(mt))]
 %
 %    See also: AR2HRV
 
 %     Version History:
 %        Mar.  8, 2010 - initial version
+%        June  1, 2011 - doc update, improved usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2010 at 13:50 GMT
+%     Last Updated June  1, 2011 at 13:50 GMT
 
 % todo:
 
@@ -52,9 +58,11 @@ if(nargin==1)
         varargout{1}=varargin{1}([2 3 1],[2 3 1],:);
         varargout{1}([1 3],:,:)=-varargout{1}([1 3],:,:);
         varargout{1}(:,[1 3],:)=-varargout{1}(:,[1 3],:);
+        gflag=true;
     elseif(isequal(6,sz(2)))
-        varargout{1}=varargin{1}(:,[2 3 1 6 4 5],:);
-        varargout{1}(:,[4 6],:)=-varargout{1}(:,[4 6],:);
+        varargout{1}=varargin{1}(:,[2 3 1 6 4 5]);
+        varargout{1}(:,[4 6])=-varargout{1}(:,[4 6]);
+        gflag=false;
     else
         error('seizmo:hrv2ar:badInput',...
             'MOMTEN inproper size!');
@@ -62,14 +70,36 @@ if(nargin==1)
 elseif(nargin==6)
     if(any(~cellfun('isreal',varargin) | cellfun('size',varargin,2)~=1))
         error('seizmo:hrv2ar:badInput',...
-            'All inputs must be real-valued Nx1 vectors!');
+            'All inputs must be real-valued Nx1 column vectors!');
     end
-    [varargout{:}]=deal(varargin{[2 3 1 6 4 5]});
-    varargout{4}=-varargout{4};
-    varargout{6}=-varargout{6};
+    % expand scalars
+    n=cellfun('prodofsize',varargin);
+    sz=size(varargin{find(n==max(n),1,'first')});
+    for i=1:6
+        if(n(i)==1)
+            varargin{i}=varargin{i}(ones(sz));
+        else
+            if(~isequal(size(varargin{i}),sz))
+                error('seizmo:hrv2ar:badInput',...
+                    'Non-scalar inputs must be equal sized!');
+            end
+        end
+    end
+    varargout{1}=[varargin{[2 3 1 6 4 5]}];
+    varargout{1}(:,[4 6])=-varargout{1}(:,[4 6]);
+    gflag=false;
 else
     error('seizmo:hrv2ar:badNumInput',...
         'Incorrect number of inputs!');
+end
+
+% separate if desired
+if(nargout>1)
+    if(gflag) % matrix
+        [varargout{1:6}]=mt_g2c(varargout{1});
+    else % vector
+        [varargout{1:6}]=mt_v2c(varargout{1});
+    end
 end
 
 end

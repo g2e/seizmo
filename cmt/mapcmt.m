@@ -16,27 +16,23 @@ function [varargout]=mapcmt(mt,varargin)
 %     H=MAPCMT(...) returns the handles to the moment tensor objects.
 %
 %    Notes:
-%     - CMTs as implimented are incompatible with mmaps because they
-%       require shading which breaks mmap patches.  We draw an invisible
-%       axis over the map to get around this for now.
-%     - The workaround mentioned above still does not allow for saving the
-%       figure at vector graphics quality.  Yet another cdata issue.
-%     - The overlap of cmt outlines is a matlab bug.  I have turned them
-%       off by default here to avoid the annoyance.
+%     - Matlab has trouble drawing many patches.  The cmts will show up in 
+%       a pdf export.
 %
 %    Examples:
-%     % 
+%     % Map the first 100 cmts in the GlobalCMT catalog:
+%     mapcmt(findcmt('n',100));
 %
 %    See also: FINDCMT, FINDCMTS, PLOTMT, RADPAT, MMAP
 
 %     Version History:
 %        May  15, 2011 - initial version
+%        May  31, 2011 - work with contour version of plotmt
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  15, 2011 at 23:55 GMT
+%     Last Updated May  31, 2011 at 23:55 GMT
 
 % todo:
-% - cmts fail to work with mmaps due to shading issues ... >_<
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -64,16 +60,9 @@ if(isempty(MAP_PROJECTION))
         'AXHANDLE must be a handle to an appropriate map!');
 end
 
-% hack: lay invisible axis over map with same limits
-drawnow;
-newax=axes('position',get(ax,'position'),'parent',get(ax,'parent'),...
-    'visible','off','color','none','xcolor','w','ycolor','w');
-set(newax,'userdata',linkprop([ax newax],{'position' 'xlim' 'ylim' ...
-    'parent' 'PlotBoxAspectRatio' 'PlotBoxAspectRatioMode'}));
-
 % set hold on
-held=ishold(newax);
-hold(newax,'on');
+held=ishold(ax);
+hold(ax,'on');
 
 % get lat/lon => x/y
 lat=mt.centroidlat;
@@ -88,11 +77,12 @@ mt=[mt.mrr mt.mtt mt.mpp mt.mrt mt.mrp mt.mtp]; % Nx6
 localnorth=90-atan2(y1-y,x1-x)*180/pi;
 
 % let plotmt do the work
-h=plotmt(x,y,mt,'roll',localnorth,'r',.1,'lc',[],varargin{:},...
-    'parent',newax);
+h=plotmt(x,y,mt,'roll',localnorth,'r',.1,varargin{:},'parent',ax);
+
+% output if desired
 if(nargout); varargout{1}=h; end
 
 % release hold
-if(~held); hold(newax,'off'); end
+if(~held); hold(ax,'off'); end
 
 end

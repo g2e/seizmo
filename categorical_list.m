@@ -31,7 +31,7 @@ function []=categorical_list()
 % Other Utility Categories
 %<a href="matlab:help sz_toc_cmap">cmap</a>      - Colormaps
 %<a href="matlab:help sz_toc_cmt">cmt</a>       - Moment tensor utilities
-%<a href="matlab:help sz_toc_event">event</a>     - Earthquake databases & info
+%<a href="matlab:help sz_toc_event">event</a>     - Misc Earthquake scripts
 %<a href="matlab:help sz_toc_invert">invert</a>    - Simple inversion stuff
 %<a href="matlab:help sz_toc_mattaup">mattaup</a>   - Matlab-TauP (improved)
 %<a href="matlab:help sz_toc_misc">misc</a>      - Miscellaneous utilities

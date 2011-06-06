@@ -3,28 +3,30 @@ function [g]=mt_v2g(v)
 %
 %    Usage:    momten=mt_v2g(mt)
 %
-%    Description: MOMTEN=MT_V2G(MT) converts moment tensors from the
-%     compact Nx6 form to 3x3xN tensor form.  This requires more memory
-%     (50% more) but is the standard.  It is useful for operations that
+%    Description:
+%     MOMTEN=MT_V2G(MT) converts moment tensors from the compact Nx6 form
+%     to 3x3xN tensor form.  This requires more memory (50% more) but is
+%     the appropriate mathematical form.  It is useful for operations that
 %     operate on the actual tensor (diagonalization etc).
 %
 %    Notes:
 %
 %    Examples:
-%     Compare tensor and compact forms:
-%      momten=mt_v2g(elementary_mt(1:6));
-%      momten(:,:,:)
-%      mt_g2v(momten)
+%     % Compare tensor and compact forms:
+%     momten=mt_v2g(elementary_mt(1:6))
+%     mt_g2v(momten)
 %
-%    See also: MT_62V, MT_V26, MT_G2V
+%    See also: MT_C2V, MT_C2G, MT_V2C, MT_G2V, MT_G2C, MT_S2C, MT_S2G,
+%              MT_S2V
 
 %     Version History:
 %        Mar.  8, 2010 - initial version
 %        Mar. 21, 2010 - added docs
 %        Feb. 11, 2011 - mass nargchk fix
+%        June  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated June  1, 2011 at 15:05 GMT
 
 % todo:
 
@@ -35,7 +37,7 @@ error(nargchk(1,1,nargin));
 sz=size(v);
 if(~isreal(v) || sz(2)~=6)
     error('seizmo:mt_v2g:badInput',...
-        'V must be a real-valued Nx6 array!');
+        'Input must be a real-valued Nx6 array!');
 end
 
 % convert

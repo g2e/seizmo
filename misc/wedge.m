@@ -131,8 +131,8 @@ function [varargout]=wedge(varargin)
 % - updating wedges
 % - rlabel/azlabel (separate functions)
 % - multiple wedges in the same axes
-% - dms stuff
-% - colormap background
+%   - for cool stuff like princeton hotspot plots
+% - deg:min:sec stuff
 
 % find axes input
 [ax,varargin,nargs]=axescheck(varargin{:});

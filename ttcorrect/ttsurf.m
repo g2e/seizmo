@@ -29,9 +29,11 @@ function [tt]=ttsurf(model,wave,speed,period,evlalo,stlalo)
 
 %     Version History:
 %        Jan. 22, 2011 - initial version
+%        June  5, 2011 - added prem/ak135 phase velocity, pac group
+%                        velocity call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 22, 2011 at 09:15 GMT
+%     Last Updated June  5, 2011 at 09:15 GMT
 
 % todo
 % - love waves, group and phase, more models ...
@@ -47,7 +49,7 @@ if(nargin<3 || isempty(speed)); speed='group'; end
 % valid options
 validwave={'rayleigh' 'love'};
 validspeed={'group' 'phase'};
-validmodel={'cub2' 'prem' 'ak135'};
+validmodel={'cub2' 'prem' 'ak135' 'pac'};
 
 % check options
 if(~isstring(wave) || ~any(strcmpi(wave,validwave)))
@@ -197,7 +199,15 @@ switch model
                             'WAVETYPE, & VELOTYPE are not ' ...
                             'implemented yet.']);
                     case 'phase'
+                        % get great circle paths (for all)
+                        gcarc=sphericalinv(evlalo(:,1),evlalo(:,2),...
+                            stlalo(:,1),stlalo(:,2))*6371*pi/180;
                         
+                        % get phase velocity at periods
+                        phvel=prem_dispersion(1./period);
+                        
+                        % phase travel times
+                        tt=gcarc(:,ones(1,nper))./phvel(:,ones(1,npaths))';
                 end
             case 'love'
                 % split by speed
@@ -226,7 +236,52 @@ switch model
                             'WAVETYPE, & VELOTYPE are not ' ...
                             'implemented yet.']);
                     case 'phase'
+                        % get great circle paths (for all)
+                        gcarc=sphericalinv(evlalo(:,1),evlalo(:,2),...
+                            stlalo(:,1),stlalo(:,2))*6371*pi/180;
                         
+                        % get phase velocity at periods
+                        phvel=prem_dispersion(1./period);
+                        
+                        % phase travel times
+                        tt=gcarc(:,ones(1,nper))./phvel(:,ones(1,npaths))';
+                end
+            case 'love'
+                % split by speed
+                switch speed
+                    case 'group'
+                        error('seizmo:ttsurf:notImplemented',...
+                            ['Sorry, this combination of MODEL, ' ...
+                            'WAVETYPE, & VELOTYPE are not ' ...
+                            'implemented yet.']);
+                    case 'phase'
+                        error('seizmo:ttsurf:notImplemented',...
+                            ['Sorry, this combination of MODEL, ' ...
+                            'WAVETYPE, & VELOTYPE are not ' ...
+                            'implemented yet.']);
+                end
+        end
+    case 'pac'
+        % split by wave
+        switch wave
+            case 'rayleigh'
+                % split by speed
+                switch speed
+                    case 'group'
+                        % get great circle paths (for all)
+                        gcarc=sphericalinv(evlalo(:,1),evlalo(:,2),...
+                            stlalo(:,1),stlalo(:,2))*6371*pi/180;
+                        
+                        % get group velocity at periods
+                        grpvel=pac_dispersion(1./period);
+                        
+                        % phase travel times
+                        tt=gcarc(:,ones(1,nper))./grpvel(:,ones(1,npaths))';
+                    case 'phase'
+                        error('seizmo:ttsurf:notImplemented',...
+                            ['Sorry, this combination of MODEL, ' ...
+                            'WAVETYPE, & VELOTYPE are not ' ...
+                            'implemented yet.']);
                 end
             case 'love'
                 % split by speed

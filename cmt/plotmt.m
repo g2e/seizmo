@@ -43,11 +43,12 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %      'radius' |   radius     |   Y   | .5            | 
 %      'parent' |   axhandle   |   N   | gca           | 
 %      'lcolor' |   [r g b]    |   Y   | [0 0 0]       | 
-%      'lwidth' |    width     |   Y   | 1             | 
+%      'lwidth' |    width     |   Y   | .5            | 
 %      'sample' |   degrees    |   Y   | 5             | 
 %
-%     H=PLOTMT(...) returns the graphics handles of the beach balls in
-%     H(:,1) and the outlines in H(:,2).
+%     H=PLOTMT(...) returns the graphics handles of the patches and lines
+%     making up the beach balls in the cell array H.  Patches are in H{:,1}
+%     and outlines in H{:,2}.
 %
 %    Notes:
 %     - This was derived from Ken Creager's radpat1.m in the Corel toolbox
@@ -70,14 +71,27 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %     plotmt(x(:),y(:),mt,'pcolor',rainbow(100));
 %     axis equal tight off;
 %
+%     % Show off the ability of PLOTMT to rotate a cmt:
+%     cmt=findcmt;
+%     mt=[cmt.mrr cmt.mtt cmt.mpp cmt.mrt cmt.mrp cmt.mtp]; % Nx6
+%     for i=0:10:360
+%         for j=0:10:360
+%             plotmt(0,0,mt(1,:),'pov',[i+j/36 j]);
+%             drawnow;
+%             pause(.01);
+%         end
+%     end
+%
 %    See also: RADPAT, MAPCMT, FINDCMT, FINDCMTS
 
 %     Version History:
 %        Apr. 28, 2011 - initial version
 %        May  15, 2011 - implimented point-of-view & roll options
+%        May  31, 2011 - plotmt now uses contourf
+%        June  1, 2011 - fix for isotropic source
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  15, 2011 at 23:55 GMT
+%     Last Updated June  1, 2011 at 23:55 GMT
 
 % todo:
 
@@ -126,14 +140,14 @@ end
 %pv.tcolor=[1 1 1]; % [r g b]    (color of tension)
 %pv.pcolor=[0 0 0]; % [r g b]    (color of compression)
 %pv.lcolor=[0 0 0]; % [r g b] or [nan nan nan] / [] (color of outline)
-%pv.lwidth=1;       % width      (line width)
+%pv.lwidth=0.5;     % width      (line width)
 %pv.radius=0.5;     % radius     (radius of moment tensor)
 %pv.sample=5;       % degrees    (sample interval for moment tensor values)
 %pv.parent=[];      % axishandle (handle of axis to plot in)
 
 % above is defunct (defaults are now parsed/checked/expanded like inputs)
 varargin=[{'wave' 'p' 'pov' [0 180] 'roll' 0 'face' 'back' ...
-    'tcolor' [1 1 1] 'pcolor' [0 0 0] 'lcolor' [0 0 0] 'lwidth' 1 ...
+    'tcolor' [1 1 1] 'pcolor' [0 0 0] 'lcolor' [0 0 0] 'lwidth' .5 ...
     'radius' .5 'sample' 5 'parent' []} varargin];
 
 % check/parse given pv pairs
@@ -250,13 +264,18 @@ if(isempty(pv.parent)); pv.parent=gca; end
 % get hold state
 held=ishold;
 
+% turn off v6 contourf warning (annoying)
+warnstate=warning('off','MATLAB:contourf:DeprecatedV6Argument');
+
 % plotting each moment tensor individually
-h=nan(n,1);
+h=cell(n,2);
 for i=1:n
     % deviatoric ray directions
-    inc=0:pv.sample(i):90; ninc=numel(inc);
-    az=0:pv.sample(i):360; naz=numel(az);
-    [az,inc]=meshgrid(az,inc); % ninc x naz
+    % note: azimuth starts at -90 as a workaround to strange contourf
+    %       behavior at 0 (a line is drawn from origin to top)
+    inc0=0:pv.sample(i):90; ninc=numel(inc0);
+    az0=-90:pv.sample(i):270; naz=numel(az0);
+    [az,inc]=meshgrid(az0,inc0); % ninc x naz
     
     % get actual ray directions
     [inc,az]=rotate_incaz(inc,az,pv,i);
@@ -264,19 +283,40 @@ for i=1:n
     % calc radiation pattern in given directions
     rp=reshape(radpat(mt(i,:),inc(:),az(:),pv.wave{i}),[ninc naz]);
     
-    % color matrix
-    c=permute(pv.tcolor(i,:),[1 3 2]);
-    c=c(ones(ninc,1),ones(1,naz),:);
-    c(rp>=0)=pv.pcolor(i,1);
-    c(find(rp>=0)+ninc*naz)=pv.pcolor(i,2);
-    c(find(rp>=0)+2*ninc*naz)=pv.pcolor(i,3);
+    % color matrix (for surf)
+    %c=permute(pv.tcolor(i,:),[1 3 2]);
+    %c=c(ones(ninc,1),ones(1,naz),:);
+    %c(rp>=0)=pv.pcolor(i,1);
+    %c(find(rp>=0)+ninc*naz)=pv.pcolor(i,2);
+    %c(find(rp>=0)+2*ninc*naz)=pv.pcolor(i,3);
     
-    % plot tensor
-    h(i,1)=surf(pv.parent,...
-        sqrt(2)*sind((0:pv.sample(i):90)'/2)...
-        *sind(pv.roll(i)+(0:pv.sample(n):360))*pv.radius(i)+x(i),...
-        sqrt(2)*sind((0:pv.sample(n):90)'/2)...
-        *cosd(pv.roll(i)+(0:pv.sample(i):360))*pv.radius(i)+y(i),0*az,c);
+    % plot moment tensor (for surf)
+    %h{i,1}=surf(pv.parent,...
+    %    sqrt(2)*sind(inc0'/2)...
+    %    *sind(pv.roll(i)+az0)*pv.radius(i)+x(i),...
+    %    sqrt(2)*sind(inc0'/2)...
+    %    *cosd(pv.roll(i)+az0)*pv.radius(i)+y(i),0*az,c);
+    
+    % plot moment tensor (for contour)
+    % notes:
+    % (1) v6 needed to properly draw contours (matlab regression)
+    % (2) the -2 forces coloring of the entire radiation pattern
+    [h{i,1},h{i,1}]=contourf(...
+        'v6',sqrt(2)*sind(inc0'/2)...
+        *sind(pv.roll(i)+az0)*pv.radius(i)+x(i),...
+        sqrt(2)*sind(inc0'/2)...
+        *cosd(pv.roll(i)+az0)*pv.radius(i)+y(i),...
+        rp,[-2 0],'parent',pv.parent);
+    
+    % clean up patches (for contour)
+    set(h{i,1},'edgecolor','none','tag','plotmt_patch');
+    if(numel(h{i,1})>1)
+        cdata=cell2mat(get(h{i,1},'cdata'));
+    else
+        cdata=get(h{i,1},'cdata');
+    end
+    set(h{i,1}(cdata>=0),'facecolor',pv.pcolor(i,:));
+    set(h{i,1}(cdata>-2 & cdata<0),'facecolor',pv.tcolor(i,:));
     
     % turn hold on after 1st pass if not already
     if(i==1 && ~held); hold(pv.parent,'on'); end
@@ -284,9 +324,9 @@ for i=1:n
     % outline
     lc=pv.lcolor(i,:); vis='on';
     if(isnan(sum(lc))); lc=[0 0 0]; vis='off'; end
-    h(i,2)=plot(pv.parent,x(i)+pv.radius(i)*sind(0:pv.sample(i):360),...
-        y(i)+pv.radius(i)*cosd(0:pv.sample(i):360),'-','color',lc,...
-        'visible',vis,'linewidth',pv.lwidth(i));
+    h{i,2}=plot(pv.parent,x(i)+pv.radius(i)*sind(az0),...
+        y(i)+pv.radius(i)*cosd(az0),'-','color',lc,...
+        'visible',vis,'linewidth',pv.lwidth(i),'tag','plotmt_outline');
     
     % save info to userdata
     tmp.wave=pv.wave{i};
@@ -298,13 +338,16 @@ for i=1:n
     tmp.outline=h(i,2);
     tmp.radius=pv.radius(i);
     tmp.sample=pv.sample(i);
-    set(h(i),'userdata',tmp);
+    set(h{i,1},'userdata',tmp);
 end
 
-% adjust view
+% turn v6 warnings back on
+warning(warnstate.state,'MATLAB:contourf:DeprecatedV6Argument');
+
+% adjust view (for surf)
 %colormap(pv.parent,[pv.tcolor(1,:); pv.pcolor(1,:)]);
-view(pv.parent,0,90);
-shading(pv.parent,'interp');
+%view(pv.parent,0,90);
+%shading(pv.parent,'interp');
 
 % restore hold
 if(~held); hold(pv.parent,'off'); end

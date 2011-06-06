@@ -38,7 +38,10 @@ all SHdiff
 prep global on terra
 
 cmt subtoolbox
-    - main thing is to plot CMTS!!!
+    - normalization, diagonalization & decomposition
+    - mt to strike-dip-rake
+    - mt to principal axes
+    - principal axes to mt
 
 more cmb models (rjk)
     - we need to allow parameter setting (while loop rather than for)

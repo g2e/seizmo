@@ -54,9 +54,10 @@ function [varargout]=plotfkarf(arf,varargin)
 %        Feb. 16, 2011 - fix pcolor offset in polar plots, color code fix
 %        Feb. 23, 2011 - replace polar call with wedge, fix pcolor
 %                        out-of-bounds pixels
+%        May  25, 2011 - commented remaining out aliasing stuff
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 23, 2011 at 10:50 GMT
+%     Last Updated May  25, 2011 at 10:50 GMT
 
 % todo:
 
@@ -335,13 +336,13 @@ set(ax,'userdata',userdata,'tag','fkarf');
 smax=max(max(abs(map.x)),max(abs(map.y)));
 
 % get nearest neighbor station distances
-[clat,clon]=arraycenter(map.stla,map.stlo);
-[e,n]=geographic2enu(map.stla,map.stlo,0,clat,clon,0);
-tri=delaunay(e,n);
-friends=[tri(:,1:2); tri(:,2:3); tri(:,[3 1])];
-friends=unique([min(friends,[],2) max(friends,[],2)],'rows');
-dist=vincentyinv(map.stla(friends(:,1)),map.stlo(friends(:,1)),...
-                 map.stla(friends(:,2)),map.stlo(friends(:,2)));
+%[clat,clon]=arraycenter(map.stla,map.stlo);
+%[e,n]=geographic2enu(map.stla,map.stlo,0,clat,clon,0);
+%tri=delaunay(e,n);
+%friends=[tri(:,1:2); tri(:,2:3); tri(:,[3 1])];
+%friends=unique([min(friends,[],2) max(friends,[],2)],'rows');
+%dist=vincentyinv(map.stla(friends(:,1)),map.stlo(friends(:,1)),...
+%                 map.stla(friends(:,2)),map.stlo(friends(:,2)));
 
 % first plot the map
 imagesc(map.x,map.y,map.beam,'parent',ax);

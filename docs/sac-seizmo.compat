@@ -67,7 +67,7 @@ grid				set(gca,'xgrid','on')
 gtext				see xlabel, ylabel, title, text ...
 hanning				N/A, can be done with slidingavg + solofun
 help				help seizmo (or any sub-directory)
-help_intro			see doc/README
+help_intro			'showdemo beginning_seizmo'
 highpass			iirfilter(data,'hi',...)
 hilbert				hilbrt (note the misspelling)
 history				use the command history window, commandhistory
@@ -77,7 +77,7 @@ image				N/A (can be done with matlab), imagesc
 inicm				see clear (also global SEIZMO)
 installmacro		N/A, see path, function, script
 int					integrate
-interpolate			interpolate (FAR BETTER) & syncrates
+interpolate			interpolate (FAR BETTER) & syncrates (ANTI-ALIASING)
 keepam				keepam (see also keepph, keeprl, keepim)
 khronhite			N/A
 line				see plot properties

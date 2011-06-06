@@ -72,9 +72,10 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %        Mar. 25, 2011 - fix corrections desync from data
 %        Apr.  6, 2011 - minor change to minradampl cut
 %        Apr. 22, 2011 - update for finalcut field
+%        May  20, 2011 - add some code to workaround matlab write bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2011 at 13:35 GMT
+%     Last Updated May  20, 2011 at 13:35 GMT
 
 % todo:
 
@@ -399,6 +400,11 @@ for i=1:numel(s)
     % time of run
     tmp.time=datestr(now);
     timestr=datestr(now,30);
+    
+    % matlab bug workaround
+    % - really strange...saving fails to
+    %   write all fields if we dont do this
+    if(isempty(tmp.userwinnow)); tmp.userwinnow=[]; end
     
     % save results
     save(fullfile(odir,[timestr '_' runname '_results.mat']),...

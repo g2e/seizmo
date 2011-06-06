@@ -43,13 +43,14 @@ function [varargout]=plot_taupcurve(tt,offset,flip,varargin)
 %     movekids(h,'back');
 %     hold(ax,'off');
 %
-%    See also: TAUPCURVE, RECORDSECTION
+%    See also: TAUPCURVE, PLOT_TAUPPATH, RECORDSECTION
 
 %     Version History:
 %        Jan. 23, 2011 - initial version
+%        May  21, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2011 at 17:15 GMT
+%     Last Updated May  21, 2011 at 17:15 GMT
 
 % todo:
 

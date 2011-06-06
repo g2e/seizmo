@@ -56,9 +56,10 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %        Apr. 11, 2011 - improve docs, add gcrng/azrng options
 %        Apr. 17, 2011 - optimizations for multibandalign, clear gc/azrng
 %        Apr. 22, 2011 - update for finalcut field
+%        May  20, 2011 - add some code to workaround matlab write bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2011 at 13:35 GMT
+%     Last Updated May  20, 2011 at 13:35 GMT
 
 % todo:
 
@@ -209,10 +210,9 @@ for i=1:numel(results)
         % loop over each band in the result to add more info
         for k=1:numel(tmp)
             % matlab bug workaround
-            % - see cmb_1st_pass
-            if(isempty(tmp(k).usersnr))
-                tmp(k).usersnr=[];
-            end
+            % - really strange...saving fails to
+            %   write all fields if we dont do this
+            if(isempty(tmp(k).usersnr)); tmp(k).usersnr=[]; end
 
             % add run name, quake name, data directory name, syn stuff
             tmp(k).phase=results(i).phase;
@@ -250,6 +250,11 @@ for i=1:numel(results)
             
             % time of run
             tmp(k).time=datestr(now);
+            
+            % matlab bug workaround
+            % - really strange...saving fails to
+            %   write all fields if we dont do this
+            if(isempty(tmp(k).userwinnow)); tmp(k).userwinnow=[]; end
         end
 
         % save results (all bands together)

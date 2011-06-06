@@ -14,8 +14,7 @@ function [mo]=scalarmoment(mt)
 %     % Compare scalar moments in the CMT catalog with those calculated
 %     % directly from the tensor values (note the bias due to truncation):
 %     cmts=findcmts;
-%     mo=scalarmoment(...
-%         [cmts.mrr cmts.mtt cmts.mpp cmts.mrt cmts.mrp cmts.mtp]);
+%     mo=scalarmoment(mt_s2v(cmts));
 %     hist(cmts.scalarmoment-mo,100);
 %
 %    See also: FINDCMTS, FINDCMT, MOMENTMAG
