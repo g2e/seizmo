@@ -75,9 +75,10 @@ function []=gooduglycheck(indir,outdir,varargin)
 %        Jan. 19, 2011 - updated for all the recent gui changes
 %        Jan. 21, 2011 - further tweaking
 %        Apr.  5, 2011 - warn on event location variation
+%        June  8, 2011 - turn on fill in cut commands
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  5, 2011 at 10:35 GMT
+%     Last Updated June  8, 2011 at 10:35 GMT
 
 % todo
 % - something like freqwindow may be better?
@@ -215,7 +216,7 @@ for i=s(:)'
         % plot filtered records
         for j=1:nfb
             % p1 style plots
-            ax=plot1(cut(fdata{j},win(1),win(2)),...
+            ax=plot1(cut(fdata{j},win(1),win(2),'fill',true),...
                 'xlabel',' ','ylabel',' ','align',true,varargin{:});
             if(ishandle(ax(1))); ffh(j)=get(ax(1),'parent'); end
             drawnow;
@@ -245,8 +246,8 @@ for i=s(:)'
         ncols=fix(sqrt(nrecs));
         nrows=ceil(nrecs/ncols);
         ax=makesubplots(nrows,ncols,1:nrecs,'align','parent',ufh);
-        [deleted,deleted]=selectrecords(cut(ddata,win(1),win(2)),...
-            'delete','p1',[],...
+        [deleted,deleted]=selectrecords(cut(ddata,win(1),win(2),...
+            'fill',true),'delete','p1',[],...
             'xlim',win,'ax',ax,'xlabel',' ','ylabel',' ',varargin{:});
         data=data0;
         data(deleted)=[];

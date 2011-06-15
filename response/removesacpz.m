@@ -2,7 +2,7 @@ function [data,pz]=removesacpz(data,varargin)
 %REMOVESACPZ    Removes SAC PoleZero responses from SEIZMO records
 %
 %    Usage:    [dataout,good]=removesacpz(datain)
-%              [...]=removesacpz(...,'freqlimits',[f1 f2 f3 f4],...)
+%              [...]=removesacpz(...,'taperlimits',[f1 f2 f3 f4],...)
 %              [...]=removesacpz(...,'tapertype',TYPE,...)
 %              [...]=removesacpz(...,'taperopt',VALUE,...)
 %              [...]=removesacpz(...,'units',UNITS,...)
@@ -22,7 +22,7 @@ function [data,pz]=removesacpz(data,varargin)
 %     struct field set to TRUE or FALSE.  See GETSACPZ for info on the
 %     PoleZero layout.
 %
-%     [...]=REMOVESACPZ(...,'FREQLIMITS',[F1 F2 F3 F4],...) applies a
+%     [...]=REMOVESACPZ(...,'TAPERLIMITS',[F1 F2 F3 F4],...) applies a
 %     lowpass and a highpass taper that limits the spectrum of the
 %     deconvolved records.  F1 and F2 give the highpass taper limits while
 %     F3 and F4 specify the lowpass taper limits.  The highpass taper is
@@ -80,10 +80,10 @@ function [data,pz]=removesacpz(data,varargin)
 %    Header changes: DEPMIN, DEPMEN, DEPMAX, IDEP, SCALE
 %
 %    Examples:
-%     Remove the instrument response for a dataset, converting to velocity
-%     and ignoring all periods at >200s while tapering periods from 200 to
-%     150 seconds:
-%      data=removesacpz(data,'units','vel','freqlimits',[1/200 1/150]);
+%     % Remove the instrument response for a dataset, converting to
+%     % velocity and ignoring all periods at >200s while tapering periods
+%     % from 200 to 150 seconds:
+%     data=removesacpz(data,'units','vel','taperlimits',[1/200 1/150]);
 %
 %    See also: APPLYSACPZ, GETSACPZ, DECONVOLVE
 
@@ -103,9 +103,11 @@ function [data,pz]=removesacpz(data,varargin)
 %                        checkheader usage
 %        Aug. 25, 2010 - drop SEIZMO global, fix taper option bug
 %        Sep. 28, 2010 - more info when response bombs out
+%        June  9, 2011 - changing freqlimits to taperlimits, output taper
+%                        limits to terminal, fixed bomb-out bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 28, 2010 at 20:30 GMT
+%     Last Updated June  9, 2011 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -209,8 +211,9 @@ try
         'icounts' 'icounts'};
     
     % default options
-    flimbu=[-1*ones(nrecs,2) 2*nyq(:,[1 1])];
-    varargin=[{'f' flimbu 't' 'hann' 'o' [] 'u' 'dis' ...
+    tlimbu=[-1*ones(nrecs,2) 2*nyq(:,[1 1])]; tlim=tlimbu;
+    tlimstr={'-1' '-1' '2*NYQUIST' '2*NYQUIST'};
+    varargin=[{'t' 'hann' 'o' [] 'u' 'dis' ...
         'id' 'idisp' 'h2o' zeros(nrecs,1)} varargin];
     
     % require all options to be strings
@@ -220,30 +223,50 @@ try
     end
     
     % check options
-    for i=1:2:numel(varargin)
-        value=varargin{i+1};
+    for z=1:2:numel(varargin)
+        value=varargin{z+1};
         
         % which option
-        switch lower(varargin{i})
+        switch lower(varargin{z})
             case {'fl' 'freq' 'fr' 'freqlim' 'freql' 'freqlimits' 'frq' ...
-                    'freqlimit' 'frqlim' 'f'}
+                    'freqlimit' 'frqlim' 'f' 'tl' 'ta' 'tap' 'tpr' ...
+                    'taperlim' 'taperl' 'taperlimits' 'taperlimit' ...
+                    'tprlim' 'l'}
                 % assure real and correct size
                 if(isreal(value) && any(size(value,1)==[1 nrecs]) ...
                         && size(value,2)<=4 && ndims(value)==2)
+                    % make sure it is sorted
                     if(~isequal(value,sort(value,2)))
                         error('seizmo:removesacpz:badInput',...
-                            ['FREQLIMITS must be [F1 F2 F3 F4]\n' ...
+                            ['TAPERLIMITS must be [F1 F2 F3 F4]\n' ...
                             'where F1 <= F2 <= F3 <= F4!']);
                     end
+                    
+                    % expand to Nx4 as needed
                     if(size(value,1)==1)
-                        flim=[value(ones(nrecs,1),:) ...
-                            flimbu(:,(size(value,2)+1):4)];
+                        tlim=[value(ones(nrecs,1),:) ...
+                            tlimbu(:,(size(value,2)+1):4)];
                     else
-                        flim=[value flimbu(:,(size(value,2)+1):4)];
+                        tlim=[value tlimbu(:,(size(value,2)+1):4)];
+                    end
+                    
+                    % update taperlimits strings
+                    if(size(value,1)==1)
+                        for a=1:numel(value)
+                            tlimstr{a}=num2str(value(a),'%g');
+                        end
+                    else % check for variable limits (use 'VARIABLE')
+                        for a=1:size(value,2)
+                            if(isscalar(unique(value(:,a))))
+                                tlimstr{a}=num2str(value(1,a),'%g');
+                            else
+                                tlimstr{a}='VARIABLE';
+                            end
+                        end
                     end
                 else
                     error('seizmo:removesacpz:badInput',...
-                        'FREQLIMITS must be [F1 F2 F3 F4]!');
+                        'TAPERLIMITS must be [F1 F2 F3 F4]!');
                 end
             case {'u' 'un' 'unit' 'units'}
                 if(ischar(value)); value=cellstr(value); end
@@ -298,13 +321,17 @@ try
                 if(isscalar(topt)); topt(1:nrecs,1)=topt; end
             otherwise
                 error('seizmo:removesacpz:badInput',...
-                    'Unknown option: %s !',varargin{i});
+                    'Unknown option: %s !',varargin{z});
         end
     end
     
     % detail message
     if(verbose)
         disp('Removing SAC PoleZero Response from Record(s)');
+        fprintf('Taper FullStop Limits: %10s Hz, %10s Hz\n',...
+            tlimstr{1},tlimstr{4})
+        fprintf('Taper FullPass Limits: %10s Hz, %10s Hz\n',...
+            tlimstr{2},tlimstr{3})
         print_time_left(0,nrecs);
     end
     
@@ -341,13 +368,13 @@ try
         freq=[linspace(0,nyq(i),nspts/2+1) ...
             linspace(-nyq(i)+sdelta,-sdelta,nspts/2-1)];
         afreq=abs(freq);
-        good=afreq>=flim(i,1) & afreq<=flim(i,4);
+        good=afreq>=tlim(i,1) & afreq<=tlim(i,4);
         
         % taper
         taper1=taperfun(ttype{i},afreq,...
-            flim(i,1:2),topt(i)).';
+            tlim(i,1:2),topt(i)).';
         taper2=taperfun(ttype{i},nyq(i)-afreq,...
-            nyq(i)-flim(i,[4 3]),topt(i)).';
+            nyq(i)-tlim(i,[4 3]),topt(i)).';
         tmp=tmp.*taper1(:,ones(ncmp(1),1)).*taper2(:,ones(ncmp(1),1));
         
         % convert zpk to fap

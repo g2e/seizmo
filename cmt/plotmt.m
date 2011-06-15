@@ -89,9 +89,12 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %        May  15, 2011 - implimented point-of-view & roll options
 %        May  31, 2011 - plotmt now uses contourf
 %        June  1, 2011 - fix for isotropic source
+%        June  6, 2011 - fixed bug for 3x3 checking case
+%        June 14, 2011 - added handles to userdata, allow character input
+%                        for colors
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  1, 2011 at 23:55 GMT
+%     Last Updated June 14, 2011 at 23:55 GMT
 
 % todo:
 
@@ -109,8 +112,11 @@ end
 
 % check main 3 inputs
 mtsz=size(mt);
-if(isequal(mtsz(1:2),[3 3]) && any(numel(mtsz)==[2 3]))
-    if(numel(mtsz>2)); n=mtsz(3); else n=1; end
+if(~isnumeric(mt) || ~isreal(mt))
+    error('seizmo:plotmt:badInput',...
+        'MT must be a real-valued numeric array!');
+elseif(isequal(mtsz(1:2),[3 3]) && any(numel(mtsz)==[2 3]))
+    if(numel(mtsz)>2); n=mtsz(3); else n=1; end
     mt=mt_g2v(mt); % convert from 3x3xN to Nx6
     %mtsz=[n 6];   % new mt size
 elseif(mtsz(2)==6 && numel(mtsz)==2)
@@ -195,30 +201,36 @@ for i=1:2:numel(varargin)
             pv.face=v;
         case {'t' 'tc' 'tcolor'}
             if(isempty(v)); continue; end
-            if(~isnumeric(v) || ~isreal(v) || size(v,2)~=3 ...
+            if((~ischar(v) ...
+                    && (~isnumeric(v) || ~isreal(v) || size(v,2)~=3)) ...
                     || ndims(v)~=2 || ~any(size(v,1)==[1 n]))
                 error('seizmo:plotmt:badInput',...
                     'TCOLOR must be given as [RED GREEN BLUE]!');
             end
             if(size(v,1)==1); v=v(ones(1,n),:); end
+            if(ischar(v)); v=name2rgb(v); end
             pv.tcolor=v;
         case {'c' 'pc' 'pcolor' 'color'}
             if(isempty(v)); continue; end
-            if(~isnumeric(v) || ~isreal(v) || size(v,2)~=3 ...
+            if((~ischar(v) ...
+                    && (~isnumeric(v) || ~isreal(v) || size(v,2)~=3)) ...
                     || ndims(v)~=2 || ~any(size(v,1)==[1 n]))
                 error('seizmo:plotmt:badInput',...
                     'PCOLOR must be given as [RED GREEN BLUE]!');
             end
             if(size(v,1)==1); v=v(ones(1,n),:); end
+            if(ischar(v)); v=name2rgb(v); end
             pv.pcolor=v;
         case {'lc' 'lcolor' 'outline'}
             if(isempty(v)); pv.lcolor=nan(n,3); continue; end
-            if(~isnumeric(v) || ~isreal(v) || size(v,2)~=3 ...
+            if((~ischar(v) ...
+                    && (~isnumeric(v) || ~isreal(v) || size(v,2)~=3)) ...
                     || ndims(v)~=2 || ~any(size(v,1)==[1 n]))
                 error('seizmo:plotmt:badInput',...
                     'LCOLOR must be given as [RED GREEN BLUE]!');
             end
             if(size(v,1)==1); v=v(ones(1,n),:); end
+            if(ischar(v)); v=name2rgb(v); end
             pv.lcolor=v;
         case {'lw' 'lwidth' 'linewidth'}
             if(isempty(v)); continue; end
@@ -338,6 +350,8 @@ for i=1:n
     tmp.outline=h(i,2);
     tmp.radius=pv.radius(i);
     tmp.sample=pv.sample(i);
+    tmp.patch_handle=h{i,1};
+    tmp.outline_handle=h{i,2};
     set(h{i,1},'userdata',tmp);
 end
 

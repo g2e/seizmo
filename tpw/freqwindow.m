@@ -90,11 +90,13 @@ function []=freqwindow(indir,outdir,varargin)
 %        Apr. 17, 2011 - normstyle option, ylimit bugfix for zero good,
 %                        axes handle bugfix, userwindow bugfixes
 %        June  5, 2011 - selectrecords has normstyle too
+%        June  8, 2011 - fixed snr cut bug when adjusting window or moveout
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  5, 2011 at 10:35 GMT
+%     Last Updated June  8, 2011 at 10:35 GMT
 
 % todo:
+% - single trace is not scaling properly (flatline) for shawn
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -371,6 +373,7 @@ for i=s(:)'
                             win=tmp.limits;
                             xlimits=win+[-1 1]*diff(win);
                             deleting=false;
+                            good=true(nrecs,1);
                         end
                     case 4 % adjust mvin
                         mvchoice=menu(...
@@ -390,6 +393,7 @@ for i=s(:)'
                         adj=[1.5 1.25 1.1 1.05 1.01 .99 .95 .9 .75 .5 1];
                         mvin=mvin*adj(mvchoice);
                         deleting=false;
+                        good=true(nrecs,1);
                     case 5 % skip one
                         unsatisfied=false;
                     case 6 % skip all

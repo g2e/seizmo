@@ -21,9 +21,10 @@ function [mo]=scalarmoment(mt)
 
 %     Version History:
 %        Mar. 11, 2011 - initial version
+%        June  7, 2011 - made warning more informative
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2011 at 23:55 GMT
+%     Last Updated June  7, 2011 at 23:55 GMT
 
 % todo:
 
@@ -34,7 +35,7 @@ error(nargchk(1,1,nargin));
 sz=size(mt);
 if(~isnumeric(mt) || ~isreal(mt))
     error('seizmo:scalarmoment:badInput',...
-        'MT is not in a valid format!');
+        'MT must be a real-valued numeric array!');
 elseif(numel(sz)==2 && sz(2)==6) % (Mrr,Mtt,Mpp,Mrt,Mrp,Mtp)
     % convert to 3x3
     mt=reshape(mt(:,[1 4 5 4 2 6 5 6 3])',[3 3 sz(1)]);

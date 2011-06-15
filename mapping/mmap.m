@@ -102,9 +102,10 @@ function [varargout]=mmap(varargin)
 %     MMAP(...,'BORDER',COLOR,...) specifies the color of the
 %     political borders in the map.  The default is [.5 0 0].
 %
-%     MMAP(...,'AXIS',AX,...)  sets the axes to draw in.  This is
+%     MMAP(...,'PARENT',AX,...)  sets the axes to draw in.  This is
 %     useful for subplots, guis, etc.  The default draws the map in a new
-%     figure.
+%     figure.  Note that this allows plotting stations/events to an
+%     existing map drawn by MMAP but only if the axes' hold state on 'on'.
 %
 %     AX=MMAP(DATA) returns the axes handle for the map.
 %
@@ -128,9 +129,11 @@ function [varargout]=mmap(varargin)
 %        Oct. 10, 2010 - changed eventmarkersize to 150 for looks
 %        Feb. 10, 2011 - namechange: maplocations => mmap, h1 line changed
 %        Mar.  6, 2011 - fix bug in longitude wrapping
+%        June 14, 2011 - add fgc/bgc option shortcuts, added code to allow
+%                        drawing stations/events on an existing mmap
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  6, 2011 at 20:30 GMT
+%     Last Updated June 14, 2011 at 20:30 GMT
 
 % todo:
 
@@ -258,7 +261,7 @@ for i=1:2:numel(varargin)
                     ['GRIDOPT option must be a cell array of ' ...
                     '''option''/value pairs!']);
             end
-        case {'fgcolor' 'fg'}
+        case {'fgcolor' 'fg' 'fgc'}
             if(skip)
                 fg=[];
             elseif(ischar(val) ...
@@ -268,7 +271,7 @@ for i=1:2:numel(varargin)
                 error('seizmo:mmap:badInput',...
                     'FGCOLOR must be a colorname or RGB triplet!');
             end
-        case {'bgcolor' 'bg'}
+        case {'bgcolor' 'bg' 'bgc'}
             if(skip)
                 bg=[];
             elseif(ischar(val) ...
@@ -305,7 +308,7 @@ for i=1:2:numel(varargin)
                 error('seizmo:mmap:badInput',...
                     'BORDERCOLOR must be a colorname or RGB triplet!');
             end
-        case {'axis' 'ax' 'a'}
+        case {'axis' 'ax' 'a' 'parent' 'pa' 'par'}
             if(skip)
                 ax=[];
             else
@@ -347,22 +350,34 @@ if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
     % new figure
     fh=figure('color',bg);
     ax=axes('parent',fh);
+    held=false;
 else
     axes(ax);
-    h=get(ax,'children'); delete(h);
-    h=findobj(get(get(ax,'parent'),'children'),'peer',ax); delete(h);
+    % use axes if held and an mmap map
+    if(ishold(ax) && strcmpi(get(ax,'tag'),'locationmap'))
+        held=true;
+    else % clear these axes
+        held=false;
+        h=get(ax,'children'); delete(h);
+        h=findobj(get(get(ax,'parent'),'children'),'peer',ax); delete(h);
+    end
 end
 
 % plot map
-m_proj(proj,popt{:});
-set(ax,'color',sea);
-if(strcmpi(gshhs,'o'))
-    m_coast('patch',land);
-else
-    m_gshhs([gshhs 'c'],'patch',land);
-    m_gshhs([gshhs 'b'],'color',border);
+% - test if options will update a plot or draw new
+%   - mixed m_coast & m_gshhs draws new
+% - could we delete and redraw certain things?
+if(~held)
+    m_proj(proj,popt{:});
+    set(ax,'color',sea);
+    if(strcmpi(gshhs,'o'))
+        m_coast('patch',land);
+    else
+        m_gshhs([gshhs 'c'],'patch',land);
+        m_gshhs([gshhs 'b'],'color',border);
+    end
+    m_grid('color',fg,gopt{:});
 end
-m_grid('color',fg,gopt{:});
 
 % hackery to color oceans at large when the above fails
 set(findobj(ax,'tag','m_grid_color'),'facecolor',sea);
@@ -391,7 +406,7 @@ h=m_scatter(ax,evlo,evla,evs,evm,'filled','markeredgecolor','k');
 set(h,'tag','events');
 h=m_scatter(ax,stlo,stla,sts,stm,'filled','markeredgecolor','k');
 set(h,'tag','stations');
-hold(ax,'off');
+if(~held); hold(ax,'off'); end
 
 % return figure handle
 set(ax,'tag','locationmap');

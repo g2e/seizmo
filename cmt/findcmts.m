@@ -59,9 +59,10 @@ function [cmts]=findcmts(varargin)
 %                        examples
 %        Feb. 11, 2011 - fix name/nullaxis option conflict
 %        Mar. 11, 2011 - fix null axis bug, add lonrng/latrng, fix name bug
+%        June 11, 2011 - minor defaults fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2011 at 21:30 GMT
+%     Last Updated June 11, 2011 at 21:30 GMT
 
 % todo:
 % - add % double couple
@@ -136,7 +137,7 @@ end
 % defaults
 varargin=[{'st' [1962 1] 'et' datevec(now) 'cat' 'both' 'mw' [0 10] ...
     'ms' [0 10] 'mb' [0 10] 'lat' [-90 90] 'lon' [-180 180] ...
-    'dep' [0 1000] 'na' [0 90] 'hd' [-9999 9999] 'cs' [-9999 9999] ...
+    'dep' [0 1000] 'hd' [-9999 9999] 'cs' [-9999 9999] ...
     'tax' [0 90] 'nax' [0 90]} varargin];
 
 % require options are strings
