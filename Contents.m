@@ -1,5 +1,5 @@
 % SEIZMO - Passive Seismology Toolbox
-% Version 0.6.199 Ichinsky 14-Jun-2011
+% Version 0.6.201 Jayawijaya 15-Jun-2011
 %
 % Help Info
 %  <a href="matlab:help install_seizmo">INSTALLATION</a>
