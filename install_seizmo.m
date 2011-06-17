@@ -14,11 +14,11 @@ function [varargout]=install_seizmo(varargin)
 %     WaveWatch III toolset requires compiling a mex file, and the M_Map
 %     toolbox needs the GSHHS coastline files downloaded and put on the
 %     path too.  While the first 2 of these tasks are done here, the GSHHS
-%     download is currently left to the user (I will probably add this
-%     sometime in the future).  An imformative message is given during the
-%     installation to aid you in completing the task.  Also, for those
-%     interested this will uninstall previous SEIZMO installs.  You can
-%     do an uninstallation yourself by calling UNINSTALL_SEIZMO.
+%     download is currently left to the user (see SEIZMO_GSHHS_WEBINSTALL).
+%     An imformative message is given during the installation to aid you in
+%     completing the task.  Also, for those interested this will uninstall
+%     previous SEIZMO installs.  You can do an uninstallation yourself by
+%     calling UNINSTALL_SEIZMO (its hidden in the 'lowlevel' directory).
 %
 %     INSTALL_SEIZMO(TYPE) allows editing the pathdef.m save preference.
 %     See SAVEPATH_SEIZMO for details.  The default is no input to
@@ -41,24 +41,16 @@ function [varargout]=install_seizmo(varargin)
 %     % Amazingly, every step of installing SEIZMO can be done *WITHIN*
 %     % Matlab/Octave.  All you need is an internet connection so you
 %     % can grab the SEIZMO package, extract the contents and install:
-%     url='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/';
-%     latest=strtrim(urlread([url 'latest']));
-%     url=[url latest];
-%     movefile('seizmo','seizmo-old');
-%     gunzip(url)
-%     untar(latest(1:end-3))
+%     file=gunzip('https://github.com/g2e/seizmo/tarball/master');
+%     untar(file{:});
 %     cd seizmo/
 %     install_seizmo
 %
-%     % Now download the GSHHS package & extract the files onto path:
-%     url='http://www.ngdc.noaa.gov/mgg/shorelines/data/gshhs/';
-%     url=[url 'oldversions/version1.10/gshhs_1.10.zip'];
-%     urlwrite(url,'gshhs_1.10.zip');
-%     unzip('gshhs_1.10.zip');
-%     addpath('gshhs');
-%     savepath
+%     % and if you have the time:
+%     seizmo_gshhs_webinstall
 %
-%    See also: ABOUT_SEIZMO, SEIZMO, UNINSTALL_SEIZMO, SAVEPATH_SEIZMO
+%    See also: ABOUT_SEIZMO, SEIZMO, UNINSTALL_SEIZMO, SAVEPATH_SEIZMO,
+%              SEIZMO_GSHHS_WEBINSTALL
 
 %     Version History:
 %        Dec. 30, 2010 - initial version
@@ -67,9 +59,10 @@ function [varargout]=install_seizmo(varargin)
 %        Jan. 14, 2011 - example improved to get current release
 %        Jan. 19, 2011 - updated to fixed examples
 %        Apr.  6, 2011 - include verLessThan for pre-7.4 matlab
+%        June 16, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  6, 2011 at 15:25 GMT
+%     Last Updated June 16, 2011 at 15:25 GMT
 
 % todo:
 

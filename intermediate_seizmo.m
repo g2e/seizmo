@@ -1,6 +1,6 @@
 % nothing here yet...
 
-%% Intermediate SEIZMO - The Next Step
+%% Intermediate SEIZMO
 %
 
 %% SEIZMO in depth

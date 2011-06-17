@@ -1,6 +1,6 @@
 % nothing here yet...
 
-%% Advanced SEIZMO - Enlightenment
+%% Advanced SEIZMO
 %
 
 %% SEIZMO for the seismologist

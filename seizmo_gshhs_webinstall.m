@@ -7,7 +7,7 @@ function [ok]=seizmo_gshhs_webinstall(mypath,varargin)
 %
 %    Description:
 %     OK=SEIZMO_GSHHS_WEBINSTALL downloads the GSHHS zip file to the
-%     current directory, extracts its contents to 'gshhs' directory and
+%     current directory, extracts its contents to the 'gshhs' directory and
 %     installs them on the Matlab/Octave path.  THE DOWNLOAD IS LARGE:
 %     OVER 100 MEGABYTES & CAN TAKE HOURS ON A SLOW CONNECTION!  THERE IS
 %     NO RESUME EITHER SO IF IT FAILS, YOU WILL LIKELY LOSE EVERYTHING YOU
