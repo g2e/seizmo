@@ -31,6 +31,7 @@ function []=alphabetical_list()
 %<a href="matlab:help aziwindow">aziwindow</a>                      - Azimuthal window record section of correlograms
 %<a href="matlab:help bad_sacpz_cplxpair">bad_sacpz_cplxpair</a>             - Finds SAC Polezero files with bad complex pairs
 %<a href="matlab:help bathy_micro_excite">bathy_micro_excite</a>             - Bathymetry 2ndary microseism excitation coefficients
+%<a href="matlab:help bihist">bihist</a>               - Plots histograms for 2 datasets with one going up & one down
 %<a href="matlab:help binoperr">binoperr</a>                       - Controls behavior of SEIZMO binary functions
 %<a href="matlab:help blue2red">blue2red</a>                       - Blue-White-Red (aka Polar) colormap
 %<a href="matlab:help bseizmo">bseizmo</a>                        - Arranges xy data into a SEIZMO data structure

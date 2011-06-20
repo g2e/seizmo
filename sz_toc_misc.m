@@ -3,6 +3,7 @@ function []=sz_toc_misc()
 %<a href="matlab:help axexpand">axexpand</a>             - Expands axes by factor
 %<a href="matlab:help axmove">axmove</a>               - Moves a set of axes by the specified amount
 %<a href="matlab:help axstretch">axstretch</a>            - Stretches a set of axes as a group (resizing+moving)
+%<a href="matlab:help bihist">bihist</a>               - Plots histograms for 2 datasets with one going up & one down
 %<a href="matlab:help buttord2">buttord2</a>             - Butterworth filter order selection. (Honors passband corners)
 %<a href="matlab:help circle">circle</a>               - Returns points on a circle in cartesian space
 %<a href="matlab:help clonefigure">clonefigure</a>          - Makes a clone of a figure
