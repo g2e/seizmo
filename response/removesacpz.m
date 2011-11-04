@@ -31,9 +31,9 @@ function [data,pz]=removesacpz(data,varargin)
 %     spectral domain.  This is an acausal filter and should not be used if
 %     you want to preserve seismic phase onsets.  Use option H2O to
 %     stabilize the deconvolution without frequency domain tapering.
-%     Default FREQLIMITS are [-1 -1 2*NYQ 2*NYQ] where NYQ is the nyquist
+%     Default TAPERLIMITS are [-1 -1 2*NYQ 2*NYQ] where NYQ is the nyquist
 %     frequency for each particular record.  The defaults will not apply
-%     any tapering to the records.  Note that FREQLIMITS may be specified
+%     any tapering to the records.  Note that TAPERLIMITS may be specified
 %     also as [F1 F2] or [F1 F2 F3].  In these cases the remaining unset
 %     values are kept at their defaults.
 %

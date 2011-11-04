@@ -3,24 +3,25 @@ function [data,dep,ind]=detach(data,option,dpts)
 %
 %    Usage:    [data,dep,ind]=detach(data,option,dpts)
 %
-%    Description: [DATA,DEP,IND]=DETACH(DATA,OPTION,DPTS) detaches DPTS
-%     number of points from records in SEIZMO struct DATA and returns them
-%     in DEP and IND.  DPTS should be a numeric scalar or an array with 1
-%     element per record.  DEP and IND are cell arrays with each element
-%     corresponding to an individual record in DATA.  OPTION must be either
-%     'beginning' or 'ending'.  If OPTION is 'beginning', DEP & IND contain
-%     detached data from the beginning of the records and the B & NPTS
-%     header fields are updated accordingly.  If OPTION is 'ending', DEP &
-%     IND contain detached data from the ending of the records and the E &
-%     NPTS header fields are updated accordingly.
+%    Description:
+%     [DATA,DEP,IND]=DETACH(DATA,OPTION,DPTS) detaches DPTS number of
+%     points from records in SEIZMO struct DATA and returns them in DEP and
+%     IND.  DPTS should be a numeric scalar or an array with 1 element per
+%     record.  DEP and IND are cell arrays with each element corresponding
+%     to an individual record in DATA.  OPTION must be either 'beginning'
+%     or 'ending'.  If OPTION is 'beginning', DEP & IND contain detached
+%     data from the beginning of the records and the B & NPTS header fields
+%     are updated accordingly.  If OPTION is 'ending', DEP & IND contain
+%     detached data from the ending of the records and the E & NPTS header
+%     fields are updated accordingly.
 %
 %    Notes:
 %
 %    Header changes: NPTS, B, E, DELTA, DEPMIN, DEPMEN, DEPMAX
 %
 %    Examples:
-%     Remove the first 10 points from all records:
-%      data=detach(data,'beginning',10);
+%     % Remove the first 10 points from all records:
+%     data=detach(data,'beginning',10);
 %
 %    See also: ATTACH, CUT
 
@@ -31,9 +32,11 @@ function [data,dep,ind]=detach(data,option,dpts)
 %        Feb.  2, 2010 - versioninfo caching
 %        Mar.  8, 2010 - versioninfo caching dropped
 %        Feb. 11, 2011 - mass nargchk fix
+%        Nov.  2, 2011 - don't allow xyz iftype, doc update, better
+%                        checkheader usage, set b/e to undef if detach all
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Nov.  2, 2011 at 15:05 GMT
 
 % todo:
 
@@ -49,7 +52,7 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt detach
 try
     % check headers (versioninfo cache update)
-    data=checkheader(data);
+    data=checkheader(data,'NONTIME_IFTYPE','ERROR');
 
     % verbosity
     verbose=seizmoverbose;
@@ -59,14 +62,7 @@ try
 
     % get header info
     leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
     [npts,b,delta,e]=getheader(data,'npts','b','delta','e');
-
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:detach:badIFTYPE',...
-            'Datatype of records in DATA must be Timeseries or XY!');
-    end
 
     % check option
     validopt={'beginning' 'ending'};
@@ -141,6 +137,12 @@ try
                     data(i).dep(end-dnpts(i)+1:end,:)=[];
                     npts(i)=npts(i)-dpts(i);
                     e(i)=e(i)-delta(i)*dpts(i);
+            end
+            
+            % timing
+            if(~npts(i))
+                b(i)=nan;
+                e(i)=nan;
             end
         end
 

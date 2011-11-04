@@ -4,15 +4,15 @@ function [times]=fixtimes(times,option)
 %    Usage:    times=fixtimes(times)
 %              times=fixtimes(times,'utc'|'tai')
 %
-%    Description: FIXTIMES(TIMES) returns equivalent times to the times in
-%     TIMES such that they follow typical Gregorian calendar conventions
-%     (months are 1 to 12, dayofmonths are 1 to the last day of the month,
-%     and dayofyears are from 1 to 365 or 366 if it is a leap year) and
-%     the 24 hour style of time (hours 0-23, minutes 0-59 and seconds
-%     0-60).  TIMES must be a Nx5 array of [yr dayofyr hr min sec] or a Nx6
-%     array of [yr mon dayofmon hr min sec].  Only the seconds portion
-%     TIMES is allowed to be non-integer (ie you cannot have 1.5 minutes
-%     etc).
+%    Description:
+%     FIXTIMES(TIMES) returns equivalent times to the times in TIMES such
+%     that they follow typical Gregorian calendar conventions (months are 1
+%     to 12, dayofmonths are 1 to the last day of the month, and dayofyears
+%     are from 1 to 365 or 366 if it is a leap year) and the 24 hour style
+%     of time (hours 0-23, minutes 0-59 and seconds 0-59).  TIMES must be a
+%     Nx5 array of [yr dayofyr hr min sec] or a Nx6 array of
+%     [yr mon dayofmon hr min sec].  Only the seconds portion TIMES is
+%     allowed to be non-integer (ie you cannot have 1.5 minutes etc).
 %
 %     FIXTIMES(TIMES,'UTC') allows fixing UTC times which have leap seconds
 %     occasionally inserted on certain dates (see LEAPSECONDS).  Setting to
@@ -21,13 +21,16 @@ function [times]=fixtimes(times,option)
 %    Notes:
 %
 %    Examples:
-%     Find the UTC time 500 seconds after some other time in UTC:
-%      UTC=[2008 12 31 23 55 3.789];
-%      UTC(6)=UTC(6)+500;
-%      fixtimes(UTC,'UTC')
+%     % Find the UTC time 500 seconds after some other time in UTC
+%     % (while crossing a leap second) and comparing to the same operation
+%     % assuming TAI timing:
+%     UTC=[2008 12 31 23 55 3.789];
+%     UTC(6)=UTC(6)+500;
+%     fixtimes(UTC,'UTC')
+%     fixtimes(UTC,'TAI')
 %
-%    See also: FIXDATES, ISLEAPYEAR, LEAPSECONDS, TOTALLEAPS, LEAPSINDAY,
-%              GETLEAPSECONDS, CAL2DOY, DOY2CAL, TIMEDIFF, UTC2TAI,
+%    See also: FIXDATES, ISLEAPYEAR, LEAPSECONDS, UTC_OFFSET, UTC_LOD,
+%              LEAPSECONDS_UPDATE, CAL2DOY, DOY2CAL, TIMEDIFF, UTC2TAI,
 %              TAI2UTC, GREGORIAN2MODSERIAL, GREGORIAN2SERIAL,
 %              SERIAL2GREGORIAN, MODSERIAL2GREGORIAN
 
@@ -38,9 +41,10 @@ function [times]=fixtimes(times,option)
 %        June 24, 2009 - minor doc update
 %        Sep.  5, 2009 - minor doc update
 %        Feb. 11, 2011 - mass nargchk fix
+%        Nov.  1, 2011 - doc update, fix for UTC_LOD rename
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Nov.  1, 2011 at 15:05 GMT
 
 % todo:
 
@@ -88,13 +92,13 @@ switch lower(option)
         
         % get what second we are at in the day
         secnow=times(:,end)+times(:,end-1)*60+times(:,end-2)*3600;
-        sectoday=86400+leapsinday(times(:,1:end-3));
+        sectoday=utc_lod(times(:,1:end-3));
         
         % rollover seconds if needed
         low=find(secnow<0);
         while(~isempty(low))
             times(low,end-3)=times(low,end-3)-1;
-            sectoday(low)=86400+leapsinday(times(low,1:end-3));
+            sectoday(low)=utc_lod(times(low,1:end-3));
             secnow(low)=secnow(low)+sectoday(low);
             low=low(secnow<0);
         end
@@ -102,7 +106,7 @@ switch lower(option)
         while(~isempty(high))
             times(high,end-3)=times(high,end-3)+1;
             secnow(high)=secnow(high)-sectoday(high);
-            sectoday(high)=86400+leapsinday(times(high,1:end-3));
+            sectoday(high)=utc_lod(times(high,1:end-3));
             high=high(secnow(high)>=sectoday(high));
         end
         

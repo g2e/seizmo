@@ -1,25 +1,26 @@
 function [dates]=fixdates(dates)
-%FIXDATES    Assures calendar or day of year dates are in proper range
+%FIXDATES    Assures calendar or day-of-year dates are in proper range
 %
 %    Usage:    dates=fixdates(dates)
 %
-%    Description: FIXDATES(DATES) returns equivalent dates to the dates
-%     in DATES such that they follow typical Gregorian calendar conventions
-%     (months are 1 to 12, dayofmonths are 1 to the last day of the month,
-%     and dayofyears are from 1 to 365 or 366 if it is a leap year).  DATES
-%     must be a Nx2 array of [years dayofyears] or a Nx3 array of
+%    Description:
+%     FIXDATES(DATES) returns equivalent dates to the dates in DATES such
+%     that they follow typical Gregorian calendar conventions (months are 1
+%     to 12, dayofmonths are 1 to the last day of the month, and dayofyears
+%     are from 1 to 365 or 366 if it is a leap year).  DATES must be a Nx2
+%     array of [years dayofyears] or a Nx3 array of
 %     [years months dayofmonths].  Inputs should only be integers.
 %     Gregorian calendar only!
 %
 %    Notes:
 %
 %    Examples:
-%     Nifty way to say the last day of February:
-%      fixdates([someyear 3 0])
-%     will return [someyear 2 28] or [someyear 2 29].
+%     % Nifty way to say the last day of February:
+%     fixdates([someyear 3 0])
+%     % will return [someyear 2 28] or [someyear 2 29].
 %
-%     Five hundred days after the start of some year:
-%      fixdates([someyear 500])
+%     % Five hundred days after the start of some year:
+%     fixdates([someyear 500])
 %
 %    See also: FIXTIMES, DOY2CAL, CAL2DOY, TIMEDIFF, ISLEAPYEAR,
 %              GREGORIAN2MODSERIAL, GREGORIAN2SERIAL, SERIAL2GREGORIAN,
@@ -30,9 +31,10 @@ function [dates]=fixdates(dates)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
 %        Feb. 11, 2011 - mass nargchk fix
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Nov.  1, 2011 at 15:05 GMT
 
 % todo:
 

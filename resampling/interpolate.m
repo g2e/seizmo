@@ -12,9 +12,9 @@ function [data]=interpolate(data,sr,method,new_b,new_e,extrap)
 %     for SYNCRATES, SQUISH, and STRETCH but aliasing of high frequency
 %     energy to lower frequencies is an issue when interpolating to a lower
 %     sample rate.  Therefore, it is not recommended to downsample records
-%     with INTERPOLATE (use SYNCRATES or squish).  RATE can be a vector of
-%     rates with one element per record in DATA to interpolate records to
-%     different rates.
+%     with INTERPOLATE (a warning is issued indicating to use SYNCRATES or
+%     SQUISH).  RATE can be a vector of rates with one element per record
+%     in DATA to interpolate records to different rates.
 %
 %     INTERPOLATE(DATA,RATE,METHOD) allows selection of the interpolation
 %     method from one of the following: 'nearest' (Nearest Neighbor),
@@ -38,17 +38,17 @@ function [data]=interpolate(data,sr,method,new_b,new_e,extrap)
 %    Header changes: DELTA, NPTS, LEVEN, B, E, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     interpolate records at 5 sps
-%      data=interpolate(data,5);  
+%     % interpolate records at 5 sps:
+%     data=interpolate(data,5);  
 %
-%     interpolate records at 1 sps from 300 seconds to e
-%      data=interpolate(data,1,[],300)
+%     % interpolate records at 1 sps from 300 seconds to e:
+%     data=interpolate(data,1,[],300)
 %
-%     interpolate at 5 sps from 900 to 950 seconds using linear interp
-%      data_pdiff=interpolate(data,5,'linear',900,950)
+%     % interpolate at 5 sps from 900 to 950 seconds using linear interp:
+%     data_pdiff=interpolate(data,5,'linear',900,950)
 %
-%     the same but setting any values outside the original time range to 0:
-%      data_pdiff=interpolate(data,5,'linear',900,950,0);
+%     % same but setting any values outside the original time range to 0:
+%     data_pdiff=interpolate(data,5,'linear',900,950,0);
 %
 %    See also: SYNCRATES, SQUISH, STRETCH, IIRFILTER
 
@@ -72,9 +72,11 @@ function [data]=interpolate(data,sr,method,new_b,new_e,extrap)
 %        Mar.  4, 2010 - keep things consistent in case the e field is off
 %        Mar. 24, 2010 - add extrap option (useful for stacking)
 %        Jan. 18, 2011 - drop versioninfo & caching, nargchk fix
+%        Aug. 26, 2011 - added warning about interpolating to higher delta
+%                        following suggestion on sac-help mailing list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 14:05 GMT
+%     Last Updated Aug. 26, 2011 at 14:05 GMT
 
 % check number of arguments
 error(nargchk(2,6,nargin));
@@ -134,6 +136,14 @@ try
         error('seizmo:interpolate:badInput',...
             'SR must be scalar or have the same size as DATA!');
     end
+    % sampling interval
+    dt=1./sr;
+    if(any(dt>delta))
+        warning('seizmo:interpolate:badRate',...
+            ['Interpolating to a lower samplerate will alias high\n' ...
+            'frequency energy to lower frequencies! This will\n' ...
+            'corrupt your results! Use SYNCRATES or SQUISH instead.']);
+    end
     if(ischar(method)); method=cellstr(method); end
     if(~iscellstr(method))
         error('seizmo:interpolate:badInput',...
@@ -168,9 +178,6 @@ try
             'real-valued array or ''extrap''']);
     end
     if(isscalar(extrap)); extrap(1:nrecs,1)=extrap; end
-
-    % sampling interval
-    dt=1./sr;
     
     % detail message
     if(verbose)

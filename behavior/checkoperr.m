@@ -7,15 +7,16 @@ function [varargout]=checkoperr(varargin)
 %                         'optionN','error|warn|ignore|fix|warnfix')
 %              s=checkoperr(...)
 %
-%    Description: CHECKOPERR provides access (through display, output, or
-%     modification) to the action options of CHECKHEADER.  Modifying these
-%     options alters the behavior of CHECKHEADER for the entire session or
-%     until another CHECKOPERR call changes the setting.  All options may
-%     be set to one of five values: 'error', 'warn', 'ignore', 'fix', and
-%     'warnfix'.  The first three values ('error' 'warn' and 'ignore') are
-%     always available (for better or worse) while the last two ('fix' and
-%     'warnfix') may not be implemented (a warning message will usually
-%     indicate why that is so).
+%    Description:
+%     CHECKOPERR provides access (through display, output, or modification)
+%     to the action options of CHECKHEADER.  Modifying these options alters
+%     the behavior of CHECKHEADER for the entire session or until another
+%     CHECKOPERR call changes the setting.  All options may be set to one
+%     of five values: 'error', 'warn', 'ignore', 'fix', and 'warnfix'.  The
+%     first three values ('error' 'warn' and 'ignore') are always available
+%     (for better or worse) while the last two ('fix' and 'warnfix') may
+%     not be implemented (a warning message will usually indicate why that
+%     is so).
 %
 %     CHECKOPERR() displays the current CHECKHEADER settings.
 %
@@ -39,8 +40,8 @@ function [varargout]=checkoperr(varargin)
 %    Notes:
 %
 %    Examples:
-%     Make CHECKHEADER only require that the version field is valid:
-%      checkoperr('all','ignore','invalid_nvhdr','error')
+%     % Make CHECKHEADER only require that the version field is valid:
+%     checkoperr('all','ignore','invalid_nvhdr','error')
 %
 %    See also: CHECKHEADER, CHECKPARAMETERS, BINOPERR
 
@@ -53,9 +54,10 @@ function [varargout]=checkoperr(varargin)
 %        Dec.  8, 2009 - new options NAN_DEP & INF_DEP
 %        Jan. 28, 2010 - doc update
 %        Feb. 11, 2011 - fprintf fix
+%        Nov.  2, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 00:55 GMT
+%     Last Updated Nov.  2, 2011 at 00:55 GMT
 
 % todo:
 

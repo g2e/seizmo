@@ -15,6 +15,7 @@ function []=sz_toc_noise()
 %<a href="matlab:help daydirs_rinst">daydirs_rinst</a>             - Remove instrument response from records in day dirs
 %<a href="matlab:help daydirs_rotcorr">daydirs_rotcorr</a>           - Rotates correlograms in day directories
 %<a href="matlab:help daydirs_stackcorr">daydirs_stackcorr</a>         - Stacks correlograms in day directories
+%<a href="matlab:help daydirs_workflow">daydirs_workflow</a>          - Outlines SEIZMO Noise Correlation Processing Workflow
 %<a href="matlab:help make_daily_horz_volumes">make_daily_horz_volumes</a>   - Computes daily fk volumes for horizontals
 %<a href="matlab:help make_daily_z_specampl">make_daily_z_specampl</a>     - Return daily array spectral amplitude
 %<a href="matlab:help make_daily_z_volumes">make_daily_z_volumes</a>      - Computes daily fk volumes for verticals

@@ -7,10 +7,10 @@ function [data,failed]=cut(data,varargin)
 %              data=cut(...,'filler',value,...)
 %              [data,failed]=cut(...,'trim',logical,...)
 %
-%    Description: CUT(DATA,PDW) cuts the records in DATA to the window
-%     limits defined by PDW and outputs the updated dataset.  Header fields
-%     are updated to match the windowed data.  Works with unevenly sampled
-%     data.
+%    Description:
+%     CUT(DATA,PDW) cuts the records in DATA to the window limits defined
+%     by PDW and outputs the updated dataset.  Header fields are updated to
+%     match the windowed data.  Works with unevenly sampled data.
 %
 %     PDW is a set of several arguments of one of the following forms:
 %                  (1) REF1,OFFSET1,REF2,OFFSET2
@@ -29,22 +29,30 @@ function [data,failed]=cut(data,varargin)
 %     points of the window.  This syntax attempts to match that of SAC.
 %
 %     REF is a string that refers to a reference value for the independent
-%     component (usually time).  It can be any valid numeric header field 
-%     or 'z' or 'x' or 'n'.
-%      'z' is the zero position for the record - 0.
-%      'x' indicates that the following offset is a sample number (first 
-%       sample is 1).  Note that this defaults to sample 0 when given
-%       without an offset.
-%      'n' indicates that the following offset is the length of the window
-%       in number of samples.  Note that this defaults to length 0 when
-%       given without an offset.  Also note that this is only valid as a
-%       second REF.
+%     component (usually time).  It can be any valid numeric header field, 
+%     'z', 'x','n', or an absolute time (allowed formats defined below). 
+%     Where:
+%      - 'z' is the zero position for the record == 0.
+%      - 'x' indicates that the following offset is a sample number (first 
+%        sample is 1).  Note that this defaults to sample 0 when given
+%        without an offset.
+%      - 'n' indicates that the following offset is the length of the
+%        window in number of samples.  Note that this defaults to length 0
+%        when given without an offset.  Also note that this is only valid
+%        as a second REF.
+%      - Absolute times can be a __ROW__ vector of [year dayofyear],
+%        [year month dayofmonth], [year dayofyear hour minute seconds], or
+%        [year month dayofmonth hour minute seconds]. Absolute times may
+%        also be a string as given by the KZDTTM or KZDATE fields or a
+%        string that can be interpreted by the Matlab function DATEVEC.
+%        Note that DATEVEC interpretation does not properly handle times
+%        within a leap second.
 %
 %     OFFSET is a numeric value giving the offset to be added to REF to 
 %     define the position of the window start/stop with respect to the 
-%     reference.  The offset can be a vector of values (one per record)
-%     to define different offsets for each record (Note that REF cannot
-%     be a vector of reference positions!).
+%     reference.  The offset can be a __COLUMN__ vector of values (one
+%     per record) to define different offsets for each record (Note that
+%     REF cannot be a vector of reference positions!).
 %
 %     REF1,OFFSET1 define the starting position of the window and
 %     REF2,OFFSET2 define the ending position.  If a REF is given without
@@ -58,10 +66,11 @@ function [data,failed]=cut(data,varargin)
 %     window.
 %
 %     CUT(...,'CMPLIST',LIST) allows specifying only certain components to
-%     be included in the output.  Basically any components not in the list
-%     are cut.  LIST should be either a row vector of indices or ':'.  It
-%     may also be an array of rows of indices or ':' (use a cell array to
-%     give a mixture.  Default is ':' (all components).
+%     be included in the output (for multicomponent files).  Basically any
+%     components not in the list are cut.  LIST should be either a row
+%     vector of indices or ':'.  It may also be an array of rows of indices
+%     or ':' (use a cell array to give a mixture.  Default is ':' (all
+%     components).
 %
 %     CUT(...,'FILL',TRUE|FALSE) turns on/off the filling of data gaps to
 %     allow records that don't extend for the entire window to do so by
@@ -93,23 +102,26 @@ function [data,failed]=cut(data,varargin)
 %    Header changes: B, E, NPTS, DELTA, NCMP, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Cut a 400 sample window starting with the 33rd sample:
-%       data=cut(data,'x',33,'n',400);
+%     % Cut a 400 sample window starting with the 33rd sample:
+%     data=cut(data,'x',33,'n',400);
 %
-%     Cut out a 90s window around t1:
-%       data=cut(data,'t1',-30,'t1',60);
+%     % Cut out a 90s window around t1:
+%     data=cut(data,'t1',-30,'t1',60);
 %
-%     Cut one hour starting at the origin time, 
-%     padding incomplete records with zeros:
-%       data=cut(data,'o',0,3600,'fill',true);
+%     % Cut one hour starting at the origin time, 
+%     % padding incomplete records with zeros:
+%     data=cut(data,'o',0,3600,'fill',true);
 %
-%     Cut records to first 300 seconds:
-%       data=cut(data,'b',0,300);
+%     % Cut records to first 300 seconds:
+%     data=cut(data,'b',0,300);
 %
-%     Cut from 300 to 500 seconds relative to reference time:
-%       data=cut(data,300,500);
+%     % Cut from 300 to 500 seconds relative to reference time:
+%     data=cut(data,300,500);
 %
-%    See also: READDATAWINDOW
+%     % Cut out data from the last week:
+%     data=cut(data,datevec(now-7),datevec(now));
+%
+%    See also: READDATAWINDOW, SYNCHRONIZE, TIMESHIFT
 
 %     Version History:
 %        Oct. 30, 2007 - initial version
@@ -142,9 +154,10 @@ function [data,failed]=cut(data,varargin)
 %        Feb.  2, 2010 - versioninfo caching
 %        Mar.  8, 2010 - dropped versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix
+%        Nov.  2, 2011 - doc update, allow absolute time input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Nov.  2, 2011 at 15:05 GMT
 
 % todo:
 
@@ -203,6 +216,67 @@ try
             ['Record(s):\n' sprintf('%d ',find(uneven & option.FILL)) ...
             '\nCannot fill unevenly sampled record(s)!']);
     end
+    
+    % debugging
+    %option
+    %[option.OFFSET1 option.OFFSET2]
+    
+    % check for abs time strings
+    % - require it is 8+ characters
+    % - allow kzdate, kzdttm, & datevec recongnised formats
+    if(numel(option.REF1>7) && ischar(option.REF1))
+        if(numel(option.REF1)==29 && all(option.REF1([12 16])=='()'))
+            option.REF1=str2double({option.REF1(1:4) option.REF1(13:15) ...
+                option.REF1(18:19) option.REF1(21:22) option.REF1(24:29)});
+        elseif(numel(option.REF1)==16 && all(option.REF1([12 16])=='()'))
+            option.REF1=str2double({option.REF1(1:4) option.REF1(13:15)});
+        else
+            try
+                option.REF1=datevec(option.REF1);
+            catch
+                if(numel(option.REF1)>8)
+                    error('seizmo:cut:malformedAbsTimeStr',...
+                        'Malformed abs time string: ''%s''',option.REF1);
+                end
+            end
+        end
+    end
+    if(numel(option.REF2>7) && ischar(option.REF2))
+        if(numel(option.REF2)==29 && all(option.REF2([12 16])=='()'))
+            option.REF2=str2double({option.REF2(1:4) option.REF2(13:15) ...
+                option.REF2(18:19) option.REF2(21:22) option.REF2(24:29)});
+        elseif(numel(option.REF2)==16 && all(option.REF2([12 16])=='()'))
+            option.REF2=str2double({option.REF2(1:4) option.REF2(13:15)});
+        else
+            try
+                option.REF2=datevec(option.REF2);
+            catch
+                if(numel(option.REF2)>8)
+                    error('seizmo:cut:malformedAbsTimeStr',...
+                        'Malformed abs time string: ''%s''',option.REF2);
+                end
+            end
+        end
+    end
+    
+    % debugging
+    %option
+    
+    % convert abs time to relative time from each record's reference time
+    if(isnumeric(option.REF1))
+        option.OFFSET1=option.OFFSET1 ...
+            +timediff(cell2mat(getheader(data,'z')),option.REF1,'UTC');
+        option.REF1='z';
+    end
+    if(isnumeric(option.REF2))
+        option.OFFSET2=option.OFFSET2 ...
+            +timediff(cell2mat(getheader(data,'z')),option.REF2,'UTC');
+        option.REF2='z';
+    end
+    
+    % debugging
+    %option
+    %[option.OFFSET1 option.OFFSET2]
 
     % window start point/time
     if(strcmpi(option.REF1,'z'))

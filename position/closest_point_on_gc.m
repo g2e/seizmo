@@ -3,45 +3,44 @@ function [lat3,lon3]=closest_point_on_gc(lat1,lon1,lat2,lon2,lat3,lon3)
 %
 %    Usage:    [lat3,lon3]=closest_point_on_gc(lat1,lon1,lat2,lon2,lat,lon)
 %
-%    Description: [LAT3,LON3]=CLOSEST_POINT_ON_GC(...
-%     LAT1,LON1,LAT2,LON2,LAT,LON) finds the point LAT3/LON3 on a great
-%     circle closest to the point(s) given by LAT/LON.  The great circle(s)
-%     are given by LAT1/LON1 and LAT2/LON2.  All LAT/LON must either be
-%     scalar or arrays with the same number of elements.  This allows
-%     multiple points vs a great circle, multiple great circles vs a point
-%     or 1 point per great circle.  All inputs must be in degrees!
+%    Description:
+%     [LAT3,LON3]=CLOSEST_POINT_ON_GC(LAT1,LON1,LAT2,LON2,LAT,LON) finds
+%     the point LAT3/LON3 on a great circle closest to the point(s) given
+%     by LAT/LON.  The great circle(s) are given by LAT1/LON1 and
+%     LAT2/LON2.  All LAT/LON must either be scalar or arrays with the same
+%     number of elements.  This allows multiple points vs a great circle,
+%     multiple great circles vs a point or 1 point per great circle.  All
+%     inputs must be in degrees!
 %
 %    Notes:
 %
 %    Examples:
-%     Plot a great circle and its closest points to points of interest:
-%      % random great circle
-%      lat1=90*2*(rand-.5);
-%      lon1=180*2*(rand-.5);
-%      lat2=90*2*(rand-.5);
-%      lon2=180*2*(rand-.5);
-%      % random points on a sphere
-%      lat=90*2*(rand(5,1)-.5);
-%      lon=180*2*(rand(5,1)-.5);
-%      % corresponding closest points
-%      [lat3,lon3]=closest_point_on_gc(lat1,lon1,lat2,lon2,lat,lon);
-%      % draw world map
-%      m_proj('hammer');
-%      m_coast('patch',[0.6 1 0.6]);
-%      % draw great circle
-%      [gclat,gclon]=gc2latlon(lat1,lon1,lat2,lon2);
-%      m_line(gclon',gclat','linewi',3,'color','b');
-%      % draw gc arc from points to closest point on gc
-%      [gclat,gclon]=gcarc2latlon(lat,lon,lat3,lon3);
-%      gclon=unwrap(gclon*pi/180,[],2)*180/pi; % avoid wraparound streak
-%      m_line(gclon',gclat','linewi',3,'color','r');
-%      % draw circles at points
-%      m_line(lon3,lat3,'marker','o',...
-%          'markerfacecolor','y','linestyle','none');
-%      m_line(lon,lat,'marker','o',...
-%          'markerfacecolor','m','linestyle','none');
-%      % add grid to map
-%      m_grid('xticklabels',[]);
+%     % Plot a great circle and its closest points to points of interest:
+%     % random great circle
+%     [lat1,lon1]=randlatlon;
+%     [lat2,lon2]=randlatlon;
+%     % random points
+%     npts=round(10*rand);
+%     [lat,lon]=randlatlon(npts);
+%     % corresponding closest points
+%     [lat3,lon3]=closest_point_on_gc(lat1,lon1,lat2,lon2,lat,lon);
+%     % draw world map
+%     m_proj('hammer');
+%     m_coast('patch',[0.6 1 0.6]);
+%     % draw great circle
+%     [gclat,gclon]=gc2latlon(lat1,lon1,lat2,lon2);
+%     m_line(gclon',gclat','linewi',3,'color','b');
+%     % draw gc arc from points to closest point on gc
+%     [gclat,gclon]=gcarc2latlon(lat,lon,lat3,lon3);
+%     gclon=unwrap(gclon*pi/180,[],2)*180/pi; % avoid wraparound streak
+%     m_line(gclon',gclat','linewi',3,'color','r');
+%     % draw circles at points
+%     m_line(lon3,lat3,'marker','o',...
+%         'markerfacecolor','y','linestyle','none');
+%     m_line(lon,lat,'marker','o',...
+%         'markerfacecolor','m','linestyle','none');
+%     % add grid to map
+%     m_grid('xticklabels',[]);
 %
 %    See also: DEGDIST_FROM_GC, GC_INTERSECT, GC2LATLON, GCARC2LATLON,
 %              GCARC_INTERSECT
@@ -50,9 +49,10 @@ function [lat3,lon3]=closest_point_on_gc(lat1,lon1,lat2,lon2,lat3,lon3)
 %        Nov. 15, 2009 - initial version
 %        Dec.  2, 2009 - improved example
 %        June 26, 2010 - fix unwrap call in example
+%        July 13, 2011 - code/doc cleanup
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 26, 2010 at 02:55 GMT
+%     Last Updated July 13, 2011 at 02:55 GMT
 
 % todo:
 
@@ -64,51 +64,15 @@ lat1=lat1(:); lon1=lon1(:);
 lat2=lat2(:); lon2=lon2(:);
 lat3=lat3(:); lon3=lon3(:);
 
-% check lat/lon
-sz1=size(lat1); sz2=size(lon1);
-sz3=size(lat2); sz4=size(lon2);
-sz5=size(lat3); sz6=size(lon3);
-n1=prod(sz1); n2=prod(sz2);
-n3=prod(sz3); n4=prod(sz4);
-n5=prod(sz5); n6=prod(sz6);
+% expand scalars
+[lat1,lon1,lat2,lon2,lat3,lon3]=expandscalars(...
+    lat1,lon1,lat2,lon2,lat3,lon3);
 
 % basic check inputs
 if(~isreal(lat1) || ~isreal(lon1) || ~isreal(lat2) || ~isreal(lon2) || ...
         ~isreal(lat3) || ~isreal(lon3))
     error('seizmo:closest_point_on_gc:nonNumeric',...
         'All inputs must be numeric!');
-elseif(any([n1 n2 n3 n4 n5 n6]==0))
-    lat3=zeros(0,1);
-    lon3=zeros(0,1);
-    return;
-end
-
-% expand scalars
-if(n1==1); lat1=repmat(lat1,sz2); n1=n2; sz1=sz2; end
-if(n2==1); lon1=repmat(lon1,sz1); sz2=sz1; end
-if(n3==1); lat2=repmat(lat2,sz4); n3=n4; sz3=sz4; end
-if(n4==1); lon2=repmat(lon2,sz3); sz4=sz3; end
-if(n5==1); lat3=repmat(lat3,sz6); n5=n6; sz5=sz6; end
-if(n6==1); lon3=repmat(lon3,sz5); sz6=sz5; end
-
-% check input pairs
-if(~isequal(sz1,sz2) || ~isequal(sz3,sz4) || ~isequal(sz5,sz6))
-    error('seizmo:closest_point_on_gc:nonscalarUnequalArrays',...
-        'Input arrays need to be scalar or have equal size!');
-end
-
-% expand scalars
-if(n1==1 && n3~=1); lat1=repmat(lat1,sz3); lon1=repmat(lon1,sz3); n1=n3; sz1=sz3; end
-if(n1==1 && n5~=1); lat1=repmat(lat1,sz5); lon1=repmat(lon1,sz5); n1=n5; sz1=sz5; end
-if(n3==1 && n1~=1); lat2=repmat(lat2,sz1); lon2=repmat(lon2,sz1); n3=n1; sz3=sz1; end
-if(n3==1 && n5~=1); lat2=repmat(lat2,sz5); lon2=repmat(lon2,sz5); n3=n5; sz3=sz5; end
-if(n5==1 && n1~=1); lat3=repmat(lat3,sz1); lon3=repmat(lon3,sz1); n5=n1; sz5=sz1; end
-if(n5==1 && n3~=1); lat3=repmat(lat3,sz3); lon3=repmat(lon3,sz3); sz5=sz3; end
-
-% cross check inputs
-if(~isequal(sz1,sz3,sz5))
-    error('seizmo:closest_point_on_gc:nonscalarUnequalArrays',...
-        'Input arrays need to be scalar or have equal size!');
 end
 
 % 1. convert A B C to xyz

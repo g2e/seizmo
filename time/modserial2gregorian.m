@@ -4,11 +4,13 @@ function [times]=modserial2gregorian(modserial,option)
 %    Usage:    gregoriandates=modserial2gregorian(modserialdates)
 %              gregoriandates=modserial2gregorian(modserialdates,option)
 %
-%    Description: MODSERIAL2GREGORIAN(DATES) returns the equivalent
-%     Gregorian dates in [year month dayofmonth hour minute second] format
-%     for the modified serial dates stored in MODSERIAL.  Modified serial
-%     dates are the number of days and seconds since January 0, year 0
-%     at 00:00:00 and are in the format [days seconds].
+%    Description:
+%     MODSERIAL2GREGORIAN(DATES) returns the equivalent Gregorian dates in
+%     [year month dayofmonth hour minute second] format for the modified
+%     serial dates stored in MODSERIAL.  Modified serial dates are the
+%     number of days and seconds since January 0, year 0 at 00:00:00 and
+%     are in the format [days seconds]. This is useful for maintaining
+%     accuracy on subsecond operations.
 %
 %     MODSERIAL2GREGORIAN(DATES,OPTION) specifies the output format:
 %      OPTION        OUTPUT
@@ -20,13 +22,13 @@ function [times]=modserial2gregorian(modserial,option)
 %    Notes:
 %     - Does not account for UTC leap seconds
 %     - Basically like Matlab's DATEVEC except that it takes in modified
-%       serial dates and has an option to output day of year style dates.
+%       serial dates and has an option to output day-of-year style dates.
 %       It also does not handle string input and isn't compiled so it is
 %       a bit slower.
 %
 %    Examples:
-%     500 seconds from now:
-%      modserial2gregorian([now 500])
+%     % 500 seconds from now:
+%     modserial2gregorian([now 500])
 %
 %    See also: GREGORIAN2MODSERIAL, SERIAL2GREGORIAN, GREGORIAN2SERIAL,
 %              FIXTIMES, FIXDATES, TIMEDIFF, ISLEAPYEAR, CAL2DOY, DOY2CAL
@@ -37,9 +39,10 @@ function [times]=modserial2gregorian(modserial,option)
 %        Sep.  5, 2009 - minor doc update
 %        Sep. 23, 2009 - fixed serial conversion (year 0 bug)
 %        Feb. 11, 2011 - mass nargchk fix
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Nov.  1, 2011 at 15:05 GMT
 
 % todo:
 

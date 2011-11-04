@@ -3,18 +3,19 @@ function [option]=cutparameters(varargin)
 %
 %    Usage:    options=cutparameters(nrecs,args)
 %
-%    Description: CUTPARAMETERS(NRECS,VARARGIN) parses parameters VARARGIN
-%     passed to CUT and READDATAWINDOW, passing results back as a struct.  
-%     Parameters include those that define the window as well as other
-%     options (fill, cmplist, etc).  Parameters go through basic type/size
-%     checks (which is why NRECS is an argument).
+%    Description: 
+%     CUTPARAMETERS(NRECS,VARARGIN) parses parameters VARARGIN passed to
+%     CUT and READDATAWINDOW, passing results back as a struct.  Parameters
+%     include those that define the window as well as other options (fill,
+%     cmplist, etc).  Parameters go through basic type/size checks (which
+%     is why NRECS is an argument).
 %
 %    Notes:
-%     - empty input arguments may have unexpected results
+%     - Empty input arguments may have unexpected results!
 %
 %    Examples:
-%     CUTPARAMETERS is what allows CUT and READDATAWINDOW to have very
-%     flexible input lists.
+%     % CUTPARAMETERS is what allows CUT and READDATAWINDOW
+%     % to have very flexible input lists.
 %
 %    See also: CUT, READDATAWINDOW
 
@@ -34,9 +35,11 @@ function [option]=cutparameters(varargin)
 %        Oct.  6, 2009 - drop use of LOGICAL function
 %        Aug. 21, 2010 - nargchk fix
 %        Apr. 12, 2011 - allow pad/padding
+%        Nov.  2, 2011 - doc update, allow 1x2/3/5/6 absolute time entries,
+%                        fix ref with no offset bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 12, 2011 at 20:45 GMT
+%     Last Updated Nov.  2, 2011 at 20:45 GMT
 
 % todo:
 
@@ -78,22 +81,98 @@ for i=1:nargin-1
     % skip empty
     if(isempty(varargin{i})); continue; end
     
-    % offset without reference
+    % offset without reference or an absolute time
+    % NOTE: column vectors for offsets, row vectors for abs times
     if(isnumeric(varargin{i}))
-        % first offset (set reference to 'z')
-        if(~ref1)
-            option.REF1='z';
-            option.OFFSET1=varargin{i};
-            ref1=true;
-        % second offset (use first reference)
-        elseif(~ref2)
-            option.REF2=option.REF1;
-            option.OFFSET2=varargin{i};
-            ref2=true;
-        % only two offsets allowed
+        % offset or abs time?
+        sz=size(varargin{i});
+        if(sz(2)==1)
+            % first offset (set reference to 'z')
+            if(~ref1)
+                option.REF1='z';
+                option.OFFSET1=varargin{i};
+                ref1=true;
+            % second offset (use first reference)
+            elseif(~ref2)
+                option.REF2=option.REF1;
+                option.OFFSET2=varargin{i};
+                ref2=true;
+            % only two offsets allowed
+            else
+                error('seizmo:cutparameters:badInput',...
+                    'Too many window offsets!');
+            end
+        elseif(sz(1)==1) % abs time?
+            if(~any(sz(2)==[2 3 5 6]))
+                error('seizmo:cutparameters:badInput',...
+                    'Malformed absolute time argument!');
+            else % abs time
+                % window reference
+                if(~ref1)
+                    option.REF1=varargin{i};
+                    ref1=true;
+                    
+                    % quit if last arg
+                    if(i==nargin-1); continue; end
+                    
+                    % first offset
+                    sz=size(varargin{i+1});
+                    if(isempty(varargin{i+1}))
+                        % default offset (0)
+                        skip=true;
+                    elseif(isnumeric(varargin{i+1}))
+                        if(sz(2)==1)
+                            % offsets to abs time
+                            option.OFFSET1=varargin{i+1};
+                            skip=true;
+                        elseif(sz(1)==1)
+                            % abs time 2
+                            skip=false;
+                        else
+                            error('seizmo:cutparameters:badInput',...
+                                'Numeric inputs must be scalars/vectors!');
+                        end
+                    else
+                        % string, offset not given (use default of 0)
+                        skip=false;
+                    end
+                elseif(~ref2)
+                    option.REF2=varargin{i};
+                    ref2=true;
+                    
+                    % quit if last arg
+                    if(i==nargin-1); continue; end
+                    
+                    % second offset
+                    if(isempty(varargin{i+1}))
+                        % default offset (0)
+                        skip=true;
+                    elseif(isnumeric(varargin{i+1}))
+                        if(sz(2)==1)
+                            % offsets to abs time
+                            option.OFFSET2=varargin{i+1};
+                            skip=true;
+                        elseif(sz(1)==1)
+                            % abs time 3?? only two references allowed!
+                            error('seizmo:cutparameters:badInput',...
+                                'Too many window references!');
+                        else
+                            error('seizmo:cutparameters:badInput',...
+                                'Numeric inputs must be scalars/vectors!');
+                        end
+                    else
+                        % string, offset not given (use default of 0)
+                        skip=false;
+                    end
+                else
+                    % only two references allowed
+                    error('seizmo:cutparameters:badInput',...
+                        'Too many window references!');
+                end
+            end
         else
             error('seizmo:cutparameters:badInput',...
-                'Too many window offsets!')
+                    'Numeric arguments must be scalars or vectors!');
         end
     % string (could be reference or other option)
     elseif(ischar(varargin{i}))
@@ -106,7 +185,7 @@ for i=1:nargin-1
             elseif(~isnumeric(varargin{i+1}) && ...
                     ~islogical(varargin{i+1}))
                 error('seizmo:cutparameters:badInput',...
-                    'OPTION value must be numeric or logical!')
+                    'OPTION value must be numeric or logical!');
             end
         end
         
@@ -148,39 +227,66 @@ for i=1:nargin-1
                     option.REF1=varargin{i};
                     ref1=true;
                     
+                    % quit if last arg
+                    if(i==nargin-1); continue; end
+                    
                     % first offset
+                    sz=size(varargin{i+1});
                     if(isempty(varargin{i+1}))
                         continue;
                     elseif(isnumeric(varargin{i+1}))
-                        option.OFFSET1=varargin{i+1};
+                        if(sz(2)==1)
+                            % offsets to abs time
+                            option.OFFSET1=varargin{i+1};
+                            skip=true;
+                        elseif(sz(1)==1)
+                            % abs time 2
+                            skip=false;
+                        else
+                            error('seizmo:cutparameters:badInput',...
+                                'Numeric inputs must be scalars/vectors!');
+                        end
                     else
                         % offset not given
-                        option.OFFSET1=0;
                         skip=false;
                     end
                 elseif(~ref2)
                     option.REF2=varargin{i};
                     ref2=true;
                     
+                    % quit if last arg
+                    if(i==nargin-1); continue; end
+                    
                     % second offset
+                    sz=size(varargin{i+1});
                     if(isempty(varargin{i+1}))
                         continue;
                     elseif(isnumeric(varargin{i+1}))
-                        option.OFFSET2=varargin{i+1};
+                        if(sz(2)==1)
+                            % offsets to abs time
+                            option.OFFSET2=varargin{i+1};
+                            skip=true;
+                        elseif(sz(1)==1)
+                            % abs time 3?? only two references allowed!
+                            error('seizmo:cutparameters:badInput',...
+                                'Too many window references!');
+                        else
+                            error('seizmo:cutparameters:badInput',...
+                                'Numeric inputs must be scalars/vectors!');
+                        end
                     else
                         % offset not given
-                        option.OFFSET2=0;
                         skip=false;
                     end
                 else
                     % only two references allowed
                     error('seizmo:cutparameters:badInput',...
-                        'Too many window references!')
+                        'Too many window references!');
                 end
         end
     else
         error('seizmo:cutparameters:badInput',...
-            'Window parameters must be strings or numeric!')
+            'Window parameters must be strings or numeric!');
     end
 end
 
@@ -201,16 +307,16 @@ option.FILL=option.FILL(:);
 % cut parameter checks
 if(numel(option.OFFSET1)~=nrecs || numel(option.OFFSET2)~=nrecs)
     error('seizmo:cutparameters:badInputSize',...
-        'Number of elements in OFFSET not correct!')
+        'Number of elements in OFFSET not correct!');
 elseif(numel(option.CMPLIST)~=nrecs)
     error('seizmo:cutparameters:badInputSize',...
-        'Number of elements in CMPLIST not correct!')
+        'Number of elements in CMPLIST not correct!');
 elseif(numel(option.FILLER)~=nrecs)
     error('seizmo:cutparameters:badInputSize',...
-        'Number of elements in FILLER not correct!')
+        'Number of elements in FILLER not correct!');
 elseif(numel(option.FILL)~=nrecs)
     error('seizmo:cutparameters:badInputSize',...
-        'Number of elements in FILL not correct!')
+        'Number of elements in FILL not correct!');
 end
 
 end

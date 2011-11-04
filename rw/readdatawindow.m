@@ -7,9 +7,10 @@ function [data,failed]=readdatawindow(data,varargin)
 %              data=readdatawindow(...,'filler',value,...)
 %              [data,failed]=readdatawindow(...,'trim',logical,...)
 %
-%    Description: READDATAWINDOW(DATA,PDW) reads a data window PDW from 
-%     SEIZMO compatible datafiles into the SEIZMO structure DATA, returning
-%     the updated structure.  This provides a mechanism similar to the SAC 
+%    Description:
+%     READDATAWINDOW(DATA,PDW) reads a data window PDW from SEIZMO
+%     compatible datafiles into the SEIZMO structure DATA, returning the
+%     updated structure.  This provides a mechanism similar to the SAC
 %     'cut' command to limit memory/cpu usage related to reading in large 
 %     datafiles where only a segment is needed.  Note that the datafile 
 %     headers must exist/be read into DATA before running READDATAWINDOW
@@ -34,22 +35,31 @@ function [data,failed]=readdatawindow(data,varargin)
 %     that defines explicitly or implicitly the starting and stopping 
 %     points of the window.  This syntax attempts to match that of SAC.
 %
-%     REF is a string that refers to a reference field/value for the 
-%     independent component (usually time).  It can be any valid numeric 
-%     header field or 'z', 'x', or 'n'.
-%      'z' is the zero position for the record - 0.
-%      'x' indicates that the following offset is a sample number (first 
-%       sample is 1).  Note that this defaults to sample 0 without an 
-%       offset.
-%      'n' indicates that the following offset is the length of the window
-%       in number of samples.  Note that this defaults to length 0 without
-%       an offset.  Also note that this is only valid as a second REF.
+%     REF is a string that refers to a reference value for the independent
+%     component (usually time).  It can be any valid numeric header field, 
+%     'z', 'x','n', or an absolute time (allowed formats defined below). 
+%     Where:
+%      - 'z' is the zero position for the record == 0.
+%      - 'x' indicates that the following offset is a sample number (first 
+%        sample is 1).  Note that this defaults to sample 0 when given
+%        without an offset.
+%      - 'n' indicates that the following offset is the length of the
+%        window in number of samples.  Note that this defaults to length 0
+%        when given without an offset.  Also note that this is only valid
+%        as a second REF.
+%      - Absolute times can be a __ROW__ vector of [year dayofyear],
+%        [year month dayofmonth], [year dayofyear hour minute seconds], or
+%        [year month dayofmonth hour minute seconds]. Absolute times may
+%        also be a string as given by the KZDTTM or KZDATE fields or a
+%        string that can be interpreted by the Matlab function DATEVEC.
+%        Note that DATEVEC interpretation does not properly handle times
+%        within a leap second.
 %
 %     OFFSET is a numeric value giving the offset to be added to REF to 
 %     define the position of the window start/stop with respect to the 
-%     reference.  The offset can be a vector of values, one for each record
-%     to be read, to define different offsets for each record (note that 
-%     REF can not be a vector of reference positions).
+%     reference.  The offset can be a __COLUMN__ vector of values, one for
+%     each record to be read, to define different offsets for each record
+%     (note that REF can not be a vector of reference positions).
 %
 %     REF1,OFFSET1 define the starting position of the window and
 %     REF2,OFFSET2 define the ending position.  If a REF is given without
@@ -101,21 +111,24 @@ function [data,failed]=readdatawindow(data,varargin)
 %    Header changes: B, E, NPTS, DELTA, NCMP, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     ALL THE FOLLOWING EXAMPLES REQUIRE YOU TO 
-%     REMEMBER TO READ IN THE HEADER INFO FIRST:
-%      data=readheader('*.SAC')
+%     % ALL THE FOLLOWING EXAMPLES REQUIRE YOU TO 
+%     % REMEMBER TO READ IN THE HEADER INFO FIRST:
+%     data=readheader('*.SAC')
 %
-%     read in only the first 300 samples of records:
-%      data=readdatawindow(data,'x',1,300)
+%     % read in only the first 300 samples of records:
+%     data=readdatawindow(data,'x',1,300)
 %     
-%     read in a 90 second window around the t1 arrival, 
-%     padding data gaps with zeros as necessary:
-%      data=readdatawindow(data,'t1',-30,60,'fill',true)
+%     % read in a 90 second window around the t1 arrival, 
+%     % padding data gaps with zeros as necessary:
+%     data=readdatawindow(data,'t1',-30,60,'fill',true)
 %
-%     read in only the 123rd sample:
-%      data=readdatawindow(data,'x',123,123)
-%     or
-%      data=readdatawindow(data,'x',123,'n',1)
+%     % read in only the 123rd sample:
+%     data=readdatawindow(data,'x',123,123)
+%     % or
+%     data=readdatawindow(data,'x',123,'n',1)
+%
+%     % Read in data from only the last week:
+%     data=readdatawindow(data,datevec(now-7),datevec(now));
 %
 %    See also: CUT, READHEADER, READDATA, READSEIZMO, WRITEHEADER,
 %              WRITESEIZMO, BSEIZMO, GETHEADER, CHANGEHEADER, LISTHEADER
@@ -144,9 +157,10 @@ function [data,failed]=readdatawindow(data,varargin)
 %        Feb.  3, 2010 - update for XDIR fixes, better SAC bug workaround,
 %                        proper SEIZMO handling, seizmoverbose support
 %        Feb. 11, 2011 - mass nargchk fix
+%        Nov.  2, 2011 - doc update, allow absolute time input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Nov.  2, 2011 at 15:05 GMT
 
 % todo:
 
@@ -200,6 +214,67 @@ try
             ['Record(s):\n' sprintf('%d ',find(xyz)) ...
             '\nIllegal operation on xyz record(s)!']);
     end
+    
+    % debugging
+    %option
+    %[option.OFFSET1 option.OFFSET2]
+    
+    % check for abs time strings
+    % - require it is 8+ characters
+    % - allow kzdate, kzdttm, & datevec recongnised formats
+    if(numel(option.REF1>7) && ischar(option.REF1))
+        if(numel(option.REF1)==29 && all(option.REF1([12 16])=='()'))
+            option.REF1=str2double({option.REF1(1:4) option.REF1(13:15) ...
+                option.REF1(18:19) option.REF1(21:22) option.REF1(24:29)});
+        elseif(numel(option.REF1)==16 && all(option.REF1([12 16])=='()'))
+            option.REF1=str2double({option.REF1(1:4) option.REF1(13:15)});
+        else
+            try
+                option.REF1=datevec(option.REF1);
+            catch
+                if(numel(option.REF1)>8)
+                    error('seizmo:readdatawindow:malformedAbsTimeStr',...
+                        'Malformed abs time string: ''%s''',option.REF1);
+                end
+            end
+        end
+    end
+    if(numel(option.REF2>7) && ischar(option.REF2))
+        if(numel(option.REF2)==29 && all(option.REF2([12 16])=='()'))
+            option.REF2=str2double({option.REF2(1:4) option.REF2(13:15) ...
+                option.REF2(18:19) option.REF2(21:22) option.REF2(24:29)});
+        elseif(numel(option.REF2)==16 && all(option.REF2([12 16])=='()'))
+            option.REF2=str2double({option.REF2(1:4) option.REF2(13:15)});
+        else
+            try
+                option.REF2=datevec(option.REF2);
+            catch
+                if(numel(option.REF2)>8)
+                    error('seizmo:readdatawindow:malformedAbsTimeStr',...
+                        'Malformed abs time string: ''%s''',option.REF2);
+                end
+            end
+        end
+    end
+    
+    % debugging
+    %option
+    
+    % convert abs time to relative time from each record's reference time
+    if(isnumeric(option.REF1))
+        option.OFFSET1=option.OFFSET1 ...
+            +timediff(cell2mat(getheader(data,'z')),option.REF1,'UTC');
+        option.REF1='z';
+    end
+    if(isnumeric(option.REF2))
+        option.OFFSET2=option.OFFSET2 ...
+            +timediff(cell2mat(getheader(data,'z')),option.REF2,'UTC');
+        option.REF2='z';
+    end
+    
+    % debugging
+    %option
+    %[option.OFFSET1 option.OFFSET2]
 
     % let readdata/cut handle unevenly sampled records (minus file deletion)
     if(any(uneven))

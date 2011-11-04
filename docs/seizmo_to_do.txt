@@ -1,6 +1,14 @@
 my todo list
 %%%%%%%%%%%%
 
+%%%%%
+today
+%%%%%
+x make cut/readdatawindow accept absolute time strings
+x fix formatting of timeshift & synchronize too
+merge uneven or variable samplerate
+get noise_setup working
+
 %%%
 phd
 %%%
@@ -8,13 +16,18 @@ phd
 fk stuff
 x	add weighting to all
     rayleigh/love dispersion estimation
+        - give it a slowness/velocity range
+        - can we fit it as azimuthal anisotropy?
+            - plot showing +/-10% variation with azimuth
+    cub2 rayleigh/love dispersion estimation
+        - can use for geofk scripts and much much more
+        - need to calculate using Hermann codes
 	weight optimization function
 		capon 1969, etc
 		haubrich 1968
-	verify horzizontal algorithm vs Haubrich and McCamy 1969
+	verify horizontal algorithm vs Haubrich and McCamy 1969
 	make scripts for
-		3hour
-        vol/map set 2 mov
+        vol/map set 2 mov (???)
 	x	fkxcmap
 	x	fkxchorzmap
 		fkhorzmap
@@ -26,6 +39,23 @@ x	add weighting to all
 		geofkxcmap
 		geofkxchorzmap
 make noise processing more flexible (file length & overlap)
+    - major overhaul of mergecut script
+    - new directory structure:
+      - YYYY/DDD.HH.MM.SS
+      - YYYY/YYYY.DDD.HH.MM.SS_YYYY.DDD.HH.MM.SS
+    - does any script depend on length of records?
+      - one bug fixed in normalization of horizontals
+    - stacking is more difficult
+    - is directory overwrite ok for all commands?
+        - definitely not going to work for correlation
+    - can we chain commands?
+        - this would consume too much memory to have the entire dataset
+          in memory at once -- need to proceed time section by time section
+          but how do we do this???
+        - ANSWER: NO ... we have to write an all-at-once command for this
+figure out the damn stationary noise!!!
+    - response taper affects it
+    - happens even without response removal?
 
 plot_cmb_measurements
     - no horizontal errorbars (combine into one?)
@@ -38,7 +68,6 @@ all SHdiff
 prep global on terra
 
 cmt subtoolbox
-    - normalization, diagonalization & decomposition
     - mt to strike-dip-rake
     - mt to principal axes
     - principal axes to mt
@@ -79,9 +108,7 @@ subduction zone contours/sheets
 improved plotting
     - moving into the gui department would be nice for plotting only
       some records (like for pages of 20 records), changing axes, etc
-    - select records where you can actually select the record
     - header info on selection
-    - station map movie (frame through samples)
 	- cmp vs cmp (plot 2 components with time)
     - particle motion (color changing line to show time progression? how?)
     - true gui buttons could make this really nice
@@ -117,8 +144,6 @@ cub2 functions
     - need love dispersion & rayleigh phase dispersion
     - functions for dispersion at position
     - functions for depth model at position
-absolute time windowing
-    - add abs time windowing to CUT
 picking
     - better understanding of ppk in SAC
     - mimic it as much as possible
@@ -160,7 +185,23 @@ ttbox integration?
     - this would give us Octave support!
 getpeaks
 markpeaks
-test Octave java package
-    - no import ... how to do this otherwise?
-fix stft conflict in octave
+basic segy (segy2MAT), ah, miniseed support
+
+way to make movies while you do other things on the screen:
+## hf = figure(‘visible’, ‘off’)
+## addframe(aviobj, hf)
+
+OCTAVE STUFF
+%%%%%%%%%%%%%
+- error (warning?) needs sprintf support
+- how to do java packages in Octave??
+- mex files in Octave??
+- fix conflicts with octave functions:
+  rainbow (same but reversed order? not a big deal)
+  ocean (similar but mine (gmt's) has greens ... not a big deal)
+  split (deprecated function in octave so its fine)
+  merge (not sure ... ifelse is the same thing ... non-matlab)
+     - getfield, setfield, nthroot use octave's merge ... this is bad news!
+  cut (not sure ... non-matlab statistics function ...)
+     - no usage in stats
 

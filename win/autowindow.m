@@ -5,17 +5,18 @@ function [win,peak,bad]=autowindow(data,thresh,reach,env,warn)
 %              [win,peak]=autowindow(data,thresh,reach,env)
 %              [win,peak,bad]=autowindow(data,thresh,reach,env,warn)
 %
-%    Description: [WIN,PEAK]=AUTOWINDOW(DATA,THRESH,REACH) determines a
-%     window around the strongest peak in each record in SEIZMO struct
-%     DATA.  The window is REACH times the distance to the first points
-%     from the peak that are below THRESH times the peak value.  The
-%     records are transformed to the envelope of their analytic signal
-%     before the window determination to allow capturing an entire signal.
-%     If the peak is on the edge of the record or the window extends past
-%     the record limits, a warning is issued and the window is reset to
-%     extend only to the record time limits.  WIN is in relative time and
-%     is a NRECSx2 matrix of [START STOP].  PEAK gives the time of the
-%     peak in the windows. Spectral records are not supported.
+%    Description:
+%     [WIN,PEAK]=AUTOWINDOW(DATA,THRESH,REACH) determines a window around
+%     the strongest peak in each record in SEIZMO struct DATA.  The window
+%     is REACH times the distance to the first points from the peak that
+%     are below THRESH times the peak value.  The records are transformed
+%     to the envelope of their analytic signal before the window
+%     determination to aid in windowing oscillatory signals.  If the peak
+%     is on the edge of the record or the window extends past the record
+%     limits, a warning is issued and the window is reset to extend only to
+%     the record time limits.  WIN is in relative time and is a NRECSx2
+%     matrix of [START STOP].  PEAK gives the time of the peak in the
+%     windows. Spectral records are not supported.
 %
 %     [WIN,PEAK]=AUTOWINDOW(DATA,THRESH,REACH,ENV) sets if the records are
 %     enveloped before the window determination.  This is useful if the
@@ -31,18 +32,19 @@ function [win,peak,bad]=autowindow(data,thresh,reach,env,warn)
 %    Notes:
 %
 %    Examples:
-%     Get an automatic window and implement it:
-%      win=autowindow(data,0.3,1.5);
-%      windata=cut(data,win(:,1),win(:,2));
-%      plot0(windata);
+%     % Get an automatic window and implement it:
+%     win=autowindow(data,0.3,1.5);
+%     windata=cut(data,win(:,1),win(:,2));
+%     plot0(windata);
 %
 %    See also: USERWINDOW, ENVELOPE, CUT
 
 %     Version History:
 %        May  20, 2010 - initial version
+%        Nov.  2, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  20, 2010 at 18:50 GMT
+%     Last Updated Nov.  2, 2011 at 18:50 GMT
 
 % todo:
 

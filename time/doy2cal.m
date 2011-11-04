@@ -1,20 +1,21 @@
 function [caldates]=doy2cal(doydates)
-%DOY2CAL    Convert Year & Day of Year to Year & Month & Day of Month
+%DOY2CAL    Convert Year & Day-of-Year to Year & Month & Day-of-Month
 %
 %    Usage:    caldates=doy2cal(doydates)
 %
-%    Description: DOY2CAL(DOYDATES) returns a Nx3 numeric array of calendar
-%     dates corresponding to DOYDATES, a Nx2 numeric array with the first
-%     column having the year and the second the day of the year.  The
+%    Description:
+%     CALDATES=DOY2CAL(DOYDATES) returns a Nx3 numeric array of calendar
+%     dates CALDATES corresponding to DOYDATES, a Nx2 numeric array with
+%     the first column having the year and the second the day-of-year.  The
 %     output array has the first column as the year, the second as the
-%     month number (1-12) and the last column with the day of the month.
+%     month number (1-12) and the last column with the day-of-month.
 %     Handles leapdays.  Gregorian calendar only.
 %
 %    Notes:
 %
 %    Examples:
-%     Get the calendar date of today:
-%      caldate=doy2cal([0 now])
+%     % Get the calendar date of today:
+%     caldate=doy2cal([0 now])
 %
 %    See also: CAL2DOY, ISLEAPYEAR, FIXDATES, FIXTIMES, TIMEDIFF,
 %              GREGORIAN2MODSERIAL, GREGORIAN2SERIAL, SERIAL2GREGORIAN,
@@ -25,9 +26,10 @@ function [caldates]=doy2cal(doydates)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
 %        June 10, 2010 - handle empty
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 10, 2010 at 23:45 GMT
+%     Last Updated Nov.  1, 2011 at 23:45 GMT
 
 % todo:
 

@@ -3,9 +3,10 @@ function [isleap]=isleapyear(year)
 %
 %    Usage:    leapyears=isleapyear(years)
 %
-%    Description: ISLEAPYEAR(YEARS) returns a logical array equal in size
-%     to YEARS with values set to true for the corresponding elements in
-%     YEARS that are leap years.
+%    Description:
+%     LEAPYEARS=ISLEAPYEAR(YEARS) returns a logical array equal in size to
+%     YEARS with values set to true for the corresponding elements in YEARS
+%     that are leap years.
 %
 %    Notes:
 %     - Gregorian calendar only!
@@ -13,7 +14,7 @@ function [isleap]=isleapyear(year)
 %       (1 BC == 0, 2 BC == -1, ...)
 %
 %    Examples:
-%     Takes into account the century rule and the exception so that
+%     % Takes into account the century rule and the exception so that
 %     isleapyear([1900 1904 2000 2004]) returns [0 1 1 1].
 %
 %    See also: FIXDATES, FIXTIMES, TIMEDIFF, CAL2DOY, DOY2CAL,
@@ -24,9 +25,10 @@ function [isleap]=isleapyear(year)
 %        Oct. 28, 2008 - initial version
 %        Apr. 23, 2009 - move usage up
 %        Sep.  5, 2009 - minor doc update
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2009 at 19:10 GMT
+%     Last Updated Nov.  1, 2011 at 19:10 GMT
 
 % todo:
 

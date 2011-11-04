@@ -60,9 +60,11 @@ function [varargout]=install_seizmo(varargin)
 %        Jan. 19, 2011 - updated to fixed examples
 %        Apr.  6, 2011 - include verLessThan for pre-7.4 matlab
 %        June 16, 2011 - doc update
+%        June 24, 2011 - fix for octave warning in verLessThan, better
+%                        uninstall output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2011 at 15:25 GMT
+%     Last Updated June 24, 2011 at 15:25 GMT
 
 % todo:
 
@@ -114,14 +116,13 @@ disp(' ');
 disp(['SEIZMO install path:  ' mypath]);
 disp(' ');
 
-% what is my version
-disp('Looking for previous SEIZMO installs...');
+% what is the previous seizmo version
 info=ver('seizmo');
 
 % remove old seizmo installations
 ok=true(6,1);
 while(~isempty(info))
-    disp('Found previous SEIZMO installation.  Uninstalling!');
+    disp(['Uninstalling previous SEIZMO version: ' info.Version]);
     ok(1)=uninstall_seizmo();
     if(~ok(1))
         warning('seizmo:install_seizmo:failedUninstall',...
@@ -279,7 +280,7 @@ if nargin < 2
     end
 end
 
-if ~ischar(toolboxstr) | ~ischar(verstr)
+if ~ischar(toolboxstr) || ~ischar(verstr)
     errstr = 'Inputs must be strings.';
     if errorSupportsIdentifiers
         error('MATLAB:verLessThan:invalidInput', errstr)

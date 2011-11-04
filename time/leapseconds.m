@@ -1,85 +1,110 @@
-function [leaps]=leapseconds()
-%LEAPSECONDS    Returns date and time strings of each leap second
+function [dates,leaps,offsets]=leapseconds(option)
+%LEAPSECONDS    Returns leapsecond info (with caching for multiple calls)
 %
-%    Usage:    leaps=leapseconds()
+%    Usage:    [dates,leaps,offsets]=leapseconds()
+%              [dates,leaps,offsets]=leapseconds(true|false)
 %
-%    Description: LEAPSECONDS() returns a formatted character array of the
-%     date-times of the end of each leap second, which is always the start
-%     of the next UTC month.  The last characters of each row gives a '+'
-%     or '-' to indicate whether the leap second was positive or negative
-%     (all leap seconds have been positive thus far).  For example, the
-%     first leap second was positive and occurred on June 30, 1972 at
-%     23:59:60 and ended on July 1, 1972 at 00:00:00, so it's string is
-%     '01-Jul-1972 00:00:00+'.  A negative leap second would start at the
-%     58th second (if we begin each minute with the 0th second), removing
-%     one second as there would be no 59th second.
+%    Description:
+%     [DATES,LEAPS,OFFSETS]=LEAPSECONDS() returns leap second info and
+%     stores that info in a global variable to speed up subsequent calls.
+%     DATES contains the serial dates on which the 'leaps' end, LEAPS
+%     contains the corresponding 'leap' (either 1 or -1), and OFFSET gives
+%     the corresponding UTC lag from TAI.
+%
+%     [DATES,LEAPS,OFFSETS]=LEAPSECONDS(OPTION) controls the behavior of
+%     the info caching.  OPTION must be TRUE or FALSE (logical).  TRUE will
+%     use the cached leapsecond info if there is any otherwise retreiving
+%     it via the leapsec.dat included with this mfile.  FALSE will force
+%     reading of leapsec.dat get the leapsecond info. The default is
+%     TRUE.
 %
 %    Notes:
-%     - At some point it may be worthwhile to just read in
-%       http://maia.usno.navy.mil/ser7/leapsec.dat
+%     - Update the leap second info using LEAPSECONDS_UPDATE
 %     - Since leapseconds were introduced in 1972, UTC times before that
-%       are not properly corrected here to maintain timing near UT1 (GMT).
-%       There was actually a different method implemented but that is not
-%       a matter for this function.  The data for this is found here:
-%       http://maia.usno.navy.mil/ser7/tai-utc.dat
-%     - Q: How to properly handle data around leap seconds from equipment
-%          that doesn't handle leap seconds?  
+%       are not properly accounted for with leap seconds to maintain timing
+%       near UT1 (GMT).  There was actually a different method implemented
+%       but that is not a matter for this function.  The data for that is
+%       found here: http://maia.usno.navy.mil/ser7/tai-utc.dat
+%     - Q: How to properly handle data around leap seconds from recording
+%          equipment that doesn't handle leap seconds as they occur?  
 %       A: Leave the last data segment before a leap second alone.  The
 %          first and subsequent data segments after a leap second should be
 %          shifted to one second earlier until the clock corrected to the
 %          actual UTC time (should have to jump back 1 second).  These will
 %          then be correct in UTC time.
-%     - Q: What if a data segment begins within a leap second on equipment
-%          that doesn't handle leap seconds?
+%     - Q: What if a data segment begins within a leap second on recording
+%          equipment that doesn't handle leap seconds as they occur?
 %       A: You need to merge that data segment with the prior (without UTC
 %          awareness) and then shift all subsequent records to 1 second
 %          prior (until the clock locks to the correct UTC time).
 %
 %    Examples:
 %     % Ever wondered when those pesky leap seconds were? Just run:
-%     leapseconds
+%     datestr(leapseconds)
 %
-%    See also: GETLEAPSECONDS, ISLEAPYEAR, LEAPSINDAY, TOTALLEAPS,
-%              FIXTIMES, TIMEDIFF, UTC2TAI, TAI2UTC
+%     % To see the speed benefit of caching:
+%     tic; for i=1:100; [dates,leaps,offsets]=leapseconds(true); end; toc
+%     tic; for i=1:100; [dates,leaps,offsets]=leapseconds(false); end; toc
+%
+%    See also: LEAPSECONDS_UPDATE, UTCOFFSET, LOD, FIXTIMES, TIMEDIFF,
+%              UTC2TAI, TAI2UTC, ISLEAPYEAR
 
 %     Version History:
-%        Oct. 28, 2008 - initial version
-%        Mar. 29, 2009 - added some notes on data handling
-%        Apr. 23, 2009 - move usage up
-%        June 10, 2009 - minor doc update
+%        Nov. 10, 2008 - initial version
+%        Nov. 15, 2008 - update for new name schema, option now a logical
+%        Dec. 13, 2008 - fix bug, eliminate recursion
+%        Apr. 23, 2009 - fix nargchk for octave, move usage up
+%        June 11, 2009 - minor doc update
+%        Aug.  4, 2009 - strictly formatted string passed to datenum
 %        Sep.  5, 2009 - minor doc update
-%        Feb. 11, 2011 - minor doc update
+%        Feb. 11, 2011 - mass nargchk fix
+%        Nov.  1, 2011 - renamed from GETLEAPSECONDS to LEAPSECONDS as that
+%                        function was moved to a file that can be updated,
+%                        added offset from TAI as a 3rd output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 19:05 GMT
+%     Last Updated Nov.  1, 2011 at 15:05 GMT
 
 % todo:
 
-% add dates at the bottom (keep time increasing)
-leaps=['01-Jul-1972 00:00:00+'
-       '01-Jan-1973 00:00:00+'
-       '01-Jan-1974 00:00:00+'
-       '01-Jan-1975 00:00:00+'
-       '01-Jan-1976 00:00:00+'
-       '01-Jan-1977 00:00:00+'
-       '01-Jan-1978 00:00:00+'
-       '01-Jan-1979 00:00:00+'
-       '01-Jan-1980 00:00:00+'
-       '01-Jul-1981 00:00:00+'
-       '01-Jul-1982 00:00:00+'
-       '01-Jul-1983 00:00:00+'
-       '01-Jul-1985 00:00:00+'
-       '01-Jan-1988 00:00:00+'
-       '01-Jan-1990 00:00:00+'
-       '01-Jan-1991 00:00:00+'
-       '01-Jul-1992 00:00:00+'
-       '01-Jul-1993 00:00:00+'
-       '01-Jul-1994 00:00:00+'
-       '01-Jan-1996 00:00:00+'
-       '01-Jul-1997 00:00:00+'
-       '01-Jan-1999 00:00:00+'
-       '01-Jan-2006 00:00:00+'
-       '01-Jan-2009 00:00:00+'];
+% check nargin
+error(nargchk(0,1,nargin));
 
+% check option
+if(nargin==0 || isempty(option))
+    option=true;
+elseif(~islogical(option))
+    error('seizmo:leapseconds:optionBad',...
+        'OPTION must be logical!');
 end
 
+% global
+global SEIZMO
+
+% retrieve from memory or recalculate
+if(option && isfield(SEIZMO,'LEAPSECONDS')...
+        && isfield(SEIZMO.LEAPSECONDS,'DATES')...
+        && isfield(SEIZMO.LEAPSECONDS,'LEAPS')...
+        && isfield(SEIZMO.LEAPSECONDS,'OFFSETS')...
+        && isnumeric(SEIZMO.LEAPSECONDS.DATES)...
+        && isnumeric(SEIZMO.LEAPSECONDS.LEAPS)...
+        && isnumeric(SEIZMO.LEAPSECONDS.OFFSETS)...
+        && isequal(size(SEIZMO.LEAPSECONDS.DATES),...
+        size(SEIZMO.LEAPSECONDS.LEAPS),...
+        size(SEIZMO.LEAPSECONDS.OFFSETS)))
+    dates=SEIZMO.LEAPSECONDS.DATES;
+    leaps=SEIZMO.LEAPSECONDS.LEAPS;
+    offsets=SEIZMO.LEAPSECONDS.OFFSETS;
+else
+    % parse leapsec.dat info
+    path=fileparts(mfilename('fullpath'));
+    txt=reshape(readtxt([path filesep 'leapsec.dat']),81,[])';
+    dates=datenum(txt(:,1:12),'yyyy mmm dd');
+    offsets=str2double(cellstr(txt(:,39:42)));
+    leaps=[0; diff(offsets)];
+    SEIZMO.LEAPSECONDS.DATES=dates;
+    SEIZMO.LEAPSECONDS.LEAPS=leaps;
+    SEIZMO.LEAPSECONDS.OFFSETS=offsets;
+end
+
+end

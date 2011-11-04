@@ -4,11 +4,12 @@ function [txt]=readtxt(file,filterspec)
 %    Usage:    txt=readtxt(file)
 %              txt=readtxt([],filterspec)
 %
-%    Description: TXT=READTXT(FILE) reads in the ascii file given by FILE
-%     (the location of the file on the filesystem) as a single string TXT.
-%     TXT his a row vector of characters.  End of line characters are not
-%     removed.  Calling READTXT without FILE or with FILE set to '' will
-%     present a graphical file selection menu.
+%    Description:
+%     TXT=READTXT(FILE) reads in the ascii file given by FILE (the location
+%     of the file on the filesystem) as a single string TXT.  TXT is a row
+%     vector of characters.  End of line characters are not removed.
+%     Calling READTXT without FILE or with FILE set to '' will present a
+%     graphical file selection menu.
 %
 %     TXT=READTXT([],FILTERSPEC) sets the file filter specifier for gui-
 %     based file selection.  The default FILTERSPEC is:
@@ -20,8 +21,8 @@ function [txt]=readtxt(file,filterspec)
 %    Notes:
 %
 %    Examples:
-%     The purpose of READTXT is to simplify the reading of text files:
-%      readtxt('somefile.txt')
+%     % The purpose of READTXT is to simplify the reading of text files:
+%     readtxt('somefile.txt')
 %
 %    See also: GETWORDS
 
@@ -31,9 +32,10 @@ function [txt]=readtxt(file,filterspec)
 %        Feb.  5, 2010 - improved file checks
 %        July 30, 2010 - nargchk fix
 %        Aug. 10, 2010 - filterspec option added
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 10, 2010 at 13:00 GMT
+%     Last Updated Nov.  1, 2011 at 13:00 GMT
 
 % todo:
 

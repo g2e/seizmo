@@ -44,6 +44,14 @@ function [data]=checkheader(data,varargin)
 %           CHECKS:     DATASET HAS NON-XYZ DATATYPES
 %           FIX:        NONE
 %           DEFAULT:    IGNORE
+%       TIME_IFTYPE
+%           CHECKS:     DATASET HAS TIMESERIES/XY DATATYPES
+%           FIX:        NONE
+%           DEFAULT:    IGNORE
+%       SPECTRAL_IFTYPE
+%           CHECKS:     DATASET HAS SPECTRAL DATATYPES
+%           FIX:        NONE
+%           DEFAULT:    IGNORE
 %       XYZ_IFTYPE
 %           CHECKS:     DATASET HAS XYZ DATATYPES
 %           FIX:        NONE
@@ -385,9 +393,11 @@ function [data]=checkheader(data,varargin)
 %        Sep. 16, 2010 - added UNSET_DELAZ
 %        Feb. 11, 2011 - minor doc update
 %        Feb. 25, 2011 - fix nonzero_iztype warning
+%        Nov.  2, 2011 - added TIME_IFTYPE & SPECTRAL_IFTYPE, bugfix for
+%                        NONXYZ_IFTYPE
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 25, 2011 at 22:10 GMT
+%     Last Updated Nov.  2, 2011 at 22:10 GMT
 
 % todo:
 
@@ -465,6 +475,16 @@ try
     % check for nonxyz data types
     if(~strcmp(option.NONXYZ_IFTYPE,'IGNORE'))
         nonxyz_iftype(option.NONXYZ_IFTYPE,iftype);
+    end
+    
+    % check for time data types
+    if(~strcmp(option.TIME_IFTYPE,'IGNORE'))
+        time_iftype(option.TIME_IFTYPE,iftype);
+    end
+    
+    % check for spectral data types
+    if(~strcmp(option.SPECTRAL_IFTYPE,'IGNORE'))
+        spectral_iftype(option.SPECTRAL_IFTYPE,iftype);
     end
     
     % check for xyz data types
@@ -958,7 +978,7 @@ end
 end
 
 function nonxyz_iftype(opt,iftype)
-validftype={'irlim' 'iamph'};
+validftype={'ixyz'};
 bad=find(~ismember(iftype,validftype));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:nonxyzIFTYPE';
@@ -985,11 +1005,69 @@ end
 
 end
 
+function time_iftype(opt,iftype)
+invalidftype={'itime' 'ixy'};
+bad=find(ismember(iftype,invalidftype));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:timeIFTYPE';
+    report.message=['IFTYPE for record(s):\n' ...
+        sprintf('%d ',bad) ...
+        '\nCannot be one of the following:\n' ...
+        sprintf('%s ',invalidftype{:})];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR INCORRECT DATA TYPES!\n' ...
+                'CONSIDER CONVERTING ALL RECORDS IN\n' ...
+                'YOUR DATASET TO A NON-TIME DATA TYPE.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR INCORRECT DATA TYPES!\n' ...
+                'CONSIDER CONVERTING ALL RECORDS IN\n' ...
+                'YOUR DATASET TO A NON-TIME DATA TYPE.']);
+    end
+end
+
+end
+
+function spectral_iftype(opt,iftype)
+invalidftype={'iamph' 'irlim'};
+bad=find(ismember(iftype,invalidftype));
+if(~isempty(bad))
+    report.identifier='seizmo:checkheader:spectralIFTYPE';
+    report.message=['IFTYPE for record(s):\n' ...
+        sprintf('%d ',bad) ...
+        '\nCannot be one of the following:\n' ...
+        sprintf('%s ',invalidftype{:})];
+    switch opt
+        case 'ERROR'
+            error(report.identifier,report.message);
+        case 'WARN'
+            warning(report.identifier,report.message);
+        case 'FIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR INCORRECT DATA TYPES!\n' ...
+                'CONSIDER CONVERTING ALL RECORDS IN\n' ...
+                'YOUR DATASET TO A NON-SPECTRAL DATA TYPE.']);
+        case 'WARNFIX'
+            warning(report.identifier,report.message);
+            disp(['NO AUTOFIX FOR INCORRECT DATA TYPES!\n' ...
+                'CONSIDER CONVERTING ALL RECORDS IN\n' ...
+                'YOUR DATASET TO A NON-SPECTRAL DATA TYPE.']);
+    end
+end
+
+end
+
 function xyz_iftype(opt,iftype)
 invalidftype={'ixyz'};
 bad=find(ismember(iftype,invalidftype));
 if(~isempty(bad))
-    report.identifier='seizmo:checkheader:nonxyzIFTYPE';
+    report.identifier='seizmo:checkheader:xyzIFTYPE';
     report.message=['IFTYPE for record(s):\n' ...
         sprintf('%d ',bad) ...
         '\nCannot be one of the following:\n' ...

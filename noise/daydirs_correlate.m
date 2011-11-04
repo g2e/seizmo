@@ -33,9 +33,10 @@ function []=daydirs_correlate(indir,outdir,zpad,maxlag,o)
 %     Version History:
 %        June 20, 2010 - initial version
 %        Sep. 21, 2010 - commented out parallel processing lines
+%        Aug. 26, 2011 - fix 1 sps bug in interpolation after correlation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2010 at 11:15 GMT
+%     Last Updated Aug. 26, 2011 at 11:15 GMT
 
 % todo:
 
@@ -157,7 +158,7 @@ for i=1:nyears
                 data=correlate(data,'lags',(maxlag+4*delta).*[-1 1]);
 
                 % interpolating
-                data=interpolate(data,1,[],-maxlag,maxlag);
+                data=interpolate(data,1/delta,[],-maxlag,maxlag);
 
                 % write verticals
                 writeseizmo(data,'path',[outdir fs syr fs sjday fs]);
@@ -186,7 +187,7 @@ for i=1:nyears
                 data=correlate(data,'lags',(maxlag+4*delta).*[-1 1]);
 
                 % interpolating
-                data=interpolate(data,1,[],-maxlag,maxlag);
+                data=interpolate(data,1/delta,[],-maxlag,maxlag);
 
                 % write horizontals
                 writeseizmo(data,'path',[outdir fs syr fs sjday fs]);

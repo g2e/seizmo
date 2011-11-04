@@ -9,12 +9,13 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %              data=synchronize(data,field,option,iztype,timing,...
 %                               field1,...,fieldN)
 %
-%    Description: SYNCHRONIZE(DATA) synchronizes the reference times for
-%     all records in DATA.  It sets the unified reference time to the
-%     starting time of the latest starting record.  All timing fields (A,
-%     B, E, F, O, Tn) are correspondingly shifted so that their timing is
-%     preserved.  This is particularly useful when combined with CUT to get
-%     a time window corresponding to a specific absolute time range.
+%    Description:
+%     SYNCHRONIZE(DATA) synchronizes the reference times for all records in
+%     DATA.  It sets the unified reference time to the starting time of the
+%     latest starting record.  All timing fields (A, B, E, F, O, Tn) are
+%     correspondingly shifted so that their timing is preserved.  This is
+%     particularly useful when combined with CUT to get a time window
+%     corresponding to a specific absolute time range.
 %
 %     SYNCHRONIZE(DATA,FIELD) changes the header field that the
 %     synchronization is based on.  FIELD may be any header field that
@@ -53,11 +54,14 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %                    A, B, E, F, O, Tn, and any user-defined field
 %
 %    Examples:
-%     Just like SAC:
-%      data=synchronize(data);
+%     % Just like SAC:
+%     data=synchronize(data);
 %
-%     Sync to the first occurance of USER2, making sure to update USERN:
-%      data=synchronize(data,'user2','first',[],[],'user');
+%     % Sync to the first occurance of USER2, making sure to update USERN:
+%     data=synchronize(data,'user2','first',[],[],'user');
+%
+%     % Cut out the first day of 2009 from records:
+%     data=cut(synchronize(data,[2009 1 0 0 0]),0,86400);
 %
 %    See also: TIMESHIFT, CUT
 
@@ -70,9 +74,10 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %                        xy datatype bug, fix checking order bug
 %        Aug. 21, 2010 - nargchk fix, better checkheader usage, update
 %                        undef checking, drop versioninfo caching
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 16:20 GMT
+%     Last Updated Nov.  1, 2011 at 16:20 GMT
 
 % todo:
 
@@ -140,7 +145,8 @@ try
             warning('off','seizmo:getheader:fieldInvalid')
             values=getheader(data,field);
             warning('on','seizmo:getheader:fieldInvalid')
-            if(any(isnan(values)) || ~isnumeric(values) || size(values,2)>1)
+            if(any(isnan(values)) ...
+                    || ~isnumeric(values) || size(values,2)>1)
                 error('seizmo:synchronize:badOption',...
                     'FIELD must be a valid numeric header field string!');
             end

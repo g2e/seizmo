@@ -3,10 +3,11 @@ function [serial]=gregorian2serial(times)
 %
 %    Usage:    serialdates=gregorian2serial(gregoriandates)
 %
-%    Description: GREGORIAN2SERIAL(DATES) returns the equivalent serial
-%     dates for the Gregorian dates stored in DATES.  Serial date 1
-%     corresponds to January 1, 0000.  DATES must be a Nx2, Nx3, Nx5 or Nx6
-%     numeric array of either [year dayofyear], [year month dayofmonth],
+%    Description:
+%     GREGORIAN2SERIAL(DATES) returns the equivalent serial dates for the
+%     Gregorian dates stored in DATES.  Serial date 1 corresponds to
+%     January 1, 0000.  DATES must be a Nx2, Nx3, Nx5 or Nx6 numeric array
+%     of either [year dayofyear], [year month dayofmonth],
 %     [year dayofyear hour minute seconds] or
 %     [year month dayofmonth hour minute seconds].
 %
@@ -18,9 +19,9 @@ function [serial]=gregorian2serial(times)
 %       DATENUM is 2 to 3 times faster.
 %
 %    Examples:
-%     The output of Matlab's datenum and gregorian2serial should match:
-%      gregorian2serial([2008 366 0 0 0.01])
-%      datenum([2008 12 31 0 0 0.01])
+%     % The output of Matlab's datenum and gregorian2serial should match:
+%     gregorian2serial([2008 366 0 0 0.01])
+%     datenum([2008 12 31 0 0 0.01])
 %
 %    See also: SERIAL2GREGORIAN, GREGORIAN2MODSERIAL, MODSERIAL2GREGORIAN,
 %              ISLEAPYEAR, DOY2CAL, CAL2DOY, FIXDATES, FIXTIMES, TIMEDIFF
@@ -30,9 +31,10 @@ function [serial]=gregorian2serial(times)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
 %        Feb. 11, 2011 - mass nargchk fix
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Nov.  1, 2011 at 15:05 GMT
 
 % todo:
 

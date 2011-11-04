@@ -4,16 +4,17 @@ function [data]=attach(data,option,dep,ind)
 %    Usage:    data=attach(data,option,dep)
 %              data=attach(data,option,dep,ind)
 %
-%    Description: DATA=ATTACH(DATA,OPTION,DEP) attaches DEP to the
-%     dependent data in records in SEIZMO struct DATA.  DEP must be a
-%     numeric array or a cell array of numeric arrays (one per record).
-%     Numeric arrays in DEP must have the same number of columns as the
-%     number of components in the record it is being attached to.  OPTION
-%     is either 'beginning' or 'ending' and decides how DEP is attached to
-%     the dependent data.  For instance, if OPTION is 'ending', DEP is
-%     attached at the end and the E header field is adjusted.  If OPTION is
-%     'beginning', DEP is attached at the beginning of the dependent
-%     dataset and the B header field is adjusted accordingly.
+%    Description:
+%     DATA=ATTACH(DATA,OPTION,DEP) attaches DEP to the dependent data in
+%     records in SEIZMO struct DATA.  DEP must be a numeric array or a cell
+%     array of numeric arrays (one per record).  Numeric arrays in DEP must
+%     have the same number of columns as the number of components in the
+%     record it is being attached to.  OPTION is either 'beginning' or
+%     'ending' and decides how DEP is attached to the dependent data.  For
+%     instance, if OPTION is 'ending', DEP is attached at the end and the E
+%     header field is adjusted.  If OPTION is 'beginning', DEP is attached
+%     at the beginning of the dependent dataset and the B header field is
+%     adjusted accordingly.
 %
 %     DATA=ATTACH(DATA,OPTION,DEP,IND) attaches IND to the independent
 %     component data.  IND must be supplied if there is any unevenly
@@ -25,13 +26,13 @@ function [data]=attach(data,option,dep,ind)
 %    Header changes: NPTS, B, E, DELTA, DEPMIN, DEPMEN, DEPMAX
 %
 %    Examples:
-%     Attach final conditions to convolved records:
-%      [data,zf]=convolve(data,gausswin(11));
-%      data=attach(data,'ending',zf);
+%     % Attach final conditions to convolved records:
+%     [data,zf]=convolve(data,gausswin(11));
+%     data=attach(data,'ending',zf);
 %
-%     Add in points to unevenly sampled record (later sorting by timing):
-%      data=checkheader(...
-%          attach(data,'ending',dep,ind),'nonmonotonic_ind','fix')
+%     % Add in points to unevenly sampled record (later sorting by timing):
+%     data=checkheader(...
+%         attach(data,'ending',dep,ind),'nonmonotonic_ind','fix')
 %
 %    See also: DETACH, CUT
 
@@ -44,9 +45,10 @@ function [data]=attach(data,option,dep,ind)
 %        Feb.  2, 2010 - versioninfo caching
 %        Mar.  8, 2010 - versioninfo caching dropped
 %        Aug. 16, 2010 - nargchk fix, better checkheader utilization
+%        Nov.  2, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 16, 2010 at 12:45 GMT
+%     Last Updated Nov.  2, 2011 at 12:45 GMT
 
 % todo:
 
@@ -62,8 +64,7 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt attach
 try
     % check headers
-    data=checkheader(data,...
-        'NONTIME_IFTYPE','ERROR');
+    data=checkheader(data,'NONTIME_IFTYPE','ERROR');
     
     % verbosity
     verbose=seizmoverbose;

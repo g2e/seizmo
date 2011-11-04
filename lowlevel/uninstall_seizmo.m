@@ -20,20 +20,46 @@ function [ok]=uninstall_seizmo()
 
 %     Version History:
 %        Jan.  1, 2011 - initial version
+%        June 24, 2011 - octave bugfix: uninstall seizmo from path before
+%                        exiting when no classpath file found
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  1, 2011 at 15:25 GMT
+%     Last Updated June 24, 2011 at 15:25 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(0,0,nargin));
 
+% find seizmo entries on path
+% - this will detect all seizmo entries
+p=getwords(path,':').';
+yn=strfind(p,'seizmo');
+
+% remove detections
+disp('Removing the following directories from the path:');
+for i=1:numel(yn)
+    if(~isempty(yn{i}))
+        disp(p{i});
+        rmpath(p{i});
+    end
+end
+fprintf('\n');
+
+% save cleaned path
+bad=savepath;
+if(bad)
+    warning('seizmo:uninstall_seizmo:failedSavingPath',...
+        ['Could not save the path after uninstalling SEIZMO!\n' ...
+        'Please contact your system administrator if you cannot\n' ...
+        'edit and save your Matlab path!']);
+end
+
 % find classpath.txt
 sjcp=which('classpath.txt');
 
 % quick return if no classpath.txt (ie Octave)
-if(isempty(sjcp)); return; end
+if(isempty(sjcp)); ok=~bad; return; end
 
 % check that classpath is synced
 % - this fails b/c of comments & arch-specific loads
@@ -84,30 +110,6 @@ if(sum(yn))
     end
 else
     ok=true;
-end
-
-% find seizmo entries on path
-% - this will detect all seizmo entries
-p=getwords(path,':').';
-yn=strfind(p,'seizmo');
-
-% remove detections
-disp('Removing the following directories from the path:');
-for i=1:numel(yn)
-    if(~isempty(yn{i}))
-        disp(p{i});
-        rmpath(p{i});
-    end
-end
-fprintf('\n');
-
-% save cleaned path
-bad=savepath;
-if(bad)
-    warning('seizmo:uninstall_seizmo:failedSavingPath',...
-        ['Could not save the path after uninstalling SEIZMO!\n' ...
-        'Please contact your system administrator if you cannot\n' ...
-        'edit and save your Matlab path!']);
 end
 ok=ok & ~bad;
 

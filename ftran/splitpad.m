@@ -36,9 +36,11 @@ function [data]=splitpad(data,pow2pad)
 %        Mar. 19, 2010 - initial version
 %        Feb. 11, 2011 - mass nargchk fix
 %        Feb. 15, 2011 - minor doc update
+%        Aug. 26, 2011 - use checkheader more effectively, added some
+%                        tolerance to the point at 0 requirement
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2011 at 10:05 GMT
+%     Last Updated Aug. 26, 2011 at 10:05 GMT
 
 % todo:
 
@@ -54,7 +56,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt to split & pad
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -68,25 +72,9 @@ try
             || ~any(numel(pow2pad)==[1 nrecs]))
         error('seizmo:splitpad:badInput',...
             ['POW2PAD must be an integer or an array\n' ...
-            'of integers (one per record) >=0!']);
+            'of integers (one per record)!']);
     end
     if(isscalar(pow2pad)); pow2pad=pow2pad(ones(nrecs,1),1); end
-    
-    % only evenly spaced arrays
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
-    
-    % check leven,iftype
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:splitpad:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    elseif(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:splitpad:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
     
     % pull relevant timing info
     [b,delta,npts,ncmp]=getheader(data,'b','delta','npts','ncmp');
@@ -102,8 +90,8 @@ try
     % loop over records
     depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
     for i=1:nrecs
-        % check has point at 0
-        idx=find((b(i)+(0:npts(i)-1)*delta(i))==0,1);
+        % check has point at 0 (within some tolerance)
+        idx=find(abs(b(i)+(0:npts(i)-1)*delta(i))<delta(i)/10,1);
         if(isempty(idx))
             error('seizmo:splitpad:noZeroPoint',...
                 'Record %d does not have a point at zero!',i);

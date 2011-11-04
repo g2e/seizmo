@@ -3,9 +3,10 @@ function [modserial]=gregorian2modserial(times)
 %
 %    Usage:    modserialdates=gregorian2modserial(gregoriandates)
 %
-%    Description: [MODSERIAL]=GREGORIAN2MODSERIAL(DATES) returns the
-%     equivalent modified serial dates for the Gregorian dates stored in
-%     DATES.  A modified serial date of 1 day and 0 seconds corresponds to 
+%    Description:
+%     [MODSERIAL]=GREGORIAN2MODSERIAL(DATES) returns the equivalent
+%     modified serial dates for the Gregorian dates stored in DATES.  A
+%     modified serial date of 1 day and 0 seconds corresponds to 
 %     January 1, 0000 at 00:00:00 and is in the format [days seconds].
 %     DATES must be a Nx2, Nx3, Nx5 or Nx6 numeric array of either 
 %     [year dayofyear], [year month dayofmonth],
@@ -23,9 +24,9 @@ function [modserial]=gregorian2modserial(times)
 %       just days (for better precision).
 %
 %    Examples:
-%     Why use modserial over serial? Better precision:
-%      modserial=gregorian2modserial([0 now])
-%      serial=gregorian2serial([0 now])
+%     % Why use modserial over serial? Better precision:
+%     modserial=gregorian2modserial([0 now])
+%     serial=gregorian2serial([0 now])
 %
 %    See also: SERIAL2GREGORIAN, GREGORIAN2SERIAL, MODSERIAL2GREGORIAN,
 %              FIXTIMES, FIXDATES, TIMEDIFF, ISLEAPYEAR, CAL2DOY, DOY2CAL
@@ -35,9 +36,10 @@ function [modserial]=gregorian2modserial(times)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Sep.  5, 2009 - minor doc update
 %        Feb. 11, 2011 - mass nargchk fix
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Nov.  1, 2011 at 15:05 GMT
 
 % todo:
 

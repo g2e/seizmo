@@ -3,27 +3,29 @@ function [X]=submat_eval(X,varargin)
 %
 %    Usage:    Y=submat_eval(X,DIM1,LIST1,DIM2,LIST2,...)
 %
-%    Description: Y=SUBMAT_EVAL(X,DIM,LIST) creates a matrix Y that is the
-%     matrix X reduced along dimension DIM to the indices in LIST.  If DIM
-%     is a list of dimensions, LIST is used to reduce each dimension.  DIM
-%     and LIST may be strings that can be evaluated such as '1:end-1'.
+%    Description:
+%     Y=SUBMAT_EVAL(X,DIM,LIST) creates a matrix Y that is the matrix X
+%     reduced along dimension DIM to the indices in LIST.  If DIM is a list
+%     of dimensions, LIST is used to reduce each dimension.  DIM and LIST
+%     may be strings that can be evaluated such as '1:end-1'.
 %
 %     Y=SUBMAT_EVAL(X,DIM1,LIST1,DIM2,LIST2,...) allows for access to
-%     multiple dimensions independently.
+%     multiple dimensions independently.  Later inputs take indexing
+%     preference if a dimension is indexed more than once.
 %
 %    Notes:
 %
 %    Examples:
-%      Return a matrix reduced on the last dimension to the last 3
-%      elements:
-%      x=submat_eval(x,'end','end-2:end')
+%     % Return a matrix reduced on the last dimension to the last 3
+%     % elements:
+%     x=submat_eval(x,'end','end-2:end')
 %
-%      Remove the last elements along all dimensions:
-%      x=submat_eval(x,':','1:end-1')
+%     % Remove the last elements along all dimensions:
+%     x=submat_eval(x,':','1:end-1')
 %
-%      These are equivalent:
-%      x=repmat(x,[1 2 ones(1,ndims(x)-2)])
-%      x=submat_eval(x,2,'[1:end 1:end]')
+%     % These are equivalent:
+%     x=repmat(x,[1 2 ones(1,ndims(x)-2)])
+%     x=submat_eval(x,2,'[1:end 1:end]')
 %
 %    See also: SUBMAT, EVAL, COLON OPERATOR (:), END, REPMAT
 
@@ -34,9 +36,10 @@ function [X]=submat_eval(X,varargin)
 %        Sep. 21, 2009 - updated one-liner, removed unnecessary brackets
 %        June 24, 2010 - error in example fixed
 %        Aug.  9, 2010 - DIM now takes strings
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  9, 2010 at 01:05 GMT
+%     Last Updated Nov.  1, 2011 at 01:05 GMT
 
 % todo:
 

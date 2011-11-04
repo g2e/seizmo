@@ -5,11 +5,13 @@ function [words]=getwords(str,delimiter,collapse)
 %              words=getwords('str',delimiter)
 %              words=getwords('str',delimiter,collapse)
 %
-%    Description: WORDS=GETWORDS('STR') extracts words in STR and returns
-%     them separated into a cellstr array WORDS without any whitespace.
+%    Description:
+%     WORDS=GETWORDS('STR') extracts words in STR and returns them
+%     separated into a cellstr array WORDS without any whitespace.
 %
 %     WORDS=GETWORDS('STR',DELIMITER) separates words in STR using the
-%     single character DELIMITER.
+%     single character DELIMITER. The default is '' or [] which indicates
+%     any whitespace character.
 %
 %     WORDS=GETWORDS('STR',DELIMITER,COLLAPSE) toggles treating multiple
 %     delimiters as a single delimiter.  Setting COLLAPSE to TRUE treats
@@ -21,13 +23,13 @@ function [words]=getwords(str,delimiter,collapse)
 %    Notes:
 %
 %    Examples:
-%     Break up a sentence:
-%      getwords('This example is pretty dumb!')
+%     % Break up a sentence:
+%     getwords('This example is pretty dumb!')
 %       ans = 
 %       'This'    'example'    'is'    'pretty'    'dumb!'
 %
-%     Turn off multi-delimiter collapsing to allow handling empty words:
-%      getwords('the answer is  !',[],false)
+%     % Turn off multi-delimiter collapsing to allow handling empty words:
+%     getwords('the answer is  !',[],false)
 %       ans = 
 %       'the'    'answer'    'is'    [1x0 char]    '!'
 %
@@ -40,9 +42,10 @@ function [words]=getwords(str,delimiter,collapse)
 %        Nov. 20, 2009 - make multi-delimiter collapse optional
 %        July 30, 2010 - nargchk fix
 %        Jan.  3, 2011 - use isstring
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  3, 2011 at 13:00 GMT
+%     Last Updated Nov.  1, 2011 at 13:00 GMT
 
 % todo:
 

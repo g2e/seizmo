@@ -8,12 +8,13 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %              data=timeshift(data,shift,iztype,timing,option,...
 %                             field1,...,fieldN)
 %
-%    Description: TIMESHIFT(DATA,SHIFT) adjusts the relative timing of
-%     SEIZMO records in DATA by SHIFT seconds.  This adjustment is added
-%     to all defined header time fields (see Header changes section).  The
-%     reference time fields are then adjusted by -SHIFT.  This preserves
-%     the actual timing of the data and is basically equivalent to SAC's
-%     'chnhdr allt shift' command.
+%    Description:
+%     TIMESHIFT(DATA,SHIFT) adjusts the relative timing of SEIZMO records
+%     in DATA by SHIFT seconds.  This adjustment is added to all defined
+%     header time fields (see Header changes section).  The reference time
+%     fields are then adjusted by -SHIFT.  This preserves the actual timing
+%     of the data and is basically equivalent to SAC's 'chnhdr allt shift'
+%     command.
 %
 %     TIMESHIFT(DATA,SHIFT,IZTYPE) changes the output records' header field
 %     'iztype' to IZTYPE.  This value is passed directly to CHANGEHEADER as
@@ -51,13 +52,13 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %                    A, B, E, F, O, Tn, and any user-defined field
 %
 %    Examples:
-%     Shift the reference time to the origin time (note '-' sign):
-%      data=timeshift(data,-gh(data,'o'),'io')
+%     % Shift the reference time to the origin time (note '-' sign):
+%     data=timeshift(data,-gh(data,'o'),'io')
 %
-%     Also useful for quickly plotting data aligned on a phase:
-%      plot0(timeshift(data,-Parrivaltimes))
+%     % Also useful for quickly plotting data aligned on a phase:
+%     plot0(timeshift(data,-Parrivaltimes))
 %
-%    See also: CHANGEHEADER, GETHEADER, FIXTIMES
+%    See also: CHANGEHEADER, GETHEADER, FIXTIMES, SYNCHRONIZE, CUT, MERGE
 
 %     Version History:
 %        Dec. 13, 2008 - initial version
@@ -74,9 +75,10 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %        Mar.  8, 2010 - drop versioninfo caching (too difficult to debug)
 %        Aug. 21, 2010 - nargchk fix, better checkheader usage, update
 %                        undef checking
+%        Nov.  1, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 12:40 GMT
+%     Last Updated Nov.  1, 2011 at 12:40 GMT
 
 % todo:
 

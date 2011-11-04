@@ -6,14 +6,15 @@ function [option]=checkparameters(setglobal,varargin)
 %                         'option1','error|warn|ignore|fix|warnfix',...,
 %                         'optionN','error|warn|ignore|fix|warnfix')
 %
-%    Description: OPTIONS=CHECKPARAMETERS(SETGLOBAL,'DEF|DEFAULT|DEFAULTS')
-%     returns the default options for CHECKHEADER.  If SETGLOBAL is TRUE,
-%     then the default settings are saved to the global
-%     SEIZMO.CHECKPARAMETERS.  This overwrites any previous modifications
-%     from options passed with the next usage form (see below).  This will
-%     cause CHECKHEADER to behave in the default manner when no options are
-%     passed to it.  If SETGLOBAL is FALSE, then the default settings are
-%     returned without modifying the global options.
+%    Description:
+%     OPTIONS=CHECKPARAMETERS(SETGLOBAL,'DEF|DEFAULT|DEFAULTS') returns the
+%     default options for CHECKHEADER.  If SETGLOBAL is TRUE, then the
+%     default settings are saved to the global SEIZMO.CHECKPARAMETERS.
+%     This overwrites any previous modifications from options passed with
+%     the next usage form (see below).  This will cause CHECKHEADER to
+%     behave in the default manner when no options are passed to it.  If
+%     SETGLOBAL is FALSE, then the default settings are returned without
+%     modifying the global options.
 %
 %     OPTIONS=CHECKPARAMETERS(SETGLOBAL,...
 %                         'OPTION1','ERROR|WARN|IGNORE|FIX|WARNFIX',...,
@@ -30,9 +31,9 @@ function [option]=checkparameters(setglobal,varargin)
 %    Notes:
 %
 %    Examples:
-%     Make all subsequent calls to CHECKHEADER only check for the version
-%     stored in the header of records:
-%      checkparameters(true,'all','ignore','invalid_nvhdr','error');
+%     % Make all subsequent calls to CHECKHEADER only check for the version
+%     % stored in the header of records:
+%     checkparameters(true,'all','ignore','invalid_nvhdr','error');
 %
 %    See also: CHECKHEADER, CHECKOPERR
 
@@ -53,9 +54,10 @@ function [option]=checkparameters(setglobal,varargin)
 %                        MULTIPLE_B.  Edited several defaults.
 %        Aug. 21, 2010 - nargchk fix
 %        Sep. 16, 2010 - added UNSET_DELAZ
+%        Nov.  2, 2011 - doc update, added SPECTRAL_IFTYPE, TIME_IFTYPE
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2010 at 13:20 GMT
+%     Last Updated Nov.  2, 2011 at 13:20 GMT
 
 % todo:
 
@@ -76,7 +78,9 @@ option.INVALID_UNEVEN='ERROR';
 option.NONSPECTRAL_IFTYPE='IGNORE';
 option.NONXYZ_IFTYPE='IGNORE';
 option.NONTIME_IFTYPE='IGNORE';
+option.SPECTRAL_IFTYPE='IGNORE';
 option.XYZ_IFTYPE='IGNORE';
+option.TIME_IFTYPE='IGNORE';
 option.MULTIPLE_IFTYPE='WARN';
 option.INVALID_IZTYPE='WARN';
 option.NONZERO_IZTYPE='WARN';
