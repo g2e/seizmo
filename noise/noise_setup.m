@@ -59,6 +59,7 @@ function []=noise_setup(indir,outdir,length,overlap,o)
 %     Last Updated Nov.  3, 2011 at 11:15 GMT
 
 % todo:
+% - time window option
 
 % check nargin
 error(nargchk(2,5,nargin));

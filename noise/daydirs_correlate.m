@@ -34,9 +34,10 @@ function []=daydirs_correlate(indir,outdir,zpad,maxlag,o)
 %        June 20, 2010 - initial version
 %        Sep. 21, 2010 - commented out parallel processing lines
 %        Aug. 26, 2011 - fix 1 sps bug in interpolation after correlation
+%        Nov. 21, 2011 - bugfix when no records found
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2011 at 11:15 GMT
+%     Last Updated Nov. 21, 2011 at 11:15 GMT
 
 % todo:
 
@@ -147,9 +148,8 @@ for i=1:nyears
             catch
                 skip=true;
             end
-            if(numel(data)<2); skip=true; end
             
-            if(~skip)
+            if(~skip && numel(data)>1)
                 % zero padding
                 data=cut(data,'z',zpad(1),zpad(2),'fill',true);
 
@@ -176,9 +176,8 @@ for i=1:nyears
             catch
                 skip=true;
             end
-            if(numel(data)<2); skip=true; end
             
-            if(~skip)
+            if(~skip && numel(data)>1)
                 % zero padding
                 data=cut(data,'z',zpad(1),zpad(2),'fill',true);
 

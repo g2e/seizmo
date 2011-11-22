@@ -36,6 +36,7 @@ function [varargout]=plot0(data,varargin)
 %      XDIR         -- 'normal' or 'reverse'
 %      YDIR         -- 'normal' or 'reverse'
 %      FONTSIZE     -- size of fonts in the axes
+%      FONTWEIGHT   -- 'light', 'normal', 'demi' or 'bold'
 %      XSCALE       -- 'linear' or 'log'
 %      YSCALE       -- 'linear' or 'log'
 %      AMPSCALE     -- 'linear' or 'log'

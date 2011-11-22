@@ -1,13 +1,16 @@
 function [opt]=parse_seizmo_plot_options(varargin)
 %PARSE_SEIZMO_PLOT_OPTIONS    Unified SEIZMO plotting option parser
 
+% Nov.  8, 2011 - added sft support
+% Nov. 10, 2011 - fixed fg/bg fix code, sft defaults now setup
+
 % todo:
 % - value checking
 % - documentation
 % - support more plotting options and functions
 
-% defaults
-pf=star69;
+% put function-dependent defaults at front of options list
+pf=star69; % who is the calling function?
 switch pf
     case {'drawmarkers' 'dm'}
         varargin=[{'m' true 'mac' 'g' 'mfc' 'r' 'moc' [1 .5 0] ...
@@ -67,6 +70,14 @@ switch pf
             'fontweight' 'bold'} varargin];
     case {'specsec' 'spectrasection'}
         varargin=[{'fg' [] 'bg' [] 'unwrap' false 'cmp' 'a'} varargin];
+    case {'sft'}
+        varargin=[{'u' '%' 'w' 2.5 'o' 75 'p2p' 1 'dbc' 'fire' 'hr' 0 ...
+            'dbr' [] 'fr' [] 'fg' [] 'bg' [] 'ax' [] 'cmap' 'hsv' ...
+            'xlabel' 1 'ylabel' 1 'title' 1 'xlim' [] 'ylim' [] ...
+            'linewidth' 1 'linestyle' '-' 'ncols' [] 'abs' false ...
+            'dateformat' [] 'xdir' 'normal' 'ydir' 'normal' ...
+            'fdir' 'normal' ...
+            'fontsize' 10 'markers' false 'fontweight' 'bold'} varargin];
     otherwise
         error('seizmo:parse_seizmo_plot_options:badInput',...
             'Unknown plotting function: %s !',pf);
@@ -187,6 +198,24 @@ for i=1:2:np
             opt.CLUSTERS=val;
         case {'poprng'}
             opt.POPRNG=val;
+        case {'u' 'unit' 'units'}
+            opt.UNITS=val;
+        case {'w' 'window' 'width' 'length' 'len'}
+            opt.WINDOW=val;
+        case {'o' 'over' 'olap' 'overlap'}
+            opt.OVERLAP=val;
+        case {'p2p' 'padpower' 'pow2pad'}
+            opt.POW2PAD=val;
+        case {'dbc' 'dbcmap' 'dbcolor' 'dbcolormap'}
+            opt.DBCMAP=val;
+        case {'hr' 'hotrod'}
+            opt.HOTROD=val;
+        case {'dbr' 'dbrange'}
+            opt.DBRANGE=val;
+        case {'fr' 'frange' 'freqrange'}
+            opt.FRANGE=val;
+        case {'fdir' 'freqdir' 'frdir'}
+            opt.FDIR=val;
         otherwise
             error('seizmo:parse_seizmo_plot_options:badInput',...
                 'Unknown Option: %s !',varargin{i});
@@ -201,11 +230,7 @@ if(isempty(opt.FGCOLOR))
         opt.FGCOLOR=invertcolor(opt.BGCOLOR,true);
     end
 elseif(isempty(opt.BGCOLOR))
-    if(isempty(opt.FGCOLOR))
-        opt.FGCOLOR='w'; opt.BGCOLOR='k';
-    else
-        opt.BGCOLOR=invertcolor(opt.FGCOLOR,true);
-    end
+    opt.BGCOLOR=invertcolor(opt.FGCOLOR,true);
 end
 
 end

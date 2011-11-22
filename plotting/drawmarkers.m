@@ -43,9 +43,10 @@ function [varargout]=drawmarkers(ax,varargin)
 
 %     Version History:
 %        Sep. 14, 2010 - initial version
+%        Nov. 11, 2011 - added sft to plot1 section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2010 at 23:00 GMT
+%     Last Updated Nov. 11, 2011 at 23:00 GMT
 
 % todo:
 
@@ -197,7 +198,7 @@ for i=1:numel(ax)
             % push markers and flags into the background
             movekids(hflag{i}(grh,:),'back');
             movekids(hmark{i}(grh,:),'back');
-        case 'plot1'
+        case {'plot1' 'sft'}
             % preallocate handles
             hmark{i}=nan(1,13);
             hflag{i}=hmark{i};

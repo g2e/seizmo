@@ -35,6 +35,7 @@ function [varargout]=recordsection(data,varargin)
 %      XDIR         -- 'normal' or 'reverse'
 %      YDIR         -- 'normal' or 'reverse'
 %      FONTSIZE     -- size of fonts in the axes
+%      FONTWEIGHT   -- 'light', 'normal', 'demi' or 'bold'
 %      YFIELD       -- header field for y-axis positioning of records
 %      XSCALE       -- 'linear' or 'log'
 %      YSCALE       -- 'linear' or 'log'

@@ -37,6 +37,7 @@ function [varargout]=plot2(varargin)
 %      XDIR       -- 'normal' or 'reverse'
 %      YDIR       -- 'normal' or 'reverse'
 %      FONTSIZE   -- size of fonts in the axes
+%      FONTWEIGHT -- 'light', 'normal', 'demi' or 'bold'
 %      ALIGN      -- ignore label and tick overlaps when aligning subplots
 %      XSCALE     -- 'linear' or 'log'
 %      YSCALE     -- 'linear' or 'log'

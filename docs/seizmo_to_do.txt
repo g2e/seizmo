@@ -2,12 +2,12 @@ my todo list
 %%%%%%%%%%%%
 
 %%%%%
-today
+next!
 %%%%%
-x make cut/readdatawindow accept absolute time strings
-x fix formatting of timeshift & synchronize too
 merge uneven or variable samplerate
-get noise_setup working
+sft plotting
+	- need abs, fgc, bgc, record cmap, flag control, etc
+	- how to tie this in with p1?
 
 %%%
 phd
@@ -22,6 +22,9 @@ x	add weighting to all
     cub2 rayleigh/love dispersion estimation
         - can use for geofk scripts and much much more
         - need to calculate using Hermann codes
+    	- need love dispersion & rayleigh phase & group dispersion
+    	- functions for dispersion at position
+    	- functions for depth model at position
 	weight optimization function
 		capon 1969, etc
 		haubrich 1968
@@ -140,10 +143,6 @@ ffmancor
 sph harm mantle models
     - really need codes to synthesize info at points
 ani mantle models
-cub2 functions
-    - need love dispersion & rayleigh phase dispersion
-    - functions for dispersion at position
-    - functions for depth model at position
 picking
     - better understanding of ppk in SAC
     - mimic it as much as possible
@@ -152,8 +151,6 @@ autopicking
 glitch & step removal
     - SAC has glitch detection ... implement it?
 smooth spline removal (requires spline toolbox)
-merge (uneven)
-    - simple in theory, but the coding will be tough
 drop restrictive copyright functions
 	buttord2 (edit of buttord)
 	ddendrogram (edit of dendrogram)

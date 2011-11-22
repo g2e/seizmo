@@ -30,6 +30,7 @@ function [varargout]=plot1(data,varargin)
 %      XDIR       -- 'normal' or 'reverse'
 %      YDIR       -- 'normal' or 'reverse'
 %      FONTSIZE   -- size of fonts in the axes
+%      FONTWEIGHT -- 'light', 'normal', 'demi' or 'bold'
 %      ALIGN      -- ignore label and tick overlaps when aligning subplots
 %      XSCALE     -- 'linear' or 'log'
 %      YSCALE     -- 'linear' or 'log'
@@ -61,9 +62,11 @@ function [varargout]=plot1(data,varargin)
 %        Apr. 16, 2011 - allow empty title/xlabel/ylabel, allow datetick
 %                        for non-absolute
 %        Apr. 19, 2011 - userdata for each record contains record metadata
+%        Nov.  8, 2011 - move shortidep out as an independent function
+%        Nov. 11, 2011 - per record linewidth, fontweight support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 19, 2011 at 23:00 GMT
+%     Last Updated Nov. 11, 2011 at 23:00 GMT
 
 % todo:
 
@@ -94,10 +97,12 @@ else
     opt.CMAP=repmat(opt.CMAP,ceil(nrecs/size(opt.CMAP,1)),1);
 end
 
-% line style
+% line style/width
 opt.LINESTYLE=cellstr(opt.LINESTYLE);
 opt.LINESTYLE=opt.LINESTYLE(:);
 opt.LINESTYLE=repmat(opt.LINESTYLE,ceil(nrecs/size(opt.LINESTYLE,1)),1);
+opt.LINEWIDTH=opt.LINEWIDTH(:);
+opt.LINEWIDTH=repmat(opt.LINEWIDTH,ceil(nrecs/size(opt.LINEWIDTH,1)),1);
 
 % check filetype (only timeseries or xy)
 iftype=getenumid(data,'iftype');
@@ -143,8 +148,8 @@ for i=goodfiles
     cla(opt.AXIS(i),'reset');
     set(opt.AXIS(i),'ydir',opt.YDIR,'xdir',opt.XDIR,...
         'xscale',opt.XSCALE,'yscale',opt.YSCALE,...
-        'fontsize',opt.FONTSIZE,'color',opt.BGCOLOR,...
-        'xcolor',opt.FGCOLOR,'ycolor',opt.FGCOLOR);
+        'fontsize',opt.FONTSIZE,'fontweight',opt.FONTWEIGHT,...
+        'color',opt.BGCOLOR,'xcolor',opt.FGCOLOR,'ycolor',opt.FGCOLOR);
     
     % plot record
     hold(opt.AXIS(i),'on');
@@ -154,12 +159,12 @@ for i=goodfiles
                 rh=plot(opt.AXIS(i),z6(i)+data(i).ind/86400,data(i).dep,...
                     'color',opt.CMAP(i,:),...
                     'linestyle',opt.LINESTYLE{i},...
-                    'linewidth',opt.LINEWIDTH);
+                    'linewidth',opt.LINEWIDTH(i));
             else
                 rh=plot(opt.AXIS(i),data(i).ind,data(i).dep,...
                     'color',opt.CMAP(i,:),...
                     'linestyle',opt.LINESTYLE{i},...
-                    'linewidth',opt.LINEWIDTH);
+                    'linewidth',opt.LINEWIDTH(i));
             end
         otherwise
             if(opt.ABSOLUTE)
@@ -168,13 +173,13 @@ for i=goodfiles
                     data(i).dep,...
                     'color',opt.CMAP(i,:),...
                     'linestyle',opt.LINESTYLE{i},...
-                    'linewidth',opt.LINEWIDTH);
+                    'linewidth',opt.LINEWIDTH(i));
             else
                 rh=plot(opt.AXIS(i),(b(i)+(0:npts(i)-1)*delta(i)).',...
                     data(i).dep,...
                     'color',opt.CMAP(i,:),...
                     'linestyle',opt.LINESTYLE{i},...
-                    'linewidth',opt.LINEWIDTH);
+                    'linewidth',opt.LINEWIDTH(i));
             end
     end
     hold(opt.AXIS(i),'off');
@@ -285,33 +290,15 @@ for i=goodfiles
     else
         p1ylabel=opt.YLABEL;
     end
-    title(opt.AXIS(i),p1title,...
-        'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);
-    xlabel(opt.AXIS(i),p1xlabel,...
-        'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);
-    ylabel(opt.AXIS(i),p1ylabel,...
-        'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);
+    title(opt.AXIS(i),p1title,'color',opt.FGCOLOR,...
+        'fontsize',opt.FONTSIZE,'fontweight',opt.FONTWEIGHT);
+    xlabel(opt.AXIS(i),p1xlabel,'color',opt.FGCOLOR,...
+        'fontsize',opt.FONTSIZE,'fontweight',opt.FONTWEIGHT);
+    ylabel(opt.AXIS(i),p1ylabel,'color',opt.FGCOLOR,...
+        'fontsize',opt.FONTSIZE,'fontweight',opt.FONTWEIGHT);
 end
 
 % output axes if wanted
 if(nargout); varargout{1}=opt.AXIS; end
 
 end
-
-
-function [idep]=shortidep(idep)
-%SHORTIDEP    Converts idep long description to just units
-long={'Unknown' 'Displacement (nm)' 'Velocity (nm/sec)' ...
-      'Acceleration (nm/sec^2)' 'Velocity (volts)' 'Absement (nm*sec)' ...
-      'Absity (nm*sec^2)' 'Abseleration (nm*sec^3)' 'Abserk (nm*sec^4)' ...
-      'Absnap (nm*sec^5)' 'Absackle (nm*sec^6)' 'Abspop (nm*sec^7)' ...
-      'Jerk (nm/sec^3)' 'Snap (nm/sec^4)' 'Crackle (nm/sec^5)' ...
-      'Pop (nm/sec^6)' 'Counts'};
-short={'unknown' 'nm' 'nm/sec' 'nm/sec^2' 'volts' 'nm*sec' 'nm*sec^2' ...
-       'nm*sec^3' 'nm*sec^4' 'nm*sec^5' 'nm*sec^6' 'nm*sec^7' ...
-       'nm/sec^3' 'nm/sec^4' 'nm/sec^5' 'nm/sec^6' 'counts'};
-[tf,i]=ismember(idep,long);
-idep(~tf)={'unknown'};
-idep(tf)=short(i(tf));
-end
-
