@@ -1,12 +1,12 @@
-function [idx]=vertcmp(data)
-%VERTCMP    Finds vertical component SEIZMO records
+function [idx]=horzcmp(data)
+%HORZCMP    Finds horizontal component SEIZMO records
 %
-%    Usage:    idx=vertcmp(data)
+%    Usage:    idx=horzcmp(data)
 %
 %    Description:
-%     IDX=VERTCMP(DATA) returns the indices in matrix IDX for the records
-%     in SEIZMO struct DATA that are vertically oriented (CMPINC is 0 or
-%     180).  Special checks are made for inclined components (CMPINC is not
+%     IDX=HORZCMP(DATA) returns the indices in matrix IDX for the records
+%     in SEIZMO struct DATA that are horizontally oriented (CMPINC is 90).
+%     Special checks are made for inclined components (CMPINC is not
 %     0, 90, or 180), vertically oriented North/East channels, horizontally
 %     oriented Z channels, multiple vertical components for the same
 %     stream, and varying azimuth or inclination for a component.
@@ -16,15 +16,14 @@ function [idx]=vertcmp(data)
 %       results.  Think of it as encouragement to fix your data.
 %
 %    Examples:
-%     % Vertical components in dataset without suspect orientations:
+%     % Separate the horizontal and vertical components:
 %     vdata=data(vertcmp(data));
+%     hdata=data(horzcmp(data));
 %
-%    See also: HORZCMP, HORZPAIRS, ROTATE
+%    See also: HORZPAIRS, VERTCMP
 
 %     Version History:
-%        Sep. 29, 2010 - initial version
-%        Nov. 30, 2011 - doc update, fixed comments, all checks on all
-%                        streams, remove 2nd output
+%        Nov. 30, 2011 - initial version
 %        Dec. 21, 2011 - forgot checking data structure and general header
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
@@ -80,7 +79,7 @@ try
         % check for vertical N,E
         if(any(strcmpi(cmpstr(stream),'N')) ...
                 || any(strcmpi(cmpstr(stream),'E')))
-            warning('seizmo:vertcmp:verticalHorizontal',...
+            warning('seizmo:horzcmp:verticalHorizontal',...
                 ['Record(s):\n' sprintf('%d ',find(stream)) ...
                 '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
                 '\nNorth/East components oriented vertically!']);
@@ -89,7 +88,7 @@ try
         
         % check for inclined anything
         if(any(cmpinc(stream)~=0 & cmpinc(stream)~=180))
-            warning('seizmo:vertcmp:verticalHorizontal',...
+            warning('seizmo:horzcmp:verticalHorizontal',...
                 ['Record(s):\n' sprintf('%d ',find(stream)) ...
                 '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
                 '\nComponent(s) oriented at strange incline!']);
@@ -98,7 +97,7 @@ try
         
         % check for multiple vertical components in stream
         if(numel(unique(cmpstr(stream)))>1)
-            warning('seizmo:vertcmp:multipleVerticals',...
+            warning('seizmo:horzcmp:multipleVerticals',...
                 ['Record(s):\n' sprintf('%d ',find(stream)) ...
                 '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
                 '\nMultiple vertical components!']);
@@ -107,7 +106,7 @@ try
         
         % check that there is only one azimuth for the verticals
         if(numel(unique(cmpaz(stream)))>1)
-            warning('seizmo:vertcmp:multiAziVerticals',...
+            warning('seizmo:horzcmp:multiAziVerticals',...
                 ['Record(s):\n' ...
                 sprintf('%d ',find(stream)) ...
                 '\nFilename(s):\n' sprintf('%s\n',data(stream).name)...
@@ -121,7 +120,7 @@ try
         % check for horizontal Z
         if(any(strcmpi(cmpstr(stream),'Z')))
             %tmp=stream(strcmpi(cmpstr(stream),'Z'));
-            warning('seizmo:vertcmp:horizontalVertical',...
+            warning('seizmo:horzcmp:horizontalVertical',...
                 ['Record(s):\n' sprintf('%d ',find(stream)) ...
                 '\nFilename(s):\n' sprintf('%s\n',data(stream).name) ...
                 '\nZ component oriented horizontally!']);
@@ -140,7 +139,7 @@ try
         % check that there is only one inclination per component
         for j=1:ncmp
             if(numel(unique(cmpinc(stream & idx3==j)))>1)
-                warning('seizmo:vertcmp:multiOrientCmp',...
+                warning('seizmo:horzcmp:multiOrientCmp',...
                     ['Record(s):\n' ...
                     sprintf('%d ',find(stream & idx3==j)) ...
                     '\nFilename(s):\n' ...
@@ -160,7 +159,7 @@ try
     end
 
     % return indices of verticals from good streams
-    idx=idx(isok & ~ishorz);
+    idx=idx(isok & ishorz);
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

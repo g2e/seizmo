@@ -5,6 +5,7 @@ function [data,failed]=readdatawindow(data,varargin)
 %              data=readdatawindow(...,'cmplist',list,...)
 %              data=readdatawindow(...,'fill',logical,...)
 %              data=readdatawindow(...,'filler',value,...)
+%              data=readdatawindow(...,'iztype',iztype,...)
 %              [data,failed]=readdatawindow(...,'trim',logical,...)
 %
 %    Description:
@@ -72,22 +73,28 @@ function [data,failed]=readdatawindow(data,varargin)
 %     11), the window defaults to the entire record ('b',0,'e',0) - ie no
 %     window.
 %
-%     READDATAWINDOW(...,'CMPLIST',LIST) allows reading in only specific
-%     components of records.  Should be either a row vector of indices or
-%     ':'.  May also be an array of rows of indices or ':' (use a cell
-%     array to get a mixture.  Default is ':' (all components).
+%     DATA=READDATAWINDOW(...,'CMPLIST',LIST,...) allows reading in only
+%     specific components of records.  Should be either a row vector of
+%     indices or ':'.  May also be an array of rows of indices or ':' (use
+%     a cell array to get a mixture.  Default is ':' (all components).
 %
-%     READDATAWINDOW(...,'FILL',TRUE|FALSE) turns on/off the filling of
-%     data gaps to allow records that don't extend for the entire window to
-%     do so by padding them with zeros.  This is useful for operations that
-%     require records to all have the same length.  See option 'FILLER' to
-%     alter the fill value.  By default 'FILL' is false (no fill).
+%     DATA=READDATAWINDOW(...,'FILL',TRUE|FALSE,...) turns on/off the
+%     filling of data gaps to allow records that don't extend for the
+%     entire window to do so by padding them with zeros.  This is useful
+%     for operations that require records to all have the same length.  See
+%     option 'FILLER' to alter the fill value.  By default 'FILL' is false
+%     (no fill).
 %
-%     READDATAWINDOW(...,'FILLER',VALUE) changes the fill value to VALUE.
-%     Adjusting this value does NOT turn option 'FILL' to true.  By default
-%     'FILLER' is set to 0 (zero).
+%     DATA=READDATAWINDOW(...,'FILLER',VALUE,...) changes the fill value to
+%     VALUE.  Adjusting this value does NOT turn option 'FILL' to true.  By
+%     default 'FILLER' is set to 0 (zero).
 %
-%     [DATA,FAILED]=READDATAWINDOW(...,'TRIM',TRUE|FALSE) turns on/off
+%     DATA=READDATAWINDOW(...,'IZTYPE',IZTYPE,...) sets the header field
+%     'iztype' of the output records to IZTYPE.    This value is passed
+%     directly to CHANGEHEADER as 'changeheader(DATA,'iztype',IZTYPE)'.
+%     The default IZTYPE is [] and changes nothing.
+%
+%     [DATA,FAILED]=READDATAWINDOW(...,'TRIM',TRUE|FALSE,...) turns on/off
 %     deleting records that are unsupported for windowing (spectral and xyz
 %     files), that failed to be read, or would have no data in the window.
 %     Optional output FAILED returns a logical array (equal in size to
@@ -158,9 +165,10 @@ function [data,failed]=readdatawindow(data,varargin)
 %                        proper SEIZMO handling, seizmoverbose support
 %        Feb. 11, 2011 - mass nargchk fix
 %        Nov.  2, 2011 - doc update, allow absolute time input
+%        Dec.  1, 2011 - IZTYPE option added
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2011 at 15:05 GMT
+%     Last Updated Dec.  1, 2011 at 15:05 GMT
 
 % todo:
 
@@ -288,11 +296,15 @@ try
         if(any(uneven & ~failed))
             % cut unevenly sampled datafiles
             uneven=(uneven & ~failed);
+            if(isempty(option.IZTYPE)); iztype=option.IZTYPE;
+            else iztype=option.IZTYPE(uneven);
+            end
             [data(uneven),failed(uneven)]=cut(data(uneven),...
                 option.REF1,option.OFFSET1(uneven),...
                 option.REF2,option.OFFSET2(uneven),...
                 'fill',option.FILL,'filler',option.FILLER,...
-                'cmplist',option.CMPLIST,'trim',false);
+                'cmplist',option.CMPLIST,'trim',false,...
+                'iztype',iztype);
         end
     end
 
@@ -451,7 +463,10 @@ try
     end
 
     % update headers
-    data(even)=changeheader(data(even),...
+    if(isempty(option.IZTYPE)); iztype=option.IZTYPE;
+    else iztype=option.IZTYPE(even);
+    end
+    data(even)=changeheader(data(even),'iztype',iztype,...
         'b',b(even),'e',e(even),'npts',npts(even),'ncmp',ncmp(even),...
         'depmen',depmen(even),'depmin',depmin(even),'depmax',depmax(even));
 

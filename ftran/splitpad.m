@@ -4,12 +4,13 @@ function [data]=splitpad(data,pow2pad)
 %    Usage:    data=splitpad(data)
 %              data=splitpad(data,pow2pad)
 %
-%    Description: DATA=SPLITPAD(DATA) splits records so the starting point
-%     is at 0 and all points prior to that come at the end of the
-%     record(s).  The record(s) are zeropadded to a power of 2.  Basically
-%     the layout is: positive time data, zeros, negative time data.  This
-%     is to preserve the phase information when transforming correlations
-%     of seismic noise to the frequency domain.
+%    Description:
+%     DATA=SPLITPAD(DATA) splits records so the starting point is at 0 and
+%     all points prior to that come at the end of the record(s).  The
+%     record(s) are zeropadded to a power of 2.  Basically the layout is:
+%     positive time data, zeros, negative time data.  This is to preserve
+%     the phase information when transforming correlations of seismic noise
+%     to the frequency domain.
 %
 %     DATA=SPLITPAD(DATA,POW2PAD) lets the power of 2 zero-padding be
 %     adjusted using an integer POW2PAD according to the formula:
@@ -27,8 +28,8 @@ function [data]=splitpad(data,pow2pad)
 %    Header changes: B, E, NPTS, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Using SPLITPAD correctly requires using an extend usage form of DFT:
-%      fdata=dft(splitpad(data),[],0);
+%     % SPLITPAD requires using an extend usage form of DFT:
+%     fdata=dft(splitpad(data),[],0);
 %
 %    See also: CUT, DFT
 
@@ -38,9 +39,10 @@ function [data]=splitpad(data,pow2pad)
 %        Feb. 15, 2011 - minor doc update
 %        Aug. 26, 2011 - use checkheader more effectively, added some
 %                        tolerance to the point at 0 requirement
+%        Dec. 21, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2011 at 10:05 GMT
+%     Last Updated Dec. 21, 2011 at 10:05 GMT
 
 % todo:
 
@@ -48,7 +50,7 @@ function [data]=splitpad(data,pow2pad)
 error(nargchk(1,2,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -68,13 +70,15 @@ try
     
     % check pow2pad
     if(nargin<2 || isempty(pow2pad)); pow2pad=1; end
-    if(~isreal(pow2pad) || any(pow2pad~=fix(pow2pad)) ...
+    if(~isnumeric(pow2pad) || ~isreal(pow2pad) ...
+            || any(pow2pad~=fix(pow2pad)) ...
             || ~any(numel(pow2pad)==[1 nrecs]))
         error('seizmo:splitpad:badInput',...
             ['POW2PAD must be an integer or an array\n' ...
             'of integers (one per record)!']);
     end
     if(isscalar(pow2pad)); pow2pad=pow2pad(ones(nrecs,1),1); end
+    pow2pad=pow2pad(:);
     
     % pull relevant timing info
     [b,delta,npts,ncmp]=getheader(data,'b','delta','npts','ncmp');

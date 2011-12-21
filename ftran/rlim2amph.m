@@ -3,23 +3,24 @@ function [data]=rlim2amph(data)
 %
 %    Usage:    data=rlim2amph(data)
 %
-%    Description: RLIM2AMPH(DATA) converts SEIZMO real-imaginary records 
-%     to amplitude-phase records.  This is particularly useful for 
-%     switching between the formats when performing basic operations on 
-%     spectral records would require separating the amplitude and phase
-%     components.  Records in DATA must be of the spectral variety.  
-%     Amplitude-phase records are not altered.
+%    Description:
+%     RLIM2AMPH(DATA) converts SEIZMO real-imaginary records to
+%     amplitude-phase records.  This is particularly useful for switching
+%     between the formats when performing basic operations on spectral
+%     records would require separating the amplitude and phase components.
+%     Records in DATA must be of the spectral variety.  Amplitude-phase
+%     records are not altered.
 %
 %    Notes:
 %
 %    Header changes: IFTYPE, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     To simply multiply two records in the frequency domain, they must be
-%     converted to real-imaginary first:
-%      data=amph2rlim(data)
-%      data=multiplyrecords(data(1),data(2))
-%      data=rlim2amph(data)
+%     % It is easier to multiply records by a constant in the frequency
+%     % domain if they are in real-imaginary format:
+%     data=amph2rlim(data);
+%     data=multiply(data,3);
+%     data=rlim2amph(data);
 %
 %    See also: AMPH2RLIM, DFT, IDFT
 
@@ -39,9 +40,10 @@ function [data]=rlim2amph(data)
 %        Mar.  8, 2010 - versioninfo caching dropped
 %        Apr.  9, 2010 - minor bug fix
 %        Feb. 11, 2011 - mass nargchk fix
+%        Dec. 21, 2011 - doc update, changed example (it was bad)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Dec. 21, 2011 at 12:45 GMT
 
 % todo:
 
@@ -49,15 +51,16 @@ function [data]=rlim2amph(data)
 error(nargchk(1,1,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt conversion
 try
-    % check header (versioninfo cache update)
-    data=checkheader(data);
+    % check header
+    data=checkheader(data,...
+        'NONSPECTRAL_IFTYPE','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -69,15 +72,7 @@ try
     iftype=getenumid(data,'iftype');
 
     % find spectral
-    amph=strcmpi(iftype,'iamph');
     rlim=strcmpi(iftype,'irlim');
-
-    % records must be spectral
-    if(any(~amph & ~rlim))
-        error('seizmo:rlim2amph:illegalOperation',...
-            ['Record(s):\n' sprintf('%d ',find(~amph & ~rlim)) ...
-            '\nIllegal operation on non-spectral record(s)!']);
-    end
     
     % detail message
     if(verbose)

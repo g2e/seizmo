@@ -3,9 +3,10 @@ function [data]=idft(data)
 %
 %    Usage:    data=idft(data)
 %
-%    Description: IDFT(DATA) converts SEIZMO records from the frequency 
-%     domain to the time domain using an inverse discrete fourier transform
-%     (Matlab's ifft).  Output filetype is 'Time Series File'.
+%    Description:
+%     IDFT(DATA) converts SEIZMO records from the frequency domain to the
+%     time domain using an inverse discrete fourier transform (Matlab's
+%     ifft).  Output filetype is 'Time Series File'.
 %
 %    Notes:
 %     - SAC (and thus SEIZMO's DFT for sanity) calculates spectral data 
@@ -13,7 +14,7 @@ function [data]=idft(data)
 %       Matlab's fft/ifft functions work so be careful when working with
 %       amplitudes!
 %
-%    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
+%    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS, IFTYPE
 %                    DEPMEN, DEPMIN, DEPMAX
 %     In the frequency domain B, DELTA, and NPTS are changed to the 
 %     beginning frequency, sampling frequency, and number of data points in
@@ -22,8 +23,8 @@ function [data]=idft(data)
 %     NSNPTS and are restored when this command is performed.
 %
 %    Examples:
-%     To take the derivative of a time-series in the frequency domain:
-%      data=idft(multiplyomega(dft(data)))
+%     % To take the derivative of a time-series in the frequency domain:
+%     data=idft(multiplyomega(dft(data)))
 %
 %    See also: DFT, AMPH2RLIM, RLIM2AMPH, DIVIDEOMEGA, MULTIPLYOMEGA
 
@@ -46,9 +47,10 @@ function [data]=idft(data)
 %                        improved messaging
 %        Aug. 19, 2010 - removed ifft symmetric flag, real conversion
 %        Feb. 11, 2011 - mass seizmocheck fix
+%        Dec. 21, 2011 - doc update, better checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Dec. 21, 2011 at 15:05 GMT
 
 % todo:
 
@@ -64,7 +66,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt inverse fast fourier transform
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONSPECTRAL_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
 
     % verbosity
     verbose=seizmoverbose;
@@ -73,23 +77,10 @@ try
     nrecs=numel(data);
 
     % retreive header info
-    leven=getlgc(data,'leven');
     iftype=getenumid(data,'iftype');
     [b,delta,sb,sdelta,npts,nspts]=...
         getheader(data,'b','delta','sb','sdelta','npts','nspts');
     e=sb+(nspts-1).*sdelta;
-
-    % check leven,iftype
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:idft:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    elseif(any(~strcmpi(iftype,'irlim') & ~strcmpi(iftype,'iamph')))
-        error('seizmo:idft:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'irlim') & ~strcmpi(iftype,'iamph'))) ...
-            '\nDatatype of record(s) in DATA must be spectral!']);
-    end
     
     % detail message
     if(verbose)

@@ -5,11 +5,12 @@ function [data]=dft(data,format,pow2pad)
 %              data=dft(data,format)
 %              data=dft(data,format,pow2pad)
 %
-%    Description: DFT(DATA,FORMAT) converts SEIZMO records from the time 
-%     domain to the frequency domain using a discrete fourier transform
-%     (Matlab's fft).  Following SAC formatting, an option FORMAT can be
-%     given to select between real-imaginary and amplitude-phase formats
-%     (FORMAT can be either 'amph' or 'rlim' - the default is 'amph').  
+%    Description:
+%     DFT(DATA,FORMAT) converts SEIZMO records from the time domain to the
+%     frequency domain using a discrete fourier transform (Matlab's fft).
+%     Following SAC formatting, an option FORMAT can be given to select
+%     between real-imaginary and amplitude-phase formats (FORMAT can be
+%     either 'amph' or 'rlim' - the default is 'amph').
 %
 %     DFT(DATA,FORMAT,POW2PAD) lets the power of 2 zero-padding be adjusted
 %     using an integer POW2PAD according to the formula:
@@ -26,17 +27,17 @@ function [data]=dft(data,format,pow2pad)
 %       npts*delta/2 gives results that may better match the amplitudes
 %       of sinusoid functions.  
 %
-%    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS
+%    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS, IFTYPE
 %                    DEPMEN, DEPMIN, DEPMAX
 %     In the frequency domain B, DELTA, and NPTS are changed to the 
 %     beginning frequency, sampling frequency, and number of data points in
 %     the transform (includes negative frequencies).  The original values 
 %     of B, DELTA, and NPTS are saved in the header as SB, SDELTA, and 
-%     NSNPTS and are restored when the IDFT command is performed.
+%     NSPTS and are restored when the IDFT command is performed.
 %
 %    Examples:
-%     To take the derivative of a time-series in the frequency domain:
-%      data=idft(multiplyomega(dft(data)))
+%     % To take the derivative of a time-series in the frequency domain:
+%     data=idft(multiplyomega(dft(data)))
 %
 %    See also: IDFT, AMPH2RLIM, RLIM2AMPH, DIVIDEOMEGA, MULTIPLYOMEGA
 
@@ -61,17 +62,15 @@ function [data]=dft(data,format,pow2pad)
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling,
 %                        improved messaging, drop GETNCMP usage
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
+%        Dec. 21, 2011 - doc update, better checkheader usage, drop globals
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Dec. 21, 2011 at 15:05 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,3,nargin));
-
-% get SEIZMO info
-global SEIZMO
 
 % check data structure
 error(seizmocheck(data,'dep'));
@@ -82,7 +81,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt fast fourier transform
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -90,92 +91,47 @@ try
     % number of records
     nrecs=numel(data);
 
-    % valid option values
-    valid.FORMAT={'amph' 'rlim'};
+    % valid format values
+    valid={'amph' 'rlim'};
 
     % defaults
-    option.FORMAT='amph';
-    option.POW2PAD=1;
-
-    % get options from SEIZMO global
-    try
-        fields=fieldnames(SEIZMO.DFT);
-        for i=1:numel(fields)
-            if(~isempty(SEIZMO.DFT.(fields{i})))
-                option.(fields{i})=SEIZMO.DFT.(fields{i});
-            end
-        end
-    catch
-    end
-
-    % get option from command line
-    if(nargin>=2 && ~isempty(format)); option.FORMAT=format; end
-    if(nargin>=3 && ~isempty(pow2pad)); option.POW2PAD=pow2pad; end
+    if(nargin<2 || isempty(format)); format='amph'; end
+    if(nargin<3 || isempty(pow2pad)); pow2pad=1; end
 
     % check options
-    fields=fieldnames(option);
-    for i=1:numel(fields)
-        % specific checks
-        switch lower(fields{i})
-            case 'format'
-                if(iscellstr(option.(fields{i})))
-                    option.(fields{i})=char(option.(fields{i}));
-                end
-                if(isempty(option.(fields{i})) ...
-                        || ~ischar(option.(fields{i})) ...
-                        || ~any(size(option.(fields{i}),1)==[1 nrecs]) ...
-                        || ~isempty(setdiff(lower(option.(fields{i})),...
-                        valid.(fields{i}))))
-                    error('seizmo:dft:badInput',...
-                        ['%s option must be one of the following:\n'...
-                        sprintf('%s ',valid.(fields{i}){:})],fields{i});
-                end
-                if(size(option.(fields{i}),1)==1)
-                    option.(fields{i})=option.(fields{i})(ones(nrecs,1),:);
-                end
-                option.(fields{i})=cellstr(option.(fields{i}));
-            case 'pow2pad'
-                if(isempty(option.(fields{i})) || ...
-                        any(fix(option.(fields{i}))~=option.(fields{i})) ...
-                        || ~any(numel(option.(fields{i}))==[1 nrecs]))
-                    error('seizmo:dft:badInput',...
-                        ['%s option must be an integer or an array of\n'...
-                        'integers with one option per record.'],fields{i});
-                end
-                if(isscalar(option.(fields{i})))
-                    option.(fields{i})=option.(fields{i})(ones(nrecs,1),1);
-                end
-        end
+    if(ischar(format)); format=cellstr(format); end
+    if(~iscellstr(format) || ~any(numel(format)==[1 nrecs]) ...
+            || any(~ismember(lower(format),valid)))
+        error('seizmo:dft:badInput',...
+            ['FORMAT option must be one of the following:\n'...
+            sprintf('%s ',valid{:})]);
     end
+    if(isscalar(format)); format(1:nrecs,1)=format; end
+    format=format(:);
+    if(~isnumeric(pow2pad) || ~isreal(pow2pad) ...
+            || any(pow2pad~=fix(pow2pad)) ...
+            || ~any(numel(pow2pad)==[1 nrecs]))
+        error('seizmo:dft:badInput',...
+            ['POW2PAD must be an integer or an array\n' ...
+            'of integers (one per record)!']);
+    end
+    if(isscalar(pow2pad)); pow2pad(1:nrecs,1)=pow2pad; end
+    pow2pad=pow2pad(:);
 
     % special warning for POW2PAD
-    if(any(option.POW2PAD<0))
+    if(any(pow2pad<0))
         warning('seizmo:dft:dataTruncation',...
-            ['Record(s):\n' sprintf('%d ',find(option.POW2PAD<0))...
-            '\nSetting option POW2PAD < 0 will\n'...
-            'truncate data from the records!'])
+            ['Setting option POW2PAD < 0 will\n' ...
+            'truncate data from the records!\n' ...
+            'Record(s):\n' sprintf('%d ',find(pow2pad<0))])
     end
 
     % retreive header info
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
     [b,delta,npts,ncmp]=getheader(data,'b','delta','npts','ncmp');
-
-    % check leven,iftype
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:dft:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    elseif(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:dft:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
 
     % output type
     iftype(1:nrecs,1)={'iamph'};
-    rlim=strcmpi(option.FORMAT,'rlim');
+    rlim=strcmpi(format,'rlim');
     if(any(rlim)); iftype(rlim)={'irlim'}; end
     
     % detail message
@@ -201,12 +157,12 @@ try
         data(i).dep=double(data(i).dep);
 
         % get frequency info
-        nspts(i)=2^(nextpow2(npts(i))+option.POW2PAD(i));
+        nspts(i)=2^(nextpow2(npts(i))+pow2pad(i));
         sb(i)=0; se(i)=1/(delta(i)*2); sdelta(i)=2*se(i)/nspts(i);
 
         % truncate npts if POW2PAD<0
-        if(option.POW2PAD(i)<0)
-            npts(i)=2^(nextpow2(npts(i))+option.POW2PAD(i));
+        if(pow2pad(i)<0)
+            npts(i)=2^(nextpow2(npts(i))+pow2pad(i));
         end
 
         % fft
@@ -217,7 +173,7 @@ try
         data(i).dep(:,(1:ncmp)*2)=data(i).dep;
 
         % split complex by desired filetype
-        switch lower(option.FORMAT{i})
+        switch lower(format{i})
             case 'rlim'
                 data(i).dep(:,1:2:end)=real(data(i).dep(:,2:2:end));
                 data(i).dep(:,2:2:end)=imag(data(i).dep(:,2:2:end));

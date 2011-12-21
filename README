@@ -25,7 +25,7 @@ for more details:
      somewhere on your filesystem.  Next, go into the extracted directory
      and start Matlab or GNU Octave.  Finally, run install_seizmo in Matlab
      or GNU Octave.  This function will remove any paths from previous
-     SEIZMO installs and add paths to the current SEIZMO as needed.  Some
+     SEIZMO installs and add paths for the current SEIZMO as needed.  Some
      operations will fail in Octave as they use unavailable features (no
      java support, etc).  Drop me a note if you are having trouble with the
      install.

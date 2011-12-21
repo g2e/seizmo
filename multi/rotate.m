@@ -20,12 +20,15 @@ function [data]=rotate(data,varargin)
 %              data=rotate(...,'verbose',logical,...)
 %              data=rotate(...,'debug',logical,...)
 %
-%    Description: DATA=ROTATE(DATA) rotates the orthogonal horizontal pairs
-%     of records in SEIZMO struct DATA to the great circle path (ie to the
-%     radial and transverse directions).  See HORZPAIRS for details on how
-%     records are determined to be horizontal pairs.  The KCMPNM field is
-%     altered to ??R for odd indexed records and ??T for even indexed
-%     records in output struct DATA.  Rotated pairs must overlap by at
+%    Description:
+%     DATA=ROTATE(DATA) rotates the orthogonal horizontal pairs of records
+%     in SEIZMO struct DATA to the great circle path (ie to the radial and
+%     transverse directions).  See HORZPAIRS for details on how records are
+%     determined to be horizontal pairs.  Pairs are returned such that
+%     records 1 & 2 are a pair, 3 & 4 are a pair, etc.  The KCMPNM field is
+%     altered to ??R for odd indexed records (indicating that these are the
+%     radial component) and ??T for even indexed records (transverse
+%     component) in output struct DATA.  Rotated pairs must overlap by at
 %     least 2 samples (see options MINOVERLAP and OVERLAPUNITS to alter
 %     this) and overlap is checked based on their absolute timing (see
 %     options USEABSOLUTETIMING and TIMING options to alter this).
@@ -59,8 +62,9 @@ function [data]=rotate(data,varargin)
 %     oriented to the TO option's azimuth) while KCMPNM2 alters the 2nd
 %     component.  KCMPNM gives the character(s) occupying the 3rd character
 %     position and on.  So setting KCMPNM1 to 'N' would output odd-indexed
-%     records with their 'kcmpnm' field is set to ??N.  The first two
-%     characters are preserved.
+%     records with their 'kcmpnm' field set to ??N.  The first two
+%     characters are preserved.  The default for KCMPNM1 is 'R' and KCMPNM2
+%     is 'T'.
 %
 %     DATA=ROTATE(...,'ADJUST',METHOD,...) allows changing which record
 %     out of a rotatible pair is shifted/interpolated to time-align with
@@ -77,7 +81,7 @@ function [data]=rotate(data,varargin)
 %     intervals will always shift the data to the new times without
 %     interpolating new values.  Really the choice depends on how sensitive
 %     you think your data is to time shifts and/or how much you trust the
-%     timing of the adjusted record.  If your trying to get relative
+%     timing of the adjusted record.  If you're trying to get relative
 %     arrival times of P recordings then you probably are worried about
 %     minor shifts in timing (which begs the question of why you are
 %     dealing with such crappy data in the first place).  The default is
@@ -153,20 +157,20 @@ function [data]=rotate(data,varargin)
 %                    (see CHECKHEADER for more)
 %
 %    Examples:
-%     Do the default (rotates to the great circle path):
-%      rdata=rotate(data);
+%     % Do the default (rotates to the great circle path):
+%     rdata=rotate(data);
 %
-%     Rotate to north (and east) + require rotated records are at least 100
-%     seconds in length + change kcmpnm of output records:
-%      rdata=rotate(data,'to',0,'kcmpnm1','N','kcmpnm2','E',...
-%                   'minoverlap',100,'overlapunits','seconds');
+%     % Rotate to north (and east) + require rotated records are at least
+%     % 100 seconds in length + correctly change kcmpnm of output records:
+%     rdata=rotate(data,'to',0,'kcmpnm1','N','kcmpnm2','E',...
+%                       'minoverlap',100,'overlapunits','seconds');
 %
-%     Adjust some timing options to make rotation faster (records should
-%     share the same reference time and we allow shifting the timing of
-%     records by up to delta/2):
-%      rdata=rotate(data,'useabsolutetiming',false,'shiftmax',0.5);
+%     % Adjust some timing options to make rotation significantly faster
+%     % (records must share the same reference time and we allow shifting
+%     % the timing of records by up to delta/2):
+%     rdata=rotate(data,'useabsolutetiming',false,'shiftmax',0.5);
 %
-%    See also: HORZPAIRS
+%    See also: HORZPAIRS, ROTATE_CORRELATIONS
 
 %     Version History:
 %        Feb. 24, 2010 - initial version
@@ -176,9 +180,10 @@ function [data]=rotate(data,varargin)
 %                        undef checks, minor fixes of debug messages
 %        Sep. 29, 2010 - warn & skip rather than error on bad TO info
 %        Oct.  6, 2010 - error if no output records
+%        Dec. 13, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2010 at 23:18 GMT
+%     Last Updated Dec. 13, 2011 at 23:18 GMT
 
 % todo:
 

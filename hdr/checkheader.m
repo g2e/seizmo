@@ -395,9 +395,10 @@ function [data]=checkheader(data,varargin)
 %        Feb. 25, 2011 - fix nonzero_iztype warning
 %        Nov.  2, 2011 - added TIME_IFTYPE & SPECTRAL_IFTYPE, bugfix for
 %                        NONXYZ_IFTYPE
+%        Dec.  1, 2011 - slight adjustment to MULTIPLE_REFTIME msgs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2011 at 22:10 GMT
+%     Last Updated Dec.  1, 2011 at 22:10 GMT
 
 % todo:
 
@@ -1298,7 +1299,8 @@ function multiple_reftime(opt,nz)
 bad=unique(nz,'rows');
 if(size(bad,1)~=1)
     report.identifier='seizmo:checkheader:multiREFTIME';
-    report.message=['Dataset has multiple reference times:\n' ...
+    report.message=['Dataset has multiple reference times! Consider\n' ...
+        'using SYNCHRONIZE to fix this! Current Reference Times:\n' ...
         sprintf('%04d:%03d@%02d:%02d:%02d.%03d ',bad')];
     switch opt
         case 'ERROR'
@@ -1307,12 +1309,10 @@ if(size(bad,1)~=1)
             warning(report.identifier,report.message);
         case 'FIX'
             warning(report.identifier,report.message);
-            disp(['NO AUTOFIX FOR MULTIPLE REFERENCE TIMES! ' ...
-                'CONSIDER USING synchronize.']);
+            disp('NO AUTOFIX FOR MULTIPLE REFERENCE TIMES!');
         case 'WARNFIX'
             warning(report.identifier,report.message);
-            disp(['NO AUTOFIX FOR MULTIPLE REFERENCE TIMES! ' ...
-                'CONSIDER USING synchronize.']);
+            disp('NO AUTOFIX FOR MULTIPLE REFERENCE TIMES!');
     end
 end
 end

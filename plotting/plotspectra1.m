@@ -14,7 +14,8 @@ function [varargout]=plotspectra1(data,varargin)
 %     y scales are logarithmic.
 %
 %     PLOTSPECTRA1(...,'CMP',SPECTRAL_CMP,...) changes the spectral
-%     component being drawn to CMP.  CMP may be 'am' 'ph' 'rl' or 'im'.
+%     component being drawn to CMP.  CMP may be 'am', 'ph', 'rl', 'im', or
+%     'pw'.
 %
 %     PLOTSPECTRA1(...,'OPTION',VALUE,...) sets certain plotting options to
 %     do simple manipulation of the plots.  Available options are:
@@ -55,9 +56,10 @@ function [varargout]=plotspectra1(data,varargin)
 
 %     Version History:
 %        Aug. 15, 2010 - initial version
+%        Dec. 21, 2011 - add power option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 15, 2010 at 23:00 GMT
+%     Last Updated Dec. 21, 2010 at 23:00 GMT
 
 % todo:
 % - autoticks in log scale is not useful (Matlab bug)
@@ -100,6 +102,10 @@ switch lower(opt.SPECTRALCMP)
     case {'i' 'im' 'imag' 'imaginary'}
         data(time | spec)=keepim(data(time | spec));
         spylabel='imag cmp';
+    case {'pw' 'pow' 'power'}
+        data(time | spec)=keeppw(data(time | spec));
+        yscale='log';
+        spylabel='power';
     otherwise
         error('seizmo:plotspectra1:badInput',...
             'Unknown spectral component: %s',opt.SPECTRALCMP);

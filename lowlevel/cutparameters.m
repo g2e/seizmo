@@ -37,9 +37,10 @@ function [option]=cutparameters(varargin)
 %        Apr. 12, 2011 - allow pad/padding
 %        Nov.  2, 2011 - doc update, allow 1x2/3/5/6 absolute time entries,
 %                        fix ref with no offset bug
+%        Dec.  1, 2011 - IZTYPE option added
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2011 at 20:45 GMT
+%     Last Updated Dec.  1, 2011 at 20:45 GMT
 
 % todo:
 
@@ -55,6 +56,7 @@ option.REF2='e';
 option.OFFSET1=0;
 option.OFFSET2=0;
 option.CMPLIST={':'};
+option.IZTYPE=[];
 
 % get options set by SEIZMO global
 global SEIZMO; fields=fieldnames(option).';
@@ -181,7 +183,7 @@ for i=1:nargin-1
         % checks
         if(any(strcmpi({'fill' 'filler' 'trim'},varargin{i})))
             if(isempty(varargin{i+1}))
-                continue; % leave as default by skipping
+                continue; % leave as default/current by skipping
             elseif(~isnumeric(varargin{i+1}) && ...
                     ~islogical(varargin{i+1}))
                 error('seizmo:cutparameters:badInput',...
@@ -201,6 +203,16 @@ for i=1:nargin-1
                         'TRIM option must be scalar!');
                 end
                 option.TRIM=varargin{i+1}~=0;
+            case 'iztype'
+                if(isempty(varargin{i+1})); continue; end
+                if(ischar(varargin{i+1}))
+                    varargin{i+1}=cellstr(varargin{i+1});
+                end
+                if(~iscellstr(varargin{i+1}))
+                    error('seizmo:cutparameters:badInput',...
+                        'IZTYPE option must be a string!');
+                end
+                option.IZTYPE=varargin{i+1};
             case 'cmplist'
                 if(iscell(varargin{i+1}))
                     for j=1:numel(varargin{i+1})
@@ -296,6 +308,7 @@ if(numel(option.OFFSET2)==1); option.OFFSET2(1:nrecs,1)=option.OFFSET2; end
 if(numel(option.CMPLIST)==1); option.CMPLIST(1:nrecs,1)=option.CMPLIST; end
 if(numel(option.FILLER)==1); option.FILLER(1:nrecs,1)=option.FILLER; end
 if(numel(option.FILL)==1); option.FILL(1:nrecs,1)=option.FILL; end
+if(numel(option.IZTYPE)==1); option.IZTYPE(1:nrecs,1)=option.IZTYPE; end
 
 % assure column vectors
 option.OFFSET1=option.OFFSET1(:);
@@ -303,20 +316,24 @@ option.OFFSET2=option.OFFSET2(:);
 option.CMPLIST=option.CMPLIST(:);
 option.FILLER=option.FILLER(:);
 option.FILL=option.FILL(:);
+option.IZTYPE=option.IZTYPE(:);
 
 % cut parameter checks
 if(numel(option.OFFSET1)~=nrecs || numel(option.OFFSET2)~=nrecs)
     error('seizmo:cutparameters:badInputSize',...
-        'Number of elements in OFFSET not correct!');
+        'Number of elements for OFFSET not correct!');
 elseif(numel(option.CMPLIST)~=nrecs)
     error('seizmo:cutparameters:badInputSize',...
-        'Number of elements in CMPLIST not correct!');
+        'Number of elements for CMPLIST option not correct!');
 elseif(numel(option.FILLER)~=nrecs)
     error('seizmo:cutparameters:badInputSize',...
-        'Number of elements in FILLER not correct!');
+        'Number of elements for FILLER option not correct!');
 elseif(numel(option.FILL)~=nrecs)
     error('seizmo:cutparameters:badInputSize',...
-        'Number of elements in FILL not correct!');
+        'Number of elements for FILL option not correct!');
+elseif(~isempty(option.IZTYPE) && numel(option.IZTYPE)~=nrecs)
+    error('seizmo:cutparameters:badInputSize',...
+        'Number of elements for IZTYPE option not correct!');
 end
 
 end

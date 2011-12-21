@@ -31,11 +31,15 @@ function [varargout]=plot_tauppath(tt,varargin)
 
 %     Version History:
 %        May  21, 2011 - initial version
+%        Dec.  6, 2011 - fix raycolor bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  21, 2011 at 17:15 GMT
+%     Last Updated Dec.  6, 2011 at 17:15 GMT
 
 % todo:
+% - fgc/bgc
+% - station marker options
+% - event marker options
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -61,15 +65,18 @@ nph=numel(tt);
 [ax,varargin]=axescheck(varargin{:});
 if(isempty(ax)); newax=true; else newax=false; end
 
-% extract pertinent parameters
-% - event start location
-% - raypath coloring
-P.evang=-45;
-P.raycolor='hsv';
+% append defaults
+varargin=[{'evang' -45 'raycolor' 'hsv'} varargin];
+
+% check options are strings
 if(~iscellstr(varargin(1:2:end)))
     error('matTaup:plot_tauppath:badInput',...
         'One or more parameters appear to not be given as strings!');
 end
+
+% extract pertinent parameters
+% - event start location
+% - raypath coloring
 delete=false(numel(varargin),1);
 for i=1:2:numel(varargin)
     p=varargin{i};

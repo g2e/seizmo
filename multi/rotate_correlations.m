@@ -3,11 +3,12 @@ function [data]=rotate_correlations(data)
 %
 %    Usage:    data=rotate_correlations(data)
 %
-%    Description: DATA=ROTATE_CORRELATIONS(DATA) will rotate horizontal
-%     correlogram sets in SEIZMO struct DATA to the radial and transverse
-%     directions (defined by the azimuths between each pair of stations).
-%     Note that correlograms are expected to be between Eest and North
-%     components (make sure to rotate all records to this system prior to
+%    Description:
+%     DATA=ROTATE_CORRELATIONS(DATA) rotates horizontal correlogram sets in
+%     SEIZMO struct DATA to the radial and transverse directions (defined
+%     by the azimuths between each pair of stations).  Note that
+%     correlograms are expected to be between Eest and North components
+%     (make sure to rotate all records to this system prior to
 %     correlation).  This is only compatible with correlograms generated
 %     by CORRELATE (due to header field setup).  Also note that this will
 %     only return correlogram sets for each unique station pair.
@@ -17,7 +18,7 @@ function [data]=rotate_correlations(data)
 %     - Currently requires all records to have the same number of points,
 %       the same sample rate and the same starting lag time.  You will want
 %       your records to be symmetrical with respect to zero lag time too so
-%       that REVERSE_CORRELATIONS will work correctly.
+%       that REVERSE_CORRELATIONS can reverse the correlograms as needed.
 %
 %    Header changes:
 %     Master & Slave Fields may be switched.
@@ -25,6 +26,7 @@ function [data]=rotate_correlations(data)
 %     USER0 & USER1 reflect the stream pair indices.
 %
 %    Examples:
+%     %
 %
 %    See also: CORRELATE, REVERSE_CORRELATIONS
 
@@ -38,7 +40,10 @@ function [data]=rotate_correlations(data)
 %     Last Updated July  2, 2010 at 13:30 GMT
 
 % todo:
-% - example
+% - example (show how to use this)
+% - cmpinc,cmpaz support (when added)
+%   - allow for non-NE input to be rotated to RT
+%   - do we rotate to some other system? why?
 
 % check nargin
 error(nargchk(1,1,nargin));

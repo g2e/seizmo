@@ -1,13 +1,16 @@
 function [data]=getspectralcmp(data,cmp)
 %GETSPECTRALCMP    Returns the indicated portion of spectral records
 %
-%    Usage:    data=getspectralcmp(data,'am'|'ph'|'rl'|'im'|'cmplx')
+%    Usage:    data=getspectralcmp(data,'am'|'ph'|'rl'|'im'|'pw'|'cmplx')
 %
-%    Description: GETSPECTRALCMP(DATA,CMP) extracts the spectral component
-%     indicated by CMP.  CMP must be one of the following: 'AM', 'PH',
-%     'RL', 'IM', or 'CMPLX'.  CMP may be a list of components as long as
-%     there is exactly one entry per record.  Filetype is changed to
-%     General X vs Y.  Note that this drops the negative frequencies.
+%    Description:
+%     GETSPECTRALCMP(DATA,CMP) extracts the spectral component indicated by
+%     CMP.  CMP must be one of the following: 'AM', 'PH', 'RL', 'IM', 'PW'
+%     or 'CMPLX'.  Those stand for the amplitude, phase, real, imaginary,
+%     power and complex spectras.  CMP may be a list of components as long
+%     as there is exactly one entry per record.  Filetype is changed to
+%     General X vs Y.  Note that this drops the negative frequencies as
+%     they are redundant for real-valued time-series data.
 %
 %    Notes:
 %     - Using 'CMPLX' will return a complex array.  This will definitely
@@ -16,10 +19,11 @@ function [data]=getspectralcmp(data,cmp)
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, IFTYPE, NPTS
 %
 %    Examples:
-%     This is SAC's KEEPAM:
-%      data=getspectralcmp(data,'am');
+%     % This is SAC's KEEPAM:
+%     data=getspectralcmp(data,'am');
 %
-%    See also: KEEPAM, KEEPPH, KEEPRL, KEEPIM, SPLITRECORDS, DFT, IDFT
+%    See also: KEEPAM, KEEPPH, KEEPRL, KEEPIM, KEEPPW,
+%              SPLITRECORDS, DFT,IDFT
 
 %     Version History:
 %        June 25, 2009 - initial version
@@ -29,9 +33,10 @@ function [data]=getspectralcmp(data,cmp)
 %                        improved messaging
 %        Aug. 15, 2010 - nargchk fix
 %        Feb. 11, 2011 - mass seizmocheck fix
+%        Dec. 21, 2011 - add power spectra option, better checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Dec. 21, 2011 at 15:05 GMT
 
 % todo:
 
@@ -47,7 +52,8 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt cmp extraction
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONSPECTRAL_IFTYPE','ERROR');
 
     % verbosity
     verbose=seizmoverbose;
@@ -56,7 +62,7 @@ try
     nrecs=numel(data);
 
     % valid cmp
-    valid.CMP={'am' 'ph' 'rl' 'im' 'cmplx'};
+    valid.CMP={'am' 'ph' 'rl' 'im' 'pw' 'cmplx'};
 
     % check/prepare cmp
     if(iscellstr(cmp))
@@ -75,16 +81,9 @@ try
 
     % get header info
     iftype=getenumid(data,'iftype');
-    [npts,ncmp]=getheader(data,'npts','ncmp');
+    [npts,ncmp,sdelta,nspts]=getheader(data,...
+        'npts','ncmp','sdelta','nspts');
     npts=npts/2+1; % new npts
-
-    % require spectral records
-    if(any(~strcmpi(iftype,'irlim') & ~strcmpi(iftype,'iamph')))
-        error('seizmo:getspectralcmp:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'irlim') & ~strcmpi(iftype,'iamph'))) ...
-            '\nDatatype of record(s) in DATA must be spectral!']);
-    end
 
     % logical array for filetype
     isrlim=strcmpi(iftype,'irlim');
@@ -140,6 +139,17 @@ try
                     data(i).dep=imag(data(i).dep(:,1:2:end)...
                         .*exp(1j*data(i).dep(:,2:2:end)));
                 end
+            case 'pw'
+                % divide by delta factor (parseval's) b/c of squaring
+                if(isrlim(i))
+                    data(i).dep=complex(data(i).dep(:,1:2:end),...
+                        data(i).dep(:,2:2:end));
+                else
+                    data(i).dep=data(i).dep(:,1:2:end)...
+                        .*exp(1j*data(i).dep(:,2:2:end));
+                end
+                data(i).dep=2*data(i).dep.*conj(data(i).dep)/nspts(i);
+                data(i).dep=data(i).dep/sdelta(i);
             case 'cmplx'
                 if(isrlim(i))
                     data(i).dep=complex(...

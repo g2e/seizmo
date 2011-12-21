@@ -3,28 +3,35 @@ function [x,t,lat,lon]=ww3ts(file,latrng,lonrng)
 %
 %    Usage:    [x,t,lat,lon]=ww3ts(files,latrng,lonrng)
 %
-%    Description: [X,T,LAT,LON]=WW3TS(FILES,LATRNG,LONRNG) extracts a time
-%     series of values for points in the WaveWatch III files FILES within
-%     the range specified by LATRNG & LONRNG.  LATRNG & LONRNG are [] by
-%     default which does not exclude any points.  
+%    Description:
+%     [X,T,LAT,LON]=WW3TS(FILES,LATRNG,LONRNG) extracts a time series of
+%     values for points in the WaveWatch III files FILES within the range
+%     specified by LATRNG & LONRNG.  LATRNG & LONRNG are [] by default
+%     which does not exclude any points.  T is a Nx6 array arranged as
+%     [YEAR MONTH DAY HOUR MINUTE SECONDS].  X is a NLATxNLONxN array.  X &
+%     T will are sorted by time.
 %
 %    Notes:
-%     - LATRNG should be in -90 to 90
-%     - LONRNG should be in 0 to 360
+%     - GRIB files must be self consistent (meaning we get the same
+%       latitude and longitude grid for every record).
+%     - LATRNG should be within -90 to 90
+%     - LONRNG should be within 0 to 360
 %
 %    Examples:
-%     Calling with no files will present a prompt to select files
-%     graphically:
-%      [x,t,lat,lon]=ww3ts([],[0 4],[6 10]);
+%     % Calling with no files will present
+%     % a prompt to select files graphically:
+%     [x,t,lat,lon]=ww3ts([],[0 4],[6 10]);
 %
 %    See also: READ_GRIB, WW3MOV, PLOTWW3, WW3MAT
 
 %     Version History:
 %        June 30, 2010 - initial version
 %        July  1, 2010 - fixed latlon bug
+%        Dec.  7, 2011 - doc update, better read_grib handling, modified
+%                        output to make it consistent and easier
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  1, 2010 at 11:00 GMT
+%     Last Updated Dec.  7, 2011 at 11:00 GMT
 
 % todo:
 
@@ -84,7 +91,7 @@ for i=1:nfiles
     nrecs(i)=numel(ww3);
     
     % error if nothing
-    if(~nrecs(i))
+    if(~nrecs(i) || isequal(ww3,-1))
         error('seizmo:ww3ts:badGRIB',...
             'WW3 GRIB file has no records or is not a GRIB file!');
     end
@@ -102,21 +109,22 @@ for i=1:nfiles
         lat=lat(latidx);
         lon=lon(lonidx);
         
+        % initialize
+        if(cnt==1)
+            x=size(map);
+            t=nan(1,6);
+        end
+        
         % push into column vector array
-        x(cnt,:)=map(:);
+        x(:,:,cnt)=map;
         t(cnt,:)=time;
         cnt=cnt+1;
     end
 end
 
-% lat/lon for each point
-[lon,lat]=meshgrid(lon,lat);
-lat=lat(:);
-lon=lon(:);
-
 % sort by times
 t=datenum(t);
 [t,idx]=sort(t);
-x=x(idx,:);
+x=x(:,:,idx);
 
 end

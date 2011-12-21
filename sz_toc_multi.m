@@ -8,6 +8,7 @@ function []=sz_toc_multi()
 %<a href="matlab:help getsiteidx">getsiteidx</a>           - Returns index array for separating dataset by sites
 %<a href="matlab:help getstationidx">getstationidx</a>        - Returns index array for separating dataset into stations
 %<a href="matlab:help getstreamidx">getstreamidx</a>         - Returns index array for separating dataset into streams
+%<a href="matlab:help horzcmp">horzcmp</a>              - Finds horizontal component SEIZMO records
 %<a href="matlab:help horzpairs">horzpairs</a>            - Returns indice arrays for pairing horizontal SEIZMO records
 %<a href="matlab:help joinrecords">joinrecords</a>          - Join SEIZMO records into multiple-component record(s)
 %<a href="matlab:help merge">merge</a>                - Merge SEIZMO records

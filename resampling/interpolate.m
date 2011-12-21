@@ -6,12 +6,13 @@ function [data]=interpolate(data,sr,method,new_b,new_e,extrap)
 %              data=interpolate(data,rate,method,new_b,new_e)
 %              data=interpolate(data,rate,method,new_b,new_e,extrap)
 %
-%    Description: INTERPOLATE(DATA,RATE) interpolates SEIZMO records in
-%     DATA to a new sample rate RATE.  As this is interpolation (the
-%     default method is spline), edge effects are not an issue as they are
-%     for SYNCRATES, SQUISH, and STRETCH but aliasing of high frequency
+%    Description:
+%     INTERPOLATE(DATA,RATE) interpolates SEIZMO records in DATA to a new
+%     sample rate RATE using splines.  As this is interpolation, edge
+%     effects are not as much of an issue as they are for SYNCRATES,
+%     SQUISH, and STRETCH.  On the other hand, aliasing of high frequency
 %     energy to lower frequencies is an issue when interpolating to a lower
-%     sample rate.  Therefore, it is not recommended to downsample records
+%     sample rate and it therefore is NOT recommended to downsample records
 %     with INTERPOLATE (a warning is issued indicating to use SYNCRATES or
 %     SQUISH).  RATE can be a vector of rates with one element per record
 %     in DATA to interpolate records to different rates.
@@ -74,9 +75,10 @@ function [data]=interpolate(data,sr,method,new_b,new_e,extrap)
 %        Jan. 18, 2011 - drop versioninfo & caching, nargchk fix
 %        Aug. 26, 2011 - added warning about interpolating to higher delta
 %                        following suggestion on sac-help mailing list
+%        Dec. 13, 2011 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2011 at 14:05 GMT
+%     Last Updated Dec. 13, 2011 at 14:05 GMT
 
 % check number of arguments
 error(nargchk(2,6,nargin));

@@ -1,9 +1,8 @@
-function []=noise_setup(indir,outdir,length,overlap,o)
+function []=noise_setup(indir,outdir,varargin)
 %NOISE_SETUP    Convert a directory of data to a year/time/file filesystem
 %
 %    Usage:    noise_setup(indir,outdir)
-%              noise_setup(indir,outdir,length,overlap)
-%              noise_setup(indir,outdir,length,overlap,overwrite)
+%              noise_setup(indir,outdir,'opt1',value1,...,'optN',valueN)
 %
 %    Description:
 %     NOISE_SETUP(INDIR,OUTDIR) reads in the records in INDIR, combines
@@ -14,18 +13,20 @@ function []=noise_setup(indir,outdir,length,overlap,o)
 %     The two times given in the directory structure are the time limits of
 %     the time section.
 %
-%     NOISE_SETUP(INDIR,OUTDIR,LENGTH,OVERLAP) allows redefining the time
-%     section length LENGTH and overlap between time sections OVERLAP.
-%     Both are in __minutes__!  The default LENGTH is 1500 (25 hours) and
-%     the default OVERLAP is 60 (1 hour). Non-integer values are not
-%     allowed!  In order to have consistency from day to day the time
-%     sections are forced to restart at the start of each day.  This means
-%     that time sections near the day boundary may not honor the OVERLAP
-%     value.
-%
-%     NOISE_SETUP(INDIR,OUTDIR,LENGTH,OVERLAP,OVERWRITE) quietly writes
-%     in OUTDIR when OVERWRITE is set to TRUE.  By default OVERWRITE is
-%     FALSE.
+%     NOISE_SETUP(INDIR,OUTDIR,'OPT1',VALUE1,...,'OPTN',VALUEN) changes the
+%     indicated options to another value.  The following options are
+%     configurable:
+%      LENGTH       - time section length in MINUTES (default is 1500)
+%      OVERLAP      - time section overlap in MINUTES (default is 60)
+%      TIMESTART    - no time sections before this time (default is [])
+%      TIMEEND      - no time sections after this time (default is [])
+%      QUIETWRITE   - quietyly overwrite OUTDIR (default is false)
+%     LENGTH & OVERLAP must be whole numbers (eg. 4.5 minutes is NOT
+%     allowed!).  In order to have consistency from day to day the time
+%     section sequence is forced to restart at the start of each day.  This
+%     means that time sections near the day boundary may not honor the
+%     OVERLAP value.  Also please note that time sections that overlap
+%     TIMESTART or TIMEEND are processed.
 %
 %    Notes:
 %     - Handles one component at a time. If all the files for one component
@@ -39,12 +40,12 @@ function []=noise_setup(indir,outdir,length,overlap,o)
 %
 %    Examples:
 %     % Setup for 3 hour time sections and no overlap:
-%     noise_setup('raw','setup-3hour',60*3,0)
+%     noise_setup('raw','setup-3hour','l',60*3,'o',0)
 %
 %     % Setup for 15 minute time sections and 80% overlap:
-%     noise_setup('some/dir','my_15min',15,12)
+%     noise_setup('some/dir','my_15min','l',15,'o',12)
 %
-%    See also: NOISE_PROCESS, NOISE_STACK
+%    See also: NOISE_PROCESS, NOISE_STACK, NOISE_WORKFLOW
 
 %     Version History:
 %        June 18, 2010 - initial version
@@ -54,32 +55,22 @@ function []=noise_setup(indir,outdir,length,overlap,o)
 %                        this replaces mergecut too), modified timesection
 %                        directory naming to include end time, renamed from
 %                        DAYDIRS_MAKE to NOISE_SETUP
+%        Nov. 22, 2011 - options are now parameter/value pairs, added
+%                        timestart & timeend options, updated docs, sync
+%                        data to time section start, set a/f markers to
+%                        time section limits
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  3, 2011 at 11:15 GMT
+%     Last Updated Nov. 22, 2011 at 11:15 GMT
 
 % todo:
-% - time window option
+% - latrng, lonrng, stations
 
 % check nargin
-error(nargchk(2,5,nargin));
+error(nargchk(2,inf,nargin));
 
-% defaults
-if(nargin<3 || isempty(length)); length=1500; end
-if(nargin<4 || isempty(overlap)); overlap=60; end
-if(nargin<5 || isempty(o)); o=false; end
-
-% check options
-if(~isscalar(length) || ~isreal(length) || length<=0)
-    error('seizmo:noise_setup:badInput',...
-        'LENGTH must be a positive real-valued scalar in minutes!');
-elseif(~isscalar(overlap) || ~isreal(length)) % negative for gaps
-    error('seizmo:noise_setup:badInput',...
-        'OVERLAP must be a real-valued scalar in minutes!');
-elseif(~isscalar(o) || ~islogical(o))
-    error('seizmo:noise_setup:badInput',...
-        'OVERWRITE flag must be a scalar logical!');
-end
+% parse/check options
+[len,ov,qw,userts,userte]=noise_setup_parameters(varargin{:});
 
 % check directories
 if(~ischar(indir) || ~isvector(indir))
@@ -100,7 +91,7 @@ if(exist(outdir,'file'))
         error('seizmo:noise_setup:dirConflict',...
             'Output Directory: %s\nIs a file!',outdir);
     end
-    if(~o)
+    if(~qw)
         fprintf('Output Directory: %s\nDirectory Exists!\n',outdir);
         reply=input('Overwrite? Y/N [N]: ','s');
         if(isempty(reply) || ~strncmpi(reply,'y',1))
@@ -162,6 +153,12 @@ for i=1:max(cmpidx) % SERIAL
         
         % loop over years
         for yr=minyr:maxyr
+            % skip year if not in user-defined range
+            if((~isempty(userts) && yr<userts(1)) ...
+                    || (~isempty(userte) && yr>userte(1)))
+                continue;
+            end
+            
             % which days?
             if(minyr==maxyr)
                 days=minday:maxday;
@@ -175,12 +172,30 @@ for i=1:max(cmpidx) % SERIAL
             
             % loop over the days
             for day=days
+                % skip day if not in user-defined range
+                if((~isempty(userts) ...
+                        && datenum(doy2cal([yr day]))...
+                        <fix(gregorian2serial(userts))) ...
+                        || (~isempty(userte) ...
+                        && datenum(doy2cal([yr day]))...
+                        >fix(gregorian2serial(userte))))
+                    continue;
+                end
+                
                 % loop over time sections
                 % 1439 is 1 minute shy of 1 day
-                for ts=0:length-overlap:1439
+                for ts=0:len-ov:1439
                     % get time section limits (we avoid utc here)
                     tsbgn=fixtimes([yr day 0 ts 0]);
-                    tsend=fixtimes([yr day 0 ts+length 0]);
+                    tsend=fixtimes([yr day 0 ts+len 0]);
+                    
+                    % skip time section if not in user-defined range
+                    if((~isempty(userts) ...
+                            && timediff(userts,tsend)<=0) ...
+                            || (~isempty(userte) ...
+                            && timediff(userte,tsbgn)>=0))
+                        continue;
+                    end
                     
                     % time section directory name
                     tsdir=sprintf(['%04d.%03d.%02d.%02d.%02d_' ...
@@ -200,6 +215,12 @@ for i=1:max(cmpidx) % SERIAL
                     
                     % skip if none
                     if(isempty(tsdata)); continue; end
+                    
+                    % sync & insert markers for time section
+                    % - note we allow some minutes to have leapseconds
+                    data=synchronize(data,tsbgn);
+                    data=changeheader(data,'iztype','ia',...
+                        'a',0,'f',timediff(tsbgn,tsend,'utc'));
                     
                     % write
                     writeseizmo(tsdata,...
@@ -226,5 +247,66 @@ end
 % parallel processing takedown & fix verbosity
 %matlabpool close; % PARALLEL
 seizmoverbose(verbose);
+
+end
+
+
+function [len,ov,qw,userts,userte]=noise_setup_parameters(varargin)
+
+% defaults
+varargin=[{'l' 1500 'o' 60 'q' false 'ts' [] 'te' []} varargin];
+
+% require option/value pairs
+if(mod(nargin,2))
+    error('seizmo:noise_setup:badInput',...
+        'Unpaired option/value pair given!');
+elseif(~iscellstr(varargin(1:2:end)))
+    error('seizmo:noise_setup:badInput',...
+        'Options must be specified as strings!');
+end
+
+% get user input
+for i=1:2:nargin
+    switch lower(varargin{i})
+        case {'l' 'len' 'length'}
+            if(isempty(varargin{i+1})); continue; end
+            len=varargin{i+1};
+        case {'o' 'ov' 'overlap'}
+            if(isempty(varargin{i+1})); continue; end
+            ov=varargin{i+1};
+        case {'q' 'qw' 'quiet' 'qwrite' 'quietwrite'}
+            if(isempty(varargin{i+1})); continue; end
+            qw=varargin{i+1};
+        case {'ts' 'tstart' 'timestart'}
+            userts=varargin{i+1};
+        case {'te' 'tend' 'timeend'}
+            userte=varargin{i+1};
+        otherwise
+            error('seizmo:noise_setup:badInput',...
+                'Unknown Option: %s !',varargin{i});
+    end
+end
+
+% check options
+szs=size(userts);
+sze=size(userte);
+if(~isscalar(len) || ~isreal(len) || len<=0)
+    error('seizmo:noise_setup:badInput',...
+        'LENGTH must be a positive real-valued scalar in minutes!');
+elseif(~isscalar(ov) || ~isreal(ov)) % negative for gaps
+    error('seizmo:noise_setup:badInput',...
+        'OVERLAP must be a real-valued scalar in minutes!');
+elseif(~isscalar(qw) || ~islogical(qw))
+    error('seizmo:noise_setup:badInput',...
+        'QUIETWRITE flag must be a scalar logical!');
+elseif(numel(szs)>2 || szs(1)~=1 || all(szs(2)~=[2 3 5 6]) ...
+        || ~isnumeric(userts) || ~isreal(userts))
+    error('seizmo:noise_setup:badInput',...
+        'TIMESTART must be a recognized date-time vector!');
+elseif(numel(sze)>2 || sze(1)~=1 || all(sze(2)~=[2 3 5 6]) ...
+        || ~isnumeric(userte) || ~isreal(userte))
+    error('seizmo:noise_setup:badInput',...
+        'TIMEEND must be a recognized date-time vector!');
+end
 
 end

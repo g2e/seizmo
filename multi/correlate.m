@@ -12,27 +12,22 @@ function [data]=correlate(data1,varargin)
 %              peaks=correlate(...,'absxc',true|false,...)
 %              peaks=correlate(...,'normxc',true|false,...)
 %
-%    Description: CORRELOGRAMS=CORRELATE(DATA) cross correlates every
-%     possible pairing of records in DATA.  If the number of records in
-%     DATA is N then CORRELOGRAMS is a SEIZMO dataset of N*(N-1)/2 correlo-
-%     grams.  Correlograms are normalized using zero-lag autocorrelation
-%     values.  The correlograms are named using the following format:
-%      CORR_-_MASTER_-_REC<idx>_-_<stninfo>_-_SLAVE_-_REC<idx>_-_<stninfo>
-%     where <idx> is the index of the record in DATA (zero padded) and
-%     <stninfo> is the fields knetwk, kstnm, khole, kcmpnm of record <idx>
-%     joined with periods ('.') in between.  The path is set to the current
-%     directory ('.'), while byte-order uses that which is native to the
-%     current system.  Default filetype is SAC v6 binary file.  See the
-%     Header changes section for details on info inserted into the header.
-%     See Notes for details on requirements for the input dataset.
+%    Description:
+%     CORRELOGRAMS=CORRELATE(DATA) cross correlates every possible unique
+%     pairing of records in DATA.  If the number of records in DATA is N
+%     then CORRELOGRAMS is a SEIZMO dataset of N*(N-1)/2 correlograms.
+%     The correlograms are normalized using the zero-lag autocorrelation
+%     values (can be turned off with an option explained below).  See the
+%     Notes and Header changes sections for details on requirements for the
+%     input dataset and the formatting of the correlograms.
 %     
 %     CORRELOGRAMS=CORRELATE(DATA1,DATA2) cross correlates every record in
 %     DATA1 against every record in DATA2 (meaning that records in DATA1
 %     are the 'master' records).  Thus if there are N1 records in DATA1 and
 %     N2 records in DATA2, then CORRELOGRAMS contains N1*N2 correlograms.
-%     See the usage description above and in Header changes section for
-%     further output details.  See Notes for details on requirements for
-%     the input dataset(s).
+%     See the Notes and Header changes sections for further correlogram
+%     details.  See Notes for details on requirements for the input
+%     dataset(s).
 %
 %     CORRELOGRAMS=CORRELATE(...,'NORMXC',TRUE|FALSE,...) allows selecting
 %     if the output correlograms are normalized or not.  The default is
@@ -133,13 +128,21 @@ function [data]=correlate(data1,varargin)
 %       lag times (or rather it assumes records are synced to the same
 %       reference time).  Synchronize the dataset to a single reference
 %       time to get lags based on absolute timing.
+%     - The correlograms are given filenames using the following format:
+%       CORR_-_MASTER_-_REC<idx>_-_<stninfo>_-_SLAVE_-_REC<idx>_-_<stninfo>
+%       where <idx> is the index of the record in DATA (zero padded) and
+%       <stninfo> is the fields knetwk, kstnm, khole, kcmpnm of record
+%       <idx> joined with periods ('.') in between.  The path is set to the
+%       current directory ('.'), while byte-order uses that which is native
+%       to the current system.  Filetype is SAC v6 binary file.  See the
+%       Header changes section for details on info retained in the header.
 %
-%    Header Changes: ALL (see BSEIZMO for defaults not listed below)
-%     DEPMEN, DEPMIN, DEPMAX are updated for the correlogram.
+%    Header Changes:
+%     DEPMEN, DEPMIN, DEPMAX
 %     B, E give the lag range.
 %     DELTA is the sample spacing.
-%     Index of master record: USER0
-%     Index of slave record:  USER1
+%     USER0 is the index of master record & KUSER0 is 'MASTER'.
+%     USER1 is the index of slave record & KUSER1 is 'SLAVE'.
 %
 %     The following info is retained:
 %      SLAVE RECORD FIELD   CORRELOGRAM FIELD
@@ -152,6 +155,8 @@ function [data]=correlate(data1,varargin)
 %       KHOLE                KHOLE
 %       KCMPNM               KCMPNM
 %       NZ                   NZ
+%       CMPINC               CMPINC
+%       CMPAZ                CMPAZ
 %      MASTER RECORD FIELD  CORRELOGRAM FIELD
 %       STLA                 EVLA
 %       STLO                 EVLO
@@ -161,13 +166,15 @@ function [data]=correlate(data1,varargin)
 %       KSTNM                KT1
 %       KHOLE                KT2
 %       KCMPNM               KT3
+%       CMPINC               USER2
+%       CMPAZ                USER3
 %
 %    Examples:
-%     Basically equivalent to 'correlate' in SAC:
-%      correlograms=correlate(data(1),data,'normxc',false)
+%     % Roughly equivalent to 'correlate' in SAC:
+%     correlograms=correlate(data(1),data,'normxc',false)
 %
-%     Align all correlograms on their strongest peak:
-%      p0(timeshift(correlate(data),...
+%     % Align all correlograms on their strongest peak:
+%     plot0(timeshift(correlate(data),...
 %       -getfield(correlate(data,'npeaks',1),'lg')))
 %
 %    See also: CONVOLVE, DFT, IDFT, MCXC
@@ -183,9 +190,12 @@ function [data]=correlate(data1,varargin)
 %                        does not get calculated, seizmoverbose support
 %        Jan. 29, 2010 - cleaned up cross_check_data subfunction
 %        Feb. 11, 2011 - mass seizmocheck fix
+%        Dec.  1, 2011 - doc update, save CMPINC/CMPAZ info, warn if
+%                        reftimes vary, remove cross check via better
+%                        checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Dec.  1, 2011 at 15:05 GMT
 
 % todo:
 
@@ -203,9 +213,6 @@ oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt header check
 try
-    % check headers
-    data1=checkheader(data1);
-
     % 1 or 2 datasets
     nrecs1=numel(data1); onedata=true;
     if(nargin>1 && isseizmo(varargin{1},'dep'))
@@ -213,10 +220,22 @@ try
         varargin(1)=[];
         nrecs2=numel(data2); 
         onedata=false;
-        data2=checkheader(data2);
-        delta=cross_check_data(data1,data2);
+        data1=checkheader(data1); % basic checks
+        data2=checkheader(data2); % basic checks
+        checkheader([data1(:); data2(:)],...
+            'ALL','IGNORE',...
+            'NONTIME_IFTYPE','ERROR',...
+            'FALSE_LEVEN','ERROR',...
+            'MULTIPLE_DELTA','ERROR',...
+            'MULCMP_DEP','ERROR',...
+            'MULTIPLE_REFTIME','WARN');
     else
-        delta=cross_check_data(data1);
+        data1=checkheader(data1,...
+            'NONTIME_IFTYPE','ERROR',...
+            'FALSE_LEVEN','ERROR',...
+            'MULTIPLE_DELTA','ERROR',...
+            'MULCMP_DEP','ERROR',...
+            'MULTIPLE_REFTIME','WARN');
     end
 
     % turn off header checking
@@ -229,27 +248,31 @@ catch
     error(lasterror);
 end
 
+% get sample spacing
+delta=getheader(data1(1),'delta');
+
 % check varargin
 nvarargin=numel(varargin);
 if(mod(nvarargin,2))
     error('seizmo:correlate:OptionMustBePaired',...
         'Options must be paired with a value!');
+elseif(~iscellstr(varargin(1:2:end)))
+    error('seizmo:correlate:OptionMustBeString',...
+        'Options must be given as a string!');
 end
 
 % how many peaks
 npeaks=0; % default is no peak picking
 for i=1:2:nvarargin
-    if(ischar(varargin{i}))
-        switch lower(varargin{i})
-            case 'npeaks'
-                npeaks=varargin{i+1};
-            case 'lags'
-                varargin{i+1}=varargin{i+1}/delta;
-            case 'spacing'
-                varargin{i+1}=varargin{i+1}/delta;
-            case 'adjacent'
-                varargin{i+1}=varargin{i+1}/delta;
-        end
+    switch lower(varargin{i})
+        case 'npeaks'
+            npeaks=varargin{i+1};
+        case 'lags'
+            varargin{i+1}=varargin{i+1}/delta;
+        case 'spacing'
+            varargin{i+1}=varargin{i+1}/delta;
+        case 'adjacent'
+            varargin{i+1}=varargin{i+1}/delta;
     end
 end
 
@@ -302,21 +325,21 @@ try
     else
         % split based on ndatasets
         if(onedata) % correlograms from one dataset
-            % extract header info needed
-            [knetwk,kstnm,khole,kcmpnm,b,stla,stlo,stdp,stel,...
-                nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=...
+            % extract relevant header info
+            [knetwk,kstnm,khole,kcmpnm,b,stla,stlo,stdp,stel,cmpinc,...
+                cmpaz,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=...
                 getheader(data1,'knetwk','kstnm','khole','kcmpnm','b',...
-                'stla','stlo','stdp','stel','nzyear','nzjday','nzhour',...
-                'nzmin','nzsec','nzmsec');
+                'stla','stlo','stdp','stel','cmpinc','cmpaz',...
+                'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
 
             % extract records
             data1=records2mat(data1);
 
-            % get correlation peaks
+            % get correlograms
             [cg,lg]=mcxc(data1,...
                 'verbose',seizmoverbose,varargin{:});
 
-            % separate records
+            % separate correlograms
             [ncors,one,nlags]=size(cg);
             if(ncors==1)
                 cg=squeeze(cg);
@@ -325,7 +348,7 @@ try
             end
             cg=mat2cell(cg,nlags,ones(ncors,1));
 
-            % make lags for each record
+            % make lags for each correlogram
             % 1 to nrecs-1 outer loop is master
             % 2 to nrecs inner loop is slave
             bdiff=b(:,ones(nrecs1,1)).'-b(:,ones(nrecs1,1));
@@ -333,11 +356,11 @@ try
             lg=lg(:,ones(ncors,1))*delta-bdiff(:,ones(nlags,1)).';
             lg=mat2cell(lg,nlags,ones(ncors,1));
 
-            % make a new dataset
+            % populate a new data structure
             data=[lg; cg];
             data=bseizmo(data{:});
 
-            % create names
+            % create correlogram filenames
             i=1:nrecs1;
             idx=cellstr(num2str(i.',...
                 ['%0' num2str(ceil(log10(nrecs1+1))) 'd']));
@@ -353,13 +376,13 @@ try
             names=names(tril(true(nrecs1),-1));
             [data.name]=deal(names{:});
 
-            % add record numbers to header
+            % setup record numbers for adding to header
             midx=i(ones(nrecs1,1),:);
             sidx=midx.';
             midx=midx(tril(true(nrecs1),-1));
             sidx=sidx(tril(true(nrecs1),-1));
 
-            % add reference times to header
+            % setup reference times for adding to header
             nzyear=nzyear(:,ones(nrecs1,1));
             nzjday=nzjday(:,ones(nrecs1,1));
             nzhour=nzhour(:,ones(nrecs1,1));
@@ -373,7 +396,7 @@ try
             nzsec=nzsec(tril(true(nrecs1),-1));
             nzmsec=nzmsec(tril(true(nrecs1),-1));
 
-            % add station id to header
+            % setup station id info for adding to header
             mknetwk=knetwk'; mknetwk=mknetwk(tril(true(nrecs1),-1));
             mkstnm=kstnm'; mkstnm=mkstnm(tril(true(nrecs1),-1));
             mkhole=khole'; mkhole=mkhole(tril(true(nrecs1),-1));
@@ -383,7 +406,7 @@ try
             khole=khole(tril(true(nrecs1),-1));
             kcmpnm=kcmpnm(tril(true(nrecs1),-1));
 
-            % add station locations to header
+            % setup station locations for adding to header
             stla=stla(:,ones(nrecs1,1)); evla=stla.';
             stlo=stlo(:,ones(nrecs1,1)); evlo=stlo.';
             stel=stel(:,ones(nrecs1,1)); evel=stel.';
@@ -396,6 +419,14 @@ try
             evlo=evlo(tril(true(nrecs1),-1));
             evel=evel(tril(true(nrecs1),-1));
             evdp=evdp(tril(true(nrecs1),-1));
+            
+            % setup component orientations for adding to header
+            cmpinc=cmpinc(:,ones(nrecs1,1)); mcmpinc=cmpinc.';
+            cmpaz=cmpaz(:,ones(nrecs1,1)); mcmpaz=cmpaz.';
+            cmpinc=cmpinc(tril(true(nrecs1),-1));
+            cmpaz=cmpaz(tril(true(nrecs1),-1));
+            mcmpinc=mcmpinc(tril(true(nrecs1),-1));
+            mcmpaz=mcmpaz(tril(true(nrecs1),-1));
 
             % dep*
             depmen=nan(ncors,1); depmin=depmen; depmax=depmen;
@@ -416,48 +447,52 @@ try
                 'kcmpnm',kcmpnm,'kt0',mknetwk,'kt1',mkstnm,...
                 'kt2',mkhole,'kt3',mkcmpnm,...
                 'stla',stla,'stlo',stlo,'stel',stel,'stdp',stdp,...
-                'evla',evla,'evlo',evlo,'evel',evel,'evdp',evdp);
+                'evla',evla,'evlo',evlo,'evel',evel,'evdp',evdp,...
+                'cmpinc',cmpinc,'cmpaz',cmpaz,...
+                'user2',mcmpinc,'user3',mcmpaz);
 
-            % update delaz stuff
+            % update delaz info
             seizmocheck_state(true);
             data=checkheader(data,'all','ignore','old_delaz','fix');
             seizmocheck_state(false);
         else % correlograms from two datasets
-            % extract header info needed
-            [mknetwk,mkstnm,mkhole,mkcmpnm,mb,mstla,mstlo,mstdp,mstel]=...
-                getheader(data1,'knetwk','kstnm','khole','kcmpnm','b',...
-                'stla','stlo','stdp','stel');
+            % extract relevant header info
+            [mknetwk,mkstnm,mkhole,mkcmpnm,mb,mstla,mstlo,mstdp,mstel,...
+                mcmpinc,mcmpaz]=getheader(data1,'knetwk','kstnm',...
+                'khole','kcmpnm','b','stla','stlo','stdp','stel',...
+                'cmpinc','cmpaz');
             [sknetwk,skstnm,skhole,skcmpnm,sb,sstla,sstlo,sstdp,sstel,...
-                nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=...
+                scmpinc,scmpaz,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=...
                 getheader(data2,'knetwk','kstnm','khole','kcmpnm','b',...
-                'stla','stlo','stdp','stel','nzyear','nzjday','nzhour',...
-                'nzmin','nzsec','nzmsec');
+                'stla','stlo','stdp','stel','cmpinc','cmpaz',...
+                'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
 
             % extract records
             data1=records2mat(data1);
             data2=records2mat(data2);
 
-            % get correlation peaks
+            % get correlograms
             [cg,lg]=mcxc(data1,data2,...
                 'verbose',seizmoverbose,varargin{:});
 
-            % separate records
+            % separate correlograms
             nlags=size(cg,3); 
             ncors=nrecs1*nrecs2;
             cg=permute(cg,[3 2 1]);
             cg=mat2cell(cg(:,:),nlags,ones(ncors,1));
 
-            % make lags for each record
+            % get lags for each correlogram
+            % - accounts for header field "b" but not "z"
             bdiff=mb(:,ones(nrecs2,1)).'-sb(:,ones(nrecs1,1));
             bdiff=bdiff(:);
             lg=lg(:,ones(ncors,1))*delta-bdiff(:,ones(nlags,1)).';
             lg=mat2cell(lg,nlags,ones(ncors,1));
 
-            % make a new dataset
+            % populate a new data structure
             data=[lg; cg];
             data=bseizmo(data{:});
 
-            % get names
+            % create correlogram filenames
             i=1:nrecs1;
             midx=cellstr(num2str(i.',...
                 ['%0' num2str(ceil(log10(nrecs1+1))) 'd']));
@@ -480,17 +515,17 @@ try
                 sknetwk,{'.'},skstnm,{'.'},skhole,{'.'},skcmpnm);
             [data.name]=deal(names{:});
 
-            % add record numbers to header
+            % setup record numbers for adding to header
             midx=i(ones(nrecs2,1),:); midx=midx(:);
             sidx=j(ones(nrecs1,1),:).'; sidx=sidx(:);
 
-            % add station id to header
+            % setup station id for adding to header
             sknetwk=sknetwk(:); skstnm=skstnm(:);
             skhole=skhole(:); skcmpnm=skcmpnm(:);
             mknetwk=mknetwk(:); mkstnm=mkstnm(:);
             mkhole=mkhole(:); mkcmpnm=mkcmpnm(:);
 
-            % add station locations to header
+            % setup station locations for adding to header
             sstla=sstla(:,ones(nrecs1,1));
             sstlo=sstlo(:,ones(nrecs1,1));
             sstel=sstel(:,ones(nrecs1,1));
@@ -503,8 +538,16 @@ try
             sstel=sstel(:); sstdp=sstdp(:);
             mstla=mstla(:); mstlo=mstlo(:);
             mstel=mstel(:); mstdp=mstdp(:);
+            
+            % setup component orientation info for adding to header
+            scmpinc=scmpinc(:,ones(nrecs1,1));
+            scmpaz=scmpaz(:,ones(nrecs1,1));
+            mcmpinc=mcmpinc(:,ones(nrecs2,1)).';
+            mcmpaz=mcmpaz(:,ones(nrecs2,1)).';
+            scmpinc=scmpinc(:); scmpaz=scmpaz(:);
+            mcmpinc=mcmpinc(:); mcmpaz=mcmpaz(:);
 
-            % add reference times to header
+            % setup reference times for adding to header
             nzyear=nzyear(:,ones(nrecs1,1)); nzyear=nzyear(:);
             nzjday=nzjday(:,ones(nrecs1,1)); nzjday=nzjday(:);
             nzhour=nzhour(:,ones(nrecs1,1)); nzhour=nzhour(:);
@@ -526,6 +569,8 @@ try
                 'nzmin',nzmin,'nzsec',nzsec,'nzmsec',nzmsec,...
                 'user0',midx,'kuser0','MASTER',...
                 'user1',sidx,'kuser1','SLAVE',...
+                'cmpinc',scmpinc,'cmpaz',scmpaz,...
+                'user2',mcmpinc,'user3',mcmpaz,...
                 'knetwk',sknetwk,'kstnm',skstnm,...
                 'khole',skhole,'kcmpnm',skcmpnm,...
                 'depmen',depmen,'depmin',depmin,'depmax',depmax,...
@@ -533,7 +578,7 @@ try
                 'stla',sstla,'stlo',sstlo,'stel',sstel,'stdp',sstdp,...
                 'evla',mstla,'evlo',mstlo,'evel',mstel,'evdp',mstdp);
 
-            % update delaz stuff
+            % update delaz info
             seizmocheck_state(true);
             data=checkheader(data,'all','ignore','old_delaz','fix');
             seizmocheck_state(false);
@@ -551,44 +596,5 @@ catch
     % rethrow error
     error(lasterror);
 end
-
-end
-
-function [delta]=cross_check_data(data1,data2)
-% assure datasets are capable of being sensibly cross correlated
-
-% if 2 datasets, datasets must be consistent with one another
-if(nargin==2)
-    [delta,ncmp]=getheader([data1(:); data2(:)],'delta','ncmp');
-    iftype=getenumid([data1(:); data2(:)],'iftype');
-    leven=getlgc([data1(:); data2(:)],'leven');
-% if 1 dataset, needs to be consistent with itself
-else
-    [delta,ncmp]=getheader(data1,'delta','ncmp');
-    iftype=getenumid(data1,'iftype');
-    leven=getlgc(data1,'leven');
-end
-
-% check delta,iftype,leven,ncmp
-if(~isscalar(unique(delta)))
-    error('seizmo:correlate:mixedSampleRates',...
-        'Mixed sample rates not allowed!');
-elseif(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-    error('seizmo:correlate:badIFTYPE',...
-        ['Record(s):\n' sprintf('%d ',...
-        find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-        '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-elseif(any(strcmpi(leven,'false')))
-    error('seizmo:convolve:badLEVEN',...
-        ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-        '\nInvalid operation on unevenly sampled record(s)!']);
-elseif(any(ncmp>1))
-    error('seizmo:correlate:tooManyComponents',...
-        ['Record(s):\n' sprintf('%d ',find(ncmp>1)) ...
-        '\nInvalid operation on multi-component record(s)!'])
-end
-
-% return common sample rate
-delta=delta(1);
 
 end

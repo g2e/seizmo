@@ -4,9 +4,10 @@ function [data]=unwrapphase(data,tol)
 %    Usage:    data=unwrapphase(data)
 %              data=unwrapphase(data,tol)
 %
-%    Description: DATA=UNWRAPPHASE(DATA) unwraps phase data stored in
-%     the record(s) of SEIZMO struct DATA by changing absolute jumps (aka
-%     phase discontinuities) greater than or equal to PI to their 2*PI
+%    Description:
+%     DATA=UNWRAPPHASE(DATA) unwraps phase data stored in the record(s) of
+%     SEIZMO struct DATA by changing absolute jumps (aka phase
+%     discontinuities) greater than or equal to PI to their 2*PI
 %     complement.  Note that spectral files are converted from Real-
 %     Imaginary data format to the Amplitude-Phase data format.  Time
 %     Series and XY records may also be "unwrapped" as if their data are
@@ -23,11 +24,11 @@ function [data]=unwrapphase(data,tol)
 %    Header changes: IFTYPE, DEPMIN, DEPMEN, DEPMAX
 %
 %    Examples:
-%     Plot the unwrapped phase of time series data:
-%      plot2(unwrapphase(keepph(dft(data))));
+%     % Plot the unwrapped phase of time series data:
+%     plot2(unwrapphase(keepph(dft(data))));
 %
-%     Plot the unwrapped instantaneous phase of time series data:
-%      plot2(unwrapphase(instantphase(data)));
+%     % Plot the unwrapped instantaneous phase of time series data:
+%     plot2(unwrapphase(instantphase(data)));
 %
 %    See also: INSTANTPHASE, KEEPPH, GETSPECTRALCMP, DFT
 
@@ -35,9 +36,10 @@ function [data]=unwrapphase(data,tol)
 %        Oct. 20, 2009 - initial version
 %        Feb.  3, 2010 - seizmoverbose support, added tol option
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
+%        Dec. 21, 2011 - doc update, better checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Dec. 21, 2011 at 15:05 GMT
 
 % todo:
 
@@ -53,7 +55,8 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check header
-    data=checkheader(data);
+    data=checkheader(data,...
+        'XYZ_IFTYPE','ERROR');
     
     % turn off header checking
     oldcheckheaderstate=checkheader_state(false);
@@ -87,13 +90,6 @@ try
     % find spectral
     rlim=strcmpi(iftype,'irlim');
     spectral=rlim | strcmpi(iftype,'iamph');
-    
-    % cannot do xyz records
-    if(any(strcmpi(iftype,'ixyz')))
-        error('seizmo:instantphase:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(iftype,'ixyz'))) ...
-            '\nIllegal operation on XYZ data!']);
-    end
     
     % detail message
     if(verbose)

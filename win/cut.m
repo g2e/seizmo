@@ -5,12 +5,14 @@ function [data,failed]=cut(data,varargin)
 %              data=cut(...,'cmplist',list,...)
 %              data=cut(...,'fill',logical,...)
 %              data=cut(...,'filler',value,...)
+%              data=cut(...,'iztype',iztype,...)
 %              [data,failed]=cut(...,'trim',logical,...)
 %
 %    Description:
-%     CUT(DATA,PDW) cuts the records in DATA to the window limits defined
-%     by PDW and outputs the updated dataset.  Header fields are updated to
-%     match the windowed data.  Works with unevenly sampled data.
+%     DATA=CUT(DATA,PDW) cuts the records in DATA to the window limits
+%     defined by PDW and outputs the updated dataset.  Header fields are
+%     updated to match the windowed data.  Works with unevenly sampled
+%     data.
 %
 %     PDW is a set of several arguments of one of the following forms:
 %                  (1) REF1,OFFSET1,REF2,OFFSET2
@@ -65,23 +67,28 @@ function [data,failed]=cut(data,varargin)
 %     11), the window defaults to the entire record ('b',0,'e',0) - ie no 
 %     window.
 %
-%     CUT(...,'CMPLIST',LIST) allows specifying only certain components to
-%     be included in the output (for multicomponent files).  Basically any
-%     components not in the list are cut.  LIST should be either a row
-%     vector of indices or ':'.  It may also be an array of rows of indices
-%     or ':' (use a cell array to give a mixture.  Default is ':' (all
-%     components).
+%     DATA=CUT(...,'CMPLIST',LIST,...) allows specifying only certain
+%     components to be included in the output (for multicomponent files).
+%     Basically any components not in the list are cut.  LIST should be
+%     either a row vector of indices or ':'.  It may also be an array of
+%     rows of indices or ':' (use a cell array to give a mixture.  Default
+%     is ':' (all components).
 %
-%     CUT(...,'FILL',TRUE|FALSE) turns on/off the filling of data gaps to
-%     allow records that don't extend for the entire window to do so by
-%     padding them with zeros.  Does not work with unevenly sampled data.
-%     This option is useful for operations that require records to have the
-%     same length.  See option 'FILLER' to alter the fill value.  By 
-%     default 'FILL' is false (no fill).
+%     DATA=CUT(...,'FILL',TRUE|FALSE,...) turns on/off the filling of data
+%     gaps to allow records that don't extend for the entire window to do
+%     so by padding them with zeros.  Does not work with unevenly sampled
+%     data.  This option is useful for operations that require records to
+%     have the same length.  See option 'FILLER' to alter the fill value. 
+%     By default 'FILL' is false (no fill).
 %
-%     CUT(...,'FILLER',VALUE) changes the fill value to VALUE.  Adjusting
-%     this value does NOT turn option 'FILL' to true.  By default 'FILLER'
-%     is set to 0 (zero).
+%     DATA=CUT(...,'FILLER',VALUE,...) changes the fill value to VALUE.
+%     Adjusting this value does NOT turn option 'FILL' to true.  By default
+%     'FILLER' is set to 0 (zero).
+%
+%     DATA=CUT(...,'IZTYPE',IZTYPE,...) sets the header field 'iztype' of
+%     the output records to IZTYPE.    This value is passed directly to
+%     CHANGEHEADER as 'changeheader(DATA,'iztype',IZTYPE)'.  The default
+%     IZTYPE is [] and changes nothing.
 %
 %     [DATA,FAILED]=CUT(...,'TRIM',TRUE|FALSE) turns on/off deleting
 %     records that have no data (after cutting) as well as spectral and xyz
@@ -155,9 +162,10 @@ function [data,failed]=cut(data,varargin)
 %        Mar.  8, 2010 - dropped versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix
 %        Nov.  2, 2011 - doc update, allow absolute time input
+%        Dec.  1, 2011 - IZTYPE option added
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2011 at 15:05 GMT
+%     Last Updated Dec.  1, 2011 at 15:05 GMT
 
 % todo:
 
@@ -477,7 +485,8 @@ try
     
     % update headers
     data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
-        'ncmp',ncmp,'depmen',depmen,'depmin',depmin,'depmax',depmax);
+        'ncmp',ncmp,'depmen',depmen,'depmin',depmin,'depmax',depmax,...
+        'iztype',option.IZTYPE);
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

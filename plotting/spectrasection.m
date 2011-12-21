@@ -16,7 +16,8 @@ function [varargout]=spectrasection(data,varargin)
 %     distinct colors in the HSV colormap.
 %
 %     SPECTRASECTION(...,'CMP',SPECTRAL_CMP,...) changes the spectral
-%     component being drawn to CMP.  CMP may be 'am' 'ph' 'rl' or 'im'.
+%     component being drawn to CMP.  CMP may be 'am', 'ph', 'rl', 'im', or
+%     'pw'.
 %
 %     SPECTRASECTION(...,'OPTION',VALUE,...) sets certain plotting options
 %     to do simple manipulation of the plots.  Available options are:
@@ -64,9 +65,10 @@ function [varargout]=spectrasection(data,varargin)
 
 %     Version History:
 %        Aug. 15, 2010 - initial version
+%        Dec. 21, 2011 - add power option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 15, 2010 at 23:00 GMT
+%     Last Updated Dec. 21, 2010 at 23:00 GMT
 
 % todo:
 % - autoticks in log scale is not useful (Matlab bug)
@@ -105,6 +107,9 @@ switch lower(opt.SPECTRALCMP)
         data(time | spec)=keeprl(data(time | spec));
     case {'i' 'im' 'imag' 'imaginary'}
         data(time | spec)=keepim(data(time | spec));
+    case {'pw' 'pow' 'power'}
+        data(time | spec)=keeppw(data(time | spec));
+        ampscale='log';
     otherwise
         error('seizmo:spectrasection:badInput',...
             'Unknown spectral component: %s',opt.SPECTRALCMP);

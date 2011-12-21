@@ -20,7 +20,8 @@ function [varargout]=plotspectra2(varargin)
 %     is extremely useful for plotting real vs synthetic data.
 %
 %     PLOTSPECTRA2(...,'CMP',SPECTRAL_CMP,...) changes the spectral
-%     component being drawn to CMP.  CMP may be 'am' 'ph' 'rl' or 'im'.
+%     component being drawn to CMP.  CMP may be 'am', 'ph', 'rl', 'im', or
+%     'pw'.
 %
 %     PLOTSPECTRA2(...,'OPTION',VALUE,...) sets certain plotting options to
 %     do simple manipulation of the plots.  Available options are:
@@ -64,9 +65,10 @@ function [varargout]=plotspectra2(varargin)
 
 %     Version History:
 %        Aug. 15, 2010 - initial version
+%        Dec. 21, 2011 - add power option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 15, 2010 at 23:00 GMT
+%     Last Updated Dec. 21, 2010 at 23:00 GMT
 
 % todo:
 % - autoticks in log scale is not useful (Matlab bug)
@@ -129,6 +131,10 @@ for i=1:nd
         case {'i' 'im' 'imag' 'imaginary'}
             data{i}(time | spec)=keepim(data{i}(time | spec));
             spylabel='imag cmp';
+        case {'pw' 'pow' 'power'}
+            data(time | spec)=keeppw(data(time | spec));
+            yscale='log';
+            spylabel='power';
         otherwise
             error('seizmo:plotspectra2:badInput',...
                 'Unknown spectral component: %s',opt.SPECTRALCMP);
