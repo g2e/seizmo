@@ -6,8 +6,9 @@ function [data]=getsacpz(data,varargin)
 %              data=getsacpz(data,'db1',...,'dbN')
 %              data=getsacpz(data,'dir1',...,'dirN')
 %
-%    Description: DATA=GETSACPZ(DATA) finds, reads in and adds SAC PoleZero
-%     info related to each record in SEIZMO struct DATA.  All info is added
+%    Description:
+%     DATA=GETSACPZ(DATA) finds, reads in and adds SAC PoleZero info
+%     related to each record in SEIZMO struct DATA.  All info is added
 %     under DATA.misc.sacpz and the format is described in MAKESACPZDB.
 %     Records without SAC PoleZero info have the field DATA.misc.has_sacpz
 %     set to FALSE (otherwise it is set to TRUE).  This particular case
@@ -44,15 +45,15 @@ function [data]=getsacpz(data,varargin)
 %    Header changes: see CHECKHEADER
 %
 %    Examples:
-%     Working with the full IRIS database (default) is somewhat slow
-%     (with >150000 PoleZeros what do you expect?).  If you can isolate the
-%     relevant PoleZero files for your dataset(s) then this operation will
-%     be significantly faster.  Run something similar to the commands below
-%     to create your custom database, save it for later and add the info to
-%     a dataset:
-%      mysacpzdb=makesacpzdb('my/sacpz/dir');
-%      save mysacpzdb mysacpzdb
-%      data=getsacpz(data,mysacpzdb)
+%     % Working with the full IRIS database (default) is somewhat slow
+%     % (with >150000 PoleZeros what do you expect?).  If you can isolate
+%     % the relevant PoleZero files for your dataset(s) then this operation
+%     % will be significantly faster.  Run something similar to the
+%     % commands below to create your custom database, save it for later
+%     % and add the info to a dataset:
+%     mysacpzdb=makesacpzdb('my/sacpz/dir');
+%     save mysacpzdb mysacpzdb
+%     data=getsacpz(data,mysacpzdb)
 %
 %    See also: APPLYSACPZ, REMOVESACPZ, READSACPZ, WRITESACPZ, MAKESACPZDB,
 %              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME
@@ -76,9 +77,10 @@ function [data]=getsacpz(data,varargin)
 %                        updated undef checks, fixed warnings/errors
 %        Sep. 28, 2010 - improved warning message if no sac pz found
 %        Mar.  5, 2011 - fixed bug in when missing networks
+%        Jan. 28, 2012 - drop strnlen usage, catch blank knetwk, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2011 at 12:45 GMT
+%     Last Updated Jan. 28, 2012 at 12:45 GMT
 
 % todo:
 
@@ -134,6 +136,12 @@ try
         NET=upper(knetwk);
         nets=unique(NET);
         
+        % check for empty network
+        if(any(cellfun('isempty',nets)))
+            error('seizmo:getsacpz:badHeader',...
+                'DATA contains records with blank KNETWK!');
+        end
+        
         % detail message
         if(verbose)
             disp('Loading SAC PoleZero Databases For Networks:');
@@ -142,7 +150,7 @@ try
         end
         
         % handle networks starting with a digit
-        net1=char(strnlen(nets,1));
+        net1=char(nets); net1=net1(:,1);
         dig1=isstrprop(net1,'digit');
         nn=nets;
         nn(dig1)=strcat('A_',nn(dig1));

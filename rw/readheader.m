@@ -3,40 +3,41 @@ function [data]=readheader(varargin)
 %
 %    Usage:    data=readheader(filelist1,...,filelistN)
 %
-%    Description: READHEADER(FILELIST1,...,FILELISTN) reads the headers of
-%     SEIZMO compatible datafiles into a SEIZMO structure.  Accepts char 
-%     arrays of filenames (one filename per row) and/or cell arrays of 
-%     filenames (one filename per cell).  Wildcards are valid.
+%    Description:
+%     READHEADER(FILELIST1,...,FILELISTN) reads the headers of SEIZMO
+%     compatible datafiles into a SEIZMO structure.  Accepts char arrays of
+%     filenames (one filename per row) and/or cell arrays of filenames (one
+%     filename per cell).  Wildcards are valid.
 %
 %     Fields of output SEIZMO structure:
-%      path - directory of file
-%      name - file name
-%      filetype - type of file
-%      version - version of filetype
+%      path      - directory of file
+%      name      - file name
+%      filetype  - type of file
+%      version   - version of filetype
 %      byteorder - byte-order of file (ieee-le or ieee-be)
-%      head - header data
-%      hasdata - logical indicating if data is read in (false here)
-%      ind - independent component data (for uneven)
-%      dep - dependent component data
-%      misc - place for miscellaneous record info
+%      head      - header data
+%      hasdata   - logical indicating if data is read in (false here)
+%      ind       - independent component data (for uneven)
+%      dep       - dependent component data
+%      misc      - place for miscellaneous record info
 %
 %    Notes:
 %
 %    Header changes: NONE
 %
 %    Examples:
-%     Some basic examples:
-%      data=readheader('KATH.R');
-%      data=readheader('SQRL.R','AAK.R');
+%     % Some basic examples:
+%     data=readheader('KATH.R');
+%     data=readheader('SQRL.R','AAK.R');
 %
-%     Maybe you have several big filelists to read in:
-%      data=readheader(USARRAYdatafiles,FLEDdatafiles,MOMAdatafiles);
+%     % Maybe you have several big filelists to read in:
+%     data=readheader(USARRAYdatafiles,FLEDdatafiles,MOMAdatafiles);
 %
-%     Read in headers of all SEIZMO readible files in current directory:
-%      data=readheader('*')
+%     % Read in headers of all SEIZMO readible files in current directory:
+%     data=readheader('*')
 %
-%     Read in some datafile's headers, modify them, and write out changes:
-%      writeheader(changeheader(readheader('*.SAC'),'kuser0','QCed'))
+%     % Read some datafile's headers, modify them, and write out changes:
+%     writeheader(changeheader(readheader('*.SAC'),'kuser0','QCed'))
 %
 %    See also: READDATA, READDATAWINDOW, WRITEHEADER, CHANGEHEADER
 %              GETHEADER, LISTHEADER, READSEIZMO, WRITESEIZMO, BSEIZMO
@@ -63,9 +64,10 @@ function [data]=readheader(varargin)
 %                        (for speed), reduced seizmodef calls
 %        Jan. 30, 2010 - seizmoverbose support, update for XDIR fixes
 %        Feb. 14, 2010 - use ONEFILELIST filterspec global option
+%        Jan. 30, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2010 at 16:05 GMT
+%     Last Updated Jan. 30, 2012 at 16:05 GMT
 
 % todo:
 

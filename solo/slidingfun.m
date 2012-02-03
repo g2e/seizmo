@@ -6,16 +6,16 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %              data=slidingfun(...,'offset',offset)
 %              data=slidingfun(...,'edge','truncate'|'pad')
 %
-%    Description: SLIDINGFUN(DATA,FUN,N) applies the function defined by
-%     the function handle FUN to a centered sliding window of 2N+1 samples
-%     to the dependent component(s) of SEIZMO records in DATA.  FUN is 
-%     expected to handle a column vector (single component) or an array 
-%     (multiple component - components are distributed in columns).  Output
-%     of FUN is assigned to the reference data point of the sliding window.  
-%     Vector output will be distributed as multiple components.  Array 
-%     output will produce an error.  N can be a scalar (each record has the
-%     same window size) or a vector (define each record's window size 
-%     separately).
+%    Description:
+%     SLIDINGFUN(DATA,FUN,N) applies the function defined by the function
+%     handle FUN to a centered sliding window of 2N+1 samples to the
+%     dependent component(s) of SEIZMO records in DATA.  FUN is expected to
+%     handle a column vector (single component) or an array (multiple
+%     component - components are distributed in columns).  Output of FUN is
+%     assigned to the reference data point of the sliding window.  Vector
+%     output will be distributed as multiple components.  Array output will
+%     produce an error.  N can be a scalar (each record has the same window
+%     size) or a vector (define each record's window size separately).
 %
 %     SLIDINGFUN(...,'POSITION','CENTER'|'TRAIL'|'LEAD') sets the position
 %     of the sliding window relative to the reference data point.  CENTER 
@@ -49,24 +49,24 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %     - The number of components in the output record need not match that
 %       of the input record.
 %     - Centered windows are of length 2N+1, while the others are just N.
-%     - SLIDINGFUN is _much_ _slooower_ than SLIDINGABSMEAN or SLIDINGRMS.
+%     - SLIDINGFUN is much _slooower_ than SLIDINGABSMEAN or SLIDINGRMS.
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NCMP
 %
 %    Examples:
-%     Running absolute mean normalization like G. D. Bensen et al, 2007 
-%     where Tmin, Tmax bound the period band of the regional seismicity 
-%     to be downweighted (usually 5-150s):
-%      f=iirfilter(data,'bandpass','butter',[1/Tmax 1/Tmin],4,2);
-%      w=slidingfun(f,@(x)mean(abs(x)),...
-%          ceil(Tmax./(4*getheader(data,'delta'))));
-%      time_norm_data=dividerecords(data,w);
+%     % Running absolute mean normalization like G. D. Bensen et al, 2007 
+%     % where Tmin, Tmax bound the period band of the regional seismicity 
+%     % to be downweighted (usually 5-150s):
+%     f=iirfilter(data,'bandpass','butter',[1/Tmax 1/Tmin],4,2);
+%     w=slidingfun(f,@(x)mean(abs(x)),...
+%         ceil(Tmax./(4*getheader(data,'delta'))));
+%     time_norm_data=dividerecords(data,w);
 %
-%     Root-Mean-Square:
-%      slidingfun(data,@(x)sqrt(mean(x.^2)),N)
+%     % Sliding Root-Mean-Square:
+%     slidingfun(data,@(x)sqrt(mean(x.^2)),N)
 %
-%     Root-Median-Square:
-%      slidingfun(data,@(x)sqrt(median(x.^2)),N)
+%     % Sliding Root-Median-Square:
+%     slidingfun(data,@(x)sqrt(median(x.^2)),N)
 %
 %    See also: SOLOFUN, SLIDINGRMS, SLIDINGABSMEAN, SLIDINGAVG
 
@@ -91,9 +91,10 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %                        versioninfo caching
 %        Jan.  6, 2011 - drop versioninfo caching, nargchk fix,
 %                        seizmofun/solofun rename
+%        Jan. 28, 2012 - doc update, drop SEIZMO global
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 09:45 GMT
+%     Last Updated Jan. 28, 2012 at 09:45 GMT
 
 % todo:
 
@@ -127,16 +128,6 @@ end
 option.POSITION='center';
 option.OFFSET=0;
 option.EDGE='truncate';
-
-% get options set by SEIZMO global
-global SEIZMO; fields=fieldnames(option).';
-if(isfield(SEIZMO,'SLIDINGFUN'))
-    for i=fields
-        if(isfield(SEIZMO.SLIDINGFUN,i{:})); 
-            option.(i{:})=SEIZMO.SLIDINGFUN.(i{:}); 
-        end
-    end
-end
 
 % options must be field-value pairs
 nargopt=numel(varargin);

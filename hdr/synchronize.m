@@ -38,7 +38,8 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %
 %     SYNCHRONIZE(DATA,FIELD,OPTION,IZTYPE,TIMING) sets the absolute timing
 %     standard to TIMING.  TIMING must be either 'UTC' or 'TAI'.  The
-%     default is 'UTC' and takes UTC leap seconds into account.
+%     default is 'UTC' and takes UTC leap seconds into account.  Using
+%     'TAI' assumes that reference times are in TAI time.
 %
 %     SYNCHRONIZE(DATA,FIELD,OPTION,IZTYPE,TIMING,FIELD1,...,FIELDN) shifts
 %     the user-defined timing fields FIELD1 thru FIELDN so their timing is
@@ -75,9 +76,10 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %        Aug. 21, 2010 - nargchk fix, better checkheader usage, update
 %                        undef checking, drop versioninfo caching
 %        Nov.  1, 2011 - doc update
+%        Jan. 28, 2012 - doc update, allow date vector input, comments
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2011 at 16:20 GMT
+%     Last Updated Jan. 28, 2012 at 16:20 GMT
 
 % todo:
 
@@ -116,12 +118,22 @@ try
         field='b';
         values=getheader(data,field);
     elseif(isnumeric(field))
-        if((~isequal(size(field),[1 5]) && ~isequal(size(field),[1 6])) ...
-                || any(isnan(field) | isinf(field)) ...
-                || ~isequal(field(1:end-1),round(field(1:end-1))))
+        szf=size(field);
+        if(szf(1)~=1 || ~any(szf(2)==[2 3 5 6]) ...
+                || any(isnan(field) | isinf(field)))
             error('seizmo:synchronize:badField',...
-                'Numeric FIELD must be 1x5 or 1x6 and not be NaN or Inf!');
+                'FIELD must be 1x2/3/5/6 and not be NaN or Inf!');
         end
+        if(any(szf(2)==[2 3]) && ~isequal(field,round(field)))
+            error('seizmo:synchronize:badField',...
+                'FIELD date vector must be integer!');
+        elseif(any(szf(2)==[5 6]) ...
+                && ~isequal(field(1:end-1),round(field(1:end-1))))
+            error('seizmo:synchronize:badField',...
+                'FIELD vector must be integer except for seconds!');
+        end
+        % expand date w/o time to time at 12am on that day
+        if(any(szf(2)==[2 3])); field=[field 0 0 0]; end
         abstime=true;
     elseif(~ischar(field) || size(field,1)~=1)
         error('seizmo:synchronize:badField',...
@@ -192,13 +204,17 @@ try
     reftimes=[nzyear nzjday nzhour nzmin nzsec+nzmsec/1000];
     if(abstime)
         synctime=fixtimes(field,timing);
+        % Note: timediff on 'utc' calls fixtimes but 'tai' does not
+        %       so we call fixtimes here to assure reftimes is proper
         if(strcmpi(timing,'tai'))
             reftimes=fixtimes(reftimes);
         end
     else
+        % sorting b/c we need the first or last occurance
+        % - using a datenum conversion here would lose the leapsecond info
         times=sortrows(fixtimes(...
             [reftimes(:,1:4) reftimes(:,5)+values],timing));
-        times(:,5)=fix(1000*(times(:,5)+1e-9))/1000; % handle msec limit
+        times(:,5)=fix(1000*(times(:,5)+1e-9))/1000; % force msec precision
         switch lower(option)
             case 'last'
                 synctime=times(end,:);
@@ -227,8 +243,8 @@ try
     data=changeheader(data,'iztype',iztype,...
         'nzyear',synctime(1),'nzjday',synctime(2),...
         'nzhour',synctime(3),'nzmin',synctime(4),...
-        'nzsec',fix(synctime(5)+1e-9),...
-        'nzmsec',fix(1000*mod(synctime(5)+1e-9,1)),...
+        'nzsec',fix(synctime(5)+1e-9),...              % trying to handle
+        'nzmsec',fix(1000*mod(synctime(5)+1e-9,1)),... % precision issues
         'a',a+shift,'b',b+shift,'e',e+shift,'f',f+shift,...
         'o',o+shift,'t',t+shift(:,ones(10,1)),user{:});
     

@@ -4,17 +4,18 @@ function [gd,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filename)
 %    Usage:    [good,knetwk,kstnm,kcmpnm,khole,b,e]=...
 %                  parse_sacpz_filename(filenames)
 %
-%    Description: [GOOD,KNETWK,KSTNM,KCMPNM,KHOLE,B,E]=...
-%     PARSE_SACPZ_FILENAME(FILENAMES) parses SAC Polezero filenames for
-%     critical info on for which records and time frame the PoleZero is
-%     valid.  Supported formats are detailed in the notes section below.
-%     FILENAMES must be a char or cellstr array of filenames.  GOOD is a
-%     logical array indicating which filenames were valid.  KNETWK, KSTNM,
-%     KCMPNM, KHOLE are column vector cellstr arrays defining the network,
-%     station, component, and stream names associated with the PoleZero
-%     files.  B and E are Nx5 numeric arrays of [yr jday hr mn secs] giving
-%     the time range the PoleZeros are valid.  All returned variables
-%     except GOOD are reduced (the invalid file info is removed).
+%    Description:
+%     [GOOD,KNETWK,KSTNM,KCMPNM,KHOLE,B,E]=PARSE_SACPZ_FILENAME(FILENAMES)
+%     parses SAC Polezero filenames for critical info on which records
+%     and the time frame the PoleZero is valid.  Supported formats are
+%     detailed in the notes section below.  FILENAMES must be a char or
+%     cellstr array of filenames.  GOOD is a logical array indicating which
+%     filenames were valid.  KNETWK, KSTNM, KCMPNM, KHOLE are column vector
+%     cellstr arrays defining the network, station, component, and stream
+%     names associated with the PoleZero files.  B and E are Nx5 numeric
+%     arrays of [yr jday hr mn secs] giving the time range the PoleZeros
+%     are valid.  All returned variables except GOOD are reduced (the
+%     invalid file info is removed).
 %
 %    Notes:
 %     - Supported SAC Polezero filename formats:
@@ -33,15 +34,15 @@ function [gd,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filename)
 %        FFF  = Fractional seconds - 1+ digits
 %
 %    Examples:
-%     PARSE_SACPZ_FILENAME not only parses a list of filenames but also
-%     filters out the invalid names.  This reduces the burden of having to
-%     eliminate non-SAC PoleZero files from the file list.  For instance,
-%     to get all the filename info for valid SAC PoleZero files in the
-%     current directory:
-%      files=dir('*');
-%      filenames={files.name}.';
-%      [good,knetwk,kstnm,kcmpnm,khole,b,e]=...
-%          parse_sacpz_filename(filenames)
+%     % PARSE_SACPZ_FILENAME not only parses a list of filenames but also
+%     % filters out the invalid names.  This reduces the burden of having
+%     % to eliminate non-SAC PoleZero files from the file list.  For
+%     % instance, to get all the filename info for valid SAC PoleZero files
+%     % in the current directory:
+%     files=dir('*');
+%     filenames={files.name}.';
+%     [good,knetwk,kstnm,kcmpnm,khole,b,e]=...
+%         parse_sacpz_filename(filenames)
 %
 %    See also: GETSACPZ, READSACPZ, WRITESACPZ, MAKESACPZDB, DB2SACPZ,
 %              APPLYSACPZ, REMOVESACPZ, GENSACPZNAME
@@ -51,9 +52,10 @@ function [gd,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filename)
 %        May  27, 2010 - seizmoverbose support
 %        Feb. 11, 2011 - mass nargchk fix
 %        Mar.  5, 2011 - improved empty khole detection
+%        Feb.  3, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2011 at 15:05 GMT
+%     Last Updated Feb.  3, 2012 at 15:05 GMT
 
 % todo:
 

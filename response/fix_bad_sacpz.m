@@ -3,23 +3,33 @@ function [sacpzdb]=fix_bad_sacpz(sacpzdb)
 %
 %    Usage:    sacpzdb=fix_bad_sacpz(sacpzdb)
 %
-%    Description: SACPZDB=FIX_BAD_SACPZ(SACPZDB) implements the fixes to
-%     the IRIS SAC PoleZero database mentioned in IRIS_SACPZDB_FIXES.  
+%    Description:
+%     SACPZDB=FIX_BAD_SACPZ(SACPZDB) implements simple fixes to the IRIS
+%     SAC PoleZero database as mentioned in IRIS_SACPZDB_FIXES.  These may
+%     or may not be correct though - see the Notes section below.
 %
 %    Notes:
+%     - These should be reported to IRIS but I'm not really familiar with
+%       how to do that, nor willing to put in the time required.  Once I
+%       finish my thesis expect the thousands of problems I've found (many
+%       of which are not corrected here) to be reported.
+%     - IRIS fixed the bad polezeros of the GE network by providing
+%       completely different responses whereas mine was just a sign
+%       change to a complex value.
 %
 %    Examples:
-%     See if we reduce the bad count:
-%      numel(bad_sacpz_cplxpair(sacpzdb))
-%      numel(bad_sacpz_cplxpair(fix_bad_sacpz(sacpzdb)))
+%     % See if we reduce the bad count:
+%     numel(bad_sacpz_cplxpair(sacpzdb))
+%     numel(bad_sacpz_cplxpair(fix_bad_sacpz(sacpzdb)))
 %
 %    See also: BAD_SACPZ_CPLXPAIR, IRIS_SACPZDB_FIXES
 
 %     Version History:
 %        May  28, 2010 - initial version
+%        Feb.  3, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  28, 2010 at 02:25 GMT
+%     Last Updated Feb.  3, 2012 at 02:25 GMT
 
 % todo:
 

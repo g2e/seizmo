@@ -9,14 +9,15 @@ function [data,pz]=removesacpz(data,varargin)
 %              [...]=removesacpz(...,'idep',IDEP,...)
 %              [...]=removesacpz(...,'h2o',H2O,...)
 %
-%    Description: [DATAOUT,GOOD]=REMOVESACPZ(DATAIN) removes the instrument
-%     response from records in DATAIN based on the associated SAC PoleZero
-%     info.  If this info has not been added, then GETSACPZ is called.  If
-%     any records in DATA do not have any associated SAC PoleZero info (as
-%     is set in the .misc.has_sacpz struct field by GETSACPZ), the records
-%     are not returned in DATAOUT.  The secondary output, GOOD, is a
-%     logical array indicating the records in DATAIN that had SAC PoleZero
-%     info (.misc.has_sacpz set TRUE).  You may use a customized PoleZero
+%    Description:
+%     [DATAOUT,GOOD]=REMOVESACPZ(DATAIN) removes the instrument response
+%     from records in DATAIN based on the associated SAC PoleZero info.  If
+%     this info has not been added, then GETSACPZ is called.  If any
+%     records in DATA do not have any associated SAC PoleZero info (as is
+%     set in the .misc.has_sacpz struct field by GETSACPZ), the records are
+%     not returned in DATAOUT.  The secondary output, GOOD, is a logical
+%     array indicating the records in DATAIN that had SAC PoleZero info
+%     (.misc.has_sacpz set TRUE).  You may use a customized PoleZero
 %     response on records by placing the info in the .misc.sacpz struct
 %     field and making sure _ALL_ records in DATA have the .misc.has_sacpz
 %     struct field set to TRUE or FALSE.  See GETSACPZ for info on the
@@ -105,20 +106,22 @@ function [data,pz]=removesacpz(data,varargin)
 %        Sep. 28, 2010 - more info when response bombs out
 %        June  9, 2011 - changing freqlimits to taperlimits, output taper
 %                        limits to terminal, fixed bomb-out bug
+%        Feb.  3, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  9, 2011 at 20:30 GMT
+%     Last Updated Feb.  3, 2012 at 20:30 GMT
 
 % todo:
 % - standard responses
 % - maybe we should just have a wpow option rather than units
 % - meters/nanometers flag
+% - scale field should be ignored rather than changed
 
 % check nargin
 error(nargchk(1,inf,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

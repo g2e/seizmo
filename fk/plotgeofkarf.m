@@ -56,9 +56,10 @@ function [varargout]=plotgeofkarf(arf,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %                        plots as 'fkmap'
 %        Dec.  8, 2010 - use '^o' for deg symbol rather than \circ
 %        Feb. 16, 2011 - color code fix
+%        Feb.  2, 2012 - use robinson projection like plotgeofkmap
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2011 at 15:05 GMT
+%     Last Updated Feb.  2, 2012 at 15:05 GMT
 
 % todo:
 
@@ -183,7 +184,7 @@ maxlon=max([arf.stlo; max(arf.latlon(:,:,2))']);
 
 % default/check projopt
 if(nargin<2 || isempty(popt))
-    popt={'hammer','lat',[minlat maxlat],'lon',[minlon maxlon]};
+    popt={'robinson','lat',[minlat maxlat],'lon',[minlon maxlon]};
 end
 if(ischar(popt)); popt=cellstr(popt); end
 if(~iscell(popt))

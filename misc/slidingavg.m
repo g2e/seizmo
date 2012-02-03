@@ -8,8 +8,9 @@ function [y]=slidingavg(x,nsamples,varargin)
 %              y=slidingavg(...,'dim',n)
 %              y=slidingavg(...,'custom',window)
 %
-%    Description: SLIDINGAVG(X,N) applies a centered sliding-window average
-%     of 2N+1 samples down the columns of numeric array X.  Sliding windows
+%    Description:
+%     SLIDINGAVG(X,N) applies a centered sliding-window average of 2N+1
+%     samples down the columns of numeric array X.  Sliding windows
 %     extending outside the record are truncated (look at the 'EDGE' option
 %     to change this).
 %
@@ -60,11 +61,11 @@ function [y]=slidingavg(x,nsamples,varargin)
 %     - SLIDINGAVG is much faster than SLIDINGFUN but less flexible
 %
 %    Examples:
-%     Get a smoothed amplitude spectra:
-%      y=slidingavg(abs(fft(x)),2)
+%     % Get a smoothed amplitude spectra:
+%     y=slidingavg(abs(fft(x)),2)
 %
-%     An example of a custom call:
-%      y=slidingavg(x,[],'custom',[-10:10; gausswin(21).'])
+%     % An example of a custom call:
+%     y=slidingavg(x,[],'custom',[-10:10; gausswin(21).'])
 %
 %    See also: SLIDINGRMS, SLIDINGABSMEAN, SLIDINGFUN
 
@@ -81,9 +82,10 @@ function [y]=slidingavg(x,nsamples,varargin)
 %        May  10, 2009 - minor doc fix
 %        June  9, 2009 - allow for unlimited varargin
 %        Feb. 11, 2011 - mass nargchk fix
+%        Jan. 28, 2012 - drop SEIZMO global, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
 % - fix nan handling
@@ -105,16 +107,6 @@ option.OFFSET=0;
 option.EDGE='truncate';
 option.DIM=1;
 option.CUSTOM=[];
-
-% get options set by SEIZMO global
-global SEIZMO; fields=fieldnames(option).';
-if(isfield(SEIZMO,'SLIDINGAVG'))
-    for i=fields
-        if(isfield(SEIZMO.SLIDINGAVG,i{:})); 
-            option.(i{:})=SEIZMO.SLIDINGAVG.(i{:});
-        end
-    end
-end
 
 % options must be field-value pairs
 nargopt=length(varargin);

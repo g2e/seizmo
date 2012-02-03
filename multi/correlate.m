@@ -193,9 +193,10 @@ function [data]=correlate(data1,varargin)
 %        Dec.  1, 2011 - doc update, save CMPINC/CMPAZ info, warn if
 %                        reftimes vary, remove cross check via better
 %                        checkheader usage
+%        Jan. 24, 2012 - checkheader post-correlation bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  1, 2011 at 15:05 GMT
+%     Last Updated Jan. 24, 2012 at 15:05 GMT
 
 % todo:
 
@@ -452,9 +453,9 @@ try
                 'user2',mcmpinc,'user3',mcmpaz);
 
             % update delaz info
-            seizmocheck_state(true);
+            checkheader_state(true);
             data=checkheader(data,'all','ignore','old_delaz','fix');
-            seizmocheck_state(false);
+            checkheader_state(false);
         else % correlograms from two datasets
             % extract relevant header info
             [mknetwk,mkstnm,mkhole,mkcmpnm,mb,mstla,mstlo,mstdp,mstel,...
@@ -579,9 +580,9 @@ try
                 'evla',mstla,'evlo',mstlo,'evel',mstel,'evdp',mstdp);
 
             % update delaz info
-            seizmocheck_state(true);
+            checkheader_state(true);
             data=checkheader(data,'all','ignore','old_delaz','fix');
-            seizmocheck_state(false);
+            checkheader_state(false);
         end
     end
 

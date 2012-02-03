@@ -4,10 +4,11 @@ function [def]=seizmodef(filetype,version,usecache)
 %    Usage:    definition=seizmodef(filetype,version)
 %              definition=seizmodef(filetype,version,usecache)
 %
-%    Description: [DEFINITIONS]=SEIZMODEF(FILETYPE,VERSION) returns the
-%     struct DEFINITIONS which provides all formatting information
-%     necessary to read/understand/modify/write the specified version
-%     VERSION of the data filetype FILETYPE using the SEIZMO toolbox.
+%    Description:
+%     [DEFINITIONS]=SEIZMODEF(FILETYPE,VERSION) returns the struct
+%     DEFINITIONS which provides all formatting information necessary to
+%     read/understand/modify/write the specified version VERSION of the
+%     data filetype FILETYPE using the SEIZMO toolbox.
 %
 %     SEIZMODEF(FILETYPE,VERSION,USECACHE) allows setting the caching
 %     behavior with a logical.  If USECACHE is set to TRUE, SEISMODEF will
@@ -26,8 +27,8 @@ function [def]=seizmodef(filetype,version,usecache)
 %       would probably require more memory anyways due to overhead.
 %
 %    Examples:
-%     Get detailed information on SAC version 6 files:
-%      sac_ver_6=seizmodef('SAC Binary',6)
+%     % Get detailed information on SAC version 6 files:
+%     sac_ver_6=seizmodef('SAC Binary',6)
 %
 %    See also:  SEIZMOCHECK, ISSEIZMO, VALIDSEIZMO
 
@@ -71,9 +72,10 @@ function [def]=seizmodef(filetype,version,usecache)
 %        May   5, 2010 - added icounts idep unit
 %        Aug. 11, 2010 - added globalcmt project (+quick) to imagsrc and
 %                        several synthetic seismogram categories for isynth
+%        Jan. 30, 2012 - doc update, 6utc/6tai changed to utc6/tai6
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 11, 2010 at 21:00 GMT
+%     Last Updated Jan. 30, 2012 at 21:00 GMT
 
 % todo:
 
@@ -151,8 +153,8 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     
     % allowed absolute time extensions
     % - utc/tai return absolute times in [yr jday hr mn secs]
-    % - 6utc/6tai return absolute times in [yr mo cday hr mn secs]
-    def.abs={'utc' 'tai' '6utc' '6tai'};
+    % - utc6/tai6 return absolute times in [yr mo cday hr mn secs]
+    def.abs={'utc' 'tai' 'utc6' 'tai6'};
     
     % virtual groups
     % - all group members must be the same type
@@ -229,10 +231,10 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     def.vf.ztai.ch=@vf_ch_ztai;
     def.vf.ztai.gh=@vf_gh_ztai;
     def.vf.ztai.lh=@vf_lh_ztai;
-    def.vf.z6tai.type='abs';
-    def.vf.z6tai.ch=@vf_ch_z6tai;
-    def.vf.z6tai.gh=@vf_gh_z6tai;
-    def.vf.z6tai.lh=@vf_lh_z6tai;
+    def.vf.ztai6.type='abs';
+    def.vf.ztai6.ch=@vf_ch_ztai6;
+    def.vf.ztai6.gh=@vf_gh_ztai6;
+    def.vf.ztai6.lh=@vf_lh_ztai6;
     def.vf.gcp.type='real';
     def.vf.gcp.ch=@vf_ch_gcp;
     def.vf.gcp.gh=@vf_gh_gcp;

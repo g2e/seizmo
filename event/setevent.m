@@ -3,11 +3,11 @@ function [data]=setevent(data,event)
 %
 %    Usage:    data=setevent(data,event)
 %
-%    Description: DATA=SETEVENT(DATA,EVENT) imports event info from a SOD
-%     CSV struct (see READSODEVENTCSV) or a GLOBALCMT NDK struct (see
-%     READNDK) into records in DATA.  EVENT must be a single event (ie the
-%     struct must be a scalar).  Imported info is limited to time, location
-%     and magnitude.
+%    Description:
+%     DATA=SETEVENT(DATA,EVENT) imports event info from a SOD CSV struct
+%     (see READSODEVENTCSV) or a GLOBALCMT NDK struct (see READNDK) into
+%     records in DATA.  EVENT must be a single event (ie the struct must be
+%     a scalar).  Imported info is limited to time, location and magnitude.
 %
 %    Notes:
 %
@@ -15,9 +15,9 @@ function [data]=setevent(data,event)
 %                    BAZ, DIST, KEVNM
 %
 %    Examples:
-%     Import basic info from a quick CMT into some records:
-%      cmt=load('globalcmt_quick');
-%      data=setevent(data,ssidx(cmt,33));
+%     % Import basic info from a quick CMT into some records:
+%     cmt=load('globalcmt_quick');
+%     data=setevent(data,ssidx(cmt,33));
 %
 %    See also: READSODEVENTCSV, READNDK, SSIDX
 
@@ -29,9 +29,10 @@ function [data]=setevent(data,event)
 %                        new optional, use mw for ndk
 %        July 30, 2010 - minor touches for new ndk setup
 %        Mar. 17, 2011 - fixed moment magnitude formula, round to hundredth
+%        Jan. 30, 2012 - 'o 6utc' changed to 'o utc'
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 17, 2011 at 22:25 GMT
+%     Last Updated Jan. 30, 2012 at 22:25 GMT
 
 % todo:
 
@@ -81,7 +82,7 @@ try
         end
         
         % add info to header
-        data=changeheader(data,'o 6utc',mat2cell(event.time,1),...
+        data=changeheader(data,'o utc',mat2cell(event.time,1),...
             'ev',[event.latitude event.longitude 0 event.depth*1000],...
             'mag',event.magnitude,'imagtyp',imagtyp,'kevnm',kevnm);
     elseif(all(ismember(ndkfields,fields)))
@@ -97,7 +98,7 @@ try
         
         % add info to header
         data=changeheader(data,...
-            'o 6utc',{[event.year event.month event.day ...
+            'o utc',{[event.year event.month event.day ...
             event.hour event.minute event.seconds]},...
             'ev',[event.latitude event.longitude 0 event.depth*1000],...
             'mag',mw,'imagtyp','imw','kevnm',event.name);
@@ -107,8 +108,7 @@ try
     end
     
     % update gcarc, az, baz, dist
-    oldcheckheaderstate=checkheader_state;
-    checkheader_state(true);
+    oldcheckheaderstate=checkheader_state(true);
     data=checkheader(data,'all','ignore','old_delaz','fix');
     checkheader_state(oldcheckheaderstate);
     

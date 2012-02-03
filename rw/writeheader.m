@@ -16,9 +16,10 @@ function []=writeheader(data,varargin)
 %              writeheader(data,...,'pathchange',{original replacemnt},...)
 %              writeheader(data,...,'byteorder',endianness,...)
 %
-%    Description: WRITEHEADER(DATA) writes SEIZMO data headers as datafiles
-%     on disk.  Primarily this is for updating the headers of existing
-%     datafiles to match the SEIZMO DATA structure.
+%    Description:
+%     WRITEHEADER(DATA) writes SEIZMO data headers to datafiles on disk.
+%     Primarily this is for updating the headers of existing datafiles to
+%     match the SEIZMO DATA structure.
 %
 %     For options 'NAME', 'PREPEND', 'APPEND', 'DELETE', and 'CHANGE' see
 %     CHANGENAME for usage.  For options 'PATH', 'PATHPREPEND',
@@ -37,12 +38,12 @@ function []=writeheader(data,varargin)
 %    Header changes: NONE
 %
 %    Examples:
-%     Read in some datafile's headers, modify them, and write out changes:
-%      writeheader(changeheader(readheader('A.SAC'),'kuser0','QCed'))
+%     % Read some datafile's headers, modify them, and write out changes:
+%     writeheader(changeheader(readheader('A.SAC'),'kuser0','QCed'))
 %
-%    See also:  WRITESEIZMO, READSEIZMO, BSEIZMO, READDATAWINDOW, READDATA,
-%               READHEADER, SEIZMODEF, GETFILEVERSION, CHANGEHEADER,
-%               GETHEADER, LISTHEADER, GETLGC, GETENUMID, GETENUMDESC
+%    See also: WRITESEIZMO, READSEIZMO, BSEIZMO, READDATAWINDOW, READDATA,
+%              READHEADER, SEIZMODEF, GETFILEVERSION, CHANGEHEADER,
+%              GETHEADER, LISTHEADER, GETLGC, GETENUMID, GETENUMDESC
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -67,9 +68,10 @@ function []=writeheader(data,varargin)
 %        Feb.  2, 2010 - proper SEIZMO handling, seizmoverbose support,
 %                        versioninfo caching
 %        Feb. 11, 2011 - dropped versioninfo caching
+%        Jan. 30, 2012 - doc update, better getheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 30, 2012 at 15:05 GMT
 
 % todo:
 
@@ -103,7 +105,7 @@ try
     data=writeparameters(data,varargin{:});
 
     % get lovrok (fairly expensive)
-    lovrok=getlgc(data,'lovrok');
+    lovrok=getheader(data,'lovrok lgc');
     
     % detail message
     if(verbose)

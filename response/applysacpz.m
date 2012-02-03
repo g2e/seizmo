@@ -9,27 +9,27 @@ function [data,pz]=applysacpz(data,varargin)
 %              [...]=applysacpz(...,'idep',IDEP,...)
 %              [...]=applysacpz(...,'h2o',H2O,...)
 %
-%    Description: [DATAOUT,GOOD]=APPLYSACPZ(DATAIN) applies an instrument
-%     response to records in DATAIN based on the associated SAC PoleZero
-%     info.  If this info has not been added, then GETSACPZ is called.  If
-%     any records in DATA do not have any associated SAC PoleZero info (as
-%     is indicated by the .misc.has_sacpz struct field set by GETSACPZ),
-%     the records are not returned in DATAOUT.  The secondary output, GOOD,
-%     is a logical array indicating the records in DATAIN that had SAC
-%     PoleZero info (.misc.has_sacpz set TRUE).  You may use a customized
-%     PoleZero response on records by placing the info in the .misc.sacpz
-%     struct field and making sure all records in DATA have the 
-%     .misc.has_sacpz struct field set to TRUE or FALSE.  Otherwise
-%     GETSACPZ is called on the entire dataset and the customized PoleZero
-%     info is lost.  See GETSACPZ for info on the PoleZero layout.  Please
-%     note that the polezero response is expected to convert records in
-%     displacement (meters) to machine units (counts).  The response is
-%     adjusted for records that are in ground units other than displacement
-%     (as indicated by the IDEP header field) so they are in the same
-%     machine units (counts) as a displacement would be.  Also note that
-%     records are assumed to be nanometers-based (which does not match the
-%     polezero assumption) and so they are scaled internally to correct for
-%     this.
+%    Description:
+%     [DATAOUT,GOOD]=APPLYSACPZ(DATAIN) applies an instrument response to
+%     records in DATAIN based on the associated SAC PoleZero info.  If this
+%     info has not been added, then GETSACPZ is called.  If any records in
+%     DATA do not have any associated SAC PoleZero info (as is indicated by
+%     the .misc.has_sacpz struct field set by GETSACPZ), the records are
+%     not returned in DATAOUT.  The secondary output, GOOD, is a logical
+%     array indicating the records in DATAIN that had SAC PoleZero info
+%     (.misc.has_sacpz set TRUE).  You may use a customized PoleZero
+%     response on records by placing the info in the .misc.sacpz struct
+%     field and making sure all records in DATA have the .misc.has_sacpz
+%     struct field set to TRUE or FALSE.  Otherwise GETSACPZ is called on
+%     the entire dataset and the customized PoleZero info is lost.  See
+%     GETSACPZ for info on the PoleZero layout.  Please note that the
+%     polezero response is expected to convert records in displacement
+%     (meters) to machine units (counts).  The response is adjusted for
+%     records that are in ground units other than displacement (as
+%     indicated by the IDEP header field) so they are in the same machine
+%     units (counts) as a displacement would be.  Also note that records
+%     are assumed to be nanometers-based (which does not match the polezero
+%     assumption) and so they are scaled internally to correct for this.
 %
 %     [...]=APPLYSACPZ(...,'TAPERLIMITS',[F1 F2 F3 F4],...) applies a
 %     lowpass and a highpass taper that limits the spectrum of the
@@ -78,8 +78,7 @@ function [data,pz]=applysacpz(data,varargin)
 %    Header changes: DEPMIN, DEPMEN, DEPMAX, IDEP, SCALE
 %
 %    Examples:
-%     % Apply instrument responses to velocity (nm/sec) records or in any
-%     % other ground unit:
+%     % Apply instrument responses to records in any known ground unit:
 %     data=applysacpz(data);
 %
 %     % Say your response info converts between velocity & counts.  Assume
@@ -117,9 +116,10 @@ function [data,pz]=applysacpz(data,varargin)
 %        Aug. 25, 2010 - drop SEIZMO global, fix taper option bug
 %        June  9, 2011 - changing freqlimits to taperlimits, output taper
 %                        limits to terminal, fixed bomb-out bug
+%        Feb.  3, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  9, 2011 at 20:30 GMT
+%     Last Updated Feb.  3, 2012 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -130,7 +130,7 @@ function [data,pz]=applysacpz(data,varargin)
 error(nargchk(1,inf,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

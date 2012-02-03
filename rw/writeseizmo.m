@@ -16,9 +16,9 @@ function []=writeseizmo(data,varargin)
 %              writeseizmo(data,...,'pathchange',{original replacemnt},...)
 %              writeseizmo(data,...,'byteorder',endianness,...)
 %
-%    Description: WRITESEIZMO(DATA) writes SEIZMO records in DATA to
-%     datafiles.  Uses the fields in the structure to determine how and
-%     where to write the records.
+%    Description:
+%     WRITESEIZMO(DATA) writes the records in SEIZMO struct DATA.  Uses the
+%     structure fields to determine how and where to write the records.
 %
 %     For options 'NAME', 'PREPEND', 'APPEND', 'DELETE', and 'CHANGE' see
 %     CHANGENAME for usage.  For options 'PATH', 'PATHPREPEND',
@@ -31,18 +31,18 @@ function []=writeseizmo(data,varargin)
 %    Header changes: see CHECKHEADER
 %
 %    Examples:
-%     Read in some files, clean them up and write over:
-%      writeseizmo(taper(removetrend(readseizmo('*'))))
+%     % Read in some files, clean them up and write over:
+%     writeseizmo(taper(removetrend(readseizmo('*'))))
 %
-%     To write out all records in big endian:
-%      writeseizmo(data,'byteorder','ieee-be')
+%     % To write out all records in big endian:
+%     writeseizmo(data,'byteorder','ieee-be')
 %
-%     Alter the location of where the files are written:
-%      writeseizmo(data,'path','some/new/directory')
+%     % Alter the location of where the files are written:
+%     writeseizmo(data,'path','some/new/directory')
 %
 %    See also:  READSEIZMO, BSEIZMO, SEIZMODEF, GETFILEVERSION, READDATA,
 %               READDATAWINDOW, READHEADER, WRITEHEADER, CHANGENAME,
-%               CHANGEPATH
+%               CHANGEPATH, CHANGEBYTEORDER
 
 %     Version History:
 %        Oct. 29, 2007 - initial version, supports struct data
@@ -75,9 +75,11 @@ function []=writeseizmo(data,varargin)
 %        Feb.  2, 2010 - proper SEIZMO handling, seizmoverbose support,
 %                        versioninfo caching
 %        Feb. 11, 2011 - dropped versioninfo caching
+%        Jan. 30, 2012 - doc update, better getheader usage, use seizmosize
+%                        override for speed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 30, 2012 at 15:05 GMT
 
 % todo:
 
@@ -109,9 +111,6 @@ try
     
     % handle options
     data=writeparameters(data,varargin{:});
-
-    % estimated filesize from header
-    est_bytes=seizmosize(data);
     
     % verbosity
     verbose=seizmoverbose;
@@ -120,9 +119,11 @@ try
     nrecs=numel(data);
 
     % header info
-    [npts,ncmp]=getheader(data,'npts','ncmp');
-    iftype=getenumid(data,'iftype');
-    [leven,lovrok]=getlgc(data,'leven','lovrok');
+    [npts,ncmp,iftype,leven,lovrok]=getheader(data,'npts','ncmp',...
+        'iftype id','leven lgc','lovrok lgc');
+    
+    % estimated filesize from header
+    est_bytes=seizmosize(h,vi,npts,ncmp,iftype,leven);
     
     % detail message
     if(verbose)
@@ -273,3 +274,29 @@ catch
 end
 
 end
+
+
+function [bytes,hbytes,dbytes]=seizmosize(h,vi,npts,ncmp,iftype,leven)
+% override version (for speed)
+
+% trim down header info
+h=[h.data];
+
+% filetype
+count=strcmpi(iftype,'itime')...
+    +strcmpi(iftype,'ixy')+strcmpi(iftype,'ixyz')...
+    +2*strcmpi(iftype,'irlim')+2*strcmpi(iftype,'iamph');
+
+% multi-component
+count=ncmp.*count;
+
+% uneven sampling
+count=count+strcmpi(leven,'false');
+
+% final tally
+hbytes=[h(vi).startbyte].';
+dbytes=count.*npts.*[h(vi).bytesize].';
+bytes=hbytes+dbytes;
+
+end
+

@@ -3,42 +3,45 @@ function [data]=copyheader(data,idx,varargin)
 %
 %    Usage:    data=copyheader(data)
 %              data=copyheader(data,idx)
-%              data=copyheader(data,name)
+%              data=copyheader(data,'filename')
 %              data=copyheader(data,idx|name,field1,...,fieldN)
 %
-%    Description: COPYHEADER(DATA) copies the entire header of record 1 in
-%     DATA to the rest of the records in DATA.
+%    Description:
+%     COPYHEADER(DATA) copies the entire header of record 1 in SEIZMO
+%     struct DATA to the rest of the records in DATA.
 %
 %     COPYHEADER(DATA,IDX) copies the entire header of the record indicated
 %     by IDX to the rest of the records in DATA.
 %
-%     COPYHEADER(DATA,NAME) allows choosing the record by name rather than
-%     by index.  NAME is compared to the name field in SEIZMO struct DATA
-%     and the first record with a matching name is chosen.
+%     COPYHEADER(DATA,'FILENAME') allows choosing the record by name rather
+%     than by index.  NAME is compared to the name field in SEIZMO struct
+%     DATA and the first record with a matching name is chosen.
 %
-%     COPYHEADER(DATA,IDX|NAME,FIELD1,...,FIELDN) copies fields FIELD1 to
-%     FIELDN from the indicated record to the rest of the records in DATA.
+%     COPYHEADER(DATA,IDX|'FILENAME',FIELD1,...,FIELDN) copies only the
+%     indicated fields.
 %
 %    Notes:
 %
 %    Header changes: POTENTIALLY ALL
 %
 %    Examples:
-%     Copy picks from record 2 to all records:
-%      data=copyheader(data,2,'t','kt')
+%     % Copy picks from record 2 to all records:
+%     data=copyheader(data,2,'t','kt')
 %
-%     Copy event info from WUSTL.sac to all other records:
-%      data=copyheader(data,'WUSTL.sac','evla','evlo','evel','evdp');
+%     % Copy event info from WUSTL.sac to all other records:
+%     data=copyheader(data,'WUSTL.sac','evla','evlo','evel','evdp');
 %
-%    See also: GETHEADER, CHANGEHEADER, LISTHEADER
+%    See also: GETHEADER, CHANGEHEADER, LISTHEADER, QUERYHEADER,
+%              COMPAREHEADER
 
 %     Version History:
 %        June 25, 2009 - initial version
 %        Jan. 28, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
+%        Jan. 30, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 30, 2012 at 15:05 GMT
 
 % todo:
 

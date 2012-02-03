@@ -23,16 +23,16 @@ function [data,failed]=readdata(data,varargin)
 %     SEIZMO data structure setup:
 %
 %     Fields for all files:
-%      path - directory of file
-%      name - file name
-%      filetype - type of file
-%      version - version of filetype
+%      path      - directory of file
+%      name      - file name
+%      filetype  - type of file
+%      version   - version of filetype
 %      byteorder - byte-order of file (ieee-le or ieee-be)
-%      head - header data
-%      hasdata - logical indicating if data is read in
-%      ind - independent component data (for uneven)
-%      dep - dependent component data
-%      misc - place for miscellaneous record info
+%      head      - header data
+%      hasdata   - logical indicating if data is read in
+%      ind       - independent component data (for uneven)
+%      dep       - dependent component data
+%      misc      - place for miscellaneous record info
 %
 %     Fields for timeseries files:
 %      dep(:,1) - amplitudes
@@ -59,7 +59,7 @@ function [data,failed]=readdata(data,varargin)
 %       six columns of data.  All dependent components ('dep') share the 
 %       same independent component ('ind').
 %
-%    Header changes: see CHECKHEADER
+%    Header changes: NONE
 %
 %    Examples:
 %     % Read in datafiles (headers only) from the current directory, subset
@@ -109,9 +109,11 @@ function [data,failed]=readdata(data,varargin)
 %        Aug. 16, 2010 - fixed typo bug, nargchk fix
 %        Feb. 11, 2011 - dropped versioninfo caching, close fid bugfix,
 %                        read files with inconsistent size if desired
+%        Jan. 28, 2012 - use a seizmosize override for speed
+%        Jan. 30, 2012 - debugging, code reformatted, use gh improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 30, 2012 at 15:05 GMT
 
 % todo:
 
@@ -157,81 +159,62 @@ end
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
+[npts,ncmp,iftype,leven]=getheader(data,...
+    'npts','ncmp','iftype id','leven lgc');
+seizmocheck_state(oldseizmocheckstate);
 
-% attempt reading in data
-try
-    % estimated filesize from header
-    [est_bytes,hbytes,dbytes]=seizmosize(data);
+% estimated filesize from header
+[est_bytes,hbytes,dbytes]=seizmosize(h,vi,npts,ncmp,iftype,leven);
 
-    % header info
-    [npts,ncmp]=getheader(data,'npts','ncmp');
-    iftype=getenumid(data,'iftype');
-    leven=getlgc(data,'leven');
+% verbosity
+verbose=seizmoverbose;
+
+% number of records
+nrecs=numel(data);
+
+% detail message
+if(verbose)
+    disp('Reading in Data Portion of Record(s)');
+    print_time_left(0,nrecs);
+end
+
+% read loop
+failed=false(nrecs,1);
+for i=1:nrecs
+    % construct fullname
+    name=[data(i).path data(i).name];
     
-    % verbosity
-    verbose=seizmoverbose;
-
-    % number of records
-    nrecs=numel(data);
+    % open file for reading
+    fid=fopen(name,'r',data(i).byteorder);
     
-    % detail message
-    if(verbose)
-        disp('Reading in Data Portion of Record(s)');
-        print_time_left(0,nrecs);
+    % fid check
+    if(fid<0)
+        % non-existent file or directory
+        warning('seizmo:readdata:badFID',...
+            'Record: %d, File not openable: %s !',i,name);
+        failed(i)=true;
+        % detail message
+        if(verbose); print_time_left(i,nrecs,true); end
+        continue;
     end
-
-    % read loop
-    failed=false(nrecs,1);
-    for i=1:nrecs
-        % construct fullname
-        name=[data(i).path data(i).name];
-
-        % open file for reading
-        fid=fopen(name,'r',data(i).byteorder);
-
-        % fid check
-        if(fid<0)
-            % non-existent file or directory
-            warning('seizmo:readdata:badFID',...
-                'Record: %d, File not openable: %s !',i,name);
-            failed(i)=true;
-            % detail message
-            if(verbose); print_time_left(i,nrecs,true); end
-            continue;
-        end
-
-        % file size
-        fseek(fid,0,'eof');
-        bytes=ftell(fid);
-
-        % byte size check
-        if(bytes>est_bytes(i))
-            if(bytes==(hbytes(i)+2*dbytes(i)))
-                % SAC BUG: In SAC, converting a spectral record to a time
-                % series record and then writing it out, writes out a 2nd
-                % component that contains gibberish.  We skip the garbage.
-            else
-                % size big enough but inconsistent - skip if trim
-                % - note we do not read it all (set npts/ncmp to read more)
-                warning('seizmo:readdata:badFileSize',...
-                    ['Record: %d\nFile: %s\n'...
-                    'Filesize does not match header info!\n'...
-                    '%d (estimated) > %d (on disk)!'],...
-                    i,name,est_bytes(i),bytes);
-                failed(i)=true;
-                if(trim)
-                    % detail message
-                    fclose(fid);
-                    if(verbose); print_time_left(i,nrecs,true); end
-                    continue;
-                end
-            end
-        elseif(bytes<est_bytes(i))
-            % size too small - skip if trim
+    
+    % file size
+    fseek(fid,0,'eof');
+    bytes=ftell(fid);
+    
+    % byte size check
+    if(bytes>est_bytes(i))
+        if(bytes==(hbytes(i)+2*dbytes(i)))
+            % SAC BUG: In SAC, converting a spectral record to a time
+            % series record and then writing it out, writes out a 2nd
+            % component that contains gibberish.  We skip the garbage.
+        else
+            % size big enough but inconsistent - skip if trim
+            % - note we do not read it all (set npts/ncmp to read more)
             warning('seizmo:readdata:badFileSize',...
                 ['Record: %d\nFile: %s\n'...
                 'Filesize does not match header info!\n'...
-                '%d (estimated) < %d (on disk)!'],...
+                '%d (estimated) > %d (on disk)!'],...
                 i,name,est_bytes(i),bytes);
             failed(i)=true;
             if(trim)
@@ -241,87 +224,118 @@ try
                 continue;
             end
         end
-
-        % preallocate data record with NaNs
-        % deallocate timing if even sampling
-        data(i).dep=nan(npts(i),ncmp(i),h(vi(i)).data.store);
-        if(isfield(data,'ind'))
-            if(strcmpi(leven(i),'true')); data(i).ind=[];
-            else data(i).ind=nan(npts(i),1,h(vi(i)).data.store);
-            end
-        end
-
-        % skip if npts==0
-        if(npts(i)==0)
-            % all data read in
-            data(i).hasdata=true;
-            % closing file
-            fclose(fid);
+    elseif(bytes<est_bytes(i))
+        % size too small - skip if trim
+        warning('seizmo:readdata:badFileSize',...
+            ['Record: %d\nFile: %s\n'...
+            'Filesize does not match header info!\n'...
+            '%d (estimated) < %d (on disk)!'],...
+            i,name,est_bytes(i),bytes);
+        failed(i)=true;
+        if(trim)
             % detail message
-            if(verbose); print_time_left(i,nrecs); end
+            fclose(fid);
+            if(verbose); print_time_left(i,nrecs,true); end
             continue;
         end
-
-        % act by file type (any new filetypes will have to be added here)
-        fseek(fid,h(vi(i)).data.startbyte,'bof');
-        if(any(strcmpi(iftype(i),{'itime' 'ixy'})))
-            % time series file - amplitude and time
-            for k=1:ncmp(i)
-                data(i).dep(:,k)=fread(fid,npts(i),...
-                    ['*' h(vi(i)).data.store]);
-            end
-
-            % timing of amp data if uneven
-            if(strcmpi(leven(i),'false'))
-                data(i).ind(:,1)=fread(fid,npts(i),...
-                    ['*' h(vi(i)).data.store]);
-            end
-        elseif(any(strcmpi(iftype(i),{'irlim' 'iamph'})))
-            % preallocate data record with NaNs
-            data(i).dep=nan(npts(i),2*ncmp(i),h(vi(i)).data.store);
-
-            % spectral file - real and imaginary
-            for k=1:ncmp(i)
-                data(i).dep(:,2*k-1)=fread(fid,npts(i),...
-                    ['*' h(vi(i)).data.store]);
-                data(i).dep(:,2*k)=fread(fid,npts(i),...
-                    ['*' h(vi(i)).data.store]);
-            end
-        elseif(any(strcmpi(iftype(i),'ixyz')))
-            % general xyz (3D) grid - nodes are evenly spaced
-            for k=1:ncmp(i)
-                data(i).dep(:,k)=fread(fid,npts(i),...
-                    ['*' h(vi(i)).data.store]);
-            end
-        end
-
-        % all data read in
-        data(i).hasdata=true;
-
-        % closing file
-        fclose(fid);
-        
-        % detail message
-        if(verbose);
-            if(failed(i))
-                print_time_left(i,nrecs,true);
-            else
-                print_time_left(i,nrecs);
-            end
+    end
+    
+    % preallocate data record with NaNs
+    % deallocate timing if even sampling
+    data(i).dep=nan(npts(i),ncmp(i),h(vi(i)).data.store);
+    if(isfield(data,'ind'))
+        if(strcmpi(leven(i),'true')); data(i).ind=[];
+        else data(i).ind=nan(npts(i),1,h(vi(i)).data.store);
         end
     end
-
-    % remove unread entries
-    if(trim); data(failed)=[]; end
-
-    % toggle checking back
-    seizmocheck_state(oldseizmocheckstate);
-catch
-    % toggle struct checking back
-    seizmocheck_state(oldseizmocheckstate);
     
-    % rethrow error
-    error(lasterror);
+    % skip if npts==0
+    if(npts(i)==0)
+        % all data read in
+        data(i).hasdata=true;
+        % closing file
+        fclose(fid);
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
+        continue;
+    end
+    
+    % act by file type (any new filetypes will have to be added here)
+    fseek(fid,h(vi(i)).data.startbyte,'bof');
+    if(any(strcmpi(iftype(i),{'itime' 'ixy'})))
+        % time series file - amplitude and time
+        for k=1:ncmp(i)
+            data(i).dep(:,k)=fread(fid,npts(i),...
+                ['*' h(vi(i)).data.store]);
+        end
+        
+        % timing of amp data if uneven
+        if(strcmpi(leven(i),'false'))
+            data(i).ind(:,1)=fread(fid,npts(i),...
+                ['*' h(vi(i)).data.store]);
+        end
+    elseif(any(strcmpi(iftype(i),{'irlim' 'iamph'})))
+        % preallocate data record with NaNs
+        data(i).dep=nan(npts(i),2*ncmp(i),h(vi(i)).data.store);
+        
+        % spectral file - real and imaginary
+        for k=1:ncmp(i)
+            data(i).dep(:,2*k-1)=fread(fid,npts(i),...
+                ['*' h(vi(i)).data.store]);
+            data(i).dep(:,2*k)=fread(fid,npts(i),...
+                ['*' h(vi(i)).data.store]);
+        end
+    elseif(any(strcmpi(iftype(i),'ixyz')))
+        % general xyz (3D) grid - nodes are evenly spaced
+        for k=1:ncmp(i)
+            data(i).dep(:,k)=fread(fid,npts(i),...
+                ['*' h(vi(i)).data.store]);
+        end
+    end
+    
+    % all data read in
+    data(i).hasdata=true;
+    
+    % closing file
+    fclose(fid);
+    
+    % detail message
+    if(verbose);
+        if(failed(i))
+            print_time_left(i,nrecs,true);
+        else
+            print_time_left(i,nrecs);
+        end
+    end
 end
 
+% remove unread entries
+if(trim); data(failed)=[]; end
+
 end
+
+
+function [bytes,hbytes,dbytes]=seizmosize(h,vi,npts,ncmp,iftype,leven)
+% override version (for speed)
+
+% trim down header info
+h=[h.data];
+
+% filetype
+count=strcmpi(iftype,'itime')...
+    +strcmpi(iftype,'ixy')+strcmpi(iftype,'ixyz')...
+    +2*strcmpi(iftype,'irlim')+2*strcmpi(iftype,'iamph');
+
+% multi-component
+count=ncmp.*count;
+
+% uneven sampling
+count=count+strcmpi(leven,'false');
+
+% final tally
+hbytes=[h(vi).startbyte].';
+dbytes=count.*npts.*[h(vi).bytesize].';
+bytes=hbytes+dbytes;
+
+end
+

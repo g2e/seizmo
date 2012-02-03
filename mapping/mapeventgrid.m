@@ -36,7 +36,7 @@ function []=mapeventgrid(ax,evla,evlo,c,rrmajor,rrminor,azmajor,azminor)
 %     ev=getheader(data(1),'ev');
 %     mapeventgrid(ax,ev(1),ev(2));
 %
-%    See also: MAPSTATIONS, MMAP, MAPFEATURE, MAPCMT
+%    See also: MAPSTATIONS, MMAP, MAPFEATURE, MAPCMTS
 
 %     Version History:
 %        June 26, 2010 - initial version

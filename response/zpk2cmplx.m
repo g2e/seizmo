@@ -4,10 +4,11 @@ function [h]=zpk2cmplx(f,z,p,k,wpow)
 %    Usage:    h=zpk2cmplx(f,z,p,k)
 %              h=zpk2cmplx(f,z,p,k,wpow)
 %
-%    Description: H=ZPK2CMPLX(F,Z,P,K) calculates the complex spectra, H,
-%     of a zero-pole-constant system at frequencies F.  F is in Hz.  Zeros
-%     are given in Z, poles are in P and the constant is given in K.  Z and
-%     P are expected to follow the omega convention (see the Notes section
+%    Description:
+%     H=ZPK2CMPLX(F,Z,P,K) calculates the complex spectra, H, of a
+%     zero-pole-constant system at frequencies F.  F is in Hz.  Zeros are
+%     given in Z, poles are in P and the constant is given in K.  Z and P
+%     are expected to follow the omega convention (see the Notes section
 %     for more details).  K should be a real scalar.
 %
 %     H=ZPK2CMPLX(F,Z,P,K,WPOW) changes the power of the angular frequency
@@ -32,13 +33,13 @@ function [h]=zpk2cmplx(f,z,p,k,wpow)
 %       frequencies corresponding to 2*PI*F, and i is the imaginary number.
 %
 %    Examples:
-%     Read in a SAC PoleZero file, get the complex spectra
-%     and plot the amplitude and phase response in velocity:
-%      [z,p,k]=readsacpz('some/pz/file')
-%      f=logspace(-3,1,1000);
-%      h=zpk2cmplx(f,z,p,k,1);
-%      figure; loglog(f,abs(h));
-%      figure; plot(f,angle(a)); set(gca,'xscale','log');
+%     % Read in a SAC PoleZero file, get the complex spectra
+%     % and plot the amplitude and phase response in velocity:
+%     [z,p,k]=readsacpz('some/pz/file')
+%     f=logspace(-3,1,1000);
+%     h=zpk2cmplx(f,z,p,k,1);
+%     figure; loglog(f,abs(h));
+%     figure; plot(f,angle(a)); set(gca,'xscale','log');
 %
 %    See also: ZPK2AP, READSACPZ
 
@@ -46,9 +47,10 @@ function [h]=zpk2cmplx(f,z,p,k,wpow)
 %        Oct. 19, 2009 - initial version
 %        Oct. 22, 2009 - fixed NaN for 0Hz in vel/acc response
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  3, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  3, 2012 at 15:05 GMT
 
 % todo:
 

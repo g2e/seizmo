@@ -61,9 +61,11 @@ function [varargout]=plot0(data,varargin)
 %                        nameonyaxis types, allow datetick for non-absolute
 %        Apr. 19, 2011 - userdata for each record contains record metadata,
 %                        drop the confusing upside-down default
+%        Jan. 12, 2012 - minor improvement to normstyle handling
+%        Jan. 25, 2012 - norm2yaxis bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 19, 2011 at 23:00 GMT
+%     Last Updated Jan. 25, 2012 at 23:00 GMT
 
 % todo:
 
@@ -128,10 +130,10 @@ end
 if(opt.NORM2YAXIS)
     scale=nrecs*opt.NORMMAX/2;
 else
-    scale=P.NORMMAX;
+    scale=opt.NORMMAX;
 end
 switch opt.NORMSTYLE
-    case {'single' 'individually' 'individual' 'one' 'separately'}
+    case {1 'i' 'single' 'individually' 'individual' 'one' 'separately'}
         switch lower(opt.AMPSCALE)
             case 'linear'
                 ampmax=max(depmin,depmax);
@@ -149,7 +151,7 @@ switch opt.NORMSTYLE
                         (2*((log10(data(i).dep)-logmin)/logrng)-1)*scale;
                 end
         end
-    case {'group' 'together' 'all'}
+    case {0 'g' 'a' 'group' 'together' 'all'}
         switch lower(opt.AMPSCALE)
             case 'linear'
                 ampmax=max([depmin; depmax]);
@@ -173,6 +175,9 @@ switch opt.NORMSTYLE
                         (2*((log10(data(i).dep)-logmin)/logrng)-1)*scale;
                 end
         end
+    otherwise
+        error('seizmo:plot0:badInput',...
+            'Unknown NORMSTYLE value!');
 end
 
 % all in one plot

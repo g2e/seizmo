@@ -4,11 +4,12 @@ function [a,p]=zpk2ap(f,z,p,k,wpow)
 %    Usage:    [a,p]=zpk2ap(f,z,p,k)
 %              [a,p]=zpk2ap(f,z,p,k,wpow)
 %
-%    Description: [A,P]=ZPK2AP(F,Z,P,K) calculates the amplitude A and
-%     phase P of a zero-pole-constant system at frequencies F.  F is in Hz.
-%     Zeros are stored in Z, poles are in P and the constant is given in K.
-%     Z and P are expected to follow the omega convention (see the Notes
-%     section for more details).  K should be a real scalar.
+%    Description:
+%     [A,P]=ZPK2AP(F,Z,P,K) calculates the amplitude A and phase P of a
+%     zero-pole-constant system at frequencies F.  F is in Hz.  Zeros are
+%     stored in Z, poles are in P and the constant is given in K.  Z and P
+%     are expected to follow the omega convention (see the Notes section
+%     for more details).  K should be a real scalar.
 %
 %     [A,P]=ZPK2AP(F,Z,P,K,WPOW) changes the power of the angular frequency
 %     divisor in the calculation of the complex response.  By default, WPOW
@@ -36,13 +37,13 @@ function [a,p]=zpk2ap(f,z,p,k,wpow)
 %        P(W)=angle(H(W))
 %
 %    Examples:
-%     Read in a SAC PoleZero file, get the amplitude and
-%     phase response in velocity, and plot it:
-%      [z,p,k]=readsacpz('some/pz/file')
-%      f=logspace(-3,1,1000);
-%      [a,p]=zpk2ap(f,z,p,k,1);
-%      figure; loglog(f,a);
-%      figure; plot(f,p); set(gca,'xscale','log');
+%     % Read in a SAC PoleZero file, get the amplitude and
+%     % phase response in velocity, and plot it:
+%     [z,p,k]=readsacpz('some/pz/file')
+%     f=logspace(-3,1,1000);
+%     [a,p]=zpk2ap(f,z,p,k,1);
+%     figure; loglog(f,a);
+%     figure; plot(f,p); set(gca,'xscale','log');
 %
 %    See also: ZPK2CMPLX, READSACPZ
 
@@ -50,9 +51,10 @@ function [a,p]=zpk2ap(f,z,p,k,wpow)
 %        Oct. 19, 2009 - initial version
 %        Oct. 22, 2009 - fixed NaN for 0Hz in vel/acc response
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  3, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  3, 2012 at 15:05 GMT
 
 % todo:
 

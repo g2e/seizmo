@@ -3,11 +3,12 @@ function [z,p,k]=readsacpz(file)
 %
 %    Usage:    [z,p,k]=readsacpz(file)
 %
-%    Description: [Z,P,K]=READSACPZ(FILE) reads the SAC PoleZero file FILE,
-%     returning the zeros in separate rows of Z, the poles in separate rows
-%     of P, and the constant in K.  See the Notes section for file format
-%     details.  The output should be compatible with the ZPK output from
-%     Signal Processing Toolbox commands like BUTTER.
+%    Description:
+%     [Z,P,K]=READSACPZ(FILE) reads the SAC PoleZero file FILE, returning
+%     the zeros in separate rows of Z, the poles in separate rows of P, and
+%     the constant in K.  See the Notes section for file format details.
+%     The output should be compatible with the ZPK output from Signal
+%     Processing Toolbox commands like BUTTER.
 %
 %    Notes:
 %     - The format of a SAC PoleZero file is free format and is keyword
@@ -42,15 +43,15 @@ function [z,p,k]=readsacpz(file)
 %       that append to SAC PoleZero files rather than overwriting them.
 %
 %    Examples:
-%     Read in a SAC PoleZero file, and convert into a filter object:
-%      [z,p,k]=readsacpz('SAC_PZs_XB_CM32_BHZ_02');
-%      fs=40; % sampling frequency - 40 samples per second
-%      [zd,pd,kd]=bilinear(z,p,k,fs); % analog to discrete
-%      [sos,g]=zp2sos(zd,pd,kd);      % converting to a
-%      fo=dfilt.df2tsos(sos,g);       % filter object
+%     % Read in a SAC PoleZero file, and convert into a filter object:
+%     [z,p,k]=readsacpz('SAC_PZs_XB_CM32_BHZ_02');
+%     fs=40;                         % sampling frequency - 40 samples/sec
+%     [zd,pd,kd]=bilinear(z,p,k,fs); % analog to discrete
+%     [sos,g]=zp2sos(zd,pd,kd);      % converting to a
+%     fo=dfilt.df2tsos(sos,g);       % filter object
 %
-%     Now take a look at the details of the PoleZero filter:
-%      fvtool(fs)
+%     % Now take a look at the details of the PoleZero filter:
+%     fvtool(fs)
 %
 %    See also: WRITESACPZ, GETSACPZ, APPLYSACPZ, REMOVESACPZ, MAKESACPZDB,
 %              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME
@@ -63,11 +64,23 @@ function [z,p,k]=readsacpz(file)
 %        Sep. 20, 2009 - throw error on blank file
 %        Feb.  3, 2010 - fixed example
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  3, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  3, 2012 at 15:05 GMT
 
 % todo:
+% - multi zpk sacpz files are not handled
+%   - we need to make a response for each one...
+%     - requires parsing the new comment table rdseed puts out
+%       which means readsacpz=readsacpz+parse_sacpz_filename
+%       - timing info (its different from the name????)
+%       - station name info (i get it from the name)
+%       - in/out units (interesting...)
+%       - station location info (make a new db?)
+%       - orientation info (good way to check...)
+%       - instrument info (hmmm...clean up the db?)
+%       - a0*sensitivity=constant
 
 % check nargin
 error(nargchk(1,1,nargin));

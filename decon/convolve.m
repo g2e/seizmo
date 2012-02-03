@@ -6,14 +6,15 @@ function [data,zf]=convolve(data,tf,delay,zi)
 %              [data,zf]=convolve(data,tf,delay)
 %              [data,zf]=convolve(data,tf,delay,zi)
 %
-%    Description: DATA=CONVOLVE(DATA,TF) convolves a time function TF onto
-%     records in SEIZMO struct DATA.  TF must be a numeric vector or a cell
-%     array with as many elements as records in DATA with each element
-%     being a numeric vector (allows for each record to have a different
-%     time function applied).  The sample spacing of the time function is
-%     assumed to be the same as that of each record.  Convolution is done
-%     in double precision in the time domain using FILTER.  The records are
-%     then converted back to their original class.
+%    Description:
+%     DATA=CONVOLVE(DATA,TF) convolves a time function TF onto records in
+%     SEIZMO struct DATA.  TF must be a numeric vector or a cell array with
+%     as many elements as records in DATA with each element being a numeric
+%     vector (allows for each record to have a different time function
+%     applied).  The sample spacing of the time function is assumed to be
+%     the same as that of each record.  Convolution is done in double
+%     precision in the time domain using FILTER.  The records are then
+%     converted back to their original class.
 %
 %     [DATA,ZF]=CONVOLVE(DATA,TF) returns the final conditions of the
 %     convolution in ZF.  ZF is a Nx2 cell array with each row
@@ -39,12 +40,12 @@ function [data,zf]=convolve(data,tf,delay,zi)
 %    Header changes: DEPMIN, DEPMEN, DEPMAX
 %
 %    Examples:
-%     Convolve a record with a centered 11-point gaussian:
-%      [data1,zf]=convolve(data(1),gausswin(11),-5);
+%     % Convolve a record with a centered 11-point gaussian:
+%     [data1,zf]=convolve(data(1),gausswin(11),-5);
 %
-%     And plot an overlay to confirm (attaching final conditions too):
-%      plot2([data(1); ...
-%          attach(attach(data1,'ending',zf{1,1}),'beginning',zf{1,2})])
+%     % And plot an overlay to confirm (attaching final conditions too):
+%     plot2([data(1); ...
+%         attach(attach(data1,'ending',zf{1,1}),'beginning',zf{1,2})])
 %
 %    See also: DECONVOLVE, ATTACH, IIRFILTER, CORRELATE
 
@@ -58,9 +59,10 @@ function [data,zf]=convolve(data,tf,delay,zi)
 %        Feb.  2, 2010 - versioninfo caching
 %        Mar.  8, 2010 - dropped versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix
+%        Jan. 28, 2012 - doc update, better checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
 
@@ -68,7 +70,7 @@ function [data,zf]=convolve(data,tf,delay,zi)
 error(nargchk(2,4,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -76,7 +78,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt convolution
 try
     % check headers (versioninfo cache update)
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -85,24 +89,7 @@ try
     nrecs=numel(data);
 
     % get header info
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
     ncmp=getheader(data,'ncmp');
-
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:convolve:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
-
-    % cannot do unevenly sampled records
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:convolve:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    end
 
     % check time function
     if(iscell(tf))

@@ -13,7 +13,6 @@ function []=sz_toc_lowlevel()
 %<a href="matlab:help isvalidseizmo">isvalidseizmo</a>           - TRUE for valid filetype/version combinations
 %<a href="matlab:help seizmocheck">seizmocheck</a>             - Validate SEIZMO data structure
 %<a href="matlab:help seizmocheck_state">seizmocheck_state</a>       - Check/Change if SEIZMOCHECK is ON=TRUE / OFF=FALSE
-%<a href="matlab:help seizmodebug">seizmodebug</a>             - Turn SEIZMO debugging output on (TRUE) or off (FALSE)
 %<a href="matlab:help seizmodef">seizmodef</a>               - Returns specified SEIZMO definition structure
 %<a href="matlab:help seizmosize">seizmosize</a>              - Returns header-estimated disksize of SEIZMO records in bytes
 %<a href="matlab:help uninstall_seizmo">uninstall_seizmo</a>        - Removes SEIZMO components

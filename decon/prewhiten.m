@@ -4,21 +4,21 @@ function [data]=prewhiten(data,order)
 %    Usage:    data=prewhiten(data)
 %              data=prewhiten(data,order)
 %
-%    Description: PREWHITEN(DATA) returns the difference between the 
-%     records in DATA with and without a prediction error filter of order 6
-%     applied.  The returned records are thus the unpredictable (noise)
-%     portion of the data (which has a significantly whiter spectrum).  The
-%     predictable portion of the data is stored as a prediction error
-%     filter under the struct field .misc.pef in DATA.  The original record
-%     may be restored (as much as possible) by applying the prediction
-%     error filter with an inverse filter to the whitened record (see
-%     UNPREWHITEN).  The whitened record has several advantages but the
-%     main one of interest in seismology is the improved stability of
-%     spectral operations.  In particular, this operation will produce a
-%     better conditioned matrix in a deconvolution.  For more info please
-%     consider looking through the suggested reading in the Notes section.
-%     Prewhitened records will also have the struct field .misc.prewhitened
-%     field set to TRUE.
+%    Description:
+%     PREWHITEN(DATA) returns the difference between the records in DATA
+%     with and without a prediction error filter of order 6 applied.  The
+%     returned records are thus the unpredictable (noise) portion of the
+%     data (which has a significantly whiter spectrum).  The predictable
+%     portion of the data is stored as a prediction error filter under the
+%     struct field .misc.pef in DATA.  The original record may be restored
+%     (as much as possible) by applying the prediction error filter with an
+%     inverse filter to the whitened record (see UNPREWHITEN).  The
+%     whitened record has several advantages but the main one of interest
+%     in seismology is the improved stability of spectral operations.  In
+%     particular, this operation will produce a better conditioned matrix
+%     in a deconvolution.  For more info please consider looking through
+%     the suggested reading in the Notes section.  Prewhitened records will
+%     also have the struct field .misc.prewhitened field set to TRUE.
 %
 %     PREWHITEN(DATA,ORDER) allows specifying the order (number of samples
 %     or poles) in the prediction error filter.  The higher the order, the
@@ -40,11 +40,11 @@ function [data]=prewhiten(data,order)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
-%     Try prewhitening and unprewhitening first.  Then try comparing some
-%     operation without prewhiten/unprewhiten with one including it to get
-%     a feel for how important/detrimental it is.  The effect can be seen
-%     by plotting the difference:
-%      plot1(subtractrecords(data,unprewhiten(prewhiten(data))))
+%     % Try prewhitening and unprewhitening first.  Then try comparing some
+%     % operation without prewhiten/unprewhiten with one including it to
+%     % get a feel for how important/detrimental it is.  The effect can be
+%     % seen by plotting the difference:
+%     plot1(subtractrecords(data,unprewhiten(prewhiten(data))))
 %
 %    See also: UNPREWHITEN, LEVINSON, FILTER, WHITEN
 
@@ -61,28 +61,29 @@ function [data]=prewhiten(data,order)
 %                        better error messages, force dim stuff
 %        Feb.  2, 2010 - update for state functions, versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
+%        Jan. 28, 2012 - doc update, drop SEIZMO global usage, better
+%                        checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
 
 % check number of inputs
 error(nargchk(1,2,nargin));
 
-% retrieve global settings
-global SEIZMO
-
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt prewhitening
 try
-    % check headers (versioninfo cache update)
-    data=checkheader(data);
+    % check headers
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -92,20 +93,6 @@ try
 
     % get some header fields
     [npts,ncmp]=getheader(data,'npts','ncmp');
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
-
-    % require evenly-spaced time series, general x vs y
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:prewhiten:illegalOperation',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nIllegal operation on unevenly sampled record(s)!']);
-    elseif(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:prewhiten:illegalOperation',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) must be Timeseries or XY!']);
-    end
 
     % pull .misc field out
     misc=[data.misc];
@@ -135,16 +122,8 @@ try
             '\nPREWHITEN will not prewhiten prewhitened records!']);
     end
 
-    % default/global/check order
-    if(nargin==1 || isempty(order))
-        order=6;
-        try
-            if(~isempty(SEIZMO.PREWHITEN.ORDER))
-                order=SEIZMO.PREWHITEN.ORDER;
-            end
-        catch
-        end
-    end
+    % default/check order
+    if(nargin==1 || isempty(order)); order=6; end
     if(~isnumeric(order) || any(fix(order)~=order) ...
             || ~any(numel(order)==[1 nrecs]))
         error('seizmo:prewhiten:badOrder',...

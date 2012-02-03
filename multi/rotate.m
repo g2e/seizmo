@@ -181,20 +181,22 @@ function [data]=rotate(data,varargin)
 %        Sep. 29, 2010 - warn & skip rather than error on bad TO info
 %        Oct.  6, 2010 - error if no output records
 %        Dec. 13, 2011 - doc update
+%        Jan. 28, 2012 - pass char to strnlen
+%        Jan. 30, 2012 - drop SEIZMO global
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 13, 2011 at 23:18 GMT
+%     Last Updated Jan. 30, 2012 at 23:18 GMT
 
 % todo:
+% - a 'norotate' would be nice
+%   - ACTUALLY THIS IS JUST A 'THRU' OPTION SET TO 0
+% - rotate 3cmp?
 
 % check nargin
 if(mod(nargin-1,2))
     error('seizmo:rotate:badNumInputs',...
         'Bad number of arguments!');
 end
-
-% get global
-global SEIZMO
 
 % check data structure
 error(seizmocheck(data,'dep'));
@@ -205,8 +207,7 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check header
-    data=checkheader(data,...
-    'NONTIME_IFTYPE','ERROR');
+    data=checkheader(data,'NONTIME_IFTYPE','ERROR');
     
     % turn off header checking
     oldcheckheaderstate=checkheader_state(false);
@@ -248,18 +249,6 @@ try
     option.ALLOCATE=nrecs; % size of tmp space
     option.VERBOSE=seizmoverbose; % default to seizmoverbose state
     option.DEBUG=seizmodebug; % default to seizmodebug state
-    
-    % get options from SEIZMO global
-    ME=upper(mfilename);
-    try
-        fields=fieldnames(SEIZMO.(ME));
-        for i=1:numel(fields)
-            if(~isempty(SEIZMO.(ME).(fields{i})))
-                option.(fields{i})=SEIZMO.(ME).(fields{i});
-            end
-        end
-    catch
-    end
     
     % get options from command line
     for i=1:2:nargin-1
@@ -771,7 +760,7 @@ try
     end
     
     % fix kcmpnm
-    nkcmpnm=strnlen(nkcmpnm,2);
+    nkcmpnm=cellstr(strnlen(char(nkcmpnm),2));
     nkcmpnm(1:2:end)=strcat(nkcmpnm(1:2:end),option.KCMPNM1);
     nkcmpnm(2:2:end)=strcat(nkcmpnm(2:2:end),option.KCMPNM2);
     

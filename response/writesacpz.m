@@ -4,11 +4,12 @@ function []=writesacpz(file,z,p,k,o)
 %    Usage:    writesacpz(file,z,p,k)
 %              writesacpz(file,z,p,k,overwrite)
 %
-%    Description: WRITESACPZ(FILE,Z,P,K) writes the SAC PoleZero file FILE
-%     using the zeros in Z, the poles in P, and the constant in K.  See the
-%     Notes section for file format details.  Z and P must be numeric
-%     vectors composed of reals and/or complex conjugate pairs.  K must be
-%     a real scalar.
+%    Description:
+%     WRITESACPZ(FILE,Z,P,K) writes the SAC PoleZero file FILE using the
+%     zeros in Z, the poles in P, and the constant in K.  See the Notes
+%     section for file format details.  Z and P must be numeric vectors
+%     composed of reals and/or complex conjugate pairs.  K must be a real
+%     scalar.
 %
 %     WRITESACPZ(FILE,Z,P,K,OVERWRITE) quietly overwrites pre-existing SAC
 %     PoleZero files without confirmation when OVERWRITE is set to TRUE.
@@ -42,10 +43,10 @@ function []=writesacpz(file,z,p,k,o)
 %       three sections does not matter.
 %
 %    Examples:
-%     Read in a SAC PoleZero file, alter the constant, and write out:
-%      [z,p,k]=readsacpz('SAC_PZs_XB_CM32_BHZ_02');
-%      k=k*correction_factor;
-%      writesacpz('SAC_PZs_XB_CM32_BHZ_02',z,p,k);
+%     % Read in a SAC PoleZero file, alter the constant, and write out:
+%     [z,p,k]=readsacpz('SAC_PZs_XB_CM32_BHZ_02');
+%     k=k*correction_factor;
+%     writesacpz('SAC_PZs_XB_CM32_BHZ_02',z,p,k);
 %
 %    See also: READSACPZ, GETSACPZ, APPLYSACPZ, REMOVESACPZ, MAKESACPZDB,
 %              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME
@@ -59,11 +60,14 @@ function []=writesacpz(file,z,p,k,o)
 %                        confirmation for overwrite with skip option
 %        Feb.  5, 2010 - graphical file creation menu
 %        Feb. 11, 2011 - mass nargchk fix, fprintf fix
+%        Feb.  3, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  3, 2012 at 15:05 GMT
 
 % todo:
+% - does not write comments
+%   - write comment block of rdseed 5.2 ?
 
 % check nargin
 error(nargchk(4,5,nargin));

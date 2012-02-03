@@ -3,9 +3,11 @@ function [db]=gensacpzname(db)
 %
 %    Usage:    sacpzdb=gensacpzname(sacpzdb)
 %
-%    Description: SACPZDB=GENSACPZNAME(SACPZDB) generates standard SAC
-%     PoleZero filenames based on the fields 'knetwk' 'kstnm', 'kcmpnm',
-%     'khole', 'b', and 'e'.  These names are written to the 'name' field.
+%    Description:
+%     SACPZDB=GENSACPZNAME(SACPZDB) generates standard SAC PoleZero
+%     filenames based on the fields 'knetwk' 'kstnm', 'kcmpnm', 'khole',
+%     'b', and 'e'.  These names are written to the 'name' field of the SAC
+%     PoleZero db.
 %
 %    Notes:
 %     - Output name has the following form:
@@ -23,8 +25,8 @@ function [db]=gensacpzname(db)
 %        FFF  = Fractional seconds - 1+ digits
 %
 %    Examples:
-%     Make new names and write out SAC PoleZero files:
-%      db2sacpz(gensacpzname(mysacpzdb));
+%     % Make new names and write out SAC PoleZero files:
+%     db2sacpz(gensacpzname(mysacpzdb));
 %
 %    See also: MAKESACPZDB, DB2SACPZ, GETSACPZ, APPLYSACPZ, REMOVESACPZ,
 %              READSACPZ, WRITESACPZ, PARSE_SACPZ_FILENAME
@@ -32,9 +34,10 @@ function [db]=gensacpzname(db)
 %     Version History:
 %        Sep. 22, 2009 - initial version
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  3, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  3, 2012 at 15:05 GMT
 
 % todo:
 

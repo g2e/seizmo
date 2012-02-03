@@ -5,12 +5,12 @@ function [data]=mirrorflip(data,varargin)
 %              data=mirrorflip(data,...,'type',type,...)
 %              data=mirrorflip(data,...,'length',N,...)
 %
-%    Description: MIRRORFLIP(DATA) returns a mirror-flipped version of
-%     SEIZMO records in DATA prepended to the original records.  The output
-%     is thus 2*NPTS-1 points long, where NPTS is the number of points in
-%     the original record.  The begin time is shifted forward to B-(E-B),
-%     where B is the original begin time and E is the end time of the
-%     record.
+%    Description:
+%     MIRRORFLIP(DATA) returns a mirror-flipped version of SEIZMO records
+%     in DATA prepended to the original records.  The output is thus
+%     2*NPTS-1 points long, where NPTS is the number of points in the
+%     original record.  The begin time is shifted forward to B-(E-B), where
+%     B is the original begin time and E is the end time of the record.
 %
 %     MIRRORFLIP(DATA,...,'TYPE',TYPE,...) allows changing the direction
 %     and output.  Valid TYPE strings are the following:
@@ -37,13 +37,13 @@ function [data]=mirrorflip(data,varargin)
 %    Header changes: B, E, NPTS, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Use mirror-flip to dodge edge-effects when decimating:
-%      [b,e]=getheader(data,'b','e');
-%      data=mirrorflip(data,'type','both');
-%      data=squish(data,[2 2 2 5]);
-%      data=cut(data,b,e);
+%     % Use mirror-flip to dodge edge-effects when decimating:
+%     [b,e]=getheader(data,'b','e');
+%     data=mirrorflip(data,'type','both');
+%     data=squish(data,[2 2 2 5]);
+%     data=cut(data,b,e);
 %
-%    See also: REVERSE
+%    See also: REVERSE, IIRFILTER
 
 %     Version History:
 %        May  14, 2009 - initial version
@@ -54,9 +54,11 @@ function [data]=mirrorflip(data,varargin)
 %        Sep. 11, 2009 - minor doc update
 %        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
 %        Feb. 11, 2011 - mass seizmocheck fix
+%        Jan. 28, 2012 - doc update, drop SEIZMO global, better checkheader
+%                        usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
 
@@ -65,9 +67,6 @@ if(mod(nargin-1,2))
     error('seizmo:mirrorflip:badNumInputs',...
         'Bad number of arguments!');
 end
-
-% get SEIZMO info
-global SEIZMO
 
 % check data structure
 error(seizmocheck(data,'dep'));
@@ -78,7 +77,7 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt mirror-flip
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,'NONTIME_IFTYPE','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -92,17 +91,6 @@ try
     % default options
     option.TYPE='prepend';
     option.LENGTH=nan;
-
-    % get options from SEIZMO global
-    try
-        fields=fieldnames(SEIZMO.MIRRORFLIP);
-        for i=1:numel(fields)
-            if(~isempty(SEIZMO.MIRRORFLIP.(fields{i})))
-                option.(fields{i})=SEIZMO.MIRRORFLIP.(fields{i});
-            end
-        end
-    catch
-    end
 
     % get options from command line
     for i=1:2:nargin-1
@@ -155,7 +143,6 @@ try
     end
 
     % get header fields
-    iftype=getenumid(data,'iftype');
     leven=~strcmpi(getlgc(data,'leven'),'false');
     [b,e,delta,npts]=getheader(data,'b','e','delta','npts');
 
@@ -166,14 +153,6 @@ try
 
     % force length option to be no larger than npts-1
     option.LENGTH=min(option.LENGTH,npts-1);
-
-    % require timeseries and general x vs y
-    if(any(~strcmp(iftype,'itime') & ~strcmp(iftype,'ixy')))
-        error('seizmo:mirrorflip:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
     
     % detail message
     if(verbose)

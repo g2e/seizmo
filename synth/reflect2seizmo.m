@@ -3,9 +3,10 @@ function [data,stf]=reflect2seizmo(infile,outfile)
 %
 %    Usage:    data=reflect2seizmo(infile,outfile)
 %
-%    Description: DATA=REFLECT2SEIZMO(INFILE,OUTFILE) converts reflectivity
-%     output to a SEIZMO dataset using the input and output files from a
-%     reflect run.  This is poorly tested at the moment.
+%    Description:
+%     DATA=REFLECT2SEIZMO(INFILE,OUTFILE) converts reflectivity output to a
+%     SEIZMO dataset using the input and output files from a reflect run.
+%     This is poorly tested at the moment.
 %
 %    Notes:
 %     - Why so slow?  Parsing ascii files in Matlab...
@@ -21,9 +22,10 @@ function [data,stf]=reflect2seizmo(infile,outfile)
 %        Aug. 10, 2010 - initial version
 %        Feb.  2, 2011 - spread model name across KUSER0-2 to allow longer
 %                        model names (one reason a fixed format fails)
+%        Jan. 28, 2012 - minor improvement to strnlen usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2011 at 23:00 GMT
+%     Last Updated Jan. 28, 2012 at 23:00 GMT
 
 % todo:
 
@@ -96,7 +98,7 @@ time=fixtimes([cmt.year cmt.month cmt.day cmt.hour ...
 kname=reshape(getwords(joinwords(s.staname,'.'),'.'),[],s.nsta)';
 knetwk=kname(:,1); kstnm=kname(:,2);
 khole=kname(:,3); kcmpnm=kname(:,4);
-kcmpnm=strtrim(strnlen(kcmpnm,2));
+kcmpnm=strtrim(cellstr(strnlen(char(kcmpnm),2)));
 [dist,az,baz]=sphericalinv(cmt.centroidlat,cmt.centroidlon,s.stla,s.stlo);
 dist=dist*6371*pi/180;
 b=s.vrstart+dist.*p;

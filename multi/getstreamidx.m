@@ -4,14 +4,15 @@ function [idx,streamcode]=getstreamidx(data)
 %    Usage:    idx=getstreamidx(data)
 %              [idx,streamcode]=getstreamidx(data)
 %
-%    Description: IDX=GETSTREAMIDX(DATA) returns an array of indices that
-%     indicate records in SEIZMO structure DATA belonging to a stream.  A
-%     stream is defined by the fields KNETWK, KSTNM, KHOLE, and KCMPNM.
-%     Only the third character of KCMPNM is allowed to vary between records
-%     for a single stream.  This means that sites with multiple sensors
-%     will be treated as separate streams as well as sensors that have
-%     multiple streams of digitization (ie BH? and HH? channels would
-%     be treated as separate streams).
+%    Description:
+%     IDX=GETSTREAMIDX(DATA) returns an array of indices that indicate
+%     records in SEIZMO structure DATA belonging to a stream.  A stream is
+%     defined by the fields KNETWK, KSTNM, KHOLE, and KCMPNM.  Only the
+%     third character of KCMPNM is allowed to vary between records for a
+%     single stream.  This means that sites with multiple sensors will be
+%     treated as separate streams as well as sensors that have multiple
+%     streams of digitization (ie BH? and HH? channels would be treated as
+%     separate streams).
 %
 %     [IDX,STREAMCODE]=GETSTREAMIDX(DATA) also returns the unique stream
 %     codes used to separate the streams.
@@ -20,11 +21,11 @@ function [idx,streamcode]=getstreamidx(data)
 %     - Case insensitive; all characters are upper-cased.
 %
 %    Examples:
-%     Break a dataset up into separate streams:
-%      idx=getstreamidx(data)
-%      for i=1:max(idx)
-%          streamdata{i}=data(idx==i);
-%      end
+%     % Break a dataset up into separate streams:
+%     idx=getstreamidx(data)
+%     for i=1:max(idx)
+%         streamdata{i}=data(idx==i);
+%     end
 %
 %    See also: GETNETWORKIDX, GETSTATIONIDX, GETCOMPONENTIDX, GETSITEIDX
 
@@ -32,9 +33,10 @@ function [idx,streamcode]=getstreamidx(data)
 %        June 28, 2009 - initial version
 %        Jan. 29, 2010 - cleaned up unnecessary code
 %        Aug. 11, 2010 - nargchk fix, doc update
+%        Jan. 28, 2012 - pass char array to strnlen, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 11, 2010 at 22:55 GMT
+%     Last Updated Jan. 28, 2012 at 22:55 GMT
 
 % todo:
 
@@ -45,7 +47,7 @@ error(nargchk(1,1,nargin));
 kname=upper(getheader(data,'kname'));
 
 % truncate kcmpnm to first 2 characters
-kname(:,4)=strnlen(kname(:,4),2);
+kname(:,4)=strnlen(char(kname(:,4)),2);
 
 % get stream groups
 [streamcode,idx,idx]=unique(strcat(...

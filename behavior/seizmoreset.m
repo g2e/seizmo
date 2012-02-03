@@ -4,10 +4,11 @@ function []=seizmoreset(varargin)
 %    Usage:    seizmoreset()
 %              seizmoreset(option1,...,optionN)
 %
-%    Description: SEIZMORESET() clears all saved SEIZMO settings.  This
-%     includes all changes made with CHECKOPERR, BINOPERR, etc as well as
-%     any cached info (like from SEIZMODEF).  Useful for putting SEIZMO in
-%     its default state.
+%    Description:
+%     SEIZMORESET() clears all saved SEIZMO settings.  This includes all
+%     changes made with CHECKOPERR, BINOPERR, etc as well as any cached
+%     info (like from SEIZMODEF).  Useful for putting SEIZMO in its default
+%     state.
 %
 %     SEIZMORESET(OPTION1,...,OPTIONN) clears specific SEIZMO settings
 %     based on OPTION1 to OPTIONN.  OPTION must be a string with one of the
@@ -18,19 +19,22 @@ function []=seizmoreset(varargin)
 %    Notes:
 %
 %    Examples:
-%     Most SEIZMO functions alter the state of SEIZMOCHECK & CHECKHEADER to
-%     speed up operations.  When an error in these functions occurs, the 
-%     state of SEIZMOCHECK & CHECKHEADER are not properly set back to the
-%     previous state.  A workaround is to reset checking after the error:
-%      seizmoreset('checks')
+%     % Most SEIZMO functions alter the state of SEIZMOCHECK & CHECKHEADER
+%     % to speed up operations.  When an error in these functions occurs,
+%     % the state of SEIZMOCHECK & CHECKHEADER are occasionally not
+%     % properly returned to their previous state.  A workaround is to
+%     % reset the state of these functions after the error:
+%     seizmoreset('checks')
 %
-%    See also: SET_SEIZMOCHECK_STATE, SET_CHECKHEADER_STATE
+%    See also: SEIZMOCHECK_STATE, CHECKHEADER_STATE, SEIZMOVERBOSE,
+%              SEIZMODEBUG
 
 %     Version History:
 %        Oct.  7, 2009 - initial version
+%        Jan. 28, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  7, 2009 at 20:00 GMT
+%     Last Updated Jan. 28, 2012 at 20:00 GMT
 
 % todo:
 

@@ -3,17 +3,19 @@ function [data]=reverse(data)
 %
 %    Usage:    data=reverse(data)
 %
-%    Description: REVERSE(DATA) reverses the dependent components in
-%     SEIZMO records so that the start and end of each is switched.
+%    Description:
+%     REVERSE(DATA) reverses the order of the dependent component data in
+%     SEIZMO records so that the starting data comes at the end and the
+%     ending data is at the start.
 %
 %    Notes:
-%     - useful for flipping negative & positive frequencies
+%     - No header fields are changed!
 %
 %    Header changes: NONE
 %
 %    Examples:
-%     See what this operation does:
-%      plot1([data(1) reverse(data(1))])
+%     % See what this operation does:
+%     plot1([data(1) reverse(data(1))])
 %
 %    See also: MIRRORFLIP
 
@@ -24,9 +26,10 @@ function [data]=reverse(data)
 %                        move usage up
 %        Sep. 11, 2009 - minor doc update
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
+%        Jan. 27, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 27, 2012 at 15:05 GMT
 
 % todo:
 

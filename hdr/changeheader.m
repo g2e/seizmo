@@ -4,67 +4,85 @@ function [data]=changeheader(data,varargin)
 %    Usage: data=changeheader(data,'field1',values1)
 %           data=changeheader(data,'field1,'values1,...,'fieldN',valuesN)
 %
-%    Description: CHANGEHEADER(DATA,FIELD,VALUE) changes the header field 
-%     FIELD to the value(s) in VALUE for each record in DATA and returns
-%     the updated SEIZMO data structure.  FIELD must be a string 
-%     corresponding to a valid header field.  A VALUE for normal header
-%     fields may be a scalar (assigns same value to all), a column vector
-%     of length equal to the number of records (assigns a separate value to
-%     each record), or a char array (which is converted to a cellstr array
-%     internally, and thus becomes a column vector).  YOU SHOULD NOT PASS A
-%     ROW VECTOR UNLESS ALL YOUR RECORDS ARE A SINGLE FILETYPE!  If the
-%     FIELD is a group field ('t','resp','user','kt','kuser') then VALUE
+%    Description:
+%     DATA=CHANGEHEADER(DATA,FIELD,VALUE) changes the header field FIELD to
+%     the value(s) in VALUE for each record in SEIZMO data structure DATA
+%     and returns the updated structure.  FIELD must be a string 
+%     corresponding to a valid header field (see the Notes section below
+%     for more details).  VALUE for normal header fields may be a scalar
+%     (assigns same value to all), a column vector of length equal to the
+%     number of records (assigns a separate value to each record), or a
+%     char array (which is converted to a cellstr array internally, and
+%     thus becomes a column vector).  ROW VECTORS ARE ONLY FOR GROUP
+%     FIELDS!  If the FIELD is a group field (see Notes section) then VALUE
 %     can be a scalar (assigns same value to all fields for all records), a
 %     column vector (separate values for each record, but same value for
 %     all fields in the group), a row vector (separate values for each
-%     field in the group, but the same values across records), or an array
-%     (separate values for all fields in all records).  Thus for group
-%     field assignment, VALUE should be arranged so that columns delimit
-%     values for each field in the group and rows delimit records 
-%     (first row = first record, etc).  See the examples below to see how 
-%     to replicate a set of values across several records.
+%     field in the group, but the same values across all records), or an
+%     array (separate values for all fields in all records).  Thus for
+%     group field assignment, VALUE should be arranged so that columns
+%     delimit values for each field in the group and rows delimit records
+%     (first row = first record, etc).  See the Examples section below to
+%     see how to replicate a set of values across several records.
 %
 %     CHANGEHEADER(DATA,FIELD1,VALUE1,...,FIELDN,VALUEN) allows changing
 %     multiple fields in a single call.
 %
 %    Notes:
-%     - Be careful with row vectors!
-%     - Passing a nan, inf, -inf value will change a numeric field to its
-%       undefined value.  Use 'nan', 'undef' or 'undefined' to do the same
+%     - Be careful with using row vectors as values!  Row vectors outside
+%       of group field usage fails if there are multiple filetypes in use.
+%       This isn't the usual case so you can get away with it most of the
+%       time... You have been warned!
+%     - Passing nan, inf, -inf values will change a numeric field to its
+%       undefined value.  'nan', 'undef' or 'undefined' will do the same
 %       for a character field.  This is useful for not having to remember
 %       what the field's actual undefined value is.
-%     - group fields:    t, kt, user, kuser, resp, dep, st, ev, nz, nzdttm,
-%                         kname, {real group} utc, {real group} tai
-%     - virtual fields:  nzmonth, nzcday, kzdttm, kzdate, kztime, z, ztai
-%     - abs time fields: {real field} utc, {real field} tai
+%     - Group fields: T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
+%                     KNAME, CMP, DELAZ, REAL, INT, ENUM, LGC, CHAR
+%     - Virtual fields are formed from fields stored in the headers.  The
+%       following virtual fields are valid:
+%         NZMONTH  - calendar month of the reference time (from NZ* fields)
+%         NZCDAY   - calendar day of the reference time (from NZ* fields)
+%         KZDTTM   - formatted string of the reference date & time
+%         KZDATE   - formatted string of the reference date
+%         KZTIME   - formatted string of the reference time
+%         Z        - reference time in UTC as [yr doy hr min sec]
+%         Z6       - reference time in UTC as [yr mon cday hr min sec]
+%         ZTAI     - reference time in TAI as [yr doy hr min sec]
+%         ZTAI6    - reference time in TAI as [yr mon cday hr min sec]
+%         GCP      - greater circle path azimuth (BAZ+180deg)
+%         NCMP     - number of components (=1 for most cases)
+%     - Enumerated/Logical fields do not need modifiers but Absolute Times
+%       do need 'utc' or 'tai' after the field as a separate word (eg.
+%       'b utc').
 %
 %    Header changes: Determined by input list.
 %
 %    Examples:
-%     Some simple examples:
-%      data=changeheader(data,'DELTA',getheader(data,'delta')*2);
-%      data=changeheader(data,'STLA',lats,'STLO',lons)
-%      data=changeheader(data,'KT0','sSKS');
+%     % Some simple examples:
+%     data=changeheader(data,'user0',500);
+%     data=changeheader(data,'iztype','iunkn');
+%     data=changeheader(data,'t0',1650,'Kt0','sSKS');
+%     data=changeheader(data,'StLA',lats,'STLo',lons)
+%     data=changeheader(data,'DeLTA',getheader(data,'delta')*2);
 %
-%     Note that this will not split 'nan' to assign each letter to each
-%     field in kuser because character arrays are first converted to cell
-%     arrays.  So 'nan' is passed to each field in kuser and they all
-%     become undefined (special behavior - see notes section):
-%      data=changeheader(data,'kuser','nan')
+%     % THIS SECTION EXPLAINS HOW TO PASS STRINGS TO A STRING GROUP FIELD
+%     % Note that this will not split 'nan' to assign each letter to each
+%     % field in kuser because character arrays are first converted to cell
+%     % arrays.  So 'nan' is passed to each field in kuser and they all
+%     % become undefined (special behavior - see the Notes section):
+%     data=changeheader(data,'kuser','nan')
+%     % To assign separate strings to fields in a character group field you
+%     % should pass a row vector cell array like this:
+%     data=changeheader(data,'kuser',{'nan' 'blah' 'wow'})
+%     % But that replicates the same strings to all records in DATA, so to
+%     % assign separate values to all records and fields (assuming here
+%     % that there are only 2 records):
+%     data=changeheader(data,'kuser',{'nan' 'blah' 'wow'; 'another' ...
+%                                     'set of' 'examples'});
 %
-%     Note that this case would bypass the cellstr conversion as the value
-%     array is passed as a numeric array:
-%      data=changeheader(data,'kuser',double('nan'))
-%
-%     To assign separate strings to fields in a character group field you
-%     should pass a row vector cell array like this:
-%      data=changeheader(data,'kuser',{'nan' 'blah' 'wow'})
-%
-%     But that replicates the same strings to all records in DATA, so to
-%     assign separate values to all records and all fields (assuming there
-%     are only 2 records):
-%      data=changeheader(data,'kuser',{'nan' 'blah' 'wow'; 'another' ...
-%           'set of' 'examples'});
+%     % Absolute times should be wrapped in cells:
+%     data=changeheader(data,'b utc',{[2012 12 21 0 0 0]});
 %
 %    See also:  LISTHEADER, GETHEADER, READHEADER, WRITEHEADER, GETLGC,
 %               GETENUMID, GETENUMDESC, COMPAREHEADER
@@ -98,9 +116,13 @@ function [data]=changeheader(data,varargin)
 %        Jan. 29, 2010 - added VERSIONINFO cache support/hack
 %        Feb. 16, 2010 - added informative errors for UTC/TAI fields
 %        Apr. 13, 2010 - actually require fields are strings
+%        Jan. 28, 2012 - drop strnlen usage
+%        Jan. 30, 2012 - doc update, 6utc/6tai changed to utc6/tai6,
+%                        some support for abstimes without modifier, allow
+%                        abstimes input to be uncelled
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 13, 2010 at 12:00 GMT
+%     Last Updated Jan. 30, 2012 at 12:00 GMT
 
 % todo:
 
@@ -153,7 +175,7 @@ if(nver>1)
                     temp{j}=varargin{j};
                 else
                     error('seizmo:changeheader:invalidInputSize',...
-                        'Value array for field %s incorrect size!',...
+                        'VALUE array for field %s incorrect size!',...
                         upper(varargin{j-1}));
                 end
             end
@@ -238,34 +260,74 @@ for i=1:2:(nargin-2)
             elseif(sz(1)==glen && glen~=1)
                 % misoriented vector - transpose & expand vertically
                 varargin{i+1}=varargin{i+1}(:,ones(nrecs,1)).';
+            elseif(isequal(sz,[1 5]) || isequal(sz,[1 6]))
+                % probably uncelled AbsTime -- cell it properly!
+                % and expand fully...
+                varargin{i+1}={cell2mat(varargin{i+1})};
+                varargin{i+1}=varargin{i+1}(ones(nrecs,glen));
+            elseif(isequal(sz,[1 5*glen]))
+                % probably uncelled AbsTime -- cell it properly!
+                % and expand vertically...
+                varargin{i+1}=mat2cell(cell2mat(varargin{i+1}),...
+                    ones(sz(1),1),5*ones(1,glen));
+                varargin{i+1}=varargin{i+1}(ones(nrecs,1),:);
+            elseif(isequal(sz,[1 6*glen]))
+                % probably uncelled AbsTime -- cell it properly!
+                % and expand vertically...
+                varargin{i+1}=mat2cell(cell2mat(varargin{i+1}),...
+                    ones(sz(1),1),6*ones(1,glen));
+                varargin{i+1}=varargin{i+1}(ones(nrecs,1),:);
             else
                 error('seizmo:changeheader:invalidInputSize',...
                     ['\nFiletype: %s, Version: %d\n'...
-                    'Group value vector for field %s incorrect size!'],...
+                    'VALUE vector for field %s incorrect size!'],...
                     h.filetype,h.version,upper(varargin{i}));
             end
         elseif(prod(sz)==nrecs)
-            % assure column vector
+            % row vector to column vector
             varargin{i+1}=varargin{i+1}(:);
+        elseif(isequal(sz,[1 5]) || isequal(sz,[1 6]))
+            % probably uncelled AbsTime -- cell it properly!
+            % and expand fully...
+            varargin{i+1}={cell2mat(varargin{i+1})};
+            varargin{i+1}=varargin{i+1}(ones(nrecs,glen));
         else
             % not in a group, but is a vector of unusual length
             error('seizmo:changeheader:invalidInputSize',...
                 ['\nFiletype: %s, Version: %d\n'...
-                'Value vector for field %s incorrect size!'],...
+                'VALUE vector for field %s incorrect size!'],...
                 h.filetype,h.version,upper(varargin{i}));
         end
     % array
     else
-        % no expansion, just check for correct orientation
-        % - allow number of columns to exceed the number of
-        %   fields in the group (to allow for variable group
-        %   size across different filetypes)
-        dim=size(varargin{i+1});
-        if(dim(1)~=nrecs || dim(2)<glen)
+        % check for correct orientation
+        sz=size(varargin{i+1});
+        if(sz(1)~=nrecs)
             error('seizmo:changeheader:invalidInputSize',...
                 ['\nFiletype: %s, Version: %d\n'...
-                'Group value array for field %s not correct size'],...
+                'VALUE array for field %s not correct size'],...
                 h.filetype,h.version,upper(varargin{i}))
+        elseif(sz(2)~=glen)
+            if(any(sz(2)==[5 6]))
+                % probably uncelled AbsTime -- cell it properly!
+                % and expand horizontally...
+                varargin{i+1}=mat2cell(cell2mat(varargin{i+1}),...
+                    ones(sz(1),1));
+                varargin{i+1}=varargin{i+1}(:,ones(1,glen));
+            elseif(sz(2)==5*glen)
+                % probably uncelled AbsTime -- cell it properly!
+                varargin{i+1}=mat2cell(cell2mat(varargin{i+1}),...
+                    ones(sz(1),1),5*ones(1,glen));
+            elseif(sz(2)==6*glen)
+                % probably uncelled AbsTime -- cell it properly!
+                varargin{i+1}=mat2cell(cell2mat(varargin{i+1}),...
+                    ones(sz(1),1),6*ones(1,glen));
+            else
+                error('seizmo:changeheader:invalidInputSize',...
+                    ['\nFiletype: %s, Version: %d\n'...
+                    'VALUE array for field %s not correct size'],...
+                    h.filetype,h.version,upper(varargin{i}))
+            end
         end
     end
     
@@ -301,6 +363,9 @@ if(isfield(h.vf,f))
     end
     return;
 end
+
+% multiwords = drop'm
+wf=getwords(f); f=wf{1};
 
 % special treatment for enums
 for m=1:numel(h.enum)
@@ -414,8 +479,10 @@ for n=1:numel(h.stype)
                 v(sum(undeftmp1,2)~=0)={h.undef.stype};
                 v(sum(undeftmp2,2)~=0)={h.undef.stype};
             end
-            v=strnlen(v,o);
-            head(p(1):p(2),:)=char(v).';
+            v=char(v).';
+            szv=size(v,1);
+            if(o>szv); v(szv+1:o,:)=32; end
+            head(p(1):p(2),:)=v(1:o,:);
             return;
         end
     end
@@ -425,91 +492,68 @@ end
 for n=1:numel(h.ntype)
     for m=1:numel(h.(h.ntype{n}))
         if(isfield(h.(h.ntype{n})(m).pos,f))
-            v=cell2mat(v);
-            v(isnan(v))=h.undef.ntype;
-            v(isinf(v))=h.undef.ntype;
-            head(h.(h.ntype{n})(m).pos.(f),:)=v;
-            return;
-        elseif(strcmp(h.ntype{n},'real'))
-            % absolute time fields section
-            wf=getwords(f);
-            if(any(strcmpi(joinwords(wf(2:end)),...
-                    {'utc' 'tai' '6utc' '6tai'})))
-                if(isfield(h.real(m).pos,wf{1}))
-                    % get reftimes
-                    if(isempty(ref))
-                        [ref,good]=vf_gh_z(h,head); good=good';
-                        tai=ref; tai(good,:)=utc2tai(ref(good,:));
-                    end
-                    
-                    % set all to undef
-                    head(h.real(m).pos.(wf{1}),:)=h.undef.ntype;
-                    
-                    % who's (un)defined
-                    nv=numel(v);
-                    good5=false(nv,1);
-                    good6=good5;
-                    for i=1:nv
-                        sv=size(v{i});
-                        % - need errors to remind myself how this works
-                        if(~isreal(v{i}))
-                            error('seizmo:changeheader:badValue',...
-                                ['Field: %s\nVALUE for a UTC/TAI ' ...
-                                'field must be real!'],upper(f));
-                        elseif(~isequal(v{i}(1:end-1),fix(v{i}(1:end-1))))
-                            error('seizmo:changeheader:badValue',...
-                                ['Field: %s\nVALUE for a UTC/TAI ' ...
-                                'field must be whole numbers except ' ...
-                                'for the seconds element!'],upper(f));
-                        end
-                        % leave as undef if undef, nan, or inf
-                        if(~any(v{i}==h.undef.ntype) ...
-                                && ~any(isnan(v{i}) | isinf(v{i})))
-                            % require 1x5/6
-                            if(isequal(sv,[1 5]))
-                                good5(i)=true;
-                            elseif(isequal(sv,[1 6]))
-                                good6(i)=true;
-                            else
-                                error('seizmo:changeheader:badValue',...
-                                    ['Field: %s\nVALUE for a UTC/TAI ' ...
-                                    'field must be celled 1x5 or 1x6 ' ...
-                                    'arrays!'],upper(f));
-                            end
-                        end
-                    end
-                    good5=good5 & good;
-                    good6=good6 & good;
-                    
-                    % skip empty
-                    if(any(good5))
-                        % fix times
-                        switch wf{2}
-                            case {'utc' '6utc'}
-                                head(h.real(m).pos.(wf{1}),good5)=...
-                                    timediff(tai(good5,:),...
-                                    utc2tai(cell2mat(v(good5,1))));
-                            case {'tai' '6tai'}
-                                head(h.real(m).pos.(wf{1}),good5)=...
-                                    timediff(tai(good5,:),...
-                                    cell2mat(v(good5,1)));
-                        end
-                    end
-                    if(any(good6))
-                        % fix times
-                        switch wf{2}
-                            case {'utc' '6utc'}
-                                head(h.real(m).pos.(wf{1}),good6)=...
-                                    timediff(tai(good6,:),...
-                                    utc2tai(cell2mat(v(good6,1))));
-                            case {'tai' '6tai'}
-                                head(h.real(m).pos.(wf{1}),good6)=...
-                                    timediff(tai(good6,:),...
-                                    cell2mat(v(good6,1)));
-                        end
-                    end
-                    return;
+            v=cell2mat(v); sv=size(v);
+            % check for abstime
+            if(any(sv(2)==[5 6]) && strcmp(h.ntype{n},'real'))
+                % warn about no modifier
+                if(solo)
+                    warning('seizmo:changeheader:noModifier',...
+                        ['Field: %s\n' ...
+                        'No modifier given for AbsTime input! ' ...
+                        'Assuming UTC!'],upper(f));
+                    wf{2}='utc';
                 end
+                
+                % get reftimes
+                if(isempty(ref))
+                    [ref,good]=vf_gh_z(h,head); good=good';
+                    tai=ref; tai(good,:)=utc2tai(ref(good,:));
+                end
+                
+                % set all to undef
+                head(h.real(m).pos.(f),:)=h.undef.ntype;
+                
+                % need errors to remind myself how this works
+                if(~isreal(v))
+                    error('seizmo:changeheader:badValue',...
+                        ['Field: %s\nVALUE for a UTC/TAI ' ...
+                        'field must be real!'],upper(f));
+                elseif(~isequal(v(:,1:end-1),fix(v(:,1:end-1))))
+                    error('seizmo:changeheader:badValue',...
+                        ['Field: %s\nVALUE for a UTC/TAI ' ...
+                        'field must be whole numbers except ' ...
+                        'for the seconds element!'],upper(f));
+                end
+                
+                % who's (un)defined
+                good=good ...
+                    & sum(v==h.undef.ntype | isnan(v) | isinf(v),2)==0;
+                
+                % skip empty
+                if(any(good))
+                    % fix times
+                    switch wf{2}
+                        case {'utc' 'utc6'}
+                            head(h.real(m).pos.(f),good)=...
+                                timediff(tai(good,:),...
+                                utc2tai(cell2mat(v(good,1))));
+                        case {'tai' 'tai6'}
+                            head(h.real(m).pos.(f),good)=...
+                                timediff(tai(good,:),...
+                                cell2mat(v(good,1)));
+                    end
+                end
+                return;
+            elseif(sv(2)==1) % normal case
+                v(isnan(v))=h.undef.ntype;
+                v(isinf(v))=h.undef.ntype;
+                head(h.(h.ntype{n})(m).pos.(f),:)=v;
+                return;
+            else
+                error('seizmo:changeheader:badInput',...
+                    ['Filetype: %s, Version: %d\nField: %s\n!' ...
+                    'VALUE array is incorrect size!'],...
+                    h.filetype,h.version,upper(f));
             end
         end
     end

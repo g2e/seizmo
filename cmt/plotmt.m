@@ -52,15 +52,17 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %
 %    Notes:
 %     - This was derived from Ken Creager's radpat1.m in the Corel toolbox
-%     - The point-of-view and face options are a little difficult because
-%       the default view is a south perspective (your feet are pointed
-%       south as you are looking from above at the backside of the solution
-%       (see 'face' option to see the frontside).  Inclination is the angle
-%       from above so that [90 0] would set the view from a north
-%       perspective and [90 90] gives an east view.
+%     - The point-of-view and face options are a little difficult to use
+%       because the default view is a kind of south perspective (your feet
+%       are pointed south as you are looking from above at the backside of
+%       the solution (see 'face' option to see the frontside).  Inclination
+%       is the angle from the vertical increasing directly above to the
+%       horizontal to directly below.  A point-of-view of [90 0] would set
+%       the view as from a northern perspective while standing upright on
+%       the horizontal and [90 90] gives a similar east view.
 %     - The roll option is useful for plotting moment tensors on maps and
 %       mantle profiles where north/up are not necessarily up in your
-%       figure.  MAPCMT uses this option to orient the moment tensors
+%       figure.  MAPCMTS uses this option to orient the moment tensors
 %       correctly.
 %
 %    Examples:
@@ -82,7 +84,7 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %         end
 %     end
 %
-%    See also: RADPAT, MAPCMT, FINDCMT, FINDCMTS
+%    See also: RADPAT, MAPCMTS, FINDCMT, FINDCMTS
 
 %     Version History:
 %        Apr. 28, 2011 - initial version
@@ -92,9 +94,10 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %        June  6, 2011 - fixed bug for 3x3 checking case
 %        June 14, 2011 - added handles to userdata, allow character input
 %                        for colors
+%        Jan. 11, 2012 - improve the notes section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 14, 2011 at 23:55 GMT
+%     Last Updated Jan. 11, 2012 at 23:55 GMT
 
 % todo:
 

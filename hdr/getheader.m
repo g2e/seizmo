@@ -1,21 +1,17 @@
 function [varargout]=getheader(data,varargin)
 %GETHEADER    Get SEIZMO data header values
 %
-%    Usage:  headers=getheader(data)
-%            values=getheader(data,'field1')
+%    Usage:  values=getheader(data,'field1')
 %            [values1,...,valuesN]=getheader(data,'field1',...,'fieldN')
+%            headers=getheader(data)
 %
-%    Description: GETHEADER(DATA) returns ALL header values for all records
-%     in SEIZMO struct DATA as a single numeric array.  Rows in the output
-%     array correspond to the header values of individual records.  The
-%     order of the fields follows that of how they are stored in the SEIZMO
-%     struct (see SEIZMO's function SEISMODEF for details).
-%
-%     GETHEADER(DATA,FIELD) returns the specified header field FIELD's
+%    Description:
+%     VALUES=GETHEADER(DATA,FIELD) returns the specified header field
 %     values for all records stored in the SEIZMO data structure DATA.
 %     FIELD must be a string corresponding to a valid header field or a
-%     valid group field (ie. t,kt,resp,user,kuser).  Values are returned in
-%     numeric arrays or cellstring arrays oriented such that each column
+%     valid group field (ie. t,kt,resp,user,kuser).  See the Notes section
+%     below for more details on valid header fields.  Values are returned
+%     in numeric arrays or cellstring arrays oriented such that each column
 %     corresponds to an individual header field and each row to an
 %     individual record.  For example, the group field 't' would return a
 %     numeric array with 10 columns (for t0 through t9) and as many rows as
@@ -26,31 +22,68 @@ function [varargout]=getheader(data,varargin)
 %     [VALUES1,...,VALUESN]=GETHEADER(DATA,FIELD1,...,FIELDN) returns the
 %     values for each specified field or group field.
 %
+%     HEADERS=GETHEADER(DATA) returns the entire header for all records in
+%     SEIZMO struct DATA as a single numeric array (raw values).  Rows in
+%     the output array correspond to the header values of individual
+%     records.  The order of the fields follows that of how they are stored
+%     in the SEIZMO struct (see SEIZMO's function SEIZMODEF for details).
+%
 %    Notes:
-%     - Enumerated fields return the value actually stored, an integer used
+%     - Group fields: T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
+%                     KNAME, CMP, DELAZ, REAL, INT, ENUM, LGC, CHAR
+%     - Enumerated fields return the raw value which is an integer used
 %       to look up the enum string id and description in a table.  To 
-%       retrieve the associated string id or description see the functions 
-%       GETENUMID or GETENUMDESC.
-%     - Logical fields return the value actually stored, not a logical.  To
-%       get a more useful value see GETLGC.
-%     - group fields:    t, kt, user, kuser, resp, dep, st, ev, nz, nzdttm,
-%                         kname, {real group} utc, {real group} tai
-%     - virtual fields:  nzmonth, nzcday, kzdttm, kzdate, kztime, z, ztai
-%     - abs time fields: {real field} utc, {real field} tai
+%       retrieve the associated string id or description add 'id' or
+%       'desc' as a separate word after the field.  The output is a cellstr
+%       array of values w/ one cell per record.  The string 'NaN' is given
+%       for any values that were outside the enum table.
+%     - Logical fields return the raw value, not a logical.  You can get a
+%       cellstr array of values by adding 'lgc' after the field as a
+%       separate word (eg. 'leven lgc').  The output contains 'true',
+%       'false' or 'NaN' if it is undefined.  While this still isn't a
+%       logical, it is filetype agnostic.
+%     - Absolute time output is supported by adding one of the following
+%       standards as a separate word after a time-based field:
+%         STANDARD | DESCRIPTION
+%        ----------+-------------
+%         UTC      | Coordinated Universal Time as [yr doy hr min sec]
+%         UTC6     | UTC as [yr mon cday hr min sec]
+%         TAI      | International Atomic Time as [yr doy hr min sec]
+%         TAI6     | TAI as [yr mon cday hr min sec]
+%       Please note that the output is a cell array with each cell
+%       corresponding to a separate record/field.
+%     - Virtual fields are formed from fields stored in the headers.  The
+%       following virtual fields are valid:
+%         NZMONTH  - calendar month of the reference time (from NZ* fields)
+%         NZCDAY   - calendar day of the reference time (from NZ* fields)
+%         KZDTTM   - formatted string of the reference date & time
+%         KZDATE   - formatted string of the reference date
+%         KZTIME   - formatted string of the reference time
+%         Z        - reference time in UTC as [yr doy hr min sec]
+%         Z6       - reference time in UTC as [yr mon cday hr min sec]
+%         ZTAI     - reference time in TAI as [yr doy hr min sec]
+%         ZTAI6    - reference time in TAI as [yr mon cday hr min sec]
+%         GCP      - greater circle path azimuth (BAZ+180deg)
+%         NCMP     - number of components (=1 for most cases)
 %
 %    Examples:
-%     % Retrieve all t series values as one array:
-%     times=getheader(data,'t')
-%
 %     % Extract the sample rates of records:
-%     dt=getheader(data,'DeLtA')
+%     dt=getheader(data,'DeLtA');
 %
 %     % Get the station lat and lon for records:
-%     [stla,stlo]=getheader(data,'stla','STLO')
+%     [stla,stlo]=getheader(data,'stla','STLO');
 %
-%     % Enumerated fields return the table lookup index,
-%     % which is the value stored in the header:
-%     getheader(data,'iftype')
+%     % Retrieve all t series values as one array:
+%     times=getheader(data,'t');
+%
+%     % Return the record datatype id:
+%     iftype=getheader(data,'iftype id');
+%
+%     % Find records that are evenly spaced:
+%     even=find(strcmp(getheader(data,'leven lgc'),'true'));
+%
+%     % Get the start time of records in UTC:
+%     butc=cell2mat(getheader(data,'b utc'));
 %
 %    See also:  CHANGEHEADER, LISTHEADER, READHEADER, WRITEHEADER, GETLGC,
 %               GETENUMID, GETENUMDESC, GETNCMP, GETARRIVAL, COMPAREHEADER
@@ -78,9 +111,12 @@ function [varargout]=getheader(data,varargin)
 %        Apr. 13, 2010 - actually require fields are strings
 %        Aug. 21, 2010 - doc update, NaN output masks undef (-12345)
 %        Apr. 19, 2011 - bugfix for z6 & friends when 2+ header types
+%        Jan. 28, 2012 - code refactoring in ph (for id/desc/lgc support)
+%        Jan. 30, 2012 - doc update, 6utc/6tai changed to utc6/tai6,
+%                        id/desc/lgc support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 19, 2011 at 12:00 GMT
+%     Last Updated Jan. 30, 2012 at 12:00 GMT
 
 % todo:
 
@@ -255,16 +291,21 @@ for n=1:numel(h.stype)
         end
     end
 end
-for n=1:numel(h.ntype)
-    for m=1:numel(h.(h.ntype{n}))
-        if(isfield(h.(h.ntype{n})(m).pos,f))
-            head=head(h.(h.ntype{n})(m).pos.(f),:).';
-            type=0; return;
-        elseif(strcmpi(h.ntype{n},'real'))
-            % absolute time fields section
-            wf=getwords(f);
-            if(numel(wf)>1 && isfield(h.real(m).pos,wf{1}))
-                if(any(strcmpi(joinwords(wf(2:end)),{'utc' 'tai'})))
+wf=getwords(f); solo=numel(wf)==1;
+if(solo)
+    for n=1:numel(h.ntype)
+        for m=1:numel(h.(h.ntype{n}))
+            if(isfield(h.(h.ntype{n})(m).pos,f))
+                head=head(h.(h.ntype{n})(m).pos.(f),:).';
+                type=0; return;
+            end
+        end
+    end
+else % multiword
+    switch wf{2}
+        case {'utc' 'tai' 'utc6' 'tai6'}
+            for m=1:numel(h.real)
+                if(isfield(h.real(m).pos,wf{1}))
                     % get reftimes
                     if(isempty(ref))
                         [ref,good]=vf_gh_z(h,head); good=good';
@@ -272,17 +313,20 @@ for n=1:numel(h.ntype)
                         ref6(good,1:3)=doy2cal(ref6(good,1:2));
                     end
                     
+                    % deal with doy/cal split
+                    if(wf{2}(end)=='6'); z=6; else z=5; end
+                    
                     % get header values in a workable form
                     nrecs=size(head,2);
-                    value=zeros(nrecs,5);
-                    value(:,5)=head(h.(h.ntype{n})(m).pos.(wf{1}),:).';
+                    value=zeros(nrecs,z);
+                    value(:,z)=head(h.real(m).pos.(wf{1}),:).';
                     
                     % default output to nan
-                    head=nan(size(value,1),5);
+                    head=nan(size(value,1),z);
                     
                     % who's (un)defined
-                    good=good & value(:,5)~=h.undef.ntype ...
-                        & ~isnan(value(:,5)) & ~isinf(value(:,5));
+                    good=good & value(:,z)~=h.undef.ntype ...
+                        & ~isnan(value(:,z)) & ~isinf(value(:,z));
                     
                     % skip if empty
                     if(any(good))
@@ -293,37 +337,10 @@ for n=1:numel(h.ntype)
                             case 'tai'
                                 head(good,:)=fixtimes(utc2tai(...
                                     ref(good,:))+value(good,:));
-                        end
-                    end
-                    head=mat2cell(head,ones(nrecs,1)); type=1;
-                    return;
-                elseif(any(strcmpi(joinwords(wf(2:end)),{'6utc' '6tai'})))
-                    % get reftimes
-                    if(isempty(ref6))
-                        [ref,good]=vf_gh_z(h,head); good=good';
-                        ref6=ref(:,[1:2 2:5]);
-                        ref6(good,1:3)=doy2cal(ref6(good,1:2));
-                    end
-                    
-                    % get header values in a workable form
-                    nrecs=size(head,2);
-                    value=zeros(nrecs,6);
-                    value(:,6)=head(h.(h.ntype{n})(m).pos.(wf{1}),:).';
-                    
-                    % default output to nan
-                    head=nan(size(value,1),6);
-                    
-                    % who's (un)defined
-                    good=good & value(:,6)~=h.undef.ntype ...
-                        & ~isnan(value(:,6)) & ~isinf(value(:,6));
-                    
-                    % skip if empty
-                    if(any(good))
-                        switch wf{2}
-                            case '6utc'
+                            case 'utc6'
                                 head(good,:)=fixtimes(ref6(good,:)...
                                     +value(good,:),'utc');
-                            case '6tai'
+                            case 'tai6'
                                 head(good,:)=fixtimes(utc2tai(...
                                     ref6(good,:))+value(good,:));
                         end
@@ -332,13 +349,36 @@ for n=1:numel(h.ntype)
                     return;
                 end
             end
-        end
+        case {'id' 'desc'}
+            for m=1:numel(h.enum)
+                if(isfield(h.enum(m).pos,wf{1}))
+                    enum=head(h.enum(m).pos.(wf{1}),:).';
+                    head=cell(size(enum));
+                    head(:)={'NaN'};
+                    good=fix(enum)==enum ...
+                        & enum>=h.enum(1).minval & enum<=h.enum(1).maxval;
+                    head(good)=h.enum(1).(wf{2})(enum(good)+1);
+                    type=1; return;
+                end
+            end
+        case 'lgc'
+            for m=1:numel(h.lgc)
+                if(isfield(h.lgc(m).pos,wf{1}))
+                    lgc=head(h.lgc(m).pos.(wf{1}),:).';
+                    head=cell(size(lgc));
+                    head(:)={'NaN'};
+                    head(lgc==h.true)={'true'};
+                    head(lgc==h.false)={'false'};
+                    type=1; return;
+                end
+            end
     end
 end
 
 % field not found
 warning('seizmo:getheader:fieldInvalid',...
-    'Filetype: %s, Version: %d\nInvalid field: %s',h.filetype,h.version,f);
+    'Filetype: %s, Version: %d\nInvalid field: %s',...
+    h.filetype,h.version,f);
 head=nan;
 type=0;
 

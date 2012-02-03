@@ -3,24 +3,25 @@ function [data]=readseizmo(varargin)
 %
 %    Usage:    data=readseizmo(filelist1,...,filelistN)
 %
-%    Description: READSEIZMO(FILELIST1,...,FILELISTN) reads compatible 
-%     datafiles into a SEIZMO data structure.  Accepts character arrays of 
-%     filenames (one filename per row) and/or cell arrays of filenames (one
-%     filename per cell).  Wildcards are valid.
+%    Description:
+%     READSEIZMO(FILELIST1,...,FILELISTN) reads compatible datafiles into a
+%     SEIZMO structure.  Accepts character arrays of filenames (one
+%     filename per row) and/or cell arrays of filenames (one filename per
+%     cell).  The '*' wildcard is valid.
 %
 %     SEIZMO data structure setup:
 %
 %     Fields for all files:
-%      path - directory of file
-%      name - file name
-%      filetype - type of file
-%      version - version of filetype
+%      path      - directory of file
+%      name      - file name
+%      filetype  - type of file
+%      version   - version of filetype
 %      byteorder - byte-order of file (ieee-le or ieee-be)
-%      head - header data
-%      hasdata - logical indicating if data is read in
-%      ind - independent component data (for uneven)
-%      dep - dependent component data
-%      misc - place for miscellaneous record info
+%      head      - header data
+%      hasdata   - logical indicating if data is read in
+%      ind       - independent component data (for uneven)
+%      dep       - dependent component data
+%      misc      - place for miscellaneous record info
 %
 %     Fields for timeseries files:
 %      dep(:,1) - amplitudes
@@ -50,12 +51,12 @@ function [data]=readseizmo(varargin)
 %    Header changes: see CHECKHEADER
 %
 %    Examples:
-%     Some simple read statements:
-%      data=readseizmo('KATH.R');
-%      data=readseizmo('SQRL.R','AAK.R');
+%     % Some simple read statements:
+%     data=readseizmo('KATH.R');
+%     data=readseizmo('SQRL.R','AAK.R');
 %
-%     Read in every SEIZMO compatible datafile from the current directory:
-%      data=readseizmo('*');
+%     % Read all SEIZMO compatible datafiles from the current directory:
+%     data=readseizmo('*');
 %
 %    See also: READHEADER, READDATA, READDATAWINDOW, WRITEHEADER, 
 %              WRITESEIZMO, BSEIZMO, CHANGEHEADER, GETHEADER, LISTHEADER
@@ -79,9 +80,10 @@ function [data]=readseizmo(varargin)
 %        Sep. 11, 2009 - added misc field
 %        Sep. 29, 2009 - minor doc update
 %        Oct.  5, 2009 - minor doc update
+%        Jan. 30, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  5, 2009 at 16:05 GMT
+%     Last Updated Jan. 30, 2012 at 16:05 GMT
 
 % todo:
 

@@ -5,14 +5,15 @@ function [data,fo,nyq]=iirfilter(data,varargin)
 %              [data,fo,nyq]=iirfilter(...)
 %              data=iirfilter(data,fo,nyq,'option1',value1,...)
 %
-%    Description: DATA=IIRFILTER(DATA,TYPE,STYLE,'OPTION1',VALUE1,...)
-%     Utilizing the set of supplied parameters, IIR filters are built to
-%     the desired specs and implemented on the records in SEIZMO struct
-%     DATA.  The design process includes the ability to automatically
-%     determine the best fitting order (aka number of poles) when the
-%     filter is over designed.  Usually this is when the specs constain
-%     parameters like transition bandwidth, stopband corners, attenuation,
-%     etc.  See the options below for details/defaults.
+%    Description:
+%     DATA=IIRFILTER(DATA,TYPE,STYLE,'OPTION1',VALUE1,...) utilizes the set
+%     of supplied parameters to build IIR filters to the desired specs and
+%     implements them on the records in SEIZMO struct DATA.  The design
+%     process includes the ability to automatically determine the best
+%     fitting order (aka number of poles) when the filter is over designed.
+%     Usually this is when the specs constain parameters like transition
+%     bandwidth, stopband corners, attenuation, etc.  See the options below
+%     for details/defaults.
 %
 %      Valid TYPE strings (NO DEFAULT):
 %       'LO' - Low-pass filter
@@ -156,17 +157,17 @@ function [data,fo,nyq]=iirfilter(data,varargin)
 %    Header changes: DEPMIN, DEPMEN, DEPMAX
 %
 %    Examples:
-%      4th order lowpass butter filter with a passband corner of 10s:
+%     % 4th order lowpass butter filter with a passband corner of 10s:
 %     data=iirfilter(data,'low','butter','c',1/10,'np',4)
 %
-%      Bandpass elliptic filter with passband corners of 15s and 12s using
-%      default transition bandwidth & attenuation to find the filter order:
+%     % Bandpass elliptic filter with passband corners of 15s and 12s using
+%     % default transition bandwidth & attenuation to get the filter order:
 %     data=iirfilter(data,'bp','ellip','c',[1/15 1/12])
 %
-%      2-pass 4th-order bandpass elliptic filter w/ 0.1dB passband ripple:
+%     % 2-pass 4th-order bandpass elliptic filter w/ 0.1dB passband ripple:
 %     data=iirfilter(data,'bp','e','c',[1/20 1/15],'o',4,'p',2,'pr',0.1)
 %
-%      Verify filter(s) with the FVTOOL (Signal Processing Toolbox):
+%     % Verify filter(s) with the FVTOOL (Signal Processing Toolbox):
 %     [data,fo,nyq]=iirfilter(data,'bp','e','c',[1/20 1/15],'o',4);
 %     fvtool(fo{:}) % note that this will plot all the filters together
 %
@@ -195,9 +196,10 @@ function [data,fo,nyq]=iirfilter(data,varargin)
 %                        added version history, complete doc reformat
 %        Sep. 20, 2010 - passes arg now uses -1,-2 rather than 3,4
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
+%        Jan. 28, 2012 - doc update, better checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
 
@@ -205,7 +207,7 @@ function [data,fo,nyq]=iirfilter(data,varargin)
 error(nargchk(2,inf,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -213,7 +215,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt filtering
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -222,24 +226,7 @@ try
     nrecs=numel(data);
     
     % get header info
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
     delta=getheader(data,'delta');
-    
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:iirfilter:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
-
-    % cannot do unevenly sampled records
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:iirfilter:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    end
     
     % get nyquist frequencies
     [dt,idx,idx]=unique(delta);

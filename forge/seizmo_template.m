@@ -13,15 +13,16 @@ function []=seizmo_template(data,varargin)
 %     % Blah:
 %     seizmo_template
 %
-%    See also: SOME_FUNCTION
+%    See also: SOME_FUNCTION, ANOTHER FUNCTION
 
 %     Version History:
 %        Jan.  1, 2009 - initial version
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix, formatting
 %                        updates
+%        Jan. 28, 2012 - drop SEIZMO global, some code format changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012
 
 % todo:
 % - stuff to do
@@ -38,7 +39,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check header
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',... % require timeseries
+        'FALSE_LEVEN','ERROR');      % require evenly spaced
     
     % turn off header checking
     oldcheckheaderstate=checkheader_state(false);
@@ -49,9 +52,6 @@ catch
     % rethrow error
     error(lasterror);
 end
-
-% get global
-global SEIZMO
 
 % attempt rest
 try
@@ -70,26 +70,22 @@ try
     me=mfilename;
     szme=['seizmo:' me ':'];
     
-    % get options from SEIZMO global
-    ME=upper(me);
-    try
-        fields=fieldnames(SEIZMO.(ME));
-        for i=1:numel(fields)
-            if(~isempty(SEIZMO.(ME).(fields{i})))
-                option.(fields{i})=SEIZMO.(ME).(fields{i});
-            end
-        end
-    catch
-    end
-    
     % get options from command line
+    if(~iscellstr(varargin(1:2:end)))
+        error([szme 'badInput'],...
+            'Options must be specified as a string!');
+    end
     for i=1:2:nargin-1
-        if(~ischar(varargin{i}))
-            error([szme 'badInput'],...
-                'Options must be specified as a string!');
-        end
+        % assign
         if(~isempty(varargin{i+1}))
             option.(upper(varargin{i}))=varargin{i+1};
+        end
+        
+        % check
+        if(~ismember(option.THING2,valid.THING2))
+            error([szme 'badInput'],...
+                ['THING2 must be of the following:\n',...
+                sprintf('%s ',valid.THING2{:})]);
         end
     end
     
@@ -97,7 +93,7 @@ try
     [b,e,delta,npts,ncmp]=getheader(data,'b','e','delta','npts','ncmp');
     
     % loop over records
-    depmin=nan(nrecs,1); depmen=depmin; depmax=depmin;
+    [depmin,depmen,depmax]=deal(nan(nrecs,1));
     for i=1:nrecs
         % skip dataless
         if(isempty(data(i).dep)); continue; end

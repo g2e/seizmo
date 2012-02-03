@@ -5,11 +5,12 @@ function [value]=getvaluefun(data,func,type,scalar)
 %              value=getvaluefun(data,func,cmptype)
 %              value=getvaluefun(data,func,cmptype,scalarOutput)
 %
-%    Description: VALUE=GETVALUEFUN(DATA,FUNC) applies the function handle
-%     FUNC to the dependent component of records in SEIZMO struct DATA.
-%     The function FUNC is expected to return a scalar value.  The values
-%     are returned in VALUE (a Nx1 column vector where N is the number of
-%     records in DATA).
+%    Description:
+%     VALUE=GETVALUEFUN(DATA,FUNC) applies the function handle FUNC to the
+%     dependent component of records in SEIZMO struct DATA.  The function
+%     FUNC is expected to return a scalar value.  The values are returned
+%     in VALUE (a Nx1 column vector where N is the number of records in
+%     DATA).
 %
 %     VALUE=GETVALUEFUN(DATA,FUNC,CMPTYPE) specifies whether FUNC is
 %     applied to the dependent or independent data using CMPTYPE.  CMPTYPE
@@ -25,20 +26,23 @@ function [value]=getvaluefun(data,func,type,scalar)
 %     - Both .dep & .ind data fields are always passed in double precision.
 %
 %    Examples:
-%     Get dependent data medians:
-%      medians=getvaluefun(data,@median);
+%     % Get dependent data medians:
+%     medians=getvaluefun(data,@median);
 %
-%     If you have multi-cmp records the following may be necessary:
-%      medians=getvaluefun(data,@(x)median(x(:)));
-%     or (if you want the median for each component):
-%      medians=getvaluefun(data,@median,[],false);
+%     % If you have multi-cmp records the following may be necessary:
+%     medians=getvaluefun(data,@(x)median(x(:)));
+%     % or (if you want the median for each component):
+%     medians=getvaluefun(data,@median,[],false);
 %
-%     Get a robust RMS:
-%      rms=getvaluefun(data,@(x)sqrt(median(x.^2-median(x).^2)));
+%     % Get RMS:
+%     rms=getvaluefun(data,@(x)sqrt(mean(x.^2-mean(x).^2)));
 %
-%     Get maximum amplitude of multi-cmp records assuming each component is
-%     orthogonal (was an old function called getnorm):
-%      normalizers=getvaluefun(data,@(x)max(sqrt(sum(x.^2,2))));
+%     % Get robust RMS:
+%     rms=getvaluefun(data,@(x)sqrt(median(x.^2-median(x).^2)));
+%
+%     % Get maximum amplitude of multi-cmp records assuming each component
+%     % is orthogonal (was an old function called getnorm):
+%     normalizers=getvaluefun(data,@(x)max(sqrt(sum(x.^2,2))));
 %
 %    See also: SOLOFUN, SLIDINGFUN, MULTIFUN
 
@@ -49,9 +53,10 @@ function [value]=getvaluefun(data,func,type,scalar)
 %        May  10, 2010 - better SCALAROUTPUT implementation
 %        Jan.  6, 2011 - nargchk fix, seizmofun/solofun rename,
 %                        recordfun/multifun rename
+%        Jan. 12, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 18:25 GMT
+%     Last Updated Jan. 12, 2012 at 18:25 GMT
 
 % todo:
 

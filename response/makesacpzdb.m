@@ -4,8 +4,9 @@ function [db]=makesacpzdb(varargin)
 %    Usage:    db=makesacpzdb()
 %              db=makesacpzdb(dir1,...,dirN)
 %
-%    Description: DB=MAKESACPZDB() creates a structure from all valid SAC
-%     Polezero files in the current directory.  See the Notes sections of
+%    Description:
+%     DB=MAKESACPZDB() creates a structure from all valid SAC Polezero
+%     files in the current directory.  See the Notes sections of
 %     PARSE_SACPZ_FILENAME and READSACPZ for file format info.
 %
 %     SACPZ data structure layout:
@@ -27,7 +28,7 @@ function [db]=makesacpzdb(varargin)
 %    Notes:
 %
 %    Examples:
-%     To add-in some SAC PoleZero files to the main SACPZ database:
+%     % To add-in some SAC PoleZero files to the main SACPZ database:
 %      % load and flatten the main db
 %      sacpzdb_tmp=load('sacpzdb');
 %      sacpzdb_tmp=struct2cell(sacpzdb_tmp);
@@ -58,9 +59,10 @@ function [db]=makesacpzdb(varargin)
 %        Nov.  2, 2009 - seizmoverbose support, fixed example
 %        May  22, 2010 - progress bar only if verbose
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  3, 2011 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  3, 2012 at 15:05 GMT
 
 % todo:
 

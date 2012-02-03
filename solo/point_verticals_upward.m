@@ -11,12 +11,11 @@ function [data,down]=point_verticals_upward(data)
 %     All records with CMPINC not set to 180/-180 are unaltered.
 %
 %     [DATA,DOWN]=POINT_VERTICALS_UPWARD(DATA) also returns the logical
-%     matrix DOWN which is equal sized to DATA and TRUE elements in DOWN
-%     indicate the records adjust from pointing down.
+%     matrix DOWN which is equal sized to DATA with TRUE elements
+%     indicating the records adjusted.
 %
 %    Notes:
-%     - Only checks that the CMPINC field is 180/-180 to assess downwards
-%       pointing records.
+%     - Only checks that the CMPINC field is 180/-180 to assess orientation
 %
 %    Header changes: DEP*, CMPINC
 %
@@ -28,9 +27,10 @@ function [data,down]=point_verticals_upward(data)
 
 %     Version History:
 %        Jan. 12, 2011 - initial version
+%        Jan. 28, 2012 - seizmocheck state bugfix, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 12, 2011 at 13:35 GMT
+%     Last Updated Jan. 28, 2012 at 13:35 GMT
 
 % check nargin
 error(nargchk(1,1,nargin));
@@ -57,6 +57,9 @@ try
         % set orientation to up
         data(down)=changeheader(data(down),'cmpinc',0);
     end
+    
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

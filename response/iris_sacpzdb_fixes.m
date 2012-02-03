@@ -265,4 +265,11 @@
 %                    -0.1053 +                 7.864i
 %                    -10.533 -                 7.864i
 
-% Last Updated: May 28, 2010 by Garrett Euler
+%     Version History:
+%        Dec.  2, 2009 - initial version
+%        Feb.  4, 2010 - fixed some typos
+%        May  28, 2010 - AZ fix good, BK fixes pending, note fix_bad_sacpz
+%        Feb.  3, 2012 - doc update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Feb.  3, 2012 at 02:25 GMT

@@ -76,9 +76,10 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %        Aug. 21, 2010 - nargchk fix, better checkheader usage, update
 %                        undef checking
 %        Nov.  1, 2011 - doc update
+%        Jan. 30, 2012 - minor code comment
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2011 at 12:40 GMT
+%     Last Updated Jan. 30, 2012 at 12:40 GMT
 
 % todo:
 
@@ -200,8 +201,8 @@ try
     % change header fields
     data=changeheader(data,'iztype',iztype,...
         'nzyear',times(:,1),'nzjday',times(:,2),'nzhour',times(:,3),...
-        'nzmin',times(:,4),'nzsec',fix(times(:,5)+1e-9),...
-        'nzmsec',fix(1000*mod(times(:,5)+1e-9,1)),...
+        'nzmin',times(:,4),'nzsec',fix(times(:,5)+1e-9),... % handling
+        'nzmsec',fix(1000*mod(times(:,5)+1e-9,1)),...       % precision
         'a',a+relshift,'b',b+relshift,'e',e+relshift,'f',f+relshift,...
         'o',o+relshift,'t',t+relshift(:,ones(10,1)),user{:});
     

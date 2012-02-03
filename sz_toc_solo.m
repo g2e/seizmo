@@ -1,6 +1,7 @@
 function []=sz_toc_solo()
 % Single-Record Operations
 %<a href="matlab:help add">add</a>                    - Add a constant to SEIZMO records
+%<a href="matlab:help clip">clip</a>                   - Clip SEIZMO data above a threshhold
 %<a href="matlab:help divide">divide</a>                 - Divide SEIZMO records by a constant
 %<a href="matlab:help envelope">envelope</a>               - Return envelopes of SEIZMO records
 %<a href="matlab:help getnorm">getnorm</a>                - Return normalizers for SEIZMO records

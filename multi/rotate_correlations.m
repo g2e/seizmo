@@ -41,15 +41,17 @@ function [data]=rotate_correlations(data)
 
 % todo:
 % - example (show how to use this)
-% - cmpinc,cmpaz support (when added)
-%   - allow for non-NE input to be rotated to RT
-%   - do we rotate to some other system? why?
+% - cmpinc,cmpaz support
+%   - allow non-NE input to be rotated to RT
+%   - update cmpinc/cmpaz & user2/user3
+% - testing is easy!
+%   - check vs xc of r/t (rotated beforehand)
 
 % check nargin
 error(nargchk(1,1,nargin));
 
 % check data
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -103,8 +105,7 @@ try
             'Horizontal correlograms must be EE/EN/NE/NN only!');
     end
     
-    % get station indices
-    % - well really we just get stream names and do a unique sort
+    % get station indices from stream names
     [ksname,kt0,kt1,kt2,kt3]=getheader(data,...
         'kname','kt0','kt1','kt2','kt3');
     kmname=[kt0 kt1 kt2 kt3];

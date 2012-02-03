@@ -6,11 +6,12 @@ function []=binoperr(varargin)
 %              binoperr('option1',state,...,
 %                       'optionN',state)
 %
-%    Description: Allows for changing the behavior of how binary functions 
-%     (addrecords, subtractrecords, multiplyrecords, dividerecords) handle
-%     records with some unequal aspects.  In particular, this function will
-%     modify the behavior of all of these functions until the session is
-%     finished or a subsequent call to BINOPERR undoes it.
+%    Description:
+%     Allows for changing the behavior of how binary functions (addrecords,
+%     subtractrecords, multiplyrecords, dividerecords) handle records with
+%     some unequal aspects.  In particular, this function will modify the
+%     behavior of all of these functions until the session is finished or a
+%     subsequent call to BINOPERR undoes it.
 %
 %     BINOPERR() displays the current binary operator error settings.
 %
@@ -78,14 +79,14 @@ function []=binoperr(varargin)
 %     - multiple options may be strung together in a single command
 %
 %    Examples:
-%     Turn off warnings for different timing:
-%      binoperr('begin','ignore','ref','ignore')
+%     % Turn off warnings for different timing:
+%     binoperr('begin','ignore','ref','ignore')
 %
-%     Show binary error settings:
-%      binoperr
+%     % Show binary error settings:
+%     binoperr
 %
 %    See also: ADDRECORDS, DIVIDERECORDS, MULTIPLYRECORDS, SUBTRACTRECORDS
-%              CHECKOPERR
+%              MULTIFUN, CHECKOPERR
 
 %     Version History:
 %        June 20, 2008 - initial version
@@ -100,9 +101,10 @@ function []=binoperr(varargin)
 %                        with mixed xy and timeseries data
 %        Oct. 21, 2009 - dropped rmfield usage (slow)
 %        Aug. 16, 2010 - fprintf fix
+%        Jan. 28, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 16, 2010 at 07:25 GMT
+%     Last Updated Jan. 28, 2012 at 07:25 GMT
 
 % todo:
 

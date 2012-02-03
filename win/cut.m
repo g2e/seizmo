@@ -163,9 +163,10 @@ function [data,failed]=cut(data,varargin)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Nov.  2, 2011 - doc update, allow absolute time input
 %        Dec.  1, 2011 - IZTYPE option added
+%        Feb.  1, 2012 - better getheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  1, 2011 at 15:05 GMT
+%     Last Updated Feb.  1, 2012 at 15:05 GMT
 
 % todo:
 
@@ -173,7 +174,7 @@ function [data,failed]=cut(data,varargin)
 error(nargchk(1,inf,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -193,9 +194,8 @@ try
     option=cutparameters(nrecs,varargin{:});
 
     % header info
-    [b,delta,e,npts,ncmp]=getheader(data,'b','delta','e','npts','ncmp');
-    iftype=getenumid(data,'iftype');
-    leven=getlgc(data,'leven');
+    [b,delta,e,npts,ncmp,iftype,leven]=getheader(data,...
+        'b','delta','e','npts','ncmp','iftype id','leven lgc');
     
     % find spectral/xyz
     amph=strcmpi(iftype,'iamph');

@@ -396,9 +396,10 @@ function [data]=checkheader(data,varargin)
 %        Nov.  2, 2011 - added TIME_IFTYPE & SPECTRAL_IFTYPE, bugfix for
 %                        NONXYZ_IFTYPE
 %        Dec.  1, 2011 - slight adjustment to MULTIPLE_REFTIME msgs
+%        Jan. 30, 2012 - better getheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  1, 2011 at 22:10 GMT
+%     Last Updated Jan. 30, 2012 at 22:10 GMT
 
 % todo:
 
@@ -431,11 +432,11 @@ try
     option=checkparameters(false,varargin{:});
 
     % get header fields
-    [iftype,iztype,idep]=getenumid(data,'iftype','iztype','idep');
-    [leven,lcalda]=getlgc(data,'leven','lcalda');
-    [nvhdr,delta,npts,ncmp,nz,b,e,sb,sdelta,nspts,st,ev,delaz,dep]=...
-        getheader(data,'nvhdr','delta','npts','ncmp','nz','b','e','sb',...
-        'sdelta','nspts','st','ev','delaz','dep');
+    [nvhdr,delta,npts,ncmp,nz,b,e,sb,sdelta,nspts,st,ev,delaz,dep,...
+        iftype,iztype,idep,leven,lcalda]=getheader(data,...
+        'nvhdr','delta','npts','ncmp','nz','b','e','sb',...
+        'sdelta','nspts','st','ev','delaz','dep','iftype id',...
+        'iztype id','idep id','leven lgc','lcalda lgc');
 
     % logicals
     xyz=strcmp(iftype,'ixyz');

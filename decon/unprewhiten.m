@@ -3,14 +3,15 @@ function [data]=unprewhiten(data)
 %
 %    Usage:    data=unprewhiten(data)
 %
-%    Description: UNPREWHITEN(DATA) restores the predictable portion of
-%     records in DATA by inversely applying the prediction error filter
-%     stored in the .misc.pef field in DATA.  This effectively undoes
-%     PREWHITEN.  Records are required to have the .misc.prewhitened' field
-%     set to TRUE.  See function PREWHITEN and the suggested reading in the
-%     Notes section for more detailed information.  The returned dataset
-%     DATA will have each record's .misc.pef field set to an empty array
-%     and the .misc.prewhitened field set to FALSE.
+%    Description:
+%     UNPREWHITEN(DATA) restores the predictable portion of records in DATA
+%     by inversely applying the prediction error filter stored in the
+%     .misc.pef field in DATA.  This effectively undoes PREWHITEN.  Records
+%     are required to have the .misc.prewhitened' field set to TRUE.  See
+%     function PREWHITEN and the suggested reading in the Notes section for
+%     more detailed information.  The returned dataset DATA will have each
+%     record's .misc.pef field set to an empty array and the
+%     .misc.prewhitened field set to FALSE.
 %
 %    Notes:
 %     - Suggested Reading:
@@ -21,10 +22,11 @@ function [data]=unprewhiten(data)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
-%     Try prewhitening and unprewhitening first.  Then try comparing some
-%     operation without prewhiten/unprewhiten with one including it to get
-%     a feel for how important/detrimental it is.  Plotting the difference:
-%      plot1(subtractrecords(data,unprewhiten(prewhiten(data))))
+%     % Try prewhitening and unprewhitening first.  Then try comparing some
+%     % operation without prewhiten/unprewhiten with one including it to
+%     % get a feel for how important/detrimental it is.  Plotting the
+%     % difference:
+%     plot1(subtractrecords(data,unprewhiten(prewhiten(data))))
 %
 %    See also: PREWHITEN, LEVINSON, FILTER, WHITEN
 
@@ -38,9 +40,10 @@ function [data]=unprewhiten(data)
 %                        force dim stuff
 %        Feb.  2, 2010 - update for state functions, versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
+%        Jan. 28, 2012 - doc update, better checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
 
@@ -48,7 +51,7 @@ function [data]=unprewhiten(data)
 error(nargchk(1,1,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -56,7 +59,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt prewhitening
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -65,21 +70,7 @@ try
     nrecs=numel(data);
 
     % get some header fields
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
     ncmp=getheader(data,'ncmp');
-
-    % require evenly-spaced time series, general x vs y
-    if(any(~strcmpi(leven,'true')))
-        error('seizmo:unprewhiten:illegalOperation',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nIllegal operation on unevenly sampled record(s)!']);
-    elseif(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:unprewhiten:illegalOperation',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) must be Timeseries or XY!']);
-    end
 
     % pull .misc field out
     misc=[data.misc];

@@ -8,11 +8,12 @@ function [data,removed]=removeduplicates(data,varargin)
 %              data=removeduplicates(data,'requiredrealfields',fields)
 %              [data,removed]=removeduplicates(...)
 %
-%    Description: REMOVEDUPLICATES(DATA) returns the SEIZMO record dataset
-%     DATA without any duplicate records or partial pieces based on the
-%     start (B) and end (E) fields.  This is only valid for Time Series and
-%     X vs Y records.  Uses the reference time fields (NZ*) to allow
-%     finding duplicates that do not share the same reference position.
+%    Description:
+%     REMOVEDUPLICATES(DATA) returns the SEIZMO record dataset DATA without
+%     any duplicate records or partial pieces based on the start (B) and
+%     end (E) fields.  This is only valid for Time Series and X vs Y
+%     records.  Uses the reference time fields (NZ*) to allow finding
+%     duplicates that do not share the same reference position.
 %
 %     REMOVEDUPLICATES(...,'TIMING','TAI') uses the TAI timing standard,
 %     which does not have any leap seconds.  The default is 'UTC', which
@@ -49,9 +50,9 @@ function [data,removed]=removeduplicates(data,varargin)
 %    Header changes: see CHECKHEADER
 %
 %    Examples:
-%     Datasets sometimes include duplicates and partial pieces.  Usually
-%     this is associated with data pulled from a DHI server.
-%      data=removeduplicates(data)
+%     % Datasets sometimes include duplicates and partial pieces.  Usually
+%     % this is associated with data pulled from a DHI server.
+%     data=removeduplicates(data)
 %
 %    See also: MERGE, REMOVEDEADRECORDS
 
@@ -64,9 +65,11 @@ function [data,removed]=removeduplicates(data,varargin)
 %                        caching, proper SEIZMO handling, seizmoverbose
 %                        support
 %        Feb. 11, 2011 - dropped versioninfo caching
+%        Jan. 28, 2012 - drop SEIZMO global, doc update, better checkheader
+%                        usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
 
@@ -76,11 +79,8 @@ if(mod(nargin-1,2))
         'Bad number of arguments!');
 end
 
-% retrieve SEIZMO settings
-global SEIZMO
-
 % check struct/header
-data=checkheader(data);
+data=checkheader(data,'NONTIME_IFTYPE','ERROR');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -91,9 +91,7 @@ try
     verbose=seizmoverbose;
     
     % detail message
-    if(verbose)
-        disp('Removing Duplicate Record(s)');
-    end
+    if(verbose); disp('Removing Duplicate Record(s)'); end
     
     % number of records
     nrecs=numel(data);
@@ -103,16 +101,6 @@ try
     option.USEABSOLUTETIMING=true;
     option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
     option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};
-
-    % get options from SEIZMO global
-    fields=fieldnames(option);
-    for i=fields
-        try
-            option.(i)=SEIZMO.REMOVEDUPLICATES.(i);
-        catch
-            % do nothing
-        end
-    end
 
     % parse options
     for i=1:2:nargin-1
@@ -176,16 +164,7 @@ try
     if(prod(szchar)~=0)
         [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
     end
-    iftype=getenumid(data,'iftype');
     leven=~strcmpi(getlgc(data,'leven'),'false');
-
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:removeduplicates:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
 
     % get start and end of records in absolute time
     if(option.USEABSOLUTETIMING)

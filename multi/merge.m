@@ -22,34 +22,37 @@ function [data]=merge(data,varargin)
 %              data=merge(...,'verbose',logical,...)
 %              data=merge(...,'debug',logical,...)
 %
-%    Description: DATA=MERGE(DATA) will take all records in DATA and merge
-%     any pairs that are within +/-0.02 seconds of being continuous.  The
-%     output dataset will contain the merged records with all duplicate or
-%     partial records removed.  A 'pair' must have a number of fields that
-%     are identical to one another (see options REQUIREDCHARFIELDS and
+%    Description:
+%     DATA=MERGE(DATA) will take all records in DATA and merge any pairs
+%     that are within +/-0.02 seconds of being continuous.  The output
+%     dataset will contain the merged records with all duplicate or partial
+%     records removed.  A 'pair' must have a number of fields that are
+%     identical to one another (see options REQUIREDCHARFIELDS and
 %     REQUIREDREALFIELDS for a list of those).  By default the records are
 %     merged end-to-end so no data is added or deleted -- just shifted to
 %     be continuous in time.  Basically this is for eliminating small
-%     'time tears'.
+%     gaps & overlaps (aka "time tears") associated with digitization.
 %
 %     DATA=MERGE(...,'TOLERANCEUNITS',UNITS,...) allows changing the
 %     units of the TOLERANCE option.  By default UNITS is 'SECONDS'.  This
-%     may be changed to 'INTERVALS' if that is more useful.
+%     may be changed to 'INTERVALS' (an interval being the time between 2
+%     samples) if that is more useful.
 %
 %     DATA=MERGE(...,'TOLERANCE',TOLERANCE,...) allows changing the
 %     magnitude of the time tears that can be merged.  Setting TOLERANCE to
 %     0.1 will therefore allow merging records with a gap or overlap within
 %     +/-0.1 seconds.  TOLERANCE can also be a two-element vector, so that
 %     gaps or overlaps around a certain magnitude can be targeted.  This is
-%     particularly suited for removing leap seconds that have been stupidly
-%     inserted into continuous data.
+%     particularly suited for removing leap seconds that have been inserted
+%     into what should be continuous data.
 %
 %     DATA=MERGE(...,'ADJUST',METHOD,...) allows changing which record
 %     out of a mergible pair is shifted/interpolated to time-align with the
 %     other.  There are six choices: 'FIRST' 'LAST' 'LONGER' 'SHORTER'
 %     'ONE' & 'TWO'.  The default is 'SHORTER' (which adjusts the shorter
 %     record to time-align with the longer).  Method 'ONE' adjusts the
-%     record with a lower index, while 'TWO' adjusts the higher.
+%     record with a lower index, while 'TWO' adjusts the higher.  The best
+%     method probably varies with the situation.
 %
 %     DATA=MERGE(...,'OVERLAP',METHOD,...) allows changing how
 %     overlaps are merged.  There are 4 choices: 'SEQUENTIAL', 'TRUNCATE',
@@ -86,20 +89,22 @@ function [data]=merge(data,varargin)
 %
 %     DATA=MERGE(...,'SHIFTMAX',MAXVALUE,...) allows changing the cap
 %     on when the record-to-be-adjusted (see ADJUST option) is interpolated
-%     or shifted to time-align with the other record.  This option only
-%     applies to the overlaps and gaps that ARE NOT to be made sequential.
-%     This means that if you are doing a truncation, gap interpolation or
-%     gap filling the option is in effect.  A record in these cases can be
-%     shifted at most one half the sample interval.  By default the
-%     MAXVALUE is 0.01 intervals -- meaning the adjusted record is only
-%     shifted if the time change is very minor, otherwise the data will be
-%     interpolated at the aligned sample times.  A MAXVALUE of 0.5
-%     intervals will always shift the data to the new times without
-%     interpolating new values.  Really the choice depends on how sensitive
-%     you think your data is to time shifts and/or how much you trust the
-%     timing of the adjusted record.  If your trying to get relative
-%     arrival times of P recordings then you probably are worried about
-%     minor shifts in timing (which begs the question of why you are
+%     or shifted to align (interval-wise) with the other record.  This
+%     option only applies to the overlaps and gaps that ARE NOT to be made
+%     sequential.  This means that if you are doing a truncation, gap
+%     interpolation or gap filling this IS in effect.  A record in these
+%     cases can be shifted at most one half the sample interval.  By
+%     default MAXVALUE is 0.01 intervals -- meaning the adjusted record is
+%     only shifted in time (without changing the dependent data) if the
+%     time change necessary to align is less than a hundredth of the sample
+%     interval.  Otherwise the data will be interpolated at the aligned
+%     sample times (which is obviously slow due to the computation).  A
+%     MAXVALUE of 0.5 intervals will always shift the data to the new times
+%     without interpolating new values.  Really the choice depends on how
+%     sensitive you think your data is to time shifts and/or how much you
+%     trust the timing of the adjusted record.  If your trying to get
+%     relative arrival times of P recordings then you probably are worried
+%     about minor shifts in timing (which begs the question of why you are
 %     dealing with such crappy data in the first place).  The default is
 %     basically saying the data timing is pretty accurate and any new data
 %     from new time points should be interpolated unless the time shift is
@@ -120,36 +125,35 @@ function [data]=merge(data,varargin)
 %     when the GAP option is set to 'FILL'.  The default is zero.  Can be
 %     any real number.
 %
-%     DATA=MERGE(...,'MERGESEQUENTIAL',LOGICAL,...) allows turning the
-%     merging of sequential records (time tear of zero) on or off.  Will
-%     not turn off making gaps or overlaps sequential (use GAP or OVERLAP
-%     options above or see MERGEGAPS and MERGEOVERLAPS below).
+%     DATA=MERGE(...,'ONLY',TYPE,...) allows specifying which type of time
+%     tear is merged: 'sequential' 'gaps' or 'overlaps'.  The default is []
+%     (empty) and allows all types.  Do not use the ONLY option with the
+%     SKIP option.  Note that 'sequential' means records that are already
+%     sequential, not gaps/overlaps to be made sequential!
 %
-%     DATA=MERGE(...,'MERGEOVERLAPS',LOGICAL,...) allows turning
-%     on/off the merging of overlapping data that is within the time tear
-%     tolerance.  Useful for just working on gaps.
-%
-%     DATA=MERGE(...,'MERGEGAPS',LOGICAL,...) allows turning on/off
-%     the merging of data with gaps that are within the time tear
-%     tolerance.  Useful for just working on overlaps.
+%     DATA=MERGE(...,'SKIP',TYPE,...) allows specifying which type of time
+%     tear is skipped: 'sequential' 'gaps' or 'overlaps'.  The default is
+%     [] (empty) and skips none.  Do not use the SKIP option with the ONLY
+%     option.  Note that 'sequential' means records that are already
+%     sequential, not gaps/overlaps to be made sequential!
 %
 %     DATA=MERGE(...,'USEABSOLUTETIMING',LOGICAL,...) allows turning
 %     on/off the usage of the reference time fields to figure out the
 %     timing of data.  This can be safely turned off if all the data share
-%     the same reference time.  Leave it on if your reference times vary
-%     with each record.
+%     the same reference time (can be done for you using SYNCHRONIZE).
+%     Leave it on if your reference times vary with each record.
 %
 %     DATA=MERGE(...,'TIMING',STANDARD,...) allows changing the timing
 %     standard assumed for the reference time.  The choices are: 'UTC' and
 %     'TAI'.  The default is 'UTC', which has leap second awareness.  This
 %     is useful for dealing with data that have had UTC leap seconds
-%     properly inserted (basically MERGE won't even see the data overlap
+%     properly inserted (basically MERGE won't even see the data "overlap"
 %     because UTC times are converted to a leapless standard).  Proper
 %     handling of leap seconds requires that the records' have their
 %     reference time at the actual UTC time.  If the recording equipment
 %     doesn't actually handle leap seconds then some time adjustment is/was
 %     needed for the data.  See LEAPSECONDS for more info.  The 'TAI'
-%     option is useful for data without any leap second concerns.
+%     option is useful for data without leap second concerns.
 %
 %     DATA=MERGE(...,'REQUIREDCHARFIELDS',FIELDS,...) allows changing
 %     the character fields required to be equal between records before
@@ -191,13 +195,12 @@ function [data]=merge(data,varargin)
 %       merging 3+ into 1+ records.  Sorting by start time would probably
 %       be enough.
 %     - Run FIXDELTA first to take care of small differences in sample
-%       rates caused by floating point inaccuracies!
+%       rates caused by floating point inaccuracies & digitization!
 %     - If you find an error you don't understand or a bug let me know!
-%       This function hasn't been vetted as much as some of the others.
-%     - How to speed things up?
+%     - Want to speed MERGE up?
 %       - Are your reference times all the same? If yes, set
 %         USEABSOLUTETIMING to FALSE.
-%       - Do you care about leap seconds? If no, set TIMING to TAI.
+%       - Do you care about leap seconds? If no, set TIMING to 'TAI'.
 %       - Do you care about timing accuracy? If not too much, then consider
 %         setting SHIFTMAX to 0.5 (with SHIFTUNITS set to INTERVALS).  This
 %         allows nudging the timing of records by half an interval so that
@@ -207,20 +210,21 @@ function [data]=merge(data,varargin)
 %                    (see CHECKHEADER for more)
 %
 %    Examples:
-%     Just friggin merge already!
-%      data=merge(data)
+%     % Merge roughly 1 second gaps/overlaps:
+%     data=merge(data,'tol',[0.99 1.01]);
 %
-%     Merge roughly 1 second gaps/overlaps:
-%      data=merge(data,'tolerance',[0.99 1.01])
+%     % Merge just gaps:
+%     data=merge(data,'only','gaps');
 %
-%     Merge just gaps:
-%      data=merge(data,'mergesequential',false,'mergeoverlaps',false)
+%     % Merge gaps by inserting NaNs:
+%     data=merge(data,'gap','fill','filler',nan);
 %
-%     Merge gaps by inserting NaNs:
-%      data=merge(data,'gap','fill','filler',nan)
+%     % Merge details (lots):
+%     merge(data,'debug',true);
 %
-%     Merge details (lots):
-%      merge(data,'debug',true);
+%     % Compare defaults settings to fast (& cruder) options:
+%     tic; merge(data); toc;
+%     tic; merge(data,'shift',.5,'abs',false,'timing','tai'); toc;
 %
 %    See also: REMOVEDUPLICATES, CUT
 
@@ -245,22 +249,23 @@ function [data]=merge(data,varargin)
 %        Feb. 24, 2010 - fixed switch statements
 %        Apr.  1, 2010 - progress bar shows nrecs
 %        Feb. 11, 2011 - mass seizmocheck fix
+%        Jan. 28, 2012 - drop SEIZMO global, better checkheader usage, made
+%                        disp+sprintf use fprintf, parse rewrite allows
+%                        more flexibility in option strings, only/skip
+%                        options replace merge* options
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
-%   - uneven support - just toss together and sort after?
-%   - variable delta support (convert to uneven then do above?)
+% - uneven support - just toss together and sort after?
+% - variable delta support (convert to uneven then do above?)
 
 % check nargin
 if(mod(nargin-1,2))
     error('seizmo:merge:badNumInputs',...
         'Bad number of arguments!');
 end
-
-% get global
-global SEIZMO
 
 % check data structure
 error(seizmocheck(data,'dep'));
@@ -271,7 +276,7 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check header
-    data=checkheader(data);
+    data=checkheader(data,'NONTIME_IFTYPE','ERROR');
     
     % turn off header checking
     oldcheckheaderstate=checkheader_state(false);
@@ -285,121 +290,8 @@ end
 
 % attempt merge
 try
-    % valid values for string options
-    valid.TOLERANCEUNITS={'seconds' 'intervals'};
-    valid.OVERLAP={'sequential' 'truncate' 'add' 'average'};
-    valid.GAP={'sequential' 'interpolate' 'fill'};
-    valid.INTERPOLATE={'spline' 'pchip' 'linear' 'nearest'};
-    valid.ADJUST={'longer' 'shorter' 'first' 'last' 'one' 'two'};
-    valid.SHIFTUNITS={'seconds' 'intervals'};
-    valid.TIMING={'utc' 'tai'};
-
-    % defaults
-    option.TOLERANCE=0.02; % seconds, any positive number
-    option.TOLERANCEUNITS='seconds'; % seconds/intervals
-    option.OVERLAP='sequential'; % sequential/truncate/add/average
-    option.GAP='sequential'; % sequential/interpolate/fill
-    option.INTERPOLATE='spline'; % spline/pchip/linear/nearest
-    option.ADJUST='shorter'; % longer/shorter/first/last
-    option.SHIFTUNITS='intervals'; % seconds/intervals
-    option.SHIFTMAX=0.01; % interval: 0-0.5 , seconds: 0+
-    option.FILLER=0; % any number
-    option.TIMING='utc'; % utc/tai
-    option.USEABSOLUTETIMING=true; % true/false
-    option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
-    option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};
-    option.ALLOCATE=10; % size of temp space
-    option.MERGESEQUENTIAL=true; % on/off switch for merging sequential
-    option.MERGEGAPS=true; % on/off switch for merging gaps
-    option.MERGEOVERLAPS=true; % on/off switch for merging overlaps
-    option.VERBOSE=seizmoverbose; % default to seizmoverbose state
-    option.DEBUG=seizmodebug; % default to seizmodebug state
-
-    % get options from SEIZMO global
-    ME=upper(mfilename);
-    try
-        fields=fieldnames(SEIZMO.(ME));
-        for i=1:numel(fields)
-            if(~isempty(SEIZMO.(ME).(fields{i})))
-                option.(fields{i})=SEIZMO.(ME).(fields{i});
-            end
-        end
-    catch
-    end
-
-    % get options from command line
-    for i=1:2:nargin-1
-        if(~ischar(varargin{i}))
-            error('seizmo:merge:badInput',...
-                'Options must be specified as a string!');
-        end
-        if(~isempty(varargin{i+1}))
-            option.(upper(varargin{i}))=varargin{i+1};
-        end
-    end
-
-    % check options
-    fields=fieldnames(option);
-    for i=1:numel(fields)
-        % get value of field and do a basic check
-        value=option.(fields{i});
-
-        % specific checks
-        switch lower(fields{i})
-            case 'tolerance'
-                if(~isnumeric(value))
-                    error('seizmo:merge:badInput',...
-                        'TOLERANCE must be a 1 or 2 element real array!');
-                end
-            case {'shiftmax' 'filler'}
-                if(~isnumeric(value) || ~isscalar(value))
-                    error('seizmo:merge:badInput',...
-                        '%s must be a scalar real number!',fields{i});
-                end
-            case {'overlap' 'gap' 'interpolate' 'toleranceunits' ...
-                    'adjust' 'shiftunits' 'timing'}
-                if(~ischar(value) || size(value,1)~=1 ...
-                        || ~any(strcmpi(value,valid.(fields{i}))))
-                    error('seizmo:merge:badInput',...
-                        ['%s option must be one of the following:\n'...
-                        sprintf('%s ',valid.(fields{i}){:})],fields{i});
-                end
-            case {'requiredcharfields' 'requiredrealfields'}
-                % fix char arrays
-                if(ischar(value))
-                    value=cellstr(value);
-                    option.(fields{i})=value;
-                end
-                if(~iscellstr(value))
-                    error('seizmo:merge:badInput',...
-                        '%s option must be a cellstr of header fields!',...
-                        fields{i});
-                end
-            case 'allocate'
-                if(~isnumeric(value) || fix(value)~=value)
-                    error('seizmo:merge:badInput',...
-                        'ALLOCATE must be a scalar integer!');
-                end
-            case {'useabsolutetiming' 'mergesequential' 'mergegaps'...
-                    'mergeoverlaps' 'verbose' 'debug'}
-                if(~islogical(value) || ~isscalar(value))
-                    error('seizmo:merge:badInput',...
-                        '%s option must be a logical!',fields{i});
-                end
-            otherwise
-                error('seizmo:merge:badInput',...
-                    'Unknown option: %s !',fields{i});
-        end
-    end
-    
-    % turn off verbose if debugging
-    if(option.DEBUG); option.VERBOSE=false; end
-
-    % handle tolerance
-    if(numel(option.TOLERANCE)==1)
-        option.TOLERANCE=[-1 option.TOLERANCE];
-    end
-    option.TOLERANCE=sort(option.TOLERANCE);
+    % parse p/v pairs
+    option=parse_merge_parameters(varargin{:});
 
     % get full filenames (for debugging output)
     nrecs=numel(data);
@@ -427,16 +319,7 @@ try
     if(prod(szchar)~=0)
         [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
     end
-    iftype=getenumid(data,'iftype');
     leven=~strcmp(getlgc(data,'leven'),'false');
-
-    % require timeseries and general x vs y
-    if(any(~strcmp(iftype,'itime') & ~strcmp(iftype,'ixy')))
-        error('seizmo:merge:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
 
     % get start and end of records in absolute time
     if(option.USEABSOLUTETIMING)
@@ -482,7 +365,8 @@ try
         disp(f);
         disp(' ');
         disp('Lookup Table:')
-        disp(sprintf('%d - %d\n',[1:nrecs; h.']));
+        fprintf('%d - %d\n',[1:nrecs; h.']);
+        fprintf('\n');
     end
     
     % detail message
@@ -504,9 +388,9 @@ try
         % detail message
         if(option.DEBUG)
             disp(' '); disp(' ');
-            disp(sprintf('Processing Group: %d',i));
+            fprintf('Processing Group: %d\n',i);
             disp(['Members: ' sprintf('%d ',gidx)]);
-            disp(sprintf('Number in Group: %d',ng));
+            fprintf('Number in Group: %d\n',ng);
         end
 
         % find any exact duplicates
@@ -516,8 +400,9 @@ try
         if(option.DEBUG)
             disp(' ');
             disp('Deleting Duplicate(s):');
-            disp(sprintf(' %d',gidx(bad)));
-            disp(sprintf('Number Still in Group: %d',ng-sum(bad)));
+            fprintf(' %d',gidx(bad));
+            fprintf('\n');
+            fprintf('Number Still in Group: %d\n',ng-sum(bad));
         end
 
         % get rid of any exact duplicates
@@ -595,9 +480,9 @@ try
         % detail message
         if(option.DEBUG)
             disp(' ');
-            disp(sprintf('Finished Merging Group: %d',i));
+            fprintf('Finished Merging Group: %d\n',i);
             disp(['Members: ' sprintf('%d ',newgidx)]);
-            disp(sprintf('Number in Group: %d',newng));
+            fprintf('Number in Group: %d\n',newng);
         end
 
         % get longest records with unique time coverage
@@ -609,13 +494,13 @@ try
         % detail message
         if(option.DEBUG)
             disp('Deleting Duplicate(s) and/or Partial Piece(s):');
-            disp(sprintf(' %d',newgidx(~good)));
-            disp('Changing Indices Of Good Record(s):');
-            disp(sprintf('%d ==> %d\n',[newgidx(good).'; ...
-                newgidx(goodidx).']));
-            disp('-------------------------------');
-            disp(sprintf('%d kept / %d made / %d original',...
-                ngood,newng-ng,origng));
+            fprintf(' %d',newgidx(~good));
+            disp('\nChanging Indices Of Good Record(s):');
+            fprintf('%d ==> %d\n',[newgidx(good).'; ...
+                newgidx(goodidx).']);
+            disp('\n-------------------------------');
+            fprintf('%d kept / %d made / %d original\n',...
+                ngood,newng-ng,origng);
         end
 
         % get rid of any duplicates/partial pieces
@@ -686,6 +571,18 @@ end
 end
 
 
+function []=muneven()
+%MUNEVEN    Merge unevenly spaced records
+
+% force all to be uneven (makeuneven)
+% merge .ind & dep
+% sort by .ind
+% if diff .ind==0 whine
+% deal with history, 
+
+end
+
+
 function [mdata,mab,mae,mnpts,mdt,mname,mhistory]=gomerge(...
     mdata,mab,mae,mnpts,mdt,mname,mhistory,mabsidx,...
     data,ab,ae,npts,dt,name,nrecs,history,absidx,delta,option)
@@ -711,9 +608,10 @@ for i=1:nrecs
     tdiff=tdiff(lead);
     
     % skip based on switches
-    if((~option.MERGESEQUENTIAL && tdiff==0) ...
-            || (~option.MERGEGAPS && tdiff>0) ...
-            || (~option.MERGEOVERLAPS && tdiff<0))
+    % SGO = 1x3 logical of SEQ, GAP, OV
+    if((~option.SGO(1) && tdiff==0) ...
+            || (~option.SGO(2) && tdiff>0) ...
+            || (~option.SGO(3) && tdiff<0))
         continue;
     end
     
@@ -741,7 +639,7 @@ for i=1:nrecs
     
     % detail message
     if(option.DEBUG)
-        disp(sprintf(...
+        fprintf(...
             ['\nMerging Record:\n'...
              ' %d - %s\n'...
              ' begin: Day: %d Second: %f\n'...
@@ -758,10 +656,10 @@ for i=1:nrecs
              sprintf('%d ',absidx(i)) '\n'...
              'Sample Interval: %f seconds\n'...
              'Time Tear:  %f seconds (%f samples)\n'...
-             'Merge Type: %s'],...
+             'Merge Type: %s\n'],...
             idx,mname{:},mab(1),mab(2),mae(1),mae(2),mnpts,...
             absidx(i),name{i},ab(i,1),ab(i,2),ae(i,1),ae(i,2),npts(i),...
-            delta,tdiff,tdiff/delta,type));
+            delta,tdiff,tdiff/delta,type);
     end
     
     % merge the records
@@ -777,17 +675,17 @@ for i=1:nrecs
     
     % detail message
     if(option.DEBUG)
-        disp(sprintf(...
+        fprintf(...
             ['Output Record:\n'...
              ' %d - %s\n'...
              ' begin: Day: %d Second: %f\n'...
              ' end:   Day: %d Second: %f\n'...
              ' npts: %d\n'...
-             ' merge history: ' sprintf('%d ',[mhistory{:}])],...
-            mabsidx,mname{:},mab(1),mab(2),mae(1),mae(2),mnpts));
+             ' merge history: ' sprintf('%d ',[mhistory{:}]) '\n'],...
+            mabsidx,mname{:},mab(1),mab(2),mae(1),mae(2),mnpts);
     end
     
-    % now recurse
+    % now recurse (try merging the new record with others)
     [mdata,mab,mae,mnpts,mdt,mname,mhistory]=gomerge(...
         mdata,mab,mae,mnpts,mdt,mname,mhistory,mabsidx,...
         data,ab,ae,npts,dt,name,nrecs,history,absidx,delta,option);
@@ -820,8 +718,8 @@ kill=3-keep;
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Adjusting: %s (%d - %s)',...
-        option.ADJUST,idx(kill),name{kill}));
+    fprintf('Adjusting: %s (%d - %s)\n',...
+        option.ADJUST,idx(kill),name{kill});
 end
 
 % adjust
@@ -845,8 +743,8 @@ dt=dt(keep,:);
 end
 
 
-function [data,ab,ae,npts,dt,name]=...
-    mgap(data,ab,ae,delta,npts,dt,option,first,idx,name,diff)
+function [data,ab,ae,npts,dt,name]=mgap(...
+    data,ab,ae,delta,npts,dt,option,first,idx,name,diff)
 %MGAP    Merge gaps
 
 % how much do we need to shift the samples
@@ -879,7 +777,7 @@ kill=3-keep;
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Gap Method: %s',option.GAP));
+    fprintf('Gap Method: %s\n',option.GAP);
 end
 
 % how to handle gap?
@@ -891,12 +789,12 @@ switch lower(option.GAP)
     case 'interpolate'
         % detail message
         if(option.DEBUG)
-            disp(sprintf(...
+            fprintf(...
                 ['Interpolate Method: %s\n',...
                  'Adjusting: %s (%d - %s)\n'...
-                 'Adjustment: %f seconds (%f samples)'],...
+                 'Adjustment: %f seconds (%f samples)\n'],...
                 option.INTERPOLATE,option.ADJUST,...
-                idx(kill),name{kill},shift,shift/delta));
+                idx(kill),name{kill},shift,shift/delta);
         end
         
         % update
@@ -923,9 +821,9 @@ switch lower(option.GAP)
         else
             % detail message
             if(option.DEBUG)
-                disp(sprintf(...
+                fprintf(...
                     ['Adjust Method: interpolate\n'...
-                     'Interpolate Method: %s'],option.INTERPOLATE));
+                     'Interpolate Method: %s\n'],option.INTERPOLATE);
             end
             
             % interpolate which?
@@ -942,12 +840,12 @@ switch lower(option.GAP)
     case 'fill'
         % detail message
         if(option.DEBUG)
-            disp(sprintf(...
+            fprintf(...
                 ['Filler: %d\n',...
                  'Adjusting: %s (%d - %s)\n'...
-                 'Adjustment: %f seconds (%f samples)'],...
+                 'Adjustment: %f seconds (%f samples)\n'],...
                 option.FILLER,option.ADJUST,idx(kill),name{kill},...
-                shift,shift/delta));
+                shift,shift/delta);
         end
         
         % update
@@ -974,9 +872,9 @@ switch lower(option.GAP)
         else
             % detail message
             if(option.DEBUG)
-                disp(sprintf(...
+                fprintf(...
                     ['Adjust Method: interpolate\n'...
-                     'Interpolate Method: %s'],option.INTERPOLATE));
+                     'Interpolate Method: %s\n'],option.INTERPOLATE);
             end
             
             % interpolate which?
@@ -1029,7 +927,7 @@ kill=3-keep;
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Overlap Method: %s',option.OVERLAP));
+    fprintf('Overlap Method: %s\n',option.OVERLAP);
 end
 
 % how to handle overlap?
@@ -1042,10 +940,10 @@ switch lower(option.OVERLAP)
         % truncate overlap from option.ADJUST record
         % detail message
         if(option.DEBUG)
-            disp(sprintf(...
+            fprintf(...
                 ['Adjusting:  %s (%d - %s)\n'...
-                 'Adjustment: %f seconds (%f samples)'],...
-                option.ADJUST,idx(kill),name{kill},shift,shift/delta));
+                 'Adjustment: %f seconds (%f samples)\n'],...
+                option.ADJUST,idx(kill),name{kill},shift,shift/delta);
         end
         
         % update
@@ -1072,9 +970,9 @@ switch lower(option.OVERLAP)
         else
             % detail message
             if(option.DEBUG)
-                disp(sprintf(...
+                fprintf(...
                     ['Adjust Method: interpolate\n'...
-                     'Interpolate Method: %s'],option.INTERPOLATE));
+                     'Interpolate Method: %s\n'],option.INTERPOLATE);
             end
             
             % interpolate which?
@@ -1096,10 +994,10 @@ switch lower(option.OVERLAP)
         
         % detail message
         if(option.DEBUG)
-            disp(sprintf(...
+            fprintf(...
                 ['Adjusting:  %s (%d - %s)\n'...
-                 'Adjustment: %f seconds (%f samples)'],...
-                option.ADJUST,idx(kill),name{kill},shift,shift/delta));
+                 'Adjustment: %f seconds (%f samples)\n'],...
+                option.ADJUST,idx(kill),name{kill},shift,shift/delta);
         end
         
         % update
@@ -1126,9 +1024,9 @@ switch lower(option.OVERLAP)
         else
             % detail message
             if(option.DEBUG)
-                disp(sprintf(...
+                fprintf(...
                     ['Adjust Method: interpolate\n'...
-                     'Interpolate Method: %s'],option.INTERPOLATE));
+                     'Interpolate Method: %s\n'],option.INTERPOLATE);
             end
             
             % interpolate which?
@@ -1174,7 +1072,7 @@ nsamples=round((ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % interpolate gap
@@ -1219,7 +1117,7 @@ nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % interpolate gap
@@ -1264,7 +1162,7 @@ nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % interpolate first record and gap
@@ -1310,7 +1208,7 @@ nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % interpolate last record and gap
@@ -1356,7 +1254,7 @@ nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % combine data and add filler
@@ -1394,7 +1292,7 @@ nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % combine data and add filler
@@ -1439,7 +1337,7 @@ nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % combine data and fill gap
@@ -1484,7 +1382,7 @@ nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % combine data and fill gap
@@ -1523,7 +1421,7 @@ ns=min(nsamples,npts(last));
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Truncated: %d',nsamples));
+    fprintf('Samples Truncated: %d\n',nsamples);
 end
 
 % combine data and drop overlap from first
@@ -1561,7 +1459,7 @@ nsamples=min(nsamples,npts(last));
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Truncated: %d',nsamples));
+    fprintf('Samples Truncated: %d\n',nsamples);
 end
 
 % combine data and drop overlap from last
@@ -1605,7 +1503,7 @@ ns=min(nsamples,npts(last));
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Truncated: %d',ns));
+    fprintf('Samples Truncated: %d\n',ns);
 end
 
 % combine data and drop overlap from first
@@ -1650,7 +1548,7 @@ nsamples=min(nsamples,npts(last));
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Truncated: %d',nsamples));
+    fprintf('Samples Truncated: %d\n',nsamples);
 end
 
 % combine data and drop overlap from last
@@ -1689,7 +1587,7 @@ ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Truncated: %d',nsamples));
+    fprintf('Samples Truncated: %d\n',nsamples);
 end
 
 % combine data
@@ -1731,7 +1629,7 @@ ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % combine data
@@ -1780,7 +1678,7 @@ ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % combine data
@@ -1829,7 +1727,7 @@ ns=b2+min(0,npts(first)-nsamples);
 
 % detail message
 if(option.DEBUG)
-    disp(sprintf('Samples Added: %d',nsamples));
+    fprintf('Samples Added: %d\n',nsamples);
 end
 
 % combine data
@@ -1929,3 +1827,187 @@ for i=1:nrecs-1
 end
 
 end
+
+
+function [option]=parse_merge_parameters(varargin)
+% parses/checks merge p/v pairs
+
+% valid values for string options
+valid.TOLERANCEUNITS={'seconds' 'intervals'};
+valid.OVERLAP={'sequential' 'truncate' 'add' 'average'};
+valid.GAP={'sequential' 'interpolate' 'fill'};
+valid.INTERPOLATE={'spline' 'pchip' 'linear' 'nearest'};
+valid.ADJUST={'longer' 'shorter' 'first' 'last' 'one' 'two'};
+valid.SHIFTUNITS={'seconds' 'intervals'};
+valid.TIMING={'utc' 'tai'};
+valid.ONLY={'sequential' 'gaps' 'overlaps' 'seq' 's' 'g' 'o' 'ov'};
+valid.SKIP={'sequential' 'gaps' 'overlaps' 'seq' 's' 'g' 'o' 'ov'};
+
+% defaults
+option.TOLERANCE=0.02; % seconds, any positive number
+option.TOLERANCEUNITS='seconds'; % seconds/intervals
+option.OVERLAP='sequential'; % sequential/truncate/add/average
+option.GAP='sequential'; % sequential/interpolate/fill
+option.INTERPOLATE='spline'; % spline/pchip/linear/nearest
+option.ADJUST='shorter'; % longer/shorter/first/last
+option.SHIFTUNITS='intervals'; % seconds/intervals
+option.SHIFTMAX=0.01; % interval: 0-0.5 , seconds: 0+
+option.FILLER=0; % any number
+option.TIMING='utc'; % utc/tai
+option.USEABSOLUTETIMING=true; % true/false
+option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
+option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};
+option.ALLOCATE=10; % size of temp space
+option.ONLY=[]; % sequential/gaps/overlaps
+option.SKIP=[]; % sequential/gaps/overlaps
+option.VERBOSE=seizmoverbose; % default to seizmoverbose state
+option.DEBUG=seizmodebug; % default to seizmodebug state
+
+% require options specified by strings
+if(~iscellstr(varargin(1:2:end)))
+    error('seizmo:merge:badInput',...
+        'Not all options are specified with a string!');
+end
+
+% parse options
+for i=1:2:nargin
+    switch lower(varargin{i})
+        case {'tolerance' 'tol' 't'}
+            option.TOLERANCE=varargin{i+1};
+        case {'toleranceunits' 'tunit' 'tu' 'tolu'}
+            option.TOLERANCEUNITS=varargin{i+1};
+        case {'overlap' 'over' 'lap' 'ov'}
+            option.OVERLAP=varargin{i+1};
+        case {'gap' 'ga' 'g'}
+            option.GAP=varargin{i+1};
+        case {'interpolate' 'interp' 'int' 'i'}
+            option.INTERPOLATE=varargin{i+1};
+        case {'adjust' 'adj' 'a'}
+            option.ADJUST=varargin{i+1};
+        case {'shiftunits' 'shiftu' 'sunit' 'su'}
+            option.SHIFTUNITS=varargin{i+1};
+        case {'shiftmax' 'shift' 'smax' 'max' 'sh'}
+            option.SHIFTMAX=varargin{i+1};
+        case {'filler' 'fill' 'f'}
+            option.FILLER=varargin{i+1};
+        case {'timing' 'time'}
+            option.TIMING=varargin{i+1};
+        case {'useabsolutetiming' 'useabs' 'abs' 'abstiming'}
+            option.USEABSOLUTETIMING=varargin{i+1};
+        case {'requiredcharfields' 'reqchar' 'charfields' 'cfields'}
+            option.REQUIREDCHARFIELDS=varargin{i+1};
+        case {'requiredrealfields' 'reqreal' 'realfields' 'rfields'}
+            option.REQUIREDREALFIELDS=varargin{i+1};
+        case {'allocate' 'all'}
+            option.ALLOCATE=varargin{i+1};
+        case 'only'
+            option.ONLY=varargin{i+1};
+        case 'skip'
+            option.SKIP=varargin{i+1};
+        case {'verbose' 'v'}
+            option.VERBOSE=varargin{i+1};
+        case {'debug' 'd'}
+            option.DEBUG=varargin{i+1};
+        otherwise
+            error('seizmo:merge:badInput',...
+                'Unknown option: %s',varargin{i});
+    end
+end
+
+% check options
+fields=fieldnames(option);
+for i=1:numel(fields)
+    % get value of field and do a basic check
+    value=option.(fields{i});
+    
+    % specific checks
+    switch lower(fields{i})
+        case 'tolerance'
+            if(~isnumeric(value))
+                error('seizmo:merge:badInput',...
+                    'TOLERANCE must be a 1 or 2 element real array!');
+            end
+        case {'shiftmax' 'filler'}
+            if(~isnumeric(value) || ~isscalar(value))
+                error('seizmo:merge:badInput',...
+                    '%s must be a scalar real number!',fields{i});
+            end
+        case {'overlap' 'gap' 'interpolate' 'toleranceunits' ...
+                'adjust' 'shiftunits' 'timing'}
+            if(~ischar(value) || size(value,1)~=1 ...
+                    || ~any(strcmpi(value,valid.(fields{i}))))
+                error('seizmo:merge:badInput',...
+                    ['%s option must be one of the following:\n'...
+                    sprintf('%s ',valid.(fields{i}){:})],fields{i});
+            end
+        case {'skip' 'only'}
+            if(~isempty(value) && (~ischar(value) || size(value,1)~=1 ...
+                    || ~any(strcmpi(value,valid.(fields{i})))))
+                error('seizmo:merge:badInput',...
+                    ['%s option must be one of the following:\n'...
+                    sprintf('%s ',valid.(fields{i}){:})],fields{i});
+            end
+        case {'requiredcharfields' 'requiredrealfields'}
+            % fix char arrays
+            if(ischar(value))
+                value=cellstr(value);
+                option.(fields{i})=value;
+            end
+            if(~iscellstr(value))
+                error('seizmo:merge:badInput',...
+                    '%s option must be a cellstr of header fields!',...
+                    fields{i});
+            end
+        case 'allocate'
+            if(~isnumeric(value) || fix(value)~=value)
+                error('seizmo:merge:badInput',...
+                    'ALLOCATE must be a scalar integer!');
+            end
+        case {'useabsolutetiming' 'verbose' 'debug'}
+            if(~islogical(value) || ~isscalar(value))
+                error('seizmo:merge:badInput',...
+                    '%s option must be a logical!',fields{i});
+            end
+        otherwise
+            error('seizmo:merge:badInput',...
+                'Unknown option: %s !',fields{i});
+    end
+end
+
+% turn off verbose if debugging
+if(option.DEBUG); option.VERBOSE=false; end
+
+% handle tolerance
+if(numel(option.TOLERANCE)==1)
+    option.TOLERANCE=[-1 option.TOLERANCE];
+end
+option.TOLERANCE=sort(option.TOLERANCE);
+
+% only 1 of skip/only can be set
+if(~isempty(option.SKIP) && ~isempty(option.ONLY))
+    error('seizmo:merge:badInput',...
+        'Use options SKIP or ONLY, but not both!');
+end
+
+% set logical equivalent to skip/only string
+option.SGO=true(1,3);
+if(~isempty(option.ONLY))
+    if(option.ONLY(1)=='s')
+        option.SGO(2:3)=false;
+    elseif(option.ONLY(1)=='g')
+        option.SGO(1:2:3)=false;
+    else % overlap
+        option.SGO(1:2)=false;
+    end
+elseif(~isempty(option.SKIP))
+    if(option.SKIP(1)=='s')
+        option.SGO(1)=false;
+    elseif(option.SKIP(1)=='g')
+        option.SGO(2)=false;
+    else % overlap
+        option.SGO(3)=false;
+    end
+end
+
+end
+

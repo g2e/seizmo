@@ -5,13 +5,14 @@ function [idx1,idx2,idx3]=horzpairs(data,varargin)
 %              horzpairs(...,'requiredcharfields',fields,...)
 %              horzpairs(...,'requiredrealfields',fields,...)
 %
-%    Description: [IDX1,IDX2,IDX3]=HORZPAIRS(DATA) pairs orthogonal
-%     horizontal components for records in SEIZMO struct DATA.  Records are
-%     paired based on their KNETWK, KSTNM, KHOLE, KCMPNM, LEVEN, NCMP,
-%     CMPINC, & CMPAZ header fields.  Pairs are identified first by having
-%     the same stream (see GETSTREAMIDX) + LEVEN + NCMP + CMPINC==90 and
-%     then by azimuth.  Individual components must have 1 orientation only
-%     to be paired.  Streams with more than 2 different horizontals are not
+%    Description:
+%     [IDX1,IDX2,IDX3]=HORZPAIRS(DATA) pairs orthogonal horizontal
+%     components for records in SEIZMO struct DATA.  Records are paired
+%     based on their KNETWK, KSTNM, KHOLE, KCMPNM, LEVEN, NCMP, CMPINC, &
+%     CMPAZ header fields.  Pairs are identified first by having the same
+%     stream (see GETSTREAMIDX) + LEVEN + NCMP + CMPINC==90 and then by
+%     azimuth.  Individual components must have 1 orientation only to be
+%     paired.  Streams with more than 2 different horizontals are not
 %     paired.  Warnings are issued for such cases as well as when a
 %     horizontal pair is non-orthogonal, a horizontal (N,E) is oriented
 %     non-horizontally, a vertical (Z) is oriented horizontally and when
@@ -39,18 +40,18 @@ function [idx1,idx2,idx3]=horzpairs(data,varargin)
 %       rates caused by floating point inaccuracies!
 %
 %    Examples:
-%     Get pairs and loop over pairs:
-%      [idx1,idx2,idx3]=horzpairs(data);
-%      for i=1:max(idx2)
-%          % record indices for this pair
-%          ridx=idx1(idx2==i);
+%     % Get pairs and loop over pairs:
+%     [idx1,idx2,idx3]=horzpairs(data);
+%     for i=1:max(idx2)
+%         % record indices for this pair
+%         ridx=idx1(idx2==i);
 %
-%          % separate indices based on component
-%          cidx1=idx1(idx2==i & idx3==1);
-%          cidx2=idx1(idx2==i & idx3==2);
+%         % separate indices based on component
+%         cidx1=idx1(idx2==i & idx3==1);
+%         cidx2=idx1(idx2==i & idx3==2);
 %
-%          ... do something useful here ...
-%      end
+%         ... % do something useful here % ...
+%     end
 %
 %    See also: ROTATE, ISORTHOGONAL, GETSTREAMIDX, GETCOMPONENTIDX
 
@@ -60,9 +61,10 @@ function [idx1,idx2,idx3]=horzpairs(data,varargin)
 %        Sep. 29, 2010 - add filename output to warnings, more warnings for
 %                        verticals, check for multiple inclinations
 %        Feb. 11, 2011 - dropped versioninfo caching
+%        Jan. 28, 2012 - doc update, char to strnlen, drop SEIZMO global
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
 
@@ -71,9 +73,6 @@ if(mod(nargin-1,2))
     error('seizmo:horzpairs:badNumInputs',...
         'Bad number of arguments!');
 end
-
-% get global
-global SEIZMO
 
 % check headers
 data=checkheader(data);
@@ -86,18 +85,6 @@ try
     % defaults
     option.REQUIREDCHARFIELDS={};
     option.REQUIREDREALFIELDS={'delta'};
-    
-    % get options from SEIZMO global
-    ME=upper(mfilename);
-    try
-        fields=fieldnames(SEIZMO.(ME));
-        for i=1:numel(fields)
-            if(~isempty(SEIZMO.(ME).(fields{i})))
-                option.(fields{i})=SEIZMO.(ME).(fields{i});
-            end
-        end
-    catch
-    end
 
     % get options from command line
     for i=1:2:nargin-1
@@ -150,9 +137,9 @@ try
         [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
     end
     
-    % form stream name and component name
+    % get stream+req name and component name
     sname=strcat(kname(:,1),'.',kname(:,2),'.',kname(:,3),'.',...
-        strnlen(kname(:,4),2),'_',strcat('',reqchar{:}),'_',...
+        strnlen(char(kname(:,4)),2),'_',strcat('',reqchar{:}),'_',...
         strcat('',reqreal{:}),'_',leven,'_',num2str(ncmp));
     cname=kname(:,4);
     

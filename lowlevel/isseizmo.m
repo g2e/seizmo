@@ -4,8 +4,9 @@ function [lgc]=isseizmo(data,varargin)
 %    Usage:    logical=isseizmo(data)
 %              logical=isseizmo(data,field1,...,fieldN)
 %
-%    Description: ISSEIZMO(DATA) returns logical true if DATA is a SEIZMO 
-%     data structure and false otherwise.  See SEIZMOCHECK for minimum 
+%    Description:
+%     ISSEIZMO(DATA) returns logical true if DATA is a SEIZMO data
+%     structure and false otherwise.  See SEIZMOCHECK for minimum 
 %     requirements.
 %
 %     ISSEIZMO(DATA,FIELD1,...,FIELDN) allows adding more fields to the 
@@ -15,10 +16,9 @@ function [lgc]=isseizmo(data,varargin)
 %     - ISSEIZMO is just a logical frontend for SEIZMOCHECK
 %
 %    Examples:
-%     To see if the function READHEADER returns a valid SEIZMO structure
-%     after reading in files from the current directory:
-%
-%       if(isseizmo(readheader('*'))); disp('Valid Structure'); end
+%     % To see if the function READHEADER returns a valid SEIZMO structure
+%     % after reading in files from the current directory:
+%     if(isseizmo(readheader('*'))); disp('Valid Structure'); end
 %
 %    See also: SEIZMOCHECK, SEIZMODEF
 
@@ -32,9 +32,10 @@ function [lgc]=isseizmo(data,varargin)
 %        Apr. 23, 2009 - move usage up
 %        June 12, 2009 - force SEIZMOCHECK state to on for the check
 %        Jan. 29, 2010 - update for new state functions
+%        Jan. 28, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2010 at 03:45 GMT
+%     Last Updated Jan. 28, 2012 at 03:45 GMT
 
 % todo:
 

@@ -3,14 +3,15 @@ function [events]=readsodeventcsv(varargin)
 %
 %    Usage:    events=readsodeventcsv(file)
 %
-%    Description: EVENTS=READSODEVENTCSV(FILE) reads in a SOD (Standing
-%     Order for Data) generated event CSV file as a structure array.  The
-%     CSV (comma-separated values) file is expected to have 1 header line
-%     of comma-separated field names.  Each line in FILE is placed as a
-%     separated index in EVENTS, such that all values from line 4 (counting
-%     the header line) can be accessed in EVENTS(3).  Calling
-%     READSODEVENTCSV without a FILE argument or with FILE set to '' will
-%     present a graphical file selection menu.
+%    Description:
+%     EVENTS=READSODEVENTCSV(FILE) reads in a SOD (Standing Order for Data)
+%     generated event CSV file as a structure array.  The CSV (comma
+%     separated values) file is expected to have 1 header line of comma
+%     separated field names.  Each line in FILE is placed as a separated
+%     index in EVENTS, such that all values from line 4 (counting the
+%     header line) can be accessed in EVENTS(3).  Calling READSODEVENTCSV
+%     without a FILE argument or with FILE set to '' will present a
+%     graphical file selection menu.
 %
 %    Notes:
 %     - converts latitude, longitude, depth and magnitude to numeric form
@@ -33,12 +34,12 @@ function [events]=readsodeventcsv(varargin)
 %       Philip Crotwell.  Website: http://www.seis.sc.edu/sod/
 %
 %    Examples:
-%     READSODEVENTCSV uses readcsv but also converts several fields into
-%     a more useful form.  To show the differences:
-%      ev1=readcsv(file);
-%      ev2=readsodeventcsv(file);
-%      ev1(1)
-%      ev2(1)
+%     % READSODEVENTCSV uses readcsv but also converts several
+%     % fields into a more useful form.  To show the differences:
+%     ev1=readcsv(file);
+%     ev2=readsodeventcsv(file);
+%     ev1(1)
+%     ev2(1)
 %
 %    See also: WRITESODEVENTCSV, READCSV, WRITECSV, SETEVENT
 
@@ -47,9 +48,10 @@ function [events]=readsodeventcsv(varargin)
 %        Jan. 26, 2010 - allow no input (select file graphically)
 %        Mar. 30, 2010 - check fields are available to modify, doc update
 %        Feb. 11, 2011 - mass nargchk fix
+%        Jan. 28, 2012 - doc update, pass char to strnlen
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
 
@@ -83,7 +85,7 @@ tmp=num2cell(round(100*str2double({events.depth}))/100);
 % - note that we strip off the Z first b/c there is
 %   a bug in dtstr2dtvecmx (datevec) that occasionally
 %   returns an incorrect time when the Z is included
-tmp=mat2cell(datevec(strnlen({events.time}.',23),...
+tmp=mat2cell(datevec(strnlen(char({events.time}.'),23),...
     'yyyy-mm-ddTHH:MM:SS.FFF'),ones(numel(events),1));
 [events.time]=deal(tmp{:});
 

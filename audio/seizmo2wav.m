@@ -5,14 +5,14 @@ function []=seizmo2wav(data,factor,varargin)
 %              seizmo2wav(data,factor)
 %              seizmo2wav(data,factor,'option',value,...)
 %
-%    Description: SEIZMO2WAV(DATA) writes the records in SEIZMO struct DATA
-%     as .wav files.  Note that each record is written as a separate wave
-%     file (a .wav extension is added to the record names).  The records
-%     are compressed time-wise by a factor of 1000 so that 1000s in the
-%     record corresponds to 1s of audio.  This is done so that seismic
-%     frequencies (20mHz-20Hz) are shifted to the audible frequency range
-%     (20Hz-20KHz).  To target other seismic frequencies see the next
-%     usage form below.
+%    Description:
+%     SEIZMO2WAV(DATA) writes the records in SEIZMO struct DATA as .wav
+%     files.  Note that each record is written as a separate wave file (a
+%     .wav extension is added to the record names).  The records are
+%     compressed time-wise by a factor of 1000 so that 1000s in the record
+%     corresponds to 1s of audio.  This is done so that seismic frequencies
+%     (20mHz-20Hz) are shifted to the audible frequency range (20Hz-20KHz).
+%     To target other seismic frequencies see the next usage form below.
 %
 %     SEIZMO2WAV(DATA,FACTOR) time-compresses records by FACTOR.  See the
 %     Notes section below for help when using FACTOR to target a specific
@@ -30,23 +30,24 @@ function []=seizmo2wav(data,factor,varargin)
 %       100        200mHz-200Hz  (5s-0.005s) -- good for local eq
 %
 %    Examples:
-%     Lowpass filter at 20s (0.05Hz) and play (5000-5s audible):
-%       data=iirfilter(data,'lp','b','c',1/20,'o',2);
-%       seizmo2wav(data,1e5);
+%     % Lowpass filter at 20s (0.05Hz) and play (5000-5s audible):
+%     data=iirfilter(data,'lp','b','c',1/20,'o',2);
+%     seizmo2wav(data,1e5);
 %
-%     The same but de-emphasize strong signals:
-%      data=iirfilter(data,'lp','b','c',1/20,'o',2);
-%      data=raise(data,1/4);
-%      seizmo2wav(data,1e5);
+%     % The same but de-emphasize strong signals:
+%     data=iirfilter(data,'lp','b','c',1/20,'o',2);
+%     data=raise(data,1/4);
+%     seizmo2wav(data,1e5);
 %
 %    See also: PLAYSEIZMO, WAVWRITE, WAVREAD
 
 %     Version History:
 %        Apr. 25, 2010 - initial version
 %        July 15, 2010 - nargchk fixes
+%        Jan. 28, 2012 - doc update, seizmocheck_state bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 15, 2010 at 12:25 GMT
+%     Last Updated Jan. 28, 2012 at 12:25 GMT
 
 % todo:
 
@@ -57,8 +58,8 @@ if(nargin>2 && mod(nargin,2))
         'Bad number of arguments!');
 end
 
-% check data (dep)
-versioninfo(data,'dep');
+% check data structure
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -108,6 +109,9 @@ try
         % detail message
         if(verbose); print_time_left(i,nrecs); end
     end
+    
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

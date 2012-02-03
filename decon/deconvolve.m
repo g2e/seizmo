@@ -8,14 +8,15 @@ function [data]=deconvolve(data,tf,delay,h2o,frange,zi,zf)
 %              data=deconvolve(data,tf,delay,h2o,frange,zi)
 %              data=deconvolve(data,tf,delay,h2o,frange,zi,zf)
 %
-%    Description: DATA=DECONVOLVE(DATA,TF) deconvolves time function TF out
-%     of records in SEIZMO struct DATA using spectral division.  TF must be
-%     a numeric vector or a cell array with one numeric vector per record
-%     in DATA.  The sample spacing of the time function is assumed to be
-%     the same as the record it is deconvolved from.  Records in DATA must
-%     be evenly spaced and Timeseries or XY datatype.  Note that if TF has
-%     spectral amplitudes == 0, then the deconvolution becomes unstable
-%     (see the next usage description for a more stable operation).
+%    Description:
+%     DATA=DECONVOLVE(DATA,TF) deconvolves time function TF out of records
+%     in SEIZMO struct DATA using spectral division.  TF must be a numeric
+%     vector or a cell array with one numeric vector per record in DATA.
+%     The sample spacing of the time function is assumed to be the same as
+%     the record it is deconvolved from.  Records in DATA must be evenly
+%     spaced and Timeseries or XY datatype.  Note that if TF has spectral
+%     amplitudes == 0, then the deconvolution becomes unstable (see the
+%     next usage description for a more stable operation).
 %
 %     DATA=DECONVOLVE(DATA,TF,DELAY) specifies the delay of the time
 %     function TF in samples.  By default DELAY is 0, which is the simple
@@ -55,9 +56,9 @@ function [data]=deconvolve(data,tf,delay,h2o,frange,zi,zf)
 %    Header changes: DEPMIN, DEPMEN, DEPMAX
 %
 %    Examples:
-%     Convolve and then deconvolve a dataset with a waterlevel of 0.0001:
-%      [data1,zf]=convolve(data,gausswin(13),-6);
-%      data2=deconvolve(data1,gausswin(13),-6,0.0001,[],[],zf);
+%     % Convolve and then deconvolve a dataset with a waterlevel of 0.0001:
+%     [data1,zf]=convolve(data,gausswin(13),-6);
+%     data2=deconvolve(data1,gausswin(13),-6,0.0001,[],[],zf);
 %
 %    See also: CONVOLVE, IIRFILTER, CORRELATE
 
@@ -72,9 +73,10 @@ function [data]=deconvolve(data,tf,delay,h2o,frange,zi,zf)
 %        Feb.  2, 2010 - versioninfo caching
 %        Aug. 19, 2010 - removed ifft symmetric flag, real conversion
 %        Feb. 11, 2011 - dropped versioninfo caching
+%        Jan. 28, 2012 - doc update, better checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Jan. 28, 2012 at 15:05 GMT
 
 % todo:
 
@@ -82,7 +84,7 @@ function [data]=deconvolve(data,tf,delay,h2o,frange,zi,zf)
 error(nargchk(2,7,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -90,7 +92,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt deconvolution
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
 
     % verbosity
     verbose=seizmoverbose;
@@ -99,25 +103,8 @@ try
     nrecs=numel(data);
 
     % get header info
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
     [npts,ncmp,delta]=getheader(data,'npts','ncmp','delta');
     nyq=1./(2*delta);
-
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:deconvolve:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
-
-    % cannot do unevenly sampled records
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:deconvolve:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    end
 
     % check time function
     if(iscell(tf))

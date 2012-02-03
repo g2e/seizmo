@@ -5,12 +5,13 @@ function []=playseizmo(data,speedup,playrate)
 %              playseizmo(data,speedup)
 %              playseizmo(data,speedup,playrate)
 %
-%    Description: PLAYSEIZMO(DATA) plays the records in SEIZMO struct DATA
-%     as sound files.  Note that each record is played separately, so this
-%     may take a while.  The records are sped up by a factor of 1000 so
-%     that 20Hz corresponds to 20KHz and 20mHz corresponds to 20Hz.  We do
-%     this because the range 20Hz-20KHz is roughly the range of human
-%     hearing and will make much of the seismic spectrum audible.
+%    Description:
+%     PLAYSEIZMO(DATA) plays the records in SEIZMO struct DATA as sound
+%     files.  Note that each record is played separately, so this may take
+%     a while.  The records are sped up by a factor of 1000 so that 20Hz
+%     corresponds to 20KHz and 20mHz corresponds to 20Hz.  We do this
+%     because the range 20Hz-20KHz is roughly the range of human hearing
+%     and will make much of the seismic spectrum audible.
 %
 %     PLAYSEIZMO(DATA,SPEEDUP) speeds up records by SPEEDUP.  See the
 %     Notes section below for help when using SPEEDUP to target a specific
@@ -29,31 +30,32 @@ function []=playseizmo(data,speedup,playrate)
 %       100        200mHz-200Hz  (5s-0.005s) -- good for local eq
 %
 %    Examples:
-%     Lowpass filter at 20s (0.05Hz) and play (5000-5s audible):
-%       data=iirfilter(data,'lp','b','c',1/20,'o',2);
-%       playseizmo(data,1e5);
+%     % Lowpass filter at 20s (0.05Hz) and play (5000-5s audible):
+%     data=iirfilter(data,'lp','b','c',1/20,'o',2);
+%     playseizmo(data,1e5);
 %
-%     The same but de-emphasize strong signals:
-%      data=iirfilter(data,'lp','b','c',1/20,'o',2);
-%      data=raise(data,1/4);
-%      playseizmo(data,1e5);
+%     % The same but de-emphasize strong signals:
+%     data=iirfilter(data,'lp','b','c',1/20,'o',2);
+%     data=raise(data,1/4);
+%     playseizmo(data,1e5);
 %
 %    See also: SOUND, SOUNDSC, SEIZMO2WAV
 
 %     Version History:
 %        Apr. 25, 2010 - initial version
 %        July 15, 2010 - add playrate arg, doc update
+%        Jan. 28, 2012 - doc update, seizmocheck_state bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 15, 2010 at 09:25 GMT
+%     Last Updated Jan. 28, 2012 at 09:25 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,3,nargin));
 
-% check data (dep)
-versioninfo(data,'dep');
+% check data structure
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -108,6 +110,9 @@ try
         % detail message
         if(verbose); print_time_left(i,nrecs); end
     end
+    
+    % toggle checking back
+    seizmocheck_state(oldseizmocheckstate);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);

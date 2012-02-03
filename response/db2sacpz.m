@@ -4,11 +4,12 @@ function []=db2sacpz(db,varargin)
 %    Usage:    db2sacpz(sacpzdb)
 %              db2sacpz(sacpzdb,overwrite)
 %
-%    Description: DB2SACPZ(SACPZDB) writes out all the entries in the SAC
-%     PoleZero database SACPZDB as SAC PoleZero files.  File location and
-%     name is determined by the fields 'path' and 'name' in the database.
-%     For more info on the fields of a SAC PoleZero database, see the Notes
-%     section of MAKESACPZDB.
+%    Description:
+%     DB2SACPZ(SACPZDB) writes out all the entries in the SAC PoleZero
+%     database SACPZDB as SAC PoleZero files.  File location and name is
+%     determined by the fields 'path' and 'name' in the database.  For more
+%     info on the fields of a SAC PoleZero database, see the Notes section
+%     of MAKESACPZDB.
 %
 %     DB2SACPZ(SACPZDB,OVERWRITE) quietly overwrites pre-existing SAC
 %     PoleZero files without confirmation when OVERWRITE is set to TRUE.
@@ -21,10 +22,10 @@ function []=db2sacpz(db,varargin)
 %       (current directory).  This avoids system-dependent path complexity.
 %
 %    Examples:
-%     Write out a network specific (IU) set of SAC PoleZero files:
-%      db=load('sacpzdb','IU');
-%      cd my/sacpz/dir
-%      db2sacpz(db.IU);
+%     % Write out a network specific (IU) set of SAC PoleZero files:
+%     db=load('sacpzdb','IU');
+%     cd my/sacpz/dir
+%     db2sacpz(db.IU);
 %
 %    See also: MAKESACPZDB, WRITESACPZ, READSACPZ, PARSE_SACPZ_FILENAME,
 %              APPLYSACPZ, REMOVESACPZ, GETSACPZ, GENSACPZNAME
@@ -33,9 +34,10 @@ function []=db2sacpz(db,varargin)
 %        Sep. 22, 2009 - initial version
 %        Feb.  3, 2010 - updated example
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  3, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  3, 2012 at 15:05 GMT
 
 % todo:
 

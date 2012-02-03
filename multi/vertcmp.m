@@ -26,9 +26,10 @@ function [idx]=vertcmp(data)
 %        Nov. 30, 2011 - doc update, fixed comments, all checks on all
 %                        streams, remove 2nd output
 %        Dec. 21, 2011 - forgot checking data structure and general header
+%        Jan. 28, 2012 - pass char array to strnlen
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2011 at 16:00 GMT
+%     Last Updated Jan. 28, 2012 at 16:00 GMT
 
 % todo:
 
@@ -51,7 +52,7 @@ try
     
     % form stream name and component name
     sname=strcat(kname(:,1),'.',kname(:,2),'.',kname(:,3),'.',...
-        strnlen(kname(:,4),2));
+        strnlen(char(kname(:,4)),2));
     cname=kname(:,4);
     
     % extract the third letter of the kcmpnm

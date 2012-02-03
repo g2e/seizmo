@@ -166,9 +166,11 @@ function [data,failed]=readdatawindow(data,varargin)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Nov.  2, 2011 - doc update, allow absolute time input
 %        Dec.  1, 2011 - IZTYPE option added
+%        Jan. 30, 2012 - better getheader usage, seizmosize override for
+%                        speed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  1, 2011 at 15:05 GMT
+%     Last Updated Jan. 30, 2012 at 15:05 GMT
 
 % todo:
 
@@ -191,14 +193,13 @@ try
     
     % parse cut parameters
     option=cutparameters(nrecs,varargin{:});
-    
-    % estimated filesize from header
-    [est_bytes,hbytes,dbytes]=seizmosize(data);
 
     % header info
-    [b,delta,e,npts,ncmp]=getheader(data,'b','delta','e','npts','ncmp');
-    iftype=getenumid(data,'iftype');
-    leven=getlgc(data,'leven');
+    [b,delta,e,npts,ncmp,iftype,leven]=getheader(data,...
+        'b','delta','e','npts','ncmp','iftype id','leven lgc');
+    
+    % estimated filesize from header
+    [est_bytes,hbytes,dbytes]=seizmosize(h,vi,npts,ncmp,iftype,leven);
 
     % find spectral/xyz
     amph=strcmpi(iftype,'iamph');
@@ -482,5 +483,30 @@ catch
     % rethrow error
     error(lasterror);
 end
+
+end
+
+
+function [bytes,hbytes,dbytes]=seizmosize(h,vi,npts,ncmp,iftype,leven)
+% override version (for speed)
+
+% trim down header info
+h=[h.data];
+
+% filetype
+count=strcmpi(iftype,'itime')...
+    +strcmpi(iftype,'ixy')+strcmpi(iftype,'ixyz')...
+    +2*strcmpi(iftype,'irlim')+2*strcmpi(iftype,'iamph');
+
+% multi-component
+count=ncmp.*count;
+
+% uneven sampling
+count=count+strcmpi(leven,'false');
+
+% final tally
+hbytes=[h(vi).startbyte].';
+dbytes=count.*npts.*[h(vi).bytesize].';
+bytes=hbytes+dbytes;
 
 end
