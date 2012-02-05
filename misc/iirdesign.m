@@ -6,8 +6,8 @@ function [fo,passes,mirror]=iirdesign(nyq,type,style,varargin)
 %              [fo,passes,mirror]=...
 %                    iirdesign(nyq,fo,nyq2,'option1',value1,...)
 %
-%    Description: [FO,PASSES,MIRROR]=...
-%                    IIRDESIGN(NYQ,TYPE,STYLE,'OPTION1',VALUE1,...)
+%    Description:
+%     [FO,PASSES,MIRROR]=IIRDESIGN(NYQ,TYPE,STYLE,'OPTION1',VALUE1,...)
 %     designs an iir (infinite impulse response) filter using the design
 %     specs specified.  The filter is then normalized for each Nyquist
 %     frequency given in NYQ.  The filter(s) are output in cell array FO
@@ -156,17 +156,17 @@ function [fo,passes,mirror]=iirdesign(nyq,type,style,varargin)
 %           but the sampling/Nyquist frequency does.
 %
 %    Examples:
-%      4th order lowpass butter filter with a passband corner of 10s:
+%     % 4th order lowpass butter filter with a passband corner of 10s:
 %     fo=iirdesign(1,'lo','butter','c',1/10,'np',4)
 %
-%      Bandpass elliptic filter with passband corners of 15s and 12s using
-%      default transition bandwidth & attenuation to find the filter order:
+%     % Bandpass elliptic filter with passband corners of 15s and 12s using
+%     % default transition bandwidth & attenuation to get the filter order:
 %     fo=iirdesign(1,'bp','ellip','c',[1/15 1/12])
 %
-%      2-pass 4th-order bandpass elliptic filter w/ 0.1dB passband ripple:
+%     % 2-pass 4th-order bandpass elliptic filter w/ 0.1dB passband ripple:
 %     [fo,npass]=iirdesign(1,'bp','e','c',[1/20 1/15],'o',4,'p',2,'pr',0.1)
 %
-%      Verify filters with the FVTOOL (Signal Processing Toolbox):
+%     % Verify filters with the FVTOOL (Signal Processing Toolbox):
 %     fo=iirdesign([10 20],'bp','e','c',[1/20 1/15],'o',4);
 %     fvtool(fo{:}) % note that this will plot all the filters together
 %
@@ -180,9 +180,10 @@ function [fo,passes,mirror]=iirdesign(nyq,type,style,varargin)
 %        May  20, 2010 - allow 'n' to specify poles, 'bu' for butter
 %        Sep. 20, 2010 - alter 3,4 pass to -1,-2 for simplicity
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  4, 2012 - doc update, fixed formatting of a couple warnings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  4, 2012 at 15:05 GMT
 
 % todo:
 
@@ -519,13 +520,13 @@ for i=1:nnyq
     if(any(corners>0.85))
         warning('seizmo:iirdesign:nyqClose',...
             ['Corner(s) close to Nyquist - consider upsampling!' ...
-            'Nyquist: %gHz\nCorner(s): ' ...
+            '\nNyquist: %gHz\nCorner(s): ' ...
             sprintf('%gHz ',corners*nyq(i))],nyq(i));
     end
     if(any(corners<0.001))
         warning('seizmo:iirdesign:zeroClose',...
             ['Extreme low frequency corner(s) - consider decimating!' ...
-            'Nyquist: %gHz\nCorner(s): ' ...
+            '\nNyquist: %gHz\nCorner(s): ' ...
             sprintf('%gHz ',corners*nyq(i))],nyq(i));
     end
     

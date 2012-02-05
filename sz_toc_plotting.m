@@ -14,6 +14,7 @@ function []=sz_toc_plotting()
 %<a href="matlab:help plotspectra1">plotspectra1</a>      - Plot SEIZMO data record spectra in individual subplots
 %<a href="matlab:help plotspectra2">plotspectra2</a>      - Overlay plot of SEIZMO data record spectra
 %<a href="matlab:help recordsection">recordsection</a>     - Plots SEIZMO data records in a record section
+%<a href="matlab:help sft">sft</a>               - Sliding Fourier Transform of SEIZMO data
 %<a href="matlab:help showflags">showflags</a>         - Toggle visibility of marker flags in SEIZMO plot
 %<a href="matlab:help showmarkers">showmarkers</a>       - Toggle visibility of markers & flags in SEIZMO plot
 %<a href="matlab:help spectrasection">spectrasection</a>    - Plots SEIZMO data record spectra in a record section

@@ -76,9 +76,14 @@ function [data]=interpolate(data,sr,method,new_b,new_e,extrap)
 %        Aug. 26, 2011 - added warning about interpolating to higher delta
 %                        following suggestion on sac-help mailing list
 %        Dec. 13, 2011 - minor doc update
+%        Feb.  4, 2012 - better getheader usage, todo added, better
+%                        checkheader usage (disallow non-timeseries)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 13, 2011 at 14:05 GMT
+%     Last Updated Feb.  4, 2012 at 14:05 GMT
+
+% todo:
+% - use interp1q? how about similar for other methods (spline? pchip?)
 
 % check number of arguments
 error(nargchk(2,6,nargin));
@@ -92,7 +97,8 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt interpolation
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -101,8 +107,9 @@ try
     nrecs=numel(data);
 
     % get timing info
-    leven=~strcmpi(getlgc(data,'leven'),'false');
-    [b,e,npts,delta]=getheader(data,'b','e','npts','delta');
+    [b,e,npts,delta,leven]=getheader(data,...
+        'b','e','npts','delta','leven lgc');
+    leven=~strcmpi(leven,'false');
 
     % defaults
     if(nargin<6 || isempty(extrap)); extrap='extrap'; end

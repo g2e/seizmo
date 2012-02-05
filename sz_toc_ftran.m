@@ -9,10 +9,15 @@ function []=sz_toc_ftran()
 %<a href="matlab:help keepph">keepph</a>               - Returns phase component of spectral records
 %<a href="matlab:help keeppw">keeppw</a>               - Returns the power component of spectral records
 %<a href="matlab:help keeprl">keeprl</a>               - Returns the real component of spectral records
+%<a href="matlab:help omegaanalytic">omegaanalytic</a>        - Analytic signal of SEIZMO records in the frequency domain
+%<a href="matlab:help omegadivide">omegadivide</a>          - Integrate SEIZMO records in the frequency domain
+%<a href="matlab:help omegagaussian">omegagaussian</a>        - Gaussian filter of SEIZMO records in the frequency domain
+%<a href="matlab:help omegahilbert">omegahilbert</a>         - Hilbert Transform SEIZMO records in the frequency domain
+%<a href="matlab:help omegamultiply">omegamultiply</a>        - Differentiate SEIZMO records in the frequency domain
+%<a href="matlab:help omegashift">omegashift</a>           - Applies time shift to SEIZMO data in the frequency domain
 %<a href="matlab:help powerspectraldensity">powerspectraldensity</a> - Returns power spectral density of SEIZMO records
 %<a href="matlab:help rlim2amph">rlim2amph</a>            - Convert SEIZMO spectral records from RLIM to AMPH
 %<a href="matlab:help splitpad">splitpad</a>             - Splits and zero pads SEIZMO data records
-%<a href="matlab:help sft">sft</a>                  - Sliding Fourier Transform of SEIZMO data
 %<a href="matlab:help unwrapphase">unwrapphase</a>          - Unwraps the phase of SEIZMO records
 %
 % <a href="matlab:help seizmo">SEIZMO - Passive Seismology Toolbox</a>

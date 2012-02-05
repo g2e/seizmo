@@ -3,19 +3,20 @@ function [data]=hilbrt(data)
 %
 %    Usage:    data=hilbrt(data)
 %
-%    Description: HILBRT(DATA) calculates and returns the Hilbert transform
-%     of SEIZMO records.  The Hilbert tranform is simply a -90 degree phase
-%     shift.
+%    Description:
+%     HILBRT(DATA) calculates and returns the Hilbert transform of SEIZMO
+%     records.  The Hilbert tranform is basically a -pi/2 phase shift.
 %
 %    Notes:
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     To do a positive 90 degree phase shift:
-%      data=hilbrt(multiply(data,-1))
+%     % Quick way to do a positive pi/2 phase shift:
+%     data=hilbrt(multiply(data,-1))
 %
-%    See also: ENVELOPE, INSTANTPHASE
+%    See also: ENVELOPE, INSTANTPHASE, INSTANTFREQ, OMEGAHILBERT,
+%              OMEGAANALYTIC
 
 %     Version History:
 %        Jan. 30, 2008 - initial version
@@ -33,16 +34,18 @@ function [data]=hilbrt(data)
 %        Oct. 19, 2009 - added checks for IFTYPE and LEVEN
 %        Jan. 29, 2010 - seizmoverbose support, better warnings
 %        June 16, 2010 - code reduction
+%        Feb.  4, 2012 - no zero-padding, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 11:00 GMT
+%     Last Updated Feb.  4, 2012 at 11:00 GMT
+
 % todo:
 
 % check nargin
 error(nargchk(1,1,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -50,7 +53,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt hilbert
 try
     % check header
-    data=checkheader(data,'NONTIME_IFTYPE','ERROR','FALSE_LEVEN','ERROR');
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
 
     % verbosity
     verbose=seizmoverbose;
@@ -60,7 +65,6 @@ try
     
     % get header info
     [npts,ncmp]=getheader(data,'npts','ncmp');
-    nspts=2.^(nextpow2n(npts)+1);
     
     % detail message
     if(verbose)
@@ -69,7 +73,7 @@ try
     end
     
     % loop over records
-    depmin=nan(nrecs,1); depmen=depmin; depmax=depmin;
+    [depmin,depmen,depmax]=deal(nan(nrecs,1));
     for i=1:nrecs
         % skip dataless
         if(isempty(data(i).dep))
@@ -83,16 +87,19 @@ try
         data(i).dep=double(data(i).dep);
         
         % frequency domain multiplier to give analytic signal
-        h=zeros(nspts(i),1);
-        h([1 nspts(i)/2+1])=1;
-        h(2:(nspts(i)/2))=2;
+        % = (1+sgn(w))
+        h=zeros(npts(i),1);
+        if(mod(npts,2)) % odd
+            h(1)=1;
+            h(2:((npts(i)+1)/2))=2;
+        else % even
+            h([1 npts(i)/2+1])=1;
+            h(2:(npts(i)/2))=2;
+        end
         
         % get hilbert
-        data(i).dep=imag(ifft(...
-            fft(data(i).dep,nspts(i),1).*h(:,ones(1,ncmp(i))),[],1));
-        
-        % truncate to original length and change class back
-        data(i).dep=oclass(data(i).dep(1:npts(i),:));
+        data(i).dep=oclass(imag(ifft(...
+            fft(data(i).dep,[],1).*h(:,ones(1,ncmp(i))),[],1)));
         
         % dep*
         depmen(i)=mean(data(i).dep(:)); 

@@ -3,9 +3,10 @@ function [data]=solofun(data,fun)
 %
 %    Usage:    data=solofun(data,fun)
 %
-%    Description: SOLOFUN(DATA,FUN) applies the function defined by the 
-%     function handle FUN to the dependent component(s) of SEIZMO records
-%     in DATA.  Does not adjust the independent data at all.
+%    Description:
+%     SOLOFUN(DATA,FUN) applies the function defined by the function handle
+%     FUN to the dependent component(s) of SEIZMO records in DATA.  Does
+%     not adjust the independent data at all.
 %
 %    Notes:
 %     - The number of components in the output record need not match that
@@ -16,16 +17,16 @@ function [data]=solofun(data,fun)
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NPTS, NCMP
 %
 %    Examples:
-%     A multi-tool of a function:
-%      data=solofun(data,@abs)
-%      data=solofun(data,@sign)
-%      data=solofun(data,@log)
-%      data=solofun(data,@sqrt)
-%      data=solofun(data,@exp)
-%      data=solofun(data,@(x)log(x)/log(4))
-%      data=solofun(data,@(x)x.^3)
-%      data=solofun(data,@(x)3.^x)
-%      data=solofun(data,@(x)real(exp(-2*i*pi*x)))
+%     % A multi-tool of a function:
+%     data=solofun(data,@abs)
+%     data=solofun(data,@sign)
+%     data=solofun(data,@log)
+%     data=solofun(data,@sqrt)
+%     data=solofun(data,@exp)
+%     data=solofun(data,@(x)log(x)/log(4))
+%     data=solofun(data,@(x)x.^3)
+%     data=solofun(data,@(x)3.^x)
+%     data=solofun(data,@(x)real(exp(-2*i*pi*x)))
 %
 %    See also: ADD, DIVIDE, MULTIPLY, SUBTRACT, SLIDINGFUN
 
@@ -46,9 +47,10 @@ function [data]=solofun(data,fun)
 %        Jan.  6, 2011 - renamed from seizmofun to solofun to better
 %                        distinguish from multifun (was recordfun), removed
 %                        versioninfo caching (too prone to breakage)
+%        Feb.  5, 2012 - doc update, code comment
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 17:05 GMT
+%     Last Updated Feb.  5, 2012 at 17:05 GMT
 
 % todo:
 
@@ -85,6 +87,8 @@ try
     ncmp=nan(nrecs,1); npts=ncmp;
     depmen=ncmp; depmin=ncmp; depmax=ncmp;
     for i=1:nrecs
+        % save class, convert to double precision,
+        % apply function & convert back to original precision
         oclass=str2func(class(data(i).dep));
         data(i).dep=oclass(fun(double(data(i).dep)));
         

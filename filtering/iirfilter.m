@@ -172,7 +172,7 @@ function [data,fo,nyq]=iirfilter(data,varargin)
 %     fvtool(fo{:}) % note that this will plot all the filters together
 %
 %    See also: INTERPOLATE, SYNCRATES, SQUISH, STRETCH, DFT, IDFT,
-%              IIRDESIGN, BUTTER, CHEBY1, CHEBY2, ELLIP
+%              IIRDESIGN, BUTTER, CHEBY1, CHEBY2, ELLIP, OMEGAGAUSSIAN
 
 %     Version History:
 %        Feb. 16, 2008 - initial version
@@ -197,9 +197,10 @@ function [data,fo,nyq]=iirfilter(data,varargin)
 %        Sep. 20, 2010 - passes arg now uses -1,-2 rather than 3,4
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
 %        Jan. 28, 2012 - doc update, better checkheader usage
+%        Feb.  5, 2012 - added omegagaussian to see also
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 15:05 GMT
+%     Last Updated Feb.  5, 2012 at 15:05 GMT
 
 % todo:
 

@@ -9,12 +9,16 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %                             field1,...,fieldN)
 %
 %    Description:
-%     TIMESHIFT(DATA,SHIFT) adjusts the relative timing of SEIZMO records
-%     in DATA by SHIFT seconds.  This adjustment is added to all defined
-%     header time fields (see Header changes section).  The reference time
-%     fields are then adjusted by -SHIFT.  This preserves the actual timing
-%     of the data and is basically equivalent to SAC's 'chnhdr allt shift'
-%     command.
+%     TIMESHIFT(DATA,SHIFT) adjusts the relative & reference timing of
+%     SEIZMO records in DATA by SHIFT seconds.  This essentially shifts the
+%     reference time of the records while preserving the actual timing of
+%     the relative time fields.  SHIFT is added to all defined relative
+%     time header fields (see Header changes section) and subtracted from
+%     the reference time.  Basically equivalent to the SAC command
+%     'chnhdr allt shift'.  Since reference time resolution is limited to
+%     milliseconds, this operation is limited to such a resolution.  Giving
+%     a shift with more precision than to the millisecond will not be
+%     honored unless OPTION (see below) is 'RELATIVE' or 'USER'.
 %
 %     TIMESHIFT(DATA,SHIFT,IZTYPE) changes the output records' header field
 %     'iztype' to IZTYPE.  This value is passed directly to CHANGEHEADER as
@@ -43,13 +47,14 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %
 %    Notes:
 %     - DOES NOT WORK FOR SPECTRAL OR XYZ RECORDS!
-%     - Since reference time resolution is limited to 1 millisecond, this
+%     - Since reference time resolution is limited to milliseconds, this
 %       operation is limited to such a resolution.  Giving a shift with
 %       more precision than to the millisecond will not be honored unless
 %       OPTION is 'RELATIVE' or 'USER'.
 %
-%    Header changes: NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC
-%                    A, B, E, F, O, Tn, and any user-defined field
+%    Header changes:
+%     Relative time fields:  A, B, E, F, O, Tn and any user-defined field
+%     Reference time fields: NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC
 %
 %    Examples:
 %     % Shift the reference time to the origin time (note '-' sign):
@@ -77,9 +82,10 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %                        undef checking
 %        Nov.  1, 2011 - doc update
 %        Jan. 30, 2012 - minor code comment
+%        Feb.  4, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 12:40 GMT
+%     Last Updated Feb.  4, 2012 at 12:40 GMT
 
 % todo:
 

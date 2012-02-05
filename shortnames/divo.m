@@ -1,1 +1,1 @@
-../intdif/divideomega.m
+../ftran/omegadivide.m

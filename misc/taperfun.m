@@ -4,11 +4,12 @@ function [pts]=taperfun(type,pts,limits,varargin)
 %    Usage:    tpr=taperfun(type,t,lim)
 %              tpr=taperfun(type,t,lim,opt)
 %
-%    Description: TPR=TAPERFUN(TYPE,T,LIM) returns a leading taper of type
-%     TYPE.  The taper goes from 0 to 1 within the time limits defined in
-%     LIM as [lower_bound upper_bound].  T is an array of time points for
-%     which corresponding taper values are returned as TPR.  Points below
-%     the lower bound return 0, while points above the upper bound give 1.
+%    Description:
+%     TPR=TAPERFUN(TYPE,T,LIM) returns a leading taper of type TYPE.  The
+%     taper goes from 0 to 1 within the time limits defined in LIM as
+%     [lower_bound upper_bound].  T is an array of time points for which
+%     corresponding taper values are returned as TPR.  Points below the
+%     lower bound return 0, while points above the upper bound give 1.
 %
 %     TPR=TAPERFUN(TYPE,T,LIM,OPT) passes taper option OPT.  Only
 %     'chebwin', 'gausswin', 'kaiser', and 'tukeywin' have options.  See
@@ -26,9 +27,9 @@ function [pts]=taperfun(type,pts,limits,varargin)
 %        NUTTALLWIN, PARZENWIN, RECTWIN, TUKEYWIN
 %
 %    Examples:
-%     Plot random values for a gaussian taper:
-%      t=sort(rand(100,1));
-%      plot(t,taperfun('gausswin',t,0:1,4),'o')
+%     % Plot random values for a gaussian taper:
+%     t=sort(rand(100,1));
+%     plot(t,taperfun('gausswin',t,0:1,4),'o')
 %
 %    See also: TAPER, WINDOW
 
@@ -36,9 +37,10 @@ function [pts]=taperfun(type,pts,limits,varargin)
 %        Sep. 23, 2009 - initial version
 %        Sep. 24, 2009 - fix no taper gives nan bug
 %        Feb.  4, 2010 - added cosine taper (points to Hann), doc update
+%        Feb.  5, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  4, 2010 at 02:20 GMT
+%     Last Updated Feb.  5, 2012 at 02:20 GMT
 
 % todo:
 

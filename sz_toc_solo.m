@@ -2,6 +2,7 @@ function []=sz_toc_solo()
 % Single-Record Operations
 %<a href="matlab:help add">add</a>                    - Add a constant to SEIZMO records
 %<a href="matlab:help clip">clip</a>                   - Clip SEIZMO data above a threshhold
+%<a href="matlab:help differentiate">differentiate</a>          - Differentiate SEIZMO records
 %<a href="matlab:help divide">divide</a>                 - Divide SEIZMO records by a constant
 %<a href="matlab:help envelope">envelope</a>               - Return envelopes of SEIZMO records
 %<a href="matlab:help getnorm">getnorm</a>                - Return normalizers for SEIZMO records
@@ -10,6 +11,7 @@ function []=sz_toc_solo()
 %<a href="matlab:help hilbrt">hilbrt</a>                 - Return Hilbert transform of SEIZMO records
 %<a href="matlab:help instantfreq">instantfreq</a>            - Returns estimated instantaneous frequency of SEIZMO records
 %<a href="matlab:help instantphase">instantphase</a>           - Return instantaneous phase of SEIZMO records
+%<a href="matlab:help integrate">integrate</a>              - Integrate SEIZMO records
 %<a href="matlab:help multiply">multiply</a>               - Multiply SEIZMO records by a constant
 %<a href="matlab:help normalize">normalize</a>              - Normalizes SEIZMO records
 %<a href="matlab:help point_verticals_upward">point_verticals_upward</a> - Adjusts vertically downward SEIZMO records

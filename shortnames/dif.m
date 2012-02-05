@@ -1,1 +1,1 @@
-../intdif/differentiate.m
+../solo/differentiate.m

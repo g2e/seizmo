@@ -5,8 +5,9 @@ function [lgc,sz,ns]=isequalsizeorscalar(varargin)
 %              isequalsizeorscalar(A,B,C,...)
 %              [tf,sz,ns]=isequalsizeorscalar(...)
 %
-%    Description:  ISEQUALSIZEORSCALAR(A,B) is 1 if the two arrays are the
-%     same size or are scalar.  If one is scalar the other may be any size.
+%    Description:
+%     ISEQUALSIZEORSCALAR(A,B) is 1 if the two arrays are the same size or
+%     are scalar.  If one is scalar the other may be any size.
 %
 %     ISEQUALSIZEORSCALAR(A,B,C,...) is 1 if all the input arguments have
 %     equal size or are scalar.
@@ -19,17 +20,17 @@ function [lgc,sz,ns]=isequalsizeorscalar(varargin)
 %     - returns true for no input or single input cases
 %
 %    Examples:
-%     Make some arrays to test:
-%      A=cell(3,4,10);
-%      B=nan(3,4,10);
-%      C=4;
-%      D=magic(5);
+%     % Make some arrays to test:
+%     A=cell(3,4,10);
+%     B=nan(3,4,10);
+%     C=4;
+%     D=magic(5);
 %
-%     Will return true:
-%      isequalsizeorscalar(A,B,C)
+%     % Will return true:
+%     isequalsizeorscalar(A,B,C)
 %
-%     Will return false:
-%      isequalsizeorscalar(A,B,C,D)
+%     % Will return false:
+%     isequalsizeorscalar(A,B,C,D)
 %
 %    See also: ISEQUAL, SIZE, EXPANDSCALARS
 
@@ -37,9 +38,10 @@ function [lgc,sz,ns]=isequalsizeorscalar(varargin)
 %        May   1, 2010 - initial version
 %        May  16, 2010 - more outputs
 %        May  20, 2010 - no split based on matlab version (sloooow)
+%        Feb.  5, 2012 - doc update, use try-catch block for pre-7.1
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  20, 2010 at 13:40 GMT
+%     Last Updated Feb.  5, 2012 at 13:40 GMT
 
 % todo:
 
@@ -66,16 +68,16 @@ end
 
 % compare nonscalars
 % - this breaks with early cellfun
-%if(verLessThan('matlab', '7.1'))
-%    nsi=find(ns);
-%    sz=size(varargin{nsi(1)});
-%    for i=nsi(2:end)
-%        if(~isequal(sz,size(varargin{i}))); lgc=false; return; end
-%    end
-%else % 7.1+
+try % 7.1+
     sizes=cellfun(@size,varargin(ns),'UniformOutput',false);
     lgc=isequal(sizes{:});
     sz=sizes{1};
-%end
+catch % pre 7.1
+    nsi=find(ns);
+    sz=size(varargin{nsi(1)});
+    for i=nsi(2:end)
+        if(~isequal(sz,size(varargin{i}))); lgc=false; return; end
+    end
+end
 
 end

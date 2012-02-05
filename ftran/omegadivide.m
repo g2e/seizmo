@@ -1,10 +1,11 @@
-function [data]=divideomega(data)
-%DIVIDEOMEGA    Integrate SEIZMO records in the frequency domain
+function [data]=omegadivide(data)
+%OMEGADIVIDE    Integrate SEIZMO records in the frequency domain
 %
-%    Usage:    data=divideomega(data)
+%    Usage:    data=omegadivide(data)
 %
-%    Description: DIVIDEOMEGA(DATA) basically divides each point in the 
-%     dependent component(s) of spectral files by:
+%    Description:
+%     OMEGADIVIDE(DATA) basically divides each point in the dependent
+%     component(s) of spectral records in SEIZMO struct DATA by:
 %       OMEGA=2.0 * PI * FREQ
 %     to perform the equivalent of integration in the time domain.  This is
 %     particularly handy when working with spectral data as it avoids
@@ -16,14 +17,15 @@ function [data]=divideomega(data)
 %     - Read the source code below for a better description of the
 %       operations performed for frequency-domain integration.
 %
-%    Header Changes: DEPMEN, DEPMIN, DEPMAX
+%    Header Changes: DEPMEN, DEPMIN, DEPMAX, IDEP
 %
 %    Examples:
-%     Integrate spectral data in the time domain vs frequency domain:
-%      data=dft(integrate(idft(data)))
-%      data=divideomega(data)
+%     % Integrate spectral data in the time domain vs frequency domain:
+%     data=dft(integrate(idft(data)))
+%     data=omegadivide(data)
 %
-%    See also: MULTIPLYOMEGA, DFT, IDFT
+%    See also: OMEGAMULTIPLY, OMEGASHIFT, OMEGAANALYTIC, DFT, IDFT,
+%              INTEGRATE, DIFFERENTIATE, OMEGAGAUSSIAN
 
 %     Version History:
 %        May  12, 2008 - initial version
@@ -31,7 +33,7 @@ function [data]=divideomega(data)
 %        July  8, 2008 - doc update, single ch call, .dep rather than .x
 %        July 19, 2008 - doc update, dataless support
 %        Oct.  7, 2008 - minor code cleaning
-%        Nov. 22, 2008 - update for new name schema (now DIVIDEOMEGA),
+%        Nov. 22, 2008 - update for new name schema (now OMEGADIVIDE),
 %                        changes idep field
 %        Apr. 23, 2009 - fix nargchk and seizmocheck for octave,
 %                        move usage up
@@ -41,9 +43,10 @@ function [data]=divideomega(data)
 %                        improved messaging
 %        May   6, 2010 - slimmer code for units exchange
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  4, 2012 - doc update, divideomega to omegadivide
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  4, 2012 at 15:05 GMT
 
 % todo:
 
@@ -51,7 +54,7 @@ function [data]=divideomega(data)
 error(nargchk(1,1,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -59,7 +62,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt frequency domain integration
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONSPECTRAL_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
 
     % verbosity
     verbose=seizmoverbose;
@@ -68,22 +73,9 @@ try
     nrecs=numel(data);
 
     % retreive header info
-    leven=getlgc(data,'leven');
-    [idep,iftype]=getenumid(data,'idep','iftype');
-    [e,delta,npts]=getheader(data,'e','delta','npts');
+    [delta,npts,idep,iftype]=getheader(data,...
+        'delta','npts','idep id','iftype id');
     npts2=npts/2;
-
-    % check leven,iftype
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:divideomega:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    elseif(any(~strcmpi(iftype,'irlim') & ~strcmpi(iftype,'iamph')))
-        error('seizmo:divideomega:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'irlim') & ~strcmpi(iftype,'iamph'))) ...
-            '\nDatatype of record(s) in DATA must be spectral!']);
-    end
     
     % detail message
     if(verbose)
@@ -92,7 +84,7 @@ try
     end
 
     % loop through records
-    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    [depmin,depmen,depmax]=deal(nan(nrecs,1));
     for i=1:nrecs
         % skip dataless
         if(isempty(data(i).dep))
@@ -106,22 +98,21 @@ try
         data(i).dep=double(data(i).dep);
 
         % integrate
-        cols=size(data(i).dep,2);
-        omega=[0 1./(2*pi*[(1:npts2(i))*delta(i) ...
-            ((npts2(i)-1):-1:1)*delta(i)])].';
+        cols=size(data(i).dep,2)/2;
+        omega=[0 1./(2*pi*delta(i)*[1:npts2(i) (npts2(i)-1):-1:1])].';
         if(strcmp(iftype(i),'irlim'))
             % rlim %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % 0Hz real/imag == 0 else
             % real=imag/omega & imag=-real/omega
             data(i).dep(:,[1:2:end 2:2:end])=oclass(...
-                [data(i).dep(:,2:2:end).*omega(:,ones(1,cols/2)) ...
-                -data(i).dep(:,1:2:end).*omega(:,ones(1,cols/2))]);
+                [data(i).dep(:,2:2:end).*omega(:,ones(1,cols)) ...
+                -data(i).dep(:,1:2:end).*omega(:,ones(1,cols))]);
         else % iamph
             % amph %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % amp at 0Hz == 0 else amp=amp/omega
             % phase=phase+pi/2 at -Hz and 0Hz else phase=phase-pi/2
             data(i).dep(:,1:2:end)=...
-                data(i).dep(:,1:2:end).*omega(:,ones(1,cols/2));
+                data(i).dep(:,1:2:end).*omega(:,ones(1,cols));
             data(i).dep(2:(npts2(i)+1),2:2:end)=...
                 data(i).dep(2:(npts2(i)+1),2:2:end)-pi/2;
             data(i).dep([1 npts2(i)+2:end],2:2:end)=...

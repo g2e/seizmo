@@ -1,12 +1,22 @@
-function [data]=idft(data)
+function [data]=idft(data,symflag)
 %IDFT    Performs an inverse discrete fourier transform on SEIZMO records
 %
 %    Usage:    data=idft(data)
+%              data=idft(data,symflag)
 %
 %    Description:
-%     IDFT(DATA) converts SEIZMO records from the frequency domain to the
-%     time domain using an inverse discrete fourier transform (Matlab's
+%     DATA=IDFT(DATA) converts SEIZMO records from the frequency domain to
+%     the time domain using an inverse discrete fourier transform (Matlab's
 %     ifft).  Output filetype is 'Time Series File'.
+%
+%     DATA=IDFT(DATA,SYMFLAG) allows passing the symmetry flag to Matlab's
+%     ifft.  By default no flag is passed & the real-portion of the time-
+%     domain data is returned.  Using SYMFLAG='nonsymmetric' will return
+%     the complex time-domain representation and is useful for analysis of
+%     complex signals like the analytic signal.  Using SYMFLAG='symmetric'
+%     will be computationally more efficient for records that are symmetric
+%     in the frequency domain.  The default, [], does what you usually
+%     want.
 %
 %    Notes:
 %     - SAC (and thus SEIZMO's DFT for sanity) calculates spectral data 
@@ -24,9 +34,15 @@ function [data]=idft(data)
 %
 %    Examples:
 %     % To take the derivative of a time-series in the frequency domain:
-%     data=idft(multiplyomega(dft(data)))
+%     data=idft(omegamultiply(dft(data)));
 %
-%    See also: DFT, AMPH2RLIM, RLIM2AMPH, DIVIDEOMEGA, MULTIPLYOMEGA
+%     % Get the envelope and instantaneous phase of spectral records:
+%     data=idft(omegaanalytic(data),'nonsymmetric');
+%     edata=solofun(data,@abs);
+%     pdata=solofun(data,@angle);
+%
+%    See also: DFT, AMPH2RLIM, RLIM2AMPH, OMEGADIVIDE, OMEGAMULTIPLY,
+%              OMEGASHIFT, OMEGAHILBERT, OMEGAANALYTIC, OMEGAGAUSSIAN
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -48,14 +64,15 @@ function [data]=idft(data)
 %        Aug. 19, 2010 - removed ifft symmetric flag, real conversion
 %        Feb. 11, 2011 - mass seizmocheck fix
 %        Dec. 21, 2011 - doc update, better checkheader usage
+%        Feb.  5, 2012 - minor doc update, symflag option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2011 at 15:05 GMT
+%     Last Updated Feb.  5, 2012 at 15:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+error(nargchk(1,2,nargin));
 
 % check data structure
 error(seizmocheck(data,'dep'));
@@ -75,6 +92,19 @@ try
 
     % number of records
     nrecs=numel(data);
+    
+    % check symflag
+    if(nargin<2); symflag=''; end
+    if(ischar(symflag))
+        if(~isempty(symflag) ...
+                && ~any(strcmpi(symflag,{'symmetric' 'nonsymmetric'})))
+            error('seizmo:idft:badInput',...
+                'SYMFLAG must be ''symmetric'' or ''nonsymmetric''!');
+        end
+    elseif(~isempty(symflag))
+        error('seizmo:idft:badInput',...
+            'SYMFLAG value not valid!');
+    end
 
     % retreive header info
     iftype=getenumid(data,'iftype');
@@ -105,13 +135,22 @@ try
 
         % turn back into time domain
         if(strcmpi(iftype(i),'irlim'))
-            data(i).dep=real(1/sdelta(i)*ifft(...
-                complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)),...
-                [],1));
+            if(isempty(symflag))
+                data(i).dep=real(1/sdelta(i)*ifft(complex(...
+                    data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)),[],1));
+            else
+                data(i).dep=1/sdelta(i)*ifft(complex(...
+                    data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)),...
+                    [],1,symflag);
+            end
         else % iamph
-            data(i).dep=real(1/sdelta(i)*ifft(...
-                data(i).dep(:,1:2:end).*exp(1j*data(i).dep(:,2:2:end)),...
-                [],1));
+            if(isempty(symflag))
+                data(i).dep=real(1/sdelta(i)*ifft(data(i).dep(:,1:2:end)...
+                    .*exp(1j*data(i).dep(:,2:2:end)),[],1));
+            else
+                data(i).dep=1/sdelta(i)*ifft(data(i).dep(:,1:2:end)...
+                    .*exp(1j*data(i).dep(:,2:2:end)),[],1,symflag);
+            end
         end
 
         % truncate to original length and change class back

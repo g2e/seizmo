@@ -1,39 +1,44 @@
 function [data]=instantphase(data)
-%INSTANTPHASE    Return instantaneous phase of SEIZMO records
+%INSTANTPHASE    Returns instantaneous phase of SEIZMO records
 %
 %    Usage:    data=instantphase(data)
 %
-%    Description: INSTANTPHASE(DATA) returns the instantaneous phase (the
-%     point-by-point phase of a record's analytic signal) of records in
-%     SEIZMO struct DATA.  The instantaneous phase is related to the
-%     Hilbert transform and the envelope of a signal by the following:
+%    Description:
+%     INSTANTPHASE(DATA) returns the instantaneous phase (the point-by-
+%     point phase of a record's analytic signal) of records in SEIZMO
+%     struct DATA.  The instantaneous phase is related to the Hilbert
+%     transform, the analytic signal, and the envelope of a signal by the
+%     following:
 %
-%       A(X) = X + iH(X)
+%      (1) A(t) = X(t) + iH(X(t))
 %
-%                        i*PHI(X)
-%       A(X) = ENV(X) * e
+%                           i*PHI(t)
+%      (2) A(t) = ENV(t) * e
 %
-%     where X is the records' data, i is sqrt(-1), H() denotes a Hilbert
-%     transform, A is the analytic signal, ENV is the envelope of the
-%     signal and PHI is the instantaneous phase.
+%     where X is the time series, i is sqrt(-1), H() denotes a Hilbert
+%     transform, A is the analytic signal, ENV is the envelope and PHI is
+%     the instantaneous phase.
 %
 %    Notes:
+%     - Make sure to remove the trend/mean beforehand!
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Plot up the various components of the analytic signal:
-%      plot1([data hilbrt(data) envelope(data) instantphase(data)])
+%     % Plot up the various components of the analytic signal:
+%     plot1([data hilbrt(data) envelope(data) instantphase(data)])
 %
-%    See also: HILBRT, ENVELOPE, INSTANTFREQ
+%    See also: HILBRT, ENVELOPE, INSTANTFREQ, OMEGAHILBERT,
+%              OMEGAANALYTIC
 
 %     Version History:
 %        Oct. 19, 2009 - initial version
 %        Jan. 29, 2010 - seizmoverbose support, better warnings
 %        June 16, 2010 - code reduction
+%        Feb.  4, 2012 - no zero-padding, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 16, 2010 at 10:20 GMT
+%     Last Updated Feb.  4, 2012 at 10:20 GMT
 
 % todo:
 
@@ -41,7 +46,7 @@ function [data]=instantphase(data)
 error(nargchk(1,1,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -49,7 +54,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt instant phase
 try
     % check header
-    data=checkheader(data,'NONTIME_IFTYPE','ERROR','FALSE_LEVEN','ERROR');
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR');
 
     % verbosity
     verbose=seizmoverbose;
@@ -59,7 +66,6 @@ try
     
     % get header info
     [npts,ncmp]=getheader(data,'npts','ncmp');
-    nspts=2.^(nextpow2n(npts)+1);
     
     % detail message
     if(verbose)
@@ -68,7 +74,7 @@ try
     end
     
     % loop over records
-    depmin=nan(nrecs,1); depmen=depmin; depmax=depmin;
+    [depmin,depmen,depmax]=deal(nan(nrecs,1));
     for i=1:nrecs
         % skip dataless
         if(isempty(data(i).dep))
@@ -82,16 +88,19 @@ try
         data(i).dep=double(data(i).dep);
         
         % frequency domain multiplier to give analytic signal
-        h=zeros(nspts(i),1);
-        h([1 nspts(i)/2+1])=1;
-        h(2:(nspts(i)/2))=2;
+        % = (1+sgn(w))
+        h=zeros(npts(i),1);
+        if(mod(npts,2)) % odd
+            h(1)=1;
+            h(2:((npts(i)+1)/2))=2;
+        else % even
+            h([1 npts(i)/2+1])=1;
+            h(2:(npts(i)/2))=2;
+        end
         
         % get instantaneous phase
-        data(i).dep=angle(ifft(...
-            fft(data(i).dep,nspts(i),1).*h(:,ones(1,ncmp(i))),[],1));
-        
-        % truncate to original length and change class back
-        data(i).dep=oclass(data(i).dep(1:npts(i),:));
+        data(i).dep=oclass(angle(ifft(...
+            fft(data(i).dep,[],1).*h(:,ones(1,ncmp(i))),[],1)));
         
         % dep*
         depmen(i)=mean(data(i).dep(:)); 

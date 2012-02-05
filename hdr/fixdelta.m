@@ -68,9 +68,10 @@ function [data]=fixdelta(data,tol,units)
 %        Mar. 24, 2010 - added rants to docs, default tol set to 1e-6
 %        Feb. 11, 2011 - mass nargchk fix, point to rrat not rat, todo list
 %        Jan. 30, 2012 - units option, some debug code, change defaults
+%        Feb.  4, 2012 - no warning for multiple delta
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 15:05 GMT
+%     Last Updated Feb.  4, 2012 at 15:05 GMT
 
 % todo:
 
@@ -78,7 +79,7 @@ function [data]=fixdelta(data,tol,units)
 error(nargchk(1,3,nargin));
 
 % check data structure & header
-data=checkheader(data);
+data=checkheader(data,'multiple_delta','ignore');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

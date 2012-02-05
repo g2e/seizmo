@@ -1,1 +1,1 @@
-../intdif/multiplyomega.m
+../ftran/omegamultiply.m

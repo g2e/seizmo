@@ -3,14 +3,15 @@ function [varargout]=expandscalars(varargin)
 %
 %    Usage:    [a,b,c,...]=expandscalars(a,b,c,...)
 %
-%    Description: [A,B,C,...]=EXPANDSCALARS(A,B,C,...) will expand any
-%     scalar inputs to match the size of nonscalar inputs.  Note that all
-%     nonscalar inputs must be the same size (checked via
-%     ISEQUALSIZEORSCALAR).
+%    Description:
+%     [A,B,C,...]=EXPANDSCALARS(A,B,C,...) will expand any scalar inputs to
+%     match the size of nonscalar inputs.  Note that all nonscalar inputs
+%     must be the same size (checked via ISEQUALSIZEORSCALAR).
 %
 %    Notes:
 %
 %    Examples:
+%     % Expand two scalars to 6x6 matrices:
 %     a=magic(6);
 %     b=999;
 %     c=zeros(6);
@@ -20,9 +21,10 @@ function [varargout]=expandscalars(varargin)
 
 %     Version History:
 %        May  16, 2010 - initial version
+%        Feb.  5, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  16, 2010 at 11:25 GMT
+%     Last Updated Feb.  5, 2012 at 11:25 GMT
 
 % todo:
 

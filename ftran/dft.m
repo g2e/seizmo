@@ -37,9 +37,10 @@ function [data]=dft(data,format,pow2pad)
 %
 %    Examples:
 %     % To take the derivative of a time-series in the frequency domain:
-%     data=idft(multiplyomega(dft(data)))
+%     data=idft(omegamultiply(dft(data)))
 %
-%    See also: IDFT, AMPH2RLIM, RLIM2AMPH, DIVIDEOMEGA, MULTIPLYOMEGA
+%    See also: IDFT, AMPH2RLIM, RLIM2AMPH, OMEGADIVIDE, OMEGAMULTIPLY,
+%              OMEGASHIFT, OMEGAHILBERT, OMEGAANALYTIC, OMEGAGAUSSIAN
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -63,9 +64,10 @@ function [data]=dft(data,format,pow2pad)
 %                        improved messaging, drop GETNCMP usage
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
 %        Dec. 21, 2011 - doc update, better checkheader usage, drop globals
+%        Feb.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2011 at 15:05 GMT
+%     Last Updated Feb.  4, 2012 at 15:05 GMT
 
 % todo:
 
