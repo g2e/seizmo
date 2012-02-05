@@ -46,7 +46,8 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %     apply SHIFT twice unless OPTION is set to 'REFERENCE' or 'USER'!
 %
 %    Notes:
-%     - DOES NOT WORK FOR SPECTRAL OR XYZ RECORDS!
+%     - DOES NOT WORK FOR XYZ RECORDS!
+%     - Spectral records update the SB field instead of the B or E field!
 %     - Since reference time resolution is limited to milliseconds, this
 %       operation is limited to such a resolution.  Giving a shift with
 %       more precision than to the millisecond will not be honored unless
@@ -55,6 +56,7 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %    Header changes:
 %     Relative time fields:  A, B, E, F, O, Tn and any user-defined field
 %     Reference time fields: NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC
+%     Spectral records: SB instead of B or E
 %
 %    Examples:
 %     % Shift the reference time to the origin time (note '-' sign):
@@ -83,9 +85,10 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %        Nov.  1, 2011 - doc update
 %        Jan. 30, 2012 - minor code comment
 %        Feb.  4, 2012 - doc update
+%        Feb.  5, 2012 - works with spectral records (updates sb not b/e)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  4, 2012 at 12:40 GMT
+%     Last Updated Feb.  5, 2012 at 12:40 GMT
 
 % todo:
 
@@ -94,7 +97,7 @@ error(nargchk(2,inf,nargin));
 
 % check struct/header
 data=checkheader(data,...
-    'NONTIME_IFTYPE','ERROR');
+    'XYZ_IFTYPE','ERROR');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -183,8 +186,9 @@ try
     % get header fields
     nvararg=numel(varargin);
     user=cell(1,nvararg);
-    [a,b,e,f,o,t,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec,user{:}]=...
-        getheader(data,'a','b','e','f','o','t',...
+    [iftype,a,b,sb,e,f,o,t,...
+        nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec,user{:}]=getheader(data,...
+        'iftype id','a','b','sb','e','f','o','t',...
         'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec',varargin{:});
 
     % get new absolute timing
@@ -203,13 +207,20 @@ try
 
     % combine field and values for changeheader call
     user=[varargin; user];
+    
+    % handle spectral records switch of b/sb, skip e
+    spectral=ismember(iftype,{'irlim' 'iamph'});
+    time=~spectral;
+    b(time)=b(time)+relshift(time);
+    e(time)=e(time)+relshift(time);
+    sb(spectral)=sb(spectral)+relshift(spectral);
 
     % change header fields
     data=changeheader(data,'iztype',iztype,...
         'nzyear',times(:,1),'nzjday',times(:,2),'nzhour',times(:,3),...
         'nzmin',times(:,4),'nzsec',fix(times(:,5)+1e-9),... % handling
         'nzmsec',fix(1000*mod(times(:,5)+1e-9,1)),...       % precision
-        'a',a+relshift,'b',b+relshift,'e',e+relshift,'f',f+relshift,...
+        'a',a+relshift,'b',b,'sb',sb,'e',e,'f',f+relshift,...
         'o',o+relshift,'t',t+relshift(:,ones(10,1)),user{:});
     
     % detail message

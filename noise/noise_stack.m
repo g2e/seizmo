@@ -101,6 +101,7 @@ function []=noise_stack(indir,outdir,pair,varargin)
 % - stack2stack
 % - missing day directories?
 % - are the weeks ok? yrmo? mon?
+% - clear user0/1?
 
 % check nargin
 error(nargchk(3,inf,nargin));

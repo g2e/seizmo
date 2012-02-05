@@ -50,9 +50,13 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %    Notes:
 %     - Due to the reference time resolution of 1 millisecond, the field
 %       being aligned on may not be zero but will be within a millisecond.
+%     - Spectral records uses SB instead of B as a timing field!  The E
+%       values are temporarily replaced with a valid E timing field and
+%       then set back to the frequency counterpart.
 %
 %    Header changes: NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC,
 %                    A, B, E, F, O, Tn, and any user-defined field
+%                    SB (if spectral)
 %
 %    Examples:
 %     % Just like SAC:
@@ -77,9 +81,10 @@ function [data]=synchronize(data,field,option,iztype,timing,varargin)
 %                        undef checking, drop versioninfo caching
 %        Nov.  1, 2011 - doc update
 %        Jan. 28, 2012 - doc update, allow date vector input, comments
+%        Feb.  5, 2012 - allow spectral records (use SB not B/E)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 16:20 GMT
+%     Last Updated Feb.  5, 2012 at 16:20 GMT
 
 % todo:
 
@@ -88,7 +93,7 @@ error(nargchk(1,inf,nargin));
 
 % check headers
 data=checkheader(data,...
-    'NONTIME_IFTYPE','ERROR');
+    'XYZ_IFTYPE','ERROR');
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -196,9 +201,22 @@ try
     % get header fields
     nvararg=numel(varargin);
     user=cell(1,nvararg);
-    [a,b,e,f,o,t,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec,user{:}]=...
-        getheader(data,'a','b','e','f','o','t',...
+    [iftype,a,b,sb,sdelta,nspts,e,f,o,t,...
+        nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec,user{:}]=getheader(data,...
+        'iftype id','a','b','sb','sdelta','nspts','e','f','o','t',...
         'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec',varargin{:});
+    se=sb+sdelta.*(nspts-1);
+    
+    % fix sync field if spectral & b/e is synced on
+    spectral=ismember(iftype,{'irlim' 'iamph'});
+    if(~abstime && any(spectral))
+        switch lower(field)
+            case 'b'
+                values(spectral)=sb(spectral);
+            case 'e'
+                values(spectral)=se(spectral);
+        end
+    end
 
     % get shift
     reftimes=[nzyear nzjday nzhour nzmin nzsec+nzmsec/1000];
@@ -238,6 +256,12 @@ try
 
     % combine field and values for changeheader call
     user=[varargin; user];
+    
+    % handle spectral records switch of b/sb, skip e
+    time=~spectral;
+    b(time)=b(time)+shift(time);
+    e(time)=e(time)+shift(time);
+    sb(spectral)=sb(spectral)+shift(spectral);
 
     % change header fields
     data=changeheader(data,'iztype',iztype,...
@@ -245,7 +269,7 @@ try
         'nzhour',synctime(3),'nzmin',synctime(4),...
         'nzsec',fix(synctime(5)+1e-9),...              % trying to handle
         'nzmsec',fix(1000*mod(synctime(5)+1e-9,1)),... % precision issues
-        'a',a+shift,'b',b+shift,'e',e+shift,'f',f+shift,...
+        'a',a+shift,'b',b,'sb',sb,'e',e,'f',f+shift,...
         'o',o+shift,'t',t+shift(:,ones(10,1)),user{:});
     
     % detail message
