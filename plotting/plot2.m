@@ -70,11 +70,14 @@ function [varargout]=plot2(varargin)
 %        Apr. 16, 2011 - allow empty title/xlabel/ylabel, allow datetick
 %                        for non-absolute
 %        Apr. 19, 2011 - userdata for each record contains record metadata
+%        Feb.  6, 2012 - better getheader usage, set displayname to kname
+%                        string, fix legend coloring
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 19, 2011 at 23:00 GMT
+%     Last Updated Feb.  6, 2012 at 23:00 GMT
 
 % todo:
+% - kname output for title in multi-dataset case only for last dataset
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -138,7 +141,8 @@ if(nd>1)
             || any(~ishandle(opt.AXIS)) ...
             || any(~strcmp('axes',get(opt.AXIS,'type'))))
         % new figure
-        fh=figure('color',opt.BGCOLOR);
+        fh=figure('color',opt.BGCOLOR,'defaulttextcolor',opt.FGCOLOR,...
+            'defaultaxesxcolor',opt.FGCOLOR); % defaults for legend
         if(isempty(opt.NUMCOLS))
             opt.NUMCOLS=fix(sqrt(nrecs));
         end
@@ -148,12 +152,12 @@ if(nd>1)
     end
     
     % necessary header info
-    leven=cell(nrecs,nd);
+    [leven,displayname]=deal(cell(nrecs,nd));
     [b,npts,delta,z]=deal(nan(nrecs,nd));
     goodfiles=false(nrecs,nd);
     for i=1:nd
         % check filetype
-        iftype=getenumid(data{i},'iftype');
+        iftype=getheader(data{i},'iftype id');
         time=strcmpi(iftype,'itime') | strcmpi(iftype,'ixy');
         spec=strcmpi(iftype,'irlim') | strcmpi(iftype,'iamph');
         goodfiles(:,i)=time | spec;
@@ -162,10 +166,13 @@ if(nd>1)
         if(sum(spec)); data{i}(spec)=idft(data{i}(spec)); end
         
         % header info
-        leven(:,i)=getlgc(data{i},'leven');
-        [b(:,i),npts(:,i),delta(:,i),kname,z6]=...
-            getheader(data{i},'b','npts','delta','kname','z6');
+        [b(:,i),npts(:,i),delta(:,i),kname,z6,leven(:,i)]=...
+            getheader(data{i},'b','npts','delta','kname','z6','leven lgc');
         z(:,i)=datenum(cell2mat(z6));
+        
+        % names for legend
+        displayname(:,i)=strcat(kname(:,1),'.',kname(:,2),...
+            '.',kname(:,3),'.',kname(:,4));
     end
     
     % loop over each subplot
@@ -216,9 +223,16 @@ if(nd>1)
             % set userdata to everything but data (cleared)
             data{j}(i).dep=[];
             data{j}(i).ind=[];
-            for ridx=1:numel(rh)
+            nrh=numel(rh);
+            for ridx=1:nrh
+                if(nrh>1)
+                    ncmpstr=[' (' num2str(ridx) ')'];
+                else
+                    ncmpstr=[];
+                end
                 data{j}(i).index=[j i ridx];
-                set(rh(ridx),'userdata',data{j}(i));
+                set(rh(ridx),'userdata',data{j}(i),...
+                    'displayname',[displayname{i,j} ncmpstr]);
             end
         end
         hold(opt.AXIS(i),'off');
@@ -270,6 +284,7 @@ if(nd>1)
         end
         
         % label
+        % - FIXME: KNAME belongs to last dataset!
         if(~isempty(opt.TITLE) && isnumeric(opt.TITLE))
             switch opt.TITLE
                 case 1 % x/y records
@@ -323,7 +338,8 @@ else
     if(isempty(opt.AXIS) || ~isscalar(opt.AXIS) || ~isreal(opt.AXIS) ...
             || ~ishandle(opt.AXIS) || ~strcmp('axes',get(opt.AXIS,'type')))
         % new figure
-        figure('color',opt.BGCOLOR);
+        figure('color',opt.BGCOLOR,'defaulttextcolor',opt.FGCOLOR,...
+            'defaultaxesxcolor',opt.FGCOLOR); % defaults for legend
         opt.AXIS=gca;
     else
         cla(opt.AXIS,'reset');
@@ -339,7 +355,7 @@ else
     data=data{1};
     
     % check filetype
-    iftype=getenumid(data,'iftype');
+    iftype=getheader(data,'iftype id');
     time=strcmpi(iftype,'itime') | strcmpi(iftype,'ixy');
     spec=strcmpi(iftype,'irlim') | strcmpi(iftype,'iamph');
     goodfiles=find(time | spec)';
@@ -348,9 +364,13 @@ else
     if(sum(spec)); data(spec)=idft(data(spec)); end
     
     % necessary header info
-    leven=getlgc(data,'leven');
-    [b,npts,delta,z6]=getheader(data,'b','npts','delta','z6');
+    [b,npts,delta,z6,kname,leven]=getheader(data,...
+        'b','npts','delta','z6','kname','leven lgc');
     z6=datenum(cell2mat(z6));
+    
+    % names for legend
+    displayname=strcat(kname(:,1),'.',kname(:,2),...
+        '.',kname(:,3),'.',kname(:,4));
     
     % loop through every record
     hold(opt.AXIS,'on');
@@ -389,9 +409,16 @@ else
         % set userdata to everything but data (cleared)
         data(i).dep=[];
         data(i).ind=[];
-        for ridx=1:numel(rh)
+        nrh=numel(rh);
+        for ridx=1:nrh
+            if(nrh>1)
+                ncmpstr=[' (' num2str(ridx) ')'];
+            else
+                ncmpstr=[];
+            end
             data(i).index=[i ridx];
-            set(rh(ridx),'userdata',data(i));
+            set(rh(ridx),'userdata',data(i),...
+                'displayname',[displayname{i} ncmpstr]);
         end
     end
     hold(opt.AXIS,'off');

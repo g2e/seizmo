@@ -7,7 +7,8 @@ function [data]=powerspectraldensity(data,method,pow2pad)
 %
 %    Description:
 %     DATA=POWERSPECTRALDENSITY(DATA) computes the power spectral density
-%     for each record in SEIZMO struct DATA using the fft approach.
+%     for each record in SEIZMO struct DATA using the fft approach.  Output
+%     records are in decibels (dBs).
 %
 %     DATA=POWERSPECTRALDENSITY(DATA,METHOD) changes the method used to
 %     compute the power spectra.  Currently there is only 'fft'.  Other
@@ -38,12 +39,10 @@ function [data]=powerspectraldensity(data,method,pow2pad)
 %
 %    Examples:
 %     % These should be the same:
-%     p2(powerspectradensity(data),keeppw(dft(data)),...
-%         'yscale','log','xscale','log');
+%     plot2(powerspectradensity(data),keeppw(dft(data)),'xscale','log');
 %
 %     % See the affect of the POW2PAD option:
-%     p2(powerspectraldensity(data([1 1 1]),[],-1:1),...
-%         'yscale','log','xscale','log');
+%     plot2(powerspectraldensity(data([1 1 1]),[],-1:1),'xscale','log');
 %
 %    See also: DFT, IDFT, KEEPPW
 
@@ -55,9 +54,10 @@ function [data]=powerspectraldensity(data,method,pow2pad)
 %                        independent of sample rate, pow2pad<0 wrapping fix
 %                        (required division by original npts), examples, no
 %                        need to turn off checkheader
+%        Feb.  6, 2012 - output is in dBs now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2011 at 13:30 GMT
+%     Last Updated Feb.  6, 2012 at 13:30 GMT
 
 % todo:
 
@@ -150,8 +150,8 @@ try
                 data(i).dep=delta(i)*data(i).dep(1:(nspts(i)/2+1),:);
         end
         
-        % change class back
-        data(i).dep=oclass(data(i).dep);
+        % convert to dB & change class back
+        data(i).dep=oclass(10*log10(data(i).dep));
         
         % dep*
         depmen(i)=mean(data(i).dep(:));

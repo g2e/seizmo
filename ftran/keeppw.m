@@ -6,7 +6,8 @@ function [data]=keeppw(data)
 %    Description:
 %     KEEPPW(DATA) extracts the power component of spectral records in
 %     DATA.  Filetype is changed to General X vs Y.  This is useful for
-%     operations that require the power component of the spectra.
+%     operations that require the power component of the spectra.  Units
+%     are decibels (dBs).
 %
 %    Notes:
 %
@@ -14,16 +15,17 @@ function [data]=keeppw(data)
 %
 %    Examples:
 %     % Simple power plot:
-%     plot2(keeppw(data),'yscale','log','xscale','log')
+%     plot2(keeppw(data),'xscale','log');
 %
 %    See also: KEEPAM, KEEPPH, KEEPIM, KEEPRL, GETSPECTRALCMP,
 %              SPLITRECORDS, DFT, IDFT
 
 %     Version History:
 %        Dec. 21, 2011 - initial version
+%        Feb.  6, 2012 - power spectra is now in dBs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2011 at 20:25 GMT
+%     Last Updated Feb.  6, 2012 at 20:25 GMT
 
 % todo:
 

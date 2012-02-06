@@ -7,7 +7,7 @@ function []=sz_toc_plotting()
 %<a href="matlab:help plot0">plot0</a>             - Evenly spaced plot of SEIZMO records
 %<a href="matlab:help plot1">plot1</a>             - Plot SEIZMO data records in individual subplots
 %<a href="matlab:help plot2">plot2</a>             - Overlay plot of SEIZMO data records
-%<a href="matlab:help plotclusters">plotclusters</a>      - Plots SEIZMO data records as clusters in subplots
+%<a href="matlab:help plot_noise_models">plot_noise_models</a> - Plots noise models (NLNM & NHNM)%<a href="matlab:help plotclusters">plotclusters</a> - Plots SEIZMO data records as clusters in subplots
 %<a href="matlab:help plotdendro">plotdendro</a>        - Plots correlation linkage and seismograms
 %<a href="matlab:help plotpop">plotpop</a>           - Makes a stem plot of cluster populations
 %<a href="matlab:help plotspectra0">plotspectra0</a>      - Evenly spaced plot of SEIZMO data record spectra

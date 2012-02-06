@@ -64,9 +64,11 @@ function [varargout]=plot1(data,varargin)
 %        Apr. 19, 2011 - userdata for each record contains record metadata
 %        Nov.  8, 2011 - move shortidep out as an independent function
 %        Nov. 11, 2011 - per record linewidth, fontweight support
+%        Feb.  6, 2012 - better getheader usage, set displayname to kname
+%                        string, fix legend coloring
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 11, 2011 at 23:00 GMT
+%     Last Updated Feb.  6, 2012 at 23:00 GMT
 
 % todo:
 
@@ -105,7 +107,7 @@ opt.LINEWIDTH=opt.LINEWIDTH(:);
 opt.LINEWIDTH=repmat(opt.LINEWIDTH,ceil(nrecs/size(opt.LINEWIDTH,1)),1);
 
 % check filetype (only timeseries or xy)
-iftype=getenumid(data,'iftype');
+iftype=getheader(data,'iftype id');
 time=strcmpi(iftype,'itime') | strcmpi(iftype,'ixy');
 spec=strcmpi(iftype,'irlim') | strcmpi(iftype,'iamph');
 goodfiles=find(time | spec)';
@@ -114,11 +116,13 @@ goodfiles=find(time | spec)';
 if(sum(spec)); data(spec)=idft(data(spec)); end
 
 % header info
-leven=getlgc(data,'leven');
-idep=shortidep(getenumdesc(data,'idep'));
-[b,npts,delta,z6,kname]=getheader(data,...
-    'b','npts','delta','z6','kname');
+[b,npts,delta,z6,kname,leven,idep]=getheader(data,...
+    'b','npts','delta','z6','kname','leven lgc','idep desc');
 z6=datenum(cell2mat(z6));
+
+% names for legend
+displayname=strcat(kname(:,1),'.',kname(:,2),...
+    '.',kname(:,3),'.',kname(:,4));
 
 % get markers info
 [marknames,marktimes]=getmarkers(data);
@@ -133,7 +137,8 @@ if(isempty(opt.AXIS) || numel(opt.AXIS)~=nrecs || ~isreal(opt.AXIS) ...
         || any(~ishandle(opt.AXIS)) ...
         || any(~strcmp('axes',get(opt.AXIS,'type'))))
     % new figure
-    fh=figure('color',opt.BGCOLOR);
+    fh=figure('color',opt.BGCOLOR,'defaulttextcolor',opt.FGCOLOR,...
+        'defaultaxesxcolor',opt.FGCOLOR); % defaults for legend
     if(isempty(opt.NUMCOLS))
         opt.NUMCOLS=fix(sqrt(nrecs));
     end
@@ -187,9 +192,16 @@ for i=goodfiles
     % set userdata to everything but data (cleared)
     data(i).dep=[];
     data(i).ind=[];
-    for ridx=1:numel(rh)
+    nrh=numel(rh);
+    for ridx=1:nrh
+        if(nrh>1)
+            ncmpstr=[' (' num2str(ridx) ')'];
+        else
+            ncmpstr=[];
+        end
         data(i).index=[i ridx];
-        set(rh(ridx),'userdata',data(i));
+        set(rh(ridx),'userdata',data(i),...
+            'displayname',[displayname{i} ncmpstr]);
     end
     
     % tag records

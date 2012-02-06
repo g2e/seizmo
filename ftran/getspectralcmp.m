@@ -34,9 +34,10 @@ function [data]=getspectralcmp(data,cmp)
 %        Aug. 15, 2010 - nargchk fix
 %        Feb. 11, 2011 - mass seizmocheck fix
 %        Dec. 21, 2011 - add power spectra option, better checkheader usage
+%        Feb.  6, 2012 - power spectra output is in dBs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2011 at 15:05 GMT
+%     Last Updated Feb.  6, 2012 at 15:05 GMT
 
 % todo:
 
@@ -150,6 +151,9 @@ try
                 end
                 data(i).dep=2*data(i).dep.*conj(data(i).dep)/nspts(i);
                 data(i).dep=data(i).dep/sdelta(i);
+                
+                % convert to dBs
+                data(i).dep=10*log10(data(i).dep);
             case 'cmplx'
                 if(isrlim(i))
                     data(i).dep=complex(...

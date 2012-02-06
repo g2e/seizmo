@@ -8,6 +8,7 @@ function [opt]=parse_seizmo_plot_options(varargin)
 % - value checking
 % - documentation
 % - support more plotting options and functions
+% - per cmp linestyle, color, linewidth
 
 % put function-dependent defaults at front of options list
 pf=star69; % who is the calling function?

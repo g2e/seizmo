@@ -57,9 +57,10 @@ function [varargout]=plotspectra1(data,varargin)
 %     Version History:
 %        Aug. 15, 2010 - initial version
 %        Dec. 21, 2011 - add power option
+%        Feb.  6, 2012 - better getheader usage, yscale=linear for cmp=pw
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2010 at 23:00 GMT
+%     Last Updated Feb.  6, 2012 at 23:00 GMT
 
 % todo:
 % - autoticks in log scale is not useful (Matlab bug)
@@ -74,7 +75,7 @@ error(seizmocheck(data,'dep'));
 opt=parse_seizmo_plot_options(varargin{:});
 
 % get datatype
-iftype=getenumid(data,'iftype');
+iftype=getheader(data,'iftype id');
 time=strcmpi(iftype,'itime') | strcmpi(iftype,'ixy');
 spec=strcmpi(iftype,'irlim') | strcmpi(iftype,'iamph');
 
@@ -104,8 +105,7 @@ switch lower(opt.SPECTRALCMP)
         spylabel='imag cmp';
     case {'pw' 'pow' 'power'}
         data(time | spec)=keeppw(data(time | spec));
-        yscale='log';
-        spylabel='power';
+        spylabel='power (dB)';
     otherwise
         error('seizmo:plotspectra1:badInput',...
             'Unknown spectral component: %s',opt.SPECTRALCMP);

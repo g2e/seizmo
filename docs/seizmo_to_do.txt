@@ -9,9 +9,6 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-way to show NLNM & NHNM on power spectra plots
-    - an option?
-    - standard labels (hum, 26s, sp, dp, NLNM, NHNM)
 merge
     - uneven or variable samplerate
 rotate

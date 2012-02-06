@@ -66,11 +66,15 @@ function [varargout]=recordsection(data,varargin)
 %        Apr. 19, 2011 - userdata for each record contains record metadata
 %        Jan. 12, 2012 - minor improvement to normstyle handling
 %        Jan. 25, 2012 - norm2yaxis bugfix
+%        Feb.  6, 2012 - better getheader usage, set displayname to kname
+%                        string, fix legend coloring, handle undefined
+%                        yfield (errors/warns), fix ncmp>1 brokeness
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 25, 2012 at 23:00 GMT
+%     Last Updated Feb.  6, 2012 at 23:00 GMT
 
 % todo:
+% - markers only based on 1st cmp data values
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -105,21 +109,37 @@ opt.LINESTYLE=opt.LINESTYLE(:);
 opt.LINESTYLE=repmat(opt.LINESTYLE,ceil(nrecs/size(opt.LINESTYLE,1)),1);
 
 % check filetype
-iftype=getenumid(data,'iftype');
+iftype=getheader(data,'iftype id');
 time=strcmpi(iftype,'itime') | strcmpi(iftype,'ixy');
 spec=strcmpi(iftype,'irlim') | strcmpi(iftype,'iamph');
-goodfiles=find(time | spec)';
+goodfiles=(time | spec)';
 
 % convert spectral to timeseries
 if(sum(spec)); data(spec)=idft(data(spec)); end
 
 % header info
-leven=getlgc(data,'leven');
-[b,npts,delta,depmin,depmax,z6,kname,yfield]=getheader(data,...
-    'b','npts','delta','depmin','depmax','z6','kname',opt.YFIELD);
+[b,npts,delta,depmin,depmax,z6,kname,leven,yfield]=getheader(data,'b',...
+    'npts','delta','depmin','depmax','z6','kname','leven lgc',opt.YFIELD);
 depmin=abs(depmin);
 depmax=abs(depmax);
 z6=datenum(cell2mat(z6));
+
+% check for yfield=nan
+bad=isnan(yfield);
+if(all(bad))
+    error('seizmo:recordsection:badInput',...
+        'YFIELD (%s) for all records is undefined!',opt.YFIELD);
+elseif(any(bad))
+    warning('seizmo:recordsection:badInput',...
+        ['Skipped plotting of record(s) with YFIELD (%s) undefined:\n' ...
+        sprintf('%d ',find(bad))],opt.YFIELD);
+    goodfiles=goodfiles & ~bad;
+end
+goodfiles=find(goodfiles);
+
+% names for legend
+displayname=strcat(kname(:,1),'.',kname(:,2),...
+    '.',kname(:,3),'.',kname(:,4));
 
 % get markers info
 [marknames,marktimes]=getmarkers(data);
@@ -194,7 +214,8 @@ end
 if(isempty(opt.AXIS) || ~isscalar(opt.AXIS) || ~isreal(opt.AXIS) ...
         || ~ishandle(opt.AXIS) || ~strcmp('axes',get(opt.AXIS,'type')))
     % new figure
-    fh=figure('color',opt.BGCOLOR);
+    fh=figure('color',opt.BGCOLOR,'defaulttextcolor',opt.FGCOLOR,...
+        'defaultaxesxcolor',opt.FGCOLOR); % defaults for legend
     opt.AXIS=axes('parent',fh);
 else
     cla(opt.AXIS,'reset');
@@ -205,6 +226,9 @@ set(opt.AXIS,'ydir',opt.YDIR,'xdir',opt.XDIR,...
     'xscale',opt.XSCALE,'yscale',opt.YSCALE,...
     'fontsize',opt.FONTSIZE,'color',opt.BGCOLOR,...
     'xcolor',opt.FGCOLOR,'ycolor',opt.FGCOLOR);
+
+% setup for markers
+userdata.markers.records=nan(nrecs,1);
 
 % loop through every record
 hold(opt.AXIS,'on');
@@ -239,12 +263,22 @@ for i=goodfiles
             end
     end
     
+    % add 1st handle to setup for markers
+    userdata.markers.records(i)=rh(1);
+    
     % set userdata to everything but data (cleared)
     data(i).dep=[];
     data(i).ind=[];
-    for ridx=1:numel(rh)
+    nrh=numel(rh);
+    for ridx=1:nrh
+        if(nrh>1)
+            ncmpstr=[' (' num2str(ridx) ')'];
+        else
+            ncmpstr=[];
+        end
         data(i).index=[i ridx];
-        set(rh(ridx),'userdata',data(i));
+        set(rh(ridx),'userdata',data(i),...
+            'displayname',[displayname{i} ncmpstr]);
     end
 end
 hold(opt.AXIS,'off');
@@ -259,8 +293,6 @@ grid(opt.AXIS,'on');
 axis(opt.AXIS,'tight');
 
 % add markers to axis userdata
-userdata.markers.records=nan(nrecs,1);
-userdata.markers.records(goodfiles)=flipud(rh);
 userdata.markers.names=marknames;
 userdata.markers.times=marktimes;
 userdata.function='recordsection';

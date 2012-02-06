@@ -44,11 +44,14 @@ function [varargout]=drawmarkers(ax,varargin)
 %     Version History:
 %        Sep. 14, 2010 - initial version
 %        Nov. 11, 2011 - added sft to plot1 section
+%        Feb.  6, 2012 - forgot to flip flags back when plot0 flipped back,
+%                        hide flags/markers using hasbehavior function
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 11, 2011 at 23:00 GMT
+%     Last Updated Feb.  6, 2012 at 23:00 GMT
 
 % todo:
+% - reduce calls for speed
 
 % check nargin
 error(nargchk(0,inf,nargin));
@@ -92,11 +95,6 @@ for i=1:numel(ax)
             grh=ishandle(rh);
             hmark{i}=nan(nrh,13);
             hflag{i}=hmark{i};
-            
-            % handle plot0 ydir being opposite
-            if(strcmpi(userdata.function,'plot0'))
-                opt.FLAGMAST=100-opt.FLAGMAST;
-            end
             
             % get data ymax/ymin
             range=nan(nrh,2);
@@ -172,6 +170,10 @@ for i=1:numel(ax)
                         'fontweight',opt.MARKERFONTWEIGHT,...
                         'fontname',opt.MARKERFONTNAME,...
                         'parent',ax(i));
+                end
+                for k=1:13
+                    %setappdata(hflag{i}(j,k),'legend_hgbehavior',false);
+                    setappdata(hmark{i}(j,k),'legend_hgbehavior',false);
                 end
             end
             hold(ax(i),'off');
@@ -293,6 +295,8 @@ for i=1:numel(ax)
             for j=1:13
                 tmp.marker=hmark{i}(j);
                 set(hflag{i}(j),'userdata',tmp);
+                %setappdata(hflag{i}(j),'legend_hgbehavior',false);
+                setappdata(hmark{i}(j),'legend_hgbehavior',false);
             end
             
             % push markers and flags into the background
