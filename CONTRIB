@@ -1,0 +1,100 @@
+Contributions (intellectually) to the SEIZMO project are encouraged! This
+document describes how to do just that.  There are 2 ways: the simple one
+and the git/github one.
+
+
+Simple Way (email me)
+-----------------------
+1. Hack out some matlab/octave seismology code & ask me to include it.
+2. New codes start in the 'forge' directory.
+3. Once accepted, codes are moved to an appropriate (or new) directory.
+
+
+Git Way (fork SEIZMO on github)
+---------------------------------
+
+On caffiene and up all night coding?
+Eat, breath, & sleep (no!) SEIZMO?
+git-savvy?
+
+Then the following "brief" command list may help...
+
+1. Getting SEIZMO with git & github
+-----------------------------------
+git clone git://github.com/g2e/seizmo.git
+
+2. Adding SEIZMO on github to your clone
+----------------------------------------
+git remote add upstream git@github.com:g2e/seizmo.git
+
+3. Pulling in updates from github (ie w/o edits --> see (8) if edited)
+----------------------------------------------------------------------
+git pull upstream master
+
+4. Adding, Removing, Moving files
+---------------------------------
+git add files
+git rm files
+git mv old new  (**NOTE: avoid edit & move in the same commit!**)
+
+5. Checking what you have done
+------------------------------
+git status -s      (condensed)
+git status
+git diff           (Unstaged changes)
+git diff --cached  (Staged changes)
+git diff HEAD      (all changes)
+
+6. Unstage a file (undo a 'git add')
+------------------------------------
+git reset HEAD -- files
+
+7. Committing in git
+--------------------
+7a. Setup commit info:
+     git config --global user.name 'Your Name'
+     git config --global user.email you@somedomain.com
+7b. git commit -am 'commit message'
+
+8. Merging in updates from upstream (ie w/ edits)
+-------------------------------------------------
+8a. git fetch upstream
+8b. git log upstream/master ^master
+8c. git merge upstream/master
+
+9. Setting up github access
+---------------------------
+9a. Get an account: http://github.com
+9b. Setup your account: http://help.github.com/linux-set-up-git/
+9c. Fork SEIZMO: http://help.github.com/fork-a-repo/
+9d. <branch> <hack> <commit> <push>
+9e. Send a pull request: http://help.github.com/send-pull-requests/
+
+10. Pushing to github
+---------------------
+10d. git push origin master
+
+11. Tagging a release in git:
+-----------------------------
+11a. git tag tagname commitchecksum
+11b. git push --tags origin master
+
+12. Branching
+-------------
+list: git branch
+create: git branch branchname
+remove: git branch -d branchname
+switch: git checkout branchname
+merge: git merge branchname
+
+13. Merge Conflicts
+-------------------
+13a. git mergetool (maybe git cherry-pick)
+13b. git diff
+13c. git add file
+13d. git commit
+
+14. History
+-----------
+git log --oneline branchname ^withoutbranchname
+git log --oneline --decorate --graph

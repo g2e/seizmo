@@ -14,19 +14,30 @@ function [data]=rotate_correlations(data)
 %     only return correlogram sets for each unique station pair.
 %
 %    Notes:
-%     - Correlogram .name fields are altered.
+%     - This is based on the algorithm published in:
+%        Lin, Moschetti, & Ritzwoller 2008, GJI,
+%         doi: 10.1111/j.1365-246X.2008.03720.x
+%     - The .name fields are altered to match the header info.
 %     - Currently requires all records to have the same number of points,
 %       the same sample rate and the same starting lag time.  You will want
 %       your records to be symmetrical with respect to zero lag time too so
-%       that REVERSE_CORRELATIONS can reverse the correlograms as needed.
+%       that REVERSE_CORRELATIONS can reverse the correlograms as needed
+%       and still have the same start/end times.
 %
 %    Header changes:
-%     Master & Slave Fields may be switched.
+%     Master & Slave Fields may be switched (see REVERSE_CORRELATIONS).
 %     KCMPNM & KT3 are changed to end with R or T.
 %     USER0 & USER1 reflect the stream pair indices.
+%     CMPAZ & USER3 are updated to reflect the component azimuths.
 %
 %    Examples:
-%     %
+%     % Get correlations between N/E horizontals and rotate to R/T system:
+%     data=readseizmo('*LHE*','*LHN*');
+%     data=correlate(data);
+%     [b,e,delta]=getheader(data,'b','e','delta');
+%     maxlag=round(max([abs(b); e])); % force to second so sample at t=0
+%     data=interpolate(data,delta(1),[],-maxlag,maxlag,0);
+%     data=rotate_correlations(data);
 %
 %    See also: CORRELATE, REVERSE_CORRELATIONS
 
@@ -35,17 +46,17 @@ function [data]=rotate_correlations(data)
 %        June 13, 2010 - major bugfix
 %        June 17, 2010 - more checks for no rotatible records
 %        July  2, 2010 - fix cat warnings (dumb Matlab feature)
+%        Feb.  7, 2012 - update cmpaz/user3 fields (azimuths), doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  2, 2010 at 13:30 GMT
+%     Last Updated Feb.  7, 2012 at 13:30 GMT
 
 % todo:
-% - example (show how to use this)
 % - cmpinc,cmpaz support
 %   - allow non-NE input to be rotated to RT
-%   - update cmpinc/cmpaz & user2/user3
-% - testing is easy!
-%   - check vs xc of r/t (rotated beforehand)
+%     - check vs xc of r/t (rotated beforehand)
+% - shiftmax/shiftunits/interpolate/minoverlap/overlapunits options
+%   - so we don't have to worry about interpolating
 
 % check nargin
 error(nargchk(1,1,nargin));
@@ -211,8 +222,8 @@ try
     
     % get azis (use last record of each quad)
     [az,baz]=getheader(data(4:4:end),'az','baz');
-    az=az*pi/180;
-    baz=baz*pi/180;
+    az=az*pi/180;   % RADIANS! Azimuth from event to station
+    baz=baz*pi/180; % RADIANS! Azimuth from station to event
     
     % detail message
     nquads=numel(data)/4;
@@ -221,16 +232,26 @@ try
         print_time_left(0,nquads);
     end
     
-    % loop over quads, rotating to RR/RT/TR/TT
+    % loop over quads, rotating to EE/EN/NE/NN to RR/RT/TR/TT
     % - see Lin et al 2008
-    % - note NE/NN order is switched
-    depmin=nan(nquads*4,1); depmax=depmin; depmen=depmin;
+    % - note matrix is adjusted b/c of ordering
+    [depmin,depmen,depmax]=deal(nan(nquads*4,1));
+    mcmpaz=depmin; % azimuth of rotated event component (master)
+    scmpaz=depmin; % azimuth of rotated station component (slave)
     for i=1:nquads
         % combine components into separate array
         % (so we don't use rotated for rotating)
         x=[data((i-1)*4+(1:4)).dep];
         
-        % rotate
+        % Azimuths
+        % R station = baz+180  T station = baz+270
+        % R event   = az       T event   = az+90
+        mcmpaz((i-1)*4+1)=az(i);      scmpaz((i-1)*4+1)=baz(i)+pi;   % RR
+        mcmpaz((i-1)*4+2)=az(i);      scmpaz((i-1)*4+2)=baz(i)-pi/2; % RT
+        mcmpaz((i-1)*4+3)=az(i)+pi/2; scmpaz((i-1)*4+3)=baz(i)+pi;   % TR
+        mcmpaz((i-1)*4+4)=az(i)+pi/2; scmpaz((i-1)*4+4)=baz(i)-pi/2; % TT
+        
+        % Rotate to: RR/RT/TR/TT
         data((i-1)*4+1).dep=...
             -sin(az(i))*sin(baz(i)).*x(:,1)...
             -sin(az(i))*cos(baz(i)).*x(:,2)...
@@ -271,22 +292,30 @@ try
         if(verbose); print_time_left(i,nquads); end
     end
     
-    % fix headers
+    % fix component codes
     kmcmp=k2(:,4);
     kmcmp([1:4:end 2:4:end])=strcat(kmcmp([1:4:end 2:4:end]),'R');
     kmcmp([3:4:end 4:4:end])=strcat(kmcmp([3:4:end 4:4:end]),'T');
     kscmp=k2(:,8);
     kscmp([1:4:end 3:4:end])=strcat(kscmp([1:4:end 3:4:end]),'R');
     kscmp([2:4:end 4:4:end])=strcat(kscmp([2:4:end 4:4:end]),'T');
+    
+    % convert azimuths from radians to degrees
+    mcmpaz=mod(mcmpaz*180/pi,360);
+    scmpaz=mod(scmpaz*180/pi,360);
+    
+    % update headers
     data=changeheader(data,'kt3',kmcmp,'kcmpnm',kscmp,...
         'user0',mi,'user1',si,'depmin',depmin,'depmax',depmax,...
-        'depmen',depmen);
+        'depmen',depmen,'cmpaz',scmpaz,'user3',mcmpaz);
     
     % fix names
     k2=strtrim(k2);
-    name=strcat('CORR_-_ROTATED_-_MASTER_-_',k2(:,1),'.',k2(:,2),'.',...
-        k2(:,3),'.',kmcmp,'_-_SLAVE_-_',k2(:,5),'.',k2(:,6),'.',k2(:,7),...
-        '.',kscmp);
+    digits=['%0' num2str(fix(log10(max([mi; si])))+1) 'd'];
+    name=strcat('CORR_-_MASTER_-_REC',num2str(mi,digits),'_-_',...
+        k2(:,1),'.',k2(:,2),'.',k2(:,3),'.',kmcmp,...
+        '_-_SLAVE_-_REC',num2str(si,digits),'_-_',...
+        k2(:,5),'.',k2(:,6),'.',k2(:,7),'.',kscmp);
     [data.name]=deal(name{:});
     
     % toggle verbosity back

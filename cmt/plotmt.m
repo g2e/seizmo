@@ -95,9 +95,10 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %        June 14, 2011 - added handles to userdata, allow character input
 %                        for colors
 %        Jan. 11, 2012 - improve the notes section
+%        Feb.  7, 2012 - use 3x3xN over Nx6 to allow single couples
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 11, 2012 at 23:55 GMT
+%     Last Updated Feb.  7, 2012 at 23:55 GMT
 
 % todo:
 
@@ -120,10 +121,9 @@ if(~isnumeric(mt) || ~isreal(mt))
         'MT must be a real-valued numeric array!');
 elseif(isequal(mtsz(1:2),[3 3]) && any(numel(mtsz)==[2 3]))
     if(numel(mtsz)>2); n=mtsz(3); else n=1; end
-    mt=mt_g2v(mt); % convert from 3x3xN to Nx6
-    %mtsz=[n 6];   % new mt size
 elseif(mtsz(2)==6 && numel(mtsz)==2)
     n=mtsz(1);
+    mt=mt_v2g(mt); % convert from Nx6 to 3x3xN
 else
     error('seizmo:plotmt:badInput',...
         'MT must be a harvard moment tensor array as 3x3xN or Nx6!');
@@ -296,7 +296,7 @@ for i=1:n
     [inc,az]=rotate_incaz(inc,az,pv,i);
     
     % calc radiation pattern in given directions
-    rp=reshape(radpat(mt(i,:),inc(:),az(:),pv.wave{i}),[ninc naz]);
+    rp=reshape(radpat(mt(:,:,i),inc(:),az(:),pv.wave{i}),[ninc naz]);
     
     % color matrix (for surf)
     %c=permute(pv.tcolor(i,:),[1 3 2]);
@@ -344,6 +344,7 @@ for i=1:n
         'visible',vis,'linewidth',pv.lwidth(i),'tag','plotmt_outline');
     
     % save info to userdata
+    tmp.mt=mt(:,:,i);
     tmp.wave=pv.wave{i};
     tmp.pov=pv.pov(i,:);
     tmp.roll=pv.roll(i);

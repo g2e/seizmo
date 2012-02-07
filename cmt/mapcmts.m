@@ -8,7 +8,8 @@ function [varargout]=mapcmts(mt,varargin)
 %    Description:
 %     MAPCMTS(MT) creates a map and plots the moment tensors in MT on it.
 %     MT must be a scalar struct with a format as that returned by FINDCMTS
-%     & FINDCMT.
+%     & FINDCMT.  Note that the beachballs are rotated to point northward
+%     instead of just to 'up' on the plot.
 %
 %     MAPCMTS(MT,'PARAM1',VAL1,...,'PARAMN',VALN) passes on parameters to
 %     PLOTMT to refine how the cmts are plotted.
@@ -30,9 +31,10 @@ function [varargout]=mapcmts(mt,varargin)
 %        May  15, 2011 - initial version
 %        May  31, 2011 - work with contour version of plotmt
 %        Jan. 11, 2012 - rename from mapcmt to mapcmts, edit note
+%        Feb.  7, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 11, 2012 at 23:55 GMT
+%     Last Updated Feb.  7, 2012 at 23:55 GMT
 
 % todo:
 

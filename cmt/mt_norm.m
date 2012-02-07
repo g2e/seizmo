@@ -10,6 +10,7 @@ function [mt,mo]=mt_norm(mt)
 %     function is useful for comparison and decomposition.
 %
 %    Notes:
+%     - Warns for tensors with Mo=0.
 %
 %    Examples:
 %     % Can you explain this histogram?
@@ -20,9 +21,10 @@ function [mt,mo]=mt_norm(mt)
 
 %     Version History:
 %        June  7, 2011 - initial version
+%        Feb.  7, 2012 - add warning about Mo=0 tensors
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  7, 2011 at 13:50 GMT
+%     Last Updated Feb.  7, 2012 at 13:50 GMT
 
 % todo:
 
@@ -53,7 +55,15 @@ for i=1:n
     mo(i,1)=sqrt(trace(mt(:,:,i)*mt(:,:,i))/2);
     
     % normalize
-    mt(:,:,i)=mt(:,:,i)/mo(i,1);
+    % - skip mo==0 (single couple?)
+    if(mo(i,1)); mt(:,:,i)=mt(:,:,i)/mo(i,1); end
+end
+
+% warn about Mo==0
+if(any(~mo))
+    warning('seizmo:mt_norm:noMoment',...
+        ['Mo=0 for some tensors so they are unnormalized:\n' ...
+        sprintf('%d ',find(~mo))]);
 end
 
 % convert back if input was Nx6

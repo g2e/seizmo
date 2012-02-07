@@ -6,9 +6,11 @@ function [v]=mt_g2v(g)
 %    Description:
 %     MT=MT_G2V(MOMTEN) converts moment tensors in tensor form (3x3xN) to a
 %     compact lower triangle form (Nx6).  This reduces memory burden (uses
-%     2/3rds the memory) without losing any information.
+%     2/3rds the memory) without losing any information assuming the tensor
+%     is symmetric.
 %
 %    Notes:
+%     - Throws an error if the tensor is not symmetric.
 %
 %    Examples:
 %     % Compare tensor and compact forms:
@@ -23,9 +25,10 @@ function [v]=mt_g2v(g)
 %        Mar. 21, 2010 - added docs
 %        Feb. 11, 2011 - mass nargchk fix
 %        June  1, 2011 - doc update
+%        Feb.  7, 2012 - error if asymmetric, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  1, 2011 at 15:05 GMT
+%     Last Updated Feb.  7, 2012 at 15:05 GMT
 
 % todo:
 
@@ -37,6 +40,9 @@ sz=size(g);
 if(~isreal(g) || ~isequal(sz(1:2),[3 3]))
     error('seizmo:mt_g2v:badInput',...
         'Input must be a real-valued 3x3xN array!');
+elseif(~isequal(g,permute(g,[2 1 3])))
+    error('seizmo:mt_g2v:badInput',...
+        'Cannot convert asymmetric tensors!');
 end
 
 % convert

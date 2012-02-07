@@ -1,4 +1,4 @@
-function [varargout]=mt_g2c(varargin)
+function [varargout]=mt_g2c(g)
 %MT_G2C    Extracts moment tensor components from the 3x3xN array format
 %
 %    Usage:    [M11,M22,M33,M12,M13,M23]=mt_g2c(momten)
@@ -9,6 +9,7 @@ function [varargout]=mt_g2c(varargin)
 %     useful for expressions that deal with moment tensor components.
 %
 %    Notes:
+%     - Throws an error if the tensor is not symmetric.
 %
 %    Examples:
 %     % Convert from Harvard to Aki & Richards explicitly:
@@ -23,19 +24,22 @@ function [varargout]=mt_g2c(varargin)
 
 %     Version History:
 %        June  1, 2011 - initial version
+%        Feb.  7, 2012 - error if asymmetric, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  1, 2011 at 15:05 GMT
+%     Last Updated Feb.  7, 2012 at 15:05 GMT
 
 if(nargin==1)
-    sz=size(varargin{1});
-    if(~isreal(varargin{1}) || ~isequal(sz(1:2),[3 3]))
+    sz=size(g);
+    if(~isreal(g) || ~isequal(sz(1:2),[3 3]))
         error('seizmo:mt_g2c:badInput',...
             'Input must be a real-valued 3x3xN array!');
+    elseif(~isequal(g,permute(g,[2 1 3])))
+        error('seizmo:mt_g2c:badInput',...
+            'Cannot convert asymmetric tensors!');
     end
-    varargin{1}=permute(varargin{1},[3 1 2]);
-    varargout={varargin{1}(:,1) varargin{1}(:,5) varargin{1}(:,9) ...
-        varargin{1}(:,2) varargin{1}(:,3) varargin{1}(:,6)};
+    g=permute(g,[3 1 2]);
+    varargout={g(:,1) g(:,5) g(:,9) g(:,2) g(:,3) g(:,6)};
 else
     error('seizmo:mt_g2c:badNumInput',...
         'Incorrect number of inputs!');

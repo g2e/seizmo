@@ -35,15 +35,16 @@ function [u]=radpat(mt,theta,phi,type)
 %     s=surface(x,y,z,'facecolor','texturemap','cdata',u_p');
 %     axis vis3d
 %
-%    See also: FINDCMT, PLOTMT, PLOTCMT, RAYP2INC
+%    See also: FINDCMT, PLOTMT, MAPCMTS, RAYP2INC
 
 %     Version History:
 %        Mar.  8, 2011 - initial version
 %        Mar. 11, 2011 - improved struct checking
+%        Feb.  6, 2012 - minor doc update, handle single couple (no norm)
 %
 %     Written by Ken Creager (kcc+ess/washington/edu)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2011 at 23:55 GMT
+%     Last Updated Feb.  6, 2012 at 23:55 GMT
 
 % todo:
 
@@ -84,7 +85,7 @@ else
     error('seizmo:radpat:badInput',...
         'MT is not in a valid format!');
 end
-if(~isreal(theta) || ~isvector(theta) || any(theta<0 | theta>180))
+if(~isreal(theta) || ~isvector(theta) || any(abs(theta)>180))
     error('seizmo:radpat:badInput',...
         ['THETA must be a vector of real-valued angles ' ...
         'from 0 (down) to 180 (up)!']);
@@ -111,7 +112,9 @@ end
 theta=theta(:); phi=phi(:);
 
 % normalize mt
-mt=mt/sqrt(trace(mt*mt)/2);
+% - handle moment=0 case (single force?)
+mo=sqrt(trace(mt*mt)/2);
+if(mo); mt=mt/mo; end
 
 % compute p/sv/sh directions
 gamma=[sind(theta).*cosd(phi) sind(theta).*sind(phi) cosd(theta)];

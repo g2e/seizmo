@@ -1,5 +1,5 @@
 SEIZMO - passive seismology toolbox for Matlab & GNU Octave
-Jayawijaya release series (2011-Jun-15)
+Kangchenjunga release series (2012-Feb-7)
 
 1. What is SEIZMO?
 ------------------
@@ -37,6 +37,9 @@ for more details:
 3.2 Next install the GSHHS binary files so you can plot coastlines, borders
     & rivers in your maps.  Type 'help seizmo_gshhs_webinstall' in Matlab
     or GNU Octave for help.
+3.3 Keep your CMT db synced with the GlobalCMT project
+    (http://www.globalcmt.org/) by running 'globalcmt_update' in Matlab or
+    GNU Octave.
 
 4. Getting Started
 ------------------
@@ -52,9 +55,7 @@ for more details:
 
 5. Contributing
 ---------------
-5.1 Hack out some matlab/octave code & ask me to include it.
-5.2 New codes start in the 'forge' directory.
-5.3 Once reviewed the codes are moved to an appropriate (or new) directory.
+Awesome! See the CONTRIB file!
 
 
   Garrett Euler, Ph.D. Candidate

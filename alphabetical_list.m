@@ -493,6 +493,7 @@ function []=alphabetical_list()
 %<a href="matlab:help solofun">solofun</a>                        - Apply function to SEIZMO records individually
 %<a href="matlab:help sort2li">sort2li</a>                        - Transforms permutation indices from sort to linear indices
 %<a href="matlab:help sortbyfield">sortbyfield</a>                    - Sort SEIZMO records by a header or SEIZMO struct field
+%<a href="matlab:help sourcespectra">sourcespectra</a>                  - Compute source spectra with rupture, rise & moment
 %<a href="matlab:help spectrasection">spectrasection</a>                 - Plots SEIZMO data record spectra in a record section
 %<a href="matlab:help sph_poly_area">sph_poly_area</a>                  - Finds area of a polygon on a sphere
 %<a href="matlab:help sph_poly_in">sph_poly_in</a>                    - Returns indexing for which polygon some points are in
