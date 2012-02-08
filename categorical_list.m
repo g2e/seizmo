@@ -10,7 +10,6 @@ function []=categorical_list()
 %<a href="matlab:help sz_toc_ftran">ftran</a>      - Fourier transform & frequency domain operations
 %<a href="matlab:help sz_toc_gui">gui</a>        - Graphical & menu-based input
 %<a href="matlab:help sz_toc_hdr">hdr</a>        - Header info, extraction & adjustment
-%<a href="matlab:help sz_toc_intdif">intdif</a>     - Integration & differentiation
 %<a href="matlab:help sz_toc_lowlevel">lowlevel</a>   - Low level SEIZMO Functions
 %<a href="matlab:help sz_toc_mapping">mapping</a>    - Mapping stations, events, & other features
 %<a href="matlab:help sz_toc_multi">multi</a>      - Operations between 2 or more records

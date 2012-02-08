@@ -36,7 +36,8 @@ function [dates,leaps,offsets]=leapseconds(option)
 %          equipment that doesn't handle leap seconds as they occur?
 %       A: You need to merge that data segment with the prior (without UTC
 %          awareness) and then shift all subsequent records to 1 second
-%          prior (until the clock locks to the correct UTC time).
+%          prior (until the clock locks to the correct UTC time).  MELD &
+%          TIMESHIFT are useful for this task.
 %
 %    Examples:
 %     % Ever wondered when those pesky leap seconds were? Just run:
@@ -61,9 +62,10 @@ function [dates,leaps,offsets]=leapseconds(option)
 %        Nov.  1, 2011 - renamed from GETLEAPSECONDS to LEAPSECONDS as that
 %                        function was moved to a file that can be updated,
 %                        added offset from TAI as a 3rd output
+%        Feb.  7, 2012 - doc update (merge to meld update)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2011 at 15:05 GMT
+%     Last Updated Feb.  7, 2012 at 15:05 GMT
 
 % todo:
 

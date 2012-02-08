@@ -62,9 +62,10 @@ function [idx1,idx2,idx3]=horzpairs(data,varargin)
 %                        verticals, check for multiple inclinations
 %        Feb. 11, 2011 - dropped versioninfo caching
 %        Jan. 28, 2012 - doc update, char to strnlen, drop SEIZMO global
+%        Feb.  7, 2012 - fixed a couple warning ids
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 15:05 GMT
+%     Last Updated Feb.  7, 2012 at 15:05 GMT
 
 % todo:
 
@@ -89,7 +90,7 @@ try
     % get options from command line
     for i=1:2:nargin-1
         if(~ischar(varargin{i}))
-            error('seizmo:merge:badInput',...
+            error('seizmo:horzpairs:badInput',...
                 'Options must be specified as a string!');
         end
         if(~isempty(varargin{i+1}))
@@ -112,12 +113,12 @@ try
                     option.(fields{i})=value;
                 end
                 if(~iscellstr(value))
-                    error('seizmo:merge:badInput',...
+                    error('seizmo:horzpairs:badInput',...
                         '%s option must be a cellstr of header fields!',...
                         fields{i});
                 end
             otherwise
-                error('seizmo:merge:badInput',...
+                error('seizmo:horzpairs:badInput',...
                     'Unknown option: %s !',fields{i});
         end
     end

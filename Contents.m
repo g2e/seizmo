@@ -1,13 +1,12 @@
 % SEIZMO - Passive Seismology Toolbox
 % Version 0.6.12 Kangchenjunga 7-Feb-2012
 %
-% Help Info
-%  <a href="matlab:help install_seizmo">INSTALLATION</a>
-%  <a href="matlab:showdemo beginning_seizmo">GETTING STARTED</a>
+% New to SEIZMO? Overwhelmed by all the functions?
+%  <a href="matlab:showdemo beginning_seizmo">THE BASICS</a>
 %
 % Browse the SEIZMO tool chest:
-%  <a href="matlab:help alphabetical_list">Alphabetical List of SEIZMO Functions</a>
 %  <a href="matlab:help categorical_list">Categorical Lists of SEIZMO Functions</a>
+%  <a href="matlab:help alphabetical_list">Everything (Woah!)</a>
 %
 % Found a bug?  Something not quite right?
 % Want to help develop SEIZMO?  Have a feature to add?

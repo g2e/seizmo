@@ -18,7 +18,7 @@
 %% SEIZMO for the signal processor
 %
 % * windowing (cut)
-% * merging (merge)
+% * merging (meld)
 % * filtering (iirfilter)
 % * resampling (syncsr, interpolate)
 % * integration/differentiation

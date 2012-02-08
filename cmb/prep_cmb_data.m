@@ -57,9 +57,10 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %        Mar. 19, 2011 - better catches when no data left, deal with
 %                        magnitude types that are not in globalcmt list
 %        Apr.  4, 2011 - remove response to displacement
+%        Feb.  7, 2012 - merge to meld update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  4, 2011 at 13:35 GMT
+%     Last Updated Feb.  7, 2012 at 13:35 GMT
 
 % todo:
 
@@ -140,7 +141,7 @@ for i=s(:)'
     end
     
     % merge data
-    data=merge(data);
+    data=meld(data);
     
     % remove records less than 10 minutes in length
     [b,e]=getheader(data,'b','e');

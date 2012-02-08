@@ -1,46 +1,65 @@
-%% An Introduction to SEIZMO - A Matlab & Octave Toolbox for Earthquake Seismology
+%% SEIZMO - A Matlab(R) & Octave Toolbox for Passive Seismology
 % 
 %% What is SEIZMO?
-% SEIZMO is a Matlab and GNU Octave based toolbox encompassing a collection
-% of over 650 functions that provide a framework for seismic data
-% preparation, quality control, and analysis akin to that of Seismic
-% Analysis Code with a focus on passive source seismology at regional and
-% global scales (where earthquakes and microseisms are the sources).
+% <http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/ SEIZMO> is a
+% <http://www.mathworks.com Matlab(R)> and
+% <http://www.gnu.org/software/octave/ Octave> based toolbox encompassing a
+% collection of <matlab:doc('alphabetical_list') over 700 functions> that
+% provide a framework for seismic data preparation, quality control, and
+% analysis akin to that of
+% <http://www.iris.edu/software/sac/manual.html Seismic Analysis Code> with
+% a focus on passive source seismology at regional and global scales (where
+% earthquakes and microseisms are the sources).
 
 %% Why use SEIZMO?
-% There are numerous functions for reading/writing standard seismic data
-% formats, displaying and editing metadata, plotting seismograms, creating
-% animations, data processing, and interactive analysis. Data processing
-% capabilities include correlation, convolution, deconvolution, detrending,
-% differentiation, integration, interpolation, resampling, filtering,
-% merging, response transferring, rotation, stacking, spectral analysis,
-% tapering, and windowing. The toolbox contains collections of functions
-% for arrival time determination and quality control with cross correlation
-% and cluster analysis, Rayleigh wave two plane-wave analysis, seismic
-% seismic noise processing, and frequency-wavenumber analysis. SEIZMO
-% utilizes direct access to the TauP toolkit to administer predicted
-% arrival times, raypaths, pierce points, and travel time curves for
-% several widely recognized 1D seismic earth models. Mapping in SEIZMO
-% draws on the M_Map toolbox. The seismology toolbox also incorporates
-% several 3D mantle models, a catalog of moment tensors from the Global CMT
-% project, and a database of instrument responses available through IRIS.
-% There are functions to aid in rapid prototyping and customization for new
-% functions and documentation for every function is accessible through the
-% inline help system.
+%
+% <http://www.iris.edu/software/sac/manual.html SAC> is syntactically
+% simpler than SEIZMO and starts significantly faster than Matlab or Octave
+% -- so why use SEIZMO+Matlab/Octave?
+%
+% # the ease of manipulating variables
+% # the ease of minipulating plots
+% # the simplicity of mathematical syntax
+% # the huge library of mathematical functions
+% # the extensive & browsible documentation of Matlab
+%
+% These are great reasons but SAC already has a method for interfacing with
+% Matlab.  So where does SEIZMO come in?
+%
+% # SAC doesn't work with Octave (and Matlab is expensive).
+% # SAC's Matlab functions are few.
+% # SEIZMO can do most SAC operations natively in Matlab/Octave.
+% # SEIZMO simplifies the more complicated processing steps (
+%     <matlab:helpwin('rotate') rotation>, <matlab:helpwin('meld') merging>,
+%     <matlab:helpwin('removesacpz') response removal>, etc) so you can focus
+%     on new science.
+% # SEIZMO has <matlab:doc('sz_toc_models') 1D & 3D Models>,
+%     <matlab:doc('sz_toc_cmt') CMTs>,
+%     <matlab:doc('sz_toc_mattaup') raypaths>,
+%     <matlab:doc('sz_toc_cmb') waveform cluster analysis>,
+%     <matlab:doc('sz_toc_noise') noise analysis>,
+%     <matlab:doc('sz_toc_fk') beamforming analysis> and
+%     <matlab:doc('categorical_list') so much more> built in.
+%
+% Convinced that SEIZMO+Matlab/Octave is a viable alternative to SAC,
+% SAC+Matlab, etc?  Read on!
 
 %% How to read a file into SEIZMO
 % Currently SEIZMO only supports one type of seismic data format: SAC
-% binary.  Reading in the SAC files is done with |readseizmo|.  For
-% instance, to read in all the SAC files in a directory |data/| (on a Unix
-% OS) into the Matlab variable called |dataset|:
-dataset=readseizmo('data/*');
+% binary.  It is a letdown but I promise the rest gets better!  Reading in
+% the SAC files is done with <matlab:helpwin('readseizmo') |readseizmo|> or
+% the <matlab:doc('sz_toc_shortnames') shortform>: |r|.  For
+% example, to read in all the SAC files in a directory |data| into the
+% Matlab variable called |dataset|:
+dataset=readseizmo('data');
 
 %%
 % Or using the shortcut form (replacing |readseizmo| with just |r|):
-dataset=r('data/*');
+dataset=r('data');
 
 %%
-% The data can then be plotted using one of SEIZMO's plotting commands:
+% The data can then be plotted using one of SEIZMO's
+% <matlab:doc('sz_toc_plotting') plotting commands>:
 recordsection(dataset)
 
 %% How to save a file from SEIZMO
@@ -48,14 +67,15 @@ recordsection(dataset)
 % SAC files.  The MAT file option allows you to save the entire dataset as
 % well as any other variables you request into a single file.  The downside
 % is that this file is not readable by other seismology programs such as
-% SAC or PQLII.
+% SAC or
+% <http://www.passcal.nmt.edu/content/pql-ii-program-viewing-data PQLII>.
 save myfile.mat dataset
 
 %%
 % To save the records in the dataset individually as SAC files use the
-% command |writeseizmo| (here we will use its shortcut |w|).  We also give
-% a parameter & value pair to change the path of the output files to
-% |data-new|.
+% command <matlab:doc('writeseizmo') |writeseizmo|> (here we will use the
+% shortcut |w|).  We also give a parameter & value pair to change the path
+% of the output files to |data-new|.
 w(dataset,'path','data-new');
 
 %%
@@ -65,11 +85,14 @@ ls -n data/ data-new/
 %% How to create a SEIZMO dataset from a matrix
 % Creating a SEIZMO dataset from a matrix is done with the |bseizmo|
 % command.  For example, we can create a vector of points with random
-% values and pass those to |bseizmo|.  The output is a SEIZMO dataset (we
-% will explore the SEIZMO data format in detail in the following sections).
-% We then can plot the matrix and SEIZMO dataset to verify.
+% values and pass those to <matlab:doc('bseizmo') |bseizmo|>.  The output
+% is a SEIZMO dataset (we will explore the SEIZMO data format in detail in
+% the following sections).  We then can plot the matrix and SEIZMO dataset
+% to verify.
 x=rand(1000,1);
 data=bseizmo(x);
+
+% plotting...
 figure;
 subplot(2,1,1);
 plot(x);
@@ -162,7 +185,8 @@ ls -n data-new/*.sac
 % Another easy struct adjustment example is to change the data of a
 % record.  Say you wanted to add some white noise to the record.  First,
 % make a copy so you can compare the noisy signal to the original.  Then
-% add some noise and plot the two records in an overlay using |plot2|:
+% add some noise and plot the two records in an overlay using
+% <matlab:doc('plot2') |plot2|>:
 noisy=new;
 noisy.dep=noisy.dep+(rand(4500,1)-0.5);
 plot2(noisy,new)
@@ -184,14 +208,14 @@ plot2(noisy,new)
 a=noisy.dep(1:10)
 
 %% Viewing header info
-% There are 3 different header or metadata viewers included in SEIZMO:
+% There are 3 different header (metadata) viewers included in SEIZMO:
 %
-% * |listheader|    - List SEIZMO data headers
-% * |compareheader| - Multicolumn listing of SEIZMO headers
-% * |queryheader|   - List SEIZMO headers in table form
+% * <matlab:doc('listheader') |listheader|>    - List SEIZMO data headers
+% * <matlab:doc('compareheader') |compareheader|> - List SEIZMO headers in field x recond table form
+% * <matlab:doc('queryheader') |queryheader|>   - List SEIZMO headers in record x field table form
 %
 % The difference between |compareheader| and |queryheader| is a
-% tranposition of the table.  I personally prefer |queryheader|.
+% transposition of the table.  I personally prefer |queryheader| aka |qh|.
 %
 % To list some header fields of the first 3 records in |dataset|:
 lh(dataset(1:3),'delta','b','e','stla','stlo')
@@ -205,15 +229,10 @@ qh(dataset(1:3),'delta','b','e','stla','stlo')
 qh(dataset(1:3),'l*')
 
 %% Extracting header info
-% 4 functions allow for exporting header values:
-%
-% * |getheader|   - Get SEIZMO data header values
-% * |getenumid|   - Get enum id from enum field
-% * |getenumdesc| - Get enum description from enum field
-% * |getlgc|      - Get logical string from logical field
-%
-% For instance if you wanted to extract the beginning time of each record,
-% you would ask for the |b| header field:
+% <matlab:doc('getheader') |getheader|> (aka |gh|) allows for exporting
+% header values to matlab variables.  For instance if you wanted to extract
+% the beginning time of each record, you would ask for the |b| header
+% field:
 values=gh(dataset,'b')
 
 %%
@@ -225,7 +244,8 @@ values=gh(dataset,'kstnm')
 values(3)
 
 %%
-% Converting a cell-string array to a character array is done as follows:
+% Converting a cell-string array to a character array is easily done using
+% the |char| command:
 values=char(values)
 
 %%
@@ -234,30 +254,33 @@ values=char(values)
 
 %%
 % Enumerated header fields are a little more complex. An integer is stored
-% in the header location for an enum field.  This integer corresponds to a
-% specific string in a lookup table that SEIZMO keeps internally.  SEIZMO's
-% strings match those in SAC and include a few extensions.  To return the
-% id & description strings for a enum field, use the functions |getenumid|
-% & |getenumdesc|.  Please note that these also return cell-string arrays.
-getenumid(dataset(3),'idep')
-getenumdesc(dataset(3),'idep')
+% in the header location for an enum field.  This is what |gh| will return
+% by default.  This integer corresponds to a specific string in a lookup
+% table that SEIZMO keeps internally.  SEIZMO's strings match those in SAC
+% and include a few extensions.  To return the id or description strings
+% for an enum field, you have to add a modifier to the field string.
+% Please note that these also return cell-string arrays.
+gh(dataset(3),'idep')
+gh(dataset(3),'idep id')
+gh(dataset(3),'idep desc')
 
 %%
-% Usage of |getlgc| is rarely necessary.  The main thing to remember about
-% logical fields is that the SAC format allows for these fields to be
-% undefined (ie set as -12345).  Thus a non-zero value returned by
-% |getheader| does not necessarily indicate the logical is |TRUE|.
+% The main thing to remember about logical fields is that the SAC format
+% allows for these fields to be undefined (ie set as -12345).  Thus a
+% non-zero value returned by |gh| does not necessarily indicate the logical
+% is |TRUE|.  It is typically safe to make that assumption though.
 
 %% Altering header info
-% Changing a header field to a new value is facilitated by |changeheader|.
-% To change the |kt0| & |t0| header fields of all to your 29 records in
-% |dataset| to the same value (the values do not have to be as below):
+% Changing a header field to a new value is facilitated by
+% <matlab:doc('changeheader') |changeheader|>
+% aka |ch|.  An example of changing the |kt0| & |t0| header fields of all
+% records in |dataset| to the same value:
 dataset=ch(dataset,'kt0','nothing','t0',8000);
 
 %%
-% Note that |changeheader| requires you to assign the output to the input
-% dataset.  You could have assigned the output to a new variable instead.
-% To view the 'nothing' markers in an ammended |plot1| call:
+% Note that the |ch| output was assigned back to the input dataset.  This
+% isn't necessary and can be assigned to a new variable instead.
+% To view the 'nothing' markers in an ammended <matlab:doc('plot1') |plot1|> call:
 plot1(dataset(1:4),'showmarkers',true);
 
 %%
@@ -266,3 +289,5 @@ plot1(dataset(1:4),'showmarkers',true);
 dataset=ch(dataset,'t0',1e4+1e4*(rand(29,1)-0.5));
 plot1(dataset(1:4),'showmarkers',true);
 
+%% Beyond the basics
+% Next: <matlab:showdemo('intermediate_seizmo') Processing in SEIZMO>

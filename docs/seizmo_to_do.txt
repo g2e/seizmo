@@ -9,19 +9,18 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-merge
+meld
     - uneven or variable samplerate
 rotate
     - through option
     - rewrite option code
 rotate_correlations
     - works for unrotated
-    - examples
-    - updates cmpinc/az, user2/3
+
 handle grib2
-    - njtbx (huge, will never include)
     - read_grib2+wgrib2 (small, will not include wgrib2 -- small too)
     - detect grb vs grb2
+
 fk stuff
 x	add weighting to all
     rayleigh/love dispersion estimation
@@ -210,9 +209,10 @@ OCTAVE SPECIFIC STUFF (Need to test vs 3.6.1)
 - fix conflicts with octave functions:
   rainbow (same but reversed order? not a big deal)
   ocean (similar but mine (gmt's) has greens ... not a big deal)
-  split (deprecated function in octave so its fine)
   merge (not sure ... ifelse is the same thing ... non-matlab)
      - getfield, setfield, nthroot use octave's merge ... this is bad news!
+       merge is being changed to "meld"
   cut (not sure ... non-matlab statistics function ...)
      - no usage in stats
+     slice, slash, trim, chop, clip, snip
 

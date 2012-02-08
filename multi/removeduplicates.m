@@ -42,7 +42,7 @@ function [data,removed]=removeduplicates(data,varargin)
 %     because the records are no longer in the output dataset!).
 %
 %    Notes:
-%     - MERGE removes duplicates and merges records
+%     - MELD removes duplicates and merges records
 %     - duplicates are required to have identical LEVEN and NCMP fields
 %     - it is recommended to run FIXDELTA first to take care of floating
 %       point accuracy causing false-negatives
@@ -54,7 +54,7 @@ function [data,removed]=removeduplicates(data,varargin)
 %     % this is associated with data pulled from a DHI server.
 %     data=removeduplicates(data)
 %
-%    See also: MERGE, REMOVEDEADRECORDS
+%    See also: MELD, REMOVEDEADRECORDS
 
 %     Version History:
 %        Dec.  6, 2008 - initial version
@@ -67,9 +67,10 @@ function [data,removed]=removeduplicates(data,varargin)
 %        Feb. 11, 2011 - dropped versioninfo caching
 %        Jan. 28, 2012 - drop SEIZMO global, doc update, better checkheader
 %                        usage
+%        Feb.  7, 2012 - merge to meld update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 15:05 GMT
+%     Last Updated Feb.  7, 2012 at 15:05 GMT
 
 % todo:
 

@@ -15,14 +15,15 @@ function [data]=joinrecords(varargin)
 %              data=joinrecords(...,'leven','error'|'warn'|'ignore')
 %              data=joinrecords(...,'iftype','error'|'warn'|'ignore')
 %
-%    Description: JOINRECORDS(DATA) will horizontally concatenate all
-%     records in DATA, returning one record with as many components as all
-%     records in DATA combined.  The header fields are set to those of the
-%     first record in DATA.  The header can be set to that of the last
-%     record by setting option 'newhdr' to TRUE.  Records should be of the
-%     same filetype, be evenly sampled, have the same sample rate, number
-%     of points, and timing but these can all be ignored (for better or for
-%     worse) by setting options available in BINOPERR to 'ignore'.
+%    Description:
+%     JOINRECORDS(DATA) will horizontally concatenate all records in DATA,
+%     returning one record with as many components as all records in DATA
+%     combined.  The header fields are set to those of the first record in
+%     DATA.  The header can be set to that of the last record by setting
+%     option 'newhdr' to TRUE.  Records should be of the same filetype, be
+%     evenly sampled, have the same sample rate, number of points, and
+%     timing but these can all be ignored (for better or for worse) by
+%     setting options available in BINOPERR to 'ignore'.
 %     
 %     JOINRECORDS(DATA1,DATA2) will join the records in DATA2 to DATA1.  If
 %     either DATA1 or DATA2 are a single record the record will be joined
@@ -106,17 +107,18 @@ function [data]=joinrecords(varargin)
 %     to 'error'.
 %
 %    Notes:
-%     - See functions MERGE or MULTIFUN to vertically concatenate records.
+%     - See functions MELD or MULTIFUN to concatenate records time-wise
+%       (aka vertically).
 %    
 %    Header changes: DEPMEN, DEPMIN, DEPMAX,
 %     NPTS, NCMP (see options 'npts' and 'ncmp')
 %     See option 'newhdr' for inheritance of other header fields.
 %
 %    Examples:
-%     Separate spectral record components then put them back together:
-%      data=joinrecords(keepam(data),keepph(data));
+%     % Separate spectral record components then put them back together:
+%     data=joinrecords(keepam(data),keepph(data));
 %
-%    See also: SPLITRECORDS, MULTIFUN, MERGE, ADDRECORDS, SUBTRACTRECORDS,
+%    See also: SPLITRECORDS, MULTIFUN, MELD, ADDRECORDS, SUBTRACTRECORDS,
 %              DIVIDERECORDS, MULTIPLYRECORDS, BINOPERR
 
 %     Version History:
@@ -124,9 +126,10 @@ function [data]=joinrecords(varargin)
 %        Jan. 30, 2010 - minor doc update
 %        Apr. 25, 2010 - updates ncmp stuff now, doc fix
 %        Jan.  6, 2011 - recordfun/multifun rename
+%        Feb.  7, 2012 - merge to meld update, doc update
 %     
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 19:55 GMT
+%     Last Updated Feb.  7, 2012 at 19:55 GMT
 
 % todo:
 

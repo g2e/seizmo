@@ -95,6 +95,27 @@ try
     % verbosity
     verbose=seizmoverbose(false);
     
+    % retain only horizontal correlations
+    idx1=horzcmp(data);
+    idx2=horzcmp(reverse_correlations(data));
+    data=data(intersect(idx1,idx2));
+    
+    % error if nothing left
+    if(numel(data)==0)
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        checkheader_state(oldcheckheaderstate);
+        error('seizmo:rotate_correlations:badInput',...
+            'No horizontal cross-correlations in DATA!');
+    end
+    
+    % - get streams
+    % - drop autoxc
+    % - drop incomplete sets
+    % - reorder
+    % - get b/npts/delta,az/baz/cmpaz/user3
+    % - assume N/E if cmpaz/user3 are nan
+    
     % get component names, orientation code, drop verticals
     [mcmp,scmp]=getheader(data,'kt3','kcmpnm');
     moc=char(mcmp); moc=cellstr(moc(:,3));

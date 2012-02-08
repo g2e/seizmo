@@ -13,34 +13,36 @@ function [data]=writeparameters(data,varargin)
 %              data=writeparameters(data,...,'pathchange',{orig repl},...)
 %              data=writeparameters(data,...,'byteorder',endianness,...)
 %
-%    Description: WRITEPARAMETERS is a wrapper function for several
-%     functions that alter top level fields of a SEIZMO data structure such
-%     as the 'name', 'path' and 'byteorder' fields.  This is intended to
-%     provide the functions WRITESEIZMO and WRITEHEADER with a large amount
-%     of options.  For options 'NAME', 'PREPEND', 'APPEND', 'DELETE', and
-%     'CHANGE' see CHANGENAME for usage.  For options 'PATH',
-%     'PATHPREPEND', 'PATHAPPEND', 'PATHDELETE', and 'PATHCHANGE' see
-%     CHANGEPATH for usage.  For option 'BYTEORDER' see CHANGEBYTEORDER for
-%     usage.
+%    Description:
+%     WRITEPARAMETERS is a wrapper function for several functions that
+%     alter top level fields of a SEIZMO data structure such as the 'name',
+%     'path' and 'byteorder' fields.  This is intended to provide the
+%     functions WRITESEIZMO and WRITEHEADER with a large amount of options.
+%     For options 'NAME', 'PREPEND', 'APPEND', 'DELETE', and 'CHANGE' see
+%     CHANGENAME for usage.  For options 'PATH', 'PATHPREPEND',
+%     'PATHAPPEND', 'PATHDELETE', and 'PATHCHANGE' see CHANGEPATH for
+%     usage.  For option 'BYTEORDER' see CHANGEBYTEORDER for usage.
 %
 %    Notes:
 %
 %    Header changes: NONE
 %
 %    Examples:
-%     Read in a dataset, merge, and write out with new names:
-%      writeseizmo(merge(readseizmo('*')),'append','.merged')
+%     % Read in a dataset, merge, and write out with new names:
+%     writeseizmo(meld(readseizmo('*')),'append','.merged')
 %
-%    See also: CHANGEBYTEORDER, CHANGENAME, CHANGEPATH
+%    See also: CHANGEBYTEORDER, CHANGENAME, CHANGEPATH, WRITESEIZMO,
+%              WRITEHEADER
 
 %     Version History:
 %        May  29, 2009 - initial version
 %        Feb.  2, 2010 - proper SEIZMO handling
 %        Apr. 25, 2010 - allow options like 'changepath', 'appendpath', etc
 %        Feb. 11, 2011 - mass seizmocheck fix
+%        Feb.  7, 2012 - merge to meld update, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  7, 2012 at 15:05 GMT
 
 % check nargin
 if(mod(nargin-1,2))

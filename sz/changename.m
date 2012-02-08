@@ -8,12 +8,13 @@ function [data]=changename(data,varargin)
 %              data=changename(data,...,'delete',{string1 ... stringN},...)
 %              data=changename(data,...,'change',{orig replacement},...)
 %
-%    Description: CHANGENAME(DATA,...,'NAME',NAME,...) sets the name field
-%     of DATA to NAME.  The name field is the filename associated with the
-%     record.  If DATA contains more than 1 record and NAME is just a
-%     single string, the name field for all records are changed to NAME.
-%     Otherwise NAME must be a char/cellstr array with 1 row/element for
-%     each record in DATA.
+%    Description:
+%     CHANGENAME(DATA,...,'NAME',NAME,...) sets the name field of DATA to
+%     NAME.  The name field is the filename associated with the record.  If
+%     DATA contains more than 1 record and NAME is just a single string,
+%     the name field for all records are changed to NAME.  Otherwise NAME
+%     must be a char/cellstr array with 1 row/element for each record in
+%     DATA.
 %
 %     CHANGENAME(DATA,...,'PREPEND',STRING,...) prepends STRING to the
 %     name field of DATA.  If DATA contains more than 1 record and STRING
@@ -52,19 +53,20 @@ function [data]=changename(data,varargin)
 %     - CHANGENAME does NOT check the validity of the filenames created!
 %
 %    Examples:
-%     Prepend and append to all filenames:
-%      data=changename(data,'prepend','zzz','append','.new')
+%     % Prepend and append to all filenames:
+%     data=changename(data,'prepend','zzz','append','.new')
 %
-%     Change the name of a record:
-%      data(3)=changename(data(3),'name','mynewfilename')
+%     % Change the name of a record:
+%     data(3)=changename(data(3),'name','mynewfilename')
 %
-%     Delete multiple parts from all filenames:
-%      data=changename(data,'delete',{'__' '.merged' 'SAC'})
+%     % Delete multiple parts from all filenames:
+%     data=changename(data,'delete',{'__' '.merged' 'SAC'})
 %
-%     Replace certain portions of all filenames:
-%      data=changename(data,'change',{'..' '.__.' 'part1' 'part2'})
+%     % Replace certain portions of all filenames:
+%     data=changename(data,'change',{'..' '.__.' 'part1' 'part2'})
 %
-%    See also: CHANGEBYTEORDER, CHANGEPATH, WRITEHEADER, WRITESEIZMO
+%    See also: CHANGEBYTEORDER, CHANGEPATH, WRITEHEADER, WRITESEIZMO,
+%              WRITEPARAMETERS
 
 %     Version History:
 %        May  28, 2009 - initial version
@@ -78,9 +80,10 @@ function [data]=changename(data,varargin)
 %        Apr. 10, 2010 - fixed bug where name was written as a cellstr
 %        Apr. 25, 2010 - allow several more strings to specify options
 %        Feb. 11, 2011 - mass seizmocheck fix
+%        Feb.  7, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  7, 2012 at 15:05 GMT
 
 % todo:
 

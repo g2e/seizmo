@@ -84,9 +84,10 @@ function []=noise_setup(indir,outdir,varargin)
 %        Feb.  1, 2012 - output kname vs progress bar, no iztype warning,
 %                        subsetting by user ts/te options, 3char cmp check,
 %                        all time operations are in utc
+%        Feb.  7, 2012 - merge to meld update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2012 at 11:15 GMT
+%     Last Updated Feb.  7, 2012 at 11:15 GMT
 
 % todo:
 
@@ -206,7 +207,7 @@ for i=1:max(cmpidx) % SERIAL
     
     % merge the component data (does header check)
     checkoperr('invalid_iztype','ignore');
-    cdata=merge(cdata);
+    cdata=meld(cdata);
     checkoperr('invalid_iztype','warn');
         
     % turn off checking

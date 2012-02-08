@@ -183,9 +183,10 @@ function [data]=rotate(data,varargin)
 %        Dec. 13, 2011 - doc update
 %        Jan. 28, 2012 - pass char to strnlen
 %        Jan. 30, 2012 - drop SEIZMO global
+%        Feb.  7, 2012 - fix no horizontals bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 23:18 GMT
+%     Last Updated Feb.  7, 2012 at 23:18 GMT
 
 % todo:
 % - a 'norotate' would be nice
@@ -387,6 +388,12 @@ try
         'requiredcharfields',option.REQUIREDCHARFIELDS,...
         'requiredrealfields',option.REQUIREDREALFIELDS);
     npairs=max(idx2);
+    
+    % error if no output records
+    if(isempty(npairs))
+        error('seizmo:rotate:noRotatedRecords',...
+            'No rotatable horizontal pairs found!');
+    end
     
     % allocate output dataset (setting as empty)
     ndata=data(nan(option.ALLOCATE,0)); c1=-1; c2=0;

@@ -65,7 +65,7 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %     % Also useful for quickly plotting data aligned on a phase:
 %     plot0(timeshift(data,-Parrivaltimes))
 %
-%    See also: CHANGEHEADER, GETHEADER, FIXTIMES, SYNCHRONIZE, CUT, MERGE
+%    See also: CHANGEHEADER, GETHEADER, FIXTIMES, SYNCHRONIZE, CUT, MELD
 
 %     Version History:
 %        Dec. 13, 2008 - initial version
@@ -86,9 +86,10 @@ function [data]=timeshift(data,shift,iztype,timing,option,varargin)
 %        Jan. 30, 2012 - minor code comment
 %        Feb.  4, 2012 - doc update
 %        Feb.  5, 2012 - works with spectral records (updates sb not b/e)
+%        Feb.  7, 2012 - merge to meld update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2012 at 12:40 GMT
+%     Last Updated Feb.  7, 2012 at 12:40 GMT
 
 % todo:
 

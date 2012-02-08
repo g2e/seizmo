@@ -1,5 +1,5 @@
 function []=compareheader(data,varargin)
-%COMPAREHEADER    Multicolumn listing of SEIZMO headers for easy comparison
+%COMPAREHEADER    List SEIZMO headers in table form for easy comparison
 %
 %    Usage:    compareheader(data)
 %              compareheader(data,'field1',...,'fieldN')
@@ -57,9 +57,10 @@ function []=compareheader(data,varargin)
 %        Jan.  5, 2011 - improved H1 line
 %        Jan. 30, 2012 - doc update, drop record listing, utc6/tai6 changes
 %        Feb.  1, 2012 - utc/tai bugfix
+%        Feb.  7, 2012 - edit h1 line
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2012 at 01:40 GMT
+%     Last Updated Feb.  7, 2012 at 01:40 GMT
 
 % todo:
 
