@@ -6,18 +6,13 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %              [dist,az,baz]=vincentyinv(lat1,lon1,lat2,lon2,[a f],...
 %                                        [tol1 tol2])
 %
-%    Description: [DIST,AZ,BAZ]=VINCENTYINV(LAT1,LON1,LAT2,LON2) returns
-%     the geodesic lengths DIST, forward azimuths AZ and back azimuths BAZ
-%     between initial point(s) with geographic latitudes LAT1 & longitudes
-%     LON1 and final point(s) with geographic latitudes LAT2 & longitudes
-%     LON2 on the WGS-84 reference ellipsoid.  All inputs must be in
-%     degrees.  DIST is in kilometers.  AZ and BAZ are in degrees.  LAT1
-%     and LON1 must be scalar or nonempty same-size arrays and LAT2 and
-%     LON2 must be as well.  If multiple initial and final points are
-%     given, all must be the same size (1 initial point per final point).
-%     A single initial or final point may be paired with an array of the
-%     other to calculate the relative position of multiple points against a
-%     single point.
+%    Description:
+%     [DIST,AZ,BAZ]=VINCENTYINV(LAT1,LON1,LAT2,LON2) returns the geodesic
+%     lengths DIST, forward azimuths AZ and back azimuths BAZ between
+%     initial point(s) with geographic latitudes LAT1 & longitudes LON1 and
+%     final point(s) with geographic latitudes LAT2 & longitudes LON2 on
+%     the WGS-84 reference ellipsoid.  All inputs must be in degrees.  DIST
+%     is in kilometers.  AZ and BAZ are in degrees.
 %
 %     VINCENTYINV(LAT1,LON1,LAT2,LON2,[A F]) allows specifying the
 %     ellipsoid parameters A (equatorial radius in kilometers) and F
@@ -39,16 +34,16 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %        the Ellipsoid with Application of Nested Equations, Survey Review,
 %        Vol. XXII, No. 176, pp. 88-93.
 %       and assume the reference ellipsoid WGS-84 unless another is given.
-%     - Azimuths are returned in the range 0<=az<=360
-%     - Azimuths & distances for near antipodal points are not accurate and
-%       should be avoided if possible.
+%     - Azimuths are returned in the range 0-360
+%     - Distances and, in particular, azimuths for near antipodal points
+%       are not accurate and should be avoided if possible.
 %
 %    Examples:
-%     St. Louis, MO USA to Yaounde, Cameroon:
-%      [dist,az,baz]=vincentyinv(38.649,-90.305,3.861,11.521)
+%     % St. Louis, MO USA to Yaounde, Cameroon:
+%     [dist,az,baz]=vincentyinv(38.649,-90.305,3.861,11.521)
 %
-%     St. Louis, MO USA to Isla Isabella, Galapagos:
-%      [dist,az,baz]=sphericalinv(38.649,-90.305,-0.823,-91.097)
+%     % St. Louis, MO USA to Isla Isabella, Galapagos:
+%     [dist,az,baz]=sphericalinv(38.649,-90.305,-0.823,-91.097)
 %
 %    See also: VINCENTYFWD, SPHERICALINV, SPHERICALFWD, HAVERSINE
 
@@ -66,16 +61,17 @@ function [dist,az,baz]=vincentyinv(evla,evlo,stla,stlo,ellipsoid,tolerance)
 %        Nov. 13, 2009 - name change: geodetic to geographic
 %        Apr. 10, 2010 - return 0s rather than NaNs for equal positions
 %        Feb. 10, 2011 - minor code formating changes
+%        Feb.  9, 2012 - doc update, drop some replication for speed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 10, 2010 at 13:15 GMT
+%     Last Updated Feb.  9, 2012 at 13:15 GMT
 
 % todo:
 
 % require 4 to 6 inputs
 error(nargchk(4,6,nargin));
 
-% default - WGS-84 Reference Ellipsoid
+% default ellipsoid - WGS-84 Reference Ellipsoid
 if(nargin==4 || isempty(ellipsoid))
     % a=radius at equator (major axis)
     % f=flattening
@@ -109,39 +105,22 @@ elseif(numel(tolerance)==1)
 end
 
 % size up inputs
-sz1=size(evla); sz2=size(evlo);
-sz3=size(stla); sz4=size(stlo);
-n1=prod(sz1); n2=prod(sz2);
-n3=prod(sz3); n4=prod(sz4);
+sz{1}=size(evla); sz{2}=size(evlo);
+sz{3}=size(stla); sz{4}=size(stlo);
+n(1)=prod(sz{1}); n(2)=prod(sz{2});
+n(3)=prod(sz{3}); n(4)=prod(sz{4});
 
 % basic check inputs
 if(~isnumeric(evla) || ~isnumeric(evlo) ||...
         ~isnumeric(stla) || ~isnumeric(stlo))
     error('seizmo:vincentyinv:nonNumeric','All inputs must be numeric!');
-elseif(any([n1 n2 n3 n4]==0))
-    error('seizmo:vincentyinv:emptyLatLon',...
-        'Latitudes & longitudes must be nonempty arrays!');
+elseif(sum(n~=1)>1 && ~isequal(sz{n~=1}))
+    error('seizmo:vincentyinv:badSize',...
+        'All location inputs must be equal sized or scalar!');
 end
 
-% expand scalars
-if(n1==1); evla=repmat(evla,sz2); n1=n2; sz1=sz2; end
-if(n2==1); evlo=repmat(evlo,sz1); n2=n1; sz2=sz1; end
-if(n3==1); stla=repmat(stla,sz4); n3=n4; sz3=sz4; end
-if(n4==1); stlo=repmat(stlo,sz3); n4=n3; sz4=sz3; end
-
-% cross check inputs
-if(~isequal(sz1,sz2) || ~isequal(sz3,sz4) ||...
-        (~any([n1 n3]==1) && ~isequal(sz1,sz3)))
-    error('seizmo:vincentyinv:nonscalarUnequalArrays',...
-        'Input arrays need to be scalar or have equal size!');
-end
-
-% expand scalars
-if(n2==1); evla=repmat(evla,sz3); evlo=repmat(evlo,sz3); end
-if(n4==1); stla=repmat(stla,sz1); stlo=repmat(stlo,sz1); end
-
-% number of pairs
-n=size(evla);
+% equal location check (also expanded)
+eqpo=(evla==stla & evlo==stlo);
 
 % check lats are within -90 to 90 (Geographic Latitude φ)
 if(any(abs(evla)>90))
@@ -179,6 +158,17 @@ L(L<-pi)=L(L<-pi)+2*pi;
 % for efficiency
 cosU1=cos(U1); cosU2=cos(U2);
 sinU1=sin(U1); sinU2=sin(U2);
+
+% scalar expansion (needed for loop)
+n=size(eqpo);
+if(~isequal(sz{:}))
+    if(isscalar(PLM)); PLM=PLM(ones(n)); end
+    if(isscalar(L)); L=L(ones(n)); end
+    if(isscalar(cosU1)); cosU1=cosU1(ones(n)); end
+    if(isscalar(cosU2)); cosU2=cosU2(ones(n)); end
+    if(isscalar(sinU1)); sinU1=sinU1(ones(n)); end
+    if(isscalar(sinU2)); sinU2=sinU2(ones(n)); end
+end
 
 % various ellipsoid measures
 b=a-a*f;
@@ -234,7 +224,6 @@ baz=mod(atan2(-cosU1.*sin(lamda),...
     sinU1.*cosU2-cosU1.*sinU2.*cos(lamda)).*R2D,360);
 
 % avoids NaNs when getting geometry between 2 equal positions
-eqpo=(evla==stla & evlo==stlo);
 if(any(eqpo(:))); dist(eqpo)=0; az(eqpo)=0; baz(eqpo)=0; end
 
 end

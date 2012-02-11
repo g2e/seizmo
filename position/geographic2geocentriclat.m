@@ -1,24 +1,32 @@
 function [lat]=geographic2geocentriclat(lat,ecc)
 %GEOGRAPHIC2GEOCENTRICLAT    Convert latitude from geographic to geocentric
 %
-%    Usage:    latitudes=geographic2geocentriclat(latitudes)
-%              latitudes=geographic2geocentriclat(latitudes,ecc)
+%    Usage:    lat=geographic2geocentriclat(lat)
+%              lat=geographic2geocentriclat(lat,ecc)
 %
-%    Description: GEOGRAPHIC2GEOCENTRICLAT(LATITUDES) converts LATITUDES
-%     that are geographic latitudes to geocentric latitudes.  LATITUDES
-%     units are in degrees.  Assumes the WGS-84 reference ellipsoid.
+%    Description:
+%     LAT=GEOGRAPHIC2GEOCENTRICLAT(LAT) converts geographic latitudes LAT
+%     to geocentric latitudes.  LAT is in degrees.  Assumes the WGS-84
+%     reference ellipsoid.
 %
-%     GEOGRAPHIC2GEOCENTRICLAT(LATITUDES,ECC) specifies the eccentricity
+%     LAT=GEOGRAPHIC2GEOCENTRICLAT(LAT,ECC) specifies the eccentricity
 %     for the ellipsoid to use in the conversion.
 %
 %    Notes:
 %     - If the location is not on the surface use GEOGRAPHIC2GEOCENTRIC.
 %
 %    Examples:
-%     Get the geocentric latitude for St. Louis, MO USA:
-%      latitude=geographic2geocentriclat(38.649)
+%     % Get the geocentric latitude for St. Louis, MO USA:
+%     lat=geographic2geocentriclat(38.649)
 %
-%    See also: GEOCENTRIC2GEOGRAPHICLAT, GEOGRAPHICLAT2RADIUS
+%     % Show the difference in latitudes (authalic pushes to the equator):
+%     figure;
+%     plot(-90:90,geographic2geocentriclat(-90:90)-(-90:90))
+%     xlabel('geographic latitude (^o)')
+%     ylabel('geocentric adjustment (^o)')
+%
+%    See also: GEOCENTRIC2GEOGRAPHICLAT, GEOGRAPHICLAT2RADIUS,
+%              AUTHALIC2GEOGRAPHICLAT, GEOGRAPHIC2AUTHALICLAT
 
 %     Version History:
 %        Oct. 14, 2008 - initial version
@@ -26,9 +34,10 @@ function [lat]=geographic2geocentriclat(lat,ecc)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Nov. 13, 2009 - name change: geodetic to geographic
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb. 10, 2012 - doc update, allow nonscalar ecc
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb. 10, 2012 at 15:05 GMT
 
 % todo:
 
@@ -39,12 +48,13 @@ error(nargchk(1,2,nargin));
 if(nargin==1); ecc=8.181919084262149e-02; end
 
 % check inputs
-if(~isnumeric(lat) || isempty(lat))
+if(~isreal(lat))
     error('seizmo:geographic2geocentriclat:badInput',...
-        'LAT must be nonempty numeric array!');
-elseif(~isnumeric(ecc) || ~isscalar(ecc) || ecc>=1 || ecc<0)
+        'LAT must be a real-valued array!');
+elseif(~isreal(ecc) || (~isscalar(ecc) && ~isequal(size(ecc),size(lat)))...
+        || any(ecc(:)>=1 | ecc(:)<0))
     error('seizmo:geographic2geocentriclat:badInput',...
-        'ECC must be numeric scalar with 0<=ECC<1 !');
+        'ECC must be real-valued with 0<=ECC<1 !');
 end
 
 % convert to geocentric

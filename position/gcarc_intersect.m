@@ -4,37 +4,39 @@ function [lat,lon]=gcarc_intersect(lat1,lon1,lat2,lon2,lat3,lon3,lat4,lon4)
 %    Usage:     [lat,lon]=gcarc_intersect(...
 %                   lat1,lon1,lat2,lon2,lat3,lon3,lat4,lon4)
 %
-%    Description: [LAT,LON]=GCARC_INTERSECT(LAT1,LON1,LAT2,LON2,...
-%     LAT3,LON3,LAT4,LON4) finds the intersection points of great circle
-%     arcs given by points LAT1/LON1 and LAT2/LON2 with great circle arcs
-%     given by points LAT3/LON3 and LAT4/LON4.  Arcs are the short arc
-%     between points.  Great circle arcs either intersect once or not at
-%     all (arcs along the same great circle are always treated as non-
-%     intersecting).  When two great circle arcs do not intersect the
-%     return LAT/LON for that pair is set to NaN.  All LAT/LON inputs must
-%     either be scalar or arrays with the same number of elements.  This
-%     allows finding intersections between one great circle arc and several
-%     others or to find intersections between distinct pairs.  All inputs
-%     must be in degrees!
+%    Description:
+%     [LAT,LON]=GCARC_INTERSECT(LAT1,LON1,LAT2,LON2,LAT3,LON3,LAT4,LON4)
+%     finds the intersection points of great circle arcs given by points
+%     LAT1/LON1 and LAT2/LON2 with great circle arcs given by points
+%     LAT3/LON3 and LAT4/LON4.  Arcs are the shortest path between points.
+%     Great circle arcs either intersect once or not at all (arcs along the
+%     same great circle are always treated as non-intersecting).  When two
+%     great circle arcs do not intersect the LAT/LON for that pair is set
+%     to NaN.  All inputs must be in degrees!
 %
 %    Notes:
+%     - Assumes positions are in geocentric coordinates.
 %
 %    Examples:
-%     Plot several great circle arcs and their intersections:
-%      lat1=90*2*(rand(5,1)-.5); lon1=180*2*(rand(5,1)-.5);
-%      lat2=90*2*(rand(5,1)-.5); lon2=180*2*(rand(5,1)-.5);
-%      lat3=90*2*(rand(5,1)-.5); lon3=180*2*(rand(5,1)-.5);
-%      lat4=90*2*(rand(5,1)-.5); lon4=180*2*(rand(5,1)-.5);
-%      m_proj('robinson');
-%      m_coast('color',[0 .6 0]);
-%      [lat,lon]=gcarc2latlon(lat1,lon1,lat2,lon2);
-%      m_line(lon',lat','linewi',3);
-%      [lat,lon]=gcarc2latlon(lat3,lon3,lat4,lon4);
-%      m_line(lon',lat','linewi',3);
-%      [ilat1,ilon1]=gcarc_intersect(lat1,lon1,...
-%          lat2,lon2,lat3,lon3,lat4,lon4);
-%      m_line(ilon1,ilat1,'marker','o','markerfacecolor','y');
-%      m_grid('linestyle','none','box','fancy','tickdir','out');
+%     % Plot several great circle arcs and their intersections:
+%     [lat1,lon1]=randlatlon(25); [lat2,lon2]=randlatlon(25);
+%     [lat3,lon3]=randlatlon(25); [lat4,lon4]=randlatlon(25);
+%     % plot arcs
+%     m_proj('robinson');
+%     m_coast('color',[0 .6 0]);
+%     [lat,lon]=gcarc2latlon(lat1,lon1,lat2,lon2);
+%     lon=unwrap(lon*pi/180,[],2)*180/pi; % avoid wraparound streak
+%     m_line(lon',lat','linewi',3);
+%     [lat,lon]=gcarc2latlon(lat3,lon3,lat4,lon4);
+%     lon=unwrap(lon*pi/180,[],2)*180/pi; % avoid wraparound streak
+%     m_line(lon',lat','linewi',3);
+%     % get intersections
+%     [ilat1,ilon1]=gcarc_intersect(lat1,lon1,...
+%         lat2,lon2,lat3,lon3,lat4,lon4);
+%     % plot intersections
+%     m_line(ilon1,ilat1,'marker','o',...
+%         'markerfacecolor','y','linestyle','none');
+%     m_grid('linestyle','none','box','fancy','tickdir','out');
 %
 %    See also: DEGDIST_FROM_GC, CLOSEST_POINT_ON_GC, GC2LATLON,
 %              GCARC2LATLON, GC_INTERSECT
@@ -42,52 +44,50 @@ function [lat,lon]=gcarc_intersect(lat1,lon1,lat2,lon2,lat3,lon3,lat4,lon4)
 %     Version History:
 %        Nov. 15, 2009 - initial version
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb. 10, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb. 10, 2012 at 15:05 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(8,8,nargin));
 
-% lat/lon to column vector
-lat1=lat1(:); lon1=lon1(:);
-lat2=lat2(:); lon2=lon2(:);
-lat3=lat3(:); lon3=lon3(:);
-lat4=lat4(:); lon4=lon4(:);
-
 % get intersection points of great circles
-[flat,flon,slat,slon]=...
-    gc_intersect(lat1,lon1,lat2,lon2,lat3,lon3,lat4,lon4);
+[flat,flon,slat,slon]=gc_intersect(...
+    lat1,lon1,lat2,lon2,lat3,lon3,lat4,lon4);
 
 % get great circle arc distances
-dist1=sphericalinv(lat1,lon1,lat2,lon2);
-dist2=sphericalinv(lat3,lon3,lat4,lon4);
+dist1=haversine(lat1,lon1,lat2,lon2);
+dist2=haversine(lat3,lon3,lat4,lon4);
 
 % get distances of intersection points to arc end points
-fdist1=sphericalinv(lat1,lon1,flat,flon);
-fdist2=sphericalinv(lat2,lon2,flat,flon);
-fdist3=sphericalinv(lat3,lon3,flat,flon);
-fdist4=sphericalinv(lat4,lon4,flat,flon);
-sdist1=sphericalinv(lat1,lon1,slat,slon);
-sdist2=sphericalinv(lat2,lon2,slat,slon);
-sdist3=sphericalinv(lat3,lon3,slat,slon);
-sdist4=sphericalinv(lat4,lon4,slat,slon);
+fdist1=haversine(lat1,lon1,flat,flon);
+fdist2=haversine(lat2,lon2,flat,flon);
+fdist3=haversine(lat3,lon3,flat,flon);
+fdist4=haversine(lat4,lon4,flat,flon);
+sdist1=haversine(lat1,lon1,slat,slon);
+sdist2=haversine(lat2,lon2,slat,slon);
+sdist3=haversine(lat3,lon3,slat,slon);
+sdist4=haversine(lat4,lon4,slat,slon);
 
 % allocate output
 lat=nan(size(flat));
 lon=nan(size(flon));
 
-% check if between - this may need to be tuned
-fon12=(fdist1+fdist2-dist1)<(10*sqrt(eps)*dist1);
-fon34=(fdist3+fdist4-dist2)<(10*sqrt(eps)*dist2);
-son12=(sdist1+sdist2-dist1)<(10*sqrt(eps)*dist1);
-son34=(sdist3+sdist4-dist2)<(10*sqrt(eps)*dist2);
+% check if distance from points to intersection adds up
+% to the total arc length (or really, really close) as
+% a method to determine if the intersection is on the arc
+fon12=abs(fdist1+fdist2-dist1)<(10*dist1*sqrt(eps));
+fon34=abs(fdist3+fdist4-dist2)<(10*dist2*sqrt(eps));
+son12=abs(sdist1+sdist2-dist1)<(10*dist1*sqrt(eps));
+son34=abs(sdist3+sdist4-dist2)<(10*dist2*sqrt(eps));
 
-% assign acceptable to output
-fok=fon12&fon34;
-sok=son12&son34;
+% intersection of circles needs to be
+% on both arcs to be an arc intersection
+fok=fon12 & fon34;
+sok=son12 & son34;
 if(any(fok))
     lat(fok)=flat(fok);
     lon(fok)=flon(fok);

@@ -4,23 +4,24 @@ function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 %    Usage:    [x,y,z]=geocentric2xyz(lat,lon,radius)
 %              [x,y,z]=geocentric2xyz(lat,lon,depth,r)
 %
-%    Description: [X,Y,Z]=GEOCENTRIC2XYZ(LAT,LON,RADIUS) converts
-%     coordinates in geocentric latitude, longitude, radius to 
-%     Earth-centered, Earth-Fixed (ECEF).  LAT and LON are in degrees.  
-%     X, Y, Z will match the units of RADIUS.
+%    Description:
+%     [X,Y,Z]=GEOCENTRIC2XYZ(LAT,LON,RADIUS) converts coordinates in
+%     geocentric latitude, longitude, radius to Earth-centered, Earth-Fixed
+%     (ECEF).  LAT and LON are in degrees.  X, Y, Z will match the units of
+%     RADIUS.
 %
-%     GEOCENTRIC2XYZ(LAT,LON,DEPTH,R) allows specifying the radius R of
-%     the sphere and DEPTH rather than RADIUS.  X, Y, Z will match the
+%     [X,Y,Z]=GEOCENTRIC2XYZ(LAT,LON,DEPTH,R) allows specifying the radius
+%     R of the sphere and DEPTH rather than RADIUS.  X, Y, Z will match the
 %     units of DEPTH and R (must have the same units).
 %
 %    Notes:
-%     - the ECEF coordinate system has the X axis passing through the
+%     - The ECEF coordinate system has the X axis passing through the
 %       equator at the prime meridian, the Z axis through the north pole
 %       and the Y axis through the equator at 90 degrees longitude.
 %
 %    Examples:
-%     Find out how far a position is from the equatorial plane (z):
-%      [x,y,z]=geocentric2xyz(lat,lon,depth,r)
+%     % Find out how far a position is from the equatorial plane (z):
+%     [x,y,z]=geocentric2xyz(lat,lon,depth,r)
 %
 %    See also: XYZ2GEOCENTRIC, XYZ2GEOGRAPHIC, GEOGRAPHIC2XYZ,
 %              GEOGRAPHIC2GEOCENTRIC, GEOCENTRIC2GEOGRAPHIC
@@ -32,9 +33,10 @@ function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 %        Sep.  5, 2009 - minor doc update
 %        Nov. 13, 2009 - name change: geodetic to geographic
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb. 10, 2012 - doc update, code cleaning, expand as necessary
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb. 10, 2012 at 15:05 GMT
 
 % todo:
 
@@ -42,45 +44,24 @@ function [x,y,z]=geocentric2xyz(lat,lon,radius,r)
 error(nargchk(3,4,nargin));
 
 % size up inputs
-sx=size(lat); sy=size(lon); sz=size(radius);
-nx=prod(sx); ny=prod(sy); nz=prod(sz);
+sz{1}=size(lat); sz{2}=size(lon); sz{3}=size(radius);
+n(1)=prod(sz{1}); n(2)=prod(sz{2}); n(3)=prod(sz{3});
+if(nargin==4); sz{4}=size(r); n(4)=prod(sz{4}); end
 
 % basic check inputs
-if(~isnumeric(lat) || ~isnumeric(lon) || ~isnumeric(radius))
+if(~isreal(lat) || ~isreal(lon) || ~isreal(radius))
     error('seizmo:geocentric2xyz:nonNumeric',...
-        'All inputs must be numeric!');
-elseif(any([nx ny nz]==0))
-    error('seizmo:geocentric2xyz:unpairedCoord',...
-        'Coordinate inputs must be nonempty arrays!');
-elseif((~isequal(sx,sy) && all([nx ny]~=1)) ||...
-       (~isequal(sx,sz) && all([nx nz]~=1)) ||...
-       (~isequal(sz,sy) && all([nz ny]~=1)))
-    error('seizmo:geocentric2xyz:unpairedCoord',...
-        'Coordinate inputs must be scalar or equal sized arrays!');
+        'All inputs must be reals!');
+elseif(sum(n~=1)>1 && ~isequal(sz{n~=1}))
+    error('seizmo:geocentric2xyz:badSize',...
+        'All inputs must be equal sized or scalar!');
 end
 
-% expand scalars
-if(all([nx ny nz]==1))
-    % do nothing
-elseif(all([nx ny]==1))
-    lat=repmat(lat,sz); lon=repmat(lon,sz);
-elseif(all([nx nz]==1))
-    lat=repmat(lat,sy); radius=repmat(radius,sy);
-elseif(all([ny nz]==1))
-    lon=repmat(lon,sx); radius=repmat(radius,sx);
-elseif(nx==1)
-    lat=repmat(lat,sz);
-elseif(ny==1)
-    lon=repmat(lon,sz);
-elseif(nz==1)
-    radius=repmat(radius,sy);
-end
-
-% check input (converts depth to radius)
+% check input (converts radius to depth)
 if(nargin==4)
-    if(~isnumeric(r) || ~isscalar(r))
+    if(~isnumeric(r))
         error('seizmo:geocentric2xyz:badR',...
-        'Sphere radius input must be numerical scalar!');
+        'R input must be real-valued!');
     end
     radius=r-radius; 
 end
@@ -89,5 +70,8 @@ end
 z=radius.*sind(lat);
 x=radius.*cosd(lon).*cosd(lat);
 y=radius.*sind(lon).*cosd(lat);
+
+% expand z to lon if scalar
+if(isscalar(z)); z=z(ones(sz{2})); end
 
 end

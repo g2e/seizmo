@@ -5,19 +5,13 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %              [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az,[a f])
 %              [lat2,lon2,baz]=vincentyfwd(lat1,lon1,dist,az,[a f],tol)
 %
-%    Description: [LAT2,LON2,BAZ]=VINCENTYFWD(LAT1,LON1,DIST,AZ) returns
-%     geographic latitudes LAT2 & longitudes LON2 of destination points, as
-%     well as the backazimuths BAZ, given the distances DIST and forward
-%     azimuths AZ from initial points with geographic latitudes LAT1 and
-%     longitudes LON1 on the WGS-84 reference ellipsoid.  Inputs are all in
-%     degrees except DIST which must be in kilometers.  Outputs are all in
-%     degrees.  LAT1 and LON1 must be scalar or nonempty same-size arrays
-%     and DIST and AZ must be as well.  If multiple initial points and
-%     distance-azimuths are given, all must be same size (1 initial point
-%     per distance-azimuth).  A single initial point may be paired with
-%     multiple distance-azimuths and multiple initial points may be paired
-%     with a single distance-azimuth to make working with repetitive data
-%     simpler.
+%    Description:
+%     [LAT2,LON2,BAZ]=VINCENTYFWD(LAT1,LON1,DIST,AZ) returns geographic
+%     latitudes LAT2 & longitudes LON2 of destination points, as well as
+%     the backazimuths BAZ, given the distances DIST and forward azimuths
+%     AZ from initial points with geographic latitudes LAT1 and longitudes
+%     LON1 on the WGS-84 reference ellipsoid.  Inputs are all in degrees
+%     except DIST which must be in kilometers.  Outputs are all in degrees.
 %
 %     VINCENTYFWD(LAT1,LON1,DIST,AZ,[A F]) allows specifying the
 %     ellipsoid parameters A (equatorial radius in kilometers) and F
@@ -35,13 +29,13 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %        the Ellipsoid with Application of Nested Equations, Survey Review,
 %        Vol. XXII, No. 176, pp. 88-93.
 %       and assume the reference ellipsoid WGS-84 unless another is given.
-%     - Latitudes are geographic (0 deg lat == equator, range -90<=lat<=90)
-%     - Longitudes are returned in the range -180<lon<=180
-%     - Azimuths are returned in the range 0<=az<=360
+%     - Latitudes are geographic (0 deg lat == equator, range +/-90)
+%     - Longitudes are returned in the range +/-180
+%     - Backazimuths are returned in the range 0-360
 %
 %    Examples:
-%     St. Louis, MO USA to ???:
-%      [lat2,lon2,baz]=vincentyfwd(38.649,-90.305,5000,-30)
+%     % St. Louis, MO USA to ???:
+%     [lat2,lon2,baz]=vincentyfwd(38.649,-90.305,5000,-30)
 %
 %    See also: VINCENTYINV, SPHERICALINV, SPHERICALFWD, HAVERSINE
 
@@ -52,16 +46,17 @@ function [stla,stlo,baz]=vincentyfwd(evla,evlo,dist,az,ellipsoid,tolerance)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Nov. 13, 2009 - name change: geodetic to geographic
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  9, 2012 - doc update, expansion bugfix, drop repmat 4 speed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  9, 2012 at 15:05 GMT
 
 % todo:
 
 % require 4 to 6 inputs
 error(nargchk(4,6,nargin));
 
-% default - WGS-84 Reference Ellipsoid
+% default ellipsoid - WGS-84 Reference Ellipsoid
 if(nargin==4 || isempty(ellipsoid))
     % a=radius at equator (major axis)
     % f=flattening
@@ -92,39 +87,45 @@ elseif(any(tolerance<0) || any(tolerance>pi))
 end
 
 % size up inputs
-sz1=size(evla); sz2=size(evlo);
-sz3=size(dist); sz4=size(az);
-n1=prod(sz1); n2=prod(sz2);
-n3=prod(sz3); n4=prod(sz4);
+sz{1}=size(evla); sz{2}=size(evlo);
+sz{3}=size(dist); sz{4}=size(az);
 
 % basic check inputs
 if(~isnumeric(evla) || ~isnumeric(evlo) ||...
         ~isnumeric(dist) || ~isnumeric(az))
     error('seizmo:vincentyfwd:nonNumeric','All inputs must be numeric!');
-elseif(any([n1 n2 n3 n4]==0))
-    error('seizmo:vincentyfwd:emptyLatLon',...
-        'Location inputs must be nonempty arrays!');
 end
 
-% expand scalars
-if(n1==1); evla=repmat(evla,sz2); n1=n2; sz1=sz2; end
-if(n2==1); evlo=repmat(evlo,sz1); n2=n1; sz2=sz1; end
-if(n3==1); stla=repmat(dist,sz4); n3=n4; sz3=sz4; end
-if(n4==1); stlo=repmat(az,sz3); n4=n3; sz4=sz3; end
-
-% cross check inputs
-if(~isequal(sz1,sz2) || ~isequal(sz3,sz4) ||...
-        (~any([n1 n3]==1) && ~isequal(sz1,sz3)))
-    error('seizmo:vincentyfwd:nonscalarUnequalArrays',...
-        'Input arrays need to be scalar or have equal size!');
+% scalar expansion
+if(~isequal(sz{:}))
+    % check for unequally sized non-scalars
+    n(1)=prod(sz{1}); n(2)=prod(sz{2});
+    n(3)=prod(sz{3}); n(4)=prod(sz{4});
+    if(sum(n~=1)>1 && ~isequal(sz{n~=1}))
+        error('seizmo:sphericalfwd:badSize',...
+            'All location inputs must be equal sized or scalar!');
+    end
+    
+    % expand scalars
+    if(n(1)==1); evla=evla(ones(sz{2})); n(1)=n(2); sz{1}=sz{2}; end
+    if(n(2)==1); evlo=evlo(ones(sz{1})); n(2)=n(1); sz{2}=sz{1}; end
+    if(n(3)==1); dist=dist(ones(sz{4})); n(3)=n(4); sz{3}=sz{4}; end
+    if(n(4)==1); az=az(ones(sz{3})); n(4)=n(3); sz{4}=sz{3}; end
+    
+    % cross check inputs
+    if(~isequal(sz{1},sz{2}) || ~isequal(sz{3},sz{4}) ||...
+            (~any([n(1) n(3)]==1) && ~isequal(sz{1},sz{3})))
+        error('seizmo:vincentyfwd:nonscalarUnequalArrays',...
+            'Input arrays need to be scalar or have equal size!');
+    end
+    
+    % expand scalars
+    if(n(2)==1); evla=evla(ones(sz{3})); evlo=evlo(ones(sz{3})); end
+    if(n(4)==1); dist=dist(ones(sz{1})); az=az(ones(sz{1})); end
+    n=size(evla); % number of pairs
+else
+    n=sz{1}; % number of pairs
 end
-
-% expand scalars
-if(n2==1); evla=repmat(evla,sz3); evlo=repmat(evlo,sz3); end
-if(n4==1); dist=repmat(stla,sz1); az=repmat(stlo,sz1); end
-
-% number of pairs
-n=size(evla);
 
 % check lats are within -90 to 90 (Geographic Latitude φ)
 if(any(abs(evla)>90))
@@ -180,7 +181,9 @@ while (any(left)) % forces at least one iteration
 end
 
 % get destination point
-cossigma=cos(sigma); sinsigma=sin(sigma); cos2sigmam=cos(2.*sigma1+sigma);
+cossigma=cos(sigma);
+sinsigma=sin(sigma);
+cos2sigmam=cos(2.*sigma1+sigma);
 stla=R2D.*atan2(sinU1.*cossigma+cosU1.*sinsigma.*cosalpha1,...
     (1-f).*sqrt(sin2alpha+(sinU1.*sinsigma...
     -cosU1.*cossigma.*cosalpha1).^2));

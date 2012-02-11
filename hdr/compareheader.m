@@ -58,9 +58,10 @@ function []=compareheader(data,varargin)
 %        Jan. 30, 2012 - doc update, drop record listing, utc6/tai6 changes
 %        Feb.  1, 2012 - utc/tai bugfix
 %        Feb.  7, 2012 - edit h1 line
+%        Feb. 11, 2012 - divergent octave behavior workaround (cellcat)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 01:40 GMT
+%     Last Updated Feb. 11, 2012 at 01:40 GMT
 
 % todo:
 
@@ -139,10 +140,10 @@ end
 
 % only list each field once
 % - this forces an alphabetical listing
-fields=unique([[fields{:}].'; [vf{:}].']);
-absf=unique([absf{:}].');
-lgcf=unique([lgcf{:}].');
-enumf=unique([enumf{:}].');
+fields=unique([cellcat(fields{:}).'; cellcat(vf{:}).']);
+absf=unique(cellcat(absf{:}).');
+lgcf=unique(cellcat(lgcf{:}).');
+enumf=unique(cellcat(enumf{:}).');
 
 % list all if no fields given
 if(nargin==1); varargin=fields; end
@@ -435,4 +436,8 @@ end
 % field not found
 string=sprintf(['%' cs 's'],'NOT A FIELD!');
 
+end
+
+function [x]=cellcat(varargin)
+x=[varargin{~cellfun('isempty',varargin)}];
 end

@@ -4,9 +4,10 @@ function [radius]=geographiclat2radius(lat,ellipsoid)
 %    Usage:    radius=geographiclat2radius(latitudes)
 %              radius=geographiclat2radius(latitudes,[a f])
 %
-%    Description: GEOGRAPHICLAT2RADIUS(LATITUDES) returns the radii at
-%     geographic latitudes LATITUDES.  LATITUDES must be in degrees.
-%     Assumes the WGS-84 reference ellipsoid.
+%    Description:
+%     GEOGRAPHICLAT2RADIUS(LATITUDES) returns the radii at geographic
+%     latitudes LATITUDES.  LATITUDES must be in degrees.  Assumes the
+%     WGS-84 reference ellipsoid.
 %
 %     GEOGRAPHICLAT2RADIUS(LATITUDES,[A F]) allows specifying the ellipsoid
 %     parameters A (equatorial radius in kilometers) and F (flattening).
@@ -15,8 +16,8 @@ function [radius]=geographiclat2radius(lat,ellipsoid)
 %    Notes:
 %
 %    Examples:
-%     Get the radius for St. Louis, MO USA:
-%      radius=geographiclat2radius(38.649)
+%     % Get the radius for St. Louis, MO USA:
+%     radius=geographiclat2radius(38.649)
 %
 %    See also: GEOCENTRIC2GEOGRAPHICLAT, GEOGRAPHIC2GEOCENTRICLAT
 
@@ -26,16 +27,17 @@ function [radius]=geographiclat2radius(lat,ellipsoid)
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Nov. 13, 2009 - name change: geodetic to geographic
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb. 10, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb. 10, 2012 at 15:05 GMT
 
 % todo:
 
 % require 1 or 2 inputs
 error(nargchk(1,2,nargin));
 
-% default - WGS-84 Reference Ellipsoid
+% default ellipsoid - WGS-84 Reference Ellipsoid
 if(nargin==1 || isempty(ellipsoid))
     % a=radius at equator (major axis)
     % f=flattening
@@ -58,12 +60,9 @@ b=a*(1-f);
 a2=a^2;
 b2=b^2;
 
-% convert to radians
-lat=lat.*(pi/180);
-
 % optimization
-b2sin2lat=b2.*sin(lat).^2;
-a2cos2lat=a2.*cos(lat).^2;
+b2sin2lat=b2.*sind(lat).^2;
+a2cos2lat=a2.*cosd(lat).^2;
 
 % get radius
 radius=sqrt((a2.*a2cos2lat+b2.*b2sin2lat)./(a2cos2lat+b2sin2lat));

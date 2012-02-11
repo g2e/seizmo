@@ -3,26 +3,26 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 %
 %    Usage:    gcarc=haversine(lat1,lon1,lat2,lon2)
 %
-%    Description: HAVERSINE(LAT1,LON1,LAT2,LON2) returns the spherical
-%     greater-circle-arc degree distance between two points.  LAT1, LON1,
-%     LAT2, LON2 must all be in degrees and the latitudes must be
-%     geocentric.  LAT1 and LON1 must be nonempty same-size arrays and LAT2
-%     and LON2 must be as well.  If multiple initial and final points are
-%     given, they must be the same size (1 initial point per final point).
-%     A single initial or final point may be paired with an array of the
-%     other to calculate the distance of multiple points from a single
-%     point.
+%    Description:
+%     HAVERSINE(LAT1,LON1,LAT2,LON2) returns the spherical greater-circle-
+%     arc degree distance between two points.  LAT1, LON1, LAT2, LON2 must
+%     all be in degrees and the latitudes must be geocentric.
 %
 %    Notes:
 %     - 'half versed sine' is better suited for accuracy at small distances
-%       than SPHERICALINV as it uses the haversine function rather than a
-%       cosine which becomes inefficient at small distances.
+%       compared to SPHERICALINV as it uses the haversine function rather
+%       than a cosine which becomes inefficient at small distances.
 %
 %    Examples:
-%     Plotting up short distance results for sphericalinv and haversine:
-%      plot(0:1e-9:1e-5,sphericalinv(0,0,0:1e-9:1e-5,0),...
-%           0:1e-9:1e-5,haversine(0,0,0:1e-9:1e-5,0))
-%     demonstrates where this function becomes useful (couple meters).
+%     % Plot distance discrepancy for sphericalinv and haversine:
+%     deg2m=1000*6371*pi/180;
+%     dist=10.^(-1:.01:7)'./deg2m;
+%     loglog(deg2m*dist,deg2m*abs(dist-sphericalinv(0,0,dist,0)),...
+%            deg2m*dist,deg2m*abs(dist-haversine(0,0,dist,0)))
+%     ylabel('discrepancy (m)')
+%     xlabel('distance (m)')
+%     legend({'sphericalinv' 'haversine'})
+%     % demonstrates convincingly this function is more accurate!
 %
 %    See also: SPHERICALINV, VINCENTYINV, SPHERICALFWD, VINCENTYFWD
 
@@ -31,9 +31,10 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 %        Nov. 10, 2008 - improved scalar expansion, doc update
 %        Apr. 23, 2009 - fix nargchk for octave, move usage up
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  9, 2012 - doc update, drop replication for speed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  9, 2012 at 15:05 GMT
 
 % todo:
 
@@ -41,36 +42,20 @@ function [gcarc]=haversine(evla,evlo,stla,stlo)
 error(nargchk(4,4,nargin));
 
 % size up inputs
-sz1=size(evla); sz2=size(evlo);
-sz3=size(stla); sz4=size(stlo);
-n1=prod(sz1); n2=prod(sz2);
-n3=prod(sz3); n4=prod(sz4);
+sz{1}=size(evla); sz{2}=size(evlo);
+sz{3}=size(stla); sz{4}=size(stlo);
+n(1)=prod(sz{1}); n(2)=prod(sz{2});
+n(3)=prod(sz{3}); n(4)=prod(sz{4});
 
-% basic check inputs
-if(~isnumeric(evla) || ~isnumeric(evlo) ||...
-        ~isnumeric(stla) || ~isnumeric(stlo))
-    error('seizmo:haversine:nonNumeric','All inputs must be numeric!');
-elseif(any([n1 n2 n3 n4]==0))
-    error('seizmo:haversine:emptyLatLon',...
-        'Latitudes & longitudes must be nonempty arrays!');
+% check inputs
+if(~isreal(evla) || ~isreal(evlo) ||...
+        ~isreal(stla) || ~isreal(stlo))
+    error('seizmo:haversine:nonNumeric',...
+        'All inputs must be real-valued arrays!');
+elseif(sum(n~=1)>1 && ~isequal(sz{n~=1}))
+    error('seizmo:haversine:badSize',...
+        'All inputs must be equal sized or scalar!');
 end
-
-% expand scalars
-if(n1==1); evla=repmat(evla,sz2); n1=n2; sz1=sz2; end
-if(n2==1); evlo=repmat(evlo,sz1); n2=n1; sz2=sz1; end
-if(n3==1); stla=repmat(stla,sz4); n3=n4; sz3=sz4; end
-if(n4==1); stlo=repmat(stlo,sz3); n4=n3; sz4=sz3; end
-
-% cross check inputs
-if(~isequal(sz1,sz2) || ~isequal(sz3,sz4) ||...
-        (~any([n1 n3]==1) && ~isequal(sz1,sz3)))
-    error('seizmo:haversine:nonscalarUnequalArrays',...
-        'Input arrays need to be scalar or have equal size!');
-end
-
-% expand scalars
-if(n2==1); evla=repmat(evla,sz3); evlo=repmat(evlo,sz3); end
-if(n4==1); stla=repmat(stla,sz1); stlo=repmat(stlo,sz1); end
 
 % get haversine distance
 a=sind((stla-evla)/2).^2+cosd(evla).*cosd(stla).*sind((stlo-evlo)/2).^2;

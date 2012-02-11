@@ -5,16 +5,17 @@ function [r]=mean_ellipsoid_radius(method,ellipsoid)
 %              r=mean_ellipsoid_radius(method)
 %              r=mean_ellipsoid_radius(method,[a f])
 %
-%    Description: R=MEAN_ELLIPSOID_RADIUS() returns the mean radius of the
-%     WGS-84 reference ellipsoid based on the formula (2A+B)/3 where A is
-%     the semimajor axis and B is the semiminor axis.
+%    Description:
+%     R=MEAN_ELLIPSOID_RADIUS() returns the mean radius of the WGS-84
+%     reference ellipsoid based on the formula (2A+B)/3 where A is the
+%     semimajor axis and B is the semiminor axis.
 %
 %     R=MEAN_ELLIPSOID_RADIUS(METHOD) specifies the method for finding the
 %     mean radius of an ellipsoid.  Valid methods are 'MEAN', 'AUTHALIC',
 %     and 'VOLUMETRIC'.  AUTHALIC gives the radius of a sphere with an area
 %     equal to that of the ellipsoid.  VOLUMETRIC gives the radius of a
 %     sphere with an equal volume to that of the ellipsoid.  The default
-%     method is 'MEAN'.
+%     method is 'MEAN' which uses the formula above.
 %   
 %     R=MEAN_ELLIPSOID_RADIUS(METHOD,[A F]) allows specifying the ellipsoid
 %     parameters A (equatorial radius in kilometers) and F (flattening).
@@ -23,10 +24,10 @@ function [r]=mean_ellipsoid_radius(method,ellipsoid)
 %    Notes:
 %
 %    Examples:
-%     Compare the 3 mean radii for the WGS-84 ellipsoid:
-%      mean_ellipsoid_radius('mean')
-%      mean_ellipsoid_radius('authalic')
-%      mean_ellipsoid_radius('volumetric')
+%     % Compare the 3 mean radii for the WGS-84 ellipsoid:
+%     mean_ellipsoid_radius('mean')
+%     mean_ellipsoid_radius('authalic')
+%     mean_ellipsoid_radius('volumetric')
 %
 %    See also: GEOGRAPHICLAT2RADIUS
 
@@ -34,16 +35,17 @@ function [r]=mean_ellipsoid_radius(method,ellipsoid)
 %        Nov. 13, 2009 - initial version
 %        Nov. 16, 2009 - divide by zero bug fixed in sphere 2 authalic
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb.  9, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb.  9, 2012 at 15:05 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(0,2,nargin));
 
-% default - WGS-84 Reference Ellipsoid
+% default ellipsoid - WGS-84 Reference Ellipsoid
 if(nargin<2 || isempty(ellipsoid))
     % a=radius at equator (major axis)
     % f=flattening

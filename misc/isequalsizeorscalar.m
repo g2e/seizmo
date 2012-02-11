@@ -39,9 +39,10 @@ function [lgc,sz,ns]=isequalsizeorscalar(varargin)
 %        May  16, 2010 - more outputs
 %        May  20, 2010 - no split based on matlab version (sloooow)
 %        Feb.  5, 2012 - doc update, use try-catch block for pre-7.1
+%        Feb.  9, 2012 - slight optimization for single input case
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2012 at 13:40 GMT
+%     Last Updated Feb.  9, 2012 at 13:40 GMT
 
 % todo:
 
@@ -52,7 +53,15 @@ lgc=true; sz=[]; ns=[];
 if(nargin==0); return; end
 
 % single input case
-if(nargin==1); sz=size(varargin{1}); ns=~isscalar(varargin{1}); return; end
+if(nargin==1)
+    if(nargout==1);
+        return;
+    else
+        sz=size(varargin{1});
+        ns=~isscalar(varargin{1});
+        return;
+    end
+end
 
 % find nonscalars
 ns=cellfun('prodofsize',varargin)~=1;

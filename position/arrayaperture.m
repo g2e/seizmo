@@ -1,48 +1,53 @@
-function [aperture]=arrayaperture(lat,lon,azirng,ellipsoid)
+function [aperture]=arrayaperture(lat,lon,azrng,ellipsoid)
 %ARRAYAPERTURE    Returns the aperture of an array
 %
 %    Usage:    aperture=arrayaperture(lat,lon)
-%              aperture=arrayaperture(lat,lon,azirng)
-%              aperture=arrayaperture(lat,lon,azirng,[a f])
+%              aperture=arrayaperture(lat,lon,azrng)
+%              aperture=arrayaperture(lat,lon,azrng,[a f])
 %
-%    Description: APERTURE=ARRAYAPERTURE(LAT,LON) returns the maximum
-%     aperture of an array of positions given by latitudes LAT and
-%     longitudes LON.    LAT & LON must be equal sized or scalar, are
-%     assumed to be in degrees, and are based in the WGS-84 reference
-%     ellipsoid.  APERTURE is in kilometers.
+%    Description:
+%     APERTURE=ARRAYAPERTURE(LAT,LON) returns the maximum aperture of an
+%     array of positions given by latitudes LAT and longitudes LON.  LAT &
+%     LON must be equal sized or scalar, are assumed to be in degrees, and
+%     are based in the WGS-84 reference ellipsoid.  APERTURE is in
+%     kilometers.  Unlike ARRAYRADIUS this does not use the array's center
+%     for the measurements.
 %
-%     APERTURE=ARRAYAPERTURE(LAT,LON,AZIRNG) limits the azimuth to which
-%     the aperture corresponds to AZIRNG.  AZIRNG should be [AZIMIN AZIMAX]
+%     APERTURE=ARRAYAPERTURE(LAT,LON,AZRNG) limits the azimuth to which
+%     the aperture corresponds to AZRNG.  AZRNG should be [AZIMIN AZIMAX]
 %     in degrees.  Multiple ranges may be specified.
 %
-%     APERTURE=ARRAYAPERTURE(LAT,LON,AZIRNG,[A F]) allows specifying the
+%     APERTURE=ARRAYAPERTURE(LAT,LON,AZRNG,[A F]) allows specifying the
 %     ellipsoid parameters A (equatorial radius in kilometers) and F
 %     (flattening).  The default corresponds to WGS-84.  This is compatible
 %     with output from Matlab's Mapping Toolbox function ALMANAC.
 %
 %    Notes:
+%     - This algorithm is not good for azimuthal variations of pole
+%       encompassing arrays.  ARRAYRADIUS may work better in those cases.
 %
 %    Examples:
-%     Get the aperture variation in 30deg increments:
-%      arrayaperture(lat,lon,[(0:30:150)' (30:30:180)'])
+%     % Get the aperture variation in 30deg increments:
+%     arrayaperture(lat,lon,[(0:30:150)' (30:30:180)'])
 %
-%    See also: ARRAYCENTER
+%    See also: ARRAYCENTER, ARRAYRADIUS
 
 %     Version History:
 %        July 23, 2010 - initial version
+%        Feb.  9, 2012 - doc update, warn/nan for azrng w/o data
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 23, 2010 at 19:25 GMT
+%     Last Updated Feb.  9, 2012 at 19:25 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(2,4,nargin));
 
-% default azirng
-if(nargin<3); azirng=[0 360]; end
+% default azrng
+if(nargin<3); azrng=[0 360]; end
 
-% default - WGS-84 Reference Ellipsoid
+% default ellipsoid - WGS-84 Reference Ellipsoid
 if(nargin<4 || isempty(ellipsoid))
     % a=radius at equator (major axis)
     % f=flattening
@@ -60,48 +65,54 @@ else
     end
 end
 
+% size up inputs
+sz{1}=size(lat); sz{2}=size(lon);
+n(1)=prod(sz{1}); n(2)=prod(sz{2});
+
 % check inputs
-if(~isreal(lat) || ~isreal(lon) || ~isreal(azirng))
+if(~isreal(lat) || ~isreal(lon) || ~isreal(azrng))
     error('seizmo:arrayaperture:badInput',...
         'Inputs must be real valued arrays!');
-elseif(~isequalsizeorscalar(lat,lon))
-    error('seizmo:arrayaperture:badInput',...
+elseif(sum(n~=1)>1 && ~isequal(sz{n~=1}))
+    error('seizmo:arrayaperture:badSize',...
         'LAT & LON must be equal sized or scalar!');
-elseif(size(azirng,2)~=2 || ndims(azirng)~=2)
+elseif(size(azrng,2)~=2 || ndims(azrng)~=2)
     error('seizmo:arrayaperture:badInput',...
-        'AZIRNG must be a Nx2 array of [AZIMIN AZIMAX]!');
+        'AZRNG must be a Nx2 array of [AZMIN AZMAX]!');
 end
 
-% expand and vectorize
-[lat,lon]=expandscalars(lat,lon);
+% vectorize & expand
 lat=lat(:); lon=lon(:);
+if(n(1)==1); lat=lat(ones(n(2),1)); end
+if(n(2)==1); lon=lon(ones(n(1),1)); end
 nsta=numel(lat);
 
 % get station pair distance & azimuth
-[dist,azi]=vincentyinv(lat(:,ones(nsta,1)),lon(:,ones(nsta,1)),...
+[d,az]=vincentyinv(lat(:,ones(nsta,1)),lon(:,ones(nsta,1)),...
     lat(:,ones(nsta,1))',lon(:,ones(nsta,1))',[a f]);
 
-% extract upper triangle
-%dist=dist(triu(true(nsta),1));
-%azi=azi(triu(true(nsta),1));
-
 % column vectors
-dist=dist(:);
-azi=azi(:);
+d=d(:); az=az(:);
+
+% get azrng setup
+azrng=mod(azrng,360);
+flip=(azrng(:,2)-azrng(:,1))<=0;
+azrng(flip,2)=azrng(flip,2)+360;
 
 % loop of ranges
-nrng=size(azirng,1);
+nrng=size(azrng,1);
 aperture=nan(nrng,1);
 for i=1:nrng
-    tmp=max(dist((azi>=azirng(i,1) & azi<=azirng(i,2)) ...
-        | (azi>=azirng(i,1)-360 & azi<=azirng(i,2)-360) ...
-        | (azi>=azirng(i,1)+360 & azi<=azirng(i,2)+360)));
-    if(isempty(tmp))
-        error('seizmo:arrayaperture:badAziRange',...
+    in=((az-azrng(i,1))>=0 & (az-azrng(i,2))<=0) ...
+        | ((az+360-azrng(i,1))>=0 & (az+360-azrng(i,2))<=0);
+    if(~any(in))
+        warning('seizmo:arrayaperture:badAzRange',...
             'No data in azimuthal range: %d to %d!',...
-            azirng(i,1),azirng(i,2));
+            azrng(i,1),azrng(i,2));
+        aperture(i)=nan;
+    else
+        aperture(i)=max(d(in));
     end
-    aperture(i)=tmp;
 end
 
 end

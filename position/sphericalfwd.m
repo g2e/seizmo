@@ -9,18 +9,12 @@ function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 %     as the back azimuths BAZ, given the great circle distances GCARC and
 %     forward azimuths AZ from initial point(s) with geocentric latitudes
 %     LAT1 and longitudes LON1.  Inputs must all be in degrees.  Outputs
-%     are also all in degrees.  LAT1 and LON1 must be nonempty same-size
-%     arrays and GCARC and AZ must be as well.  If multiple initial points
-%     and distance-azimuths are given, all must be the same size (1 initial
-%     point per distance-azimuth).  A single initial point may be paired
-%     with multiple distance-azimuths and multiple initial points may be
-%     paired with a single distance-azimuth to make working with repetitive
-%     data simpler.
+%     are also all in degrees.
 %
 %    Notes:
-%     - Latitudes are geocentric (0 deg lat == equator, range -90<=lat<=90)
-%     - Longitudes are returned in the range -180<lon<=180
-%     - Azimuths are returned in the range 0<=az<=360
+%     - Latitudes are geocentric (0 deg lat == equator, range +/-90)
+%     - Longitudes are returned in the range +/-180
+%     - Backazimuth is returned in the range 0-360
 %
 %    Examples:
 %     % St. Louis, MO USA to ???:
@@ -36,9 +30,11 @@ function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 %        Jan. 22, 2011 - use degrees functions, fix pole result giving
 %                        complex occasionally, nargchk fix
 %        Feb. 24, 2011 - doc update
+%        Feb.  9, 2012 - doc update, drop replication for speed, precompute
+%                        sines for speed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2011 at 21:15 GMT
+%     Last Updated Feb.  9, 2012 at 21:15 GMT
 
 % todo:
 
@@ -46,52 +42,46 @@ function [stla,stlo,baz]=sphericalfwd(evla,evlo,gcarc,az)
 error(nargchk(4,4,nargin));
 
 % size up inputs
-sz1=size(evla); sz2=size(evlo);
-sz3=size(gcarc); sz4=size(az);
-n1=prod(sz1); n2=prod(sz2);
-n3=prod(sz3); n4=prod(sz4);
+sz{1}=size(evla); sz{2}=size(evlo);
+sz{3}=size(gcarc); sz{4}=size(az);
+n(1)=prod(sz{1}); n(2)=prod(sz{2});
+n(3)=prod(sz{3}); n(4)=prod(sz{4});
 
 % basic check inputs
 if(~isnumeric(evla) || ~isnumeric(evlo) ||...
         ~isnumeric(gcarc) || ~isnumeric(az))
     error('seizmo:sphericalfwd:nonNumeric','All inputs must be numeric!');
-elseif(any([n1 n2 n3 n4]==0))
-    error('seizmo:sphericalfwd:emptyLatLon',...
-        'Location inputs must be nonempty arrays!');
+elseif(sum(n~=1)>1 && ~isequal(sz{n~=1}))
+    error('seizmo:sphericalfwd:badSize',...
+        'All inputs must be equal sized or scalar!');
 end
 
-% expand scalars
-if(n1==1); evla=repmat(evla,sz2); n1=n2; sz1=sz2; end
-if(n2==1); evlo=repmat(evlo,sz1); n2=n1; sz2=sz1; end
-if(n3==1); stla=repmat(gcarc,sz4); n3=n4; sz3=sz4; end
-if(n4==1); stlo=repmat(az,sz3); n4=n3; sz4=sz3; end
-
-% cross check inputs
-if(~isequal(sz1,sz2) || ~isequal(sz3,sz4) ||...
-        (~any([n1 n3]==1) && ~isequal(sz1,sz3)))
-    error('seizmo:sphericalfwd:nonscalarUnequalArrays',...
-        'Input arrays need to be scalar or have equal size!');
-end
-
-% expand scalars
-if(n2==1); evla=repmat(evla,sz3); evlo=repmat(evlo,sz3); end
-if(n4==1); gcarc=repmat(stla,sz1); az=repmat(stlo,sz1); end
+% optimize computation over memory
+sinlat1=sind(evla);
+singc=sind(gcarc);
+coslat1=cosd(evla);
+cosgc=cosd(gcarc);
 
 % for conversion
 r2d=180/pi;
 
 % get destination point
-stla=real(asind(sind(evla).*cosd(gcarc)...
-    +cosd(evla).*sind(gcarc).*cosd(az)));
-stlo=mod(evlo+r2d.*atan2(sind(az).*sind(gcarc).*cosd(evla),...
-    cosd(gcarc)-sind(evla).*sind(stla)),360);
+stla=real(asind(sinlat1.*cosgc+coslat1.*singc.*cosd(az)));
+sinlat2=sind(stla);
+stlo=mod(evlo+r2d.*atan2(sind(az).*singc.*coslat1,...
+    cosgc-sinlat1.*sinlat2),360);
+
+% stla misses evlo for sizing
+if(isscalar(stla)); stla=stla(ones(sz{2})); end
+
+% proper range (+/-180)
+stlo(stlo>180)=stlo(stlo>180)-360;
+
+% shortcut
+if(nargout<3); return; end
 
 % get back azimuth
-baz=mod(r2d.*atan2(sind(evlo-stlo).*cosd(evla),...
-        cosd(stla).*sind(evla)-sind(stla).*cosd(evla).*cosd(evlo-stlo)),...
-        360);
-
-% proper range
-stlo(stlo>180)=stlo(stlo>180)-360;
+baz=mod(r2d.*atan2(sind(evlo-stlo).*coslat1,...
+        cosd(stla).*sinlat1-sinlat2.*coslat1.*cosd(evlo-stlo)),360);
 
 end

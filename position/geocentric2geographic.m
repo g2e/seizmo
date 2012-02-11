@@ -4,12 +4,12 @@ function [lat,lon,depth]=geocentric2geographic(lat,lon,depth,ellipsoid)
 %    Usage:    [lat,lon,depth]=geocentric2geographic(lat,lon,depth)
 %              [lat,lon,depth]=geocentric2geographic(lat,lon,depth,[a f])
 %
-%    Description: [LAT,LON,DEPTH]=GEOCENTRIC2GEOGRAPHIC(LAT,LON,DEPTH) 
-%     converts arrays of coordinates from geocentric to geographic
-%     latitude, longitude, depth.  LAT and LON are in degrees.  DEPTH is in
-%     kilometers.  The reference ellipsoid is assumed to be WGS-84.  The
-%     volumetric radius is derived from ellipsoid parameters for the
-%     spherical radius.
+%    Description:
+%     [LAT,LON,DEPTH]=GEOCENTRIC2GEOGRAPHIC(LAT,LON,DEPTH) converts arrays
+%     of coordinates from geocentric to geographic latitude, longitude,
+%     and depth.  LAT and LON are in degrees.  DEPTH is in kilometers.  The
+%     reference ellipsoid is assumed to be WGS-84.  The volumetric radius
+%     is derived from ellipsoid parameters for the spherical radius.
 %
 %     [LAT,LON,DEPTH]=GEOCENTRIC2GEOGRAPHIC(LAT,LON,DEPTH,[A F]) allows
 %     specifying the ellipsoid parameters A (equatorial radius in 
@@ -19,8 +19,8 @@ function [lat,lon,depth]=geocentric2geographic(lat,lon,depth,ellipsoid)
 %    Notes:
 %
 %    Examples:
-%     Get your earthquake location into geographic coordinates:
-%      [lat,lon,depth]=geocentric2geographic(evla,evlo,evdp/1000)
+%     % Get your earthquake location into geographic coordinates:
+%     [lat,lon,depth]=geocentric2geographic(evla,evlo,evdp/1000)
 %
 %    See also: GEOGRAPHIC2GEOCENTRIC, GEOCENTRIC2XYZ, XYZ2GEOGRAPHIC,
 %              XYZ2GEOCENTRIC, GEOGRAPHIC2XYZ
@@ -33,16 +33,17 @@ function [lat,lon,depth]=geocentric2geographic(lat,lon,depth,ellipsoid)
 %        Nov. 13, 2009 - name change: geodetic to geographic, fix calls to
 %                        missing functions
 %        Feb. 11, 2011 - mass nargchk fix
+%        Feb. 10, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Feb. 10, 2012 at 15:05 GMT
 
 % todo:
 
 % require 3 or 4 inputs
 error(nargchk(3,4,nargin));
 
-% default - WGS-84 Reference Ellipsoid
+% default ellipsoid - WGS-84 Reference Ellipsoid
 if(nargin==3 || isempty(ellipsoid))
     % a=radius at equator (major axis)
     % f=flattening
