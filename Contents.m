@@ -2,7 +2,7 @@
 % Version 0.6.12 Kangchenjunga 7-Feb-2012
 %
 % New to SEIZMO? Overwhelmed by all the functions?
-%  <a href="matlab:showdemo beginning_seizmo">THE BASICS</a>
+%  <a href="matlab:showdemo sz_pub_beginning">THE BASICS</a>
 %
 % Browse the SEIZMO tool chest:
 %  <a href="matlab:help categorical_list">Categorical Lists of SEIZMO Functions</a>

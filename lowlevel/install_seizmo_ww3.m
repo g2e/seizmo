@@ -1,15 +1,14 @@
-function [ok]=install_seizmo_ww3(mypath)
-%INSTALL_SEIZMO_WW3    Compiles WaveWatch III mex files
+function [ok]=install_seizmo_ww3()
+%INSTALL_SEIZMO_WW3    Checks that njtbx is installed
 %
-%    Usage:    ok=install_seizmo_ww3(mypath)
+%    Usage:    ok=install_seizmo_ww3()
 %
 %    Description:
-%     OK=INSTALL_SEIZMO_WW3(MYPATH) compiles the mex files in the 'ww3'
-%     directory within the MYPATH directory.  OK indicates if the
-%     compilation succeeded or not.
+%     OK=INSTALL_SEIZMO_WW3() checks that njtbx is installed.  If not
+%     a warning is given indicating where to go to get it.  OK is TRUE if
+%     njtbx is found and FALSE otherwise.
 %
 %    Notes:
-%     - Currently only BDS_unpack_mex5.c is compiled
 %
 %    Examples:
 %
@@ -18,44 +17,23 @@ function [ok]=install_seizmo_ww3(mypath)
 
 %     Version History:
 %        Dec. 30, 2010 - initial version
+%        Feb. 14, 2012 - switch from read_grib to njtbx
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 30, 2010 at 15:25 GMT
+%     Last Updated Feb. 14, 2012 at 15:25 GMT
 
 % todo:
 
-% check nargin
-error(nargchk(0,1,nargin));
-
-% default path input
-if(nargin<1 || isempty(mypath)); mypath='.'; end
-
-% check path
-fs=filesep;
-ww3path=[mypath fs 'ww3'];
-if(~exist(ww3path,'dir'))
-    error('seizmo:install_seizmo_ww3:badPath',...
-        ['Expected path to WW3 directory (' ww3path ') does not exist!']);
-end
-
-% get to ww3 directory
-cwd=pwd;
-cd([mypath fs 'ww3']);
-
-% compile mex file(s)
-ok=false;
-try
-    mex('BDS_unpack_mex5.c');
+% check that necessary njtbx functions are available
+if(~exist('mDataset','file') || ~exist('getVars','file') ...
+        || ~exist('nj_time','file'))
+    warning('seizmo:install_seizmo_ww3:noNJTBX',...
+        ['NJTBX is not installed!  You can get it here:\n' ...
+        'http://sourceforge.net/apps/trac/njtbx/' ...
+        'wiki/DownloadNjtbx-current']);
+    ok=false;
+else
     ok=true;
-catch
-    file=[mypath fs 'ww3' fs 'BDS_unpack_mex5.c'];
-    warning('seizmo:install_seizmo_ww3:compilationFailed',...
-        ['Failed to compile WaveWatch III mex file:\n' ...
-        strrep(file,'\','\\') '\n' ...
-        'WaveWatch III & SEIZMO interaction will fail until resolved!']);
 end
-
-% return to starting directory
-cd(cwd);
 
 end

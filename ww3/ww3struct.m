@@ -1,15 +1,15 @@
-function [s]=ww3mat(file,rec,stime,etime,latrng,lonrng)
-%WW3MAT    Gets WaveWatch III hindcast GRiB1/2 files into a structure
+function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
+%WW3STRUCT    Puts WaveWatch III hindcast GRiB1/2 files into a structure
 %
-%    Usage:    s=ww3mat('file')
-%              s=ww3mat({'file1' ... 'fileN'})
-%              s=ww3mat()
-%              s=ww3mat('file',rec)
-%              s=ww3mat('file',rec,stime,etime,latrng,lonrng)
+%    Usage:    s=ww3struct('file')
+%              s=ww3struct({'file1' ... 'fileN'})
+%              s=ww3struct()
+%              s=ww3struct('file',rec)
+%              s=ww3struct('file',rec,stime,etime,latrng,lonrng)
 %
 %    Description:
-%     S=WW3MAT('FILE') reads the WW3 GRiB or GRiB2 file FILE, returning the
-%     contents as a struct S with the following layout:
+%     S=WW3STRUCT('FILE') reads the WW3 GRiB or GRiB2 file FILE, returning
+%     the contents as a struct S with the following layout:
 %       .path        - path to the WW3 hindcast file
 %       .name        - name of the WW3 hindcast file
 %       .description - description of the data
@@ -20,19 +20,19 @@ function [s]=ww3mat(file,rec,stime,etime,latrng,lonrng)
 %       .time        - times (in serial number format)
 %     Note that the fields .description, .units & .data are returned as
 %     cell arrays so that WW3 hindcast files with multiple variables are
-%     supported (this allows reading wind data).
+%     supported (this allows reading wind u/v data).
 %
-%     S=WW3MAT({'FILE1' ... 'FILEN'}) processes the multiple WW3 hindcast
-%     files given.  The output structure S is Nx1 where N is the number of
-%     valid hindcast files.
+%     S=WW3STRUCT({'FILE1' ... 'FILEN'}) processes multiple WW3 hindcast
+%     files.  The output structure S is Nx1 where N is the number of valid
+%     hindcast files.
 %
-%     S=WW3MAT() presents a GUI for the user to select the WW3 hindcast
+%     S=WW3STRUCT() presents a GUI for the user to select WW3 hindcast
 %     file(s).
 %
-%     S=WW3MAT('FILE',REC) only reads the record numbers specified in REC.
-%     This is useful for working time step by time step.
+%     S=WW3STRUCT('FILE',REC) only reads the record numbers specified in
+%     REC.  This is useful for working time step by time step.
 %
-%     S=WW3MAT('FILE',REC,STIME,ETIME,LATRNG,LONRNG) limits the output to
+%     S=WW3STRUCT('FILE',REC,STIME,ETIME,LATRNG,LONRNG) limits output to
 %     the ranges specified.  The defaults are [], which do not limit the
 %     output.
 %
@@ -46,7 +46,7 @@ function [s]=ww3mat(file,rec,stime,etime,latrng,lonrng)
 %
 %    Examples:
 %     % Read the first record of a NOAA WW3 grib file and plot it up:
-%     s=ww3mat('nww3.hs.200607.grb',1);
+%     s=ww3struct('nww3.hs.200607.grb',1);
 %     figure;
 %     imagesc(s.lon,s.lat,s.data{1});
 %     set(gca,'ydir','normal');
@@ -59,7 +59,8 @@ function [s]=ww3mat(file,rec,stime,etime,latrng,lonrng)
 %        July  2, 2010 - added WW3TS to see also
 %        Dec.  5, 2011 - doc update
 %        Feb. 14, 2012 - njtbx instead of read_grib, range limits, file
-%                        input, multi-file support, multi-field support
+%                        input, multi-file support, multi-field support,
+%                        renamed from ww3mat to ww3struct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 14, 2012 at 00:40 GMT
@@ -80,7 +81,7 @@ if(nargin<6); lonrng=[]; end
 % check that njtbx is installed (somewhat)
 if(~exist('mDataset','file') || ~exist('getVars','file') ...
         || ~exist('nj_time','file'))
-    error('seizmo:ww3mat:noNJTBX',...
+    error('seizmo:ww3struct:noNJTBX',...
         ['NJTBX is not installed!  You may get it here:\n' ...
         'http://sourceforge.net/apps/trac/njtbx/' ...
         'wiki/DownloadNjtbx-current']);
@@ -96,30 +97,30 @@ file=onefilelist(file);
 nfiles=numel(file);
 
 % error if no files
-if(nfiles<1); error('seizmo:ww3mat:noFiles','No files to read!'); end
+if(nfiles<1); error('seizmo:ww3struct:noFiles','No files to read!'); end
 
 % check the limits
 stsz=size(stime); etsz=size(etime);
 if(~isreal(rec) || ~isreal(stime) || ~isreal(etime) ...
         || ~isreal(latrng) || ~isreal(lonrng))
-    error('seizmo:ww3mat:badInput',...
+    error('seizmo:ww3struct:badInput',...
         'Range inputs must be real-valued!');
 elseif(~isempty(rec) && (~isvector(rec) || any(fix(rec)~=rec)))
-    error('seizmo:ww3mat:badInput',...
+    error('seizmo:ww3struct:badInput',...
         'REC must be a vector of integers!');
 elseif(numel(stsz)>2 || stsz(1)>1 || ~any(stsz(2)==[0 1 2 3 5 6]))
-    error('seizmo:ww3mat:badInput',...
+    error('seizmo:ww3struct:badInput',...
         'STIME must be a 1x? numeric vector giving a time!');
 elseif(numel(etsz)>2 || etsz(1)>1 || ~any(etsz(2)==[0 1 2 3 5 6]))
-    error('seizmo:ww3mat:badInput',...
+    error('seizmo:ww3struct:badInput',...
         'ETIME must be a 1x? numeric vector giving a time!');
 elseif(~isempty(latrng) && (~isequal(size(latrng),[1 2]) ...
         || latrng(1)>latrng(2)))
-    error('seizmo:ww3mat:badInput',...
+    error('seizmo:ww3struct:badInput',...
         'LATRNG must be a 1x2 vector as [MINLAT MAXLAT]!');
 elseif(~isempty(lonrng) && (~isequal(size(lonrng),[1 2]) ...
         || lonrng(1)>lonrng(2)))
-    error('seizmo:ww3mat:badInput',...
+    error('seizmo:ww3struct:badInput',...
         'LONRNG must be a 1x2 vector as [MINLON MAXLON]!');
 end
 

@@ -6,7 +6,7 @@
    <!--
 This HTML is auto-generated from an M-file.
 To make changes, update the M-file and republish this document.
-      --><title>SEIZMO - A Matlab&reg; &amp; Octave Toolbox for Passive Seismology</title><meta name="generator" content="MATLAB 7.10"><meta name="date" content="2012-02-08"><meta name="m-file" content="beginning_seizmo"><style type="text/css">
+      --><title>SEIZMO - A Matlab&reg; &amp; Octave Toolbox for Passive Seismology</title><meta name="generator" content="MATLAB 7.10"><meta name="date" content="2012-02-14"><meta name="m-file" content="sz_pub_beginning"><style type="text/css">
 
 body {
   background-color: white;
@@ -73,7 +73,7 @@ Reading in Data Portion of Record(s)
 Reading in Data Portion of Record(s)
 [######################### 100% #########################] 29/29 0s
 </pre><p>The data can then be plotted using one of SEIZMO's <a href="matlab:doc('sz_toc_plotting')">plotting commands</a>:</p><pre class="codeinput">recordsection(dataset)
-</pre><img vspace="5" hspace="5" src="beginning_seizmo_01.png" alt=""> <h2>How to save a file from SEIZMO<a name="6"></a></h2><p>There are 2 options when saving SEIZMO datasets: as a <tt>.mat</tt> file or as SAC files.  The MAT file option allows you to save the entire dataset as well as any other variables you request into a single file.  The downside is that this file is not readable by other seismology programs such as SAC or <a href="http://www.passcal.nmt.edu/content/pql-ii-program-viewing-data">PQLII</a>.</p><pre class="codeinput">save <span class="string">myfile.mat</span> <span class="string">dataset</span>
+</pre><img vspace="5" hspace="5" src="sz_pub_beginning_01.png" alt=""> <h2>How to save a file from SEIZMO<a name="6"></a></h2><p>There are 2 options when saving SEIZMO datasets: as a <tt>.mat</tt> file or as SAC files.  The MAT file option allows you to save the entire dataset as well as any other variables you request into a single file.  The downside is that this file is not readable by other seismology programs such as SAC or <a href="http://www.passcal.nmt.edu/content/pql-ii-program-viewing-data">PQLII</a>.</p><pre class="codeinput">save <span class="string">myfile.mat</span> <span class="string">dataset</span>
 </pre><p>To save the records in the dataset individually as SAC files use the command <a href="matlab:doc('writeseizmo')"><tt>writeseizmo</tt></a> (here we will use the shortcut <tt>w</tt>).  We also give a parameter &amp; value pair to change the path of the output files to <tt>data-new</tt>.</p><pre class="codeinput">w(dataset,<span class="string">'path'</span>,<span class="string">'data-new'</span>);
 </pre><pre class="codeoutput">Changing Paths of Record(s)
 Writing Record(s)
@@ -81,68 +81,67 @@ Writing Record(s)
 </pre><p>Listing the 2 directories shows all is well:</p><pre class="codeinput">ls <span class="string">-n</span> <span class="string">data/</span> <span class="string">data-new/</span>
 </pre><pre class="codeoutput">data/:
 total 580
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM01.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM02.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM03.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM04.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM05.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM06.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM07.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM08.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM09.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM10.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM11.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM12.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM13.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM14.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM15.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM17.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM18.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM19.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM21.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM23.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM24.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM25.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM26.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM27.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM28.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM29.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM30.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM31.02.BHZ.00
--rw-r--r--. 1 500 500 18632 Feb  8 12:57 SAC.XB.CM32.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM01.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM02.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM03.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM04.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM05.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM06.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM07.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM08.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM09.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM10.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM11.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM12.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM13.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM14.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM15.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM17.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM18.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM19.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM21.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM23.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM24.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM25.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM26.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM27.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM28.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM29.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM30.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM31.02.BHZ.00
+-rw-r--r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM32.02.BHZ.00
 
 data-new/:
-total 600
--rw-rw-r--. 1 500 500 18632 Feb  8 14:30 mynewname.sac
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM01.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM02.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM03.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM04.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM05.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM06.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM07.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM08.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM09.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM10.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM11.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM12.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM13.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM14.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM15.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM17.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM18.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM19.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM21.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM23.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM24.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM25.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM26.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM27.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM28.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM29.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM30.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM31.02.BHZ.00
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 SAC.XB.CM32.02.BHZ.00
+total 580
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM01.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM02.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM03.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM04.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM05.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM06.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM07.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM08.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM09.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM10.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM11.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM12.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM13.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM14.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM15.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM17.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM18.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM19.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM21.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM23.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM24.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM25.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM26.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM27.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM28.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM29.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM30.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM31.02.BHZ.00
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 SAC.XB.CM32.02.BHZ.00
 
 </pre><h2>How to create a SEIZMO dataset from a matrix<a name="9"></a></h2><p>Creating a SEIZMO dataset from a matrix is done with the <tt>bseizmo</tt> command.  For example, we can create a vector of points with random values and pass those to <a href="matlab:doc('bseizmo')"><tt>bseizmo</tt></a>.  The output is a SEIZMO dataset (we will explore the SEIZMO data format in detail in the following sections).  We then can plot the matrix and SEIZMO dataset to verify.</p><pre class="codeinput">x=rand(1000,1);
 data=bseizmo(x);
@@ -157,7 +156,7 @@ plot1(data,<span class="string">'axis'</span>,gca);
 title(<span class="string">'now in SEIZMO'</span>)
 </pre><pre class="codeoutput">Creating SEIZMO Record(s)
 [######################### 100% #########################] 1/1 0s
-</pre><img vspace="5" hspace="5" src="beginning_seizmo_02.png" alt=""> <h2>The SEIZMO struct<a name="10"></a></h2><p>In this section we explore the main parts of a SEIZMO dataset.  First, the dataset is actually stored as a struct in Matlab.  A "struct" is simply a structured set of variables.  The SEIZMO struct contains 10 variables or "fields" that organize all the info in a record.  Those 10 fields are:</p><div><ul><li><tt>path</tt>      - directory of file</li><li><tt>name</tt>      - file name</li><li><tt>filetype</tt>  - type of file</li><li><tt>version</tt>   - version of filetype</li><li><tt>byteorder</tt> - byte-order of file (ieee-le or ieee-be)</li><li><tt>head</tt>      - header data</li><li><tt>hasdata</tt>   - logical indicating if data is read in</li><li><tt>ind</tt>       - independent component data (for uneven)</li><li><tt>dep</tt>       - dependent component data</li><li><tt>misc</tt>      - place for miscellaneous record info</li></ul></div><p>To list the fields and their values for a record, enter the dataset name and record index at the commandwindow.  For instance, record 3 of the dataset from our reading SAC files example (we saved the dataset to a variable called <tt>dataset</tt>) can be explored by entering:</p><pre class="codeinput">dataset(3)
+</pre><img vspace="5" hspace="5" src="sz_pub_beginning_02.png" alt=""> <h2>The SEIZMO struct<a name="10"></a></h2><p>In this section we explore the main parts of a SEIZMO dataset.  First, the dataset is actually stored as a struct in Matlab.  A "struct" is simply a structured set of variables.  The SEIZMO struct contains 10 variables or "fields" that organize all the info in a record.  Those 10 fields are:</p><div><ul><li><tt>path</tt>      - directory of file</li><li><tt>name</tt>      - file name</li><li><tt>filetype</tt>  - type of file</li><li><tt>version</tt>   - version of filetype</li><li><tt>byteorder</tt> - byte-order of file (ieee-le or ieee-be)</li><li><tt>head</tt>      - header data</li><li><tt>hasdata</tt>   - logical indicating if data is read in</li><li><tt>ind</tt>       - independent component data (for uneven)</li><li><tt>dep</tt>       - dependent component data</li><li><tt>misc</tt>      - place for miscellaneous record info</li></ul></div><p>To list the fields and their values for a record, enter the dataset name and record index at the commandwindow.  For instance, record 3 of the dataset from our reading SAC files example (we saved the dataset to a variable called <tt>dataset</tt>) can be explored by entering:</p><pre class="codeinput">dataset(3)
 </pre><pre class="codeoutput">
 ans = 
 
@@ -225,28 +224,28 @@ ans =
 ls <span class="string">-n</span> <span class="string">data-new/*.sac</span>
 </pre><pre class="codeoutput">Writing Record(s)
 [######################### 100% #########################] 1/1 0s
--rw-rw-r--. 1 500 500 18632 Feb  8 14:31 data-new/mynewname.sac
+-rw-rw-r--. 1 500 500 18632 Feb 14 15:49 data-new/mynewname.sac
 
 </pre><p>In summary, to adjust a field for a record the format is as follows:</p><p><tt>datasetname(recordindex).field=value</tt></p><p>If there is only 1 record in a dataset then the <tt>(recordindex)</tt> may be omitted.</p><p>Another easy struct adjustment example is to change the data of a record.  Say you wanted to add some white noise to the record.  First, make a copy so you can compare the noisy signal to the original.  Then add some noise and plot the two records in an overlay using <a href="matlab:doc('plot2')"><tt>plot2</tt></a>:</p><pre class="codeinput">noisy=new;
 noisy.dep=noisy.dep+(rand(4500,1)-0.5);
 plot2(noisy,new)
-</pre><img vspace="5" hspace="5" src="beginning_seizmo_03.png" alt=""> <p>In this case, the noise is too weak to affect the character of the signal.  Enhance the noise <tt>2000x</tt> for a pronounced effect:</p><pre class="codeinput">noisy=new;
+</pre><img vspace="5" hspace="5" src="sz_pub_beginning_03.png" alt=""> <p>In this case, the noise is too weak to affect the character of the signal.  Enhance the noise <tt>2000x</tt> for a pronounced effect:</p><pre class="codeinput">noisy=new;
 noisy.dep=noisy.dep+2e3*(rand(4500,1)-0.5);
 plot2(noisy,new)
-</pre><img vspace="5" hspace="5" src="beginning_seizmo_04.png" alt=""> <h2>Extracting the data<a name="22"></a></h2><p>The quickest way to access the data in a SEIZMO record is to use a command with the following form:</p><p><tt>mymatrix=datasetname(recordindex).dep;</tt></p><p>For example, to extract the first 10 values from the noisy record:</p><pre class="codeinput">a=noisy.dep(1:10)
+</pre><img vspace="5" hspace="5" src="sz_pub_beginning_04.png" alt=""> <h2>Extracting the data<a name="22"></a></h2><p>The quickest way to access the data in a SEIZMO record is to use a command with the following form:</p><p><tt>mymatrix=datasetname(recordindex).dep;</tt></p><p>For example, to extract the first 10 values from the noisy record:</p><pre class="codeinput">a=noisy.dep(1:10)
 </pre><pre class="codeoutput">
 a =
 
-       -649.1871
-       -458.9827
-        612.2749
-        473.8676
-        795.0978
-       -977.5148
-        759.5292
-        136.5772
-         138.216
-       -929.7434
+       -13.90417
+        539.9703
+       -180.4984
+       -1038.339
+       -994.4641
+        39.75309
+       -309.1038
+        578.8702
+       -1133.219
+       -650.7246
 
 </pre><h2>Viewing header info<a name="23"></a></h2><p>There are 3 different header (metadata) viewers included in SEIZMO:</p><div><ul><li><a href="matlab:doc('listheader')"><tt>listheader</tt></a>    - List SEIZMO data headers</li><li><a href="matlab:doc('compareheader')"><tt>compareheader</tt></a> - List SEIZMO headers in field x recond table form</li><li><a href="matlab:doc('queryheader')"><tt>queryheader</tt></a>   - List SEIZMO headers in record x field table form</li></ul></div><p>The difference between <tt>compareheader</tt> and <tt>queryheader</tt> is a transposition of the table.  I personally prefer <tt>queryheader</tt> aka <tt>qh</tt>.</p><p>To list some header fields of the first 3 records in <tt>dataset</tt>:</p><pre class="codeinput">lh(dataset(1:3),<span class="string">'delta'</span>,<span class="string">'b'</span>,<span class="string">'e'</span>,<span class="string">'stla'</span>,<span class="string">'stlo'</span>)
 </pre><pre class="codeoutput">
@@ -481,9 +480,9 @@ ans =
 
 </pre><p>The main thing to remember about logical fields is that the SAC format allows for these fields to be undefined (ie set as -12345).  Thus a non-zero value returned by <tt>gh</tt> does not necessarily indicate the logical is <tt>TRUE</tt>.  It is typically safe to make that assumption though.</p><h2>Altering header info<a name="32"></a></h2><p>Changing a header field to a new value is facilitated by <a href="matlab:doc('changeheader')"><tt>changeheader</tt></a> aka <tt>ch</tt>.  An example of changing the <tt>kt0</tt> &amp; <tt>t0</tt> header fields of all records in <tt>dataset</tt> to the same value:</p><pre class="codeinput">dataset=ch(dataset,<span class="string">'kt0'</span>,<span class="string">'nothing'</span>,<span class="string">'t0'</span>,8000);
 </pre><p>Note that the <tt>ch</tt> output was assigned back to the input dataset.  This isn't necessary and can be assigned to a new variable instead. To view the 'nothing' markers in an ammended <a href="matlab:doc('plot1')"><tt>plot1</tt></a> call:</p><pre class="codeinput">plot1(dataset(1:4),<span class="string">'showmarkers'</span>,true);
-</pre><img vspace="5" hspace="5" src="beginning_seizmo_05.png" alt=""> <p>You may use an array to give each record a diffent value.  To add a little randomness to the marker positions:</p><pre class="codeinput">dataset=ch(dataset,<span class="string">'t0'</span>,1e4+1e4*(rand(29,1)-0.5));
+</pre><img vspace="5" hspace="5" src="sz_pub_beginning_05.png" alt=""> <p>You may use an array to give each record a diffent value.  To add a little randomness to the marker positions:</p><pre class="codeinput">dataset=ch(dataset,<span class="string">'t0'</span>,1e4+1e4*(rand(29,1)-0.5));
 plot1(dataset(1:4),<span class="string">'showmarkers'</span>,true);
-</pre><img vspace="5" hspace="5" src="beginning_seizmo_06.png" alt=""> <h2>Beyond the basics<a name="35"></a></h2><p>Next: <a href="matlab:showdemo('intermediate_seizmo')">Processing in SEIZMO</a></p><p class="footer"><br>
+</pre><img vspace="5" hspace="5" src="sz_pub_beginning_06.png" alt=""> <h2>Beyond the basics<a name="35"></a></h2><p>Next: <a href="matlab:showdemo('intermediate_seizmo')">Processing in SEIZMO</a></p><p class="footer"><br>
       Published with MATLAB&reg; 7.10<br></p></div><!--
 ##### SOURCE BEGIN #####
 %% SEIZMO - A Matlab(R) & Octave Toolbox for Passive Seismology

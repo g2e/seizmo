@@ -1,0 +1,100 @@
+function [ok]=webinstall_gshhs(mypath)
+%WEBINSTALL_GSHHS    Install GSHHS components
+%
+%    Usage:    ok=webinstall_gshhs
+%              ok=webinstall_gshhs(path)
+%
+%    Description:
+%     OK=WEBINSTALL_GSHHS downloads the GSHHS zip file to the directory
+%     where this mfile is located, extracts its contents to the 'gshhs'
+%     directory and adds/saves it to the path.  THE DOWNLOAD IS LARGE:
+%     OVER 100 MEGABYTES & CAN TAKE HOURS ON A SLOW CONNECTION!  THERE IS
+%     NO RESUME: IF IT FAILS, YOU WILL LOSE EVERYTHING YOU DOWNLOADED!  See
+%     the notes below on how to install the GSHHS binaries manually.  Also
+%     be aware that you cannot do anything else at the Matlab/Octave prompt
+%     while waiting for the file to download.
+%
+%     OK=WEBINSTALL_GSHHS(PATH) install the GSHHS binary files under
+%     the directory given by PATH.
+%
+%    Notes:
+%     - Get the GSHHS binary files by downloading the archive from here:
+%        http://www.ngdc.noaa.gov/mgg/shorelines/data/gshhs/oldversions/
+%       The file is gshhs_1.10.zip under the 1.10 version.  Extract the
+%       binaries from the archive using your unzip utility of choice.
+%     - If you have the GSHHS binary files extracted, just add the
+%       directory containing them to your Matlab or Octave path using:
+%        addpath directory/of/gshhs/
+%       where the directory/of/gshhs needs to be changed to where the files
+%       are on your system.
+%
+%    Examples:
+%     % GSHHS is big: this download can take _hours_.  This function is
+%     % only useful if you have a fast connection!
+%
+%    See also: UNINSTALL_GSHHS, WEBINSTALL_MMAP, UNINSTALL_MMAP,
+%              WEBINSTALL_NJTBX, UNINSTALL_NJTBX, M_MAP, M_GSHHS
+
+%     Version History:
+%        Feb.  5, 2011 - initial version
+%        Feb. 14, 2012 - renamed from seizmo_gshhs_webinstall to
+%                        webinstall_gshhs, updated to use gshhs2 files, doc
+%                        update, no savpath_seizmo, installs to location of
+%                        this file under gshhs directory
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Feb. 14, 2012 at 15:25 GMT
+
+% todo:
+
+% check nargin
+error(nargchk(0,1,nargin));
+
+% default path to seizmo directory
+if(nargin<1 || isempty(mypath))
+    mypath=fileparts(mfilename('fullpath'));
+end
+
+% check path
+if(~exist(mypath,'dir'))
+    error('seizmo:webinstall_gshhs:badPath',...
+        ['Directory (' mypath ') does not exist!']);
+end
+
+% attempt gshhs install
+try
+    % go to desired install location
+    cwd=pwd;
+    cd(mypath);
+    
+    % current version
+    gshhs='gshhs+wdbii_2.2.0.zip';
+    
+    % grab file
+    url='http://www.ngdc.noaa.gov/mgg/shorelines/data/gshhs/';
+    url=[url 'version2.2.0/' gshhs];
+    if(exist(gshhs,'file'))
+        if(~exist(fullfile(mypath,gshhs),'file'))
+            copyfile(which(gshhs),'.');
+        end
+    else
+        urlwrite(url,gshhs);
+    end
+    
+    % unpack and install gshhs
+    unzip(gshhs);
+    addpath('gshhs');
+    ok=savepath;
+    if(~ok)
+        warning('seizmo:webinstall_gshhs:noWritePathdef',...
+            'Cannot save path!');
+    end
+    
+    % return
+    cd(cwd);
+catch
+    ok=false;
+    cd(cwd);
+end
+
+end
