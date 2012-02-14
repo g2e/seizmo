@@ -5,15 +5,16 @@ function [x,t,lat,lon]=ww3ts(file,latrng,lonrng)
 %
 %    Description:
 %     [X,T,LAT,LON]=WW3TS(FILES,LATRNG,LONRNG) extracts a time series of
-%     values for points in the WaveWatch III files FILES within the range
-%     specified by LATRNG & LONRNG.  LATRNG & LONRNG are [] by default
-%     which does not exclude any points.  T is a Nx6 array arranged as
+%     values (significant wave height, period, etc) for positions in the
+%     WaveWatch III files FILES within the limits specified by LATRNG &
+%     LONRNG.  LATRNG & LONRNG are [] by default which does not exclude any
+%     positions.  T is a Nx6 array arranged as
 %     [YEAR MONTH DAY HOUR MINUTE SECONDS].  X is a NLATxNLONxN array.  X &
-%     T will are sorted by time.
+%     T are sorted by time.  LAT & LON are vectors in degrees.
 %
 %    Notes:
 %     - GRIB files must be self consistent (meaning we get the same
-%       latitude and longitude grid for every record).
+%       latitude and longitude positions for every record).
 %     - LATRNG should be within -90 to 90
 %     - LONRNG should be within 0 to 360
 %
@@ -29,11 +30,15 @@ function [x,t,lat,lon]=ww3ts(file,latrng,lonrng)
 %        July  1, 2010 - fixed latlon bug
 %        Dec.  7, 2011 - doc update, better read_grib handling, modified
 %                        output to make it consistent and easier
+%        Feb. 13, 2012 - fixed input parsing bug, fixed allocation bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  7, 2011 at 11:00 GMT
+%     Last Updated Feb. 13, 2012 at 11:00 GMT
 
 % todo:
+% - grb2
+% - onefilelist (should have struct support too)
+% - persistent variable holds the directory from last gui usage
 
 % check nargin
 error(nargchk(0,3,nargin));
@@ -53,7 +58,7 @@ if(nargin<1 || isempty(file))
     nfiles=numel(file);
 else
     % check file
-    if(~ischar(file) || ~iscellstr(file))
+    if(~ischar(file) && ~iscellstr(file))
         error('seizmo:ww3ts:fileNotString',...
             'FILES must be a string or a cell array of strings!');
     end
@@ -111,11 +116,11 @@ for i=1:nfiles
         
         % initialize
         if(cnt==1)
-            x=size(map);
+            x=nan(size(map));
             t=nan(1,6);
         end
         
-        % push into column vector array
+        % store as sheets
         x(:,:,cnt)=map;
         t(cnt,:)=time;
         cnt=cnt+1;

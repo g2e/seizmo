@@ -37,9 +37,10 @@ function [times]=serial2gregorian(serial,option)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Feb. 14, 2011 - minor doc fix
 %        Nov.  1, 2011 - doc update
+%        Feb. 13, 2012 - vector input for cal* output bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2011 at 15:05 GMT
+%     Last Updated Feb. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -88,8 +89,8 @@ switch lower(option)
         leap=isleapyear(times(:,1,:));
         ndays2(:,3:end,:)=ndays2(:,3:end,:)+leap(:,ones(1,10),:);
         times(:,2,:)=sum(serial(:,ones(12,1),:)>=ndays2,2);
-        times(:,3,:)=serial(:,1,:)...
-            -ndays(times(:,2,:))-(leap & times(:,2,:)>2)+1;
+        times(:,3,:)=serial(:,1,:)-reshape(ndays(times(:,2,:)),...
+            size(times(:,2,:)))-(leap & times(:,2,:)>2)+1;
     case 'caltime'
         times=nan([prod(sz(1:2)) 6 sz(3:end)]);
         ndays=[0 31 59 90 120 151 181 212 243 273 304 334]+1;
@@ -98,8 +99,8 @@ switch lower(option)
         leap=isleapyear(times(:,1,:));
         ndays2(:,3:end,:)=ndays2(:,3:end,:)+leap(:,ones(1,10),:);
         times(:,2,:)=sum(serial(:,ones(12,1),:)>=ndays2,2);
-        times(:,3,:)=fix(serial(:,1,:))...
-            -ndays(times(:,2,:))-(leap & times(:,2,:)>2)+1;
+        times(:,3,:)=fix(serial(:,1,:))-reshape(ndays(times(:,2,:)),...
+            size(times(:,2,:)))-(leap & times(:,2,:)>2)+1;
         serial=mod(serial,1);
         times(:,4,:)=fix(serial*24);
         serial=serial-times(:,4,:)/24;

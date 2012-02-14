@@ -40,9 +40,10 @@ function [times]=modserial2gregorian(modserial,option)
 %        Sep. 23, 2009 - fixed serial conversion (year 0 bug)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Nov.  1, 2011 - doc update
+%        Feb. 13, 2012 - vector input for cal* output bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2011 at 15:05 GMT
+%     Last Updated Feb. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -95,7 +96,8 @@ switch lower(option)
         ndays2(:,3:end,:)=ndays2(:,3:end,:)+leap(:,ones(1,10),:);
         times(:,2,:)=sum(serial(:,ones(12,1),:)>=ndays2,2);
         times(:,3,:)=serial+modserial(:,2,:)/86400 ...
-            -ndays(times(:,2,:))-(leap & times(:,2,:)>2)+1;
+            -reshape(ndays(times(:,2,:)),size(times(:,2,:)))...
+            -(leap & times(:,2,:)>2)+1;
     case 'caltime'
         times=nan([sz(1) 6 sz(3:end)]);
         ndays=[1 32 60 91 121 152 182 213 244 274 305 335];
@@ -104,8 +106,8 @@ switch lower(option)
         leap=isleapyear(times(:,1,:));
         ndays2(:,3:end,:)=ndays2(:,3:end,:)+leap(:,ones(1,10),:);
         times(:,2,:)=sum(serial(:,ones(12,1),:)>=ndays2,2);
-        times(:,3,:)=serial...
-            -ndays(times(:,2,:))-(leap & times(:,2,:)>2)+1;
+        times(:,3,:)=serial-reshape(ndays(times(:,2,:)),...
+            size(times(:,2,:)))-(leap & times(:,2,:)>2)+1;
         times(:,4,:)=fix(modserial(:,2,:)/3600);
         modserial(:,2,:)=modserial(:,2,:)-times(:,4,:)*3600;
         times(:,5,:)=fix(modserial(:,2,:)/60);

@@ -6,7 +6,8 @@ function []=leapseconds_update(url)
 %
 %    Description:
 %     LEAPSECONDS_UPDATE saves leap second information from a trusted
-%     online source (http://maia.usno.navy.mil/ser7/leapsec.dat) to
+%     online source (http://maia.usno.navy.mil/ser7/leapsec.dat) to a file
+%     named 'leapsec.dat' in the same directory as this function.
 %
 %     LEAPSECONDS_UPDATE(URL) allows using a different location to download
 %     the leapsecond info.  Please note that the file must have the same

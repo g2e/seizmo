@@ -4,23 +4,24 @@ function [list]=onefilelist(varargin)
 %    Usage:    list=onefilelist(list1,...,listN)
 %              list=onefilelist
 %
-%    Description: LIST=ONEFILELIST(ARG1,...,ARGN) combines input
-%     char/cellstr arrays into a single-column cellstr array and then pipes
-%     each cell through XDIR to expand wildcard inputs and to get detailed
-%     info for each file.  This is mostly useful for taking file lists and
-%     wildcards in various array formats and combining them into one
-%     structured list of files.  See XDIR for the format of LIST.
+%    Description:
+%     LIST=ONEFILELIST(ARG1,...,ARGN) combines input char/cellstr arrays
+%     into a single-column cellstr array and then pipes each cell through
+%     XDIR to expand wildcard inputs and to get detailed info for each
+%     file.  This is mostly useful for taking file lists and wildcards in
+%     various array formats and combining them into one structured list of
+%     files.  See XDIR for the format of LIST.
 %
 %     LIST=ONEFILELIST presents a gui to select files.
 %
 %    Notes:
 %     - The global SEIZMO.ONEFILELIST.FILTERSPEC allows access to the
-%     filetype filtering in the gui menu.  See UIGETFILE for details.  An
-%     all files spec is added to the bottom of the list automatically.
+%       filetype filtering in the gui menu.  See UIGETFILE for details.  An
+%       all files spec is added to the bottom of the list automatically.
 %
 %    Examples:
-%     Compile a list of files from several directories
-%      list=onefilelist('*','../*','~/*')
+%     % Compile a list of files from several directories
+%     list=onefilelist('*','../*','~/*')
 %
 %    See also: STRNLEN, XDIR
 
@@ -40,9 +41,10 @@ function [list]=onefilelist(varargin)
 %        Oct. 16, 2009 - file select ui if no input
 %        Jan. 27, 2010 - file select ui if empty first arg & only 1 arg
 %        Feb. 14, 2010 - added SEIZMO global access to filterspec
+%        Feb. 14, 2012 - LASTDIRECTORY saves last dir in gui, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2010 at 16:05 GMT
+%     Last Updated Feb. 14, 2012 at 16:05 GMT
 
 % todo:
 
@@ -50,12 +52,17 @@ function [list]=onefilelist(varargin)
 global SEIZMO
 
 % grab filterspec
-filterspec={};
+filterspec={}; lastdir='./';
 try
     if(~isempty(SEIZMO.ONEFILELIST.FILTERSPEC) ...
             && iscellstr(SEIZMO.ONEFILELIST.FILTERSPEC) ...
             && size(SEIZMO.ONEFILELIST.FILTERSPEC,2)==2)
         filterspec=SEIZMO.ONEFILELIST.FILTERSPEC;
+    end
+    if(~isempty(SEIZMO.ONEFILELIST.LASTDIRECTORY) ...
+            && ischar(SEIZMO.ONEFILELIST.LASTDIRECTORY) ...
+            && isdir(SEIZMO.ONEFILELIST.LASTDIRECTORY))
+        lastdir=SEIZMO.ONEFILELIST.LASTDIRECTORY;
     end
 catch
 end
@@ -64,7 +71,10 @@ end
 if(nargin<1 || (nargin==1 && isempty(varargin{1})))
     [files,path]=uigetfile(...
         [filterspec; {'*.*;*' 'All Files (*.* , *)'}],...
-        'Select File(s)','MultiSelect','on');
+        'Select File(s)',lastdir,'MultiSelect','on');
+    if(~isempty(path) && ischar(path))
+        SEIZMO.ONEFILELIST.LASTDIRECTORY=[path filesep];
+    end
     if(isequal(0,files))
         error('seizmo:onefilelist:noFilesSelected','No files selected!');
     end

@@ -15,7 +15,7 @@ function [dates,leaps,offsets]=leapseconds(option)
 %     the info caching.  OPTION must be TRUE or FALSE (logical).  TRUE will
 %     use the cached leapsecond info if there is any otherwise retreiving
 %     it via the leapsec.dat included with this mfile.  FALSE will force
-%     reading of leapsec.dat get the leapsecond info. The default is
+%     reading of leapsec.dat to get the leapsecond info. The default is
 %     TRUE.
 %
 %    Notes:
@@ -63,9 +63,10 @@ function [dates,leaps,offsets]=leapseconds(option)
 %                        function was moved to a file that can be updated,
 %                        added offset from TAI as a 3rd output
 %        Feb.  7, 2012 - doc update (merge to meld update)
+%        Feb. 13, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 15:05 GMT
+%     Last Updated Feb. 13, 2012 at 15:05 GMT
 
 % todo:
 

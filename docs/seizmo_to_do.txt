@@ -9,6 +9,10 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
+new mmap!
+    - migrate changeset
+    - gshhs 2.0?
+
 meld
     - uneven or variable samplerate
 rotate
