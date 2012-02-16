@@ -1,4 +1,4 @@
-function [application,version]=getapplication()
+function [varargout]=getapplication()
 %GETAPPLICATION    Returns application running this script and its version
 %
 %    Usage:    [application,version]=getapplication()
@@ -30,12 +30,19 @@ function [application,version]=getapplication()
 %        Mar.  3, 2009 - minor doc cleaning
 %        Apr. 23, 2009 - move usage up
 %        Sep.  8, 2009 - minor doc update
-%        Feb. 15, 2012 - minor doc update
+%        Feb. 15, 2012 - minor doc update, cache values using persistent
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 15, 2012 at 19:55 GMT
 
 % todo:
+
+% cache as persistent variables
+persistent application version
+if(~isempty(application) && ~isempty(version))
+    varargout={application version};
+    return;
+end
 
 % checking for Matlab will throw an error in Octave
 try
@@ -45,19 +52,19 @@ try
     % we are in Matlab
     application=a.Name;
     version=a.Version;
-    return;
 catch
     % check if we are in Octave
     if(exist('OCTAVE_VERSION','builtin')==5)
         application='OCTAVE';
         version=OCTAVE_VERSION;
-        return;
     % ok I have no clue what is running
     else
         application='UNKNOWN';
         version='UNKNOWN';
-        return;
     end
 end
+
+% output
+varargout={application version};
 
 end

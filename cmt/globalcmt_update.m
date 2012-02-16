@@ -26,9 +26,10 @@ function []=globalcmt_update()
 %        Aug.  3, 2010 - initial version
 %        Jan.  5, 2011 - improved docs, fixed download bug
 %        Nov.  1, 2011 - condensed code to remove some redundancies
+%        Feb. 15, 2012 - say 'new cmts' to avoid confusion
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2011 at 21:30 GMT
+%     Last Updated Feb. 15, 2012 at 21:30 GMT
 
 % todo:
 
@@ -129,7 +130,7 @@ if(updated)
     % detail message
     if(verbose)
         nf2=numel(full.name);
-        disp(['Found ' num2str(nf2-nf) ' CMTs']);
+        disp(['Found ' num2str(nf2-nf) ' New CMTs']);
     end
     
     % save full
@@ -160,7 +161,7 @@ if(ok && ~isempty(qndk))
     
     % detail message
     nq=numel(quick.name);
-    if(verbose); disp(['Found ' num2str(nq) ' Quick CMTs']); end
+    if(verbose); disp(['Found ' num2str(nq) ' New Quick CMTs']); end
     
     % save
     path=fileparts(mfilename('fullpath'));

@@ -6,7 +6,7 @@ function [ok]=uninstall_seizmo()
 %    Description:
 %     OK=UNINSTALL_SEIZMO removes the directories and jar-files associated
 %     with the SEIZMO toolbox from the path and tries to save the edited
-%     path.  OK is the savepath exit status.
+%     path.  OK is TRUE if the uninstall succeeded.
 %
 %    Notes:
 %     - Uses the location of the 'seizmodef' function to find the toolbox.
@@ -26,12 +26,30 @@ function [ok]=uninstall_seizmo()
 %        June 24, 2011 - octave bugfix: uninstall seizmo from path before
 %                        exiting when no classpath file found
 %        Feb. 15, 2012 - doc update, cleaner code, call external component
-%                        uninstallers
+%                        uninstallers, only use javarmpath when needed,
+%                        don't force failure for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 15, 2012 at 15:25 GMT
 
 % todo:
+
+% ask to install external components
+% - has to be done before removing 'seizmo/uninstall' directory
+% - eventually: taup, exportfig
+ok=true;
+reply=input('Uninstall njTBX? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & uninstall_njtbx;
+end
+reply=input('Uninstall M_Map? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & uninstall_mmap;
+    reply=input('Uninstall GSHHS? Y/N [Y]: ','s');
+    if(isempty(reply) || strncmpi(reply,'y',1))
+        ok=ok & uninstall_gshhs;
+    end
+end
 
 % does seizmodef exist?
 % - this is the "kernel" of seizmo
@@ -81,31 +99,25 @@ if(exist('seizmodef','file'))
         [path fs 'win'],...
         [path fs 'ww3'],...
         [path fs 'xcalign'],...
-        [path fs 'mattaup']);
-    ok=savepath;
+        [path fs 'mattaup'],...
+        [path fs 'exportfig']);
+    ok=ok & ~savepath;
     if(~ok)
         warning('seizmo:uninstall_seizmo:noPermission',...
             'Could not edit path!');
     end
 else
     % not found, so toolbox not installed...
-    ok=true;
     return;
 end
 
 % clean out mattaup jar from dynamic java path
 mattaupjar=fullfile(path,'mattaup','lib','matTaup.jar');
-javarmpath(mattaupjar);
+if(ismember(mattaupjar,javaclasspath)); javarmpath(mattaupjar); end
 
 % find classpath.txt
 sjcp=which('classpath.txt');
-if(isempty(sjcp))
-    warning('seizmo:uninstall_seizmo:noJavaClassPath',...
-        'Octave has no classpath.txt to remove .jar files from!');
-    disp('Skipping remainder of SEIZMO uninstall!');
-    ok=false;
-    return;
-end
+if(isempty(sjcp)); return; end
 
 % read classpath.txt
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
@@ -113,18 +125,19 @@ s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 % detect offending classpath.txt lines
 yn=~cellfun('isempty',strfind(s2,mattaupjar));
 
-% inform user about which lines are to be removed
-disp('Removing the following lines:');
-fprintf('%s\n',s2{yn});
-fprintf('\nfrom:\n%s\n\n',sjcp);
-
 % only remove if necessary
 if(sum(yn))
+    % inform user about which lines are to be removed
+    fprintf(' Removing the following lines:\n');
+    fprintf('  %s\n',s2{yn});
+    fprintf(' from:\n  %s\n',sjcp);
+    
     % the hard part (remove offending lines from classpath.txt)
     fid=fopen(sjcp,'w');
     if(fid<0)
         warning('seizmo:uninstall_seizmo:failedToOpen',...
             'Cannot edit classpath.txt!');
+        disp('#######################################################');
         disp('You must have Root/Administrator privileges to edit');
         disp('the classpath.txt file.  To fully uninstall SEIZMO');
         disp('you need to remove the following line(s):');
@@ -133,10 +146,10 @@ if(sum(yn))
         disp('from your Matlab''s classpath.txt located here:');
         disp(strrep(sjcp,'\','\\'));
         disp(' ');
-        disp(' ');
         disp('This may be done by contacting your System Admin if you');
         disp('do not have Root/Administrator privileges.  Afterwards,');
         disp('please restart Matlab to complete the uninstallation!');
+        disp('#######################################################');
         ok=false;
     else
         fseek(fid,0,'bof');
@@ -144,24 +157,6 @@ if(sum(yn))
             fprintf(fid,'%s\n',s2{i});
         end
         fclose(fid);
-        ok=ok & true;
-    end
-else
-    ok=ok & true;
-end
-
-% ask to install external components
-% - eventually: taup, exportfig
-reply=input('Uninstall njTBX? Y/N [Y]: ','s');
-if(isempty(reply) || strncmpi(reply,'y',1))
-    ok=ok & uninstall_njtbx;
-end
-reply=input('Uninstall M_Map? Y/N [Y]: ','s');
-if(isempty(reply) || strncmpi(reply,'y',1))
-    ok=ok & uninstall_mmap;
-    reply=input('Uninstall GSHHS? Y/N [Y]: ','s');
-    if(isempty(reply) || strncmpi(reply,'y',1))
-        ok=ok & uninstall_gshhs;
     end
 end
 

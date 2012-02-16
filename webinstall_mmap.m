@@ -26,10 +26,10 @@ function [ok]=webinstall_mmap(mypath)
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
-%        Feb. 15, 2012 - add m_map_fixes, doc update
+%        Feb. 15, 2012 - add m_map_fixes, doc update, flip savepath logic
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2012 at 15:25 GMT
+%     Last Updated Feb. 15, 2012 at 15:25 GMT
 
 % todo:
 
@@ -58,6 +58,7 @@ try
     
     % grab file
     url='http://www.eos.ubc.ca/%7Erich/';
+    disp([' Getting ' mmap]);
     if(exist(mmap,'file'))
         if(~exist(fullfile(mypath,mmap),'file'))
             copyfile(which(mmap),'.');
@@ -68,9 +69,11 @@ try
     
     % unpack and install mmap
     unzip(mmap);
-    addpath('m_map');
-    if(exist('m_map_fixes','dir')); addpath('m_map_fixes'); end
-    ok=savepath;
+    addpath(fullfile(mypath,'m_map'));
+    if(exist(fullfile(mypath,'m_map_fixes'),'dir'))
+        addpath(fullfile(mypath,'m_map_fixes'));
+    end
+    ok=~savepath;
     if(~ok)
         warning('seizmo:webinstall_mmap:noWritePathdef',...
             'Cannot save path!');

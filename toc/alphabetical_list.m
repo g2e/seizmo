@@ -365,7 +365,8 @@ function []=alphabetical_list()
 %<a href="matlab:help plot_daily_volumes">plot_daily_volumes</a>             - Makes weekly grids of daily fk spectra plots
 %<a href="matlab:help plot_mlocate_ellipsoids">plot_mlocate_ellipsoids</a>        - Plots MLOCATE confidence ellipsoids
 %<a href="matlab:help plot_monthly_volumes">plot_monthly_volumes</a>           - Makes 4x3 grid of monthly fk spectra plots
-%<a href="matlab:help plot_noise_models">plot_noise_models</a>              - Plots noise models (NLNM & NHNM)%<a href="matlab:help plotclusters">plotclusters</a> - Plots SEIZMO data records as clusters in subplots
+%<a href="matlab:help plot_noise_models">plot_noise_models</a>              - Plots noise models (NLNM & NHNM)
+%<a href="matlab:help plotclusters">plotclusters</a>                   - Plots SEIZMO data records as clusters in subplots
 %<a href="matlab:help plot_taupcurve">plot_taupcurve</a>                 - Plots taupcurve output
 %<a href="matlab:help plot_yrmo_volumes">plot_yrmo_volumes</a>              - Makes 4x3 grid of year-month fk spectra plots
 %<a href="matlab:help plotbathyexcite">plotbathyexcite</a>                - Plots 2ndary microseism bathymetric excitation coeff

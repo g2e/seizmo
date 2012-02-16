@@ -1,12 +1,12 @@
 function [ok]=uninstall_njtbx()
-%UNINSTALL_NJTBX    Uninstalls the currently installed njtbx
+%UNINSTALL_NJTBX    Uninstalls the currently installed njTBX
 %
 %    Usage:    ok=uninstall_njtbx
 %
 %    Description:
 %     OK=UNINSTALL_NJTBX removes the directories and jar-files associated
-%     with the njtbx toolbox from the path and tries to save the edited
-%     path.  OK is the savepath exit status.
+%     with the njTBX toolbox from the path and tries to save the edited
+%     path.  OK is TRUE if the uninstall succeeded.
 %
 %    Notes:
 %     - Uses the location of function 'nj_time' to detect the toolbox.
@@ -20,7 +20,9 @@ function [ok]=uninstall_njtbx()
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
-%        Feb. 15, 2012 - handle not installed
+%        Feb. 15, 2012 - handle not installed, flip logic from savepath,
+%                        doc update, only use javarmpath when needed,
+%                        don't force failure for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 15, 2012 at 15:25 GMT
@@ -35,7 +37,7 @@ if(exist('nj_time','file'))
     rmpath(fullfile(path,'njFunc'));
     rmpath(fullfile(path,'examples'));
     rmpath(path);
-    ok=savepath;
+    ok=~savepath;
 else
     % not found, so toolbox not installed...
     ok=true;
@@ -43,19 +45,16 @@ else
 end
 
 % clear the dynamic java path
-jars=dir([path '*.jar']);
-javarmpath(fullfile(path,jars(1).name));
-javarmpath(fullfile(path,jars(2).name));
+jars=dir(fullfile(path,'*.jar'));
+for i=1:numel(jars)
+    if(ismember(fullfile(path,jars(i).name),javaclasspath))
+        javarmpath(fullfile(path,jars(i).name));
+    end
+end
 
 % find classpath.txt
 sjcp=which('classpath.txt');
-if(isempty(sjcp))
-    warning('seizmo:uninstall_njtbx:noJavaClassPath',...
-        'Octave has no classpath.txt to remove .jar files from!');
-    disp('Skipping remainder of njtbx uninstall!');
-    ok=false;
-    return;
-end
+if(isempty(sjcp)); return; end
 
 % read classpath.txt
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
@@ -63,20 +62,21 @@ s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 % detect offending classpath.txt lines
 yn=~cellfun('isempty',strfind(s2,path));
 
-% inform user about which lines are to be removed
-disp('Removing the following lines:');
-fprintf('%s\n',s2{yn});
-fprintf('\nfrom:\n%s\n\n',sjcp);
-
 % only remove if necessary
 if(sum(yn))
+    % inform user about which lines are to be removed
+    fprintf(' Removing the following lines:\n');
+    fprintf('  %s\n',s2{yn});
+    fprintf(' from:\n  %s\n',sjcp);
+    
     % the hard part (remove offending lines from classpath.txt)
     fid=fopen(sjcp,'w');
     if(fid<0)
         warning('seizmo:uninstall_njtbx:failedToOpen',...
             'Cannot edit classpath.txt!');
+        disp('#######################################################');
         disp('You must have Root/Administrator privileges to edit');
-        disp('the classpath.txt file.  To fully uninstall njtbx');
+        disp('the classpath.txt file.  To fully uninstall njTBX');
         disp('you need to remove the following line(s):');
         disp(strrep(sprintf('%s\n',s2{yn}),'\','\\'));
         disp(' ');
@@ -87,6 +87,7 @@ if(sum(yn))
         disp('This may be done by contacting your System Admin if you');
         disp('do not have Root/Administrator privileges.  Afterwards,');
         disp('please restart Matlab to complete the uninstallation!');
+        disp('#######################################################');
         ok=false;
     else
         fseek(fid,0,'bof');
@@ -94,10 +95,7 @@ if(sum(yn))
             fprintf(fid,'%s\n',s2{i});
         end
         fclose(fid);
-        ok=ok & true;
     end
-else
-    ok=ok & true;
 end
 
 end

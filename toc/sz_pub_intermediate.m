@@ -1,7 +1,7 @@
-% nothing here yet...
-
-%% Intermediate SEIZMO
+%% SEIZMO - A Matlab(R) & Octave Toolbox for Passive Seismology
 %
+%% Intermediate SEIZMO - Beyond the Basics
+% Looking for more?  It isn't here yet...
 
 %% SEIZMO in depth
 %
@@ -20,14 +20,17 @@
 % * windowing (cut)
 % * merging (meld)
 % * filtering (iirfilter)
-% * resampling (syncsr, interpolate)
-% * integration/differentiation
-% * removing polezero instrument response
-% * quick map of station locations
+% * resampling (syncrates, interpolate)
+% * integrate/differentiate
+% * removing instrument response
+% * mapping of station locations
 % * synchronize & timeshift
 % * adding/subtracting/etc records
 % * rotation
-% * fourier transform and its inverse
+% * spectral operations
 % * cross correlation
 % * making audio files
 %
+
+%% Analysis & Development
+% Next: <matlab:showdemo('sz_pub_advanced') Analysis in SEIZMO>

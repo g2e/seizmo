@@ -1,7 +1,7 @@
-% nothing here yet...
-
-%% Advanced SEIZMO
-%
+%% SEIZMO - A Matlab(R) & Octave Toolbox for Passive Seismology
+% 
+%% Advanced SEIZMO - Analysis & Development
+% Looking for more?  It isn't here yet...
 
 %% SEIZMO for the seismologist
 %

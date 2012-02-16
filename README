@@ -3,55 +3,49 @@ Kangchenjunga release series (2012-Feb-7)
 
 1. What is SEIZMO?
 ------------------
-A big set of routines that taken together aid you in learning and doing
-research in seismology using Matlab or GNU Octave.  See the project website
-for more details:
+A set of routines that taken together can aid in learning seismology as
+well as reduce the effort required in day-to-day processing and analysis in
+seismology research.  See the project website for more details:
  http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/
 
 2. Downloading
 --------------
-2.1a Get the latest version (as a compressed tarball or zipfile) here:
+2a Get the latest version (as a compressed tarball or zipfile) here:
       https://github.com/g2e/seizmo/archives/master
-2.1b Or grab a tagged tarball: https://github.com/g2e/seizmo/downloads
-2.1c Or if you have git installed (http://git-scm.com/), you may use it to
-     retrieve the latest version:
+2b Or grab a tagged tarball: https://github.com/g2e/seizmo/downloads
+2c Or if you have git installed (http://git-scm.com/), you may use it to
+   retrieve the latest version:
       git clone git://github.com/g2e/seizmo.git
-     and to update to the latest version (within the seizmo directory):
+   and to update to the latest version (within the seizmo directory):
       git pull git://github.com/g2e/seizmo.git
 
 3. Installation
 ---------------
-3.1a If you went with route 2.1a or 2.1b then extract the tarball/zipfile
-     somewhere on your filesystem.  Next, go into the extracted directory
-     and start Matlab or GNU Octave.  Finally, run install_seizmo in Matlab
-     or GNU Octave.  This function will remove any paths from previous
-     SEIZMO installs and add paths for the current SEIZMO as needed.  Some
-     operations will fail in Octave as they use unavailable features (no
-     java support, etc).  Drop me a note if you are having trouble with the
-     install.
-3.1b If you went the git route (2.1c) then move into your new repository
-     and open Matlab or GNU Octave.  Next, run install_seizmo in Matlab or
-     GNU Octave.  NOTE: you may need to run install_seizmo even if you are
-     only updating (using git) because the directories inside SEIZMO change
-     from time to time so Matlab & GNU Octave need to be aware of this.
-3.2 Next install the GSHHS binary files so you can plot coastlines, borders
-    & rivers in your maps.  Type 'help seizmo_gshhs_webinstall' in Matlab
-    or GNU Octave for help.
-3.3 Keep your CMT db synced with the GlobalCMT project
-    (http://www.globalcmt.org/) by running 'globalcmt_update' in Matlab or
-    GNU Octave.
+3a If you went with route 2a or 2b then extract the tarball/zipfile
+   somewhere on your filesystem.  Next, go into the extracted directory
+   and start Matlab or GNU Octave.  Finally, run install_seizmo in Matlab
+   or GNU Octave.  This function will remove any paths from previous
+   SEIZMO installs and add paths for the current SEIZMO as needed.  Drop me
+   a note if you are having trouble with the install.
+3b If you went the git route (2c) then move into your new repository
+   and open Matlab or GNU Octave.  Next, run install_seizmo in Matlab or
+   GNU Octave.  NOTE: You should run install_seizmo even if you are only
+   updating using git because SEIZMO's directory layout changes from time
+   to time and Matlab & GNU Octave need to be made aware of this.  There
+   may be issues during the uninstall phase with git-based updates so you
+   might need to clean your path occasionally.
 
 4. Getting Started
 ------------------
-4.1a In Matlab: Type 'help seizmo' in the Matlab command window.  Follow
-     the hyperlinks as desired.
-4.1b In Octave: Type 'help <function>' where <function> is the function you
-     want help with.  There is currently no over-arching help for seizmo in
-     GNU Octave because this requires significant effort making info files.
-4.2 REMEMBER: 'help <function>' or 'help <directory>'
-    ex. help install_seizmo
-        help seizmo_gshhs_webinstall
-        help cmt
+4a In Matlab: Type 'help seizmo' in the Matlab command window.  Follow
+   the hyperlinks as desired.
+4b In Octave: Type 'help <function>' where <function> is the function you
+   want help with.  There is currently no over-arching help for seizmo in
+   GNU Octave because this requires significant effort making info files.
+
+REMEMBER: 'help <function>' or 'help <directory>'
+   ex. help install_seizmo
+       help cmt
 
 5. Contributing
 ---------------

@@ -51,7 +51,8 @@ function [varargout]=install_seizmo()
 %                        uninstall output
 %        Feb. 15, 2012 - use version_compare, clean up messages, drop
 %                        separate installers except for external
-%                        components, update cmt db
+%                        components, update cmt db, flip savepath logic,
+%                        only use javaaddpath or edit classpath as needed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 15, 2012 at 15:25 GMT
@@ -70,7 +71,6 @@ disp('Checking what application we are installing SEIZMO in...')
 [application,version]=getapplication;
 disp(['Application:  ' application]);
 disp(['Version    :  ' version]);
-disp(' ');
 switch lower(application)
     case 'matlab'
         if(version_compare(version,'7.1')<=0)
@@ -113,11 +113,10 @@ end
 
 % where am i?
 path=fileparts(mfilename('fullpath'));
-disp(' ');
 disp(['SEIZMO install path:  ' path]);
-disp(' ');
 
 % install new seizmo
+fs=filesep;
 addpath(path,...
     [path fs 'lowlevel'],...
     [path fs 'uninstall'],...
@@ -160,52 +159,58 @@ addpath(path,...
     [path fs 'win'],...
     [path fs 'ww3'],...
     [path fs 'xcalign'],...
-    [path fs 'mattaup']);
-ok=ok & savepath;
+    [path fs 'mattaup'],...
+    [path fs 'exportfig']);
+ok=ok & ~savepath;
 if(~ok)
     warning('seizmo:install_seizmo:noPermission',...
         'Could not edit path!');
 end
 
 % check that classpath exists (Octave fails here)
+mattaupjar=fullfile(path,'mattaup','lib','matTaup.jar');
 sjcp=which('classpath.txt');
 if(isempty(sjcp))
-    warning('seizmo:webinstall_njtbx:noJavaClassPath',...
-        'Octave has no classpath.txt to save .jar files!');
-end
-
-% install matTaup.jar to classpath
-mattaupjar=fullfile(path,'mattaup','lib','matTaup.jar');
-if(isempty(sjcp))
+    %warning('seizmo:webinstall_njtbx:noJavaClassPath',...
+    %    'Octave has no classpath.txt to save .jar files!');
+    
     % no classpath.txt so add to dynamic path
-    javaaddpath(mattaupjar);
-    ok=false;
-else
-    fid=fopen(sjcp,'a+');
-    if(fid<0)
-        warning('seizmo:webinstall_njtbx:noWriteClasspath',...
-            ['Cannot edit classpath.txt! Adding ' ...
-            'matTaup.jar to dynamic java class path!']);
-        javaaddpath(mattaupjar);
-        ok=false;
-    else
-        fseek(fid,0,'eof');
-        fprintf(fid,'%s\n',mattaupjar);
-        fclose(fid);
-        ok=ok & true;
+    if(~ismember(mattaupjar,javaclasspath)); javaaddpath(mattaupjar); end
+else % install matTaup.jar to classpath
+    % read classpath.txt
+    s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
+    
+    % detect offending classpath.txt lines
+    yn=~cellfun('isempty',strfind(s2,mattaupjar));
+    
+    % only add if not there already
+    if(~sum(yn))
+        fid=fopen(sjcp,'a+');
+        if(fid<0)
+            warning('seizmo:webinstall_njtbx:noWriteClasspath',...
+                ['Cannot edit classpath.txt! Adding ' ...
+                'matTaup.jar to dynamic java class path!']);
+            if(~ismember(mattaupjar,javaclasspath))
+                javaaddpath(mattaupjar);
+            end
+        else
+            fseek(fid,0,'eof');
+            fprintf(fid,'%s\n',mattaupjar);
+            fclose(fid);
+        end
     end
 end
 
 % ask to install external components
 % - eventually: taup, exportfig
-reply=input('Install njTBX? Y/N [Y]: ','s');
+reply=input('Install njTBX (30MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_njtbx;
 end
-reply=input('Install M_Map? Y/N [Y]: ','s');
+reply=input('Install M_Map (1MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_mmap;
-    reply=input('Install GSHHS (large download!)? Y/N [Y]: ','s');
+    reply=input('Install GSHHS (120MB!)? Y/N [Y]: ','s');
     if(isempty(reply) || strncmpi(reply,'y',1))
         ok=ok & webinstall_gshhs;
     end
@@ -219,6 +224,7 @@ if(isempty(reply) || strncmpi(reply,'y',1)); globalcmt_update; end
 % download models/features
 % - eventually: 3D mantle models & features in mapping
 
+disp('DON''T FORGET TO RESTART!');
 disp('##################################################################');
 disp('################## FINISHED SEIZMO INSTALLATION ##################');
 disp('##################################################################');
@@ -233,7 +239,7 @@ if(nargout); varargout{1}=ok; end
 
 end
 
-function [application,version]=getapplication()
+function [varargout]=getapplication()
 %GETAPPLICATION    Returns application running this script and its version
 %
 %    Usage:    [application,version]=getapplication()
@@ -265,12 +271,19 @@ function [application,version]=getapplication()
 %        Mar.  3, 2009 - minor doc cleaning
 %        Apr. 23, 2009 - move usage up
 %        Sep.  8, 2009 - minor doc update
-%        Feb. 15, 2012 - minor doc update
+%        Feb. 15, 2012 - minor doc update, cache values using persistent
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 15, 2012 at 19:55 GMT
 
 % todo:
+
+% cache as persistent variables
+persistent application version
+if(~isempty(application) && ~isempty(version))
+    varargout={application version};
+    return;
+end
 
 % checking for Matlab will throw an error in Octave
 try
@@ -280,20 +293,20 @@ try
     % we are in Matlab
     application=a.Name;
     version=a.Version;
-    return;
 catch
     % check if we are in Octave
     if(exist('OCTAVE_VERSION','builtin')==5)
         application='OCTAVE';
         version=OCTAVE_VERSION;
-        return;
     % ok I have no clue what is running
     else
         application='UNKNOWN';
         version='UNKNOWN';
-        return;
     end
 end
+
+% output
+varargout={application version};
 
 end
 
@@ -525,5 +538,132 @@ for i=1:numel(isnum)
         an{i}=str(idx(i,1):idx(i,2));
     end
 end
+
+end
+
+function [words]=getwords(str,delimiter,collapse)
+%GETWORDS    Returns a cell array of words from a string
+%
+%    Usage:    words=getwords('str')
+%              words=getwords('str',delimiter)
+%              words=getwords('str',delimiter,collapse)
+%
+%    Description:
+%     WORDS=GETWORDS('STR') extracts words in STR and returns them
+%     separated into a cellstr array WORDS without any whitespace.
+%
+%     WORDS=GETWORDS('STR',DELIMITER) separates words in STR using the
+%     single character DELIMITER. The default is '' or [] which indicates
+%     any whitespace character.
+%
+%     WORDS=GETWORDS('STR',DELIMITER,COLLAPSE) toggles treating multiple
+%     delimiters as a single delimiter.  Setting COLLAPSE to TRUE treats
+%     multiple delimiters between words as a single delimiter.  Setting
+%     COLLAPSE to FALSE will always return the word between a delimiter
+%     pair, even if the word is '' (ie no characters).  The default is
+%     TRUE.
+%
+%    Notes:
+%
+%    Examples:
+%     % Break up a sentence:
+%     getwords('This example is pretty dumb!')
+%       ans = 
+%       'This'    'example'    'is'    'pretty'    'dumb!'
+%
+%     % Turn off multi-delimiter collapsing to allow handling empty words:
+%     getwords('the answer is  !',[],false)
+%       ans = 
+%       'the'    'answer'    'is'    [1x0 char]    '!'
+%
+%    See also: JOINWORDS, STRTOK, ISSPACE
+
+%     Version History:
+%        June 11, 2009 - initial version
+%        Sep. 13, 2009 - minor doc update, added input check
+%        Sep. 16, 2009 - add delimiter option
+%        Nov. 20, 2009 - make multi-delimiter collapse optional
+%        July 30, 2010 - nargchk fix
+%        Jan.  3, 2011 - use isstring
+%        Nov.  1, 2011 - doc update
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Nov.  1, 2011 at 13:00 GMT
+
+% todo:
+
+% check nargin
+error(nargchk(1,3,nargin));
+
+% check str
+if(~isstring(str))
+    error('seizmo:getwords:badInput','STR must be a char array!');
+end
+
+% check collapse
+if(nargin<3 || isempty(collapse)); collapse=true; end
+if(~islogical(collapse) || ~isscalar(collapse))
+    error('seizmo:getwords:badInput','COLLAPSE must be a logical!');
+end
+
+% force str to row vector
+str=str(:).';
+
+% highlight word boundaries
+if(nargin>1 && ~isempty(delimiter))
+    % check delimiter
+    if(~ischar(delimiter) || ~isscalar(delimiter))
+        error('seizmo:getwords:badInput','DELIMITER must be a char!');
+    end
+    idx=[true str==delimiter true];
+else
+    idx=[true isspace(str) true];
+end
+
+% get word boundaries
+if(collapse)
+    idx=diff(idx);
+    s=find(idx==-1);
+    e=find(idx==1)-1;
+else
+    s=find(idx(1:end-1));
+    e=find(idx(2:end))-1;
+end
+
+% number of words
+nw=numel(s);
+
+% get words
+words=cell(1,nw);
+for i=1:nw; words{i}=str(s(i):e(i)); end
+
+end
+
+function [lgc]=isstring(str)
+%ISSTRING    True for a string (row vector) of characters
+%
+%    Usage:    lgc=isstring(str)
+%
+%    Description:
+%     LGC=ISSTRING(STR) returns TRUE if STR is a string (ie row vector) of
+%     characters.  This means ISCHAR(STR) must be TRUE and SIZE(STR,1)==1.
+%
+%    Notes:
+%
+%    Examples:
+%     % A 2x2 character array will return FALSE:
+%     isstring(repmat('a',2,2))
+%
+%    See also: ISCHAR
+
+%     Version History:
+%        Sep. 13, 2010 - initial version (added docs)
+%        Oct. 11, 2010 - allow empty string
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Oct. 11, 2010 at 11:00 GMT
+
+lgc=ischar(str) && ndims(str==2) ...
+    && (size(str,1)==1 || isequal(size(str),[0 0]));
 
 end

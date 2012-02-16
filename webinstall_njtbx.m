@@ -25,7 +25,8 @@ function [ok]=webinstall_njtbx(mypath)
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
-%        Feb. 15, 2012 - doc update
+%        Feb. 15, 2012 - doc update, flip savepath logic, only use
+%                        javaaddpath or edit classpath as needed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 15, 2012 at 15:25 GMT
@@ -47,13 +48,6 @@ if(~exist(mypath,'dir'))
         ['Directory (' mypath ') does not exist!']);
 end
 
-% check that classpath exists (Octave fails here)
-sjcp=which('classpath.txt');
-if(isempty(sjcp))
-    warning('seizmo:webinstall_njtbx:noJavaClassPath',...
-        'Octave has no classpath.txt to save .jar files!');
-end
-
 % attempt njTBX install
 try
     % go to desired install location
@@ -70,7 +64,7 @@ try
     %   does not have direct links on the english site
     url=['http://es.sourceforge.jp/frs/g_redir.php?m=jaist&f=%2F' ...
         'njtbx%2FnjTBX-downloads%2F'];
-    disp(['Getting ' njtbx]);
+    disp([' Getting ' njtbx]);
     if(exist(njtbx,'file'))
         if(~exist(fullfile(mypath,njtbx),'file'))
             copyfile(which(njtbx),'.');
@@ -78,7 +72,7 @@ try
     else
         urlwrite([url njtbx],njtbx);
     end
-    disp(['Getting ' toolsui]);
+    disp([' Getting ' toolsui]);
     if(exist(toolsui,'file'))
         if(~exist(fullfile(mypath,toolsui),'file'))
             copyfile(which(toolsui),'.');
@@ -86,7 +80,7 @@ try
     else
         urlwrite([url toolsui],toolsui);
     end
-    disp(['Getting ' njtools]);
+    disp([' Getting ' njtools]);
     if(exist(njtools,'file'))
         if(~exist(fullfile(mypath,njtools),'file'))
             copyfile(which(njtools),'.');
@@ -97,35 +91,60 @@ try
     
     % unpack and install njtbx
     unzip(njtbx);
-    addpath(fullfile(njtbx,'njTBX-2.0','Utilities'));
-    addpath(fullfile(njtbx,'njTBX-2.0'));
-    addpath(fullfile(njtbx,'njFunc'));
-    addpath(fullfile(njtbx,'examples'));
-    addpath(njtbx);
-    ok=savepath;
+    njtbxdir=njtbx(1:end-4); % strip the .zip
+    addpath(fullfile(mypath,njtbxdir,'njTBX-2.0','Utilities'));
+    addpath(fullfile(mypath,njtbxdir,'njTBX-2.0'));
+    addpath(fullfile(mypath,njtbxdir,'njFunc'));
+    addpath(fullfile(mypath,njtbxdir,'examples'));
+    addpath(fullfile(mypath,njtbxdir));
+    ok=~savepath;
     if(~ok)
         warning('seizmo:webinstall_njtbx:noWritePathdef',...
             'Cannot save path!');
     end
     
     % install jars to classpath
+    toolsuijar=fullfile(mypath,njtbxdir,toolsui);
+    njtoolsjar=fullfile(mypath,njtbxdir,njtools);
+    sjcp=which('classpath.txt');
     if(isempty(sjcp))
+        %warning('seizmo:webinstall_njtbx:noJavaClassPath',...
+        %    'Octave has no classpath.txt to save .jar files!');
+        
         % no classpath.txt so add to dynamic path
-        javaaddpath(toolsui);
-        javaaddpath(njtools);
-        ok=false;
+        if(~ismember(toolsuijar,javaclasspath))
+            javaaddpath(toolsuijar);
+        end
+        if(~ismember(njtoolsjar,javaclasspath))
+            javaaddpath(njtoolsjar);
+        end
     else
-        fid=fopen(sjcp,'a+');
-        if(fid<0)
-            warning('seizmo:webinstall_njtbx:noWriteClasspath',...
-                'Cannot edit classpath.txt!');
-            ok=false;
-        else
-            fseek(fid,0,'eof');
-            fprintf(fid,'%s\n',toolsui);
-            fprintf(fid,'%s\n',njtools);
-            fclose(fid);
-            ok=ok & true;
+        % read classpath.txt
+        s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
+        
+        % detect offending classpath.txt lines
+        yn1=~cellfun('isempty',strfind(s2,toolsuijar));
+        yn2=~cellfun('isempty',strfind(s2,njtoolsjar));
+        
+        % only add if not there already
+        if(sum(yn1 | yn2)<=1)
+            fid=fopen(sjcp,'a+');
+            if(fid<0)
+                warning('seizmo:webinstall_njtbx:noWriteClasspath',...
+                    ['Cannot edit classpath.txt! Adding njTBX jars ' ...
+                    'to dynamic java class path!']);
+                if(~ismember(toolsuijar,javaclasspath))
+                    javaaddpath(toolsuijar);
+                end
+                if(~ismember(njtoolsjar,javaclasspath))
+                    javaaddpath(njtoolsjar);
+                end
+            else
+                fseek(fid,0,'eof');
+                if(~sum(yn1)); fprintf(fid,'%s\n',toolsuijar); end
+                if(~sum(yn2)); fprintf(fid,'%s\n',njtoolsjar); end
+                fclose(fid);
+            end
         end
     end
     

@@ -5,8 +5,8 @@
 %  <a href="matlab:showdemo sz_pub_beginning">THE BASICS</a>
 %
 % Browse the SEIZMO tool chest:
-%  <a href="matlab:help categorical_list">Categorical Lists of SEIZMO Functions</a>
-%  <a href="matlab:help alphabetical_list">Everything (Woah!)</a>
+%  <a href="matlab:helpwin categorical_list">Categorical Lists of SEIZMO Functions</a>
+%  <a href="matlab:helpwin alphabetical_list">Everything (Woah!)</a>
 %
 % Found a bug?  Something not quite right?
 % Want to help develop SEIZMO?  Have a feature to add?

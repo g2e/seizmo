@@ -41,7 +41,7 @@ function [ok]=webinstall_gshhs(mypath)
 %                        webinstall_gshhs, updated to use gshhs2 files, doc
 %                        update, no savpath_seizmo, installs to location of
 %                        this file under gshhs directory
-%        Feb. 15, 2012 - doc update
+%        Feb. 15, 2012 - doc update, flip savepath logic
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 15, 2012 at 15:25 GMT
@@ -74,6 +74,7 @@ try
     % grab file
     url='http://www.ngdc.noaa.gov/mgg/shorelines/data/gshhs/';
     url=[url 'version2.2.0/' gshhs];
+    disp([' Getting ' gshhs]);
     if(exist(gshhs,'file'))
         if(~exist(fullfile(mypath,gshhs),'file'))
             copyfile(which(gshhs),'.');
@@ -84,8 +85,8 @@ try
     
     % unpack and install GSHHS
     unzip(gshhs);
-    addpath('gshhs');
-    ok=savepath;
+    addpath(fullfile(mypath,'gshhs'));
+    ok=~savepath;
     if(~ok)
         warning('seizmo:webinstall_gshhs:noWritePathdef',...
             'Cannot save path!');

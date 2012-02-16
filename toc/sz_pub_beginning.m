@@ -290,4 +290,4 @@ dataset=ch(dataset,'t0',1e4+1e4*(rand(29,1)-0.5));
 plot1(dataset(1:4),'showmarkers',true);
 
 %% Beyond the basics
-% Next: <matlab:showdemo('intermediate_seizmo') Processing in SEIZMO>
+% Next: <matlab:showdemo('sz_pub_intermediate') Processing in SEIZMO>

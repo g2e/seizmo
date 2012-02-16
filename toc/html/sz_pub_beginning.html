@@ -482,7 +482,7 @@ ans =
 </pre><p>Note that the <tt>ch</tt> output was assigned back to the input dataset.  This isn't necessary and can be assigned to a new variable instead. To view the 'nothing' markers in an ammended <a href="matlab:doc('plot1')"><tt>plot1</tt></a> call:</p><pre class="codeinput">plot1(dataset(1:4),<span class="string">'showmarkers'</span>,true);
 </pre><img vspace="5" hspace="5" src="sz_pub_beginning_05.png" alt=""> <p>You may use an array to give each record a diffent value.  To add a little randomness to the marker positions:</p><pre class="codeinput">dataset=ch(dataset,<span class="string">'t0'</span>,1e4+1e4*(rand(29,1)-0.5));
 plot1(dataset(1:4),<span class="string">'showmarkers'</span>,true);
-</pre><img vspace="5" hspace="5" src="sz_pub_beginning_06.png" alt=""> <h2>Beyond the basics<a name="35"></a></h2><p>Next: <a href="matlab:showdemo('intermediate_seizmo')">Processing in SEIZMO</a></p><p class="footer"><br>
+</pre><img vspace="5" hspace="5" src="sz_pub_beginning_06.png" alt=""> <h2>Beyond the basics<a name="35"></a></h2><p>Next: <a href="matlab:showdemo('sz_pub_intermediate')">Processing in SEIZMO</a></p><p class="footer"><br>
       Published with MATLAB&reg; 7.10<br></p></div><!--
 ##### SOURCE BEGIN #####
 %% SEIZMO - A Matlab(R) & Octave Toolbox for Passive Seismology
@@ -777,7 +777,7 @@ dataset=ch(dataset,'t0',1e4+1e4*(rand(29,1)-0.5));
 plot1(dataset(1:4),'showmarkers',true);
 
 %% Beyond the basics
-% Next: <matlab:showdemo('intermediate_seizmo') Processing in SEIZMO>
+% Next: <matlab:showdemo('sz_pub_intermediate') Processing in SEIZMO>
 
 ##### SOURCE END #####
 --></body></html>
