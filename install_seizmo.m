@@ -53,9 +53,10 @@ function [varargout]=install_seizmo()
 %                        separate installers except for external
 %                        components, update cmt db, flip savepath logic,
 %                        only use javaaddpath or edit classpath as needed
+%        Feb. 16, 2012 - export_fig is externally managed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2012 at 15:25 GMT
+%     Last Updated Feb. 16, 2012 at 15:25 GMT
 
 % todo:
 
@@ -159,8 +160,7 @@ addpath(path,...
     [path fs 'win'],...
     [path fs 'ww3'],...
     [path fs 'xcalign'],...
-    [path fs 'mattaup'],...
-    [path fs 'exportfig']);
+    [path fs 'mattaup']);
 ok=ok & ~savepath;
 if(~ok)
     warning('seizmo:install_seizmo:noPermission',...
@@ -202,18 +202,22 @@ else % install matTaup.jar to classpath
 end
 
 % ask to install external components
-% - eventually: taup, exportfig
+% - eventually: taup
 reply=input('Install njTBX (30MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_njtbx;
 end
-reply=input('Install M_Map (1MB)? Y/N [Y]: ','s');
+reply=input('Install M_Map (<1MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_mmap;
     reply=input('Install GSHHS (120MB!)? Y/N [Y]: ','s');
     if(isempty(reply) || strncmpi(reply,'y',1))
         ok=ok & webinstall_gshhs;
     end
+end
+reply=input('Install export_fig (25KB)? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & webinstall_exportfig;
 end
 
 % update dbs

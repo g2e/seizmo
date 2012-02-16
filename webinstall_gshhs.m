@@ -42,9 +42,10 @@ function [ok]=webinstall_gshhs(mypath)
 %                        update, no savpath_seizmo, installs to location of
 %                        this file under gshhs directory
 %        Feb. 15, 2012 - doc update, flip savepath logic
+%        Feb. 16, 2012 - workaround quietly stalled unzip in octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2012 at 15:25 GMT
+%     Last Updated Feb. 16, 2012 at 15:25 GMT
 
 % todo:
 
@@ -83,9 +84,19 @@ try
         urlwrite(url,gshhs);
     end
     
+    % delete pre-existing directory
+    gshhsdir=fullfile(mypath,'gshhs');
+    if(exist(gshhsdir,'dir') && exist('OCTAVE_VERSION','builtin')==5)
+        fprintf('Output directory exists: %s\n',gshhsdir);
+        y=rmdir(gshhsdir,'s');
+        if(~y)
+            disp('Replace All or None of the files? A/N?');
+        end
+    end
+    
     % unpack and install GSHHS
     unzip(gshhs);
-    addpath(fullfile(mypath,'gshhs'));
+    addpath(gshhsdir);
     ok=~savepath;
     if(~ok)
         warning('seizmo:webinstall_gshhs:noWritePathdef',...

@@ -28,15 +28,16 @@ function [ok]=uninstall_seizmo()
 %        Feb. 15, 2012 - doc update, cleaner code, call external component
 %                        uninstallers, only use javarmpath when needed,
 %                        don't force failure for octave
+%        Feb. 16, 2012 - export_fig is externally managed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2012 at 15:25 GMT
+%     Last Updated Feb. 16, 2012 at 15:25 GMT
 
 % todo:
 
 % ask to install external components
 % - has to be done before removing 'seizmo/uninstall' directory
-% - eventually: taup, exportfig
+% - eventually: taup
 ok=true;
 reply=input('Uninstall njTBX? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
@@ -49,6 +50,10 @@ if(isempty(reply) || strncmpi(reply,'y',1))
     if(isempty(reply) || strncmpi(reply,'y',1))
         ok=ok & uninstall_gshhs;
     end
+end
+reply=input('Uninstall export_fig? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & uninstall_exportfig;
 end
 
 % does seizmodef exist?
@@ -99,8 +104,7 @@ if(exist('seizmodef','file'))
         [path fs 'win'],...
         [path fs 'ww3'],...
         [path fs 'xcalign'],...
-        [path fs 'mattaup'],...
-        [path fs 'exportfig']);
+        [path fs 'mattaup']);
     ok=ok & ~savepath;
     if(~ok)
         warning('seizmo:uninstall_seizmo:noPermission',...

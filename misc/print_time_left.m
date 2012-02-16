@@ -4,15 +4,16 @@ function []=print_time_left(act_step,tot_step,redraw)
 %    Usage:    print_time_left(act_step,tot_step)
 %              print_time_left(act_step,tot_step,redraw)
 %
-%    Description: PRINT_TIME_LEFT(ACT_STEP,TOT_STEP) draws an ascii
-%     progress bar in the command window with the remaining time left
-%     estimated based on having ACT_STEP steps out of TOT_STEPS completed.
-%     The progress bar shows the rounded percentage completed within the
-%     progress bar along with the steps and the estimated time remaining.
-%     Subsequent calls update the previous.  On completion of the final
-%     step, the total time taken is shown.  If any outside text is written
-%     between calls, use the next usage form to draw a new progress bar
-%     that avoids overwriting the outside text.
+%    Description:
+%     PRINT_TIME_LEFT(ACT_STEP,TOT_STEP) draws an ascii progress bar in the
+%     command window with the remaining time left estimated based on having
+%     ACT_STEP steps out of TOT_STEPS completed.  The progress bar shows
+%     the rounded percentage completed within the progress bar along with
+%     the steps and the estimated time remaining.  Subsequent calls update
+%     the previous.  On completion of the final step, the total time taken
+%     is shown.  If any outside text is written between calls, use the next
+%     usage form to draw a new progress bar that avoids overwriting the
+%     outside text.
 %
 %     PRINT_TIME_LEFT(ACT_STEP,TOT_STEP,REDRAW) redraws the ascii progress
 %     bar without deleting any previous text.  Useful for cases when some
@@ -22,12 +23,12 @@ function []=print_time_left(act_step,tot_step,redraw)
 %     - Only updates when the rounded percent increases.
 %
 %    Examples:
-%     Standard usage format for this function:
-%      print_time_left(0,100); % initialize internal timer
-%      for i=1:100
-%          ... do something ...
-%          print_time_left(1,100);
-%      end
+%     % Standard usage format for this function:
+%     print_time_left(0,100); % initialize internal timer
+%     for i=1:100
+%         ... do something ...
+%         print_time_left(1,100);
+%     end
 %
 %    See also: WAITBAR
 
@@ -40,10 +41,11 @@ function []=print_time_left(act_step,tot_step,redraw)
 %        Feb. 22, 2010 - prints total time spent on last step
 %        Mar.  7, 2010 - no error if called from the cmd line
 %        Jan. 18, 2011 - find 0 tot_step bug, nargchk fix
+%        Feb. 16, 2012 - doc update, Octave shortcircuit
 %
 %     Written by Nicolas Le Roux (lerouxni at iro dot umontreal dot ca)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 17:55 GMT
+%     Last Updated Feb. 16, 2012 at 17:55 GMT
 
 % todo:
 % - preceeding warning message links are missing occasionally?
@@ -59,6 +61,9 @@ elseif(~isscalar(tot_step) || ~isnumeric(tot_step))
     error('seizmo:print_time_left:badInput',...
         'TOT_STEP must be a numeric scalar!');
 end
+
+% shortcircuit for Octave (no print b/c this fails)
+if(strcmp(getapplication,'OCTAVE')); return; end
 
 % declare persistent vars
 persistent nb i old_step old_fun

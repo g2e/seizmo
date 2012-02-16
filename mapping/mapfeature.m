@@ -50,8 +50,8 @@ function []=mapfeature(varargin)
 %     FEATURES.
 %
 %     MAPFEATURE(FEATURES,OPTS,'PROP1',VAL1,'PROP2',VAL2,...) passes
-%     property/value pairs to M_LINE, M_PATCH, or M_HATCH.  These then pass
-%     these to LINE & PATCH.
+%     property/value pairs to M_LINE, M_PATCH, or M_HATCH.  Which in turn
+%     pass the properties on to LINE & PATCH.
 %
 %     MAPFEATURE(AX,...) draws on the M_Map map given by axes handle AX.
 %     Please note that M_Map cannot handle drawing amongst multiple map
@@ -83,9 +83,10 @@ function []=mapfeature(varargin)
 
 %     Version History:
 %        Feb.  9, 2011 - initial version
+%        Feb. 16, 2012 - fix bug in parsing hatch triplets
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  9, 2011 at 23:00 GMT
+%     Last Updated Feb. 16, 2012 at 23:00 GMT
 
 % todo:
 % - fix the polygon insanity of some features
@@ -164,7 +165,7 @@ if(iscell(opt))
             continue;
         end
         if(numel(opt{i})==3 && isstring(opt{i}{1}) ...
-                && isnumeric(opt{i}{2}) && isnumeric(opt{3}))
+                && isnumeric(opt{i}{2}) && isnumeric(opt{i}{3}))
             hopt{i}=opt{i};
             opt{i}='hatch';
             continue;

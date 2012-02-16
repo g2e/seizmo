@@ -9,13 +9,20 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
+ww3struct
+    - autoload .jars if not found
+
+makearrivals == creates .misc.arrivals
+findarrivals == searches .misc.arrivals
+arrivals2picks == push .misc.arrivals to header pick fields
+findpicks == searches t* fields
+
 - startup.m file?
   - addpath
   - javaaddpath
 
-default verbose to off
+default verbose off
     - when using parallel toolbox
-    - when using octave
 
 meld
     - uneven or variable samplerate
@@ -75,18 +82,6 @@ more cmb models (rjk)
         - cell of numbers  {depths/heights  velo%s}
         - inputs will change per model or series ...
         - can never really do everything here ... just go for basics
-expand sph tri stuff
-    - function to make g matrix for sph tri stuff
-      - distance from polygon center to pnts on line
-        - simple logical for flat weighting
-        - distance based gaussian weighting
-      - inversion is % from prem?
-        - have to do synthetics for all events
-
-makearrivals == creates .misc.arrivals
-findarrivals == searches .misc.arrivals
-arrivals2picks == push .misc.arrivals to header pick fields
-findpicks == searches t* fields
 
 %%%%%%%
 POSTDOC
@@ -175,7 +170,6 @@ better polezero docs
 	- vel 2 dis
 		- add zero at 0
 	- SERIOUSLY FOLKS, why is there not a simple gui for this?
-update srtm30plus to 7.0
 ffmancor
     - dynamic ray tracing is a must (see princeton group)
 	- stretch/squish gradually starting at some depth
@@ -215,16 +209,26 @@ basic segy (segy2MAT), ah, miniseed support
 
 OCTAVE SPECIFIC STUFF (Need to test vs 3.6.1)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-- error (warning?) needs sprintf support
-- how to do java packages in Octave??
-- mex files in Octave??
+- error & warning need sprintf support
 - fix conflicts with octave functions:
   rainbow (same but reversed order? not a big deal)
   ocean (similar but mine (gmt's) has greens ... not a big deal)
-  merge (not sure ... ifelse is the same thing ... non-matlab)
-     - getfield, setfield, nthroot use octave's merge ... this is bad news!
-       merge is being changed to "meld"
   cut (not sure ... non-matlab statistics function ...)
      - no usage in stats
      slice, slash, trim, chop, clip, snip
-
+- octave-java package issues with Fedora (as root):
+    cd /usr/lib/jvm/
+    ln -s /etc/alternatives/java_sdk default-java
+    cd /usr/lib/jvm/default-java/jre/lib/amd64/
+    ln -s server client
+- no import function
+    - apparently javaObject should be used...
+- concatenation differs if cells & empties involved (using cellcat)
+- box doesn't take ax (patch submitted)
+- a(b(end)) fails if a not declared (fixed upstream)
+- addpath works backwards
+- rmpath/unzip etc beat text to the prompt
+- unzip on existing unzipped contents will look stalled
+    - use y/n/A/N
+- no texlabel
+- require: java, signal

@@ -123,9 +123,10 @@ function tt=tauptime(varargin)
 %                        some import calls
 %        Jan.  6, 2011 - add matTaup.jar to dynamic java classpath if
 %                        necessary
+%        Feb. 16, 2012 - works with Octave+Octave-Java
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 17:15 GMT
+%     Last Updated Feb. 16, 2012 at 17:15 GMT
 
 % todo:
 
@@ -134,14 +135,15 @@ if(mod(nargin,2))
     error('matTaup:tauptime:badNumOptions','Unpaired option(s)!');
 end
 
-% initialize java code
-import edu.sc.seis.TauP.*;
-
-% try adding matTaup.jar if no MatTauP class exists
-if(~exist('MatTauP_Time','class'))
+% initialize java object
+try
+    MatTauP_Time=javaObject('edu.sc.seis.TauP.MatTauP_Time');
+catch
+    % try adding first matTaup.jar if no MatTauP class exists
     fs=filesep;
     mypath=fileparts(mfilename('fullpath'));
     javaaddpath([mypath fs 'lib' fs 'matTaup.jar']);
+    MatTauP_Time=javaObject('edu.sc.seis.TauP.MatTauP_Time');
 end
 
 % default options
@@ -282,7 +284,7 @@ if(nargout==0)
     disp('--------------------------------------------------------------------------')
     
     % list phase info
-    for ii=1:arrivals.length
+    for ii=1:numel(arrivals)
         fprintf(' %7.2f  %6.1f   %-10s   %7.2f   %7.3f    %7.2f  = %-10s\n',...
             arrivals(ii).getModuloDistDeg,arrivals(ii).getSourceDepth,...
             char(arrivals(ii).getName),arrivals(ii).getTime,...
@@ -294,9 +296,9 @@ if(nargout==0)
 end
 
 % struct output
-tt(1:arrivals.length)=struct('phase',[],'distance',[],'depth',[],...
+tt(1:numel(arrivals))=struct('phase',[],'distance',[],'depth',[],...
     'time',[],'rayparameter',[]);
-for ii=1:arrivals.length
+for ii=1:numel(arrivals)
     tt(ii).time=arrivals(ii).getTime;
     tt(ii).distance=arrivals(ii).getDistDeg;
     tt(ii).depth=arrivals(ii).getSourceDepth;

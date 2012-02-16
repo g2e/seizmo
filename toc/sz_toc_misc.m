@@ -13,6 +13,7 @@ function []=sz_toc_misc()
 %<a href="matlab:help expandscalars">expandscalars</a>        - Expands scalars to match size of array inputs
 %<a href="matlab:help fig2print">fig2print</a>            - Adjusts figures to be as printed (aka print preview-ish)
 %<a href="matlab:help filter_bank">filter_bank</a>          - Makes a set of narrow-band bandpass filters
+%<a href="matlab:help findhome">findhome</a>             - Returns the user's home directory
 %<a href="matlab:help fisher">fisher</a>               - Converts correlation coefficients to the Z statistic
 %<a href="matlab:help gaussian">gaussian</a>             - Returns values from a Gaussian PDF
 %<a href="matlab:help gaussiantf">gaussiantf</a>           - Returns a gaussian time function

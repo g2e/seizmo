@@ -27,9 +27,10 @@ function [ok]=webinstall_mmap(mypath)
 %     Version History:
 %        Feb. 14, 2012 - initial version
 %        Feb. 15, 2012 - add m_map_fixes, doc update, flip savepath logic
+%        Feb. 16, 2012 - workaround quietly stalled unzip in octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2012 at 15:25 GMT
+%     Last Updated Feb. 16, 2012 at 15:25 GMT
 
 % todo:
 
@@ -67,9 +68,19 @@ try
         urlwrite([url mmap],mmap);
     end
     
-    % unpack and install mmap
+    % delete pre-existing directory if in Octave
+    mmapdir=fullfile(mypath,'m_map');
+    if(exist(mmapdir,'dir') && exist('OCTAVE_VERSION','builtin')==5)
+        fprintf('Output directory exists: %s\n',mmapdir);
+        y=rmdir(mmapdir,'s');
+        if(~y)
+            disp('Replace All or None of the files? A/N?');
+        end
+    end
+    
+    % unpack and install M_Map
     unzip(mmap);
-    addpath(fullfile(mypath,'m_map'));
+    addpath(mmapdir);
     if(exist(fullfile(mypath,'m_map_fixes'),'dir'))
         addpath(fullfile(mypath,'m_map_fixes'));
     end

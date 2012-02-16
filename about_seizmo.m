@@ -22,11 +22,6 @@ function []=about_seizmo()
 %     Last Updated Dec. 30, 2010 at 15:25 GMT
 
 % todo:
-% - how to display hyperlinks?
-% - truely awesome seizmo logo
-% - truely awesome seizmo song
-%   - kill song when popup gone
-% - no button (ie no msgbox)
 
 % retreive all necessary data
 info=ver('seizmo');

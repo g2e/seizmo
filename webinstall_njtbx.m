@@ -27,9 +27,10 @@ function [ok]=webinstall_njtbx(mypath)
 %        Feb. 14, 2012 - initial version
 %        Feb. 15, 2012 - doc update, flip savepath logic, only use
 %                        javaaddpath or edit classpath as needed
+%        Feb. 16, 2012 - workaround quietly stalled unzip in octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2012 at 15:25 GMT
+%     Last Updated Feb. 16, 2012 at 15:25 GMT
 
 % todo:
 
@@ -64,7 +65,7 @@ try
     %   does not have direct links on the english site
     url=['http://es.sourceforge.jp/frs/g_redir.php?m=jaist&f=%2F' ...
         'njtbx%2FnjTBX-downloads%2F'];
-    disp([' Getting ' njtbx]);
+    fprintf(' Getting %s\n',njtbx);
     if(exist(njtbx,'file'))
         if(~exist(fullfile(mypath,njtbx),'file'))
             copyfile(which(njtbx),'.');
@@ -72,7 +73,7 @@ try
     else
         urlwrite([url njtbx],njtbx);
     end
-    disp([' Getting ' toolsui]);
+    fprintf(' Getting %s\n',toolsui);
     if(exist(toolsui,'file'))
         if(~exist(fullfile(mypath,toolsui),'file'))
             copyfile(which(toolsui),'.');
@@ -80,7 +81,7 @@ try
     else
         urlwrite([url toolsui],toolsui);
     end
-    disp([' Getting ' njtools]);
+    fprintf(' Getting %s\n',njtools);
     if(exist(njtools,'file'))
         if(~exist(fullfile(mypath,njtools),'file'))
             copyfile(which(njtools),'.');
@@ -89,14 +90,24 @@ try
         urlwrite([url njtools],njtools);
     end
     
-    % unpack and install njtbx
+    % delete pre-existing directory if in Octave
+    njtbxdir=fullfile(mypath,njtbx(1:end-4)); % strip .zip
+    if(exist(njtbxdir,'dir') && exist('OCTAVE_VERSION','builtin')==5)
+        fprintf('Output directory exists: %s\n',njtbxdir);
+        y=rmdir(njtbxdir,'s');
+        if(~y)
+            disp('Replace All or None of the files? A/N?');
+        end
+    end
+    
+    % unpack and install njTBX
     unzip(njtbx);
-    njtbxdir=njtbx(1:end-4); % strip the .zip
-    addpath(fullfile(mypath,njtbxdir,'njTBX-2.0','Utilities'));
-    addpath(fullfile(mypath,njtbxdir,'njTBX-2.0'));
-    addpath(fullfile(mypath,njtbxdir,'njFunc'));
-    addpath(fullfile(mypath,njtbxdir,'examples'));
-    addpath(fullfile(mypath,njtbxdir));
+    fs=filesep;
+    addpath(njtbxdir,...
+        [njtbxdir fs 'examples'],...
+        [njtbxdir fs 'njFunc'],...
+        [njtbxdir fs 'njTBX-2.0'],...
+        [njtbxdir fs 'njTBX-2.0' fs 'Utilities']);
     ok=~savepath;
     if(~ok)
         warning('seizmo:webinstall_njtbx:noWritePathdef',...
@@ -104,8 +115,8 @@ try
     end
     
     % install jars to classpath
-    toolsuijar=fullfile(mypath,njtbxdir,toolsui);
-    njtoolsjar=fullfile(mypath,njtbxdir,njtools);
+    toolsuijar=fullfile(mypath,toolsui);
+    njtoolsjar=fullfile(mypath,njtools);
     sjcp=which('classpath.txt');
     if(isempty(sjcp))
         %warning('seizmo:webinstall_njtbx:noJavaClassPath',...
@@ -151,6 +162,7 @@ try
     % return
     cd(cwd);
 catch
+    error(lasterror)
     ok=false;
     cd(cwd);
 end
