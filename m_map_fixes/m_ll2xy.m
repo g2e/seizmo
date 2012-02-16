@@ -21,7 +21,7 @@ function [X,Y,I]=m_ll2xy(varargin);
 % it's mine, so you can't sell it.
 
 % 6/Nov/00 - eliminate returned stuff if ';' neglected (thx to D Byrne)
-% 27/Feb/11 - wrap longitudes outside of plot into plot (if possible)
+% 27/Feb/11 - wrap longitudes outside of plot into plot (if possible) (gge)
 
 global MAP_PROJECTION MAP_COORDS MAP_VAR_LIST
 

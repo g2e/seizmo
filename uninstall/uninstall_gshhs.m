@@ -9,7 +9,7 @@ function [ok]=uninstall_gshhs()
 %     the savepath exit status.
 %
 %    Notes:
-%     - Uses the binary file gshhs_c.b to detect the directory.
+%     - Uses the location of binary file gshhs_c.b to detect the directory.
 %
 %    Examples:
 %     % Update gshhs:
@@ -20,9 +20,10 @@ function [ok]=uninstall_gshhs()
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
+%        Feb. 15, 2012 - handle not installed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2012 at 15:25 GMT
+%     Last Updated Feb. 15, 2012 at 15:25 GMT
 
 % todo:
 
@@ -31,6 +32,10 @@ if(exist('gshhs_c.b','file'))
     path=fileparts(which('gshhs_c.b')); % root directory
     rmpath(path);
     ok=savepath;
+else
+    % not found, so not installed...
+    ok=true;
+    return;
 end
 
 end

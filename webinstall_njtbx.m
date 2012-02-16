@@ -1,23 +1,23 @@
 function [ok]=webinstall_njtbx(mypath)
-%WEBINSTALL_NJTBX    Install njtbx components
+%WEBINSTALL_NJTBX    Install njTBX components
 %
 %    Usage:    ok=webinstall_njtbx
 %              ok=webinstall_njtbx(path)
 %
 %    Description:
 %     OK=WEBINSTALL_NJTBX creates the directory 'njtbx' where this mfile is
-%     located, moves into it and downloads & installs the njtbx toolbox
+%     located, moves into it and downloads & installs the njTBX toolbox
 %     files.  The download is large (~30 megabytes) so make sure you have a
 %     good connection.  Also be aware that you cannot do anything else at
 %     the Matlab/Octave prompt while waiting for the files to download.
 %
-%     OK=WEBINSTALL_NJTBX(PATH) installs the njtbx toolbox in the directory
+%     OK=WEBINSTALL_NJTBX(PATH) installs the njTBX toolbox in the directory
 %     given by PATH.
 %
 %    Notes:
 %
 %    Examples:
-%     % Update njtbx:
+%     % Update njTBX:
 %     uninstall_njtbx & webinstall_njtbx
 %
 %    See also: UNINSTALL_NJTBX, UNINSTALL_GSHHS, WEBINSTALL_GSHHS,
@@ -25,9 +25,10 @@ function [ok]=webinstall_njtbx(mypath)
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
+%        Feb. 15, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2012 at 15:25 GMT
+%     Last Updated Feb. 15, 2012 at 15:25 GMT
 
 % todo:
 
@@ -53,7 +54,7 @@ if(isempty(sjcp))
         'Octave has no classpath.txt to save .jar files!');
 end
 
-% attempt njtbx install
+% attempt njTBX install
 try
     % go to desired install location
     cwd=pwd;

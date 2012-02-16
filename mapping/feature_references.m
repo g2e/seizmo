@@ -1,3 +1,6 @@
+function []=feature_references()
+%FEATURE_REFERENCES    References for features available in MAPFEATURE
+%
 %Volcano locations are from the Smithsonian Institution, Global Volcanism Program.
 %Data is available here:
 %http://www.volcano.si.edu/world/globallists.cfm
@@ -24,7 +27,7 @@
 %
 %Fracture zone & magnetic lineation data:
 %http://www.aist.go.jp/GSJ/dMG/dMGold/free/plates/Intro.html
-%http://www.soest.hawaii.edu/PT/fz.html
+%http://www.soest.hawaii.edu/PT/
 %
 %Impacts (mine is from an earlier excel of the earth impact database):
 %http://keith.aa.washington.edu/craterdata/
@@ -49,3 +52,5 @@
 % cob - europe is incomplete
 % lips - 3/5ths of the data needs fixing
 %
+help feature_refereences
+end

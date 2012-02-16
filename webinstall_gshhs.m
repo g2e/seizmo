@@ -19,14 +19,14 @@ function [ok]=webinstall_gshhs(mypath)
 %
 %    Notes:
 %     - Get the GSHHS binary files by downloading the archive from here:
-%        http://www.ngdc.noaa.gov/mgg/shorelines/data/gshhs/oldversions/
-%       The file is gshhs_1.10.zip under the 1.10 version.  Extract the
-%       binaries from the archive using your unzip utility of choice.
+%        ftp://ftp.soest.hawaii.edu/pwessel/gshhs/gshhs+wdbii_2.2.0.zip
+%       Extract the binaries from the archive using your unzip utility of
+%       choice.
 %     - If you have the GSHHS binary files extracted, just add the
 %       directory containing them to your Matlab or Octave path using:
 %        addpath directory/of/gshhs/
-%       where the directory/of/gshhs needs to be changed to where the files
-%       are on your system.
+%       where the directory/of/gshhs needs to be changed to where the
+%       GSHHS binary files are located on your computer.
 %
 %    Examples:
 %     % GSHHS is big: this download can take _hours_.  This function is
@@ -41,9 +41,10 @@ function [ok]=webinstall_gshhs(mypath)
 %                        webinstall_gshhs, updated to use gshhs2 files, doc
 %                        update, no savpath_seizmo, installs to location of
 %                        this file under gshhs directory
+%        Feb. 15, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2012 at 15:25 GMT
+%     Last Updated Feb. 15, 2012 at 15:25 GMT
 
 % todo:
 
@@ -61,7 +62,7 @@ if(~exist(mypath,'dir'))
         ['Directory (' mypath ') does not exist!']);
 end
 
-% attempt gshhs install
+% attempt GSHHS install
 try
     % go to desired install location
     cwd=pwd;
@@ -81,7 +82,7 @@ try
         urlwrite(url,gshhs);
     end
     
-    % unpack and install gshhs
+    % unpack and install GSHHS
     unzip(gshhs);
     addpath('gshhs');
     ok=savepath;

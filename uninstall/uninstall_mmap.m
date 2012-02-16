@@ -9,7 +9,7 @@ function [ok]=uninstall_mmap()
 %     savepath exit status.
 %
 %    Notes:
-%     - Uses the function m_coast to detect the m_map toolbox.
+%     - Uses the location of function m_coast to detect the m_map toolbox.
 %
 %    Examples:
 %     % Update m_map:
@@ -20,9 +20,10 @@ function [ok]=uninstall_mmap()
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
+%        Feb. 15, 2012 - handle not installed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2012 at 15:25 GMT
+%     Last Updated Feb. 15, 2012 at 15:25 GMT
 
 % todo:
 
@@ -31,6 +32,10 @@ if(exist('m_coast','file'))
     path=fileparts(which('m_coast')); % root directory
     rmpath(path);
     ok=savepath;
+else
+    % not found, so toolbox not installed...
+    ok=true;
+    return;
 end
 
 end

@@ -24,6 +24,7 @@ function []=categorical_list()
 %<a href="matlab:help sz_toc_synth">synth</a>      - Synthetic seismograms
 %<a href="matlab:help sz_toc_sz">sz</a>         - SEIZMO struct adjustment
 %<a href="matlab:help sz_toc_tpw">tpw</a>        - Two plane wave analysis
+%<a href="matlab:help sz_toc_uninstall">uninstall</a>  - Uninstallation
 %<a href="matlab:help sz_toc_win">win</a>        - Windowing & merging
 %<a href="matlab:help sz_toc_xcalign">xcalign</a>    - Cross correlation based arrival times
 %
@@ -34,7 +35,6 @@ function []=categorical_list()
 %<a href="matlab:help sz_toc_invert">invert</a>    - Simple inversion stuff
 %<a href="matlab:help sz_toc_mattaup">mattaup</a>   - Matlab-TauP (improved)
 %<a href="matlab:help sz_toc_misc">misc</a>      - Miscellaneous utilities
-%<a href="matlab:help m_map">m_map</a>     - The M_Map Mapping Toolbox
 %<a href="matlab:help sz_toc_models">models</a>    - 1D/3D models of the Earth's interior
 %<a href="matlab:help sz_toc_position">position</a>  - Global positioning & conversions
 %<a href="matlab:help sz_toc_sphpoly">sphpoly</a>   - Polygons on a sphere

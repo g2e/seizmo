@@ -1,24 +1,24 @@
 function [ok]=webinstall_mmap(mypath)
-%WEBINSTALL_MMAP    Install m_map components
+%WEBINSTALL_MMAP    Install M_Map components
 %
 %    Usage:    ok=webinstall_mmap
 %              ok=webinstall_mmap(path)
 %
 %    Description:
-%     OK=WEBINSTALL_MMAP downloads the m_map zip file to the directory
+%     OK=WEBINSTALL_MMAP downloads the M_Map zip file to the directory
 %     where this mfile is located, extracts its contents to the 'm_map'
 %     directory and adds/saves it to the path.  The download is only 0.6
-%     megabytes so major worries.  Just be aware that you cannot do
-%     anything else at the Matlab/Octave prompt while waiting for the file
-%     to download.
+%     megabytes.  Just be aware that you will not be able to do anything
+%     else at the Matlab/Octave prompt while waiting for the file to
+%     download.
 %
-%     OK=WEBINSTALL_MMAP(PATH) installs the m_map toolbox under the
+%     OK=WEBINSTALL_MMAP(PATH) installs the M_Map toolbox under the
 %     directory given by PATH.
 %
 %    Notes:
 %
 %    Examples:
-%     % Update m_map:
+%     % Update M_Map:
 %     uninstall_mmap & webinstall_mmap
 %
 %    See also: UNINSTALL_MMAP, WEBINSTALL_GSHHS, UNINSTALL_GSHHS,
@@ -26,6 +26,7 @@ function [ok]=webinstall_mmap(mypath)
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
+%        Feb. 15, 2012 - add m_map_fixes, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 14, 2012 at 15:25 GMT
@@ -46,7 +47,7 @@ if(~exist(mypath,'dir'))
         ['Directory (' mypath ') does not exist!']);
 end
 
-% attempt mmap install
+% attempt M_Map install
 try
     % go to desired install location
     cwd=pwd;
@@ -68,6 +69,7 @@ try
     % unpack and install mmap
     unzip(mmap);
     addpath('m_map');
+    if(exist('m_map_fixes','dir')); addpath('m_map_fixes'); end
     ok=savepath;
     if(~ok)
         warning('seizmo:webinstall_mmap:noWritePathdef',...

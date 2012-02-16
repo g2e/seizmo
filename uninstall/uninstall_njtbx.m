@@ -9,7 +9,7 @@ function [ok]=uninstall_njtbx()
 %     path.  OK is the savepath exit status.
 %
 %    Notes:
-%     - Uses the function 'nj_time' to detect the toolbox.
+%     - Uses the location of function 'nj_time' to detect the toolbox.
 %
 %    Examples:
 %     % Update njtbx:
@@ -20,9 +20,10 @@ function [ok]=uninstall_njtbx()
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
+%        Feb. 15, 2012 - handle not installed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2012 at 15:25 GMT
+%     Last Updated Feb. 15, 2012 at 15:25 GMT
 
 % todo:
 
@@ -35,6 +36,10 @@ if(exist('nj_time','file'))
     rmpath(fullfile(path,'examples'));
     rmpath(path);
     ok=savepath;
+else
+    % not found, so toolbox not installed...
+    ok=true;
+    return;
 end
 
 % clear the dynamic java path

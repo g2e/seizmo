@@ -1,28 +1,15 @@
-function [varargout]=install_seizmo(varargin)
+function [varargout]=install_seizmo()
 %INSTALL_SEIZMO    Installs the SEIZMO Toolbox in Matlab or Octave
 %
 %    Usage:    install_seizmo
-%              install_seizmo(type)
 %
 %    Description:
 %     INSTALL_SEIZMO installs the SEIZMO toolbox in Matlab or Octave.  This
 %     mainly involves editing the Matlab/Octave path so you get access to
-%     all the functions that make SEIZMO what it is.  There are a few
-%     extras that require more work: using the MatTauP toolset requires
-%     editing the system-wide classpath.txt (use 'which classpath.txt' in
-%     Matlab to locate this -- sorry Octave does not yet support this), the
-%     WaveWatch III toolset requires compiling a mex file, and the M_Map
-%     toolbox needs the GSHHS coastline files downloaded and put on the
-%     path too.  While the first 2 of these tasks are done here, the GSHHS
-%     download is currently left to the user (see SEIZMO_GSHHS_WEBINSTALL).
-%     An imformative message is given during the installation to aid you in
-%     completing the task.  Also, for those interested this will uninstall
-%     previous SEIZMO installs.  You can do an uninstallation yourself by
-%     calling UNINSTALL_SEIZMO (its hidden in the 'lowlevel' directory).
-%
-%     INSTALL_SEIZMO(TYPE) allows editing the pathdef.m save preference.
-%     See SAVEPATH_SEIZMO for details.  The default is no input to
-%     SAVEPATH_SEIZMO.
+%     all the functions that make SEIZMO work.  This will uninstall
+%     previous SEIZMO installs (thus this is a way to "update").  You can
+%     do an uninstallation yourself by calling UNINSTALL_SEIZMO (its hidden
+%     in the 'uninstall' directory).
 %
 %    Notes:
 %     - INSTALL_SEIZMO must be called from *WITHIN* a running session of
@@ -30,12 +17,15 @@ function [varargout]=install_seizmo(varargin)
 %       equivalent, so do NOT "run" install_seizmo.m from your OS shell.
 %       Start up Matlab/Octave and in the command window type
 %       "install_seizmo" without the quotes and press enter.  Read what it
-%       says and with any luck you will be ready to go!
+%       says and with any luck you will be ready to go after it finishes!
 %
 %     - Websites:
-%        SEIZMO  - http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/
-%        MatTauP - http://www.ess.washington.edu/SEIS/FMI/matTaup.htm
-%        M_Map   - http://www.eos.ubc.ca/~rich/map.html
+%        SEIZMO    - http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/
+%        MatTauP   - http://www.ess.washington.edu/SEIS/FMI/matTaup.htm
+%        M_Map     - http://www.eos.ubc.ca/~rich/map.html
+%        njTBX     - http://sourceforge.net/apps/trac/njtbx
+%        GSHHS     - http://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html
+%        GlobalCMT - http://www.globalcmt.org/
 %
 %    Examples:
 %     % Amazingly, every step of installing SEIZMO can be done *WITHIN*
@@ -46,11 +36,8 @@ function [varargout]=install_seizmo(varargin)
 %     cd seizmo/
 %     install_seizmo
 %
-%     % and if you have the time:
-%     seizmo_gshhs_webinstall
-%
-%    See also: ABOUT_SEIZMO, SEIZMO, UNINSTALL_SEIZMO, SAVEPATH_SEIZMO,
-%              SEIZMO_GSHHS_WEBINSTALL
+%    See also: ABOUT_SEIZMO, SEIZMO, UNINSTALL_SEIZMO, WEBINSTALL_NJTBX,
+%              WEBINSTALL_MMAP, WEBINSTALL_GSHHS
 
 %     Version History:
 %        Dec. 30, 2010 - initial version
@@ -62,9 +49,12 @@ function [varargout]=install_seizmo(varargin)
 %        June 16, 2011 - doc update
 %        June 24, 2011 - fix for octave warning in verLessThan, better
 %                        uninstall output
+%        Feb. 15, 2012 - use version_compare, clean up messages, drop
+%                        separate installers except for external
+%                        components, update cmt db
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 24, 2011 at 15:25 GMT
+%     Last Updated Feb. 15, 2012 at 15:25 GMT
 
 % todo:
 
@@ -72,6 +62,7 @@ function [varargout]=install_seizmo(varargin)
 error(nargchk(0,1,nargin));
 
 % check application & version
+ok=true;
 disp('##################################################################');
 disp('################## STARTING SEIZMO INSTALLATION ##################');
 disp('##################################################################');
@@ -82,7 +73,7 @@ disp(['Version    :  ' version]);
 disp(' ');
 switch lower(application)
     case 'matlab'
-        if(verLessThan('matlab','7.1'))
+        if(version_compare(version,'7.1')<=0)
             warning('seizmo:install_seizmo:versionBad',...
                 ['Matlab version too old for SEIZMO!\n' ...
                 'Full function of toolbox is unlikely.']);
@@ -100,75 +91,133 @@ switch lower(application)
         end
     case 'octave'
         warning('seizmo:install_seizmo:octaveIssues',...
-            ['Octave compatibility for SEIZMO is a work in progress.\n' ...
-            'Please report issues as found.  Java issues (MatTauP)\n' ...
-            'and mex compilation problems are expected.']);
+            'Octave compatibility for SEIZMO is a work in progress!');
     otherwise
         warning('seizmo:install_seizmo:noClueWhatIsRunning',...
-            'Unsure if SEIZMO will install on UNKNOWN application!');
+            'Installing SEIZMO on an UNKNOWN application!');
 end
 
-% where am i?
-me=mfilename('fullpath');
-mypath=fileparts(me);
-cwd=pwd;
-disp(' ');
-disp(['SEIZMO install path:  ' mypath]);
-disp(' ');
-
-% what is the previous seizmo version
+% remove old seizmo installation(s)
 info=ver('seizmo');
-
-% remove old seizmo installations
-ok=true(6,1);
 while(~isempty(info))
     disp(['Uninstalling previous SEIZMO version: ' info.Version]);
-    ok(1)=uninstall_seizmo();
-    if(~ok(1))
+    ok=uninstall_seizmo;
+    if(~ok)
         warning('seizmo:install_seizmo:failedUninstall',...
-            ['Uninstalling previous SEIZMO failed.  Please\n' ...
-            'resolve this and then attempt INSTALL_SEIZMO again.\n']);
-        if(nargout); varargout{1}=false; end
+            'Uninstalling previous SEIZMO failed!');
+        if(nargout); varargout{1}=ok; end
         return;
     end
     info=ver('seizmo');
 end
 
+% where am i?
+path=fileparts(mfilename('fullpath'));
+disp(' ');
+disp(['SEIZMO install path:  ' path]);
+disp(' ');
+
 % install new seizmo
-if(ok(1))
-    cd([mypath filesep 'lowlevel']);
-    disp('Installing SEIZMO-MatTauP components...');
-    ok(2)=install_seizmo_mattaup(mypath,varargin{:});
-    if(~ok(2))
-        warning('seizmo:install_seizmo:failedInstall',...
-            'Failed to install SEIZMO-MatTauP components!');
-    end
-    disp('Installing SEIZMO-M_Map components...');
-    ok(3)=install_seizmo_mmap(mypath,varargin{:});
-    if(~ok(3))
-        warning('seizmo:install_seizmo:failedInstall',...
-            'Failed to install SEIZMO-M_Map components!');
-    end
-    disp('Installing SEIZMO-WaveWatch III components...');
-    ok(4)=install_seizmo_ww3(mypath,varargin{:});
-    if(~ok(4))
-        warning('seizmo:install_seizmo:failedInstall',...
-            'Failed to install SEIZMO-WaveWatch III components!');
-    end
-    disp('Installing Optional SEIZMO components...');
-    ok(5)=install_seizmo_optional(mypath,varargin{:});
-    if(~ok(5))
-        warning('seizmo:install_seizmo:failedInstall',...
-            'Failed to install optional SEIZMO components!');
-    end
-    disp('Installing Core SEIZMO components...');
-    ok(6)=install_seizmo_core(mypath,varargin{:});
-    if(~ok(6))
-        warning('seizmo:install_seizmo:failedInstall',...
-            'Failed to install core SEIZMO components!');
-    end
-    cd(cwd);
+addpath(path,...
+    [path fs 'lowlevel'],...
+    [path fs 'uninstall'],...
+    [path fs 'behavior'],...
+    [path fs 'toc'],...
+    [path fs 'rw'],...
+    [path fs 'hdr'],...
+    [path fs 'sz'],...
+    [path fs 'misc'],...
+    [path fs 'time'],...
+    [path fs 'position'],...
+    [path fs 'audio'],...
+    [path fs 'cmap'],...
+    [path fs 'cmb'],...
+    [path fs 'cmt'],...
+    [path fs 'decon'],...
+    [path fs 'event'],...
+    [path fs 'filtering'],...
+    [path fs 'fixes'],...
+    [path fs 'fk'],...
+    [path fs 'ftran'],...
+    [path fs 'gui'],...
+    [path fs 'invert'],...
+    [path fs 'mapping'],...
+    [path fs 'models'],...
+    [path fs 'multi'],...
+    [path fs 'noise'],...
+    [path fs 'pick'],...
+    [path fs 'plotting'],...
+    [path fs 'resampling'],...
+    [path fs 'response'],...
+    [path fs 'shortnames'],...
+    [path fs 'solo'],...
+    [path fs 'sphpoly'],...
+    [path fs 'synth'],...
+    [path fs 'tomo'],...
+    [path fs 'topo'],...
+    [path fs 'tpw'],...
+    [path fs 'ttcorrect'],...
+    [path fs 'win'],...
+    [path fs 'ww3'],...
+    [path fs 'xcalign'],...
+    [path fs 'mattaup']);
+ok=ok & savepath;
+if(~ok)
+    warning('seizmo:install_seizmo:noPermission',...
+        'Could not edit path!');
 end
+
+% check that classpath exists (Octave fails here)
+sjcp=which('classpath.txt');
+if(isempty(sjcp))
+    warning('seizmo:webinstall_njtbx:noJavaClassPath',...
+        'Octave has no classpath.txt to save .jar files!');
+end
+
+% install matTaup.jar to classpath
+mattaupjar=fullfile(path,'mattaup','lib','matTaup.jar');
+if(isempty(sjcp))
+    % no classpath.txt so add to dynamic path
+    javaaddpath(mattaupjar);
+    ok=false;
+else
+    fid=fopen(sjcp,'a+');
+    if(fid<0)
+        warning('seizmo:webinstall_njtbx:noWriteClasspath',...
+            ['Cannot edit classpath.txt! Adding ' ...
+            'matTaup.jar to dynamic java class path!']);
+        javaaddpath(mattaupjar);
+        ok=false;
+    else
+        fseek(fid,0,'eof');
+        fprintf(fid,'%s\n',mattaupjar);
+        fclose(fid);
+        ok=ok & true;
+    end
+end
+
+% ask to install external components
+% - eventually: taup, exportfig
+reply=input('Install njTBX? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & webinstall_njtbx;
+end
+reply=input('Install M_Map? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & webinstall_mmap;
+    reply=input('Install GSHHS (large download!)? Y/N [Y]: ','s');
+    if(isempty(reply) || strncmpi(reply,'y',1))
+        ok=ok & webinstall_gshhs;
+    end
+end
+
+% update dbs
+% - eventually: iris sacpzdb
+reply=input('Update GlobalCMT database? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1)); globalcmt_update; end
+
+% download models/features
+% - eventually: 3D mantle models & features in mapping
 
 disp('##################################################################');
 disp('################## FINISHED SEIZMO INSTALLATION ##################');
@@ -180,7 +229,7 @@ about_seizmo;
 help seizmo;
 
 % output
-if(nargout); varargout{1}=sum(ok)==numel(ok); end
+if(nargout); varargout{1}=ok; end
 
 end
 
@@ -189,24 +238,25 @@ function [application,version]=getapplication()
 %
 %    Usage:    [application,version]=getapplication()
 %
-%    Description: [APPLICATION,VERSION]=GETAPPLICATION() will determine and
-%     return the name and version of the application running this script
-%     (obviously only if the application can run this script in the first
-%     place).  Both APPLICATION and VERSION are strings.
+%    Description:
+%     [APPLICATION,VERSION]=GETAPPLICATION() will determine and return the
+%     name and version of the application running this script (obviously
+%     only if the application can run this script in the first place).
+%     Both APPLICATION and VERSION are strings.
 %
 %    Notes:
 %     - returns 'UNKNOWN' if it cannot figure out the application
 %
 %    Examples:
-%     Matlab and Octave still behave quite differently for a number of
-%     different functions so it is best in some cases to use different
-%     function calls depending on which we are running:
-%      [app,ver]=getapplication;
-%      if(strcmp(app,'MATLAB'))
-%        % do something via matlab routines
-%      else
-%        % do something via octave routines
-%      end
+%     % Matlab and Octave still behave quite differently for a number of
+%     % different functions so it is best in some cases to use different
+%     % function calls depending on which we are running:
+%     [app,ver]=getapplication;
+%     if(strcmp(app,'MATLAB'))
+%       % do something via matlab routines
+%     else
+%       % do something via octave routines
+%     end
 %
 %    See also: NATIVEBYTEORDER, VER
 
@@ -215,9 +265,10 @@ function [application,version]=getapplication()
 %        Mar.  3, 2009 - minor doc cleaning
 %        Apr. 23, 2009 - move usage up
 %        Sep.  8, 2009 - minor doc update
+%        Feb. 15, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 19:55 GMT
+%     Last Updated Feb. 15, 2012 at 19:55 GMT
 
 % todo:
 
@@ -246,75 +297,233 @@ end
 
 end
 
-function result = verLessThan(toolboxstr, verstr)
-%verLessThan Compare version of toolbox to specified version string.
-%   verLessThan(TOOLBOX_DIR, VERSION) returns true if the version of
-%   the toolbox specified by the string TOOLBOX_DIR is older than the
-%   version specified by the string VERSION, and false otherwise. 
-%   VERSION must be a string in the form 'major[.minor[.revision]]', 
-%   such as '7', '7.1', or '7.0.1'. If TOOLBOX_DIR cannot be found
-%   on MATLAB's search path, an error is generated.
+function [cmp]=version_compare(ver1,ver2)
+%VERSION_COMPARE    Compares versions strings given in XX.XX.XX.... format
 %
-%   Examples:
-%       if verLessThan('images', '4.1')
-%           error('Image Processing Toolbox 4.1 or higher is required.');
-%       end
+%    Usage:    cmp=version_compare(ver1,ver2)
 %
-%       if verLessThan('matlab', '7.0.1')
-%           % Put code to run under MATLAB older than MATLAB 7.0.1 here
-%       else
-%           % Put code to run under MATLAB 7.0.1 and newer here
-%       end
+%    Description:
+%     CMP=VERSION_COMPARE(VER1,VER2) compares the versions in VER1 & VER2
+%     returning CMP=1 if VER1>VER2, CMP=-1 if VER1<VER2, or CMP=0 if
+%     VER1=VER2.  VER1 & VER2 must be strings.  Versions are split based on
+%     the '.' delimiter (typically versions are formatted as major.minor
+%     and so on).  Alphabetical characters have higher values than numbers
+%     so that 'a'>'9'.
 %
-%   See also MATLABPATH, VER.
+%    Notes:
+%
+%    Examples:
+%     % Compare some simple versions:
+%     cmp=version_compare('1','3')
+%
+%     % A case from wgrib2:
+%     cmp=version_compare('v0.1.5f','v0.1.9.4')
+%
+%    See also: VERLESSTHAN, VER, PARSE_ALPHANUMERIC
 
-%   Copyright 2006-2007 The MathWorks, Inc.
-%   $Revision: 1.1.4.1 $  $Date: 2007/02/23 13:28:34 $
+%     Version History:
+%        Feb. 13, 2012 - initial version
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Feb. 13, 2012 at 13:00 GMT
+
+% todo:
+
+% check nargin
+error(nargchk(2,2,nargin));
+
+% require strings
+if(~(ischar(ver1) || iscellstr(ver1)) ...
+        || ~(ischar(ver2) || iscellstr(ver2)))
+    error('seizmo:version_compare:badInput',...
+        'VER must be a string!');
+end
+
+% now convert to cell strings
+ver1=cellstr(ver1);
+ver2=cellstr(ver2);
+
+% expand scalars
+if(isscalar(ver1)); ver1=ver1(ones(numel(ver2),1),1); end
+if(isscalar(ver2)); ver2=ver2(ones(numel(ver1),1),1); end
+ncmp=numel(ver1);
+
+% loop over each row in ver1/ver2
+cmp=nan(ncmp,1);
+for i=1:ncmp
+    % require single row
+    if(size(ver1{i},1)>1 || size(ver2{i},1)>1)
+        error('seizmo:version_compare:badInput',...
+            'VER string must be a row vector!');
+    end
     
-if nargin < 2
-    errstr = 'Not enough input arguments.';
-    if errorSupportsIdentifiers
-        error('MATLAB:nargchk:notEnoughInputs', errstr)
+    % get major.minor.revision...
+    f1=getwords(ver1{i},'.');
+    f2=getwords(ver2{i},'.');
+    
+    % loop over comparible fields until there is a difference
+    nf1=numel(f1); nf2=numel(f2);
+    for j=1:min(nf1,nf2)
+        % try parsing as numbers
+        d1=str2double(f1{j});
+        d2=str2double(f2{j});
+        
+        if(~isnan(d1) && ~isnan(d2))
+            % both are numbers
+            cmp(i)=sign(d1-d2);
+        else
+            % parse as alphanumeric
+            [an1,isnum1]=parse_alphanumeric(f1{j});
+            [an2,isnum2]=parse_alphanumeric(f2{j});
+            nbit1=numel(isnum1);
+            nbit2=numel(isnum2);
+            
+            % loop over parsed bits
+            for k=1:min(nbit1,nbit2)
+                % n vs n
+                if(isnum1(k) && isnum2(k))
+                    cmp(i)=sign(an1{k}-an2{k});
+                % a vs a
+                elseif(~isnum1(k) && ~isnum2(k))
+                    last=max(numel(an1{k}),numel(an2{k}));
+                    for l=1:last
+                        cmp(i)=sign(an1{k}(l)-an2{k}(l));
+                        if(cmp(i)); break; end
+                    end
+                    % no diff so use number of alpha
+                    if(~cmp(i))
+                        cmp(i)=sign(numel(an1{k})-numel(an2{k}));
+                    end
+                % n vs a
+                elseif(isnum1(k) && ~isnum2(k))
+                    % alpha wins (0-9, a-z)
+                    cmp(i)=-1;
+                % a vs n
+                elseif(~isnum1(k) && isnum2(k))
+                    % alpha wins (0-9, a-z)
+                    cmp(i)=1;
+                end
+                if(cmp(i)); break; end
+            end
+        end
+        
+        % continue until 1 or -1
+        if(cmp(i)); break; end
+    end
+    
+    % failed to find a difference in comparible fields
+    % so just use the number of fields
+    if(isnan(cmp(i)) || ~cmp(i)); cmp(i)=sign(nf1-nf2); end
+end
+
+end
+
+function [an,isnum]=parse_alphanumeric(str)
+%PARSE_ALPHANUMERIC    Split alphanumeric string into words & numbers
+%
+%    Usage:    [an,isnum]=parse_alphanumeric(str)
+%
+%    Description:
+%     [AN,ISNUM]=PARSE_ALPHANUMERIC(STR) parses out alphabet and digit
+%     sequences from character string STR as a cell array of "words" and
+%     numbers (converted to double) in AN.  ISNUM indicates the elements in
+%     AN that are numeric.
+%
+%    Notes:
+%
+%    Examples:
+%     % Split a date string:
+%     parse_alphanumeric('2000may03')
+%
+%    See also: ISSTRPROP, GETWORDS, READTXT, VERSION_COMPARE
+
+%     Version History:
+%        Feb. 13, 2012 - initial version
+%
+%     Written by Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Feb. 13, 2012 at 13:00 GMT
+
+% todo:
+
+% check nargin
+error(nargchk(1,1,nargin));
+
+% require character input
+if(~ischar(str))
+    error('seizmo:parse_alphanumeric:badInput',...
+        'STR must be a character string!');
+end
+
+% identify alphanumeric bits
+num=isstrprop(str,'digit');
+alf=isstrprop(str,'alpha');
+
+% loop over bits getting words & numbers
+cnt=1; in=false; idx=nan(0,2); isnum=false(0,1);
+for i=1:numel(str)
+    if(num(i))
+        % number
+        if(in(cnt) && isnum(cnt))
+            % continuing number
+            continue;
+        elseif(in(cnt) && ~isnum(cnt))
+            % terminate alpha, begin number
+            idx(cnt,2)=i-1;
+            cnt=cnt+1;
+            idx(cnt,1)=i;
+            isnum(cnt)=true;
+            in(cnt)=true;
+        else
+            % new number
+            idx(cnt,1)=i;
+            isnum(cnt)=true;
+            in(cnt)=true;
+        end
+    elseif(alf(i))
+        % word
+        if(in(cnt) && isnum(cnt))
+            % terminate number, begin word
+            idx(cnt,2)=i-1;
+            cnt=cnt+1;
+            idx(cnt,1)=i;
+            isnum(cnt)=false;
+            in(cnt)=true;
+        elseif(in(cnt) && ~isnum(cnt))
+            % continuing word
+            continue;
+        else
+            % new word
+            idx(cnt,1)=i;
+            isnum(cnt)=false;
+            in(cnt)=true;
+        end
     else
-        error(errstr)
+        % not either
+        if(in(cnt) && isnum(cnt))
+            % terminate number
+            idx(cnt,2)=i-1;
+            cnt=cnt+1;
+            in(cnt)=false;
+        elseif(in(cnt) && ~isnum(cnt))
+            % terminate word
+            idx(cnt,2)=i-1;
+            cnt=cnt+1;
+            in(cnt)=false;
+        end
     end
 end
 
-if ~ischar(toolboxstr) || ~ischar(verstr)
-    errstr = 'Inputs must be strings.';
-    if errorSupportsIdentifiers
-        error('MATLAB:verLessThan:invalidInput', errstr)
+% close final word/number
+if(in(cnt)); idx(cnt,2)=i; end
+
+% make cellstr
+an=cell(1,numel(isnum));
+for i=1:numel(isnum)
+    if(isnum(i))
+        an{i}=str2double(str(idx(i,1):idx(i,2)));
     else
-        error(errstr)
+        an{i}=str(idx(i,1):idx(i,2));
     end
 end
 
-toolboxver = ver(toolboxstr);
-if isempty(toolboxver)
-    errformat = 'Toolbox ''%s'' not found.';
-    if errorSupportsIdentifiers
-        error('MATLAB:verLessThan:missingToolbox', errformat, toolboxstr)
-    else
-        error(sprintf(errformat, toolboxstr))
-    end
-end
-
-toolboxParts = getParts(toolboxver(1).Version);
-verParts = getParts(verstr);
-
-result = (sign(toolboxParts - verParts) * [1; .1; .01]) < 0;
-end
-
-function parts = getParts(V)
-    parts = sscanf(V, '%d.%d.%d')';
-    if length(parts) < 3
-       parts(3) = 0; % zero-fills to 3 elements
-    end
-end
-
-function tf = errorSupportsIdentifiers
-    % Determine, using code that runs on MATLAB 6.0 or later, if
-    % error identifiers should be used when calling error().
-    tf = 1;
-    eval('lasterr('''','''');','tf = 0;');
 end

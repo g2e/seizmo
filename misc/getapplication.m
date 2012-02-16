@@ -3,24 +3,25 @@ function [application,version]=getapplication()
 %
 %    Usage:    [application,version]=getapplication()
 %
-%    Description: [APPLICATION,VERSION]=GETAPPLICATION() will determine and
-%     return the name and version of the application running this script
-%     (obviously only if the application can run this script in the first
-%     place).  Both APPLICATION and VERSION are strings.
+%    Description:
+%     [APPLICATION,VERSION]=GETAPPLICATION() will determine and return the
+%     name and version of the application running this script (obviously
+%     only if the application can run this script in the first place).
+%     Both APPLICATION and VERSION are strings.
 %
 %    Notes:
 %     - returns 'UNKNOWN' if it cannot figure out the application
 %
 %    Examples:
-%     Matlab and Octave still behave quite differently for a number of
-%     different functions so it is best in some cases to use different
-%     function calls depending on which we are running:
-%      [app,ver]=getapplication;
-%      if(strcmp(app,'MATLAB'))
-%        % do something via matlab routines
-%      else
-%        % do something via octave routines
-%      end
+%     % Matlab and Octave still behave quite differently for a number of
+%     % different functions so it is best in some cases to use different
+%     % function calls depending on which we are running:
+%     [app,ver]=getapplication;
+%     if(strcmp(app,'MATLAB'))
+%       % do something via matlab routines
+%     else
+%       % do something via octave routines
+%     end
 %
 %    See also: NATIVEBYTEORDER, VER
 
@@ -29,9 +30,10 @@ function [application,version]=getapplication()
 %        Mar.  3, 2009 - minor doc cleaning
 %        Apr. 23, 2009 - move usage up
 %        Sep.  8, 2009 - minor doc update
+%        Feb. 15, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  8, 2009 at 19:55 GMT
+%     Last Updated Feb. 15, 2012 at 19:55 GMT
 
 % todo:
 

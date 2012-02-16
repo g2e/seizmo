@@ -8,16 +8,19 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %              s=ww3struct('file',rec,stime,etime,latrng,lonrng)
 %
 %    Description:
-%     S=WW3STRUCT('FILE') reads the WW3 GRiB or GRiB2 file FILE, returning
-%     the contents as a struct S with the following layout:
+%     S=WW3STRUCT('FILE') reads the WW3 hindcast GRiB or GRiB2 file FILE,
+%     returning the contents as a struct S with the following layout:
 %       .path        - path to the WW3 hindcast file
 %       .name        - name of the WW3 hindcast file
 %       .description - description of the data
 %       .units       - units of the data
 %       .data        - data values as LATxLONxTIME
-%       .lat         - latitudes
-%       .lon         - longitudes
-%       .time        - times (in serial number format)
+%       .lat         - latitudes (degrees)
+%       .lon         - longitudes (degrees)
+%       .time        - times (in serial number format aka day numer)
+%       .latstep     - latitude grid step size (degrees)
+%       .lonstep     - longitude grid step size (degrees)
+%       .timestep    - time step size (in fraction of a day)
 %     Note that the fields .description, .units & .data are returned as
 %     cell arrays so that WW3 hindcast files with multiple variables are
 %     supported (this allows reading wind u/v data).
@@ -37,6 +40,7 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %     output.
 %
 %    Notes:
+%     - Requires that the njtbx toolbox is installed!
 %     - STIME & ETIME must be in one of the following formats:
 %        1x1 -> SERIAL (See datenum)
 %        1x2 -> [YR DOY]
@@ -52,7 +56,7 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %     set(gca,'ydir','normal');
 %     title([datestr(s.time) ' Significant Wave Heights']);
 %
-%    See also: PLOTWW3, PLOTWW3AVG, WW3MOV, WW3TS
+%    See also: PLOTWW3, PLOTWW3AVG, WW3MOV
 
 %     Version History:
 %        June 30, 2010 - initial version

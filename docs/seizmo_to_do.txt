@@ -9,9 +9,13 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-new mmap!
-    - migrate changeset
-    - gshhs 2.0?
+- startup.m file?
+  - addpath
+  - javaaddpath
+
+default verbose to off
+    - when using parallel toolbox
+    - when using octave
 
 meld
     - uneven or variable samplerate
@@ -20,10 +24,6 @@ rotate
     - rewrite option code
 rotate_correlations
     - works for unrotated
-
-handle grib2
-    - read_grib2+wgrib2 (small, will not include wgrib2 -- small too)
-    - detect grb vs grb2
 
 fk stuff
 x	add weighting to all
@@ -91,6 +91,14 @@ findpicks == searches t* fields
 %%%%%%%
 POSTDOC
 %%%%%%%
+
+new datasets
+    - natural earth: http://www.naturalearthdata.com/downloads/
+    - utig plate boundaries: ftp://ftp.ig.utexas.edu/pub/LIPS/Data/plate_boundaries/
+    - seamounts: http://www.soest.hawaii.edu/PT/SMTS/main.html
+    - ml & fz: http://www.soest.hawaii.edu/PT/GSFML/
+    - seafloor age stuff: http://www.earthbyte.org/Research/Current/agegrid2008.html
+    - srtm30plus 7.0
 
 rename to MOSS:
     Matlab & Octave Seismology Scripts

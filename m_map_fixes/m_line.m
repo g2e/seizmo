@@ -22,7 +22,7 @@ function h=m_line(long,lat,varargin);
 % 21/June/10 - redraw lines at several equivalent longitudes (gge)
 % 8/Feb/11 - remove line indicating wraparound fixed (you have to do it),
 %            row vectors to column vectors, don't nan out lines (gge)
-% 14/Apr/11 - separate calls (better memory, better coloring)
+% 14/Apr/11 - separate calls (better memory, better coloring) (gge)
 
 %
 % This software is provided "as is" without warranty of any kind. But
