@@ -47,14 +47,26 @@ import java.util.Vector;
   */
 public class MatTauP_Curve extends TauP_Curve 
 {
-    protected TT_Curve tt_curve[];
+    public MatCurve matCurves[];
 
     protected MatTauP_Curve() {
         super();
     }
 
-    public void init() throws IOException 
+    public MatTauP_Curve(TauModel tMod) throws TauModelException {
+        super(tMod);
+    }
+
+    public MatTauP_Curve(String modelName) throws TauModelException {
+        super(modelName);
+    }
+
+    public MatCurve getMatCurve(int i)
     {
+        return matCurves[i];
+    }
+
+    public void init() throws IOException {
         if (phaseNames.size() == 0) {
             if ( toolProps.containsKey("taup.phase.file")) {
                 if ( toolProps.containsKey("taup.phase.list")) {
@@ -100,47 +112,50 @@ public class MatTauP_Curve extends TauP_Curve
         dos=null;
     }
 
-    public void printResult(OutputStream dos) throws IOException 
-    {
-        Writer s = null;
-        printResult(s);
-    }
-    public void printResult(Writer out) throws IOException 
-    {
+    public void curvecalculate(double degrees) {
+        /* no need to do any calculations, just check the phases since
+         * they have already been
+         * done within the seismic phase. So, this just overrides
+         * TauP_Time.calculate. printResult handles everything else. */
+        recalcPhases();
         SeismicPhase phase;
         Arrival currArrival;
         double[] dist, time, rayParams;
-        double arcDistance, timeReduced;
+        double arcDistance, timeReduced, rayParamsReduced;
         Arrival[] phaseArrivals;
         double maxTime = -1*Double.MAX_VALUE, minTime = Double.MAX_VALUE;
 
-        tt_curve=new TT_Curve[phases.size()];
+        matCurves=new MatCurve[phases.size()];
         for (int phaseNum=0;phaseNum<phases.size(); phaseNum++) {
-            phase = (SeismicPhase)phases.get(phaseNum);
+            phase = phases.get(phaseNum);
             dist = phase.getDist();
             time = phase.getTime();
             rayParams = phase.getRayParams();
 
-            tt_curve[phaseNum]=new TT_Curve(dist.length);
-            tt_curve[phaseNum].phaseName=phase.getName();
-            tt_curve[phaseNum].sourceDepth=depth;
-            tt_curve[phaseNum].rayParam=rayParams;
+            matCurves[phaseNum]=new MatCurve(dist.length);
+            matCurves[phaseNum].phaseName=phase.getName();
+            matCurves[phaseNum].puristPhaseName=phase.getPuristName();
+            matCurves[phaseNum].sourceDepth=depth;
             for (int i=0; i<dist.length; i++) {
 
                 /* Here we use a trig trick to make sure the dist is 0 to PI. */
                 arcDistance = Math.acos(Math.cos(dist[i]));
                 if (reduceTime) {
                     timeReduced = time[i]-arcDistance/reduceVel;
+                    rayParamsReduced = rayParams[i]-1/reduceVel;
                 } else {
                     timeReduced = time[i];
+                    rayParamsReduced = rayParams[i];
                 }
-                tt_curve[phaseNum].time[i]=timeReduced;
-                tt_curve[phaseNum].dist[i]=180.0/Math.PI*arcDistance;
+                matCurves[phaseNum].time[i]=timeReduced;
+                matCurves[phaseNum].distance[i]=180.0/Math.PI*dist[i];
+                matCurves[phaseNum].mindistance[i]=180.0/Math.PI*arcDistance;
+                matCurves[phaseNum].rayParam[i]=rayParamsReduced;
+
 
                 if (i<dist.length-1 && (rayParams[i] == rayParams[i+1]) && 
                     rayParams.length > 2) {
                     /* Here we have a shadow zone, so put a break in the curve. */
-                    System.out.println("  Shadow Zone detected for phase "+phase.getName()+"\n");
                     continue;
                 }
 
@@ -154,12 +169,6 @@ public class MatTauP_Curve extends TauP_Curve
                     while (j<phaseArrivals.length) {
                         if ((phase.rayParams[i]-phaseArrivals[j].rayParam)*
                             (phaseArrivals[j].rayParam-phase.rayParams[i+1])>0) {
-                            if (reduceTime) {
-                                System.out.println("180.0  "+
-                                          (float)(phaseArrivals[j].time- Math.PI/reduceVel)+"\n");
-                            } else {
-                                System.out.println("180.0  "+(float)phaseArrivals[j].time+"\n");
-                            }
                             break;
                         }
                         j++;
@@ -176,7 +185,6 @@ public class MatTauP_Curve extends TauP_Curve
                     while (j<phaseArrivals.length) {
                         if ((phase.rayParams[i]-phaseArrivals[j].rayParam)*
                             (phaseArrivals[j].rayParam-phase.rayParams[i+1])>0) {
-                            System.out.println("0.0  "+(float)phaseArrivals[j].time+"\n");
                             break;
                         }
                         j++;
@@ -185,135 +193,5 @@ public class MatTauP_Curve extends TauP_Curve
             }
 
         }
-    }
-
-    public static TT_Curve[] run_curve(String[] args)
-        throws FileNotFoundException,
-        IOException,
-        StreamCorruptedException,
-        ClassNotFoundException,
-        OptionalDataException
-    {
-        TT_Curve[] tt_curve=null;
-        boolean doInteractive = true;
-        try {
-            MatTauP_Curve tauPCurve = new MatTauP_Curve();
-            tauPCurve.outFile = "taup_curve.gmt";
-
-            String[] noComprendoArgs = tauPCurve.parseCmdLineArgs(args);
-            if (noComprendoArgs.length > 0) {
-                for (int i=0;i<noComprendoArgs.length;i++) {
-                    if (noComprendoArgs[i].equals("-help") ||
-                        noComprendoArgs[i].equals("-version")) {
-                        return tt_curve;
-                    }
-                }
-                System.out.println("I don't understand the following arguments, continuing:");
-                for (int i=0;i<noComprendoArgs.length;i++) {
-                    System.out.print(noComprendoArgs[i]+" ");
-                    if (noComprendoArgs[i].equals("-help")) {
-                        System.out.println();
-                        return tt_curve;
-                    }
-                }
-                System.out.println();
-                noComprendoArgs = null;
-            }
-
-            for (int i=0; i<args.length; i++) {
-                if (args[i] == "-h") {
-                    doInteractive = false;
-                }
-            }
-
-            if (tauPCurve.DEBUG) {
-                System.out.println("Done reading "+tauPCurve.modelName);
-            }
-
-            tauPCurve.init();
-            if (doInteractive) {
-                tauPCurve.start();
-            } else {
-                /* enough info given on cmd line, so just do one calc. */
-                tauPCurve.depthCorrect( Double.valueOf(
-                                                       tauPCurve.toolProps.getProperty("taup.source.depth", "0.0")
-                                                       ).doubleValue());
-                tauPCurve.calculate(tauPCurve.degrees);
-                tauPCurve.printResult(tauPCurve.dos);
-            }
-            tt_curve=tauPCurve.tt_curve;
-            tauPCurve.destroy();
-            return tt_curve;
-        } catch (TauModelException e) {
-            System.out.println("Caught TauModelException: "+e.getMessage());
-            e.printStackTrace();
-        } 
-        return tt_curve;
-    }
-    
-    /** Allows TauP_Curve to run as an application. Creates an instance 
-     * of TauP_Curve.
-     * . */
-    public static void main(String[] args)
-        throws FileNotFoundException,
-        IOException,
-        StreamCorruptedException,
-        ClassNotFoundException,
-        OptionalDataException
-    {
-        TT_Curve[] tt_curve;
-        boolean doInteractive = true;
-        try {
-            MatTauP_Curve tauPCurve = new MatTauP_Curve();
-            tauPCurve.outFile = "taup_curve.gmt";
-
-            String[] noComprendoArgs = tauPCurve.parseCmdLineArgs(args);
-            if (noComprendoArgs.length > 0) {
-                for (int i=0;i<noComprendoArgs.length;i++) {
-                    if (noComprendoArgs[i].equals("-help") ||
-                        noComprendoArgs[i].equals("-version")) {
-                        System.exit(0);
-                    }
-                }
-                System.out.println("I don't understand the following arguments, continuing:");
-                for (int i=0;i<noComprendoArgs.length;i++) {
-                    System.out.print(noComprendoArgs[i]+" ");
-                    if (noComprendoArgs[i].equals("-help")) {
-                        System.out.println();
-                        System.exit(0);
-                    }
-                }
-                System.out.println();
-                noComprendoArgs = null;
-            }
-
-            for (int i=0; i<args.length; i++) {
-                if (args[i] == "-h") {
-                    doInteractive = false;
-                }
-            }
-
-            if (tauPCurve.DEBUG) {
-                System.out.println("Done reading "+tauPCurve.modelName);
-            }
-
-            tauPCurve.init();
-            if (doInteractive) {
-                tauPCurve.start();
-            } else {
-                /* enough info given on cmd line, so just do one calc. */
-                tauPCurve.depthCorrect( Double.valueOf(
-                                                       tauPCurve.toolProps.getProperty("taup.source.depth", "0.0")
-                                                       ).doubleValue());
-                tauPCurve.calculate(tauPCurve.degrees);
-                tauPCurve.printResult(tauPCurve.dos);
-            }
-            tt_curve=tauPCurve.tt_curve;
-            tauPCurve.destroy();
-        } catch (TauModelException e) {
-            System.out.println("Caught TauModelException: "+e.getMessage());
-            e.printStackTrace();
-        } 
-
     }
 }

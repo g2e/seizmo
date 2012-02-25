@@ -59,9 +59,10 @@ function []=compareheader(data,varargin)
 %        Feb.  1, 2012 - utc/tai bugfix
 %        Feb.  7, 2012 - edit h1 line
 %        Feb. 11, 2012 - divergent octave behavior workaround (cellcat)
+%        Feb. 20, 2012 - properly allocate arrays causing above issue
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2012 at 01:40 GMT
+%     Last Updated Feb. 20, 2012 at 01:40 GMT
 
 % todo:
 
@@ -92,7 +93,7 @@ if(~isscalar(cn) || cn~=round(cn) || cn<=0)
 end
 
 % gather all possible fields and reftimes
-fields=cell(2,5,nh); % just a guess
+fields=cell(2,5,nh); [fields{:}]=deal({}); % size is just a guess
 absf=fields; lgcf=fields; enumf=fields;
 ref=nan(nrecs,5); good=false(nrecs,1); vf=cell(nh,1); 
 for i=1:nh
@@ -140,10 +141,10 @@ end
 
 % only list each field once
 % - this forces an alphabetical listing
-fields=unique([cellcat(fields{:}).'; cellcat(vf{:}).']);
-absf=unique(cellcat(absf{:}).');
-lgcf=unique(cellcat(lgcf{:}).');
-enumf=unique(cellcat(enumf{:}).');
+fields=unique([[fields{:}].'; [vf{:}].']);
+absf=unique([absf{:}].');
+lgcf=unique([lgcf{:}].');
+enumf=unique([enumf{:}].');
 
 % list all if no fields given
 if(nargin==1); varargin=fields; end
@@ -436,8 +437,4 @@ end
 % field not found
 string=sprintf(['%' cs 's'],'NOT A FIELD!');
 
-end
-
-function [x]=cellcat(varargin)
-x=[varargin{~cellfun('isempty',varargin)}];
 end

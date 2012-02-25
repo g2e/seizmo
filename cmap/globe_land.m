@@ -3,10 +3,11 @@ function [map]=globe_land(m)
 %
 %    Usage:    map=globe_land(m)
 %
-%    Description: MAP=GLOBE_LAND(M) returns a Mx3 matrix of RGB color
-%     values going from green to peach, brown, light purple, & white.
-%     GLOBE_LAND by itself sets M to match the current figure's colormap
-%     size.  If no figure exists, one is created.
+%    Description:
+%     MAP=GLOBE_LAND(M) returns a Mx3 matrix of RGB color values going from
+%     green to peach, brown, light purple, & white. GLOBE_LAND by itself
+%     sets M to match the current figure's colormap size.  If no figure
+%     exists, one is created.
 %
 %    Notes:
 %     - by Lester M. Anderson (CASP, UK)
@@ -14,22 +15,23 @@ function [map]=globe_land(m)
 %       0m to 10000m.
 %
 %    Examples:
-%     Set the current figure's colormap:
-%      colormap(globe_land)
+%     % Set the current figure's colormap:
+%     colormap(globe_land)
 %
-%     To use the colormap in reverse:
-%      colormap(flipud(globe_land))
+%     % To use the colormap in reverse:
+%     colormap(flipud(globe_land))
 %
-%    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, OCEAN, DRYWET,
-%              GEBCO, SEALAND, RAINBOW, RELIEF, GLOBE_SEA,
+%    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, GMT_OCEAN,
+%              DRYWET, GEBCO, SEALAND, GMT_RAINBOW, RELIEF, GLOBE_SEA,
 %              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ, FIRE, NIGHTTIME,
 %              DUSK, DAWN, HSVSPIN, HSVCUSTOM
 
 %     Version History:
 %        Feb. 17, 2010 - initial version
+%        Feb. 22, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 17, 2010 at 00:40 GMT
+%     Last Updated Feb. 22, 2012 at 00:40 GMT
 
 % todo:
 

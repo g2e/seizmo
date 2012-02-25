@@ -9,6 +9,14 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
+taup
+    - check functions work in octave
+        - tt_curve issue (make getCurve method)
+        - matpath access functions
+    - plot functions need work
+        - plot_tauppath3 from plotraypaths
+    - angle output (takeoff & incident)
+        - if this is available for curve...wow!
 ww3struct
     - autoload .jars if not found
 
@@ -89,6 +97,7 @@ POSTDOC
 
 new datasets
     - natural earth: http://www.naturalearthdata.com/downloads/
+    - gplates stuff
     - utig plate boundaries: ftp://ftp.ig.utexas.edu/pub/LIPS/Data/plate_boundaries/
     - seamounts: http://www.soest.hawaii.edu/PT/SMTS/main.html
     - ml & fz: http://www.soest.hawaii.edu/PT/GSFML/
@@ -210,25 +219,20 @@ basic segy (segy2MAT), ah, miniseed support
 OCTAVE SPECIFIC STUFF (Need to test vs 3.6.1)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 - error & warning need sprintf support
-- fix conflicts with octave functions:
-  rainbow (same but reversed order? not a big deal)
-  ocean (similar but mine (gmt's) has greens ... not a big deal)
-  cut (not sure ... non-matlab statistics function ...)
-     - no usage in stats
-     slice, slash, trim, chop, clip, snip
 - octave-java package issues with Fedora (as root):
     cd /usr/lib/jvm/
     ln -s /etc/alternatives/java_sdk default-java
     cd /usr/lib/jvm/default-java/jre/lib/amd64/
     ln -s server client
 - no import function
-    - apparently javaObject should be used...
-- concatenation differs if cells & empties involved (using cellcat)
-- box doesn't take ax (patch submitted)
-- a(b(end)) fails if a not declared (fixed upstream)
+    - use javaObject & javaMethod
+- concatenation differs if cells & empties involved
+    - avoid multitype concatenation
+- box doesn't take ax (patch applied to devel branch)
+- a(b(end)) fails if a not declared (fix applied to stable branch)
 - addpath works backwards
 - rmpath/unzip etc beat text to the prompt
 - unzip on existing unzipped contents will look stalled
-    - use y/n/A/N
+    - type y/n/A/N to get through it
 - no texlabel
-- require: java, signal
+- no axescheck (use personal axparse function)

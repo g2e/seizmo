@@ -21,7 +21,7 @@ function [varargout]=install_seizmo()
 %
 %     - Websites:
 %        SEIZMO    - http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/
-%        MatTauP   - http://www.ess.washington.edu/SEIS/FMI/matTaup.htm
+%        TauP      - http://www.seis.sc.edu/TauP/
 %        M_Map     - http://www.eos.ubc.ca/~rich/map.html
 %        njTBX     - http://sourceforge.net/apps/trac/njtbx
 %        GSHHS     - http://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html
@@ -54,9 +54,10 @@ function [varargout]=install_seizmo()
 %                        components, update cmt db, flip savepath logic,
 %                        only use javaaddpath or edit classpath as needed
 %        Feb. 16, 2012 - export_fig is externally managed
+%        Feb. 22, 2012 - require java/signal packages in Octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2012 at 15:25 GMT
+%     Last Updated Feb. 22, 2012 at 15:25 GMT
 
 % todo:
 
@@ -93,6 +94,23 @@ switch lower(application)
     case 'octave'
         warning('seizmo:install_seizmo:octaveIssues',...
             'Octave compatibility for SEIZMO is a work in progress!');
+        if(isempty(ver('java')))
+            warning('seizmo:install_seizmo:noSigProcTbx',...
+                'Java package missing from Octave!');
+            reply=input(['Install java package from Octave-Forge ' ...
+                '(requires internet)? Y/N [Y]: '],'s');
+            if(isempty(reply) || strncmpi(reply,'y',1))
+                pkg install -forge java;
+            end
+        elseif(isempty(ver('signal')))
+            warning('seizmo:install_seizmo:noSigProcTbx',...
+                'Signal package missing from Octave!');
+            reply=input(['Install signal package from Octave-Forge ' ...
+                '(requires internet)? Y/N [Y]: '],'s');
+            if(isempty(reply) || strncmpi(reply,'y',1))
+                pkg install -forge signal;
+            end
+        end
     otherwise
         warning('seizmo:install_seizmo:noClueWhatIsRunning',...
             'Installing SEIZMO on an UNKNOWN application!');

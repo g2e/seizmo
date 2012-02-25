@@ -48,7 +48,7 @@ import edu.sc.seis.TauP.*;
   */
 public class MatTauP_Path extends TauP_Path 
 {
-    protected double maxPathInc = 1.0;
+    protected static double maxPathInc = 1.0;
 
     protected MatArrival matArrivals[];
     
@@ -56,6 +56,21 @@ public class MatTauP_Path extends TauP_Path
     {
         super();
         outFile = null;
+    }
+
+    public MatTauP_Path(TauModel tMod) throws TauModelException {
+        super(tMod);
+        outFile = null;
+    }
+
+    public MatTauP_Path(String modelName) throws TauModelException {
+        super(modelName);
+        outFile = null;
+    }
+
+    public MatArrival getMatArrival(int i)
+    {
+        return matArrivals[i];
     }
 
     public void init() throws IOException 
@@ -105,13 +120,7 @@ public class MatTauP_Path extends TauP_Path
         dos=null;
     }
 
-    public void printResult(OutputStream dos) throws IOException 
-    {
-        Writer s = null;
-        printResult(s);
-    }
-
-    public void printResult(Writer out) throws IOException 
+    public void pathInterpolate() 
     {
         double calcTime, calcDist, calcDepth;
         LatLon coord;
@@ -160,7 +169,6 @@ public class MatTauP_Path extends TauP_Path
                 {
                    calcDist =  -1.0*calcDist;
                 }
-                matArrivals[i].matPath.p[j+k]=currArrival.path[j].p;
                 matArrivals[i].matPath.time[j+k]=calcTime;
                 matArrivals[i].matPath.dist[j+k]=calcDist;
                 matArrivals[i].matPath.depth[j+k]=calcDepth;
@@ -188,7 +196,6 @@ public class MatTauP_Path extends TauP_Path
                                 * (currArrival.path[j + 1].depth - currArrival.path[j].depth)
                                 / maxInterpNum;
 
-                        matArrivals[i].matPath.p[j+k]=currArrival.path[j].p;
                         matArrivals[i].matPath.time[j+k]=calcTime;
                         matArrivals[i].matPath.dist[j+k]=calcDist;
                         matArrivals[i].matPath.depth[j+k]=calcDepth;
@@ -232,110 +239,4 @@ public class MatTauP_Path extends TauP_Path
         pathCoord.lon=lon;
         return pathCoord;
     }
-   
-    /** Allows TauP_Path to run as an application. Creates an instance of 
-     * TauP_Path and calls TauP_Path.init() and TauP_Path.start(). */
-    public static MatArrival[] run_path(String[] args)
-        throws FileNotFoundException,
-        IOException,
-        StreamCorruptedException,
-        ClassNotFoundException,
-        OptionalDataException
-    {
-        MatArrival[] matArrivals=null;
-	try {
-	    MatTauP_Path tauPPath = new MatTauP_Path();
-	    String[] noComprendoArgs = tauPPath.parseCmdLineArgs(args);
-	    if (noComprendoArgs.length > 0) {
-		for (int i=0;i<noComprendoArgs.length;i++) {
-		    if (noComprendoArgs[i].equals("-help") ||
-			noComprendoArgs[i].equals("-version")) {
-			return matArrivals;
-		    }
-		}
-		System.out.println("I don't understand the following arguments, continuing:");
-		for (int i=0;i<noComprendoArgs.length;i++) {
-		    System.out.print(noComprendoArgs[i]+" ");
-		    if (noComprendoArgs[i].equals("-help") ||
-			noComprendoArgs[i].equals("-version")) {
-			System.out.println();
-			return matArrivals;
-		    }
-		}
-		System.out.println();
-		noComprendoArgs = null;
-	    }
-
-	    tauPPath.init();
-	    if (tauPPath.DEBUG) {
-		System.out.println("Done reading "+tauPPath.modelName);
-	    }
- 
-	    tauPPath.start();
-        matArrivals=tauPPath.matArrivals;
-	    tauPPath.destroy();
-        return matArrivals;
- 
-	} catch (TauModelException e) {
-	    System.out.println("Caught TauModelException: "+e.getMessage());
-	    e.printStackTrace();
-	} catch (TauPException e) {
-	    System.out.println("Caught TauPException: "+e.getMessage());
-	    e.printStackTrace();
-	}
-    return matArrivals;
-    }
-
-    
-    public static void main(String[] args)
-        throws FileNotFoundException,
-        IOException,
-        StreamCorruptedException,
-        ClassNotFoundException,
-        OptionalDataException
-    {
-        MatArrival[] matArrivals=null;
-	try {
-	    MatTauP_Path tauPPath = new MatTauP_Path();
-	    String[] noComprendoArgs = tauPPath.parseCmdLineArgs(args);
-	    if (noComprendoArgs.length > 0) {
-		for (int i=0;i<noComprendoArgs.length;i++) {
-		    if (noComprendoArgs[i].equals("-help") ||
-			noComprendoArgs[i].equals("-version")) {
-			return ;
-		    }
-		}
-		System.out.println("I don't understand the following arguments, continuing:");
-		for (int i=0;i<noComprendoArgs.length;i++) {
-		    System.out.print(noComprendoArgs[i]+" ");
-		    if (noComprendoArgs[i].equals("-help") ||
-			noComprendoArgs[i].equals("-version")) {
-			System.out.println();
-			return ;
-		    }
-		}
-		System.out.println();
-		noComprendoArgs = null;
-	    }
-
-	    tauPPath.init();
-	    if (tauPPath.DEBUG) {
-		System.out.println("Done reading "+tauPPath.modelName);
-	    }
- 
-	    tauPPath.start();
-        matArrivals=tauPPath.matArrivals;
-	    tauPPath.destroy();
-        return ;
- 
-	} catch (TauModelException e) {
-	    System.out.println("Caught TauModelException: "+e.getMessage());
-	    e.printStackTrace();
-	} catch (TauPException e) {
-	    System.out.println("Caught TauPException: "+e.getMessage());
-	    e.printStackTrace();
-	}
-    return ;
-    }
-
 }

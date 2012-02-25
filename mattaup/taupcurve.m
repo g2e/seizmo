@@ -1,4 +1,4 @@
-function tt=taupcurve(varargin)
+function [varargout]=taupcurve(varargin)
 %TAUPCURVE    Calculate travel time curves using the TauP toolkit
 %
 %    Usage:    taupcurve(...)
@@ -9,19 +9,25 @@ function tt=taupcurve(varargin)
 %           tt=taupcurve(...,'rd|rdeg|reddeg',velo,...)
 %           tt=taupcurve(...,'rk|rkm|redkm',velo,...)
 %
-%    Description: TAUPCURVE(...) (no outputs, w/ or w/o inputs) displays a
-%     formatted list of information on many seismic phases for an
-%     earthquake with a depth of 0km.  The 1D Earth model utilized by
-%     default is IASP91 (see the MODEL option to adjust this).  The default
-%     phase list is 'ttbasic' (equivalent to setting phases to BASIC in
-%     Brian Kennett's TTIMES program) which lists many common phases by
-%     default.  See option PHASES to adjust the phase list.
+%    Description:
+%     TAUPCURVE(...) (no outputs, w/ or w/o inputs) displays a formatted
+%     list of information on many seismic phases for an earthquake with a
+%     depth of 0km.  The 1D Earth model utilized by default is IASP91 (see
+%     the MODEL option to adjust this).  The default phase list is
+%     'ttbasic' (equivalent to setting phases to BASIC in Brian Kennett's
+%     TTIMES program) which lists many common phases by default.  See
+%     option PHASES to adjust the phase list.
 %
 %     TT=TAUPCURVE(...) (1 output, w/ or w/o inputs) returns a structure
 %     array with the following fields:
-%             TT(index).phase        - seismic phase name
-%                      .distance     - purist distance (deg)
+%             TT(index).modelname    - name of velocity model
+%                      .event        - event location if known ([lat lon])
+%                      .station      - stn location if known ([lat lon])
 %                      .depth        - depth of earthquake (km)
+%                      .distance     - true distance (deg)
+%                      .mindistance  - least distance (deg)
+%                      .phase        - seismic phase name
+%                      .puristphase  - verbose seismic phase name
 %                      .time         - travel time (sec)
 %                      .rayparameter - ray parameter (sec/deg)
 %     Each phase has its own indice in the struct array TT.  Use TT(index)
@@ -34,7 +40,8 @@ function tt=taupcurve(varargin)
 %
 %     TT=TAUPCURVE(...,'M|MOD|MODEL',MODEL,...) sets the 1D Earth model to
 %     MODEL.  Accepts a variety of common models like 'prem', 'iasp91',
-%     'ak135'.  See the TauP program/documentation for more.  The default
+%     'ak135'.  See the TauP program/documentation for more.  You may also
+%     give a 1DMODEL struct like from CMB_1DMODEL_LIBRARY.  The default
 %     model is 'iasp91'.
 %
 %     TT=TAUPCURVE(...,'H|Z|DEP|EVDP|DEPTH',DEPTH,...) sets the event depth
@@ -43,51 +50,33 @@ function tt=taupcurve(varargin)
 %     TT=TAUPCURVE(...,'P|PH|PHASES',PHASES,...) sets the phase list to
 %     PHASES.  PHASES must be a comma separated list of seismic phases.  
 %     See the TauP documentation for conventions and valid phase names.
-%     Multiple calls are honored.  The default phase list is 'ttbasic'.
+%     The default phase list is 'ttbasic'.
 %
 %     TT=TAUPCURVE(...,'RD|RDEG|REDDEG',VELO,...) applies a reduction
 %     velocity of VELO degrees per second.  Note that this is in reciprocal
-%     units of that of the ray parameter returned.  Also note that this is
-%     only applied to the travel time, not the ray parameter.  There is no
-%     default value for this option.
+%     units of that of the ray parameter returned.  There is no default
+%     value for this option.
 %
 %     TT=TAUPCURVE(...,'RK|RKM|REDKM',VELO,...) applies a reduction
-%     velocity of VELO kilometers per second.  This is only applied to the
-%     travel time, but not the ray parameter (blame TauP).  There is no
-%     default value for this option.
+%     velocity of VELO kilometers per second.  There is no default value
+%     for this option.
 %
 %    Notes:
-%     - These scripts require the included file:
-%          mattaup/lib/matTaup.jar
-%       to be added in Matlab's javaclasspath.  You may use the functions
-%       javaaddpath and javarmpath to alter the dynamic portion of the path
-%       or you will need to add the jar file to the Matlab system file
-%       'classpath.txt'.  Use the command 'edit classpath.txt' in Matlab to
-%       add the the jar file (be careful and use the full path!).  This may
-%       require administrator privileges.
-%
-%     - MatTauP is only a wrapping program for TauP toolkit, which is
-%       developed by:
+%     - TauP toolkit developed by:
 %        H. Philip Crotwell, Thomas J. Owens, Jeroen Ritsema
 %        Department of Geological Sciences
 %        University of South Carolina
 %        http://www.seis.sc.edu
 %        crotwell@seis.sc.edu
 %
-%     - MatTauP was written by:
-%        Qin Li 
-%        Unverisity of Washington
-%        qinli@u.washington.edu
-%        Nov, 2002
-%
 %    Examples:
-%     Travel time curves for several P phases from a 300km deep event:
-%      taupcurve('mod','prem','dep',300,'ph','ttp+')
+%     % Travel time curves for several P phases from a 300km deep event:
+%     taupcurve('mod','prem','dep',300,'ph','ttp+')
 %
-%     Apply a reduction velocity of 25km/s
-%      taupcurve('mod','prem','dep',300,'ph','ttp+','redkm',25)
+%     % Apply a reduction velocity of 25km/s
+%     taupcurve('mod','prem','dep',300,'ph','ttp+','redkm',25)
 %
-%    See also: TAUP, TAUPPATH, TAUPTIME, TAUPPIERCE
+%    See also: TAUPPATH, TAUPTIME, TAUPPIERCE, TAUPCREATE, PLOT_TAUPCURVE
 
 %     Version History:
 %        Sep.  2, 2009 - major revision of script, name change to avoid
@@ -97,207 +86,187 @@ function tt=taupcurve(varargin)
 %        Nov. 13, 2009 - dropped some import calls
 %        Jan.  6, 2011 - add matTaup.jar to dynamic java classpath if
 %                        necessary
+%        Feb. 24, 2012 - switch to enhanced taup (needed for output)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 17:15 GMT
+%     Last Updated Feb. 24, 2012 at 17:15 GMT
 
 % todo:
 
 % check nargin
 if(mod(nargin,2))
-    error('matTaup:taupcurve:badNumOptions','Unpaired option(s)!');
+    error('TauP:taupcurve:badNumOptions','Unpaired option(s)!');
 end
 
-% initialize java code
-import edu.sc.seis.TauP.*;
-
-% try adding matTaup.jar if no MatTauP class exists
-if(~exist('MatTauP_Curve','class'))
+% try adding *.jar if no TauP class exists
+if(~exist('edu.sc.seis.TauP.MatTauP_Curve','class'))
     fs=filesep;
     mypath=fileparts(mfilename('fullpath'));
-    javaaddpath([mypath fs 'lib' fs 'matTaup.jar']);
+    javaaddpath([mypath fs 'lib' fs 'MatTauP-1.2beta4.jar']);
+    javaaddpath([mypath fs 'lib' fs 'TauP-1.2beta4.jar']);
+    javaaddpath([mypath fs 'lib' fs 'seisFile-1.0.8.jar']);
 end
 
 % default options
-model='iasp91';
-depth='0';
-phases='ttbasic';
+model='iasp91'; modelname='iasp91';
+depth=0; phases={'ttbasic'};
+rdeg=[]; rkm=[];
 
 % check options
-phase=cell(0); np1=0;
-pargs=cell(0); np2=0;
-dargs=cell(0); nd=0; d=false; k=d;
+if(~iscellstr(varargin(1:2:end)))
+    error('TauP:taupcurve:badInput',...
+        'All options must be specified with strings!');
+end
 for i=1:2:nargin
+    if(isempty(varargin{i+1})); continue; end
     switch lower(varargin{i})
         case {'m' 'mod' 'model'}
-            if(isempty(varargin{i+1})); continue; end
-            if(~ischar(varargin{i+1}))
-                error('matTaup:taupcurve:badInput',...
+            if(ischar(varargin{i+1})) % name of model on TauP path
+                model=varargin{i+1};
+                modelname=model;
+            elseif(isempty(chk1dmodel(varargin{i+1}))) % 1dmodel struct
+                model=taupcreate(varargin{i+1});
+                modelname=char(model.getModelName);
+            elseif(strcmp(class(varargin{i+1}),... % velocity model obj
+                    'edu.sc.seis.TauP.VelocityModel'))
+                model=taupcreate(varargin{i+1});
+                modelname=char(model.getModelName);
+            elseif(strcmp(class(varargin{i+1}),... % tau model obj
+                    'edu.sc.seis.TauP.TauModel'))
+                model=varargin{i+1};
+                modelname=char(model.getModelName);
+            else
+                error('TauP:tauptime:badInput',...
                     'MODEL must be a string (like ''prem'')!');
             end
-            model=varargin{i+1}(:)';
         case {'h' 'z' 'dep' 'evdp' 'depth'}
-            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) ...
                     || ~isreal(varargin{i+1}) || varargin{i+1}<0)
-                error('matTaup:taupcurve:badInput',...
+                error('TauP:tauptime:badInput',...
                     'DEPTH must be a positive number (in km)!');
             end
-            depth=num2str(varargin{i+1});
+            depth=varargin{i+1};
         case {'p' 'ph' 'phases'}
-            if(isempty(varargin{i+1})); continue; end
             if(~ischar(varargin{i+1}))
-                error('matTaup:taupcurve:badInput',...
+                error('TauP:tauptime:badInput',...
                     'PHASES must be a string (like ''P,S'')!');
             end
-            np2=np2+2; np1=np1+1;
-            pargs(1,np2-1:np2)={'-ph' varargin{i+1}};
-            phase{np1}=varargin{i+1}(:)';
+            phases=varargin{i+1};
+            phases=strtrim(getwords(phases,','));
         case {'rd' 'rdeg' 'reddeg'}
-            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}))
-                error('matTaup:taupcurve:badInput',...
+                error('TauP:taupcurve:badInput',...
                     'REDDEG must be a scalar number (in deg/sec)!');
             end
-            nd=nd+2;
-            dargs(1,nd-1:nd)={'-reddeg' num2str(varargin{i+1})};
-            d=true;
+            rdeg=varargin{i+1};
         case {'rk' 'rkm' 'redkm'}
-            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}))
-                error('matTaup:taupcurve:badInput',...
+                error('TauP:taupcurve:badInput',...
                     'REDKM must be a scalar number (in km/sec)!');
             end
-            nd=nd+2;
-            dargs(1,nd-1:nd)={'-redkm' num2str(varargin{i+1})};
-            k=true;
+            rkm=varargin{i+1};
         otherwise
-            error('matTaup:taupcurve:badOption',...
+            error('TauP:taupcurve:badOption',...
                 'Unknown Option: %s',varargin{i});
     end
 end
 
-% set up inputs
-inArgs{1}='-mod';
-inArgs{2}=model;
-inArgs{3}='-h';
-inArgs{4}=depth;
-if(np1>0)
-    inArgs=[inArgs pargs];
-    phases=char(strcat(phase,','))';    % comma delimited
-    phases=phases(:)';                  % assure row vector
-    phases=phases(phases~=32);          % remove spaces
-    phases=phases(1:end-1);             % trim off trailing comma
-else
-    inArgs{5}='-ph';
-    inArgs{6}=phases;
+% check reduction
+if(~isempty(rdeg) && ~isempty(rkm))
+    error('TauP:taupcurve:badInput',...
+        'REDKM & REDDEG cannot both be specified!');
 end
-if(d || k); inArgs=[inArgs dargs]; end
 
-% debug
-%disp(inArgs);
+% create time object for velocity model
+tcobj=javaObject('edu.sc.seis.TauP.MatTauP_Curve',model);
 
-% attempt run
-arrivals=MatTauP_Curve.run_curve(inArgs);
+% calculate curves for the specified depth & phase
+tcobj.setSourceDepth(depth);
+tcobj.setPhaseNames(phases);
+if(~isempty(rdeg))
+    tcobj.setReduceTime(true);
+    tcobj.setReduceVelDeg(rdeg);
+elseif(~isempty(rkm))
+    tcobj.setReduceTime(true);
+    tcobj.setReduceVelKm(rkm);
+end
+tcobj.depthCorrect(depth);
+tcobj.curvecalculate(0); % the input is meaningless
+narr=tcobj.getNumPhases; % note it is NOT getNumArrivals
 
 % conversion
 R2D=180/pi;
+
+% struct output
+ok=false(narr,1);
+tt(1:narr,1)=struct('modelname',[],'depth',[],'phase',[],...
+    'puristphase',[],'distance',[],'mindistance',[],'time',[],...
+    'rayparameter',[]);
+for ii=1:narr
+    % get curve info
+    arr=tcobj.getMatCurve(ii-1);
+    ok(ii)=arr.getNumPoints>0;
+    tt(ii).modelname=modelname;
+    tt(ii).depth=arr.getSourceDepth;
+    tt(ii).phase=char(arr.getPhaseName);
+    tt(ii).puristphase=char(arr.getPuristPhaseName);
+    
+    % Handle Octave/Matlab difference
+    if(exist('OCTAVE_VERSION','builtin')==5) % Octave
+        % preallocate
+        n=arr.getNumPoints;
+        [tt(ii).distance,tt(ii).mindistance,...
+            tt(ii).time,tt(ii).rayparameter]=deal(nan(n,1));
+        
+        % loop over points
+        for jj=1:n
+            tt(ii).distance(jj)=arr.getDistance(jj-1);
+            tt(ii).mindistance(jj)=arr.getMinDistance(jj-1);
+            tt(ii).time(jj)=arr.getTime(jj-1);
+            tt(ii).rayparameter(jj)=arr.getRayParam(jj-1);
+        end
+        tt(ii).rayparameter=tt(ii).rayparameter/R2D;
+    else % Matlab
+        tt(ii).distance=arr.getDistances;
+        tt(ii).mindistance=arr.getMinDistances;
+        tt(ii).time=arr.getTimes;
+        tt(ii).rayparameter=arr.getRayParams/R2D;
+    end
+end
+tt(~ok)=[];
+narr=sum(ok);
 
 % formatted listing
 if(nargout==0)
     % header
     disp(' ')
-    disp(['Model: ' model])
-    disp('Depth   Phase            Min/Max Travel   Min/Max Ray Param   Min/Max Distance')
-    disp(' (km)   Name                Time (s)          p (s/deg)            (deg)      ')
-    disp('------------------------------------------------------------------------------')
-    
-    % initialize dist vs time plot
-    fh1=figure('color','k','name','TauP Travel Time Curves');
-    pos=get(fh1,'position');
-    set(fh1,'position',[pos(1) pos(2)-pos(4)*.75 pos(3) pos(4)*1.75]);
-    set(gca,'xcolor','w','ycolor','w','color','k',...
-        'yaxislocation','right','position',[0 0.1 0.9 0.8])
-    title({['MODEL: ' model '  EVENT DEPTH: ' depth 'km']...
-        ['  PHASES: ' phases]},'color','w','interpreter','none')
-    xlabel('Distance (deg)')
-    ylabel('Time (sec)')
-    hold on
-    box on
+    disp(['Model: ' modelname])
+    disp('Depth   Phase              Min/Max Travel   Min/Max Ray Param   Min/Max Distance')
+    disp(' (km)   Name                  Time (s)          p (s/deg)            (deg)      ')
+    disp('--------------------------------------------------------------------------------')
     
     % loop over phases
-    colors=hsv(arrivals.length); n=0;
-    ph1=nan(1,arrivals.length); ph2=ph1; pn=cell(1,arrivals.length);
-    for ii=1:arrivals.length
+    for ii=1:narr
         % list phase info
-        fprintf(' %6.1f   %-10s   %8.2f/%8.2f   %7.3f/%7.3f    %7.2f/%7.2f\n',...
-            arrivals(ii).sourceDepth,...
-            char(arrivals(ii).phaseName),...
-            min(arrivals(ii).time),max(arrivals(ii).time),...
-            min(arrivals(ii).rayParam)/R2D,max(arrivals(ii).rayParam)/R2D,...
-            min(arrivals(ii).dist),max(arrivals(ii).dist));
-        
-        if(numel(arrivals(ii).dist)>1)
-            n=n+1;
-            figure(fh1);
-            ph1(n)=plot(arrivals(ii).dist,arrivals(ii).time,...
-                'color',colors(ii,:));
-            pn{n}=char(arrivals(ii).phaseName);
-        end
+        fprintf(' %6.1f   %-10s   %8.2f /%8.2f   %7.3f /%7.3f    %7.2f /%7.2f\n',...
+            tt(ii).depth,tt(ii).phase,...
+            min(tt(ii).time),max(tt(ii).time),...
+            min(tt(ii).rayparameter),max(tt(ii).rayparameter),...
+            min(tt(ii).distance),max(tt(ii).distance));
     end
     
-    % force distance range from 0 to 180
-    xlim([0 180])
-    
-    % legend
-    lh1=legend(ph1(1:n),pn(1:n),'location','westoutside');
-    set(lh1,'color','none','edgecolor','w','textcolor','w',...
-        'fontsize',6,'interpreter','none')
-    
-    % initialize dist vs ray parameter plot
-    fh2=figure('color','k','name','TauP Ray Parameter Curves');
-    pos=get(fh2,'position');
-    set(fh2,'position',[pos(1) pos(2)-pos(4)*.75 pos(3) pos(4)*1.75]);
-    set(gca,'xcolor','w','ycolor','w','color','k',...
-        'yaxislocation','right','position',[0 0.1 0.9 0.8])
-    title({['MODEL: ' model '  EVENT DEPTH: ' depth 'km']...
-        ['  PHASES: ' phases]},'color','w','interpreter','none')
-    xlabel('Distance (deg)')
-    ylabel('Ray Parameter (sec/deg)')
-    hold on
-    box on
-    
-    % plot rayparameter vs dist
-    n=0;
-    for ii=1:arrivals.length
-        if(numel(arrivals(ii).dist)>1)
-            n=n+1;
-            figure(fh2);
-            ph2(n)=plot(arrivals(ii).dist,arrivals(ii).rayParam/R2D,...
-                'color',colors(ii,:));
-        end
-    end
-    
-    % force distance range from 0 to 180
-    xlim([0 180])
-    
-    % legend
-    lh2=legend(ph2(1:n),pn(1:n),'location','westoutside');
-    set(lh2,'color','none','edgecolor','w','textcolor','w',...
-        'fontsize',6,'interpreter','none')
-    
-    return
-end
-
-% struct output
-tt(1:arrivals.length)=struct('phase',[],'distance',[],'depth',[],...
-    'time',[],'rayparameter',[]);
-for ii=1:arrivals.length
-    tt(ii).time=arrivals(ii).time;
-    tt(ii).distance=arrivals(ii).dist;
-    tt(ii).depth=arrivals(ii).sourceDepth;
-    tt(ii).phase=char(arrivals(ii).phaseName);
-    tt(ii).rayparameter=arrivals(ii).rayParam/R2D;
+    % plot curves
+    ax=plot_taupcurve(tt);
+    title(ax(1),{['MODEL: ' modelname ...
+        '  EVENT DEPTH: ' num2str(depth) 'km'] ...
+        ['  PHASES: ' joinwords(phases,',')]},...
+        'color','w','interpreter','none');
+    title(ax(2),{['MODEL: ' modelname ...
+        '  EVENT DEPTH: ' num2str(depth) 'km'] ...
+        ['  PHASES: ' joinwords(phases,',')]},...
+        'color','w','interpreter','none');
+else
+    varargout{1}=tt;
 end
 
 end

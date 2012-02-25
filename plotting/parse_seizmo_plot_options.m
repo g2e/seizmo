@@ -3,6 +3,7 @@ function [opt]=parse_seizmo_plot_options(varargin)
 
 % Nov.  8, 2011 - added sft support
 % Nov. 10, 2011 - fixed fg/bg fix code, sft defaults now setup
+% Feb. 24, 2012 - pass char fg/bg inputs to name2rgb
 
 % todo:
 % - value checking
@@ -224,6 +225,8 @@ for i=1:2:np
 end
 
 % fix fg/bg
+if(ischar(opt.FGCOLOR)); opt.FGCOLOR=name2rgb(opt.FGCOLOR); end
+if(ischar(opt.BGCOLOR)); opt.BGCOLOR=name2rgb(opt.BGCOLOR); end
 if(isempty(opt.FGCOLOR))
     if(isempty(opt.BGCOLOR))
         opt.FGCOLOR='w'; opt.BGCOLOR='k';

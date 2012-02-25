@@ -1,2 +1,3 @@
-matTaupClasses.jar  -  Java archive file for matTaup classes only
-matTaup.jar         -  Java archive file including Taup classes
+MatTauP-1.2beta4.jar - Matlab extensions
+seisFile-1.0.8.jar   - Ray Tracing
+TauP-1.2beta4.jar    - Ray Tracing interface

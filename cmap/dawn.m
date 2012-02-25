@@ -3,28 +3,30 @@ function [map]=dawn(m)
 %
 %    Usage:    map=dawn(m)
 %
-%    Description: MAP=DAWN(M) returns a Mx3 matrix of RGB color values
-%     going through black, blue, violet, pink, orange & red.  This colormap
-%     mimics the array of colors in the gaining light before sunrise and
-%     has a strong pastel scheme.  DAWN by itself sets M to match the
-%     current figure's colormap size.  If no figure exists, one is created.
+%    Description:
+%     MAP=DAWN(M) returns a Mx3 matrix of RGB color values going through
+%     black, blue, violet, pink, orange & red.  This colormap mimics the
+%     array of colors in the gaining light before sunrise and has a strong
+%     pastel scheme.  DAWN by itself sets M to match the current figure's
+%     colormap size.  If no figure exists, one is created.
 %
 %    Notes:
 %
 %    Examples:
-%     Set the current figure's colormap:
-%      colormap(dawn)
+%     % Set the current figure's colormap:
+%     colormap(dawn)
 %
-%    See also: BLUE2RED, GREEN2BLUE, SPLIT, SEIS, OCEAN, DRYWET, NIGHTTIME,
-%              GEBCO, SEALAND, RAINBOW, RELIEF, GLOBE_SEA, GLOBE_LAND,
-%              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ, RED2GREEN, FIRE,
-%              DUSK, HSVSPIN, HSVCUSTOM
+%    See also: BLUE2RED, GREEN2BLUE, SPLIT, SEIS, GMT_OCEAN, DRYWET,
+%              NIGHTTIME, GEBCO, SEALAND, GMT_RAINBOW, RELIEF, GLOBE_SEA,
+%              GLOBE_LAND, SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ,
+%              RED2GREEN, FIRE, DUSK, HSVSPIN, HSVCUSTOM
 
 %     Version History:
 %        July 25, 2010 - initial version
+%        Feb. 22, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 25, 2010 at 01:40 GMT
+%     Last Updated Feb. 22, 2012 at 01:40 GMT
 
 % todo:
 

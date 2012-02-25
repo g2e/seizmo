@@ -1,5 +1,5 @@
-- smash any bugs since original release
-- tauppierce output should not have those extra entries
+- smash any bugs since latest release
 - taup applet needs to have path interpolation (tell Philip)
-- function to list available models
-- functions for taup_create, taup_setsac
+- path wave type (isshear)
+- path wave type conversion (isconvert)
+- path leg name ('P' 'K' 'I' '^660')

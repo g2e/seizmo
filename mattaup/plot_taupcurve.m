@@ -1,117 +1,263 @@
-function [varargout]=plot_taupcurve(tt,offset,flip,varargin)
+function [varargout]=plot_taupcurve(tt,varargin)
 %PLOT_TAUPCURVE    Plots taupcurve output
 %
 %    Usage:    plot_taupcurve(tt)
-%              plot_taupcurve(tt,offset)
-%              plot_taupcurve(tt,offset,flip)
-%              plot_taupcurve(tt,offset,flip,'option',value,...)
-%              h=plot_taupcurve(...)
+%              plot_taupcurve(tt,'property',value,...)
+%           ax=plot_taupcurve(...)
 %
 %    Description:
-%     PLOT_TAUPCURVE(TT) plots the travel time curves in TT on a new plot.
-%     TT is the output from TAUPCURVE.  See that function for more details
-%     on generating travel time curves.
+%     PLOT_TAUPCURVE(TT) plots the output struct TT from TAUPCURVE in 2 new
+%     figures.  The travel time curves vs distance are presented in one
+%     figure and the rayparameter curves vs distance in another.
 %
-%     PLOT_TAUPCURVE(TT,OFFSET) offsets the travel time curves by OFFSET
-%     seconds.  This is quite useful when plotting against records that are
-%     not relative to the event time.
+%     PLOT_TAUPCURVE(TT,'PROPERTY',VALUE,...) allows some up-front plot
+%     manipulation by adjusting specific properties.  Any unknown
+%     properties are passed on to PLOT.  Valid properties:
+%      BGCOLOR    - background color (rgb triplet, name) (default is 'k')
+%      FGCOLOR    - foreground color (rgb triplet, name) (default is 'w')
+%      DRAW       - which plots to make ('both'=default, 'time', 'rayp')
+%      SHOWLEGEND - true or false (default is true)
+%      AXES       - handle(s) of axes to draw in (1 or 2 handles) (none)
+%      CURVECOLOR - colormap, rgb triplet, name ('hsv')
 %
-%     PLOT_TAUPCURVE(TT,OFFSET,FLIP) indicates if the x-axis is time or
-%     distance.  The default (FALSE) is to have the x-axis as distance.
-%
-%     PLOT_TAUPCURVE(TT,OFFSET,FLIP,'OPTION',VALUE,...) passes option/value
-%     pairs to PLOT.  This is useful for defining the axis ('parent') or
-%     the width of the curves ('linewidth').
-%
-%     H=PLOT_TAUPCURVE(...) returns the handles to the travel time curves.
+%     AX=PLOT_TAUPCURVE(...) returns the handles to the axes drawn in.
 %
 %    Notes:
 %
 %    Examples:
-%     % Align some records on Pdiff, then plot some travel time curves
-%     % underneath the records to enhance analysis:
-%     evdp=getheader(data(1),'evdp')/1000;
-%     data=timeshift(data,-getarrival(data,'Pdiff'));
-%     ax=recordsection(data);
-%     tt=taupcurve('dep',evdp);
-%     idx=find(strcmp('Pdiff',{tt.phase}));
-%     intrcpt=tt(idx).time(1)-tt(idx).distance(1)*tt(idx).rayparameter(1);
-%     tt=taupcurve('dep',evdp,...
-%                  'reddeg',1/tt(idx).rayparameter(1),'ph','ttall');
-%     hold(ax,'on');
-%     h=plot_taupcurve(tt,-intrcpt,true,'parent',ax,'linewidth',5);
-%     movekids(h,'back');
-%     hold(ax,'off');
+%     % A colorful example:
+%     tt=taupcurve('z',500);
+%     plot_taupcurve(tt,'bgcolor','purple','curvecolor','fire')
 %
-%    See also: TAUPCURVE, PLOT_TAUPPATH, RECORDSECTION
+%    See also: PLOT_TAUPPATH, PLOT_TAUPCURVE_DT, TAUPCURVE
 
 %     Version History:
-%        Jan. 23, 2011 - initial version
-%        May  21, 2011 - minor doc update
+%        Feb. 24, 2012 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  21, 2011 at 17:15 GMT
+%     Last Updated Feb. 24, 2012 at 17:15 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,inf,nargin));
-if(nargin>3 && ~mod(nargin,2))
-    error('matTaup:plot_taupcurve:badNumOptions',...
+if(nargin>1 && ~mod(nargin,2))
+    error('TauP:plot_taupcurve:badNumOptions',...
         'Unpaired option(s)!');
 end
 
 % check taupcurve output
 if(~isstruct(tt) || any(~isfield(tt,...
-        {'time' 'distance' 'depth' 'phase' 'rayparameter'})))
-    error('matTaup:plot_taupcurve:badInput',...
+        {'modelname' 'depth' 'distance' 'mindistance' ...
+        'phase' 'puristphase' 'time' 'rayparameter'})))
+    error('TauP:plot_taupcurve:badInput',...
         'TT was not created by TAUPCURVE!');
+elseif(isempty(tt))
+    error('TauP:plot_taupcurve:badInput',...
+        'TT is empty!');
 end
 
-% default/check offset
-if(nargin<2 || isempty(offset)); offset=0; end
-if(~isscalar(offset) || ~isreal(offset))
-    error('matTaup:plot_taupcurve:badInput',...
-        'OFFSET must be a real-valued scalar!');
+% number of curves
+nc=numel(tt);
+
+% check options are strings
+if(~iscellstr(varargin(1:2:end)))
+    error('TauP:plot_taupcurve:badInput',...
+        'One or more properties appear to not be given as strings!');
 end
 
-% default/check flip
-if(nargin<3 || isempty(flip)); flip=false; end
-if(~isscalar(flip) || (~isreal(flip) && ~islogical(flip)))
-    error('matTaup:plot_taupcurve:badInput',...
-        'FLIP must be TRUE or FALSE!');
-end
+% strip axes arguments
+[ax,varargin]=axparse(varargin{:});
 
-% plot curves
-ntt=numel(tt);
-colors=hsv(ntt)/3;
-h=nan(ntt,1);
-first=true;
-ax=-1;
-for i=1:ntt
-    if(isempty(tt(i).time)); continue; end
-    if(flip) % time vs dist
-        h(i)=plot(tt(i).time+offset,tt(i).distance,...
-            'color',colors(i,:),varargin{:});
-    else     % dist vs time
-        h(i)=plot(tt(i).distance,tt(i).time+offset,...
-            'color',colors(i,:),varargin{:});
+% append defaults
+varargin=[{'fgc' [] 'bgc' [] 'draw' 'both' 'legend' true ...
+    'curvecolor' 'hsv'} varargin];
+
+% extract pertinent parameters
+delete=false(numel(varargin),1);
+for i=1:2:numel(varargin)
+    p=varargin{i};
+    v=varargin{i+1};
+    switch p
+        case {'fg' 'fgc' 'fgcolor'}
+            if(~ischar(v) && ~isnumeric(v))
+                error('TauP:plot_taupcurve:badInput',...
+                    'FGCOLOR must be a valid colorstring or RGB triplet!');
+            elseif(isnumeric(v) && ~isempty(v) && ~isequal(size(v),[1 3]))
+                error('TauP:plot_taupcurve:badInput',...
+                    'FGCOLOR must be a valid colorstring or RGB triplet!');
+            end
+            opt.fgc=v;
+            delete(i:i+1)=true;
+        case {'bg' 'bgc' 'bgcolor'}
+            if(~ischar(v) && ~isnumeric(v))
+                error('TauP:plot_taupcurve:badInput',...
+                    'BGCOLOR must be a valid colorstring or RGB triplet!');
+            elseif(isnumeric(v) && ~isempty(v) && ~isequal(size(v),[1 3]))
+                error('TauP:plot_taupcurve:badInput',...
+                    'BGCOLOR must be a valid colorstring or RGB triplet!');
+            end
+            opt.bgc=v;
+            delete(i:i+1)=true;
+        case {'showlegend' 'legend' 'leg'}
+            if(~isscalar(v) || ~islogical(v))
+                error('TauP:plot_taupcurve:badInput',...
+                    'SHOWLEGEND must be TRUE or FALSE!');
+            end
+            opt.legend=v;
+            delete(i:i+1)=true;
+        case {'draw'}
+            if(isempty(v)); continue; end
+            if(~ischar(v) || size(v,1)~=1 ...
+                    || ~ismember(lower(v),{'time' 'rayp' 'both'}))
+                error('TauP:plot_taupcurve:badInput',...
+                    'DRAW must be ''TIME'' ''RAYP'' or ''BOTH''!');
+            end
+            opt.draw=v;
+            delete(i:i+1)=true;
+        case {'color' 'curvecolor' 'curve' 'ccolor' 'curvec' 'cc'}
+            if(isempty(v)); continue; end
+            % try to decipher input
+            if(ischar(v))
+                try
+                    tmp=str2func(v);
+                    tmp=tmp(nc);
+                    if(isequal(size(tmp),[nc 3]))
+                        opt.color=tmp;
+                    else
+                        error('TauP:plot_taupcurve:nothing',...
+                            'Ignore this!');
+                    end
+                catch
+                    try
+                        tmp=name2rgb(v);
+                        opt.color=tmp(ones(nc,1),:);
+                    catch
+                        error('TauP:plot_taupcurve:badInput',...
+                            'Could not decipher CURVECOLOR input!');
+                    end
+                end
+            else
+                if(isequal(size(v),[1 3]))
+                    opt.color=v(ones(nph,1),:);
+                elseif(isequal(size(v),[nc 3]))
+                    opt.color=v;
+                else
+                    error('TauP:plot_taupcurve:badInput',...
+                        'Could not decipher CURVECOLOR input!');
+                end
+            end
+            delete(i:i+1)=true;
     end
-    set(h(i),'tag',tt(i).phase);
-    if(first)
-        ax=get(h(i),'parent');
-        hold(ax,'on');
-        first=false;
-    end
 end
-if(ishandle(ax))
-    hold(ax,'off');
+varargin(delete)=[];
+
+% fix fg/bg
+if(ischar(opt.bgc)); opt.bgc=name2rgb(opt.bgc); end
+if(ischar(opt.fgc)); opt.fgc=name2rgb(opt.fgc); end
+if(isempty(opt.fgc))
+    if(isempty(opt.bgc))
+        opt.fgc='w'; opt.bgc='k';
+    else
+        opt.fgc=invertcolor(opt.bgc,true);
+    end
+elseif(isempty(opt.bgc))
+    opt.bgc=invertcolor(opt.fgc,true);
+end
+
+% new plots or existing
+if(strcmpi(opt.draw,'both'))
+    if(numel(ax)==2); newplot=false; else newplot=true; end
 else
-    error('matTaup:plot_taupcurve:badInput',...
-        'TT contains no travel time curves!');
+    if(numel(ax)==1); newplot=false; else newplot=true; end
 end
 
-% output if desired
-if(nargout); varargout{1}=h(~isnan(h)); end
+if(ismember(lower(opt.draw),{'time' 'both'}))
+    % initialize dist vs time plot
+    if(newplot)
+        fh(1)=figure('color',opt.bgc,'defaulttextcolor',opt.fgc,...
+            'defaultaxesxcolor',opt.fgc,'defaultaxesycolor',opt.fgc,...
+            'name','TauP Travel Time Curves');
+        pos=get(fh(1),'position');
+        set(fh(1),'position',...
+            [pos(1) pos(2)-pos(4)*.75 pos(3) pos(4)*1.75]);
+        ax(1)=axes('parent',fh(1));
+        set(ax(1),'color','none',...
+            'yaxislocation','right','position',[0 0.1 0.9 0.8]);
+    end
+    title(ax(1),'TauP Travel Time Curves');
+    xlabel(ax(1),'Distance (deg)');
+    ylabel(ax(1),'Time (sec)');
+    held=ishold(ax(1));
+    if(~held); hold(ax(1),'on'); end
+    box(ax(1),'on');
+    
+    % loop over phases
+    for ii=1:nc
+        plot(ax(1),tt(ii).mindistance,tt(ii).time,...
+            'color',opt.color(ii,:),'displayname',tt(ii).phase,...
+            'tag','taupcurve_timecurve',varargin{:});
+    end
+    
+    % force distance range from 0 to 180
+    xlim(ax(1),[0 180])
+    
+    % legend
+    if(opt.legend)
+        lh(1)=legend(ax(1),...
+            flipud(findobj(ax(1),'tag','taupcurve_timecurve')),{},...
+            'location','westoutside');
+        set(lh(1),'color','none',...
+            'fontsize',6,'interpreter','none');
+    end
+    if(~held); hold(ax(1),'off'); end
+end
+
+if(ismember(lower(opt.draw),{'rayp' 'both'}))
+    % deal with handles
+    if(strcmpi(opt.draw,'both')); np=2; else np=1; end
+    
+    % initialize dist vs ray parameter plot
+    if(newplot)
+        fh(np)=figure('color',opt.bgc,'defaulttextcolor',opt.fgc,...
+            'defaultaxesxcolor',opt.fgc,'defaultaxesycolor',opt.fgc,...
+            'name','TauP Ray Parameter Curves');
+        pos=get(fh(np),'position');
+        set(fh(np),'position',...
+            [pos(1) pos(2)-pos(4)*.75 pos(3) pos(4)*1.75]);
+        ax(np)=axes('parent',fh(np));
+        set(ax(np),'color','none',...
+            'yaxislocation','right','position',[0 0.1 0.9 0.8]);
+    end
+    title(ax(np),'TauP Ray Parameter Curves');
+    xlabel(ax(np),'Distance (deg)');
+    ylabel(ax(np),'Ray Parameter (sec/deg)');
+    held=ishold(ax(np));
+    if(~held); hold(ax(np),'on'); end
+    box(ax(np),'on');
+    
+    % plot rayparameter vs dist
+    for ii=1:nc
+        plot(ax(np),tt(ii).mindistance,tt(ii).rayparameter,...
+            'color',opt.color(ii,:),'displayname',tt(ii).phase,...
+            'tag','taupcurve_rayparametercurve',varargin{:});
+    end
+    
+    % force distance range from 0 to 180
+    xlim(ax(np),[0 180])
+    
+    % legend
+    if(opt.legend)
+        lh(np)=legend(ax(np),...
+            flipud(findobj(ax(np),'tag','taupcurve_rayparametercurve')),...
+            {},'location','westoutside');
+        set(lh(np),'color','none',...
+            'fontsize',6,'interpreter','none');
+    end
+    if(~held); hold(ax(np),'off'); end
+end
+
+% output
+if(nargout); varargout{1}=ax; end
 
 end

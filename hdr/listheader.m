@@ -71,9 +71,10 @@ function []=listheader(data,varargin)
 %                        multi-column support
 %        Feb.  1, 2012 - fix tai/tai6 output, adaptive column spacing,
 %                        split path/file output, utc/tai bugfix
+%        Feb. 20, 2012 - clean up cell array initialization issues
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2012 at 15:05 GMT
+%     Last Updated Feb. 20, 2012 at 15:05 GMT
 
 % todo:
 
@@ -105,8 +106,8 @@ nrecs=numel(data);
 % gather all possible fields and reftimes
 nfields=cell(nh,1);
 nabsf=nfields; nlgcf=nfields; nenumf=nfields;
-tmpfields=cell(2,5); % just a guess
-tmpabsf=nfields; tmplgcf=nfields; tmpenumf=nfields;
+tmpfields=cell(2,5); [tmpfields{:}]=deal({}); % size is just a guess
+tmpabsf=tmpfields; tmplgcf=tmpfields; tmpenumf=tmpfields;
 ref=nan(nrecs,5); good=false(nrecs,1);
 for i=1:nh
     % add virtual fields to wildcard search
@@ -132,16 +133,16 @@ for i=1:nh
                     strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
                     ' tai6');
             elseif(strcmp(h(i).types{j},'lgc'))
-                tmplgcf(k,j,1)=...
-                    {strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
-                    ' lgc')};
+                tmplgcf{k,j,1}=...
+                    strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
+                    ' lgc');
             elseif(strcmp(h(i).types{j},'enum'))
-                tmpenumf(k,j,1)=...
-                    {strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
-                    ' id')};
-                tmpenumf(k,j,2)=...
-                    {strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
-                    ' desc')};
+                tmpenumf{k,j,1}=...
+                    strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
+                    ' id');
+                tmpenumf{k,j,2}=...
+                    strcat(fieldnames(h(i).(h(i).types{j})(k).pos).',...
+                    ' desc');
             end
         end
     end

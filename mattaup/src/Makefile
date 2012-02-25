@@ -1,17 +1,14 @@
 TGT = 1.5
 DESTDIR = .
 INSTALLDIR = ../lib
-#CLASSPATH = .:/opt/taup/1.1.7/lib/TauP-1.1.7.jar:/opt/taup/1.1.7/lib/seisFile-1.0.1.jar
-CLASSPATH = .:/opt/taup/2.0/lib/TauP-2.0.jar:/opt/taup/2.0/lib/seisFile-1.2.jar
+CLASSPATH = .:/opt/taup/1.2beta4/lib/TauP-1.2beta4.jar:/opt/taup/1.2beta4/lib/seisFile-1.0.8.jar
 
-DISTOBJS =	LatLon.class \
+DISTOBJS =	MatCurve.class \
+	MatTauP_Curve.class \
 	MatPath.class \
 	MatArrival.class \
-	TT_Curve.class \
-	MatTauP_Curve.class \
-	MatTauP_Path.class \
-	MatTauP_Pierce.class \
-	MatTauP_Time.class
+	LatLon.class \
+	MatTauP_Path.class
 
 OBJS = ${DISTOBJS}
 
@@ -24,11 +21,10 @@ OBJS = ${DISTOBJS}
 dist:	${OBJS}
 
 install: jar
-#	cp -f $(DESTDIR)/MatTauP-1.1.7.jar ${INSTALLDIR}/MatTauP-1.1.7.jar
-	cp -f $(DESTDIR)/MatTauP-2.0.jar ${INSTALLDIR}/MatTauP-2.0.jar
+	cp -f $(DESTDIR)/MatTauP-1.2beta4.jar ${INSTALLDIR}/MatTauP-1.2beta4.jar
 
 jar:	dist
-#	cd ${DESTDIR} ; jar -cf MatTauP-1.1.7.jar edu
-	cd ${DESTDIR} ; jar -cf MatTauP-2.0.jar edu
+	cd ${DESTDIR} ; jar -cf MatTauP-1.2beta4.jar edu
+
 
 

@@ -3,32 +3,33 @@ function [map]=gebco(m)
 %
 %    Usage:    map=gebco(m)
 %
-%    Description: MAP=GEBCO(M) returns a Mx3 matrix of RGB color values
-%     going from cyan to light greens to white.  GEBCO by itself sets
-%     M to match the current figure's colormap size.  If no figure exists,
-%     one is created.
+%    Description:
+%     MAP=GEBCO(M) returns a Mx3 matrix of RGB color values going from cyan
+%     to light greens to white.  GEBCO by itself sets M to match the
+%     current figure's colormap size.  If no figure exists, one is created.
 %
 %    Notes:
 %     - by Andrew Goodwillie, Scripps
 %     - The original GMT color palette extent was from -7000m to 0m.
 %
 %    Examples:
-%     Set the current figure's colormap:
-%      colormap(gebco)
+%     % Set the current figure's colormap:
+%     colormap(gebco)
 %
-%     To use the colormap in reverse:
-%      colormap(flipud(gebco))
+%     % To use the colormap in reverse:
+%     colormap(flipud(gebco))
 %
-%    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, OCEAN, DRYWET,
-%              SEALAND, RAINBOW, RELIEF, GLOBE_SEA, GLOBE_LAND,
+%    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, GMT_OCEAN,
+%              DRYWET, SEALAND, GMT_RAINBOW, RELIEF, GLOBE_SEA, GLOBE_LAND,
 %              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ, FIRE, NIGHTTIME,
 %              DUSK, DAWN, HSVSPIN, HSVCUSTOM
 
 %     Version History:
 %        Feb. 17, 2010 - initial version
+%        Feb. 22, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 17, 2010 at 00:40 GMT
+%     Last Updated Feb. 22, 2012 at 00:40 GMT
 
 % todo:
 

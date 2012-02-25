@@ -2,7 +2,7 @@ function [varargout]=plot_tauppath(tt,varargin)
 %PLOT_TAUPPATH    Plots tauppath output
 %
 %    Usage:    plot_tauppath(tt)
-%              plot_tauppath(tt,'option',value,...)
+%              plot_tauppath(tt,'property',value,...)
 %              h=plot_tauppath(...)
 %
 %    Description:
@@ -10,80 +10,170 @@ function [varargout]=plot_tauppath(tt,varargin)
 %     output from TAUPPATH.  See that function for more details on
 %     generating raypaths.
 %
-%     PLOT_TAUPPATH(TT,'OPTION',VALUE,...) passes option/value pairs to
-%     PLOT.  This is useful for defining the axis ('parent') or the width
-%     of the paths ('linewidth').  A couple extra parameters are available:
-%      'evangle'  - angle to place event at (-45 is the default)
-%      'raycolor' - coloring of rays (colormap string, rgb values, name)
+%     PLOT_TAUPPATH(TT,'PROPERTY',VALUE,...) allows some up-front plot
+%     manipulation by adjusting specific properties.  Any unknown
+%     properties are passed on to PLOT.  Valid properties:
+%      EVANGLE    - angle to place event at (default is -45)
+%      RAYCOLOR   - coloring of rays (colormap string, rgb triplet, name)
+%                   (default is 'hsv')
+%      STSYMBOL   - station marker symbol (default is '^')
+%      STSIZE     - station marker size (default is 8)
+%      STCOLOR    - station marker facecolor (default is 'r')
+%      EVSYMBOL   - event marker symbol (default is 'p')
+%      EVSIZE     - event marker size (default is 10)
+%      EVCOLOR    - event marker facecolor (default is 'y')
+%      BGCOLOR    - background color (rgb triplet, name) (default is 'k')
+%      FGCOLOR    - foreground color (rgb triplet, name) (default is 'w')
+%      SHOWLEGEND - true or false (default is true)
+%      AXES       - handle of axes to draw in (1 or 2 handles) (none)
 %
-%     H=PLOT_TAUPPATH(...) returns the handles to the raypaths.
+%     AX=PLOT_TAUPPATH(...) returns the handle to the axes drawn in.
 %
 %    Notes:
 %
 %    Examples:
 %     % Draw a variety of phases from an event to 3 random stations:
-%     plot_tauppath(tauppath,'raycolor','r')
-%     plot_tauppath(tauppath,'raycolor','g','parent',gca)
-%     plot_tauppath(tauppath,'raycolor','b','parent',gca)
-%     legend off
+%     ax=plot_tauppath(tauppath,'raycolor','r','legend',false);
+%     plot_tauppath(tauppath,'raycolor','g','parent',ax,'legend',false);
+%     plot_tauppath(tauppath,'raycolor','b','parent',ax,'legend',false);
 %
 %    See also: TAUPPATH, PLOT_TAUPCURVE
 
 %     Version History:
 %        May  21, 2011 - initial version
 %        Dec.  6, 2011 - fix raycolor bug
+%        Feb. 24, 2012 - added lots of new properties
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  6, 2011 at 17:15 GMT
+%     Last Updated Feb. 24, 2012 at 17:15 GMT
 
 % todo:
-% - fgc/bgc
-% - station marker options
-% - event marker options
 
 % check nargin
 error(nargchk(1,inf,nargin));
 if(nargin>1 && ~mod(nargin,2))
-    error('matTaup:plot_tauppath:badNumOptions',...
+    error('TauP:plot_tauppath:badNumOptions',...
         'Unpaired option(s)!');
 end
 
-% check taupcurve output
+% check tauppath output
 if(~isstruct(tt) || any(~isfield(tt,...
-        {'time' 'distance' 'depth' 'phase' 'rayparameter' 'path'})))
-    error('matTaup:plot_tauppath:badInput',...
+        {'modelname' 'depth' 'distance' 'mindistance' 'phase' ...
+        'puristphase' 'time' 'rayparameter' 'path'})))
+    error('TauP:plot_tauppath:badInput',...
         'TT was not created by TAUPPATH!');
 elseif(isempty(tt))
-    error('matTaup:plot_tauppath:badInput',...
+    error('TauP:plot_tauppath:badInput',...
         'TT is empty!');
 end
 
 % number of phases
 nph=numel(tt);
 
-% was an axis handle given?
-[ax,varargin]=axescheck(varargin{:});
-if(isempty(ax)); newax=true; else newax=false; end
-
-% append defaults
-varargin=[{'evang' -45 'raycolor' 'hsv'} varargin];
-
 % check options are strings
 if(~iscellstr(varargin(1:2:end)))
-    error('matTaup:plot_tauppath:badInput',...
-        'One or more parameters appear to not be given as strings!');
+    error('TauP:plot_tauppath:badInput',...
+        'One or more properties appear to not be given as strings!');
 end
 
+% strip axes arguments
+[ax,varargin]=axparse(varargin{:});
+
+% append defaults
+varargin=[{'fgc' [] 'bgc' [] 'legend' true ...
+    'evsym' 'p' 'evsize' 10 'evc' 'y' ...
+    'stsym' '^' 'stsize' 8 'stc' 'r' ...
+    'evang' -45 'raycolor' 'hsv'} varargin];
+
 % extract pertinent parameters
-% - event start location
-% - raypath coloring
 delete=false(numel(varargin),1);
 for i=1:2:numel(varargin)
     p=varargin{i};
     v=varargin{i+1};
     switch p
+        case {'evsymbol' 'evsym'}
+            if(~ischar(v) || ~isscalar(v) ...
+                    || ~any(lower(v)=='.ox+*sdv^<>ph'))
+                error('TauP:plot_tauppath:badInput',...
+                    'EVSYMBOL must be a valid single character symbol!');
+            end
+            opt.evsymbol=v;
+            delete(i:i+1)=true;
+        case {'evsize' 'evsz'}
+            if(~isscalar(v) || ~isreal(v) || v<0)
+                error('TauP:plot_tauppath:badInput',...
+                    'EVSIZE must be a positive real-valued scalar!');
+            end
+            opt.evsize=v;
+            delete(i:i+1)=true;
+        case {'evcolor' 'evc'}
+            if(~ischar(v) && ~isnumeric(v))
+                error('TauP:plot_tauppath:badInput',...
+                    'EVCOLOR must be a valid colorstring or RGB triplet!');
+            elseif(isnumeric(v) && ~isempty(v) && ~isequal(size(v),[1 3]))
+                error('TauP:plot_tauppath:badInput',...
+                    'EVCOLOR must be a valid colorstring or RGB triplet!');
+            end
+            opt.evcolor=v;
+            delete(i:i+1)=true;
+        case {'stsymbol' 'stsym'}
+            if(~ischar(v) || ~isscalar(v) ...
+                    || ~any(lower(v)=='.ox+*sdv^<>ph'))
+                error('TauP:plot_tauppath:badInput',...
+                    'STSYMBOL must be a valid single character symbol!');
+            end
+            opt.stsymbol=v;
+            delete(i:i+1)=true;
+        case {'stsize' 'stsz'}
+            if(~isscalar(v) || ~isreal(v) || v<0)
+                error('TauP:plot_tauppath:badInput',...
+                    'STSIZE must be a positive real-valued scalar!');
+            end
+            opt.stsize=v;
+            delete(i:i+1)=true;
+        case {'stcolor' 'stc'}
+            if(~ischar(v) && ~isnumeric(v))
+                error('TauP:plot_tauppath:badInput',...
+                    'STCOLOR must be a valid colorstring or RGB triplet!');
+            elseif(isnumeric(v) && ~isempty(v) && ~isequal(size(v),[1 3]))
+                error('TauP:plot_tauppath:badInput',...
+                    'STCOLOR must be a valid colorstring or RGB triplet!');
+            end
+            opt.stcolor=v;
+            delete(i:i+1)=true;
+        case {'fg' 'fgc' 'fgcolor'}
+            if(~ischar(v) && ~isnumeric(v))
+                error('TauP:plot_tauppath:badInput',...
+                    'FGCOLOR must be a valid colorstring or RGB triplet!');
+            elseif(isnumeric(v) && ~isempty(v) && ~isequal(size(v),[1 3]))
+                error('TauP:plot_tauppath:badInput',...
+                    'FGCOLOR must be a valid colorstring or RGB triplet!');
+            end
+            opt.fgc=v;
+            delete(i:i+1)=true;
+        case {'bg' 'bgc' 'bgcolor'}
+            if(~ischar(v) && ~isnumeric(v))
+                error('TauP:plot_tauppath:badInput',...
+                    'BGCOLOR must be a valid colorstring or RGB triplet!');
+            elseif(isnumeric(v) && ~isempty(v) && ~isequal(size(v),[1 3]))
+                error('TauP:plot_tauppath:badInput',...
+                    'BGCOLOR must be a valid colorstring or RGB triplet!');
+            end
+            opt.bgc=v;
+            delete(i:i+1)=true;
+        case {'showlegend' 'legend' 'leg'}
+            if(~isscalar(v) || ~islogical(v))
+                error('TauP:plot_tauppath:badInput',...
+                    'SHOWLEGEND must be TRUE or FALSE!');
+            end
+            opt.legend=v;
+            delete(i:i+1)=true;
         case {'evang' 'evangle'}
-            P.evang=v;
+            if(~isscalar(v) || ~isreal(v))
+                error('TauP:plot_tauppath:badInput',...
+                    'EVANGLE must be a real-valued scalar!');
+            end
+            opt.evangle=v;
             delete(i:i+1)=true;
         case {'rayc' 'raycolor'}
             % try to decipher input
@@ -92,27 +182,27 @@ for i=1:2:numel(varargin)
                     tmp=str2func(v);
                     tmp=tmp(nph);
                     if(isequal(size(tmp),[nph 3]))
-                        P.raycolor=tmp;
+                        opt.raycolor=tmp;
                     else
-                        error('matTaup:plot_tauppath:nothing',...
+                        error('TauP:plot_tauppath:nothing',...
                             'Ignore this!');
                     end
                 catch
                     try
                         tmp=name2rgb(v);
-                        P.raycolor=tmp(ones(nph,1),:);
+                        opt.raycolor=tmp(ones(nph,1),:);
                     catch
-                        error('matTaup:plot_tauppath:badInput',...
+                        error('TauP:plot_tauppath:badInput',...
                             'Could not decipher RAYCOLOR input!');
                     end
                 end
             else
                 if(isequal(size(v),[1 3]))
-                    P.raycolor=v(ones(nph,1),:);
+                    opt.raycolor=v(ones(nph,1),:);
                 elseif(isequal(size(v),[nph 3]))
-                    P.raycolor=v;
+                    opt.raycolor=v;
                 else
-                    error('matTaup:plot_tauppath:badInput',...
+                    error('TauP:plot_tauppath:badInput',...
                         'Could not decipher RAYCOLOR input!');
                 end
             end
@@ -121,10 +211,25 @@ for i=1:2:numel(varargin)
 end
 varargin(delete)=[];
 
+% fix fg/bg
+if(ischar(opt.bgc)); opt.bgc=name2rgb(opt.bgc); end
+if(ischar(opt.fgc)); opt.fgc=name2rgb(opt.fgc); end
+if(isempty(opt.fgc))
+    if(isempty(opt.bgc))
+        opt.fgc='w'; opt.bgc='k';
+    else
+        opt.fgc=invertcolor(opt.bgc,true);
+    end
+elseif(isempty(opt.bgc))
+    opt.bgc=invertcolor(opt.fgc,true);
+end
+
 % new plot?
-if(newax)
+if(isempty(ax))
     % new figure if no parent
-    fh=figure('color','k','name','TauP Ray Paths');
+    fh=figure('color',opt.bgc,'defaulttextcolor',opt.fgc,...
+        'defaultaxesxcolor',opt.fgc,'defaultaxesycolor',opt.fgc,...
+        'name','TauP Ray Paths');
     ax=axes('parent',fh);
     hold(ax,'on'); isheld=true;
     
@@ -145,7 +250,7 @@ if(newax)
     % plot major discontinuities
     for i=[6371 3480 1220]
         [cx,cy]=circle(i);
-        plot(ax,cx,cy,'w','linewidth',2);
+        plot(ax,cx,cy,'color',opt.fgc,'linewidth',2);
     end
     
     % plot minor discontinuities
@@ -161,27 +266,31 @@ else
 end
 
 % loop over phases
-ph=nan(1,nph); pn=cell(1,nph);
 for i=1:nph
     % plot phase path
-    cx=(6371-tt(i).path.depth).*sin((P.evang+tt(i).path.distance)/180*pi);
-    cy=(6371-tt(i).path.depth).*cos((P.evang+tt(i).path.distance)/180*pi);
-    ph(i)=plot(ax,cx,cy,'color',P.raycolor(i,:),...
+    cx=(6371-tt(i).path.depth)...
+        .*sin((opt.evangle+tt(i).path.distance)/180*pi);
+    cy=(6371-tt(i).path.depth)...
+        .*cos((opt.evangle+tt(i).path.distance)/180*pi);
+    plot(ax,cx,cy,'color',opt.raycolor(i,:),...
         'displayname',tt(i).phase,'tag','tauppath_raypath',varargin{:});
-    pn{i}=tt(i).phase;
 end
 
 % set default earthquake,station location
 stloc=unique([tt.distance]);
 stloc=stloc(stloc<=180);
-cx=6371*sin((P.evang+[0 stloc])/180*pi);
-cy=6371*cos((P.evang+[0 stloc])/180*pi);
+cx=6371*sin((opt.evangle+[0 stloc])/180*pi);
+cy=6371*cos((opt.evangle+[0 stloc])/180*pi);
 
 % plot event and station markers
-h1=plot(ax,cx(1),cy(1),'yp','markersize',10,'markerfacecolor','y',...
+if(ischar(opt.evcolor)); opt.evcolor=name2rgb(opt.evcolor); end
+if(ischar(opt.stcolor)); opt.stcolor=name2rgb(opt.stcolor); end
+h1=plot(ax,cx(1),cy(1),opt.evsymbol,'markeredgecolor',opt.evcolor,...
+    'markersize',opt.evsize,'markerfacecolor',opt.evcolor,...
     'tag','event_marker','displayname','event');
 for i=2:numel(cx)
-    h2=plot(ax,cx(i),cy(i),'r^','markersize',8,'markerfacecolor','r',...
+    h2=plot(ax,cx(i),cy(i),opt.stsymbol,'markeredgecolor',opt.stcolor,...
+        'markersize',opt.stsize,'markerfacecolor',opt.stcolor,...
         'tag','station_marker','displayname','station');
 end
 
@@ -189,12 +298,13 @@ end
 if(~isheld); hold(ax,'off'); end
 
 % update legend
-lh=legend([h1 h2 findobj(ax,'tag','tauppath_raypath')'],...
-    'location','westoutside');
-set(lh,'color','none','edgecolor','w','fontsize',6,'interpreter','none',...
-    'textcolor','w');
+if(opt.legend)
+    lh=legend(ax,[h1 h2 flipud(findobj(ax,'tag','tauppath_raypath'))'],...
+        {},'location','westoutside');
+    set(lh,'color','none','fontsize',6,'interpreter','none');
+end
 
 % output handles if desired
-if(nargout); varargout{1}=ph; end
+if(nargout); varargout{1}=ax; end
 
 end

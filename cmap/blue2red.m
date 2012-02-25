@@ -3,31 +3,33 @@ function [map]=blue2red(m)
 %
 %    Usage:    map=blue2red(m)
 %
-%    Description: MAP=BLUE2RED(M) returns a Mx3 matrix of RGB color values
-%     beginning with blue going to white in the middle and red at the end.
-%     BLUE2RED by itself sets M to match the current figure's colormap
-%     size.  If no figure exists, one is created.
+%    Description:
+%     MAP=BLUE2RED(M) returns a Mx3 matrix of RGB color values beginning
+%     with blue going to white in the middle and red at the end. BLUE2RED
+%     by itself sets M to match the current figure's colormap size.  If no
+%     figure exists, one is created.
 %
 %    Notes:
 %     - Matlab use to have a similar polar color map
 %
 %    Examples:
-%     Set the current figure's colormap:
-%      colormap(blue2red)
+%     % Set the current figure's colormap:
+%     colormap(blue2red)
 %
-%     To go red to blue:
-%      colormap(flipud(blue2red))
+%     % To go red to blue:
+%     colormap(flipud(blue2red))
 %
-%    See also: RED2GREEN, GREEN2BLUE, SPLIT, SEIS, OCEAN, DRYWET,
-%              GEBCO, SEALAND, RAINBOW, RELIEF, GLOBE_SEA, GLOBE_LAND,
+%    See also: RED2GREEN, GREEN2BLUE, SPLIT, SEIS, GMT_OCEAN, DRYWET,
+%              GEBCO, SEALAND, GMT_RAINBOW, RELIEF, GLOBE_SEA, GLOBE_LAND,
 %              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ, FIRE, NIGHTTIME,
 %              DUSK, DAWN, HSVSPIN, HSVCUSTOM
 
 %     Version History:
 %        Feb. 17, 2010 - initial version
+%        Feb. 22, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 17, 2010 at 00:40 GMT
+%     Last Updated Feb. 22, 2012 at 00:40 GMT
 
 % todo:
 

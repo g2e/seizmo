@@ -1,8 +1,8 @@
 #!/bin/bash
 echo 'Number of Personal m-Files:'
 ls -1 *.m audio/*.m behavior/*.m cmap/*.m cmb/*.m cmt/*.m decon/*.m event/*.m filtering/*.m fixes/*.m fk/*.m ftran/*.m gui/*.m hdr/*.m invert/*.m lowlevel/*.m mapping/*.m mattaup/*.m misc/*.m models/*.m multi/*.m noise/*.m pick/*.m plotting/*.m position/*.m resampling/*.m response/*.m rw/*.m solo/*.m sphpoly/*.m synth/*.m sz/*.m time/*.m toc/*.m tomo/*.m topo/*.m tpw/*.m ttcorrect/*.m uninstall/*.m win/*.m ww3/*.m xcalign/*.m | wc -l
-echo 'Number of Additional m-Files:'
-ls -1 exportfig/*.m | wc -l
+echo 'Number of Additional Files:'
+ls -1 mattaup/src/* mattaup/lib/* | wc -l
 echo 'Total Number of Lines (Personal):'
 cat *.m audio/*.m behavior/*.m cmap/*.m cmb/*.m cmt/*.m decon/*.m event/*.m filtering/*.m fixes/*.m fk/*.m ftran/*.m gui/*.m hdr/*.m invert/*.m lowlevel/*.m mapping/*.m mattaup/*.m misc/*.m models/*.m multi/*.m noise/*.m pick/*.m plotting/*.m position/*.m resampling/*.m response/*.m rw/*.m solo/*.m sphpoly/*.m synth/*.m sz/*.m time/*.m toc/*.m tomo/*.m topo/*.m tpw/*.m ttcorrect/*.m uninstall/*.m win/*.m ww3/*.m xcalign/*.m | wc -l
 echo 'Total Number of Words (Personal):'

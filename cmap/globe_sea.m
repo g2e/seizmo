@@ -3,10 +3,11 @@ function [map]=globe_sea(m)
 %
 %    Usage:    map=globe_sea(m)
 %
-%    Description: MAP=GLOBE_SEA(M) returns a Mx3 matrix of RGB color values
-%     going from violet to light blue to white.  GLOBE_SEA by itself sets
-%     M to match the current figure's colormap size.  If no figure exists,
-%     one is created.
+%    Description:
+%     MAP=GLOBE_SEA(M) returns a Mx3 matrix of RGB color values going from
+%     violet to light blue to white.  GLOBE_SEA by itself sets M to match
+%     the current figure's colormap size.  If no figure exists, one is
+%     created.
 %
 %    Notes:
 %     - by Lester M. Anderson (CASP, UK)
@@ -14,22 +15,23 @@ function [map]=globe_sea(m)
 %       -10000m to 0m.
 %
 %    Examples:
-%     Set the current figure's colormap:
-%      colormap(globe_sea)
+%     % Set the current figure's colormap:
+%     colormap(globe_sea)
 %
-%     To use the colormap in reverse:
-%      colormap(flipud(globe_sea))
+%     % To use the colormap in reverse:
+%     colormap(flipud(globe_sea))
 %
-%    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, OCEAN, DRYWET,
-%              GEBCO, SEALAND, RAINBOW, RELIEF, GLOBE_LAND,
+%    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, GMT_OCEAN,
+%              DRYWET, GEBCO, SEALAND, GMT_RAINBOW, RELIEF, GLOBE_LAND,
 %              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ, FIRE, NIGHTTIME,
 %              DUSK, DAWN, HSVSPIN, HSVCUSTOM
 
 %     Version History:
 %        Feb. 17, 2010 - initial version
+%        Feb. 22, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 17, 2010 at 00:40 GMT
+%     Last Updated Feb. 22, 2012 at 00:40 GMT
 
 % todo:
 

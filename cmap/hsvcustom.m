@@ -3,8 +3,9 @@ function map=hsvcustom(hsv,m)
 %
 %    Usage:    map=hsvcustom(hsv,m)
 %
-%    Description: MAP=HSVCUSTOM(HSV,M) returns a Mx3 matrix of RGB color
-%     values corresponding to varying hue in the hue-saturation-value color
+%    Description:
+%     MAP=HSVCUSTOM(HSV,M) returns a Mx3 matrix of RGB color values
+%     corresponding to varying hue in the hue-saturation-value color
 %     system.  This function differs from HSV in that it will begin with
 %     the hue specified by HSV (0 to 1) rather than always starting/ending
 %     with red).  The saturation and value are not changed across the color
@@ -15,22 +16,23 @@ function map=hsvcustom(hsv,m)
 %    Notes:
 %
 %    Examples:
-%     Set the current figure's colormap:
-%      colormap(hsvcustom([0.3 0.5 0.5]))
+%     % Set the current figure's colormap:
+%     colormap(hsvcustom([0.3 0.5 0.5]))
 %
-%     To use the colormap in reverse:
-%      colormap(flipud(hsvcustom([0.3 0.5 0.5])))
+%     % To use the colormap in reverse:
+%     colormap(flipud(hsvcustom([0.3 0.5 0.5])))
 %
 %    See also: HSV, HSV2RGB, RGB2HSV, RED2GREEN, BLUE2RED, GREEN2BLUE,
-%              SPLIT, SEIS, OCEAN, DRYWET, GEBCO, SEALAND, RAINBOW, RELIEF,
-%              GLOBE_SEA, GLOBE_LAND, SEALAND_SEA, SEALAND_LAND, TOPO_LAND,
-%              FIRE, HSVSPIN, NIGHTTIME, DUSK, DAWN
+%              SPLIT, SEIS, GMT_OCEAN, DRYWET, GEBCO, SEALAND, GMT_RAINBOW,
+%              RELIEF, GLOBE_SEA, GLOBE_LAND, SEALAND_SEA, SEALAND_LAND,
+%              TOPO_LAND, FIRE, HSVSPIN, NIGHTTIME, DUSK, DAWN
 
 %     Version History:
 %        May  11, 2010 - initial version
+%        Feb. 22, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  11, 2010 at 00:45 GMT
+%     Last Updated Feb. 22, 2012 at 00:45 GMT
 
 if nargin < 1, hsv=[0 1 1]; end
 if nargin < 2, m = size(get(gcf,'colormap'),1); end

@@ -1,4 +1,4 @@
-function tt=tauptime(varargin)
+function [varargout]=tauptime(varargin)
 %TAUPTIME    Calculate travel times using the TauP toolkit
 %
 %    Usage:    tauptime(...)
@@ -11,21 +11,27 @@ function tt=tauptime(varargin)
 %           tt=tauptime(...,'s|st|sta|station',[lat lon],...)
 %           tt=tauptime(...,'e|ev|evt|event',[lat lon],...)
 %
-%    Description: TAUPTIME(...) (no outputs, w/ or w/o inputs) displays a
-%     formatted list of information on many seismic phases found at a
-%     random distance (0 to 180 deg) from an event with a depth of 0km.  
-%     The 1D Earth model utilized by default is IASP91 (see the MODEL
-%     option to adjust this).  The default phase list is 'ttbasic'
-%     (equivalent to setting phases to BASIC in Brian Kennett's TTIMES
-%     program) which lists many common phases by default.  See option
-%     PHASES to adjust the phase list.  A variety of options (DEG, KM, STA
-%     & EVT) allow for changing the distance from the event.
+%    Description:
+%     TAUPTIME(...) (no outputs, w/ or w/o inputs) displays a formatted
+%     list of information on many seismic phases found at a random distance
+%     (0 to 180 deg) from an event with a depth of 0km.  The 1D Earth model
+%     utilized by default is IASP91 (see the MODEL option to adjust this).
+%     The default phase list is 'ttbasic' (equivalent to setting phases to
+%     BASIC in Brian Kennett's TTIMES program) which lists many common
+%     phases by default.  See option PHASES to adjust the phase list.  A
+%     variety of options (DEG, KM, STA & EVT) allow for changing the
+%     distance from the event.
 %
 %     TT=TAUPTIME(...) (1 output, w/ or w/o inputs) returns a structure
 %     array with the following fields:
-%             TT(index).phase        - seismic phase name
-%                      .distance     - purist distance (deg)
+%             TT(index).modelname    - name of velocity model
+%                      .event        - event location if known ([lat lon])
+%                      .station      - stn location if known ([lat lon])
 %                      .depth        - depth of earthquake (km)
+%                      .distance     - true distance (deg)
+%                      .mindistance  - least distance (deg)
+%                      .phase        - seismic phase name
+%                      .puristphase  - verbose seismic phase name
 %                      .time         - travel time (sec)
 %                      .rayparameter - ray parameter (sec/deg)
 %     Each phase has its own indice in the struct array TT.  Use TT(index)
@@ -38,7 +44,8 @@ function tt=tauptime(varargin)
 %
 %     TT=TAUPTIME(...,'M|MOD|MODEL',MODEL,...) sets the 1D Earth model to
 %     MODEL.  Accepts a variety of common models like 'prem', 'iasp91',
-%     'ak135'.  See the TauP program/documentation for more.  The default
+%     'ak135'.  See the TauP program/documentation for more.  You may also
+%     give a 1DMODEL struct like from CMB_1DMODEL_LIBRARY.  The default
 %     model is 'iasp91'.
 %
 %     TT=TAUPTIME(...,'H|Z|DEP|EVDP|DEPTH',DEPTH,...) sets the event depth
@@ -47,7 +54,7 @@ function tt=tauptime(varargin)
 %     TT=TAUPTIME(...,'P|PH|PHASES',PHASES,...) sets the phase list to
 %     PHASES.  PHASES must be a comma separated list of seismic phases.  
 %     See the TauP documentation for conventions and valid phase names.
-%     Multiple calls are honored.  The default phase list is 'ttbasic'.
+%     The default phase list is 'ttbasic'.
 %
 %     TT=TAUPTIME(...,'D|DEG|GCARC|DEGREES',DEGDIST,...) sets the event
 %     distance to DEGDIST.  DEGDIST is expected to be in angular degrees.
@@ -69,44 +76,24 @@ function tt=tauptime(varargin)
 %     There is no default value for this option.
 %
 %    Notes:
-%     - These scripts require the included file:
-%          mattaup/lib/matTaup.jar
-%       to be added in Matlab's javaclasspath.  You may use the functions
-%       javaaddpath and javarmpath to alter the dynamic portion of the path
-%       or you will need to add the jar file to the Matlab system file
-%       'classpath.txt'.  Use the command 'edit classpath.txt' in Matlab to
-%       add the the jar file (be careful and use the full path!).  This may
-%       require administrator privileges.
-%
-%     - This script passes all position/distance options in the order they
-%       are given.  This leaves the interpretation of conflicting inputs to
-%       TauP.
-%
-%     - MatTauP is only a wrapping program for TauP toolkit, which is
-%       developed by:
+%     - TauP toolkit developed by:
 %        H. Philip Crotwell, Thomas J. Owens, Jeroen Ritsema
 %        Department of Geological Sciences
 %        University of South Carolina
 %        http://www.seis.sc.edu
 %        crotwell@seis.sc.edu
 %
-%     - MatTauP was written by:
-%        Qin Li 
-%        Unverisity of Washington
-%        qinli@u.washington.edu
-%        Nov, 2002
-%
 %    Examples:
-%     Return info on several P arrivals expected at 25 degrees from an
-%     event:
-%      tauptime('p','ttp','d',25)
+%     % Return info on several P arrivals
+%     % expected at 25 degrees from an event:
+%     tauptime('p','ttp','d',25)
 %
-%     Some other valid examples:
-%      tauptime('dep',50,'ph','P,S','deg',45.6)
-%      tauptime('mod','prem','dep',50,'ph','Pdiff,PKP',...
-%          'sta',[-40 -100],'evt',[30,50])
+%     % Some other valid examples:
+%     tauptime('dep',50,'ph','P,S','deg',45.6)
+%     tauptime('mod','prem','dep',50,'ph','Pdiff,PKP',...
+%         'sta',[-40 -100],'evt',[30,50])
 %
-%    See also: TAUP, TAUPPATH, TAUPCURVE, TAUPPIERCE
+%    See also: TAUPPATH, TAUPCURVE, TAUPPIERCE, TAUPCREATE, TAUP
 
 %     Version History:
 %        June 29, 2009 - added defaults for depth, phase, model
@@ -124,9 +111,10 @@ function tt=tauptime(varargin)
 %        Jan.  6, 2011 - add matTaup.jar to dynamic java classpath if
 %                        necessary
 %        Feb. 16, 2012 - works with Octave+Octave-Java
+%        Feb. 24, 2012 - switch to native taup
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2012 at 17:15 GMT
+%     Last Updated Feb. 24, 2012 at 17:15 GMT
 
 % todo:
 
@@ -135,175 +123,206 @@ if(mod(nargin,2))
     error('matTaup:tauptime:badNumOptions','Unpaired option(s)!');
 end
 
-% initialize java object
-try
-    MatTauP_Time=javaObject('edu.sc.seis.TauP.MatTauP_Time');
-catch
-    % try adding first matTaup.jar if no MatTauP class exists
+% try adding *.jar if no TauP class exists
+if(~exist('edu.sc.seis.TauP.TauP_Time','class'))
     fs=filesep;
     mypath=fileparts(mfilename('fullpath'));
-    javaaddpath([mypath fs 'lib' fs 'matTaup.jar']);
-    MatTauP_Time=javaObject('edu.sc.seis.TauP.MatTauP_Time');
+    javaaddpath([mypath fs 'lib' fs 'MatTauP-1.2beta4.jar']);
+    javaaddpath([mypath fs 'lib' fs 'TauP-1.2beta4.jar']);
+    javaaddpath([mypath fs 'lib' fs 'seisFile-1.0.8.jar']);
 end
 
 % default options
-model='iasp91';
-depth='0';
-phases='ttbasic';
+model='iasp91'; modelname='iasp91';
+depth=0; phases={'ttbasic'};
+deg=[]; km=[];
+st=[]; ev=[];
+az=[]; baz=[];
 
 % check options
-pargs=cell(0); np=0;
-dargs=cell(0); nd=0;
-d=false; k=d; s=d; e=d; a=d; b=d;
+if(~iscellstr(varargin(1:2:end)))
+    error('TauP:tauptime:badInput',...
+        'All options must be specified with strings!');
+end
 for i=1:2:nargin
+    if(isempty(varargin{i+1})); continue; end
     switch lower(varargin{i})
         case {'m' 'mod' 'model'}
-            if(isempty(varargin{i+1})); continue; end
-            if(~ischar(varargin{i+1}))
-                error('matTaup:tauptime:badInput',...
+            if(ischar(varargin{i+1})) % name of model on TauP path
+                model=varargin{i+1};
+                modelname=model;
+            elseif(isempty(chk1dmodel(varargin{i+1}))) % 1dmodel struct
+                model=taupcreate(varargin{i+1});
+                modelname=char(model.getModelName);
+            elseif(strcmp(class(varargin{i+1}),... % velocity model obj
+                    'edu.sc.seis.TauP.VelocityModel'))
+                model=taupcreate(varargin{i+1});
+                modelname=char(model.getModelName);
+            elseif(strcmp(class(varargin{i+1}),... % tau model obj
+                    'edu.sc.seis.TauP.TauModel'))
+                model=varargin{i+1};
+                modelname=char(model.getModelName);
+            else
+                error('TauP:tauptime:badInput',...
                     'MODEL must be a string (like ''prem'')!');
             end
-            model=varargin{i+1}(:)';
         case {'h' 'z' 'dep' 'evdp' 'depth'}
-            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) ...
                     || ~isreal(varargin{i+1}) || varargin{i+1}<0)
-                error('matTaup:tauptime:badInput',...
+                error('TauP:tauptime:badInput',...
                     'DEPTH must be a positive number (in km)!');
             end
-            depth=num2str(varargin{i+1});
+            depth=varargin{i+1};
         case {'p' 'ph' 'phases'}
-            if(isempty(varargin{i+1})); continue; end
             if(~ischar(varargin{i+1}))
-                error('matTaup:tauptime:badInput',...
+                error('TauP:tauptime:badInput',...
                     'PHASES must be a string (like ''P,S'')!');
             end
-            np=np+2;
-            pargs(1,np-1:np)={'-ph' varargin{i+1}};
+            phases=varargin{i+1};
+            phases=strtrim(getwords(phases,','));
         case {'d' 'deg' 'gcarc' 'degrees'}
-            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) ...
                     || ~isreal(varargin{i+1}) || varargin{i+1}<0)
-                error('matTaup:tauptime:badInput',...
+                error('TauP:tauptime:badInput',...
                     'DEG must be a positive number (in degrees)!');
             end
-            nd=nd+2;
-            dargs(1,nd-1:nd)={'-deg' num2str(varargin{i+1})};
-            d=true;
+            deg=varargin{i+1};
         case {'k' 'km' 'dist' 'kilometers'}
-            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) ...
                     || ~isreal(varargin{i+1}) || varargin{i+1}<0)
-                error('matTaup:tauptime:badInput',...
+                error('TauP:tauptime:badInput',...
                     'KM must be a positive number (in kilometers)!');
             end
-            nd=nd+2;
-            dargs(1,nd-1:nd)={'-km' num2str(varargin{i+1})};
-            k=true;
+            km=varargin{i+1};
         case {'s' 'st' 'sta' 'station'}
-            if(isempty(varargin{i+1})); continue; end
-            if(numel(varargin{i+1})~=2 ...
+            if(~isequal([1 2],size(varargin{i+1})) ...
                     || ~all(isreal(varargin{i+1})))
-                error('matTaup:tauptime:badInput',...
+                error('TauP:tauptime:badInput',...
                     'STA must be 2 real numbers ([LAT LON] in degrees)!');
             end
-            nd=nd+3;
-            dargs(1,nd-2:nd)={'-sta' num2str(varargin{i+1}(1)) ...
-                num2str(varargin{i+1}(2))};
-            s=true;
+            st=varargin{i+1};
         case {'e' 'ev' 'evt' 'event'}
-            if(isempty(varargin{i+1})); continue; end
-            if(numel(varargin{i+1})~=2 ...
+            if(~isequal([1 2],size(varargin{i+1})) ...
                     || ~all(isreal(varargin{i+1})))
-                error('matTaup:tauptime:badInput',...
+                error('TauP:tauptime:badInput',...
                     'EVT must be 2 real numbers ([LAT LON] in degrees)!');
             end
-            nd=nd+3;
-            dargs(1,nd-2:nd)={'-evt' num2str(varargin{i+1}(1)) ...
-                num2str(varargin{i+1}(2))};
-            e=true;
+            ev=varargin{i+1};
         case {'a' 'az' 'azi' 'azimuth'}
-            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}))
-                error('matTaup:tauptime:badInput',...
+                error('TauP:tauptime:badInput',...
                     'AZ must be a scalar number (in degrees)!');
             end
-            nd=nd+2;
-            dargs(1,nd-1:nd)={'-az' num2str(varargin{i+1})};
-            a=true;
+            az=varargin{i+1};
         case {'b' 'baz' 'bazi' 'backazimuth'}
-            if(isempty(varargin{i+1})); continue; end
             if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}))
-                error('matTaup:tauptime:badInput',...
+                error('TauP:tauptime:badInput',...
                     'BAZ must be a scalar number (in degrees)!');
             end
-            nd=nd+2;
-            dargs(1,nd-1:nd)={'-baz' num2str(varargin{i+1})};
-            b=true;
+            baz=varargin{i+1};
         otherwise
-            error('matTaup:tauptime:badOption',...
+            error('TauP:tauptime:badOption',...
                 'Unknown Option: %s',varargin{i});
     end
 end
 
-% set up inputs
-inArgs{1}='-mod';
-inArgs{2}=model;
-inArgs{3}='-h';
-inArgs{4}=depth;
-if(np>0)
-    inArgs=[inArgs pargs];
-else
-    inArgs{5}='-ph';
-    inArgs{6}=phases;
-end
-if(d || k || (s && e) || (s && b && (d || k)) || (e && a && (d || k)))
-    inArgs=[inArgs dargs];
-else
+% check geometry
+sc=javaObject('edu.sc.seis.TauP.SphericalCoords');
+d=~isempty(deg); k=~isempty(km); s=~isempty(st);
+e=~isempty(ev); a=~isempty(az); b=~isempty(baz);
+if(d && k)
+    % over specified
+    error('TauP:tauptime:badInput',...
+        'DEG & KM options cannot both be used!');
+elseif(k)
+    deg=km/(6371*pi/180);
+elseif(d)
+    %km=deg*(6371*pi/180);
+elseif(~(e && s))
     % default to random distance
     disp('Distance not given or could not be determined - using random!')
-    inArgs=[inArgs dargs {'-deg' num2str(rand*180)}];
+    deg=rand*180;
+    %km=deg*(6371*pi/180);
+    d=true;
+end
+if((e && s) || (e && a && (d || k)) || (s && b && (d || k)))
+    % specific geometry
+    %generic=false;
+    if(e && s)
+        deg=sc.distance(ev(1),ev(2),st(1),st(2));
+        %az=sc.azimuth(ev(1),ev(2),st(1),st(2));
+        %baz=sc.azimuth(st(1),st(2),ev(1),ev(2));
+    elseif(s)
+        ev(1)=sc.latFor(st(1),st(2),deg,baz);
+        ev(2)=sc.lonFor(st(1),st(2),deg,baz);
+        %az=sc.azimuth(ev(1),ev(2),st(1),st(2));
+    elseif(e)
+        st(1)=sc.latFor(ev(1),ev(2),deg,az);
+        st(2)=sc.lonFor(ev(1),ev(2),deg,az);
+        %baz=sc.azimuth(st(1),st(2),ev(1),ev(2));
+    end
+elseif((d || k) && ~((d && k) || s || e || a || b))
+    % generic geometry
+    %generic=true;
+else
+    error('TauP:tauptime:badInput',...
+        'Event-Station geometry under/over specified!');
 end
 
 % debug
-%disp(inArgs);
+%[generic ev st deg az baz]
 
-% attempt run
-arrivals=MatTauP_Time.run_time(inArgs);
+% create time object for velocity model
+ttobj=javaObject('edu.sc.seis.TauP.TauP_Time',model);
+
+% calculate times for the specified depth, phase & distance
+ttobj.setSourceDepth(depth);
+ttobj.setPhaseNames(phases);
+ttobj.calculate(deg);
+narr=ttobj.getNumArrivals;
 
 % conversion
 R2D=180/pi;
+
+% struct output
+tt(1:narr,1)=struct('modelname',[],'event',[],'station',[],'depth',[],...
+    'distance',[],'mindistance',[],'phase',[],'puristphase',[],...
+    'time',[],'rayparameter',[]);
+for ii=1:narr
+    % get phase info
+    arr=ttobj.getArrival(ii-1);
+    tt(ii).modelname=modelname;
+    tt(ii).event=ev;
+    tt(ii).station=st;
+    tt(ii).depth=arr.getSourceDepth;
+    tt(ii).distance=arr.getDistDeg;
+    tt(ii).mindistance=arr.getModuloDistDeg;
+    tt(ii).phase=char(arr.getName);
+    tt(ii).puristphase=char(arr.getPuristName);
+    tt(ii).time=arr.getTime;
+    tt(ii).rayparameter=arr.getRayParam/R2D;
+end
 
 % formatted listing
 if(nargout==0)
     % header
     disp(' ')
-    disp(['Model: ' model])
+    disp(['Model: ' modelname])
     disp('Distance   Depth   Phase        Travel    Ray Param   Purist    Purist')
     disp('  (deg)     (km)   Name         Time (s)  p (s/deg)  Distance   Name  ')
     disp('--------------------------------------------------------------------------')
     
-    % list phase info
-    for ii=1:numel(arrivals)
+    % loop over arrivals
+    for ii=1:narr
+        % list phase info
         fprintf(' %7.2f  %6.1f   %-10s   %7.2f   %7.3f    %7.2f  = %-10s\n',...
-            arrivals(ii).getModuloDistDeg,arrivals(ii).getSourceDepth,...
-            char(arrivals(ii).getName),arrivals(ii).getTime,...
-            arrivals(ii).getRayParam/R2D,arrivals(ii).getDistDeg,...
-            char(arrivals(ii).getPuristName));
+            tt(ii).mindistance,tt(ii).depth,...
+            tt(ii).phase,tt(ii).time,...
+            tt(ii).rayparameter,tt(ii).distance,...
+            tt(ii).puristphase);
     end
-    
-    return
-end
-
-% struct output
-tt(1:numel(arrivals))=struct('phase',[],'distance',[],'depth',[],...
-    'time',[],'rayparameter',[]);
-for ii=1:numel(arrivals)
-    tt(ii).time=arrivals(ii).getTime;
-    tt(ii).distance=arrivals(ii).getDistDeg;
-    tt(ii).depth=arrivals(ii).getSourceDepth;
-    tt(ii).phase=char(arrivals(ii).getName);
-    tt(ii).rayparameter=arrivals(ii).getRayParam/R2D;
+else
+    varargout{1}=tt;
 end
 
 end

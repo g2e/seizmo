@@ -70,7 +70,7 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %     y=1:10; y=y(ones(10,1),:); x=y';
 %     cmt=findcmt('n',100);
 %     mt=[cmt.mrr cmt.mtt cmt.mpp cmt.mrt cmt.mrp cmt.mtp]; % Nx6
-%     plotmt(x(:),y(:),mt,'pcolor',rainbow(100));
+%     plotmt(x(:),y(:),mt,'pcolor',gmt_rainbow(100));
 %     axis equal tight off;
 %
 %     % Show off the ability of PLOTMT to rotate a cmt:
@@ -96,9 +96,10 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %                        for colors
 %        Jan. 11, 2012 - improve the notes section
 %        Feb.  7, 2012 - use 3x3xN over Nx6 to allow single couples
+%        Feb. 22, 2012 - minor fix for example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 23:55 GMT
+%     Last Updated Feb. 22, 2012 at 23:55 GMT
 
 % todo:
 

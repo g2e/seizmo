@@ -1,5 +1,5 @@
-%   1 - These scripts require the included file:
-%          mattaup/lib/matTaup.jar
+%   1 - These scripts require the included files:
+%          mattaup/lib/*.jar
 %       to be added in Matlab's javaclasspath.  You may use the functions
 %       javaaddpath and javarmpath to alter the dynamic portion of the path
 %       or you will need to add the jar file to the Matlab system file
@@ -14,4 +14,4 @@
 %       privileges.
 %
 %   3 - Type 'help mattaup' in Matlab to check if step 2 worked.  Run some
-%       of the functions listed to check if step 1 worked.
+%       of the m-file functions listed to check if step 1 worked.

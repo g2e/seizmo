@@ -2,6 +2,7 @@ function []=sz_toc_misc()
 % Miscellaneous Support Functions
 %<a href="matlab:help axexpand">axexpand</a>             - Expands axes by factor
 %<a href="matlab:help axmove">axmove</a>               - Moves a set of axes by the specified amount
+%<a href="matlab:help axparse">axparse</a>              - Strips out axes arguments (leading or p/v pair)
 %<a href="matlab:help axstretch">axstretch</a>            - Stretches a set of axes as a group (resizing+moving)
 %<a href="matlab:help bihist">bihist</a>               - Plots histograms for 2 datasets with one going up & one down
 %<a href="matlab:help buttord2">buttord2</a>             - Butterworth filter order selection. (Honors passband corners)

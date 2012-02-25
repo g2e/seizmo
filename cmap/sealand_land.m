@@ -3,10 +3,11 @@ function [map]=sealand_land(m)
 %
 %    Usage:    map=sealand_land(m)
 %
-%    Description: MAP=SEALAND_LAND(M) returns a Mx3 matrix of RGB color
-%     values going from light yellow to light red to pink.  SEALAND_LAND by
-%     itself sets M to match the current figure's colormap size.  If no
-%     figure exists, one is created.
+%    Description:
+%     MAP=SEALAND_LAND(M) returns a Mx3 matrix of RGB color values going
+%     from light yellow to light red to pink.  SEALAND_LAND by itself sets
+%     M to match the current figure's colormap size.  If no figure exists,
+%     one is created.
 %
 %    Notes:
 %     - by W.H.F. Smith, NOAA
@@ -14,22 +15,23 @@ function [map]=sealand_land(m)
 %       0m to 3000m.
 %
 %    Examples:
-%     Set the current figure's colormap:
-%      colormap(sealand_land)
+%     % Set the current figure's colormap:
+%     colormap(sealand_land)
 %
-%     To use the colormap in reverse:
-%      colormap(flipud(sealand_land))
+%     % To use the colormap in reverse:
+%     colormap(flipud(sealand_land))
 %
-%    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, OCEAN, DRYWET,
-%              GEBCO, SEALAND, RAINBOW, RELIEF, GLOBE_SEA, GLOBE_LAND,
-%              SEALAND_SEA, TOPO_LAND, RITZ, FIRE, NIGHTTIME,
+%    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, GMT_OCEAN,
+%              DRYWET, GEBCO, SEALAND, GMT_RAINBOW, RELIEF, GLOBE_SEA,
+%              GLOBE_LAND, SEALAND_SEA, TOPO_LAND, RITZ, FIRE, NIGHTTIME,
 %              DUSK, DAWN, HSVSPIN, HSVCUSTOM
 
 %     Version History:
 %        Feb. 17, 2010 - initial version
+%        Feb. 22, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 17, 2010 at 00:40 GMT
+%     Last Updated Feb. 22, 2012 at 00:40 GMT
 
 % todo:
 

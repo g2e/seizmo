@@ -1,8 +1,9 @@
-function []=write_1dmodel_nd(file,model,o)
+function []=write_1dmodel_nd(file,model,overwrite,noheader)
 %WRITE_1DMODEL_ND    Writes a 1D model struct in .nd format
 %
 %    Usage:    write_1dmodel_nd(file,model)
 %              write_1dmodel_nd(file,model,overwrite)
+%              write_1dmodel_nd(file,model,overwrite,noheader)
 %
 %    Description:
 %     WRITE_1DMODEL_ND(FILE,MODEL) writes an .nd formatted file (see
@@ -20,6 +21,11 @@ function []=write_1dmodel_nd(file,model,o)
 %     existing ND file without confirmation when OVERWRITE is set to TRUE.
 %     By default OVERWRITE is FALSE.  OVERWRITE is ignored in the graphical
 %     file creation menu.
+%
+%     WRITE_1DMODEL_ND(FILE,MODEL,OVERWRITE,NOHEADER) skips writing the
+%     header portion of the .nd file when NOHEADER is set to TRUE.  This is
+%     helpful for programs like TAUP that cannot handle comments.  By
+%     default NOHEADER is FALSE.
 %
 %    Notes:
 %     - References for the .nd file format:
@@ -42,20 +48,25 @@ function []=write_1dmodel_nd(file,model,o)
 %     Version History:
 %        Sep. 18, 2010 - initial version
 %        Sep. 19, 2010 - support for inf Q output as 0
+%        Feb. 21, 2012 - noheader flag
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 19, 2010 at 10:35 GMT
+%     Last Updated Feb. 21, 2012 at 10:35 GMT
 
 % todo
 
 % check nargin
-error(nargchk(2,3,nargin));
+error(nargchk(2,4,nargin));
 
 % default overwrite to false
-if(nargin==2 || isempty(o)); o=false; end
-if(~isscalar(o) || ~islogical(o))
+if(nargin<3 || isempty(overwrite)); overwrite=false; end
+if(nargin<4 || isempty(noheader)); noheader=false; end
+if(~isscalar(overwrite) || ~islogical(overwrite))
     error('seizmo:write_1dmodel_nd:badInput',...
         'OVERWRITE flag must be a scalar logical!');
+elseif(~isscalar(noheader) || ~islogical(noheader))
+    error('seizmo:write_1dmodel_nd:badInput',...
+        'NOHEADER flag must be a scalar logical!');
 end
 
 % check model
@@ -89,7 +100,7 @@ else
             error('seizmo:write_1dmodel_nd:dirConflict',...
                 '1D Model .ND File: %s\nIs A Directory!',file);
         end
-        if(~o)
+        if(~overwrite)
             fprintf('1D Model .ND File: %s\nFile Exists!\n',file);
             reply=input('Overwrite? Y/N [N]: ','s');
             if(isempty(reply) || ~strncmpi(reply,'y',1))
@@ -135,10 +146,12 @@ if(fid<0)
 end
 
 % write 2 comment lines with metadata
-fprintf(fid,'# %s\n',model.name);
-fprintf(fid,'# %d %d %d %d %d\n',...
-    model.ocean,model.crust,model.isotropic,...
-    model.refperiod,model.flattened);
+if(~noheader)
+    fprintf(fid,'# %s\n',model.name);
+    fprintf(fid,'# %d %d %d %d %d\n',...
+        model.ocean,model.crust,model.isotropic,...
+        model.refperiod,model.flattened);
+end
 
 % write model
 fields={'depth' 'vp' 'vs' 'rho' 'qk' 'qu' 'qp' 'qs'};

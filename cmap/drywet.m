@@ -3,31 +3,33 @@ function [map]=drywet(m)
 %
 %    Usage:    map=drywet(m)
 %
-%    Description: MAP=DRYWET(M) returns a Mx3 matrix of RGB color values
-%     going from brown to light blue to a deep blue.  DRYWET by itself sets
-%     M to match the current figure's colormap size.  If no figure exists,
-%     one is created.
+%    Description:
+%     MAP=DRYWET(M) returns a Mx3 matrix of RGB color values going from
+%     brown to light blue to a deep blue.  DRYWET by itself sets M to match
+%     the current figure's colormap size.  If no figure exists, one is
+%     created.
 %
 %    Notes:
 %     - by Ed Maurer, U Washington
 %
 %    Examples:
-%     Set the current figure's colormap:
-%      colormap(drywet)
+%     % Set the current figure's colormap:
+%     colormap(drywet)
 %
-%     To use the colormap in reverse:
-%      colormap(flipud(drywet))
+%     % To use the colormap in reverse:
+%     colormap(flipud(drywet))
 %
-%    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, OCEAN, DRYWET,
-%              GEBCO, SEALAND, RAINBOW, RELIEF, GLOBE_SEA, GLOBE_LAND,
-%              SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ, FIRE, NIGHTTIME,
-%              DUSK, DAWN, HSVSPIN, HSVCUSTOM
+%    See also: RED2GREEN, BLUE2RED, GREEN2BLUE, SPLIT, SEIS, GMT_OCEAN,
+%              DRYWET, GEBCO, SEALAND, GMT_RAINBOW, RELIEF, GLOBE_SEA,
+%              GLOBE_LAND, SEALAND_SEA, SEALAND_LAND, TOPO_LAND, RITZ,
+%              FIRE, NIGHTTIME, DUSK, DAWN, HSVSPIN, HSVCUSTOM
 
 %     Version History:
 %        Feb. 17, 2010 - initial version
+%        Feb. 22, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 17, 2010 at 00:40 GMT
+%     Last Updated Feb. 22, 2012 at 00:40 GMT
 
 % todo:
 
