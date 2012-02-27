@@ -21,12 +21,12 @@ function [ecor,ccor,mcorf,mcoru]=corediffracted_ttcorr(data,phase,mod)
 %     - Ellipticity corrections use AK135, not the selected model.
 %
 %    Examples:
-%     Get corrections for a core-diffracted dataset and apply them:
-%      [ecor,ccor,mcorfull,mcorup]=corediffracted_ttcorr(data,'Pdiff');
-%      data=addarrivals(data,'mod','prem','ph','P,Pdiff');
-%      Pdiff=getarrival(data,{'P' 'Pdiff'});
-%      cddata=timeshift(data,-(Pdiff+ecor+ccor+mcorfull));
-%      plot0(cddata);
+%     % Get corrections for a core-diffracted dataset and apply them:
+%     [ecor,ccor,mcorfull,mcorup]=corediffracted_ttcorr(data,'Pdiff');
+%     data=addarrivals(data,'mod','prem','ph','P,Pdiff');
+%     Pdiff=getarrival(data,{'P' 'Pdiff'});
+%     cddata=timeshift(data,-(Pdiff+ecor+ccor+mcorfull));
+%     plot0(cddata);
 %
 %    See also: ELLCOR, CRUCOR, MANCOR, GETRAYPATHS, PLOTRAYPATHS,
 %              EXTRACT_UPSWING_RAYPATHS, CRUST2LESS_RAYPATHS
@@ -34,9 +34,10 @@ function [ecor,ccor,mcorf,mcoru]=corediffracted_ttcorr(data,phase,mod)
 %     Version History:
 %        June 11, 2010 - initial version
 %        Aug.  8, 2010 - cleaned up docs & code
+%        Feb. 27, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 14:25 GMT
+%     Last Updated Feb. 27, 2012 at 14:25 GMT
 
 % todo:
 

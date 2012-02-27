@@ -9,17 +9,6 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-taup
-    - check functions work in octave
-        - tt_curve issue (make getCurve method)
-        - matpath access functions
-    - plot functions need work
-        - plot_tauppath3 from plotraypaths
-    - angle output (takeoff & incident)
-        - if this is available for curve...wow!
-ww3struct
-    - autoload .jars if not found
-
 makearrivals == creates .misc.arrivals
 findarrivals == searches .misc.arrivals
 arrivals2picks == push .misc.arrivals to header pick fields

@@ -29,15 +29,15 @@ function [ok]=uninstall_seizmo()
 %                        uninstallers, only use javarmpath when needed,
 %                        don't force failure for octave
 %        Feb. 16, 2012 - export_fig is externally managed
+%        Feb. 27, 2012 - multi-jar mattaup update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2012 at 15:25 GMT
+%     Last Updated Feb. 27, 2012 at 15:25 GMT
 
 % todo:
 
 % ask to install external components
 % - has to be done before removing 'seizmo/uninstall' directory
-% - eventually: taup
 ok=true;
 reply=input('Uninstall njTBX? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
@@ -115,9 +115,14 @@ else
     return;
 end
 
-% clean out mattaup jar from dynamic java path
-mattaupjar=fullfile(path,'mattaup','lib','matTaup.jar');
-if(ismember(mattaupjar,javaclasspath)); javarmpath(mattaupjar); end
+% clean out mattaup jars from dynamic java path
+jar=dir(fullfile(path,'mattaup','lib','*.jar'));
+for i=1:numel(jar)
+    if(~ismember(fullfile(path,'mattaup','lib',...
+            jar(i).name),javaclasspath))
+        javarmpath(fullfile(path,'mattaup','lib',jar(i).name));
+    end
+end
 
 % find classpath.txt
 sjcp=which('classpath.txt');

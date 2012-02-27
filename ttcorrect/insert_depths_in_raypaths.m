@@ -3,9 +3,10 @@ function [paths]=insert_depths_in_raypaths(paths,depths)
 %
 %    Usage:    paths=insert_depths_in_raypaths(paths,depths)
 %
-%    Description: PATHS=INSERT_DEPTHS_IN_RAYPATHS(PATHS,DEPTHS) adds points
-%     to the raypaths in struct PATHS at the depths indicated in DEPTHS
-%     using linear interpolation.  PATHS should conform to the output from
+%    Description:
+%     PATHS=INSERT_DEPTHS_IN_RAYPATHS(PATHS,DEPTHS) adds points to the
+%     raypaths in struct PATHS at the depths indicated in DEPTHS using
+%     linear interpolation.  PATHS should conform to the output from
 %     TAUPPATH.  DEPTHS is expected to be in units of km.  Notes that
 %     depths are only added if they are crossed by the raypaths.
 %
@@ -14,13 +15,13 @@ function [paths]=insert_depths_in_raypaths(paths,depths)
 %       not have issues at the poles.
 %
 %    Examples:
-%     Insert some points at all PREM discontinuities:
-%      mod=prem:
-%      depths=mod.depth(find(~diff(mod.depth)))';
-%      paths=insert_depths_in_raypaths(paths,depths);
+%     % Insert some points at all PREM discontinuities:
+%     mod=prem:
+%     depths=mod.depth(find(~diff(mod.depth)))';
+%     paths=insert_depths_in_raypaths(paths,depths);
 %
-%     Effectively upsampling your raypath:
-%      paths=insert_depths_in_raypaths(paths,0:5:2890);
+%     % Effectively upsampling your raypath:
+%     paths=insert_depths_in_raypaths(paths,0:5:2890);
 %
 %    See also: GETRAYPATHS, TRIM_DEPTHS_RAYPATHS, TAUPPATH,
 %              CRUST2LESS_RAYPATHS, EXTRACT_UPSWING_RAYPATHS
@@ -28,11 +29,33 @@ function [paths]=insert_depths_in_raypaths(paths,depths)
 %     Version History:
 %        June  3, 2010 - initial version
 %        Aug.  8, 2010 - doc update
+%        Feb. 27, 2012 - update for tauppath changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 23:15 GMT
+%     Last Updated Feb. 27, 2012 at 02:45 GMT
 
 % todo:
+
+% check nargin
+error(nargchk(2,2,nargin));
+
+% input should be a tauppath struct
+test=tauppath('ph','P','ev',[0 0],'st',[0 10]);
+if(~isstruct(paths) || any(~ismember(fieldnames(paths),fieldnames(test))))
+    error('seizmo:insert_depths_in_raypaths:badStruct',...
+        'PATHS does not appear to be a valid raypath struct!');
+elseif(any(~ismember(fieldnames(paths(1).path),fieldnames(test(1).path))))
+    error('seizmo:insert_depths_in_raypaths:badStruct',...
+        'PATHS does not appear to be a valid raypath struct!');
+end
+
+% specific locations or not?
+% - this fails if some are and some are not
+if(any(~ismember({'latitude' 'longitude'},fieldnames(paths(1).path))))
+    specific=false;
+else % not specific
+    specific=true;
+end
 
 % number of raypaths
 nrp=numel(paths);
@@ -84,31 +107,34 @@ for i=1:nrp
                     [paths(i).path.depth(1:cnt+j);
                      depths(k);
                      paths(i).path.depth(cnt+j+1:end)];
-                paths(i).path.rayparameter=...
-                    [paths(i).path.rayparameter(1:cnt+j);
-                     paths(i).path.rayparameter(cnt+j)+frac*(diff(paths(i).path.rayparameter(cnt+j:cnt+j+1)));
-                     paths(i).path.rayparameter(cnt+j+1:end)];
                 paths(i).path.time=...
                     [paths(i).path.time(1:cnt+j);
-                     paths(i).path.time(cnt+j)+frac*(diff(paths(i).path.time(cnt+j:cnt+j+1)));
+                     paths(i).path.time(cnt+j)...
+                        +frac*(diff(paths(i).path.time(cnt+j:cnt+j+1)));
                      paths(i).path.time(cnt+j+1:end)];
                 paths(i).path.distance=...
                     [paths(i).path.distance(1:cnt+j);
-                     paths(i).path.distance(cnt+j)+frac*(diff(paths(i).path.distance(cnt+j:cnt+j+1)));
+                     paths(i).path.distance(cnt+j)...
+                        +frac*(diff(paths(i).path.distance(cnt+j:cnt+j+1)));
                      paths(i).path.distance(cnt+j+1:end)];
-                [dist,az]=sphericalinv(...
-                    paths(i).path.latitude(cnt+j),paths(i).path.longitude(cnt+j),...
-                    paths(i).path.latitude(cnt+j+1),paths(i).path.longitude(cnt+j+1));
-                [lat,lon]=sphericalfwd(...
-                    paths(i).path.latitude(cnt+j),paths(i).path.longitude(cnt+j),dist*frac,az);
-                paths(i).path.latitude=...
-                    [paths(i).path.latitude(1:cnt+j);
-                     lat;
-                     paths(i).path.latitude(cnt+j+1:end)];
-                paths(i).path.longitude=...
-                    [paths(i).path.longitude(1:cnt+j);
-                     lon;
-                     paths(i).path.longitude(cnt+j+1:end)];
+                if(specific)
+                    [dist,az]=sphericalinv(...
+                        paths(i).path.latitude(cnt+j),...
+                        paths(i).path.longitude(cnt+j),...
+                        paths(i).path.latitude(cnt+j+1),...
+                        paths(i).path.longitude(cnt+j+1));
+                    [lat,lon]=sphericalfwd(...
+                        paths(i).path.latitude(cnt+j),...
+                        paths(i).path.longitude(cnt+j),dist*frac,az);
+                    paths(i).path.latitude=...
+                        [paths(i).path.latitude(1:cnt+j);
+                         lat;
+                         paths(i).path.latitude(cnt+j+1:end)];
+                    paths(i).path.longitude=...
+                        [paths(i).path.longitude(1:cnt+j);
+                         lon;
+                         paths(i).path.longitude(cnt+j+1:end)];
+                end
                 
                 % increment counter for subsequent tests
                 cnt=cnt+1;

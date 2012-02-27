@@ -11,16 +11,15 @@ function [paths]=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
 %     recognized by TauP.  Lat/Lon inputs must be in degrees.  Depth is in
 %     kilometers (note that this is not like the SAC format)!
 %
-%     This just calls TAUPPATH in a loop.
+%     PATHS=GETRAYPATHS(DATA,PHASE,MOD) uses the station and event
+%     positions in SEIZMO struct DATA to calculate the raypaths.
 %
 %    Notes:
+%     - This just calls TAUPPATH in a loop.
 %
 %    Examples:
 %     % Get some phase paths corresponding to a dataset:
-%     [stla,stlo,evla,evlo,evdp]=getheader(data,'stla','stlo',...
-%                                          'evla','evlo','evdp');
-%     evdp=evdp/1000; % m2km
-%     paths=getraypaths('P','prem',evla,evlo,evdp,stla,stlo);
+%     paths=getraypaths(data,'P','prem');
 %
 %    See also: TAUPPATH, MANCOR, CRUST2LESS_RAYPATHS, TRIM_DEPTHS_RAYPATHS,
 %              EXTRACT_UPSWING_RAYPATHS
@@ -31,14 +30,32 @@ function [paths]=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
 %        June  4, 2010 - paths reshapes to match inputs
 %        Mar.  7, 2011 - don't cover up error for debugging
 %        May  19, 2011 - updated error message to reflect the usual issue
+%        Feb. 27, 2012 - new usage form simplifies the typical case, return
+%                        all paths
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  19, 2011 at 13:45 GMT
+%     Last Updated Feb. 27, 2012 at 13:45 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(7,7,nargin));
+error(nargchk(3,7,nargin));
+if(~any(nargin==[3 7]))
+    error('seizmo:getraypaths:badInput','Incorrect number of arguments!');
+end
+
+% handle data struct
+if(isseizmo(phase))
+    data=phase; phase=mod; mod=evla;
+    data=checkheader(data,...
+        'UNSET_ST_LATLON','ERROR',...
+        'UNSET_EV_LATLON','ERROR',...
+        'UNSET_ELEV','FIX',...
+        'UNSET_DEPTH','FIX');
+    [evla,evlo,evdp,stla,stlo]=getheader(data,...
+        'evla','evlo','evdp','stla','stlo');
+    evdp=evdp/1000;
+end
 
 % check inputs
 if(ischar(phase)); phase=cellstr(phase); end
@@ -74,7 +91,7 @@ stla=geographic2geocentriclat(stla);
 verbose=seizmoverbose;
 if(verbose)
     disp('Getting Ray Path(s)');
-    print_time_left(0,nph)
+    print_time_left(0,nph);
 end
 
 % loop over each set
@@ -87,7 +104,7 @@ try
             ['Could not retrieve path for EQ/STA pair: %d\n' ...
             'Maybe you do not have your ~/.taup file correct?'],i);
     end
-    paths(i)=tmp(1); % return only the first arrival for each set
+    paths=tmp;
     if(verbose); print_time_left(1,nph); end
     for i=1:nph-1
         tmp=tauppath('ph',phase{i},'mod',mod{i},'dep',evdp(i),...
@@ -96,12 +113,9 @@ try
             error('seizmo:getraypaths:badPath',...
                 'Could not retrieve path for EQ/STA pair: %d',i);
         end
-        paths(i)=tmp(1); % return only the first arrival for each set
+        paths=[paths; tmp];
         if(verbose); print_time_left(i+1,nph); end
     end
-    
-    % reshape to match input size
-    paths=reshape(paths,size(evla));
 catch
     error(lasterror);
 end

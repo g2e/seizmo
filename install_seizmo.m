@@ -55,9 +55,10 @@ function [varargout]=install_seizmo()
 %                        only use javaaddpath or edit classpath as needed
 %        Feb. 16, 2012 - export_fig is externally managed
 %        Feb. 22, 2012 - require java/signal packages in Octave
+%        Feb. 27, 2012 - multi-jar mattaup update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 22, 2012 at 15:25 GMT
+%     Last Updated Feb. 27, 2012 at 15:25 GMT
 
 % todo:
 
@@ -186,14 +187,16 @@ if(~ok)
 end
 
 % check that classpath exists (Octave fails here)
-mattaupjar=fullfile(path,'mattaup','lib','matTaup.jar');
+jar=dir(fullfile(path,'mattaup','lib','*.jar'));
 sjcp=which('classpath.txt');
 if(isempty(sjcp))
-    %warning('seizmo:webinstall_njtbx:noJavaClassPath',...
-    %    'Octave has no classpath.txt to save .jar files!');
-    
     % no classpath.txt so add to dynamic path
-    if(~ismember(mattaupjar,javaclasspath)); javaaddpath(mattaupjar); end
+    for i=1:numel(jar)
+        if(~ismember(fullfile(path,'mattaup','lib',...
+                jar(i).name),javaclasspath))
+            javaaddpath(fullfile(path,'mattaup','lib',jar(i).name));
+        end
+    end
 else % install matTaup.jar to classpath
     % read classpath.txt
     s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
@@ -207,9 +210,13 @@ else % install matTaup.jar to classpath
         if(fid<0)
             warning('seizmo:webinstall_njtbx:noWriteClasspath',...
                 ['Cannot edit classpath.txt! Adding ' ...
-                'matTaup.jar to dynamic java class path!']);
-            if(~ismember(mattaupjar,javaclasspath))
-                javaaddpath(mattaupjar);
+                'TauP jars to dynamic java class path!']);
+            for i=1:numel(jar)
+                if(~ismember(fullfile(...
+                        path,'mattaup','lib',jar(i).name),javaclasspath))
+                    javaaddpath(fullfile(...
+                        path,'mattaup','lib',jar(i).name));
+                end
             end
         else
             fseek(fid,0,'eof');

@@ -131,9 +131,10 @@ function [varargout]=tauppath(varargin)
 %        Jan.  6, 2011 - add matTaup.jar to dynamic java classpath if
 %                        necessary, 2x speedup by turning off a debug line
 %        Feb. 24, 2012 - switch to enhanced taup (needed for output)
+%        Feb. 27, 2012 - skip plotting if no arrivals, path lat/lon bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2012 at 17:15 GMT
+%     Last Updated Feb. 27, 2012 at 17:15 GMT
 
 % todo:
 
@@ -269,12 +270,12 @@ if((e && s) || (e && a && (d || k)) || (s && b && (d || k)))
     generic=false;
     if(e && s)
         deg=sc.distance(ev(1),ev(2),st(1),st(2));
-        %az=sc.azimuth(ev(1),ev(2),st(1),st(2));
+        az=sc.azimuth(ev(1),ev(2),st(1),st(2));
         %baz=sc.azimuth(st(1),st(2),ev(1),ev(2));
     elseif(s)
         ev(1)=sc.latFor(st(1),st(2),deg,baz);
         ev(2)=sc.lonFor(st(1),st(2),deg,baz);
-        %az=sc.azimuth(ev(1),ev(2),st(1),st(2));
+        az=sc.azimuth(ev(1),ev(2),st(1),st(2));
     elseif(e)
         st(1)=sc.latFor(ev(1),ev(2),deg,az);
         st(2)=sc.lonFor(ev(1),ev(2),deg,az);
@@ -298,6 +299,10 @@ tpobj=javaObject('edu.sc.seis.TauP.MatTauP_Path',model);
 tpobj.setSourceDepth(depth);
 tpobj.setPhaseNames(phases);
 tpobj.calculate(deg);
+if(~generic)
+    tpobj.setEv(ev(1),ev(2));
+    tpobj.setAz(az);
+end
 tpobj.pathInterpolate;
 narr=tpobj.getNumArrivals;
 
@@ -376,14 +381,16 @@ if(nargout==0)
     end
     
     % plot ray paths
-    plot_tauppath(tt);
-    ax=gca;
-    
-    % title
-    sdist=[num2str(deg,'%7.3f') 'deg (' num2str(km,'%7.1f') 'km)'];
-    title(ax,{['MODEL: ' modelname '  PHASES: ' joinwords(phases,',')]...
-        ['EVENT DEPTH: ' num2str(depth) 'km  DISTANCE: ' ...
-        sdist]},'color','w','interpreter','none');
+    if(~isempty(tt))
+        ax=plot_tauppath(tt);
+        
+        % title
+        sdist=[num2str(deg,'%7.3f') 'deg (' num2str(km,'%7.1f') 'km)'];
+        title(ax,...
+            {['MODEL: ' modelname '  PHASES: ' joinwords(phases,',')] ...
+            ['EVENT DEPTH: ' num2str(depth) 'km  DISTANCE: ' sdist]},...
+            'color','w','interpreter','none');
+    end
 else
     varargout{1}=tt;
 end

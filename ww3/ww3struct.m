@@ -56,7 +56,7 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %     set(gca,'ydir','normal');
 %     title([datestr(s.time) ' Significant Wave Heights']);
 %
-%    See also: PLOTWW3, PLOTWW3AVG, WW3MOV
+%    See also: PLOTWW3, WW3MOV
 
 %     Version History:
 %        June 30, 2010 - initial version
@@ -65,9 +65,10 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %        Feb. 14, 2012 - njtbx instead of read_grib, range limits, file
 %                        input, multi-file support, multi-field support,
 %                        renamed from ww3mat to ww3struct
+%        Feb. 27, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2012 at 00:40 GMT
+%     Last Updated Feb. 27, 2012 at 00:40 GMT
 
 % todo:
 

@@ -3,13 +3,14 @@ function [paths]=crust2less_raypaths(paths)
 %
 %    Usage:    paths=crust2less_raypaths(paths)
 %
-%    Description: PATHS=CRUST2LESS_RAYPATHS(PATHS) will remove the
-%     portions of the raypaths that are above the Crust2.0 moho.  To avoid
-%     plotting functions connecting across segments where the crust was
-%     removed, NaNs are inserted to isolate the mantle raypath sections
-%     from each other.  Segments that cross the moho are adjusted so that
-%     the segments end at the moho boundary.  Linear interpolation is used
-%     to estimate these positions.
+%    Description:
+%     PATHS=CRUST2LESS_RAYPATHS(PATHS) will remove the portions of the
+%     raypaths that are above the Crust2.0 moho.  To avoid plotting
+%     functions connecting across segments where the crust was removed,
+%     NaNs are inserted to isolate the mantle raypath sections from each
+%     other.  Segments that cross the moho are adjusted so that the
+%     segments end at the moho boundary.  Linear interpolation is used to
+%     estimate these positions.
 %
 %    Notes:
 %     - Currently this isn't very smart.  It will have trouble if it
@@ -20,9 +21,9 @@ function [paths]=crust2less_raypaths(paths)
 %       warning is issued so you know if this happens.
 %
 %    Examples:
-%     Plot some paths without the crustal portions:
-%      paths=tauppath('ev',[5 129],'st',[41 -1]);
-%      plotraypaths(crust2less_raypaths(paths));
+%     % Plot some paths without the crustal portions:
+%     paths=tauppath('ev',[5 129],'st',[41 -1]);
+%     plotraypaths(crust2less_raypaths(paths));
 %
 %    See also: GETRAYPATHS, EXTRACT_UPSWING_RAYPATHS, MANCOR, TAUPPATH,
 %              TRIM_DEPTHS_RAYPATHS, INSERT_DEPTHS_IN_RAYPATHS
@@ -31,9 +32,10 @@ function [paths]=crust2less_raypaths(paths)
 %        May  31, 2010 - initial version
 %        June  3, 2010 - updated example, handle nans
 %        Aug.  8, 2010 - doc update
+%        Feb. 27, 2012 - update for tauppath changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 02:45 GMT
+%     Last Updated Feb. 27, 2012 at 02:45 GMT
 
 % todo:
 % - test for lat/lon less paths
@@ -54,13 +56,16 @@ function [paths]=crust2less_raypaths(paths)
 error(nargchk(1,1,nargin));
 
 % input should be a tauppath struct
-test=tauppath('ph','P','deg',10);
+test=tauppath('ph','P','ev',[0 0],'st',[0 10]);
 if(~isstruct(paths) || any(~ismember(fieldnames(paths),fieldnames(test))))
     error('seizmo:crust2less_raypaths:badStruct',...
         'PATHS does not appear to be a valid raypath struct!');
 elseif(any(~ismember(fieldnames(paths(1).path),fieldnames(test(1).path))))
     error('seizmo:crust2less_raypaths:badStruct',...
         'PATHS does not appear to be a valid raypath struct!');
+elseif(any(~ismember({'latitude' 'longitude'},fieldnames(paths(1).path))))
+    error('seizmo:crust2less_raypaths:badStruct',...
+        'Latitude & Longitude are required path fields!');
 end
 
 % loop over each path
@@ -108,11 +113,10 @@ for i=1:numel(paths)
     ns=numel(s);
     
     % loop over sections below
-    newrp=cell(ns,1); newt=newrp; newdist=newrp;
-    newdep=newrp; newlat=newrp; newlon=newrp;
+    newt=cell(ns,1); newdist=newt;
+    newdep=newt; newlat=newt; newlon=newt;
     for j=1:ns
         % extract section
-        newrp{j}=paths(i).path.rayparameter(s(j):e(j));
         newt{j}=paths(i).path.time(s(j):e(j));
         newdist{j}=paths(i).path.distance(s(j):e(j));
         newdep{j}=paths(i).path.depth(s(j):e(j));
@@ -128,7 +132,6 @@ for i=1:numel(paths)
             if(isnan(newdep{j}(1)))
                 % just chop off first point and move on
                 newdep{j}(1)=[];
-                newrp{j}(1)=[];
                 newt{j}(1)=[];
                 newdist{j}(1)=[];
                 newlat{j}(1)=[];
@@ -140,7 +143,6 @@ for i=1:numel(paths)
                 
                 % just chop off first point and move on
                 newdep{j}(1)=[];
-                newrp{j}(1)=[];
                 newt{j}(1)=[];
                 newdist{j}(1)=[];
                 newlat{j}(1)=[];
@@ -156,7 +158,6 @@ for i=1:numel(paths)
                 % - also assumes we don't hit a sidewall of the crust
                 % - lat/lon are handled specially to avoid issues
                 newdep{j}(1)=moho(s(j));
-                newrp{j}(1)=newrp{j}(2)-frac*diff(newrp{j}(1:2));
                 newt{j}(1)=newt{j}(2)-frac*diff(newt{j}(1:2));
                 newdist{j}(1)=newdist{j}(2)-frac*diff(newdist{j}(1:2));
                 [dist,az]=sphericalinv(...
@@ -175,7 +176,6 @@ for i=1:numel(paths)
             if(isnan(newdep{j}(end)))
                 % just chop off last point and move on
                 newdep{j}(end)=[];
-                newrp{j}(end)=[];
                 newt{j}(end)=[];
                 newdist{j}(end)=[];
                 newlat{j}(end)=[];
@@ -187,7 +187,6 @@ for i=1:numel(paths)
                 
                 % just chop off last point and move on
                 newdep{j}(end)=[];
-                newrp{j}(end)=[];
                 newt{j}(end)=[];
                 newdist{j}(end)=[];
                 newlat{j}(end)=[];
@@ -203,8 +202,6 @@ for i=1:numel(paths)
                 % - also assumes we don't hit a sidewall of the crust
                 % - lat/lon are handled specially to avoid issues
                 newdep{j}(end)=moho(e(j));
-                newrp{j}(end)=newrp{j}(end-1)...
-                    +frac*diff(newrp{j}(end-1:end));
                 newt{j}(end)=newt{j}(end-1)...
                     +frac*diff(newt{j}(end-1:end));
                 newdist{j}(end)=newdist{j}(end-1)...
@@ -223,7 +220,6 @@ for i=1:numel(paths)
         
         % add nan to end of each section (except for the last one)
         if(j~=ns)
-            newrp{j}=[newrp{j}; nan];
             newt{j}=[newt{j}; nan];
             newdist{j}=[newdist{j}; nan];
             newdep{j}=[newdep{j}; nan];
@@ -233,7 +229,6 @@ for i=1:numel(paths)
     end
     
     % and concatenate new sections together (with nans between)
-    paths(i).path.rayparameter=cat(1,newrp{:});
     paths(i).path.time=cat(1,newt{:});
     paths(i).path.distance=cat(1,newdist{:});
     paths(i).path.depth=cat(1,newdep{:});
