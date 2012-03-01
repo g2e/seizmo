@@ -56,9 +56,10 @@ function [varargout]=install_seizmo()
 %        Feb. 16, 2012 - export_fig is externally managed
 %        Feb. 22, 2012 - require java/signal packages in Octave
 %        Feb. 27, 2012 - multi-jar mattaup update
+%        Mar.  1, 2012 - globalcmt catalog creation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 15:25 GMT
+%     Last Updated Mar.  1, 2012 at 15:25 GMT
 
 % todo:
 
@@ -245,10 +246,13 @@ if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_exportfig;
 end
 
-% update dbs
+% make dbs
 % - eventually: iris sacpzdb
-reply=input('Update GlobalCMT database? Y/N [Y]: ','s');
-if(isempty(reply) || strncmpi(reply,'y',1)); globalcmt_update; end
+reply=input('Create local GlobalCMT database? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    globalcmt_create;
+    globalcmt_update;
+end
 
 % download models/features
 % - eventually: 3D mantle models & features in mapping

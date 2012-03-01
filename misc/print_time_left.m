@@ -42,10 +42,11 @@ function []=print_time_left(act_step,tot_step,redraw)
 %        Mar.  7, 2010 - no error if called from the cmd line
 %        Jan. 18, 2011 - find 0 tot_step bug, nargchk fix
 %        Feb. 16, 2012 - doc update, Octave shortcircuit
+%        Mar.  1, 2012 - minor changes to Octave shortcircuit
 %
 %     Written by Nicolas Le Roux (lerouxni at iro dot umontreal dot ca)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2012 at 17:55 GMT
+%     Last Updated Mar.  1, 2012 at 17:55 GMT
 
 % todo:
 % - preceeding warning message links are missing occasionally?
@@ -62,8 +63,8 @@ elseif(~isscalar(tot_step) || ~isnumeric(tot_step))
         'TOT_STEP must be a numeric scalar!');
 end
 
-% shortcircuit for Octave (no print b/c this fails)
-if(strcmp(getapplication,'OCTAVE')); return; end
+% shortcircuit for Octave (avoiding b/c it fails to work right)
+if(isoctave); return; end
 
 % declare persistent vars
 persistent nb i old_step old_fun

@@ -5,18 +5,19 @@ function [events]=readsodeventcsv(varargin)
 %
 %    Description:
 %     EVENTS=READSODEVENTCSV(FILE) reads in a SOD (Standing Order for Data)
-%     generated event CSV file as a structure array.  The CSV (comma
+%     generated event CSV file as a scalar structure array.  The CSV (comma
 %     separated values) file is expected to have 1 header line of comma
-%     separated field names.  Each line in FILE is placed as a separated
-%     index in EVENTS, such that all values from line 4 (counting the
-%     header line) can be accessed in EVENTS(3).  Calling READSODEVENTCSV
-%     without a FILE argument or with FILE set to '' will present a
-%     graphical file selection menu.
+%     separated field names.  These define the fields of the structure
+%     which are returned as NLx1 arrays where NL is the number of lines in
+%     the file excluding the header line.  The function SSIDX is useful for
+%     accessing specific entries of scalar structs (see the Examples
+%     section below).  Calling READSODEVENTCSV without a FILE argument or
+%     with FILE set to '' will present a graphical file selection menu.
 %
 %    Notes:
-%     - converts latitude, longitude, depth and magnitude to numeric form
-%     - converts time from string to [yr mon cday hr min secs]
-%     - fields of a standard SOD Event CSV file:
+%     - Converts latitude, longitude, depth and magnitude to numeric form.
+%     - Converts time from string to [yr mon cday hr min secs].
+%     - Fields of a standard SOD Event CSV file:
 %           time
 %           latitude
 %           longitude
@@ -49,16 +50,17 @@ function [events]=readsodeventcsv(varargin)
 %        Mar. 30, 2010 - check fields are available to modify, doc update
 %        Feb. 11, 2011 - mass nargchk fix
 %        Jan. 28, 2012 - doc update, pass char to strnlen
+%        Feb. 28, 2012 - update for READCSV scalar struct output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 15:05 GMT
+%     Last Updated Feb. 28, 2012 at 15:05 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(0,1,nargin));
 
-% send on to readcsv
+% send input on to readcsv
 events=readcsv(varargin{:});
 
 % require certain fields are present
@@ -71,22 +73,19 @@ if(~all(ismember(req,fields)))
 end
 
 % convert some fields to numbers
-f={'latitude' 'longitude' 'magnitude'};
+f={'latitude' 'longitude' 'depth' 'magnitude'};
 for i=1:numel(f)
-    tmp=num2cell(str2double({events.(f{i})}));
-    [events.(f{i})]=deal(tmp{:});
+    events.(f{i})=str2double(events.(f{i}));
 end
 
 % clean up depths
-tmp=num2cell(round(100*str2double({events.depth}))/100);
-[events.depth]=deal(tmp{:});
+events.depth=round(100*events.depth)/100;
 
 % convert time to something useful
 % - note that we strip off the Z first b/c there is
 %   a bug in dtstr2dtvecmx (datevec) that occasionally
 %   returns an incorrect time when the Z is included
-tmp=mat2cell(datevec(strnlen(char({events.time}.'),23),...
-    'yyyy-mm-ddTHH:MM:SS.FFF'),ones(numel(events),1));
-[events.time]=deal(tmp{:});
+events.time=datevec(strnlen(char(events.time),23),...
+    'yyyy-mm-ddTHH:MM:SS.FFF');
 
 end

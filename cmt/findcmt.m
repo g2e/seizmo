@@ -4,17 +4,19 @@ function [cmt,d]=findcmt(varargin)
 %    Usage:    cmt=findcmt('option1',value1,...,'optionN',valueN)
 %              [cmt,dist]=findcmt(...)
 %
-%    Description: CMT=FINDCMT('OPTION1',VALUE1,...,'OPTIONN',VALUEN) finds
-%     the Global CMT(s) (www.globalcmt.org) using the parameters provided.
-%     The options are:
+%    Description:
+%     CMT=FINDCMT('OPTION1',VALUE1,...,'OPTIONN',VALUEN) finds the Global
+%     CMT(s) (www.globalcmt.org) using the parameters provided.  The
+%     options are:
+%      TYPE      -- location type: 'centroid' or 'hypocenter' (default)
 %      TIME      -- look for cmts near this time (see Notes for format)
 %      LOCATION  -- look for cmts near this location ([deg_lat deg_lon])
 %      DEPTH     -- look for cmts near this depth (in kilometers)
-%      MAGNITUDE -- look for cmts near this moment magnitude
+%      MAGNITUDE -- look for cmts near this magnitude
 %      MAGTYPE   -- magnitude type: 'mb' 'ms' or 'mw' (default)
 %      TIMESCALE -- scales time discrepancy to distance (default is 5 km/s)
 %      MAGSCALE  -- scales magnitude discrepancy to distance (see Notes)
-%      CATALOG   -- 'both' (default),'full', 'quick'
+%      CATALOG   -- CMT catalog: 'Full', 'Quick', 'Both' (Default)
 %      NUMCMT    -- returns this many cmts, integer>0 (default is 1)
 %      NAME      -- limits search to cmt(s) who's name satisfies the given
 %                   regular expression (see REGEXP for details)
@@ -33,20 +35,20 @@ function [cmt,d]=findcmt(varargin)
 %     - GlobalCMT catalogs are cached under global SEIZMO.GLOBALCMT
 %
 %    Examples:
-%     Find the event closest to the new millinium:
-%      findcmt('time',[2000 1])
+%     % Find the event closest to the new millinium:
+%     findcmt('time',[2000 1])
 %
-%     Find deepest cmt:
-%      findcmt('depth',1000)
+%     % Find deepest cmt:
+%     findcmt('depth',1000)
 %
-%     Find cmt nearest the south pole:
-%      findcmt('location',[-90 0])
+%     % Find cmt nearest the south pole:
+%     findcmt('location',[-90 0])
 %
-%     Find largest cmt:
-%      findcmt('magnitude',10)
+%     % Find largest cmt:
+%     findcmt('magnitude',10)
 %
-%     Find largest cmt from Jan 2008:
-%      findcmt('name','^\w200801','magnitude',10)
+%     % Find largest cmt from Jan 2008:
+%     findcmt('name','^\w200801','magnitude',10)
 %
 %    See also: FINDCMTS, SETEVENT, READNDK, SSIDX
 
@@ -58,9 +60,12 @@ function [cmt,d]=findcmt(varargin)
 %        Aug. 11, 2010 - altered/fixed magnitude scaling, added magtype opt
 %        Sep. 28, 2010 - also output total distance
 %        Apr. 28, 2011 - return n when n asked for and nothing else
+%        Feb. 29, 2012 - doc update, type option & switch to hypo, use both
+%                        catalogs by default
+%        Mar.  1, 2012 - auto-creation of catalogs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 28, 2011 at 21:30 GMT
+%     Last Updated Mar.  1, 2012 at 21:30 GMT
 
 % todo:
 
@@ -74,23 +79,46 @@ if(~isempty(opt.NAME))
     if(~sum(idx)); cmt=opt.CATALOG; d=[]; return; end
 end
 
-% get distances
-dd=0*opt.CATALOG.centroiddep;
-if(~isempty(opt.DEPTH))
-    dd=abs(opt.CATALOG.centroiddep-opt.DEPTH);
+% type-dependant distances
+switch lower(opt.TYPE)
+    case {'centroid' 'cmt' 'c'}
+        % get distances
+        dd=0*opt.CATALOG.centroiddep;
+        if(~isempty(opt.DEPTH))
+            dd=abs(opt.CATALOG.centroiddep-opt.DEPTH);
+        end
+        ld=0;
+        if(~isempty(opt.LOCATION))
+            ld=vincentyinv(opt.LOCATION(1),opt.LOCATION(2),...
+                opt.CATALOG.centroidlat,opt.CATALOG.centroidlon);
+        end
+        td=0;
+        if(~isempty(opt.TIME))
+            td=opt.TIMESCALE*abs(timediff(opt.TIME,...
+                [opt.CATALOG.year opt.CATALOG.month opt.CATALOG.day ...
+                opt.CATALOG.hour opt.CATALOG.minute ...
+                opt.CATALOG.seconds+opt.CATALOG.centroidtime]));
+        end
+    case {'hypocenter' 'hypo' 'h'}
+        % get distances
+        dd=0*opt.CATALOG.depth;
+        if(~isempty(opt.DEPTH))
+            dd=abs(opt.CATALOG.depth-opt.DEPTH);
+        end
+        ld=0;
+        if(~isempty(opt.LOCATION))
+            ld=vincentyinv(opt.LOCATION(1),opt.LOCATION(2),...
+                opt.CATALOG.latitude,opt.CATALOG.longitude);
+        end
+        td=0;
+        if(~isempty(opt.TIME))
+            td=opt.TIMESCALE*abs(timediff(opt.TIME,...
+                [opt.CATALOG.year opt.CATALOG.month opt.CATALOG.day ...
+                opt.CATALOG.hour opt.CATALOG.minute opt.CATALOG.seconds]));
+        end
 end
-ld=0;
-if(~isempty(opt.LOCATION))
-    ld=vincentyinv(opt.LOCATION(1),opt.LOCATION(2),...
-        opt.CATALOG.centroidlat,opt.CATALOG.centroidlon);
-end
-td=0;
-if(~isempty(opt.TIME))
-    td=opt.TIMESCALE*abs(timediff(opt.TIME,...
-        [opt.CATALOG.year opt.CATALOG.month opt.CATALOG.day ...
-        opt.CATALOG.hour opt.CATALOG.minute ...
-        opt.CATALOG.seconds+opt.CATALOG.centroidtime]));
-end
+
+% magnitude distance does not depend on type
 md=0;
 if(~isempty(opt.MAGNITUDE))
     switch lower(opt.MAGTYPE)
@@ -133,6 +161,7 @@ end
 
 % defaults (not checked, so must be good)
 opt.NAME=[]; % optional
+opt.TYPE='hypo'; % hypo, centroid
 opt.TIME=[]; % optional
 opt.LOCATION=[]; % optional
 opt.DEPTH=[]; % optional
@@ -140,18 +169,19 @@ opt.MAGNITUDE=[]; % optional
 opt.MAGTYPE='mw'; % ms, mb, mw
 opt.TIMESCALE=5; % x km/s
 opt.MAGSCALE=100; % km/mag
-opt.CATALOG='full'; % full/quick
+opt.CATALOG='both'; % full/quick/both
 opt.NUMCMT=1; % number of cmts returned
 
 % valid strings
 valid.CATALOG={'full' 'quick' 'both'};
+valid.TYPE={'hypocenter' 'hypo' 'h' 'centroid' 'cmt' 'c'};
 valid.MAGTYPE={'mb' 'ms' 'mw'};
 valid.TIMES={'[YEAR JDAY]' '[YEAR MONTH CDAY]' ...
     '[YEAR JDAY HOUR MINUTE SECONDS]' ...
     '[YEAR MONTH CDAY HOUR MINUTE SECONDS]'};
 valid.NDKFIELDS={'scalarmoment' 'exponent' 'year' 'month' 'day' 'hour' ...
     'minute' 'seconds' 'centroidtime' 'centroidlat' 'centroidlon' ...
-    'centroiddep'};
+    'centroiddep' 'latitude' 'longitude' 'depth'};
 
 % loop over options
 for i=1:2:nargin
@@ -163,7 +193,16 @@ for i=1:2:nargin
                     'NAME must be a string!');
             end
             opt.NAME=varargin{i+1};
-        case {'time' 't'}
+        case {'type' 'ty'}
+            if(ischar(varargin{i+1}) ...
+                    && ismember(lower(varargin{i+1}),valid.TYPE))
+                opt.TYPE=varargin{i+1};
+            else
+                error('seizmo:findcmt:badInput',...
+                    ['TYPE must be one of the following:\n' ...
+                    sprintf('''%s'' ',valid.TYPE{:})]);
+            end
+        case {'time' 'ti' 't'}
             % check
             sz=size(varargin{i+1});
             if(~isreal(varargin{i+1}) || numel(sz)>2 ...
@@ -256,34 +295,90 @@ end
 
 % get catalog
 if(ischar(opt.CATALOG))
-    switch lower(opt.CATALOG)
+    opt.CATALOG=lower(opt.CATALOG);
+    switch opt.CATALOG
         case 'both'
             % try loading cached version
-            if(seizmoverbose)
-                disp('Loading Catalog (May take a second...)');
-            end
             try
                 tmp1=SEIZMO.GLOBALCMT.FULL;
             catch
-                % not there so load and cache
+                % no cache there...so load and cache
                 try
+                    if(seizmoverbose)
+                        disp('Loading Catalog (May take a second...)');
+                    end
                     tmp1=load('globalcmt_full');
                     SEIZMO.GLOBALCMT.FULL=tmp1;
+                    if(seizmoverbose); disp('Loaded Catalog!'); end
                 catch
-                    error('seizmo:findcmt:badCatalog',...
-                        'GlobalCMT catalogs are misconfigured!');
+                    % what happened?
+                    if(exist('globalcmt_full.mat','file'))
+                        % catalog is broken
+                        disp('Local GlobalCMT Full catalog is corrupted!');
+                        reply=input('Attempt to re-create? Y/N [N]: ','s');
+                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                            globalcmt_create;
+                            globalcmt_update;
+                            tmp1=load('globalcmt_full');
+                            SEIZMO.GLOBALCMT.FULL=tmp1;
+                            if(seizmoverbose); disp('Loaded Catalog!'); end
+                        else
+                            error('seizmo:findcmt:badCatalog',...
+                                'No Valid Local GlobalCMT Full catalog!');
+                        end
+                    else
+                        % no catalog...ask to make one
+                        disp('No Local GlobalCMT Full Catalog Found!');
+                        reply=input('Attempt to create? Y/N [N]: ','s');
+                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                            globalcmt_create;
+                            globalcmt_update;
+                            tmp1=load('globalcmt_full');
+                            SEIZMO.GLOBALCMT.FULL=tmp1;
+                            if(seizmoverbose); disp('Loaded Catalog!'); end
+                        else
+                            error('seizmo:findcmt:badCatalog',...
+                                'No Local GlobalCMT Full catalog!');
+                        end
+                    end
                 end
             end
             try
                 tmp2=SEIZMO.GLOBALCMT.QUICK;
             catch
-                % not there so load and cache
+                % no cache there...so load and cache
                 try
                     tmp2=load('globalcmt_quick');
                     SEIZMO.GLOBALCMT.QUICK=tmp2;
                 catch
-                    error('seizmo:findcmt:badCatalog',...
-                        'GlobalCMT catalogs are misconfigured!');
+                    % what happened?
+                    if(exist('globalcmt_quick.mat','file'))
+                        % catalog is broken
+                        disp('Local GlobalCMT Quick catalog corrupted!');
+                        reply=input('Attempt to re-create? Y/N [N]: ','s');
+                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                            globalcmt_update;
+                            tmp2=load('globalcmt_quick');
+                            SEIZMO.GLOBALCMT.QUICK=tmp2;
+                            if(seizmoverbose); disp('Loaded Catalog!'); end
+                        else
+                            error('seizmo:findcmt:badCatalog',...
+                                'No Valid Local GlobalCMT Quick catalog!');
+                        end
+                    else
+                        % no catalog...ask to make one
+                        disp('No Local GlobalCMT Quick Catalog Found!');
+                        reply=input('Attempt to create? Y/N [N]: ','s');
+                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                            globalcmt_update;
+                            tmp2=load('globalcmt_quick');
+                            SEIZMO.GLOBALCMT.QUICK=tmp2;
+                            if(seizmoverbose); disp('Loaded Catalog!'); end
+                        else
+                            error('seizmo:findcmt:badCatalog',...
+                                'No Local GlobalCMT Quick catalog!');
+                        end
+                    end
                 end
             end
             if(isstruct(tmp1) && ~all(ismember(valid.NDKFIELDS,...
@@ -306,13 +401,12 @@ if(ischar(opt.CATALOG))
                 opt.CATALOG.(fields{i})=...
                     [tmp1.(fields{i}); tmp2.(fields{i})];
             end
-            if(seizmoverbose); disp('Loaded Catalog!'); end
         case {'full' 'quick'}
             % try loading cached version
             try
                 opt.CATALOG=SEIZMO.GLOBALCMT.(upper(opt.CATALOG));
             catch
-                % not there so load and cache
+                % no cache there...so load and cache
                 try
                     if(seizmoverbose)
                         disp('Loading Catalog (May take a second...)');
@@ -322,8 +416,36 @@ if(ischar(opt.CATALOG))
                     SEIZMO.GLOBALCMT.(cattype)=opt.CATALOG;
                     if(seizmoverbose); disp('Loaded Catalog!'); end
                 catch
-                    error('seizmo:findcmt:badCatalog',...
-                        'GlobalCMT catalogs are misconfigured!');
+                    % what happened?
+                    if(exist(['globalcmt_' opt.CATALOG '.mat'],'file'))
+                        % catalog is broken
+                        disp('Local GlobalCMT catalog is corrupted!');
+                        reply=input('Attempt to re-create? Y/N [N]: ','s');
+                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                            globalcmt_create;
+                            globalcmt_update;
+                            opt.CATALOG=load(['globalcmt_' opt.CATALOG]);
+                            SEIZMO.GLOBALCMT.(cattype)=opt.CATALOG;
+                            if(seizmoverbose); disp('Loaded Catalog!'); end
+                        else
+                            error('seizmo:findcmt:badCatalog',...
+                                'No Valid Local GlobalCMT catalog!');
+                        end
+                    else
+                        % no catalog...ask to make one
+                        disp('No Local GlobalCMT Catalog Found!');
+                        reply=input('Attempt to create? Y/N [N]: ','s');
+                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                            globalcmt_create;
+                            globalcmt_update;
+                            opt.CATALOG=load(['globalcmt_' opt.CATALOG]);
+                            SEIZMO.GLOBALCMT.(cattype)=opt.CATALOG;
+                            if(seizmoverbose); disp('Loaded Catalog!'); end
+                        else
+                            error('seizmo:findcmt:badCatalog',...
+                                'No Local GlobalCMT catalog!');
+                        end
+                    end
                 end
             end
             if(isstruct(opt.CATALOG) && ~all(ismember(valid.NDKFIELDS,...

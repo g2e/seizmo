@@ -24,9 +24,10 @@ function [varargout]=seizmoverbose(varargin)
 %        Dec.  2, 2009 - initial version
 %        Jan. 29, 2010 - warn & fix if invalid value in SEIZMO
 %        Jan. 28, 2012 - doc update
+%        Mar.  1, 2012 - not verbose by default when parallel tbx in use
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 20:00 GMT
+%     Last Updated Mar.  1, 2012 at 20:00 GMT
 
 % todo:
 
@@ -44,15 +45,20 @@ if(nargout)
             varargout{1}=true;
         end
     catch
-        varargout{1}=true;
+        % don't be verbose if using parallel toolbox
+        if(matlabpool('size'))
+            varargout{1}=false;
+        else
+            varargout{1}=true;
+        end
     end
 end
 
 % update value
 if(nargin)
     if(~islogical(varargin{1}) || ~isscalar(varargin{1}))
-            error('seizmo:seizmoverbose:badState',...
-                'STATE of SEIZMOVERBOSE must be TRUE or FALSE!');
+        error('seizmo:seizmoverbose:badState',...
+            'STATE of SEIZMOVERBOSE must be TRUE or FALSE!');
     end
     SEIZMO.SEIZMOVERBOSE=varargin{1};
 end

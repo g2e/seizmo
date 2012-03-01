@@ -6,25 +6,27 @@ function [lines]=readcsv(file,delimiter)
 %
 %    Description:
 %     STRUCT=READCSV(FILE) reads in a comma-separated values (CSV) text
-%     file FILE as a struct.  FILE is expected to have 1 header line of
-%     comma-separated field names.  All values returned in STRUCT are text.
-%     Each line in FILE is placed as a separated index in STRUCT, such that
-%     all values from line 4 (counting the header line) can be accessed in
-%     STRUCT(3).  Calling READCSV without FILE or with FILE set to '' will
-%     present a graphical file selection menu.
+%     file FILE as a scalar struct.  FILE is expected to have 1 header line
+%     of comma-separated field names.  All values are treated as text and
+%     are not processed so the output struct fields are cellstr arrays of
+%     size NLx1 where NL is the number of lines (minus the header line).
+%     The function SSIDX is useful for accessing specific entries of scalar
+%     structs (see the Examples section below).  Calling READCSV without
+%     the FILE input or with FILE set to '' will present a graphical file
+%     selection menu.
 %
 %     STRUCT=READCSV(FILE,DELIMITER) uses the single character DELIMITER to
 %     parse the .csv file.  The default delimiter is ',' (comma).  Line
 %     termination characters (linefeed & carriage return) are not allowed.
 %
 %    Notes:
-%     - does not handle text entries with the field delimiter or
-%       line terminators!
-%     - white space before/after an entry is not preserved!
+%     - Does not handle text entries that contain the delimiter or a line
+%       terminator!
+%     - White space before/after an entry is not preserved!
 %
 %    Examples:
-%     Read a SOD (Standing Order for Data) generated event csv file:
-%      events=readcsv('events.csv')
+%     % Get the first 3 lines of a csv file:
+%     ssidx(readcsv,1:3)
 %
 %    See also: WRITECSV, CSVREAD, CSVWRITE
 
@@ -35,9 +37,10 @@ function [lines]=readcsv(file,delimiter)
 %        Jan. 12, 2011 - nargchk fix, fix for stricter getwords
 %        Jan. 28, 2011 - handle empty entries (,,), allow alternate
 %                        field delimiter, require nonempty field name
+%        Feb. 28, 2012 - output is scalar struct now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2011 at 17:25 GMT
+%     Last Updated Feb. 28, 2012 at 17:25 GMT
 
 % todo:
 % - text delimiter
@@ -134,7 +137,7 @@ end
 
 % breakup str into individual values
 % - treat ',,' as an empty entry
-v=strtrim(getwords(str,delimiter,false));
+v=strtrim(getwords(str,delimiter,false))';
 
 % get number of fields, values, events
 nf=numel(f);
@@ -148,10 +151,9 @@ if(nev~=round(nev))
         'Some lines have an incorrect number of entries!'],file);
 end
 
-% create struct
-lines(1:nev,1)=struct();
+% create scalar struct
 for i=1:nf
-    [lines.(f{i})]=deal(v{nf+i:nf:end});
+    lines.(f{i})=v(nf+i:nf:end);
 end
 
 end

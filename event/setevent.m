@@ -16,8 +16,8 @@ function [data]=setevent(data,event)
 %
 %    Examples:
 %     % Import basic info from a quick CMT into some records:
-%     cmt=load('globalcmt_quick');
-%     data=setevent(data,ssidx(cmt,33));
+%     cmt=findcmt('catalog','quick','time',datevec(now));
+%     data=setevent(data,cmt);
 %
 %    See also: READSODEVENTCSV, READNDK, SSIDX
 
@@ -30,9 +30,10 @@ function [data]=setevent(data,event)
 %        July 30, 2010 - minor touches for new ndk setup
 %        Mar. 17, 2011 - fixed moment magnitude formula, round to hundredth
 %        Jan. 30, 2012 - 'o 6utc' changed to 'o utc'
+%        Feb. 29, 2012 - minor fixes for sod struct changes, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 22:25 GMT
+%     Last Updated Feb. 29, 2012 at 22:25 GMT
 
 % todo:
 
@@ -53,7 +54,7 @@ try
     % number of records
     nrecs=numel(data);
     
-    % figure out if event is a sodcsv or ndk struct
+    % figure out if event is a sod or ndk struct
     if(~isstruct(event) || ~isscalar(event))
         error('seizmo:setevent:badInput',...
             'EVENT must be a scalar struct!');
@@ -82,7 +83,7 @@ try
         end
         
         % add info to header
-        data=changeheader(data,'o utc',mat2cell(event.time,1),...
+        data=changeheader(data,'o utc',{event.time},...
             'ev',[event.latitude event.longitude 0 event.depth*1000],...
             'mag',event.magnitude,'imagtyp',imagtyp,'kevnm',kevnm);
     elseif(all(ismember(ndkfields,fields)))

@@ -6,14 +6,15 @@ function []=globalcmt_update()
 %    Description:
 %     GLOBALCMT_UPDATE will search the GlobalCMT Project's website for
 %     updates to their catalogs and will add any new CMTs found to SEIZMO's
-%     catalogs.  GLOBALCMT_UPDATE does not check for changes in the old
-%     catalogs from the GlobalCMT Project (old being those that are already
-%     a part of the SEIZMO catalogs).  Try not to use GLOBALCMT_UPDATE too
-%     often as it downloads & updates the quick CMT catalog every run.
+%     local catalogs.  GLOBALCMT_UPDATE does not check for changes in the
+%     old catalogs from the GlobalCMT Project (old being those that are
+%     already a part of the SEIZMO catalogs).
 %
 %    Notes:
-%     - needs write permission to SEIZMO directories
-%     - also updates the cached catalogs under SEIZMO.GLOBALCMT
+%     - Try not to use GLOBALCMT_UPDATE too often as it downloads & updates
+%       the quick CMT catalog every run.
+%     - Needs write permission to SEIZMO directories.
+%     - Also updates the cached catalogs under SEIZMO.GLOBALCMT
 %
 %    Examples:
 %     % Update your catalog, then find CMTs from the last week:
@@ -27,9 +28,10 @@ function []=globalcmt_update()
 %        Jan.  5, 2011 - improved docs, fixed download bug
 %        Nov.  1, 2011 - condensed code to remove some redundancies
 %        Feb. 15, 2012 - say 'new cmts' to avoid confusion
+%        Mar.  1, 2012 - minor doc update, Octave save workaround
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2012 at 21:30 GMT
+%     Last Updated Mar.  1, 2012 at 21:30 GMT
 
 % todo:
 
@@ -136,7 +138,11 @@ if(updated)
     % save full
     path=fileparts(mfilename('fullpath'));
     SEIZMO.GLOBALCMT.FULL=full;
-    save([path filesep 'globalcmt_full.mat'],'-struct','full');
+    if(isoctave)
+        save([path filesep 'globalcmt_full.mat'],'-struct','-7','full');
+    else % matlab
+        save([path filesep 'globalcmt_full.mat'],'-struct','full');
+    end
 else
     % detail message
     if(verbose); disp('Found 0 CMTs'); end
@@ -166,7 +172,11 @@ if(ok && ~isempty(qndk))
     % save
     path=fileparts(mfilename('fullpath'));
     SEIZMO.GLOBALCMT.QUICK=quick;
-    save([path filesep 'globalcmt_quick.mat'],'-struct','quick');
+    if(isoctave)
+        save([path filesep 'globalcmt_quick.mat'],'-struct','-7','quick');
+    else % matlab
+        save([path filesep 'globalcmt_quick.mat'],'-struct','quick');
+    end
 end
 
 end

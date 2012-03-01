@@ -14,13 +14,6 @@ findarrivals == searches .misc.arrivals
 arrivals2picks == push .misc.arrivals to header pick fields
 findpicks == searches t* fields
 
-- startup.m file?
-  - addpath
-  - javaaddpath
-
-default verbose off
-    - when using parallel toolbox
-
 meld
     - uneven or variable samplerate
 rotate

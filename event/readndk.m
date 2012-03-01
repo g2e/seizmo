@@ -4,11 +4,12 @@ function [events]=readndk(file,flag)
 %    Usage:    events=readndk(file)
 %              events=readndk(string,true)
 %
-%    Description: EVENTS=READNDK(FILE) reads in an NDK-formatted text file
-%     from the Global CMT project (www.globalcmt.org).  All event info from
-%     the file is imported into the struct EVENTS (see the Notes section
-%     below for more details).  If FILE is not given or set to '' then a
-%     graphical file selection menu is presented.
+%    Description:
+%     EVENTS=READNDK(FILE) reads in an NDK-formatted text file from the
+%     Global CMT project (www.globalcmt.org).  All event info from the file
+%     is imported into the struct EVENTS (see the Notes section below for
+%     more details).  If FILE is not given or set to '' then a graphical
+%     file selection menu is presented.
 %
 %     EVENTS=READNDK(STRING,TRUE) will take the first input to be a string
 %     of an NDK file (rather than the filename) if the second input is set
@@ -96,37 +97,14 @@ function [events]=readndk(file,flag)
 %           rake2
 %
 %    Examples:
-%     Read in the included example NDK file:
-%      ndk=readndk('mar10.ndk');
+%     % Read in the included example NDK file:
+%     ndk=readndk('mar10.ndk');
 %
-%     Extract a specific CMT (replace CMTIDX):
-%      cmt=ssidx(ndk,CMTIDX);
-%     
-%     Import info from the CMT into some records:
-%      data=setevent(data,cmt);
+%     % Extract a specific CMT (replace CMTIDX):
+%     cmt=ssidx(ndk,CMTIDX);
 %
-%     This is how I create the "full" cmt catalog:
-%      legacy=readndk('legacy.ndk');
-%      monthly=readndk('monthly.ndk');
-%      % combine
-%      fields=fieldnames(legacy);
-%      for i=1:numel(fields)
-%        full.(fields{i})=[legacy.(fields{i}); monthly.(fields{i})];
-%      end
-%      % delete dupes
-%      [keep,keep]=unique(full.name);
-%      full=ssidx(full,sort(keep));
-%      % remove 1976 deep (there are 6 - these are dupes too)
-%      name=char(full.name);
-%      full=ssidx(full,~(full.year==1976 & name(:,8)=='X'));
-%      % save
-%      save('globalcmt_full.mat','-struct','full');
-%
-%     This is how I remove the overlap between the full & quick catalogs:
-%      quick=readndk('quick.ndk');
-%      keep=(quick.year==2010 & quick.month>=4) | quick.year>2010;
-%      quick=ssidx(quick,keep);
-%      save('globalcmt_quick.mat','-struct','quick');
+%     % Import info from the CMT into some records:
+%     data=setevent(data,cmt);
 %
 %    See also: READSODEVENTCSV, READTXT, SETEVENT, SSIDX, PARSE_ISC_ORIGIN,
 %              FINDCMT, FINDCMTS, GLOBALCMT_UPDATE
@@ -140,9 +118,10 @@ function [events]=readndk(file,flag)
 %                        struct, nargchk fix, use readtxt/getwords
 %        Aug.  2, 2010 - updated catalog examples
 %        Aug.  3, 2010 - allow string input
+%        Mar.  1, 2012 - remove outdated examples
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  3, 2010 at 15:40 GMT
+%     Last Updated Aug.  1, 2012 at 15:40 GMT
 
 % todo:
 % - Currently no numeric fields have missing values that would need to be

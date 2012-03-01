@@ -4,15 +4,16 @@ function [events]=readndk_slow(file,flag)
 %    Usage:    events=readndk_slow(file)
 %              events=readndk(string,true)
 %
-%    Description: EVENTS=READNDK_SLOW(FILE) reads in an NDK-formatted text
-%     file from the Global CMT project (www.globalcmt.org).  All event info
-%     from the file is imported into struct array EVENTS (see the Notes
-%     section below for more details).  If FILE is not given or set to ''
-%     then a graphical file selection menu is presented.  This is different
-%     from READNDK in that the method used to convert numeric fields from
-%     text is safer and robust but is significantly slower (15x here).
-%     This function is currently unnecessary but I keep it as a template
-%     for building other similar functions that do need this robustness.
+%    Description:
+%     EVENTS=READNDK_SLOW(FILE) reads in an NDK-formatted text file from
+%     the Global CMT project (www.globalcmt.org).  All event info from the
+%     file is imported into struct array EVENTS (see the Notes section
+%     below for more details).  If FILE is not given or set to '' then a
+%     graphical file selection menu is presented.  This is different from
+%     READNDK in that the method used to convert numeric fields from text
+%     is safer and robust but is significantly slower (15x here).  This
+%     function is currently unnecessary but I keep it as a template for
+%     building other similar functions that do need this robustness.
 %
 %     EVENTS=READNDK_SLOW(STRING,TRUE) will take the first input to be a
 %     string of an NDK file (rather than the filename) if the second input
@@ -100,17 +101,14 @@ function [events]=readndk_slow(file,flag)
 %           rake2
 %
 %    Examples:
-%     Read in the included example NDK file:
-%      ndk=readndk_slow('mar10.ndk');
+%     % Read in the included example NDK file:
+%     ndk=readndk_slow('mar10.ndk');
 %
-%     Extract a specific CMT (replace CMTIDX):
-%      fields=fieldnames(ndk);
-%      for i=1:numel(fields)
-%          cmt.(fields{i})=ndk.(fields{i})(CMTIDX);
-%      end
+%     % Extract a specific CMT (replace CMTIDX):
+%     cmt=ssidx(ndk,CMTIDX);
 %     
-%     Import info from the CMT into some records:
-%      data=setevent(data,cmt);
+%     % Import info from the CMT into some records:
+%     data=setevent(data,cmt);
 %
 %    See also: READSODEVENTCSV, READTXT, SETEVENT, READNDK, FINDCMTS,
 %              FINDCMT, GLOBALCMT_UPDATE, SSIDX, PARSE_ISC_ORIGIN
@@ -123,9 +121,10 @@ function [events]=readndk_slow(file,flag)
 %        July 30, 2010 - change strik2 to strike2, now outputs a scalar
 %                        struct, nargchk fix, use readtxt/getwords
 %        Aug.  3, 2010 - allow string input
+%        Mar.  1, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  3, 2010 at 15:40 GMT
+%     Last Updated Mar.  1, 2012 at 15:40 GMT
 
 % todo:
 
@@ -144,7 +143,8 @@ if(~flag)
             '*.*' 'All Files (*.*)'},...
             'Select NDK File');
         if(isequal(0,file))
-            error('seizmo:readndk_slow:noFileSelected','No input file selected!');
+            error('seizmo:readndk_slow:noFileSelected',...
+                'No input file selected!');
         end
         file=strcat(path,filesep,file);
     else % check file
