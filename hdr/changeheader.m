@@ -120,9 +120,10 @@ function [data]=changeheader(data,varargin)
 %        Jan. 30, 2012 - doc update, 6utc/6tai changed to utc6/tai6,
 %                        some support for abstimes without modifier, allow
 %                        abstimes input to be uncelled
+%        Mar.  1, 2012 - bugfix: forgot to define solo, drop bad cell2mat
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 12:00 GMT
+%     Last Updated Mar.  1, 2012 at 12:00 GMT
 
 % todo:
 
@@ -364,8 +365,9 @@ if(isfield(h.vf,f))
     return;
 end
 
-% multiwords = drop'm
+% multiwords
 wf=getwords(f); f=wf{1};
+if(numel(wf)==1); solo=true; else solo=false; end
 
 % special treatment for enums
 for m=1:numel(h.enum)
@@ -535,12 +537,10 @@ for n=1:numel(h.ntype)
                     switch wf{2}
                         case {'utc' 'utc6'}
                             head(h.real(m).pos.(f),good)=...
-                                timediff(tai(good,:),...
-                                utc2tai(cell2mat(v(good,1))));
+                                timediff(tai(good,:),utc2tai(v(good,:)));
                         case {'tai' 'tai6'}
                             head(h.real(m).pos.(f),good)=...
-                                timediff(tai(good,:),...
-                                cell2mat(v(good,1)));
+                                timediff(tai(good,:),v(good,:));
                     end
                 end
                 return;

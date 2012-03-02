@@ -102,9 +102,10 @@ function [info]=multibandalign(data,varargin)
 %                        filter set, fix bug where window settings lost if
 %                        too few high-snr waveforms
 %        May  19, 2011 - fixed error with .finalcut not always there
+%        Mar.  1, 2012 - old plot_taupcurve is now plot_taupcurve_dt
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  19, 2011 at 12:25 GMT
+%     Last Updated Mar.  1, 2012 at 12:25 GMT
 
 % todo:
 % - smarter initial window is needed to reduce later arrivals messing up
@@ -1038,7 +1039,7 @@ if(~isempty(p.phase))
     tt=taupcurve('dep',evdp,...
         'reddeg',1/tt(idx).rayparameter(1),'ph','ttall');
     hold(ax,'on');
-    h=plot_taupcurve(tt,-intrcpt,true,'parent',ax,'linewidth',5);
+    h=plot_taupcurve_dt(tt,-intrcpt,true,'parent',ax,'linewidth',5);
     movekids(h,'back');
     hold(ax,'off');
 end

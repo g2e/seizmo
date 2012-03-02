@@ -316,7 +316,7 @@ if(ischar(opt.CATALOG))
                         % catalog is broken
                         disp('Local GlobalCMT Full catalog is corrupted!');
                         reply=input('Attempt to re-create? Y/N [N]: ','s');
-                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                        if(~isempty(reply) && strncmpi(reply,'y',1))
                             globalcmt_create;
                             globalcmt_update;
                             tmp1=load('globalcmt_full');
@@ -330,7 +330,7 @@ if(ischar(opt.CATALOG))
                         % no catalog...ask to make one
                         disp('No Local GlobalCMT Full Catalog Found!');
                         reply=input('Attempt to create? Y/N [N]: ','s');
-                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                        if(~isempty(reply) && strncmpi(reply,'y',1))
                             globalcmt_create;
                             globalcmt_update;
                             tmp1=load('globalcmt_full');
@@ -356,7 +356,7 @@ if(ischar(opt.CATALOG))
                         % catalog is broken
                         disp('Local GlobalCMT Quick catalog corrupted!');
                         reply=input('Attempt to re-create? Y/N [N]: ','s');
-                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                        if(~isempty(reply) && strncmpi(reply,'y',1))
                             globalcmt_update;
                             tmp2=load('globalcmt_quick');
                             SEIZMO.GLOBALCMT.QUICK=tmp2;
@@ -369,7 +369,7 @@ if(ischar(opt.CATALOG))
                         % no catalog...ask to make one
                         disp('No Local GlobalCMT Quick Catalog Found!');
                         reply=input('Attempt to create? Y/N [N]: ','s');
-                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                        if(~isempty(reply) && strncmpi(reply,'y',1))
                             globalcmt_update;
                             tmp2=load('globalcmt_quick');
                             SEIZMO.GLOBALCMT.QUICK=tmp2;
@@ -421,7 +421,7 @@ if(ischar(opt.CATALOG))
                         % catalog is broken
                         disp('Local GlobalCMT catalog is corrupted!');
                         reply=input('Attempt to re-create? Y/N [N]: ','s');
-                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                        if(~isempty(reply) && strncmpi(reply,'y',1))
                             globalcmt_create;
                             globalcmt_update;
                             opt.CATALOG=load(['globalcmt_' opt.CATALOG]);
@@ -435,7 +435,7 @@ if(ischar(opt.CATALOG))
                         % no catalog...ask to make one
                         disp('No Local GlobalCMT Catalog Found!');
                         reply=input('Attempt to create? Y/N [N]: ','s');
-                        if(isempty(reply) || ~strncmpi(reply,'y',1))
+                        if(~isempty(reply) && strncmpi(reply,'y',1))
                             globalcmt_create;
                             globalcmt_update;
                             opt.CATALOG=load(['globalcmt_' opt.CATALOG]);

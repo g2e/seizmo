@@ -52,6 +52,7 @@ x	add weighting to all
 figure out strange narrow long-period peaks in noise results
     - response taper affects it
     - happens even without response removal?
+
 plot_cmb_measurements
     - no horizontal errorbars (combine into one?)
     - use frequency?
@@ -60,12 +61,6 @@ affect of azimuth width on measurements
 affect of minimum distance on measurements
 all Pdiff A/B/C 1st pass
 all SHdiff
-prep global on terra
-
-cmt subtoolbox
-    - mt to strike-dip-rake
-    - mt to principal axes
-    - principal axes to mt
 
 more cmb models (rjk)
     - we need to allow parameter setting (while loop rather than for)

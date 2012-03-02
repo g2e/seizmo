@@ -8,23 +8,23 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %     CMT=PREP_CMB_DATA(INDIR,OUTDIR,SODCSVFILE) prepares the SEIZMO data
 %     files in INDIR (which contains directories of data corresponding to
 %     individual earthquakes).  Preparation includes:
-%      EVENT SELECTION (by user)
-%      CMT SELECTION (based on sodcsvfile)
-%      HEADER CORRECTIONS
-%      MERGING
-%      WINNOWING (>600s records only)
-%      DETRENDING
-%      TAPERING
-%      RESAMPLING (1Hz)
-%      RESPONSE REMOVAL
-%      FORCE VERTICALS TO BE ORIENTED UPWARD
-%      ROTATION (into radial & transverse)
-%      ALIGNMENT (on Pdiff or Sdiff)
-%      WINNOWING (require 300s about arrival)
-%      RENAMING (rdseed based naming)
+%      ( 1) EVENT SELECTION (by user)
+%      ( 2) CMT SELECTION (based on sodcsvfile)
+%      ( 3) HEADER CORRECTIONS
+%      ( 4) MERGING
+%      ( 5) WINNOWING (>600s records only)
+%      ( 6) DETRENDING
+%      ( 7) TAPERING
+%      ( 8) RESAMPLING (1Hz)
+%      ( 9) RESPONSE REMOVAL
+%      (10) FORCE VERTICALS TO BE ORIENTED UPWARD
+%      (11) ROTATION (into radial & transverse)
+%      (12) ALIGNMENT (on Pdiff or Sdiff)
+%      (13) WINNOWING (require 300s about arrival)
+%      (14) RENAMING (rdseed based naming)
 %     SODCSVFILE should match the directory list in INDIR.  If it does not
 %     then things will fail.  So basically you must use SOD if you want to
-%     proceed.  Sorry.  CMT is the globalcmt moment tensors used.
+%     proceed.  Sorry.  CMT is the GlobalCMT moment tensors used.
 %
 %     CMT=PREP_CMB_DATA(INDIR,OUTDIR,SODCSVFILE,DATASRC) indicates where
 %     the SAC files came from: 'RDSEED' for SAC files output from a SEED
@@ -39,13 +39,16 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %     - INDIR example layout:
 %                INDIR
 %                 |
-%                 +-> DAYDIR1
-%                 +-> DAYDIR2
+%                 +-> EVENTDIR1
+%                 +-> EVENTDIR2
 %                      |
 %                      +-> FILE1
 %                      +-> FILE2
 %
 %    Examples:
+%     % You can skip giving a CSV input if you would rather select it
+%     % using a GUI menu:
+%     cmt=prep_cmb_data('myrawdata','myprepdata');
 %
 %    See also: CMB_1ST_PASS, CMB_OUTLIERS, CMB_2ND_PASS, SLOWDECAYPAIRS,
 %              SLOWDECAYPROFILES, MAP_CMB_PROFILES
@@ -58,9 +61,10 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %                        magnitude types that are not in globalcmt list
 %        Apr.  4, 2011 - remove response to displacement
 %        Feb.  7, 2012 - merge to meld update
+%        Mar.  1, 2012 - fixes for scalar structs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 13:35 GMT
+%     Last Updated Mar.  1, 2012 at 13:35 GMT
 
 % todo:
 
@@ -106,9 +110,10 @@ s=listdlg('PromptString','Select events:',...
           'ListSize',[170 300],...
           'ListString',datelist);
 
-% silence checkheader annoying warnings
+% silence annoying checkheader warnings
 checkoperr('MULTIPLE_DELTA','IGNORE',...
-           'INVALID_IZTYPE','IGNORE');
+           'INVALID_IZTYPE','IGNORE',...
+           'KM_DEPTH','IGNORE');
 
 % loop over user selected events
 for i=s(:)'
@@ -118,17 +123,18 @@ for i=s(:)'
     % read in data
     data=readseizmo([indir filesep dates(i).name]);
     
-    % find event csv
-    if(any(strcmpi(event(i).magnitudeType,{'mw' 'mb' 'ms'})))
-        cmt(i)=findcmt('time',event(i).time,...
-            'location',[event(i).latitude event(i).longitude],...
-            'depth',event(i).depth,...
-            'magtype',event(i).magnitudeType,...
-            'magnitude',event(i).magnitude);
+    % find event cmt
+    ievent=ssidx(event,i);
+    if(any(strcmpi(ievent.magnitudeType,{'mw' 'mb' 'ms'})))
+        cmt(i)=findcmt('time',ievent.time,...
+            'location',[ievent.latitude ievent.longitude],...
+            'depth',ievent.depth,...
+            'magtype',char(ievent.magnitudeType),...
+            'magnitude',ievent.magnitude);
     else
-        cmt(i)=findcmt('time',event(i).time,...
-            'location',[event(i).latitude event(i).longitude],...
-            'depth',event(i).depth);
+        cmt(i)=findcmt('time',ievent.time,...
+            'location',[ievent.latitude ievent.longitude],...
+            'depth',ievent.depth);
     end
     
     % fix header info
@@ -157,7 +163,7 @@ for i=s(:)'
     
     % remove response
     try
-        data=removesacpz(data,'f',1./[200 100]);
+        data=removesacpz(data,'tl',1./[200 100]);
     catch
         msg=lasterror;
         warning(msg.identifier,msg.message);
@@ -206,5 +212,8 @@ for i=s(:)'
     if(isempty([vdata; rdata])); continue; end
     writeseizmo([vdata; rdata],'path',[outdir filesep dates(i).name]);
 end
+
+% compact cmt output
+cmt=sscat(cmt);
 
 end
