@@ -112,6 +112,10 @@ function [info]=multibandalign(data,varargin)
 % - smarter initial window is needed to reduce later arrivals messing up
 %   the amplitude scaling (or can we prescale using signal window???)
 % - smarter noise window would be nice
+% - something like investigate_cmb_results in get_initial_window
+%   would be nice -- probably a subroutine working with the info struct
+%   - requires full info being passed to get_initial_window
+%   - is the pf stuff too specific for multibandalign?
 
 % check nargin
 if(nargin<1)

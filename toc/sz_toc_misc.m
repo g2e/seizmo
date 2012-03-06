@@ -41,6 +41,7 @@ function []=sz_toc_misc()
 %<a href="matlab:help makesubplots">makesubplots</a>         - Makes subplots in current figure returning axes handles
 %<a href="matlab:help mat2vec">mat2vec</a>              - Converts matrices to column vectors
 %<a href="matlab:help matchsort">matchsort</a>            - Replicates a sort operation using the returned permutation indices
+%<a href="matlab:help maximize">maximize</a>             - Maximize figure in Matlab (uses java, platform independent)
 %<a href="matlab:help mcxc">mcxc</a>                 - Multi-channel cross correlation with built-in peak picker
 %<a href="matlab:help midx2li">midx2li</a>              - Translates min/max indices to linear indices
 %<a href="matlab:help movekids">movekids</a>             - Moves the specified children plot objects

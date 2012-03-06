@@ -109,19 +109,12 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %        Mar.  2, 2012 - handle unset earthmodel bugfix, octave save ascii
 %                        workaround, .mat output name includes eventdir
 %        Mar.  5, 2012 - allow no written output
+%        Mar.  6, 2012 - basic .weights field support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2012 at 13:35 GMT
+%     Last Updated Mar.  6, 2012 at 13:35 GMT
 
 % todo:
-% - allow weighting?
-%   - currently unused in wlinem calls
-%   - in the struct?
-%     - this is simpler
-%     - write a function to set weights
-%       - optional field (like finalcut)
-%       - weights are normalized number of frequencies for a station
-%         - this should dampen effect of added/droped stations
 
 % check nargin
 error(nargchk(1,4,nargin));
@@ -282,20 +275,49 @@ for a=1:numel(results)
             submat(ndsquareform(results(a).useralign.xc.cg),1:2,idx,3,1);
         
         % find slowness & decay rate
-        [m,covm]=wlinem(delaz(idx,1),rtime(idx),1,diag(rtimeerr(idx).^2));
-        tmp(cnt).slow=m(2);
-        tmp(cnt).slowerr=sqrt(covm(2,2));
-        [m,covm]=wlinem(delaz(idx,1),crtime(idx),1,diag(rtimeerr(idx).^2));
-        tmp(cnt).cslow=m(2);
-        tmp(cnt).cslowerr=sqrt(covm(2,2));
-        [m,covm]=wlinem(delaz(idx,1),log(rampl(idx)),1,...
-            diag((log(rampl(idx)+ramplerr(idx))-log(rampl(idx))).^2));
-        tmp(cnt).decay=m(2);
-        tmp(cnt).decayerr=sqrt(covm(2,2));
-        [m,covm]=wlinem(delaz(idx,1),log(crampl(idx)),1,...
-            diag((log(crampl(idx)+ramplerr(idx))-log(crampl(idx))).^2));
-        tmp(cnt).cdecay=m(2);
-        tmp(cnt).cdecayerr=sqrt(covm(2,2));
+        if(isfield(results(a),'weights'))
+            try
+                [m,covm]=wlinem(delaz(idx,1),rtime(idx),1,...
+                    diag(rtimeerr(idx).^2),diag(results(a).weights(idx)));
+                tmp(cnt).slow=m(2);
+                tmp(cnt).slowerr=sqrt(covm(2,2));
+                [m,covm]=wlinem(delaz(idx,1),crtime(idx),1,...
+                    diag(rtimeerr(idx).^2),diag(results(a).weights(idx)));
+                tmp(cnt).cslow=m(2);
+                tmp(cnt).cslowerr=sqrt(covm(2,2));
+                [m,covm]=wlinem(delaz(idx,1),log(rampl(idx)),1,...
+                    diag((log(rampl(idx)+ramplerr(idx))...
+                    -log(rampl(idx))).^2),diag(results(a).weights(idx)));
+                tmp(cnt).decay=m(2);
+                tmp(cnt).decayerr=sqrt(covm(2,2));
+                [m,covm]=wlinem(delaz(idx,1),log(crampl(idx)),1,...
+                    diag((log(crampl(idx)+ramplerr(idx))...
+                    -log(crampl(idx))).^2),diag(results(a).weights(idx)));
+                tmp(cnt).cdecay=m(2);
+                tmp(cnt).cdecayerr=sqrt(covm(2,2));
+            catch
+                error('seizmo:slowdecayprofiles:corruptResults',...
+                    'Something is wrong with the .weights field!');
+            end
+        else
+            [m,covm]=wlinem(delaz(idx,1),rtime(idx),1,...
+                diag(rtimeerr(idx).^2));
+            tmp(cnt).slow=m(2);
+            tmp(cnt).slowerr=sqrt(covm(2,2));
+            [m,covm]=wlinem(delaz(idx,1),crtime(idx),1,...
+                diag(rtimeerr(idx).^2));
+            tmp(cnt).cslow=m(2);
+            tmp(cnt).cslowerr=sqrt(covm(2,2));
+            [m,covm]=wlinem(delaz(idx,1),log(rampl(idx)),1,...
+                diag((log(rampl(idx)+ramplerr(idx))-log(rampl(idx))).^2));
+            tmp(cnt).decay=m(2);
+            tmp(cnt).decayerr=sqrt(covm(2,2));
+            [m,covm]=wlinem(delaz(idx,1),log(crampl(idx)),1,...
+                diag((log(crampl(idx)+ramplerr(idx))...
+                -log(crampl(idx))).^2));
+            tmp(cnt).cdecay=m(2);
+            tmp(cnt).cdecayerr=sqrt(covm(2,2));
+        end
     end
     
     % skip if none

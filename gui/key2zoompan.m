@@ -9,25 +9,22 @@ function []=key2zoompan(key,ax)
 %     on the keycode given by KEY.  A keycode is an integer corresponding
 %     to a specific key on the keyboard.  You can obtain a keycode via the
 %     button variable returned by GINPUT.  Actions are currently:
-%      KEY          KEYCODE    ACTION
-%       up-arrow     30         Pan up 25%
-%       down-arrow   31         Pan down 25%
-%       left-arrow   28         Pan left 25%
-%       right-arrow  29         Pan right 25%
-%       i            105        Zoom in 2x
-%       o            111        Zoom out 2x
-%       x            120        Toggle x-axis only zoom on/off (def is off)
-%       y            121        Toggle y-axis only zoom on/off (def is off)
-%       r            114        Zoom out to default zoom level
-%       s            115        Set default zoom level to current
+%      KEY           KEYCODE    ACTION
+%       up-arrow      30         Pan up 25%
+%       down-arrow    31         Pan down 25%
+%       left-arrow    28         Pan left 25%
+%       right-arrow   29         Pan right 25%
+%       i             105        Zoom in 2x
+%       o             111        Zoom out 2x
+%       x             120        Toggle x-axis only zoom on/off (def=off)
+%       y             121        Toggle y-axis only zoom on/off (def=off)
+%       r             114        Zoom out to default zoom level
+%       s             115        Set default zoom level to current
+%       h             104        Help window showing allowed keys
 %
-%     KEY2ZOOMPAN(KEY,AX) uses the axis given by AX.  Note that if the axis
-%     handle changes, the x/y-axis zoom states are lost for the previous
-%     axis.
+%     KEY2ZOOMPAN(KEY,AX) uses the axis given by AX.
 %
 %    Notes:
-%     - If the caller to KEY2ZOOMPAN changes then the x/y-axis zoom states
-%       from the previous caller are lost.
 %
 %    Examples:
 %     % Plot some data and zoom/pan the axis using the keyboard:
@@ -46,9 +43,11 @@ function []=key2zoompan(key,ax)
 %     Version History:
 %        Jan.  6, 2011 - initial version
 %        Jan.  7, 2011 - use axis handle for zoom calls
+%        Mar.  6, 2012 - added h key for help window, now works while
+%                        switching back and forth between axes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  7, 2011 at 11:00 GMT
+%     Last Updated Mar.  6, 2012 at 11:00 GMT
 
 % todo:
 
@@ -68,20 +67,40 @@ elseif(~isscalar(ax) || ~isreal(ax) || ~ishandle(ax) ...
         'AX must be a valid axes handle!');
 end
 
-% whos calling
-caller=star69;
-
-% save & default x/y axis zoom states
-persistent xzoom yzoom oldax oldcaller
-if(isempty(xzoom) || ax~=oldax || ~strcmp(caller,oldcaller))
+% get states
+persistent oldax oldzoom h
+if(any(ax==oldax))
+    xzoom=oldzoom(ax==oldax,1);
+    yzoom=oldzoom(ax==oldax,2);
+else
     xzoom=false;
-end
-if(isempty(yzoom) || ax~=oldax || ~strcmp(caller,oldcaller));
     yzoom=false;
 end
 
 % action based on key
 switch key
+    case 104 % h
+        k2zphelp={
+            'KEY                ACTION'
+            'up-arrow           Pan up 25%'
+            'down-arrow         Pan down 25%'
+            'left-arrow         Pan left 25%'
+            'right-arrow        Pan right 25%'
+            'i                  Zoom in 2x'
+            'o                  Zoom out 2x'
+            'x                  Toggle x-axis only zoom on/off (def=off)'
+            'y                  Toggle y-axis only zoom on/off (def=off)'
+            'r                  Zoom out to default zoom level'
+            's                  Set default zoom level to current'
+            'h                  This help window'};
+        
+        % does a help dialog window already exist?
+        if(ishandle(h))
+             % bring to front
+            figure(h);
+        else % new help dialog window
+            h=helpdlg(k2zphelp,'KEY2ZOOMPAN CONTROL');
+        end
     case 105 % i
         if(xzoom)
             zoom(ax,'xon');
@@ -150,8 +169,17 @@ switch key
         % nothing
 end
 
-% set oldax & oldcaller
-oldax=ax;
-oldcaller=caller;
+% set oldax & oldzoom
+if(any(ax==oldax))
+    oldzoom(ax==oldax,:)=[xzoom yzoom];
+else
+    oldax=[oldax; ax];
+    oldzoom=[oldzoom; xzoom yzoom];
+end
+
+% clear out dead handles
+good=ishandle(oldax);
+oldax=oldax(good);
+oldzoom=oldzoom(good,:);
 
 end

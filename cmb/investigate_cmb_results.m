@@ -1,4 +1,4 @@
-function [ax]=investigate_cmb_results(results,observable)
+function [varargout]=investigate_cmb_results(results,observable)
 %INVESTIGATE_CMB_RESULTS    Plots results output from cmb functions
 %
 %    Usage:    investigate_cmb_results(results)
@@ -27,7 +27,7 @@ function [ax]=investigate_cmb_results(results,observable)
 %              PLOT_CMB_PDF, PLOT_CMB_MEASUREMENTS
 
 %     Version History:
-%        Mar.  5, 2012 - initial version
+%        Mar.  5, 2012 - initial version, use minor xticks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Mar.  5, 2012 at 13:35 GMT
@@ -83,7 +83,7 @@ end
 
 % get observables for each result
 [d,kname,x]=deal(cell(nr,1));
-for i=1:numel(results)
+for i=1:nr
     % station names & distances
     [n,d{i,1}]=getheader(results(i).useralign.data,'kname','gcarc');
     kname{i,1}=strcat(n(:,1),'.',n(:,2),'.',n(:,3),'.',n(:,4));
@@ -110,7 +110,7 @@ for i=1:numel(results)
             snr=snr(snr>=results(i).usersnr.snrcut);
             snr(results(i).userwinnow.cut)=[];
             snr=snr(results(i).finalcut);
-            x{i,1}=log10(snr);
+            x{i,1}=snr;
             x{i,1}(results(i).outliers.bad)=nan;
         case 'amp'
             % amplitude
@@ -131,7 +131,7 @@ for i=1:numel(results)
             snr=snr(snr>=results(i).usersnr.snrcut);
             snr(results(i).userwinnow.cut)=[];
             snr=snr(results(i).finalcut);
-            x{i,3}=log10(snr);
+            x{i,3}=snr;
             x{i,3}(results(i).outliers.bad)=nan;
             x{i,4}=log10(results(i).useralign.solution.amp);
             x{i,4}(results(i).outliers.bad)=nan;
@@ -149,7 +149,7 @@ end
 if(strcmpi(observable,'all'))
     % make observable matrices
     o=nan(size(s,1),numel(bad),4);
-    for i=1:numel(results)
+    for i=1:nr
         [tf,loc]=ismember(kname{i},s);
         for j=1:4; o(loc,oi(i),j)=x{i,j}; end
     end
@@ -162,7 +162,7 @@ if(strcmpi(observable,'all'))
     set(ax(1:4),'color','none',...
         'ytick',(1:numel(s)),...
         'yticklabel',s,...
-        'xtick',oi);
+        'xminortick','on');
     colorbar('peer',ax(1));
     colorbar('peer',ax(2));
     colorbar('peer',ax(3));
@@ -187,7 +187,7 @@ if(strcmpi(observable,'all'))
 else
     % make observable matrix
     o=nan(size(s,1),numel(bad));
-    for i=1:numel(results)
+    for i=1:nr
         [tf,loc]=ismember(kname{i},s);
         o(loc,oi(i))=x{i};
     end
@@ -197,11 +197,14 @@ else
     set(ax,'color','none',...
         'ytick',(1:numel(s)),...
         'yticklabel',s,...
-        'xtick',oi);
+        'xminortick','on');
     colorbar('peer',ax);
     set(h,'alphadata',~isnan(o));
     title(ax,observable);
     xlabel(ax,'index #');
 end
+
+% output
+if(nargout); varargout{1}=ax; end
 
 end
