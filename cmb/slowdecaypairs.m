@@ -23,15 +23,17 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %
 %     PF=SLOWDECAYPAIRS(RESULTS,AZRNG,GCRNG,ODIR) sets the output directory
 %     where the PF struct is saved.  By default ODIR is '.' (the current
-%     directory.
+%     directory.  You may set ODIR to FALSE for no written output.
 %
 %    Notes:
 %     - The PF struct is also written to disk as:
-%           TIMESTAMP_EARTHMODEL_2stn_profiles.mat
-%       where TIMESTAMP is the time when the file is written
-%       and uses format 30 from the DATESTR function.  EARTHMODEL is
-%       derived from the results.earthmodel field (if you give a results
-%       struct of 2+ elements with differing models then EARTHMODEL='misc'.
+%           TIMESTAMP_EVENTDIR_EARTHMODEL_2stn_profiles.mat
+%       where TIMESTAMP is the time when the file is written and uses
+%       format 30 from the DATESTR function, EVENTDIR is the directory
+%       where the waveforms reside, & EARTHMODEL is derived from the
+%       results.earthmodel field.  If you give a results struct of 2+
+%       elements with differing event directories or earthmodels then they
+%       are set to 'misc'.
 %     - The PF struct has the following fields:
 %       .gcdist         - degree distance difference between stations
 %       .azwidth        - azimuthal difference between stations
@@ -109,9 +111,12 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %        Mar. 24, 2011 - delay write if filename will be exactly the same
 %        Mar. 30, 2011 - doc update
 %        Apr. 22, 2011 - update for finalcut field
+%        Mar.  2, 2012 - handle unset earthmodel bugfix, octave save ascii
+%                        workaround, .mat output name includes eventdir
+%        Mar.  5, 2012 - allow no written output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2011 at 13:35 GMT
+%     Last Updated Mar.  5, 2012 at 13:35 GMT
 
 % todo:
 
@@ -123,6 +128,7 @@ error(check_cmb_results(results));
 
 % default odir
 if(nargin<4 || isempty(odir)); odir='.'; end
+if(islogical(odir) && isscalar(odir) && odir); odir='.'; end
 
 % check azrng & gcrng
 if(~isreal(azrng) || ~any(numel(azrng)==[1 2]))
@@ -131,17 +137,23 @@ if(~isreal(azrng) || ~any(numel(azrng)==[1 2]))
 elseif(~isreal(gcrng) || ~any(numel(gcrng)==[1 2]))
     error('seizmo:slowdecaypairs:badInput',...
         'GCRNG must be [MINGC MAXGC] or MINGC!');
-elseif(~isstring(odir))
+elseif(~isstring(odir) && ~(islogical(odir) && isscalar(odir)))
     error('seizmo:slowdecaypairs:badInput',...
-        'ODIR must be a string!');
+        'ODIR must be a string or TRUE/FALSE!');
 end
+if(islogical(odir)); out=odir; else out=true; end
 
 % make sure odir exists (create it if it does not)
-[ok,msg,msgid]=mkdir(odir);
-if(~ok)
-    warning(msgid,msg);
-    error('seizmo:slowdecaypairs:pathBad',...
-        'Cannot create directory: %s',odir);
+if(out)
+    [ok,msg,msgid]=mkdir(odir);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:slowdecaypairs:pathBad',...
+            'Cannot create directory: %s',odir);
+    end
+elseif(~out && ~nargout)
+    error('seizmo:slowdecaypairs:badInput',...
+        'Output variable must be assigned when no written output!');
 end
 
 % expand scalar azrng & gcrng
@@ -315,16 +327,36 @@ for a=1:numel(results)
 end
 
 % save profiles
-if(exist('pf','var'))
-    name=unique({results.earthmodel}');
-    if(~isscalar(name)); name='misc'; else name=char(name); end
+if(out && exist('pf','var'))
+    % strings for saving
+    wfdirs={results.dirname}';
+    wfdirs(cellfun('isempty',wfdirs))=[];
+    wfdir=unique(wfdirs);
+    if(~isscalar(wfdir))
+        wfdir='misc';
+    else
+        [a,b,c]=fileparts(char(wfdir));
+        wfdir=[b c];
+    end
+    emods={results.earthmodel}';
+    emods(cellfun('isempty',emods))=[];
+    emod=unique(emods);
+    if(~isscalar(emod)); emod='misc'; else emod=char(emod); end
+    
     % avoid clobber by waiting until unique time
-    if(exist(fullfile(odir,...
-            [datestr(now,30) '_' name '_2stn_profiles.mat']),'file'))
+    if(exist(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
+            '_2stn_profiles.mat']),'file'))
         pause(1);
     end
-    save(fullfile(odir,...
-        [datestr(now,30) '_' name '_2stn_profiles.mat']),'pf');
+    
+    % saving
+    if(isoctave)
+        save(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
+            '_2stn_profiles.mat']),'-7','pf');
+    else % matlab
+        save(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
+            '_2stn_profiles.mat']),'pf');
+    end
 end
 
 % check for output

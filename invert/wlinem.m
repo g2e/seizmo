@@ -6,11 +6,12 @@ function [m,covm] = wlinem(dd,tt,power,covd,We)
 %            [m,covm]=wlinem(dd,tt,power,covd)
 %            [m,covm]=wlinem(dd,tt,power,covd,We)
 %
-%    Description: [M,COVM]=WLINEM(DD,TT) uses the degree distances DD and
-%     the travel times TT to solve for the best straight-line fit to the
-%     travel time curve using a least squares inversion.  The first output
-%     is the y-intercept and slope organized in M as : [y-intercept slope].
-%     The second output is the corresponding model covariance matrix COVM
+%    Description:
+%     [M,COVM]=WLINEM(DD,TT) uses the degree distances DD and the travel
+%     times TT to solve for the best straight-line fit to the travel time
+%     curve using a least squares inversion.  The first output is the
+%     y-intercept and slope organized in M as : [y-intercept slope].  The
+%     second output is the corresponding model covariance matrix COVM
 %     assuming that the data are uncorrelated and all have equal variances
 %     of 1 (ie the identity matrix).  The weighting matrix is also set
 %     equal to the identity matrix for this case.
@@ -36,11 +37,11 @@ function [m,covm] = wlinem(dd,tt,power,covd,We)
 %       matrix has off diagonal elements!
 %
 %    Examples:
-%     Fit a line through some predicted P arrivals:
-%      data=addarrivals(data);
-%      P=getarrival(data,'P');
-%      gcarc=getheader(data,'gcarc');
-%      [m,covm]=wlinem(gcarc,P);
+%     % Fit a line through some predicted P arrivals:
+%     data=addarrivals(data);
+%     P=getarrival(data,'P');
+%     gcarc=getheader(data,'gcarc');
+%     [m,covm]=wlinem(gcarc,P);
 %
 %    See also: CORRELATE
 
@@ -51,9 +52,10 @@ function [m,covm] = wlinem(dd,tt,power,covd,We)
 %        Mar.  2, 2010 - minor doc update
 %        Sep. 13, 2010 - nargchk fix
 %        Feb. 11, 2011 - drop inv call
+%        Mar.  5, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 18:00 GMT
+%     Last Updated Mar.  5, 2012 at 18:00 GMT
 
 % todo:
 

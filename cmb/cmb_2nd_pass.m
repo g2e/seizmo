@@ -19,7 +19,7 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %     option/value pairs.  Any options allowed by MULTIBANDALIGN may be
 %     set.  See MULTIBANDALIGN for a comprehensive list of those.  Some
 %     useful options:
-%      'odir'    - directory to save all output
+%      'odir'    - directory to save all output (current dir is default)
 %      'figdir'  - directory to save figures (overrides odir option)
 %      'distrng' - specify a distance window as [DISTMIN DISTMAX]
 %      'azrng'   - specify an azimuth window as [AZMIN AZMAX]
@@ -33,6 +33,10 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %     % This is the typical usage case for me:
 %     sr=5; % 5sps
 %     results2=cmb_2nd_pass(results,sr);
+%
+%     % Nothing is written to disk if the
+%     % output directories are set to false:
+%     results=cmb_2nd_pass(results,5,'odir',false,'figdir',false);
 %
 %    See also: PREP_CMB_DATA, CMB_1ST_PASS, CMB_CLUSTERING, CMB_OUTLIERS,
 %              SLOWDECAYPAIRS, SLOWDECAYPROFILES, MAP_CMB_PROFILES
@@ -57,9 +61,11 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %        Apr. 17, 2011 - optimizations for multibandalign, clear gc/azrng
 %        Apr. 22, 2011 - update for finalcut field
 %        May  20, 2011 - add some code to workaround matlab write bug
+%        Mar.  1, 2012 - octave ascii save workaround
+%        Mar.  5, 2012 - allow no written output, odir/figdir bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  20, 2011 at 13:35 GMT
+%     Last Updated Mar.  5, 2012 at 13:35 GMT
 
 % todo:
 
@@ -94,8 +100,13 @@ keep=true(nargin-2,1);
 for i=1:2:nargin-2
     switch lower(varargin{i})
         case {'outdir' 'odir'}
-            varargin{i}='figdir';
             odir=varargin{i+1};
+            if(isempty(figdir))
+                varargin{i}='figdir';
+                figdir=odir;
+            else
+                keep(i:i+1)=false;
+            end
         case {'gcrng' 'distrng'}
             if(~isnumeric(varargin{i+1}) || numel(varargin{i+1})~=2 ...
                     || varargin{i+1}(1)>varargin{i+1}(2) ...
@@ -113,22 +124,40 @@ for i=1:2:nargin-2
             end
             azrng=varargin{i+1};
             keep(i:i+1)=false;
+        case 'figdir'
+            figdir=varargin{i+1};
     end
 end
 varargin=varargin(keep);
+if(isempty(figdir)); figdir='.'; end
+
+% fix TRUE directory input
+if(islogical(odir) && isscalar(odir) && odir); odir='.'; end
+if(islogical(figdir) && isscalar(figdir) && figdir); figdir='.'; end
 
 % check odir
-if(~isstring(odir))
+if(~isstring(odir) && ~(islogical(odir) && isscalar(odir)))
     error('seizmo:cmb_2nd_pass:badInput',...
-        'ODIR must be a string!');
+        'ODIR must be a string or TRUE/FALSE!');
+elseif(~isstring(figdir) && ~(islogical(figdir) && isscalar(figdir)))
+    error('seizmo:cmb_1st_pass:badInput',...
+        'FIGDIR must be a string or TRUE/FALSE!');
 end
+if(islogical(odir)); out=odir; else out=true; end
+%if(islogical(figdir)); figout=odir; else figout=true; end
+% UNCOMMENT THE ABOVE IF FIGURE HANDLING IS EVER INSERTED BELOW HERE
 
 % create odir if not there
-[ok,msg,msgid]=mkdir(odir);
-if(~ok)
-    warning(msgid,msg);
-    error('seizmo:cmb_2nd_pass:pathBad',...
-        'Cannot create directory: %s',odir);
+if(out)
+    [ok,msg,msgid]=mkdir(odir);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:cmb_2nd_pass:pathBad',...
+            'Cannot create directory: %s',odir);
+    end
+elseif(~out && ~nargout)
+    error('seizmo:cmb_2nd_pass:badInput',...
+        'Output variable must be assigned when no written output!');
 end
 
 % loop over each event
@@ -258,8 +287,17 @@ for i=1:numel(results)
         end
 
         % save results (all bands together)
-        save(fullfile(odir,[datestr(now,30) '_' ...
-            runname '_cluster_' sj '_allband_results.mat']),'tmp');
+        if(out)
+            if(isoctave)
+                save(fullfile(odir,...
+                    [datestr(now,30) '_' runname '_cluster_' ...
+                    sj '_allband_results.mat']),'-7','tmp');
+            else % matlab
+                save(fullfile(odir,...
+                    [datestr(now,30) '_' runname '_cluster_' ...
+                    sj '_allband_results.mat']),'tmp');
+            end
+        end
 
         % export to command line too
         if(nargout)

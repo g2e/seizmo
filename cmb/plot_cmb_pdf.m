@@ -1,8 +1,9 @@
-function [varargout]=plot_cmb_pdf(pf,field,y,p)
+function [varargout]=plot_cmb_pdf(pf,field,y,p,ax)
 %PLOT_CMB_PDF    Plot probability space of slowness or decay constant
 %
 %    Usage:    plot_cmb_pdf(pf,field)
 %              plot_cmb_pdf(pf,field,y,p)
+%              plot_cmb_pdf(pf,field,y,p,ax)
 %              pdf=plot_cmb_pdf(...)
 %              [pdf,y,p]=plot_cmb_pdf(...)
 %
@@ -28,6 +29,8 @@ function [varargout]=plot_cmb_pdf(pf,field,y,p)
 %     regularly spaced vector of values (this is so pixel width can be
 %     established for probability determination).  P inputs have similar
 %     constraints.
+%
+%     PLOT_CMB_PDF(PF,FIELD,Y,P,AX) plots in the axes given by handle AX.
 %
 %     PDF=PLOT_CMB_PDF(...) outputs the PDF matrix.  PDF is NYxNP in size
 %     where NY is the number of points in the measurement value space and
@@ -65,14 +68,15 @@ function [varargout]=plot_cmb_pdf(pf,field,y,p)
 %        Feb. 17, 2011 - aesthetic touches
 %        Mar. 30, 2011 - improve title and documentations
 %        Apr. 22, 2011 - fixed docs, input arg order, pdf output transposed
+%        Mar.  5, 2012 - axes handle input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2011 at 13:35 GMT
+%     Last Updated Mar.  5, 2012 at 13:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,4,nargin));
+error(nargchk(2,5,nargin));
 
 % check input
 reqfields={'gcdist','azwidth','slow','slowerr','decay','decayerr',...
@@ -109,6 +113,9 @@ ypad=(ymax-ymin)/4;
 % 100 pixels each way, scaled to data
 if(nargin<3 || isempty(y)); y=linspace(ymin-ypad,ymax+ypad,100); end
 if(nargin<4 || isempty(p)); p=linspace(pmin,pmax,100); end
+
+% default axes
+if(nargin<5); ax=[]; end
 
 % special 2-element range
 if(numel(y)==2); y=linspace(y(1),y(2),100); end
@@ -165,9 +172,12 @@ elseif(nargout)
     varargout={mtx};
 else
     % plot output
-    fh=figure('color','k'); ax=axes('parent',fh);
+    if(isempty(ax))
+        fh=figure('color','k');
+        ax=axes('parent',fh);
+        colormap(ax,fire);
+    end
     imagesc(p,y,mtx,'parent',ax);
-    colormap(ax,fire);
     set(ax,'ydir','normal','color','k','xcolor','w','ycolor','w');
     set(ax,'xminortick','on','yminortick','on');
     set(ax,'xgrid','on','ygrid','on','linewidth',1);

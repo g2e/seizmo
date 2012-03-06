@@ -21,15 +21,17 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %
 %     PF=SLOWDECAYPROFILES(RESULTS,AZRNG,GCRNG,ODIR) sets the output
 %     directory where the PF struct is saved.  By default ODIR is '.' (the
-%     current directory.
+%     current directory.  You may set ODIR to FALSE for no written output.
 %
 %    Notes:
 %     - The PF struct is also written to disk as:
-%           TIMESTAMP_EARTHMODEL_nstn_profiles.mat
-%       where TIMESTAMP is the time when the file is written
-%       and uses format 30 from the DATESTR function.  EARTHMODEL is
-%       derived from the results.earthmodel field (if you give a results
-%       struct of 2+ elements with differing models then EARTHMODEL='misc'.
+%           TIMESTAMP_EVENTDIR_EARTHMODEL_nstn_profiles.mat
+%       where TIMESTAMP is the time when the file is written and uses
+%       format 30 from the DATESTR function, EVENTDIR is the directory
+%       where the waveforms reside, & EARTHMODEL is derived from the
+%       results.earthmodel field.  If you give a results struct of 2+
+%       elements with differing event directories or earthmodels then they
+%       are set to 'misc'.
 %     - The PF struct has the following fields:
 %       .gcdist         - degree distance difference between stations
 %       .azwidth        - azimuthal difference between stations
@@ -104,11 +106,22 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %        Mar. 18, 2011 - handle raypaths in correction info
 %        Mar. 30, 2011 - doc update
 %        Apr. 22, 2011 - update for finalcut field
+%        Mar.  2, 2012 - handle unset earthmodel bugfix, octave save ascii
+%                        workaround, .mat output name includes eventdir
+%        Mar.  5, 2012 - allow no written output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2011 at 13:35 GMT
+%     Last Updated Mar.  5, 2012 at 13:35 GMT
 
 % todo:
+% - allow weighting?
+%   - currently unused in wlinem calls
+%   - in the struct?
+%     - this is simpler
+%     - write a function to set weights
+%       - optional field (like finalcut)
+%       - weights are normalized number of frequencies for a station
+%         - this should dampen effect of added/droped stations
 
 % check nargin
 error(nargchk(1,4,nargin));
@@ -120,6 +133,7 @@ error(check_cmb_results(results));
 if(nargin<2 || isempty(azrng)); azrng=[0 360]; end
 if(nargin<3 || isempty(gcrng)); gcrng=[0 180]; end
 if(nargin<4 || isempty(odir)); odir='.'; end
+if(islogical(odir) && isscalar(odir) && odir); odir='.'; end
 
 % check azrng & gcrng
 if(~isreal(azrng) || numel(azrng)~=2)
@@ -131,17 +145,23 @@ elseif(any(abs(azrng)>540))
 elseif(~isreal(gcrng) || numel(gcrng)~=2)
     error('seizmo:slowdecayprofiles:badInput',...
         'GCRNG must be [GCMIN GCMAX]!');
-elseif(~isstring(odir))
+elseif(~isstring(odir) && ~(islogical(odir) && isscalar(odir)))
     error('seizmo:slowdecayprofiles:badInput',...
-        'ODIR must be a string!');
+        'ODIR must be a string or TRUE/FALSE!');
 end
+if(islogical(odir)); out=odir; else out=true; end
 
 % make sure odir exists (create it if it does not)
-[ok,msg,msgid]=mkdir(odir);
-if(~ok)
-    warning(msgid,msg);
-    error('seizmo:slowdecayprofiles:pathBad',...
-        'Cannot create directory: %s',odir);
+if(out)
+    [ok,msg,msgid]=mkdir(odir);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:slowdecayprofiles:pathBad',...
+            'Cannot create directory: %s',odir);
+    end
+elseif(~out && ~nargout)
+    error('seizmo:slowdecayprofiles:badInput',...
+        'Output variable must be assigned when no written output!');
 end
 
 % verbosity
@@ -290,11 +310,36 @@ for a=1:numel(results)
 end
 
 % save profiles
-if(exist('pf','var'))
-    name=unique({results.earthmodel}');
-    if(~isscalar(name)); name='misc'; else name=char(name); end
-    save(fullfile(odir,...
-        [datestr(now,30) '_' name '_nstn_profiles.mat']),'pf');
+if(out && exist('pf','var'))
+    % strings for saving
+    wfdirs={results.dirname}';
+    wfdirs(cellfun('isempty',wfdirs))=[];
+    wfdir=unique(wfdirs);
+    if(~isscalar(wfdir))
+        wfdir='misc';
+    else
+        [a,b,c]=fileparts(char(wfdir));
+        wfdir=[b c];
+    end
+    emods={results.earthmodel}';
+    emods(cellfun('isempty',emods))=[];
+    emod=unique(emods);
+    if(~isscalar(emod)); emod='misc'; else emod=char(emod); end
+    
+    % avoid clobber by waiting until unique time
+    if(exist(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
+            '_nstn_profiles.mat']),'file'))
+        pause(1);
+    end
+    
+    % saving
+    if(isoctave)
+        save(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
+            '_nstn_profiles.mat']),'-7','pf');
+    else % matlab
+        save(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
+            '_nstn_profiles.mat']),'pf');
+    end
 end
 
 % check for output

@@ -11,8 +11,8 @@ phd
 
 makearrivals == creates .misc.arrivals
 findarrivals == searches .misc.arrivals
-arrivals2picks == push .misc.arrivals to header pick fields
-findpicks == searches t* fields
+arrivals2picks == push .misc.arrivals to header pick fields (addarrivals)
+findpicks == searches t* fields (getarrival)
 
 meld
     - uneven or variable samplerate

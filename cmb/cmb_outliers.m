@@ -15,10 +15,12 @@ function [results]=cmb_outliers(results,odir,figdir)
 %
 %     RESULTS=CMB_OUTLIERS(RESULTS,ODIR) sets the output directory
 %     where the figures and RESULTS struct is saved.  By default ODIR is
-%     '.' (the current directory.
+%     '.' (the current directory).  You may set ODIR to FALSE for no
+%     written output.
 %
 %     RESULTS=CMB_OUTLIERS(RESULTS,ODIR,FIGDIR) allows saving figures to a
 %     different directory than ODIR (where the RESULTS struct is saved).
+%     You may set FIGDIR to FALSE to skip saving figures.
 %
 %    Notes:
 %     - Outliers are reset each time CMB_OUTLIERS is ran on a RESULTS
@@ -52,9 +54,11 @@ function [results]=cmb_outliers(results,odir,figdir)
 %        Apr.  3, 2011 - update .time field of skipped
 %        Apr. 22, 2011 - update for finalcut field
 %        May  19, 2011 - undo works now
+%        Mar.  1, 2012 - octave ascii save workaround
+%        Mar.  5, 2012 - allow no written output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  19, 2011 at 13:35 GMT
+%     Last Updated Mar.  5, 2012 at 13:35 GMT
 
 % todo:
 
@@ -66,29 +70,40 @@ error(check_cmb_results(results));
 
 % default odir & figdir
 if(nargin<2 || isempty(odir)); odir='.'; end
+if(islogical(odir) && isscalar(odir) && odir); odir='.'; end
 if(nargin<3 || isempty(figdir)); figdir=odir; end
+if(islogical(figdir) && isscalar(figdir) && figdir); figdir='.'; end
 
 % check odir & figdir
-if(~isstring(odir))
+if(~isstring(odir) && ~(islogical(odir) && isscalar(odir)))
     error('seizmo:cmb_outliers:badInput',...
-        'ODIR must be a string!');
-elseif(~isstring(figdir))
+        'ODIR must be a string or TRUE/FALSE!');
+elseif(~isstring(figdir) && ~(islogical(figdir) && isscalar(figdir)))
     error('seizmo:cmb_outliers:badInput',...
-        'FIGDIR must be a string!');
+        'FIGDIR must be a string or TRUE/FALSE!');
 end
+if(islogical(odir)); out=odir; else out=true; end
+if(islogical(figdir)); figout=odir; else figout=true; end
 
 % make sure odir/figdir exists (create it if it does not)
-[ok,msg,msgid]=mkdir(odir);
-if(~ok)
-    warning(msgid,msg);
-    error('seizmo:cmb_outliers:pathBad',...
-        'Cannot create directory: %s',odir);
+if(out)
+    [ok,msg,msgid]=mkdir(odir);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:cmb_outliers:pathBad',...
+            'Cannot create directory: %s',odir);
+    end
+elseif(~out && ~nargout)
+    error('seizmo:cmb_outliers:badInput',...
+        'Output variable must be assigned when no written output!');
 end
-[ok,msg,msgid]=mkdir(figdir);
-if(~ok)
-    warning(msgid,msg);
-    error('seizmo:cmb_outliers:pathBad',...
-        'Cannot create directory: %s',figdir);
+if(figout)
+    [ok,msg,msgid]=mkdir(figdir);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:cmb_outliers:pathBad',...
+            'Cannot create directory: %s',figdir);
+    end
 end
 
 % loop over each event
@@ -187,11 +202,13 @@ for i=1:numel(results)
                     results(i).outliers.bad(good(bad))=true;
                     results(i).outliers.cluster(j).arrcut.bad{arrcnt}=good(bad);
                     results(i).outliers.cluster(j).arrcut.cutoff(arrcnt)=cutoff;
-                    if(ishandle(ax(1)))
+                    if(figout && ishandle(ax(1)))
                         saveas(get(ax(1),'parent'),fullfile(figdir,...
                             [datestr(now,30) '_' results(i).runname ...
                             '_cluster_' sj '_arrcut_' num2str(arrcnt) ...
                             '.fig']));
+                    end
+                    if(ishandle(ax(1)))
                         close(get(ax(1),'parent'));
                     end
                 case 2 % arrerr
@@ -200,11 +217,13 @@ for i=1:numel(results)
                     results(i).outliers.bad(good(bad))=true;
                     results(i).outliers.cluster(j).errcut.bad{errcnt}=good(bad);
                     results(i).outliers.cluster(j).errcut.cutoff(errcnt)=cutoff;
-                    if(ishandle(ax))
+                    if(figout && ishandle(ax))
                         saveas(get(ax,'parent'),fullfile(figdir,...
                             [datestr(now,30) '_' results(i).runname ...
                             '_cluster_' sj '_errcut_' num2str(errcnt) ...
                             '.fig']));
+                    end
+                    if(ishandle(ax))
                         close(get(ax,'parent'));
                     end
                 case 3 % amp
@@ -214,11 +233,13 @@ for i=1:numel(results)
                     results(i).outliers.bad(good(bad))=true;
                     results(i).outliers.cluster(j).ampcut.bad{ampcnt}=good(bad);
                     results(i).outliers.cluster(j).ampcut.cutoff(ampcnt)=cutoff;
-                    if(ishandle(ax))
+                    if(figout && ishandle(ax))
                         saveas(get(ax,'parent'),fullfile(figdir,...
                             [datestr(now,30) '_' results(i).runname ...
                             '_cluster_' sj '_ampcut_' num2str(ampcnt) ...
                             '.fig']));
+                    end
+                    if(ishandle(ax))
                         close(get(ax,'parent'));
                     end
                 case 4 % distance/azimuth
@@ -229,11 +250,13 @@ for i=1:numel(results)
                     results(i).outliers.cluster(j).delazcut.bad{delazcnt}=good(bad);
                     results(i).outliers.cluster(j).delazcut.azlim{delazcnt}=azlim;
                     results(i).outliers.cluster(j).delazcut.ddlim{delazcnt}=ddlim;
-                    if(ishandle(ax))
+                    if(figout && ishandle(ax))
                         saveas(get(ax,'parent'),fullfile(figdir,...
                             [datestr(now,30) '_' results(i).runname ...
                             '_cluster_' sj '_delazcut_' num2str(delazcnt) ...
                             '.fig']));
+                    end
+                    if(ishandle(ax))
                         close(get(ax,'parent'));
                     end
                 case 5 % undo all
@@ -257,9 +280,16 @@ for i=1:numel(results)
     results(i).time=datestr(now);
     
     % save results
-    tmp=results(i);
-    save(fullfile(odir,[datestr(now,30) '_' results(i).runname ...
-        '_outliers_results.mat']),'-struct','tmp');
+    if(out)
+        tmp=results(i);
+        if(isoctave)
+            save(fullfile(odir,[datestr(now,30) '_' results(i).runname ...
+                '_outliers_results.mat']),'-7','-struct','tmp');
+        else % matlab
+            save(fullfile(odir,[datestr(now,30) '_' results(i).runname ...
+                '_outliers_results.mat']),'-struct','tmp');
+        end
+    end
 end
 
 end

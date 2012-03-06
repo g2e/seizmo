@@ -43,6 +43,11 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %     % input and graphically selecting it instead:
 %     results=cmb_1st_pass('Pdiff');
 %
+%     % Nothing is written to disk if the
+%     % output directories are set to false:
+%     results=cmb_1st_pass('SHdiff','my/in/dir',...
+%                          'odir',false,'figdir',false);
+%
 %    See also: PREP_CMB_DATA, CMB_2ND_PASS, CMB_OUTLIERS, SLOWDECAYPAIRS,
 %              SLOWDECAYPROFILES, MAP_CMB_PROFILES, CMB_CLUSTERING
 
@@ -73,9 +78,11 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %        Apr.  6, 2011 - minor change to minradampl cut
 %        Apr. 22, 2011 - update for finalcut field
 %        May  20, 2011 - add some code to workaround matlab write bug
+%        Mar.  1, 2012 - octave ascii save workaround
+%        Mar.  5, 2012 - allow no written output, odir/figdir bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  20, 2011 at 13:35 GMT
+%     Last Updated Mar.  5, 2012 at 13:35 GMT
 
 % todo:
 
@@ -129,6 +136,8 @@ for i=1:2:nargin-2
             if(isempty(figdir))
                 varargin{i}='figdir';
                 figdir=odir;
+            else
+                keep(i:i+1)=false;
             end
         case 'minradampl'
             minradampl=varargin{i+1};
@@ -143,34 +152,47 @@ end
 varargin=varargin(keep);
 if(isempty(figdir)); figdir='.'; end
 
+% fix TRUE directory input
+if(islogical(odir) && isscalar(odir) && odir); odir='.'; end
+if(islogical(figdir) && isscalar(figdir) && figdir); figdir='.'; end
+
 % check odir/figdir
-if(~isstring(odir))
+if(~isstring(odir) && ~(islogical(odir) && isscalar(odir)))
     error('seizmo:cmb_1st_pass:badInput',...
-        'ODIR must be a string!');
-elseif(~isstring(figdir))
+        'ODIR must be a string or TRUE/FALSE!');
+elseif(~isstring(figdir) && ~(islogical(figdir) && isscalar(figdir)))
     error('seizmo:cmb_1st_pass:badInput',...
-        'FIGDIR must be a string!');
+        'FIGDIR must be a string or TRUE/FALSE!');
 end
+if(islogical(odir)); out=odir; else out=true; end
+if(islogical(figdir)); figout=odir; else figout=true; end
 
 % create odir if not there
-[ok,msg,msgid]=mkdir(odir);
-if(~ok)
-    warning(msgid,msg);
-    error('seizmo:cmb_1st_pass:pathBad',...
-        'Cannot create directory: %s',odir);
+if(out)
+    [ok,msg,msgid]=mkdir(odir);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:cmb_1st_pass:pathBad',...
+            'Cannot create directory: %s',odir);
+    end
+elseif(~out && ~nargout)
+    error('seizmo:cmb_1st_pass:badInput',...
+        'Output variable must be assigned when no written output!');
 end
-[ok,msg,msgid]=mkdir(figdir);
-if(~ok)
-    warning(msgid,msg);
-    error('seizmo:cmb_1st_pass:pathBad',...
-        'Cannot create directory: %s',figdir);
+if(figout)
+    [ok,msg,msgid]=mkdir(figdir);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:cmb_1st_pass:pathBad',...
+            'Cannot create directory: %s',figdir);
+    end
 end
 
 % check minimum radiation pattern amplitude
 if(~isreal(minradampl) || ~isscalar(minradampl) || minradampl<0 ...
         || minradampl>1)
     error('seizmo:cmb_1st_pass:badInput',...
-        'MINRADAMPL must be a scalar from 0 & 1 !');
+        'MINRADAMPL must be a scalar within the range 0 to 1 !');
 end
 
 % check delazcut
@@ -294,8 +316,10 @@ for i=1:numel(s)
         disp([num2str(sum(bad)) ...
             ' Stations Outside Distance-Azimuth Limits Removed']);
         if(ishandle(ax))
-            saveas(get(ax,'parent'),fullfile(figdir,...
-                [datestr(now,30) '_' runname '_band_1_delazcut.fig']));
+            if(figout)
+                saveas(get(ax,'parent'),fullfile(figdir,...
+                    [datestr(now,30) '_' runname '_band_1_delazcut.fig']));
+            end
             close(get(ax,'parent'));
         end
     else
@@ -407,16 +431,24 @@ for i=1:numel(s)
     if(isempty(tmp.userwinnow)); tmp.userwinnow=[]; end
     
     % save results
-    save(fullfile(odir,[timestr '_' runname '_results.mat']),...
-        '-struct','tmp');
-    
-    % read in to check
-    try
-        tmp=load(fullfile(odir,[timestr '_' runname '_results.mat']));
-        error(check_cmb_results(tmp));
-    catch
-        warning('seizmo:cmb_1st_pass:failedWrite',...
-            'Had trouble writing RESULTS! Check directory permissions!');
+    if(out)
+        if(isoctave)
+            save(fullfile(odir,[timestr '_' runname '_results.mat']),...
+                '-7','-struct','tmp');
+        else % matlab
+            save(fullfile(odir,[timestr '_' runname '_results.mat']),...
+                '-struct','tmp');
+        end
+        
+        % read in to check
+        try
+            tmp=load(fullfile(odir,[timestr '_' runname '_results.mat']));
+            error(check_cmb_results(tmp));
+        catch
+            warning('seizmo:cmb_1st_pass:failedWrite',...
+                ['Had trouble writing RESULTS! ' ...
+                'Check directory permissions!']);
+        end
     end
     
     % export to command line too

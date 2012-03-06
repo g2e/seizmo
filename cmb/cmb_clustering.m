@@ -15,10 +15,12 @@ function [results]=cmb_clustering(results,odir,figdir)
 %
 %     RESULTS=CMB_CLUSTERING(RESULTS,ODIR) sets the output directory
 %     where the figures and RESULTS struct is saved.  By default ODIR is
-%     '.' (the current directory.
+%     '.' (the current directory.  You may set ODIR to FALSE for no
+%     written output.
 %
 %     RESULTS=CMB_CLUSTERING(RESULTS,ODIR,FIGDIR) allows saving figures to
 %     a different directory than ODIR (where the RESULTS struct is saved).
+%     You may set FIGDIR to FALSE to skip saving figures.
 %
 %    Notes:
 %     - Redoing the alignment (from CMB_1ST_PASS) is probably necessary if
@@ -47,9 +49,11 @@ function [results]=cmb_clustering(results,odir,figdir)
 %        Jan. 31, 2011 - odir & figdir inputs
 %        Feb. 11, 2011 - results now output to odir not figdir
 %        Apr.  1, 2011 - update .time field of skipped
+%        Mar.  1, 2012 - octave ascii save workaround
+%        Mar.  5, 2012 - allow no written output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  1, 2011 at 13:35 GMT
+%     Last Updated Mar.  5, 2012 at 13:35 GMT
 
 % todo:
 
@@ -61,29 +65,40 @@ error(check_cmb_results(results));
 
 % default odir & figdir
 if(nargin<2 || isempty(odir)); odir='.'; end
+if(islogical(odir) && isscalar(odir) && odir); odir='.'; end
 if(nargin<3 || isempty(figdir)); figdir=odir; end
+if(islogical(figdir) && isscalar(figdir) && figdir); figdir='.'; end
 
 % check odir & figdir
-if(~isstring(odir))
+if(~isstring(odir) && ~(islogical(odir) && isscalar(odir)))
     error('seizmo:cmb_clustering:badInput',...
-        'ODIR must be a string!');
-elseif(~isstring(figdir))
+        'ODIR must be a string or TRUE/FALSE!');
+elseif(~isstring(figdir) && ~(islogical(figdir) && isscalar(figdir)))
     error('seizmo:cmb_clustering:badInput',...
-        'FIGDIR must be a string!');
+        'FIGDIR must be a string or TRUE/FALSE!');
 end
+if(islogical(odir)); out=odir; else out=true; end
+if(islogical(figdir)); figout=odir; else figout=true; end
 
 % make sure odir/figdir exists (create it if it does not)
-[ok,msg,msgid]=mkdir(odir);
-if(~ok)
-    warning(msgid,msg);
-    error('seizmo:cmb_clustering:pathBad',...
-        'Cannot create directory: %s',odir);
+if(out)
+    [ok,msg,msgid]=mkdir(odir);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:cmb_clustering:pathBad',...
+            'Cannot create directory: %s',odir);
+    end
+elseif(~out && ~nargout)
+    error('seizmo:cmb_clustering:badInput',...
+        'Output variable must be assigned when no written output!');
 end
-[ok,msg,msgid]=mkdir(figdir);
-if(~ok)
-    warning(msgid,msg);
-    error('seizmo:cmb_clustering:pathBad',...
-        'Cannot create directory: %s',figdir);
+if(figout)
+    [ok,msg,msgid]=mkdir(figdir);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:cmb_clustering:pathBad',...
+            'Cannot create directory: %s',figdir);
+    end
 end
 
 % loop over each event
@@ -104,8 +119,11 @@ for i=1:numel(results)
     if(any(ishandle(ax)))
         fh=unique(cell2mat(get(ax(ishandle(ax)),'parent')));
         for j=1:numel(fh)
-            saveas(fh(j),fullfile(figdir,[datestr(now,30) '_' ...
-                results(i).runname '_usercluster_' num2str(j) '.fig']));
+            if(figout)
+                saveas(fh(j),fullfile(figdir,...
+                    [datestr(now,30) '_' results(i).runname ...
+                    '_usercluster_' num2str(j) '.fig']));
+            end
             close(fh(j));
         end
     end
@@ -123,9 +141,16 @@ for i=1:numel(results)
     results(i).time=datestr(now);
 
     % save results
-    tmp=results(i);
-    save(fullfile(odir,[datestr(now,30) '_' results(i).runname ...
-        '_clustering_results.mat']),'-struct','tmp');
+    if(out)
+        tmp=results(i);
+        if(isoctave)
+            save(fullfile(odir,[datestr(now,30) '_' results(i).runname ...
+                '_clustering_results.mat']),'-7','-struct','tmp');
+        else % matlab
+            save(fullfile(odir,[datestr(now,30) '_' results(i).runname ...
+                '_clustering_results.mat']),'-struct','tmp');
+        end
+    end
 end
 
 end

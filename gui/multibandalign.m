@@ -103,9 +103,10 @@ function [info]=multibandalign(data,varargin)
 %                        too few high-snr waveforms
 %        May  19, 2011 - fixed error with .finalcut not always there
 %        Mar.  1, 2012 - old plot_taupcurve is now plot_taupcurve_dt
+%        Mar.  5, 2012 - allow no written output by setting figdir=false
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2012 at 12:25 GMT
+%     Last Updated Mar.  5, 2012 at 12:25 GMT
 
 % todo:
 % - smarter initial window is needed to reduce later arrivals messing up
@@ -203,9 +204,11 @@ try
             % preview plot
             ax=preview_plot(data0,info(i),p);
             if(ishandle(ax))
-                saveas(get(ax,'parent'),fullfile(p.figdir,...
-                    [datestr(now,30) '_' p.runname '_band_' istr ...
-                    '_preview.fig']));
+                if(p.figout)
+                    saveas(get(ax,'parent'),fullfile(p.figdir,...
+                        [datestr(now,30) '_' p.runname '_band_' istr ...
+                        '_preview.fig']));
+                end
                 close(get(ax,'parent'));
             end
             data0=cut(data0,info(i).initwin(1),info(i).initwin(2));
@@ -213,9 +216,11 @@ try
             [data0,info(i),skip,p,ax]=get_initial_window(data0,...
                 info(i),p,i);
             if(ishandle(ax))
-                saveas(get(ax,'parent'),fullfile(p.figdir,...
-                    [datestr(now,30) '_' p.runname '_band_' istr ...
-                    '_preview.fig']));
+                if(p.figout)
+                    saveas(get(ax,'parent'),fullfile(p.figdir,...
+                        [datestr(now,30) '_' p.runname '_band_' istr ...
+                        '_preview.fig']));
+                end
                 close(get(ax,'parent'));
             end
         end
@@ -240,9 +245,11 @@ try
             info(i).usersnr.plottype=@plot0;
             ax=windows_plot(data0,info(i));
             if(ishandle(ax))
-                saveas(get(ax,'parent'),fullfile(p.figdir,...
-                    [datestr(now,30) '_' p.runname '_band_' istr ...
-                    '_windows.fig']));
+                if(p.figout)
+                    saveas(get(ax,'parent'),fullfile(p.figdir,...
+                        [datestr(now,30) '_' p.runname '_band_' istr ...
+                        '_windows.fig']));
+                end
                 close(get(ax,'parent'));
             end
             
@@ -288,9 +295,11 @@ try
             info(i).usersnr.snr=snr;
             info(i).usersnr.snrcut=p.snrcut;
             if(ishandle(ax))
-                saveas(get(ax,'parent'),fullfile(p.figdir,...
-                    [datestr(now,30) '_' p.runname '_band_' istr ...
-                    '_usersnr.fig']));
+                if(p.figout)
+                    saveas(get(ax,'parent'),fullfile(p.figdir,...
+                        [datestr(now,30) '_' p.runname '_band_' istr ...
+                        '_usersnr.fig']));
+                end
                 close(get(ax,'parent'));
             end
         end
@@ -341,9 +350,11 @@ try
                     'linewidth',4);
                 hold(ax,'off');
                 if(ishandle(ax))
-                    saveas(get(ax,'parent'),fullfile(p.figdir,...
-                        [datestr(now,30) '_' p.runname '_band_' istr ...
-                        '_winnow.fig']));
+                    if(p.figout)
+                        saveas(get(ax,'parent'),fullfile(p.figdir,...
+                            [datestr(now,30) '_' p.runname '_band_' ...
+                            istr '_winnow.fig']));
+                    end
                     close(get(ax,'parent'));
                 end
                 
@@ -375,9 +386,11 @@ try
             snr(info(i).userwinnow.cut)=[];
             snridx(info(i).userwinnow.cut)=[];
             if(ishandle(ax))
-                saveas(get(ax,'parent'),fullfile(p.figdir,...
+                if(p.figout)
+                    saveas(get(ax,'parent'),fullfile(p.figdir,...
                         [datestr(now,30) '_' p.runname '_band_' istr ...
                         '_userwinnow.fig']));
+                end
                 close(get(ax,'parent'));
             end
             nn=numel(data0);
@@ -414,9 +427,13 @@ try
         ax=plot2(info(i).useralign.data);
         if(p.auto)
             if(ishandle(ax))
-                saveas(get(ax,'parent'),fullfile(p.figdir,...
-                    [datestr(now,30) '_' p.runname '_band_' istr ...
-                    '_aligned.fig']));
+                if(p.figout)
+                    saveas(get(ax,'parent'),fullfile(p.figdir,...
+                        [datestr(now,30) '_' p.runname '_band_' istr ...
+                        '_aligned.fig']));
+                end
+                % this was missing before (probably for testing)
+                close(get(ax,'parent'));
             end
         else
             satisfied=false;
@@ -424,10 +441,12 @@ try
             while(~satisfied)
                 choice=user_satisfied;
                 if(ishandle(ax))
-                    saveas(get(ax,'parent'),fullfile(p.figdir,...
-                        [datestr(now,30) '_' p.runname '_band_' istr ...
-                        '_aligned.fig']));
-                        close(get(ax,'parent'));
+                    if(p.figout)
+                        saveas(get(ax,'parent'),fullfile(p.figdir,...
+                            [datestr(now,30) '_' p.runname '_band_' ...
+                            istr '_aligned.fig']));
+                    end
+                    close(get(ax,'parent'));
                 end
                 switch choice
                     case 'yes'
@@ -662,6 +681,7 @@ p.userwinnow=false;
 p.winnowyfield='gcarc';
 p.winnowlimits=[];
 p.figdir='.';
+p.figout=true;
 p.lags=[];
 
 % valid filter types & styles (grabbed from iirdesign)
@@ -832,9 +852,10 @@ for i=1:2:nargin
             p.winnowyfield=varargin{i+1};
             keep(i:i+1)=false;
         case {'fdir' 'figdir'}
-            if(~isstring(varargin{i+1}))
+            if(~isstring(varargin{i+1}) && ~(islogical(varargin{i+1}) ...
+                    && isscalar(varargin{i+1})))
                 error('seizmo:multibandalign:badInput',...
-                    'FIGDIR must be a string!');
+                    'FIGDIR must be a string or TRUE/FALSE!');
             end
             p.figdir=varargin{i+1};
             keep(i:i+1)=false;
@@ -852,13 +873,19 @@ varargin=varargin(keep);
 % force fast to true if auto is true
 if(p.auto); p.fast=true; end
 
+% fix TRUE directory input
+if(islogical(p.figdir) && p.figdir); p.figdir='.'; end
+if(islogical(figdir)); p.figout=odir; else p.figout=true; end
+
 % create directory if it does not exist
 % check that this does not fail
-[ok,msg,msgid]=mkdir(p.figdir);
-if(~ok)
-    warning(msgid,msg);
-    error('seizmo:multibandalign:pathBad',...
-        'Cannot create directory: %s',p.figdir);
+if(p.figout)
+    [ok,msg,msgid]=mkdir(p.figdir);
+    if(~ok)
+        warning(msgid,msg);
+        error('seizmo:multibandalign:pathBad',...
+            'Cannot create directory: %s',p.figdir);
+    end
 end
 
 end
