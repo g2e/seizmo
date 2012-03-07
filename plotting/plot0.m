@@ -65,9 +65,10 @@ function [varargout]=plot0(data,varargin)
 %        Jan. 25, 2012 - norm2yaxis bugfix
 %        Feb.  6, 2012 - better getheader usage, set displayname to kname
 %                        string, fix legend coloring, fix ncmp>1 brokeness
+%        Mar.  6, 2012 - don't use depmin/depmax from header
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  6, 2012 at 23:00 GMT
+%     Last Updated Mar.  6, 2012 at 23:00 GMT
 
 % todo:
 % - markers only based on 1st cmp data values
@@ -114,10 +115,8 @@ goodfiles=find(time | spec)';
 if(sum(spec)); data(spec)=idft(data(spec)); end
 
 % header info
-[b,npts,delta,depmin,depmax,z6,kname,leven]=getheader(data,...
-    'b','npts','delta','depmin','depmax','z6','kname','leven lgc');
-depmin=abs(depmin);
-depmax=abs(depmax);
+[b,npts,delta,z6,kname,leven]=getheader(data,...
+    'b','npts','delta','z6','kname','leven lgc');
 z6=datenum(cell2mat(z6));
 
 % names for legend
@@ -132,6 +131,23 @@ if(opt.ABSOLUTE)
     marktimes=marktimes/86400+z6(:,ones(1,size(marktimes,2)));
 end
 
+% get data limits
+depmin=nan(nrecs,1); depmax=nan(nrecs,1);
+switch lower(opt.AMPSCALE)
+    case 'linear'
+        for i=goodfiles
+            depmin(i)=abs(min(data(i).dep(:)));
+            depmax(i)=abs(max(data(i).dep(:)));
+        end
+    case 'log'
+        for i=goodfiles
+            if(any(data(i).dep>0))
+                depmin(i)=min(log10(data(i).dep(data(i).dep(:)>0)));
+                depmax(i)=max(log10(data(i).dep(data(i).dep(:)>0)));
+            end
+        end
+end
+
 % normalize
 if(opt.NORM2YAXIS)
     scale=nrecs*opt.NORMMAX/2;
@@ -143,39 +159,31 @@ switch opt.NORMSTYLE
         switch lower(opt.AMPSCALE)
             case 'linear'
                 ampmax=max(depmin,depmax);
-                ampmax(ampmax==0)=1; % avoid NaNs
+                ampmax(ampmax==0)=1; % avoid divide-by-zero below
                 for i=goodfiles
                     data(i).dep=i+data(i).dep/ampmax(i)*scale;
                 end
             case 'log'
+                logrng=depmax-depmin;
+                logrng(logrng==0)=1; % avoid divide-by-zero below
                 for i=goodfiles
-                    logmin=min(log10(data(i).dep(data(i).dep>0)));
-                    logmax=max(log10(data(i).dep(data(i).dep>0)));
-                    logrng=logmax-logmin;
-                    if(~logrng); logrng=1; end % avoid NaNs
-                    data(i).dep=i+...
-                        (2*((log10(data(i).dep)-logmin)/logrng)-1)*scale;
+                    data(i).dep=i+(2*((log10(data(i).dep)...
+                        -depmin(i))/logrng(i))-1)*scale;
                 end
         end
     case {0 'g' 'a' 'group' 'together' 'all'}
         switch lower(opt.AMPSCALE)
             case 'linear'
                 ampmax=max([depmin; depmax]);
-                ampmax(ampmax==0)=1; % avoid NaNs
+                ampmax(ampmax==0)=1; % avoid divide-by-zero below
                 for i=goodfiles
                     data(i).dep=i+data(i).dep/ampmax*scale;
                 end
             case 'log'
-                logmin=nan(nrecs,1);
-                logmax=nan(nrecs,1);
-                for i=goodfiles
-                    logmin(i)=min(log10(data(i).dep(data(i).dep>0)));
-                    logmax(i)=max(log10(data(i).dep(data(i).dep>0)));
-                end
-                logmin=min(logmin);
-                logmax=max(logmax);
+                logmin=min(depmin);
+                logmax=max(depmax);
                 logrng=logmax-logmin;
-                if(~logrng); logrng=1; end % avoid NaNs
+                logrng(logrng==0)=1; % avoid divide-by-zero below
                 for i=goodfiles
                     data(i).dep=i+...
                         (2*((log10(data(i).dep)-logmin)/logrng)-1)*scale;

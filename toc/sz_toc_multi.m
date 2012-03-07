@@ -2,6 +2,7 @@ function []=sz_toc_multi()
 % Multi-Record Operations
 %<a href="matlab:help addrecords">addrecords</a>           - Add SEIZMO records
 %<a href="matlab:help correlate">correlate</a>            - Compute cross correlograms of SEIZMO data records
+%<a href="matlab:help coverage">coverage</a>             - Convert SEIZMO data records to coverage
 %<a href="matlab:help dividerecords">dividerecords</a>        - Divide SEIZMO records
 %<a href="matlab:help getcomponentidx">getcomponentidx</a>      - Returns index array to separate dataset into components
 %<a href="matlab:help getnetworkidx">getnetworkidx</a>        - Returns index array for separating dataset into networks

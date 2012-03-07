@@ -71,6 +71,7 @@ function []=alphabetical_list()
 %<a href="matlab:help convolve_source_timefunction">convolve_source_timefunction</a>   - Convolve source function on SEIZMO records
 %<a href="matlab:help copyheader">copyheader</a>                     - Copy one record's header to all records
 %<a href="matlab:help correlate">correlate</a>                      - Compute cross correlograms of SEIZMO data records
+%<a href="matlab:help coverage">coverage</a>                       - Convert SEIZMO data records to coverage
 %<a href="matlab:help create_contents_file">create_contents_file</a>           - Create Contents.m file for a directory of m-files
 %<a href="matlab:help crucor">crucor</a>                         - Returns Crust2.0 based travel time corrections
 %<a href="matlab:help crust2less_raypaths">crust2less_raypaths</a>            - Removes ray path above Crust2.0 moho
