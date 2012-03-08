@@ -28,9 +28,10 @@ function [ok]=webinstall_njtbx(mypath)
 %        Feb. 15, 2012 - doc update, flip savepath logic, only use
 %                        javaaddpath or edit classpath as needed
 %        Feb. 16, 2012 - workaround quietly stalled unzip in octave
+%        Mar.  8, 2012 - minor code changes for clarity
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2012 at 15:25 GMT
+%     Last Updated Mar.  8, 2012 at 15:25 GMT
 
 % todo:
 
@@ -134,11 +135,11 @@ try
         s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
         
         % detect offending classpath.txt lines
-        yn1=~cellfun('isempty',strfind(s2,toolsuijar));
-        yn2=~cellfun('isempty',strfind(s2,njtoolsjar));
+        injcp(1)=any(~cellfun('isempty',strfind(s2,toolsuijar)));
+        injcp(2)=any(~cellfun('isempty',strfind(s2,njtoolsjar)));
         
         % only add if not there already
-        if(sum(yn1 | yn2)<=1)
+        if(sum(injcp)<2)
             fid=fopen(sjcp,'a+');
             if(fid<0)
                 warning('seizmo:webinstall_njtbx:noWriteClasspath',...
@@ -152,8 +153,8 @@ try
                 end
             else
                 fseek(fid,0,'eof');
-                if(~sum(yn1)); fprintf(fid,'%s\n',toolsuijar); end
-                if(~sum(yn2)); fprintf(fid,'%s\n',njtoolsjar); end
+                if(~injcp(1)); fprintf(fid,'%s\n',toolsuijar); end
+                if(~injcp(2)); fprintf(fid,'%s\n',njtoolsjar); end
                 fclose(fid);
             end
         end

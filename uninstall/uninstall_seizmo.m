@@ -30,9 +30,10 @@ function [ok]=uninstall_seizmo()
 %                        don't force failure for octave
 %        Feb. 16, 2012 - export_fig is externally managed
 %        Feb. 27, 2012 - multi-jar mattaup update
+%        Mar.  8, 2012 - fix mattaup multi-jar breakage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 15:25 GMT
+%     Last Updated Mar.  8, 2012 at 15:25 GMT
 
 % todo:
 
@@ -118,7 +119,7 @@ end
 % clean out mattaup jars from dynamic java path
 jar=dir(fullfile(path,'mattaup','lib','*.jar'));
 for i=1:numel(jar)
-    if(~ismember(fullfile(path,'mattaup','lib',...
+    if(ismember(fullfile(path,'mattaup','lib',...
             jar(i).name),javaclasspath))
         javarmpath(fullfile(path,'mattaup','lib',jar(i).name));
     end
@@ -132,13 +133,13 @@ if(isempty(sjcp)); return; end
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 
 % detect offending classpath.txt lines
-yn=~cellfun('isempty',strfind(s2,mattaupjar));
+injcp=~cellfun('isempty',strfind(s2,fullfile(path,'mattaup','lib','')));
 
 % only remove if necessary
-if(sum(yn))
+if(sum(injcp)>0)
     % inform user about which lines are to be removed
     fprintf(' Removing the following lines:\n');
-    fprintf('  %s\n',s2{yn});
+    fprintf('  %s\n',s2{injcp});
     fprintf(' from:\n  %s\n',sjcp);
     
     % the hard part (remove offending lines from classpath.txt)
@@ -150,7 +151,7 @@ if(sum(yn))
         disp('You must have Root/Administrator privileges to edit');
         disp('the classpath.txt file.  To fully uninstall SEIZMO');
         disp('you need to remove the following line(s):');
-        disp(strrep(sprintf('%s\n',s2{yn}),'\','\\'));
+        disp(strrep(sprintf('%s\n',s2{injcp}),'\','\\'));
         disp(' ');
         disp('from your Matlab''s classpath.txt located here:');
         disp(strrep(sjcp,'\','\\'));
@@ -162,9 +163,7 @@ if(sum(yn))
         ok=false;
     else
         fseek(fid,0,'bof');
-        for i=find(~yn)'
-            fprintf(fid,'%s\n',s2{i});
-        end
+        fprintf(fid,'%s\n',s2{~injcp});
         fclose(fid);
     end
 end

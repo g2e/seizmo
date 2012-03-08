@@ -57,9 +57,10 @@ function [varargout]=install_seizmo()
 %        Feb. 22, 2012 - require java/signal packages in Octave
 %        Feb. 27, 2012 - multi-jar mattaup update
 %        Mar.  1, 2012 - globalcmt catalog creation
+%        Mar.  8, 2012 - fix mattaup multi-jar breakage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2012 at 15:25 GMT
+%     Last Updated Mar.  8, 2012 at 15:25 GMT
 
 % todo:
 
@@ -203,10 +204,14 @@ else % install matTaup.jar to classpath
     s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
     
     % detect offending classpath.txt lines
-    yn=~cellfun('isempty',strfind(s2,mattaupjar));
+    injcp=false(1,numel(jar));
+    for i=1:numel(jar)
+        injcp(i)=any(~cellfun('isempty',...
+            strfind(s2,fullfile(path,'mattaup','lib',jar(i).name))));
+    end
     
-    % only add if not there already
-    if(~sum(yn))
+    % only add if some not there
+    if(sum(injcp)~=numel(jar))
         fid=fopen(sjcp,'a+');
         if(fid<0)
             warning('seizmo:webinstall_njtbx:noWriteClasspath',...
@@ -215,13 +220,16 @@ else % install matTaup.jar to classpath
             for i=1:numel(jar)
                 if(~ismember(fullfile(...
                         path,'mattaup','lib',jar(i).name),javaclasspath))
-                    javaaddpath(fullfile(...
-                        path,'mattaup','lib',jar(i).name));
+                    javaaddpath(...
+                        fullfile(path,'mattaup','lib',jar(i).name));
                 end
             end
         else
             fseek(fid,0,'eof');
-            fprintf(fid,'%s\n',mattaupjar);
+            for i=find(~injcp)
+                fprintf(fid,'%s\n',...
+                    fullfile(path,'mattaup','lib',jar(i).name));
+            end
             fclose(fid);
         end
     end
