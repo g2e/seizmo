@@ -47,8 +47,9 @@ function [data,failed]=cut(data,varargin)
 %        [year month dayofmonth hour minute seconds]. Absolute times may
 %        also be a string as given by the KZDTTM or KZDATE fields or a
 %        string that can be interpreted by the Matlab function DATEVEC.
-%        Note that DATEVEC interpretation does not properly handle times
-%        within a leap second.
+%        Absolute times are assumed to be in UTC.  Note that DATEVEC
+%        interpretation does not properly handle times within a leap
+%        second.
 %
 %     OFFSET is a numeric value giving the offset to be added to REF to 
 %     define the position of the window start/stop with respect to the 
@@ -164,9 +165,10 @@ function [data,failed]=cut(data,varargin)
 %        Nov.  2, 2011 - doc update, allow absolute time input
 %        Dec.  1, 2011 - IZTYPE option added
 %        Feb.  1, 2012 - better getheader usage
+%        Mar.  8, 2012 - minor doc update (abs times are UTC)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2012 at 15:05 GMT
+%     Last Updated Mar.  8, 2012 at 15:05 GMT
 
 % todo:
 

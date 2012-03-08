@@ -44,7 +44,6 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %             or a cell array with a combination of those.  'mon' stacks
 %             across years for a particular month (for example stacking
 %             Jan 2005, 2006, & 2007).  The default is 'full'.
-%             or a cell array with a combination. Defaults to 'ncf'.
 %      XCCMP - Controls which NCF component is output.  May be any of:
 %               'full','sym','pos','neg'
 %              or a cell array combination.  The default is 'full'.
@@ -93,14 +92,13 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %        Jan. 31, 2012 - aggregator code written, 1st working version
 %        Feb.  1, 2012 - drop type option, addrecords override & skip
 %                        checking = 2x faster
+%        Mar.  8, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2012 at 11:15 GMT
+%     Last Updated Mar.  8, 2012 at 11:15 GMT
 
 % todo:
 % - stack2stack
-% - missing day directories?
-% - are the weeks ok? yrmo? mon?
 % - clear user0/1?
 
 % check nargin
@@ -198,6 +196,7 @@ clear good;
 e=e-1/86400;
 
 % check timesection lengths
+% - adding UTC to timediff here would break the detections below
 if(numel(unique(timediff(tsbgn,tsend)))>1)
     error('seizmo:noise_stack:variableTimeSectionWidth',...
         'Timesection time spans vary in INDIR!');

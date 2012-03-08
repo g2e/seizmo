@@ -85,9 +85,10 @@ function []=noise_setup(indir,outdir,varargin)
 %                        subsetting by user ts/te options, 3char cmp check,
 %                        all time operations are in utc
 %        Feb.  7, 2012 - merge to meld update
+%        Mar.  8, 2012 - drop UTC in timediff where unnecessary
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 11:15 GMT
+%     Last Updated Mar.  8, 2012 at 11:15 GMT
 
 % todo:
 
@@ -149,12 +150,12 @@ end
 % limit stations based on user input
 if(~isempty(opt.TIMESTART))
     eutc=cell2mat(getheader(data,'e utc'));
-    data=data(timediff(opt.TIMESTART,eutc,'utc')>0);
+    data=data(timediff(opt.TIMESTART,eutc)>0);
     checkdata(data);
 end
 if(~isempty(opt.TIMEEND))
     butc=cell2mat(getheader(data,'b utc'));
-    data=data(timediff(opt.TIMEEND,butc,'utc')<0);
+    data=data(timediff(opt.TIMEEND,butc)<0);
     checkdata(data);
 end
 if(~isempty(opt.LATRNG))
@@ -262,9 +263,9 @@ for i=1:max(cmpidx) % SERIAL
                     
                     % skip time section if not in user-defined range
                     if((~isempty(opt.TIMESTART) ...
-                            && timediff(opt.TIMESTART,tsend,'utc')<=0) ...
+                            && timediff(opt.TIMESTART,tsend)<=0) ...
                             || (~isempty(opt.TIMEEND) ...
-                            && timediff(opt.TIMEEND,tsbgn,'utc')>=0))
+                            && timediff(opt.TIMEEND,tsbgn)>=0))
                         continue;
                     end
                     
@@ -276,8 +277,8 @@ for i=1:max(cmpidx) % SERIAL
                     %disp([kname{i} ' ' num2str(yr) ' ' tsdir])
                     
                     % skip if time section contains no records
-                    if(all(timediff(butc,tsend,'utc')<=0 ...
-                            | timediff(eutc,tsbgn,'utc')>=0))
+                    if(all(timediff(butc,tsend)<=0 ...
+                            | timediff(eutc,tsbgn)>=0))
                         continue;
                     end
                     

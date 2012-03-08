@@ -110,15 +110,17 @@ function []=noise_process(indir,outdir,steps,varargin)
 %                        reading of header and data for speed
 %        Feb.  1, 2012 - all time operations are in utc, turn off checking,
 %                        parallelization edits, fdpassband option gone
+%        Mar.  8, 2012 - skip dirs outside time limits before reading data,
+%                        now checks steps, early h/v split & shortcircuits
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2012 at 11:15 GMT
+%     Last Updated Mar.  8, 2012 at 11:15 GMT
 
 % todo:
 % - what is behind the lp noise?
-%   - response taper?
 %   - spectral whitening? NO
 %   - temp norm? NO
+%   - response taper?
 %   - xc?
 %   - the data?
 
@@ -165,6 +167,13 @@ if(exist(outdir,'file'))
     end
 end
 
+% check steps
+if(isempty(steps) || ~isnumeric(steps) || ~isreal(steps) ...
+        || any(steps<=0) || any(steps~=fix(steps)))
+    error('seizmo:noise_process:badInput',...
+        'STEPS must be a series of positive integers!');
+end
+
 % directory separator
 fs=filesep;
 
@@ -182,425 +191,454 @@ for i=1:nyr
     dirs=dirs([dirs.isdir]' & ~strncmp({dirs.name}','.',1)); % unhidden dir
     tsdir{i}={dirs.name};
 end
+tsdirs=[tsdir{:}]'; % all timesections
+clear dirs yrdir nyr tsdir;
+
+% convert time ranges to numeric arrays
+t=char(tsdirs);
+tsbgn=str2double([cellstr(t(:,1:4)) cellstr(t(:,6:8)) ...
+    cellstr(t(:,10:11)) cellstr(t(:,13:14)) cellstr(t(:,16:17))]);
+tsend=str2double([cellstr(t(:,19:22)) cellstr(t(:,24:26)) ...
+    cellstr(t(:,28:29)) cellstr(t(:,31:32)) cellstr(t(:,34:35))]);
+clear t;
+
+% forget about any outside of user specified time limits
+good=true(numel(tsdirs),1);
+if(~isempty(opt.TIMESTART))
+    good=good & timediff(opt.TIMESTART,tsend)>0;
+end
+if(~isempty(opt.TIMEEND))
+    good=good & timediff(opt.TIMEEND,tsbgn)<0;
+end
+tsdirs=tsdirs(good); tsbgn=tsbgn(good,:); tsend=tsend(good,:);
+clear good;
 
 % verbosity  (turn it off for the loop)
 verbose=seizmoverbose(false);
 if(verbose); disp('PROCESSING SEISMIC DATA FOR NOISE ANALYSIS'); end
 
-% loop over years
-for i=1:nyr
-    % skip if outside user-defined time range
-    if((~isempty(opt.TIMESTART) ...
-            && str2double(yrdir{i})<opt.TIMESTART(1)) ...
-            || (~isempty(opt.TIMEEND) ...
-            && str2double(yrdir{i})>opt.TIMEEND(1)))
+% loop over time section directories
+for i=1:numel(tsdirs) % SERIAL
+    %parfor j=1:numel(tsdirs) % PARALLEL
+    % read the header
+    try
+        data=readheader(...
+            strcat(indir,fs,tsdirs{i}(1:4),fs,tsdirs{i},fs,opt.FILENAMES));
+    catch
+        % no data...
         continue;
     end
+    if(isempty(data)); continue; end
     
-    % loop over time section directories
-    for j=1:numel(tsdir{i}) % SERIAL
-    %parfor j=1:numel(tsdir{i}) % PARALLEL
-        % read the header
-        try
-            data=readheader(...
-                strcat(indir,fs,yrdir{i},fs,tsdir{i}{j},fs,opt.FILENAMES));
-            hvsplit=false;
-        catch
-            % no data...
-            continue;
+    % check if records are correlations
+    [kuser0,kuser1]=getheader(data,'kuser0','kuser1');
+    xc=ismember(kuser0,{'MASTER' 'SLAVE'}) ...
+        & ismember(kuser1,{'MASTER' 'SLAVE'});
+    if(all(xc)); isxc=true;
+    elseif(all(~xc)); isxc=false;
+    else
+        error('seizmo:noise_process:mixedData',...
+            ['Data contains both seismic records and ' ...
+            'correlograms! This is NOT allowed.\nYou might try ' ...
+            'using the FILENAMES option to limit input to one type.']);
+    end
+    if(isxc && any(steps<12)) % CAREFUL
+        error('seizmo:noise_process:invalidProcess4xcdata',...
+            'Cannot run earlier processing steps on correlograms!');
+    end
+    
+    % proceed by data type
+    if(isxc) % correlograms
+        % limit to the stations that the user allows
+        % Note: check both fields!
+        if(~isempty(opt.LATRNG))
+            [stla,evla]=getheader(data,'stla','evla');
+            data=data(stla>=min(opt.LATRNG) & stla<=max(opt.LATRNG) ...
+                & evla>=min(opt.LATRNG) & evla<=max(opt.LATRNG));
+            if(isempty(data)); continue; end
         end
-        if(isempty(data)); continue; end
-        
-        % check if records are correlations
-        [kuser0,kuser1]=getheader(data,'kuser0','kuser1');
-        xc=ismember(kuser0,{'MASTER' 'SLAVE'}) ...
-            & ismember(kuser1,{'MASTER' 'SLAVE'});
-        if(all(xc)); isxc=true;
-        elseif(all(~xc)); isxc=false;
-        else
-            error('seizmo:noise_process:mixedData',...
-                ['Data contains both seismic records and ' ...
-                'correlograms! This is NOT allowed.\nYou might try ' ...
-                'using the FILENAMES option to limit input to one type.']);
+        if(~isempty(opt.LONRNG))
+            [stlo,evlo]=getheader(data,'stlo','evlo');
+            data=data(stlo>=min(opt.LONRNG) & stlo<=max(opt.LONRNG) ...
+                & evlo>=min(opt.LONRNG) & evlo<=max(opt.LONRNG));
+            if(isempty(data)); continue; end
         end
-        if(isxc && any(steps<12)) % CAREFUL
-            error('seizmo:noise_process:invalidProcess4xcdata',...
-                'Cannot run earlier processing steps on correlograms!');
+        if(~isempty(opt.NETWORKS))
+            [knetwk1,knetwk2]=getheader(data,'knetwk','kt0');
+            data=data(ismember(lower(knetwk1),opt.NETWORKS) ...
+                & ismember(lower(knetwk2),opt.NETWORKS));
+            if(isempty(data)); continue; end
         end
-        
-        % proceed by data type
-        if(isxc) % correlograms
-            % Use directory name to check if within time limits
-            % - parse start/end from the time section directory name
-            times=getwords(tsdir{i}{j},'_');          % separate times
-            tsbgn=str2double(getwords(times{1},'.')); % make numeric vector
-            tsend=str2double(getwords(times{2},'.'));
-            if((~isempty(opt.TIMESTART) ...
-                    && timediff(opt.TIMESTART,tsend,'utc')<=0) ...
-                    || (~isempty(opt.TIMEEND) ...
-                    && timediff(opt.TIMEEND,tsbgn,'utc')>=0))
-                continue;
-            end
-            
-            % limit to the stations that the user allows
-            % Note: check both fields!
-            if(~isempty(opt.LATRNG))
-                [stla,evla]=getheader(data,'stla','evla');
-                data=data(stla>=min(opt.LATRNG) & stla<=max(opt.LATRNG) ...
-                    & evla>=min(opt.LATRNG) & evla<=max(opt.LATRNG));
-                if(isempty(data)); continue; end
-            end
-            if(~isempty(opt.LONRNG))
-                [stlo,evlo]=getheader(data,'stlo','evlo');
-                data=data(stlo>=min(opt.LONRNG) & stlo<=max(opt.LONRNG) ...
-                    & evlo>=min(opt.LONRNG) & evlo<=max(opt.LONRNG));
-                if(isempty(data)); continue; end
-            end
-            if(~isempty(opt.NETWORKS))
-                [knetwk1,knetwk2]=getheader(data,'knetwk','kt0');
-                data=data(ismember(lower(knetwk1),opt.NETWORKS) ...
-                    & ismember(lower(knetwk2),opt.NETWORKS));
-                if(isempty(data)); continue; end
-            end
-            if(~isempty(opt.STATIONS))
-                [kstnm1,kstnm2]=getheader(data,'kstnm','kt1');
-                data=data(ismember(lower(kstnm1),opt.STATIONS) ...
-                    & ismember(lower(kstnm2),opt.STATIONS));
-                if(isempty(data)); continue; end
-            end
-            if(~isempty(opt.STREAMS))
-                [khole1,khole2]=getheader(data,'khole','kt2');
-                data=data(ismember(lower(khole1),opt.STREAMS) ...
-                    & ismember(lower(khole2),opt.STREAMS));
-                if(isempty(data)); continue; end
-            end
-            if(~isempty(opt.COMPONENTS))
-                [kcmpnm1,kcmpnm2]=getheader(data,'kcmpnm','kt3');
-                data=data(ismember(lower(kcmpnm1),opt.COMPONENTS) ...
-                    & ismember(lower(kcmpnm2),opt.COMPONENTS));
-                if(isempty(data)); continue; end
-            end
-        else % seismic records
-            % find/check time section limits
-            [tsbgn,tsend]=getheader(data,'a utc','f utc');
-            tsbgn=unique(cell2mat(tsbgn),'rows');
-            tsend=unique(cell2mat(tsend),'rows');
-            if(size(tsbgn,1)>1 || size(tsend,1)>1)
-                error('seizmo:noise_process:inconsistentSetup',...
-                    'Time window limits are inconsistent!');
-            end
-            
-            % skip if outside user-defined time range
-            if((~isempty(opt.TIMESTART) ...
-                    && timediff(opt.TIMESTART,tsend,'utc')<=0) ...
-                    || (~isempty(opt.TIMEEND) ...
-                    && timediff(opt.TIMEEND,tsbgn,'utc')>=0))
-                continue;
-            end
-            
-            % limit to stations user allowed
-            if(~isempty(opt.LATRNG))
-                stla=getheader(data,'stla');
-                data=data(stla>=min(opt.LATRNG) & stla<=max(opt.LATRNG));
-                if(isempty(data)); continue; end
-            end
-            if(~isempty(opt.LONRNG))
-                stlo=getheader(data,'stlo');
-                data=data(stlo>=min(opt.LONRNG) & stlo<=max(opt.LONRNG));
-                if(isempty(data)); continue; end
-            end
-            if(~isempty(opt.NETWORKS))
-                knetwk=getheader(data,'knetwk');
-                data=data(ismember(lower(knetwk),opt.NETWORKS));
-                if(isempty(data)); continue; end
-            end
-            if(~isempty(opt.STATIONS))
-                kstnm=getheader(data,'kstnm');
-                data=data(ismember(lower(kstnm),opt.STATIONS));
-                if(isempty(data)); continue; end
-            end
-            if(~isempty(opt.STREAMS))
-                khole=getheader(data,'khole');
-                data=data(ismember(lower(khole),opt.STREAMS));
-                if(isempty(data)); continue; end
-            end
-            if(~isempty(opt.COMPONENTS))
-                kcmpnm=getheader(data,'kcmpnm');
-                data=data(ismember(lower(kcmpnm),opt.COMPONENTS));
-                if(isempty(data)); continue; end
-            end
+        if(~isempty(opt.STATIONS))
+            [kstnm1,kstnm2]=getheader(data,'kstnm','kt1');
+            data=data(ismember(lower(kstnm1),opt.STATIONS) ...
+                & ismember(lower(kstnm2),opt.STATIONS));
+            if(isempty(data)); continue; end
         end
-        
-        % read in data
+        if(~isempty(opt.STREAMS))
+            [khole1,khole2]=getheader(data,'khole','kt2');
+            data=data(ismember(lower(khole1),opt.STREAMS) ...
+                & ismember(lower(khole2),opt.STREAMS));
+            if(isempty(data)); continue; end
+        end
+        if(~isempty(opt.COMPONENTS))
+            [kcmpnm1,kcmpnm2]=getheader(data,'kcmpnm','kt3');
+            data=data(ismember(lower(kcmpnm1),opt.COMPONENTS) ...
+                & ismember(lower(kcmpnm2),opt.COMPONENTS));
+            if(isempty(data)); continue; end
+        end
+    else % seismic records
+        % limit to stations user allowed
+        if(~isempty(opt.LATRNG))
+            stla=getheader(data,'stla');
+            data=data(stla>=min(opt.LATRNG) & stla<=max(opt.LATRNG));
+            if(isempty(data)); continue; end
+        end
+        if(~isempty(opt.LONRNG))
+            stlo=getheader(data,'stlo');
+            data=data(stlo>=min(opt.LONRNG) & stlo<=max(opt.LONRNG));
+            if(isempty(data)); continue; end
+        end
+        if(~isempty(opt.NETWORKS))
+            knetwk=getheader(data,'knetwk');
+            data=data(ismember(lower(knetwk),opt.NETWORKS));
+            if(isempty(data)); continue; end
+        end
+        if(~isempty(opt.STATIONS))
+            kstnm=getheader(data,'kstnm');
+            data=data(ismember(lower(kstnm),opt.STATIONS));
+            if(isempty(data)); continue; end
+        end
+        if(~isempty(opt.STREAMS))
+            khole=getheader(data,'khole');
+            data=data(ismember(lower(khole),opt.STREAMS));
+            if(isempty(data)); continue; end
+        end
+        if(~isempty(opt.COMPONENTS))
+            kcmpnm=getheader(data,'kcmpnm');
+            data=data(ismember(lower(kcmpnm),opt.COMPONENTS));
+            if(isempty(data)); continue; end
+        end
+    end
+    
+    % splits data into vertical and horizontal sets
+    if(~isxc)
+        vdata=data(vertcmp(data));
+        hdata=data(horzcmp(data));
+        data=[]; % clearing data
+        if(any(steps==11) && numel(vdata)==1); vdata=[]; end
+        if(any(steps==11) && numel(hdata)==1); hdata=[]; end
+        if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+        if(isempty(hdata) && isempty(vdata)); continue; end
+    end
+    
+    % shortcircuit for too few correlations for correlogram rotation
+    if(isxc && any(steps==12) && numel(data)<4); continue; end
+    
+    % read in data
+    if(isxc)
         data=readdata(data);
-        
-        % detail message
-        if(verbose); disp(['PROCESSING: ' tsdir{i}{j}]); end
-        
-        % turn off checking
-        oldseizmocheckstate=seizmocheck_state(false);
-        oldcheckheaderstate=checkheader_state(false);
-        
-        try
-            % process data for noise analysis
-            if(any(steps==1)) % remove dead
-                data=removedeadrecords(data);
-                if(isempty(data)); continue; end
+    else
+        if(~isempty(vdata)); vdata=readdata(vdata); end
+        if(~isempty(hdata)); hdata=readdata(hdata); end
+    end
+    
+    % detail message
+    if(verbose); disp(['PROCESSING: ' tsdirs{i}]); end
+    
+    % turn off checking
+    oldseizmocheckstate=seizmocheck_state(false);
+    oldcheckheaderstate=checkheader_state(false);
+    
+    try
+        % process data for noise analysis
+        if(any(steps==1)) % remove dead
+            if(~isempty(vdata)); vdata=removedeadrecords(vdata); end
+            if(~isempty(hdata)); hdata=removedeadrecords(hdata); end
+            if(any(steps==11) && numel(vdata)==1); vdata=[]; end
+            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(isempty(hdata) && isempty(vdata)); continue; end
+        end
+        if(any(steps==2)) % remove short
+            if(~isempty(vdata))
+                [b,e]=getheader(vdata,'b','e');
+                vdata=vdata(...
+                    e-b>opt.MINIMUMLENGTH*timediff(tsbgn(i,:),tsend(i,:)));
             end
-            if(any(steps==2)) % remove short
-                [b,e]=getheader(data,'b','e');
-                data=data(...
-                    e-b>opt.MINIMUMLENGTH*timediff(tsbgn,tsend,'utc'));
-                if(isempty(data)); continue; end
+            if(~isempty(hdata))
+                [b,e]=getheader(hdata,'b','e');
+                hdata=hdata(...
+                    e-b>opt.MINIMUMLENGTH*timediff(tsbgn(i,:),tsend(i,:)));
             end
-            if(any(steps==3)) % remove trend
-                data=removetrend(data);
-            end
-            if(any(steps==4)) % taper
-                data=taper(data,opt.TAPERWIDTH,...
+            if(any(steps==11) && numel(vdata)==1); vdata=[]; end
+            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(isempty(hdata) && isempty(vdata)); continue; end
+        end
+        if(any(steps==3)) % remove trend
+            if(~isempty(vdata)); vdata=removetrend(vdata); end
+            if(~isempty(hdata)); hdata=removetrend(hdata); end
+        end
+        if(any(steps==4)) % taper
+            if(~isempty(vdata))
+                vdata=taper(vdata,opt.TAPERWIDTH,...
                     [],opt.TAPERTYPE,opt.TAPEROPT);
             end
-            if(any(steps==5)) % resample
-                data=syncrates(data,opt.SAMPLERATE);
+            if(~isempty(hdata))
+                hdata=taper(hdata,opt.TAPERWIDTH,...
+                    [],opt.TAPERTYPE,opt.TAPEROPT);
             end
-            if(any(steps==6)) % remove pz
-                if(~isempty(opt.PZDB)); data=getsacpz(data,opt.PZDB); end
-                data=removesacpz(data,...
-                    'units',opt.UNITS,'tl',opt.PZTAPERLIMITS);
-                if(isempty(data)); continue; end
-            end
-            if(any(steps==7))
-                % PLACEHOLDER -- CURRENTLY UNIMPLEMENTED
-                %
-                % Considering that this will "zero out" earthquakes based
-                % on a catalog (globalcmt at this point).  That will
-                % require lots of work to make it effective:
-                % - quake magnitude vs distance
-                % - blackout time vs distance & magnitude
-                % - record-by-record find events within a day and figure
-                %   out blackout time spans for that station
-            end
-            
-            % HIDDEN STEP (required for 8+)
-            % splits data into vertical and horizontal sets
-            if(~isxc && any(steps>7))
-                vdata=data(vertcmp(data));
-                hdata=data(horzcmp(data));
-                hvsplit=true;
-                data=[]; % clearing data
-                if(isempty(hdata) && isempty(vdata)); continue; end
-            end
-            
-            % continue processing data for noise analysis
-            if(any(steps==8)) % rotate horz to NE
-                if(~isempty(hdata))
-                    hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
-                end
-                if(isempty(hdata) && isempty(vdata)); continue; end
-            end
-            if(any(steps==9)) % td norm
-                % have to rotate to sort horizontals if not done before
-                if(~any(steps==8) && ~isempty(hdata))
-                    hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
-                end
-                if(isempty(hdata) && isempty(vdata)); continue; end
-                
-                % normalization style
-                switch lower(opt.TDSTYLE)
-                    case '1bit'
-                        if(~isempty(vdata))
-                            vdata=solofun(vdata,@sign);
-                        end
-                        if(~isempty(hdata))
-                            % orthogonal pair 1bit: x^2+y^2=1
-                            weights=solofun(addrecords(...
-                                solofun(hdata(1:2:end),@(x)x.^2),...
-                                solofun(hdata(2:2:end),@(x)x.^2)),@sqrt);
-                            hdata=dividerecords(hdata,...
-                                weights([1:end; 1:end]));
-                        end
-                    case 'clip'
-                        if(~isempty(vdata))
-                            if(opt.TDRMS)
-                                % use robust rms (better for spikes)
-                                rms=getvaluefun(vdata,...
-                                    @(x)sqrt(median(x.^2-median(x).^2)));
-                                tdclip=rms*opt.TDCLIP;
-                            else
-                                tdclip=opt.TDCLIP;
-                            end
-                            vdata=clip(vdata,tdclip);
-                        end
-                        if(~isempty(hdata))
-                            % orthogonal pair clipping
-                            if(opt.TDRMS)
-                                rms=getvaluefun(solofun(addrecords(...
-                                    solofun(hdata(1:2:end),@(x)x.^2),...
-                                    solofun(hdata(2:2:end),@(x)x.^2)),...
-                                    @sqrt),@(x)sqrt(median(x.^2)));
-                                tdclip=rms([1:end; 1:end])*opt.TDCLIP;
-                            else
-                                tdclip=opt.TDCLIP;
-                            end
-                            hdata=clip(hdata,tdclip);
-                        end
-                    case 'ram'
-                        tdwb=opt.TDWEIGHTBAND;
-                        if(~isempty(vdata))
-                            delta=getheader(vdata(1),'delta');
-                            weights=add(slidingabsmean(iirfilter(vdata,...
-                                'bp','b','c',tdwb(1,:),'o',4,'p',2),...
-                                ceil(1/(2*delta*min(tdwb(:))))),eps);
-                            for a=2:size(tdwb,1)
-                                weights=addrecords(weights,...
-                                    add(slidingabsmean(iirfilter(vdata,...
-                                    'bp','b','c',tdwb(a,:),'o',4,'p',2),...
-                                    ceil(1/(2*delta*min(tdwb(:))))),eps));
-                            end
-                            vdata=dividerecords(vdata,weights);
-                        end
-                        if(~isempty(hdata))
-                            weights=add(slidingabsmean(iirfilter(hdata,...
-                                'bp','b','c',tdwb(1,:),'o',4,'p',2),...
-                                ceil(1/(2*delta*min(tdwb(:))))),eps);
-                            for a=2:size(tdwb,1)
-                                weights=addrecords(weights,...
-                                    add(slidingabsmean(iirfilter(hdata,...
-                                    'bp','b','c',tdwb(a,:),'o',4,'p',2),...
-                                    ceil(1/(2*delta*min(tdwb(:))))),eps));
-                            end
-                            weights=solofun(addrecords(...
-                                solofun(weights(1:2:end),@(x)x.^2),...
-                                solofun(weights(2:2:end),@(x)x.^2)),@sqrt);
-                            hdata=dividerecords(hdata,...
-                                weights([1:end; 1:end]));
-                        end
-                    otherwise
-                        error('seizmo:noise_process:badInput',...
-                            'Unknown TDSTYLE: %s',opt.TDSTYLE);
-                end
-            end
-            if(any(steps==10)) % fd norm
-                % have to rotate to sort horizontals if not done before
-                if(~any(steps==8) && ~isempty(hdata))
-                    hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
-                end
-                if(isempty(hdata) && isempty(vdata)); continue; end
-                
-                % normalization style
-                switch lower(opt.FDSTYLE)
-                    case '1bit'
-                        if(~isempty(vdata))
-                            vdata=dft(vdata);
-                            vdata=solofun(vdata,@(x)[x(:,1).^0,x(:,2)]);
-                            vdata=idft(vdata);
-                        end
-                        if(~isempty(hdata))
-                            % orthogonal pair 1bit: x^2+y^2=1
-                            hdata=dft(hdata,'rlim');
-                            amph=rlim2amph(hdata);
-                            amph=solofun(amph,...
-                                @(x)x(:,[1:2:end; 1:2:end])+eps);
-                            amph=solofun(addrecords(...
-                                solofun(amph(1:2:end),@(x)x.^2),...
-                                solofun(amph(2:2:end),@(x)x.^2)),@sqrt);
-                            amph=changeheader(amph,'iftype','irlim');
-                            hdata=dividerecords(hdata,...
-                                amph([1:end; 1:end]));
-                            hdata=idft(hdata);
-                        end
-                    case 'ram'
-                        if(~isempty(vdata))
-                            vdata=dft(vdata,'rlim');
-                            vdata=whiten(vdata,opt.FDWIDTH);
-                            vdata=idft(vdata);
-                        end
-                        if(~isempty(hdata))
-                            % orthogonal pair ram: x^2+y^2=1
-                            hdata=dft(hdata,'rlim');
-                            amph=rlim2amph(hdata);
-                            amph=slidingmean(amph,ceil(opt.FDWIDTH...
-                                ./getheader(hdata,'delta')));
-                            amph=solofun(amph,...
-                                @(x)x(:,[1:2:end; 1:2:end])+eps);
-                            amph=solofun(addrecords(...
-                                solofun(amph(1:2:end),@(x)x.^2),...
-                                solofun(amph(2:2:end),@(x)x.^2)),@sqrt);
-                            amph=changeheader(amph,'iftype','irlim');
-                            hdata=dividerecords(hdata,...
-                                amph([1:end; 1:end]));
-                            hdata=idft(hdata);
-                        end
-                    otherwise
-                        error('seizmo:noise_process:badInput',...
-                            'Unknown FDSTYLE: %s',opt.TDSTYLE);
-                end
-            end
-            if(any(steps==11)) % xc
-                if(numel(vdata)<2 && numel(hdata)<2); continue; end
-                if(numel(vdata)>1)
-                    delta=getheader(vdata(1),'delta');
-                    vdata=interpolate(correlate(...
-                        cut(vdata,'a','f','fill',true),...
-                        'lags',(opt.XCMAXLAG+4*delta).*[-1 1]),...
-                        1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
-                    [vdata.path]=deal([indir fs yrdir{i} fs tsdir{i}{j}]);
-                else
-                    vdata=vdata([]);
-                end
-                if(numel(hdata)>1)
-                    delta=getheader(hdata(1),'delta');
-                    hdata=interpolate(correlate(...
-                        cut(hdata,'a','f','fill',true),...
-                        'lags',(opt.XCMAXLAG+4*delta).*[-1 1]),...
-                        1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
-                    [hdata.path]=deal([indir fs yrdir{i} fs tsdir{i}{j}]);
-                else
-                    hdata=hdata([]);
-                end
-            end
-            if(any(steps==12)) % rotate xc
-                % this removes ZZ correlations!
-                if(isxc)
-                    data=rotate_correlations(data);
-                else
-                    if(~isempty(hdata))
-                        hdata=rotate_correlations(hdata);
-                    end
-                end
-            end
-            
-            % write the data
-            if(isxc || ~hvsplit)
-                if(isempty(data)); continue; end
-                writeseizmo(data,'path',...
-                    [outdir fs yrdir{i} fs tsdir{i}{j} fs]);
-            else
-                if(~isempty(vdata))
-                    writeseizmo(vdata,'path',...
-                        [outdir fs yrdir{i} fs tsdir{i}{j} fs]);
-                end
-                if(~isempty(hdata))
-                    writeseizmo(hdata,'path',...
-                        [outdir fs yrdir{i} fs tsdir{i}{j} fs]);
-                end
-            end
-            
-            % toggle checking back
-            seizmocheck_state(oldseizmocheckstate);
-            checkheader_state(oldcheckheaderstate);
-        catch
-            % toggle checking back
-            seizmocheck_state(oldseizmocheckstate);
-            checkheader_state(oldcheckheaderstate);
-            
-            % parallel processing takedown & fix verbosity
-            %matlabpool close; % PARALLEL
-            seizmoverbose(verbose);
-            
-            % rethrow error
-            error(lasterror);
         end
+        if(any(steps==5)) % resample
+            if(~isempty(vdata)); vdata=syncrates(vdata,opt.SAMPLERATE); end
+            if(~isempty(hdata)); hdata=syncrates(hdata,opt.SAMPLERATE); end
+        end
+        if(any(steps==6)) % remove pz
+            if(~isempty(opt.PZDB))
+                if(~isempty(vdata)); vdata=getsacpz(vdata,opt.PZDB); end
+                if(~isempty(hdata)); hdata=getsacpz(hdata,opt.PZDB); end
+            end
+            if(~isempty(vdata))
+                vdata=removesacpz(vdata,...
+                    'units',opt.UNITS,'tl',opt.PZTAPERLIMITS);
+            end
+            if(~isempty(hdata))
+                hdata=removesacpz(hdata,...
+                    'units',opt.UNITS,'tl',opt.PZTAPERLIMITS);
+            end
+            if(any(steps==11) && numel(vdata)==1); vdata=[]; end
+            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(isempty(hdata) && isempty(vdata)); continue; end
+        end
+        if(any(steps==7))
+            % PLACEHOLDER -- CURRENTLY UNIMPLEMENTED
+            %
+            % Considering that this will "zero out" earthquakes based
+            % on a catalog (globalcmt at this point).  That will
+            % require lots of work to make it effective:
+            % - quake magnitude vs distance
+            % - blackout time vs distance & magnitude
+            % - record-by-record find events within a day and figure
+            %   out blackout time spans for that station
+        end
+        
+        % continue processing data for noise analysis
+        if(any(steps==8)) % rotate horz to NE
+            if(~isempty(hdata))
+                hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
+            end
+            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(isempty(hdata) && isempty(vdata)); continue; end
+        end
+        if(any(steps==9)) % td norm
+            % have to rotate to sort horizontals if not done before
+            if(~any(steps==8) && ~isempty(hdata))
+                hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
+            end
+            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(isempty(hdata) && isempty(vdata)); continue; end
+            
+            % normalization style
+            switch lower(opt.TDSTYLE)
+                case '1bit'
+                    if(~isempty(vdata))
+                        vdata=solofun(vdata,@sign);
+                    end
+                    if(~isempty(hdata))
+                        % orthogonal pair 1bit: x^2+y^2=1
+                        weights=solofun(addrecords(...
+                            solofun(hdata(1:2:end),@(x)x.^2),...
+                            solofun(hdata(2:2:end),@(x)x.^2)),@sqrt);
+                        hdata=dividerecords(hdata,...
+                            weights([1:end; 1:end]));
+                    end
+                case 'clip'
+                    if(~isempty(vdata))
+                        if(opt.TDRMS)
+                            % use robust rms (better for spikes)
+                            rms=getvaluefun(vdata,...
+                                @(x)sqrt(median(x.^2-median(x).^2)));
+                            tdclip=rms*opt.TDCLIP;
+                        else
+                            tdclip=opt.TDCLIP;
+                        end
+                        vdata=clip(vdata,tdclip);
+                    end
+                    if(~isempty(hdata))
+                        % orthogonal pair clipping
+                        if(opt.TDRMS)
+                            rms=getvaluefun(solofun(addrecords(...
+                                solofun(hdata(1:2:end),@(x)x.^2),...
+                                solofun(hdata(2:2:end),@(x)x.^2)),...
+                                @sqrt),@(x)sqrt(median(x.^2)));
+                            tdclip=rms([1:end; 1:end])*opt.TDCLIP;
+                        else
+                            tdclip=opt.TDCLIP;
+                        end
+                        hdata=clip(hdata,tdclip);
+                    end
+                case 'ram'
+                    tdwb=opt.TDWEIGHTBAND;
+                    if(~isempty(vdata))
+                        delta=getheader(vdata(1),'delta');
+                        weights=add(slidingabsmean(iirfilter(vdata,...
+                            'bp','b','c',tdwb(1,:),'o',4,'p',2),...
+                            ceil(1/(2*delta*min(tdwb(:))))),eps);
+                        for a=2:size(tdwb,1)
+                            weights=addrecords(weights,...
+                                add(slidingabsmean(iirfilter(vdata,...
+                                'bp','b','c',tdwb(a,:),'o',4,'p',2),...
+                                ceil(1/(2*delta*min(tdwb(:))))),eps));
+                        end
+                        vdata=dividerecords(vdata,weights);
+                    end
+                    if(~isempty(hdata))
+                        weights=add(slidingabsmean(iirfilter(hdata,...
+                            'bp','b','c',tdwb(1,:),'o',4,'p',2),...
+                            ceil(1/(2*delta*min(tdwb(:))))),eps);
+                        for a=2:size(tdwb,1)
+                            weights=addrecords(weights,...
+                                add(slidingabsmean(iirfilter(hdata,...
+                                'bp','b','c',tdwb(a,:),'o',4,'p',2),...
+                                ceil(1/(2*delta*min(tdwb(:))))),eps));
+                        end
+                        weights=solofun(addrecords(...
+                            solofun(weights(1:2:end),@(x)x.^2),...
+                            solofun(weights(2:2:end),@(x)x.^2)),@sqrt);
+                        hdata=dividerecords(hdata,...
+                            weights([1:end; 1:end]));
+                    end
+                otherwise
+                    error('seizmo:noise_process:badInput',...
+                        'Unknown TDSTYLE: %s',opt.TDSTYLE);
+            end
+        end
+        if(any(steps==10)) % fd norm
+            % have to rotate to sort horizontals if not done before
+            if(~any(steps==8) && ~isempty(hdata))
+                hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
+            end
+            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(isempty(hdata) && isempty(vdata)); continue; end
+            
+            % normalization style
+            switch lower(opt.FDSTYLE)
+                case '1bit'
+                    if(~isempty(vdata))
+                        vdata=dft(vdata);
+                        vdata=solofun(vdata,@(x)[x(:,1).^0,x(:,2)]);
+                        vdata=idft(vdata);
+                    end
+                    if(~isempty(hdata))
+                        % orthogonal pair 1bit: x^2+y^2=1
+                        hdata=dft(hdata,'rlim');
+                        amph=rlim2amph(hdata);
+                        amph=solofun(amph,...
+                            @(x)x(:,[1:2:end; 1:2:end])+eps);
+                        amph=solofun(addrecords(...
+                            solofun(amph(1:2:end),@(x)x.^2),...
+                            solofun(amph(2:2:end),@(x)x.^2)),@sqrt);
+                        amph=changeheader(amph,'iftype','irlim');
+                        hdata=dividerecords(hdata,...
+                            amph([1:end; 1:end]));
+                        hdata=idft(hdata);
+                    end
+                case 'ram'
+                    if(~isempty(vdata))
+                        vdata=dft(vdata,'rlim');
+                        vdata=whiten(vdata,opt.FDWIDTH);
+                        vdata=idft(vdata);
+                    end
+                    if(~isempty(hdata))
+                        % orthogonal pair ram: x^2+y^2=1
+                        hdata=dft(hdata,'rlim');
+                        amph=rlim2amph(hdata);
+                        amph=slidingmean(amph,ceil(opt.FDWIDTH...
+                            ./getheader(hdata,'delta')));
+                        amph=solofun(amph,...
+                            @(x)x(:,[1:2:end; 1:2:end])+eps);
+                        amph=solofun(addrecords(...
+                            solofun(amph(1:2:end),@(x)x.^2),...
+                            solofun(amph(2:2:end),@(x)x.^2)),@sqrt);
+                        amph=changeheader(amph,'iftype','irlim');
+                        hdata=dividerecords(hdata,...
+                            amph([1:end; 1:end]));
+                        hdata=idft(hdata);
+                    end
+                otherwise
+                    error('seizmo:noise_process:badInput',...
+                        'Unknown FDSTYLE: %s',opt.TDSTYLE);
+            end
+        end
+        if(any(steps==11)) % xc
+            if(numel(vdata)<2 && numel(hdata)<2); continue; end
+            if(numel(vdata)>1)
+                delta=getheader(vdata(1),'delta');
+                vdata=interpolate(correlate(...
+                    cut(vdata,'a','f','fill',true),...
+                    'lags',(opt.XCMAXLAG+4*delta).*[-1 1]),...
+                    1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
+                [vdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
+            else
+                vdata=vdata([]);
+            end
+            if(numel(hdata)>1)
+                delta=getheader(hdata(1),'delta');
+                hdata=interpolate(correlate(...
+                    cut(hdata,'a','f','fill',true),...
+                    'lags',(opt.XCMAXLAG+4*delta).*[-1 1]),...
+                    1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
+                [hdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
+            else
+                hdata=hdata([]);
+            end
+        end
+        if(any(steps==12)) % rotate xc
+            % this removes ZZ correlations!
+            if(isxc)
+                data=rotate_correlations(data);
+            else
+                if(~isempty(hdata))
+                    hdata=rotate_correlations(hdata);
+                end
+            end
+        end
+        
+        % write the data
+        if(isxc)
+            if(isempty(data)); continue; end
+            writeseizmo(data,'path',...
+                [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
+        else
+            if(~isempty(vdata))
+                writeseizmo(vdata,'path',...
+                    [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
+            end
+            if(~isempty(hdata))
+                writeseizmo(hdata,'path',...
+                    [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
+            end
+        end
+        
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        checkheader_state(oldcheckheaderstate);
+    catch
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        checkheader_state(oldcheckheaderstate);
+        
+        % parallel processing takedown & fix verbosity
+        %matlabpool close; % PARALLEL
+        seizmoverbose(verbose);
+        
+        % rethrow error
+        error(lasterror);
     end
 end
 
