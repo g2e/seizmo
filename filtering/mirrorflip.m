@@ -56,9 +56,10 @@ function [data]=mirrorflip(data,varargin)
 %        Feb. 11, 2011 - mass seizmocheck fix
 %        Jan. 28, 2012 - doc update, drop SEIZMO global, better checkheader
 %                        usage
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -143,8 +144,9 @@ try
     end
 
     % get header fields
-    leven=~strcmpi(getlgc(data,'leven'),'false');
-    [b,e,delta,npts]=getheader(data,'b','e','delta','npts');
+    [b,e,delta,npts,leven]=getheader(data,...
+        'b','e','delta','npts','leven lgc');
+    leven=~strcmpi(leven,'false');
 
     % fix empty length option
     if(isnan(option.LENGTH))

@@ -1,4 +1,4 @@
-function [n,d] = rrat(x,tol)
+function [n,d]=rrat(x,tol)
 %RRAT    Relative rational approximation
 %
 %    Usage:    [n,d]=rrat(x,tol)
@@ -30,141 +30,131 @@ function [n,d] = rrat(x,tol)
 
 %     Version History:
 %        Aug. 16, 2010 - gplv3 version derived from GNU Octave's RAT
+%        Mar. 13, 2012 - drop license comment, reformat code, many bugfixes
 %
 %     Written by Paul Kienzle (RAT in GNU Octave)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 16, 2010 at 11:00 GMT
+%     Last Updated Mar. 13, 2012 at 11:00 GMT
 
 % todo:
 
-% Copyright (C) 2001, 2007, 2008, 2009 Paul Kienzle
-%
-% This file is part of Octave.
-%
-% Octave is free software; you can redistribute it and/or modify it
-% under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 3 of the License, or (at
-% your option) any later version.
-%
-% Octave is distributed in the hope that it will be useful, but
-% WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-% General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with Octave; see the file COPYING.  If not, see
-% <http://www.gnu.org/licenses/>.
+% check io
+error(nargchk(1,2,nargin));
+error(nargchk(0,2,nargout));
 
-  error(nargchk(1,2,nargin));
-  error(nargchk(0,2,nargout));
+% get size, make vector and find infinite elements
+sx=size(x);
+nx=numel(x);
+x=x(:);
 
-  y = x(:);
+% Replace Inf with nan while calculating ratios.
+isinfx=isinf(x);
+infx=x(isinfx);
+x(isinfx)=0;
 
-  % Replace Inf with 0 while calculating ratios.
-  y(isinf(y)) = 0;
+% detect zeros
+iszerox=x==0;
 
-  % default norm
-  if (nargin < 2)
-    tol = 1e-6 * norm(y,1);
-  end
+% default norm
+if(nargin<2); tol=1e-6*norm(x,1); end
 
-  % First step in the approximation is the integer portion
+% First step in the approximation is the integer portion
 
-  % First element in the continued fraction.
-  n = round(y);
-  d = ones(size(y));
-  frac = y-n;
-  lastn = ones(size(y));
-  lastd = zeros(size(y));
+% First element in the continued fraction.
+n=round(x);
+d=ones(nx,1);
+frac=x-n;
+lastn=ones(nx,1);
+lastd=zeros(nx,1);
+steps=zeros(nx,0);
 
-  nsz = numel (y);
-  steps = zeros(nsz,0);
+% nan the zeros
+x(iszerox)=nan;
 
-  % Grab new factors until all continued fractions converge.
-  while (1)
+% Grab new factors until all continued fractions converge.
+while(1) % goes until break is reached
     % Determine which fractions have not yet converged.
     % edit by Garrett Euler - makes code match described behavior
     % (tol is in relative terms, not absolute terms)
-    idx = find(abs((y-n./d)./y) >= tol);
-    if (isempty(idx))
-      if (isempty (steps))
-        steps = NaN .* ones (nsz, 1);
-      end
-      break;
+    idx=find(abs((x-n./d)./x)>=tol);
+    if(isempty(idx))
+        if(isempty(steps)); steps=NaN.*ones(nx,1); end
+        break;
     end
-
+    
     % Grab the next step in the continued fraction.
-    flip = 1./frac(idx);
+    flip=1./frac(idx);
     % Next element in the continued fraction.
-    step = round(flip);
-
-    if (nargout < 2)
-      tsteps = NaN .* ones (nsz, 1);
-      tsteps (idx) = step;
-      steps = [steps, tsteps];
+    step=round(flip);
+    
+    if(nargout<2)
+        tsteps=NaN.*ones(nx,1);
+        tsteps(idx)=step;
+        steps=[steps tsteps];
     end
-
-    frac(idx) = flip-step;
-
+    
+    frac(idx)=flip-step;
+    
     % Update the numerator/denominator.
-    nextn = n;
-    nextd = d;
-    n(idx) = n(idx).*step + lastn(idx);
-    d(idx) = d(idx).*step + lastd(idx);
-    lastn = nextn;
-    lastd = nextd;
-  end
+    nextn=n;
+    nextd=d;
+    n(idx)=n(idx).*step+lastn(idx);
+    d(idx)=d(idx).*step+lastd(idx);
+    lastn=nextn;
+    lastd=nextd;
+end
 
-  if (nargout == 2)
+if(nargout==2)
     % Move the minus sign to the top.
-    n = n.*sign(d);
-    d = abs(d);
-
+    n=n.*sign(d);
+    d=abs(d);
+    
     % Return the same shape as you receive.
-    n = reshape(n, size(x));
-    d = reshape(d, size(x));
-
+    n=reshape(n,sx);
+    d=reshape(d,sx);
+    
     % Use 1/0 for Inf.
-    n(isinf(x)) = sign(x(isinf(x)));
-    d(isinf(x)) = 0;
-
+    n(isinfx)=sign(infx);
+    d(isinfx)=0;
+    
     % Reshape the output.
-    n = reshape (n, size (x));
-    d = reshape (d, size (x));
-  else
-    n = '';
-    nsteps = size(steps, 2);
-    for i = 1: nsz
-      s = [int2str(y(i)),' '];
-      j = 1;
-
-      while (true)
-        step = steps(i, j);
-        j=j+1;
-        if (isnan (step))
-          break;
+    n=reshape(n,sx);
+    d=reshape(d,sx);
+else
+    n='';
+    nsteps=size(steps,2);
+    x(iszerox)=0;
+    x(isinfx)=infx;
+    for i=1:nx
+        s=int2str(x(i));
+        j=1;
+        
+        while(1) % goes until break is reached
+            k=j; j=j+1;
+            if(isnan(steps(i,k))); break; end
+            if(j>nsteps || isnan(steps(i,k)))
+                if(steps(i,k)<0)
+                    s=cat(2,s,[' + 1/(' int2str(steps(i,k)) ')']);
+                else
+                    s=cat(2,s,[' + 1/' int2str(steps(i,k))]);
+                end
+                break;
+            else
+                s=cat(2,s,[' + 1/(' int2str(steps(i,k)) ')']);
+            end
         end
-        if (j > nsteps || isnan (steps(i, j)))
-          if (step < 0)
-            s = [s(1:end-1), ' + 1/(', int2str(step), ')'];
-          else
-            s = [s(1:end-1), ' + 1/', int2str(step)];
-          end
-          break;
-        else
-          s = [s(1:end-1), ' + 1/(', int2str(step), ')'];
+        s=[s repmat(')',1,j-2)];
+        if(~isempty(n))
+            n_nc=size(n,2);
+            s_nc=size(s,2);
+            if(n_nc>s_nc)
+                s(:,s_nc+1:n_nc)=' ';
+            elseif(s_nc>n_nc)
+                n(:,n_nc+1:s_nc)=' ';
+            end
         end
-      end
-      s = [s, repmat(')', 1, j-2)];
-      n_nc = size(n,2);
-      s_nc = size(s,2);
-      if (n_nc > s_nc)
-        s(:,s_nc+1:n_nc) = ' ';
-      elseif (s_nc > n_nc)
-        n(:,n_nc+1:s_nc) = ' ';
-      end
-      n = cat (1, n, s);
+        n=cat(1,n,s);
     end
-  end
+end
 
 end

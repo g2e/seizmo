@@ -3,20 +3,21 @@ function [data]=removetrend(data)
 %
 %    Usage:    data=removetrend(data)
 %
-%    Description: REMOVETREND(DATA) removes the linear trend from SEIZMO
-%     records by subtracting the best straight line fit to the data as 
-%     determined by a least squares inversion.  For multi-component
-%     records, each component is dealt with separately.  It is highly
-%     recommended to combine this command with any filtering operations to
-%     reduce edge effects that may lead to poor data quality.
+%    Description:
+%     REMOVETREND(DATA) removes the linear trend from SEIZMO records by
+%     subtracting the best straight line fit to the data as determined by a
+%     least squares inversion.  For multi-component records, each component
+%     is dealt with separately.  It is highly recommended to combine this
+%     command with any filtering operations to reduce edge effects that may
+%     lead to poor data quality.
 %
 %    Notes:
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     4th order lowpass butter filter with a passband corner of 10s
-%      data=iirfilter(removetrend(data),'low','butter',1/10,4)
+%     % 4th order lowpass butter filter with a passband corner of 10s
+%     data=iirfilter(removetrend(data),'low','butter',1/10,4)
 %
 %    See also: REMOVEMEAN, REMOVEPOLYNOMIAL, GETPOLYNOMIAL, TAPER,
 %              REMOVEDEADRECORDS
@@ -43,9 +44,10 @@ function [data]=removetrend(data)
 %        Jan. 30, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb.  2, 2010 - versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
+%        Mar. 13, 2012 - doc update, seizmocheck fix, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -53,14 +55,14 @@ function [data]=removetrend(data)
 error(nargchk(1,1,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt trend removal
 try
-    % check header (versioninfo cache update)
+    % check header
     data=checkheader(data);
     
     % verbosity
@@ -70,7 +72,7 @@ try
     nrecs=numel(data);
     
     % header info
-    leven=getlgc(data,'leven');
+    leven=~strcmpi(getheader(data,'leven lgc'),'false');
     
     % detail message
     if(verbose)
@@ -93,7 +95,7 @@ try
         data(i).dep=double(data(i).dep);
 
         % unevenly spaced
-        if(strcmp(leven(i),'false'))
+        if(~leven(i))
             for j=1:size(data(i).dep,2)
                 data(i).dep(:,j)=data(i).dep(:,j) ...
                     -polyval(polyfit(double(data(i).ind),...

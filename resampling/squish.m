@@ -3,10 +3,11 @@ function [data]=squish(data,factor)
 %
 %    Usage:    data=squish(data,factors)
 %
-%    Description: SQUISH(DATA,FACTOR) downsamples SEIZMO records by an 
-%     integer FACTOR after implementing an anti-aliasing filter.  To avoid
-%     adding significant numerical noise to the data, keep the decimation
-%     factor below 13.  If a decimation factor greater than this is needed,
+%    Description:
+%     SQUISH(DATA,FACTOR) downsamples SEIZMO records by an integer FACTOR
+%     after implementing an anti-aliasing filter.  To avoid adding
+%     significant numerical noise to the data, keep the decimation factor
+%     below 13.  If a decimation factor greater than this is needed,
 %     consider using a cascade of decimation factors (by giving an array of
 %     factors for FACTOR).  For a usage case, see the examples below.
 %     Strong amplitudes at or near the start and end of records will
@@ -19,11 +20,13 @@ function [data]=squish(data,factor)
 %    Header changes: DELTA, NPTS, E, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples: 
-%     To halve the samplerates of records in data:
-%      data=squish(data,2)
+%     % To halve the samplerates of records in data:
+%     data=squish(data,2);
 %
-%     To cascade records to a samplerate 40 times lower;
-%      data=squish(data,[5 8])
+%     % To cascade records to a samplerate 40 times lower:
+%     data=squish(data,[5 8]);
+%     % or:
+%     data=squish(data,factor(40));
 %
 %    See also: STRETCH, SYNCRATES, INTERPOLATE
 
@@ -46,9 +49,11 @@ function [data]=squish(data,factor)
 %                        improved error messages
 %        Feb.  2, 2010 - versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
+%        Mar. 13, 2012 - doc update, seizmocheck fix, better checkheader
+%                        usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -56,7 +61,7 @@ function [data]=squish(data,factor)
 error(nargchk(2,2,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % empty factor
 if(isempty(factor)); return; end
@@ -67,7 +72,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt convolution
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'FALSE_LEVEN','ERROR',...
+        'NONTIME_IFTYPE','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -77,8 +84,6 @@ try
 
     % get header info
     [b,delta,npts,ncmp]=getheader(data,'b','delta','npts','ncmp');
-    iftype=getenumid(data,'iftype');
-    leven=getlgc(data,'leven');
     
     % check factor
     if(~isnumeric(factor) || any(factor<1) || any(fix(factor)~=factor))
@@ -93,21 +98,6 @@ try
     % overall factor
     of=prod(factor);
     delta=delta*of;
-
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:squish:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
-
-    % cannot do unevenly sampled records
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:squish:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    end
     
     % detail message
     if(verbose)

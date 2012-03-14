@@ -46,9 +46,10 @@ function [data]=attach(data,option,dep,ind)
 %        Mar.  8, 2010 - versioninfo caching dropped
 %        Aug. 16, 2010 - nargchk fix, better checkheader utilization
 %        Nov.  2, 2011 - doc update
+%        Mar. 13, 2012 - seizmocheck fix, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2011 at 12:45 GMT
+%     Last Updated Mar. 13, 2012 at 12:45 GMT
 
 % todo:
 
@@ -56,7 +57,7 @@ function [data]=attach(data,option,dep,ind)
 error(nargchk(3,4,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -73,8 +74,9 @@ try
     nrecs=numel(data);
 
     % get header info
-    leven=getlgc(data,'leven');
-    [npts,ncmp,b,delta,e]=getheader(data,'npts','ncmp','b','delta','e');
+    [npts,ncmp,b,delta,e,leven]=getheader(data,...
+        'npts','ncmp','b','delta','e','leven lgc');
+    leven=~strcmpi(leven,'false');
 
     % check option
     validopt={'beginning' 'ending' 'prepend' 'append'};
@@ -115,7 +117,7 @@ try
     end
 
     % check ind
-    if(nargin==3 && any(strcmpi(leven,'false')))
+    if(nargin==3 && any(~leven))
         error('seizmo:attach:INDnecessary',...
             ['IND argument must be given if ' ...
             'DATA has unevenly sampled records!']);
@@ -164,7 +166,7 @@ try
         oclass=str2func(class(data(i).dep));
 
         % unevenly spaced
-        if(strcmpi(leven{i},'false'))
+        if(~leven(i))
             % reclass attachment
             tmpd=oclass(dep{depidx(i)});
             oclassi=str2func(class(data(i).ind));

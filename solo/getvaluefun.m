@@ -54,9 +54,10 @@ function [value]=getvaluefun(data,func,type,scalar)
 %        Jan.  6, 2011 - nargchk fix, seizmofun/solofun rename,
 %                        recordfun/multifun rename
 %        Jan. 12, 2012 - minor doc update
+%        Mar. 13, 2012 - seizmocheck fix, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 12, 2012 at 18:25 GMT
+%     Last Updated Mar. 13, 2012 at 18:25 GMT
 
 % todo:
 
@@ -116,16 +117,16 @@ try
             end
         case 'ind'
             % fill .ind for evenly spaced arrays
-            even=~strcmpi(getlgc(data,'leven'),'false');
+            leven=~strcmpi(getheader(data,'leven lgc'),'false');
             
             % are any are evenly spaced?
-            if(any(even))
+            if(any(leven))
                 % pull header values
-                [b,delta,npts]=getheader(data(even),'b','delta','npts');
+                [b,delta,npts]=getheader(data(leven),'b','delta','npts');
                 
                 % loop over even, add .ind
-                idx=find(even);
-                for i=1:sum(even)
+                idx=find(leven);
+                for i=1:sum(leven)
                     data(idx(i)).ind=b(i)+(0:npts(i)-1)'*delta(i);
                 end
             end

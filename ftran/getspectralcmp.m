@@ -35,9 +35,10 @@ function [data]=getspectralcmp(data,cmp)
 %        Feb. 11, 2011 - mass seizmocheck fix
 %        Dec. 21, 2011 - add power spectra option, better checkheader usage
 %        Feb.  6, 2012 - power spectra output is in dBs
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  6, 2012 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -81,9 +82,8 @@ try
     cmp=cellstr(lower(cmp));
 
     % get header info
-    iftype=getenumid(data,'iftype');
-    [npts,ncmp,sdelta,nspts]=getheader(data,...
-        'npts','ncmp','sdelta','nspts');
+    [npts,ncmp,sdelta,nspts,iftype]=getheader(data,...
+        'npts','ncmp','sdelta','nspts','iftype id');
     npts=npts/2+1; % new npts
 
     % logical array for filetype

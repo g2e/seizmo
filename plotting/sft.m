@@ -112,9 +112,10 @@ function [varargout]=sft(data,varargin)
 %        Aug. 15, 2010 - linked x axes of record & spectragram, short idep
 %        June 24, 2011 - change name from stft to sft to avoid conflict
 %        Nov. 21, 2011 - bring up-to-date with plotting functions
+%        Mar.  9, 2012 - drop getenum* usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 21, 2011 at 18:25 GMT
+%     Last Updated Mar.  9, 2012 at 18:25 GMT
 
 % todo:
 % - different spectrogram methods? scaleogram?
@@ -169,16 +170,15 @@ try
         ceil(nrecs/size(opt.LINEWIDTH,1)),1);
     
     % check filetype (only timeseries or xy)
-    iftype=getenumid(data,'iftype');
+    iftype=getheader(data,'iftype id');
     spec=strcmpi(iftype,'irlim') | strcmpi(iftype,'iamph');
     
     % convert spectral to timeseries
     if(sum(spec)); data(spec)=idft(data(spec)); end
     
     % header info
-    idep=shortidep(getenumdesc(data,'idep'));
-    [b,npts,delta,ncmp,z6,kname]=getheader(data,...
-        'b','npts','delta','ncmp','z6','kname');
+    [b,npts,delta,ncmp,z6,kname,idep]=getheader(data,...
+        'b','npts','delta','ncmp','z6','kname','idep desc');
     z6=datenum(cell2mat(z6));
     
     % get markers info

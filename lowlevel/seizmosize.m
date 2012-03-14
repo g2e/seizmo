@@ -39,9 +39,10 @@ function [bytes,hbytes,dbytes]=seizmosize(data)
 %                        versioninfo caching support, added extra outputs
 %        Aug. 21, 2010 - nargchk fix
 %        Feb. 11, 2011 - minor doc reformatting
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 23:55 GMT
+%     Last Updated Mar. 13, 2012 at 23:55 GMT
 
 % todo:
 
@@ -59,9 +60,8 @@ oldversioninfocache=versioninfo_cache(true);
 % attempt size estimation
 try
     % header info
-    [npts,ncmp]=getheader(data,'npts','ncmp');
-    iftype=getenumid(data,'iftype');
-    leven=getlgc(data,'leven');
+    [npts,ncmp,iftype,leven]=getheader(data,...
+        'npts','ncmp','iftype id','leven lgc');
     
     % filetype
     count=strcmpi(iftype,'itime')...

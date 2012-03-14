@@ -24,9 +24,10 @@ function [data]=extract_plot_data(h)
 
 %     Version History:
 %        Apr. 19, 2011 - initial version
+%        Mar. 13, 2012 - use getheader improvements, code reduction
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 19, 2011 at 23:00 GMT
+%     Last Updated Mar. 13, 2012 at 23:00 GMT
 
 % todo:
 
@@ -56,7 +57,7 @@ data=get(rh,'userdata');
 if(iscell(data)); data=[data{:}]'; end
 
 % extract data
-leven=getlgc(data,'leven');
+leven=getheader(data,'leven lgc');
 for i=1:numel(data)
     switch leven{i}
         case 'true'  % evenly spaced
@@ -123,8 +124,12 @@ for i=1:numel(data)
     data{i}=rmfield(data{i},'index');
     
     % fixing amplitudes (due to normalization/offset)
-    [depmin,depmax]=getheader(data{i},'depmin','depmax');
+    [b,npts,delta,z6,leven,depmin,depmax]=getheader(data{i},...
+        'b','npts','delta','z6','leven lgc','depmin','depmax');
+    leven=~strcmpi(leven,'false');
+    z6=datenum(cell2mat(z6));
     for j=1:numel(data{i})
+        % fixing amplitudes (due to normalization/offset)
         dmax=max(data{i}(j).dep(:));
         dmin=min(data{i}(j).dep(:));
         if(dmax~=depmax(j) || dmin~=depmin(j))
@@ -133,15 +138,9 @@ for i=1:numel(data)
                 *data{i}(j).dep;
             data{i}(j).dep=data{i}(j).dep+depmin(j)-min(data{i}(j).dep(:));
         end
-    end
-    
-    % fixing timing of uneven records plotted in abs time
-    [b,npts,delta,z6]=getheader(data{i},'b','npts','delta','z6');
-    z6=datenum(cell2mat(z6));
-    leven=getlgc(data{i},'leven');
-    for j=1:numel(data{i})
-        if(strcmpi(leven{j},'false') ...
-                && (abs(b(j)-data{i}(j).ind(1))>b(j)*10*eps('single') ...
+        
+        % fixing timing of uneven records plotted in abs time
+        if(~leven && (abs(b(j)-data{i}(j).ind(1))>b(j)*10*eps('single') ...
                 || ((data{i}(j).ind(end)-data{i}(j).ind(1))...
                 /(npts(j)-1)-delta(j)>delta(j)*10*eps('single'))))
             data{i}(j).ind=(data{i}(j).ind-z6(j))*86400;

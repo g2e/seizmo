@@ -34,9 +34,10 @@ function [data,dep,ind]=detach(data,option,dpts)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Nov.  2, 2011 - don't allow xyz iftype, doc update, better
 %                        checkheader usage, set b/e to undef if detach all
+%        Mar. 13, 2012 - seizmocheck fix, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2011 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -44,7 +45,7 @@ function [data,dep,ind]=detach(data,option,dpts)
 error(nargchk(3,4,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -61,8 +62,9 @@ try
     nrecs=numel(data);
 
     % get header info
-    leven=getlgc(data,'leven');
-    [npts,b,delta,e]=getheader(data,'npts','b','delta','e');
+    [npts,b,delta,e,leven]=getheader(data,...
+        'npts','b','delta','e','leven lgc');
+    leven=~strcmpi(leven,'false');
 
     % check option
     validopt={'beginning' 'ending'};
@@ -98,7 +100,7 @@ try
     depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
     for i=1:nrecs
         % unevenly spaced
-        if(strcmpi(leven{i},'false'))
+        if(~leven(i))
             % extract/delete
             switch lower(option)
                 case 'beginning'

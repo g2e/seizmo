@@ -3,19 +3,20 @@ function [data]=removepolynomial(data,order)
 %
 %    Usage:    data=removepolynomial(data,order)
 %
-%    Description: REMOVEPOLYNOMIAL(DATA,ORDER) removes the polynomial trend
-%     of order ORDER from SEIZMO records.  For multi-component
-%     records, each component is dealt with separately.  It is highly
-%     recommended to combine this command with filtering operations to
-%     reduce edge effects that may lead to poor data quality.
+%    Description:
+%     REMOVEPOLYNOMIAL(DATA,ORDER) removes the polynomial trend of order
+%     ORDER from SEIZMO records.  For multi-component records, each
+%     component is dealt with separately.  It is highly recommended to
+%     combine this command with filtering operations to reduce edge effects
+%     that may lead to poor data quality.
 %
 %    Notes:
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Check out the difference various order polynomials make:
-%      plot1(removepolynomial(data(ones(1,10)),1:10))
+%     % Check out the difference various order polynomials make:
+%     plot1(removepolynomial(data(ones(1,10)),1:10))
 %
 %    See also: REMOVEMEAN, REMOVETREND, GETPOLYNOMIAL, TAPER,
 %              REMOVEDEADRECORDS
@@ -26,9 +27,11 @@ function [data]=removepolynomial(data,order)
 %        Jan. 30, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb.  2, 2010 - fix verbose bug, versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
+%        Mar. 13, 2012 - doc update, seizmocheck fix, leven fix, use
+%                        getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -36,7 +39,7 @@ function [data]=removepolynomial(data,order)
 error(nargchk(2,2,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -63,8 +66,9 @@ try
     end
 
     % header info
-    [delta,npts,ncmp]=getheader(data,'delta','npts','ncmp');
-    leven=getlgc(data,'leven');
+    [delta,npts,ncmp,leven]=getheader(data,...
+        'delta','npts','ncmp','leven lgc');
+    leven=~strcmpi(leven,'false');
     
     % detail message
     if(verbose)
@@ -87,13 +91,13 @@ try
         data(i).dep=double(data(i).dep);
 
         % evenly spaced
-        if(strcmp(leven(i),'true'))
+        if(leven(i))
             time=((0:npts(i)-1)*delta(i)).';
             for j=1:ncmp(i)
                 data(i).dep(:,j)=data(i).dep(:,j) ...
                     -polyval(polyfit(time,data(i).dep(:,j),order(i)),time);
             end
-            % unevenly spaced
+        % unevenly spaced
         else
             for j=1:ncmp(i)
                 data(i).dep(:,j)=data(i).dep(:,j)...

@@ -68,9 +68,10 @@ function [data,removed]=removeduplicates(data,varargin)
 %        Jan. 28, 2012 - drop SEIZMO global, doc update, better checkheader
 %                        usage
 %        Feb.  7, 2012 - merge to meld update
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -151,11 +152,11 @@ try
 
     % get header fields
     if(option.USEABSOLUTETIMING)
-        [b,e,ncmp,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=...
+        [b,e,ncmp,nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec,leven]=...
             getheader(data,'b','e','ncmp','nzyear','nzjday','nzhour',...
-            'nzmin','nzsec','nzmsec');
+            'nzmin','nzsec','nzmsec','leven lgc');
     else
-        [b,e,ncmp]=getheader(data,'b','e','ncmp');
+        [b,e,ncmp,leven]=getheader(data,'b','e','ncmp','leven lgc');
     end
     szreal=size(option.REQUIREDREALFIELDS); reqreal=cell(szreal);
     szchar=size(option.REQUIREDCHARFIELDS); reqchar=cell(szchar);
@@ -165,7 +166,7 @@ try
     if(prod(szchar)~=0)
         [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
     end
-    leven=~strcmpi(getlgc(data,'leven'),'false');
+    leven=~strcmpi(leven,'false');
 
     % get start and end of records in absolute time
     if(option.USEABSOLUTETIMING)

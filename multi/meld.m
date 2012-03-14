@@ -252,9 +252,10 @@ function [data]=meld(data,varargin)
 %                        disp+sprintf use fprintf, parse rewrite allows
 %                        more flexibility in option strings, only/skip
 %                        options replace merge* options
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 % - uneven support - just toss together and sort after?
@@ -300,14 +301,16 @@ try
 
     % get header fields
     if(option.USEABSOLUTETIMING)
-        [b,e,ncmp,delta,npts,depmin,depmax,depmen,...
+        [b,e,ncmp,delta,npts,depmin,depmax,depmen,leven,...
             nzyear,nzjday,nzhour,nzmin,nzsec,nzmsec]=getheader(data,...
             'b','e','ncmp','delta','npts','depmin','depmax','depmen',...
-            'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
+            'leven lgc','nzyear','nzjday','nzhour','nzmin','nzsec',...
+            'nzmsec');
         dt=[nzyear nzjday nzhour nzmin nzsec nzmsec];
     else
-        [b,e,ncmp,delta,npts,depmin,depmax,depmen]=getheader(data,...
-            'b','e','ncmp','delta','npts','depmin','depmax','depmen');
+        [b,e,ncmp,delta,npts,depmin,depmax,depmen,leven]=getheader(data,...
+            'b','e','ncmp','delta','npts','depmin','depmax','depmen',...
+            'leven lgc');
         dt=nan(nrecs,6);
     end
     szreal=size(option.REQUIREDREALFIELDS); reqreal=cell(szreal);
@@ -318,7 +321,7 @@ try
     if(prod(szchar)~=0)
         [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
     end
-    leven=~strcmp(getlgc(data,'leven'),'false');
+    leven=~strcmp(leven,'false');
 
     % get start and end of records in absolute time
     if(option.USEABSOLUTETIMING)

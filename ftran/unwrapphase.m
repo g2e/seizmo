@@ -37,9 +37,10 @@ function [data]=unwrapphase(data,tol)
 %        Feb.  3, 2010 - seizmoverbose support, added tol option
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
 %        Dec. 21, 2011 - doc update, better checkheader usage
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2011 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -85,7 +86,7 @@ try
     if(isscalar(tol)); tol=tol(ones(nrecs,1),1); end
     
     % get header info
-    iftype=getenumid(data,'iftype');
+    iftype=getheader(data,'iftype id');
     
     % find spectral
     rlim=strcmpi(iftype,'irlim');

@@ -3,21 +3,23 @@ function [data]=stretch(data,factor)
 %
 %    Usage:    data=stretch(data,factor)
 %
-%    Description: STRETCH(DATA,FACTOR) upsamples SEIZMO records by an 
-%     integer FACTOR.  Anti-aliasing is not an issue so there is no limit 
-%     imposed on the stretch factor.  Cascades are allowed regardless.  
-%     Uses the Matlab function interp (Signal Processing Toolbox).
+%    Description:
+%     STRETCH(DATA,FACTOR) upsamples SEIZMO records by an integer FACTOR.
+%     Anti-aliasing is not an issue so there is no limit imposed on the
+%     stretch factor.  Cascades are allowed regardless.  Uses the Matlab
+%     function interp (Signal Processing Toolbox).  Detrending and tapering
+%     records beforehand will help to suppress edge effects.
 %
 %    Notes:
 %
 %    Header changes: DELTA, NPTS, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples: 
-%     To double samplerates:
-%      data=stretch(data,2)
+%     % To double samplerates:
+%     data=stretch(data,2);
 %
-%     To cascade to a samplerate 40 times higher:
-%      data=stretch(data,[5 8])
+%     % To cascade to a samplerate 40 times higher:
+%     data=stretch(data,[5 8]);
 %
 %    See also: SQUISH, SYNCRATES, INTERPOLATE
 
@@ -37,9 +39,11 @@ function [data]=stretch(data,factor)
 %                        improved error messages
 %        Feb.  2, 2010 - versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
+%        Mar. 13, 2012 - doc update, seizmocheck fix, better checkheader
+%                        usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -47,7 +51,7 @@ function [data]=stretch(data,factor)
 error(nargchk(2,2,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % empty factor
 if(isempty(factor)); return; end
@@ -58,7 +62,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt convolution
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'FALSE_LEVEN','ERROR',...
+        'NONTIME_IFTYPE','ERROR');
 
     % verbosity
     verbose=seizmoverbose;
@@ -68,8 +74,6 @@ try
 
     % get header info
     [delta,npts,ncmp]=getheader(data,'delta','npts','ncmp');
-    iftype=getenumid(data,'iftype');
-    leven=getlgc(data,'leven');
 
     % check factor
     if(~isnumeric(factor) || any(factor<1) || any(fix(factor)~=factor))
@@ -84,21 +88,6 @@ try
     % overall factor
     of=prod(factor);
     delta=delta*of;
-
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:stretch:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
-
-    % cannot do unevenly sampled records
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:stretch:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    end
 
     % detail message
     if(verbose)

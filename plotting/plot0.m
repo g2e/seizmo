@@ -66,9 +66,10 @@ function [varargout]=plot0(data,varargin)
 %        Feb.  6, 2012 - better getheader usage, set displayname to kname
 %                        string, fix legend coloring, fix ncmp>1 brokeness
 %        Mar.  6, 2012 - don't use depmin/depmax from header
+%        Mar. 13, 2012 - make sure dep* is updated for extract_plot_data
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  6, 2012 at 23:00 GMT
+%     Last Updated Mar. 13, 2012 at 23:00 GMT
 
 % todo:
 % - markers only based on 1st cmp data values
@@ -113,6 +114,11 @@ goodfiles=find(time | spec)';
 
 % convert spectral to timeseries
 if(sum(spec)); data(spec)=idft(data(spec)); end
+
+% fix dep*
+oldcheckheader_state=checkheader_state(true);
+data=checkheader(data,'all','ignore','old_dep_stats','fix');
+checkheader_state(oldcheckheader_state);
 
 % header info
 [b,npts,delta,z6,kname,leven]=getheader(data,...

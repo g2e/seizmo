@@ -4,12 +4,13 @@ function [data]=syncrates(data,sr,tol)
 %    Usage:    data=syncrates(data,sr)
 %              data=syncrates(data,sr,tol)
 %
-%    Description: SYNCRATES(DATA,SR) syncronizes the sample rates of SEIZMO 
-%     records in DATA to the sample rate SR.  A fir filter is used to
-%     avoid aliasing issues, but this can cause edge effects if the records
-%     deviate from zero strongly at the start/end of the record.  Typically
-%     using REMOVETREND and TAPER on records beforehand helps to limit the
-%     edge effects.  Uses the Matlab function RESAMPLE (Signal Processing
+%    Description:
+%     SYNCRATES(DATA,SR) syncronizes the sample rates of SEIZMO records in
+%     DATA to the sample rate SR.  A fir filter is used to avoid aliasing
+%     issues, but this can cause edge effects if the records deviate from
+%     zero strongly at the start/end of the record.  Typically using
+%     REMOVETREND and TAPER on records beforehand helps to limit the edge
+%     effects.  Uses the Matlab function RESAMPLE (Signal Processing
 %     Toolbox).
 %
 %     SYNCRATES(DATA,SR,TOL) specifies the maximum tolerance TOL that the
@@ -25,8 +26,8 @@ function [data]=syncrates(data,sr,tol)
 %    Header Changes: DELTA, NPTS, DEPMEN, DEPMIN, DEPMAX, E
 %
 %    Examples:
-%     Change all records to 5 samples per second:
-%      data=syncrates(data,5)
+%     % Change all records to 5 samples per second:
+%     data=syncrates(data,5);
 %
 %    See also: INTERPOLATE, IIRFILTER, SQUISH, STRETCH
 
@@ -53,9 +54,11 @@ function [data]=syncrates(data,sr,tol)
 %                        improved error messages, use RRAT (fixed RAT)
 %        Feb.  3, 2010 - make sure checkheader is skipped for trouble case
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
+%        Mar. 13, 2012 - disallow spectral syncing, doc update, better
+%                        checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -71,7 +74,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'FALSE_LEVEN','ERROR',...
+        'NONTIME_IFTYPE','ERROR');
     
     % turn off header checking
     oldcheckheaderstate=checkheader_state(false);
@@ -93,8 +98,6 @@ try
 
     % get header info
     [delta,b]=getheader(data,'delta','b');
-    iftype=getenumid(data,'iftype');
-    leven=~strcmpi(getlgc(data,'leven'),'false');
 
     % check rate
     if(~isnumeric(sr) || ~isscalar(sr) || sr<=0)
@@ -107,20 +110,6 @@ try
     if(~isscalar(tol) || ~isreal(tol))
         error('seizmo:syncrates:badInput',...
             'TOL must be a scalar real!');
-    end
-
-    % require evenly sampled records only
-    if(any(~leven))
-        error('seizmo:syncrates:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(~leven)) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    end
-
-    % require non-xyz records
-    if(any(strcmpi(iftype,'ixyz')))
-        error('seizmo:syncrates:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(iftype,'ixyz'))) ...
-            '\nInvalid operation on XYZ record(s)!']);
     end
 
     % find fraction numerator/denominator of sampling

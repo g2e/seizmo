@@ -41,9 +41,10 @@ function [data]=rlim2amph(data)
 %        Apr.  9, 2010 - minor bug fix
 %        Feb. 11, 2011 - mass nargchk fix
 %        Dec. 21, 2011 - doc update, changed example (it was bad)
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2011 at 12:45 GMT
+%     Last Updated Mar. 13, 2012 at 12:45 GMT
 
 % todo:
 
@@ -69,7 +70,7 @@ try
     nrecs=numel(data);
     
     % retreive header info
-    iftype=getenumid(data,'iftype');
+    iftype=getheader(data,'iftype id');
 
     % find spectral
     rlim=strcmpi(iftype,'irlim');

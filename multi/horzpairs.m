@@ -63,9 +63,10 @@ function [idx1,idx2,idx3]=horzpairs(data,varargin)
 %        Feb. 11, 2011 - dropped versioninfo caching
 %        Jan. 28, 2012 - doc update, char to strnlen, drop SEIZMO global
 %        Feb.  7, 2012 - fixed a couple warning ids
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -124,9 +125,8 @@ try
     end
     
     % get cmpinc, cmpaz, kname
-    [cmpinc,cmpaz,kname,ncmp]=...
-        getheader(data,'cmpinc','cmpaz','kname','ncmp');
-    leven=getlgc(data,'leven');
+    [cmpinc,cmpaz,kname,ncmp,leven]=getheader(data,...
+        'cmpinc','cmpaz','kname','ncmp','leven lgc');
     
     % get soft requirements
     szreal=size(option.REQUIREDREALFIELDS); reqreal=cell(szreal);

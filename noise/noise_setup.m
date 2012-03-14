@@ -61,7 +61,7 @@ function []=noise_setup(indir,outdir,varargin)
 %     % Setup for 15 minute time sections and 80% overlap:
 %     noise_setup('some/dir','my_15min','l',15,'o',12)
 %
-%    See also: NOISE_PROCESS, NOISE_STACK, NOISE_WORKFLOW
+%    See also: NOISE_PROCESS, NOISE_STACK, NOISE_OVERVIEW
 
 %     Version History:
 %        June 18, 2010 - initial version

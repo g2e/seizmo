@@ -65,9 +65,10 @@ function [data]=idft(data,symflag)
 %        Feb. 11, 2011 - mass seizmocheck fix
 %        Dec. 21, 2011 - doc update, better checkheader usage
 %        Feb.  5, 2012 - minor doc update, symflag option
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2012 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -107,9 +108,8 @@ try
     end
 
     % retreive header info
-    iftype=getenumid(data,'iftype');
-    [b,delta,sb,sdelta,npts,nspts]=...
-        getheader(data,'b','delta','sb','sdelta','npts','nspts');
+    [b,delta,sb,sdelta,npts,nspts,iftype]=getheader(data,...
+        'b','delta','sb','sdelta','npts','nspts','iftype id');
     e=sb+(nspts-1).*sdelta;
     
     % detail message

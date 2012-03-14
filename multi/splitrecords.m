@@ -26,8 +26,8 @@ function [data,idx]=splitrecords(data)
 %     data=joinrecords(splitrecords(data));
 %
 %     % Undo SPLITRECORDS (even iftype change):
-%     [splitdata,idx]=splitrecords(data);
 %     iftype=getheader(data,'iftype');
+%     [splitdata,idx]=splitrecords(data);
 %     savedata=data;
 %     for i=1:max(idx)
 %         data(i)=joinrecords(splitdata(idx==i));
@@ -45,9 +45,10 @@ function [data,idx]=splitrecords(data)
 %        Feb.  3, 2010 - fixed verbose msg bug, fixed bug when no mcmp
 %        Jan.  6, 2011 - recordfun/multifun rename
 %        Nov.  2, 2011 - doc update
+%        Mar. 13, 2012 - use getheader improvements, fix example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2011 at 16:40 GMT
+%     Last Updated Mar. 13, 2012 at 16:40 GMT
 
 % todo:
 
@@ -73,14 +74,11 @@ try
     idx=(1:nrecs).';
 
     % get filetype and ncmp
-    iftype=getenumid(data,'iftype');
-    ncmp=getheader(data,'ncmp');
+    [ncmp,iftype]=getheader(data,'ncmp','iftype id');
 
     % double ncmp for spectral
     isspectral=strcmpi(iftype,'irlim') | strcmpi(iftype,'iamph');
-    if(any(isspectral))
-        ncmp(isspectral)=ncmp(isspectral)*2;
-    end
+    if(any(isspectral)); ncmp(isspectral)=ncmp(isspectral)*2; end
 
     % total new records
     mcmp=find(ncmp.'>1);

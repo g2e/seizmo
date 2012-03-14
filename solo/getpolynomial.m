@@ -3,18 +3,18 @@ function [p]=getpolynomial(data,order)
 %
 %    Usage:    p=getpolynomial(data,order)
 %
-%    Description: P=GETPOLYNOMIAL(DATA,ORDER) gets the polynomial trend
-%     of order ORDER from SEIZMO records.  For multi-component records,
-%     each component is dealt with separately.  Polynomial coefficients are
-%     returned in cell array P, with each cell corresponding to each record
-%     in DATA and each row in each cell giving the coefficients for each
-%     component.
+%    Description:
+%     P=GETPOLYNOMIAL(DATA,ORDER) gets the polynomial trend of order ORDER
+%     from SEIZMO records.  For multi-component records, each component is
+%     dealt with separately.  Polynomial coefficients are returned in cell
+%     array P, with each cell corresponding to each record in DATA and each
+%     row in each cell giving the coefficients for each component.
 %
 %    Notes:
 %
 %    Examples:
-%     Get various polynomial fits to a record:
-%      getpolynomial(data(ones(1,5)),0:4)
+%     % Get various polynomial fits to a record:
+%     getpolynomial(data(ones(1,5)),0:4)
 %
 %    See also: REMOVEMEAN, REMOVETREND, REMOVEPOLYNOMIAL, TAPER,
 %              REMOVEDEADRECORDS
@@ -26,9 +26,11 @@ function [p]=getpolynomial(data,order)
 %                        improved messaging
 %        Feb.  2, 2010 - versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
+%        Mar. 13, 2012 - doc update, seizmocheck fix, leven fix, use
+%                        getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -36,7 +38,7 @@ function [p]=getpolynomial(data,order)
 error(nargchk(2,2,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -63,8 +65,8 @@ try
     end
 
     % header info
-    [delta,npts]=getheader(data,'delta','npts');
-    leven=getlgc(data,'leven');
+    [delta,npts,leven]=getheader(data,'delta','npts','leven lgc');
+    leven=~strcmpi(leven,'false');
     
     % detail message
     if(verbose)
@@ -86,13 +88,13 @@ try
         data(i).dep=double(data(i).dep);
 
         % evenly spaced
-        if(strcmp(leven(i),'true'))
+        if(leven(i))
             time=((0:npts(i)-1)*delta(i)).';
             for j=1:size(data(i).dep,2)
                 p{i}(j,1:order(i)+1)=...
                     polyfit(time,data(i).dep(:,j),order(i));
             end
-            % unevenly spaced
+        % unevenly spaced
         else
             for j=1:size(data(i).dep,2)
                 p{i}(j,1:order(i)+1)=...

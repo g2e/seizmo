@@ -80,9 +80,10 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %        May  20, 2011 - add some code to workaround matlab write bug
 %        Mar.  1, 2012 - octave ascii save workaround
 %        Mar.  5, 2012 - allow no written output, odir/figdir bugfix
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2012 at 13:35 GMT
+%     Last Updated Mar. 13, 2012 at 13:35 GMT
 
 % todo:
 
@@ -351,7 +352,7 @@ for i=1:numel(s)
     
     % check if all synthetics (only reflectivity synthetics for now)
     % - reflect2seizmo conventions here
-    isynth=unique(getenumid(data,'isynth'));
+    isynth=unique(getheader(data,'isynth id'));
     if(isscalar(isynth) && strcmpi(isynth,'ireflect'))
         issynth=true;
         [mod1,mod2,mod3]=getheader(data(1),'kuser0','kuser1','kuser2');

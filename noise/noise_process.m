@@ -95,7 +95,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     noise_process('15raw','15xc5',[],'sr',5,'xcmaxlag',500)
 %     % We adjusted the lag time b/c 15 minutes is 900 seconds.
 %
-%    See also: NOISE_SETUP, NOISE_STACK, NOISE_WORKFLOW
+%    See also: NOISE_SETUP, NOISE_STACK, NOISE_OVERVIEW
 
 %     Version History:
 %        Nov. 22, 2011 - initial version (only first 6 steps)
@@ -178,7 +178,7 @@ end
 fs=filesep;
 
 % parallel processing setup (up to 8 instances)
-%matlabpool(4); % PARALLEL
+matlabpool(4); % PARALLEL
 
 % get year directories and time-section directories
 dirs=xdir([indir fs]);
@@ -218,8 +218,8 @@ verbose=seizmoverbose(false);
 if(verbose); disp('PROCESSING SEISMIC DATA FOR NOISE ANALYSIS'); end
 
 % loop over time section directories
-for i=1:numel(tsdirs) % SERIAL
-    %parfor j=1:numel(tsdirs) % PARALLEL
+%for i=1:numel(tsdirs) % SERIAL
+parfor j=1:numel(tsdirs) % PARALLEL
     % read the header
     try
         data=readheader(...
@@ -634,7 +634,7 @@ for i=1:numel(tsdirs) % SERIAL
         checkheader_state(oldcheckheaderstate);
         
         % parallel processing takedown & fix verbosity
-        %matlabpool close; % PARALLEL
+        matlabpool close; % PARALLEL
         seizmoverbose(verbose);
         
         % rethrow error
@@ -643,7 +643,7 @@ for i=1:numel(tsdirs) % SERIAL
 end
 
 % parallel processing takedown & fix verbosity
-%matlabpool close; % PARALLEL
+matlabpool close; % PARALLEL
 seizmoverbose(verbose);
 
 end

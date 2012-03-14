@@ -24,9 +24,11 @@ function [zx]=zerocrossings(data)
 
 %     Version History:
 %        Jan. 18, 2011 - initial version
+%        Mar. 13, 2012 - leven bugfix, better checkheader usage,
+%                        seizmocheck fix, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 12:25 GMT
+%     Last Updated Mar. 13, 2012 at 12:25 GMT
 
 % todo:
 
@@ -39,29 +41,16 @@ error(seizmocheck(data,'dep'));
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
-% attempt header check
+% attempt zero-crossings discovery
 try
     % check headers
     data=checkheader(data);
     
-    % turn off header checking
-    oldcheckheaderstate=checkheader_state(false);
-catch
-    % toggle checking back
-    seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror);
-end
-
-% attempt zero-crossings discovery
-try
     % number of records
     nrecs=numel(data);
     
     % get pertinent header info
-    [b,delta]=getheader(data,'b','delta');
-    leven=getlgc(data,'leven');
+    [b,delta,leven]=getheader(data,'b','delta','leven lgc');
     
     % loop over each record
     zx=cell(nrecs,1);
@@ -70,7 +59,7 @@ try
         idx=find(filter([1 1],1,sign(data(i).dep))==0)-1;
         
         % get times based on whether evenly spaced or not
-        if(strcmp(leven,'false'))
+        if(~leven(i))
             t1=data(i).ind(idx);
             t2=data(i).ind(idx+1);
         else
@@ -85,11 +74,9 @@ try
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror);

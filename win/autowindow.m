@@ -42,17 +42,18 @@ function [win,peak,bad]=autowindow(data,thresh,reach,env,warn)
 %     Version History:
 %        May  20, 2010 - initial version
 %        Nov.  2, 2011 - doc update
+%        Mar. 13, 2012 - seizmocheck fix, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  2, 2011 at 18:50 GMT
+%     Last Updated Mar. 13, 2012 at 18:50 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(3,5,nargin));
 
-% check struct
-versioninfo(data,'dep');
+% check data structure
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -107,9 +108,9 @@ try
     if(isscalar(env)); env(1:nrecs,1)=env; end
     
     % header info
-    leven=getlgc(data,'leven');
+    [b,e,delta,npts,leven]=getheader(data,...
+        'b','e','delta','npts','leven lgc');
     leven=~strcmpi(leven,'false');
-    [b,e,delta,npts]=getheader(data,'b','e','delta','npts');
     
     % envelope those desired
     if(any(env)); data(env)=envelope(data(env)); end
@@ -124,7 +125,12 @@ try
     win=nan(nrecs,2); bad=false(nrecs,1); peak=nan(nrecs,1);
     for i=1:nrecs
         % handle dataless
-        if(npts(i)==0); bad(i)=true; continue; end
+        if(npts(i)==0);
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            bad(i)=true;
+            continue;
+        end
         
         % get peak
         [pval,pidx]=max(data(i).dep);

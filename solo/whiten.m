@@ -6,13 +6,13 @@ function [data]=whiten(data,width,units,varargin)
 %              data=whiten(data,width,units)
 %              data=whiten(data,width,units,'optionname',optionvalue,...)
 %
-%    Description: WHITEN(DATA) will perform spectral normalization (aka
-%     whitening) on records in the SEIZMO structure DATA.  Normalization is
-%     performed by dividing the complex spectrum by a smoothed version of
-%     the amplitude spectrum.  Smoothing utilizes a 41-sample sliding mean.
-%     This is NOT equivalent to the 'whiten' command in SAC (see function
-%     PREWHITEN).  This operation is particularly suited for seismic noise
-%     studies.
+%    Description:
+%     WHITEN(DATA) will perform spectral normalization (aka whitening) on
+%     records in the SEIZMO structure DATA.  Normalization is performed by
+%     dividing the complex spectrum by a smoothed version of the amplitude
+%     spectrum.  Smoothing utilizes a 41-sample sliding mean.  This is NOT
+%     equivalent to the 'whiten' command in SAC (see function PREWHITEN).
+%     This operation is particularly suited for seismic noise studies.
 %
 %     WHITEN(DATA,WIDTH) sets the width of the smoothing window.  WIDTH is
 %     in Hz.  The default value is 0.001 Hz (1 mHz).  Note this width is
@@ -38,8 +38,8 @@ function [data]=whiten(data,width,units,varargin)
 %    Header Changes: DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
-%     Spectral normalization returns much whiter noise:
-%      plot1([data(1) whiten(data(1))])
+%     % Spectral normalization returns much whiter noise:
+%     plot1([data(1) whiten(data(1))])
 %
 %    See also: SLIDINGMEAN, PREWHITEN, UNPREWHITEN
 
@@ -55,9 +55,11 @@ function [data]=whiten(data,width,units,varargin)
 %        Jan.  6, 2011 - update for seizmofun/solofun name change, fix
 %                        nargchk, use versioninfo
 %        Feb. 15, 2011 - minor doc update
+%        Mar. 13, 2012 - doc update, seizmocheck fix, better checkheader
+%                        usage, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2011 at 10:05 GMT
+%     Last Updated Mar. 13, 2012 at 10:05 GMT
 
 % todo:
 
@@ -65,7 +67,7 @@ function [data]=whiten(data,width,units,varargin)
 error(nargchk(1,inf,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -73,7 +75,9 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt header check
 try
     % check header
-    data=checkheader(data);
+    data=checkheader(data,...
+        'FALSE_LEVEN','ERROR',...
+        'XYZ_IFTYPE','ERROR');
     
     % turn off header checking
     oldcheckheaderstate=checkheader_state(false);
@@ -97,23 +101,7 @@ try
     if(verbose); disp('Beginning Spectral Whitening of Record(s)'); end
     
     % get some header fields
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
-
-    % cannot do xyz records
-    if(any(strcmpi(iftype,'ixyz')))
-        error('seizmo:whiten:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ', ...
-            find(~strcmpi(iftype,'ixyz'))) ...
-            '\nInvalid operation on XYZ record(s)!']);
-    end
-
-    % cannot do unevenly sampled records
-    if(any(strcmpi(leven,'false')))
-        error('seizmo:whiten:badLEVEN',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(leven,'false'))) ...
-            '\nInvalid operation on unevenly sampled record(s)!']);
-    end
+    iftype=getheader(data,'iftype id');
     
     % check window options
     if(nargin<2 || isempty(width)); width=0.001; end

@@ -107,9 +107,10 @@ function [data,pz]=removesacpz(data,varargin)
 %        June  9, 2011 - changing freqlimits to taperlimits, output taper
 %                        limits to terminal, fixed bomb-out bug
 %        Feb.  3, 2012 - doc update
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2012 at 20:30 GMT
+%     Last Updated Mar. 13, 2012 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -174,8 +175,8 @@ try
     nrecs=numel(data);
     
     % get header info
-    iftype=getenumid(data,'iftype');
-    [npts,ncmp,delta,e]=getheader(data,'npts','ncmp','delta','e');
+    [npts,ncmp,delta,e,iftype]=getheader(data,...
+        'npts','ncmp','delta','e','iftype id');
     
     % get spectral
     rlim=strcmpi(iftype,'irlim');

@@ -4,15 +4,16 @@ function [data]=integrate(data,option)
 %    Usage:    data=integrate(data)
 %              data=integrate(data,method)
 %
-%    Description: INTEGRATE(DATA) will integrate SEIZMO records in DATA
-%     using the assumption that the record's points are at the midpoints of
-%     the integrated record and that their values give the difference
-%     between those points.  This operation will add 1 point to the
-%     records, starting with the first point set to 0.  This also is
-%     attempted for uneven records but may fail if the midpoint assumption
-%     cannot be true (the independent component must increase
-%     monotonically).  The trapezoidal rule is used as a fallback in this
-%     instance (a warning is issued as well).
+%    Description:
+%     INTEGRATE(DATA) will integrate SEIZMO records in DATA using the
+%     assumption that the record's points are at the midpoints of the
+%     integrated record and that their values give the difference between
+%     those points.  This operation will add 1 point to the records,
+%     starting with the first point set to 0.  This also is attempted for
+%     uneven records but may fail if the midpoint assumption cannot be true
+%     (the independent component must increase monotonically).  The
+%     trapezoidal rule is used as a fallback in this instance (a warning is
+%     issued as well).
 %
 %     INTEGRATE(DATA,METHOD) allows choosing the integration method.  The
 %     methods allowed are:
@@ -36,8 +37,8 @@ function [data]=integrate(data,option)
 %    Header changes: B, E, NPTS, DELTA, DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
-%     Check how good integrate undoes differentiate:
-%      plot1(subtractrecords(data,integrate(differentiate(data))))
+%     % Check how good integrate undoes differentiate:
+%     plot1(subtractrecords(data,integrate(differentiate(data))))
 %
 %    See also: DIFFERENTIATE, DIVIDEOMEGA, MULTIPLYOMEGA
 
@@ -54,9 +55,11 @@ function [data]=integrate(data,option)
 %        May   6, 2010 - fixed ncmp bug, slimmer code for units exchange,
 %                        fixed interaction of midpoint warning & scrollbar
 %        Feb. 11, 2011 - mass nargchk fix
+%        Mar. 13, 2012 - doc update, seizmocheck fix, better checkheader
+%                        usage, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 
@@ -64,7 +67,7 @@ function [data]=integrate(data,option)
 error(nargchk(1,2,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -72,7 +75,8 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt integration
 try
     % check data header
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -99,17 +103,9 @@ try
     end
 
     % get header info
-    even=~strcmpi('false',getlgc(data,'leven'));
-    [idep,iftype]=getenumid(data,'idep','iftype');
-    [b,e,delta,npts,ncmp]=getheader(data,'b','e','delta','npts','ncmp');
-    
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:integrate:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
+    [b,e,delta,npts,ncmp,leven,idep]=getheader(data,...
+        'b','e','delta','npts','ncmp','leven lgc','idep id');
+    leven=~strcmpi(leven,'false');
     
     % detail message
     if(verbose)
@@ -138,7 +134,7 @@ try
             % start with zero at the first point, and shoot to npts+1
             % or just to npts for uneven (we can't get the time of npts+1)
             case {'rect' 'rectangular'}
-                if (even(i))
+                if (leven(i))
                     data(i).dep=[zeros(1,ncmp(i)); ...
                         delta(i)*cumsum(data(i).dep,1)];
                     e(i)=e(i)+delta(i);
@@ -154,7 +150,7 @@ try
                 % slope at point gives offset of point from the last point
                 %
                 % don't add 1st point (it's zero) to keep npts the same
-                if (even(i))
+                if (leven(i))
                     data(i).dep=delta(i)*cumsum(data(i).dep,1);
                 else
                     dt=diff(double(data(i).ind),1,1);
@@ -168,7 +164,7 @@ try
                 %
                 % start first output point at time of first input point
                 % setting it to zero, as we have to start somewhere
-                if (even(i))
+                if (leven(i))
                     data(i).dep=delta(i)*cumtrapz(data(i).dep,1);
                 else
                     data(i).dep=...
@@ -179,7 +175,7 @@ try
                 % and shifts times to midpoints
                 %
                 % this is a -delta/2 time shift from trapezoidal
-                if (even(i))
+                if (leven(i))
                     data(i).dep=delta(i)*cumtrapz(data(i).dep,1);
                     data(i).dep(1,:)=[];
                     b(i)=b(i)+delta(i)/2;
@@ -205,7 +201,7 @@ try
                 % setting the first output point (half delta
                 % before the first input point) to zero, we
                 % use the slope to get to the subsequent points
-                if(even(i))
+                if(leven(i))
                     data(i).dep=[zeros(1,ncmp(i)); ...
                         delta(i)*cumsum(data(i).dep,1)];
                     b(i)=b(i)-delta(i)/2;

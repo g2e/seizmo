@@ -7,9 +7,10 @@ function [data]=taper(data,w,o,type,opt)
 %              data=taper(data,width,offset,type)
 %              data=taper(data,width,offset,type,option)
 %
-%    Description: TAPER(DATA) tapers data records with a Hann taper set to
-%     vary from 0 to 1 over 5% of every records' length on each end.  This
-%     matches SAC's default taper command.
+%    Description:
+%     TAPER(DATA) tapers data records with a Hann taper set to vary from 0
+%     to 1 over 5% of every records' length on each end.  This matches
+%     SAC's default taper command.
 %
 %     TAPER(DATA,WIDTH) allows the taper width to be set.  WIDTH should be
 %     a number anywhere from 0.0 (no taper) to 0.5 (taper from the edge to
@@ -64,14 +65,14 @@ function [data]=taper(data,w,o,type,opt)
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Taper data with a gaussian that is applied to the first and last 10th
-%     of the record with the taper forced to represent a gaussian curve 
-%     from peak out to 4 standard deviations:
-%      data=taper(data,0.1,0,'gausswin',4);
+%     % Taper data with a gaussian that is applied to the first and last
+%     % 10th of the record with the taper forced to represent a gaussian
+%     % curve from peak out to 4 standard deviations:
+%     data=taper(data,0.1,0,'gausswin',4);
 %
-%     Now do a similar taper but start the leading taper after the first
-%     third and the trailing taper before the final eighth:
-%      data=taper(data,0.1,[1/3 0.125],'gausswin',4)
+%     % Now do a similar taper but start the leading taper after the first
+%     % third and the trailing taper before the final eighth:
+%     data=taper(data,0.1,[1/3 0.125],'gausswin',4)
 %
 %    See also: REMOVEMEAN, REMOVETREND, REMOVEPOLYNOMIAL
 
@@ -103,9 +104,11 @@ function [data]=taper(data,w,o,type,opt)
 %        Jan. 30, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb.  2, 2010 - versioninfo caching
 %        Aug. 25, 2010 - drop versioninfo caching, nargchk fix
+%        Mar. 13, 2012 - doc update, seizmocheck fix, better checkheader
+%                        usage, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 25, 2010 at 21:00 GMT
+%     Last Updated Mar. 13, 2012 at 21:00 GMT
 
 % todo:
 
@@ -113,15 +116,16 @@ function [data]=taper(data,w,o,type,opt)
 error(nargchk(1,5,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt taper
 try
-    % check headers (versioninfo cache update)
-    data=checkheader(data);
+    % check headers
+    data=checkheader(data,...
+        'XYZ_IFTYPE','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -217,16 +221,8 @@ try
     end
 
     % header info
-    [b,e,delta,npts,ncmp]=getheader(data,'b','e','delta','npts','ncmp');
-    leven=getlgc(data,'leven');
-    iftype=getenumid(data,'iftype');
-
-    % check for unsupported filetypes
-    if(any(strcmpi(iftype,'ixyz')))
-        error('seizmo:taper:illegalFiletype',...
-            ['Record(s):\n' sprintf('%d ',find(strcmpi(iftype,'ixyz'))) ...
-            '\nIllegal operation on XYZ record(s)!']);
-    end
+    [b,e,delta,npts,ncmp,leven,iftype]=getheader(data,...
+        'b','e','delta','npts','ncmp','leven lgc','iftype id');
     
     % detail message
     if(verbose)

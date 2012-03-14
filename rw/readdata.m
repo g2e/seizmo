@@ -66,7 +66,7 @@ function [data,failed]=readdata(data,varargin)
 %     % it to include only time series files, and then read in the
 %     % associated time series data:
 %     data=readheader('*')
-%     data=data(strcmpi(getenumid(data,'iftype'),'itime'))
+%     data=data(strcmpi(getheader(data,'iftype id'),'itime'))
 %     data=readdata(data)
 %
 %    See also: READHEADER, READDATAWINDOW, READSEIZMO, WRITESEIZMO, GETLGC,
@@ -111,9 +111,10 @@ function [data,failed]=readdata(data,varargin)
 %                        read files with inconsistent size if desired
 %        Jan. 28, 2012 - use a seizmosize override for speed
 %        Jan. 30, 2012 - debugging, code reformatted, use gh improvements
+%        Mar. 13, 2012 - fix example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 

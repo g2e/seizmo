@@ -9,6 +9,8 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
+seizmoverbose still does not handle parallel toolbox
+
 makearrivals == creates .misc.arrivals
 findarrivals == searches .misc.arrivals
 arrivals2picks == push .misc.arrivals to header pick fields (addarrivals)
@@ -23,7 +25,6 @@ rotate_correlations
     - works for unrotated
 
 fk stuff
-x	add weighting to all
     rayleigh/love dispersion estimation
         - give it a slowness/velocity range
         - can we fit it as azimuthal anisotropy?

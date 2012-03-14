@@ -3,14 +3,14 @@ function [data]=make_adjoint_source(data,win)
 %
 %    Usage:    data=make_adjoint_source(data,win)
 %
-%    Description: DATA=MAKE_ADJOINT_SOURCE(DATA,WIN) converts synthetic
-%     records created through a forward simulation to adjoint source
-%     records for creation of finite frequency kernels.  This basically
-%     windows the negative derivitive of the records in SEIZMO struct DATA
-%     using the WIN parameter (must be size NRECSx2 where NRECS is the
-%     number of records in DATA).  Records are then scaled by their
-%     autocorrelation.  Records must be in displacement and must be
-%     timeseries or xy data.
+%    Description:
+%     DATA=MAKE_ADJOINT_SOURCE(DATA,WIN) converts synthetic records created
+%     through a forward simulation to adjoint source records for creation
+%     of finite frequency kernels.  This basically windows the negative
+%     derivitive of the records in SEIZMO struct DATA using the WIN
+%     parameter (must be size NRECSx2 where NRECS is the number of records
+%     in DATA).  Records are then scaled by their autocorrelation.  Records
+%     must be in displacement and must be timeseries or xy data.
 %
 %    Notes:
 %     - Really just for SPECFEM3D.
@@ -18,14 +18,14 @@ function [data]=make_adjoint_source(data,win)
 %    Header changes: DEPMIN, DEPMEN, DEPMAX
 %
 %    Examples:
-%     Generally this goes something along the following:
-%      data=readseizmo('*');
-%      gcarc=getheader(data,'gcarc');
-%      data(gcarc<100 | gcarc>150)=[];
-%      data=addarrivals(data,'phases','Pdiff');
-%      pdiff=getarrival(data,'Pdiff');
-%      data=make_adjoint_source(data,pdiff+[-20 80]);
-%      writeseizmo(data,'append','.adj');
+%     % Generally this goes something along the following:
+%     data=readseizmo('*');
+%     gcarc=getheader(data,'gcarc');
+%     data(gcarc<100 | gcarc>150)=[];
+%     data=addarrivals(data,'phases','Pdiff');
+%     pdiff=getarrival(data,'Pdiff');
+%     data=make_adjoint_source(data,pdiff+[-20 80]);
+%     writeseizmo(data,'append','.adj');
 %
 %    See also: MAKE_SOURCE_TIMEFUNCTION, CONVOLVE_SOURCE_TIMEFUNCTION,
 %              DECONVOLVE_SOURCE_TIMEFUNCTION
@@ -34,9 +34,11 @@ function [data]=make_adjoint_source(data,win)
 %        Dec.  8, 2009 - initial version
 %        Mar.  1, 2010 - updated for newer checking methods
 %        Feb.  1, 2011 - update for triangletf changes
+%        Mar. 13, 2012 - doc update, use getheader improvements,
+%                        seizmoverbose support, better checkheader usage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2011 at 02:15 GMT
+%     Last Updated Mar. 13, 2012 at 02:15 GMT
 
 % todo:
 
@@ -44,28 +46,21 @@ function [data]=make_adjoint_source(data,win)
 error(nargchk(2,2,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
-% attempt header check
-try
-    % check header
-    data=checkheader(data);
-    
-    % turn off header checking
-    oldcheckheaderstate=checkheader_state(false);
-catch
-    % toggle checking back
-    seizmocheck_state(oldseizmocheckstate);
-    
-    % rethrow error
-    error(lasterror);
-end
-
 % attempt rest
 try
+    % check header
+    data=checkheader(data,...
+        'FALSE_LEVEN','ERROR',...
+        'NONTIME_IFTYPE','ERROR');
+    
+    % verbosity
+    verbose=seizmoverbose;
+    
     % number of records
     nrecs=numel(data);
     
@@ -80,31 +75,30 @@ try
     hwin=diff(win,1,2)/2;
 
     % get header info
-    [b,npts,delta]=getheader(data,'b','npts','delta');
-    [idep,iftype]=getenumid(data,'idep','iftype');
-    leven=getlgc(data,'leven');
+    [b,npts,delta,idep]=getheader(data,'b','npts','delta','idep id');
     
-    % check sample spacing, file type, units
-    if(any(~strcmpi(leven,'true')))
-        error('seizmo:make_adjoint_source:badSpacing',...
-            ['Record(s):\n' sprintf('%d ',find(~strcmpi(leven,'true'))) ...
-            'Illegal operation on unevenly spaced record(s)!'])
-    elseif(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:make_adjoint_source:badType',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            'Illegal operation on spectral/xyz record(s)!'])
-    elseif(any(~strcmpi(idep,'idisp')))
+    % check units
+    if(any(~strcmpi(idep,'idisp')))
         error('seizmo:make_adjoint_source:badUnits',...
             ['Record(s):\n' sprintf('%d ',find(~strcmpi(idep,'idisp'))) ...
             '\nDependent component units must be in displacement!']);
+    end
+    
+    % detail message
+    if(verbose)
+        disp('Converting Synthetic(s) for Adjoint Source Computation');
+        print_time_left(0,nrecs);
     end
 
     % loop over records
     depmin=nan(nrecs,1); depmen=depmin; depmax=depmin;
     for i=1:numel(data)
         % skip dataless
-        if(isempty(data(i).dep)); continue; end
+        if(isempty(data(i).dep))
+            % detail message
+            if(verbose); print_time_left(i,nrecs); end
+            continue;
+        end
         
         % convert to double precision
         oclass=str2func(class(data(i).dep));
@@ -130,6 +124,9 @@ try
         depmin=min(data(i).dep(:));
         depmen=mean(data(i).dep(:));
         depmax=max(data(i).dep(:));
+        
+        % detail message
+        if(verbose); print_time_left(i,nrecs); end
     end
     
     % update header
@@ -138,11 +135,9 @@ try
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    checkheader_state(oldcheckheaderstate);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
-    checkheader_state(oldcheckheaderstate);
     
     % rethrow error
     error(lasterror);

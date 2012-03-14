@@ -184,9 +184,10 @@ function [data]=rotate(data,varargin)
 %        Jan. 28, 2012 - pass char to strnlen
 %        Jan. 30, 2012 - drop SEIZMO global
 %        Feb.  7, 2012 - fix no horizontals bug
+%        Mar. 13, 2012 - use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 23:18 GMT
+%     Last Updated Mar. 13, 2012 at 23:18 GMT
 
 % todo:
 % - a 'norotate' would be nice
@@ -353,14 +354,13 @@ try
     
     % get header fields
     if(option.USEABSOLUTETIMING)
-        [b,e,delta,npts,nz,kcmpnm,cmpaz]=getheader(data,...
-            'b','e','delta','npts','nz','kcmpnm','cmpaz');
+        [b,e,delta,npts,nz,kcmpnm,cmpaz,leven]=getheader(data,...
+            'b','e','delta','npts','nz','kcmpnm','cmpaz','leven lgc');
     else
-        [b,e,delta,npts,kcmpnm,cmpaz]=getheader(data,...
-            'b','e','delta','npts','kcmpnm','cmpaz');
+        [b,e,delta,npts,kcmpnm,cmpaz,leven]=getheader(data,...
+            'b','e','delta','npts','kcmpnm','cmpaz','leven lgc');
         nz=nan(nrecs,6);
     end
-    leven=getlgc(data,'leven');
     
     % get filenames (for debug output)
     if(option.DEBUG)

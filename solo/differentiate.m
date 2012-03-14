@@ -4,10 +4,11 @@ function [data]=differentiate(data,option)
 %    Usage:    data=differentiate(data)
 %              data=differentiate(data,option)
 %
-%    Description: DIFFERENTIATE(DATA) returns the derivative of each
-%     record in the SEIZMO structure DATA using the differences between
-%     points as an approximation of the derivative at the midpoint.  Works
-%     with unevenly spaced data.
+%    Description:
+%     DIFFERENTIATE(DATA) returns the derivative of each record in the
+%     SEIZMO structure DATA using the differences between points as an
+%     approximation of the derivative at the midpoint.  Works with unevenly
+%     spaced data.
 %
 %     DIFFERENTIATE(DATA,OPTION) allows specifying the difference operator.
 %     Supported OPTIONS are 'two', 'three', and 'five'. The operators
@@ -35,9 +36,9 @@ function [data]=differentiate(data,option)
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NPTS, B, E
 %
 %    Examples:
-%     These are equal:
-%      removemean(data)
-%      removemean(integrate(differentiate(data)))
+%     % These are equal:
+%     removemean(data)
+%     removemean(integrate(differentiate(data)))
 %
 %    See also: INTEGRATE, MULTIPLYOMEGA, DIVIDEOMEGA
 
@@ -58,9 +59,11 @@ function [data]=differentiate(data,option)
 %                        improved messaging, forced dim on some functions
 %        May   6, 2010 - slimmer code for units exchange
 %        Feb. 11, 2011 - mass nargchk fix
+%        Mar. 13, 2012 - doc update, seizmocheck fix, better checkheader
+%                        usage, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 13, 2012 at 15:05 GMT
 
 % todo:
 % - add 'five' option for uneven
@@ -74,7 +77,7 @@ function [data]=differentiate(data,option)
 error(nargchk(1,2,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -82,7 +85,8 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt differentiation
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'NONTIME_IFTYPE','ERROR');
     
     % verbosity
     verbose=seizmoverbose;
@@ -91,17 +95,9 @@ try
     nrecs=numel(data);
 
     % retreive header info
-    even=~strcmpi('false',getlgc(data,'leven'));
-    [delta,b,e,npts]=getheader(data,'delta','b','e','npts');
-    [idep,iftype]=getenumid(data,'idep','iftype');
-    
-    % cannot do spectral/xyz records
-    if(any(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy')))
-        error('seizmo:differentiate:badIFTYPE',...
-            ['Record(s):\n' sprintf('%d ',...
-            find(~strcmpi(iftype,'itime') & ~strcmpi(iftype,'ixy'))) ...
-            '\nDatatype of record(s) in DATA must be Timeseries or XY!']);
-    end
+    [delta,b,e,npts,leven,idep]=getheader(data,...
+        'delta','b','e','npts','leven lgc','idep id');
+    leven=~strcmpi(leven,'false');
 
     % check option
     if(nargin==1 || isempty(option))
@@ -147,12 +143,12 @@ try
         % 2pt = (dep(j+1) -dep(j))/delta
         if(two(i))
             % evenly spaced
-            if(even(i))
+            if(leven(i))
                 data(i).dep=diff(data(i).dep,1,1)/delta(i);
                 b(i)=b(i)+delta(i)/2;
                 e(i)=e(i)-delta(i)/2;
                 npts(i)=npts(i)-1;
-                % unevenly spaced
+            % unevenly spaced
             else
                 data(i).ind=double(data(i).ind);
                 ind=diff(data(i).ind,1,1);
@@ -166,14 +162,14 @@ try
         % 3pt = (dep(j+1) - dep(j-1))/(2*delta)
         elseif(three(i))
             % evenly spaced
-            if(even(i))
+            if(leven(i))
                 data(i).dep=...
                     filter([1 0 -1],1,data(i).dep,[],1)/(2*delta(i));
                 data(i).dep=data(i).dep(3:end,:);
                 b(i)=b(i)+delta(i);
                 e(i)=e(i)-delta(i);
                 npts(i)=npts(i)-2;
-                % unevenly spaced
+            % unevenly spaced
             else
                 data(i).ind=double(data(i).ind);
                 ind=diff(data(i).ind,1,1);
@@ -190,14 +186,14 @@ try
         % 5pt = (-dep(j+2)+8*dep(j+1)-8*dep(j-1)+dep(j-2))/(12*delta)
         else
             % evenly spaced
-            if(even(i))
+            if(leven(i))
                 data(i).dep=...
                     filter([-1 8 0 -8 1],1,data(i).dep,[],1)/(12*delta(i));
                 data(i).dep=data(i).dep(5:end,:);
                 b(i)=b(i)+2*delta(i);
                 e(i)=e(i)-2*delta(i);
                 npts(i)=npts(i)-4;
-                % unevenly spaced
+            % unevenly spaced
             else
                 % need to derive this using Lagrange multipliers IIRC
                 error('seizmo:differentiate:undone',...

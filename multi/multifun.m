@@ -15,15 +15,16 @@ function [data]=multifun(fun,varargin)
 %              data=multifun(...,'leven','error'|'warn'|'ignore')
 %              data=multifun(...,'iftype','error'|'warn'|'ignore')
 %
-%    Description: MULTIFUN(FUN,DATA) operates on all records in DATA using
-%     FUN and will return a single record with its header fields set to
-%     those of the first record in DATA.  FUN must be either '+', '-', '/',
-%     '*', or a function handle.  The '+', '-', '/','*' options all operate
-%     on the records point by point.  Function handles must accept 2
-%     numeric arrays and return 1 numeric array.  The returned header can
-%     be that of the last record by setting option 'newhdr' to TRUE.
-%     Records should be of the same filetype, be evenly sampled, have the
-%     same sample rate, number of points, and timing but these can all be
+%    Description:
+%     MULTIFUN(FUN,DATA) operates on all records in DATA using FUN and will
+%     return a single record with its header fields set to those of the
+%     first record in DATA.  FUN must be either '+', '-', '/', '*', or a
+%     function handle.  The '+', '-', '/','*' options all operate on the
+%     records point by point.  Function handles must accept 2 numeric
+%     arrays and return 1 numeric array.  The returned header can be that
+%     of the last record by setting option 'newhdr' to TRUE.  Records
+%     should be of the same filetype, be evenly sampled, have the same
+%     sample rate, number of points, and timing but these can all be
 %     ignored (for better or for worse) by setting options available in
 %     BINOPERR to 'ignore'.
 %     
@@ -112,15 +113,15 @@ function [data]=multifun(fun,varargin)
 %    Notes:
 %     
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
-%     NPTS, NCMP (see option 'npts' and 'ncmp')
-%     See option 'newhdr' for inheritance of other header fields.
+%                    NPTS, NCMP (see option 'npts' and 'ncmp')
+%                    See 'newhdr' option for inheritance of other fields.
 %
 %    Examples:
-%     Display a stack of the records:
-%      plot1(multifun('+',data))
+%     % Display a stack of the records:
+%     plot1(multifun('+',data))
 %     
-%     Add records from one dataset to another
-%      data=multifun('+',data1,data2)
+%     % Add records from one dataset to another:
+%     data=multifun('+',data1,data2)
 %     
 %    See also: ADDRECORDS, SUBTRACTRECORDS, MULTIPLYRECORDS, DIVIDERECORDS,
 %              BINOPERR, SOLOFUN, JOINRECORDS
@@ -148,9 +149,10 @@ function [data]=multifun(fun,varargin)
 %        Feb.  2, 2010 - dropped quick exit
 %        Jan.  6, 2011 - name changed from recordfun to multifun to
 %                        better differentiate it from seizmofun/solofun
+%        Mar. 13, 2012 - doc update, use getheader improvements
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 21:25 GMT
+%     Last Updated Mar. 13, 2012 at 21:25 GMT
 
 % todo:
 % - could use some code re-ordering
@@ -301,12 +303,10 @@ try
     nzyear=b; nzjday=b; nzhour=b; nzmin=b; nzsec=b; nzmsec=b;
     for i=1:ndatasets
         data{i}=checkheader(data{i});
-        leven{i}=getlgc(data{i},'leven');
-        iftype{i}=getenumid(data{i},'iftype');
-        [npts{i},ncmp{i},delta{i},b{i},nzyear{i},nzjday{i},...
-            nzhour{i},nzmin{i},nzsec{i},nzmsec{i}]=...
-            getheader(data{i},'npts','ncmp','delta','b',...
-            'nzyear','nzjday','nzhour','nzmin','nzsec','nzmsec');
+        [npts{i},ncmp{i},delta{i},b{i},nzyear{i},nzjday{i},nzhour{i},...
+            nzmin{i},nzsec{i},nzmsec{i},leven{i},iftype{i}]=getheader(...
+            data{i},'npts','ncmp','delta','b','nzyear','nzjday',...
+            'nzhour','nzmin','nzsec','nzmsec','leven lgc','iftype id');
     end
 
     % turn off header checking
