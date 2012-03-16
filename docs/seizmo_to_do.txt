@@ -9,9 +9,6 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-download 3D models
-download pzdb
-
 meld
     - uneven or variable samplerate
 rotate
@@ -195,7 +192,7 @@ getpeaks
 markpeaks
 basic segy (segy2MAT), ah, miniseed support
 
-OCTAVE SPECIFIC STUFF (Need to test vs 3.6.1)
+OCTAVE SPECIFIC STUFF
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 - error & warning need sprintf support
 - octave-java package issues with Fedora (as root):

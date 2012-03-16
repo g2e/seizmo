@@ -58,9 +58,10 @@ function [varargout]=install_seizmo()
 %        Feb. 27, 2012 - multi-jar mattaup update
 %        Mar.  1, 2012 - globalcmt catalog creation
 %        Mar.  8, 2012 - fix mattaup multi-jar breakage
+%        Mar. 15, 2012 - responses, models & features download
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2012 at 15:25 GMT
+%     Last Updated Mar. 15, 2012 at 15:25 GMT
 
 % todo:
 
@@ -236,7 +237,6 @@ else % install matTaup.jar to classpath
 end
 
 % ask to install external components
-% - eventually: taup
 reply=input('Install njTBX (30MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_njtbx;
@@ -262,8 +262,21 @@ if(isempty(reply) || strncmpi(reply,'y',1))
     globalcmt_update;
 end
 
-% download models/features
-% - eventually: 3D mantle models & features in mapping
+% download models/features/responses
+url='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/';
+reply=input('Download IRIS station responses (~20MB)? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & download_and_unpack_seizmo_zip(url,'seizmo_iris_sacpzdb.zip');
+end
+reply=input('Download 3D models (~20MB)? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & download_and_unpack_seizmo_zip(url,'seizmo_3d_models.zip');
+end
+reply=input('Download features for mapping (~10MB)? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & download_and_unpack_seizmo_zip(url,...
+        'seizmo_mapping_features.zip');
+end
 
 disp('DON''T FORGET TO RESTART!');
 disp('##################################################################');
@@ -278,6 +291,36 @@ help seizmo;
 % output
 if(nargout); varargout{1}=ok; end
 
+end
+
+function [ok]=download_and_unpack_seizmo_zip(url,file)
+mypath=fileparts(mfilename('fullpath'));
+try
+    % go to desired install location
+    cwd=pwd;
+    cd(mypath);
+    
+    % grab file
+    url=[url '/' file];
+    disp([' Getting ' file]);
+    if(exist(file,'file'))
+        if(~exist(fullfile(mypath,file),'file'))
+            copyfile(which(file),'.');
+        end
+    else
+        urlwrite(url,file);
+    end
+    
+    % unpack file
+    unzip(file);
+    
+    % return
+    cd(cwd);
+    ok=true;
+catch
+    cd(cwd);
+    ok=false;
+end
 end
 
 function [varargout]=getapplication()
