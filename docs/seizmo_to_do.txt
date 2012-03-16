@@ -9,12 +9,8 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-seizmoverbose still does not handle parallel toolbox
-
-makearrivals == creates .misc.arrivals
-findarrivals == searches .misc.arrivals
-arrivals2picks == push .misc.arrivals to header pick fields (addarrivals)
-findpicks == searches t* fields (getarrival)
+download 3D models
+download pzdb
 
 meld
     - uneven or variable samplerate
@@ -72,6 +68,11 @@ more cmb models (rjk)
 %%%%%%%
 POSTDOC
 %%%%%%%
+
+syncsample
+    - 1,2,3,4+ datasets
+    - this will be underneath rotate, meld, rotate_correlations, 
+omegaxcorr
 
 new datasets
     - natural earth: http://www.naturalearthdata.com/downloads/

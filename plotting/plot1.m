@@ -263,7 +263,7 @@ for i=goodfiles
         switch opt.TITLE
             case 1 % filename
                 if(~isempty(data(i).name))
-                    if(exist('OCTAVE_VERSION','builtin')==5)
+                    if(isoctave)
                         p1title=data(i).name;
                     else
                         p1title=texlabel(data(i).name,'literal');

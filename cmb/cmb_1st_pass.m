@@ -81,9 +81,10 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %        Mar.  1, 2012 - octave ascii save workaround
 %        Mar.  5, 2012 - allow no written output, odir/figdir bugfix
 %        Mar. 13, 2012 - use getheader improvements
+%        Mar. 15, 2012 - fix for pick functions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 13:35 GMT
+%     Last Updated Mar. 15, 2012 at 13:35 GMT
 
 % todo:
 
@@ -337,7 +338,7 @@ for i=1:numel(s)
     end
     
     % time shift to phase
-    t=getarrival(data,{truephase truephase(1)});
+    t=findpicks(data,[truephase(1) ',' truephase],1);
     switch phase
         case 'Pdiff'
             t=t+corrections.ellcor ...

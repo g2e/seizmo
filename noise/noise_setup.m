@@ -86,9 +86,10 @@ function []=noise_setup(indir,outdir,varargin)
 %                        all time operations are in utc
 %        Feb.  7, 2012 - merge to meld update
 %        Mar.  8, 2012 - drop UTC in timediff where unnecessary
+%        Mar. 15, 2012 - parallel verbose fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2012 at 11:15 GMT
+%     Last Updated Mar. 15, 2012 at 11:15 GMT
 
 % todo:
 
@@ -131,11 +132,9 @@ end
 % directory separator
 fs=filesep;
 
-% parallel processing setup (up to 8 instances)
+% parallel processing setup
+verbose=seizmoverbose;
 %matlabpool(4); % PARALLEL
-
-% verbosity  (turn it off for the loop)
-verbose=seizmoverbose(false);
 
 % read in data headers
 if(verbose); disp('READING DATAFILE HEADERS (MAY TAKE A WHILE)!)'); end
@@ -200,6 +199,9 @@ end
 % loop over components
 %parfor i=1:max(cmpidx) % PARALLEL
 for i=1:max(cmpidx) % SERIAL
+    % force quietness even in parfor (which resets globals)
+    seizmoverbose(false);
+    
     % detail message
     if(verbose); disp(['PROCESSING: ' kname{i}]); end
     

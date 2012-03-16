@@ -32,38 +32,39 @@ function [info,xc,data0]=useralign(data,varargin)
 %    Notes:
 %
 %    Examples:
-%     Say we have some recordings of a large teleseismic earthquake and
-%     that we have inserted the expected arrival times of Pdiff into the
-%     headers of these records.  Were did we get those expected arrival
-%     times?  The TauP routine TAUPTIME is used to raytrace through a 1D
-%     model such as PREM to get them (ADDARRIVALS is probably the easiest
-%     method as it will call TAUPTIME and automatically add the arrival
-%     times to the header).  The first step is to "pre-align" on those
-%     times so that we can attempt to isolate the Pdiff waveforms from
-%     other seismic phases using windowing and tapering.  The Pdiff
-%     waveforms will have noticeable perturbations from this alignment
-%     because the 1D model does not account for the Earth's lateral
-%     heterogeniety in seismic properties.  To enhance this initial
-%     alignment, we can either go through and pick each signal onset
-%     manually (yuck!) or we can use waveform cross-correlation to solve
-%     for the best relative arrival times between all the recorded signals
-%     (there are certainly other ways to align seismic phases but for now
-%     let's focus on the later method mentioned here).  USERALIGN provides
-%     us with an interface to do the later method.  It includes a set of
-%     menus and plots to aid us in both the signal isolation and alignment
-%     enhancing by solving for time perturbations utilizing multi-channel
-%     cross-correlation.  Great!  So this is pretty easy: pre-align using
-%     an initial guess such as expected arrivals from a 1D Earth model,
-%     isolate the signal using windowing and tapering, and finally
-%     realigning using cross-correlation:
-%      data=timeshift(data,-getarrival(data,'Pdiff'));
-%      [info,xc,data0]=useralign(data);
+%     % Say we have some recordings of a large teleseismic earthquake and
+%     % that we have inserted the expected arrival times of Pdiff into the
+%     % headers of these records.  Were did we get those expected arrival
+%     % times?  The TauP routine TAUPTIME is used to raytrace through a 1D
+%     % model such as PREM to get them (ARRIVALS2PICKS is probably the
+%     % easiest method to get this done as it will call TAUPTIME and
+%     % automatically add the arrival times to the header).  The first step
+%     % is to "pre-align" on those times so that we can attempt to isolate
+%     % the Pdiff waveforms from other seismic phases using windowing.  The
+%     % Pdiff waveforms will have noticeable perturbations from this
+%     % alignment because the 1D model does not account for the Earth's
+%     % lateral heterogeniety in seismic properties.  To improve on this
+%     % initial alignment, we can either go through and pick each signal
+%     % onset manually (yuck!) or we can use waveform cross-correlation to
+%     % solve for the best relative arrival times between all the recorded
+%     % signals (there are other ways to align seismic phases but that is
+%     % beyond the scope of this example).  USERALIGN provides us with an
+%     % interface to do the later method.  It includes a set of menus and
+%     % plots to aid us in both the signal isolation and alignment
+%     % enhancing by solving for time perturbations utilizing multi-channel
+%     % cross-correlation.  Great!  So this is pretty easy: pre-align using
+%     % an initial guess such as expected arrivals from a 1D Earth model,
+%     % isolate the signal using windowing and tapering, and finally
+%     % realigning using cross-correlation:
+%     data=timeshift(data,-findpicks(data,'Pdiff',1));
+%     [info,xc,data0]=useralign(data);
 %
-%     I usually like to give a SNR estimate of the waveforms to help the
-%     cross-correlation solution decide which waveforms are more reliable:
-%      data=timeshift(data,-getarrival(data,'Pdiff'));
-%      snr=quicksnr(data,[-100 -10],[-10 60]);
-%      [info,xc,data0]=useralign(data,'snr',snr);
+%     % I usually like to give a SNR estimate of the waveforms in addition
+%     % to the cross-correlation result to decide which waveforms are
+%     % reliable:
+%     data=timeshift(data,-findpicks(data,'Pdiff',1));
+%     snr=quicksnr(data,[-100 -10],[-10 60]);
+%     [info,xc,data0]=useralign(data,'snr',snr);
 %
 %    See also: TTSOLVE, CORRELATE, USERWINDOW, USERTAPER, USERRAISE,
 %              USERMOVEOUT, USERALIGN_QUIET, MULTIBANDALIGN
@@ -90,6 +91,7 @@ function [info,xc,data0]=useralign(data,varargin)
 %        Jan. 14, 2011 - add useralign_quiet to See also section
 %        Jan. 17, 2011 - allow specifying window & taper, altered menus
 %        Jan. 29, 2011 - fix window input bug
+%        Mar. 16, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Jan. 29, 2011 at 11:00 GMT
@@ -100,7 +102,7 @@ function [info,xc,data0]=useralign(data,varargin)
 error(nargchk(1,inf,nargin));
 
 % check data (dep)
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

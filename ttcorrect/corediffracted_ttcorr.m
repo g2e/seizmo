@@ -23,8 +23,8 @@ function [ecor,ccor,mcorf,mcoru]=corediffracted_ttcorr(data,phase,mod)
 %    Examples:
 %     % Get corrections for a core-diffracted dataset and apply them:
 %     [ecor,ccor,mcorfull,mcorup]=corediffracted_ttcorr(data,'Pdiff');
-%     data=addarrivals(data,'mod','prem','ph','P,Pdiff');
-%     Pdiff=getarrival(data,{'P' 'Pdiff'});
+%     data=makearrivals(data,'P,Pdiff','prem');
+%     Pdiff=findpicks(arrivals2picks(data),'P,Pdiff',1);
 %     cddata=timeshift(data,-(Pdiff+ecor+ccor+mcorfull));
 %     plot0(cddata);
 %
@@ -35,9 +35,10 @@ function [ecor,ccor,mcorf,mcoru]=corediffracted_ttcorr(data,phase,mod)
 %        June 11, 2010 - initial version
 %        Aug.  8, 2010 - cleaned up docs & code
 %        Feb. 27, 2012 - doc update
+%        Mar. 15, 2012 - fix example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 14:25 GMT
+%     Last Updated Mar. 15, 2012 at 14:25 GMT
 
 % todo:
 

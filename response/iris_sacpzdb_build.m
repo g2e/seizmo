@@ -39,9 +39,10 @@ function []=iris_sacpzdb_build(path)
 %        Dec. 22, 2011 - convert iris_sacpzdb_howto notes to this script
 %        Feb.  3, 2012 - made documentation, removed inert code, use new
 %                        form of bad_sacpz_cmplx (avoids crashes)
+%        Mar. 15, 2012 - fix parallel verbose
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2012 at 11:15 GMT
+%     Last Updated Mar. 15, 2012 at 11:15 GMT
 
 % todo:
 
@@ -55,6 +56,7 @@ matlabpool(8);
 sacpzdb_tmp=cell(numel(net),1);
 parfor i=1:numel(net)
     disp(net(i).name);
+    seizmoverbose(false);
     sacpzdb_tmp{i}=makesacpzdb(fullfile(net(i).path,net(i).name));
 end
 matlabpool close;

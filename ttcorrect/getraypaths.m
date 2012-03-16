@@ -1,18 +1,25 @@
-function [paths]=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
+function [paths,idx]=getraypaths(phaselist,model,evla,evlo,evdp,stla,stlo)
 %GETRAYPATHS    Returns seismic phase paths for a set of stations
 %
-%    Usage:    paths=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
+%    Usage:    paths=getraypaths(phaselist,model,evla,evlo,evdp,stla,stlo)
+%              paths=getraypaths(data,phaselist,model)
+%              [paths,idx]=getraypaths(...)
 %
 %    Description:
-%     PATHS=GETRAYPATHS(PHASE,MOD,EVLA,EVLO,EVDP,STLA,STLO) returns a
-%     struct array containing phase paths for each PHASE/MODEL/EQ/STA pair.
-%     PHASE should be a char or cellstr array and is case sensitive (uses
-%     TauP to parse the phase name).  MOD must be a 1D model name
-%     recognized by TauP.  Lat/Lon inputs must be in degrees.  Depth is in
-%     kilometers (note that this is not like the SAC format)!
+%     PATHS=GETRAYPATHS(PHASELIST,MODEL,EVLA,EVLO,EVDP,STLA,STLO) returns a
+%     struct array containing phase paths for each PHASELIST/MODEL/EV/ST
+%     set.  PHASELIST should be a char or cellstr array and is case
+%     sensitive (uses TauP to parse the phase name).  MODEL must be a model
+%     input recognized by TAUPPATH.  Lat/Lon inputs must be in degrees.
+%     Depth is in kilometers (note that this is not the same as the output
+%     from the EVDP header field)!
 %
-%     PATHS=GETRAYPATHS(DATA,PHASE,MOD) uses the station and event
+%     PATHS=GETRAYPATHS(DATA,PHASELIST,MODEL) uses the station and event
 %     positions in SEIZMO struct DATA to calculate the raypaths.
+%
+%     [PATHS,IDX]=GETRAYPATHS(...) also returns the indices of the set to
+%     which each path belongs.  This is mainly useful if using the DATA
+%     input usage form.
 %
 %    Notes:
 %     - This just calls TAUPPATH in a loop.
@@ -22,7 +29,7 @@ function [paths]=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
 %     paths=getraypaths(data,'P','prem');
 %
 %    See also: TAUPPATH, MANCOR, CRUST2LESS_RAYPATHS, TRIM_DEPTHS_RAYPATHS,
-%              EXTRACT_UPSWING_RAYPATHS
+%              EXTRACT_UPSWING_RAYPATHS, MAKEARRIVALS, FINDARRIVALS
 
 %     Version History:
 %        May  31, 2010 - initial version
@@ -32,21 +39,23 @@ function [paths]=getraypaths(phase,mod,evla,evlo,evdp,stla,stlo)
 %        May  19, 2011 - updated error message to reflect the usual issue
 %        Feb. 27, 2012 - new usage form simplifies the typical case, return
 %                        all paths
+%        Mar. 14, 2012 - accept all mattaup model types, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 13:45 GMT
+%     Last Updated Mar. 14, 2012 at 13:45 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(3,7,nargin));
 if(~any(nargin==[3 7]))
-    error('seizmo:getraypaths:badInput','Incorrect number of arguments!');
+    error('seizmo:getraypaths:badInput',...
+        'Incorrect number of arguments!');
 end
 
 % handle data struct
-if(isseizmo(phase))
-    data=phase; phase=mod; mod=evla;
+if(isseizmo(phaselist))
+    data=phaselist; phaselist=model; model=evla;
     data=checkheader(data,...
         'UNSET_ST_LATLON','ERROR',...
         'UNSET_EV_LATLON','ERROR',...
@@ -58,25 +67,23 @@ if(isseizmo(phase))
 end
 
 % check inputs
-if(ischar(phase)); phase=cellstr(phase); end
-if(ischar(mod)); mod=cellstr(mod); end
+if(ischar(phaselist)); phaselist=cellstr(phaselist); end
+if(ischar(model)); model=cellstr(model); end
 if(~all(cellfun('isreal',{evla evlo evdp stla stlo})))
     error('seizmo:getraypaths:badLocation',...
         'All lat/lon/depth values must be real valued!');
-elseif(~iscellstr(phase))
+elseif(~iscellstr(phaselist))
     error('seizmo:getraypaths:badPhase',...
-        'PHASE must be char/cellstr array!');
-elseif(~iscellstr(mod))
-    error('seizmo:getraypaths:badModel',...
-        'MOD must be char/cellstr array!');
-elseif(~isequalsizeorscalar(phase,mod,evla,evlo,evdp,stla,stlo))
+        'PHASELIST must be char/cellstr array!');
+elseif(~isequalsizeorscalar(phaselist,model,evla,evlo,evdp,stla,stlo))
     error('seizmo:getraypaths:badSize',...
         'All inputs must be scalar or equal-sized!');
 end
+if(~iscell(model)); model=num2cell(model); end
 
 % expand scalars
-[evla,evlo,evdp,stla,stlo,mod,phase]=expandscalars(...
-    evla,evlo,evdp,stla,stlo,mod,phase);
+[evla,evlo,evdp,stla,stlo,model,phaselist]=expandscalars(...
+    evla,evlo,evdp,stla,stlo,model,phaselist);
 nph=numel(evla);
 
 % fix out-of-range lat/lon
@@ -87,37 +94,25 @@ nph=numel(evla);
 evla=geographic2geocentriclat(evla);
 stla=geographic2geocentriclat(stla);
 
-% verbose
+% detail message
 verbose=seizmoverbose;
 if(verbose)
     disp('Getting Ray Path(s)');
     print_time_left(0,nph);
 end
 
-% loop over each set
-try
-    i=nph;
-    tmp=tauppath('ph',phase{i},'mod',mod{i},'dep',evdp(i),...
+% now loop over each set
+paths=[]; idx=[];
+for i=1:nph
+    tmp=tauppath('ph',phaselist{i},'mod',model{i},'dep',evdp(i),...
         'ev',[evla(i) evlo(i)],'st',[stla(i) stlo(i)]);
     if(isempty(tmp))
         error('seizmo:getraypaths:badPath',...
-            ['Could not retrieve path for EQ/STA pair: %d\n' ...
-            'Maybe you do not have your ~/.taup file correct?'],i);
+            'Could not retrieve path for EV/ST pair: %d',i);
     end
-    paths=tmp;
-    if(verbose); print_time_left(1,nph); end
-    for i=1:nph-1
-        tmp=tauppath('ph',phase{i},'mod',mod{i},'dep',evdp(i),...
-            'ev',[evla(i) evlo(i)],'st',[stla(i) stlo(i)]);
-        if(isempty(tmp))
-            error('seizmo:getraypaths:badPath',...
-                'Could not retrieve path for EQ/STA pair: %d',i);
-        end
-        paths=[paths; tmp];
-        if(verbose); print_time_left(i+1,nph); end
-    end
-catch
-    error(lasterror);
+    if(isempty(paths)); paths=tmp; else paths=cat(1,paths,tmp); end
+    idx=cat(1,idx,i*ones(numel(tmp),1));
+    if(verbose); print_time_left(i,nph); end
 end
 
 end

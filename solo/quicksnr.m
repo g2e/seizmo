@@ -4,12 +4,13 @@ function [snr]=quicksnr(data,nwin,swin,method)
 %    Usage:    snr=quicksnr(data,noisewindow,signalwindow)
 %              snr=quicksnr(data,noisewindow,signalwindow,method)
 %
-%    Description: QUICKSNR(DATA,NOISEWINDOW,SIGNALWINDOW) estimates the
-%     signal-to-noise ratio for SEIZMO records by calculating the ratio of
-%     the maximum-minimum amplitudes of two data windows that represent the
-%     'noise' and the 'signal'.  NOISEWINDOW & SIGNALWINDOW need to be 2
-%     element numeric arrays that specify the start and end of the window
-%     relative to the records' reference times.
+%    Description:
+%     QUICKSNR(DATA,NOISEWINDOW,SIGNALWINDOW) estimates the signal-to-noise
+%     ratio for SEIZMO records by calculating the ratio of the maximum-to-
+%     minimum amplitudes of two data windows that represent the 'noise' and
+%     the 'signal'.  NOISEWINDOW & SIGNALWINDOW need to be 2 element
+%     numeric arrays that specify the start and end of the window relative
+%     to the records' reference times.
 %
 %     QUICKSNR(DATA,NOISEWINDOW,SIGNALWINDOW,METHOD) specifies the SNR
 %     calculation method using METHOD.  METHOD must be one of the
@@ -23,14 +24,15 @@ function [snr]=quicksnr(data,nwin,swin,method)
 %    Notes:
 %     - Some initial testing showed that the rms method typically gave
 %       estimates that were 3/4th that of the peak2peak method while the
-%       robustrms method was roughly 1/2.
+%       robustrms method was roughly 1/2.  This was in a rather bandlimited
+%       case though so your results will differ.
 %
 %    Examples:
-%     To get SNR estimates of P (assuming times are stored in header):
-%       Ptimes=getarrival(data,'P');
-%       snr=quicksnr(data,Ptimes+[-100 -20],Ptimes+[-20 40])
+%     % To get SNR estimates of P (assuming times are stored in header):
+%      P=findpicks(data,'P',1);
+%      snr=quicksnr(data,P+[-100 -20],P+[-20 40])
 %
-%    See also: GETARRIVAL, CUT
+%    See also: FINDPICKS, CUT
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -52,9 +54,10 @@ function [snr]=quicksnr(data,nwin,swin,method)
 %                        are included), input check fix
 %        Mar. 31, 2010 - added two more methods: PEAK2RMS, PEAK2ROBUSTRMS
 %        Sep. 13, 2010 - nargchk fix
+%        Mar. 15, 2012 - doc update, seizmocheck fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2010 at 18:00 GMT
+%     Last Updated Mar. 15, 2012 at 18:00 GMT
 
 % todo:
 
@@ -62,7 +65,7 @@ function [snr]=quicksnr(data,nwin,swin,method)
 error(nargchk(3,4,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

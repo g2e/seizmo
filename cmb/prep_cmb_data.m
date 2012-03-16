@@ -62,9 +62,10 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %        Apr.  4, 2011 - remove response to displacement
 %        Feb.  7, 2012 - merge to meld update
 %        Mar.  1, 2012 - fixes for scalar structs
+%        Mar. 15, 2012 - fixes for pick functions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2012 at 13:35 GMT
+%     Last Updated Mar. 15, 2012 at 13:35 GMT
 
 % todo:
 
@@ -181,10 +182,10 @@ for i=s(:)'
         vdata=point_verticals_upward(vdata);
         
         % add arrivals
-        vdata=addarrivals(vdata,'ph','P,Pdiff,PKP');
+        vdata=arrivals2picks(vdata,'P,Pdiff,PKP');
         
         % set Pdiff as reference time
-        vdata=timeshift(vdata,-getarrival(vdata,{'P' 'Pdiff'}));
+        vdata=timeshift(vdata,-findpicks(vdata,'P,Pdiff',1));
         
         % remove records without 300s before & after Pdiff
         [b,e]=getheader(vdata,'b','e');
@@ -198,10 +199,10 @@ for i=s(:)'
         rdata=genname(rdata,'rdseed');
         
         % add arrivals
-        rdata=addarrivals(rdata,'ph','S,Sdiff,SKS,sSKS,pSKS');
+        rdata=arrivals2picks(rdata,'S,Sdiff,SKS,sSKS,pSKS');
         
         % set Sdiff as reference time
-        rdata=timeshift(rdata,-getarrival(rdata,{'S' 'Sdiff'}));
+        rdata=timeshift(rdata,-findpicks(rdata,'S,Sdiff',1));
         
         % remove records without 300s before & after Sdiff
         [b,e]=getheader(rdata,'b','e');

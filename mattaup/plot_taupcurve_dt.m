@@ -33,7 +33,7 @@ function [varargout]=plot_taupcurve_dt(tt,offset,flip,varargin)
 %     % Align some records on Pdiff, then plot some travel time curves
 %     % underneath the records to enhance analysis:
 %     evdp=getheader(data(1),'evdp'); % depth in meters!
-%     data=timeshift(data,-getarrival(data,'Pdiff'));
+%     data=timeshift(data,-findpicks(data,'Pdiff',1));
 %     ax=recordsection(data);
 %     tt=taupcurve('dep',evdp/1000); % depth in kilometers!
 %     idx=find(strcmp('Pdiff',{tt.phase}));
@@ -51,9 +51,10 @@ function [varargout]=plot_taupcurve_dt(tt,offset,flip,varargin)
 %        Jan. 23, 2011 - initial version
 %        May  21, 2011 - minor doc update
 %        Feb. 24, 2012 - doc update, code update
+%        Mar. 15, 2012 - minor fix in example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2012 at 17:15 GMT
+%     Last Updated Mar. 15, 2012 at 17:15 GMT
 
 % todo:
 

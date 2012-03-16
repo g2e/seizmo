@@ -22,8 +22,7 @@ function [data]=make_adjoint_source(data,win)
 %     data=readseizmo('*');
 %     gcarc=getheader(data,'gcarc');
 %     data(gcarc<100 | gcarc>150)=[];
-%     data=addarrivals(data,'phases','Pdiff');
-%     pdiff=getarrival(data,'Pdiff');
+%     pdiff=findpicks(arrivals2picks(data,'Pdiff'),'Pdiff',1);
 %     data=make_adjoint_source(data,pdiff+[-20 80]);
 %     writeseizmo(data,'append','.adj');
 %
@@ -36,9 +35,10 @@ function [data]=make_adjoint_source(data,win)
 %        Feb.  1, 2011 - update for triangletf changes
 %        Mar. 13, 2012 - doc update, use getheader improvements,
 %                        seizmoverbose support, better checkheader usage
+%        Mar. 15, 2012 - fix example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 02:15 GMT
+%     Last Updated Mar. 15, 2012 at 02:15 GMT
 
 % todo:
 

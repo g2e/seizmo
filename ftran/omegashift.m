@@ -22,8 +22,7 @@ function [data]=omegashift(data,shift)
 %    Examples:
 %     % Stack P wave arrivals:
 %     b=getheader(data,'b');
-%     data=addarrivals(data,'ph','P,Pdiff');
-%     P=getarrival(data,{'P' 'Pdiff'});
+%     P=findpicks(arrivals2picks(data,'P,Pdiff'),'P,Pdiff',1);
 %     plot1(addrecords(idft(...
 %         omegashift(dft(data,'rlim'),b-P)),'npts','pad'))
 %
@@ -32,9 +31,10 @@ function [data]=omegashift(data,shift)
 
 %     Version History:
 %        Feb.  4, 2012 - initial version
+%        Mar. 15, 2012 - fix example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  4, 2012 at 15:05 GMT
+%     Last Updated Mar. 15, 2012 at 15:05 GMT
 
 % todo:
 

@@ -29,11 +29,11 @@ function [phase]=snr2phaseerror(snr,func)
 %       it in measurement error though.
 %
 %    Examples:
-%     % Get max effect of noise on P arrival phase:
-%     Ptimes=getarrival(data,'P');
-%     snr=quicksnr(data,Ptimes+[-100 -20],Ptimes+[-20 40])
+%     % Observed max travel-time error from noise on some 10s P waves:
+%     P=findpicks(data,'P',1);
+%     snr=quicksnr(data,P+[-100 -20],P+[-20 40])
 %     period=10; % Assume 10sec is dominant period
-%     arrivalerror=period/(2*pi).*snr2phaseerror(snr,@max);
+%     maxtterror=period/(2*pi).*snr2phaseerror(snr,@max);
 %
 %    See also: QUICKSNR, TTSOLVE
 
@@ -43,9 +43,10 @@ function [phase]=snr2phaseerror(snr,func)
 %        Jan. 18, 2011 - doc update
 %        Feb. 12, 2011 - minor doc update, 2nd input, now std is used
 %                        rather than max, name changed to snr2phaseerror
+%        Mar. 15, 2012 - update example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 12, 2011 at 06:55 GMT
+%     Last Updated Mar. 15, 2012 at 06:55 GMT
 
 % todo:
 

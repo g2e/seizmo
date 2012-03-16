@@ -93,9 +93,10 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %        Feb.  1, 2012 - drop type option, addrecords override & skip
 %                        checking = 2x faster
 %        Mar.  8, 2012 - doc update
+%        Mar. 15, 2012 - parallel verbose fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2012 at 11:15 GMT
+%     Last Updated Mar. 15, 2012 at 11:15 GMT
 
 % todo:
 % - stack2stack
@@ -152,7 +153,8 @@ pair=unique(lower(pair(:)))'; % row vector of unique strings
 % directory separator
 fs=filesep;
 
-% parallel processing setup (up to 8 instances)
+% parallel processing setup
+verbose=seizmoverbose;
 %matlabpool(4); % PARALLEL
 
 % get year directories and time-section directories
@@ -210,8 +212,7 @@ elseif(any(ismember(opt.SPAN,'day')) && tslen>=86400)
         'SPAN=''day'' requires timesections to be less than 1 day!');
 end
 
-% alter verbosity
-verbose=seizmoverbose(false);
+% detail message
 if(verbose); disp('STACKING CORRELOGRAMS'); end
 
 % turn off checking
@@ -329,8 +330,13 @@ try
         % loop over stack time spans
         %parfor s=1:size(spanbgn,1) % PARALLEL
         for s=1:size(spanbgn,1) % SERIAL
+            % force quietness even in parfor (which resets globals)
+            seizmoverbose(false);
+            
+            % create variables for easy access (needed for parallel)
             sbgn=spanbgn(s,:);
             send=spanend(s,:);
+            
             % get timesections ENTIRELY in stack time span
             switch char(span)
                 case 'mon'

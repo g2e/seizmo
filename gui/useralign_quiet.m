@@ -4,12 +4,13 @@ function [info,xc,data0]=useralign_quiet(data,varargin)
 %    Usage:    [info,xc,data0]=useralign_quiet(data)
 %              [...]=useralign_quiet(data,'option1',value1,...)
 %
-%    Description: [INFO,XC,DATA0]=USERALIGN_QUIET(DATA) aligns records in
-%     SEIZMO struct DATA on a particular signal noninteractively.  This
-%     provides an automated alternative to USERALIGN.  The output INFO is
-%     setup to appear just like from USERALIGN even though interactive
-%     functions were not run (USERMOVEOUT, USERWINDOW, USERTAPER are
-%     included and contain the default info).  The final solution is within
+%    Description:
+%     [INFO,XC,DATA0]=USERALIGN_QUIET(DATA) aligns records in SEIZMO struct
+%     DATA on a particular signal noninteractively.  This provides an
+%     automated alternative to USERALIGN.  The output INFO is setup to
+%     appear just like from USERALIGN even though interactive functions
+%     were not run (USERMOVEOUT, USERWINDOW, USERTAPER are included and
+%     contain the default info).  The final solution is within
 %     INFO.SOLUTION.  XC is the struct from CORRELATE reordered by TTSOLVE
 %     (contains the correlogram peaks used to find the solution).  DATA0
 %     is the processed dataset (windowed, tapered & aligned).  See the next
@@ -30,7 +31,7 @@ function [info,xc,data0]=useralign_quiet(data,varargin)
 %    Examples:
 %     % I like to give a SNR estimate of the waveforms to provide more info
 %     % for the solver to decide which measurements are more reliable:
-%     data=timeshift(data,-getarrival(data,'Pdiff'));
+%     data=timeshift(data,-findpicks(data,'Pdiff',1));
 %     snr=quicksnr(data,[-100 -10],[-10 60]);
 %     [info,xc,data0]=useralign_quiet(data,'snr',snr);
 %
@@ -40,9 +41,10 @@ function [info,xc,data0]=useralign_quiet(data,varargin)
 %     Version History:
 %        Jan. 14, 2011 - initial version
 %        Apr. 16, 2011 - add lags option for correlate
+%        Mar. 16, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 16, 2011 at 11:00 GMT
+%     Last Updated Mar. 16, 2012 at 11:00 GMT
 
 % todo:
 
@@ -50,7 +52,7 @@ function [info,xc,data0]=useralign_quiet(data,varargin)
 error(nargchk(1,inf,nargin));
 
 % check data (dep)
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

@@ -112,9 +112,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %                        parallelization edits, fdpassband option gone
 %        Mar.  8, 2012 - skip dirs outside time limits before reading data,
 %                        now checks steps, early h/v split & shortcircuits
+%        Mar. 15, 2012 - bad parfor variable bugfix, parallel verbose fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2012 at 11:15 GMT
+%     Last Updated Mar. 15, 2012 at 11:15 GMT
 
 % todo:
 % - what is behind the lp noise?
@@ -177,8 +178,9 @@ end
 % directory separator
 fs=filesep;
 
-% parallel processing setup (up to 8 instances)
-matlabpool(4); % PARALLEL
+% parallel processing setup
+verbose=seizmoverbose;
+%matlabpool(4); % PARALLEL
 
 % get year directories and time-section directories
 dirs=xdir([indir fs]);
@@ -213,13 +215,15 @@ end
 tsdirs=tsdirs(good); tsbgn=tsbgn(good,:); tsend=tsend(good,:);
 clear good;
 
-% verbosity  (turn it off for the loop)
-verbose=seizmoverbose(false);
+% detail message
 if(verbose); disp('PROCESSING SEISMIC DATA FOR NOISE ANALYSIS'); end
 
 % loop over time section directories
-%for i=1:numel(tsdirs) % SERIAL
-parfor j=1:numel(tsdirs) % PARALLEL
+%parfor i=1:numel(tsdirs) % PARALLEL
+for i=1:numel(tsdirs) % SERIAL
+    % force quietness even in parfor (which resets globals)
+    seizmoverbose(false);
+    
     % read the header
     try
         data=readheader(...
@@ -634,7 +638,7 @@ parfor j=1:numel(tsdirs) % PARALLEL
         checkheader_state(oldcheckheaderstate);
         
         % parallel processing takedown & fix verbosity
-        matlabpool close; % PARALLEL
+        %matlabpool close; % PARALLEL
         seizmoverbose(verbose);
         
         % rethrow error
@@ -643,7 +647,7 @@ parfor j=1:numel(tsdirs) % PARALLEL
 end
 
 % parallel processing takedown & fix verbosity
-matlabpool close; % PARALLEL
+%matlabpool close; % PARALLEL
 seizmoverbose(verbose);
 
 end

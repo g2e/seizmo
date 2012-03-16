@@ -38,12 +38,11 @@ function [m,covm] = wlinem(dd,tt,power,covd,We)
 %
 %    Examples:
 %     % Fit a line through some predicted P arrivals:
-%     data=addarrivals(data);
-%     P=getarrival(data,'P');
+%     P=findpicks(arrivals2picks(data),'P',1);
 %     gcarc=getheader(data,'gcarc');
 %     [m,covm]=wlinem(gcarc,P);
 %
-%    See also: CORRELATE
+%    See also: POLYFIT, POLYVAL
 
 %     Version History:
 %        Aug. 25, 2009 - initial version
@@ -53,9 +52,10 @@ function [m,covm] = wlinem(dd,tt,power,covd,We)
 %        Sep. 13, 2010 - nargchk fix
 %        Feb. 11, 2011 - drop inv call
 %        Mar.  5, 2012 - minor doc update
+%        Mar. 15, 2012 - fix example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2012 at 18:00 GMT
+%     Last Updated Mar. 15, 2012 at 18:00 GMT
 
 % todo:
 

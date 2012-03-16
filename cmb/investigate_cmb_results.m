@@ -28,9 +28,10 @@ function [varargout]=investigate_cmb_results(results,observable)
 
 %     Version History:
 %        Mar.  5, 2012 - initial version, use minor xticks
+%        Mar. 15, 2012 - fixes for pick functions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2012 at 13:35 GMT
+%     Last Updated Mar. 15, 2012 at 13:35 GMT
 
 % todo:
 
@@ -95,8 +96,8 @@ for i=1:nr
             % rather than the total travel time
             verbose=seizmoverbose(false);
             x{i,1}=results(i).useralign.solution.arr ...
-                - (getarrival(results(i).useralign.data,...
-                {results(i).phase(1) results(i).phase}) ...
+                - (findpicks(results(i).useralign.data,...
+                [results(i).phase(1) ',' results(i).phase],1) ...
                 - getheader(results(i).useralign.data,'o'));
             seizmoverbose(verbose);
             x{i,1}(results(i).outliers.bad)=nan;
@@ -120,8 +121,8 @@ for i=1:nr
             % all of the above
             verbose=seizmoverbose(false);
             x{i,1}=results(i).useralign.solution.arr ...
-                - (getarrival(results(i).useralign.data,...
-                {results(i).phase(1) results(i).phase}) ...
+                - (findpicks(results(i).useralign.data,...
+                [results(i).phase(1) ',' results(i).phase],1) ...
                 - getheader(results(i).useralign.data,'o'));
             seizmoverbose(verbose);
             x{i,1}(results(i).outliers.bad)=nan;

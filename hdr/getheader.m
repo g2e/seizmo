@@ -86,7 +86,7 @@ function [varargout]=getheader(data,varargin)
 %     butc=cell2mat(getheader(data,'b utc'));
 %
 %    See also:  CHANGEHEADER, LISTHEADER, READHEADER, WRITEHEADER, GETLGC,
-%               GETENUMID, GETENUMDESC, GETNCMP, GETARRIVAL, COMPAREHEADER
+%               GETENUMID, GETENUMDESC, GETNCMP, FINDPICKS, COMPAREHEADER
 
 %     Version History:
 %        Oct. 29, 2007 - initial version
@@ -114,9 +114,10 @@ function [varargout]=getheader(data,varargin)
 %        Jan. 28, 2012 - code refactoring in ph (for id/desc/lgc support)
 %        Jan. 30, 2012 - doc update, 6utc/6tai changed to utc6/tai6,
 %                        id/desc/lgc support
+%        Mar. 15, 2012 - minor doc touch
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 12:00 GMT
+%     Last Updated Mar. 15, 2012 at 12:00 GMT
 
 % todo:
 

@@ -104,9 +104,10 @@ function [info]=multibandalign(data,varargin)
 %        May  19, 2011 - fixed error with .finalcut not always there
 %        Mar.  1, 2012 - old plot_taupcurve is now plot_taupcurve_dt
 %        Mar.  5, 2012 - allow no written output by setting figdir=false
+%        Mar. 15, 2012 - fix for pick functions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2012 at 12:25 GMT
+%     Last Updated Mar. 15, 2012 at 12:25 GMT
 
 % todo:
 % - smarter initial window is needed to reduce later arrivals messing up
@@ -554,7 +555,7 @@ end
 
 % shift if phase given
 if(~isempty(p.phase))
-    [t,n]=getarrival(data,{p.phase p.phase(1)});
+    [t,n]=findpicks(data,[p.phase ',' p.phase],1);
     data=timeshift(data,-t,strcat('it',num2str(n)));
 end
 
