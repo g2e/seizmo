@@ -3,11 +3,11 @@ function [data]=fix_cameroon(data)
 %
 %    Usage:    data=fix_cameroon(data)
 %
-%    Description: DATA=FIX_CAMEROON(DATA) makes simple corrections to the
-%     records in DATA that correspond to problematic stations from the
-%     Camerooon Seismic Experiment (deployed from 2005-2007, Network Code
-%     XB, Station Names CM01-CM32).  These include amplitude and timing
-%     corrections.
+%    Description:
+%     DATA=FIX_CAMEROON(DATA) makes simple corrections to the records in
+%     DATA that correspond to problematic stations from the Camerooon
+%     Seismic Experiment (deployed from 2005-2007, Network Code XB, Station
+%     Names CM01-CM32).  These include amplitude and timing corrections.
 %
 %    Notes:
 %     - Look at the comments within this script for details on corrections.
@@ -19,8 +19,8 @@ function [data]=fix_cameroon(data)
 %     NZHOUR, NZMIN, NZSEC, NZMSEC, A, F, O, Tn
 %
 %    Examples:
-%     Clean up some Cameroon records acquired via RDSEED:
-%      data=fix_cameroon(fix_rdseed_v48(readseizmo('*XB*CM*')));
+%     % Clean up some Cameroon records acquired via RDSEED:
+%     data=fix_cameroon(fix_rdseed_v48(readseizmo('*XB*CM*')));
 %
 %    See also: FIX_SOD_V222, FIX_DB2SAC_V48, FIX_RDSEED_V48
 
@@ -29,9 +29,10 @@ function [data]=fix_cameroon(data)
 %        Jan. 30, 2010 - reduce CHECKHEADER calls
 %        Aug. 21, 2010 - nargchk fix, updated undef/nan handling, fixed
 %                        warnings
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 21:05 GMT
+%     Last Updated Mar. 24, 2012 at 21:05 GMT
 
 % todo:
 
@@ -39,7 +40,7 @@ function [data]=fix_cameroon(data)
 error(nargchk(1,1,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

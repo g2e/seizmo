@@ -8,14 +8,15 @@ function [data]=slidingmean(data,n,varargin)
 %              data=slidingmean(...,'dim',n)
 %              data=slidingmean(...,'custom',window)
 %
-%    Description: SLIDINGMEAN(DATA,N) applies a centered sliding-window 
-%     mean of 2N+1 samples to the dependent component(s) of records in
-%     SEIZMO struct DATA.  N can be a scalar (each record has the same
-%     window size) or a vector (define each record's window size 
-%     separately).  Sliding windows extending outside the record are
-%     truncated (look at 'EDGE' option to change this).
+%    Description:
+%     DATA=SLIDINGMEAN(DATA,N) applies a centered sliding-window mean of
+%     2N+1 samples to the dependent component(s) of records in SEIZMO
+%     struct DATA.  N can be a scalar (each record has the same window
+%     size) or a vector (define each record's window size separately).
+%     Sliding windows extending outside the record are truncated (look at
+%     'EDGE' option to change this).
 %
-%     SLIDINGMEAN(...,'POSITION','CENTER'|'TRAIL'|'LEAD') sets the
+%     DATA=SLIDINGMEAN(...,'POSITION','CENTER'|'TRAIL'|'LEAD') sets the
 %     position of the sliding window relative to the reference data point
 %     (the data point which is assigned the window's average).  CENTER 
 %     positions the window such that the reference point is at its center.
@@ -26,7 +27,7 @@ function [data]=slidingmean(data,n,varargin)
 %     CENTER positioning is 2N+1, while for TRAIL or LEAD the window size
 %     is N.  Default position is CENTER.
 %     
-%     SLIDINGMEAN(...,'OFFSET',OFFSET) sets the offset of the sliding
+%     DATA=SLIDINGMEAN(...,'OFFSET',OFFSET) sets the offset of the sliding
 %     window from the reference data point in number of samples.  For a
 %     centered window (see option 'POSITION') this introduces a gap of 
 %     2*OFFSET-1 in the window.  For example an OFFSET of 1 will exclude
@@ -37,19 +38,19 @@ function [data]=slidingmean(data,n,varargin)
 %     centermost points to be included twice and so on.  Default OFFSET=0.
 %     OFFSET may be a vector of offsets specifying each record's offset.
 %     
-%     SLIDINGMEAN(...,'EDGE','TRUNCATE'|'PAD') sets the handling of edge
-%     cases.  TRUNCATE eliminates points in the sliding-window that do not 
-%     reference a datapoint (for instance if the window extends before or 
-%     after the data, that portion of the window will be truncated).  PAD 
-%     adds zeros to the data so that all the points of the sliding-window 
-%     always reference some value.  This will create a tapered look at the
-%     edges of the data.  The default setting of EDGE is TRUNCATE.
+%     DATA=SLIDINGMEAN(...,'EDGE','TRUNCATE'|'PAD') sets the handling of
+%     edge cases.  TRUNCATE eliminates points in the sliding-window that do
+%     not reference a data point (ie. if the window extends before or after
+%     the data, that portion of the window will be truncated).  PAD adds
+%     zeros to the data so that all the points of the sliding-window always
+%     reference some value.  This will create a tapered look at the edges
+%     of the data.  The default setting of EDGE is TRUNCATE.
 %
-%     SLIDINGMEAN(...,'DIM',N) slides across dimension N raher than the
-%     default 1 (1 slides down the component - 2 would slide across the
-%     components).
+%     DATA=SLIDINGMEAN(...,'DIM',N) slides across dimension N rather than
+%     the default of 1 (N=1 slides down the component, N=2 slides across
+%     the components).
 %
-%     SLIDINGMEAN(...,'CUSTOM',WINDOW) allows a custom sliding window
+%     DATA=SLIDINGMEAN(...,'CUSTOM',WINDOW) uses a custom sliding window
 %     average.  This might be useful for a Gaussian average or similar.
 %     WINDOW must be formatted as [index; weight] where index is relative
 %     to the reference data point and weight does not include the averaging
@@ -65,8 +66,8 @@ function [data]=slidingmean(data,n,varargin)
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%      Compare a 21-sample sliding-window mean to the original record:
-%       p2([data(1) slidingmean(data(1),10)])
+%     % Compare a 21-sample sliding-window mean to the original record:
+%     p2([data(1) slidingmean(data(1),10)])
 %
 %    See also: SLIDINGABSMEAN, SLIDINGAVG, SLIDINGRMS, SOLOFUN
 
@@ -75,9 +76,10 @@ function [data]=slidingmean(data,n,varargin)
 %        Apr. 22, 2010 - allow multiple N as advertised
 %        Jan.  6, 2011 - drop versioninfo caching, nargchk fix,
 %                        seizmofun/solofun rename
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 09:45 GMT
+%     Last Updated Apr.  3, 2012 at 09:45 GMT
 
 % todo:
 

@@ -9,11 +9,11 @@ function [varargout]=fkframeslide(map,delay,varargin)
 %              fkframeslide(map,delay,dblim,zerodb,fgcolor,bgcolor,ax)
 %              mov=fkframeslide(...);
 %
-%    Description: FKFRAMESLIDE(MAP) slides through an array of fk maps
-%     produced by FKMAP or FKVOLUME/FK4D+FKVOL2MAP by plotting each
-%     map sequentially in a single plot.  There is a 1/3 second delay
-%     between each replotting by default (see next Usage form to adjust
-%     this).
+%    Description:
+%     FKFRAMESLIDE(MAP) slides through an array of fk maps produced by
+%     FKMAP or FKVOLUME/FK4D+FKVOL2MAP by plotting each map sequentially in
+%     a single plot.  There is a 1/3 second delay between each replotting
+%     by default (see next Usage form to adjust this).
 %
 %     FKFRAMESLIDE(MAP,DELAY) specifies the delay between the plotting of
 %     each map in seconds.  The default DELAY is 0.33s.
@@ -43,10 +43,10 @@ function [varargout]=fkframeslide(map,delay,varargin)
 %    Notes:
 %
 %    Examples:
-%     Get a 4D fk dataset, average over frequencies, and play:
-%      s4d=fk4d(data,1,75,50,201,[1/50 1/20]);
-%      s3d=fkvol2map(s4d);
-%      fkframeslide(s3d);
+%     % Get a 4D fk dataset, average over frequencies, and play:
+%     s4d=fk4d(data,1,75,50,201,[1/50 1/20]);
+%     s3d=fkvol2map(s4d);
+%     fkframeslide(s3d);
 %
 %    See also: FK4D, FKFREQSLIDE, PLOTFKMAP, UPDATEFKMAP, FKVOL2MAP,
 %              FKSUBVOL, FKVOLUME
@@ -56,9 +56,10 @@ function [varargout]=fkframeslide(map,delay,varargin)
 %        May  26, 2010 - update for new plotfkmap args
 %        June 16, 2010 - fix see also section
 %        July  6, 2010 - update for new struct
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 16:05 GMT
+%     Last Updated Apr.  4, 2012 at 16:05 GMT
 
 % todo:
 

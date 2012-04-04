@@ -8,16 +8,17 @@ function [x]=ndsquareform(x,method,flag)
 %              m=ndsquareform(v,method,flag)
 %              v=ndsquareform(m,method,flag)
 %
-%    Description: V=NDSQUAREFORM(M) & M=NDSQUAREFORM(V) reshapes M & V
-%     between an n-dimensional, symmetric, square matrix M and the
-%     corresponding n-d "vector" V (quoted because it isn't quite a vector,
-%     as it may have >1 non-singletone dimensions - but at least one of the
-%     first two must be singleton).  The vector form is the lower triangle
-%     section of the matrix form and thus consumes less space.  The
-%     primary disadvantage to the vector form is that one does not
-%     immediately know what a specific element corresponds to in the matrix
-%     form.  Vectors are always returned as row vectors.  Matrices are
-%     always returned with the diagonal elements set to zero.
+%    Description:
+%     V=NDSQUAREFORM(M) & M=NDSQUAREFORM(V) reshapes M & V between an
+%     n-dimensional, symmetric, square matrix M and the corresponding n-d
+%     "vector" V (quoted because it isn't quite a vector, as it may have >1
+%     non-singletone dimensions - think of it as an array of vectors).  The
+%     vector form is the lower triangle section of the matrix form and thus
+%     consumes less space.  The primary disadvantage to the vector form is
+%     that one does not immediately know what a specific element
+%     corresponds to in the matrix form.  Vectors are always returned as
+%     row vectors.  Matrices are always returned with the diagonal elements
+%     set to zero.
 %
 %     M=NDSQUAREFORM(V,'TOMATRIX') requires NDSQUAREFORM to interpret the
 %     input as a vector to be transformed into a matrix.  This option
@@ -50,10 +51,10 @@ function [x]=ndsquareform(x,method,flag)
 %     - The diagonal is NOT required to be zeros.
 %
 %    Example:
-%     Create an n-d vector and convert to matrix form:
-%      v=repmat(1:10,[1 1 2 2])
-%      m=ndsquareform(v)
-%     gives:
+%     % Create an n-d vector and convert to matrix form:
+%     v=repmat(1:10,[1 1 2 2])
+%     m=ndsquareform(v)
+%     % gives:
 %      m(:,:,1,1)=[0  1  2  3  4
 %                  1  0  5  6  7
 %                  2  5  0  8  9
@@ -74,9 +75,9 @@ function [x]=ndsquareform(x,method,flag)
 %                  2  5  0  8  9
 %                  3  6  8  0 10
 %                  4  7  9 10  0];
-%     and going back to vector form:
-%      v=ndsquareform(m)
-%     gives:
+%     % and going back to vector form:
+%     v=ndsquareform(m)
+%     % gives:
 %      v(:,:,1,1)=[1 2 3 4 5 6 7 8 9 10];
 %      v(:,:,2,1)=[1 2 3 4 5 6 7 8 9 10];
 %      v(:,:,1,2)=[1 2 3 4 5 6 7 8 9 10];
@@ -92,9 +93,10 @@ function [x]=ndsquareform(x,method,flag)
 %        Mar. 12, 2010 - doc update
 %        Mar. 22, 2010 - improved checking of anti-symmetric matrices
 %        Feb. 11, 2011 - mass nargchk fix
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  3, 2012 at 15:05 GMT
 
 % todo:
 

@@ -3,11 +3,12 @@ function [data]=raise(data,power)
 %
 %    Usage:    data=raise(data,power)
 %
-%    Description: DATA=RAISE(DATA,POWER) raises SEIZMO records in DATA by
-%     POWER.  POWER must be a real-valued scalar such as 3 or 1/4.  The
-%     default value for POWER is 1 which leaves the records unchanged.
-%     Note that the sign of the data is preserved and the power just scales
-%     the absolute value of the data.
+%    Description:
+%     DATA=RAISE(DATA,POWER) raises SEIZMO records in DATA by POWER.  POWER
+%     must be a real-valued scalar such as 3 or 1/4.  The default value for
+%     POWER is 1 which leaves the records unchanged.  Note that the sign of
+%     the data is preserved and the power just scales the absolute value of
+%     the data.
 %
 %    Notes:
 %     - POWER > 1 emphasizes strong peaks
@@ -18,11 +19,11 @@ function [data]=raise(data,power)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
-%     Cube the data in records:
-%      data=raise(data,3);
+%     % Cube the data in records:
+%     data=raise(data,3);
 %
-%     Get the 4th root of records:
-%      data=raise(data,1/4);
+%     % Get the 4th root of records:
+%     data=raise(data,1/4);
 %
 %    See also: SOLOFUN
 
@@ -30,9 +31,10 @@ function [data]=raise(data,power)
 %        Mar. 16, 2010 - initial version
 %        Jan.  6, 2011 - drop versioninfo caching, fix nargchk, update for
 %                        seizmofun/solofun name change
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 17:05 GMT
+%     Last Updated Mar. 24, 2012 at 17:05 GMT
 
 % todo:
 

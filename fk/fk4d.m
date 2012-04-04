@@ -5,11 +5,10 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %              s4d=fk4d(data,width,overlap,smax,spts,frng,polar)
 %              s4d=fk4d(data,width,overlap,smax,spts,frng,polar,method)
 %
-%    Description: S4D=FK4D(DATA,WIDTH,OVERLAP,SMAX,SPTS,FRNG) beamforms the
-%     wave energy passing through an array in frequency-wavenumber-time
-%     space.  Actually, to allow for easier interpretation between
-%     frequencies, the energy is mapped into frequency-slowness-time space.
-%     The addition of the time dimension (compared to FKVOLUME) is made
+%    Description:
+%     S4D=FK4D(DATA,WIDTH,OVERLAP,SMAX,SPTS,FRNG) beamforms the wave energy
+%     passing through an array in frequency-slowness-time space.  The
+%     addition of the time dimension (compared to FKVOLUME) is made
 %     possible by taking windows that are a fraction of the input records
 %     in SEIZMO struct DATA.  The array info is derived from the metadata
 %     stored in the SEIZMO struct DATA, so make sure station location and
@@ -52,7 +51,7 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %     North/South directions and so exhibits less distortion of the
 %     slowness space.
 %
-%     SVOL=FK4D(DATA,WIDTH,OVERLAP,SMAX,SPTS,FRNG,POLAR,METHOD) defines the
+%     S4D=FK4D(DATA,WIDTH,OVERLAP,SMAX,SPTS,FRNG,POLAR,METHOD) defines the
 %     beamforming method.  METHOD may be 'center', 'coarray', 'full', or
 %     [LAT LON].  The default is 'coarray' which utilizes information from
 %     all unique record pairings in the beamforming and is the default.
@@ -72,8 +71,8 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %       reference time and station location must be set in the header.
 %
 %    Examples:
-%     Get frequency-slowness-time data for an array at 20-50s periods:
-%      s4d=fk4d(data,1,75,50,201,[1/50 1/20]);
+%     % Get frequency-slowness-time data for an array at 20-50s periods:
+%     s4d=fk4d(data,1,75,50,201,[1/50 1/20]);
 %
 %    See also: FKFREQSLIDE, FKFRAMESLIDE, FKVOLUME, FKMAP, FKARF
 
@@ -84,9 +83,10 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %        June 16, 2010 - fix nargchk, error for no windows, improved note
 %                        section, removed meaningless line
 %        July  6, 2010 - major update to struct, doc update
+%        Apr.  3, 2012 - minor doc update, use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 14:05 GMT
+%     Last Updated Apr.  3, 2012 at 14:05 GMT
 
 % todo:
 
@@ -94,7 +94,7 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 error(nargchk(6,8,nargin));
 
 % check struct
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % defaults for width/overlap
 if(isempty(width)); width=1; end

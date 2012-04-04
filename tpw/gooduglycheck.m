@@ -6,21 +6,21 @@ function []=gooduglycheck(indir,outdir,varargin)
 %              gooduglycheck(...,'moveouts',kmps,...)
 %              gooduglycheck(...,'option',value,...)
 %
-%    Description: GOODUGLYCHECK(INDIR,OUTDIR) is used to inspect the
-%     quality of records in the directory structure under directory INDIR.
-%     The program expects that under directory INDIR there are directories
-%     corresponding to separate events and that within these event
-%     directories are the records to be QCed.  The user is presented with a
-%     series of menus and interactive plots to select which events to
-%     look at and to delete poor records from those events.  By default,
-%     this is oriented to the quality control of surface wave recordings as
-%     for each event 3 plots are produced displaying the recordings
-%     filtered at various bands.  The filter ranges are 20-40s, 95-200s,
-%     and 35-120s which are right in line for regional and global surface
-%     wave analysis.  The last plot is interactive to allow record deletion
-%     -- use left-click to select/deselect & middle-click to complete
-%     selection).  Records that are not deleted are written within the
-%     directory OUTDIR with the same directory layout.  
+%    Description:
+%     GOODUGLYCHECK(INDIR,OUTDIR) is for inspection of record quality in
+%     the directory structure under directory INDIR.  The program expects
+%     that under directory INDIR there are directories corresponding to
+%     separate events and that within these event directories are the
+%     records to be QCed.  The user is presented with a series of menus and
+%     interactive plots to select which events to look at and to delete
+%     poor records from those events.  By default, 3 plots are produced
+%     for each event displaying the recordings filtered at some frequency
+%     band.  The filter ranges are 20-40s, 95-200s, and 35-120s which is
+%     works for regional and global surface wave analysis.  The last plot
+%     is interactive to allow record deletion -- use left-click to select
+%     or deselect & middle-click to complete selection).  Records that are
+%     not deleted are written within the directory OUTDIR with the same
+%     directory layout.  
 %
 %     GOODUGLYCHECK(...,'FREQBANDS',CORNERS,...) indicates filtered bands
 %     to be inspected (in addition to the unfiltered records).  The filters
@@ -76,9 +76,10 @@ function []=gooduglycheck(indir,outdir,varargin)
 %        Jan. 21, 2011 - further tweaking
 %        Apr.  5, 2011 - warn on event location variation
 %        June  8, 2011 - turn on fill in cut commands
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  8, 2011 at 10:35 GMT
+%     Last Updated Apr.  2, 2012 at 10:35 GMT
 
 % todo
 % - something like freqwindow may be better?

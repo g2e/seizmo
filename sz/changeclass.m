@@ -3,9 +3,10 @@ function [data]=changeclass(data,class)
 %
 %    Usage:    data=changeclass(data,class)
 %
-%    Description: CHANGECLASS(DATA,CLASS) changes the in-memory class type
-%     of the independent and dependent data stored in the SEIZMO dataset
-%     DATA to CLASS.  CLASS must be a string or cellstr of valid class(es)
+%    Description:
+%     DATA=CHANGECLASS(DATA,CLASS) changes the in-memory class type of the
+%     independent and dependent data stored in the SEIZMO dataset DATA to
+%     CLASS.  CLASS must be a string or cellstr of valid class(es)
 %     ('double', 'single', etc).  This does not change the storage type of
 %     data written to disk (requires a filetype/version change).
 %
@@ -16,8 +17,8 @@ function [data]=changeclass(data,class)
 %    Header changes: NONE
 %
 %    Examples:
-%     Return double precision records and attempt to fix sample spacing:
-%      data=fixdelta(changeclass(data,'double'))
+%     % Return double precision records and attempt to fix sample spacing:
+%     data=fixdelta(changeclass(data,'double'))
 %
 %    See also: FIXDELTA
 
@@ -37,9 +38,10 @@ function [data]=changeclass(data,class)
 %        Oct.  5, 2009 - doc update
 %        Jan. 28, 2010 - seizmoverbose support
 %        Aug. 16, 2010 - fix error usage
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 16, 2010 at 14:05 GMT
+%     Last Updated Apr.  3, 2012 at 14:05 GMT
 
 % todo:
 

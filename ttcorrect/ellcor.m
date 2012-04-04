@@ -4,12 +4,13 @@ function [varargout]=ellcor(evla,evdp,gcarc,az,varargin)
 %    Usage:    corr=ellcor(evla,evdp,gcarc,az,phase)
 %              [corr1,...,corrN]=ellcor(evla,evdp,gcarc,az,ph1,...,phN)
 %
-%    Description: CORR=ELLCOR(EVLA,EVDP,GCARC,AZ,PHASE) calculates the
-%     effect of an elliptical Earth (WGS-84 ellipsoid & AK135 velocity
-%     structure) on the travel times of seismic phases.  The effect is
-%     given so that TTsphere+CORR=TTellipsoid where TTsphere is the travel
-%     time of the phase for the AK135 1D Earth model.  PHASE may be any of
-%     the following phases (given as a string):
+%    Description:
+%     CORR=ELLCOR(EVLA,EVDP,GCARC,AZ,PHASE) calculates the effect of an
+%     elliptical Earth (WGS-84 ellipsoid & AK135 velocity structure) on the
+%     travel times of seismic phases.  The effect is given so that
+%     TTsphere+CORR=TTellipsoid where TTsphere is the travel time of the
+%     phase for the AK135 1D Earth model.  PHASE may be any of the
+%     following phases (given as a string):
 %      p,P,Pdiff,PcP,PP,PS,PcS,SP,ScP,s,S,Sdiff,ScS,SS.
 %     EVLA, EVDP, GCARC, & AZ should all be scalar or equal sized.  EVLA
 %     is the latitude of the earthquake(s) and should be in degrees.  EVDP
@@ -65,9 +66,10 @@ function [varargout]=ellcor(evla,evdp,gcarc,az,varargin)
 %     Version History:
 %        May  16, 2010 - initial version
 %        Jan.  7, 2011 - update example to use RANDLATLON
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  7, 2011 at 12:25 GMT
+%     Last Updated Apr.  2, 2012 at 12:25 GMT
 
 % todo:
 

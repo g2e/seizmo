@@ -55,9 +55,10 @@ function [varargout]=gmv(data,varargin)
 
 %     Version History:
 %        Apr. 16, 2011 - initial version
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 16, 2011 at 14:05 GMT
+%     Last Updated Apr.  3, 2012 at 14:05 GMT
 
 % todo:
 
@@ -71,8 +72,8 @@ elseif(nargin>1 && ~iscellstr(varargin(1:2:end)))
         '1 or more properties were not given as strings!');
 end
 
-% check data (dep)
-versioninfo(data,'dep');
+% check data structure
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

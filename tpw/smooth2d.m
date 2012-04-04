@@ -6,14 +6,14 @@ function [v]=smooth2d(v,nx,ny,edge)
 %              sv=smooth2d(v,nx,ny,edge)
 %              sv=smooth2d(v,n,[],edge)
 %
-%    Description: SV=SMOOTH2D(V,N) smooths the values in the 2D array V
-%     by convolving it with a Gaussian with a characteristic falloff
-%     distance of N rows or columns.  V is assumed to be a regularly spaced
-%     grid with equal spacing in both the row and column directions.  N
-%     defines the distance from the Gaussian's center (of unit amplitude)
-%     to the point where the values have fallen off to 1/e.  Edge effects
-%     are accounted for by using a equally smoothed unit surface for
-%     averaging.
+%    Description:
+%     SV=SMOOTH2D(V,N) smooths the values in the 2D array V by convolving
+%     it with a Gaussian with a characteristic falloff distance of N rows
+%     or columns.  V is assumed to be a regularly spaced grid with equal
+%     spacing in both the row and column directions.  N defines the
+%     distance from the Gaussian's center (of unit amplitude) to the point
+%     where the values have fallen off to 1/e.  Edge effects are accounted
+%     for by using a equally smoothed unit surface for averaging.
 %
 %     SV=SMOOTH2D(V,NX,NY) allows for unequal spacing between the x
 %     (column spacing) and the y (row spacing) directions.  For example,
@@ -32,10 +32,10 @@ function [v]=smooth2d(v,nx,ny,edge)
 %    Notes:
 %
 %    Examples:
-%     Compare PEAKS before/after applying a Gaussian with a falloff of 4
-%     grid spacings in both the x & y directions (0.5 units);
-%      peaks;
-%      surf(smooth2d(peaks,4));
+%     % Compare PEAKS before/after applying a Gaussian with a falloff of 4
+%     % grid spacings in both the x & y directions (0.5 units);
+%     peaks;
+%     surf(smooth2d(peaks,4));
 %
 %    See also: INTERP2, CONV2
 
@@ -43,9 +43,10 @@ function [v]=smooth2d(v,nx,ny,edge)
 %        Feb.  4, 2010 - rewrite and added documentation
 %        May  17, 2010 - updated documentation
 %        July  9, 2010 - fixed nargchk
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  9, 2010 at 17:10 GMT
+%     Last Updated Apr.  2, 2012 at 17:10 GMT
 
 % todo:
 

@@ -3,10 +3,11 @@ function [model]=perturb_1dmodel(model,newname,varargin)
 %
 %    Usage:    model=perturb_1dmodel(model,newname,prop,value,...)
 %
-%    Description: MODEL=PERTURB_1DMODEL(MODEL,NEWNAME,PROP,VALUE,...) will
-%     perturb the property PROP of the 1D Earth model MODEL using the
-%     matrix VALUE to create new layers in the model.  VALUE is a Nx5
-%     matrix with the following layout:
+%    Description:
+%     MODEL=PERTURB_1DMODEL(MODEL,NEWNAME,PROP,VALUE,...) will perturb the
+%     property PROP of the 1D Earth model MODEL using the matrix VALUE to
+%     create new layers in the model.  VALUE is a Nx5 matrix with the
+%     following layout:
 %       [depth1 value1 vtype1 gtype12 npts12;
 %        depth2 value2 vtype2 gtype23 npts23;
 %        ...
@@ -47,28 +48,28 @@ function [model]=perturb_1dmodel(model,newname,varargin)
 %     - values that are 
 %
 %    Examples:
-%     PREM with a D" discontinuity in Vs.  There is a 100km thick layer
-%     above the discontinuity at 2700km that decays from PREM to -1% of
-%     PREM.  The discontinuity is a 3% jump.  Afterwards the D" layer
-%     decays like an error function (that was given values from 0 to 2) to
-%     the CMB which is -0.2km/s slower than the top of the D" layer:
-%      newmod=perturb_1dmodel(prem,'prem+ddp',...
-%                             'vs',[2600    0 1 1 10;
-%                                   2700   -1 4 0  0;
-%                                   2700    2 4 2 10;
-%                                   2891 -0.2 1 0  0]);
-%      plot1dmodel([prem newmod],[],[2500 3000]);
+%     % PREM with a D" discontinuity in Vs.  There is a 100km thick layer
+%     % above the discontinuity at 2700km that decays from PREM to -1% of
+%     % PREM.  The discontinuity is a 3% jump.  Afterwards the D" layer
+%     % decays like an error function (that was given values from 0 to 2)
+%     % to the CMB which is -0.2km/s slower than the top of the D" layer:
+%     newmod=perturb_1dmodel(prem,'prem+ddp',...
+%                            'vs',[2600    0 1 1 10;
+%                                  2700   -1 4 0  0;
+%                                  2700    2 4 2 10;
+%                                  2891 -0.2 1 0  0]);
+%     plot1dmodel([prem newmod],[],[2500 3000]);
 %
-%     Same but also adding a 5-point, 25km thick
-%     ULVZ with a 10% drop in Vs:
-%      newmod=perturb_1dmodel(prem,'prem+ddp+ulvz',...
-%                             'vs',[2600    0 1 1 10;
-%                                   2700   -1 4 0  0;
-%                                   2700    2 4 2 10;
-%                                   2891 -0.2 1 0  0],...
-%                             'vs',[2891-25 -10 4 1 5;
-%                                   2891    -10 4 0 0]);
-%      plot1dmodel([prem newmod],[],[2500 3000]);
+%     % Same but also adding a 5-point, 25km thick
+%     % ULVZ with a 10% drop in Vs:
+%     newmod=perturb_1dmodel(prem,'prem+ddp+ulvz',...
+%                            'vs',[2600    0 1 1 10;
+%                                  2700   -1 4 0  0;
+%                                  2700    2 4 2 10;
+%                                  2891 -0.2 1 0  0],...
+%                            'vs',[2891-25 -10 4 1 5;
+%                                  2891    -10 4 0 0]);
+%     plot1dmodel([prem newmod],[],[2500 3000]);
 %
 %    See also: PREM, AK135, IASP91, PREM_PERFECT, CMB_1DMODEL_LIBRARY,
 %              PLOT1DMODEL, FLATTEN_1DMODEL
@@ -79,9 +80,10 @@ function [model]=perturb_1dmodel(model,newname,varargin)
 %                        arg so we set the model name too
 %        May  29, 2010 - fixed a bug in perturbing relative to value above
 %        Sep. 19, 2010 - change NaN values to Inf (for Inf Q factor)
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 19, 2010 at 14:45 GMT
+%     Last Updated Apr.  3, 2012 at 14:45 GMT
 
 % todo:
 

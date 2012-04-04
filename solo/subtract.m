@@ -4,15 +4,15 @@ function [data]=subtract(data,constant,cmp)
 %    Usage:    data=subtract(data,constant)
 %              data=subtract(data,constant,cmp_list)
 %
-%    Description: SUBTRACT(DATA,CONSTANT) subtracts a constant from the 
-%     dependent component(s) of SEIZMO records.  For multi-component 
-%     files, this operation is performed on every dependent component (this
-%     includes spectral files).
+%    Description:
+%     DATA=SUBTRACT(DATA,CONSTANT) subtracts a constant from the dependent
+%     component(s) of SEIZMO records in DATA.  For multi-component files,
+%     this operation is performed on every dependent component (including
+%     spectral).
 %
-%     SUBTRACT(DATA,CONSTANT,CMP) allows for operations on just components
+%     DATA=SUBTRACT(DATA,CONSTANT,CMP) allows for operations on components
 %     in the list CMP.  By default all components are operated on (use ':'
-%     to replicate the default behavior).  See the examples section for a 
-%     usage case.
+%     to replicate the default behavior).
 %
 %    Notes:
 %     - a scalar constant applies the value to all records
@@ -24,10 +24,10 @@ function [data]=subtract(data,constant,cmp)
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Do a Hilbert transform by converting records to the frequency 
-%     domain, subtracting pi/2 from the phase (component 2 in spectral
-%     records), and converting back to the time domain:
-%      data=idft(subtract(dft(data),pi/2,2))
+%     % Do a Hilbert transform by converting records to the frequency 
+%     % domain, subtracting pi/2 from the phase (component 2 in spectral
+%     % records), and converting back to the time domain:
+%     data=idft(subtract(dft(data),pi/2,2))
 %
 %    See also: ADD, MULTIPLY, DIVIDE, SOLOFUN
 
@@ -48,9 +48,10 @@ function [data]=subtract(data,constant,cmp)
 %                        move usage up
 %        Jan. 26, 2010 - seizmoverbose support, properly handle states
 %        Jan.  6, 2011 - nargchk fix, seizmofun/solofun rename
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 18:25 GMT
+%     Last Updated Apr.  3, 2012 at 18:25 GMT
 
 % todo:
 

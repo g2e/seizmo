@@ -33,9 +33,10 @@ function [data]=fix_sod_v222(data)
 %        Aug. 21, 2010 - nargchk fix, updated undef/nan handling
 %        Jan. 31, 2011 - minor doc fixes
 %        Mar. 19, 2011 - stream code fix was wrong (sigh)
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 19, 2011 at 22:25 GMT
+%     Last Updated Apr.  3, 2012 at 22:25 GMT
 
 % todo:
 
@@ -43,7 +44,7 @@ function [data]=fix_sod_v222(data)
 error(nargchk(1,1,nargin));
 
 % check data structure
-versioninfo(data);
+error(seizmocheck(data));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

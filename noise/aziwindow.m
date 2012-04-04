@@ -7,7 +7,7 @@ function [varargout]=aziwindow(data,azrng,lagrng,degrng,ax)
 %              ax=aziwindow(...)
 %
 %    Description:
-%     AZISWINDOW(DATA,AZIRNG) creates a plot showing the correlograms in
+%     AZIWINDOW(DATA,AZIRNG) creates a plot showing the correlograms in
 %     SEIZMO struct DATA ordered by station-pair distance.  The plot has
 %     default limits of -1 to 11 in degree distance and +/-500s in time.
 %     To adjust these values see the remaining usage forms.  The input
@@ -42,17 +42,18 @@ function [varargout]=aziwindow(data,azrng,lagrng,degrng,ax)
 %     Version History:
 %        Sep.  7, 2010 - initial version
 %        Sep. 16, 2010 - major doc update, better checks and plotting
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 16, 2010 at 14:15 GMT
+%     Last Updated Apr.  3, 2012 at 14:15 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,5,nargin));
 
-% check dataset
-versioninfo(data,'dep');
+% check data structure
+error(seizmocheck(data,'dep'));
 
 % check header of dataset
 data=checkheader(data,...

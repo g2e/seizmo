@@ -5,11 +5,12 @@ function [x,li]=unsort(x,i,dim)
 %              y=unsort(x,sort_idx,dim)
 %              [y,li]=unsort(...)
 %
-%    Description: Y=UNSORT(X,SORT_IDX) undoes a previous sort operation
-%     using the permutation matrix from that previous sort.  Really this
-%     just calls SORT2LI to get the sort indices into linear indices so
-%     unsorting is as simple as X(LI)=X, where LI are the linear indices.
-%     See the third usage form and the example for more on linear indices.
+%    Description:
+%     Y=UNSORT(X,SORT_IDX) undoes a previous sort operation using the
+%     permutation matrix from that previous sort.  Really this just calls
+%     SORT2LI to get the sort indices into linear indices so unsorting is
+%     as simple as X(LI)=X, where LI are the linear indices.  See the third
+%     usage form and the example for more on linear indices.
 %
 %     Y=UNSORT(X,SORT_IDX,DIM) specifies the dimension that the previous
 %     sort operation worked on.  If you specified DIM with sort, then DIM
@@ -21,22 +22,23 @@ function [x,li]=unsort(x,i,dim)
 %    Notes:
 %
 %    Examples:
-%     Sort and unsort a matrix:
-%      [x,i]=sort(x)
-%      [x,li]=unsort(x,i)
+%     % Sort and unsort a matrix:
+%     [x,i]=sort(x)
+%     [x,li]=unsort(x,i)
 %     
-%     Now re-sort and re-unsort using the linear indices:
-%      x=x(li); % sorted
-%      x(li)=x; % unsorted
+%     % Now re-sort and re-unsort using the linear indices:
+%     x=x(li); % sorted
+%     x(li)=x; % unsorted
 %
 %    See also: SORT, MATCHSORT, SORT2LI
 
 %     Version History:
 %        Sep. 21, 2009 - initial version
 %        Feb. 16, 2010 - fixed usage section in docs
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2010 at 01:25 GMT
+%     Last Updated Apr.  3, 2012 at 01:25 GMT
 
 % todo:
 

@@ -8,11 +8,12 @@ function [data,tpr,ax]=usertaper(data,width,func,varargin)
 %              [data,tpr]=usertaper(...)
 %              [data,tpr,ax]=usertaper(...)
 %
-%    Description: DATA=USERTAPER(DATA) presents an interactive menu and
-%     plot interface to taper records in a dataset with a few mouse clicks.
-%     The default taper type is that set by function TAPER.  This may be
-%     modified using the menu presented.  By default no mean or trend
-%     removal is done after tapering.
+%    Description:
+%     DATA=USERTAPER(DATA) presents an interactive menu and plot interface
+%     to taper records in a dataset with a few mouse clicks.  The default
+%     taper type is that set by function TAPER.  This may be modified using
+%     the menu presented.  By default no mean or trend removal is done
+%     after tapering.
 %
 %     DATA=USERTAPER(DATA,WIDTH) alters the default taper width.  Note that
 %     the default here is [0 0] which means no leading or trailing tapers. 
@@ -63,9 +64,10 @@ function [data,tpr,ax]=usertaper(data,width,func,varargin)
 %        Jan.  6, 2011 - use key2zoompan
 %        Jan. 17, 2011 - allow specifying the default taper width, altered
 %                        the menus (no more crashing exit)
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 17, 2011 at 11:00 GMT
+%     Last Updated Mar. 24, 2012 at 11:00 GMT
 
 % todo:
 % - subplot showing taper
@@ -79,7 +81,7 @@ if(nargin>3 && ~mod(nargin,2))
 end
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

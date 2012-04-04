@@ -4,12 +4,13 @@ function [f,a]=getmainlobe(f0,fs,swin,tprfrac,zpad,show)
 %    Usage:    [f,a]=getmainlobe(f0,fs,swin,tprfrac,zpad)
 %              [f,a]=getmainlobe(f0,fs,swin,tprfrac,zpad,show)
 %
-%    Description: [F,A]=GETMAINLOBE(F0,FS,SWIN,TPRFRAC,ZPAD) extracts the
-%     frequency and amplitude of the main lobe of a windowed sinusoid.  The
-%     sinusoid's frequency is given by F0 (in Hz) and has unit amplitude.
-%     The sampling frequency is given by FS (in Hz).  FS must be greater
-%     than twice the sinusoid's frequency to avoid aliasing.  SWIN gives
-%     the boxcar window limits ([START END] in seconds), TPRFRAC gives the
+%    Description:
+%     [F,A]=GETMAINLOBE(F0,FS,SWIN,TPRFRAC,ZPAD) extracts the frequency and
+%     amplitude of the main lobe of a windowed sinusoid.  The sinusoid's
+%     frequency is given by F0 (in Hz) and has unit amplitude.  The
+%     sampling frequency is given by FS (in Hz).  FS must be greater than
+%     twice the sinusoid's frequency to avoid aliasing.  SWIN gives the
+%     boxcar window limits ([START END] in seconds), TPRFRAC gives the
 %     cosine taper halfwidth as a fraction of the boxcar window size, and
 %     ZPAD gives amouunt of zero-padding before and after the window
 %     ([BEFORE AFTER] in seconds).  Given these specifications, the
@@ -27,14 +28,14 @@ function [f,a]=getmainlobe(f0,fs,swin,tprfrac,zpad,show)
 %     - sinusoid is a sine function w/ no phase offset (amp. at 0s is 0)
 %
 %    Examples:
-%     Get the main lobe for a 100s period sinusoid sampled at 1Hz with a
-%     1000s window with 200 seconds of cosine tapering on each end and
-%     1000s of zero padding on both ends:
-%      [f,a]=getmainlobe(1/100,1,[1000 2000],200/1000,[1000 1000]);
+%     % Get the main lobe for a 100s period sinusoid sampled at 1Hz with a
+%     % 1000s window with 200 seconds of cosine tapering on each end and
+%     % 1000s of zero padding on both ends:
+%     [f,a]=getmainlobe(1/100,1,[1000 2000],200/1000,[1000 1000]);
 %
-%     Compare that with a non-tapered version:
-%      [f1,a1]=getmainlobe(1/100,1,[1000 2000],0,[1000 1000]);
-%      plot(f,a,f1,a1)
+%     % Compare that with a non-tapered version:
+%     [f1,a1]=getmainlobe(1/100,1,[1000 2000],0,[1000 1000]);
+%     plot(f,a,f1,a1)
 %
 %    See also: RAYLEIGH_2D_PLANE_WAVE_KERNELS, SMOOTH2D, READKERNELS,
 %              WRITEKERNELS, MAKEKERNELS, PLOTKERNELS
@@ -42,9 +43,10 @@ function [f,a]=getmainlobe(f0,fs,swin,tprfrac,zpad,show)
 %     Version History:
 %        Feb.  4, 2010 - initial version
 %        July  9, 2010 - fixed see also section, fixed nargchk
+%        Mar. 24, 2012 - minor doc update, plot calls use handles now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  9, 2010 at 17:10 GMT
+%     Last Updated Mar. 24, 2012 at 17:10 GMT
 
 % todo:
 
@@ -95,12 +97,13 @@ t=[t(1)-(nzp(1):-1:1)/fs t t(end)+(1:nzp(2))/fs];
 x=[zeros(1,nzp(1)) x zeros(1,nzp(2))];
 npts=nzp(1)+nzp(2)+npts;
 if(show)
-    figure;
-    plot(t,x);
-    xlabel('TIME (s)');
-    ylabel('NON-DIMENSIONAL AMPLITUDE');
-    title(['WINDOWED SINUSOID - ' sprintf('PERIOD: %gS',1/f0)]);
-    grid on
+    fh(1)=figure;
+    ax(1)=axes('parent',fh(1));
+    plot(ax(1),t,x);
+    xlabel(ax(1),'TIME (s)');
+    ylabel(ax(1),'NON-DIMENSIONAL AMPLITUDE');
+    title(ax(1),['WINDOWED SINUSOID - ' sprintf('PERIOD: %gS',1/f0)]);
+    grid(ax(1),'on');
 end
 
 % fft
@@ -111,12 +114,14 @@ c=fft(x,nfft)/fs;
 f=fs/nfft*(0:nfft/2);
 a=2*abs(c(1:nfft/2+1));
 if(show)
-    figure;
-    loglog(f,a);
-    xlabel('FREQUENCY (Hz)');
-    ylabel('NON-DIMENSIONAL SPECTRAL AMPLITUDE');
-    title(['WINDOWED SINUSOID SPECTRA - ' sprintf('PERIOD: %gS',1/f0)]);
-    grid on
+    fh(2)=figure;
+    ax(2)=axes('parent',fh(2));
+    loglog(ax(2),f,a);
+    xlabel(ax(2),'FREQUENCY (Hz)');
+    ylabel(ax(2),'NON-DIMENSIONAL SPECTRAL AMPLITUDE');
+    title(ax(2),['WINDOWED SINUSOID SPECTRA - ' ...
+        sprintf('PERIOD: %gS',1/f0)]);
+    grid(ax(2),'on');
 end
 
 % extract the main lobe

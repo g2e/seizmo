@@ -3,21 +3,22 @@ function [data]=removemean(data)
 %
 %    Usage:    data=removemean(data)
 %
-%    Description: REMOVEMEAN(DATA) removes the mean from SEIZMO records.
-%     In the case of multi-component records, each component has the mean
-%     removed.
+%    Description:
+%     DATA=REMOVEMEAN(DATA) removes the mean from SEIZMO records.  In the
+%     case of multi-component records, each component has the mean removed.
 %
 %    Notes:
-%     - useful for avoiding edge-effects in spectral operations but
-%       REMOVETREND is probably a better option in this case
+%     - REMOVEMEAN is useful for avoiding edge-effects in spectral
+%       operations but REMOVETREND is probably a better option in this
+%       case.
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     It is generally a good idea to remove the mean from records before
-%     performing any filtering operations to avoid edge effects:
-%      plot1(squish(data,5))             % more ringing
-%      plot1(squish(removemean(data),5)) % less ringing
+%     % It is generally a good idea to remove the mean from records before
+%     % performing any filtering operations to avoid edge effects:
+%     plot1(squish(data,5))             % more ringing
+%     plot1(squish(removemean(data),5)) % less ringing
 %
 %    See also: REMOVETREND, REMOVEPOLYNOMIAL, GETPOLYNOMIAL, TAPER,
 %              REMOVEDEADRECORDS
@@ -37,9 +38,10 @@ function [data]=removemean(data)
 %        June 24, 2009 - minor doc fix
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  3, 2012 at 15:05 GMT
 
 % todo:
 

@@ -3,19 +3,19 @@ function []=etopo1_tile(version)
 %
 %    Usage:    etopo1_tile(version)
 %
-%    Description: ETOPO1_TILE(VERSION) reads the ETOPO1 mat files
-%     'etopo1_*.mat' in the current working directory and reformats them to
-%     be in 10x10 degree tiles.  This makes loads faster and lighter.
-%     The output mat-files are 'etopo1_*10.mat' in the current working
-%     directory.
+%    Description:
+%     ETOPO1_TILE(VERSION) reads the ETOPO1 mat files 'etopo1_*.mat' in the
+%     current working directory and reformats them to be in 10x10 degree
+%     tiles.  This makes loads faster and lighter.  The output mat-files
+%     are 'etopo1_*10.mat' in the current working directory.
 %
 %    Notes:
 %     - Due to grid registration the tiles will have overlap.  Use
 %       TOPO_REGION to extract the region properly.
 %
 %    Examples:
-%     Tile (setting version to 1):
-%      etopo1_tile(1);
+%     % Tile (setting version to 1):
+%     etopo1_tile(1);
 %
 %    See also: SRTM30PLUS_TILE
 
@@ -23,9 +23,10 @@ function []=etopo1_tile(version)
 %        Feb. 16, 2010 - initial version
 %        Feb. 25, 2010 - minor doc update
 %        Feb. 11, 2011 - mass nargchk fix
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  2, 2012 at 15:05 GMT
 
 % todo:
 

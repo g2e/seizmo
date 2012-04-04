@@ -9,14 +9,15 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %              plotgeofkmap(map,projopt,dblim,zerodb,fgcolor,bgcolor,ax)
 %              ax=plotgeofkmap(...)
 %
-%    Description: PLOTGEOFKMAP(MAP) plots the frequency-slowness-position
-%     beam data in geofk struct MAP.  See a geofk function like
-%     GEOFKXCVOLUME for details on the struct.  The data is plotted on a
-%     map with a Hammer-Aitoff projection and the map limits are scaled to
-%     fit the beam data & station positions.  Note that the beam data
-%     positions should form a regular grid (using a function like
-%     MESHGRID).  This plots GSHHS coastlines and borders in low-resolution
-%     which may take a few moments - please be patient.
+%    Description:
+%     PLOTGEOFKMAP(MAP) plots the frequency-slowness-position beam data in
+%     geofk struct MAP.  See a geofk function like GEOFKXCVOLUME for
+%     details on the struct.  The data is plotted on a map with a
+%     Hammer-Aitoff projection and the map limits are scaled to fit the
+%     beam data & station positions.  Note that the beam data positions
+%     should form a regular grid (using a function like MESHGRID).  This
+%     plots GSHHS coastlines and borders in low-resolution which may take a
+%     few moments - please be patient.
 %
 %     PLOTGEOFKMAP(MAP,PROJOPT) allows passing options to M_PROJ.  See
 %     M_PROJ('SET') for possible projections and See M_PROJ('GET',PROJ) for
@@ -45,11 +46,11 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %    Notes:
 %
 %    Examples:
-%     In search of the 26s microseism:
-%      [lat,lon]=meshgrid(-60:60,-60:60);
-%      zgeo=geofkxcvolume(xcdata,[lat(:) lon(:)],27:33,[1/26.3 1/26]);
-%      zgeo0=geofkvol2map(zgeo);
-%      plotgeofkmap(zgeo0);
+%     % In search of the 26s microseism:
+%     [lat,lon]=meshgrid(-60:60,-60:60);
+%     zgeo=geofkxcvolume(xcdata,[lat(:) lon(:)],27:33,[1/26.3 1/26]);
+%     zgeo0=geofkvol2map(zgeo);
+%     plotgeofkmap(zgeo0);
 %
 %    See also: GEOFKFREQSLIDE, GEOFKSLOWSLIDE, GEOFKVOL2MAP, GEOFKXCVOLUME,
 %              GEOFKXCHORZVOLUME, CHKGEOFKSTRUCT, UPDATEGEOFKMAP
@@ -63,9 +64,10 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %                        plots as 'fkmap'
 %        Dec.  8, 2010 - use '^o' for deg symbol rather than \circ
 %        Feb. 16, 2011 - color code fix
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2011 at 15:05 GMT
+%     Last Updated Apr.  4, 2012 at 15:05 GMT
 
 % todo:
 

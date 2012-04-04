@@ -4,15 +4,15 @@ function [data]=multiply(data,constant,cmp)
 %    Usage:    data=multiply(data,constant)
 %              data=multiply(data,constant,cmp_list)
 %
-%    Description: MULTIPLY(DATA,CONSTANT) multiplies the dependent
-%     component(s) of SEIZMO records by a constant.  For multi-component
-%     files, this operation is performed on every dependent component (this
-%     includes spectral files).
+%    Description:
+%     DATA=MULTIPLY(DATA,CONSTANT) multiplies the dependent component(s) of
+%     SEIZMO records in DATA by a constant.  For multi-component files,
+%     this operation is performed on every dependent component (including
+%     spectral).
 %
-%     MULTIPLY(DATA,CONSTANT,CMP) allows for operations on just components
+%     DATA=MULTIPLY(DATA,CONSTANT,CMP) allows for operations on components
 %     in the list CMP.  By default all components are operated on (use ':'
-%     to replicate the default behavior).  See the examples section for a 
-%     usage case.
+%     to replicate the default behavior).
 %
 %    Notes:
 %     - a scalar constant applies the value to all records
@@ -24,9 +24,9 @@ function [data]=multiply(data,constant,cmp)
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Get the complex conjugate of a real-imaginary spectral records by
-%     multiplying the imaginary component by -1 (component 2):
-%      data=multiply(data,-1,2)
+%     % Get the complex conjugate of a real-imaginary spectral records by
+%     % multiplying the imaginary component by -1 (component 2):
+%     data=multiply(data,-1,2)
 %
 %    See also: SUBTRACT, ADD, DIVIDE, SOLOFUN
 
@@ -47,9 +47,10 @@ function [data]=multiply(data,constant,cmp)
 %                        move usage up
 %        Jan. 26, 2010 - seizmoverbose support, properly handle states
 %        Jan.  6, 2011 - nargchk fix, seizmofun/solofun rename
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 18:25 GMT
+%     Last Updated Apr.  3, 2012 at 18:25 GMT
 
 % todo:
 

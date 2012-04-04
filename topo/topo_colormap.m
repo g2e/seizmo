@@ -6,11 +6,12 @@ function [varargout]=topo_colormap(z,m,sea,land)
 %              topo_colormap(z,m,sea_cmap,land_cmap)
 %              [cmap,z0]=topo_colormap(...)
 %
-%    Description: TOPO_COLORMAP(Z) creates and applies a colormap for the
-%     topography data Z.  The colormap is the combination of two colormaps
-%     appropriately proportioned to the elevation ranges of Z so that the
-%     interface between the colormaps is at sea level.  The two colormaps
-%     are provided by the functions GLOBE_SEA & GLOBE_LAND.  With no output
+%    Description:
+%     TOPO_COLORMAP(Z) creates and applies a colormap for the topography
+%     data Z.  The colormap is a combination of two colormaps appropriately
+%     proportioned to the elevation ranges of Z so that the interface
+%     between the colormaps is at sea level.  The two colormaps are
+%     provided by the functions GLOBE_SEA & GLOBE_LAND.  With no output
 %     arguments, the current figure is set to use the created colormap and
 %     the color axis is adjusted to the limits of Z (unless Z does not span
 %     0 - see the Notes section below).
@@ -35,18 +36,19 @@ function [varargout]=topo_colormap(z,m,sea,land)
 %       highlighting of the range of Z values.
 %
 %    Examples:
-%     Force the colormap to be from -7km to 5km with 256 colors:
-%      cmap=topo_colormap([-7000 5000],256);
+%     % Force the colormap to be from -7km to 5km with 256 colors:
+%     cmap=topo_colormap([-7000 5000],256);
 %
-%    See also: TOPO_REGION
+%    See also: TOPO_REGION, TOPO_POINTS
 
 %     Version History:
 %        Feb. 19, 2010 - initial version
 %        Feb. 22, 2010 - output all z-values rather than limits
 %        Feb. 11, 2011 - mass nargchk fix
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  2, 2012 at 15:05 GMT
 
 % todo:
 

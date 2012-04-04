@@ -3,27 +3,29 @@ function [moho]=getc2moho(lat,lon)
 %
 %    Usage:    moho=getc2moho(lat,lon)
 %
-%    Description: MOHO=GETC2MOHO(LAT,LON) returns the depth of the Moho
-%     discontinuity at the positions specified.  The Moho is in kilometers
-%     depth from sea level.  LAT & LON are expected to be scalars or equal
-%     sized arrays and have units in degrees.  The depths are based on
-%     Crust2.0 by the Scripps group.
+%    Description:
+%     MOHO=GETC2MOHO(LAT,LON) returns the depth of the Moho discontinuity
+%     at the positions specified.  The Moho is in kilometers depth from sea
+%     level.  LAT & LON are expected to be scalars or equal sized arrays
+%     and have units in degrees.  The depths are based on Crust2.0 by the
+%     Scripps group.
 %
 %    Notes:
 %
 %    Examples:
-%     Plot a Crust2.0 moho depth map:
-%      [x,y]=meshgrid(-179:2:179,89:-2:-89);
-%      figure; imagesc(-179:2:179,89:-2:-89,getc2moho(y,x)); axis xy
+%     % Plot a Crust2.0 moho depth map:
+%     [x,y]=meshgrid(-179:2:179,89:-2:-89);
+%     figure; imagesc(-179:2:179,89:-2:-89,getc2moho(y,x)); axis xy
 %
 %    See also: GETC2ELEV, GETC2THICK, GETCRUST2, CRUCOR, MANCOR
 
 %     Version History:
 %        May  17, 2010 - initial version
 %        May  19, 2010 - name changed from GETMOHO
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  19, 2010 at 18:15 GMT
+%     Last Updated Apr.  3, 2012 at 18:15 GMT
 
 % todo:
 

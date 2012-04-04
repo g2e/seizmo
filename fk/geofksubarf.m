@@ -3,16 +3,17 @@ function [arf]=geofksubarf(arf,srng,latrng,lonrng)
 %
 %    Usage:    arf=geofksubarf(arf,srng,latrng,lonrng)
 %
-%    Description: ARF=GEOFKSUBARF(ARF,SRNG,LATRNG,LONRNG) extracts the
-%     geofkarf data in ARF for the ranges given by FRNG, SRNG, LATRNG, &
-%     LONRNG and returns the reduced array response function with all
-%     pertinent info updated.  ARF is a geofkarf struct (for struct details
-%     see that function).  SRNG defines the horizontal slowness range in
-%     seconds per degree as [SLOWLOW SLOWHIGH].  LATRNG & LONRNG provide
-%     the parallels and meridians that define a window in the geographic
-%     domain and they are expected to be in degrees as [LOW HIGH].  Note
-%     that longitudes in the response positions will be wrapped so all
-%     possible points are included in the LONRNG.
+%    Description:
+%     ARF=GEOFKSUBARF(ARF,SRNG,LATRNG,LONRNG) extracts the geofkarf data in
+%     ARF for the ranges given by FRNG, SRNG, LATRNG, & LONRNG and returns
+%     the reduced array response function with all pertinent info updated.
+%     ARF is a geofkarf struct (for struct details see that function).
+%     SRNG defines the horizontal slowness range in seconds per degree as
+%     [SLOWLOW SLOWHIGH].  LATRNG & LONRNG provide the parallels and
+%     meridians that define a window in the geographic domain and they are
+%     expected to be in degrees as [LOW HIGH].  Note that longitudes in the
+%     response positions will be wrapped so all possible points are
+%     included in the LONRNG.
 %
 %     By default all ranges are set to [] (full range).
 %
@@ -27,9 +28,10 @@ function [arf]=geofksubarf(arf,srng,latrng,lonrng)
 
 %     Version History:
 %        July  8, 2010 - initial version
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  8, 2010 at 10:45 GMT
+%     Last Updated Apr.  4, 2012 at 10:45 GMT
 
 % todo:
 

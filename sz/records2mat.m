@@ -3,24 +3,25 @@ function [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 %
 %    Usage:    [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 %
-%    Description: [DEP,IDX1,IND,IDX2,STORE,NPTS]=RECORDS2MAT(DATA)
-%     combines SEIZMO records stored in DATA into numeric arrays DEP & IND 
-%     (components are in separate columns).  IDX1 & IDX2 indicate which
-%     columns belong to which records in DATA.  STORE is a cell array of
-%     data class strings, one for each record.  NPTS gives the original
-%     npts in each record (records are padded with zeros when combined).
-%     This function is useful for providing easy access to functions not
-%     in the SEIZMO toolbox.  Use MAT2RECORDS to redistribute the records
-%     back into DATA if necessary.
+%    Description:
+%     [DEP,IDX1,IND,IDX2,STORE,NPTS]=RECORDS2MAT(DATA) combines SEIZMO
+%     records stored in DATA into numeric arrays DEP & IND (components are
+%     in separate columns).  IDX1 & IDX2 indicate which columns belong to
+%     which records in DATA.  STORE is a cell array of data class strings,
+%     one for each record.  NPTS gives the original npts in each record
+%     (records are padded with zeros when combined).  This function is
+%     useful for providing easy access to functions not in the SEIZMO
+%     toolbox.  Use MAT2RECORDS to redistribute the records back into DATA
+%     if necessary.
 %    
 %    Notes:
 %
 %    Header changes: see CHECKHEADER
 %
 %    Examples:
-%     Get the interquartile range of records and assign to a header field:
-%      dep=records2mat(data);
-%      data=changeheader(data,'user3',iqr(dep));
+%     % Get interquartile range of records and assign to a header field:
+%     dep=records2mat(data);
+%     data=changeheader(data,'user3',iqr(dep));
 %
 %    See also: MAT2RECORDS, BSEIZMO, GETVALUEFUN, SOLOFUN, MULTIFUN,
 %              SLIDINGFUN
@@ -45,9 +46,10 @@ function [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 %        Feb.  3, 2010 - versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix, see also section update, 
 %                        dropped versioninfo caching
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 24, 2012 at 15:05 GMT
 
 % todo:
 
@@ -55,14 +57,14 @@ function [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 error(nargchk(1,1,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt matrix creation
 try
-    % check headers (versioninfo cache update)
+    % check headers
     data=checkheader(data);
     
     % verbosity

@@ -6,13 +6,13 @@ function [data,mvo,ax]=usermoveout(data,varargin)
 %              [data,mvo]=usermoveout(...)
 %              [data,mvo,ax]=usermoveout(...)
 %
-%    Description: DATA=USERMOVEOUT(DATA) presents an interactive menu and
-%     record section plot (arranged by degree distance) to facilitate
-%     timeshifting data by a particular moveout.  This is useful for
-%     pre-aligning on a particular seismic phase before stacking or
-%     windowing.  All moveouts are expressed in seconds per degree and are
-%     applied relative to the lowest record's degree distance (given by the
-%     GCARC field).
+%    Description:
+%     DATA=USERMOVEOUT(DATA) presents an interactive menu and record
+%     section plot (arranged by degree distance) to facilitate timeshifting
+%     data by a particular moveout.  This is useful for pre-aligning on a
+%     particular seismic phase before stacking or windowing.  All moveouts
+%     are expressed in seconds per degree and are applied relative to the
+%     lowest record's degree distance (given by the GCARC field).
 %
 %     DATA=USERMOVEOUT(DATA,'FIELD1',VALUE1,...,'FIELDN',VALUEN) passes
 %     field/value pairs to RECORDSECTION to allow plot customization.
@@ -32,10 +32,10 @@ function [data,mvo,ax]=usermoveout(data,varargin)
 %                    A, B, E, F, O, Tn
 %
 %    Examples:
-%     Typically one runs this followed by USERWINDOW & USERTAPER:
-%      [data,mvo,ax(1)]=usermoveout(data);
-%      [data,win,ax(2)]=userwindow(data);
-%      [data,tpr,ax(3)]=usertaper(data);
+%     % Typically one runs this followed by USERWINDOW & USERTAPER:
+%     [data,mvo,ax(1)]=usermoveout(data);
+%     [data,win,ax(2)]=userwindow(data);
+%     [data,tpr,ax(3)]=usertaper(data);
 %
 %    See also: USERWINDOW, USERTAPER, USERALIGN, USERWINNOW
 
@@ -46,9 +46,10 @@ function [data,mvo,ax]=usermoveout(data,varargin)
 %        Jan. 17, 2011 - better nargin checking
 %        Mar. 17, 2011 - change .adjust to .shift as is originally in docs
 %        Apr.  7, 2011 - drop first menu (straight to adjustment)
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  7, 2011 at 10:00 GMT
+%     Last Updated Mar. 24, 2012 at 10:00 GMT
 
 % todo:
 
@@ -60,7 +61,7 @@ if(nargin>1 && ~mod(nargin,2))
 end
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

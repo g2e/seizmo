@@ -4,9 +4,10 @@ function [varargout]=updategeofkarf(arf,ax)
 %    Usage:    updategeofkarf(arf,ax)
 %              ax=updategeofkarf(arf)
 %
-%    Description: UPDATEGEOFKARF(ARF,AX) draws a new geofkarf map given by
-%     ARF in an existing axes AX.  This is mainly intended for exploring
-%     geofkarf datasets and for making movies in a faster fashion.
+%    Description:
+%     UPDATEGEOFKARF(ARF,AX) draws a new geofkarf map given by ARF in an
+%     existing axes AX.  This is mainly intended for exploring geofkarf
+%     datasets and for making movies in a faster fashion.
 %
 %     AX=UPDATEGEOFKARF(ARF) is the same as calling PLOTGEOFKARF(ARF) --
 %     ie. a new figure is drawn.
@@ -22,9 +23,10 @@ function [varargout]=updategeofkarf(arf,ax)
 %        July  8, 2010 - update for new struct
 %        Oct.  6, 2010 - truncate title if too many ARF locations
 %        Dec.  8, 2010 - use '^o' for deg symbol rather than \circ
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  8, 2010 at 10:45 GMT
+%     Last Updated Apr.  4, 2012 at 10:45 GMT
 
 % todo:
 

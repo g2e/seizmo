@@ -3,22 +3,22 @@ function [s]=getsubfield(s,varargin)
 %
 %    Usage:    f=getsubfield(s,'field','subfield',...)
 %
-%    Description: F=GETSUBFIELD(S,'FIELD','SUBFIELD',...) extracts the
-%     subfield S.('FIELD').('SUBFIELD').  Substructures should be
-%     concatenateable - meaning they must have the same fields and
-%     dimensions 1 and 3+ must be equal sized.  Deeper subfields may be
-%     extracted by providing more fields.  F by default is returned as a
-%     cell array, unless all cells contain non-empty elements of class
-%     struct, logical, or double.
+%    Description:
+%     F=GETSUBFIELD(S,'FIELD','SUBFIELD',...) extracts the subfield
+%     S.('FIELD').('SUBFIELD').  Substructures should be concatenateable -
+%     meaning they must have the same fields and dimensions 1 and 3+ must
+%     be equal sized.  Deeper subfields may be extracted by providing more
+%     fields.  F by default is returned as a cell array, unless all cells
+%     contain non-empty elements of class struct, logical, or double.
 %
 %    Notes:
 %
 %    Examples:
-%     Get subfield c, which contains both char and double types:
-%      a(1).b(2).c='fff';
-%      a(2).b(1).c=1;
-%      a(3).b(5).c='b';
-%      f=getsubfield(a,'b','c')
+%     % Get subfield c, which contains both char and double types:
+%     a(1).b(2).c='fff';
+%     a(2).b(1).c=1;
+%     a(3).b(5).c='b';
+%     f=getsubfield(a,'b','c')
 %
 %    See also: GETFIELD
 
@@ -26,9 +26,10 @@ function [s]=getsubfield(s,varargin)
 %        Sep. 22, 2009 - initial version
 %        Sep. 25, 2009 - unwraps logical array now
 %        Feb. 11, 2011 - mass nargchk fix
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  4, 2012 at 15:05 GMT
 
 % todo:
 

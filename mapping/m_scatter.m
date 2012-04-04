@@ -10,10 +10,11 @@ function [han]=m_scatter(varargin)
 %           M_SCATTER(axes_handle,...) 
 %           H=M_SCATTER(...)
 %
-%    Description: M_SCATTER provides a wrapper for making a scatter plot on
-%     an M_MAP map.  This adjusts the LON & LAT arguments to map
-%     coordinates.  Note that the SIZE argument is still in points^2.  All
-%     options for SCATTER are available.
+%    Description:
+%     M_SCATTER provides a wrapper for making a scatter plot on an M_MAP
+%     map.  This adjusts the LON & LAT arguments to map coordinates.  Note
+%     that the SIZE argument is still in points^2.  All options for SCATTER
+%     are available.
 %
 %    See also: SCATTER
 
@@ -21,9 +22,10 @@ function [han]=m_scatter(varargin)
 %        May   9, 2010 - initial version (based on M_PLOT & SCATTER)
 %        June 25, 2010 - point clipping to eliminate off-map points
 %        Feb. 10, 2011 - minor H1 change
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2011 at 22:15 GMT
+%     Last Updated Apr.  3, 2012 at 22:15 GMT
 
 global MAP_PROJECTION
 

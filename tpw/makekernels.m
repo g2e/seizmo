@@ -6,14 +6,14 @@ function []=makekernels(f0,v,fs,swin,tprfrac,twin,w,d,lambda,path,post)
 %              makekernels(f0,velo,fs,swin,tprfrac,...
 %                          twin,width,spacing,lambda,path,post)
 %
-%    Description: MAKEKERNELS(F0,VELO,FS,SWIN,TPRFRAC,...
-%                          TWIN,WIDTH,SPACING,LAMBDA)
-%     builds 2D phase and amplitude kernels for Rayleigh wave phase
-%     velocities using the specifications given and writes them to text
-%     files in the current directory with the naming scheme detailed in the
-%     Notes section below.  F0 indicates the particular frequency to which
-%     the kernels correspond.  F0 may be an array of frequencies, in which
-%     case kernels are built at each frequency and all subsequent arguments
+%    Description:
+%     MAKEKERNELS(F0,VELO,FS,SWIN,TPRFRAC,TWIN,WIDTH,SPACING,LAMBDA) builds
+%     2D phase and amplitude kernels for Rayleigh wave phase velocities
+%     using the specifications given and writes them to text files in the
+%     current directory with the naming scheme detailed in the Notes
+%     section below.  F0 indicates the particular frequency to which the
+%     kernels correspond.  F0 may be an array of frequencies, in which case
+%     kernels are built at each frequency and all subsequent arguments
 %     should be either scalar (replicated to the same value at each
 %     frequency) or have the same number of elements as the number of
 %     frequencies NF (different value for each frequency).  VELO is the
@@ -45,27 +45,27 @@ function []=makekernels(f0,v,fs,swin,tprfrac,twin,w,d,lambda,path,post)
 %       functions in the See Also section below.
 %
 %    Examples:
-%     First, get some frequency bands:
-%      bank=filter_bank([0.0055 0.055],'variable',0.2,0.1);
+%     % First, get some frequency bands:
+%     bank=filter_bank([0.0055 0.055],'variable',0.2,0.1);
 %
-%     Second, get some phase velocities at those frequencies:
-%      phvel=prem_dispersion(bank(:,1));
+%     % Second, get some phase velocities at those frequencies:
+%     phvel=prem_dispersion(bank(:,1));
 %
-%     Third, use the beat length as a window width:
-%      L_beat=1./(bank(:,3)-bank(:,2));
+%     % Third, use the beat length as a window width:
+%     L_beat=1./(bank(:,3)-bank(:,2));
 %
-%     Fourth, modify that window width by an empirically derived power law
-%     to get a more typical window width:
-%      win=L_beat*(2.5+1000*bank(:,1).^2);
+%     % Fourth, modify that window width by an empirically derived
+%     % power law to get a more typical window width:
+%     win=L_beat*(2.5+1000*bank(:,1).^2);
 %
-%     Now get the kernels for a windowed sinusoid sampled at 1Hz, tapered
-%     on the outer 20% of the window, and zero-padded to a length of 9000s
-%     starting at -2000s.  The kernels are sampled in a 5000km by 5000km
-%     grid centered on the receiver, grid points are every 10km and a
-%     Gaussian smoother with a characteristic distance of 100km is applied.
-%     The kernel names are appended with '.example'.
-%      makekernels(band(:,1),phvel,1,win*[0 1],0.2,[-2000 7000],...
-%                  5000,10,100,[],'.example');
+%     % Now get the kernels for a windowed sinusoid sampled at 1Hz, tapered
+%     % on the outer 20% of the window, and zero-padded to a length of
+%     % 9000s starting at -2000s.  The kernels are sampled in a 5000km grid
+%     % centered on the receiver, grid points are every 10km and a Gaussian
+%     % smoother with a characteristic distance of 100km is applied.  The
+%     % kernel names are appended with '.example'.
+%     makekernels(band(:,1),phvel,1,win*[0 1],0.2,[-2000 7000],5000,10,...
+%         100,[],'.example');
 %
 %    See also: WRITEKERNELS, READKERNELS, RAYLEIGH_2D_PLANE_WAVE_KERNELS,
 %              GETMAINLOBE, SMOOTH2D, PLOTKERNELS
@@ -74,9 +74,10 @@ function []=makekernels(f0,v,fs,swin,tprfrac,twin,w,d,lambda,path,post)
 %        Feb.  5, 2010 - rewrite and added documentation
 %        July  9, 2010 - fixed nargchk, improved example, output filename
 %                        includes velocity in m/s now
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  9, 2010 at 22:10 GMT
+%     Last Updated Apr.  2, 2012 at 22:10 GMT
 
 % todo:
 

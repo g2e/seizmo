@@ -4,11 +4,12 @@ function [li]=sort2li(i,dim)
 %    Usage:    li=sort2li(sort_idx)
 %              li=sort2li(sort_idx,dim)
 %
-%    Description: LI=SORT2LI(SORT_IDX) takes the indices returned from the
-%     'sort' function, which are difficult to reimplement for sorting
-%     multiple n-dimensional matrices in parallel, and returns linear
-%     indices. SORT2LI will operate on the first non-singleton dimension
-%     just like sort does without a dimension argument.
+%    Description:
+%     LI=SORT2LI(SORT_IDX) takes the indices returned from the 'sort'
+%     function, which are difficult to reimplement for sorting multiple
+%     n-dimensional matrices in parallel, and returns linear indices.
+%     SORT2LI will operate on the first non-singleton dimension just like
+%     sort does without a dimension argument.
 %
 %     LI=SORT2LI(SORT_IDX,DIM) allows specifying the dimension that sort
 %     operated on.
@@ -16,11 +17,11 @@ function [li]=sort2li(i,dim)
 %    Notes:
 %
 %    Examples:
-%     Sort a and then sort the elements of b exactly the same way.  
-%      b=1./a;
-%      [c,i]=sort(a)
-%      d=b(sort2li(i))
-%      isequal(c,1./d)
+%     % Sort a and then sort the elements of b exactly the same way.  
+%     b=1./a;
+%     [c,i]=sort(a)
+%     d=b(sort2li(i))
+%     isequal(c,1./d)
 %
 %    See also: SORT, SUBMAT, MATCHSORT, UNSORT, MIDX2LI
 
@@ -28,9 +29,10 @@ function [li]=sort2li(i,dim)
 %        Sep.  8, 2009 - doc cleanup, dropped submat subfunction
 %        Sep. 21, 2009 - dropped submat call (now uses only built-ins)
 %        Feb. 15, 2011 - added midx2li to See also section
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2011 at 21:00 GMT
+%     Last Updated Apr.  3, 2012 at 21:00 GMT
 
 % todo:
 

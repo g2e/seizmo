@@ -6,11 +6,12 @@ function []=mapeventgrid(ax,evla,evlo,c,rrmajor,rrminor,azmajor,azminor)
 %              mapeventgrid(ax,evla,evlo,c,rrmaj,rrmin)
 %              mapeventgrid(ax,evla,evlo,c,rrmaj,rrmin,azmaj,azmin)
 %
-%    Description: MAPEVENTGRID(AX,EVLA,EVLO) plots a azimuth/range grid
-%     from a the lat/lon point given by EVLA/EVLO on the map with axes AX.
-%     EVLA & EVLO must be scalar and in units of degrees.  AX must be a
-%     handle for a map produced with MMAP or MAPSTATIONS.  The grid steps
-%     at 10deg increments in range and 15deg increments in azimuth.
+%    Description:
+%     MAPEVENTGRID(AX,EVLA,EVLO) plots a azimuth/range grid from the
+%     lat/lon point given by EVLA/EVLO on the map with axes AX.  EVLA &
+%     EVLO must be scalar and in units of degrees.  AX must be a handle for
+%     a map produced with MMAP or MAPSTATIONS.  The grid steps at 10deg
+%     increments in range and 15deg increments in azimuth.
 %
 %     MAPEVENTGRID(AX,EVLA,EVLO,C) sets the grid color.  C by default is
 %     'b' (blue).
@@ -42,9 +43,10 @@ function []=mapeventgrid(ax,evla,evlo,c,rrmajor,rrminor,azmajor,azminor)
 %        June 26, 2010 - initial version
 %        Mar.  6, 2011 - changed line width for aesthetics
 %        May  15, 2011 - updated docs 
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  15, 2011 at 03:15 GMT
+%     Last Updated Apr.  3, 2012 at 03:15 GMT
 
 % todo:
 

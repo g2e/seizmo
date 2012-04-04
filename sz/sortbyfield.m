@@ -4,11 +4,12 @@ function [data]=sortbyfield(data,field,mode)
 %    Usage:    data=sortbyfield(data,field)
 %              data=sortbyfield(data,field,mode)
 %
-%    Description: SORTBYFIELD(DATA,FIELD) sorts records in SEIZMO struct
-%     DATA by the header field FIELD.  Also will sort by any top-level
-%     struct field in DATA such as 'name', 'version', 'byteorder', etc.  
-%     Data fields 'misc', 'head', 'dep', and 'ind' are not supported.
-%     Group header fields are also not allowed.
+%    Description:
+%     DATA=SORTBYFIELD(DATA,FIELD) sorts records in SEIZMO struct DATA by
+%     the header field FIELD.  Also will sort by any top-level struct field
+%     in DATA such as 'name', 'version', 'byteorder', etc.  Data fields
+%     'misc', 'head', 'dep', and 'ind' are not supported.  Group header
+%     fields are also not allowed.
 %
 %     SORTBYFIELD(DATA,FIELD,MODE) sets the sorting order ('ascend' or
 %     'descend' is allowed - 'ascend' is the default).
@@ -18,8 +19,8 @@ function [data]=sortbyfield(data,field,mode)
 %    Header changes: NONE
 %
 %    Examples: 
-%     Sort by descending degree distance:
-%      data=sortbyfield(data,'gcarc','descend')
+%     % Sort by descending degree distance:
+%     data=sortbyfield(data,'gcarc','descend')
 %
 %    See also: SORT, GETHEADER
 
@@ -37,9 +38,10 @@ function [data]=sortbyfield(data,field,mode)
 %        Feb.  3, 2010 - proper SEIZMO handling, versioninfo caching,
 %                        seizmoverbose support
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
+%        Apr.  2, 2012 - minor doc update, use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  2, 2012 at 15:05 GMT
 
 % todo:
 
@@ -47,7 +49,7 @@ function [data]=sortbyfield(data,field,mode)
 error(nargchk(2,3,nargin));
 
 % check data structure
-versioninfo(data);
+error(seizmocheck(data));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

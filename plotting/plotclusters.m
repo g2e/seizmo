@@ -34,9 +34,10 @@ function [varargout]=plotclusters(data,grp,varargin)
 %        Sep. 18, 2010 - initial version
 %        Oct.  6, 2010 - handle 0 pop clusters (do not plot)
 %        Jan. 13, 2011 - fix no plot varargout bug
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 13, 2011 at 17:35 GMT
+%     Last Updated Apr.  3, 2012 at 17:35 GMT
 
 % todo:
 
@@ -44,7 +45,7 @@ function [varargout]=plotclusters(data,grp,varargin)
 error(nargchk(2,inf,nargin));
 
 % check data struct
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % number of records
 nrecs=numel(data);

@@ -93,9 +93,10 @@ function [varargout]=fkvolume(data,smax,spts,frng,polar,method,w)
 %        July  1, 2010 - high latitude fix
 %        July  6, 2010 - major update to struct, doc update
 %        Nov. 18, 2010 - added weighting
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 18, 2010 at 14:05 GMT
+%     Last Updated Apr.  3, 2012 at 14:05 GMT
 
 % todo:
 
@@ -107,7 +108,7 @@ d2r=pi/180;
 d2km=6371*d2r;
 
 % check struct
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % defaults for optionals
 if(nargin<5 || isempty(polar)); polar=false; end

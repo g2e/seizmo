@@ -3,21 +3,22 @@ function [val]=get_scripps_value(s,lat,lon,depth)
 %
 %    Usage:    dv=get_scripps_value(mod,lat,lon,depth)
 %
-%    Description: DV=GET_SCRIPPS_VALUE(MOD,LAT,LON,DEPTH) finds velocity
-%     values associated with a Scripps mantle model MOD at the locations
-%     given by LAT, LON, & DEPTH.  MOD should be created by SCRIPPS2MATLAB.
-%     LAT, LON, & DEPTH should be real-valued, equal valued arrays or
-%     scalars.  LAT & LON must be in degrees.  DEPTH must be in kilometers.
+%    Description:
+%     DV=GET_SCRIPPS_VALUE(MOD,LAT,LON,DEPTH) finds velocity values
+%     associated with a Scripps mantle model MOD at the locations given by
+%     LAT, LON, & DEPTH.  MOD should be created by SCRIPPS2MATLAB.  LAT,
+%     LON, & DEPTH should be real-valued, equal valued arrays or scalars.
+%     LAT & LON must be in degrees.  DEPTH must be in kilometers.
 %
 %    Notes:
 %
 %    Examples:
-%     Get a depth slice at 2800km (with an extra 90deg of longitude):
-%      hmsl06p=load('HMSL06P');
-%      [x,y]=meshgrid(0:2:450,90:-2:-90);
-%      imagesc(0:2:450,90:-2:-90,get_scripps_value(hmsl06p,y,x,2800));
-%      axis xy equal tight;
-%      colormap(seis);
+%     % Get a depth slice at 2800km (with an extra 90deg of longitude):
+%     hmsl06p=load('HMSL06P');
+%     [x,y]=meshgrid(0:2:450,90:-2:-90);
+%     imagesc(0:2:450,90:-2:-90,get_scripps_value(hmsl06p,y,x,2800));
+%     axis xy equal tight;
+%     colormap(seis);
 %
 %    See also: SCRIPPS2MATLAB, READ_SCRIPPS_BINARY
 
@@ -25,9 +26,10 @@ function [val]=get_scripps_value(s,lat,lon,depth)
 %        May  16, 2010 - initial version
 %        June  1, 2010 - dv rather than dv%, fixed example
 %        July  8, 2010 - really fixed example
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  8, 2010 at 18:35 GMT
+%     Last Updated Mar. 24, 2012 at 18:35 GMT
 
 % todo
 

@@ -3,16 +3,17 @@ function [lbwh]=lrbt2lbwh(lrbt)
 %
 %    Usage:    lbwh=lrbt2lbwh(lrbt)
 %
-%    Description: LBWH=LRBT2LBWH(LRBT) convert left/right/bottom/top
-%     position coordinates to left/bottom/width/height.  This is useful
-%     when doing manual specifying of axes positions.  Note that the width
-%     and height may be negative if the coordinate system does not increase
-%     when going up and/or right.
+%    Description:
+%     LBWH=LRBT2LBWH(LRBT) convert left/right/bottom/top position
+%     coordinates to left/bottom/width/height.  This is useful when doing
+%     manual specifying of axes positions.  Note that the width and height
+%     may be negative if the coordinate system does not increase when going
+%     up and/or right.
 %
 %    Notes:
 %
 %    Examples:
-%     % change an axis to have .13 padding on each side
+%     % Change an axis to have .13 padding on each side:
 %     set(gca,'position',lrbt2lbwh([.13 .13 .13 .13]));
 %
 %    See also: LBWH2LRBT
@@ -20,9 +21,10 @@ function [lbwh]=lrbt2lbwh(lrbt)
 %     Version History:
 %        Aug.  4, 2010 - initial version
 %        Apr. 13, 2011 - fix h1 line
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 13, 2011 at 12:25 GMT
+%     Last Updated Apr.  4, 2012 at 12:25 GMT
 
 % todo:
 

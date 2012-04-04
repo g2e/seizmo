@@ -4,11 +4,12 @@ function [topo,lat,lon]=topo_region(latrange,lonrange,toponame)
 %    Usage:    [topo,lat,lon]=topo_region(latrange,lonrange)
 %              [topo,lat,lon]=topo_region(latrange,lonrange,toponame)
 %
-%    Description: [TOPO,LAT,LON]=TOPO_REGION(LATRANGE,LONRANGE) returns a
-%     matrix of the topography for the region bounded by LATRANGE &
-%     LONRANGE.  LATRANGE & LONRANGE must in degrees and be 1x2 real-valued
-%     arrays.  If LONRANGE(1)>LONRANGE(2) then the region wraps around the
-%     dateline.  The topography is from SRTM30+ and is in meters.
+%    Description:
+%     [TOPO,LAT,LON]=TOPO_REGION(LATRANGE,LONRANGE) returns a matrix of the
+%     topography for the region bounded by LATRANGE & LONRANGE.  LATRANGE &
+%     LONRANGE must in degrees and be 1x2 real-valued arrays.  If
+%     LONRANGE(1)>LONRANGE(2) then the region wraps around the dateline.
+%     The topography is from SRTM30+ and is in meters.
 %
 %     [TOPO,LAT,LON]=TOPO_REGION(LATRANGE,LONRANGE,TOPONAME) allows setting
 %     the dataset that the topography (z-values) is pulled from.  TOPONAME
@@ -22,10 +23,10 @@ function [topo,lat,lon]=topo_region(latrange,lonrange,toponame)
 %    Notes:
 %
 %    Examples:
-%     The Bering Sea:
-%      [topo,lat,lon]=topo_region([64 49],[162 -166],'etopo1_bed');
-%      figure; surface(lon,lat,topo);
-%      shading interp; topo_colormap(topo); axis equal tight;
+%     % The Bering Sea:
+%     [topo,lat,lon]=topo_region([64 49],[162 -166],'etopo1_bed');
+%     figure; surface(lon,lat,topo);
+%     shading interp; topo_colormap(topo); axis equal tight;
 %
 %    See also: TOPO_POINTS, TOPO_COLORMAP
 
@@ -33,9 +34,10 @@ function [topo,lat,lon]=topo_region(latrange,lonrange,toponame)
 %        Feb. 17, 2010 - initial version
 %        May  17, 2010 - slight improvement to example
 %        Feb. 11, 2011 - mass nargchk fix
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 24, 2012 at 15:05 GMT
 
 % todo:
 

@@ -4,29 +4,29 @@ function [data]=divide(data,constant,cmp)
 %    Usage:    data=divide(data,constant)
 %              data=divide(data,constant,cmp_list)
 %
-%    Description: DIVIDE(DATA,CONSTANT) divides the dependent component(s)
-%     of SEIZMO records by a constant.  For multi-component files, this
-%     operation is performed on every dependent component (this includes
-%     spectral files).
+%    Description:
+%     DATA=DIVIDE(DATA,CONSTANT) divides the dependent component(s) of
+%     SEIZMO records in DATA by a constant.  For multi-component files,
+%     this operation is performed on each dependent component (including
+%     spectral).
 %
-%     DIVIDE(DATA,CONSTANT,CMP) allows for operation on just components in
+%     DATA=DIVIDE(DATA,CONSTANT,CMP) allows for operation on components in
 %     the list CMP.  By default all components are operated on (use ':' to
-%     replicate the default behavior).  See the examples section for a 
-%     usage case.
+%     replicate the default behavior).
 %
 %    Notes:
-%     - a scalar constant applies the value to all records
-%     - a vector of constants (length must equal the number of records)
-%       allows applying different values to each record
-%     - CMP is the dependent component(s) to work on (default is all)
-%     - an empty list of components will not modify any components
+%     - A scalar constant applies the value to all records.
+%     - A vector of constants (length must equal the number of records)
+%       allows applying different values to each record.
+%     - CMP is the dependent component(s) to work on (default is all).
+%     - An empty list of components will not modify any components.
 %    
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Alter the amplitudes of amplitude-phase spectral records without
-%     affecting the phase component by dividing only the first component:
-%      data=divide(data,32,1)
+%     % Alter the amplitudes of amplitude-phase spectral records without
+%     % affecting the phase component by dividing only the first component:
+%     data=divide(data,32,1)
 %
 %    See also: MULTIPLY, ADD, SUBTRACT, SOLOFUN
 
@@ -49,9 +49,10 @@ function [data]=divide(data,constant,cmp)
 %                        move usage up
 %        Jan. 26, 2010 - seizmoverbose support, properly handle states
 %        Jan.  6, 2011 - nargchk fix, seizmofun/solofun rename
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 18:25 GMT
+%     Last Updated Apr.  3, 2012 at 18:25 GMT
 
 % todo:
 

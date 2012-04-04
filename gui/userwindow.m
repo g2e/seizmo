@@ -9,10 +9,11 @@ function [data,win,ax]=userwindow(data,limits,fill,func,varargin)
 %              [data,win]=userwindow(...)
 %              [data,win,ax]=userwindow(...)
 %
-%    Description: DATA=USERWINDOW(DATA) presents an interactive menu and
-%     plot to facilitate windowing a dataset with a few mouse clicks.  By
-%     default, the windowed data is not padded with zeros nor is the mean
-%     or trend removed.
+%    Description:
+%     DATA=USERWINDOW(DATA) presents an interactive menu and plot to
+%     facilitate windowing a dataset with a few mouse clicks.  By default,
+%     the windowed data is not padded with zeros nor is the mean or trend
+%     removed.
 %
 %     DATA=USERWINDOW(DATA,INITWIN) sets the initial window limits to
 %     INITWIN.  INITWIN should be a 1x2 vector of real numbers ordered as
@@ -71,9 +72,10 @@ function [data,win,ax]=userwindow(data,limits,fill,func,varargin)
 %        Nov. 12, 2010 - added initial window argument
 %        Jan.  6, 2011 - use key2zoompan
 %        Jan. 17, 2011 - altered the menus (no more crashing exit)
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 17, 2011 at 11:00 GMT
+%     Last Updated Mar. 24, 2012 at 11:00 GMT
 
 % todo:
 
@@ -85,7 +87,7 @@ if(nargin>4 && mod(nargin,2))
 end
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

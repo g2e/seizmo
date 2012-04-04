@@ -13,10 +13,11 @@ function [varargout]=geofkarfslowslide(arf,srng,delay,varargin)
 %                             fgcolor,bgcolor,ax)
 %              mov=geofkarfslowslide(...);
 %
-%    Description: GEOFKARFSLOWSLIDE(ARF) slides through a geofk ARF by
-%     plotting each of the slownesses in sequence in a single plot.  There
-%     is a 1/3 second delay between each replotting by default (see the
-%     following Usage forms to adjust this).
+%    Description:
+%     GEOFKARFSLOWSLIDE(ARF) slides through a geofk ARF by plotting each of
+%     the slownesses in sequence in a single plot.  There is a 1/3 second
+%     delay between each replotting by default (see the following Usage
+%     forms to adjust this).
 %
 %     GEOFKARFSLOWSLIDE(ARF,SRNG) defines the range of horizontal
 %     slownesses to slide across in seconds per degree as
@@ -65,9 +66,10 @@ function [varargout]=geofkarfslowslide(arf,srng,delay,varargin)
 
 %     Version History:
 %        July  8, 2010 - initial version
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  8, 2010 at 10:05 GMT
+%     Last Updated Apr.  4, 2012 at 10:05 GMT
 
 % todo:
 

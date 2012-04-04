@@ -3,8 +3,9 @@ function [lgc]=isorthogonal(o1,o2)
 %
 %    Usage:    lgc=isorthogonal(o1,o2)
 %
-%    Description: LGC=ISORTHOGONAL(O1,O2) returns TRUE/FALSE for each pair
-%     of orientations formed by O1 & O2.  O1 & O2 must be Nx2 real arrays
+%    Description:
+%     LGC=ISORTHOGONAL(O1,O2) returns TRUE/FALSE for each pair of
+%     orientations formed by O1 & O2.  O1 & O2 must be Nx2 real arrays
 %     where the first column gives the inclination from vertical and the
 %     second column gives the azimuth from North.  Must be in degrees!  If
 %     either O1 or O2 is a scalar orientation (ie 1x2) then it is expanded
@@ -14,15 +15,15 @@ function [lgc]=isorthogonal(o1,o2)
 %     - O1 & O2 must be in DEGREES!
 %
 %    Examples:
-%     Some simple affirmative examples:
-%      isorthogonal([ 0  0],[90  0]) % vertical vs north
-%      isorthogonal([ 0  0],[90 90]) % vertical vs east
-%      isorthogonal([90  0],[90 90]) % north vs east
+%     % Some simple affirmative examples:
+%     isorthogonal([ 0  0],[90  0]) % vertical vs north
+%     isorthogonal([ 0  0],[90 90]) % vertical vs east
+%     isorthogonal([90  0],[90 90]) % north vs east
 %
-%     Some wrap-around examples:
-%      isorthogonal([  0   0],[270   0])
-%      isorthogonal([ 90  90],[ 90 360])
-%      isorthogonal([ 90 -90],[ 90 180])
+%     % Some wrap-around examples:
+%     isorthogonal([  0   0],[270   0])
+%     isorthogonal([ 90  90],[ 90 360])
+%     isorthogonal([ 90 -90],[ 90 180])
 %
 %    See also: ISPARALLEL, DOT
 
@@ -30,9 +31,10 @@ function [lgc]=isorthogonal(o1,o2)
 %        Nov.  2, 2009 - initial version
 %        Feb. 22, 2010 - bug fix for size checks, single-prec tolerance
 %        Feb. 11, 2011 - mass nargchk fix
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  4, 2012 at 15:05 GMT
 
 % todo:
 

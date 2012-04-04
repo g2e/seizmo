@@ -45,7 +45,7 @@ oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt polynomial fit
 try
-    % check headers (versioninfo cache update)
+    % check headers
     data=checkheader(data);
 
     % verbosity

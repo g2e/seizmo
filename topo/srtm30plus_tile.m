@@ -3,18 +3,19 @@ function []=srtm30plus_tile(version)
 %
 %    Usage:    srtm30plus_tile(version)
 %
-%    Description: SRTM30PLUS_TILE(VERSION) reads the SRTM mat file
-%     'srtm30plus.mat' produced by SRTM30PLUS2MAT in the current working
-%     directory and reformats it to be in 10x10 degree tiles.  This makes
-%     loads faster, lighter, and simpler.  Output mat-file is
-%     'srtm30plus10' in the current working directory.
+%    Description:
+%     SRTM30PLUS_TILE(VERSION) reads the SRTM mat file 'srtm30plus.mat'
+%     produced by SRTM30PLUS2MAT in the current working directory and
+%     reformats it to be in 10x10 degree tiles.  This makes loads faster,
+%     lighter, and simpler.  Output mat-file is 'srtm30plus10' in the
+%     current working directory.
 %
 %    Notes:
 %
 %    Examples:
-%     Convert and tile (setting version to 6):
-%      srtm30plus2mat('*.srtm');
-%      srtm30plus_tile(6);
+%     % Convert and tile (setting version to 6):
+%     srtm30plus2mat('*.srtm');
+%     srtm30plus_tile(6);
 %
 %    See also: SRTM30PLUS2MAT
 
@@ -22,9 +23,10 @@ function []=srtm30plus_tile(version)
 %        Feb. 14, 2010 - initial version
 %        Feb. 16, 2010 - significant memory use reduction
 %        Feb. 11, 2011 - mass nargchk fix, fix etopo1_bed bug
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  2, 2012 at 15:05 GMT
 
 % todo:
 

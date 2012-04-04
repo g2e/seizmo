@@ -3,30 +3,28 @@ function [Qk]=qpqs2qk(Qp,Qs,Vp,Vs)
 %
 %    Usage:    [Qk]=qpqs2qk(Qp,Qs,Vp,Vs)
 %
-%    Description: [Qk]=QPQS2QK(Qp,Qs,Vp,Vs) calculates the bulk modulus
-%     (ie incompressibility) quality factor from the P & S wave quality
-%     factors and velocities.  This is from equation (32) on page 192 of
-%     Stein & Wysession.
+%    Description:
+%     [Qk]=QPQS2QK(Qp,Qs,Vp,Vs) calculates the bulk modulus (eg. 
+%     incompressibility) quality factor from the P & S wave quality factors
+%     and velocities.  This is from equation (32) on page 192 of Stein &
+%     Wysession.
 %
 %    Notes:
 %
 %    Examples:
-%     Qk for the lower crust in PREM:
-%      Qp = 1350;
-%      Qs = 600;
-%      Vp = 6.8;
-%      Vs = 3.9;
-%      Qk = qpqs2qk(Qp,Qs,Vp,Vs)
-%       Qk =
-%           57452.459016393
+%     % Qk for the lower crust in PREM:
+%     Qp=1350; Qs=600;
+%     Vp=6.8; Vs=3.9;
+%     Qk=qpqs2qk(Qp,Qs,Vp,Vs)
 %
 %    See also: QKQU2QP
 
 %     Version History:
 %        May  19, 2010 - initial version
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  19, 2010 at 02:55 GMT
+%     Last Updated Mar. 24, 2012 at 02:55 GMT
 
 % todo:
 

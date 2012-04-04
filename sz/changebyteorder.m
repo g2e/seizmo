@@ -3,19 +3,21 @@ function [data]=changebyteorder(data,endianness)
 %
 %    Usage:    data=changebyteorder(data,endianness)
 %
-%    Description: CHANGEBYTEORDER(DATA,ENDIANNESS) changes the byte-order
-%     that the records in the SEIZMO struct DATA will be written as to
-%     ENDIANNESS.  ENDIANNESS must be the string 'ieee-le' or 'ieee-be' or
-%     it may be a char/cellstr array of those strings to define each
-%     record's endianness individually.  ENDIANNESS may also be specified
-%     as 'little', 'big', 'intel', 'pc', or 'sun'.
+%    Description:
+%     DATA=CHANGEBYTEORDER(DATA,ENDIANNESS) changes the byte-order that the
+%     records in the SEIZMO struct DATA will be written as to ENDIANNESS.
+%     ENDIANNESS must be the string 'ieee-le' or 'ieee-be' or it may be a
+%     char/cellstr array of those strings to define each record's
+%     endianness individually.  ENDIANNESS may also be specified as
+%     'little', 'big', 'intel', 'le', 'l', 'pc', 'be', 'b', or 'sun'.
 %
 %    Notes:
-%     - empty string ('') will preserve the byteorder of records
+%     - Empty strings ('') will preserve the byteorder of records.
 %
 %    Examples:
-%     Change records in current directory to the platform's byte-ordering:
-%      writeseizmo(changebyteorder(readseizmo('*'),nativebyteorder))
+%     % Change records in the current directory
+%     % to the platform's byte-ordering:
+%     writeseizmo(changebyteorder(readseizmo('*'),nativebyteorder))
 %
 %    See also: NATIVEBYTEORDER, WRITESEIZMO, READSEIZMO, BSEIZMO,
 %              READDATA, READDATAWINDOW, READHEADER, WRITEHEADER
@@ -31,9 +33,10 @@ function [data]=changebyteorder(data,endianness)
 %        Apr. 25, 2010 - added new strings
 %        Aug. 16, 2010 - fix error usage
 %        Mar.  5, 2011 - added le/be/l/b
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2011 at 14:05 GMT
+%     Last Updated Apr.  3, 2012 at 14:05 GMT
 
 % todo:
 

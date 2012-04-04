@@ -7,8 +7,9 @@ function [mout]=ak135(varargin)
 %              model=ak135(...,'range',[top bottom],...)
 %              model=ak135(...,'crust',true|false,...)
 %
-%    Description: MODEL=AK135() returns a struct containing the 1D radial
-%     Earth model AK135.  The struct has the following fields:
+%    Description:
+%     MODEL=AK135() returns a struct containing the 1D radial Earth model
+%     AK135.  The struct has the following fields:
 %      MODEL.name      - model name ('AK135')
 %           .ocean     - always false here
 %           .crust     - true/false
@@ -51,14 +52,14 @@ function [mout]=ak135(varargin)
 %        in the Earth from traveltimes, Geophys. J. Int. 122, pp. 108-124
 %
 %    Examples:
-%     Plot parameters for the top 400km of the crustless version:
-%      model=ak135('r',[0 400],'c',false);
-%      figure;
-%      plot(model.depth,model.vp,'r',...
-%           model.depth,model.vs,'g',...
-%           model.depth,model.rho,'b','linewidth',2);
-%      title('AK135')
-%      legend({'Vp' 'Vs' '\rho'})
+%     % Plot parameters for the top 400km of the crustless version:
+%     model=ak135('r',[0 400],'c',false);
+%     figure;
+%     plot(model.depth,model.vp,'r',...
+%          model.depth,model.vs,'g',...
+%          model.depth,model.rho,'b','linewidth',2);
+%     title('AK135')
+%     legend({'Vp' 'Vs' '\rho'})
 %
 %    See also: IASP91, PREM
 
@@ -69,9 +70,10 @@ function [mout]=ak135(varargin)
 %        Aug.  8, 2010 - minor doc touch, dcbelow option
 %        Aug. 17, 2010 - added reference
 %        Sep. 19, 2010 - doc update, better discontinuity support
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 19, 2010 at 14:45 GMT
+%     Last Updated Apr.  3, 2012 at 14:45 GMT
 
 % todo:
 

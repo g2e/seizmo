@@ -3,10 +3,11 @@ function fig2print(fh,orientation)
 %
 %    Usage:    fig2print(fh,'orient')
 %
-%    Description: FIG2PRINT(FH,'ORIENT') resizes the figure(s) given by the
-%     handle(s) in FH so they match the printed size.  The 'ORIENT' input
-%     sets the paper orientation.  Valid orientations are 'tall' 'portrait'
-%     'landscape' 'ftall' 'fportrait' & 'flandscape'.  The last three
+%    Description:
+%     FIG2PRINT(FH,'ORIENT') resizes the figure(s) given by the handle(s)
+%     in FH so they match the printed size.  The 'ORIENT' input sets the
+%     paper orientation.  Valid orientations are 'tall', 'portrait',
+%     'landscape', 'ftall', 'fportrait', & 'flandscape'.  The last three
 %     orientations do not have the quarter inch margins like the others.
 %     Note that the figure itself is not necessarily the size of the print
 %     (but the plots are the size they will be on the print).
@@ -14,18 +15,19 @@ function fig2print(fh,orientation)
 %    Notes:
 %
 %    Examples:
-%     % setup a figure for landscape printing
-%      fig2print(gcf,'landscape');
+%     % Setup a figure for landscape printing:
+%     fig2print(gcf,'flandscape');
 %
 %    See also: PRINT, ORIENT, NOINVERT
 
 %     Version History:
 %        Jan.  5, 2002 - initial version
 %        Aug.  4, 2010 - altered to match SEIZMO coding style
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Frederik J Simons (fjsimons-at-alum.mit.edu)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  4, 2010 at 12:25 GMT
+%     Last Updated Apr.  4, 2012 at 12:25 GMT
 
 % todo:
 

@@ -6,11 +6,11 @@ function [varargout]=xdir(str,depth)
 %                xdir(path,depth)
 %              d=xdir(...)
 %
-%    Description: XDIR() lists the files/directories in the current
-%     directory. The listing gives the directory logical first (true for
-%     directories), then the file size in bytes, followed by the date and
-%     time of the last modification and finally the name of the directory
-%     or file.
+%    Description:
+%     XDIR() lists the files/directories in the current directory. The
+%     listing gives the directory logical first (true for directories),
+%     then the file size in bytes, followed by the date and time of the
+%     last modification and finally the name of the directory or file.
 %
 %     XDIR(PATH) lists the files matching PATH or within the directory
 %     PATH.  The wildcard '*' or '?' may be used to specify a directory or
@@ -50,8 +50,8 @@ function [varargout]=xdir(str,depth)
 %       deep trees.
 %
 %    Examples:
-%     List all m-files in private directories below the current directory:
-%      xdir **/private/*.m
+%     % List all m-files in private directories below the current:
+%     xdir **/private/*.m
 %
 %    See also: DIR, LS, CD, DELETE, RMDIR, MKDIR
 
@@ -75,10 +75,11 @@ function [varargout]=xdir(str,depth)
 %        Mar. 12, 2010 - fix for Octave when setting empty path
 %        Mar. 16, 2010 - added todo list (mainly about ? wildcard)
 %        Feb. 11, 2011 - use fprintf
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 20:00 GMT
+%     Last Updated Apr.  3, 2012 at 20:00 GMT
 
 % todo:
 % - be mindful of octave/matlab differences in DIR

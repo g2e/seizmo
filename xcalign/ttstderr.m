@@ -4,10 +4,11 @@ function [std]=ttstderr(m,lag,lagw)
 %    Usage:    stderr=ttstderr(m,lag)
 %              stderr=ttstderr(m,lag,lagw)
 %
-%    Description: STDERR=TTSTDERR(M,LAG) returns the standard error of the
-%     arrival times in M to the lags in LAG.  M is expected to be formatted
-%     like the output of TTALIGN.  Note that this error measurement is more
-%     of a measure of the inconsistency of the lags rather than an accurate
+%    Description:
+%     STDERR=TTSTDERR(M,LAG) returns the standard error of the arrival
+%     times in M to the lags in LAG.  M is expected to be formatted like
+%     the output of TTALIGN.  Note that this error measurement is more of a
+%     measure of the inconsistency of the lags rather than an accurate
 %     assessment of the true arrival time error.
 %
 %     STDERR=TTSTDERR(M,LAG,LAGW) allows weighting the standard error
@@ -22,9 +23,9 @@ function [std]=ttstderr(m,lag,lagw)
 %       residual and are not useful error measures.
 %
 %    Examples:
-%     Get arrival time solution and standard error:
-%      m=ttalign(lag);
-%      mstd=ttstderr(m,lag);
+%     % Get arrival time solution and standard error:
+%     m=ttalign(lag);
+%     mstd=ttstderr(m,lag);
 %
 %    See also: TTALIGN, TTPOLAR, TTREFINE, TTSOLVE, SNR2MAXPHASEERROR
 
@@ -36,9 +37,10 @@ function [std]=ttstderr(m,lag,lagw)
 %        Mar. 22, 2010 - account for ttalign fix, ignore diagonal elements
 %                        in error calculation (makes error slightly higher)
 %        Sep. 13, 2010 - nargchk fix
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2010 at 01:05 GMT
+%     Last Updated Apr.  2, 2012 at 01:05 GMT
 
 % todo:
 

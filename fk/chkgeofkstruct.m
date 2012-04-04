@@ -3,17 +3,18 @@ function [report]=chkgeofkstruct(geofk)
 %
 %    Usage:    msg=chkgeofkstruct(geofk)
 %
-%    Description: MSG=CHKGEOFKSTRUCT(GEOFK) checks that GEOFK is a struct
-%     as output from GEOFK functions.  See those functions for details on
-%     the struct layout.  MSG is an error structure if a problem is found
-%     (otherwise it is empty).
+%    Description:
+%     MSG=CHKGEOFKSTRUCT(GEOFK) checks that GEOFK is a struct as output
+%     from GEOFK functions.  See those functions for details on the struct
+%     layout.  MSG is an error structure if a problem is found (otherwise
+%     it is empty).
 %
 %    Notes:
 %
 %    Examples:
-%     Check that output from GEOFKXCVOLUME is compatible:
-%      sgeo=geofkxcvolume(xcdata,latlon,horzslow,freqrng);
-%      error(chkgeofkstruct(sgeo));
+%     % Check that output from GEOFKXCVOLUME is compatible:
+%     sgeo=geofkxcvolume(xcdata,latlon,horzslow,freqrng);
+%     error(chkgeofkstruct(sgeo));
 %
 %    See also: CHKFKSTRUCT, GEOFKXCVOLUME, GEOFKXCHORZVOLUME, PLOTGEOFKMAP
 
@@ -22,9 +23,10 @@ function [report]=chkgeofkstruct(geofk)
 %        June 24, 2010 - bugfix
 %        June 25, 2010 - more lenient to allow a variety of volume types
 %        July  6, 2010 - major update for new struct
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 18:50 GMT
+%     Last Updated Apr.  4, 2012 at 18:50 GMT
 
 % todo:
 

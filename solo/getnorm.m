@@ -3,9 +3,10 @@ function [scale]=getnorm(data)
 %
 %    Usage:    scale=getnorm(data)
 %
-%    Description: GETNORM(DATA) returns the maximum amplitude of each
-%     SEIZMO record in DATA assuming that for multi-component records
-%     the components are orthogonal to one another.  This is useful for 
+%    Description:
+%     SCALE=GETNORM(DATA) returns the maximum amplitude of each SEIZMO
+%     record in DATA assuming that for multi-component records the
+%     components are orthogonal to one another.  This is useful for 
 %     normalizing multi-component data.  The maximum amplitude is just:
 %                        _________________
 %                       /
@@ -18,8 +19,8 @@ function [scale]=getnorm(data)
 %    Notes:
 %
 %    Examples:
-%     Find the maximum amplitude of ground motion for a 3 component record:
-%       amp_max=getnorm(data)
+%     % Find the maximum amplitude for a 3 component record:
+%     amp_max=getnorm(data)
 %
 %    See also: MULTIPLY, NORMALIZE, GETVALUEFUN
 
@@ -35,9 +36,10 @@ function [scale]=getnorm(data)
 %                        move usage up
 %        Mar. 26, 2010 - doc update
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  3, 2012 at 15:05 GMT
 
 % check nargin
 error(nargchk(1,1,nargin));

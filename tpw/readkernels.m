@@ -3,21 +3,21 @@ function [Kph,Kam,x,y]=readkernels(file)
 %
 %    Usage:    [Kph,Kam,x,y]=readkernels(file)
 %
-%    Description: [Kph,Kam,X,Y]=READKERNELS(FILE) reads in the kernels
-%     stored in FILE.  FILE should be a file on the system.  FILE is
-%     expected to be formatted to work with Yang & Forsyth fortran
-%     routines.  FILE may be empty to bring up a graphical file selection
-%     menu.  Kph, Kam, X, Y are equal-sized numeric arrays giving the phase
-%     sensitivity kernel, the amplitude sensitivity kernel, the x-direction
-%     (radial) position and the y-direction (azimuthal or transverse)
-%     position respectively.  Checks are performed to assure the kernel
-%     file is properly formatted.
+%    Description:
+%     [Kph,Kam,X,Y]=READKERNELS(FILE) reads in the kernels stored in FILE.
+%     FILE should be a file on the system.  FILE is expected to be
+%     formatted to work with Yang & Forsyth fortran routines.  FILE may be
+%     empty to bring up a graphical file selection menu.  Kph, Kam, X, Y
+%     are equal-sized numeric arrays giving the phase sensitivity kernel,
+%     the amplitude sensitivity kernel, the x-direction (radial) position
+%     and the y-direction (azimuthal or transverse) position respectively.
+%     Checks are performed to assure the kernel file is properly formatted.
 %
 %    Notes:
 %
 %    Examples:
-%     Check that a kernel is formatted correctly:
-%      readkernels('my.kernel');
+%     % Check that a kernel is formatted correctly:
+%     readkernels('my.kernel');
 %
 %    See also: WRITEKERNELS, MAKEKERNELS, RAYLEIGH_2D_PLANE_WAVE_KERNELS,
 %              GETMAINLOBE, SMOOTH2D, PLOTKERNELS
@@ -26,9 +26,10 @@ function [Kph,Kam,x,y]=readkernels(file)
 %        Feb.  5, 2010 - initial version
 %        July  9, 2010 - fixed nargchk
 %        Feb. 11, 2011 - mass nargchk fix
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 24, 2012 at 15:05 GMT
 
 % todo:
 

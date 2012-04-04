@@ -51,9 +51,10 @@ function [data,win,ax]=userwinnow(data,limits,varargin)
 %        Jan. 17, 2011 - initial limits arg, allow exclusion range, yfield
 %                        fully encouraged now
 %        Jan. 29, 2011 - fix empty yfield bug (default to gcarc)
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2011 at 11:00 GMT
+%     Last Updated Apr.  3, 2012 at 11:00 GMT
 
 % todo:
 
@@ -65,7 +66,7 @@ if(nargin>2 && mod(nargin,2))
 end
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

@@ -20,10 +20,11 @@ function [varargout]=mmap(varargin)
 %              mmap(...,'axis',ax,...)
 %              ax=mmap(...)
 %
-%    Description: MMAP() creates a global map using the Hammer
-%     projection.  The map is quite basic without topography but does
-%     include coastlines.  Land is colored green and the oceans blue.  The
-%     figure is set to black and the map boundary is white.
+%    Description:
+%     MMAP() creates a global map using the Hammer projection.  The map is
+%     quite basic without topography but does include coastlines.  Land is
+%     colored green and the oceans blue.  The figure is set to black and
+%     the map boundary is white.
 %
 %     MMAP(...,'STATIONS',[LAT LON],...) sets the station locations
 %     to plot in the map.  The stations will be drawn as yellow circles.
@@ -112,11 +113,11 @@ function [varargout]=mmap(varargin)
 %    Notes:
 %
 %    Examples:
-%     Show a grid of stations in a map with fancy border:
-%      [stla,stlo]=meshgrid(3:13,10:15);
-%      mmap('st',[stla(:) stlo(:)],...
-%                   'po',{'lat',[-40 40],'lon',[-30 60]},...
-%                   'go',{'box','fancy'})
+%     % Show a grid of stations in a map with fancy border:
+%     [stla,stlo]=meshgrid(3:13,10:15);
+%     mmap('st',[stla(:) stlo(:)],...
+%                  'po',{'lat',[-40 40],'lon',[-30 60]},...
+%                  'go',{'box','fancy'})
 %
 %    See also: M_PROJ, M_GRID, M_GSHHS, M_SCATTER, MAPFEATURE, RAISEFANCY
 
@@ -131,9 +132,10 @@ function [varargout]=mmap(varargin)
 %        Mar.  6, 2011 - fix bug in longitude wrapping
 %        June 14, 2011 - add fgc/bgc option shortcuts, added code to allow
 %                        drawing stations/events on an existing mmap
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 14, 2011 at 20:30 GMT
+%     Last Updated Apr.  3, 2012 at 20:30 GMT
 
 % todo:
 

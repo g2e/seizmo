@@ -47,9 +47,10 @@ function [grp,ax]=selectclusters(data,grp,opt,varargin)
 %        Jan. 13, 2011 - doc cleanup, handle plotcluster no plot case, fix
 %                        bugs in cases with empty clusters
 %        Mar. 31, 2011 - fix bug in checking of grp.good
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 31, 2011 at 20:00 GMT
+%     Last Updated Apr.  3, 2012 at 20:00 GMT
 
 % todo:
 
@@ -63,7 +64,7 @@ elseif(nargin>3 && ~mod(nargin,2))
 end
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % number of records
 nrecs=numel(data);

@@ -9,10 +9,10 @@ function [varargout]=plot1dmodel(model,fields,drng,cmap,fgcolor,bgcolor,ax)
 %              plot1dmodel(model,fields,drng,cmap,fgcolor,bgcolor,ax)
 %              ax=plot1dmodel(...)
 %
-%    Description: PLOT1DMODEL(MODEL) makes separate subplots for properties
-%     in the 1D models of MODEL for quick inspection & comparison.  The
-%     depths extend from the surface (0km) to the center of the Earth
-%     (6371km).
+%    Description:
+%     PLOT1DMODEL(MODEL) makes separate subplots for properties in the 1D
+%     models of MODEL for quick inspection & comparison.  The depths extend
+%     from the surface (0km) to the center of the Earth (6371km).
 %
 %     PLOT1DMODEL(MODEL,FIELDS) specifies the fields to plot.  FIELDS must
 %     be a char or cellstr array of property fields in MODEL.  The default
@@ -41,16 +41,16 @@ function [varargout]=plot1dmodel(model,fields,drng,cmap,fgcolor,bgcolor,ax)
 %    Notes:
 %
 %    Examples:
-%     Perturb PREM and compare:
-%      newmod=perturb_1dmodel(prem,'prem+ddp+ulvz',...
-%                             'vs',[2600    0 1 1 10;
-%                                   2700   -1 4 0  0;
-%                                   2700    2 4 2 10;
-%                                   2891 -0.2 1 0  0],...
-%                             'vs',[2891-25 -10 4 1 5;
-%                                   2891    -10 4 0 0]);
-%      h=plot1dmodel([prem newmod],[],[2500 3000]);
-%      set(findobj(h,'tag','vs'),'xlim',[6 8]); % resetting due to core
+%     % Perturb PREM and compare:
+%     newmod=perturb_1dmodel(prem,'prem+ddp+ulvz',...
+%                            'vs',[2600    0 1 1 10;
+%                                  2700   -1 4 0  0;
+%                                  2700    2 4 2 10;
+%                                  2891 -0.2 1 0  0],...
+%                            'vs',[2891-25 -10 4 1 5;
+%                                  2891    -10 4 0 0]);
+%     h=plot1dmodel([prem newmod],[],[2500 3000]);
+%     set(findobj(h,'tag','vs'),'xlim',[6 8]); % resetting due to core
 %
 %    See also: PREM, AK135, IASP91, PREM_PERFECT, PREM2_PERFECT,
 %              PERTURB_1DMODEL, AVAILABLE_1DMODELS, CHK1DMODEL,
@@ -61,9 +61,10 @@ function [varargout]=plot1dmodel(model,fields,drng,cmap,fgcolor,bgcolor,ax)
 %        May  29, 2010 - turn off tex interpretation of model names
 %        Aug. 17, 2010 - fancy titles in LaTeX
 %        Feb. 28, 2010 - fix default color code bug
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 28, 2011 at 15:50 GMT
+%     Last Updated Apr.  3, 2012 at 15:50 GMT
 
 % todo:
 

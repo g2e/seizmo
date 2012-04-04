@@ -3,26 +3,27 @@ function [thick]=getc2thick(lat,lon)
 %
 %    Usage:    thick=getc2thick(lat,lon)
 %
-%    Description: THICK=GETC2THICK(LAT,LON) returns the Crust2.0
-%     crust thickness at the positions specified.  Note that this has a 2x2
-%     degree resolution!  LAT & LON are expected to be scalars or equal
-%     sized arrays and have units in degrees.  Crust2.0 is by the Scripps
-%     group.
+%    Description:
+%     THICK=GETC2THICK(LAT,LON) returns the Crust2.0 crust thickness at the
+%     positions specified.  Note that this has a 2x2 degree resolution.
+%     LAT & LON are expected to be scalars or equal sized arrays and have
+%     units in degrees.  Crust2.0 is by the Scripps group.
 %
 %    Notes:
 %
 %    Examples:
-%     Plot a Crust2.0 crustal thickness map:
-%      [x,y]=meshgrid(-179:2:179,89:-2:-89);
-%      figure; imagesc(-179:2:179,89:-2:-89,getc2thick(y,x)); axis xy
+%     % Plot a Crust2.0 crustal thickness map:
+%     [x,y]=meshgrid(-179:2:179,89:-2:-89);
+%     figure; imagesc(-179:2:179,89:-2:-89,getc2thick(y,x)); axis xy
 %
 %    See also: GETC2MOHO, GETC2ELEV, GETCRUST2, CRUCOR, MANCOR
 
 %     Version History:
 %        May  19, 2010 - initial version
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  19, 2010 at 17:55 GMT
+%     Last Updated Apr.  3, 2012 at 17:55 GMT
 
 % todo:
 

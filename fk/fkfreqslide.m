@@ -9,10 +9,11 @@ function [varargout]=fkfreqslide(vol,delay,varargin)
 %              fkfreqslide(vol,delay,dblim,zerodb,fgcolor,bgcolor,ax)
 %              mov=fkfreqslide(...);
 %
-%    Description: FKFREQSLIDE(VOL) slides through a fk volume produced by
-%     FKVOLUME by plotting each of the frequencies in sequence in a single
-%     plot.  There is a 1/3 second delay between each replotting by default
-%     (see next Usage form to adjust this).
+%    Description:
+%     FKFREQSLIDE(VOL) slides through a fk volume produced by FKVOLUME by
+%     plotting each of the frequencies in sequence in a single plot.  There
+%     is a 1/3 second delay between each replotting by default (see next
+%     Usage form to adjust this).
 %
 %     FKFREQSLIDE(VOL,DELAY) specifies the delay between the plotting of
 %     each frequency in seconds.  The default DELAY is 0.33s.
@@ -42,9 +43,9 @@ function [varargout]=fkfreqslide(vol,delay,varargin)
 %    Notes:
 %
 %    Examples:
-%     Show frequency-slowness volume for a dataset at 20-50s periods:
-%      svol=fkvolume(data,50,201,[1/50 1/20]);
-%      fkfreqslide(svol);
+%     % Show frequency-slowness volume for a dataset at 20-50s periods:
+%     svol=fkvolume(data,50,201,[1/50 1/20]);
+%     fkfreqslide(svol);
 %
 %    See also: FKVOLUME, PLOTFKMAP, UPDATEFKMAP, FKMAP, FK4D, FKFRAMESLIDE,
 %              FKVOL2MAP, FKSUBVOL
@@ -54,9 +55,10 @@ function [varargout]=fkfreqslide(vol,delay,varargin)
 %        May  26, 2010 - update for new plotfkmap args
 %        June 16, 2010 - fix see also section
 %        July  6, 2010 - update for new struct
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 16:05 GMT
+%     Last Updated Apr.  4, 2012 at 16:05 GMT
 
 % todo:
 

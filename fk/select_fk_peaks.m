@@ -1,4 +1,4 @@
-function [peaks]=select_fk_peaks(map,varargin)
+function [peaks,ax]=select_fk_peaks(map,varargin)
 %SELECT_FK_PEAKS    Interactively select peaks in a fk beamformer plot
 %
 %    Usage:    peaks=select_fk_peaks(map)
@@ -13,9 +13,9 @@ function [peaks]=select_fk_peaks(map,varargin)
 %      middle click (shift-click) - return
 %     The output PEAKS is a struct with the following fields:
 %      .xrng     - bounding box xlimits
-%      .xrngtype - xlimit type ('east' or 'baz')
+%      .xtype    - xlimit type ('east' or 'baz')
 %      .yrng     - bounding box ylimits
-%      .yrngtype - ylimit type ('north' or 'slow')
+%      .ytype    - ylimit type ('north' or 'slow')
 %      .db       - dB of peak
 %      .backazi  - backazimuth of peak
 %      .horzslow - slowness of peak
@@ -27,19 +27,26 @@ function [peaks]=select_fk_peaks(map,varargin)
 %     PEAKS=SELECT_FK_PEAKS(MAP,...) passes additional inputs to PLOTFKMAP.
 %     This is useful for customizing the plotting.
 %
+%     [PEAKS,AX]=SELECT_FK_PEAKS(...) returns the handle to the axes that
+%     the beamformer spectra map was plotted in as AX.
+%
 %    Notes:
 %     - Closing the plot is the same as middle clicking.
 %
 %    Examples:
-%     % 
+%     % Get the frequency-slowness of some array data and pick the peaks:
+%     map=fkmap(data,50,201,[1/20 1/10],true);
+%     peaks=select_fk_peaks(map,[0 6],'median');
 %
 %    See also: PLOTFKMAP, FKDBINFO, FKMAP, FKVOLUME, FKVOL2MAP
 
 %     Version History:
 %        Feb. 16, 2011 - initial version
+%        Mar. 29, 2012 - ax output, minor struct change, added example,
+%                        fix backazimuth bug for polar case
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2011 at 10:35 GMT
+%     Last Updated Mar. 29, 2012 at 10:35 GMT
 
 % todo:
 
@@ -68,7 +75,7 @@ bgcolor=cmap(1,:);
 [peak,med]=fkdbinfo(map);
 
 % allocate output
-peaks=struct('xrng',[],'xrngtype',xtype,'yrng',[],'yrngtype',ytype,...
+peaks=struct('xrng',[],'xtype',xtype,'yrng',[],'ytype',ytype,...
     'db',[],'backazi',[],'horzslow',[],'meddb',med.db);
 
 % check axes
@@ -123,7 +130,7 @@ while(true)
                 hold(ax,'on');
                 if(polar)
                     % convert cartesian box corners to polar
-                    [bbx,bby]=cart2pol(bbx,bby);
+                    [bbx,bby]=cart2pol(bby,bbx);
                     bbx=bbx*180/pi;
                     
                     % box must be < 180 degrees
@@ -133,7 +140,7 @@ while(true)
                     % draw radial box lines
                     bbx2=[bbx(1:2); bbx(1:2)];
                     bby2=[bby([1 1]); bby([2 2])];
-                    [bbx2,bby2]=pol2cart(bbx2*pi/180,bby2);
+                    [bby2,bbx2]=pol2cart(bbx2*pi/180,bby2);
                     boxh(cnt,1:2)=plot(ax,bbx2,bby2,...
                         'color',fgcolor,'linewidth',2);
                     
@@ -141,7 +148,7 @@ while(true)
                     bbx2=[linspace(bbx(1),bbx(2),30)' ...
                         linspace(bbx(1),bbx(2),30)'];
                     bby2=bby([ones(30,1) 2*ones(30,1)]);
-                    [bbx2,bby2]=pol2cart(bbx2*pi/180,bby2);
+                    [bby2,bbx2]=pol2cart(bbx2*pi/180,bby2);
                     boxh(cnt,3:4)=plot(ax,bbx2,bby2,...
                         'color',fgcolor,'linewidth',2);
                 else % cartesian
@@ -173,7 +180,7 @@ while(true)
                 
                 % mark peak
                 hold(ax,'on');
-                [bbx2,bby2]=pol2cart(pi/180*peak.backazi,peak.horzslow);
+                [bby2,bbx2]=pol2cart(pi/180*peak.backazi,peak.horzslow);
                 peakh(cnt)=plot(ax,bbx2,bby2,'x','color',bgcolor);
                 hold(ax,'off');
                 
@@ -195,7 +202,7 @@ while(true)
                 bby=peaks.yrng(cnt,1);
                 
                 % fix box corner 1 if polar
-                if(polar); [bbx,bby]=pol2cart(pi/180*bbx,bby); end
+                if(polar); [bby,bbx]=pol2cart(pi/180*bbx,bby); end
                 
                 % remove peak info
                 peaks.xrng(cnt,:)=[];

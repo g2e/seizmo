@@ -3,16 +3,17 @@ function [vol]=geofksubvol(vol,frng,srng,latrng,lonrng)
 %
 %    Usage:    vol=geofksubvol(vol,frng,srng,latrng,lonrng)
 %
-%    Description: VOL=GEOFKSUBVOL(VOL,FRNG,SRNG,LATRNG,LONRNG) extracts the
-%     geofk beam data in VOL for the ranges given by FRNG, SRNG,
-%     LATRNG, & LONRNG and returns the reduced volume with all pertinent
-%     info updated.  VOL is a geofk struct (see GEOFKXCVOLUME for details).
-%     FRNG gives the frequency range to extract as [FREQLOW FREQHIGH] in
-%     Hz.  SRNG defines the horizontal slowness range in seconds per
-%     degree as [SLOWLOW SLOWHIGH].  LATRNG & LONRNG provide the parallels
-%     and meridians that define a window in the geographic domain and they
-%     are expected to be in degrees as [LOW HIGH].  Note that longitudes in
-%     the beam data positions will be wrapped so all possible points are
+%    Description:
+%     VOL=GEOFKSUBVOL(VOL,FRNG,SRNG,LATRNG,LONRNG) extracts the geofk beam
+%     data in VOL for the ranges given by FRNG, SRNG, LATRNG, & LONRNG and
+%     returns the reduced volume with all pertinent info updated.  VOL is a
+%     geofk struct (see GEOFKXCVOLUME for details).  FRNG gives the
+%     frequency range to extract as [FREQLOW FREQHIGH] in Hz.  SRNG defines
+%     the horizontal slowness range in seconds per degree as
+%     [SLOWLOW SLOWHIGH].  LATRNG & LONRNG provide the parallels and
+%     meridians that define a window in the geographic domain and they are
+%     expected to be in degrees as [LOW HIGH].  Note that longitudes in the
+%     beam data positions will be wrapped so all possible points are
 %     included in the LONRNG.
 %
 %     By default all ranges are set to [] (full range).
@@ -22,12 +23,12 @@ function [vol]=geofksubvol(vol,frng,srng,latrng,lonrng)
 %       points to correspond to a monotonic grid required by PLOTGEOFKMAP.
 %
 %    Examples:
-%     Split a volume into 10s period windows:
-%      svol=fkvolume(data,50,201,[1/50 1/20]);
-%      svol1=geofksubvol(svol,[1/50 1/40]);
-%      svol2=geofksubvol(svol,[1/40 1/30]);
-%      svol3=geofksubvol(svol,[1/30 1/20]);
-%      svol4=geofksubvol(svol,[1/20 1/10]);
+%     % Split a volume into 10s period windows:
+%     svol=fkvolume(data,50,201,[1/50 1/20]);
+%     svol1=geofksubvol(svol,[1/50 1/40]);
+%     svol2=geofksubvol(svol,[1/40 1/30]);
+%     svol3=geofksubvol(svol,[1/30 1/20]);
+%     svol4=geofksubvol(svol,[1/20 1/10]);
 %
 %    See also: GEOFKFREQSLIDE, GEOFKSLOWSLIDE, PLOTGEOFKMAP, GEOFKXCVOLUME,
 %              GEOFKVOL2MAP, CHKGEOFKSTRUCT
@@ -35,9 +36,10 @@ function [vol]=geofksubvol(vol,frng,srng,latrng,lonrng)
 %     Version History:
 %        June 25, 2010 - initial version
 %        July  6, 2010 - update for new struct
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 19:05 GMT
+%     Last Updated Apr.  4, 2012 at 19:05 GMT
 
 % todo:
 

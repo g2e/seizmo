@@ -3,19 +3,19 @@ function [data]=mat2records(data,dep,idx1,ind,idx2,store,npts)
 %
 %    Usage:    data=mat2records(data,dep,idx1,ind,idx2,store,npts)
 %
-%    Description: MAT2RECORDS(DATA,DEP,IDX1,IND,IDX2,STORE,NPTS) imports
-%     the data in DEP and IND (numeric arrays with each column as a
-%     separate component of records - DEP contains the dependent components
-%     and IND contains the independent components) into SEIZMO structure
-%     DATA, outputing the updated structure.  IDX1 and IDX2 give the record
-%     in DATA that each column corresponds to (if multiple columns belong
-%     to a single record they will be ordered the same as they are in
-%     DEP -- note IND cannot have multiple components for the same record).
-%     STORE gives the data storage class for each record in DATA (not for
-%     each column/component).  NPTS gives the number of points in each
-%     record in DATA (not for each column/component).  This function is
-%     typically used in conjunction with RECORDS2MAT to access functions
-%     not in the SEIZMO toolbox.
+%    Description:
+%     DATA=MAT2RECORDS(DATA,DEP,IDX1,IND,IDX2,STORE,NPTS) imports data in
+%     DEP and IND (numeric arrays with each column as a separate component
+%     of records - DEP contains the dependent components and IND contains
+%     the independent components) into SEIZMO structure DATA, outputing the
+%     updated structure.  IDX1 and IDX2 give the record in DATA that each
+%     column corresponds to (if multiple columns belong to a single record
+%     they will be ordered the same as they are in DEP -- note IND cannot
+%     have multiple components for the same record).  STORE gives the data
+%     storage class for each record in DATA (not each column/component).
+%     NPTS gives the number of points in each record in DATA (not for each
+%     column/component).  This function is typically used in conjunction
+%     with RECORDS2MAT to access functions not in the SEIZMO toolbox.
 %
 %     **********************************************
 %     FOR CREATING A NEW SEIZMO DATA STRUCTURE FROM
@@ -30,10 +30,10 @@ function [data]=mat2records(data,dep,idx1,ind,idx2,store,npts)
 %    Header changes: see CHECKHEADER
 %
 %    Examples:
-%     The typical usage:
-%      [dep,idx1,ind,idx2,store,npts]=records2mat(data);
-%      ...non-seizmo commands...
-%      data=mat2records(data,dep,idx1,ind,idx2,store,npts);
+%     % The typical usage:
+%     [dep,idx1,ind,idx2,store,npts]=records2mat(data);
+%     ...non-seizmo commands...
+%     data=mat2records(data,dep,idx1,ind,idx2,store,npts);
 %
 %    See also: RECORDS2MAT, BSEIZMO, GETVALUEFUN, SOLOFUN, MULTIFUN,
 %              SLIDINGFUN
@@ -56,9 +56,10 @@ function [data]=mat2records(data,dep,idx1,ind,idx2,store,npts)
 %        Feb.  3, 2010 - reduced seizmocheck usage
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix, see also
 %                        section update
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  2, 2012 at 15:05 GMT
 
 % todo:
 

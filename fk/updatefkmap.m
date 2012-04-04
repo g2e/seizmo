@@ -4,9 +4,10 @@ function [varargout]=updatefkmap(map,ax)
 %    Usage:    updatefkmap(map,ax)
 %              ax=updatefkmap(map)
 %
-%    Description: UPDATEFKMAP(MAP,AX) draws an new fk beam map given by
-%     MAP in an existing axes AX.  This is mainly intended for exploring 3D
-%     and 4D fk datasets and for making movies in a faster fashion.
+%    Description:
+%     UPDATEFKMAP(MAP,AX) draws an new fk beam map given by MAP in an
+%     existing axes AX.  This is mainly intended for exploring 3D and 4D fk
+%     datasets and for making movies in a faster fashion.
 %
 %     AX=UPDATEFKMAP(MAP) is the same as calling PLOTFKMAP(MAP) -- ie. a
 %     new figure is drawn.
@@ -14,18 +15,18 @@ function [varargout]=updatefkmap(map,ax)
 %    Notes:
 %
 %    Examples:
-%     Slide through a few fk beams:
-%      spolar(1)=fkmap(data,25,201,[1/50 1/45],true);
-%      spolar(2)=fkmap(data,25,201,[1/45 1/40],true);
-%      spolar(3)=fkmap(data,25,201,[1/40 1/35],true);
-%      spolar(4)=fkmap(data,25,201,[1/35 1/30],true);
-%      spolar(5)=fkmap(data,25,201,[1/30 1/25],true);
-%      spolar(6)=fkmap(data,25,201,[1/25 1/20],true);
-%      ax=plotfkmap(spolar(1));
-%      for i=2:6
-%          pause(1);
-%          updatefkmap(spolar(i),ax);
-%      end
+%     % Slide through a few fk beams:
+%     spolar(1)=fkmap(data,25,201,[1/50 1/45],true);
+%     spolar(2)=fkmap(data,25,201,[1/45 1/40],true);
+%     spolar(3)=fkmap(data,25,201,[1/40 1/35],true);
+%     spolar(4)=fkmap(data,25,201,[1/35 1/30],true);
+%     spolar(5)=fkmap(data,25,201,[1/30 1/25],true);
+%     spolar(6)=fkmap(data,25,201,[1/25 1/20],true);
+%     ax=plotfkmap(spolar(1));
+%     for i=2:6
+%         pause(1);
+%         updatefkmap(spolar(i),ax);
+%     end
 %
 %    See also: PLOTFKMAP, FKMAP, FKVOLUME, FK4D, FKFREQSLIDE, FKFRAMESLIDE
 
@@ -37,9 +38,10 @@ function [varargout]=updatefkmap(map,ax)
 %        June 16, 2010 - better see also section
 %        July  6, 2010 - major update for new struct
 %        Apr. 13, 2011 - better axis handle usage
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 13, 2011 at 16:05 GMT
+%     Last Updated Apr.  4, 2012 at 16:05 GMT
 
 % todo:
 

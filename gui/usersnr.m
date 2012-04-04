@@ -2,20 +2,21 @@ function [snr,s,ax]=usersnr(data,nwin,swin,method,varargin)
 %USERSNR    Interactively select windows for SNR estimation
 %
 %    Usage:    snr=usersnr(data)
-%              usersnr(data,noisewin,signalwin)
-%              usersnr(data,noisewin,signalwin,method)
-%              usersnr(data,noisewin,signalwin,method,'field',value,...)
+%              snr=usersnr(data,noisewin,signalwin)
+%              snr=usersnr(data,noisewin,signalwin,method)
+%              snr=usersnr(data,noisewin,signalwin,method,'param',val,...)
 %              [snr,s]=usersnr(...)
 %              [snr,s,ax]=usersnr(...)
 %
-%    Description: SNR=USERSNR(DATA) presents an interactive menu and plot
-%     to facilitate the signal-to-noise ratio estimation of records in
-%     SEIZMO struct DATA.  The estimates are output in an Nx1 array SNR
-%     where N is the number of records in DATA.  The default window limits
-%     extend across the timing of the entire dataset, so it is necessary to
-%     adjust these limits (otherwise all SNR estimates will be 1).  The
-%     default method is 'PEAK2PEAK'.  The defaults may be adjusted using
-%     the alternative usage forms below.
+%    Description:
+%     SNR=USERSNR(DATA) presents an interactive menu and plot to facilitate
+%     signal-to-noise ratio estimation of records in SEIZMO struct DATA.
+%     The estimates are output in an Nx1 array SNR where N is the number of
+%     records in DATA.  The default window limits extend across the timing
+%     of the entire dataset, so it is necessary to adjust these limits
+%     (otherwise all SNR estimates will be 1).  The default method is
+%     'PEAK2PEAK'.  The defaults may be adjusted using the alternative
+%     usage forms below.
 %
 %     SNR=USERSNR(DATA,NOISEWIN,SIGNALWIN) specifies the noise and signal
 %     window limits.  Both NOISEWIN & SIGNALWIN must be 1x2 real-valued
@@ -30,8 +31,9 @@ function [snr,s,ax]=usersnr(data,nwin,swin,method,varargin)
 %     'PEAK2PEAK'.  See QUICKSNR for more details.  The method may be
 %     changed by the user (this is the initial value).
 %
-%     SNR=USERSNR(DATA,NOISEWIN,SIGNALWIN,METHOD,'FIELD',VALUE,...) passes
-%     field/value pairs to the plotting function to allow customization.
+%     SNR=USERSNR(DATA,NOISEWIN,SIGNALWIN,METHOD,'PARAM',VAL,...) passes
+%     parameter/value pairs to the underlying plotting function to allow
+%     customization.
 %
 %     [SNR,S]=USERSNR(...) returns a struct S with the following fields:
 %      S.noisewin   --  time limits of the noise window (relative times) 
@@ -44,9 +46,9 @@ function [snr,s,ax]=usersnr(data,nwin,swin,method,varargin)
 %    Notes:
 %
 %    Examples:
-%     Specify the default window limits and method and let the user modify
-%     them if they desire:
-%      [snr,s,ax]=usersnr(data,[-90 -15],[-15 60],'robustrms');
+%     % Specify the default window limits and method
+%     % and let the user modify them if they desire:
+%     [snr,s,ax]=usersnr(data,[-90 -15],[-15 60],'robustrms');
 %
 %    See also: QUICKSNR, USERWINDOW, CUT
 
@@ -57,9 +59,10 @@ function [snr,s,ax]=usersnr(data,nwin,swin,method,varargin)
 %        Jan.  6, 2011 - use key2zoompan
 %        Jan. 18, 2011 - remove exit button
 %        Jan. 23, 2011 - redraw plot if plot type selected
+%        Apr.  3, 2012 - minor doc update, use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2011 at 11:00 GMT
+%     Last Updated Apr.  3, 2012 at 11:00 GMT
 
 % todo:
 
@@ -71,7 +74,7 @@ if(nargin>4 && mod(nargin,2))
 end
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

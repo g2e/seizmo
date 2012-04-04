@@ -6,17 +6,18 @@ function [varargout]=azisweep(data,lagrng,degrng,azwin,azstep)
 %              mov=azisweep(data,lagrng,degrng,azwin,azstep)
 %              mov=azisweep(data,lagrng,degrng,azwin,azstep,ax)
 %
-%    Description: MOV=AZISWEEP(DATA) creates a Matlab movie MOV by plotting
-%     correlograms as a function of distance for a series of azimuthal
-%     windows.  The default azimuthal window is 10 degrees wide and
-%     increments at 1 degree.  The record section plot extends from -500 to
-%     500 seconds in lag time and the distance range is -1 to 11 degrees.
-%     To adjust these values see the remaining usage forms.  Also included
-%     is a small map inset on the lower left showing the station pairs in
-%     the main window.  The source stations are drawn as red stars while
-%     the receiver stations are yellow circles.  Lines connecting the 2
-%     stations designates a pair.  The map plotting can be terribly slow
-%     so expect to wait 10 or so minutes for this to finish.
+%    Description:
+%     MOV=AZISWEEP(DATA) creates a Matlab movie MOV by drawing correlograms
+%     as a function of distance for a series of azimuthal windows.  The
+%     default azimuthal window is 10 degrees wide and steps at 1 degree.
+%     The record section plot extends from -500 to 500 seconds in lag time
+%     and the distance range is -1 to 11 degrees.  To adjust these values
+%     see the remaining usage forms.  Also included is a small map inset on
+%     the lower left showing the station pairs in the main window.  The
+%     source stations are drawn as red stars while the receiver stations
+%     are yellow circles.  Lines connecting the 2 stations designates a
+%     pair.  The map plotting can be terribly slow so expect to wait 10 or
+%     so minutes for this to finish.
 %
 %     MOV=AZISWEEP(DATA,LAGRNG,DEGRNG) adjusts the record section plot
 %     limits.  Default LAGRNG is [-500 500] and DEGRNG is [-1 11].  Records
@@ -44,17 +45,18 @@ function [varargout]=azisweep(data,lagrng,degrng,azwin,azstep)
 %        Sep. 16, 2010 - doc update, fixed plotting (much faster now),
 %                        fixed bug in azimuthal windowing and labeling
 %        Feb. 11, 2011 - minor mlint fix
+%        Apr.  3, 2012 - minor doc update, use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 14:15 GMT
+%     Last Updated Apr.  3, 2012 at 14:15 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,6,nargin));
 
-% check dataset
-versioninfo(data,'dep');
+% check data structure
+error(seizmocheck(data,'dep'));
 
 % default/check optional inputs
 if(nargin<2 || isempty(lagrng)); lagrng=[-500 500]; end

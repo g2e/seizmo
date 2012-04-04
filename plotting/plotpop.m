@@ -5,10 +5,10 @@ function [varargout]=plotpop(grp,ax)
 %              plotpop(grp,ax)
 %              ax=plotpop(...)
 %
-%    Description: PLOTPOP(GRP) makes a stem plot of the cluster populations
-%     given in the struct GRP.  See USERCLUSTER for the format of GRP.
-%     This is mainly for interactive population-based cluster cutting using
-%     POPCUT.
+%    Description:
+%     PLOTPOP(GRP) makes a stem plot of the cluster populations given in
+%     the struct GRP.  See USERCLUSTER for the format of GRP.  This is
+%     mainly for interactive population-based cluster cutting using POPCUT.
 %
 %     PLOTPOP(GRP,AX) sets the axis handle AX to draw in.  This is useful
 %     for subplotting.
@@ -30,9 +30,10 @@ function [varargout]=plotpop(grp,ax)
 %        Oct.  6, 2010 - handle 0 pop clusters
 %        Mar. 31, 2011 - drawnow call avoids buggy matlab scatter issues,
 %                        improve ticking
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 31, 2011 at 17:35 GMT
+%     Last Updated Apr.  3, 2012 at 17:35 GMT
 
 % todo:
 

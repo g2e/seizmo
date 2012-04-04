@@ -4,9 +4,10 @@ function [cx,cy]=circle(r,steps)
 %    Usage:    [x,y]=circle(radius)
 %              [x,y]=circle(radius,steps)
 %
-%    Description: [X,Y]=CIRCLE(RADIUS) returns the cartesian coordinates of
-%     points on a circle of radius RADIUS.  RADIUS must be a real-valued
-%     scalar.  The points are spaced at 1 degree intervals.
+%    Description:
+%     [X,Y]=CIRCLE(RADIUS) returns the cartesian coordinates of points on a
+%     circle of radius RADIUS.  RADIUS must be a real-valued scalar.  The
+%     points are spaced at 1 degree intervals.
 %     
 %     [X,Y]=CIRCLE(RADIUS,STEPS) sets the number of steps in the circle
 %     given by X & Y.  The number of points in the circle is STEPS+1.
@@ -16,21 +17,22 @@ function [cx,cy]=circle(r,steps)
 %    Notes:
 %
 %    Examples:
-%     Draw a unit circle with radial lines every 30deg:
-%      steps=360/30;
-%      [x0,y0]=circle(0,steps);
-%      [x1,y1]=circle(1,steps);
-%      [x,y]=circle(1);
-%      figure; plot([x0; x1],[y0; y1],'k',x,y,'k');
-%      axis equal
+%     % Draw a unit circle with radial lines every 30deg:
+%     steps=360/30;
+%     [x0,y0]=circle(0,steps);
+%     [x1,y1]=circle(1,steps);
+%     [x,y]=circle(1);
+%     figure; plot([x0; x1],[y0; y1],'k',x,y,'k');
+%     axis equal
 %
 %    See also: SPHERE, ELLIPSOID, CYLINDER
 
 %     Version History:
 %        May   4, 2010 - initial version
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   4, 2010 at 10:30 GMT
+%     Last Updated Mar. 24, 2012 at 10:30 GMT
 
 % todo:
 

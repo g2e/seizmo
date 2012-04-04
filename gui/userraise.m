@@ -6,14 +6,15 @@ function [data,rai,ax]=userraise(data,varargin)
 %              [data,ray]=userraise(...)
 %              [data,ray,ax]=userraise(...)
 %
-%    Description: DATA=USERRAISE(DATA) presents an interactive menu and
-%     record section plot (arranged by degree distance) to facilitate
-%     scaling records in SEIZMO struct DATA by a specified power.  This is
-%     useful for noise suppression/enhancement.  The default power is 1
-%     which leaves the data as it originally was.  Using power>1 will
-%     emphasize high data values while 0<power<1 will emphasize small data
-%     values (in an absolute value sense).  Using a power of 0 is
-%     equivalent to a 1-bit filter.  Using a power<0 is a bad idea!
+%    Description:
+%     DATA=USERRAISE(DATA) presents an interactive menu and record section
+%     plot (arranged by degree distance) to facilitate scaling records in
+%     SEIZMO struct DATA by a specified power.  This is useful for noise
+%     suppression/enhancement.  The default power is 1 which leaves the
+%     data as it originally was.  Using power>1 will emphasize high data
+%     values while 0<power<1 will emphasize small data values (in an
+%     absolute value sense).  Using a power of 0 is equivalent to a 1-bit
+%     filter.  Using a power<0 is a bad idea!
 %
 %     DATA=USERRAISE(DATA,'FIELD1',VALUE1,...,'FIELDN',VALUEN) passes
 %     field/value pairs to RECORDSECTION to allow plot customization.
@@ -30,11 +31,11 @@ function [data,rai,ax]=userraise(data,varargin)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
-%     Scaling records in your dataset may be useful for noise suppression
-%     before some other tasks:
-%      data=userraise(data);
-%      xc=correlate(data,'npeaks',3,'spacing',10);
-%      [arr,err,pol]=ttsolve(xc);
+%     % Scaling records in your dataset may be useful for noise suppression
+%     % before some other tasks:
+%     data=userraise(data);
+%     xc=correlate(data,'npeaks',3,'spacing',10);
+%     [arr,err,pol]=ttsolve(xc);
 %
 %    See also: USERWINDOW, USERTAPER, USERMOVEOUT, USERALIGN
 
@@ -42,9 +43,10 @@ function [data,rai,ax]=userraise(data,varargin)
 %        Mar. 16, 2010 - initial version
 %        Mar. 18, 2010 - made robust to menu closing
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 26, 2010 at 10:00 GMT
+%     Last Updated Mar. 24, 2012 at 10:00 GMT
 
 % todo:
 
@@ -52,7 +54,7 @@ function [data,rai,ax]=userraise(data,varargin)
 error(nargchk(1,inf,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);

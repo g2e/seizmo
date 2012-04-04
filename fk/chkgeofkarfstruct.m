@@ -3,15 +3,15 @@ function [report]=chkgeofkarfstruct(geofk)
 %
 %    Usage:    msg=chkgeofkarfstruct(arf)
 %
-%    Description: MSG=CHKGEOFKARFSTRUCT(ARF) checks that ARF is a struct as
-%     output from GEOFKARF.  See GEOFKARF for details on the struct layout.
-%     MSG is an error structure if a problem is found (otherwise it is
-%     empty).
+%    Description:
+%     MSG=CHKGEOFKARFSTRUCT(ARF) checks that ARF is a struct as output from
+%     GEOFKARF.  See GEOFKARF for details on the struct layout.  MSG is an
+%     error structure if a problem is found (otherwise it is empty).
 %
 %    Notes:
 %
 %    Examples:
-%     Check that output from GEOFKARF is ok:
+%     % Check that output from GEOFKARF is ok:
 %     lat0=-20:20;
 %     lon0=-20:20;
 %     [lat,lon]=meshgrid(lat0,lon0);
@@ -24,9 +24,10 @@ function [report]=chkgeofkarfstruct(geofk)
 
 %     Version History:
 %        July  7, 2010 - initial version
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  7, 2010 at 18:50 GMT
+%     Last Updated Apr.  4, 2012 at 18:50 GMT
 
 % todo:
 

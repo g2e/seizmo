@@ -8,61 +8,62 @@ function [data]=changepath(data,varargin)
 %              data=changepath(data,...,'delete',{string1 ... stringN},...)
 %              data=changepath(data,...,'change',{orig replacement},...)
 %
-%    Description: CHANGEPATH(DATA,...,'PATH',PATH,...) sets the path field
-%     of DATA to PATH.  The path field is the filepath associated with the
-%     record.  If DATA contains more than 1 record and PATH is just a
-%     single string, the path field for all records are changed to PATH.
-%     Otherwise PATH must be a char/cellstr array with 1 row/element for
-%     each record in DATA.
+%    Description:
+%     DATA=CHANGEPATH(DATA,...,'PATH',PATH,...) sets the path field of DATA
+%     to PATH.  The path field is the filepath associated with the record.
+%     If DATA contains more than 1 record and PATH is just a single string,
+%     the path field for all records are changed to PATH.  Otherwise PATH
+%     must be a char/cellstr array with 1 row/element for each record in
+%     DATA.
 %
-%     CHANGEPATH(DATA,...,'PREPEND',STRING,...) prepends STRING to the
+%     DATA=CHANGEPATH(DATA,...,'PREPEND',STRING,...) prepends STRING to the
 %     path field of DATA.  If DATA contains more than 1 record and STRING
 %     is just a single string, STRING is prepended to the path field of all
 %     records in DATA.  Otherwise STRING must be a char/cellstr array with
 %     1 row/element for each record in DATA.
 %
-%     CHANGEPATH(DATA,...,'APPEND',STRING,...) appends STRING to the path
-%     field of DATA.  If DATA contains more than 1 record and STRING is
-%     just a single string, STRING is appended to the path field of all
+%     DATA=CHANGEPATH(DATA,...,'APPEND',STRING,...) appends STRING to the
+%     path field of DATA.  If DATA contains more than 1 record and STRING
+%     is just a single string, STRING is appended to the path field of all
 %     records in DATA.  Otherwise STRING must be a char/cellstr array with
 %     1 row/element for each record in DATA.
 %
-%     CHANGEPATH(DATA,...,'DELETE',STRING,...) deletes STRING from the path
-%     field of DATA.  If DATA contains more than 1 record and STRING is
-%     just a single string, STRING is deleted from the path field of all
+%     DATA=CHANGEPATH(DATA,...,'DELETE',STRING,...) deletes STRING from the
+%     path field of DATA.  If DATA contains more than 1 record and STRING
+%     is just a single string, STRING is deleted from the path field of all
 %     records in DATA.  Otherwise STRING must be a char/cellstr array with
 %     1 row/element for each record in DATA.  To delete multiple parts from
 %     the path field, see the next DELETE option usage.
 %
-%     CHANGEPATH(DATA,...,'DELETE',{STRING1 ... STRINGN},...) allows
+%     DATA=CHANGEPATH(DATA,...,'DELETE',{STRING1 ... STRINGN},...) allows
 %     deleting multiple strings from the path field of DATA.  Multi-line
 %     entries are not allowed (use one string per cell if working on
 %     multiple records where each row corresponds to a separate record).  
 %
-%     CHANGEPATH(DATA,...,'CHANGE',{ORIGINAL REPLACEMENT},...) replaces all
-%     occurances of the string ORIGINAL in the path field of DATA with the
-%     string REPLACEMENT.  If DATA contains more than 1 record and ORIGINAL
-%     and REPLACEMENT are just single strings, then the same string set is
-%     applied to every record.  Otherwise a string pair must be given for
-%     each record (requires a cellstr array).  To change multiple portions
-%     of the path field for records in DATA, just expand the number of
-%     columns in the cellstr array.
+%     DATA=CHANGEPATH(DATA,...,'CHANGE',{ORIGINAL REPLACEMENT},...) alters
+%     all occurances of the string ORIGINAL in the path field of DATA with
+%     the string REPLACEMENT.  If DATA contains more than 1 record and
+%     ORIGINAL and REPLACEMENT are just single strings, then the same
+%     string set is applied to every record.  Otherwise a string pair must
+%     be given for each record (requires a cellstr array).  To change
+%     multiple portions of the path field for records in DATA, just expand
+%     the number of columns in the cellstr array.
 %
 %    Notes:
 %     - CHANGEPATH does NOT check the validity of the file paths created!
 %
 %    Examples:
-%     Prepend and append to all filepaths:
-%      data=changepath(data,'prepend','/some/dir/','append','/two/more')
+%     % Prepend and append to all filepaths:
+%     data=changepath(data,'prepend','/some/dir/','append','/two/more')
 %
-%     Change the path of a record:
-%      data(3)=changepath(data(3),'path','my/new/file/path')
+%     % Change the path of a record:
+%     data(3)=changepath(data(3),'path','my/new/file/path')
 %
-%     Delete multiple parts from all filepaths:
-%      data=changepath(data,'delete',{'/some/abs/path' '../pointless/..'})
+%     % Delete multiple parts from all filepaths:
+%     data=changepath(data,'delete',{'/some/abs/path' '../pointless/..'})
 %
-%     Replace certain portions of all filepaths:
-%      data=changepath(data,'change',{'//' '/' 'dir1' 'dir2'})
+%     % Replace certain portions of all filepaths:
+%     data=changepath(data,'change',{'//' '/' 'dir1' 'dir2'})
 %
 %    See also: CHANGEBYTEORDER, CHANGENAME, WRITEHEADER, WRITESEIZMO
 
@@ -78,9 +79,10 @@ function [data]=changepath(data,varargin)
 %        Apr. 10, 2010 - fix bug where path was written as a cellstr
 %        Apr. 25, 2010 - allow several more strings to specify options
 %        Feb. 11, 2011 - mass seizmocheck fix
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  2, 2012 at 15:05 GMT
 
 % todo:
 

@@ -5,12 +5,13 @@ function [x]=scaled_erf(x,inrange,outrange)
 %              y=scaled_erf(x,inrange)
 %              y=scaled_erf(x,inrange,outrange)
 %
-%    Description: Y=SCALED_ERF(X) rescales X so it varies according to
-%     an error function.  Output values in X range from -1 to 1.  X values
-%     less than -2 will have a corresponding Y value near -1 while X values
-%     above 2 will correspond to Y values near 1.  The strongest
-%     transition in Y occurs for X values from -1 to 1 where Y goes from
-%     about -0.8 to 0.8.  This is no different from Y=ERF(X).
+%    Description:
+%     Y=SCALED_ERF(X) rescales X so it varies according to an error
+%     function.  Output values in X range from -1 to 1.  X values less than
+%     -2 will have a corresponding Y value near -1 while X values above 2
+%     will correspond to Y values near 1.  The strongest transition in Y
+%     occurs for X values from -1 to 1 where Y goes from about -0.8 to 0.8.
+%     This is no different from Y=ERF(X).
 %
 %     Y=SCALED_ERF(X,INRANGE) sets the X range over which the Y output goes
 %     from -1 to 1.  The default is [-2 2].  INRANGE must be a 1x2 vector
@@ -38,9 +39,10 @@ function [x]=scaled_erf(x,inrange,outrange)
 %                        half the peak 2 peak amplitude of the signal
 %        Jan. 18, 2011 - no longer used by ttsolve, renamed from
 %                        rescaled_snr to scaled_erf, changed ranges
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 18, 2011 at 01:05 GMT
+%     Last Updated Apr.  3, 2012 at 01:05 GMT
 
 % todo:
 

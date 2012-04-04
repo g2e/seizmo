@@ -3,8 +3,9 @@ function [varargout]=fkstructfix(fk)
 %
 %    Usage:    fk=fkstructfix(fk)
 %
-%    Description: FK=FKSTRUCTFIX(FK) upgrades a struct with a previous
-%     layout to the current one.  This does the following currently:
+%    Description:
+%     FK=FKSTRUCTFIX(FK) upgrades a struct with a previous layout to the
+%     current one.  This does the following currently:
 %      .response ==> .beam
 %      .z        ==> .freq
 %      .center   ==> .method & .center & .npairs
@@ -19,9 +20,10 @@ function [varargout]=fkstructfix(fk)
 
 %     Version History:
 %        July  8, 2010 - initial version
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  8, 2010 at 13:05 GMT
+%     Last Updated Apr.  4, 2012 at 13:05 GMT
 
 % check nargin
 error(nargchk(1,1,nargin));

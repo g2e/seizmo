@@ -3,9 +3,10 @@ function [table]=ak135_ellip_tables()
 %
 %    Usage:    tables=ak135_ellip_tables
 %
-%    Description: TABLES=AK135_ELLIP_TABLES returns tables of tau values
-%     for calculation of ellipticity corrections for several seismic phases
-%     in the AK135 model.  The layout is as follows:
+%    Description:
+%     TABLES=AK135_ELLIP_TABLES returns tables of tau values for
+%     calculation of ellipticity corrections for several seismic phases in
+%     the AK135 model.  The layout is as follows:
 %      TABLES.(phase).depth
 %                    .distance
 %                    .t0
@@ -21,17 +22,18 @@ function [table]=ak135_ellip_tables()
 %       Int. 127, pp. 40-48).
 %
 %    Examples:
-%     See if your phase is tabulated:
-%      ak135_ellip_tables
+%     % See if your phase is tabulated:
+%     ak135_ellip_tables
 %
 %    See also: ELLCOR, AK135
 
 %     Version History:
 %        May  16, 2010 - initial version
 %        Oct.  6, 2010 - edited 85/90deg values for Pdiff & Sdiff
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  6, 2010 at 10:35 GMT
+%     Last Updated Apr.  2, 2012 at 10:35 GMT
 
 % todo
 % - SKSac, ...

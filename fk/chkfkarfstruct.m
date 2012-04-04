@@ -3,16 +3,17 @@ function [report]=chkfkarfstruct(fk)
 %
 %    Usage:    msg=chkfkarfstruct(arf)
 %
-%    Description: MSG=CHKFKARFSTRUCT(ARF) checks that ARF is a struct as
-%     output from FKARF.  See FKARF for details on the struct layout.  MSG
-%     is an error structure if a problem is found (otherwise it is empty).
+%    Description:
+%     MSG=CHKFKARFSTRUCT(ARF) checks that ARF is a struct as output from
+%     FKARF.  See FKARF for details on the struct layout.  MSG is an error
+%     structure if a problem is found (otherwise it is empty).
 %
 %    Notes:
 %
 %    Examples:
-%     Check that output from FKARF is ok:
-%      sarf=fkarf(stla,stlo,50,201,0,0,[1/30 1/20]);
-%      error(chkfkarfstruct(sarf));
+%     % Check that output from FKARF is ok:
+%     sarf=fkarf(stla,stlo,50,201,0,0,[1/30 1/20]);
+%     error(chkfkarfstruct(sarf));
 %
 %    See also: CHKFKSTRUCT, PLOTFKARF, FKARF
 
@@ -23,9 +24,10 @@ function [report]=chkfkarfstruct(fk)
 %        May  27, 2010 - fixed an error message
 %        June 16, 2010 - minor code update
 %        July  6, 2010 - major update for new struct
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 17:05 GMT
+%     Last Updated Apr.  4, 2012 at 17:05 GMT
 
 % todo:
 

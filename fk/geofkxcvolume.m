@@ -55,11 +55,11 @@ function [svol]=geofkxcvolume(data,ll,s,frng,w)
 %       the 'coarray' method.
 %
 %    Examples:
-%     Do you see the 26s microseism in your data?:
-%      [lat,lon]=meshgrid();
-%      hs=27:0.5:33;
-%      frng=[1/27 1/26];
-%      sgeo=geofkxcvolume(xcdata,[lat(:) lon(:)],hs,frng);
+%     % Do you see the 26s microseism in your data?:
+%     [lat,lon]=meshgrid(-10:.5:10,-10:.5:10);
+%     hs=27:0.5:33;
+%     frng=[1/27 1/26];
+%     sgeo=geofkxcvolume(xcdata,[lat(:) lon(:)],hs,frng);
 %
 %    See also: FKXCVOLUME, GEOFKXCHORZVOLUME, CHKGEOFKSTRUCT, PLOTGEOFKMAP,
 %              GEOFKFREQSLIDE, GEOFKSLOWSLIDE, GEOFKSUBVOL, GEOFKVOL2MAP
@@ -68,9 +68,10 @@ function [svol]=geofkxcvolume(data,ll,s,frng,w)
 %        June 22, 2010 - initial version
 %        July  6, 2010 - major update to struct, doc update
 %        July  7, 2010 - removed deg to km conversions
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  7, 2010 at 15:15 GMT
+%     Last Updated Apr.  3, 2012 at 15:15 GMT
 
 % todo:
 % - geometrical spreading & Q would be nice
@@ -80,7 +81,7 @@ error(nargchk(4,5,nargin));
 error(nargchk(1,1,nargout));
 
 % check struct
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % number of correlograms
 ncorr=numel(data);

@@ -4,12 +4,12 @@ function [h,idx]=versioninfo(data,varargin)
 %    Usage:    [h,idx]=versioninfo(data)
 %              [h,idx]=versioninfo(data,'reqfield1',...,'reqfieldN')
 %
-%    Description: [H,IDX]=VERSIONINFO(DATA) returns all necessary version
-%     definitions pertaining to the records in the SEIZMO structure DATA in
-%     the struct array H.  IDX has one entry per record in DATA that
-%     gives the index in H that corresponds to that record's version
-%     definition. This is an internal function to reduce rampant code
-%     repetition.
+%    Description:
+%     [H,IDX]=VERSIONINFO(DATA) returns all necessary version definitions
+%     pertaining to the records in the SEIZMO structure DATA in the struct
+%     array H.  IDX has one entry per record in DATA that gives the index
+%     in H that corresponds to that record's version definition. This is an
+%     internal function to reduce rampant code repetition.
 %
 %     [H,IDX]=VERSIONINFO(DATA,'REQFIELD1',...,'REQFIELDN') passes
 %     additional required SEIZMO struct fields on to SEIZMOCHECK.
@@ -17,9 +17,9 @@ function [h,idx]=versioninfo(data,varargin)
 %    Notes:
 %
 %    Examples:
-%     Get the undefined value for your data:
-%      h=versioninfo(data);
-%      h.undef
+%     % Get the undefined value for your data:
+%     h=versioninfo(data);
+%     h.undef
 %
 %    See also: SEIZMODEF, VALIDSEIZMO, SEIZMOCHECK
 
@@ -37,9 +37,10 @@ function [h,idx]=versioninfo(data,varargin)
 %        Nov. 18, 2009 - allow extra input into seizmocheck
 %        Jan. 29, 2010 - add export to SEIZMO and caching
 %        Aug. 16, 2010 - fix error usages
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 16, 2010 at 00:05 GMT
+%     Last Updated Mar. 24, 2012 at 00:05 GMT
 
 % todo:
 

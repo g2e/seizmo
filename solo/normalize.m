@@ -3,15 +3,17 @@ function [data,scale]=normalize(data)
 %
 %    Usage:    [data,scale]=normalize(data)
 %
-%    Description: [DATA,SCALE]=NORMALIZE(DATA) scales the amplitudes of
-%     SEIZMO records to the range of -1 to 1.  SCALE contains the
-%     normalization factors.  All components for a record are scaled by the
-%     same factor, which is the maximum amplitude found assuming the
-%     components are orthogonal. The maximum amplitude is just:
+%    Description:
+%     [DATA,SCALE]=NORMALIZE(DATA) scales the amplitudes of SEIZMO records
+%     to the range of -1 to 1.  SCALE contains the normalization factors.
+%     All components for a record are scaled by the same factor, which is
+%     the maximum amplitude found assuming the components are orthogonal.
+%     The maximum amplitude is just:
 %                        _________________
 %                       /
 %       amp_max=max \  / cmp1^2+cmp2^2+...
 %                    \/
+%
 %     Use header fields DEPMIN and DEPMAX to get the single largest data
 %     value.
 %
@@ -21,8 +23,8 @@ function [data,scale]=normalize(data)
 %    Header changes: DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
-%     Display record overlay with records scaled:
-%      plot2(normalize(data))
+%     % Display record overlay with records scaled:
+%     plot2(normalize(data))
 %
 %    See also: MULTIPLY, GETNORM
 
@@ -40,9 +42,10 @@ function [data,scale]=normalize(data)
 %        Jan. 30, 2010 - proper SEIZMO handling, seizmoverbose support
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
 %        Apr. 14, 2011 - fix for record of all zeros returning nans
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 14, 2011 at 15:05 GMT
+%     Last Updated Mar. 24, 2012 at 15:05 GMT
 
 % todo:
 

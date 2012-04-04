@@ -19,15 +19,16 @@ function [deg]=slowness2deg(ph,slow)
 %     deg=slowness2deg('P',6)
 %     tauptime('ph','P','mod','ak135','deg',deg)
 %
-%    See also: TAUPCURVE, TAUPTIME
+%    See also: DEG2SLOWNESS, TAUPCURVE, TAUPTIME
 
 %     Version History:
 %        Aug. 30, 2010 - initial version
 %        Sep. 13, 2010 - doc update
 %        Sep. 21, 2010 - several more phases
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2010 at 10:35 GMT
+%     Last Updated Apr.  3, 2012 at 10:35 GMT
 
 % todo
 
@@ -49,7 +50,7 @@ end
 % load model
 dp=load('ak135slow');
 
-% act by slowness type
+% act by phase
 switch ph
     case 'P'
         deg=interp1(dp.P(:,2),dp.P(:,1),slow);

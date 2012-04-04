@@ -3,26 +3,27 @@ function [lgc]=isparallel(o1,o2)
 %
 %    Usage:    lgc=isparallel(o1,o2)
 %
-%    Description: LGC=ISPARALLEL(O1,O2) returns TRUE for each pair of
-%     orientations formed by O1 & O2 that are parallel.  O1 & O2 must be
-%     Nx2 real arrays where the first column gives the inclination from
-%     vertical and the second column gives the azimuth from North.  Must be
-%     in degrees!  If either O1 or O2 is a scalar orientation (ie 1x2) then
-%     it is expanded to the size of the other orientation array.
+%    Description:
+%     LGC=ISPARALLEL(O1,O2) returns TRUE for each pair of orientations
+%     formed by O1 & O2 that are parallel.  O1 & O2 must be Nx2 real arrays
+%     where the first column gives the inclination from vertical and the
+%     second column gives the azimuth from North.  Must be in degrees!  If
+%     either O1 or O2 is a scalar orientation (ie 1x2) then it is expanded
+%     to the size of the other orientation array.
 %
 %    Notes:
 %     - O1 & O2 must be in DEGREES!
 %
 %    Examples:
-%     Some simple negative examples:
-%      isparallel([  0   0],[ 90   0]) % vertical vs north
-%      isparallel([  0   0],[ 90  90]) % vertical vs east
-%      isparallel([ 90   0],[ 90  90]) % north vs east
+%     % Some simple non-parallel examples:
+%     isparallel([  0   0],[ 90   0]) % vertical vs north
+%     isparallel([  0   0],[ 90  90]) % vertical vs east
+%     isparallel([ 90   0],[ 90  90]) % north vs east
 %
-%     Some wrap-around examples:
-%      isparallel([  0   0],[  0 360])
-%      isparallel([ 90  90],[ 90 450])
-%      isparallel([ 90 -90],[ 90 270])
+%     % Some wrap-around examples:
+%     isparallel([  0   0],[  0 360])
+%     isparallel([ 90  90],[ 90 450])
+%     isparallel([ 90 -90],[ 90 270])
 %
 %    See also: ISORTHOGONAL, DOT
 
@@ -30,9 +31,10 @@ function [lgc]=isparallel(o1,o2)
 %        Nov.  2, 2009 - initial version
 %        Feb. 22, 2010 - bug fix for size checks, single-prec tolerance
 %        Feb. 11, 2011 - mass nargchk fix
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  4, 2012 at 15:05 GMT
 
 % todo:
 

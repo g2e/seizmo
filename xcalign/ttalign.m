@@ -5,11 +5,12 @@ function [m,Gg]=ttalign(lag,lagw,abstt,absw,absidx)
 %              [m,Gg]=ttalign(lag,lagw)
 %              [m,Gg]=ttalign(lag,lagw,abstt,absw,absidx)
 %
-%    Description: [M,Gg]=TTALIGN(LAG) solves the matrix of relative lag
-%     times LAG in a least-squares sense for the optimal relative arrival
-%     times M (zero-centered).  Secondary output Gg is the generalized
-%     inverse of G in the equation G*M=LAG (so M=Gg*LAG).  This is an
-%     overdetermined problem so Gg=(G.'*G)\G.'.
+%    Description:
+%     [M,Gg]=TTALIGN(LAG) solves the matrix of relative lag times LAG in a
+%     least-squares sense for the optimal relative arrival times M (zero-
+%     centered).  Secondary output Gg is the generalized inverse of G in
+%     the equation G*M=LAG (so M=Gg*LAG).  This is an overdetermined
+%     problem so Gg=(G.'*G)\G.'.
 %
 %     [M,Gg]=TTALIGN(LAG,LAGW) assigns weights LAGW to the corresponding
 %     elements in LAG when solving for M.  Higher weights forces the
@@ -30,21 +31,21 @@ function [m,Gg]=ttalign(lag,lagw,abstt,absw,absidx)
 %       approximation to a normal distribution that will enhance weights.
 %
 %    Examples:
-%     A simple case (synthetic arrivals at
-%     1 to 10 sec hidden in some noise):
-%      arr=1:10;
-%      lg=arr(ones(10,1),:)-arr(ones(10,1),:)'+2*rand(10)-1;
-%      ttalign(lg)
+%     % A simple case (synthetic arrivals at
+%     % 1 to 10 sec hidden in some noise):
+%     arr=1:10;
+%     lg=arr(ones(10,1),:)-arr(ones(10,1),:)'+2*rand(10)-1;
+%     ttalign(lg)
 %
-%     Get the covariance of the arrivals assuming the variance of the data
-%     is the square of 1/2 the sample interval of records (sampled at 5Hz
-%     here) and that there is no data covariance:
-%      [m,Gg]=ttalign(lags);
-%      covd=((0.2/2)^2)*eye(numel(lg));
-%      covm=Gg*covd*Gg.';
+%     % Get the covariance of the arrivals assuming the variance of the
+%     % data is the square of 1/2 the sample interval of records (sampled
+%     % at 5Hz here) and that there is no data covariance:
+%     [m,Gg]=ttalign(lags);
+%     covd=((0.2/2)^2)*eye(numel(lg));
+%     covm=Gg*covd*Gg.';
 %
-%     Tie cross correlation results to some absolute time picks:
-%      ttalign(lags,[],[725.5 801.1],1,[22 30])
+%     % Tie cross correlation results to some absolute time picks:
+%     ttalign(lags,[],[725.5 801.1],1,[22 30])
 %
 %    See also: WLINEM, TTSTDERR, TTPOLAR, TTREFINE, TTSOLVE
 
@@ -56,9 +57,10 @@ function [m,Gg]=ttalign(lag,lagw,abstt,absw,absidx)
 %                        times)
 %        Sep. 13, 2010 - nargchk fix
 %        Feb. 11, 2011 - drop inv calls, minor doc update
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 01:05 GMT
+%     Last Updated Apr.  2, 2012 at 01:05 GMT
 
 % todo:
 

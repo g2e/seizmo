@@ -3,8 +3,9 @@ function [lgc]=isvalidseizmo(filetype,version)
 %
 %    Usage:    lgc=isvalidseizmo(filetype,version)
 %
-%    Description: LGC=ISVALIDSEIZMO(FILETYPE,VERSION) returns a logical
-%     array indicating which elements in FILETYPE and VERSION are valid
+%    Description:
+%     LGC=ISVALIDSEIZMO(FILETYPE,VERSION) returns a logical array
+%     indicating which elements in FILETYPE and VERSION are valid
 %     filetype/version combinations in SEIZMO.  FILETYPE and VERSION should
 %     have the same number of elements or be scalar (scalar expansion is
 %     enabled).  LGC is a column vector with the same number of elements as
@@ -14,12 +15,12 @@ function [lgc]=isvalidseizmo(filetype,version)
 %    Notes:
 %
 %    Examples:
-%     Are any SEIZMO versions valid SAC versions?:
-%      isvalidseizmo('SAC Binary',validseizmo('SEIZMO Binary'))
+%     % Are any SEIZMO versions valid SAC versions?:
+%     isvalidseizmo('SAC Binary',validseizmo('SEIZMO Binary'))
 %
-%     Quickly check that all filetype and
-%     version fields in a dataset are ok:
-%      all(isvalidseizmo({data.filetype},{data.version});
+%     % Quickly check that all filetype and
+%     % version fields in a dataset are ok:
+%     all(isvalidseizmo({data.filetype},{data.version});
 %
 %    See also: VALIDSEIZMO, SEIZMOCHECK, ISSEIZMO, SEIZMODEF,
 %              GETFILEVERSION
@@ -27,9 +28,10 @@ function [lgc]=isvalidseizmo(filetype,version)
 %     Version History:
 %        Oct.  6, 2009 - initial version
 %        Aug. 21, 2010 - nargchk fix
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 18:10 GMT
+%     Last Updated Apr.  3, 2012 at 18:10 GMT
 
 % todo:
 

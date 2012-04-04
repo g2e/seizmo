@@ -10,17 +10,18 @@ function [corr,ttc2,ttref]=crucor(lat,lon,rayp,wtype,varargin)
 %              corr=crucor(lat,lon,rayp,wavetype,...,'top',1ddepth,...)
 %              [corr,ttc2,ttref]=crucor(...)
 %
-%    Description: CORR=CRUCOR(LAT,LON,RAYP,WAVETYPE) calculates the
-%     difference in travel time through Crust2.0 compared to PREM for a
-%     seismic phase with ray parameter RAYP (in sec/deg) and of type
-%     WAVETYPE ('p' or 's').  The travel time through Crust2.0 goes from
-%     the moho to the elevation at LAT/LON for SRTM30_PLUS.  To account
-%     for the difference between Crust2.0's elevation and SRTM30_PLUS, the
-%     crust is stretched/squished to match while preserving the moho depth.
-%     The travel time for PREM is for a section going from sealevel (PREM
-%     has no topography) to the Crust2.0 moho depth.  The correction CORR
-%     is in seconds and gives TT3D=TT1D+CORR.  Combining CRUCOR with ELLCOR
-%     and MANCOR will provide a more complete 3D correction.
+%    Description:
+%     CORR=CRUCOR(LAT,LON,RAYP,WAVETYPE) calculates the difference in
+%     travel time through Crust2.0 compared to PREM for a seismic phase
+%     with ray parameter RAYP (in sec/deg) and of type WAVETYPE ('p' or
+%     's').  The travel time through Crust2.0 goes from the moho to the
+%     elevation at LAT/LON for SRTM30_PLUS.  To account for the difference
+%     between Crust2.0's elevation and SRTM30_PLUS, the crust is stretched
+%     or squished to match while preserving the moho depth.  The travel
+%     time for PREM is for a section going from sealevel (PREM has no
+%     topography) to the Crust2.0 moho depth.  The correction CORR is in
+%     seconds and gives TT3D=TT1D+CORR.  Combining CRUCOR with ELLCOR and
+%     MANCOR will provide a more complete 3D correction.
 %
 %     CORR=CRUCOR(LAT,LON,RAYP,WAVETYPE,...,'ELEV',ELEV,...) sets the
 %     local elevations used in the crustal corrections to ELEV.  If STRETCH
@@ -59,26 +60,27 @@ function [corr,ttc2,ttref]=crucor(lat,lon,rayp,wtype,varargin)
 %    Notes:
 %
 %    Examples:
-%     Generate a map of crustal corrections for Pdiff (no distance
-%     dependance to Pdiff ray parameter which allows us to do this):
-%      rayp=4.428;
-%      [lon,lat]=meshgrid(-179:2:179,89:-2:-89);
-%      corr=crucor(lat,lon,rayp,'p','s',false);
-%      figure; imagesc(-179:2:179,89:-2:-89,reshape(corr,size(lon)));
-%      axis xy equal tight;
-%      xlabel('Longitude')
-%      ylabel('Latitude')
-%      title('Pdiff Crust2.0 Travel Time Corrections');
-%      hc=colorbar; ylabel(hc,'sec');
+%     % Generate a map of crustal corrections for Pdiff (no distance
+%     % dependance to Pdiff ray parameter which allows us to do this):
+%     rayp=4.428;
+%     [lon,lat]=meshgrid(-179:2:179,89:-2:-89);
+%     corr=crucor(lat,lon,rayp,'p','s',false);
+%     figure; imagesc(-179:2:179,89:-2:-89,reshape(corr,size(lon)));
+%     axis xy equal tight;
+%     xlabel('Longitude')
+%     ylabel('Latitude')
+%     title('Pdiff Crust2.0 Travel Time Corrections');
+%     hc=colorbar; ylabel(hc,'sec');
 %
 %    See also: ELLCOR, MANCOR, GETCRUST2, PREM, AK135, IASP91, TOPO_POINTS
 
 %     Version History:
 %        May  20, 2010 - initial version
 %        Jan. 14, 2011 - improved verbose message, fixed message bug
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2011 at 15:45 GMT
+%     Last Updated Apr.  2, 2012 at 15:45 GMT
 
 % todo
 

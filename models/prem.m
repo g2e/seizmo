@@ -8,10 +8,11 @@ function [mout]=prem(varargin)
 %              model=prem(...,'crust',true|false,...)
 %              model=prem(...,'ocean',true|false,...)
 %
-%    Description: MODEL=PREM() returns a struct containing the isotropic
-%     version of the 1D radial Earth model PREM.  Note that by default the
-%     ocean has been replaced with an extended upper crust.  The struct has
-%     the following fields:
+%    Description:
+%     MODEL=PREM() returns a struct containing the isotropic version of the
+%     1D radial Earth model PREM.  Note that by default the ocean has been
+%     replaced with an extended upper crust.  The struct has the following
+%     fields:
 %      MODEL.name      - model name ('PREM')
 %           .ocean     - true if OCEAN & CRUST are both TRUE
 %           .crust     - true if CRUST is TRUE
@@ -64,14 +65,14 @@ function [mout]=prem(varargin)
 %        Phys. Earth planet. Inter. 25, pp. 297-356
 %
 %    Examples:
-%     Plot parameters for the CMB region:
-%      model=prem('r',[2600 3400]);
-%      figure;
-%      plot(model.depth,model.vp,'r',...
-%           model.depth,model.vs,'g',...
-%           model.depth,model.rho,'b','linewidth',2);
-%      title('PREM')
-%      legend({'Vp' 'Vs' '\rho'})
+%     % Plot parameters for the CMB region:
+%     model=prem('r',[2600 3400]);
+%     figure;
+%     plot(model.depth,model.vp,'r',...
+%          model.depth,model.vs,'g',...
+%          model.depth,model.rho,'b','linewidth',2);
+%     title('PREM')
+%     legend({'Vp' 'Vs' '\rho'})
 %
 %    See also: AK135, IASP91
 
@@ -87,9 +88,10 @@ function [mout]=prem(varargin)
 %        Aug. 17, 2010 - added reference
 %        Sep. 19, 2010 - back to Inf Qu in ocean & outercore, doc update,
 %                        better discontinuity support
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 19, 2010 at 14:45 GMT
+%     Last Updated Apr.  3, 2012 at 14:45 GMT
 
 % todo:
 

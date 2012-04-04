@@ -12,13 +12,14 @@ function [data,x,t]=deconvolve_source_timefunction(data,varargin)
 %                       data,hwidth,type,h2o,frange,zi,zf)
 %              [data,x,t]=deconvolve_source_timefunction(...)
 %
-%    Description: DATA=DECONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH)
-%     deconvolves a gaussian source function with halfwidth HWIDTH from
-%     records in SEIZMO struct DATA.  HWIDTH is in seconds and must be a
-%     scalar or an array of size equal to the number of records in DATA.
-%     The gaussian source function has unit area so that the operation
-%     preserves the energy in the records (see the last Usage format to get
-%     the actual source function).
+%    Description:
+%     DATA=DECONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH) deconvolves a
+%     gaussian source function with halfwidth HWIDTH from records in SEIZMO
+%     struct DATA.  HWIDTH is in seconds and must be a scalar or an array
+%     of size equal to the number of records in DATA.  The gaussian source
+%     function has unit area so that the operation preserves the energy in
+%     the records (see the last Usage format to get the actual source
+%     function).
 %
 %     DATA=DECONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH,TYPE) specifies the
 %     type of source function used in the deconvolution.  See function
@@ -26,11 +27,9 @@ function [data,x,t]=deconvolve_source_timefunction(data,varargin)
 %     like 'gaussian' or 'triangle' or a cellstr array with one string per
 %     record in DATA.
 %
-%     See function DECONVOLVE for details on the following options:
-%     DATA=DECONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH,TYPE,H2O)
-%     DATA=DECONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH,TYPE,H2O,FRANGE)
-%     DATA=DECONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH,TYPE,H2O,FRANGE,ZI)
-%     DATA=DECONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH,TYPE,H2O,FRANGE,ZI,ZF)
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     SEE FUNCTION DECONVOLVE FOR DETAILS ON THE REMAINING INPUTS!
+%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %     [DATA,X,T]=DECONVOLVE_SOURCE_TIMEFUNCTION(...) also returns the
 %     source time functions used in the deconvolution in cell arrays X and
@@ -43,8 +42,8 @@ function [data,x,t]=deconvolve_source_timefunction(data,varargin)
 %    Header changes: DEPMIN, DEPMEN, DEPMAX
 %
 %    Examples:
-%     Deconvolve a gaussian with a halfwidth of 10s from some data:
-%      data1=deconvolve_source_timefunction(data,10,'gaussian');
+%     % Deconvolve a gaussian with a halfwidth of 10s from some data:
+%     data1=deconvolve_source_timefunction(data,10,'gaussian');
 %
 %    See also: DECONVOLVE, CONVOLVE_SOURCE_TIMEFUNCTION, CONVOLVE,
 %              MAKE_SOURCE_TIMEFUNCTION, TRIANGLETF, GAUSSIANTF
@@ -54,9 +53,10 @@ function [data,x,t]=deconvolve_source_timefunction(data,varargin)
 %        Jan. 30, 2010 - fix checking state functions, better messages
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix, use
 %                        checkheader more effectively
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 24, 2012 at 15:05 GMT
 
 % todo:
 

@@ -20,11 +20,11 @@ function [varargout]=mapstations(data,varargin)
 %              mapstations(...,'axis',ax,...)
 %              ax=mapstations(...)
 %
-%    Description: MAPSTATIONS(DATA) creates a map showing the station and
-%     earthquake locations stored in the headers of records of SEIZMO
-%     struct DATA.  The map is a global map using the Robinson projection.
-%     Stations are plotted as yellow circles and events are plotted as
-%     5-pointed stars.
+%    Description:
+%     MAPSTATIONS(DATA) creates a map showing the station and earthquake
+%     locations stored in the headers of records of SEIZMO struct DATA.
+%     The map is a global map using the Robinson projection.  Stations are
+%     plotted as yellow circles and events are plotted as 5-pointed stars.
 %
 %     MAPSTATIONS(...,'STATIONS',[LAT LON],...)
 %     MAPSTATIONS(...,'STATIONMARKER',SYMSTR,...)
@@ -43,28 +43,28 @@ function [varargout]=mapstations(data,varargin)
 %     MAPSTATIONS(...,'BORDER',COLOR,...)
 %     MAPSTATIONS(...,'AXIS',AX,...)
 %     AX=MAPSTATIONS(...)
-%      see MMAP for details on these options.  Note that using the
+%      See MMAP for details on these options.  Note that using the
 %      STATIONS or EVENTS option overrides the info found in DATA.
 %
 %    Notes:
 %
 %    Examples:
-%     Show locations of stations in a dataset:
-%      mapstations(data);
+%     % Show locations of stations in a dataset:
+%     mapstations(data);
 %
-%     This replaces the old MAPSTATIONS2:
-%      ax=mapstations(data);
-%      ev=getheader(data(1),'ev');
-%      mapeventgrid(ax,ev(1),ev(2));
+%     % This replaces the old MAPSTATIONS2:
+%     ax=mapstations(data);
+%     ev=getheader(data(1),'ev');
+%     mapeventgrid(ax,ev(1),ev(2));
 %
-%     This replaces the old MAPCLUSTERS:
-%      ax=mapstations(data);
-%      h=findobj(ax,'tag','stations');
-%      set(h,'cdata',grp.color(grp.T,:));
+%     % This replaces the old MAPCLUSTERS:
+%     ax=mapstations(data);
+%     h=findobj(ax,'tag','stations');
+%     set(h,'cdata',grp.color(grp.T,:));
 %
-%     Show Africa stations in a map with fancy border:
-%      mapstations(data,'po',{'lat',[-40 40],'lon',[-30 60]},...
-%                       'go',{'box','fancy'})
+%     % Show Africa stations in a map with fancy border:
+%     mapstations(data,'po',{'lat',[-40 40],'lon',[-30 60]},...
+%                      'go',{'box','fancy'})
 %
 %    See also: PLOT0, PLOT1, PLOT2, RECORDSECTION, MAPEVENTGRID, MMAP
 
@@ -80,9 +80,10 @@ function [varargout]=mapstations(data,varargin)
 %        July 22, 2010 - uses MAPLOCATIONS
 %        Aug. 21, 2010 - update undef usage
 %        Feb. 10, 2011 - update for maplocations=>mmap
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2011 at 22:00 GMT
+%     Last Updated Apr.  3, 2012 at 22:00 GMT
 
 % todo:
 

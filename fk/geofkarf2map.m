@@ -3,27 +3,29 @@ function [arf]=geofkarf2map(arf,srng)
 %
 %    Usage:    arf=geofkarf2map(arf,srng)
 %
-%    Description: ARF=GEOFKARF2MAP(ARF,SRNG) averages the geofk array
-%     beam response data in ARF across the horizontal slowness range SRNG,
-%     returning the result in ARF.  ARF may then be plotted using
-%     PLOTGEOFKARF.  ARF is a GEOFKARF struct (see that function for
-%     details on the struct layout).  SRNG gives the horizontal slowness
-%     range to average over as [SLOWLOW SLOWHIGH] in sec/deg.
+%    Description:
+%     ARF=GEOFKARF2MAP(ARF,SRNG) averages the geofk array beam response
+%     data in ARF across the horizontal slowness range SRNG, returning the
+%     result in ARF.  ARF may then be plotted using PLOTGEOFKARF.  ARF is a
+%     GEOFKARF struct (see that function for details on the struct layout).
+%     SRNG gives the horizontal slowness range to average over as
+%     [SLOWLOW SLOWHIGH] in sec/deg.
 %
 %    Notes:
 %
 %    Examples:
-%     Normal usage:
-%      plotgeofkarf(geofkarf2map(geofkarf(...)))
+%     % Normal usage:
+%     plotgeofkarf(geofkarf2map(geofkarf(...)))
 %
 %    See also: GEOFKARF, PLOTGEOFKARF, GEOFKSUBARF, UPDATEGEOFKARF,
 %              GEOFKARFSLOWSLIDE, CHKGEOFKARFSTRUCT
 
 %     Version History:
 %        July  7, 2010 - initial version
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  7, 2010 at 19:05 GMT
+%     Last Updated Apr.  4, 2012 at 19:05 GMT
 
 % todo:
 

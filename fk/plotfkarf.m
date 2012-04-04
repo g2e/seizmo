@@ -1,42 +1,45 @@
 function [varargout]=plotfkarf(arf,varargin)
 %PLOTFKARF    Plots an fk array response function
 %
-%    Usage:    h=plotfkarf(arf)
-%              h=plotfkarf(arf,dblim)
-%              h=plotfkarf(arf,dblim,zerodb)
-%              h=plotfkarf(arf,dblim,zerodb,fgcolor,bgcolor)
-%              h=plotfkarf(arf,dblim,zerodb,fgcolor,bgcolor,h)
+%    Usage:    plotfkarf(arf)
+%              plotfkarf(arf,dblim)
+%              plotfkarf(arf,dblim,zerodb)
+%              plotfkarf(arf,dblim,zerodb,fgcolor,bgcolor)
+%              plotfkarf(arf,dblim,zerodb,fgcolor,bgcolor,h)
+%              ax=plotfkarf(...)
 %
-%    Description: H=PLOTFKARF(ARF) plots the slowness map within the struct
-%     ARF which was output from FKARF.  See FKARF for details on the
-%     struct.  This is mainly so you can save the results and replot them
-%     later (because FKARF is slow).  H is the handle to the axes that the
-%     map was plotted in.
+%    Description:
+%     PLOTFKARF(ARF) plots the slowness map within the struct ARF which
+%     was output from FKARF.  See FKARF for details on the struct.  This is
+%     mainly so you can save the results and replot them later (because
+%     FKARF is slow).
 %
-%     H=PLOTFKARF(ARF,DBLIM) sets the dB limits for coloring the response
+%     PLOTFKARF(ARF,DBLIM) sets the dB limits for coloring the response
 %     info.  The default is [-12 0] for the default ZERODB (see next Usage
 %     form).  If ZERODB IS 'min' or 'median', the default DBLIM is [0 12].
 %     DBLIM must be a real-valued 2-element vector.
 %
-%     H=PLOTFKARF(ARF,DBLIM,ZERODB) changes what 0dB corresponds to in the
+%     PLOTFKARF(ARF,DBLIM,ZERODB) changes what 0dB corresponds to in the
 %     plot.  The allowed values are 'min', 'max', 'median', & 'abs'.  The
 %     default is 'max'.
 %
-%     H=PLOTFKARF(ARF,DBLIM,ZERODB,FGCOLOR,BGCOLOR) sets the foreground and
+%     PLOTFKARF(ARF,DBLIM,ZERODB,FGCOLOR,BGCOLOR) sets the foreground and
 %     background colors of the plot.  The default is 'w' for FGCOLOR and
 %     'k' for BGCOLOR.  Note that if one is specified and the other is not,
 %     an opposing color is found using INVERTCOLOR.  The color scale is
 %     also changed so the noise clip is at BGCOLOR.
 %
-%     H=PLOTFKARF(ARF,DBLIM,ZERODB,FGCOLOR,BGCOLOR,H) sets the axes that
+%     PLOTFKARF(ARF,DBLIM,ZERODB,FGCOLOR,BGCOLOR,H) sets the axes that
 %     the map is drawn in.  This is useful for subplots, guis, etc.
+%
+%     AX=PLOTFKARF(...) returns the axis handle of the plot.
 %
 %    Notes:
 %
 %    Examples:
-%     Show a array response function for 12 plane waves:
-%      arfpolar=fkarf(stla,stlo,50,201,20,[0:30:330],1/30,true);
-%      plotfkarf(arfpolar);
+%     % Show a array response function for 12 plane waves:
+%     arfpolar=fkarf(stla,stlo,50,201,20,[0:30:330],1/30,true);
+%     plotfkarf(arfpolar);
 %
 %    See also: FKMAP, FKARF, PLOTFKMAP
 
@@ -55,9 +58,10 @@ function [varargout]=plotfkarf(arf,varargin)
 %        Feb. 23, 2011 - replace polar call with wedge, fix pcolor
 %                        out-of-bounds pixels
 %        May  25, 2011 - commented remaining out aliasing stuff
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  25, 2011 at 10:50 GMT
+%     Last Updated Apr.  4, 2012 at 10:50 GMT
 
 % todo:
 

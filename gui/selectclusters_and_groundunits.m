@@ -34,9 +34,10 @@ function [data0,grp,units,ax]=selectclusters_and_groundunits(data,grp,varargin)
 %        Jan. 16, 2011 - fix data not matching choice if we alter the units
 %                        and then go back to the original (note plot did
 %                        not even show correct data)
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 16, 2011 at 20:00 GMT
+%     Last Updated Apr.  3, 2012 at 20:00 GMT
 
 % todo:
 
@@ -50,7 +51,7 @@ elseif(nargin>3 && ~mod(nargin,2))
 end
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % number of records
 nrecs=numel(data);

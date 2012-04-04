@@ -4,11 +4,12 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %    Usage:    [filetype,version,endian]=getfileversion('filename')
 %              [filetype,version,endian]=getfileversion('filename',verbose)
 %
-%    Description: [FILETYPE,VERSION,ENDIAN]=GETFILEVERSION(FILENAME) gets
-%     the filetype FILETYPE, version VERSION, and byte-order ENDIAN of a
-%     SEIZMO compatible file FILENAME.  If a datafile cannot be validated
-%     (occurs when the file is not a SEIZMO datafile or cannot be opened or
-%     read) a warning is given & FILETYPE, VERSION, ENDIAN are set empty.
+%    Description:
+%     [FILETYPE,VERSION,ENDIAN]=GETFILEVERSION(FILENAME) gets the filetype
+%     FILETYPE, version VERSION, and byte-order ENDIAN of a SEIZMO
+%     compatible file FILENAME.  If a datafile cannot be validated (occurs
+%     when the file is not a SEIZMO datafile or cannot be opened or read) a
+%     warning is given & FILETYPE, VERSION, ENDIAN are set empty.
 %
 %     [FILETYPE,VERSION,ENDIAN]=GETFILEVERSION(FILENAME,VERBOSE) outputs
 %     all error messages encountered during reading attempts as warnings.
@@ -20,11 +21,11 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %       validity (a 32bit signed integer occupying bytes 305 to 308).
 %
 %    Examples:
-%     Figure out a file's version so that we can pull up the definition:
-%      [filetype,version,endian]=getfileversion('myfile')
-%      definition=seizmodef(filetype,version)
+%     % Figure out a file's version so that we can pull up the definition:
+%     [filetype,version,endian]=getfileversion('myfile');
+%     definition=seizmodef(filetype,version);
 %
-%    See also:  READHEADER, WRITEHEADER, SEIZMODEF, VALIDSEIZMO
+%    See also: READHEADER, WRITEHEADER, SEIZMODEF, VALIDSEIZMO
 
 %     Version History:
 %        Jan. 27, 2008 - initial version
@@ -46,9 +47,10 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %        Sep.  7, 2009 - minor doc update
 %        Oct. 16, 2009 - added persistent vars to speed things up
 %        Aug. 21, 2010 - nargchk fix
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 21, 2010 at 02:45 GMT
+%     Last Updated Mar. 24, 2012 at 02:45 GMT
 
 % todo:
 

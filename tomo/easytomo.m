@@ -4,20 +4,21 @@ function [G,m_synth,tt,s,e]=easytomo(nrays,nblocks,vmean,vvar)
 %    Usage:    [G,m_synth,tt,s,e]=easytomo(nrays,model)
 %              [G,m_synth,tt,s,e]=easytomo(nrays,nblocks,vmean,vvar)
 %
-%    Description: [G,M_SYNTH,TT,S,E]=EASYTOMO(NRAYS,MODEL) draws
-%     NRAYS number of raypaths through the velocity model MODEL.  Their
-%     total travel time through the region and individual path lengths
-%     within each block are then calculated and returned.  MODEL should
-%     have velocities scaled to the block size (so if the blocks are 5x5km,
-%     then a velocity of 1 would mean 5kmps).  Blocks are assumed to be
-%     square.  The model does not have to be square (ie the matrix can be
-%     MxN).  The outputs are the kernel matrix G (contains the path length
-%     in each block for each ray path with one ray path per row - this
-%     defines your data/model relationship and is the hard part to work
-%     out), m_synth (1/velocity aka the slowness for each block - this is
-%     what you want to resolve), tt (the total travel time for each ray
-%     path through the region - this is your data), and the starting and
-%     ending positions of the raypaths in [x y] format, S and E.
+%    Description:
+%     [G,M_SYNTH,TT,S,E]=EASYTOMO(NRAYS,MODEL) draws NRAYS number of
+%     raypaths through the velocity model MODEL.  Their total travel time
+%     through the region and individual path lengths within each block are
+%     then calculated and returned.  MODEL should have velocities scaled to
+%     the block size (so if the blocks are 5x5km, then a velocity of 1
+%     would mean 5kmps).  Blocks are assumed to be square.  The model does
+%     not have to be square (ie the matrix can be MxN).  The outputs are
+%     the kernel matrix G (contains the path length in each block for each
+%     raypath with one raypath per row - this defines your data/model
+%     relationship and is the hard part to work out), m_synth (1/velocity
+%     aka the slowness for each block - this is what you want to resolve),
+%     tt (the total travel time for each raypath through the region - this
+%     is your data), and the starting and ending positions of the raypaths
+%     in [x y] format, S and E.
 %
 %     [G,M_SYNTH,TT,S,E]=EASYTOMO(NRAYS,NBLOCKS,VMEAN,VVAR) creates a
 %     region of NBLOCKS by NBLOCKS (blocks are square) with each block
@@ -33,8 +34,8 @@ function [G,m_synth,tt,s,e]=easytomo(nrays,nblocks,vmean,vvar)
 %     - no error is added to the travel times
 %
 %    Examples:
-%     GDA style exercise (15 rays through a 3x3 grid with velocity 10+/-1):
-%      [G,m_synth,tt,s,e]=easytomo(15,3,10,1)
+%     % 15 rays through a 3x3 grid with velocity 10+/-1:
+%     [G,m_synth,tt,s,e]=easytomo(15,3,10,1);
 %
 %    See also:
 
@@ -44,9 +45,10 @@ function [G,m_synth,tt,s,e]=easytomo(nrays,nblocks,vmean,vvar)
 %        Fall     2008 - major code cleanup, renamed to EASYTOMO
 %        Mar.  6, 2009 - added to SEIZMO
 %        Sep.  6, 2009 - updated documentation
+%        Mar. 24, 2012 - minor doc update, plot calls use handles now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  6, 2009 at 02:50 GMT
+%     Last Updated Mar. 24, 2012 at 02:50 GMT
 
 % todo:
 
@@ -68,18 +70,18 @@ end
 m_synth=1./vel(:);
 
 % plot velocity model
-figure;
-pcolor(0:n,0:m,[vel zeros(m,1); zeros(1,n) 0])
-shading flat;
-axis ij;
-caxis([min(vel(:))-2*eps max(vel(:))+2*eps])
-colormap(flipud(jet(1024)));
-a=colorbar;
-ylabel(a,'Velocity (blocks/sec)','fontsize',14,'fontweight','bold')
-title('Velocity Grid and Raypaths','fontsize',14,'fontweight','bold')
-set(gca,'fontsize',14,'fontweight','bold','xaxislocation','top')
-drawnow;
-hold on
+fh=figure;
+ax=axes('parent',fh);
+pcolor(ax,0:n,0:m,[vel zeros(m,1); zeros(1,n) 0]);
+shading(ax,'flat');
+axis(ax,'ij');
+caxis(ax,[min(vel(:))-2*eps max(vel(:))+2*eps]);
+colormap(ax,flipud(jet(1024)));
+a=colorbar('peer',ax);
+ylabel(a,'Velocity (blocks/sec)','fontsize',14,'fontweight','bold');
+title(ax,'Velocity Grid and Raypaths','fontsize',14,'fontweight','bold');
+set(ax,'fontsize',14,'fontweight','bold','xaxislocation','top');
+hold(ax,'on');
 
 % random position on side (0 to 1)
 pos=rand(nrays,2);
@@ -128,10 +130,12 @@ s=[sx sy];
 e=[ex ey];
 
 % plot ray paths
-plot([sx.'; ex.'],[sy.'; ey.'],'k','linewidth',2)
-plot(sx,sy,'s','MarkerEdgeColor','k','MarkerFaceColor','g','MarkerSize',12)
-plot(ex,ey,'d','MarkerEdgeColor','k','MarkerFaceColor','r','MarkerSize',7)
-drawnow;
+plot(ax,[sx.'; ex.'],[sy.'; ey.'],'k','linewidth',2);
+plot(ax,sx,sy,'s',...
+    'MarkerEdgeColor','k','MarkerFaceColor','g','MarkerSize',12);
+plot(ax,ex,ey,'d',...
+    'MarkerEdgeColor','k','MarkerFaceColor','r','MarkerSize',7);
+hold(ax,'off');
 
 % geometry
 dx=ex-sx;            % x length

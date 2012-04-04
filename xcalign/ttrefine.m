@@ -8,15 +8,16 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %              [cg,lg,pg,nc]=ttrefine(cg,lg,pg,dt,std,pol,wg,minstd,pflag)
 %              [li,best,M]=ttrefine(...,wg,minstd,pflag,false)
 %
-%    Description: [CG,LG,PG,NC]=TTREFINE(CG,LG,PG,DT,STD,POL) takes the
-%     output matrices from a multi-peak run of CORRELATE (CG, LG, PG) and
-%     the solutions from TTALIGN (DT), TTSTDERR (STD), & TTPOLAR (POL) to
-%     reorder the CG, LG, & PG so the first page of those matrices contain
-%     the peaks with the smallest timing difference from DT and a polarity
-%     matching that of POL.  If the peak on the first page is within 2
-%     standard deviations as given by STD then that peak will not be
-%     reordered.  See the third usage form with MINSTD to adjust this.  The
-%     output NC is the number of peaks changed.
+%    Description:
+%     [CG,LG,PG,NC]=TTREFINE(CG,LG,PG,DT,STD,POL) takes the output matrices
+%     from a multi-peak run of CORRELATE (CG, LG, PG) and the solutions
+%     from TTALIGN (DT), TTSTDERR (STD), & TTPOLAR (POL) to reorder the CG,
+%     LG, & PG matrices so the first page contains the peaks with the
+%     smallest timing difference from DT and a polarity matching that of
+%     POL.  If the peak on the first page is within 2 standard deviations
+%     as given by STD then that peak will not be reordered.  See the third
+%     usage form with MINSTD to adjust this.  The output NC is the number
+%     of peaks changed.
 %
 %     [CG,LG,PG,NC]=TTREFINE(CG,LG,PG,DT,STD,POL,WG) weights the misfits
 %     using WG.  WG should be empty/scalar (no weighting) or a matrix of
@@ -58,23 +59,23 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %       reordered solution heavily depends on the accuracy of DT & POL.
 %
 %    Examples:
-%     Correlate, solve, plot, refine, solve again, plot:
-%      plot0(data);
-%      xc=correlate(data,'npeaks',3,'spacing',10);
-%      dt=ttalign(xc.lg(:,:,1));
-%      data1=timeshift(data,-dt);
-%      pol=ttpolar(xc.pg(:,:,1));
-%      data1=multiply(data1,pol);
-%      std=ttstderr(dt,xc.lg(:,:,1));
-%      plot0(data1);
-%      [xc2.cg,xc2.lg,xc2.pg,nc]=...
-%          ttrefine(xc.cg,xc.lg,xc.pg,dt,std,pol,[],0.1,0);
-%      dt=ttalign(xc2.lg(:,:,1));
-%      data1=timeshift(data,-dt);
-%      pol=ttpolar(xc2.pg(:,:,1));
-%      data1=multiply(data1,pol);
-%      std=ttstderr(dt,xc2.lg(:,:,1));
-%      plot0(data1);
+%     % Correlate, solve, plot, refine, solve again, plot:
+%     plot0(data);
+%     xc=correlate(data,'npeaks',3,'spacing',10);
+%     dt=ttalign(xc.lg(:,:,1));
+%     data1=timeshift(data,-dt);
+%     pol=ttpolar(xc.pg(:,:,1));
+%     data1=multiply(data1,pol);
+%     std=ttstderr(dt,xc.lg(:,:,1));
+%     plot0(data1);
+%     [xc2.cg,xc2.lg,xc2.pg,nc]=...
+%         ttrefine(xc.cg,xc.lg,xc.pg,dt,std,pol,[],0.1,0);
+%     dt=ttalign(xc2.lg(:,:,1));
+%     data1=timeshift(data,-dt);
+%     pol=ttpolar(xc2.pg(:,:,1));
+%     data1=multiply(data1,pol);
+%     std=ttstderr(dt,xc2.lg(:,:,1));
+%     plot0(data1);
 %
 %    See also: TTSOLVE, TTALIGN, TTSTDERR, TTPOLAR
 
@@ -87,9 +88,10 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %        Sep. 13, 2010 - nargchk fix
 %        Jan. 23, 2011 - allow zero polarity if FORCEPOLAR is false
 %        Mar.  3, 2011 - document special output option, fix reorder code
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  3, 2011 at 01:05 GMT
+%     Last Updated Apr.  2, 2012 at 01:05 GMT
 
 % todo:
 

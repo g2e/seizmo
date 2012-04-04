@@ -15,26 +15,27 @@ function [data]=addrecords(varargin)
 %              data=addrecords(...,'leven','error'|'warn'|'ignore')
 %              data=addrecords(...,'iftype','error'|'warn'|'ignore')
 %
-%    Description: ADDRECORDS(DATA) will add all records in DATA, returning
-%     one record with its header fields set to those of the first record
-%     in DATA.  The header can be set to that of the last record by setting
+%    Description:
+%     DATA=ADDRECORDS(DATA) will add all records in DATA, returning one
+%     record with its header fields set to those of the first record in
+%     DATA.  The header can be set to that of the last record by setting
 %     option 'newhdr' to TRUE.  Records should be of the same filetype, be
 %     evenly sampled, have the same sample rate, number of points, and
-%     timing but these can all be ignored (for better or for worse) by 
+%     timing but these can all be ignored (for better or for worse) by
 %     setting options available in BINOPERR to 'ignore'.
 %     
-%     ADDRECORDS(DATA1,DATA2) will add the records in DATA2 to DATA1.  If
-%     either DATA1 or DATA2 are a single record the record will be added to
-%     every record of the other dataset.  DATA1 and DATA2 must contain the
-%     same number of records otherwise.
+%     DATA=ADDRECORDS(DATA1,DATA2) will add the records in DATA2 to DATA1.
+%     If either DATA1 or DATA2 are a single record the record will be added
+%     to every record of the other dataset.  DATA1 and DATA2 must contain
+%     the same number of records otherwise.
 %     
-%     ADDRECORDS(DATA1,DATA2,...,DATAN) adds records in all N datasets such
-%     that the first record of each dataset is added together and so on.
-%     Therefore every dataset must have the same number of records.  The
+%     DATA=ADDRECORDS(DATA1,DATA2,...,DATAN) adds records in all N datasets
+%     such that the first record of each dataset is added together and so
+%     on.  Every dataset must have the same number of records.  The
 %     exception to this rule is single record datasets, which are
 %     replicated to match the size of the rest of the datasets.
 %     
-%     ADDRECORDS(...,'newhdr',true) controls the inheritance of header
+%     DATA=ADDRECORDS(...,'newhdr',true) controls the inheritance of header
 %     fields and will set the resultant records' header fields to those of
 %     the last record to be added on.  So
 %                    ADDRECORDS(DATA1,DATA2,'newhdr',true)
@@ -51,7 +52,7 @@ function [data]=addrecords(varargin)
 %     The following options may also be controlled by BINOPERR.
 %     *********************************************************
 %     
-%     ADDRECORDS(...,'npts','error|warn|truncate|pad|ignore') sets the
+%     DATA=ADDRECORDS(...,'npts','error|warn|truncate|pad|ignore') sets the
 %     reaction to records with different numbers of points.  If the option
 %     is set to 'warn' or 'ignore', the number of points in the records is
 %     not altered - which will likely cause an error during the operation.
@@ -61,7 +62,7 @@ function [data]=addrecords(varargin)
 %     points equal to that with the most (note that padding is done with
 %     zeros).  By default 'npts' is set to 'error'.
 %     
-%     ADDRECORDS(...,'ncmp','error|warn|truncate|pad|ignore') sets the
+%     DATA=ADDRECORDS(...,'ncmp','error|warn|truncate|pad|ignore') sets the
 %     reaction to records with different numbers of components.  If the
 %     option is set to 'warn' or 'ignore', the number of components in the
 %     records is not altered - which will likely lead to an error.  If the
@@ -71,34 +72,34 @@ function [data]=addrecords(varargin)
 %     to that of the record with the most (note that padding is done with
 %     zeros).  By default 'ncmp' is set to 'error'.
 %     
-%     ADDRECORDS(...,'delta','error|warn|ignore') sets the reaction to
+%     DATA=ADDRECORDS(...,'delta','error|warn|ignore') sets the reaction to
 %     records with different sample rates.  If the option is set to 'warn'
 %     or 'ignore', the records are just operated on point for point
 %     (basically ignoring timing).  The resultant records' sample rates are
 %     determined by the parent of their header fields (set by option
 %     'newhdr').  By default 'delta' is set to 'error'.
 %     
-%     ADDRECORDS(...,'begin','error|warn|ignore') sets the reaction to
+%     DATA=ADDRECORDS(...,'begin','error|warn|ignore') sets the reaction to
 %     records with different begin times.  If the option is set to 'warn'
 %     or 'ignore', the resultant records' begin times are determined by the
 %     parent of their header fields (set by option 'newhdr').  By default
 %     'begin' is set to 'warn'.
 %     
-%     ADDRECORDS(...,'ref','error|warn|ignore') sets the reaction to
+%     DATA=ADDRECORDS(...,'ref','error|warn|ignore') sets the reaction to
 %     records with different reference times.  If the option is set to
 %     'warn' or 'ignore', the resultant records' reference times are
 %     determined by the parent of their header fields (set by option
 %     'newhdr').  By default 'ref' is set to 'warn'.
 %     
-%     ADDRECORDS(...,'leven','error|warn|ignore') sets the reaction to
+%     DATA=ADDRECORDS(...,'leven','error|warn|ignore') sets the reaction to
 %     unevenly sampled records.  If the option is set to 'warn' or
 %     'ignore', the records are just operated on point for point (basically
 %     ignoring timing).  The resultant records' leven fields are determined
 %     by the parent of their header fields (set by option 'newhdr').  By
 %     default 'leven' is set to 'error'.
 %     
-%     ADDRECORDS(...,'iftype','error|warn|ignore') sets the reaction to
-%     records of different types.  If the option is set to 'warn' or
+%     DATA=ADDRECORDS(...,'iftype','error|warn|ignore') sets the reaction
+%     to records of different types.  If the option is set to 'warn' or
 %     'ignore', the records are just operated on point for point.  The 
 %     resultant records' iftypes are determined by the parent of their
 %     header fields (set by option 'newhdr').  By default 'iftype' is set
@@ -111,11 +112,11 @@ function [data]=addrecords(varargin)
 %     See option 'newhdr' for inheritance of other header fields.
 %
 %    Examples:
-%     Display a stack of the records:
-%      plot1(addrecords(data))
+%     % Display a stack of the records:
+%     plot1(addrecords(data))
 %     
-%     Add records from one dataset to another
-%      data=addrecords(data1,data2)
+%     % Add records from one dataset to another
+%     data=addrecords(data1,data2)
 %     
 %    See also: SUBTRACTRECORDS, MULTIPLYRECORDS, DIVIDERECORDS, BINOPERR
 
@@ -130,9 +131,10 @@ function [data]=addrecords(varargin)
 %        Apr. 23, 2009 - move usage up
 %        June 28, 2009 - cleaned up docs for recent changes to RECORDFUN
 %        Jan.  6, 2011 - recordfun/multifun rename
+%        Apr.  3, 2012 - minor doc update
 %     
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 19:55 GMT
+%     Last Updated Apr.  3, 2012 at 19:55 GMT
 
 % todo:
 

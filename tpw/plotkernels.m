@@ -5,8 +5,9 @@ function [ax]=plotkernels(Kph,Kam,x,y,ax)
 %              plotkernels(Kph,Kam,x,y,ax)
 %              ax=plotkernel(...)
 %
-%    Description: PLOTKERNELS(Kph,Kam,X,Y) plots sensitivity kernels made
-%     with RAYLEIGH_2D_PLANE_WAVE_KERNELS or read in with READKERNELS.  The
+%    Description:
+%     PLOTKERNELS(Kph,Kam,X,Y) plots sensitivity kernels made with
+%     RAYLEIGH_2D_PLANE_WAVE_KERNELS or read in with READKERNELS.  The
 %     kernels are plotted as images (previously they were plotted as
 %     surfaces but this was really slow).
 %
@@ -22,9 +23,9 @@ function [ax]=plotkernels(Kph,Kam,x,y,ax)
 %       Forsyth kernel format.
 %
 %    Examples:
-%     Read in kernels and plot them up:
-%      [Kph,Kam,x,y]=readkernels();
-%      plotkernels(Kph,Kam,x,y);
+%     % Read in kernels and plot them up:
+%     [Kph,Kam,x,y]=readkernels();
+%     plotkernels(Kph,Kam,x,y);
 %
 %    See also: READKERNELS, RAYLEIGH_2D_PLANE_WAVE_KERNELS, GETMAINLOBE,
 %              SMOOTH2D, MAKEKERNELS, WRITEKERNELS
@@ -32,9 +33,10 @@ function [ax]=plotkernels(Kph,Kam,x,y,ax)
 %     Version History:
 %        July  9, 2010 - initial version
 %        Feb. 11, 2011 - improve axes calls in plotting
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 16:30 GMT
+%     Last Updated Apr.  2, 2012 at 16:30 GMT
 
 % todo:
 

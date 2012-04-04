@@ -4,23 +4,25 @@ function [valid]=validseizmo(filetype)
 %    Usage:    valid_filetypes=validseizmo()
 %              valid_versions=validseizmo(filetype)
 %
-%    Description: VALIDSEIZMO() returns a cellstr array of filetypes that
-%     SEIZMO will work with.
+%    Description:
+%     VALID_FILETYPES=VALIDSEIZMO() returns a cellstr array of filetypes
+%     that SEIZMO will work with.
 %
-%     VALIDSEIZMO(FILETYPE) returns a vector of version numbers of the
-%     specified filetype FILETYPE that SEIZMO can work with.  If the
-%     filetype is not supported, VALIDSEIZMO will return an empty array.
+%     VALID_VERSIONS=VALIDSEIZMO(FILETYPE) returns a vector of version
+%     numbers of the specified filetype FILETYPE that SEIZMO can work with.
+%     If the filetype is not supported, VALIDSEIZMO will return an empty
+%     array.
 %
 %    Notes:
 %     - currently only supports filetypes 'SAC Binary' and 'SEIZMO Binary'
 %     - SEIZMO versions 101,200,201 are modifications of SAC version 6
 %
 %    Examples:
-%     What filetypes are supported?
-%      validseizmo()
+%     % What filetypes are supported?
+%     validseizmo()
 %
-%     How many different SEIZMO binary file versions are supported:
-%      length(validseizmo('SEIZMO Binary'))
+%     % How many different SEIZMO binary file versions are supported:
+%     length(validseizmo('SEIZMO Binary'))
 %
 %    See also:  SEIZMOCHECK, ISSEIZMO, SEIZMODEF, GETFILEVERSION
 
@@ -41,9 +43,10 @@ function [valid]=validseizmo(filetype)
 %        Sep. 25, 2009 - undid hack mentioned above
 %        Oct.  6, 2009 - new usage form to return valid filetypes
 %        Oct. 16, 2009 - dropped redundant nargin check (2x faster)
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2009 at 02:25 GMT
+%     Last Updated Apr.  3, 2012 at 02:25 GMT
 
 % todo:
 

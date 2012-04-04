@@ -3,17 +3,18 @@ function [report]=chk1dmodel(model)
 %
 %    Usage:    msg=chk1dmodel(model)
 %
-%    Description: MSG=CHK1DMODEL(MODEL) checks that MODEL is a struct as
-%     output from PREM/AK135/IASP91.  See those functions for details on
-%     the struct layout.  MSG is an error structure if a problem is found
-%     (otherwise it is empty).
+%    Description:
+%     MSG=CHK1DMODEL(MODEL) checks that MODEL is a struct as output from
+%     PREM/AK135/IASP91.  See those functions for details on the struct
+%     layout.  MSG is an error structure if a problem is found (otherwise
+%     it is empty).
 %
 %    Notes:
 %
 %    Examples:
-%     Check that output from PREM is compatible:
-%      mod=prem;
-%      error(chk1dmodel(mod));
+%     % Check that output from PREM is compatible:
+%     mod=prem;
+%     error(chk1dmodel(mod));
 %
 %    See also: PREM, AK135, IASP91
 
@@ -25,9 +26,10 @@ function [report]=chk1dmodel(model)
 %        Sep. 19, 2010 - more .depth checks
 %        Jan. 25, 2011 - require .crust is true if .ocean is true, fix some
 %                        warning ids
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 25, 2011 at 15:05 GMT
+%     Last Updated Apr.  3, 2012 at 15:05 GMT
 
 % todo:
 % - models should have named discontinuities field

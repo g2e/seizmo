@@ -13,14 +13,15 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %             [cg,lg,pg]=mcxc(...,'pow2pad',pow2pad,...)
 %             [cg,lg,pg]=mcxc(...,'verbose',verbosity,...)
 %
-%    Description: [CG,LG]=MCXC(X,Y) performs multi-channel cross
-%     correlation of records distributed in the columns of X against
-%     records distributed in the columns of Y returning the correlograms in
-%     CG such that the row and column correpond to the columns of the two 
-%     records being cross correlated in X and Y.  The entire correlogram is
-%     stored down the third dimension of CG such that CG(3,7,:) would give
-%     the correlogram of cross correlating record 3 in X against record 7
-%     in Y.  LG is a vector giving the corresponding lags.
+%    Description:
+%     [CG,LG]=MCXC(X,Y) performs multi-channel cross correlation of records
+%     distributed in the columns of X against records distributed in the
+%     columns of Y returning the correlograms in CG such that the row and
+%     column correpond to the columns of the two records being cross
+%     correlated in X and Y.  The entire correlogram is stored down the
+%     third dimension of CG such that CG(3,7,:) would give the correlogram
+%     of cross correlating record 3 in X against record 7 in Y.  LG is a
+%     vector giving the corresponding lags.
 %
 %     [CG,LG]=MCXC(X) performs multi-channel cross-correlation of every
 %     unique pairing for the records distributed in the columns of X.
@@ -142,17 +143,17 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %    Examples:
-%     The single dataset option is good for cases where correlations
-%     between all records are needed.  For instance, in a seismic noise
-%     study.  This will produce correlograms for all pairs of records
-%     in a dataset (Remember individual records should extend down the
-%     columns of X!):
-%      [correlograms,lags]=mcxc(X);
+%     % The single dataset option is good for cases where correlations
+%     % between all records are needed.  For instance, in a seismic noise
+%     % study.  This will produce correlograms for all pairs of records
+%     % in a dataset (Remember individual records should extend down the
+%     % columns of X!):
+%     [correlograms,lags]=mcxc(X);
 %
 %    See also: XCORR, FFTFILT (Signal Processing Toolbox)
 
 %    Seismology Specific Notes:
-%     The idea behind mcxc is that it is a more robust way of determining
+%     The idea behind MCXC is that it is a more robust way of determining
 %     the relative delays of phases between stations than using a 'master'
 %     station system because it reduces the adverse effects of noise and
 %     waveform distortion.  It also doesn't require the user to select a
@@ -193,9 +194,10 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %                        a verbose option (requires PRINT_TIME_LEFT)
 %        Mar. 12, 2010 - fix for precision issue in normalized case
 %        Feb. 15, 2011 - minor doc update
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2011 at 10:05 GMT
+%     Last Updated Mar. 24, 2012 at 10:05 GMT
 
 % todo:
 % - vectorized gives different lag result if no peaks left (DO NOT CARE)

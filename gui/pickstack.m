@@ -4,16 +4,17 @@ function [onset,ax]=pickstack(data,varargin)
 %    Usage:    onset=pickstack(data)
 %              onset=pickstack(data,...)
 %              [onset,ax]=pickstack(...)
-%              pickstack(ax,data,...)
+%              [...]=pickstack(ax,...)
 %
-%    Description: ONSET=PICKSTACK(DATA) presents an interactive menu and
-%     plot to facilitate picking the onset of a signal in the stack of
-%     records contained in SEIZMO struct DATA.  The returned value ONSET is
-%     a relative time value.  Note that the records are essentially passed
-%     to ADDRECORDS which performs a sample-by-sample addition without
-%     regard to timing.  MAKE SURE ALL SAMPLES ARE TIME ALIGNED IN THIS
-%     USAGE CASE or your stack likely will not be useful.  You will likely
-%     need to call CUT and/or INTERPOLATE first to make this happen.
+%    Description:
+%     ONSET=PICKSTACK(DATA) presents an interactive menu and plot to
+%     facilitate picking the onset of a signal in the stack of records
+%     contained in SEIZMO struct DATA.  The returned value ONSET is a
+%     relative time value.  Note that the records are essentially passed to
+%     ADDRECORDS which performs a sample-by-sample addition without regard
+%     to timing.  MAKE SURE ALL SAMPLES ARE TIME ALIGNED IN THIS USAGE CASE
+%     or your stack likely will not be useful.  You will likely need to
+%     call CUT and/or INTERPOLATE first to make this happen.
 %
 %     ONSET=PICKSTACK(DATA,...) passes extra arguments on to STACK (and
 %     thus on to INTERPOLATE).  This is the typical usage form.  See
@@ -22,14 +23,14 @@ function [onset,ax]=pickstack(data,varargin)
 %     [ONSET,FH]=PICKSTACK(...) also returns the plot's axis handle as
 %     the second output argument AX.
 %
-%     PICKSTACK(AX,DATA,...) specifies the axes to plot in using the handle
-%     in AX.
+%     [...]=PICKSTACK(AX,...) specifies the axes to plot in using the
+%     handle AX.
 %
 %    Notes:
 %
 %    Examples:
-%     Pick a normalized stack sampled at 5sps from -200 to 200 seconds:
-%      onset=pickstack(normalize(data),5,[],-200,200);
+%     % Pick a normalized stack sampled at 5sps from -200 to 200 seconds:
+%     onset=pickstack(normalize(data),5,[],-200,200);
 %
 %    See also: STACK, USERALIGN
 
@@ -38,9 +39,10 @@ function [onset,ax]=pickstack(data,varargin)
 %        Aug. 26, 2010 - nargchk fix, update for new plotting functions,
 %                        onset line plots in correct place on redraw
 %        Jan.  6, 2011 - use key2zoompan
+%        Apr.  3, 2012 - minor doc update, use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 23:55 GMT
+%     Last Updated Apr.  3, 2012 at 23:55 GMT
 
 % todo:
 
@@ -54,7 +56,7 @@ else
     ax=data;
     data=varargin{1};
     varargin(1)=[];
-    versioninfo(data,'dep');
+    error(seizmocheck(data,'dep'));
 end
 
 % turn off struct checking

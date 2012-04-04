@@ -6,8 +6,9 @@ function [Kph,Kam,x,y]=rayleigh_2d_plane_wave_kernels(w,d,f,a,v,show)
 %              [Kph,Kam,x,y]=rayleigh_2d_plane_wave_kernels(...
 %                              width,spacing,freq,amp,velo,show)
 %
-%    Description: [Kph,Kam,X,Y]=RAYLEIGH_2D_PLANE_WAVE_KERNELS(...
-%                              WIDTH,SPACING,FREQ,AMP,VELO)
+%    Description:
+%     [Kph,Kam,X,Y]=RAYLEIGH_2D_PLANE_WAVE_KERNELS(...
+%                                              WIDTH,SPACING,FREQ,AMP,VELO)
 %     returns phase and amplitude sensitivity kernels for 2D Rayleigh wave
 %     phase velocities.  The kernels are based on a plane wave assumption.
 %     That is, the sensitivities assume that the wave front has propogated
@@ -23,7 +24,7 @@ function [Kph,Kam,x,y]=rayleigh_2d_plane_wave_kernels(w,d,f,a,v,show)
 %     clockwise from the source (along the plane wave front).
 %
 %     [Kph,Kam,X,Y]=RAYLEIGH_2D_PLANE_WAVE_KERNELS(...
-%                              WIDTH,SPACING,FREQ,AMP,VELO,SHOW)
+%                                         WIDTH,SPACING,FREQ,AMP,VELO,SHOW)
 %     toggles the plotting of the kernels using SHOW.  SHOW must be TRUE
 %     (plots the kernels) or FALSE (no plotting, the default).
 %
@@ -38,11 +39,11 @@ function [Kph,Kam,x,y]=rayleigh_2d_plane_wave_kernels(w,d,f,a,v,show)
 %       pp. 142-168
 %
 %    Examples:
-%     Get frequency-amplitude values for a windowed 100s Rayleigh wave:
-%      [f,a]=getmainlobe(1/100,1,[1000 2000],200/1000,[1000 1000]);
+%     % Get frequency-amplitude values for a windowed 100s Rayleigh wave:
+%     [f,a]=getmainlobe(1/100,1,[1000 2000],200/1000,[1000 1000]);
 %
-%     Show the corresponding kernels assuming a Vph=4km/s:
-%      rayleigh_2d_plane_wave_kernels(3000,10,f,a,4,true);
+%     % Show the corresponding kernels assuming a Vph=4km/s:
+%     rayleigh_2d_plane_wave_kernels(3000,10,f,a,4,true);
 %
 %    See also: GETMAINLOBE, SMOOTH2D, READKERNELS, WRITEKERNELS,
 %              MAKEKERNELS, PLOTKERNELS
@@ -51,9 +52,10 @@ function [Kph,Kam,x,y]=rayleigh_2d_plane_wave_kernels(w,d,f,a,v,show)
 %        Feb.  4, 2010 - rewrite and added documentation
 %        July  9, 2010 - fixed see also section, fixed major bug (thanks to
 %                        davidh), fixed nargchk
+%        Mar. 24, 2012 - minor doc update, plot calls use handles now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  9, 2010 at 16:30 GMT
+%     Last Updated Mar. 24, 2012 at 16:30 GMT
 
 % todo:
 
@@ -113,32 +115,34 @@ if(show)
     [i,i]=max(a); p=1/f(i);
     
     % first plot the phase kernel
-    figure;
-    imagesc(x0,x0,Kph);
-    colormap(jet);
-    xlabel('RADIAL POSITION (KM)');
-    ylabel('TRANSVERSE POSITION (KM)');
-    zlabel('SENSITIVITY (S/KM^2)');
-    title({'2D PLANE-WAVE PHASE DELAY KERNEL' ...
+    fh(1)=figure;
+    ax(1)=axes('parent',fh(1));
+    imagesc(x0,x0,Kph,'parent',ax(1));
+    colormap(ax(1),jet);
+    xlabel(ax(1),'RADIAL POSITION (KM)');
+    ylabel(ax(1),'TRANSVERSE POSITION (KM)');
+    zlabel(ax(1),'SENSITIVITY (S/KM^2)');
+    title(ax(1),{'2D PLANE-WAVE PHASE DELAY KERNEL' ...
         'FOR RAYLEIGH WAVE PHASE VELOCITIES' ...
         [sprintf('PERIOD: %gS ',p) sprintf('VELOCITY: %gKM/S',v)]});
-    box on
-    grid on
-    colorbar
+    box(ax(1),'on');
+    grid(ax(1),'on');
+    colorbar('peer',ax(1));
     
     % now plot the amplitude kernel
-    figure;
-    imagesc(x0,x0,Kam);
-    colormap(jet);
-    xlabel('RADIAL POSITION (KM)');
-    ylabel('TRANSVERSE POSITION (KM)');
-    zlabel('SENSITIVITY (S/KM^2)');
-    title({'2D PLANE-WAVE AMPLITUDE DEVIATION KERNEL' ...
+    fh(2)=figure;
+    ax(2)=axes('parent',fh(2));
+    imagesc(x0,x0,Kam,'parent',ax(2));
+    colormap(ax(2),jet);
+    xlabel(ax(2),'RADIAL POSITION (KM)');
+    ylabel(ax(2),'TRANSVERSE POSITION (KM)');
+    zlabel(ax(2),'SENSITIVITY (S/KM^2)');
+    title(ax(2),{'2D PLANE-WAVE AMPLITUDE DEVIATION KERNEL' ...
         'FOR RAYLEIGH WAVE PHASE VELOCITIES' ...
         [sprintf('PERIOD: %gS ',p) sprintf('VELOCITY: %gKM/S',v)]});
-    box on
-    grid on
-    colorbar
+    box(ax(2),'on');
+    grid(ax(2),'on');
+    colorbar('peer',ax(2));
 end
 
 end

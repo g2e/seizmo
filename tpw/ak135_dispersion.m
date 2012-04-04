@@ -3,14 +3,15 @@ function [phvel]=ak135_dispersion(freq)
 %
 %    Usage:    phvel=ak135_dispersion(freq)
 %
-%    Description: PHVEL=AK135_DISPERSION(FREQ) returns the Rayleigh wave
-%     phase velocities PHVEL at the frequencies specified in FREQ.
+%    Description:
+%     PHVEL=AK135_DISPERSION(FREQ) returns the Rayleigh wave phase
+%     velocities PHVEL at the frequencies specified in FREQ.
 %
 %    Notes:
 %     - At present this function is quite crappy.
 %
 %    Examples:
-%     Plot up a AK135 dispersion curve:
+%     % Plot up a AK135 dispersion curve:
 %     freq=0.005:0.001:0.1;
 %     phvel=ak135_dispersion(freq);
 %     plot(freq,phvel)
@@ -18,10 +19,11 @@ function [phvel]=ak135_dispersion(freq)
 %    See also: PREM_DISPERSION, AK135
 
 %     Version History:
-%        Apr.  22, 2010 - initial version
+%        Apr. 22, 2010 - initial version
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2010 at 09:15 GMT
+%     Last Updated Apr.  2, 2012 at 09:15 GMT
 
 % todo
 % - get better dispersion values using Saito code

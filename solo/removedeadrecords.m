@@ -5,13 +5,13 @@ function [data,removed]=removedeadrecords(data,option)
 %              data=removedeadrecords(data,option)
 %              [data,removed]=removedeadrecords(...)
 %
-%    Description: REMOVEDEADRECORDS(DATA) removes records that have no
-%     change in the dependent component.  These can cause problems in
-%     analysis and are not worth keeping.  Uses the header fields 
-%     'depmin'/'depmax' so that records can be eliminated before reading
-%     in the data.
+%    Description:
+%     DATA=REMOVEDEADRECORDS(DATA) removes records that have no change in
+%     the dependent component.  These can cause problems in analysis and
+%     are not worth keeping.  Uses the header fields 'depmin'/'depmax' so
+%     that records can be eliminated before reading in the data.
 %
-%     REMOVEDEADRECORDS(DATA,OPTION) allows changing how records are
+%     DATA=REMOVEDEADRECORDS(DATA,OPTION) allows changing how records are
 %     determined as dead.  OPTION is a logical that when set true
 %     (default), will use the header fields depmin/depmax to look for dead
 %     records.  When OPTION is false, the data (in .dep) is used to find
@@ -27,8 +27,8 @@ function [data,removed]=removedeadrecords(data,option)
 %    Header changes: NONE
 %
 %    Examples:
-%     Remove dead records before reading in data from current directory:
-%      data=readdata(removedeadrecords(readheaders('*')));
+%     % Remove dead records before reading in data from current directory:
+%     data=readdata(removedeadrecords(readheaders('*')));
 %
 %    See also: REMOVEMEAN, REMOVETREND
 
@@ -43,9 +43,10 @@ function [data,removed]=removedeadrecords(data,option)
 %        Jan. 30, 2010 - slimmed the code (no checkheader call)
 %        Apr.  1, 2010 - detail message indicates number removed
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix, warn fix
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  3, 2012 at 15:05 GMT
 
 % todo:
 

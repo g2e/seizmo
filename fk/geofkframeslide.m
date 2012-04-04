@@ -12,11 +12,11 @@ function [varargout]=geofkframeslide(map,delay,varargin)
 %                              fgcolor,bgcolor,ax)
 %              mov=geofkframeslide(...);
 %
-%    Description: GEOFKFRAMESLIDE(MAP) slides through an array of geofk
-%     maps produced by geofk functions + FKVOL2MAP by plotting each
-%     map sequentially in a single plot.  There is a 1/3 second delay
-%     between each replotting by default (see next Usage form to adjust
-%     this).
+%    Description:
+%     GEOFKFRAMESLIDE(MAP) slides through an array of geofk maps produced
+%     by geofk functions + FKVOL2MAP by plotting each map sequentially in a
+%     single plot.  There is a 1/3 second delay between each replotting by
+%     default (see next Usage form to adjust this).
 %
 %     GEOFKFRAMESLIDE(MAP,DELAY) specifies the delay between the plotting
 %     of each map in seconds.  The default DELAY is 0.33s.
@@ -59,9 +59,10 @@ function [varargout]=geofkframeslide(map,delay,varargin)
 
 %     Version History:
 %        July  7, 2010 - initial version
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  7, 2010 at 23:05 GMT
+%     Last Updated Apr.  4, 2012 at 23:05 GMT
 
 % todo:
 

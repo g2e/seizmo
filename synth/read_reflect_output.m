@@ -3,13 +3,13 @@ function [raw]=read_reflect_output(file)
 %
 %    Usage:    raw=read_reflect_output(file)
 %
-%    Description: RAW=READ_REFLECT_OUTPUT(FILE) reads an ascii reflectivity
-%     output file produced by running Brian Kennett's reflect code.  This
-%     output file usually ends with the extension '.sei' and contains the
-%     synthetic seismogram data concatenated together.  This will return
-%     the values as a single vector of numbers.  Use the output of
-%     READ_REFLECT_INPUT to parse this or just use REFLECT2SEIZMO to have
-%     it done for you.
+%    Description:
+%     RAW=READ_REFLECT_OUTPUT(FILE) reads an ascii reflectivity output file
+%     produced by running Brian Kennett's reflect code.  This output file
+%     usually ends with the extension '.sei' and contains the synthetic
+%     seismogram data concatenated together.  This will return the values
+%     as a single vector of numbers.  Use the output of READ_REFLECT_INPUT
+%     to parse this or just use REFLECT2SEIZMO to have it done for you.
 %
 %    Notes:
 %     - The included reflect codes no longer produce ascii output so this
@@ -21,9 +21,10 @@ function [raw]=read_reflect_output(file)
 
 %     Version History:
 %        Aug. 10, 2010 - initial version
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 10, 2010 at 23:00 GMT
+%     Last Updated Apr.  3, 2012 at 23:00 GMT
 
 % todo:
 

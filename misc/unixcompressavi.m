@@ -9,9 +9,10 @@ function [varargout]=unixcompressavi(filein,fileout,codec,options)
 %              unixcompressavi(filein,fileout,codec,options)
 %              output=unixcompressavi(...)
 %
-%    Description: UNIXCOMPRESSAVI shows the available MEncoder video
-%     "codecs" for compressing an AVI file.  Codecs that I have used
-%     successfully are 'lavc' (the default) & 'x264'.
+%    Description:
+%     UNIXCOMPRESSAVI shows the available MEncoder video "codecs" for
+%     compressing an AVI file.  Codecs that I have used successfully are
+%     'lavc' (the default) & 'x264'.
 %
 %     UNIXCOMPRESSAVI(FILENAME) compresses an AVI file FILENAME using
 %     MEncoder & the AVC codec.  This results in massive reductions in file
@@ -53,16 +54,16 @@ function [varargout]=unixcompressavi(filein,fileout,codec,options)
 %       useful in tracking down a temporary file if something goes wrong.
 %
 %    Examples:
-%     I use this for compressing movies made with my fk routines:
-%      s3d=fkxcvolume(xcdata,50,201,[1/100 1/3]);
-%      mov=fkfreqslide(s3d,0);
-%      movie2avi(mov,'xcfk_vs_freq.avi');
-%      unixcompressavi('xcfk_vs_freq.avi');
-%      unix('mplayer xcfk_vs_freq.avi');
+%     % I use this for compressing movies made with my fk routines:
+%     s3d=fkxcvolume(xcdata,50,201,[1/100 1/3]);
+%     mov=fkfreqslide(s3d,0);
+%     movie2avi(mov,'xcfk_vs_freq.avi');
+%     unixcompressavi('xcfk_vs_freq.avi');
+%     unix('mplayer xcfk_vs_freq.avi');
 %
-%     To encode a list of avi files:
-%      files=xdir('*.avi');
-%      unixcompressavi({files.name});
+%     % To encode a list of avi files:
+%     files=xdir('*.avi');
+%     unixcompressavi({files.name});
 %
 %    See also: MOVIE2AVI, AVIINFO, MOVIE, GETFRAME, UNIX
 
@@ -73,9 +74,10 @@ function [varargout]=unixcompressavi(filein,fileout,codec,options)
 %        May  25, 2010 - default encode string should improve windows
 %                        compatibility, added .avi to tmp name, doc update,
 %                        2pass encoding, options argument
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  25, 2010 at 17:45 GMT
+%     Last Updated Apr.  3, 2012 at 17:45 GMT
 
 % todo
 % - options for other codecs?

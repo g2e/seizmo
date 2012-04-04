@@ -44,9 +44,12 @@ function [phase]=snr2phaseerror(snr,func)
 %        Feb. 12, 2011 - minor doc update, 2nd input, now std is used
 %                        rather than max, name changed to snr2phaseerror
 %        Mar. 15, 2012 - update example
+%        Mar. 23, 2012 - simplified computation (removed amplitude term)
+%                        with output changed only when snr=1 (now max=pi/2
+%                        rather than max=pi) which is correct anyway
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 06:55 GMT
+%     Last Updated Mar. 23, 2012 at 06:55 GMT
 
 % todo:
 
@@ -73,9 +76,7 @@ nsnr=numel(snr);       % save numel before expansion
 theta=0:0.1*pi:2*pi; % maybe a bit too dense...
 snr=snr(:,ones(numel(theta),1)); % expand
 theta=theta(ones(nsnr,1),:);     % expand
-amp=sqrt(1+snr.^2+2.*snr.*cos(theta));
-phase=atan2(sin(theta)./amp,(snr+cos(theta))./amp);
-phase(isnan(phase))=pi;          % catch amp==0 & set appropriately
+phase=atan2(sin(theta),snr+cos(theta));
 phase=reshape(func(phase.'),sz); % get stddev and reshape back
 
 end

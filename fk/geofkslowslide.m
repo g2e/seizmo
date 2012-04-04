@@ -14,12 +14,12 @@ function [varargout]=geofkslowslide(vol,frng,srng,delay,varargin)
 %                             fgcolor,bgcolor,ax)
 %              mov=geofkslowslide(...);
 %
-%    Description: GEOFKSLOWSLIDE(VOL) slides through a geofk volume by
-%     plotting each of the slownesses in sequence in a single plot.  Note
-%     that the volume is averaged across all frequencies (see the following
-%     Usage forms to adjust this).  There is a 1/3 second delay between
-%     each replotting by default (see the following Usage forms to adjust
-%     this).
+%    Description:
+%     GEOFKSLOWSLIDE(VOL) slides through a geofk volume by plotting each of
+%     the slownesses in sequence in a single plot.  Note that the volume is
+%     averaged across all frequencies (see the following Usage forms to
+%     adjust this).  There is a 1/3 second delay between each replotting by
+%     default (see the following Usage forms to adjust this).
 %
 %     GEOFKSLOWSLIDE(VOL,FRNG) sets the frequency range to _AVERAGE_.
 %     FRNG gives the frequency range as [FREQLOW FREQHIGH] in Hz.  The
@@ -74,9 +74,10 @@ function [varargout]=geofkslowslide(vol,frng,srng,delay,varargin)
 %        June 25, 2010 - initial version
 %        July  6, 2010 - update for new struct
 %        July  8, 2010 - doc update
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  8, 2010 at 10:25 GMT
+%     Last Updated Apr.  4, 2012 at 10:25 GMT
 
 % todo:
 

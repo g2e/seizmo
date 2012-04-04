@@ -4,9 +4,10 @@ function [varargout]=updategeofkmap(map,ax)
 %    Usage:    updategeofkmap(map,ax)
 %              ax=updategeofkmap(map)
 %
-%    Description: UPDATEGEOFKMAP(MAP,AX) draws a new geofk beam data map
-%     given by MAP in an existing axes AX.  This is mainly intended for
-%     exploring geofk datasets and for making movies in a faster fashion.
+%    Description:
+%     UPDATEGEOFKMAP(MAP,AX) draws a new geofk beam data map given by MAP
+%     in an existing axes AX.  This is mainly intended for exploring geofk
+%     datasets and for making movies in a faster fashion.
 %
 %     AX=UPDATEGEOFKMAP(MAP) is the same as calling PLOTGEOFKMAP(MAP) --
 %     ie. a new figure is drawn.
@@ -22,9 +23,10 @@ function [varargout]=updategeofkmap(map,ax)
 %        June 25, 2010 - initial version
 %        July  6, 2010 - update for new struct
 %        Dec.  8, 2010 - improved degrees symbol usage (^o)
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec.  8, 2010 at 19:05 GMT
+%     Last Updated Apr.  4, 2012 at 19:05 GMT
 
 % todo:
 

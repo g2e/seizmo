@@ -5,9 +5,10 @@ function [fk]=fkcart2pol(fk,ass,sss,method)
 %              fk=fkcart2pol(fk,azistepsize,slowstepsize)
 %              fk=fkcart2pol(fk,azistepsize,slowstepsize,method)
 %
-%    Description: FK=FKCART2POL(FK) converts an fk struct regularly sampled
-%     in cartesian space (ie. Sx & Sy) to one regularly sampled in polar
-%     space (ie. Baz & |S|).  Please note that this requires 2D-based
+%    Description:
+%     FK=FKCART2POL(FK) converts an fk struct regularly sampled in
+%     cartesian space (ie. Sx & Sy) to one regularly sampled in polar space
+%     (ie. Baz & |S|).  Please note that this requires 2D-based
 %     interpolation!
 %
 %     FK=FKCART2POL(FK,AZISTEPSIZE,SLOWSTEPSIZE) specifies the azimuthal
@@ -22,18 +23,19 @@ function [fk]=fkcart2pol(fk,ass,sss,method)
 %    Notes:
 %
 %    Examples:
-%     Plot an fk struct already in cartesian, convert to polar and plot
-%     again to compare:
-%      plotfkmap(fk)
-%      plotfkmap(fkcart2pol(fk))
+%     % Plot an fk struct already in cartesian, convert to polar and plot
+%     % again to compare:
+%     plotfkmap(fk)
+%     plotfkmap(fkcart2pol(fk))
 %
 %    See also: FKMAP, FKVOLUME, FK4D, FKSUBVOL, FKVOL2MAP, PLOTFKMAP
 
 %     Version History:
 %        July 14, 2010 - initial version
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 14, 2010 at 16:05 GMT
+%     Last Updated Apr.  4, 2012 at 16:05 GMT
 
 % todo:
 

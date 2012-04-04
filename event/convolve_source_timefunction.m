@@ -5,17 +5,18 @@ function [data,x,t]=convolve_source_timefunction(data,varargin)
 %              data=convolve_source_timefunction(data,hwidth,type)
 %              [data,x,t]=convolve_source_timefunction(...)
 %
-%    Description: DATA=CONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH) convolves
-%     a gaussian source function onto records in SEIZMO struct DATA.
-%     HWIDTH defines the half width of the source function and must be a
-%     scalar or an array of size equal to the number of records in DATA.
-%     Note that the gaussian is centered on each point, so the convolution
-%     is an acausal operation.  The gaussian has unit area so that the
-%     energy is preserved (see the last Usage format to get the actual
-%     source function).  The returned records include extra points before
-%     and after the time limits of the original records.  These points
-%     are included because energy has been given to those points through
-%     the convolution operation.
+%    Description:
+%     DATA=CONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH) convolves a gaussian
+%     source function onto records in SEIZMO struct DATA.  HWIDTH defines
+%     the half width of the source function and must be a scalar or an
+%     array of size equal to the number of records in DATA.  Note that the
+%     gaussian is centered on each point, so the convolution is an acausal
+%     operation.  The gaussian has unit area so that the energy is
+%     preserved (see the last Usage format to get the actual source
+%     function).  The returned records include extra points before and
+%     after the time limits of the original records.  These points are
+%     included because energy has been given to those points through the
+%     convolution operation.
 %
 %     DATA=CONVOLVE_SOURCE_TIMEFUNCTION(DATA,HWIDTH,TYPE) specifies the
 %     type of source function to be used in the convolution.  See function
@@ -34,9 +35,9 @@ function [data,x,t]=convolve_source_timefunction(data,varargin)
 %    Header changes: DEPMIN, DEPMEN, DEPMAX, NPTS, B, E
 %
 %    Examples:
-%     Convolve a 10 second triangle source function onto some synthetic
-%     data read into a SEIZMO dataset:
-%      data=convolve_source_timefunction(data,10,'triangle');
+%     % Convolve a 10 second triangle source function onto
+%     % some synthetic data read into a SEIZMO dataset:
+%     data=convolve_source_timefunction(data,10,'triangle');
 %
 %    See also: CONVOLVE, DECONVOLVE_SOURCE_TIMEFUNCTION, DECONVOLVE,
 %              MAKE_SOURCE_TIMEFUNCTION, TRIANGLETF, GAUSSIANTF
@@ -49,9 +50,10 @@ function [data,x,t]=convolve_source_timefunction(data,varargin)
 %        Jan. 30, 2010 - fix checking state functions, better messages
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix, use
 %                        checkheader more effectively
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 24, 2012 at 15:05 GMT
 
 % todo:
 

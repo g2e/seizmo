@@ -4,13 +4,14 @@ function [x,t]=make_source_timefunction(delta,hwidth,type)
 %    Usage: [x,t]=make_source_timefunction(delta,hwidth)
 %           [x,t]=make_source_timefunction(delta,hwidth,type)
 %
-%    Description: [X,T]=MAKE_SOURCE_TIMEFUNCTION(DELTA,HWIDTH) creates
-%     gaussian source functions with a halfwidth of HWIDTH sampled at a
-%     spacing of DELTA.  DELTA must be a real array with values >0.  HWIDTH
-%     must be a real array.  DELTA and HWIDTH should be equal sized or be
-%     scalar.  Scalar expansion is enabled.  The gaussian values are
-%     returned in X and the times are in T.  X and T are cell arrays with
-%     the source function corresponding to each element in DELTA/HWIDTH.
+%    Description:
+%     [X,T]=MAKE_SOURCE_TIMEFUNCTION(DELTA,HWIDTH) creates gaussian source
+%     functions with a halfwidth of HWIDTH sampled at a spacing of DELTA.
+%     DELTA must be a real array with values >0.  HWIDTH must be a real
+%     array.  DELTA and HWIDTH should be equal sized or be scalar.  Scalar
+%     expansion is enabled.  The gaussian values are returned in X and the
+%     times are in T.  X and T are cell arrays with the source function
+%     corresponding to each element in DELTA/HWIDTH.
 %
 %     [X,T]=MAKE_SOURCE_TIMEFUNCTION(DELTA,HWIDTH,TYPE) sets the type of
 %     the source function.  Valid values of TYPE are 'GAUSSIAN' &
@@ -38,9 +39,10 @@ function [x,t]=make_source_timefunction(delta,hwidth,type)
 %        Jan. 27, 2010 - seizmoverbose support
 %        Aug.  9, 2010 - nargchk fix
 %        Feb.  1, 2011 - update for gaussiantf & triangletf changes
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2011 at 07:05 GMT
+%     Last Updated Apr.  2, 2012 at 07:05 GMT
 
 % todo:
 

@@ -9,14 +9,15 @@ function [varargout]=plotgeofkarf(arf,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %              plotgeofkarf(arf,projopt,dblim,zerodb,fgcolor,bgcolor,ax)
 %              ax=plotgeofkarf(...)
 %
-%    Description: PLOTGEOFKARF(ARF) plots the frequency-slowness-position
-%     beam data in geofk struct ARF.  See a geofk function like
-%     GEOFKXCVOLUME for details on the struct.  The data is plotted on a
-%     map with a Hammer-Aitoff projection and the map limits are scaled to
-%     fit the beam data & station positions.  Note that the beam data
-%     positions should form a regular grid (using a function like
-%     MESHGRID).  This plots GSHHS coastlines and borders in low-resolution
-%     which may take a few moments - please be patient.
+%    Description:
+%     PLOTGEOFKARF(ARF) plots the frequency-slowness-position beam data in
+%     geofk struct ARF.  See a geofk function like GEOFKXCVOLUME for
+%     details on the struct.  The data is plotted on a map with a
+%     Hammer-Aitoff projection and the map limits are scaled to fit the
+%     beam data & station positions.  Note that the beam data positions
+%     should form a regular grid (using a function like MESHGRID).  This
+%     plots GSHHS coastlines and borders in low-resolution which may take a
+%     few moments - please be patient.
 %
 %     PLOTGEOFKARF(ARF,PROJOPT) allows passing options to M_PROJ.  See
 %     M_PROJ('SET') for possible projections and See M_PROJ('GET',PROJ) for
@@ -57,6 +58,7 @@ function [varargout]=plotgeofkarf(arf,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %        Dec.  8, 2010 - use '^o' for deg symbol rather than \circ
 %        Feb. 16, 2011 - color code fix
 %        Feb.  2, 2012 - use robinson projection like plotgeofkmap
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb.  2, 2012 at 15:05 GMT

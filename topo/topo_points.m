@@ -4,10 +4,11 @@ function [topo]=topo_points(lat,lon,toponame)
 %    Usage:    topo=topo_points(lat,lon)
 %              topo=topo_points(lat,lon,toponame)
 %
-%    Description: TOPO=TOPO_POINTS(LAT,LON) grabs the topography (or
-%     z-value) for the positions given by LAT & LON.  LAT & LON must be in
-%     degrees and must be scalar or equal-sized arrays.  By default, this
-%     returns SRTM30+ topography in meters at the points given.
+%    Description:
+%     TOPO=TOPO_POINTS(LAT,LON) grabs the topography (or z-value) for the
+%     positions given by LAT & LON.  LAT & LON must be in degrees and must
+%     be scalar or equal-sized arrays.  By default, this returns SRTM30+
+%     topography in meters at the points given.
 %
 %     TOPO=TOPO_POINTS(LAT,LON,TOPONAME) allows changing the dataset to
 %     pull the topography (z-values) from.  TOPONAME must be a string and
@@ -22,12 +23,12 @@ function [topo]=topo_points(lat,lon,toponame)
 %    Notes:
 %
 %    Examples:
-%     Plot up an equatorial profile:
-%      plot(-180:0.1:180,topo_points(0,-180:0.1:180))
+%     % Plot up an equatorial profile:
+%     plot(-180:0.1:180,topo_points(0,-180:0.1:180))
 %
-%     Compare SRTM30+ and ETOPO1:
-%      plot(-180:0.1:180,topo_points(0,-180:0.1:180),'r',...
-%           -180:0.1:180,topo_points(0,-180:0.1:180,'etopo1_bed'),'k:')
+%     % Compare SRTM30+ and ETOPO1:
+%     plot(-180:0.1:180,topo_points(0,-180:0.1:180),'r',...
+%          -180:0.1:180,topo_points(0,-180:0.1:180,'etopo1_bed'),'k:')
 %
 %    See also: TOPO_REGION, TOPO_COLORMAP
 
@@ -37,9 +38,10 @@ function [topo]=topo_points(lat,lon,toponame)
 %        May  19, 2010 - return nothing when given nothing
 %        May  20, 2010 - added scrollbar (cause it is slow)
 %        Feb. 11, 2011 - mass nargchk fix
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Apr.  2, 2012 at 15:05 GMT
 
 % todo:
 % - etopo2, etopo5, crust2

@@ -1,42 +1,45 @@
 function [varargout]=plotfkmap(map,varargin)
 %PLOTFKMAP    Plots the frequency-wavenumber output from FKMAP
 %
-%    Usage:    h=plotfkmap(map)
-%              h=plotfkmap(map,dblim)
-%              h=plotfkmap(map,dblim,zerodb)
-%              h=plotfkmap(map,dblim,zerodb,fgcolor,bgcolor)
-%              h=plotfkmap(map,dblim,zerodb,fgcolor,bgcolor,h)
+%    Usage:    plotfkmap(map)
+%              plotfkmap(map,dblim)
+%              plotfkmap(map,dblim,zerodb)
+%              plotfkmap(map,dblim,zerodb,fgcolor,bgcolor)
+%              plotfkmap(map,dblim,zerodb,fgcolor,bgcolor,h)
+%              ax=plotfkmap(...)
 %
-%    Description: H=PLOTFKMAP(MAP) plots a slowness map using the struct
-%     MAP which was output from FKMAP.  See FKMAP for details on the
-%     struct.  This is mainly so you can save the results and replot them
-%     later (because FKMAP is quite slow).  H is the handle to the axes
-%     that the map was plotted in.
+%    Description:
+%     PLOTFKMAP(MAP) plots a slowness map using the struct MAP which was
+%     output from FKMAP.  See FKMAP for details on the struct.  This is
+%     mainly so you can save the results and replot them later (because
+%     FKMAP is quite slow).
 %
-%     H=PLOTFKMAP(MAP,DBLIM) sets the dB limits for coloring the beam
-%     info.  The default is [-12 0] for the default ZERODB (see next Usage
-%     form).  If ZERODB IS 'min' or 'median', the default DBLIM is [0 12].
-%     DBLIM must be a real-valued 2-element vector.
+%     PLOTFKMAP(MAP,DBLIM) sets the dB limits for coloring the beam info.
+%     The default is [-12 0] for the default ZERODB (see next Usage form).
+%     If ZERODB IS 'min' or 'median', the default DBLIM is [0 12].  DBLIM
+%     must be a real-valued 2-element vector.
 %
-%     H=PLOTFKMAP(MAP,DBLIM,ZERODB) changes what 0dB corresponds to in the
+%     PLOTFKMAP(MAP,DBLIM,ZERODB) changes what 0dB corresponds to in the
 %     plot.  The allowed values are 'min', 'max', 'median', & 'abs'.  The
 %     default is 'max'.
 %
-%     H=PLOTFKMAP(MAP,DBLIM,ZERODB,FGCOLOR,BGCOLOR) specifies foreground
-%     and background colors of the plot.  The default is 'w' for FGCOLOR &
-%     'k' for BGCOLOR.  Note that if one is specified and the other is not,
-%     an opposing color is found using INVERTCOLOR.  The color scale is
-%     also changed so the noise clip is at BGCOLOR.
+%     PLOTFKMAP(MAP,DBLIM,ZERODB,FGCOLOR,BGCOLOR) specifies foreground and
+%     background colors of the plot.  The default is 'w' for FGCOLOR & 'k'
+%     for BGCOLOR.  Note that if one is specified and the other is not, an
+%     opposing color is found using INVERTCOLOR.  The color scale is also
+%     changed so the noise clip is at BGCOLOR.
 %
-%     H=PLOTFKMAP(MAP,DBLIM,ZERODB,FGCOLOR,BGCOLOR,H) sets the axes to draw
+%     PLOTFKMAP(MAP,DBLIM,ZERODB,FGCOLOR,BGCOLOR,H) sets the axes to draw
 %     in.  This is useful for subplots, guis, etc.
+%
+%     AX=PLOTFKMAP(...) returns the axis handle of the plot.
 %
 %    Notes:
 %
 %    Examples:
-%     Show slowness map for a dataset at about 50s periods:
-%      map=fkmap(data,50,201,[1/51 1/49]);
-%      plotfkmap(map);
+%     % Show slowness map for a dataset at about 50s periods:
+%     map=fkmap(data,50,201,[1/51 1/49]);
+%     plotfkmap(map);
 %
 %    See also: FKMAP, PLOTFKARF, UPDATEFKMAP, FKFREQSLIDE, FKFRAMESLIDE
 
@@ -55,9 +58,10 @@ function [varargout]=plotfkmap(map,varargin)
 %        Feb. 16, 2011 - fix pcolor offset in polar plots, color code fix
 %        Feb. 23, 2011 - replace polar call with wedge, fix pcolor
 %                        out-of-bounds pixels
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 23, 2011 at 10:50 GMT
+%     Last Updated Apr.  4, 2012 at 10:50 GMT
 
 % todo:
 

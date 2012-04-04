@@ -7,8 +7,9 @@ function [mout]=iasp91(varargin)
 %              model=iasp91(...,'range',[top bottom],...)
 %              model=iasp91(...,'crust',true|false,...)
 %
-%    Description: MODEL=IASP91() returns a struct containing the 1D radial
-%     Earth model IASP91.  The struct has the following fields:
+%    Description:
+%     MODEL=IASP91() returns a struct containing the 1D radial Earth model
+%     IASP91.  The struct has the following fields:
 %      MODEL.name      - model name ('IASP91')
 %           .ocean     - always false here
 %           .crust     - true/false
@@ -51,14 +52,14 @@ function [mout]=iasp91(varargin)
 %        and phase identification, Geophys. J. Int. 105, pp. 429-465
 %
 %    Examples:
-%     Plot parameters for the CMB region:
-%      model=iasp91('r',[2600 3400]);
-%      figure;
-%      plot(model.depth,model.vp,'r',...
-%           model.depth,model.vs,'g',...
-%           model.depth,model.rho,'b','linewidth',2);
-%      title('IASP91')
-%      legend({'Vp' 'Vs' '\rho'})
+%     % Plot parameters for the CMB region:
+%     model=iasp91('r',[2600 3400]);
+%     figure;
+%     plot(model.depth,model.vp,'r',...
+%          model.depth,model.vs,'g',...
+%          model.depth,model.rho,'b','linewidth',2);
+%     title('IASP91')
+%     legend({'Vp' 'Vs' '\rho'})
 %
 %    See also: AK135, PREM
 
@@ -69,9 +70,10 @@ function [mout]=iasp91(varargin)
 %        Aug.  8, 2010 - minor doc touch, dcbelow option
 %        Aug. 17, 2010 - added reference
 %        Sep. 19, 2010 - doc update, better discontinuity support
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 19, 2010 at 14:45 GMT
+%     Last Updated Apr.  3, 2012 at 14:45 GMT
 
 % todo:
 

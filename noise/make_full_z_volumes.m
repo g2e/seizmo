@@ -3,11 +3,12 @@ function []=make_full_z_volumes(indir)
 %
 %    Usage:    make_full_z_volumes(stack_dir)
 %
-%    Description: MAKE_FULL_Z_VOLUMES(STACK_DIR) creates a fk-based
-%     slowness response volume for an array.  This only works on a
-%     directory layout setup by DAYDIRS_STACKCORR.  The period range is 4
-%     to 100s, the maximum slowness is 50sec/deg and the slowness
-%     resolution is 1/3 sec/deg.  This will process only the full stack.
+%    Description:
+%     MAKE_FULL_Z_VOLUMES(STACK_DIR) creates a fk-based slowness response
+%     volume for an array.  This only works on a directory layout setup by
+%     DAYDIRS_STACKCORR.  The period range is 4 to 100s, the maximum
+%     slowness is 50sec/deg and the slowness resolution is 1/3 sec/deg.
+%     This will process only the full stack.
 %
 %    Notes:
 %
@@ -20,9 +21,10 @@ function []=make_full_z_volumes(indir)
 %        June 24, 2010 - initial version
 %        Oct. 10, 2010 - svol to fkvol
 %        Feb. 15, 2011 - minor doc update
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2011 at 15:55 GMT
+%     Last Updated Apr.  3, 2012 at 15:55 GMT
 
 % todo:
 

@@ -5,13 +5,14 @@ function [ax]=makesubplots(r,c,p,varargin)
 %              ax=makesubplots(r,c,p)
 %              ax=makesubplots(r,c,p,...)
 %
-%    Description: AX=MAKESUBPLOTS(R,C) initializes all subplots in a RxC
-%     array of axes in the current figure.  R specifies the number of rows
-%     and C gives the number of columns.  So AX will be a CxR matrix of
-%     axes handles (note this is actually transposed from the way the plots
-%     are arranged -- so AX(2) corresponds to subplot(R,C,2) etc).
-%     Transpose AX to get axes handles in the visual ordering.  If no
-%     figure exists, one is initialized.
+%    Description:
+%     AX=MAKESUBPLOTS(R,C) initializes all subplots in a RxC array of axes
+%     in the current figure.  R specifies the number of rows and C gives
+%     the number of columns.  So AX will be a CxR matrix of axes handles
+%     (note this is actually transposed from the way the plots are arranged
+%     -- so AX(2) corresponds to subplot(R,C,2) etc).  Transpose AX to get
+%     axes handles in the visual ordering.  If no figure exists, one is
+%     initialized.
 %
 %     AX=MAKESUBPLOTS(R,C,P) initializes only the subplots at positions P.
 %     Note that this does not support subplots spanning multiple rows
@@ -43,9 +44,10 @@ function [ax]=makesubplots(r,c,p,varargin)
 %     Version History:
 %        Aug.  4, 2010 - initial version
 %        Aug.  8, 2010 - bugfix: support p as matrix, logical support
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 12:25 GMT
+%     Last Updated Apr.  3, 2012 at 12:25 GMT
 
 % todo:
 

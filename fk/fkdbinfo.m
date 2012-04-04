@@ -4,10 +4,11 @@ function [maxdb,meddb,mindb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
 %    Usage:    [maxdb,meddb,mindb]=fkdbinfo(fk)
 %             [maxdb,meddb,mindb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
 %
-%    Description: [MAXDB,MEDDB,MINDB]=FKDBINFO(FK) returns the decibel
-%     limits and median of the beam(s) in the fk struct FK.  This is useful
-%     for quick identification for strong plane wave coherency.  The
-%     outputs are actually structs with the following format:
+%    Description:
+%     [MAXDB,MEDDB,MINDB]=FKDBINFO(FK) returns the decibel limits and
+%     median of the beam(s) in the fk struct FK.  This is useful for quick
+%     identification for strong plane wave coherency.  The outputs are
+%     actually structs with the following format:
 %       .db        == decibel value
 %       .horzslow  == magnitude of the horizontal slowness (in sec/deg)
 %       .backazi   == backazimuth (in degrees)
@@ -27,14 +28,15 @@ function [maxdb,meddb,mindb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
 %    Notes:
 %
 %    Examples:
-%     Analyze a 4D fk dataset:
-%      s4d=fk4d(data,[],[],50,201,[1/100 1/4]);
-%      [maxdb,meddb,mindb]=fkdbinfo(s4d);
-%      figure; plot(mindb.db);
-%      hold on;
-%      plot(maxdb.db);
-%      plot(meddb.db);
-%      hold off;
+%     % Analyze a 4D fk dataset:
+%     s4d=fk4d(data,[],[],50,201,[1/100 1/4]);
+%     [maxdb,meddb,mindb]=fkdbinfo(s4d);
+%     figure;
+%     plot(mindb.db);
+%     hold on;
+%     plot(maxdb.db);
+%     plot(meddb.db);
+%     hold off;
 %
 %    See also: GEOFKDBINFO, FKMAP, FKVOLUME, FK4D
 
@@ -45,9 +47,10 @@ function [maxdb,meddb,mindb]=fkdbinfo(fk,frng,bazrng,srng,esrng,nsrng)
 %        July  6, 2010 - update for new struct
 %        July 12, 2010 - baz range issue bugfix (for sane ranges)
 %        July 16, 2010 - output structs with db point info
+%        Mar. 29, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 16, 2010 at 14:25 GMT
+%     Last Updated Mar. 29, 2012 at 14:25 GMT
 
 % todo:
 

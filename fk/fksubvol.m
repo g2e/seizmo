@@ -3,20 +3,21 @@ function [vol]=fksubvol(vol,frng)
 %
 %    Usage:    vol=fksubvol(vol,frng)
 %
-%    Description: VOL=FKSUBVOL(VOL,FRNG) extracts the fk beam data in
-%     VOL for the frequency range given by FRNG, returning the result.  VOL
-%     is a fk struct produced either by FKVOLUME or FK4D.  FRNG gives the
-%     frequency range to extract as [FREQLOW FREQHIGH] in Hz.
+%    Description:
+%     VOL=FKSUBVOL(VOL,FRNG) extracts the fk beam data in VOL for the
+%     frequency range given by FRNG, returning the result.  VOL is a fk
+%     struct produced either by FKVOLUME or FK4D.  FRNG gives the frequency
+%     range to extract as [FREQLOW FREQHIGH] in Hz.
 %
 %    Notes:
 %
 %    Examples:
-%     Split a volume into 10s period windows:
-%      svol=fkvolume(data,50,201,[1/50 1/20]);
-%      svol1=fksubvol(svol,[1/50 1/40]);
-%      svol2=fksubvol(svol,[1/40 1/30]);
-%      svol3=fksubvol(svol,[1/30 1/20]);
-%      svol4=fksubvol(svol,[1/20 1/10]);
+%     % Split a volume into 10s period windows:
+%     svol=fkvolume(data,50,201,[1/50 1/20]);
+%     svol1=fksubvol(svol,[1/50 1/40]);
+%     svol2=fksubvol(svol,[1/40 1/30]);
+%     svol3=fksubvol(svol,[1/30 1/20]);
+%     svol4=fksubvol(svol,[1/20 1/10]);
 %
 %    See also: FKFREQSLIDE, PLOTFKMAP, FKVOLUME, FK4D, FKMAP, FKVOL2MAP
 
@@ -24,9 +25,10 @@ function [vol]=fksubvol(vol,frng)
 %        June 11, 2010 - initial version
 %        July  6, 2010 - update for new struct
 %        July 14, 2010 - bugfix related to new struct
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 14, 2010 at 12:55 GMT
+%     Last Updated Apr.  4, 2012 at 12:55 GMT
 
 % todo:
 

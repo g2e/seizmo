@@ -21,19 +21,20 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %              [...]=ttsolve(...,'mpri',niter,...)
 %              [...]=ttsolve(...,'noncnv',method,...)
 %
-%    Description: [ARR,ERR,POL,ZMEAN,ZSTD,NC,OPTIONS,XC]=TTSOLVE(XC) takes
-%     a cross-correlation struct produced by a CORRELATE call with option
-%     'NPEAKS' set to 1 or higher and solves for the relative arrival times
-%     and polarities between the correlated signals.  The inversion
-%     utilizes an iterative, weighted least-squares approach that makes use
-%     of multiple peaks in a correlogram.  This approach is particularly
-%     suited for aligning noisy, narrow-band signals.  There are a
-%     multitude of options that allow for adjusting the weighting in the
-%     inversion, the starting conditions of the inversion, and the style
-%     and depth of the inversion.  ARR is the relative arrival times (zero
-%     mean).  ERR is the standard error of the relative arrival times.  POL
-%     is the relative polarities.  ZMEAN is the mean z-statistics.  ZSTD is
-%     the standard error in the z-statistics.  NC is the number of peaks
+%    Description:
+%     [ARR,ERR,POL,ZMEAN,ZSTD,NC,OPTIONS,XC]=TTSOLVE(XC) takes a cross-
+%     correlation struct produced by a CORRELATE call with option 'NPEAKS'
+%     set to 1 or higher and solves for the relative arrival times and
+%     polarities between the correlated signals.  The inversion utilizes an
+%     iterative, weighted least-squares approach that makes use of multiple
+%     peaks in a correlogram.  This approach is particularly suited for
+%     aligning noisy, narrow-band signals.  There are a multitude of
+%     options that allow for adjusting the weighting in the inversion, the
+%     starting conditions of the inversion, and the style and depth of the
+%     inversion.  ARR is the relative arrival times (zero mean).  ERR is
+%     the standard error of the relative arrival times.  POL is the
+%     relative polarities.  ZMEAN is the mean z-statistics.  ZSTD is the
+%     standard error in the z-statistics.  NC is the number of peaks
 %     changed in each refinement iteration.  OPTIONS is a struct containing
 %     info on the parameters controlling the inversion.  Output XC is the
 %     reordered input XC with a couple more fields used in the inversion.
@@ -163,10 +164,13 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %    Examples:
 %     % Get the SNR of some signals roughly aligned near 0:
 %     snr=quicksnr(data,[-100 -10],[-10 100]);
+%
 %     % Correlate the records:
 %     xc=correlate(data,'npeaks',3,'spacing',10);
+%
 %     % Solve using signal-to-noise info in the weights:
 %     [arr,err,pol,zmean,zstd,nc]=ttsolve(xc,'snr',snr);
+%
 %     % Now plot the alignment:
 %     recordsection(multiply(timeshift(normalize(data),dt),pol));
 %
@@ -192,9 +196,10 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %                        necessary (improper apriori replacement)
 %        Mar. 17, 2011 - fixed bug where est* fields could not be set to
 %                        empty once set non-empty
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 17, 2011 at 09:45 GMT
+%     Last Updated Apr.  2, 2012 at 01:05 GMT
 
 % todo:
 

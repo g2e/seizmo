@@ -3,10 +3,11 @@ function [crust]=getcrust2(lat,lon)
 %
 %    Usage:    crust=getcrust2(lat,lon)
 %
-%    Description: CRUST=GETCRUST2(LAT,LON) returns struct CRUST containing
-%     info about the crustal structure at the positions given by LAT & LON.
-%     LAT & LON are expected to be scalars or equal sized arrays and have
-%     units in degrees.  CRUST has a layout as follows:
+%    Description:
+%     CRUST=GETCRUST2(LAT,LON) returns struct CRUST containing info about
+%     the crustal structure at the positions given by LAT & LON.  LAT & LON
+%     are expected to be scalars or equal sized arrays and have units in
+%     degrees.  CRUST has a layout as follows:
 %      CRUST.type        -- 2 character crust id
 %           .description -- string describing structure
 %           .vp          -- isotropic p-velocities (1x8)
@@ -31,8 +32,8 @@ function [crust]=getcrust2(lat,lon)
 %       elevation given in CRUST.elev for local bathymetry.
 %
 %    Examples:
-%     What is the crustal structure below Saint Louis?
-%      getcrust2(38.649,-90.305)
+%     % What is the crustal structure below Saint Louis?
+%     getcrust2(38.649,-90.305)
 %
 %    See also: GETC2MOHO, GETC2THICK, GETC2ELEV, CRUCOR, MANCOR
 
@@ -40,9 +41,10 @@ function [crust]=getcrust2(lat,lon)
 %        May  16, 2010 - initial version
 %        May  17, 2010 - improved saved crust2, added moho
 %        May  19, 2010 - added moho to doc
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  19, 2010 at 18:35 GMT
+%     Last Updated Apr.  3, 2012 at 18:35 GMT
 
 % todo:
 

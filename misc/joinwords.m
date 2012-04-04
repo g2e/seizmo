@@ -4,21 +4,22 @@ function [str]=joinwords(words,delimiter)
 %    Usage:    str=joinwords(words)
 %              str=joinwords(words,delimiter)
 %
-%    Description: STR=JOINWORDS(WORDS) combines the cellstr array WORDS and
-%     returns a single rowed char array STR with the elements of WORDS
-%     delimited by spaces.
+%    Description:
+%     STR=JOINWORDS(WORDS) combines the cellstr array WORDS and returns a
+%     single rowed char array STR with the elements of WORDS delimited by
+%     spaces.
 %
-%     STR=JOINWORDS(WORDS,DELIMITER) uses the string DELIMITER to
-%     separate words in the output string.
+%     STR=JOINWORDS(WORDS,DELIMITER) uses the string DELIMITER to separate
+%     words in the output string.
 %
 %    Notes:
-%     - punctuation should be part of the preceeding word!
+%     - Punctuation should be part of the preceeding word!
 %
 %    Examples:
-%     Make a sentence but with underscores:
-%      joinwords({'This' 'example' 'is' 'pretty' 'dumb!'},'_')
-%       ans = 
-%       This_example_is_pretty_dumb!
+%     % Make a sentence but with underscores:
+%     joinwords({'This' 'example' 'is' 'pretty' 'dumb!'},'_')
+%      ans = 
+%      This_example_is_pretty_dumb!
 %
 %    See also: GETWORDS, STRTOK, ISSPACE
 
@@ -26,9 +27,10 @@ function [str]=joinwords(words,delimiter)
 %        Sep. 13, 2009 - initial version
 %        Sep. 16, 2009 - add delimiter option
 %        Aug. 14, 2010 - allow multi-character delimiter
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 14, 2010 at 04:50 GMT
+%     Last Updated Apr.  4, 2012 at 04:50 GMT
 
 % todo:
 

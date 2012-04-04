@@ -14,14 +14,15 @@ function [varargout]=geofkfreqslidex(vol,frng,srng,delay,varargin)
 %                             fgcolor,bgcolor,ax)
 %              mov=geofkfreqslidex(...);
 %
-%    Description: GEOFKFREQSLIDEX(VOL) slides through a geofk volume by
-%     plotting each of the frequencies in sequence in a single plot.  Note
-%     that the volume is averaged across all slownesses (see the following
-%     Usage forms to adjust this).  There is a 1/3 second delay between
-%     each replotting by default (see the following Usage forms to adjust
-%     this).  This differs from GEOFKFREQSLIDE in that an "X" marker is
-%     placed at the maximum db point for each frame, giving a visual
-%     reference to follow.
+%    Description:
+%     GEOFKFREQSLIDEX(VOL) slides through a geofk volume by plotting each
+%     of the frequencies in sequence in a single plot.  Note that the
+%     volume is averaged across all slownesses (see the following Usage
+%     forms to adjust this).  There is a 1/3 second delay between each
+%     replotting by default (see the following Usage forms to adjust this).
+%     This differs from GEOFKFREQSLIDE in that an "X" marker is placed at
+%     the maximum db point for each frame, giving a visual reference to
+%     follow.
 %
 %     GEOFKFREQSLIDEX(VOL,FRNG) sets the frequency range to slide through.
 %     FRNG gives the frequency range to extract as [FREQLOW FREQHIGH] in
@@ -74,9 +75,10 @@ function [varargout]=geofkfreqslidex(vol,frng,srng,delay,varargin)
 
 %     Version History:
 %        July 18, 2010 - initial version
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 18, 2010 at 23:05 GMT
+%     Last Updated Apr.  4, 2012 at 23:05 GMT
 
 % todo:
 

@@ -3,17 +3,18 @@ function [report]=chkfkstruct(fk)
 %
 %    Usage:    msg=chkfkstruct(fk)
 %
-%    Description: MSG=CHKFKSTRUCT(FK) checks that FK is a struct as output
-%     from FKMAP/FKVOLUME/FK4D.  See those functions for details on the
-%     struct layout.  MSG is an error structure if a problem is found
-%     (otherwise it is empty).
+%    Description:
+%     MSG=CHKFKSTRUCT(FK) checks that FK is a struct as output from FKMAP,
+%     FKVOLUME, or FK4D.  See those functions for details on the struct
+%     layout.  MSG is an error structure if a problem is found (otherwise
+%     it is empty).
 %
 %    Notes:
 %
 %    Examples:
-%     Check that output from FKMAP is compatible:
-%      smap=fkmap(data,50,201,[1/30 1/20]);
-%      error(chkfkstruct(smap));
+%     % Check that output from FKMAP is compatible:
+%     smap=fkmap(data,50,201,[1/30 1/20]);
+%     error(chkfkstruct(smap));
 %
 %    See also: CHKFKARFSTRUCT, PLOTFKMAP, FKMAP, FKVOLUME, FK4D
 
@@ -24,9 +25,10 @@ function [report]=chkfkstruct(fk)
 %        May  27, 2010 - fixed an error message
 %        June 16, 2010 - minor code update
 %        July  6, 2010 - major update for new struct
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 14:05 GMT
+%     Last Updated Apr.  4, 2012 at 14:05 GMT
 
 % todo:
 

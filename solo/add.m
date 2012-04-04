@@ -4,15 +4,14 @@ function [data]=add(data,constant,cmp)
 %    Usage:    data=add(data,constant)
 %              data=add(data,constant,cmp_list)
 %
-%    Description: ADD(DATA,CONSTANT) adds a constant to the dependent 
-%     component(s) of SEIZMO records.  For multi-component files, this
-%     operation is performed on every dependent component (this includes 
-%     spectral files).
+%    Description:
+%     DATA=ADD(DATA,CONSTANT) adds a constant to the dependent component(s)
+%     of SEIZMO records in DATA.  For multi-component files, this operation
+%     is performed on every dependent component (including spectral).
 %
-%     ADD(DATA,CONSTANT,CMP) allows for operation on just components in
-%     the list CMP.  By default all components are operated on (use ':' to
-%     replicate the default behavior).  See the examples section for a 
-%     usage case.
+%     DATA=ADD(DATA,CONSTANT,CMP) allows for operation on components in the
+%     list CMP.  By default all components are operated on (use ':' to
+%     replicate the default behavior).
 %
 %    Notes:
 %     - a scalar constant applies the value to all records
@@ -24,9 +23,9 @@ function [data]=add(data,constant,cmp)
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     Add a 135 degree (3*pi/4) phase shift to records by only adding
-%     to the phase component in amplitude-phase records (component 2):
-%      data=idft(add(dft(data),3*pi/4,2))
+%     % Add a 135 degree (3*pi/4) phase shift to records by only adding
+%     % to the phase component in amplitude-phase records (component 2):
+%     data=idft(add(dft(data),3*pi/4,2))
 %
 %    See also: SUBTRACT, MULTIPLY, DIVIDE, SOLOFUN
 
@@ -51,9 +50,10 @@ function [data]=add(data,constant,cmp)
 %        Jan. 26, 2010 - seizmoverbose support, properly handle states
 %        Aug. 16, 2010 - nargchk fix, versioninfo instead of seizmocheck
 %        Jan.  6, 2011 - back to seizmocheck, seizmofun/solofun rename
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  6, 2011 at 18:25 GMT
+%     Last Updated Apr.  3, 2012 at 18:25 GMT
 
 % todo:
 

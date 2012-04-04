@@ -3,16 +3,16 @@ function [data]=fix_db2sac_v48(data,knetwk)
 %
 %    Usage:    data=fix_db2sac_v48(data,knetwk)
 %
-%    Description: DATA=FIX_DB2SAC_V48(DATA,KNETWK) fixes the headers of SAC
-%     files exported using DB2SAC from ANTELOPE version 4.8.  The fixes
-%     are:
-%     1. sets IDEP field to 'IUNKN' (unknown units) - for db2sac -counts
-%     2. sets IZTYPE field to 'IB'
-%     3. sets KNETWK field to KNETWK (note this is the 2nd input argument)
-%     4. splits KCMPNM field to set KHOLE and KCMPNM
-%     5. sets empty KHOLE to '__'
-%     6. sets LOVROK to TRUE (allow overwrite)
-%     7. set USER7, USER8, NORID, NEVID to undefined
+%    Description:
+%     DATA=FIX_DB2SAC_V48(DATA,KNETWK) fixes the headers of SAC files
+%     exported using DB2SAC from ANTELOPE version 4.8.  The fixes are:
+%      1. sets IDEP field to 'IUNKN' (unknown units) - for db2sac -counts
+%      2. sets IZTYPE field to 'IB'
+%      3. sets KNETWK field to KNETWK (note this is the 2nd input argument)
+%      4. splits KCMPNM field to set KHOLE and KCMPNM
+%      5. sets empty KHOLE to '__'
+%      6. sets LOVROK to TRUE (allow overwrite)
+%      7. set USER7, USER8, NORID, NEVID to undefined
 %
 %    Notes:
 %     - SAC records created with DB2SAC may be off by 1 millisecond
@@ -24,8 +24,8 @@ function [data]=fix_db2sac_v48(data,knetwk)
 %                    USER7, USER8, NORID, NEVID
 %
 %    Examples:
-%     Read, clean up, and overwrite some DB2SAC-made SAC files:
-%      w(fix_db2sac_v48(r('*')))
+%     % Read, clean up, and overwrite some DB2SAC-made SAC files:
+%     w(fix_db2sac_v48(r('*')))
 %
 %    See also: FIX_SOD_V222, FIX_RDSEED_V48, FIX_TREXCERPT_V48,
 %              FIX_CAMEROON, FIXDELTA
@@ -37,9 +37,10 @@ function [data]=fix_db2sac_v48(data,knetwk)
 %        Jan. 30, 2010 - reduced calls to seizmocheck
 %        Mar. 24, 2010 - drop fixdelta call
 %        Feb. 11, 2011 - mass nargchk fix
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 15:05 GMT
+%     Last Updated Mar. 24, 2012 at 15:05 GMT
 
 % todo:
 

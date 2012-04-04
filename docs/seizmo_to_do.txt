@@ -9,6 +9,11 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
+multifun should convert spectral records to complex before operation
+    - will this affect any current operations?
+
+make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
+
 meld
     - uneven or variable samplerate
 rotate
@@ -18,6 +23,9 @@ rotate_correlations
     - works for unrotated
 
 fk stuff
+    clean up documentation
+        - estimate of freq-slowness power spectra using frequency-domain beamforming
+    allow saving complex spectra
     rayleigh/love dispersion estimation
         - give it a slowness/velocity range
         - can we fit it as azimuthal anisotropy?
@@ -94,7 +102,6 @@ fix doc formatting
     - examples
     - description
 fix checkheader calls (and remove redundant checks)
-drop getlgc/getenum*
 better versioninfo usage
     - caching should be dropped in all but the lowest level cases
     - seizmocheck should be used instead for the most part
@@ -103,7 +110,7 @@ improve top-level help file
     - some intros to basic signal processing tasks, cmts, plotting
     - walk-thrus of analysis codes
 checking needs some tolerance (just too strict...)
-    - delta/b often are differ by a neglegible amount
+    - delta/b often differ by a neglegible amount
 slantstacking
 vespagrams
 ftan
@@ -176,12 +183,6 @@ smooth spline removal (requires spline toolbox)
 drop restrictive copyright functions
 	buttord2 (edit of buttord)
 	ddendrogram (edit of dendrogram)
-taup improvements
-    clean up tauppierce extra output
-    taup* functions should handle args that are vectors (ie multi-station)
-    drop mattaup, use taup jar directly
-    .taup support (use global?)
-    some way to add, list, export models (ie taupcreate++)
 slidingavg
     - nan support
     - check against other running mean functions

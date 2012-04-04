@@ -3,10 +3,11 @@ function [pol,def,ok]=ttpolar(pg)
 %
 %    Usage:  [pol,defects,ok]=ttpolar(pg)
 %
-%    Description: [POL,DEFECTS,OK]=TTPOLAR(PG) returns the likely
-%     polarities POL that produced the matrix of relative polarities PG.
-%     PG & POL are related by:
-%                           PG=(POL*POL').*DEFECTS
+%    Description:
+%     [POL,DEFECTS,OK]=TTPOLAR(PG) returns estimated polarities POL that
+%     produce the input matrix of relative polarities PG. PG & POL are
+%     related by:
+%         PG=(POL*POL').*DEFECTS
 %     where PG is an NxN matrix, POL is an Nx1 column vector, and DEFECTS
 %     is an NxN matrix.  All contain only 1s and -1s.  DEFECTS indicates
 %     the relative polarities in PG that are not matched by POL.  The
@@ -24,14 +25,14 @@ function [pol,def,ok]=ttpolar(pg)
 %       solution for POL.
 %
 %    Examples:
-%     Correlate records, solve for alignment & polarities, plot results:
-%      plot0(data);
-%      xc=correlate(data,'npeaks',1);
-%      dt=ttalign(xc.lg);
-%      data=timeshift(data,dt);
-%      pol=ttpolar(xc.pg);
-%      data=multiply(data,pol);
-%      plot0(data);
+%     % Correlate records, solve for alignment & polarities, plot results:
+%     plot0(data);
+%     xc=correlate(data,'npeaks',1);
+%     dt=ttalign(xc.lg);
+%     data=timeshift(data,dt);
+%     pol=ttpolar(xc.pg);
+%     data=multiply(data,pol);
+%     plot0(data);
 %
 %    See also: TTALIGN, TTSTDERR, TTREFINE, TTSOLVE
 
@@ -39,9 +40,10 @@ function [pol,def,ok]=ttpolar(pg)
 %        Mar. 11, 2010 - initial version (from clean_polarities)
 %        Sep. 13, 2010 - doc update, highest abs eigenvalue, nargchk fix
 %        Jan. 23, 2011 - flag/warning for edge case
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2011 at 11:10 GMT
+%     Last Updated Apr.  2, 2012 at 11:10 GMT
 
 % todo:
 % - it would really be nice if this was a weighted inversion, then it could

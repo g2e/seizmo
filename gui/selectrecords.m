@@ -7,14 +7,15 @@ function [data,selected,ax]=selectrecords(data,opt,type,selected,varargin)
 %              data=selectrecords(data,option,type,selected)
 %              data=selectrecords(data,option,type,selected,plotoptions)
 %
-%    Description: [DATA,SELECTED,AX]=SELECTRECORDS(DATA) returns records
-%     in SEIZMO data structure DATA that are graphically selected by the
-%     user.  By default the plottype is PLOT1 and no records are
-%     preselected.  Selection/unselection of records is performed by left-
-%     clicking over a record.  Complete dataset selection by middle-
-%     clicking over the plot or closing the figure.  Optional additional
-%     outputs are the logical array SELECTED which indicates the records
-%     that were selected and AX gives the plot handle(s).
+%    Description:
+%     [DATA,SELECTED,AX]=SELECTRECORDS(DATA) returns records in SEIZMO data
+%     structure DATA that are graphically selected by the user.  By default
+%     the plottype is PLOT1 and no records are preselected.  Selection/
+%     unselection of records is performed by left-clicking over a record.
+%     Complete dataset selection by middle-clicking over the plot or
+%     closing the figure.  Optional additional outputs are the logical
+%     array SELECTED which indicates the records that were selected and AX
+%     gives the plot handle(s).
 %
 %     SELECTRECORDS(DATA,OPTION) sets whether selected records from DATA
 %     are kept or deleted.  OPTION must be either 'keep' or 'delete'.  When
@@ -46,8 +47,8 @@ function [data,selected,ax]=selectrecords(data,opt,type,selected,varargin)
 %    Header changes: NONE
 %
 %    Examples:
-%     To select which records to delete using plot1:
-%       data=selectrecords(data,'delete','plot1')
+%     % To select which records to delete using plot1:
+%     data=selectrecords(data,'delete','plot1')
 %
 %    See also: PLOT1, PLOT0
 
@@ -72,9 +73,10 @@ function [data,selected,ax]=selectrecords(data,opt,type,selected,varargin)
 %        Apr. 20, 2011 - proliferation of types (all main plot types ok)
 %        Apr. 22, 2011 - preselected needed to be colored as selected, fix
 %                        crash that occurs when gco is empty
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2011 at 20:50 GMTs
+%     Last Updated Mar. 24, 2012 at 20:50 GMTs
 
 % todo:
 
@@ -88,7 +90,7 @@ elseif(nargin>4 && mod(nargin,2))
 end
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % number of records
 nrecs=numel(data);

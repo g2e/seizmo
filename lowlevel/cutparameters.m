@@ -3,7 +3,7 @@ function [option]=cutparameters(varargin)
 %
 %    Usage:    options=cutparameters(nrecs,args)
 %
-%    Description: 
+%    Description:
 %     CUTPARAMETERS(NRECS,VARARGIN) parses parameters VARARGIN passed to
 %     CUT and READDATAWINDOW, passing results back as a struct.  Parameters
 %     include those that define the window as well as other options (fill,

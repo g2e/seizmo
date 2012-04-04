@@ -4,12 +4,13 @@ function []=writekernels(file,Kph,Kam,x,y,o)
 %    Usage:    writekernels(file,Kph,Kam,x,y)
 %              writekernels(file,Kph,Kam,x,y,overwrite)
 %
-%    Description: WRITEKERNELS(FILE,KPH,KAM,X,Y) writes out kernel info
-%     created with RAYLEIGH_2D_PLANE_WAVE_KERNELS to a file for use with
-%     Yang & Forsyth fortran routines.  FILE should be a string giving the
-%     filename and path.  FILE may be empty to bring up a graphical file
-%     creation menu.  Kph, Kam, X, Y should all be equal-sized numeric
-%     arrays (see RAYLEIGH_2D_PLANE_WAVE_KERNELS for details).
+%    Description:
+%     WRITEKERNELS(FILE,KPH,KAM,X,Y) writes out kernel info created with
+%     RAYLEIGH_2D_PLANE_WAVE_KERNELS to a file for use with Yang & Forsyth
+%     fortran routines.  FILE should be a string giving the filename and
+%     path.  FILE may be empty to bring up a graphical file creation menu.
+%     Kph, Kam, X, Y should all be equal-sized numeric arrays (see
+%     RAYLEIGH_2D_PLANE_WAVE_KERNELS for details).
 %
 %     WRITEKERNELS(FILENAME,KPH,KAM,X,Y,OVERWRITE) quietly overwrites the
 %     pre-existing file without confirmation when OVERWRITE is set to TRUE.
@@ -19,12 +20,12 @@ function []=writekernels(file,Kph,Kam,x,y,o)
 %    Notes:
 %
 %    Examples:
-%     Create kernels and write them out:
-%      [f,a]=getmainlobe(1/100,1,[1000 2000],200/1000,[1000 1000]);
-%      [Kph,Kam,x,y]=rayleigh_2d_plane_wave_kernels(3000,10,f,a,4);
-%      Kph=smooth2d(Kph,100/10,[],'zeropad');     % 100km characteristic
-%      Kam=smooth2d(Kam,100/10,[],'zeropad');     %   falloff distance
-%      writekernels([],Kph,Kam,x,y); % choose your own filename
+%     % Create kernels and write them out:
+%     [f,a]=getmainlobe(1/100,1,[1000 2000],200/1000,[1000 1000]);
+%     [Kph,Kam,x,y]=rayleigh_2d_plane_wave_kernels(3000,10,f,a,4);
+%     Kph=smooth2d(Kph,100/10,[],'zeropad');     % 100km characteristic
+%     Kam=smooth2d(Kam,100/10,[],'zeropad');     %   falloff distance
+%     writekernels([],Kph,Kam,x,y); % choose your own filename
 %
 %    See also: READKERNELS, RAYLEIGH_2D_PLANE_WAVE_KERNELS, GETMAINLOBE,
 %              SMOOTH2D, MAKEKERNELS, PLOTKERNELS
@@ -33,9 +34,10 @@ function []=writekernels(file,Kph,Kam,x,y,o)
 %        Feb.  5, 2010 - rewrite and added documentation
 %        July  9, 2010 - fixed nargchk
 %        Feb. 11, 2011 - use fprintf
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2011 at 17:10 GMT
+%     Last Updated Apr.  2, 2012 at 17:10 GMT
 
 % todo:
 

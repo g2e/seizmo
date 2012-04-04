@@ -35,9 +35,10 @@ function [grp,ax]=popcut(data,grp)
 %        Sep. 21, 2010 - altered inputs/outputs
 %        Jan.  6, 2011 - proper ginput handling, use key2zoompan
 %        Mar. 31, 2011 - more columns than rows is more appealing
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 31, 2011 at 23:55 GMT
+%     Last Updated Apr.  3, 2012 at 23:55 GMT
 
 % todo:
 
@@ -45,7 +46,7 @@ function [grp,ax]=popcut(data,grp)
 error(nargchk(2,2,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % number of records
 nrecs=numel(data);

@@ -3,11 +3,12 @@ function [o]=read_reflect_input(file)
 %
 %    Usage:    s=read_reflect_input(file)
 %
-%    Description: S=READ_REFLECT_INPUT(FILE) reads a reflectivity input
-%     file formatted equivalently to that produced by MAKE_REFLECT_INPUT.
-%     The output is a struct S that contains all the reflectivity input
-%     information in several fields.  No format checking is done: it will
-%     either go smoothly or burn.
+%    Description:
+%     S=READ_REFLECT_INPUT(FILE) reads a reflectivity input file formatted
+%     equivalently to that produced by MAKE_REFLECT_INPUT.  The output is a
+%     struct S that contains all the reflectivity input information in
+%     several fields.  No format checking is done: it will either go
+%     smoothly or bust.
 %
 %    Notes:
 %     - THIS READS A LOCAL FORMAT!  Do not expect this to read reflectivity
@@ -23,9 +24,10 @@ function [o]=read_reflect_input(file)
 
 %     Version History:
 %        Aug. 10, 2010 - initial version
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 10, 2010 at 23:00 GMT
+%     Last Updated Apr.  3, 2012 at 23:00 GMT
 
 % todo:
 

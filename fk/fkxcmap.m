@@ -76,9 +76,10 @@ function [varargout]=fkxcmap(data,smax,spts,frng,polar,w)
 
 %     Version History:
 %        Nov. 18, 2010 - initial version
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 18, 2010 at 15:25 GMT
+%     Last Updated Apr.  3, 2012 at 15:25 GMT
 
 % todo:
 
@@ -90,7 +91,7 @@ d2r=pi/180;
 d2km=6371*d2r;
 
 % check struct
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % number of correlograms
 ncorr=numel(data);

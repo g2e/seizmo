@@ -9,10 +9,11 @@ function [varargout]=plotfkazifreq(vol,srng,dblim,zerodb,fgcolor,bgcolor,ax)
 %              plotfkazifreq(vol,srng,dblim,zerodb,fgcolor,bgcolor,ax)
 %              ax=plotfkazifreq(...)
 %
-%    Description: PLOTFKAZIFREQ(VOL) graphs the maximum beam strength
-%     across all slownesses as a function of frequency and azimuth using
-%     the struct VOL which is output from FKVOLUME or equivalent.  This is
-%     an excellent way to summarize the direction strength with frequency.
+%    Description:
+%     PLOTFKAZIFREQ(VOL) graphs the maximum beam strength across all
+%     slownesses as a function of frequency and azimuth using the struct
+%     VOL which is output from FKVOLUME or equivalent.  This is an
+%     excellent way to summarize the direction strength with frequency.
 %
 %     PLOTFKAZIFREQ(VOL,SRNG) limits the horizontal slowness magnitudes
 %     when searching for the maximum db value.  The default is [] and is
@@ -41,17 +42,18 @@ function [varargout]=plotfkazifreq(vol,srng,dblim,zerodb,fgcolor,bgcolor,ax)
 %    Notes:
 %
 %    Examples:
-%     Limit to surface wave velocities:
-%      plotfkazifreq(vol,[25 35]);
+%     % Limit to surface wave velocities:
+%     plotfkazifreq(vol,[25 35]);
 %
 %    See also: FKVOLUME, FKXCVOLUME, FKFREQSLIDE, FKSUBVOL
 
 %     Version History:
 %        July 14, 2010 - initial version
 %        Feb. 16, 2011 - color code fix
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2011 at 16:05 GMT
+%     Last Updated Apr.  4, 2012 at 16:05 GMT
 
 % todo:
 

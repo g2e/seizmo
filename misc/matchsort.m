@@ -5,10 +5,11 @@ function [x,li]=matchsort(x,i,dim)
 %           y=matchsort(x,sort_idx,dim)
 %           [y,li]=matchsort(...)
 %
-%    Description: Y=MATCHSORT(X,SORT_IDX) replicates a previous sort
-%     operation using the permutation matrix from that previous sort.  This
-%     is useful for sorting multiple equal-sized matrices in parallel.
-%     Operates on the first non-singleton dimension just like sort does.
+%    Description:
+%     Y=MATCHSORT(X,SORT_IDX) replicates a previous sort operation using
+%     the permutation matrix from that previous sort.  This is useful for
+%     sorting multiple equal-sized matrices in parallel.  Operates on the
+%     first non-singleton dimension just like sort does.
 %
 %     Y=MATCHSORT(X,SORT_IDX,DIM) allows specifying the dimension that the
 %     sort operation occured on.
@@ -21,24 +22,25 @@ function [x,li]=matchsort(x,i,dim)
 %    Notes:
 %
 %    Examples:
-%     So lets say you have 5 n-dimensional same-sized matrices and you
-%     wanted to rearrange the elements in all the matrices the exact same
-%     way.  Lets say that rearrangement is based on a sorting on one of the
-%     matrices.  Sort doesn't really make this easy, so normally you would
-%     combine all the matrices into a 2D array and do a sort rows operation
-%     -- or you could use matchsort:
-%      [m,i]=sort(a,4);
-%      [n,li]=matchsort(b,i,4);
-%      o=c(li); p=d(li); q=e(li);
+%     % So lets say you have 5 n-dimensional same-sized matrices and you
+%     % wanted to rearrange the elements in all the matrices the exact same
+%     % way.  Lets say that rearrangement is based on a sorting on one of
+%     % the matrices.  Sort doesn't really make this easy, so normally you
+%     % would combine all the matrices into a 2D array and do a sort rows
+%     % operation -- or you could use matchsort:
+%     [m,i]=sort(a,4);
+%     [n,li]=matchsort(b,i,4);
+%     o=c(li); p=d(li); q=e(li);
 %
 %    See also: SORT, UNSORT, SORT2LI
 
 %     Version History:
 %        Sep.  8, 2009 - doc cleanup, dropped submat, sort2li subfunctions
 %        Sep. 21, 2009 - minor doc update, changed arg y to x
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 21, 2009 at 20:35 GMT
+%     Last Updated Apr.  3, 2012 at 20:35 GMT
 
 % todo:
 

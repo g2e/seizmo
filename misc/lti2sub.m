@@ -3,37 +3,39 @@ function [i,j]=lti2sub(nrows,lti)
 %
 %    Usage:    [i,j]=lti2sub(nrows,idx)
 %
-%    Description: [I,J]=lti2sub(NROWS,IDX) converts lower triangle indices
-%     IDX to row/column subscripts I & J.  The number of rows in the matrix
-%     needs to be given as NROWS.  Lower triangle indices increase similar
-%     to linear indices, but the upper triangle and the diagonal are
-%     ignored so that for a 5x5 matrix the indices proceed as follows:
+%    Description:
+%     [I,J]=LTI2SUB(NROWS,IDX) converts lower triangle indices IDX to
+%     row/column subscripts I & J.  The number of rows in the matrix needs
+%     to be given as NROWS.  Lower triangle indices increase similar to
+%     linear indices, but the upper triangle and the diagonal are ignored
+%     so that for a 5x5 matrix the indices proceed as follows:
 %
-%      \j  1  2  3  4  5
-%     i \
-%     1    -  -  -  -  -
-%     2    1  -  -  -  -
-%     3    2  5  -  -  -
-%     4    3  6  8  -  -
-%     5    4  7  9 10  -
+%       \j  1  2  3  4  5
+%      i \
+%      1    -  -  -  -  -
+%      2    1  -  -  -  -
+%      3    2  5  -  -  -
+%      4    3  6  8  -  -
+%      5    4  7  9 10  -
 %
 %    Notes:
 %
 %    Examples:
-%     Say you have a dissimilarity vector (in this case, say it corresponds
-%     to the lower triangle of a 400x400 dissimilarity matrix) and you
-%     wanted to know the two things that are being compared at value 8544
-%     in the vector:
-%      [thing1,thing2]=lti2sub(400,8544)
+%     % So you have a dissimilarity vector (in this case it corresponds
+%     % to the lower triangle of a 400x400 dissimilarity matrix) and you
+%     % wanted to know the indices of the two things being compared at
+%     % index 8544 in the vector:
+%     [thing1,thing2]=lti2sub(400,8544)
 %
 %    See also: UTI2SUB, SUB2UTI, SUB2LTI
 
 %     Version History:
 %        Sep.  8, 2009 - added documentation
 %        Oct. 13, 2009 - added checks, updated documentation
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 13, 2009 at 22:00 GMT
+%     Last Updated Mar. 24, 2012 at 22:35 GMT
 
 % todo:
 

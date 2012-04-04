@@ -3,32 +3,33 @@ function [numdev]=ttnumdev(lg,dt,std)
 %
 %    Usage:    numdev=ttnumdev(lg,m,stderr)
 %
-%    Description: NUMDEV=TTNUMDEV(LG,M,STDERR) returns the number of
-%     standard deviations, NUMDEV, each of the lags in LG are from the
-%     lags estimated by relative arrivals in M.  This is useful for
-%     identifying outliers and for converting lags to a measure that is
-%     more effective in weighting schemes.  STDERR is the standard error
-%     for each of the relative arrivals in M and must be equal sized with
-%     M.
+%    Description:
+%     NUMDEV=TTNUMDEV(LG,M,STDERR) returns the number of standard
+%     deviations, NUMDEV, each of the lags in LG are from the lags
+%     estimated by relative arrivals in M.  This is useful for identifying
+%     outliers and for converting lags to a measure that is more effective
+%     in weighting schemes.  STDERR is the standard error for each of the
+%     relative arrivals in M and must be equal sized with M.
 %
 %    Notes:
 %
 %    Examples:
-%     Plot the record number vs number of standard deviations of the
-%     corresponding lags:
-%      nrecs=numel(m);
-%      figure; plot(repmat(1:nrecs,nrecs,1),ttnumdev(lag,m,stderr),'x');
-%      xlabel('Record Number')
-%      ylabel('Number of Standard Deviations')
+%     % Plot the record number vs number of standard
+%     % deviations of the corresponding lags:
+%     nrecs=numel(m);
+%     figure; plot(repmat(1:nrecs,nrecs,1),ttnumdev(lag,m,stderr),'x');
+%     xlabel('Record Number')
+%     ylabel('Number of Standard Deviations')
 %
 %    See also: TTSTDERR, TTALIGN, CORRELATE
 
 %     Version History:
 %        Mar. 22, 2010 - initial version
 %        Sep. 13, 2010 - nargchk fix, doc update
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2010 at 01:05 GMT
+%     Last Updated Apr.  2, 2012 at 01:05 GMT
 
 % todo:
 

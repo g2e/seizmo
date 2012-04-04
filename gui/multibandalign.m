@@ -105,9 +105,10 @@ function [info]=multibandalign(data,varargin)
 %        Mar.  1, 2012 - old plot_taupcurve is now plot_taupcurve_dt
 %        Mar.  5, 2012 - allow no written output by setting figdir=false
 %        Mar. 15, 2012 - fix for pick functions
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 12:25 GMT
+%     Last Updated Apr.  3, 2012 at 12:25 GMT
 
 % todo:
 % - smarter initial window is needed to reduce later arrivals messing up
@@ -127,8 +128,8 @@ elseif(nargin>1 && ~mod(nargin,2))
         'Options must be paired with a value!');
 end
 
-% check data (dep)
-versioninfo(data,'dep');
+% check data structure
+error(seizmocheck(data,'dep'));
 
 % number of records
 nrecs=numel(data);

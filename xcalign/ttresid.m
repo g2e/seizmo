@@ -3,27 +3,29 @@ function [resid]=ttresid(lg,dt)
 %
 %    Usage:    resid=ttresid(lg,m)
 %
-%    Description: RESID=TTRESID(LG,M) returns the time residual of each
-%     lag in LG from the lags estimated by relative arrivals in M.
+%    Description:
+%     RESID=TTRESID(LG,M) returns the time residual of each lag in LG from
+%     the lags estimated by relative arrivals in M.
 %
 %    Notes:
 %
 %    Examples:
-%     Plot of record number vs the lag residuals to the estimated relative
-%     arrival times:
-%      nrecs=numel(m);
-%      figure; plot(repmat(1:nrecs,nrecs,1),ttresid(lag,m),'x');
-%      xlabel('Record Number')
-%      ylabel('Time Residual of Lags to Estimated Arrivals')
+%     % Plot of record number vs the lag residuals
+%     % to the estimated relative arrival times:
+%     nrecs=numel(m);
+%     figure; plot(repmat(1:nrecs,nrecs,1),ttresid(lag,m),'x');
+%     xlabel('Record Number')
+%     ylabel('Time Residual of Lags to Estimated Arrivals')
 %
 %    See also: TTSTDERR, TTALIGN, CORRELATE
 
 %     Version History:
 %        Mar. 22, 2010 - initial version
 %        Sep. 13, 2010 - nargchk fix
+%        Apr.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2010 at 01:05 GMT
+%     Last Updated Apr.  2, 2012 at 01:05 GMT
 
 % todo:
 

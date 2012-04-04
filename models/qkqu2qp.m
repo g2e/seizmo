@@ -3,31 +3,28 @@ function [Qp]=qkqu2qp(Qk,Qu,Vp,Vs)
 %
 %    Usage:    [Qp]=qkqu2qp(Qk,Qu,Vp,Vs)
 %
-%    Description: [Qp]=QKQU2QP(Qk,Qu,Vp,Vs) calculates the p-wave quality
-%     factor from the bulk & shear moduli quality factors and the P & S
-%     velocities.  This is from equation (32) on page 192 of Stein &
-%     Wysession.
+%    Description:
+%     [Qp]=QKQU2QP(Qk,Qu,Vp,Vs) calculates the p-wave quality factor from
+%     the bulk & shear moduli quality factors and the P & S velocities.
+%     This is from equation (32) on page 192 of Stein & Wysession.
 %
 %    Notes:
 %
 %    Examples:
-%     Qp for the lower crust in PREM:
-%      Qk = 57283;
-%      Qu = 600;
-%      Vp = 6.8;
-%      Vs = 3.9;
-%      Qp = qkqu2qp(Qk,Qu,Vp,Vs)
-%       Qp =
-%           1349.94731733252
+%     % Qp for the lower crust in PREM:
+%     Qk=57283; Qu=600;
+%     Vp=6.8; Vs=3.9;
+%     Qp=qkqu2qp(Qk,Qu,Vp,Vs)
 %
 %    See also: QPQS2QK
 
 %     Version History:
 %        May  19, 2010 - initial version
 %        Aug.  9, 2010 - minor doc fix
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  9, 2010 at 02:55 GMT
+%     Last Updated Mar. 24, 2012 at 02:55 GMT
 
 % todo:
 

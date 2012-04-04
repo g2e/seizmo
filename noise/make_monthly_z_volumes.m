@@ -4,12 +4,13 @@ function []=make_monthly_z_volumes(indir,months)
 %    Usage:    make_monthly_z_volumes(stack_dir)
 %              make_monthly_z_volumes(stack_dir,months)
 %
-%    Description: MAKE_MONTHLY_Z_VOLUMES(STACK_DIR) creates fk-based
-%     slowness response volumes for an array on a month to month basis
-%     independent of year (eg stacked across years).  This only works on a
-%     directory layout setup by DAYDIRS_STACKCORR.  The period range is
-%     4 to 100s, the maximum slowness is 50sec/deg and the slowness
-%     resolution is 1/3 sec/deg.
+%    Description:
+%     MAKE_MONTHLY_Z_VOLUMES(STACK_DIR) creates fk-based slowness response
+%     volumes for an array on a month to month basis independent of year
+%     (eg stacked across years).  This only works on a directory layout
+%     setup by DAYDIRS_STACKCORR.  The period range is 4 to 100s, the
+%     maximum slowness is 50sec/deg and the slowness resolution is 1/3
+%     sec/deg.
 %
 %     MAKE_MONTHLY_Z_VOLUMES(STACK_DIR,MONTHS) explicitly sets the months
 %     to process.  This is useful for doing this parallel-ish.
@@ -26,9 +27,10 @@ function []=make_monthly_z_volumes(indir,months)
 %        June 24, 2010 - initial version
 %        Oct. 10, 2010 - svol to fkvol
 %        Feb. 14, 2011 - doc update, skip if no data for a month, verbosity
+%        Apr.  3, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2011 at 15:55 GMT
+%     Last Updated Apr.  3, 2012 at 15:55 GMT
 
 % todo:
 

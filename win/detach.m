@@ -52,7 +52,7 @@ oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt detach
 try
-    % check headers (versioninfo cache update)
+    % check headers
     data=checkheader(data,'NONTIME_IFTYPE','ERROR');
 
     % verbosity

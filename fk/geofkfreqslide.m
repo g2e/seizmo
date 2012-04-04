@@ -14,12 +14,12 @@ function [varargout]=geofkfreqslide(vol,frng,srng,delay,varargin)
 %                             fgcolor,bgcolor,ax)
 %              mov=geofkfreqslide(...);
 %
-%    Description: GEOFKFREQSLIDE(VOL) slides through a geofk volume by
-%     plotting each of the frequencies in sequence in a single plot.  Note
-%     that the volume is averaged across all slownesses (see the following
-%     Usage forms to adjust this).  There is a 1/3 second delay between
-%     each replotting by default (see the following Usage forms to adjust
-%     this).
+%    Description:
+%     GEOFKFREQSLIDE(VOL) slides through a geofk volume by plotting each of
+%     the frequencies in sequence in a single plot.  Note that the volume
+%     is averaged across all slownesses (see the following Usage forms to
+%     adjust this).  There is a 1/3 second delay between each replotting by
+%     default (see the following Usage forms to adjust this).
 %
 %     GEOFKFREQSLIDE(VOL,FRNG) sets the frequency range to slide through.
 %     FRNG gives the frequency range to extract as [FREQLOW FREQHIGH] in
@@ -73,9 +73,10 @@ function [varargout]=geofkfreqslide(vol,frng,srng,delay,varargin)
 %     Version History:
 %        June 25, 2010 - initial version
 %        July  6, 2010 - update for new struct
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 19:05 GMT
+%     Last Updated Apr.  4, 2012 at 19:05 GMT
 
 % todo:
 

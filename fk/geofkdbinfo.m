@@ -4,11 +4,11 @@ function [maxdb,meddb,mindb]=geofkdbinfo(fk,frng,srng,latrng,lonrng)
 %    Usage:    [maxdb,meddb,mindb]=geofkdbinfo(fk)
 %              [maxdb,meddb,mindb]=geofkdbinfo(fk,frng,srng,latrng,lonrng)
 %
-%    Description: [MAXDB,MEDDB,MINDB]=GEOFKDBINFO(FK) returns the decibel
-%     limits and median of the beam(s) in the geofk struct FK.  This is
-%     useful for quick identification of elements with strong spherical
-%     wave coherency.  The outputs are actually structs with the following
-%     format:
+%    Description:
+%     [MAXDB,MEDDB,MINDB]=GEOFKDBINFO(FK) returns the decibel limits and
+%     median of the beam(s) in the geofk struct FK.  This is useful for
+%     identification of elements with strong spherical wave coherency.  The
+%     outputs are actually structs with the following format:
 %       .db        == decibel value
 %       .horzslow  == magnitude of the horizontal slowness (in sec/deg)
 %       .latlon    == [latitude longitude] (in degrees)
@@ -34,9 +34,10 @@ function [maxdb,meddb,mindb]=geofkdbinfo(fk,frng,srng,latrng,lonrng)
 %     Version History:
 %        July 12, 2010 - initial version
 %        July 18, 2010 - output structs with db point info
+%        Mar. 24, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 18, 2010 at 22:25 GMT
+%     Last Updated Mar. 24, 2012 at 22:25 GMT
 
 % todo:
 

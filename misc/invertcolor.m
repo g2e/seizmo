@@ -4,12 +4,13 @@ function [c]=invertcolor(c,flag)
 %    Usage:    ci=invertcolor(c)
 %              ci=invertcolor(c,hcmode)
 %
-%    Description: CI=INVERTCOLOR(C) returns the "opposite" rgb color values
-%     CI to those in C.  This is essentially CI=1-C but with special
-%     handling of short/long color names (where it returns the opposing
-%     short/long color name).  Note that "gray" [0.5 0.5 0.5] here is the
-%     opposite of itself and so will not provide any contrast (see next
-%     usage form for high contrast colors).
+%    Description:
+%     CI=INVERTCOLOR(C) returns the "opposite" rgb color values CI to those
+%     in C.  This is essentially CI=1-C but with special handling of short
+%     and long color names (where it returns the opposing short or long
+%     color name).  Note that "gray" [0.5 0.5 0.5] here is the opposite of
+%     itself and so will not provide any contrast (see next usage form for
+%     high contrast colors).
 %
 %     CI=INVERTCOLOR(C,HCMODE) toggles high contrast mode.  HCMODE set to
 %     TRUE will find the color CI with the highest contrast to C using the
@@ -52,9 +53,10 @@ function [c]=invertcolor(c,flag)
 %        Aug.  4, 2010 - see also NAME2RGB
 %        Sep. 13, 2010 - remove see also itself
 %        Feb.  1, 2011 - renamed flag to hcmode for clarity
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  1, 2011 at 14:15 GMT
+%     Last Updated Apr.  4, 2012 at 14:15 GMT
 
 % todo:
 % - hsv support

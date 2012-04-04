@@ -77,7 +77,7 @@ oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt convolution
 try
-    % check headers (versioninfo cache update)
+    % check headers
     data=checkheader(data,...
         'NONTIME_IFTYPE','ERROR',...
         'FALSE_LEVEN','ERROR');

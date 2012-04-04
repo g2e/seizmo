@@ -3,14 +3,14 @@ function [vol]=geofkvol2map(vol,frng,srng)
 %
 %    Usage:    map=geofkvol2map(vol,frng,srng)
 %
-%    Description: MAP=GEOFKVOL2MAP(VOL,FRNG,SRNG) averages the geofk
-%     beam data in VOL across the frequency range given by FRNG and the
-%     horizontal slowness range SRNG, returning the result in MAP.  MAP may
-%     be then plotted using PLOTGEOFKMAP.  VOL is a geofk struct produced
-%     by a geofk function (like GEOFKXCVOLUME).  FRNG gives the frequency
-%     range to average over as [FREQLOW FREQHIGH] in Hz.  SRNG gives the
-%     horizontal slowness range to average over as [SLOWLOW SLOWHIGH] in
-%     sec/deg.
+%    Description:
+%     MAP=GEOFKVOL2MAP(VOL,FRNG,SRNG) averages the geofk beam data in VOL
+%     across the frequency range given by FRNG and the horizontal slowness
+%     range SRNG, returning the result in MAP.  MAP may be then plotted
+%     using PLOTGEOFKMAP.  VOL is a geofk struct produced by a geofk
+%     function (like GEOFKXCVOLUME).  FRNG gives the frequency range to
+%     average over as [FREQLOW FREQHIGH] in Hz.  SRNG gives the horizontal
+%     slowness range to average over as [SLOWLOW SLOWHIGH] in sec/deg.
 %
 %    Notes:
 %
@@ -22,9 +22,10 @@ function [vol]=geofkvol2map(vol,frng,srng)
 %     Version History:
 %        June 24, 2010 - initial version
 %        July  6, 2010 - update for new struct
+%        Apr.  4, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  6, 2010 at 19:05 GMT
+%     Last Updated Apr.  4, 2012 at 19:05 GMT
 
 % todo:
 

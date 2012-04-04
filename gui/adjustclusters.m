@@ -36,9 +36,10 @@ function [data,grp,arr,pol,units]=adjustclusters(data,grp,arr,pol)
 %                        that are last in the set (ie make sure max(grp.T)
 %                        points to a non-zero group), close cluster map
 %        Mar. 31, 2011 - fix plot closing breakage when only 1 cluster
+%        Apr.  3, 2012 - use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 31, 2011 at 10:00 GMT
+%     Last Updated Apr.  3, 2012 at 10:00 GMT
 
 % todo:
 
@@ -46,7 +47,7 @@ function [data,grp,arr,pol,units]=adjustclusters(data,grp,arr,pol)
 error(nargchk(4,4,nargin));
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 data=checkheader(data);
 
 % turn off checking

@@ -11,12 +11,12 @@ function [grp,oldax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %                              'field1',value1,...,'fieldN',valueN)
 %              [grp,ax]=usercluster(...)
 %
-%    Description: GRP=USERCLUSTER(DATA) cross correlates the records in
-%     DATA and passes the maximum correlation values to clustering routines
-%     that facilitate rapid segregation of the dataset with just a few
-%     mouse clicks.  GRP is a struct containing several fields providing
-%     the parameters used in the analysis and some related info.  The
-%     layout is as follows:
+%    Description:
+%     GRP=USERCLUSTER(DATA) cross correlates the records in DATA and passes
+%     the maximum correlation values to clustering routines that facilitate
+%     rapid segregation of the dataset with just a few mouse clicks.  GRP
+%     is a struct containing several fields providing the parameters used
+%     in the analysis and some related info.  The layout is as follows:
 %       GRP.distcut   = clustering distance limit
 %       GRP.method    = linkage method
 %       GRP.criterion = cluster formation method
@@ -90,9 +90,10 @@ function [grp,oldax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %        Jan. 13, 2011 - finally fixed cluster map warning issue
 %        Feb. 25, 2011 - fixed bug in criterion selection menu
 %        Mar. 31, 2011 - prompt once quick fix
+%        Apr.  3, 2012 - minor doc update, use seizmocheck
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 31, 2011 at 10:00 GMT
+%     Last Updated Apr.  3, 2012 at 10:00 GMT
 
 % todo:
 
@@ -104,7 +105,7 @@ if(nargin>6 && mod(nargin,2))
 end
 
 % check data structure
-versioninfo(data,'dep');
+error(seizmocheck(data,'dep'));
 
 % turn off checking
 oldseizmocheckstate=seizmocheck_state(false);
