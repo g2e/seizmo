@@ -56,7 +56,7 @@ function []=noise_setup(indir,outdir,varargin)
 %
 %    Examples:
 %     % Setup for 25 hour time sections and 1hr overlap:
-%     noise_setup('raw','setup-3hour','l',60*25,'o',60)
+%     noise_setup('raw','setup-25hour','l',60*25,'o',60)
 %
 %     % Setup for 15 minute time sections and 80% overlap:
 %     noise_setup('some/dir','my_15min','l',15,'o',12)
@@ -87,9 +87,10 @@ function []=noise_setup(indir,outdir,varargin)
 %        Feb.  7, 2012 - merge to meld update
 %        Mar.  8, 2012 - drop UTC in timediff where unnecessary
 %        Mar. 15, 2012 - parallel verbose fixes
+%        Apr. 25, 2012 - minor example fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 11:15 GMT
+%     Last Updated Apr. 25, 2012 at 11:15 GMT
 
 % todo:
 

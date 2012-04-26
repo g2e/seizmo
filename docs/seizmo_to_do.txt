@@ -9,6 +9,14 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
+- median needs be replaced with nanmedian in geofs programs for bodywave
+backprojection stuff
+
+- cart2pol fixes
+- pol2cart needs to be added
+- fs_phase2latlon needs a direct equivalent like fkmap/fkvolume
+
+
 multifun should convert spectral records to complex before operation
     - will this affect any current operations?
 

@@ -15,8 +15,8 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      ( 3) remove mean & trend
 %      ( 4) taper (first/last 1%)
 %      ( 5) resample to 1 sample/sec
-%      ( 6) remove polezero response (displacement, lp taper: [.004 .006])
-%      ( 7) NOT IMPLEMENTED
+%      ( 6) remove polezero response (displacement, hp taper: [.004 .006])
+%      ( 7) reject records based on amplitudes (>10^6nm)
 %      ( 8) rotate horizontals to North/East (removes unpaired)
 %      ( 9) t-domain normalize (3-15s & 15-100s moving average)
 %      (10) f-domain normalize (2mHz moving average)
@@ -39,7 +39,8 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      SAMPLERATE - samplerate to synchronize records to in step 5 [1]
 %      PZDB - polezero db to use in step 6 []
 %      UNITS - ground units of records after polezero removal ['disp']
-%      PZTAPERLIMITS - lowpass taper to stabilize pz removal [.004 .008]
+%      PZTAPERLIMITS - highpass taper to stabilize pz removal [.004 .008]
+%      AMPREJECT - step 7 minimum absolute amplitude for rejection [10^6]
 %      TDSTYLE - time domain normalization style:
 %                '1bit' - set amplitudes to +/-1
 %                'clip' - clip values above some absolute value
@@ -113,17 +114,13 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        Mar.  8, 2012 - skip dirs outside time limits before reading data,
 %                        now checks steps, early h/v split & shortcircuits
 %        Mar. 15, 2012 - bad parfor variable bugfix, parallel verbose fixes
+%        Apr. 26, 2012 - minor doc fix (lp->hp), step 7 is now amplitude
+%                        based rejection
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 11:15 GMT
+%     Last Updated Apr. 26, 2012 at 11:15 GMT
 
 % todo:
-% - what is behind the lp noise?
-%   - spectral whitening? NO
-%   - temp norm? NO
-%   - response taper?
-%   - xc?
-%   - the data?
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -416,16 +413,19 @@ for i=1:numel(tsdirs) % SERIAL
             if(any(steps==12) && numel(hdata)<4); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
-        if(any(steps==7))
-            % PLACEHOLDER -- CURRENTLY UNIMPLEMENTED
-            %
-            % Considering that this will "zero out" earthquakes based
-            % on a catalog (globalcmt at this point).  That will
-            % require lots of work to make it effective:
-            % - quake magnitude vs distance
-            % - blackout time vs distance & magnitude
-            % - record-by-record find events within a day and figure
-            %   out blackout time spans for that station
+        if(any(steps==7)) % simple amplitude based rejection
+            if(~isempty(vdata))
+                [depmin,depmax]=getheader(vdata,'depmin','depmax');
+                vdata(depmin<=opt.AMPREJECT | depmax>=opt.AMPREJECT)=[];
+            end
+            if(~isempty(hdata))
+                [depmin,depmax]=getheader(hdata,'depmin','depmax');
+                hdata(depmin<=opt.AMPREJECT | depmax>=opt.AMPREJECT)=[];
+            end
+            if(any(steps==11) && numel(vdata)==1); vdata=[]; end
+            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(isempty(hdata) && isempty(vdata)); continue; end
         end
         
         % continue processing data for noise analysis
@@ -658,7 +658,7 @@ function [opt]=noise_process_parameters(varargin)
 
 % defaults
 varargin=[{'minlen' 70 'tw' 1 'tt' [] 'topt' [] 'sr' 1 ...
-    'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] ...
+    'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] 'ar' 10^6 ...
     'tds' 'ram' 'tdrms' true 'tdclip' 1 'tdfb' [1/15 1/3;.01 1/15] ...
     'fds' 'ram' 'fdw' .002 'lag' 4000 ...
     'ts' [] 'te' [] 'lat' [] 'lon' [] ...
@@ -688,6 +688,9 @@ for i=1:2:numel(varargin)
         case {'pztaperlimits' 'pztl' 'tl' 'taperlim' 'tlim' 'taplim'}
             if(isempty(varargin{i+1})); continue; end
             opt.PZTAPERLIMITS=varargin{i+1};
+        case {'ampreject' 'ar' 'amprej' 'arej' 'ampr'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.AMPREJECT=varargin{i+1};
         case {'tdstyle' 'td' 'tds'}
             if(isempty(varargin{i+1})); continue; end
             opt.TDSTYLE=varargin{i+1};
@@ -790,6 +793,10 @@ elseif(~isempty(opt.PZTAPERLIMITS) && (numel(szp)>2 || szp(1)~=1 ...
         || ~isreal(opt.PZTAPERLIMITS) || any(opt.PZTAPERLIMITS<0)))
     error('seizmo:noise_process:badInput',...
         'PZTAPERLIMITS should be a [LOWSTOP LOWPASS] or [LS LP HP HS]!');
+elseif(~isscalar(opt.AMPREJECT) || ~isreal(opt.AMPREJECT) ...
+        || opt.AMPREJECT<=0)
+    error('seizmo:noise_process:badInput',...
+        'AMPREJECT must be a scalar >=0!');
 elseif(~ischar(opt.TDSTYLE) || ~isvector(opt.TDSTYLE) ...
         || size(opt.TDSTYLE,1)~=1)
     error('seizmo:noise_process:badInput',...

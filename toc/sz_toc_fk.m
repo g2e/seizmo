@@ -5,6 +5,7 @@ function []=sz_toc_fk()
 %<a href="matlab:help chkfkstruct">chkfkstruct</a>        - Validate if a struct is as defined by FKMAP/VOLUME/4D
 %<a href="matlab:help chkgeofkarfstruct">chkgeofkarfstruct</a>  - Validate if a struct is as defined by GEOFKARF
 %<a href="matlab:help chkgeofkstruct">chkgeofkstruct</a>     - Validate if a struct is as defined by GEOFK functions
+%<a href="matlab:help deg2slowness">deg2slowness</a>       - Converts distance (deg) to horizontal slowness (s/deg)
 %<a href="matlab:help fk4d">fk4d</a>               - Returns beamformer volumes in frequency-wavenumber-time space
 %<a href="matlab:help fkarf">fkarf</a>              - Returns the fk array response function for a seismic array
 %<a href="matlab:help fkcart2pol">fkcart2pol</a>         - Converts a cartesian space based fk grid to polar space
@@ -20,7 +21,7 @@ function []=sz_toc_fk()
 %<a href="matlab:help fkxchorzvolume">fkxchorzvolume</a>     - Returns frequency-wavenumber space for horz. xc data
 %<a href="matlab:help fkxcmap">fkxcmap</a>            - Returns beam map in frequency-wavenumber space for xc data
 %<a href="matlab:help fkxcvolume">fkxcvolume</a>         - Returns energy map in frequency-wavenumber space for xc data
-%<a href="matlab:help geofkarf">geofkarf</a>           - Returns the geofk array response function for a seismic array
+%<a href="matlab:help fs_phase2latlon">fs_phase2latlon</a>    - Converts a fs spectra to geofs using a given phase%<a href="matlab:help geofkarf">geofkarf</a> - Returns the geofk array response function for a seismic array
 %<a href="matlab:help geofkarf2map">geofkarf2map</a>       - Converts a geofk ARF volume to a geofk ARF map
 %<a href="matlab:help geofkarfcorr">geofkarfcorr</a>       - Computes correlation with ARFs in the parameter space
 %<a href="matlab:help geofkarfslowslide">geofkarfslowslide</a>  - Slides through the slownesses of a geofkarf volume

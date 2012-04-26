@@ -29,9 +29,11 @@ function [ok]=webinstall_njtbx(mypath)
 %                        javaaddpath or edit classpath as needed
 %        Feb. 16, 2012 - workaround quietly stalled unzip in octave
 %        Mar.  8, 2012 - minor code changes for clarity
+%        Apr. 25, 2012 - use zipped version of the svn checkout of njtbx as
+%                        the zipfile available via their website is broken
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2012 at 15:25 GMT
+%     Last Updated Apr. 25, 2012 at 15:25 GMT
 
 % todo:
 
@@ -57,13 +59,14 @@ try
     cd(mypath);
     
     % current versions
-    njtbx='matlab-njTbx-2.0.05.zip';     % ~5mb
+    njtbx='njToolbox-2.0.zip';           % ~5mb
     toolsui='toolsUI-4.0.49.jar';        % ~20mb
     njtools='njTools-2.0.12_jre1.6.jar'; % ~5mb
     
     % grab files (either locally or remotely)
     % - remote location is from japan b/c sourceforge
     %   does not have direct links on the english site
+    url0='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/';
     url=['http://es.sourceforge.jp/frs/g_redir.php?m=jaist&f=%2F' ...
         'njtbx%2FnjTBX-downloads%2F'];
     fprintf(' Getting %s\n',njtbx);
@@ -72,7 +75,7 @@ try
             copyfile(which(njtbx),'.');
         end
     else
-        urlwrite([url njtbx],njtbx);
+        urlwrite([url0 njtbx],njtbx);
     end
     fprintf(' Getting %s\n',toolsui);
     if(exist(toolsui,'file'))

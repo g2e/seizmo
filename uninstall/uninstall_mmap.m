@@ -22,15 +22,18 @@ function [ok]=uninstall_mmap()
 %        Feb. 14, 2012 - initial version
 %        Feb. 15, 2012 - handle not installed, flip logic from savepath,
 %                        doc update
+%        Apr. 25, 2012 - uninstall m_map_fixes directory too
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2012 at 15:25 GMT
+%     Last Updated Apr. 25, 2012 at 15:25 GMT
 
 % todo:
 
 % does m_coast exist?
 if(exist('m_coast','file'))
-    path=fileparts(which('m_coast')); % root directory
+    path=fileparts(which('m_coast')); % m_map directory
+    rmpath(path);
+    path=fileparts(which('m_gshhs')); % m_map_fixes directory
     rmpath(path);
     ok=~savepath;
 else

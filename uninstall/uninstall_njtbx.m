@@ -24,9 +24,10 @@ function [ok]=uninstall_njtbx()
 %                        doc update, only use javarmpath when needed,
 %                        don't force failure for octave
 %        Mar.  8, 2012 - make code changes for clarity
+%        Apr. 25, 2012 - fix classpath.txt jar removal
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2012 at 15:25 GMT
+%     Last Updated Apr. 25, 2012 at 15:25 GMT
 
 % todo:
 
@@ -61,7 +62,7 @@ if(isempty(sjcp)); return; end
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 
 % detect offending classpath.txt lines
-injcp=~cellfun('isempty',strfind(s2,path));
+injcp=~cellfun('isempty',strfind(s2,fileparts(path)));
 
 % only remove if necessary
 if(sum(injcp)>0)

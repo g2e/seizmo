@@ -74,9 +74,10 @@ function [varargout]=geofkfreqslide(vol,frng,srng,delay,varargin)
 %        June 25, 2010 - initial version
 %        July  6, 2010 - update for new struct
 %        Apr.  4, 2012 - minor doc update
+%        Apr. 25, 2012 - allow non-volume in slowness domain
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  4, 2012 at 19:05 GMT
+%     Last Updated Apr. 25, 2012 at 19:05 GMT
 
 % todo:
 
@@ -87,7 +88,7 @@ error(nargchk(1,10,nargin));
 error(chkgeofkstruct(vol));
 
 % don't allow array/volume
-if(~isscalar(vol) || ~all(vol.volume))
+if(~isscalar(vol) || ~vol.volume(2))
     error('seizmo:geofkfreqslide:badInput',...
         'VOL must be a scalar geofk struct and a beam volume!');
 end

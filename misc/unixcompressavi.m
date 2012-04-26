@@ -75,9 +75,11 @@ function [varargout]=unixcompressavi(filein,fileout,codec,options)
 %                        compatibility, added .avi to tmp name, doc update,
 %                        2pass encoding, options argument
 %        Apr.  3, 2012 - minor doc update
+%        Apr. 26, 2012 - add LD_LIBRARY_PATH="" to unix calls to avoid
+%                        linker issues (glibcxx_3.4.11 no found...)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 17:45 GMT
+%     Last Updated Apr. 26, 2012 at 17:45 GMT
 
 % todo
 % - options for other codecs?
@@ -157,14 +159,14 @@ for i=1:n
     copt=opt{strcmpi(codecs,codec{i})};
     
     % 2pass encoding
-    disp(['mencoder ' filein{i} ' -nosound -o /dev/null' ...
+    disp(['LD_LIBRARY_PATH="" && mencoder ' filein{i} ' -nosound -o /dev/null' ...
         ' -ovc ' codec{i} ' ' copt ' ' options{i} ':vpass=1']);
-    [s,w]=unix(['mencoder ' filein{i} ' -nosound -o /dev/null' ...
+    [s,w]=unix(['LD_LIBRARY_PATH="" && mencoder ' filein{i} ' -nosound -o /dev/null' ...
         ' -ovc ' codec{i} ' ' copt ' ' options{i} ':vpass=1']);
     if(s); error('seizmo:unixcompressavi:mencoderError',w); return; end
-    disp(['mencoder ' filein{i} ' -nosound -o ' tmp ...
+    disp(['LD_LIBRARY_PATH="" && mencoder ' filein{i} ' -nosound -o ' tmp ...
         ' -ovc ' codec{i} ' ' copt ' ' options{i} ':vpass=2']);
-    [s,w]=unix(['mencoder ' filein{i} ' -nosound -o ' tmp ...
+    [s,w]=unix(['LD_LIBRARY_PATH="" && mencoder ' filein{i} ' -nosound -o ' tmp ...
         ' -ovc ' codec{i} ' ' copt ' ' options{i} ':vpass=2']);
     if(s); error('seizmo:unixcompressavi:mencoderError',w); return; end
     [s,w1]=unix(['mv ' tmp ' ' fileout{i}]);

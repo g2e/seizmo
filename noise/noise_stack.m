@@ -101,6 +101,8 @@ function []=noise_stack(indir,outdir,pair,varargin)
 % todo:
 % - stack2stack
 % - clear user0/1?
+% - wkday stacks (sun, mon, tue, wed, thu, fri, sat)
+% - 1hr stacks
 
 % check nargin
 error(nargchk(3,inf,nargin));

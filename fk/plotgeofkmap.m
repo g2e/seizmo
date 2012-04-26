@@ -65,9 +65,10 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %        Dec.  8, 2010 - use '^o' for deg symbol rather than \circ
 %        Feb. 16, 2011 - color code fix
 %        Apr.  4, 2012 - minor doc update
+%        Apr. 25, 2012 - use nanmedian for median determination
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  4, 2012 at 15:05 GMT
+%     Last Updated Apr. 25, 2012 at 15:05 GMT
 
 % todo:
 
@@ -116,8 +117,8 @@ switch zerodb
         map.normdb=map.normdb+max(map.beam(:));
         map.beam=map.beam-max(map.beam(:));
     case 'median'
-        map.normdb=map.normdb+median(map.beam(:));
-        map.beam=map.beam-median(map.beam(:));
+        map.normdb=map.normdb+nanmedian(map.beam(:));
+        map.beam=map.beam-nanmedian(map.beam(:));
     case 'abs'
         map.beam=map.beam+map.normdb;
         map.normdb=0;

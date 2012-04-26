@@ -38,6 +38,9 @@ function [fk]=fkcart2pol(fk,ass,sss,method)
 %     Last Updated Apr.  4, 2012 at 16:05 GMT
 
 % todo:
+% - significant information is lost
+% - no sister function fs_pol2cart
+% - step size should be replaced with nsteps
 
 % check nargin
 error(nargchk(1,4,nargin));

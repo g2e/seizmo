@@ -82,6 +82,7 @@ function []=alphabetical_list()
 %<a href="matlab:help ddendrogram">ddendrogram</a>                    - Generate dendrogram plot (with some extra color options)
 %<a href="matlab:help deconvolve">deconvolve</a>                     - Spectrally deconvolve a time function from SEIZMO records
 %<a href="matlab:help deconvolve_source_timefunction">deconvolve_source_timefunction</a> - Deconvolve source from SEIZMO records
+%<a href="matlab:help deg2slowness">deg2slowness</a>                   - Converts distance (deg) to horizontal slowness (s/deg)
 %<a href="matlab:help degdist_from_gc">degdist_from_gc</a>                - Distance from a point on a sphere to a great circle
 %<a href="matlab:help delazcut">delazcut</a>                       - Interactively select degree-distance & azimuth range
 %<a href="matlab:help deleterecords">deleterecords</a>                  - Deletes indicated records from SEIZMO data structure
@@ -142,6 +143,7 @@ function []=alphabetical_list()
 %<a href="matlab:help flatten_1dmodel">flatten_1dmodel</a>                - Flattens a 1D Earth model
 %<a href="matlab:help flipflags">flipflags</a>                      - Flips the flag direction in SEIZMO plots
 %<a href="matlab:help freqwindow">freqwindow</a>                     - Interactive tool for multi-frequency QCing & windowing of event data
+%<a href="matlab:help fs_phase2latlon">fs_phase2latlon</a>                - Converts a fs spectra to geofs using a given phase%<a href="matlab:help geofkarf">geofkarf</a> - Returns the geofk array response function for a seismic array
 %<a href="matlab:help gaussian">gaussian</a>                       - Returns values from a Gaussian PDF
 %<a href="matlab:help gaussiantf">gaussiantf</a>                     - Returns a gaussian time function
 %<a href="matlab:help gc2latlon">gc2latlon</a>                      - Returns points along great circle(s)

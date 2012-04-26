@@ -28,9 +28,10 @@ function [ok]=webinstall_mmap(mypath)
 %        Feb. 14, 2012 - initial version
 %        Feb. 15, 2012 - add m_map_fixes, doc update, flip savepath logic
 %        Feb. 16, 2012 - workaround quietly stalled unzip in octave
+%        Apr. 25, 2012 - copy m_map/private to m_map_fixes/private
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2012 at 15:25 GMT
+%     Last Updated Apr. 25, 2012 at 15:25 GMT
 
 % todo:
 
@@ -83,6 +84,8 @@ try
     addpath(mmapdir);
     if(exist(fullfile(mypath,'m_map_fixes'),'dir'))
         addpath(fullfile(mypath,'m_map_fixes'));
+        copyfile(fullfile(mmapdir,'private'),...
+            fullfile(mypath,'m_map_fixes','private'));
     end
     ok=~savepath;
     if(~ok)
