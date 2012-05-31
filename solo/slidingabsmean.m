@@ -86,9 +86,10 @@ function [data]=slidingabsmean(data,n,varargin)
 %        Jan.  6, 2011 - drop versioninfo caching, nargchk fix,
 %                        seizmofun/solofun rename
 %        Apr.  3, 2012 - minor doc update
+%        May  30, 2012 - allow N=0
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 09:45 GMT
+%     Last Updated May  30, 2012 at 09:45 GMT
 
 % todo:
 
@@ -110,7 +111,7 @@ try
     nrecs=numel(data);
     
     % check n
-    if(~isreal(n) || ~any(numel(n)==[1 nrecs]) || any(n<1))
+    if(~isreal(n) || ~any(numel(n)==[1 nrecs]) || any(n<0))
         error('seizmo:slidingabsmean:badInput',...
             'N must be a positive real scalar or vector!');
     end

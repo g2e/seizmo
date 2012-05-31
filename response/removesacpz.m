@@ -108,9 +108,10 @@ function [data,pz]=removesacpz(data,varargin)
 %                        limits to terminal, fixed bomb-out bug
 %        Feb.  3, 2012 - doc update
 %        Mar. 13, 2012 - use getheader improvements
+%        May  30, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 20:30 GMT
+%     Last Updated May  30, 2012 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -353,7 +354,7 @@ try
         oclass=str2func(class(data(i).dep));
         data(i).dep=double(data(i).dep);
         
-        % convert to complex spectra
+        % convert data to complex spectra
         if(amph(i))
             nspts=npts(i);
             sdelta=delta(i);
@@ -363,7 +364,7 @@ try
             sdelta=delta(i);
             tmp=complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
         else
-            nspts=2^(nextpow2(npts(i))+1);
+            nspts=2^nextpow2(npts(i));
             sdelta=2*nyq(i)./nspts;
             tmp=fft(data(i).dep,nspts,1); % no need to scale by delta
         end
@@ -385,6 +386,8 @@ try
         [a,p]=zpk2ap(freq,data(i).misc.sacpz.z,data(i).misc.sacpz.p,...
             data(i).misc.sacpz.k,wpow(i));
         h=((a+h2o(i)).*exp(1i*p)).'; % and back to complex...
+        %h=zpk2cmplx(freq,data(i).misc.sacpz.z,data(i).misc.sacpz.p,...
+        %    data(i).misc.sacpz.k,wpow(i)).'; % debugging
         
         % remove response (over limited freqrange)
         % - multiply by 1e9 to account for SAC PoleZero in meters
@@ -392,6 +395,10 @@ try
         
         % recover from h==0
         tmp(good & h'==0,:)=0;
+        
+        % set f=0 to 0 & f=nyq to abs
+        %tmp(1)=0;
+        %tmp(nspts/2+1)=abs(tmp(nspts/2+1));
         
         % convert back
         if(amph(i))
@@ -401,6 +408,7 @@ try
             data(i).dep(:,1:2:end)=real(tmp);
             data(i).dep(:,2:2:end)=imag(tmp);
         else
+            %tmp=ifft(tmp,[],1,'symmetric'); % debugging
             tmp=real(ifft(tmp,[],1));
             data(i).dep=tmp(1:npts(i),:);
         end

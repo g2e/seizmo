@@ -29,10 +29,10 @@ function axstretch(ax,varargin)
 %    Notes:
 %
 %    Examples:
-%     % make a group of subplots and stretch them downwards:
-%      figure;
-%      ax=makesubplots(5,3,1:12);
-%      axstretch(ax,'down',20);
+%     % Make a group of subplots and stretch them downwards:
+%     figure;
+%     ax=makesubplots(5,3,1:12);
+%     axstretch(ax,'down',20);
 %
 %    See also: AXMOVE, AXEXPAND, MAKESUBPLOTS, NOLABELS, NOTICKS, NOTITLES,
 %              NOCOLORBARS, SUPERTITLE, SUPERXLABEL, SUPERYLABEL,
@@ -44,9 +44,10 @@ function axstretch(ax,varargin)
 %                        sign, changed name to axstretch
 %        Aug.  8, 2010 - doc update
 %        Dec. 17, 2010 - fixed buggy calls to min/max
+%        May   4, 2012 - stretch called w/ multiple commands fixed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 17, 2010 at 12:25 GMT
+%     Last Updated May   4, 2012 at 12:25 GMT
 
 % todo:
 % - maybe add units triggers
@@ -79,11 +80,9 @@ end
 % get position of "group axis"
 lbwh=get(ax,'position');
 if(iscell(lbwh)); lbwh=cat(1,lbwh{:}); end
-gpos=[min(lbwh(:,1:2),[],1) max(lbwh(:,1:2)+lbwh(:,3:4),[],1)]; % LBRT
+rt=lbwh(:,1:2)+lbwh(:,3:4); % get rt for lbwh
+gpos=[min(lbwh(:,1:2),[],1) max(rt,[],1)]; % LBRT
 gpos(5:6)=gpos(3:4)-gpos(1:2); % LBRTWH
-
-% get lbrtwh for lbwh
-lbrtwh=[lbwh(:,1:2) lbwh(:,1:2)+lbwh(:,3:4) lbwh(:,3:4)];
 
 % loop over pairs
 nax=numel(ax);
@@ -138,8 +137,8 @@ for i=1:2:nargin-1
             % compact/expand horizontally preserving rightmost edge
             
             % weights
-            lw=abs(1./((gpos(1)-lbrtwh(:,1))./gpos(5))); % 1 to inf
-            rw=abs(1./((gpos(3)-lbrtwh(:,3))./gpos(5))); % 1 to inf
+            lw=abs(1./((gpos(1)-lbwh(:,1))./gpos(5))); % 1 to inf
+            rw=abs(1./((gpos(3)-rt(:,1))./gpos(5))); % 1 to inf
             
             % push factor
             push=pushfactor(lw,rw).*lbwh(:,3).*frac;
@@ -154,8 +153,8 @@ for i=1:2:nargin-1
             % compact/expand horizontally preserving leftmost edge
             
             % weights
-            lw=abs(1./((gpos(1)-lbrtwh(:,1))./gpos(5))); % 1 to inf
-            rw=abs(1./((gpos(3)-lbrtwh(:,3))./gpos(5))); % 1 to inf
+            lw=abs(1./((gpos(1)-lbwh(:,1))./gpos(5))); % 1 to inf
+            rw=abs(1./((gpos(3)-rt(:,1))./gpos(5))); % 1 to inf
             
             % push factor
             push=pushfactor(lw,rw).*lbwh(:,3).*frac;
@@ -170,8 +169,8 @@ for i=1:2:nargin-1
             % compact/expand vectically preserving lowermost edge
             
             % weights
-            bw=abs(1./((gpos(2)-lbrtwh(:,2))./gpos(6))); % 1 to inf
-            tw=abs(1./((gpos(4)-lbrtwh(:,4))./gpos(6))); % 1 to inf
+            bw=abs(1./((gpos(2)-lbwh(:,2))./gpos(6))); % 1 to inf
+            tw=abs(1./((gpos(4)-rt(:,2))./gpos(6))); % 1 to inf
             
             % push factor
             push=pushfactor(bw,tw).*lbwh(:,4).*frac;
@@ -186,8 +185,8 @@ for i=1:2:nargin-1
             % compact/expand vectically preserving uppermost edge
             
             % weights
-            bw=abs(1./((gpos(2)-lbrtwh(:,2))./gpos(6))); % 1 to inf
-            tw=abs(1./((gpos(4)-lbrtwh(:,4))./gpos(6))); % 1 to inf
+            bw=abs(1./((gpos(2)-lbwh(:,2))./gpos(6))); % 1 to inf
+            tw=abs(1./((gpos(4)-rt(:,2))./gpos(6))); % 1 to inf
             
             % push factor
             push=pushfactor(bw,tw).*lbwh(:,4).*frac;
@@ -202,15 +201,14 @@ for i=1:2:nargin-1
             % compact/expand horizontally preserving center
             
             % weights
-            lw=abs(1./((gpos(1)-lbrtwh(:,1))./gpos(5))); % 1 to inf
-            rw=abs(1./((gpos(3)-lbrtwh(:,3))./gpos(5))); % 1 to inf
+            lw=abs(1./((gpos(1)-lbwh(:,1))./gpos(5))); % 1 to inf
+            rw=abs(1./((gpos(3)-rt(:,1))./gpos(5))); % 1 to inf
             
             % push factor
             push=pushfactor(lw,rw).*lbwh(:,3).*frac;
             
             % stretch horizontally without axis expansion
-            newpos=[lbwh(:,1)+...
-                (lbwh(:,1)-(gpos(1)+gpos(3))/2).*frac+push ...
+            newpos=[lbwh(:,1)+(lbwh(:,1)-(gpos(1)+gpos(3))/2).*frac+push...
                     lbwh(:,2) ...
                     lbwh(:,3) ...
                     lbwh(:,4)];
@@ -219,16 +217,15 @@ for i=1:2:nargin-1
             % compact/expand vectically preserving center
             
             % weights
-            bw=abs(1./((gpos(2)-lbrtwh(:,2))./gpos(6))); % 1 to inf
-            tw=abs(1./((gpos(4)-lbrtwh(:,4))./gpos(6))); % 1 to inf
+            bw=abs(1./((gpos(2)-lbwh(:,2))./gpos(6))); % 1 to inf
+            tw=abs(1./((gpos(4)-rt(:,2))./gpos(6))); % 1 to inf
             
             % push factor
             push=pushfactor(bw,tw).*lbwh(:,4).*frac;
             
             % stretch down without axis expansion
             newpos=[lbwh(:,1) ...
-                    lbwh(:,2)+...
-                (lbwh(:,2)-(gpos(2)+gpos(4))/2).*frac+push ...
+                    lbwh(:,2)+(lbwh(:,2)-(gpos(2)+gpos(4))/2).*frac+push...
                     lbwh(:,3) ...
                     lbwh(:,4)];
             for j=1:nax; set(ax(j),'position',newpos(j,:)); end
@@ -236,6 +233,12 @@ for i=1:2:nargin-1
             error('seizmo:axstretch:badInput',...
                 'Unknown DIRECTION: %s',varargin{i});
     end
+    
+    % update lbwh, gpos, rt
+    lbwh=newpos;
+    rt=lbwh(:,1:2)+lbwh(:,3:4);
+    gpos=[min(lbwh(:,1:2),[],1) max(rt,[],1)]; % LBRT
+    gpos(5:6)=gpos(3:4)-gpos(1:2); % LBRTWH
 end
 
 end

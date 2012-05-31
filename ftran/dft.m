@@ -15,11 +15,11 @@ function [data]=dft(data,format,pow2pad)
 %     DFT(DATA,FORMAT,POW2PAD) lets the power of 2 zero-padding be adjusted
 %     using an integer POW2PAD according to the formula:
 %                fftlength=2^(nextpow2(NPTS)+POW2PAD)
-%     The default value is 1 and is a good choice for most problems.
-%     Setting POW2PAD to <1 is not recommended and setting <0 will truncate
-%     the time series.  Setting POW2PAD >1 will increase the frequency
-%     resolution of the spectrogram at the cost of increased computation
-%     time and array size.
+%     The default value is 0 and is a good choice for most problems.
+%     Setting POW2PAD to <0 is not recommended and will truncate the time
+%     series.  Setting POW2PAD >0 will increase the frequency resolution of
+%     the spectrogram at the cost of increased computation time and array
+%     size.
 %
 %    Notes:
 %     - SAC (and thus SEIZMO for sanity) calculates spectral data according
@@ -65,9 +65,10 @@ function [data]=dft(data,format,pow2pad)
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
 %        Dec. 21, 2011 - doc update, better checkheader usage, drop globals
 %        Feb.  4, 2012 - minor doc update
+%        May  29, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  4, 2012 at 15:05 GMT
+%     Last Updated May  29, 2012 at 15:05 GMT
 
 % todo:
 
@@ -98,7 +99,7 @@ try
 
     % defaults
     if(nargin<2 || isempty(format)); format='amph'; end
-    if(nargin<3 || isempty(pow2pad)); pow2pad=1; end
+    if(nargin<3 || isempty(pow2pad)); pow2pad=0; end
 
     % check options
     if(ischar(format)); format=cellstr(format); end

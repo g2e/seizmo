@@ -12,8 +12,8 @@ function [varargout]=bathy_micro_excite(z,f,vs)
 %     waves to give the microseism energy (Kedar et al 2008).  Z is the
 %     bathymetry and may be an array (C is the same size as Z).  F is the
 %     frequency (not the angular frequency) and Vs is the shear velocity of
-%     the sea bed in meters per second.  The default value for F is 1/(2pi)
-%     and Vs is 2800 m/s.
+%     the sea bed in meters per second.  The default values are 1/(2pi) Hz
+%     for F and 2800 m/s for Vs.
 %
 %     [C1,C2,C3,C4]=BATHY_MICRO_EXCITE(Z,F,VS) returns the individual
 %     components from C1 to C4.  These can be used to calculate the former
@@ -22,26 +22,71 @@ function [varargout]=bathy_micro_excite(z,f,vs)
 %    Notes:
 %     - References:
 %        Longuet-Higgins 1950, Theory of the Origin of Microseisms
-%        Kedar et al 2008, The origin of Deep Ocean Microseisms in the
+%        Kedar et al 2008, The Origin of Deep Ocean Microseisms in the
 %         North Atlantic Ocean
 %
 %    Examples:
+%     % The effect of frequency:
+%     figure;
+%     plot(1:6500,[bathy_micro_excite(1:6500,1/10);
+%                  bathy_micro_excite(1:6500,1/7.5);
+%                  bathy_micro_excite(1:6500,1/5);
+%                  bathy_micro_excite(1:6500,1/2.5)],'linewidth',2);
+%     set(gca,'fontweight','bold');
+%     text(800,.85,'2.5s','fontweight','bold');
+%     text(1800,.85,'5s','fontweight','bold');
+%     text(2700,.85,'7.5s','fontweight','bold');
+%     text(3650,.85,'10s','fontweight','bold');
+%     xlabel('Bathymetric Depth (m)','fontweight','bold');
+%     ylabel('Bathymetric Excitation Coefficient','fontweight','bold');
+%     title('Effect of Wave Period on Bathymetric Excitation',...
+%         'fontweight','bold');
+%     axis tight;
+%     ylim([0 1]);
+%
+%     % The effect of Crustal Vs:
+%     figure;
+%     plot(1:6500,[bathy_micro_excite(1:6500,1/7.5,2000);
+%                  bathy_micro_excite(1:6500,1/7.5,2400);
+%                  bathy_micro_excite(1:6500,1/7.5,2800);
+%                  bathy_micro_excite(1:6500,1/7.5,3200);
+%                  bathy_micro_excite(1:6500,1/7.5,3600)],'linewidth',2);
+%     set(gca,'fontweight','bold');
+%     text(2000,.85,'2.0km/s','fontweight','bold','rotation',45);
+%     text(2400,.85,'2.4km/s','fontweight','bold','rotation',45);
+%     text(2800,.85,'2.8km/s','fontweight','bold','rotation',45);
+%     text(3200,.85,'3.2km/s','fontweight','bold','rotation',45);
+%     text(3600,.85,'3.6km/s','fontweight','bold','rotation',45);
+%     xlabel('Bathymetric Depth (m)','fontweight','bold');
+%     ylabel('Bathymetric Excitation Coefficient','fontweight','bold');
+%     title(['Effect of Crustal Shear Velocity ' ...
+%         'on Bathymetric Excitation'],'fontweight','bold');
+%     axis tight;
+%     ylim([0 1]);
+%
 %     % Crust2.0 excitation:
 %     [lon,lat]=meshgrid(-179:2:179,89:-2:-89);
 %     c2elev=getc2elev(lat,lon);
 %     c2elev(c2elev>0)=0; % mask out land
-%     c=bathy_micro_excite(-c2elev);
-%     figure;
-%     imagesc(lon(1,:),lat(:,1),c);
-%     set(gca,'ydir','normal');
+%     vs=cat(1,c2.vs);
+%     vs=reshape(vs(:,3:7),90,180,5);
+%     thick=cat(1,c2.thick);
+%     thick=reshape(thick(:,3:7),90,180,5);
+%     c2vsavg=sum(thick,3)./sum(thick./vs,3);
+%     c=bathy_micro_excite(-c2elev,1/7.5,c2vsavg*1000);
+%     ax=plotbathyexcite(c,lat,lon);
+%     title(ax,{[] 'Crust2.0 Bathymetric Excitation Coefficient Map' ...
+%         'Period: 7.5s   Vs: 2.2-3.75km/s' []},'color','w');
 %
-%    See also: SLOWNESS2DEG, PLOTBATHYEXCITE
+%    See also: PLOTBATHYEXCITE, FS_PHASE2LATLON, SLOWNESS2DEG, DEG2SLOWNESS
 
 %     Version History:
 %        Sep. 22, 2010 - initial version
+%        May   5, 2012 - added couple more examples and some doc fixes
+%        May  18, 2012 - minor touches
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 22, 2010 at 10:35 GMT
+%     Last Updated May  18, 2012 at 10:35 GMT
 
 % todo
 

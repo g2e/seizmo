@@ -8,9 +8,9 @@ function [deg]=slowness2deg(ph,slow)
 %     in seconds per degree for a specific seismic phase to the originating
 %     distance in degrees using the travel time model AK135.  Allowed
 %     seismic phase strings are 'P', 'PP', 'PKPab', 'PKPbc', 'PKPdf'
-%     (aka PKIKP), 'S', 'SS', 'SKS', 'SKiKS', and 'SKIKS'.  NOTE THAT THE
-%     S-WAVE CORE-PHASES ARE FROM IASP91.  This is because AK135 SKS has
-%     some funkyness going on.  SLOWNESS may be an array.
+%     (aka PKIKP), 'PKiKP', 'S', 'SS', 'SKS', 'SKiKS', and 'SKIKS'.  NOTE
+%     THAT THE S-WAVE CORE-PHASES ARE FROM IASP91.  This is because AK135
+%     SKS has some funkyness going on.  SLOWNESS may be an array.
 %
 %    Notes:
 %
@@ -26,9 +26,10 @@ function [deg]=slowness2deg(ph,slow)
 %        Sep. 13, 2010 - doc update
 %        Sep. 21, 2010 - several more phases
 %        Apr.  3, 2012 - minor doc update
+%        May  18, 2012 - forgot to mention PKiKP in documentation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 10:35 GMT
+%     Last Updated May  18, 2012 at 10:35 GMT
 
 % todo
 

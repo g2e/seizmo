@@ -44,9 +44,10 @@ function [f,a]=getmainlobe(f0,fs,swin,tprfrac,zpad,show)
 %        Feb.  4, 2010 - initial version
 %        July  9, 2010 - fixed see also section, fixed nargchk
 %        Mar. 24, 2012 - minor doc update, plot calls use handles now
+%        May  30, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2012 at 17:10 GMT
+%     Last Updated May  30, 2012 at 17:10 GMT
 
 % todo:
 
@@ -107,7 +108,7 @@ if(show)
 end
 
 % fft
-nfft=2^(nextpow2(npts)+1);
+nfft=2^nextpow2(npts);
 c=fft(x,nfft)/fs;
 
 % get frequency & amplitudes

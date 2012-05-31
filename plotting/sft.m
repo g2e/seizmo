@@ -40,9 +40,9 @@ function [varargout]=sft(data,varargin)
 %     units does not change the overlap units!
 %
 %     SFT(DATA,...,'POW2PAD',POWER,...) controls the fft zero padding to
-%     the next power of 2.  The default value is 1 which pads to the next
-%     power of 2 plus 1 more.  Higher powers provide higher frequency
-%     resolution but can take considerably more computation.
+%     the next power of 2.  The default value is 0 which pads to the next
+%     power of 2.  Higher powers provide higher frequency resolution but
+%     can take considerably more computation.
 %
 %     SFT(DATA,...,'FREQRANGE',FRANGE,...) specifies the frequency range
 %     to plot in the spectrogram.  The default FRANGE is [0 Fnyquist].
@@ -113,9 +113,10 @@ function [varargout]=sft(data,varargin)
 %        June 24, 2011 - change name from stft to sft to avoid conflict
 %        Nov. 21, 2011 - bring up-to-date with plotting functions
 %        Mar.  9, 2012 - drop getenum* usage
+%        May  29, 2012 - pow2pad=0 by default, fix output breakage
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  9, 2012 at 18:25 GMT
+%     Last Updated May  29, 2012 at 18:25 GMT
 
 % todo:
 % - different spectrogram methods? scaleogram?
@@ -387,7 +388,8 @@ try
             P=cell(ncmp(i),1);
             for j=1:ncmp(i)
                 [P{j},F,T,P{j}]=spectrogram(double(data(i).dep(:,j)),...
-                    width(i),overlap(i),pow2pad(i),1/delta(i));
+                    opt.WINDOW(i),opt.OVERLAP(i),...
+                    opt.POW2PAD(i),1/delta(i));
                 P{j}=P{j}(:); % make column vector
             end
             

@@ -94,9 +94,10 @@ function [varargout]=fkhorzvolume(edat,ndat,smax,spts,frng,polar,method,w)
 
 %     Version History:
 %        Nov. 18, 2010 - initial version
+%        May  30, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 18, 2010 at 15:25 GMT
+%     Last Updated May  30, 2012 at 15:25 GMT
 
 % todo:
 
@@ -287,7 +288,7 @@ try
     [rvol(1:nrng,1).weights]=deal(w);
     
     % get frequencies
-    nspts=2^(nextpow2(npts)+1);
+    nspts=2^nextpow2(npts);
     f=(0:nspts/2)/(delta*nspts);  % only +freq
     
     % extract data (silently)

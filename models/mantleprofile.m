@@ -118,7 +118,7 @@ function [varargout]=mantleprofile(varargin)
 %
 %    Examples:
 %     % How can I do a greater circle (full 360)?  Specify a point+delaz:
-%     mantleprofile('cpnt',[0 0],'delaz',[360 -90]); % equatorial slice
+%     mantleprofile('spnt',[0 0],'delaz',[360 -90]); % equatorial slice
 %
 %     % Fallaron slab:
 %     mantleprofile('spnt',[40 -120],'epnt',[40 -60],'dvrng',[-1 1]);
@@ -145,9 +145,10 @@ function [varargout]=mantleprofile(varargin)
 
 %     Version History:
 %        Feb. 25, 2011 - initial version
+%        May   2, 2012 - minor example fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 25, 2011 at 20:30 GMT
+%     Last Updated May   2, 2011 at 20:30 GMT
 
 % todo:
 

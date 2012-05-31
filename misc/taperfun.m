@@ -9,7 +9,10 @@ function [pts]=taperfun(type,pts,limits,varargin)
 %     taper goes from 0 to 1 within the time limits defined in LIM as
 %     [lower_bound upper_bound].  T is an array of time points for which
 %     corresponding taper values are returned as TPR.  Points below the
-%     lower bound return 0, while points above the upper bound give 1.
+%     lower bound return 0, while points above the upper bound give 1.  If
+%     LIM is specified as [upper_bound lower_bound] then a trailing taper
+%     is used with points below the lower bound returning 1 and points
+%     above the upper bound give 0.
 %
 %     TPR=TAPERFUN(TYPE,T,LIM,OPT) passes taper option OPT.  Only
 %     'chebwin', 'gausswin', 'kaiser', and 'tukeywin' have options.  See
@@ -29,7 +32,12 @@ function [pts]=taperfun(type,pts,limits,varargin)
 %    Examples:
 %     % Plot random values for a gaussian taper:
 %     t=sort(rand(100,1));
-%     plot(t,taperfun('gausswin',t,0:1,4),'o')
+%     plot(t,taperfun('gausswin',t,[0 .5],4),'o')
+%
+%     % Combine hipass and lopass tapers:
+%     t=sort(rand(100,1));
+%     plot(t,taperfun('gausswin',t,[0 .5],4) ...
+%          .* taperfun('gausswin',t,[1 .5],4),'o')
 %
 %    See also: TAPER, WINDOW
 
@@ -38,25 +46,55 @@ function [pts]=taperfun(type,pts,limits,varargin)
 %        Sep. 24, 2009 - fix no taper gives nan bug
 %        Feb.  4, 2010 - added cosine taper (points to Hann), doc update
 %        Feb.  5, 2012 - doc update
+%        May  29, 2012 - t=limit(2) goes to taper function now
+%        May  30, 2012 - flipped lim flips taper, refix nan bug, checks
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2012 at 02:20 GMT
+%     Last Updated May  30, 2012 at 02:20 GMT
 
 % todo:
 
+% check nargin
+error(nargchk(3,4,nargin));
+
+% simple checks
+if(~ischar(type) || ~isvector(type))
+    error('seizmo:taperfun:badInput',...
+        'TYPE must be a string!');
+elseif(~isnumeric(pts))
+    error('seizmo:taperfun:badInput',...
+        'PTS must be numeric!');
+elseif(~isnumeric(limits) || ~isequal(size(limits),[1 2]))
+    error('seizmo:taperfun:badInput',...
+        'LIM must be a numeric vector as [lo_bound hi_bound]!');
+end
+
+% hp or lp taper
+if(diff(limits)>=0)
+    % hi pass
+    z=pts<limits(1);
+    u=pts>limits(2);
+else
+    % lo pass
+    z=pts>limits(1);
+    u=pts<limits(2);
+end
+
 % pts to be zero
-z=pts<limits(1);
 if(any(z)); pts(z)=0; end
 
 % untapered pts
-u=pts>=limits(2);
 if(any(u)); pts(u)=1; end
 
 % tapered
 t=~u & ~z;
 if(any(t))
     func=str2func(['taper_' type]);
-    pts(t)=(pts(t)-limits(1))/(limits(2)-limits(1));
+    if(diff(limits)==0) % no taper if width=0
+        pts(t)=1;
+    else
+        pts(t)=(pts(t)-limits(1))/(limits(2)-limits(1));
+    end
     pts(t)=func(pts(t),varargin{:});
 end
 

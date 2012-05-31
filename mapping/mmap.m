@@ -17,7 +17,8 @@ function [varargout]=mmap(varargin)
 %              mmap(...,'sea',color,...)
 %              mmap(...,'land',color,...)
 %              mmap(...,'border',color,...)
-%              mmap(...,'axis',ax,...)
+%              mmap(...,'coast',color,...)
+%              mmap(...,'parent',ax,...)
 %              ax=mmap(...)
 %
 %    Description:
@@ -95,13 +96,20 @@ function [varargout]=mmap(varargin)
 %     is not, then BGCOLOR will be set using INVERTCOLOR.
 %
 %     MMAP(...,'SEA',COLOR,...) specifies the color of the sea in
-%     the map.  The default is [.3 .6 1].
+%     the map.  The default is [.3 .6 1].  Setting to FALSE will set the
+%     sea patch color to 'none'.
 %
 %     MMAP(...,'LAND',COLOR,...) specifies the color of the land in
-%     the map.  The default is [.4 .6 .2].
+%     the map.  The default is [.4 .6 .2].  Setting to FALSE will draw the
+%     coastline using lines rather than land-colored patches.
 %
 %     MMAP(...,'BORDER',COLOR,...) specifies the color of the
-%     political borders in the map.  The default is [.5 0 0].
+%     political borders in the map.  The default is [.5 0 0].  Setting to
+%     FALSE will skip drawing the borders.
+%
+%     MMAP(...,'COAST',COLOR,...) specifies the color of the coastlines in
+%     the map.  The default is [0 0 0].  Setting to FALSE will hide the
+%     coast lines.
 %
 %     MMAP(...,'PARENT',AX,...)  sets the axes to draw in.  This is
 %     useful for subplots, guis, etc.  The default draws the map in a new
@@ -117,7 +125,17 @@ function [varargout]=mmap(varargin)
 %     [stla,stlo]=meshgrid(3:13,10:15);
 %     mmap('st',[stla(:) stlo(:)],...
 %                  'po',{'lat',[-40 40],'lon',[-30 60]},...
-%                  'go',{'box','fancy'})
+%                  'go',{'box','fancy'});
+%
+%    % Simple map highlighting the land:
+%    mmap('c',false,'go',{'xtick',[],'ytick',[]},'fg','k','s','w');
+%
+%    % Simple map with coastlines:
+%    mmap('l',false,'s','w','fg','k','go',{'xtick',[],'ytick',[]});
+%
+%    % Seamounts map:
+%    ax=mmap('c','w','l',false,'s','k','go',{'xtick',[],'ytick',[]});
+%    mapfeature(ax,'seamounts');
 %
 %    See also: M_PROJ, M_GRID, M_GSHHS, M_SCATTER, MAPFEATURE, RAISEFANCY
 
@@ -133,9 +151,11 @@ function [varargout]=mmap(varargin)
 %        June 14, 2011 - add fgc/bgc option shortcuts, added code to allow
 %                        drawing stations/events on an existing mmap
 %        Apr.  3, 2012 - minor doc update
+%        May  30, 2012 - added several examples, added coast option,
+%                        allow sea/land/border/coast = false
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 20:30 GMT
+%     Last Updated May  30, 2012 at 20:30 GMT
 
 % todo:
 
@@ -151,7 +171,8 @@ global MAP_VAR_LIST
 % option defaults
 varargin=[{'st' [] 'sm' 'yo' 'ss' [] 'ev' [] 'em' 'rp' 'es' 150 'g' 'o' ...
     'p' 'robinson' 'po' [] 'go' [] 'fg' [] 'bg' [] 's' [.3 .6 1] ...
-    'l' [.4 .6 .2] 'b' [.5 0 0] 'a' []} varargin];
+    'l' [.4 .6 .2] 'b' [.5 0 0] 'c' [0 0 0] 'a' []} varargin];
+showsea=true; showland=true; showborder=true; showcoast=true;
 
 % check options
 if(~iscellstr(varargin(1:2:end)))
@@ -288,6 +309,8 @@ for i=1:2:numel(varargin)
             if(ischar(val) ...
                     || (isreal(val) && isequal(size(val),[1 3])))
                 sea=val;
+            elseif(islogical(val) && isscalar(val))
+                showsea=val;
             else
                 error('seizmo:mmap:badInput',...
                     'SEACOLOR must be a colorname or RGB triplet!');
@@ -297,6 +320,8 @@ for i=1:2:numel(varargin)
             if(ischar(val) ...
                     || (isreal(val) && isequal(size(val),[1 3])))
                 land=val;
+            elseif(islogical(val) && isscalar(val))
+                showland=val;
             else
                 error('seizmo:mmap:badInput',...
                     'LANDCOLOR must be a colorname or RGB triplet!');
@@ -306,9 +331,22 @@ for i=1:2:numel(varargin)
             if(ischar(val) ...
                     || (isreal(val) && isequal(size(val),[1 3])))
                 border=val;
+            elseif(islogical(val) && isscalar(val))
+                showborder=val;
             else
                 error('seizmo:mmap:badInput',...
                     'BORDERCOLOR must be a colorname or RGB triplet!');
+            end
+        case {'coastcolor' 'coast' 'c' 'coastline'}
+            if(skip); continue; end
+            if(ischar(val) ...
+                    || (isreal(val) && isequal(size(val),[1 3])))
+                coast=val;
+            elseif(islogical(val) && isscalar(val))
+                showcoast=val;
+            else
+                error('seizmo:mmap:badInput',...
+                    'COASTCOLOR must be a colorname or RGB triplet!');
             end
         case {'axis' 'ax' 'a' 'parent' 'pa' 'par'}
             if(skip)
@@ -345,6 +383,7 @@ if(ischar(bg)); bg=name2rgb(bg); end
 if(ischar(sea)); sea=name2rgb(sea); end
 if(ischar(land)); land=name2rgb(land); end
 if(ischar(border)); border=name2rgb(border); end
+if(ischar(coast)); border=name2rgb(coast); end
 
 % setup axis
 if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
@@ -370,19 +409,39 @@ end
 %   - mixed m_coast & m_gshhs draws new
 % - could we delete and redraw certain things?
 if(~held)
+    if(~showsea); sea='none'; end
+    if(~showcoast); coast='none'; end
     m_proj(proj,popt{:});
     set(ax,'color',sea);
     if(strcmpi(gshhs,'o'))
-        m_coast('patch',land);
+        if(showland)
+            m_coast('patch',land,'edgecolor',coast);
+        else
+            if(showcoast)
+                m_coast('line','color',coast);
+            else
+                m_coast('line','linestyle',coast);
+            end
+        end
     else
-        m_gshhs([gshhs 'c'],'patch',land);
-        m_gshhs([gshhs 'b'],'color',border);
+        if(showland)
+            m_gshhs([gshhs 'c'],'patch',land,'edgecolor',coast);
+        else
+            if(showcoast)
+                m_gshhs([gshhs 'c'],'line','color',coast);
+            else
+                m_gshhs([gshhs 'c'],'line','linestyle',coast);
+            end
+        end
+        if(showborder)
+            m_gshhs([gshhs 'b'],'color',border);
+        end
     end
     m_grid('color',fg,gopt{:});
-end
 
-% hackery to color oceans at large when the above fails
-set(findobj(ax,'tag','m_grid_color'),'facecolor',sea);
+    % hackery to color oceans at large when the above fails
+    set(findobj(ax,'tag','m_grid_color'),'facecolor',sea);
+end
 
 % wrap longitudes to plot
 while(any(stlo-MAP_VAR_LIST.longs(2)>0))

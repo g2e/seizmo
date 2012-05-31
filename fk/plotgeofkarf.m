@@ -13,7 +13,7 @@ function [varargout]=plotgeofkarf(arf,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %     PLOTGEOFKARF(ARF) plots the frequency-slowness-position beam data in
 %     geofk struct ARF.  See a geofk function like GEOFKXCVOLUME for
 %     details on the struct.  The data is plotted on a map with a
-%     Hammer-Aitoff projection and the map limits are scaled to fit the
+%     Robinson projection and the map limits are scaled to fit the
 %     beam data & station positions.  Note that the beam data positions
 %     should form a regular grid (using a function like MESHGRID).  This
 %     plots GSHHS coastlines and borders in low-resolution which may take a
@@ -59,9 +59,10 @@ function [varargout]=plotgeofkarf(arf,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %        Feb. 16, 2011 - color code fix
 %        Feb.  2, 2012 - use robinson projection like plotgeofkmap
 %        Apr.  4, 2012 - minor doc update
+%        May   5, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  2, 2012 at 15:05 GMT
+%     Last Updated May   5, 2012 at 15:05 GMT
 
 % todo:
 
@@ -72,7 +73,7 @@ error(nargchk(1,7,nargin));
 error(chkgeofkarfstruct(arf));
 
 % don't allow array/volume
-if(~isscalar(arf) || any(arf.volume))
+if(~isscalar(arf) || any(arf.volume(2)))
     error('seizmo:plotgeofkarf:badInput',...
         'ARF must be a scalar geofk struct and not a volume!');
 end

@@ -11,8 +11,8 @@ function axmove(ax,r,u)
 %    Notes:
 %
 %    Examples:
-%     % move the current axis up by 10% of the figure height
-%      axmove(gca,0,.1);
+%     % Move the current axis up by 10% of the figure height:
+%     axmove(gca,0,.1);
 %
 %    See also: AXEXPAND, AXSTRETCH, MAKESUBPLOTS, NOLABELS, NOTICKS,
 %              NOTITLES, NOCOLORBARS, SUPERTITLE, SUPERXLABEL, SUPERYLABEL,
@@ -21,9 +21,10 @@ function axmove(ax,r,u)
 %     Version History:
 %        Aug.  5, 2010 - initial version
 %        Aug.  8, 2010 - doc update
+%        May   4, 2012 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 12:25 GMT
+%     Last Updated May   4, 2012 at 12:25 GMT
 
 % todo:
 

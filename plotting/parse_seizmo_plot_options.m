@@ -4,6 +4,7 @@ function [opt]=parse_seizmo_plot_options(varargin)
 % Nov.  8, 2011 - added sft support
 % Nov. 10, 2011 - fixed fg/bg fix code, sft defaults now setup
 % Feb. 24, 2012 - pass char fg/bg inputs to name2rgb
+% May  29, 2012 - pow2pad=0 by default
 
 % todo:
 % - value checking
@@ -73,7 +74,7 @@ switch pf
     case {'specsec' 'spectrasection'}
         varargin=[{'fg' [] 'bg' [] 'unwrap' false 'cmp' 'a'} varargin];
     case {'sft'}
-        varargin=[{'u' '%' 'w' 2.5 'o' 75 'p2p' 1 'dbc' 'fire' 'hr' 0 ...
+        varargin=[{'u' '%' 'w' 2.5 'o' 75 'p2p' 0 'dbc' 'fire' 'hr' 0 ...
             'dbr' [] 'fr' [] 'fg' [] 'bg' [] 'ax' [] 'cmap' 'hsv' ...
             'xlabel' 1 'ylabel' 1 'title' 1 'xlim' [] 'ylim' [] ...
             'linewidth' 1 'linestyle' '-' 'ncols' [] 'abs' false ...

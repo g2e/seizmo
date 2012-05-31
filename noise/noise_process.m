@@ -16,7 +16,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      ( 4) taper (first/last 1%)
 %      ( 5) resample to 1 sample/sec
 %      ( 6) remove polezero response (displacement, hp taper: [.004 .006])
-%      ( 7) reject records based on amplitudes (>10^6nm)
+%      ( 7) reject records based on amplitudes (>Inf nm)
 %      ( 8) rotate horizontals to North/East (removes unpaired)
 %      ( 9) t-domain normalize (3-15s & 15-100s moving average)
 %      (10) f-domain normalize (2mHz moving average)
@@ -40,7 +40,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      PZDB - polezero db to use in step 6 []
 %      UNITS - ground units of records after polezero removal ['disp']
 %      PZTAPERLIMITS - highpass taper to stabilize pz removal [.004 .008]
-%      AMPREJECT - step 7 minimum absolute amplitude for rejection [10^6]
+%      AMPREJECT - step 7 minimum absolute amplitude for rejection [Inf]
 %      TDSTYLE - time domain normalization style:
 %                '1bit' - set amplitudes to +/-1
 %                'clip' - clip values above some absolute value
@@ -116,9 +116,11 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        Mar. 15, 2012 - bad parfor variable bugfix, parallel verbose fixes
 %        Apr. 26, 2012 - minor doc fix (lp->hp), step 7 is now amplitude
 %                        based rejection
+%        May   3, 2012 - fixed bug in amplitude-based rejection
+%        May  14, 2012 - set amp rejection to Inf (no reject) by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 26, 2012 at 11:15 GMT
+%     Last Updated May  14, 2012 at 11:15 GMT
 
 % todo:
 
@@ -416,11 +418,13 @@ for i=1:numel(tsdirs) % SERIAL
         if(any(steps==7)) % simple amplitude based rejection
             if(~isempty(vdata))
                 [depmin,depmax]=getheader(vdata,'depmin','depmax');
-                vdata(depmin<=opt.AMPREJECT | depmax>=opt.AMPREJECT)=[];
+                depmin=abs(depmin); depmax=abs(depmax);
+                vdata(depmin>=opt.AMPREJECT | depmax>=opt.AMPREJECT)=[];
             end
             if(~isempty(hdata))
                 [depmin,depmax]=getheader(hdata,'depmin','depmax');
-                hdata(depmin<=opt.AMPREJECT | depmax>=opt.AMPREJECT)=[];
+                depmin=abs(depmin); depmax=abs(depmax);
+                hdata(depmin>=opt.AMPREJECT | depmax>=opt.AMPREJECT)=[];
             end
             if(any(steps==11) && numel(vdata)==1); vdata=[]; end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
@@ -658,7 +662,7 @@ function [opt]=noise_process_parameters(varargin)
 
 % defaults
 varargin=[{'minlen' 70 'tw' 1 'tt' [] 'topt' [] 'sr' 1 ...
-    'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] 'ar' 10^6 ...
+    'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] 'ar' Inf ...
     'tds' 'ram' 'tdrms' true 'tdclip' 1 'tdfb' [1/15 1/3;.01 1/15] ...
     'fds' 'ram' 'fdw' .002 'lag' 4000 ...
     'ts' [] 'te' [] 'lat' [] 'lon' [] ...

@@ -24,8 +24,8 @@ function axexpand(ax,wf,hf)
 %     - To undo an expansion: NEWFAC=(1/(1+OLDFAC/100)-1)*100
 %
 %    Examples:
-%     % make a figure with 4x3 arrangement of subplots, then expand them by
-%     % 15% and drop labels on any axes not at the figure edge
+%     % Make a figure with 4x3 arrangement of subplots, then expand them by
+%     % 15% and drop labels on any axes not at the figure edge:
 %     figure;
 %     ax=makesubplots(5,3,1:12);
 %     ax=reshape(ax,3,4);
@@ -41,9 +41,10 @@ function axexpand(ax,wf,hf)
 %     Version History:
 %        Aug.  4, 2010 - initial version
 %        Aug.  8, 2010 - doc update
+%        May   4, 2012 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 12:25 GMT
+%     Last Updated May   4, 2012 at 12:25 GMT
 
 % todo:
 

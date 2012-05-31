@@ -1,51 +1,51 @@
-function [varargout]=ww3mov(s,delay,varargin)
-%WW3MOV    Create movie from a WaveWatch III hindcast GRiB1/2 file
+function [varargout]=ww3mapmov(s,delay,varargin)
+%WW3MAPMOV    Create map movie from a WaveWatch III hindcast GRiB1/2 file
 %
-%    Usage:    mov=ww3mov('file')
-%              [mov1,...,movN]=ww3mov('file')
-%              [...]=ww3mov('file',delay)
-%              [...]=ww3mov('file',delay,rng)
-%              [...]=ww3mov('file',delay,rng,fgcolor,bgcolor)
-%              [...]=ww3mov('file',delay,rng,fgcolor,bgcolor,ax)
-%              [...]=ww3mov(s,...)
+%    Usage:    mov=ww3mapmov('file')
+%              [mov1,...,movN]=ww3mapmov('file')
+%              [...]=ww3mapmov('file',delay)
+%              [...]=ww3mapmov('file',delay,rng)
+%              [...]=ww3mapmov('file',delay,rng,fgcolor,bgcolor)
+%              [...]=ww3mapmov('file',delay,rng,fgcolor,bgcolor,ax)
+%              [...]=ww3mapmov(s,...)
 %
 %    Description:
-%     MOV=WW3MOV('FILE') creates a Matlab movie of the WaveWatch III
+%     MOV=WW3MAPMOV('FILE') creates a Matlab movie of the WaveWatch III
 %     handcast data contained in the GRiB file FILE.  MOV is the movie
 %     struct that can then be converted to an AVI file using MOVIE2AVI.
 %     There is a 1/3 second delay between each frame by default (see next
 %     Usage form to adjust this).  If FILE is omitted or is empty then a
 %     GUI is presented for GRiB file selection.  If no output is assigned
-%     then WW3MOV will "play" the data.
+%     then WW3MAPMOV will "play" the data.
 %
-%     [MOV1,...,MOVN]=WW3MOV('FILE') returns the movies for each data type
+%     [MOV1,...,MOVN]=WW3MAPMOV('FILE') returns the movies for each data type
 %     in FILE (eg for wind data there is a movie for each component).
 %
-%     [...]=WW3MOV('FILE',DELAY) specifies the delay between the plotting
+%     [...]=WW3MAPMOV('FILE',DELAY) specifies the delay between the plotting
 %     of each time step in seconds.  The default DELAY is 0.33s.
 %
-%     [...]=WW3MOV('FILE',DELAY,RNG) sets the limits for coloring the data.
+%     [...]=WW3MAPMOV('FILE',DELAY,RNG) sets the limits for coloring the data.
 %     The default is [0 15] which works well for significant wave heights.
 %
-%     [...]=WW3MOV('FILE',DELAY,RNG,FGCOLOR,BGCOLOR) specifies foreground
+%     [...]=WW3MAPMOV('FILE',DELAY,RNG,FGCOLOR,BGCOLOR) specifies foreground
 %     and background colors of the movie.  The default is 'w' for FGCOLOR &
 %     'k' for BGCOLOR.  Note that if one is specified and the other is not,
 %     an opposing color is found using INVERTCOLOR.  The color scale is
 %     also changed so the noise clip is at BGCOLOR.
 %
-%     [...]=WW3MOV('FILE',DELAY,RNG,FGCOLOR,BGCOLOR,AX) sets the axes drawn
+%     [...]=WW3MAPMOV('FILE',DELAY,RNG,FGCOLOR,BGCOLOR,AX) sets the axes drawn
 %     in.  This is useful for subplots, guis, etc.  The default creates a
 %     new figure.
 %
-%     [...]=WW3MOV(S,...) creates a movie using the WaveWatch III data
+%     [...]=WW3MAPMOV(S,...) creates a movie using the WaveWatch III data
 %     contained in the structure S created by WW3STRUCT.
 %
 %    Notes:
 %     - Requires that the njtbx toolbox is installed!
 %
 %    Examples:
-%     % Calling WW3MOV with no args lets you graphically choose a file:
-%     mov=ww3mov;
+%     % Calling WW3MAPMOV with no args lets you graphically choose a file:
+%     mov=ww3mapmov;
 %
 %     % Save as an avi file:
 %     movie2avi(mov,'filename.avi');
@@ -53,15 +53,11 @@ function [varargout]=ww3mov(s,delay,varargin)
 %     % Compress on linux (if you have mencoder available)
 %     unixcompressavi('filename.avi');
 %
-%    See also: WW3MAPMOV, MOVIE2AVI, UNIXCOMPRESSAVI, WW3STRUCT, WW3REC,
-%              PLOTWW3, WW3MAP
+%    See also: WW3MAP, WW3MOV, PLOTWW3, MOVIE2AVI, UNIXCOMPRESSAVI,
+%              WW3STRUCT, WW3REC
 
 %     Version History:
-%        June 15, 2010 - initial version
-%        July  2, 2010 - adjusted oneliner description
-%        Aug. 30, 2010 - fix documentation
-%        Feb. 15, 2012 - use ww3struct, doc update
-%        May   4, 2012 - allow struct input, fix no input case
+%        May   4, 2012 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated May   4, 2012 at 00:40 GMT
@@ -77,8 +73,8 @@ if(nargin==0) % gui selection of grib file
     % - this does the gui & checks file is valid
     s=ww3struct([],1);
     if(~isscalar(s))
-        error('seizmo:ww3mov:badWW3',...
-            'WW3MOV can only handle 1 file!');
+        error('seizmo:ww3mapmov:badWW3',...
+            'WW3MAPMOV can only handle 1 file!');
     end
     read=true;
 elseif(ischar(s)) % filename given
@@ -90,12 +86,12 @@ elseif(isstruct(s))
     valid={'path' 'name' 'description' 'units' 'data' ...
         'lat' 'lon' 'time' 'latstep' 'lonstep' 'timestep'};
     if(~isscalar(s) || any(~ismember(valid,fieldnames(s))))
-        error('seizmo:ww3mov:badWW3',...
+        error('seizmo:ww3mapmov:badWW3',...
             'S must be a scalar struct generated by WW3STRUCT!');
     end
     read=false;
 else
-    error('seizmo:ww3mov:badWW3',...
+    error('seizmo:ww3mapmov:badWW3',...
         'FILE must be a string!');
 end
 
@@ -111,7 +107,7 @@ end
 % check delay
 if(nargin<2 || isempty(delay)); delay=0.33; end
 if(~isreal(delay) || ~isscalar(delay) || delay<0)
-    error('seizmo:ww3mov:badDelay',...
+    error('seizmo:ww3mapmov:badDelay',...
         'DELAY must be a positive scalar in seconds!');
 end
 
@@ -120,8 +116,8 @@ makemovie=false;
 if(nargout); makemovie=true; end
 
 % make initial plot
-ax=plotww3(ww3rec(s,1),varargin{:});
-varargin{4}=ax;
+ax=ww3map(ww3rec(s,1),varargin{:});
+varargin{5}=ax;
 fh=get(ax,'parent');
 if(iscell(fh)); fh=cell2mat(fh); end
 for j=1:numel(fh)
@@ -135,10 +131,10 @@ for i=2:nrecs
     else t=ww3rec(s,i);
     end
     if(any(~ishghandle(ax,'axes')))
-        error('seizmo:ww3mov:userClose',...
+        error('seizmo:ww3mapmov:userClose',...
             'Axes disappeared! Did someone turn off the lights?');
     end
-    plotww3(t,varargin{:});
+    updateww3map(t,varargin{end});
     drawnow;
     for j=1:numel(fh)
         if(makemovie); varargout{j}(i)=getframe(fh(j)); end
@@ -146,3 +142,25 @@ for i=2:nrecs
 end
 
 end
+
+function [ax]=updateww3map(s,ax)
+% time string
+tstring=datestr(s.time,31);
+
+% update each map
+for i=1:numel(ax)
+    % find previous
+    pc=findobj(ax(i),'tag','m_pcolor');
+    
+    % slip in new data
+    set(pc(1),'cdata',s.data{i});
+    
+    % update title
+    title(ax(i),...
+        {'NOAA WaveWatch III Hindcast' s.description{i} tstring},...
+        'fontweight','bold',...
+        'color',get(findobj(ax(i),'tag','m_grid_box'),'color'));
+end
+
+end
+

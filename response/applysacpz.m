@@ -118,9 +118,10 @@ function [data,pz]=applysacpz(data,varargin)
 %                        limits to terminal, fixed bomb-out bug
 %        Feb.  3, 2012 - doc update
 %        Mar. 13, 2012 - use getheader improvements
+%        May  30, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 20:30 GMT
+%     Last Updated May  30, 2012 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -362,7 +363,7 @@ try
             sdelta=delta(i);
             tmp=complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
         else
-            nspts=2^(nextpow2(npts(i))+1);
+            nspts=2^nextpow2(npts(i));
             sdelta=2*nyq(i)./nspts;
             tmp=fft(data(i).dep,nspts,1);
         end

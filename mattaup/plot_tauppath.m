@@ -3,7 +3,7 @@ function [varargout]=plot_tauppath(tt,varargin)
 %
 %    Usage:    plot_tauppath(tt)
 %              plot_tauppath(tt,'property',value,...)
-%              h=plot_tauppath(...)
+%              ax=plot_tauppath(...)
 %
 %    Description:
 %     PLOT_TAUPPATH(TT) plots the raypaths in TT on a new plot.  TT is the
@@ -43,9 +43,10 @@ function [varargout]=plot_tauppath(tt,varargin)
 %        May  21, 2011 - initial version
 %        Dec.  6, 2011 - fix raycolor bug
 %        Feb. 24, 2012 - added lots of new properties
+%        May   3, 2012 - tagged the grid, minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2012 at 17:15 GMT
+%     Last Updated May   3, 2012 at 17:15 GMT
 
 % todo:
 
@@ -235,28 +236,35 @@ if(isempty(ax))
     
     % plot grid
     [cx,cy]=circle(6871);
-    plot(ax,cx,cy,'color',[0.2 0.2 0.2],'linewidth',2);
+    plot(ax,cx,cy,'color',[0.2 0.2 0.2],'linewidth',2,...
+        'tag','plot_tauppath_grid');
     set(ax,'position',[0.025 0.05 0.95 0.9]);
     [cx1,cy1]=circle(6871,180);
     [cx2,cy2]=circle(6771,180);
-    plot(ax,[cx1; cx2],[cy1; cy2],'color',[0.2 0.2 0.2],'linewidth',1);
+    plot(ax,[cx1; cx2],[cy1; cy2],'color',[0.2 0.2 0.2],'linewidth',1,...
+        'tag','plot_tauppath_grid');
     [cx1,cy1]=circle(6871,36);
     [cx2,cy2]=circle(6671,36);
-    plot(ax,[cx1; cx2],[cy1; cy2],'color',[0.2 0.2 0.2],'linewidth',2);
+    plot(ax,[cx1; cx2],[cy1; cy2],'color',[0.2 0.2 0.2],'linewidth',2,...
+        'tag','plot_tauppath_grid');
     [cx,cy]=circle(6371,4);
-    plot(ax,cx(1:2:3),cy(1:2:3),'color',[0.2 0.2 0.2],'linewidth',2);
-    plot(ax,cx(2:2:4),cy(2:2:4),'color',[0.2 0.2 0.2],'linewidth',2);
+    plot(ax,cx(1:2:3),cy(1:2:3),'color',[0.2 0.2 0.2],'linewidth',2,...
+        'tag','plot_tauppath_grid');
+    plot(ax,cx(2:2:4),cy(2:2:4),'color',[0.2 0.2 0.2],'linewidth',2,...
+        'tag','plot_tauppath_grid');
     
     % plot major discontinuities
     for i=[6371 3480 1220]
         [cx,cy]=circle(i);
-        plot(ax,cx,cy,'color',opt.fgc,'linewidth',2);
+        plot(ax,cx,cy,'color',opt.fgc,'linewidth',2,...
+            'tag','plot_tauppath_major_discon');
     end
     
     % plot minor discontinuities
     for i=[5961 5711 3780]
         [cx,cy]=circle(i);
-        plot(ax,cx,cy,'color',[0.5 0.5 0.5],'linewidth',1);
+        plot(ax,cx,cy,'color',[0.5 0.5 0.5],'linewidth',1,...
+            'tag','plot_tauppath_minor_discon');
     end
     axis(ax,'off','equal');
 else

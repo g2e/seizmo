@@ -115,9 +115,10 @@ function [varargout]=fkarf(stla,stlo,smax,spts,s0,baz0,f0,polar,method,w)
 %        Nov. 16, 2010 - added weighting (franklin witnessed)
 %        Nov. 17, 2010 - forgot .weights field
 %        Nov. 18, 2010 - coarray weight indexing example, fixed scaling bug
+%        Apr. 27, 2012 - spts now allows input as [spts bazpts]
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 18, 2010 at 14:40 GMT
+%     Last Updated Apr. 27, 2012 at 14:40 GMT
 
 % todo:
 
@@ -147,9 +148,9 @@ if(~isreal(stla) || ~isreal(stlo) || ~isequalsizeorscalar(stla,stlo))
 elseif(~isreal(smax) || ~isscalar(smax) || smax<=0)
     error('seizmo:fkarf:badInput',...
         'SMAX must be a positive real scalar in s/deg!');
-elseif(~isscalar(spts) || fix(spts)~=spts || spts<=0)
+elseif(~any(numel(spts)==[1 2]) || any(fix(spts)~=spts) || any(spts<=2))
     error('seizmo:fkarf:badInput',...
-        'SPTS must be a positive scalar integer!');
+        'SPTS must be a positive scalar integer >2!');
 elseif(~isreal(s0) || any(s0<0))
     error('seizmo:fkarf:badInput',...
         'S must be a positive slowness in s/deg!');

@@ -18,9 +18,8 @@ function [data]=powerspectraldensity(data,method,pow2pad)
 %     DATA=POWERSPECTRALDENSITY(DATA,METHOD,POW2PAD) lets the power of 2
 %     zero-padding be adjusted by an integer POW2PAD in the formula:
 %                fftlength=2^(nextpow2(NPTS)+POW2PAD)
-%     The default value is 1 and provides great frequency resolution.
-%     Using a value of 0 will degrade the frequency resolution while giving
-%     similar results for half the memory.
+%     The default value is 0 and provides good frequency resolution.
+%     Using a value of >0 will improve the frequency resolution.
 %
 %    Notes:
 %     - Setting POW2PAD<0 will wrap the data (summing the segments
@@ -55,9 +54,10 @@ function [data]=powerspectraldensity(data,method,pow2pad)
 %                        (required division by original npts), examples, no
 %                        need to turn off checkheader
 %        Feb.  6, 2012 - output is in dBs now
+%        May  29, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  6, 2012 at 13:30 GMT
+%     Last Updated May  29, 2012 at 13:30 GMT
 
 % todo:
 
@@ -96,7 +96,7 @@ try
     method=method(:);
     
     % pow2pad
-    if(nargin<3 || isempty(pow2pad)); pow2pad=1; end
+    if(nargin<3 || isempty(pow2pad)); pow2pad=0; end
     if(~isnumeric(pow2pad) || ~isreal(pow2pad) ...
             || any(pow2pad~=fix(pow2pad)) ...
             || ~any(numel(pow2pad)==[1 nrecs]))

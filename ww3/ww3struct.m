@@ -51,12 +51,9 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %    Examples:
 %     % Read the first record of a NOAA WW3 grib file and plot it up:
 %     s=ww3struct('nww3.hs.200607.grb',1);
-%     figure;
-%     imagesc(s.lon,s.lat,s.data{1});
-%     set(gca,'ydir','normal');
-%     title([datestr(s.time) ' Significant Wave Heights']);
+%     plotww3(s);
 %
-%    See also: PLOTWW3, WW3MOV
+%    See also: WW3REC, PLOTWW3, WW3MOV, WW3MAP, WW3MAPMOV
 
 %     Version History:
 %        June 30, 2010 - initial version
@@ -66,9 +63,11 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %                        input, multi-file support, multi-field support,
 %                        renamed from ww3mat to ww3struct
 %        Feb. 27, 2012 - minor doc update
+%        May   5, 2012 - minor doc update
+%        May  11, 2012 - skips .data access if there is a null range
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 00:40 GMT
+%     Last Updated May  11, 2012 at 00:40 GMT
 
 % todo:
 
@@ -213,9 +212,11 @@ for i=1:nfiles
         % preallocate data output and loop over each time
         % - this tries to avoid java memory issues
         s(i).data{j}=nan(nlat,nlon,ntime);
-        for k=1:ntime
-            s(i).data{j}(:,:,k)=gh{f{j}}(...
-                oktime(k),oklat,oklon).data; %#ok<FNDSB>
+        if(nlat*nlon*ntime>0)
+            for k=1:ntime
+                s(i).data{j}(:,:,k)=gh{f{j}}(...
+                    oktime(k),oklat,oklon).data; %#ok<FNDSB>
+            end
         end
     end
     

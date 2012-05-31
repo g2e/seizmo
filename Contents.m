@@ -1,5 +1,5 @@
 % SEIZMO - Passive Seismology Toolbox
-% Version 0.6.13 Lhotse 16-Mar-2012
+% Version 0.6.14 Meru 31-May-2012
 %
 % New to SEIZMO? Overwhelmed by all the functions?
 %  <a href="matlab:showdemo sz_pub_beginning">THE BASICS</a>

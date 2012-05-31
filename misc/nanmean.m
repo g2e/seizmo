@@ -1,4 +1,4 @@
-function [mean]=nanmean(x,dim)
+function [mean]=nanmean(x,varargin)
 %NANMEAN    Return mean excluding NaNs
 %
 %    Usage: mean=nanmean(x)
@@ -27,9 +27,10 @@ function [mean]=nanmean(x,dim)
 
 %     Version History:
 %        Sep. 13, 2010 - brought back, better documentation, nargchk
+%        May   4, 2012 - simplify code (use varargin)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2010 at 14:45 GMT
+%     Last Updated May   4, 2012 at 14:45 GMT
 
 % CHECK NARGIN
 error(nargchk(1,2,nargin));
@@ -39,15 +40,8 @@ nans=isnan(x);
 x(nans)=0;
 
 % LET SUM DECIDE WHICH DIMENSION TO WORK ON
-if(nargin==1 || isempty(dim))
-    nne=sum(~nans);     % COUNT NUMBER OF NON-NaN ELEMENTS (FOR THE AVERAGING)
-    nne(nne==0)=nan;    % IF EVERY ELEMENT IS NaN RETURN NaN AS THE MEAN
-    mean=sum(x)./nne;   % MEAN EXCLUDING NaN ELEMENTS (UNLESS ALL NaN)
-% USER DEFINED DIMENSION
-else
-    nne=sum(~nans,dim);     % COUNT NUMBER OF NON-NaN ELEMENTS (FOR THE AVERAGING)
-    nne(nne==0)=nan;        % IF EVERY ELEMENT IS NaN RETURN NaN AS THE MEAN
-    mean=sum(x,dim)./nne;   % MEAN EXCLUDING NaN ELEMENTS (UNLESS ALL NaN)
-end
+nne=sum(~nans,varargin{:});   % COUNT NUMBER OF NON-NaN ELEMENTS
+nne(nne==0)=nan;              % RETURN NaN AS THE MEAN IF ALL NAN
+mean=sum(x,varargin{:})./nne; % MEAN EXCLUDING NaN ELEMENTS
 
 end

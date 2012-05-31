@@ -14,14 +14,18 @@ function []=noise_overview()
 %          2. Fix the headers (in Matlab):
 %              w(fix_rdseed_v48(r('mydir')))
 %             This isn't necessary but will silence some warnings.
-%       b. Otherwise you just need to get all the records as SAC files in
-%          the same directory (lookout for filename conflicts) and make
-%          sure following header fields are set correctly:
+%       b. Otherwise you just need to get all the records as SAC files
+%          under the same directory and make sure following header fields
+%          are set correctly:
 %           KNETWK, KSTNM, KHOLE, KCMPNM, NZYEAR, NZJDAY, NZHOUR, NZMIN,
 %           NZSEC, NZMSEC, B, E, NPTS, DELTA, CMPINC, CMPAZ, STLA, STLO,
 %           STDP, STEL, LEVEN (MUST BE EVENLY SPACED!!!), IFTYPE, IZTYPE
 %    2. Create 3hr timesections to be processed separately (in Matlab):
 %        noise_setup('mydir','setup');
+%       Note that if your data files are under subdirectories you will need
+%       to use something like the following instead to force a recursive
+%       search for files:
+%        noise_setup('mydir','setup','f','**/');
 %    3. Process the timesections (in Matlab):
 %        noise_process('setup','ncf');
 %    4. Stack the noise correlations (in Matlab):

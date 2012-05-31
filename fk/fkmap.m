@@ -104,9 +104,10 @@ function [varargout]=fkmap(data,smax,spts,frng,polar,method,w)
 %        July  6, 2010 - major update to struct, doc update
 %        Nov. 18, 2010 - added weighting
 %        Apr.  3, 2012 - use seizmocheck
+%        May  30, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 14:05 GMT
+%     Last Updated May  30, 2012 at 14:05 GMT
 
 % todo:
 
@@ -262,7 +263,7 @@ try
     [smap(1:nrng,1).weights]=deal(w);
     
     % get frequencies
-    nspts=2^(nextpow2(npts(1))+1);
+    nspts=2^nextpow2(npts(1));
     f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
     
     % extract data (silently)

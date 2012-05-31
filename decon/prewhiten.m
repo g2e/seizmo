@@ -63,9 +63,10 @@ function [data]=prewhiten(data,order)
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
 %        Jan. 28, 2012 - doc update, drop SEIZMO global usage, better
 %                        checkheader usage
+%        May  30, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 15:05 GMT
+%     Last Updated May  30, 2012 at 15:05 GMT
 
 % todo:
 
@@ -146,7 +147,7 @@ try
     end
 
     % loop over records
-    npts2=2.^nextpow2n(2*npts);
+    npts2=2.^nextpow2n(npts);
     depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
     for i=1:nrecs
         % skip dataless

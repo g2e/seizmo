@@ -74,9 +74,10 @@ function [data]=deconvolve(data,tf,delay,h2o,frange,zi,zf)
 %        Aug. 19, 2010 - removed ifft symmetric flag, real conversion
 %        Feb. 11, 2011 - dropped versioninfo caching
 %        Jan. 28, 2012 - doc update, better checkheader usage
+%        May  30, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 15:05 GMT
+%     Last Updated May  30, 2012 at 15:05 GMT
 
 % todo:
 
@@ -270,7 +271,7 @@ try
         end
 
         % waterleveled spectral division
-        nspts=2^(nextpow2(npts(i)+ntf(tfidx(i))-1)+1);
+        nspts=2^nextpow2(npts(i)+ntf(tfidx(i))-1);
         sdelta=2*nyq(i)./nspts;
         freq=abs([0:(nspts/2) (1-nspts/2):-1].*sdelta);
         good=freq>=frange(i,1) & freq<=frange(i,2);

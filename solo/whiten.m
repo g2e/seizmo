@@ -10,7 +10,7 @@ function [data]=whiten(data,width,units,varargin)
 %     WHITEN(DATA) will perform spectral normalization (aka whitening) on
 %     records in the SEIZMO structure DATA.  Normalization is performed by
 %     dividing the complex spectrum by a smoothed version of the amplitude
-%     spectrum.  Smoothing utilizes a 41-sample sliding mean.  This is NOT
+%     spectrum.  Smoothing utilizes a 1 mHz wide sliding mean.  This is NOT
 %     equivalent to the 'whiten' command in SAC (see function PREWHITEN).
 %     This operation is particularly suited for seismic noise studies.
 %
@@ -41,6 +41,9 @@ function [data]=whiten(data,width,units,varargin)
 %     % Spectral normalization returns much whiter noise:
 %     plot1([data(1) whiten(data(1))])
 %
+%     % Compare to 1-bit whitening:
+%     plot1([data(1) whiten(data(1)) whiten(data(1),1,'samples')])
+%
 %    See also: SLIDINGMEAN, PREWHITEN, UNPREWHITEN
 
 %     Version History:
@@ -57,9 +60,10 @@ function [data]=whiten(data,width,units,varargin)
 %        Feb. 15, 2011 - minor doc update
 %        Mar. 13, 2012 - doc update, seizmocheck fix, better checkheader
 %                        usage, use getheader improvements
+%        May  30, 2012 - added example, simplified verbose output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 10:05 GMT
+%     Last Updated May  30, 2012 at 10:05 GMT
 
 % todo:
 
@@ -95,10 +99,13 @@ try
     nrecs=numel(data);
     
     % verbosity
-    verbose=seizmoverbose;
+    verbose=seizmoverbose(false);
     
     % detail message
-    if(verbose); disp('Beginning Spectral Whitening of Record(s)'); end
+    if(verbose)
+        disp('Spectral Whitening Record(s)');
+        print_time_left(0,nrecs);
+    end
     
     % get some header fields
     iftype=getheader(data,'iftype id');
@@ -168,15 +175,17 @@ try
     end
     
     % detail message
-    if(verbose); disp('Finished Spectral Whitening of Record(s)'); end
-
+    if(verbose); print_time_left(nrecs,nrecs); end
+    
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
     checkheader_state(oldcheckheaderstate);
+    seizmoverbose(verbose);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
     checkheader_state(oldcheckheaderstate);
+    seizmoverbose(verbose);
     
     % rethrow error
     error(lasterror);

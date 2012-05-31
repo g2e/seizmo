@@ -47,9 +47,10 @@ function nolabels(ax,xy)
 %        Aug.  7, 2010 - added 'xtick' 'ytick' 'xytick' 'xlabel' 'ylabel' &
 %                        'xylabel' options
 %        Aug.  8, 2010 - doc update
+%        May   9, 2012 - made options a bit more flexible
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2010 at 17:25 GMT
+%     Last Updated May   9, 2012 at 17:25 GMT
 
 % todo:
 
@@ -90,30 +91,30 @@ switch lower(xy)
         tmp=get(ax,'ylabel');
         if(iscell(tmp)); tmp=cat(1,tmp{:}); end
         set(tmp,'string',[]);
-    case 'xylabel'
+    case {'xylabel' 'xylabels'}
         tmp=get(ax,'xlabel');
         if(iscell(tmp)); tmp=cat(1,tmp{:}); end
         set(tmp,'string',[]);
         tmp=get(ax,'ylabel');
         if(iscell(tmp)); tmp=cat(1,tmp{:}); end
         set(tmp,'string',[]);
-    case 'xlabel'
+    case {'xlabel' 'xlabels'}
         tmp=get(ax,'xlabel');
         if(iscell(tmp)); tmp=cat(1,tmp{:}); end
         set(tmp,'string',[]);
-    case 'ylabel'
+    case {'ylabel' 'ylabels'}
         tmp=get(ax,'ylabel');
         if(iscell(tmp)); tmp=cat(1,tmp{:}); end
         set(tmp,'string',[]);
-    case 'xytick'
+    case {'xytick' 'xyticks'}
         set(ax,'xticklabel',[],'yticklabel',[]);
-    case 'xtick'
+    case {'xtick' 'xticks'}
         set(ax,'xticklabel',[]);
-    case 'ytick'
+    case {'ytick' 'yticks'}
         set(ax,'yticklabel',[]);
     otherwise
         error('seizmo:nolabels:badInput',...
-            'XY must be either ''x'' ''y'' or ''xy''!');
+            'XY input unknown!');
 end
 
 end

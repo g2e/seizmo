@@ -69,9 +69,10 @@ function [svol]=geofkxcvolume(data,ll,s,frng,w)
 %        July  6, 2010 - major update to struct, doc update
 %        July  7, 2010 - removed deg to km conversions
 %        Apr.  3, 2012 - use seizmocheck
+%        May  30, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 15:15 GMT
+%     Last Updated May  30, 2012 at 14:05 GMT
 
 % todo:
 % - geometrical spreading & Q would be nice
@@ -187,8 +188,7 @@ try
     [svol(1:nrng,1).weights]=deal(w);
     
     % get frequencies
-    pow2pad=0; % 0 is the default
-    nspts=2^(pow2pad+nextpow2(npts(1)));
+    nspts=2^nextpow2(npts(1));
     f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
     
     % extract data (silently)

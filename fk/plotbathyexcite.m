@@ -12,10 +12,9 @@ function [varargout]=plotbathyexcite(c,la,lo,crng,popt,fgcolor,bgcolor,ax)
 %     PLOTBATHYEXCITE(C,LAT,LON) plots bathymetric coefficient data given
 %     in the 2D array C.  The data should be regularly sampled in latitude
 %     and longitude (given by vectors LAT & LON).  The data is plotted on a
-%     map with a Hammer-Aitoff projection and the map limits are scaled to
+%     map with a Robinson projection and the map limits are scaled to
 %     fit the latitude and longitude limits.  This plots GSHHS coastlines
-%     and borders in crude-resolution which may take a few moments - please
-%     be patient. Dimensions of C should be NUMEL(LAT)xNUMEL(LON).
+%     in a crude-resolution. Dimensions of C should be NLATxNLON.
 %
 %     PLOTBATHYEXCITE(C,LAT,LON,CLIM) sets the coloring limits of the
 %     coefficients limits for coloring.  The default is [0 1].  CLIM must
@@ -32,7 +31,7 @@ function [varargout]=plotbathyexcite(c,la,lo,crng,popt,fgcolor,bgcolor,ax)
 %     other is not, an opposing color is found using INVERTCOLOR.  The
 %     color scale is also changed so the lower color clip is at BGCOLOR.
 %
-%     PLOTBATHYEXCITE(MAP,PROJOPT,DBLIM,ZERODB,FGCOLOR,BGCOLOR,AX) sets the
+%     PLOTBATHYEXCITE(C,LAT,LON,CLIM,PROJOPT,FGCOLOR,BGCOLOR,AX) sets the
 %     axes to draw in.  This is useful for subplots, guis, etc.
 %
 %     AX=PLOTBATHYEXCITE(...)
@@ -45,18 +44,26 @@ function [varargout]=plotbathyexcite(c,la,lo,crng,popt,fgcolor,bgcolor,ax)
 %     [lon,lat]=meshgrid(-179:2:179,89:-2:-89);
 %     c2elev=getc2elev(lat,lon);
 %     c2elev(c2elev>0)=0; % mask out land
-%     c=bathy_micro_excite(-c2elev);
+%     c2=getcrust2(lat,lon);
+%     vs=cat(1,c2.vs);
+%     vs=reshape(vs(:,3:7),90,180,5);
+%     thick=cat(1,c2.thick);
+%     thick=reshape(thick(:,3:7),90,180,5);
+%     c2vsavg=sum(thick,3)./sum(thick./vs,3);
+%     c=bathy_micro_excite(-c2elev,1/7.5,c2vsavg*1000);
 %     ax=plotbathyexcite(c,lat,lon);
 %     title(ax,{[] 'Crust2.0 Bathymetric Excitation Coefficient Map' ...
-%         'Period: 6.28s   Vs: 2.8km/s' []},'color','w');
+%         'Period: 7.5s   Vs: 2.2-3.75km/s' []},'color','w');
 %
 %    See also: BATHY_MICRO_EXCITE
 
 %     Version History:
 %        Feb. 15, 2011 - initial version
+%        May   5, 2012 - minor doc update
+%        May  18, 2012 - improved label of the colorbar, use gray colormap
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2011 at 15:05 GMT
+%     Last Updated May  18, 2012 at 15:05 GMT
 
 % todo:
 
@@ -126,10 +133,11 @@ else
 end
 
 % map colors & coast/border res
-gshhs='c';
+%gshhs='c';
 ocean=bgcolor;
-land=fgcolor;
-border=fgcolor;
+%land=fgcolor;
+land=[0.4 0.6 0.2];
+%border=fgcolor;
 
 % access to m_map globals for map boundaries
 global MAP_VAR_LIST
@@ -159,7 +167,7 @@ end
 m_proj(popt{:});
 set(ax,'color',ocean);
 
-% plot geofk beam
+% plot image data
 hold(ax,'on');
 if(any(lo>MAP_VAR_LIST.longs(1) & lo<MAP_VAR_LIST.longs(2)))
     m_pcolor(lo,la,c,'parent',ax);
@@ -174,9 +182,9 @@ end
 % modify
 shading(ax,'flat');
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
-    colormap(ax,flipud(fire));
+    colormap(ax,flipud(gray));
 elseif(strcmp(bgcolor,'k') || isequal(bgcolor,[0 0 0]))
-    colormap(ax,fire);
+    colormap(ax,gray);
 else
     if(ischar(bgcolor))
         bgcolor=name2rgb(bgcolor);
@@ -189,16 +197,19 @@ hold(ax,'off');
 
 % now add coastlines and political boundaries
 axes(ax);
-m_gshhs([gshhs 'c'],'color',land);
-m_gshhs([gshhs 'b'],'color',border);
-m_grid('color',fgcolor);
+%m_gshhs([gshhs 'c'],'color',land);
+%m_gshhs([gshhs 'b'],'color',border);
+m_coast('line','color',fgcolor);
+%m_coast('patch',land);
+m_grid('color',fgcolor,'xtick',[],'ytick',[]);
 
 % hackery to color oceans at large when the above fails
 set(findobj(ax,'tag','m_grid_color'),'facecolor',ocean);
 
 % colorbar & title
 c=colorbar('eastoutside','peer',ax,'xcolor',fgcolor,'ycolor',fgcolor);
-xlabel(c,'c','color',fgcolor);
+xlabel(c,'$$\sum {c_{m}^2}$$','color',fgcolor,...
+    'interpreter','latex');
 title(ax,{[] 'Bathymetric Excitation Coefficient Map' []},...
     'color',fgcolor);
 

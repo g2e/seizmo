@@ -15,11 +15,11 @@ function [data]=splitpad(data,pow2pad)
 %     DATA=SPLITPAD(DATA,POW2PAD) lets the power of 2 zero-padding be
 %     adjusted using an integer POW2PAD according to the formula:
 %                fftlength=2^(nextpow2(NPTS)+POW2PAD)
-%     The default value is 1 and is a good choice for most problems.
-%     Setting POW2PAD to <1 is not recommended and setting <0 will truncate
-%     the time series.  Setting POW2PAD >1 will increase the frequency
-%     resolution of the spectrogram at the cost of increased computation
-%     time and array size.
+%     The default value is 0 and is a good choice for most problems.
+%     Setting POW2PAD to <0 is not recommended and will truncate the time
+%     series.  Setting POW2PAD >0 will increase the frequency resolution of
+%     the spectrogram at the cost of increased computation time and array
+%     size.
 %
 %    Notes:
 %     - The record's must have a point at zero time.  An error is issued if
@@ -28,8 +28,8 @@ function [data]=splitpad(data,pow2pad)
 %    Header changes: B, E, NPTS, DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     % SPLITPAD requires using an extend usage form of DFT:
-%     fdata=dft(splitpad(data),[],0);
+%     % Do NOT adjust the POW2PAD option to DFT when using SPLITPAD:
+%     fdata=dft(splitpad(data));
 %
 %    See also: CUT, DFT
 
@@ -40,9 +40,10 @@ function [data]=splitpad(data,pow2pad)
 %        Aug. 26, 2011 - use checkheader more effectively, added some
 %                        tolerance to the point at 0 requirement
 %        Dec. 21, 2011 - doc update
+%        May  29, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2011 at 10:05 GMT
+%     Last Updated May  29, 2012 at 10:05 GMT
 
 % todo:
 
@@ -69,7 +70,7 @@ try
     nrecs=numel(data);
     
     % check pow2pad
-    if(nargin<2 || isempty(pow2pad)); pow2pad=1; end
+    if(nargin<2 || isempty(pow2pad)); pow2pad=0; end
     if(~isnumeric(pow2pad) || ~isreal(pow2pad) ...
             || any(pow2pad~=fix(pow2pad)) ...
             || ~any(numel(pow2pad)==[1 nrecs]))

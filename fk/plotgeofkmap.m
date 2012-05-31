@@ -13,7 +13,7 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %     PLOTGEOFKMAP(MAP) plots the frequency-slowness-position beam data in
 %     geofk struct MAP.  See a geofk function like GEOFKXCVOLUME for
 %     details on the struct.  The data is plotted on a map with a
-%     Hammer-Aitoff projection and the map limits are scaled to fit the
+%     Robinson projection and the map limits are scaled to fit the
 %     beam data & station positions.  Note that the beam data positions
 %     should form a regular grid (using a function like MESHGRID).  This
 %     plots GSHHS coastlines and borders in low-resolution which may take a
@@ -160,7 +160,7 @@ else
 end
 
 % map colors & coast/border res
-gshhs='l';
+gshhs='i';
 %ocean=[0.3 0.6 1];
 %land=[0.4 0.6 0.2];
 %border=[0.5 0 0];
@@ -247,9 +247,11 @@ hold(ax,'off');
 axes(ax);
 %m_gshhs([gshhs 'c'],'patch',land);
 %m_gshhs([gshhs 'b'],'color',border);
-m_gshhs([gshhs 'c'],'color',land);
-m_gshhs([gshhs 'b'],'color',border);
-m_grid('color',fgcolor);
+%m_gshhs([gshhs 'c'],'color',land);
+%m_gshhs([gshhs 'b'],'color',border);
+m_coast('line','color',fgcolor);
+%m_grid('color',fgcolor);
+m_grid('color',fgcolor,'xtick',[],'ytick',[]);
 
 % hackery to color oceans at large when the above fails
 set(findobj(ax,'tag','m_grid_color'),'facecolor',ocean);

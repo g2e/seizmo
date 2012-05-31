@@ -83,9 +83,10 @@ function [y]=slidingavg(x,nsamples,varargin)
 %        June  9, 2009 - allow for unlimited varargin
 %        Feb. 11, 2011 - mass nargchk fix
 %        Jan. 28, 2012 - drop SEIZMO global, doc update
+%        May  30, 2012 - allow N=0 for position=center
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 15:05 GMT
+%     Last Updated May  30, 2012 at 15:05 GMT
 
 % todo:
 % - fix nan handling
@@ -158,9 +159,9 @@ end
 if(isempty(option.CUSTOM))
     % fix/check nsamples
     if(~isnumeric(nsamples) || ~isscalar(nsamples)...
-            || nsamples<1 || fix(nsamples)~=nsamples)
+            || nsamples<0 || fix(nsamples)~=nsamples)
         error('seizmo:slidingavg:badInput',...
-            'N must be a positive integer!')
+            'N must be a positive integer!');
     end
     
     % build window indices
@@ -169,8 +170,16 @@ if(isempty(option.CUSTOM))
             hw=(1:nsamples)+option.OFFSET-(option.OFFSET>0);
             window=[-fliplr(hw) zeros(~option.OFFSET,1) hw];
         case 'trail'
+            if(nsamples<1)
+                error('seizmo:slidingavg:badInput',...
+                    'N must be a positive integer!');
+            end
             window=(1-nsamples:0)+option.OFFSET;
         case 'lead'
+            if(nsamples<1)
+                error('seizmo:slidingavg:badInput',...
+                    'N must be a positive integer!');
+            end
             window=(0:nsamples-1)+option.OFFSET;
     end
     sw=numel(window); nw=sw;

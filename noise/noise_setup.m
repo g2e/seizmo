@@ -138,7 +138,7 @@ verbose=seizmoverbose;
 %matlabpool(4); % PARALLEL
 
 % read in data headers
-if(verbose); disp('READING DATAFILE HEADERS (MAY TAKE A WHILE)!)'); end
+if(verbose); disp('READING DATAFILE HEADERS (A LITTLE SLOW...)'); end
 data=readheader(strcat(indir,fs,opt.FILENAMES));
 
 % require 3char cmp code

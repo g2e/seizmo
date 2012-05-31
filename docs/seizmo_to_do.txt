@@ -9,16 +9,9 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-- median needs be replaced with nanmedian in geofs programs for bodywave
-backprojection stuff
-
-- cart2pol fixes
-- pol2cart needs to be added
-- fs_phase2latlon needs a direct equivalent like fkmap/fkvolume
-
-
 multifun should convert spectral records to complex before operation
     - will this affect any current operations?
+        - whiten
 
 make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
 
@@ -32,7 +25,8 @@ rotate_correlations
 
 fk stuff
     clean up documentation
-        - estimate of freq-slowness power spectra using frequency-domain beamforming
+        - estimate of freq-slowness power spectra
+          using frequency-domain beamforming
     allow saving complex spectra
     rayleigh/love dispersion estimation
         - give it a slowness/velocity range
@@ -59,6 +53,10 @@ fk stuff
 		geofkhorzvolume - alg changes
 		geofkxcmap      - alg changes
 		geofkxchorzmap  - alg changes
+    cart2pol fixes
+    pol2cart needs to be added
+    fs_phase2latlon needs a direct equivalent like fkmap/fkvolume
+    plotting geo spectra uses mmap
 figure out strange narrow long-period peaks in noise results
     - response taper affects it
     - happens even without response removal?

@@ -105,7 +105,7 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %         fftlength=2^(nextpow2(max([size(X,1) size(Y,1)]))+POW2PAD)
 %     POW2PAD may be any integer.  Negative POW2PAD will truncate X and Y, 
 %     POW2PAD==0 will minimally pad X and Y, and positive POW2PAD pad X and
-%     Y even more.  By default POW2PAD is set to 1 and changing it is
+%     Y even more.  By default POW2PAD is set to 0 and changing it is
 %     discouraged.
 %
 %     [CG,LG,PG]=MCXC(...,'verbose',VERBOSITY,...) switches the verbose
@@ -123,7 +123,7 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %      - SPACING  == 1                          0+
 %      - ADJACENT == 0                          0+
 %      - LAGS     == [-size(X,1)+1 size(Y,1)-1] -size(X,1)+1 to size(Y,1)-1
-%      - POW2PAD  == 1                  INTEGERS (0+ recommended)
+%      - POW2PAD  == 0                  INTEGERS (0+ recommended)
 %      - VERBOSE  == TRUE     Any value that can be evaluated as TRUE/FALSE
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -195,9 +195,10 @@ function [cg,lg,pg]=mcxc(x,varargin)
 %        Mar. 12, 2010 - fix for precision issue in normalized case
 %        Feb. 15, 2011 - minor doc update
 %        Mar. 24, 2012 - minor doc update
+%        May  29, 2012 - pow2pad=0 by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2012 at 10:05 GMT
+%     Last Updated May  29, 2012 at 10:05 GMT
 
 % todo:
 % - vectorized gives different lag result if no peaks left (DO NOT CARE)
@@ -215,7 +216,7 @@ adjacent=0;         % no adjacent points
 normxc=true;        % normalize correlograms
 absxc=true;         % take absolute value before picking
 vectorxc=false;     % use looped subfunctions
-pow2pad=1;          % next power of 2 plus 1
+pow2pad=0;          % next power of 2
 verbose=true;       % verbosity of messages
 
 % parse and check x and y
