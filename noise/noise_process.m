@@ -118,9 +118,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %                        based rejection
 %        May   3, 2012 - fixed bug in amplitude-based rejection
 %        May  14, 2012 - set amp rejection to Inf (no reject) by default
+%        May  31, 2012 - speed overrides for (divide/add)records
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  14, 2012 at 11:15 GMT
+%     Last Updated May  31, 2012 at 11:15 GMT
 
 % todo:
 
@@ -871,5 +872,25 @@ end
 opt.MINIMUMLENGTH=opt.MINIMUMLENGTH/100;
 opt.TAPERWIDTH=opt.TAPERWIDTH/100;
 
+end
+
+
+function [d1]=dividerecords(d1,d2,varargin)
+% simple hack for speed (also updates dep* fields)
+nrecs=numel(d1);
+[depmin,depmax,depmen]=deal(nan(nrecs,1));
+for i=1:nrecs
+    d1(i).dep=d1(i).dep./d2(i).dep;
+    depmin(i)=min(d1(i).dep(:));
+    depmax(i)=max(d1(i).dep(:));
+    depmen(i)=mean(d1(i).dep(:));
+end
+d1=changeheader(d1,'depmin',depmin,'depmax',depmax,'depmen',depmen);
+end
+
+
+function [d1]=addrecords(d1,d2,varargin)
+% simple hack for speed (no dep* update)
+for i=1:numel(d1); d1(i).dep=d1(i).dep+d2(i).dep; end
 end
 

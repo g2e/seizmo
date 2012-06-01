@@ -10,9 +10,8 @@ function [data]=omegashift(data,shift)
 %     the operation is done in the frequency domain there is a circular
 %     shift occurring (that is data from the end wraps to the front and
 %     data from the front wraps to the end) but it is complicated by
-%     records being zero-padded.  For shifts less than the record length
-%     the wrap-around will be replaced with zeros (or close to it).  SHIFT
-%     may be a scalar or a vector of values (1 per record in DATA).
+%     records being zero-padded.  SHIFT may be a scalar or a vector of
+%     values (1 per record in DATA).
 %
 %    Notes:
 %     - TIMESHIFT & OMEGASHIFT are completely different operations!  The
@@ -32,9 +31,10 @@ function [data]=omegashift(data,shift)
 %     Version History:
 %        Feb.  4, 2012 - initial version
 %        Mar. 15, 2012 - fix example
+%        May  31, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 15:05 GMT
+%     Last Updated May  31, 2012 at 15:05 GMT
 
 % todo:
 

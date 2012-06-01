@@ -9,10 +9,6 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-multifun should convert spectral records to complex before operation
-    - will this affect any current operations?
-        - whiten
-
 make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
 
 meld

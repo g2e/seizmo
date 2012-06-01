@@ -67,7 +67,7 @@ function [data]=slidingmean(data,n,varargin)
 %
 %    Examples:
 %     % Compare a 21-sample sliding-window mean to the original record:
-%     p2([data(1) slidingmean(data(1),10)])
+%     plot2([data(1) slidingmean(data(1),10)])
 %
 %    See also: SLIDINGABSMEAN, SLIDINGAVG, SLIDINGRMS, SOLOFUN
 
@@ -78,9 +78,10 @@ function [data]=slidingmean(data,n,varargin)
 %                        seizmofun/solofun rename
 %        Apr.  3, 2012 - minor doc update
 %        May  30, 2012 - allow N=0
+%        May  31, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  30, 2012 at 09:45 GMT
+%     Last Updated May  31, 2012 at 09:45 GMT
 
 % todo:
 

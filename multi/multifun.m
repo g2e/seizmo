@@ -111,6 +111,8 @@ function [data]=multifun(fun,varargin)
 %     to 'warn'.
 %     
 %    Notes:
+%     - Spectral records are converted to complex prior to the operation.
+%       They are converted back appropriately.
 %     
 %    Header changes: DEPMIN, DEPMAX, DEPMEN,
 %                    NPTS, NCMP (see option 'npts' and 'ncmp')
@@ -150,12 +152,15 @@ function [data]=multifun(fun,varargin)
 %        Jan.  6, 2011 - name changed from recordfun to multifun to
 %                        better differentiate it from seizmofun/solofun
 %        Mar. 13, 2012 - doc update, use getheader improvements
+%        June  1, 2012 - fix bug when padding ncmp, spectral records are
+%                        converted to complex for the operator
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 21:25 GMT
+%     Last Updated June  1, 2012 at 21:25 GMT
 
 % todo:
-% - could use some code re-ordering
+% - better scalar expansion handling (less memory)
+% - could use some code re-ordering (readability & efficiency)
 
 % default options
 option.NEWHDR=false;
@@ -299,7 +304,7 @@ try
 
     % check and get header fields
     b(1:ndatasets)={nan(maxrecs,1)};
-    npts=b; delta=b; leven=b; iftype=b; ncmp=b;
+    npts=b; delta=b; leven=b; iftype=b; ncmp=b; isrlim=b; isamph=b;
     nzyear=b; nzjday=b; nzhour=b; nzmin=b; nzsec=b; nzmsec=b;
     for i=1:ndatasets
         data{i}=checkheader(data{i});
@@ -307,6 +312,8 @@ try
             nzmin{i},nzsec{i},nzmsec{i},leven{i},iftype{i}]=getheader(...
             data{i},'npts','ncmp','delta','b','nzyear','nzjday',...
             'nzhour','nzmin','nzsec','nzmsec','leven lgc','iftype id');
+        isrlim{i}=strcmpi(iftype{i},'irlim');
+        isamph{i}=strcmpi(iftype{i},'iamph');
     end
 
     % turn off header checking
@@ -407,6 +414,22 @@ try
         for i=1:ndatasets
             for j=1:maxrecs; data{i}(j).dep=double(data{i}(j).dep); end
         end
+        
+        % convert spectral records to complex
+        for i=1:ndatasets
+            if(any(isrlim{i}))
+                for j=find(isrlim{i})'
+                    data{i}(j).dep=complex(data{i}(j).dep(:,1:2:end),...
+                        data{i}(j).dep(:,2:2:end));
+                end
+            end
+            if(any(isamph{i}))
+                for j=find(isamph{i})'
+                    data{i}(j).dep=data{i}(j).dep(:,1:2:end)...
+                        .*exp(1i*data{i}(j).dep(:,2:2:end));
+                end
+            end
+        end
 
         % alter size of npts/ncmp
         allnpts=cell2mat(npts);
@@ -438,8 +461,8 @@ try
             maxcmp=max(allncmp,[],2);
             for i=1:ndatasets
                 for j=1:maxrecs
-                    data{i}(j).dep=[data{i}(j).dep ...
-                        zeros(npts{i}(j),maxcmp(j)-ncmp{i}(j))];
+                    data{i}(j).dep=[data{i}(j).dep zeros(...
+                        size(data{i}(j).dep,1),maxcmp(j)-ncmp{i}(j))];
                 end
             end
         end
@@ -458,9 +481,19 @@ try
             for j=2:ndatasets
                 data{1}(i).dep=fun(data{1}(i).dep,data{j}(i).dep);
             end
+            
+            % convert spectral records back from complex
+            [npts(i),ncmp(i)]=size(data{1}(i).dep);
+            if(option.NEWHDR); spidx=ndatasets; else spidx=1; end
+            if(isrlim{spidx}(i))
+                data{1}(i).dep(:,[1:2:2*ncmp(i) 2:2:2*ncmp(i)])=...
+                    [real(data{1}(i).dep) imag(data{1}(i).dep)];
+            elseif(isamph{spidx}(i))
+                data{1}(i).dep(:,[1:2:2*ncmp(i) 2:2:2*ncmp(i)])=...
+                    [abs(data{1}(i).dep) angle(data{1}(i).dep)];
+            end
 
             % get header info
-            [npts(i),ncmp(i)]=size(data{1}(i).dep);
             if(npts(i)>0 && ncmp(i)>0)
                 depmen(i)=mean(data{1}(i).dep(:));
                 depmin(i)=min(data{1}(i).dep(:));
@@ -472,7 +505,7 @@ try
 
             % copy header if newhdr set
             if(option.NEWHDR)
-                % this totally requires header layout to be equivalent
+                % this requires header layout to be equivalent
                 data{1}(i).head=data{end}(i).head;
             end
             
@@ -556,13 +589,29 @@ try
                 warning(report.identifier,report.message);
             end
         end
-
+        
         % save class and convert to double precision
         if(option.NEWHDR); oclass=str2func(class(data(end).dep));
         else oclass=str2func(class(data(1).dep));
         end
         for i=1:nrecs; data(i).dep=double(data(i).dep); end
-
+        
+        % convert spectral records to complex
+        isrlim=cell2mat(isrlim);
+        isamph=cell2mat(isamph);
+        if(any(isrlim))
+            for j=find(isrlim)'
+                data(j).dep=complex(data(j).dep(:,1:2:end),...
+                    data(j).dep(:,2:2:end));
+            end
+        end
+        if(any(isamph))
+            for j=find(isamph)'
+                data(j).dep=data(j).dep(:,1:2:end)...
+                    .*exp(1i*data(j).dep(:,2:2:end));
+            end
+        end
+        
         % alter size of npts/ncmp
         npts=cell2mat(npts);
         ncmp=cell2mat(ncmp);
@@ -585,7 +634,8 @@ try
         elseif(strcmpi(option.NCMP,'PAD'))
             maxcmp=max(ncmp);
             for i=1:nrecs
-                data(i).dep=[data(i).dep zeros(npts(i),maxcmp-ncmp(i))];
+                data(i).dep=[data(i).dep ...
+                    zeros(size(data(i).dep,1),maxcmp-ncmp(i))];
             end
         end
         
@@ -605,18 +655,28 @@ try
 
         % copy header if newhdr set
         if(option.NEWHDR)
-            % this totally requires header layout to be equivalent
+            % this requires header layout to be equivalent
             data(1).head=data(end).head;
         end
 
         % reduce to first record
         data=data(1);
+        
+        % convert spectral records back from complex
+        [npts,ncmp]=size(data.dep);
+        if(option.NEWHDR); spidx=nrecs; else spidx=1; end
+        if(isrlim(spidx))
+            data.dep(:,[1:2:2*ncmp 2:2:2*ncmp])=...
+                [real(data.dep) imag(data.dep)];
+        elseif(isamph(spidx))
+            data.dep(:,[1:2:2*ncmp 2:2:2*ncmp])=...
+                [abs(data.dep) angle(data.dep)];
+        end
 
         % change class back
         data.dep=oclass(data.dep);
 
         % get header info
-        [npts,ncmp]=size(data.dep);
         depmen=nan; depmin=nan; depmax=nan;
         if(npts>0 && ncmp>0)
             depmen=mean(data.dep(:));

@@ -61,9 +61,10 @@ function [data]=whiten(data,width,units,varargin)
 %        Mar. 13, 2012 - doc update, seizmocheck fix, better checkheader
 %                        usage, use getheader improvements
 %        May  30, 2012 - added example, simplified verbose output
+%        May  31, 2012 - use minimal subfunction to divide (for speed)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  30, 2012 at 10:05 GMT
+%     Last Updated May  31, 2012 at 10:05 GMT
 
 % todo:
 
@@ -151,9 +152,6 @@ try
     width(hz)=ceil(width(hz)./sdelta(hz)+1);
     width=ceil((width-1)/2);
 
-    % fake amph records as rlim (to get by dividerecords checks/fixes)
-    amph=changeheader(amph,'iftype','irlim');
-
     % get smoothed amplitude records
     amph=slidingmean(amph,width,varargin{:});
 
@@ -192,3 +190,18 @@ catch
 end
 
 end
+
+
+function [d1]=dividerecords(d1,d2,varargin)
+% simple hack for speed
+nrecs=numel(d1);
+[depmin,depmax,depmen]=deal(nan(nrecs,1));
+for i=1:nrecs
+    d1(i).dep=d1(i).dep./d2(i).dep;
+    depmin(i)=min(d1(i).dep(:));
+    depmax(i)=max(d1(i).dep(:));
+    depmen(i)=mean(d1(i).dep(:));
+end
+d1=changeheader(d1,'depmin',depmin,'depmax',depmax,'depmen',depmen);
+end
+

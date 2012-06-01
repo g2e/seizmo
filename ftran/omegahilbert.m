@@ -15,16 +15,17 @@ function [data]=omegahilbert(data)
 %
 %    Examples:
 %     % Compare H(u)(t) with u(t):
-%     p2([data(1) idft(omegahilbert(dft(data(1))))])
+%     plot2([data(1) idft(omegahilbert(dft(data(1))))])
 %
 %    See also: HILBRT, ENVELOPE, OMEGASHIFT, OMEGADIVIDE, OMEGAMULTIPLY,
 %              OMEGAANALYTIC, DFT, IDFT, OMEGAGAUSSIAN
 
 %     Version History:
 %        Feb.  4, 2012 - initial version
+%        May  31, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  4, 2012 at 15:05 GMT
+%     Last Updated May  31, 2012 at 15:05 GMT
 
 % todo:
 

@@ -34,7 +34,7 @@ function [data,idx]=splitrecords(data)
 %     end
 %     data=changeheader(data,'iftype',iftype);
 %     % Now subtract and plot to make sure:
-%     p1(subtractrecords(savedata,data));
+%     plot1(subtractrecords(savedata,data));
 %
 %    See also: JOINRECORDS, MULTIFUN, GETSPECTRALCMP, KEEPAM, KEEPPH,
 %              KEEPRL, KEEPIM, CUT
@@ -46,9 +46,10 @@ function [data,idx]=splitrecords(data)
 %        Jan.  6, 2011 - recordfun/multifun rename
 %        Nov.  2, 2011 - doc update
 %        Mar. 13, 2012 - use getheader improvements, fix example
+%        May  31, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 16:40 GMT
+%     Last Updated May  31, 2012 at 16:40 GMT
 
 % todo:
 
