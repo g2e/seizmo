@@ -13,6 +13,7 @@ make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
 
 meld
     - uneven or variable samplerate
+    - timing precision issue
 rotate
     - through option
     - rewrite option code

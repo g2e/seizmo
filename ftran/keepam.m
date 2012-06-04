@@ -9,6 +9,8 @@ function [data]=keepam(data)
 %     operations that require only spectral amplitudes.
 %
 %    Notes:
+%     - Doubles the spectral amplitudes since only positive frequencies are
+%       retained.
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, IFTYPE
 %
@@ -23,9 +25,10 @@ function [data]=keepam(data)
 %        June 25, 2009 - initial version
 %        Aug. 15, 2010 - nargchk fix
 %        Dec. 21, 2011 - doc update
+%        June  1, 2012 - output is now doubled (in getspectralcmp)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Dec. 21, 2011 at 20:25 GMT
+%     Last Updated June  1, 2012 at 20:25 GMT
 
 % todo:
 

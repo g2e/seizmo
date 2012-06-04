@@ -42,9 +42,10 @@ function [times]=fixtimes(times,option)
 %        Sep.  5, 2009 - minor doc update
 %        Feb. 11, 2011 - mass nargchk fix
 %        Nov.  1, 2011 - doc update, fix for UTC_LOD rename
+%        June  3, 2012 - bugfix for negative rollover
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2011 at 15:05 GMT
+%     Last Updated June  3, 2012 at 15:05 GMT
 
 % todo:
 
@@ -100,7 +101,7 @@ switch lower(option)
             times(low,end-3)=times(low,end-3)-1;
             sectoday(low)=utc_lod(times(low,1:end-3));
             secnow(low)=secnow(low)+sectoday(low);
-            low=low(secnow<0);
+            low=low(secnow(low)<0);
         end
         high=find(secnow>=sectoday);
         while(~isempty(high))

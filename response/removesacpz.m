@@ -109,9 +109,10 @@ function [data,pz]=removesacpz(data,varargin)
 %        Feb.  3, 2012 - doc update
 %        Mar. 13, 2012 - use getheader improvements
 %        May  30, 2012 - pow2pad=0 by default
+%        June  1, 2012 - reduced computions (skip neg freq), found sac bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  30, 2012 at 20:30 GMT
+%     Last Updated June  1, 2012 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -216,7 +217,7 @@ try
         'icounts' 'icounts'};
     
     % default options
-    tlimbu=[-1*ones(nrecs,2) 2*nyq(:,[1 1])]; tlim=tlimbu;
+    tlimbu=[-1*ones(nrecs,2) 2*nyq 2*nyq+eps]; tlim=tlimbu;
     tlimstr={'-1' '-1' '2*NYQUIST' '2*NYQUIST'};
     varargin=[{'t' 'hann' 'o' [] 'u' 'dis' ...
         'id' 'idisp' 'h2o' zeros(nrecs,1)} varargin];
@@ -357,48 +358,39 @@ try
         % convert data to complex spectra
         if(amph(i))
             nspts=npts(i);
-            sdelta=delta(i);
             tmp=data(i).dep(:,1:2:end).*exp(1i*data(i).dep(:,2:2:end));
         elseif(rlim(i))
             nspts=npts(i);
-            sdelta=delta(i);
             tmp=complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
         else
             nspts=2^nextpow2(npts(i));
-            sdelta=2*nyq(i)./nspts;
             tmp=fft(data(i).dep,nspts,1); % no need to scale by delta
         end
         
-        % get limited frequency range
-        freq=[linspace(0,nyq(i),nspts/2+1) ...
-            linspace(-nyq(i)+sdelta,-sdelta,nspts/2-1)];
-        afreq=abs(freq);
-        good=afreq>=tlim(i,1) & afreq<=tlim(i,4);
+        % just the positive frequencies
+        freq=linspace(0,nyq(i),nspts/2+1);
         
-        % taper
-        taper1=taperfun(ttype{i},afreq,...
-            tlim(i,1:2),topt(i)).';
-        taper2=taperfun(ttype{i},nyq(i)-afreq,...
-            nyq(i)-tlim(i,[4 3]),topt(i)).';
-        tmp=tmp.*taper1(:,ones(ncmp(1),1)).*taper2(:,ones(ncmp(1),1));
-        
-        % convert zpk to fap
-        [a,p]=zpk2ap(freq,data(i).misc.sacpz.z,data(i).misc.sacpz.p,...
+        % convert zpk to complex (this is several orders better than SAC)
+        h=zpk2cmplx(freq,data(i).misc.sacpz.z,data(i).misc.sacpz.p,...
             data(i).misc.sacpz.k,wpow(i));
-        h=((a+h2o(i)).*exp(1i*p)).'; % and back to complex...
-        %h=zpk2cmplx(freq,data(i).misc.sacpz.z,data(i).misc.sacpz.p,...
-        %    data(i).misc.sacpz.k,wpow(i)).'; % debugging
+        h=((abs(h)+h2o(i)).*exp(1i*angle(h))).'; % add waterlevel...
         
-        % remove response (over limited freqrange)
-        % - multiply by 1e9 to account for SAC PoleZero in meters
-        tmp(good,:)=1e9*tmp(good,:)./h(good,ones(ncmp(i),1));
+        % now apply taper
+        h=1./h.*taperfun(ttype{i},freq,tlim(i,1:2),topt(i)).'...
+            .*taperfun(ttype{i},freq,tlim(i,[4 3]),topt(i)).';
+        h(isinf(h) | isnan(h))=0; % care for trouble spots in response
         
-        % recover from h==0
-        tmp(good & h'==0,:)=0;
+        % indexing to only work within the taper limits
+        good=freq>=tlim(i,1) & freq<=tlim(i,4);
+        tmpgood=[good false(1,nspts/2-1)];
         
-        % set f=0 to 0 & f=nyq to abs
-        %tmp(1)=0;
-        %tmp(nspts/2+1)=abs(tmp(nspts/2+1));
+        % apply transfer function
+        tmp(tmpgood,:)=1e9*tmp(tmpgood,:).*h(good,ones(ncmp(i),1));
+        tmp(~tmpgood,:)=0; % no response outside taper limits
+        tmp(nspts/2+2:end,:)=conj(tmp(nspts/2:-1:2,:)); % neg frequencies
+        tmp(1)=0; % force 0Hz to 0
+        tmp(nspts/2+1)=abs(tmp(nspts/2+1)); % no constraint on NyqHz phase
+        %tmp(nspts)=abs(tmp(nspts)); % SAC transfer bug
         
         % convert back
         if(amph(i))
@@ -408,7 +400,6 @@ try
             data(i).dep(:,1:2:end)=real(tmp);
             data(i).dep(:,2:2:end)=imag(tmp);
         else
-            %tmp=ifft(tmp,[],1,'symmetric'); % debugging
             tmp=real(ifft(tmp,[],1));
             data(i).dep=tmp(1:npts(i),:);
         end

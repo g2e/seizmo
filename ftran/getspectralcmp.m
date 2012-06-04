@@ -10,7 +10,8 @@ function [data]=getspectralcmp(data,cmp)
 %     power and complex spectras.  CMP may be a list of components as long
 %     as there is exactly one entry per record.  Filetype is changed to
 %     General X vs Y.  Note that this drops the negative frequencies as
-%     they are redundant for real-valued time-series data.
+%     they are redundant for real-valued time-series data.  The amplitude
+%     spectrum is accordingly doubled.
 %
 %    Notes:
 %     - Using 'CMPLX' will return a complex array.  This will definitely
@@ -36,9 +37,10 @@ function [data]=getspectralcmp(data,cmp)
 %        Dec. 21, 2011 - add power spectra option, better checkheader usage
 %        Feb.  6, 2012 - power spectra output is in dBs
 %        Mar. 13, 2012 - use getheader improvements
+%        June  1, 2012 - bugfix: multiply amp spectra by 2
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 15:05 GMT
+%     Last Updated June  1, 2012 at 15:05 GMT
 
 % todo:
 
@@ -114,10 +116,10 @@ try
         switch cmp{i}
             case 'am'
                 if(isrlim(i))
-                    data(i).dep=abs(complex(...
+                    data(i).dep=2*abs(complex(...
                         data(i).dep(:,1:2:end),data(i).dep(:,2:2:end)));
                 else
-                    data(i).dep=data(i).dep(:,1:2:end);
+                    data(i).dep=2*data(i).dep(:,1:2:end);
                 end
             case 'ph'
                 if(isrlim(i))

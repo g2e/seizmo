@@ -119,9 +119,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        May   3, 2012 - fixed bug in amplitude-based rejection
 %        May  14, 2012 - set amp rejection to Inf (no reject) by default
 %        May  31, 2012 - speed overrides for (divide/add)records
+%        June  3, 2012 - immediate class change to doubles
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  31, 2012 at 11:15 GMT
+%     Last Updated June  3, 2012 at 11:15 GMT
 
 % todo:
 
@@ -341,10 +342,14 @@ for i=1:numel(tsdirs) % SERIAL
     
     % read in data
     if(isxc)
-        data=readdata(data);
+        data=changeclass(readdata(data),'double');
     else
-        if(~isempty(vdata)); vdata=readdata(vdata); end
-        if(~isempty(hdata)); hdata=readdata(hdata); end
+        if(~isempty(vdata))
+            vdata=changeclass(readdata(vdata),'double');
+        end
+        if(~isempty(hdata))
+            hdata=changeclass(readdata(hdata),'double');
+        end
     end
     
     % detail message

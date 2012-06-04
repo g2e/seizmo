@@ -44,10 +44,12 @@ function [data]=removetrend(data)
 %        Jan. 30, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb.  2, 2010 - versioninfo caching
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
-%        Mar. 13, 2012 - doc update, seizmocheck fix, use getheader improvements
+%        Mar. 13, 2012 - doc update, seizmocheck fix, use getheader
+%                        improvements
+%        June  3, 2012 - no checkheader call, skip doubles conversion
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 15:05 GMT
+%     Last Updated June  3, 2012 at 15:05 GMT
 
 % todo:
 
@@ -62,9 +64,6 @@ oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt trend removal
 try
-    % check header
-    data=checkheader(data);
-    
     % verbosity
     verbose=seizmoverbose;
 
@@ -81,7 +80,7 @@ try
     end
 
     % remove trend and update header
-    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    [depmen,depmin,depmax]=deal(nan(nrecs,1));
     for i=1:numel(data)
         % skip dataless
         if(isempty(data(i).dep))
@@ -89,10 +88,6 @@ try
             if(verbose); print_time_left(i,nrecs); end
             continue;
         end
-
-        % save class and convert to double precision
-        oclass=str2func(class(data(i).dep));
-        data(i).dep=double(data(i).dep);
 
         % unevenly spaced
         if(~leven(i))
@@ -108,9 +103,6 @@ try
                     data(i).dep(:,j)-mean(data(i).dep(:,j)));
             end
         end
-
-        % change class back
-        data(i).dep=oclass(data(i).dep);
 
         % adjust header
         depmen(i)=mean(data(i).dep(:));

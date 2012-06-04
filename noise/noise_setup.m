@@ -31,6 +31,8 @@ function []=noise_setup(indir,outdir,varargin)
 %      COMPONENTS   - include records with these component codes []
 %      FILENAMES    - limit processing to files with these filenames []
 %      QUIETWRITE   - quietly overwrite OUTDIR (default is false)
+%      FIXDELTAOPT  - options for FIXDELTA (default is {})
+%      MELDOPT      - options for MELD (default is {})
 %
 %     LENGTH & OVERLAP must be whole numbers (eg. 4.5 minutes is NOT
 %     allowed!).  Please note that in order to have consistency from day to
@@ -88,9 +90,10 @@ function []=noise_setup(indir,outdir,varargin)
 %        Mar.  8, 2012 - drop UTC in timediff where unnecessary
 %        Mar. 15, 2012 - parallel verbose fixes
 %        Apr. 25, 2012 - minor example fix
+%        June  3, 2012 - fixdelta call added, meld & fixdelta options
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2012 at 11:15 GMT
+%     Last Updated June  3, 2012 at 11:15 GMT
 
 % todo:
 
@@ -189,6 +192,9 @@ if(~isempty(opt.COMPONENTS))
     checkdata(data);
 end
 
+% fix delta
+data=fixdelta(data,opt.FIXDELTAOPTIONS{:});
+
 % detail message
 if(verbose)
     disp('MAKING DIRECTORY STRUCTURE FOR NOISE ANALYSIS');
@@ -211,7 +217,7 @@ for i=1:max(cmpidx) % SERIAL
     
     % merge the component data (does header check)
     checkoperr('invalid_iztype','ignore');
-    cdata=meld(cdata);
+    cdata=meld(cdata,opt.MELDOPTIONS{:});
     checkoperr('invalid_iztype','warn');
         
     % turn off checking
@@ -333,7 +339,8 @@ function [opt]=noise_setup_parameters(varargin)
 
 % defaults
 varargin=[{'l' 180 'o' 0 'q' false 'ts' [] 'te' [] 'lat' [] 'lon' [] ...
-    'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' []} varargin];
+    'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' [] 'mopt' {} 'fdopt' {}} ...
+    varargin];
 
 % require option/value pairs
 if(mod(nargin,2))
@@ -374,6 +381,10 @@ for i=1:2:numel(varargin)
             opt.COMPONENTS=varargin{i+1};
         case {'f' 'file' 'filename' 'files' 'filenames'}
             opt.FILENAMES=varargin{i+1};
+        case {'fd' 'fdopt' 'fixdelta' 'fixdeltaopt' 'fixdeltaoptions'}
+            opt.FIXDELTAOPTIONS=varargin{i+1};
+        case {'m' 'mopt' 'meldopt' 'meldoptions'}
+            opt.MELDOPTIONS=varargin{i+1};
         otherwise
             error('seizmo:noise_setup:badInput',...
                 'Unknown Option: %s !',varargin{i});
@@ -445,6 +456,12 @@ elseif(~isempty(opt.COMPONENTS) && (~iscellstr(opt.COMPONENTS)))
 elseif(~isempty(opt.FILENAMES) && (~iscellstr(opt.FILENAMES)))
     error('seizmo:noise_setup:badInput',...
         'FILENAMES must be a string list of allowed files!');
+elseif(~iscell(opt.MELDOPTIONS) || ~isvector(opt.MELDOPTIONS))
+    error('seizmo:noise_setup:badInput',...
+        'MELDOPT must be a cell array of options for MELD!');
+elseif(~iscell(opt.FIXDELTAOPTIONS) || ~isvector(opt.FIXDELTAOPTIONS))
+    error('seizmo:noise_setup:badInput',...
+        'FIXDELTAOPT must be a cell array of options for FIXDELTA!');
 end
 
 end

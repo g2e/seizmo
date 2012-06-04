@@ -39,9 +39,10 @@ function [data]=removemean(data)
 %        Jan. 29, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
 %        Apr.  3, 2012 - minor doc update
+%        June  3, 2012 - skip doubles conversion
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 15:05 GMT
+%     Last Updated June  3, 2012 at 15:05 GMT
 
 % todo:
 
@@ -69,7 +70,7 @@ try
     end
 
     % remove mean and update header
-    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+    [depmen,depmin,depmax]=deal(nan(nrecs,1));
     for i=1:nrecs
         % skip dataless
         if(isempty(data(i).dep))
@@ -78,17 +79,10 @@ try
             continue;
         end
 
-        % save class and convert to double precision
-        oclass=str2func(class(data(i).dep));
-        data(i).dep=double(data(i).dep);
-
         % loop through components
         for j=1:size(data(i).dep,2)
             data(i).dep(:,j)=data(i).dep(:,j)-mean(data(i).dep(:,j));
         end
-
-        % change class back
-        data(i).dep=oclass(data(i).dep);
 
         % adjust header
         depmen(i)=mean(data(i).dep(:));
