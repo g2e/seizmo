@@ -108,8 +108,8 @@ function [varargout]=mmap(varargin)
 %     FALSE will skip drawing the borders.
 %
 %     MMAP(...,'COAST',COLOR,...) specifies the color of the coastlines in
-%     the map.  The default is [0 0 0].  Setting to FALSE will hide the
-%     coast lines.
+%     the map.  The default uses the foreground color setting.  Setting to
+%     FALSE will hide the coast lines.
 %
 %     MMAP(...,'PARENT',AX,...)  sets the axes to draw in.  This is
 %     useful for subplots, guis, etc.  The default draws the map in a new
@@ -153,9 +153,11 @@ function [varargout]=mmap(varargin)
 %        Apr.  3, 2012 - minor doc update
 %        May  30, 2012 - added several examples, added coast option,
 %                        allow sea/land/border/coast = false
+%        June  7, 2012 - coasts are the same as the foreground color by
+%                        default, allow ocean instead of sea keyword
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  30, 2012 at 20:30 GMT
+%     Last Updated June  7, 2012 at 20:30 GMT
 
 % todo:
 
@@ -171,7 +173,7 @@ global MAP_VAR_LIST
 % option defaults
 varargin=[{'st' [] 'sm' 'yo' 'ss' [] 'ev' [] 'em' 'rp' 'es' 150 'g' 'o' ...
     'p' 'robinson' 'po' [] 'go' [] 'fg' [] 'bg' [] 's' [.3 .6 1] ...
-    'l' [.4 .6 .2] 'b' [.5 0 0] 'c' [0 0 0] 'a' []} varargin];
+    'l' [.4 .6 .2] 'b' [.5 0 0] 'c' [] 'a' []} varargin];
 showsea=true; showland=true; showborder=true; showcoast=true;
 
 % check options
@@ -219,7 +221,7 @@ for i=1:2:numel(varargin)
                 error('seizmo:mmap:badInput',...
                     'STATIONMARKER must be a 1 or 2 char string!');
             end
-        case {'eventnmarker' 'evm' 'em'}
+        case {'eventmarker' 'evm' 'em'}
             if(skip); continue; end
             if(ischar(val) && numel(val)<3)
                 evm=val;
@@ -304,7 +306,7 @@ for i=1:2:numel(varargin)
                 error('seizmo:mmap:badInput',...
                     'BGCOLOR must be a colorname or RGB triplet!');
             end
-        case {'seacolor' 'sea' 's'}
+        case {'seacolor' 'sea' 'sc' 's' 'oceancolor' 'ocean' 'oc' 'o'}
             if(skip); continue; end
             if(ischar(val) ...
                     || (isreal(val) && isequal(size(val),[1 3])))
@@ -338,8 +340,9 @@ for i=1:2:numel(varargin)
                     'BORDERCOLOR must be a colorname or RGB triplet!');
             end
         case {'coastcolor' 'coast' 'c' 'coastline'}
-            if(skip); continue; end
-            if(ischar(val) ...
+            if(skip)
+                coast=[];
+            elseif(ischar(val) ...
                     || (isreal(val) && isequal(size(val),[1 3])))
                 coast=val;
             elseif(islogical(val) && isscalar(val))
@@ -376,6 +379,9 @@ if(isempty(fg))
 elseif(isempty(bg))
     bg=invertcolor(fg,true);
 end
+
+% fix coast color
+if(isempty(coast)); coast=fg; end
 
 % convert colornames
 if(ischar(fg)); fg=name2rgb(fg); end

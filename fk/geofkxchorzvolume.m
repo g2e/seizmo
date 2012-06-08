@@ -284,13 +284,13 @@ try
     
     % extract data (silently)
     seizmoverbose(false);
-    rr=splitpad(rr,0);
+    rr=splitpad(rr);
     rr=records2mat(rr);
-    rt=splitpad(rt,0);
+    rt=splitpad(rt);
     rt=records2mat(rt);
-    tr=splitpad(tr,0);
+    tr=splitpad(tr);
     tr=records2mat(tr);
-    tt=splitpad(tt,0);
+    tt=splitpad(tt);
     tt=records2mat(tt);
     seizmoverbose(verbose);
     
