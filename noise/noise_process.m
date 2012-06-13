@@ -119,10 +119,11 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        May   3, 2012 - fixed bug in amplitude-based rejection
 %        May  14, 2012 - set amp rejection to Inf (no reject) by default
 %        May  31, 2012 - speed overrides for (divide/add)records
-%        June  3, 2012 - immediate class change to doubles
+%        June  3, 2012 - immediately class change to doubles
+%        June 11, 2012 - fix rms formula
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  3, 2012 at 11:15 GMT
+%     Last Updated June 11, 2012 at 11:15 GMT
 
 % todo:
 
@@ -475,7 +476,7 @@ for i=1:numel(tsdirs) % SERIAL
                         if(opt.TDRMS)
                             % use robust rms (better for spikes)
                             rms=getvaluefun(vdata,...
-                                @(x)sqrt(median(x.^2-median(x).^2)));
+                                @(x)sqrt(median(x.^2)));
                             tdclip=rms*opt.TDCLIP;
                         else
                             tdclip=opt.TDCLIP;

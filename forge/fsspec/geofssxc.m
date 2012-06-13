@@ -1,8 +1,9 @@
-function [s]=geofssxc(data,ll,slow,frng,w)
+function [s]=geofssxc(data,ll,slow,frng,whiten,w)
 %GEOFSSXC    Estimate frequency-slowness-position spectrum
 %
 %    Usage:    s=geofssxc(xcdata,latlon,slow,frng)
-%              s=geofssxc(xcdata,latlon,slow,frng,weights)
+%              s=geofssxc(xcdata,latlon,slow,frng,whiten)
+%              s=geofssxc(xcdata,latlon,slow,frng,whiten,weights)
 %
 %    Description:
 %     S=GEOFSSXC(XCDATA,LATLON,SLOW,FRNG) computes an estimate of the
@@ -43,8 +44,13 @@ function [s]=geofssxc(data,ll,slow,frng,w)
 %          .vector   - [tf_multifreq tf_multislow]
 %          .weights  - weights used in beamforming
 %
-%     S=GEOFSSXC(XCDATA,LATLON,SLOW,FRNG,WEIGHTS) specifies the relative
-%     weights for each correlogram in XCDATA (must match size of XCDATA).
+%     S=GEOFSSXC(XCDATA,LATLON,SLOW,FRNG,WHITEN) whitens the cross spectral
+%     matrix elements before beamforming if WHITEN is TRUE.  The default is
+%     TRUE.
+%
+%     S=GEOFSSXC(XCDATA,LATLON,SLOW,FRNG,WHITEN,WEIGHTS) specifies the
+%     relative weights for each correlogram in XCDATA (must match size of
+%     XCDATA).
 %
 %    Notes:
 %     - The records must have the same lag range & sample
@@ -72,14 +78,17 @@ function [s]=geofssxc(data,ll,slow,frng,w)
 %        Apr.  3, 2012 - use seizmocheck
 %        May  30, 2012 - pow2pad=0 by default
 %        June  4, 2012 - altered from geofkxcvolume
+%        June 10, 2012 - no more conj (multiply shift by -1), verified test
+%                        results
+%        June 12, 2012 - add whiten option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  4, 2012 at 14:05 GMT
+%     Last Updated June 12, 2012 at 14:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(4,5,nargin));
+error(nargchk(4,6,nargin));
 
 % check struct
 error(seizmocheck(data,'dep'));
@@ -88,7 +97,8 @@ error(seizmocheck(data,'dep'));
 ncorr=numel(data);
 
 % defaults for optionals
-if(nargin<5 || isempty(w)); w=ones(numel(data),1); end
+if(nargin<5 || isempty(whiten)); whiten=true; end
+if(nargin<6 || isempty(w)); w=ones(numel(data),1); end
 
 % check inputs
 sf=size(frng);
@@ -101,6 +111,9 @@ elseif(~isreal(slow) || ~isvector(slow) || any(slow<=0))
 elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<=0))
     error('seizmo:geofssxc:badInput',...
         'FRNG must be a Nx2 array of [FREQLOW FREQHIGH] in Hz!');
+elseif(~isscalar(whiten) || ~islogical(whiten))
+    error('seizmo:geofssxc:badInput',...
+        'WHITEN must be TRUE or FALSE!');
 elseif(numel(w)~=ncorr || any(w(:)<0) || ~isreal(w))
     error('seizmo:geofssxc:badInput',...
         'WEIGHTS must be equal sized with XCDATA & be positive numbers!');
@@ -158,7 +171,7 @@ try
     loc=unique([st; ev],'rows');
     nsta=size(loc,1);
     
-    % start/end time range (handle old correlograms
+    % start/end time range (handles old correlograms)
     a=cell2mat(a); a=a(all(~isnan(a),2),:);
     f=cell2mat(f); f=f(all(~isnan(f),2),:);
     if(~isempty(a))
@@ -198,8 +211,9 @@ try
     [s(1:nrng,1).vector]=deal([true nslow~=1]);
     [s(1:nrng,1).latlon]=deal(ll);
     [s(1:nrng,1).slow]=deal(slow);
-    [s(1:nrng,1).npairs]=deal(ncorr);
+    [s(1:nrng,1).freq]=deal([]);
     [s(1:nrng,1).method]=deal('coarray');
+    [s(1:nrng,1).npairs]=deal(ncorr);
     [s(1:nrng,1).center]=deal([clat clon]);
     [s(1:nrng,1).weights]=deal(w);
     
@@ -214,9 +228,7 @@ try
     seizmoverbose(verbose);
     
     % get fft
-    % - !FIXME! conjugate is b/c my xc is flipped? or a triangle issue?
-    % - this is the true cross spectra
-    data=conj(fft(data,nspts,1));
+    data=fft(data,nspts,1);
     
     % distance difference for the phasors that "steer" the array
     % dd is NLLxNCORR
@@ -225,7 +237,7 @@ try
         ev(ones(nll,1),:),ev(2*ones(nll,1),:));
     dists=sphericalinv(ll(:,ones(ncorr,1)),ll(:,2*ones(ncorr,1)),...
         st(ones(nll,1),:),st(2*ones(nll,1),:));
-    dd=2*pi*1i*(distm-dists); % includes extra terms for efficiency
+    dd=-2*pi*1i*(distm-dists); % includes extra terms for efficiency
     
     % loop over frequency ranges
     for a=1:nrng
@@ -235,7 +247,7 @@ try
         nfreq=numel(fidx);
         if(nfreq==1); s(a).vector(1)=false; end
         
-        % preallocate fk space
+        % preallocate spectra
         s(a).spectra=zeros(nll,nslow,nfreq,'single');
         
         % warning if no frequencies
@@ -251,7 +263,7 @@ try
         %
         % cs is NCORRxNFREQ
         cs=data(fidx,:).';
-        cs=cs./abs(cs);
+        if(whiten); cs=cs./abs(cs); end
         
         % apply weighting
         cs=cs.*w(:,ones(1,nfreq));

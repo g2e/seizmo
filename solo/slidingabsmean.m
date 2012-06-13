@@ -103,7 +103,7 @@ error(seizmocheck(data,'dep'));
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
-% attempt sliding rms
+% attempt sliding absolute mean
 try
     % verbosity
     verbose=seizmoverbose;

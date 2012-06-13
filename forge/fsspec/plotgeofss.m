@@ -55,9 +55,10 @@ function [varargout]=plotgeofss(s,dblim,zerodb,varargin)
 %        Apr.  4, 2012 - minor doc update
 %        Apr. 25, 2012 - use nanmedian for median determination
 %        June  4, 2012 - altered from plotgeofkmap, full mmap options
+%        June 10, 2012 - handle full method
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  4, 2012 at 15:05 GMT
+%     Last Updated June 10, 2012 at 15:05 GMT
 
 % todo:
 
@@ -109,8 +110,8 @@ dblim=sort([dblim(1) dblim(2)]);
 
 % convert to dB
 switch s.method
-    case 'coarray'
-        s.spectra=10*log10(pos(real(s.spectra)));
+    case {'coarray' 'full'}
+        s.spectra=10*log10(abs(real(s.spectra)));
     otherwise
         s.spectra=10*log10(s.spectra);
 end
@@ -152,7 +153,7 @@ maxlon=max([s.stlo; max(s.latlon(:,:,2))']);
 
 % plot map
 ax=mmap('po',{'lat',[minlat maxlat],'lon',[minlon maxlon]},...
-    'land',false,varargin{:});
+    'land',false,'sea',false,varargin{:});
 
 % access to m_map globals for map boundaries
 global MAP_VAR_LIST
@@ -181,8 +182,12 @@ movekids(findobj(ax,'tag','m_grid_color'),'back');
 
 % this hides some warnings
 ocean=get(findobj(ax,'tag','m_grid_color'),'facecolor');
-set(findobj(ax,'tag','m_grid_color'),'facevertexcdata',ocean(ones(...
-    size(get(findobj(ax,'tag','m_grid_color'),'vertices'),1),1),:));
+if(~ischar(ocean))
+    set(findobj(ax,'tag','m_grid_color'),'facevertexcdata',ocean(ones(...
+        size(get(findobj(ax,'tag','m_grid_color'),'vertices'),1),1),:));
+else
+    delete(findobj(ax,'tag','m_grid_color'));
+end
 
 % modify
 shading(ax,'flat');
@@ -205,6 +210,7 @@ while(any(abs(s.stlo-mean(MAP_VAR_LIST.longs))>180))
 end
 
 % map the stations
+% - have to do this afterwards b/c of matlab warnings/issues
 hold(ax,'on');
 mmap('st',[s.stla s.stlo],'parent',ax,varargin{:});
 hold(ax,'off');
@@ -221,18 +227,12 @@ title(ax,{[] ['Number of Stations:  ' num2str(s.nsta)] ...
     ['Slowness  :  ' num2str(smin) ' to ' num2str(smax) ' s/^o'] ...
     ['0 dB = ' num2str(zdb) 'dB'] []},'color',fg);
 
-% set zerodb & dblim in userdata
-% - this is for updategeofss
+% set zerodb in userdata
+% - this is for plotgeofssupdate
 userdata.zerodb=zerodb;
-userdata.dblim=dblim;
-set(ax,'userdata',userdata,'tag','geofss');
+set(ax,'userdata',userdata,'createfcn','plotgeofss');
 
 % return figure handle
 if(nargout); varargout{1}=ax; end
 
 end
-
-function [x]=pos(x)
-x(x<0)=eps;
-end
-

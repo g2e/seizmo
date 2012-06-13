@@ -25,9 +25,10 @@ function [report]=chkgeofss(s)
 %        July  6, 2010 - major update for new struct
 %        Apr.  4, 2012 - minor doc update
 %        June  4, 2012 - adapted from chkgeofkstruct
+%        June 10, 2012 - handle full method
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  4, 2012 at 18:50 GMT
+%     Last Updated June 10, 2012 at 18:50 GMT
 
 % todo:
 
@@ -47,7 +48,7 @@ if(~isstruct(s) || ~all(ismember(fields,fieldnames(s))))
 end
 
 % valid method strings
-valid.METHOD={'center' 'coarray' 'user'};
+valid.METHOD={'center' 'coarray' 'user' 'full'};
 
 % loop over each frame/volume/map
 for i=1:numel(s)

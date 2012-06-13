@@ -15,7 +15,7 @@ function [data]=clip(data,thresh,value)
 %
 %    Examples:
 %     % Clip anything above 3*RMS:
-%     rms=getvaluefun(data,@(x)sqrt(mean(x.^2-mean(x).^2)));
+%     rms=getvaluefun(data,@(x)sqrt(mean(x.^2)));
 %     data=clip(data,3*rms);
 %
 %     % Replace clipped sections with NaNs and then interpolate them
@@ -26,9 +26,10 @@ function [data]=clip(data,thresh,value)
 
 %     Version History:
 %        Jan. 12, 2012 - initial version
+%        June 11, 2012 - fix rms formula in example, skip double conversion
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 12, 2012 at 11:15 GMT
+%     Last Updated June 11, 2012 at 11:15 GMT
 
 % check nargin
 error(nargchk(2,3,nargin));
@@ -75,16 +76,9 @@ for i=1:nrecs
         continue;
     end
     
-    % change class to double
-    oclass=str2func(class(data(i).dep));
-    data(i).dep=double(data(i).dep);
-    
     % clip
     clipped=abs(data(i).dep)>thresh(i);
     data(i).dep(clipped)=value(i)*sign(data(i).dep(clipped));
-    
-    % change class back
-    data(i).dep=oclass(data(i).dep);
     
     % dep*
     depmen(i)=mean(data(i).dep(:)); 

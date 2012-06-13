@@ -9,7 +9,12 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-
+fsspec 12 3 4 5 6
+    - horz & xchorz
+    - corr
+    - s(f,lat,lon) - should be a method
+    - capon method
+    - flag for normalizing cross spectra matrix
 
 make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
 
@@ -23,10 +28,6 @@ rotate_correlations
     - works for unrotated
 
 fk stuff
-    clean up documentation
-        - estimate of freq-slowness power spectra
-          using frequency-domain beamforming
-    allow saving complex spectra
     rayleigh/love dispersion estimation
         - give it a slowness/velocity range
         - can we fit it as azimuthal anisotropy?
@@ -37,25 +38,9 @@ fk stuff
     	- need love dispersion & rayleigh phase & group dispersion
     	- functions for dispersion at position
     	- functions for depth model at position
-	weight optimization function to reduce array response
-        - capon 1969, etc
-		- haubrich 1968
-        - test on ARFs
 	verify horizontal algorithm vs Haubrich and McCamy 1969
-	make scripts for
-        vol/map set 2 mov (???)
-		fkhorzmap       - handles N/E input
-		fkhorzvolume    - handles N/E input
-		geofkmap        - alg changes
-		geofkhorzmap    - alg changes
-		geofkvolume     - alg changes
-		geofkhorzvolume - alg changes
-		geofkxcmap      - alg changes
-		geofkxchorzmap  - alg changes
-    cart2pol fixes
-    pol2cart needs to be added
-    fs_phase2latlon needs a direct equivalent like fkmap/fkvolume
-    plotting geo spectra uses mmap
+    cart2pol & pol2cart
+    fss_phase2geofss
 figure out strange narrow long-period peaks in noise results
     - response taper affects it
     - happens even without response removal?

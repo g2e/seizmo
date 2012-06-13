@@ -1,9 +1,10 @@
-function [s]=geofss(data,ll,slow,frng,method,w)
+function [s]=geofss(data,ll,slow,frng,method,whiten,w)
 %GEOFSS    Estimate frequency-slowness-position spectrum
 %
 %    Usage:    s=geofss(data,latlon,slow,frng)
 %              s=geofss(data,latlon,slow,frng,method)
-%              s=geofss(data,latlon,slow,frng,method,weights)
+%              s=geofss(data,latlon,slow,frng,method,whiten)
+%              s=geofss(data,latlon,slow,frng,method,whiten,weights)
 %
 %    Description:
 %     S=GEOFSS(DATA,LATLON,SLOW,FRNG) computes an estimate of the
@@ -43,25 +44,30 @@ function [s]=geofss(data,ll,slow,frng,method,w)
 %          .vector   - [tf_multifreq tf_multislow]
 %          .weights  - weights used in beamforming
 %
-%     S=GEOFSS(DATA,LATLON,SLOW,FRNG,METHOD) defines the beamform
-%     method.  METHOD may be 'center', 'coarray', or [LAT LON].  The
-%     default is 'coarray' which utilizes information from all unique
-%     pairings of records to compute the complex power spectrum.  The
-%     'center' option only pairs each record against the array center
-%     (found using ARRAYCENTER) to compute the real-valued spectrum.  The
-%     'center' method is extremely fast for large arrays compared to the
-%     'coarray' method.  The 'center' method gives slightly degraded
-%     results compared to 'coarray'.  Using [LAT LON] for method is
-%     algorithmically the same as the 'center' method but uses the defined
-%     coordinates as the center for the array.
+%     S=GEOFSS(DATA,LATLON,SLOW,FRNG,METHOD) defines the beamforming
+%     method.  METHOD may be 'center', 'coarray', 'full' or [LAT LON].  The
+%     default is 'center' which is extremely fast for large arrays compared
+%     to the 'coarray' method as it only pairs each record against the
+%     array center (found using ARRAYCENTER) to compute the real-valued
+%     spectrum.  The 'coarray' method utilizes information from all unique
+%     pairings of records to compute the complex slowness spectrum while
+%     the 'full' method uses every possible pairing to do the same.  The
+%     'full' method is significantly slower and gives degraded results
+%     compared to the 'coarray' method and so is not recommended except in
+%     verification.  The 'center' method gives results that are the same as
+%     the 'full' method but does it far faster.  Using [LAT LON] for method
+%     is algorithmically the same as the 'center' method but uses the
+%     defined coordinates as the center for the array.
 %
-%     S=GEOFSS(DATA,LATLON,SLOW,FRNG,METHOD,WEIGHTS) specifies the relative
-%     weights for each correlogram in DATA (must match size of DATA).
+%     S=GEOFSS(DATA,LATLON,SLOW,FRNG,METHOD,WHITEN) whitens the cross
+%     spectral matrix elements before beamforming if WHITEN is TRUE.  The
+%     default is TRUE.
+%
+%     S=GEOFSS(DATA,LATLON,SLOW,FRNG,METHOD,WHITEN,WEIGHTS) specifies the
+%     relative weights for each record in DATA (must match size of DATA).
 %
 %    Notes:
-%     - Records in DATA must have equal number of points, equal sample
-%       spacing, the same start time (in absolute time), and be evenly
-%       spaced time series records.
+%     - Records in DATA must have equal and regular sample spacing.
 %
 %    Examples:
 %     % Do you see the 26s microseism in your data?:
@@ -72,7 +78,7 @@ function [s]=geofss(data,ll,slow,frng,method,w)
 %     plotgeofss(geofssavg(s));
 %
 %    See also: FSS, GEOFSSXC, FSSXC, GEOFSSAVG, GEOFSSSUB, PLOTGEOFSS,
-%              GEOFSSARF, GEOFSSINFO, GEOFSSCORR, GEOFSSFRAMESLIDE,
+%              GEOFSSARF, GEOFSSDBINFO, GEOFSSCORR, GEOFSSFRAMESLIDE,
 %              GEOFSSFREQSLIDE, GEOFSSSLOWSLIDE, PLOTGEOFSSARF
 
 %     Version History:
@@ -82,15 +88,17 @@ function [s]=geofss(data,ll,slow,frng,method,w)
 %        Apr.  3, 2012 - use seizmocheck
 %        May  30, 2012 - pow2pad=0 by default
 %        June  4, 2012 - altered from geofssxc & fkvolume
+%        June 10, 2012 - fixed weighting, allow b to vary, added full
+%                        method, verified test results
+%        June 11, 2012 - default to center method
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  4, 2012 at 14:05 GMT
+%     Last Updated June 11, 2012 at 14:05 GMT
 
 % todo:
-% - complex weight factor?
 
 % check nargin
-error(nargchk(4,6,nargin));
+error(nargchk(4,7,nargin));
 
 % check struct
 error(seizmocheck(data,'dep'));
@@ -105,11 +113,12 @@ if(nrecs<2)
 end
 
 % defaults for optionals
-if(nargin<5 || isempty(method)); method='coarray'; end
-if(nargin<6 || isempty(w)); w=ones(numel(data),1); end
+if(nargin<5 || isempty(method)); method='center'; end
+if(nargin<6 || isempty(whiten)); whiten=true; end
+if(nargin<7 || isempty(w)); w=ones(numel(data),1); end
 
 % valid method strings
-valid.METHOD={'center' 'coarray'};
+valid.METHOD={'center' 'coarray' 'full'};
 
 % check inputs
 sf=size(frng);
@@ -126,6 +135,9 @@ elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
         || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
     error('seizmo:geofss:badInput',...
         'METHOD must be ''CENTER'', ''COARRAY'', or [LAT LON]!');
+elseif(~isscalar(whiten) || ~islogical(whiten))
+    error('seizmo:geofss:badInput',...
+        'WHITEN must be TRUE or FALSE!');
 elseif(~isnumeric(w) || numel(w)~=nrecs || any(w(:)<0))
     error('seizmo:geofss:badInput',...
         'WEIGHTS must be equal sized with DATA & be positive!');
@@ -182,10 +194,22 @@ try
     [npts,delta,butc,eutc,st]=getheader(data,...
         'npts','delta','b utc','e utc','st');
     butc=cell2mat(butc); eutc=cell2mat(eutc);
-    if(size(unique(butc,'rows'),1)~=1)
-        error('seizmo:geofss:badData',...
-            'Records in DATA must have equal B (UTC)!');
+    
+    % get utc static time shifts
+    dt=timediff(butc,butc(1,:),'utc').'; % need row vector
+    switch method
+        case 'coarray'
+            [row,col]=find(triu(true(nrecs),1));
+            w=w(col).*w(row);     % expand weights
+            w=w./sum(w);          % renormalize weights
+            dt=dt(row)-dt(col);   % alter to pair shifts
+        case 'full'
+            [row,col]=find(true(nrecs));
+            w=w(col).*w(row);     % expand weights
+            w=w./sum(w);          % renormalize weights
+            dt=dt(row)-dt(col);   % alter to pair shifts
     end
+    dt=2*pi*1i*dt(ones(nll,1),:);
     
     % longest record 
     [maxnpts,imaxnpts]=max(npts);
@@ -205,6 +229,8 @@ try
         switch method
             case 'coarray'
                 npairs=nrecs*(nrecs-1)/2;
+            case 'full'
+                npairs=nrecs*nrecs;
             case 'center'
                 npairs=nrecs;
         end
@@ -228,14 +254,16 @@ try
     [s(1:nrng,1).vector]=deal([true nslow~=1]);
     [s(1:nrng,1).latlon]=deal(ll);
     [s(1:nrng,1).slow]=deal(slow);
-    [s(1:nrng,1).npairs]=deal(npairs);
+    [s(1:nrng,1).freq]=deal([]);
     [s(1:nrng,1).method]=deal(method);
+    [s(1:nrng,1).npairs]=deal(npairs);
     [s(1:nrng,1).center]=deal([clat clon]);
     [s(1:nrng,1).weights]=deal(w);
     
     % get frequencies
-    nspts=2^nextpow2(maxnpts);
-    f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
+    nspts=2^nextpow2(maxnpts); % half xcorr
+    %nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification
+    f=(0:nspts/2)/(delta(1)*nspts); % only +freq
     
     % extract data (silently)
     seizmoverbose(false);
@@ -248,9 +276,8 @@ try
     % distance difference for the phasors that "steer" the array
     % dd is NLLxNPAIRS
     switch method
-        case 'coarray'
+        case {'coarray' 'full'}
             % distance difference for each pair from source
-            [row,col]=find(triu(true(nrecs),1));
             ev=st(col,:).'; st=st(row,:).';
             distm=sphericalinv(...
                 ll(:,ones(npairs,1)),ll(:,2*ones(npairs,1)),...
@@ -280,7 +307,7 @@ try
         nfreq=numel(fidx);
         if(nfreq==1); s(a).vector(1)=false; end
         
-        % preallocate fk space
+        % preallocate spectra
         s(a).spectra=zeros(nll,nslow,nfreq,'single');
         
         % warning if no frequencies
@@ -299,12 +326,10 @@ try
         %
         % cs is NPAIRSxNFREQ
         cs=data(fidx,:).';
-        cs=cs./abs(cs);
+        if(whiten); cs=cs./abs(cs); end
         switch method
-            case 'coarray'
-                [row,col]=find(triu(true(nrecs),1));
+            case {'coarray' 'full'}
                 cs=cs(row,:).*conj(cs(col,:));
-                w=w(row).*w(col); % expand weights
         end
         
         % apply weighting
@@ -319,19 +344,19 @@ try
         
         % beamforming method
         switch method
-            case 'coarray'
+            case {'coarray' 'full'}
                 for b=1:nfreq
                     for c=1:nslow
                         s(a).spectra(:,c,b)=...
-                            exp(f(fidx(b))*slow(c)*dd)*cs(:,b);
+                            exp(f(fidx(b))*(slow(c)*dd-dt))*cs(:,b);
                     end
                     if(verbose); print_time_left(b,nfreq); end
                 end
             otherwise
                 for b=1:nfreq
                     for c=1:nslow
-                        s(a).spectra(:,c,b)=...
-                            abs(exp(f(fidx(b))*slow(c)*dd)*cs(:,b)).^2;
+                        s(a).spectra(:,c,b)=abs(...
+                            exp(f(fidx(b))*(slow(c)*dd-dt))*cs(:,b)).^2;
                     end
                     if(verbose); print_time_left(b,nfreq); end
                 end

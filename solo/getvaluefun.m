@@ -35,10 +35,10 @@ function [value]=getvaluefun(data,func,type,scalar)
 %     medians=getvaluefun(data,@median,[],false);
 %
 %     % Get RMS:
-%     rms=getvaluefun(data,@(x)sqrt(mean(x.^2-mean(x).^2)));
+%     rms=getvaluefun(data,@(x)sqrt(mean(x.^2));
 %
 %     % Get robust RMS:
-%     rms=getvaluefun(data,@(x)sqrt(median(x.^2-median(x).^2)));
+%     rms=getvaluefun(data,@(x)sqrt(median(x.^2));
 %
 %     % Get maximum amplitude of multi-cmp records assuming each component
 %     % is orthogonal (was an old function called getnorm):
@@ -55,9 +55,10 @@ function [value]=getvaluefun(data,func,type,scalar)
 %                        recordfun/multifun rename
 %        Jan. 12, 2012 - minor doc update
 %        Mar. 13, 2012 - seizmocheck fix, use getheader improvements
+%        June 11, 2012 - fix rms & robust rms examples
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 18:25 GMT
+%     Last Updated June 11, 2012 at 18:25 GMT
 
 % todo:
 

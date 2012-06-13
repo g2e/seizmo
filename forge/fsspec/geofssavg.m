@@ -53,7 +53,7 @@ if(~isempty(srng) && (~isreal(srng) || numel(ss)~=2 || ss(1)~=1 ...
         'SRNG must be a 1x2 array of [SLOWLOW SLOWHIGH] in sec/deg!');
 end
 
-% average frequencies/slownesses
+% average spectrum over frequencies/slownesses
 for i=1:numel(s)
     % handle empty frng
     if(isempty(frng))
