@@ -22,7 +22,8 @@ function [paths,idx]=getraypaths(phaselist,model,evla,evlo,evdp,stla,stlo)
 %     input usage form.
 %
 %    Notes:
-%     - This just calls TAUPPATH in a loop.
+%     - This calls TAUPPATH in a loop.
+%     - Latitudes are assumed to be geographic.
 %
 %    Examples:
 %     % Get some phase paths corresponding to a dataset:
@@ -40,9 +41,10 @@ function [paths,idx]=getraypaths(phaselist,model,evla,evlo,evdp,stla,stlo)
 %        Feb. 27, 2012 - new usage form simplifies the typical case, return
 %                        all paths
 %        Mar. 14, 2012 - accept all mattaup model types, doc update
+%        Aug.  6, 2012 - add latitude note to docs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 14, 2012 at 13:45 GMT
+%     Last Updated Aug.  6, 2012 at 13:45 GMT
 
 % todo:
 

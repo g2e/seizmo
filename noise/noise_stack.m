@@ -24,7 +24,7 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %                             +-> TIME
 %
 %     where: PAIR  is 'ZZ', 'RR', etc
-%            XCCMP is 'FULL', 'SYM', etc (see option XCCMP below)
+%            XCCMP is 'TWOWAY', 'SYMMETRIC', etc (see option XCCMP below)
 %            SPAN  is 'ALL', 'MON', etc (see option SPAN below)
 %            TIME  is the time span stacked and depends on LENGTH:
 %                   SPAN   |  TIME_FORMAT
@@ -45,8 +45,8 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %             across years for a particular month (for example stacking
 %             Jan 2005, 2006, & 2007).  The default is 'full'.
 %      XCCMP - Controls which NCF component is output.  May be any of:
-%               'full','sym','pos','neg'
-%              or a cell array combination.  The default is 'full'.
+%               'twoway','symmetric','causal','acausal'
+%              or a cell array combination.  The default is 'twoway'.
 %      TIMESTART - process time sections from this time on []
 %      TIMEEND - process times sections before this time []
 %      LATRNG - include stations in this latitude range []
@@ -94,14 +94,17 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %                        checking = 2x faster
 %        Mar.  8, 2012 - doc update
 %        Mar. 15, 2012 - parallel verbose fixes
+%        June 14, 2012 - xccmp value changes, make time options names more
+%                        flexible
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 11:15 GMT
+%     Last Updated June 14, 2012 at 11:15 GMT
 
 % todo:
 % - stack2stack
 % - clear user0/1?
 % - wkday stacks (sun, mon, tue, wed, thu, fri, sat)
+% - tod stacks (0000,0300,0600,0900,1200,1500,1800,2100)
 % - 1hr stacks
 
 % check nargin
@@ -565,13 +568,13 @@ try
                     path=strcat(outdir,fs,pair(p),'_',span,'_',xc,...
                         fs,spanstr(s,:));
                     switch char(xc)
-                        case 'full'
+                        case 'twoway'
                             writeseizmo(sdata{pidx},'path',path);
-                        case 'sym'
+                        case 'symmetric'
                             writeseizmo(symcmp(sdata{pidx}),'path',path);
-                        case 'pos'
+                        case 'causal'
                             writeseizmo(cut(sdata{pidx},0),'path',path);
-                        case 'neg'
+                        case 'acausal'
                             writeseizmo(cut(reverse(sdata{pidx}),0),...
                                 'path',path);
                     end
@@ -607,7 +610,7 @@ function [opt]=noise_stack_parameters(varargin)
 % parses/checks noise_stack pv pairs
 
 % defaults
-varargin=[{'span' 'all' 'xccmp' 'full' ...
+varargin=[{'span' 'all' 'xccmp' 'twoway' ...
     'q' false 'ts' [] 'te' [] 'lat' [] 'lon' [] ...
     'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' []} varargin];
 
@@ -629,9 +632,9 @@ for i=1:2:numel(varargin)
         case {'xccmp' 'xc' 'xcc'}
             if(isempty(varargin{i+1})); continue; end
             opt.XCCMP=varargin{i+1};
-        case {'ts' 'tstart' 'timestart'}
+        case {'ts' 'tstart' 'timestart' 'startt' 'stime' 'starttime'}
             opt.TIMESTART=varargin{i+1};
-        case {'te' 'tend' 'timeend'}
+        case {'te' 'tend' 'timeend' 'et' 'endtime' 'etime' 'endt'}
             opt.TIMEEND=varargin{i+1};
         case {'lat' 'la' 'lar' 'latr' 'larng' 'latitude' 'latrng'}
             opt.LATRNG=varargin{i+1};
@@ -640,7 +643,14 @@ for i=1:2:numel(varargin)
         case {'knetwk' 'n' 'net' 'netwk' 'network' 'nets' 'networks'}
             opt.NETWORKS=varargin{i+1};
         case {'kstnm' 'st' 'sta' 'stn' 'stns' 'stations' 'station'}
-            opt.STATIONS=varargin{i+1};
+            if(~isempty(varargin{i+1}) && isnumeric(varargin{i+1}))
+                % timestart/starttime catch
+                warning('seizmo:noise_setup:badInput',...
+                    'TIMESTART/STATION mixup!  Assuming TIMESTART!');
+                opt.TIMESTART=varargin{i+1};
+            else
+                opt.STATIONS=varargin{i+1};
+            end
         case {'khole' 'hole' 'holes' 'str' 'strs' 'stream' 'streams'}
             opt.STREAMS=varargin{i+1};
         case {'kcmpnm' 'cmpnm' 'cmp' 'cmps' 'component' 'components'}
@@ -680,7 +690,7 @@ if(iscellstr(opt.FILENAMES)); opt.FILENAMES=unique(opt.FILENAMES(:)); end
 
 % valid values
 valid.SPAN={'3hr' 'day' 'wk' 'yrmo' 'mon' '3mon' 'all'};
-valid.XCCMP={'full' 'pos' 'neg' 'sym'};
+valid.XCCMP={'twoway' 'causal' 'acausal' 'symmetric'};
 
 % check options
 szs=size(opt.TIMESTART);
@@ -690,7 +700,7 @@ if(~iscellstr(opt.SPAN) || any(~ismember(opt.SPAN,valid.SPAN)))
         'SPAN option unrecognised! Use ''3hr'', ''mon'', etc!');
 elseif(~iscellstr(opt.XCCMP) || any(~ismember(opt.XCCMP,valid.XCCMP)))
     error('seizmo:noise_stack:badInput',...
-        'XCCMP option unrecognised! Use ''sym'', ''pos'', etc!');
+        'XCCMP option unrecognised! Use ''twoway'', ''symmetric'', etc!');
 elseif(~isscalar(opt.QUIETWRITE) || ~islogical(opt.QUIETWRITE))
     error('seizmo:noise_stack:badInput',...
         'QUIETWRITE flag must be a scalar logical!');
@@ -736,7 +746,7 @@ end
 
 % look out for xccmp options in component
 if(~isempty(opt.COMPONENTS) && any(ismember(opt.COMPONENTS,...
-        {'full' 'sym' 'pos' 'neg'})))
+        {'twoway' 'symmetric' 'causal' 'acausal'})))
     if(~opt.QUIETWRITE)
         fprintf(...
             'Option COMPONENTS looks to have been passed XCCMP values!');

@@ -121,9 +121,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        May  31, 2012 - speed overrides for (divide/add)records
 %        June  3, 2012 - immediately class change to doubles
 %        June 11, 2012 - fix rms formula
+%        June 14, 2012 - make time options names more flexible
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 11, 2012 at 11:15 GMT
+%     Last Updated June 14, 2012 at 11:15 GMT
 
 % todo:
 
@@ -723,9 +724,9 @@ for i=1:2:numel(varargin)
         case {'xcmaxlag' 'xcmax' 'xclag' 'maxlag' 'lag'}
             if(isempty(varargin{i+1})); continue; end
             opt.XCMAXLAG=varargin{i+1};
-        case {'ts' 'tstart' 'timestart'}
+        case {'ts' 'tstart' 'timestart' 'startt' 'stime' 'starttime'}
             opt.TIMESTART=varargin{i+1};
-        case {'te' 'tend' 'timeend'}
+        case {'te' 'tend' 'timeend' 'et' 'endtime' 'etime' 'endt'}
             opt.TIMEEND=varargin{i+1};
         case {'lat' 'la' 'lar' 'latr' 'larng' 'latitude' 'latrng'}
             opt.LATRNG=varargin{i+1};
@@ -734,7 +735,14 @@ for i=1:2:numel(varargin)
         case {'knetwk' 'n' 'net' 'netwk' 'network' 'nets' 'networks'}
             opt.NETWORKS=varargin{i+1};
         case {'kstnm' 'st' 'sta' 'stn' 'stns' 'stations' 'station'}
-            opt.STATIONS=varargin{i+1};
+            if(~isempty(varargin{i+1}) && isnumeric(varargin{i+1}))
+                % timestart/starttime catch
+                warning('seizmo:noise_setup:badInput',...
+                    'TIMESTART/STATION mixup!  Assuming TIMESTART!');
+                opt.TIMESTART=varargin{i+1};
+            else
+                opt.STATIONS=varargin{i+1};
+            end
         case {'khole' 'hole' 'holes' 'str' 'strs' 'stream' 'streams'}
             opt.STREAMS=varargin{i+1};
         case {'kcmpnm' 'cmpnm' 'cmp' 'cmps' 'component' 'components'}

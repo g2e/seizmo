@@ -13,15 +13,15 @@ function [varargout]=ellcor(evla,evdp,gcarc,az,varargin)
 %     following phases (given as a string):
 %      p,P,Pdiff,PcP,PP,PS,PcS,SP,ScP,s,S,Sdiff,ScS,SS.
 %     EVLA, EVDP, GCARC, & AZ should all be scalar or equal sized.  EVLA
-%     is the latitude of the earthquake(s) and should be in degrees.  EVDP
-%     is the kilometer depth of the earthquake(s).  GCARC is the distance
-%     from the earthquake to the station in degrees and AZ is the
-%     earthquake to station azimuth in degrees.  Note that if the
+%     is the geocentric latitude of the earthquake(s) and should be in
+%     degrees.  EVDP is the kilometer depth of the earthquake(s).  GCARC is
+%     the distance from the earthquake to the station in degrees and AZ is
+%     the earthquake to station azimuth in degrees.  Note that if the
 %     earthquake-station pair is outside the phase tabulation the
 %     correction will be NaN!
 %
-%     [CORR1,...,CORRN]=ELLCOR(EVLA,EVDP,GCARC,AZ,PHASE1,...,PHASEN) allows
-%     retrieving ellipticity corrections for multiple phases.  CORR1..N
+%     [CORR1,...,CORRN]=ELLCOR(EVLA,EVDP,GCARC,AZ,PHASE1,...,PHASEN)
+%     retrieves ellipticity corrections for multiple phases.  CORR1..N
 %     correspond to the corrections for PHASE1..N.
 %
 %    Notes:
@@ -67,11 +67,15 @@ function [varargout]=ellcor(evla,evdp,gcarc,az,varargin)
 %        May  16, 2010 - initial version
 %        Jan.  7, 2011 - update example to use RANDLATLON
 %        Apr.  2, 2012 - minor doc update
+%        Aug.  6, 2012 - nargin check added, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  2, 2012 at 12:25 GMT
+%     Last Updated Aug.  6, 2012 at 12:25 GMT
 
 % todo:
+
+% check number of inputs
+error(nargchk(5,inf,nargin));
 
 % check location inputs
 if(~isreal(evla) || ~isreal(evdp) || ~isreal(gcarc) || ~isreal(az))

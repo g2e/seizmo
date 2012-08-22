@@ -2,12 +2,12 @@ function [corr,ttc2,ttref]=crucor(lat,lon,rayp,wtype,varargin)
 %CRUCOR    Returns Crust2.0 based travel time corrections
 %
 %    Usage:    corr=crucor(lat,lon,rayp,wavetype)
-%              corr=crucor(lat,lon,rayp,wavetype,...,'elev',elev,...)
-%              corr=crucor(lat,lon,rayp,wavetype,...,'hole',depth,...)
-%              corr=crucor(lat,lon,rayp,wavetype,...,'stretch',logical,...)
-%              corr=crucor(lat,lon,rayp,wavetype,...,'refmod',1dmodel,...)
-%              corr=crucor(lat,lon,rayp,wavetype,...,'bottom',1ddepth,...)
-%              corr=crucor(lat,lon,rayp,wavetype,...,'top',1ddepth,...)
+%              corr=crucor(...,'elev',elev,...)
+%              corr=crucor(...,'hole',depth,...)
+%              corr=crucor(...,'stretch',logical,...)
+%              corr=crucor(...,'refmod',1dmodel,...)
+%              corr=crucor(...,'bottom',1ddepth,...)
+%              corr=crucor(...,'top',1ddepth,...)
 %              [corr,ttc2,ttref]=crucor(...)
 %
 %    Description:
@@ -23,41 +23,41 @@ function [corr,ttc2,ttref]=crucor(lat,lon,rayp,wtype,varargin)
 %     seconds and gives TT3D=TT1D+CORR.  Combining CRUCOR with ELLCOR and
 %     MANCOR will provide a more complete 3D correction.
 %
-%     CORR=CRUCOR(LAT,LON,RAYP,WAVETYPE,...,'ELEV',ELEV,...) sets the
-%     local elevations used in the crustal corrections to ELEV.  If STRETCH
-%     is set to TRUE (the default - see below) then the Crust2.0 layers are
-%     stretched to match this elevation while preserving the depth to the
-%     moho discontinuity.  By default, if STRETCH is TRUE then ELEV is the
-%     topography from SRTM30_PLUS (from TOPO_POINTS).  If STRETCH is FALSE,
-%     ELEV is the topography from Crust2.0 and will not be changed even if
-%     an elevation is given.  Units are in km.
+%     CORR=CRUCOR(...,'ELEV',ELEV,...) sets the local elevations used in
+%     the crustal corrections to ELEV if and only if STRETCH=TRUE.  If
+%     STRETCH is set to TRUE (the default - see below) then the Crust2.0
+%     layers are stretched to match this elevation while preserving the
+%     depth to the moho discontinuity.  By default, if STRETCH=TRUE then
+%     ELEV is the topography from SRTM30_PLUS (from TOPO_POINTS).  If
+%     STRETCH=FALSE, ELEV is always the topography from Crust2.0 and will
+%     not be changed even if ELEV is set otherwise.  Units are in km.
 %
-%     CORR=CRUCOR(LAT,LON,RAYP,WAVETYPE,...,'HOLE',DEPTH,...) sets the
-%     seismometer depth from the local elevation.  Units are in km.
-%     Default is 0.
+%     CORR=CRUCOR(...,'HOLE',DEPTH,...) sets the seismometer depth from the
+%     local elevation.  Units are in km.  Default is 0.
 %
-%     CORR=CRUCOR(LAT,LON,RAYP,WAVETYPE,...,'STRETCH',LOGICAL,...)
-%     indicates if the crust is to be stretched to the elevation value
-%     supplied through ELEV while preserving the moho discontinuity depth.
-%     If STRETCH is false, ELEV is ignored (it is replaced by the Crust2.0
-%     elevation).  Default is TRUE.
+%     CORR=CRUCOR(...,'STRETCH',LOGICAL,...) indicates if the crust is to
+%     be stretched to the elevation value supplied through ELEV while
+%     preserving the moho discontinuity depth.  If STRETCH is false, ELEV
+%     is ignored (it is replaced by the Crust2.0 elevation).  Default is
+%     TRUE.
 %
-%     CORR=CRUCOR(LAT,LON,RAYP,WAVETYPE,...,'REFMOD',1DMODEL,...) sets the
-%     reference 1D Earth model to correct.  Can be any listed by
-%     AVAILABLE_1DMODELS.  Default is 'PREM'.
+%     CORR=CRUCOR(...,'REFMOD',1DMODEL,...) sets the reference 1D Earth
+%     model to correct.  Can be any listed by AVAILABLE_1DMODELS.  Default
+%     is 'PREM'.
 %
-%     CORR=CRUCOR(LAT,LON,RAYP,WAVETYPE,...,'BOTTOM',1DDEPTH,...)
-%     CORR=CRUCOR(LAT,LON,RAYP,WAVETYPE,...,'TOP',1DDEPTH,...) are for
-%     setting bounds on the depths of the models used in the crustal
-%     correction.  This is useful for source side corrections where the
-%     earthquake is located within the crust.  It is an error to set both
-%     HOLE & TOP to nonzero.  The default is 0 for TOP and the Crust2.0
-%     moho depth for BOTTOM.
+%     CORR=CRUCOR(...,'BOTTOM',1DDEPTH,...)
+%     CORR=CRUCOR(...,'TOP',1DDEPTH,...) are for setting bounds on the
+%     depths of the models used in the crustal correction.  This is useful
+%     for source side corrections where the earthquake is located within
+%     the crust.  It is currently an error to set both HOLE & TOP to
+%     nonzero.  The default is 0 for TOP and the Crust2.0 moho depth for
+%     BOTTOM.
 %
 %     [CORR,TTC2,TTREF]=CRUCOR(...) also returns the total travel time
 %     through both Crust2.0 (TTC2) and the 1D reference model (TTREF).
 %
 %    Notes:
+%     - Latitudes are assumed to be geographic.
 %
 %    Examples:
 %     % Generate a map of crustal corrections for Pdiff (no distance
@@ -78,9 +78,10 @@ function [corr,ttc2,ttref]=crucor(lat,lon,rayp,wtype,varargin)
 %        May  20, 2010 - initial version
 %        Jan. 14, 2011 - improved verbose message, fixed message bug
 %        Apr.  2, 2012 - minor doc update
+%        Aug.  6, 2012 - better handling of stretch=false, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  2, 2012 at 15:45 GMT
+%     Last Updated Aug.  6, 2012 at 15:45 GMT
 
 % todo
 
@@ -193,7 +194,7 @@ for i=1:2:numel(varargin)
 end
 
 % get crust for crust2.0
-crust=getcrust2(lat,lon);
+crust=getcrust2(geographic2geocentriclat(lat),lon);
 
 % get crust2.0 moho depth & elevation
 c2moho=reshape([crust.moho],sz);
@@ -204,7 +205,14 @@ if(isempty(bot)); bot=c2moho; end
 
 % set elev (if not set) to that in crust2
 eflag=false;
-if(isempty(elev)); eflag=true; elev=c2elev; end
+if(isempty(elev))
+    elev=c2elev;
+    if(isscalar(stretch))
+        eflag=stretch;
+    else
+        eflag=true;
+    end
+end
 
 % check sizes & expand
 if(~isequalsizeorscalar(lat,elev,hole,top,bot,stretch,refmod))
@@ -212,7 +220,7 @@ if(~isequalsizeorscalar(lat,elev,hole,top,bot,stretch,refmod))
         'All inputs must be scalar or equal sized!');
 end
 [elev,hole,top,bot,stretch,refmod]=...
-    expandscalars(elev,hole,top,bot,stretch,refmod);
+    expandscalars(elev,hole,top,bot,stretch,refmod,lat);
 
 % get highres local elevation if stretching and no elevation given
 % - this is really slow

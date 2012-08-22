@@ -66,9 +66,10 @@ function [varargout]=plotgeofkmap(map,popt,dblim,zerodb,fgcolor,bgcolor,ax)
 %        Feb. 16, 2011 - color code fix
 %        Apr.  4, 2012 - minor doc update
 %        Apr. 25, 2012 - use nanmedian for median determination
+%        Aug. 15, 2012 - plot coasts and latlon grid only
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2012 at 15:05 GMT
+%     Last Updated Aug. 15, 2012 at 15:05 GMT
 
 % todo:
 
@@ -246,12 +247,11 @@ hold(ax,'off');
 % now add coastlines and political boundaries
 axes(ax);
 %m_gshhs([gshhs 'c'],'patch',land);
-%m_gshhs([gshhs 'b'],'color',border);
 %m_gshhs([gshhs 'c'],'color',land);
 %m_gshhs([gshhs 'b'],'color',border);
 m_coast('line','color',fgcolor);
-%m_grid('color',fgcolor);
-m_grid('color',fgcolor,'xtick',[],'ytick',[]);
+m_grid('color',fgcolor);
+%m_grid('color',fgcolor,'xtick',[],'ytick',[]);
 
 % hackery to color oceans at large when the above fails
 set(findobj(ax,'tag','m_grid_color'),'facecolor',ocean);

@@ -44,6 +44,7 @@ function [s]=tdxcmigrate(data,ll,slow,w)
 %     Last Updated June 12, 2012 at 14:05 GMT
 
 % todo:
+% - test the effect of hilbert transforming 2-way greens function
 
 % check nargin
 error(nargchk(3,4,nargin));

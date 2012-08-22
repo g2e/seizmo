@@ -30,9 +30,10 @@ function [geofs]=fs_phase2latlon(fs,phase,llstep)
 %     Version History:
 %        Apr. 24, 2012 - initial version
 %        May  18, 2012 - hack for arf plotting
+%        Aug. 10, 2012 - remove debugging output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  18, 2012 at 16:05 GMT
+%     Last Updated Aug. 10, 2012 at 16:05 GMT
 
 % todo:
 
@@ -63,7 +64,6 @@ if(isfkarfstruct(fs))
     fs.npts=1;
     fs.delta=1;
 end
-fs
 error(chkfkstruct(fs));
 nfs=numel(fs);
 

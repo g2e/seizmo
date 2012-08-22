@@ -21,7 +21,8 @@ function []=sz_toc_fk()
 %<a href="matlab:help fkxchorzvolume">fkxchorzvolume</a>     - Returns frequency-wavenumber space for horz. xc data
 %<a href="matlab:help fkxcmap">fkxcmap</a>            - Returns beam map in frequency-wavenumber space for xc data
 %<a href="matlab:help fkxcvolume">fkxcvolume</a>         - Returns energy map in frequency-wavenumber space for xc data
-%<a href="matlab:help fs_phase2latlon">fs_phase2latlon</a>    - Converts a fs spectra to geofs using a given phase%<a href="matlab:help geofkarf">geofkarf</a> - Returns the geofk array response function for a seismic array
+%<a href="matlab:help fs_phase2latlon">fs_phase2latlon</a>    - Converts a fs spectra to geofs using a given phase
+%<a href="matlab:help geofkarf">geofkarf</a>           - Returns the geofk array response function for a seismic array
 %<a href="matlab:help geofkarf2map">geofkarf2map</a>       - Converts a geofk ARF volume to a geofk ARF map
 %<a href="matlab:help geofkarfcorr">geofkarfcorr</a>       - Computes correlation with ARFs in the parameter space
 %<a href="matlab:help geofkarfslowslide">geofkarfslowslide</a>  - Slides through the slownesses of a geofkarf volume

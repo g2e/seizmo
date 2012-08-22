@@ -91,9 +91,12 @@ function []=freqwindow(indir,outdir,varargin)
 %                        axes handle bugfix, userwindow bugfixes
 %        June  5, 2011 - selectrecords has normstyle too
 %        June  8, 2011 - fixed snr cut bug when adjusting window or moveout
+%        Aug. 22, 2012 - fix warning about varying event info (evel=nan),
+%                        fixed bug that wrote bad records with output, add
+%                        jump to filter option in menu
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  8, 2011 at 10:35 GMT
+%     Last Updated Aug. 22, 2012 at 10:35 GMT
 
 % todo:
 % - single trace is not scaling properly (flatline) for shawn
@@ -132,7 +135,7 @@ elseif(isdir(outdir))
         % only delete selected event directories
         disp('Deleting Contents of Processed Filter Directories!');
         
-        % the code below deletes the entire superdirectory (too dangerous)
+        % the code below deletes the entire superdirectory (too dangerous!)
         %if(~rmdir(outdir,'s'))
         %    error('seizmo:freqwindow:couldNotDelete',...
         %        'Could Not Delete Directory: %s',outdir);
@@ -175,7 +178,7 @@ for i=s(:)'
     % get some header info
     [st,ev,delaz,outc,o0]=getheader(data,'st','ev','delaz','o utc','o');
     outc=cell2mat(outc);
-    ev=unique(ev,'rows');
+    ev=unique(ev(:,[1 2 4]),'rows'); % evel is usually nans so ignore it
     if(size(ev,1)>1)
         warning('seizmo:freqwindow:muddledHeader',...
             'Looks like EVENT location info varies among records!');
@@ -197,7 +200,8 @@ for i=s(:)'
     
     % loop over each filter (short period to long)
     skipall=false;
-    for j=1:nfilt
+    j=1;
+    while(j<=nfilt)
         % display filter
         sfilt=num2str(j,'%02d');
         disp(['Band: ' sfilt '  Period: ' num2str(1/p.bank(j,3)) '-' ...
@@ -210,6 +214,7 @@ for i=s(:)'
         o=o0;
         
         % initial window width
+        % - this is an empirical formula based on my own windowing
         L_beat=1./(p.bank(j,3)-p.bank(j,2));
         win=L_beat*(2.5+1000*p.bank(j,1).^2);
         win=[-win/2 win/2];
@@ -324,7 +329,8 @@ for i=s(:)'
                     'Adjust Window',...
                     'Adjust Moveout',...
                     'Skip This Filter',...
-                    'Skip Remaining Filters');
+                    'Skip Remaining Filters',...
+                    'Jump To Filter ...');
                 
                 switch choice
                     case 1 % write
@@ -351,8 +357,9 @@ for i=s(:)'
                                 end
                             end
                         end
-                        writeseizmo(gdata,'path',fdir);
+                        writeseizmo(gdata(good),'path',fdir);
                         unsatisfied=false;
+                        j=j+1;
                     case 2 % adjust good
                         [bad,bad,tmpax]=selectrecords(fdata,'delete',...
                             'p1',~good,'xlim',xlimits,'align',true,...
@@ -396,9 +403,30 @@ for i=s(:)'
                         good=true(nrecs,1);
                     case 5 % skip one
                         unsatisfied=false;
+                        j=j+1;
                     case 6 % skip all
                         unsatisfied=false;
                         skipall=true;
+                    case 7 % jump to filter
+                        % present gui to user to make a choice
+                        n=cellstr(num2str((1:nfilt)','%02d'));
+                        p1=cellstr(num2str(1./p.bank(:,3),'%5.1f'));
+                        p2=cellstr(num2str(1./p.bank(:,2),'%5.1f'));
+                        cur={''}; cur=cur(ones(nb,1),1);
+                        cur{j}='(current)';
+                        newj=listdlg('liststring',...
+                            strcat({'BAND '},n,{':  '},...
+                                p1,'-',p2,{'s '},cur),...
+                            'selectionmode','single',...
+                            'promptstring','Jump To Filter:',...
+                            'initialvalue',j,...
+                            'listsize',[240 400]);
+                        if(isempty(newj) || newj==j)
+                            % like nothing happened
+                        else
+                            unsatisfied=false;
+                            j=newj;
+                        end
                 end
             end
             

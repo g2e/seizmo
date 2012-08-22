@@ -2,7 +2,7 @@ function [corr,tt1d,tt3d]=mancor(paths,mod3d)
 %MANCOR    Returns mantle travel time corrections for a set of raypaths
 %
 %    Usage:    corr=mancor(paths,mod3d)
-%              [corr,tt3d,tt1d]=mancor(...)
+%              [corr,tt1d,tt3d]=mancor(...)
 %
 %    Description:
 %     CORR=MANCOR(PATHS,MOD3D) calculates travel time corrections for phase
@@ -20,9 +20,12 @@ function [corr,tt1d,tt3d]=mancor(paths,mod3d)
 %     paths in the 3D model (TT3D) and in the 1D model (TT1D).
 %
 %    Notes:
+%     - Latitudes in PATH are assumed to be geocentric.  You should always
+%       pass geocentric latitudes to TAUPPATH if you use it.  The function
+%       GETRAYPATHS does this for you.
 %
 %    Examples:
-%     % An example mantle correction workflow:
+%     % An example of mantle correction workflow:
 %     paths=tauppath('ev',[31.5 140.07],'st',[2.389 9.834],...
 %                    'ph','ttp+','mod','prem');
 %     cmb=2891; % prem based cmb depth
@@ -38,9 +41,10 @@ function [corr,tt1d,tt3d]=mancor(paths,mod3d)
 %        June  4, 2010 - drop amp input
 %        Jan. 14, 2011 - improved verbose message
 %        Feb. 27, 2012 - update for tauppath changes
+%        Aug.  6, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 02:45 GMT
+%     Last Updated Aug.  6, 2012 at 02:45 GMT
 
 % todo:
 

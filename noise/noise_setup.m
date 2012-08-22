@@ -91,9 +91,11 @@ function []=noise_setup(indir,outdir,varargin)
 %        Mar. 15, 2012 - parallel verbose fixes
 %        Apr. 25, 2012 - minor example fix
 %        June  3, 2012 - fixdelta call added, meld & fixdelta options
+%        June 14, 2012 - make time options names more flexible, fix checks
+%                        for meld/fixdelta options
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  3, 2012 at 11:15 GMT
+%     Last Updated June 14, 2012 at 11:15 GMT
 
 % todo:
 
@@ -363,9 +365,9 @@ for i=1:2:numel(varargin)
         case {'q' 'qw' 'quiet' 'qwrite' 'quietwrite'}
             if(isempty(varargin{i+1})); continue; end
             opt.QUIETWRITE=varargin{i+1};
-        case {'ts' 'tstart' 'timestart'}
+        case {'ts' 'tstart' 'timestart' 'startt' 'stime' 'starttime'}
             opt.TIMESTART=varargin{i+1};
-        case {'te' 'tend' 'timeend'}
+        case {'te' 'tend' 'timeend' 'et' 'endtime' 'etime' 'endt'}
             opt.TIMEEND=varargin{i+1};
         case {'lat' 'la' 'lar' 'latr' 'larng' 'latitude' 'latrng'}
             opt.LATRNG=varargin{i+1};
@@ -374,7 +376,14 @@ for i=1:2:numel(varargin)
         case {'knetwk' 'n' 'net' 'netwk' 'network' 'nets' 'networks'}
             opt.NETWORKS=varargin{i+1};
         case {'kstnm' 'st' 'sta' 'stn' 'stns' 'stations' 'station'}
-            opt.STATIONS=varargin{i+1};
+            if(~isempty(varargin{i+1}) && isnumeric(varargin{i+1}))
+                % timestart/starttime catch
+                warning('seizmo:noise_setup:badInput',...
+                    'TIMESTART/STATION mixup!  Assuming TIMESTART!');
+                opt.TIMESTART=varargin{i+1};
+            else
+                opt.STATIONS=varargin{i+1};
+            end
         case {'khole' 'hole' 'holes' 'str' 'strs' 'stream' 'streams'}
             opt.STREAMS=varargin{i+1};
         case {'kcmpnm' 'cmpnm' 'cmp' 'cmps' 'component' 'components'}
@@ -456,10 +465,10 @@ elseif(~isempty(opt.COMPONENTS) && (~iscellstr(opt.COMPONENTS)))
 elseif(~isempty(opt.FILENAMES) && (~iscellstr(opt.FILENAMES)))
     error('seizmo:noise_setup:badInput',...
         'FILENAMES must be a string list of allowed files!');
-elseif(~iscell(opt.MELDOPTIONS) || ~isvector(opt.MELDOPTIONS))
+elseif(~iscell(opt.MELDOPTIONS))
     error('seizmo:noise_setup:badInput',...
         'MELDOPT must be a cell array of options for MELD!');
-elseif(~iscell(opt.FIXDELTAOPTIONS) || ~isvector(opt.FIXDELTAOPTIONS))
+elseif(~iscell(opt.FIXDELTAOPTIONS))
     error('seizmo:noise_setup:badInput',...
         'FIXDELTAOPT must be a cell array of options for FIXDELTA!');
 end

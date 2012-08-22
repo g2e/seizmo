@@ -91,11 +91,13 @@ function [s]=geofss(data,ll,slow,frng,method,whiten,w)
 %        June 10, 2012 - fixed weighting, allow b to vary, added full
 %                        method, verified test results
 %        June 11, 2012 - default to center method
+%        June 13, 2012 - capon method added (needs work)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 11, 2012 at 14:05 GMT
+%     Last Updated June 13, 2012 at 14:05 GMT
 
 % todo:
+% - sort out capon method weights
 
 % check nargin
 error(nargchk(4,7,nargin));
@@ -118,7 +120,7 @@ if(nargin<6 || isempty(whiten)); whiten=true; end
 if(nargin<7 || isempty(w)); w=ones(numel(data),1); end
 
 % valid method strings
-valid.METHOD={'center' 'coarray' 'full'};
+valid.METHOD={'center' 'coarray' 'full' 'capon'};
 
 % check inputs
 sf=size(frng);
@@ -134,7 +136,8 @@ elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<=0))
 elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
         || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
     error('seizmo:geofss:badInput',...
-        'METHOD must be ''CENTER'', ''COARRAY'', or [LAT LON]!');
+        ['METHOD must be one of the following:\n' ...
+        '''CENTER'', ''COARRAY'', ''FULL'', ''CAPON'' or [LAT LON]!']);
 elseif(~isscalar(whiten) || ~islogical(whiten))
     error('seizmo:geofss:badInput',...
         'WHITEN must be TRUE or FALSE!');
@@ -203,7 +206,7 @@ try
             w=w(col).*w(row);     % expand weights
             w=w./sum(w);          % renormalize weights
             dt=dt(row)-dt(col);   % alter to pair shifts
-        case 'full'
+        case {'full' 'capon'}
             [row,col]=find(true(nrecs));
             w=w(col).*w(row);     % expand weights
             w=w./sum(w);          % renormalize weights
@@ -229,7 +232,7 @@ try
         switch method
             case 'coarray'
                 npairs=nrecs*(nrecs-1)/2;
-            case 'full'
+            case {'full' 'capon'}
                 npairs=nrecs*nrecs;
             case 'center'
                 npairs=nrecs;
@@ -276,7 +279,7 @@ try
     % distance difference for the phasors that "steer" the array
     % dd is NLLxNPAIRS
     switch method
-        case {'coarray' 'full'}
+        case {'coarray' 'full' 'capon'}
             % distance difference for each pair from source
             ev=st(col,:).'; st=st(row,:).';
             distm=sphericalinv(...
@@ -328,12 +331,28 @@ try
         cs=data(fidx,:).';
         if(whiten); cs=cs./abs(cs); end
         switch method
-            case {'coarray' 'full'}
+            case {'coarray' 'full' 'capon'}
                 cs=cs(row,:).*conj(cs(col,:));
         end
         
-        % apply weighting
-        cs=cs.*w(:,ones(1,nfreq));
+        % capon 1969 minimum length method for weighting
+        % - invert the cross power spectra complex matrix
+        switch method
+            case 'capon'
+                % detail message
+                if(verbose)
+                    fprintf('Inverting Cross Power Spectra Matrix\n');
+                    print_time_left(0,nfreq);
+                end
+                for b=1:nfreq
+                    cs(:,b)=reshape(...
+                        pinv(reshape(cs(:,b),[nrecs nrecs])),[],1);
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            otherwise
+                % apply weighting
+                cs=cs.*w(:,ones(1,nfreq));
+        end
         
         % detail message
         if(verbose)
@@ -344,7 +363,7 @@ try
         
         % beamforming method
         switch method
-            case {'coarray' 'full'}
+            case {'coarray' 'full' 'capon'}
                 for b=1:nfreq
                     for c=1:nslow
                         s(a).spectra(:,c,b)=...

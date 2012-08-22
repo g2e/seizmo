@@ -9,18 +9,18 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-fsspec 12 3 4 5 6
+fsspec 12 3 4 5
     - horz & xchorz
     - corr
     - s(f,lat,lon) - should be a method
     - capon method
-    - flag for normalizing cross spectra matrix
+    - latitudes => geo2sph
+    - amplitudes are correct (2pi factor?)
 
 make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
 
 meld
     - uneven or variable samplerate
-    - timing precision issue
 rotate
     - through option
     - rewrite option code
@@ -103,7 +103,6 @@ checking needs some tolerance (just too strict...)
     - delta/b often differ by a neglegible amount
 slantstacking
 vespagrams
-ftan
 writegmt
 historical quakes
 subduction zone contours/sheets

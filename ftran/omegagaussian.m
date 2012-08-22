@@ -41,8 +41,6 @@ function [data]=omegagaussian(data,fc,a)
 %    Notes:
 %     - The following paper describes the algorithms used here:
 %        Dziewonski, Bloch, & Landisman 1969, BSSA Vol 59, No 1, pp 427-444
-%     - Because DFT zero-pads records this operation does not give the same
-%       result as Matlab's hilbert.
 %
 %    Examples:
 %     % Gaussian filter centered at .01Hz with a width of .005Hz when the
@@ -51,13 +49,14 @@ function [data]=omegagaussian(data,fc,a)
 %     data=omegagaussian(data,.01,log(100)/(.005/2/.01)^2);
 %
 %    See also: OMEGAHILBERT, OMEGASHIFT, OMEGADIVIDE, OMEGAMULTIPLY,
-%              OMEGAANALYTIC, DFT, IDFT, IIRFILTER, TAPERFUN
+%              OMEGAANALYTIC, DFT, IDFT, IIRFILTER, TAPERFUN, FTAN
 
 %     Version History:
 %        Feb.  5, 2012 - initial version
+%        Aug.  2, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2012 at 15:05 GMT
+%     Last Updated Aug.  2, 2012 at 15:05 GMT
 
 % todo:
 

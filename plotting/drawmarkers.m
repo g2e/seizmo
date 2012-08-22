@@ -46,9 +46,10 @@ function [varargout]=drawmarkers(ax,varargin)
 %        Nov. 11, 2011 - added sft to plot1 section
 %        Feb.  6, 2012 - forgot to flip flags back when plot0 flipped back,
 %                        hide flags/markers using hasbehavior function
+%        Aug.  2, 2012 - added sft to plot1 section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  6, 2012 at 23:00 GMT
+%     Last Updated Aug.  2, 2012 at 23:00 GMT
 
 % todo:
 % - reduce calls for speed
@@ -200,7 +201,7 @@ for i=1:numel(ax)
             % push markers and flags into the background
             movekids(hflag{i}(grh,:),'back');
             movekids(hmark{i}(grh,:),'back');
-        case {'plot1' 'sft'}
+        case {'plot1' 'sft' 'ftan'}
             % preallocate handles
             hmark{i}=nan(1,13);
             hflag{i}=hmark{i};

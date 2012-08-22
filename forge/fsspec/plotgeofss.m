@@ -110,7 +110,7 @@ dblim=sort([dblim(1) dblim(2)]);
 
 % convert to dB
 switch s.method
-    case {'coarray' 'full'}
+    case {'coarray' 'full' 'capon'}
         s.spectra=10*log10(abs(real(s.spectra)));
     otherwise
         s.spectra=10*log10(s.spectra);

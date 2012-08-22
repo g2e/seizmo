@@ -18,7 +18,7 @@ function [paths]=crust2less_raypaths(paths)
 %       raypath segment crosses a block boundary AND the both ends of the
 %       segment are above the moho depth of the block that the segment ends
 %       in.  To work around this case the crossing segment is removed.  A
-%       warning is issued so you know if this happens.
+%       warning is issued if seizmodebug=true so you know if this happens.
 %
 %    Examples:
 %     % Plot some paths without the crustal portions:
@@ -33,9 +33,10 @@ function [paths]=crust2less_raypaths(paths)
 %        June  3, 2010 - updated example, handle nans
 %        Aug.  8, 2010 - doc update
 %        Feb. 27, 2012 - update for tauppath changes
+%        Aug.  6, 2012 - warn only if seizmodebug=true
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 02:45 GMT
+%     Last Updated Aug.  6, 2012 at 02:45 GMT
 
 % todo:
 % - test for lat/lon less paths
@@ -67,6 +68,9 @@ elseif(any(~ismember({'latitude' 'longitude'},fieldnames(paths(1).path))))
     error('seizmo:crust2less_raypaths:badStruct',...
         'Latitude & Longitude are required path fields!');
 end
+
+% hide warnings unless debugging is on
+debug=seizmodebug;
 
 % loop over each path
 for i=1:numel(paths)
@@ -137,9 +141,11 @@ for i=1:numel(paths)
                 newlat{j}(1)=[];
                 newlon{j}(1)=[];
             elseif(all(newdep{j}(1:2)<=moho(s(j))))
-                warning('seizmo:crust2less_raypaths:sidewall',...
-                    'Hit a crust side wall: path %d, section %d start!',...
-                    i,j);
+                if(debug)
+                    warning('seizmo:crust2less_raypaths:sidewall',...
+                        ['Hit a crust side wall: ' ...
+                        'path %d, section %d start!'],i,j);
+                end
                 
                 % just chop off first point and move on
                 newdep{j}(1)=[];
@@ -181,9 +187,11 @@ for i=1:numel(paths)
                 newlat{j}(end)=[];
                 newlon{j}(end)=[];
             elseif(all(newdep{j}(end-1:end)<=moho(e(j))))
-                warning('seizmo:crust2less_raypaths:sidewall',...
-                    'Hit a crust side wall: path %d, section %d end!',...
-                    i,j);
+                if(debug)
+                    warning('seizmo:crust2less_raypaths:sidewall',...
+                        ['Hit a crust side wall: ' ...
+                        'path %d, section %d end!'],i,j);
+                end
                 
                 % just chop off last point and move on
                 newdep{j}(end)=[];

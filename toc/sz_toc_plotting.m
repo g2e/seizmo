@@ -3,6 +3,7 @@ function []=sz_toc_plotting()
 %<a href="matlab:help drawmarkers">drawmarkers</a>       - Draw markers in SEIZMO plot deleting any existing ones
 %<a href="matlab:help extract_plot_data">extract_plot_data</a> - Extracts SEIZMO data struct from SEIZMO plot
 %<a href="matlab:help flipflags">flipflags</a>         - Flips the flag direction in SEIZMO plots
+%<a href="matlab:help ftan">ftan</a>              - FTAN style plotting of SEIZMO data
 %<a href="matlab:help mastflags">mastflags</a>         - Masts marker flags in SEIZMO plots
 %<a href="matlab:help plot0">plot0</a>             - Evenly spaced plot of SEIZMO records
 %<a href="matlab:help plot1">plot1</a>             - Plot SEIZMO data records in individual subplots

@@ -26,9 +26,10 @@ function [report]=chkfkstruct(fk)
 %        June 16, 2010 - minor code update
 %        July  6, 2010 - major update for new struct
 %        Apr.  4, 2012 - minor doc update
+%        June 13, 2012 - add capon method support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  4, 2012 at 14:05 GMT
+%     Last Updated June 13, 2012 at 14:05 GMT
 
 % todo:
 
@@ -48,7 +49,7 @@ if(~isstruct(fk) || ~all(ismember(fields,fieldnames(fk))))
 end
 
 % valid method strings
-valid.METHOD={'center' 'coarray' 'full' 'user'};
+valid.METHOD={'center' 'coarray' 'full' 'user' 'capon'};
 
 % loop over each frame/volume/map
 for i=1:numel(fk)

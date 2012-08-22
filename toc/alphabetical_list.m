@@ -144,6 +144,7 @@ function []=alphabetical_list()
 %<a href="matlab:help flipflags">flipflags</a>                      - Flips the flag direction in SEIZMO plots
 %<a href="matlab:help freqwindow">freqwindow</a>                     - Interactive tool for multi-frequency QCing & windowing of event data
 %<a href="matlab:help fs_phase2latlon">fs_phase2latlon</a>                - Converts a fs spectra to geofs using a given phase%<a href="matlab:help geofkarf">geofkarf</a> - Returns the geofk array response function for a seismic array
+%<a href="matlab:help ftan">ftan</a>                           - FTAN style plotting of SEIZMO data
 %<a href="matlab:help gaussian">gaussian</a>                       - Returns values from a Gaussian PDF
 %<a href="matlab:help gaussiantf">gaussiantf</a>                     - Returns a gaussian time function
 %<a href="matlab:help gc2latlon">gc2latlon</a>                      - Returns points along great circle(s)

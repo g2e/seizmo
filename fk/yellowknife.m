@@ -15,13 +15,14 @@ function [loc,name]=yellowknife()
 %     loc=yellowknife;
 %     fkarf(loc(:,1:2),20,201,1);
 %
-%    See also: ARRAY_STATION_NAMES, ARRAYCENTER, ARRAYAPERATURE, FKARF
+%    See also: ARRAYCENTER, ARRAYAPERTURE, FKARF
 
 %     Version History:
 %        May  25, 2011 - initial version
+%        Aug.  6, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  25, 2011 at 23:55 GMT
+%     Last Updated Aug.  6, 2012 at 23:55 GMT
 
 % locations (lat, lon, depth)
 loc=[62.61 -114.61 194.2
