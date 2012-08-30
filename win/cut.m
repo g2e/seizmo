@@ -362,7 +362,7 @@ for i=find(~failed')
         
         % update dep*
         if(numel(data(i).dep))
-            depmen(i)=mean(data(i).dep(:));
+            depmen(i)=nanmean(data(i).dep(:));
             depmin(i)=min(data(i).dep(:));
             depmax(i)=max(data(i).dep(:));
         else
@@ -448,7 +448,7 @@ for i=find(~failed')
         % update timing/dep*
         b(i)=data(i).ind(1);
         e(i)=data(i).ind(end);
-        depmen(i)=mean(data(i).dep(:));
+        depmen(i)=nanmean(data(i).dep(:));
         depmin(i)=min(data(i).dep(:));
         depmax(i)=max(data(i).dep(:));
         if(npts(i)>1)

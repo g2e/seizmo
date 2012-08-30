@@ -9,39 +9,39 @@ function [data]=changename(data,varargin)
 %              data=changename(data,...,'change',{orig replacement},...)
 %
 %    Description:
-%     CHANGENAME(DATA,...,'NAME',NAME,...) sets the name field of DATA to
-%     NAME.  The name field is the filename associated with the record.  If
-%     DATA contains more than 1 record and NAME is just a single string,
+%     DATA=CHANGENAME(DATA,...,'NAME',NAME,...) sets the name field of DATA
+%     to NAME.  The name field is the filename associated with the record.
+%     If DATA contains more than 1 record and NAME is just a single string,
 %     the name field for all records are changed to NAME.  Otherwise NAME
 %     must be a char/cellstr array with 1 row/element for each record in
 %     DATA.
 %
-%     CHANGENAME(DATA,...,'PREPEND',STRING,...) prepends STRING to the
+%     DATA=CHANGENAME(DATA,...,'PREPEND',STRING,...) prepends STRING to the
 %     name field of DATA.  If DATA contains more than 1 record and STRING
 %     is just a single string, STRING is prepended to the name field of all
 %     records in DATA.  Otherwise STRING must be a char/cellstr array with
 %     1 row/element for each record in DATA.
 %
-%     CHANGENAME(DATA,...,'APPEND',STRING,...) appends STRING to the name
-%     field of DATA.  If DATA contains more than 1 record and STRING is
-%     just a single string, STRING is appended to the name field of all
+%     DATA=CHANGENAME(DATA,...,'APPEND',STRING,...) appends STRING to the
+%     name field of DATA.  If DATA contains more than 1 record and STRING
+%     is just a single string, STRING is appended to the name field of all
 %     records in DATA.  Otherwise STRING must be a char/cellstr array with
 %     1 row/element for each record in DATA.
 %
-%     CHANGENAME(DATA,...,'DELETE',STRING,...) deletes STRING from the name
-%     field of DATA.  If DATA contains more than 1 record and STRING is
-%     just a single string, STRING is deleted from the name field of all
+%     DATA=CHANGENAME(DATA,...,'DELETE',STRING,...) deletes STRING from the
+%     name field of DATA.  If DATA contains more than 1 record and STRING
+%     is just a single string, STRING is deleted from the name field of all
 %     records in DATA.  Otherwise STRING must be a char/cellstr array with
 %     1 row/element for each record in DATA.  To delete multiple parts from
 %     the name field, see the next DELETE option usage.
 %
-%     CHANGENAME(DATA,...,'DELETE',{STRING1 ... STRINGN},...) allows
+%     DATA=CHANGENAME(DATA,...,'DELETE',{STRING1 ... STRINGN},...) allows
 %     deleting multiple strings from the name field of DATA.  Multi-line
 %     entries are not allowed (use one string per cell if working on
 %     multiple records where each row corresponds to a separate record).  
 %
-%     CHANGENAME(DATA,...,'CHANGE',{ORIGINAL REPLACEMENT},...) replaces all
-%     occurances of the string ORIGINAL in the name field of DATA with the
+%     DATA=CHANGENAME(DATA,...,'CHANGE',{ORIGINAL REPLACEMENT},...) sets
+%     occurances of the string ORIGINAL in the name field of DATA to the
 %     string REPLACEMENT.  If DATA contains more than 1 record and ORIGINAL
 %     and REPLACEMENT are just single strings, then the same string set is
 %     applied to every record.  Otherwise a string pair must be given for
@@ -81,6 +81,7 @@ function [data]=changename(data,varargin)
 %        Apr. 25, 2010 - allow several more strings to specify options
 %        Feb. 11, 2011 - mass seizmocheck fix
 %        Feb.  7, 2012 - doc update
+%        Aug. 30, 2012 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb.  7, 2012 at 15:05 GMT

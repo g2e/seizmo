@@ -102,7 +102,7 @@ try
             fft(data(i).dep,[],1).*h(:,ones(1,ncmp(i))),[],1)));
         
         % dep*
-        depmen(i)=mean(data(i).dep(:)); 
+        depmen(i)=nanmean(data(i).dep(:)); 
         depmin(i)=min(data(i).dep(:)); 
         depmax(i)=max(data(i).dep(:));
         

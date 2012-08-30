@@ -107,7 +107,7 @@ try
         
         % get dep*
         depmin=min(data(i).dep(:));
-        depmen=mean(data(i).dep(:));
+        depmen=nanmean(data(i).dep(:));
         depmax=max(data(i).dep(:));
     end
     

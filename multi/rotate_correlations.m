@@ -298,16 +298,16 @@ try
         if(size(x,1))
             depmin((i-1)*4+1)=min(data((i-1)*4+1).dep);
             depmax((i-1)*4+1)=max(data((i-1)*4+1).dep);
-            depmen((i-1)*4+1)=mean(data((i-1)*4+1).dep);
+            depmen((i-1)*4+1)=nanmean(data((i-1)*4+1).dep);
             depmin((i-1)*4+2)=min(data((i-1)*4+2).dep);
             depmax((i-1)*4+2)=max(data((i-1)*4+2).dep);
-            depmen((i-1)*4+2)=mean(data((i-1)*4+2).dep);
+            depmen((i-1)*4+2)=nanmean(data((i-1)*4+2).dep);
             depmin((i-1)*4+3)=min(data((i-1)*4+3).dep);
             depmax((i-1)*4+3)=max(data((i-1)*4+3).dep);
-            depmen((i-1)*4+3)=mean(data((i-1)*4+3).dep);
+            depmen((i-1)*4+3)=nanmean(data((i-1)*4+3).dep);
             depmin((i-1)*4+4)=min(data((i-1)*4+4).dep);
             depmax((i-1)*4+4)=max(data((i-1)*4+4).dep);
-            depmen((i-1)*4+4)=mean(data((i-1)*4+4).dep);
+            depmen((i-1)*4+4)=nanmean(data((i-1)*4+4).dep);
         end
         
         if(verbose); print_time_left(i,nquads); end

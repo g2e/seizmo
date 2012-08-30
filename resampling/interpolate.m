@@ -219,7 +219,7 @@ try
         else
             b(i)=nt(1);
             e(i)=nt(end);
-            depmen(i)=mean(data(i).dep(:));
+            depmen(i)=nanmean(data(i).dep(:));
             depmin(i)=min(data(i).dep(:));
             depmax(i)=max(data(i).dep(:));
         end

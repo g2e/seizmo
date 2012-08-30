@@ -351,6 +351,7 @@ function []=alphabetical_list()
 %<a href="matlab:help noinvert">noinvert</a>                       - Turns off hardcopy black/white inversion
 %<a href="matlab:help noise_overview">noise_overview</a>                 - Outlines Noise Correlation Analysis Workflow
 %<a href="matlab:help noise_process">noise_process</a>                  - Performs processing of seismic data for noise analysis
+%<a href="matlab:help noise_rms_calc">noise_rms_calc</a>                 - Calculates RMS values for noise analysis
 %<a href="matlab:help noise_setup">noise_setup</a>                    - Convert a directory of data to a year/time/file filesystem
 %<a href="matlab:help noise_stack">noise_stack</a>                    - Stack noise correlation functions for noise analysis
 %<a href="matlab:help nolabels">nolabels</a>                       - Removes tick and axis labels

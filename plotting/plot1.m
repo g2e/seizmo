@@ -66,9 +66,10 @@ function [varargout]=plot1(data,varargin)
 %        Nov. 11, 2011 - per record linewidth, fontweight support
 %        Feb.  6, 2012 - better getheader usage, set displayname to kname
 %                        string, fix legend coloring
+%        Aug. 30, 2012 - allow [] input for labeling, short idep by default
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  6, 2012 at 23:00 GMT
+%     Last Updated Aug. 30, 2012 at 23:00 GMT
 
 % todo:
 
@@ -119,6 +120,9 @@ if(sum(spec)); data(spec)=idft(data(spec)); end
 [b,npts,delta,z6,kname,leven,idep]=getheader(data,...
     'b','npts','delta','z6','kname','leven lgc','idep desc');
 z6=datenum(cell2mat(z6));
+
+% convert idep to short form
+idep=shortidep(idep);
 
 % names for legend
 displayname=strcat(kname(:,1),'.',kname(:,2),...
@@ -290,7 +294,7 @@ for i=goodfiles
     else
         p1title=opt.TITLE;
     end
-    if(isnumeric(opt.XLABEL) && opt.XLABEL==1)
+    if(~isempty(opt.XLABEL) && isnumeric(opt.XLABEL) && opt.XLABEL==1)
         if(opt.ABSOLUTE)
             xlimits=get(opt.AXIS(i),'xlim');
             p1xlabel=joinwords(cellstr(datestr(unique(fix(xlimits)))),...
@@ -301,7 +305,7 @@ for i=goodfiles
     else
         p1xlabel=opt.XLABEL;
     end
-    if(isnumeric(opt.YLABEL) && opt.YLABEL==1)
+    if(~isempty(opt.YLABEL) && isnumeric(opt.YLABEL) && opt.YLABEL==1)
         p1ylabel=idep(i);
     else
         p1ylabel=opt.YLABEL;

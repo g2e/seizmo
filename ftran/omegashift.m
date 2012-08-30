@@ -111,7 +111,7 @@ try
         data(i).dep=oclass(data(i).dep);
         
         % dep*
-        depmen(i)=mean(data(i).dep(:));
+        depmen(i)=nanmean(data(i).dep(:));
         depmin(i)=min(data(i).dep(:));
         depmax(i)=max(data(i).dep(:));
         

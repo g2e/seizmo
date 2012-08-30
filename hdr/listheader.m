@@ -2,18 +2,20 @@ function []=listheader(data,varargin)
 %LISTHEADER    List SEIZMO data headers
 %
 %    Usage:    listheader(data)
-%              listheader(data,'field1','field2',...)
+%              listheader(data,'field1',...,'fieldN')
 %
 %    Description:
 %     LISTHEADER(DATA) lists the header fields of all records in DATA in a
 %     format similar to SAC's lh command.  Undefined fields are skipped.
 %
-%     LISTHEADER(DATA,FIELD1,...,FIELDN) lists the header field(s) FIELD1
-%     to FIELDN and their value(s) from records in DATA in a manner similar
-%     to SAC's lh command.  FIELDS must be a string corresponding to a
-%     valid header field, group field (ie. 't' 'kt' 'resp' 'user' 'kuser'
-%     etc), absolute fields ('t9 utc' 'user3 tai' 'resp utc' etc), or
-%     wildcards ('nz*' 'dep*' etc).  Only * and ? are valid wildcards.
+%     LISTHEADER(DATA,'FIELD1',...,'FIELDN') prints a list of the header
+%     field(s) FIELD1 to FIELDN and their value(s) from records in DATA
+%     like SAC's lh command does.  FIELDS may be normal fields ('b' 'kt1'
+%     'xmaximum' etc), group fields ('t' 'kt' etc), absolute fields
+%     ('t9 utc' 'user3 tai' 'resp utc' etc), list fields ('picks' 'all'
+%     'full' -- these are not available to the functions CHANGEHEADER or
+%     GETHEADER) or wildcards ('*t1' '?' etc).  Only * and ? are valid
+%     wildcard characters.
 %
 %    Notes:
 %     - Group fields:    T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
@@ -72,9 +74,10 @@ function []=listheader(data,varargin)
 %        Feb.  1, 2012 - fix tai/tai6 output, adaptive column spacing,
 %                        split path/file output, utc/tai bugfix
 %        Feb. 20, 2012 - clean up cell array initialization issues
+%        Aug. 30, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 20, 2012 at 15:05 GMT
+%     Last Updated Aug. 30, 2012 at 15:05 GMT
 
 % todo:
 

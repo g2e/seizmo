@@ -40,7 +40,6 @@ fk stuff
     	- functions for depth model at position
 	verify horizontal algorithm vs Haubrich and McCamy 1969
     cart2pol & pol2cart
-    fss_phase2geofss
 figure out strange narrow long-period peaks in noise results
     - response taper affects it
     - happens even without response removal?

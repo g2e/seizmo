@@ -112,7 +112,7 @@ try
         data(i).dep=qgrad(unwrap(data(i).dep,[],1))/(2*pi*delta(i));
         
         % dep*
-        depmen(i)=mean(data(i).dep(:)); 
+        depmen(i)=nanmean(data(i).dep(:)); 
         depmin(i)=min(data(i).dep(:)); 
         depmax(i)=max(data(i).dep(:));
         

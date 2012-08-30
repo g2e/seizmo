@@ -94,9 +94,10 @@ function []=freqwindow(indir,outdir,varargin)
 %        Aug. 22, 2012 - fix warning about varying event info (evel=nan),
 %                        fixed bug that wrote bad records with output, add
 %                        jump to filter option in menu
+%        Aug. 30, 2012 - added band index to titles
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 22, 2012 at 10:35 GMT
+%     Last Updated Aug. 30, 2012 at 10:35 GMT
 
 % todo:
 % - single trace is not scaling properly (flatline) for shawn
@@ -252,8 +253,9 @@ for i=s(:)'
             end
             
             % plot raw filtered data beside good, clean records
-            fh=figure('name',['FREQWINDOW - ' events(i).name ...
-                ' - ' num2str(1/p.bank(j,1)) 's'],'color','k');
+            fh=figure('name',['FREQWINDOW - ' events(i).name ' - BAND ' ...
+                num2str(j,'%02d') ': ' num2str(1/p.bank(j,1)) 's'],...
+                'color','k','numbertitle','off');
             ax=makesubplots(1,2,1,'parent',fh);
             ax(1)=recordsection(fdata,'normstyle',p.normstyle,...
                 'xlim',xlimits,'ax',ax(1),'cmap',cmap);
@@ -317,8 +319,9 @@ for i=s(:)'
             
             % super title
             axmove(ax,[],-.03);
-            supertitle(ax,{[events(i).name ' - ' ...
-                num2str(1/p.bank(j,1)) 's'] ''},'color','w');
+            supertitle(ax,{[events(i).name  ' - BAND ' ...
+                num2str(j,'%02d') ': ' num2str(1/p.bank(j,1)) 's'] ''},...
+                'color','w');
             
             % ask user
             choice=0;
@@ -412,7 +415,7 @@ for i=s(:)'
                         n=cellstr(num2str((1:nfilt)','%02d'));
                         p1=cellstr(num2str(1./p.bank(:,3),'%5.1f'));
                         p2=cellstr(num2str(1./p.bank(:,2),'%5.1f'));
-                        cur={''}; cur=cur(ones(nb,1),1);
+                        cur={''}; cur=cur(ones(nfilt,1),1);
                         cur{j}='(current)';
                         newj=listdlg('liststring',...
                             strcat({'BAND '},n,{':  '},...

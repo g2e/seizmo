@@ -14,8 +14,10 @@ function []=queryheader(data,varargin)
 %     QUERYHEADER(DATA,'FIELD1',...,'FIELDN') prints out the header
 %     fields FIELD1 to FIELDN for records in DATA as a table.  FIELDS may
 %     be normal fields ('b' 'kt1' 'xmaximum' etc), group fields ('t' 'kt'
-%     etc), absolute fields ('t9 utc' 'user3 tai' 'resp utc' etc), or
-%     wildcards ('*t1' '?' etc).  Only * and ? are valid wildcards.
+%     etc), absolute fields ('t9 utc' 'user3 tai' 'resp utc' etc), list
+%     fields ('picks', 'all', 'full' -- these are not available to the
+%     functions CHANGEHEADER or GETHEADER) or wildcards ('*t1' '?' etc).
+%     Only * and ? are valid wildcard characters.
 %
 %    Notes:
 %     - Group fields:    T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
@@ -48,9 +50,10 @@ function []=queryheader(data,varargin)
 %        Feb.  1, 2012 - utc/tai bugfix
 %        Feb. 11, 2012 - divergent octave behavior workaround (cellcat)
 %        Feb. 20, 2012 - properly allocate arrays causing above issue
+%        Aug. 29, 2012 - fixed breakage when character field is blank
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 20, 2012 at 01:40 GMT
+%     Last Updated Aug. 29, 2012 at 01:40 GMT
 
 % todo:
 
@@ -219,8 +222,9 @@ for i=1:nvarg
             values{k}=cmph_disp(h(idx(k)),f,data(k),cs,ref(k,:),good(k));
         end
         
-        % justify
-        values=strtrim(strjust(char(values),'right'));
+        % justify & crop
+        values=strjust(char(values),'right');
+        values(:,all(isspace(values)))=[];
         
         % now get minimum column width
         cn=max(cn,size(values,2)+2); cs=num2str(cn);
@@ -229,7 +233,7 @@ for i=1:nvarg
         cnt=cnt+1;
         cw(cnt)=cn;
         hf{cnt}=sprintf(['%' cs 's'],upper(f));
-        v{cnt}=char(strcat({32*ones(1,cn-size(values,2))},values));
+        v{cnt}=[char(32*ones(nrecs,cn-size(values,2))) values];
     end
 end
 

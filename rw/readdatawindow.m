@@ -437,7 +437,7 @@ try
 
         % update dep*
         if(numel(data(i).dep))
-            depmen(i)=mean(data(i).dep(:));
+            depmen(i)=nanmean(data(i).dep(:));
             depmin(i)=min(data(i).dep(:));
             depmax(i)=max(data(i).dep(:));
         else

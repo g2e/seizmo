@@ -562,10 +562,10 @@ try
                     % dep*
                     if(nnpts(c1))
                         ndepmin(c1)=min(ndata(c1).dep(:));
-                        ndepmen(c1)=mean(ndata(c1).dep(:));
+                        ndepmen(c1)=nanmean(ndata(c1).dep(:));
                         ndepmax(c1)=max(ndata(c1).dep(:));
                         ndepmin(c2)=min(ndata(c2).dep(:));
-                        ndepmen(c2)=mean(ndata(c2).dep(:));
+                        ndepmen(c2)=nanmean(ndata(c2).dep(:));
                         ndepmax(c2)=max(ndata(c2).dep(:));
                     end
                     
@@ -687,10 +687,10 @@ try
                     nnpts([c1 c2])=numel(ndata(c1).dep);
                     if(nnpts(c1))
                         ndepmin(c1)=min(ndata(c1).dep(:));
-                        ndepmen(c1)=mean(ndata(c1).dep(:));
+                        ndepmen(c1)=nanmean(ndata(c1).dep(:));
                         ndepmax(c1)=max(ndata(c1).dep(:));
                         ndepmin(c2)=min(ndata(c2).dep(:));
-                        ndepmen(c2)=mean(ndata(c2).dep(:));
+                        ndepmen(c2)=nanmean(ndata(c2).dep(:));
                         ndepmax(c2)=max(ndata(c2).dep(:));
                     end
                     

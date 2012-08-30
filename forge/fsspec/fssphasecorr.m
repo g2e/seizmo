@@ -17,7 +17,7 @@ function [ns,es]=fssphasecorr(phase,mod3d,evla,evlo,evdp,stla,stlo)
 %    Notes:
 %     - Latitudes are assumed to be geographic.
 %     - EVDP is expected in kilometers!
-%     - Phase handling is basic - doesn't handle exotic phases!
+%     - Phase handling is basic - does not handle exotic phases!
 %
 %    Examples:
 %     % Get the expected slowness of a P wave passing through the
@@ -43,9 +43,10 @@ function [ns,es]=fssphasecorr(phase,mod3d,evla,evlo,evdp,stla,stlo)
 
 %     Version History:
 %        Aug.  6, 2012 - initial version
+%        Aug. 30, 2012 - fixed forced phase/wavetype inputs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  6, 2012 at 23:18 GMT
+%     Last Updated Aug. 30, 2012 at 23:18 GMT
 
 % todo:
 
@@ -83,12 +84,12 @@ mc=mancor(gpaths,mod3d);
 
 % crustal corrections
 rayp=[gpaths.rayparameter]; rayp=rayp(:);
-cc=crucor(stla,stlo,rayp,'p','s',false);
+cc=crucor(stla,stlo,rayp,wavetype,'s',false);
 
 % ellipticity corrections
 [gcarc,az]=sphericalinv(geographic2geocentriclat(evla),evlo,...
     geographic2geocentriclat(stla),stlo);
-ec=ellcor(geographic2geocentriclat(evla),evdp,gcarc,az,'P');
+ec=ellcor(geographic2geocentriclat(evla),evdp,gcarc,az,ephase);
 
 % total corrections
 tc=mc+cc+ec;

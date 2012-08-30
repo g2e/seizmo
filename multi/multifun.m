@@ -495,7 +495,7 @@ try
 
             % get header info
             if(npts(i)>0 && ncmp(i)>0)
-                depmen(i)=mean(data{1}(i).dep(:));
+                depmen(i)=nanmean(data{1}(i).dep(:));
                 depmin(i)=min(data{1}(i).dep(:));
                 depmax(i)=max(data{1}(i).dep(:));
             end
@@ -679,7 +679,7 @@ try
         % get header info
         depmen=nan; depmin=nan; depmax=nan;
         if(npts>0 && ncmp>0)
-            depmen=mean(data.dep(:));
+            depmen=nanmean(data.dep(:));
             depmin=min(data.dep(:));
             depmax=max(data.dep(:));
         end

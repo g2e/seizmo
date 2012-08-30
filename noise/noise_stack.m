@@ -26,24 +26,42 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %     where: PAIR  is 'ZZ', 'RR', etc
 %            XCCMP is 'TWOWAY', 'SYMMETRIC', etc (see option XCCMP below)
 %            SPAN  is 'ALL', 'MON', etc (see option SPAN below)
-%            TIME  is the time span stacked and depends on LENGTH:
+%            TIME  is the time span stacked and depends on SPAN:
 %                   SPAN   |  TIME_FORMAT
 %                 ---------+--------------
 %                   'all'  |  yyyy.ddd.hh.mm.ss_yyyy.ddd.hh.mm.ss
+%               '2season'  |  summer, winter
+%               '4season'  |  spring, summer, autumn, winter
 %                  '3mon'  |  yyyy.MM_yyyy.MM
 %                   'mon'  |  MM
 %                  'yrmo'  |  yyyy.MM
 %                    'wk'  |  yyyy.ddd_yyyy.ddd
+%                 'wkday'  |  1-SUN, 2-MON, ...
 %                   'day'  |  yyyy.ddd
 %                   '3hr'  |  yyyy.ddd.hh.mm.ss_yyyy.ddd.hh.mm.ss
+%                   '1hr'  |  yyyy.ddd.hh.mm.ss_yyyy.ddd.hh.mm.ss
+%                'tod3hr'  |  hh00 (eg. 0000, 0300, etc)
+%                'tod1hr'  |  hh00 (eg. 0000, 0100, etc)
 %
 %     NOISE_STACK(INDIR,OUTDIR,PAIR,'OPT1',VAL,...,'OPTN',VAL) gives access
 %     to several stacking and selection parameters:
 %      SPAN - Controls the stacked time span.  May be of the following:
-%              '3hr','day','wk','mon','yrmo','3mon','all'
-%             or a cell array with a combination of those.  'mon' stacks
-%             across years for a particular month (for example stacking
-%             Jan 2005, 2006, & 2007).  The default is 'full'.
+%              tod1hr - stack by hour of the day (across all days)
+%              tod3hr - stack 3 hour blocks across all days (no overlap)
+%                 1hr - stack each hour separately
+%                 3hr - stack all 3 hour blocks separately
+%                 day - stack each day separately
+%               wkday - stack each weekday (across all weeks)
+%                  wk - stack each week separately
+%                 mon - stack each month (across all years)
+%                yrmo - stack each month separately
+%                3mon - stack each 3 month block possible (steps @ 1 month)
+%             4season - stack 3 month blocks across years
+%                       1-3=winter, 4-6=spring, 7-9=summer, 10-12=autumn
+%             2season - stack 6 month blocks across years
+%                       4-9=summer, 10-12,1-3=winter
+%                 all - stack everything
+%             or a cell array with a combination of them. Default is 'all'.
 %      XCCMP - Controls which NCF component is output.  May be any of:
 %               'twoway','symmetric','causal','acausal'
 %              or a cell array combination.  The default is 'twoway'.
@@ -96,16 +114,21 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %        Mar. 15, 2012 - parallel verbose fixes
 %        June 14, 2012 - xccmp value changes, make time options names more
 %                        flexible
+%        Aug. 22, 2012 - added 1hr, tod1hr, tod3hr, wkday, 4season, 2season
+%                        span options
+%        Aug. 24, 2012 - fix timespan indexing bug (span~=all were wrong)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 14, 2012 at 11:15 GMT
+%     Last Updated Aug. 24, 2012 at 11:15 GMT
 
 % todo:
-% - stack2stack
-% - clear user0/1?
-% - wkday stacks (sun, mon, tue, wed, thu, fri, sat)
-% - tod stacks (0000,0300,0600,0900,1200,1500,1800,2100)
-% - 1hr stacks
+% - separate function: stack2stack (make stacks from stacks)
+%   - tod1hr => tod3hr, day=>yrmo, mon=> full, etc
+% - overlap option
+%   - default to 50% ?
+%   - weight summation by overlap?
+%   - need a time function to return overlap between ranges
+%   - tod?hr, wkday, mon, ?season need special care
 
 % check nargin
 error(nargchk(3,inf,nargin));
@@ -185,6 +208,7 @@ tsend=str2double([cellstr(t(:,19:22)) cellstr(t(:,24:26)) ...
 clear t;
 
 % forget about any outside of user specified time limits
+% - allow those overlapping boundary
 good=true(numel(tsdirs),1);
 if(~isempty(opt.TIMESTART))
     good=good & timediff(opt.TIMESTART,tsend)>0;
@@ -204,17 +228,21 @@ e=e-1/86400;
 
 % check timesection lengths
 % - adding UTC to timediff here would break the detections below
+smaxlen={'tod1hr' 'tod3hr' '1hr' '3hr' 'day' 'wkday' ...
+    'wk' 'yrmo' 'mon' '3mon' '4season' '2season' 'all'};
+nmaxlen=[3601 10801 3600 10800 86400 86401 ...
+    86400*7 86400*28 86400*28 86400*89 86400*90 86400*180 inf];
 if(numel(unique(timediff(tsbgn,tsend)))>1)
     error('seizmo:noise_stack:variableTimeSectionWidth',...
         'Timesection time spans vary in INDIR!');
 end
 tslen=timediff(tsbgn(1,:),tsend(1,:));
-if(any(ismember(opt.SPAN,'3hr')) && tslen>=10800)
-    error('seizmo:noise_stack:badInput',...
-        'SPAN=''3hr'' requires timesections to be less than 3 hours!');
-elseif(any(ismember(opt.SPAN,'day')) && tslen>=86400)
-    error('seizmo:noise_stack:badInput',...
-        'SPAN=''day'' requires timesections to be less than 1 day!');
+for i=1:numel(opt.SPAN)
+    if(tslen>=nmaxlen(strcmp(opt.SPAN{i},smaxlen)))
+        error('seizmo:noise_stack:badInput',...
+            'SPAN=''%s'' requires timesections to be less than %ds!',...
+            opt.SPAN{i},nmaxlen(strcmp(opt.SPAN{i},smaxlen)));
+    end
 end
 
 % detail message
@@ -230,6 +258,32 @@ try
     for span=opt.SPAN
         % determine time spans
         switch char(span)
+            case 'tod1hr'
+                % need to handle this specially b/c of multiple time ranges
+                spanbgn=[nan(24,2) (0:23)' zeros(24,2)];
+                spanend=[nan(24,2) (1:24)' zeros(24,2)];
+                spanstr=num2str((0:23)','%02d00');
+            case 'tod3hr'
+                % need to handle this specially b/c of multiple time ranges
+                spanbgn=[nan(8,2) (0:3:21)' zeros(8,2)];
+                spanend=[nan(8,2) (3:3:24)' zeros(8,2)];
+                spanstr=num2str((0:3:21)','%02d00');
+            case '1hr'
+                % 1hr = 1/24th of a day
+                spanbgn=serial2gregorian((fix(b*24):fix(e*24))/24,...
+                    'doytime');
+                spanend=serial2gregorian(((fix(b*24):fix(e*24))+1)/24,...
+                    'doytime');
+                spanstr=strcat(num2str(spanbgn(:,1)),'.',...
+                    num2str(spanbgn(:,2),'%03d'),'.',...
+                    num2str(spanbgn(:,3),'%02d'),'.',...
+                    num2str(spanbgn(:,4),'%02d'),'.',...
+                    num2str(spanbgn(:,5),'%02d'),'_',...
+                    num2str(spanend(:,1)),'.',...
+                    num2str(spanend(:,2),'%03d'),'.',...
+                    num2str(spanend(:,3),'%02d'),'.',...
+                    num2str(spanend(:,4),'%02d'),'.',...
+                    num2str(spanend(:,5),'%02d'));
             case '3hr'
                 % 3hrs = 1/8th of a day
                 spanbgn=serial2gregorian((fix(b*8):fix(e*8))/8,'doytime');
@@ -250,6 +304,12 @@ try
                 spanend=serial2gregorian((fix(b):fix(e))+1,'doydate');
                 spanstr=strcat(num2str(spanbgn(:,1)),'.',...
                     num2str(spanbgn(:,2),'%03d'));
+            case 'wkday'
+                % need to handle this specially b/c of multiple time ranges
+                spanbgn=[nan(7,1) (1:7)'];
+                spanend=[nan(7,1) (1:7)'];
+                spanstr=['1-SUN';'2-MON';'3-TUE';'4-WED';...
+                    '5-THU';'6-FRI';'7-SAT'];
             case 'wk'
                 % any sun-sat with data
                 % Serial Date of 2 is Sunday
@@ -285,10 +345,10 @@ try
                 spanstr=strcat(num2str(spanbgn(:,1)),'.',...
                     num2str(spanbgn(:,2),'%02d'));
             case 'mon'
-                % need to handle this specially
-                % - mark year as nan to indicate this
-                spanbgn=[nan(12,1) lind(12,1) ones(12,1)];
-                spanstr=num2str(lind(12,1),'%02d');
+                % need to handle this specially b/c of multiple time ranges
+                spanbgn=[nan(12,1) (1:12)' ones(12,1)];
+                spanend=[nan(12,1) (1:12)' ones(12,1)];
+                spanstr=num2str((1:12)','%02d');
             case '3mon'
                 % only 3 month spans in which all 3 months likely have data
                 btmp=serial2gregorian(b,'caldate'); btmp=btmp(1:2);
@@ -317,6 +377,16 @@ try
                     num2str(spanend1(:,1)),'.',...
                     num2str(spanend1(:,2),'%02d'));
                 clear spanend1;
+            case '4season'
+                % need to handle this specially b/c of multiple time ranges
+                spanbgn=[nan(4,1) [1;4;7;10] ones(4,1)];
+                spanend=[nan(4,1) [4;7;10;13] ones(4,1)];
+                spanstr=['spring';'summer';'autumn';'winter'];
+            case '2season'
+                % need to handle this specially b/c of multiple time ranges
+                spanbgn=[nan(2,1) [4;10] ones(2,1)];
+                spanend=[nan(2,1) [10;4] ones(2,1)];
+                spanstr=['summer';'winter'];
             case 'all'
                 spanbgn=tsbgn(ib,:);
                 spanend=tsend(ie,:);
@@ -344,12 +414,34 @@ try
             
             % get timesections ENTIRELY in stack time span
             switch char(span)
+                case '2season'
+                    tsbgn2=[doy2cal(tsbgn(:,1:2)) tsbgn(:,3:5)];
+                    tsend2=[doy2cal(tsend(:,1:2)) tsend(:,3:5)];
+                    tsend2=fixtimes([tsend2(:,1:5) tsend2(:,6)-1]); % -1s
+                    % special algorithm to handle 10-12,1-3 & 4-9
+                    in=find(...
+                        (tsbgn2(:,2)>=sbgn(2) & tsend2(:,2)<sbgn(2)+3) ...
+                        | (tsbgn2(:,2)>=send(2)-3 & tsend2(:,2)<send(2)));
+                case '4season'
+                    tsbgn2=[doy2cal(tsbgn(:,1:2)) tsbgn(:,3:5)];
+                    tsend2=[doy2cal(tsend(:,1:2)) tsend(:,3:5)];
+                    tsend2=fixtimes([tsend2(:,1:5) tsend2(:,6)-1]); % -1s
+                    in=find(tsbgn2(:,2)>=sbgn(2) & tsend2(:,2)<send(2));
                 case 'mon'
                     tsbgn2=[doy2cal(tsbgn(:,1:2)) tsbgn(:,3:5)];
                     tsend2=[doy2cal(tsend(:,1:2)) tsend(:,3:5)];
                     tsend2=fixtimes([tsend2(:,1:5) tsend2(:,6)-1]); % -1s
                     in=find(tsbgn2(:,2)==sbgn(2) ...
                         & tsend2(:,2)==sbgn(2));
+                case {'tod1hr' 'tod3hr'}
+                    tsend2=fixtimes([tsend(:,1:4) tsend(:,5)-1]); % -1s
+                    in=find(tsbgn(:,3)>=sbgn(3) & tsend2(:,3)<send(3));
+                case 'wkday'
+                    tsend2=fixtimes([tsend(:,1:4) tsend(:,5)-1]); % -1s
+                    in=find(weekday(...
+                        gregorian2serial(tsbgn(:,[1 2])))==sbgn(2) ...
+                        & weekday(...
+                        gregorian2serial(tsend2(:,[1 2])))==sbgn(2));
                 otherwise
                     in=find(timediff(sbgn,tsbgn)>=0 ...
                         & timediff(send,tsend)<=0);
@@ -359,7 +451,12 @@ try
             if(isempty(in)); continue; end
             
             % detail message
-            if(verbose); disp(['STACKING: ' spanstr(s,:)]); end
+            nin=numel(in);
+            if(verbose)
+                disp(['STACKING: ' spanstr(s,:)]);
+                fprintf('==> %d TIMESECTIONS IN THIS STACK\n',nin)
+                print_time_left(0,nin);
+            end
             
             % preallocation
             sdata=cell(numel(pair),1);  % stack data containers
@@ -368,11 +465,23 @@ try
             sscale=cell(numel(pair),1);
             
             % loop over timesections
-            for ts=1:numel(in)
+            for ts=1:nin
                 % read in timesection data headers
                 try
-                    data=readheader(strcat(indir,fs,'*',fs,...
-                        tsdirs(ts),fs,opt.FILENAMES));
+                    if(opt.MATIN)
+                        data=load(strcat(indir,fs,tsdirs{in(ts)}(1:4),...
+                            fs,tsdirs{in(ts)},fs,...
+                            'noise_process_output.mat'));
+                        data=data.noise_process_output;
+                        if(~isempty(opt.FILENAMES))
+                            warning('seizmo:noise_stack:unusedOption',...
+                                'FILENAMES option ignored for MAT input!');
+                        end
+                    else
+                        data=readheader(strcat(indir,fs,...
+                            tsdirs{in(ts)}(1:4),fs,tsdirs{in(ts)},fs,...
+                            opt.FILENAMES));
+                    end
                 catch
                     % no data...
                     continue;
@@ -455,15 +564,22 @@ try
                 kcmpnms=char(kcmpnm); kcmpnms=lower(kcmpnms(:,3));
                 kcmpnmm=char(kt3); kcmpnmm=lower(kcmpnmm(:,3));
                 
-                % read in data
-                data=readdata(data);
+                % read in data (if not MATFILE input)
+                if(~opt.MATIN); data=readdata(data); end
                 
                 % multiply by scale
                 scale(isnan(scale))=1;
                 data=multiply(data,scale);
+                for i=1:numel(data)
+                    data(i).misc.stacknames={[data(i).path data(i).name]};
+                end
                 
                 % get reversed data
                 rdata=reverse_correlations(data);
+                for i=1:numel(rdata)
+                    rdata(i).misc.stacknames=...
+                        {[rdata(i).path rdata(i).name]};
+                end
                 
                 % loop over pairing codes
                 for p=1:numel(pair)
@@ -516,6 +632,9 @@ try
                         snames{p}=[snames{p}; knamem(~tf & pidx2)];
                     end
                 end
+                
+                % detail message
+                if(verbose); print_time_left(ts,nin); end
             end
             
             % data is now stacked for this time span!
@@ -536,18 +655,39 @@ try
                 else
                     % get span reference time
                     switch char(span)
-                        case {'3hr' 'all'}
+                        case {'1hr' '3hr' 'all'}
                             spanref=sbgn;
                         case {'day' 'wk' 'yrmo' '3mon'}
                             spanref=[sbgn 0 0 0];
+                        case {'tod1hr' 'tod3hr'}
+                            % use 1st ts's info
+                            sbgn(1:2)=tsbgn(in(1),1:2);
+                            send(1:2)=tsbgn(in(1),1:2);
+                            spanref=sbgn;
+                        case 'wkday'
+                            % use 1st ts's info
+                            sbgn(1:2)=tsbgn(in(1),1:2);
+                            send(1:2)=fixdates(sbgn+[0 1]);
+                            spanref=[sbgn 0 0 0];
                         case 'mon'
-                            % use 1st ts's year as the year for span
+                            % use 1st ts's info
                             sbgn(1)=tsbgn(in(1),1);
                             send=fixdates(sbgn+[0 1 0]);
+                            spanref=[sbgn 0 0 0];
+                        case '2season'
+                            % use 1st ts's info
+                            sbgn(1)=tsbgn(in(1),1);
+                            send=fixdates(sbgn+[0 6 0]);
+                            spanref=[sbgn 0 0 0];
+                        case '4season'
+                            % use 1st ts's info
+                            sbgn(1)=tsbgn(in(1),1);
+                            send=fixdates(sbgn+[0 3 0]);
                             spanref=[sbgn 0 0 0];
                     end
                     
                     % divide by scale to get back to an average
+                    % - updates dep* stats skipped by addrecords hack
                     sdata{p}=divide(sdata{p},sscale{p});
                     
                     % rename
@@ -569,14 +709,53 @@ try
                         fs,spanstr(s,:));
                     switch char(xc)
                         case 'twoway'
-                            writeseizmo(sdata{pidx},'path',path);
+                            if(opt.MATOUT)
+                                noise_stack_output=changepath(...
+                                    sdata{pidx},'path',path); %#ok<*NASGU>
+                                save(fullfile(char(path),...
+                                    'noise_stack_output.mat'),...
+                                    'noise_stack_output');
+                                clear noise_stack_output;
+                            else
+                                writeseizmo(sdata{pidx},'path',path);
+                            end
                         case 'symmetric'
-                            writeseizmo(symcmp(sdata{pidx}),'path',path);
+                            if(opt.MATOUT)
+                                noise_stack_output=changepath(...
+                                    symcmp(sdata{pidx}),'path',path);
+                                save(fullfile(char(path),...
+                                    'noise_stack_output.mat'),...
+                                    'noise_stack_output');
+                                clear noise_stack_output;
+                            else
+                                writeseizmo(symcmp(sdata{pidx}),...
+                                    'path',path);
+                            end
                         case 'causal'
-                            writeseizmo(cut(sdata{pidx},0),'path',path);
+                            if(opt.MATOUT)
+                                noise_stack_output=changepath(...
+                                    cut(sdata{pidx},0),'path',path);
+                                save(fullfile(char(path),...
+                                    'noise_stack_output.mat'),...
+                                    'noise_stack_output');
+                                clear noise_stack_output;
+                            else
+                                writeseizmo(cut(sdata{pidx},0),...
+                                    'path',path);
+                            end
                         case 'acausal'
-                            writeseizmo(cut(reverse(sdata{pidx}),0),...
-                                'path',path);
+                            if(opt.MATOUT)
+                                noise_stack_output=changepath(...
+                                    cut(reverse(sdata{pidx}),0),...
+                                    'path',path);
+                                save(fullfile(char(path),...
+                                    'noise_stack_output.mat'),...
+                                    'noise_stack_output');
+                                clear noise_stack_output;
+                            else
+                                writeseizmo(cut(reverse(sdata{pidx}),0),...
+                                    'path',path);
+                            end
                     end
                 end
             end
@@ -610,8 +789,8 @@ function [opt]=noise_stack_parameters(varargin)
 % parses/checks noise_stack pv pairs
 
 % defaults
-varargin=[{'span' 'all' 'xccmp' 'twoway' ...
-    'q' false 'ts' [] 'te' [] 'lat' [] 'lon' [] ...
+varargin=[{'span' 'all' 'xccmp' 'twoway' 'o' 50 'matin' false ...
+    'q' false 'ts' [] 'te' [] 'lat' [] 'lon' [] 'matout' false ...
     'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' []} varargin];
 
 % require option/value pairs
@@ -632,6 +811,9 @@ for i=1:2:numel(varargin)
         case {'xccmp' 'xc' 'xcc'}
             if(isempty(varargin{i+1})); continue; end
             opt.XCCMP=varargin{i+1};
+        case {'overlap' 'over' 'ol' 'ov' 'o' 'olap'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.OVERLAP=varargin{i+1};
         case {'ts' 'tstart' 'timestart' 'startt' 'stime' 'starttime'}
             opt.TIMESTART=varargin{i+1};
         case {'te' 'tend' 'timeend' 'et' 'endtime' 'etime' 'endt'}
@@ -660,6 +842,12 @@ for i=1:2:numel(varargin)
         case {'q' 'qw' 'quiet' 'qwrite' 'quietwrite'}
             if(isempty(varargin{i+1})); continue; end
             opt.QUIETWRITE=varargin{i+1};
+        case {'matin'}
+            % secret option: matfile input
+            opt.MATIN=varargin{i+1};
+        case {'matout'}
+            % secret option: matfile output
+            opt.MATOUT=varargin{i+1};
         otherwise
             error('seizmo:noise_stack:badInput',...
                 'Unknown Option: %s !',varargin{i});
@@ -674,8 +862,6 @@ if(ischar(opt.STATIONS)); opt.STATIONS=cellstr(opt.STATIONS); end
 if(ischar(opt.STREAMS)); opt.STREAMS=cellstr(opt.STREAMS); end
 if(ischar(opt.COMPONENTS)); opt.COMPONENTS=cellstr(opt.COMPONENTS); end
 if(ischar(opt.FILENAMES)); opt.FILENAMES=cellstr(opt.FILENAMES); end
-if(iscellstr(opt.SPAN)); opt.SPAN=unique(lower(opt.SPAN(:)))'; end
-if(iscellstr(opt.XCCMP)); opt.XCCMP=unique(lower(opt.XCCMP(:)))'; end
 if(iscellstr(opt.NETWORKS))
     opt.NETWORKS=unique(lower(opt.NETWORKS(:)));
 end
@@ -689,7 +875,8 @@ end
 if(iscellstr(opt.FILENAMES)); opt.FILENAMES=unique(opt.FILENAMES(:)); end
 
 % valid values
-valid.SPAN={'3hr' 'day' 'wk' 'yrmo' 'mon' '3mon' 'all'};
+valid.SPAN={'tod1hr' 'tod3hr' '1hr' '3hr' 'day' 'wkday' ...
+    'wk' 'yrmo' 'mon' '3mon' '4season' '2season' 'all'};
 valid.XCCMP={'twoway' 'causal' 'acausal' 'symmetric'};
 
 % check options
@@ -701,6 +888,10 @@ if(~iscellstr(opt.SPAN) || any(~ismember(opt.SPAN,valid.SPAN)))
 elseif(~iscellstr(opt.XCCMP) || any(~ismember(opt.XCCMP,valid.XCCMP)))
     error('seizmo:noise_stack:badInput',...
         'XCCMP option unrecognised! Use ''twoway'', ''symmetric'', etc!');
+elseif(~isscalar(opt.OVERLAP) || ~isnumeric(opt.OVERLAP) ...
+        || opt.OVERLAP>100 || opt.OVERLAP<0)
+    error('seizmo:noise_stack:badInput',...
+        'OVERLAP must be a scalar from 0-100%%!');
 elseif(~isscalar(opt.QUIETWRITE) || ~islogical(opt.QUIETWRITE))
     error('seizmo:noise_stack:badInput',...
         'QUIETWRITE flag must be a scalar logical!');
@@ -742,6 +933,12 @@ elseif(~isempty(opt.FILENAMES) && (~iscellstr(opt.FILENAMES)))
 elseif(numel(opt.FILENAMES)>1)
     error('seizmo:noise_stack:badInput',...
         'FILENAMES must be a single pattern in NOISE_STACK!');
+elseif(~isscalar(opt.MATIN) || ~islogical(opt.MATIN))
+    error('seizmo:noise_stack:badInput',...
+        'MATIN must be TRUE or FALSE!');
+elseif(~isscalar(opt.MATOUT) || ~islogical(opt.MATOUT))
+    error('seizmo:noise_stack:badInput',...
+        'MATOUT must be TRUE or FALSE!');
 end
 
 % look out for xccmp options in component
@@ -770,9 +967,13 @@ end
 
 
 function [d1]=addrecords(d1,d2,varargin)
-% simple hack for speed
+% simple hack for speed (no dep* update)
 try
-    for i=1:numel(d1); d1(i).dep=d1(i).dep+d2(i).dep; end
+    for i=1:numel(d1)
+        d1(i).dep=d1(i).dep+d2(i).dep;
+        d1(i).misc.stacknames=...
+            [d1(i).misc.stacknames; d2(i).misc.stacknames];
+    end
 catch
     error('seizmo:noise_stack:badNCFs',...
         'NCFs differ in number of points! Cannot stack!');

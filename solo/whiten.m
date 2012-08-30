@@ -200,7 +200,7 @@ for i=1:nrecs
     d1(i).dep=d1(i).dep./d2(i).dep;
     depmin(i)=min(d1(i).dep(:));
     depmax(i)=max(d1(i).dep(:));
-    depmen(i)=mean(d1(i).dep(:));
+    depmen(i)=nanmean(d1(i).dep(:));
 end
 d1=changeheader(d1,'depmin',depmin,'depmax',depmax,'depmen',depmen);
 end

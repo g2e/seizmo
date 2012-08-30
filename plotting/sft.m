@@ -398,7 +398,7 @@ try
             npts(i)=numel(P{1});
             nxsize(i)=numel(T);
             nysize(i)=numel(F);
-            depmen(i)=mean(data(i).dep(:));
+            depmen(i)=nanmean(data(i).dep(:));
             depmin(i)=min(data(i).dep(:));
             depmax(i)=max(data(i).dep(:));
         else % plotting

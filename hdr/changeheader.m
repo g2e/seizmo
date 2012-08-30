@@ -1,46 +1,54 @@
 function [data]=changeheader(data,varargin)
 %CHANGEHEADER    Change SEIZMO data header values
 %
-%    Usage: data=changeheader(data,'field1',values1)
-%           data=changeheader(data,'field1,'values1,...,'fieldN',valuesN)
+%    Usage: data=changeheader(data,'field',values)
+%           data=changeheader(data,'field abstime',values)
+%           data=changeheader(data,'groupfield',values)
+%           data=changeheader(data,'virtualfield',values)
+%           data=changeheader(data,'field1',values1,...,'fieldN',valuesN)
 %
 %    Description:
-%     DATA=CHANGEHEADER(DATA,FIELD,VALUE) changes the header field FIELD to
-%     the value(s) in VALUE for each record in SEIZMO data structure DATA
+%     DATA=CHANGEHEADER(DATA,FIELD,VALUES) changes the header field FIELD
+%     to the value(s) in VALUES for each record in SEIZMO structure DATA
 %     and returns the updated structure.  FIELD must be a string 
-%     corresponding to a valid header field (see the Notes section below
-%     for more details).  VALUE for normal header fields may be a scalar
-%     (assigns same value to all), a column vector of length equal to the
-%     number of records (assigns a separate value to each record), or a
-%     char array (which is converted to a cellstr array internally, and
-%     thus becomes a column vector).  ROW VECTORS ARE ONLY FOR GROUP
-%     FIELDS!  If the FIELD is a group field (see Notes section) then VALUE
-%     can be a scalar (assigns same value to all fields for all records), a
-%     column vector (separate values for each record, but same value for
-%     all fields in the group), a row vector (separate values for each
-%     field in the group, but the same values across all records), or an
-%     array (separate values for all fields in all records).  Thus for
-%     group field assignment, VALUE should be arranged so that columns
-%     delimit values for each field in the group and rows delimit records
-%     (first row = first record, etc).  See the Examples section below to
-%     see how to replicate a set of values across several records.
+%     corresponding to a valid header field (you can use the LISTHEADER
+%     command to get an idea of what header fields there are).  VALUES
+%     may be a scalar (assigns the same value to all records), a column
+%     vector of length equal to the number of records (assigns a separate
+%     value to each record), or a char array (which is converted to a
+%     cellstr array internally, and thus becomes a column vector).
 %
-%     CHANGEHEADER(DATA,FIELD1,VALUE1,...,FIELDN,VALUEN) allows changing
-%     multiple fields in a single call.
+%     DATA=CHANGEHEADER(DATA,'FIELD ABSTIME',VALUES) sets the field FIELD
+%     to the absolute time VALUES using the standard ABSTIME.  ABSTIME must
+%     be a string of the following choices:
+%         UTC  - input time is in UTC as [yr doy hr min sec]
+%         UTC6 - input time is in UTC as [yr mon cday hr min sec]
+%         TAI  - input time is in TAI as [yr doy hr min sec]
+%         TAI6 - input time is in TAI as [yr mon cday hr min sec]
+%     Please note that while CHANGEHEADER may generally parse VALUES
+%     correctly, passing VALUES as a cell array with each time in a
+%     separate cell works best.  This is consistent with GETHEADER output.
+%     Also you do not need to use UTC6 or TAI6 here (UTC or TAI can handle
+%     both Nx5 & Nx6 input types) but it is available to be consistent with
+%     the other header functions.
 %
-%    Notes:
-%     - Be careful with using row vectors as values!  Row vectors outside
-%       of group field usage fails if there are multiple filetypes in use.
-%       This isn't the usual case so you can get away with it most of the
-%       time... You have been warned!
-%     - Passing nan, inf, -inf values will change a numeric field to its
-%       undefined value.  'nan', 'undef' or 'undefined' will do the same
-%       for a character field.  This is useful for not having to remember
-%       what the field's actual undefined value is.
-%     - Group fields: T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
-%                     KNAME, CMP, DELAZ, REAL, INT, ENUM, LGC, CHAR
-%     - Virtual fields are formed from fields stored in the headers.  The
-%       following virtual fields are valid:
+%     DATA=CHANGEHEADER(DATA,GROUPFIELD,VALUES) allows setting a predefined
+%     group of header fields simultaneously.  The groups fields are:
+%         T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
+%         KNAME, CMP, DELAZ, REAL, INT, ENUM, LGC, CHAR
+%     The members of the group field can be seen by using the LISTHEADER
+%     command on a group field.  VALUES can be a scalar (assigns same value
+%     to all fields for all records), a column vector (separate values for
+%     each record, but same value for all fields in the group), a row
+%     vector (separate values for each field in the group, but the same
+%     values across all records), or an array (separate values for all
+%     fields in all records).  Thus for group field assignment, VALUE
+%     should be arranged so that columns delimit values for each field in
+%     the group and rows delimit records (first row = first record, etc).
+%
+%     DATA=CHANGEHEADER(DATA,VIRTUALFIELD,VALUES) alters a predefined
+%     virtual field which is then alters 1 or more true header fields.
+%     Available virtual fields:
 %         NZMONTH  - calendar month of the reference time (from NZ* fields)
 %         NZCDAY   - calendar day of the reference time (from NZ* fields)
 %         KZDTTM   - formatted string of the reference date & time
@@ -52,6 +60,20 @@ function [data]=changeheader(data,varargin)
 %         ZTAI6    - reference time in TAI as [yr mon cday hr min sec]
 %         GCP      - greater circle path azimuth (BAZ+180deg)
 %         NCMP     - number of components (=1 for most cases)
+%
+%     DATA=CHANGEHEADER(DATA,FIELD1,VALUE1,...,FIELDN,VALUEN) changes
+%     multiple fields in a single call.  FIELD may be any of the above
+%     types.
+%
+%    Notes:
+%     - Be careful with using row vectors as values!  Row vectors outside
+%       of group field usage fails if there are multiple filetypes in use.
+%       This isn't the usual case so you can get away with it most of the
+%       time... You have been warned!
+%     - Passing nan, inf, -inf values will change a numeric field to its
+%       undefined value.  'nan', 'undef' or 'undefined' will do the same
+%       for a character field.  This is useful for not having to remember
+%       what the field's actual undefined value is.
 %     - Enumerated/Logical fields do not need modifiers but Absolute Times
 %       do need 'utc' or 'tai' after the field as a separate word (eg.
 %       'b utc').
@@ -66,26 +88,20 @@ function [data]=changeheader(data,varargin)
 %     data=changeheader(data,'StLA',lats,'STLo',lons)
 %     data=changeheader(data,'DeLTA',getheader(data,'delta')*2);
 %
-%     % THIS SECTION EXPLAINS HOW TO PASS STRINGS TO A STRING GROUP FIELD
-%     % Note that this will not split 'nan' to assign each letter to each
-%     % field in kuser because character arrays are first converted to cell
-%     % arrays.  So 'nan' is passed to each field in kuser and they all
-%     % become undefined (special behavior - see the Notes section):
-%     data=changeheader(data,'kuser','nan')
-%     % To assign separate strings to fields in a character group field you
-%     % should pass a row vector cell array like this:
-%     data=changeheader(data,'kuser',{'nan' 'blah' 'wow'})
-%     % But that replicates the same strings to all records in DATA, so to
-%     % assign separate values to all records and fields (assuming here
-%     % that there are only 2 records):
-%     data=changeheader(data,'kuser',{'nan' 'blah' 'wow'; 'another' ...
-%                                     'set of' 'examples'});
+%     % Clear picks:
+%     data=changeheader(data,'t',nan,'kt','nan');
 %
-%     % Absolute times should be wrapped in cells:
+%     % Set begin time to right now:
+%     data=changeheader(data,'b utc',datevec(now))
+%
+%     % Wrap absolute times in cells to assure proper parsing:
 %     data=changeheader(data,'b utc',{[2012 12 21 0 0 0]});
 %
-%    See also:  LISTHEADER, GETHEADER, READHEADER, WRITEHEADER, GETLGC,
-%               GETENUMID, GETENUMDESC, COMPAREHEADER
+%     % Change the month of the records by one:
+%     data=changeheader(data,'nzmonth',getheader(data,'nzmonth')+1);
+%
+%    See also: LISTHEADER, GETHEADER, READHEADER, WRITEHEADER, QUERYHEADER,
+%              COMPAREHEADER
 
 %     Version History:
 %        Oct. 29, 2007 - initial version
@@ -121,9 +137,10 @@ function [data]=changeheader(data,varargin)
 %                        some support for abstimes without modifier, allow
 %                        abstimes input to be uncelled
 %        Mar.  1, 2012 - bugfix: forgot to define solo, drop bad cell2mat
+%        Aug. 30, 2012 - big doc update for clarity
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2012 at 12:00 GMT
+%     Last Updated Aug. 30, 2012 at 12:00 GMT
 
 % todo:
 

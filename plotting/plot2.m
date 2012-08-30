@@ -72,9 +72,10 @@ function [varargout]=plot2(varargin)
 %        Apr. 19, 2011 - userdata for each record contains record metadata
 %        Feb.  6, 2012 - better getheader usage, set displayname to kname
 %                        string, fix legend coloring
+%        Aug. 30, 2012 - allow [] input for labeling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  6, 2012 at 23:00 GMT
+%     Last Updated Aug. 30, 2012 at 23:00 GMT
 
 % todo:
 % - kname output for title in multi-dataset case only for last dataset
@@ -309,7 +310,7 @@ if(nd>1)
         else
             p2title=opt.TITLE;
         end
-        if(isnumeric(opt.XLABEL) && opt.XLABEL==1)
+        if(~isempty(opt.XLABEL) && isnumeric(opt.XLABEL) && opt.XLABEL==1)
             if(opt.ABSOLUTE)
                 xlimits=get(opt.AXIS(i),'xlim');
                 p2xlabel=...
@@ -321,7 +322,7 @@ if(nd>1)
         else
             p2xlabel=opt.XLABEL;
         end
-        if(isnumeric(opt.YLABEL) && opt.YLABEL==1)
+        if(~isempty(opt.YLABEL) && isnumeric(opt.YLABEL) && opt.YLABEL==1)
             p2ylabel='Amplitude';
         else
             p2ylabel=opt.YLABEL;
@@ -468,11 +469,11 @@ else
     end
     
     % label
-    if(isnumeric(opt.TITLE) && opt.TITLE==1)
+    if(~isempty(opt.TITLE) && isnumeric(opt.TITLE) && opt.TITLE==1)
         opt.TITLE=[num2str(numel(goodfiles)) ...
             '/' num2str(nrecs) ' Records']; 
     end
-    if(isnumeric(opt.XLABEL) && opt.XLABEL==1)
+    if(~isempty(opt.XLABEL) && isnumeric(opt.XLABEL) && opt.XLABEL==1)
         if(opt.ABSOLUTE)
             xlimits=get(opt.AXIS,'xlim');
             opt.XLABEL=joinwords(cellstr(datestr(unique(fix(xlimits)))),...
@@ -481,7 +482,9 @@ else
             opt.XLABEL='Time (sec)';
         end
     end
-    if(isnumeric(opt.YLABEL) && opt.YLABEL==1); opt.YLABEL='Amplitude'; end
+    if(~isempty(opt.YLABEL) && isnumeric(opt.YLABEL) && opt.YLABEL==1)
+        opt.YLABEL='Amplitude';
+    end
     title(opt.AXIS,opt.TITLE,...
         'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);
     xlabel(opt.AXIS,opt.XLABEL,...

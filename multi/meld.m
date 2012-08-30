@@ -474,7 +474,7 @@ try
                 history(newng)=newhistory;
                 depmin(newidx)=min(data(newidx).dep(:));
                 depmax(newidx)=max(data(newidx).dep(:));
-                depmen(newidx)=mean(data(newidx).dep(:));
+                depmen(newidx)=nanmean(data(newidx).dep(:));
                 newidx=newidx+1;
             end
         end

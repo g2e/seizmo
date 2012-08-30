@@ -284,7 +284,7 @@ try
         data(i).dep=tmp(offset(i)+(1:npts(i)),:);
 
         % dep*
-        depmen(i)=mean(data(i).dep(:));
+        depmen(i)=nanmean(data(i).dep(:));
         depmin(i)=min(data(i).dep(:));
         depmax(i)=max(data(i).dep(:));
 

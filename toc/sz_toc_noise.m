@@ -21,6 +21,7 @@ function []=sz_toc_noise()
 %<a href="matlab:help nlnm">nlnm</a>                      - Returns the power spectral density of the USGS low noise model
 %<a href="matlab:help noise_overview">noise_overview</a>            - Outlines Noise Correlation Analysis Workflow
 %<a href="matlab:help noise_process">noise_process</a>             - Performs processing of seismic data for noise analysis
+%<a href="matlab:help noise_rms_calc">noise_rms_calc</a>            - Calculates RMS values for noise analysis
 %<a href="matlab:help noise_setup">noise_setup</a>               - Convert a directory of data to a year/time/file filesystem
 %<a href="matlab:help noise_stack">noise_stack</a>               - Stack noise correlation functions for noise analysis
 %<a href="matlab:help plot_daily_volumes">plot_daily_volumes</a>        - Makes weekly grids of daily fk spectra plots

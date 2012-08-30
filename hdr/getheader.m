@@ -1,59 +1,73 @@
 function [varargout]=getheader(data,varargin)
 %GETHEADER    Get SEIZMO data header values
 %
-%    Usage:  values=getheader(data,'field1')
-%            [values1,...,valuesN]=getheader(data,'field1',...,'fieldN')
-%            headers=getheader(data)
+%    Usage:    values=getheader(data,'field')
+%              values=getheader(data,'field abstime')
+%              values=getheader(data,'enumfield id')
+%              values=getheader(data,'enumfield desc')
+%              values=getheader(data,'logicfield lgc')
+%              values=getheader(data,'groupfield')
+%              values=getheader(data,'virtualfield')
+%              [values1,...,valuesN]=getheader(data,'field1',...,'fieldN')
+%              headers=getheader(data)
 %
 %    Description:
 %     VALUES=GETHEADER(DATA,FIELD) returns the specified header field
 %     values for all records stored in the SEIZMO data structure DATA.
-%     FIELD must be a string corresponding to a valid header field or a
-%     valid group field (ie. t,kt,resp,user,kuser).  See the Notes section
-%     below for more details on valid header fields.  Values are returned
-%     in numeric arrays or cellstring arrays oriented such that each column
-%     corresponds to an individual header field and each row to an
-%     individual record.  For example, the group field 't' would return a
-%     numeric array with 10 columns (for t0 through t9) and as many rows as
-%     there are records in DATA.  Group field 'kuser' would return a
-%     cellstring array with 3 columns (for kuser0 thru kuser2) and as many
-%     rows as there are records in DATA.  FIELD is case-insensitive.
-%     
-%     [VALUES1,...,VALUESN]=GETHEADER(DATA,FIELD1,...,FIELDN) returns the
-%     values for each specified field or group field.
+%     FIELD must be a string corresponding to a valid header field and is
+%     case insensitive.  Values are returned as a numeric array or
+%     cellstring array (for character fields) oriented as a column vector
+%     where each row corresponds to an individual record.
 %
-%     HEADERS=GETHEADER(DATA) returns the entire header for all records in
-%     SEIZMO struct DATA as a single numeric array (raw values).  Rows in
-%     the output array correspond to the header values of individual
-%     records.  The order of the fields follows that of how they are stored
-%     in the SEIZMO struct (see SEIZMO's function SEIZMODEF for details).
+%     VALUES=GETHEADER(DATA,'FIELD ABSTIME') returns the field FIELD in
+%     absolute time using the standard ABSTIME.  ABSTIME must be a string
+%     as one of the following choices:
+%         UTC  - return values in UTC as [yr doy hr min sec]
+%         UTC6 - return values in UTC as [yr mon cday hr min sec]
+%         TAI  - return values in TAI as [yr doy hr min sec]
+%         TAI6 - return values in TAI as [yr mon cday hr min sec]
+%     Please note that the output is a cell array with each cell
+%     corresponding to a absolute time for each record/field.
 %
-%    Notes:
-%     - Group fields: T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
-%                     KNAME, CMP, DELAZ, REAL, INT, ENUM, LGC, CHAR
-%     - Enumerated fields return the raw value which is an integer used
-%       to look up the enum string id and description in a table.  To 
-%       retrieve the associated string id or description add 'id' or
-%       'desc' as a separate word after the field.  The output is a cellstr
-%       array of values w/ one cell per record.  The string 'NaN' is given
-%       for any values that were outside the enum table.
-%     - Logical fields return the raw value, not a logical.  You can get a
-%       cellstr array of values by adding 'lgc' after the field as a
-%       separate word (eg. 'leven lgc').  The output contains 'true',
-%       'false' or 'NaN' if it is undefined.  While this still isn't a
-%       logical, it is filetype agnostic.
-%     - Absolute time output is supported by adding one of the following
-%       standards as a separate word after a time-based field:
-%         STANDARD | DESCRIPTION
-%        ----------+-------------
-%         UTC      | Coordinated Universal Time as [yr doy hr min sec]
-%         UTC6     | UTC as [yr mon cday hr min sec]
-%         TAI      | International Atomic Time as [yr doy hr min sec]
-%         TAI6     | TAI as [yr mon cday hr min sec]
-%       Please note that the output is a cell array with each cell
-%       corresponding to a separate record/field.
-%     - Virtual fields are formed from fields stored in the headers.  The
-%       following virtual fields are valid:
+%     VALUES=GETHEADER(DATA,'ENUMFIELD ID') retrieves the associated string
+%     id of the enum field ENUMFIELD.  This is more useful than the default
+%     output (the enumerated table index).  An example id output would be
+%     'idisp' for the field 'idep' which is far easier to read than the
+%     equivalent raw output of 6.  Output is a cell-string array.  The
+%     string 'NaN' is returned for values that are outside the enum table.
+%
+%     VALUES=GETHEADER(DATA,'ENUMFIELD DESC') retrieves the associated
+%     string description of the enum field ENUMFIELD.  This is useful for
+%     descriptive output.  An example description output woud be
+%     'Displacement (nm)' for the field 'idep'.  Output is a cell-string
+%     array.  The string 'NaN' is returned for values that are outside the
+%     enum table.
+%
+%     VALUES=GETHEADER(DATA,'LOGICFIELD LGC') retrieves logical strings
+%     associated with the logical field LOGICFIELD.  VALUES is a cell
+%     string array composed of 'true', 'false' and/or 'nan'.  This is
+%     easier to read and helps to avoid confusion compared to the default
+%     output of 0, 1 or nan.
+%
+%     VALUES=GETHEADER(DATA,'GROUPFIELD') returns the values of a
+%     predefined group of header fields as a single array simultaneously.
+%     Available group fields are:
+%         T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
+%         KNAME, CMP, DELAZ, REAL, INT, ENUM, LGC, CHAR
+%     The members of the group field can be seen by using the LISTHEADER
+%     command on a group field.  VALUES is a numeric or cellstring array
+%     where each row corresponds to a seperate record in DATA and each
+%     column corresponds to a separate field.  For example, the group field
+%     't' returns a numeric array with 10 columns (for fields t0 to t9) and
+%     as many rows as there are records in DATA.  Group field 'kuser'
+%     returns a cellstring array with 3 columns (for kuser0 thru kuser2)
+%     and as many rows as there are records in DATA.  Output modifiers
+%     described above (abstime, id, desc, lgc) can be combined with group
+%     fields as appropriate.
+%
+%     VALUES=GETHEADER(DATA,'VIRTUALFIELD') retrieves predefined virtual
+%     field values defined by 1 or more true header fields.  Available
+%     virtual fields:
 %         NZMONTH  - calendar month of the reference time (from NZ* fields)
 %         NZCDAY   - calendar day of the reference time (from NZ* fields)
 %         KZDTTM   - formatted string of the reference date & time
@@ -65,6 +79,20 @@ function [varargout]=getheader(data,varargin)
 %         ZTAI6    - reference time in TAI as [yr mon cday hr min sec]
 %         GCP      - greater circle path azimuth (BAZ+180deg)
 %         NCMP     - number of components (=1 for most cases)
+%     
+%     [VALUES1,...,VALUESN]=GETHEADER(DATA,FIELD1,...,FIELDN) returns
+%     multiple fields in a single call.  FIELD may be any of the above
+%     types.
+%
+%     HEADERS=GETHEADER(DATA) returns the entire header for all records in
+%     SEIZMO struct DATA as a single numeric array (raw values).  Rows in
+%     the output array correspond to the header values of individual
+%     records.  The order of the fields follows that of how they are stored
+%     in the SEIZMO struct (see SEIZMO's function SEIZMODEF for details).
+%
+%    Notes:
+%     - Undefined header field values (-12345 in SAC) are returned as nan
+%       or 'NaN' for ease of use.
 %
 %    Examples:
 %     % Extract the sample rates of records:
@@ -85,8 +113,8 @@ function [varargout]=getheader(data,varargin)
 %     % Get the start time of records in UTC:
 %     butc=cell2mat(getheader(data,'b utc'));
 %
-%    See also:  CHANGEHEADER, LISTHEADER, READHEADER, WRITEHEADER, GETLGC,
-%               GETENUMID, GETENUMDESC, GETNCMP, FINDPICKS, COMPAREHEADER
+%    See also:  CHANGEHEADER, LISTHEADER, READHEADER, WRITEHEADER,
+%               FINDPICKS, COMPAREHEADER, QUERYHEADER
 
 %     Version History:
 %        Oct. 29, 2007 - initial version
@@ -115,9 +143,10 @@ function [varargout]=getheader(data,varargin)
 %        Jan. 30, 2012 - doc update, 6utc/6tai changed to utc6/tai6,
 %                        id/desc/lgc support
 %        Mar. 15, 2012 - minor doc touch
+%        Aug. 30, 2012 - big doc update for clarity
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 12:00 GMT
+%     Last Updated Aug. 30, 2012 at 12:00 GMT
 
 % todo:
 

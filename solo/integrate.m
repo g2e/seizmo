@@ -235,7 +235,7 @@ try
                         data(i).dep=...
                             oclass(cumtrapz(data(i).ind,data(i).dep,1));
                         data(i).ind=oclass(data(i).ind);
-                        depmen(i)=mean(data(i).dep(:));
+                        depmen(i)=nanmean(data(i).dep(:));
                         depmin(i)=min(data(i).dep(:));
                         depmax(i)=max(data(i).dep(:));
                         % detail message
@@ -263,7 +263,7 @@ try
                         data(i).dep=...
                             oclass(cumtrapz(data(i).ind,data(i).dep,1));
                         data(i).ind=oclass(data(i).ind);
-                        depmen(i)=mean(data(i).dep(:));
+                        depmen(i)=nanmean(data(i).dep(:));
                         depmin(i)=min(data(i).dep(:));
                         depmax(i)=max(data(i).dep(:));
                         % detail message
@@ -288,7 +288,7 @@ try
         data(i).dep=oclass(data(i).dep);
 
         % get dependent component values
-        depmen(i)=mean(data(i).dep(:));
+        depmen(i)=nanmean(data(i).dep(:));
         depmin(i)=min(data(i).dep(:));
         depmax(i)=max(data(i).dep(:));
         

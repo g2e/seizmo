@@ -109,7 +109,7 @@ for i=1:nrecs
     end
     
     % dep*
-    depmen(i)=mean(data(i).dep(:));
+    depmen(i)=nanmean(data(i).dep(:));
     depmin(i)=min(data(i).dep(:)); 
     depmax(i)=max(data(i).dep(:));
     

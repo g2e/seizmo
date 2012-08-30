@@ -281,7 +281,7 @@ for i=1:2:nin
     % get b,e,dep*
     b(j)=varargin{i}(1);
     e(j)=varargin{i}(end);
-    depmen(j)=mean(data(j).dep(:));
+    depmen(j)=nanmean(data(j).dep(:));
     depmin(j)=min(data(j).dep(:));
     depmax(j)=max(data(j).dep(:));
     

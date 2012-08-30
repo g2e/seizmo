@@ -15,10 +15,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      ( 3) remove mean & trend
 %      ( 4) taper (first/last 1%)
 %      ( 5) resample to 1 sample/sec
-%      ( 6) remove polezero response (displacement, hp taper: [.004 .006])
+%      ( 6) remove polezero response (displacement, hp taper: [.004 .008])
 %      ( 7) reject records based on amplitudes (>Inf nm)
 %      ( 8) rotate horizontals to North/East (removes unpaired)
-%      ( 9) t-domain normalize (3-15s & 15-100s moving average)
+%      ( 9) t-domain normalize (3-150s & 15-100s moving average)
 %      (10) f-domain normalize (2mHz moving average)
 %      (11) correlate (keep +/-4000s lagtime)
 %      (12) rotate correlations into <RR, RT, TR, TT>
@@ -34,8 +34,9 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     configurable:
 %      MINIMUMLENGTH - minimum length of records in % of time section [70]
 %      TAPERWIDTH - % width of step 4 taper relative to record length [1]
-%      TAPERTYPE - type of taper in step 4 []
-%      TAPEROPTION - option for taper in step 4 []
+%                   (also applied after step 10 - fd normalization)
+%      TAPERTYPE - type of taper in step 4 & 10 []
+%      TAPEROPTION - option for taper in step 4 & 10 []
 %      SAMPLERATE - samplerate to synchronize records to in step 5 [1]
 %      PZDB - polezero db to use in step 6 []
 %      UNITS - ground units of records after polezero removal ['disp']
@@ -48,8 +49,8 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      TDRMS - use TDCLIP x RMS for each record [true]
 %      TDCLIP - sets clip for TDSTYLE='clip' [1]
 %      TDWEIGHTBANDS - frequency bands for TDSTYLE='ram' weights
-%                     [1/15 1/3; 1/100 1/15]
-%                     (TUNED TO MINIMIZE TELESEISMIC EARTHQUAKES)
+%                     [1/150 1/3; 1/100 1/15]
+%                     (TUNED TO REDUCE GLITCHES & TELESEISMIC EARTHQUAKES)
 %      FDSTYLE - frequency domain normalization style:
 %                '1bit' - set all amplitudes to 1 (horizontals are special)
 %                ['ram'] - normalized using running absolute mean
@@ -75,7 +76,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        Prieto et al 2009, JGR, doi:10.1029/2008JB006067
 %        Ekstrom et al 2009, GRL, doi:10.1029/2009GL039131
 %     - Steps 9 & 10 for horizontals currently require running step 8 on
-%       the same run (if you forget it is automatically done for you).
+%       the same run (but if you forget it is automatically done for you).
 %
 %    Header changes: Varies with steps chosen...
 %
@@ -119,12 +120,16 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        May   3, 2012 - fixed bug in amplitude-based rejection
 %        May  14, 2012 - set amp rejection to Inf (no reject) by default
 %        May  31, 2012 - speed overrides for (divide/add)records
-%        June  3, 2012 - immediately class change to doubles
+%        June  3, 2012 - immediately change class to doubles
 %        June 11, 2012 - fix rms formula
 %        June 14, 2012 - make time options names more flexible
+%        Aug. 23, 2012 - td tapering after fd norm (removes high freq zero
+%                        slowness noise), changed 1st tdnorm filter to be
+%                        wider (captures glitches better), remove
+%                        correlations against cmp for the same station
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 14, 2012 at 11:15 GMT
+%     Last Updated Aug. 23, 2012 at 11:15 GMT
 
 % todo:
 
@@ -229,8 +234,24 @@ for i=1:numel(tsdirs) % SERIAL
     
     % read the header
     try
-        data=readheader(...
-            strcat(indir,fs,tsdirs{i}(1:4),fs,tsdirs{i},fs,opt.FILENAMES));
+        if(opt.MATIN)
+            try
+                data=load(strcat(indir,fs,tsdirs{in(ts)}(1:4),fs,...
+                    tsdirs{in(ts)},fs,'noise_setup_output.mat'));
+                data=data.noise_setup_output;
+            catch
+                data=load(strcat(indir,fs,tsdirs{in(ts)}(1:4),fs,...
+                    tsdirs{in(ts)},fs,'noise_process_output.mat'));
+                data=data.noise_process_output;
+            end
+            if(~isempty(opt.FILENAMES))
+                warning('seizmo:noise_stack:unusedOption',...
+                    'FILENAMES option ignored for MAT input!');
+            end
+        else
+            data=readheader(strcat(indir,fs,tsdirs{i}(1:4),fs,tsdirs{i},...
+                fs,opt.FILENAMES));
+        end
     catch
         % no data...
         continue;
@@ -343,14 +364,16 @@ for i=1:numel(tsdirs) % SERIAL
     if(isxc && any(steps==12) && numel(data)<4); continue; end
     
     % read in data
-    if(isxc)
-        data=changeclass(readdata(data),'double');
-    else
-        if(~isempty(vdata))
-            vdata=changeclass(readdata(vdata),'double');
-        end
-        if(~isempty(hdata))
-            hdata=changeclass(readdata(hdata),'double');
+    if(~opt.MATIN)
+        if(isxc)
+            data=changeclass(readdata(data),'double');
+        else
+            if(~isempty(vdata))
+                vdata=changeclass(readdata(vdata),'double');
+            end
+            if(~isempty(hdata))
+                hdata=changeclass(readdata(hdata),'double');
+            end
         end
     end
     
@@ -501,6 +524,11 @@ for i=1:numel(tsdirs) % SERIAL
                     tdwb=opt.TDWEIGHTBAND;
                     if(~isempty(vdata))
                         delta=getheader(vdata(1),'delta');
+                        %%% FOR CAMEROON VERIFICATION %%%
+                        %weights=add(slidingabsmean(vdata,...
+                        %    ceil(1/(2*delta*min(tdwb(:))))),eps);
+                        %vdata=dividerecords(vdata,weights);
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                         weights=add(slidingabsmean(iirfilter(vdata,...
                             'bp','b','c',tdwb(1,:),'o',4,'p',2),...
                             ceil(1/(2*delta*min(tdwb(:))))),eps);
@@ -513,6 +541,16 @@ for i=1:numel(tsdirs) % SERIAL
                         vdata=dividerecords(vdata,weights);
                     end
                     if(~isempty(hdata))
+                        delta=getheader(hdata(1),'delta');
+                        %%% FOR CAMEROON VERIFICATION %%%
+                        %weights=add(slidingabsmean(hdata,...
+                        %    ceil(1/(2*delta*min(tdwb(:))))),eps);
+                        %weights=solofun(addrecords(...
+                        %    solofun(weights(1:2:end),@(x)x.^2),...
+                        %    solofun(weights(2:2:end),@(x)x.^2)),@sqrt);
+                        %hdata=dividerecords(hdata,...
+                        %    weights([1:end; 1:end]));
+                        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                         weights=add(slidingabsmean(iirfilter(hdata,...
                             'bp','b','c',tdwb(1,:),'o',4,'p',2),...
                             ceil(1/(2*delta*min(tdwb(:))))),eps);
@@ -549,6 +587,8 @@ for i=1:numel(tsdirs) % SERIAL
                         vdata=dft(vdata);
                         vdata=solofun(vdata,@(x)[x(:,1).^0,x(:,2)]);
                         vdata=idft(vdata);
+                        vdata=taper(vdata,opt.TAPERWIDTH,...
+                            [],opt.TAPERTYPE,opt.TAPEROPT);
                     end
                     if(~isempty(hdata))
                         % orthogonal pair 1bit: x^2+y^2=1
@@ -563,15 +603,26 @@ for i=1:numel(tsdirs) % SERIAL
                         hdata=dividerecords(hdata,...
                             amph([1:end; 1:end]));
                         hdata=idft(hdata);
+                        hdata=taper(hdata,opt.TAPERWIDTH,...
+                            [],opt.TAPERTYPE,opt.TAPEROPT);
                     end
                 case 'ram'
                     if(~isempty(vdata))
+                        %delta=getheader(vdata(1),'delta');         % cam
+                        %nyqhz=1/(2*delta);                         % cam
+                        %tnorm=[1/150/nyqhz (nyqhz-1/3)/nyqhz];     % cam
                         vdata=dft(vdata,'rlim');
                         vdata=whiten(vdata,opt.FDWIDTH);
+                        %vdata=taper(vdata,tnorm,[],'gausswin',10); % cam
                         vdata=idft(vdata);
+                        vdata=taper(vdata,opt.TAPERWIDTH,...
+                            [],opt.TAPERTYPE,opt.TAPEROPT);
                     end
                     if(~isempty(hdata))
                         % orthogonal pair ram: x^2+y^2=1
+                        %delta=getheader(hdata(1),'delta');         % cam
+                        %nyqhz=1/(2*delta);                         % cam
+                        %tnorm=[1/150/nyqhz (nyqhz-1/3)/nyqhz];     % cam
                         hdata=dft(hdata,'rlim');
                         amph=rlim2amph(hdata);
                         amph=slidingmean(amph,ceil(opt.FDWIDTH...
@@ -584,7 +635,10 @@ for i=1:numel(tsdirs) % SERIAL
                         amph=changeheader(amph,'iftype','irlim');
                         hdata=dividerecords(hdata,...
                             amph([1:end; 1:end]));
+                        %hdata=taper(hdata,tnorm,[],'gausswin',10); % cam
                         hdata=idft(hdata);
+                        hdata=taper(hdata,opt.TAPERWIDTH,...
+                            [],opt.TAPERTYPE,opt.TAPEROPT);
                     end
                 otherwise
                     error('seizmo:noise_process:badInput',...
@@ -609,6 +663,9 @@ for i=1:numel(tsdirs) % SERIAL
                     cut(hdata,'a','f','fill',true),...
                     'lags',(opt.XCMAXLAG+4*delta).*[-1 1]),...
                     1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
+                % delete correlations across cmp for same station
+                [m,s]=getheader(hdata,'user0','user1');
+                hdata(mod(m,2) & m+1==s)=[];
                 [hdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
             else
                 hdata=hdata([]);
@@ -628,16 +685,43 @@ for i=1:numel(tsdirs) % SERIAL
         % write the data
         if(isxc)
             if(isempty(data)); continue; end
-            writeseizmo(data,'path',...
-                [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
-        else
-            if(~isempty(vdata))
-                writeseizmo(vdata,'path',...
+            if(opt.MATOUT)
+                noise_process_output=changepath(data,'path',...
+                    [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]); %#ok<*NASGU>
+                save(fullfile(outdir,tsdirs{i}(1:4),tsdirs{i},...
+                    'noise_process_output.mat'),...
+                    'noise_process_output');
+                clear noise_process_output;
+            else
+                writeseizmo(data,'path',...
                     [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
             end
+        else
+            if(~isempty(vdata))
+                if(opt.MATOUT)
+                    noise_process_output=changepath(vdata,'path',...
+                        [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
+                    save(fullfile(outdir,tsdirs{i}(1:4),tsdirs{i},...
+                        'noise_process_output.mat'),...
+                        'noise_process_output');
+                    clear noise_process_output;
+                else
+                    writeseizmo(vdata,'path',...
+                        [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
+                end
+            end
             if(~isempty(hdata))
-                writeseizmo(hdata,'path',...
-                    [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
+                if(opt.MATOUT)
+                    noise_process_output=changepath(hdata,'path',...
+                        [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
+                    save(fullfile(outdir,tsdirs{i}(1:4),tsdirs{i},...
+                        'noise_process_output.mat'),...
+                        'noise_process_output');
+                    clear noise_process_output;
+                else
+                    writeseizmo(hdata,'path',...
+                        [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
+                end
             end
         end
         
@@ -671,9 +755,9 @@ function [opt]=noise_process_parameters(varargin)
 % defaults
 varargin=[{'minlen' 70 'tw' 1 'tt' [] 'topt' [] 'sr' 1 ...
     'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] 'ar' Inf ...
-    'tds' 'ram' 'tdrms' true 'tdclip' 1 'tdfb' [1/15 1/3;.01 1/15] ...
+    'tds' 'ram' 'tdrms' true 'tdclip' 1 'tdfb' [1/150 1/3; 1/100 1/15] ...
     'fds' 'ram' 'fdw' .002 'lag' 4000 ...
-    'ts' [] 'te' [] 'lat' [] 'lon' [] ...
+    'ts' [] 'te' [] 'lat' [] 'lon' [] 'matin' false 'matout' false ...
     'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' [] 'q' false} varargin];
 
 % get user input
@@ -752,6 +836,12 @@ for i=1:2:numel(varargin)
         case {'q' 'qw' 'quiet' 'qwrite' 'quietwrite'}
             if(isempty(varargin{i+1})); continue; end
             opt.QUIETWRITE=varargin{i+1};
+        case {'matin'}
+            % secret option: matfile input
+            opt.MATIN=varargin{i+1};
+        case {'matout'}
+            % secret option: matfile output
+            opt.MATOUT=varargin{i+1};
         otherwise
             error('seizmo:noise_process:badInput',...
                 'Unknown Option: %s !',varargin{i});
@@ -880,6 +970,12 @@ elseif(~isempty(opt.COMPONENTS) && (~iscellstr(opt.COMPONENTS)))
 elseif(~isempty(opt.FILENAMES) && (~iscellstr(opt.FILENAMES)))
     error('seizmo:noise_process:badInput',...
         'FILENAMES must be a string list of allowed files!');
+elseif(~isscalar(opt.MATIN) || ~islogical(opt.MATIN))
+    error('seizmo:noise_process:badInput',...
+        'MATIN must be TRUE or FALSE!');
+elseif(~isscalar(opt.MATOUT) || ~islogical(opt.MATOUT))
+    error('seizmo:noise_process:badInput',...
+        'MATOUT must be TRUE or FALSE!');
 end
 
 % percent to fraction
@@ -897,7 +993,7 @@ for i=1:nrecs
     d1(i).dep=d1(i).dep./d2(i).dep;
     depmin(i)=min(d1(i).dep(:));
     depmax(i)=max(d1(i).dep(:));
-    depmen(i)=mean(d1(i).dep(:));
+    depmen(i)=nanmean(d1(i).dep(:));
 end
 d1=changeheader(d1,'depmin',depmin,'depmax',depmax,'depmen',depmen);
 end

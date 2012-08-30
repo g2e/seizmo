@@ -93,9 +93,10 @@ function []=noise_setup(indir,outdir,varargin)
 %        June  3, 2012 - fixdelta call added, meld & fixdelta options
 %        June 14, 2012 - make time options names more flexible, fix checks
 %                        for meld/fixdelta options
+%        Aug. 23, 2012 - allow indir to have wildcards
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 14, 2012 at 11:15 GMT
+%     Last Updated Aug. 23, 2012 at 11:15 GMT
 
 % todo:
 
@@ -110,7 +111,7 @@ if(~ischar(indir) || ~isvector(indir))
     error('seizmo:noise_setup:fileNotString',...
         'INDIR must be a string!');
 end
-if(~exist(indir,'dir'))
+if(~exist(indir,'dir') && ~any(indir=='*')) % allow wildcards
     error('seizmo:noise_setup:dirConflict',...
         ['Input Directory: %s\n' ...
         'Does not exist (or is not a directory)!'],indir);
@@ -306,8 +307,17 @@ for i=1:max(cmpidx) % SERIAL
                         'a',0,'f',timediff(tsbgn,tsend,'utc'));
                     
                     % write
-                    writeseizmo(tsdata,...
-                        'path',[outdir fs num2str(yr) fs tsdir]);
+                    if(opt.MATOUT)
+                        noise_setup_output=changepath(tsdata,'path',...
+                            [outdir fs num2str(yr) fs tsdir]); %#ok<*NASGU>
+                        save(fullfile(outdir,num2str(yr),tsdir,...
+                            'noise_setup_output.mat'),...
+                            'noise_setup_output');
+                        clear noise_setup_output;
+                    else
+                        writeseizmo(tsdata,...
+                            'path',[outdir fs num2str(yr) fs tsdir]);
+                    end
                 end
             end
         end
@@ -341,8 +351,8 @@ function [opt]=noise_setup_parameters(varargin)
 
 % defaults
 varargin=[{'l' 180 'o' 0 'q' false 'ts' [] 'te' [] 'lat' [] 'lon' [] ...
-    'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' [] 'mopt' {} 'fdopt' {}} ...
-    varargin];
+    'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' [] 'mopt' {} 'fdopt' {} ...
+    'matout' false} varargin];
 
 % require option/value pairs
 if(mod(nargin,2))
@@ -394,6 +404,9 @@ for i=1:2:numel(varargin)
             opt.FIXDELTAOPTIONS=varargin{i+1};
         case {'m' 'mopt' 'meldopt' 'meldoptions'}
             opt.MELDOPTIONS=varargin{i+1};
+        case {'matout'}
+            % secret option: matfile output
+            opt.MATOUT=varargin{i+1};
         otherwise
             error('seizmo:noise_setup:badInput',...
                 'Unknown Option: %s !',varargin{i});
@@ -471,6 +484,9 @@ elseif(~iscell(opt.MELDOPTIONS))
 elseif(~iscell(opt.FIXDELTAOPTIONS))
     error('seizmo:noise_setup:badInput',...
         'FIXDELTAOPT must be a cell array of options for FIXDELTA!');
+elseif(~isscalar(opt.MATOUT) || ~islogical(opt.MATOUT))
+    error('seizmo:noise_setup:badInput',...
+        'MATOUT must be TRUE or FALSE!');
 end
 
 end

@@ -95,7 +95,7 @@ try
         % get npts, ncmp, dep*
         [npts(i),ncmp(i)]=size(data(i).dep);
         if(npts(i)) % skip dep* for empty
-            depmen(i)=mean(data(i).dep(:)); 
+            depmen(i)=nanmean(data(i).dep(:)); 
             depmin(i)=min(data(i).dep(:)); 
             depmax(i)=max(data(i).dep(:));
         end

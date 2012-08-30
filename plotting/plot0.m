@@ -67,9 +67,10 @@ function [varargout]=plot0(data,varargin)
 %                        string, fix legend coloring, fix ncmp>1 brokeness
 %        Mar.  6, 2012 - don't use depmin/depmax from header
 %        Mar. 13, 2012 - make sure dep* is updated for extract_plot_data
+%        Aug. 30, 2012 - allow [] input for labeling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 23:00 GMT
+%     Last Updated Aug. 30, 2012 at 23:00 GMT
 
 % todo:
 % - markers only based on 1st cmp data values
@@ -356,11 +357,11 @@ else
 end
 
 % label
-if(isnumeric(opt.TITLE) && opt.TITLE==1)
+if(~isempty(opt.TITLE) && isnumeric(opt.TITLE) && opt.TITLE==1)
     opt.TITLE=[num2str(numel(goodfiles)) ...
         '/' num2str(nrecs) ' Records'];
 end
-if(isnumeric(opt.XLABEL) && opt.XLABEL==1)
+if(~isempty(opt.XLABEL) && isnumeric(opt.XLABEL) && opt.XLABEL==1)
     if(opt.ABSOLUTE)
         xlimits=get(opt.AXIS,'xlim');
         opt.XLABEL=joinwords(cellstr(datestr(unique(fix(xlimits)))),...
@@ -369,7 +370,9 @@ if(isnumeric(opt.XLABEL) && opt.XLABEL==1)
         opt.XLABEL='Time (sec)';
     end
 end
-if(isnumeric(opt.YLABEL) && opt.YLABEL==1); opt.YLABEL='Record'; end
+if(~isempty(opt.YLABEL) && isnumeric(opt.YLABEL) && opt.YLABEL==1)
+    opt.YLABEL='Record';
+end
 title(opt.AXIS,opt.TITLE,'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);
 xlabel(opt.AXIS,opt.XLABEL,'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);
 ylabel(opt.AXIS,opt.YLABEL,'color',opt.FGCOLOR,'fontsize',opt.FONTSIZE);

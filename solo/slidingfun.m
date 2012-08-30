@@ -229,7 +229,7 @@ for i=1:nrecs
     data(i).dep=oclass(temp);
     
     % dep*
-    depmen(i)=mean(data(i).dep(:)); 
+    depmen(i)=nanmean(data(i).dep(:)); 
     depmin(i)=min(data(i).dep(:)); 
     depmax(i)=max(data(i).dep(:));
     ncmp(i)=size(data(i).dep,2);

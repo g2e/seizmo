@@ -15,8 +15,10 @@ function []=compareheader(data,varargin)
 %     COMPAREHEADER(DATA,'FIELD1',...,'FIELDN') prints out the header
 %     fields FIELD1 to FIELDN for records in DATA as a table.  FIELDS may
 %     be normal fields ('b' 'kt1' 'xmaximum' etc), group fields ('t' 'kt'
-%     etc), absolute fields ('t9 utc' 'user3 tai' 'resp utc' etc), or
-%     wildcards ('*t1' '?' etc).  Only * and ? are valid wildcards.
+%     etc), absolute fields ('t9 utc' 'user3 tai' 'resp utc' etc), list
+%     fields ('picks', 'all', 'full' -- these are not available to the
+%     functions CHANGEHEADER or GETHEADER) or wildcards ('*t1' '?' etc).
+%     Only * and ? are valid wildcard characters.
 %
 %    Notes:
 %     - Group fields:    T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
@@ -60,9 +62,10 @@ function []=compareheader(data,varargin)
 %        Feb.  7, 2012 - edit h1 line
 %        Feb. 11, 2012 - divergent octave behavior workaround (cellcat)
 %        Feb. 20, 2012 - properly allocate arrays causing above issue
+%        Aug. 30, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 20, 2012 at 01:40 GMT
+%     Last Updated Aug. 30, 2012 at 01:40 GMT
 
 % todo:
 

@@ -432,7 +432,7 @@ try
             % dep*
             depmen=nan(ncors,1); depmin=depmen; depmax=depmen;
             for i=1:ncors
-                depmen(i)=mean(data(i).dep(:));
+                depmen(i)=nanmean(data(i).dep(:));
                 depmin(i)=min(data(i).dep(:));
                 depmax(i)=max(data(i).dep(:));
             end
@@ -559,7 +559,7 @@ try
             % dep*
             depmen=nan(ncors,1); depmin=depmen; depmax=depmen;
             for i=1:ncors
-                depmen(i)=mean(data(i).dep(:));
+                depmen(i)=nanmean(data(i).dep(:));
                 depmin(i)=min(data(i).dep(:));
                 depmax(i)=max(data(i).dep(:));
             end
