@@ -12,6 +12,7 @@ function []=sz_toc_hdr()
 %<a href="matlab:help setasiday">setasiday</a>     - Sets the reference times of records to the start of the day
 %<a href="matlab:help synchronize">synchronize</a>   - Synchronizes the reference times of SEIZMO records
 %<a href="matlab:help timeshift">timeshift</a>     - Shift timing of SEIZMO records
+%<a href="matlab:help vgrp">vgrp</a>          - List/Return members of SEIZMO virtual group header fields
 %
 % <a href="matlab:help seizmo">SEIZMO - Passive Seismology Toolbox</a>
 end

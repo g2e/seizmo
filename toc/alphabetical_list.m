@@ -611,6 +611,7 @@ function []=alphabetical_list()
 %<a href="matlab:help versioninfo">versioninfo</a>                    - Returns version info for SEIZMO data records
 %<a href="matlab:help versioninfo_cache">versioninfo_cache</a>              - Check/Change VERSIONINFO caching ON=TRUE / OFF=FALSE
 %<a href="matlab:help vertcmp">vertcmp</a>                        - Finds vertical component SEIZMO records
+%<a href="matlab:help vgrp">vgrp</a>                           - List/Return members of SEIZMO virtual group header fields
 %<a href="matlab:help vincentyfwd">vincentyfwd</a>                    - Find destination point on an ellipsoid relative to a point
 %<a href="matlab:help vincentyinv">vincentyinv</a>                    - Find distance and azimuth between 2 locations on ellipsoid
 %<a href="matlab:help webinstall_exportfig">webinstall_exportfig</a>           - Install export_fig components

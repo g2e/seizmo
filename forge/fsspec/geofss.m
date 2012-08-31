@@ -92,9 +92,10 @@ function [s]=geofss(data,ll,slow,frng,method,whiten,w)
 %                        method, verified test results
 %        June 11, 2012 - default to center method
 %        June 13, 2012 - capon method added (needs work)
+%        Aug. 30, 2012 - cleaned out some deprecated comments
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 13, 2012 at 14:05 GMT
+%     Last Updated Aug. 30, 2012 at 14:05 GMT
 
 % todo:
 % - sort out capon method weights
@@ -190,10 +191,7 @@ try
     % verbosity
     verbose=seizmoverbose;
     
-    % require all records to have equal delta, b utc, and be single cmp
-    % - we could drop some requirements but that means more effort
-    %   - this is useful for surface waves & large aperture arrays
-    %   - requires static time shift term
+    % grab necessary header info
     [npts,delta,butc,eutc,st]=getheader(data,...
         'npts','delta','b utc','e utc','st');
     butc=cell2mat(butc); eutc=cell2mat(eutc);

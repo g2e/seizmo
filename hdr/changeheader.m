@@ -36,15 +36,15 @@ function [data]=changeheader(data,varargin)
 %     group of header fields simultaneously.  The groups fields are:
 %         T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
 %         KNAME, CMP, DELAZ, REAL, INT, ENUM, LGC, CHAR
-%     The members of the group field can be seen by using the LISTHEADER
-%     command on a group field.  VALUES can be a scalar (assigns same value
-%     to all fields for all records), a column vector (separate values for
-%     each record, but same value for all fields in the group), a row
-%     vector (separate values for each field in the group, but the same
-%     values across all records), or an array (separate values for all
-%     fields in all records).  Thus for group field assignment, VALUE
-%     should be arranged so that columns delimit values for each field in
-%     the group and rows delimit records (first row = first record, etc).
+%     The members of the group field can be seen by using the VGRP command
+%     on a group field.  VALUES can be a scalar (assigns same value to all
+%     fields for all records), a column vector (separate values for each
+%     record, but same value for all fields in the group), a row vector
+%     (separate values for each field in the group, but the same values
+%     across all records), or an array (separate values for all fields in
+%     all records).  Thus for group field assignment, VALUE should be
+%     arranged so that columns delimit values for each field in the group
+%     and rows delimit records (first row = first record, etc).
 %
 %     DATA=CHANGEHEADER(DATA,VIRTUALFIELD,VALUES) alters a predefined
 %     virtual field which is then alters 1 or more true header fields.
@@ -74,9 +74,9 @@ function [data]=changeheader(data,varargin)
 %       undefined value.  'nan', 'undef' or 'undefined' will do the same
 %       for a character field.  This is useful for not having to remember
 %       what the field's actual undefined value is.
-%     - Enumerated/Logical fields do not need modifiers but Absolute Times
-%       do need 'utc' or 'tai' after the field as a separate word (eg.
-%       'b utc').
+%     - Enumerated/Logical fields do not need modifiers as they are auto
+%       detected in CHANGEHEADER, but Absolute Times do need 'utc' or 'tai'
+%       after the field as a separate word (eg. 'b utc').
 %
 %    Header changes: Determined by input list.
 %
@@ -101,7 +101,7 @@ function [data]=changeheader(data,varargin)
 %     data=changeheader(data,'nzmonth',getheader(data,'nzmonth')+1);
 %
 %    See also: LISTHEADER, GETHEADER, READHEADER, WRITEHEADER, QUERYHEADER,
-%              COMPAREHEADER
+%              COMPAREHEADER, VGRP
 
 %     Version History:
 %        Oct. 29, 2007 - initial version

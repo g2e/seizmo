@@ -19,6 +19,9 @@ fsspec 12 3 4 5
 
 make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
 
+noise_stack needs overlap option
+    - more time functions (time_range_overlap: sec,bgn,end)
+
 meld
     - uneven or variable samplerate
 rotate

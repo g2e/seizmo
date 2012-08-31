@@ -19,6 +19,7 @@ function [c]=z2c(z,cmap,clim)
 %     to be a 1x2 vector of [ZMIN ZMAX] over which the colormap changes.
 %
 %    Notes:
+%     - NaN inputs are always set to [.25 .25 .25] which is a dark grey.
 %
 %    Examples:
 %     % Plot some data with coloring based on their azimuth:
@@ -31,9 +32,10 @@ function [c]=z2c(z,cmap,clim)
 %     Version History:
 %        Mar.  6, 2011 - initial version
 %        Apr. 13, 2011 - fix bug when clim has no range
+%        Aug. 30, 2012 - nan support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 13, 2011 at 23:55 GMT
+%     Last Updated Aug. 30, 2011 at 23:55 GMT
 
 % todo:
 
@@ -43,8 +45,12 @@ error(nargchk(2,3,nargin));
 % default clim
 if(nargin==2 || isempty(clim)); clim=[min(z) max(z)]; end
 
+% fix nan color limits
+if(all(isnan(clim))); clim=[min(z) max(z)]; end
+if(all(isnan(clim))); clim=[0 1]; end
+
 % fix equal color limits
-if(~diff(clim)); clim=clim(1)+[-eps eps]; end
+if(diff(clim)==0); clim=clim(1)+eps(clim(1)).*[-1 1]; end
 
 % check inputs
 if(~isreal(z) || ~isvector(z))
@@ -59,10 +65,12 @@ elseif(~isreal(clim) || ~isvector(clim) || numel(clim)~=2)
 end
 
 % get color
+c=.25*ones(numel(z),3);
+nans=isnan(z);
 nc=size(cmap,1);
 idx=fix((z-clim(1))./(diff(clim)/nc));
 idx(idx<1)=1;
 idx(idx>nc)=nc;
-c=cmap(idx,:);
+c(~nans,:)=cmap(idx(~nans),:);
 
 end

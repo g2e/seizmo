@@ -40,7 +40,7 @@ function []=compareheader(data,varargin)
 %     % Compare picks:
 %     compareheader(data,'picks')
 %
-%    See also: QUERYHEADER, LISTHEADER, GETHEADER, CHANGEHEADER
+%    See also: QUERYHEADER, LISTHEADER, GETHEADER, CHANGEHEADER, VGRP
 
 %     Version History:
 %        Sep. 11, 2009 - initial version

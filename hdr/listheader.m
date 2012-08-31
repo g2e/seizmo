@@ -42,7 +42,7 @@ function []=listheader(data,varargin)
 %     % List only the logical fields:
 %     listheader(data,'lgc')
 %
-%    See also: QUERYHEADER, COMPAREHEADER, CHANGEHEADER, GETHEADER
+%    See also: QUERYHEADER, COMPAREHEADER, CHANGEHEADER, GETHEADER, VGRP
 
 %     Version History:
 %        Oct. 29, 2007 - initial version

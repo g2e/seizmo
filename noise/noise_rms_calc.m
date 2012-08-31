@@ -21,9 +21,10 @@ function []=noise_rms_calc(indir)
 %     Version History:
 %        Aug. 27, 2012 - initial version
 %        Aug. 30, 2012 - output is now a seizmo dataset
+%        Aug. 31, 2012 - fixed to handle time gaps
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 30, 2012 at 11:15 GMT
+%     Last Updated Aug. 31, 2012 at 11:15 GMT
 
 % todo:
 
@@ -74,6 +75,12 @@ if(numel(unique(tsend-tsbgn))>1)
         'Timesection time spans vary in INDIR!');
 end
 tslen=round((tsend(1)-tsbgn(1))*86400);
+
+% need to get time step
+tsstep=round(min(diff(tsbgn))*86400); % this can be wrong
+[n,d]=rrat(round((tsbgn(2:end)-tsbgn(1))*86400)/tsstep);
+if(numel(unique(d))>1); tsstep=tsstep/max(d); end
+tsidx=round((tsbgn-tsbgn(1))*86400)/tsstep+1;
 
 % temporary verbose control
 verbose=seizmoverbose(false);
@@ -139,16 +146,18 @@ for i=1:nts
 end
 
 % insert rms & timing info into data
+npts=max(tsidx);
 [depmin,depmen,depmax]=deal(nan(ndata,1));
 for i=1:ndata
-    data(i).dep=rms(:,i);
+    data(i).dep=nan(npts,1);
+    data(i).dep(tsidx)=rms(:,i);
     depmin(i)=min(data(i).dep);
     depmen(i)=nanmean(data(i).dep);
     depmax(i)=max(data(i).dep);
 end
 data=changeheader(data,'z6',serial2gregorian(tsbgn(1)),...
     'depmin',depmin,'depmen',depmen,'depmax',depmax,...
-    'b',0,'delta',tslen,'npts',nts);
+    'b',0,'delta',tsstep,'npts',npts,'e',(npts-1)*tsstep,'f',tslen);
 data=changename(data,'name',name);
 
 % return verbosity

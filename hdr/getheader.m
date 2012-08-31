@@ -54,16 +54,16 @@ function [varargout]=getheader(data,varargin)
 %     Available group fields are:
 %         T, KT, USER, KUSER, RESP, DEP, ST, EV, NZ, NZDTTM,
 %         KNAME, CMP, DELAZ, REAL, INT, ENUM, LGC, CHAR
-%     The members of the group field can be seen by using the LISTHEADER
-%     command on a group field.  VALUES is a numeric or cellstring array
-%     where each row corresponds to a seperate record in DATA and each
-%     column corresponds to a separate field.  For example, the group field
-%     't' returns a numeric array with 10 columns (for fields t0 to t9) and
-%     as many rows as there are records in DATA.  Group field 'kuser'
-%     returns a cellstring array with 3 columns (for kuser0 thru kuser2)
-%     and as many rows as there are records in DATA.  Output modifiers
-%     described above (abstime, id, desc, lgc) can be combined with group
-%     fields as appropriate.
+%     The members of the group field can be seen by using the VGRP command
+%     on a group field.  VALUES is a numeric or cellstring array where each
+%     row corresponds to a seperate record in DATA and each column
+%     corresponds to a separate field.  For example, the group field 't'
+%     returns a numeric array with 10 columns (for fields t0 to t9) and as
+%     many rows as there are records in DATA.  Group field 'kuser' returns
+%     a cellstring array with 3 columns (for kuser0 thru kuser2) and as
+%     many rows as there are records in DATA.  Output modifiers described
+%     above (abstime, id, desc, lgc) can be combined with group fields as
+%     appropriate.
 %
 %     VALUES=GETHEADER(DATA,'VIRTUALFIELD') retrieves predefined virtual
 %     field values defined by 1 or more true header fields.  Available
@@ -114,7 +114,7 @@ function [varargout]=getheader(data,varargin)
 %     butc=cell2mat(getheader(data,'b utc'));
 %
 %    See also:  CHANGEHEADER, LISTHEADER, READHEADER, WRITEHEADER,
-%               FINDPICKS, COMPAREHEADER, QUERYHEADER
+%               FINDPICKS, COMPAREHEADER, QUERYHEADER, VGRP
 
 %     Version History:
 %        Oct. 29, 2007 - initial version

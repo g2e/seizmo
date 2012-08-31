@@ -22,9 +22,9 @@ function [varargout]=gmv(data,varargin)
 %      'vclip'   - limits in vert ground motion (2 std)
 %      'hclip'   - limits in horz ground motion (2 std)
 %      'hscale'  - horz ground motion that gives a 1deg bar (1 std)
-%      'vstd'    - number of vert standard deviations for vclip (2)
-%      'hstd'    - number of horz standard deviations for hclip (2)
-%      'hstdsc'  - number of horz standard deviations for hscale (1)
+%      'vstd'    - number of vert std dev for default vclip (2)
+%      'hstd'    - number of horz std dev for default hclip (2)
+%      'hstdsc'  - number of horz std dev for default hscale (1)
 %      'hlinew'  - linewidth for horizontal motion line (def is 2)
 %      'rsta'    - ref stn idx (in DATA) or 'name' (default is 1)
 %      'xfunc'   - function to call to alter plot just before frame capture
@@ -56,9 +56,12 @@ function [varargout]=gmv(data,varargin)
 %     Version History:
 %        Apr. 16, 2011 - initial version
 %        Apr.  3, 2012 - use seizmocheck
+%        Aug. 31, 2012 - handle rotate breaking if no horizontals, allow
+%                        setting labels on record axis, minor doc update,
+%                        handle absolute time plot
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 14:05 GMT
+%     Last Updated Aug. 31, 2012 at 14:05 GMT
 
 % todo:
 
@@ -134,14 +137,19 @@ try
             end
         case 'horz'
             vdata=[];
-            hdata=rotate(data,'to',0);
-            if(isempty(hdata))
+            try
+                hdata=rotate(data,'to',0);
+            catch
                 error('seizmo:gmv:noHorz',...
                     'No horizontal pairs found to visualize!');
             end
         case 'both'
             vdata=data(vertcmp(data));
-            hdata=rotate(data,'to',0);
+            try
+                hdata=rotate(data,'to',0);
+            catch
+                hdata=[];
+            end
             if(isempty(vdata) && isempty(hdata))
                 error('seizmo:gmv:noHorz',...
                     'No vertical/horizontal data found to visualize!');
@@ -177,7 +185,7 @@ try
     end
     
     % create gmv plot
-    [fh,mapax,recax]=plot_gmv(data,vdata,hdata,prop);
+    [fh,mapax,recax,xdata]=plot_gmv(data,vdata,hdata,prop);
     
     % save frame
     if(nargout); varargout{1}(1)=getframe(fh); end
@@ -231,8 +239,7 @@ try
         movekids(findobj(mapax,'tag','rstaloc'),'front');
         
         % update record plot
-        set(findobj(recax,'tag','currenttime'),'xdata',...
-            get(findobj(recax,'tag','currenttime'),'xdata')+delta);
+        set(findobj(recax,'tag','currenttime'),'xdata',xdata(i)*[1;1]);
         
         % save frame
         if(nargout); varargout{1}(i)=getframe(fh); end
@@ -333,7 +340,7 @@ for i=1:nrecs; amp(i)=data(i).dep(idx); end
 end
 
 
-function [fh,mapax,recax]=plot_gmv(data,vdata,hdata,prop)
+function [fh,mapax,recax,xdata]=plot_gmv(data,vdata,hdata,prop)
 % initialize
 fh=figure('color','k');
 mapax=subplot(4,1,1:3,'parent',fh);
@@ -377,13 +384,15 @@ hold(mapax,'off');
 
 % record plot
 recax=plot0(data(prop.rsta),'axis',recax,'namesonyaxis','stashort',...
+    'title',[],'ylabel',[],'xlabel','Time Since Earthquake (seconds)',...
     prop.p0opt{:});
 hold(recax,'on');
 
 % add current time bar
 ylimits=ylim(recax);
-plot(recax,getheader(data(prop.rsta(1)),'b')*[1;1],ylimits.','r',...
-    'linewidth',2,'tag','currenttime');
+kids=get(recax,'children');
+xdata=get(kids(1),'xdata');
+plot(recax,xdata(1)*[1;1],ylimits.','r','linewidth',2,'tag','currenttime');
 hold(recax,'off');
 
 % modify using external function
@@ -391,12 +400,7 @@ prop.xfunc(fh,mapax,recax,prop);
 end
 
 
-function []=xfunc(fh,mapax,recax,prop)
-% scales (red is up, blue is down)
-% clean up title & labels
-% resize axes
-title(recax,'');
-ylabel(recax,'');
-xlabel(recax,'Time Since Earthquake (seconds)');
+function []=xfunc(varargin)
+% does nothing
 end
 
