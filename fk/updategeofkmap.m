@@ -1,11 +1,11 @@
-function [varargout]=plotgeofssupdate(s,ax)
-%PLOTGEOFSSUPDATE    Updates an existing geofss plot with a new spectra
+function [varargout]=updategeofkmap(map,ax)
+%UPDATEGEOFKMAP    Quickly updates an existing geofk plot with a new map
 %
-%    Usage:    plotgeofssupdate(s,ax)
-%              ax=plotgeofssupdate(s)
+%    Usage:    updategeofkmap(map,ax)
+%              ax=updategeofkmap(map)
 %
 %    Description:
-%     UPDATEGEOFSS(S,AX) draws a new geofk beam data map given by MAP
+%     UPDATEGEOFKMAP(MAP,AX) draws a new geofk beam data map given by MAP
 %     in an existing axes AX.  This is mainly intended for exploring geofk
 %     datasets and for making movies in a faster fashion.
 %

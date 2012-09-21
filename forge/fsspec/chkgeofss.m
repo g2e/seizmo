@@ -13,10 +13,11 @@ function [report]=chkgeofss(s)
 %
 %    Examples:
 %     % Check that output from GEOFSSXC is compatible:
-%     s=geofssxc(xcdata,latlon,slow,frng);
+%     [lat,lon]=meshgrid(-89:2:89,-179:2:179);
+%     s=geofssxc(xcdata,[lat(:) lon(:)],30,[.01 .0125]);
 %     error(chkgeofss(s));
 %
-%    See also: CHKFSS, GEOFSSXC, GEOFSSHORZXC, PLOTGEOFSS, ISGEOFSS
+%    See also: CHKFSS, GEOFSSXC, GEOFSSHORZ, GEOFSSHORZXC, ISGEOFSS
 
 %     Version History:
 %        June 22, 2010 - initial version
@@ -27,9 +28,10 @@ function [report]=chkgeofss(s)
 %        June  4, 2012 - adapted from chkgeofkstruct
 %        June 10, 2012 - handle full method
 %        June 13, 2012 - allow capon method
+%        Sep. 12, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 13, 2012 at 18:50 GMT
+%     Last Updated Sep. 12, 2012 at 18:50 GMT
 
 % todo:
 
@@ -51,7 +53,7 @@ end
 % valid method strings
 valid.METHOD={'center' 'coarray' 'user' 'full' 'capon'};
 
-% loop over each frame/volume/map
+% loop over each spectra
 for i=1:numel(s)
     % check consistency
     ss=size(s(i).spectra);

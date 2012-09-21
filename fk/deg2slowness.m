@@ -13,6 +13,10 @@ function [slow]=deg2slowness(ph,deg)
 %     going on.  SLOWNESS may be an array.
 %
 %    Notes:
+%     - Only the lowermantle portion of the P,PP,S,SS phases can be used
+%       because of triplications (and thus 3+ slownesses for some
+%       distances).  If you really need all slownesses for a given distance
+%       then use TAUPTIME and/or TAUPPATH.
 %
 %    Examples:
 %     % What is the slowness of a P-wave at 60 deg?
@@ -23,9 +27,11 @@ function [slow]=deg2slowness(ph,deg)
 
 %     Version History:
 %        Apr.  3, 2012 - initial version
+%        Sep.  6, 2012 - use *lowermantle for truncated curves but skip
+%                        actually using them due to interpolation problem
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 10:35 GMT
+%     Last Updated Sep.  6, 2012 at 10:35 GMT
 
 % todo
 
@@ -49,10 +55,10 @@ dp=load('ak135slow');
 
 % act by phase
 switch ph
-    case 'P'
-        slow=interp1(dp.P(:,1),dp.P(:,2),deg);
-    case 'PP'
-        slow=interp1(dp.PP(:,1),dp.PP(:,2),deg);
+    case {'P' 'Plowermantle'}
+        slow=interp1(dp.Plowermantle(:,1),dp.Plowermantle(:,2),deg);
+    case {'PP' 'PPlowermantle'}
+        slow=interp1(dp.PPlowermantle(:,1),dp.PPlowermantle(:,2),deg);
     case 'PKPab'
         slow=interp1(dp.PKPab(:,1),dp.PKPab(:,2),deg);
     case 'PKPbc'
@@ -61,10 +67,10 @@ switch ph
         slow=interp1(dp.PKiKP(:,1),dp.PKiKP(:,2),deg);
     case {'PKIKP' 'PKPdf'}
         slow=interp1(dp.PKPdf(:,1),dp.PKPdf(:,2),deg);
-    case 'S'
-        slow=interp1(dp.S(:,1),dp.S(:,2),deg);
-    case 'SS'
-        slow=interp1(dp.SS(:,1),dp.SS(:,2),deg);
+    case {'S' 'Slowermantle'}
+        slow=interp1(dp.Slowermantle(:,1),dp.Slowermantle(:,2),deg);
+    case {'SS' 'SSlowermantle'}
+        slow=interp1(dp.SSlowermantle(:,1),dp.SSlowermantle(:,2),deg);
     case 'SKS'
         % iasp91
         slow=interp1(dp.SKS(:,1),dp.SKS(:,2),deg);

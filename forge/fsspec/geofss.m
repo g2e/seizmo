@@ -18,15 +18,16 @@ function [s]=geofss(data,ll,slow,frng,method,whiten,w)
 %     (a rule of thumb: a source within one array aperture width has
 %     significant near-field terms).  LATLON contains the latitude and
 %     longitude wavefield beamforming positions and must be in units of
-%     degrees and formatted as an Nx2 array of [LAT LON].  SLOW is the
-%     magnitude of the horizontal slowness of the waves in sec/deg and
-%     should be a vector.  FRNG gives the frequency range as
+%     degrees and formatted as an Nx2 array of [LAT LON].  Latitudes are
+%     assumed to be geographic (but distances are computed as on a sphere).
+%     SLOW is the magnitude of the horizontal slowness of the waves in
+%     sec/deg and should be a vector.  FRNG gives the frequency range as
 %     [FREQLOW FREQHIGH] in Hz (the individual frequencies are
-%     predetermined by the fft).  The output S is a struct containing
-%     relevant info and the frequency-slowness-position spectra
-%     itself (with size NPOSxNSLOWxNFREQ).  The struct layout is:
-%          .spectra  - frequency-slowness-position spectra
-%          .nsta     - number of stations utilized in making map
+%     predetermined by the fft of the data).  The output S is a struct
+%     containing relevant info and the frequency-slowness-position spectra
+%     (with size NPOSxNSLOWxNFREQ).  The struct layout is:
+%          .spectra  - frequency-slowness-position spectra estimate
+%          .nsta     - number of stations
 %          .stla     - station latitudes
 %          .stlo     - station longitudes
 %          .stel     - station elevations (surface)
@@ -68,6 +69,7 @@ function [s]=geofss(data,ll,slow,frng,method,whiten,w)
 %
 %    Notes:
 %     - Records in DATA must have equal and regular sample spacing.
+%     - Latitudes are assumed to be geographic!
 %
 %    Examples:
 %     % Do you see the 26s microseism in your data?:
@@ -79,7 +81,8 @@ function [s]=geofss(data,ll,slow,frng,method,whiten,w)
 %
 %    See also: FSS, GEOFSSXC, FSSXC, GEOFSSAVG, GEOFSSSUB, PLOTGEOFSS,
 %              GEOFSSARF, GEOFSSDBINFO, GEOFSSCORR, GEOFSSFRAMESLIDE,
-%              GEOFSSFREQSLIDE, GEOFSSSLOWSLIDE, PLOTGEOFSSARF
+%              GEOFSSFREQSLIDE, GEOFSSSLOWSLIDE, PLOTGEOFSSARF, GEOFSSHORZ,
+%              GEOFSSHORZXC, FSSHORZ, FSSHORZXC
 
 %     Version History:
 %        June 22, 2010 - initial version
@@ -93,12 +96,13 @@ function [s]=geofss(data,ll,slow,frng,method,whiten,w)
 %        June 11, 2012 - default to center method
 %        June 13, 2012 - capon method added (needs work)
 %        Aug. 30, 2012 - cleaned out some deprecated comments
+%        Sep. 11, 2012 - handle latitudes properly
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 30, 2012 at 14:05 GMT
+%     Last Updated Sep. 11, 2012 at 14:05 GMT
 
 % todo:
-% - sort out capon method weights
+% - sort out capon method
 
 % check nargin
 error(nargchk(4,7,nargin));
@@ -138,13 +142,13 @@ elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
         || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
     error('seizmo:geofss:badInput',...
         ['METHOD must be one of the following:\n' ...
-        '''CENTER'', ''COARRAY'', ''FULL'', ''CAPON'' or [LAT LON]!']);
+        '''CENTER'', ''COARRAY'', ''FULL'', or [LAT LON]!']);
 elseif(~isscalar(whiten) || ~islogical(whiten))
     error('seizmo:geofss:badInput',...
         'WHITEN must be TRUE or FALSE!');
 elseif(~isnumeric(w) || numel(w)~=nrecs || any(w(:)<0))
     error('seizmo:geofss:badInput',...
-        'WEIGHTS must be equal sized with DATA & be positive!');
+        'WEIGHTS must be equal sized with DATA & positive!');
 end
 nrng=sf(1);
 
@@ -203,12 +207,12 @@ try
             [row,col]=find(triu(true(nrecs),1));
             w=w(col).*w(row);     % expand weights
             w=w./sum(w);          % renormalize weights
-            dt=dt(row)-dt(col);   % alter to pair shifts
+            dt=dt(col)-dt(row);   % alter to pair shifts
         case {'full' 'capon'}
             [row,col]=find(true(nrecs));
             w=w(col).*w(row);     % expand weights
             w=w./sum(w);          % renormalize weights
-            dt=dt(row)-dt(col);   % alter to pair shifts
+            dt=dt(col)-dt(row);   % alter to pair shifts
     end
     dt=2*pi*1i*dt(ones(nll,1),:);
     
@@ -219,7 +223,7 @@ try
     fnyq=1/(2*delta(1));
     if(any(frng>=fnyq))
         error('seizmo:geofss:badFRNG',...
-            ['FRNG frequencies exceeds nyquist frequency (' ...
+            ['FRNG frequencies exceed nyquist frequency (' ...
             num2str(fnyq) ')!']);
     end
     
@@ -262,8 +266,8 @@ try
     [s(1:nrng,1).weights]=deal(w);
     
     % get frequencies
-    nspts=2^nextpow2(maxnpts); % half xcorr
-    %nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification
+    %nspts=2^nextpow2(maxnpts); % half xcorr
+    nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification
     f=(0:nspts/2)/(delta(1)*nspts); % only +freq
     
     % extract data (silently)
@@ -273,6 +277,10 @@ try
     
     % get fft
     data=fft(data,nspts,1);
+    
+    % convert latitudes
+    ll(:,1)=geographic2geocentriclat(ll(:,1));
+    st(:,1)=geographic2geocentriclat(st(:,1));
     
     % distance difference for the phasors that "steer" the array
     % dd is NLLxNPAIRS
@@ -365,7 +373,7 @@ try
                 for b=1:nfreq
                     for c=1:nslow
                         s(a).spectra(:,c,b)=...
-                            exp(f(fidx(b))*(slow(c)*dd-dt))*cs(:,b);
+                            exp(f(fidx(b))*(slow(c)*dd+dt))*cs(:,b);
                     end
                     if(verbose); print_time_left(b,nfreq); end
                 end
@@ -373,7 +381,7 @@ try
                 for b=1:nfreq
                     for c=1:nslow
                         s(a).spectra(:,c,b)=abs(...
-                            exp(f(fidx(b))*(slow(c)*dd-dt))*cs(:,b)).^2;
+                            exp(f(fidx(b))*(slow(c)*dd+dt))*cs(:,b)).^2;
                     end
                     if(verbose); print_time_left(b,nfreq); end
                 end

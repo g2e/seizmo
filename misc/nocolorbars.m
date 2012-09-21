@@ -11,8 +11,8 @@ function nocolorbars(ax)
 %
 %    Examples:
 %     % make and destroy a colorbar
-%      figure; axes; colorbar;
-%      nocolorbars;
+%     figure; axes; colorbar;
+%     nocolorbars;
 %
 %    See also: NOLABELS, NOTICKS, NOTITLES, SETFONTS, MAKESUBPLOTS,
 %              SUPERTITLE, SUPERXLABEL, SUPERYLABEL, SUPERCOLORBAR,
@@ -22,9 +22,10 @@ function nocolorbars(ax)
 %        Aug.  5, 2010 - initial version
 %        Aug.  8, 2010 - doc update
 %        Oct. 11, 2010 - delete colorbar handles
+%        Sep.  5, 2012 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 11, 2010 at 12:25 GMT
+%     Last Updated Sep.  5, 2012 at 12:25 GMT
 
 % todo:
 
@@ -41,7 +42,7 @@ if(~isreal(ax) || any(~ishandle(ax(:))) ...
         'AX must be a valid axes handle!');
 end
 
-% remove titles
+% remove colorbars
 for i=1:numel(ax)
     cbh=findobj(get(ax(i),'parent'),'tag','Colorbar','axes',ax(i));
     if(~isempty(cbh)); delete(cbh); end

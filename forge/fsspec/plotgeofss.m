@@ -88,8 +88,8 @@ end
 if(nargin<3 || isempty(zerodb)); zerodb='max'; end
 if(~ischar(zerodb) ...
         || ~ismember(lower(zerodb),{'max' 'min' 'median' 'med' 'abs'}))
-    error('seizmo:plotgeofss:badSTYPE',...
-        'STYPE must be ''min'' ''max'' ''median'' or ''abs''!');
+    error('seizmo:plotgeofss:badZERODB',...
+        'ZERODB must be ''min'' ''max'' ''median'' or ''abs''!');
 end
 zerodb=lower(zerodb);
 
@@ -116,7 +116,7 @@ switch s.method
         s.spectra=10*log10(s.spectra);
 end
 
-% rescale response
+% rescale spectra
 switch zerodb
     case 'min'
         zdb=min(s.spectra(:));

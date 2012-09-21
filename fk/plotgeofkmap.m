@@ -250,8 +250,8 @@ axes(ax);
 %m_gshhs([gshhs 'c'],'color',land);
 %m_gshhs([gshhs 'b'],'color',border);
 m_coast('line','color',fgcolor);
-m_grid('color',fgcolor);
-%m_grid('color',fgcolor,'xtick',[],'ytick',[]);
+%m_grid('color',fgcolor);
+m_grid('color',fgcolor,'xtick',[],'ytick',[]);
 
 % hackery to color oceans at large when the above fails
 set(findobj(ax,'tag','m_grid_color'),'facecolor',ocean);

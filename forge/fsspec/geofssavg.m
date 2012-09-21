@@ -5,7 +5,7 @@ function [s]=geofssavg(s,frng,srng)
 %
 %    Description:
 %     S=GEOFSSAVG(S,FRNG,SRNG) averages the frequency-slowness-position
-%     spectra in S over the frequency and slownes ranges given by FRNG and
+%     spectra in S over the frequency and slowness ranges given by FRNG and
 %     SRNG.  S must be a struct as output by GEOFSS.  FRNG is the frequency
 %     range to average as [FREQLOW FREQHIGH] in Hz.  SRNG is the horizontal
 %     slowness range to average as [SLOWLOW SLOWHIGH] in sec/deg.

@@ -203,110 +203,147 @@ try
     verbose=seizmoverbose;
     
     % grab necessary header info
-    [butc,b,delta,npts,st,kname,cmp]=getheader(n,...
+    [butc,eutc,b,delta,npts,st,kname,cmp]=getheader(n,...
+        'b utc','e utc','b','delta','npts','st','kname','cmp');
+    [butc2,b2,delta2,npts2,st2,kname2,cmp2]=getheader(e,...
         'b utc','b','delta','npts','st','kname','cmp');
-    [butc2,b2,delta2,npts2,st2,kname2,cmp]=getheader(e,...
-        'b utc','b','delta','npts','st','kname','cmp');
+    butc=cell2mat(butc); eutc=cell2mat(eutc);
     
     % need n & e to match on several fields:
     % kname, st, b utc, delta, npts
     if(~isequal(butc,butc2) || ~isequal(b,b2) || ~isequal(delta,delta2) ...
             || ~isequal(npts,npts2) || ~isequal(st,st2) ...
             || ~isequal(kname(:,1:3),kname2(:,1:3)))
-        sync yo shit
+        error('seizmo:geofsshorz:badInput',...
+            'N & E are not synced!');
     end
+    clear butc2 b b2 delta2 npts2 st2 kname kname2;
+    delta=delta(1);
     
     % require north & east orientation
-    die
-    orient yo shit
-    
-    % get station locations & require that they match
-    [st1,ev1,az,baz]=getheader(rr,'st','ev','az','baz');
-    [st2,ev2]=getheader(rt,'st','ev');
-    [st3,ev3]=getheader(tr,'st','ev');
-    [st4,ev4]=getheader(tt,'st','ev');
-    if(~isequal([st1; ev1],[st2; ev2],[st3; ev3],[st4; ev4]))
-        error('seizmo:geofsshorz:xcDataMismatch',...
-            'XC Datasets have different station locations!');
+    if(any(cmp(:,1)~=90) || any(cmp2(:,1)~=90)) % cmpinc
+        error('seizmo:geofsshorz:badInput',...
+            'N & E must have CMPINC==90!');
+    elseif(any(cmp(:,2)~=0))
+        error('seizmo:geofsshorz:badInput',...
+            'N must have CMPAZ==0!');
+    elseif(any(cmp2(:,2)~=90))
+        error('seizmo:geofsshorz:badInput',...
+            'E must have CMPAZ==90!');
     end
-    clear st2 st3 st4 ev2 ev3 ev4
+    clear cmp cmp2;
     
-    % find unique station locations
-    loc=unique([st1; ev1],'rows');
-    nsta=size(loc,1);
-    
-    % array center
-    [clat,clon]=arraycenter([st1(:,1); ev1(:,1)],[st1(:,2); ev1(:,2)]);
-    
-    % require all records to have equal b, npts, delta
-    [b,npts,delta]=getheader([rr(:); rt(:); tr(:); tt(:)],...
-        'b','npts','delta');
-    if(~isscalar(unique(b)) ...
-            || ~isscalar(unique(npts)) ...
-            || ~isscalar(unique(delta)))
-        error('seizmo:geofsshorz:badData',...
-            'XC records must have equal B, NPTS & DELTA fields!');
+    % get utc static time shifts
+    dt=timediff(butc,butc(1,:),'utc').'; % need row vector
+    switch method
+        case 'coarray'
+            [row,col]=find(triu(true(nrecs),1));
+            w=w(col).*w(row);     % expand weights
+            w=w./sum(w);          % renormalize weights
+            dt=dt(row)-dt(col);   % alter to pair shifts
+        case {'full' 'capon'}
+            [row,col]=find(true(nrecs));
+            w=w(col).*w(row);     % expand weights
+            w=w./sum(w);          % renormalize weights
+            dt=dt(row)-dt(col);   % alter to pair shifts
     end
-    npts=npts(1); delta=delta(1);
+    dt=2*pi*1i*dt(ones(nll,1),:);
+    
+    % longest record 
+    [maxnpts,imaxnpts]=max(npts);
     
     % check nyquist
     fnyq=1/(2*delta(1));
     if(any(frng>=fnyq))
         error('seizmo:geofsshorz:badFRNG',...
-            ['FRNG frequencies must be under the nyquist frequency (' ...
+            ['FRNG frequencies exceeds nyquist frequency (' ...
             num2str(fnyq) ')!']);
     end
     
-    % setup output
-    [rvol(1:nrng,1).nsta]=deal(nsta);
-    [rvol(1:nrng,1).stla]=deal(loc(:,1));
-    [rvol(1:nrng,1).stlo]=deal(loc(:,2));
-    [rvol(1:nrng,1).stel]=deal(loc(:,3));
-    [rvol(1:nrng,1).stdp]=deal(loc(:,4));
-    [rvol(1:nrng,1).butc]=deal([0 0 0 0 0]);
-    [rvol(1:nrng,1).eutc]=deal([0 0 0 0 0]);
-    [rvol(1:nrng,1).delta]=deal(delta);
-    [rvol(1:nrng,1).npts]=deal(npts);
-    [rvol(1:nrng,1).volume]=deal(true(1,2));
-    [rvol(1:nrng,1).latlon]=deal(ll);
-    [rvol(1:nrng,1).horzslow]=deal(s);
-    [rvol(1:nrng,1).npairs]=deal(ncorr);
-    [rvol(1:nrng,1).method]=deal(method);
-    [rvol(1:nrng,1).center]=deal([clat clon]);
-    [rvol(1:nrng,1).weights]=deal(w);
+    % fix method/center/npairs
+    if(ischar(method))
+        method=lower(method);
+        [clat,clon]=arraycenter(st(:,1),st(:,2));
+        switch method
+            case 'coarray'
+                npairs=nrecs*(nrecs-1)/2;
+            case {'full' 'capon'}
+                npairs=nrecs*nrecs;
+            case 'center'
+                npairs=nrecs;
+        end
+    else
+        clat=method(1);
+        clon=method(2);
+        method='user';
+        npairs=nrecs;
+    end
     
-    % get frequencies (note no extra power for correlations)
-    nspts=2^nextpow2(npts);
-    f=(0:nspts/2)/(delta*nspts);  % only +freq
+    % setup output
+    [r(1:nrng,1).nsta]=deal(nrecs);
+    [r(1:nrng,1).stla]=deal(st(:,1));
+    [r(1:nrng,1).stlo]=deal(st(:,2));
+    [r(1:nrng,1).stel]=deal(st(:,3));
+    [r(1:nrng,1).stdp]=deal(st(:,4));
+    [r(1:nrng,1).butc]=deal(butc(1,:));
+    [r(1:nrng,1).eutc]=deal(eutc(imaxnpts,:));
+    [r(1:nrng,1).delta]=deal(delta(1));
+    [r(1:nrng,1).npts]=deal(maxnpts);
+    [r(1:nrng,1).vector]=deal([true nslow~=1]);
+    [r(1:nrng,1).latlon]=deal(ll);
+    [r(1:nrng,1).slow]=deal(slow);
+    [r(1:nrng,1).freq]=deal([]);
+    [r(1:nrng,1).method]=deal(method);
+    [r(1:nrng,1).npairs]=deal(npairs);
+    [r(1:nrng,1).center]=deal([clat clon]);
+    [r(1:nrng,1).weights]=deal(w);
+    t=r;
+    
+    % get frequencies
+    nspts=2^nextpow2(maxnpts); % half xcorr
+    %nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification
+    f=(0:nspts/2)/(delta(1)*nspts); % only +freq
     
     % extract data (silently)
     seizmoverbose(false);
-    rr=splitpad(rr);
-    rr=records2mat(rr);
-    rt=splitpad(rt);
-    rt=records2mat(rt);
-    tr=splitpad(tr);
-    tr=records2mat(tr);
-    tt=splitpad(tt);
-    tt=records2mat(tt);
+    n=records2mat(n);
+    e=records2mat(e);
     seizmoverbose(verbose);
     
-    % get fft (conjugate is b/c my xc is flipped?)
-    % - this is the true cross spectra
-    rr=conj(fft(rr,nspts,1));
-    rt=conj(fft(rt,nspts,1));
-    tr=conj(fft(tr,nspts,1));
-    tt=conj(fft(tt,nspts,1));
+    % get fft
+    n=fft(n,nspts,1);
+    e=fft(e,nspts,1);
     
-    % distance difference for the phasors that steer the array
-    % dd is NLLxNCORR
+    % distance difference for the phasors that "steer" the array
+    % dd is NLLxNPAIRS
     % - also getting azimuth info for rotators
-    ev1=ev1.'; st1=st1.';
-    [distm,azm,bazm]=sphericalinv(ll(:,ones(ncorr,1)),...
-        ll(:,2*ones(ncorr,1)),ev1(ones(nll,1),:),ev1(2*ones(nll,1),:));
-    [dists,azs,bazs]=sphericalinv(ll(:,ones(ncorr,1)),...
-        ll(:,2*ones(ncorr,1)),st1(ones(nll,1),:),st1(2*ones(nll,1),:));
-    dd=2*pi*1i*(distm-dists);
+    switch method
+        case {'coarray' 'full' 'capon'}
+            % distance difference for each pair from source
+            ev=st(col,:).'; st=st(row,:).';
+            [distm,azm,bazm]=sphericalinv(...
+                ll(:,ones(npairs,1)),ll(:,2*ones(npairs,1)),...
+                ev(ones(nll,1),:),ev(2*ones(nll,1),:));
+            [dists,azs,bazs]=sphericalinv(...
+                ll(:,ones(npairs,1)),ll(:,2*ones(npairs,1)),...
+                st(ones(nll,1),:),st(2*ones(nll,1),:));
+            dd=2*pi*1i*(distm-dists); % includes extra terms for efficiency
+        otherwise
+            % distance difference for station and center from source
+            st=st.';
+            [distm,azm,bazm]=sphericalinv(...
+                ll(:,ones(npairs,1)),ll(:,2*ones(npairs,1)),...
+                clat(ones(nll,1),ones(npairs,1)),...
+                clon(ones(nll,1),ones(npairs,1)));
+            [dists,azs,bazs]=sphericalinv(...
+                ll(:,ones(npairs,1)),ll(:,2*ones(npairs,1)),...
+                st(ones(nll,1),:),st(2*ones(nll,1),:));
+            dd=2*pi*1i*(distm-dists); % includes extra terms for efficiency
+    end
+    
+    die
+    % - i need to get the rotator formulas worked out for n & e inputs
+    % - need az/baz between pairs (for r & t)
     
     % rotators
     % u = cos theta
@@ -319,9 +356,6 @@ try
     vm=sin(thetam);
     us=cos(thetas);
     vs=sin(thetas);
-    
-    % copy rvol to tvol
-    tvol=rvol;
     
     % loop over frequency ranges
     for a=1:nrng

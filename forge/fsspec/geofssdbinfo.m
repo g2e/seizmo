@@ -8,15 +8,14 @@ function [maxdb,meddb,mindb]=geofssdbinfo(s,fflag,sflag)
 %     [MAXDB,MEDDB,MINDB]=GEOFSSDBINFO(S) returns the decibel limits and
 %     median of the frequency-slowness-position spectra(s) in the GEOFSS
 %     struct S.  This is useful for identifying waves with strong spherical
-%     wave coherency.  The outputs are actually structs with the following
-%     format:
+%     wave coherency.  The outputs are structs with the following format:
 %       .db        == decibel value
 %       .slow      == magnitude of the horizontal slowness (in sec/deg)
 %       .latlon    == [latitude longitude] (in degrees)
 %       .freq      == frequency (in Hz)
 %     The output is equal in size to the input struct S.  So MAXDB(3).db,
 %     MAXDB(3).slow, MAXDB(3).latlon, & MAXDB(3).freq give info about the
-%     max peak in FK(3).  Please note that MEDDB does not return any
+%     max peak in S(3).  Please note that MEDDB does not return any
 %     location info as a median's location is not useful/straightfoward.
 %
 %     [MAXDB,MEDDB,MINDB]=GEOFSSDBINFO(S,FFLAG,SFLAG) sets if each
@@ -84,9 +83,9 @@ for i=1:numel(s)
     % convert to dB
     switch s(i).method
         case {'coarray' 'full'}
-            s.spectra=10*log10(pos(real(s(i).spectra)));
+            s(i).spectra=10*log10(abs(real(s(i).spectra)));
         otherwise
-            s.spectra=10*log10(s(i).spectra);
+            s(i).spectra=10*log10(s(i).spectra);
     end
     
     % force freq field to column vector
@@ -168,8 +167,4 @@ for i=1:numel(s)
     end
 end
 
-end
-
-function [x]=pos(x)
-x(x<0)=eps;
 end

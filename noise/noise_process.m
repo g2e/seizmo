@@ -127,9 +127,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %                        slowness noise), changed 1st tdnorm filter to be
 %                        wider (captures glitches better), remove
 %                        correlations against cmp for the same station
+%        Sep. 20, 2012 - correlations are now unnormalized
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 23, 2012 at 11:15 GMT
+%     Last Updated Sep. 20, 2012 at 11:15 GMT
 
 % todo:
 
@@ -651,6 +652,7 @@ for i=1:numel(tsdirs) % SERIAL
                 delta=getheader(vdata(1),'delta');
                 vdata=interpolate(correlate(...
                     cut(vdata,'a','f','fill',true),...
+                    'normxc',false,...
                     'lags',(opt.XCMAXLAG+4*delta).*[-1 1]),...
                     1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
                 [vdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
@@ -661,6 +663,7 @@ for i=1:numel(tsdirs) % SERIAL
                 delta=getheader(hdata(1),'delta');
                 hdata=interpolate(correlate(...
                     cut(hdata,'a','f','fill',true),...
+                    'normxc',false,...
                     'lags',(opt.XCMAXLAG+4*delta).*[-1 1]),...
                     1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
                 % delete correlations across cmp for same station

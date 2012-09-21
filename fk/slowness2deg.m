@@ -10,9 +10,14 @@ function [deg]=slowness2deg(ph,slow)
 %     seismic phase strings are 'P', 'PP', 'PKPab', 'PKPbc', 'PKPdf'
 %     (aka PKIKP), 'PKiKP', 'S', 'SS', 'SKS', 'SKiKS', and 'SKIKS'.  NOTE
 %     THAT THE S-WAVE CORE-PHASES ARE FROM IASP91.  This is because AK135
-%     SKS has some funkyness going on.  SLOWNESS may be an array.
+%     SKS is a bit strange.  SLOWNESS may be an array.
 %
 %    Notes:
+%     - A slowness will give a specific distance but a distance may not
+%       give a specific slowness due to triplications.  Please note that
+%       the companion function DEG2SLOWNESS only works at lowermantle
+%       distances for P, PP, S, & SS.  Use TAUPTIME to get multiple
+%       slownesses for a phase at a specific distance.
 %
 %    Examples:
 %     % Where and when is the slowness of a P-wave 6 sec/deg?
@@ -27,9 +32,10 @@ function [deg]=slowness2deg(ph,slow)
 %        Sep. 21, 2010 - several more phases
 %        Apr.  3, 2012 - minor doc update
 %        May  18, 2012 - forgot to mention PKiKP in documentation
+%        Sep.  6, 2012 - user *lowermantle for truncated curves
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  18, 2012 at 10:35 GMT
+%     Last Updated Sep.  6, 2012 at 10:35 GMT
 
 % todo
 
@@ -57,6 +63,10 @@ switch ph
         deg=interp1(dp.P(:,2),dp.P(:,1),slow);
     case 'PP'
         deg=interp1(dp.PP(:,2),dp.PP(:,1),slow);
+    case 'Plowermantle'
+        deg=interp1(dp.Plowermantle(:,2),dp.Plowermantle(:,1),slow);
+    case 'PPlowermantle'
+        deg=interp1(dp.PPlowermantle(:,2),dp.PPlowermantle(:,1),slow);
     case 'PKPab'
         deg=interp1(dp.PKPab(:,2),dp.PKPab(:,1),slow);
     case 'PKPbc'
@@ -69,6 +79,10 @@ switch ph
         deg=interp1(dp.S(:,2),dp.S(:,1),slow);
     case 'SS'
         deg=interp1(dp.SS(:,2),dp.SS(:,1),slow);
+    case 'Slowermantle'
+        deg=interp1(dp.Slowermantle(:,2),dp.Slowermantle(:,1),slow);
+    case 'SSlowermantle'
+        deg=interp1(dp.SSlowermantle(:,2),dp.SSlowermantle(:,1),slow);
     case 'SKS'
         % iasp91
         deg=interp1(dp.SKS(:,2),dp.SKS(:,1),slow);

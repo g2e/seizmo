@@ -51,7 +51,7 @@ ax=plotgeofss(geofssavg(s(1)),varargin{:});
 fh=get(ax,'parent');
 mov=getframe(fh);
 
-% loop over remaining frequencies
+% loop over remaining frames
 for i=2:nf
     plotgeofssupdate(geofssavg(s(i)),ax);
     mov(i)=getframe(fh);

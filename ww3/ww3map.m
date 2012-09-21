@@ -54,9 +54,10 @@ function [varargout]=ww3map(s,rng,popt,fgcolor,bgcolor,ax)
 
 %     Version History:
 %        May   5, 2012 - initial version
+%        Sep.  5, 2012 - set nan=0 for ice
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   5, 2012 at 00:40 GMT
+%     Last Updated Sep.  5, 2012 at 00:40 GMT
 
 % todo:
 
@@ -157,9 +158,10 @@ end
 
 % loop over data types
 for i=1:numel(s.data)
-    % average data
+    % average data (convert nan to 0 to handle ice)
+    s.data{i}(isnan(s.data{i}))=0;
     if(size(s.data{i},3)>1)
-        s.data{i}=sum(s.data{i},3)/size(s.data{i},3);
+        s.data{i}=mean(s.data{i},3);
     end
     
     % create plot

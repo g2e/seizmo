@@ -3,7 +3,7 @@ function [varargout]=wedge(varargin)
 %
 %    Usage:    wedge(azimuth,radius)
 %              wedge(azimuth,radius,linespec)
-%              wedge(azimuth,radius,pcolormatrix)
+%              wedge(azimuth,radius,image)
 %              wedge(...,'prop1',val1,'prop2',val2,...)
 %              wedge(ax,...)
 %              h=wedge(...)
@@ -20,12 +20,12 @@ function [varargout]=wedge(varargin)
 %     WEDGE(AZIMUTH,RADIUS,LINESPEC) uses the linestyle specified in string
 %     LINESPEC.  See PLOT for a description of legal linestyles.
 %
-%     WEDGE(AZIMUTH,RADIUS,PCOLORMATRIX) passes inputs to pcolor as a way
-%     to plot images in polar coordinates.  AZIMUTH & RADIUS must be
-%     vectors or matrices of size NRxNAZ where NR is the number of radii &
-%     NAZ is the number of azimuths.  MATRIX must be NRxNAZ in size.
-%     Inputs are shifted so that the pcolor "image" pixels are at the
-%     correct positions.
+%     WEDGE(AZIMUTH,RADIUS,IMAGE) passes inputs to pcolor as a way to plot
+%     images in polar coordinates.  AZIMUTH & RADIUS must be vectors or
+%     matrices of size NRxNAZ where NR is the number of radii & NAZ is the
+%     number of azimuths.  Sampling in azimuth and radius must be regular.
+%     IMAGE must be NRxNAZ in size.  Inputs are automatically adjusted so
+%     that pcolor plots the image at the correct positions.
 %
 %     WEDGE(...,'PROP1',VAL1,'PROP2',VAL2,...) alters specific wedge &
 %     lineseries (or surface) properties.  Available wedge properties are:
@@ -138,9 +138,10 @@ function [varargout]=wedge(varargin)
 %        Apr. 27, 2012 - fix minor breakage in p/v checking
 %        May   1, 2012 - updating many parameters is now available
 %        May   2, 2012 - many more enhancements
+%        Sep. 12, 2012 - doc update: expect image, not pcolor input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   2, 2012 at 18:35 GMT
+%     Last Updated Sep. 12, 2012 at 18:35 GMT
 
 % todo
 % - drawing

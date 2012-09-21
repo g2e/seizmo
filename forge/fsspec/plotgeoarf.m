@@ -20,6 +20,12 @@ function [varargout]=plotgeoarf(s,varargin)
 %     s=geoarf(st,[lat(:) lon(:)],25,[0 0],25,1/500);
 %     plotgeoarf(s);
 %
+%     % Multi-source ARF for a global array:
+%     [lat,lon]=meshgrid(-89:2:89,-179:2:179);
+%     st=randlatlon(100);
+%     s=geoarf(st,[lat(:) lon(:)],25,randlatlon(5),25,1/500);
+%     plotgeoarf(geofssavg(s));
+%
 %    See also: GEOARF, PLOTGEOFSS, GEOFSSAVG, GEOFSSSUB
 
 %     Version History:
