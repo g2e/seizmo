@@ -33,9 +33,10 @@ function [varargout]=plotgeofssupdate(s,ax)
 %        Dec.  8, 2010 - improved degrees symbol usage (^o)
 %        Apr.  4, 2012 - minor doc update
 %        June  8, 2012 - adapt from updategeofkmap
+%        Sep. 29, 2012 - update for struct changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  8, 2012 at 19:05 GMT
+%     Last Updated Sep. 29, 2012 at 19:05 GMT
 
 % todo:
 
@@ -45,10 +46,16 @@ error(nargchk(1,2,nargin));
 % check struct
 error(chkgeofss(s));
 
-% don't allow array/volume
-if(~isscalar(s) || any(s.vector))
+% require scalar struct
+if(~isscalar(s))
     error('seizmo:plotgeofssupdate:badInput',...
-        'S must be a scalar geofss struct and be averaged w/ GEOFSSAVG!');
+        'S must be a scalar geofss struct');
+end
+
+% require scalar freq & slow dimensions
+if(size(s.spectra,2)~=1 || size(s.spectra,3)~=1)
+    error('seizmo:plotgeofssupdate:badInput',...
+        'S needs to be reduced using GEOFSSAVG!');
 end
 
 % just replot if ax isn't an axes handle
@@ -58,7 +65,7 @@ if(nargin<2)
     return;
 elseif(~isscalar(ax) || ~isreal(ax) || ~ishandle(ax) ...
         || ~strcmp('axes',get(ax,'type')) ...
-        || ~strcmp(get(ax,'createfcn'),'plotgeofss'))
+        || ~isappdata(ax,'made_by_plotgeofss'))
     error('seizmo:plotgeofssupdate:badInput',...
         'AX is not a valid PLOTGEOFSS axes!');
 end
@@ -72,13 +79,11 @@ else
     zerodb=userdata.zerodb;
 end
 
+% scale factor if unwhitened
+if(~s.whiten); s.spectra=s.spectra/(2*pi); end
+
 % convert to dB
-switch s.method
-    case 'coarray'
-        s.spectra=10*log10(pos(real(s.spectra)));
-    otherwise
-        s.spectra=10*log10(s.spectra);
-end
+s.spectra=10*log10(abs(s.spectra));
 
 % rescale response
 switch zerodb
@@ -124,13 +129,15 @@ set(pc(1),...
 % adjust title
 fmin=min(s.freq); fmax=max(s.freq);
 smin=min(s.slow); smax=max(s.slow);
+s.butc=[s.butc(1:4) fix(s.butc(5)) fix(1000*mod(s.butc(5),1))];
+s.eutc=[s.eutc(1:4) fix(s.eutc(5)) fix(1000*mod(s.eutc(5),1))];
 set(get(ax,'Title'),'string',...
-    {[] ['Number of Stations:  ' num2str(s.nsta)] ...
-    ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',s.butc) ' UTC'] ...
-    ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',s.eutc) ' UTC'] ...
-    ['Period    :  ' num2str(1/fmax) ' to ' num2str(1/fmin) ' s'] ...
-    ['Slowness  :  ' num2str(smin) ' to ' num2str(smax) ' s/^o'] ...
-    ['0 dB = ' num2str(zdb) 'dB'] []});
+    {[] ['Stations: ' num2str(s.nsta)] ...
+    ['Bgn Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.butc) ' UTC'] ...
+    ['End Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.eutc) ' UTC'] ...
+    ['Period: ' num2str(1/fmax) ' to ' num2str(1/fmin) ' s'] ...
+    ['Slowness: ' num2str(smin) ' to ' num2str(smax) ' s/^o'] ...
+    ['0dB = ' num2str(zdb) 'dB'] []});
 
 if(nargout); varargout{1}=ax; end
 

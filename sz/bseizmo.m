@@ -96,9 +96,11 @@ function [data]=bseizmo(varargin)
 %        Jan. 27, 2010 - seizmoverbose support, proper SEIZMO handling
 %        Aug. 10, 2010 - allow empty ind cmp (b=0, e=npts-1, delta=1)
 %        Jan.  4, 2011 - allow single input (just dep)
+%        Sep. 28, 2012 - fixed nasty eps usage bug and loosened up
+%                        tolerance on leven/delta determination
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  4, 2011 at 17:35 GMT
+%     Last Updated Sep. 28, 2012 at 17:35 GMT
 
 % todo:
 
@@ -290,7 +292,9 @@ for i=1:2:nin
     
     % get delta and handle uneven
     delta(j)=diff(varargin{i}([1 end]))/(npts(j)-1);
-    if(any(abs(delta(j)-diff(varargin{i}))>10*max(varargin{i})*eps))
+    [n,d]=rat(delta(j),1e-9/npts(j));
+    delta(j)=n/d;
+    if(any(abs(delta(j)-diff(varargin{i}))>eps(single(max(varargin{i})))))
         data(j).ind=varargin{i}(:);
         leven(j)=false;
     end

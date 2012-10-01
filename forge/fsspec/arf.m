@@ -1,10 +1,11 @@
-function [s]=arf(stlalo,smax,spts,baz0,slow0,f0,polar,method,w)
-%FKARF    Returns the array response function for a seismic array
+function [s]=arf(stlalo,smax,spts,baz0,slow0,f0,varargin)
+%ARF    Returns the array response function for a seismic array
 %
 %    Usage:    s=arf(stlalo,smax,spts,baz0,slow0,f0)
-%              s=arf(stlalo,smax,spts,baz0,slow0,f0,polar)
-%              s=arf(stlalo,smax,spts,baz0,slow0,f0,polar,method)
-%              s=arf(stlalo,smax,spts,baz0,slow0,f0,polar,method,weights)
+%              s=arf(...,'polar',true|false,...)
+%              s=arf(...,'method',string,...)
+%              s=arf(...,'weights',w,...)
+%              s=arf(...,'avg',true|false,...)
 %
 %    Description:
 %     S=ARF(STLALO,SMAX,SPTS,baz0,slow0,f0) computes the array response
@@ -24,50 +25,42 @@ function [s]=arf(stlalo,smax,spts,baz0,slow0,f0,polar,method,w)
 %      .source.baz  - backazimuth (deg)
 %      .source.slow - horizontal slowness (sec/deg)
 %      .source.freq - frequency (Hz)
-%     By default SPTS is 101, baz0 is 0, slow0 is 0, & f0 is 1 and they are
-%     optional inputs.
+%     By default SPTS is 101, baz0 is 0, slow0 is 0, & f0 is 1.
 %
-%     S=ARF(STLALO,SMAX,SPTS,SLOW0,BAZ0,F0,POLAR) decides if the spectra of
-%     the array response is sampled regularly with cartesian or polar
-%     coordinates.  Polar coords are useful for slicing the spectra by
-%     azimuth (pie slice) or slowness (rings).  Cartesian coords (the
-%     default) samples the slowness space regularly in the East/West &
-%     North/South directions and so exhibits less distortion in plots of
-%     the slowness space. If POLAR=TRUE, SPTS may be given as
-%     [spnts bazpnts] to control the azimuthal resolution (default is 181
-%     points).
+%     S=ARF(...,'POLAR',TRUE|FALSE,...) decides if the spectra of the array
+%     response is sampled regularly with cartesian or polar coordinates.
+%     Polar coords are useful for slicing the spectra by azimuth (eg. a pie
+%     slice) or slowness (eg. rings).  Cartesian coords (the default)
+%     samples the slowness space regularly in the East/West & North/South
+%     directions and so exhibits less distortion in plots of the slowness
+%     space. If POLAR=TRUE, SPTS may be given as [spnts bazpnts] to control
+%     the azimuthal resolution (default is 181 points).
 %
-%     S=ARF(STLALO,SMAX,SPTS,SLOW0,BAZ0,F0,POLAR,METHOD) defines the
-%     beamforming method.  METHOD may be 'center', 'coarray', 'full', or
-%     [LAT LON]. The default is 'center' which is extremely fast for large
-%     arrays compared to other methods as it only pairs each record against
-%     the array center (found using ARRAYCENTER) to compute the real-valued
-%     spectrum.  The 'coarray' method utilizes information from all unique
-%     pairings of records to compute the complex slowness spectrum while
-%     the 'full' method uses every possible pairing to do the same.  The
-%     'full' method is significantly slower and gives degraded results
-%     compared to the 'coarray' method and so is not recommended except in
-%     verification.  The 'center' method gives results that are the same as
-%     the 'full' method but does it far faster.  Using [LAT LON] for method
-%     is algorithmically the same as the 'center' method but uses the
-%     defined coordinates as the center for the array.
+%     S=ARF(...,'METHOD',STRING,...) defines the beamforming method.
+%     STRING may be 'center', 'coarray', 'full', or [LAT LON].  Note that
+%     the 'capon' method is not available as the array response for that
+%     method is dependent on the data.
 %
-%     S=ARF(STLALO,SMAX,SPTS,SLOW0,BAZ0,F0,POLAR,METHOD,WEIGHTS) gives the
-%     relative weights for each station (must have the same number of rows
-%     as STLALO).
+%     S=ARF(...,'WEIGHTS',W,...) specifies the relative weights for each
+%     station (must have the same number of rows as STLALO) or pairing (if
+%     METHOD is 'coarray' or 'full').
+%
+%     S=ARF(...,'AVG',TRUE|FALSE,...) indicates if the spectra is averaged
+%     across frequency during computation.  This can save a significant
+%     amount of memory.  The default is false.
 %
 %    Notes:
 %
 %    Examples:
-%     % Show the 1Hz array response function out to
-%     % 5 sec/deg for an array in a SEIZMO dataset:
-%     plotarf(arf(getheader(data,'st'),5));
+%     % Show the 1Hz array response function out to 5s/deg
+%     % for the Large Aperture Seismic Array (LASA):
+%     plotarf(arf(lasa,5));
 %
 %     % Get a multi-plane wave response at 0.03Hz for a random array:
-%     s=arf(randlatlon(20)/45,50,201,[20 10 20],[0 0 45],0.03);
-%     plotarf(fssavg(s));
+%     plotarf(arf(randlatlon(20)/30,50,201,[0 0 45],[20 10 20],0.03,...
+%         'a',true,'m','coarray'));
 %
-%    See also: PLOTARF, FSS, FSSXC, FSSHORZ, FSSHORZXC, SNYQUIST
+%    See also: PLOTARF, ARFHORZ, FSS, FSSXC, FSSHORZ, FSSHORZXC, SNYQUIST
 
 %     Version History:
 %        May   1, 2010 - initial version
@@ -87,14 +80,17 @@ function [s]=arf(stlalo,smax,spts,baz0,slow0,f0,polar,method,w)
 %        Nov. 18, 2010 - coarray weight indexing example, fixed scaling bug
 %        Apr. 27, 2012 - spts now allows input as [spts bazpts]
 %        Sep. 14, 2012 - adapted from fkarf
+%        Sep. 22, 2012 - allow station or pair weights
+%        Sep. 27, 2012 - pv pair inputs, doc update
+%        Sep. 30, 2012 - avg option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2012 at 14:40 GMT
+%     Last Updated Sep. 30, 2012 at 14:40 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,9,nargin));
+error(nargchk(2,inf,nargin));
 
 % check required inputs
 if(~isreal(stlalo) || ndims(stlalo)>2 || size(stlalo,2)<2)
@@ -119,12 +115,6 @@ if(nargin<3 || isempty(spts)); spts=101; end
 if(nargin<4 || isempty(baz0)); baz0=0; end
 if(nargin<5 || isempty(slow0)); slow0=0; end
 if(nargin<6 || isempty(f0)); f0=1; end
-if(nargin<7 || isempty(polar)); polar=false; end
-if(nargin<8 || isempty(method)); method='center'; end
-if(nargin<9 || isempty(w)); w=ones(nrecs,1); end
-
-% valid method strings
-valid.METHOD={'center' 'coarray' 'full'};
 
 % check inputs
 if(~any(numel(spts)==[1 2]) || any(fix(spts)~=spts) || any(spts<=2))
@@ -133,26 +123,22 @@ if(~any(numel(spts)==[1 2]) || any(fix(spts)~=spts) || any(spts<=2))
 elseif(~isreal(baz0))
     error('seizmo:arf:badInput',...
         'baz0 must be in degrees!');
-elseif(~isreal(slow0) || any(slow0<0))
+elseif(~isreal(slow0))
     error('seizmo:arf:badInput',...
-        'slow0 must be a positive slowness in s/deg!');
+        'slow0 must be horizontal slowness in s/deg!');
 elseif(~isreal(f0) || any(f0<=0))
     error('seizmo:arf:badInput',...
         'f0 must be a positive frequency in Hz!');
 elseif(~isequalsizeorscalar(slow0,baz0,f0))
     error('seizmo:arf:badInput',...
         'baz0, slow0, f0 must be equal sized or scalar!');
-elseif(~isscalar(polar) || (~islogical(polar) && ~isnumeric(polar)))
-    error('seizmo:arf:badInput',...
-        'POLAR must be TRUE or FALSE!');
-elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
-        || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
-    error('seizmo:arf:badInput',...
-        'METHOD must be [LAT LON], ''CENTER'', ''COARRAY'' or ''FULL''');
-elseif(~isnumeric(w) || numel(w)~=nrecs || any(w(:)<0))
-    error('seizmo:arf:badInput',...
-        'WEIGHTS must be positive real values!');
 end
+
+% parse options
+pv=parse_arf_pv_pairs(varargin{:});
+
+% defaults for optionals
+if(isempty(pv.w)); pv.w=ones(nrecs,1); end
 
 % fix backazimuths
 baz0=lonmod(baz0);
@@ -164,11 +150,15 @@ slow0=slow0(:);
 baz0=baz0(:);
 f0=f0(:);
 
+% fix negative slowness
+baz0(slow0<0)=lonmod(baz0(slow0<0)+180);
+slow0=abs(slow0);
+
 % fix method/center/npairs
-if(ischar(method))
-    method=lower(method);
+if(ischar(pv.method))
+    pv.method=lower(pv.method);
     [clat,clon]=arraycenter(stlalo(:,1),stlalo(:,2));
-    switch method
+    switch pv.method
         case 'coarray'
             npairs=nrecs*(nrecs-1)/2;
         case {'full' 'capon'}
@@ -177,14 +167,20 @@ if(ischar(method))
             npairs=nrecs;
     end
 else
-    clat=method(1);
-    clon=method(2);
-    method='user';
+    clat=pv.method(1);
+    clon=pv.method(2);
+    pv.method='user';
     npairs=nrecs;
 end
 
+% check weights again
+if(~any(numel(pv.w)==[nrecs npairs]))
+    error('seizmo:arf:badInput',...
+        'Number of WEIGHTS must match the number of stations or pairs!');
+end
+
 % setup slowness grid
-if(polar)
+if(pv.polar)
     if(numel(spts)==1); spts(2)=181; end % default # azimuthal points
     sx=(0:spts(2)-1)/(spts(2)-1)*360; % baz (wedge decided x/y)
     sy=(0:spts(1)-1).'/(spts(1)-1)*smax; % smag
@@ -201,20 +197,22 @@ s.butc=[0 0 0 0 0];
 s.eutc=[0 0 0 0 0];
 s.delta=nan;
 s.npts=0;
-s.polar=polar;
+s.polar=pv.polar;
 s.x=sx;
 s.y=sy;
 s.freq=f0;
-s.method=method;
+s.method=pv.method;
 s.npairs=npairs;
 s.center=[clat clon];
 s.whiten=true;
-s.weights=w;
+s.weights=pv.w;
 s.source.nsrc=npw;
 s.source.baz=baz0;
 s.source.slow=slow0;
 s.source.freq=f0;
-s.spectra=zeros(spts(1),spts(2),npw,'single');
+if(pv.avg); s.spectra=zeros(spts,'single');
+else s.spectra=zeros([spts npw],'single');
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % end of defaults, checks, & data setup %
@@ -227,18 +225,18 @@ d2km=6371*d2r;
 % get number of slowness points
 nslow=prod(spts);
 
-% normalize & expand weights
-w=w(:);
-switch method
+% expand & normalize weights
+pv.w=pv.w(:);
+switch pv.method
     case 'coarray'
         % row is master index, column is slave index
         [master,slave]=find(triu(true(nrecs),1));
-        w=w(slave).*conj(w(master));
+        if(numel(pv.w)==nrecs); pv.w=pv.w(slave).*conj(pv.w(master)); end
     case 'full'
         [master,slave]=find(true(nrecs));
-        w=w(slave).*conj(w(master));
+        if(numel(pv.w)==nrecs); pv.w=pv.w(slave).*conj(pv.w(master)); end
 end
-w=w./sum(abs(w));
+pv.w=pv.w./sum(abs(pv.w));
 
 % get relative positions for each pair (the coarray)
 % r=(x  ,y  )
@@ -248,7 +246,7 @@ w=w./sum(abs(w));
 %  ij              ij
 %
 % r is a 2xNPAIRS matrix
-switch method
+switch pv.method
     case {'coarray' 'full'}
         % [ r   r   ... r
         %    11  12      1N
@@ -283,10 +281,11 @@ clear e n
 % spatial difference vectors r (called the coarray)
 %
 % p is NSLOWxNPAIRS
-if(polar)
-    sx=sx(ones(spts(1),1),:)*d2r; % baz in radians
+if(pv.polar)
+    sx=sx(ones(spts(1),1),:); % baz in degrees
     sy=sy(:,ones(spts(2),1))/d2km; % smag in sec/km
-    p=[sy(:).*sin(sx(:)) sy(:).*cos(sx(:))]*r;
+    [sx,sy]=deal(sy.*sind(sx),sy.*cosd(sx));
+    p=[sx(:) sy(:)]*r;
 else % cartesian
     sx=sx/d2km;
     sx=sx(ones(spts(1),1),:);
@@ -312,16 +311,87 @@ for a=1:npw
     p0=p0(ones(nslow,1),:);
     
     % beamform
-    s.spectra(:,:,a)=reshape(exp(-2*pi*1i*f0(a)*(p-p0))*w,spts);
+    switch pv.method
+        case {'center' 'user'}
+            if(pv.avg)
+                s.spectra=s.spectra+reshape(abs(...
+                    exp(-2*pi*1i*f0(a)*(p-p0))*pv.w).^2,spts);
+            else
+                s.spectra(:,:,a)=reshape(abs(...
+                    exp(-2*pi*1i*f0(a)*(p-p0))*pv.w).^2,spts);
+            end
+        otherwise % {'coarray' 'full'}
+            if(pv.avg)
+                s.spectra=s.spectra+reshape(real(...
+                    exp(-2*pi*1i*f0(a)*(p-p0))*pv.w),spts);
+            else
+                s.spectra(:,:,a)=reshape(real(...
+                    exp(-2*pi*1i*f0(a)*(p-p0))*pv.w),spts);
+            end
+    end
     
     % progress bar update
     if(verbose); print_time_left(a,npw); end
 end
+if(pv.avg); s.spectra=s.spectra/npw; end
 
-% auto-correlation power spectral density
-switch method
-    case {'center' 'user'}
-        s.spectra=s.spectra.*conj(s.spectra);
+end
+
+
+function [pv]=parse_arf_pv_pairs(varargin)
+
+% defaults
+pv.avg=false;
+pv.polar=false;
+pv.method='center';
+pv.w=[];
+
+% require pv pairs
+if(mod(nargin,2))
+    error('seizmo:arf:badInput',...
+        'Unpaired parameter/value!');
+end
+
+% parse pv pairs
+if(~iscellstr(varargin(1:2:end)))
+    error('seizmo:arf:badInput',...
+        'Parameters must be specified using a string!');
+end
+for i=1:2:nargin
+    switch varargin{i}
+        case {'polar' 'plr' 'pol' 'p'}
+            pv.polar=varargin{i+1};
+        case {'method' 'meth' 'm'}
+            pv.method=varargin{i+1};
+        case {'weights' 'w' 'wgt' 'wgts' 'weight'}
+            pv.w=varargin{i+1};
+        case {'average' 'av' 'avg' 'a'}
+            pv.avg=varargin{i+1};
+        otherwise
+            error('seizmo:arf:badInput',...
+                'Unknown parameter: %s !',varargin{i});
+    end
+end
+
+% valid method strings
+valid.METHOD={'center' 'coarray' 'full'};
+
+% check values
+if(~isscalar(pv.polar) || (~islogical(pv.polar) && ~isnumeric(pv.polar)))
+    error('seizmo:arf:badInput',...
+        'POLAR must be TRUE or FALSE!');
+elseif((isnumeric(pv.method) ...
+        && (~isreal(pv.method) || ~numel(pv.method)==2)) ...
+        || (ischar(pv.method) && ~any(strcmpi(pv.method,valid.METHOD))))
+    error('seizmo:arf:badInput',...
+        ['METHOD must be one of the following:\n' ...
+        '''CENTER'', ''COARRAY'', ''FULL'', or [LAT LON]!']);
+elseif(~isnumeric(pv.w) || any(pv.w(:)<0))
+    error('seizmo:arf:badInput',...
+        'WEIGHTS must be positive!');
+elseif(~isscalar(pv.avg) || ~islogical(pv.avg))
+    error('seizmo:arf:badInput',...
+        'AVG must be TRUE or FALSE!');
 end
 
 end

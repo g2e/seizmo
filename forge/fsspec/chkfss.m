@@ -15,7 +15,8 @@ function [report]=chkfss(s)
 %     s=fssxc(xcdata,50,101,[.01 .0125]);
 %     error(chkfss(s));
 %
-%    See also: CHKGEOFSS, FSSXC, FSSHORZ, FSSHORZXC, ISFSS
+%    See also: CHKGEOFSS, FSS, FSSXC, FSSHORZ, FSSHORZXC, ARF, ARFHORZ,
+%              ISFSS
 
 %     Version History:
 %        June 22, 2010 - initial version
@@ -27,9 +28,10 @@ function [report]=chkfss(s)
 %        June 10, 2012 - handle full method
 %        June 13, 2012 - allow capon method
 %        Sep. 12, 2012 - adapt from chkgeofss & chkfkstruct, drop capon
+%        Sep. 27, 2012 - add capon, xc, caponxc, tdxc
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 12, 2012 at 18:50 GMT
+%     Last Updated Sep. 27, 2012 at 18:50 GMT
 
 % todo:
 
@@ -48,7 +50,8 @@ if(~isstruct(s) || ~all(ismember(fields,fieldnames(s))))
 end
 
 % valid method strings
-valid.METHOD={'center' 'coarray' 'user' 'full'};
+valid.METHOD={'center' 'coarray' 'user' 'full' ...
+    'capon' 'xc' 'caponxc' 'tdxc'};
 
 % loop over each spectra
 for i=1:numel(s)
@@ -88,8 +91,7 @@ for i=1:numel(s)
         return;
     elseif(~any(strcmpi(s(i).method,valid.METHOD)))
         report.identifier='seizmo:chkfss:methodInvalid';
-        report.message=['FSS method field must be ''USER'', ' ...
-            '''CENTER'', or ''COARRAY'''];
+        report.message='FSS method field contains an invalid method!';
         return;
     elseif(~isnumeric(s(i).center) || (~isreal(s(i).center) ...
             || ~numel(s(i).center)==2))
@@ -101,7 +103,7 @@ for i=1:numel(s)
         report.identifier='seizmo:chkfss:xyzCorrupt';
         report.message='FSS x/y/freq info is corrupt!';
         return;
-    elseif(~isnumeric(s(i).spectra) ...
+    elseif(~isreal(s(i).spectra) ...
             || (ss(3)>1 && ~isequal(ss,[sy sx sf])) ...
             || (ss(3)==1 && ~isequal(ss,[sy sx 1])))
         report.identifier='seizmo:chkfss:spectraCorrupt';

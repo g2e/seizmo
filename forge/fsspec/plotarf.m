@@ -27,20 +27,20 @@ function [varargout]=plotarf(s,varargin)
 %     Version History:
 %        June 12, 2012 - initial version
 %        Sep. 15, 2012 - adapted from plotgeoarf
+%        Sep. 22, 2012 - grey stars (to show stars in background too)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 15, 2012 at 15:05 GMT
+%     Last Updated Sep. 22, 2012 at 15:05 GMT
 
 % todo:
 
 error(nargchk(1,inf,nargin));
 ax=plotfss(s,varargin{:});
-userdata=get(ax,'userdata');
 hold(ax,'on');
 x=s.source.slow.*sind(s.source.baz);
 y=s.source.slow.*cosd(s.source.baz);
 plot(ax,x,y,'p',...
-    'markeredgecolor',userdata.bgcolor,...
+    'markeredgecolor',[.5 .5 .5],...
     'tag','ARF_source');
 hold(ax,'off');
 if(nargout); varargout={ax}; end

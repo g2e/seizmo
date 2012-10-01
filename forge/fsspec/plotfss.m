@@ -38,6 +38,8 @@ function [varargout]=plotfss(s,varargin)
 %     AX=PLOTFSS(...) returns the axis handle of the plot.
 %
 %    Notes:
+%     - Polar plots use the function WEDGE for drawing.  See that function
+%       to alter the plots beyond PLOTFSS.
 %
 %    Examples:
 %     % Show spectra for a dataset at about 50s periods:
@@ -63,9 +65,10 @@ function [varargout]=plotfss(s,varargin)
 %                        out-of-bounds pixels
 %        Apr.  4, 2012 - minor doc update
 %        Sep. 12, 2012 - adapted from plotfkmap
+%        Sep. 27, 2012 - spectra to db simplified
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 12, 2012 at 10:50 GMT
+%     Last Updated Sep. 27, 2012 at 10:50 GMT
 
 % todo:
 
@@ -126,15 +129,11 @@ end
 dblim=sort([dblim(1) dblim(2)]);
 
 % scale factor if unwhitened
+% - this is probably not right
 if(~s.whiten); s.spectra=s.spectra/(2*pi); end
 
 % convert to dB
-switch s.method
-    case {'coarray' 'full'}
-        s.spectra=10*log10(abs(real(s.spectra)));
-    otherwise
-        s.spectra=10*log10(s.spectra);
-end
+s.spectra=10*log10(abs(s.spectra));
 
 % rescale spectra
 switch zerodb
@@ -192,12 +191,12 @@ wedge(ax,s.x,s.y,double(s.spectra),...
 % add title
 s.butc=[s.butc(1:4) fix(s.butc(5)) fix(1000*mod(s.butc(5),1))];
 s.eutc=[s.eutc(1:4) fix(s.eutc(5)) fix(1000*mod(s.eutc(5),1))];
-title(ax,{['Stations:  ' num2str(s.nsta)] ...
+title(ax,{['Stations: ' num2str(s.nsta)] ...
     ['Bgn Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.butc) ' UTC'] ...
     ['End Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.eutc) ' UTC'] ...
     ['Period: ' num2str(1/min(s.freq),'%3.3g') 's to ' ...
     num2str(1/max(s.freq),'%3.3g') 's'] ...
-    ['0 dB = ' num2str(zdb,'%3.3g') 'dB']},'color',fgcolor);
+    ['0dB = ' num2str(zdb,'%3.3g') 'dB']},'color',fgcolor);
 
 % modify
 set(ax,'clim',dblim);
@@ -260,12 +259,7 @@ dblim=sort([dblim(1) dblim(2)]);
 if(~s.whiten); s.spectra=s.spectra/(2*pi); end
 
 % convert to dB
-switch s.method
-    case {'coarray' 'full'}
-        s.spectra=10*log10(abs(real(s.spectra)));
-    otherwise
-        s.spectra=10*log10(s.spectra);
-end
+s.spectra=10*log10(abs(s.spectra));
 
 % rescale spectra
 switch zerodb
@@ -367,12 +361,12 @@ hold(ax,'off');
 % finally take care of labels/coloring/etc
 s.butc=[s.butc(1:4) fix(s.butc(5)) fix(1000*mod(s.butc(5),1))];
 s.eutc=[s.eutc(1:4) fix(s.eutc(5)) fix(1000*mod(s.eutc(5),1))];
-title(ax,{['Stations:  ' num2str(s.nsta)] ...
+title(ax,{['Stations: ' num2str(s.nsta)] ...
     ['Bgn Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.butc) ' UTC'] ...
     ['End Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.eutc) ' UTC'] ...
     ['Period: ' num2str(1/min(s.freq),'%3.3g') 's to ' ...
     num2str(1/max(s.freq),'%3.3g') 's'] ...
-    ['0 dB = ' num2str(zdb,'%3.3g') 'dB']},'color',fgcolor);
+    ['0dB = ' num2str(zdb,'%3.3g') 'dB']},'color',fgcolor);
 xlabel(ax,'East Slowness (sec/deg)','color',fgcolor);
 ylabel(ax,'North Slowness (sec/deg)','color',fgcolor);
 if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))

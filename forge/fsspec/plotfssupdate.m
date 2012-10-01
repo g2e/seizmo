@@ -6,10 +6,10 @@ function [varargout]=plotfssupdate(s,ax)
 %
 %    Description:
 %     PLOTFSSUPDATE(S,AX) draws an new fss spectra given by S in an
-%     existing axes AX.  This is mainly intended for exploring FSS
-%     datasets by making movies in a faster fashion.
+%     existing axes AX created by PLOTFSS.  This is mainly intended for
+%     exploring FSS datasets by making movies in a faster fashion.
 %
-%     AX=PLOTFSSUPDATE(MAP) is the same as calling PLOTFSS(S) -- ie. a new
+%     AX=PLOTFSSUPDATE(S) is the same as calling PLOTFSS(S) -- ie. a new
 %     figure is drawn.
 %
 %    Notes:
@@ -41,9 +41,11 @@ function [varargout]=plotfssupdate(s,ax)
 %        Apr. 13, 2011 - better axis handle usage
 %        Apr.  4, 2012 - minor doc update
 %        Sep. 13, 2012 - adapted from updatefkmap
+%        Sep. 27, 2012 - spectra to db simplified
+%        Sep. 29, 2012 - support whiten field, minor title change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2012 at 16:05 GMT
+%     Last Updated Sep. 29, 2012 at 16:05 GMT
 
 % todo:
 
@@ -99,13 +101,11 @@ else
     zerodb=userdata.zerodb;
 end
 
+% scale factor if unwhitened
+if(~s.whiten); s.spectra=s.spectra/(2*pi); end
+
 % convert spectra to dB
-switch s.method
-    case {'coarray' 'full'}
-        s.spectra=10*log10(abs(real(s.spectra)));
-    otherwise
-        s.spectra=10*log10(s.spectra);
-end
+s.spectra=10*log10(abs(s.spectra));
 
 % rescale response
 switch zerodb
@@ -131,12 +131,12 @@ hold(ax,'off');
 s.butc=[s.butc(1:4) fix(s.butc(5)) fix(1000*mod(s.butc(5),1))];
 s.eutc=[s.eutc(1:4) fix(s.eutc(5)) fix(1000*mod(s.eutc(5),1))];
 set(get(ax,'Title'),'string',...
-    {['Stations:  ' num2str(s.nsta)] ...
+    {['Stations: ' num2str(s.nsta)] ...
     ['Bgn Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.butc) ' UTC'] ...
     ['End Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.eutc) ' UTC'] ...
     ['Period: ' num2str(1/min(s.freq),'%3.3g') 's to ' ...
     num2str(1/max(s.freq),'%3.3g') 's'] ...
-    ['0 dB = ' num2str(zdb,'%3.3g') 'dB']});
+    ['0dB = ' num2str(zdb,'%3.3g') 'dB']});
 
 end
 
@@ -152,13 +152,11 @@ else
     zerodb=userdata.zerodb;
 end
 
+% scale factor if unwhitened
+if(~s.whiten); s.spectra=s.spectra/(2*pi); end
+
 % convert spectra to dB
-switch s.method
-    case {'coarray' 'full'}
-        s.spectra=10*log10(abs(real(s.spectra)));
-    otherwise
-        s.spectra=10*log10(s.spectra);
-end
+s.spectra=10*log10(abs(s.spectra));
 
 % rescale response
 switch zerodb
@@ -186,11 +184,11 @@ hold(ax,'off');
 s.butc=[s.butc(1:4) fix(s.butc(5)) fix(1000*mod(s.butc(5),1))];
 s.eutc=[s.eutc(1:4) fix(s.eutc(5)) fix(1000*mod(s.eutc(5),1))];
 set(get(ax,'Title'),'string',...
-    {['Stations:  ' num2str(s.nsta)] ...
+    {['Stations: ' num2str(s.nsta)] ...
     ['Bgn Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.butc) ' UTC'] ...
     ['End Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.eutc) ' UTC'] ...
     ['Period: ' num2str(1/min(s.freq),'%3.3g') 's to ' ...
     num2str(1/max(s.freq),'%3.3g') 's'] ...
-    ['0 dB = ' num2str(zdb,'%3.3g') 'dB']});
+    ['0dB = ' num2str(zdb,'%3.3g') 'dB']});
 
 end

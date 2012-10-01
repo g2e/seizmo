@@ -1,17 +1,20 @@
-function [s]=fssxc(xcdata,smax,spts,frng,polar,whiten,w)
+function [s]=fssxc(xcdata,smax,spts,frng,varargin)
 %FSSXC    Estimate frequency-slowness spectrum with cross-correlations
 %
 %    Usage:    s=fssxc(xcdata,smax,spts,frng)
-%              s=fssxc(xcdata,smax,spts,frng,polar)
-%              s=fssxc(xcdata,smax,spts,frng,polar,whiten)
-%              s=fssxc(xcdata,smax,spts,frng,polar,whiten,weights)
+%              s=fssxc(...,'polar',true|false,...)
+%              s=fssxc(...,'method',string,...)
+%              s=fssxc(...,'whiten',true|false,...)
+%              s=fssxc(...,'weights',w,...)
+%              s=fssxc(...,'damping',d,...)
+%              s=fssxc(...,'avg',true|false,...)
 %
 %    Description:
 %     S=FSSXC(XCDATA,SMAX,SPTS,FRNG) computes an estimate of the frequency-
 %     slowness power spectra for an array by frequency-domain beamforming
 %     the correlation dataset XCDATA in a cartesian grid.  The dataset
 %     XCDATA is a SEIZMO struct containing array info and correlations.
-%     This function differs from GEOFSS in that the waves are assumed to be
+%     This function differs from GEOFSSXC in that the waves are defined as
 %     plane waves traveling on a planar surface rather than surface waves
 %     expanding and contracting on a sphere.  The range of the horizontal
 %     slowness grid is given by SMAX (sec/deg) and extends from -SMAX to
@@ -32,13 +35,13 @@ function [s]=fssxc(xcdata,smax,spts,frng,polar,whiten,w)
 %          .y        - north or radial slowness values (sec/deg)
 %          .freq     - frequency values (Hz)
 %          .npairs   - number of pairs (aka correlations)
-%          .method   - beamforming method ('center', 'coarray', or 'user')
+%          .method   - beamforming method ('xc' or 'caponxc')
 %          .center   - array center as [LAT LON]
 %          .whiten   - is spectra whitened? true/false
 %          .weights  - weights used in beamforming
 %          .spectra  - frequency-slowness spectra estimate
 %
-%     S=FSSXC(XCDATA,SMAX,SPTS,FRNG,POLAR) specifies if the spectra is
+%     S=FSSXC(...,'POLAR',TRUE|FALSE,...) specifies if the spectra is
 %     sampled regularly in cartesian or polar coordinates.  Polar coords
 %     are useful for slicing the spectra by azimuth (pie slice) or slowness
 %     (rings).  Cartesian coords (the default) samples the slowness space
@@ -47,13 +50,32 @@ function [s]=fssxc(xcdata,smax,spts,frng,polar,whiten,w)
 %     may be given as [SPTS BAZPTS] to control the azimuthal resolution
 %     (default is BAZPTS=181 points).
 %
-%     S=FSSXC(XCDATA,SMAX,SPTS,FRNG,POLAR,METHOD,WHITEN) whitens the cross
-%     spectral matrix elements before beamforming if WHITEN is TRUE.  The
-%     default is TRUE.
+%     S=FSSXC(...,'METHOD',STRING,...) specifies the beamforming method.
+%     STRING may be either 'xc' or 'caponxc'.  The default is 'xc' which
+%     uses the correlations as a substitute for the cross power spectral
+%     density matrix in a conventional frequency-slowness estimation (eg.
+%     'coarray' or 'full').  The 'caponxc' method requires that the
+%     correlation dataset can form the entire cross power spectral density
+%     matrix (ie. this requires all N^2 pairs).  If possible then this
+%     method can return a higher resolution estimate of the frequency-
+%     slowness spectra.
 %
-%     S=FSSXC(XCDATA,SMAX,SPTS,FRNG,POLAR,METHOD,WHITEN,WEIGHTS) specifies
-%     the relative weights for each record in XCDATA (must match size of
-%     XCDATA).
+%     S=FSSXC(...,'WHITEN',TRUE|FALSE,...) whitens the cross power spectral
+%     matrix elements before beamforming if WHITEN is TRUE.  The default is
+%     TRUE.
+%
+%     S=FSSXC(...,'WEIGHTS',W,...) specifies the relative weights for each
+%     correlogram in XCDATA (must match size of XCDATA).
+%
+%     S=FSSXC(...,'DAMPING',D,...) alters the dampening parameter used in
+%     the inversion of the cross power spectral density matrix for the
+%     'capon' method.  This is done by diagonal loading which means the
+%     dampening value is added the elements along the diagonal.  The
+%     default value of 0.001 may need to be adjusted for better results.
+%
+%     S=FSSXC(...,'AVG',TRUE|FALSE,...) indicates if the spectra is
+%     averaged across frequency during computation.  This can save a
+%     significant amount of memory.  The default is false.
 %
 %    Notes:
 %     - Correlations in XCDATA must have equal and regular sample spacing.
@@ -63,12 +85,16 @@ function [s]=fssxc(xcdata,smax,spts,frng,polar,whiten,w)
 %       require adjustment.
 %
 %    Examples:
-%     % Show slowness map for a dataset at about 50s periods:
-%     plotfss(fss(xcdata,50,201,[1/51 1/49]))
+%     % Show slowness spectra for an artificial dataset at 40-50s periods:
+%     plotfss(fssxc(correlate(capon1970),50,201,[1/50 1/40],'avg',true));
+%
+%     % A full set of correlations is required for a Capon Estimator:
+%     plotfss(fssxc(correlate(capon1970,capon1970),50,201,[1/50 1/40],...
+%         'avg',true,'m','caponxc'));
 %
 %    See also: FSS, ARF, SNYQUIST, PLOTFSS, KXY2SLOWBAZ, SLOWBAZ2KXY,
-%              FSSAVG, FSSSUB, FSSHORZ, FSSHORZXC, FSSDBINFO, FSSFREQSLIDE,
-%              FSSFRAMESLIDE, PLOTARF, FSSCORR
+%              FSSAVG, FSSSUB, FSSHORZ, FSSHORZXC, ARFHORZ, FSSDBINFO,
+%              FSSFREQSLIDE, FSSFRAMESLIDE, PLOTARF, FSSCORRCOEF
 
 %     Version History:
 %        May   3, 2010 - initial version
@@ -96,26 +122,31 @@ function [s]=fssxc(xcdata,smax,spts,frng,polar,whiten,w)
 %        Sep. 11, 2012 - altered from geofss & fkmap
 %        Sep. 17, 2012 - altered from fss, fkxcvolume, & geofssxc
 %        Sep. 20, 2012 - no need for splitpad or resampling beforehand
+%        Sep. 21, 2012 - allow 0-Fnyq range (for full spectrum)
+%        Sep. 22, 2012 - allow station or pair weights
+%        Sep. 27, 2012 - pv pair inputs, capon method works with damping,
+%                        doc update, error for no freq
+%        Sep. 30, 2012 - avg option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 20, 2012 at 14:05 GMT
+%     Last Updated Sep. 30, 2012 at 14:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(4,7,nargin));
+error(nargchk(4,inf,nargin));
 
 % check struct
 error(seizmocheck(xcdata,'dep'));
 
+% require xc dataset
+if(~isxc(xcdata))
+    error('seizmo:fssxc:badInput',...
+        'XCDATA must be correlations with metadata as from CORRELATE!');
+end
+
 % number of pairings
 npairs=numel(xcdata);
-
-% defaults for optionals
-if(nargin<5 || isempty(polar)); polar=false; end
-if(nargin<6 || isempty(whiten)); whiten=true; end
-if(nargin<7 || isempty(w)); w=ones(npairs,1); end
-method='coarray';
 
 % check inputs
 sf=size(frng);
@@ -125,20 +156,18 @@ if(~isreal(smax) || ~isscalar(smax) || smax<=0)
 elseif(~any(numel(spts)==[1 2]) || any(fix(spts)~=spts) || any(spts<=2))
     error('seizmo:fssxc:badInput',...
         'SPTS must be a positive scalar integer >2!');
-elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<=0))
+elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<0) ...
+        || any(frng(1)>frng(2)))
     error('seizmo:fssxc:badInput',...
         'FRNG must be a Nx2 array of [FREQLOW FREQHIGH] in Hz!');
-elseif(~isscalar(polar) || (~islogical(polar) && ~isnumeric(polar)))
-    error('seizmo:fssxc:badInput',...
-        'POLAR must be TRUE or FALSE!');
-elseif(~isscalar(whiten) || ~islogical(whiten))
-    error('seizmo:fssxc:badInput',...
-        'WHITEN must be TRUE or FALSE!');
-elseif(~isnumeric(w) || numel(w)~=npairs || any(w(:)<0))
-    error('seizmo:fssxc:badInput',...
-        'WEIGHTS must be equal sized with XCDATA & positive!');
 end
 nrng=sf(1);
+
+% parse options
+pv=parse_fssxc_pv_pairs(varargin{:});
+
+% defaults for optionals
+if(isempty(pv.w)); pv.w=ones(npairs,1); end
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -169,7 +198,7 @@ try
     % verbosity
     verbose=seizmoverbose;
     
-    % grap necessary header info
+    % grab necessary header info
     [b,npts,delta,autc,futc,st,ev,stnm,evnm]=getheader(xcdata,...
         'b','npts','delta','a utc','f utc','st','ev','kname','kt');
     autc=cell2mat(autc); futc=cell2mat(futc);
@@ -209,9 +238,9 @@ end
 
 % check nyquist
 fnyq=1/(2*delta(1));
-if(any(frng>=fnyq))
+if(any(frng(:,1)>fnyq))
     error('seizmo:fssxc:badFRNG',...
-        ['FRNG exceed nyquist frequency (' num2str(fnyq) ')!']);
+        ['FRNG exceeds nyquist frequency (' num2str(fnyq) ')!']);
 end
 
 % longest record
@@ -223,6 +252,10 @@ f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
 
 % get fft
 xcdata=fft(xcdata,nspts,1);
+xcdata=xcdata(1+(0:nspts/2),:).'; % trim -freq
+
+% whiten data if desired
+if(pv.whiten); xcdata=xcdata./abs(xcdata); end
 
 % use unique stations names to get number of stations & locations
 evnm=evnm(:,1:4);
@@ -233,16 +266,33 @@ st=[st;ev];
 st=st(idx1,:);
 nrecs=numel(stnm);
 
+% check weights again
+if(~any(numel(pv.w)==[nrecs npairs]))
+    error('seizmo:fssxc:badInput',...
+        '# of WEIGHTS must match the # of stations or records in XCDATA!');
+end
+
 % slave/master indices
 idx2=reshape(idx2,[],2);
 slave=idx2(:,1);
 master=idx2(:,2);
 
+% check if full matrix for caponxc
+if(strcmpi(pv.method,'caponxc'))
+    tmp=false(nrecs);
+    csidx=sub2ind([nrecs nrecs],master,slave);
+    tmp(csidx)=true;
+    if(npairs~=nrecs^2 || ~all(tmp(:)))
+        error('seizmo:fssxc:badInput',...
+            'XCDATA does not have all pairs necessary for CAPONXC!');
+    end
+end
+
 % array center
 [clat,clon]=arraycenter(st(:,1),st(:,2));
 
 % setup slowness grid
-if(polar)
+if(pv.polar)
     if(numel(spts)==1); spts(2)=181; end % default # azimuthal points
     sx=(0:spts(2)-1)/(spts(2)-1)*360; % baz (wedge decided x/y)
     sy=(0:spts(1)-1).'/(spts(1)-1)*smax; % smag
@@ -259,15 +309,15 @@ end
 [s(1:nrng,1).eutc]=deal(futc);
 [s(1:nrng,1).delta]=deal(delta(1));
 [s(1:nrng,1).npts]=deal(maxnpts);
-[s(1:nrng,1).polar]=deal(polar);
+[s(1:nrng,1).polar]=deal(pv.polar);
 [s(1:nrng,1).x]=deal(sx);
 [s(1:nrng,1).y]=deal(sy);
 [s(1:nrng,1).freq]=deal([]);
-[s(1:nrng,1).method]=deal(method);
+[s(1:nrng,1).method]=deal(pv.method);
 [s(1:nrng,1).npairs]=deal(npairs);
 [s(1:nrng,1).center]=deal([clat clon]);
-[s(1:nrng,1).whiten]=deal(whiten);
-[s(1:nrng,1).weights]=deal(w);
+[s(1:nrng,1).whiten]=deal(pv.whiten);
+[s(1:nrng,1).weights]=deal(pv.w);
 [s(1:nrng,1).spectra]=deal(zeros(0,'single'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -285,9 +335,10 @@ nslow=prod(spts);
 % - MUST shift to zero lag
 dt=b(:,ones(nslow,1)).';
 
-% normalize weights
-w=w(:);
-w=w./sum(abs(w));
+% normalize & expand weights
+pv.w=pv.w(:);
+if(numel(pv.w)==nrecs); pv.w=pv.w(slave).*conj(pv.w(master)); end
+pv.w=pv.w./sum(abs(pv.w));
 
 % get relative positions for each pair (the coarray)
 % r=(x  ,y  )
@@ -317,10 +368,11 @@ clear e n
 % spatial difference vectors r (called the coarray)
 %
 % p is NSLOWxNPAIRS
-if(polar)
-    sx=sx(ones(spts(1),1),:)*d2r; % baz in radians
+if(pv.polar)
+    sx=sx(ones(spts(1),1),:); % baz in degrees
     sy=sy(:,ones(spts(2),1))/d2km; % smag in sec/km
-    p=[sy(:).*sin(sx(:)) sy(:).*cos(sx(:))]*r;
+    [sx,sy]=deal(sy.*sind(sx),sy.*cosd(sx));
+    p=[sx(:) sy(:)]*r;
 else % cartesian
     sx=sx/d2km;
     sx=sx(ones(spts(1),1),:);
@@ -337,7 +389,16 @@ for a=1:nrng
     nfreq=numel(fidx);
     
     % preallocate spectra
-    s(a).spectra=zeros([spts nfreq],'single');
+    if(pv.avg); s(a).spectra=zeros(spts,'single');
+    else s(a).spectra=zeros([spts nfreq],'single');
+    end
+    
+    % warning if no frequencies
+    if(~nfreq)
+        error('seizmo:fssxc:noFreqs',...
+            'No frequencies within the range %g to %g Hz!',...
+            frng(a,1),frng(a,2));
+    end
     
     % detail message
     if(verbose)
@@ -346,26 +407,127 @@ for a=1:nrng
         print_time_left(0,nfreq);
     end
     
-    % warning if no frequencies
-    if(~nfreq)
-        warning('seizmo:fssxc:noFreqs',...
-            'No frequencies within the range %g to %g Hz!',...
-            frng(a,1),frng(a,2));
-        continue;
+    % proceed by type
+    switch pv.method
+        case 'xc'
+            if(pv.avg)
+                for b=1:nfreq
+                    s(a).spectra=s(a).spectra+reshape(real(...
+                        exp(-2*pi*1i*f(fidx(b))*(p+dt))...
+                        *(xcdata(:,fidx(b)).*pv.w)),spts);
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            else
+                for b=1:nfreq
+                    s(a).spectra(:,:,b)=reshape(real(...
+                        exp(-2*pi*1i*f(fidx(b))*(p+dt))...
+                        *(xcdata(:,fidx(b)).*pv.w)),spts);
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            end
+        otherwise % 'caponxc'
+            cs=zeros(nrecs,nrecs);
+            if(pv.avg)
+                for b=1:nfreq
+                    cs(csidx)=xcdata(:,fidx(b)); % populate matrix
+                    cs=pinv((1-pv.damping)*cs+pv.damping*eye(nrecs));
+                    s(a).spectra=s(a).spectra+1./reshape(real(exp(...
+                        -2*pi*1i*f(fidx(b))*(p+dt))*(cs(csidx).*pv.w)),...
+                        spts);
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            else
+                for b=1:nfreq
+                    cs(csidx)=xcdata(:,fidx(b)); % populate matrix
+                    cs=pinv((1-pv.damping)*cs+pv.damping*eye(nrecs));
+                    s(a).spectra(:,:,b)=1./reshape(real(exp(...
+                        -2*pi*1i*f(fidx(b))*(p+dt))*(cs(csidx).*pv.w)),...
+                        spts);
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            end
     end
-    
-    % extract frequency band & whiten (if desired)
-    %
-    % cs is NPAIRSxNFREQ
-    cs=xcdata(fidx,:).';
-    if(whiten); cs=cs./abs(cs); end
-    
-    % loop over frequencies
-    for b=1:nfreq
-        s(a).spectra(:,:,b)=reshape(...
-            exp(-2*pi*1i*f(fidx(b))*(p+dt))*(cs(:,b).*w),spts);
-        if(verbose); print_time_left(b,nfreq); end
-    end
+    if(pv.avg); s(a).spectra=s(a).spectra/nfreq; end
 end
 
 end
+
+
+function [pv]=parse_fssxc_pv_pairs(varargin)
+
+% defaults
+pv.avg=false;
+pv.polar=false;
+pv.method='xc';
+pv.whiten=true;
+pv.w=[];
+pv.damping=0.001; % only for caponxc
+
+% require pv pairs
+if(mod(nargin,2))
+    error('seizmo:fssxc:badInput',...
+        'Unpaired parameter/value!');
+end
+
+% parse pv pairs
+if(~iscellstr(varargin(1:2:end)))
+    error('seizmo:fssxc:badInput',...
+        'Parameters must be specified using a string!');
+end
+for i=1:2:nargin
+    switch varargin{i}
+        case {'polar' 'plr' 'pol' 'p'}
+            pv.polar=varargin{i+1};
+        case {'method' 'meth' 'm'}
+            pv.method=varargin{i+1};
+        case {'whiten' 'wh' 'white' 'normalize' 'n' 'coherency' 'c'}
+            pv.whiten=varargin{i+1};
+        case {'weights' 'w' 'wgt' 'wgts' 'weight'}
+            pv.w=varargin{i+1};
+        case {'damping' 'damp' 'd'}
+            pv.damping=varargin{i+1};
+        case {'average' 'av' 'avg' 'a'}
+            pv.avg=varargin{i+1};
+        otherwise
+            error('seizmo:fssxc:badInput',...
+                'Unknown parameter: %s !',varargin{i});
+    end
+end
+
+% valid method strings
+valid.METHOD={'xc' 'caponxc'};
+
+% check values
+if(~isscalar(pv.polar) || (~islogical(pv.polar) && ~isnumeric(pv.polar)))
+    error('seizmo:fssxc:badInput',...
+        'POLAR must be TRUE or FALSE!');
+elseif((isnumeric(pv.method) ...
+        && (~isreal(pv.method) || ~numel(pv.method)==2)) ...
+        || (ischar(pv.method) && ~any(strcmpi(pv.method,valid.METHOD))))
+    error('seizmo:fssxc:badInput',...
+        ['METHOD must be one of the following:\n' ...
+        '''XC'' or ''CAPONXC''!']);
+elseif(~isscalar(pv.whiten) || ~islogical(pv.whiten))
+    error('seizmo:fssxc:badInput',...
+        'WHITEN must be TRUE or FALSE!');
+elseif(~isnumeric(pv.w) || any(pv.w(:)<0))
+    error('seizmo:fssxc:badInput',...
+        'WEIGHTS must be positive!');
+elseif(~isreal(pv.damping) || ~isscalar(pv.damping) || pv.damping<0)
+    error('seizmo:fssxc:badInput',...
+        'DAMPING must be a positive scalar!');
+elseif(~isscalar(pv.avg) || ~islogical(pv.avg))
+    error('seizmo:fssxc:badInput',...
+        'AVG must be TRUE or FALSE!');
+end
+
+end
+
+
+function [lgc]=isxc(data)
+[m,s]=getheader(data,'kuser0','kuser1');
+if(all(strcmp(m,'MASTER') & strcmp(s,'SLAVE'))); lgc=true;
+else lgc=false;
+end
+end
+

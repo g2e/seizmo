@@ -1,11 +1,14 @@
-function [s]=fss(data,smax,spts,frng,polar,method,whiten,w)
+function [s]=fss(data,smax,spts,frng,varargin)
 %FSS    Estimate frequency-slowness spectrum
 %
 %    Usage:    s=fss(data,smax,spts,frng)
-%              s=fss(data,smax,spts,frng,polar)
-%              s=fss(data,smax,spts,frng,polar,method)
-%              s=fss(data,smax,spts,frng,polar,method,whiten)
-%              s=fss(data,smax,spts,frng,polar,method,whiten,weights)
+%              s=fss(...,'polar',true|false,...)
+%              s=fss(...,'method',string,...)
+%              s=fss(...,'whiten',true|false,...)
+%              s=fss(...,'weights',w,...)
+%              s=fss(...,'damping',d,...)
+%              s=fss(...,'ntiles',nt,...)
+%              s=fss(...,'avg',true|false,...)
 %
 %    Description:
 %     S=FSS(DATA,SMAX,SPTS,FRNG) computes an estimate of the frequency-
@@ -33,13 +36,13 @@ function [s]=fss(data,smax,spts,frng,polar,method,whiten,w)
 %          .y        - north or radial slowness values (sec/deg)
 %          .freq     - frequency values (Hz)
 %          .npairs   - number of pairs
-%          .method   - beamforming method ('center', 'coarray', or 'user')
+%          .method   - beamforming method ('center', 'coarray', etc)
 %          .center   - array center as [LAT LON]
 %          .whiten   - is spectra whitened? true/false
 %          .weights  - weights used in beamforming
 %          .spectra  - frequency-slowness spectra estimate
 %
-%     S=FSS(DATA,SMAX,SPTS,FRNG,POLAR) specifies if the spectra is sampled
+%     S=FSS(...,'POLAR',TRUE|FALSE,...) specifies if the spectra is sampled
 %     regularly in cartesian or polar coordinates.  Polar coords are useful
 %     for slicing the spectra by azimuth (pie slice) or slowness (rings).
 %     Cartesian coords (the default) samples the slowness space regularly
@@ -48,38 +51,72 @@ function [s]=fss(data,smax,spts,frng,polar,method,whiten,w)
 %     given as [SPTS BAZPTS] to control the azimuthal resolution (default
 %     is BAZPTS=181 points).
 %
-%     S=FSS(DATA,SMAX,SPTS,FRNG,POLAR,METHOD) defines the beamforming
-%     method.  METHOD may be 'center', 'coarray', 'full', or [LAT LON].
-%     The default is 'center' which is extremely fast for large arrays
-%     compared to the 'coarray' method as it only pairs each record against
-%     the array center (found using ARRAYCENTER) to compute the real-valued
-%     spectrum.  The 'coarray' method utilizes information from all unique
-%     pairings of records to compute the complex slowness spectrum while
-%     the 'full' method uses every possible pairing to do the same.  The
-%     'full' method is significantly slower and gives degraded results
-%     compared to the 'coarray' method and so is not recommended except in
-%     verification.  The 'center' method gives results that are the same as
-%     the 'full' method but does it far faster.  Using [LAT LON] for method
-%     is algorithmically the same as the 'center' method but uses the
-%     defined coordinates as the center for the array.
+%     S=FSS(...,'METHOD',STRING,...) defines the beaming method.  STRING
+%     may be 'center', 'coarray', 'capon', 'full', or [LAT LON].  The
+%     default is 'center' which is extremely fast for large arrays compared
+%     to the other methods as it phase delays the auto-correlation of each
+%     record using the distance to the array center (using ARRAYCENTER).
+%     The 'coarray' method utilizes all unique pairings of records to
+%     compute the spectrum with a little less than half the cross power
+%     spectral density matrix while the 'full' method uses the entire cross
+%     power spectral density matrix.  The 'full' method is significantly
+%     slower and gives degraded results compared to the 'coarray' method
+%     and so is not recommended except in verification (as it gives the
+%     exact same result of the 'center' method).  The 'coarray' method has
+%     the best resolution out of those three methods but is far inferior to
+%     he 'capon' method. The 'capon' method is similar to the 'full' method
+%     in computation time (the only additional operation is a dampened
+%     inversion of the full cross power spectral density matrix) but the
+%     resolution method at every slowness is optimized in a least-squares
+%     sense using the maximum likelyhood method.  Using [LAT LON] as a
+%     method is algorithmically the same as the 'center' method but uses
+%     the defined coordinates as the center for the array.
 %
-%     S=FSS(DATA,SMAX,SPTS,FRNG,POLAR,METHOD,WHITEN) whitens the cross
-%     spectral matrix elements before beamforming if WHITEN is TRUE.  The
-%     default is TRUE.
+%     S=FSS(...,'WHITEN',TRUE|FALSE,...) whitens the spectras before
+%     beamforming if WHITEN is TRUE.  The default is TRUE.
 %
-%     S=FSS(DATA,SMAX,SPTS,FRNG,POLAR,METHOD,WHITEN,WEIGHTS) specifies the
-%     relative weights for each record in DATA (must match size of DATA).
+%     S=FSS(...,'WEIGHTS',W,...) specifies the relative weights for each
+%     record in DATA (must match size of DATA) or pairing (if METHOD is
+%     'coarray', 'capon', or 'full').
+%
+%     S=FSS(...,'DAMPING',D,...) alters the dampening parameter used in the
+%     inversion of the cross power spectral density matrix for the 'capon'
+%     method.  This is done by "diagonal loading" which means the dampening
+%     value is added the elements along the diagonal.  The default value of
+%     0.001 may need to be adjusted for better results.
+%
+%     S=FSS(...,'NTILES',NT,...) sets how many nonoverlapping timesections
+%     the data should be split into.  This is mainly for the 'capon' method
+%     as it needs time/frequency averaging of the cross power spectral
+%     density matrix for stability.  Setting NT>=N where N is the number of
+%     records in DATA is recommended by Capon 1969.  The default is 1 which
+%     provides the best frequency resolution.
+%
+%     S=FSS(...,'AVG',TRUE|FALSE,...) indicates if the spectra is averaged
+%     across frequency during computation.  This can save a significant
+%     amount of memory.  The default is false.
 %
 %    Notes:
 %     - Records in DATA must have equal and regular sample spacing.
+%     - Attenuation is ignored.
+%     - dB values for unwhitened data are probably not scaled correctly but
+%       this does not have an impact on relative dB values.
+%     - References:
+%        Capon 1969, High-Resolution Frequency-Wavenumber Spectrum
+%         Analysis, Proc. IEEE, Vol. 57, No. 8, pp. 1408-1418
+%        Rost & Thomas 2002, Array Seismology: Methods and Applications,
+%         Rev of Geoph, Vol. 40, No. 3, doi:10.1029/2000RG000100
 %
 %    Examples:
-%     % Show slowness map for a dataset at about 50s periods:
-%     plotfss(fss(data,50,201,[1/51 1/49]))
+%     % Show slowness spectra for an artificial dataset at 40-50s periods:
+%     plotfss(fss(capon1970,50,201,[1/50 1/40],'avg',true));
+%
+%     % Now compare that to the Capon Estimation:
+%     plotfss(fss(capon1970,50,201,[1/50 1/40],'avg',true,'m','capon'));
 %
 %    See also: FSSXC, ARF, SNYQUIST, PLOTFSS, KXY2SLOWBAZ, SLOWBAZ2KXY,
-%              FSSAVG, FSSSUB, FSSHORZ, FSSHORZXC, FSSDBINFO, FSSFREQSLIDE,
-%              FSSFRAMESLIDE, PLOTARF, FSSCORR
+%              FSSAVG, FSSSUB, FSSHORZ, FSSHORZXC, ARFHORZ, FSSDBINFO,
+%              FSSFREQSLIDE, FSSFRAMESLIDE, PLOTARF, FSSCORRCOEF
 
 %     Version History:
 %        May   3, 2010 - initial version
@@ -105,23 +142,29 @@ function [s]=fss(data,smax,spts,frng,polar,method,whiten,w)
 %        May  30, 2012 - pow2pad=0 by default
 %        June 13, 2012 - add capon method (not working!)
 %        Sep. 11, 2012 - altered from geofss & fkmap
+%        Sep. 21, 2012 - allow 0-Fnyq range (for full spectrum)
+%        Sep. 22, 2012 - allow station or pair weights
+%        Sep. 27, 2012 - pv pair inputs, capon method works with damping,
+%                        doc update, less memory usage, error for no freq
+%        Sep. 28, 2012 - tiling works for all methods
+%        Sep. 30, 2012 - avg option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 11, 2012 at 14:05 GMT
+%     Last Updated Sep. 30, 2012 at 14:05 GMT
 
 % todo:
-% - functions:
-% 3/4 - Xarf, fssxc, fsshorz, fsshorzxc
-% 0/6 - Xchkfss, Xisfss, Xfssavg, Xfsssub, Xfssgrids, Xfssidx
-% 0/5 - Xplotfss, Xplotarf, Xplotfssupdate, Xfssfreqslide, Xfssframeslide
-% 0/2 - Xfssdbinfo, Xfsscorrcoef
-% 0/2 - Xfsscart2pol, Xfsspol2cart
 
 % check nargin
-error(nargchk(4,8,nargin));
+error(nargchk(4,inf,nargin));
 
 % check struct
 error(seizmocheck(data,'dep'));
+
+% require not a xc dataset
+if(isxc(data))
+    error('seizmo:fss:badInput',...
+        'Use FSSXC for correlations!');
+end
 
 % number of records
 nrecs=numel(data);
@@ -132,15 +175,6 @@ if(nrecs<2)
         'DATA must have 2+ records!');
 end
 
-% defaults for optionals
-if(nargin<5 || isempty(polar)); polar=false; end
-if(nargin<6 || isempty(method)); method='center'; end
-if(nargin<7 || isempty(whiten)); whiten=true; end
-if(nargin<8 || isempty(w)); w=ones(nrecs,1); end
-
-% valid center strings
-valid.METHOD={'center' 'coarray' 'full'};
-
 % check inputs
 sf=size(frng);
 if(~isreal(smax) || ~isscalar(smax) || smax<=0)
@@ -149,25 +183,18 @@ if(~isreal(smax) || ~isscalar(smax) || smax<=0)
 elseif(~any(numel(spts)==[1 2]) || any(fix(spts)~=spts) || any(spts<=2))
     error('seizmo:fss:badInput',...
         'SPTS must be a positive scalar integer >2!');
-elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<=0))
+elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<0) ...
+        || any(frng(1)>frng(2)))
     error('seizmo:fss:badInput',...
         'FRNG must be a Nx2 array of [FREQLOW FREQHIGH] in Hz!');
-elseif(~isscalar(polar) || (~islogical(polar) && ~isnumeric(polar)))
-    error('seizmo:fss:badInput',...
-        'POLAR must be TRUE or FALSE!');
-elseif((isnumeric(method) && (~isreal(method) || ~numel(method)==2)) ...
-        || (ischar(method) && ~any(strcmpi(method,valid.METHOD))))
-    error('seizmo:fss:badInput',...
-        ['METHOD must be one of the following:\n' ...
-        '''CENTER'', ''COARRAY'', ''FULL'', or [LAT LON]!']);
-elseif(~isscalar(whiten) || ~islogical(whiten))
-    error('seizmo:fss:badInput',...
-        'WHITEN must be TRUE or FALSE!');
-elseif(~isnumeric(w) || numel(w)~=nrecs || any(w(:)<0))
-    error('seizmo:fss:badInput',...
-        'WEIGHTS must be equal sized with DATA & positive!');
 end
 nrng=sf(1);
+
+% parse options
+pv=parse_fss_pv_pairs(varargin{:});
+
+% defaults for optionals
+if(isempty(pv.w)); pv.w=ones(nrecs,1); end
 
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
@@ -222,33 +249,11 @@ catch
     error(lasterror);
 end
 
-% get time limits
-[bmin,bmini]=min(timediff(butc(1,:),butc,'utc'));
-[emax,emaxi]=max(timediff(eutc(1,:),eutc,'utc'));
-
-% check nyquist
-fnyq=1/(2*delta(1));
-if(any(frng>=fnyq))
-    error('seizmo:fss:badFRNG',...
-        ['FRNG exceed nyquist frequency (' num2str(fnyq) ')!']);
-end
-
-% longest record
-maxnpts=max(npts);
-
-% get frequencies
-nspts=2^nextpow2(maxnpts); % half xcorr
-%nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification
-f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
-
-% get fft
-data=fft(data,nspts,1);
-
 % fix method/center/npairs
-if(ischar(method))
-    method=lower(method);
+if(ischar(pv.method))
+    pv.method=lower(pv.method);
     [clat,clon]=arraycenter(st(:,1),st(:,2));
-    switch method
+    switch pv.method
         case 'coarray'
             npairs=nrecs*(nrecs-1)/2;
         case {'full' 'capon'}
@@ -257,14 +262,64 @@ if(ischar(method))
             npairs=nrecs;
     end
 else
-    clat=method(1);
-    clon=method(2);
-    method='user';
+    clat=pv.method(1);
+    clon=pv.method(2);
+    pv.method='user';
     npairs=nrecs;
 end
 
+% check weights again
+if(~any(numel(pv.w)==[nrecs npairs]))
+    error('seizmo:fss:badInput',...
+        'Number of WEIGHTS must match the number of stations or pairs!');
+end
+
+% get time limits
+[bmin,bmini]=min(timediff(butc(1,:),butc,'utc'));
+[emax,emaxi]=max(timediff(eutc(1,:),eutc,'utc'));
+
+% check nyquist
+fnyq=1/(2*delta(1));
+if(any(frng(:,1)>fnyq))
+    error('seizmo:fss:badFRNG',...
+        ['FRNG exceeds nyquist frequency (' num2str(fnyq) ')!']);
+end
+
+% longest record
+maxnpts=max(npts);
+
+% tiling
+if(pv.ntiles>1)
+    oldmax=maxnpts;
+    maxnpts=ceil(maxnpts/pv.ntiles);
+end
+
+% get frequencies
+nspts=2^nextpow2(maxnpts); % half xcorr
+%nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification
+f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
+
+% tiling
+if(pv.ntiles>1)
+    data=[data; zeros(maxnpts*pv.ntiles-oldmax,nrecs)];
+    data=permute(reshape(data.',[nrecs maxnpts pv.ntiles]),[2 1 3]);
+end
+
+% get fft
+data=fft(data,nspts,1);
+
+% trim -freq and permute
+if(pv.ntiles>1)
+    data=permute(data(1+(0:nspts/2),:,:),[2 1 3]);
+else
+    data=data(1+(0:nspts/2),:).';
+end
+
+% whiten data if desired
+if(pv.whiten); data=data./abs(data); end
+
 % setup slowness grid
-if(polar)
+if(pv.polar)
     if(numel(spts)==1); spts(2)=181; end % default # azimuthal points
     sx=(0:spts(2)-1)/(spts(2)-1)*360; % baz (wedge decided x/y)
     sy=(0:spts(1)-1).'/(spts(1)-1)*smax; % smag
@@ -281,15 +336,15 @@ end
 [s(1:nrng,1).eutc]=deal(eutc(emaxi,:));
 [s(1:nrng,1).delta]=deal(delta(1));
 [s(1:nrng,1).npts]=deal(maxnpts);
-[s(1:nrng,1).polar]=deal(polar);
+[s(1:nrng,1).polar]=deal(pv.polar);
 [s(1:nrng,1).x]=deal(sx);
 [s(1:nrng,1).y]=deal(sy);
 [s(1:nrng,1).freq]=deal([]);
-[s(1:nrng,1).method]=deal(method);
+[s(1:nrng,1).method]=deal(pv.method);
 [s(1:nrng,1).npairs]=deal(npairs);
 [s(1:nrng,1).center]=deal([clat clon]);
-[s(1:nrng,1).whiten]=deal(whiten);
-[s(1:nrng,1).weights]=deal(w);
+[s(1:nrng,1).whiten]=deal(pv.whiten);
+[s(1:nrng,1).weights]=deal(pv.w);
 [s(1:nrng,1).spectra]=deal(zeros(0,'single'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -305,24 +360,24 @@ nslow=prod(spts);
 
 % get utc static time shifts
 dt=timediff(butc(1,:),butc,'utc').'; % need row vector
-switch method
+switch pv.method
     case 'coarray'
         % row is master index, column is slave index
         [master,slave]=find(triu(true(nrecs),1));
         dt=dt(slave)-dt(master); % alter to pair shifts
-    case 'full'
+    case {'full' 'capon'}
         [master,slave]=find(true(nrecs));
         dt=dt(slave)-dt(master); % alter to pair shifts
 end
 dt=dt(ones(nslow,1),:);
 
 % normalize & expand weights
-w=w(:);
-switch method
-    case {'coarray' 'full'}
-        w=w(slave).*conj(w(master));
+pv.w=pv.w(:);
+switch pv.method
+    case {'coarray' 'full' 'capon'}
+        if(numel(pv.w)==nrecs); pv.w=pv.w(slave).*conj(pv.w(master)); end
 end
-w=w./sum(abs(w));
+pv.w=pv.w./sum(abs(pv.w));
 
 % get relative positions for each pair (the coarray)
 % r=(x  ,y  )
@@ -332,8 +387,8 @@ w=w./sum(abs(w));
 %  ij              ij
 %
 % r is a 2xNPAIRS matrix
-switch method
-    case {'coarray' 'full'}
+switch pv.method
+    case {'coarray' 'full' 'capon'}
         % [ r   r   ... r
         %    11  12      1N
         %   r   r   ... r
@@ -367,10 +422,11 @@ clear e n
 % spatial difference vectors r (called the coarray)
 %
 % p is NSLOWxNPAIRS
-if(polar)
-    sx=sx(ones(spts(1),1),:)*d2r; % baz in radians
+if(pv.polar)
+    sx=sx(ones(spts(1),1),:); % baz in degrees
     sy=sy(:,ones(spts(2),1))/d2km; % smag in sec/km
-    p=[sy(:).*sin(sx(:)) sy(:).*cos(sx(:))]*r;
+    [sx,sy]=deal(sy.*sind(sx),sy.*cosd(sx));
+    p=[sx(:) sy(:)]*r;
 else % cartesian
     sx=sx/d2km;
     sx=sx(ones(spts(1),1),:);
@@ -387,7 +443,16 @@ for a=1:nrng
     nfreq=numel(fidx);
     
     % preallocate spectra
-    s(a).spectra=zeros([spts nfreq],'single');
+    if(pv.avg); s(a).spectra=zeros(spts,'single');
+    else s(a).spectra=zeros([spts nfreq],'single');
+    end
+    
+    % error if no frequencies
+    if(~nfreq)
+        error('seizmo:fss:noFreqs',...
+            'No frequencies within the range %g to %g Hz!',...
+            frng(a,1),frng(a,2));
+    end
     
     % detail message
     if(verbose)
@@ -396,40 +461,158 @@ for a=1:nrng
         print_time_left(0,nfreq);
     end
     
-    % warning if no frequencies
-    if(~nfreq)
-        warning('seizmo:fss:noFreqs',...
-            'No frequencies within the range %g to %g Hz!',...
-            frng(a,1),frng(a,2));
-        continue;
-    end
-    
-    % extract frequency band & whiten (if desired)
-    %
-    % cs is NRECSxNFREQ
-    cs=data(fidx,:).';
-    if(whiten); cs=cs./abs(cs); end
-    
-    % build cross spectral density matrix
-    %
-    % cs is NPAIRSxNFREQ
-    switch method
+    % proceed by type
+    switch pv.method
         case {'coarray' 'full'}
-            cs=cs(slave,:).*conj(cs(master,:));
+            if(pv.avg)
+                for b=1:nfreq
+                    s(a).spectra=s(a).spectra+reshape(real(...
+                        exp(-2*pi*1i*f(fidx(b))*(p+dt))...
+                        *(mean(data(slave,fidx(b),:)...
+                        .*conj(data(master,fidx(b),:)),3).*pv.w)),spts);
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            else
+                for b=1:nfreq
+                    s(a).spectra(:,:,b)=reshape(real(...
+                        exp(-2*pi*1i*f(fidx(b))*(p+dt))...
+                        *(mean(data(slave,fidx(b),:)...
+                        .*conj(data(master,fidx(b),:)),3).*pv.w)),spts);
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            end
+        case 'capon'
+            if(pv.avg)
+                for b=1:nfreq
+                    cs=pinv((1-pv.damping)*reshape(...
+                        mean(data(slave,fidx(b),:)...
+                        .*conj(data(master,fidx(b),:)),3),...
+                        [nrecs nrecs])+pv.damping*eye(nrecs));
+                    s(a).spectra=s(a).spectra+1./reshape(real(exp(...
+                        -2*pi*1i*f(fidx(b))*(p+dt))*(cs(:).*pv.w)),spts);
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            else
+                for b=1:nfreq
+                    cs=pinv((1-pv.damping)*reshape(...
+                        mean(data(slave,fidx(b),:)...
+                        .*conj(data(master,fidx(b),:)),3),...
+                        [nrecs nrecs])+pv.damping*eye(nrecs));
+                    s(a).spectra(:,:,b)=1./reshape(real(exp(...
+                        -2*pi*1i*f(fidx(b))*(p+dt))*(cs(:).*pv.w)),spts);
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            end
+        otherwise % {'center' 'user'}
+            if(pv.avg)
+                for b=1:nfreq
+                    for c=1:pv.ntiles
+                        s(a).spectra=s(a).spectra+reshape(abs(...
+                            exp(-2*pi*1i*f(fidx(b))*(p+dt))...
+                            *(data(:,fidx(b),c).*pv.w)).^2,spts);
+                    end
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            else
+                for b=1:nfreq
+                    for c=1:pv.ntiles
+                        s(a).spectra(:,:,b)=s(a).spectra(:,:,b)...
+                            +reshape(abs(exp(...
+                            -2*pi*1i*f(fidx(b))*(p+dt))...
+                            *(data(:,fidx(b),c).*pv.w)).^2,spts);
+                    end
+                    if(verbose); print_time_left(b,nfreq); end
+                end
+            end
+            s(a).spectra=s(a).spectra/pv.ntiles;
     end
-    
-    % loop over frequencies
-    for b=1:nfreq
-        s(a).spectra(:,:,b)=reshape(...
-            exp(-2*pi*1i*f(fidx(b))*(p+dt))*(cs(:,b).*w),spts);
-        if(verbose); print_time_left(b,nfreq); end
-    end
-    
-    % auto-correlation power spectral density
-    switch method
-        case {'center' 'user'}
-            s(a).spectra=s(a).spectra.*conj(s(a).spectra);
+    if(pv.avg); s(a).spectra=s(a).spectra/nfreq; end
+end
+
+end
+
+
+function [pv]=parse_fss_pv_pairs(varargin)
+
+% defaults
+pv.avg=false;
+pv.polar=false;
+pv.method='center';
+pv.whiten=true;
+pv.w=[];
+pv.damping=0.001; % only for capon
+pv.ntiles=1;
+
+% require pv pairs
+if(mod(nargin,2))
+    error('seizmo:fss:badInput',...
+        'Unpaired parameter/value!');
+end
+
+% parse pv pairs
+if(~iscellstr(varargin(1:2:end)))
+    error('seizmo:fss:badInput',...
+        'Parameters must be specified using a string!');
+end
+for i=1:2:nargin
+    switch varargin{i}
+        case {'polar' 'plr' 'pol' 'p'}
+            pv.polar=varargin{i+1};
+        case {'method' 'meth' 'm'}
+            pv.method=varargin{i+1};
+        case {'whiten' 'wh' 'white' 'normalize' 'n' 'coherency' 'c'}
+            pv.whiten=varargin{i+1};
+        case {'weights' 'w' 'wgt' 'wgts' 'weight'}
+            pv.w=varargin{i+1};
+        case {'damping' 'damp' 'd'}
+            pv.damping=varargin{i+1};
+        case {'ntiles' 'ntile' 'tiles' 'tile' 'nt' 't'}
+            pv.ntiles=varargin{i+1};
+        case {'average' 'av' 'avg' 'a'}
+            pv.avg=varargin{i+1};
+        otherwise
+            error('seizmo:fss:badInput',...
+                'Unknown parameter: %s !',varargin{i});
     end
 end
 
+% valid method strings
+valid.METHOD={'center' 'coarray' 'full' 'capon'};
+
+% check values
+if(~isscalar(pv.polar) || (~islogical(pv.polar) && ~isnumeric(pv.polar)))
+    error('seizmo:fss:badInput',...
+        'POLAR must be TRUE or FALSE!');
+elseif((isnumeric(pv.method) ...
+        && (~isreal(pv.method) || ~numel(pv.method)==2)) ...
+        || (ischar(pv.method) && ~any(strcmpi(pv.method,valid.METHOD))))
+    error('seizmo:fss:badInput',...
+        ['METHOD must be one of the following:\n' ...
+        '''CENTER'', ''COARRAY'', ''CAPON'', ''FULL'', or [LAT LON]!']);
+elseif(~isscalar(pv.whiten) || ~islogical(pv.whiten))
+    error('seizmo:fss:badInput',...
+        'WHITEN must be TRUE or FALSE!');
+elseif(~isnumeric(pv.w) || any(pv.w(:)<0))
+    error('seizmo:fss:badInput',...
+        'WEIGHTS must be positive!');
+elseif(~isreal(pv.damping) || ~isscalar(pv.damping) || pv.damping<0)
+    error('seizmo:fss:badInput',...
+        'DAMPING must be a positive scalar!');
+elseif(~isreal(pv.ntiles) || ~isscalar(pv.ntiles) ...
+        || pv.ntiles<=0 || pv.ntiles~=fix(pv.ntiles))
+    error('seizmo:fss:badInput',...
+        'NTILES must be a positive integer!');
+elseif(~isscalar(pv.avg) || ~islogical(pv.avg))
+    error('seizmo:fss:badInput',...
+        'AVG must be TRUE or FALSE!');
+end
+
+end
+
+
+function [lgc]=isxc(data)
+[m,s]=getheader(data,'kuser0','kuser1');
+if(all(strcmp(m,'MASTER') & strcmp(s,'SLAVE'))); lgc=true;
+else lgc=false;
+end
 end

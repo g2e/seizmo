@@ -56,9 +56,10 @@ function [varargout]=plotgeofss(s,dblim,zerodb,varargin)
 %        Apr. 25, 2012 - use nanmedian for median determination
 %        June  4, 2012 - altered from plotgeofkmap, full mmap options
 %        June 10, 2012 - handle full method
+%        Sep. 29, 2012 - handle new struct changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 10, 2012 at 15:05 GMT
+%     Last Updated Sep. 29, 2012 at 15:05 GMT
 
 % todo:
 
@@ -79,7 +80,7 @@ if(~isscalar(s))
 end
 
 % require scalar freq & slow dimensions
-if(any(s.vector))
+if(size(s.spectra,2)~=1 || size(s.spectra,3)~=1)
     error('seizmo:plotgeofss:badInput',...
         'S needs to be reduced using GEOFSSAVG!');
 end
@@ -108,13 +109,12 @@ if(~isreal(dblim) || numel(dblim)~=2)
 end
 dblim=sort([dblim(1) dblim(2)]);
 
+% scale factor if unwhitened
+% - this is probably not right
+if(~s.whiten); s.spectra=s.spectra/(2*pi); end
+
 % convert to dB
-switch s.method
-    case {'coarray' 'full' 'capon'}
-        s.spectra=10*log10(abs(real(s.spectra)));
-    otherwise
-        s.spectra=10*log10(s.spectra);
-end
+s.spectra=10*log10(abs(s.spectra));
 
 % rescale spectra
 switch zerodb
@@ -146,10 +146,10 @@ s.latlon(end,:,2)=s.latlon(end,:,2)+lonstep;
 s.spectra=s.spectra([1:end end],[1:end end]);
 
 % limits of map
-minlat=min([s.stla; min(s.latlon(:,:,1))']);
-maxlat=max([s.stla; max(s.latlon(:,:,1))']);
-minlon=min([s.stlo; min(s.latlon(:,:,2))']);
-maxlon=max([s.stlo; max(s.latlon(:,:,2))']);
+minlat=min([s.st(:,1); min(s.latlon(:,:,1))']);
+maxlat=max([s.st(:,1); max(s.latlon(:,:,1))']);
+minlon=min([s.st(:,2); min(s.latlon(:,:,2))']);
+maxlon=max([s.st(:,2); max(s.latlon(:,:,2))']);
 
 % plot map
 ax=mmap('po',{'lat',[minlat maxlat],'lon',[minlon maxlon]},...
@@ -191,28 +191,32 @@ end
 
 % modify
 shading(ax,'flat');
-bg=get(get(ax,'parent'),'color');
-fg=get(findobj(ax,'tag','m_grid_box'),'color');
+bg=get(get(ax,'parent'),'color');               % these may not
+fg=get(findobj(ax,'tag','m_grid_box'),'color'); % be right ...
 if(strcmp(bg,'w') || isequal(bg,[1 1 1]))
     colormap(ax,flipud(fire));
 elseif(strcmp(bg,'k') || isequal(bg,[0 0 0]))
     colormap(ax,fire);
+else
+    if(ischar(bg)); bg=name2rgb(bg); end
+    hsv=rgb2hsv(bg);
+    colormap(ax,hsvcustom(hsv));
 end
 set(ax,'clim',dblim);
 hold(ax,'off');
 
 % wrap station longitudes to within 180deg of plot center
-while(any(abs(s.stlo-mean(MAP_VAR_LIST.longs))>180))
-    s.stlo(s.stlo<MAP_VAR_LIST.longs(1))=...
-        s.stlo(s.stlo<MAP_VAR_LIST.longs(1))+360;
-    s.stlo(s.stlo>MAP_VAR_LIST.longs(2))=...
-        s.stlo(s.stlo>MAP_VAR_LIST.longs(2))-360;
+while(any(abs(s.st(:,2)-mean(MAP_VAR_LIST.longs))>180))
+    s.stlo(s.st(:,2)<MAP_VAR_LIST.longs(1))=...
+        s.stlo(s.st(:,2)<MAP_VAR_LIST.longs(1))+360;
+    s.stlo(s.st(:,2)>MAP_VAR_LIST.longs(2))=...
+        s.stlo(s.st(:,2)>MAP_VAR_LIST.longs(2))-360;
 end
 
 % map the stations
 % - have to do this afterwards b/c of matlab warnings/issues
 hold(ax,'on');
-mmap('st',[s.stla s.stlo],'parent',ax,varargin{:});
+mmap('st',s.st(:,1:2),'parent',ax,varargin{:});
 hold(ax,'off');
 
 % colorbar & title
@@ -220,17 +224,22 @@ c=colorbar('eastoutside','peer',ax,'xcolor',fg,'ycolor',fg);
 xlabel(c,'dB','color',fg);
 fmin=min(s.freq); fmax=max(s.freq);
 smin=min(s.slow); smax=max(s.slow);
-title(ax,{[] ['Number of Stations:  ' num2str(s.nsta)] ...
-    ['Begin Time:  ' sprintf('%d.%03d %02d:%02d:%02g',s.butc) ' UTC'] ...
-    ['End Time  :  ' sprintf('%d.%03d %02d:%02d:%02g',s.eutc) ' UTC'] ...
-    ['Period    :  ' num2str(1/fmax) ' to ' num2str(1/fmin) ' s'] ...
-    ['Slowness  :  ' num2str(smin) ' to ' num2str(smax) ' s/^o'] ...
-    ['0 dB = ' num2str(zdb) 'dB'] []},'color',fg);
+s.butc=[s.butc(1:4) fix(s.butc(5)) fix(1000*mod(s.butc(5),1))];
+s.eutc=[s.eutc(1:4) fix(s.eutc(5)) fix(1000*mod(s.eutc(5),1))];
+title(ax,{[] ['Stations:  ' num2str(s.nsta)] ...
+    ['Bgn Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.butc) ' UTC'] ...
+    ['End Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.eutc) ' UTC'] ...
+    ['Period: ' num2str(1/fmax) 's to ' num2str(1/fmin) 's'] ...
+    ['Slowness: ' num2str(smin) 's/^o to ' num2str(smax) 's/^o'] ...
+    ['0dB = ' num2str(zdb) 'dB'] []},'color',fg);
 
 % set zerodb in userdata
 % - this is for plotgeofssupdate
 userdata.zerodb=zerodb;
-set(ax,'userdata',userdata,'createfcn','plotgeofss');
+userdata.fgcolor=fg;
+userdata.bgcolor=bg;
+set(ax,'userdata',userdata);
+setappdata(ax,'made_by_plotgeofss',true);
 
 % return figure handle
 if(nargout); varargout{1}=ax; end

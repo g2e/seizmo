@@ -25,9 +25,10 @@ function [data]=extract_plot_data(h)
 %     Version History:
 %        Apr. 19, 2011 - initial version
 %        Mar. 13, 2012 - use getheader improvements, code reduction
+%        Sep. 28, 2012 - fixed nasty eps usage bugs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 23:00 GMT
+%     Last Updated Sep. 28, 2012 at 23:00 GMT
 
 % todo:
 
@@ -140,9 +141,9 @@ for i=1:numel(data)
         end
         
         % fixing timing of uneven records plotted in abs time
-        if(~leven && (abs(b(j)-data{i}(j).ind(1))>b(j)*10*eps('single') ...
+        if(~leven && (abs(b(j)-data{i}(j).ind(1))>eps(single(10*b(j))) ...
                 || ((data{i}(j).ind(end)-data{i}(j).ind(1))...
-                /(npts(j)-1)-delta(j)>delta(j)*10*eps('single'))))
+                /(npts(j)-1)-delta(j)>eps(single(10*delta(j))))))
             data{i}(j).ind=(data{i}(j).ind-z6(j))*86400;
         end
     end

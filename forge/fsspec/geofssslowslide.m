@@ -23,7 +23,7 @@ function [mov]=geofssslowslide(s,varargin)
 %     unixcompressavi('example.avi');
 %
 %    See also: GEOFSS, GEOFSSXC, GEOFSSSUB, PLOTGEOFSS, PLOTGEOFSSUPDATE,
-%              GEOFSSFREQSLIDE, GEOFSSAVG
+%              GEOFSSFREQSLIDE, GEOFSSAVG, GEOFSSFRAMESLIDE
 
 %     Version History:
 %        June 25, 2010 - initial version
@@ -31,9 +31,10 @@ function [mov]=geofssslowslide(s,varargin)
 %        Apr.  4, 2012 - minor doc update
 %        Apr. 25, 2012 - allow non-volume in slowness domain
 %        June  8, 2012 - adapted from geofkfreqslide
+%        Sep. 29, 2012 - update for struct & geofsssub changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  8, 2012 at 19:05 GMT
+%     Last Updated Sep. 29, 2012 at 19:05 GMT
 
 % todo:
 
@@ -50,23 +51,19 @@ if(~isscalar(s))
 end
 
 % require slowness vector
-if(~s.vector(2) && ~isscalar(s.slow))
+if(size(s.spectra,2)~=numel(s.slow))
     error('seizmo:geofssslowslide:badInput',...
-        'S must not be averaged with GEOFSSAVG!');
+        'S must NOT be averaged with GEOFSSAVG!');
 end
 
-% get frequencies
-hs=s.slow;
-ns=numel(hs);
-
 % make initial plot
-ax=plotgeofss(geofssavg(geofsssub(s,[],[hs(1) hs(1)])),varargin{:});
+ax=plotgeofss(geofssavg(geofsssub(s,[],[],[],[],[],1)),varargin{:});
 fh=get(ax,'parent');
 mov=getframe(fh);
 
 % loop over remaining frequencies
-for i=2:ns
-    plotgeofssupdate(geofssavg(geofsssub(s,[],[hs(i) hs(i)])),ax);
+for i=2:numel(s.slow)
+    plotgeofssupdate(geofssavg(geofsssub(s,[],[],[],[],[],i)),ax);
     mov(i)=getframe(fh);
 end
 

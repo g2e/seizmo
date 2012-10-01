@@ -25,9 +25,10 @@ function [s]=geofssavg(s,frng,srng)
 %        July  6, 2010 - update for new struct
 %        Apr.  4, 2012 - minor doc update
 %        June  7, 2012 - altered from geofkvol2map
+%        Sep. 29, 2012 - handle no vector field and slow func
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  7, 2012 at 19:05 GMT
+%     Last Updated Sep. 29, 2012 at 19:05 GMT
 
 % todo:
 
@@ -65,7 +66,7 @@ for i=1:numel(s)
     end
     
     % handle empty srng
-    if(isempty(srng))
+    if(isempty(srng) && ~isa(s(i).slow,'function_handle'))
         smin=min(s(i).slow);
         smax=max(s(i).slow);
     else
@@ -74,17 +75,25 @@ for i=1:numel(s)
     end
     
     % average (if possible)
-    if(s(i).vector(1))
+    if(numel(s(i).freq)==size(s(i).spectra,3))
         fidx=s(i).freq>=fmin & s(i).freq<=fmax;
-        s(i).spectra=sum(s(i).spectra(:,:,fidx),3)/sum(fidx);
+        if(~any(fidx))
+            error('seizmo:fssavg:badFRNG',...
+                'FRNG outside S(%d) frequency range!',i);
+        end
+        s(i).spectra=nanmean(s(i).spectra(:,:,fidx),3);
         s(i).freq=s(i).freq(fidx);
     end
-    if(s(i).vector(2))
+    if(~isa(s(i).slow,'function_handle') ...
+            && numel(s(i).slow)==size(s(i).spectra,2))
         sidx=s(i).slow>=smin & s(i).slow<=smax;
-        s(i).spectra=sum(s(i).spectra(:,sidx),2)/sum(sidx);
+        if(~any(fidx))
+            error('seizmo:fssavg:badSRNG',...
+                'SRNG outside S(%d) slowness range!',i);
+        end
+        s(i).spectra=nanmean(s(i).spectra(:,sidx,:),2);
         s(i).slow=s(i).slow(sidx);
     end
-    s(i).vector=[false false];
 end
 
 end

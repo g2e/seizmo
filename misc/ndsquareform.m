@@ -94,9 +94,10 @@ function [x]=ndsquareform(x,method,flag)
 %        Mar. 22, 2010 - improved checking of anti-symmetric matrices
 %        Feb. 11, 2011 - mass nargchk fix
 %        Apr.  3, 2012 - minor doc update
+%        Sep. 28, 2012 - fixed nasty eps usage bug
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 15:05 GMT
+%     Last Updated Sep. 28, 2012 at 15:05 GMT
 
 % todo:
 
@@ -128,7 +129,7 @@ switch lower(method)
                 'M must be a square numeric or logical array!');
         elseif(isnumeric(x) && (~isequal(x(:,:,1),x(:,:,1).') && ...
                 any(any(((x(:,:,1)-diag(xd))-(diag(xd)-x(:,:,1).'))...
-                >max(max(x(:,:,1)))*eps))))
+                >eps(max(max(x(:,:,1))))))))
             % the above uses diag to ignore the diagonal
             error('seizmo:ndsquareform:badInput',...
                 'M must be a(n) (anti-)symmetric matrix!');

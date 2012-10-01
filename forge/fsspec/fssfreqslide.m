@@ -30,9 +30,10 @@ function [mov]=fssfreqslide(s,varargin)
 %        Apr. 25, 2012 - allow non-volume in slowness domain
 %        June  8, 2012 - adapted from geofkfreqslide
 %        Sep. 13, 2012 - adapted from geofssfreqslide
+%        Sep. 29, 2012 - allow scalar freq (non-avg) spectra
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 13, 2012 at 19:05 GMT
+%     Last Updated Sep. 29, 2012 at 19:05 GMT
 
 % todo:
 
@@ -49,23 +50,19 @@ if(~isscalar(s))
 end
 
 % require frequency vector
-if(size(s.spectra,3)==1)
+if(size(s.spectra,3)~=numel(s.freq))
     error('seizmo:fssfreqslide:badInput',...
         'S must not be averaged with FSSAVG!');
 end
 
-% get frequencies
-f=s.freq;
-nf=numel(f);
-
 % make initial plot
-ax=plotfss(fsssub(s,[f(1) f(1)]),varargin{:});
+ax=plotfss(fsssub(s,[],1),varargin{:});
 fh=get(ax,'parent');
 mov=getframe(fh);
 
 % loop over remaining frequencies
-for i=2:nf
-    plotfssupdate(fsssub(s,[f(i) f(i)]),ax);
+for i=2:numel(s.freq)
+    plotfssupdate(fsssub(s,[],i),ax);
     mov(i)=getframe(fh);
 end
 

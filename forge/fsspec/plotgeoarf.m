@@ -30,9 +30,10 @@ function [varargout]=plotgeoarf(s,varargin)
 
 %     Version History:
 %        June 12, 2012 - initial version
+%        Sep. 29, 2012 - handle extended lalo
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 12, 2012 at 15:05 GMT
+%     Last Updated Sep. 29, 2012 at 15:05 GMT
 
 % todo:
 
@@ -40,7 +41,7 @@ error(nargchk(1,inf,nargin));
 ax=plotgeofss(s,varargin{:});
 hold(ax,'on');
 % have to do this afterwards b/c of matlab warnings/issues
-mmap('ev',s.source.latlon,'parent',ax,varargin{3:end});
+mmap('ev',s.source.latlon(:,1:2),'parent',ax,varargin{3:end});
 hold(ax,'off');
 if(nargout); varargout={ax}; end
 

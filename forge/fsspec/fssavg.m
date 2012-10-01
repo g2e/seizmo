@@ -25,9 +25,10 @@ function [s]=fssavg(s,frng)
 %        June  7, 2012 - altered from geofkvol2map
 %        Sep. 12, 2012 - altered from geofssavg
 %        Sep. 14, 2012 - use nanmean instead of sum when averaging
+%        Sep. 29, 2012 - error slightly earlier if no freq in frng
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 14, 2012 at 19:05 GMT
+%     Last Updated Sep. 29, 2012 at 19:05 GMT
 
 % todo:
 
@@ -60,12 +61,12 @@ for i=1:numel(s)
     % average (if possible)
     if(numel(s(i).freq)==size(s(i).spectra,3))
         fidx=s(i).freq>=fmin & s(i).freq<=fmax;
-        s(i).spectra=nanmean(s(i).spectra(:,:,fidx),3);
-        s(i).freq=s(i).freq(fidx);
-        if(isempty(s(i).freq))
+        if(~any(fidx))
             error('seizmo:fssavg:badFRNG',...
                 'FRNG outside S(%d) frequency range!',i);
         end
+        s(i).spectra=nanmean(s(i).spectra(:,:,fidx),3);
+        s(i).freq=s(i).freq(fidx);
     end
 end
 

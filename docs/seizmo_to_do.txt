@@ -9,13 +9,23 @@ way to make movies while you do other things on the screen:
 phd
 %%%
 
-fsspec 12 3 4 5
-    - horz & xchorz
-    - corr
-    - s(f,lat,lon) - should be a method
-    - capon method
-    - latitudes => geo2sph
-    - amplitudes are correct (2pi factor?)
+fss
+ - compute spectra not centered on 0,0?
+   - complicates cart2pol & pol2cart
+   - input style: [nsmin nsmax nspts],[esmin esmax espts]
+                  [bazmin bazmax bazpts],[smin smax spts]
+                  smax,[espts nspts]
+                  smax,[spts bazpts]
+                  espts,nspts,spts default to 101
+                  bazpts default to 181
+ - amplitudes of unwhitened, tdss & capon
+   - 1/(2*pi) factor?
+   - power spectral density is scaled by 2*delta/npts (td measures)
+geofss
+ - rewrites
+   - geo(fss,fssxc,tdssxc)
+ - write
+   - geo(fsshorz,fsshorzxc,tdsshorzxc,arfhorz)
 
 make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
 
@@ -30,19 +40,6 @@ rotate
 rotate_correlations
     - works for unrotated
 
-fk stuff
-    rayleigh/love dispersion estimation
-        - give it a slowness/velocity range
-        - can we fit it as azimuthal anisotropy?
-            - plot showing +/-10% variation with azimuth
-    cub2 rayleigh/love dispersion estimation
-        - can use for geofk scripts and much much more
-        - need to calculate using Hermann codes
-    	- need love dispersion & rayleigh phase & group dispersion
-    	- functions for dispersion at position
-    	- functions for depth model at position
-	verify horizontal algorithm vs Haubrich and McCamy 1969
-    cart2pol & pol2cart
 figure out strange narrow long-period peaks in noise results
     - response taper affects it
     - happens even without response removal?

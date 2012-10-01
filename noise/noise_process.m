@@ -75,7 +75,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        Harmon et al 2008, GRL, doi:10.1029/2008GL035387
 %        Prieto et al 2009, JGR, doi:10.1029/2008JB006067
 %        Ekstrom et al 2009, GRL, doi:10.1029/2009GL039131
-%     - Steps 9 & 10 for horizontals currently require running step 8 on
+%     - Steps 9-11 for horizontals currently require running step 8 on
 %       the same run (but if you forget it is automatically done for you).
 %
 %    Header changes: Varies with steps chosen...
@@ -128,9 +128,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %                        wider (captures glitches better), remove
 %                        correlations against cmp for the same station
 %        Sep. 20, 2012 - correlations are now unnormalized
+%        Sep. 23, 2012 - horizontals are sorted before correlation now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 20, 2012 at 11:15 GMT
+%     Last Updated Sep. 23, 2012 at 11:15 GMT
 
 % todo:
 
@@ -647,6 +648,13 @@ for i=1:numel(tsdirs) % SERIAL
             end
         end
         if(any(steps==11)) % xc
+            % have to rotate to sort horizontals if not done before
+            if(~any(steps==8) && ~isempty(hdata))
+                hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
+            end
+            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(isempty(hdata) && isempty(vdata)); continue; end
+            
             if(numel(vdata)<2 && numel(hdata)<2); continue; end
             if(numel(vdata)>1)
                 delta=getheader(vdata(1),'delta');
