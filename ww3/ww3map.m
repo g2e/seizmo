@@ -55,9 +55,10 @@ function [varargout]=ww3map(s,rng,popt,fgcolor,bgcolor,ax)
 %     Version History:
 %        May   5, 2012 - initial version
 %        Sep.  5, 2012 - set nan=0 for ice
+%        Oct.  5, 2012 - no file bugfix for rng
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep.  5, 2012 at 00:40 GMT
+%     Last Updated Oct.  5, 2012 at 00:40 GMT
 
 % todo:
 
@@ -86,7 +87,7 @@ else
 end
 
 % default/check color limits
-if(nargin==1 || isempty(rng)); rng=[0 15]; end
+if(nargin<=1 || isempty(rng)); rng=[0 15]; end
 if(~isreal(rng) || ~isequal(size(rng),[1 2]) || rng(1)>rng(2))
     error('seizmo:ww3map:badRNG',...
         'RNG must be a real-valued 2 element vector as [low high]!');

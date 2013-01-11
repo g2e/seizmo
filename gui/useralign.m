@@ -43,7 +43,7 @@ function [info,xc,data0]=useralign(data,varargin)
 %     % the Pdiff waveforms from other seismic phases using windowing.  The
 %     % Pdiff waveforms will have noticeable perturbations from this
 %     % alignment because the 1D model does not account for the Earth's
-%     % lateral heterogeniety in seismic properties.  To improve on this
+%     % lateral heterogeneity in seismic properties.  To improve on this
 %     % initial alignment, we can either go through and pick each signal
 %     % onset manually (yuck!) or we can use waveform cross-correlation to
 %     % solve for the best relative arrival times between all the recorded

@@ -5,6 +5,7 @@ function []=sz_toc_position()
 %<a href="matlab:help arrayradius">arrayradius</a>              - Returns the radius of an array
 %<a href="matlab:help authalic2geographiclat">authalic2geographiclat</a>   - Convert latitude from authalic to geographic
 %<a href="matlab:help azdiff">azdiff</a>                   - Returns the angle between azimuths
+%<a href="matlab:help azmean">azmean</a>                   - Returns the mean azimuth of a set of azimuths
 %<a href="matlab:help closest_point_on_gc">closest_point_on_gc</a>      - Return closest point on great circle to a point
 %<a href="matlab:help degdist_from_gc">degdist_from_gc</a>          - Distance from a point on a sphere to a great circle
 %<a href="matlab:help enu2geographic">enu2geographic</a>           - Converts local East/North/Up system to geographic

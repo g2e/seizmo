@@ -132,6 +132,13 @@ function [s]=fssxc(xcdata,smax,spts,frng,varargin)
 %     Last Updated Sep. 30, 2012 at 14:05 GMT
 
 % todo:
+% - discrepancy between fss capon & fssxc caponxc
+%   - the absolute dBs are off from each other and from other methods
+%     - they vary as a function of frequency which means that addition is
+%       broken between the two b/c the contribution varies per frequency
+%   - relative dBs are very close but do vary sometimes off
+%     - plotfss(fssxc(correlate(capon1970,capon1970),50,201,[1/49 1/48],'avg',true,'m','caponxc'),[-48 0]);
+%     - plotfss(fss(capon1970,50,201,[1/49 1/48],'avg',true,'m','capon'),[-48 0]);
 
 % check nargin
 error(nargchk(4,inf,nargin));
@@ -475,7 +482,7 @@ if(~iscellstr(varargin(1:2:end)))
         'Parameters must be specified using a string!');
 end
 for i=1:2:nargin
-    switch varargin{i}
+    switch lower(varargin{i})
         case {'polar' 'plr' 'pol' 'p'}
             pv.polar=varargin{i+1};
         case {'method' 'meth' 'm'}

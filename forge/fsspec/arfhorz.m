@@ -5,6 +5,7 @@ function [r,t]=arfhorz(varargin)
 %              [r,t]=arfhorz(...,'polar',true|false,...)
 %              [r,t]=arfhorz(...,'method',string,...)
 %              [r,t]=arfhorz(...,'weights',w,...)
+%              [r,t]=arfhorz(...,'avg',true|false,...)
 %
 %    Description:
 %     [R,T]=ARFHORZ(STLALO,SMAX,SPTS,baz0,slow0,f0,radial0) computes the
@@ -40,13 +41,15 @@ function [r,t]=arfhorz(varargin)
 %     control the azimuthal resolution (default is 181 points).
 %
 %     [R,T]=ARFHORZ(...,'METHOD',STRING,...) sets the beamforming method.
-%     STRING may be 'center', 'coarray', 'full', or [LAT LON].  Note that
-%     the 'capon' method is not available as the array response for that
-%     method is dependent on the data.
+%     STRING may be 'center', 'coarray', 'full', or [LAT LON].
 %
 %     [R,T]=ARFHORZ(...,'WEIGHTS',W,...) specifies the relative weights for
 %     each station (must have the same number of rows as STLALO) or pair
 %     (only if METHOD is 'coarray' or 'full').
+%
+%     [R,T]=ARFHORZ(...,'AVG',TRUE|FALSE,...) indicates if the spectra is
+%     averaged across frequency during computation.  This can save a
+%     significant amount of memory.  The default is false.
 %
 %    Notes:
 %
@@ -69,9 +72,10 @@ function [r,t]=arfhorz(varargin)
 %     Version History:
 %        Sep. 22, 2012 - initial version
 %        Sep. 27, 2012 - pv pair inputs, doc update
+%        Jan.  8, 2013 - avg option (tricky)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 27, 2012 at 14:40 GMT
+%     Last Updated Jan.  8, 2013 at 14:40 GMT
 
 % todo:
 
@@ -93,7 +97,7 @@ elseif(~isequalsizeorscalar(radial0,slow0,baz0,f0))
 end
 
 % let arf compute the undistorted array response
-r=arf(varargin{1:min(6,nargin)},varargin{8:end});
+r=arf(varargin{1:min(6,nargin)},varargin{8:end},'avg',false);
 t=r;
 r.orient='radial';
 t.orient='transverse';
@@ -119,6 +123,19 @@ for i=1:npw
         r.spectra(:,:,i)=r.spectra(:,:,i).*abs(sind(baz-baz0(i))).^2;
         t.spectra(:,:,i)=t.spectra(:,:,i).*abs(cosd(baz-baz0(i))).^2;
     end
+end
+
+% average
+pv.avg=false;
+for i=9:2:nargin
+    switch lower(varargin{i})
+        case {'average' 'av' 'avg' 'a'}
+            pv.avg=varargin{i+1};
+    end
+end
+if(pv.avg)
+    r.spectra=mean(r.spectra,3);
+    r.spectra=mean(t.spectra,3);
 end
 
 end

@@ -8,6 +8,7 @@ function [varargout]=mmap(varargin)
 %              mmap(...,'events',[lat lon],...)
 %              mmap(...,'eventmarker',symstr,...)
 %              mmap(...,'eventmarkersize',symstr,...)
+%              mmap(...,'image',{lat lon image},...)
 %              mmap(...,'gshhs',res,...)
 %              mmap(...,'proj',proj,...)
 %              mmap(...,'projopt',{'opt',val,...},...)
@@ -64,6 +65,10 @@ function [varargout]=mmap(varargin)
 %     MMAP(...,'EVENTMARKERSIZE',VAL,...) sets the event marker
 %     size to VAL.  The default is 75 as this scales better with the
 %     defaults.
+%
+%     MMAP(...,'IMAGE',{LAT LON IMAGE},...) will plot the image above the
+%     sea but under any land patches.  This is converted to pcolor style
+%     format and passed to M_PCOLOR.
 %
 %     MMAP(...,'GSHHS',RES,...) sets the GSHHS coastline and
 %     political boundaries resolution.  The values can be 'c', 'l', 'i',
@@ -155,9 +160,10 @@ function [varargout]=mmap(varargin)
 %                        allow sea/land/border/coast = false
 %        June  7, 2012 - coasts are the same as the foreground color by
 %                        default, allow ocean instead of sea keyword
+%        Oct. 10, 2012 - image option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  7, 2012 at 20:30 GMT
+%     Last Updated Oct. 10, 2012 at 20:30 GMT
 
 % todo:
 
@@ -173,7 +179,7 @@ global MAP_VAR_LIST
 % option defaults
 varargin=[{'st' [] 'sm' 'yo' 'ss' [] 'ev' [] 'em' 'rp' 'es' 150 'g' 'o' ...
     'p' 'robinson' 'po' [] 'go' [] 'fg' [] 'bg' [] 's' [.3 .6 1] ...
-    'l' [.4 .6 .2] 'b' [.5 0 0] 'c' [] 'a' []} varargin];
+    'l' [.4 .6 .2] 'b' [.5 0 0] 'c' [] 'a' [] 'im' []} varargin];
 showsea=true; showland=true; showborder=true; showcoast=true;
 
 % check options
@@ -248,6 +254,15 @@ for i=1:2:numel(varargin)
             else
                 error('seizmo:mmap:badInput',...
                     'STATIONMARKERSIZE must be a positive real scalar!');
+            end
+        case {'image' 'im' 'i'}
+            if(skip)
+                lat=[]; lon=[]; image=[];
+            elseif(numel(val)==3 && iscell(val))
+                lat=val{1}; lon=val{2}; image=val{3};
+            else
+                error('seizmo:mmap:badInput',...
+                    'IMAGE must be given as {LAT LON IMAGE}!');
             end
         case {'gshhs' 'res' 'g'}
             if(skip); continue; end
@@ -410,15 +425,58 @@ else
     end
 end
 
+% convert image to pcolor
+if(~isempty(image))
+    % shift from pixel to cell registration
+    latstep=lat(1,2)-lat(1,1);
+    lonstep=lon(2)-lon(1);
+    lat=lat-latstep/2;
+    lon=lon-lonstep/2;
+    lat=lat([1:end end],[1:end end]);
+    lon=lon([1:end end],[1:end end]);
+    lat(:,end)=lat(:,end)+latstep;
+    lon(end,:)=lon(end,:)+lonstep;
+    image=image([1:end end],[1:end end]);
+    
+    % force >90 lat to 90
+    lat(lat<-90)=-90;
+    lat(lat>90)=90;
+end
+
 % plot map
 % - test if options will update a plot or draw new
 %   - mixed m_coast & m_gshhs draws new
 % - could we delete and redraw certain things?
 if(~held)
+    % initialize map projection
     if(~showsea); sea='none'; end
     if(~showcoast); coast='none'; end
     m_proj(proj,popt{:});
     set(ax,'color',sea);
+    
+    % draw image
+    if(~isempty(image))
+        hold(ax,'on');
+        if(any(lon(:)>MAP_VAR_LIST.longs(1) ...
+                & lon(:)<MAP_VAR_LIST.longs(2)))
+            ph=m_pcolor(lon,lat,image,'parent',ax);
+            set(ph,'clipping','off');
+        end
+        if(any(lon(:)-360>MAP_VAR_LIST.longs(1) ...
+                & lon(:)-360<MAP_VAR_LIST.longs(2)))
+            ph=m_pcolor(lon-360,lat,image,'parent',ax);
+            set(ph,'clipping','off');
+        end
+        if(any(lon(:)+360>MAP_VAR_LIST.longs(1) ...
+                & lon(:)+360<MAP_VAR_LIST.longs(2)))
+            ph=m_pcolor(lon+360,lat,image,'parent',ax);
+            set(ph,'clipping','off');
+        end
+        shading(ax,'flat');
+        hold(ax,'off');
+    end
+    
+    % now draw coast, land, border
     if(strcmpi(gshhs,'o'))
         if(showland)
             m_coast('patch',land,'edgecolor',coast);

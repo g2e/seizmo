@@ -43,10 +43,9 @@ function [s]=geoarf(stlalo,lalo,slow,lalo0,slow0,f0,varargin)
 %     a significant amount of memory.  The default is false.
 %
 %    Notes:
+%     - Latitudes are assumed to be geographic!
 %     - Slowness inputs may also be specified as functions that output
 %       travel time given the following style of input:
-%        tt=func([evla evlo],[stla stlo],freq)
-%       or
 %        tt=func([evla evlo ...],[stla stlo ...],freq)
 %       where tt is the travel time between the locations.  The lat/lon
 %       inputs are Nx2+ arrays and so tt is expected to be a Nx1 array.
@@ -154,7 +153,7 @@ nsrc=max([numel(slow0) size(lalo0,1) numel(f0)]);
 if(isscalar(slow0) && ~s0isafunc); slow0(1:nsrc,1)=slow0; end
 if(isscalar(f0)); f0(1:nsrc,1)=f0; end
 if(size(lalo0,1)==1); lalo0=lalo0(ones(nsrc,1),:); end
-slow0=slow0(:); % force column vector
+if(~s0isafunc); slow0=slow0(:); end % force column vector
 f0=f0(:); % force column vector
 
 % fix method/center/npairs
@@ -223,18 +222,13 @@ end
 if(isnumeric(pv.w))
     pv.w=pv.w(:);
     switch pv.method
-        case 'coarray'
-            % row is master index, column is slave index
-            if(numel(pv.w)==nrecs)
-                pv.w=pv.w(slave).*conj(pv.w(master));
-            end
-        case 'full'
+        case {'coarray' 'full'}
             if(numel(pv.w)==nrecs)
                 pv.w=pv.w(slave).*conj(pv.w(master));
             end
     end
     pv.w=pv.w./sum(abs(pv.w));
-    c=1;
+    z=1;
 else
     switch pv.method
         case {'user' 'center'}
@@ -247,14 +241,14 @@ else
                 lalo(:,ones(nrecs,1)),lalo(:,2*ones(nrecs,1)),...
                 stlalo(:,ones(nll,1))',stlalo(:,2*ones(nll,1))');
             pv.w=ones(npairs,1);
-            c=abs(azdiff(az(:,master),az(:,slave)));
-            c=c./repmat(sum(c,2),1,npairs);
+            z=abs(azdiff(az(:,master),az(:,slave)));
+            z=z./repmat(sum(z,2),1,npairs);
         case 'ddiff'
             pv.w=sphericalinv(...
                 stlalo(master,1),stlalo(master,2),...
                 stlalo(slave,1),stlalo(slave,2));
             pv.w=pv.w./sum(abs(pv.w));
-            c=1;
+            z=1;
     end
 end
 
@@ -303,18 +297,18 @@ for a=1:nsrc
         switch method
             case {'full' 'coarray'}
                 if(pv.avg)
-                    s.spectra=s.spectra+real((c.*exp(-2*pi*1i*f0(a)...
+                    s.spectra=s.spectra+real((z.*exp(-2*pi*1i*f0(a)...
                         *(hs*tt-tt0(ones(nll,1),:))))*pv.w);
                 else
-                    s.spectra(:,b,a)=real((c.*exp(-2*pi*1i*f0(a)...
+                    s.spectra(:,b,a)=real((z.*exp(-2*pi*1i*f0(a)...
                         *(hs*tt-tt0(ones(nll,1),:))))*pv.w);
                 end
             otherwise % {'center' 'user'}
                 if(pv.avg)
-                    s.spectra=s.spectra+abs((c.*exp(-2*pi*1i*f0(a)...
+                    s.spectra=s.spectra+abs((z.*exp(-2*pi*1i*f0(a)...
                         *(hs*tt-tt0(ones(nll,1),:))))*pv.w).^2;
                 else
-                    s.spectra(:,b,a)=abs((c.*exp(-2*pi*1i*f0(a)...
+                    s.spectra(:,b,a)=abs((z.*exp(-2*pi*1i*f0(a)...
                         *(hs*tt-tt0(ones(nll,1),:))))*pv.w).^2;
                 end
         end

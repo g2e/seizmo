@@ -48,7 +48,6 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %       .st             - [lat lon elev(m) depth(m)]
 %       .ev             - [lat lon elev(m) depth(m)]
 %       .delaz          - [degdist az baz kmdist]
-%       .corrections    - traveltime & amplitude correction values
 %       .corrcoef       - max correlation coefficient between waveforms
 %       .synthetics     - TRUE if synthetic data (only reflect synthetics)
 %       .earthmodel     - model used to make synthetics or 'DATA'
@@ -61,7 +60,7 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %      *** Correction is different between data and synthetics.  For data
 %          the .cslow value is found by subtracting out the corrections
 %          (and hence attempts to go from 3D to 1D by removing the lateral
-%          heterogeniety).  For synthetics the .cslow value is essentially
+%          heterogeneity).  For synthetics the .cslow value is essentially
 %          the opposite (it is corrected to 3D).  So basically:
 %                     +----------+---------------+
 %                     |   DATA   |   SYNTHETICS  |
@@ -110,9 +109,10 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %                        workaround, .mat output name includes eventdir
 %        Mar.  5, 2012 - allow no written output
 %        Mar.  6, 2012 - basic .weights field support
+%        Oct. 11, 2012 - drop corrections field (huge)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  6, 2012 at 13:35 GMT
+%     Last Updated Oct. 11, 2012 at 13:35 GMT
 
 % todo:
 
@@ -250,7 +250,8 @@ for a=1:numel(results)
             'slow',[],'slowerr',[],'decay',[],'decayerr',[],...
             'cslow',[],'cslowerr',[],'cdecay',[],'cdecayerr',[],...
             'cluster',b,'kname',[],'st',[],'ev',[],'delaz',[],...
-            'corrections',[],'corrcoef',[],...
+            ...%'corrections',[],...
+            'corrcoef',[],...
             'synthetics',results(a).synthetics,...
             'earthmodel',results(a).earthmodel,...
             'freq',results(a).filter.corners,'phase',results(a).phase,...
@@ -268,7 +269,7 @@ for a=1:numel(results)
         tmp(cnt).azwidth=max(delaz(idx,2))-min(delaz(idx,2));
         
         % corrections
-        tmp(cnt).corrections=fixcorrstruct(results(a).corrections,idx);
+        %tmp(cnt).corrections=fixcorrstruct(results(a).corrections,idx);
         
         % correlation coefficients
         tmp(cnt).corrcoef=...

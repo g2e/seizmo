@@ -16,13 +16,14 @@ function [d]=azdiff(az1,az2)
 %     % 20 --> 340 should give -40:
 %     azdiff(20,340)
 %
-%    See also: SPHERICALINV, VINCENTYINV
+%    See also: AZMEAN, SPHERICALINV, VINCENTYINV
 
 %     Version History:
 %        Feb.  9, 2012 - initial version
+%        Oct. 10, 2012 - add AZMEAN to see also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  9, 2012 at 19:00 GMT
+%     Last Updated Oct. 10, 2012 at 19:00 GMT
 
 % todo:
 

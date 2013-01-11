@@ -10,10 +10,13 @@ function [varargout]=investigate_cmb_results(results,observable)
 %     observables as well as rayparameter and decay constant.  This is
 %     great for diagnosing data problems.
 %
-%     INVESTIGATE_CMB_RESULTS(RESULTS,OBSERVABLE) plots
+%     INVESTIGATE_CMB_RESULTS(RESULTS,OBSERVABLE) plots the indicated
+%     observable in a new figure.  OBSERVABLE must be one of the following:
+%      'arr', 'arrerr', 'amp', 'snr', or 'all' (the default)
 %
 %     AX=INVESTIGATE_CMB_RESULTS(...) returns the handle(s) of the axes
-%     plotted in.  If no observable was specified 
+%     plotted in.  If no observable was specified or OBSERVABLE='all' then
+%     AX has 6 elements, otherwise AX is scalar.
 %
 %    Notes:
 %     - Outliers are set to NaN in the observables plots.
@@ -29,9 +32,10 @@ function [varargout]=investigate_cmb_results(results,observable)
 %     Version History:
 %        Mar.  5, 2012 - initial version, use minor xticks
 %        Mar. 15, 2012 - fixes for pick functions
+%        Oct. 10, 2012 - doc update, more flexibility on 'arrerr' vs 'err'
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 13:35 GMT
+%     Last Updated Oct. 10, 2012 at 13:35 GMT
 
 % todo:
 
@@ -43,7 +47,7 @@ error(check_cmb_results(results));
 
 % check observable
 if(nargin>1 && ~isempty(observable))
-    valid={'arr' 'err' 'amp' 'snr' 'all'};
+    valid={'arr' 'arrerr' 'err' 'amp' 'snr' 'all'};
     if(~ischar(observable) || size(observable,1)~=1 ...
             || ~any(strcmpi(observable,valid)))
         error('seizmo:investigate_cmb_results:badInput',...
@@ -101,7 +105,7 @@ for i=1:nr
                 - getheader(results(i).useralign.data,'o'));
             seizmoverbose(verbose);
             x{i,1}(results(i).outliers.bad)=nan;
-        case 'err'
+        case {'arrerr' 'err'}
             % arrival time error
             x{i,1}=results(i).useralign.solution.arrerr;
             x{i,1}(results(i).outliers.bad)=nan;

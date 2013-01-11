@@ -5,15 +5,14 @@ function [pos]=true_axis_position(ax)
 %              pos=true_axis_position(ax)
 %
 %    Description:
-%     POS=TRUE_AXIS_POSITION retuns the position of the current plotted
-%     axis which may differ from the actual axis position, depending on the
-%     axis limits, data aspect ratio, and plot box aspect ratio.  The
+%     POS=TRUE_AXIS_POSITION returns the true positioning of the current
+%     axis which may differ from the axis positioning from GET, depending
+%     on axis limits, data aspect ratio, and plot box aspect ratio.  The
 %     position is returned in the same units as the those used to define
-%     the axis itself.  This function can only be used for a 2D plot.  POS
-%     is a 4-element position vector like returned by:
-%      get(gca,'position')
+%     the axis.  This function can only be used for a 2D plot.  POS is a
+%     4-element position vector like returned by: get(gca,'position').
 %
-%     POS=TRUE_AXIS_POSITION(AX) returns the position of the axes specified
+%     POS=TRUE_AXIS_POSITION(AX) returns the position of the axis specified
 %     by AX.
 %
 %    Notes:
@@ -40,10 +39,11 @@ function [pos]=true_axis_position(ax)
 %        Oct. 19, 2011 - Now defaults to current axis if no input provided.
 %                        Also updated example image to a simpler one.
 %        May.  3, 2012 - documentation changes, added to seizmo/misc
+%        Oct. 15, 2012 - minor doc update
 %
 %     Written by Kelly Kearney (FEX ID: 9615)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   3, 2012 at 18:35 GMT
+%     Last Updated Oct. 15, 2012 at 18:35 GMT
 
 % todo:
 

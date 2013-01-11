@@ -1,5 +1,6 @@
 function []=sz_toc_misc()
 % Miscellaneous Support Functions
+%<a href="matlab:help ax2funits">ax2funits</a>            - Converts from data units to normalized figure units
 %<a href="matlab:help axexpand">axexpand</a>             - Expands axes by factor
 %<a href="matlab:help axmove">axmove</a>               - Moves a set of axes by the specified amount
 %<a href="matlab:help axparse">axparse</a>              - Strips out axes arguments (leading or p/v pair)
@@ -19,6 +20,7 @@ function []=sz_toc_misc()
 %<a href="matlab:help gaussian">gaussian</a>             - Returns values from a Gaussian PDF
 %<a href="matlab:help gaussiantf">gaussiantf</a>           - Returns a gaussian time function
 %<a href="matlab:help getapplication">getapplication</a>       - Returns application running this script and its version
+%<a href="matlab:help getpeaks">getpeaks</a>             - Returns peak info of a data vector
 %<a href="matlab:help getsubfield">getsubfield</a>          - Get substructure field contents
 %<a href="matlab:help getwords">getwords</a>             - Returns a cell array of words from a string
 %<a href="matlab:help h1">h1</a>                   - Returns H1 line for an mfile

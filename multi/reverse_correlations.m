@@ -10,19 +10,15 @@ function [data]=reverse_correlations(data)
 %     generated with CORRELATE.
 %
 %    Notes:
-%     - Checks that all records have the fields KUSER0 & KUSER1 set to
-%       'MASTER' & 'SLAVE'.  Warns if they are not (an indication that the
-%       records are not from CORRELATE).
+%     - Requires that all records have the fields KUSER0 & KUSER1 set to
+%       'MASTER' & 'SLAVE'.
 %
 %    Header changes:
 %     Switches B & E :
 %      B = -E
 %      E = -B
 %     Master & Slave Field Switches :
-%      STLA   <-> EVLA
-%      STLO   <-> EVLO
-%      STEL   <-> EVEL
-%      STDP   <-> EVDP
+%      ST   <-> EV
 %      KNETWK <-> KT0
 %      KSTNM  <-> KT1
 %      KHOLE  <-> KT2
@@ -30,15 +26,18 @@ function [data]=reverse_correlations(data)
 %      USER0  <-> USER1
 %      CMPINC <-> USER2
 %      CMPAZ  <-> USER3
+%      A,F    <-> T0,T1
 %     Updates:
 %      GCARC, AZ, BAZ, DIST
 %
 %    Examples:
 %     % Get all cross correlation pairs (only computing half of them):
-%     corr1=correlate(data);
+%     corr0=correlate(data); % auto correlations
+%     corr1=correlate(data,'mcxc','noauto');
 %     corr2=reverse_correlations(corr1);
 %
-%    See also: CORRELATE, REVERSE
+%    See also: CORRELATE, REVERSE, SPLIT_AUTO_CORRELATIONS,
+%              ROTATE_CORRELATIONS, SPLIT_HORZ_CORRELATIONS
 
 %     Version History:
 %        Apr. 12, 2010 - initial version
@@ -46,9 +45,10 @@ function [data]=reverse_correlations(data)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Jan. 27, 2012 - update for cmpinc/cmpaz fields, better checkheader
 %                        usage
+%        Oct. 21, 2012 - update for a,f,t0,t1 fields
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2012 at 15:05 GMT
+%     Last Updated Oct. 21, 2012 at 15:05 GMT
 
 % todo:
 
@@ -77,15 +77,16 @@ try
     
     % get header info
     [kuser0,kuser1,user0,user1,user2,user3,cmpinc,cmpaz,st,ev,...
-        knetwk,kstnm,khole,kcmpnm,kt0,kt1,kt2,kt3,b,e]=getheader(data,...
+        knetwk,kstnm,khole,kcmpnm,kt0,kt1,kt2,kt3,...
+        b,e,a,f,t0,t1]=getheader(data,...
         'kuser0','kuser1','user0','user1','user2','user3','cmpinc',...
         'cmpaz','st','ev','knetwk','kstnm','khole','kcmpnm','kt0','kt1',...
-        'kt2','kt3','b','e');
+        'kt2','kt3','b','e','a','f','t0','t1');
     
     % correlogram signature
     if(~all(strcmp('MASTER',kuser0) & strcmp('SLAVE',kuser1)))
-        warning('seizmo:reverse_correlations:notCorrelogram',...
-            'Some records are probably not correlograms!');
+        error('seizmo:reverse_correlations:notCorrelogram',...
+            'Correlograms appear to have malformed headers!');
     end
     
     % detail message
@@ -95,7 +96,8 @@ try
     data=changeheader(data,'b',-e,'e',-b,'st',ev,'ev',st,'user0',user1,...
         'user1',user0,'knetwk',kt0,'kstnm',kt1,'khole',kt2,'kcmpnm',kt3,...
         'kt0',knetwk,'kt1',kstnm,'kt2',khole,'kt3',kcmpnm,...
-        'cmpinc',user2,'cmpaz',user3,'user2',cmpinc,'user3',cmpaz);
+        'cmpinc',user2,'cmpaz',user3,'user2',cmpinc,'user3',cmpaz,...
+        'a',t0,'f',t1,'t0',a,'t1',f);
     
     % reverse data
     data=reverse(data);

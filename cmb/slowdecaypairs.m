@@ -50,7 +50,6 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %       .st             - [lat lon elev(m) depth(m)]
 %       .ev             - [lat lon elev(m) depth(m)]
 %       .delaz          - [degdist az baz kmdist]
-%       .corrections    - traveltime & amplitude correction values
 %       .corrcoef       - max correlation coefficient between waveforms
 %       .synthetics     - TRUE if synthetic data (only reflect synthetics)
 %       .earthmodel     - model used to make synthetics or 'DATA'
@@ -63,7 +62,7 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %      *** Correction is different between data and synthetics.  For data
 %          the .cslow value is found by subtracting out the corrections
 %          (and hence attempts to go from 3D to 1D by removing the lateral
-%          heterogeniety).  For synthetics the .cslow value is essentially
+%          heterogeneity).  For synthetics the .cslow value is essentially
 %          the opposite (it is corrected to 3D).  So basically:
 %                     +----------+---------------+
 %                     |   DATA   |   SYNTHETICS  |
@@ -114,9 +113,11 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %        Mar.  2, 2012 - handle unset earthmodel bugfix, octave save ascii
 %                        workaround, .mat output name includes eventdir
 %        Mar.  5, 2012 - allow no written output
+%        Oct. 10, 2012 - bugfix: azimuthal difference via azdiff
+%        Oct. 11, 2012 - drop corrections field (huge)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2012 at 13:35 GMT
+%     Last Updated Oct. 11, 2012 at 13:35 GMT
 
 % todo:
 
@@ -235,7 +236,7 @@ for a=1:numel(results)
     % get pairs within range (need the indices)
     dgc=abs(delaz(:,ones(nrecs,1))-delaz(:,ones(nrecs,1)).')...
         .*(triu(nan(nrecs),1)+tril(ones(nrecs),-1));
-    daz=abs(delaz(:,2*ones(nrecs,1))-delaz(:,2*ones(nrecs,1)).')...
+    daz=abs(azdiff(delaz(:,2*ones(nrecs,1)),delaz(:,2*ones(nrecs,1)).'))...
         .*(triu(nan(nrecs),1)+tril(ones(nrecs),-1));
     [idx1,idx2]=find(dgc>=gcrng(1) & dgc<=gcrng(2) ...
         & daz>=azrng(1) & daz<=azrng(2));
@@ -256,7 +257,8 @@ for a=1:numel(results)
         'slow',[],'slowerr',[],'decay',[],'decayerr',[],...
         'cslow',[],'cslowerr',[],'cdecay',[],'cdecayerr',[],...
         'cluster',[],'kname',[],'st',[],'ev',[],'delaz',[],...
-        'corrections',[],'corrcoef',[],...
+        ...%'corrections',[],...
+        'corrcoef',[],...
         'synthetics',results(a).synthetics,...
         'earthmodel',results(a).earthmodel,...
         'freq',results(a).filter.corners,'phase',results(a).phase,...
@@ -280,8 +282,8 @@ for a=1:numel(results)
         tmp(b).azwidth=daz(idx1(b),idx2(b));
         
         % corrections
-        tmp(b).corrections=fixcorrstruct(results(a).corrections,...
-            [idx1(b) idx2(b)]);
+        %tmp(b).corrections=fixcorrstruct(results(a).corrections,...
+        %    [idx1(b) idx2(b)]);
         
         % correlation coefficients
         tmp(b).corrcoef=...

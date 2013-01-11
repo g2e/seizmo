@@ -1,9 +1,10 @@
-function [varargout]=plot_cmb_pdf(pf,field,y,p,ax)
+function [varargout]=plot_cmb_pdf(pf,field,y,p,fgcolor,bgcolor,ax)
 %PLOT_CMB_PDF    Plot probability space of slowness or decay constant
 %
 %    Usage:    plot_cmb_pdf(pf,field)
 %              plot_cmb_pdf(pf,field,y,p)
-%              plot_cmb_pdf(pf,field,y,p,ax)
+%              plot_cmb_pdf(pf,field,y,p,fgcolor,bgcolor)
+%              plot_cmb_pdf(pf,field,y,p,fgcolor,bgcolor,ax)
 %              pdf=plot_cmb_pdf(...)
 %              [pdf,y,p]=plot_cmb_pdf(...)
 %
@@ -30,7 +31,15 @@ function [varargout]=plot_cmb_pdf(pf,field,y,p,ax)
 %     established for probability determination).  P inputs have similar
 %     constraints.
 %
-%     PLOT_CMB_PDF(PF,FIELD,Y,P,AX) plots in the axes given by handle AX.
+%     PLOT_CMB_PDF(PF,FIELD,Y,P,FGCOLOR,BGCOLOR) adjusts the foreground
+%     color FGCOLOR and the background color BGCOLOR.  The default is white
+%     ('w') for the foreground and black ('k') for the background.  Note
+%     that if one is specified and the other is not, an opposing color is
+%     found using INVERTCOLOR.  The probability color scale is also changed
+%     so the noise clip is at BGCOLOR.
+%
+%     PLOT_CMB_PDF(PF,FIELD,Y,P,FGCOLOR,BGCOLOR,AX) plots in the axes given
+%     by handle AX.
 %
 %     PDF=PLOT_CMB_PDF(...) outputs the PDF matrix.  PDF is NYxNP in size
 %     where NY is the number of points in the measurement value space and
@@ -69,19 +78,22 @@ function [varargout]=plot_cmb_pdf(pf,field,y,p,ax)
 %        Mar. 30, 2011 - improve title and documentations
 %        Apr. 22, 2011 - fixed docs, input arg order, pdf output transposed
 %        Mar.  5, 2012 - axes handle input
+%        Oct. 11, 2012 - drop corrections field requirement, period min/max
+%                        input bugfix
+%        Oct. 16, 2012 - color options
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2012 at 13:35 GMT
+%     Last Updated Oct. 16, 2012 at 13:35 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(2,5,nargin));
+error(nargchk(2,7,nargin));
 
 % check input
 reqfields={'gcdist','azwidth','slow','slowerr','decay','decayerr',...
     'cslow','cslowerr','cdecay','cdecayerr','cluster','kname','st','ev',...
-    'delaz','synthetics','earthmodel','corrections','corrcoef','freq',...
+    'delaz','synthetics','earthmodel','corrcoef','freq',...
     'phase','runname','dirname','time'};
 if(~isstruct(pf) || any(~isfield(pf,reqfields)))
     error('seizmo:plot_cmb_pdf:badInput',...
@@ -114,12 +126,37 @@ ypad=(ymax-ymin)/4;
 if(nargin<3 || isempty(y)); y=linspace(ymin-ypad,ymax+ypad,100); end
 if(nargin<4 || isempty(p)); p=linspace(pmin,pmax,100); end
 
+% check colors
+if(nargin<5);
+    fgcolor='w'; bgcolor='k';
+elseif(nargin<6)
+    if(isempty(fgcolor))
+        fgcolor='w'; bgcolor='k';
+    else
+        bgcolor=invertcolor(fgcolor,true);
+    end
+else
+    if(isempty(fgcolor))
+        if(isempty(bgcolor))
+            fgcolor='w'; bgcolor='k';
+        else
+            fgcolor=invertcolor(bgcolor,true);
+        end
+    elseif(isempty(bgcolor))
+        bgcolor=invertcolor(fgcolor,true);
+    end
+end
+
+% change char to something rgb
+if(ischar(fgcolor)); fgcolor=name2rgb(fgcolor); end
+if(ischar(bgcolor)); bgcolor=name2rgb(bgcolor); end
+
 % default axes
-if(nargin<5); ax=[]; end
+if(nargin<7); ax=[]; end
 
 % special 2-element range
 if(numel(y)==2); y=linspace(y(1),y(2),100); end
-if(numel(p)==2); y=linspace(p(1),p(2),100); end
+if(numel(p)==2); p=linspace(p(1),p(2),100); end
 
 % special positive scalar integer input
 if(isscalar(y) && y==fix(y) && y>0); y=linspace(ymin-ypad,ymax+ypad,y); end
@@ -173,33 +210,44 @@ elseif(nargout)
 else
     % plot output
     if(isempty(ax))
-        fh=figure('color','k');
+        fh=figure('color',bgcolor);
         ax=axes('parent',fh);
-        colormap(ax,fire);
+        if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
+            colormap(ax,flipud(fire));
+        elseif(strcmp(bgcolor,'k') || isequal(bgcolor,[0 0 0]))
+            colormap(ax,fire);
+        else
+            if(ischar(bgcolor))
+                bgcolor=name2rgb(bgcolor);
+            end
+            hsv=rgb2hsv(bgcolor);
+            colormap(ax,hsvcustom(hsv));
+        end
     end
     imagesc(p,y,mtx,'parent',ax);
-    set(ax,'ydir','normal','color','k','xcolor','w','ycolor','w');
+    set(ax,'ydir','normal','color',bgcolor,...
+        'xcolor',fgcolor,'ycolor',fgcolor);
     set(ax,'xminortick','on','yminortick','on');
     set(ax,'xgrid','on','ygrid','on','linewidth',1);
-    xlabel(ax,'Period (s)');
-    cb=colorbar('peer',ax);
-    ylabel(cb,'% Probability');
+    xlabel(ax,'Period (s)','color',fgcolor);
+    cb=colorbar('peer',ax,'xcolor',fgcolor,'ycolor',fgcolor);
+    ylabel(cb,'% Probability','color',fgcolor);
     set(cb,'linewidth',1);
     switch field
         case 'slow'
-            ylabel(ax,'Ray Parameter (s/^o)');
-            title(ax,'Ray Parameter Dispersion','color','w');
+            ylabel(ax,'Ray Parameter (s/^o)','color',fgcolor);
+            title(ax,'Ray Parameter Dispersion','color',fgcolor);
         case 'cslow'
-            ylabel(ax,'Ray Parameter (s/^o)');
+            ylabel(ax,'Ray Parameter (s/^o)','color',fgcolor);
             title(ax,['Ray Parameter Dispersion Corrected ' ...
-                'for 3D Heterogeniety'],'color','w');
+                'for 3D Heterogeneity'],'color',fgcolor);
         case 'decay'
-            ylabel(ax,'Decay Constant');
-            title(ax,'Decay Constant Dispersion','color','w');
+            ylabel(ax,'Decay Constant','color',fgcolor);
+            title(ax,'Decay Constant Dispersion','color',fgcolor);
         case 'cdecay'
-            ylabel(ax,'Decay Constant');
+            ylabel(ax,'Decay Constant','color',fgcolor);
             title(ax,['Decay Constant Dispersion without ' ...
-                     'Geometrical Spreading'],'color','w');
+                     'Geometrical Spreading'],'color',fgcolor);
     end
 end
 

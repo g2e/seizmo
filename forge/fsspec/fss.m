@@ -63,14 +63,17 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %     slower and gives degraded results compared to the 'coarray' method
 %     and so is not recommended except in verification (as it gives the
 %     exact same result of the 'center' method).  The 'coarray' method has
-%     the best resolution out of those three methods but is far inferior to
-%     he 'capon' method. The 'capon' method is similar to the 'full' method
+%     the best resolution out of those three methods but is inferior to the
+%     'capon' method.  The 'capon' method is similar to the 'full' method
 %     in computation time (the only additional operation is a dampened
 %     inversion of the full cross power spectral density matrix) but the
-%     resolution method at every slowness is optimized in a least-squares
-%     sense using the maximum likelyhood method.  Using [LAT LON] as a
-%     method is algorithmically the same as the 'center' method but uses
-%     the defined coordinates as the center for the array.
+%     resolution at every slowness is optimized in a least-squares sense
+%     using the maximum likelyhood method.  Because of the reliance of the
+%     'capon' method on the actual data, the signal to incoherent noise
+%     levels must be high otherwise the 'coarray' method is the best
+%     choice.  Using [LAT LON] as a method is algorithmically the same as
+%     the 'center' method but uses the defined coordinates as the center
+%     for the array.
 %
 %     S=FSS(...,'WHITEN',TRUE|FALSE,...) whitens the spectras before
 %     beamforming if WHITEN is TRUE.  The default is TRUE.
@@ -148,11 +151,13 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %                        doc update, less memory usage, error for no freq
 %        Sep. 28, 2012 - tiling works for all methods
 %        Sep. 30, 2012 - avg option
+%        Jan.  9, 2013 - bugfix for norm. when record is all zeros
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 30, 2012 at 14:05 GMT
+%     Last Updated Jan.  9, 2013 at 14:05 GMT
 
 % todo:
+% - abs amp (see fssxc)
 
 % check nargin
 error(nargchk(4,inf,nargin));
@@ -316,7 +321,7 @@ else
 end
 
 % whiten data if desired
-if(pv.whiten); data=data./abs(data); end
+if(pv.whiten); data=data./abs(data); data(isnan(data))=0; end
 
 % setup slowness grid
 if(pv.polar)
@@ -369,7 +374,6 @@ switch pv.method
         [master,slave]=find(true(nrecs));
         dt=dt(slave)-dt(master); % alter to pair shifts
 end
-dt=dt(ones(nslow,1),:);
 
 % normalize & expand weights
 pv.w=pv.w(:);
@@ -467,7 +471,7 @@ for a=1:nrng
             if(pv.avg)
                 for b=1:nfreq
                     s(a).spectra=s(a).spectra+reshape(real(...
-                        exp(-2*pi*1i*f(fidx(b))*(p+dt))...
+                        exp(-2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
                         *(mean(data(slave,fidx(b),:)...
                         .*conj(data(master,fidx(b),:)),3).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
@@ -475,7 +479,7 @@ for a=1:nrng
             else
                 for b=1:nfreq
                     s(a).spectra(:,:,b)=reshape(real(...
-                        exp(-2*pi*1i*f(fidx(b))*(p+dt))...
+                        exp(-2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
                         *(mean(data(slave,fidx(b),:)...
                         .*conj(data(master,fidx(b),:)),3).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
@@ -484,22 +488,24 @@ for a=1:nrng
         case 'capon'
             if(pv.avg)
                 for b=1:nfreq
-                    cs=pinv((1-pv.damping)*reshape(...
-                        mean(data(slave,fidx(b),:)...
-                        .*conj(data(master,fidx(b),:)),3),...
-                        [nrecs nrecs])+pv.damping*eye(nrecs));
+                    cs=reshape(mean(data(slave,fidx(b),:)...
+                        .*conj(data(master,fidx(b),:)),3),[nrecs nrecs]);
+                    if(pv.whiten); cs=cs./abs(cs); end
+                    cs=pinv((1-pv.damping)*cs+pv.damping*eye(nrecs));
                     s(a).spectra=s(a).spectra+1./reshape(real(exp(...
-                        -2*pi*1i*f(fidx(b))*(p+dt))*(cs(:).*pv.w)),spts);
+                        -2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
+                        *(cs(:).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
                 end
             else
                 for b=1:nfreq
-                    cs=pinv((1-pv.damping)*reshape(...
-                        mean(data(slave,fidx(b),:)...
-                        .*conj(data(master,fidx(b),:)),3),...
-                        [nrecs nrecs])+pv.damping*eye(nrecs));
+                    cs=reshape(mean(data(slave,fidx(b),:)...
+                        .*conj(data(master,fidx(b),:)),3),[nrecs nrecs]);
+                    if(pv.whiten); cs=cs./abs(cs); end
+                    cs=pinv((1-pv.damping)*cs+pv.damping*eye(nrecs));
                     s(a).spectra(:,:,b)=1./reshape(real(exp(...
-                        -2*pi*1i*f(fidx(b))*(p+dt))*(cs(:).*pv.w)),spts);
+                        -2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
+                        *(cs(:).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
                 end
             end
@@ -507,8 +513,8 @@ for a=1:nrng
             if(pv.avg)
                 for b=1:nfreq
                     for c=1:pv.ntiles
-                        s(a).spectra=s(a).spectra+reshape(abs(...
-                            exp(-2*pi*1i*f(fidx(b))*(p+dt))...
+                        s(a).spectra=s(a).spectra+reshape(abs(exp(...
+                            -2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
                             *(data(:,fidx(b),c).*pv.w)).^2,spts);
                     end
                     if(verbose); print_time_left(b,nfreq); end
@@ -518,7 +524,7 @@ for a=1:nrng
                     for c=1:pv.ntiles
                         s(a).spectra(:,:,b)=s(a).spectra(:,:,b)...
                             +reshape(abs(exp(...
-                            -2*pi*1i*f(fidx(b))*(p+dt))...
+                            -2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
                             *(data(:,fidx(b),c).*pv.w)).^2,spts);
                     end
                     if(verbose); print_time_left(b,nfreq); end
@@ -555,7 +561,7 @@ if(~iscellstr(varargin(1:2:end)))
         'Parameters must be specified using a string!');
 end
 for i=1:2:nargin
-    switch varargin{i}
+    switch lower(varargin{i})
         case {'polar' 'plr' 'pol' 'p'}
             pv.polar=varargin{i+1};
         case {'method' 'meth' 'm'}

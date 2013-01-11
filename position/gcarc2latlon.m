@@ -38,9 +38,10 @@ function [lat,lon]=gcarc2latlon(lat1,lon1,lat2,lon2,npts)
 %        Dec. 13, 2010 - fix wrap-around bug in example
 %        Jan. 22, 2011 - nargchk fix, code formatting
 %        Feb. 10, 2012 - doc update, skip expansion
+%        Oct. 15, 2012 - bugfix: expand only lat1/lon1 as needed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2012 at 19:35 GMT
+%     Last Updated Oct. 15, 2012 at 19:35 GMT
 
 % todo:
 
@@ -73,6 +74,8 @@ end
 
 % get great circle arcs
 [dist,az]=sphericalinv(lat1,lon1,lat2,lon2); n=numel(az);
+if(isscalar(lat1)); lat1=lat1(ones(n,1)); end
+if(isscalar(lon1)); lon1=lon1(ones(n,1)); end
 [lat,lon]=deal(nan(n,npts));
 for i=1:n
     [lat(i,:),lon(i,:)]=sphericalfwd(lat1(i),lon1(i),...

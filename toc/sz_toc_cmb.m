@@ -1,5 +1,6 @@
 function []=sz_toc_cmb()
 % Core-Diffracted Wave Analysis Functions
+%<a href="matlab:help capavg_cmb_profiles">capavg_cmb_profiles</a>         - Cap-average CMB profiles over a lat/lon grid
 %<a href="matlab:help check_cmb_results">check_cmb_results</a>           - Validates a core-diffracted wave analysis struct
 %<a href="matlab:help cmb_1st_pass">cmb_1st_pass</a>                - Initial core-diff alignment + normalization + clustering
 %<a href="matlab:help cmb_2nd_pass">cmb_2nd_pass</a>                - Narrow-band core-diff alignment + normalization

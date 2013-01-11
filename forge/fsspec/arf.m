@@ -358,7 +358,7 @@ if(~iscellstr(varargin(1:2:end)))
         'Parameters must be specified using a string!');
 end
 for i=1:2:nargin
-    switch varargin{i}
+    switch lower(varargin{i})
         case {'polar' 'plr' 'pol' 'p'}
             pv.polar=varargin{i+1};
         case {'method' 'meth' 'm'}

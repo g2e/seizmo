@@ -59,9 +59,10 @@ function [varargout]=plot_cmb_measurements(pf,field,varargin)
 %        Feb. 17, 2011 - aesthetic touches
 %        Mar. 30, 2011 - improve title and documentation
 %        Apr. 22, 2011 - documented outputs, fix warning ids
+%        Oct. 11, 2012 - drop corrections field requirement
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 22, 2011 at 13:35 GMT
+%     Last Updated Oct. 11, 2012 at 13:35 GMT
 
 % todo:
 
@@ -71,7 +72,7 @@ error(nargchk(2,inf,nargin));
 % check profile struct
 reqfields={'gcdist','azwidth','slow','slowerr','decay','decayerr',...
     'cslow','cslowerr','cdecay','cdecayerr','cluster','kname','st','ev',...
-    'delaz','synthetics','earthmodel','corrections','corrcoef','freq',...
+    'delaz','synthetics','earthmodel','corrcoef','freq',...
     'phase','runname','dirname','time'};
 if(~isstruct(pf) || any(~isfield(pf,reqfields)))
     error('seizmo:plot_cmb_measurements:badInput',...
@@ -166,7 +167,7 @@ if(isempty(get(get(ax,'title'),'string')))
             title(ax,'Ray Parameter Dispersion');
         case 'cslow'
             title(ax,['Ray Parameter Dispersion Corrected ' ...
-                'for 3D Heterogeniety']);
+                'for 3D Heterogeneity']);
         case 'decay'
             title(ax,'Decay Constant Dispersion');
         case 'cdecay'

@@ -1,9 +1,10 @@
-function [iso,idx,azi]=gcarc_count(eq,st,minor,pt,r,n)
+function [iso,idx,az,azidx]=gcarc_count(eq,st,minor,pt,r,n)
 %GCARC_COUNT    Great-circle arc histogram count
 %
 %    Usage:    iso=gcarc_count(eq,st,minor,pt,r)
 %              [iso,idx]=gcarc_count(...)
-%              [iso,idx,azi]=gcarc_count(eq,st,minor,pt,r,n)
+%              [iso,idx,az]=gcarc_count(eq,st,minor,pt,r,n)
+%              [iso,idx,az,azidx]=gcarc_count(eq,st,minor,pt,r,n)
 %
 %    Description:
 %     ISO=GCARC_COUNT(EQ,ST,MINOR,PT,R) counts the number of great-circle
@@ -23,19 +24,26 @@ function [iso,idx,azi]=gcarc_count(eq,st,minor,pt,r,n)
 %     instance, EQ(IDX{3},:) & ST(IDX{3},:) give the great-circle-arcs
 %     found near PT(3,:).
 %
-%     [ISO,IDX,AZI]=GCARC_COUNT(EQ,ST,MINOR,PT,R,N) also returns the local
-%     azimuth counts for each location in PT as a BxN array AZI where N is
+%     [ISO,IDX,AZ]=GCARC_COUNT(EQ,ST,MINOR,PT,R,N) also returns the local
+%     azimuth counts for each location in PT as a BxN array AZ where N is
 %     the number of azimuthal bins from 0-180 degrees.  The default for N
 %     is 10 (18deg bins) and may be omitted.
 %
+%     [ISO,IDX,AZ,AZIDX]=GCARC_COUNT(EQ,ST,MINOR,PT,R,N) returns a BxN cell
+%     array of indices corresponding to the great-circle-arcs counted for
+%     each local azimuth bin at each point.
+%
 %    Notes:
+%     - References:
+%        Barmin, Ritzwoller, & Levshin 2001, PAG, Vol. 158, pp. 1351-1375
+%         A Fast and Reliable Method for Surface Wave Tomography
 %
 %    Examples:
 %     % Make a random dataset:
 %     eq=randlatlon(100);
 %     st=randlatlon(100);
 %     pt=randlatlon(1000);
-%     iso=gcarc_count(eq,st,true,pt,1000); % 1000km radius bins
+%     [iso,~,az]=gcarc_count(eq,st,true,pt,1000); % 1000km radius bins
 %
 %     % Plot the arcs & points:
 %     ax=mmap;
@@ -59,14 +67,27 @@ function [iso,idx,azi]=gcarc_count(eq,st,minor,pt,r,n)
 %     title(ax,'Great Circle Arc Density');
 %     hold(ax,'off');
 %
+%     % Now plot the azimuthal distribution (black=uniform, white=poor):
+%     ax=mmap;
+%     hold(ax,'on');
+%     m_scatter(ax,pt(:,2),pt(:,1),[],...
+%         1-repmat(sum(az,2)./(10*max(az,[],2)),[1 3]),...
+%         'filled','markeredgecolor','k');
+%     m_grid('linestyle','none','box','fancy','tickdir','out');
+%     title(ax,'Great Circle Arc Azimuthal Distribution');
+%     hold(ax,'off');
+%
 %    See also: DEGDIST_FROM_GC, CLOSEST_POINT_ON_GC, HAVERSINE,
 %              SPHERICALINV, HISTC
 
 %     Version History:
 %        Feb. 11, 2012 - initial version
+%        Oct.  9, 2012 - fixed bug that included arcs 2*R from point,
+%                        return indices for azimuth bins
+%        Oct. 11, 2012 - add progress bar output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 11, 2012 at 19:00 GMT
+%     Last Updated Oct. 11, 2012 at 19:00 GMT
 
 % todo:
 
@@ -121,8 +142,14 @@ r=r/(6371*pi/180);
 % bins
 bins=linspace(0,180,n+1);
 
+% verbosity
+verbose=seizmoverbose;
+
 % this shortcut for no azi output and if Av<Bv
 if(nargout<3 && Av<Bv)
+    % detail message
+    if(verbose); print_time_left(0,Av); end
+    
     % loop over each gc
     iso=zeros(Bv,1);
     if(nargout>1); idx=cell(Bv,1); end
@@ -136,19 +163,23 @@ if(nargout<3 && Av<Bv)
         [cplat,cplon]=closest_point_on_gc(...
             eq(i,1),eq(i,2),st(i,1),st(i,2),pt(in,1),pt(in,2));
         
-        % eliminate (cp) not within (r) of the specified arc (minor)
-        % - this catches paths starting/ending in window which is ok
-        deq=haversine(eq(i,1),eq(i,2),cplat,cplon);
-        dst=haversine(st(i,1),st(i,2),cplat,cplon);
-        if(minor(i))
-            ok=(deq<d(i)+r) & (dst<d(i)+r);
-        else
-            ok=(deq>d(i)-r) | (dst>d(i)-r);
-        end
+        % are closest points (cp) on the minor arc (eq,st)?
+        dcpeq=haversine(eq(i,1),eq(i,2),cplat,cplon);
+        dcpst=haversine(st(i,1),st(i,2),cplat,cplon);
+        cponminor=abs(dcpeq+dcpst-d(i))<100*eps(d(i));
+        
+        % specified arcs (eq,st) within (r) of (pt)
+        ok=false(size(in));
+        ok(minor(i) & cponminor)=true;
+        ok(~minor(i) & ~cponminor)=true;
+        deq=haversine(eq(i,1),eq(i,2),pt(in,1),pt(in,2));
+        dst=haversine(st(i,1),st(i,2),pt(in,1),pt(in,2));
+        ok(deq<r | dst<r)=true;
         
         % trim
         in=in(ok);
         iso(in)=iso(in)+1;
+        if(verbose); print_time_left(i,Av); end
         if(nargout<2); continue; end
         for j=1:numel(in); idx{in(j)}=[idx{in(j)}; i]; end
     end
@@ -158,7 +189,9 @@ end
 % loop over each point in pt
 iso=zeros(Bv,1);
 if(nargout>1); idx=cell(Bv,1); end
-if(nargout>2); azi=zeros(Bv,n+1); end
+if(nargout>2); az=zeros(Bv,n+1); end
+if(nargout>3); azidx=cell(Bv,n); end
+if(verbose); print_time_left(0,Bv); end
 for i=1:Bv
     % find great circles (eq,st) within (r) of (pt)
     in=find(degdist_from_gc(eq(:,1),eq(:,2),...
@@ -169,22 +202,26 @@ for i=1:Bv
     [cplat,cplon]=closest_point_on_gc(...
         eq(in,1),eq(in,2),st(in,1),st(in,2),pt(i,1),pt(i,2));
     
-    % find (cp) within (r) of the specified arc (minor)
-    % - this catches paths starting/ending in window which is ok
-    deq=haversine(eq(in,1),eq(in,2),cplat,cplon);
-    dst=haversine(st(in,1),st(in,2),cplat,cplon);
-    ok=false(size(cplat));
-    io=minor(in); % minor arcs
-    oi=~io;       % major arcs
-    ok(io)=(deq(io)<=d(in(io))+r) & (dst(io)<=d(in(io))+r);
-    ok(oi)=(deq(oi)>=d(in(oi))-r) | (dst(oi)>=d(in(oi))-r);
+    % is closest point (cp) on the minor arc (eq,st)?
+    dcpeq=haversine(eq(in,1),eq(in,2),cplat,cplon);
+    dcpst=haversine(st(in,1),st(in,2),cplat,cplon);
+    cponminor=abs(dcpeq+dcpst-d(in))<100*eps(max(d(in)));
+    
+    % specified arcs (eq,st) within (r) of (pt)
+    ok=false(size(in));
+    ok(minor(in) & cponminor)=true;
+    ok(~minor(in) & ~cponminor)=true;
+    deq=haversine(eq(in,1),eq(in,2),pt(i,1),pt(i,2));
+    dst=haversine(st(in,1),st(in,2),pt(i,1),pt(i,2));
+    ok(deq<r | dst<r)=true;
     
     % trim
-    in=in(ok);
     cplat=cplat(ok);
     cplon=cplon(ok);
+    in=in(ok);
     
     % have # of great circle arcs (eq,st) within (r) of (pt)
+    if(verbose); print_time_left(i,Bv); end
     iso(i)=numel(in);
     if(nargout<2); continue; end
     idx{i}=in;
@@ -206,16 +243,19 @@ for i=1:Bv
     localaz(localaz<0)=localaz(localaz<0)+180;
     localaz(localaz>180)=localaz(localaz>180)-180;
     
-    % bin them into azi
-    azi(i,:)=histc(localaz,bins);
+    % bin them
+    [az(i,:),binmem]=histc(localaz,bins);
+    
+    % get indexing
+    if(nargout<4); continue; end
+    azidx{i,1}=in(binmem==1 | binmem==n+1); % exactly 180deg is in 1st bin
+    for j=2:n; azidx{i,j}=in(binmem==j); end
 end
 
-% skip azi code if no azi output
+% az(:,end) is the exactly 180deg count
 if(nargout<3); return; end
-
-% azi(:,end) is the exactly 180deg count
-azi(:,1)=azi(:,1)+azi(:,end);
-azi(:,end)=[];
+az(:,1)=az(:,1)+az(:,end);
+az(:,end)=[];
 
 end
 

@@ -5,10 +5,6 @@ way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
 ## addframe(aviobj, hf)
 
-%%%
-phd
-%%%
-
 fss
  - compute spectra not centered on 0,0?
    - complicates cart2pol & pol2cart
@@ -23,7 +19,7 @@ fss
    - power spectral density is scaled by 2*delta/npts (td measures)
 geofss
  - rewrites
-   - geo(fss,fssxc,tdssxc)
+   - geo(fssxc,tdssxc)
  - write
    - geo(fsshorz,fsshorzxc,tdsshorzxc,arfhorz)
 
@@ -37,21 +33,10 @@ meld
 rotate
     - through option
     - rewrite option code
-rotate_correlations
-    - works for unrotated
 
 figure out strange narrow long-period peaks in noise results
     - response taper affects it
     - happens even without response removal?
-
-plot_cmb_measurements
-    - no horizontal errorbars (combine into one?)
-    - use frequency?
-affect of distance on measurements
-affect of azimuth width on measurements
-affect of minimum distance on measurements
-all Pdiff A/B/C 1st pass
-all SHdiff
 
 more cmb models (rjk)
     - we need to allow parameter setting (while loop rather than for)
@@ -59,14 +44,9 @@ more cmb models (rjk)
         - inputs will change per model or series ...
         - can never really do everything here ... just go for basics
 
-%%%%%%%
-POSTDOC
-%%%%%%%
-
 syncsample
     - 1,2,3,4+ datasets
     - this will be underneath rotate, meld, rotate_correlations, 
-omegaxcorr
 
 new datasets
     - natural earth: http://www.naturalearthdata.com/downloads/
@@ -98,13 +78,16 @@ better versioninfo usage
 improve top-level help file
     - some intros to basic signal processing tasks, cmts, plotting
     - walk-thrus of analysis codes
+
 checking needs some tolerance (just too strict...)
     - delta/b often differ by a neglegible amount
+
 slantstacking
 vespagrams
 writegmt
 historical quakes
 subduction zone contours/sheets
+
 improved plotting
     - moving into the gui department would be nice for plotting only
       some records (like for pages of 20 records), changing axes, etc
@@ -116,6 +99,7 @@ improved plotting
 		- phase picking
 		- show predicted phase times
 		- so much more...
+
 3cmp support
     - how do we indicate 3cmp? iftype?
     - need functions to go from 1-cmp to 3-cmp and back
@@ -126,6 +110,7 @@ improved plotting
 	- how to handle non-synced breaks in components
 	- movies/plots of 3-d particle motion
 	- movies/plots of 2-d particle motion
+
 standard instrument responses database
     - this leads into inst resp checking
       ie. this is a STS-2 but the response
@@ -150,6 +135,7 @@ better polezero docs
 	- vel 2 dis
 		- add zero at 0
 	- SERIOUSLY FOLKS, why is there not a simple gui for this?
+
 ffmancor
     - dynamic ray tracing is a must (see princeton group)
 	- stretch/squish gradually starting at some depth
@@ -157,26 +143,33 @@ ffmancor
     - define azimuthal cos
 	- reflect off cmb
     - can we make this something like 1e-6 s/km^3 ?
+
 sph harm mantle models
     - really need codes to synthesize info at points
 ani mantle models
+
 picking
     - better understanding of ppk in SAC
     - mimic it as much as possible
 autopicking
     - sta/lta style
+
 glitch & step removal
     - SAC has glitch detection ... implement it?
 smooth spline removal (requires spline toolbox)
+
 drop restrictive copyright functions
 	buttord2 (edit of buttord)
 	ddendrogram (edit of dendrogram)
+
 slidingavg
     - nan support
     - check against other running mean functions
+
 ttbox integration?
     - needs HUGE revamping for speed & output
     - this would give us Octave support of traveltimes!
+
 getpeaks
 markpeaks
 basic segy (segy2MAT), ah, miniseed support

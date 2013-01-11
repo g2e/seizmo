@@ -36,10 +36,10 @@ function [pf]=extractpf(pf,type,in1,in2)
 %    Examples:
 %     % Extract all profiles between CCM (Cathedral Cave, MO) & HRV
 %     % (Harvard) -- please note that the input order is not important:
-%     newpf=extractpf(pf,'CCM','HRV');
+%     newpf=extractpf(pf,'st','CCM','HRV');
 %
 %     % Pull profiles for station CMB of the Berkeley network:
-%     newpf=extractpf(pf,{'BK' 'CMB'});
+%     newpf=extractpf(pf,'st',{'BK' 'CMB'});
 %
 %    See also: SLOWDECAYPAIRS, PLOT_CMB_MEASUREMENTS, PLOT_CMB_PDF
 
@@ -47,9 +47,12 @@ function [pf]=extractpf(pf,type,in1,in2)
 %        Feb.  2, 2011 - initial version
 %        Mar. 30, 2011 - minor doc update
 %        Mar.  2, 2012 - major rewrite, rename to extractpf
+%        Oct. 11, 2012 - fix examples, drop corrections field requirement
+%        Oct. 15, 2012 - st option works now, added more flexibility to
+%                        option specification
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  2, 2012 at 13:35 GMT
+%     Last Updated Oct. 15, 2012 at 13:35 GMT
 
 % todo:
 
@@ -59,7 +62,7 @@ error(nargchk(3,4,nargin));
 % check profile struct
 reqfields={'gcdist','azwidth','slow','slowerr','decay','decayerr',...
     'cslow','cslowerr','cdecay','cdecayerr','cluster','kname','st','ev',...
-    'delaz','synthetics','earthmodel','corrections','corrcoef','freq',...
+    'delaz','synthetics','earthmodel','corrcoef','freq',...
     'phase','runname','dirname','time'};
 if(~isstruct(pf) || any(~isfield(pf,reqfields)))
     error('seizmo:extractpf:badInput',...
@@ -68,7 +71,7 @@ if(~isstruct(pf) || any(~isfield(pf,reqfields)))
 end
 
 % check type
-valid={'freq' 'ev' 'st'};
+valid={'freq' 'fr' 'f' 'e' 'ev' 'eq' 's' 'st' 'stn' 'kname' 'kn' 'k' 'n'};
 if(~ischar(type) || ~any(strcmpi(type,valid)))
     error('seizmo:extractpf:badInput',...
         'TYPE must be ''FREQ'' ''EV'' or ''ST''!');
@@ -76,7 +79,7 @@ end
 
 % process by type
 switch lower(type)
-    case 'freq'
+    case {'freq' 'fr' 'f'}
         switch numel(in1)
             case 1
                 if(~isnumeric(in1) || ~isreal(in1) || in1<0)
@@ -97,7 +100,7 @@ switch lower(type)
                 error('seizmo:extractpf:badInput',...
                     'FREQ input invalid!');
         end
-    case 'ev'
+    case {'e' 'ev' 'eq'}
         if(~ischar(in1) || ndims(in1)>2 || size(in1,1)~=1)
             error('seizmo:extractpf:badInput',...
                 'EVDIR must be a string!');
@@ -108,9 +111,9 @@ switch lower(type)
             names{i}=[b c];
         end
         pf=pf(ismember(names,in1));
-    case 'st'
+    case {'st' 's' 'stn' 'kname' 'kn' 'k' 'n'}
         % check stn info
-        if(isstring(in1)); stn1=cellstr(in1); end
+        if(isstring(in1)); in1=cellstr(in1); end
         if(~iscellstr(in1) || numel(in1)>4)
             error('seizmo:extractpf:badInput',...
                 ['STN1 must be one of the following:\n' ...
@@ -118,7 +121,7 @@ switch lower(type)
                 '''NAME'' ''STREAM''}']);
         end
         if(nargin==4)
-            if(isstring(in2)); stn2=cellstr(in2); end
+            if(isstring(in2)); in2=cellstr(in2); end
             if(~iscellstr(in2) || numel(in2)>4)
                 error('seizmo:extractpf:badInput',...
                     ['STN2 must be one of the following:\n' ...
@@ -149,50 +152,50 @@ switch lower(type)
         
         % find matches for first station
         match11=false(npf,1); match12=false(npf,1);
-        stn1=upper(stn1); n1=numel(stn1);
+        in1=upper(in1); n1=numel(in1);
         switch n1
             case 1 % name
-                match11(:)=strcmpi(stn1,kname(1,2,:));
-                match12(:)=strcmpi(stn1,kname(2,2,:));
+                match11(:)=strcmpi(in1,kname(1,2,:));
+                match12(:)=strcmpi(in1,kname(2,2,:));
             case 2 % net name
                 for i=1:npf
-                    match11(i)=isequal(stn1,kname(1,1:2,i));
-                    match12(i)=isequal(stn1,kname(2,1:2,i));
+                    match11(i)=isequal(in1,kname(1,1:2,i));
+                    match12(i)=isequal(in1,kname(2,1:2,i));
                 end
             case 3 % net name hole
                 for i=1:npf
-                    match11(i)=isequal(stn1,kname(1,1:3,i));
-                    match12(i)=isequal(stn1,kname(2,1:3,i));
+                    match11(i)=isequal(in1,kname(1,1:3,i));
+                    match12(i)=isequal(in1,kname(2,1:3,i));
                 end
             case 4 % net name hole cmp
                 for i=1:npf
-                    match11(i)=isequal(stn1,kname(1,1:4,i));
-                    match12(i)=isequal(stn1,kname(2,1:4,i));
+                    match11(i)=isequal(in1,kname(1,1:4,i));
+                    match12(i)=isequal(in1,kname(2,1:4,i));
                 end
         end
         
         % find matches for station 2
         if(nargin==4)
             match21=false(npf,1); match22=false(npf,1);
-            stn2=upper(stn2); n2=numel(stn2);
+            in2=upper(in2); n2=numel(in2);
             switch n2
                 case 1 % name
-                    match21(:)=strcmpi(stn2,kname(1,2,:));
-                    match22(:)=strcmpi(stn2,kname(2,2,:));
+                    match21(:)=strcmpi(in2,kname(1,2,:));
+                    match22(:)=strcmpi(in2,kname(2,2,:));
                 case 2 % net name
                     for i=1:npf
-                        match21(i)=isequal(stn2,kname(1,1:2,i));
-                        match22(i)=isequal(stn2,kname(2,1:2,i));
+                        match21(i)=isequal(in2,kname(1,1:2,i));
+                        match22(i)=isequal(in2,kname(2,1:2,i));
                     end
                 case 3 % net name hole
                     for i=1:npf
-                        match21(i)=isequal(stn2,kname(1,1:3,i));
-                        match22(i)=isequal(stn2,kname(2,1:3,i));
+                        match21(i)=isequal(in2,kname(1,1:3,i));
+                        match22(i)=isequal(in2,kname(2,1:3,i));
                     end
                 case 4 % net name hole cmp
                     for i=1:npf
-                        match21(i)=isequal(stn2,kname(1,1:4,i));
-                        match22(i)=isequal(stn2,kname(2,1:4,i));
+                        match21(i)=isequal(in2,kname(1,1:4,i));
+                        match22(i)=isequal(in2,kname(2,1:4,i));
                     end
             end
         end
