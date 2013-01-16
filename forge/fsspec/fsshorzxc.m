@@ -115,9 +115,11 @@ function [r,t]=fsshorzxc(nn,ne,en,ee,smax,spts,frng,varargin)
 %        Sep. 27, 2012 - pv pair inputs, doc update, less memory usage,
 %                        error for no freq, fixed frequency indexing bug
 %        Sep. 30, 2012 - avg option
+%        Jan.  9, 2013 - allow options to be any case
+%        Jan. 14, 2013 - update history
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 30, 2012 at 14:05 GMT
+%     Last Updated Jan. 14, 2013 at 14:05 GMT
 
 % todo:
 

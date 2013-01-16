@@ -127,9 +127,11 @@ function [s]=fssxc(xcdata,smax,spts,frng,varargin)
 %        Sep. 27, 2012 - pv pair inputs, capon method works with damping,
 %                        doc update, error for no freq
 %        Sep. 30, 2012 - avg option
+%        Jan.  9, 2013 - allow options to be any case, notes on amp issue
+%        Jan. 14, 2013 - update history
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 30, 2012 at 14:05 GMT
+%     Last Updated Jan. 14, 2013 at 14:05 GMT
 
 % todo:
 % - discrepancy between fss capon & fssxc caponxc

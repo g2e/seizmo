@@ -83,9 +83,11 @@ function [s]=arf(stlalo,smax,spts,baz0,slow0,f0,varargin)
 %        Sep. 22, 2012 - allow station or pair weights
 %        Sep. 27, 2012 - pv pair inputs, doc update
 %        Sep. 30, 2012 - avg option
+%        Jan.  9, 2013 - allow options to be any case
+%        Jan. 14, 2013 - update history
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 30, 2012 at 14:40 GMT
+%     Last Updated Jan. 14, 2013 at 14:40 GMT
 
 % todo:
 

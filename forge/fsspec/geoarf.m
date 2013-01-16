@@ -86,9 +86,12 @@ function [s]=geoarf(stlalo,lalo,slow,lalo0,slow0,f0,varargin)
 %                        average the sources
 %        Sep. 28, 2012 - pv pair inputs, doc update, tt functions
 %        Sep. 29, 2012 - special weighting 'azdiff' & 'ddiff', avg option
+%        Oct.  2, 2012 - minor doc update, minor bugfix for func handle,
+%                        variable collision bugfix
+%        Jan. 15, 2013 - history update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 29, 2012 at 17:00 GMT
+%     Last Updated Jan. 15, 2013 at 17:00 GMT
 
 % todo:
 

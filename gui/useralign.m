@@ -92,9 +92,11 @@ function [info,xc,data0]=useralign(data,varargin)
 %        Jan. 17, 2011 - allow specifying window & taper, altered menus
 %        Jan. 29, 2011 - fix window input bug
 %        Mar. 16, 2012 - doc update
+%        Oct. 17, 2012 - minor doc update (heterogeneity misspelling)
+%        Jan. 11, 2013 - minor doc update (history update)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2011 at 11:00 GMT
+%     Last Updated Jan. 11, 2013 at 11:00 GMT
 
 % todo:
 

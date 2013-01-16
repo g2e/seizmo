@@ -1,5 +1,5 @@
 % SEIZMO - Passive Seismology Toolbox
-% Version 0.6.14 Makalu 31-May-2012
+% Version 0.6.15 Noshaq 20-Sep-2012
 %
 % New to SEIZMO? Overwhelmed by all the functions?
 %  <a href="matlab:showdemo sz_pub_beginning">THE BASICS</a>
@@ -12,7 +12,7 @@
 % Want to help develop SEIZMO?  Have a feature to add?
 % Email me: ggeuler@seismo.wustl.edu
 %
-% Garrett Euler, Ph.D. Candidate
+% Garrett Euler, Ph.D.
 % Department of Earth & Planetary Sciences
 % Washington University in Saint Louis
 %

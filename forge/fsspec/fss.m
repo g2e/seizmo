@@ -151,10 +151,14 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %                        doc update, less memory usage, error for no freq
 %        Sep. 28, 2012 - tiling works for all methods
 %        Sep. 30, 2012 - avg option
-%        Jan.  9, 2013 - bugfix for norm. when record is all zeros
+%        Oct. 10, 2012 - doc update, lower mem usage (expand dt on the
+%                        fly), whitening for capon method
+%        Jan.  9, 2013 - bugfix for norm. when record is all zeros, allow
+%                        options to be any case
+%        Jan. 14, 2013 - update history
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  9, 2013 at 14:05 GMT
+%     Last Updated Jan. 14, 2013 at 14:05 GMT
 
 % todo:
 % - abs amp (see fssxc)

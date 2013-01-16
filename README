@@ -1,5 +1,4 @@
 SEIZMO - passive seismology toolbox for Matlab & GNU Octave
-Lhotse release series (2012-Mar-16)
 
 1. What is SEIZMO?
 ------------------
@@ -50,9 +49,3 @@ REMEMBER: 'help <function>' or 'help <directory>'
 5. Contributing
 ---------------
 Awesome! See the CONTRIB file!
-
-
-  Garrett Euler, Ph.D. Candidate
-  ggeuler .at. seismo @dot@ wustl @dot@ edu
-  Department of Earth & Planetary Sciences
-  Washington University in Saint Louis
