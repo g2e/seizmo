@@ -63,9 +63,11 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %        Feb.  7, 2012 - merge to meld update
 %        Mar.  1, 2012 - fixes for scalar structs
 %        Mar. 15, 2012 - fixes for pick functions
+%        Jan. 28, 2013 - some records have inf data values so some code
+%                        was added to catch & delete those records
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 13:35 GMT
+%     Last Updated Jan. 28, 2013 at 13:35 GMT
 
 % todo:
 
@@ -123,6 +125,13 @@ for i=s(:)'
     
     % read in data
     data=readseizmo([indir filesep dates(i).name]);
+    
+    % clean out data with inf values
+    baddata=false(numel(data),1);
+    for b=1:numel(data)
+        if(any(isinf(data(b).dep))); baddata(b)=true; end
+    end
+    data(baddata)=[];
     
     % find event cmt
     ievent=ssidx(event,i);

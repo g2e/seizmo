@@ -24,9 +24,11 @@ function [cmt,dist]=sod2cmt(sod,varargin)
 
 %     Version History:
 %        Feb. 29, 2012 - initial version
+%        Jan. 18, 2013 - magnitude type bugfix, preallocation bugfix
+%        Jan. 28, 2013 - force column vector output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 29, 2012 at 17:25 GMT
+%     Last Updated Jan. 28, 2013 at 17:25 GMT
 
 % todo:
 
@@ -49,14 +51,14 @@ end
 
 % loop over each event
 nev=numel(sod.latitude);
-cmt(1:nev,1)=struct();
 dist=nan(nev,1);
 for i=1:nev
     sod1=ssidx(sod,i);
     [cmt(i),dist(i)]=findcmt('time',sod1.time,...
         'location',[sod1.latitude sod1.longitude],...
-        'magnitude',sod1.magnitude,'magtype',sod1.magnitudeType,...
-        'depth',sod1.depth,varargin{:});
+        'magnitude',sod1.magnitude,'magtype',sod1.magnitudeType{:},...
+        'depth',sod1.depth,varargin{:}); %#ok<AGROW>
+    if(i==1); cmt(2:nev,1)=cmt; end
 end
 
 % concatenate struct elements into a scalar struct

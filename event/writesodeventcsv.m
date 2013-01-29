@@ -40,13 +40,13 @@ function []=writesodeventcsv(file,events,varargin)
 %
 %    Examples:
 %     % Using READSODEVENTCSV and WRITESODEVENTCSV together allows for
-%     % adjusting SOD Event CSV files via matlab.  For instance to create a
-%     % file with only events with magnitude > 5.5:
+%     % adjusting SOD Event CSV files via matlab.  For instance to create
+%     % a file with only events with magnitude > 5.5:
 %     events=readsodeventcsv('my.csv')
-%     events=events([events.magnitude]>5.5));
+%     events=ssidx(events,events.magnitude>5.5);
 %     writesodeventcsv('my_gt_5p5.csv',events);
 %
-%    See also: READSODEVENTCSV, READCSV, WRITECSV
+%    See also: READSODEVENTCSV, READCSV, WRITECSV, SSIDX, SSCAT
 
 %     Version History:
 %        Sep. 16, 2009 - initial version
@@ -55,9 +55,10 @@ function []=writesodeventcsv(file,events,varargin)
 %        Mar. 30, 2010 - check fields are available to modify, doc update
 %        Feb. 11, 2011 - mass nargchk fix
 %        Feb. 29, 2012 - update for scalar struct changes
+%        Jan. 17, 2013 - fix example, add ssidx/sscat to see also
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 28, 2012 at 15:05 GMT
+%     Last Updated Jan. 17, 2013 at 15:05 GMT
 
 % todo:
 

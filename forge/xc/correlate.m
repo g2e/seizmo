@@ -16,10 +16,10 @@ function [data]=correlate(master,varargin)
 %     by the MASTER and SLAVE datasets on a index by index basis.  That
 %     means that the record MASTER(3) is correlated with SLAVE(3).  If
 %     either MASTER or SLAVE is scalar it is applied to all the records of
-%     the other.  The correlation operation is done in the frequency-domain
-%     but the results are returned in the time domain.  CORRELOGRAMS will
-%     match the size of the non-scalar input (if both are scalar then
-%     CORRELOGRAMS is scalar).
+%     the other.  Please note that the correlation operation is done in the
+%     frequency-domain but the results are returned in the time domain.
+%     The output CORRELOGRAMS will match the size of the non-scalar input
+%     (if both are scalar then CORRELOGRAMS is scalar).
 %
 %     CORRELOGRAMS=CORRELATE(MASTER) returns the autocorrelations for each
 %     record in MASTER.  The output CORRELOGRAMS is the same size as the
@@ -29,28 +29,35 @@ function [data]=correlate(master,varargin)
 %     are normalized by the zero lag value of the autocorrelations.  The
 %     values for a normalized correlogram are in the range from -1 to 1,
 %     with 1 being a perfect correlation between the two records and -1
-%     a perfect anticorrelation.
+%     a perfect anticorrelation.  This requires slightly more computation
+%     time as the zero-lag values of the autocorrelations must be computed.
 %
-%     CORRELOGRAMS=CORRELATE(...,'MCXC',...) makes every possible pairing
-%     between the MASTER & SLAVE datasets (or if only the MASTER set is
-%     given then it gets unique pairs amongst those -- autocorrelations
-%     too).  This just helps to reduce the computation time and memory as
-%     each input record is in several pairs.
+%     CORRELOGRAMS=CORRELATE(...,'MCXC',...) cross correlates all possible
+%     pairings between the MASTER & SLAVE datasets (or if only the MASTER
+%     set is given this computes all the unique cross correlations as well
+%     as the autocorrelations).  This helps to reduce computation time and
+%     memory by making use of the fact that each input record is in several
+%     pairings.
 %
 %     CORRELOGRAMS=CORRELATE(...,'NOAUTO',...) skips autocorrelations for
 %     the MASTER only 'MCXC' case.
 %
 %     CORRELOGRAMS=CORRELATE(...,'RELTIME',...) makes the lags based on the
-%     relative timing of the records.  By default the lags are based on the
-%     absolute timing of the correlated records.
+%     relative timing of the records.  That is, using this flag will cause
+%     CORRELATE to ignore any differences in the reference timing of the
+%     input records.  By default the lags are based on the absolute timing
+%     of the correlated records.
 %
 %     CORRELOGRAMS=CORRELATE(...,[LAGMIN LAGMAX],...) limits the output
 %     correlograms to the lag points within the specified range.  Note that
-%     padding is done with zeros.
+%     if the range extends past the default range (all possible non-zero
+%     points), then the correlograms are padded with zeros as needed.
 %
 %     CORRELOGRAMS=CORRELATE(...,'ABSXC',...) takes the absolute value of
 %     the correlograms.  This is only useful for peak picking (see the next
-%     option).
+%     option) which forces the peak picker to look at troughs in the
+%     negative correlation range.  Note that troughs in the positive
+%     correlation range will not become peaks by this action.
 %
 %     PEAKS=CORRELATE(...,'PEAKS',{'PARAM1',VAL1,...},...) passes the
 %     correlograms on to a peak picker.  The output PEAKS is a struct
@@ -65,18 +72,17 @@ function [data]=correlate(master,varargin)
 %    Notes:
 %     - All records are required to have a common sample rate (DELTA field
 %       should be equal), be evenly sampled (LEVEN field should be TRUE),
-%       and single component (GETNCMP should return all ones).  All records
-%       are also passed through CHECKHEADER so sane settings for all header
+%       and single component (NCMP field should be 1).  All records are
+%       also passed through CHECKHEADER so sane settings for all header
 %       fields are enforced.
 %     - The correlograms are given filenames using the following format:
 %       CORR_-_MASTER_-_REC<idx>_-_<kname>_-_SLAVE_-_REC<idx>_-_<kname>
-%       where <idx> is the index of the record in MASTER/SLAVE (zero
-%       padded) and <kname> is the fields knetwk, kstnm, khole, kcmpnm of
-%       record <idx> joined with periods ('.') in between.  The path is set
-%       to the current directory ('.'), while byte-order uses that which is
-%       native to the current system.  Filetype is SAC v6 binary file.  See
-%       the Header changes section for details on info retained in the
-%       header.
+%       where <idx> is the index of the record in MASTER/SLAVE and <kname>
+%       is the fields knetwk, kstnm, khole, kcmpnm of record <idx> joined
+%       with periods ('.') in between.  The path is set to the current
+%       directory ('.'), while byte-order uses that which is native to the
+%       current system.  Filetype is SAC v6 binary file.  See the Header
+%       changes section for details on info retained in the header.
 %
 %    Header Changes:
 %     DEPMEN, DEPMIN, DEPMAX, NPTS
@@ -147,9 +153,10 @@ function [data]=correlate(master,varargin)
 %        Sep. 28, 2012 - force delta & leven of output
 %        Oct. 19, 2012 - complete rewrite
 %        Oct. 21, 2012 - more fixes related to testing
+%        Jan. 28, 2013 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 21, 2012 at 15:05 GMT
+%     Last Updated Jan. 28, 2013 at 15:05 GMT
 
 % todo:
 

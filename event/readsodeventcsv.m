@@ -35,14 +35,12 @@ function [events]=readsodeventcsv(varargin)
 %       Philip Crotwell.  Website: http://www.seis.sc.edu/sod/
 %
 %    Examples:
-%     % READSODEVENTCSV uses readcsv but also converts several
-%     % fields into a more useful form.  To show the differences:
-%     ev1=readcsv(file);
-%     ev2=readsodeventcsv(file);
-%     ev1(1)
-%     ev2(1)
+%     % READSODEVENTCSV uses READCSV but also converts several
+%     % fields into a more useful format.  To show the differences:
+%     ev1=readcsv(file)
+%     ev2=readsodeventcsv(file)
 %
-%    See also: WRITESODEVENTCSV, READCSV, WRITECSV, SETEVENT
+%    See also: WRITESODEVENTCSV, READCSV, WRITECSV, SETEVENT, SSIDX, SSCAT
 
 %     Version History:
 %        Sep. 16, 2009 - initial version
@@ -51,9 +49,10 @@ function [events]=readsodeventcsv(varargin)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Jan. 28, 2012 - doc update, pass char to strnlen
 %        Feb. 28, 2012 - update for READCSV scalar struct output
+%        Jan. 17, 2013 - fix example, add ssidx/sscat to see also
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 28, 2012 at 15:05 GMT
+%     Last Updated Jan. 17, 2013 at 15:05 GMT
 
 % todo:
 

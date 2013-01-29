@@ -25,7 +25,9 @@ geofss
 
 make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
 
-noise_stack needs overlap option
+noise_stack
+    - stack2stack companion function
+    - needs overlap option
     - more time functions (time_range_overlap: sec,bgn,end)
 
 meld
@@ -35,8 +37,10 @@ rotate
     - rewrite option code
 
 figure out strange narrow long-period peaks in noise results
-    - response taper affects it
+    - response taper affects it?
+    - window length does not?
     - happens even without response removal?
+    - as you can see i'm not sure...may even be a real signal!
 
 more cmb models (rjk)
     - we need to allow parameter setting (while loop rather than for)

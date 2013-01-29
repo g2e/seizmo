@@ -106,9 +106,11 @@ function [info]=multibandalign(data,varargin)
 %        Mar.  5, 2012 - allow no written output by setting figdir=false
 %        Mar. 15, 2012 - fix for pick functions
 %        Apr.  3, 2012 - use seizmocheck
+%        Jan. 28, 2013 - deleted permutation of xc outputs, fixed phase
+%                        parsing for findpicks, fixed figdir handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 12:25 GMT
+%     Last Updated Jan. 28, 2013 at 12:25 GMT
 
 % todo:
 % - smarter initial window is needed to reduce later arrivals messing up
@@ -486,20 +488,10 @@ try
             bigdeleted=ndsquareform(deleted(:,ones(nn,1)) ...
                 | deleted(:,ones(nn,1))');
             info(i).useralign.xc.cg(bigdeleted,:)=[];
-            info(i).useralign.xc.cg=...
-                permute(info(i).useralign.xc.cg,[1 3 2]);
             info(i).useralign.xc.lg(bigdeleted,:)=[];
-            info(i).useralign.xc.lg=...
-                permute(info(i).useralign.xc.lg,[1 3 2]);
             info(i).useralign.xc.pg(bigdeleted,:)=[];
-            info(i).useralign.xc.pg=...
-                permute(info(i).useralign.xc.pg,[1 3 2]);
             info(i).useralign.xc.zg(bigdeleted,:)=[];
-            info(i).useralign.xc.zg=...
-                permute(info(i).useralign.xc.zg,[1 3 2]);
             info(i).useralign.xc.wg(bigdeleted,:)=[];
-            info(i).useralign.xc.wg=...
-                permute(info(i).useralign.xc.wg,[1 3 2]);
             clear bigdeleted;
             
             % update variables
@@ -556,7 +548,7 @@ end
 
 % shift if phase given
 if(~isempty(p.phase))
-    [t,n]=findpicks(data,[p.phase ',' p.phase],1);
+    [t,n]=findpicks(data,[p.phase(1) ',' p.phase],1);
     data=timeshift(data,-t,strcat('it',num2str(n)));
 end
 
@@ -880,8 +872,10 @@ varargin=varargin(keep);
 if(p.auto); p.fast=true; end
 
 % fix TRUE directory input
-if(islogical(p.figdir) && p.figdir); p.figdir='.'; end
-if(islogical(figdir)); p.figout=odir; else p.figout=true; end
+if(islogical(p.figdir))
+    if(~p.figdir); p.figout=false; end
+    p.figdir='.';
+end
 
 % create directory if it does not exist
 % check that this does not fail

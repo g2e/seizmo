@@ -13,8 +13,9 @@ function [axc,xc]=split_auto_correlations(xc,cmpflag)
 %     [AXC,XC]=SPLIT_AUTO_CORRELATIONS(XC,CMPFLAG) ignores component codes
 %     when deciding autocorrelations when CMPFLAG=FALSE.  This is useful
 %     for detecting "auto" correlations between components of the same
-%     station.  The default is CMPFLAG=TRUE and requires component codes to
-%     be exactly the same for autocorrelations.
+%     station (ie. between horizontals).  The default is CMPFLAG=TRUE and
+%     requires component codes to be exactly the same for autocorrelation
+%     detection.
 %
 %    Notes:
 %
@@ -28,10 +29,11 @@ function [axc,xc]=split_auto_correlations(xc,cmpflag)
 %              SPLIT_HORZ_CORRELATIONS
 
 %     Version History:
-%        Oct. 21, 2010 - initial version
+%        Oct. 21, 2012 - initial version
+%        Jan. 28, 2013 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 21, 2012 at 13:30 GMT
+%     Last Updated Jan. 28, 2013 at 13:30 GMT
 
 % todo:
 

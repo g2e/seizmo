@@ -9,6 +9,10 @@ function [nn,ne,en,ee]=split_horz_correlations(xc)
 %     East.  All other correlations are dropped.
 %
 %    Notes:
+%     - The ordering nor the size of NN, NE, EN, & EE are not guaranteed to
+%       match unless the original data records are ordered in a particular
+%       way.  Using ROTATE immediately before CORRELATE is one way to
+%       assure this (see the example below).
 %
 %    Examples:
 %     % Read, Rotate, Correlate, Separate, Rotate:
@@ -23,9 +27,10 @@ function [nn,ne,en,ee]=split_horz_correlations(xc)
 
 %     Version History:
 %        Oct. 21, 2010 - initial version
+%        Jan. 28, 2013 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 21, 2012 at 13:30 GMT
+%     Last Updated Jan. 28, 2013 at 13:30 GMT
 
 % todo:
 
