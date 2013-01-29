@@ -67,9 +67,8 @@ function [varargout]=fkxcmap(data,smax,spts,frng,polar,w)
 %       the 'coarray' method from FKMAP.
 %
 %    Examples:
-%     Show frequency-slowness map for a dataset at 20-50s periods:
-%      xcdata=correlate(data);
-%      fkxcmap(xcdata,50,201,[1/50 1/20]);
+%     % Show frequency-slowness map for a dataset at 20-50s periods:
+%     fkxcmap(correlate(data,'mcxc','noauto'),50,201,[1/50 1/20]);
 %
 %    See also: FKMAP, FKFREQSLIDE, FKMAP, FK4D, FKVOL2MAP, FKSUBVOL,
 %              FKXCHORZMAP, CORRELATE
@@ -77,9 +76,10 @@ function [varargout]=fkxcmap(data,smax,spts,frng,polar,w)
 %     Version History:
 %        Nov. 18, 2010 - initial version
 %        Apr.  3, 2012 - use seizmocheck
+%        Jan. 29, 2013 - example update for new correlate functions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 15:25 GMT
+%     Last Updated Jan. 29, 2013 at 15:25 GMT
 
 % todo:
 

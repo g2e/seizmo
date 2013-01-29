@@ -77,15 +77,17 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %       the 'coarray' method from FKVOLUME.
 %
 %    Examples:
-%     One way to perform horizontal fk analysis:
-%      enxc=correlate(e,n);
-%      [b,e,delta]=getheader(enxc,'b','e','delta');
-%      enxc=interpolate(enxc,delta(1),'spline',max(b),min(e));
-%      rtxc=rotate_correlations(enxc);
-%      [rvol,tvol]=fkxchorzvolume(rtxc(1:4:end),rtxc(2:4:end),...
-%          rtxc(3:4:end),rtxc(4:4:end),50,101,[1/50 1/20]);
-%      fkfreqslide(rvol,0);
-%      fkfreqslide(tvol,0);
+%     % One way to perform horizontal fk analysis:
+%     data=rotate(data,'to',0,'kcmpnm1','N','kcmpnm2','E');
+%     xc=correlate(data,'mcxc');
+%     [axc,xc]=split_auto_correlations(xc,false);
+%     [b,e,delta]=getheader(xc,'b','e','delta');
+%     xc=interpolate(xc,delta(1),'spline',max(b),min(e));
+%     [nn,ne,en,ee]=split_horz_correlations(xc);
+%     [rr,rt,tr,tt]=rotate_correlations(nn,ne,en,ee);
+%     [r,t]=fkxchorzvolume(rr,rt,tr,tt,50,101,[1/50 1/20]);
+%     fkfreqslide(rvol,0);
+%     fkfreqslide(tvol,0);
 %
 %    See also: FKXCVOLUME, FKFREQSLIDE, FKMAP, FK4D, FKVOL2MAP, FKSUBVOL,
 %              FKVOLUME, CORRELATE, ROTATE_CORRELATIONS
@@ -101,9 +103,10 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %        July  1, 2010 - high latitude fix
 %        July  6, 2010 - major update to struct, doc update
 %        Nov. 18, 2010 - .weights bugfix
+%        Jan. 29, 2013 - example update for new correlate functions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov. 18, 2010 at 15:25 GMT
+%     Last Updated Jan. 29, 2013 at 15:25 GMT
 
 % todo:
 

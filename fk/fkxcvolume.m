@@ -68,7 +68,7 @@ function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
 %
 %    Examples:
 %     % Show frequency-slowness volume for a dataset at 20-50s periods:
-%     xcdata=correlate(data);
+%     xcdata=correlate(data,'mcxc','noauto');
 %     svol=fkxcvolume(xcdata,50,201,[1/50 1/20]);
 %     mov=fkfreqslide(svol,0); % show once with no delay (make movie too)
 %     h=figure; % open figure so movie consumes figure
@@ -86,9 +86,10 @@ function [varargout]=fkxcvolume(data,smax,spts,frng,polar,w)
 %        July  1, 2010 - high latitude fix
 %        July  6, 2010 - major update to struct, doc update
 %        Apr.  3, 2012 - use seizmocheck
+%        Jan. 29, 2013 - example update for new correlate functions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 15:25 GMT
+%     Last Updated Jan. 29, 2013 at 15:25 GMT
 
 % todo:
 
