@@ -1,7 +1,6 @@
 function []=sz_toc_multi()
 % Multi-Record Operations
 %<a href="matlab:help addrecords">addrecords</a>           - Add SEIZMO records
-%<a href="matlab:help correlate">correlate</a>            - Compute cross correlograms of SEIZMO data records
 %<a href="matlab:help coverage">coverage</a>             - Convert SEIZMO data records to coverage
 %<a href="matlab:help dividerecords">dividerecords</a>        - Divide SEIZMO records
 %<a href="matlab:help getcomponentidx">getcomponentidx</a>      - Returns index array to separate dataset into components
@@ -16,9 +15,7 @@ function []=sz_toc_multi()
 %<a href="matlab:help multifun">multifun</a>             - Perform basic function between multiple SEIZMO records
 %<a href="matlab:help multiplyrecords">multiplyrecords</a>      - Multiply SEIZMO records
 %<a href="matlab:help removeduplicates">removeduplicates</a>     - Remove duplicate SEIZMO records
-%<a href="matlab:help reverse_correlations">reverse_correlations</a> - Reverses correlations (switch master & slave)
 %<a href="matlab:help rotate">rotate</a>               - Rotates SEIZMO records that are horizontal pairs
-%<a href="matlab:help rotate_correlations">rotate_correlations</a>  - Rotates EE/EN/NE/NN correlations to RR/RT/TR/TT
 %<a href="matlab:help splitrecords">splitrecords</a>         - Split up components into separate records
 %<a href="matlab:help stack">stack</a>                - Simple Time-Domain Stacking of SEIZMO records
 %<a href="matlab:help subtractrecords">subtractrecords</a>      - Subtract SEIZMO records

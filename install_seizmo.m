@@ -59,9 +59,10 @@ function [varargout]=install_seizmo()
 %        Mar.  1, 2012 - globalcmt catalog creation
 %        Mar.  8, 2012 - fix mattaup multi-jar breakage
 %        Mar. 15, 2012 - responses, models & features download
+%        Jan. 29, 2013 - added xc folder
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 15:25 GMT
+%     Last Updated Jan. 29, 2013 at 15:25 GMT
 
 % todo:
 
@@ -181,6 +182,7 @@ addpath(path,...
     [path fs 'ttcorrect'],...
     [path fs 'win'],...
     [path fs 'ww3'],...
+    [path fs 'xc'],...
     [path fs 'xcalign'],...
     [path fs 'mattaup']);
 ok=ok & ~savepath;
