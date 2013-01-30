@@ -1,13 +1,15 @@
-function [resid]=ttresid(lg,dt)
+function [resid]=ttresid(lag,dt)
 %TTRESID    Returns the time residuals of lags from the solution
 %
-%    Usage:    resid=ttresid(lg,m)
+%    Usage:    resid=ttresid(lag,m)
 %
 %    Description:
-%     RESID=TTRESID(LG,M) returns the time residual of each lag in LG from
-%     the lags estimated by relative arrivals in M.
+%     RESID=TTRESID(LAG,M) returns the time residual of each lag in LAG
+%     from the lags estimated by relative arrivals in M.
 %
 %    Notes:
+%     - LAG is required to be 2D or 3D where the 1st 2 dimensions are NxN
+%       or N*(N-1)/2x1 where N is the number of signals being compared.
 %
 %    Examples:
 %     % Plot of record number vs the lag residuals
@@ -23,9 +25,10 @@ function [resid]=ttresid(lg,dt)
 %        Mar. 22, 2010 - initial version
 %        Sep. 13, 2010 - nargchk fix
 %        Apr.  2, 2012 - minor doc update
+%        Jan. 29, 2013 - change lg to lag for readibility, fix warnings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  2, 2012 at 01:05 GMT
+%     Last Updated Jan. 29, 2013 at 01:05 GMT
 
 % todo:
 
@@ -33,35 +36,35 @@ function [resid]=ttresid(lg,dt)
 error(nargchk(2,2,nargin));
 
 % check inputs
-[nr,nxc,np,vector]=check_xc_info(lg);
+[nr,nxc,np,vector]=check_xc_info(lag);
 check_xc_solutions(nr,dt);
 
 % find number of deviations
 if(vector)
     % i=row, j=col in matrix form
-    [i,j]=ind2sub([nr nr],find(tril(true(nr),-1)));
+    [s,m]=ind2sub([nr nr],find(tril(true(nr),-1)));
     
     % misfit
-    resid=lg-dt(i,1,ones(1,np))+dt(j,1,ones(1,np));
+    resid=lag-dt(s,1,ones(1,np))+dt(m,1,ones(1,np));
 else % matrix
     % misfit
-    resid=lg-dt(:,ones(1,nr),ones(1,np))...
+    resid=lag-dt(:,ones(1,nr),ones(1,np))...
         +permute(dt(:,ones(1,nr),ones(1,np)),[2 1 3]);
 end
 
 end
 
 
-function [nr,nxc,np,vector]=check_xc_info(lg)
+function [nr,nxc,np,vector]=check_xc_info(lag)
 % size up
-sz=size(lg);
+sz=size(lag);
 
 % require only 3 dimensions
 if(numel(sz)==2)
     sz(3)=1;
 elseif(numel(sz)>3)
-    error('seizmo:ttnumdev:badInput',...
-        'LG has too many dimensions!');
+    error('seizmo:ttresid:badInput',...
+        'LAG has too many dimensions!');
 end
 
 % allow either vector or matrix form
@@ -75,14 +78,14 @@ if(sz(2)==1)
     
     % assure length is ok
     if((nr^2-nr)/2~=sz(1))
-        error('seizmo:ttnumdev:badInput',...
-            'LG is not a properly lengthed vector!');
+        error('seizmo:ttresid:badInput',...
+            'LAG is not a properly lengthed vector!');
     end
     
     % check values are in range
-    if(~isreal(lg))
-        error('seizmo:ttnumdev:badInput',...
-            'LG must be a vector of real values!');
+    if(~isreal(lag))
+        error('seizmo:ttresid:badInput',...
+            'LAG must be a vector of real values!');
     end
 else % matrix form
     vector=false;
@@ -94,14 +97,14 @@ else % matrix form
     
     % check grids are square
     if(sz(1)~=sz(2))
-        error('seizmo:ttnumdev:badInput',...
-            'LG are not square matrices!');
+        error('seizmo:ttresid:badInput',...
+            'LAG are not square matrices!');
     end
     
     % check grids are symmetric & values are in range
-    if(~isequal(lg,permute(-lg,[2 1 3])))
-        error('seizmo:ttnumdev:badInput',...
-            'LG must be a anti-symmetric matrix of real values!');
+    if(~isequal(lag,permute(-lag,[2 1 3])))
+        error('seizmo:ttresid:badInput',...
+            'LAG must be a anti-symmetric matrix of real values!');
     end
 end
 
@@ -111,7 +114,7 @@ end
 function []=check_xc_solutions(nr,dt)
 % checking that all are correctly sized and valued
 if(~isreal(dt) || ~isequal(size(dt),[nr 1]))
-    error('seizmo:ttnumdev:badInput',...
+    error('seizmo:ttresid:badInput',...
         'DT is not a properly sized real-valued column vector!');
 end
 

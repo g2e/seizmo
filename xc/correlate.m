@@ -35,9 +35,8 @@ function [data]=correlate(master,varargin)
 %     CORRELOGRAMS=CORRELATE(...,'MCXC',...) cross correlates all possible
 %     pairings between the MASTER & SLAVE datasets (or if only the MASTER
 %     set is given this computes all the unique cross correlations as well
-%     as the autocorrelations).  This helps to reduce computation time and
-%     memory by making use of the fact that each input record is in several
-%     pairings.
+%     as autocorrelations).  This helps to reduce computation time and
+%     memory by making use of redundancies in the computations.
 %
 %     CORRELOGRAMS=CORRELATE(...,'NOAUTO',...) skips autocorrelations for
 %     the MASTER only 'MCXC' case.
@@ -60,14 +59,15 @@ function [data]=correlate(master,varargin)
 %     correlation range will not become peaks by this action.
 %
 %     PEAKS=CORRELATE(...,'PEAKS',{'PARAM1',VAL1,...},...) passes the
-%     correlograms on to a peak picker.  The output PEAKS is a struct
-%     containing the fields .cg, .lg, & .pg of size NPAIRSxNPEAKSxNADJACENT
-%     where NPEAKS & NADJACENT are defined by the peaks options in the cell
-%     array.  There are two additional fields: .m & .s which give the
-%     indices of the correlated records for each pair as NPAIRSx1 vectors.
-%     See the function GETPEAKS for more info on paramter/value pairs that
-%     may be given.  The .pg field indicates the polarity of the peak
-%     (always 1 unless the 'ABSXC' parameter is passed).
+%     correlograms to a peak picker.  The output struct PEAKS contains the
+%     fields .cg, .lg, & .pg of size NPAIRSx1xNPEAKSxNADJACENT where NPEAKS
+%     & NADJACENT are defined by the peaks options in the cell array.
+%     There are two additional fields: .m & .s which give the indices of
+%     the correlated records for each pair as NPAIRSx1 vectors.  See the
+%     function GETPEAKS for more info on paramter/value pairs that may be
+%     given.  The .pg field indicates the polarity of the peak (always 1
+%     unless the 'ABSXC' parameter is passed in which case the elements are
+%     either 1 or -1).
 %
 %    Notes:
 %     - All records are required to have a common sample rate (DELTA field
@@ -154,9 +154,11 @@ function [data]=correlate(master,varargin)
 %        Oct. 19, 2012 - complete rewrite
 %        Oct. 21, 2012 - more fixes related to testing
 %        Jan. 28, 2013 - doc update
+%        Jan. 30, 2013 - peaks output dimension 2 is forced scalar for
+%                        compatibility with peaks output of old version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2013 at 15:05 GMT
+%     Last Updated Jan. 30, 2013 at 15:05 GMT
 
 % todo:
 
@@ -518,9 +520,9 @@ end
 % output for peaks
 if(peaks)
     data=[];
-    data.cg=permute(cat(3,p.cg),[3 1 2]);
-    data.lg=permute(cat(3,p.lg),[3 1 2]);
-    data.pg=permute(cat(3,p.pg),[3 1 2]);
+    data.cg=permute(cat(3,p.cg),[3 4 1 2]);
+    data.lg=permute(cat(3,p.lg),[3 4 1 2]);
+    data.pg=permute(cat(3,p.pg),[3 4 1 2]);
     data.m=m;
     data.s=s;
     return;

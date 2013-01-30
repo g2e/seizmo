@@ -1,18 +1,19 @@
-function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
+function [m,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %TTSOLVE    Iteratively solves for relative arrival times & polarities
 %
 %    Usage:    [arr,err,pol,zmean,zstd,nc,options,xc]=ttsolve(xc)
 %
-%            weighting options:
+%            misfit/weighting options:
 %              [...]=ttsolve(...,'snr',snr,...)
 %              [...]=ttsolve(...,'wgtpow',value,...)
 %              [...]=ttsolve(...,'minlag',stddev,...)
 %              [...]=ttsolve(...,'maxcor',rval,...)
 %
 %            starting solution options:
-%              [...]=ttsolve(...,'estarr',relarr,...)
-%              [...]=ttsolve(...,'esterr',stderr,...)
-%              [...]=ttsolve(...,'estpol',relpol,...)
+%              [...]=ttsolve(...,'estarr',m,...)
+%              [...]=ttsolve(...,'esterr',std,...)
+%              [...]=ttsolve(...,'estpol',pol,...)
+%              [...]=ttsolve(...,'absarr',[abstt absw absidx],...)
 %
 %            solver style/depth options:
 %              [...]=ttsolve(...,'method',method,...)
@@ -23,14 +24,14 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %
 %    Description:
 %     [ARR,ERR,POL,ZMEAN,ZSTD,NC,OPTIONS,XC]=TTSOLVE(XC) takes a cross-
-%     correlation struct produced by a CORRELATE call with option 'NPEAKS'
-%     set to 1 or higher and solves for the relative arrival times and
-%     polarities between the correlated signals.  The inversion utilizes an
-%     iterative, weighted least-squares approach that makes use of multiple
-%     peaks in a correlogram.  This approach is particularly suited for
-%     aligning noisy, narrow-band signals.  There are a multitude of
-%     options that allow for adjusting the weighting in the inversion, the
-%     starting conditions of the inversion, and the style and depth of the
+%     correlation struct produced by a CORRELATE call with option 'PEAKS'
+%     set and solves for the relative arrival times and polarities between
+%     the correlated signals.  The inversion utilizes an iterative,
+%     weighted least-squares approach that can make use of multiple peaks
+%     in a correlogram (requires 'NPEAKS' option >1 when using 'PEAKS' in
+%     CORRELATE).  This approach is particularly suited for aligning noisy
+%     signals.  There are a multitude of options that allow for adjusting
+%     the weighting, starting conditions, and the style and depth of the
 %     inversion.  ARR is the relative arrival times (zero mean).  ERR is
 %     the standard error of the relative arrival times.  POL is the
 %     relative polarities.  ZMEAN is the mean z-statistics.  ZSTD is the
@@ -40,19 +41,20 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     reordered input XC with a couple more fields used in the inversion.
 %
 %     %%%%%%%%%%%%%%%%%%%%%%%%
-%     SOLVER WEIGHTING OPTIONS
+%     MISFIT/WEIGHTING OPTIONS
 %     %%%%%%%%%%%%%%%%%%%%%%%%
 %
 %     [...]=TTSOLVE(...,'SNR',SNR,...) sets the signal to noise ratio to
-%     something other than one (the default).  This is for weighting when
-%     inverting for relative arrival times and errors.  Please note that
-%     the values given in SNR will be rescaled utilizing SNR2MAXPHASEERROR.
-%     SNR must be a column vector of positive values.
+%     something other than one (the default).  This is used for weighting
+%     when inverting for relative arrival times and errors.  Please note
+%     that the values given in SNR will be rescaled with SNR2MAXPHASEERROR
+%     which makes assumptions about the noise and signal.  SNR must be a
+%     column vector of positive values.
 %
 %     [...]=TTSOLVE(...,'WGTPOW',POWER,...) raises the weights used in the
 %     inversion by POWER.  The default is 1 (no change in weight).  Setting
 %     POWER to 0 will cause the inversion to be completely driven by lag
-%     misfit and polarities (ie SNR and cross-correlation coefficient will
+%     misfit and polarities (ie. SNR and cross-correlation coefficient will
 %     have no influence).  Higher POWER will increase the influence of the
 %     SNR and cross-correlation coefficients on the inversion.
 %
@@ -60,7 +62,7 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     deviation that is lower than STDDEV to STDDEV.  This allows for
 %     limiting the influence of lags near the estimated arrival time's lag
 %     prediction.  The default is 0.1 and seems to do pretty well.  This
-%     means that a lag off by 1 standard deviation has 10 times the
+%     causes a lag off by 1 standard deviation to only be 10 times the
 %     unweighted misfit as that of a lag right at the predicted time.
 %     Setting this value higher usually slows down the convergence to a
 %     solution but favors highly correlated signals.  Setting this number
@@ -74,31 +76,40 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     The default is 0.999 and mainly eliminates the problem of identical
 %     signals that destabilize the inversion.
 %
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     SOLVER STARTING SOLUTION OPTIONS
-%     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%     %%%%%%%%%%%%%%%%%%%%%%%%%
+%     STARTING SOLUTION OPTIONS
+%     %%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%     [...]=TTSOLVE(...,'ESTARR',RELARR,...) sets the initial estimate of
-%     the relative arrival times to RELARR.  The inversion will guide the
-%     refinement of relative arrival times to be near these estimates.  The
-%     default is no estimate, which causes TTSOLVE to get an estimate using
-%     the lags given in XC.lg(:,:,1).  This usually corresponds to the
-%     strongest peaks in the correlograms which generally give a close
-%     estimate of the actual relative arrival times.
+%     [...]=TTSOLVE(...,'ESTARR',M,...) sets the initial estimate of the
+%     relative arrival times to M.  The inversion will guide the refinement
+%     of relative arrival times to be near these estimates.  The default is
+%     no estimate, which causes TTSOLVE to get an estimate using the lags
+%     given in XC.lg(:,:,1).  This usually corresponds to the strongest
+%     peaks in the correlograms which generally give a close estimate of
+%     the actual relative arrival times.
 %
-%     [...]=TTSOLVE(...,'ESTERR',STDERR,...) sets the initial estimate of
-%     error in the relative arrival times to STDERR.  This can be useful
-%     for driving the first iteration of the refinement.  The default is no
+%     [...]=TTSOLVE(...,'ESTERR',STD,...) sets the initial estimate of
+%     error in the relative arrival times to STD.  This can be useful for
+%     driving the first iteration of the refinement.  The default is no
 %     estimate, which forces TTSOLVE to estimate the error using the
 %     consistency of the lags in XC to the estimated relative arrival times
 %     (see option 'ESTARR' above).
 %
-%     [...]=TTSOLVE(...,'ESTPOL',RELPOL,...) sets the initial estimate of
-%     the relative polarity to RELPOL.  This will guide the refinement of
-%     relative arrival times (see option 'MPRI' for more information on
+%     [...]=TTSOLVE(...,'ESTPOL',POL,...) sets the initial estimate of
+%     the relative polarity to POL.  This will guide the refinement of
+%     relative polarities (see option 'MPRI' for more information on
 %     solving for relative polarities).  The default is no estimate, which
 %     forces TTSOLVE to get an estimate using the relative polarities given
 %     in XC.
+%
+%     [...]=TTSOLVE(...,'ABSARR',[ABSTT ABSW ABSIDX],...) allows for
+%     constraining the output arrival times with absolute time picks in a
+%     weighted least squares sense.  Note that this info is included in
+%     every call to the function TTALIGN.  ABSTT is the column giving the
+%     estimated absolute arrival time, ABSW is the corresponding weight,
+%     and ABSIDX is the indices of the signals that ABSTT & ABSW correspond
+%     to (ie. [2;4;7] means that the signals corresponding to the 2nd, 4th,
+%     & 7th entries of RELARR also have absolute arrival time estimates).
 %
 %     %%%%%%%%%%%%%%%%%%%%%%%%%%
 %     SOLVER STYLE/DEPTH OPTIONS
@@ -114,11 +125,11 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     refine the polarities, is non-linear, has lower errors while REWEIGHT
 %     requires only a single peak from the correlogram and is simpler but
 %     may converge quite slowly).  BOTH uses REORDER then REWEIGHT to
-%     refine a solution.  They all provide similar solutions in easy cases.
+%     refine a solution.  They all provide similar solutions in most cases.
 %
 %     [...]=TTSOLVE(...,'THRESH',THRESHHOLD,...) defines the threshhold
 %     THRESHHOLD when the REWEIGHT method has converged enough on a
-%     solution.  Note that this in terms of change from the previous
+%     solution.  Note that this is in terms of change from the previous
 %     iteration's solution.  The default is 0.1 seconds and I have found
 %     that solutions with this threshhold tend to match well with results
 %     from the REORDER method (it will take some time for the solution to
@@ -132,7 +143,7 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     (the last iteration's) solution. The default NITER is 20 iterations.
 %     Setting NITER to 0 will perform no refinement while setting it to 10
 %     will allow up to 10 iterations.  TTSOLVE may exit before NITER
-%     iterations if no more peaks are to be reordered or non-convergence is
+%     iterations if no more peaks are to be reordered, non-convergence is
 %     detected (see option 'NONCNV') or (if using the REWEIGHT/BOTH method)
 %     the max change from the last iteration is below THRESH.  Generally,
 %     MTRI should always be greater than MPRI (see below) to get a
@@ -150,8 +161,8 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %
 %     [...]=TTSOLVE(...,'NONCNV',METHOD,...) alters how non-convergence is
 %     handled in the REORDER method.  The default METHOD is 'BREAK' which
-%     stops iterating when the non-convergence is detected.  Other options
-%     are 'IGNORE' & 'REWEIGHT'.  The 'IGNORE' method does nothing when a
+%     stops iterating when non-convergence is detected.  Other options are
+%     'IGNORE' & 'REWEIGHT'.  The 'IGNORE' method does nothing when a
 %     non-convergence is detected (not setting option 'MTRI' to a finite
 %     number when using the 'IGNORE' method may lead to an infinite loop).
 %     The 'REWEIGHT' method will downweight the troubled peaks (those that
@@ -160,21 +171,27 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %     lead to a better solution in difficult cases.
 %
 %    Notes:
+%     - The NADJACENT parameter in the PEAKS option of CORRELATE is not
+%       supported without some extra work as it makes the XC elements into
+%       4D arrays.  To do this, flatten the arrays to 3D:
+%       XC.cg=XC.cg(:,:,:);
+%       XC.lg=XC.lg(:,:,:);
+%       XC.pg=XC.pg(:,:,:);
 %
 %    Examples:
 %     % Get the SNR of some signals roughly aligned near 0:
 %     snr=quicksnr(data,[-100 -10],[-10 100]);
 %
 %     % Correlate the records:
-%     xc=correlate(data,'npeaks',3,'spacing',10);
+%     xc=correlate(data,'mcxc','noauto','normxc','peaks',{'npeaks',3});
 %
 %     % Solve using signal-to-noise info in the weights:
 %     [arr,err,pol,zmean,zstd,nc]=ttsolve(xc,'snr',snr);
 %
 %     % Now plot the alignment:
-%     recordsection(multiply(timeshift(normalize(data),dt),pol));
+%     plot0(multiply(timeshift(normalize(data),-arr),pol));
 %
-%    See also: TTALIGN, TTREFINE, TTPOLAR, TTSTDERR
+%    See also: TTALIGN, TTREFINE, TTPOLAR, TTSTDERR, CORRELATE
 
 %     Version History:
 %        Mar. 12, 2010 - initial version (derived from groupeval)
@@ -197,9 +214,10 @@ function [dt,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %        Mar. 17, 2011 - fixed bug where est* fields could not be set to
 %                        empty once set non-empty
 %        Apr.  2, 2012 - minor doc update
+%        Jan. 30, 2013 - doc update, absolute arrival constraints
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  2, 2012 at 01:05 GMT
+%     Last Updated Jan. 30, 2013 at 01:05 GMT
 
 % todo:
 
@@ -251,14 +269,19 @@ xc.wg=xc.wg.^opt.WGTPOW;
 % initial alignment/error/polarity estimates
 if(isempty(opt.ESTARR))
     if(verbose); disp('Inverting for Initial Relative Arrivals'); end
-    dt=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
+    if(opt.ABS)
+        m=ttalign(xc.lg(:,:,1),xc.wg(:,:,1),...
+            opt.ABSTT,opt.ABSW,opt.ABSIDX);
+    else
+        m=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
+    end
 else
     if(verbose); disp('Initial Relative Arrival Estimate Given'); end
-    dt=opt.ESTARR;
+    m=opt.ESTARR;
 end
 if(isempty(opt.ESTERR))
     if(verbose); disp('Determining Standard Errors'); end
-    std=ttstderr(dt,xc.lg(:,:,1),xc.wg(:,:,1));
+    std=ttstderr(m,xc.lg(:,:,1),xc.wg(:,:,1));
 else
     if(verbose); disp('Initial Error Estimate Given'); end
     std=opt.ESTERR;
@@ -308,9 +331,9 @@ switch lower(opt.METHOD)
 
             % refine
             [li,best]=ttrefine(...
-                xc.cg,xc.lg,xc.pg,dt,std,pol,xc.wg,opt.MINLAG,pflag,true);
+                xc.cg,xc.lg,xc.pg,m,std,pol,xc.wg,opt.MINLAG,pflag,true);
             [xc.cg,xc.lg,xc.pg,nc(iter,1)]=ttrefine(...
-                xc.cg,xc.lg,xc.pg,dt,std,pol,xc.wg,opt.MINLAG,pflag);
+                xc.cg,xc.lg,xc.pg,m,std,pol,xc.wg,opt.MINLAG,pflag);
 
             % check for change
             if(nc(iter,1)>0)
@@ -342,8 +365,13 @@ switch lower(opt.METHOD)
             if(verbose && nc(iter,1))
                 disp('Reinverting Reordered Peak Info');
             end
-            dt=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
-            std=ttstderr(dt,xc.lg(:,:,1),xc.wg(:,:,1));
+            if(opt.ABS)
+                m=ttalign(xc.lg(:,:,1),xc.wg(:,:,1),...
+                    opt.ABSTT,opt.ABSW,opt.ABSIDX);
+            else
+                m=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
+            end
+            std=ttstderr(m,xc.lg(:,:,1),xc.wg(:,:,1));
             [newpol,ok,ok]=ttpolar(xc.pg(:,:,1));
             if(pflag && ~(iter==1 && ~isempty(opt.ESTPOL)))
                 % check that polarity solution did not change
@@ -394,8 +422,13 @@ switch lower(opt.METHOD)
                         if(verbose);
                             disp('Reinverting Downweighted Version');
                         end
-                        dt=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
-                        std=ttstderr(dt,xc.lg(:,:,1),xc.wg(:,:,1));
+                        if(opt.ABS)
+                            m=ttalign(xc.lg(:,:,1),xc.wg(:,:,1),...
+                                opt.ABSTT,opt.ABSW,opt.ABSIDX);
+                        else
+                            m=ttalign(xc.lg(:,:,1),xc.wg(:,:,1));
+                        end
+                        std=ttstderr(m,xc.lg(:,:,1),xc.wg(:,:,1));
                         xc.wg(li)=tmp;
                     case 'ignore'
                         % free as can be
@@ -452,17 +485,22 @@ switch lower(opt.METHOD)
             xc.rg=xc.wg(:,:,1).*numdev.*def;
 
             % solve with reweighted lags
-            dt_old=dt;
-            dt=ttalign(xc.lg(:,:,1),xc.rg);
-            std=ttstderr(dt,xc.lg(:,:,1),xc.rg);
+            m_old=m;
+            if(opt.ABS)
+                m=ttalign(xc.lg(:,:,1),xc.rg,...
+                    opt.ABSTT,opt.ABSW,opt.ABSIDX);
+            else
+                m=ttalign(xc.lg(:,:,1),xc.rg);
+            end
+            std=ttstderr(m,xc.lg(:,:,1),xc.rg);
 
             % check if we have converged
-            nc(iter,1)=max(abs(dt_old-dt));
+            nc(iter,1)=max(abs(m_old-m));
             if(verbose)
                 disp(['Largest Relative Arrival Change: ' ...
                     num2str(nc(iter))]);
                 disp(['Mean Relative Arrival Change: ' ...
-                    num2str(mean(abs(dt_old-dt)))]);
+                    num2str(mean(abs(m_old-m)))]);
             end
             if(nc(iter,1)<opt.THRESH); break; end
 
@@ -584,6 +622,10 @@ opt.WGTPOW=1;         % power to apply to misfit weights
 opt.ESTARR=[];        % initial relative arrival estimate
 opt.ESTERR=[];        % initial relative arrival error estimate
 opt.ESTPOL=[];        % initial relative polarity estimate
+opt.ABS=false;        % absolute arrival constraints?
+opt.ABSTT=[];         % absolute arrival times
+opt.ABSW=[];          % "              " weights
+opt.ABSIDX=[];        % "              " indices
 opt.SNR=ones(nr,1);   % snr (for misfit weights)
 
 % option must be specified by a string
@@ -695,6 +737,27 @@ for i=1:2:nargin-1
                     'sized column vector of 1s & -1s!']);
             end
             opt.ESTPOL=varargin{i+1};
+        case {'abs' 'absarr' 'aa'}
+            if(isempty(varargin{i+1}))
+                opt.ABS=false;
+                opt.ABSTT=[];
+                opt.ABSW=[];
+                opt.ABSIDX=[];
+                continue;
+            end
+            if(~isreal(varargin{i+1}) || size(varargin{i+1},2)~=3 ...
+                    || ndims(varargin{i+1})~=2)
+                error('seizmo:ttsolve:badInput',...
+                    'ABSARR input must be [ABSTT ABSW ABSIDX]!');
+            elseif(any(varargin{i+1}(:,3)<1 | varargin{i+1}(:,3)>nr ...
+                    | varargin{i+1}(:,3)~=fix(varargin{i+1}(:,3))))
+                error('seizmo:ttsolve:badInput',...
+                    'ABSIDX entries outside valid range!');
+            end
+            opt.ABS=true;
+            opt.ABSTT=varargin{i+1}(:,1);
+            opt.ABSW=varargin{i+1}(:,2);
+            opt.ABSIDX=varargin{i+1}(:,3);
         case {'snr'}
             if(isempty(varargin{i+1})); continue; end
             if(isscalar(varargin{i+1}))
