@@ -60,7 +60,7 @@ function [grp,oldax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %     % Cluster starting with a dissimilarity cutoff of 0.05:
 %     grp=usercluster(data,[],0.05);
 %
-%    See also: USERWINDOW, USERTAPER, USERALIGN, PLOTDENDRO,
+%    See also: USERWINDOW, USERTAPER, USERALIGN, PLOTDENDRO, CORRELATE
 %              CLUSTER, LINKAGE, PDIST, INCONSISTENT, DENDROGRAM
 %              POPCUT, PLOTPOP, PLOTCLUSTERS, SELECTCLUSTERS
 
@@ -91,9 +91,10 @@ function [grp,oldax]=usercluster(data,cg,distcut,method,crit,pcut,varargin)
 %        Feb. 25, 2011 - fixed bug in criterion selection menu
 %        Mar. 31, 2011 - prompt once quick fix
 %        Apr.  3, 2012 - minor doc update, use seizmocheck
+%        Jan. 30, 2013 - update for new correlate
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 10:00 GMT
+%     Last Updated Jan. 30, 2013 at 10:00 GMT
 
 % todo:
 
@@ -119,7 +120,7 @@ try
     % correlate if no second input
     if(nargin==1 || isempty(cg))
         disp('CORRELATING DATASET (MAY TAKE A FEW MINUTES)')
-        peaks=correlate(data,'npeaks',1);
+        peaks=correlate(data,'mcxc','noauto','normxc','peaks');
         cg=peaks.cg;
     end
     

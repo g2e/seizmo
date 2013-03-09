@@ -129,11 +129,17 @@ function []=noise_process(indir,outdir,steps,varargin)
 %                        correlations against cmp for the same station
 %        Sep. 20, 2012 - correlations are now unnormalized
 %        Sep. 23, 2012 - horizontals are sorted before correlation now
+%        Feb. 27, 2013 - support for new correlate (outputs auto
+%                        correlations as well), rotate_correlations rename
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 23, 2012 at 11:15 GMT
+%     Last Updated Feb. 27, 2013 at 11:15 GMT
 
 % todo:
+% - normxc (for coherency)?
+% - rotate correlations is not ready!
+%   - single dataset i/o
+%   - cross (4 files) & auto (3 files) sets 
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -660,8 +666,7 @@ for i=1:numel(tsdirs) % SERIAL
                 delta=getheader(vdata(1),'delta');
                 vdata=interpolate(correlate(...
                     cut(vdata,'a','f','fill',true),...
-                    'normxc',false,...
-                    'lags',(opt.XCMAXLAG+4*delta).*[-1 1]),...
+                    'mcxc',(opt.XCMAXLAG+4*delta).*[-1 1]),...
                     1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
                 [vdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
             else
@@ -671,12 +676,8 @@ for i=1:numel(tsdirs) % SERIAL
                 delta=getheader(hdata(1),'delta');
                 hdata=interpolate(correlate(...
                     cut(hdata,'a','f','fill',true),...
-                    'normxc',false,...
-                    'lags',(opt.XCMAXLAG+4*delta).*[-1 1]),...
+                    'mcxc',(opt.XCMAXLAG+4*delta).*[-1 1]),...
                     1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
-                % delete correlations across cmp for same station
-                [m,s]=getheader(hdata,'user0','user1');
-                hdata(mod(m,2) & m+1==s)=[];
                 [hdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
             else
                 hdata=hdata([]);
@@ -685,10 +686,10 @@ for i=1:numel(tsdirs) % SERIAL
         if(any(steps==12)) % rotate xc
             % this removes ZZ correlations!
             if(isxc)
-                data=rotate_correlations(data);
+                data=rotate_correlations_old(data);
             else
                 if(~isempty(hdata))
-                    hdata=rotate_correlations(hdata);
+                    hdata=rotate_correlations_old(hdata);
                 end
             end
         end

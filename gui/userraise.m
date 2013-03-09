@@ -17,24 +17,24 @@ function [data,rai,ax]=userraise(data,varargin)
 %     filter.  Using a power<0 is a bad idea!
 %
 %     DATA=USERRAISE(DATA,'FIELD1',VALUE1,...,'FIELDN',VALUEN) passes
-%     field/value pairs to RECORDSECTION to allow plot customization.
+%     field/value pairs to PLOT0 to allow plot customization.
 %
 %     [DATA,RAI]=USERRAISE(...) returns a struct RAI with the following
 %     fields:
 %      RAI.power  --  power applied to data
 %
 %     [DATA,RAI,AX]=USERRAISE(...) returns the record section's axes
-%      handle in AX.
+%     handle in AX.
 %
 %    Notes:
 %
 %    Header changes: DEPMIN, DEPMAX, DEPMEN
 %
 %    Examples:
-%     % Scaling records in your dataset may be useful for noise suppression
-%     % before some other tasks:
+%     % Scaling records in your dataset may be useful for noise
+%     % suppression before some other task like signal alignment:
 %     data=userraise(data);
-%     xc=correlate(data,'npeaks',3,'spacing',10);
+%     xc=correlate(data,'m','noa','nor','a','p',{'n',3});
 %     [arr,err,pol]=ttsolve(xc);
 %
 %    See also: USERWINDOW, USERTAPER, USERMOVEOUT, USERALIGN
@@ -44,9 +44,10 @@ function [data,rai,ax]=userraise(data,varargin)
 %        Mar. 18, 2010 - made robust to menu closing
 %        Aug. 26, 2010 - update for axes plotting output, checkheader fix
 %        Mar. 24, 2012 - minor doc update
+%        Jan. 30, 2013 - update example for new correlate
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2012 at 10:00 GMT
+%     Last Updated Jan. 30, 2013 at 10:00 GMT
 
 % todo:
 

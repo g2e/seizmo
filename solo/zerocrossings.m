@@ -26,9 +26,10 @@ function [zx]=zerocrossings(data)
 %        Jan. 18, 2011 - initial version
 %        Mar. 13, 2012 - leven bugfix, better checkheader usage,
 %                        seizmocheck fix, use getheader improvements
+%        Feb. 14, 2013 - bugfix the leven bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 12:25 GMT
+%     Last Updated Feb. 14, 2013 at 12:25 GMT
 
 % todo:
 
@@ -51,6 +52,7 @@ try
     
     % get pertinent header info
     [b,delta,leven]=getheader(data,'b','delta','leven lgc');
+    leven=~strcmpi(leven,'false');
     
     % loop over each record
     zx=cell(nrecs,1);

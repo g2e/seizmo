@@ -154,9 +154,10 @@ function [data]=multifun(fun,varargin)
 %        Mar. 13, 2012 - doc update, use getheader improvements
 %        June  1, 2012 - fix bug when padding ncmp, spectral records are
 %                        converted to complex for the operator
+%        Feb. 14, 2013 - bugfix: assume leven true unless set to false
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  1, 2012 at 21:25 GMT
+%     Last Updated Feb. 14, 2013 at 21:25 GMT
 
 % todo:
 % - better scalar expansion handling (less memory)
@@ -341,7 +342,7 @@ try
             end
         end
         for i=1:ndatasets
-            if(any(~strcmpi(leven{i},'true')))
+            if(any(strcmpi(leven{i},'false')))
                 report.identifier='seizmo:multifun:illegalOperation';
                 report.message=...
                     'Illegal operation on unevenly sampled record(s)!';
@@ -529,7 +530,7 @@ try
                 warning(report.identifier,report.message);
             end
         end
-        if(any(~strcmpi(leven{:},'true')))
+        if(any(strcmpi(leven{:},'false')))
             report.identifier='seizmo:multifun:illegalOperation';
             report.message=...
                 'Illegal operation on unevenly spaced record(s)!';

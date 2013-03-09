@@ -65,9 +65,10 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %        Mar. 15, 2012 - fixes for pick functions
 %        Jan. 28, 2013 - some records have inf data values so some code
 %                        was added to catch & delete those records
+%        Feb. 26, 2013 - helpful detection of .csv/data desync
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2013 at 13:35 GMT
+%     Last Updated Feb. 26, 2013 at 13:35 GMT
 
 % todo:
 
@@ -86,16 +87,20 @@ end
 
 % check indir
 if(~isstring(indir))
-    error('INDIR must be a string giving one directory!');
+    error('seizmo:prep_cmb_data:badInput',...
+        'INDIR must be a string giving one directory!');
 elseif(~isdir(indir))
-    error('INDIR must be a directory!');
+    error('seizmo:prep_cmb_data:badInput',...
+        'INDIR must be a directory!');
 end
 
 % check outdir
 if(~isstring(outdir))
-    error('OUTDIR must be a string giving one directory!');
+    error('seizmo:prep_cmb_data:badInput',...
+        'OUTDIR must be a string giving one directory!');
 elseif(exist(outdir,'file') && ~isdir(outdir))
-    error('OUTDIR must be a directory!');
+    error('seizmo:prep_cmb_data:badInput',...
+        'OUTDIR must be a directory!');
 end
 
 % get date directories
@@ -154,6 +159,18 @@ for i=s(:)'
             data=fix_rdseed_v48(data);
         case 'sod'
             data=fix_sod_v222(data);
+    end
+    
+    % check for desync between sodcsv & data directories
+    % - error if beginning of record does not begin within 1 hour of event
+    b=getheader(data,'b');
+    if(any(abs(b)>3600))
+        error('seizmo:prep_cmb_data:desync',...
+            ['Data Directories & .csv file appear desynced!\n' ...
+            'Did you forget to send/download a breqfast/SEED file?\n' ...
+            'Did you send/download an extra breqfast/SEED file?\n' ...
+            'Event: %s\nDirectory: %s'],datestr(ievent.time),...
+            dates(i).name);
     end
     
     % merge data

@@ -54,9 +54,10 @@ function [data]=omegagaussian(data,fc,a)
 %     Version History:
 %        Feb.  5, 2012 - initial version
 %        Aug.  2, 2012 - minor doc update
+%        Feb. 14, 2013 - use strcmpi for consistency
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  2, 2012 at 15:05 GMT
+%     Last Updated Feb. 14, 2013 at 15:05 GMT
 
 % todo:
 
@@ -121,7 +122,7 @@ try
         % gaussian filter
         w=delta(i)*[0:1:npts2(i) npts2(i)-1:-1:1].';
         g=exp(-a(i)*((w-fc(i))/fc(i)).^2);
-        if(strcmp(iftype(i),'irlim'))
+        if(strcmpi(iftype(i),'irlim'))
             data(i).dep=data(i).dep.*g(:,ones(1,ncmp(i)));
         else % iamph
             data(i).dep(:,1:2:end)=data(i).dep(:,1:2:end)...

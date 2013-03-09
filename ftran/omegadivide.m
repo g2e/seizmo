@@ -44,9 +44,10 @@ function [data]=omegadivide(data)
 %        May   6, 2010 - slimmer code for units exchange
 %        Feb. 11, 2011 - mass nargchk fix
 %        Feb.  4, 2012 - doc update, divideomega to omegadivide
+%        Feb. 14, 2013 - use strcmpi for consistency
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  4, 2012 at 15:05 GMT
+%     Last Updated Feb. 14, 2013 at 15:05 GMT
 
 % todo:
 
@@ -100,7 +101,7 @@ try
         % integrate
         cols=size(data(i).dep,2)/2;
         omega=[0 1./(2*pi*delta(i)*[1:npts2(i) (npts2(i)-1):-1:1])].';
-        if(strcmp(iftype(i),'irlim'))
+        if(strcmpi(iftype(i),'irlim'))
             % rlim %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % 0Hz real/imag == 0 else
             % real=imag/omega & imag=-real/omega

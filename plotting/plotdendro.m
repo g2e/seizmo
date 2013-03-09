@@ -2,7 +2,7 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %PLOTDENDRO    Plots correlation linkage and seismograms
 %
 %    Usage: [perm,colors,ax]=plotdendro(data,z)
-%           plotdendro(data,z,'option',value,...)
+%           [...]=plotdendro(data,z,'option',value,...)
 %
 %    Description:
 %     [PERM,COLORS,AX]=PLOTDENDRO(DATA,Z) plots the heirarchial linkage
@@ -14,7 +14,7 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %     individual colors of the permuted records.  AX contains the axes
 %     handles to the dendrogram and waveform plots.
 %
-%     PLOTDENDRO(DATA,Z,'OPTION',VALUE,...) allows changing certain
+%     [...]=PLOTDENDRO(DATA,Z,'OPTION',VALUE,...) allows changing certain
 %     plotting options to do simple manipulation of the plots as well as
 %     controlling the clustering cutoff.  Available options are:
 %      FGCOLOR      -- foreground color (axes, text, labels)
@@ -41,7 +41,7 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %      XSCALE       -- 'linear' or 'log'
 %      YSCALE       -- 'linear' or 'log'
 %      AMPSCALE     -- 'linear' or 'log'
-%      DISTOFF      -- 0 to 1 (default of 0.2)
+%      DISTCUT      -- 0 to 1 (default of 0.2)
 %      DISTCUTCOLOR -- default is 'r' (red)
 %      OTHERCOLOR   -- color of unclustered records/nodes ([.5 .5 .5])
 %
@@ -50,7 +50,7 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %    Examples:
 %     % Get similarities using correlate, assemble the tree using linkage,
 %     % and visualize the heirarchy using plotdendro:
-%     peaks=correlate(data,'npeaks',1);
+%     peaks=correlate(data,'mcxc','noauto','normxc','peaks');
 %     Z=linkage(1-peaks.cg.','average');
 %     plotdendro(data,Z,'cutoff',1);
 %
@@ -64,9 +64,10 @@ function [perm,colors,ax]=plotdendro(data,Z,varargin)
 %        Sep. 21, 2010 - distcut/distcutcolor
 %        Oct.  1, 2010 - better axis handling
 %        Apr. 19, 2011 - fixed cutoff text for plot0 ydir change
+%        Jan. 30, 2013 - update example for new correlate
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 19, 2011 at 23:00 GMT
+%     Last Updated Jan. 30, 2013 at 23:00 GMT
 
 % todo:
 

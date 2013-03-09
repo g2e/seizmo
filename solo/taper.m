@@ -106,9 +106,11 @@ function [data]=taper(data,w,o,type,opt)
 %        Aug. 25, 2010 - drop versioninfo caching, nargchk fix
 %        Mar. 13, 2012 - doc update, seizmocheck fix, better checkheader
 %                        usage, use getheader improvements
+%        Feb. 14, 2013 - using strcmpi for consistency
+%        Feb. 26, 2013 - bugfix: workaround precision issues for 0 width
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 21:00 GMT
+%     Last Updated Feb. 26, 2013 at 21:00 GMT
 
 % todo:
 
@@ -245,9 +247,10 @@ try
         data(i).dep=double(data(i).dep);
 
         % unevenly spaced
-        if(strcmp(leven(i),'false'))
+        if(strcmpi(leven(i),'false'))
             % get normalized time
-            times=(data(i).ind-b(i))/(e(i)-b(i));
+            times=[0 (data(i).ind(2:end-1)'-b(i))/(e(i)-b(i)) 1];
+            if(npts(i)<2); times=0; end
 
             % get tapers
             taper1=taperfun(type{i,1},times,lim1(i,:),opt(i,1));
@@ -257,12 +260,13 @@ try
             % apply tapers
             data(i).dep=data(i).dep.*taper1(:,ones(1,ncmp(i))) ...
                 .*taper2(:,ones(1,ncmp(i)));
-            % evenly spaced
+        % evenly spaced
         else
             % time series and general xy records
-            if(strcmp(iftype(i),'itime') || strcmp(iftype(i),'ixy'))
+            if(strcmpi(iftype(i),'itime') || strcmpi(iftype(i),'ixy'))
                 % get normalized time
-                times=((0:(npts(i)-1))*delta(i))/(e(i)-b(i));
+                times=[0 ((1:(npts(i)-2))*delta(i))/(e(i)-b(i)) 1];
+                if(npts(i)<2); times=0; end
 
                 % get tapers
                 taper1=taperfun(type{i,1},times,lim1(i,:),opt(i,1));
@@ -274,8 +278,9 @@ try
                     .*taper2(:,ones(1,ncmp(i)));
             else % spectral
                 % get normalized frequency
-                freq=[(0:(npts(i)/2))*delta(i) ...
-                    ((npts(i)/2-1):-1:1)*delta(i)]/e(i);
+                freq=[(0:(npts(i)/2-1))*delta(i)/e(i) 1 ...
+                    ((npts(i)/2-1):-1:1)*delta(i)/e(i)];
+                if(npts(i)<2); freq=0; end
 
                 % get tapers
                 taper1=taperfun(type{i,1},freq,lim1(i,:),opt(i,1));

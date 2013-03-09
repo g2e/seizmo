@@ -23,7 +23,7 @@ function [info,xc,data0]=useralign(data,varargin)
 %     [...]=USERALIGN(DATA,'OPTION1',VALUE1,...,'OPTIONN',VALUEN) passes
 %     options to CUT, TAPER, CORRELATE & TTSOLVE for enhanced control of
 %     the workflow.  Currently available are all options in TTSOLVE, 3
-%     options in CORRELATE ('NPEAKS', 'SPACING', & 'ABSXC'), 'WINDOW' &
+%     options in CORRELATE ('LAGS', 'NPEAKS', & 'ABSXC'), 'WINDOW' &
 %     'TAPER.  'WINDOW' specifies the window passed to CUT and should be a
 %     1x2 vector of [START END].  'TAPER' specifies the taper width passed
 %     to TAPER.  See those functions for details about the options.  Note
@@ -94,9 +94,12 @@ function [info,xc,data0]=useralign(data,varargin)
 %        Mar. 16, 2012 - doc update
 %        Oct. 17, 2012 - minor doc update (heterogeneity misspelling)
 %        Jan. 11, 2013 - minor doc update (history update)
+%        Jan. 30, 2013 - update for new correlate (no spacing option now
+%                        but the lag option is now available)
+%        Feb. 26, 2013 - bugfix: needs 'reltime' correlate option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 11, 2013 at 11:00 GMT
+%     Last Updated Feb. 26, 2013 at 11:00 GMT
 
 % todo:
 
@@ -136,8 +139,8 @@ try
     end
     
     % default correlate options
+    info.correlate.lags=[];
     info.correlate.npeaks=5;
-    info.correlate.spacing=10;
     info.correlate.absxc=true;
     info.userwindow.limits=[-inf inf];
     info.usertaper.width=[0 0];
@@ -146,6 +149,13 @@ try
     keep=true(nargin-1,1);
     for i=1:2:nargin-1
         switch lower(varargin{i})
+            case 'lags'
+                if(numel(varargin{i+1})>2 || ~isnumeric(varargin{i+1}))
+                    error('seizmo:useralign:badInput',...
+                        'LAGS must be given as [MINLAG MAXLAG]!');
+                end
+                info.correlate.lags=varargin{i+1};
+                keep(i:i+1)=false;
             case 'npeaks'
                 if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
                         || varargin{i+1}~=fix(varargin{i+1}) ...
@@ -154,14 +164,6 @@ try
                         'NPEAKS must be an integer >=1 !');
                 end
                 info.correlate.npeaks=varargin{i+1};
-                keep(i:i+1)=false;
-            case 'spacing'
-                if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
-                        || varargin{i+1}<0)
-                    error('seizmo:useralign:badInput',...
-                        'SPACING must be a positive real (in seconds)!');
-                end
-                info.correlate.spacing=varargin{i+1};
                 keep(i:i+1)=false;
             case 'absxc'
                 if(~isscalar(varargin{i+1}) || ~islogical(varargin{i+1}))
@@ -228,13 +230,11 @@ try
         while(1)
             % present current settings
             tmp1=num2str(info.correlate.npeaks);
-            tmp2=num2str(info.correlate.spacing);
-            tmp3='POLARITIES ARE MATCHED';
-            if(info.correlate.absxc); tmp3='POLARITIES ARE UNKNOWN'; end
+            tmp2='POLARITIES ARE MATCHED';
+            if(info.correlate.absxc); tmp2='POLARITIES ARE UNKNOWN'; end
             choice=menu('ALTER CORRELATE SETTINGS?',...
                 ['CHANGE NUMBER OF PEAKS (' tmp1 ')'],...
-                ['CHANGE PEAK SPACING (' tmp2 's)'],...
-                ['CHANGE POLARITY ASSUMPTION (' tmp3 ')'],...
+                ['CHANGE POLARITY ASSUMPTION (' tmp2 ')'],...
                 'NO - CORRELATE DATA');
 
             % proceed by user choice
@@ -272,23 +272,9 @@ try
                                 end
                             end
                     end
-                case 2 % spacing
-                    tmp=inputdlg(...
-                        ['Minimum Spacing Between Peaks (in seconds)? [' ...
-                        tmp2 ']:'],'Peak Spacing',1,{tmp2});
-                    if(~isempty(tmp))
-                        try
-                            tmp=str2double(tmp{:});
-                            if(isscalar(tmp) && isreal(tmp) && tmp>=0)
-                                info.correlate.spacing=tmp;
-                            end
-                        catch
-                            % do not change info.correlate.spacing
-                        end
-                    end
                 case 3 % absxc
                     choice=menu('DO THE POLARITIES ALL MATCH?',...
-                        ['CURRENT (' tmp3 ')'],'YES','NO');
+                        ['CURRENT (' tmp2 ')'],'YES','NO');
                     switch choice
                         case 1 % CURRENT
                             % leave alone
@@ -303,10 +289,9 @@ try
         end
 
         % correlate
-        xc=correlate(data0,...
-            'npeaks',info.correlate.npeaks,...
-            'spacing',info.correlate.spacing,...
-            'absxc',info.correlate.absxc);
+        if(info.correlate.absxc); absxc={'absxc'}; else absxc={}; end
+        xc=correlate(data0,'mcxc','normxc','noauto','reltime',absxc{:},...
+            info.correlate.lags,'peaks',{'npeaks',info.correlate.npeaks});
 
         % solve alignment
         if(info.correlate.absxc)

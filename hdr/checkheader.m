@@ -397,9 +397,10 @@ function [data]=checkheader(data,varargin)
 %                        NONXYZ_IFTYPE
 %        Dec.  1, 2011 - slight adjustment to MULTIPLE_REFTIME msgs
 %        Jan. 30, 2012 - better getheader usage
+%        Feb. 14, 2013 - use strcmpi for consistency
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 22:10 GMT
+%     Last Updated Feb. 14, 2013 at 22:10 GMT
 
 % todo:
 
@@ -439,8 +440,8 @@ try
         'iztype id','idep id','leven lgc','lcalda lgc');
 
     % logicals
-    xyz=strcmp(iftype,'ixyz');
-    spectral=(strcmp(iftype,'irlim') | strcmp(iftype,'iamph'));
+    xyz=strcmpi(iftype,'ixyz');
+    spectral=(strcmpi(iftype,'irlim') | strcmpi(iftype,'iamph'));
 
     % fudge factor
     try
@@ -1168,7 +1169,7 @@ end
 end
 
 function []=invalid_uneven(opt,reqeven,leven)
-bad=find(reqeven & strcmp(leven,'false'));
+bad=find(reqeven & strcmpi(leven,'false'));
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:badUneven';
     report.message=['LEVEN must be TRUE for Spectral/XYZ record(s):\n'...
@@ -1319,11 +1320,11 @@ end
 end
 
 function [iztype]=nonzero_iztype(opt,spectral,data,nz,iztype)
-day=strcmp('iday',iztype);
+day=strcmpi('iday',iztype);
 badday=find(day & sum(nz(:,3:6)~=0,2)~=0);
-unkn=strcmp('iunkn',iztype) | ~strncmp('i',iztype,1);
+unkn=strcmpi('iunkn',iztype) | ~strncmpi('i',iztype,1);
 other=find(~day & ~unkn);
-b=strcmp('ib',iztype);
+b=strcmpi('ib',iztype);
 if(any(spectral & b)); iztype(spectral & b)={'isb'}; end
 if(isscalar(unique(iztype(other))))
     iz=unique(iztype(other));
@@ -1802,7 +1803,7 @@ end
 end
 
 function [e]=inconsistent_e(opt,leven,spectral,b,delta,npts,e)
-bad=find(strcmp(leven,'true') & ~spectral & e~=b+(npts-1).*delta);
+bad=find(~strcmpi(leven,'false') & ~spectral & e~=b+(npts-1).*delta);
 if(~isempty(bad))
     report.identifier='seizmo:checkheader:inconsistentE';
     report.message=['Record(s):\n' sprintf('%d ',bad) ...
@@ -2200,7 +2201,7 @@ def=0==sum(isnan(st(:,1:2)) | isinf(st(:,1:2)),2) ...
     & 0==sum(isnan(ev(:,1:2)) | isinf(ev(:,1:2)),2);
 
 % get lcalda (don't mess with those with lcalda == 'false')
-chk=~strcmp(lcalda,'false');
+chk=~strcmpi(lcalda,'false');
 newdelaz=nan(size(delaz));
 ok=chk & def;
 if(any(ok))
@@ -2347,7 +2348,7 @@ end
 end
 
 function [leven]=missing_ind(opt,leven,data)
-ok=find(strcmp(leven,'false') & [data.hasdata].');
+ok=find(strcmpi(leven,'false') & [data.hasdata].');
 nrows=nan(size(ok)); ncols=nrows; nirows=nrows; nicols=nrows;
 for i=1:numel(ok)
     [nrows(i),ncols(i)]=size(data(ok(i)).dep);
@@ -2378,7 +2379,7 @@ end
 end
 
 function [data]=even_ind(opt,leven,data)
-ok=find(~strcmp(leven,'false') & [data.hasdata].');
+ok=find(~strcmpi(leven,'false') & [data.hasdata].');
 bad=false(size(ok));
 for i=1:numel(ok); bad(i)=~isempty(data(ok(i)).ind); end
 bad=ok(bad);
@@ -2408,7 +2409,7 @@ end
 end
 
 function mulcmp_ind(opt,leven,data)
-ok=find(strcmp(leven,'false') & [data.hasdata].');
+ok=find(strcmpi(leven,'false') & [data.hasdata].');
 nirows=nan(size(ok)); nicols=nirows;
 for i=1:numel(ok); [nirows(i),nicols(i)]=size(data(ok(i)).ind); end
 %[nirows,nicols]=arrayfun(@(x)size(x.ind),data(ok));
@@ -2436,7 +2437,7 @@ end
 end
 
 function [data]=inconsistent_ind_npts(opt,leven,data)
-ok=find(strcmp(leven,'false') & [data.hasdata].');
+ok=find(strcmpi(leven,'false') & [data.hasdata].');
 nrows=nan(size(ok)); nirows=nrows;
 for i=1:numel(ok)
     nrows(i)=size(data(ok(i)).dep,1);
@@ -2478,7 +2479,7 @@ end
 end
 
 function [data]=nonmonotonic_ind(opt,leven,data)
-ok=find(strcmp(leven,'false') & [data.hasdata].');
+ok=find(strcmpi(leven,'false') & [data.hasdata].');
 bad=false(size(ok));
 for i=1:numel(ok)
     if(~isempty(data(ok(i)).ind)); bad(i)=min(diff(data(ok(i)).ind))<0; end
@@ -2512,7 +2513,7 @@ end
 end
 
 function [data]=repeat_ind(opt,leven,data)
-ok=find(strcmp(leven,'false') & [data.hasdata].');
+ok=find(strcmpi(leven,'false') & [data.hasdata].');
 bad=false(size(ok));
 for i=1:numel(ok); bad(i)=any(diff(sort(data(ok(i)).ind))==0); end
 bad=ok(bad);
@@ -2545,7 +2546,7 @@ end
 
 function [b]=inconsistent_ind_b(opt,leven,data,b)
 newb=nan(size(b));
-ok=find(strcmp(leven,'false') & [data.hasdata].');
+ok=find(strcmpi(leven,'false') & [data.hasdata].');
 for i=ok.'
     if(~isempty(data(i).ind)); newb(i)=double(data(i).ind(1)); end
 end
@@ -2573,7 +2574,7 @@ end
 
 function [e]=inconsistent_ind_e(opt,leven,data,e)
 newe=nan(size(e));
-ok=find(strcmp(leven,'false') & [data.hasdata].');
+ok=find(strcmpi(leven,'false') & [data.hasdata].');
 for i=ok.'
     if(~isempty(data(i).ind)); newe(i)=double(data(i).ind(end)); end
 end
@@ -2601,7 +2602,7 @@ end
 end
 
 function [delta]=inconsistent_ind_delta(opt,leven,data,delta)
-ok=find(strcmp(leven,'false') & [data.hasdata].');
+ok=find(strcmpi(leven,'false') & [data.hasdata].');
 bad=false(size(ok)); newd=nan(size(delta));
 for i=1:numel(ok)
     if(numel(data(ok(i)).ind)>1)

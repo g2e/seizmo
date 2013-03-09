@@ -63,9 +63,10 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %        May  20, 2011 - add some code to workaround matlab write bug
 %        Mar.  1, 2012 - octave ascii save workaround
 %        Mar.  5, 2012 - allow no written output, odir/figdir bugfix
+%        Feb. 14, 2013 - bugfix figdir handling
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2012 at 13:35 GMT
+%     Last Updated Feb. 14, 2013 at 13:35 GMT
 
 % todo:
 
@@ -90,6 +91,7 @@ end
 
 % default/extract odir
 odir='.';
+figdir=[];
 gcrng=[0 180];
 azrng=[0 360];
 if(~iscellstr(varargin(1:2:end)))
@@ -100,12 +102,17 @@ keep=true(nargin-2,1);
 for i=1:2:nargin-2
     switch lower(varargin{i})
         case {'outdir' 'odir'}
-            odir=varargin{i+1};
-            if(isempty(figdir))
-                varargin{i}='figdir';
-                figdir=odir;
-            else
+            if(isempty(varargin{i+1}))
+                odir='.';
                 keep(i:i+1)=false;
+            else
+                odir=varargin{i+1};
+                if(isempty(figdir))
+                    varargin{i}='figdir';
+                    figdir=odir;
+                else
+                    keep(i:i+1)=false;
+                end
             end
         case {'gcrng' 'distrng'}
             if(~isnumeric(varargin{i+1}) || numel(varargin{i+1})~=2 ...
@@ -129,11 +136,11 @@ for i=1:2:nargin-2
     end
 end
 varargin=varargin(keep);
-if(isempty(figdir)); figdir='.'; end
+if(isempty(figdir)); figdir=odir; end
 
 % fix TRUE directory input
 if(islogical(odir) && isscalar(odir) && odir); odir='.'; end
-if(islogical(figdir) && isscalar(figdir) && figdir); figdir='.'; end
+if(islogical(figdir) && isscalar(figdir) && figdir); figdir=odir; end
 
 % check odir
 if(~isstring(odir) && ~(islogical(odir) && isscalar(odir)))

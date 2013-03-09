@@ -82,9 +82,11 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %        Mar.  5, 2012 - allow no written output, odir/figdir bugfix
 %        Mar. 13, 2012 - use getheader improvements
 %        Mar. 15, 2012 - fix for pick functions
+%        Feb. 26, 2013 - bugfix: skip event if only 1 waveform
+%                        bugfix: no crash when handling no good events
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 13:35 GMT
+%     Last Updated Feb. 26, 2013 at 13:35 GMT
 
 % todo:
 
@@ -233,6 +235,9 @@ if(isempty(s))
         'No directories selected!');
 end
 
+% handle output for no good events
+varargout={};
+
 % loop over events
 for i=1:numel(s)
     % echo directory name to screen
@@ -267,10 +272,10 @@ for i=1:numel(s)
             disp(['Found ' num2str(numel(data)) ' Radial Components']);
     end
     
-    % skip if no waveforms
-    if(~numel(data))
+    % skip if 1 or no waveforms
+    if(numel(data)<2)
         warning('seizmo:cmb_1st_pass:noWaveforms',...
-            'No %s waveforms found for event: %s',...
+            'Too few %s waveforms found for event: %s',...
             phase,dates(s(i)).name)
         continue;
     end
@@ -283,10 +288,10 @@ for i=1:numel(s)
     data(gcarc<90 | gcarc>170)=[];
     disp(['Found ' num2str(numel(data)) ' components in 90-170deg range']);
     
-    % skip if no waveforms
-    if(~numel(data))
+    % skip if 1 or no waveforms
+    if(numel(data)<2)
         warning('seizmo:cmb_1st_pass:noWaveforms',...
-            'No %s waveforms in 90-170deg range found for event: %s',...
+            'Too few %s waveforms in 90-170deg range for event: %s',...
             phase,dates(s(i)).name)
         continue;
     end
@@ -300,10 +305,10 @@ for i=1:numel(s)
     corrections=fixcorrstruct(corrections,good);
     disp([num2str(sum(~good)) ' Near-Nodal Stations Removed']);
     
-    % skip if no waveforms
-    if(~numel(data))
+    % skip if 1 or no waveforms
+    if(numel(data)<2)
         warning('seizmo:cmb_1st_pass:noWaveforms',...
-            'No %s waveforms with fitting criteria found for event: %s',...
+            'Too few %s waveforms fit criteria for event: %s',...
             phase,dates(s(i)).name)
         continue;
     end
@@ -329,10 +334,10 @@ for i=1:numel(s)
         ddlim=[0 180];
     end
     
-    % skip if no waveforms
-    if(~numel(data))
+    % skip if 1 or no waveforms
+    if(numel(data)<2)
         warning('seizmo:cmb_1st_pass:noWaveforms',...
-            'No %s waveforms with fitting criteria found for event: %s',...
+            'Too few %s waveforms fit criteria for event: %s',...
             phase,dates(s(i)).name)
         continue;
     end
@@ -459,7 +464,7 @@ end
 
 if(nargout && ~numel(varargout))
     error('seizmo:cmb_1st_pass:badIdea',...
-        'It appears there was no data available for this phase!');
+        'It appears there was not enough data available for this phase!');
 end
 
 end

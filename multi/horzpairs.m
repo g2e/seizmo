@@ -2,8 +2,8 @@ function [idx1,idx2,idx3]=horzpairs(data,varargin)
 %HORZPAIRS    Returns indice arrays for pairing horizontal SEIZMO records
 %
 %    Usage:    [idx1,idx2,idx3]=horzpairs(data)
-%              horzpairs(...,'requiredcharfields',fields,...)
-%              horzpairs(...,'requiredrealfields',fields,...)
+%              [...]=horzpairs(...,'requiredcharfields',fields,...)
+%              [...]=horzpairs(...,'requiredrealfields',fields,...)
 %
 %    Description:
 %     [IDX1,IDX2,IDX3]=HORZPAIRS(DATA) pairs orthogonal horizontal
@@ -23,17 +23,17 @@ function [idx1,idx2,idx3]=horzpairs(data,varargin)
 %     max(IDX2) to get the number of pairs).  IDX3 gives the component
 %     indices (always 1 or 2).
 %
-%     [IDX1,IDX2,IDX3]=HORZPAIRS(...,'REQUIREDCHARFIELDS',FIELDS,...)
-%     allows changing the character fields required to be equal between
-%     records before they are paired.  The list is a cellstring array.  The
-%     default is: {}.  Note that pairing based on KNETWK, KSTNM, KHOLE,
-%     KCMPNM header fields is hard-coded.
+%     [...]=HORZPAIRS(...,'REQUIREDCHARFIELDS',FIELDS,...) changes the
+%     character header fields required to be equal between records before
+%     they are paired.  The list is a cellstring array.  The default is {}.
+%     Note that pairing based on KNETWK, KSTNM, KHOLE, KCMPNM header fields
+%     is hardcoded.
 %
-%     [IDX1,IDX2,IDX3]=HORZPAIRS(...,'REQUIREDREALFIELDS',FIELDS,...)
-%     changes the numerical fields required to be equal between records
-%     before they are paired.  The list must be a cellstring array.  The
-%     default is: {'delta'}.  Note that CMPINC, LEVEN and NCMP are also
-%     required but cannot be removed from the list.
+%     [...]=HORZPAIRS(...,'REQUIREDREALFIELDS',FIELDS,...) changes the
+%     numerical fields required to be equal between records before they are
+%     paired.  The list must be a cellstring array.  The default is
+%     {'delta'}.  Note that CMPINC, LEVEN and NCMP header fields are
+%     hardcoded.
 %
 %    Notes:
 %     - Run FIXDELTA first to take care of small differences in sample
@@ -64,9 +64,10 @@ function [idx1,idx2,idx3]=horzpairs(data,varargin)
 %        Jan. 28, 2012 - doc update, char to strnlen, drop SEIZMO global
 %        Feb.  7, 2012 - fixed a couple warning ids
 %        Mar. 13, 2012 - use getheader improvements
+%        Feb.  5, 2013 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 15:05 GMT
+%     Last Updated Feb.  5, 2013 at 15:05 GMT
 
 % todo:
 

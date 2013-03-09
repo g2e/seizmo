@@ -19,12 +19,12 @@ function [info,xc,data0]=useralign_quiet(data,varargin)
 %
 %     [...]=USERALIGN_QUIET(DATA,'OPTION1',VALUE1,...) allows passing
 %     options on to CUT, TAPER, CORRELATE & TTSOLVE for enhanced control of
-%     the workflow.  Currently available are all options in TTSOLVE, 4
-%     options in CORRELATE ('LAGS', 'NPEAKS', 'SPACING', & 'ABSXC'), as
-%     well as 'WINDOW' & 'TAPER'.  'WINDOW' specifies the window passed to
-%     CUT and should be a 1x2 vector of [START END].  'TAPER' specifies the
-%     taper width passed to TAPER.  See those functions for details about
-%     the options.  Note that NPEAKS must be >=1!
+%     the workflow.  Currently available are all options in TTSOLVE, 3
+%     options in CORRELATE ('LAGS', 'NPEAKS', & 'ABSXC'), as well as
+%     'WINDOW' & 'TAPER'.  'WINDOW' specifies the window passed to CUT and
+%     should be a 1x2 vector of [START END].  'TAPER' specifies the taper
+%     width passed to TAPER.  See those functions for details about the
+%     options.  Note that NPEAKS must be >=1!
 %
 %    Notes:
 %
@@ -42,9 +42,12 @@ function [info,xc,data0]=useralign_quiet(data,varargin)
 %        Jan. 14, 2011 - initial version
 %        Apr. 16, 2011 - add lags option for correlate
 %        Mar. 16, 2012 - doc update
+%        Jan. 30, 2013 - update for new correlate (no spacing option now)
+%        Feb. 27, 2013 - bugfix: needs 'reltime' correlate option, added
+%                        info.solution.origarr for debugging purposes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 16, 2012 at 11:00 GMT
+%     Last Updated Feb. 27, 2013 at 11:00 GMT
 
 % todo:
 
@@ -86,7 +89,6 @@ try
     % default options
     info.correlate.lags=[];
     info.correlate.npeaks=5;
-    info.correlate.spacing=10;
     info.correlate.absxc=true;
     info.userwindow.limits=[-inf inf];
     info.usertaper.width=[0 0];
@@ -110,14 +112,6 @@ try
                         'NPEAKS must be an integer >=1 !');
                 end
                 info.correlate.npeaks=varargin{i+1};
-                keep(i:i+1)=false;
-            case 'spacing'
-                if(~isscalar(varargin{i+1}) || ~isreal(varargin{i+1}) ...
-                        || varargin{i+1}<0)
-                    error('seizmo:useralign_quiet:badInput',...
-                        'SPACING must be a positive real (in seconds)!');
-                end
-                info.correlate.spacing=varargin{i+1};
                 keep(i:i+1)=false;
             case 'absxc'
                 if(~isscalar(varargin{i+1}) || ~islogical(varargin{i+1}))
@@ -178,11 +172,9 @@ try
     data0=taper(data0,info.usertaper.width);
     
     % correlate
-    xc=correlate(data0,...
-        'npeaks',info.correlate.npeaks,...
-        'spacing',info.correlate.spacing,...
-        'absxc',info.correlate.absxc,...
-        'lags',info.correlate.lags);
+    if(info.correlate.absxc); absxc={'absxc'}; else absxc={}; end
+    xc=correlate(data0,'mcxc','normxc','noauto','reltime',absxc{:},...
+        info.correlate.lags,'peaks',{'npeaks',info.correlate.npeaks});
     
     % solve alignment
     if(info.correlate.absxc)
@@ -193,6 +185,14 @@ try
         [arr,err,pol,zmean,zstd,nc,info.ttsolve,xc]=ttsolve(xc,...
             varargin{:},'mpri',0,'estpol',1);
     end
+    
+    % debugging
+    %figure;
+    %ax=makesubplots(3,1,1:3);
+    %plot2(normalize(data0),'ax',ax(1),'bgc','w');
+    %plot2(normalize(timeshift(data0,-arr)),'ax',ax(2),'bgc','w');
+    %plot2(normalize(timeshift(data0,arr)),'ax',ax(3),'bgc','w');
+    info.solution.origarr=arr;
     
     % align records
     data0=multiply(timeshift(data0,-arr),pol);

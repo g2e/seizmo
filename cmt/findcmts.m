@@ -33,14 +33,14 @@ function [cmts]=findcmts(varargin)
 %     1976.
 %
 %    Notes:
-%     - Longitude range may cross the dateline
+%     - Longitude range may cross the dateline.
 %     - Time and location constraints are placed on the centroid time and
-%       location not the hypocenter.
+%       location not the hypocenter.  Use the TYPE option to change that.
 %     - TIME formats: [YEAR JULDAY] (start of day)
 %                     [YEAR MONTH CALDAY] (start of day)
 %                     [YEAR JULDAY HOUR MINUTE SECONDS]
 %                     [YEAR MONTH CALDAY HOUR MINUTE SECONDS]
-%     - CATALOG may be an NDK struct for searching a custom CMT catalog
+%     - CATALOG may be an NDK struct for searching a custom CMT catalog.
 %     - GlobalCMT catalogs are cached under global SEIZMO.GLOBALCMT
 %
 %    Examples:
@@ -64,9 +64,10 @@ function [cmts]=findcmts(varargin)
 %        June 11, 2011 - minor defaults fix
 %        Feb. 29, 2012 - doc update, type option & switch to hypo
 %        Mar.  1, 2012 - auto-creation of catalogs
+%        Feb. 26, 2013 - sorted by time (slower but nice)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2012 at 21:30 GMT
+%     Last Updated Feb. 26, 2013 at 21:30 GMT
 
 % todo:
 
@@ -144,6 +145,12 @@ end
 
 % extract cmts
 cmts=ssidx(opt.CATALOG,idx);
+
+% sort by time
+[idx,idx]=sort(datenum([cmts.year cmts.month cmts.day cmts.hour ...
+    cmts.minute cmts.seconds+cmts.centroidtime]));
+fields=fieldnames(cmts);
+for i=1:numel(fields); cmts.(fields{i})=cmts.(fields{i})(idx); end
 
 end
 

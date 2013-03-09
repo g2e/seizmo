@@ -112,9 +112,10 @@ function [data,failed]=readdata(data,varargin)
 %        Jan. 28, 2012 - use a seizmosize override for speed
 %        Jan. 30, 2012 - debugging, code reformatted, use gh improvements
 %        Mar. 13, 2012 - fix example
+%        Feb. 14, 2013 - bugfix: assume leven true unless set to false
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 15:05 GMT
+%     Last Updated Feb. 14, 2013 at 15:05 GMT
 
 % todo:
 
@@ -245,7 +246,7 @@ for i=1:nrecs
     % deallocate timing if even sampling
     data(i).dep=nan(npts(i),ncmp(i),h(vi(i)).data.store);
     if(isfield(data,'ind'))
-        if(strcmpi(leven(i),'true')); data(i).ind=[];
+        if(~strcmpi(leven(i),'false')); data(i).ind=[];
         else data(i).ind=nan(npts(i),1,h(vi(i)).data.store);
         end
     end

@@ -63,9 +63,10 @@ function [m,Gg]=ttalign(lag,lagw,abstt,absw,absidx)
 %        Feb. 11, 2011 - drop inv calls, minor doc update
 %        Apr.  2, 2012 - minor doc update
 %        Jan. 29, 2013 - doc update, improve readability master/slave
+%        Feb. 26, 2013 - lag/lagw must be converted to double for sparse
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 29, 2013 at 01:05 GMT
+%     Last Updated Feb. 26, 2013 at 01:05 GMT
 
 % todo:
 
@@ -132,6 +133,9 @@ end
 end
 
 function [x,nr,len,s,m]=m2v(x,str)
+
+% convert to double
+x=double(x);
 
 % check lag
 if(~isreal(x))

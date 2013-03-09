@@ -33,9 +33,10 @@ function [varargout]=investigate_cmb_results(results,observable)
 %        Mar.  5, 2012 - initial version, use minor xticks
 %        Mar. 15, 2012 - fixes for pick functions
 %        Oct. 10, 2012 - doc update, more flexibility on 'arrerr' vs 'err'
+%        Feb. 27, 2013 - bugfix: plot_cmb_pdf input changed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2012 at 13:35 GMT
+%     Last Updated Feb. 27, 2013 at 13:35 GMT
 
 % todo:
 
@@ -59,8 +60,7 @@ else
 end
 
 % create figure
-fh=figure('color','k','defaultaxesxcolor','w','defaultaxesycolor','w',...
-    'defaulttextcolor','w');
+fh=figure;
 
 % axes
 if(strcmpi(observable,'all'))
@@ -165,8 +165,8 @@ if(strcmpi(observable,'all'))
     h(3)=imagesc(o(:,:,3),'parent',ax(3));
     h(4)=imagesc(o(:,:,4),'parent',ax(4));
     set(ax(1:4),'color','none',...
-        'ytick',(1:numel(s)),...
-        'yticklabel',s,...
+        ... 'ytick',(1:numel(s)),...
+        ... 'yticklabel',s,...
         'xminortick','on');
     colorbar('peer',ax(1));
     colorbar('peer',ax(2));
@@ -176,19 +176,28 @@ if(strcmpi(observable,'all'))
     set(h(2),'alphadata',~isnan(o(:,:,2)));
     set(h(3),'alphadata',~isnan(o(:,:,3)));
     set(h(4),'alphadata',~isnan(o(:,:,4)));
-    title(ax(1),'arr');
-    title(ax(2),'err');
-    title(ax(3),'snr');
-    title(ax(4),'amp');
-    xlabel(ax(1),'index #');
+    title(ax(1),'\deltat (s)');
+    title(ax(2),'\deltat_{err} (s)');
+    title(ax(3),'SNR');
+    title(ax(4),'amp log_{10}(nm)');
     xlabel(ax(2),'index #');
-    xlabel(ax(3),'index #');
     xlabel(ax(4),'index #');
+    ylabel(ax(1),'record #');
+    ylabel(ax(2),'record #');
+    linkaxes(ax(1:4));
     
     % plot profile info
-    pf=slowdecayprofiles(results,[],[],false);
-    plot_cmb_pdf(pf,'cslow',[],[],ax(5));
-    plot_cmb_pdf(pf,'cdecay',[],[],ax(6));
+    try
+        pf=slowdecaypairs(results,10,10,false);
+        plot_cmb_pdf(pf,'cslow',[],[],'k',[],ax(5));
+        plot_cmb_pdf(pf,'cdecay',[],[],'k',[],ax(6));
+        title(ax(5),'');
+        title(ax(6),'');
+        linkaxes(ax(5:6),'x');
+    catch
+        warning('seizmo:investigate_cmb_results:noProfiles',...
+            'No profiles meet criteria!');
+    end
 else
     % make observable matrix
     o=nan(size(s,1),numel(bad));

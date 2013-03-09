@@ -50,7 +50,10 @@ function [data]=correlate(master,varargin)
 %     CORRELOGRAMS=CORRELATE(...,[LAGMIN LAGMAX],...) limits the output
 %     correlograms to the lag points within the specified range.  Note that
 %     if the range extends past the default range (all possible non-zero
-%     points), then the correlograms are padded with zeros as needed.
+%     points), then the correlograms are padded with zeros as needed.  The
+%     default (all possible non-zero points) may be specified with an empty
+%     matrix (ie. []).  Also you may specify a single value to get a
+%     symmetric range.
 %
 %     CORRELOGRAMS=CORRELATE(...,'ABSXC',...) takes the absolute value of
 %     the correlograms.  This is only useful for peak picking (see the next
@@ -155,10 +158,13 @@ function [data]=correlate(master,varargin)
 %        Oct. 21, 2012 - more fixes related to testing
 %        Jan. 28, 2013 - doc update
 %        Jan. 30, 2013 - peaks output dimension 2 is forced scalar for
-%                        compatibility with peaks output of old version
+%                        compatibility with peaks output of old version,
+%                        allow empty matrix [] to specify lagrng default
+%                        and single element lagrng for a symmetric range
+%        Feb. 27, 2013 - MAJOR BUGFIX: lagrng usage offset lags by 1 sample
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2013 at 15:05 GMT
+%     Last Updated Feb. 27, 2013 at 15:05 GMT
 
 % todo:
 
@@ -231,10 +237,18 @@ lagrng=[];
 np=cellfun('isclass',varargin,'double');
 if(any(np));
     lagrng=varargin{find(np,1,'last')};
-    if(~isnumeric(lagrng) || ~isreal(lagrng) || numel(lagrng)~=2 ...
-            || diff(lagrng)<0)
+    if(isempty(lagrng))
+        % do nothing
+    elseif(isscalar(lagrng))
+        if(~isnumeric(lagrng) || ~isreal(lagrng))
+            error('seizmo:correlate:badInput',...
+                'LAGRNG must be real-valued!');
+        end
+        lagrng=abs(lagrng)*[-1 1];
+    elseif(~isnumeric(lagrng) || ~isreal(lagrng) ...
+            || numel(lagrng)~=2 || diff(lagrng)<0)
         error('seizmo:correlate:badInput',...
-            'LAGRNG must be specified as [LAGMIN LAGMAX]!');
+            'LAGRNG must be a real-valued vector as [LAGMIN LAGMAX]!');
     end
 end
 varargin(np)=[];
@@ -451,7 +465,7 @@ for i=1:npairs
                 tmp(lidx(lidx>0 & lidx<=npts0(i))); ...
                 zeros(sum(lidx>npts0(i)),1)];
             npts0(i)=numel(tmp);
-            b0(i)=b0(i)+min(lidx)*delta;
+            b0(i)=b0(i)+(min(lidx)-1)*delta;
         end
         
         % peaks
@@ -498,7 +512,7 @@ for i=1:npairs
                 data(i).dep(lidx(lidx>0 & lidx<=npts0(i))); ...
                 zeros(sum(lidx>npts0(i)),1)];
             npts0(i)=numel(data(i).dep);
-            b0(i)=b0(i)+min(lidx)*delta;
+            b0(i)=b0(i)+(min(lidx)-1)*delta;
         end
         
         % absolute?

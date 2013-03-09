@@ -17,6 +17,8 @@ fss
  - amplitudes of unwhitened, tdss & capon
    - 1/(2*pi) factor?
    - power spectral density is scaled by 2*delta/npts (td measures)
+ - half+auto => full for xc when desired
+   - this should just be a function
 geofss
  - rewrites
    - geo(fssxc,tdssxc)
@@ -28,7 +30,12 @@ make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
 noise_stack
     - stack2stack companion function
     - needs overlap option
-    - more time functions (time_range_overlap: sec,bgn,end)
+    - don't output reversed correlations
+noise_process
+    - better rotate_correlations needed
+
+rotate_correlations
+    - not ready: need single dataset i/o, autoxc support (3 vs 4 files)
 
 meld
     - uneven or variable samplerate
@@ -37,10 +44,10 @@ rotate
     - rewrite option code
 
 figure out strange narrow long-period peaks in noise results
+    - window length does not affect it.
     - response taper affects it?
-    - window length does not?
     - happens even without response removal?
-    - as you can see i'm not sure...may even be a real signal!
+    - real signal?
 
 more cmb models (rjk)
     - we need to allow parameter setting (while loop rather than for)

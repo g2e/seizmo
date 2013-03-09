@@ -59,6 +59,10 @@ function [nn,ne,en,ee]=rotate_correlations(nn,ne,en,ee)
 %     Last Updated Jan. 28, 2013 at 13:30 GMT
 
 % todo:
+% - need a single dataset option
+%   - should be a separate function?
+%   - have the split routine but need a pairing routine which
+%     is obviously internalized here
 
 % check nargin
 error(nargchk(4,4,nargin));

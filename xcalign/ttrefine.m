@@ -94,9 +94,10 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %        Apr.  2, 2012 - minor doc update
 %        Jan. 30, 2013 - doc update, rename dt to m & M to misfit for
 %                        readability and consistency
+%        Feb. 26, 2013 - handle nans in pg
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2013 at 01:05 GMT
+%     Last Updated Feb. 26, 2013 at 01:05 GMT
 
 % todo:
 
@@ -236,7 +237,7 @@ if(sz(2)==1)
     elseif(~isreal(lg))
         error('seizmo:ttrefine:badInput',...
             'LG must be a vector of real values!');
-    elseif(any(abs(pg(:))~=1))
+    elseif(any(abs(pg(~isnan(pg(:))))~=1))
         error('seizmo:ttrefine:badInput',...
             'PG must be a vector of 1s & -1s!');
     end
@@ -261,7 +262,8 @@ else % matrix form
     elseif(~isequal(lg,permute(-lg,[2 1 3])))
         error('seizmo:ttrefine:badInput',...
             'LG must be a anti-symmetric matrix of real values!');
-    elseif(~isequal(pg,permute(pg,[2 1 3])) || any(abs(pg(:))~=1))
+    elseif(~isequal(pg,permute(pg,[2 1 3])) ...
+            || any(abs(pg(~isnan(pg(:))))~=1))
         error('seizmo:ttrefine:badInput',...
             'PG must be a symmetric matrix of 1s & -1s!');
     end

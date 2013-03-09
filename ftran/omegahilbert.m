@@ -23,9 +23,10 @@ function [data]=omegahilbert(data)
 %     Version History:
 %        Feb.  4, 2012 - initial version
 %        May  31, 2012 - minor doc update
+%        Feb. 14, 2013 - use strcmpi for consistency
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  31, 2012 at 15:05 GMT
+%     Last Updated Feb. 14, 2013 at 15:05 GMT
 
 % todo:
 
@@ -76,7 +77,7 @@ try
         data(i).dep=double(data(i).dep);
 
         % hilbert transform
-        if(strcmp(iftype(i),'irlim'))
+        if(strcmpi(iftype(i),'irlim'))
             % -i w>0, i w<0, 0 w=0
             data(i).dep(2:npts2(i),[1:2:end 2:2:end])=...
                 [data(i).dep(2:npts2(i),2:2:end) ...

@@ -27,9 +27,10 @@ function [data]=omegaanalytic(data)
 
 %     Version History:
 %        Feb.  5, 2012 - initial version
+%        Feb. 14, 2013 - use strcmpi for consistency
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2012 at 15:05 GMT
+%     Last Updated Feb. 14, 2013 at 15:05 GMT
 
 % todo:
 
@@ -80,7 +81,7 @@ try
         data(i).dep=double(data(i).dep);
 
         % analytic signal
-        if(strcmp(iftype(i),'irlim'))
+        if(strcmpi(iftype(i),'irlim'))
             data(i).dep(2:npts2(i),:)=data(i).dep(2:npts2(i),:)*2;
             data(i).dep(npts2(i)+2:end,:)=0;
         else % iamph

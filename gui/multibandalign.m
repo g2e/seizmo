@@ -36,6 +36,7 @@ function [info]=multibandalign(data,varargin)
 %       winnowyfield    - header field to winnow by (default is 'gcarc')
 %       winnowlimits    - default winnow limits (default is [])
 %       figdir          - directory to save figures to (default is '.')
+%       lags            - number of periods to look from 0 for xc peaks
 %     The remaining options are passed to USERALIGN.  See that function for
 %     more details.
 %
@@ -108,18 +109,16 @@ function [info]=multibandalign(data,varargin)
 %        Apr.  3, 2012 - use seizmocheck
 %        Jan. 28, 2013 - deleted permutation of xc outputs, fixed phase
 %                        parsing for findpicks, fixed figdir handling
+%        Jan. 30, 2013 - update for new correlate (no spacing option)
+%        Feb. 14, 2013 - bugfix for xc output squeeze
+%        Feb. 27, 2013 - bugfix: winnow cut uninitialized, adjust default
+%                        windowing parameters & zx parameters so full auto
+%                        works much better
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2013 at 12:25 GMT
+%     Last Updated Feb. 27, 2013 at 12:25 GMT
 
 % todo:
-% - smarter initial window is needed to reduce later arrivals messing up
-%   the amplitude scaling (or can we prescale using signal window???)
-% - smarter noise window would be nice
-% - something like investigate_cmb_results in get_initial_window
-%   would be nice -- probably a subroutine working with the info struct
-%   - requires full info being passed to get_initial_window
-%   - is the pf stuff too specific for multibandalign?
 
 % check nargin
 if(nargin<1)
@@ -240,13 +239,22 @@ try
         % auto-window or user specified (usersnr interface)
         if(p.auto)
             % default settings
-            info(i).usersnr.noisewin=p.noisewin;
-            info(i).usersnr.signalwin=p.signalwin;
-            info(i).usersnr.method=p.snrmethod;
+            if(i==1)
+                info(i).usersnr.noisewin=p.noisewin;
+                info(i).usersnr.signalwin=p.signalwin;
+                info(i).usersnr.method=p.snrmethod;
+            else
+                info(i).usersnr.noisewin=info(last).usersnr.noisewin;
+                info(i).usersnr.signalwin=info(last).usersnr.signalwin;
+                info(i).usersnr.method=p.snrmethod;
+            end
             
             % zx-based window
             if(p.zxing);
-                info(i).usersnr.signalwin=autozx(data0,info(i),p);
+                zx(1)=zeroxing321(data0,info(i),1);
+                zx(2)=zeroxing(data0,info(i),2);
+                info(i).usersnr.signalwin=zx;
+                %info(i).usersnr.signalwin=autozx(data0,info(i),p);
             end
             
             % plot windows
@@ -367,7 +375,7 @@ try
                 end
                 
                 % winnow
-                data0(cut)=[];
+                data0(info(i).userwinnow.cut)=[];
                 snr(info(i).userwinnow.cut)=[];
                 snridx(info(i).userwinnow.cut)=[];
                 nn=numel(data0);
@@ -415,8 +423,7 @@ try
         
         % quiet align
         [info(i).useralign,info(i).useralign.xc,...
-            info(i).useralign.data]=useralign_quiet(data0,...
-            'spacing',1/(4*p.bank(i,3)),'absxc',false,...
+            info(i).useralign.data]=useralign_quiet(data0,'absxc',false,...
             'estarr',zeros(nn,1),'snr',snr,'lags',p.lags/p.bank(i,3),...
             'window',info(i).usersnr.signalwin,varargin{:});
         
@@ -487,11 +494,11 @@ try
             info(i).useralign.usermoveout.adjust(deleted)=[];
             bigdeleted=ndsquareform(deleted(:,ones(nn,1)) ...
                 | deleted(:,ones(nn,1))');
-            info(i).useralign.xc.cg(bigdeleted,:)=[];
-            info(i).useralign.xc.lg(bigdeleted,:)=[];
-            info(i).useralign.xc.pg(bigdeleted,:)=[];
-            info(i).useralign.xc.zg(bigdeleted,:)=[];
-            info(i).useralign.xc.wg(bigdeleted,:)=[];
+            info(i).useralign.xc.cg(bigdeleted,:,:)=[];
+            info(i).useralign.xc.lg(bigdeleted,:,:)=[];
+            info(i).useralign.xc.pg(bigdeleted,:,:)=[];
+            info(i).useralign.xc.zg(bigdeleted,:,:)=[];
+            info(i).useralign.xc.wg(bigdeleted,:,:)=[];
             clear bigdeleted;
             
             % update variables
@@ -660,8 +667,8 @@ end
 
 % defaults
 p.initwin=[-150 200];
-p.noisewin=[-125 25];
-p.signalwin=[35 135];
+p.noisewin=[-150 0];
+p.signalwin=[50 170];
 p.bank=filter_bank([1/50 1/5],'variable',0.2,0.1);
 p.runname=['multibandalign_' datestr(now,30)];
 p.snrcut=5;
@@ -909,7 +916,7 @@ zx=sort(zx{1}); % just in case
 
 % find closest within range
 sw=info.usersnr.signalwin;
-neg=find(zx<sw(idx) & zx>=(sw(idx)-(sw(1)+sw(2))/2),1,'last');
+neg=find(zx<sw(idx) & zx>=(sw(1)+sw(2))/2,1,'last');
 
 % choose one
 if(isempty(neg))
@@ -940,8 +947,8 @@ zx=sort(zx{1}); % just in case
 
 % find closest within range
 sw=info.usersnr.signalwin;
-neg=find(zx<sw(idx) & zx>=(sw(idx)-(sw(1)+sw(2))/2),1,'last');
-pos=find(zx>=sw(idx) & zx<=(sw(idx)+(sw(1)+sw(2))/2),1,'first');
+neg=find(zx<sw(idx) & zx>=sw(idx)-(sw(2)-sw(1))/2,1,'last');
+pos=find(zx>=sw(idx) & zx<=(sw(1)+sw(2))/2,1,'first');
 
 % choose one
 if(isempty(neg) && isempty(pos))
@@ -952,98 +959,12 @@ elseif(isempty(neg))
 elseif(isempty(pos))
     zx=zx(neg);
 else
-    % move positive only if < 1/3 negative distance
-    if((sw(idx)-zx(neg))/3<=(zx(pos)-sw(idx)))
+    % nearest zero crossing
+    if((sw(idx)-zx(neg))<=(zx(pos)-sw(idx)))
         zx=zx(neg);
     else
         zx=zx(pos);
     end
-end
-
-end
-
-
-function [win]=autozx(data,info,p)
-% get sample spacing
-delta=getheader(data,'delta');
-delta=unique(delta);
-if(~isscalar(delta))
-   error('seizmo:multibandalign:badInput',...
-       'DATA records must have the same sample rate!');
-end
-
-% get stack
-dstack=stack(data,1/delta,[],info.initwin(1),info.initwin(2));
-
-% get zero crossings
-zx=zerocrossings(dstack);
-zx=sort(zx{1}); % just in case
-nzx=numel(zx);
-
-% find closest within range
-pos=find(zx>info.usersnr.signalwin(1),1,'first');
-
-% look out for empty
-if(isempty(pos))
-    % auto window fails (???) so just use default as fallback
-    error('seizmo:multibandalign:badAutoZX',...
-        'Could not find a suitable zero-crossing!');
-end
-
-% window start adjusted or not?
-if(p.zxoffset)
-    % window start is offset by some number of zero-crossings
-    spos=pos+p.zxoffset-1;
-    epos=pos+p.zxoffset-1+p.zxwidth;
-    if(spos<1)
-        % bad inputs (something totally wrong)
-        warning('seizmo:multibandalign:badAutoZX',...
-            'Had to adjust auto-window start to initial window start!');
-        win(1)=info.initwin(1);
-    elseif(spos>nzx)
-        % bad inputs (something totally wrong)
-        warning('seizmo:multibandalign:badAutoZX',...
-            'Had to adjust auto-window start to initial window end!');
-        win(1)=info.initwin(2);
-    else
-        win(1)=zx(spos);
-    end
-    if(epos<1)
-        % bad inputs (something totally wrong)
-        warning('seizmo:multibandalign:badAutoZX',...
-            'Had to adjust auto-window end to initial window start!');
-        win(2)=info.initwin(1);
-    elseif(epos>nzx)
-        % bad inputs (this one does happen occasionally)
-        warning('seizmo:multibandalign:badAutoZX',...
-            'Had to adjust auto-window end to initial window end!');
-        win(2)=info.initwin(2);
-    else
-        win(2)=zx(epos);
-    end
-else % no adjust
-    % no offset for signal window start
-    epos=pos+p.zxwidth-1;
-    win(1)=info.usersnr.signalwin(1);
-    if(epos<1)
-        % bad inputs (something totally wrong)
-        warning('seizmo:multibandalign:badAutoZX',...
-            'Had to adjust auto-window end to initial window start!');
-        win(2)=info.initwin(1);
-    elseif(epos>nzx)
-        % bad inputs (this one does happen occasionally)
-        warning('seizmo:multibandalign:badAutoZX',...
-            'Had to adjust auto-window end to initial window end!');
-        win(2)=info.initwin(2);
-    else
-        win(2)=zx(epos);
-    end
-end
-
-% sanity check
-if(~diff(win))
-    error('seizmo:multibandalign:badAutoZX',...
-        'Input parameters are improper!');
 end
 
 end

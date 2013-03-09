@@ -129,6 +129,9 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %   - weight summation by overlap?
 %   - need a time function to return overlap between ranges
 %   - tod?hr, wkday, mon, ?season need special care
+% - do not write reversed correlations
+%   - less memory
+%   - less work (read, remove, process vs read, process)
 
 % check nargin
 error(nargchk(3,inf,nargin));

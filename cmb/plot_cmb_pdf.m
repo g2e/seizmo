@@ -81,9 +81,10 @@ function [varargout]=plot_cmb_pdf(pf,field,y,p,fgcolor,bgcolor,ax)
 %        Oct. 11, 2012 - drop corrections field requirement, period min/max
 %                        input bugfix
 %        Oct. 16, 2012 - color options
+%        Feb. 26, 2013 - bugfix: precision issue with y interval detection
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 16, 2012 at 13:35 GMT
+%     Last Updated Feb. 26, 2013 at 13:35 GMT
 
 % todo:
 
@@ -164,11 +165,11 @@ if(isscalar(p) && p==fix(p) && p>0); p=linspace(pmin,pmax,p); end
 
 % check period/value
 % - value needs to be regularly spaced
-spacing=abs(unique(single(diff(y))));
+spacing=y(2)-y(1);
 if(~isreal(p) || ~isvector(p) || any(p<=0))
     error('seizmo:plot_cmb_pdf:badInput',...
         'P must be a vector of positive real-valued periods in seconds!');
-elseif(~isreal(y) || ~isvector(y) || ~isscalar(spacing))
+elseif(~isreal(y) || ~isvector(y) || any(abs(diff(y)-spacing)/spacing>.01))
     error('seizmo:plot_cmb_pdf:badInput',...
         'Y must be a vector of evenly spaced reals!');
 end

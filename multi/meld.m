@@ -253,9 +253,12 @@ function [data]=meld(data,varargin)
 %                        more flexibility in option strings, only/skip
 %                        options replace merge* options
 %        Mar. 13, 2012 - use getheader improvements
+%        Feb. 14, 2013 - use strcmpi for consistency (fixes a big bug in
+%                        TIMING option (would treat 'UTC' as 'TAI' b/c it
+%                        was not matching 'utc')
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 15:05 GMT
+%     Last Updated Feb. 14, 2013 at 15:05 GMT
 
 % todo:
 % - uneven support - just toss together and sort after?
@@ -321,11 +324,11 @@ try
     if(prod(szchar)~=0)
         [reqchar{:}]=getheader(data,option.REQUIREDCHARFIELDS{:});
     end
-    leven=~strcmp(leven,'false');
+    leven=~strcmpi(leven,'false');
 
     % get start and end of records in absolute time
     if(option.USEABSOLUTETIMING)
-        if(strcmp(option.TIMING,'utc'))
+        if(strcmpi(option.TIMING,'utc'))
             ab=gregorian2modserial(utc2tai(...
                 [nzyear nzjday nzhour nzmin nzsec+nzmsec/1000+b]));
             ae=gregorian2modserial(utc2tai(...
@@ -535,7 +538,7 @@ try
 
     % get relative times from absolute
     if(option.USEABSOLUTETIMING)
-        if(strcmp(option.TIMING,'utc'))
+        if(strcmpi(option.TIMING,'utc'))
             az=gregorian2modserial(utc2tai(...
                 [dt(:,1:4) dt(:,5)+dt(:,6)/1000]));
             b=(ab(:,1)-az(:,1))*86400+(ab(:,2)-az(:,2));

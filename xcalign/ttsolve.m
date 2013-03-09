@@ -215,9 +215,10 @@ function [m,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %                        empty once set non-empty
 %        Apr.  2, 2012 - minor doc update
 %        Jan. 30, 2013 - doc update, absolute arrival constraints
+%        Feb. 26, 2013 - handle nans in pg, dt=>m bugfix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2013 at 01:05 GMT
+%     Last Updated Feb. 26, 2013 at 01:05 GMT
 
 % todo:
 
@@ -461,7 +462,7 @@ switch lower(opt.METHOD)
             end
 
             % get # std dev of lags to previous solution
-            numdev=max(opt.MINLAG,ttnumdev(xc.lg(:,:,1),dt,std));
+            numdev=max(opt.MINLAG,ttnumdev(xc.lg(:,:,1),m,std));
 
             % polarity-based weights
             if(iter<=opt.MPRI)
@@ -563,7 +564,7 @@ if(sz(2)==1)
     elseif(~isreal(lg))
         error('seizmo:ttsolve:badInput',...
             'LG must be a vector of real values!');
-    elseif(any(abs(pg(:))~=1))
+    elseif(any(abs(pg(~isnan(pg(:))))~=1))
         error('seizmo:ttsolve:badInput',...
             'PG must be a vector of 1s & -1s!');
     end
@@ -589,7 +590,8 @@ else % matrix form
     elseif(~isequal(lg,permute(-lg,[2 1 3])))
         error('seizmo:ttsolve:badInput',...
             'LG must be a anti-symmetric matrix of real values!');
-    elseif(~isequal(pg,permute(pg,[2 1 3])) || any(abs(pg(:))~=1))
+    elseif(~isequal(pg,permute(pg,[2 1 3])) ...
+            || any(abs(pg(~isnan(pg(:))))~=1))
         error('seizmo:ttsolve:badInput',...
             'PG must be a symmetric matrix of 1s & -1s!');
     end

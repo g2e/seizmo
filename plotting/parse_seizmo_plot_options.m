@@ -6,6 +6,8 @@ function [opt]=parse_seizmo_plot_options(varargin)
 % Feb. 24, 2012 - pass char fg/bg inputs to name2rgb
 % May  29, 2012 - pow2pad=0 by default
 % Aug.  2, 2012 - added ftan support
+% Jan. 30, 2013 - more distcut aliases
+% Feb. 27, 2013 - parent allowed for specifying axis
 
 % todo:
 % - value checking
@@ -116,7 +118,7 @@ for i=1:2:np
             opt.FGCOLOR=val;
         case {'bgcolor' 'bgc' 'bg' 'background'}
             opt.BGCOLOR=val;
-        case {'axis' 'ax' 'axes'}
+        case {'axis' 'ax' 'axes' 'parent'}
             opt.AXIS=val;
         case {'cmap' 'colormap'}
             opt.CMAP=val;
@@ -174,7 +176,7 @@ for i=1:2:np
             opt.SPECTRALCMP=val;
         case {'unwrap' 'unwrapphase'}
             opt.UNWRAP=val;
-        case {'clucut' 'cutoff' 'distcut'}
+        case {'clucut' 'cutoff' 'distcut' 'distoff' 'dcut'}
             opt.CUTOFF=val;
         case {'clucutcolor' 'distcutcolor' 'cutoffcolor'}
             opt.CUTOFFCOLOR=val;
