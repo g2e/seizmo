@@ -64,14 +64,25 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %        Mar.  1, 2012 - octave ascii save workaround
 %        Mar.  5, 2012 - allow no written output, odir/figdir bugfix
 %        Feb. 14, 2013 - bugfix figdir handling
+%        Mar. 11, 2013 - directory input (reads indir/*.mat), selection
+%                        list, advanced clustering commented out
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2013 at 13:35 GMT
+%     Last Updated Mar. 11, 2013 at 13:35 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,inf,nargin));
+
+% handle directory input
+if(ischar(results) && isdir(results))
+    files=xdir([results filesep '*.mat']);
+    clear results;
+    for i=1:numel(files)
+        results(i)=load([files(i).path files(i).name]);
+    end
+end
 
 % check results
 error(check_cmb_results(results));
@@ -147,7 +158,7 @@ if(~isstring(odir) && ~(islogical(odir) && isscalar(odir)))
     error('seizmo:cmb_2nd_pass:badInput',...
         'ODIR must be a string or TRUE/FALSE!');
 elseif(~isstring(figdir) && ~(islogical(figdir) && isscalar(figdir)))
-    error('seizmo:cmb_1st_pass:badInput',...
+    error('seizmo:cmb_2nd_pass:badInput',...
         'FIGDIR must be a string or TRUE/FALSE!');
 end
 if(islogical(odir)); out=odir; else out=true; end
@@ -167,56 +178,69 @@ elseif(~out && ~nargout)
         'Output variable must be assigned when no written output!');
 end
 
+% select events
+datelist=char({results.runname}.');
+s=listdlg('PromptString','Select events:',...
+          'InitialValue',1:numel(results),...
+          'ListSize',[170 300],...
+          'ListString',datelist);
+
+% error if none selected
+if(isempty(s))
+    error('seizmo:cmb_2nd_pass:noDirsSelected',...
+        'No earthquakes selected!');
+end
+
 % loop over each event
 cnt=0;
-for i=1:numel(results)
+for i=1:numel(s)
     % run name
-    runname=regexprep(results(i).runname,'1stPass','2ndPass');
+    runname=regexprep(results(s(i)).runname,'1stPass','2ndPass');
     disp(runname);
     
     % skip if no useralign
-    if(isempty(results(i).useralign)); continue; end
+    if(isempty(results(s(i)).useralign)); continue; end
     
     % read in data
-    data=readseizmo(strcat(results(i).dirname,filesep,...
-        {results(i).useralign.data.name}'));
+    data=readseizmo(strcat(results(s(i)).dirname,filesep,...
+        {results(s(i)).useralign.data.name}'));
     
     % get some header info
     [gcarc,az]=getheader(data,'gcarc','az');
     
     % adjust ground units
-    if(any(results(i).usercluster.units~=0))
-        units=results0(i).usercluster.units;
-        if(any(units==-2))
-            data(units==-2)=differentiate(differentiate(data(units==-2)));
-        end
-        if(any(units==-1))
-            data(units==-1)=differentiate(data(units==-1));
-        end
-        if(any(units==1))
-            data(units==1)=integrate(data(units==1));
-        end
-        if(any(units==2))
-            data(units==2)=integrate(integrate(data(units==2)));
-        end
-    end
+    %if(any(results(s(i)).usercluster.units~=0))
+    %    units=results(s(i)).usercluster.units;
+    %    if(any(units==-2))
+    %        data(units==-2)=differentiate(differentiate(data(units==-2)));
+    %    end
+    %    if(any(units==-1))
+    %        data(units==-1)=differentiate(data(units==-1));
+    %    end
+    %    if(any(units==1))
+    %        data(units==1)=integrate(data(units==1));
+    %    end
+    %    if(any(units==2))
+    %        data(units==2)=integrate(integrate(data(units==2)));
+    %    end
+    %end
     
     % resample
     if(~isempty(sr)); data=syncrates(data,sr); end
     
     % align data using 1stPass results
-    arr=results(i).useralign.solution.arr;
-    pol=results(i).useralign.solution.pol;
+    arr=results(s(i)).useralign.solution.arr;
+    pol=results(s(i)).useralign.solution.pol;
     data=multiply(data,pol);
     data=timeshift(data,-getheader(data,'o')-arr);
     
     % loop over good clusters
-    for j=find(results(i).usercluster.good(:)')
+    for j=find(results(s(i)).usercluster.good(:)')
         % get cluster info
         sj=num2str(j,'%02d');
         disp(['Aligning cluster ' sj]);
-        good=find(results(i).usercluster.T==j ...
-            & ~(results(i).outliers.bad) ...
+        good=find(results(s(i)).usercluster.T==j ...
+            & ~(results(s(i)).outliers.bad) ...
             & gcarc>=gcrng(1) & gcarc<=gcrng(2) ...
             & ((az>=azrng(1) & az<=azrng(2)) ...
             | (az>=azrng(1)-360 & az<=azrng(2)-360) ...
@@ -231,7 +255,7 @@ for i=1:numel(results)
         end
         
         % extract appropriate corrections
-        correct=results(i).corrections;
+        correct=results(s(i)).corrections;
         correct=fixcorrstruct(correct,good);
         
         % apply sign corrections for radiation pattern
@@ -251,12 +275,12 @@ for i=1:numel(results)
             if(isempty(tmp(k).usersnr)); tmp(k).usersnr=[]; end
 
             % add run name, quake name, data directory name, syn stuff
-            tmp(k).phase=results(i).phase;
+            tmp(k).phase=results(s(i)).phase;
             tmp(k).runname=[runname '_cluster_' sj ...
                 '_band_' num2str(k,'%02d')];
-            tmp(k).dirname=results(i).dirname;
-            tmp(k).synthetics=results(i).synthetics;
-            tmp(k).earthmodel=results(i).earthmodel;
+            tmp(k).dirname=results(s(i)).dirname;
+            tmp(k).synthetics=results(s(i)).synthetics;
+            tmp(k).earthmodel=results(s(i)).earthmodel;
 
             % fix corrections
             if(~isempty(tmp(k).usersnr) && ~isempty(tmp(k).userwinnow))

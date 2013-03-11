@@ -56,14 +56,24 @@ function [results]=cmb_outliers(results,odir,figdir)
 %        May  19, 2011 - undo works now
 %        Mar.  1, 2012 - octave ascii save workaround
 %        Mar.  5, 2012 - allow no written output
+%        Mar. 11, 2013 - directory input (read indir/*.mat), selection list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  5, 2012 at 13:35 GMT
+%     Last Updated Mar. 11, 2013 at 13:35 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,3,nargin));
+
+% handle directory input
+if(ischar(results) && isdir(results))
+    files=xdir([results filesep '*.mat']);
+    clear results;
+    for i=1:numel(files)
+        results(i)=load([files(i).path files(i).name]);
+    end
+end
 
 % check results
 error(check_cmb_results(results));
@@ -106,60 +116,76 @@ if(figout)
     end
 end
 
+% select events
+datelist=char({results.runname}.');
+s=listdlg('PromptString','Select events:',...
+          'InitialValue',1:numel(results),...
+          'ListSize',[170 300],...
+          'ListString',datelist);
+
+% error if none selected
+if(isempty(s))
+    error('seizmo:cmb_outliers:noDirsSelected',...
+        'No earthquakes selected!');
+end
+
 % loop over each event
-for i=1:numel(results)
+for i=1:numel(s)
     % display name
-    disp(results(i).runname);
+    disp(results(s(i)).runname);
     
     % time (for skipped)
-    results(i).time=datestr(now);
+    results(s(i)).time=datestr(now);
     
     % abandon events we skipped
-    if(isempty(results(i).useralign)); continue; end
+    if(isempty(results(s(i)).useralign)); continue; end
     
     % arrival & amplitude info
-    [dd,az,ev,st]=getheader(results(i).useralign.data,...
+    [dd,az,ev,st]=getheader(results(s(i)).useralign.data,...
         'gcarc','az','ev','st');
-    arr=results(i).useralign.solution.arr;
-    if(results(i).synthetics)
+    arr=results(s(i)).useralign.solution.arr;
+    if(results(s(i)).synthetics)
         carr=arr;
     else
-        switch results(i).phase
+        switch results(s(i)).phase
             case 'Pdiff'
-                carr=arr-results(i).corrections.ellcor...
-                    -results(i).corrections.crucor.prem...
-                    -results(i).corrections.mancor.hmsl06p.upswing;
+                carr=arr-results(s(i)).corrections.ellcor...
+                    -results(s(i)).corrections.crucor.prem...
+                    -results(s(i)).corrections.mancor.hmsl06p.upswing;
             case {'SHdiff' 'SVdiff'}
-                carr=arr-results(i).corrections.ellcor...
-                    -results(i).corrections.crucor.prem...
-                    -results(i).corrections.mancor.hmsl06s.upswing;
+                carr=arr-results(s(i)).corrections.ellcor...
+                    -results(s(i)).corrections.crucor.prem...
+                    -results(s(i)).corrections.mancor.hmsl06s.upswing;
         end
     end
-    snr=results(i).usersnr.snr;
-    snr=snr(snr>=results(i).usersnr.snrcut);
-    snr(results(i).userwinnow.cut)=[];
-    if(isfield(results(i),'finalcut')); snr=snr(results(i).finalcut); end
-    arrerr=sqrt((results(i).useralign.solution.arrerr).^2 ...
-        +(max(1./results(i).filter.corners)...
+    snr=results(s(i)).usersnr.snr;
+    snr=snr(snr>=results(s(i)).usersnr.snrcut);
+    snr(results(s(i)).userwinnow.cut)=[];
+    if(isfield(results(s(i)),'finalcut'))
+        snr=snr(results(s(i)).finalcut);
+    end
+    arrerr=sqrt((results(s(i)).useralign.solution.arrerr).^2 ...
+        +(max(1./results(s(i)).filter.corners)...
         ./(2*pi).*snr2phaseerror(snr)).^2);
-    amp=results(i).useralign.solution.amp;
-    camp=amp./results(i).corrections.geomsprcor;
-    amperr=results(i).useralign.solution.amperr;
+    amp=results(s(i)).useralign.solution.amp;
+    camp=amp./results(s(i)).corrections.geomsprcor;
+    amperr=results(s(i)).useralign.solution.amperr;
     
     % default to all non-outliers
-    results(i).outliers.bad=false(numel(results(i).useralign.data),1);
+    results(s(i)).outliers.bad=false(...
+        numel(results(s(i)).useralign.data),1);
     
     % loop over good clusters
-    for j=find(results(i).usercluster.good(:)')
+    for j=find(results(s(i)).usercluster.good(:)')
         % current cluster index as a string
         sj=num2str(j,'%02d');
         
         % preallocate struct
-        results(i).outliers.cluster(j).arrcut=...
+        results(s(i)).outliers.cluster(j).arrcut=...
             struct('bad',[],'cutoff',[]);
-        results(i).outliers.cluster(j).ampcut=...
+        results(s(i)).outliers.cluster(j).ampcut=...
             struct('bad',[],'cutoff',[]);
-        results(i).outliers.cluster(j).errcut=...
+        results(s(i)).outliers.cluster(j).errcut=...
             struct('bad',[],'cutoff',[]);
         
         % loop until user is happy overall
@@ -168,8 +194,8 @@ for i=1:numel(results)
         arrcnt=0; ampcnt=0; errcnt=0; delazcnt=0;
         while(~happyoverall)
             % get current cluster population
-            good=find(results(i).usercluster.T==j ...
-                & ~results(i).outliers.bad);
+            good=find(results(s(i)).usercluster.T==j ...
+                & ~results(s(i)).outliers.bad);
             pop=numel(good);
             
             % require at least 2 members in good standing
@@ -177,7 +203,7 @@ for i=1:numel(results)
             if(pop<2)
                 warning('seizmo:cmb_outliers:tooFewGood',...
                     ['Cluster ' sj ' has <2 good members. Skipping!']);
-                results(i).outliers.bad(good)=true;
+                results(s(i)).outliers.bad(good)=true;
                 happyoverall=true;
                 continue;
             end
@@ -199,12 +225,12 @@ for i=1:numel(results)
                     [bad,cutoff,ax]=...
                         arrcut(dd(good),carr(good),[],1,arrerr(good),[],...
                         z2c(az(good),hsv(64),[0 360]));
-                    results(i).outliers.bad(good(bad))=true;
-                    results(i).outliers.cluster(j).arrcut.bad{arrcnt}=good(bad);
-                    results(i).outliers.cluster(j).arrcut.cutoff(arrcnt)=cutoff;
+                    results(s(i)).outliers.bad(good(bad))=true;
+                    results(s(i)).outliers.cluster(j).arrcut.bad{arrcnt}=good(bad);
+                    results(s(i)).outliers.cluster(j).arrcut.cutoff(arrcnt)=cutoff;
                     if(figout && ishandle(ax(1)))
                         saveas(get(ax(1),'parent'),fullfile(figdir,...
-                            [datestr(now,30) '_' results(i).runname ...
+                            [datestr(now,30) '_' results(s(i)).runname ...
                             '_cluster_' sj '_arrcut_' num2str(arrcnt) ...
                             '.fig']));
                     end
@@ -214,12 +240,12 @@ for i=1:numel(results)
                 case 2 % arrerr
                     errcnt=errcnt+1;
                     [bad,cutoff,ax]=errcut(dd(good),arrerr(good));
-                    results(i).outliers.bad(good(bad))=true;
-                    results(i).outliers.cluster(j).errcut.bad{errcnt}=good(bad);
-                    results(i).outliers.cluster(j).errcut.cutoff(errcnt)=cutoff;
+                    results(s(i)).outliers.bad(good(bad))=true;
+                    results(s(i)).outliers.cluster(j).errcut.bad{errcnt}=good(bad);
+                    results(s(i)).outliers.cluster(j).errcut.cutoff(errcnt)=cutoff;
                     if(figout && ishandle(ax))
                         saveas(get(ax,'parent'),fullfile(figdir,...
-                            [datestr(now,30) '_' results(i).runname ...
+                            [datestr(now,30) '_' results(s(i)).runname ...
                             '_cluster_' sj '_errcut_' num2str(errcnt) ...
                             '.fig']));
                     end
@@ -230,12 +256,12 @@ for i=1:numel(results)
                     ampcnt=ampcnt+1;
                     [bad,cutoff,ax]=ampcut(dd(good),camp(good),[],1,amperr(good),[],...
                         z2c(az(good),hsv(64),[0 360]));
-                    results(i).outliers.bad(good(bad))=true;
-                    results(i).outliers.cluster(j).ampcut.bad{ampcnt}=good(bad);
-                    results(i).outliers.cluster(j).ampcut.cutoff(ampcnt)=cutoff;
+                    results(s(i)).outliers.bad(good(bad))=true;
+                    results(s(i)).outliers.cluster(j).ampcut.bad{ampcnt}=good(bad);
+                    results(s(i)).outliers.cluster(j).ampcut.cutoff(ampcnt)=cutoff;
                     if(figout && ishandle(ax))
                         saveas(get(ax,'parent'),fullfile(figdir,...
-                            [datestr(now,30) '_' results(i).runname ...
+                            [datestr(now,30) '_' results(s(i)).runname ...
                             '_cluster_' sj '_ampcut_' num2str(ampcnt) ...
                             '.fig']));
                     end
@@ -245,14 +271,14 @@ for i=1:numel(results)
                 case 4 % distance/azimuth
                     delazcnt=delazcnt+1;
                     [bad,azlim,ddlim,ax]=delazcut(ev(1,1:2),st(good,1:2),...
-                        [],[],results(i).usercluster.color(j,:));
-                    results(i).outliers.bad(good(bad))=true;
-                    results(i).outliers.cluster(j).delazcut.bad{delazcnt}=good(bad);
-                    results(i).outliers.cluster(j).delazcut.azlim{delazcnt}=azlim;
-                    results(i).outliers.cluster(j).delazcut.ddlim{delazcnt}=ddlim;
+                        [],[],results(s(i)).usercluster.color(j,:));
+                    results(s(i)).outliers.bad(good(bad))=true;
+                    results(s(i)).outliers.cluster(j).delazcut.bad{delazcnt}=good(bad);
+                    results(s(i)).outliers.cluster(j).delazcut.azlim{delazcnt}=azlim;
+                    results(s(i)).outliers.cluster(j).delazcut.ddlim{delazcnt}=ddlim;
                     if(figout && ishandle(ax))
                         saveas(get(ax,'parent'),fullfile(figdir,...
-                            [datestr(now,30) '_' results(i).runname ...
+                            [datestr(now,30) '_' results(s(i)).runname ...
                             '_cluster_' sj '_delazcut_' num2str(delazcnt) ...
                             '.fig']));
                     end
@@ -260,15 +286,15 @@ for i=1:numel(results)
                         close(get(ax,'parent'));
                     end
                 case 5 % undo all
-                    results(i).outliers.cluster(j).arrcut=...
+                    results(s(i)).outliers.cluster(j).arrcut=...
                         struct('bad',[],'cutoff',[]);
-                    results(i).outliers.cluster(j).ampcut=...
+                    results(s(i)).outliers.cluster(j).ampcut=...
                         struct('bad',[],'cutoff',[]);
-                    results(i).outliers.cluster(j).errcut=...
+                    results(s(i)).outliers.cluster(j).errcut=...
                         struct('bad',[],'cutoff',[]);
                     arrcnt=0; ampcnt=0; errcnt=0;
-                    results(i).outliers.bad(...
-                        results(i).usercluster.T==j)=false;
+                    results(s(i)).outliers.bad(...
+                        results(s(i)).usercluster.T==j)=false;
                 case 6 % continue
                     happyoverall=true;
                     continue;
@@ -277,17 +303,19 @@ for i=1:numel(results)
     end
     
     % time
-    results(i).time=datestr(now);
+    results(s(i)).time=datestr(now);
     
     % save results
     if(out)
-        tmp=results(i);
+        tmp=results(s(i));
         if(isoctave)
-            save(fullfile(odir,[datestr(now,30) '_' results(i).runname ...
-                '_outliers_results.mat']),'-7','-struct','tmp');
+            save(fullfile(odir,[datestr(now,30) '_' ...
+                results(s(i)).runname '_outliers_results.mat']),...
+                '-7','-struct','tmp');
         else % matlab
-            save(fullfile(odir,[datestr(now,30) '_' results(i).runname ...
-                '_outliers_results.mat']),'-struct','tmp');
+            save(fullfile(odir,[datestr(now,30) '_' ...
+                results(s(i)).runname '_outliers_results.mat']),...
+                '-struct','tmp');
         end
     end
 end

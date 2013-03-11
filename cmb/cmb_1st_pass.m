@@ -84,9 +84,10 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %        Mar. 15, 2012 - fix for pick functions
 %        Feb. 26, 2013 - bugfix: skip event if only 1 waveform
 %                        bugfix: no crash when handling no good events
+%        Mar. 11, 2013 - skip event if 2 or less waveforms
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 26, 2013 at 13:35 GMT
+%     Last Updated Mar. 11, 2013 at 13:35 GMT
 
 % todo:
 
@@ -272,8 +273,8 @@ for i=1:numel(s)
             disp(['Found ' num2str(numel(data)) ' Radial Components']);
     end
     
-    % skip if 1 or no waveforms
-    if(numel(data)<2)
+    % skip if 2 or less waveforms
+    if(numel(data)<3)
         warning('seizmo:cmb_1st_pass:noWaveforms',...
             'Too few %s waveforms found for event: %s',...
             phase,dates(s(i)).name)
@@ -288,8 +289,8 @@ for i=1:numel(s)
     data(gcarc<90 | gcarc>170)=[];
     disp(['Found ' num2str(numel(data)) ' components in 90-170deg range']);
     
-    % skip if 1 or no waveforms
-    if(numel(data)<2)
+    % skip if 2 or less waveforms
+    if(numel(data)<3)
         warning('seizmo:cmb_1st_pass:noWaveforms',...
             'Too few %s waveforms in 90-170deg range for event: %s',...
             phase,dates(s(i)).name)
@@ -305,8 +306,8 @@ for i=1:numel(s)
     corrections=fixcorrstruct(corrections,good);
     disp([num2str(sum(~good)) ' Near-Nodal Stations Removed']);
     
-    % skip if 1 or no waveforms
-    if(numel(data)<2)
+    % skip if 2 or less waveforms
+    if(numel(data)<3)
         warning('seizmo:cmb_1st_pass:noWaveforms',...
             'Too few %s waveforms fit criteria for event: %s',...
             phase,dates(s(i)).name)
@@ -334,8 +335,8 @@ for i=1:numel(s)
         ddlim=[0 180];
     end
     
-    % skip if 1 or no waveforms
-    if(numel(data)<2)
+    % skip if 2 or less waveforms
+    if(numel(data)<3)
         warning('seizmo:cmb_1st_pass:noWaveforms',...
             'Too few %s waveforms fit criteria for event: %s',...
             phase,dates(s(i)).name)
