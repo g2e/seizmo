@@ -8,12 +8,15 @@ function [varargout]=hrv2ar(varargin)
 %    Description:
 %     MOMTEN=HRV2AR(MOMTEN) converts moment tensors stored in MOMTEN from
 %     Harvard/USGS form (Up, South, East) to Aki & Richards form (North,
-%     East, Up).  MOMTEN may be a 3x3xN array or a Nx6 array where N allows
-%     for multiple moment tensors.  The Nx6 array case must have the layout
-%     [Mrr Mtt Mpp Mrt Mrp Mtp] which allows for compact moment tensor
-%     storage compared to the 3x3xN case which repeats the Mrt, Mrp, Mtp
-%     components in the upper triangle.  The output moment tensor will have
-%     the same size as that of the input.
+%     East, Down).  MOMTEN may be a 3x3xN array arranged as:
+%        [Mrr Mrt Mrp
+%         Mrt Mtt Mtp
+%         Mrp Mtp Mpp]
+%     or a Nx6 array as:
+%        [Mrr Mtt Mpp Mrt Mrp Mtp]
+%     where N allows for multiple moment tensors down the corresponding
+%     dimension.  The output moment tensor will have the same size as that
+%     of the input.
 %
 %     MOMTEN=HRV2AR(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp) allows inputing the components
 %     of the moment tensor separately.  Output is an Nx6 array.  There must
@@ -34,19 +37,19 @@ function [varargout]=hrv2ar(varargin)
 %     Version History:
 %        Mar.  8, 2010 - initial version
 %        June  1, 2011 - doc update, improved usage
+%        Mar. 13, 2013 - major doc fixes (A&R is NED not NEU!)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  1, 2011 at 13:50 GMT
+%     Last Updated Mar. 13, 2013 at 13:50 GMT
 
 % todo:
 
-%AR  XX  YY  ZZ  XY  XZ  YZ
-%     N   E   U  NE  NU  EU
-%     2   3   1  -6   4  -5 (hrv2ar)
-%
 %HRV RR  TT  PP  RT  RP  TP
-%     U   S   E  US  UE  SE
+%    UU  SS  EE  US  UE  SE
 %     3   1   2   5  -6  -4 (ar2hrv)
+%AR  XX  YY  ZZ  XY  XZ  YZ
+%    NN  EE  DD  NE  ND  ED
+%     2   3   1  -6   4  -5 (hrv2ar)
 
 if(nargin==1)
     if(~isreal(varargin{1}))
