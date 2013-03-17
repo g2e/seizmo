@@ -65,10 +65,9 @@ if(sz2==1); slip=slip(ones(sz1,1),:); end
 [strike,dip]=norm2strikedip(normal);
 
 % get rake angle from slip vector and horizontal in-plane vector
-rake=acosd((normal(:,1).*slip(:,2)-normal(:,2).*slip(:,1))...
-    ./sqrt(normal(:,1).^2+normal(:,2).^2));
+rake=real(acosd(cosd(strike).*slip(:,1)+sind(strike).*slip(:,2)));
 
-% fix sense of orientation
+% fix sense of orientation as the above only returns positive angles
 j=find(slip(:,3)<0);
 rake(j)=-rake(j);
 

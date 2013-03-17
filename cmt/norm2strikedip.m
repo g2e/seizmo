@@ -22,7 +22,11 @@ function [strike,dip]=norm2strikedip(n,e,u)
 %    Notes:
 %     - Strike & Dip are independent of whether the normal vector points
 %       toward the hanging wall (default from STRIKEDIP2NORM) or the foot
-%       wall.
+%       wall EXCEPT for a vertical fault.  In that case the normal vector
+%       points to the hanging wall and so the strike is such that the
+%       normal vector points to the right when looking along the strike
+%       direction.
+%     - A vertical normal returns a fault with a North strike and no dip.
 %
 %    Examples:
 %     % What are the strikes and dips of the planes for a series of normals
@@ -73,9 +77,6 @@ switch nargin
             'Incorrect number of inputs (only 1 or 3)!');
 end
 
-% conversion
-R2D=180/pi;
-
 % make sure normals are always pointing up at hanging block
 % - this is needed to preserve the appropriate strike & dip
 %   relationship while keeping the dip in the 0-90deg range
@@ -87,11 +88,10 @@ e(j)=-e(j);
 u(j)=-u(j);
 
 % get strike (unfortunately we loose precision b/c of atan2)
-strike=mod(atan2(-n,e)*R2D,360);
+strike=mod(atan2(-n,e)*180/pi,360);
 
 % get dip
 dip=acosd(u./sqrt(n.^2+e.^2+u.^2));
-%dip=atan2(sqrt(n.^2+e.^2),u)*R2D;
 
 % combine if only one output
 if(nargout<=1); strike=[strike(:) dip(:)]; end

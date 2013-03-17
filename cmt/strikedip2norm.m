@@ -1,4 +1,4 @@
-function [n,e,u]=strikedip2norm(strike,dip)
+function [n,e,u]=strikedip2norm(strike,dip,varargin)
 %STRIKEDIP2NORM    Returns the normal vector to a fault plane
 %
 %    Usage:    neu=strikedip2norm(sd)
@@ -21,6 +21,8 @@ function [n,e,u]=strikedip2norm(strike,dip)
 %
 %    Notes:
 %     - The returned normal vector always points towards the hanging wall.
+%       This means the normal vector always points to the right when
+%       looking along the strike (except for a no dip horizontal fault).
 %
 %    Examples:
 %     % What is the plunge & azimuth of the normal vector
@@ -43,12 +45,13 @@ function [n,e,u]=strikedip2norm(strike,dip)
 % todo:
 
 % check nargin
-error(nargchk(1,2,nargin));
+error(nargchk(1,3,nargin));
 
 % one or both inputs
 switch nargin
     case 1
-        if(size(strike,2)~=2 || ndims(strike)>2)
+        % ignore the rake term if present
+        if(~any(size(strike,2)==[2 3]) || ndims(strike)>2)
             error('seizmo:strikedip2norm:badInput',...
                 'SD must be a Nx2 array as [STRIKE DIP] !');
         elseif(~isnumeric(strike) || ~isreal(strike))
@@ -57,6 +60,14 @@ switch nargin
         end
         [strike,dip]=deal(strike(:,1),strike(:,2));
     case 2
+        if(~isnumeric(strike) || ~isreal(strike) ...
+                || ~isnumeric(dip) || ~isreal(dip))
+            error('seizmo:strikedip2norm:badInput',...
+                'STRIKE/DIP must be real-valued arrays!');
+        end
+        [strike,dip]=expandscalars(strike,dip);
+    case 3
+        % ignore the rake term if present
         if(~isnumeric(strike) || ~isreal(strike) ...
                 || ~isnumeric(dip) || ~isreal(dip))
             error('seizmo:strikedip2norm:badInput',...

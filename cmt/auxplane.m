@@ -24,7 +24,7 @@ function [strike,dip,rake]=auxplane(strike,dip,rake)
 %    Notes:
 %     - The auxiliary plane is perpendicular to the input fault plane.
 %     - The normal & slip vector of the auxiliary plane is the slip &
-%       normal vector of the fault plane
+%       normal vector of the fault plane (there may be a sign change).
 %     - The plane perpendicular to both the fault plane and the auxiliary
 %       plane has its normal along the null axis of the focal mechanism.
 %
@@ -33,7 +33,8 @@ function [strike,dip,rake]=auxplane(strike,dip,rake)
 %     % dip-slip on a normal fault that strikes North:
 %     auxplane(0,45,-90)
 %
-%    See also: NEU2STRIKEDIP, STRIKEDIP2NEU, SDR2SLIP, MT2SDR, SDR2MT
+%    See also: NORM2STRIKEDIP, STRIKEDIP2NORM, SDR2SLIP, SDR2NULL, SDR2TPB,
+%              TPB2SDR, NORMSLIP2SDR, NODALLINES
 
 %     Version History:
 %        Mar.  8, 2010 - initial version
@@ -69,51 +70,19 @@ switch nargin
                 'STRIKE/DIP/RAKE must be real-valued arrays!');
         end
         [strike,dip,rake]=expandscalars(strike,dip,rake);
+    otherwise
+        error('seizmo:auxplane:badNumInputs',...
+            'Incorrect number of inputs (only 1 or 3)!');
 end
 
 % get strike/dip/rake of auxiliary plane
 % -> sdr to normal, slip
-% -> switch & convert back to sdr
+% -> switch (taking care to preserve vertical direction of slip)
+%    -> note that this includes a trick such that +val=>1, 0=>1, -val=>-1
+% -> convert back to sdr
 normal=strikedip2norm(strike,dip);
 slip=sdr2slip(strike,dip,rake);
-[strike,dip,rake]=normslip2sdr(slip,normal);
-
-%{
-% make strike relative to west (why?)
-strike=strike+90;
-
-% cos & sin
-scos=cosd(strike); ssin=sind(strike);
-dcos=cosd(dip);    dsin=sind(dip);
-rcos=cosd(rake);   rsin=sind(rake);
-
-% vector pointing in direction of slip
-% is normal to the auxiliary plane
-sl1=-rcos.*scos-rsin.*ssin.*dcos;
-sl2=rcos.*ssin-rsin.*scos.*dcos;
-sl3=rsin.*dsin;
-
-% strike & dip of auxiliary plane
-[strike,dip]=neu2strikedip(sl2,sl1,sl3);
-
-% rake direction is normal to the primary focal plane
-% - getting normal to primary focal plane
-n1=ssin.*dsin;
-n2=scos.*dsin;
-%n3=dcos;
-
-% a vector along intersection of aux. plane with horizontal
-h1=-sl2;
-h2=sl1;
-%h3=0*sl1;
-
-% angle between normal vector and horizontal vector gives rake (+/-)
-rake=acosd((h1.*n1+h2.*n2)./sqrt(h1.^2+h2.^2));
-    
-% fix sense of orientation
-j=find(sl3<=0);
-rake(j)=-rake(j);
-%}
+[strike,dip,rake]=normslip2sdr(slip,(1-2*(slip(:,[3 3 3])<0)).*normal);
 
 % combine if only one output
 if(nargout<=1); strike=[strike(:) dip(:) rake(:)]; end

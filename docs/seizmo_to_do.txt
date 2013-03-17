@@ -6,14 +6,8 @@ way to make movies while you do other things on the screen:
 ## addframe(aviobj, hf)
 
 cmt
- - systems:
-   - angles: inc, plunge/dip, elev/phi/lat, cmpinc/colat
-             lon, azimuth, theta
-   - ned, use, neu, xyz
-   - strike/dip/rake
- - nodal (neu/vpa/strikedip input?)
+ - nodallines (neu/vpa/strikedip input?)
  - sdr2tpb
- - sdr2slip
  - plotmt: tpb, nodal line plotting
  - plotmt3: neu axes, tpb axes, nodal lines, quiver3
  - HARD: mt2sdr (decomp type? tpb2sdr...)
