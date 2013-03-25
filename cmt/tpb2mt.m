@@ -5,13 +5,13 @@ function [mt]=tpb2mt(t,p,b)
 %
 %    Description:
 %     MT=TPB2MT(T,P,B) assembles the principal axes info (tension,
-%     pressure and null axes) to recreate the associated moment tensor(s).
+%     pressure, and null axes) to recreate the associated moment tensor(s).
 %     T, P, & B should be Nx3 arrays of [eigenvalue plunge azimuth] where
 %     N allows for multiple moment tensors to be processed simultaneously.
-%     Plunge & azimuth are in degrees and plunge is positive downward from
-%     the horizontal while azimuth is positive clockwise from North.  The
-%     moment tensors are returned in a 3x3xN array in Harvard convention
-%     (Up, South, East).
+%     Plunge & azimuth are in degrees where plunge is positive downward
+%     from the horizontal and azimuth is positive clockwise from North.
+%     The moment tensors are returned as a 3x3xN array in Harvard
+%     convention (Up, South, East).
 %
 %    Notes:
 %
@@ -22,12 +22,11 @@ function [mt]=tpb2mt(t,p,b)
 %     t=[cmts.eigval1 cmts.plunge1 cmts.azimuth1];
 %     p=[cmts.eigval3 cmts.plunge3 cmts.azimuth3];
 %     b=[cmts.eigval2 cmts.plunge2 cmts.azimuth2];
-%     cmts=mt_s2v(cmts);
-%     max(cmts-mt_g2v(tpb2mt(t,p,b)))
+%     max(mt_change('v',cmts)-mt_change('v',tpb2mt(t,p,b)))
 %
 %     % Now compare to the accuracy of the conversion back and forth:
 %     [t,p,b]=mt2tpb(cmts);
-%     max(cmts-mt_g2v(tpb2mt(t,p,b)))
+%     max(mt_change('v',cmts)-mt_change('v',tpb2mt(t,p,b)))
 %
 %    See also: MT2TPB, MT_DIAG, MT_UNDIAG, MT_DECOMP
 
@@ -35,9 +34,10 @@ function [mt]=tpb2mt(t,p,b)
 %        June 12, 2011 - initial version
 %        June 13, 2011 - added docs
 %        Mar. 19, 2013 - doc update, minor fix for precision issue
+%        Mar. 25, 2013 - fix examples for mt_change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 19, 2013 at 13:50 GMT
+%     Last Updated Mar. 25, 2013 at 13:50 GMT
 
 % todo:
 

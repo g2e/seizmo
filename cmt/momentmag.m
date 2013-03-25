@@ -1,7 +1,8 @@
-function [mw]=momentmag(mt)
+function [mw]=momentmag(varargin)
 %MOMENTMAG    Returns the moment magnitude for a moment tensor
 %
 %    Usage:    Mw=momentmag(mt)
+%              Mw=momentmag(m1,m2,m3,m4,m5,m6)
 %
 %    Description:
 %     Mw=MOMENTMAG(MT) calculates moment magnitude Mw for the moment
@@ -9,6 +10,9 @@ function [mw]=momentmag(mt)
 %     (formatted as returned by FINDCMTS), a Nx6 array or a 3x3xN array.
 %     Note that for the numeric arrays the tensors should include the
 %     exponent.  MT is expected to be in units of dyne*cm NOT N*m!
+%
+%     Mw=MOMENTMAG(M1,M2,M3,M4,M5,M6) allows inputting the moment tensor
+%     components individually (Harvard or Aki & Richards system).
 %
 %    Notes:
 %
@@ -43,30 +47,25 @@ function [mw]=momentmag(mt)
 %     Version History:
 %        Mar. 11, 2011 - initial version
 %        Mar. 19, 2013 - doc update
+%        Mar. 25, 2013 - update for mt_check/mt_change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 19, 2013 at 23:55 GMT
+%     Last Updated Mar. 25, 2013 at 23:55 GMT
 
 % todo:
 
+% check nargin
+error(nargchk(1,6,nargin));
+
 % check inputs
-sz=size(mt);
-if(isstruct(mt) && isscalar(mt)) % global cmt struct
+error(mt_check(varargin{:}));
+if(isstruct(varargin{1})) % global cmt struct
     % use scalarmoment field as that is more accurate than using
     % the truncated moment tensor values which are always biased
     % to lower magnitudes
     mw=(2/3).*(log10(mt.scalarmoment.*10.^mt.exponent)-16.1);
-    return;
-elseif(numel(sz)==2 && sz(2)==6) % [Mrr,Mtt,Mpp,Mrt,Mrp,Mtp]
-    mo=scalarmoment(mt);
-elseif(isequal(sz(1:2),[3 3])) % [Mrr Mrt Mrp; Mrt Mtt Mtp; Mrp Mtp Mpp]
-    mo=scalarmoment(mt);
 else
-    error('seizmo:momentmag:badInput',...
-        'MT is not in a valid format!');
+    mw=(2/3).*(log10(scalarmoment(varargin{:}))-16.1);
 end
-
-% moment magnitude
-mw=(2/3).*(log10(mo)-16.1);
 
 end

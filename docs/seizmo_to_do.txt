@@ -7,7 +7,6 @@ way to make movies while you do other things on the screen:
 
 cmt
  - neu 2 enu
- - mt_check & mt_change
  - plotmt: tpb, nodal line plotting
  - plotmt3: coloring per mt
  - isc database

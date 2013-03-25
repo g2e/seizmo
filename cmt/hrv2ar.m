@@ -1,14 +1,14 @@
 function [varargout]=hrv2ar(varargin)
 %HRV2AR    Convert moment tensor from Harvard from to Aki & Richards form
 %
-%    Usage:    momten=hrv2ar(momten)
-%              momten=hrv2ar(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp)
+%    Usage:    mt=hrv2ar(mt)
+%              mt=hrv2ar(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp)
 %              [Mxx,Myy,Mzz,Mxy,Mxz,Myz]=hrv2ar(...)
 %
 %    Description:
-%     MOMTEN=HRV2AR(MOMTEN) converts moment tensors stored in MOMTEN from
-%     Harvard/USGS form (Up, South, East) to Aki & Richards form (North,
-%     East, Down).  MOMTEN may be a 3x3xN array arranged as:
+%     MT=HRV2AR(MT) converts moment tensors stored in MT from Harvard/USGS
+%     form (Up, South, East) to Aki & Richards form (North, East, Down).
+%     MT may be a 3x3xN array arranged as:
 %        [Mrr Mrt Mrp
 %         Mrt Mtt Mtp
 %         Mrp Mtp Mpp]
@@ -18,8 +18,8 @@ function [varargout]=hrv2ar(varargin)
 %     dimension.  The output moment tensor will have the same size as that
 %     of the input.
 %
-%     MOMTEN=HRV2AR(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp) allows inputing the components
-%     of the moment tensor separately.  Output is an Nx6 array.  There must
+%     MT=HRV2AR(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp) allows specifying the moment
+%     tensor components separately.  Output is an Nx6 array.  There must
 %     be exactly six inputs and they must be column vectors or scalars!
 %
 %     [Mxx,Myy,Mzz,Mxy,Mxz,Myz]=HRV2AR(...) outputs the moment tensor
@@ -38,9 +38,10 @@ function [varargout]=hrv2ar(varargin)
 %        Mar.  8, 2010 - initial version
 %        June  1, 2011 - doc update, improved usage
 %        Mar. 13, 2013 - major doc fixes (A&R is NED not NEU!)
+%        Mar. 25, 2013 - update for mt_change/mt_check
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2013 at 13:50 GMT
+%     Last Updated Mar. 25, 2013 at 13:50 GMT
 
 % todo:
 
@@ -51,58 +52,29 @@ function [varargout]=hrv2ar(varargin)
 %    NN  EE  DD  NE  ND  ED
 %     2   3   1  -6   4  -5 (hrv2ar)
 
-if(nargin==1)
-    if(~isreal(varargin{1}))
-        error('seizmo:hrv2ar:badInput',...
-            'MOMTEN must be real-valued!');
-    end
-    sz=size(varargin{1});
-    if(isequal([3 3],sz(1:2)))
-        varargout{1}=varargin{1}([2 3 1],[2 3 1],:);
-        varargout{1}([1 3],:,:)=-varargout{1}([1 3],:,:);
-        varargout{1}(:,[1 3],:)=-varargout{1}(:,[1 3],:);
-        gflag=true;
-    elseif(isequal(6,sz(2)))
-        varargout{1}=varargin{1}(:,[2 3 1 6 4 5]);
-        varargout{1}(:,[4 6])=-varargout{1}(:,[4 6]);
-        gflag=false;
-    else
-        error('seizmo:hrv2ar:badInput',...
-            'MOMTEN inproper size!');
-    end
-elseif(nargin==6)
-    if(any(~cellfun('isreal',varargin) | cellfun('size',varargin,2)~=1))
-        error('seizmo:hrv2ar:badInput',...
-            'All inputs must be real-valued Nx1 column vectors!');
-    end
-    % expand scalars
-    n=cellfun('prodofsize',varargin);
-    sz=size(varargin{find(n==max(n),1,'first')});
-    for i=1:6
-        if(n(i)==1)
-            varargin{i}=varargin{i}(ones(sz));
-        else
-            if(~isequal(size(varargin{i}),sz))
-                error('seizmo:hrv2ar:badInput',...
-                    'Non-scalar inputs must be equal sized!');
-            end
-        end
-    end
-    varargout{1}=[varargin{[2 3 1 6 4 5]}];
-    varargout{1}(:,[4 6])=-varargout{1}(:,[4 6]);
-    gflag=false;
-else
-    error('seizmo:hrv2ar:badNumInput',...
-        'Incorrect number of inputs!');
+% nargin check
+error(nargchk(1,6,nargin));
+
+% check moment tensor and force to vector form
+error(mt_check(varargin{:}));
+[mt,from]=mt_change('v',varargin{:});
+if(from=='s')
+    error('seizmo:hrv2ar:badInput',...
+        'HRV2AR does not allow scalar struct MT input!');
 end
 
-% separate if desired
+% hrv2ar
+mt=mt(:,[2 3 1 6 4 5]);
+mt(:,[4 6])=-mt(:,[4 6]);
+
+% output/separate
 if(nargout>1)
-    if(gflag) % matrix
-        [varargout{1:6}]=mt_g2c(varargout{1});
-    else % vector
-        [varargout{1:6}]=mt_v2c(varargout{1});
-    end
+    varargout=cell(1,6);
+    [varargout{:}]=mt_change('c',mt);
+elseif(from=='g')
+    varargout={mt_change('g',mt)};
+else
+    varargout={mt};
 end
 
 end

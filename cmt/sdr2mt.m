@@ -23,7 +23,8 @@ function [mt]=sdr2mt(strike,dip,rake)
 %
 %    Notes:
 %     - Tested OK against George Helffrich's website:
-%       http://www1.gly.bris.ac.uk/~george/focmec.html
+%        http://www1.gly.bris.ac.uk/~george/focmec.html
+%     - See Aki & Richards (2002) Figure 4.20 & Box 4.4 for details.
 %
 %    Examples:
 %     % Plot a dip-slip fault with EW strike and 45 deg dip:
@@ -45,9 +46,10 @@ function [mt]=sdr2mt(strike,dip,rake)
 %        Mar.  8, 2010 - initial version
 %        June  1, 2011 - harvard output, now with docs
 %        Mar. 21, 2013 - doc update, clean up code, no mt cmp output
+%        Mar. 25, 2013 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  1, 2011 at 13:50 GMT
+%     Last Updated Mar. 25, 2013 at 13:50 GMT
 
 % todo:
 

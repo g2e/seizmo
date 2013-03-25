@@ -14,12 +14,14 @@ function [varargout]=mt_decomp(mt,option)
 %
 %    Description:
 %     [ISO,DEV]=MT_DECOMP(MT,'ISO') returns the isotropic and deviatoric
-%     components of the moment tensor(s) given in MT.  MT must be a Nx6 or
-%     3x3xN array where N is the number of moment tensors in MT.  Note that
+%     components of the moment tensor(s) given in MT.  MT must be either a
+%     scalar struct as output by FINDCMT/FINDCMTS, a Nx6 array, or a 3x3xN
+%     array where N is the number of moment tensors in MT.  Note that
 %     all GlobalCMT & USGS moment tensors are constrained to be purely
-%     deviatoric.  THE OUTPUTS ARE DIAGONALIZED!  See the last usage form
+%     deviatoric so there will not be any non-zero values in ISO.  THE
+%     OUTPUTS ARE DIAGONALIZED 3x3xN matrices!  See the last usage form
 %     to get the eigenvectors which may be used with MT_UNDIAG to plot the
-%     moment tensors.
+%     moment tensors (see the Examples section below too).
 %
 %     [MAJOR,MINOR]=MT_DECOMP(MT,'MAJMIN') returns major and minor double
 %     couples for the moment tensor(s) in MT.  Note that this decomposition
@@ -87,11 +89,11 @@ function [varargout]=mt_decomp(mt,option)
 %     % Decompose some cmts into a CLVD & best double-couples following
 %     % Knopoff & Randall 1970, then undiagonalize and plot:
 %     cmts=findcmt('n',10);
-%     [clvd,best,vec]=mt_decomp(mt_s2v(cmts),'clvd');
+%     [clvd,best,vec]=mt_decomp(cmts,'clvd');
 %     clvd=mt_undiag(clvd,vec);
 %     best=mt_undiag(best,vec);
 %     figure;
-%     plotmt(1:10,2,mt_s2v(cmts))
+%     plotmt(1:10,2,cmts)
 %     hold on;
 %     plotmt(1:10,1,clvd)
 %     plotmt(1:10,0,best)
@@ -102,9 +104,10 @@ function [varargout]=mt_decomp(mt,option)
 %     Version History:
 %        June 10, 2011 - initial version
 %        Mar. 20, 2013 - 3dc & 3clvd options
+%        Mar. 25, 2013 - update for mt_check/mt_change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 20, 2013 at 13:50 GMT
+%     Last Updated Mar. 25, 2013 at 13:50 GMT
 
 % todo:
 
@@ -112,19 +115,9 @@ function [varargout]=mt_decomp(mt,option)
 error(nargchk(2,2,nargin));
 
 % check tensor format (force 3x3xN)
-mtsz=size(mt);
-if(~isnumeric(mt) || ~isreal(mt))
-    error('seizmo:mt_decomp:badInput',...
-        'MT must be a real-valued numeric array!');
-elseif(isequal(mtsz(1:2),[3 3]) && any(numel(mtsz)==[2 3]))
-    if(numel(mtsz)>2); n=mtsz(3); else n=1; end
-elseif(mtsz(2)==6 && numel(mtsz)==2)
-    mt=mt_v2g(mt); % convert from Nx6 to 3x3xN
-    n=mtsz(1);
-else
-    error('seizmo:mt_decomp:badInput',...
-        'MT must be a harvard moment tensor array as 3x3xN or Nx6!');
-end
+error(mt_check(mt));
+mt=mt_change('g',mt);
+n=size(mt,3);
 
 % check option string
 valid={'iso' 'majmin' 'majmid' 'midmin' ...

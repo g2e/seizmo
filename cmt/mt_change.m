@@ -31,7 +31,7 @@ function [varargout]=mt_change(to,varargin)
 %    See also: MT_CHECK, FINDCMT, FINDCMTS
 
 %     Version History:
-%        Mar. 25, 2013 - initial version
+%        Mar. 25, 2013 - initial version, allow "conversion" to same type
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Mar. 25, 2013 at 13:30 GMT
@@ -79,6 +79,8 @@ if(nargin==2) % scalar struct or nx6/3x3xn array
         varargout{end+1}='s';
     elseif(size(varargin{1},2)==6) % vector
         switch to
+            case 'v'
+                varargout=varargin;
             case 'g'
                 varargout{1}=reshape(...
                     varargin{1}(:,[1 4 5 4 2 6 5 6 3])',...
@@ -94,6 +96,8 @@ if(nargin==2) % scalar struct or nx6/3x3xn array
                 varargout{1}=[varargin{1}(:,1) varargin{1}(:,5) ...
                     varargin{1}(:,9) varargin{1}(:,2) ...
                     varargin{1}(:,3) varargin{1}(:,6)];
+            case 'g'
+                varargout=varargin;
             case 'c'
                 varargin{1}=permute(varargin{1},[3 1 2]);
                 varargout={varargin{1}(:,1) varargin{1}(:,5) ...
@@ -112,8 +116,11 @@ elseif(nargin==7) % components
         case 'v'
             varargout{1}=cat(2,varargin{:});
         case 'g'
-            varargout{1}=reshape(varargin{1}(:,[1 4 5 4 2 6 5 6 3])',...
-                    [3 3 size(varargin{1},1)]);
+            varargin=cat(2,varargin{:});
+            varargout{1}=reshape(varargin(:,[1 4 5 4 2 6 5 6 3])',...
+                    [3 3 size(varargin,1)]);
+        case 'c'
+            varargout=varargin;
     end
     varargout{end+1}='c';
 end

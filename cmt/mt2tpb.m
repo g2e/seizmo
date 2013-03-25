@@ -1,16 +1,21 @@
-function [t,p,b]=mt2tpb(mt)
+function [t,p,b]=mt2tpb(varargin)
 %MT2TPB    Returns the principal axes of moment tensors
 %
-%    Usage: [t,p,b]=mt2tpb(mt)
+%    Usage:    [t,p,b]=mt2tpb(mt)
+%              [t,p,b]=mt2tpb(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp)
 %
 %    Description:
 %     [T,P,B]=MT2TPB(MT) returns the principal axes of the moment tensor(s)
-%     in MT.  MT must be a Nx6 or 3x3xN array where N is the number of
-%     moment tensors in MT.  T, P, & B (the tension, pressure & null axes)
-%     are Nx3 arrays of [eigenvalue plunge azimuth] where plunge & azimuth
-%     are in degrees.  Plunge is positive downward from the horizontal and
-%     azimuth is positive clockwise from North.  Moment tensors in MT are
-%     expected to be in Harvard convention (Up, South, East).
+%     in MT.  MT must be a scalar struct as output by FINDCMT/FINDCMTS, a
+%     Nx6 array, or a 3x3xN array where N is the number of moment tensors
+%     in MT.  T, P, & B (the tension, pressure & null axes) are Nx3 arrays
+%     of [eigenvalue plunge azimuth] where plunge & azimuth are in degrees.
+%     Plunge is positive downward from the horizontal and azimuth is
+%     positive clockwise from North.  Moment tensors in MT are expected to
+%     be in Harvard convention (Up, South, East).
+%
+%     [T,P,B]=MT2TPB(Mrr,Mtt,Mpp,Mrt,Mrp,Mtp) allows specifying the moment
+%     tensor components individually (Harvard system only).
 %
 %    Notes:
 %     - Checking against the entire GlobalCMT catalog finds the following:
@@ -23,7 +28,7 @@ function [t,p,b]=mt2tpb(mt)
 %
 %    Examples:
 %     % Get the principal axes of a CLVD moment tensor:
-%     [t,p,b]=mt2tpb(diag([2 -1 -1])
+%     [t,p,b]=mt2tpb(diag([2 -1 -1]))
 %
 %    See also: TPB2MT, MT_DIAG, MT_UNDIAG, MT_DECOMP
 
@@ -31,29 +36,20 @@ function [t,p,b]=mt2tpb(mt)
 %        June 11, 2011 - initial version
 %        June 13, 2011 - works with forced positive plunge
 %        Mar. 19, 2013 - minor doc update
+%        Nar, 25, 2013 - update for mt_check/mt_change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 19, 2013 at 13:50 GMT
+%     Last Updated Mar. 25, 2013 at 13:50 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,1,nargin));
+error(nargchk(1,6,nargin));
 
 % check tensor format (force 3x3xN)
-mtsz=size(mt);
-if(~isnumeric(mt) || ~isreal(mt))
-    error('seizmo:mt2tpb:badInput',...
-        'MT must be a real-valued numeric array!');
-elseif(isequal(mtsz(1:2),[3 3]) && any(numel(mtsz)==[2 3]))
-    if(numel(mtsz)>2); n=mtsz(3); else n=1; end
-elseif(mtsz(2)==6 && numel(mtsz)==2)
-    mt=mt_v2g(mt); % convert from Nx6 to 3x3xN
-    n=mtsz(1);
-else
-    error('seizmo:mt2tpb:badInput',...
-        'MT must be a harvard moment tensor array as 3x3xN or Nx6!');
-end
+error(mt_check(varargin{:}));
+mt=mt_change('g',varargin{:});
+n=size(mt,3);
 
 % diagonalize moment tensor first
 % (diagonal is eigenvalues, rotation vectors are the eigenvectors)

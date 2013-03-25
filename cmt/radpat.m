@@ -27,7 +27,7 @@ function [u]=radpat(mt,inc,az,type)
 %    Examples:
 %     % Get the dimensionless P & S wave displacements at the T/P/B axes
 %     % of the lowest magnitude moment tensor from the GlobalCMT project:
-%     cmt=mt_s2g(findcmt('magnitude',4));
+%     cmt=mt_change('g',findcmt('magnitude',4));
 %     [t,p,b]=mt2tpb(cmt);
 %     radpat(cmt,90-[t(2) p(2) b(2)],[t(3) p(3) b(3)])
 %
@@ -37,7 +37,8 @@ function [u]=radpat(mt,inc,az,type)
 %        Mar.  8, 2011 - initial version modified from Ken Creager's Coral
 %        Mar. 11, 2011 - improved struct checking
 %        Feb.  6, 2012 - minor doc update, handle single couple (no norm)
-%        Mar. 25, 2013 - theta & phi renamed to inc & az for clarity
+%        Mar. 25, 2013 - theta & phi renamed to inc & az for clarity, minor
+%                        doc update
 %
 %     Written by Ken Creager (kcc+ess/washington/edu)
 %                Garrett Euler (ggeuler at wustl dot edu)

@@ -10,7 +10,7 @@ function [mt]=mt_undiag(mt,vec)
 %     convention (Up, South, East).  This is useful for plotting
 %     decomposed moment tensors (deviatoric, best double couple,  clvd,
 %     etc).  VAL & VEC should follow the convention returned by MT_DIAG,
-%     which is that they must both be 3x3xN.
+%     which is that they must both be 3x3xN.  MT is 3x3xN.
 %
 %    Notes:
 %
@@ -18,11 +18,11 @@ function [mt]=mt_undiag(mt,vec)
 %     % Decompose some cmts into their major & minor double-couples,
 %     % undiagonalize and plot:
 %     cmts=findcmt('n',10);
-%     [major,minor,vec]=mt_decomp(mt_s2v(cmts),'majmin');
+%     [major,minor,vec]=mt_decomp(cmts,'majmin');
 %     major=mt_undiag(major,vec);
 %     minor=mt_undiag(minor,vec);
 %     figure;
-%     plotmt(1:10,2,mt_s2v(cmts))
+%     plotmt(1:10,2,cmts)
 %     hold on;
 %     plotmt(1:10,1,major)
 %     plotmt(1:10,0,minor)
@@ -33,9 +33,10 @@ function [mt]=mt_undiag(mt,vec)
 %     Version History:
 %        June 11, 2011 - initial version
 %        Mar. 20, 2013 - doc update, floating point asymmetry fix
+%        Mar. 25, 2013 - fixed example for mt_change/mt_check
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 20, 2013 at 13:50 GMT
+%     Last Updated Mar. 25, 2013 at 13:50 GMT
 
 % todo:
 

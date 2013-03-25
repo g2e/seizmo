@@ -11,8 +11,9 @@ function [varargout]=plotmt3(x,y,z,mt,varargin)
 %     beach balls.  X, Y, & Z are assumed to be East, North, & Up making
 %     them equivalent to roughly longitude, latitude, and elevation.  MT
 %     must be in Harvard convention with one of the following formats:
-%       Nx6    [Mrr Mtt Mpp Mrt Mrp Mtp]
-%       3x3xN  [Mrr Mrt Mrp; Mrt Mtt Mtp; Mrp Mtp Mpp]
+%       - Nx6    [Mrr Mtt Mpp Mrt Mrp Mtp]
+%       - 3x3xN  [Mrr Mrt Mrp; Mrt Mtt Mtp; Mrp Mtp Mpp]
+%       - scalar struct with fields .mrr .mtt .mpp .mrt .mrp .mtp
 %     where N is the number of moment tensors to plot.  Note that X, Y, & Z
 %     must be scalar or have N elements.
 %
@@ -68,27 +69,25 @@ function [varargout]=plotmt3(x,y,z,mt,varargin)
 %     % Plot a 3x3 grid of moment tensors with the s-wave radiation:
 %     [x,y]=meshgrid(1:3,1:3);
 %     cmts=findcmt('n',9);
-%     mt=mt_s2v(cmts);
-%     plotmt3(x(:),y(:),0,mt,'draw',{'mt' 's'});
+%     plotmt3(x(:),y(:),0,cmts,'draw',{'mt' 's'});
 %
 %     % Plot a moment tensor with everything + the font set to size 16:
 %     cmt=findcmt('n',1);
-%     mt=mt_s2v(cmt);
-%     plotmt3(0,0,0,mt,'draw',{'mt' 'nodal' 'enu' 'tpb' 'p' 's'},...
+%     plotmt3(0,0,0,cmt,'draw',{'mt' 'nodal' 'enu' 'tpb' 'p' 's'},...
 %         'fontsize',16);
 %
 %     % Some midwest quakes:
 %     cmts=findcmts('latrange',[30 50],'lonrange',[-105 -85]);
-%     plotmt3(cmts.centroidlon,cmts.centroidlat,-cmts.centroiddep,...
-%         mt_s2v(cmts));
+%     plotmt3(cmts.centroidlon,cmts.centroidlat,-cmts.centroiddep,cmts);
 %
-%    See also: PLOTMT, RADPAT
+%    See also: PLOTMT, RADPAT, FINDCMT, FINDCMTS
 
 %     Version History:
 %        Mar. 22, 2013 - initial version
+%        Mar. 25, 2013 - update for mt_check/mt_change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 22, 2013 at 13:50 GMT
+%     Last Updated Mar. 25, 2013 at 13:50 GMT
 
 % todo:
 % - individual color schemes for mt
@@ -108,20 +107,10 @@ if(~isnumeric(x) || ~isreal(x) || ~isnumeric(y) || ~isreal(y) ...
         || ~isnumeric(z) || ~isreal(z))
     error('seizmo:plotmt3:badInput',...
         'X/Y/Z must be real-valued numeric arrays!');
-elseif(~isnumeric(mt) || ~isreal(mt))
-    error('seizmo:plotmt3:badInput',...
-        'MT must be a real-valued numeric array!');
 end
-mtsz=size(mt);
-if(isequal(mtsz(1:2),[3 3]) && any(numel(mtsz)==[2 3]))
-    if(numel(mtsz)>2); n=mtsz(3); else n=1; end
-    mt=mt_g2v(mt);
-elseif(mtsz(2)==6 && numel(mtsz)==2)
-    n=mtsz(1);
-else
-    error('seizmo:plotmt3:badInput',...
-        'MT must be a harvard moment tensor as a 3x3xN or Nx6 array!');
-end
+error(mt_check(mt));
+mt=mt_change('v',mt);
+n=size(mt,1);
 if(~all([numel(x) numel(y) numel(z)]==1 | [numel(x) numel(y) numel(z)]==n))
     error('seizmo:plotmt3:badInput',...
         'X/Y/Z must be scalar or arrays with N elements!');

@@ -12,8 +12,9 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %     to be East & North making them roughly equivalent to longitude and
 %     latitude.  MT must be in Harvard convention with one of the following
 %     formats:
-%       Nx6    [Mrr Mtt Mpp Mrt Mrp Mtp]
-%       3x3xN  [Mrr Mrt Mrp; Mrt Mtt Mtp; Mrp Mtp Mpp]
+%       - Nx6    [Mrr Mtt Mpp Mrt Mrp Mtp]
+%       - 3x3xN  [Mrr Mrt Mrp; Mrt Mtt Mtp; Mrp Mtp Mpp]
+%       - scalar struct with fields .mrr .mtt .mpp .mrt .mrp .mtp
 %     where N is the number of moment tensors to plot.  Note that X & Y
 %     must be scalar or have N elements.
 %
@@ -69,15 +70,14 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %    Examples:
 %     % Plot a 10x10 grid of the first 100 cmts in the globalcmt database:
 %     y=1:10; y=y(ones(10,1),:); x=y';
-%     mt=mt_s2v(findcmt('n',100));
-%     plotmt(x(:),y(:),mt,'pcolor',gmt_rainbow(100));
+%     plotmt(x(:),y(:),findcmt('n',100),'pcolor',gmt_rainbow(100));
 %     axis equal tight off;
 %
 %     % Show off the ability of PLOTMT to "rotate" a moment tensor:
-%     mt=mt_s2v(findcmt);
+%     mt=findcmt;
 %     for i=0:10:360
 %         for j=0:10:360
-%             plotmt(0,0,mt(1,:),'pov',[i+j/36 j]);
+%             plotmt(0,0,mt,'pov',[i+j/36 j]);
 %             drawnow;
 %             pause(.01);
 %         end
@@ -97,9 +97,10 @@ function [varargout]=plotmt(x,y,mt,varargin)
 %        Feb.  7, 2012 - use 3x3xN over Nx6 to allow single couples
 %        Feb. 22, 2012 - minor fix for example
 %        Mar. 23, 2013 - doc update, minor code fixes/refactoring
+%        Mar. 25, 2013 - update for mt_change/mt_check
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 23, 2013 at 23:55 GMT
+%     Last Updated Mar. 25, 2013 at 23:55 GMT
 
 % todo:
 % - tpb points
@@ -117,30 +118,20 @@ elseif(nargin>3 && ~iscellstr(varargin(1:2:end)))
         'PLOTMT parameters must be specified as strings!');
 end
 
-% check x/y/z
+% check x/y/mt
 if(~isnumeric(x) || ~isreal(x) || ~isnumeric(y) || ~isreal(y))
     error('seizmo:plotmt:badInput',...
         'X/Y must be real-valued numeric arrays!');
-elseif(~isnumeric(mt) || ~isreal(mt))
-    error('seizmo:plotmt:badInput',...
-        'MT must be a real-valued numeric array!');
 end
-mtsz=size(mt);
-if(isequal(mtsz(1:2),[3 3]) && any(numel(mtsz)==[2 3]))
-    if(numel(mtsz)>2); n=mtsz(3); else n=1; end
-    mt=mt_g2v(mt);
-elseif(mtsz(2)==6 && numel(mtsz)==2)
-    n=mtsz(1);
-else
-    error('seizmo:plotmt:badInput',...
-        'MT must be a harvard moment tensor array as 3x3xN or Nx6!');
-end
+error(mt_check(mt));
+mt=mt_change('v',mt);
+n=size(mt,1);
 if(~all([numel(x) numel(y)]==1 | [numel(x) numel(y)]==n))
     error('seizmo:plotmt:badInput',...
         'X/Y must be scalar or arrays with N elements!');
 end
 
-% expand x/y/z to Nx1
+% expand x/y to Nx1
 if(isscalar(x)); x(1:n)=x; end
 if(isscalar(y)); y(1:n)=y; end
 [x,y]=deal(x(:),y(:));
