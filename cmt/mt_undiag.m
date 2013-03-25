@@ -6,8 +6,8 @@ function [mt]=mt_undiag(mt,vec)
 %    Description:
 %     MT=MT_UNDIAG(VAL,VEC) undoes the diagonalization (aka rotation) of
 %     the moment tensor(s) in VAL using the eigenvectors in VEC.  This
-%     rotates them back into the Harvard convention (see HRV2AR & AR2HRV
-%     for more details).  This is particularly useful for plotting
+%     rotates them from the principal axes basis back into the Harvard
+%     convention (Up, South, East).  This is useful for plotting
 %     decomposed moment tensors (deviatoric, best double couple,  clvd,
 %     etc).  VAL & VEC should follow the convention returned by MT_DIAG,
 %     which is that they must both be 3x3xN.
@@ -28,13 +28,14 @@ function [mt]=mt_undiag(mt,vec)
 %     plotmt(1:10,0,minor)
 %     axis equal tight off
 %
-%    See also: MT_DIAG, MT_DECOMP
+%    See also: MT_DIAG, MT_DECOMP, MT2TPB, TPB2MT, PLOTMT
 
 %     Version History:
 %        June 11, 2011 - initial version
+%        Mar. 20, 2013 - doc update, floating point asymmetry fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 11, 2011 at 13:50 GMT
+%     Last Updated Mar. 20, 2013 at 13:50 GMT
 
 % todo:
 
@@ -60,5 +61,8 @@ end
 for i=1:size(mt,3)
     mt(:,:,i)=vec(:,:,i)*mt(:,:,i)*vec(:,:,i)';
 end
+
+% floating point asymmetry fix
+mt=(mt+permute(mt,[2 1 3]))/2;
 
 end

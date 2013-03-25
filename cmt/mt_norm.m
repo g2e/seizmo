@@ -10,21 +10,22 @@ function [mt,mo]=mt_norm(mt)
 %     function is useful for comparison and decomposition.
 %
 %    Notes:
-%     - Warns for tensors with Mo=0.
+%     - Warns for tensors with MO=0.
 %
 %    Examples:
 %     % Can you explain this histogram?
 %     [mt,mo]=mt_norm(mt_s2g(findcmts));
-%     hist(mo,100)
+%     hist(log10(mo),100)
 %
 %    See also: MT_DIAG, MT_DECOMP, SCALARMOMENT
 
 %     Version History:
 %        June  7, 2011 - initial version
-%        Feb.  7, 2012 - add warning about Mo=0 tensors
+%        Feb.  7, 2012 - add warning about MO=0 tensors
+%        Mar. 23, 2013 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 13:50 GMT
+%     Last Updated Mar. 23, 2013 at 13:50 GMT
 
 % todo:
 
@@ -55,14 +56,14 @@ for i=1:n
     mo(i,1)=sqrt(trace(mt(:,:,i)*mt(:,:,i))/2);
     
     % normalize
-    % - skip mo==0 (single couple?)
+    % - skip mo==0 (single couple / linear vector dipole)
     if(mo(i,1)); mt(:,:,i)=mt(:,:,i)/mo(i,1); end
 end
 
-% warn about Mo==0
+% warn about mo==0
 if(any(~mo))
     warning('seizmo:mt_norm:noMoment',...
-        ['Mo=0 for some tensors so they are unnormalized:\n' ...
+        ['MO=0 for some tensors so they are unnormalized:\n' ...
         sprintf('%d ',find(~mo))]);
 end
 

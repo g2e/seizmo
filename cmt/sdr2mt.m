@@ -1,21 +1,25 @@
-function [varargout]=sdr2mt(varargin)
+function [mt]=sdr2mt(strike,dip,rake)
 %SDR2MT    Convert strike-dip-rake to moment tensor
 %
 %    Usage:    mt=sdr2mt(sdr)
 %              mt=sdr2mt(strike,dip,rake)
-%              [Mrr,Mtt,Mpp,Mrt,Mrp,Mtp]=sdr2mt(...)
 %
 %    Description:
 %     MT=SDR2MT(SDR) converts a double-couple (aka focal mechanism) given
-%     in strike-dip-rake form (Nx3) to moment tensor form (Nx6).  This is
-%     useful for plotting the focal mechanism with PLOTMT.
+%     in strike-dip-rake form (Nx3) as [strike dip rake] to Harvard moment
+%     tensor form (Nx6) as [Mrr Mtt Mpp Mrt Mrp Mtp] which uses the Up,
+%     South, East coordinate system.  N allows for multiple focal
+%     mechanisms to be converted simultaneously.  The main purpose of this
+%     function is to allow plotting of the focal mechanism with PLOTMT.
+%     Strike is positive clockwise from North, dip is positive downward
+%     from the horizontal and rake is positive counter-clockwise in the
+%     fault plane from the strike direction.  Note that the strike must be
+%     such that when you look along the direction of the strike the fault
+%     dips to your right.
 %
 %     MT=SDR2MT(STRIKE,DIP,RAKE) allows inputing the strike, dip & rake
 %     separately.  Note that the inputs should all be Nx1 column vectors or
-%     scalars.  
-%
-%     [MRR,MTT,MPP,MRT,MRP,MTP]=SDR2MT(...) outputs the moment tensor
-%     components separately.  Note they are in Harvard form.
+%     scalars.
 %
 %    Notes:
 %     - Tested OK against George Helffrich's website:
@@ -26,112 +30,74 @@ function [varargout]=sdr2mt(varargin)
 %     plotmt(0,0,sdr2mt(90,45,-90))
 %     axis tight equal off
 %
-%    See also: MT2SDR, AUXPLANE, STRIKEDIP, PLOTMT
+%     % Validate SDR2MT & MT2SDR using GlobalCMT catalog:
+%     cmts=findcmts;
+%     sdr1=[cmts.strike1 cmts.dip1 cmts.rake1];
+%     sdr2=[cmts.strike2 cmts.dip2 cmts.rake2];
+%     sdr3=mt2sdr(sdr2mt(sdr1));
+%     max(min(abs(azdiff(sdr3,sdr1)),abs(azdiff(sdr3,sdr2))))
+%     sdr4=mt2sdr(sdr2mt(sdr2));
+%     max(min(abs(azdiff(sdr4,sdr1)),abs(azdiff(sdr4,sdr2))))
+%
+%    See also: MT2SDR, AUXPLANE, PLOTMT, MT_DECOMP, MT_DIAG, MT_UNDIAG
 
 %     Version History:
 %        Mar.  8, 2010 - initial version
 %        June  1, 2011 - harvard output, now with docs
+%        Mar. 21, 2013 - doc update, clean up code, no mt cmp output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated June  1, 2011 at 13:50 GMT
 
 % todo:
 
-% convert NEU strike-dip-rake to A&R mt
-% d = dip
-% f = strike
-% l = rake
-% Mxx = - Mo(sind cosl sin2f + sin2d sinl sin2f )
-% Myy = Mo(sind cosl sin2f - sin2d sinl cos2f )
-% Mzz = Mo sin2d sinl
-% Mxy = Mo(sind cosl cos2f + 0.5 sin2d sinl sin2f )
-% Mxz = - Mo(cosd cosl cosf + cos2d sinl sinf )
-% Myz = - Mo(cosd cosl sinf - cos2d sinl cosf )
+% check nargin
+error(nargchk(1,3,nargin));
 
-% conversion
-R2D=180/pi;
-
-if(nargin==1)
-    % check input
-    sz=size(varargin{1});
-    if(~isreal(varargin{1}) || ~isequal(3,sz(2)))
-        error('seizmo:sdr2mt:badInput',...
-            'SDR must be a real-valued Nx3 array!');
-    end
-    sz(2)=6;
-    varargin{1}=varargin{1}/R2D;
-    varargout{1}=nan(sz);
-    varargout{1}(:,1)=sin(varargin{1}(:,2)).*cos(varargin{1}(:,3))...
-        .*sin(2*varargin{1}(:,1))+sin(2*varargin{1}(:,2))...
-        .*sin(varargin{1}(:,3)).*sin(varargin{1}(:,1)).^2;
-    varargout{1}(:,2)=sin(varargin{1}(:,2)).*cos(varargin{1}(:,3))...
-        .*sin(2*varargin{1}(:,1))-sin(2*varargin{1}(:,2))...
-        .*sin(varargin{1}(:,3)).*cos(varargin{1}(:,1)).^2;
-    varargout{1}(:,3)=sin(2*varargin{1}(:,2)).*sin(varargin{1}(:,3));
-    varargout{1}(:,4)=sin(varargin{1}(:,2)).*cos(varargin{1}(:,3))...
-        .*cos(2*varargin{1}(:,1))+0.5*sin(2*varargin{1}(:,2))...
-        .*sin(varargin{1}(:,3)).*sin(2*varargin{1}(:,1));
-    varargout{1}(:,5)=cos(varargin{1}(:,2)).*cos(varargin{1}(:,3))...
-        .*cos(varargin{1}(:,1))+cos(2*varargin{1}(:,2))...
-        .*sin(varargin{1}(:,3)).*sin(varargin{1}(:,1));
-    varargout{1}(:,6)=cos(varargin{1}(:,2)).*cos(varargin{1}(:,3))...
-        .*sin(varargin{1}(:,1))-cos(2*varargin{1}(:,2))...
-        .*sin(varargin{1}(:,3)).*cos(varargin{1}(:,1));
-    varargout{1}(:,[1 5 6])=-varargout{1}(:,[1 5 6]);
-elseif(nargin==3)
-    % check inputs
-    if(any(~cellfun('isreal',varargin) | cellfun('size',varargin,2)~=1))
-        error('seizmo:sdr2mt:badInput',...
-            'All inputs must be real-valued Nx1 vectors!');
-    end
-    % expand scalars
-    n=cellfun('prodofsize',varargin);
-    sz=size(varargin{find(n==max(n),1,'first')});
-    for i=1:3
-        if(n(i)==1)
-            varargin{i}=varargin{i}(ones(sz));
-        else
-            if(~isequal(size(varargin{i}),sz))
-                error('seizmo:sdr2mt:badInput',...
-                    'Non-scalar inputs must be equal sized!');
-            end
+% one or both inputs
+switch nargin
+    case 1
+        if(size(strike,2)~=3 || ndims(strike)>2)
+            error('seizmo:sdr2mt:badInput',...
+                'SDR must be a Nx3 array as [STRIKE DIP RAKE] !');
+        elseif(~isnumeric(strike) || ~isreal(strike))
+            error('seizmo:sdr2mt:badInput',...
+                'SDR must be a real-valued Nx3 array!');
         end
-    end
-    % combine
-    varargin{1}=cat(2,varargin{:});
-    % convert
-    sz(2)=6;
-    varargin{1}=varargin{1}/R2D;
-    varargout{1}=nan(sz);
-    varargout{1}(:,1)=sin(varargin{1}(:,2)).*cos(varargin{1}(:,3))...
-        .*sin(2*varargin{1}(:,1))+sin(2*varargin{1}(:,2))...
-        .*sin(varargin{1}(:,3)).*sin(varargin{1}(:,1)).^2;
-    varargout{1}(:,2)=sin(varargin{1}(:,2)).*cos(varargin{1}(:,3))...
-        .*sin(2*varargin{1}(:,1))-sin(2*varargin{1}(:,2))...
-        .*sin(varargin{1}(:,3)).*cos(varargin{1}(:,1)).^2;
-    varargout{1}(:,3)=sin(2*varargin{1}(:,2)).*sin(varargin{1}(:,3));
-    varargout{1}(:,4)=sin(varargin{1}(:,2)).*cos(varargin{1}(:,3))...
-        .*cos(2*varargin{1}(:,1))+0.5*sin(2*varargin{1}(:,2))...
-        .*sin(varargin{1}(:,3)).*sin(2*varargin{1}(:,1));
-    varargout{1}(:,5)=cos(varargin{1}(:,2)).*cos(varargin{1}(:,3))...
-        .*cos(varargin{1}(:,1))+cos(2*varargin{1}(:,2))...
-        .*sin(varargin{1}(:,3)).*sin(varargin{1}(:,1));
-    varargout{1}(:,6)=cos(varargin{1}(:,2)).*cos(varargin{1}(:,3))...
-        .*sin(varargin{1}(:,1))-cos(2*varargin{1}(:,2))...
-        .*sin(varargin{1}(:,3)).*cos(varargin{1}(:,1));
-    varargout{1}(:,[1 5 6])=-varargout{1}(:,[1 5 6]);
-else
-    error('seizmo:sdr2mt:badNumInputs',...
-        'Incorrect number of inputs!');
+        [strike,dip,rake]=deal(strike(:,1),strike(:,2),strike(:,3));
+    case 3
+        if(~isnumeric(strike) || ~isreal(strike) ...
+                || ~isnumeric(dip) || ~isreal(dip) ...
+                || ~isnumeric(rake) || ~isreal(rake))
+            error('seizmo:sdr2mt:badInput',...
+                'STRIKE/DIP/RAKE must be real-valued arrays!');
+        end
+        [strike,dip,rake]=expandscalars(strike(:),dip(:),rake(:));
+    otherwise
+        error('seizmo:sdr2mt:badNumInputs',...
+            'Incorrect number of inputs (only 1 or 3)!');
 end
 
-% convert to harvard format
-varargout{1}=ar2hrv(varargout{1});
-
-% split up if wanted
-if(nargout>1)
-    % 6 Nx1 form
-    varargout=num2cell(varargout{1},1);
-end
+% convert strike-dip-rake to HRV mt
+% f = strike, d = dip, l = rake
+%1 Mrr =  Mzz =  Mo sin2d sinl
+%2 Mtt =  Mxx = -Mo(sind cosl sin2f +     sin2d sinl (sinf)^2 )
+%3 Mpp =  Myy =  Mo(sind cosl sin2f -     sin2d sinl (cosf)^2 )
+%4 Mrt =  Mxz = -Mo(cosd cosl cosf  +     cos2d sinl sinf )
+%5 Mrp = -Myz =  Mo(cosd cosl sinf  -     cos2d sinl cosf )
+%6 Mtp = -Mxy = -Mo(sind cosl cos2f + 0.5 sin2d sinl sin2f )
+mt=nan(numel(strike),6);
+mt(:,1)=sind(2*dip).*sind(rake);
+mt(:,2)=sind(dip).*cosd(rake).*sind(2*strike) ...
+    + sind(2*dip).*sind(rake).*sind(strike).^2;
+mt(:,3)=sind(dip).*cosd(rake).*sind(2*strike) ...
+    - sind(2*dip).*sind(rake).*cosd(strike).^2;
+mt(:,4)=cosd(dip).*cosd(rake).*cosd(strike) ...
+    + cosd(2*dip).*sind(rake).*sind(strike);
+mt(:,5)=cosd(dip).*cosd(rake).*sind(strike) ...
+    - cosd(2*dip).*sind(rake).*cosd(strike);
+mt(:,6)=sind(dip).*cosd(rake).*cosd(2*strike) ...
+    + 0.5.*sind(2*dip).*sind(rake).*sind(2*strike);
+mt(:,2:2:6)=-mt(:,2:2:6);
 
 end

@@ -124,6 +124,8 @@ function [varargout]=mmap(varargin)
 %     AX=MMAP(DATA) returns the axes handle for the map.
 %
 %    Notes:
+%     - The M_Map toolbox plotting commands are not atomic so DO NOT switch
+%       between plots while using the associated commands.
 %
 %    Examples:
 %     % Show a grid of stations in a map with fancy border:
@@ -161,9 +163,10 @@ function [varargout]=mmap(varargin)
 %        June  7, 2012 - coasts are the same as the foreground color by
 %                        default, allow ocean instead of sea keyword
 %        Oct. 10, 2012 - image option
+%        Mar. 23, 2013 - note lack of plotting atomicity
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2012 at 20:30 GMT
+%     Last Updated Mar. 23, 2013 at 20:30 GMT
 
 % todo:
 

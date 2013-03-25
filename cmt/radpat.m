@@ -1,19 +1,19 @@
-function [u]=radpat(mt,theta,phi,type)
+function [u]=radpat(mt,inc,az,type)
 %RADPAT    Calculates moment tensor radiation pattern
 %
-%    Usage:    u=radpat(mt,theta,phi)
-%              u=radpat(mt,theta,phi,type)
+%    Usage:    u=radpat(mt,inc,az)
+%              u=radpat(mt,inc,az,type)
 %
 %    Description:
-%     U=RADPAT(MT,THETA,PHI) calculates the dimensionless displacement
-%     for a moment tensor given by MT at the angles given by THETA & PHI.
-%     MT must be in Harvard convention and is one of the following formats:
-%       1x6  [Mrr Mtt Mpp Mrt Mrp Mtp]
-%       3x3  [Mrr Mrt Mrp; Mrt Mtt Mtp; Mrp Mtp Mpp]
-%       scalar struct with scalar fields .mrr .mtt .mpp .mrt .mrp .mtp
-%     THETA & PHI give the angle from down (ie the inclination) and the
-%     azimuth (from North) respectively.  U contains the P, SV, & SH
-%     displacements as U(:,1), U(:,2), & U(:,3).
+%     U=RADPAT(MT,INC,AZ) calculates the dimensionless displacement for a
+%     moment tensor given by MT at the angles INC & AZ.  MT must be in
+%     Harvard convention with one of the following formats:
+%        - 1x6  [Mrr Mtt Mpp Mrt Mrp Mtp]
+%        - 3x3  [Mrr Mrt Mrp; Mrt Mtt Mtp; Mrp Mtp Mpp]
+%        - scalar struct with fields .mrr .mtt .mpp .mrt .mrp .mtp
+%     INC gives the angle from down (ie. the inclination) and AZ gives the
+%     clockwise angle from North.  U contains the P, SV, & SH displacements
+%     as U(:,1), U(:,2), & U(:,3).
 %
 %     U=RADPAT(MT,THETA,PHI,TYPE) calculates the displacement for the
 %     specified wavetype TYPE.  TYPE must be either 'P', 'SH', 'SV' or
@@ -21,30 +21,27 @@ function [u]=radpat(mt,theta,phi,type)
 %
 %    Notes:
 %     - Calculations are based on Aki & Richards (2002) eqs 4.88 & 4.96
-%     - THETA is related to the rayparameter, source depth & velocity by:
-%        THETA=asind(P*V0/R0)
+%     - INC is related to the rayparameter (s/deg), source radius (km)
+%       & velocity (km/s) by:  INC=asind(180/pi*P*V0/R)
 %
 %    Examples:
-%     % Grab a cmt and get the P-wave displacement pattern:
-%     [theta,phi]=meshgrid(0:180,0:360);
-%     cmt=findcmt();
-%     u_p=radpat(cmt,theta(:),phi(:),'p');
-%     u_p=reshape(u_p,size(theta));
-%     [x,y,z]=sphere(50);
-%     figure;
-%     s=surface(x,y,z,'facecolor','texturemap','cdata',u_p');
-%     axis vis3d
+%     % Get the dimensionless P & S wave displacements at the T/P/B axes
+%     % of the lowest magnitude moment tensor from the GlobalCMT project:
+%     cmt=mt_s2g(findcmt('magnitude',4));
+%     [t,p,b]=mt2tpb(cmt);
+%     radpat(cmt,90-[t(2) p(2) b(2)],[t(3) p(3) b(3)])
 %
-%    See also: FINDCMT, PLOTMT, MAPCMTS, RAYP2INC
+%    See also: FINDCMT, FINDCMTS, PLOTMT, PLOTMT3, MAPCMTS, RAYP2INC
 
 %     Version History:
-%        Mar.  8, 2011 - initial version
+%        Mar.  8, 2011 - initial version modified from Ken Creager's Coral
 %        Mar. 11, 2011 - improved struct checking
 %        Feb.  6, 2012 - minor doc update, handle single couple (no norm)
+%        Mar. 25, 2013 - theta & phi renamed to inc & az for clarity
 %
 %     Written by Ken Creager (kcc+ess/washington/edu)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  6, 2012 at 23:55 GMT
+%     Last Updated Mar. 25, 2013 at 23:55 GMT
 
 % todo:
 
@@ -55,49 +52,24 @@ error(nargchk(3,4,nargin));
 if(nargin==3 || isempty(type)); type='all'; end
 
 % check inputs
-if(isstruct(mt) && isscalar(mt)) % global cmt struct
-    % convert to 3x3 in ray coordinates (aki & richards)
-    if(~all(isfield(mt,{'mrr', 'mtt' 'mpp' 'mrt' 'mrp' 'mtp'})))
-        error('seizmo:radpat:badInput',...
-            'MT struct must be have fields: mrr mtt mpp mrt mrp mtp !');
-    elseif(~isscalar(mt.mtt))
-        error('seizmo:radpat:badInput',...
-            'MT struct fields must be scalar!');
-    end
-    try
-        mt=[mt.mtt mt.mtp mt.mrt;
-            mt.mtp mt.mpp mt.mrp;
-            mt.mrt mt.mrp mt.mrr];
-    catch
-        error('seizmo:radpat:badInput',...
-            'MT struct fields must be scalar!');
-    end
-    mt(2:2:8)=-mt(2:2:8);
-elseif(isequal(size(mt),[1 6])) % (Mrr,Mtt,Mpp,Mrt,Mrp,Mtp)
-    % convert to 3x3 in ray coordinates (aki & richards)
-    mt=mt([2 6 4; 6 3 5; 4 5 1]);
-    mt(2:2:8)=-mt(2:2:8);
-elseif(isequal(size(mt),[3 3])) % [Mrr Mrt Mrp; Mrt Mtt Mtp; Mrp Mtp Mpp]
-    % convert to ray coordinates (aki & richards)
-    mt=mt([2 3 1],[2 3 1]);
-    mt(2:2:8)=-mt(2:2:8);
-else
+error(mt_check(mt));
+mt=hrv2ar(mt_change('g',mt));
+if(size(mt,3)~=1)
     error('seizmo:radpat:badInput',...
-        'MT is not in a valid format!');
+        'MT must be only contain one moment tensor for RADPAT!');
 end
-if(~isreal(theta) || ~isvector(theta) || any(abs(theta)>180))
+if(~isnumeric(inc) || ~isreal(inc) || any(abs(inc(:))>180))
     error('seizmo:radpat:badInput',...
-        ['THETA must be a vector of real-valued angles ' ...
+        ['INC must be an array of real-valued angles ' ...
         'from 0 (down) to 180 (up)!']);
 end
-if(~isreal(phi) || ~isvector(phi))
-    % 0 = North, 90 = East
+if(~isnumeric(az) || ~isreal(az))
     error('seizmo:radpat:badInput',...
-        ['PHI must be a vector of real-valued azimuth angles ' ...
+        ['AZ must be an array of real-valued azimuth angles ' ...
         '(0 = North, 90 = East)!']);
-elseif(~isequalnumelorscalar(theta,phi))
+elseif(~isequalsizeorscalar(inc,az))
     error('seizmo:radpat:badInput',...
-        'THETA & PHI must have equal number of elements or be scalar!');
+        'INC & AZ must be scalar or equally sized!');
 end
 if(~ischar(type) || size(type,1)~=1 ...
         || ~any(strcmpi(type,{'p' 'sh' 'sv' 'all'})))
@@ -105,11 +77,9 @@ if(~ischar(type) || size(type,1)~=1 ...
         'TYPE must be ''p'' ''sh'' ''sv'' or ''all''!');
 end
 
-% expand scalar theta/phi
-[theta,phi]=expandscalars(theta,phi);
-
-% force to be column vectors
-theta=theta(:); phi=phi(:);
+% expand scalar inc/az & force to be column vectors
+[inc,az]=expandscalars(inc,az);
+inc=inc(:); az=az(:);
 
 % normalize mt
 % - handle moment=0 case (single force?)
@@ -117,22 +87,22 @@ mo=sqrt(trace(mt*mt)/2);
 if(mo); mt=mt/mo; end
 
 % compute p/sv/sh directions
-gamma=[sind(theta).*cosd(phi) sind(theta).*sind(phi) cosd(theta)];
-sv=[cosd(theta).*cosd(phi) cosd(theta).*sind(phi) -sind(theta)];
-sh=[-sind(phi) cosd(phi) zeros(size(phi))];
+gamma=[sind(inc).*cosd(az) sind(inc).*sind(az) cosd(inc)];
+sv=[cosd(inc).*cosd(az) cosd(inc).*sind(az) -sind(inc)];
+sh=[-sind(az) cosd(az) zeros(size(az))];
 
 % get displacements
-u=nan(numel(theta),1);
+u=nan(numel(inc),1);
 switch lower(type)
     case 'p'
-        for i=1:numel(theta); u(i,1)=gamma(i,:)*mt*gamma(i,:).'; end
+        for i=1:numel(inc); u(i,1)=gamma(i,:)*mt*gamma(i,:).'; end
     case 'sv'
-        for i=1:numel(theta); u(i,1)=sv(i,:)*mt*gamma(i,:).'; end
+        for i=1:numel(inc); u(i,1)=sv(i,:)*mt*gamma(i,:).'; end
     case 'sh'
-        for i=1:numel(theta); u(i,1)=sh(i,:)*mt*gamma(i,:).'; end
+        for i=1:numel(inc); u(i,1)=sh(i,:)*mt*gamma(i,:).'; end
     case 'all'
         u=[u u u];
-        for i=1:numel(theta)
+        for i=1:numel(inc)
             u(i,1)=gamma(i,:)*mt*gamma(i,:).';
             u(i,2)=sv(i,:)*mt*gamma(i,:).';
             u(i,3)=sh(i,:)*mt*gamma(i,:).';

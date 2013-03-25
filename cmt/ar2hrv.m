@@ -28,10 +28,8 @@ function [varargout]=ar2hrv(varargin)
 %    Notes:
 %
 %    Examples:
-%     % Plotting the elementary moment tensors
-%     % requires conversion to Harvard form:
-%     figure; plotmt(1:6,zeros(1,6),ar2hrv(elementary_mt(1:6)));
-%     axis equal off
+%     % An explosion is expressed the same in both systems:
+%     ar2hrv([1 1 1 0 0 0])
 %
 %    See also: HRV2AR
 
@@ -39,9 +37,10 @@ function [varargout]=ar2hrv(varargin)
 %        Mar.  8, 2010 - initial version
 %        June  1, 2011 - doc update, improved usage
 %        Mar. 13, 2013 - major doc fixes (A&R is NED not NEU!)
+%        Mar. 23, 2013 - changed example as the old one was wrong
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2013 at 13:50 GMT
+%     Last Updated Mar. 23, 2013 at 13:50 GMT
 
 % todo:
 

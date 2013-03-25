@@ -1,40 +1,46 @@
-function [varargout]=mapcmts(mt,varargin)
+function [varargout]=mapcmts(cmts,varargin)
 %MAPCMTS    Plots GlobalCMT moment tensors on a M_Map map
 %
-%    Usage:    mapcmts(mt)
-%              mapcmts(mt,'param1',val1,...,'paramN',valN)
+%    Usage:    mapcmts(cmts)
+%              mapcmts(cmts,'param1',val1,...,'paramN',valN)
 %              h=mapcmts(...)
 %
 %    Description:
-%     MAPCMTS(MT) creates a map and plots the moment tensors in MT on it.
-%     MT must be a scalar struct with a format as that returned by FINDCMTS
-%     & FINDCMT.  Note that the beachballs are rotated to point northward
-%     instead of just to 'up' on the plot.
+%     MAPCMTS(CMTS) creates a map with the moment tensors in CMTS on it.
+%     CMTS must be a scalar struct with a format as that returned by
+%     FINDCMTS & FINDCMT.  Note that the beachballs are rotated to point
+%     northward instead of just to 'up' on the plot.
 %
-%     MAPCMTS(MT,'PARAM1',VAL1,...,'PARAMN',VALN) passes on parameters to
-%     PLOTMT to refine how the cmts are plotted.
+%     MAPCMTS(CMTS,'PARAM1',VAL1,...,'PARAMN',VALN) passes parameters on to
+%     PLOTMT to refine how the moment tensors are plotted.
 %
 %     H=MAPCMTS(...) returns the handles to the moment tensor objects.
 %
 %    Notes:
-%     - Matlab has trouble drawing many patches so the plot may look bad
-%       if there are many cmts (something like 100 or more).  The cmts will
-%       be drawn correctly in a pdf export though.
+%     - Matlab has trouble keeping the order of many patches so the plot
+%       may look bad (the moment tensor patches will be hidden behind the
+%       continents and the outlines will be on top of all patches) if there
+%       are many moment tensors (around 100 or more).  The moment tensors
+%       will be drawn correctly in a pdf export though (see EXPORT_FIG).
 %
 %    Examples:
-%     % Map the first 100 cmts in the GlobalCMT catalog:
+%     % Map the first 100 moment tensors in the GlobalCMT catalog:
 %     mapcmts(findcmt('n',100));
 %
-%    See also: FINDCMT, FINDCMTS, PLOTMT, RADPAT, MMAP
+%     % Plot the biggest 100 moment tensors in the GlobalCMT catalog:
+%     mapcmts(findcmt('n',100,'magnitude',10));
+%
+%    See also: FINDCMT, FINDCMTS, PLOTMT, RADPAT, MMAP, EXPORT_FIG
 
 %     Version History:
 %        May  15, 2011 - initial version
 %        May  31, 2011 - work with contour version of plotmt
 %        Jan. 11, 2012 - rename from mapcmt to mapcmts, edit note
 %        Feb.  7, 2012 - minor doc update
+%        Mar. 23, 2013 - doc update, minor code fixes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 23:55 GMT
+%     Last Updated Mar. 23, 2013 at 23:55 GMT
 
 % todo:
 
@@ -43,6 +49,16 @@ error(nargchk(1,inf,nargin));
 
 % extract axes handle
 [ax,varargin]=axescheck(varargin{:});
+
+% check cmts is a scalar struct with required fields
+valid={'centroidlat' 'centroidlon' 'mrr' 'mtt' 'mpp' 'mrt' 'mrp' 'mtp'};
+if(~isstruct(cmts) || ~isscalar(cmts))
+    error('seizmo:mapcmts:badInput',...
+        'CMTS must be a scalar struct as from FINDCMTS!');
+elseif(~all(ismember(valid,fieldnames(cmts))))
+    error('seizmo:mapcmts:badInput',...
+        'CMTS is must have the following fields:');
+end
 
 % check for map (new if none)
 if(isempty(ax))
@@ -69,19 +85,19 @@ held=ishold(ax);
 hold(ax,'on');
 
 % get lat/lon => x/y
-lat=mt.centroidlat;
-lon=mt.centroidlon;
+lat=cmts.centroidlat;
+lon=cmts.centroidlon;
 [x,y]=m_ll2xy(lon,lat,'clip','point');
 
 % get moment tensor
-mt=[mt.mrr mt.mtt mt.mpp mt.mrt mt.mrp mt.mtp]; % Nx6
+cmts=[cmts.mrr cmts.mtt cmts.mpp cmts.mrt cmts.mrp cmts.mtp]; % Nx6
 
-% get local north
+% get local north (not atomic!)
 [x1,y1]=m_ll2xy(lon,lat+diff(MAP_VAR_LIST.lats)/1000,'clip','point');
 localnorth=90-atan2(y1-y,x1-x)*180/pi;
 
 % let plotmt do the work
-h=plotmt(x,y,mt,'roll',localnorth,'r',.1,varargin{:},'parent',ax);
+h=plotmt(x,y,cmts,'roll',localnorth,'r',.1,varargin{:},'parent',ax);
 
 % output if desired
 if(nargout); varargout{1}=h; end

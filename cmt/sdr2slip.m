@@ -9,12 +9,13 @@ function [n,e,u]=sdr2slip(strike,dip,rake)
 %     NEU=SDR2SLIP(SDR) calculates the slip vector NEU for a given fault
 %     and rake defined by SDR.  SDR is expected to be a Nx3 array formatted
 %     as [strike dip rake] where N allows for multiple planes & rakes to be
-%     processed simultaneously.  Strike is clockwise from North, dip is
-%     positive downward from the horizontal and rake is counter-clockwise
-%     in the fault plane from the strike direction.  Note that the strike
-%     must be such that when you look along the direction of the strike the
-%     fault dips to your right.  NEU is returned as a Nx3 array formatted
-%     as [North East Up].
+%     processed simultaneously.  Strike is positive clockwise from North,
+%     dip is positive downward from the horizontal and rake is positive
+%     counter-clockwise in the fault plane from the strike direction.  Note
+%     that the strike must be such that when you look along the direction
+%     of the strike the fault dips to your right.  NEU is returned as a Nx3
+%     array formatted as [North East Up].  The slip vector defines the
+%     motion of the hanging wall relative to the foot wall.
 %
 %     NEU=SDR2SLIP(STRIKE,DIP,RAKE) allows strike, dip & rake to be given
 %     separately.
@@ -32,9 +33,10 @@ function [n,e,u]=sdr2slip(strike,dip,rake)
 
 %     Version History:
 %        Mar. 15, 2013 - initial version
+%        Mar. 18, 2013 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2013 at 15:05 GMT
+%     Last Updated Mar. 18, 2013 at 15:05 GMT
 
 % todo:
 

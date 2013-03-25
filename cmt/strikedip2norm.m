@@ -29,7 +29,7 @@ function [n,e,u]=strikedip2norm(strike,dip,varargin)
 %     % to a fault striking North and dipping at 30deg?
 %     neu2vpa(strikedip2norm(0,30))
 %
-%     % "Fix" the upwards normal vector:
+%     % "Fix" the upwards normal vector so it points to the foot wall:
 %     neu2vpa(-1*strikedip2norm(0,30))
 %
 %    See also: NORM2STRIKEDIP, SDR2NULL, SDR2SLIP, AUXPLANE, SDR2TPB,
@@ -59,14 +59,7 @@ switch nargin
                 'SD must be a real-valued Nx2 array!');
         end
         [strike,dip]=deal(strike(:,1),strike(:,2));
-    case 2
-        if(~isnumeric(strike) || ~isreal(strike) ...
-                || ~isnumeric(dip) || ~isreal(dip))
-            error('seizmo:strikedip2norm:badInput',...
-                'STRIKE/DIP must be real-valued arrays!');
-        end
-        [strike,dip]=expandscalars(strike,dip);
-    case 3
+    case {2 3}
         % ignore the rake term if present
         if(~isnumeric(strike) || ~isreal(strike) ...
                 || ~isnumeric(dip) || ~isreal(dip))

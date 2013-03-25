@@ -7,12 +7,13 @@ function [strike,dip]=norm2strikedip(n,e,u)
 %
 %    Description:
 %     SD=NORM2STRIKEDIP(NEU) finds the strike and dip of a fault plane with
-%     a normal vector given as [North East Up] in NEU.  SD is returned as
-%     [strike dip] in degrees where strike is relative to North and dip is
-%     positive downward from the horizontal.  Note that the strike is given
-%     so that when you look along the direction of the strike the fault
-%     dips to your right.  NEU is Nx3 where N allows for multiple vectors
-%     to be converted simultaneously (SD is Nx2).
+%     a normal vector given as [North East Up] in NEU.  Normal vectors must
+%     always point towards the hanging wall and thus NEU(:,3)>=0.  SD is
+%     returned as [strike dip] in degrees where strike is relative to North
+%     and dip is positive downward from the horizontal.  Note that the
+%     strike is given so that when you look along the direction of the
+%     strike the fault dips to your right.  NEU is Nx3 where N allows for
+%     multiple vectors to be converted simultaneously (SD is Nx2).
 %
 %     SD=NORM2STRIKEDIP(N,E,U) allows North, East & Up to be given
 %     separately.
@@ -20,12 +21,6 @@ function [strike,dip]=norm2strikedip(n,e,u)
 %     [STRIKE,DIP]=NORM2STRIKEDIP(...) returns the strike & dip separately.
 %
 %    Notes:
-%     - Strike & Dip are independent of whether the normal vector points
-%       toward the hanging wall (default from STRIKEDIP2NORM) or the foot
-%       wall EXCEPT for a vertical fault.  In that case the normal vector
-%       points to the hanging wall and so the strike is such that the
-%       normal vector points to the right when looking along the strike
-%       direction.
 %     - A vertical normal returns a fault with a North strike and no dip.
 %
 %    Examples:
@@ -45,9 +40,10 @@ function [strike,dip]=norm2strikedip(n,e,u)
 %        June  1, 2011 - improved docs
 %        Mar. 14, 2013 - rewrite, rename
 %        Mar. 15, 2013 - rename again for clarity
+%        Mar. 18, 2013 - require upwards normal
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2013 at 15:05 GMT
+%     Last Updated Mar. 18, 2013 at 15:05 GMT
 
 % todo:
 
@@ -82,10 +78,10 @@ end
 %   relationship while keeping the dip in the 0-90deg range
 % - also keeps the normal vector & slip vector relationship
 %   between the fault & auxiliary planes
-j=find(u<0);
-n(j)=-n(j);
-e(j)=-e(j);
-u(j)=-u(j);
+if(any(u<0))
+    error('seizmo:norm2strikedip:badNormal',...
+        'Some normal vectors point downwards!');
+end
 
 % get strike (unfortunately we loose precision b/c of atan2)
 strike=mod(atan2(-n,e)*180/pi,360);

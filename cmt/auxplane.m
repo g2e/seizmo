@@ -24,7 +24,8 @@ function [strike,dip,rake]=auxplane(strike,dip,rake)
 %    Notes:
 %     - The auxiliary plane is perpendicular to the input fault plane.
 %     - The normal & slip vector of the auxiliary plane is the slip &
-%       normal vector of the fault plane (there may be a sign change).
+%       normal vector of the fault plane (there may be a sign change
+%       needed so that the normal vector points upwards).
 %     - The plane perpendicular to both the fault plane and the auxiliary
 %       plane has its normal along the null axis of the focal mechanism.
 %
@@ -42,6 +43,7 @@ function [strike,dip,rake]=auxplane(strike,dip,rake)
 %        June  1, 2011 - updated docs
 %        Mar. 14, 2013 - rewrite
 %        Mar. 15, 2013 - more cleanup
+%        Mar. 18, 2013 - sign change required for upwards normal
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Mar. 15, 2013 at 15:05 GMT
@@ -75,14 +77,26 @@ switch nargin
             'Incorrect number of inputs (only 1 or 3)!');
 end
 
+% size to reshape to
+sz=size(dip);
+
 % get strike/dip/rake of auxiliary plane
 % -> sdr to normal, slip
-% -> switch (taking care to preserve vertical direction of slip)
+% -> switch normal & slip
+%    -> taking care to keep the normal pointed upwards so that it points to
+%       the hanging wall (also have to flip the slip so it gives the motion
+%       of the hanging wall relative to the foot wall)
 %    -> note that this includes a trick such that +val=>1, 0=>1, -val=>-1
 % -> convert back to sdr
 normal=strikedip2norm(strike,dip);
 slip=sdr2slip(strike,dip,rake);
-[strike,dip,rake]=normslip2sdr(slip,(1-2*(slip(:,[3 3 3])<0)).*normal);
+[strike,dip,rake]=normslip2sdr((1-2*(slip(:,[3 3 3])<0)).*slip,...
+    (1-2*(slip(:,[3 3 3])<0)).*normal);
+
+% reshape
+strike=reshape(strike,sz);
+dip=reshape(dip,sz);
+rake=reshape(rake,sz);
 
 % combine if only one output
 if(nargout<=1); strike=[strike(:) dip(:) rake(:)]; end

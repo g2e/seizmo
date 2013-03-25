@@ -29,9 +29,10 @@ function []=globalcmt_update()
 %        Nov.  1, 2011 - condensed code to remove some redundancies
 %        Feb. 15, 2012 - say 'new cmts' to avoid confusion
 %        Mar.  1, 2012 - minor doc update, Octave save workaround
+%        Mar. 20, 2013 - no error if cannot write (just warn and move on)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2012 at 21:30 GMT
+%     Last Updated Mar. 20, 2013 at 21:30 GMT
 
 % todo:
 
@@ -138,10 +139,16 @@ if(updated)
     % save full
     path=fileparts(mfilename('fullpath'));
     SEIZMO.GLOBALCMT.FULL=full;
-    if(isoctave)
-        save([path filesep 'globalcmt_full.mat'],'-struct','-7','full');
-    else % matlab
-        save([path filesep 'globalcmt_full.mat'],'-struct','full');
+    try
+        if(isoctave)
+            save([path filesep 'globalcmt_full.mat'],...
+                '-struct','-7','full');
+        else % matlab
+            save([path filesep 'globalcmt_full.mat'],'-struct','full');
+        end
+    catch
+        le=lasterror;
+        warning(le.identifier,le.message);
     end
 else
     % detail message
@@ -172,10 +179,16 @@ if(ok && ~isempty(qndk))
     % save
     path=fileparts(mfilename('fullpath'));
     SEIZMO.GLOBALCMT.QUICK=quick;
-    if(isoctave)
-        save([path filesep 'globalcmt_quick.mat'],'-struct','-7','quick');
-    else % matlab
-        save([path filesep 'globalcmt_quick.mat'],'-struct','quick');
+    try
+        if(isoctave)
+            save([path filesep 'globalcmt_quick.mat'],...
+                '-struct','-7','quick');
+        else % matlab
+            save([path filesep 'globalcmt_quick.mat'],'-struct','quick');
+        end
+    catch
+        le=lasterror;
+        warning(le.identifier,le.message);
     end
 end
 

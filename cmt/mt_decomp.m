@@ -5,6 +5,8 @@ function [varargout]=mt_decomp(mt,option)
 %              [major,minor]=mt_decomp(mt,'majmin')
 %              [major,middle]=mt_decomp(mt,'majmid')
 %              [middle,minor]=mt_decomp(mt,'midmin')
+%              [dc1,dc2,dc3]=mt_decomp(mt,'3dc')
+%              [clvd1,clvd2,clvd3]=mt_decomp(mt,'3clvd')
 %              [dblcpl,clvd]=mt_decomp(mt,'maxdc')
 %              [clvd,dblcpl]=mt_decomp(mt,'maxclvd')
 %              [clvd,dblcpl]=mt_decomp(mt,'clvd')
@@ -15,7 +17,9 @@ function [varargout]=mt_decomp(mt,option)
 %     components of the moment tensor(s) given in MT.  MT must be a Nx6 or
 %     3x3xN array where N is the number of moment tensors in MT.  Note that
 %     all GlobalCMT & USGS moment tensors are constrained to be purely
-%     deviatoric.
+%     deviatoric.  THE OUTPUTS ARE DIAGONALIZED!  See the last usage form
+%     to get the eigenvectors which may be used with MT_UNDIAG to plot the
+%     moment tensors.
 %
 %     [MAJOR,MINOR]=MT_DECOMP(MT,'MAJMIN') returns major and minor double
 %     couples for the moment tensor(s) in MT.  Note that this decomposition
@@ -37,6 +41,14 @@ function [varargout]=mt_decomp(mt,option)
 %     absolute sense) to define the moments of the double couples but it is
 %     just as valid to choose some other pairing of moments (see 'MAJMIN' &
 %     'MAJMID' options).
+%
+%     [DC1,DC2,DC3]=MT_DECOMP(MT,'3DC') returns 3 double couples for each
+%     moment tensor in MT.  See Jost & Hermann (1989) for algorithm
+%     details.
+%
+%     [CLVD1,CLVD2,CLVD3]=MT_DECOMP(MT,'3CLVD') returns 3 compensated
+%     linear-vector dipoles (clvd) for each moment tensor in MT.  See Jost
+%     & Hermann (1989) for algorithm details.
 %
 %     [DBLCPL,CLVD]=MT_DECOMP(MT,'MAXDC') returns the maximum double couple
 %     with a compensated linear-vector dipole (clvd) component for the
@@ -89,12 +101,12 @@ function [varargout]=mt_decomp(mt,option)
 
 %     Version History:
 %        June 10, 2011 - initial version
+%        Mar. 20, 2013 - 3dc & 3clvd options
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 10, 2011 at 13:50 GMT
+%     Last Updated Mar. 20, 2013 at 13:50 GMT
 
 % todo:
-% - 3 DC, 3 CLVD (see Jost & Hermann 1989)
 
 % check nargin
 error(nargchk(2,2,nargin));
@@ -115,7 +127,8 @@ else
 end
 
 % check option string
-valid={'iso' 'majmin' 'majmid' 'midmin' 'maxdc' 'maxclvd' 'clvd'};
+valid={'iso' 'majmin' 'majmid' 'midmin' ...
+    'maxdc' 'maxclvd' 'clvd' '3dc' '3clvd'};
 if(~any(strcmpi(option,valid)))
     error('seizmo:mt_decomp:badInput',...
         ['OPTION must be one of the following:\n' ...
@@ -212,7 +225,44 @@ switch lower(option)
         end
         varargout={major minor vec};
     case '3dc' % Jost & Hermann 1989
-        
+        % this is a bit strange b/c the double couples
+        % are calculated from the iso+dev components
+        [dc1,dc2,dc3]=deal(zeros(3,3,n));
+        for i=1:n
+            % dc1 (p & b)
+            dc1(1,1,i)=(mt(1,1,i)-mt(2,2,i))/3;
+            dc1(2,2,i)=-dc1(1,1,i);
+            
+            % dc2 (b & t)
+            dc2(2,2,i)=(mt(2,2,i)-mt(3,3,i))/3;
+            dc2(3,3,i)=-dc2(2,2,i);
+            
+            % dc3 (t & p)
+            dc3(3,3,i)=(mt(3,3,i)-mt(1,1,i))/3;
+            dc3(1,1,i)=-dc3(3,3,i);
+        end
+        varargout={dc1 dc2 dc3 vec};
+    case '3clvd' % Jost & Hermann 1989
+        % this is a bit strange b/c the clvd components
+        % are calculated from the iso+dev components
+        [clvd1,clvd2,clvd3]=deal(zeros(3,3,n));
+        for i=1:n
+            % clvd1 p
+            clvd1(1,1,i)=2*mt(1,1,i)/3;
+            clvd1(2,2,i)=-mt(1,1,i)/3;
+            clvd1(3,3,i)=-mt(1,1,i)/3;
+            
+            % clvd2 b
+            clvd2(1,1,i)=-mt(2,2,i)/3;
+            clvd2(2,2,i)=2*mt(2,2,i)/3;
+            clvd2(3,3,i)=-mt(2,2,i)/3;
+            
+            % clvd3 t
+            clvd3(1,1,i)=-mt(3,3,i)/3;
+            clvd3(2,2,i)=-mt(3,3,i)/3;
+            clvd3(3,3,i)=2*mt(3,3,i)/3;
+        end
+        varargout={clvd1 clvd2 clvd3 vec};
     case 'maxdc' % dziewonski et al 1981
         % used by globalcmt, usgs catalogs (T, P, B axes shared but mixed)
         % best double couple is 1/2 the difference of largest pos & neg egn

@@ -6,11 +6,21 @@ way to make movies while you do other things on the screen:
 ## addframe(aviobj, hf)
 
 cmt
- - nodallines (neu/vpa/strikedip input?)
- - sdr2tpb
+ - neu 2 enu
+ - mt_check & mt_change
  - plotmt: tpb, nodal line plotting
- - plotmt3: neu axes, tpb axes, nodal lines, quiver3
- - HARD: mt2sdr (decomp type? tpb2sdr...)
+ - plotmt3: coloring per mt
+ - isc database
+ - usgs database
+ - findcmt/findcmts sort by name (turn this off to save time!)
+
+noise
+ - setup needs 1:6 process steps
+ - .mat i/o by default
+ - stack2stack
+ - stack only outputs 1 xc direction
+ - HARD: overlap option for stack
+ - HARD: better rotate_correlations
 
 fss
  - compute spectra not centered on 0,0?
@@ -32,14 +42,8 @@ geofss
  - write
    - geo(fsshorz,fsshorzxc,tdsshorzxc,arfhorz)
 
-make_*_*_volumes depends on old DAYDIRS_STACKCORR layout
-
-noise_stack
-    - stack2stack companion function
-    - needs overlap option
-    - don't output reversed correlations
-noise_process
-    - better rotate_correlations needed
+make_*_*_volumes
+ - depends on old DAYDIRS_STACKCORR layout
 
 rotate_correlations
     - not ready: need single dataset i/o, autoxc support (3 vs 4 files)
