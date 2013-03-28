@@ -47,7 +47,7 @@ function [mw]=momentmag(varargin)
 %     Version History:
 %        Mar. 11, 2011 - initial version
 %        Mar. 19, 2013 - doc update
-%        Mar. 25, 2013 - update for mt_check/mt_change
+%        Mar. 25, 2013 - update for mt_check/mt_change, minor fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Mar. 25, 2013 at 23:55 GMT
@@ -63,7 +63,8 @@ if(isstruct(varargin{1})) % global cmt struct
     % use scalarmoment field as that is more accurate than using
     % the truncated moment tensor values which are always biased
     % to lower magnitudes
-    mw=(2/3).*(log10(mt.scalarmoment.*10.^mt.exponent)-16.1);
+    mw=(2/3).*(log10(varargin{1}.scalarmoment ...
+        .*10.^varargin{1}.exponent)-16.1);
 else
     mw=(2/3).*(log10(scalarmoment(varargin{:}))-16.1);
 end

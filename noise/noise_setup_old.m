@@ -107,12 +107,15 @@ function []=noise_setup(indir,outdir,varargin)
 %                        for meld/fixdelta options
 %        Aug. 23, 2012 - allow indir to have wildcards
 %        Mar. 25, 2013 - new options (proc 1-6, matio)
-%        Mar. 27, 2013 - matio actually works, improved algorithm
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 27, 2013 at 11:15 GMT
+%     Last Updated Mar. 25, 2013 at 11:15 GMT
 
 % todo:
+% - cheapest way (memory-wise but more i/o)
+%   readheaders then determine files for each window
+%   readdatawindow for each window
+%   needs agressive testing (perfect match between current & new)
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -154,7 +157,7 @@ end
 fs=filesep;
 
 % parallel processing setup
-verbose=seizmoverbose(false);
+verbose=seizmoverbose;
 %matlabpool(4); % PARALLEL
 
 % read in data headers
@@ -210,183 +213,193 @@ if(~isempty(opt.COMPONENTS))
 end
 
 % fix delta
-checkoperr('invalid_iztype','ignore');
 data=fixdelta(data,opt.FIXDELTAOPTIONS{:});
-checkoperr('invalid_iztype','warn');
 
 % detail message
-if(verbose); disp('MAKING DIRECTORY STRUCTURE FOR NOISE ANALYSIS'); end
-    
-% get absolute time limits
-[butc,eutc]=getheader(data,'b utc','e utc');
-butc=cell2mat(butc); eutc=cell2mat(eutc);
-minyr=min(butc(:,1)); maxyr=max(eutc(:,1));
-minday=min(butc(butc(:,1)==minyr,2));
-maxday=max(eutc(eutc(:,1)==maxyr,2));
+if(verbose)
+    disp('MAKING DIRECTORY STRUCTURE FOR NOISE ANALYSIS');
+end
 
-% loop over years
-for yr=minyr:maxyr
-    % skip year if not in user-defined range
-    if((~isempty(opt.TIMESTART) && yr<opt.TIMESTART(1)) ...
-            || (~isempty(opt.TIMEEND) && yr>opt.TIMEEND(1)))
-        continue;
-    end
+% get name-based indexing
+[cmpidx,kname]=getcomponentidx(data);
+
+% loop over components
+%parfor i=1:max(cmpidx) % PARALLEL
+for i=1:max(cmpidx) % SERIAL
+    % force quietness even in parfor (which resets globals)
+    seizmoverbose(false);
     
-    % which days?
-    if(minyr==maxyr)
-        days=minday:maxday;
-    elseif(yr==minyr)
-        days=minday:365+isleapyear(minyr);
-    elseif(yr==maxyr)
-        days=1:maxday;
-    else
-        days=1:365+isleapyear(yr);
-    end
+    % detail message
+    if(verbose); disp(['PROCESSING: ' kname{i}]); end
     
-    % loop over the days
-    for day=days
-        % skip day if not in user-defined range
-        if((~isempty(opt.TIMESTART) ...
-                && datenum(doy2cal([yr day]))...
-                <fix(gregorian2serial(opt.TIMESTART))) ...
-                || (~isempty(opt.TIMEEND) ...
-                && datenum(doy2cal([yr day]))...
-                >fix(gregorian2serial(opt.TIMEEND))))
-            continue;
-        end
+    % read in component data
+    cdata=readdata(data(i==cmpidx));
+    
+    % merge the component data (does header check)
+    checkoperr('invalid_iztype','ignore');
+    cdata=meld(cdata,opt.MELDOPTIONS{:});
+    checkoperr('invalid_iztype','warn');
         
-        % turn off checking
-        oldseizmocheckstate=seizmocheck_state(false);
-        oldcheckheaderstate=checkheader_state(false);
+    % turn off checking
+    oldseizmocheckstate=seizmocheck_state(false);
+    oldcheckheaderstate=checkheader_state(false);
+    
+    try
+        % get absolute time limits
+        [butc,eutc]=getheader(cdata,'b utc','e utc');
+        butc=cell2mat(butc); eutc=cell2mat(eutc);
+        minyr=min(butc(:,1)); maxyr=max(eutc(:,1));
+        minday=min(butc(butc(:,1)==minyr,2));
+        maxday=max(eutc(eutc(:,1)==maxyr,2));
         
-        try
-            % loop over time sections
-            % 1439 is 1 minute shy of 1 day
-            for ts=0:opt.LENGTH-opt.OVERLAP:1439
-                % get time section limits (we avoid utc here)
-                tsbgn=fixtimes([yr day 0 ts 0]);
-                tsend=fixtimes([yr day 0 ts+opt.LENGTH 0]);
-                
-                % skip time section if not in user-defined range
-                % - time sections that overlap TIMESTART/END are
-                %   allowed as data in the time section is okay
+        % loop over years
+        for yr=minyr:maxyr
+            % skip year if not in user-defined range
+            if((~isempty(opt.TIMESTART) && yr<opt.TIMESTART(1)) ...
+                    || (~isempty(opt.TIMEEND) && yr>opt.TIMEEND(1)))
+                continue;
+            end
+            
+            % which days?
+            if(minyr==maxyr)
+                days=minday:maxday;
+            elseif(yr==minyr)
+                days=minday:365+isleapyear(minyr);
+            elseif(yr==maxyr)
+                days=1:maxday;
+            else
+                days=1:365+isleapyear(yr);
+            end
+            
+            % loop over the days
+            for day=days
+                % skip day if not in user-defined range
                 if((~isempty(opt.TIMESTART) ...
-                        && timediff(opt.TIMESTART,tsend)<=0) ...
+                        && datenum(doy2cal([yr day]))...
+                        <fix(gregorian2serial(opt.TIMESTART))) ...
                         || (~isempty(opt.TIMEEND) ...
-                        && timediff(opt.TIMEEND,tsbgn)>=0))
+                        && datenum(doy2cal([yr day]))...
+                        >fix(gregorian2serial(opt.TIMEEND))))
                     continue;
                 end
                 
-                % time section directory name
-                tsdir=sprintf(['%04d.%03d.%02d.%02d.%02d_' ...
-                    '%04d.%03d.%02d.%02d.%02d'],tsbgn,tsend);
-                if(verbose); disp(['PROCESSING: ' tsdir]); end
-                
-                % skip if time section contains no records
-                if(all(timediff(butc,tsend)<=0 ...
-                        | timediff(eutc,tsbgn)>=0))
-                    continue;
-                end
-                
-                % read a portion of the data
-                tsdata=readdatawindow(data,tsbgn,tsend);
-                
-                % skip if none
-                if(isempty(tsdata)); continue; end
-                
-                % merge the data (does header check)
-                checkoperr('invalid_iztype','ignore');
-                tsdata=meld(tsdata,opt.MELDOPTIONS{:});
-                checkoperr('invalid_iztype','warn');
-                
-                % sync & insert markers for time section
-                % - note we allow some minutes to have leapseconds
-                tsdata=synchronize(tsdata,tsbgn);
-                tsdata=changeheader(tsdata,'iztype','ia',...
-                    'a',0,'f',timediff(tsbgn,tsend,'utc'));
-                
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%
-                % begin process steps 1-6 %
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%
-                if(any(opt.PROCESS==1)) % remove dead
-                    if(~isempty(tsdata))
-                        tsdata=removedeadrecords(tsdata);
+                % loop over time sections
+                % 1439 is 1 minute shy of 1 day
+                for ts=0:opt.LENGTH-opt.OVERLAP:1439
+                    % get time section limits (we avoid utc here)
+                    tsbgn=fixtimes([yr day 0 ts 0]);
+                    tsend=fixtimes([yr day 0 ts+opt.LENGTH 0]);
+                    
+                    % skip time section if not in user-defined range
+                    % - time sections that overlap TIMESTART/END are
+                    %   allowed as data in the time section is okay
+                    if((~isempty(opt.TIMESTART) ...
+                            && timediff(opt.TIMESTART,tsend)<=0) ...
+                            || (~isempty(opt.TIMEEND) ...
+                            && timediff(opt.TIMEEND,tsbgn)>=0))
+                        continue;
                     end
+                    
+                    % time section directory name
+                    tsdir=sprintf(['%04d.%03d.%02d.%02d.%02d_' ...
+                        '%04d.%03d.%02d.%02d.%02d'],tsbgn,tsend);
+                    
+                    % debugging
+                    %disp([kname{i} ' ' num2str(yr) ' ' tsdir])
+                    
+                    % skip if time section contains no records
+                    if(all(timediff(butc,tsend)<=0 ...
+                            | timediff(eutc,tsbgn)>=0))
+                        continue;
+                    end
+                    
+                    % cut
+                    tsdata=cut(cdata,tsbgn,tsend);
+                    
+                    % skip if none
                     if(isempty(tsdata)); continue; end
-                end
-                if(any(opt.PROCESS==2)) % remove short
-                    if(~isempty(tsdata))
-                        [b,e]=getheader(tsdata,'b','e');
-                        tsdata=tsdata(e-b ...
-                            > opt.MINIMUMLENGTH*timediff(tsbgn,tsend));
-                    end
-                    if(isempty(tsdata)); continue; end
-                end
-                if(any(opt.PROCESS==3)) % remove trend
-                    if(~isempty(tsdata))
-                        tsdata=removetrend(tsdata);
-                    end
-                end
-                if(any(opt.PROCESS==4)) % taper
-                    if(~isempty(tsdata))
-                        tsdata=taper(tsdata,opt.TAPERWIDTH,...
-                            [],opt.TAPERTYPE,opt.TAPEROPT);
-                    end
-                end
-                if(any(opt.PROCESS==5)) % resample
-                    if(~isempty(tsdata))
-                        tsdata=syncrates(tsdata,opt.SAMPLERATE);
-                    end
-                end
-                if(any(opt.PROCESS==6)) % remove pz
-                    if(~isempty(opt.PZDB))
+                    
+                    % sync & insert markers for time section
+                    % - note we allow some minutes to have leapseconds
+                    tsdata=synchronize(tsdata,tsbgn);
+                    tsdata=changeheader(tsdata,'iztype','ia',...
+                        'a',0,'f',timediff(tsbgn,tsend,'utc'));
+                    
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    % begin process steps 1-6 %
+                    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+                    if(any(opt.PROCESS==1)) % remove dead
                         if(~isempty(tsdata))
-                            tsdata=getsacpz(tsdata,opt.PZDB);
+                            tsdata=removedeadrecords(tsdata);
+                        end
+                        if(isempty(tsdata)); continue; end
+                    end
+                    if(any(opt.PROCESS==2)) % remove short
+                        if(~isempty(tsdata))
+                            [b,e]=getheader(tsdata,'b','e');
+                            tsdata=tsdata(e-b ...
+                                > opt.MINIMUMLENGTH*timediff(tsbgn,tsend));
+                        end
+                        if(isempty(tsdata)); continue; end
+                    end
+                    if(any(opt.PROCESS==3)) % remove trend
+                        if(~isempty(tsdata))
+                            tsdata=removetrend(tsdata);
                         end
                     end
-                    if(~isempty(tsdata))
-                        tsdata=removesacpz(tsdata,...
-                            'units',opt.UNITS,'tl',opt.PZTAPERLIMITS);
+                    if(any(opt.PROCESS==4)) % taper
+                        if(~isempty(tsdata))
+                            tsdata=taper(tsdata,opt.TAPERWIDTH,...
+                                [],opt.TAPERTYPE,opt.TAPEROPT);
+                        end
                     end
-                    if(isempty(tsdata)); continue; end
-                end
-                %%%%%%%%%%%%%%%%%%%%%%%%%
-                % end process steps 1-6 %
-                %%%%%%%%%%%%%%%%%%%%%%%%%
-                
-                % write
-                if(opt.MATIO)
-                    noise_records=changepath(tsdata,'path',...
-                        [outdir fs num2str(yr) fs tsdir]);
-                    if(~exist([outdir fs num2str(yr) fs tsdir],'dir'))
-                        mkdir([outdir fs num2str(yr) fs tsdir]);
+                    if(any(opt.PROCESS==5)) % resample
+                        if(~isempty(tsdata))
+                            tsdata=syncrates(tsdata,opt.SAMPLERATE);
+                        end
                     end
-                    save(fullfile(outdir,num2str(yr),tsdir,...
-                        'noise_records.mat'),'noise_records');
-                else % SAC
+                    if(any(opt.PROCESS==6)) % remove pz
+                        if(~isempty(opt.PZDB))
+                            if(~isempty(tsdata))
+                                tsdata=getsacpz(tsdata,opt.PZDB);
+                            end
+                        end
+                        if(~isempty(tsdata))
+                            tsdata=removesacpz(tsdata,...
+                                'units',opt.UNITS,'tl',opt.PZTAPERLIMITS);
+                        end
+                        if(isempty(tsdata)); continue; end
+                    end
+                    %%%%%%%%%%%%%%%%%%%%%%%%%
+                    % end process steps 1-6 %
+                    %%%%%%%%%%%%%%%%%%%%%%%%%
+                    
+                    % write
                     writeseizmo(tsdata,...
                         'path',[outdir fs num2str(yr) fs tsdir]);
                 end
             end
-            
-            % toggle checking back
-            seizmocheck_state(oldseizmocheckstate);
-            checkheader_state(oldcheckheaderstate);
-        catch
-            % toggle checking back
-            seizmocheck_state(oldseizmocheckstate);
-            checkheader_state(oldcheckheaderstate);
-            
-            % parallel processing takedown & fix verbosity
-            %matlabpool close; % PARALLEL
-            seizmoverbose(verbose);
-            
-            % rethrow error
-            disp(['FAILED IN: ' tsdir])
-            error(lasterror);
         end
+        
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        checkheader_state(oldcheckheaderstate);
+    catch
+        % toggle checking back
+        seizmocheck_state(oldseizmocheckstate);
+        checkheader_state(oldcheckheaderstate);
+        
+        % parallel processing takedown & fix verbosity
+        %matlabpool close; % PARALLEL
+        seizmoverbose(verbose);
+        
+        % rethrow error
+        error(lasterror);
     end
 end
+
+% mat i/o
+if(opt.MATIO); noise_sac2mat(outdir); end
 
 % parallel processing takedown & fix verbosity
 %matlabpool close; % PARALLEL

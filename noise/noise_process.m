@@ -8,14 +8,14 @@ function []=noise_process(indir,outdir,steps,varargin)
 %    Description:
 %     NOISE_PROCESS(INDIR,OUTDIR) processes the data under the directory
 %     INDIR using noise cross correlation methods.  The resulting data are
-%     written to OUTDIR.  The following techniques are done on the input
-%     dataset:
-%      ( 1) remove dead records (no change in recorded value)
-%      ( 2) remove short records (spanning less than 70% of time section)
-%      ( 3) remove mean & trend
-%      ( 4) taper (first/last 1%)
-%      ( 5) resample to 1 sample/sec
-%      ( 6) remove polezero response (displacement, hp taper: [.004 .008])
+%     written to OUTDIR.  The following techniques may be performed on the
+%     input dataset (see the next Usage form to set which):
+%      (*1) remove dead records (no change in recorded value)
+%      (*2) remove short records (spanning less than 70% of time section)
+%      (*3) remove mean & trend
+%      (*4) taper (first/last 1%)
+%      (*5) resample to 1 sample/sec
+%      (*6) remove polezero response (displacement, hp taper: [.004 .008])
 %      ( 7) reject records based on amplitudes (>Inf nm)
 %      ( 8) rotate horizontals to North/East (removes unpaired)
 %      ( 9) t-domain normalize (3-150s & 15-100s moving average)
@@ -23,11 +23,13 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      (11) correlate (keep +/-4000s lagtime)
 %      (12) rotate correlations into <RR, RT, TR, TT>
 %     See below for details on how to alter or skip some of these steps.
+%     * -> Steps 1-6 are performed in NOISE_SETUP by default and do not
+%          need to be used unless you are doing something non-standard.
 %
 %     NOISE_PROCESS(INDIR,OUTDIR,STEPS) only does the processing steps
-%     indicated in STEPS.  STEPS should be a vector of numbers
-%     corresponding to valid steps given above.  The default is [] which
-%     does all of the above steps.
+%     indicated in STEPS.  STEPS is be a vector of numbers corresponding to
+%     valid steps given above.  The default is 7:12 (1:6 are done in
+%     NOISE_SETUP by default and so do not need to be done here).
 %
 %     NOISE_PROCESS(INDIR,OUTDIR,STEPS,'OPT1',VAL,...,'OPTN',VAL) allows
 %     changing some of the noise correlation parameters.  The following are
@@ -89,12 +91,12 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     % This is great for prototyping and debugging!
 %
 %     % Skip the normalization steps:
-%     noise_process('raw','xc',[1:8 11:12])
+%     noise_process('raw','xc',[7:8 11:12])
 %
 %     % Use non-overlapping 15-minute timesections, sampled
 %     % at 5Hz to look at noise up to about 1.5Hz:
-%     noise_setup('raw','15raw','l',15,'o',0);
-%     noise_process('15raw','15xc5',[],'sr',5,'xcmaxlag',500)
+%     noise_setup('raw','15disp','l',15,'o',0,'sr',5);
+%     noise_process('15disp','15xc5',[],'xcmaxlag',500);
 %     % We adjusted the lag time b/c 15 minutes is 900 seconds.
 %
 %    See also: NOISE_SETUP, NOISE_STACK, NOISE_OVERVIEW
@@ -131,9 +133,11 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        Sep. 23, 2012 - horizontals are sorted before correlation now
 %        Feb. 27, 2013 - support for new correlate (outputs auto
 %                        correlations as well), rotate_correlations rename
+%        Mar. 25, 2013 - matio by default, 7:12 by default, fixed mat file
+%                        reading/writing, updated docs accordingly
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2013 at 11:15 GMT
+%     Last Updated Mar. 25, 2013 at 11:15 GMT
 
 % todo:
 % - normxc (for coherency)?
@@ -149,7 +153,7 @@ if(nargin>=4 && ~mod(nargin,2))
 end
 
 % default steps to all
-if(nargin<3 || isempty(steps)); steps=1:12; end
+if(nargin<3 || isempty(steps)); steps=7:12; end
 
 % parse/check options
 opt=noise_process_parameters(varargin{:});
@@ -242,16 +246,10 @@ for i=1:numel(tsdirs) % SERIAL
     
     % read the header
     try
-        if(opt.MATIN)
-            try
-                data=load(strcat(indir,fs,tsdirs{in(ts)}(1:4),fs,...
-                    tsdirs{in(ts)},fs,'noise_setup_output.mat'));
-                data=data.noise_setup_output;
-            catch
-                data=load(strcat(indir,fs,tsdirs{in(ts)}(1:4),fs,...
-                    tsdirs{in(ts)},fs,'noise_process_output.mat'));
-                data=data.noise_process_output;
-            end
+        if(opt.MATIO)
+            data=load(strcat(indir,fs,tsdirs{in(ts)}(1:4),fs,...
+                tsdirs{in(ts)},fs,'noise_records.mat'));
+            data=data.noise_records;
             if(~isempty(opt.FILENAMES))
                 warning('seizmo:noise_stack:unusedOption',...
                     'FILENAMES option ignored for MAT input!');
@@ -695,45 +693,28 @@ for i=1:numel(tsdirs) % SERIAL
         end
         
         % write the data
-        if(isxc)
-            if(isempty(data)); continue; end
-            if(opt.MATOUT)
-                noise_process_output=changepath(data,'path',...
-                    [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]); %#ok<*NASGU>
-                save(fullfile(outdir,tsdirs{i}(1:4),tsdirs{i},...
-                    'noise_process_output.mat'),...
-                    'noise_process_output');
-                clear noise_process_output;
+        if(opt.MATIO)
+            if(isxc)
+                if(isempty(data)); continue; end
+                noise_records=changepath(data,'path',...
+                    [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
             else
-                writeseizmo(data,'path',...
+                if(numel(vdata)+numel(hdata)==0); continue; end
+                noise_records=changepath([vdata; hdata],'path',...
                     [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
             end
+            save(fullfile(outdir,tsdirs{i}(1:4),tsdirs{i},...
+                'noise_records.mat'),'noise_records');
+            clear noise_records;
         else
-            if(~isempty(vdata))
-                if(opt.MATOUT)
-                    noise_process_output=changepath(vdata,'path',...
+            if(isxc)
+                if(isempty(data)); continue; end
+                writeseizmo(data,'path',...
+                    [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
+            else
+                if(numel(vdata)+numel(hdata)==0); continue; end
+                writeseizmo([vdata; hdata],'path',...
                         [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
-                    save(fullfile(outdir,tsdirs{i}(1:4),tsdirs{i},...
-                        'noise_process_output.mat'),...
-                        'noise_process_output');
-                    clear noise_process_output;
-                else
-                    writeseizmo(vdata,'path',...
-                        [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
-                end
-            end
-            if(~isempty(hdata))
-                if(opt.MATOUT)
-                    noise_process_output=changepath(hdata,'path',...
-                        [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
-                    save(fullfile(outdir,tsdirs{i}(1:4),tsdirs{i},...
-                        'noise_process_output.mat'),...
-                        'noise_process_output');
-                    clear noise_process_output;
-                else
-                    writeseizmo(hdata,'path',...
-                        [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
-                end
             end
         end
         
@@ -769,7 +750,7 @@ varargin=[{'minlen' 70 'tw' 1 'tt' [] 'topt' [] 'sr' 1 ...
     'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] 'ar' Inf ...
     'tds' 'ram' 'tdrms' true 'tdclip' 1 'tdfb' [1/150 1/3; 1/100 1/15] ...
     'fds' 'ram' 'fdw' .002 'lag' 4000 ...
-    'ts' [] 'te' [] 'lat' [] 'lon' [] 'matin' false 'matout' false ...
+    'ts' [] 'te' [] 'lat' [] 'lon' [] 'matin' false 'matio' true ...
     'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' [] 'q' false} varargin];
 
 % get user input

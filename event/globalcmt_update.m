@@ -126,7 +126,7 @@ end
 
 % only update if new cmts found
 if(updated)
-    % delete dupes
+    % delete dupes by name (also sorts by name)
     [keep,keep]=unique(full.name);
     full=ssidx(full,sort(keep));
     

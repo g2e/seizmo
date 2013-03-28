@@ -26,9 +26,10 @@ function []=globalcmt_create(overwrite)
 
 %     Version History:
 %        Mar.  1, 2012 - initial version
+%        Mar. 25, 2013 - no error if cannot write (just warn and move on)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2012 at 17:25 GMT
+%     Last Updated Mar. 25, 2013 at 17:25 GMT
 
 % todo:
 
@@ -78,21 +79,26 @@ cmt1=ssidx(cmt1,cmt1.year<1976);
 % concatenate archives
 cmt=sscat(cmt,cmt1,cmt2);
 
-% remove dupes
+% remove dupes by name (also sorts by name)
 [name,idx]=unique(cmt.name);
 if(verbose && numel(name)~=numel(cmt.name))
     dropped=numel(cmt.name)-numel(name);
-    disp(['Removed ' num2str(dropped) ' Duplicate CMTs']);
+    disp(['Removed ' num2str(dropped) ' Duplicate CMTs By Name.']);
 end
 cmt=ssidx(cmt,idx);
 
 % save full
 path=fileparts(mfilename('fullpath'));
 SEIZMO.GLOBALCMT.FULL=cmt;
-if(isoctave)
-    save([path filesep 'globalcmt_full.mat'],'-struct','-7','cmt');
-else % matlab
-    save([path filesep 'globalcmt_full.mat'],'-struct','cmt');
+try
+    if(isoctave)
+        save([path filesep 'globalcmt_full.mat'],'-struct','-7','cmt');
+    else % matlab
+        save([path filesep 'globalcmt_full.mat'],'-struct','cmt');
+    end
+catch
+    le=lasterror;
+    warning(le.identifier,le.message);
 end
 
 end

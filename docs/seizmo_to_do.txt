@@ -11,10 +11,9 @@ cmt
  - plotmt3: coloring per mt
  - isc database
  - usgs database
- - findcmt/findcmts sort by name (turn this off to save time!)
+ - mt_nodallines
 
 noise
- - setup needs 1:6 process steps
  - .mat i/o by default
  - stack2stack
  - stack only outputs 1 xc direction
