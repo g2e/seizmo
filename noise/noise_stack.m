@@ -45,7 +45,9 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %
 %     NOISE_STACK(INDIR,OUTDIR,PAIR,'OPT1',VAL,...,'OPTN',VAL) gives access
 %     to several stacking and selection parameters:
-%      SPAN - Controls the stacked time span.  May be of the following:
+%
+%      SPAN - Controls the stacked time span.  May be any of the following
+%             or a combination (in a cellstr array):
 %              tod1hr - stack by hour of the day (across all days)
 %              tod3hr - stack 3 hour blocks across all days (no overlap)
 %                 1hr - stack each hour separately
@@ -60,25 +62,30 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %                       1-3=winter, 4-6=spring, 7-9=summer, 10-12=autumn
 %             2season - stack 6 month blocks across years
 %                       4-9=summer, 10-12,1-3=winter
-%                 all - stack everything
-%             or a cell array with a combination of them. Default is 'all'.
-%      XCCMP - Controls which NCF component is output.  May be any of:
-%               'twoway','symmetric','causal','acausal'
-%              or a cell array combination.  The default is 'twoway'.
-%      TIMESTART - process time sections from this time on []
-%      TIMEEND - process times sections before this time []
-%      LATRNG - include stations in this latitude range []
-%      LONRNG - include stations in this longitude range []
-%      NETWORKS - include records with these network codes []
-%      STATIONS - include records with these station codes []
-%      STREAMS - include records with these stream codes []
+%                 all - stack everything (DEFAULT)
+%
+%      XCCMP      - Controls which NCF component is output.  May be any of:
+%                    'twoway','symmetric','causal','acausal'
+%                   or a cell array combination.  The default is 'twoway'.
+%
+%      XCREVERSE  - create time-reversed correlations (false)
+%      TIMESTART  - process time sections from this time on []
+%      TIMEEND    - process times sections before this time []
+%      LATRNG     - include stations in this latitude range []
+%      LONRNG     - include stations in this longitude range []
+%      NETWORKS   - include records with these network codes []
+%      STATIONS   - include records with these station codes []
+%      STREAMS    - include records with these stream codes []
 %      COMPONENTS - include records with these component codes []
-%      FILENAMES - limit processing to files matching this file pattern []
-%      QUIETWRITE   - quietly overwrite OUTDIR (default is false)
+%      FILENAMES  - limit processing to files matching this file pattern []
+%      QUIETWRITE - quietly overwrite OUTDIR (default is false)
+%      MATIO      - mat file input/output instead of sac files (true)
 %
 %    Notes:
 %     - Stack time span must exceed the timesection time span.  You cannot
 %       make day or 3hr stacks from day correlations.
+%     - Correlation directories cannot contain both the correlations & the
+%       reversed correlations.  See NOISE_STACK_ARBITRARY.
 %
 %    Header changes: SCALE (number of records in stack), DEP*
 %                    Z, A, F
@@ -95,7 +102,7 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %     % Several people like to use the symmetric component:
 %     noise_stack('xc','stacks','zz','xccmp','sym')
 %
-%    See also:  NOISE_SETUP, NOISE_PROCESS, NOISE_OVERVIEW
+%    See also: NOISE_SETUP, NOISE_PROCESS, NOISE_OVERVIEW
 
 %     Version History:
 %        June 20, 2010 - added to seizmo, fixed bug that would replace
@@ -117,21 +124,20 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %        Aug. 22, 2012 - added 1hr, tod1hr, tod3hr, wkday, 4season, 2season
 %                        span options
 %        Aug. 24, 2012 - fix timespan indexing bug (span~=all were wrong)
+%        Mar. 28, 2013 - matio fixes
+%        Mar. 29, 2013 - autoxc bugfixes, xcreverse option
+%        Apr.  3, 2013 - minor fixes and notes
+%        Apr.  8, 2013 - xcreverse option is false by default (for space)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 24, 2012 at 11:15 GMT
+%     Last Updated Apr.  8, 2013 at 11:15 GMT
 
 % todo:
-% - separate function: stack2stack (make stacks from stacks)
-%   - tod1hr => tod3hr, day=>yrmo, mon=> full, etc
 % - overlap option
 %   - default to 50% ?
 %   - weight summation by overlap?
 %   - need a time function to return overlap between ranges
 %   - tod?hr, wkday, mon, ?season need special care
-% - do not write reversed correlations
-%   - less memory
-%   - less work (read, remove, process vs read, process)
 
 % check nargin
 error(nargchk(3,inf,nargin));
@@ -471,11 +477,10 @@ try
             for ts=1:nin
                 % read in timesection data headers
                 try
-                    if(opt.MATIN)
+                    if(opt.MATIO)
                         data=load(strcat(indir,fs,tsdirs{in(ts)}(1:4),...
-                            fs,tsdirs{in(ts)},fs,...
-                            'noise_process_output.mat'));
-                        data=data.noise_process_output;
+                            fs,tsdirs{in(ts)},fs,'noise_records.mat'));
+                        data=data.noise_records;
                         if(~isempty(opt.FILENAMES))
                             warning('seizmo:noise_stack:unusedOption',...
                                 'FILENAMES option ignored for MAT input!');
@@ -493,11 +498,10 @@ try
                 
                 % require records are correlations
                 [kuser0,kuser1]=getheader(data,'kuser0','kuser1');
-                xc=ismember(kuser0,{'MASTER' 'SLAVE'}) ...
-                    & ismember(kuser1,{'MASTER' 'SLAVE'});
+                xc=strcmp(kuser0,'MASTER') & strcmp(kuser1,'SLAVE');
                 if(~all(xc))
                     error('seizmo:noise_stack:badInput',...
-                        'INDIR does not contain correlations!');
+                        'INDIR does contains non-correlations!');
                 end
                 
                 % limit to the stations that the user allows
@@ -568,9 +572,11 @@ try
                 kcmpnmm=char(kt3); kcmpnmm=lower(kcmpnmm(:,3));
                 
                 % read in data (if not MATFILE input)
-                if(~opt.MATIN); data=readdata(data); end
+                if(~opt.MATIO); data=readdata(data); end
                 
                 % multiply by scale
+                % - this allows weighted stacks
+                % - this is also useful for stack2stack
                 scale(isnan(scale))=1;
                 data=multiply(data,scale);
                 for i=1:numel(data)
@@ -592,47 +598,52 @@ try
                         continue;
                     end
                     
-                    % skip if none have are this pair
+                    % skip if none have this pair
                     pidx1=ismember([kcmpnmm kcmpnms],pair(p));
                     pidx2=ismember([kcmpnms kcmpnmm],pair(p));
                     if(~sum(pidx1 | pidx2)); continue; end
                     
                     % look up record knames in stacks
-                    [tf,loc]=ismember(strcat(knamem,'.',knames),...
+                    [tf1,loc]=ismember(strcat(knamem,'.',knames),...
                         strcat(snamem{p},'.',snames{p}));
-                    loc=loc(tf); % remove zeros
-                    if(any(tf))
+                    loc=loc(tf1); % remove zeros
+                    if(any(tf1))
                         % those to be stacked on
-                        sdata{p}(loc)=addrecords(sdata{p}(loc),data(tf),...
+                        sdata{p}(loc)=addrecords(sdata{p}(loc),data(tf1),...
                             'ref','ignore');
-                        sscale{p}(loc)=sscale{p}(loc)+scale(tf);
-                    end
-                    if(any(~tf & pidx1))
-                        % those to be appended on
-                        sdata{p}=[sdata{p}; data(~tf & pidx1)];
-                        sscale{p}=[sscale{p}; scale(~tf & pidx1)];
-                        snamem{p}=[snamem{p}; knamem(~tf & pidx1)];
-                        snames{p}=[snames{p}; knames(~tf & pidx1)];
+                        sscale{p}(loc)=sscale{p}(loc)+scale(tf1);
                     end
                     
                     % look up record knames reversed in stacks
-                    % Note: b/c this is AFTER the above append we avoid
-                    %       potential data duplication
-                    [tf,loc]=ismember(strcat(knames,'.',knamem),...
+                    % - don't allow autoxc this time (to avoid double add)
+                    [tf2,loc]=ismember(strcat(knames,'.',knamem),...
                         strcat(snamem{p},'.',snames{p}));
-                    loc=loc(tf); % remove zeros
-                    if(any(tf))
+                    autoxc=strcmp(knamem,knames);
+                    tf2=tf2 & ~autoxc;
+                    loc=loc(tf2); % remove zeros
+                    if(any(tf2))
                         % those to be stacked on
                         sdata{p}(loc)=addrecords(sdata{p}(loc),...
-                            rdata(tf),'ref','ignore');
-                        sscale{p}(loc)=sscale{p}(loc)+scale(tf);
+                            rdata(tf2),'ref','ignore');
+                        sscale{p}(loc)=sscale{p}(loc)+scale(tf2);
                     end
-                    if(any(~tf & pidx2))
+                    
+                    % append unknown records
+                    tf=~tf1 & ~tf2 & pidx1;
+                    if(any(tf))
                         % those to be appended on
-                        sdata{p}=[sdata{p}; rdata(~tf & pidx2)];
-                        sscale{p}=[sscale{p}; scale(~tf & pidx2)];
-                        snamem{p}=[snamem{p}; knames(~tf & pidx2)];
-                        snames{p}=[snames{p}; knamem(~tf & pidx2)];
+                        sdata{p}=[sdata{p}; data(tf)];
+                        sscale{p}=[sscale{p}; scale(tf)];
+                        snamem{p}=[snamem{p}; knamem(tf)];
+                        snames{p}=[snames{p}; knames(tf)];
+                    end
+                    tf=~tf1 & ~tf2 & ~autoxc & pidx2;
+                    if(opt.XCREVERSE && any(tf))
+                        % those to be appended on
+                        sdata{p}=[sdata{p}; rdata(tf)];
+                        sscale{p}=[sscale{p}; scale(tf)];
+                        snamem{p}=[snamem{p}; knames(tf)];
+                        snames{p}=[snames{p}; knamem(tf)];
                     end
                 end
                 
@@ -708,53 +719,53 @@ try
                 
                 % xccmp
                 for xc=opt.XCCMP
-                    path=strcat(outdir,fs,pair(p),'_',span,'_',xc,...
-                        fs,spanstr(s,:));
+                    path=char(strcat(outdir,fs,pair(p),'_',span,'_',xc,...
+                        fs,spanstr(s,:)));
                     switch char(xc)
                         case 'twoway'
-                            if(opt.MATOUT)
-                                noise_stack_output=changepath(...
+                            if(opt.MATIO)
+                                noise_records=changepath(...
                                     sdata{pidx},'path',path); %#ok<*NASGU>
+                                if(~exist(path,'dir')); mkdir(path); end
                                 save(fullfile(char(path),...
-                                    'noise_stack_output.mat'),...
-                                    'noise_stack_output');
-                                clear noise_stack_output;
+                                    'noise_records.mat'),'noise_records');
+                                clear noise_records;
                             else
                                 writeseizmo(sdata{pidx},'path',path);
                             end
                         case 'symmetric'
-                            if(opt.MATOUT)
-                                noise_stack_output=changepath(...
+                            if(opt.MATIO)
+                                noise_records=changepath(...
                                     symcmp(sdata{pidx}),'path',path);
+                                if(~exist(path,'dir')); mkdir(path); end
                                 save(fullfile(char(path),...
-                                    'noise_stack_output.mat'),...
-                                    'noise_stack_output');
-                                clear noise_stack_output;
+                                    'noise_records.mat'),'noise_records');
+                                clear noise_records;
                             else
                                 writeseizmo(symcmp(sdata{pidx}),...
                                     'path',path);
                             end
                         case 'causal'
-                            if(opt.MATOUT)
-                                noise_stack_output=changepath(...
+                            if(opt.MATIO)
+                                noise_records=changepath(...
                                     cut(sdata{pidx},0),'path',path);
+                                if(~exist(path,'dir')); mkdir(path); end
                                 save(fullfile(char(path),...
-                                    'noise_stack_output.mat'),...
-                                    'noise_stack_output');
-                                clear noise_stack_output;
+                                    'noise_records.mat'),'noise_records');
+                                clear noise_records;
                             else
                                 writeseizmo(cut(sdata{pidx},0),...
                                     'path',path);
                             end
                         case 'acausal'
-                            if(opt.MATOUT)
-                                noise_stack_output=changepath(...
+                            if(opt.MATIO)
+                                noise_records=changepath(...
                                     cut(reverse(sdata{pidx}),0),...
                                     'path',path);
+                                if(~exist(path,'dir')); mkdir(path); end
                                 save(fullfile(char(path),...
-                                    'noise_stack_output.mat'),...
-                                    'noise_stack_output');
-                                clear noise_stack_output;
+                                    'noise_records.mat'),'noise_records');
+                                clear noise_records;
                             else
                                 writeseizmo(cut(reverse(sdata{pidx}),0),...
                                     'path',path);
@@ -792,8 +803,8 @@ function [opt]=noise_stack_parameters(varargin)
 % parses/checks noise_stack pv pairs
 
 % defaults
-varargin=[{'span' 'all' 'xccmp' 'twoway' 'o' 50 'matin' false ...
-    'q' false 'ts' [] 'te' [] 'lat' [] 'lon' [] 'matout' false ...
+varargin=[{'span' 'all' 'xccmp' 'twoway' 'o' 50 'matio' true ...
+    'q' false 'ts' [] 'te' [] 'lat' [] 'lon' [] 'xcr' false ...
     'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' []} varargin];
 
 % require option/value pairs
@@ -814,7 +825,11 @@ for i=1:2:numel(varargin)
         case {'xccmp' 'xc' 'xcc'}
             if(isempty(varargin{i+1})); continue; end
             opt.XCCMP=varargin{i+1};
+        case {'xcreverse' 'xcrev' 'xcr'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.XCREVERSE=varargin{i+1};
         case {'overlap' 'over' 'ol' 'ov' 'o' 'olap'}
+            % support for this option does not exist yet!
             if(isempty(varargin{i+1})); continue; end
             opt.OVERLAP=varargin{i+1};
         case {'ts' 'tstart' 'timestart' 'startt' 'stime' 'starttime'}
@@ -845,12 +860,9 @@ for i=1:2:numel(varargin)
         case {'q' 'qw' 'quiet' 'qwrite' 'quietwrite'}
             if(isempty(varargin{i+1})); continue; end
             opt.QUIETWRITE=varargin{i+1};
-        case {'matin'}
-            % secret option: matfile input
-            opt.MATIN=varargin{i+1};
-        case {'matout'}
-            % secret option: matfile output
-            opt.MATOUT=varargin{i+1};
+        case {'matio' 'mat' 'matout' 'matin'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.MATIO=varargin{i+1};
         otherwise
             error('seizmo:noise_stack:badInput',...
                 'Unknown Option: %s !',varargin{i});
@@ -891,6 +903,9 @@ if(~iscellstr(opt.SPAN) || any(~ismember(opt.SPAN,valid.SPAN)))
 elseif(~iscellstr(opt.XCCMP) || any(~ismember(opt.XCCMP,valid.XCCMP)))
     error('seizmo:noise_stack:badInput',...
         'XCCMP option unrecognised! Use ''twoway'', ''symmetric'', etc!');
+elseif(~isscalar(opt.XCREVERSE) || ~islogical(opt.XCREVERSE))
+    error('seizmo:noise_stack:badInput',...
+        'XCREVERSE must be TRUE or FALSE!');
 elseif(~isscalar(opt.OVERLAP) || ~isnumeric(opt.OVERLAP) ...
         || opt.OVERLAP>100 || opt.OVERLAP<0)
     error('seizmo:noise_stack:badInput',...
@@ -936,12 +951,9 @@ elseif(~isempty(opt.FILENAMES) && (~iscellstr(opt.FILENAMES)))
 elseif(numel(opt.FILENAMES)>1)
     error('seizmo:noise_stack:badInput',...
         'FILENAMES must be a single pattern in NOISE_STACK!');
-elseif(~isscalar(opt.MATIN) || ~islogical(opt.MATIN))
+elseif(~isscalar(opt.MATIO) || ~islogical(opt.MATIO))
     error('seizmo:noise_stack:badInput',...
-        'MATIN must be TRUE or FALSE!');
-elseif(~isscalar(opt.MATOUT) || ~islogical(opt.MATOUT))
-    error('seizmo:noise_stack:badInput',...
-        'MATOUT must be TRUE or FALSE!');
+        'MATIO must be TRUE or FALSE!');
 end
 
 % look out for xccmp options in component

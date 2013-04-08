@@ -81,6 +81,7 @@ function []=sz_toc_misc()
 %<a href="matlab:help sscat">sscat</a>                - Concatenates struct(s) into a scalar struct
 %<a href="matlab:help ssidx">ssidx</a>                - Scalar struct database indexing
 %<a href="matlab:help star69">star69</a>               - Returns who called the current function
+%<a href="matlab:help str2int">str2int</a>              - Converts simple integer strings to integers (fast)
 %<a href="matlab:help strnlen">strnlen</a>              - Pad/truncate char/cellstr array to n character columns
 %<a href="matlab:help sub2lti">sub2lti</a>              - Square matrix lower triangle linear indices from subscripts
 %<a href="matlab:help sub2uti">sub2uti</a>              - Square matrix upper triangle linear indices from subscripts

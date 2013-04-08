@@ -26,6 +26,7 @@ function []=categorical_list()
 %<a href="matlab:help sz_toc_tpw">tpw</a>        - Two plane wave analysis
 %<a href="matlab:help sz_toc_uninstall">uninstall</a>  - Uninstallation
 %<a href="matlab:help sz_toc_win">win</a>        - Windowing & merging
+%<a href="matlab:help sz_toc_xc">xc</a>    - Cross Correlation
 %<a href="matlab:help sz_toc_xcalign">xcalign</a>    - Cross correlation based arrival times
 %
 % Other Utility Categories
@@ -36,6 +37,7 @@ function []=categorical_list()
 %<a href="matlab:help sz_toc_mattaup">mattaup</a>   - Matlab-TauP (improved)
 %<a href="matlab:help sz_toc_misc">misc</a>      - Miscellaneous utilities
 %<a href="matlab:help sz_toc_models">models</a>    - 1D/3D models of the Earth's interior
+%<a href="matlab:help sz_toc_ocean">ocean</a>    - Ocean wave & storm track analysis
 %<a href="matlab:help sz_toc_position">position</a>  - Global positioning & conversions
 %<a href="matlab:help sz_toc_sphpoly">sphpoly</a>   - Polygons on a sphere
 %<a href="matlab:help sz_toc_time">time</a>      - Timing Standards & Conversions

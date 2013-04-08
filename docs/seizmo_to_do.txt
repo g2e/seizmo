@@ -14,9 +14,8 @@ cmt
  - mt_nodallines
 
 noise
- - .mat i/o by default
- - stack2stack
- - stack only outputs 1 xc direction
+ - psdgram
+ - rms based deletion
  - HARD: overlap option for stack
  - HARD: better rotate_correlations
 

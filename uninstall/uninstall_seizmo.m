@@ -10,8 +10,8 @@ function [ok]=uninstall_seizmo()
 %
 %    Notes:
 %     - Uses the location of the 'seizmodef' function to find the toolbox.
-%     - This function is not in the top level directory because that would
-%       lead to running 'uninstall_seizmo' from an not-installed SEIZMO
+%     - This function is not in the top level directory as that would
+%       lead to running 'uninstall_seizmo' from a not-installed SEIZMO
 %       directory when trying to install that SEIZMO directory.
 %
 %    Examples:
@@ -19,7 +19,7 @@ function [ok]=uninstall_seizmo()
 %     install_seizmo  % calls uninstall_seizmo
 %
 %    See also: ABOUT_SEIZMO, SEIZMO, INSTALL_SEIZMO, UNINSTALL_NJTBX,
-%              UNINSTALL_MMAP, UNINSTALL_GSHHS
+%              UNINSTALL_MMAP, UNINSTALL_GSHHS, UNINSTALL_EXPORTFIG
 
 %     Version History:
 %        Jan.  1, 2011 - initial version
@@ -31,9 +31,10 @@ function [ok]=uninstall_seizmo()
 %        Feb. 16, 2012 - export_fig is externally managed
 %        Feb. 27, 2012 - multi-jar mattaup update
 %        Mar.  8, 2012 - fix mattaup multi-jar breakage
+%        Mar. 28, 2013 - add ocean/xc directories
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  8, 2012 at 15:25 GMT
+%     Last Updated Mar. 28, 2013 at 15:25 GMT
 
 % todo:
 
@@ -90,6 +91,7 @@ if(exist('seizmodef','file'))
         [path fs 'models'],...
         [path fs 'multi'],...
         [path fs 'noise'],...
+        [path fs 'ocean'],...
         [path fs 'pick'],...
         [path fs 'plotting'],...
         [path fs 'resampling'],...
@@ -104,6 +106,7 @@ if(exist('seizmodef','file'))
         [path fs 'ttcorrect'],...
         [path fs 'win'],...
         [path fs 'ww3'],...
+        [path fs 'xc'],...
         [path fs 'xcalign'],...
         [path fs 'mattaup']);
     ok=ok & ~savepath;

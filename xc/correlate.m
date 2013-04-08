@@ -162,9 +162,11 @@ function [data]=correlate(master,varargin)
 %                        allow empty matrix [] to specify lagrng default
 %                        and single element lagrng for a symmetric range
 %        Feb. 27, 2013 - MAJOR BUGFIX: lagrng usage offset lags by 1 sample
+%        Mar. 28, 2013 - checkheader post-correlation bugfix (forgot to add
+%                        this to update the delaz fields)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2013 at 15:05 GMT
+%     Last Updated Mar. 28, 2013 at 15:05 GMT
 
 % todo:
 
@@ -562,6 +564,11 @@ else
         'kt2',kname1(m,3),'kt3',kname1(m,4),'kname',kname1(s,:),...
         'user2',cmp1(m,1),'user3',cmp1(m,2),'cmp',cmp1(s,:));
 end
+
+% update delaz info
+checkheader_state(true);
+data=checkheader(data,'all','ignore','old_delaz','fix');
+checkheader_state(false);
 
 end
 

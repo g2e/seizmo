@@ -66,9 +66,11 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %        Jan. 28, 2013 - some records have inf data values so some code
 %                        was added to catch & delete those records
 %        Feb. 26, 2013 - helpful detection of .csv/data desync
+%        Apr.  8, 2013 - 2hr desync required due to begin times of some
+%                        records being outside 1hr limit
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 26, 2013 at 13:35 GMT
+%     Last Updated Apr.  8, 2013 at 13:35 GMT
 
 % todo:
 
@@ -161,10 +163,11 @@ for i=s(:)'
             data=fix_sod_v222(data);
     end
     
-    % check for desync between sodcsv & data directories
-    % - error if beginning of record does not begin within 1 hour of event
+    % rough check for major desync between sodcsv & data directories
+    % - error if beginning of any record does
+    %   not begin within 2 hours of event time
     b=getheader(data,'b');
-    if(any(abs(b)>3600))
+    if(any(abs(b)>7200))
         error('seizmo:prep_cmb_data:desync',...
             ['Data Directories & .csv file appear desynced!\n' ...
             'Did you forget to send/download a breqfast/SEED file?\n' ...

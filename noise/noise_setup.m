@@ -33,6 +33,7 @@ function []=noise_setup(indir,outdir,varargin)
 %      QUIETWRITE   - quietly overwrite OUTDIR (default is false)
 %      FIXDELTAOPT  - options for FIXDELTA (default is {})
 %      MELDOPT      - options for MELD (default is {})
+%      MATIO        - output mat files instead of sac files (true)
 %
 %     LENGTH & OVERLAP must be whole numbers (eg. 4.5 minutes is NOT
 %     allowed!).  Please note that in order to have consistency from day to
@@ -154,12 +155,15 @@ end
 fs=filesep;
 
 % parallel processing setup
-verbose=seizmoverbose(false);
+verbose=seizmoverbose;
 %matlabpool(4); % PARALLEL
 
 % read in data headers
 if(verbose); disp('READING DATAFILE HEADERS (A LITTLE SLOW...)'); end
 data=readheader(strcat(indir,fs,opt.FILENAMES));
+
+% keep quiet now
+seizmoverbose(false);
 
 % require 3char cmp code
 if(size(char(getheader(data,'kcmpnm')),2)~=3)
@@ -478,7 +482,7 @@ for i=1:2:numel(varargin)
             opt.FIXDELTAOPTIONS=varargin{i+1};
         case {'m' 'mopt' 'meldopt' 'meldoptions'}
             opt.MELDOPTIONS=varargin{i+1};
-        case {'matout' 'matio' 'mat'}
+        case {'matout' 'matio' 'mat' 'matin'}
             opt.MATIO=varargin{i+1};
         otherwise
             error('seizmo:noise_setup:badInput',...

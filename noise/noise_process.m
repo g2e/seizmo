@@ -35,39 +35,40 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     changing some of the noise correlation parameters.  The following are
 %     configurable:
 %      MINIMUMLENGTH - minimum length of records in % of time section [70]
-%      TAPERWIDTH - % width of step 4 taper relative to record length [1]
-%                   (also applied after step 10 - fd normalization)
-%      TAPERTYPE - type of taper in step 4 & 10 []
-%      TAPEROPTION - option for taper in step 4 & 10 []
-%      SAMPLERATE - samplerate to synchronize records to in step 5 [1]
-%      PZDB - polezero db to use in step 6 []
-%      UNITS - ground units of records after polezero removal ['disp']
+%      TAPERWIDTH    - % width of taper relative to record length [1]
+%      TAPERTYPE     - type of taper []
+%      TAPEROPTION   - option for taper []
+%      SAMPLERATE    - samplerate to synchronize records to in step 5 [1]
+%      PZDB          - polezero db to use in step 6 []
+%      UNITS         - units of records after polezero removal ['disp']
 %      PZTAPERLIMITS - highpass taper to stabilize pz removal [.004 .008]
-%      AMPREJECT - step 7 minimum absolute amplitude for rejection [Inf]
-%      TDSTYLE - time domain normalization style:
-%                '1bit' - set amplitudes to +/-1
-%                'clip' - clip values above some absolute value
-%                ['ram'] - normalized using running-absolute mean
-%      TDRMS - use TDCLIP x RMS for each record [true]
-%      TDCLIP - sets clip for TDSTYLE='clip' [1]
+%      AMPREJECT     - step 7 minimum absolute ampl. for rejection [Inf]
+%      TDSTYLE       - time domain normalization style:
+%                       '1bit' - set amplitudes to +/-1
+%                       'clip' - clip values above some absolute value
+%                      ['ram'] - normalized using running-absolute mean
+%      TDRMS         - use TDCLIP x RMS for each record [true]
+%      TDCLIP        - sets clip for TDSTYLE='clip' [1]
 %      TDWEIGHTBANDS - frequency bands for TDSTYLE='ram' weights
 %                     [1/150 1/3; 1/100 1/15]
 %                     (TUNED TO REDUCE GLITCHES & TELESEISMIC EARTHQUAKES)
-%      FDSTYLE - frequency domain normalization style:
-%                '1bit' - set all amplitudes to 1 (horizontals are special)
-%                ['ram'] - normalized using running absolute mean
-%      FDWIDTH - width of frequency window for FDSTYLE='ram' in Hz [.002]
-%      XCMAXLAG - maximum lag time of output correlograms in sec [4000]
-%      TIMESTART - process time sections from this time on []
-%      TIMEEND - process times sections before this time []
-%      LATRNG - include stations in this latitude range []
-%      LONRNG - include stations in this longitude range []
-%      NETWORKS - include records with these network codes []
-%      STATIONS - include records with these station codes []
-%      STREAMS - include records with these stream codes []
-%      COMPONENTS - include records with these component codes []
-%      FILENAMES - limit processing to files with these filenames []
-%      QUIETWRITE - quietly overwrite OUTDIR (default is false)
+%      FDSTYLE       - frequency domain normalization style:
+%                       '1bit' - set spectral ampl. to 1
+%                      ['ram'] - normalized using running absolute mean
+%      FDWIDTH       - frequency window width for FDSTYLE='ram' (Hz) [.002]
+%      XCMAXLAG      - maximum lag time of correlograms in sec [4000]
+%      NORMXC        - normalize the cross correlations [true]
+%      TIMESTART     - process time sections from this time on []
+%      TIMEEND       - process times sections before this time []
+%      LATRNG        - include stations in this latitude range []
+%      LONRNG        - include stations in this longitude range []
+%      NETWORKS      - include records with these network codes []
+%      STATIONS      - include records with these station codes []
+%      STREAMS       - include records with these stream codes []
+%      COMPONENTS    - include records with these component codes []
+%      FILENAMES     - limit processing to files with these filenames []
+%      QUIETWRITE    - quietly overwrite OUTDIR (default is false)
+%      MATIO         - output mat files instead of sac files (true)
 %
 %    Notes:
 %     - Good Noise Analysis References:
@@ -140,10 +141,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     Last Updated Mar. 25, 2013 at 11:15 GMT
 
 % todo:
-% - normxc (for coherency)?
 % - rotate correlations is not ready!
 %   - single dataset i/o
-%   - cross (4 files) & auto (3 files) sets 
+%   - cross (4 files) & auto (3 files) sets
+%     - step 12 currently will not output autoxc horiz. data
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -247,8 +248,8 @@ for i=1:numel(tsdirs) % SERIAL
     % read the header
     try
         if(opt.MATIO)
-            data=load(strcat(indir,fs,tsdirs{in(ts)}(1:4),fs,...
-                tsdirs{in(ts)},fs,'noise_records.mat'));
+            data=load(strcat(indir,fs,tsdirs{i}(1:4),fs,...
+                tsdirs{i},fs,'noise_records.mat'));
             data=data.noise_records;
             if(~isempty(opt.FILENAMES))
                 warning('seizmo:noise_stack:unusedOption',...
@@ -370,7 +371,7 @@ for i=1:numel(tsdirs) % SERIAL
     if(isxc && any(steps==12) && numel(data)<4); continue; end
     
     % read in data
-    if(~opt.MATIN)
+    if(~opt.MATIO)
         if(isxc)
             data=changeclass(readdata(data),'double');
         else
@@ -663,7 +664,7 @@ for i=1:numel(tsdirs) % SERIAL
             if(numel(vdata)>1)
                 delta=getheader(vdata(1),'delta');
                 vdata=interpolate(correlate(...
-                    cut(vdata,'a','f','fill',true),...
+                    cut(vdata,'a','f','fill',true),opt.NORMXC{:},...
                     'mcxc',(opt.XCMAXLAG+4*delta).*[-1 1]),...
                     1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
                 [vdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
@@ -673,7 +674,7 @@ for i=1:numel(tsdirs) % SERIAL
             if(numel(hdata)>1)
                 delta=getheader(hdata(1),'delta');
                 hdata=interpolate(correlate(...
-                    cut(hdata,'a','f','fill',true),...
+                    cut(hdata,'a','f','fill',true),opt.NORMXC{:},...
                     'mcxc',(opt.XCMAXLAG+4*delta).*[-1 1]),...
                     1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
                 [hdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
@@ -702,6 +703,9 @@ for i=1:numel(tsdirs) % SERIAL
                 if(numel(vdata)+numel(hdata)==0); continue; end
                 noise_records=changepath([vdata; hdata],'path',...
                     [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
+            end
+            if(~exist([outdir fs tsdirs{i}(1:4) fs tsdirs{i}],'dir'))
+                mkdir([outdir fs tsdirs{i}(1:4) fs tsdirs{i}]);
             end
             save(fullfile(outdir,tsdirs{i}(1:4),tsdirs{i},...
                 'noise_records.mat'),'noise_records');
@@ -749,8 +753,8 @@ function [opt]=noise_process_parameters(varargin)
 varargin=[{'minlen' 70 'tw' 1 'tt' [] 'topt' [] 'sr' 1 ...
     'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] 'ar' Inf ...
     'tds' 'ram' 'tdrms' true 'tdclip' 1 'tdfb' [1/150 1/3; 1/100 1/15] ...
-    'fds' 'ram' 'fdw' .002 'lag' 4000 ...
-    'ts' [] 'te' [] 'lat' [] 'lon' [] 'matin' false 'matio' true ...
+    'fds' 'ram' 'fdw' .002 'lag' 4000 'normxc' true ...
+    'ts' [] 'te' [] 'lat' [] 'lon' [] 'matio' true ...
     'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' [] 'q' false} varargin];
 
 % get user input
@@ -801,6 +805,9 @@ for i=1:2:numel(varargin)
         case {'xcmaxlag' 'xcmax' 'xclag' 'maxlag' 'lag'}
             if(isempty(varargin{i+1})); continue; end
             opt.XCMAXLAG=varargin{i+1};
+        case {'normxc' 'nxc'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.NORMXC=varargin{i+1};
         case {'ts' 'tstart' 'timestart' 'startt' 'stime' 'starttime'}
             opt.TIMESTART=varargin{i+1};
         case {'te' 'tend' 'timeend' 'et' 'endtime' 'etime' 'endt'}
@@ -829,12 +836,9 @@ for i=1:2:numel(varargin)
         case {'q' 'qw' 'quiet' 'qwrite' 'quietwrite'}
             if(isempty(varargin{i+1})); continue; end
             opt.QUIETWRITE=varargin{i+1};
-        case {'matin'}
-            % secret option: matfile input
-            opt.MATIN=varargin{i+1};
-        case {'matout'}
-            % secret option: matfile output
-            opt.MATOUT=varargin{i+1};
+        case {'matio' 'mat' 'matout' 'matin'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.MATIO=varargin{i+1};
         otherwise
             error('seizmo:noise_process:badInput',...
                 'Unknown Option: %s !',varargin{i});
@@ -925,6 +929,9 @@ elseif(~isscalar(opt.XCMAXLAG) || ~isreal(opt.XCMAXLAG) ...
         || opt.XCMAXLAG<=0)
     error('seizmo:noise_process:badInput',...
         'XCMAXLAG should be a positive real-valued scalar in seconds!');
+elseif(~isscalar(opt.NORMXC) || ~islogical(opt.NORMXC))
+    error('seizmo:noise_process:badInput',...
+        'NORMXC should be true or false!');
 elseif(~isscalar(opt.QUIETWRITE) || ~islogical(opt.QUIETWRITE))
     error('seizmo:noise_process:badInput',...
         'QUIETWRITE flag must be a scalar logical!');
@@ -963,17 +970,17 @@ elseif(~isempty(opt.COMPONENTS) && (~iscellstr(opt.COMPONENTS)))
 elseif(~isempty(opt.FILENAMES) && (~iscellstr(opt.FILENAMES)))
     error('seizmo:noise_process:badInput',...
         'FILENAMES must be a string list of allowed files!');
-elseif(~isscalar(opt.MATIN) || ~islogical(opt.MATIN))
+elseif(~isscalar(opt.MATIO) || ~islogical(opt.MATIO))
     error('seizmo:noise_process:badInput',...
-        'MATIN must be TRUE or FALSE!');
-elseif(~isscalar(opt.MATOUT) || ~islogical(opt.MATOUT))
-    error('seizmo:noise_process:badInput',...
-        'MATOUT must be TRUE or FALSE!');
+        'MATIO must be TRUE or FALSE!');
 end
 
 % percent to fraction
 opt.MINIMUMLENGTH=opt.MINIMUMLENGTH/100;
 opt.TAPERWIDTH=opt.TAPERWIDTH/100;
+
+% normxc logical to option
+if(opt.NORMXC); opt.NORMXC={'normxc'}; else opt.NORMXC={}; end
 
 end
 

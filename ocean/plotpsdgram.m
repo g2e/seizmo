@@ -73,6 +73,7 @@ spec=nan(numel(tall),numel(psdgram.freq));
 spec(loc,:)=psdgram.spectra;
 spec(spec==0)=nan;
 spec=10*log10(spec);
+%spec=spec-repmat(nanmedian(spec),numel(tall),1);
 
 % plot
 h=imagesc(tall/86400+min(psdgram.time),psdgram.freq,spec','parent',ax);
