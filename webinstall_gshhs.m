@@ -43,9 +43,10 @@ function [ok]=webinstall_gshhs(mypath)
 %                        this file under gshhs directory
 %        Feb. 15, 2012 - doc update, flip savepath logic
 %        Feb. 16, 2012 - workaround quietly stalled unzip in octave
+%        Apr.  8, 2013 - url moved (not updating to gshhg atm)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2012 at 15:25 GMT
+%     Last Updated Apr.  8, 2013 at 15:25 GMT
 
 % todo:
 
@@ -73,8 +74,8 @@ try
     gshhs='gshhs+wdbii_2.2.0.zip';
     
     % grab file
-    url='http://www.ngdc.noaa.gov/mgg/shorelines/data/gshhs/';
-    url=[url 'version2.2.0/' gshhs];
+    url='ftp://ftp.soest.hawaii.edu/pwessel/gshhs/';
+    url=[url gshhs];
     disp([' Getting ' gshhs]);
     if(exist(gshhs,'file'))
         if(~exist(fullfile(mypath,gshhs),'file'))

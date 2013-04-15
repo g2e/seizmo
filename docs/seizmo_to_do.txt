@@ -6,7 +6,7 @@ way to make movies while you do other things on the screen:
 ## addframe(aviobj, hf)
 
 cmt
- - neu 2 enu
+ - neu 2 enu (is this worthwhile)
  - plotmt: tpb, nodal line plotting
  - plotmt3: coloring per mt
  - isc database
@@ -14,7 +14,6 @@ cmt
  - mt_nodallines
 
 noise
- - psdgram
  - rms based deletion
  - HARD: overlap option for stack
  - HARD: better rotate_correlations
@@ -39,14 +38,14 @@ geofss
  - write
    - geo(fsshorz,fsshorzxc,tdsshorzxc,arfhorz)
 
-make_*_*_volumes
- - depends on old DAYDIRS_STACKCORR layout
-
 rotate_correlations
-    - not ready: need single dataset i/o, autoxc support (3 vs 4 files)
+    - not ready
+      - need single dataset i/o
+      - need horiz autoxc support (3 vs 4 files)
 
 meld
     - uneven or variable samplerate
+
 rotate
     - through option
     - rewrite option code
@@ -184,10 +183,6 @@ drop restrictive copyright functions
 slidingavg
     - nan support
     - check against other running mean functions
-
-ttbox integration?
-    - needs HUGE revamping for speed & output
-    - this would give us Octave support of traveltimes!
 
 getpeaks
 markpeaks
