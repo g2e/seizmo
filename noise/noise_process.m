@@ -22,14 +22,13 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      (10) f-domain normalize (2mHz moving average)
 %      (11) correlate (keep +/-4000s lagtime)
 %      (12) rotate correlations into <RR, RT, TR, TT>
-%     See below for details on how to alter or skip some of these steps.
-%     * -> Steps 1-6 are performed in NOISE_SETUP by default and do not
-%          need to be used unless you are doing something non-standard.
+%     * -> Steps 1-6 are done in NOISE_SETUP and are skipped here.
+%     See below for details on how to alter or skip more of these steps.
 %
 %     NOISE_PROCESS(INDIR,OUTDIR,STEPS) only does the processing steps
 %     indicated in STEPS.  STEPS is be a vector of numbers corresponding to
 %     valid steps given above.  The default is 7:12 (1:6 are done in
-%     NOISE_SETUP by default and so do not need to be done here).
+%     NOISE_SETUP by default and so do not need to be added).
 %
 %     NOISE_PROCESS(INDIR,OUTDIR,STEPS,'OPT1',VAL,...,'OPTN',VAL) allows
 %     changing some of the noise correlation parameters.  The following are
@@ -42,7 +41,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      PZDB          - polezero db to use in step 6 []
 %      UNITS         - units of records after polezero removal ['disp']
 %      PZTAPERLIMITS - highpass taper to stabilize pz removal [.004 .008]
-%      AMPREJECT     - step 7 minimum absolute ampl. for rejection [Inf]
+%      REJECTMETHOD  - data rejection method: 'rms' or 'abs' ['abs']
+%      REJECTCUTOFF  - data rejection cutoff: abs value or NxRMS [Inf]
+%      REJECTWIDTH   - include 2N neighboring timewindows (+current) when
+%                      calculating the rms value for data rejection [0]
 %      TDSTYLE       - time domain normalization style:
 %                       '1bit' - set amplitudes to +/-1
 %                       'clip' - clip values above some absolute value
@@ -78,6 +80,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        Harmon et al 2008, GRL, doi:10.1029/2008GL035387
 %        Prieto et al 2009, JGR, doi:10.1029/2008JB006067
 %        Ekstrom et al 2009, GRL, doi:10.1029/2009GL039131
+%        Seats et al 2012, GJI, doi:10.1111/j.1365-246X.2011.05263.x
 %     - Steps 9-11 for horizontals currently require running step 8 on
 %       the same run (but if you forget it is automatically done for you).
 %
@@ -92,7 +95,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     % This is great for prototyping and debugging!
 %
 %     % Skip the normalization steps:
-%     noise_process('raw','xc',[7:8 11:12])
+%     noise_process('setup','xc',[7:8 11:12])
 %
 %     % Use non-overlapping 15-minute timesections, sampled
 %     % at 5Hz to look at noise up to about 1.5Hz:
@@ -100,7 +103,14 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     noise_process('15disp','15xc5',[],'xcmaxlag',500);
 %     % We adjusted the lag time b/c 15 minutes is 900 seconds.
 %
-%    See also: NOISE_SETUP, NOISE_STACK, NOISE_OVERVIEW
+%     % The default setup output makes 3 hour, non-overlapping timewindows.
+%     % Here we use data rejection with the 'rms' method.  Data with a
+%     % amplitude exceeding 100 times the rms for the surrounding day are
+%     % rejected ('rejectwidth'=6 as (6x2+1) x 3 hours = 25 hours):
+%     noise_rms_calc('3hr');
+%     noise_process('3hr','xc',[],'rm','rms','rc',100,'rw',6);
+%
+%    See also: NOISE_SETUP, NOISE_STACK, NOISE_OVERVIEW, NOISE_RMS_CALC
 
 %     Version History:
 %        Nov. 22, 2011 - initial version (only first 6 steps)
@@ -136,15 +146,19 @@ function []=noise_process(indir,outdir,steps,varargin)
 %                        correlations as well), rotate_correlations rename
 %        Mar. 25, 2013 - matio by default, 7:12 by default, fixed mat file
 %                        reading/writing, updated docs accordingly
+%        Aug.  8, 2013 - rms-based data rejection has been added to step 7
+%                        but requires running NOISE_RMS_CALC first, this
+%                        adds several new reject* options too
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 25, 2013 at 11:15 GMT
+%     Last Updated Aug.  8, 2013 at 11:15 GMT
 
 % todo:
 % - rotate correlations is not ready!
 %   - single dataset i/o
 %   - cross (4 files) & auto (3 files) sets
 %     - step 12 currently will not output autoxc horiz. data
+%   - drop all numel(hdata)<4 checks
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -235,6 +249,34 @@ if(~isempty(opt.TIMEEND))
 end
 tsdirs=tsdirs(good); tsbgn=tsbgn(good,:); tsend=tsend(good,:);
 clear good;
+
+% rms based rejection setup
+if(any(steps==7)) % simple amplitude based rejection
+    switch lower(opt.REJECTMETHOD)
+        case 'rms'
+            rmsname=[indir fs 'noise_rms_info.mat'];
+            if(exist(rmsname,'file') && ~exist(rmsname,'dir'))
+                rmsinfo=load(rmsname);
+            else
+                error('seizmo:noise_process:badInput',...
+                    ['Cannot find noise_rms_info.mat!\n' ...
+                    'Make sure to run NOISE_RMS_CALC on ' ...
+                    'the input directory before running ' ...
+                    'NOISE_PROCESS!']);
+            end
+            if(any(~ismember({'data' 'tsbgn' 'tsend'},...
+                    fieldnames(rmsinfo))))
+                error('seizmo:noise_process:badInput',...
+                    'noise_rms_info.mat is missing required RMS data!');
+            end
+            if(opt.REJECTWIDTH>0)
+                rmsinfo.data=slidingrms(rmsinfo.data,opt.REJECTWIDTH);
+            end
+            kname=upper(getheader(rmsinfo.data,'kname'));
+            rmsinfo.kname=strcat(kname(:,1),'.',kname(:,2),'.',...
+                kname(:,3),'.',kname(:,4));
+    end
+end
 
 % detail message
 if(verbose); disp('PROCESSING SEISMIC DATA FOR NOISE ANALYSIS'); end
@@ -456,13 +498,47 @@ for i=1:numel(tsdirs) % SERIAL
         if(any(steps==7)) % simple amplitude based rejection
             if(~isempty(vdata))
                 [depmin,depmax]=getheader(vdata,'depmin','depmax');
-                depmin=abs(depmin); depmax=abs(depmax);
-                vdata(depmin>=opt.AMPREJECT | depmax>=opt.AMPREJECT)=[];
+                ampmax=max(abs(depmin),abs(depmax));
+                switch lower(opt.REJECTMETHOD)
+                    case 'abs'
+                        vdata(ampmax>=opt.REJECTCUTOFF)=[];
+                    case 'rms'
+                        % grab pertinent rms values (the tough part)
+                        kname=upper(getheader(vdata,'kname'));
+                        kname=strcat(kname(:,1),'.',kname(:,2),'.',...
+                            kname(:,3),'.',kname(:,4));
+                        [tf,idx]=ismember(kname,rmsinfo.kname);
+                        if(~all(tf))
+                            error('seizmo:noise_process:badData',...
+                                'Missing RMS info for some records!');
+                        end
+                        [tmp,tidx]=min(abs(...
+                            rmsinfo.tsbgn-gregorian2serial(tsbgn(i,:))));
+                        rms=getvaluefun(rmsinfo.data(idx),@(x)x(tidx));
+                        vdata(ampmax>=opt.REJECTCUTOFF*rms)=[];
+                end
             end
             if(~isempty(hdata))
                 [depmin,depmax]=getheader(hdata,'depmin','depmax');
-                depmin=abs(depmin); depmax=abs(depmax);
-                hdata(depmin>=opt.AMPREJECT | depmax>=opt.AMPREJECT)=[];
+                ampmax=max(abs(depmin),abs(depmax));
+                switch lower(opt.REJECTMETHOD)
+                    case 'abs'
+                        hdata(ampmax>=opt.REJECTCUTOFF)=[];
+                    case 'rms'
+                        % grab pertinent rms values (the tough part)
+                        kname=upper(getheader(hdata,'kname'));
+                        kname=strcat(kname(:,1),'.',kname(:,2),'.',...
+                            kname(:,3),'.',kname(:,4));
+                        [tf,idx]=ismember(kname,rmsinfo.kname);
+                        if(~all(tf))
+                            error('seizmo:noise_process:badData',...
+                                'Missing RMS info for some records!');
+                        end
+                        [tmp,tidx]=min(abs(...
+                            rmsinfo.tsbgn-gregorian2serial(tsbgn(i,:))));
+                        rms=getvaluefun(rmsinfo.data(idx),@(x)x(tidx));
+                        hdata(ampmax>=opt.REJECTCUTOFF*rms)=[];
+                end
             end
             if(any(steps==11) && numel(vdata)==1); vdata=[]; end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
@@ -750,8 +826,8 @@ function [opt]=noise_process_parameters(varargin)
 % parses/checks noise_process pv pairs
 
 % defaults
-varargin=[{'minlen' 70 'tw' 1 'tt' [] 'topt' [] 'sr' 1 ...
-    'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] 'ar' Inf ...
+varargin=[{'minlen' 70 'tw' 1 'tt' [] 'topt' [] 'sr' 1 'rw' 0 ...
+    'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] 'rc' Inf 'rm' 'abs' ...
     'tds' 'ram' 'tdrms' true 'tdclip' 1 'tdfb' [1/150 1/3; 1/100 1/15] ...
     'fds' 'ram' 'fdw' .002 'lag' 4000 'normxc' true ...
     'ts' [] 'te' [] 'lat' [] 'lon' [] 'matio' true ...
@@ -781,9 +857,15 @@ for i=1:2:numel(varargin)
         case {'pztaperlimits' 'pztl' 'tl' 'taperlim' 'tlim' 'taplim'}
             if(isempty(varargin{i+1})); continue; end
             opt.PZTAPERLIMITS=varargin{i+1};
-        case {'ampreject' 'ar' 'amprej' 'arej' 'ampr'}
+        case {'rejectcutoff' 'cutoff' 'rejcut' 'cut' 'rc' 'rco'}
             if(isempty(varargin{i+1})); continue; end
-            opt.AMPREJECT=varargin{i+1};
+            opt.REJECTCUTOFF=varargin{i+1};
+        case {'rejectwidth' 'width' 'rejwid' 'wid' 'rw'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.REJECTWIDTH=varargin{i+1};
+        case {'rejectmethod' 'method' 'rejmeth' 'rm' 'meth'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.REJECTMETHOD=varargin{i+1};
         case {'tdstyle' 'td' 'tds'}
             if(isempty(varargin{i+1})); continue; end
             opt.TDSTYLE=varargin{i+1};
@@ -899,10 +981,19 @@ elseif(~isempty(opt.PZTAPERLIMITS) && (numel(szp)>2 || szp(1)~=1 ...
         || ~isreal(opt.PZTAPERLIMITS) || any(opt.PZTAPERLIMITS<0)))
     error('seizmo:noise_process:badInput',...
         'PZTAPERLIMITS should be a [LOWSTOP LOWPASS] or [LS LP HP HS]!');
-elseif(~isscalar(opt.AMPREJECT) || ~isreal(opt.AMPREJECT) ...
-        || opt.AMPREJECT<=0)
+elseif(~ischar(opt.REJECTMETHOD) || ~isvector(opt.REJECTMETHOD) ...
+        || size(opt.REJECTMETHOD,1)~=1 ...
+        || ~ismember(lower(opt.REJECTMETHOD),{'abs' 'rms'}))
     error('seizmo:noise_process:badInput',...
-        'AMPREJECT must be a scalar >=0!');
+        'REJECTMETHOD must be either ''ABS'' or ''RMS''!');
+elseif(~isscalar(opt.REJECTWIDTH) || ~isreal(opt.REJECTWIDTH) ...
+        || fix(opt.REJECTWIDTH)~=opt.REJECTWIDTH || opt.REJECTWIDTH<0)
+    error('seizmo:noise_process:badInput',...
+        'REJECTWIDTH must be a positive integer!');
+elseif(~isscalar(opt.REJECTCUTOFF) || ~isreal(opt.REJECTCUTOFF) ...
+        || opt.REJECTCUTOFF<=0)
+    error('seizmo:noise_process:badInput',...
+        'REJECTCUTOFF must be a positive scalar!');
 elseif(~ischar(opt.TDSTYLE) || ~isvector(opt.TDSTYLE) ...
         || size(opt.TDSTYLE,1)~=1)
     error('seizmo:noise_process:badInput',...

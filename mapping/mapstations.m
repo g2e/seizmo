@@ -2,51 +2,23 @@ function [varargout]=mapstations(data,varargin)
 %MAPSTATIONS    Map station/earthquake locations of SEIZMO records
 %
 %    Usage:    mapstations(data)
-%              mapstations(...,'stations',[lat lon],...)
-%              mapstations(...,'stationmarker',symstr,...)
-%              mapstations(...,'stationmarkersize',val,...)
-%              mapstations(...,'events',[lat lon],...)
-%              mapstations(...,'eventmarker',symstr,...)
-%              mapstations(...,'eventmarkersize',symstr,...)
-%              mapstations(...,'gshhs',res,...)
-%              mapstations(...,'proj',proj,...)
-%              mapstations(...,'projopt',{'opt',val,...},...)
-%              mapstations(...,'gridopt',{'opt',val,...},...)
-%              mapstations(...,'fgcolor',color,...)
-%              mapstations(...,'bgcolor',color,...)
-%              mapstations(...,'sea',color,...)
-%              mapstations(...,'land',color,...)
-%              mapstations(...,'border',color,...)
-%              mapstations(...,'axis',ax,...)
+%              mapstations(...,'mmap_opt1',mmap_val1,...)
 %              ax=mapstations(...)
 %
 %    Description:
 %     MAPSTATIONS(DATA) creates a map showing the station and earthquake
-%     locations stored in the headers of records of SEIZMO struct DATA.
-%     The map is a global map using the Robinson projection.  Stations are
-%     plotted as yellow circles and events are plotted as 5-pointed stars.
+%     locations stored in the headers of records of SEIZMO struct DATA
+%     using MMAP defaults.  So stations are plotted as yellow circles and
+%     events are plotted as 5-pointed red stars.
 %
-%     MAPSTATIONS(...,'STATIONS',[LAT LON],...)
-%     MAPSTATIONS(...,'STATIONMARKER',SYMSTR,...)
-%     MAPSTATIONS(...,'STATIONMARKERSIZE',VAL,...)
-%     MAPSTATIONS(...,'EVENTS',[LAT LON],...)
-%     MAPSTATIONS(...,'EVENTMARKER',SYMSTR,...)
-%     MAPSTATIONS(...,'EVENTMARKERSIZE',SYMSTR,...)
-%     MAPSTATIONS(...,'GSHHS',RES,...)
-%     MAPSTATIONS(...,'PROJ',PROJ,...)
-%     MAPSTATIONS(...,'PROJOPT',{'OPT',VAL,...},...)
-%     MAPSTATIONS(...,'GRIDOPT',{'OPT',VAL,...},...)
-%     MAPSTATIONS(...,'FGCOLOR',COLOR,...)
-%     MAPSTATIONS(...,'BGCOLOR',COLOR,...)
-%     MAPSTATIONS(...,'SEA',COLOR,...)
-%     MAPSTATIONS(...,'LAND',COLOR,...)
-%     MAPSTATIONS(...,'BORDER',COLOR,...)
-%     MAPSTATIONS(...,'AXIS',AX,...)
-%     AX=MAPSTATIONS(...)
-%      See MMAP for details on these options.  Note that using the
-%      STATIONS or EVENTS option overrides the info found in DATA.
+%     MAPSTATIONS(...,'MMAP_OPT1',MMAP_VAL1,...) passes additional options
+%     on to MMAP to alter the map/symbols.
+%
+%     AX=MAPSTATIONS(...) returns the axes drawn in.
 %
 %    Notes:
+%     - Station symbols are tagged as 'stations'.
+%     - Event symbols are tagged as 'events'.
 %
 %    Examples:
 %     % Show locations of stations in a dataset:
@@ -81,9 +53,10 @@ function [varargout]=mapstations(data,varargin)
 %        Aug. 21, 2010 - update undef usage
 %        Feb. 10, 2011 - update for maplocations=>mmap
 %        Apr.  3, 2012 - minor doc update
+%        Aug. 28, 2013 - doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 22:00 GMT
+%     Last Updated Aug. 28, 2013 at 22:00 GMT
 
 % todo:
 

@@ -43,7 +43,8 @@ function []=noise_setup(indir,outdir,varargin)
 %     overlap TIMESTART or TIMEEND are output too.
 %
 %     The following options are available for doing the first 6 steps
-%     of noise_process within noise_setup:
+%     of noise_process within noise_setup (see TAPER, SYNCRATES, GETSACPZ,
+%     PARSE_SACPZ_FILENAME, and REMOVESACPZ for details):
 %      PROCESS       - noise_process steps 1-6 [1:6]
 %      MINIMUMLENGTH - minimum length of records in % of time section [70]
 %      TAPERWIDTH    - % width of step 4 taper relative to length [1]
@@ -55,9 +56,6 @@ function []=noise_setup(indir,outdir,varargin)
 %      PZTAPERLIMITS - highpass taper to stabilize pz removal [.004 .008]
 %
 %    Notes:
-%     - Handles one component at a time. If all the files for one component
-%       of data exceeds your RAM then this will cause trouble. Try working
-%       on smaller portions of the input dataset if that is the case.
 %     - Please cleanup your headers beforehand!  Make sure that the KNETWK,
 %       KSTNM, KHOLE & KCMPNM fields are filled with the appropriate info
 %       beforehand (FIX_RDSEED_V48 is helpful)!
@@ -75,6 +73,17 @@ function []=noise_setup(indir,outdir,varargin)
 %
 %     % Setup for 15 minute time sections and 80% overlap:
 %     noise_setup('some/dir','my_15min','l',15,'o',12)
+%
+%     % Does the default polezero database not include your data?  You can
+%     % use your own set of polezero response files stored in a directory
+%     % by using the 'PZDB' option.  Please note that the polezero files
+%     % must have filenames as expected by PARSE_SACPZ_FILENAME and have
+%     % their contents formatted as expected by READSACPZ.  Make sure that
+%     % the data file header fields KNETWK, KSTNM, KHOLE, KCMPNM also match
+%     % the polezero info (info that is stored/extracted via the polezero
+%     % filename)!  An example with data in 'some/datadir' and polezero
+%     % files in 'some/pzdir':
+%     noise_setup('some/datadir','setup-3hour','pzdb','some/pzdir')
 %
 %    See also: NOISE_PROCESS, NOISE_STACK, NOISE_OVERVIEW
 
@@ -109,9 +118,12 @@ function []=noise_setup(indir,outdir,varargin)
 %        Aug. 23, 2012 - allow indir to have wildcards
 %        Mar. 25, 2013 - new options (proc 1-6, matio)
 %        Mar. 27, 2013 - matio actually works, improved algorithm
+%        July 24, 2013 - check process option, improved option docs by
+%                        pointing to the associated functions, add pzdb
+%                        example, removed old and incorrect note
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 27, 2013 at 11:15 GMT
+%     Last Updated July 24, 2013 at 11:15 GMT
 
 % todo:
 
@@ -512,7 +524,11 @@ if(iscellstr(opt.FILENAMES)); opt.FILENAMES=unique(opt.FILENAMES(:)); end
 szs=size(opt.TIMESTART);
 sze=size(opt.TIMEEND);
 szp=size(opt.PZTAPERLIMITS);
-if(~isscalar(opt.MINIMUMLENGTH) || ~isreal(opt.MINIMUMLENGTH) ...
+if(~isnumeric(opt.PROCESS) || ~isreal(opt.PROCESS) ...
+        || any(~ismember(opt.PROCESS,1:6)))
+    error('seizmo:noise_setup:badInput',...
+        'PROCESS must be a vector of process steps from 1 to 6 !');
+elseif(~isscalar(opt.MINIMUMLENGTH) || ~isreal(opt.MINIMUMLENGTH) ...
         || opt.MINIMUMLENGTH<0 || opt.MINIMUMLENGTH>100)
     error('seizmo:noise_setup:badInput',...
         'MINIMUMLENGTH must be a scalar within 0 & 100 (%%)!');

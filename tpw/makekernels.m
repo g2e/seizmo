@@ -56,7 +56,7 @@ function []=makekernels(f0,v,fs,swin,tprfrac,twin,w,d,lambda,path,post)
 %
 %     % Fourth, modify that window width by an empirically derived
 %     % power law to get a more typical window width:
-%     win=L_beat*(2.5+1000*bank(:,1).^2);
+%     win=L_beat.*(2.5+1000*bank(:,1).^2);
 %
 %     % Now get the kernels for a windowed sinusoid sampled at 1Hz, tapered
 %     % on the outer 20% of the window, and zero-padded to a length of
@@ -75,9 +75,10 @@ function []=makekernels(f0,v,fs,swin,tprfrac,twin,w,d,lambda,path,post)
 %        July  9, 2010 - fixed nargchk, improved example, output filename
 %                        includes velocity in m/s now
 %        Apr.  2, 2012 - minor doc update
+%        July 26, 2013 - fix bug in example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  2, 2012 at 22:10 GMT
+%     Last Updated July 26, 2013 at 22:10 GMT
 
 % todo:
 

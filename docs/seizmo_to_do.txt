@@ -1,12 +1,28 @@
 my todo list
 %%%%%%%%%%%%
 
+4 rotate correlations & noise codes handle autoxc
+5 noise array phase and attenuation like in prieto 2009
+6 test & tutorials
+7 fss codes
+8 geofss codes (use mmap image option)
+9 test & tutorials
+10 data grabbing codes
+grab_events
+grab_stations
+grab_channels
+grab_responses
+grab_seismograms
+11 tpw
+12 2d inversion on a sphere
+13 reflectivity
+
 way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
 ## addframe(aviobj, hf)
 
 cmt
- - neu 2 enu (is this worthwhile)
+ - neu 2 enu (is this worthwhile?)
  - plotmt: tpb, nodal line plotting
  - plotmt3: coloring per mt
  - isc database
@@ -14,9 +30,9 @@ cmt
  - mt_nodallines
 
 noise
- - rms based deletion
- - HARD: overlap option for stack
- - HARD: better rotate_correlations
+ - HARD: overlap option for stack stuff
+ - HARD: better rotate_correlations for processing
+ - check horizontals code
 
 fss
  - compute spectra not centered on 0,0?
@@ -32,11 +48,16 @@ fss
    - power spectral density is scaled by 2*delta/npts (td measures)
  - half+auto => full for xc when desired
    - this should just be a function
+ - averaging across frequency (mainly for capon method)
+ - test again!
 geofss
  - rewrites
    - geo(fssxc,tdssxc)
+     - antipodal issue?
  - write
    - geo(fsshorz,fsshorzxc,tdsshorzxc,arfhorz)
+     - much of this should come from non-geo versions
+ - test!
 
 rotate_correlations
     - not ready

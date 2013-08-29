@@ -38,7 +38,7 @@ function [varargout]=plot_taupcurve_dt(tt,offset,flip,varargin)
 %     tt=taupcurve('dep',evdp/1000); % depth in kilometers!
 %     idx=find(strcmp('Pdiff',{tt.phase}));
 %     intrcpt=tt(idx).time(1)-tt(idx).distance(1)*tt(idx).rayparameter(1);
-%     tt=taupcurve('dep',evdp,...
+%     tt=taupcurve('dep',evdp/1000,...
 %                  'reddeg',1/tt(idx).rayparameter(1),'ph','ttall');
 %     hold(ax,'on');
 %     h=plot_taupcurve_dt(tt,-intrcpt,true,'parent',ax,'linewidth',5);
@@ -52,9 +52,10 @@ function [varargout]=plot_taupcurve_dt(tt,offset,flip,varargin)
 %        May  21, 2011 - minor doc update
 %        Feb. 24, 2012 - doc update, code update
 %        Mar. 15, 2012 - minor fix in example
+%        Aug. 29, 2013 - fixed m=>km bug in example (thanks Cheng!)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 17:15 GMT
+%     Last Updated Aug. 29, 2013 at 17:15 GMT
 
 % todo:
 

@@ -5,8 +5,7 @@ function [varargout]=ww3mapmov(s,delay,varargin)
 %              [mov1,...,movN]=ww3mapmov('file')
 %              [...]=ww3mapmov('file',delay)
 %              [...]=ww3mapmov('file',delay,rng)
-%              [...]=ww3mapmov('file',delay,rng,fgcolor,bgcolor)
-%              [...]=ww3mapmov('file',delay,rng,fgcolor,bgcolor,ax)
+%              [...]=ww3mapmov('file',rng,'mmap_opt1',mmap_val1,...)
 %              [...]=ww3mapmov(s,...)
 %
 %    Description:
@@ -18,30 +17,26 @@ function [varargout]=ww3mapmov(s,delay,varargin)
 %     GUI is presented for GRiB file selection.  If no output is assigned
 %     then WW3MAPMOV will "play" the data.
 %
-%     [MOV1,...,MOVN]=WW3MAPMOV('FILE') returns the movies for each data type
-%     in FILE (eg for wind data there is a movie for each component).
+%     [MOV1,...,MOVN]=WW3MAPMOV('FILE') returns the movies for each
+%     datatype in FILE (e.g., for wind data there is a movie for each
+%     component).
 %
-%     [...]=WW3MAPMOV('FILE',DELAY) specifies the delay between the plotting
-%     of each time step in seconds.  The default DELAY is 0.33s.
+%     [...]=WW3MAPMOV('FILE',DELAY) specifies the delay between the
+%     mapping of each time step in seconds.  The default DELAY is 0.33s.
 %
-%     [...]=WW3MAPMOV('FILE',DELAY,RNG) sets the limits for coloring the data.
+%     [...]=WW3MAPMOV('FILE',DELAY,RNG) sets the data limits for coloring.
 %     The default is [0 15] which works well for significant wave heights.
 %
-%     [...]=WW3MAPMOV('FILE',DELAY,RNG,FGCOLOR,BGCOLOR) specifies foreground
-%     and background colors of the movie.  The default is 'w' for FGCOLOR &
-%     'k' for BGCOLOR.  Note that if one is specified and the other is not,
-%     an opposing color is found using INVERTCOLOR.  The color scale is
-%     also changed so the noise clip is at BGCOLOR.
-%
-%     [...]=WW3MAPMOV('FILE',DELAY,RNG,FGCOLOR,BGCOLOR,AX) sets the axes drawn
-%     in.  This is useful for subplots, guis, etc.  The default creates a
-%     new figure.
+%     [...]=WW3MAPMOV('FILE',DELAY,RNG,'MMAP_OPT1',MMAP_VAL1,...) passes
+%     additional options on to MMAP to alter the map.
 %
 %     [...]=WW3MAPMOV(S,...) creates a movie using the WaveWatch III data
 %     contained in the structure S created by WW3STRUCT.
 %
 %    Notes:
 %     - Requires that the njtbx toolbox is installed!
+%     - Passing the 'parent' MMAP option requires as many axes as
+%       datatypes.  This will only matter for wind data.
 %
 %    Examples:
 %     % Calling WW3MAPMOV with no args lets you graphically choose a file:
@@ -58,14 +53,12 @@ function [varargout]=ww3mapmov(s,delay,varargin)
 
 %     Version History:
 %        May   4, 2012 - initial version
+%        Aug. 27, 2013 - use mmap image option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   4, 2012 at 00:40 GMT
+%     Last Updated Aug. 27, 2013 at 00:40 GMT
 
 % todo:
-
-% check nargin
-error(nargchk(0,6,nargin));
 
 % check ww3 input
 if(nargin==0) % gui selection of grib file
@@ -96,6 +89,7 @@ else
 end
 
 % get number of time steps
+% - special file handling b/c we only read the 1st record
 if(read)
     h=mDataset(fullfile(s.path,s.name));
     nrecs=numel(h{'time'}(:));
@@ -117,7 +111,7 @@ if(nargout); makemovie=true; end
 
 % make initial plot
 ax=ww3map(ww3rec(s,1),varargin{:});
-varargin{5}=ax;
+varargin=[varargin {'parent' ax}];
 fh=get(ax,'parent');
 if(iscell(fh)); fh=cell2mat(fh); end
 for j=1:numel(fh)
@@ -152,14 +146,12 @@ for i=1:numel(ax)
     % find previous
     pc=findobj(ax(i),'tag','m_pcolor');
     
-    % slip in new data
-    set(pc(1),'cdata',s.data{i});
+    % slip in new data (note the doubling of the keyword end for pcolor)
+    set(pc(1),'cdata',s.data{i}([1:end end],[1:end end]).');
     
     % update title
-    title(ax(i),...
-        {'NOAA WaveWatch III Hindcast' s.description{i} tstring},...
-        'fontweight','bold',...
-        'color',get(findobj(ax(i),'tag','m_grid_box'),'color'));
+    set(get(ax(i),'Title'),'string',...
+        {'NOAA WaveWatch III Hindcast' s.description{i} tstring});
 end
 
 end

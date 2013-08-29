@@ -1,27 +1,26 @@
-function []=freqwindow(indir,outdir,varargin)
-%FREQWINDOW    Interactive multi-frequency QCing & windowing of event data
+function []=freqwindow_auto(indir,outdir,varargin)
+%FREQWINDOW_AUTO    Automatic multi-frequency QCing & windowing event data
 %
-%    Usage:    freqwindow(indir,outdir)
-%              freqwindow(indir,outdir,'option',value,...)
+%    Usage:    freqwindow_auto(indir,outdir)
+%              freqwindow_auto(indir,outdir,'option',value,...)
 %
 %    Description:
-%     FREQWINDOW(INDIR,OUTDIR) provides an interface aiding in windowing &
-%     quality control management of surface wave array data for a series of
-%     narrow frequency bands.  This is useful to eliminate noisy data from
-%     two-plane wave analysis and get the windows "just right".  Starting
-%     windows are determined using the CUB2 model and an empirical formula.
-%     The surface waves are cut out using the window, tapered and then
-%     subjected to SNR-based quality control.  The taper width is 0.2, the
-%     SNR cutoff is 3 (using the peak2rms method), & the noise windows are
-%     0.5 the signal window on either side.  Output records are written
-%     under OUTDIR (see the Notes section for directory structure details)
-%     and are padded with zeros so that the records extend from -2000 to
-%     7000 seconds relative to the origin time.  The filter bank is created
-%     using the following:
+%     FREQWINDOW_AUTO(INDIR,OUTDIR) provides an aid in windowing & quality
+%     control management of surface wave array data for a series of narrow
+%     frequency bands.  This is useful to eliminate noisy data from
+%     two-plane wave analysis.  Windows are determined using the CUB2 model
+%     and an empirical formula.  The surface waves are cut out using the
+%     window, tapered and then subjected to SNR-based quality control.  The
+%     taper width is 0.2, the SNR cutoff is 3 (using the peak2rms method),
+%     & the width of the noise windows are 0.5 the signal window width on
+%     either side.  Output records are written under OUTDIR (see the Notes
+%     section for directory structure details) and are padded with zeros so
+%     that the records extend from -2000 to 7000 seconds relative to the
+%     origin time.  The filter bank is created using the following:
 %      flipud(filter_bank([0.0055 0.055],'variable',0.2,0.1))
 %     This means that filters proceed from short period to long period.
 %
-%     FREQWINDOW(INDIR,OUTDIR,'OPTION',VALUE,...) alters the specified
+%     FREQWINDOW_AUTO(INDIR,OUTDIR,'OPTION',VALUE,...) alters the specified
 %     parameter(s) given by 'OPTION' to VALUE.  The following are valid:
 %      'bank'       - filter bank (FILTER_BANK format)
 %      'snrcut'     - SNR cutoff (3)
@@ -79,7 +78,7 @@ function []=freqwindow(indir,outdir,varargin)
 %
 %    Examples:
 %     % Be a little stricter on noise allowance:
-%     freqwindow(INDIR,OUTDIR,'snrcut',5);
+%     freqwindow_auto(INDIR,OUTDIR,'snrcut',5);
 %
 %    See also: GOODUGLYCHECK, MAKEKERNELS, PLOTKERNELS
 
@@ -95,6 +94,7 @@ function []=freqwindow(indir,outdir,varargin)
 %                        fixed bug that wrote bad records with output, add
 %                        jump to filter option in menu
 %        Aug. 30, 2012 - added band index to titles
+%        July 18, 2013 - automatic version
 %        Aug.  7, 2013 - fixed filter directory name to be equal length for
 %                        all filters so fortran codes don't have issues
 %
@@ -107,7 +107,7 @@ function []=freqwindow(indir,outdir,varargin)
 % check nargin
 error(nargchk(2,inf,nargin));
 if(mod(nargin,2))
-    error('seizmo:freqwindow:uppairedOption',...
+    error('seizmo:freqwindow_auto:uppairedOption',...
         'One (or more) input OPTION/VALUE is unpaired!');
 end
 
@@ -116,17 +116,17 @@ fs=filesep;
 
 % check indir
 if(~isstring(indir) || ~isdir(indir))
-    error('seizmo:freqwindow:badInput',...
+    error('seizmo:freqwindow_auto:badInput',...
         'INDIR must be a directory location!');
 end
 
 % check outdir
 reply='o';
 if(~isstring(outdir))
-    error('seizmo:freqwindow:badInput',...
+    error('seizmo:freqwindow_auto:badInput',...
         'OUTDIR must be a valid directory path!');
 elseif(exist(outdir,'file') && ~isdir(outdir))
-    error('seizmo:freqwindow:badInput',...
+    error('seizmo:freqwindow_auto:badInput',...
         'OUTDIR location is a file!');
 elseif(isdir(outdir))
     fprintf('Directory: %s\nDirectory Exists!\n',outdir);
@@ -140,7 +140,7 @@ elseif(isdir(outdir))
         
         % the code below deletes the entire superdirectory (too dangerous!)
         %if(~rmdir(outdir,'s'))
-        %    error('seizmo:freqwindow:couldNotDelete',...
+        %    error('seizmo:freqwindow_auto:couldNotDelete',...
         %        'Could Not Delete Directory: %s',outdir);
         %end
     else % quiting
@@ -150,20 +150,21 @@ elseif(isdir(outdir))
 end
 
 % default parameters / user-supplied alterations
-p=parse_freqwindow_param(varargin{:});
+p=parse_freqwindow_auto_param(varargin{:});
 nfilt=size(p.bank,1);
 
 % get date directories
 events=dir(indir);
 events(strcmp({events.name},'.') | strcmp({events.name},'..'))=[];
 events(~[events.isdir])=[];
-eventlist=char(strcat({events.name}.'));
+%eventlist=char(strcat({events.name}.'));
 
 % get user selected start date
-s=listdlg('PromptString','Select events:',...
-          'InitialValue',1:numel(events),...
-          'ListSize',[170 300],...
-          'ListString',eventlist);
+s=1:numel(events);
+%s=listdlg('PromptString','Select events:',...
+%          'InitialValue',1:numel(events),...
+%          'ListSize',[170 300],...
+%          'ListString',eventlist);
 
 % loop over user selected events
 for i=s(:)'
@@ -183,10 +184,10 @@ for i=s(:)'
     outc=cell2mat(outc);
     ev=unique(ev(:,[1 2 4]),'rows'); % evel is usually nans so ignore it
     if(size(ev,1)>1)
-        warning('seizmo:freqwindow:muddledHeader',...
+        warning('seizmo:freqwindow_auto:muddledHeader',...
             'Looks like EVENT location info varies among records!');
     elseif(any(abs(timediff(outc(1,:),outc))>0.002))
-        error('seizmo:freqwindow:oUTCFieldVaries',...
+        error('seizmo:freqwindow_auto:oUTCFieldVaries',...
             'ORIGIN time varies among records!');
     end
     
@@ -301,7 +302,7 @@ for i=s(:)'
                 hold(ax(2),'off');
             else % no records meet conditions!
                 % would be cool to put some text in place of axes
-                warning('seizmo:freqwindow:noRecordsPass',...
+                warning('seizmo:freqwindow_auto:noRecordsPass',...
                     'No records meet the SNR/user specifications!');
                 ylimits=ylimits1;
             end
@@ -328,20 +329,21 @@ for i=s(:)'
             % ask user
             choice=0;
             while(~choice)
-                choice=menu('Choose An Option:',...
-                    'Write & Continue',...
-                    'Delete Records',...
-                    'Adjust Window',...
-                    'Adjust Moveout',...
-                    'Skip This Filter',...
-                    'Skip Remaining Filters',...
-                    'Jump To Filter ...');
+                choice=1;
+                %choice=menu('Choose An Option:',...
+                %    'Write & Continue',...
+                %    'Delete Records',...
+                %    'Adjust Window',...
+                %    'Adjust Moveout',...
+                %    'Skip This Filter',...
+                %    'Skip Remaining Filters',...
+                %    'Jump To Filter ...');
                 
                 switch choice
                     case 1 % write
                         % save plot
                         if(ishandle(fh))
-                            saveas(fh,['freqwindow_' events(i).name ...
+                            saveas(fh,['freqwindow_auto_' events(i).name ...
                                 '_band' sfilt '_' ...
                                 num2str(1/p.bank(j,1)) 's.fig']);
                         end
@@ -356,7 +358,7 @@ for i=s(:)'
                         if(strncmpi(reply,'d',1))
                             if(isdir(fdir))
                                 if(~rmdir(fdir,'s'))
-                                    error('seizmo:freqwindow:dirFail',...
+                                    error('seizmo:freqwindow_auto:dirFail',...
                                         'Can Not Delete Directory: %s',...
                                         fdir);
                                 end
@@ -447,7 +449,7 @@ end
 end
 
 
-function p=parse_freqwindow_param(varargin)
+function p=parse_freqwindow_auto_param(varargin)
 %PARSE_FREQWINDOW_PARAM    Parse & default freqwindow parameters
 
 % defaults
@@ -488,14 +490,14 @@ for i=1:2:nargin
         case {'taperwidth' 'taper' 'taperwin' 'tapwin'}
             if(~isreal(varargin{i+1}) || numel(varargin{i+1})>2 ...
                     || any(varargin{i+1}<0 | varargin{i+1}>.5))
-                error('seizmo:freqwindow:badInput',...
+                error('seizmo:freqwindow_auto:badInput',...
                     'TAPERWIDTH must be valid for the TAPER function!');
             end
             p.taperwidth=varargin{i+1};
         case {'snrcut' 'snrcutoff'}
             if(~isreal(varargin{i+1}) || numel(varargin{i+1})~=1 ...
                     || varargin{i+1}<0)
-                error('seizmo:freqwindow:badInput',...
+                error('seizmo:freqwindow_auto:badInput',...
                     'SNRCUT must be a real-valued scalar!');
             end
             p.snrcut=varargin{i+1};
@@ -509,19 +511,19 @@ for i=1:2:nargin
         case {'snrwin'}
             if(~isreal(varargin{i+1}) || numel(varargin{i+1})~=1 ...
                     || any(varargin{i+1}<0 | varargin{i+1}>1))
-                error('seizmo:freqwindow:badInput',...
+                error('seizmo:freqwindow_auto:badInput',...
                     'SNRWIN must be real-valued scalar from 0 to 1!');
             end
             p.snrwin=varargin{i+1};
         case {'snrmethod'}
             if(~isstring(varargin{i+1}))
-                error('seizmo:freqwindow:badInput',...
+                error('seizmo:freqwindow_auto:badInput',...
                     'SNRMETHOD must be a string!');
             end
             p.snrmethod=varargin{i+1};
         case {'model'}
             if(~isstring(varargin{i+1}))
-                error('seizmo:freqwindow:badInput',...
+                error('seizmo:freqwindow_auto:badInput',...
                     'MODEL must be a string!');
             end
             p.model=varargin{i+1};
@@ -529,7 +531,7 @@ for i=1:2:nargin
             validwave={'rayleigh' 'love'};
             if(~isstring(varargin{i+1}) ...
                     || ~any(strcmpi(varargin{i+1},validwave)))
-                error('seizmo:freqwindow:badInput',...
+                error('seizmo:freqwindow_auto:badInput',...
                     'WAVE must be a string!');
             end
             p.wave=varargin{i+1};
@@ -537,7 +539,7 @@ for i=1:2:nargin
             validspeed={'group' 'phase'};
             if(~isstring(varargin{i+1}) ...
                     || ~any(strcmpi(varargin{i+1},validspeed)))
-                error('seizmo:freqwindow:badInput',...
+                error('seizmo:freqwindow_auto:badInput',...
                     'SPEED must be a string!');
             end
             p.speed=varargin{i+1};
@@ -547,7 +549,7 @@ for i=1:2:nargin
                     | isinf(varargin{i+1}(:))) ...
                     || any(varargin{i+1}(:,1)<=varargin{i+1}(:,2) ...
                     | varargin{i+1}(:,3)<=varargin{i+1}(:,1)))
-                error('seizmo:freqwindow:badInput',...
+                error('seizmo:freqwindow_auto:badInput',...
                     'BANK must be in the format from FILTER_BANK!');
             end
             p.bank=varargin{i+1};
@@ -555,12 +557,12 @@ for i=1:2:nargin
             if(~isstring(varargin{i+1}) || ~any(strcmpi(varargin{i+1},...
                     {'single' 'individually' 'individual' 'one' ...
         	        'separately' 'group' 'together' 'all'})))
-        	    error('seizmo:freqwindow:badInput',...
+        	    error('seizmo:freqwindow_auto:badInput',...
                     'NORMSTYLE must be ''SINGLE'' or ''GROUP''!');
             end
             p.normstyle=varargin{i+1};
         otherwise
-            error('seizmo:freqwindow:unknownOption',...
+            error('seizmo:freqwindow_auto:unknownOption',...
                 'Unknown Option: %s',varargin{i});
     end
 

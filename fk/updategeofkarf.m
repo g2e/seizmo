@@ -1,20 +1,30 @@
-function [varargout]=updategeofkarf(arf,ax)
+function []=updategeofkarf(arf,ax)
 %UPDATEGEOFKARF    Quickly updates an existing geofkarf plot with a new arf
 %
 %    Usage:    updategeofkarf(arf,ax)
-%              ax=updategeofkarf(arf)
 %
 %    Description:
-%     UPDATEGEOFKARF(ARF,AX) draws a new geofkarf map given by ARF in an
-%     existing axes AX.  This is mainly intended for exploring geofkarf
-%     datasets and for making movies in a faster fashion.
-%
-%     AX=UPDATEGEOFKARF(ARF) is the same as calling PLOTGEOFKARF(ARF) --
-%     ie. a new figure is drawn.
+%     UPDATEGEOFKARF(ARF,AX) quickly updates an existing geofkarf map given
+%     with axes handle AX with the new beam response data in ARF.  This is
+%     intended for exploring geofkarf datasets by making "movies" and is
+%     used by functions such as GEOFKARFSLOWSLIDE.
 %
 %    Notes:
 %
 %    Examples:
+%     % See what happens to the ARF as you delete 1 station from a global
+%     % array (looping over all possible stations):
+%     st=randlatlon(30);
+%     ev=randlatlon(6);
+%     [la,lo]=meshgrid(-90:90,-180:180);
+%     arf=geofkarf(st,[la(:) lo(:)],30,ev,30,1/500,'center');
+%     ax=plotgeofkarf(geofkarf2map(arf),[-6 0]);
+%     for i=1:30
+%         drawnow;
+%         st1=st; st1(i,:)=[];
+%         arf=geofkarf(st1,[la(:) lo(:)],30,ev,30,1/500,'center');
+%         updategeofkarf(geofkarf2map(arf),ax);
+%     end
 %
 %    See also: GEOFKARF, PLOTGEOFKARF, GEOFKARF2MAP, GEOFKSUBARF,
 %              GEOFKARFSLOWSLIDE, CHKGEOFKARFSTRUCT
@@ -24,14 +34,16 @@ function [varargout]=updategeofkarf(arf,ax)
 %        Oct.  6, 2010 - truncate title if too many ARF locations
 %        Dec.  8, 2010 - use '^o' for deg symbol rather than \circ
 %        Apr.  4, 2012 - minor doc update
+%        Aug. 28, 2013 - require axes, error if axes not valid, better
+%                        checking, use mmap to update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  4, 2012 at 10:45 GMT
+%     Last Updated Aug. 28, 2013 at 10:45 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,2,nargin));
+error(nargchk(2,2,nargin));
 
 % check fk struct
 error(chkgeofkarfstruct(arf));
@@ -44,25 +56,17 @@ end
 
 % just replot if ax isn't an axes handle
 if(nargin<2 || ~isscalar(ax) || ~isreal(ax) || ~ishandle(ax) ...
-        || ~strcmp('axes',get(ax,'type')))
-    ax=plotgeofkarf(arf);
-    if(nargout); varargout{1}=ax; end
-    return;
+        || ~strcmp('axes',get(ax,'type')) ...
+        || ~strcmp('geofkarf',get(ax,'tag')))
+    error('seizmo:updategeofkarf:badAxes',...
+        'Map axes for updating geofkarf spectra does not exist!');
 end
 
 % get zerodb/dblim
 userdata=get(ax,'userdata');
-if(isempty(userdata) || ~isstruct(userdata) ...
-        || any(~isfield(userdata,{'zerodb' 'dblim'})))
-    %dblim=[-12 0];
-    zerodb='max';
-else
-    %dblim=userdata.dblim;
-    zerodb=userdata.zerodb;
-end
 
 % rescale arf
-switch zerodb
+switch userdata.zerodb
     case 'min'
         arf.beam=arf.beam-min(arf.beam(:));
         arf.normdb=arf.normdb+min(arf.beam(:));
@@ -77,31 +81,23 @@ switch zerodb
         arf.normdb=0;
 end
 
-% reshape arf & account for pcolor
+% reshape beam
 nlat=numel(unique(arf.latlon(:,1)));
 nlon=numel(unique(arf.latlon(:,2)));
 arf.latlon=reshape(arf.latlon,[nlon nlat 2]);
 arf.beam=reshape(arf.beam,[nlon nlat]);
-latstep=arf.latlon(1,2,1)-arf.latlon(1,1,1);
-lonstep=arf.latlon(2,1,2)-arf.latlon(1,1,2);
-arf.latlon(:,:,1)=arf.latlon(:,:,1)-latstep/2;
-arf.latlon(:,:,2)=arf.latlon(:,:,2)-lonstep/2;
-arf.latlon=arf.latlon([1:end end],[1:end end],:);
-arf.latlon(:,end,1)=arf.latlon(:,end,1)+latstep;
-arf.latlon(end,:,2)=arf.latlon(end,:,2)+lonstep;
-arf.beam=arf.beam([1:end end],[1:end end]);
 
-% convert to map coordinates
-[arf.latlon(:,:,2),arf.latlon(:,:,1)]=m_ll2xy(...
-    arf.latlon(:,:,2),arf.latlon(:,:,1),'clip','patch');
+% find previous objects & delete
+delete(findobj(ax,'tag','m_pcolor'));
+delete(findobj(ax,'tag','stations'));
+delete(findobj(ax,'tag','events'));
 
-% find previous
-pc=findobj(ax,'tag','m_pcolor');
-
-% slip in new data
-set(pc(1),...
-    'xdata',arf.latlon(:,:,2),'ydata',arf.latlon(:,:,1),...
-    'zdata',0*arf.latlon(:,:,2),'cdata',double(arf.beam));
+% update map
+held=ishold(ax);
+if(~held); hold(ax,'on'); end
+mmap('image',{arf.latlon(:,:,1) arf.latlon(:,:,2) double(arf.beam)},...
+    'st',[arf.stla arf.stlo],'ev',arf.latlon0,'parent',ax);
+if(~held); hold(ax,'off'); end
 
 % adjust title
 smn=min(arf.horzslow); smx=max(arf.horzslow);
@@ -120,7 +116,5 @@ set(get(ax,'Title'),'string',...
     ['Number of Stations: ' num2str(arf.nsta)]; ...
     ['Horiz. Slowness : ' num2str(smn) ' to ' num2str(smx) ' s/^o']; ...
     ['0 dB = ' num2str(arf.normdb) 'dB']; {[]}]);
-
-if(nargout); varargout{1}=ax; end
 
 end

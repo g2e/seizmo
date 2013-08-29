@@ -1,4 +1,4 @@
-function [varargout]=install_seizmo()
+function [varargout]=install_seizmo(renameflag)
 %INSTALL_SEIZMO    Installs the SEIZMO Toolbox in Matlab or Octave
 %
 %    Usage:    install_seizmo
@@ -61,14 +61,48 @@ function [varargout]=install_seizmo()
 %        Mar. 15, 2012 - responses, models & features download
 %        Jan. 29, 2013 - added xc folder
 %        Mar. 11, 2013 - added ocean folder
+%        July 19, 2013 - rename toplevel directory, better toolbox warnings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2013 at 15:25 GMT
+%     Last Updated July 19, 2013 at 15:25 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(0,1,nargin));
+
+% renameflag default & check
+if(nargin<1 || isempty(renameflag)); renameflag=true; end
+if(~isscalar(renameflag) || ~islogical(renameflag))
+    error('seizmo:install_seizmo:badInput',...
+        'RENAMEFLAG must be TRUE or FALSE!');
+end
+
+% rename directory where install_seizmo resides to "seizmo"
+% - this allows "help seizmo" and "ver seizmo" work as desired
+% - the recursion allows calling install_seizmo after the move so
+%   that subfunctions can be called with error
+% - also must handle the case the move can't happen like if that
+%   directory already exists
+fs=filesep;
+path=fileparts(mfilename('fullpath'));
+[rootpath,szdir]=fileparts(path);
+if(renameflag && ~strcmp(szdir,'seizmo'))
+    disp('Renaming SEIZMO''s top level directory to "seizmo"');
+    [ok,msg,msgid]=movefile(path,[rootpath fs 'seizmo']);
+    if(~ok)
+        warning(msgid,msg);
+        warning('seizmo:install_seizmo:badRoot',...
+            ['SEIZMO''s top directory must be named "seizmo" for' ...
+            '\n commands like "help seizmo" and "ver seizmo"!']);
+    end
+    if(ok && strcmp(path,pwd))
+        cd([rootpath fs 'seizmo']);
+    end
+    ok=install_seizmo(false);
+    if(nargout); varargout{1}=ok; end
+    return;
+end
 
 % check application & version
 ok=true;
@@ -89,13 +123,13 @@ switch lower(application)
         if(~license('checkout','signal_toolbox'))
             warning('seizmo:install_seizmo:noSigProcTbx',...
                 ['Your Matlab does not have the Signal Processing\n' ...
-                'Toolbox installed!  SEIZMO needs the Signal\n' ...
-                'Processing Toolbox to be fully functional!']);
+                'Toolbox installed!  SEIZMO assumes the Signal\n' ...
+                'Processing Toolbox is available in a few places!']);
         elseif(~license('checkout','statistics_toolbox'))
             warning('seizmo:install_seizmo:noStatsTbx',...
                 ['Your Matlab does not have the Statistics\n' ...
-                'Toolbox installed!  SEIZMO needs the Statistics\n' ...
-                'Toolbox to be fully functional!']);
+                'Toolbox installed!  SEIZMO uses the Statistics\n' ...
+                'Toolbox for cluster analysis!']);
         end
     case 'octave'
         warning('seizmo:install_seizmo:octaveIssues',...
@@ -137,11 +171,9 @@ while(~isempty(info))
 end
 
 % where am i?
-path=fileparts(mfilename('fullpath'));
 disp(['SEIZMO install path:  ' path]);
 
 % install new seizmo
-fs=filesep;
 addpath(path,...
     [path fs 'lowlevel'],...
     [path fs 'uninstall'],...
@@ -270,11 +302,13 @@ end
 url='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/';
 reply=input('Download IRIS station responses (~20MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
-    ok=ok & download_and_unpack_seizmo_zip(url,'seizmo_iris_sacpzdb.zip');
+    ok=ok & download_and_unpack_seizmo_zip(url,...
+        'seizmo_iris_sacpzdb.zip');
 end
 reply=input('Download 3D models (~20MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
-    ok=ok & download_and_unpack_seizmo_zip(url,'seizmo_3d_models.zip');
+    ok=ok & download_and_unpack_seizmo_zip(url,...
+        'seizmo_3d_models.zip');
 end
 reply=input('Download features for mapping (~10MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))

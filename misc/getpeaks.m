@@ -55,9 +55,10 @@ function [xp,xi]=getpeaks(x,varargin)
 %     Version History:
 %        Oct. 18, 2012 - initial version
 %        Oct. 19, 2012 - tweaks for speed
+%        Aug. 16, 2013 - bugfixes for no peak detection
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 19, 2012 at 15:05 GMT
+%     Last Updated Aug. 16, 2013 at 15:05 GMT
 
 % todo:
 
@@ -126,7 +127,7 @@ else
     x=x(:);
     
     % all peaks toward positive infinity
-    xi=find(diff([0; x])>0 & diff([x; 0])<0);
+    xi=find(diff([-inf; x])>0 & diff([x; -inf])<0);
     xp=x(xi);
     
     % sort by peak height
@@ -146,9 +147,9 @@ else
     end
     
     % pad/clip if necessary
-    xi(end:n)=nan;
+    xi(max(end,1):n)=nan;
     xi(n+1:end)=[];
-    xp(end:n)=nan;
+    xp(max(end,1):n)=nan;
     xp(n+1:end)=[];
 end
 

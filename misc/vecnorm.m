@@ -34,11 +34,17 @@ function [x]=vecnorm(x,dim,p)
 %     Version History:
 %        Nov. 12, 2009 - initial version
 %        Feb. 10, 2012 - doc update
+%        Aug.  7, 2013 - require x is numeric
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2012 at 05:45 GMT
+%     Last Updated Aug.  7, 2013 at 05:45 GMT
 
 % todo:
+
+% check x
+if(~isnumeric(x))
+    error('seizmo:vecnorm:badX','X must be a numeric array!');
+end
 
 % default dimension
 if(nargin==1 || isempty(dim))

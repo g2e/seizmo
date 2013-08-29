@@ -68,7 +68,9 @@ function [varargout]=mmap(varargin)
 %
 %     MMAP(...,'IMAGE',{LAT LON IMAGE},...) will plot the image above the
 %     sea but under any land patches.  This is converted to pcolor style
-%     format and passed to M_PCOLOR.
+%     format and passed to M_PCOLOR.  Note that IMAGE must be NLONxNLAT in
+%     size.  LAT/LON can be equal sized to IMAGE or appropriately sized
+%     vectors.
 %
 %     MMAP(...,'GSHHS',RES,...) sets the GSHHS coastline and
 %     political boundaries resolution.  The values can be 'c', 'l', 'i',
@@ -164,9 +166,12 @@ function [varargout]=mmap(varargin)
 %                        default, allow ocean instead of sea keyword
 %        Oct. 10, 2012 - image option
 %        Mar. 23, 2013 - note lack of plotting atomicity
+%        Aug. 27, 2013 - allow vector lat/lon for image option, do not
+%                        check tag of existing axes, image can be drawn on
+%                        existing axes, hack to avoid shading warnings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 23, 2013 at 20:30 GMT
+%     Last Updated Aug. 27, 2013 at 20:30 GMT
 
 % todo:
 
@@ -418,8 +423,8 @@ if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
     held=false;
 else
     axes(ax);
-    % use axes if held and an mmap map
-    if(ishold(ax) && strcmpi(get(ax,'tag'),'locationmap'))
+    % use axes if held
+    if(ishold(ax))
         held=true;
     else % clear these axes
         held=false;
@@ -429,7 +434,41 @@ else
 end
 
 % convert image to pcolor
+% - lats increment across columns
+% - lons increment down rows
 if(~isempty(image))
+    % image input check/setup
+    if(isvector(lat))
+        if(numel(lat)==2)
+            lat=linspace(lat(1),lat(2),size(image,2));
+            lat=lat(ones(size(image,1),1),:);
+        elseif(numel(lat)==size(image,2))
+            lat=lat(:)';
+            lat=lat(ones(size(image,1),1),:);
+        else
+            error('seizmo:mmap:badImage',...
+                'IMAGE option LAT input not formatted correctly!');
+        end
+    elseif(~isequal(size(lat),size(image)))
+        error('seizmo:mmap:badImage',...
+            'IMAGE option LAT input not formatted correctly!');
+    end
+    if(isvector(lon))
+        if(numel(lon)==2)
+            lon=linspace(lon(1),lon(2),size(image,1))';
+            lon=lon(:,ones(1,size(image,2)));
+        elseif(numel(lon)==size(image,1))
+            lon=lon(:);
+            lon=lon(:,ones(1,size(image,2)));
+        else
+            error('seizmo:mmap:badImage',...
+                'IMAGE option LON input not formatted correctly!');
+        end
+    elseif(~isequal(size(lon),size(image)))
+        error('seizmo:mmap:badImage',...
+            'IMAGE option LON input not formatted correctly!');
+    end
+    
     % shift from pixel to cell registration
     latstep=lat(1,2)-lat(1,1);
     lonstep=lon(2)-lon(1);
@@ -447,39 +486,42 @@ if(~isempty(image))
 end
 
 % plot map
+if(~held)
+    % initialize map projection
+    if(~showsea); sea='none'; end
+    m_proj(proj,popt{:});
+    set(ax,'color',sea);
+end
+
+% draw image
+if(~isempty(image))
+    ph=nan(3,1);
+    if(~held); hold(ax,'on'); end
+    if(any(lon(:)>MAP_VAR_LIST.longs(1) ...
+            & lon(:)<MAP_VAR_LIST.longs(2)))
+        ph(1)=m_pcolor(lon,lat,image,'parent',ax);
+        set(ph(1),'clipping','off');
+    end
+    if(any(lon(:)-360>MAP_VAR_LIST.longs(1) ...
+            & lon(:)-360<MAP_VAR_LIST.longs(2)))
+        ph(2)=m_pcolor(lon-360,lat,image,'parent',ax);
+        set(ph(2),'clipping','off');
+    end
+    if(any(lon(:)+360>MAP_VAR_LIST.longs(1) ...
+            & lon(:)+360<MAP_VAR_LIST.longs(2)))
+        ph(3)=m_pcolor(lon+360,lat,image,'parent',ax);
+        set(ph(3),'clipping','off');
+    end
+    shading(ax,'flat');
+    if(~held); hold(ax,'off'); end
+end
+
+% draw coast, land, border
 % - test if options will update a plot or draw new
 %   - mixed m_coast & m_gshhs draws new
 % - could we delete and redraw certain things?
 if(~held)
-    % initialize map projection
-    if(~showsea); sea='none'; end
     if(~showcoast); coast='none'; end
-    m_proj(proj,popt{:});
-    set(ax,'color',sea);
-    
-    % draw image
-    if(~isempty(image))
-        hold(ax,'on');
-        if(any(lon(:)>MAP_VAR_LIST.longs(1) ...
-                & lon(:)<MAP_VAR_LIST.longs(2)))
-            ph=m_pcolor(lon,lat,image,'parent',ax);
-            set(ph,'clipping','off');
-        end
-        if(any(lon(:)-360>MAP_VAR_LIST.longs(1) ...
-                & lon(:)-360<MAP_VAR_LIST.longs(2)))
-            ph=m_pcolor(lon-360,lat,image,'parent',ax);
-            set(ph,'clipping','off');
-        end
-        if(any(lon(:)+360>MAP_VAR_LIST.longs(1) ...
-                & lon(:)+360<MAP_VAR_LIST.longs(2)))
-            ph=m_pcolor(lon+360,lat,image,'parent',ax);
-            set(ph,'clipping','off');
-        end
-        shading(ax,'flat');
-        hold(ax,'off');
-    end
-    
-    % now draw coast, land, border
     if(strcmpi(gshhs,'o'))
         if(showland)
             m_coast('patch',land,'edgecolor',coast);
@@ -508,6 +550,15 @@ if(~held)
 
     % hackery to color oceans at large when the above fails
     set(findobj(ax,'tag','m_grid_color'),'facecolor',sea);
+    
+    % hackery to avoid warnings when using the shading command
+    set(findobj(ax,'tag','m_grid_color'),'facevertexcdata',...
+        nan(numel(get(findobj(ax,'tag','m_grid_color'),'faces')),1));
+end
+
+% move image above
+if(~isempty(image))
+    movekids(ph(~isnan(ph)),'front');
 end
 
 % wrap longitudes to plot
@@ -529,7 +580,7 @@ while(any(evlo-MAP_VAR_LIST.longs(1)<0))
 end
 
 % plot locations
-hold(ax,'on');
+if(~held); hold(ax,'on'); end
 h=m_scatter(ax,evlo,evla,evs,evm,'filled','markeredgecolor','k');
 set(h,'tag','events');
 h=m_scatter(ax,stlo,stla,sts,stm,'filled','markeredgecolor','k');
@@ -537,7 +588,6 @@ set(h,'tag','stations');
 if(~held); hold(ax,'off'); end
 
 % return figure handle
-set(ax,'tag','locationmap');
 if(nargout); varargout{1}=ax; end
 
 end

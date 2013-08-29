@@ -115,14 +115,24 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %        Mar.  5, 2012 - allow no written output
 %        Oct. 10, 2012 - bugfix: azimuthal difference via azdiff
 %        Oct. 11, 2012 - drop corrections field (huge)
+%        July 25, 2013 - directory input (reads indir/*.mat)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 11, 2012 at 13:35 GMT
+%     Last Updated July 25, 2013 at 13:35 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(3,4,nargin));
+
+% handle directory input
+if(ischar(results) && isdir(results))
+    files=xdir([results filesep '*.mat']);
+    clear results;
+    for i=1:numel(files)
+        results(i)=load([files(i).path files(i).name]);
+    end
+end
 
 % check results struct
 error(check_cmb_results(results));

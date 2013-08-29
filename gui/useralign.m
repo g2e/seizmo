@@ -97,9 +97,11 @@ function [info,xc,data0]=useralign(data,varargin)
 %        Jan. 30, 2013 - update for new correlate (no spacing option now
 %                        but the lag option is now available)
 %        Feb. 26, 2013 - bugfix: needs 'reltime' correlate option
+%        Aug. 29, 2013 - bugfix: correlate settings switch cases were
+%                        desynced from the menu options (thanks Cheng!)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 26, 2013 at 11:00 GMT
+%     Last Updated Aug. 29, 2013 at 11:00 GMT
 
 % todo:
 
@@ -272,7 +274,7 @@ try
                                 end
                             end
                     end
-                case 3 % absxc
+                case 2 % absxc
                     choice=menu('DO THE POLARITIES ALL MATCH?',...
                         ['CURRENT (' tmp2 ')'],'YES','NO');
                     switch choice
@@ -283,7 +285,7 @@ try
                         case 3 % looking at both pos/neg peaks
                             info.correlate.absxc=true;
                     end
-                case 4 % correlate
+                case 3 % correlate
                     break;
             end
         end

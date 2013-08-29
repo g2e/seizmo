@@ -144,6 +144,7 @@ function []=alphabetical_list()
 %<a href="matlab:help flatten_1dmodel">flatten_1dmodel</a>                - Flattens a 1D Earth model
 %<a href="matlab:help flipflags">flipflags</a>                      - Flips the flag direction in SEIZMO plots
 %<a href="matlab:help freqwindow">freqwindow</a>                     - Interactive tool for multi-frequency QCing & windowing of event data
+%<a href="matlab:help freqwindow_auto">freqwindow_auto</a>                - Automatic multi-frequency QCing & windowing event data
 %<a href="matlab:help fs_phase2latlon">fs_phase2latlon</a>                - Converts a fs spectra to geofs using a given phase%<a href="matlab:help geofkarf">geofkarf</a> - Returns the geofk array response function for a seismic array
 %<a href="matlab:help ftan">ftan</a>                           - FTAN style plotting of SEIZMO data
 %<a href="matlab:help gaussian">gaussian</a>                       - Returns values from a Gaussian PDF
@@ -153,6 +154,7 @@ function []=alphabetical_list()
 %<a href="matlab:help gcarc2latlon">gcarc2latlon</a>                   - Returns points along great circle arc(s)
 %<a href="matlab:help gcarc_count">gcarc_count</a>                    - Great-circle arc histogram count
 %<a href="matlab:help gcarc_intersect">gcarc_intersect</a>                - Return intersection points between great circle arcs
+%<a href="matlab:help gcdn">gcdn</a>                           - Returns greatest common devisor for a vector of numbers
 %<a href="matlab:help gebco">gebco</a>                          - Colormap approximating GEBCO bathymetry charts
 %<a href="matlab:help genname">genname</a>                        - Generic filenames for SEIZMO records
 %<a href="matlab:help gensacpzname">gensacpzname</a>                   - Generates SAC Polezero names based on sacpzdb info

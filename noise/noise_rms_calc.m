@@ -15,16 +15,21 @@ function []=noise_rms_calc(indir)
 %     % Lookout for bad data early in the process:
 %     noise_setup('raw','3hr')
 %     noise_rms_calc('3hr')
+%     noise_process('3hr','xc',[],'rm','rms','rc',5);
 %
-%    See also: NOISE_SETUP, NOISE_PROCESS, NOISE_STACK
+%    See also: NOISE_SETUP, NOISE_PROCESS, NOISE_STACK, NOISE_OVERVIEW
 
 %     Version History:
 %        Aug. 27, 2012 - initial version
 %        Aug. 30, 2012 - output is now a seizmo dataset
 %        Aug. 31, 2012 - fixed to handle time gaps
+%        July 24, 2013 - update .path field to '.'
+%        Aug.  8, 2013 - fixed buggy time step code using function GCDN,
+%                        tsbgn & tsend output now include times for every
+%                        point in the output data for sanity
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 31, 2012 at 11:15 GMT
+%     Last Updated Aug.  8, 2013 at 11:15 GMT
 
 % todo:
 
@@ -77,9 +82,7 @@ end
 tslen=round((tsend(1)-tsbgn(1))*86400);
 
 % need to get time step
-tsstep=round(min(diff(tsbgn))*86400); % this can be wrong
-[n,d]=rrat(round((tsbgn(2:end)-tsbgn(1))*86400)/tsstep);
-if(numel(unique(d))>1); tsstep=tsstep/max(d); end
+tsstep=gcdn(round(1440*diff(tsbgn)))*60;
 tsidx=round((tsbgn-tsbgn(1))*86400)/tsstep+1;
 
 % temporary verbose control
@@ -159,6 +162,11 @@ data=changeheader(data,'z6',serial2gregorian(tsbgn(1)),...
     'depmin',depmin,'depmen',depmen,'depmax',depmax,...
     'b',0,'delta',tsstep,'npts',npts,'e',(npts-1)*tsstep,'f',tslen);
 data=changename(data,'name',name);
+data=changepath(data,'path','.');
+
+% update tsbgn & tsend to include skipped (no data) time windows
+tsbgn=tsbgn(1)+(0:npts-1)*tsstep/86400;
+tsend=tsbgn+tslen/86400;
 
 % return verbosity
 seizmoverbose(verbose);

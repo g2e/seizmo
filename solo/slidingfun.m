@@ -50,6 +50,8 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %       of the input record.
 %     - Centered windows are of length 2N+1, while the others are just N.
 %     - SLIDINGFUN is much _slooower_ than SLIDINGABSMEAN or SLIDINGRMS.
+%       The main value is that it allows any function to be slid, not just
+%       an average.  For example a median.
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX, NCMP
 %
@@ -92,9 +94,10 @@ function [data]=slidingfun(data,fun,nsamples,varargin)
 %        Jan.  6, 2011 - drop versioninfo caching, nargchk fix,
 %                        seizmofun/solofun rename
 %        Jan. 28, 2012 - doc update, drop SEIZMO global
+%        Aug.  2, 2013 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 09:45 GMT
+%     Last Updated Aug.  2, 2013 at 09:45 GMT
 
 % todo:
 

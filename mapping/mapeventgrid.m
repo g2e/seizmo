@@ -25,8 +25,8 @@ function []=mapeventgrid(ax,evla,evlo,c,rrmajor,rrminor,azmajor,azminor)
 %     by default is [15:45:330 30:45:345].
 %
 %    Notes:
-%     - azimuthal lines are tagged as az_minor & az_major
-%     - range rings are tagged as rr_minor & rr_major
+%     - Azimuthal lines are tagged as 'az_minor' & 'az_major'.
+%     - Range rings are tagged as 'rr_minor' & 'rr_major'.
 %
 %    Examples:
 %     % Quickly make a map and place an azimuth/range grid on it:
@@ -44,9 +44,10 @@ function []=mapeventgrid(ax,evla,evlo,c,rrmajor,rrminor,azmajor,azminor)
 %        Mar.  6, 2011 - changed line width for aesthetics
 %        May  15, 2011 - updated docs 
 %        Apr.  3, 2012 - minor doc update
+%        Aug. 28, 2013 - do not require axes to be tagged
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 03:15 GMT
+%     Last Updated Aug. 28, 2013 at 03:15 GMT
 
 % todo:
 
@@ -55,10 +56,9 @@ error(nargchk(3,8,nargin));
 
 % check ax
 if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
-        || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')) ...
-        || ~any(strcmpi(get(ax,'tag'),{'locationmap'})))
+        || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
     error('seizmo:mapeventgrid:badAxes',...
-        'AX must be a handle to an appropriate map!');
+        'Map axes does not exist or is invalid!');
 else
     axes(ax);
 end

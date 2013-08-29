@@ -29,7 +29,7 @@ function [psdgram]=noise_psdgram(indir,length,overlap,func)
 %    Examples:
 %     % The default from NOISE_SETUP is 180 minute timesections with no
 %     % overlap.  Setting a psd length of 10 minutes (no overlap) gives
-%     % 18 sub-windows (out of which the minimum value for each frequency
+%     % 18 sub-windows (out of which the median value for each frequency
 %     % is used to make the output spectra).  The spectra are then written
 %     % to the input directory:
 %     noise_psdgram('my_setup_dir',10);
@@ -37,10 +37,11 @@ function [psdgram]=noise_psdgram(indir,length,overlap,func)
 %    See also: PLOTPSDGRAM, CHKPSDGRAM, READ_NDBC_SWDEN, NOISE_SETUP
 
 %     Version History:
-%        Apr. 15, 2013 - initial version
+%        Apr. 15, 2013 - initial version, no 50% data in subwindow bugfix
+%        Apr. 17, 2013 - use powerspectraldensity to get psd
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 15, 2013 at 13:30 GMT
+%     Last Updated Apr. 17, 2013 at 13:30 GMT
 
 % todo:
 
@@ -183,14 +184,18 @@ for i=1:n
         oki(failed)=[];
         swdata(failed)=[];
         
+        % handle none
+        if(isempty(swdata)); continue; end
+        
         % remove trend & taper
         swdata=taper(removetrend(swdata),.5);
         
         % pad with zeros
         swdata=cut(swdata,'x',1,'n',swlen2,'fill',true);
         
-        % get spectra
-        swdata=keepam(dft(divide(swdata,1e9)));
+        % get power spectra (not in dBs)
+        swdata=solofun(powerspectraldensity(divide(swdata,1e9)),...
+            @(x)10.^(x/10));
         
         % grab frequency once
         if(~exist('f','var'))
@@ -207,11 +212,10 @@ for i=1:n
     % apply function to each cell
     % - avoid call for single spectra to avoid issues & for speed
     % - transpose so freq down columns
-    % - square for power (not amplitude) spectra
     ok=true(numel(data),1);
     for j=1:numel(data)
         if(isempty(swspectra{j})); ok(j)=false; continue; end
-        swspectra{j}=(swspectra{j}').^2;
+        swspectra{j}=swspectra{j}';
         if(size(swspectra{j},2)==1); continue; end
         swspectra{j}=func(swspectra{j});
     end

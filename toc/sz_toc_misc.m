@@ -19,6 +19,7 @@ function []=sz_toc_misc()
 %<a href="matlab:help fisher">fisher</a>               - Converts correlation coefficients to the Z statistic
 %<a href="matlab:help gaussian">gaussian</a>             - Returns values from a Gaussian PDF
 %<a href="matlab:help gaussiantf">gaussiantf</a>           - Returns a gaussian time function
+%<a href="matlab:help gcdn">gcdn</a>                 - Returns greatest common devisor for a vector of numbers
 %<a href="matlab:help getapplication">getapplication</a>       - Returns application running this script and its version
 %<a href="matlab:help getpeaks">getpeaks</a>             - Returns peak info of a data vector
 %<a href="matlab:help getsubfield">getsubfield</a>          - Get substructure field contents

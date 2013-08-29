@@ -150,7 +150,7 @@ report              N/A ('global SEIZMO; SEIZMO' for the hardcore)
 reverse				reverse
 rglitches           N/A
 rmean				removemean (rmean)
-rms                 getvaluefun(data,@(x)sqrt(mean(x.^2)))
+rms                 getvaluefun(data,@(x)sqrt(mean((x-mean(x)).^2)))
 rollback            unnecessary!
 rotate				rotate
 rq                  N/A

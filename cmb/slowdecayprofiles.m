@@ -110,14 +110,24 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %        Mar.  5, 2012 - allow no written output
 %        Mar.  6, 2012 - basic .weights field support
 %        Oct. 11, 2012 - drop corrections field (huge)
+%        July 25, 2013 - directory input (reads indir/*.mat)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 11, 2012 at 13:35 GMT
+%     Last Updated July 25, 2013 at 13:35 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,4,nargin));
+
+% handle directory input
+if(ischar(results) && isdir(results))
+    files=xdir([results filesep '*.mat']);
+    clear results;
+    for i=1:numel(files)
+        results(i)=load([files(i).path files(i).name]);
+    end
+end
 
 % check results struct
 error(check_cmb_results(results));

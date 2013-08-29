@@ -216,9 +216,10 @@ function [m,std,pol,zmean,zstd,nc,opt,xc]=ttsolve(xc,varargin)
 %        Apr.  2, 2012 - minor doc update
 %        Jan. 30, 2013 - doc update, absolute arrival constraints
 %        Feb. 26, 2013 - handle nans in pg, dt=>m bugfix
+%        Aug. 25, 2013 - force weights to be positive
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 26, 2013 at 01:05 GMT
+%     Last Updated Aug. 25, 2013 at 01:05 GMT
 
 % todo:
 
@@ -261,9 +262,9 @@ SNRr=1-snr2phaseerror(opt.SNR)/pi;
 xc.wg=sqrt(SNRr*SNRr');
 xc.wg=xc.wg(:,:,ones(np,1));
 if(vector)
-    xc.wg=permute(ndsquareform(xc.wg),[2 1 3]).*(xc.zg);
+    xc.wg=permute(ndsquareform(xc.wg),[2 1 3]).*abs(xc.zg);
 else % matrix
-    xc.wg=xc.wg.*xc.zg;
+    xc.wg=xc.wg.*abs(xc.zg);
 end
 xc.wg=xc.wg.^opt.WGTPOW;
 

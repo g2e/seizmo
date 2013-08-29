@@ -10,8 +10,9 @@ seismology research.  See the project website for more details:
 2. Downloading
 --------------
 2a Get the latest version (as a compressed tarball or zipfile) here:
-      https://github.com/g2e/seizmo/archives/master
-2b Or grab a tagged tarball: https://github.com/g2e/seizmo/downloads
+      https://github.com/g2e/seizmo/archive/master.tar.gz
+      https://github.com/g2e/seizmo/archive/master.zip
+2b Or grab an older tagged version: https://github.com/g2e/seizmo/tags
 2c Or if you have git installed (http://git-scm.com/), you may use it to
    retrieve the latest version:
       git clone git://github.com/g2e/seizmo.git

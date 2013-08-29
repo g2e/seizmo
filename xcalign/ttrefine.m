@@ -274,6 +274,9 @@ end
 function [wg]=check_xc_weights(cg,wg)
 % check values
 if(~isreal(wg) || any(wg(:)<0))
+    isreal(wg)
+    any(wg(:)<0)
+    sum(wg(:)<0)
     error('seizmo:ttrefine:badInput',...
         'WG must be an array of positive reals!');
 end

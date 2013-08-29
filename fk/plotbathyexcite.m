@@ -1,43 +1,27 @@
-function [varargout]=plotbathyexcite(c,la,lo,crng,popt,fgcolor,bgcolor,ax)
+function [varargout]=plotbathyexcite(c,la,lo,crng,varargin)
 %PLOTBATHYEXCITE    Plots 2ndary microseism bathymetric excitation coeff
 %
 %    Usage:    plotbathyexcite(c,lat,lon)
 %              plotbathyexcite(c,lat,lon,clim)
-%              plotbathyexcite(c,lat,lon,clim,projopt)
-%              plotbathyexcite(c,lat,lon,clim,projopt,fgcolor,bgcolor)
-%              plotbathyexcite(c,lat,lon,clim,projopt,fgcolor,bgcolor,ax)
+%              plotbathyexcite(c,lat,lon,clim,'mmap_opt1',mmap_val1,...)
 %              ax=plotbathyexcite(...)
 %
 %    Description:
-%     PLOTBATHYEXCITE(C,LAT,LON) plots bathymetric coefficient data given
+%     PLOTBATHYEXCITE(C,LAT,LON) maps bathymetric coefficient data given
 %     in the 2D array C.  The data should be regularly sampled in latitude
-%     and longitude (given by vectors LAT & LON).  The data is plotted on a
-%     map with a Robinson projection and the map limits are scaled to
-%     fit the latitude and longitude limits.  This plots GSHHS coastlines
-%     in a crude-resolution. Dimensions of C should be NLATxNLON.
+%     and longitude (given by vectors LAT & LON).  Dimensions of C should
+%     be NLATxNLON.
 %
-%     PLOTBATHYEXCITE(C,LAT,LON,CLIM) sets the coloring limits of the
-%     coefficients limits for coloring.  The default is [0 1].  CLIM must
-%     be a real-valued 2-element vector.
+%     PLOTBATHYEXCITE(C,LAT,LON,CLIM) sets the colormap limits of the
+%     coefficients.  The default is [0 1].  CLIM must be a real-valued
+%     2-element vector.
+%     
+%     PLOTBATHYEXCITE(C,LAT,LON,CLIM,'MMAP_OPT1',MMAP_VAL1,...) passes
+%     additional options on to MMAP to alter the map.
 %
-%     PLOTBATHYEXCITE(C,LAT,LON,CLIM,PROJOPT) allows passing options to
-%     M_PROJ.  See M_PROJ('SET') for possible projections and see
-%     M_PROJ('GET',PROJ) for a list of possible additional options specific
-%     to that projection.
-%
-%     PLOTBATHYEXCITE(C,LAT,LON,CLIM,PROJOPT,FGCOLOR,BGCOLOR) specifies
-%     foreground and background colors of the plot.  The default is 'w' for
-%     FGCOLOR & 'k' for BGCOLOR.  Note that if one is specified and the
-%     other is not, an opposing color is found using INVERTCOLOR.  The
-%     color scale is also changed so the lower color clip is at BGCOLOR.
-%
-%     PLOTBATHYEXCITE(C,LAT,LON,CLIM,PROJOPT,FGCOLOR,BGCOLOR,AX) sets the
-%     axes to draw in.  This is useful for subplots, guis, etc.
-%
-%     AX=PLOTBATHYEXCITE(...)
+%     AX=PLOTBATHYEXCITE(...) returns the axes drawn in.
 %
 %    Notes:
-%     - This function can be easily altered to work for any image data.
 %
 %    Examples:
 %     % Get bathymetric excitation coefficients for Crust2.0 and plot:
@@ -61,14 +45,15 @@ function [varargout]=plotbathyexcite(c,la,lo,crng,popt,fgcolor,bgcolor,ax)
 %        Feb. 15, 2011 - initial version
 %        May   5, 2012 - minor doc update
 %        May  18, 2012 - improved label of the colorbar, use gray colormap
+%        Aug. 27, 2013 - use mmap image option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  18, 2012 at 15:05 GMT
+%     Last Updated Aug. 27, 2013 at 15:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,8,nargin));
+error(nargchk(3,inf,nargin));
 
 % check coefficient array
 if(~isreal(c) || any(c(:)<0) || ndims(c)~=2)
@@ -96,127 +81,38 @@ if(~isreal(crng) || numel(crng)~=2)
 end
 crng=sort([crng(1) crng(2)]);
 
-% check colors
-if(nargin<6);
-    fgcolor='w'; bgcolor='k';
-elseif(nargin<7)
-    if(isempty(fgcolor))
-        fgcolor='w'; bgcolor='k';
-    else
-        bgcolor=invertcolor(fgcolor,true);
-    end
-else
-    if(isempty(fgcolor))
-        if(isempty(bgcolor))
-            fgcolor='w'; bgcolor='k';
-        else
-            fgcolor=invertcolor(bgcolor,true);
-        end
-    elseif(isempty(bgcolor))
-        bgcolor=invertcolor(fgcolor,true);
-    end
-end
+% a couple mmap default changes
+% - use min/max of lat/lon as the map boundary
+% - do not show land/ocean
+varargin=[{'po' {'lat' [min(la) max(la)] ...
+    'lon' [min(lo) max(lo)]} 'l' false 'o' false} varargin];
 
-% change char to something rgb
-if(ischar(fgcolor)); fgcolor=name2rgb(fgcolor); end
-if(ischar(bgcolor)); bgcolor=name2rgb(bgcolor); end
+% draw map
+ax=mmap('image',{la lo c.'},varargin{:});
 
-% check handle
-if(nargin<8 || isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
-        || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
-    figure('color',bgcolor);
-    ax=gca;
-else
-    axes(ax);
-    h=get(ax,'children'); delete(h);
-    h=findobj(get(get(ax,'parent'),'children'),'peer',ax); delete(h);
-end
+% extract color
+bg=get(get(ax,'parent'),'color');
+fg=get(findobj(ax,'tag','m_grid_box'),'color');
 
-% map colors & coast/border res
-%gshhs='c';
-ocean=bgcolor;
-%land=fgcolor;
-land=[0.4 0.6 0.2];
-%border=fgcolor;
-
-% access to m_map globals for map boundaries
-global MAP_VAR_LIST
-
-% reshape beam & account for pcolor
-latstep=la(2)-la(1);
-lonstep=lo(2)-lo(1);
-la=[la(:)-latstep/2; la(end)+latstep/2];
-lo=[lo(:)'-lonstep/2 lo(end)+lonstep/2];
-c=c([1:end end],[1:end end]);
-
-% get max/min lat/lon of map & stations
-minlat=min(la); maxlat=max(la);
-minlon=min(lo); maxlon=max(lo);
-
-% default/check projopt
-if(nargin<5 || isempty(popt))
-    popt={'robinson','lat',[minlat maxlat],'lon',[minlon maxlon]};
-end
-if(ischar(popt)); popt=cellstr(popt); end
-if(~iscell(popt))
-    error('seizmo:plotbathyexcite:badInput',...
-        'PROJOPT must be a cell array of args for M_PROJ!');
-end
-
-% setup projection
-m_proj(popt{:});
-set(ax,'color',ocean);
-
-% plot image data
-hold(ax,'on');
-if(any(lo>MAP_VAR_LIST.longs(1) & lo<MAP_VAR_LIST.longs(2)))
-    m_pcolor(lo,la,c,'parent',ax);
-end
-if(any(lo-360>MAP_VAR_LIST.longs(1) & lo-360<MAP_VAR_LIST.longs(2)))
-    m_pcolor(lo-360,la,c,'parent',ax);
-end
-if(any(lo+360>MAP_VAR_LIST.longs(1) & lo+360<MAP_VAR_LIST.longs(2)))
-    m_pcolor(lo+360,la,c,'parent',ax);
-end
-
-% modify
-shading(ax,'flat');
-if(strcmp(bgcolor,'w') || isequal(bgcolor,[1 1 1]))
+% set colormap
+if(strcmp(bg,'w') || isequal(bg,[1 1 1]))
     colormap(ax,flipud(gray));
-elseif(strcmp(bgcolor,'k') || isequal(bgcolor,[0 0 0]))
+elseif(strcmp(bg,'k') || isequal(bg,[0 0 0]))
     colormap(ax,gray);
 else
-    if(ischar(bgcolor))
-        bgcolor=name2rgb(bgcolor);
-    end
-    hsv=rgb2hsv(bgcolor);
+    if(ischar(bg)); bg=name2rgb(bg); end
+    hsv=rgb2hsv(bg);
     colormap(ax,hsvcustom(hsv));
 end
 set(ax,'clim',crng);
-hold(ax,'off');
-
-% now add coastlines and political boundaries
-axes(ax);
-%m_gshhs([gshhs 'c'],'color',land);
-%m_gshhs([gshhs 'b'],'color',border);
-m_coast('line','color',fgcolor);
-%m_coast('patch',land);
-m_grid('color',fgcolor,'xtick',[],'ytick',[]);
-
-% hackery to color oceans at large when the above fails
-set(findobj(ax,'tag','m_grid_color'),'facecolor',ocean);
 
 % colorbar & title
-c=colorbar('eastoutside','peer',ax,'xcolor',fgcolor,'ycolor',fgcolor);
-xlabel(c,'$$\sum {c_{m}^2}$$','color',fgcolor,...
-    'interpreter','latex');
-title(ax,{[] 'Bathymetric Excitation Coefficient Map' []},...
-    'color',fgcolor);
-
-% tag plot
-set(ax,'tag','bathyexcite');
+c=colorbar('eastoutside','peer',ax,'xcolor',fg,'ycolor',fg);
+xlabel(c,'$$\sum {c_{m}^2}$$','color',fg,'interpreter','latex');
+title(ax,{[] 'Bathymetric Excitation Coefficient Map' []},'color',fg);
 
 % return figure handle
+set(ax,'tag','bathyexcitemap');
 if(nargout); varargout{1}=ax; end
 
 end

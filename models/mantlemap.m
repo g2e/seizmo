@@ -12,16 +12,8 @@ function [varargout]=mantlemap(varargin)
 %              mantlemap(...,'loninc',increment,...)
 %              mantlemap(...,'dvrng',dvlimits,...)
 %              mantlemap(...,'colormap',cmap,...)
-%              mantlemap(...,'gshhs',res,...)
-%              mantlemap(...,'proj',proj,...)
-%              mantlemap(...,'projopt',{'opt',val,...},...)
-%              mantlemap(...,'gridopt',{'opt',val,...},...)
-%              mantlemap(...,'fgcolor',color,...)
-%              mantlemap(...,'bgcolor',color,...)
-%              mantlemap(...,'coast',color,...)
-%              mantlemap(...,'border',color,...)
-%              mantlemap(...,'showcolorbar',logical,...)
-%              mantlemap(...,'axis',ax,...)
+%              mantlemap(...,'titletype',value,...)
+%              mantlemap(...,'mmap_opt1',mmap_val1,...)
 %              ax=mantlemap(...)
 %
 %    Description:
@@ -66,57 +58,27 @@ function [varargout]=mantlemap(varargin)
 %     MANTLEMAP(...,'LONINC',INCREMENT,...) sets the longitude increment
 %     for sampling the mantle model.  The default is 1 degree.
 %
-%     MANTLEMAP(...,'COLORMAP',CMAP,...) alters the colormap used in the
-%     map.  The default colormap is 'seis'.  The colormap may be a Nx3 RGB
-%     triplet array or a string that may be evaluated to a Nx3 RGB triplet.
-%
 %     MANTLEMAP(...,'DVRNG',DVLIMITS,...) sets the coloring limits.
 %     Anything outside of this range is set to either the maximum or
 %     minimum colors in the color map.  The default is set to the limits of
 %     the data.  The units are in % dlnv.
 %
-%     MANTLEMAP(...,'GSHHS',RES,...) sets the GSHHS coastline and
-%     political boundaries resolution.  The values can be 'c', 'l', 'i',
-%     'h', 'f', or 'o' (for 'off').  The default GSHHS resolution is 'o'
-%     (off) which calls M_COAST and does not draw political borders.
-%
-%     MANTLEMAP(...,'PROJ',PROJ,...) defines the map projection.  See
-%     M_PROJ('SET') for possible projections.  The default PROJ is
-%     'Robinson'.
-%
-%     MANTLEMAP(...,'PROJOPT',{'OPT',VAL,...},...) passes additional
-%     options to M_PROJ (like the lat/lon boundaries of the map).  The
-%     options must be wrapped in a cell array!  See M_PROJ('get',PROJ) for
-%     a list of possible options for the set projection (see 'PROJ' option
-%     for the default projection and altering it).  The default will create
-%     a map to the limits of the lat/lon ranges of the dv data.
-%
-%     MANTLEMAP(...,'GRIDOPT',{'OPT',VAL,...},...) passes options to
-%     M_GRID (like the lat/lon ticks of the map, etc).  The options must be
-%     wrapped in a cell array!  See M_GRID('get') for a list of possible
-%     options and M_GRID('set') for their defaults.  The default is no
-%     options.
-%
-%     MANTLEMAP(...,'FGCOLOR',COLOR,...) specifies the foreground color
-%     of the map.  The default is 'w'.  If BGCOLOR is specified and FGCOLOR
-%     is not, then FGCOLOR will be set using INVERTCOLOR.
-%
-%     MANTLEMAP(...,'BGCOLOR',COLOR,...) specifies the background color
-%     of the map.  The default is 'k'.  If FGCOLOR is specified and BGCOLOR
-%     is not, then BGCOLOR will be set using INVERTCOLOR.
-%
-%     MANTLEMAP(...,'COAST',COLOR,...) specifies the color of the coastline
-%     in the map.  The default is 'k' (black).
-%
-%     MANTLEMAP(...,'BORDER',COLOR,...) specifies the color of the
-%     political borders in the map.  The default is [.5 0 0].
+%     MANTLEMAP(...,'COLORMAP',CMAP,...) alters the colormap used in the
+%     map.  The default colormap is 'seis'.  The colormap may be a Nx3 RGB
+%     triplet array or a string that may be evaluated to a Nx3 RGB triplet.
 %
 %     MANTLEMAP(...,'SHOWCOLORBAR',LOGICAL,...) turns on/off the drawing of
 %     a colorbar.  The default is TRUE.
 %
-%     MANTLEMAP(...,'AXIS',AX,...) sets the axes to draw in.  This is
-%     useful for subplots, guis, etc.  The default draws the map in a new
-%     figure.
+%     MANTLEMAP(...,'TITLETYPE',VALUE,...) changes the automatic title
+%     info.  Valid values are 0 (or false), 1 (or true -- the default), 2,
+%     or 3.  False shows no title.  The others:
+%      1: Model Depth   or   Model Min(Depth)-Max(Depth)
+%      2: Min(Depth)-Max(Depth)
+%      3: Mean(Depths)
+%
+%     MANTLEMAP(...,'MMAP_OPT1',MMAP_VAL1,...) controls the mapping
+%     using MMAP options.  See MMAP or the Examples section below.
 %
 %     AX=MANTLEMAP(...) returns the axes handle for the map.
 %
@@ -131,8 +93,8 @@ function [varargout]=mantlemap(varargin)
 %     model={'dz04' 'pri05p' 'hmsl06p' 'mitp08'};
 %     for i=1:4
 %         ax=subplot(2,2,i);
-%         mantlemap('clim',[-2 2],'mo',model{i},...
-%             'axis',ax,'cb',false,'fg','k');
+%         mantlemap('dvrng',[-2 2],'mo',model{i},...
+%             'parent',ax,'cb',false,'fg','k');
 %     end
 %
 %    See also: MANTLEDV, AVAILABLE_3DMODELS, MANTLEPROFILE
@@ -140,9 +102,10 @@ function [varargout]=mantlemap(varargin)
 %     Version History:
 %        Aug.  4, 2010 - initial version
 %        Feb. 24, 2011 - slightly better axes handle code, better labels
+%        Aug. 26, 2013 - use mmap image option (big code reduction)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2011 at 20:30 GMT
+%     Last Updated Aug. 26, 2013 at 20:30 GMT
 
 % todo:
 
@@ -152,14 +115,10 @@ if(mod(nargin,2))
         'Unpaired Option/Value!');
 end
 
-% access to m_map globals for map boundaries
-global MAP_VAR_LIST
-
 % option defaults
 varargin=[{'m' 'S20RTS' 'd' 2850 'lar' [-90 90] 'lor' [0 360] ...
-    'dst' 100 'last' 1 'lost' 1 'dvrng' [] 'cmap' 'seis' 'g' 'o' ...
-    'proj' 'robinson' 'po' [] 'go' [] 'fg' [] 'bg' [] 'c' 'k' ...
-    'b' [.5 0 0] 'cb' true 'tt' true 'a' []} varargin];
+    'dst' 100 'last' 1 'lost' 1 'dvrng' [] 'cmap' 'seis' ...
+    'cb' true 'tt' true} varargin];
 
 % check options are strings
 if(~iscellstr(varargin(1:2:end)))
@@ -168,6 +127,7 @@ if(~iscellstr(varargin(1:2:end)))
 end
 
 % check option/value pairs
+delete=false(1,numel(varargin));
 for i=1:2:numel(varargin)
     % skip empty by default (but still checking option exists)
     skip=false;
@@ -177,6 +137,7 @@ for i=1:2:numel(varargin)
     % check option is available
     switch lower(varargin{i})
         case {'model' 'mo' 'm'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if(ischar(val))
                 model=val;
@@ -185,6 +146,7 @@ for i=1:2:numel(varargin)
                     'MODEL must be a string!');
             end
         case {'depth' 'dep' 'd'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if(isreal(val) && isscalar(val) && val>=0)
                 deprng=[val val];
@@ -193,6 +155,7 @@ for i=1:2:numel(varargin)
                     'DEPTH must be a positive scalar!');
             end
         case {'depthrange' 'deprng' 'dr'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if(isreal(val) && isequal(size(val),[1 2]))
                 deprng=val;
@@ -201,6 +164,7 @@ for i=1:2:numel(varargin)
                     'DEPTHRANGE must be [depth_lo depth_hi]!');
             end
         case {'latituderange' 'latrng' 'lar'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if(isreal(val) && isequal(size(val),[1 2]) ...
                     && all(abs(val)<=90))
@@ -210,6 +174,7 @@ for i=1:2:numel(varargin)
                     'LATRANGE must be [lat_lo lat_hi]!');
             end
         case {'longituderange' 'lonrng' 'lor'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if(isreal(val) && isequal(size(val),[1 2]))
                 lonrng=val;
@@ -218,6 +183,7 @@ for i=1:2:numel(varargin)
                     'LONRANGE must be [lon_lo lon_hi]!');
             end
         case {'depthstep' 'depstep' 'depinc' 'dst'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if(isreal(val) && isscalar(val) && val>0)
                 depstep=val;
@@ -226,6 +192,7 @@ for i=1:2:numel(varargin)
                     'DEPTHSTEP must be a positive scalar!');
             end
         case {'latitudestep' 'latstep' 'latinc' 'last'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if(isreal(val) && isscalar(val) && val>0)
                 latstep=val;
@@ -234,6 +201,7 @@ for i=1:2:numel(varargin)
                     'LATSTEP must be a positive scalar!');
             end
         case {'longitudestep' 'lonstep' 'loninc' 'lost'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if(isreal(val) && isscalar(val) && val>0)
                 lonstep=val;
@@ -242,6 +210,7 @@ for i=1:2:numel(varargin)
                     'LONSTEP must be a positive scalar!');
             end
         case {'clim' 'dvrng'}
+            delete(i:i+1)=true;
             if(skip)
                 dvrng=[];
             elseif(isreal(val) && isequal(size(val),[1 2]))
@@ -251,6 +220,7 @@ for i=1:2:numel(varargin)
                     'DVRNG must be [%%dv_lo %%dv_hi]!');
             end
         case {'colormap' 'cmap'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if(isreal(val) && ndims(val)==2 ...
                     && size(val,2)==3 ...
@@ -263,83 +233,8 @@ for i=1:2:numel(varargin)
                     ['COLORMAP must be a colormap function\n'...
                     'string or a Nx3 RGB triplet array!']);
             end
-        case {'gshhs' 'g' 'resolution' 'res'}
-            if(skip); continue; end
-            if(ischar(val) && numel(val)==1 ...
-                    && any(strcmpi(val,{'o' 'c' 'l' 'i' 'h' 'f'})))
-                gshhs=lower(val);
-            else
-                error('seizmo:mantlemap:badInput',...
-                    'GSHHS option must be c, l, i, h, or f !');
-            end
-        case {'projection' 'proj' 'p'}
-            if(skip); continue; end
-            if(ischar(val) && ndims(val)==2 && size(val,1)==1)
-                proj=lower(val);
-            else
-                error('seizmo:mantlemap:badInput',...
-                    'PROJECTION option must be a string!');
-            end
-        case {'projopt' 'popt' 'po'}
-            if(skip)
-                popt={};
-            elseif(iscell(val) && iscellstr(val(1:2:end)))
-                popt=val;
-            else
-                error('seizmo:mantlemap:badInput',...
-                    ['PROJOPT option must be a cell array of ' ...
-                    '''option''/value pairs!']);
-            end
-        case {'gridopt' 'gopt' 'go'}
-            if(skip)
-                gopt={};
-            elseif(iscell(val) && iscellstr(val(1:2:end)))
-                gopt=val;
-            else
-                error('seizmo:mantlemap:badInput',...
-                    ['GRIDOPT option must be a cell array of ' ...
-                    '''option''/value pairs!']);
-            end
-        case {'fgcolor' 'fg'}
-            if(skip)
-                fg=[];
-            elseif(ischar(val) ...
-                    || (isreal(val) && isequal(size(val),[1 3])))
-                fg=val;
-            else
-                error('seizmo:mantlemap:badInput',...
-                    'FGCOLOR must be a colorname or RGB triplet!');
-            end
-        case {'bgcolor' 'bg'}
-            if(skip)
-                bg=[];
-            elseif(ischar(val) ...
-                    || (isreal(val) && isequal(size(val),[1 3])))
-                bg=val;
-            else
-                error('seizmo:mantlemap:badInput',...
-                    'BGCOLOR must be a colorname or RGB triplet!');
-            end
-        case {'coastcolor' 'coast' 'c'}
-            if(skip)
-                coast=[];
-            elseif(ischar(val) ...
-                    || (isreal(val) && isequal(size(val),[1 3])))
-                coast=val;
-            else
-                error('seizmo:mantlemap:badInput',...
-                    'COASTCOLOR must be a colorname or RGB triplet!');
-            end
-        case {'bordercolor' 'border' 'b'}
-            if(skip); continue; end
-            if(ischar(val) ...
-                    || (isreal(val) && isequal(size(val),[1 3])))
-                border=val;
-            else
-                error('seizmo:mantlemap:badInput',...
-                    'BORDERCOLOR must be a colorname or RGB triplet!');
-            end
         case {'showcolorbar' 'colorbar' 'cb'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if((islogical(val) || isreal(val)) && isscalar(val))
                 showcb=val;
@@ -348,6 +243,7 @@ for i=1:2:numel(varargin)
                     'SHOWCOLORBAR must be TRUE or FALSE!');
             end
         case {'titletype' 'tt'}
+            delete(i:i+1)=true;
             if(skip); continue; end
             if((islogical(val) || isreal(val)) && isscalar(val))
                 titletype=val;
@@ -355,37 +251,9 @@ for i=1:2:numel(varargin)
                 error('seizmo:mantlemap:badInput',...
                     'TITLETYPE must be a scalar value!');
             end
-        case {'axis' 'ax' 'a'}
-            if(skip)
-                ax=[];
-            else
-                ax=val;
-            end
-        otherwise
-            error('seizmo:mantlemap:badOption',...
-                'Unknown Option: %s',varargin{i});
     end
 end
-
-% fix fg/bg colors
-if(isempty(fg))
-    if(isempty(bg))
-        fg='w'; bg='k';
-    else
-        fg=invertcolor(bg,true);
-    end
-elseif(isempty(bg))
-    bg=invertcolor(fg,true);
-end
-if(isempty(coast))
-    coast=fg;
-end
-
-% convert colornames
-if(ischar(fg)); fg=name2rgb(fg); end
-if(ischar(bg)); bg=name2rgb(bg); end
-if(ischar(coast)); coast=name2rgb(coast); end
-if(ischar(border)); border=name2rgb(border); end
+varargin(delete)=[];
 
 % lat/lon grid
 lat0=latrng(1):latstep:latrng(2);
@@ -395,90 +263,31 @@ lon0=lonrng(1):lonstep:lonrng(2);
 % loop over depths, get average %dv
 dep=deprng(1):depstep:deprng(2);
 dv=zeros(size(lat));
-[wtype,wtype]=mantledv(model,lat(1),lon(1),dep(1));
 for i=1:numel(dep)
     dv=dv+mantledv(model,lat,lon,dep(i));
 end
 dv=dv./numel(dep).*100;
 
-% image to pcolor
-lat=lat-latstep/2;
-lon=lon-lonstep/2;
-lat=lat([1:end end],[1:end end]);
-lon=lon([1:end end],[1:end end]);
-lat(end,:)=lat(end,:)+latstep;
-lon(:,end)=lon(:,end)+lonstep;
-dv=dv([1:end end],[1:end end]);
+% a couple mmap default changes
+% - use min/max of lat/lon as the map boundary
+% - do not show land/ocean
+varargin=[{'po' {'lat' [min(lat(:)) max(lat(:))] ...
+    'lon' [min(lon(:)) max(lon(:))]} 'l' false 'o' false} varargin];
 
-% force >90 lat to 90
-lat(lat<-90)=-90;
-lat(lat>90)=90;
-
-% default projection options
-if(isempty(popt))
-    % use min/max of lat/lon
-    minlat=min(lat(:));
-    maxlat=max(lat(:));
-    minlon=min(lon(:));
-    maxlon=max(lon(:));
-    popt={'lat',[minlat maxlat],'lon',[minlon maxlon]};
-end
-
-% setup axis
-if(isempty(ax) || ~isscalar(ax) || ~isreal(ax) ...
-        || ~ishandle(ax) || ~strcmp('axes',get(ax,'type')))
-    % new figure
-    fh=figure('color',bg);
-    ax=axes('parent',fh);
-else
-    axes(ax);
-    h=get(ax,'children'); delete(h);
-    h=findobj(get(get(ax,'parent'),'children'),'peer',ax); delete(h);
-end
-
-% setup projection
-m_proj(proj,popt{:});
-set(ax,'color',bg);
-
-% plot mantle map
-hold(ax,'on');
-if(any(lon(:)>MAP_VAR_LIST.longs(1) ...
-        & lon(:)<MAP_VAR_LIST.longs(2)))
-    ph=m_pcolor(lon,lat,dv,'parent',ax);
-    set(ph,'clipping','off');
-end
-if(any(lon(:)-360>MAP_VAR_LIST.longs(1) ...
-        & lon(:)-360<MAP_VAR_LIST.longs(2)))
-    ph=m_pcolor(lon-360,lat,dv,'parent',ax);
-    set(ph,'clipping','off');
-end
-if(any(lon(:)+360>MAP_VAR_LIST.longs(1) ...
-        & lon(:)+360<MAP_VAR_LIST.longs(2)))
-    ph=m_pcolor(lon+360,lat,dv,'parent',ax);
-    set(ph,'clipping','off');
-end
+% draw map
+ax=mmap('image',{lat lon dv},varargin{:});
 
 % pretty it up
-shading(ax,'flat');
 colormap(ax,cmap);
 if(~isempty(dvrng)); set(ax,'clim',dvrng); end
-hold(ax,'off');
 
-% plot coasts & borders
-if(strcmpi(gshhs,'o'))
-    m_coast('color',coast);
-else
-    m_gshhs([gshhs 'c'],'color',coast);
-    m_gshhs([gshhs 'b'],'color',border);
-end
-m_grid('color',fg,gopt{:});
-
-% hackery to color the map if the above fails
-set(findobj(ax,'tag','m_grid_color'),'facecolor',bg);
+% extract foreground color
+fg=get(findobj(ax,'tag','m_grid_box'),'color');
 
 % colorbar & title
 if(showcb)
     c=colorbar('southoutside','peer',ax,'xcolor',fg,'ycolor',fg);
+    [wtype,wtype]=mantledv(model,lat(1),lon(1),dep(1)); % wave type
     xlabel(c,['% \delta{}lnv_' wtype],'color',fg);
 end
 switch titletype
