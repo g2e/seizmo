@@ -70,7 +70,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      COMPONENTS    - include records with these component codes []
 %      FILENAMES     - limit processing to files with these filenames []
 %      QUIETWRITE    - quietly overwrite OUTDIR (default is false)
-%      MATIO         - output mat files instead of sac files (true)
+%      MATIO         - input/output are .mat files instead of SAC (true)
 %
 %    Notes:
 %     - Good Noise Analysis References:
@@ -83,6 +83,9 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        Seats et al 2012, GJI, doi:10.1111/j.1365-246X.2011.05263.x
 %     - Steps 9-11 for horizontals currently require running step 8 on
 %       the same run (but if you forget it is automatically done for you).
+%     - Input and output data are .mat files by default -- these can be
+%       read into Matlab using the LOAD function and written out as SAC
+%       files using the function WRITESEIZMO.
 %
 %    Header changes: Varies with steps chosen...
 %
@@ -95,7 +98,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     % This is great for prototyping and debugging!
 %
 %     % Skip the normalization steps:
-%     noise_process('setup','xc',[7:8 11:12])
+%     noise_process('setup','ncfs',[7:8 11:12])
 %
 %     % Use non-overlapping 15-minute timesections, sampled
 %     % at 5Hz to look at noise up to about 1.5Hz:
@@ -108,7 +111,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     % amplitude exceeding 100 times the rms for the surrounding day are
 %     % rejected ('rejectwidth'=6 as (6x2+1) x 3 hours = 25 hours):
 %     noise_rms_calc('3hr');
-%     noise_process('3hr','xc',[],'rm','rms','rc',100,'rw',6);
+%     noise_process('3hr','ncfs',[],'rm','rms','rc',100,'rw',6);
 %
 %    See also: NOISE_SETUP, NOISE_STACK, NOISE_OVERVIEW, NOISE_RMS_CALC
 
@@ -149,16 +152,12 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        Aug.  8, 2013 - rms-based data rejection has been added to step 7
 %                        but requires running NOISE_RMS_CALC first, this
 %                        adds several new reject* options too
+%        Sep. 23, 2013 - update for new rotate_correlations, 4=>3 fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2013 at 11:15 GMT
+%     Last Updated Sep. 23, 2013 at 11:15 GMT
 
 % todo:
-% - rotate correlations is not ready!
-%   - single dataset i/o
-%   - cross (4 files) & auto (3 files) sets
-%     - step 12 currently will not output autoxc horiz. data
-%   - drop all numel(hdata)<4 checks
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -405,12 +404,12 @@ for i=1:numel(tsdirs) % SERIAL
         data=[]; % clearing data
         if(any(steps==11) && numel(vdata)==1); vdata=[]; end
         if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-        if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+        if(any(steps==12) && numel(hdata)<3); hdata=[]; end
         if(isempty(hdata) && isempty(vdata)); continue; end
     end
     
     % shortcircuit for too few correlations for correlogram rotation
-    if(isxc && any(steps==12) && numel(data)<4); continue; end
+    if(isxc && any(steps==12) && numel(data)<3); continue; end
     
     % read in data
     if(~opt.MATIO)
@@ -440,7 +439,7 @@ for i=1:numel(tsdirs) % SERIAL
             if(~isempty(hdata)); hdata=removedeadrecords(hdata); end
             if(any(steps==11) && numel(vdata)==1); vdata=[]; end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         if(any(steps==2)) % remove short
@@ -456,7 +455,7 @@ for i=1:numel(tsdirs) % SERIAL
             end
             if(any(steps==11) && numel(vdata)==1); vdata=[]; end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         if(any(steps==3)) % remove trend
@@ -492,7 +491,7 @@ for i=1:numel(tsdirs) % SERIAL
             end
             if(any(steps==11) && numel(vdata)==1); vdata=[]; end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         if(any(steps==7)) % simple amplitude based rejection
@@ -542,7 +541,7 @@ for i=1:numel(tsdirs) % SERIAL
             end
             if(any(steps==11) && numel(vdata)==1); vdata=[]; end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         
@@ -552,7 +551,7 @@ for i=1:numel(tsdirs) % SERIAL
                 hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
             end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         if(any(steps==9)) % td norm
@@ -561,7 +560,7 @@ for i=1:numel(tsdirs) % SERIAL
                 hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
             end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
             
             % normalization style
@@ -660,7 +659,7 @@ for i=1:numel(tsdirs) % SERIAL
                 hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
             end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
             
             % normalization style
@@ -733,7 +732,7 @@ for i=1:numel(tsdirs) % SERIAL
             if(~any(steps==8) && ~isempty(hdata))
                 hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
             end
-            if(any(steps==12) && numel(hdata)<4); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
             
             if(numel(vdata)<2 && numel(hdata)<2); continue; end
@@ -759,12 +758,13 @@ for i=1:numel(tsdirs) % SERIAL
             end
         end
         if(any(steps==12)) % rotate xc
-            % this removes ZZ correlations!
-            if(isxc)
-                data=rotate_correlations_old(data);
+            % correlation input or split data from before?
+            if(isxc) % correlations
+                % this removes ZZ correlations!
+                data=rotate_correlations(data,'rt');
             else
                 if(~isempty(hdata))
-                    hdata=rotate_correlations_old(hdata);
+                    hdata=rotate_correlations(hdata,'rt');
                 end
             end
         end

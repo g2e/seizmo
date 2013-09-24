@@ -15,7 +15,7 @@ function []=noise_rms_calc(indir)
 %     % Lookout for bad data early in the process:
 %     noise_setup('raw','3hr')
 %     noise_rms_calc('3hr')
-%     noise_process('3hr','xc',[],'rm','rms','rc',5);
+%     noise_process('3hr','ncfs',[],'rm','rms','rc',5);
 %
 %    See also: NOISE_SETUP, NOISE_PROCESS, NOISE_STACK, NOISE_OVERVIEW
 
@@ -27,9 +27,10 @@ function []=noise_rms_calc(indir)
 %        Aug.  8, 2013 - fixed buggy time step code using function GCDN,
 %                        tsbgn & tsend output now include times for every
 %                        point in the output data for sanity
+%        Sep. 24, 2013 - fixed example to avoid xc directory issue
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  8, 2013 at 11:15 GMT
+%     Last Updated Sep. 24, 2013 at 11:15 GMT
 
 % todo:
 

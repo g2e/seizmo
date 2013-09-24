@@ -13,7 +13,7 @@ function []=noise_overview()
 %             Help using RDSEED: http://www.iris.edu/manuals/rdseed.htm
 %          2. Fix the headers (in Matlab):
 %              w(fix_rdseed_v48(r('mydir')))
-%             This isn't necessary but will silence some warnings.
+%             This isn't always necessary but it silences some warnings.
 %       b. Otherwise you just need to get all the records as SAC files
 %          under the same directory and make sure following header fields
 %          are set correctly:
@@ -22,22 +22,24 @@ function []=noise_overview()
 %           STDP, STEL, LEVEN (MUST BE EVENLY SPACED!!!), IFTYPE, IZTYPE
 %    2. Create 3hr timesections to be processed separately (in Matlab):
 %        noise_setup('mydir','setup');
-%       Note that if your data files are under subdirectories you will need
-%       to use something like the following instead to force a recursive
-%       search for files:
-%        noise_setup('mydir','setup','f','**/');
-%    3. Process the timesections (in Matlab):
+%       ***Note*** If your data files are under subdirectories you will
+%                  need to use something like the following instead to
+%                  force a recursive search for files:
+%                   noise_setup('mydir','setup','f','**/');
+%    3. OPTIONAL: Create an RMS database (in Matlab):
+%        noise_rms_calc('setup');
+%    4. Process the timesections (in Matlab):
 %        noise_process('setup','ncf');
-%    4. Stack the noise correlations (in Matlab):
+%    5. Stack the noise correlations (in Matlab):
 %        noise_stack('ncf','stacks','zz');
 %       And for horizontals:
 %        noise_stack('ncf','stacks',{'rr' 'rt' 'tr' 'tt'});
 %
-%    Steps 2-4 can be modified significantly by passing options to the
+%    Steps 2-5 can be modified significantly by passing options to the
 %    corresponding function.  See their respective help documentation for
 %    details.
 %
-% Making a pretty ncfs vs distance plot or movie:
+% Making a pretty NCFs vs distance plot or movie:
 %    0. Do the above.
 %    1. Read in the particular NCFs you are interested in:
 %        data=r('stacks/zz_all_full/*/');
@@ -47,10 +49,6 @@ function []=noise_overview()
 %          movie2avi(mov,'mymovie.avi');
 %          % If you are using linux and have mencoder installed:
 %          unixcompressavi('mymovie.avi')
-%
-% There are also functions to make fk datasets from the NCFs and to make
-% plots for those. That should be pretty easy to figure out so I leave
-% that for you to explore for now -- see "help sz_toc_noise" for a list.
 %
 % <a href="matlab:help sz_toc_noise">Seismic Noise Analysis Functions</a>
 % <a href="matlab:help seizmo">SEIZMO - Passive Seismology Toolbox</a>

@@ -83,9 +83,9 @@ function [varargout]=fkxchorzmap(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %     [axc,xc]=split_auto_correlations(xc,false);
 %     [b,e,delta]=getheader(xc,'b','e','delta');
 %     xc=interpolate(xc,delta(1),'spline',max(b),min(e));
+%     xc=rotate_correlations(xc);
 %     [in,set,cmp]=horz_correlations_sets(xc);
-%     [rr,rt,tr,tt]=rotate_correlations(...
-%         xc(cmp==1),xc(cmp==2),xc(cmp==3),xc(cmp==4));
+%     [rr,rt,tr,tt]=deal(xc(cmp==1),xc(cmp==2),xc(cmp==3),xc(cmp==4));
 %     [r,t]=fkxchorzmap(rr,rt,tr,tt,50,101,[1/50 1/20]);
 %     plotfkmap(rmap);
 %     plotfkmap(tmap);
@@ -96,7 +96,8 @@ function [varargout]=fkxchorzmap(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %     Version History:
 %        Nov. 18, 2010 - initial version
 %        Jan. 29, 2013 - example update for new correlate functions
-%        Sep. 23, 2013 - example update for new correlate functions
+%        Sep. 23, 2013 - example update for new correlate functions,
+%                        adjust for rotate_correlations change
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Sep. 23, 2013 at 15:25 GMT

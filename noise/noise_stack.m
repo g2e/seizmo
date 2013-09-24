@@ -79,13 +79,16 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %      COMPONENTS - include records with these component codes []
 %      FILENAMES  - limit processing to files matching this file pattern []
 %      QUIETWRITE - quietly overwrite OUTDIR (default is false)
-%      MATIO      - mat file input/output instead of sac files (true)
+%      MATIO      - .mat file input/output instead of SAC (true)
 %
 %    Notes:
 %     - Stack time span must exceed the timesection time span.  You cannot
 %       make day or 3hr stacks from day correlations.
 %     - Correlation directories cannot contain both the correlations & the
 %       reversed correlations.  See NOISE_STACK_ARBITRARY.
+%     - Input and output data are .mat files by default -- these can be
+%       read into Matlab using the LOAD function and written out as SAC
+%       files using the function WRITESEIZMO.
 %
 %    Header changes: SCALE (number of records in stack), DEP*
 %                    Z, A, F
@@ -93,14 +96,14 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %    Examples:
 %     % The typical noise processing:
 %     noise_setup('some/dir','raw')
-%     noise_process('raw','xc')
-%     noise_stack('xc','stacks','zz')
+%     noise_process('raw','ncfs')
+%     noise_stack('ncfs','stacks','zz')
 %
 %     % Stack the horizontal components:
-%     noise_stack('xc','stacks',{'rr' 'rt' 'tr' 'tt'})
+%     noise_stack('ncfs','stacks',{'rr' 'rt' 'tr' 'tt'})
 %
 %     % Several people like to use the symmetric component:
-%     noise_stack('xc','stacks','zz','xccmp','sym')
+%     noise_stack('ncfs','stacks','zz','xccmp','sym')
 %
 %    See also: NOISE_SETUP, NOISE_PROCESS, NOISE_OVERVIEW
 
@@ -128,9 +131,10 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %        Mar. 29, 2013 - autoxc bugfixes, xcreverse option
 %        Apr.  3, 2013 - minor fixes and notes
 %        Apr.  8, 2013 - xcreverse option is false by default (for space)
+%        Sep. 24, 2013 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  8, 2013 at 11:15 GMT
+%     Last Updated Sep. 24, 2013 at 11:15 GMT
 
 % todo:
 % - overlap option
