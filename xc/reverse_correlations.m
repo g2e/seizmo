@@ -36,8 +36,10 @@ function [data]=reverse_correlations(data)
 %     corr1=correlate(data,'mcxc','noauto');
 %     corr2=reverse_correlations(corr1);
 %
-%    See also: CORRELATE, REVERSE, SPLIT_AUTO_CORRELATIONS,
-%              ROTATE_CORRELATIONS, SPLIT_HORZ_CORRELATIONS
+%    See also: CORRELATE, REVERSE, SPLIT_AUTO_CORRELATIONS, ISXC,
+%              ROTATE_CORRELATIONS, NAME_CORRELATIONS,
+%              NO_REDUNDANT_CORRELATIONS, HORZ_CORRELATIONS_SETS,
+%              IS_FULL_MATRIX_OF_CORRELATIONS
 
 %     Version History:
 %        Apr. 12, 2010 - initial version
@@ -46,9 +48,11 @@ function [data]=reverse_correlations(data)
 %        Jan. 27, 2012 - update for cmpinc/cmpaz fields, better checkheader
 %                        usage
 %        Oct. 21, 2012 - update for a,f,t0,t1 fields
+%        Sep.  9, 2013 - stricter checkheader call
+%        Sep. 20, 2013 - updated See also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 21, 2012 at 15:05 GMT
+%     Last Updated Sep. 20, 2013 at 15:05 GMT
 
 % todo:
 
@@ -64,7 +68,12 @@ oldseizmocheckstate=seizmocheck_state(false);
 % attempt reversal
 try
     % check headers
-    data=checkheader(data);
+    data=checkheader(data,...
+        'MULCMP_DEP','ERROR',...
+        'NONTIME_IFTYPE','ERROR',...
+        'FALSE_LEVEN','ERROR',...
+        'UNSET_ST_LATLON','ERROR',...
+        'UNSET_EV_LATLON','ERROR');
     
     % number of records
     nrecs=numel(data);

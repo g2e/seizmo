@@ -34,9 +34,10 @@ function [idx,streamcode]=getstreamidx(data)
 %        Jan. 29, 2010 - cleaned up unnecessary code
 %        Aug. 11, 2010 - nargchk fix, doc update
 %        Jan. 28, 2012 - pass char array to strnlen, doc update
+%        Sep.  5, 2013 - fixed error from strnlen char<=>cell conversion
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 22:55 GMT
+%     Last Updated Sep.  5, 2013 at 22:55 GMT
 
 % todo:
 
@@ -46,11 +47,10 @@ error(nargchk(1,1,nargin));
 % get header info
 kname=upper(getheader(data,'kname'));
 
-% truncate kcmpnm to first 2 characters
-kname(:,4)=strnlen(char(kname(:,4)),2);
-
 % get stream groups
+% - truncate kcmpnm to first 2 characters
 [streamcode,idx,idx]=unique(strcat(...
-    kname(:,1),'.',kname(:,2),'.',kname(:,3),'.',kname(:,4)));
+    kname(:,1),'.',kname(:,2),'.',kname(:,3),'.',...
+    strnlen(char(kname(:,4)),2)));
 
 end

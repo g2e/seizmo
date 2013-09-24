@@ -11,17 +11,18 @@ function []=listfiles(data)
 %    Notes:
 %
 %    Examples:
-%     % This is convenient to use with TABLEHEADER or QUERYHEADER:
+%     % This is convenient to use with COMPAREHEADER or QUERYHEADER:
 %     queryheader(data,'a*');
 %     listfiles(data);
 %
-%    See also: TABLEHEADER, QUERYHEADER, KEEPRECORDS, DELETERECORDS
+%    See also: COMPAREHEADER, QUERYHEADER
 
 %     Version History:
 %        Jan. 30, 2012 - initial version
+%        Sep.  9, 2013 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 01:40 GMT
+%     Last Updated Sep.  9, 2013 at 01:40 GMT
 
 % todo:
 

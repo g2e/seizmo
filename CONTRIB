@@ -31,11 +31,12 @@ git remote add upstream git@github.com:g2e/seizmo.git
 ----------------------------------------------------------------------
 git pull upstream master
 
-4. Adding, Removing, Moving files
+4. Adding, Removing, Moving, Unremoving files
 ---------------------------------
 git add files
 git rm files
 git mv old new  (**NOTE: avoid edit & move in the same commit!**)
+git checkout HEAD files
 
 5. Checking what you have done
 ------------------------------

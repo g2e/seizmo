@@ -25,20 +25,21 @@ function [data]=genname(data,style)
 %     record.
 %
 %    Notes:
-%     - this matches with my perl code naming schemes
+%     - The default matches with my perl code naming scheme.
 %
 %    Examples:
 %     Read, set the name, write:
 %      writeseizmo(genname(readseizmo('*')));
 %
-%    See also: CHANGENAME
+%    See also: CHANGENAME, LISTFILES, FIX_RDSEED_V48, NAME_CORRELATIONS
 
 %     Version History:
 %        June 13, 2010 - initial version
 %        Oct.  1, 2010 - added style option (with 'rdseed')
+%        Sep.  9, 2013 - some see also additions
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct.  1, 2010 at 01:45 GMT
+%     Last Updated Sep.  9, 2013 at 01:45 GMT
 
 % todo:
 

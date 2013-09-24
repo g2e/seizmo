@@ -6,9 +6,8 @@ function [axc,xc]=split_auto_correlations(xc,cmpflag)
 %
 %    Description:
 %     [AXC,XC]=SPLIT_AUTO_CORRELATIONS(XC) splits auto correlations from
-%     cross correlations.  Detection is based on name info and start/end
-%     times (see CORRELATE for the pertinent fields).  This is a simple
-%     convenience function.
+%     cross correlations.  Detection is based on name info (see CORRELATE
+%     for the pertinent fields).  This is a simple convenience function.
 %
 %     [AXC,XC]=SPLIT_AUTO_CORRELATIONS(XC,CMPFLAG) ignores component codes
 %     when deciding autocorrelations when CMPFLAG=FALSE.  This is useful
@@ -25,15 +24,17 @@ function [axc,xc]=split_auto_correlations(xc,cmpflag)
 %     [axc,xc]=split_auto_correlations(xc);
 %     rxc=reverse_correlations(xc);
 %
-%    See also: CORRELATE, REVERSE_CORRELATIONS, ROTATE_CORRELATIONS,
-%              SPLIT_HORZ_CORRELATIONS
+%    See also: CORRELATE, REVERSE_CORRELATIONS, ROTATE_CORRELATIONS, ISXC,
+%              NAME_CORRELATIONS, NO_REDUNDANT_CORRELATIONS,
+%              HORZ_CORRELATIONS_SETS, IS_FULL_MATRIX_OF_CORRELATIONS
 
 %     Version History:
 %        Oct. 21, 2012 - initial version
 %        Jan. 28, 2013 - doc update
+%        Sep. 20, 2013 - updated See also section, dropped time requirement
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2013 at 13:30 GMT
+%     Last Updated Sep. 20, 2013 at 13:30 GMT
 
 % todo:
 
@@ -47,13 +48,12 @@ if(~isscalar(cmpflag) || ~islogical(cmpflag))
         'CMPFLAG must be TRUE or FALSE!');
 end
 
-% autoxc = kname + abs times match
-[kname,kt0,kt1,kt2,kt3,a,f,t0,t1]=getheader(xc,...
-    'kname','kt0','kt1','kt2','kt3','a','f','t0','t1');
+% autoxc = kname match
+[kname,kt0,kt1,kt2,kt3]=getheader(xc,'kname','kt0','kt1','kt2','kt3');
 if(cmpflag)
-    auto=find(all(strcmp(kname,[kt0 kt1 kt2 kt3]),2) & a==t0 & f==t1);
+    auto=find(all(strcmp(kname,[kt0 kt1 kt2 kt3]),2));
 else
-    auto=find(all(strcmp(kname(:,1:3),[kt0 kt1 kt2]),2) & a==t0 & f==t1);
+    auto=find(all(strcmp(kname(:,1:3),[kt0 kt1 kt2]),2));
 end
 axc=xc(auto);
 xc(auto)=[];

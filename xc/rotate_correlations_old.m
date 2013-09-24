@@ -47,16 +47,12 @@ function [data]=rotate_correlations_old(data)
 %        June 17, 2010 - more checks for no rotatible records
 %        July  2, 2010 - fix cat warnings (dumb Matlab feature)
 %        Feb.  7, 2012 - update cmpaz/user3 fields (azimuths), doc update
+%        Sep. 20, 2013 - bugfix: cos/sin typo for TT rotation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2012 at 13:30 GMT
+%     Last Updated Sep. 20, 2013 at 13:30 GMT
 
 % todo:
-% - cmpinc,cmpaz support
-%   - allow non-NE input to be rotated to RT
-%     - check vs xc of r/t (rotated beforehand)
-% - shiftmax/shiftunits/interpolate/minoverlap/overlapunits options
-%   - so we don't have to worry about interpolating
 
 % check nargin
 error(nargchk(1,1,nargin));
@@ -289,7 +285,7 @@ try
             +sin(az(i))*sin(baz(i)).*x(:,3)...
             +sin(az(i))*cos(baz(i)).*x(:,4);
         data((i-1)*4+4).dep=...
-            -cos(az(i))*sin(baz(i)).*x(:,1)...
+            -cos(az(i))*cos(baz(i)).*x(:,1)...
             +cos(az(i))*sin(baz(i)).*x(:,2)...
             +sin(az(i))*cos(baz(i)).*x(:,3)...
             -sin(az(i))*sin(baz(i)).*x(:,4);

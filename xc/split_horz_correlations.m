@@ -9,6 +9,7 @@ function [nn,ne,en,ee]=split_horz_correlations(xc)
 %     East.  All other correlations are dropped.
 %
 %    Notes:
+%     - This function is deprecated!  Please use HORZ_CORRELATIONS_SETS.
 %     - The ordering nor the size of NN, NE, EN, & EE are not guaranteed to
 %       match unless the original data records are ordered in a particular
 %       way.  Using ROTATE immediately before CORRELATE is one way to
@@ -19,6 +20,7 @@ function [nn,ne,en,ee]=split_horz_correlations(xc)
 %     data=readseizmo('*');
 %     data=rotate(data,'to',0,'kcmpnm1','N','kcmpnm2','E');
 %     xc=correlate(data,'mcxc');
+%     [axc,xc]=split_auto_correlations(xc,false);
 %     [nn,ne,en,ee]=split_horz_correlations(xc);
 %     [rr,rt,tr,tt]=rotate_correlations(nn,ne,en,ee);
 %
@@ -28,9 +30,10 @@ function [nn,ne,en,ee]=split_horz_correlations(xc)
 %     Version History:
 %        Oct. 21, 2010 - initial version
 %        Jan. 28, 2013 - doc update
+%        Sep. 23, 2013 - fixed example
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2013 at 13:30 GMT
+%     Last Updated Sep. 23, 2013 at 13:30 GMT
 
 % todo:
 

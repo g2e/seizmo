@@ -95,9 +95,10 @@ function [cg,lg,pg,NCHANGED]=ttrefine(...
 %        Jan. 30, 2013 - doc update, rename dt to m & M to misfit for
 %                        readability and consistency
 %        Feb. 26, 2013 - handle nans in pg
+%        Aug. 29, 2013 - deleted some debugging lines
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 26, 2013 at 01:05 GMT
+%     Last Updated Aug. 29, 2013 at 01:05 GMT
 
 % todo:
 
@@ -274,9 +275,6 @@ end
 function [wg]=check_xc_weights(cg,wg)
 % check values
 if(~isreal(wg) || any(wg(:)<0))
-    isreal(wg)
-    any(wg(:)<0)
-    sum(wg(:)<0)
     error('seizmo:ttrefine:badInput',...
         'WG must be an array of positive reals!');
 end

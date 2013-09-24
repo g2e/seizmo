@@ -40,11 +40,13 @@ function [nn,ne,en,ee]=rotate_correlations(nn,ne,en,ee)
 %     % Rotate, Correlate, Separate, Rotate:
 %     data=rotate(data,'to',0,'kcmpnm1','N','kcmpnm2','E');
 %     xc=correlate(data,'mcxc');
-%     [nn,ne,en,ee]=split_horz_correlations(xc);
-%     [rr,rt,tr,tt]=rotate_correlations(nn,ne,en,ee);
+%     [axc,xc]=split_auto_correlations(xc,false);
+%     [in,set,cmp]=horz_correlations_sets(xc);
+%     [rr,rt,tr,tt]=rotate_correlations(...
+%         xc(cmp==1),xc(cmp==2),xc(cmp==3),xc(cmp==4));
 %
-%    See also: CORRELATE, REVERSE_CORRELATIONS, SPLIT_HORZ_CORRELATIONS,
-%              SPLIT_AUTO_CORRELATIONS
+%    See also: CORRELATE, REVERSE_CORRELATIONS, HORZ_CORRELATIONS_SETS
+%              SPLIT_AUTO_CORRELATIONS, ROTATE
 
 %     Version History:
 %        June 10, 2010 - initial version
@@ -54,15 +56,14 @@ function [nn,ne,en,ee]=rotate_correlations(nn,ne,en,ee)
 %        Feb.  7, 2012 - update cmpaz/user3 fields (azimuths), doc update
 %        Nov.  7, 2012 - rewrite based on split input/output
 %        Jan. 28, 2013 - doc update
+%        Sep.  9, 2013 - fixed a bug for dep* update
+%        Sep. 23, 2013 - improved example, dropped deprecated function
+%                        split_horz_correlations
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2013 at 13:30 GMT
+%     Last Updated Sep. 23, 2013 at 13:30 GMT
 
 % todo:
-% - need a single dataset option
-%   - should be a separate function?
-%   - have the split routine but need a pairing routine which
-%     is obviously internalized here
 
 % check nargin
 error(nargchk(4,4,nargin));
@@ -246,7 +247,7 @@ for i=1:npairs
          nn(i).dep*ss-ne(i).dep*sc-en(i).dep*cs+ee(i).dep*cc);
     
     % update dep*
-    if(size(x,1))
+    if(size(nn(i).dep,1)>0)
         nnmin(i)=min(nn(i).dep);
         nnmax(i)=max(nn(i).dep);
         nnmen(i)=nanmean(nn(i).dep);

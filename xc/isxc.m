@@ -18,13 +18,17 @@ function [lgc]=isxc(data)
 %     d=r('*');
 %     d(isxc(d))=[];
 %
-%    See also: CORRELATE, ROTATE_CORRELATIONS
+%    See also: CORRELATE, ROTATE_CORRELATIONS, REVERSE_CORRELATIONS,
+%              HORZ_CORRELATIONS_SETS, NAME_CORRELATIONS,
+%              NO_REDUNDANT_CORRELATIONS, IS_FULL_MATRIX_OF_CORRELATIONS,
+%              ISSEIZMO, SEIZMOCHECK
 
 %     Version History:
 %        Feb.  5, 2013 - initial version
+%        Sep. 12, 2013 - expanded see also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  5, 2013 at 15:05 GMT
+%     Last Updated Sep. 12, 2013 at 15:05 GMT
 
 % todo:
 

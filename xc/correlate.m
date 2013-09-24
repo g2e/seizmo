@@ -134,9 +134,11 @@ function [data]=correlate(master,varargin)
 %     % (in an absolute value sense) for every correlogram:
 %     xc=correlate(data,'m','nor','noa','r','a','p',{'n',3});
 %
-%    See also: CONVOLVE, MCXC, GETPEAKS, REVERSE_CORRELATIONS,
+%    See also: CONVOLVE, MCXC, GETPEAKS, REVERSE_CORRELATIONS, ISXC,
 %              ROTATE_CORRELATIONS, SPLIT_AUTO_CORRELATIONS,
-%              SPLIT_HORZ_CORRELATIONS
+%              NAME_CORRELATIONS, NO_REDUNDANT_CORRELATIONS,
+%              HORZ_CORRELATIONS_SETS, IS_FULL_MATRIX_OF_CORRELATIONS
+%              
 
 %     Version History:
 %        June 27, 2009 - first fully functional version
@@ -165,9 +167,10 @@ function [data]=correlate(master,varargin)
 %        Mar. 28, 2013 - checkheader post-correlation bugfix (forgot to add
 %                        this to update the delaz fields)
 %        Aug. 16, 2013 - bugfixes for no peak detection
+%        Sep. 20, 2013 - updated See also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 16, 2013 at 15:05 GMT
+%     Last Updated Sep. 20, 2013 at 15:05 GMT
 
 % todo:
 

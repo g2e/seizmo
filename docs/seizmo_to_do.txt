@@ -1,7 +1,18 @@
 my todo list
 %%%%%%%%%%%%
 
-4 rotate correlations & noise codes handle autoxc
+exist function problem
+- returns true for any directory/file name on path so we need to test
+  for existence only in the current directory (if not absolute)
+  - means appending ./ (for linux) on any relative path
+- possible workaround: ~exist(dir,7) || isempty(xdir(dir))
+
+matio noise function problem
+- noise_process quietly fails if directory has sac files when matio is true
+  - need a way to inform the user of this...
+  - noise_sac2mat could be used...
+
+4 noise codes handle autoxc
 5 noise array phase and attenuation like in prieto 2009
 6 test & tutorials
 7 fss codes
@@ -16,6 +27,10 @@ grab_seismograms
 11 tpw
 12 2d inversion on a sphere
 13 reflectivity
+14 parallel version available using comment tags to allow switching
+   % __SEIZMO_PARALLEL__
+   % __SEIZMO_SERIAL__
+   functions
 
 way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
