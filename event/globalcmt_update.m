@@ -30,9 +30,10 @@ function []=globalcmt_update()
 %        Feb. 15, 2012 - say 'new cmts' to avoid confusion
 %        Mar.  1, 2012 - minor doc update, Octave save workaround
 %        Mar. 20, 2013 - no error if cannot write (just warn and move on)
+%        Jan. 14, 2014 - catches urlread errors and gives warning
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 20, 2013 at 21:30 GMT
+%     Last Updated Jan. 14, 2014 at 21:30 GMT
 
 % todo:
 
@@ -92,8 +93,15 @@ for i=lastyr:maxyr
     % loop over months of this year
     for j=mon
         % get catalog
-        [ndk,ok]=urlread([url '/' num2str(i) '/' ...
-            month{j} num2str(i-2000,'%02d') '.ndk']);
+        try
+            [ndk,ok]=urlread([url '/' num2str(i) '/' ...
+                month{j} num2str(i-2000,'%02d') '.ndk']);
+        catch % no internet connection?
+            le=lasterror;
+            warning(le.identifier,le.message);
+            skip=true;
+            break;
+        end
         
         % check that file exists and has entries
         % NOTE: this fails if the monthly catalog was actually empty
@@ -157,7 +165,14 @@ end
 
 % get quick catalog
 qcmt='http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/NEW_QUICK/';
-[qndk,ok]=urlread([qcmt 'qcmt.ndk']);
+try
+    [qndk,ok]=urlread([qcmt 'qcmt.ndk']);
+catch % no internet connection?
+    le=lasterror;
+    warning(le.identifier,le.message);
+    ok=false;
+    qndk=[];
+end
 
 % skip if could not read
 if(ok && ~isempty(qndk))

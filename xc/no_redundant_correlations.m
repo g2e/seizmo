@@ -31,9 +31,10 @@ function [xc]=no_redundant_correlations(xc)
 %        Sep.  9, 2013 - initial version
 %        Sep. 19, 2013 - drop relative timing constraint, optimized
 %                        checking, improved docs
+%        Jan. 15, 2014 - fixed warning id
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 19, 2013 at 15:05 GMT
+%     Last Updated Jan. 15, 2014 at 15:05 GMT
 
 % todo:
 
@@ -74,7 +75,7 @@ nrecs=numel(xc);
 
 % require all correlograms
 if(~all(strcmp(kuser(:,1),'MASTER') & strcmp(kuser(:,2),'SLAVE')))
-    error('seizmo:horz_correlation_sets:badInput',...
+    error('seizmo:no_redundant_correlations:badInput',...
         'Some records appear not to be correlations!');
 end
 

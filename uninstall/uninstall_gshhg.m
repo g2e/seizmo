@@ -1,30 +1,34 @@
-function [ok]=uninstall_gshhs()
-%UNINSTALL_GSHHS    Uninstalls the currently installed GSHHS
+function [ok]=uninstall_gshhg()
+%UNINSTALL_GSHHG    Uninstalls the currently installed GSHHG
 %
-%    Usage:    ok=uninstall_gshhs
+%    Usage:    ok=uninstall_gshhg
 %
 %    Description:
-%     OK=UNINSTALL_GSHHS removes the directory containing GSHHS binary
+%     OK=UNINSTALL_GSHHG removes the directory containing GSHHG binary
 %     files from the path and tries to save the edited path.  OK is TRUE if
 %     the uninstall succeeded.
 %
 %    Notes:
+%     - Does not delete the directory or the downloaded zip file.
 %     - Uses the location of binary file gshhs_c.b to detect the directory.
 %
 %    Examples:
-%     % Update GSHHS:
-%     uninstall_gshhs & webinstall_gshhs
+%     % Update GSHHG:
+%     uninstall_gshhg & webinstall_gshhg
 %
-%    See also: WEBINSTALL_GSHHS, UNINSTALL_MMAP, WEBINSTALL_MMAP,
-%              UNINSTALL_NJTBX, WEBINSTALL_NJTBX
+%    See also: WEBINSTALL_GSHHG, UNINSTALL_MMAP, WEBINSTALL_MMAP,
+%              UNINSTALL_NJTBX, WEBINSTALL_NJTBX, UNINSTALL_EXPORTFIG,
+%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
 %        Feb. 15, 2012 - handle not installed, flip logic from savepath,
 %                        doc update
+%        Jan. 14, 2014 - update for gshhg
+%        Jan. 15, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 15, 2012 at 15:25 GMT
+%     Last Updated Jan. 15, 2014 at 15:25 GMT
 
 % todo:
 

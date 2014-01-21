@@ -14,16 +14,17 @@ function [s]=ww3rec(s,rec)
 %     s=ww3struct();
 %     for i=1:numel(s.time); plotww3(ww3rec(s,i)); end
 %
-%    See also: WW3STRUCT, PLOTWW3, WW3MOV, WW3MAP, WW3MAPMOV
+%    See also: WW3STRUCT, WW3CAT, PLOTWW3, PLOTWW3TS, WW3MOV, WW3MAP,
+%              WW3MAPMOV
 
 %     Version History:
 %        May   4, 2012 - initial version
+%        Jan. 15, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   4, 2012 at 00:40 GMT
+%     Last Updated Jan. 15, 2014 at 00:40 GMT
 
 % todo:
-% - this functionality could be put in ww3struct
 
 % check nargin
 error(nargchk(2,2,nargin));

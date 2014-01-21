@@ -9,17 +9,18 @@ function [ok]=uninstall_seizmo()
 %     path.  OK is TRUE if the uninstall succeeded.
 %
 %    Notes:
-%     - Uses the location of the 'seizmodef' function to find the toolbox.
+%     - Uses the 'validseizmo' function location to find the toolbox.
 %     - This function is not in the top level directory as that would
 %       lead to running 'uninstall_seizmo' from a not-installed SEIZMO
 %       directory when trying to install that SEIZMO directory.
 %
 %    Examples:
-%     % Update SEIZMO
-%     install_seizmo  % calls uninstall_seizmo
+%     % Update SEIZMO & extras (must be in the main seizmo directory):
+%     delete('*.zip');  % forces redownload of extra packages
+%     install_seizmo    % calls uninstall_seizmo
 %
 %    See also: ABOUT_SEIZMO, SEIZMO, INSTALL_SEIZMO, UNINSTALL_NJTBX,
-%              UNINSTALL_MMAP, UNINSTALL_GSHHS, UNINSTALL_EXPORTFIG
+%              UNINSTALL_MMAP, UNINSTALL_GSHHG, UNINSTALL_EXPORTFIG
 
 %     Version History:
 %        Jan.  1, 2011 - initial version
@@ -32,9 +33,12 @@ function [ok]=uninstall_seizmo()
 %        Feb. 27, 2012 - multi-jar mattaup update
 %        Mar.  8, 2012 - fix mattaup multi-jar breakage
 %        Mar. 28, 2013 - add ocean/xc directories
+%        Jan. 15, 2014 - update for gshhs to gshhg rename, use validseizmo
+%                        to locate the toolbox (octave workaround), update
+%                        example for updating extra stuff too
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 28, 2013 at 15:25 GMT
+%     Last Updated Jan. 15, 2014 at 15:25 GMT
 
 % todo:
 
@@ -48,9 +52,9 @@ end
 reply=input('Uninstall M_Map? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & uninstall_mmap;
-    reply=input('Uninstall GSHHS? Y/N [Y]: ','s');
+    reply=input('Uninstall GSHHG? Y/N [Y]: ','s');
     if(isempty(reply) || strncmpi(reply,'y',1))
-        ok=ok & uninstall_gshhs;
+        ok=ok & uninstall_gshhg;
     end
 end
 reply=input('Uninstall export_fig? Y/N [Y]: ','s');
@@ -61,8 +65,8 @@ end
 % does seizmodef exist?
 % - this is the "kernel" of seizmo
 fs=filesep;
-if(exist('seizmodef','file'))
-    path=fileparts(fileparts(which('seizmodef'))); % root directory
+if(exist('validseizmo','file'))
+    path=fileparts(fileparts(which('validseizmo'))); % root directory
     rmpath(...
         path,...
         [path fs 'lowlevel'],...

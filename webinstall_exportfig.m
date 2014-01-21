@@ -18,18 +18,24 @@ function [ok]=webinstall_exportfig(mypath)
 %    Notes:
 %
 %    Examples:
-%     % Update export_fig:
-%     uninstall_exportfig & webinstall_exportfig
+%     % Update export_fig by uninstalling, deleting the .zip & installing:
+%     uninstall_exportfig;
+%     delete([fileparts(which('webinstall_exportfig')) filesep ...
+%         'export_fig.zip']);
+%     webinstall_exportfig;
 %
 %    See also: UNINSTALL_EXPORTFIG, WEBINSTALL_GSHHS, UNINSTALL_GSHHS,
 %              WEBINSTALL_NJTBX, UNINSTALL_NJTBX, WEBINSTALL_MMAP,
-%              UNINSTALL_MMAP
+%              UNINSTALL_MMAP, UNINSTALL_SEIZMO, INSTALL_SEIZMO, EXPORT_FIG
 
 %     Version History:
 %        Feb. 16, 2012 - initial version
+%        Jan. 14, 2014 - throw warning if problem
+%        Jan. 15, 2014 - updated example to actually update export_fig,
+%                        updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2012 at 15:25 GMT
+%     Last Updated Jan. 15, 2014 at 15:25 GMT
 
 % todo:
 
@@ -90,6 +96,8 @@ try
     % return
     cd(cwd);
 catch
+    le=lasterror;
+    warning(le.identifier,le.message);
     ok=false;
     cd(cwd);
 end

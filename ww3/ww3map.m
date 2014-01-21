@@ -22,11 +22,6 @@ function [varargout]=ww3map(s,rng,varargin)
 %     WW3MAP('FILE',RNG,'MMAP_OPT1',MMAP_VAL1,...) passes additional
 %     options on to MMAP to alter the map.
 %
-%     WW3MAP('FILE',RNG,PROJOPT,FGCOLOR,BGCOLOR,AX) sets the axes to draw
-%     in.  This is useful for subplots, guis, etc.  AX must have the same
-%     number of elements as S.DATA (as in one plot per data type).  The
-%     default creates a new figure.
-%
 %     WW3MAP(S,...) plots the WaveWatch III data contained in the
 %     structure S created by WW3STRUCT.  The plots average the data across
 %     all records for each data type.
@@ -43,16 +38,19 @@ function [varargout]=ww3map(s,rng,varargin)
 %     s=ww3struct('nww3.hs.200607.grb',1);
 %     ax=ww3map(s);
 %
-%    See also: WW3STRUCT, WW3MAPMOV, PLOTWW3, WW3MOV, WW3REC
+%    See also: WW3STRUCT, WW3MAPMOV, PLOTWW3, PLOTWW3TS, WW3MOV, WW3REC,
+%              WW3CAT
 
 %     Version History:
 %        May   5, 2012 - initial version
 %        Sep.  5, 2012 - set nan=0 for ice
 %        Oct.  5, 2012 - no file bugfix for rng
 %        Aug. 27, 2013 - use mmap image option
+%        Jan. 15, 2014 - updated See also list
+%        Jan. 16, 2014 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 27, 2013 at 00:40 GMT
+%     Last Updated Jan. 16, 2014 at 00:40 GMT
 
 % todo:
 

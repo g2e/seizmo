@@ -25,7 +25,8 @@ function [varargout]=plot_tauppath(tt,varargin)
 %      BGCOLOR    - background color (rgb triplet, name) (default is 'k')
 %      FGCOLOR    - foreground color (rgb triplet, name) (default is 'w')
 %      SHOWLEGEND - true or false (default is true)
-%      AXES       - handle of axes to draw in (1 or 2 handles) (none)
+%      PARENT     - handle of axes to draw in (1 or 2 handles) (none)
+%      DRAWEARTH  - draw earth when axes given to 'PARENT' option (false)
 %
 %     AX=PLOT_TAUPPATH(...) returns the handle to the axes drawn in.
 %
@@ -44,9 +45,10 @@ function [varargout]=plot_tauppath(tt,varargin)
 %        Dec.  6, 2011 - fix raycolor bug
 %        Feb. 24, 2012 - added lots of new properties
 %        May   3, 2012 - tagged the grid, minor doc fix
+%        Jan. 17, 2014 - added drawearth option, use parent for axes option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May   3, 2012 at 17:15 GMT
+%     Last Updated Jan. 17, 2014 at 17:15 GMT
 
 % todo:
 
@@ -84,7 +86,7 @@ end
 varargin=[{'fgc' [] 'bgc' [] 'legend' true ...
     'evsym' 'p' 'evsize' 10 'evc' 'y' ...
     'stsym' '^' 'stsize' 8 'stc' 'r' ...
-    'evang' -45 'raycolor' 'hsv'} varargin];
+    'evang' -45 'rayc' 'hsv' 'de' false} varargin];
 
 % extract pertinent parameters
 delete=false(numel(varargin),1);
@@ -92,6 +94,13 @@ for i=1:2:numel(varargin)
     p=varargin{i};
     v=varargin{i+1};
     switch p
+        case {'drawearth' 'drawe' 'de' 'earth' 'draw'}
+            if(~isscalar(v) || ~islogical(v))
+                error('TauP:plot_tauppath:badInput',...
+                    'DRAWEARTH must be TRUE or FALSE!');
+            end
+            opt.drawearth=v;
+            delete(i:i+1)=true;
         case {'evsymbol' 'evsym'}
             if(~ischar(v) || ~isscalar(v) ...
                     || ~any(lower(v)=='.ox+*sdv^<>ph'))
@@ -226,19 +235,27 @@ elseif(isempty(opt.bgc))
 end
 
 % new plot?
-if(isempty(ax))
-    % new figure if no parent
-    fh=figure('color',opt.bgc,'defaulttextcolor',opt.fgc,...
-        'defaultaxesxcolor',opt.fgc,'defaultaxesycolor',opt.fgc,...
-        'name','TauP Ray Paths');
-    ax=axes('parent',fh);
-    hold(ax,'on'); isheld=true;
+if(isempty(ax) || opt.drawearth)
+    if(isempty(ax))
+        % new figure if no parent
+        fh=figure('color',opt.bgc,'defaulttextcolor',opt.fgc,...
+            'defaultaxesxcolor',opt.fgc,'defaultaxesycolor',opt.fgc,...
+            'name','TauP Ray Paths');
+        ax=axes('parent',fh);
+        new=true;
+    else
+        new=false;
+    end
+    
+    % get hold state, set hold on
+    isheld=ishold(ax);
+    hold(ax,'on');
     
     % plot grid
     [cx,cy]=circle(6871);
     plot(ax,cx,cy,'color',[0.2 0.2 0.2],'linewidth',2,...
         'tag','plot_tauppath_grid');
-    set(ax,'position',[0.025 0.05 0.95 0.9]);
+    if(new); set(ax,'position',[0.025 0.05 0.95 0.9]); end
     [cx1,cy1]=circle(6871,180);
     [cx2,cy2]=circle(6771,180);
     plot(ax,[cx1; cx2],[cy1; cy2],'color',[0.2 0.2 0.2],'linewidth',1,...

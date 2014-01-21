@@ -1,52 +1,57 @@
-function [ok]=webinstall_gshhs(mypath)
-%WEBINSTALL_GSHHS    Install GSHHS components
+function [ok]=webinstall_gshhg(mypath)
+%WEBINSTALL_GSHHG    Install GSHHG components
 %
-%    Usage:    ok=webinstall_gshhs
-%              ok=webinstall_gshhs(path)
+%    Usage:    ok=webinstall_gshhg
+%              ok=webinstall_gshhg(path)
 %
 %    Description:
-%     OK=WEBINSTALL_GSHHS downloads the GSHHS zip file to the directory
-%     where this mfile is located, extracts its contents to the 'gshhs'
+%     OK=WEBINSTALL_GSHHG downloads the GSHHG zip file to the directory
+%     where this mfile is located, extracts its contents to the 'gshhg'
 %     directory and adds/saves it to the path.  THE DOWNLOAD IS LARGE:
 %     OVER 100 MEGABYTES & CAN TAKE HOURS ON A SLOW CONNECTION!  THERE IS
 %     NO RESUME: IF IT FAILS, YOU WILL LOSE EVERYTHING YOU DOWNLOADED!  See
-%     the notes below on how to install the GSHHS binaries manually.  Also
+%     the notes below on how to install the GSHHG binaries manually.  Also
 %     be aware that you cannot do anything else at the Matlab/Octave prompt
 %     while waiting for the file to download.
 %
-%     OK=WEBINSTALL_GSHHS(PATH) install the GSHHS binary files under
+%     OK=WEBINSTALL_GSHHG(PATH) install the GSHHG binary files under
 %     the directory given by PATH.
 %
 %    Notes:
-%     - Get the GSHHS binary files by downloading the archive from here:
-%        ftp://ftp.soest.hawaii.edu/pwessel/gshhs/gshhs+wdbii_2.2.0.zip
+%     - Get the GSHHG binary files by downloading the archive from here:
+%        ftp://ftp.soest.hawaii.edu/gshhg/gshhg-bin-2.2.4.zip
 %       Extract the binaries from the archive using your unzip utility of
 %       choice.
-%     - If you have the GSHHS binary files extracted, just add the
+%     - If you have the GSHHG binary files extracted, just add the
 %       directory containing them to your Matlab or Octave path using:
-%        addpath directory/of/gshhs/
-%       where the directory/of/gshhs needs to be changed to where the
-%       GSHHS binary files are located on your computer.
+%        addpath directory/of/gshhg/
+%       where the directory/of/gshhg needs to be changed to where the
+%       GSHHG binary files are located on your computer.
 %
 %    Examples:
-%     % GSHHS is big: this download can take _hours_.  This function is
+%     % GSHHG is big: this download can take _hours_.  This function is
 %     % only useful if you have a fast connection!
 %
-%    See also: UNINSTALL_GSHHS, WEBINSTALL_MMAP, UNINSTALL_MMAP,
-%              WEBINSTALL_NJTBX, UNINSTALL_NJTBX, M_MAP, M_GSHHS
+%    See also: UNINSTALL_GSHHG, WEBINSTALL_MMAP, UNINSTALL_MMAP,
+%              WEBINSTALL_NJTBX, UNINSTALL_NJTBX, UNINSTALL_EXPORTFIG,
+%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO,
+%              MMAP, M_MAP, M_GSHHS
 
 %     Version History:
 %        Feb.  5, 2011 - initial version
 %        Feb. 14, 2012 - renamed from seizmo_gshhs_webinstall to
 %                        webinstall_gshhs, updated to use gshhs2 files, doc
 %                        update, no savpath_seizmo, installs to location of
-%                        this file under gshhs directory
+%                        this file under gshhg directory
 %        Feb. 15, 2012 - doc update, flip savepath logic
 %        Feb. 16, 2012 - workaround quietly stalled unzip in octave
 %        Apr.  8, 2013 - url moved (not updating to gshhg atm)
+%        Jan. 14, 2014 - url moved, updated/renamed to latest gshhg, throw
+%                        warning if problem encountered
+%        Jan. 15, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  8, 2013 at 15:25 GMT
+%     Last Updated Jan. 15, 2014 at 15:25 GMT
 
 % todo:
 
@@ -60,53 +65,56 @@ end
 
 % check path
 if(~exist(mypath,'dir'))
-    error('seizmo:webinstall_gshhs:badPath',...
+    error('seizmo:webinstall_gshhg:badPath',...
         ['Directory (' mypath ') does not exist!']);
 end
 
-% attempt GSHHS install
+% attempt GSHHG install
 try
     % go to desired install location
     cwd=pwd;
     cd(mypath);
     
     % current version
-    gshhs='gshhs+wdbii_2.2.0.zip';
+    gshhg='gshhg-bin-2.2.4.zip';
     
     % grab file
-    url='ftp://ftp.soest.hawaii.edu/pwessel/gshhs/';
-    url=[url gshhs];
-    disp([' Getting ' gshhs]);
-    if(exist(gshhs,'file'))
-        if(~exist(fullfile(mypath,gshhs),'file'))
-            copyfile(which(gshhs),'.');
+    url='ftp://ftp.soest.hawaii.edu/gshhg/';
+    url=[url gshhg];
+    disp([' Getting ' gshhg]);
+    if(exist(gshhg,'file'))
+        if(~exist(fullfile(mypath,gshhg),'file'))
+            copyfile(which(gshhg),'.');
         end
     else
-        urlwrite(url,gshhs);
+        urlwrite(url,gshhg);
     end
     
     % delete pre-existing directory
-    gshhsdir=fullfile(mypath,'gshhs');
-    if(exist(gshhsdir,'dir') && exist('OCTAVE_VERSION','builtin')==5)
-        fprintf('Output directory exists: %s\n',gshhsdir);
-        y=rmdir(gshhsdir,'s');
+    % - this is only for octave and might not be necessary anymore
+    gshhgdir=fullfile(mypath,'gshhg');
+    if(exist(gshhgdir,'dir') && exist('OCTAVE_VERSION','builtin')==5)
+        fprintf('Output directory exists: %s\n',gshhgdir);
+        y=rmdir(gshhgdir,'s');
         if(~y)
             disp('Replace All or None of the files? A/N?');
         end
     end
     
-    % unpack and install GSHHS
-    unzip(gshhs);
-    addpath(gshhsdir);
+    % unpack and install GSHHG
+    unzip(gshhg,gshhgdir);
+    addpath(gshhgdir);
     ok=~savepath;
     if(~ok)
-        warning('seizmo:webinstall_gshhs:noWritePathdef',...
+        warning('seizmo:webinstall_gshhg:noWritePathdef',...
             'Cannot save path!');
     end
     
     % return
     cd(cwd);
 catch
+    le=lasterror;
+    warning(le.identifier,le.message);
     ok=false;
     cd(cwd);
 end

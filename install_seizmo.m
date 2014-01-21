@@ -24,7 +24,7 @@ function [varargout]=install_seizmo(renameflag)
 %        TauP      - http://www.seis.sc.edu/TauP/
 %        M_Map     - http://www.eos.ubc.ca/~rich/map.html
 %        njTBX     - http://sourceforge.net/apps/trac/njtbx
-%        GSHHS     - http://www.ngdc.noaa.gov/mgg/shorelines/gshhs.html
+%        GSHHG     - http://www.soest.hawaii.edu/pwessel/gshhg
 %        GlobalCMT - http://www.globalcmt.org/
 %
 %    Examples:
@@ -37,7 +37,9 @@ function [varargout]=install_seizmo(renameflag)
 %     install_seizmo
 %
 %    See also: ABOUT_SEIZMO, SEIZMO, UNINSTALL_SEIZMO, WEBINSTALL_NJTBX,
-%              WEBINSTALL_MMAP, WEBINSTALL_GSHHS
+%              WEBINSTALL_MMAP, WEBINSTALL_GSHHG, WEBINSTALL_EXPORTFIG,
+%              UNINSTALL_NJTBX, UNINSTALL_MMAP, UNINSTALL_GSHHG,
+%              UNINSTALL_EXPORTFIG
 
 %     Version History:
 %        Dec. 30, 2010 - initial version
@@ -62,9 +64,12 @@ function [varargout]=install_seizmo(renameflag)
 %        Jan. 29, 2013 - added xc folder
 %        Mar. 11, 2013 - added ocean folder
 %        July 19, 2013 - rename toplevel directory, better toolbox warnings
+%        Jan. 15, 2014 - update for gshhs to gshhg rename, added spline
+%                        toolbox to dependencies (none yet), warning on
+%                        problem with seizmo zip files
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 19, 2013 at 15:25 GMT
+%     Last Updated Jan. 15, 2014 at 15:25 GMT
 
 % todo:
 
@@ -123,13 +128,21 @@ switch lower(application)
         if(~license('checkout','signal_toolbox'))
             warning('seizmo:install_seizmo:noSigProcTbx',...
                 ['Your Matlab does not have the Signal Processing\n' ...
-                'Toolbox installed!  SEIZMO assumes the Signal\n' ...
-                'Processing Toolbox is available in a few places!']);
+                'Toolbox installed.  A few SEIZMO functions assume\n' ...
+                'the Signal Processing Toolbox is available and\n' ...
+                'will fail when used (e.g., filtering operations).']);
         elseif(~license('checkout','statistics_toolbox'))
             warning('seizmo:install_seizmo:noStatsTbx',...
-                ['Your Matlab does not have the Statistics\n' ...
-                'Toolbox installed!  SEIZMO uses the Statistics\n' ...
-                'Toolbox for cluster analysis!']);
+                ['Your Matlab does not have the Statistics Toolbox\n' ...
+                'installed.  A few SEIZMO functions assume the\n' ...
+                'Statistics Toolbox is available for cluster\n' ...
+                'analysis and will fail when used.']);
+        elseif(~license('checkout','spline_toolbox'))
+            warning('seizmo:install_seizmo:noSplineTbx',...
+                ['Your Matlab does not have the Spline Toolbox\n' ...
+                'installed.  A few SEIZMO functions assume the\n' ...
+                'Spline Toolbox is available for smooth spline\n' ...
+                'extraction/removal and will fail when used.']);
         end
     case 'octave'
         warning('seizmo:install_seizmo:octaveIssues',...
@@ -140,6 +153,7 @@ switch lower(application)
             reply=input(['Install java package from Octave-Forge ' ...
                 '(requires internet)? Y/N [Y]: '],'s');
             if(isempty(reply) || strncmpi(reply,'y',1))
+                % DOES THIS NEED A TRY/CATCH?
                 pkg install -forge java;
             end
         elseif(isempty(ver('signal')))
@@ -148,7 +162,17 @@ switch lower(application)
             reply=input(['Install signal package from Octave-Forge ' ...
                 '(requires internet)? Y/N [Y]: '],'s');
             if(isempty(reply) || strncmpi(reply,'y',1))
+                % DOES THIS NEED A TRY/CATCH?
                 pkg install -forge signal;
+            end
+        elseif(isempty(ver('splines')))
+            warning('seizmo:install_seizmo:noSplinesTbx',...
+                'Splines package missing from Octave!');
+            reply=input(['Install splines package from Octave-Forge ' ...
+                '(requires internet)? Y/N [Y]: '],'s');
+            if(isempty(reply) || strncmpi(reply,'y',1))
+                % DOES THIS NEED A TRY/CATCH?
+                pkg install -forge splines;
             end
         end
     otherwise
@@ -290,8 +314,7 @@ if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_exportfig;
 end
 
-% make dbs
-% - eventually: iris sacpzdb
+% make globalcmt db
 reply=input('Create local GlobalCMT database? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     globalcmt_create;
@@ -356,6 +379,8 @@ try
     cd(cwd);
     ok=true;
 catch
+    le=lasterror;
+    warning(le.identifier,le.message);
     cd(cwd);
     ok=false;
 end

@@ -2,29 +2,31 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %FSS    Estimate frequency-slowness spectrum
 %
 %    Usage:    s=fss(data,smax,spts,frng)
+%              s=fss(data,smax,[nspts espts],frng)
+%              s=fss(data,[nsmin nsmax nspts],[esmin esmax espts],frng)
 %              s=fss(...,'polar',true|false,...)
 %              s=fss(...,'method',string,...)
 %              s=fss(...,'whiten',true|false,...)
 %              s=fss(...,'weights',w,...)
 %              s=fss(...,'damping',d,...)
 %              s=fss(...,'ntiles',nt,...)
+%              s=fss(...,'fhwidth',n,...)
 %              s=fss(...,'avg',true|false,...)
 %
 %    Description:
 %     S=FSS(DATA,SMAX,SPTS,FRNG) computes an estimate of the frequency-
 %     slowness power spectra for an array by frequency-domain beamforming
-%     the time series dataset DATA in a cartesian grid.  The dataset DATA
-%     is a SEIZMO struct containing array info and time series recordings.
-%     This function differs from GEOFSS in that the waves are assumed to be
-%     plane waves traveling on a planar surface rather than surface waves
-%     expanding and contracting on a sphere.  The range of the horizontal
-%     slowness grid is given by SMAX (sec/deg) and extends from -SMAX to
-%     SMAX for both East/West and North/South directions.  SPTS controls
-%     the number of slowness points for both directions (SPTSxSPTS grid).
-%     FRNG gives the frequency range as [FREQLOW FREQHIGH] in Hz (the
-%     individual frequencies are determined by the fft of the data).  The
-%     output S is a struct containing relevant info and the frequency-
-%     slowness spectra (with size SPTSxSPTSxNFREQ).  The struct layout is:
+%     the time series dataset DATA in a cartesian grid of SPTSxSPTS in size
+%     extending from -SMAX to SMAX (sec/deg) in both North & East
+%     horizontal slowness space.  The dataset DATA is a SEIZMO struct
+%     containing array info and time series recordings.  This function
+%     differs from GEOFSS in that the waves are assumed to be plane waves
+%     traveling on a planar surface rather than waves expanding and
+%     contracting on a sphere.  FRNG gives the frequency range as
+%     [FREQLOW FREQHIGH] in Hz (the individual frequencies are determined
+%     by the fft of the data).  The output S is a struct containing
+%     relevant info and the frequency- slowness spectra (with size
+%     SPTSxSPTSxNFREQ).  The struct layout is:
 %          .nsta     - number of stations
 %          .st       - station positions [lat lon elev depth]
 %          .butc     - UTC start time of data
@@ -40,7 +42,20 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %          .center   - array center as [LAT LON]
 %          .whiten   - is spectra whitened? true/false
 %          .weights  - weights used in beamforming
+%          .ntiles   - number of timesection tiles
+%          .fhwidth  - frequency smoothing halfwidth in samples
 %          .spectra  - frequency-slowness spectra estimate
+%
+%     S=FSS(DATA,SMAX,[NSPTS ESPTS],FRNG) allows specifying the horizontal
+%     slowness sample size separately.  For example [200 100] would give
+%     twice the sampling in the North slowness space compared to that of
+%     the East slowness space.
+%
+%     S=FSS(DATA,[NSMIN NSMAX NSPTS],[ESMIN ESMAX ESPTS],FRNG) specifies
+%     the range and sampling of the North & East slowness.  This allows
+%     targeted sampling of slowness space to save computation and memory.
+%     The 3rd element (the number of samples) may be omitted (will default
+%     to 101).
 %
 %     S=FSS(...,'POLAR',TRUE|FALSE,...) specifies if the spectra is sampled
 %     regularly in cartesian or polar coordinates.  Polar coords are useful
@@ -49,7 +64,13 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %     in the East/West & North/South directions and so exhibits less
 %     distortion in plots of the slowness space. If POLAR=TRUE, SPTS may be
 %     given as [SPTS BAZPTS] to control the azimuthal resolution (default
-%     is BAZPTS=181 points).
+%     is BAZPTS=181 points).  SPTS goes from 0 to SMAX in this case rather
+%     than from -SMAX to SMAX for cartesian (so reduce SMAX by 2 if you
+%     want to keep a similar spacing).  You may also use:
+%      [SMIN SMAX SPTS],[BAZMIN BAZMAX BAZPTS]
+%     to explicitly specify the sampled region in absolute slowness and
+%     back-azimuth.  The 3rd element (the number of samples) may be omitted
+%     (SPTS defaults to 101, BAZPTS defaults to 181).
 %
 %     S=FSS(...,'METHOD',STRING,...) defines the beaming method.  STRING
 %     may be 'center', 'coarray', 'capon', 'full', or [LAT LON].  The
@@ -95,18 +116,29 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %     records in DATA is recommended by Capon 1969.  The default is 1 which
 %     provides the best frequency resolution.
 %
+%     S=FSS(...,'FHWIDTH',N,...) sets the sliding window halfwidth used to
+%     average neighboring frequencies.  This is mainly for stabilizing the
+%     inversion in the 'capon' method but has utility in smoothing spectra.
+%     The window is size 2N+1 so N=2 averages each frequency with the
+%     closest 2 discrete frequencies above and below.  The default N is 0
+%     which does no averaging.
+%
 %     S=FSS(...,'AVG',TRUE|FALSE,...) indicates if the spectra is averaged
-%     across frequency during computation.  This can save a significant
-%     amount of memory.  The default is false.
+%     across frequency during computation (thus collapsing the frequency
+%     dimension to size 1).  This is not related to the FHWIDTH option and
+%     can save a significant amount of memory.  The default is false.
 %
 %    Notes:
 %     - Records in DATA must have equal and regular sample spacing.
-%     - Attenuation is ignored.
+%     - Attenuation is not included.
 %     - dB values for unwhitened data are probably not scaled correctly but
 %       this does not have an impact on relative dB values.
 %     - References:
 %        Capon 1969, High-Resolution Frequency-Wavenumber Spectrum
 %         Analysis, Proc. IEEE, Vol. 57, No. 8, pp. 1408-1418
+%        Husebye & Ruud 1989, Array Seismology - Past, Present and Future
+%         Developments, in Observatory Seismology, edited by Litehiser, pp.
+%         123-153, Univ of Calif Press, Berkeley
 %        Rost & Thomas 2002, Array Seismology: Methods and Applications,
 %         Rev of Geoph, Vol. 40, No. 3, doi:10.1029/2000RG000100
 %
@@ -156,12 +188,26 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %        Jan.  9, 2013 - bugfix for norm. when record is all zeros, allow
 %                        options to be any case
 %        Jan. 14, 2013 - update history
+%        Jan. 15, 2014 - allow far more flexible slowness space sampling,
+%                        fhwidth option, tiles are averaged
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2013 at 14:05 GMT
+%     Last Updated Jan. 15, 2014 at 14:05 GMT
 
 % todo:
-% - abs amp (see fssxc)
+% - allow far more flexible slowness space sampling
+%   - checking done --> TEST
+%   - implemented --> TEST
+%   - make sure plotting et al can handle it
+%   - TEST: does fhwidth=0 give the same without fhwidth implemented?
+% - fixed unwhitened output (power)
+%   - what did i mean here???
+% - tiling/fhwidth: do i avg raw data or matrix output?
+%   - (1) avg spectral matrices across nt & f then invert
+%         - this is costly but the way to go
+%   - (2) just averages the raw data
+%   - (3) fhwidth on raw freq then averages nt sp mat
+% - detrend/hanning of tiled data
 
 % check nargin
 error(nargchk(4,inf,nargin));
@@ -185,14 +231,49 @@ if(nrecs<2)
 end
 
 % check inputs
+if(isscalar(smax))
+    % (smax,spts) or (smax,[ypts xpts])
+    %       ep=np or (smax,[npts epts])
+    %      bp=181 or (smax,[spts bazpts])
+    if(~isnumeric(smax) || ~isreal(smax) || smax<=0)
+        error('seizmo:fss:badInput',...
+            'SMAX must be a positive real scalar in sec/deg!');
+    elseif(~isnumeric(spts) || ~isreal(spts) || ~isvector(spts) ...
+            || isempty(spts) || any(spts<2) || any(fix(spts)~=spts))
+        error('seizmo:fss:badInput',...
+            'SPTS must be positive integer(s) >1!');
+    elseif(numel(spts)>2)
+        error('seizmo:fss:badInput',...
+            'SPTS must contain 1 or 2 elements!');
+    end
+else
+    % ([ymin ymax],[xmin xmax]) or ([ymin ymax ypts],[xmin xmax xpts])
+    % ([nmin nmax],[emin emax]) with npts=101
+    % ([smin smax],[bazmin bazmax]) with spts=101, bazpts=181
+    if(~isnumeric(smax) || ~isreal(smax))
+        error('seizmo:fss:badInput',...
+            '[YMIN YMAX YPTS] input must be real-valued!');
+    elseif(~isnumeric(spts) || ~isreal(spts))
+        error('seizmo:fss:badInput',...
+            '[XMIN XMAX XPTS] input must be real-valued!');
+    end
+    if(isempty(smax) || numel(smax)>3)
+        error('seizmo:fss:badInput',...
+            '2nd argument must be [YMIN YMAX YPTS] or [YMIN YMAX]!');
+    elseif(isempty(smax) || numel(smax)>3)
+        error('seizmo:fss:badInput',...
+            '3rd argument must be [XMIN XMAX XPTS] or [XMIN XMAX]!');
+    end
+    if(numel(smax)==3 && (smax(3)<1 || smax(3)~=fix(smax(3))))
+        error('seizmo:fss:badInput',...
+            'YPTS must be a positive integer!');
+    elseif(numel(spts)==3 && (spts(3)<1 || spts(3)~=fix(spts(3))))
+        error('seizmo:fss:badInput',...
+            'XPTS must be a positive integer!');
+    end
+end
 sf=size(frng);
-if(~isreal(smax) || ~isscalar(smax) || smax<=0)
-    error('seizmo:fss:badInput',...
-        'SMAX must be a positive real scalar in sec/deg!');
-elseif(~any(numel(spts)==[1 2]) || any(fix(spts)~=spts) || any(spts<=2))
-    error('seizmo:fss:badInput',...
-        'SPTS must be a positive scalar integer >2!');
-elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<0) ...
+if(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<0) ...
         || any(frng(1)>frng(2)))
     error('seizmo:fss:badInput',...
         'FRNG must be a Nx2 array of [FREQLOW FREQHIGH] in Hz!');
@@ -305,7 +386,7 @@ end
 
 % get frequencies
 nspts=2^nextpow2(maxnpts); % half xcorr
-%nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification
+%nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification purposes
 f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
 
 % tiling
@@ -329,13 +410,29 @@ if(pv.whiten); data=data./abs(data); data(isnan(data))=0; end
 
 % setup slowness grid
 if(pv.polar)
-    if(numel(spts)==1); spts(2)=181; end % default # azimuthal points
-    sx=(0:spts(2)-1)/(spts(2)-1)*360; % baz (wedge decided x/y)
-    sy=(0:spts(1)-1).'/(spts(1)-1)*smax; % smag
+    if(numel(smax)==1)
+        if(numel(spts)==1); spts(2)=181; end % default # azimuthal points
+        sx=(0:spts(2)-1)/(spts(2)-1)*360; % baz (wedge decided x/y)
+        sy=(0:spts(1)-1).'/(spts(1)-1)*smax; % smag
+    else
+        if(numel(smax)==2); smax(3)=101; end % default # slow mag points
+        if(numel(spts)==2); spts(3)=181; end % default # azimuthal points
+        sx=linspace(spts(1),spts(2),spts(3)); % baz (wedge decided x/y)
+        sy=linspace(smax(1),smax(2),smax(3)).'; % smag
+        spts=[smax(3) spts(3)]; % save npts for later
+    end
 else
-    spts(2)=spts(1);
-    sx=-smax:2*smax/(spts(1)-1):smax; % east
-    sy=fliplr(sx).'; % north
+    if(numel(smax)==1)
+        if(numel(spts)==1); spts(2)=spts(1); end % default # east points
+        sx=-smax:2*smax/(spts(2)-1):smax; % east
+        sy=fliplr(-smax:2*smax/(spts(1)-1):smax).'; % north
+    else
+        if(numel(smax)==2); smax(3)=101; end % default # north points
+        if(numel(spts)==2); spts(3)=101; end % default # east points
+        sx=linspace(spts(1),spts(2),spts(3)); % east
+        sy=fliplr(linspace(smax(1),smax(2),smax(3))).'; % north
+        spts=[smax(3) spts(3)]; % save npts for later
+    end
 end
 
 % setup output
@@ -354,6 +451,8 @@ end
 [s(1:nrng,1).center]=deal([clat clon]);
 [s(1:nrng,1).whiten]=deal(pv.whiten);
 [s(1:nrng,1).weights]=deal(pv.w);
+[s(1:nrng,1).ntiles]=deal(pv.ntiles);
+[s(1:nrng,1).fhwidth]=deal(pv.fhwidth);
 [s(1:nrng,1).spectra]=deal(zeros(0,'single'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -368,6 +467,7 @@ d2km=6371*d2r;
 nslow=prod(spts);
 
 % get utc static time shifts
+% - case 'center' 'user' only does the line below
 dt=timediff(butc(1,:),butc,'utc').'; % need row vector
 switch pv.method
     case 'coarray'
@@ -409,7 +509,7 @@ switch pv.method
         [e,n]=geographic2enu(st(:,1),st(:,2),0,clat,clon,0);
         e=e(slave)-e(master);
         n=n(slave)-n(master);
-    otherwise
+    otherwise % {'center' 'user'}
         % each station relative to array center
         [e,n]=geographic2enu(st(:,1),st(:,2),0,clat,clon,0);
 end
@@ -429,18 +529,19 @@ clear e n
 % p is the projection of the slowness vectors s onto the
 % spatial difference vectors r (called the coarray)
 %
-% p is NSLOWxNPAIRS
+% p is NSLOWxNPAIRS and has units of seconds
 if(pv.polar)
     sx=sx(ones(spts(1),1),:); % baz in degrees
-    sy=sy(:,ones(spts(2),1))/d2km; % smag in sec/km
-    [sx,sy]=deal(sy.*sind(sx),sy.*cosd(sx));
-    p=[sx(:) sy(:)]*r;
+    sy=sy/d2km; % smag in sec/km
+    sy=sy(:,ones(spts(2),1));
+    [sx,sy]=deal(sy.*sind(sx),sy.*cosd(sx)); % convert to cartesian
 else % cartesian
     sx=sx/d2km;
     sx=sx(ones(spts(1),1),:);
-    sy=fliplr(sx)';
-    p=[sx(:) sy(:)]*r;
+    sy=sy/d2km;
+    sy=sy(:,ones(spts(2),1));
 end
+p=[sx(:) sy(:)]*r;
 clear r sx sy
 
 % loop over frequency ranges
@@ -552,6 +653,7 @@ pv.whiten=true;
 pv.w=[];
 pv.damping=0.001; % only for capon
 pv.ntiles=1;
+pv.fhwidth=0;
 
 % require pv pairs
 if(mod(nargin,2))
@@ -578,6 +680,8 @@ for i=1:2:nargin
             pv.damping=varargin{i+1};
         case {'ntiles' 'ntile' 'tiles' 'tile' 'nt' 't'}
             pv.ntiles=varargin{i+1};
+        case {'fhwidth' 'fhwid' 'fh' 'fwid' 'f'}
+            pv.fhwidth=varargin{i+1};
         case {'average' 'av' 'avg' 'a'}
             pv.avg=varargin{i+1};
         otherwise
@@ -612,6 +716,10 @@ elseif(~isreal(pv.ntiles) || ~isscalar(pv.ntiles) ...
         || pv.ntiles<=0 || pv.ntiles~=fix(pv.ntiles))
     error('seizmo:fss:badInput',...
         'NTILES must be a positive integer!');
+elseif(~isreal(pv.fhwidth) || ~isscalar(pv.fhwidth) ...
+        || pv.fhwidth~=fix(pv.fhwidth))
+    error('seizmo:fss:badInput',...
+        'FHWIDTH must be an integer!');
 elseif(~isscalar(pv.avg) || ~islogical(pv.avg))
     error('seizmo:fss:badInput',...
         'AVG must be TRUE or FALSE!');

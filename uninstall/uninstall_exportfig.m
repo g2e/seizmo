@@ -17,13 +17,14 @@ function [ok]=uninstall_exportfig()
 %
 %    See also: WEBINSTALL_EXPORTFIG, UNINSTALL_GSHHS, WEBINSTALL_GSHHS,
 %              UNINSTALL_NJTBX, WEBINSTALL_NJTBX, UNINSTALL_MMAP,
-%              WEBINSTALL_MMAP
+%              WEBINSTALL_MMAP, UNINSTALL_SEIZMO, INSTALL_SEIZMO
 
 %     Version History:
 %        Feb. 16, 2012 - initial version
+%        Jan. 15, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2012 at 15:25 GMT
+%     Last Updated Jan. 15, 2014 at 15:25 GMT
 
 % todo:
 

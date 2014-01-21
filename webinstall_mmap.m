@@ -18,20 +18,27 @@ function [ok]=webinstall_mmap(mypath)
 %    Notes:
 %
 %    Examples:
-%     % Update M_Map:
-%     uninstall_mmap & webinstall_mmap
+%     % Update M_Map by uninstalling, deleting the zip file & reinstalling:
+%     uninstall_mmap;
+%     delete([fileparts(which('webinstall_mmap')) filesep 'm_map1.4.zip']);
+%     webinstall_mmap
 %
 %    See also: UNINSTALL_MMAP, WEBINSTALL_GSHHS, UNINSTALL_GSHHS,
-%              WEBINSTALL_NJTBX, UNINSTALL_NJTBX
+%              WEBINSTALL_NJTBX, UNINSTALL_NJTBX, UNINSTALL_EXPORTFIG,
+%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO,
+%              MMAP, M_MAP
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
 %        Feb. 15, 2012 - add m_map_fixes, doc update, flip savepath logic
 %        Feb. 16, 2012 - workaround quietly stalled unzip in octave
 %        Apr. 25, 2012 - copy m_map/private to m_map_fixes/private
+%        Jan. 14, 2014 - throw warning if problem
+%        Jan. 15, 2014 - updated example to actually update M_Map, updated
+%                        See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2012 at 15:25 GMT
+%     Last Updated Jan. 15, 2014 at 15:25 GMT
 
 % todo:
 
@@ -96,6 +103,8 @@ try
     % return
     cd(cwd);
 catch
+    le=lasterror;
+    warning(le.identifier,le.message);
     ok=false;
     cd(cwd);
 end

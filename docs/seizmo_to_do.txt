@@ -1,34 +1,53 @@
 my todo list
 %%%%%%%%%%%%
 
-exist function problem
-- returns true for any directory/file name on path so we need to test
-  for existence only in the current directory (if not absolute)
-  - possible workaround: ~exist(dir,7) || isempty(xdir(dir))
-    - does this work on windows/mac?
-
-5 noise array phase and attenuation like in prieto 2009
-6 test & tutorials
-7 fss codes
-8 geofss codes (use mmap image option)
-9 test & tutorials
-10 data grabbing codes
-grab_events
-grab_stations
-grab_channels
-grab_responses
-grab_seismograms
-11 2d inversion on a sphere
-12 tpw
-13 reflectivity
-14 parallel version available using comment tags to allow switching
-   % __SEIZMO_PARALLEL__
-   % __SEIZMO_SERIAL__
-   functions
-
 way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
 ## addframe(aviobj, hf)
+
+exist function problem
+- returns true for any directory/file name on path so we need to test
+  for existence only in the current directory (if not absolute)
+  - possible workarounds:
+    ~exist(dir,7) || isempty(xdir(dir))
+      - does this work on windows/mac?
+     exist([pwd filesep dir],7)
+
+getspline
+rspline
+
+crust1.0
+
+5 noise array phase and attenuation like in prieto 2009
+    - noise_stack_delaz
+    - stacking option
+      - z stat of coherency (freq domain)
+      - acl of coherency (freq domain)
+    - given dataset & freq plot real/imag coherency vs distance
+    - dist vs freq plot of real/imag coherency
+    - minimum misfit to observed real coherency
+        - searches through phase velocity
+        - searches through attenuation
+        - make a plot too
+    - Rayleigh greens function given phase velocity & attenuation vs freq
+6 test & tutorials for noise codes
+7 fss codes
+8 geofss codes (use mmap image option)
+9 test & tutorials for fss codes
+10 data grabbing codes
+    grab_events
+    grab_stations
+    grab_channels
+    grab_responses
+    grab_seismograms
+11 2d inversion on a sphere
+12 tpw
+13 reflectivity
+14 rayleigh & love forward & inverse problem
+15 parallel version available using comment tags to allow switching
+   % __SEIZMO_PARALLEL__
+   % __SEIZMO_SERIAL__
+   functions
 
 cmt
  - neu 2 enu (is this worthwhile?)
@@ -40,8 +59,6 @@ cmt
 
 noise
  - HARD: overlap option for stack stuff
- - HARD: better rotate_correlations for processing
- - check horizontals code
 
 fss
  - compute spectra not centered on 0,0?
@@ -55,8 +72,6 @@ fss
  - amplitudes of unwhitened, tdss & capon
    - 1/(2*pi) factor?
    - power spectral density is scaled by 2*delta/npts (td measures)
- - half+auto => full for xc when desired
-   - this should just be a function
  - averaging across frequency (mainly for capon method)
  - test again!
 geofss
@@ -67,11 +82,6 @@ geofss
    - geo(fsshorz,fsshorzxc,tdsshorzxc,arfhorz)
      - much of this should come from non-geo versions
  - test!
-
-rotate_correlations
-    - not ready
-      - need single dataset i/o
-      - need horiz autoxc support (3 vs 4 files)
 
 meld
     - uneven or variable samplerate
@@ -91,10 +101,6 @@ more cmb models (rjk)
         - cell of numbers  {depths/heights  velo%s}
         - inputs will change per model or series ...
         - can never really do everything here ... just go for basics
-
-syncsample
-    - 1,2,3,4+ datasets
-    - this will be underneath rotate, meld, rotate_correlations, 
 
 new datasets
     - natural earth: http://www.naturalearthdata.com/downloads/
@@ -129,6 +135,8 @@ improve top-level help file
 
 checking needs some tolerance (just too strict...)
     - delta/b often differ by a neglegible amount
+        - but how do we handle the difference? fixdelta currently
+    - global access?
 
 slantstacking
 vespagrams
@@ -158,6 +166,9 @@ improved plotting
 	- how to handle non-synced breaks in components
 	- movies/plots of 3-d particle motion
 	- movies/plots of 2-d particle motion
+syncsample
+    - 2,3,4+ datasets
+    - this will be underneath rotate, meld
 
 standard instrument responses database
     - this leads into inst resp checking
@@ -194,29 +205,39 @@ ffmancor
 
 sph harm mantle models
     - really need codes to synthesize info at points
+        - fjsimmons has matlab codes along these lines it seems
+
 ani mantle models
+    - just store the values as another field
+    - add a ani flag of some sort (should indicate type too)
+    - dependent functions need to handle flag logic and math
+
+add more models shared via iris emc
 
 picking
     - better understanding of ppk in SAC
     - mimic it as much as possible
+    - something like key2zoompan + plotX
+
 autopicking
     - sta/lta style
+    - this is also useful for glitch detection
 
 glitch & step removal
     - SAC has glitch detection ... implement it?
-smooth spline removal (requires spline toolbox)
+    - smooth spline removal (requires spline toolbox)
 
-drop restrictive copyright functions
-	buttord2 (edit of buttord)
-	ddendrogram (edit of dendrogram)
+drop/replace restrictive copyright functions
+	buttord2 (edit of buttord) - NEED!
+	ddendrogram (edit of dendrogram) - NEED FOR COLORING!
 
-slidingavg
-    - nan support
-    - check against other running mean functions
-
-getpeaks
 markpeaks
-basic segy (segy2MAT), ah, miniseed support
+
+other filetype support:
+ segy (segy2MAT)
+ ah (coral)
+ miniseed support (this can be done since there is a fc entry)
+ sh (Thorne's codes)
 
 OCTAVE SPECIFIC STUFF
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -238,3 +259,4 @@ OCTAVE SPECIFIC STUFF
     - type y/n/A/N to get through it
 - no texlabel
 - no axescheck (use personal axparse function)
+- 3.8.0 doesn't handle comment after line continuation

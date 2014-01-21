@@ -25,7 +25,7 @@ function [varargout]=capavg_cmb_profiles(pf,step,r)
 %
 %    Examples:
 %     % Plot just the corrected slowness results:
-%     images=capavg_cmb_profiles(pf,4,10);
+%     im=capavg_cmb_profiles(pf,4,10);
 %     mmap('image',{im.lat im.lon im.cslow},...
 %          'fg','k','l',false,'o',false);
 %
@@ -39,9 +39,10 @@ function [varargout]=capavg_cmb_profiles(pf,step,r)
 %        Nov.  2, 2012 - r is now in degrees
 %        Nov. 23, 2012 - now capavg_...
 %        Jan. 10, 2013 - documented no output plotting
+%        Oct. 11, 2013 - minor example fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 19, 2013 at 13:30 GMT
+%     Last Updated Oct. 11, 2013 at 13:30 GMT
 
 % todo:
 

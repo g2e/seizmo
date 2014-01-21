@@ -2,9 +2,10 @@ function [in,set,cmp,rev]=horz_correlations_sets(xc)
 %HORZ_CORRELATIONS_SETS   Returns indices for horiz. correlation sets
 %
 %    Usage:    [in,set,cmp]=horz_correlations_sets(xc)
+%              [in,set,cmp,rev]=horz_correlations_sets(xc)
 %
 %    Description:
-%     [IN,SET,CMP]=HORZ_CORRELATION_SETS(XC) groups horizontal correlograms
+%     [IN,SET,CMP]=HORZ_CORRELATIONS_SETS(XC) groups horiz. correlograms
 %     into rotatible sets for ROTATE_CORRELATIONS.  This is similar to the
 %     functions HORZPAIRS & FINDTRIPLETS which find the rotatible data for
 %     the functions ROTATE/ROTATE3.  XC is a SEIZMO struct of correlograms
@@ -22,7 +23,7 @@ function [in,set,cmp,rev]=horz_correlations_sets(xc)
 %     Auto-correlation sets may potentially be missing component 2 or 3 due
 %     to the redundant information (2=reverse(3)).
 %
-%     [IN,SET,CMP,REV]=HORZ_CORRELATION_SETS(XC) also indicates what
+%     [IN,SET,CMP,REV]=HORZ_CORRELATIONS_SETS(XC) also indicates what
 %     correlograms need to be reversed.  This is useful when master & slave
 %     stations are switched for a set.
 %
@@ -41,10 +42,10 @@ function [in,set,cmp,rev]=horz_correlations_sets(xc)
 %
 %    Examples:
 %     % Remove vertical correlations and non-set horizontal correlations:
-%     xc=xc(horz_correlation_sets(xc));
+%     xc=xc(horz_correlations_sets(xc));
 %
 %     % Get sets and loop over them:
-%     [in,set,cmp]=horz_correlation_sets(xc);
+%     [in,set,cmp]=horz_correlations_sets(xc);
 %     for i=1:max(set)
 %         % record indices for this pair
 %         ridx=in(set==i);
@@ -67,9 +68,10 @@ function [in,set,cmp,rev]=horz_correlations_sets(xc)
 %        Mar.  9, 2013 - initial concept drafted
 %        Sep.  5, 2013 - first working version
 %        Sep. 20, 2013 - properly optimized checking, deg fudge factor
+%        Jan. 15, 2014 - fixed several typos of this functions name
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 20, 2013 at 15:05 GMT
+%     Last Updated Jan. 15, 2014 at 15:05 GMT
 
 % todo:
 
@@ -108,7 +110,7 @@ nrecs=numel(xc);
 
 % error if non-correlations
 if(~all(strcmp(kuser(:,1),'MASTER') & strcmp(kuser(:,2),'SLAVE')))
-    error('seizmo:horz_correlation_sets:badInput',...
+    error('seizmo:horz_correlations_sets:badInput',...
         'Some records appear not to be correlations!');
 end
 

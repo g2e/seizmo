@@ -21,7 +21,9 @@ function [ok]=webinstall_njtbx(mypath)
 %     uninstall_njtbx & webinstall_njtbx
 %
 %    See also: UNINSTALL_NJTBX, UNINSTALL_GSHHS, WEBINSTALL_GSHHS,
-%              UNINSTALL_MMAP, WEBINSTALL_MMAP
+%              UNINSTALL_MMAP, WEBINSTALL_MMAP, UNINSTALL_EXPORTFIG,
+%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO,
+%              SZ_TOC_WW3
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
@@ -31,9 +33,11 @@ function [ok]=webinstall_njtbx(mypath)
 %        Mar.  8, 2012 - minor code changes for clarity
 %        Apr. 25, 2012 - use zipped version of the svn checkout of njtbx as
 %                        the zipfile available via their website is broken
+%        Jan. 14, 2014 - throw warning rather than error if problem
+%        Jan. 15, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2012 at 15:25 GMT
+%     Last Updated Jan. 15, 2014 at 15:25 GMT
 
 % todo:
 
@@ -166,7 +170,8 @@ try
     % return
     cd(cwd);
 catch
-    error(lasterror)
+    le=lasterror;
+    warning(le.identifier,le.message);
     ok=false;
     cd(cwd);
 end

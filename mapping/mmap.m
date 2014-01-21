@@ -169,9 +169,11 @@ function [varargout]=mmap(varargin)
 %        Aug. 27, 2013 - allow vector lat/lon for image option, do not
 %                        check tag of existing axes, image can be drawn on
 %                        existing axes, hack to avoid shading warnings
+%        Jan. 14, 2014 - commented out moving image to the front as this
+%                        hides coastlines and land
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 27, 2013 at 20:30 GMT
+%     Last Updated Jan. 14, 2014 at 20:30 GMT
 
 % todo:
 
@@ -557,9 +559,9 @@ if(~held)
 end
 
 % move image above
-if(~isempty(image))
-    movekids(ph(~isnan(ph)),'front');
-end
+%if(~isempty(image))
+%    movekids(ph(~isnan(ph)),'front');
+%end
 
 % wrap longitudes to plot
 while(any(stlo-MAP_VAR_LIST.longs(2)>0))

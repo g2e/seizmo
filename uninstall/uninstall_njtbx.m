@@ -16,7 +16,8 @@ function [ok]=uninstall_njtbx()
 %     uninstall_njtbx & webinstall_njtbx
 %
 %    See also: WEBINSTALL_NJTBX, UNINSTALL_MMAP, WEBINSTALL_MMAP,
-%              UNINSTALL_GSHHS, WEBINSTALL_GSHHS
+%              UNINSTALL_GSHHG, WEBINSTALL_GSHHG, UNINSTALL_EXPORTFIG,
+%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
@@ -25,9 +26,10 @@ function [ok]=uninstall_njtbx()
 %                        don't force failure for octave
 %        Mar.  8, 2012 - make code changes for clarity
 %        Apr. 25, 2012 - fix classpath.txt jar removal
+%        Jan. 15, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2012 at 15:25 GMT
+%     Last Updated Jan. 15, 2014 at 15:25 GMT
 
 % todo:
 

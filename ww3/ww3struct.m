@@ -53,7 +53,8 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %     s=ww3struct('nww3.hs.200607.grb',1);
 %     plotww3(s);
 %
-%    See also: WW3REC, PLOTWW3, WW3MOV, WW3MAP, WW3MAPMOV
+%    See also: WW3REC, WW3CAT, PLOTWW3, PLOTWW3TS, WW3MOV, WW3MAP,
+%              WW3MAPMOV
 
 %     Version History:
 %        June 30, 2010 - initial version
@@ -65,9 +66,10 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %        Feb. 27, 2012 - minor doc update
 %        May   5, 2012 - minor doc update
 %        May  11, 2012 - skips .data access if there is a null range
+%        Jan. 15, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  11, 2012 at 00:40 GMT
+%     Last Updated Jan. 15, 2014 at 00:40 GMT
 
 % todo:
 

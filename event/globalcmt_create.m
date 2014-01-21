@@ -27,9 +27,10 @@ function []=globalcmt_create(overwrite)
 %     Version History:
 %        Mar.  1, 2012 - initial version
 %        Mar. 25, 2013 - no error if cannot write (just warn and move on)
+%        Jan. 14, 2014 - warn if problem encountered (like from urlread)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 25, 2013 at 17:25 GMT
+%     Last Updated Jan. 14, 2014 at 17:25 GMT
 
 % todo:
 
@@ -68,29 +69,29 @@ url='http://www.ldeo.columbia.edu/~gcmt/projects/CMT/catalog/';
 files={'jan76_dec10.ndk' ...
     'PRE1976/deep_1962-1976.ndk' 'PRE1976/intdep_1962-1975.ndk'};
 
-% read in archives
-cmt=readndk(urlread([url files{1}]),true);
-cmt1=readndk(urlread([url files{2}]),true);
-cmt2=readndk(urlread([url files{3}]),true);
-
-% remove deep dupes (from 1976)
-cmt1=ssidx(cmt1,cmt1.year<1976);
-
-% concatenate archives
-cmt=sscat(cmt,cmt1,cmt2);
-
-% remove dupes by name (also sorts by name)
-[name,idx]=unique(cmt.name);
-if(verbose && numel(name)~=numel(cmt.name))
-    dropped=numel(cmt.name)-numel(name);
-    disp(['Removed ' num2str(dropped) ' Duplicate CMTs By Name.']);
-end
-cmt=ssidx(cmt,idx);
-
-% save full
-path=fileparts(mfilename('fullpath'));
-SEIZMO.GLOBALCMT.FULL=cmt;
 try
+    % read in archives
+    cmt=readndk(urlread([url files{1}]),true);
+    cmt1=readndk(urlread([url files{2}]),true);
+    cmt2=readndk(urlread([url files{3}]),true);
+    
+    % remove deep dupes (from 1976)
+    cmt1=ssidx(cmt1,cmt1.year<1976);
+    
+    % concatenate archives
+    cmt=sscat(cmt,cmt1,cmt2);
+    
+    % remove dupes by name (also sorts by name)
+    [name,idx]=unique(cmt.name);
+    if(verbose && numel(name)~=numel(cmt.name))
+        dropped=numel(cmt.name)-numel(name);
+        disp(['Removed ' num2str(dropped) ' Duplicate CMTs By Name.']);
+    end
+    cmt=ssidx(cmt,idx);
+    
+    % save full
+    path=fileparts(mfilename('fullpath'));
+    SEIZMO.GLOBALCMT.FULL=cmt;
     if(isoctave)
         save([path filesep 'globalcmt_full.mat'],'-struct','-7','cmt');
     else % matlab

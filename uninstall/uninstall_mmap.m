@@ -16,16 +16,18 @@ function [ok]=uninstall_mmap()
 %     uninstall_mmap & webinstall_mmap
 %
 %    See also: WEBINSTALL_MMAP, UNINSTALL_GSHHS, WEBINSTALL_GSHHS,
-%              UNINSTALL_NJTBX, WEBINSTALL_NJTBX
+%              UNINSTALL_NJTBX, WEBINSTALL_NJTBX, UNINSTALL_EXPORTFIG,
+%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
 %        Feb. 15, 2012 - handle not installed, flip logic from savepath,
 %                        doc update
 %        Apr. 25, 2012 - uninstall m_map_fixes directory too
+%        Jan. 15, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2012 at 15:25 GMT
+%     Last Updated Jan. 15, 2014 at 15:25 GMT
 
 % todo:
 

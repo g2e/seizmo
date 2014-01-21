@@ -33,7 +33,7 @@ function [xc]=rotate_correlations(xc,to)
 %     xc=correlate(data,'mcxc');
 %     xc=rotate_correlations(xc,'RT');
 %
-%    See also: HORZ_CORRELATION_SETS, CORRELATE, REVERSE_CORRELATIONS,
+%    See also: HORZ_CORRELATIONS_SETS, CORRELATE, REVERSE_CORRELATIONS,
 %              ISXC, SPLIT_AUTO_CORRELATIONS, NO_REDUNDANT_CORRELATIONS,
 %              IS_FULL_MATRIX_OF_CORRELATIONS, NAME_CORRELATIONS, ROTATE
 
@@ -48,9 +48,10 @@ function [xc]=rotate_correlations(xc,to)
 %        Sep.  9, 2013 - rewrite to do only single dataset io and autoxc
 %        Sep. 20, 2013 - properly optimized checking, debugging
 %        Sep. 24, 2013 - to parameter is 'rt' by default and may be omitted
+%        Jan. 15, 2014 - fixed typo in See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 24, 2013 at 15:05 GMT
+%     Last Updated Jan. 15, 2014 at 15:05 GMT
 
 % todo:
 
