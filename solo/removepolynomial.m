@@ -1,25 +1,27 @@
-function [data]=removepolynomial(data,order)
-%REMOVEPOLYNOMIAL    Remove polynomial trend from SEIZMO records
+function [data]=removepolynomial(data,degree)
+%REMOVEPOLYNOMIAL    Remove polynomial fit from SEIZMO records
 %
-%    Usage:    data=removepolynomial(data,order)
+%    Usage:    data=removepolynomial(data,degree)
 %
 %    Description:
-%     REMOVEPOLYNOMIAL(DATA,ORDER) removes the polynomial trend of order
-%     ORDER from SEIZMO records.  For multi-component records, each
-%     component is dealt with separately.  It is highly recommended to
-%     combine this command with filtering operations to reduce edge effects
-%     that may lead to poor data quality.
+%     DATA=REMOVEPOLYNOMIAL(DATA,DEGREE) removes the polynomial fit with
+%     polynomial degree DEGREE from SEIZMO records in DATA.  For multi-
+%     component records, each component is dealt with separately.  DEGREE
+%     may be a scalar or an array of size NRECSxNCMP to specify different
+%     values for each record & component.
 %
 %    Notes:
+%     - Degree 0 == REMOVEMEAN
+%       Degree 1 == REMOVETREND
 %
 %    Header changes: DEPMEN, DEPMIN, DEPMAX
 %
 %    Examples:
-%     % Check out the difference various order polynomials make:
-%     plot1(removepolynomial(data(ones(1,10)),1:10))
+%     % Check out the difference various degree polynomials make:
+%     plot1(removepolynomial(data(ones(1,10)),0:9))
 %
-%    See also: REMOVEMEAN, REMOVETREND, GETPOLYNOMIAL, TAPER,
-%              REMOVEDEADRECORDS
+%    See also: REMOVESPLINE, REMOVEMEAN, REMOVETREND, GETPOLYNOMIAL, TAPER,
+%              REMOVEDEADRECORDS, GETSPLINE, POLYFIT, POLYVAL
 
 %     Version History:
 %        June 24, 2009 - initial version
@@ -29,9 +31,13 @@ function [data]=removepolynomial(data,order)
 %        Feb. 11, 2011 - mass nargchk fix, dropped versioninfo caching
 %        Mar. 13, 2012 - doc update, seizmocheck fix, leven fix, use
 %                        getheader improvements
+%        Jan. 21, 2014 - minor doc fix
+%        Jan. 22, 2014 - bugfix: poly. order was actually degree, changed
+%                        all instances of order to degree, allow per cmp
+%                        degree specification, turn off polyfit warnings
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 15:05 GMT
+%     Last Updated Jan. 22, 2014 at 15:05 GMT
 
 % todo:
 
@@ -46,6 +52,10 @@ oldseizmocheckstate=seizmocheck_state(false);
 
 % attempt polynomial removal
 try
+    % turn off the badly conditioned polynomial warnings
+    warning('off','MATLAB:polyfit:RepeatedPoints');
+    warning('off','MATLAB:polyfit:RepeatedPointsOrRescale');
+    
     % check headers
     data=checkheader(data);
     
@@ -55,14 +65,20 @@ try
     % number of records
     nrecs=numel(data);
 
-    % check order
-    if(~isnumeric(order) || any(order~=fix(order)) ...
-            || ~any(numel(order)==[1 nrecs]))
+    % check degree
+    if(~isnumeric(degree) || any(degree(:)~=fix(degree(:))) ...
+            || (~isscalar(degree) && mod(numel(degree),nrecs)~=0) ...
+            || ~any(size(degree,1)==[1 nrecs]))
         error('seizmo:removepolynomial:badOrder',...
-            'ORDER must be a scalar or an array of integers.');
+            'DEGREE must be a scalar or an array of integers.');
     end
-    if(isscalar(order))
-        order(1:nrecs,1)=order;
+    if(size(degree,2)==nrecs && size(degree,1)==1)
+        % make row vector a column vector
+        degree=degree(:);
+    end
+    if(~any(size(degree,1)==[1 nrecs]))
+        error('seizmo:removepolynomial:badOrder',...
+            'DEGREE must be a scalar or a NRECSxNCMP array.');
     end
 
     % header info
@@ -70,13 +86,22 @@ try
         'delta','npts','ncmp','leven lgc');
     leven=~strcmpi(leven,'false');
     
+    % expand degree
+    if(isscalar(degree))
+        degree=degree(ones(nrecs,max(ncmp)));
+    elseif(size(degree,2)==1 && max(ncmp)>1)
+        degree=degree(:,ones(1,max(ncmp)));
+    elseif(size(degree,2)==max(ncmp) && size(degree,1)==1)
+        degree=degree(ones(nrecs,1),:);
+    end
+    
     % detail message
     if(verbose)
-        disp('Removing Polynomial from Record(s)');
+        disp('Removing Polynomial Fit from Record(s)');
         print_time_left(0,nrecs);
     end
 
-    % remove trend and update header
+    % remove polynomial and update header
     depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
     for i=1:numel(data)
         % skip dataless
@@ -95,14 +120,15 @@ try
             time=((0:npts(i)-1)*delta(i)).';
             for j=1:ncmp(i)
                 data(i).dep(:,j)=data(i).dep(:,j) ...
-                    -polyval(polyfit(time,data(i).dep(:,j),order(i)),time);
+                    -polyval(polyfit(time,data(i).dep(:,j),degree(i,j)),...
+                    time);
             end
         % unevenly spaced
         else
             for j=1:ncmp(i)
                 data(i).dep(:,j)=data(i).dep(:,j)...
                     -polyval(polyfit(double(data(i).ind),...
-                    data(i).dep(:,j),order(i)),double(data(i).ind));
+                    data(i).dep(:,j),degree(i,j)),double(data(i).ind));
             end
         end
 
@@ -124,9 +150,17 @@ try
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % turn on the badly conditioned polynomial warnings
+    warning('on','MATLAB:polyfit:RepeatedPoints');
+    warning('on','MATLAB:polyfit:RepeatedPointsOrRescale');
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
+    
+    % turn on the badly conditioned polynomial warnings
+    warning('on','MATLAB:polyfit:RepeatedPoints');
+    warning('on','MATLAB:polyfit:RepeatedPointsOrRescale');
     
     % rethrow error
     error(lasterror);

@@ -21,7 +21,7 @@ function [data]=removemean(data)
 %     plot1(squish(removemean(data),5)) % less ringing
 %
 %    See also: REMOVETREND, REMOVEPOLYNOMIAL, GETPOLYNOMIAL, TAPER,
-%              REMOVEDEADRECORDS
+%              REMOVEDEADRECORDS, REMOVESPLINE, GETSPLINE
 
 %     Version History:
 %        Oct. 31, 2007 - initial version
@@ -40,9 +40,10 @@ function [data]=removemean(data)
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix
 %        Apr.  3, 2012 - minor doc update
 %        June  3, 2012 - skip doubles conversion
+%        Jan. 21, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  3, 2012 at 15:05 GMT
+%     Last Updated Jan. 21, 2014 at 15:05 GMT
 
 % todo:
 

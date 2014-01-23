@@ -13,9 +13,6 @@ exist function problem
       - does this work on windows/mac?
      exist([pwd filesep dir],7)
 
-getspline
-rspline
-
 crust1.0
 
 5 noise array phase and attenuation like in prieto 2009
@@ -225,7 +222,6 @@ autopicking
 
 glitch & step removal
     - SAC has glitch detection ... implement it?
-    - smooth spline removal (requires spline toolbox)
 
 drop/replace restrictive copyright functions
 	buttord2 (edit of buttord) - NEED!

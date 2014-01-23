@@ -30,7 +30,7 @@ function [data,removed]=removedeadrecords(data,option)
 %     % Remove dead records before reading in data from current directory:
 %     data=readdata(removedeadrecords(readheaders('*')));
 %
-%    See also: REMOVEMEAN, REMOVETREND
+%    See also: REMOVEMEAN, REMOVETREND, REMOVEPOLYNOMIAL, REMOVESPLINE
 
 %     Version History:
 %        Jan. 28, 2008 - initial version
@@ -44,9 +44,10 @@ function [data,removed]=removedeadrecords(data,option)
 %        Apr.  1, 2010 - detail message indicates number removed
 %        Feb. 11, 2011 - mass nargchk fix, mass seizmocheck fix, warn fix
 %        Apr.  3, 2012 - minor doc update
+%        Jan. 21, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 15:05 GMT
+%     Last Updated Jan. 21, 2014 at 15:05 GMT
 
 % todo:
 

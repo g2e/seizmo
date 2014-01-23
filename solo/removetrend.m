@@ -1,10 +1,10 @@
 function [data]=removetrend(data)
-%REMOVETREND    Remove linear trend from SEIZMO records
+%REMOVETREND    Remove linear fit from SEIZMO records
 %
 %    Usage:    data=removetrend(data)
 %
 %    Description:
-%     REMOVETREND(DATA) removes the linear trend from SEIZMO records by
+%     DATA=REMOVETREND(DATA) removes the linear fit from SEIZMO records by
 %     subtracting the best straight line fit to the data as determined by a
 %     least squares inversion.  For multi-component records, each component
 %     is dealt with separately.  It is highly recommended to combine this
@@ -20,7 +20,8 @@ function [data]=removetrend(data)
 %     data=iirfilter(removetrend(data),'low','butter',1/10,4)
 %
 %    See also: REMOVEMEAN, REMOVEPOLYNOMIAL, GETPOLYNOMIAL, TAPER,
-%              REMOVEDEADRECORDS
+%              REMOVEDEADRECORDS, REMOVESPLINE, GETSPLINE, POLYFIT,
+%              POLYVAL, DETREND
 
 %     Version History:
 %        Oct. 31, 2007 - initial version
@@ -47,9 +48,10 @@ function [data]=removetrend(data)
 %        Mar. 13, 2012 - doc update, seizmocheck fix, use getheader
 %                        improvements
 %        June  3, 2012 - no checkheader call, skip doubles conversion
+%        Jan. 21, 2014 - minor doc fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  3, 2012 at 15:05 GMT
+%     Last Updated Jan. 21, 2014 at 15:05 GMT
 
 % todo:
 
