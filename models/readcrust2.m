@@ -2,6 +2,8 @@ function [mod]=readcrust2(keyfile,typefile,elevfile)
 %READCRUST2    Reads Crust2.0 files, putting them into a struct
 %
 % Usage: mod=readcrust2('CNtype2_key.txt','CNtype2.txt','CNelevatio2.txt')
+%
+% Note that this also works for Crust5.1.
 
 % read in key file
 lines=getwords(readtxt(keyfile),sprintf('\n'));
