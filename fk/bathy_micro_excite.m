@@ -19,7 +19,7 @@ function [varargout]=bathy_micro_excite(ph,z,f,vs)
 %
 %     [C0,...,C6]=BATHY_MICRO_EXCITE('RAYLEIGH',Z,F,VS) gives individual
 %     Rayleigh excitation components from C0 to C6.  These can be used to
-%     calculate the former usage output C=C0.^2+C1.^2+C2.^2+C3.^2+...
+%     calculate the former usage output C^2=C0^2+C1^2+C2^2+C3^2+...
 %
 %    Notes:
 %     - References:
@@ -75,21 +75,18 @@ function [varargout]=bathy_micro_excite(ph,z,f,vs)
 %     axis tight;
 %     ylim([0 1]);
 %
-%     % Crust2.0 excitation:
-%     [lon,lat]=meshgrid(-179:2:179,89:-2:-89);
-%     c2elev=getc2elev(lat,lon);
-%     c2elev(c2elev>0)=0; % mask out land
-%     c2=getcrust2(lat,lon);
-%     vs=cat(1,c2.vs);
-%     vs=reshape(vs(:,3:7),90,180,5);
-%     thick=cat(1,c2.thick);
-%     thick=reshape(thick(:,3:7),90,180,5);
-%     c2vsavg=sum(thick,3)./sum(thick./vs,3);
-%     c=bathy_micro_excite('R',-c2elev,1/7.5,c2vsavg*1000);
-%     ax=plotbathyexcite(c,lat,lon,'R');
+%     % Rayleigh Bathymetric Excitation Map:
+%     [lon,lat]=meshgrid(-179.5:179.5,-89.5:89.5);
+%     mod=getcrust(lat,lon);
+%     mod.top(mod.top(:,2)>0,2)=0; % mask out land
+%     mod.vs(mod.vs==0)=1; % avoid divide by zero
+%     vsavg=sum(mod.thk(:,2:8),2)./sum(mod.thk(:,2:8)./mod.vs(:,2:8),2);
+%     c=bathy_micro_excite('R',-mod.top(:,2)*1000,1/7.5,vsavg*1000);
+%     ax=plotbathyexcite('R',reshape(c,[180 360]),lat,lon);
 %     title(ax,{[] ...
-%         'Crust2.0 Rayleigh Bathymetric Excitation Coefficient Map' ...
-%         'Period: 7.5s   Vs: 2.2-3.75km/s' []},'color','w');
+%         'Rayleigh Bathymetric Excitation Map for' ...
+%         'Wave-Wave Interference of Ocean Waves' ...
+%         'Seismic Period: 7.5s' []},'color','w');
 %
 %    See also: PLOTBATHYEXCITE, FS_PHASE2LATLON, SLOWNESS2DEG, DEG2SLOWNESS
 
@@ -99,9 +96,10 @@ function [varargout]=bathy_micro_excite(ph,z,f,vs)
 %        May  18, 2012 - minor touches
 %        Jan. 14, 2014 - updated for Ardhuin & Herbers and forcing phase
 %                        choice because it matters, fixed example
+%        Jan. 23, 2014 - update to example for recent changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2014 at 10:35 GMT
+%     Last Updated Jan. 23, 2014 at 10:35 GMT
 
 % todo
 

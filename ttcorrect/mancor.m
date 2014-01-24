@@ -11,7 +11,7 @@ function [corr,tt1d,tt3d]=mancor(paths,mod3d)
 %     expected to follow the format of the struct output from TAUPPATH.
 %     Please note that paths are not checked for segments that leave the
 %     mantle and so you should "prepare" the paths by running them through
-%     CRUST2LESS_RAYPATHS & TRIM_DEPTHS_RAYPATHS to remove the crust
+%     CRUSTLESS_RAYPATHS & TRIM_DEPTHS_RAYPATHS to remove the crust
 %     segments and core segments.  CORR is in seconds and gives
 %     TT3D=TT1D+CORR.  Combining MANCOR with ELLCOR and CRUCOR will provide
 %     a more complete 3D correction.
@@ -29,11 +29,12 @@ function [corr,tt1d,tt3d]=mancor(paths,mod3d)
 %     paths=tauppath('ev',[31.5 140.07],'st',[2.389 9.834],...
 %                    'ph','ttp+','mod','prem');
 %     cmb=2891; % prem based cmb depth
-%     gpaths=crust2less_raypaths(trim_depths_raypaths(paths,[0 cmb]));
+%     gpaths=crustless_raypaths(trim_depths_raypaths(paths,[0 cmb]));
 %     corr=mancor(gpaths,'hmsl06p')
 %
 %    See also: AVAILABLE_3DMODELS, GETRAYPATHS, TRIM_DEPTHS_RAYPATHS,
-%              CRUST2LESS_RAYPATHS, EXTRACT_UPSWING_RAYPATHS
+%              CRUSTLESS_RAYPATHS, EXTRACT_UPSWING_RAYPATHS, PLOTRAYPATHS,
+%              TAUPPATH, INSERT_DEPTHS_IN_RAYPATHS
 
 %     Version History:
 %        June  2, 2010 - initial version
@@ -42,9 +43,10 @@ function [corr,tt1d,tt3d]=mancor(paths,mod3d)
 %        Jan. 14, 2011 - improved verbose message
 %        Feb. 27, 2012 - update for tauppath changes
 %        Aug.  6, 2012 - doc update
+%        Jan. 23, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  6, 2012 at 02:45 GMT
+%     Last Updated Jan. 23, 2014 at 02:45 GMT
 
 % todo:
 

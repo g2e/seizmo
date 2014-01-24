@@ -22,7 +22,8 @@ function [paths]=extract_upswing_raypaths(paths,depth)
 %     paths=extract_upswing_raypaths(paths,2891-500);
 %     plotraypaths(paths);
 %
-%    See also: GETRAYPATHS, CRUST2LESS_RAYPATHS, MANCOR, TAUPPATH
+%    See also: GETRAYPATHS, CRUSTLESS_RAYPATHS, MANCOR, PLOTRAYPATHS,
+%              INSERT_DEPTHS_IN_RAYPATHS, TAUPPATH, TRIM_DEPTHS_RAYPATHS
 
 %     Version History:
 %        May  31, 2010 - initial version
@@ -30,9 +31,10 @@ function [paths]=extract_upswing_raypaths(paths,depth)
 %                        reduced number of inputs by making path generation
 %                        external
 %        Feb. 27, 2012 - update for tauppath changes
+%        Jan. 23, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 02:45 GMT
+%     Last Updated Jan. 23, 2014 at 02:45 GMT
 
 % todo:
 

@@ -63,7 +63,7 @@ function []=mapfeature(varargin)
 %     - LIPS is only a partial subset.  If you want to help clean it up see
 %       the TODO section in the code below.
 %     - COB is incomplete and needs help.  If you want to help, use
-%       Crust2.0 as a guide (crustal thickness).
+%       the crustal thickness of a crustal model as a guide.
 %     - Dataset sources: see FEATURE_REFERENCES in See Also section
 %
 %    Examples:
@@ -84,9 +84,10 @@ function []=mapfeature(varargin)
 %     Version History:
 %        Feb.  9, 2011 - initial version
 %        Feb. 16, 2012 - fix bug in parsing hatch triplets
+%        Jan. 23, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2012 at 23:00 GMT
+%     Last Updated Jan. 23, 2014 at 23:00 GMT
 
 % todo:
 % - fix the polygon insanity of some features

@@ -23,16 +23,17 @@ function [paths]=insert_depths_in_raypaths(paths,depths)
 %     % Effectively upsampling your raypath:
 %     paths=insert_depths_in_raypaths(paths,0:5:2890);
 %
-%    See also: GETRAYPATHS, TRIM_DEPTHS_RAYPATHS, TAUPPATH,
-%              CRUST2LESS_RAYPATHS, EXTRACT_UPSWING_RAYPATHS
+%    See also: GETRAYPATHS, TRIM_DEPTHS_RAYPATHS, TAUPPATH, PLOTRAYPATHS,
+%              CRUSTLESS_RAYPATHS, EXTRACT_UPSWING_RAYPATHS, MANCOR
 
 %     Version History:
 %        June  3, 2010 - initial version
 %        Aug.  8, 2010 - doc update
 %        Feb. 27, 2012 - update for tauppath changes
+%        Jan. 23, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 02:45 GMT
+%     Last Updated Jan. 23, 2014 at 02:45 GMT
 
 % todo:
 

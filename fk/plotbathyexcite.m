@@ -1,24 +1,24 @@
-function [varargout]=plotbathyexcite(c,la,lo,ph,clim,varargin)
+function [varargout]=plotbathyexcite(ph,c,la,lo,clim,varargin)
 %PLOTBATHYEXCITE    Plots 2ndary microseism bathymetric excitation coeff
 %
-%    Usage:    plotbathyexcite(c,lat,lon,ph)
-%              plotbathyexcite(c,lat,lon,ph,clim)
-%              plotbathyexcite(c,lat,lon,ph,clim,'mmap_opt1',mmap_val1,...)
+%    Usage:    plotbathyexcite(ph,c,lat,lon)
+%              plotbathyexcite(ph,c,lat,lon,clim)
+%              plotbathyexcite(ph,c,lat,lon,clim,'mmap_opt1',mmap_val1,...)
 %              ax=plotbathyexcite(...)
 %
 %    Description:
-%     PLOTBATHYEXCITE(C,LAT,LON,PH) maps bathymetric coefficient data given
+%     PLOTBATHYEXCITE(PH,C,LAT,LON) maps bathymetric coefficient data given
 %     in the 2D array C.  The data should be regularly sampled in latitude
 %     and longitude (given by vectors LAT & LON).  Dimensions of C should
 %     be NLATxNLON.  The output map will display the squared values of C.
 %     PH is the phase string (such as 'P') and is used for labeling.
 %
-%     PLOTBATHYEXCITE(C,LAT,LON,PH,CLIM) sets the colormap limits of the
+%     PLOTBATHYEXCITE(PH,C,LAT,LON,CLIM) sets the colormap limits of the
 %     coefficients.  The default is [0 1] which is fine for Rayleigh wave
-%     excitation coefficients but not for P.  CLIM must be a real-valued
-%     2-element vector.
+%     excitation coefficients but not for P or S waves.  CLIM must be a
+%     real-valued 2-element vector.
 %     
-%     PLOTBATHYEXCITE(C,LAT,LON,PH,CLIM,'MMAP_OPT1',MMAP_VAL1,...) passes
+%     PLOTBATHYEXCITE(PH,C,LAT,LON,CLIM,'MMAP_OPT1',MMAP_VAL1,...) passes
 %     additional options on to MMAP to alter the map.
 %
 %     AX=PLOTBATHYEXCITE(...) returns the axes drawn in.
@@ -26,21 +26,18 @@ function [varargout]=plotbathyexcite(c,la,lo,ph,clim,varargin)
 %    Notes:
 %
 %    Examples:
-%     % Get bathymetric excitation coefficients for Crust2.0 and plot:
-%     [lon,lat]=meshgrid(-179:2:179,89:-2:-89);
-%     c2elev=getc2elev(lat,lon);
-%     c2elev(c2elev>0)=0; % mask out land
-%     c2=getcrust2(lat,lon);
-%     vs=cat(1,c2.vs);
-%     vs=reshape(vs(:,3:7),90,180,5);
-%     thick=cat(1,c2.thick);
-%     thick=reshape(thick(:,3:7),90,180,5);
-%     c2vsavg=sum(thick,3)./sum(thick./vs,3);
-%     c=bathy_micro_excite('R',-c2elev,1/7.5,c2vsavg*1000);
-%     ax=plotbathyexcite(c,lat,lon,'R');
+%     % Rayleigh Bathymetric Excitation Map:
+%     [lon,lat]=meshgrid(-179.5:179.5,-89.5:89.5);
+%     mod=getcrust(lat,lon);
+%     mod.top(mod.top(:,2)>0,2)=0; % mask out land
+%     mod.vs(mod.vs==0)=1; % avoid divide by zero
+%     vsavg=sum(mod.thk(:,2:8),2)./sum(mod.thk(:,2:8)./mod.vs(:,2:8),2);
+%     c=bathy_micro_excite('R',-mod.top(:,2)*1000,1/7.5,vsavg*1000);
+%     ax=plotbathyexcite('R',reshape(c,[180 360]),lat,lon);
 %     title(ax,{[] ...
-%         'Crust2.0 Rayleigh Bathymetric Excitation Coefficient Map' ...
-%         'Period: 7.5s   Vs: 2.2-3.75km/s' []},'color','w');
+%         'Rayleigh Bathymetric Excitation Map for' ...
+%         'Wave-Wave Interference of Ocean Waves' ...
+%         'Seismic Period: 7.5s' []},'color','w');
 %
 %    See also: BATHY_MICRO_EXCITE
 
@@ -51,9 +48,11 @@ function [varargout]=plotbathyexcite(c,la,lo,ph,clim,varargin)
 %        Aug. 27, 2013 - use mmap image option
 %        Jan. 14, 2014 - bugfix: squares input c values, added phase string
 %                        argument (required), changed crng to clim
+%        Jan. 23, 2014 - doc update, made phase argument first to match
+%                        bathy_micro_excite, fix clim bug, no title set
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2014 at 15:05 GMT
+%     Last Updated Jan. 23, 2014 at 15:05 GMT
 
 % todo:
 
@@ -71,8 +70,23 @@ if(~isreal(la) || ~isreal(lo) || any(abs(la(:))>90))
     error('seizmo:plotbathyexcite:badInput',...
         'LAT & LON must be real-valued arrays in the appropriate range!');
 end
-if(~isvector(la)); la=flipud(unique(la(:))); end
-if(~isvector(lo)); lo=unique(lo(:)); end
+if(~isvector(la))
+    if(diff(la(1:2)))
+        % lats down the column
+        la=la(:,1);
+    else
+        % lats across the row
+        la=la(1,:);
+    end
+end
+if(~isvector(lo))
+    if(diff(lo(1:2)))
+        % lons down the column
+        lo=lo(:,1);
+    else
+        % lons across the row
+        lo=lo(1,:);
+    end
 if(~isequal(size(c),[numel(la) numel(lo)]))
     error('seizmo:plotbathyexcite:badInput',...
         'LAT & LON must be vectors matching C dimensions!');
@@ -85,7 +99,7 @@ if(~ischar(ph) || ndims(ph)>2 || size(ph,1)>1)
 end
 
 % default/check clim
-if(nargin<4 || isempty(clim)); clim=[0 1]; end
+if(nargin<5 || isempty(clim)); clim=[0 1]; end
 if(~isreal(clim) || numel(clim)~=2)
     error('seizmo:plotbathyexcite:badInput',...
         'CLIM must be a real valued 2 element vector!');
@@ -120,11 +134,10 @@ else
 end
 set(ax,'clim',clim);
 
-% colorbar & title
+% colorbar
 c=colorbar('eastoutside','peer',ax,'xcolor',fg,'ycolor',fg);
-ph=['$$\sum {c_{' ph '}^2}$$'];
+ph=['$$c_{' ph '}^2$$'];
 xlabel(c,ph,'color',fg,'interpreter','latex');
-title(ax,{[] 'Bathymetric Excitation Coefficient Map' []},'color',fg);
 
 % return figure handle
 set(ax,'tag','bathyexcitemap');

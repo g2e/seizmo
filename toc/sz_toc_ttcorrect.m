@@ -1,8 +1,8 @@
 function []=sz_toc_ttcorrect()
 % Seismic Phase Travel Time Correction Functions
 %<a href="matlab:help ak135_ellip_tables">ak135_ellip_tables</a>        - Returns tables for ellipticity corrections
-%<a href="matlab:help crucor">crucor</a>                    - Returns Crust2.0 based travel time corrections
-%<a href="matlab:help crust2less_raypaths">crust2less_raypaths</a>       - Removes ray path above Crust2.0 moho
+%<a href="matlab:help crucor">crucor</a>                    - Returns crustal travel time corrections
+%<a href="matlab:help crustless_raypaths">crustless_raypaths</a>       - Removes ray path above moho
 %<a href="matlab:help ellcor">ellcor</a>                    - Returns ellipticity corrections
 %<a href="matlab:help extract_upswing_raypaths">extract_upswing_raypaths</a>  - Returns the "upswing" portion of raypaths
 %<a href="matlab:help geomsprcor">geomsprcor</a>                - Geometrical spreading factor for amplitudes

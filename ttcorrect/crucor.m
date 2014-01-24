@@ -1,36 +1,39 @@
-function [corr,ttc2,ttref]=crucor(lat,lon,rayp,wtype,varargin)
-%CRUCOR    Returns Crust2.0 based travel time corrections
+function [corr,ttmod,ttref]=crucor(lat,lon,rayp,wtype,varargin)
+%CRUCOR    Returns crustal travel time corrections
 %
 %    Usage:    corr=crucor(lat,lon,rayp,wavetype)
 %              corr=crucor(...,'elev',elev,...)
 %              corr=crucor(...,'hole',depth,...)
 %              corr=crucor(...,'stretch',logical,...)
+%              corr=crucor(...,'model',crustal_model,...)
 %              corr=crucor(...,'refmod',1dmodel,...)
 %              corr=crucor(...,'bottom',1ddepth,...)
 %              corr=crucor(...,'top',1ddepth,...)
-%              [corr,ttc2,ttref]=crucor(...)
+%              [corr,ttmod,ttref]=crucor(...)
 %
 %    Description:
 %     CORR=CRUCOR(LAT,LON,RAYP,WAVETYPE) calculates the difference in
-%     travel time through Crust2.0 compared to PREM for a seismic phase
-%     with ray parameter RAYP (in sec/deg) and of type WAVETYPE ('p' or
-%     's').  The travel time through Crust2.0 goes from the moho to the
+%     travel time through the default 3D crustal model (see the MODEL
+%     option for more info) compared to PREM for a seismic phase with ray
+%     parameter RAYP (in sec/deg) and of type WAVETYPE ('p' or 's').  The
+%     travel time through the crustal model goes from the moho to the
 %     elevation at LAT/LON for SRTM30_PLUS.  To account for the difference
-%     between Crust2.0's elevation and SRTM30_PLUS, the crust is stretched
-%     or squished to match while preserving the moho depth.  The travel
-%     time for PREM is for a section going from sealevel (PREM has no
-%     topography) to the Crust2.0 moho depth.  The correction CORR is in
-%     seconds and gives TT3D=TT1D+CORR.  Combining CRUCOR with ELLCOR and
-%     MANCOR will provide a more complete 3D correction.
+%     between the crustal model's elevation and SRTM30_PLUS, the model is
+%     stretched or squished to match while preserving the moho depth.  The
+%     travel time for PREM is for a section going from sealevel (PREM has
+%     no topography) to the moho depth of the crustal model.  The
+%     correction CORR is in seconds and gives TT3D=TT1D+CORR.  Combining
+%     CRUCOR with ELLCOR and MANCOR will provide a more complete 3D
+%     travel time correction.
 %
 %     CORR=CRUCOR(...,'ELEV',ELEV,...) sets the local elevations used in
 %     the crustal corrections to ELEV if and only if STRETCH=TRUE.  If
-%     STRETCH is set to TRUE (the default - see below) then the Crust2.0
+%     STRETCH is set to TRUE (the default - see below) then the crust model
 %     layers are stretched to match this elevation while preserving the
 %     depth to the moho discontinuity.  By default, if STRETCH=TRUE then
-%     ELEV is the topography from SRTM30_PLUS (from TOPO_POINTS).  If
-%     STRETCH=FALSE, ELEV is always the topography from Crust2.0 and will
-%     not be changed even if ELEV is set otherwise.  Units are in km.
+%     ELEV is the topography from SRTM30_PLUS (via TOPO_POINTS).  If
+%     STRETCH=FALSE, ELEV is the topography from the crustal model and
+%     cannot be changed (ELEV option is ignored).  Units are in km.
 %
 %     CORR=CRUCOR(...,'HOLE',DEPTH,...) sets the seismometer depth from the
 %     local elevation.  Units are in km.  Default is 0.
@@ -38,8 +41,13 @@ function [corr,ttc2,ttref]=crucor(lat,lon,rayp,wtype,varargin)
 %     CORR=CRUCOR(...,'STRETCH',LOGICAL,...) indicates if the crust is to
 %     be stretched to the elevation value supplied through ELEV while
 %     preserving the moho discontinuity depth.  If STRETCH is false, ELEV
-%     is ignored (it is replaced by the Crust2.0 elevation).  Default is
-%     TRUE.
+%     is ignored (it is replaced by the crustal model elevation).  Default
+%     is TRUE.
+%
+%     CORR=CRUCOR(...,'MODEL',CRUSTAL_MODEL,...) sets the crustal model
+%     used to generate the crustal travel time corrections from the
+%     reference 1D model.  The default model and available models are
+%     defined by GETCRUST.
 %
 %     CORR=CRUCOR(...,'REFMOD',1DMODEL,...) sets the reference 1D Earth
 %     model to correct.  Can be any listed by AVAILABLE_1DMODELS.  Default
@@ -47,14 +55,14 @@ function [corr,ttc2,ttref]=crucor(lat,lon,rayp,wtype,varargin)
 %
 %     CORR=CRUCOR(...,'BOTTOM',1DDEPTH,...)
 %     CORR=CRUCOR(...,'TOP',1DDEPTH,...) are for setting bounds on the
-%     depths of the models used in the crustal correction.  This is useful
-%     for source side corrections where the earthquake is located within
-%     the crust.  It is currently an error to set both HOLE & TOP to
-%     nonzero.  The default is 0 for TOP and the Crust2.0 moho depth for
-%     BOTTOM.
+%     depths of the models used in the crustal correction.  This is for
+%     source side corrections where the earthquake is located within the
+%     crust.  It is currently an error to set both HOLE & TOP to nonzero.
+%     The default is 0 for TOP and the moho depth for BOTTOM.
 %
-%     [CORR,TTC2,TTREF]=CRUCOR(...) also returns the total travel time
-%     through both Crust2.0 (TTC2) and the 1D reference model (TTREF).
+%     [CORR,TTMOD,TTREF]=CRUCOR(...) also returns the total travel time
+%     through both the crustal model (TTMOD) and the 1D reference model
+%     (TTREF).
 %
 %    Notes:
 %     - Latitudes are assumed to be geographic.
@@ -63,25 +71,26 @@ function [corr,ttc2,ttref]=crucor(lat,lon,rayp,wtype,varargin)
 %     % Generate a map of crustal corrections for Pdiff (no distance
 %     % dependance to Pdiff ray parameter which allows us to do this):
 %     rayp=4.428;
-%     [lon,lat]=meshgrid(-179:2:179,89:-2:-89);
+%     [lon,lat]=meshgrid(-179.5:179.5,-89.5:89.5);
 %     corr=crucor(lat,lon,rayp,'p','s',false);
-%     figure; imagesc(-179:2:179,89:-2:-89,reshape(corr,size(lon)));
+%     figure; imagesc(-179.5:179.5,-89.5:89.5,reshape(corr,size(lon)));
 %     axis xy equal tight;
 %     xlabel('Longitude')
 %     ylabel('Latitude')
-%     title('Pdiff Crust2.0 Travel Time Corrections');
+%     title('Pdiff Crustal Travel Time Corrections');
 %     hc=colorbar; ylabel(hc,'sec');
 %
-%    See also: ELLCOR, MANCOR, GETCRUST2, PREM, AK135, IASP91, TOPO_POINTS
+%    See also: ELLCOR, MANCOR, GETCRUST, PREM, AK135, IASP91, TOPO_POINTS
 
 %     Version History:
 %        May  20, 2010 - initial version
 %        Jan. 14, 2011 - improved verbose message, fixed message bug
 %        Apr.  2, 2012 - minor doc update
 %        Aug.  6, 2012 - better handling of stretch=false, doc update
+%        Jan. 23, 2014 - update for crustal model changes, model option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  6, 2012 at 15:45 GMT
+%     Last Updated Jan. 23, 2014 at 15:45 GMT
 
 % todo
 
@@ -112,7 +121,7 @@ sz=size(lat); npts=prod(sz);
 valid.refmod=available_1dmodels;
 
 % option defaults
-varargin=[{'e' [] 'h' 0 't' 0 'b' [] 's' true 'm' 'prem'} varargin];
+varargin=[{'e' [] 'h' 0 't' 0 'b' [] 's' true 'm' [] 'r' 'prem'} varargin];
 
 % go through optional inputs
 if(~iscellstr(varargin(1:2:end)))
@@ -176,7 +185,16 @@ for i=1:2:numel(varargin)
                     'STRETCH must be a logical array!');
             end
             stretch=varargin{i+1};
-        case {'m' 'r' 'ref' 'mod' 'refmod'}
+        case {'m' 'cm' 'mod' 'cmod' 'crustal_model' 'model'}
+            % 3D crustal model
+            if(~isempty(varargin{i+1}) && (~ischar(varargin{i+1}) ...
+                    || ndims(varargin{i+1})~=2 ...
+                    || size(varargin{i+1},1)~=1))
+                error('seizmo:crucor:badMOD',...
+                    'MODEL must be a string!');
+            end
+            model=varargin{i+1};
+        case {'r' 'rm' 'ref' 'refmod'}
             if(skip); continue; end
             % reference model to calc against
             % should call a function that has a list
@@ -193,20 +211,20 @@ for i=1:2:numel(varargin)
     end
 end
 
-% get crust for crust2.0
-crust=getcrust2(geographic2geocentriclat(lat),lon);
+% get crust model
+crust=getcrust(geographic2geocentriclat(lat),lon,model);
 
-% get crust2.0 moho depth & elevation
-c2moho=reshape([crust.moho],sz);
-c2elev=reshape([crust.elev],sz)/1000;
+% extract moho depth & elevation
+moho=reshape(-crust.top(:,end),sz);
+celev=reshape(crust.top(:,2),sz);
 
 % set bottom to moho if empty
-if(isempty(bot)); bot=c2moho; end
+if(isempty(bot)); bot=moho; end
 
-% set elev (if not set) to that in crust2
+% set elev (if not set) to that of the crustal model
 eflag=false;
 if(isempty(elev))
-    elev=c2elev;
+    elev=celev;
     if(isscalar(stretch))
         eflag=stretch;
     else
@@ -226,9 +244,9 @@ end
 % - this is really slow
 if(eflag); elev(stretch)=topo_points(lat(stretch),lon(stretch))/1000; end
 
-% force c2 elevation if not stretching
+% force crustal model elevation if not stretching
 % - already set if eflag
-if(~eflag); elev(~stretch)=c2elev(~stretch); end
+if(~eflag); elev(~stretch)=celev(~stretch); end
 
 % do not allow hole & top ~= 0
 if(any(hole & top))
@@ -244,7 +262,7 @@ hole=hole-elev;
 ss=top~=0;
 
 % replace out-of-range values with more valid ones
-bot(bot>c2moho)=c2moho(bot>c2moho); % cannot go below moho
+bot(bot>moho)=moho(bot>moho); % cannot go below moho
 top(top>bot)=bot(top>bot); % we will shortcut for top==bot, corr=0
 bot(bot<top)=top(bot<top); % we will shortcut for top==bot, corr=0
 top=max(top,-elev); % no airborne event/bounce
@@ -270,39 +288,41 @@ end
 % verbosity
 verbose=seizmoverbose;
 if(verbose)
-    disp(['Getting Crustal Correction(s) for Crust2.0 vs ' ...
+    disp(['Getting Crustal Correction(s) for ' crust.model ' vs ' ...
         upper(joinwords(mod1dnames,' & '))]);
     print_time_left(0,npts);
 end
 
 % loop over points
-ttc2=zeros(npts,1); ttref=ttc2;
+ttmod=zeros(npts,1); ttref=ttmod;
 for i=1:npts
     % special skip if top==bot
     if(top(i)==bot(i)); continue; end
     
-    % stretch crust2.0 if wanted
+    % stretch crustal model if wanted
     if(stretch(i))
-        factor=(c2moho(i)+elev(i))/(c2moho(i)+c2elev(i));
-        crust(i).thick=crust(i).thick*factor;
+        factor=(moho(i)+elev(i))/(moho(i)+celev(i));
+        crust.thk(i,:)=crust.thk(i,:)*factor;
     end
     
     % get radii of layers
-    rlbot=6371+elev(i)-cumsum(crust(i).thick([1 3:end]));
+    rlbot=6371+elev(i)-cumsum(crust.thk(i,2:end));
     rltop=[6371+elev(i) rlbot(1:end-1)];
     %rlmid=(rlbot+rltop)/2;
     
     % get fractions of each layer that are in correction
     frac=max(min(rltop,rtop(i))-max(rlbot,rbot(i)),0)...
-        ./crust(i).thick([1 3:end]);
-    frac(crust(i).thick([1 3:end])==0)=0;
+        ./crust.thk(i,2:end);
+    frac(crust.thk(i,2:end)==0)=0;
     
     % velocity based on wtype
     switch lower(wtype{i})
         case 'p'
-            v=crust(i).vp([1 3:end-1]);
+            v=crust.vp(i,2:end-1);
+            v(v==0)=1; % avoid divide by zero
         case 's'
-            v=crust(i).vs([1 3:end-1]);
+            v=crust.vs(i,2:end-1);
+            v(v==0)=1; % avoid divide by zero
     end
     
     % exact formula for tt in constant velocity spherical shells
@@ -311,7 +331,7 @@ for i=1:npts
     %
     % r  >  r
     %  1     2
-    ttc2(i)=sum(frac.*(sqrt((rltop./v).^2-rayp(i)^2) ...
+    ttmod(i)=sum(frac.*(sqrt((rltop./v).^2-rayp(i)^2) ...
                       -sqrt((rlbot./v).^2-rayp(i)^2)));
     
     % ALTERNATIVE
@@ -319,9 +339,8 @@ for i=1:npts
     % (for tt in model with constant velocity)
     % - using equation (16) on page 159 in Stein & Wysession
     % - requires loop
-    %eval_tt=nan(1,6);
-    %for j=1:6
-    %    eval_tt(j)=quad(...
+    %for j=1:numel(v)
+    %    ttmod(i)=ttmod(i)+quad(...
     %        @(r)(r/v(j)).^2./(r.*sqrt((r/v(j)).^2-rayp(i)^2)),...
     %        rlbot(j),rltop(j));
     %end
@@ -329,8 +348,8 @@ for i=1:npts
     % ALTERNATIVE
     % my old approximate formula for tt
     % - get path length in layer based on rayparameter
-    %len=crust(i).thick([1 3:end])./cos(asin(rayp(i)*v./rlmid));
-    %ttc2(i)=sum(frac.*len./v);
+    %len=crust.thk(i,2:end)./cos(asin(rayp(i)*v./rlmid));
+    %ttmod(i)=sum(frac.*len./v);
     
     % allocate reference model
     radii=6371-ref{refidx(i)}.depth;
@@ -426,6 +445,6 @@ for i=1:npts
 end
 
 % corrections
-corr=ttc2-ttref;
+corr=ttmod-ttref;
 
 end

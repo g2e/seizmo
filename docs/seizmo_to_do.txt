@@ -13,14 +13,7 @@ exist function problem
       - does this work on windows/mac?
      exist([pwd filesep dir],7)
 
-crust1.0
- x readcrust10
- - getcrust (reads 1.0, 2.0, 5.1)
- - do we need getc2*?
- - crust2less_raypaths ==> crustless_raypaths
- - crucor
- - all other instances
- - update seizmo_3d_models.zip
+fix topo functions
 
 5 noise array phase and attenuation like in prieto 2009
     - noise_stack_delaz

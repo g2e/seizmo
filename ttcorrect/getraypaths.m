@@ -29,8 +29,9 @@ function [paths,idx]=getraypaths(phaselist,model,evla,evlo,evdp,stla,stlo)
 %     % Get some phase paths corresponding to a dataset:
 %     paths=getraypaths(data,'P','prem');
 %
-%    See also: TAUPPATH, MANCOR, CRUST2LESS_RAYPATHS, TRIM_DEPTHS_RAYPATHS,
-%              EXTRACT_UPSWING_RAYPATHS, MAKEARRIVALS, FINDARRIVALS
+%    See also: TAUPPATH, MANCOR, CRUSTLESS_RAYPATHS, TRIM_DEPTHS_RAYPATHS,
+%              EXTRACT_UPSWING_RAYPATHS, INSERT_DEPTHS_IN_RAYPATHS,
+%              MAKEARRIVALS, FINDARRIVALS
 
 %     Version History:
 %        May  31, 2010 - initial version
@@ -42,9 +43,10 @@ function [paths,idx]=getraypaths(phaselist,model,evla,evlo,evdp,stla,stlo)
 %                        all paths
 %        Mar. 14, 2012 - accept all mattaup model types, doc update
 %        Aug.  6, 2012 - add latitude note to docs
+%        Jan. 23, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  6, 2012 at 13:45 GMT
+%     Last Updated Jan. 23, 2014 at 13:45 GMT
 
 % todo:
 

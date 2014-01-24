@@ -1,32 +1,38 @@
-function [paths]=crust2less_raypaths(paths)
-%CRUST2LESS_RAYPATHS    Removes ray path above Crust2.0 moho
+function [paths]=crustless_raypaths(paths,model)
+%CRUSTLESS_RAYPATHS    Removes ray path above moho
 %
-%    Usage:    paths=crust2less_raypaths(paths)
+%    Usage:    paths=crustless_raypaths(paths)
+%              paths=crustless_raypaths(paths,model)
 %
 %    Description:
-%     PATHS=CRUST2LESS_RAYPATHS(PATHS) will remove the portions of the
-%     raypaths that are above the Crust2.0 moho.  To avoid plotting
-%     functions connecting across segments where the crust was removed,
-%     NaNs are inserted to isolate the mantle raypath sections from each
-%     other.  Segments that cross the moho are adjusted so that the
-%     segments end at the moho boundary.  Linear interpolation is used to
-%     estimate these positions.
+%     PATHS=CRUSTLESS_RAYPATHS(PATHS) will remove the portions of the
+%     raypaths that are above the moho.  To avoid plotting functions
+%     connecting across segments where the crust was removed, NaNs are
+%     inserted to isolate the mantle raypath sections from each other.
+%     Segments that cross the moho are adjusted so that the segments end at
+%     the moho boundary.  Linear interpolation is used to estimate these
+%     positions.
+%
+%     PATHS=CRUSTLESS_RAYPATHS(PATHS,MODEL) selects the crustal model.  The
+%     default model and available models are defined by GETCRUST.
 %
 %    Notes:
-%     - Currently this isn't very smart.  It will have trouble if it
-%       encounters a crust2.0 sidewall.  This condition occurs when a
-%       raypath segment crosses a block boundary AND the both ends of the
-%       segment are above the moho depth of the block that the segment ends
-%       in.  To work around this case the crossing segment is removed.  A
-%       warning is issued if seizmodebug=true so you know if this happens.
+%     - This is not a very smart function.  It will have trouble if it
+%       encounters a crustal sidewall.  One way this condition occurs is
+%       when a raypath segment crosses a block boundary AND both ends of
+%       the segment are above the moho depth of the block that the segment
+%       ends in but below the moho that the segment starts in.  To work
+%       around this case the crossing segment is removed.  A warning is
+%       issued if seizmodebug=true so you know if this happens.
 %
 %    Examples:
 %     % Plot some paths without the crustal portions:
 %     paths=tauppath('ev',[5 129],'st',[41 -1]);
-%     plotraypaths(crust2less_raypaths(paths));
+%     plotraypaths(crustless_raypaths(paths));
 %
 %    See also: GETRAYPATHS, EXTRACT_UPSWING_RAYPATHS, MANCOR, TAUPPATH,
-%              TRIM_DEPTHS_RAYPATHS, INSERT_DEPTHS_IN_RAYPATHS
+%              TRIM_DEPTHS_RAYPATHS, INSERT_DEPTHS_IN_RAYPATHS,
+%              PLOTRAYPATHS
 
 %     Version History:
 %        May  31, 2010 - initial version
@@ -34,13 +40,12 @@ function [paths]=crust2less_raypaths(paths)
 %        Aug.  8, 2010 - doc update
 %        Feb. 27, 2012 - update for tauppath changes
 %        Aug.  6, 2012 - warn only if seizmodebug=true
+%        Jan. 23, 2014 - update for crustal model changes, model option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  6, 2012 at 02:45 GMT
+%     Last Updated Jan. 23, 2014 at 02:45 GMT
 
 % todo:
-% - test for lat/lon less paths
-%
 % We don't handle the case where the path intersects the side of a
 % crustal wall.  How to do it?  If one of the moho depths is below both
 % points then we have this case.  Then we need to find intersection with
@@ -54,19 +59,26 @@ function [paths]=crust2less_raypaths(paths)
 %     |____| x
 
 % check nargin
-error(nargchk(1,1,nargin));
+error(nargchk(1,2,nargin));
 
 % input should be a tauppath struct
 test=tauppath('ph','P','ev',[0 0],'st',[0 10]);
 if(~isstruct(paths) || any(~ismember(fieldnames(paths),fieldnames(test))))
-    error('seizmo:crust2less_raypaths:badStruct',...
+    error('seizmo:crustless_raypaths:badStruct',...
         'PATHS does not appear to be a valid raypath struct!');
 elseif(any(~ismember(fieldnames(paths(1).path),fieldnames(test(1).path))))
-    error('seizmo:crust2less_raypaths:badStruct',...
+    error('seizmo:crustless_raypaths:badStruct',...
         'PATHS does not appear to be a valid raypath struct!');
 elseif(any(~ismember({'latitude' 'longitude'},fieldnames(paths(1).path))))
-    error('seizmo:crust2less_raypaths:badStruct',...
+    error('seizmo:crustless_raypaths:badStruct',...
         'Latitude & Longitude are required path fields!');
+end
+
+% default/check model
+if(nargin<2); model=[]; end
+if(~ischar(model) || ndims(model)~=2 || size(model,1)~=1)
+    error('seizmo:crustless_raypaths:badInput',...
+        'MODEL must be a string!');
 end
 
 % hide warnings unless debugging is on
@@ -77,7 +89,7 @@ for i=1:numel(paths)
     % check for lat/lon-less paths
     if(isequal(unique(paths(i).path.latitude),0) ...
             && isequal(unique(paths(i).path.longitude),0))
-        warning('seizmo:crust2less_raypaths:noLatLon',...
+        warning('seizmo:crustless_raypaths:noLatLon',...
             'PATHS appears to be missing lat/lon info!');
     end
     
@@ -86,9 +98,10 @@ for i=1:numel(paths)
     npts=numel(paths(i).path.depth);
     
     % find points below moho
+    mod=getcrust(paths(i).path.latitude(nn),...
+        paths(i).path.longitude(nn),model);
     moho=nan(npts,1);
-    moho(nn)=getc2moho(paths(i).path.latitude(nn),...
-        paths(i).path.longitude(nn));
+    moho(nn)=-mod.top(:,9);
     below=moho<paths(i).path.depth;
     
     % now get start/end indices of sections
@@ -142,7 +155,7 @@ for i=1:numel(paths)
                 newlon{j}(1)=[];
             elseif(all(newdep{j}(1:2)<=moho(s(j))))
                 if(debug)
-                    warning('seizmo:crust2less_raypaths:sidewall',...
+                    warning('seizmo:crustless_raypaths:sidewall',...
                         ['Hit a crust side wall: ' ...
                         'path %d, section %d start!'],i,j);
                 end
@@ -188,7 +201,7 @@ for i=1:numel(paths)
                 newlon{j}(end)=[];
             elseif(all(newdep{j}(end-1:end)<=moho(e(j))))
                 if(debug)
-                    warning('seizmo:crust2less_raypaths:sidewall',...
+                    warning('seizmo:crustless_raypaths:sidewall',...
                         ['Hit a crust side wall: ' ...
                         'path %d, section %d end!'],i,j);
                 end

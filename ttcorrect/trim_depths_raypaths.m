@@ -22,16 +22,17 @@ function [paths]=trim_depths_raypaths(paths,range)
 %     paths=trim_depths_raypaths(paths,[2891 6371]);
 %     plotraypaths(paths);
 %
-%    See also: CRUST2LESS_RAYPATHS, GETRAYPATHS, PLOTRAYPATHS,
+%    See also: CRUSTLESS_RAYPATHS, GETRAYPATHS, PLOTRAYPATHS, TAUPPATH,
 %              INSERT_DEPTHS_IN_RAYPATHS, EXTRACT_UPSWING_RAYPATHS, MANCOR
 
 %     Version History:
 %        June  2, 2010 - initial version
 %        Aug.  8, 2010 - doc update
 %        Feb. 27, 2012 - update for tauppath changes
+%        Jan. 23, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 02:45 GMT
+%     Last Updated Jan. 23, 2014 at 02:45 GMT
 
 % todo:
 

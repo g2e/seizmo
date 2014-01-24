@@ -39,9 +39,10 @@ function [varargout]=cmb_corrections(varargin)
 %        Jan. 29, 2011 - use check_cmb_results
 %        Mar. 10, 2011 - skip all mantle corrections but HMSL, save paths,
 %                        radiation pattern amplitudes
+%        Jan. 23, 2014 - minor fix for a rename of called function
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 10, 2011 at 15:25 GMT
+%     Last Updated Jan. 23, 2014 at 15:25 GMT
 
 % todo:
 
@@ -116,7 +117,7 @@ switch varargin{1}
         corrections.paths=getraypaths('P,Pdiff','prem',ev(:,1),ev(:,2),ev(:,4),st(:,1),st(:,2));
         
         % remove crust from paths
-        corrections.paths=crust2less_raypaths(corrections.paths);
+        corrections.paths=crustless_raypaths(corrections.paths);
         
         % upswing paths
         % - using 500km above CMB as the cutoff
@@ -148,7 +149,7 @@ switch varargin{1}
         corrections.paths=getraypaths('S,Sdiff','prem',ev(:,1),ev(:,2),ev(:,4),st(:,1),st(:,2));
         
         % remove crust from paths
-        corrections.paths=crust2less_raypaths(corrections.paths);
+        corrections.paths=crustless_raypaths(corrections.paths);
         
         % upswing paths
         % - using 500km above CMB as the cutoff

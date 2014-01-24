@@ -29,16 +29,17 @@ function [ecor,ccor,mcorf,mcoru]=corediffracted_ttcorr(data,phase,mod)
 %     plot0(cddata);
 %
 %    See also: ELLCOR, CRUCOR, MANCOR, GETRAYPATHS, PLOTRAYPATHS,
-%              EXTRACT_UPSWING_RAYPATHS, CRUST2LESS_RAYPATHS
+%              EXTRACT_UPSWING_RAYPATHS, CRUSTLESS_RAYPATHS, TAUPPATH
 
 %     Version History:
 %        June 11, 2010 - initial version
 %        Aug.  8, 2010 - cleaned up docs & code
 %        Feb. 27, 2012 - doc update
 %        Mar. 15, 2012 - fix example
+%        Jan. 23, 2014 - minor doc update, bugfix: call CRUSTLESS_RAYPATHS
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 14:25 GMT
+%     Last Updated Jan. 23, 2014 at 14:25 GMT
 
 % todo:
 
@@ -88,6 +89,7 @@ switch lower(phase)
     case 'pdiff'
         % get raypaths and rayparameters
         paths=getraypaths('P,Pdiff',mod,evla,evlo,evdp,stla,stlo);
+        paths=crustless_raypaths(paths);
         uppaths=extract_upswing_raypaths(paths,cmb-350);
         rp=[paths.rayparameter]';
         
@@ -103,6 +105,7 @@ switch lower(phase)
     case {'sdiff' 'svdiff' 'shdiff'}
         % get raypaths and rayparameters
         paths=getraypaths('S,Sdiff',mod,evla,evlo,evdp,stla,stlo);
+        paths=crustless_raypaths(paths);
         uppaths=extract_upswing_raypaths(paths,cmb-350);
         rp=[paths.rayparameter]';
         
