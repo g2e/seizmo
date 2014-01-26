@@ -150,7 +150,7 @@ if(~exist('edu.sc.seis.TauP.MatTauP_Path','class'))
     mypath=fileparts(mfilename('fullpath'));
     jars=dir([mypath fs 'lib' fs '*.jar']);
     for i=1:numel(jars)
-        if(~ismember([mypath fs 'lib' fs jar(i).name],javaclasspath))
+        if(~ismember([mypath fs 'lib' fs jars(i).name],javaclasspath))
             javaaddpath([mypath fs 'lib' fs jars(i).name]);
         end
     end

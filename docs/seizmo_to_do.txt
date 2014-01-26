@@ -5,8 +5,6 @@ way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
 ## addframe(aviobj, hf)
 
-seizmo_startup.m
- - simple path setup (assume install already did what it could)
 sacpzdb
  - fix the zipfile
  - update the db
