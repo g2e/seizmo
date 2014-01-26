@@ -57,20 +57,17 @@ Prior to 7.1 (R14SP3):
 
 Issues with Octave:
 	- Plotting is an awful mess
-	- No support for jar files
-	- Does M_Map work?  Probably not!
-	- Help system not so good (no link support in terminal)
+	- Java support...
+	- Does M_Map work?  No!
+	- Help system... (no link support in terminal)
 	- Needs profiler/mlint
 	- struct view is too verbose
-	- error needs to support structs and empty strings
-		- fixed 3.2.4+
 	- cell array of function handles should handle space separated (not require commas)
 		- worked around?
 	- way to assign new field to empty struct
 		- worked around
 	- setdiff does not handle mixed char/cell
 		- does now? (worked around)
-	- switch case didn't handle cells prior to 3.2.2
-		- update
+    - 3.8.0 dies after line continuatin & comment
 
 

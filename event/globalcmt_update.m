@@ -31,9 +31,10 @@ function []=globalcmt_update()
 %        Mar.  1, 2012 - minor doc update, Octave save workaround
 %        Mar. 20, 2013 - no error if cannot write (just warn and move on)
 %        Jan. 14, 2014 - catches urlread errors and gives warning
+%        Jan. 25, 2014 - indented verbose messages for visual improvement
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2014 at 21:30 GMT
+%     Last Updated Jan. 25, 2014 at 21:30 GMT
 
 % todo:
 
@@ -111,7 +112,7 @@ for i=lastyr:maxyr
         else
             % detail message
             if(verbose)
-                disp(['Retrieved ' month{j} ...
+                disp([' Retrieved ' month{j} ...
                     num2str(i-2000,'%02d') '.ndk']);
             end
             
@@ -141,7 +142,7 @@ if(updated)
     % detail message
     if(verbose)
         nf2=numel(full.name);
-        disp(['Found ' num2str(nf2-nf) ' New CMTs']);
+        disp([' Found ' num2str(nf2-nf) ' New CMTs']);
     end
     
     % save full
@@ -160,7 +161,7 @@ if(updated)
     end
 else
     % detail message
-    if(verbose); disp('Found 0 CMTs'); end
+    if(verbose); disp(' Found 0 CMTs'); end
 end
 
 % get quick catalog
@@ -189,7 +190,7 @@ if(ok && ~isempty(qndk))
     
     % detail message
     nq=numel(quick.name);
-    if(verbose); disp(['Found ' num2str(nq) ' New Quick CMTs']); end
+    if(verbose); disp([' Found ' num2str(nq) ' New Quick CMTs']); end
     
     % save
     path=fileparts(mfilename('fullpath'));

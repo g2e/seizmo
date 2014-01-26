@@ -28,9 +28,10 @@ function []=globalcmt_create(overwrite)
 %        Mar.  1, 2012 - initial version
 %        Mar. 25, 2013 - no error if cannot write (just warn and move on)
 %        Jan. 14, 2014 - warn if problem encountered (like from urlread)
+%        Jan. 25, 2014 - more verbose messages
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2014 at 17:25 GMT
+%     Last Updated Jan. 25, 2014 at 17:25 GMT
 
 % todo:
 
@@ -71,11 +72,19 @@ files={'jan76_dec10.ndk' ...
 
 try
     % read in archives
+    if(verbose); disp([' Getting ' files{1}]); end
     cmt=readndk(urlread([url files{1}]),true);
+    if(verbose); disp([' Getting ' files{2}]); end
     cmt1=readndk(urlread([url files{2}]),true);
+    if(verbose); disp([' Getting ' files{3}]); end
     cmt2=readndk(urlread([url files{3}]),true);
     
     % remove deep dupes (from 1976)
+    if(verbose)
+        dropped=num2str(sum(cmt1.year==1976));
+        disp([' Removed ' dropped ' Redundant CMTs From Year 1976 in ' ...
+            files{2}]);
+    end
     cmt1=ssidx(cmt1,cmt1.year<1976);
     
     % concatenate archives
@@ -85,9 +94,13 @@ try
     [name,idx]=unique(cmt.name);
     if(verbose && numel(name)~=numel(cmt.name))
         dropped=numel(cmt.name)-numel(name);
-        disp(['Removed ' num2str(dropped) ' Duplicate CMTs By Name.']);
+        disp([' Removed ' num2str(dropped) ...
+            ' Duplicate CMTs By Name.']);
     end
     cmt=ssidx(cmt,idx);
+
+    % show total
+    if(verbose); disp([' Found ' num2str(numel(cmt.name)) ' CMTs']); end
     
     % save full
     path=fileparts(mfilename('fullpath'));

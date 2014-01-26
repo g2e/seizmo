@@ -5,15 +5,24 @@ way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
 ## addframe(aviobj, hf)
 
-exist function problem
-- returns true for any directory/file name on path so we need to test
-  for existence only in the current directory (if not absolute)
-  - possible workarounds:
-    ~exist(dir,7) || isempty(xdir(dir))
-      - does this work on windows/mac?
+1. exist function problem
+  - returns true for any directory/file name on path so we need to test
+    for existence only in the current directory (if not absolute)
+  - the workaround (use absolute path if relative):
      exist([pwd filesep dir],7)
+  - but how to know if the path is relative or absolute???
+    - first get the OS: use isunix or ispc
+    - if "unix" (unix/linux/macosx): '/' is 1st char
+    - if "pc" (windows): 'X:\' is 1st 3 char
 
-fix topo functions
+2. fix topo functions
+3. 2d inversion on a sphere
+4. data grabbing codes
+    grab_events
+    grab_stations
+    grab_channels
+    grab_responses
+    grab_seismograms
 
 5 noise array phase and attenuation like in prieto 2009
     - noise_stack_delaz
@@ -31,13 +40,8 @@ fix topo functions
 7 fss codes
 8 geofss codes (use mmap image option)
 9 test & tutorials for fss codes
-10 data grabbing codes
-    grab_events
-    grab_stations
-    grab_channels
-    grab_responses
-    grab_seismograms
-11 2d inversion on a sphere
+10
+11
 12 tpw
 13 reflectivity
 14 rayleigh & love forward & inverse problem
@@ -243,6 +247,11 @@ OCTAVE SPECIFIC STUFF
     ln -s /etc/alternatives/java_sdk default-java
     cd /usr/lib/jvm/default-java/jre/lib/amd64/
     ln -s server client
+- getting "pkg install -forge java;" to work:
+    export JAVA_HOME=/etc/alternatives
+    yum install octave-devel
+    cd /etc/alternatives/jre/lib/amd64/client
+    ln -s ../server/libjvm.so .
 - no import function
     - use javaObject & javaMethod
 - concatenation differs if cells & empties involved

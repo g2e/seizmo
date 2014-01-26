@@ -68,9 +68,11 @@ function [varargout]=install_seizmo(renameflag)
 %                        toolbox to dependencies (none yet), warning on
 %                        problem with seizmo zip files
 %        Jan. 24, 2014 - moved link for 3d models
+%        Jan. 25, 2014 - bugfix: more gshhs to gshhg, bugfix: amazon url
+%                        cannot handle double slash
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 24, 2014 at 15:25 GMT
+%     Last Updated Jan. 25, 2014 at 15:25 GMT
 
 % todo:
 
@@ -305,9 +307,9 @@ end
 reply=input('Install M_Map (<1MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_mmap;
-    reply=input('Install GSHHS (120MB!)? Y/N [Y]: ','s');
+    reply=input('Install GSHHG (120MB!)? Y/N [Y]: ','s');
     if(isempty(reply) || strncmpi(reply,'y',1))
-        ok=ok & webinstall_gshhs;
+        ok=ok & webinstall_gshhg;
     end
 end
 reply=input('Install export_fig (25KB)? Y/N [Y]: ','s');
@@ -319,12 +321,13 @@ end
 reply=input('Create local GlobalCMT database? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     globalcmt_create;
+    disp('Updating GlobalCMT Database');
     globalcmt_update;
 end
 
 % download models/features/responses
-url='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/';
-urls3='https://s3-us-west-2.amazonaws.com/seizmo/';
+url='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo';
+urls3='https://s3-us-west-2.amazonaws.com/seizmo';
 reply=input('Download IRIS station responses (~20MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & download_and_unpack_seizmo_zip(url,...

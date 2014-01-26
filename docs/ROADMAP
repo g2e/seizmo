@@ -14,12 +14,14 @@
 210-219  --  Kangchenjunga
 220-229  --  Lhotse
 230-239  --  Makalu
-240-259  --  Noshaq
-260-269  --  Otgontenger
-270-279  --  Pumori/PassuSar/PizPalü
-280-289  --  Rheinwaldhorn/Rakaposhi/Rakhiot
-290-299  --  Shishapangma/Shivling/Saraghrar
-300-???  --  TirichMir/Tsambagarav/Tambora
+240-299  --  Noshaq
+300-399  --  Otgontenger
+400-499  --  Pumori/PassuSar/PizPalü
+500-599  --  Rheinwaldhorn/Rakaposhi/Rakhiot
+600-699  --  Shishapangma/Shivling/Saraghrar
+700-799  --  TirichMir/Tsambagarav/Tambora
+800-899  --  Ultar/Untersberg/Ulysses/Uncompahgre/Undundi-Wandandi
+900-999  --  Vinson/Vitosha/Vesuvius/Vancouver/Venado
 
 0.7.0
 ------------
