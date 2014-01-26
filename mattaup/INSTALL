@@ -1,3 +1,9 @@
+%   PLEASE NOTE THAT I HAVE ALTERED MATTAUP SIGNIFICANTLY.  I WOULD
+%   ARGUE THAT THIS EFFORT HAS BEEN FRUITFUL, BUT IF YOU NEED
+%   COMPATIBILITY WITH THE ORIGINAL MATTAUP WRITTEN BY QIN LI THEN
+%   YOU NEED TO LOOK ON THE INTERNET SOME MORE FOR THAT VERSION.
+%
+%   TO INSTALL:
 %   1 - These scripts require the included files:
 %          mattaup/lib/*.jar
 %       to be added in Matlab's javaclasspath.  You may use the functions
@@ -7,7 +13,7 @@
 %       add the the jar file (be careful and use the full path!).  This may
 %       require administrator privileges.
 %
-%   2 - To install these scripts in Matlab, add this directory to the Matlab
+%   2 - To install the scripts in Matlab, add this directory to the Matlab
 %       path.  You may do this by using Matlab functions addpath, rmpath,
 %       and savepath.  This can be done graphically in Matlab by going to
 %       File => Set Path.  Setting the path may require administrative

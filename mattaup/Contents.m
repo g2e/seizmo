@@ -1,5 +1,5 @@
 %MatTauP - Matlab toolbox for the TauP Toolkit
-% Version 2.2 Kangchenjunga 24-Feb-2012
+% Version 2.3 Noshaq 26-Jan-2014
 %
 %PLOT_TAUPCURVE    - Plots taupcurve output
 %PLOT_TAUPCURVE_DT - Distance-time plot of taupcurve output

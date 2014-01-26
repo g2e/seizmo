@@ -49,6 +49,9 @@ import edu.sc.seis.TauP.*;
 public class MatTauP_Path extends TauP_Path 
 {
     protected static double maxPathInc = 1.0;
+    protected static double eventLat = 0.0;
+    protected static double eventLon = 0.0;
+    protected static double azimuth = 0.0;
 
     protected MatArrival matArrivals[];
     
@@ -106,18 +109,8 @@ public class MatTauP_Path extends TauP_Path
                 readTauModel();
             } catch (TauModelException ee) {
                 Alert.error("Caught TauModelException", ee.getMessage());
-            } catch(FileNotFoundException ee) {
-                Alert.error("Can't find saved model file for model "+
-                            modelName+".", "");
-                return;
-            } catch (InvalidClassException ee) {
-                Alert.error("Model file "+
-                            modelName+" is not compatible with the current version.",
-                            "Recreate using taup_create.");
-                return;
             }
         }
-        dos=null;
     }
 
     public void pathInterpolate() 
@@ -141,11 +134,11 @@ public class MatTauP_Path extends TauP_Path
             for (int j=0; j< currArrival.path.length; j++) 
             {
                 if(j < currArrival.path.length - 1
-                        && (currArrival.rayParam != 0.0 && 180.0 / Math.PI
-                                * (currArrival.path[j + 1].dist - currArrival.path[j].dist) > maxPathInc))
+                        && (currArrival.rayParam != 0.0 && 
+                                (currArrival.path[j + 1].getDistDeg() - currArrival.path[j].getDistDeg()) > maxPathInc))
                 {
-                    count=count-1+(int)Math.ceil((currArrival.path[j + 1].dist - currArrival.path[j].dist)
-                            * 180.0 / Math.PI / maxPathInc);
+                    count=count-1+(int)Math.ceil((currArrival.path[j + 1].getDistDeg() - currArrival.path[j].getDistDeg())
+                            / maxPathInc);
                 }
             }
 
@@ -164,7 +157,7 @@ public class MatTauP_Path extends TauP_Path
             {
                 calcTime = currArrival.path[j].time;
                 calcDepth = currArrival.path[j].depth;
-                calcDist = currArrival.path[j].dist *180.0/Math.PI;
+                calcDist = currArrival.path[j].getDistDeg();
                 if (longWayRound && calcDist != 0.0) 
                 {
                    calcDist =  -1.0*calcDist;
@@ -177,20 +170,20 @@ public class MatTauP_Path extends TauP_Path
 
                 // interpolate to steps of at most maxPathInc degrees for path (gge)
                 if(j < currArrival.path.length - 1
-                        && (currArrival.rayParam != 0.0 && 180.0 / Math.PI
-                                * (currArrival.path[j + 1].dist - currArrival.path[j].dist) > maxPathInc)) {
-                    maxInterpNum = (int)Math.ceil((currArrival.path[j + 1].dist - currArrival.path[j].dist)
-                            * 180.0 / Math.PI / maxPathInc);
+                        && (currArrival.rayParam != 0.0 && 
+                                (currArrival.path[j + 1].getDistDeg() - currArrival.path[j].getDistDeg()) > maxPathInc)) {
+                    maxInterpNum = (int)Math.ceil((currArrival.path[j + 1].getDistDeg() - currArrival.path[j].getDistDeg())
+                            / maxPathInc);
                     for(interpNum = 1; interpNum < maxInterpNum; interpNum++) {
                         k=k+1;
                         calcTime += (currArrival.path[j + 1].time - currArrival.path[j].time)
                                 / maxInterpNum;
                         if(longWayRound) {
-                            calcDist -= (currArrival.path[j + 1].dist - currArrival.path[j].dist)
-                                    / maxInterpNum * 180.0 / Math.PI;
+                            calcDist -= (currArrival.path[j + 1].getDistDeg() - currArrival.path[j].getDistDeg())
+                                    / maxInterpNum;
                         } else {
-                            calcDist += (currArrival.path[j + 1].dist - currArrival.path[j].dist)
-                                    / maxInterpNum * 180.0 / Math.PI;
+                            calcDist += (currArrival.path[j + 1].getDistDeg() - currArrival.path[j].getDistDeg())
+                                    / maxInterpNum;
                         }
                         calcDepth = currArrival.path[j].depth + interpNum
                                 * (currArrival.path[j + 1].depth - currArrival.path[j].depth)
@@ -238,5 +231,13 @@ public class MatTauP_Path extends TauP_Path
         pathCoord.lat=lat;
         pathCoord.lon=lon;
         return pathCoord;
+    }
+
+    public void setEv(double eventLat, double eventLon) {
+        this.eventLat=eventLat;
+        this.eventLon=eventLon;
+    }
+    public void setAz(double azimuth) {
+        this.azimuth=azimuth;
     }
 }

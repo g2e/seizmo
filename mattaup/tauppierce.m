@@ -156,9 +156,11 @@ function [varargout]=tauppierce(varargin)
 %        Jan.  6, 2011 - add matTaup.jar to dynamic java classpath if
 %                        necessary
 %        Feb. 24, 2012 - switch to native taup
+%        Jan. 26, 2014 - minor fix necessary for update to TauP 2.1.1, no
+%                        longer need to update jar filenames
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2012 at 17:15 GMT
+%     Last Updated Jan. 26, 2014 at 17:15 GMT
 
 % todo:
 
@@ -171,9 +173,12 @@ end
 if(~exist('edu.sc.seis.TauP.TauP_Pierce','class'))
     fs=filesep;
     mypath=fileparts(mfilename('fullpath'));
-    javaaddpath([mypath fs 'lib' fs 'MatTauP-1.2beta4.jar']);
-    javaaddpath([mypath fs 'lib' fs 'TauP-1.2beta4.jar']);
-    javaaddpath([mypath fs 'lib' fs 'seisFile-1.0.8.jar']);
+    jars=dir([mypath fs 'lib' fs '*.jar']);
+    for i=1:numel(jars)
+        if(~ismember([mypath fs 'lib' fs jar(i).name],javaclasspath))
+            javaaddpath([mypath fs 'lib' fs jars(i).name]);
+        end
+    end
 end
 
 % default options
@@ -402,7 +407,8 @@ for ii=1:narr
     for jj=1:npts
         % this gets all points
         tt(ii).pierce.depth(jj)=pts(jj).depth;
-        tt(ii).pierce.distance(jj)=pts(jj).dist*R2D;
+        %tt(ii).pierce.distance(jj)=pts(jj).dist*R2D;      % For  < 2.X
+        tt(ii).pierce.distance(jj)=pts(jj).distRadian*R2D; % For >= 2.X
         tt(ii).pierce.time(jj)=pts(jj).time;
         if(~generic)
             tt(ii).pierce.latitude(jj)=sc.latFor(ev(1),ev(2),...

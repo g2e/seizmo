@@ -29,9 +29,11 @@ function [tauobj]=taupcreate(filein,fileout)
 
 %     Version History:
 %        Feb. 24, 2012 - initial version
+%        Jan. 26, 2014 - minor fix necessary for update to TauP 2.1.1, no
+%                        longer need to update jar filenames
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2012 at 10:35 GMT
+%     Last Updated Jan. 26, 2014 at 10:35 GMT
 
 % todo:
 
@@ -42,9 +44,12 @@ error(nargchk(1,2,nargin));
 if(~exist('edu.sc.seis.TauP.VelocityModel','class'))
     fs=filesep;
     mypath=fileparts(mfilename('fullpath'));
-    javaaddpath([mypath fs 'lib' fs 'MatTauP-1.2beta4.jar']);
-    javaaddpath([mypath fs 'lib' fs 'TauP-1.2beta4.jar']);
-    javaaddpath([mypath fs 'lib' fs 'seisFile-1.0.8.jar']);
+    jars=dir([mypath fs 'lib' fs '*.jar']);
+    for i=1:numel(jars)
+        if(~ismember([mypath fs 'lib' fs jar(i).name],javaclasspath))
+            javaaddpath([mypath fs 'lib' fs jars(i).name]);
+        end
+    end
 end
 
 % get velocity model object
@@ -90,8 +95,9 @@ end
 
 % sample model
 tcobj=javaObject('edu.sc.seis.TauP.TauP_Create');
-tcobj.setVelocityModel(filein);
-tauobj=tcobj.createTauModel;
+%tcobj.setVelocityModel(filein);        % For  < 2.X
+%tauobj=tcobj.createTauModel;           % For  < 2.X
+tauobj=tcobj.createTauModel(filein);    % For >= 2.X
 
 % save model
 if(nargin==2)

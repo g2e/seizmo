@@ -27,9 +27,10 @@ function []=taup()
 %     Version History:
 %        Sep.  5, 2009 - major doc update
 %        Feb. 24, 2012 - doc update, make work with Octave
+%        Jan. 26, 2014 - no longer need to update jar filenames
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2012 at 21:40 GMT
+%     Last Updated Jan. 26, 2014 at 21:40 GMT
 
 % todo:
 
@@ -37,9 +38,12 @@ function []=taup()
 if(~exist('edu.sc.seis.TauP.TauP','class'))
     fs=filesep;
     mypath=fileparts(mfilename('fullpath'));
-    javaaddpath([mypath fs 'lib' fs 'MatTauP-1.2beta4.jar']);
-    javaaddpath([mypath fs 'lib' fs 'TauP-1.2beta4.jar']);
-    javaaddpath([mypath fs 'lib' fs 'seisFile-1.0.8.jar']);
+    jars=dir([mypath fs 'lib' fs '*.jar']);
+    for i=1:numel(jars)
+        if(~ismember([mypath fs 'lib' fs jar(i).name],javaclasspath))
+            javaaddpath([mypath fs 'lib' fs jars(i).name]);
+        end
+    end
 end
 
 t=javaObject('edu.sc.seis.TauP.TauP');

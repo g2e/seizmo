@@ -1,5 +1,8 @@
+for me
 - smash any bugs since latest release
-- taup applet needs to have path interpolation (tell Philip)
-- path wave type (isshear)
-- path wave type conversion (isconvert)
-- path leg name ('P' 'K' 'I' '^660')
+- taupwavefront
+for upstream
+- taup applet needs to have path interpolation for core-diffracted waves
+- path wave type ... like an isshear field
+- path wave type conversion ... like an isconvert field
+- path leg name field (w/ values like 'P' 'K' 'I' '^660')

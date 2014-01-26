@@ -5,6 +5,13 @@ way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
 ## addframe(aviobj, hf)
 
+seizmo_startup.m
+ - simple path setup (assume install already did what it could)
+sacpzdb
+ - fix the zipfile
+ - update the db
+octave installation under 3.8.0
+
 1. exist function problem
   - returns true for any directory/file name on path so we need to test
     for existence only in the current directory (if not absolute)
@@ -14,7 +21,7 @@ way to make movies while you do other things on the screen:
     - first get the OS: use isunix or ispc
     - if "unix" (unix/linux/macosx): '/' is 1st char
     - if "pc" (windows): 'X:\' is 1st 3 char
-
+    - isabspath will be the new function name
 2. fix topo functions
 3. 2d inversion on a sphere
 4. data grabbing codes
@@ -40,8 +47,8 @@ way to make movies while you do other things on the screen:
 7 fss codes
 8 geofss codes (use mmap image option)
 9 test & tutorials for fss codes
-10
-11
+10 datasets for examples, walkthroughs
+11 expand centralized documentation with more examples & walkthroughs
 12 tpw
 13 reflectivity
 14 rayleigh & love forward & inverse problem

@@ -1,3 +1,5 @@
+v2.3    - altered to get MatTauP working with TauP-2.1.1
+        - taup*.m no longer have the .jar files hardcoded
 v2.2    - added methods for accessing path & curve variables from octave
         - taupcreate works with v1.2 of TauP
         - massive cleanup of plotting functions
@@ -21,3 +23,5 @@ v1.1.0  - updated m-files
             - utilize help system
         - added a Makefile for compiling
         - added path interpolation (fixes plots of diffracted paths)
+
+v1.0    - original MatTauP written by Qin Li

@@ -98,18 +98,8 @@ public class MatTauP_Curve extends TauP_Curve
                 readTauModel();
             } catch (TauModelException ee) {
                 Alert.error("Caught TauModelException", ee.getMessage());
-            } catch(FileNotFoundException ee) {
-                Alert.error("Can't find saved model file for model "+
-                            modelName+".", "");
-                return;
-            } catch (InvalidClassException ee) {
-                Alert.error("Model file "+
-                            modelName+" is not compatible with the current version.",
-                            "Recreate using taup_create.");
-                return;
             }
         }
-        dos=null;
     }
 
     public void curvecalculate(double degrees) {
@@ -119,79 +109,39 @@ public class MatTauP_Curve extends TauP_Curve
          * TauP_Time.calculate. printResult handles everything else. */
         recalcPhases();
         SeismicPhase phase;
-        Arrival currArrival;
         double[] dist, time, rayParams;
         double arcDistance, timeReduced, rayParamsReduced;
-        Arrival[] phaseArrivals;
         double maxTime = -1*Double.MAX_VALUE, minTime = Double.MAX_VALUE;
 
         matCurves=new MatCurve[phases.size()];
+        
         for (int phaseNum=0;phaseNum<phases.size(); phaseNum++) {
             phase = phases.get(phaseNum);
-            dist = phase.getDist();
-            time = phase.getTime();
-            rayParams = phase.getRayParams();
+		dist = phase.getDist();
+		time = phase.getTime();
+		rayParams = phase.getRayParams();
 
-            matCurves[phaseNum]=new MatCurve(dist.length);
-            matCurves[phaseNum].phaseName=phase.getName();
-            matCurves[phaseNum].puristPhaseName=phase.getPuristName();
-            matCurves[phaseNum].sourceDepth=depth;
-            for (int i=0; i<dist.length; i++) {
+		matCurves[phaseNum]=new MatCurve(dist.length);
+		matCurves[phaseNum].phaseName=phase.getName();
+		matCurves[phaseNum].puristPhaseName=phase.getPuristName();
+		matCurves[phaseNum].sourceDepth=depth;
+		
+		for (int i=0; i<dist.length; i++) {
 
-                /* Here we use a trig trick to make sure the dist is 0 to PI. */
-                arcDistance = Math.acos(Math.cos(dist[i]));
-                if (reduceTime) {
-                    timeReduced = time[i]-arcDistance/reduceVel;
-                    rayParamsReduced = rayParams[i]-1/reduceVel;
-                } else {
-                    timeReduced = time[i];
-                    rayParamsReduced = rayParams[i];
-                }
-                matCurves[phaseNum].time[i]=timeReduced;
-                matCurves[phaseNum].distance[i]=180.0/Math.PI*dist[i];
-                matCurves[phaseNum].mindistance[i]=180.0/Math.PI*arcDistance;
-                matCurves[phaseNum].rayParam[i]=rayParamsReduced;
-
-
-                if (i<dist.length-1 && (rayParams[i] == rayParams[i+1]) && 
-                    rayParams.length > 2) {
-                    /* Here we have a shadow zone, so put a break in the curve. */
-                    continue;
-                }
-
-                /* Here we check to see if we cross a 180 degree mark, in which
-                 * case sin changes sign. */
-                if (i<dist.length-1 && Math.sin(dist[i]) > 0 && 
-                    Math.sin(dist[i+1]) <0) {
-                    phase.calcTime(180.0);
-                    phaseArrivals = phase.getArrivals();
-                    int j=0;
-                    while (j<phaseArrivals.length) {
-                        if ((phase.rayParams[i]-phaseArrivals[j].rayParam)*
-                            (phaseArrivals[j].rayParam-phase.rayParams[i+1])>0) {
-                            break;
-                        }
-                        j++;
-                    }
-                }
-
-                /* Here we check to see if we cross a 0 degree mark, in which
-                 * case sin changes sign. No need for reduce vel at 0 distance.*/
-                if (i<dist.length-1 && Math.sin(dist[i]) < 0 && 
-                    Math.sin(dist[i+1]) > 0) {
-                    phase.calcTime(0.0);
-                    phaseArrivals = phase.getArrivals();
-                    int j=0;
-                    while (j<phaseArrivals.length) {
-                        if ((phase.rayParams[i]-phaseArrivals[j].rayParam)*
-                            (phaseArrivals[j].rayParam-phase.rayParams[i+1])>0) {
-                            break;
-                        }
-                        j++;
-                    }
-                }
-            }
-
+		    /* trig trick to make sure the dist is 0 to PI. */
+		    arcDistance = Math.acos(Math.cos(dist[i]));
+		    if (reduceTime) {
+			timeReduced = time[i]-dist[i]/reduceVel;
+			rayParamsReduced = rayParams[i]-1/reduceVel;
+		    } else {
+			timeReduced = time[i];
+			rayParamsReduced = rayParams[i];
+		    }
+		    matCurves[phaseNum].time[i]=timeReduced;
+		    matCurves[phaseNum].distance[i]=180.0/Math.PI*dist[i];
+		    matCurves[phaseNum].mindistance[i]=180.0/Math.PI*arcDistance;
+		    matCurves[phaseNum].rayParam[i]=rayParamsReduced;
+		}
         }
     }
 }

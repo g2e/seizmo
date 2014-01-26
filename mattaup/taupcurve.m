@@ -88,9 +88,10 @@ function [varargout]=taupcurve(varargin)
 %                        necessary
 %        Feb. 24, 2012 - switch to enhanced taup (needed for output)
 %        Feb. 27, 2012 - skip plotting if no arrivals
+%        Jan. 26, 2014 - no longer need to update jar filenames
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2012 at 17:15 GMT
+%     Last Updated Jan. 26, 2014 at 17:15 GMT
 
 % todo:
 
@@ -103,9 +104,12 @@ end
 if(~exist('edu.sc.seis.TauP.MatTauP_Curve','class'))
     fs=filesep;
     mypath=fileparts(mfilename('fullpath'));
-    javaaddpath([mypath fs 'lib' fs 'MatTauP-1.2beta4.jar']);
-    javaaddpath([mypath fs 'lib' fs 'TauP-1.2beta4.jar']);
-    javaaddpath([mypath fs 'lib' fs 'seisFile-1.0.8.jar']);
+    jars=dir([mypath fs 'lib' fs '*.jar']);
+    for i=1:numel(jars)
+        if(~ismember([mypath fs 'lib' fs jar(i).name],javaclasspath))
+            javaaddpath([mypath fs 'lib' fs jars(i).name]);
+        end
+    end
 end
 
 % default options
