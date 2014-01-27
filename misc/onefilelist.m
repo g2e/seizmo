@@ -42,17 +42,21 @@ function [list]=onefilelist(varargin)
 %        Jan. 27, 2010 - file select ui if empty first arg & only 1 arg
 %        Feb. 14, 2010 - added SEIZMO global access to filterspec
 %        Feb. 14, 2012 - LASTDIRECTORY saves last dir in gui, doc update
+%        Jan. 27, 2014 - fix bad path bug in windows, reduce filesep calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2012 at 16:05 GMT
+%     Last Updated Jan. 27, 2014 at 16:05 GMT
 
 % todo:
 
 % retrieve global settings
 global SEIZMO
 
+% directory separator
+fs=filesep;
+
 % grab filterspec
-filterspec={}; lastdir='./';
+filterspec={}; lastdir=[pwd fs];
 try
     if(~isempty(SEIZMO.ONEFILELIST.FILTERSPEC) ...
             && iscellstr(SEIZMO.ONEFILELIST.FILTERSPEC) ...
@@ -73,12 +77,12 @@ if(nargin<1 || (nargin==1 && isempty(varargin{1})))
         [filterspec; {'*.*;*' 'All Files (*.* , *)'}],...
         'Select File(s)',lastdir,'MultiSelect','on');
     if(~isempty(path) && ischar(path))
-        SEIZMO.ONEFILELIST.LASTDIRECTORY=[path filesep];
+        SEIZMO.ONEFILELIST.LASTDIRECTORY=[path fs];
     end
     if(isequal(0,files))
         error('seizmo:onefilelist:noFilesSelected','No files selected!');
     end
-    varargin=strcat(path,filesep,cellstr(files));
+    varargin=strcat(path,fs,cellstr(files));
 else
     % check, organize, and compile char/cellstr arrays
     for i=1:max(1,nargin)

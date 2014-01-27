@@ -57,21 +57,28 @@ function [results]=cmb_outliers(results,odir,figdir)
 %        Mar.  1, 2012 - octave ascii save workaround
 %        Mar.  5, 2012 - allow no written output
 %        Mar. 11, 2013 - directory input (read indir/*.mat), selection list
+%        Jan. 27, 2014 - abs path fix & reduced filesep/fullfile calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2013 at 13:35 GMT
+%     Last Updated Jan. 27, 2014 at 13:35 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,3,nargin));
 
+% directory separator
+fs=filesep;
+
 % handle directory input
-if(ischar(results) && isdir(results))
-    files=xdir([results filesep '*.mat']);
-    clear results;
-    for i=1:numel(files)
-        results(i)=load([files(i).path files(i).name]);
+if(isstring(results))
+    if(~isabspath(results)); results=[pwd fs results]; end
+    if(isdir(results))
+        files=xdir([results fs '*.mat']);
+        clear results;
+        for i=1:numel(files)
+            results(i)=load([files(i).path files(i).name]);
+        end
     end
 end
 
@@ -229,10 +236,10 @@ for i=1:numel(s)
                     results(s(i)).outliers.cluster(j).arrcut.bad{arrcnt}=good(bad);
                     results(s(i)).outliers.cluster(j).arrcut.cutoff(arrcnt)=cutoff;
                     if(figout && ishandle(ax(1)))
-                        saveas(get(ax(1),'parent'),fullfile(figdir,...
-                            [datestr(now,30) '_' results(s(i)).runname ...
+                        saveas(get(ax(1),'parent'),[figdir fs ...
+                            datestr(now,30) '_' results(s(i)).runname ...
                             '_cluster_' sj '_arrcut_' num2str(arrcnt) ...
-                            '.fig']));
+                            '.fig']);
                     end
                     if(ishandle(ax(1)))
                         close(get(ax(1),'parent'));
@@ -244,10 +251,10 @@ for i=1:numel(s)
                     results(s(i)).outliers.cluster(j).errcut.bad{errcnt}=good(bad);
                     results(s(i)).outliers.cluster(j).errcut.cutoff(errcnt)=cutoff;
                     if(figout && ishandle(ax))
-                        saveas(get(ax,'parent'),fullfile(figdir,...
-                            [datestr(now,30) '_' results(s(i)).runname ...
+                        saveas(get(ax,'parent'),[figdir fs ...
+                            datestr(now,30) '_' results(s(i)).runname ...
                             '_cluster_' sj '_errcut_' num2str(errcnt) ...
-                            '.fig']));
+                            '.fig']);
                     end
                     if(ishandle(ax))
                         close(get(ax,'parent'));
@@ -260,10 +267,10 @@ for i=1:numel(s)
                     results(s(i)).outliers.cluster(j).ampcut.bad{ampcnt}=good(bad);
                     results(s(i)).outliers.cluster(j).ampcut.cutoff(ampcnt)=cutoff;
                     if(figout && ishandle(ax))
-                        saveas(get(ax,'parent'),fullfile(figdir,...
-                            [datestr(now,30) '_' results(s(i)).runname ...
+                        saveas(get(ax,'parent'),[figdir fs ...
+                            datestr(now,30) '_' results(s(i)).runname ...
                             '_cluster_' sj '_ampcut_' num2str(ampcnt) ...
-                            '.fig']));
+                            '.fig']);
                     end
                     if(ishandle(ax))
                         close(get(ax,'parent'));
@@ -277,10 +284,10 @@ for i=1:numel(s)
                     results(s(i)).outliers.cluster(j).delazcut.azlim{delazcnt}=azlim;
                     results(s(i)).outliers.cluster(j).delazcut.ddlim{delazcnt}=ddlim;
                     if(figout && ishandle(ax))
-                        saveas(get(ax,'parent'),fullfile(figdir,...
-                            [datestr(now,30) '_' results(s(i)).runname ...
+                        saveas(get(ax,'parent'),[figdir fs ...
+                            datestr(now,30) '_' results(s(i)).runname ...
                             '_cluster_' sj '_delazcut_' num2str(delazcnt) ...
-                            '.fig']));
+                            '.fig']);
                     end
                     if(ishandle(ax))
                         close(get(ax,'parent'));
@@ -309,13 +316,11 @@ for i=1:numel(s)
     if(out)
         tmp=results(s(i));
         if(isoctave)
-            save(fullfile(odir,[datestr(now,30) '_' ...
-                results(s(i)).runname '_outliers_results.mat']),...
-                '-7','-struct','tmp');
+            save([odir fs datestr(now,30) '_' results(s(i)).runname ...
+                '_outliers_results.mat'],'-7','-struct','tmp');
         else % matlab
-            save(fullfile(odir,[datestr(now,30) '_' ...
-                results(s(i)).runname '_outliers_results.mat']),...
-                '-struct','tmp');
+            save([odir fs datestr(now,30) '_' results(s(i)).runname ...
+                '_outliers_results.mat'],'-struct','tmp');
         end
     end
 end

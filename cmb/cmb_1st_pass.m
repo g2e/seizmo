@@ -85,9 +85,10 @@ function [varargout]=cmb_1st_pass(phase,indir,varargin)
 %        Feb. 26, 2013 - bugfix: skip event if only 1 waveform
 %                        bugfix: no crash when handling no good events
 %        Mar. 11, 2013 - skip event if 2 or less waveforms
+%        Jan. 27, 2014 - abs path fix & reduced filesep/fullfile calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2013 at 13:35 GMT
+%     Last Updated Jan. 27, 2014 at 13:35 GMT
 
 % todo:
 
@@ -112,14 +113,20 @@ elseif(~isstring(phase) || ~ismember(phase,valid))
         sprintf('''%s'' ',valid{:}) '!']);
 end
 
+% directory separator
+fs=filesep;
+
 % select/check indir
 if(nargin<2 || isempty(indir))
     drawnow;
     indir=uigetdir('.','Choose a directory of data directories:');
-elseif(~isstring(indir))
+end
+if(~isstring(indir))
     error('seizmo:cmb_1st_pass:badInput',...
         'INDIR must be a string giving one directory!');
-elseif(~isdir(indir))
+end
+if(~isabspath(indir)); indir=[pwd fs indir]; end
+if(~isdir(indir))
     error('seizmo:cmb_1st_pass:badInput',...
         'INDIR must be a directory!');
 end
@@ -213,9 +220,9 @@ dates(~[dates.isdir])=[];
 if(isempty(dates))
     % you probably selected a single directory to work on
     % so lets just use that as the date directory
-    pathdirs=getwords(indir,filesep);
-    if(strcmp(indir(1),filesep)); pathdirs{1}=[filesep pathdirs{1}]; end
-    indir=joinwords(pathdirs(1:end-1),filesep);
+    pathdirs=getwords(indir,fs);
+    if(strcmp(indir(1),fs)); pathdirs{1}=[fs pathdirs{1}]; end
+    indir=joinwords(pathdirs(1:end-1),fs);
     if(isempty(indir)); indir='.'; end
     dates=dir(indir);
     dates=dates(strcmp({dates.name}.',pathdirs(end)));
@@ -245,7 +252,7 @@ for i=1:numel(s)
     disp(dates(s(i)).name);
     
     % read in headers
-    data=readheader([indir filesep dates(s(i)).name]);
+    data=readheader([indir fs dates(s(i)).name]);
     runname=[dates(s(i)).name '_' phase '_1stPass'];
     
     % appropriate components for this phase
@@ -325,8 +332,8 @@ for i=1:numel(s)
             ' Stations Outside Distance-Azimuth Limits Removed']);
         if(ishandle(ax))
             if(figout)
-                saveas(get(ax,'parent'),fullfile(figdir,...
-                    [datestr(now,30) '_' runname '_band_1_delazcut.fig']));
+                saveas(get(ax,'parent'),[figdir fs datestr(now,30) '_' ...
+                    runname '_band_1_delazcut.fig']);
             end
             close(get(ax,'parent'));
         end
@@ -398,7 +405,7 @@ for i=1:numel(s)
     
     % add run name, data directory, phase name
     tmp.runname=runname;
-    tmp.dirname=[indir filesep dates(s(i)).name];
+    tmp.dirname=[indir fs dates(s(i)).name];
     tmp.phase=phase;
     tmp.synthetics=issynth;
     tmp.earthmodel=synmodel;
@@ -441,16 +448,16 @@ for i=1:numel(s)
     % save results
     if(out)
         if(isoctave)
-            save(fullfile(odir,[timestr '_' runname '_results.mat']),...
+            save([odir fs timestr '_' runname '_results.mat'],...
                 '-7','-struct','tmp');
         else % matlab
-            save(fullfile(odir,[timestr '_' runname '_results.mat']),...
+            save([odir fs timestr '_' runname '_results.mat'],...
                 '-struct','tmp');
         end
         
         % read in to check
         try
-            tmp=load(fullfile(odir,[timestr '_' runname '_results.mat']));
+            tmp=load([odir fs timestr '_' runname '_results.mat']);
             error(check_cmb_results(tmp));
         catch
             warning('seizmo:cmb_1st_pass:failedWrite',...

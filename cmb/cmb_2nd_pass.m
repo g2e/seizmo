@@ -66,21 +66,28 @@ function [varargout]=cmb_2nd_pass(results,sr,varargin)
 %        Feb. 14, 2013 - bugfix figdir handling
 %        Mar. 11, 2013 - directory input (reads indir/*.mat), selection
 %                        list, advanced clustering commented out
+%        Jan. 27, 2014 - abs path fix & reduced filesep/fullfile calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2013 at 13:35 GMT
+%     Last Updated Jan. 27, 2014 at 13:35 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,inf,nargin));
 
+% directory separator
+fs=filesep;
+
 % handle directory input
-if(ischar(results) && isdir(results))
-    files=xdir([results filesep '*.mat']);
-    clear results;
-    for i=1:numel(files)
-        results(i)=load([files(i).path files(i).name]);
+if(isstring(results))
+    if(~isabspath(results)); results=[pwd fs results]; end
+    if(isdir(results))
+        files=xdir([results fs '*.mat']);
+        clear results;
+        for i=1:numel(files)
+            results(i)=load([files(i).path files(i).name]);
+        end
     end
 end
 
@@ -202,7 +209,7 @@ for i=1:numel(s)
     if(isempty(results(s(i)).useralign)); continue; end
     
     % read in data
-    data=readseizmo(strcat(results(s(i)).dirname,filesep,...
+    data=readseizmo(strcat(results(s(i)).dirname,fs,...
         {results(s(i)).useralign.data.name}'));
     
     % get some header info
@@ -320,13 +327,11 @@ for i=1:numel(s)
         % save results (all bands together)
         if(out)
             if(isoctave)
-                save(fullfile(odir,...
-                    [datestr(now,30) '_' runname '_cluster_' ...
-                    sj '_allband_results.mat']),'-7','tmp');
+                save([odir fs datestr(now,30) '_' runname '_cluster_' ...
+                    sj '_allband_results.mat'],'-7','tmp');
             else % matlab
-                save(fullfile(odir,...
-                    [datestr(now,30) '_' runname '_cluster_' ...
-                    sj '_allband_results.mat']),'tmp');
+                save([odir fs datestr(now,30) '_' runname '_cluster_' ...
+                    sj '_allband_results.mat'],'tmp');
             end
         end
 

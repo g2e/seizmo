@@ -78,9 +78,10 @@ function [data]=getsacpz(data,varargin)
 %        Sep. 28, 2010 - improved warning message if no sac pz found
 %        Mar.  5, 2011 - fixed bug in when missing networks
 %        Jan. 28, 2012 - drop strnlen usage, catch blank knetwk, doc update
+%        Jan. 27, 2014 - fix abs path bug from isdir call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 12:45 GMT
+%     Last Updated Jan. 27, 2014 at 12:45 GMT
 
 % todo:
 
@@ -201,8 +202,13 @@ try
         % get dirs
         ndirs=numel(varargin);
         dirs=false(1,ndirs);
+        fs=filesep;
         for i=1:ndirs
-            dirs(i)=isdir(varargin{i});
+            if(isabspath(varargin{i}))
+                dirs(i)=isdir(varargin{i});
+            else
+                dirs(i)=isdir([pwd fs varargin{i}]);
+            end
         end
         if(any(dirs))
             try

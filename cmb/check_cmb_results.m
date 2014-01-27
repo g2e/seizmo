@@ -41,9 +41,10 @@ function [report]=check_cmb_results(results)
 %        Jan. 18, 2011 - require .time field
 %        Jan. 26, 2011 - require .synthetics & .earthmodel
 %        Mar. 11, 2013 - commented out advanced clustering
+%        Jan. 27, 2014 - abs path fix for isdir test for .dirname field
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 11, 2013 at 13:35 GMT
+%     Last Updated Jan. 27, 2014 at 13:35 GMT
 
 % todo:
 
@@ -150,7 +151,13 @@ else
         end
         
         % check dirname
-        if(~isstring(results(a).dirname) || ~isdir(results(a).dirname))
+        if(~isstring(results(a).dirname))
+            
+        end
+        if(~isabspath(results(a).dirname))
+            results(a).dirname=[pwd filesep results(a).dirname];
+        end
+        if(~isdir(results(a).dirname))
             report.identifier='seizmo:cmb_cmb_results:badDirName';
             report.message='RESULTS.dirname must be a valid directory!';
             return;

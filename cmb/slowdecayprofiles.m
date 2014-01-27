@@ -111,9 +111,8 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 %        Mar.  6, 2012 - basic .weights field support
 %        Oct. 11, 2012 - drop corrections field (huge)
 %        July 25, 2013 - directory input (reads indir/*.mat)
-%        Jan. 27, 2014 - abs path fix not needed b/c relative path is
-%                        always non-empty, put unique output file detection
-%                        in while loop
+%        Jan. 27, 2014 - put unique output file detection in while loop,
+%                        abs path fix & reduced filesep/fullfile calls
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Jan. 27, 2014 at 13:35 GMT
@@ -123,12 +122,18 @@ function [pf]=slowdecayprofiles(results,azrng,gcrng,odir)
 % check nargin
 error(nargchk(1,4,nargin));
 
+% directory separator
+fs=filesep;
+
 % handle directory input
-if(ischar(results) && isdir(results))
-    files=xdir([results filesep '*.mat']);
-    clear results;
-    for i=1:numel(files)
-        results(i)=load([files(i).path files(i).name]);
+if(isstring(results))
+    if(~isabspath(results)); results=[pwd fs results]; end
+    if(isdir(results))
+        files=xdir([results fs '*.mat']);
+        clear results;
+        for i=1:numel(files)
+            results(i)=load([files(i).path files(i).name]);
+        end
     end
 end
 
@@ -363,18 +368,18 @@ if(out && exist('pf','var'))
     if(~isscalar(emod)); emod='misc'; else emod=char(emod); end
     
     % avoid clobber by waiting until unique time
-    while(exist(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
-            '_nstn_profiles.mat']),'file'))
+    while(exist([odir fs datestr(now,30) '_' wfdir '_' emod ...
+            '_nstn_profiles.mat'],'file'))
         pause(1);
     end
     
     % saving
     if(isoctave)
-        save(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
-            '_nstn_profiles.mat']),'-7','pf');
+        save([odir fs datestr(now,30) '_' wfdir '_' emod ...
+            '_nstn_profiles.mat'],'-7','pf');
     else % matlab
-        save(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
-            '_nstn_profiles.mat']),'pf');
+        save([odir fs datestr(now,30) '_' wfdir '_' emod ...
+            '_nstn_profiles.mat'],'pf');
     end
 end
 

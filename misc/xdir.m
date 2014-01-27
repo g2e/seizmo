@@ -76,6 +76,7 @@ function [varargout]=xdir(str,depth)
 %        Mar. 16, 2010 - added todo list (mainly about ? wildcard)
 %        Feb. 11, 2011 - use fprintf
 %        Apr.  3, 2012 - minor doc update
+%        Jan. 27, 2014 - commented on abs path issue for isdir call
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
@@ -198,10 +199,10 @@ end
 D=emptylist;
 if isempty(wildpath)
   % handle dir expanding directories
-  if(isdir([prepath postpath]))
+  if(isdir([prepath postpath])) % MATLAB false positives possible here
     % list directory and clean up ending filesep
     path=[prepath postpath];
-    D=dir(path);
+    D=dir(path); % MATLAB false positives destroyed here
     if(strcmp(path(end),filesep)); path=path(1:end-1); end
     
     % workaround for new field to empty struct
