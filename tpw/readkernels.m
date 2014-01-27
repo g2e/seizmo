@@ -27,14 +27,18 @@ function [Kph,Kam,x,y]=readkernels(file)
 %        July  9, 2010 - fixed nargchk
 %        Feb. 11, 2011 - mass nargchk fix
 %        Mar. 24, 2012 - minor doc update
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2012 at 15:05 GMT
+%     Last Updated Jan. 26, 2014 at 15:05 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(0,1,nargin));
+
+% directory separator
+fs=filesep;
 
 % graphical selection
 if(nargin<1 || isempty(file))
@@ -50,13 +54,14 @@ if(nargin<1 || isempty(file))
         error('seizmo:readkernels:noFileSelected',...
             'No input file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else
     % check file
-    if(~ischar(file))
+    if(~isstring(file))
         error('seizmo:readkernels:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(~exist(file,'file'))
         error('seizmo:readkernels:fileDoesNotExist',...
             'File: %s\nDoes Not Exist!',file);

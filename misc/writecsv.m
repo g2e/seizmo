@@ -49,14 +49,18 @@ function []=writecsv(file,struct,delimiter,overwrite)
 %        Feb.  5, 2010 - add check for overwrite flag
 %        Feb. 11, 2011 - mass nargchk fix, use fprintf
 %        Feb. 28, 2012 - input is scalar struct now, delimiter input
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 28, 2012 at 15:05 GMT
+%     Last Updated Jan. 26, 2014 at 15:05 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(2,4,nargin));
+
+% directory separator
+fs=filesep;
 
 % defaults
 if(nargin<3 || isempty(delimiter)); delimiter=', '; end
@@ -84,13 +88,14 @@ if(isempty(file))
     if(isequal(0,file))
         error('seizmo:writecsv:noFileSelected','No output file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else
     % check file
-    if(~ischar(file) || ~isvector(file))
+    if(~isstring(file))
         error('seizmo:writecsv:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(exist(file,'file'))
         if(exist(file,'dir'))
             error('seizmo:writecsv:dirConflict',...

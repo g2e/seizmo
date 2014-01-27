@@ -23,6 +23,7 @@ function []=noise_mat2sac(noisedir,rmflag)
 
 %     Version History:
 %        Mar. 26, 2013 - initial version
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Mar. 26, 2013 at 13:50 GMT
@@ -32,11 +33,15 @@ function []=noise_mat2sac(noisedir,rmflag)
 % check nargin
 error(nargchk(1,2,nargin));
 
+% directory separator
+fs=filesep;
+
 % check directory
-if(~ischar(noisedir) || ~isvector(noisedir))
+if(~isstring(noisedir))
     error('seizmo:noise_mat2sac:fileNotString',...
         'NOISEDIR must be a string!');
 end
+if(~isabspath(noisedir)); noisedir=[pwd fs noisedir]; end
 if(~exist(noisedir,'dir'))
     error('seizmo:noise_mat2sac:dirConflict',...
         ['Noise Directory: %s\n' ...
@@ -51,7 +56,6 @@ if(~isscalar(rmflag) || ~islogical(rmflag))
 end
 
 % get year directories and time-section directories
-fs=filesep;
 dirs=xdir([noisedir fs]);
 dirs=dirs([dirs.isdir]' & ~strncmp({dirs.name}','.',1)); % unhidden dirs
 yrdir={dirs.name};

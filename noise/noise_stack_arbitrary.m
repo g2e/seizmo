@@ -32,14 +32,18 @@ function [sdata]=noise_stack_arbitrary(indirs,varargin)
 %     Version History:
 %        Apr.  3, 2013 - initial version
 %        Apr.  8, 2013 - forgot to average
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  8, 2013 at 11:15 GMT
+%     Last Updated Jan. 26, 2014 at 11:15 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,1,nargin));
+
+% directory separator
+fs=filesep;
 
 % check indirs
 if(~iscellstr(indirs))
@@ -51,7 +55,9 @@ for i=1:n
     if(ndims(indirs{i})~=2 || size(indirs{i},1)~=1)
         error('seizmo:noise_stack_arbitrary:fileNotString',...
             'INDIRS must all be valid strings!');
-    elseif(~exist(indirs{i},'dir'))
+    end
+    if(~isabspath(indirs{i})); indirs{i}=[pwd fs indirs{i}]; end
+    if(~exist(indirs{i},'dir'))
         error('seizmo:noise_stack_arbitrary:dirConflict',...
             ['Input Directory: %s\n' ...
             'Does not exist (or is not a directory)!'],indirs{i});

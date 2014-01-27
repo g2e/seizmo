@@ -77,9 +77,10 @@ function []=gooduglycheck(indir,outdir,varargin)
 %        Apr.  5, 2011 - warn on event location variation
 %        June  8, 2011 - turn on fill in cut commands
 %        Apr.  2, 2012 - minor doc update
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  2, 2012 at 10:35 GMT
+%     Last Updated Jan. 26, 2014 at 10:35 GMT
 
 % todo
 % - something like freqwindow may be better?
@@ -95,7 +96,12 @@ end
 fs=filesep;
 
 % check indir
-if(~isstring(indir) || ~isdir(indir))
+if(~isstring(indir))
+    error('seizmo:gooduglycheck:badInput',...
+        'INDIR must be a directory location!');
+end
+if(~isabspath(indir)); indir=[pwd fs indir]; end
+if(~isdir(indir))
     error('seizmo:gooduglycheck:badInput',...
         'INDIR must be a directory location!');
 end
@@ -105,7 +111,9 @@ reply='o';
 if(~isstring(outdir))
     error('seizmo:gooduglycheck:badInput',...
         'OUTDIR must be a valid directory path!');
-elseif(exist(outdir,'file') && ~isdir(outdir))
+end
+if(~isabspath(outdir)); outdir=[pwd fs outdir]; end
+if(exist(outdir,'file') && ~isdir(outdir))
     error('seizmo:gooduglycheck:badInput',...
         'OUTDIR location is a file!');
 elseif(isdir(outdir))

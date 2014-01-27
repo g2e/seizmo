@@ -132,9 +132,10 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %        Apr.  3, 2013 - minor fixes and notes
 %        Apr.  8, 2013 - xcreverse option is false by default (for space)
 %        Sep. 24, 2013 - minor doc update
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 24, 2013 at 11:15 GMT
+%     Last Updated Jan. 26, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -150,23 +151,28 @@ if(nargin>=4 && ~mod(nargin,2))
         'Unpaired option/value pair given!');
 end
 
+% directory separator
+fs=filesep;
+
 % parse/check options
 opt=noise_stack_parameters(varargin{:});
 
 % check directories
-if(~ischar(indir) || ~isvector(indir))
+if(~isstring(indir))
     error('seizmo:noise_stack:fileNotString',...
         'INDIR must be a string!');
 end
+if(~isabspath(indir)); indir=[pwd fs indir]; end
 if(~exist(indir,'dir'))
     error('seizmo:noise_stack:dirConflict',...
         ['Input Directory: %s\n' ...
         'Does not exist (or is not a directory)!'],indir);
 end
-if(~ischar(outdir) || ~isvector(outdir))
+if(~isstring(outdir))
     error('seizmo:noise_stack:fileNotString',...
         'OUTDIR must be a string!');
 end
+if(~isabspath(outdir)); outdir=[pwd fs outdir]; end
 if(exist(outdir,'file'))
     if(~exist(outdir,'dir'))
         error('seizmo:noise_stack:dirConflict',...
@@ -190,9 +196,6 @@ if(~iscellstr(pair) || any(cellfun('prodofsize',pair)~=2))
         'PAIR must be a string like ''ZZ'' etc!');
 end
 pair=unique(lower(pair(:)))'; % row vector of unique strings
-
-% directory separator
-fs=filesep;
 
 % parallel processing setup
 verbose=seizmoverbose;
@@ -731,8 +734,8 @@ try
                                 noise_records=changepath(...
                                     sdata{pidx},'path',path); %#ok<*NASGU>
                                 if(~exist(path,'dir')); mkdir(path); end
-                                save(fullfile(char(path),...
-                                    'noise_records.mat'),'noise_records');
+                                save([path fs 'noise_records.mat'],...
+                                    'noise_records');
                                 clear noise_records;
                             else
                                 writeseizmo(sdata{pidx},'path',path);
@@ -742,8 +745,8 @@ try
                                 noise_records=changepath(...
                                     symcmp(sdata{pidx}),'path',path);
                                 if(~exist(path,'dir')); mkdir(path); end
-                                save(fullfile(char(path),...
-                                    'noise_records.mat'),'noise_records');
+                                save([path fs 'noise_records.mat'],...
+                                    'noise_records');
                                 clear noise_records;
                             else
                                 writeseizmo(symcmp(sdata{pidx}),...
@@ -754,8 +757,8 @@ try
                                 noise_records=changepath(...
                                     cut(sdata{pidx},0),'path',path);
                                 if(~exist(path,'dir')); mkdir(path); end
-                                save(fullfile(char(path),...
-                                    'noise_records.mat'),'noise_records');
+                                save([path fs 'noise_records.mat'],...
+                                    'noise_records');
                                 clear noise_records;
                             else
                                 writeseizmo(cut(sdata{pidx},0),...
@@ -767,8 +770,8 @@ try
                                     cut(reverse(sdata{pidx}),0),...
                                     'path',path);
                                 if(~exist(path,'dir')); mkdir(path); end
-                                save(fullfile(char(path),...
-                                    'noise_records.mat'),'noise_records');
+                                save([path fs 'noise_records.mat'],...
+                                    'noise_records');
                                 clear noise_records;
                             else
                                 writeseizmo(cut(reverse(sdata{pidx}),0),...

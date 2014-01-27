@@ -153,9 +153,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %                        but requires running NOISE_RMS_CALC first, this
 %                        adds several new reject* options too
 %        Sep. 23, 2013 - update for new rotate_correlations, 4=>3 fix
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 23, 2013 at 11:15 GMT
+%     Last Updated Jan. 26, 2014 at 11:15 GMT
 
 % todo:
 
@@ -166,6 +167,9 @@ if(nargin>=4 && ~mod(nargin,2))
         'Unpaired option/value pair given!');
 end
 
+% directory separator
+fs=filesep;
+
 % default steps to all
 if(nargin<3 || isempty(steps)); steps=7:12; end
 
@@ -173,19 +177,21 @@ if(nargin<3 || isempty(steps)); steps=7:12; end
 opt=noise_process_parameters(varargin{:});
 
 % check directories
-if(~ischar(indir) || ~isvector(indir))
+if(~isstring(indir))
     error('seizmo:noise_process:fileNotString',...
         'INDIR must be a string!');
 end
+if(~isabspath(indir)); indir=[pwd fs indir]; end
 if(~exist(indir,'dir'))
     error('seizmo:noise_process:dirConflict',...
         ['Input Directory: %s\n' ...
         'Does not exist (or is not a directory)!'],indir);
 end
-if(~ischar(outdir) || ~isvector(outdir))
+if(~isstring(outdir))
     error('seizmo:noise_process:fileNotString',...
         'OUTDIR must be a string!');
 end
+if(~isabspath(outdir)); outdir=[pwd fs outdir]; end
 if(exist(outdir,'file'))
     if(~exist(outdir,'dir'))
         error('seizmo:noise_process:dirConflict',...
@@ -208,9 +214,6 @@ if(isempty(steps) || ~isnumeric(steps) || ~isreal(steps) ...
     error('seizmo:noise_process:badInput',...
         'STEPS must be a series of positive integers!');
 end
-
-% directory separator
-fs=filesep;
 
 % parallel processing setup
 verbose=seizmoverbose;
@@ -783,8 +786,8 @@ for i=1:numel(tsdirs) % SERIAL
             if(~exist([outdir fs tsdirs{i}(1:4) fs tsdirs{i}],'dir'))
                 mkdir([outdir fs tsdirs{i}(1:4) fs tsdirs{i}]);
             end
-            save(fullfile(outdir,tsdirs{i}(1:4),tsdirs{i},...
-                'noise_records.mat'),'noise_records');
+            save([outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs ...
+                'noise_records.mat'],'noise_records');
             clear noise_records;
         else
             if(isxc)

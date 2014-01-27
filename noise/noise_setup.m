@@ -121,32 +121,38 @@ function []=noise_setup(indir,outdir,varargin)
 %        July 24, 2013 - check process option, improved option docs by
 %                        pointing to the associated functions, add pzdb
 %                        example, removed old and incorrect note
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 24, 2013 at 11:15 GMT
+%     Last Updated Jan. 26, 2014 at 11:15 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(2,inf,nargin));
 
+% directory separator
+fs=filesep;
+
 % parse/check options
 opt=noise_setup_parameters(varargin{:});
 
 % check directories
-if(~ischar(indir) || ~isvector(indir))
+if(~isstring(indir))
     error('seizmo:noise_setup:fileNotString',...
         'INDIR must be a string!');
 end
+if(~isabspath(indir)); indir=[pwd fs indir]; end
 if(~exist(indir,'dir') && ~any(indir=='*')) % allow wildcards
     error('seizmo:noise_setup:dirConflict',...
         ['Input Directory: %s\n' ...
         'Does not exist (or is not a directory)!'],indir);
 end
-if(~ischar(outdir) || ~isvector(outdir))
+if(~isstring(outdir))
     error('seizmo:noise_setup:fileNotString',...
         'OUTDIR must be a string!');
 end
+if(~isabspath(outdir)); outdir=[pwd fs outdir]; end
 if(exist(outdir,'file'))
     if(~exist(outdir,'dir'))
         error('seizmo:noise_setup:dirConflict',...
@@ -162,9 +168,6 @@ if(exist(outdir,'file'))
         disp('Overwriting!');
     end
 end
-
-% directory separator
-fs=filesep;
 
 % parallel processing setup
 verbose=seizmoverbose;
@@ -377,8 +380,8 @@ for yr=minyr:maxyr
                     if(~exist([outdir fs num2str(yr) fs tsdir],'dir'))
                         mkdir([outdir fs num2str(yr) fs tsdir]);
                     end
-                    save(fullfile(outdir,num2str(yr),tsdir,...
-                        'noise_records.mat'),'noise_records');
+                    save([outdir fs num2str(yr) fs tsdir fs ...
+                        'noise_records.mat'],'noise_records');
                 else % SAC
                     writeseizmo(tsdata,...
                         'path',[outdir fs num2str(yr) fs tsdir]);

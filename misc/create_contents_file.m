@@ -26,14 +26,18 @@ function []=create_contents_file(mdir,desc,file,o)
 
 %     Version History:
 %        Jan.  3, 2011 - initial version
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan.  3, 2011 at 23:00 GMT
+%     Last Updated Jan. 26, 2014 at 23:00 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(0,4,nargin));
+
+% directory separator
+fs=filesep;
 
 % check directory if given
 if(nargin>0 && ~isempty(mdir))
@@ -42,6 +46,7 @@ if(nargin>0 && ~isempty(mdir))
         error('seizmo:create_contents_file:dirNotString',...
             'MDIR must be a string!');
     end
+    if(~isabspath(mdir)); mdir=[pwd fs mdir]; end
     if(~exist(mdir,'dir'))
         error('seizmo:create_contents_file:dirDoesNotExist',...
             'Directory: %s\nDoes Not Exist!',mdir);
@@ -98,7 +103,6 @@ end
 if(nargin<2 || isempty(desc)); desc=['Contents of ' mdir ':']; end
 
 % graphical file selections
-fs=filesep;
 if(nargin<3 || isempty(file))
     [file,path]=uiputfile(...
         {'*.m' 'M Files (*.m)';

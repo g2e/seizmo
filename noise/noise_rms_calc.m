@@ -28,28 +28,30 @@ function []=noise_rms_calc(indir)
 %                        tsbgn & tsend output now include times for every
 %                        point in the output data for sanity
 %        Sep. 24, 2013 - fixed example to avoid xc directory issue
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 24, 2013 at 11:15 GMT
+%     Last Updated Jan. 26, 2014 at 11:15 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,1,nargin));
 
+% directory separator
+fs=filesep;
+
 % check directory
-if(~ischar(indir) || ~isvector(indir))
+if(~isstring(indir))
     error('seizmo:noise_rms_calc:fileNotString',...
         'INDIR must be a string!');
 end
+if(~isabspath(indir)); indir=[pwd fs indir]; end
 if(~exist(indir,'dir'))
     error('seizmo:noise_rms_calc:dirConflict',...
         ['Input Directory: %s\n' ...
         'Does not exist (or is not a directory)!'],indir);
 end
-
-% directory separator
-fs=filesep;
 
 % get year directories and time-section directories
 dirs=xdir([indir fs]);

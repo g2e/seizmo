@@ -92,9 +92,10 @@ function [varargout]=make_reflect_input(...
 %     Version History:
 %        Aug. 10, 2010 - initial version
 %        Feb. 28, 2011 - fix overwrite crash
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 28, 2011 at 23:00 GMT
+%     Last Updated Jan. 26, 2014 at 23:00 GMT
 
 % todo:
 
@@ -292,6 +293,9 @@ nsrcfun=numel(srcfun);
 %%%% begin write section!!! %%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% directory separator
+fs=filesep;
+
 % get output filename if one not given
 if(isempty(o.file))
     [o.file,path]=uiputfile(...
@@ -302,13 +306,14 @@ if(isempty(o.file))
         error('seizmo:make_reflect_input:noFileSelected',...
             'No output file selected!');
     end
-    o.file=strcat(path,filesep,o.file);
+    o.file=[path fs o.file];
 else
     % check file
-    if(~ischar(o.file) || ~isvector(o.file))
+    if(~isstring(o.file))
         error('seizmo:make_reflect_input:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(o.file)); o.file=[pwd fs o.file]; end
     if(exist(o.file,'file'))
         if(exist(o.file,'dir'))
             error('seizmo:make_reflect_input:dirConflict',...

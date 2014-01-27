@@ -23,9 +23,10 @@ function [data,stf]=reflect2seizmo(infile,outfile)
 %        Feb.  2, 2011 - spread model name across KUSER0-2 to allow longer
 %                        model names (one reason a fixed format fails)
 %        Jan. 28, 2012 - minor improvement to strnlen usage
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 28, 2012 at 23:00 GMT
+%     Last Updated Jan. 26, 2014 at 23:00 GMT
 
 % todo:
 
@@ -169,6 +170,9 @@ end
 function [x,p,raw]=read_reflect_binary_output(file,nsta,npts)
 %READ_REFLECT_BINARY_OUTPUT  Reads in reflectivity binary output
 
+% directory separator
+fs=filesep;
+
 % graphical selection
 if(isempty(file))
     [file,path]=uigetfile(...
@@ -178,13 +182,14 @@ if(isempty(file))
         error('seizmo:read_reflect_binary_output:noFileSelected',...
             'No input file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else
     % check file
-    if(~ischar(file))
+    if(~isstring(file))
         error('seizmo:read_reflect_binary_output:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(~exist(file,'file'))
         error('seizmo:read_reflect_binary_output:fileDoesNotExist',...
             'File: %s\nDoes Not Exist!',file);

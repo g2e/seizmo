@@ -49,14 +49,18 @@ function []=write_1dmodel_nd(file,model,overwrite,noheader)
 %        Sep. 18, 2010 - initial version
 %        Sep. 19, 2010 - support for inf Q output as 0
 %        Feb. 21, 2012 - noheader flag
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 21, 2012 at 10:35 GMT
+%     Last Updated Jan. 26, 2014 at 10:35 GMT
 
 % todo
 
 % check nargin
 error(nargchk(2,4,nargin));
+
+% directory separator
+fs=filesep;
 
 % default overwrite to false
 if(nargin<3 || isempty(overwrite)); overwrite=false; end
@@ -88,13 +92,14 @@ if(isempty(file))
         error('seizmo:write_1dmodel_nd:noFileSelected',...
             'No output file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else
     % check file
-    if(~ischar(file) || ~isvector(file))
+    if(~isstring(file))
         error('seizmo:write_1dmodel_nd:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(exist(file,'file'))
         if(exist(file,'dir'))
             error('seizmo:write_1dmodel_nd:dirConflict',...

@@ -67,9 +67,10 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %        May   5, 2012 - minor doc update
 %        May  11, 2012 - skips .data access if there is a null range
 %        Jan. 15, 2014 - updated See also list
+%        Jan. 26, 2014 - fixed error msg for no njtbx installed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 00:40 GMT
+%     Last Updated Jan. 26, 2014 at 00:40 GMT
 
 % todo:
 
@@ -87,9 +88,7 @@ if(nargin<6); lonrng=[]; end
 % check that njtbx is installed (somewhat)
 if(~exist('mDataset','file') || ~exist('nj_time','file'))
     error('seizmo:ww3struct:noNJTBX',...
-        ['NJTBX is not installed!  You may get it here:\n' ...
-        'http://sourceforge.net/apps/trac/njtbx/' ...
-        'wiki/DownloadNjtbx-current']);
+        'NJTBX is not installed!  Run function WEBINSTALL_NJTBX.');
 end
 
 % set filterspec appropriately

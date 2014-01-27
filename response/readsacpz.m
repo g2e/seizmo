@@ -65,9 +65,10 @@ function [z,p,k]=readsacpz(file)
 %        Feb.  3, 2010 - fixed example
 %        Feb. 11, 2011 - mass nargchk fix
 %        Feb.  3, 2012 - doc update
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2012 at 15:05 GMT
+%     Last Updated Jan. 26, 2014 at 15:05 GMT
 
 % todo:
 % - multi zpk sacpz files are not handled
@@ -85,11 +86,15 @@ function [z,p,k]=readsacpz(file)
 % check nargin
 error(nargchk(1,1,nargin));
 
+% directory separator
+fs=filesep;
+
 % check file
-if(~ischar(file))
+if(~isstring(file))
     error('seizmo:readsacpz:fileNotString',...
         'FILE must be a string!');
 end
+if(~isabspath(file)); file=[pwd fs file]; end
 if(~exist(file,'file'))
     error('seizmo:readsacpz:fileDoesNotExist',...
         'SAC PoleZero File: %s\nDoes Not Exist!',file);

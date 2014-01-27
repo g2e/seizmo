@@ -35,9 +35,10 @@ function []=writekernels(file,Kph,Kam,x,y,o)
 %        July  9, 2010 - fixed nargchk
 %        Feb. 11, 2011 - use fprintf
 %        Apr.  2, 2012 - minor doc update
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  2, 2012 at 17:10 GMT
+%     Last Updated Jan. 26, 2014 at 17:10 GMT
 
 % todo:
 
@@ -72,6 +73,9 @@ elseif(~isscalar(dy) || dy<=0)
         'Y step size is not uniform or is <=0!');
 end
 
+% directory separator
+fs=filesep;
+
 % handle file
 if(isempty(file))
     % graphical selection
@@ -87,13 +91,14 @@ if(isempty(file))
         error('seizmo:writekernels:noFileSelected',...
             'No input file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else
     % check file
-    if(~ischar(file) || ~isvector(file))
+    if(~isstring(file))
         error('seizmo:writekernels:badInput',...
             'FILENAME must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(exist(file,'dir'))
         error('seizmo:writekernels:dirConflict',...
             'File: %s\nIs A Directory!',file);

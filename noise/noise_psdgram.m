@@ -39,20 +39,25 @@ function [psdgram]=noise_psdgram(indir,length,overlap,func)
 %     Version History:
 %        Apr. 15, 2013 - initial version, no 50% data in subwindow bugfix
 %        Apr. 17, 2013 - use powerspectraldensity to get psd
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 17, 2013 at 13:30 GMT
+%     Last Updated Jan. 26, 2014 at 13:30 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,4,nargin));
 
+% directory separator
+fs=filesep;
+
 % check input directory
-if(~ischar(indir) || size(indir,1)~=1)
+if(~isstring(indir))
     error('seizmo:noise_psdgram:fileNotString',...
         'INDIR must be a string!');
 end
+if(~isabspath(indir)); indir=[pwd fs indir]; end
 if(~exist(indir,'dir'))
     error('seizmo:noise_psdgram:dirConflict',...
         ['Input Directory: %s\n' ...
@@ -60,7 +65,6 @@ if(~exist(indir,'dir'))
 end
 
 % get year directories and time-section directories
-fs=filesep;
 dirs=xdir([indir fs]);
 dirs=dirs([dirs.isdir]' & ~strncmp({dirs.name}','.',1)); % unhidden dirs
 yrdir={dirs.name};

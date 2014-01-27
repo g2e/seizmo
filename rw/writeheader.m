@@ -69,9 +69,10 @@ function []=writeheader(data,varargin)
 %                        versioninfo caching
 %        Feb. 11, 2011 - dropped versioninfo caching
 %        Jan. 30, 2012 - doc update, better getheader usage
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 15:05 GMT
+%     Last Updated Jan. 26, 2014 at 15:05 GMT
 
 % todo:
 
@@ -118,8 +119,9 @@ try
         % update progress bar by default
         redraw=false;
         
-        % construct fullname
+        % construct fullname (force absolute path)
         name=fullfile(data(i).path,data(i).name);
+        if(~isabspath(name)); name=fullfile(pwd,name); end
 
         % make sure directory exists
         [ok,msg,msgid]=mkdir(data(i).path);

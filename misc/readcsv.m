@@ -38,9 +38,10 @@ function [lines]=readcsv(file,delimiter)
 %        Jan. 28, 2011 - handle empty entries (,,), allow alternate
 %                        field delimiter, require nonempty field name
 %        Feb. 28, 2012 - output is scalar struct now
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 28, 2012 at 17:25 GMT
+%     Last Updated Jan. 26, 2014 at 17:25 GMT
 
 % todo:
 % - text delimiter
@@ -53,6 +54,9 @@ function [lines]=readcsv(file,delimiter)
 % check nargin
 error(nargchk(0,2,nargin));
 
+% directory separator
+fs=filesep;
+
 % graphical selection
 if(nargin<1 || isempty(file))
     [file,path]=uigetfile(...
@@ -63,13 +67,14 @@ if(nargin<1 || isempty(file))
         error('seizmo:readcsv:noFileSelected',...
             'No input file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else
     % check file
-    if(~ischar(file))
+    if(~isstring(file))
         error('seizmo:readcsv:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(~exist(file,'file'))
         error('seizmo:readcsv:fileDoesNotExist',...
             'CSV File: %s\nDoes Not Exist!',file);

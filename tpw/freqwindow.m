@@ -97,12 +97,12 @@ function []=freqwindow(indir,outdir,varargin)
 %        Aug. 30, 2012 - added band index to titles
 %        Aug.  7, 2013 - fixed filter directory name to be equal length for
 %                        all filters so fortran codes don't have issues
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  7, 2013 at 10:35 GMT
+%     Last Updated Jan. 26, 2014 at 10:35 GMT
 
 % todo:
-% - single trace is not scaling properly (flatline) for shawn
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -115,7 +115,12 @@ end
 fs=filesep;
 
 % check indir
-if(~isstring(indir) || ~isdir(indir))
+if(~isstring(indir))
+    error('seizmo:freqwindow:badInput',...
+        'INDIR must be a directory location!');
+end
+if(~isabspath(indir)); indir=[pwd fs indir]; end
+if(~isdir(indir))
     error('seizmo:freqwindow:badInput',...
         'INDIR must be a directory location!');
 end
@@ -125,7 +130,9 @@ reply='o';
 if(~isstring(outdir))
     error('seizmo:freqwindow:badInput',...
         'OUTDIR must be a valid directory path!');
-elseif(exist(outdir,'file') && ~isdir(outdir))
+end
+if(~isabspath(outdir)); outdir=[pwd fs outdir]; end
+if(exist(outdir,'file') && ~isdir(outdir))
     error('seizmo:freqwindow:badInput',...
         'OUTDIR location is a file!');
 elseif(isdir(outdir))

@@ -31,18 +31,22 @@ function [cu]=read_cu_mod(file)
 %     figure; imagesc(model.vsh(:,:,3));
 %     figure; imagesc(model.vsv(:,:,3));
 %
-%    See also:
+%    See also: READCRUST2, READCRUST10
 
 %     Version History:
 %        Jan. 21, 2011 - initial version
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 21, 2011 at 10:35 GMT
+%     Last Updated Jan. 26, 2014 at 10:35 GMT
 
 % todo
 
 % check nargin
 error(nargchk(0,1,nargin));
+
+% directory separator
+fs=filesep;
 
 % file input
 filterspec={
@@ -55,13 +59,14 @@ if(nargin<1 || isempty(file))
         error('seizmo:read_cu_mod:noFileSelected',...
             'No input file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else
     % check file
     if(~isstring(file))
         error('seizmo:read_cu_mod:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(~exist(file,'file'))
         error('seizmo:read_cu_mod:fileDoesNotExist',...
             'File: %s\nDoes Not Exist!',file);

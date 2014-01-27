@@ -33,14 +33,18 @@ function [txt]=readtxt(file,filterspec)
 %        July 30, 2010 - nargchk fix
 %        Aug. 10, 2010 - filterspec option added
 %        Nov.  1, 2011 - doc update
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Nov.  1, 2011 at 13:00 GMT
+%     Last Updated Jan. 26, 2014 at 13:00 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(0,2,nargin));
+
+% directory separator
+fs=filesep;
 
 % default/check filterspec
 if(nargin<2 || isempty(filterspec))
@@ -58,13 +62,14 @@ if(nargin<1 || isempty(file))
     if(isequal(0,file))
         error('seizmo:readtxt:noFileSelected','No input file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else
     % check file
-    if(~ischar(file))
+    if(~isstring(file))
         error('seizmo:readtxt:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(~exist(file,'file'))
         error('seizmo:readtxt:fileDoesNotExist',...
             'File: %s\nDoes Not Exist!',file);

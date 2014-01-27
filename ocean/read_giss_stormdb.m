@@ -30,9 +30,10 @@ function [storms]=read_giss_stormdb(file)
 %     Version History:
 %        Feb. 12, 2013 - initial version
 %        Feb. 16, 2013 - storms now returned as scalar struct
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 16, 2013 at 13:30 GMT
+%     Last Updated Jan. 26, 2014 at 13:30 GMT
 
 % todo:
 
@@ -53,10 +54,11 @@ if(nargin<1 || isempty(file))
     file=strcat(path,filesep,file);
 else
     % check file
-    if(~ischar(file))
+    if(~isstring(file))
         error('seizmo:read_giss_stormdb:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(~exist(file,'file'))
         error('seizmo:read_giss_stormdb:fileDoesNotExist',...
             'File: %s\nDoes Not Exist!',file);

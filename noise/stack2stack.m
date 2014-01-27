@@ -99,9 +99,10 @@ function []=stack2stack(stackdir,newspan,varargin)
 
 %     Version History:
 %        Apr.  6, 2013 - initial version
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  6, 2013 at 11:15 GMT
+%     Last Updated Jan. 26, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -117,14 +118,18 @@ if(nargin>=3 && mod(nargin,2))
         'Unpaired option/value pair given!');
 end
 
+% directory separator
+fs=filesep;
+
 % parse/check options
 opt=stack2stack_parameters(varargin{:});
 
 % check stack directory
-if(~ischar(stackdir) || ndims(stackdir)~=2 || size(stackdir,1)~=1)
+if(~isstring(stackdir))
     error('seizmo:stack2stack:dirNotString',...
         'STACKDIR must be a string!');
 end
+if(~isabspath(stackdir)); stackdir=[pwd fs stackdir]; end
 if(~exist(stackdir,'dir'))
     error('seizmo:stack2stack:dirConflict',...
         ['Stack Directory: %s\n' ...

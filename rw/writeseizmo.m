@@ -77,9 +77,10 @@ function []=writeseizmo(data,varargin)
 %        Feb. 11, 2011 - dropped versioninfo caching
 %        Jan. 30, 2012 - doc update, better getheader usage, use seizmosize
 %                        override for speed
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 15:05 GMT
+%     Last Updated Jan. 26, 2014 at 15:05 GMT
 
 % todo:
 
@@ -133,8 +134,9 @@ try
 
     % loop over records
     for i=1:nrecs
-        % construct fullname
+        % construct fullname (force absolute path)
         name=fullfile(data(i).path,data(i).name);
+        if(~isabspath(name)); name=fullfile(pwd,name); end
 
         % skip writing if dataless
         if(~data(i).hasdata)

@@ -77,9 +77,10 @@ function [varargout]=unixcompressavi(filein,fileout,codec,options)
 %        Apr.  3, 2012 - minor doc update
 %        Apr. 26, 2012 - add LD_LIBRARY_PATH="" to unix calls to avoid
 %                        linker issues (glibcxx_3.4.11 no found...)
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 26, 2012 at 17:45 GMT
+%     Last Updated Jan. 26, 2014 at 17:45 GMT
 
 % todo
 % - options for other codecs?
@@ -102,6 +103,9 @@ if(~nargin); unix('mencoder -ovc help'); return; end
 
 % check nargin
 error(nargchk(1,4,nargin));
+
+% directory separator
+fs=filesep;
 
 % default codec
 if(nargin==1 || isempty(fileout)); fileout=filein; end
@@ -140,6 +144,7 @@ if(isscalar(options)); options(1:n,1)=options; end
 
 % loop over filein checking each exists
 for i=1:n
+    if(~isabspath(filein{i})); filein{i}=[pwd fs filein{i}]; end
     if(~exist(filein{i},'file'))
         error('seizmo:unixcompressavi:fileNotFound',...
             'Could not locate file: %s',filein{i});

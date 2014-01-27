@@ -61,9 +61,10 @@ function []=writesacpz(file,z,p,k,o)
 %        Feb.  5, 2010 - graphical file creation menu
 %        Feb. 11, 2011 - mass nargchk fix, fprintf fix
 %        Feb.  3, 2012 - doc update
+%        Jan. 26, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2012 at 15:05 GMT
+%     Last Updated Jan. 26, 2014 at 15:05 GMT
 
 % todo:
 % - does not write comments
@@ -91,6 +92,9 @@ elseif(~isreal(k))
         'CONSTANT must be a real scalar!');
 end
 
+% directory separator
+fs=filesep;
+
 % graphical selection
 if(isempty(file))
     [file,path]=uiputfile(...
@@ -101,13 +105,14 @@ if(isempty(file))
         error('seizmo:writesacpz:noFileSelected',...
             'No output file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else
     % check file
-    if(~ischar(file) || ~isvector(file))
+    if(~isstring(file))
         error('seizmo:writesacpz:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(exist(file,'file'))
         if(exist(file,'dir'))
             error('seizmo:writesacpz:dirConflict',...

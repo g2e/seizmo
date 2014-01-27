@@ -30,6 +30,7 @@ function []=sz_toc_misc()
 %<a href="matlab:help inc2rayp">inc2rayp</a>             - Returns the rayparameter for a given takeoff angle (from down)
 %<a href="matlab:help invertcolor">invertcolor</a>          - Inverts colors given as rgb triplet or as short/long names
 %<a href="matlab:help interpdc1">interpdc1</a>            - 1D interpolation (table lookup) with discontinuity support
+%<a href="matlab:help isabspath">isabspath</a>            - Determines if a path is an absolute path or not
 %<a href="matlab:help isequalnumelorscalar">isequalnumelorscalar</a> - True if all inputs have equal numel or are scalar
 %<a href="matlab:help isequalsizeorscalar">isequalsizeorscalar</a>  - True if all input arrays are equal size or scalar
 %<a href="matlab:help isoctave">isoctave</a>             - Returns TRUE if the application is Octave
