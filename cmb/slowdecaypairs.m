@@ -116,9 +116,12 @@ function [pf]=slowdecaypairs(results,azrng,gcrng,odir)
 %        Oct. 10, 2012 - bugfix: azimuthal difference via azdiff
 %        Oct. 11, 2012 - drop corrections field (huge)
 %        July 25, 2013 - directory input (reads indir/*.mat)
+%        Jan. 27, 2014 - abs path fix not needed b/c relative path is
+%                        always non-empty, put unique output file detection
+%                        in while loop
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 25, 2013 at 13:35 GMT
+%     Last Updated Jan. 27, 2014 at 13:35 GMT
 
 % todo:
 
@@ -356,7 +359,7 @@ if(out && exist('pf','var'))
     if(~isscalar(emod)); emod='misc'; else emod=char(emod); end
     
     % avoid clobber by waiting until unique time
-    if(exist(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
+    while(exist(fullfile(odir,[datestr(now,30) '_' wfdir '_' emod ...
             '_2stn_profiles.mat']),'file'))
         pause(1);
     end

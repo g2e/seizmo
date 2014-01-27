@@ -29,9 +29,10 @@ function []=globalcmt_create(overwrite)
 %        Mar. 25, 2013 - no error if cannot write (just warn and move on)
 %        Jan. 14, 2014 - warn if problem encountered (like from urlread)
 %        Jan. 25, 2014 - more verbose messages
+%        Jan. 27, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 25, 2014 at 17:25 GMT
+%     Last Updated Jan. 27, 2014 at 17:25 GMT
 
 % todo:
 
@@ -49,7 +50,8 @@ end
 verbose=seizmoverbose;
 
 % check for existing copy
-catalog='globalcmt_full.mat';
+path=fileparts(mfilename('fullpath'));
+catalog=[path filesep 'globalcmt_full.mat'];
 if(exist(catalog,'file'))
     if(~overwrite)
         fprintf('Local CMT Catalog: %s\nFile Exists!\n',catalog);
@@ -103,12 +105,11 @@ try
     if(verbose); disp([' Found ' num2str(numel(cmt.name)) ' CMTs']); end
     
     % save full
-    path=fileparts(mfilename('fullpath'));
     SEIZMO.GLOBALCMT.FULL=cmt;
     if(isoctave)
-        save([path filesep 'globalcmt_full.mat'],'-struct','-7','cmt');
+        save(catalog,'-struct','-7','cmt');
     else % matlab
-        save([path filesep 'globalcmt_full.mat'],'-struct','cmt');
+        save(catalog,'-struct','cmt');
     end
 catch
     le=lasterror;

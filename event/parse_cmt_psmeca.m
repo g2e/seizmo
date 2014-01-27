@@ -44,13 +44,17 @@ function [cmt]=parse_cmt_psmeca(file,hlines)
 %        July 12, 2011 - initial version
 %        Aug.  5, 2011 - code cleaned up
 %        Aug. 25, 2011 - added example for connection with FINDCMTS
+%        Jan. 27, 2014 - abs path exist fix
 %
 %     Written by Erica Emry (ericae at wustl dot edu)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 25, 2011 at 13:35 GMT
+%     Last Updated Jan. 27, 2014 at 13:35 GMT
 
 % check nargin
 error(nargchk(0,2,nargin));
+
+% directory separator
+fs=filesep;
 
 % graphical isc file selection if no file given
 if(nargin<1 || isempty(file))
@@ -62,13 +66,14 @@ if(nargin<1 || isempty(file))
         error('seizmo:parse_cmt_psmeca:noFileSelected',...
             'No input file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else % file given so check it exists
     % check file
-    if(~ischar(file))
+    if(~isstring(file))
         error('seizmo:parse_cmt_psmeca:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(~exist(file,'file'))
         error('seizmo:parse_cmt_psmeca:fileDoesNotExist',...
             'File: %s\nDoes Not Exist!',file);

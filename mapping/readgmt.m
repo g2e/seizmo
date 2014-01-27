@@ -41,9 +41,10 @@ function [gmt]=readgmt(file,type,marker,ll)
 %        Jan. 20, 2011 - initial version
 %        Jan. 24, 2011 - support comma delimited
 %        Jan. 31, 2011 - latlon arg
+%        Jan. 27, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 31, 2011 at 10:35 GMT
+%     Last Updated Jan. 27, 2014 at 10:35 GMT
 
 % todo
 
@@ -72,6 +73,9 @@ elseif(~isscalar(ll) || (~islogical(ll) && ~isreal(ll)))
         'LATLON must be either TRUE or FALSE!');
 end
 
+% directory separator
+fs=filesep;
+
 % file input
 filterspec={
     '*.gmt;*.GMT' 'GMT Files (*.gmt,*.GMT)';
@@ -82,13 +86,14 @@ if(nargin<1 || isempty(file))
     if(isequal(0,file))
         error('seizmo:readgmt:noFileSelected','No input file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else
     % check file
     if(~isstring(file))
         error('seizmo:readgmt:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(~exist(file,'file'))
         error('seizmo:readgmt:fileDoesNotExist',...
             'File: %s\nDoes Not Exist!',file);

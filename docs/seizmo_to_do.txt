@@ -11,7 +11,9 @@ sacpzdb
 octave installation under 3.8.0
 
 1. exist function problem
-   - use isabspath to find rel paths then prepend pwd fs on those
+   - use isabspath to find rel paths
+     - then prepend [pwd fs] on those
+       - could also do ['.' fs]
    - isdir needs this too!
    - BONUS: fix string checking to use isstring ('must be a string!')
 2. fix topo functions

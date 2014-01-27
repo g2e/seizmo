@@ -20,12 +20,12 @@ function [events]=read_usgs_mt(file,hdrlines,flag)
 %    Notes:
 %     - Exponent in Nm is converted to dyne-cm (SI to CGS standard) to
 %       match GlobalCMT catalog units.
-%     - centroid fields are set to be equivalent to epicenter since there
+%     - Centroid fields are set to be equivalent to epicenter since there
 %       is no centroid determination for USGS moment tensors
-%     - magnitudes not given are set to 0
-%     - source function half-durations are determined with MO2HD which
+%     - Magnitudes not given are set to 0
+%     - Source function half-durations are determined with MO2HD which
 %       uses the Harvard empirical scaling
-%     - principal axes are determined using moment tensor components
+%     - Principal axes are determined using moment tensor components
 %
 %    Examples:
 %     % Read in usgs.momten file and find moment tensors from 1990:
@@ -42,12 +42,12 @@ function [events]=read_usgs_mt(file,hdrlines,flag)
 
 %     Version History:
 %        June 14, 2011 - initial version
+%        Jan. 27, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 14, 2011 at 13:50 GMT
+%     Last Updated Jan. 27, 2014 at 13:50 GMT
 
 % todo:
-% - http://neic.usgs.gov/cgi-bin/sopar/sopar.cgi?GS=1&OTHER=4&FILEFORMAT=3
 
 % check nargin
 error(nargchk(0,3,nargin));
@@ -55,6 +55,9 @@ error(nargchk(0,3,nargin));
 % default flag
 if(nargin<2 || isempty(hdrlines)); hdrlines=0; end
 if(nargin<3 || isempty(flag)); flag=false; end
+
+% directory separator
+fs=filesep;
 
 % skip if string input
 if(~flag)
@@ -68,12 +71,13 @@ if(~flag)
             error('seizmo:read_usgs_mt:noFileSelected',...
                 'No input file selected!');
         end
-        file=strcat(path,filesep,file);
+        file=[path fs file];
     else % check file
-        if(~ischar(file) || ~isvector(file))
+        if(~isstring(file))
             error('seizmo:read_usgs_mt:fileNotString',...
                 'FILE must be a string!');
         end
+        if(~isabspath(file)); file=[pwd fs file]; end
         if(~exist(file,'file'))
             error('seizmo:read_usgs_mt:fileDoesNotExist',...
                 'USGS MT File: %s\nDoes Not Exist!',file);
@@ -87,8 +91,7 @@ if(~flag)
     txt=readtxt(file);
 else
     % just copy file to txt
-    if(nargin<1 || isempty(file) || ~ischar(file) ...
-            || ndims(file)>2 || ~isvector(file))
+    if(nargin<1 || isempty(file) || ~isstring(file))
         error('seizmo:read_usgs_mt:emptyStr',...
             'STRING must be non-empty!');
     else

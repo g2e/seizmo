@@ -119,9 +119,10 @@ function [events]=readndk(file,flag)
 %        Aug.  2, 2010 - updated catalog examples
 %        Aug.  3, 2010 - allow string input
 %        Mar.  1, 2012 - remove outdated examples
+%        Jan. 27, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  1, 2012 at 15:40 GMT
+%     Last Updated Jan. 27, 2014 at 15:40 GMT
 
 % todo:
 % - Currently no numeric fields have missing values that would need to be
@@ -135,6 +136,9 @@ error(nargchk(0,2,nargin));
 % default flag
 if(nargin<2 || isempty(flag)); flag=false; end
 
+% directory separator
+fs=filesep;
+
 % skip if string input
 if(~flag)
     % graphical selection
@@ -147,12 +151,13 @@ if(~flag)
             error('seizmo:readndk:noFileSelected',...
                 'No input file selected!');
         end
-        file=strcat(path,filesep,file);
+        file=[path fs file];
     else % check file
-        if(~ischar(file))
+        if(~isstring(file))
             error('seizmo:readndk:fileNotString',...
                 'FILE must be a string!');
         end
+        if(~isabspath(file)); file=[pwd fs file]; end
         if(~exist(file,'file'))
             error('seizmo:readndk:fileDoesNotExist',...
                 'CSV File: %s\nDoes Not Exist!',file);
@@ -166,7 +171,7 @@ if(~flag)
     txt=readtxt(file);
 else
     % just copy file to txt
-    if(nargin<1 || isempty(file))
+    if(nargin<1 || isempty(file) || ~isstring(file))
         error('seizmo:readndk:emptyStr',...
             'STRING must be non-empty!');
     else

@@ -68,9 +68,10 @@ function [cmt]=prep_cmb_data(indir,outdir,sodcsv,src)
 %        Feb. 26, 2013 - helpful detection of .csv/data desync
 %        Apr.  8, 2013 - 2hr desync required due to begin times of some
 %                        records being outside 1hr limit
+%        Jan. 27, 2014 - abs path exist fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  8, 2013 at 13:35 GMT
+%     Last Updated Jan. 27, 2014 at 13:35 GMT
 
 % todo:
 
@@ -87,11 +88,16 @@ if(~isstring(src) || ~any(strcmpi(src,{'rdseed' 'sod'})))
         'DATASRC must be either ''RDSEED'' or ''SOD''!');
 end
 
+% directory separator
+fs=filesep;
+
 % check indir
 if(~isstring(indir))
     error('seizmo:prep_cmb_data:badInput',...
         'INDIR must be a string giving one directory!');
-elseif(~isdir(indir))
+end
+if(~isabspath(indir)); indir=[pwd fs indir]; end
+if(~isdir(indir))
     error('seizmo:prep_cmb_data:badInput',...
         'INDIR must be a directory!');
 end
@@ -100,7 +106,9 @@ end
 if(~isstring(outdir))
     error('seizmo:prep_cmb_data:badInput',...
         'OUTDIR must be a string giving one directory!');
-elseif(exist(outdir,'file') && ~isdir(outdir))
+end
+if(~isabspath(outdir)); outdir=[pwd fs outdir]; end
+if(exist(outdir,'file') && ~isdir(outdir))
     error('seizmo:prep_cmb_data:badInput',...
         'OUTDIR must be a directory!');
 end

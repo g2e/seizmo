@@ -42,10 +42,11 @@ function [isc]=parse_isc_origin(file,hlines)
 %                        graphical file selection and handling blank fields
 %        July 28, 2010 - added documentation
 %        Mar.  7, 2011 - mention ssidx
+%        Jan. 27, 2014 - abs path exist fix
 %
 %     Written by Erica Emry (ericae at wustl dot edu)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  7, 2011 at 17:25 GMT
+%     Last Updated Jan. 27, 2014 at 17:25 GMT
 
 % todo:
 
@@ -124,6 +125,9 @@ function [isc]=parse_isc_origin(file,hlines)
 % check nargin
 error(nargchk(0,2,nargin));
 
+% directory separator
+fs=filesep;
+
 % graphical isc file selection if no file given
 if(nargin<1 || isempty(file))
     [file,path]=uigetfile(...
@@ -133,13 +137,14 @@ if(nargin<1 || isempty(file))
     if(isequal(0,file))
         error('seizmo:parse_isc:noFileSelected','No input file selected!');
     end
-    file=strcat(path,filesep,file);
+    file=[path fs file];
 else % file given so check it exists
     % check file
-    if(~ischar(file))
+    if(~isstring(file))
         error('seizmo:parse_isc:fileNotString',...
             'FILE must be a string!');
     end
+    if(~isabspath(file)); file=[pwd fs file]; end
     if(~exist(file,'file'))
         error('seizmo:parse_isc:fileDoesNotExist',...
             'File: %s\nDoes Not Exist!',file);
