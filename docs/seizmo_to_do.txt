@@ -5,7 +5,11 @@ way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
 ## addframe(aviobj, hf)
 
-2. fix topo functions
+octave_364_fixes in install_seizmo & startup
+mp_tmerc goes from m_map_fixes to m_map_fixes/private in webinstall_mmap
+figure out best way to use scatter in octave
+ - no symbol spec on scatter call then set them afterwards
+
 3. 2d inversion on a sphere
 4. data grabbing codes
     grab_events (!)
@@ -256,7 +260,7 @@ OCTAVE SPECIFIC STUFF
 - wedge stalls octave 3.6.4
 - bihist makes fails in octave 3.6.4
 - legend can't change color for text/edge
-- no spectragram in 3.6.4
+- no spectrogram in 3.6.4
 - no filter objects in 3.6.4
 - octave complains about m_maps many old short-circuit operators
 - mp_tmerc fails

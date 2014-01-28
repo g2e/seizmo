@@ -1,30 +1,32 @@
-function [varargout]=topo_colormap(z,m,sea,land)
+function [varargout]=topo_colormap(varargin)
 %TOPO_COLORMAP    Creates a colormap for topography data
 %
 %    Usage:    topo_colormap(z)
 %              topo_colormap(z,m)
 %              topo_colormap(z,m,sea_cmap,land_cmap)
+%              topo_colormap(ax,...)
 %              [cmap,z0]=topo_colormap(...)
 %
 %    Description:
 %     TOPO_COLORMAP(Z) creates and applies a colormap for the topography
 %     data Z.  The colormap is a combination of two colormaps appropriately
 %     proportioned to the elevation ranges of Z so that the interface
-%     between the colormaps is at sea level.  The two colormaps are
+%     between the colormaps is at sea level.  The two default colormaps are
 %     provided by the functions GLOBE_SEA & GLOBE_LAND.  With no output
-%     arguments, the current figure is set to use the created colormap and
-%     the color axis is adjusted to the limits of Z (unless Z does not span
-%     0 - see the Notes section below).
+%     arguments, the figure corresponding to the current axes is set to use
+%     the created colormap and the color axis is adjusted to the limits of
+%     Z (unless Z does not span 0 - see the Notes section below).
 %
 %     TOPO_COLORMAP(Z,M) uses a colormap with M colors.  The default is
 %     that of the current figure's colormap size (the default is 64).
 %
 %     TOPO_COLORMAP(Z,M,SEA_CMAP,LAND_CMAP) uses the specified colormaps to
 %     create the topography colormap.  SEA_CMAP & LAND_CMAP should be Nx3
-%     arrays of rgb colors.  If N is 0 then the default colormap is used
-%     (GLOBE_SEA for SEA_CMAP and GLOBE_LAND for LAND_CMAP).  The default
-%     sea and land colormaps are sampled at M colors to a minimum of 64
-%     colors.
+%     arrays of rgb colors.  The default sea and land colormaps are sampled
+%     at M colors, combined and resampled to M colors total.
+%
+%     TOPO_COLORMAP(AX,...) sets the colormap of the figure corresponding
+%     to the axes AX.
 %
 %     [CMAP,Z0]=TOPO_COLORMAP(...) outputs the colormap as CMAP and the
 %     z-values of the colormap as Z0.
@@ -46,19 +48,34 @@ function [varargout]=topo_colormap(z,m,sea,land)
 %        Feb. 22, 2010 - output all z-values rather than limits
 %        Feb. 11, 2011 - mass nargchk fix
 %        Apr.  2, 2012 - minor doc update
+%        Jan. 28, 2014 - added axes specification option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  2, 2012 at 15:05 GMT
+%     Last Updated Jan. 28, 2014 at 15:05 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(1,5,nargin));
 
+% parse axes
+[ax,varargin]=axparse(varargin{:});
+nargs=numel(varargin);
+
+% check nargin
+error(nargchk(1,4,nargs));
+
+% assign variables
+if(numel(varargin)<4); varargin(numel(varargin)+1:4)={[]}; end
+[z,m,sea,land]=deal(varargin{:});
+
+% default axes
+if(isempty(ax)); ax=gca; end
+
 % check inputs
-if(nargin<2 || isempty(m)); m=size(get(gcf,'colormap'),1); end
-if(nargin<3 || isempty(sea)); sea=globe_sea(max(m,64)); end
-if(nargin<4 || isempty(land)); land=globe_land(max(m,64)); end
+if(isempty(m)); m=size(get(get(ax,'parent'),'colormap'),1); end
+if(isempty(sea)); sea=globe_sea(m); end
+if(isempty(land)); land=globe_land(m); end
 if(isempty(z))
     error('seizmo:topo_colormap:badInput',...
         'Z must not be empty!');
@@ -69,9 +86,9 @@ elseif(~isreal(z))
     warning('seizmo:topo_colormap:complexInput',...
         ['Z is complex.  Only the real-portion of Z\n' ...
         'will be used for the color map range!']);
-elseif(~isscalar(m) || ~isreal(m) || m~=fix(m))
+elseif(~isscalar(m) || ~isreal(m) || m~=fix(m) || m<=0)
     error('seizmo:topo_colormap:badInput',...
-        'M must be a scalar integer!');
+        'M must be a positive scalar integer!');
 elseif(ndims(sea)>2 || size(sea,2)~=3)
     error('seizmo:topo_colormap:badInput',...
         'SEA_CMAP must be a Nx3 matrix!');
@@ -91,7 +108,7 @@ zmin=min([real(z(:)); 0]);
 zmax=max([real(z(:)); 0]);
 
 % get z values to sample the colormaps at
-z=zmin+(zmax-zmin).*(0:1:m-1)'/(m-1);
+z=zmin+(zmax-zmin).*(0:m-1)'/(m-1);
 
 % setup z values of colormaps
 ns=size(sea,1);
@@ -126,8 +143,8 @@ if(nargout)
     varargout{1}=map;
     varargout{2}=z;
 else
-    caxis([zmin zmax]);
-    colormap(map);
+    caxis(ax,[zmin zmax]);
+    colormap(ax,map);
 end
 
 end

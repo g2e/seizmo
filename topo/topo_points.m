@@ -5,30 +5,49 @@ function [topo]=topo_points(lat,lon,toponame)
 %              topo=topo_points(lat,lon,toponame)
 %
 %    Description:
-%     TOPO=TOPO_POINTS(LAT,LON) grabs the topography (or z-value) for the
+%     TOPO=TOPO_POINTS(LAT,LON) grabs SRTM30+ topography in meters for the
 %     positions given by LAT & LON.  LAT & LON must be in degrees and must
-%     be scalar or equal-sized arrays.  By default, this returns SRTM30+
-%     topography in meters at the points given.
+%     be scalar or equal-sized arrays.
 %
-%     TOPO=TOPO_POINTS(LAT,LON,TOPONAME) allows changing the dataset to
-%     pull the topography (z-values) from.  TOPONAME must be a string and
-%     currently the valid strings are:
-%      'srtm30plus' - SRTM30+ topography (30 arc-second resolution)
+%     TOPO=TOPO_POINTS(LAT,LON,TOPONAME) changes the dataset from which the
+%     topography is pulled.  TOPONAME must be a string and currently
+%     valid topography models are:
+%      'srtm30+'    - SRTM30+ topography (30 arc-second resolution)
 %                     (http://topex.ucsd.edu/WWW_html/srtm30_plus.html)
 %      'etopo1_bed' - ETOPO1 bedrock topography (1 arc-minute resolution)
 %      'etopo1_ice' - ETOPO1 ice topography (1 arc-minute resolution)
-%      'etopo1_thk' - ETOPO1 ice thickness (1 arc-minute resolution)
 %                     (http://www.ngdc.noaa.gov/mgg/global/global.html)
+%      'crust1.0'   - Crustal model at 1x1deg blocks (w/ topography)
+%      'crust2.0'   - Crustal model at 2x2deg blocks (w/ topography)
+%      'crust5.1'   - Crustal model at 5x5deg blocks (w/ topography)
+%                     (http://igppweb.ucsd.edu/~gabi/crust1.html)
 %
 %    Notes:
+%     - SRTM30+ elevation is read from the "topo30" binary file.
+%     - ETOPO1* elevation is read from the "etopo1_*_g_i2.bin" binary file.
+%     - CRUST*.* uses GETCRUST to get the elevation values.
+%     - For either SRTM30+ or ETOPO1 you need to put the binary files on
+%       the path (download them from the websites above).  For CRUST*.* the
+%       zip file seizmo_3d_models.zip downloaded by INSTALL_SEIZMO must
+%       have been expanded on the path.
 %
 %    Examples:
 %     % Plot up an equatorial profile:
-%     plot(-180:0.1:180,topo_points(0,-180:0.1:180))
+%     lon=-180:0.1:180;
+%     figure;
+%     plot(lon,topo_points(0,lon))
 %
-%     % Compare SRTM30+ and ETOPO1:
-%     plot(-180:0.1:180,topo_points(0,-180:0.1:180),'r',...
-%          -180:0.1:180,topo_points(0,-180:0.1:180,'etopo1_bed'),'k:')
+%     % Compare equatorial profiles:
+%     lon=-180:0.1:180;
+%     figure;
+%     plot(lon,topo_points(0,lon,'srtm30+'),'r',...
+%          lon,topo_points(0,lon,'etopo1_bed'),'g--',...
+%          lon,topo_points(0,lon,'etopo1_ice'),'b-.',...
+%          lon,topo_points(0,lon,'crust1.0'),'k:',...
+%          lon,topo_points(0,lon,'crust2.0'),'y',...
+%          lon,topo_points(0,lon,'crust5.1'),'m--')
+%     legend({'srtm30+' 'etopo1_bed' 'etopo1_ice' ...
+%             'crust1.0' 'crust2.0' 'crust5.1'},'interpreter','none');
 %
 %    See also: TOPO_REGION, TOPO_COLORMAP
 
@@ -39,21 +58,24 @@ function [topo]=topo_points(lat,lon,toponame)
 %        May  20, 2010 - added scrollbar (cause it is slow)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Apr.  2, 2012 - minor doc update
+%        Jan. 28, 2014 - read from int16 binary files directly, drop
+%                        etopo1_thk (just do two calls and do the math),
+%                        added CrustX.X by redirecting to GETCRUST
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  2, 2012 at 15:05 GMT
+%     Last Updated Jan. 28, 2014 at 15:05 GMT
 
 % todo:
-% - etopo2, etopo5, crust2
 
 % check nargin
 error(nargchk(2,3,nargin));
 
 % valid topo list (add new topo here)
-validtopo={'srtm30plus' 'etopo1_bed' 'etopo1_ice' 'etopo1_thk'};
+validtopo={'srtm30+' 'etopo1_bed' 'etopo1_ice' ...
+    'crust1.0' 'crust2.0' 'crust5.1'};
 
 % check inputs
-if(nargin==2 || isempty(toponame)); toponame='srtm30plus'; end
+if(nargin==2 || isempty(toponame)); toponame='srtm30+'; end
 if(~isreal(lat) || ~isreal(lon))
     error('seizmo:topo_points:badInput',...
         'LAT/LON must be real-valued!');
@@ -78,68 +100,124 @@ if(~npts); topo=[]; return; end
 % take care of wrap-around
 [lat,lon]=fixlatlon(lat,lon);
 
-% retrieve topo info
-s=load(toponame,'version','registration',...
-    'pixelsperdegree','latname','lonname');
-ppd=s.pixelsperdegree;
-spacing=1/ppd;
-
-% get tile indices for each point
-ll=90:-10:-90;
-latidx=nan(size(lat));
-for i=1:npts
-    latidx(i)=find(lat(i)<=ll,1,'last');
+% proceed by topo
+switch lower(toponame)
+    case 'srtm30+'
+        type='cell';
+        rows=21600;
+        cols=43200;
+        slat=90;
+        latsign=-1;
+        slon=0;
+        lonsign=1;
+        inclat1st=false;
+        bytesize=2;
+        bytetype='int16';
+        endian='ieee-be';
+        width=1/120;
+    case {'etopo1_bed' 'etopo1_ice'}
+        type='grid';
+        rows=10801;
+        cols=21601;
+        slat=90;
+        latsign=-1;
+        slon=-180;
+        lonsign=1;
+        inclat1st=false;
+        bytesize=2;
+        bytetype='int16';
+        endian='ieee-le';
+        width=1/60;
+    case {'crust1.0' 'crust2.0' 'crust5.1'}
+        topo=getcrust(lat,lon,toponame);
+        topo=reshape(topo.top(:,2),size(lat)).*1000;
+        return;
 end
-latidx(latidx>18)=18;
-ll=-180:10:180;
-lonidx=nan(size(lat));
-for i=1:npts
-    lonidx(i)=find(lon(i)>=ll,1,'last');
-end
-lonidx(lonidx>36)=36;
 
-% get tile names
-[tidx,idx,idx]=unique([lonidx(:) latidx(:)],'rows');
-tilenames=strcat(s.lonname(tidx(:,1))',s.latname(tidx(:,2))');
-
-% verbosity
-verbose=seizmoverbose;
-if(verbose)
-    cnt=0;
-    disp('Getting Topography at Location(s)');
-    print_time_left(cnt,npts);
+% offset cell registration
+if(strcmp(type,'cell'))
+    slat=slat+width/2*latsign;
+    slon=slon+width/2*lonsign;
 end
 
-% loop over tiles
-topo=nan(size(lat)); cnt=0;
-for i=1:numel(tilenames)
-    % load tile
-    z=load(toponame,tilenames{i});
-    z=z.(char(fieldnames(z)));
-    
-    % get lat/lon for this tile
-    switch lower(s.registration)
-        case 'pixel'
-            % have to expand to assure all points are within tile
-            z=[z(:,1) z z(:,end)]; %#ok
-            z=[z(1,:); z; z(end,:)]; %#ok
-            zlat=90-(tidx(i,2)-1)*10-spacing/2-(0:10*ppd-1)*spacing;
-            zlon=-180+(tidx(i,1)-1)*10+spacing/2+(0:10*ppd-1)*spacing;
-            zlat=[90-(tidx(i,2)-1)*10 zlat 90-(tidx(i,2))*10]; %#ok
-            zlon=[-180+(tidx(i,1)-1)*10 zlon -180+(tidx(i,1))*10]; %#ok
+% convert lat/lon to nearest row/column
+row=round(latsign.*(lat-slat)/width)+1;
+col=round(lonsign.*(lon-slon)/width)+1;
+
+% deal with pole issues (rounding issue for cell registration)
+if(any(row==0)); row(row==0)=1; end
+if(any(row==rows+1)); row(row==rows+1)=rows; end
+
+% deal with negative columns
+if(any(col<=0))
+    switch type
+        case 'cell'
+            col(col<=0)=cols+col(col<=0);
         case 'grid'
-            zlat=90-(tidx(i,2)-1)*10-(0:10*ppd)*spacing;
-            zlon=-180+(tidx(i,1)-1)*10+(0:10*ppd)*spacing;
+            col(col<=0)=cols+col(col<=0)-1;
     end
-    
-    % points in this tile
-    pts=idx==i;
-    
-    % get values
-    topo(pts)=interp2(zlon,zlat,z,lon(pts),lat(pts),'nearest');
-    
-    % detail message
-    if(verbose); cnt=cnt+sum(pts); print_time_left(cnt,npts); end
 end
+
+% deal with cols+1 values (rounding issue for cell registration)
+if(any(col==cols+1)); col(col==cols+1)=cols; end
+
+% binary filename
+switch toponame
+    case 'srtm30+'
+        filename='topo30';
+    case 'etopo1_ice'
+        filename='etopo1_ice_g_i2.bin';
+    case 'etopo1_bed'
+        filename='etopo1_bed_g_i2.bin';
+end
+
+% open file
+fid=fopen(filename,'r',endian);
+
+% fid check
+if(fid<0)
+    % bad permissions?
+    error('seizmo:topo_region:badFID',...
+        'File not openable, %s !',filename);
+end
+
+% going by rows or columns?
+topo=nan(size(lat));
+if(inclat1st)
+    % seek locations
+    seek=bytesize.*(rows.*(col-1)+row);
+    
+    % optimize their order for a speed boost
+    [seek,idx]=sort(seek(:));
+    
+    % goes across latitudes first
+    for i=1:numel(col)
+        fail=fseek(fid,seek(i),'bof');
+        if(fail)
+            error('seizmo:topo_region:badSEEK',...
+                'Seek failed on %s !',filename);
+        end
+        topo(idx(i))=fread(fid,1,bytetype);
+    end
+else
+    % seek locations
+    seek=bytesize.*(cols.*(row-1)+col);
+    
+    % optimize their order for a speed boost
+    [seek,idx]=sort(seek(:));
+    
+    % goes across longitudes first
+    for i=1:numel(col)
+        fail=fseek(fid,seek(i),'bof');
+        if(fail)
+            error('seizmo:topo_region:badSEEK',...
+                'Seek failed on %s !',filename);
+        end
+        topo(idx(i))=fread(fid,1,bytetype);
+    end
+end
+
+% close file
+fclose(fid);
 
 end
