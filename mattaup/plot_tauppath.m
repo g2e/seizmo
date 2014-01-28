@@ -46,9 +46,10 @@ function [varargout]=plot_tauppath(tt,varargin)
 %        Feb. 24, 2012 - added lots of new properties
 %        May   3, 2012 - tagged the grid, minor doc fix
 %        Jan. 17, 2014 - added drawearth option, use parent for axes option
+%        Jan. 27, 2014 - fix legend calls for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 17, 2014 at 17:15 GMT
+%     Last Updated Jan. 27, 2014 at 17:15 GMT
 
 % todo:
 
@@ -325,8 +326,10 @@ if(~isheld); hold(ax,'off'); end
 % update legend
 if(opt.legend)
     lh=legend(ax,[h1 h2 flipud(findobj(ax,'tag','tauppath_raypath'))'],...
-        {},'location','westoutside');
-    set(lh,'color','none','fontsize',6,'interpreter','none');
+        get([h1 h2 flipud(findobj(ax,'tag','tauppath_raypath'))'],...
+        'displayname'),'location','westoutside');
+    set(lh,'color','none','fontsize',6,'interpreter','none',...
+        'edgecolor',opt.fgc,'textcolor',opt.fgc);
 end
 
 % output handles if desired

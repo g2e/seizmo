@@ -139,9 +139,11 @@ function [varargout]=wedge(varargin)
 %        May   1, 2012 - updating many parameters is now available
 %        May   2, 2012 - many more enhancements
 %        Sep. 12, 2012 - doc update: expect image, not pcolor input
+%        Jan. 27, 2014 - use axparse instead of axescheck for octave,
+%                        adjust newplot call only for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 12, 2012 at 18:35 GMT
+%     Last Updated Jan. 27, 2014 at 18:35 GMT
 
 % todo
 % - drawing
@@ -166,7 +168,8 @@ function [varargout]=wedge(varargin)
 % - something akin to plotyy (degrees vs radians, radius vs depth)
 
 % find axes input
-[ax,varargin,nargs]=axescheck(varargin{:});
+[ax,varargin]=axparse(varargin{:});
+nargs=numel(varargin);
 
 % find current axes if none given
 % - this also returns current if given was dead
@@ -334,7 +337,11 @@ function [ax,w]=wedge_create(ax,y,w)
 
 % clear plot & set hold to on
 if(ishandle(ax)); hold(ax,'off'); end
-ax=newplot(ax);
+if(exist('OCTAVE_VERSION','builtin')==5)
+    newplot;
+else
+    ax=newplot(ax);
+end
 hold(ax,'on');
 
 % tag the underlying axes

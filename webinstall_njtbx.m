@@ -35,7 +35,8 @@ function [ok]=webinstall_njtbx(mypath)
 %                        the zipfile available via their website is broken
 %        Jan. 14, 2014 - throw warning rather than error if problem
 %        Jan. 15, 2014 - updated See also list
-%        Jan. 27, 2014 - added isabspath for abs path fix to path option
+%        Jan. 27, 2014 - added isabspath for abs path fix to path option,
+%                        added handling of octave without java
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Jan. 27, 2014 at 15:25 GMT
@@ -127,6 +128,14 @@ try
             'Cannot save path!');
     end
     
+    % check that java pkg is installed
+    java_in_octave=true;
+    if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
+        warning('seizmo:install_seizmo:noSigProcTbx',...
+            'Java package missing from Octave!');
+        java_in_octave=false;
+    end
+    
     % install jars to classpath
     toolsuijar=[mypath fs toolsui];
     njtoolsjar=[mypath fs njtools];
@@ -136,10 +145,10 @@ try
         %    'Octave has no classpath.txt to save .jar files!');
         
         % no classpath.txt so add to dynamic path
-        if(~ismember(toolsuijar,javaclasspath))
+        if(java_in_octave && ~ismember(toolsuijar,javaclasspath))
             javaaddpath(toolsuijar);
         end
-        if(~ismember(njtoolsjar,javaclasspath))
+        if(java_in_octave && ~ismember(njtoolsjar,javaclasspath))
             javaaddpath(njtoolsjar);
         end
     else

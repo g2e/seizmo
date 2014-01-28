@@ -70,7 +70,9 @@ function [varargout]=install_seizmo(renameflag)
 %        Jan. 24, 2014 - moved link for 3d models
 %        Jan. 25, 2014 - bugfix: more gshhs to gshhg, bugfix: amazon url
 %                        cannot handle double slash
-%        Jan. 27, 2014 - added isabspath for abs path fix to path option
+%        Jan. 27, 2014 - added isabspath for abs path fix to path option,
+%                        drop installing of pkgs in octave, handle lack of
+%                        java path support in octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Jan. 27, 2014 at 15:25 GMT
@@ -135,13 +137,15 @@ switch lower(application)
                 'Toolbox installed.  A few SEIZMO functions assume\n' ...
                 'the Signal Processing Toolbox is available and\n' ...
                 'will fail when used (e.g., filtering operations).']);
-        elseif(~license('checkout','statistics_toolbox'))
+        end
+        if(~license('checkout','statistics_toolbox'))
             warning('seizmo:install_seizmo:noStatsTbx',...
                 ['Your Matlab does not have the Statistics Toolbox\n' ...
                 'installed.  A few SEIZMO functions assume the\n' ...
                 'Statistics Toolbox is available for cluster\n' ...
                 'analysis and will fail when used.']);
-        elseif(~license('checkout','spline_toolbox'))
+        end
+        if(~license('checkout','spline_toolbox'))
             warning('seizmo:install_seizmo:noSplineTbx',...
                 ['Your Matlab does not have the Spline Toolbox\n' ...
                 'installed.  A few SEIZMO functions assume the\n' ...
@@ -151,33 +155,39 @@ switch lower(application)
     case 'octave'
         warning('seizmo:install_seizmo:octaveIssues',...
             'Octave compatibility for SEIZMO is a work in progress!');
+        % JAVA INSTALL REQUIRES TOO MUCH HAND-HOLDING TO BE AUTOMATED
+        % UNFORTUNATELY.  IT ALSO IS INCLUDED IN 3.8.0+ (I THINK...)
+        java_in_octave=true;
         if(isempty(ver('java')))
             warning('seizmo:install_seizmo:noSigProcTbx',...
                 'Java package missing from Octave!');
-            reply=input(['Install java package from Octave-Forge ' ...
-                '(requires internet)? Y/N [Y]: '],'s');
-            if(isempty(reply) || strncmpi(reply,'y',1))
-                % DOES THIS NEED A TRY/CATCH?
-                pkg install -forge java;
-            end
-        elseif(isempty(ver('signal')))
+            java_in_octave=false;
+        %    reply=input(['Install java package from Octave-Forge ' ...
+        %        '(requires internet)? Y/N [Y]: '],'s');
+        %    if(isempty(reply) || strncmpi(reply,'y',1))
+        %        % DOES THIS NEED A TRY/CATCH?
+        %        pkg install -forge java;
+        %    end
+        end
+        if(isempty(ver('signal')))
             warning('seizmo:install_seizmo:noSigProcTbx',...
                 'Signal package missing from Octave!');
-            reply=input(['Install signal package from Octave-Forge ' ...
-                '(requires internet)? Y/N [Y]: '],'s');
-            if(isempty(reply) || strncmpi(reply,'y',1))
-                % DOES THIS NEED A TRY/CATCH?
-                pkg install -forge signal;
-            end
-        elseif(isempty(ver('splines')))
+        %    reply=input(['Install signal package from Octave-Forge ' ...
+        %        '(requires internet)? Y/N [Y]: '],'s');
+        %    if(isempty(reply) || strncmpi(reply,'y',1))
+        %        % DOES THIS NEED A TRY/CATCH?
+        %        pkg install -forge signal;
+        %    end
+        end
+        if(isempty(ver('splines')))
             warning('seizmo:install_seizmo:noSplinesTbx',...
                 'Splines package missing from Octave!');
-            reply=input(['Install splines package from Octave-Forge ' ...
-                '(requires internet)? Y/N [Y]: '],'s');
-            if(isempty(reply) || strncmpi(reply,'y',1))
-                % DOES THIS NEED A TRY/CATCH?
-                pkg install -forge splines;
-            end
+        %    reply=input(['Install splines package from Octave-Forge ' ...
+        %        '(requires internet)? Y/N [Y]: '],'s');
+        %    if(isempty(reply) || strncmpi(reply,'y',1))
+        %        % DOES THIS NEED A TRY/CATCH?
+        %        pkg install -forge splines;
+        %    end
         end
     otherwise
         warning('seizmo:install_seizmo:noClueWhatIsRunning',...
@@ -259,8 +269,8 @@ sjcp=which('classpath.txt');
 if(isempty(sjcp))
     % no classpath.txt so add to dynamic path
     for i=1:numel(jar)
-        if(~ismember([path fs 'mattaup' fs 'lib' fs jar(i).name],...
-                javaclasspath))
+        if(java_in_octave && ~ismember([path fs 'mattaup' fs 'lib' fs ...
+                jar(i).name],javaclasspath))
             javaaddpath([path fs 'mattaup' fs 'lib' fs jar(i).name]);
         end
     end

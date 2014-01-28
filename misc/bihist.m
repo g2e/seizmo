@@ -42,14 +42,17 @@ function [varargout]=bihist(varargin)
 %        Sep. 18, 2009 - minor updates
 %        June 18, 2011 - rewrite by gge (histogram handle output, more
 %                        flexible inputs, ticks redraw on zoom/pan)
+%        Jan. 27, 2014 - use axparse instead of axescheck for octave
 %
-%     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 18, 2011 at 18:55 GMT
+%     Written by Mauro
+%                Garrett Euler (ggeuler at wustl dot edu)
+%     Last Updated Jan. 27, 2014 at 18:55 GMT
 
 % todo:
 
 % get axes handle if there is one
-[ax,varargin,nargs]=axescheck(varargin{:});
+[ax,varargin]=axparse(varargin{:});
+nargs=numel(varargin);
 if(isempty(ax)); ax=gca; end
 
 % check nargin

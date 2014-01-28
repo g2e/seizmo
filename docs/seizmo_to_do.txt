@@ -5,17 +5,6 @@ way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
 ## addframe(aviobj, hf)
 
-sacpzdb
- - fix the zipfile
- - update the db
-octave installation under 3.8.0
-
-1. exist function problem
-   - use isabspath to find rel paths
-     - then prepend [pwd fs] on those
-       - could also do ['.' fs]
-   - isdir needs this too!
-   - BONUS: fix string checking to use isstring ('must be a string!')
 2. fix topo functions
 3. 2d inversion on a sphere
 4. data grabbing codes
@@ -242,26 +231,36 @@ other filetype support:
 OCTAVE SPECIFIC STUFF
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 - error & warning need sprintf support
-- octave-java package issues with Fedora (as root):
-    cd /usr/lib/jvm/
-    ln -s /etc/alternatives/java_sdk default-java
-    cd /usr/lib/jvm/default-java/jre/lib/amd64/
-    ln -s server client
-- getting "pkg install -forge java;" to work:
-    export JAVA_HOME=/etc/alternatives
+- octave-java package issues with Fedora:
     yum install octave-devel
-    cd /etc/alternatives/jre/lib/amd64/client
-    ln -s ../server/libjvm.so .
+    export JAVA_HOME=/opt/sun/jdk1.6****
+    cd $JAVA_HOME/jre/lib/amd64/
+    ln -s server client
 - no import function
     - use javaObject & javaMethod
 - concatenation differs if cells & empties involved
     - avoid multitype concatenation
 - box doesn't take ax (patch applied to devel branch)
+    - need patched version for 3.6.4
+    - 3.8.0 is okay here
+- 3.8.0 fails for: ... % blah
 - a(b(end)) fails if a not declared (fix applied to stable branch)
 - addpath works backwards
 - rmpath/unzip etc beat text to the prompt
 - unzip on existing unzipped contents will look stalled
     - type y/n/A/N to get through it
+    - need to inform user of this ahead of time
 - no texlabel
 - no axescheck (use personal axparse function)
-- 3.8.0 doesn't handle comment after line continuation
+- newplot doesn't have any io
+- wedge stalls octave 3.6.4
+- bihist makes fails in octave 3.6.4
+- legend can't change color for text/edge
+- no spectragram in 3.6.4
+- no filter objects in 3.6.4
+- octave complains about m_maps many old short-circuit operators
+- mp_tmerc fails
+  - fix in m_map_fixes but must move it to m_map_fixes/private
+- linestyle symbols are different:
+  . + */h o x ^/> v/< s d p
+- scatter fails on just about any linespec entry in 3.6.4

@@ -48,9 +48,11 @@ function [filetype,version,endian]=getfileversion(filename,verbose)
 %        Oct. 16, 2009 - added persistent vars to speed things up
 %        Aug. 21, 2010 - nargchk fix
 %        Mar. 24, 2012 - minor doc update
+%        Jan. 27, 2014 - made comment about fopen possibly opening a file
+%                        anywhere on the path (not fixing this)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2012 at 02:45 GMT
+%     Last Updated Jan. 27, 2014 at 02:45 GMT
 
 % todo:
 
@@ -71,7 +73,7 @@ end
 filetype=[]; version=[]; endian=[];
 
 % open file for reading
-fid=fopen(filename);
+fid=fopen(filename); % note that this can open a file anywhere on the path
 
 % check for invalid fid (for directories etc)
 if(fid<0)

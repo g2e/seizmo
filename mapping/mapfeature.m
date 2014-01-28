@@ -85,9 +85,10 @@ function []=mapfeature(varargin)
 %        Feb.  9, 2011 - initial version
 %        Feb. 16, 2012 - fix bug in parsing hatch triplets
 %        Jan. 23, 2014 - minor doc update
+%        Jan. 27, 2014 - use axparse instead of axescheck for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2014 at 23:00 GMT
+%     Last Updated Jan. 27, 2014 at 23:00 GMT
 
 % todo:
 % - fix the polygon insanity of some features
@@ -109,7 +110,8 @@ function []=mapfeature(varargin)
 %   - convergent/sub-left/sub-right are
 
 % extract axes handle
-[ax,varargin,nargs]=axescheck(varargin{:});
+[ax,varargin]=axparse(varargin{:});
+nargs=numel(varargin);
 
 % check nargin
 error(nargchk(1,inf,nargs));

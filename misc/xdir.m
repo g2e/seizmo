@@ -48,6 +48,10 @@ function [varargout]=xdir(str,depth)
 %     - XDIR uses self-recursion to extend down directory structures, so
 %       be aware of Matlab's recursion limit (typically 50) if accessing
 %       deep trees.
+%     - Another Matlab/Octave difference:
+%         * lists all files including . & .. in Matlab
+%         * lists only non-hidden files in Octave (. & .. are not listed)
+%        .* lists only hidden files in Octave (no way to show both types)
 %
 %    Examples:
 %     % List all m-files in private directories below the current:
@@ -76,11 +80,12 @@ function [varargout]=xdir(str,depth)
 %        Mar. 16, 2010 - added todo list (mainly about ? wildcard)
 %        Feb. 11, 2011 - use fprintf
 %        Apr.  3, 2012 - minor doc update
-%        Jan. 27, 2014 - commented on abs path issue for isdir call
+%        Jan. 27, 2014 - commented on abs path issue for isdir call, fixed
+%                        emptylist not empty bug in octave
 %
 %     Written by Gus Brown ()
 %                Garrett Euler (ggeuler at seismo dot wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 20:00 GMT
+%     Last Updated Jan. 27, 2014 at 20:00 GMT
 
 % todo:
 % - be mindful of octave/matlab differences in DIR
@@ -96,6 +101,10 @@ function [varargout]=xdir(str,depth)
 %       - octave expands the entry
 %       - matlab lists the entry but does not expand it
 %       - xdir accounts for this discrepancy!
+%   - only having * wildcard after last pathsep or without a pathsep
+%       - returns hidden files too in Matlab
+%       - does not return hidden files in Octave (like . & ..)
+%         - use .* to get hidden files only (no way to show both)
 %
 % - handle '?' wildcard (only for matlab - octave already does this!)
 %  * => .*     42 => 46 42
@@ -129,7 +138,7 @@ if(~isstruct(emptylist))
   blah=[{'path'}; fieldnames(dir)];
   bah=[blah cell(size(blah))].';
   tmp([],1)=struct(bah{:});
-  emptylist=tmp;
+  emptylist=tmp([]);
 end
 
 % use the current directory if nothing is specified

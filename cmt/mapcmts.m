@@ -38,9 +38,10 @@ function [varargout]=mapcmts(cmts,varargin)
 %        Jan. 11, 2012 - rename from mapcmt to mapcmts, edit note
 %        Feb.  7, 2012 - minor doc update
 %        Mar. 23, 2013 - doc update, minor code fixes
+%        Jan. 27, 2014 - use axparse instead of axescheck for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 23, 2013 at 23:55 GMT
+%     Last Updated Jan. 27, 2014 at 23:55 GMT
 
 % todo:
 
@@ -48,7 +49,7 @@ function [varargout]=mapcmts(cmts,varargin)
 error(nargchk(1,inf,nargin));
 
 % extract axes handle
-[ax,varargin]=axescheck(varargin{:});
+[ax,varargin]=axparse(varargin{:});
 
 % check cmts is a scalar struct with required fields
 valid={'centroidlat' 'centroidlon' 'mrr' 'mtt' 'mpp' 'mrt' 'mrp' 'mtp'};

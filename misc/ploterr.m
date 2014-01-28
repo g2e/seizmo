@@ -134,11 +134,12 @@ function [varargout]=ploterr(varargin)
 %                        with handles split up possible now.  Also allow
 %                        xy/yx to be at start or end of option.
 %        Feb. 10, 2011 - make hhx/hhy/hhxy based on range not mean
+%        Jan. 27, 2014 - use axparse instead of axescheck for octave
 %
 %     Written by Goetz Huesken (goetz.huesken(at)gmx.de)
 %                Felix Z�rgiebel (felix_z -> web.de)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 10, 2011 at 13:35 GMT
+%     Last Updated Jan. 27, 2014 at 13:35 GMT
 
 % todo:
 
@@ -378,7 +379,8 @@ function [ax,x,y,xerr,yerr,sym,lx,ly,hx,hy,varargin]=parseinputs(varargin)
 %PARSEINPUTS    Parses inputs passed to PLOTERR
 
 % find axes handle if given
-[ax,varargin,nargin]=axescheck(varargin{:});
+[ax,varargin]=axparse(varargin{:});
+nargin=numel(varargin);
 if(isempty(ax)); ax={}; else ax={ax}; end
 
 % check nargin

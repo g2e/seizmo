@@ -33,9 +33,10 @@ function [varargout]=plot_taupcurve(tt,varargin)
 
 %     Version History:
 %        Feb. 24, 2012 - initial version
+%        Jan. 27, 2014 - fix legend calls for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 24, 2012 at 17:15 GMT
+%     Last Updated Jan. 27, 2014 at 17:15 GMT
 
 % todo:
 
@@ -205,10 +206,11 @@ if(ismember(lower(opt.draw),{'time' 'both'}))
     % legend
     if(opt.legend)
         lh(1)=legend(ax(1),...
-            flipud(findobj(ax(1),'tag','taupcurve_timecurve')),{},...
-            'location','westoutside');
-        set(lh(1),'color','none',...
-            'fontsize',6,'interpreter','none');
+            flipud(findobj(ax(1),'tag','taupcurve_timecurve')),...
+            get(flipud(findobj(ax(1),'tag','taupcurve_timecurve')),...
+            'displayname'),'location','westoutside');
+        set(lh(1),'color','none','edgecolor',opt.fgc,...
+            'textcolor',opt.fgc,'fontsize',6,'interpreter','none');
     end
     if(~held); hold(ax(1),'off'); end
 end
@@ -250,9 +252,11 @@ if(ismember(lower(opt.draw),{'rayp' 'both'}))
     if(opt.legend)
         lh(np)=legend(ax(np),...
             flipud(findobj(ax(np),'tag','taupcurve_rayparametercurve')),...
-            {},'location','westoutside');
-        set(lh(np),'color','none',...
-            'fontsize',6,'interpreter','none');
+            get(flipud(findobj(ax(np),...
+            'tag','taupcurve_rayparametercurve')),'displayname'),...
+            'location','westoutside');
+        set(lh(np),'color','none','edgecolor',opt.fgc,...
+            'textcolor',opt.fgc,'fontsize',6,'interpreter','none');
     end
     if(~held); hold(ax(np),'off'); end
 end

@@ -32,6 +32,7 @@ function [xi,yi,lon,lat]=m_hatch(lon,lat,varargin);
 % Iram Weinsteins 'fancification'. Speckle modifications by R. Pawlowicz.
 % 8/Feb/11 - draw at +/-360 too (gge)
 % 9/Feb/11 - support multiple polygon input (gge)
+% 27/Jan/14 - use axparse instead of axescheck, isstr => ischar
 %
 % R Pawlowicz 15/Dec/2005
   
@@ -39,21 +40,21 @@ styl='speckle';
 angle=7;
 step=1/2;
 
-if length(varargin)>0 & isstr(varargin{1}),
+if length(varargin)>0 & ischar(varargin{1}),
   styl=varargin{1};
   varargin(1)=[];  
 end;
-if length(varargin)>0 & ~isstr(varargin{1}),
+if length(varargin)>0 & ~ischar(varargin{1}),
   angle=varargin{1};
   varargin(1)=[];  
 end;
-if length(varargin)>0 & ~isstr(varargin{1}),
+if length(varargin)>0 & ~ischar(varargin{1}),
   step=varargin{1};
   varargin(1)=[];
 end;
 
 % get axis
-ax=axescheck(varargin{:});
+[ax,varargin]=axparse(varargin{:});
 if(isempty(ax)); ax=gca; end
 
 % row vector to column vector

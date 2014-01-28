@@ -186,7 +186,7 @@ try
 
                 % open file for modification
                 fid=fopen(name,'r+',data(i).byteorder);
-                % file exists but is not SEIZMO datafile
+            % file exists but is not SEIZMO datafile
             else
                 % SEIZMO is gonna trash your file!
                 redraw=true;
@@ -198,7 +198,7 @@ try
                 % overwrite file
                 fid=fopen(name,'w',data(i).byteorder);
             end
-            % file doesn't exist ==> make new file
+        % file doesn't exist ==> make new file
         else
             % new file
             fid=fopen(name,'w',data(i).byteorder);

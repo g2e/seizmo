@@ -60,9 +60,10 @@ function [varargout]=plot_cmb_measurements(pf,field,varargin)
 %        Mar. 30, 2011 - improve title and documentation
 %        Apr. 22, 2011 - documented outputs, fix warning ids
 %        Oct. 11, 2012 - drop corrections field requirement
+%        Jan. 27, 2014 - use axparse instead of axescheck for octave
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 11, 2012 at 13:35 GMT
+%     Last Updated Jan. 27, 2014 at 13:35 GMT
 
 % todo:
 
@@ -102,7 +103,7 @@ emod={pf.earthmodel}';
 nmod=max(idx);
 
 % new plot or use existing
-ax=axescheck(varargin{:});
+ax=axparse(varargin{:});
 if(isempty(ax))
     % new plot
     fh=figure('color','w');
