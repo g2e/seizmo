@@ -41,9 +41,10 @@ function [paths]=crustless_raypaths(paths,model)
 %        Feb. 27, 2012 - update for tauppath changes
 %        Aug.  6, 2012 - warn only if seizmodebug=true
 %        Jan. 23, 2014 - update for crustal model changes, model option
+%        Jan. 31, 2014 - fixed error when no model specified
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 23, 2014 at 02:45 GMT
+%     Last Updated Jan. 31, 2014 at 02:45 GMT
 
 % todo:
 % We don't handle the case where the path intersects the side of a
@@ -76,7 +77,8 @@ end
 
 % default/check model
 if(nargin<2); model=[]; end
-if(~ischar(model) || ndims(model)~=2 || size(model,1)~=1)
+if(~isempty(model) ...
+        && (~ischar(model) || ndims(model)~=2 || size(model,1)~=1))
     error('seizmo:crustless_raypaths:badInput',...
         'MODEL must be a string!');
 end

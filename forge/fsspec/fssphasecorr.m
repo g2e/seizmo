@@ -8,7 +8,7 @@ function [ns,es]=fssphasecorr(phase,mod3d,evla,evlo,evdp,stla,stlo)
 %     the north and east slowness deviations for a seismic phase PHASE from
 %     a source EVLA/EVLO/EVDP passing through 3D mantle model MODEL and
 %     recorded by a seismic array defined by STLA/STLO.  Additional
-%     corrections for crustal heterogeneity in Crust2.0 and Earth
+%     corrections for crustal heterogeneity in Crust1.0 and Earth
 %     ellipticity are included.  The slownesses are the apparent moveout of
 %     the phase from heterogeneity and ellipticity, which can be applied to
 %     the moveout for the phase through a 1D Earth model to better match
@@ -44,9 +44,11 @@ function [ns,es]=fssphasecorr(phase,mod3d,evla,evlo,evdp,stla,stlo)
 %     Version History:
 %        Aug.  6, 2012 - initial version
 %        Aug. 30, 2012 - fixed forced phase/wavetype inputs
+%        Jan. 31, 2014 - update for CRUST2.0 to CRUST1.0 switch, switched
+%                        bad phase removal to match that of TauP 2.1.1
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 30, 2012 at 23:18 GMT
+%     Last Updated Jan. 31, 2014 at 23:18 GMT
 
 % todo:
 
@@ -71,13 +73,14 @@ end
 [paths,idx]=getraypaths(phase,'prem',evla,evlo,evdp,stla,stlo);
 
 % deal with missing paths or triplications
-[idx1,idx2]=unique(idx,'last'); % last b/c earlier paths are crap
+%[idx1,idx2]=unique(idx,'last'); % last b/c earlier paths are crap
+[idx1,idx2]=unique(idx,'first'); % first b/c later paths are crap
 stla=stla(idx1); stlo=stlo(idx1);
 paths=paths(idx2);
 
 % get mantle paths
 cmb=2891; % prem based cmb depth
-gpaths=crust2less_raypaths(trim_depths_raypaths(paths,[0 cmb]));
+gpaths=crustless_raypaths(trim_depths_raypaths(paths,[0 cmb]));
 
 % mantle corrections
 mc=mancor(gpaths,mod3d);
@@ -106,5 +109,8 @@ n=n/deg2km;
 % linear fits to get moveout
 me=wlinem(e,tc); es=me(2);
 mn=wlinem(n,tc); ns=mn(2);
+
+% debugging
+%d=[n e mc cc ec];
 
 end

@@ -9,6 +9,9 @@ octave_364_fixes in install_seizmo & startup
 mp_tmerc goes from m_map_fixes to m_map_fixes/private in webinstall_mmap
 figure out best way to use scatter in octave
  - no symbol spec on scatter call then set them afterwards
+how about installing the latest octave stable branch instead
+
+taup Sn/Pn no refracted path bug
 
 3. 2d inversion on a sphere
 4. data grabbing codes
