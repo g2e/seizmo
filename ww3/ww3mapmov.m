@@ -49,15 +49,16 @@ function [varargout]=ww3mapmov(s,delay,varargin)
 %     unixcompressavi('filename.avi');
 %
 %    See also: WW3MAP, WW3MOV, PLOTWW3, PLOTWW3TS, WW3STRUCT, WW3REC,
-%              WW3CAT, MOVIE2AVI, UNIXCOMPRESSAVI
+%              WW3CAT, MOVIE2AVI, UNIXCOMPRESSAVI, WW3UV2SA
 
 %     Version History:
 %        May   4, 2012 - initial version
 %        Aug. 27, 2013 - use mmap image option
 %        Jan. 15, 2014 - updated See also list
+%        Feb.  5, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 00:40 GMT
+%     Last Updated Feb.  5, 2014 at 00:40 GMT
 
 % todo:
 

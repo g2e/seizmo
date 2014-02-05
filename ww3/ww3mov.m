@@ -54,7 +54,7 @@ function [varargout]=ww3mov(s,delay,varargin)
 %     unixcompressavi('filename.avi');
 %
 %    See also: WW3MAPMOV, MOVIE2AVI, UNIXCOMPRESSAVI, WW3STRUCT, WW3REC,
-%              WW3CAT, PLOTWW3, PLOTWW3TS, WW3MAP
+%              WW3CAT, PLOTWW3, PLOTWW3TS, WW3MAP, WW3UV2SA
 
 %     Version History:
 %        June 15, 2010 - initial version
@@ -63,9 +63,10 @@ function [varargout]=ww3mov(s,delay,varargin)
 %        Feb. 15, 2012 - use ww3struct, doc update
 %        May   4, 2012 - allow struct input, fix no input case
 %        Jan. 15, 2014 - updated See also list
+%        Feb.  5, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 00:40 GMT
+%     Last Updated Feb.  5, 2014 at 00:40 GMT
 
 % todo:
 

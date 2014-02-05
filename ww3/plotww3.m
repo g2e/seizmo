@@ -46,7 +46,7 @@ function [varargout]=plotww3(s,rng,fgcolor,bgcolor,ax)
 %     ax=plotww3(s);
 %
 %    See also: PLOTWW3TS, WW3STRUCT, WW3MOV, WW3MAP, WW3MAPMOV, WW3REC,
-%              WW3CAT
+%              WW3CAT, WW3UV2SA
 
 %     Version History:
 %        June 15, 2010 - initial version
@@ -56,9 +56,10 @@ function [varargout]=plotww3(s,rng,fgcolor,bgcolor,ax)
 %        Feb. 15, 2012 - use ww3struct, doc update
 %        May   4, 2012 - allow filename input
 %        Jan. 15, 2014 - updated See also list
+%        Feb.  5, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 00:40 GMT
+%     Last Updated Feb.  5, 2014 at 00:40 GMT
 
 % todo:
 

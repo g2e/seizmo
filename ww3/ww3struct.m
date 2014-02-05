@@ -68,9 +68,10 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %        May  11, 2012 - skips .data access if there is a null range
 %        Jan. 15, 2014 - updated See also list
 %        Jan. 26, 2014 - fixed error msg for no njtbx installed
+%        Feb.  5, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 00:40 GMT
+%     Last Updated Feb.  5, 2014 at 00:40 GMT
 
 % todo:
 

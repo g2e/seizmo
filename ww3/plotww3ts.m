@@ -29,14 +29,15 @@ function [varargout]=plotww3ts(varargin)
 %     datetick(get(h,'parent'),'x');
 %
 %    See also: LOCATE_STORMS, WW3STRUCT, WW3REC, WW3CAT, PLOTWW3, WW3MOV,
-%              WW3MAP, WW3MAPMOV
+%              WW3MAP, WW3MAPMOV, WW3UV2SA
 
 %     Version History:
 %        May  31, 2012 - initial version
 %        Jan. 15, 2014 - updated See also list
+%        Feb.  5, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 00:40 GMT
+%     Last Updated Feb.  5, 2014 at 00:40 GMT
 
 % todo:
 
