@@ -1,3 +1,4 @@
+function []=startup()
 %STARTUP    Sets up Matlab/Octave path & javaclasspath for SEIZMO
 %
 % If you can't edit your paths or don't want seizmo on your default
@@ -72,27 +73,38 @@ addpath(path,...
 jars=dir([path fs 'mattaup' fs 'lib' fs '*.jar']);
 for i=1:numel(jars)
     if(~ismember([path fs 'mattaup' fs 'lib' ...
-            fs jars(i).name],javaclasspath))
+            fs jars(i).name],javaclasspath('-all')))
         javaaddpath([path fs 'mattaup' fs 'lib' fs jars(i).name]);
     end
 end
 
 % these are the additional folders for external programs
-addpath([path fs 'export_fig'],...
-    [path fs 'gshhg'],...
-    [path fs 'm_map'],...
-    [path fs 'm_map_fixes'],...
-    [path fs 'njtbx' fs 'njToolbox-2.0'],...
-    [path fs 'njtbx' fs 'njToolbox-2.0' fs 'examples'],...
-    [path fs 'njtbx' fs 'njToolbox-2.0' fs 'njFunc'],...
-    [path fs 'njtbx' fs 'njToolbox-2.0' fs 'njTBX-2.0'],...
-    [path fs 'njtbx' fs 'njToolbox-2.0' fs 'njTBX-2.0' fs 'Utilities']);
+% - skip attempt at adding them to the path if they don't exist
+if(isdir([path fs 'export_fig']))
+    addpath([path fs 'export_fig']);
+end
+if(isdir([path fs 'gshhg']))
+    addpath([path fs 'gshhg']);
+end
+if(isdir([path fs 'm_map']))
+    addpath([path fs 'm_map_fixes'],...
+        [path fs 'm_map']);
+end
+if(isdir([path fs 'njtbx' fs 'njToolbox-2.0']))
+    addpath([path fs 'njtbx' fs 'njToolbox-2.0'],...
+        [path fs 'njtbx' fs 'njToolbox-2.0' fs 'examples'],...
+        [path fs 'njtbx' fs 'njToolbox-2.0' fs 'njFunc'],...
+        [path fs 'njtbx' fs 'njToolbox-2.0' fs 'njTBX-2.0'],...
+        [path fs 'njtbx' fs 'njToolbox-2.0' fs 'njTBX-2.0' fs 'Utilities']);
+end
 
 % jars (2 of them) for external program njtbx
 % - used by WW3 functions (analyze ocean waves & seismic noise)
 jars=dir([path fs 'njtbx' fs '*.jar']);
 for i=1:numel(jars)
-    if(~ismember([path fs 'njtbx' fs jars(i).name],javaclasspath))
+    if(~ismember([path fs 'njtbx' fs jars(i).name],javaclasspath('-all')))
         javaaddpath([path fs 'njtbx' fs jars(i).name]);
     end
+end
+
 end
