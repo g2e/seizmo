@@ -10,7 +10,7 @@ function [varargout]=plotww3ts(varargin)
 %     PLOTWW3TS(S) plots the WaveWatch III hindcast data in the structure S
 %     created by WW3STRUCT as a time-series rather than as a map or map
 %     movie.  All data types are plotted in in the same axes (wind u/v
-%     components are both in the plot).
+%     components are in the same plot).
 %
 %     PLOTWW3TS(S,...) passes additional inputs onto PLOT.
 %
@@ -29,12 +29,12 @@ function [varargout]=plotww3ts(varargin)
 %     datetick(get(h,'parent'),'x');
 %
 %    See also: LOCATE_STORMS, WW3STRUCT, WW3REC, WW3CAT, PLOTWW3, WW3MOV,
-%              WW3MAP, WW3MAPMOV, WW3UV2SA
+%              WW3MAP, WW3MAPMOV, WW3UV2SA, WW3BAZ2AZ
 
 %     Version History:
 %        May  31, 2012 - initial version
 %        Jan. 15, 2014 - updated See also list
-%        Feb.  5, 2014 - minor doc update
+%        Feb.  5, 2014 - minor doc update, allow multiple lat/lon points
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb.  5, 2014 at 00:40 GMT
@@ -67,6 +67,7 @@ end
 % plot
 h=[];
 for i=1:numel(s.data)
+    s.data{i}=permute(s.data{i},[3 1 2]);
     h=cat(2,h,plot(ax{:},s.time(:),s.data{i}(:,:),varargin{:}));
 end
 

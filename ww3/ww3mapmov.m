@@ -5,7 +5,8 @@ function [varargout]=ww3mapmov(s,delay,varargin)
 %              [mov1,...,movN]=ww3mapmov('file')
 %              [...]=ww3mapmov('file',delay)
 %              [...]=ww3mapmov('file',delay,rng)
-%              [...]=ww3mapmov('file',rng,'mmap_opt1',mmap_val1,...)
+%              [...]=ww3mapmov('file',delay,rng,cmap)
+%              [...]=ww3mapmov('file',delay,rng,cmap,'mapopt1',mapval1,...)
 %              [...]=ww3mapmov(s,...)
 %
 %    Description:
@@ -24,11 +25,19 @@ function [varargout]=ww3mapmov(s,delay,varargin)
 %     [...]=WW3MAPMOV('FILE',DELAY) specifies the delay between the
 %     mapping of each time step in seconds.  The default DELAY is 0.33s.
 %
-%     [...]=WW3MAPMOV('FILE',DELAY,RNG) sets the data limits for coloring.
-%     The default is [0 15] which works well for significant wave heights.
+%     [...]=WW3MAPMOV('FILE',DELAY,RNG) sets the colormap limits of the
+%     data. The default is dependent on the datatype: [0 15] for
+%     significant wave heights and wind speed, [0 20] for wave periods,
+%     [0 360] for wave & wind direction, & [-15 15] for u & v wind
+%     components.
 %
-%     [...]=WW3MAPMOV('FILE',DELAY,RNG,'MMAP_OPT1',MMAP_VAL1,...) passes
-%     additional options on to MMAP to alter the map.
+%     [...]=WW3MAPMOV('FILE',DELAY,RNG,CMAP) alters the colormap to CMAP.
+%     The default is HSV for wave & wind direction and FIRE for everything
+%     else.  The FIRE colormap is adjusted to best match the background
+%     color.
+%
+%     [...]=WW3MAPMOV('FILE',DELAY,RNG,CMAP,'MMAP_OPT1',MMAP_VAL1,...)
+%     passes additional options on to MMAP to alter the map.
 %
 %     [...]=WW3MAPMOV(S,...) creates a movie using the WaveWatch III data
 %     contained in the structure S created by WW3STRUCT.
@@ -49,13 +58,13 @@ function [varargout]=ww3mapmov(s,delay,varargin)
 %     unixcompressavi('filename.avi');
 %
 %    See also: WW3MAP, WW3MOV, PLOTWW3, PLOTWW3TS, WW3STRUCT, WW3REC,
-%              WW3CAT, MOVIE2AVI, UNIXCOMPRESSAVI, WW3UV2SA
+%              WW3CAT, MOVIE2AVI, UNIXCOMPRESSAVI, WW3UV2SA, WW3BAZ2AZ
 
 %     Version History:
 %        May   4, 2012 - initial version
 %        Aug. 27, 2013 - use mmap image option
 %        Jan. 15, 2014 - updated See also list
-%        Feb.  5, 2014 - minor doc update
+%        Feb.  5, 2014 - doc update, update for colormap input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb.  5, 2014 at 00:40 GMT
@@ -149,7 +158,10 @@ for i=1:numel(ax)
     pc=findobj(ax(i),'tag','m_pcolor');
     
     % slip in new data (note the doubling of the keyword end for pcolor)
+    % - also do not color nans (land/ice)
     set(pc(1),'cdata',s.data{i}([1:end end],[1:end end]).');
+    set(pc(1),'alphadata',...
+        double(~isnan(s.data{i}([1:end end],[1:end end]).')));
     
     % update title
     set(get(ax(i),'Title'),'string',...

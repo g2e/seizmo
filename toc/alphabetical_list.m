@@ -641,6 +641,7 @@ function []=alphabetical_list()
 %<a href="matlab:help writesacpz">writesacpz</a>                     - Writes out a SAC PoleZero file
 %<a href="matlab:help writeseizmo">writeseizmo</a>                    - Write SEIZMO records to datafiles
 %<a href="matlab:help writesodeventcsv">writesodeventcsv</a>               - Write out a SOD event .csv file from a structure
+%<a href="matlab:help ww3baz2az">ww3baz2az</a>                      - Converts wave direction from local backazimuth to azimuth
 %<a href="matlab:help ww3cat">ww3cat</a>                         - Concatenates WW3 hindcast data from WW3STRUCT
 %<a href="matlab:help ww3map">ww3map</a>                         - Maps WaveWatch III hindcast data
 %<a href="matlab:help ww3mapmov">ww3mapmov</a>                      - Create map movie from a WaveWatch III hindcast GRiB1/2 file

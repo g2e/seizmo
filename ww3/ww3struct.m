@@ -54,7 +54,7 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %     plotww3(s);
 %
 %    See also: WW3REC, WW3CAT, PLOTWW3, PLOTWW3TS, WW3MOV, WW3MAP,
-%              WW3MAPMOV
+%              WW3MAPMOV, WW3UV2SA, WW3BAZ2AZ
 
 %     Version History:
 %        June 30, 2010 - initial version
@@ -68,7 +68,8 @@ function [s]=ww3struct(file,rec,stime,etime,latrng,lonrng)
 %        May  11, 2012 - skips .data access if there is a null range
 %        Jan. 15, 2014 - updated See also list
 %        Jan. 26, 2014 - fixed error msg for no njtbx installed
-%        Feb.  5, 2014 - minor doc update
+%        Feb.  5, 2014 - minor doc update, bugfix: pixel longitude
+%                        correction was not needed (decided from ww3map)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb.  5, 2014 at 00:40 GMT
@@ -158,10 +159,6 @@ for i=1:nfiles
     s(i).latstep=s(i).lat(2)-s(i).lat(1);
     s(i).lonstep=s(i).lon(2)-s(i).lon(1);
     s(i).timestep=s(i).time(2)-s(i).time(1);
-    
-    % correct longitudes which correspond to left side of pixel
-    % --> left-center to center-center
-    s(i).lon=s(i).lon+s(i).lonstep/2;
     
     % handle no record limiting
     if(isempty(rec))

@@ -15,7 +15,7 @@ function [s]=ww3rec(s,rec)
 %     for i=1:numel(s.time); plotww3(ww3rec(s,i)); end
 %
 %    See also: WW3STRUCT, WW3CAT, PLOTWW3, PLOTWW3TS, WW3MOV, WW3MAP,
-%              WW3MAPMOV, WW3UV2SA
+%              WW3MAPMOV, WW3UV2SA, WW3BAZ2AZ
 
 %     Version History:
 %        May   4, 2012 - initial version

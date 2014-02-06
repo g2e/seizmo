@@ -15,7 +15,7 @@ function [s]=ww3uv2sa(s,varargin)
 %     ww3map(ww3uv2sa(ww3struct));
 %
 %    See also: WW3STRUCT, WW3REC, WW3CAT, WW3MAP, WW3MAPMOV, WW3MOV,
-%              PLOTWW3, PLOTWW3TS
+%              PLOTWW3, PLOTWW3TS, WW3BAZ2AZ
 
 %     Version History:
 %        Feb.  5, 2014 - initial version
@@ -49,7 +49,7 @@ for i=1:numel(s)
             || isequal(s(i).description,...
             {'U-component of wind'  'V-component of wind'}))
         s(i).description={'wind speed'  'wind azimuth'};
-        s(i).units={'m/s' 'deg'};
+        s(i).units={'m/s' 'degrees'};
         s(i).data={sqrt(s(i).data{1}.^2+s(i).data{2}.^2) ...
             180/pi*angle(s(i).data{2}+1i.*s(i).data{1})};
         s(i).data{2}(s(i).data{2}<0)=s(i).data{2}(s(i).data{2}<0)+360;
@@ -58,7 +58,7 @@ for i=1:numel(s)
             || isequal(s(i).description,...
             {'V-component of wind'  'U-component of wind'}))
         s(i).description={'wind speed'  'wind azimuth'};
-        s(i).units={'m/s' 'deg'};
+        s(i).units={'m/s' 'degrees'};
         s(i).data={sqrt(s(i).data{1}.^2+s(i).data{2}.^2) ...
             180/pi*angle(s(i).data{1}+1i.*s(i).data{2})};
         s(i).data{2}(s(i).data{2}<0)=s(i).data{2}(s(i).data{2}<0)+360;

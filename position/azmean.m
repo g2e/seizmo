@@ -12,6 +12,7 @@ function [avg]=azmean(az,dim)
 %     AVG=AZMEAN(AZ,DIM) takes the mean across along dimension DIM.
 %
 %    Notes:
+%     - NaNs are allowed and are ignored.
 %
 %    Examples:
 %     % Average North scattered azimuths:
@@ -21,9 +22,10 @@ function [avg]=azmean(az,dim)
 
 %     Version History:
 %        Oct. 10, 2012 - initial version
+%        Feb.  5, 2014 - use nanmean so nans can be included
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Oct. 10, 2012 at 19:00 GMT
+%     Last Updated Feb.  5, 2014 at 19:00 GMT
 
 % todo:
 
@@ -37,6 +39,6 @@ if(nargin==1 || isempty(dim))
 end
 
 % azimuths to unit vector, mean, unit vector to azimuth
-avg=180/pi*atan2(mean(sind(az),dim),mean(cosd(az),dim));
+avg=180/pi*atan2(nanmean(sind(az),dim),nanmean(cosd(az),dim));
 
 end

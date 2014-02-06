@@ -27,7 +27,7 @@ function [s]=ww3cat(s,varargin)
 %     s=ww3cat(s);
 %
 %    See also: WW3STRUCT, WW3REC, PLOTWW3, PLOTWW3TS, WW3MOV, WW3MAP,
-%              WW3MAPMOV, WW3UV2SA
+%              WW3MAPMOV, WW3UV2SA, WW3BAZ2AZ
 
 %     Version History:
 %        May  11, 2012 - initial version

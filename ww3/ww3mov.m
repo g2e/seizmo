@@ -6,7 +6,8 @@ function [varargout]=ww3mov(s,delay,varargin)
 %              [...]=ww3mov('file',delay)
 %              [...]=ww3mov('file',delay,rng)
 %              [...]=ww3mov('file',delay,rng,fgcolor,bgcolor)
-%              [...]=ww3mov('file',delay,rng,fgcolor,bgcolor,ax)
+%              [...]=ww3mov('file',delay,rng,fgcolor,bgcolor,cmap)
+%              [...]=ww3mov('file',delay,rng,fgcolor,bgcolor,cmap,ax)
 %              [...]=ww3mov(s,...)
 %
 %    Description:
@@ -24,8 +25,10 @@ function [varargout]=ww3mov(s,delay,varargin)
 %     [...]=WW3MOV('FILE',DELAY) specifies the delay between the plotting
 %     of each time step in seconds.  The default DELAY is 0.33s.
 %
-%     [...]=WW3MOV('FILE',DELAY,RNG) sets the limits for coloring the data.
-%     The default is [0 15] which works well for significant wave heights.
+%     [...]=WW3MOV('FILE',DELAY,RNG) sets the colormap limits of the data.
+%     The default is dependent on the datatype: [0 15] for significant wave
+%     heights and wind speed, [0 20] for wave periods, [0 360] for wave &
+%     wind direction, & [-15 15] for u & v wind components.
 %
 %     [...]=WW3MOV('FILE',DELAY,RNG,FGCOLOR,BGCOLOR) specifies foreground
 %     and background colors of the movie.  The default is 'w' for FGCOLOR &
@@ -33,9 +36,14 @@ function [varargout]=ww3mov(s,delay,varargin)
 %     an opposing color is found using INVERTCOLOR.  The color scale is
 %     also changed so the noise clip is at BGCOLOR.
 %
-%     [...]=WW3MOV('FILE',DELAY,RNG,FGCOLOR,BGCOLOR,AX) sets the axes drawn
-%     in.  This is useful for subplots, guis, etc.  The default creates a
-%     new figure.
+%     [...]=WW3MOV('FILE',DELAY,RNG,FGCOLOR,BGCOLOR,CMAP) alters the
+%     colormap to CMAP.  The default is HSV for wave & wind direction and
+%     FIRE for everything else.  The FIRE colormap is adjusted to best
+%     match the background color.
+%
+%     [...]=WW3MOV('FILE',DELAY,RNG,FGCOLOR,BGCOLOR,CMAP,AX) sets the axes
+%     drawn in.  This is useful for subplots, guis, etc.  The default
+%     creates a new figure.
 %
 %     [...]=WW3MOV(S,...) creates a movie using the WaveWatch III data
 %     contained in the structure S created by WW3STRUCT.
@@ -54,7 +62,7 @@ function [varargout]=ww3mov(s,delay,varargin)
 %     unixcompressavi('filename.avi');
 %
 %    See also: WW3MAPMOV, MOVIE2AVI, UNIXCOMPRESSAVI, WW3STRUCT, WW3REC,
-%              WW3CAT, PLOTWW3, PLOTWW3TS, WW3MAP, WW3UV2SA
+%              WW3CAT, PLOTWW3, PLOTWW3TS, WW3MAP, WW3UV2SA, WW3BAZ2AZ
 
 %     Version History:
 %        June 15, 2010 - initial version
@@ -63,7 +71,7 @@ function [varargout]=ww3mov(s,delay,varargin)
 %        Feb. 15, 2012 - use ww3struct, doc update
 %        May   4, 2012 - allow struct input, fix no input case
 %        Jan. 15, 2014 - updated See also list
-%        Feb.  5, 2014 - minor doc update
+%        Feb.  5, 2014 - doc update, update for colormap input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb.  5, 2014 at 00:40 GMT
@@ -71,7 +79,7 @@ function [varargout]=ww3mov(s,delay,varargin)
 % todo:
 
 % check nargin
-error(nargchk(0,6,nargin));
+error(nargchk(0,7,nargin));
 
 % check ww3 input
 if(nargin==0) % gui selection of grib file
@@ -123,7 +131,7 @@ if(nargout); makemovie=true; end
 
 % make initial plot
 ax=plotww3(ww3rec(s,1),varargin{:});
-varargin{4}=ax;
+varargin{5}=ax;
 fh=get(ax,'parent');
 if(iscell(fh)); fh=cell2mat(fh); end
 for j=1:numel(fh)

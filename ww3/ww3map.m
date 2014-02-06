@@ -1,9 +1,10 @@
-function [varargout]=ww3map(s,rng,varargin)
+function [varargout]=ww3map(s,rng,cmap,varargin)
 %WW3MAP    Maps WaveWatch III hindcast data
 %
 %    Usage:    ww3map('file')
 %              ww3map('file',rng)
-%              ww3map('file',rng,'mmap_opt1',mmap_val1,...)
+%              ww3map('file',rng,cmap)
+%              ww3map('file',rng,cmap,'mmap_opt1',mmap_val1,...)
 %              ww3map(s,...)
 %              ax=ww3map(...)
 %
@@ -16,10 +17,15 @@ function [varargout]=ww3map(s,rng,varargin)
 %     presented for the user to select a WW3 hindcast file.
 %
 %     WW3MAP('FILE',RNG) sets the colormap limits of the data. The default
-%     is [0 15] which works well for significant wave heights.  A scale of
-%     [0 25] will prevent saturation of wave heights & periods.
+%     is dependent on the datatype: [0 15] for significant wave heights and
+%     wind speed, [0 20] for wave periods, [0 360] for wave & wind
+%     direction, & [-15 15] for u & v wind components.
 %
-%     WW3MAP('FILE',RNG,'MMAP_OPT1',MMAP_VAL1,...) passes additional
+%     WW3MAP('FILE',RNG,CMAP) alters the colormap to CMAP.  The default is
+%     HSV for wave & wind direction and FIRE for everything else.  The FIRE
+%     colormap is adjusted to best match the background color.
+%
+%     WW3MAP('FILE',RNG,CMAP,'MMAP_OPT1',MMAP_VAL1,...) passes additional
 %     options on to MMAP to alter the map.
 %
 %     WW3MAP(S,...) plots the WaveWatch III data contained in the
@@ -31,7 +37,7 @@ function [varargout]=ww3map(s,rng,varargin)
 %    Notes:
 %     - Requires that the njtbx toolbox is installed!
 %     - Passing the 'parent' MMAP option requires as many axes as
-%       datatypes.  This will only matter for wind data.
+%       datatypes.  This only matters for wind data.
 %
 %    Examples:
 %     % Read the first record of a NOAA WW3 grib file and map it:
@@ -39,7 +45,7 @@ function [varargout]=ww3map(s,rng,varargin)
 %     ax=ww3map(s);
 %
 %    See also: WW3STRUCT, WW3MAPMOV, PLOTWW3, PLOTWW3TS, WW3MOV, WW3REC,
-%              WW3CAT, WW3UV2SA
+%              WW3CAT, WW3UV2SA, WW3BAZ2AZ
 
 %     Version History:
 %        May   5, 2012 - initial version
@@ -48,7 +54,9 @@ function [varargout]=ww3map(s,rng,varargin)
 %        Aug. 27, 2013 - use mmap image option
 %        Jan. 15, 2014 - updated See also list
 %        Jan. 16, 2014 - minor doc fix
-%        Feb.  5, 2014 - minor comment fixes
+%        Feb.  5, 2014 - doc & comment fixes, proper handling of direction
+%                        data and nans for ice/land, don't color nans,
+%                        colormap input, smart rng/cmap defaults
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb.  5, 2014 at 00:40 GMT
@@ -61,7 +69,7 @@ if(nargin==0) % gui selection of grib file
     s=ww3struct();
     if(~isscalar(s))
         error('seizmo:ww3map:badWW3',...
-            'PLOTWW3 can only handle 1 file!');
+            'WW3MAP can only handle 1 file!');
     end
 elseif(isstruct(s))
     valid={'path' 'name' 'description' 'units' 'data' ...
@@ -79,10 +87,22 @@ else
 end
 
 % default/check color limits
-if(nargin<=1 || isempty(rng)); rng=[0 15]; end
+if(nargin<2 || isempty(rng)); rng=[nan nan]; end
 if(~isreal(rng) || ~isequal(size(rng),[1 2]) || rng(1)>rng(2))
     error('seizmo:ww3map:badRNG',...
         'RNG must be a real-valued 2 element vector as [low high]!');
+end
+
+% default/check colormap input
+defcmap=false;
+if(nargin<3 || isempty(cmap)); cmap='default'; defcmap=true; end
+if((isnumeric(cmap) && isreal(cmap) ...
+        && (ndims(cmap)~=2 || size(cmap,2)~=3 ...
+        || ~all(cmap(:)>=0 & cmap(:)<=1))) || (ischar(cmap) ...
+        && (ndims(cmap)~=2 || size(cmap,1)~=1)))
+    error('seizmo:ww3map:badCMAP',...
+        ['COLORMAP must be a colormap function as\n'...
+        'a string or a Nx3 RGB triplet array!']);
 end
 
 % check options are strings
@@ -122,36 +142,58 @@ end
 % loop over data types
 ax=nan(ndata,1);
 for i=1:ndata
-    % average data (convert nan to 0 to handle ice)
-    s.data{i}(isnan(s.data{i}))=0;
+    % average data handling ice/land (nans) & direction
     if(size(s.data{i},3)>1)
-        s.data{i}=mean(s.data{i},3);
+        if(isequal(s.units{i},'degrees'))
+            s.data{i}=azmean(s.data{i},3);
+            s.data{i}(s.data{i}<0)=s.data{i}(s.data{i}<0)+360;
+        else
+            s.data{i}=nanmean(s.data{i},3);
+        end
     end
     
-    % draw map
+    % draw map, skip coloring on nans (land/ice) & set colormap limits
     ax(i)=mmap('image',{s.lat s.lon s.data{i}.'},...
         varargin{:},'parent',defax{i});
+    set(findobj(ax(i),'tag','m_pcolor'),...
+        'alphadata',double(~isnan(s.data{i}([1:end end],[1:end end]).')));
+    if(all(isnan(rng)))
+        if(isequal(s.units{i},'degrees'))
+            rng0=[0 360];
+        elseif(isequal(s.units{i},'s'))
+            rng0=[0 20];
+        elseif(any(strcmp(s.description{i},{'U-component of wind' ...
+                'V-component of wind' 'u wind' 'v wind'})))
+            rng0=[-15 15];
+        else
+            rng0=[0 15];
+        end
+    else
+        rng0=rng;
+    end
+    set(ax(i),'clim',rng0);
     
     % extract color
     bg=get(get(ax(i),'parent'),'color');
     fg=get(findobj(ax(i),'tag','m_grid_box'),'color');
     
-    % set colormap
-    if(strcmp(bg,'w') || isequal(bg,[1 1 1]))
-        colormap(ax(i),flipud(fire));
-    elseif(strcmp(bg,'k') || isequal(bg,[0 0 0]))
-        colormap(ax(i),fire);
-    else
-        if(ischar(bg)); bg=name2rgb(bg); end
-        hsv=rgb2hsv(bg);
-        colormap(ax(i),hsvcustom(hsv));
-    end
-    set(ax(i),'clim',rng);
-    
     % labeling
     title(ax(i),...
         {'NOAA WaveWatch III Hindcast' s.description{i} tstring},...
         'color',fg);
+    
+    % set colormap
+    if(defcmap)
+        if(isequal(s.units{i},'degrees'))
+            colormap(ax(i),hsv);
+        elseif(strcmp(bg,'w') || isequal(bg,[1 1 1]))
+            colormap(ax(i),flipud(fire));
+        else
+            colormap(ax(i),fire);
+        end
+    else
+        colormap(ax(i),cmap);
+    end
     
     % colorbar
     c=colorbar('eastoutside','peer',ax(i),'xcolor',fg,'ycolor',fg);

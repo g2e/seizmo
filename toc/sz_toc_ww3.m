@@ -2,6 +2,7 @@ function []=sz_toc_ww3()
 % WaveWatch III Functions
 %<a href="matlab:help plotww3">plotww3</a>   - Plots WaveWatch III hindcast data
 %<a href="matlab:help plotww3ts">plotww3ts</a> - Plots WaveWatch III hindcast data as a time-series
+%<a href="matlab:help ww3baz2az">ww3baz2az</a> - Converts wave direction from local backazimuth to azimuth
 %<a href="matlab:help ww3cat">ww3cat</a>    - Concatenates WW3 hindcast data from WW3STRUCT
 %<a href="matlab:help ww3map">ww3map</a>    - Maps WaveWatch III hindcast data
 %<a href="matlab:help ww3mapmov">ww3mapmov</a> - Create map movie from a WaveWatch III hindcast GRiB1/2 file
