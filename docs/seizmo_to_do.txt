@@ -15,11 +15,13 @@ taup Sn/Pn no refracted path bug
 
 3. 2d inversion on a sphere
 4. data grabbing codes
-    grab_events (!)
-    grab_stations
-    grab_channels
-    grab_responses (!)
-    grab_seismograms (!)
+    - irisFetch conversion
+      x iris2seizmo
+      - iris2sod
+    - irisFetch replacement?
+      - reasons: doesn't work with octave, sloooow, bad time handling,
+                 not robust (can return 0 records or many for the same
+                 call!), no sacpz fetch
 5 noise array phase and attenuation like in prieto 2009
     - noise_stack_delaz
     - stacking option
