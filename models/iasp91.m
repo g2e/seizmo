@@ -50,6 +50,9 @@ function [mout]=iasp91(varargin)
 %     - IASP91 reference:
 %        Kennett & Engdahl 1991, Traveltimes for global earthquake location
 %        and phase identification, Geophys. J. Int. 105, pp. 429-465
+%     - The density is from the AK135 model:
+%        Kennett, Engdahl, & Buland 1995, Constraints on seismic velocities
+%        in the Earth from traveltimes, Geophys. J. Int. 122, pp. 108-124
 %
 %    Examples:
 %     % Plot parameters for the CMB region:
@@ -71,11 +74,16 @@ function [mout]=iasp91(varargin)
 %        Aug. 17, 2010 - added reference
 %        Sep. 19, 2010 - doc update, better discontinuity support
 %        Apr.  3, 2012 - minor doc update
+%        Feb. 18, 2014 - added note about origin of density values (thanks
+%                        to Aubreya for noticing that!), fixed typo in
+%                        density value at ~4900km depth node (these were
+%                        from the TauP Toolkit so that will also be there)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 14:45 GMT
+%     Last Updated Feb. 18, 2014 at 14:45 GMT
 
 % todo:
+% - make iasp91_perfect and check against this
 
 % check nargin
 if(mod(nargin,2))
@@ -252,7 +260,7 @@ model=[
   4751.250   10.1105    0.0000   11.9098
   4801.580   10.1349    0.0000   11.9414
   4851.910   10.1576    0.0000   11.9722
-  4902.240   10.1785    0.0000   12.0021
+  4902.240   10.1785    0.0000   12.0001
   4952.580   10.1978    0.0000   12.0311
   5002.910   10.2154    0.0000   12.0593
   5053.240   10.2312    0.0000   12.0867

@@ -42,9 +42,10 @@ function [gmt]=readgmt(file,type,marker,ll)
 %        Jan. 24, 2011 - support comma delimited
 %        Jan. 31, 2011 - latlon arg
 %        Jan. 27, 2014 - abs path exist fix
+%        Feb.  9, 2014 - use readtxt
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 10:35 GMT
+%     Last Updated Feb.  9, 2014 at 10:35 GMT
 
 % todo
 
@@ -73,55 +74,29 @@ elseif(~isscalar(ll) || (~islogical(ll) && ~isreal(ll)))
         'LATLON must be either TRUE or FALSE!');
 end
 
-% directory separator
-fs=filesep;
-
-% file input
+% read in file
 filterspec={
     '*.gmt;*.GMT' 'GMT Files (*.gmt,*.GMT)';
     '*.txt;*.TXT' 'TXT Files (*.txt,*.TXT)';
     '*.*' 'All Files (*.*)'};
-if(nargin<1 || isempty(file))
-    [file,path]=uigetfile(filterspec,'Select GMT File');
-    if(isequal(0,file))
-        error('seizmo:readgmt:noFileSelected','No input file selected!');
-    end
-    file=[path fs file];
-else
-    % check file
-    if(~isstring(file))
-        error('seizmo:readgmt:fileNotString',...
-            'FILE must be a string!');
-    end
-    if(~isabspath(file)); file=[pwd fs file]; end
-    if(~exist(file,'file'))
-        error('seizmo:readgmt:fileDoesNotExist',...
-            'File: %s\nDoes Not Exist!',file);
-    elseif(exist(file,'dir'))
-        error('seizmo:readgmt:dirConflict',...
-            'File: %s\nIs A Directory!',file);
-    end
-end
+lines=getwords(readtxt(file,filterspec),sprintf('\n'));
 
 % initialize output
 gmt([])=struct('type',[],'comments',[],'header',[],...
     'latitude',[],'longitude',[],'text',[]);
 
-% read in file
-line=getwords(readtxt(file),sprintf('\n'));
-
 % keep processing until through all lines
 a=1; obj=1; nc=0; d=0;
-nlines=numel(line);
+nlines=numel(lines);
 while(a<=nlines)
     % skip line if blank
-    if(isempty(line{a}))
+    if(isempty(lines{a}))
         a=a+1;
         continue;
     end
     
     % process line
-    words=getwords(line{a});
+    words=getwords(lines{a});
     
     % skip line if blank
     if(isempty(words))
@@ -150,7 +125,7 @@ while(a<=nlines)
             error('seizmo:readgmt:badGMT',...
                 ['GMT File: %s\nLine %d: %s\n'...
                 'File must not have multiple data types!'],...
-                file,a,line{a});
+                file,a,lines{a});
         end
         gmt(obj).type=type;
         
@@ -163,13 +138,13 @@ while(a<=nlines)
         a=a+1; d=0; nextsegment=false; csd=0;
         while(a<=nlines && ~nextsegment)
             % skip line if blank
-            if(isempty(line{a}))
+            if(isempty(lines{a}))
                 a=a+1;
                 continue;
             end
             
             % process line
-            words=getwords(line{a});
+            words=getwords(lines{a});
             
             % skip line if blank
             if(isempty(words))
@@ -202,13 +177,13 @@ while(a<=nlines)
                     error('seizmo:readgmt:badData',...
                         ['GMT File: %s\nLine %d: %s\n'...
                         'Line must have at least LON LAT!'],...
-                        file,a,line{a});
+                        file,a,lines{a});
                 elseif(isnan(str2double(words{1})) ...
                         || isnan(str2double(words{1})))
                     error('seizmo:readgmt:badData',...
                         ['GMT File: %s\nLine %d: %s\n'...
                         'LON LAT must not be in DMS or have E/W/N/S!'],...
-                        file,a,line{a});
+                        file,a,lines{a});
                 end
                 d=d+1;
                 if(ll)
@@ -240,7 +215,7 @@ while(a<=nlines)
             error('seizmo:readgmt:badGMT',...
                 ['GMT File: %s\nLine %d: %s\n'...
                 'File must not have multiple data types!'],...
-                file,a,line{a});
+                file,a,lines{a});
         end
         gmt(obj).type=type;
         
@@ -253,13 +228,13 @@ while(a<=nlines)
             error('seizmo:readgmt:badData',...
                 ['GMT File: %s\nLine %d: %s\n'...
                 'Line must have at least LON LAT!'],...
-                file,a,line{a});
+                file,a,lines{a});
         elseif(isnan(str2double(words{1})) ...
                 || isnan(str2double(words{1})))
             error('seizmo:readgmt:badData',...
                 ['GMT File: %s\nLine %d: %s\n'...
                 'LON LAT must not be in DMS or have E/W/N/S!'],...
-                file,a,line{a});
+                file,a,lines{a});
         end
         d=d+1;
         if(ll) % lat lon

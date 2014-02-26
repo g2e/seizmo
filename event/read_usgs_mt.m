@@ -5,6 +5,17 @@ function [events]=read_usgs_mt(file,hdrlines,flag)
 %              events=read_usgs_mt(string,headerlines,true)
 %
 %    Description:
+%     !!! WARNING !!!
+%     UNFORTANATELY THE USGS HAVE ELIMINATED THE SOPAR SITE IN FAVOR OF
+%     BURYING SOURCE PARAMETER INFO INTO INDIVIDUAL EVENT PAGES (SO IT IS
+%     NO LONGER ACCESSIBLE VIA SEARCH) WHILE EXPANDING THE SEARCH
+%     CATEGORIES FOR "COOLER" EARTHQUAKE INFORMATION LIKE SOCIAL MEDIA
+%     STATISTICS.  ENJOY YOUR "OMG EARTHQUAKE!" TWITTER WAVES USGS.
+%     I WILL KEEP THIS FUNCTION AROUND FOR THOSE THAT HAVE SAVED SOPAR
+%     OUTPUT AS A FILE AND IN CASE THE USGS REGROWS A BRAIN.  FOR NOW IF
+%     YOU WANT SOURCE PARAMETERS USE THE NEW FUNCTION PARSE_ISC_FM.
+%     !!! WARNING !!!
+%
 %     EVENTS=READ_USGS_MT(FILE,HEADERLINES) reads in an ascii file in USGS
 %     MT formatting containing moment tensor solutions.  FILE may be
 %     omitted to allow the user to graphically select the file.
@@ -20,7 +31,7 @@ function [events]=read_usgs_mt(file,hdrlines,flag)
 %    Notes:
 %     - Exponent in Nm is converted to dyne-cm (SI to CGS standard) to
 %       match GlobalCMT catalog units.
-%     - Centroid fields are set to be equivalent to epicenter since there
+%     - Centroid fields are set to be equivalent to hypocenter since there
 %       is no centroid determination for USGS moment tensors
 %     - Magnitudes not given are set to 0
 %     - Source function half-durations are determined with MO2HD which
@@ -38,14 +49,15 @@ function [events]=read_usgs_mt(file,hdrlines,flag)
 %         ['http://neic.usgs.gov/cgi-bin/sopar/sopar.cgi' ...
 %          '?GS=1&OTHER=4&FILEFORMAT=3']),[],true);
 %
-%    See also: READ_USGS_FM, READNDK, FINDCMT, FINDCMTS
+%    See also: READ_USGS_FM, READNDK, FINDCMT, FINDCMTS, PARSE_ISC_FM
 
 %     Version History:
 %        June 14, 2011 - initial version
 %        Jan. 27, 2014 - abs path exist fix
+%        Feb.  9, 2014 - use readtxt, noted uselessness of usgs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 13:50 GMT
+%     Last Updated Feb.  9, 2014 at 13:50 GMT
 
 % todo:
 
@@ -56,39 +68,12 @@ error(nargchk(0,3,nargin));
 if(nargin<2 || isempty(hdrlines)); hdrlines=0; end
 if(nargin<3 || isempty(flag)); flag=false; end
 
-% directory separator
-fs=filesep;
-
 % skip if string input
 if(~flag)
-    % graphical selection
-    if(nargin<1 || isempty(file))
-        [file,path]=uigetfile(...
-            {'*.mt;*.MT' 'USGS MT Files (*.mt,*.MT)';
-            '*.*' 'All Files (*.*)'},...
-            'Select USGS MT File');
-        if(isequal(0,file))
-            error('seizmo:read_usgs_mt:noFileSelected',...
-                'No input file selected!');
-        end
-        file=[path fs file];
-    else % check file
-        if(~isstring(file))
-            error('seizmo:read_usgs_mt:fileNotString',...
-                'FILE must be a string!');
-        end
-        if(~isabspath(file)); file=[pwd fs file]; end
-        if(~exist(file,'file'))
-            error('seizmo:read_usgs_mt:fileDoesNotExist',...
-                'USGS MT File: %s\nDoes Not Exist!',file);
-        elseif(exist(file,'dir'))
-            error('seizmo:read_usgs_mt:dirConflict',...
-                'USGS MT File: %s\nIs A Directory!',file);
-        end
-    end
-    
     % read in ndk file
-    txt=readtxt(file);
+    if(nargin<1); file=[]; end
+    txt=readtxt(file,{'*.mt;*.MT' 'USGS MT Files (*.mt,*.MT)';
+        '*.*' 'All Files (*.*)'});
 else
     % just copy file to txt
     if(nargin<1 || isempty(file) || ~isstring(file))

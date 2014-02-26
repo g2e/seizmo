@@ -45,62 +45,36 @@ function [cmt]=parse_cmt_psmeca(file,hlines)
 %        Aug.  5, 2011 - code cleaned up
 %        Aug. 25, 2011 - added example for connection with FINDCMTS
 %        Jan. 27, 2014 - abs path exist fix
+%        Feb.  9, 2014 - use readtxt, bugfix: hlines input now honored
 %
 %     Written by Erica Emry (ericae at wustl dot edu)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 13:35 GMT
+%     Last Updated Feb.  9, 2014 at 13:35 GMT
 
 % check nargin
 error(nargchk(0,2,nargin));
 
-% directory separator
-fs=filesep;
-
-% graphical isc file selection if no file given
-if(nargin<1 || isempty(file))
-    [file,path]=uigetfile(...
-        {'*.txt;*.TXT' 'TXT Files (*.txt,*.TXT)';
-        '*.*' 'All Files (*.*)'},...
-        'Select TXT File');
-    if(isequal(0,file))
-        error('seizmo:parse_cmt_psmeca:noFileSelected',...
-            'No input file selected!');
-    end
-    file=[path fs file];
-else % file given so check it exists
-    % check file
-    if(~isstring(file))
-        error('seizmo:parse_cmt_psmeca:fileNotString',...
-            'FILE must be a string!');
-    end
-    if(~isabspath(file)); file=[pwd fs file]; end
-    if(~exist(file,'file'))
-        error('seizmo:parse_cmt_psmeca:fileDoesNotExist',...
-            'File: %s\nDoes Not Exist!',file);
-    elseif(exist(file,'dir'))
-        error('seizmo:parse_cmt_psmeca:dirConflict',...
-            'File: %s\nIs A Directory!',file);
-    end
-end
+% get text
+if(nargin<1); file=[]; end
+txt=readtxt(file,{'*.txt;*.TXT' 'TXT Files (*.txt,*.TXT)';
+    '*.*' 'All Files (*.*)'});
 
 % default/check header lines
-if (nargin==1); hlines=0; end
+if (nargin<2); hlines=0; end
 if(~isreal(hlines) || ~isscalar(hlines) || hlines~=fix(hlines) || hlines<0)
     error('seizmo:parse_cmt_psmeca:badInput',...
         'HEADERLINES must be a positive scalar interger!');
 end
 
-% read in isc file
-txt=readtxt(file);
+% chop off header lines
+lines=getwords(txt,sprintf('\n'));
+lines=lines(hlines+1:end);
+txt=joinwords(lines,sprintf('\n'));
 
 % separate all fields
 fields=getwords(txt)';
 
 % push into a struct
-% - should we make this meet the minimum ndk struct requirements?
-%   'scalarmoment' 'exponent' 'year' 'month' 'day' 'hour'
-%   'minute' 'seconds' 'centroidtime' 'centroidlat' 'centroidlon'
-%   'centroiddep'
 cmt.latitude=str2double(fields(2:13:end));
 cmt.longitude=str2double(fields(1:13:end));
 cmt.depth=str2double(fields(3:13:end));

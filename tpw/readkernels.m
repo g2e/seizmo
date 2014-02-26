@@ -28,64 +28,24 @@ function [Kph,Kam,x,y]=readkernels(file)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Mar. 24, 2012 - minor doc update
 %        Jan. 26, 2014 - abs path exist fix
+%        Feb.  8, 2014 - use readtxt, fix warning ids
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 15:05 GMT
+%     Last Updated Feb.  8, 2014 at 15:05 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(0,1,nargin));
 
-% directory separator
-fs=filesep;
-
-% graphical selection
-if(nargin<1 || isempty(file))
-    [file,path]=uigetfile(...
-        {'*.kernel;*.KERNEL;kernel.*;KERNEL.*;' ...
-        'Kernel Files (*.kernel,KERNEL.*)';
-        '*.kern;*.KERN;kern.*;KERN.*;' ...
-        'Kern Files (*.kern,KERN.*)';
-        '*.dat;*.DAT' 'DAT Files (*.dat,*.DAT)';
-        '*.*' 'All Files (*.*)'},...
-        'Select Kernel File');
-    if(isequal(0,file))
-        error('seizmo:readkernels:noFileSelected',...
-            'No input file selected!');
-    end
-    file=[path fs file];
-else
-    % check file
-    if(~isstring(file))
-        error('seizmo:readkernels:fileNotString',...
-            'FILE must be a string!');
-    end
-    if(~isabspath(file)); file=[pwd fs file]; end
-    if(~exist(file,'file'))
-        error('seizmo:readkernels:fileDoesNotExist',...
-            'File: %s\nDoes Not Exist!',file);
-    elseif(exist(file,'dir'))
-        error('seizmo:readkernels:dirConflict',...
-            'File: %s\nIs A Directory!',file);
-    end
-end
-
-% open file for reading
-fid=fopen(file);
-
-% check if file is openable
-if(fid<0)
-    error('seizmo:readkernels:cannotOpenFile',...
-        'File: %s\nNot Openable!',file);
-end
-
-% read in file and close
-txt=fread(fid,'*char');
-fclose(fid);
-
-% row vector
-txt=txt';
+% get text
+if(nargin<1); file=[]; end
+txt=readtxt(file,{'*.kernel;*.KERNEL;kernel.*;KERNEL.*;' ...
+    'Kernel Files (*.kernel,KERNEL.*)';
+    '*.kern;*.KERN;kern.*;KERN.*;' ...
+    'Kern Files (*.kern,KERN.*)';
+    '*.dat;*.DAT' 'DAT Files (*.dat,*.DAT)';
+    '*.*' 'All Files (*.*)'});
 
 % parse and convert to double
 v=str2double(getwords(txt));
@@ -114,16 +74,16 @@ Kam=reshape(v(4:4:end),[ny nx]);
 dx2=unique(diff(x,1,2));
 dy2=unique(diff(y,1,1));
 if(~isscalar(dx2) || dx2<=0)
-    error('seizmo:writekernels:badInput',...
+    error('seizmo:readkernels:badInput',...
         'X step size is not uniform or is <=0!');
 elseif(~isscalar(dy2) || dy2<=0)
-    error('seizmo:writekernels:badInput',...
+    error('seizmo:readkernels:badInput',...
         'Y step size is not uniform or is <=0!');
 elseif(dx2~=dx || x(1)~=bx)
-    error('seizmo:writekernels:badInput',...
+    error('seizmo:readkernels:badInput',...
         'X header info does not match data!');
 elseif(dy2~=dy || y(1)~=by)
-    error('seizmo:writekernels:badInput',...
+    error('seizmo:readkernels:badInput',...
         'Y header info does not match data!');
 end
 

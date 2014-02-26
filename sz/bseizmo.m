@@ -98,9 +98,10 @@ function [data]=bseizmo(varargin)
 %        Jan.  4, 2011 - allow single input (just dep)
 %        Sep. 28, 2012 - fixed nasty eps usage bug and loosened up
 %                        tolerance on leven/delta determination
+%        Feb. 20, 2014 - .path now has filesep on end
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 28, 2012 at 17:35 GMT
+%     Last Updated Feb. 20, 2014 at 17:35 GMT
 
 % todo:
 
@@ -193,7 +194,7 @@ end
 % create structure
 nrecs=nin/2;
 format=['%0' num2str(ceil(log10(nrecs+1))) 'd'];
-data(1:nrecs,1)=struct('path','.','name',[],...
+data(1:nrecs,1)=struct('path',['.' filesep],'name',[],...
     'filetype',option.FILETYPE,'version',option.VERSION,...
     'byteorder',option.BYTEORDER,'head',undef,'hasdata',true,...
     'ind',[],'dep',[],'misc',[]);

@@ -17,7 +17,9 @@ function [ok]=uninstall_njtbx()
 %
 %    See also: WEBINSTALL_NJTBX, UNINSTALL_MMAP, WEBINSTALL_MMAP,
 %              UNINSTALL_GSHHG, WEBINSTALL_GSHHG, UNINSTALL_EXPORTFIG,
-%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO
+%              WEBINSTALL_EXPORTFIG, UNINSTALL_EXTRAS, WEBINSTALL_EXTRAS,
+%              UNINSTALL_IRISWS, WEBINSTALL_IRISWS, UNINSTALL_TAUP,
+%              WEBINSTALL_TAUP, UNINSTALL_SEIZMO, INSTALL_SEIZMO
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
@@ -27,19 +29,24 @@ function [ok]=uninstall_njtbx()
 %        Mar.  8, 2012 - make code changes for clarity
 %        Apr. 25, 2012 - fix classpath.txt jar removal
 %        Jan. 15, 2014 - updated See also list
+%        Feb. 20, 2014 - fixed dynamic java path uninstall, no fullfile
+%                        use, updated see also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 15:25 GMT
+%     Last Updated Feb. 20, 2014 at 15:25 GMT
 
 % todo:
+
+% directory separator
+fs=filesep;
 
 % does nj_time exist?
 if(exist('nj_time','file'))
     path=fileparts(fileparts(which('nj_time'))); % root directory
-    rmpath(fullfile(path,'njTBX-2.0','Utilities'));
-    rmpath(fullfile(path,'njTBX-2.0'));
-    rmpath(fullfile(path,'njFunc'));
-    rmpath(fullfile(path,'examples'));
+    rmpath([path fs 'njTBX-2.0' fs 'Utilities']);
+    rmpath([path fs 'njTBX-2.0']);
+    rmpath([path fs 'njFunc']);
+    rmpath([path fs 'examples']);
     rmpath(path);
     ok=~savepath;
 else
@@ -49,10 +56,11 @@ else
 end
 
 % clear the dynamic java path
-jars=dir(fullfile(path,'*.jar'));
+jarpath=fileparts(path);
+jars=dir([jarpath fs '*.jar']);
 for i=1:numel(jars)
-    if(ismember(fullfile(path,jars(i).name),javaclasspath))
-        javarmpath(fullfile(path,jars(i).name));
+    if(ismember([jarpath fs jars(i).name],javaclasspath))
+        javarmpath([jarpath fs jars(i).name]);
     end
 end
 
@@ -64,7 +72,7 @@ if(isempty(sjcp)); return; end
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 
 % detect offending classpath.txt lines
-injcp=~cellfun('isempty',strfind(s2,fileparts(path)));
+injcp=~cellfun('isempty',strfind(s2,jarpath));
 
 % only remove if necessary
 if(sum(injcp)>0)

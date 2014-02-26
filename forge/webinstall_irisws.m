@@ -1,44 +1,34 @@
-function [ok]=webinstall_njtbx(mypath)
-%WEBINSTALL_NJTBX    Install njTBX components
+function [ok]=webinstall_irisws(mypath)
+%WEBINSTALL_IRISWS    Install IRIS Web Services components
 %
-%    Usage:    ok=webinstall_njtbx
-%              ok=webinstall_njtbx(path)
+%    Usage:    ok=webinstall_irisws
+%              ok=webinstall_irisws(path)
 %
 %    Description:
-%     OK=WEBINSTALL_NJTBX creates the directory 'njtbx' where this mfile is
-%     located, moves into it and downloads & installs the njTBX toolbox
-%     files.  The download is large (~30 megabytes) so make sure you have a
-%     good connection.  Also be aware that you cannot do anything else at
-%     the Matlab/Octave prompt while waiting for the files to download.
+%     OK=WEBINSTALL_IRISWS downloads & installs the files distributed by
+%     IRIS for coupling Matlab/Octave with IRIS web services into the
+%     'irisws' directory.  The download is not large at <1 megabyte but
+%     do make sure you have a good connection or this operation will take a
+%     little while and you cannot do anything else at the Matlab/Octave
+%     prompt while waiting for the files to download.
 %
-%     OK=WEBINSTALL_NJTBX(PATH) installs the njTBX toolbox in the directory
-%     given by PATH.
+%     OK=WEBINSTALL_IRISWS(PATH) installs the files in the directory given
+%     by PATH.
 %
 %    Notes:
 %
 %    Examples:
-%     % Update njTBX:
-%     uninstall_njtbx & webinstall_njtbx
+%     % Reinstall IRIS web services:
+%     uninstall_irisws & webinstall_irisws
 %
-%    See also: UNINSTALL_NJTBX, WEBINSTALL_GSHHS, UNINSTALL_GSHHS,
+%    See also: UNINSTALL_IRISWS, WEBINSTALL_GSHHS, UNINSTALL_GSHHS,
 %              WEBINSTALL_MMAP, UNINSTALL_MMAP, WEBINSTALL_EXPORTFIG,
-%              UNINSTALL_EXPORTFIG, WEBINSTALL_IRISWS, UNINSTALL_IRISWS,
+%              UNINSTALL_EXPORTFIG, WEBINSTALL_NJTBX, UNINSTALL_NJTBX,
 %              WEBINSTALL_EXTRAS, UNINSTALL_EXTRAS, WEBINSTALL_TAUP,
-%              UNINSTALL_TAUP, UNINSTALL_SEIZMO, INSTALL_SEIZMO, SZ_TOC_WW3
+%              UNINSTALL_TAUP, INSTALL_SEIZMO, UNINSTALL_SEIZMO
 
 %     Version History:
-%        Feb. 14, 2012 - initial version
-%        Feb. 15, 2012 - doc update, flip savepath logic, only use
-%                        javaaddpath or edit classpath as needed
-%        Feb. 16, 2012 - workaround quietly stalled unzip in octave
-%        Mar.  8, 2012 - minor code changes for clarity
-%        Apr. 25, 2012 - use zipped version of the svn checkout of njtbx as
-%                        the zipfile available via their website is broken
-%        Jan. 14, 2014 - throw warning rather than error if problem
-%        Jan. 15, 2014 - updated See also list
-%        Jan. 27, 2014 - added isabspath for abs path fix to path option,
-%                        added handling of octave without java
-%        Feb. 20, 2014 - fixed warning id, update see also list
+%        Feb. 20, 2014 - initial version
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 20, 2014 at 15:25 GMT
@@ -53,7 +43,7 @@ fs=filesep;
 
 % default path to seizmo directory
 if(nargin<1 || isempty(mypath))
-    mypath=[fileparts(mfilename('fullpath')) fs 'njtbx'];
+    mypath=[fileparts(mfilename('fullpath')) fs 'irisws'];
     if(~exist(mypath,'dir')); mkdir(mypath); end
 else
     if(~isabspath(mypath)); mypath=[pwd fs mypath]; end
@@ -61,73 +51,38 @@ end
 
 % check path
 if(~exist(mypath,'dir'))
-    error('seizmo:webinstall_njtbx:badPath',...
+    error('seizmo:webinstall_irisws:badPath',...
         ['Directory (' mypath ') does not exist!']);
 end
 
-% attempt njTBX install
+% attempt IRISWS install
 try
     % go to desired install location
     cwd=pwd;
     cd(mypath);
     
     % current versions
-    njtbx='njToolbox-2.0.zip';           % ~5mb
-    toolsui='toolsUI-4.0.49.jar';        % ~20mb
-    njtools='njTools-2.0.12_jre1.6.jar'; % ~5mb
+    irisws='IRIS-WS-2.0.6.jar'; % ~500kb
+    irisfetch='irisFetch.m';    % ~100kb
     
     % grab files (either locally or remotely)
-    % - remote location is from japan b/c sourceforge
-    %   does not have direct links on the english site
-    url0='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/';
-    url=['http://es.sourceforge.jp/frs/g_redir.php?m=jaist&f=%2F' ...
-        'njtbx%2FnjTBX-downloads%2F'];
-    fprintf(' Getting %s\n',njtbx);
-    if(exist(njtbx,'file'))
-        if(~exist([mypath fs njtbx],'file'))
-            copyfile(which(njtbx),'.');
+    url0='http://www.iris.edu/files/IRIS-WS/2/2.0.6/';
+    url1='http://www.iris.edu/files/irisFetch.m/2-0-6/';
+    fprintf(' Getting %s\n',irisws);
+    if(exist(irisws,'file'))
+        if(~exist([mypath fs irisws],'file'))
+            copyfile(which(irisws),'.');
         end
     else
-        urlwrite([url0 njtbx],njtbx);
+        urlwrite([url0 irisws],irisws);
     end
-    fprintf(' Getting %s\n',toolsui);
-    if(exist(toolsui,'file'))
-        if(~exist([mypath fs toolsui],'file'))
-            copyfile(which(toolsui),'.');
+    fprintf(' Getting %s\n',irisfetch);
+    if(exist(irisfetch,'file'))
+        if(~exist([mypath fs irisfetch],'file'))
+            copyfile(which(irisfetch),'.');
         end
     else
-        urlwrite([url toolsui],toolsui);
-    end
-    fprintf(' Getting %s\n',njtools);
-    if(exist(njtools,'file'))
-        if(~exist([mypath fs njtools],'file'))
-            copyfile(which(njtools),'.');
-        end
-    else
-        urlwrite([url njtools],njtools);
-    end
-    
-    % delete pre-existing directory if in Octave
-    njtbxdir=[mypath fs njtbx(1:end-4)]; % strip .zip
-    if(exist(njtbxdir,'dir') && exist('OCTAVE_VERSION','builtin')==5)
-        fprintf('Output directory exists: %s\n',njtbxdir);
-        y=rmdir(njtbxdir,'s');
-        if(~y)
-            disp('Replace All or None of the files? A/N?');
-        end
-    end
-    
-    % unpack and install njTBX
-    unzip(njtbx);
-    addpath(njtbxdir,...
-        [njtbxdir fs 'examples'],...
-        [njtbxdir fs 'njFunc'],...
-        [njtbxdir fs 'njTBX-2.0'],...
-        [njtbxdir fs 'njTBX-2.0' fs 'Utilities']);
-    ok=~savepath;
-    if(~ok)
-        warning('seizmo:webinstall_njtbx:noWritePathdef',...
-            'Cannot save path!');
+        urlwrite([url1 irisfetch],irisfetch);
     end
     
     % check that java pkg is installed
@@ -139,45 +94,36 @@ try
     end
     
     % install jars to classpath
-    toolsuijar=[mypath fs toolsui];
-    njtoolsjar=[mypath fs njtools];
+    iriswsjar=[mypath fs irisws];
     sjcp=which('classpath.txt');
     if(isempty(sjcp))
-        %warning('seizmo:webinstall_njtbx:noJavaClassPath',...
+        %warning('seizmo:webinstall_irisws:noJavaClassPath',...
         %    'Octave has no classpath.txt to save .jar files!');
         
         % no classpath.txt so add to dynamic path
-        if(java_in_octave && ~ismember(toolsuijar,javaclasspath))
-            javaaddpath(toolsuijar);
-        end
-        if(java_in_octave && ~ismember(njtoolsjar,javaclasspath))
-            javaaddpath(njtoolsjar);
+        if(java_in_octave && ~ismember(iriswsjar,javaclasspath))
+            javaaddpath(iriswsjar);
         end
     else
         % read classpath.txt
         s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
         
         % detect offending classpath.txt lines
-        injcp(1)=any(~cellfun('isempty',strfind(s2,toolsuijar)));
-        injcp(2)=any(~cellfun('isempty',strfind(s2,njtoolsjar)));
+        injcp(1)=any(~cellfun('isempty',strfind(s2,iriswsjar)));
         
         % only add if not there already
-        if(sum(injcp)<2)
+        if(sum(injcp)<1)
             fid=fopen(sjcp,'a+');
             if(fid<0)
-                warning('seizmo:webinstall_njtbx:noWriteClasspath',...
-                    ['Cannot edit classpath.txt! Adding njTBX jars ' ...
+                warning('seizmo:webinstall_irisws:noWriteClasspath',...
+                    ['Cannot edit classpath.txt! Adding IRISWS jar ' ...
                     'to dynamic java class path!']);
-                if(~ismember(toolsuijar,javaclasspath))
-                    javaaddpath(toolsuijar);
-                end
-                if(~ismember(njtoolsjar,javaclasspath))
-                    javaaddpath(njtoolsjar);
+                if(~ismember(iriswsjar,javaclasspath))
+                    javaaddpath(iriswsjar);
                 end
             else
                 fseek(fid,0,'eof');
-                if(~injcp(1)); fprintf(fid,'%s\n',toolsuijar); end
-                if(~injcp(2)); fprintf(fid,'%s\n',njtoolsjar); end
+                if(~injcp(1)); fprintf(fid,'%s\n',iriswsjar); end
                 fclose(fid);
             end
         end

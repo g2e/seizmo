@@ -2,7 +2,7 @@ function [events]=readndk_slow(file,flag)
 %READNDK_SLOW    Reads a GlobalCMT Project NDK text file into a struct
 %
 %    Usage:    events=readndk_slow(file)
-%              events=readndk(string,true)
+%              events=readndk_slow(string,true)
 %
 %    Description:
 %     EVENTS=READNDK_SLOW(FILE) reads in an NDK-formatted text file from
@@ -19,7 +19,9 @@ function [events]=readndk_slow(file,flag)
 %     string of an NDK file (rather than the filename) if the second input
 %     is set to logical TRUE.  The string should be the same as if the NDK
 %     file was read with READTXT (a single row char vector with linefeeds
-%     included).
+%     included).  This is useful when combined with URLREAD to directly
+%     grab info from the web rather than having to save it to your
+%     filesystem first.
 %
 %    Notes:
 %     - Details of the NDK format may be found using the Global CMT
@@ -28,90 +30,32 @@ function [events]=readndk_slow(file,flag)
 %       The file 'allorder.ndk_explained' will provide the details.
 %     - EVENTS is a scalar struct with many fields.  All fields are column
 %       vectors (either of double or cellstr type) with as many rows as
-%       events in the NDK file.  The fields of the NDK struct:
-%           catalog
-%           year
-%           month
-%           day
-%           hour
-%           minute
-%           seconds
-%           latitude
-%           longitude
-%           depth
-%           mb
-%           ms
-%           location
-%           name
-%           data1type
-%           data1nstn
-%           data1ncmp
-%           data1sper
-%           data2type
-%           data2nstn
-%           data2ncmp
-%           data2sper
-%           data3type
-%           data3nstn
-%           data3ncmp
-%           data3sper
-%           srcinvtype
-%           srcfunctype
-%           srcfuncdur
-%           centroidstring
-%           centroidtime
-%           centroidtimeerr
-%           centroidlat
-%           centroidlaterr
-%           centroidlon
-%           centroidlonerr
-%           centroiddep
-%           centroiddeperr
-%           depthtype
-%           timestamp
-%           exponent
-%           mrr
-%           mrrerr
-%           mtt
-%           mtterr
-%           mpp
-%           mpperr
-%           mrt
-%           mrterr
-%           mrp
-%           mrperr
-%           mtp
-%           mtperr
-%           version
-%           eigval1
-%           plunge1
-%           azimuth1
-%           eigval2
-%           plunge2
-%           azimuth2
-%           eigval3
-%           plunge3
-%           azimuth3
-%           scalarmoment
-%           strike1
-%           dip1
-%           rake1
-%           strik2
-%           dip2
-%           rake2
+%       events in the NDK file.  SSIDX is useful to access individual
+%       moment tensor solutions.
 %
 %    Examples:
 %     % Read in the included example NDK file:
-%     ndk=readndk_slow('mar10.ndk');
+%     ndk=readndk(which('mar10.ndk'));
 %
-%     % Extract a specific CMT (replace CMTIDX):
-%     cmt=ssidx(ndk,CMTIDX);
-%     
-%     % Import info from the CMT into some records:
-%     data=setevent(data,cmt);
+%     % Map the first 20 of them:
+%     mapcmts(ssidx(ndk,1:20),'r',.01);
+%
+%     % Now extract the 10th CMT:
+%     cmt=ssidx(ndk,10);
+%
+%     % Plot it up:
+%     plotmt3(0,0,0,cmt,...
+%         'draw',{'mt' 'nodal' 'enu' 'tpb' 'p' 's'},'fontsize',16);
+%
+%     % Read in all the QuickCMT catalog from the GlobalCMT.org website:
+%     link=['http://www.ldeo.columbia.edu/' ...
+%           '~gcmt/projects/CMT/catalog/NEW_QUICK/qcmt.ndk'];
+%     ndk=readndk(urlread(link),true);
 %
 %    See also: READSODEVENTCSV, READTXT, SETEVENT, READNDK, FINDCMTS,
-%              FINDCMT, GLOBALCMT_UPDATE, SSIDX, PARSE_ISC_ORIGIN
+%              FINDCMT, GLOBALCMT_CREATE, GLOBALCMT_UPDATE, SSIDX,
+%              PARSE_ISC_ORIGIN, READ_USGS_MT, READ_USGS_FM, PARSE_ISC_FM,
+%              URLREAD
 
 %     Version History:
 %        Mar.  6, 2009 - initial version (in SEIZMO)
@@ -123,9 +67,11 @@ function [events]=readndk_slow(file,flag)
 %        Aug.  3, 2010 - allow string input
 %        Mar.  1, 2012 - doc update
 %        Jan. 27, 2014 - abs path exist fix
+%        Feb.  9, 2014 - use readtxt, leave fieldnames out of notes, update
+%                        examples
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 15:40 GMT
+%     Last Updated Feb.  9, 2014 at 15:40 GMT
 
 % todo:
 
@@ -135,39 +81,12 @@ error(nargchk(0,2,nargin));
 % default flag
 if(nargin<2 || isempty(flag)); flag=false; end
 
-% directory separator
-fs=filesep;
-
 % skip if string input
 if(~flag)
-    % graphical selection
-    if(nargin<1 || isempty(file))
-        [file,path]=uigetfile(...
-            {'*.ndk;*.NDK' 'NDK Files (*.ndk,*.NDK)';
-            '*.*' 'All Files (*.*)'},...
-            'Select NDK File');
-        if(isequal(0,file))
-            error('seizmo:readndk_slow:noFileSelected',...
-                'No input file selected!');
-        end
-        file=[path fs file];
-    else % check file
-        if(~isstring(file))
-            error('seizmo:readndk_slow:fileNotString',...
-                'FILE must be a string!');
-        end
-        if(~isabspath(file)); file=[pwd fs file]; end
-        if(~exist(file,'file'))
-            error('seizmo:readndk_slow:fileDoesNotExist',...
-                'CSV File: %s\nDoes Not Exist!',file);
-        elseif(exist(file,'dir'))
-            error('seizmo:readndk_slow:dirConflict',...
-                'CSV File: %s\nIs A Directory!',file);
-        end
-    end
-    
     % read in ndk file
-    txt=readtxt(file);
+    if(nargin<1); file=[]; end
+    txt=readtxt(file,{'*.ndk;*.NDK' 'NDK Files (*.ndk,*.NDK)';
+        '*.*' 'All Files (*.*)'});
 else
     % just copy file to txt
     if(nargin<1 || isempty(file) || ~isstring(file))

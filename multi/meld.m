@@ -6,6 +6,7 @@ function [data]=meld(data,varargin)
 %              data=meld(...,'toleranceunits',units,...)
 %              data=meld(...,'adjust',method,...)
 %              data=meld(...,'overlap',method,...)
+%              data=meld(...,'unevenoverlap',method,...)
 %              data=meld(...,'gap',method,...)
 %              data=meld(...,'shiftmax',value,...)
 %              data=meld(...,'shiftunits',units,...)
@@ -29,8 +30,10 @@ function [data]=meld(data,varargin)
 %     identical to one another (see options REQUIREDCHARFIELDS and
 %     REQUIREDREALFIELDS for a list of those).  By default the records are
 %     merged end-to-end so no data is added or deleted -- just shifted to
-%     be continuous in time.  Basically this is for eliminating small
-%     gaps & overlaps (aka "time tears") associated with digitization.
+%     be continuous in time.  Basically this is for merging data that is
+%     already continuous as well as for eliminating small gaps & overlaps
+%     (aka "time tears") associated with clock drift and digitization which
+%     do not reflect the amount of drift over the data being merged.
 %
 %     DATA=MELD(...,'TOLERANCEUNITS',UNITS,...) allows changing the
 %     units of the TOLERANCE option.  By default UNITS is 'SECONDS'.  This
@@ -38,12 +41,18 @@ function [data]=meld(data,varargin)
 %     samples) if that is more useful.
 %
 %     DATA=MELD(...,'TOLERANCE',TOLERANCE,...) allows changing the
-%     magnitude of the time tears that can be merged.  Setting TOLERANCE to
-%     0.1 will therefore allow merging records with a gap or overlap within
-%     +/-0.1 seconds.  TOLERANCE can also be a two-element vector, so that
-%     gaps or overlaps around a certain magnitude can be targeted.  This is
-%     particularly suited for removing leap seconds that have been inserted
-%     into what should be continuous data.
+%     magnitude of the time tears that can be merged.  The default value
+%     for TOLERANCE is 0.02 seconds (you can change the units of TOLERANCE
+%     using the TOLERANCEUNITS option above).  This will limit the merges
+%     to records that are within 0.02 seconds of being continuous (so gaps
+%     and overlaps of up to 0.02 seconds are worked on).  Setting TOLERANCE
+%     to 0.1 will therefore allow merging records with a gap or overlap
+%     of up to 0.1 seconds (assuming option TOLERANCEUNITS is 'SECONDS').
+%     TOLERANCE can also be a two-element vector, so that gaps or overlaps
+%     around a certain magnitude can be targeted (use only positive numbers
+%     as all time tears have a positive value).  This is particularly
+%     suited for removing leap seconds that have been inserted into what
+%     should be continuous data (see the Examples section below).
 %
 %     DATA=MELD(...,'ADJUST',METHOD,...) allows changing which record
 %     out of a mergible pair is shifted/interpolated to time-align with the
@@ -54,23 +63,36 @@ function [data]=meld(data,varargin)
 %     method probably varies with the situation.
 %
 %     DATA=MELD(...,'OVERLAP',METHOD,...) allows changing how
-%     overlaps are merged.  There are 4 choices: 'SEQUENTIAL', 'TRUNCATE',
-%     'ADD', & 'AVERAGE'.  The default is 'SEQUENTIAL', which shifts the
-%     timing of one of the records (as chosen by the ADJUST option) so they
-%     no longer overlap and then combines the two records.  This is useful
-%     for cases where the data is actually continuous but a time tear was
-%     inserted to deal with accrued time error over a longer time section
-%     than the records that are being merged.  The 'TRUNCATE' option allows
-%     for deleting overlapping data from one of the records (as chosen by
-%     the ADJUST option).  This is useful for merging records that do have
-%     some redundant data.  The 'ADD' option will merge the records much
-%     like the 'TRUNCATE' method, but rather than dropping the overlapping
-%     data from one of the records the data is numerically added to the
-%     other records' data in the overlapping segment.  This is useful for
-%     sequential records that have been filtered (to allow adding the final
+%     overlaps are merged.  There are 5 choices: 'SEQUENTIAL', 'TRUNCATE',
+%     'ADD', 'AVERAGE' & 'BLEND'.  The default is 'SEQUENTIAL', which
+%     shifts the timing of one of the records (as chosen by the ADJUST
+%     option) so they no longer overlap and then combines the two records.
+%     This is useful for cases where the data is actually continuous but a
+%     time tear was inserted to deal with accrued time error over a longer
+%     time section than the records that are being merged (like if the
+%     digitizer has a clock drift).  The 'TRUNCATE' option allows for
+%     deleting overlapping data from one of the records (as chosen by the
+%     ADJUST option).  This is useful for merging records that do have some
+%     redundant data (this does happen for data from IRIS).  The 'ADD'
+%     option will merge the records much like the 'TRUNCATE' method, but
+%     rather than dropping the overlapping data from one of the records,
+%     the data is numerically added to the other records' data in the
+%     overlapping segment.  This method is useful for merging what once
+%     were sequential records that have been filtered with the final
+%     conditions appended to those records (so that this will add the final
 %     conditions to adjacent records).  The 'AVERAGE' option does a simple
 %     average of the data in the overlapping segment so the records mend
-%     together better.  This might be useful for some situations.
+%     together better.  This might be useful for some situations but seems
+%     like a bad idea to me.  The 'BLEND' option is like the 'AVERAGE'
+%     option but with a linear blend over the overlap to improve the
+%     transition.  Like 'AVERAGE' this method seems like a bad idea to me
+%     but you are the expert!
+%
+%     DATA=MELD(...,'UNEVENOVERLAP',METHOD,...) allows changing how
+%     repeated points of uneven records are merged.  There are 4 choices:
+%     'TRUNCATE', 'ADD', 'AVERAGE' & 'IGNORE'.  The default is 'TRUNCATE'.
+%     The 'IGNORE' method keeps all the repeated points.  See the OVERLAP
+%     option above for more details on the other methods.
 %
 %     DATA=MELD(...,'GAP',METHOD,...) allows changing how gaps are
 %     merged.  There are three choices: 'SEQUENTIAL' 'INTERPOLATE' and
@@ -86,10 +108,11 @@ function [data]=meld(data,varargin)
 %     This is useful for combining data with large gaps.  The filler can be
 %     changed with the FILLER option.
 %
-%     DATA=MELD(...,'SHIFTMAX',MAXVALUE,...) allows changing the cap
-%     on when the record-to-be-adjusted (see ADJUST option) is interpolated
-%     or shifted to align (interval-wise) with the other record.  This
-%     option only applies to the overlaps and gaps that ARE NOT to be made
+%     DATA=MELD(...,'SHIFTMAX',MAXVALUE,...) allows changing the threshold
+%     on when the remaining portion (the part which is not overlapping) of
+%     a record-to-be-adjusted (see ADJUST option) is interpolated or
+%     shifted to align (interval-wise) with the other record.  This option
+%     only applies to the overlaps and gaps that ARE NOT to be made
 %     sequential.  This means that if you are doing a truncation, gap
 %     interpolation or gap filling this IS in effect.  A record in these
 %     cases can be shifted at most one half the sample interval.  By
@@ -97,11 +120,11 @@ function [data]=meld(data,varargin)
 %     only shifted in time (without changing the dependent data) if the
 %     time change necessary to align is less than a hundredth of the sample
 %     interval.  Otherwise the data will be interpolated at the aligned
-%     sample times (which is obviously slow due to the computation).  A
+%     sample times (which is obviously slower due to the computation).  A
 %     MAXVALUE of 0.5 intervals will always shift the data to the new times
 %     without interpolating new values.  Really the choice depends on how
 %     sensitive you think your data is to time shifts and/or how much you
-%     trust the timing of the adjusted record.  If your trying to get
+%     trust the timing of the adjusted record.  If you're trying to get
 %     relative arrival times of P recordings then you probably are worried
 %     about minor shifts in timing (which begs the question of why you are
 %     dealing with such crappy data in the first place).  The default is
@@ -114,27 +137,29 @@ function [data]=meld(data,varargin)
 %     be changed to 'SECONDS' if that is more useful.
 %
 %     DATA=MELD(...,'INTERPOLATE',METHOD,...) allows changing the
-%     interpolation method.  The choices are basically those allowed in
-%     Matlab's INTERP1 command: 'spline' 'pchip' 'linear' and 'nearest'.
-%     The default is 'spline', which is continuous in the 1st and 2nd
-%     derivatives.  Look out for artifacting if you use one of the other
-%     options and are going to differentiate the data later.
+%     interpolation method.  The choices are those allowed by the INTERP1
+%     command: 'spline' 'pchip' 'linear' and 'nearest'.  The default is
+%     'spline', which is continuous in the 1st and 2nd derivatives.  Look
+%     out for artifacting if you use one of the other options and are going
+%     to differentiate the data later.
 %
 %     DATA=MELD(...,'FILLER',FILLER,...) allows changing the filler
 %     when the GAP option is set to 'FILL'.  The default is zero.  Can be
-%     any real number.
+%     any real number or NaN.
 %
 %     DATA=MELD(...,'ONLY',TYPE,...) allows specifying which type of time
 %     tear is merged: 'sequential' 'gaps' or 'overlaps'.  The default is []
 %     (empty) and allows all types.  Do not use the ONLY option with the
-%     SKIP option.  Note that 'sequential' means records that are already
-%     sequential, not gaps/overlaps to be made sequential!
+%     SKIP option.  Note that 'sequential' applies to records that are
+%     already sequential (have a time tear of 0), not gaps/overlaps to be
+%     made sequential!
 %
 %     DATA=MELD(...,'SKIP',TYPE,...) allows specifying which type of time
 %     tear is skipped: 'sequential' 'gaps' or 'overlaps'.  The default is
 %     [] (empty) and skips none.  Do not use the SKIP option with the ONLY
-%     option.  Note that 'sequential' means records that are already
-%     sequential, not gaps/overlaps to be made sequential!
+%     option.  Note that 'sequential' only applies to records that are
+%     already sequential (have a time tear of 0), not gaps/overlaps to be
+%     made sequential!
 %
 %     DATA=MELD(...,'USEABSOLUTETIMING',LOGICAL,...) allows turning
 %     on/off the usage of the reference time fields to figure out the
@@ -144,15 +169,22 @@ function [data]=meld(data,varargin)
 %
 %     DATA=MELD(...,'TIMING',STANDARD,...) allows changing the timing
 %     standard assumed for the reference time.  The choices are: 'UTC' and
-%     'TAI'.  The default is 'UTC', which has leap second awareness.  This
-%     is useful for dealing with data that have had UTC leap seconds
-%     properly inserted (basically MELD won't even see the data "overlap"
-%     because UTC times are converted to a leapless standard).  Proper
-%     handling of leap seconds requires that the records' have their
-%     reference time at the actual UTC time.  If the recording equipment
-%     doesn't actually handle leap seconds then some time adjustment is/was
-%     needed for the data.  See LEAPSECONDS for more info.  The 'TAI'
-%     option is useful for data without leap second concerns.
+%     'TAI'.  The default is 'UTC' (oddly the standard used by digitizers,
+%     databases and data formats) and does have UTC leap second awareness.
+%     This is useful for merging data that have had UTC leap seconds
+%     properly inserted (MELD actually won't even see the data "overlap"
+%     often shown in programs that don't have leap second awareness because
+%     the UTC times are converted to a leapless standard to carry out the
+%     merge).  Proper handling of leap seconds requires that the records'
+%     have their reference time at the actual UTC time.  If the recording
+%     equipment doesn't actually handle leap seconds (and is thus a second
+%     off until the clock is updated) then records after a leap second will
+%     have a reference time 1 second early (because all leap seconds thus
+%     far have been an additional second).  Some manual time adjustment may
+%     be needed for the data if this is the case or see the Examples
+%     section below for a simple usage form to deal exclusively with these
+%     problematic time tears.  See LEAPSECONDS for even more info.  The
+%     'TAI' option is useful for data without leap second concerns.
 %
 %     DATA=MELD(...,'REQUIREDCHARFIELDS',FIELDS,...) allows changing
 %     the character fields required to be equal between records before
@@ -162,9 +194,9 @@ function [data]=meld(data,varargin)
 %     DATA=MELD(...,'REQUIREDREALFIELDS',FIELDS,...) allows changing
 %     the numerical fields required to be equal between records before
 %     checking if they can be merged.  The list must be a cellstring array.
-%     The default is: {'delta' 'cmpinc' 'cmpaz'}.  Note that LEVEN and NCMP
-%     are also required but cannot be removed from the list.  Removing
-%     DELTA from the list will allow creation of unevenly sampled records.
+%     The default is: {'cmpinc' 'cmpaz'}.  Note that LEVEN and NCMP are
+%     also required but cannot be removed from the list.  Adding DELTA to
+%     the list will prevent creation of unevenly sampled records.
 %
 %     DATA=MELD(...,'ALLOCATE',SIZE,...) sets the temporary space
 %     initially allocated for merged records.  This is just a guess of the
@@ -180,22 +212,28 @@ function [data]=meld(data,varargin)
 %
 %    Notes:
 %     - MELD is a rather complicated function 'under the hood' as it tries
-%       to allow for most of the sane ways I could come up with to combine
-%       records.  The defaults should be good for the most common cases but
-%       if you have a more complicated situation, MELD (hopefully) can
-%       save you some time. Good luck!
+%       to allow for most of the sane to pathological ways I could come up
+%       with to combine records.  The defaults should be good for the most
+%       common case that the records should be continuous but if you have
+%       you are faced with a more complicated situation, MELD likely can
+%       save you some effort. Good luck!
 %     - Biggest caveat -- merging multiple records together can return with
 %       different solutions depending on the order of the records.  This is
-%       because each merge operation is separate from the next.  So which
-%       records gets truncated, shifted, interpolated, or left alone
-%       depends on the order in which the records are processed (starts at
-%       the lower indices) and the ADJUST option.  So you may want to
-%       consider preparing the data a bit before using meld if you are
-%       merging 3+ into 1+ records.  Sorting by start time would probably
-%       be enough.
-%     - Run FIXDELTA first to take care of small differences in sample
-%       rates caused by floating point inaccuracies & digitization!
-%     - If you find an error you don't understand or a bug let me know!
+%       because each merge operation is separate from the next (it works on
+%       one pair of records at a time).  So which records gets truncated,
+%       shifted, interpolated, or left alone depends on the order in which
+%       the records are processed (starts at the lower indices) and the
+%       ADJUST option.  So you may want to consider preparing the data a
+%       bit before using meld if you are merging 3+ into 1+ records.
+%       Sorting by start time and setting ADJUST to 'FIRST' would be enough
+%       to give you a consistent result.
+%     - Running FIXDELTA first to take care of small differences in sample
+%       rates caused by floating point inaccuracies & clock drift allows
+%       you to avoid the headache of handling merged data with variable
+%       samplerates.  Using FIXDELTA can introduce timing issues though if
+%       the clock drift is significant so user beware!
+%     - If you receive an error while using MELD that you don't understand
+%       or find a bug let me know.
 %     - Want to speed MELD up?
 %       - Are your reference times all the same? If yes, set
 %         USEABSOLUTETIMING to FALSE.
@@ -203,7 +241,8 @@ function [data]=meld(data,varargin)
 %       - Do you care about timing accuracy? If not too much, then consider
 %         setting SHIFTMAX to 0.5 (with SHIFTUNITS set to INTERVALS).  This
 %         allows nudging the timing of records by half an interval so that
-%         they time-align without interpolating the data.  BIG speed jump.
+%         they time-align without interpolating the data.  BIG speed jump
+%         for the working with data that doesn't fit the default options.
 %
 %    Header changes: B, E, NPTS, DEPMEN, DEPMIN, DEPMAX
 %                    (see CHECKHEADER for more)
@@ -218,8 +257,16 @@ function [data]=meld(data,varargin)
 %     % Merge gaps by inserting NaNs:
 %     data=meld(data,'gap','fill','filler',nan);
 %
-%     % Merge details (lots):
+%     % Merge details (there is a lot!):
 %     meld(data,'debug',true);
+%
+%     % Make & merge some data with different sample rates and overlap:
+%     data=bseizmo(0:.1:1,rand(1,11),...
+%                  1.1:.101:2.2,rand(1,11),...
+%                  .5:.1:1.5,rand(1,11));
+%     data=ch(data,'kstnm','R1');
+%     mdata=merge(data,'debug',true);
+%     plot0([data;mdata]);
 %
 %     % Compare defaults settings to fast (& cruder) options:
 %     tic; meld(data); toc;
@@ -256,13 +303,17 @@ function [data]=meld(data,varargin)
 %        Feb. 14, 2013 - use strcmpi for consistency (fixes a big bug in
 %                        TIMING option (would treat 'UTC' as 'TAI' b/c it
 %                        was not matching 'utc')
+%        Feb. 20, 2014 - doc update, drop delta from requiredrealfields,
+%                        progress bar now reprints to avoid clobbering
+%                        debugging output, unevenoverlap option, uneven &
+%                        multi-rate merging
+%        Feb. 22, 2014 - overlap blend method, unevenoverlap ignore method
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2013 at 15:05 GMT
+%     Last Updated Feb. 22, 2014 at 15:05 GMT
 
 % todo:
-% - uneven support - just toss together and sort after?
-% - variable delta support (convert to uneven then do above?)
+% - ignore unevenoverlap method
 
 % check nargin
 if(mod(nargin-1,2))
@@ -366,12 +417,12 @@ try
 
     % debug
     if(option.DEBUG)
-        disp('Group IDs:')
-        disp(f);
-        disp(' ');
-        disp('Lookup Table:')
+        fprintf('Group IDs:\n')
+        tmpids=strcat(num2str((1:ngrp)'),{'. '},f);
+        fprintf('%s\n',tmpids{:});
+        fprintf('\nLookup Table:\n')
+        fprintf('(Record # - Group #)\n');
         fprintf('%d - %d\n',[1:nrecs; h.']);
-        fprintf('\n');
     end
     
     % detail message
@@ -392,25 +443,27 @@ try
 
         % detail message
         if(option.DEBUG)
-            disp(' '); disp(' ');
-            fprintf('Processing Group: %d\n',i);
-            disp(['Members: ' sprintf('%d ',gidx)]);
-            fprintf('Number in Group: %d\n',ng);
+            fprintf('\nProcessing Group: %d\n',i);
+            fprintf('Members: ');
+            fprintf('%d ',gidx);
+            fprintf('\nNumber in Group: %d\n',ng);
         end
 
-        % find any exact duplicates
+        % find any exact timespan duplicates
+        % - Assumes the underlying data is the same.
+        %   - I could use dep* to check for this.
         bad=flagexactdupes(ab(gidx,:),ae(gidx,:));
 
         % detail message
         if(option.DEBUG)
-            disp(' ');
-            disp('Deleting Duplicate(s):');
-            fprintf(' %d',gidx(bad));
-            fprintf('\n');
-            fprintf('Number Still in Group: %d\n',ng-sum(bad));
+            if(any(bad))
+                fprintf('\nDeleting Duplicate(s):\n');
+                fprintf(' %d',gidx(bad));
+                fprintf('\nNumber Still in Group: %d\n',ng-sum(bad));
+            end
         end
 
-        % get rid of any exact duplicates
+        % get rid of any exact timespan duplicates
         destroy(gidx(bad))=true;
         ng=ng-sum(bad);
         gidx(bad)=[];
@@ -418,76 +471,100 @@ try
         % no records to merge with
         if(ng==1)
             % detail message
-            if(option.VERBOSE); print_time_left(cumpop(i),nrecs); end
+            if(option.VERBOSE)
+                if(option.DEBUG)
+                    print_time_left(cumpop(i),nrecs,true);
+                else
+                    print_time_left(cumpop(i),nrecs);
+                end
+            end
             continue;
         end
-
-        % handle uneven / differing sample rates (NEEDS TO BE WRITTEN)
-        if(any(~leven(gidx)) || numel(unique(delta(gidx)))~=1)
-            % debug
-            %any(~leven(gidx))
-            %numel(unique(delta(gidx)))~=1
-            %die
-
-            % what to do?
-            % - pass to mseq as if perfect
-            % - meld .ind
-            % - sort by .ind
-            % - if diff .ind==0 whine
-            error('seizmo:meld:unevenUnsupported',...
-                ['Merging Uneven Records or Records with differing\n'...
-                'DELTA is unsupported at the moment!']);
-            [data,ab,ae,npts,dt,name]=mseq(...
-                data,ab,ae,delta,npts,dt,option,first,idx,name,varargin);
-            % uneven flag
-            % gomeld_uneven
-        end
-
-        % all the same delta so share
-        gdelta=delta(gidx(1));
-
+        
         % separate arrays for adding new info
         history=num2cell(gidx).';
         newgidx=gidx;
+        newidx=nrecs+1;
         newng=ng;
 
-        % loop until no files left unattempted
-        attempted=npts(gidx)==0; % skip dataless
-        newidx=nrecs+1;
-        while(any(~attempted))
-            % get an unattempted file
-            j=find(~attempted,1,'first');
-
-            % go meld with other records
-            [data(newidx),ab(newidx,:),ae(newidx,:),npts(newidx),...
-                dt(newidx,:),fullname(newidx),newhistory]=gomeld(...
-                data(gidx(j)),ab(gidx(j),:),ae(gidx(j),:),npts(gidx(j)),...
-                dt(gidx(j),:),fullname(gidx(j)),history(j),newidx,...
-                data(gidx),ab(gidx,:),ae(gidx,:),npts(gidx),dt(gidx,:),...
-                fullname(gidx),ng,history(1:ng),gidx,gdelta,option);
-
-            % check meld history
-            if(isequal(newhistory,history(j)))
-                attempted(j)=true;
+        % handle uneven / differing sample rates (NEEDS TO BE WRITTEN)
+        if(~leven(gidx(1)) || numel(unique(delta(gidx)))~=1)
+            % even or uneven?
+            if(leven(gidx(1)))
+                % detail message
+                if(option.DEBUG)
+                    fprintf('Group has multiple samplerates!\n');
+                end
+                
+                % make even records uneven
+                for j=1:ng
+                    data(gidx(j)).ind=b(gidx(j))+(0:delta(gidx(j)):...
+                        delta(gidx(j))*(npts(gidx(j))-1))';
+                end
             else
-                newng=newng+1;
-                attempted(ismember(gidx,[newhistory{:}]))=true;
-                newgidx(newng)=newidx;
-                delta(newidx)=gdelta;
-                history(newng)=newhistory;
-                depmin(newidx)=min(data(newidx).dep(:));
-                depmax(newidx)=max(data(newidx).dep(:));
-                depmen(newidx)=nanmean(data(newidx).dep(:));
-                newidx=newidx+1;
+                % detail message
+                if(option.DEBUG)
+                    fprintf('Group has uneven sampling!\n');
+                end
+            end
+            
+            % combine into 1 record with special handling for repeated pts
+            [data(newidx),ab(newidx,:),ae(newidx,:),npts(newidx),...
+                dt(newidx,:),fullname(newidx),history(newidx)]=...
+                gomeld_uneven(data(gidx),ab(gidx,:),ae(gidx,:),...
+                npts(gidx),dt(gidx,:),fullname(gidx),gidx,ng,option);
+            
+            % update arrays
+            newng=newng+1;
+            newgidx(newng)=newidx;
+            delta(newidx)=diff(data(newidx).ind([end 1]))/(npts(newidx)-1);
+            depmin(newidx)=min(data(newidx).dep(:));
+            depmax(newidx)=max(data(newidx).dep(:));
+            depmen(newidx)=nanmean(data(newidx).dep(:));
+            leven(newidx)=false;
+        else
+            % all the same delta so share
+            gdelta=delta(gidx(1));
+            
+            % loop until no files left unattempted
+            attempted=npts(gidx)==0; % skip dataless
+            while(any(~attempted))
+                % get an unattempted file
+                j=find(~attempted,1,'first');
+                
+                % go meld with other records
+                [data(newidx),ab(newidx,:),ae(newidx,:),npts(newidx),...
+                    dt(newidx,:),fullname(newidx),newhistory]=gomeld(...
+                    data(gidx(j)),ab(gidx(j),:),ae(gidx(j),:),...
+                    npts(gidx(j)),dt(gidx(j),:),fullname(gidx(j)),...
+                    history(j),newidx,data(gidx),ab(gidx,:),ae(gidx,:),...
+                    npts(gidx),dt(gidx,:),fullname(gidx),ng,...
+                    history(1:ng),gidx,gdelta,option);
+                
+                % check meld history
+                if(isequal(newhistory,history(j)))
+                    attempted(j)=true;
+                else
+                    newng=newng+1;
+                    attempted(ismember(gidx,[newhistory{:}]))=true;
+                    newgidx(newng)=newidx;
+                    delta(newidx)=gdelta;
+                    history(newng)=newhistory;
+                    depmin(newidx)=min(data(newidx).dep(:));
+                    depmax(newidx)=max(data(newidx).dep(:));
+                    depmen(newidx)=nanmean(data(newidx).dep(:));
+                    leven(newidx)=true;
+                    newidx=newidx+1;
+                end
             end
         end
 
         % detail message
         if(option.DEBUG)
-            disp(' ');
             fprintf('Finished Merging Group: %d\n',i);
-            disp(['Members: ' sprintf('%d ',newgidx)]);
-            fprintf('Number in Group: %d\n',newng);
+            fprintf('Members: ');
+            fprintf('%d ',newgidx);
+            fprintf('\nNumber in Group: %d\n',newng);
         end
 
         % get longest records with unique time coverage
@@ -498,12 +575,12 @@ try
 
         % detail message
         if(option.DEBUG)
-            disp('Deleting Duplicate(s) and/or Partial Piece(s):');
+            fprintf('Deleting Duplicate(s) and/or Partial Piece(s):\n');
             fprintf(' %d',newgidx(~good));
-            disp('\nChanging Indices Of Good Record(s):');
+            fprintf('\nChanging Indices Of Good Record(s):\n');
             fprintf('%d ==> %d\n',[newgidx(good).'; ...
                 newgidx(goodidx).']);
-            disp('\n-------------------------------');
+            fprintf('-------------------------------\n');
             fprintf('%d kept / %d made / %d original\n',...
                 ngood,newng-ng,origng);
         end
@@ -517,11 +594,18 @@ try
         depmin(newgidx(goodidx))=depmin(newgidx(good));
         depmax(newgidx(goodidx))=depmax(newgidx(good));
         depmen(newgidx(goodidx))=depmen(newgidx(good));
+        leven(newgidx(goodidx))=leven(newgidx(good));
         dt(newgidx(goodidx),:)=dt(newgidx(good),:);
         destroy(newgidx(ngood+1:end))=true;
         
         % detail message
-        if(option.VERBOSE); print_time_left(cumpop(i),nrecs); end
+        if(option.VERBOSE)
+            if(option.DEBUG)
+                print_time_left(cumpop(i),nrecs,true);
+            else
+                print_time_left(cumpop(i),nrecs);
+            end
+        end
     end
 
     % trim off temp space
@@ -535,6 +619,7 @@ try
     depmin(nrecs+1:end)=[];
     depmax(nrecs+1:end)=[];
     depmen(nrecs+1:end)=[];
+    leven(nrecs+1:end)=[];
 
     % get relative times from absolute
     if(option.USEABSOLUTETIMING)
@@ -556,7 +641,7 @@ try
 
     % update header
     data=changeheader(data,'b',b,'e',e,'delta',delta,'npts',npts,...
-        'depmin',depmin,'depmax',depmax,'depmen',depmen);
+        'depmin',depmin,'depmax',depmax,'depmen',depmen,'leven',leven);
 
     % remove unwanted data
     data(destroy)=[];
@@ -576,14 +661,114 @@ end
 end
 
 
-function []=muneven()
-%MUNEVEN    Merge unevenly spaced records
+function [mdata,mab,mae,mnpts,mdt,mname,mhistory]=gomeld_uneven(...
+    data,ab,ae,npts,dt,name,gidx,ng,option)
+%GOMELD_UNEVEN    Merge unevenly spaced records
 
-% force all to be uneven (makeuneven)
-% meld .ind & dep
-% sort by .ind
-% if diff .ind==0 whine
-% deal with history, 
+% detail message
+if(option.DEBUG)
+    fprintf('\nMerging Uneven/Multi-Rate Records:\n');
+    for i=1:ng
+        fprintf(' %d - %s\n',gidx(i),name{i});
+    end
+end
+
+% history is sorted by time order
+[mhistory,mhistory]=sortrows(ab);
+
+% Define succession based on ADJUST
+switch lower(option.ADJUST)
+    case 'first'
+        king=flipud(mhistory);
+    case 'last'
+        king=mhistory;
+    case 'longer'
+        [king,king]=sort(npts,[],'descend');
+    case 'shorter'
+        [king,king]=sort(npts);
+    case 'one'
+        [king,king]=sort(gidx,[],'descend');
+    otherwise % two
+        [king,king]=sort(gidx);
+end
+
+% get reference times in mod serial
+if(option.USEABSOLUTETIMING)
+    if(strcmpi(option.TIMING,'utc'))
+        az=gregorian2modserial(utc2tai([dt(:,1:4) dt(:,5)+dt(:,6)/1000]));
+    else
+        az=gregorian2modserial([dt(:,1:4) dt(:,5)+dt(:,6)/1000]);
+    end
+else
+    az=zeros(nrecs,2);
+end
+
+% adjust .ind of subjects to be relative to the king
+tdiff=(az(:,1)-az(king(1),1))*86400+(az(:,2)-az(king(1),2));
+for i=1:ng
+    data(i).ind=data(i).ind+tdiff(i);
+end
+    
+% the king has a prince
+mdata=data(king(1));
+mab=ab(mhistory(1),:);
+mae=sortrows(ae);
+mae=mae(end,:);
+mdt=dt(king(1),:);
+mname=name(king(1));
+mnpts0=sum(npts); % assuming no overlap
+mdata.dep=cat(1,data(king).dep);
+mdata.ind=cat(1,data(king).ind);
+
+% how does the prince deal with disputes
+switch lower(option.UNEVENOVERLAP)
+    case 'truncate'
+        % the prince solves the dispute based on nobility
+        [mdata.ind,idx]=unique(mdata.ind,'first');
+        mdata.dep=mdata.dep(idx);
+    case 'add'
+        % the prince puts the disputed positions together
+        [times,idx]=sort(mdata.ind);
+        uidx=[find(diff(times)); numel(times)]; % last occurance
+        mdata.ind=times(uidx);
+        deps=mdata.dep(idx);
+        deps=deps(uidx);
+        n=histc(times,mdata.ind);
+        i=mat2cell(idx,n);
+        for a=find(n>1)'
+            deps(a)=sum(mdata.dep(i{a}));
+        end
+        mdata.dep=deps;
+    case 'average'
+        % the prince comprimises between the disputes
+        [times,idx]=sort(mdata.ind);
+        uidx=[find(diff(times)); numel(times)]; % last occurance
+        mdata.ind=times(uidx);
+        deps=mdata.dep(idx);
+        deps=deps(uidx);
+        n=histc(times,mdata.ind);
+        i=mat2cell(idx,n);
+        for a=find(n>1)'
+            deps(a)=sum(mdata.dep(i{a}))/n(a);
+        end
+        mdata.dep=deps;
+    case 'ignore'
+        % the prince lets the dispute continue
+        [mdata.ind,idx]=sort(mdata.ind);
+        mdata.dep=mdata.dep(idx);
+end
+
+% update npts
+mnpts=numel(mdata.dep);
+
+% detail message
+if(option.DEBUG)
+    fprintf('%d Redundant Time Points Removed Using\n',mnpts0-mnpts);
+    fprintf('UNEVENOVERLAP Method: %s\n',upper(option.UNEVENOVERLAP));
+end
+
+% the prince's geneology
+mhistory={gidx(mhistory)'};
 
 end
 
@@ -591,6 +776,7 @@ end
 function [mdata,mab,mae,mnpts,mdt,mname,mhistory]=gomeld(...
     mdata,mab,mae,mnpts,mdt,mname,mhistory,mabsidx,...
     data,ab,ae,npts,dt,name,nrecs,history,absidx,delta,option)
+%GOMELD    Merge evenly spaced records
 
 % if record is unmerged then identify as the original
 if(isscalar([mhistory{:}])); idx=[mhistory{:}];
@@ -609,6 +795,8 @@ for i=1:nrecs
     tdiff(2)=-delta+(mab(1)-ae(i,1))*86400+(mab(2)-ae(i,2));
     
     % use minimum shift (so we don't try to meld in strange ways)
+    % lead = 1, record is after
+    % lead = 2, record is before
     [lead,lead]=min(abs(tdiff));
     tdiff=tdiff(lead);
     
@@ -992,7 +1180,7 @@ switch lower(option.OVERLAP)
             end
         end
     case {'add' 'average'}
-        % add/average overlap from option.ADJUST record
+        % add/average overlap
         
         % divisor for adding (1) or averaging (2)
         d=1; if(strcmpi(option.OVERLAP,'average')); d=2; end
@@ -1043,6 +1231,57 @@ switch lower(option.OVERLAP)
                 % interpolate and add last record
                 [data,ab,ae,npts]=interpolateandavglast(...
                     data,ab,ae,delta,npts,shift,first,last,option,d);
+            end
+        end
+    case 'blend'
+        % blended average of overlap
+        
+        % detail message
+        if(option.DEBUG)
+            fprintf(...
+                ['Adjusting:  %s (%d - %s)\n'...
+                 'Adjustment: %f seconds (%f samples)\n'],...
+                option.ADJUST,idx(kill),name{kill},shift,shift/delta);
+        end
+        
+        % update
+        dt=dt(keep,:);
+        name=name(keep);
+        
+        % shift or interpolate option.ADJUST record to align?
+        if(abs(shift)<=maxshift)
+            % detail message
+            if(option.DEBUG)
+                disp('Adjust Method: shift');
+            end
+            
+            % shift which?
+            if(kill==first)
+                % shift timing and add first record
+                [data,ab,ae,npts]=shiftandblendfirst(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            else
+                % shift timing and add last record
+                [data,ab,ae,npts]=shiftandblendlast(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            end
+        else
+            % detail message
+            if(option.DEBUG)
+                fprintf(...
+                    ['Adjust Method: interpolate\n'...
+                     'Interpolate Method: %s\n'],option.INTERPOLATE);
+            end
+            
+            % interpolate which?
+            if(kill==first)
+                % interpolate and add first record
+                [data,ab,ae,npts]=interpolateandblendfirst(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
+            else
+                % interpolate and add last record
+                [data,ab,ae,npts]=interpolateandblendlast(...
+                    data,ab,ae,delta,npts,shift,first,last,option);
             end
         end
 end
@@ -1750,6 +1989,192 @@ npts=npts(1)+npts(2)-ns;
 end
 
 
+function [data,ab,ae,npts]=...
+    shiftandblendfirst(data,ab,ae,delta,npts,shift,first,last,option)
+% shift and blend data of first record
+
+% we need to shift the samples of the first record to align with the last
+% then we blend the overlapping samples from the first to the last
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of first
+sab=ab(first,:)+[0 shift];
+sae=ae(first,:)+[0 shift];
+
+% figure out number of samples dropped
+nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+e1=max(0,npts(first)-nsamples);
+b2=min(nsamples,npts(last));
+ns=b2+min(0,npts(first)-nsamples);
+
+% detail message
+if(option.DEBUG)
+    fprintf('Samples Truncated: %d\n',nsamples);
+end
+
+% combine data
+% - note that there may be partial pieces here
+data(last).dep=[data(first).dep(1:e1,:); data(last).dep(1:b2-ns,:); ...
+    (data(first).dep(e1+1:e1+ns,:).*(ns:-1:1).'...
+    +data(last).dep(b2-ns+1:b2,:).*(1:ns).')/(ns+1); ...
+    data(first).dep(e1+ns+1:end,:); data(last).dep(b2+1:end,:)];
+data(first)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial([ab(first,1) min(ab(last,2),sab(2))]);
+ae=fixmodserial([ab(first,1) max(ae(last,2),sae(2))]);
+npts=npts(1)+npts(2)-ns;
+
+end
+
+
+function [data,ab,ae,npts]=...
+    shiftandblendlast(data,ab,ae,delta,npts,shift,first,last,option)
+% shift and blend data of last record
+
+% we need to shift the samples of the last record to align with the first
+% then we blend the overlapping samples from the last to the first
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of last
+sab=ab(last,:)-[0 shift];
+sae=ae(last,:)-[0 shift];
+
+% figure out number of samples
+nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+e1=max(0,npts(first)-nsamples);
+b2=min(nsamples,npts(last));
+ns=b2+min(0,npts(first)-nsamples);
+
+% detail message
+if(option.DEBUG)
+    fprintf('Samples Added: %d\n',nsamples);
+end
+
+% combine data
+% - note that there may be partial pieces here
+data(first).dep=[data(first).dep(1:e1,:); data(last).dep(1:b2-ns,:); ...
+    (data(first).dep(e1+1:e1+ns,:).*(ns:-1:1).'...
+    +data(last).dep(b2-ns+1:b2,:).*(1:ns).')/(ns+1); ...
+    data(first).dep(e1+ns+1:end,:); data(last).dep(b2+1:end,:)];
+data(last)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial([ab(first,1) min(ab(first,2),sab(2))]);
+ae=fixmodserial([ab(first,1) max(ae(first,2),sae(2))]);
+npts=npts(1)+npts(2)-ns;
+
+end
+
+
+function [data,ab,ae,npts]=interpolateandblendfirst(...
+    data,ab,ae,delta,npts,shift,first,last,option)
+% interpolate and blend data of first record
+
+% we need to interpolate the samples of the first record to align with the
+% last, then we blend the overlapping samples from the first to the last
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of first
+sab=ab(first,:)+[0 shift];
+sae=ae(first,:)+[0 shift];
+
+% interpolate first record
+oldtimes=ab(first,2)+(0:(npts(first)-1))*delta;
+newtimes=sab(2)+(0:(npts(first)-1))*delta;
+data(first).dep=...
+    interp1(oldtimes,data(first).dep,newtimes,option.INTERPOLATE,'extrap');
+data(first).dep=data(first).dep.';
+
+% figure out number of samples
+nsamples=round(abs(ab(last,2)-sae(2)-delta)/delta);
+e1=max(0,npts(first)-nsamples);
+b2=min(nsamples,npts(last));
+ns=b2+min(0,npts(first)-nsamples);
+
+% detail message
+if(option.DEBUG)
+    fprintf('Samples Added: %d\n',nsamples);
+end
+
+% combine data
+% - note that there may be partial pieces here
+data(last).dep=[data(first).dep(1:e1,:); data(last).dep(1:b2-ns,:); ...
+    (data(first).dep(e1+1:e1+ns,:).*(ns:-1:1).'...
+    +data(last).dep(b2-ns+1:b2,:).*(1:ns).')/(ns+1); ...
+    data(first).dep(e1+ns+1:end,:); data(last).dep(b2+1:end,:)];
+data(first)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial([ab(first,1) min(ab(last,2),sab(2))]);
+ae=fixmodserial([ab(first,1) max(ae(last,2),sae(2))]);
+npts=npts(1)+npts(2)-ns;
+
+end
+
+
+function [data,ab,ae,npts]=interpolateandblendlast(...
+    data,ab,ae,delta,npts,shift,first,last,option)
+% interpolate and blend data of last record
+
+% we need to interpolate the samples of the last record to align with the
+% first, then we blend the overlapping samples from the last to the first
+
+% make sure all times share the same day
+ae(first,:)=[ab(first,1) ae(first,2)+86400*(ae(first,1)-ab(first,1))];
+ab(last,:)=[ab(first,1) ab(last,2)+86400*(ab(last,1)-ab(first,1))];
+ae(last,:)=[ab(first,1) ae(last,2)+86400*(ae(last,1)-ab(first,1))];
+
+% get shifted times of last
+sab=ab(last,:)-[0 shift];
+sae=ae(last,:)-[0 shift];
+
+% interpolate last record
+oldtimes=ab(last,2)+(0:(npts(last)-1))*delta;
+newtimes=sab(2)+(0:(npts(last)-1))*delta;
+data(last).dep=...
+    interp1(oldtimes,data(last).dep,newtimes,option.INTERPOLATE,'extrap');
+data(last).dep=data(last).dep.';
+
+% figure out number of samples
+nsamples=round(abs(sab(2)-ae(first,2)-delta)/delta);
+e1=max(0,npts(first)-nsamples);
+b2=min(nsamples,npts(last));
+ns=b2+min(0,npts(first)-nsamples);
+
+% detail message
+if(option.DEBUG)
+    fprintf('Samples Added: %d\n',nsamples);
+end
+
+% combine data
+% - note that there may be partial pieces here
+data(first).dep=[data(first).dep(1:e1,:); data(last).dep(1:b2-ns,:); ...
+    (data(first).dep(e1+1:e1+ns,:).*(ns:-1:1).'...
+    +data(last).dep(b2-ns+1:b2,:).*(1:ns).')/(ns+1); ...
+    data(first).dep(e1+ns+1:end,:); data(last).dep(b2+1:end,:)];
+data(last)=[];
+
+% set new ab, ae, npts
+ab=fixmodserial([ab(first,1) min(ab(first,2),sab(2))]);
+ae=fixmodserial([ab(first,1) max(ae(first,2),sae(2))]);
+npts=npts(1)+npts(2)-ns;
+
+end
+
+
 function [flags]=flagexactdupes(b,e)
 % flags records that start/end at the same time as another as duplicates
 
@@ -1839,7 +2264,8 @@ function [option]=parse_meld_parameters(varargin)
 
 % valid values for string options
 valid.TOLERANCEUNITS={'seconds' 'intervals'};
-valid.OVERLAP={'sequential' 'truncate' 'add' 'average'};
+valid.OVERLAP={'sequential' 'truncate' 'add' 'average' 'blend'};
+valid.UNEVENOVERLAP={'truncate' 'add' 'average' 'ignore'};
 valid.GAP={'sequential' 'interpolate' 'fill'};
 valid.INTERPOLATE={'spline' 'pchip' 'linear' 'nearest'};
 valid.ADJUST={'longer' 'shorter' 'first' 'last' 'one' 'two'};
@@ -1851,7 +2277,8 @@ valid.SKIP={'sequential' 'gaps' 'overlaps' 'seq' 's' 'g' 'o' 'ov'};
 % defaults
 option.TOLERANCE=0.02; % seconds, any positive number
 option.TOLERANCEUNITS='seconds'; % seconds/intervals
-option.OVERLAP='sequential'; % sequential/truncate/add/average
+option.OVERLAP='sequential'; % sequential/truncate/add/average/blend
+option.UNEVENOVERLAP='truncate'; % truncate/add/average/ignore
 option.GAP='sequential'; % sequential/interpolate/fill
 option.INTERPOLATE='spline'; % spline/pchip/linear/nearest
 option.ADJUST='shorter'; % longer/shorter/first/last
@@ -1861,7 +2288,7 @@ option.FILLER=0; % any number
 option.TIMING='utc'; % utc/tai
 option.USEABSOLUTETIMING=true; % true/false
 option.REQUIREDCHARFIELDS={'knetwk' 'kstnm' 'khole' 'kcmpnm'};
-option.REQUIREDREALFIELDS={'delta' 'cmpinc' 'cmpaz'};
+option.REQUIREDREALFIELDS={'cmpinc' 'cmpaz'};
 option.ALLOCATE=10; % size of temp space
 option.ONLY=[]; % sequential/gaps/overlaps
 option.SKIP=[]; % sequential/gaps/overlaps
@@ -1883,6 +2310,8 @@ for i=1:2:nargin
             option.TOLERANCEUNITS=varargin{i+1};
         case {'overlap' 'over' 'lap' 'ov'}
             option.OVERLAP=varargin{i+1};
+        case {'unevenoverlap' 'uneven' 'unover' 'unlap' 'unov'}
+            option.UNEVENOVERLAP=varargin{i+1};
         case {'gap' 'ga' 'g'}
             option.GAP=varargin{i+1};
         case {'interpolate' 'interp' 'int' 'i'}
@@ -1938,7 +2367,7 @@ for i=1:numel(fields)
                     '%s must be a scalar real number!',fields{i});
             end
         case {'overlap' 'gap' 'interpolate' 'toleranceunits' ...
-                'adjust' 'shiftunits' 'timing'}
+                'adjust' 'shiftunits' 'timing' 'unevenoverlap'}
             if(~ischar(value) || size(value,1)~=1 ...
                     || ~any(strcmpi(value,valid.(fields{i}))))
                 error('seizmo:meld:badInput',...

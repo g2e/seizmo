@@ -5,15 +5,27 @@ function [s,sa]=sourcespectra(Tr,Td,Mo,f)
 %              [s,sa]=sourcespectra(...)
 %
 %    Description:
-%     S=SOURCESPECTRA(Td,Tr,Mo,F) returns the source amplitude spectra S at
-%     the frequencies in F given the source rupture duration Tr, rise time
-%     Td, scalar moment Mo.  Td, Tr, Mo, & F may be scalars or equal sized
-%     arrays/vectors.
+%     S=SOURCESPECTRA(Tr,Td,Mo,F) returns the source amplitude spectra S of
+%     an earthquake at the frequencies in F given the source rupture
+%     duration Tr, rise time Td, and scalar moment Mo.  The spectra is
+%     derived from a simple model of the source time function as the
+%     convolution of 2 unit area boxcar functions of length Tr & Td and
+%     scaling the result by Mo.  This is easily implemented in the
+%     frequency domain as the sinc function is the Fourier transform pair
+%     of a Boxcar function.  Multiplication of the moment Mo by the sinc
+%     function for rupture time Tr as well as the sinc function for rise
+%     time Td gives the amplitude spectra.  Td, Tr, Mo, & F may be scalars
+%     or equal sized arrays/vectors.
 %
-%     [S,SA]=SOURCESPECTRA(...) also returns the approximate source spectra
-%     by using |sinc(x)|=1 for x<=1 & |sinc(x)|=1/x for x>1.
+%     [S,SA]=SOURCESPECTRA(...) also returns an approximate source spectra
+%     by using |sinc(f)|=1 for f<=2/Tx & |sinc(f)|=1/f for f>2/Tx instead
+%     of the sinc functions of Td & Tr.  This allows clearly seeing the
+%     corner frequencies at 2/Tr & 2/Td.
 %
 %    Notes:
+%     - For an explanation of Tr & Td see Stein & Wysession 2002 sections
+%       4.3.2 & 4.6.2.
+%     - Formulas from Stein & Wysession 2002 page 267 equations 7 & 9.
 %
 %    Examples:
 %     % Show the source spectra and an approximation for an
@@ -26,18 +38,26 @@ function [s,sa]=sourcespectra(Tr,Td,Mo,f)
 
 %     Version History:
 %        Feb.  6, 2012 - initial version
+%        Feb. 18, 2014 - doc update, input checking
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  6, 2012 at 11:15 GMT
+%     Last Updated Feb. 18, 2014 at 11:15 GMT
 
 % todo:
 
 % check nargin
 error(nargchk(4,4,nargin));
 
+% check inputs
+if(~isequalsizeorscalar(Tr,Td,Mo,f))
+    error('seizmo:sourcespectra:badInput',...
+        'Inputs must be equal sized or scalar!');
+end
+
 % actual spectra
 s=Mo.*abs(sin(f.*Tr/2)./(f.*Tr/2)).*abs(sin(f.*Td/2)./(f.*Td/2));
 
+% do we want an approximated source spectra?
 if(nargout<2); return; end
 
 % expand scalars

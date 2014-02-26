@@ -1,63 +1,65 @@
-function [data]=iris2seizmo(trace)
-%IRIS2SEIZMO    Converts an IRISFETCH trace struct to a SEIZMO data struct
+function [data]=irisfetch2seizmo(trace)
+%IRISFETCH2SEIZMO    Converts an irisFetch.Traces struct to a SEIZMO struct
 %
-%    Usage:    data=iris2seizmo(tr)
+%    Usage:    data=irisfetch2seizmo(trace)
 %
 %    Description:
-%     DATA=IRIS2SEIZMO(TR) converts seismograms returned by IRISFETCH from
-%     their struct format to the SEIZMO data struct format.  Values are
-%     placed in their normal spots except a few fields that don't quite
+%     DATA=IRISFETCH2SEIZMO(TRACE) converts seismograms from IRISFETCH
+%     from that struct format to the SEIZMO data struct format.  Values
+%     are placed in their normal spots except a few fields that don't quite
 %     fit:
-%      TR.quality is set to the KDATRD field
-%      TR.sensitivity is set to the SCALE field
-%      TR.sensitivity* is placed in DATA.misc
-%      TR.instrument is placed in DATA.misc
-%      TR.sacpz stuff is in DATA.misc.sacpz (with some additional info)
+%      TRACE.quality is set to the KDATRD field
+%      TRACE.sensitivity is set to the SCALE field
+%      TRACE.sensitivity* is placed in DATA.misc
+%      TRACE.instrument is placed in DATA.misc
+%      TRACE.sacpz stuff is in DATA.misc.sacpz (with some additional info)
 %
 %    Notes:
 %     - IRISFETCH often returns an empty struct when there is actually data
 %       at IRIS.  I have found that repeating the IRISFETCH command will
-%       eventually return data.  Basically IRISFETCH is NOT a robust data
-%       request tool!
+%       eventually return data so wrapping it in a while loop works.
 %     - Timing from IRISFETCH is low resolution (millisecond accuracy) and
-%       uses DATENUM to set tr.startTime & tr.endTime which can be wrong
-%       when a leapsecond overlaps the time range of a record.
+%       uses DATENUM to set TRACE.startTime & TRACE.endTime which can be
+%       wrong when a leapsecond overlaps the time range of a record.
 %
 %    Examples:
 %     % Download a few hours of vertical component data recorded by the
 %     % Cameroon array (XB) during a particularly strong earthquake (this
 %     % took about a minute to download on my home connection):
-%     tr=[];
-%     while(isempty(tr)) % force irisFetch.Traces to find something...
+%     trace=[];
+%     while(isempty(trace)) % force irisFetch.Traces to find something...
 %         tic;
-%         tr=irisFetch.Traces('XB','*','01','LHZ',...
+%         trace=irisFetch.Traces('XB','*','01','LHZ',...
 %             '2006-01-31 19:15:51.590','2006-01-31 22:02:31.590',...
 %             'includePZ');
 %         toc;
 %     end
-%     data=iris2seizmo(tr);
+%     data=irisfetch2seizmo(trace);
 %     data=removetrend(synchronize(fix_cameroon(data),'b','first'));
 %     plot0(squish(data,10),'normstyle','individual');
 %
 %     % Data from station CMB of the Berkeley network:
-%     tr=[];
-%     while(isempty(tr)) % force irisFetch.Traces to find something...
+%     trace=[];
+%     while(isempty(trace)) % force irisFetch.Traces to find something...
 %         tic;
-%         tr=irisFetch.Traces('BK','CMB','*','VHZ',...
+%         trace=irisFetch.Traces('BK','CMB','*','VHZ',...
 %             '2006-01-31 19:15:51.590','2006-01-31 22:02:31.590',...
 %             'includePZ');
 %         toc;
 %     end
-%     data=iris2seizmo(tr);
+%     data=irisfetch2seizmo(trace);
 %     plot0(data);
 %
 %    See also: IRISFETCH, BSEIZMO, IRIS2SOD
 
 %     Version History:
 %        Feb.  7, 2014 - initial version
+%        Feb.  8, 2014 - fixed cmpinc (0 is up, 90 horiz, 180 down)
+%        Feb.  9, 2014 - doc update
+%        Feb. 20, 2014 - rename to irisfetch2seizmo
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  7, 2014 at 00:40 GMT
+%     Last Updated Feb. 20, 2014 at 00:40 GMT
 
 % todo:
 
@@ -66,17 +68,17 @@ error(nargchk(1,1,nargin));
 
 % check input
 if(~isstruct(trace))
-    error('seizmo:iris2seizmo:badInput',...
+    error('seizmo:irisfetch2seizmo:badInput',...
         'TRACE must be a struct!');
 elseif(isempty(trace))
-    error('seizmo:iris2seizmo:badInput',...
+    error('seizmo:irisfetch2seizmo:badInput',...
         'TRACE is empty!');
 elseif(any(~ismember({'network' 'station' 'location' 'channel' ...
         'quality' 'latitude' 'longitude' 'elevation' 'depth' 'azimuth' ...
         'dip' 'data' 'sampleCount' 'sampleRate' 'startTime' 'sacpz' ...
         'sensitivity' 'sensitivityFrequency' 'instrument' ...
         'sensitivityUnits'},fieldnames(trace))))
-    error('seizmo:iris2seizmo:badInput',...
+    error('seizmo:irisfetch2seizmo:badInput',...
         'TRACE missing required struct fields!');
 end
 
@@ -130,7 +132,7 @@ end
 % insert info into the header
 data=changeheader(data,'npts',[trace.sampleCount],...
     'delta',1./[trace.sampleRate],'z',b,'b',0,'iztype','ib',...
-    'cmpaz',[trace.azimuth],'cmpinc',-[trace.dip],...
+    'cmpaz',[trace.azimuth],'cmpinc',90+[trace.dip],...
     'stla',[trace.latitude],'stlo',[trace.longitude],...
     'stel',[trace.elevation],'stdp',[trace.depth],...
     'knetwk',{trace.network},'kstnm',{trace.station},...

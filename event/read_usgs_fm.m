@@ -5,6 +5,17 @@ function [events]=read_usgs_fm(file,hdrlines,flag)
 %              events=read_usgs_fm(string,headerlines,true)
 %
 %    Description:
+%     !!! WARNING !!!
+%     UNFORTANATELY THE USGS HAVE ELIMINATED THE SOPAR SITE IN FAVOR OF
+%     BURYING SOURCE PARAMETER INFO INTO INDIVIDUAL EVENT PAGES (SO IT IS
+%     NO LONGER ACCESSIBLE VIA SEARCH) WHILE EXPANDING THE SEARCH
+%     CATEGORIES FOR "COOLER" EARTHQUAKE INFORMATION LIKE SOCIAL MEDIA
+%     STATISTICS.  ENJOY YOUR "OMG EARTHQUAKE!" TWITTER WAVES USGS.
+%     I WILL KEEP THIS FUNCTION AROUND FOR THOSE THAT HAVE SAVED SOPAR
+%     OUTPUT AS A FILE AND IN CASE THE USGS REGROWS A BRAIN.  FOR NOW IF
+%     YOU WANT SOURCE PARAMETERS USE THE NEW FUNCTION PARSE_ISC_FM.
+%     !!! WARNING !!!
+%
 %     EVENTS=READ_USGS_FM(FILE,HEADERLINES) reads in an ascii file in USGS
 %     FM format containing moment tensor & fault plane solutions.  FILE
 %     may be omitted to allow the user to graphically select the file.
@@ -35,14 +46,15 @@ function [events]=read_usgs_fm(file,hdrlines,flag)
 %         ['http://neic.usgs.gov/cgi-bin/sopar/sopar.cgi' ...
 %          '?GS=1&OTHER=4&FILEFORMAT=1']),[],true);
 %
-%    See also: READ_USGS_MT, READNDK, FINDCMT, FINDCMTS
+%    See also: READ_USGS_MT, READNDK, FINDCMT, FINDCMTS, PARSE_ISC_FM
 
 %     Version History:
 %        June 14, 2011 - initial version
 %        Jan. 27, 2014 - abs path exist fix
+%        Feb.  9, 2014 - use readtxt, noted uselessness of usgs
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 13:50 GMT
+%     Last Updated Feb.  9, 2014 at 13:50 GMT
 
 % todo:
 
@@ -58,34 +70,10 @@ fs=filesep;
 
 % skip if string input
 if(~flag)
-    % graphical selection
-    if(nargin<1 || isempty(file))
-        [file,path]=uigetfile(...
-            {'*.fm;*.FM' 'USGS FM Files (*.fm,*.FM)';
-            '*.*' 'All Files (*.*)'},...
-            'Select USGS FM File');
-        if(isequal(0,file))
-            error('seizmo:read_usgs_fm:noFileSelected',...
-                'No input file selected!');
-        end
-        file=[path fs file];
-    else % check file
-        if(~isstring(file))
-            error('seizmo:read_usgs_fm:fileNotString',...
-                'FILE must be a string!');
-        end
-        if(~isabspath(file)); file=[pwd fs file]; end
-        if(~exist(file,'file'))
-            error('seizmo:read_usgs_fm:fileDoesNotExist',...
-                'USGS FM File: %s\nDoes Not Exist!',file);
-        elseif(exist(file,'dir'))
-            error('seizmo:read_usgs_fm:dirConflict',...
-                'USGS FM File: %s\nIs A Directory!',file);
-        end
-    end
-    
     % read in ndk file
-    txt=readtxt(file);
+    if(nargin<1); file=[]; end
+    txt=readtxt(file,{'*.fm;*.FM' 'USGS FM Files (*.fm,*.FM)';
+            '*.*' 'All Files (*.*)'});
 else
     % just copy file to txt
     if(nargin<1 || isempty(file) || ~isstring(file))

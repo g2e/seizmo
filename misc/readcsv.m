@@ -1,12 +1,13 @@
-function [lines]=readcsv(file,delimiter)
+function [s]=readcsv(file,delimiter,flag)
 %READCSV    Read in .csv formatted file as a structure
 %
-%    Usage:    struct=readcsv(file)
-%              struct=readcsv(file,delimiter)
+%    Usage:    s=readcsv(file)
+%              s=readcsv(file,delimiter)
+%              s=readcsv(string,delimiter,true)
 %
 %    Description:
-%     STRUCT=READCSV(FILE) reads in a comma-separated values (CSV) text
-%     file FILE as a scalar struct.  FILE is expected to have 1 header line
+%     S=READCSV(FILE) reads in a comma-separated values (CSV) text file
+%     FILE as a scalar struct S.  FILE is expected to have 1 header line
 %     of comma-separated field names.  All values are treated as text and
 %     are not processed so the output struct fields are cellstr arrays of
 %     size NLx1 where NL is the number of lines (minus the header line).
@@ -18,6 +19,14 @@ function [lines]=readcsv(file,delimiter)
 %     STRUCT=READCSV(FILE,DELIMITER) uses the single character DELIMITER to
 %     parse the .csv file.  The default delimiter is ',' (comma).  Line
 %     termination characters (linefeed & carriage return) are not allowed.
+%
+%     S=READCSV(STRING,DELIMITER,TRUE) will take the first input to be a
+%     character string of the contents of an .csv file (rather than the
+%     filename) if the third input is set to the logical TRUE.  The string
+%     should be the same as if the file was read with READTXT (a single row
+%     char vector with linefeeds included).  This is also useful when
+%     combined with URLREAD to directly grab info from the web rather than
+%     having to save it to your filesystem first.
 %
 %    Notes:
 %     - Does not handle text entries that contain the delimiter or a line
@@ -39,9 +48,11 @@ function [lines]=readcsv(file,delimiter)
 %                        field delimiter, require nonempty field name
 %        Feb. 28, 2012 - output is scalar struct now
 %        Jan. 26, 2014 - abs path exist fix
+%        Feb.  8, 2014 - use readtxt, doc update
+%        Feb.  9, 2014 - contents as a string input allowed now
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 17:25 GMT
+%     Last Updated Feb.  9, 2014 at 17:25 GMT
 
 % todo:
 % - text delimiter
@@ -52,35 +63,24 @@ function [lines]=readcsv(file,delimiter)
 % - linefeeds are not allowed to be delimiters
 
 % check nargin
-error(nargchk(0,2,nargin));
+error(nargchk(0,3,nargin));
 
-% directory separator
-fs=filesep;
+% default flag
+if(nargin<3 || isempty(flag)); flag=false; end
 
-% graphical selection
-if(nargin<1 || isempty(file))
-    [file,path]=uigetfile(...
-        {'*.csv;*.CSV' 'CSV Files (*.csv,*.CSV)';
-        '*.*' 'All Files (*.*)'},...
-        'Select CSV File');
-    if(isequal(0,file))
-        error('seizmo:readcsv:noFileSelected',...
-            'No input file selected!');
-    end
-    file=[path fs file];
+% skip if string input
+if(~flag)
+    % read in csv file
+    if(nargin<1); file=[]; end
+    txt=readtxt(file,{'*.csv;*.CSV' 'CSV Files (*.csv,*.CSV)';
+    '*.*' 'All Files (*.*)'});
 else
-    % check file
-    if(~isstring(file))
-        error('seizmo:readcsv:fileNotString',...
-            'FILE must be a string!');
-    end
-    if(~isabspath(file)); file=[pwd fs file]; end
-    if(~exist(file,'file'))
-        error('seizmo:readcsv:fileDoesNotExist',...
-            'CSV File: %s\nDoes Not Exist!',file);
-    elseif(exist(file,'dir'))
-        error('seizmo:readcsv:dirConflict',...
-            'CSV File: %s\nIs A Directory!',file);
+    % just copy file to txt
+    if(nargin<1 || isempty(file) || ~isstring(file))
+        error('seizmo:readcsv:emptyStr',...
+            'STRING must be non-empty!');
+    else
+        txt=file;
     end
 end
 
@@ -91,29 +91,16 @@ if(~isstring(delimiter) || ~isscalar(delimiter))
         'DELIMITER must be a single character!');
 end
 
-% open file for reading
-fid=fopen(file);
-
-% check if file is openable
-if(fid<0)
-    error('seizmo:readcsv:cannotOpenFile',...
-        'CSV File: %s\nNot Openable!',file);
-end
-
-% read in file and close
-str=fread(fid,'*char').';
-fclose(fid);
-
 % replace last lf/cr with nothing
-while(isspace(str(end)))
-    str(end)=[];
+while(isspace(txt(end)))
+    txt(end)=[];
 end
 
 % get header
-lf=str==10;
-cr=str==13;
+lf=txt==10;
+cr=txt==13;
 hde=find(lf | cr,1,'first');
-hd=str(1:hde-1);
+hd=txt(1:hde-1);
 
 % breakup header into individual fields
 % - treat ',,' as an empty entry
@@ -121,7 +108,7 @@ f=strtrim(getwords(hd,delimiter,false));
 
 % require all fields have a name
 for i=1:numel(f)
-    if(~numel(f{i}))
+    if(numel(f{i})==0)
         error('seizmo:readcsv:badFieldName',...
             'CSV File: %s\nField %d is not named!',file,i);
     end
@@ -130,19 +117,19 @@ end
 % replace line terminators with commas
 if(any(lf))
     % replace linefeeds with commas
-    str(lf)=delimiter;
+    txt(lf)=delimiter;
     if(any(cr))
         % replace carriage returns with nothing
-        str(cr)=[];
+        txt(cr)=[];
     end
 elseif(any(cr))
     % replace carriage returns with commas
-    str(cr)=delimiter;
+    txt(cr)=delimiter;
 end
 
 % breakup str into individual values
 % - treat ',,' as an empty entry
-v=strtrim(getwords(str,delimiter,false))';
+v=strtrim(getwords(txt,delimiter,false))';
 
 % get number of fields, values, events
 nf=numel(f);
@@ -150,7 +137,7 @@ nv=numel(v)-nf;
 nev=nv/nf;
 
 % just to make sure (not definitive but it makes sure the last part works)
-if(nev~=round(nev))
+if(nev~=fix(nev))
     error('seizmo:readcsv:malformedEventCSV',...
         ['CSV file: %s\n'...
         'Some lines have an incorrect number of entries!'],file);
@@ -158,7 +145,7 @@ end
 
 % create scalar struct
 for i=1:nf
-    lines.(f{i})=v(nf+i:nf:end);
+    s.(f{i})=v(nf+i:nf:end);
 end
 
 end

@@ -5,6 +5,10 @@ way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
 ## addframe(aviobj, hf)
 
+times from b+npts+delta:
+   float issues: b+(0:npts-1)*delta (THIS IS WHAT I'VE BEEN USING!)
+no float issues: b+(0:delta:delta*(npts-1))  (MERGE OF UNEVEN USES THIS!)
+
 octave_364_fixes in install_seizmo & startup
 mp_tmerc goes from m_map_fixes to m_map_fixes/private in webinstall_mmap
 figure out best way to use scatter in octave
@@ -12,54 +16,65 @@ figure out best way to use scatter in octave
 how about installing the latest octave stable branch instead
 
 taup Sn/Pn no refracted path bug
+taup strange extra P phases bug
 
-3. 2d inversion on a sphere
-4. data grabbing codes
-    - irisFetch conversion
-      x iris2seizmo
-      - iris2sod
-    - irisFetch replacement?
-      - reasons: doesn't work with octave, sloooow, bad time handling,
-                 not robust (can return 0 records or many for the same
-                 call!), no sacpz fetch
-5 noise array phase and attenuation like in prieto 2009
-    - noise_stack_delaz
-    - stacking option
-      - z stat of coherency (freq domain)
-      - acl of coherency (freq domain)
-    - given dataset & freq plot real/imag coherency vs distance
-    - dist vs freq plot of real/imag coherency
-    - minimum misfit to observed real coherency
-        - searches through phase velocity
-        - searches through attenuation
-        - make a plot too
-    - Rayleigh greens function given phase velocity & attenuation vs freq
-6 test & tutorials for noise codes
-7 fss codes
-8 geofss codes (use mmap image option)
-9 test & tutorials for fss codes
-10 datasets for examples, walkthroughs
-11 expand centralized documentation with more examples & walkthroughs
-12 tpw
-13 reflectivity
-14 rayleigh & love forward & inverse problem
-15 parallel version available using comment tags to allow switching
-   % __SEIZMO_PARALLEL__
-   % __SEIZMO_SERIAL__
-   functions
-
-cmt
- - neu 2 enu (is this worthwhile?)
- - plotmt: tpb, nodal line plotting
- - plotmt3: coloring per mt
- - isc database
- - usgs database
- - mt_nodallines
-
-noise
- - HARD: overlap option for stack stuff
-
-fss
+1. install_seizmo improvements
+    - irisws
+        x irisfetch2seizmo
+        x irisfetch2sod
+        x webinstall_irisws
+        x uninstall_irisws
+        - grab_sacpz (-> getsacpz integration)
+    - mattaup
+        x webinstall_taup
+        x uninstall_taup
+    - extras
+        x webinstall_extras
+        x uninstall_extras
+        - iscfmdb
+          x parse_isc_fm
+          - clean_isc_fm
+            - no depth -> out
+            - no mag -> out
+            - fill in remaining fields
+          - update_isc_fm
+        x readsacpz_rdseed
+        x writesacpz_rdseed
+        x issacpz_rdseed
+        x fix_old_sacpz
+        - update sacpzdb
+            - makesacpz
+            - getsacpz
+            - db2sacpz
+            - (remove|apply)sacpz
+            - iris_sacpzdb_build
+            - iris_sacpzdb_fixes
+        - station_check (uses new sacpzdb)
+        - add new mapping features?
+            - natural earth: http://www.naturalearthdata.com/downloads/
+            - gplates stuff
+         ok - utig plate boundaries: ftp://ftp.ig.utexas.edu/pub/LIPS/Data/plate_boundaries/
+         ok - seamounts: http://www.soest.hawaii.edu/PT/SMTS/main.html
+         ok - ml & fz: http://www.soest.hawaii.edu/PT/GSFML/
+         ok - seafloor age stuff: http://www.earthbyte.org/Research/Current/agegrid2008.html
+        - add new 3D models?
+            - sph harm mantle models
+                - really need codes to synthesize info at points
+                    - fjsimmons has matlab codes along these lines it seems
+            - ani mantle models
+                - just store the values as another field
+                - add an ani flag of some sort (should indicate type too)
+                - dependent functions need to handle flag logic and math
+            - add more models shared via iris emc
+    - install_seizmo
+    - uninstall_seizmo
+    - any function that requires a jar does
+      a check first and tries to add it to
+      the dynamic path if not found
+        - ww3struct
+          - how to detect jar files are not in classpath?
+2. fss codes
+ - fss & fss_capon?
  - compute spectra not centered on 0,0?
    - complicates cart2pol & pol2cart
    - input style: [nsmin nsmax nspts],[esmin esmax espts]
@@ -73,7 +88,7 @@ fss
    - power spectral density is scaled by 2*delta/npts (td measures)
  - averaging across frequency (mainly for capon method)
  - test again!
-geofss
+3. geofss codes (use mmap image option)
  - rewrites
    - geo(fssxc,tdssxc)
      - antipodal issue?
@@ -81,9 +96,44 @@ geofss
    - geo(fsshorz,fsshorzxc,tdsshorzxc,arfhorz)
      - much of this should come from non-geo versions
  - test!
+4. test & tutorials for fss codes
+5. 2d inversion on a sphere
+    - cubed sphere
+        - book keeping for adjacent blocks
+        - read reference a few times to help understand their bookkeeping
+6. noise array phase and attenuation like in prieto 2009
+    - noise_stack_delaz
+    - stacking option
+      - z stat of coherency (freq domain)
+      - acl of coherency (freq domain)
+    - given dataset & freq plot real/imag coherency vs distance
+    - dist vs freq plot of real/imag coherency
+    - minimum misfit to observed real coherency
+        - searches through phase velocity
+        - searches through attenuation
+        - make a plot too
+    - Rayleigh greens function given phase velocity & attenuation vs freq
+7. test & tutorials for noise codes
+8. datasets for examples, walkthroughs
+9. expand centralized documentation with more examples & walkthroughs
+    - some intros to basic signal processing tasks, cmts, plotting
+    - walk-thrus of analysis codes
+A. tpw
+B. reflectivity
+C. rayleigh & love forward & inverse problem
+D. parallel version available using comment tags to allow switching
+   % __SEIZMO_PARALLEL__
+   % __SEIZMO_SERIAL__
+   functions
 
-meld
-    - uneven or variable samplerate
+cmt
+ - neu 2 enu (is this worthwhile?)
+ - plotmt: tpb, nodal line plotting
+ - plotmt3: coloring per mt
+ - mt_nodallines
+
+noise
+ - HARD: overlap option for stack stuff
 
 rotate
     - through option
@@ -100,15 +150,6 @@ more cmb models (rjk)
         - cell of numbers  {depths/heights  velo%s}
         - inputs will change per model or series ...
         - can never really do everything here ... just go for basics
-
-new datasets
-    - natural earth: http://www.naturalearthdata.com/downloads/
-    - gplates stuff
-    - utig plate boundaries: ftp://ftp.ig.utexas.edu/pub/LIPS/Data/plate_boundaries/
-    - seamounts: http://www.soest.hawaii.edu/PT/SMTS/main.html
-    - ml & fz: http://www.soest.hawaii.edu/PT/GSFML/
-    - seafloor age stuff: http://www.earthbyte.org/Research/Current/agegrid2008.html
-    - srtm30plus 7.0
 
 rename to MOSS:
     Matlab & Octave Seismology Scripts
@@ -127,10 +168,6 @@ fix checkheader calls (and remove redundant checks)
 better versioninfo usage
     - caching should be dropped in all but the lowest level cases
     - seizmocheck should be used instead for the most part
-
-improve top-level help file
-    - some intros to basic signal processing tasks, cmts, plotting
-    - walk-thrus of analysis codes
 
 checking needs some tolerance (just too strict...)
     - delta/b often differ by a neglegible amount
@@ -173,13 +210,6 @@ standard instrument responses database
     - this leads into inst resp checking
       ie. this is a STS-2 but the response
           is not as expected...
-update polezero db
-	- we should keep this external somehow...
-		- installation requires running a cmt update
-		  & a polezero update -- sounds good to me!
-database of station info?
-    - mda query functions...
-    - rdseed 5.0+ pz output has stn info...
 better polezero docs
 	- units of poles and zeros
 		- sac radians
@@ -201,17 +231,6 @@ ffmancor
     - define azimuthal cos
 	- reflect off cmb
     - can we make this something like 1e-6 s/km^3 ?
-
-sph harm mantle models
-    - really need codes to synthesize info at points
-        - fjsimmons has matlab codes along these lines it seems
-
-ani mantle models
-    - just store the values as another field
-    - add a ani flag of some sort (should indicate type too)
-    - dependent functions need to handle flag logic and math
-
-add more models shared via iris emc
 
 picking
     - better understanding of ppk in SAC
@@ -236,6 +255,8 @@ other filetype support:
  ah (coral)
  miniseed support (this can be done since there is a fc entry)
  sh (Thorne's codes)
+ seisan (gizmo)
+ antelope database (gizmo)
 
 OCTAVE SPECIFIC STUFF
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

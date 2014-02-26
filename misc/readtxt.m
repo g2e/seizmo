@@ -1,8 +1,9 @@
-function [txt]=readtxt(file,filterspec)
+function [txt,file]=readtxt(file,filterspec)
 %READTXT    Reads in a text file as a single string
 %
 %    Usage:    txt=readtxt(file)
 %              txt=readtxt([],filterspec)
+%              [txt,file]=readtxt(...)
 %
 %    Description:
 %     TXT=READTXT(FILE) reads in the ascii file given by FILE (the location
@@ -17,6 +18,10 @@ function [txt]=readtxt(file,filterspec)
 %       '*.*' 'All Files (*.*)'}
 %     This is mainly so other functions do not need to include their own ui
 %     to select an ascii file (that will get passed to here anyways).
+%
+%     [TXT,FILE]=READTXT(...) returns the file (with absolute path) as the
+%     character string FILE.  This is useful when no filename was given as
+%     an input.
 %
 %    Notes:
 %
@@ -34,9 +39,10 @@ function [txt]=readtxt(file,filterspec)
 %        Aug. 10, 2010 - filterspec option added
 %        Nov.  1, 2011 - doc update
 %        Jan. 26, 2014 - abs path exist fix
+%        Feb.  9, 2014 - file output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 13:00 GMT
+%     Last Updated Feb.  9, 2014 at 13:00 GMT
 
 % todo:
 

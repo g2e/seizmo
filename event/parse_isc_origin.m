@@ -1,25 +1,29 @@
-function [isc]=parse_isc_origin(file,hlines)
-%PARSE_ISC_ORIGIN    Parses origin output from the ISC bulletin
+function [isc]=parse_isc_origin(file,flag)
+%PARSE_ISC_ORIGIN    Parses hypocenter output from the ISC bulletin
 %
 %    Usage:    isc=parse_isc_origin(file)
-%              isc=parse_isc_origin(file,headerlines)
+%              isc=parse_isc_origin(string,true)
 %
 %    Description:
 %     ISC=PARSE_ISC_ORIGIN(FILE) reads an ascii file containing origin
 %     output from the ISC bulletin.  To create your own file go here:
-%       http://www.isc.ac.uk/search/bulletin/rectang.html
-%     and make sure the format is set to ISC1.0 and to unselect the
-%     check boxes for Headers, Comments, Links, Secondaries, Magnitudes and
-%     Phases.  Once you have entered and submitted your query, copy the
-%     output events (do not include anything else) to a text file.  FILE
-%     should be the filename (and path if necessary) input as a string.
-%     The output is a scalar struct with fields for all of the ISC origin
-%     datums.  Each field will be NORIGINSx1 and will either be a double
-%     array or a cellstr array.
+%       http://www.isc.ac.uk/iscbulletin/search/bulletin/
+%     and make sure the output format is set to ISF Bulletin and to select
+%     Prime Hypocenter output and unselect the output for Headers,
+%     Comments, Links, Magnitudes and Phases.  Save the page as an .html
+%     file.  FILE should be the filename (and path if necessary) of the
+%     saved .html file.  The output (ISC) is a scalar struct with fields
+%     for all of the ISC origin datums.  Each field will be NORIGINSx1 and
+%     will either be a double array or a cellstr array and the function
+%     SSIDX is provided to pull info from scalar structs.
 %
-%     ISC=PARSE_ISC_ORIGIN(FILE,HEADERLINES) allows skipping HEADERLINES
-%     number of header lines in FILE.  This can be useful for personal
-%     notes etc.
+%     ISC=PARSE_ISC_ORIGIN(STRING,TRUE) will take the first input to be a
+%     character string of the contents of an ISC hypocenter .html file
+%     (rather than the filename) if the second input is set to the logical
+%     TRUE.  The string should be the same as if the file was read with
+%     READTXT (a single row char vector with linefeeds included).  This is
+%     also useful when combined with URLREAD to directly grab info from the
+%     web rather than having to save it to your filesystem first.
 %
 %    Notes:
 %     - Empty numeric fields have a NaN placeholder and empty string fields
@@ -30,12 +34,22 @@ function [isc]=parse_isc_origin(file,hlines)
 %     isc=parse_isc_origin();
 %
 %     % Do a test run:
-%     isc=parse_isc_origin('test_isc.txt')
+%     link=['http://isc-mirror.iris.washington.edu/cgi-bin/web-db-v4' ...
+%           '?request=COMPREHENSIVE&out_format=ISF&bot_lat=&top_lat=' ...
+%           '&left_lon=&right_lon=&ctr_lat=&ctr_lon=&radius=' ...
+%           '&max_dist_units=deg&searchshape=GLOBAL&srn=&grn=' ...
+%           '&start_year=2011&start_month=7&start_day=31' ...
+%           '&start_time=00%3A00%3A00&end_year=2011&end_month=8' ...
+%           '&end_day=01&end_time=00%3A00%3A00&min_dep=&max_dep=' ...
+%           '&min_mag=&max_mag=&req_mag_type=Any&req_mag_agcy=Any' ...
+%           '&min_def=&max_def=&prime_only=on'];
+%     isc=parse_isc_origin(urlread(link),true)
 %
-%     % Extract an origin from file of your choice (replace EVENTIDX):
-%     isc=ssidx(parse_isc_origin(),EVENTIDX);
+%     % Extract the 3rd origin from the returned isc origin struct:
+%     origin=ssidx(isc,3)
 %
-%    See also: READNDK, READSODEVENTCSV, SSIDX
+%    See also: PARSE_ISC_FM, READNDK, READSODEVENTCSV, READ_USGS_MT,
+%              READ_USGS_FM, SSIDX
 
 %     Version History:
 %        July 26, 2010 - initial version by Erica, added code to allow for
@@ -43,12 +57,52 @@ function [isc]=parse_isc_origin(file,hlines)
 %        July 28, 2010 - added documentation
 %        Mar.  7, 2011 - mention ssidx
 %        Jan. 27, 2014 - abs path exist fix
+%        Feb.  9, 2014 - no more header line option, direct string (html)
+%                        input allowed with flagged second option, parses
+%                        html page directly, updated docs to reflect ISC
+%                        webpage changes, altered examples
 %
 %     Written by Erica Emry (ericae at wustl dot edu)
 %                Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 17:25 GMT
+%     Last Updated Feb.  9, 2014 at 17:25 GMT
 
 % todo:
+
+% check nargin
+error(nargchk(0,2,nargin));
+
+% default flag
+if(nargin<2 || isempty(flag)); flag=false; end
+
+% skip if string input
+if(~flag)
+    % read in isc origin file
+    if(nargin<1); file=[]; end
+    txt=readtxt(file,{'*.html;*.HTML' 'HTML Files (*.html,*.HTML)';
+        '*.txt;*.TXT' 'TXT Files (*.txt,*.TXT)';
+        '*.*' 'All Files (*.*)'});
+else
+    % just copy file to txt
+    if(nargin<1 || isempty(file) || ~isstring(file))
+        error('seizmo:parse_isc_origin:emptyStr',...
+            'STRING must be non-empty!');
+    else
+        txt=file;
+    end
+end
+
+% delete carriage return characters
+txt(txt==13)=[];
+
+% separate lines
+lines=getwords(txt,sprintf('\n'));
+
+% find data lines
+b=find(strcmp('ISC Bulletin',lines));
+e=find(strcmp('STOP',lines));
+
+% convert to character array (to extract fixed column sections)
+txt0=char(lines(b+1:e-1));
 
 % Parse ISC origin output -
 %   Input file should be: 
@@ -121,57 +175,6 @@ function [isc]=parse_isc_origin(file,hlines)
 % 			ls = landslide
 % 	119-127 	a9 	author of the origin
 % 	129-136 	a8 	origin identification 
-
-% check nargin
-error(nargchk(0,2,nargin));
-
-% directory separator
-fs=filesep;
-
-% graphical isc file selection if no file given
-if(nargin<1 || isempty(file))
-    [file,path]=uigetfile(...
-        {'*.txt;*.TXT' 'TXT Files (*.txt,*.TXT)';
-        '*.*' 'All Files (*.*)'},...
-        'Select TXT File');
-    if(isequal(0,file))
-        error('seizmo:parse_isc:noFileSelected','No input file selected!');
-    end
-    file=[path fs file];
-else % file given so check it exists
-    % check file
-    if(~isstring(file))
-        error('seizmo:parse_isc:fileNotString',...
-            'FILE must be a string!');
-    end
-    if(~isabspath(file)); file=[pwd fs file]; end
-    if(~exist(file,'file'))
-        error('seizmo:parse_isc:fileDoesNotExist',...
-            'File: %s\nDoes Not Exist!',file);
-    elseif(exist(file,'dir'))
-        error('seizmo:parse_isc:dirConflict',...
-            'File: %s\nIs A Directory!',file);
-    end
-end
-
-% default/check header lines
-if(nargin<2 || isempty(hlines)); hlines=0; end
-if(~isreal(hlines) || ~isscalar(hlines) || hlines~=fix(hlines) || hlines<0)
-    error('seizmo:parse_isc:badInput',...
-        'HEADERLINES must be a positive scalar interger!');
-end
-
-% read in isc file
-txt=readtxt(file);
-
-% separate lines
-lines=getwords(txt,sprintf('\n'));
-
-% trim off header lines
-lines=lines(hlines+1:end);
-
-% convert to character array (to extract fixed column sections)
-txt0=char(lines);
 
 % extract fields
 % - note we use str2double+cellstr to set empty numeric entries with nans

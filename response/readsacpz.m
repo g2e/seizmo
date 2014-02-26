@@ -1,4 +1,4 @@
-function [z,p,k]=readsacpz(file)
+function [z,p,k]=readsacpz(varargin)
 %READSACPZ    Reads in a SAC PoleZero file
 %
 %    Usage:    [z,p,k]=readsacpz(file)
@@ -37,10 +37,13 @@ function [z,p,k]=readsacpz(file)
 %       line gives the multiplicative factor.
 %     - Comment lines may be added to the SAC PoleZero file by starting the
 %       line with a '*' (asterisk).
-%     - READSACPZ will read all valid sections -- if there are multiple
-%       zeros, poles or constant sections then only the last one will be
-%       kept.  Please be aware that this may be important if using programs
-%       that append to SAC PoleZero files rather than overwriting them.
+%     - READSACPZ will read all valid sections -- IF THERE ARE MULTIPLE
+%       ZEROS, POLES OR CONSTANT SECTIONS THEN ONLY THE LAST ONE OF EACH
+%       WILL BE KEPT.  See READSACPZ_RDSEED to handle multi-channel SAC
+%       polezero files.  Please be aware that this is important when using
+%       programs that append to SAC PoleZero files rather than overwriting
+%       them (like RDSEED) and for IRIS web services which returns all SAC
+%       polezero info together.
 %
 %    Examples:
 %     % Read in a SAC PoleZero file, and convert into a filter object:
@@ -54,7 +57,8 @@ function [z,p,k]=readsacpz(file)
 %     fvtool(fs)
 %
 %    See also: WRITESACPZ, GETSACPZ, APPLYSACPZ, REMOVESACPZ, MAKESACPZDB,
-%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME
+%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME,
+%              READSACPZ_RDSEED
 
 %     Version History:
 %        Apr.  7, 2009 - initial version
@@ -66,65 +70,18 @@ function [z,p,k]=readsacpz(file)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Feb.  3, 2012 - doc update
 %        Jan. 26, 2014 - abs path exist fix
+%        Feb.  8, 2014 - doc update for readsacpz_rdseed, use readtxt
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 15:05 GMT
+%     Last Updated Feb.  8, 2014 at 15:05 GMT
 
 % todo:
-% - multi zpk sacpz files are not handled
-%   - we need to make a response for each one...
-%     - requires parsing the new comment table rdseed puts out
-%       which means readsacpz=readsacpz+parse_sacpz_filename
-%       - timing info (its different from the name????)
-%       - station name info (i get it from the name)
-%       - in/out units (interesting...)
-%       - station location info (make a new db?)
-%       - orientation info (good way to check...)
-%       - instrument info (hmmm...clean up the db?)
-%       - a0*sensitivity=constant
 
 % check nargin
 error(nargchk(1,1,nargin));
 
-% directory separator
-fs=filesep;
-
-% check file
-if(~isstring(file))
-    error('seizmo:readsacpz:fileNotString',...
-        'FILE must be a string!');
-end
-if(~isabspath(file)); file=[pwd fs file]; end
-if(~exist(file,'file'))
-    error('seizmo:readsacpz:fileDoesNotExist',...
-        'SAC PoleZero File: %s\nDoes Not Exist!',file);
-elseif(exist(file,'dir'))
-    error('seizmo:readsacpz:dirConflict',...
-        'SAC PoleZero File: %s\nIs A Directory!',file);
-end
-
-% open file for reading as ascii
-fid=fopen(file,'rt');
-
-% check if file is openable
-if(fid<0)
-    error('seizmo:readsacpz:cannotOpenFile',...
-        'SAC PoleZero File: %s\nNot Openable!',file);
-end
-
-% set defaults
-z=[]; p=[]; k=1;
-
-% read in all lines
-c=0; a=cell(1,0);
-while 1
-    tmp=fgetl(fid);
-    if(~ischar(tmp)); break; end
-    c=c+1; a{c}=tmp;
-end
-
-% close file
-fclose(fid);
+% read in text from file (gui selection if no input)
+a=getwords(readtxt(varargin{:}),sprintf('\n'));
 
 % error on empty file
 if(isempty(a))
