@@ -20,7 +20,8 @@ function [ok]=uninstall_seizmo()
 %     install_seizmo    % calls uninstall_seizmo
 %
 %    See also: ABOUT_SEIZMO, SEIZMO, INSTALL_SEIZMO, UNINSTALL_NJTBX,
-%              UNINSTALL_MMAP, UNINSTALL_GSHHG, UNINSTALL_EXPORTFIG
+%              UNINSTALL_MMAP, UNINSTALL_GSHHG, UNINSTALL_EXPORTFIG,
+%              UNINSTALL_TAUP
 
 %     Version History:
 %        Jan.  1, 2011 - initial version
@@ -36,15 +37,20 @@ function [ok]=uninstall_seizmo()
 %        Jan. 15, 2014 - update for gshhs to gshhg rename, use validseizmo
 %                        to locate the toolbox (octave workaround), update
 %                        example for updating extra stuff too
+%        Feb. 25, 2014 - uninstall_taup support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 15:25 GMT
+%     Last Updated Feb. 25, 2014 at 15:25 GMT
 
 % todo:
 
 % ask to install external components
 % - has to be done before removing 'seizmo/uninstall' directory
 ok=true;
+reply=input('Uninstall TauP? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & uninstall_taup;
+end
 reply=input('Uninstall njTBX? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & uninstall_njtbx;
@@ -62,8 +68,7 @@ if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & uninstall_exportfig;
 end
 
-% does seizmodef exist?
-% - this is the "kernel" of seizmo
+% does validseizmo exist?
 fs=filesep;
 if(exist('validseizmo','file'))
     path=fileparts(fileparts(which('validseizmo'))); % root directory
@@ -121,58 +126,6 @@ if(exist('validseizmo','file'))
 else
     % not found, so toolbox not installed...
     return;
-end
-
-% clean out mattaup jars from dynamic java path
-jar=dir(fullfile(path,'mattaup','lib','*.jar'));
-for i=1:numel(jar)
-    if(ismember(fullfile(path,'mattaup','lib',...
-            jar(i).name),javaclasspath))
-        javarmpath(fullfile(path,'mattaup','lib',jar(i).name));
-    end
-end
-
-% find classpath.txt
-sjcp=which('classpath.txt');
-if(isempty(sjcp)); return; end
-
-% read classpath.txt
-s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
-
-% detect offending classpath.txt lines
-injcp=~cellfun('isempty',strfind(s2,fullfile(path,'mattaup','lib','')));
-
-% only remove if necessary
-if(sum(injcp)>0)
-    % inform user about which lines are to be removed
-    fprintf(' Removing the following lines:\n');
-    fprintf('  %s\n',s2{injcp});
-    fprintf(' from:\n  %s\n',sjcp);
-    
-    % the hard part (remove offending lines from classpath.txt)
-    fid=fopen(sjcp,'w');
-    if(fid<0)
-        warning('seizmo:uninstall_seizmo:failedToOpen',...
-            'Cannot edit classpath.txt!');
-        disp('#######################################################');
-        disp('You must have Root/Administrator privileges to edit');
-        disp('the classpath.txt file.  To fully uninstall SEIZMO');
-        disp('you need to remove the following line(s):');
-        disp(strrep(sprintf('%s\n',s2{injcp}),'\','\\'));
-        disp(' ');
-        disp('from your Matlab''s classpath.txt located here:');
-        disp(strrep(sjcp,'\','\\'));
-        disp(' ');
-        disp('This may be done by contacting your System Admin if you');
-        disp('do not have Root/Administrator privileges.  Afterwards,');
-        disp('please restart Matlab to complete the uninstallation!');
-        disp('#######################################################');
-        ok=false;
-    else
-        fseek(fid,0,'bof');
-        fprintf(fid,'%s\n',s2{~injcp});
-        fclose(fid);
-    end
 end
 
 end

@@ -18,6 +18,12 @@ how about installing the latest octave stable branch instead
 taup Sn/Pn no refracted path bug
 taup strange extra P phases bug
 
+
+2. irisws
+3. isc_fm
+4. sacpz
+5. maketimes issue
+
 1. install_seizmo improvements
     - irisws
         x irisfetch2seizmo

@@ -5,6 +5,7 @@ function []=sz_toc_uninstall()
 %<a href="matlab:help uninstall_mmap">uninstall_mmap</a>      - Uninstalls the currently installed M_Map
 %<a href="matlab:help uninstall_seizmo">uninstall_seizmo</a>    - Uninstalls the currently installed SEIZMO
 %<a href="matlab:help uninstall_njtbx">uninstall_njtbx</a>     - Uninstalls the currently installed njTBX
+%<a href="matlab:help uninstall_taup">uninstall_taup</a>      - Uninstalls the currently installed IRIS web services
 %
 % <a href="matlab:help seizmo">SEIZMO - Passive Seismology Toolbox</a>
 end

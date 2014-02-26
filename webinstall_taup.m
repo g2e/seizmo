@@ -30,9 +30,10 @@ function [ok]=webinstall_taup(mypath)
 
 %     Version History:
 %        Feb. 20, 2014 - initial version
+%        Feb. 25, 2014 - bugfix: assign to output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 20, 2014 at 15:25 GMT
+%     Last Updated Feb. 25, 2014 at 15:25 GMT
 
 % todo:
 
@@ -152,6 +153,9 @@ try
     
     % return
     cd(cwd);
+    
+    % all good
+    ok=true;
 catch
     le=lasterror;
     warning(le.identifier,le.message);

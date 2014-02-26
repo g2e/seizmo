@@ -38,8 +38,8 @@ function [varargout]=install_seizmo(renameflag)
 %
 %    See also: ABOUT_SEIZMO, SEIZMO, UNINSTALL_SEIZMO, WEBINSTALL_NJTBX,
 %              WEBINSTALL_MMAP, WEBINSTALL_GSHHG, WEBINSTALL_EXPORTFIG,
-%              UNINSTALL_NJTBX, UNINSTALL_MMAP, UNINSTALL_GSHHG,
-%              UNINSTALL_EXPORTFIG
+%              WEBINSTALL_TAUP, UNINSTALL_NJTBX, UNINSTALL_MMAP,
+%              UNINSTALL_GSHHG, UNINSTALL_EXPORTFIG, UNINSTALL_TAUP
 
 %     Version History:
 %        Dec. 30, 2010 - initial version
@@ -73,9 +73,10 @@ function [varargout]=install_seizmo(renameflag)
 %        Jan. 27, 2014 - added isabspath for abs path fix to path option,
 %                        drop installing of pkgs in octave, handle lack of
 %                        java path support in octave
+%        Feb. 25, 2014 - webinstall_taup support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 15:25 GMT
+%     Last Updated Feb. 25, 2014 at 15:25 GMT
 
 % todo:
 
@@ -157,11 +158,9 @@ switch lower(application)
             'Octave compatibility for SEIZMO is a work in progress!');
         % JAVA INSTALL REQUIRES TOO MUCH HAND-HOLDING TO BE AUTOMATED
         % UNFORTUNATELY.  IT ALSO IS INCLUDED IN 3.8.0+ (I THINK...)
-        java_in_octave=true;
         if(isempty(ver('java')))
-            warning('seizmo:install_seizmo:noSigProcTbx',...
+            warning('seizmo:install_seizmo:noJavaTbx',...
                 'Java package missing from Octave!');
-            java_in_octave=false;
         %    reply=input(['Install java package from Octave-Forge ' ...
         %        '(requires internet)? Y/N [Y]: '],'s');
         %    if(isempty(reply) || strncmpi(reply,'y',1))
@@ -263,54 +262,11 @@ if(~ok)
         'Could not edit path!');
 end
 
-% check that classpath exists (Octave fails here)
-jar=dir([path fs 'mattaup' fs 'lib' fs '*.jar']);
-sjcp=which('classpath.txt');
-if(isempty(sjcp))
-    % no classpath.txt so add to dynamic path
-    for i=1:numel(jar)
-        if(java_in_octave && ~ismember([path fs 'mattaup' fs 'lib' fs ...
-                jar(i).name],javaclasspath))
-            javaaddpath([path fs 'mattaup' fs 'lib' fs jar(i).name]);
-        end
-    end
-else % install matTaup.jar to classpath
-    % read classpath.txt
-    s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
-    
-    % detect offending classpath.txt lines
-    injcp=false(1,numel(jar));
-    for i=1:numel(jar)
-        injcp(i)=any(~cellfun('isempty',...
-            strfind(s2,[path fs 'mattaup' fs 'lib' fs jar(i).name])));
-    end
-    
-    % only add if some not there
-    if(sum(injcp)~=numel(jar))
-        fid=fopen(sjcp,'a+');
-        if(fid<0)
-            warning('seizmo:webinstall_njtbx:noWriteClasspath',...
-                ['Cannot edit classpath.txt! Adding ' ...
-                'TauP jars to dynamic java class path!']);
-            for i=1:numel(jar)
-                if(~ismember([path fs 'mattaup' fs 'lib' fs ...
-                        jar(i).name],javaclasspath))
-                    javaaddpath(...
-                        [path fs 'mattaup' fs 'lib' fs jar(i).name]);
-                end
-            end
-        else
-            fseek(fid,0,'eof');
-            for i=find(~injcp)
-                fprintf(fid,'%s\n',...
-                    [path fs 'mattaup' fs 'lib' fs jar(i).name]);
-            end
-            fclose(fid);
-        end
-    end
-end
-
 % ask to install external components
+reply=input('Install TauP (<1MB)? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & webinstall_taup;
+end
 reply=input('Install njTBX (30MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_njtbx;
