@@ -6,11 +6,11 @@ function [ok]=webinstall_irisws(mypath)
 %
 %    Description:
 %     OK=WEBINSTALL_IRISWS downloads & installs the files distributed by
-%     IRIS for coupling Matlab/Octave with IRIS web services into the
-%     'irisws' directory.  The download is not large at <1 megabyte but
-%     do make sure you have a good connection or this operation will take a
-%     little while and you cannot do anything else at the Matlab/Octave
-%     prompt while waiting for the files to download.
+%     IRIS for coupling Matlab/Octave with IRIS web services into the 'ws'
+%     directory.  The download is not large at <1 megabyte but do make sure
+%     you have a good connection or this operation will take a little while
+%     and you cannot do anything else at the Matlab/Octave prompt while
+%     waiting for the files to download.
 %
 %     OK=WEBINSTALL_IRISWS(PATH) installs the files in the directory given
 %     by PATH.
@@ -29,9 +29,11 @@ function [ok]=webinstall_irisws(mypath)
 
 %     Version History:
 %        Feb. 20, 2014 - initial version
+%        Feb. 25, 2014 - use 'ws' directory rather than 'irisws',
+%                        bugfix: assign to output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 20, 2014 at 15:25 GMT
+%     Last Updated Feb. 25, 2014 at 15:25 GMT
 
 % todo:
 
@@ -43,7 +45,7 @@ fs=filesep;
 
 % default path to seizmo directory
 if(nargin<1 || isempty(mypath))
-    mypath=[fileparts(mfilename('fullpath')) fs 'irisws'];
+    mypath=[fileparts(mfilename('fullpath')) fs 'ws'];
     if(~exist(mypath,'dir')); mkdir(mypath); end
 else
     if(~isabspath(mypath)); mypath=[pwd fs mypath]; end
@@ -131,6 +133,9 @@ try
     
     % return
     cd(cwd);
+    
+    % all good
+    ok=true;
 catch
     le=lasterror;
     warning(le.identifier,le.message);

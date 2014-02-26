@@ -26,6 +26,7 @@ function []=categorical_list()
 %<a href="matlab:help sz_toc_tpw">tpw</a>        - Two plane wave analysis
 %<a href="matlab:help sz_toc_uninstall">uninstall</a>  - Uninstallation
 %<a href="matlab:help sz_toc_win">win</a>        - Windowing & merging
+%<a href="matlab:help sz_toc_ws">ws</a>         - Web Services
 %<a href="matlab:help sz_toc_xc">xc</a>         - Cross Correlation
 %<a href="matlab:help sz_toc_xcalign">xcalign</a>    - Cross correlation based arrival times
 %

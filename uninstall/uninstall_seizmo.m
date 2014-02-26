@@ -21,7 +21,7 @@ function [ok]=uninstall_seizmo()
 %
 %    See also: ABOUT_SEIZMO, SEIZMO, INSTALL_SEIZMO, UNINSTALL_NJTBX,
 %              UNINSTALL_MMAP, UNINSTALL_GSHHG, UNINSTALL_EXPORTFIG,
-%              UNINSTALL_TAUP
+%              UNINSTALL_TAUP, UNINSTALL_IRISWS
 
 %     Version History:
 %        Jan.  1, 2011 - initial version
@@ -37,7 +37,7 @@ function [ok]=uninstall_seizmo()
 %        Jan. 15, 2014 - update for gshhs to gshhg rename, use validseizmo
 %                        to locate the toolbox (octave workaround), update
 %                        example for updating extra stuff too
-%        Feb. 25, 2014 - uninstall_taup support
+%        Feb. 25, 2014 - uninstall_taup support, uninstall_irisws support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 25, 2014 at 15:25 GMT
@@ -50,6 +50,10 @@ ok=true;
 reply=input('Uninstall TauP? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & uninstall_taup;
+end
+reply=input('Uninstall IRISWS? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & uninstall_irisws;
 end
 reply=input('Uninstall njTBX? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))

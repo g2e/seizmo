@@ -26,6 +26,10 @@ function [varargout]=install_seizmo(renameflag)
 %        njTBX     - http://sourceforge.net/apps/trac/njtbx
 %        GSHHG     - http://www.soest.hawaii.edu/pwessel/gshhg
 %        GlobalCMT - http://www.globalcmt.org/
+%        ExportFig - http://www.mathworks.com/
+%                                matlabcentral/fileexchange/23629-exportfig
+%        IRISWS    - http://www.iris.edu/
+%                                 dms/nodes/dmc/software/downloads/IRIS-WS/
 %
 %    Examples:
 %     % Amazingly, every step of installing SEIZMO can be done *WITHIN*
@@ -38,8 +42,9 @@ function [varargout]=install_seizmo(renameflag)
 %
 %    See also: ABOUT_SEIZMO, SEIZMO, UNINSTALL_SEIZMO, WEBINSTALL_NJTBX,
 %              WEBINSTALL_MMAP, WEBINSTALL_GSHHG, WEBINSTALL_EXPORTFIG,
-%              WEBINSTALL_TAUP, UNINSTALL_NJTBX, UNINSTALL_MMAP,
-%              UNINSTALL_GSHHG, UNINSTALL_EXPORTFIG, UNINSTALL_TAUP
+%              WEBINSTALL_TAUP, WEBINSTALL_IRISWS, UNINSTALL_NJTBX,
+%              UNINSTALL_MMAP, UNINSTALL_GSHHG, UNINSTALL_EXPORTFIG,
+%              UNINSTALL_TAUP, UNINSTALL_IRISWS
 
 %     Version History:
 %        Dec. 30, 2010 - initial version
@@ -73,7 +78,7 @@ function [varargout]=install_seizmo(renameflag)
 %        Jan. 27, 2014 - added isabspath for abs path fix to path option,
 %                        drop installing of pkgs in octave, handle lack of
 %                        java path support in octave
-%        Feb. 25, 2014 - webinstall_taup support
+%        Feb. 25, 2014 - webinstall_taup support, webinstall_irisws support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 25, 2014 at 15:25 GMT
@@ -252,6 +257,7 @@ addpath(path,...
     [path fs 'tpw'],...
     [path fs 'ttcorrect'],...
     [path fs 'win'],...
+    [path fs 'ws'],...
     [path fs 'ww3'],...
     [path fs 'xc'],...
     [path fs 'xcalign'],...
@@ -266,6 +272,10 @@ end
 reply=input('Install TauP (<1MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_taup;
+end
+reply=input('Install IRISWS (<1MB)? Y/N [Y]: ','s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & webinstall_irisws;
 end
 reply=input('Install njTBX (30MB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
