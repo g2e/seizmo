@@ -41,9 +41,10 @@ function [data]=splitpad(data,pow2pad)
 %                        tolerance to the point at 0 requirement
 %        Dec. 21, 2011 - doc update
 %        May  29, 2012 - pow2pad=0 by default
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  29, 2012 at 10:05 GMT
+%     Last Updated Mar.  1, 2014 at 10:05 GMT
 
 % todo:
 
@@ -96,7 +97,8 @@ try
     depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
     for i=1:nrecs
         % check has point at 0 (within some tolerance)
-        idx=find(abs(b(i)+(0:npts(i)-1)*delta(i))<delta(i)/10,1);
+        idx=find(...
+            abs(b(i)+(0:delta(i):delta(i)*(npts(i)-1)))<delta(i)/10,1);
         if(isempty(idx))
             error('seizmo:splitpad:noZeroPoint',...
                 'Record %d does not have a point at zero!',i);

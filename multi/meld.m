@@ -308,12 +308,12 @@ function [data]=meld(data,varargin)
 %                        debugging output, unevenoverlap option, uneven &
 %                        multi-rate merging
 %        Feb. 22, 2014 - overlap blend method, unevenoverlap ignore method
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 22, 2014 at 15:05 GMT
+%     Last Updated Mar.  1, 2014 at 15:05 GMT
 
 % todo:
-% - ignore unevenoverlap method
 
 % check nargin
 if(mod(nargin-1,2))
@@ -1320,9 +1320,9 @@ if(option.DEBUG)
 end
 
 % interpolate gap
-lasttimes=ab(last,2)+(0:(npts(last)-1))*delta;
-gaptimes=sae(2)+(1:nsamples)*delta;
-newtimes=sab(2)+(0:(npts(first)-1))*delta;
+lasttimes=ab(last,2)+(0:delta:delta*(npts(last)-1));
+gaptimes=sae(2)+(delta:delta:delta*nsamples);
+newtimes=sab(2)+(0:delta:delta*(npts(first)-1));
 gapdata=interp1([newtimes lasttimes],...
     [data(first).dep; data(last).dep],...
     gaptimes,option.INTERPOLATE,'extrap');
@@ -1365,9 +1365,9 @@ if(option.DEBUG)
 end
 
 % interpolate gap
-firsttimes=ab(first,2)+(0:(npts(first)-1))*delta;
-gaptimes=ae(first,2)+(1:nsamples)*delta;
-newtimes=sab(2)+(0:(npts(last)-1))*delta;
+firsttimes=ab(first,2)+(0:delta:delta*(npts(first)-1));
+gaptimes=ae(first,2)+(delta:delta:delta*nsamples);
+newtimes=sab(2)+(0:delta:delta*(npts(last)-1));
 gapdata=interp1([firsttimes newtimes],...
     [data(first).dep; data(last).dep],...
     gaptimes,option.INTERPOLATE,'extrap');
@@ -1410,10 +1410,10 @@ if(option.DEBUG)
 end
 
 % interpolate first record and gap
-firsttimes=ab(first,2)+(0:(npts(first)-1))*delta;
-lasttimes=ab(last,2)+(0:(npts(last)-1))*delta;
-gaptimes=sae(2)+(1:nsamples)*delta;
-newtimes=sab(2)+(0:(npts(first)-1))*delta;
+firsttimes=ab(first,2)+(0:delta:delta*(npts(first)-1));
+lasttimes=ab(last,2)+(0:delta:delta*(npts(last)-1));
+gaptimes=sae(2)+(delta:delta:delta*nsamples);
+newtimes=sab(2)+(0:delta:delta*(npts(first)-1));
 newdata=interp1([firsttimes lasttimes],...
     [data(first).dep; data(last).dep],...
     [newtimes gaptimes],option.INTERPOLATE,'extrap');
@@ -1456,10 +1456,10 @@ if(option.DEBUG)
 end
 
 % interpolate last record and gap
-firsttimes=ab(first,2)+(0:(npts(first)-1))*delta;
-lasttimes=ab(last,2)+(0:(npts(last)-1))*delta;
-gaptimes=ae(first,2)+(1:nsamples)*delta;
-newtimes=sab(2)+(0:(npts(last)-1))*delta;
+firsttimes=ab(first,2)+(0:delta:delta*(npts(first)-1));
+lasttimes=ab(last,2)+(0:delta:delta*(npts(last)-1));
+gaptimes=ae(first,2)+(delta:delta:delta*nsamples);
+newtimes=sab(2)+(0:delta:delta*(npts(last)-1));
 newdata=interp1([firsttimes lasttimes],...
     [data(first).dep; data(last).dep],...
     [gaptimes newtimes],option.INTERPOLATE,'extrap');
@@ -1570,8 +1570,8 @@ sab=ab(first,:)+[0 shift];
 sae=ae(first,:)+[0 shift];
 
 % interpolate first record
-oldtimes=ab(first,2)+(0:(npts(first)-1))*delta;
-newtimes=sab(2)+(0:(npts(first)-1))*delta;
+oldtimes=ab(first,2)+(0:delta:delta*(npts(first)-1));
+newtimes=sab(2)+(0:delta:delta*(npts(first)-1));
 data(first).dep=...
     interp1(oldtimes,data(first).dep,newtimes,option.INTERPOLATE,'extrap');
 data(first).dep=data(first).dep.';
@@ -1615,8 +1615,8 @@ sab=ab(last,:)-[0 shift];
 sae=ae(last,:)-[0 shift];
 
 % interpolate last record
-oldtimes=ab(last,2)+(0:(npts(last)-1))*delta;
-newtimes=sab(2)+(0:(npts(last)-1))*delta;
+oldtimes=ab(last,2)+(0:delta:delta*(npts(last)-1));
+newtimes=sab(2)+(0:delta:delta*(npts(last)-1));
 data(last).dep=...
     interp1(oldtimes,data(last).dep,newtimes,option.INTERPOLATE,'extrap');
 data(last).dep=data(last).dep.';
@@ -1735,8 +1735,8 @@ sab=ab(first,:)+[0 shift];
 sae=ae(first,:)+[0 shift];
 
 % interpolate first record
-oldtimes=ab(first,2)+(0:(npts(first)-1))*delta;
-newtimes=sab(2)+(0:(npts(first)-1))*delta;
+oldtimes=ab(first,2)+(0:delta:delta*(npts(first)-1));
+newtimes=sab(2)+(0:delta:delta*(npts(first)-1));
 data(first).dep=...
     interp1(oldtimes,data(first).dep,newtimes,option.INTERPOLATE,'extrap');
 data(first).dep=data(first).dep.';
@@ -1780,8 +1780,8 @@ sab=ab(last,:)-[0 shift];
 sae=ae(last,:)-[0 shift];
 
 % interpolate last record
-oldtimes=ab(last,2)+(0:(npts(last)-1))*delta;
-newtimes=sab(2)+(0:(npts(last)-1))*delta;
+oldtimes=ab(last,2)+(0:delta:delta*(npts(last)-1));
+newtimes=sab(2)+(0:delta:delta*(npts(last)-1));
 data(last).dep=...
     interp1(oldtimes,data(last).dep,newtimes,option.INTERPOLATE,'extrap');
 data(last).dep=data(last).dep.';
@@ -1908,8 +1908,8 @@ sab=ab(first,:)+[0 shift];
 sae=ae(first,:)+[0 shift];
 
 % interpolate first record
-oldtimes=ab(first,2)+(0:(npts(first)-1))*delta;
-newtimes=sab(2)+(0:(npts(first)-1))*delta;
+oldtimes=ab(first,2)+(0:delta:delta*(npts(first)-1));
+newtimes=sab(2)+(0:delta:delta*(npts(first)-1));
 data(first).dep=...
     interp1(oldtimes,data(first).dep,newtimes,option.INTERPOLATE,'extrap');
 data(first).dep=data(first).dep.';
@@ -1957,8 +1957,8 @@ sab=ab(last,:)-[0 shift];
 sae=ae(last,:)-[0 shift];
 
 % interpolate last record
-oldtimes=ab(last,2)+(0:(npts(last)-1))*delta;
-newtimes=sab(2)+(0:(npts(last)-1))*delta;
+oldtimes=ab(last,2)+(0:delta:delta*(npts(last)-1));
+newtimes=sab(2)+(0:delta:delta*(npts(last)-1));
 data(last).dep=...
     interp1(oldtimes,data(last).dep,newtimes,option.INTERPOLATE,'extrap');
 data(last).dep=data(last).dep.';
@@ -2092,8 +2092,8 @@ sab=ab(first,:)+[0 shift];
 sae=ae(first,:)+[0 shift];
 
 % interpolate first record
-oldtimes=ab(first,2)+(0:(npts(first)-1))*delta;
-newtimes=sab(2)+(0:(npts(first)-1))*delta;
+oldtimes=ab(first,2)+(0:delta:delta*(npts(first)-1));
+newtimes=sab(2)+(0:delta:delta*(npts(first)-1));
 data(first).dep=...
     interp1(oldtimes,data(first).dep,newtimes,option.INTERPOLATE,'extrap');
 data(first).dep=data(first).dep.';
@@ -2142,8 +2142,8 @@ sab=ab(last,:)-[0 shift];
 sae=ae(last,:)-[0 shift];
 
 % interpolate last record
-oldtimes=ab(last,2)+(0:(npts(last)-1))*delta;
-newtimes=sab(2)+(0:(npts(last)-1))*delta;
+oldtimes=ab(last,2)+(0:delta:delta*(npts(last)-1));
+newtimes=sab(2)+(0:delta:delta*(npts(last)-1));
 data(last).dep=...
     interp1(oldtimes,data(last).dep,newtimes,option.INTERPOLATE,'extrap');
 data(last).dep=data(last).dep.';

@@ -40,9 +40,10 @@ function [psdgram]=noise_psdgram(indir,length,overlap,func)
 %        Apr. 15, 2013 - initial version, no 50% data in subwindow bugfix
 %        Apr. 17, 2013 - use powerspectraldensity to get psd
 %        Jan. 26, 2014 - abs path exist fix
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 13:30 GMT
+%     Last Updated Mar.  1, 2014 at 13:30 GMT
 
 % todo:
 
@@ -204,7 +205,7 @@ for i=1:n
         % grab frequency once
         if(~exist('f','var'))
             [npts,delta]=getheader(swdata(1),'npts','delta');
-            f=(0:npts-1)'*delta;
+            f=(0:delta:delta*(npts-1)).';
         end
         
         % append spectra to storage cells (one per record)

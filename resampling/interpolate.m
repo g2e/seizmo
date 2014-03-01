@@ -78,9 +78,10 @@ function [data]=interpolate(data,sr,method,new_b,new_e,extrap)
 %        Dec. 13, 2011 - minor doc update
 %        Feb.  4, 2012 - better getheader usage, todo added, better
 %                        checkheader usage (disallow non-timeseries)
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  4, 2012 at 14:05 GMT
+%     Last Updated Mar.  1, 2014 at 14:05 GMT
 
 % todo:
 % - use interp1q? how about similar for other methods (spline? pchip?)
@@ -201,7 +202,7 @@ try
         oclass=str2func(class(data(i).dep));
 
         % old timing of data
-        if(leven(i)); ot=b(i)+(0:npts(i)-1).'*delta(i);
+        if(leven(i)); ot=b(i)+(0:delta(i):delta(i)*(npts(i)-1)).';
         else ot=data(i).ind; data(i).ind=[]; end
 
         % make new timing array

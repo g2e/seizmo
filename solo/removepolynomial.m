@@ -35,9 +35,10 @@ function [data]=removepolynomial(data,degree)
 %        Jan. 22, 2014 - bugfix: poly. order was actually degree, changed
 %                        all instances of order to degree, allow per cmp
 %                        degree specification, turn off polyfit warnings
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 22, 2014 at 15:05 GMT
+%     Last Updated Mar.  1, 2014 at 15:05 GMT
 
 % todo:
 
@@ -117,7 +118,7 @@ try
 
         % evenly spaced
         if(leven(i))
-            time=((0:npts(i)-1)*delta(i)).';
+            time=(0:delta(i):delta(i)*(npts(i)-1)).';
             for j=1:ncmp(i)
                 data(i).dep(:,j)=data(i).dep(:,j) ...
                     -polyval(polyfit(time,data(i).dep(:,j),degree(i,j)),...

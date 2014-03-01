@@ -32,9 +32,10 @@ function [data]=makeuneven(data)
 %        Dec. 30, 2010 - fixed 1-liner description
 %        Feb. 11, 2011 - mass nargchk fix
 %        Jan. 30, 2012 - doc update, better checkheader/getheader usage
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 15:05 GMT
+%     Last Updated Mar.  1, 2014 at 15:05 GMT
 
 % todo:
 
@@ -71,7 +72,7 @@ try
         % loop over even, add .ind
         idx=find(even);
         for i=1:sum(even)
-            data(idx(i)).ind=b(i)+(0:npts(i)-1)'*delta(i);
+            data(idx(i)).ind=b(i)+(0:delta(i):delta(i)*(npts(i)-1)).';
         end
     end
     

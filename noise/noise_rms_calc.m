@@ -29,9 +29,10 @@ function []=noise_rms_calc(indir)
 %                        point in the output data for sanity
 %        Sep. 24, 2013 - fixed example to avoid xc directory issue
 %        Jan. 26, 2014 - abs path exist fix
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 11:15 GMT
+%     Last Updated Mar.  1, 2014 at 11:15 GMT
 
 % todo:
 
@@ -168,7 +169,7 @@ data=changename(data,'name',name);
 data=changepath(data,'path','.');
 
 % update tsbgn & tsend to include skipped (no data) time windows
-tsbgn=tsbgn(1)+(0:npts-1)*tsstep/86400;
+tsbgn=tsbgn(1)+(0:tsstep/86400:tsstep/86400*(npts-1));
 tsend=tsbgn+tslen/86400;
 
 % return verbosity

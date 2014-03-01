@@ -47,9 +47,10 @@ function [dep,idx1,ind,idx2,store,npts]=records2mat(data)
 %        Feb. 11, 2011 - mass nargchk fix, see also section update, 
 %                        dropped versioninfo caching
 %        Mar. 24, 2012 - minor doc update
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 24, 2012 at 15:05 GMT
+%     Last Updated Mar.  1, 2014 at 15:05 GMT
 
 % todo:
 
@@ -114,7 +115,7 @@ try
         idx1(col(i):col2(i))=i;
         dep(1:npts(i),col(i):col2(i))=data(i).dep;
         if(leven(i))
-            ind(1:npts(i),i)=b(i)+(0:npts(i)-1)*delta(i);
+            ind(1:npts(i),i)=b(i)+(0:delta(i):delta(i)*(npts(i)-1));
         else
             ind(1:npts(i),i)=data(i).ind;
         end

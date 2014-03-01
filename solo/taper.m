@@ -108,9 +108,10 @@ function [data]=taper(data,w,o,type,opt)
 %                        usage, use getheader improvements
 %        Feb. 14, 2013 - using strcmpi for consistency
 %        Feb. 26, 2013 - bugfix: workaround precision issues for 0 width
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 26, 2013 at 21:00 GMT
+%     Last Updated Mar.  1, 2014 at 21:00 GMT
 
 % todo:
 
@@ -265,7 +266,8 @@ try
             % time series and general xy records
             if(strcmpi(iftype(i),'itime') || strcmpi(iftype(i),'ixy'))
                 % get normalized time
-                times=[0 ((1:(npts(i)-2))*delta(i))/(e(i)-b(i)) 1];
+                times=delta(i)/(e(i)-b(i));
+                times=[0 times:times:times*(npts(i)-2) 1];
                 if(npts(i)<2); times=0; end
 
                 % get tapers
@@ -278,8 +280,9 @@ try
                     .*taper2(:,ones(1,ncmp(i)));
             else % spectral
                 % get normalized frequency
-                freq=[(0:(npts(i)/2-1))*delta(i)/e(i) 1 ...
-                    ((npts(i)/2-1):-1:1)*delta(i)/e(i)];
+                freq=delta(i)/e(i);
+                freq=[0:freq:freq*(npts(i)/2-1) 1 ...
+                    freq*(npts(i)/2-1):-freq:freq];
                 if(npts(i)<2); freq=0; end
 
                 % get tapers

@@ -36,9 +36,10 @@ function [data]=make_adjoint_source(data,win)
 %        Mar. 13, 2012 - doc update, use getheader improvements,
 %                        seizmoverbose support, better checkheader usage
 %        Mar. 15, 2012 - fix example
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 15, 2012 at 02:15 GMT
+%     Last Updated Mar.  1, 2014 at 02:15 GMT
 
 % todo:
 
@@ -106,7 +107,8 @@ try
         
         % get window function (a triangle window)
         % - note need to set amp to 1 to better preserve amplitudes
-        tw=triangletf(b(i)+(0:npts(i)-1)*delta(i),cwin(i),hwin(i),1);
+        tw=triangletf(b(i)+(0:delta(i):delta(i)*(npts(i)-1)),...
+            cwin(i),hwin(i),1);
 
         % get derivative
         data(i).dep=gradient(data(i).dep,delta(i));

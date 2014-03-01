@@ -5,11 +5,6 @@ way to make movies while you do other things on the screen:
 ## hf = figure(‘visible’, ‘off’)
 ## addframe(aviobj, hf)
 
-times from b+npts+delta:
-   float issues: b+(0:npts-1)*delta (THIS IS WHAT I'VE BEEN USING!)
-no float issues: b+(0:delta:delta*(npts-1))  (MERGE OF UNEVEN USES THIS!)
-- grep 0:npts */*.m
-
 octave_364_fixes in install_seizmo & startup
 mp_tmerc goes from m_map_fixes to m_map_fixes/private in webinstall_mmap
 figure out best way to use scatter in octave
@@ -19,14 +14,10 @@ how about installing the latest octave stable branch instead
 taup Sn/Pn no refracted path bug
 taup strange extra P phases bug
 
-3. isc_fm
-4. sacpz
-5. maketimes issue
+download_extras.bash
 
 1. install_seizmo improvements
     - extras
-        x webinstall_extras
-        x uninstall_extras
         - iscfmdb
           x parse_isc_fm
           - clean_isc_fm
@@ -34,18 +25,20 @@ taup strange extra P phases bug
             - no mag -> out
             - fill in remaining fields
           - update_isc_fm
-        x readsacpz_rdseed
-        x writesacpz_rdseed
-        x issacpz_rdseed
-        x fix_old_sacpz
-        - update sacpzdb
+          - compat w/ findcmt findcmts plotmt mapcmts etc ?
+        - sacpz
+          x readsacpz_rdseed
+          x writesacpz_rdseed
+          x issacpz_rdseed
+          x fix_old_sacpz
+          - update sacpzdb
             - makesacpz
             - getsacpz (sacpz ws support)
             - db2sacpz
             - (remove|apply)sacpz
             - iris_sacpzdb_build
             - iris_sacpzdb_fixes
-        - station_check (uses new sacpzdb)
+          - station_check (uses new sacpzdb)
         - add new mapping features?
             - natural earth: http://www.naturalearthdata.com/downloads/
             - gplates stuff
@@ -62,8 +55,6 @@ taup strange extra P phases bug
                 - add an ani flag of some sort (should indicate type too)
                 - dependent functions need to handle flag logic and math
             - add more models shared via iris emc
-    - install_seizmo
-    - uninstall_seizmo
     - any function that requires a jar does
       a check first and tries to add it to
       the dynamic path if not found

@@ -41,9 +41,10 @@ function [data]=getpolynomial(data,degree,pflag)
 %                        getheader improvements
 %        Jan. 22, 2014 - data output by default, poly. coeff. option, doc
 %                        update, turn off polyfit warnings
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 22, 2014 at 15:05 GMT
+%     Last Updated Mar.  1, 2014 at 15:05 GMT
 
 % todo:
 
@@ -139,7 +140,7 @@ try
 
         % evenly spaced
         if(leven(i))
-            time=((0:npts(i)-1)*delta(i)).';
+            time=(0:delta(i):delta(i)*(npts(i)-1)).';
             if(pflag)
                 for j=1:ncmp(i)
                     p{i,j}=polyfit(time,data(i).dep(:,j),degree(i,j));

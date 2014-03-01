@@ -95,9 +95,10 @@ function [varargout]=ftan(data,varargin)
 
 %     Version History:
 %        Aug.  2, 2012 - initial version
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug.  2, 2012 at 18:25 GMT
+%     Last Updated Mar.  1, 2014 at 18:25 GMT
 
 % todo:
 
@@ -389,13 +390,15 @@ try
                 'xcolor',opt.FGCOLOR,'ycolor',opt.FGCOLOR);
             hold(h1,'on');
             if(opt.ABSOLUTE)
-                rh=plot(h1,z6(i)+(b(i)+(0:npts(i)-1)*delta(i)).'/86400,...
+                rh=plot(h1,z6(i)+b(i)/86400+...
+                    (0:delta(i)/86400:delta(i)/86400*(npts(i)-1)).',...
                     data(i).dep,...
                     'color',opt.CMAP(i,:),...
                     'linewidth',opt.LINEWIDTH(i),...
                     'linestyle',opt.LINESTYLE{i});
             else
-                rh=plot(h1,(b(i)+(0:npts(i)-1)*delta(i)).',data(i).dep,...
+                rh=plot(h1,b(i)+(0:delta(i):delta(i)*(npts(i)-1)).',...
+                    data(i).dep,...
                     'color',opt.CMAP(i,:),...
                     'linewidth',opt.LINEWIDTH(i),...
                     'linestyle',opt.LINESTYLE{i});
@@ -443,9 +446,10 @@ try
             
             % fix timing
             if(opt.ABSOLUTE)
-                T=z6(i)+(b(i)+(0:npts(i)-1)*delta(i))/86400;
+                T=z6(i)+b(i)/86400+...
+                    (0:delta(i)/86400:delta(i)/86400*(npts(i)-1));
             else % relative
-                T=b(i)+(0:npts(i)-1)*delta(i);
+                T=b(i)+(0:delta(i):delta(i)*(npts(i)-1));
             end
             
             % deal with zrange
@@ -613,7 +617,7 @@ nfpts=2^nextpow2(npts);
 nfpts2=nfpts/2;
 fnyq=1/(2*delta);
 fdelta=2*fnyq/nfpts;
-f=fdelta*[0:1:nfpts2 nfpts2-1:-1:1].';
+f=[0:fdelta:fdelta*nfpts2 fdelta*(nfpts2-1):-fdelta:fdelta].';
 if(isempty(frng)); frng=[0 fnyq]; end
 fcstep=diff(frng)/nf;
 fc=frng(1)+fcstep/2:fcstep:frng(2)-fcstep/2;

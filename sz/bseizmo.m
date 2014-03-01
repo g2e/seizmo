@@ -99,9 +99,10 @@ function [data]=bseizmo(varargin)
 %        Sep. 28, 2012 - fixed nasty eps usage bug and loosened up
 %                        tolerance on leven/delta determination
 %        Feb. 20, 2014 - .path now has filesep on end
+%        Mar.  1, 2014 - minor edit for clarity
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 20, 2014 at 17:35 GMT
+%     Last Updated Mar.  1, 2014 at 17:35 GMT
 
 % todo:
 
@@ -241,7 +242,7 @@ for i=1:2:nin
         else
             npts(j)=size(varargin{i+1},1);
         end
-        varargin{i}=0:npts(j)-1;
+        varargin{i}=0:(npts(j)-1);
     end
     
     % cross check

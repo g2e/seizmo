@@ -44,9 +44,10 @@ function [data]=omegamultiply(data)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Feb.  4, 2012 - doc update, multiplyomega to omegamultiply
 %        Feb. 14, 2013 - use strcmpi for consistency
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 14, 2013 at 15:05 GMT
+%     Last Updated Mar.  1, 2014 at 15:05 GMT
 
 % todo:
 
@@ -99,7 +100,8 @@ try
 
         % differentiate
         cols=size(data(i).dep,2)/2;
-        omega=2*pi*delta(i)*[0:npts2(i) (npts2(i)-1):-1:1].';
+        omega=2*pi*delta(i);
+        omega=[0:omega:omega*npts2(i) (npts2(i)-1)*omega:-omega:omega].';
         if(strcmpi(iftype(i),'irlim'))
             % rlim %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % 0Hz real/imag == 0 else

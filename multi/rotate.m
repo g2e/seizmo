@@ -185,9 +185,10 @@ function [data]=rotate(data,varargin)
 %        Jan. 30, 2012 - drop SEIZMO global
 %        Feb.  7, 2012 - fix no horizontals bug
 %        Mar. 13, 2012 - use getheader improvements
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 23:18 GMT
+%     Last Updated Mar.  1, 2014 at 23:18 GMT
 
 % todo:
 % - a 'norotate' would be nice
@@ -607,10 +608,12 @@ try
             % get independent component
             t1=cell(n1,1); t2=cell(n2,1);
             for j=1:n1
-                t1{j}=cb1(j)+(0:npts(cidx1(j))-1).'*delta(pidx(1));
+                t1{j}=cb1(j)+...
+                    (0:delta(pidx(1)):delta(pidx(1))*(npts(cidx1(j))-1)).';
             end
             for j=1:n2
-                t2{j}=cb2(j)+(0:npts(cidx2(j))-1).'*delta(pidx(1));
+                t2{j}=cb2(j)+...
+                    (0:delta(pidx(1)):delta(pidx(1))*(npts(cidx2(j))-1)).';
             end
             
             % loop over all possible pairings
@@ -846,25 +849,25 @@ end
 
 % get new times
 if(move1)
-    t=t2(bidx2+(0:npts-1));
+    t=t2(bidx2+(0:(npts-1)));
 else % move 2
-    t=t1(bidx1+(0:npts-1));
+    t=t1(bidx1+(0:(npts-1)));
 end
 
 % get x1,x2
 if(shift<=shiftmax)
     % ok we are just shifting one record to time align
     if(option.DEBUG); disp('Adjust Method: SHIFT'); end
-    x1=x1(bidx1+(0:npts-1));
-    x2=x2(bidx2+(0:npts-1));
+    x1=x1(bidx1+(0:(npts-1)));
+    x2=x2(bidx2+(0:(npts-1)));
 else % interpolate
     % interpolating one record to time align
     if(option.DEBUG); disp('Adjust Method: INTERPOLATE'); end
     if(move1)
         x1=interp1(t1,x1,t,option.INTERPOLATE,'extrap');
-        x2=x2(bidx2+(0:npts-1));
+        x2=x2(bidx2+(0:(npts-1)));
     else % interpolate 2
-        x1=x1(bidx1+(0:npts-1));
+        x1=x1(bidx1+(0:(npts-1)));
         x2=interp1(t2,x2,t,option.INTERPOLATE,'extrap');
     end
 end

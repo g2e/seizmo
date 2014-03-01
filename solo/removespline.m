@@ -39,9 +39,10 @@ function [data]=removespline(data,roughness)
 
 %     Version History:
 %        Jan. 21, 2014 - initial version
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 21, 2014 at 15:05 GMT
+%     Last Updated Mar.  1, 2014 at 15:05 GMT
 
 % todo:
 
@@ -120,7 +121,7 @@ try
 
         % evenly spaced
         if(leven(i))
-            time=((0:npts(i)-1)*delta(i)).';
+            time=(0:delta(i):delta(i)*(npts(i)-1)).';
             for j=1:ncmp(i)
                 if(isnan(roughness(i,j)))
                     [tmp,roughness(i,j)]=csaps(time,data(i).dep(:,j),[],...

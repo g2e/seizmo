@@ -56,9 +56,10 @@ function [value]=getvaluefun(data,func,type,scalar)
 %        Jan. 12, 2012 - minor doc update
 %        Mar. 13, 2012 - seizmocheck fix, use getheader improvements
 %        June 11, 2012 - fix rms & robust rms examples
+%        Mar.  1, 2014 - maketime fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 11, 2012 at 18:25 GMT
+%     Last Updated Mar.  1, 2014 at 18:25 GMT
 
 % todo:
 
@@ -128,7 +129,8 @@ try
                 % loop over even, add .ind
                 idx=find(leven);
                 for i=1:sum(leven)
-                    data(idx(i)).ind=b(i)+(0:npts(i)-1)'*delta(i);
+                    data(idx(i)).ind=...
+                        b(i)+(0:delta(i):delta(i)*(npts(i)-1)).';
                 end
             end
             
