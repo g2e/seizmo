@@ -31,9 +31,10 @@ function [ok]=webinstall_irisws(mypath)
 %        Feb. 20, 2014 - initial version
 %        Feb. 25, 2014 - use 'ws' directory rather than 'irisws',
 %                        bugfix: assign to output
+%        Feb. 27, 2014 - install on dynamic & static (if possible)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 25, 2014 at 15:25 GMT
+%     Last Updated Feb. 27, 2014 at 15:25 GMT
 
 % todo:
 
@@ -90,23 +91,21 @@ try
     % check that java pkg is installed
     java_in_octave=true;
     if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
-        warning('seizmo:install_seizmo:noJavaTbx',...
-            'Java package missing from Octave!');
+        warning('seizmo:webinstall_irisws:noJavaTbx',...
+            ['Java package missing from Octave! ' ...
+            'IRISWS cannot be installed']);
         java_in_octave=false;
     end
     
-    % install jars to classpath
+    % install jars to dynamic classpath
     iriswsjar=[mypath fs irisws];
+    if(java_in_octave && ~ismember(iriswsjar,javaclasspath))
+        javaaddpath(iriswsjar);
+    end
+    
+    % install jars to static classpath
     sjcp=which('classpath.txt');
-    if(isempty(sjcp))
-        %warning('seizmo:webinstall_irisws:noJavaClassPath',...
-        %    'Octave has no classpath.txt to save .jar files!');
-        
-        % no classpath.txt so add to dynamic path
-        if(java_in_octave && ~ismember(iriswsjar,javaclasspath))
-            javaaddpath(iriswsjar);
-        end
-    else
+    if(~isempty(sjcp))
         % read classpath.txt
         s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
         
@@ -116,14 +115,7 @@ try
         % only add if not there already
         if(sum(injcp)<1)
             fid=fopen(sjcp,'a+');
-            if(fid<0)
-                warning('seizmo:webinstall_irisws:noWriteClasspath',...
-                    ['Cannot edit classpath.txt! Adding IRISWS jar ' ...
-                    'to dynamic java class path!']);
-                if(~ismember(iriswsjar,javaclasspath))
-                    javaaddpath(iriswsjar);
-                end
-            else
+            if(fid~=-1)
                 fseek(fid,0,'eof');
                 if(~injcp(1)); fprintf(fid,'%s\n',iriswsjar); end
                 fclose(fid);
@@ -134,8 +126,8 @@ try
     % return
     cd(cwd);
     
-    % all good
-    ok=true;
+    % all good?
+    ok=java_in_octave;
 catch
     le=lasterror;
     warning(le.identifier,le.message);

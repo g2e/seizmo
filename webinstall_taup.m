@@ -31,9 +31,10 @@ function [ok]=webinstall_taup(mypath)
 %     Version History:
 %        Feb. 20, 2014 - initial version
 %        Feb. 25, 2014 - bugfix: assign to output
+%        Feb. 28, 2014 - install on dynamic & static (if possible)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 25, 2014 at 15:25 GMT
+%     Last Updated Feb. 28, 2014 at 15:25 GMT
 
 % todo:
 
@@ -92,31 +93,28 @@ try
     % check that java pkg is installed
     java_in_octave=true;
     if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
-        warning('seizmo:install_seizmo:noJavaTbx',...
+        warning('seizmo:webinstall_taup:noJavaTbx',...
             'Java package missing from Octave!');
         java_in_octave=false;
     end
     
-    % install jars to classpath
+    % install jars to dynamic classpath
     taupjar=[mypath fs taup];
     seisjar=[mypath fs seis];
     mattaupjar=[mypath fs mattaup];
+    if(java_in_octave && ~ismember(taupjar,javaclasspath))
+        javaaddpath(taupjar);
+    end
+    if(java_in_octave && ~ismember(seisjar,javaclasspath))
+        javaaddpath(seisjar);
+    end
+    if(java_in_octave && ~ismember(mattaupjar,javaclasspath))
+        javaaddpath(mattaupjar);
+    end
+    
+    % install jars to static classpath
     sjcp=which('classpath.txt');
-    if(isempty(sjcp))
-        %warning('seizmo:webinstall_taup:noJavaClassPath',...
-        %    'Octave has no classpath.txt to save .jar files!');
-        
-        % no classpath.txt so add to dynamic path
-        if(java_in_octave && ~ismember(taupjar,javaclasspath))
-            javaaddpath(taupjar);
-        end
-        if(java_in_octave && ~ismember(seisjar,javaclasspath))
-            javaaddpath(seisjar);
-        end
-        if(java_in_octave && ~ismember(mattaupjar,javaclasspath))
-            javaaddpath(mattaupjar);
-        end
-    else
+    if(~isempty(sjcp))
         % read classpath.txt
         s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
         
@@ -128,20 +126,7 @@ try
         % only add if not there already
         if(sum(injcp)<3)
             fid=fopen(sjcp,'a+');
-            if(fid<0)
-                warning('seizmo:webinstall_taup:noWriteClasspath',...
-                    ['Cannot edit classpath.txt! Adding MatTauP & ' ...
-                    'TauP jars to dynamic java class path!']);
-                if(~ismember(taupjar,javaclasspath))
-                    javaaddpath(taupjar);
-                end
-                if(~ismember(seisjar,javaclasspath))
-                    javaaddpath(seisjar);
-                end
-                if(~ismember(mattaupjar,javaclasspath))
-                    javaaddpath(mattaupjar);
-                end
-            else
+            if(fid~=-1)
                 fseek(fid,0,'eof');
                 if(~injcp(1)); fprintf(fid,'%s\n',taupjar); end
                 if(~injcp(2)); fprintf(fid,'%s\n',seisjar); end
@@ -154,8 +139,8 @@ try
     % return
     cd(cwd);
     
-    % all good
-    ok=true;
+    % all good?
+    ok=java_in_octave;
 catch
     le=lasterror;
     warning(le.identifier,le.message);

@@ -23,9 +23,10 @@ function [ok]=uninstall_taup()
 
 %     Version History:
 %        Feb. 20, 2014 - initial version
+%        Mar.  1, 2014 - only remove specific jars, java detection
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 20, 2014 at 15:25 GMT
+%     Last Updated Mar.  1, 2014 at 15:25 GMT
 
 % todo:
 
@@ -33,20 +34,27 @@ function [ok]=uninstall_taup()
 fs=filesep;
 
 % does TauP-*.jar exist on javaclasspath?
+ok=true;
 if(exist('edu.sc.seis.TauP.TauP_Time','class'))
     path=[fileparts(which('tauptime')) fs 'lib']; % jar directory
-    ok=true;
 else
     % not found, so toolbox not installed...
-    ok=true;
     return;
 end
 
+% check that java pkg is installed
+java_in_octave=true;
+if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
+    java_in_octave=false;
+end
+
 % clear the dynamic java path
-jars=dir([path fs '*.jar']);
+jars(1)=[path fs 'TauP-2.1.1.jar'];
+jars(2)=[path fs 'seisFile-1.5.1.jar'];
+jars(3)=[path fs 'MatTauP-2.1.1.jar'];
 for i=1:numel(jars)
-    if(ismember([path fs jars(i).name],javaclasspath))
-        javarmpath([path fs jars(i).name]);
+    if(java_in_octave && ismember(jars(i),javaclasspath))
+        javarmpath(jars(i));
     end
 end
 
@@ -58,7 +66,9 @@ if(isempty(sjcp)); return; end
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 
 % detect offending classpath.txt lines
-injcp=~cellfun('isempty',strfind(s2,path));
+injcp=~cellfun('isempty',strfind(s2,jars(1))) ...
+    || ~cellfun('isempty',strfind(s2,jars(2))) ...
+    || ~cellfun('isempty',strfind(s2,jars(3)));
 
 % only remove if necessary
 if(sum(injcp)>0)

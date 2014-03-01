@@ -17,7 +17,9 @@ function [ok]=uninstall_mmap()
 %
 %    See also: WEBINSTALL_MMAP, UNINSTALL_GSHHS, WEBINSTALL_GSHHS,
 %              UNINSTALL_NJTBX, WEBINSTALL_NJTBX, UNINSTALL_EXPORTFIG,
-%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO
+%              WEBINSTALL_EXPORTFIG, UNINSTALL_EXTRAS, WEBINSTALL_EXTRAS,
+%              UNINSTALL_IRISWS, WEBINSTALL_IRISWS, UNINSTALL_TAUP,
+%              WEBINSTALL_TAUP, UNINSTALL_SEIZMO, INSTALL_SEIZMO
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
@@ -25,23 +27,42 @@ function [ok]=uninstall_mmap()
 %                        doc update
 %        Apr. 25, 2012 - uninstall m_map_fixes directory too
 %        Jan. 15, 2014 - updated See also list
+%        Mar.  1, 2014 - updated See also list, savepath only called if
+%                        needed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 15:25 GMT
+%     Last Updated Mar.  1, 2014 at 15:25 GMT
 
 % todo:
 
 % does m_coast exist?
+ok=true;
 if(exist('m_coast','file'))
-    path=fileparts(which('m_coast')); % m_map directory
-    rmpath(path);
-    path=fileparts(which('m_gshhs')); % m_map_fixes directory
-    rmpath(path);
-    ok=~savepath;
+    path{1}=fileparts(which('m_coast')); % m_map directory
+    path{2}=fileparts(which('m_gshhs')); % m_map_fixes directory
+    rmpath(path{:});
+    if(is_on_static_path(path{:}))
+        ok=~savepath;
+    end
 else
     % not found, so toolbox not installed...
-    ok=true;
     return;
 end
 
 end
+
+
+function [lgc]=is_on_static_path(varargin)
+% find pathdef.m
+spd=which('pathdef.m');
+
+% read pathdef.m
+s=textread(spd,'%s','delimiter','\n','whitespace','');
+
+% detect offending pathdef.m lines
+for i=1:nargin
+    lgc=any(~cellfun('isempty',strfind(s,varargin{i})));
+    if(lgc); return; end
+end
+end
+

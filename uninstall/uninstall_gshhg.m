@@ -18,7 +18,9 @@ function [ok]=uninstall_gshhg()
 %
 %    See also: WEBINSTALL_GSHHG, UNINSTALL_MMAP, WEBINSTALL_MMAP,
 %              UNINSTALL_NJTBX, WEBINSTALL_NJTBX, UNINSTALL_EXPORTFIG,
-%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO
+%              WEBINSTALL_EXPORTFIG, UNINSTALL_EXTRAS, WEBINSTALL_EXTRAS,
+%              UNINSTALL_IRISWS, WEBINSTALL_IRISWS, UNINSTALL_TAUP,
+%              WEBINSTALL_TAUP, UNINSTALL_SEIZMO, INSTALL_SEIZMO
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
@@ -26,21 +28,41 @@ function [ok]=uninstall_gshhg()
 %                        doc update
 %        Jan. 14, 2014 - update for gshhg
 %        Jan. 15, 2014 - updated See also list
+%        Mar.  1, 2014 - updated See also list, savepath only called if
+%                        needed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 15:25 GMT
+%     Last Updated Mar.  1, 2014 at 15:25 GMT
 
 % todo:
 
 % does nj_time exist?
+ok=true;
 if(exist('gshhs_c.b','file'))
     path=fileparts(which('gshhs_c.b')); % root directory
     rmpath(path);
-    ok=~savepath;
+    if(is_on_static_path(path))
+        ok=~savepath;
+    end
 else
     % not found, so not installed...
-    ok=true;
     return;
 end
 
 end
+
+
+function [lgc]=is_on_static_path(varargin)
+% find pathdef.m
+spd=which('pathdef.m');
+
+% read pathdef.m
+s=textread(spd,'%s','delimiter','\n','whitespace','');
+
+% detect offending pathdef.m lines
+for i=1:nargin
+    lgc=any(~cellfun('isempty',strfind(s,varargin{i})));
+    if(lgc); return; end
+end
+end
+

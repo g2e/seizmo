@@ -7,7 +7,7 @@ function [ok]=webinstall_extras(dlflag)
 %    Description:
 %     OK=WEBINSTALL_EXTRAS downloads & installs some extra files for SEIZMO
 %     such as a SAC polezero db, feature data for mapping, & 3D velocity
-%     models.  The download is large at >50 megabytes so make sure you have
+%     models.  The download is large at 50+ megabytes so make sure you have
 %     a good connection or this operation will take a while and you cannot
 %     do anything else at the Matlab/Octave prompt while waiting for the
 %     files to download.
@@ -18,7 +18,7 @@ function [ok]=webinstall_extras(dlflag)
 %
 %    Examples:
 %     % Reinstall:
-%     uninstall_irisws & webinstall_extras
+%     uninstall_irisws & webinstall_extras(true)
 %
 %    See also: UNINSTALL_IRISWS, WEBINSTALL_GSHHS, UNINSTALL_GSHHS,
 %              WEBINSTALL_MMAP, UNINSTALL_MMAP, WEBINSTALL_EXPORTFIG,
@@ -28,9 +28,11 @@ function [ok]=webinstall_extras(dlflag)
 
 %     Version History:
 %        Feb. 21, 2014 - initial version
+%        Feb. 27, 2014 - minor doc update
+%        Mar.  1, 2014 - iscfmdb not ready yet
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 21, 2014 at 15:25 GMT
+%     Last Updated Mar.  1, 2014 at 15:25 GMT
 
 % todo:
 
@@ -66,7 +68,7 @@ try
     sacpzdb='seizmo_iris_sacpzdb.zip';     % ~20mb
     sz3dmod='seizmo_3d_models.zip';        % ~20mb
     mapfeat='seizmo_mapping_features.zip'; % ~10mb
-    iscfmdb='seizmo_iscfmdb.zip';          %  ~6mb
+    %iscfmdb='seizmo_iscfmdb.zip';          %  ~6mb
     
     % grab files (either locally or remotely)
     url0='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/';
@@ -95,23 +97,28 @@ try
     else
         urlwrite([url0 mapfeat],mapfeat);
     end
-    fprintf(' Getting %s\n',iscfmdb);
-    if(~dlflag && exist(iscfmdb,'file'))
-        if(~exist([mypath fs iscfmdb],'file'))
-            copyfile(which(iscfmdb),'.');
-        end
-    else
-        urlwrite([url1 iscfmdb],iscfmdb);
-    end
+    %fprintf(' Getting %s\n',iscfmdb);
+    %if(~dlflag && exist(iscfmdb,'file'))
+    %    if(~exist([mypath fs iscfmdb],'file'))
+    %        copyfile(which(iscfmdb),'.');
+    %    end
+    %else
+    %    urlwrite([url1 iscfmdb],iscfmdb);
+    %end
     
     % unpack files
+    % - These should land in their appropriate
+    %   locations if I packaged them correctly.
     unzip(sacpzdb);
     unzip(sz3dmod);
     unzip(mapfeat);
-    unzip(iscfmdb);
+    %unzip(iscfmdb);
     
     % return
     cd(cwd);
+    
+    % all good
+    ok=true;
 catch
     le=lasterror;
     warning(le.identifier,le.message);

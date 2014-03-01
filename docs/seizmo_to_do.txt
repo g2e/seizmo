@@ -8,6 +8,7 @@ way to make movies while you do other things on the screen:
 times from b+npts+delta:
    float issues: b+(0:npts-1)*delta (THIS IS WHAT I'VE BEEN USING!)
 no float issues: b+(0:delta:delta*(npts-1))  (MERGE OF UNEVEN USES THIS!)
+- grep 0:npts */*.m
 
 octave_364_fixes in install_seizmo & startup
 mp_tmerc goes from m_map_fixes to m_map_fixes/private in webinstall_mmap
@@ -214,7 +215,7 @@ better polezero docs
 		- sensor gain (sensitivity - gives appropriate units) 
 		- digitizer gain (volts/bit - bit/volts)
 	- dis 2 vel
-		- add pole at 0
+		- add pole at 0 or remove zero at 0
 	- vel 2 dis
 		- add zero at 0
 	- SERIOUSLY FOLKS, why is there not a simple gui for this?

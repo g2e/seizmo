@@ -34,8 +34,10 @@ function [ok]=webinstall_gshhg(mypath)
 %
 %    See also: UNINSTALL_GSHHG, WEBINSTALL_MMAP, UNINSTALL_MMAP,
 %              WEBINSTALL_NJTBX, UNINSTALL_NJTBX, UNINSTALL_EXPORTFIG,
-%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO,
-%              MMAP, M_MAP, M_GSHHS
+%              WEBINSTALL_EXPORTFIG, WEBINSTALL_EXTRAS, UNINSTALL_EXTRAS,
+%              WEBINSTALL_IRISWS, UNINSTALL_IRISWS, WEBINSTALL_TAUP,
+%              UNINSTALL_TAUP, UNINSTALL_SEIZMO, INSTALL_SEIZMO, MMAP,
+%              M_MAP, M_GSHHS
 
 %     Version History:
 %        Feb.  5, 2011 - initial version
@@ -50,9 +52,10 @@ function [ok]=webinstall_gshhg(mypath)
 %                        warning if problem encountered
 %        Jan. 15, 2014 - updated See also list
 %        Jan. 27, 2014 - added isabspath for abs path fix to path option
+%        Feb. 27, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 15:25 GMT
+%     Last Updated Feb. 27, 2014 at 15:25 GMT
 
 % todo:
 
@@ -110,14 +113,13 @@ try
     % unpack and install GSHHG
     unzip(gshhg,gshhgdir);
     addpath(gshhgdir);
-    ok=~savepath;
-    if(~ok)
-        warning('seizmo:webinstall_gshhg:noWritePathdef',...
-            'Cannot save path!');
-    end
+    savepath;
     
     % return
     cd(cwd);
+    
+    % all good
+    ok=true;
 catch
     le=lasterror;
     warning(le.identifier,le.message);

@@ -24,9 +24,11 @@ function [ok]=webinstall_mmap(mypath)
 %     webinstall_mmap
 %
 %    See also: UNINSTALL_MMAP, WEBINSTALL_GSHHS, UNINSTALL_GSHHS,
-%              WEBINSTALL_NJTBX, UNINSTALL_NJTBX, UNINSTALL_EXPORTFIG,
-%              WEBINSTALL_EXPORTFIG, UNINSTALL_SEIZMO, INSTALL_SEIZMO,
-%              MMAP, M_MAP
+%              WEBINSTALL_NJTBX, UNINSTALL_NJTBX, WEBINSTALL_EXPORTFIG,
+%              UNINSTALL_EXPORTFIG, WEBINSTALL_EXTRAS, UNINSTALL_EXTRAS,
+%              WEBINSTALL_IRISWS, UNINSTALL_IRISWS, WEBINSTALL_TAUP,
+%              UNINSTALL_TAUP, UNINSTALL_SEIZMO, INSTALL_SEIZMO, MMAP,
+%              M_MAP
 
 %     Version History:
 %        Feb. 14, 2012 - initial version
@@ -37,9 +39,10 @@ function [ok]=webinstall_mmap(mypath)
 %        Jan. 15, 2014 - updated example to actually update M_Map, updated
 %                        See also list
 %        Jan. 27, 2014 - added isabspath for abs path fix to path option
+%        Feb. 27, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 15:25 GMT
+%     Last Updated Feb. 27, 2014 at 15:25 GMT
 
 % todo:
 
@@ -100,14 +103,13 @@ try
         copyfile([mmapdir fs 'private'],...
             [mypath fs 'm_map_fixes' fs 'private']);
     end
-    ok=~savepath;
-    if(~ok)
-        warning('seizmo:webinstall_mmap:noWritePathdef',...
-            'Cannot save path!');
-    end
+    savepath;
     
     % return
     cd(cwd);
+    
+    % all good
+    ok=true;
 catch
     le=lasterror;
     warning(le.identifier,le.message);

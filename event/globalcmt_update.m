@@ -5,14 +5,15 @@ function []=globalcmt_update()
 %
 %    Description:
 %     GLOBALCMT_UPDATE will search the GlobalCMT Project's website for
-%     updates to their catalogs and will add any new CMTs found to SEIZMO's
-%     local catalogs.  GLOBALCMT_UPDATE does not check for changes in the
-%     old catalogs from the GlobalCMT Project (old being those that are
-%     already a part of the SEIZMO catalogs).
+%     additions to their catalogs and will add any new CMTs found to
+%     SEIZMO's local catalogs.  GLOBALCMT_UPDATE does not check for changes
+%     in catalogs previously downloaded from the GlobalCMT Project (the
+%     exception is the quick CMT catalog which is redownloaded every time
+%     GLOBALCMT_UPDATE is run).
 %
 %    Notes:
 %     - Try not to use GLOBALCMT_UPDATE too often as it downloads & updates
-%       the quick CMT catalog every run.
+%       the entire quick CMT catalog every run.
 %     - Needs write permission to SEIZMO directories.
 %     - Also updates the cached catalogs under SEIZMO.GLOBALCMT
 %
@@ -32,9 +33,10 @@ function []=globalcmt_update()
 %        Mar. 20, 2013 - no error if cannot write (just warn and move on)
 %        Jan. 14, 2014 - catches urlread errors and gives warning
 %        Jan. 25, 2014 - indented verbose messages for visual improvement
+%        Feb. 27, 2014 - catch error if no catalog, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 25, 2014 at 21:30 GMT
+%     Last Updated Feb. 27, 2014 at 21:30 GMT
 
 % todo:
 
@@ -48,8 +50,14 @@ global SEIZMO
 try
     full=SEIZMO.GLOBALCMT.FULL;
 catch
-    full=load('globalcmt_full.mat');
-    SEIZMO.GLOBALCMT.FULL=full;
+    try
+        full=load('globalcmt_full.mat');
+        SEIZMO.GLOBALCMT.FULL=full;
+    catch
+        warning('seizmo:globalcmt_update:noCatalog',...
+            'GLOBALCMT catalog does not exist!  Run GLOBALCMT_CREATE!');
+        return;
+    end
 end
 fields=fieldnames(full);
 nf=numel(full.name);

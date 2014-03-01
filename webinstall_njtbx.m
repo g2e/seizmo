@@ -39,9 +39,10 @@ function [ok]=webinstall_njtbx(mypath)
 %        Jan. 27, 2014 - added isabspath for abs path fix to path option,
 %                        added handling of octave without java
 %        Feb. 20, 2014 - fixed warning id, update see also list
+%        Feb. 27, 2014 - install on dynamic & static (if possible)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 20, 2014 at 15:25 GMT
+%     Last Updated Feb. 27, 2014 at 15:25 GMT
 
 % todo:
 
@@ -124,36 +125,30 @@ try
         [njtbxdir fs 'njFunc'],...
         [njtbxdir fs 'njTBX-2.0'],...
         [njtbxdir fs 'njTBX-2.0' fs 'Utilities']);
-    ok=~savepath;
-    if(~ok)
-        warning('seizmo:webinstall_njtbx:noWritePathdef',...
-            'Cannot save path!');
-    end
+    savepath;
     
     % check that java pkg is installed
     java_in_octave=true;
     if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
-        warning('seizmo:install_seizmo:noJavaTbx',...
-            'Java package missing from Octave!');
+        warning('seizmo:webinstall_njtbx:noJavaTbx',...
+            ['Java package missing from Octave! ' ...
+            'NJTBX cannot be installed!']);
         java_in_octave=false;
     end
     
-    % install jars to classpath
+    % install jars to dynamic classpath
     toolsuijar=[mypath fs toolsui];
     njtoolsjar=[mypath fs njtools];
+    if(java_in_octave && ~ismember(toolsuijar,javaclasspath))
+        javaaddpath(toolsuijar);
+    end
+    if(java_in_octave && ~ismember(njtoolsjar,javaclasspath))
+        javaaddpath(njtoolsjar);
+    end
+    
+    % install jars to static classpath
     sjcp=which('classpath.txt');
-    if(isempty(sjcp))
-        %warning('seizmo:webinstall_njtbx:noJavaClassPath',...
-        %    'Octave has no classpath.txt to save .jar files!');
-        
-        % no classpath.txt so add to dynamic path
-        if(java_in_octave && ~ismember(toolsuijar,javaclasspath))
-            javaaddpath(toolsuijar);
-        end
-        if(java_in_octave && ~ismember(njtoolsjar,javaclasspath))
-            javaaddpath(njtoolsjar);
-        end
-    else
+    if(~isempty(sjcp))
         % read classpath.txt
         s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
         
@@ -164,17 +159,7 @@ try
         % only add if not there already
         if(sum(injcp)<2)
             fid=fopen(sjcp,'a+');
-            if(fid<0)
-                warning('seizmo:webinstall_njtbx:noWriteClasspath',...
-                    ['Cannot edit classpath.txt! Adding njTBX jars ' ...
-                    'to dynamic java class path!']);
-                if(~ismember(toolsuijar,javaclasspath))
-                    javaaddpath(toolsuijar);
-                end
-                if(~ismember(njtoolsjar,javaclasspath))
-                    javaaddpath(njtoolsjar);
-                end
-            else
+            if(fid~=-1)
                 fseek(fid,0,'eof');
                 if(~injcp(1)); fprintf(fid,'%s\n',toolsuijar); end
                 if(~injcp(2)); fprintf(fid,'%s\n',njtoolsjar); end
@@ -185,6 +170,9 @@ try
     
     % return
     cd(cwd);
+    
+    % all good?
+    ok=java_in_octave;
 catch
     le=lasterror;
     warning(le.identifier,le.message);

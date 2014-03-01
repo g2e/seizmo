@@ -23,9 +23,10 @@ function [ok]=uninstall_irisws()
 
 %     Version History:
 %        Feb. 20, 2014 - initial version
+%        Mar.  1, 2014 - only remove specific jars, java detection
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 20, 2014 at 15:25 GMT
+%     Last Updated Mar.  1, 2014 at 15:25 GMT
 
 % todo:
 
@@ -33,20 +34,25 @@ function [ok]=uninstall_irisws()
 fs=filesep;
 
 % does IRISWS-*.jar exist on javaclasspath?
+ok=true;
 if(exist('edu.iris.dmc.extensions.fetch.TraceData','class'))
     path=fileparts(which('irisFetch')); % root directory
-    ok=true;
 else
     % not found, so toolbox not installed...
-    ok=true;
     return;
 end
 
+% check that java pkg is installed
+java_in_octave=true;
+if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
+    java_in_octave=false;
+end
+
 % clear the dynamic java path
-jars=dir([path fs '*.jar']);
+jars(1)=[path fs 'IRIS-WS-2.0.6.jar'];
 for i=1:numel(jars)
-    if(ismember([path fs jars(i).name],javaclasspath))
-        javarmpath([path fs jars(i).name]);
+    if(java_in_octave && ismember(jars(i),javaclasspath))
+        javarmpath(jars(i));
     end
 end
 
@@ -58,7 +64,7 @@ if(isempty(sjcp)); return; end
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 
 % detect offending classpath.txt lines
-injcp=~cellfun('isempty',strfind(s2,path));
+injcp=~cellfun('isempty',strfind(s2,jars(1)));
 
 % only remove if necessary
 if(sum(injcp)>0)

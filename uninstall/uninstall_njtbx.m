@@ -31,9 +31,11 @@ function [ok]=uninstall_njtbx()
 %        Jan. 15, 2014 - updated See also list
 %        Feb. 20, 2014 - fixed dynamic java path uninstall, no fullfile
 %                        use, updated see also list
+%        Mar.  1, 2014 - savepath only called if needed, only remove
+%                        specific jars, java detection
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 20, 2014 at 15:25 GMT
+%     Last Updated Mar.  1, 2014 at 15:25 GMT
 
 % todo:
 
@@ -41,26 +43,33 @@ function [ok]=uninstall_njtbx()
 fs=filesep;
 
 % does nj_time exist?
+ok=true;
 if(exist('nj_time','file'))
     path=fileparts(fileparts(which('nj_time'))); % root directory
-    rmpath([path fs 'njTBX-2.0' fs 'Utilities']);
-    rmpath([path fs 'njTBX-2.0']);
-    rmpath([path fs 'njFunc']);
-    rmpath([path fs 'examples']);
-    rmpath(path);
-    ok=~savepath;
+    njtbx_path={path [path fs 'njTBX-2.0' fs 'Utilities'] ...
+        [path fs 'njTBX-2.0'] [path fs 'njFunc'] [path fs 'examples']};
+    rmpath(njtbx_path{:});
+    if(is_on_static_path(njtbx_path{:}))
+        ok=~savepath;
+    end
 else
     % not found, so toolbox not installed...
-    ok=true;
     return;
+end
+
+% check that java pkg is installed
+java_in_octave=true;
+if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
+    java_in_octave=false;
 end
 
 % clear the dynamic java path
 jarpath=fileparts(path);
-jars=dir([jarpath fs '*.jar']);
+jars(1)=[jarpath fs 'toolsUI-4.0.49.jar'];
+jars(2)=[jarpath fs 'njTools-2.0.12_jre1.6.jar'];
 for i=1:numel(jars)
-    if(ismember([jarpath fs jars(i).name],javaclasspath))
-        javarmpath([jarpath fs jars(i).name]);
+    if(java_in_octave && ismember(jars(i),javaclasspath))
+        javarmpath(jars(i));
     end
 end
 
@@ -72,7 +81,8 @@ if(isempty(sjcp)); return; end
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 
 % detect offending classpath.txt lines
-injcp=~cellfun('isempty',strfind(s2,jarpath));
+injcp=~cellfun('isempty',strfind(s2,jars(1))) ...
+    || ~cellfun('isempty',strfind(s2,jars(2)));
 
 % only remove if necessary
 if(sum(injcp)>0)
@@ -109,3 +119,19 @@ if(sum(injcp)>0)
 end
 
 end
+
+
+function [lgc]=is_on_static_path(varargin)
+% find pathdef.m
+spd=which('pathdef.m');
+
+% read pathdef.m
+s=textread(spd,'%s','delimiter','\n','whitespace','');
+
+% detect offending pathdef.m lines
+for i=1:nargin
+    lgc=any(~cellfun('isempty',strfind(s,varargin{i})));
+    if(lgc); return; end
+end
+end
+

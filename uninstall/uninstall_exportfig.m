@@ -17,26 +17,48 @@ function [ok]=uninstall_exportfig()
 %
 %    See also: WEBINSTALL_EXPORTFIG, UNINSTALL_GSHHS, WEBINSTALL_GSHHS,
 %              UNINSTALL_NJTBX, WEBINSTALL_NJTBX, UNINSTALL_MMAP,
-%              WEBINSTALL_MMAP, UNINSTALL_SEIZMO, INSTALL_SEIZMO
+%              WEBINSTALL_MMAP, UNINSTALL_EXTRAS, WEBINSTALL_EXTRAS,
+%              UNINSTALL_IRISWS, WEBINSTALL_IRISWS, UNINSTALL_TAUP,
+%              WEBINSTALL_TAUP, UNINSTALL_SEIZMO, INSTALL_SEIZMO
 
 %     Version History:
 %        Feb. 16, 2012 - initial version
 %        Jan. 15, 2014 - updated See also list
+%        Mar.  1, 2014 - updated See also list, savepath only called if
+%                        needed
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 15:25 GMT
+%     Last Updated Mar.  1, 2014 at 15:25 GMT
 
 % todo:
 
 % does export_fig exist?
+ok=true;
 if(exist('export_fig','file'))
     path=fileparts(which('export_fig')); % root directory
     rmpath(path);
-    ok=~savepath;
+    if(is_on_static_path(path))
+        ok=~savepath;
+    end
 else
     % not found, so toolbox not installed...
-    ok=true;
     return;
 end
 
 end
+
+
+function [lgc]=is_on_static_path(varargin)
+% find pathdef.m
+spd=which('pathdef.m');
+
+% read pathdef.m
+s=textread(spd,'%s','delimiter','\n','whitespace','');
+
+% detect offending pathdef.m lines
+for i=1:nargin
+    lgc=any(~cellfun('isempty',strfind(s,varargin{i})));
+    if(lgc); return; end
+end
+end
+

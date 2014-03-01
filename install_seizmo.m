@@ -79,6 +79,7 @@ function [varargout]=install_seizmo(renameflag)
 %                        drop installing of pkgs in octave, handle lack of
 %                        java path support in octave
 %        Feb. 25, 2014 - webinstall_taup support, webinstall_irisws support
+%        Feb. 27, 2014 - drop toolbox checks, webinstall_extras support
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Feb. 25, 2014 at 15:25 GMT
@@ -111,7 +112,7 @@ if(renameflag && ~strcmp(szdir,'seizmo'))
         warning(msgid,msg);
         warning('seizmo:install_seizmo:badRoot',...
             ['SEIZMO''s top directory must be named "seizmo" for' ...
-            '\n commands like "help seizmo" and "ver seizmo"!']);
+            '\n commands like "help seizmo" and "ver seizmo" to work!']);
     end
     if(ok && strcmp(path,pwd))
         cd([rootpath fs 'seizmo']);
@@ -137,65 +138,12 @@ switch lower(application)
                 ['Matlab version too old for SEIZMO!\n' ...
                 'Full function of toolbox is unlikely.']);
         end
-        if(~license('checkout','signal_toolbox'))
-            warning('seizmo:install_seizmo:noSigProcTbx',...
-                ['Your Matlab does not have the Signal Processing\n' ...
-                'Toolbox installed.  A few SEIZMO functions assume\n' ...
-                'the Signal Processing Toolbox is available and\n' ...
-                'will fail when used (e.g., filtering operations).']);
-        end
-        if(~license('checkout','statistics_toolbox'))
-            warning('seizmo:install_seizmo:noStatsTbx',...
-                ['Your Matlab does not have the Statistics Toolbox\n' ...
-                'installed.  A few SEIZMO functions assume the\n' ...
-                'Statistics Toolbox is available for cluster\n' ...
-                'analysis and will fail when used.']);
-        end
-        if(~license('checkout','spline_toolbox'))
-            warning('seizmo:install_seizmo:noSplineTbx',...
-                ['Your Matlab does not have the Spline Toolbox\n' ...
-                'installed.  A few SEIZMO functions assume the\n' ...
-                'Spline Toolbox is available for smooth spline\n' ...
-                'extraction/removal and will fail when used.']);
-        end
     case 'octave'
         warning('seizmo:install_seizmo:octaveIssues',...
             'Octave compatibility for SEIZMO is a work in progress!');
-        % JAVA INSTALL REQUIRES TOO MUCH HAND-HOLDING TO BE AUTOMATED
-        % UNFORTUNATELY.  IT ALSO IS INCLUDED IN 3.8.0+ (I THINK...)
-        if(isempty(ver('java')))
-            warning('seizmo:install_seizmo:noJavaTbx',...
-                'Java package missing from Octave!');
-        %    reply=input(['Install java package from Octave-Forge ' ...
-        %        '(requires internet)? Y/N [Y]: '],'s');
-        %    if(isempty(reply) || strncmpi(reply,'y',1))
-        %        % DOES THIS NEED A TRY/CATCH?
-        %        pkg install -forge java;
-        %    end
-        end
-        if(isempty(ver('signal')))
-            warning('seizmo:install_seizmo:noSigProcTbx',...
-                'Signal package missing from Octave!');
-        %    reply=input(['Install signal package from Octave-Forge ' ...
-        %        '(requires internet)? Y/N [Y]: '],'s');
-        %    if(isempty(reply) || strncmpi(reply,'y',1))
-        %        % DOES THIS NEED A TRY/CATCH?
-        %        pkg install -forge signal;
-        %    end
-        end
-        if(isempty(ver('splines')))
-            warning('seizmo:install_seizmo:noSplinesTbx',...
-                'Splines package missing from Octave!');
-        %    reply=input(['Install splines package from Octave-Forge ' ...
-        %        '(requires internet)? Y/N [Y]: '],'s');
-        %    if(isempty(reply) || strncmpi(reply,'y',1))
-        %        % DOES THIS NEED A TRY/CATCH?
-        %        pkg install -forge splines;
-        %    end
-        end
     otherwise
         warning('seizmo:install_seizmo:noClueWhatIsRunning',...
-            'Installing SEIZMO on an UNKNOWN application!');
+            'Installing SEIZMO on an UNKNOWN application.  Impressive!');
 end
 
 % remove old seizmo installation(s)
@@ -215,7 +163,7 @@ end
 % where am i?
 disp(['SEIZMO install path:  ' path]);
 
-% install new seizmo
+% add seizmo directories to path
 addpath(path,...
     [path fs 'lowlevel'],...
     [path fs 'uninstall'],...
@@ -293,6 +241,11 @@ reply=input('Install export_fig (25KB)? Y/N [Y]: ','s');
 if(isempty(reply) || strncmpi(reply,'y',1))
     ok=ok & webinstall_exportfig;
 end
+reply=input(['Install 3D models, map features, ' ...
+    'polezeros, etc (60mb)? Y/N [Y]: '],'s');
+if(isempty(reply) || strncmpi(reply,'y',1))
+    ok=ok & webinstall_extras;
+end
 
 % make globalcmt db
 reply=input('Create local GlobalCMT database? Y/N [Y]: ','s');
@@ -302,26 +255,6 @@ if(isempty(reply) || strncmpi(reply,'y',1))
     globalcmt_update;
 end
 
-% download models/features/responses
-url='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo';
-urls3='https://s3-us-west-2.amazonaws.com/seizmo';
-reply=input('Download IRIS station responses (~20MB)? Y/N [Y]: ','s');
-if(isempty(reply) || strncmpi(reply,'y',1))
-    ok=ok & download_and_unpack_seizmo_zip(url,...
-        'seizmo_iris_sacpzdb.zip');
-end
-reply=input('Download 3D models (~20MB)? Y/N [Y]: ','s');
-if(isempty(reply) || strncmpi(reply,'y',1))
-    ok=ok & download_and_unpack_seizmo_zip(urls3,...
-        'seizmo_3d_models.zip');
-end
-reply=input('Download features for mapping (~10MB)? Y/N [Y]: ','s');
-if(isempty(reply) || strncmpi(reply,'y',1))
-    ok=ok & download_and_unpack_seizmo_zip(url,...
-        'seizmo_mapping_features.zip');
-end
-
-disp('DON''T FORGET TO RESTART!');
 disp('##################################################################');
 disp('################## FINISHED SEIZMO INSTALLATION ##################');
 disp('##################################################################');
@@ -336,37 +269,6 @@ if(nargout); varargout{1}=ok; end
 
 end
 
-function [ok]=download_and_unpack_seizmo_zip(url,file)
-mypath=fileparts(mfilename('fullpath'));
-try
-    % go to desired install location
-    cwd=pwd;
-    cd(mypath);
-    
-    % grab file
-    url=[url '/' file];
-    disp([' Getting ' file]);
-    if(exist(file,'file'))
-        if(~exist([mypath filesep file],'file'))
-            copyfile(which(file),'.');
-        end
-    else
-        urlwrite(url,file);
-    end
-    
-    % unpack file
-    unzip(file);
-    
-    % return
-    cd(cwd);
-    ok=true;
-catch
-    le=lasterror;
-    warning(le.identifier,le.message);
-    cd(cwd);
-    ok=false;
-end
-end
 
 function [varargout]=getapplication()
 %GETAPPLICATION    Returns application running this script and its version
@@ -797,93 +699,3 @@ lgc=ischar(str) && ndims(str==2) ...
 
 end
 
-function [lgc]=isabspath(path,iswindows)
-%ISABSPATH    Determines if a path is an absolute path or not
-%
-%    Usage:    lgc=isabspath(path)
-%              lgc=isabspath(path,iswindows)
-%
-%    Description:
-%     LGC=ISABSPATH(PATH) checks if the path(s) in PATH are relative or
-%     absolute and returns TRUE for those that are absolute paths.  PATHS
-%     may be a string, char array or a cell string array.  LGC is a logical
-%     array with one element per path in PATH.  This is useful to find
-%     relative paths so you can convert them to absolute paths for
-%     functions like EXIST.  The determination is done by discovering the
-%     OS type of the current system using ISPC.
-%
-%     LGC=ISABSPATH(PATH,ISWINDOWS) allows setting the OS type for
-%     determining if the paths are absolute or not when the paths are not
-%     valid paths for the current machine.  For instance, set ISWINDOWS to
-%     FALSE for Unix, Linux or MACOSX paths when you are using MicrosoftTM
-%     WindowsTM.  ISWINDOWS must be TRUE or FALSE (scalar only).
-%
-%    Notes:
-%     - The path is not required to exist or even to be valid!  This just
-%       does a simple test on each path given the OS (e.g., is the first
-%       character a '/' for unix).
-%
-%    Examples:
-%     % Test a few relative paths:
-%     isabspath('./somedir')
-%     isabspath('../somedir')
-%     isabspath('~/somedir')
-%     isabspath('..\somewindir')
-%
-%     % Test a few absolute paths:
-%     isabspath('/home')
-%     isabspath('/usr/share/../bin')
-%     isabspath('c:\Programs')
-%
-%     % And a few invalid ones:
-%     isabspath('/\')                   % absolute path to the '\' dir?
-%     isabspath('somedir\c:/somewhere') % win drive in a unix dir under pwd
-%     isabspath('\\someserver\somedir') % maybe you can add this feature...
-%
-%    See also: ISPC, ISUNIX
-
-%     Version History:
-%        Jan. 27, 2014 - initial version
-%
-%     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 11:15 GMT
-
-% todo:
-
-% check number of inputs
-error(nargchk(1,2,nargin));
-
-% check/fix path
-if(ischar(path))
-    path=cellstr(path);
-elseif(~iscellstr(path))
-    error('seizmo:isabspath:badInput',...
-        'PATH must be a string, char array or a cellstr array!');
-end
-
-% check/default os
-if(nargin<2 || isempty(iswindows)); iswindows=ispc; end
-if(~islogical(iswindows) || ~isscalar(iswindows))
-    error('seizmo:isabspath:badInput',...
-        'ISWINDOWS must be TRUE or FALSE!');
-end
-
-% preallocate output as all relative paths
-lgc=false(size(path));
-
-% act by os
-if(iswindows) % windows
-    for i=1:numel(path)
-        % require drive char to be a-z,A-Z
-        if(isempty(path{i})); continue; end
-        drive=double(upper(path{i}(1)));
-        lgc(i)=drive>=65 && drive<=90 && strcmp(path{i}(2:3),':\');
-    end
-else % unix, linux, macosx
-    for i=1:numel(path)
-        if(isempty(path{i})); continue; end
-        lgc(i)=strcmp(path{i}(1),'/');
-    end
-end
-
-end

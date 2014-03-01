@@ -26,7 +26,9 @@ function [ok]=webinstall_exportfig(mypath)
 %
 %    See also: UNINSTALL_EXPORTFIG, WEBINSTALL_GSHHS, UNINSTALL_GSHHS,
 %              WEBINSTALL_NJTBX, UNINSTALL_NJTBX, WEBINSTALL_MMAP,
-%              UNINSTALL_MMAP, UNINSTALL_SEIZMO, INSTALL_SEIZMO, EXPORT_FIG
+%              UNINSTALL_MMAP, WEBINSTALL_EXTRAS, UNINSTALL_EXTRAS,
+%              WEBINSTALL_IRISWS, UNINSTALL_IRISWS, WEBINSTALL_TAUP,
+%              UNINSTALL_TAUP, UNINSTALL_SEIZMO, INSTALL_SEIZMO, EXPORT_FIG
 
 %     Version History:
 %        Feb. 16, 2012 - initial version
@@ -34,9 +36,10 @@ function [ok]=webinstall_exportfig(mypath)
 %        Jan. 15, 2014 - updated example to actually update export_fig,
 %                        updated See also list
 %        Jan. 27, 2014 - added isabspath for abs path fix to path option
+%        Feb. 27, 2014 - updated See also list
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 15:25 GMT
+%     Last Updated Feb. 27, 2014 at 15:25 GMT
 
 % todo:
 
@@ -86,21 +89,20 @@ try
         fprintf('Output directory exists: %s\n',exportfigdir);
         y=rmdir(exportfigdir,'s');
         if(~y)
-            disp('Replace All or None of the files? A/N?');
+            disp('Replace All or None of the files? (A/N)?');
         end
     end
     
     % unpack and install export_fig
     unzip(exportfig,exportfigdir); % extract to export_fig dir
     addpath([mypath fs 'export_fig']);
-    ok=~savepath;
-    if(~ok)
-        warning('seizmo:webinstall_exportfig:noWritePathdef',...
-            'Cannot save path!');
-    end
+    savepath;
     
     % return
     cd(cwd);
+    
+    % all good
+    ok=true;
 catch
     le=lasterror;
     warning(le.identifier,le.message);

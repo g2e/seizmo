@@ -1,21 +1,17 @@
-function []=startup()
-%STARTUP    Sets up Matlab/Octave path & javaclasspath for SEIZMO
+function []=startup_seizmo()
+%STARTUP_SEIZMO    Adds SEIZMO to dynamic path & javaclasspath
 %
 % If you can't edit your paths or don't want seizmo on your default
-% path then use run this script (or add it to your own startup file)
-% to get seizmo working.  Note you need to edit the variable "path"
-% below to match the directory seizmo is installed in -- I have
-% seizmo files (like this) under directory "/opt/seizmo/seizmo".
-% Also note that this startup assumes that the external programs
-% have been downloaded too -- comment those lines out if you have
-% not done so.
-
-% !!! MODIFY PATH TO MATCH YOUR SEIZMO INSTALL DIRECTORY !!!
-% Current setting below is only valid when this file is in the seizmo
-% directory.  So if you run this script from anywhere else you need
-% "path" to be the seizmo directory (absolute path required).
+% path then run this script (or add it to your own startup file)
+% to get seizmo working.  Note you may need to edit the value of the
+% variable "path" below to match the directory seizmo is installed
+% in -- I have seizmo as directory "/opt/seizmo/seizmo" on my system.
+% The current setting is only valid when this file is in the seizmo
+% directory.  If you run this script from anywhere else you need the
+% variable "path" to be the absolute path to your seizmo directory.
+% !!! MODIFY & UNCOMMENT PATH TO MATCH YOUR SEIZMO INSTALL DIRECTORY !!!
+%path='/opt/seizmo/seizmo';            % Valid anywhere on my system.
 path=fileparts(mfilename('fullpath')); % Valid only in seizmo directory.
-%path='/opt/seizmo/seizmo'; % Valid anywhere on my system.
 
 % path separator
 fs=filesep;
@@ -63,20 +59,38 @@ addpath(path,...
     [path fs 'ttcorrect'],...
     [path fs 'win'],...
     [path fs 'ww3'],...
+    [path fs 'ws'],...
     [path fs 'xc'],...
     [path fs 'xcalign'],...
     [path fs 'mattaup']);
 
+% check that java pkg is installed
+java_in_octave=true;
+if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
+    java_in_octave=false;
+end
+
+% adding irisws jar
+jars(1)=[path fs 'ws' fs 'IRIS-WS-2.0.6.jar'];
+for i=1:numel(jars)
+    if(java_in_octave && ~ismember(jars(1),javaclasspath('-all')))
+        javaaddpath(jars(1));
+    end
+end
+clear jars;
+
 % adding the jars for mattaup is not necessary for
 % taup*.m but you might want to do this now if you
 % directly use the jars or objects for some reason
-jars=dir([path fs 'mattaup' fs 'lib' fs '*.jar']);
+jars(1)=[path fs 'mattaup' fs 'lib' fs 'TauP-2.1.1.jar'];
+jars(2)=[path fs 'mattaup' fs 'lib' fs 'seisFile-1.5.1.jar'];
+jars(3)=[path fs 'mattaup' fs 'lib' fs 'MatTauP-2.1.1.jar'];
 for i=1:numel(jars)
-    if(~ismember([path fs 'mattaup' fs 'lib' ...
-            fs jars(i).name],javaclasspath('-all')))
-        javaaddpath([path fs 'mattaup' fs 'lib' fs jars(i).name]);
+    if(java_in_octave && ~ismember(jars(i),javaclasspath('-all')))
+        javaaddpath(jars(i));
     end
 end
+clear jars;
 
 % these are the additional folders for external programs
 % - skip attempt at adding them to the path if they don't exist
@@ -90,21 +104,24 @@ if(isdir([path fs 'm_map']))
     addpath([path fs 'm_map_fixes'],...
         [path fs 'm_map']);
 end
-if(isdir([path fs 'njtbx' fs 'njToolbox-2.0']))
-    addpath([path fs 'njtbx' fs 'njToolbox-2.0'],...
-        [path fs 'njtbx' fs 'njToolbox-2.0' fs 'examples'],...
-        [path fs 'njtbx' fs 'njToolbox-2.0' fs 'njFunc'],...
-        [path fs 'njtbx' fs 'njToolbox-2.0' fs 'njTBX-2.0'],...
-        [path fs 'njtbx' fs 'njToolbox-2.0' fs 'njTBX-2.0' fs 'Utilities']);
+njtbx_path=[path fs 'njtbx' fs 'njToolbox-2.0'];
+if(isdir(njtbx_path))
+    addpath(njtbx_path,...
+        [njtbx_path fs 'examples'],...
+        [njtbx_path fs 'njFunc'],...
+        [njtbx_path fs 'njTBX-2.0'],...
+        [njtbx_path fs 'njTBX-2.0' fs 'Utilities']);
 end
 
 % jars (2 of them) for external program njtbx
 % - used by WW3 functions (analyze ocean waves & seismic noise)
-jars=dir([path fs 'njtbx' fs '*.jar']);
+jars(1)=[path fs 'njtbx' fs 'njTools-2.0.12_jre1.6.jar'];
+jars(2)=[path fs 'njtbx' fs 'toolsUI-4.0.49.jar'];
 for i=1:numel(jars)
-    if(~ismember([path fs 'njtbx' fs jars(i).name],javaclasspath('-all')))
-        javaaddpath([path fs 'njtbx' fs jars(i).name]);
+    if(java_in_octave && ~ismember(jars(i),javaclasspath('-all')))
+        javaaddpath(jars(i));
     end
 end
+clear jars;
 
 end
