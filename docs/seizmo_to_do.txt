@@ -49,7 +49,7 @@ download_extras.bash
         - add new 3D models?
             - sph harm mantle models
                 - really need codes to synthesize info at points
-                    - fjsimmons has matlab codes along these lines it seems
+                    - fjsimmons might have matlab codes along these lines
             - ani mantle models
                 - just store the values as another field
                 - add an ani flag of some sort (should indicate type too)

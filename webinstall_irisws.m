@@ -103,7 +103,7 @@ try
     %   will generate warnings from at least Matlab.
     iriswsjar=[mypath fs irisws];
     if(java_in_octave && ...
-            all(cellfun('isempty',strfind(irisws,javaclasspath('-all')))))
+            all(cellfun('isempty',strfind(javaclasspath('-all'),irisws))))
         javaaddpath(iriswsjar);
     end
     

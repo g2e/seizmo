@@ -104,15 +104,15 @@ try
     seisjar=[mypath fs seis];
     mattaupjar=[mypath fs mattaup];
     if(java_in_octave && ...
-            all(cellfun('isempty',strfind(taup,javaclasspath('-all')))))
+            all(cellfun('isempty',strfind(javaclasspath('-all'),taup))))
         javaaddpath(taupjar);
     end
     if(java_in_octave && ...
-            all(cellfun('isempty',strfind(seis,javaclasspath('-all')))))
+            all(cellfun('isempty',strfind(javaclasspath('-all'),seis))))
         javaaddpath(seisjar);
     end
     if(java_in_octave && ...
-            all(cellfun('isempty',strfind(mattaup,javaclasspath('-all')))))
+            all(cellfun('isempty',strfind(javaclasspath('-all'),mattaup))))
         javaaddpath(mattaupjar);
     end
     

@@ -1,5 +1,5 @@
 % SEIZMO - Passive Seismology Toolbox
-% Version 0.6.15 Noshaq 25-Feb-2014
+% Version 0.6.15 Noshaq 2-Mar-2014
 %
 % New to SEIZMO? Overwhelmed by all the functions?
 %  <a href="matlab:showdemo sz_pub_beginning">THE BASICS</a>

@@ -72,21 +72,21 @@ if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
 end
 
 % removing irisws jar
-jars(1)=[path fs 'ws' fs 'IRIS-WS-2.0.6.jar'];
+jars{1}=[path fs 'ws' fs 'IRIS-WS-2.0.6.jar'];
 for i=1:numel(jars)
-    if(java_in_octave && ismember(jars(1),javaclasspath))
-        javarmpath(jars(1));
+    if(java_in_octave && ismember(jars{1},javaclasspath))
+        javarmpath(jars{1});
     end
 end
 clear jars;
 
 % removing the jars for mattaup
-jars(1)=[path fs 'mattaup' fs 'lib' fs 'TauP-2.1.1.jar'];
-jars(2)=[path fs 'mattaup' fs 'lib' fs 'seisFile-1.5.1.jar'];
-jars(3)=[path fs 'mattaup' fs 'lib' fs 'MatTauP-2.1.1.jar'];
+jars{1}=[path fs 'mattaup' fs 'lib' fs 'TauP-2.1.1.jar'];
+jars{2}=[path fs 'mattaup' fs 'lib' fs 'seisFile-1.5.1.jar'];
+jars{3}=[path fs 'mattaup' fs 'lib' fs 'MatTauP-2.1.1.jar'];
 for i=1:numel(jars)
-    if(java_in_octave && ismember(jars(i),javaclasspath))
-        javarmpath(jars(i));
+    if(java_in_octave && ismember(jars{i},javaclasspath))
+        javarmpath(jars{i});
     end
 end
 clear jars;
@@ -114,11 +114,11 @@ end
 
 % jars (2 of them) for external program njtbx
 % - used by WW3 functions (analyze ocean waves & seismic noise)
-jars(1)=[path fs 'njtbx' fs 'njTools-2.0.12_jre1.6.jar'];
-jars(2)=[path fs 'njtbx' fs 'toolsUI-4.0.49.jar'];
+jars{1}=[path fs 'njtbx' fs 'njTools-2.0.12_jre1.6.jar'];
+jars{2}=[path fs 'njtbx' fs 'toolsUI-4.0.49.jar'];
 for i=1:numel(jars)
-    if(java_in_octave && ismember(jars(i),javaclasspath))
-        javarmpath(jars(i));
+    if(java_in_octave && ismember(jars{i},javaclasspath))
+        javarmpath(jars{i});
     end
 end
 clear jars;

@@ -30,9 +30,10 @@ function [ok]=webinstall_extras(dlflag)
 %        Feb. 21, 2014 - initial version
 %        Feb. 27, 2014 - minor doc update
 %        Mar.  1, 2014 - iscfmdb not ready yet
+%        Mar.  2, 2014 - minor fix to web links
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2014 at 15:25 GMT
+%     Last Updated Mar.  2, 2014 at 15:25 GMT
 
 % todo:
 
@@ -72,7 +73,7 @@ try
     
     % grab files (either locally or remotely)
     url0='http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/';
-    url1='https://s3-us-west-2.amazonaws.com/seizmo/';
+    %url1='https://s3-us-west-2.amazonaws.com/seizmo/'; % backup currently
     fprintf(' Getting %s\n',sacpzdb);
     if(~dlflag && exist(sacpzdb,'file'))
         if(~exist([mypath fs sacpzdb],'file'))
@@ -87,7 +88,7 @@ try
             copyfile(which(sz3dmod),'.');
         end
     else
-        urlwrite([url1 sz3dmod],sz3dmod);
+        urlwrite([url0 sz3dmod],sz3dmod);
     end
     fprintf(' Getting %s\n',mapfeat);
     if(~dlflag && exist(mapfeat,'file'))
@@ -103,7 +104,7 @@ try
     %        copyfile(which(iscfmdb),'.');
     %    end
     %else
-    %    urlwrite([url1 iscfmdb],iscfmdb);
+    %    urlwrite([url0 iscfmdb],iscfmdb);
     %end
     
     % unpack files

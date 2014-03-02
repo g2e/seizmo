@@ -71,10 +71,12 @@ if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
 end
 
 % adding irisws jar
-jars(1)=[path fs 'ws' fs 'IRIS-WS-2.0.6.jar'];
+jars{1}='IRIS-WS-2.0.6.jar';
+pjars=strcat(path,fs,'ws',fs,jars);
 for i=1:numel(jars)
-    if(java_in_octave && ~ismember(jars(1),javaclasspath('-all')))
-        javaaddpath(jars(1));
+    if(java_in_octave && ...
+            all(cellfun('isempty',strfind(javaclasspath('-all'),jars{i}))))
+        javaaddpath(pjars{i});
     end
 end
 clear jars;
@@ -82,12 +84,14 @@ clear jars;
 % adding the jars for mattaup is not necessary for
 % taup*.m but you might want to do this now if you
 % directly use the jars or objects for some reason
-jars(1)=[path fs 'mattaup' fs 'lib' fs 'TauP-2.1.1.jar'];
-jars(2)=[path fs 'mattaup' fs 'lib' fs 'seisFile-1.5.1.jar'];
-jars(3)=[path fs 'mattaup' fs 'lib' fs 'MatTauP-2.1.1.jar'];
+jars{1}='TauP-2.1.1.jar';
+jars{2}='seisFile-1.5.1.jar';
+jars{3}='MatTauP-2.1.1.jar';
+pjars=strcat(path,fs,'mattaup',fs,'lib',fs,jars);
 for i=1:numel(jars)
-    if(java_in_octave && ~ismember(jars(i),javaclasspath('-all')))
-        javaaddpath(jars(i));
+    if(java_in_octave && ...
+            all(cellfun('isempty',strfind(javaclasspath('-all'),jars{i}))))
+        javaaddpath(pjars{i});
     end
 end
 clear jars;
@@ -115,11 +119,13 @@ end
 
 % jars (2 of them) for external program njtbx
 % - used by WW3 functions (analyze ocean waves & seismic noise)
-jars(1)=[path fs 'njtbx' fs 'njTools-2.0.12_jre1.6.jar'];
-jars(2)=[path fs 'njtbx' fs 'toolsUI-4.0.49.jar'];
+jars{1}='njTools-2.0.12_jre1.6.jar';
+jars{2}='toolsUI-4.0.49.jar';
+pjars=strcat(path,fs,'njtbx',fs,jars);
 for i=1:numel(jars)
-    if(java_in_octave && ~ismember(jars(i),javaclasspath('-all')))
-        javaaddpath(jars(i));
+    if(java_in_octave && ...
+            all(cellfun('isempty',strfind(javaclasspath('-all'),jars{i}))))
+        javaaddpath(pjars{i});
     end
 end
 clear jars;

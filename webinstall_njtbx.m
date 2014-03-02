@@ -141,11 +141,11 @@ try
     toolsuijar=[mypath fs toolsui];
     njtoolsjar=[mypath fs njtools];
     if(java_in_octave && ...
-            all(cellfun('isempty',strfind(toolsui,javaclasspath('-all')))))
+            all(cellfun('isempty',strfind(javaclasspath('-all'),toolsui))))
         javaaddpath(toolsuijar);
     end
     if(java_in_octave && ...
-            all(cellfun('isempty',strfind(njtools,javaclasspath('-all')))))
+            all(cellfun('isempty',strfind(javaclasspath('-all'),njtools))))
         javaaddpath(njtoolsjar);
     end
     
