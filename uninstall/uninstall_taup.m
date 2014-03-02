@@ -49,12 +49,12 @@ if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
 end
 
 % clear the dynamic java path
-jars(1)=[path fs 'TauP-2.1.1.jar'];
-jars(2)=[path fs 'seisFile-1.5.1.jar'];
-jars(3)=[path fs 'MatTauP-2.1.1.jar'];
+jars{1}=[path fs 'TauP-2.1.1.jar'];
+jars{2}=[path fs 'seisFile-1.5.1.jar'];
+jars{3}=[path fs 'MatTauP-2.1.1.jar'];
 for i=1:numel(jars)
-    if(java_in_octave && ismember(jars(i),javaclasspath))
-        javarmpath(jars(i));
+    if(java_in_octave && ismember(jars{i},javaclasspath))
+        javarmpath(jars{i});
     end
 end
 
@@ -66,9 +66,9 @@ if(isempty(sjcp)); return; end
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 
 % detect offending classpath.txt lines
-injcp=~cellfun('isempty',strfind(s2,jars(1))) ...
-    || ~cellfun('isempty',strfind(s2,jars(2))) ...
-    || ~cellfun('isempty',strfind(s2,jars(3)));
+injcp=~cellfun('isempty',strfind(s2,jars{1})) ...
+    | ~cellfun('isempty',strfind(s2,jars{2})) ...
+    | ~cellfun('isempty',strfind(s2,jars{3}));
 
 % only remove if necessary
 if(sum(injcp)>0)

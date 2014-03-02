@@ -65,11 +65,11 @@ end
 
 % clear the dynamic java path
 jarpath=fileparts(path);
-jars(1)=[jarpath fs 'toolsUI-4.0.49.jar'];
-jars(2)=[jarpath fs 'njTools-2.0.12_jre1.6.jar'];
+jars{1}=[jarpath fs 'toolsUI-4.0.49.jar'];
+jars{2}=[jarpath fs 'njTools-2.0.12_jre1.6.jar'];
 for i=1:numel(jars)
-    if(java_in_octave && ismember(jars(i),javaclasspath))
-        javarmpath(jars(i));
+    if(java_in_octave && ismember(jars{i},javaclasspath))
+        javarmpath(jars{i});
     end
 end
 
@@ -81,8 +81,8 @@ if(isempty(sjcp)); return; end
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 
 % detect offending classpath.txt lines
-injcp=~cellfun('isempty',strfind(s2,jars(1))) ...
-    || ~cellfun('isempty',strfind(s2,jars(2)));
+injcp=~cellfun('isempty',strfind(s2,jars{1})) ...
+    | ~cellfun('isempty',strfind(s2,jars{2}));
 
 % only remove if necessary
 if(sum(injcp)>0)

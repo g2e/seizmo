@@ -99,7 +99,7 @@ try
     
     % install jars to dynamic classpath
     iriswsjar=[mypath fs irisws];
-    if(java_in_octave && ~ismember(iriswsjar,javaclasspath))
+    if(java_in_octave && ~ismember(iriswsjar,javaclasspath('-all')))
         javaaddpath(iriswsjar);
     end
     

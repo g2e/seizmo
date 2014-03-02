@@ -84,9 +84,10 @@ function [s4d]=fk4d(data,width,overlap,varargin)
 %                        section, removed meaningless line
 %        July  6, 2010 - major update to struct, doc update
 %        Apr.  3, 2012 - minor doc update, use seizmocheck
+%        Mar.  1, 2014 - improved verbose output
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  3, 2012 at 14:05 GMT
+%     Last Updated Mar.  1, 2014 at 14:05 GMT
 
 % todo:
 
@@ -138,7 +139,7 @@ end
 % do fk analysis
 try
     % verbosity
-    verbose=seizmoverbose;
+    verbose=seizmoverbose(false);
     
     % synchronize to start of first record
     data=synchronize(data,'b','first');
@@ -156,14 +157,15 @@ try
     width=width*(e-b);
     tstep=width*(1-overlap);
     
+    % detail message
+    if(verbose)
+        disp('Getting Sliding Window fk Response');
+        print_time_left(0,nframes);
+    end
+    
     % loop over time windows
     skip=0;
     for i=1:nframes
-        % detail message
-        if(verbose)
-            fprintf('Getting fk Response Window %d of %d\n',i,nframes);
-        end
-        
         % get data window
         start=b+(i-1)*tstep;
         finish=start+width;
@@ -173,7 +175,12 @@ try
         data0(getvaluefun(data0,@(x)any(isnan(x(:)))))=[];
         
         % skip if <2 records
-        if(numel(data0)<2); skip=skip+1; continue; end
+        if(numel(data0)<2)
+            % detail message
+            if(verbose); print_time_left(i,nframes); end
+            skip=skip+1;
+            continue;
+        end
         
         % pass to fkvolume
         % - each column corresponds to a time range
@@ -183,6 +190,9 @@ try
         else
             s4d(:,i-skip)=fkvolume(data0,varargin{:});
         end
+        
+        % detail message
+        if(verbose); print_time_left(i,nframes); end
     end
     
     % throw error if no output
@@ -191,10 +201,16 @@ try
             'No windows contained 2 or more records!');
     end
     
+    % toggle verbosity back
+    seizmoverbose(verbose);
+    
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
     checkheader_state(oldcheckheaderstate);
 catch
+    % toggle verbosity back
+    seizmoverbose(verbose);
+    
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
     checkheader_state(oldcheckheaderstate);

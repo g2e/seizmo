@@ -130,7 +130,7 @@ if(exist('validseizmo','file'))
         [path fs 'xcalign'] ...
         [path fs 'mattaup']};
     rmpath(seizmo_path{:});
-    if(is_on_static_path(path{:}))
+    if(is_on_static_path(seizmo_path{:}))
         ok=ok & ~savepath;
     end
 else

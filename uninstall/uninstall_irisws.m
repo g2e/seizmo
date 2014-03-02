@@ -49,10 +49,10 @@ if(exist('OCTAVE_VERSION','builtin')==5 && isempty(ver('java')))
 end
 
 % clear the dynamic java path
-jars(1)=[path fs 'IRIS-WS-2.0.6.jar'];
+jars{1}=[path fs 'IRIS-WS-2.0.6.jar'];
 for i=1:numel(jars)
-    if(java_in_octave && ismember(jars(i),javaclasspath))
-        javarmpath(jars(i));
+    if(java_in_octave && ismember(jars{i},javaclasspath))
+        javarmpath(jars{i});
     end
 end
 
@@ -64,7 +64,7 @@ if(isempty(sjcp)); return; end
 s2=textread(sjcp,'%s','delimiter','\n','whitespace','');
 
 % detect offending classpath.txt lines
-injcp=~cellfun('isempty',strfind(s2,jars(1)));
+injcp=~cellfun('isempty',strfind(s2,jars{1}));
 
 % only remove if necessary
 if(sum(injcp)>0)

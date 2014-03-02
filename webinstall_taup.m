@@ -102,13 +102,13 @@ try
     taupjar=[mypath fs taup];
     seisjar=[mypath fs seis];
     mattaupjar=[mypath fs mattaup];
-    if(java_in_octave && ~ismember(taupjar,javaclasspath))
+    if(java_in_octave && ~ismember(taupjar,javaclasspath('-all')))
         javaaddpath(taupjar);
     end
-    if(java_in_octave && ~ismember(seisjar,javaclasspath))
+    if(java_in_octave && ~ismember(seisjar,javaclasspath('-all')))
         javaaddpath(seisjar);
     end
-    if(java_in_octave && ~ismember(mattaupjar,javaclasspath))
+    if(java_in_octave && ~ismember(mattaupjar,javaclasspath('-all')))
         javaaddpath(mattaupjar);
     end
     

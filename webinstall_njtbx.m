@@ -139,10 +139,10 @@ try
     % install jars to dynamic classpath
     toolsuijar=[mypath fs toolsui];
     njtoolsjar=[mypath fs njtools];
-    if(java_in_octave && ~ismember(toolsuijar,javaclasspath))
+    if(java_in_octave && ~ismember(toolsuijar,javaclasspath('-all')))
         javaaddpath(toolsuijar);
     end
-    if(java_in_octave && ~ismember(njtoolsjar,javaclasspath))
+    if(java_in_octave && ~ismember(njtoolsjar,javaclasspath('-all')))
         javaaddpath(njtoolsjar);
     end
     
