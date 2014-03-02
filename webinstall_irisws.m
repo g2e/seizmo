@@ -32,9 +32,10 @@ function [ok]=webinstall_irisws(mypath)
 %        Feb. 25, 2014 - use 'ws' directory rather than 'irisws',
 %                        bugfix: assign to output
 %        Feb. 27, 2014 - install on dynamic & static (if possible)
+%        Mar.  2, 2014 - avoid warnings by search javaclasspath by filename
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2014 at 15:25 GMT
+%     Last Updated Mar.  2, 2014 at 15:25 GMT
 
 % todo:
 
@@ -97,9 +98,12 @@ try
         java_in_octave=false;
     end
     
-    % install jars to dynamic classpath
+    % install jars to dynamic classpath if not already on dynamic/static
+    % - Avoid having jars of the same name with different paths as this
+    %   will generate warnings from at least Matlab.
     iriswsjar=[mypath fs irisws];
-    if(java_in_octave && ~ismember(iriswsjar,javaclasspath('-all')))
+    if(java_in_octave && ...
+            all(cellfun('isempty',strfind(irisws,javaclasspath('-all')))))
         javaaddpath(iriswsjar);
     end
     

@@ -40,9 +40,10 @@ function [ok]=webinstall_njtbx(mypath)
 %                        added handling of octave without java
 %        Feb. 20, 2014 - fixed warning id, update see also list
 %        Feb. 27, 2014 - install on dynamic & static (if possible)
+%        Mar.  2, 2014 - avoid warnings by search javaclasspath by filename
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2014 at 15:25 GMT
+%     Last Updated Mar.  2, 2014 at 15:25 GMT
 
 % todo:
 
@@ -139,10 +140,12 @@ try
     % install jars to dynamic classpath
     toolsuijar=[mypath fs toolsui];
     njtoolsjar=[mypath fs njtools];
-    if(java_in_octave && ~ismember(toolsuijar,javaclasspath('-all')))
+    if(java_in_octave && ...
+            all(cellfun('isempty',strfind(toolsui,javaclasspath('-all')))))
         javaaddpath(toolsuijar);
     end
-    if(java_in_octave && ~ismember(njtoolsjar,javaclasspath('-all')))
+    if(java_in_octave && ...
+            all(cellfun('isempty',strfind(njtools,javaclasspath('-all')))))
         javaaddpath(njtoolsjar);
     end
     

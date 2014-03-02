@@ -32,9 +32,10 @@ function [ok]=webinstall_taup(mypath)
 %        Feb. 20, 2014 - initial version
 %        Feb. 25, 2014 - bugfix: assign to output
 %        Feb. 28, 2014 - install on dynamic & static (if possible)
+%        Mar.  2, 2014 - avoid warnings by search javaclasspath by filename
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 28, 2014 at 15:25 GMT
+%     Last Updated Mar.  2, 2014 at 15:25 GMT
 
 % todo:
 
@@ -102,13 +103,16 @@ try
     taupjar=[mypath fs taup];
     seisjar=[mypath fs seis];
     mattaupjar=[mypath fs mattaup];
-    if(java_in_octave && ~ismember(taupjar,javaclasspath('-all')))
+    if(java_in_octave && ...
+            all(cellfun('isempty',strfind(taup,javaclasspath('-all')))))
         javaaddpath(taupjar);
     end
-    if(java_in_octave && ~ismember(seisjar,javaclasspath('-all')))
+    if(java_in_octave && ...
+            all(cellfun('isempty',strfind(seis,javaclasspath('-all')))))
         javaaddpath(seisjar);
     end
-    if(java_in_octave && ~ismember(mattaupjar,javaclasspath('-all')))
+    if(java_in_octave && ...
+            all(cellfun('isempty',strfind(mattaup,javaclasspath('-all')))))
         javaaddpath(mattaupjar);
     end
     
