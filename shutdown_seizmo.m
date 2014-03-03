@@ -102,6 +102,8 @@ end
 if(isdir([path fs 'm_map']))
     rmpath([path fs 'm_map_fixes'],...
         [path fs 'm_map']);
+else
+    rmpath([path fs 'm_map_fixes']);
 end
 njtbx_path=[path fs 'njtbx' fs 'njToolbox-2.0'];
 if(isdir(njtbx_path))

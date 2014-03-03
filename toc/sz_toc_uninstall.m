@@ -1,5 +1,6 @@
 function []=sz_toc_uninstall()
 % Uninstallation Functions
+%<a href="matlab:help clean_seizmo">clean_seizmo</a>        - Deletes Extra SEIZMO Packages
 %<a href="matlab:help uninstall_exportfig">uninstall_exportfig</a> - Uninstalls the currently installed export_fig
 %<a href="matlab:help uninstall_extras">uninstall_extras</a>    - Uninstalls the extra SEIZMO components
 %<a href="matlab:help uninstall_gshhs">uninstall_gshhs</a>     - Uninstalls the currently installed GSHHS

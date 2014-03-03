@@ -14,8 +14,6 @@ how about installing the latest octave stable branch instead
 taup Sn/Pn no refracted path bug
 taup strange extra P phases bug
 
-uninstall/clean_seizmo.m
-
 1. install_seizmo improvements
     - extras
         - iscfmdb

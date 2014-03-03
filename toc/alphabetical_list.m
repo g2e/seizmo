@@ -57,6 +57,7 @@ function []=alphabetical_list()
 %<a href="matlab:help chkstorms">chkstorms</a>                      - Validate a storms struct
 %<a href="matlab:help circle">circle</a>                         - Returns points on a circle in cartesian space
 %<a href="matlab:help clean_contents_file">clean_contents_file</a>            - Cleans up formatting of a Contents.m file
+%<a href="matlab:help clean_seizmo">clean_seizmo</a>                   - Deletes Extra SEIZMO Packages
 %<a href="matlab:help clip">clip</a>                           - Clip SEIZMO data above a threshhold
 %<a href="matlab:help clonefigure">clonefigure</a>                    - Makes a clone of a figure
 %<a href="matlab:help closest_point_on_gc">closest_point_on_gc</a>            - Return closest point on great circle to a point
