@@ -14,7 +14,7 @@ how about installing the latest octave stable branch instead
 taup Sn/Pn no refracted path bug
 taup strange extra P phases bug
 
-download_extras.bash
+uninstall/clean_seizmo.m
 
 1. install_seizmo improvements
     - extras
