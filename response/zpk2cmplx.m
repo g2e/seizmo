@@ -49,7 +49,9 @@ function [h]=zpk2cmplx(f,z,p,k,wpow)
 %        Oct. 22, 2009 - fixed NaN for 0Hz in vel/acc response
 %        Feb. 11, 2011 - mass nargchk fix
 %        Feb.  3, 2012 - doc update
-%        Mar. 10, 2014 - update See also section
+%        Mar. 10, 2014 - update See also section, bugfix: prod needs dim
+%                        parameter for single pole or zero, bugfix: zero
+%                        out response where freq == 0 not h(1)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Mar. 10, 2014 at 15:05 GMT
@@ -73,9 +75,9 @@ if(~isscalar(wpow) || wpow~=fix(wpow))
 end
 nf=numel(f); nz=numel(z); np=numel(p);
 w=complex(0,2*pi*f(:).');
-h=k.*prod(w(ones(nz,1),:)-z(:,ones(nf,1))) ...
-    ./prod(w(ones(np,1),:)-p(:,ones(nf,1)));
+h=k.*prod(w(ones(nz,1),:)-z(:,ones(nf,1)),1) ...
+    ./prod(w(ones(np,1),:)-p(:,ones(nf,1)),1);
 h=h./w.^wpow;
-if(wpow>0); h(1)=0; end
+if(wpow>0); h(f==0)=0; end
 
 end
