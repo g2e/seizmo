@@ -82,6 +82,7 @@ function [data]=getsacpz(data,varargin)
 %        Mar. 10, 2014 - works with new sacpzdb format, empty khole fixes,
 %                        warn for any bad responses, update See also
 %                        section
+%        Mar. 10, 2014 - also handle unset KHOLE
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Mar. 10, 2014 at 12:45 GMT
@@ -118,10 +119,10 @@ try
     
     % require all fields to be defined
     badname=strcmpi('NaN',knetwk) | strcmpi('NaN',kstnm) ...
-        | strcmpi('NaN',kcmpnm) | strcmpi('NaN',khole);
+        | strcmpi('NaN',kcmpnm);
     if(any(badname))
         error('seizmo:getsacpz:badName',...
-            ['KNETWK, KSTNM, KHOLE, and/or KCMPNM fields not set!' ...
+            ['KNETWK, KSTNM, and/or KCMPNM fields not set!' ...
             '\nRecord(s):\n' sprintf('%d ',find(badname))]);
     end
     % - all time fields should not be undef, nan, inf
@@ -133,7 +134,7 @@ try
     end
     
     % handle the many ways people have come up with to fill an empty khole
-    khole2=khole; badhole=ismember(khole,{'__' '99' 'XX' '  ' '--'});
+    khole2=khole; badhole=ismember(khole,{'__' '99' 'XX' '  ' '--' 'NaN'});
     if(any(badhole)); khole2(badhole)={''}; end
     
     % get sacpzdb

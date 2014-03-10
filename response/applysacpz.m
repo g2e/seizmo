@@ -121,7 +121,8 @@ function [data,pz]=applysacpz(data,varargin)
 %        May  30, 2012 - pow2pad=0 by default
 %        Mar. 10, 2014 - works with new sacpz format, error if no sacpz,
 %                        reduced computations (skip neg freq), skip/delete
-%                        records with bad responses
+%                        records with bad responses, fixed upper taper eps
+%                        bug that could cause flatlining
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Mar. 10, 2014 at 20:30 GMT
@@ -249,7 +250,7 @@ try
         6 6 6 -1 -1 -2 -2 -3 -3 -4 -4 -5 -5 -6 -6 -7 -7 0 0 0 0 0 0 0 0];
     
     % default options
-    tlimbu=[-1*ones(nrecs,2) 2*nyq 2*nyq+eps]; tlim=tlimbu;
+    tlimbu=[-1*ones(nrecs,2) 2*nyq 2*nyq+10*eps(2*nyq)]; tlim=tlimbu;
     tlimstr={'-1' '-1' '2*NYQUIST' '2*NYQUIST'};
     varargin=[{'t' 'hann' 'o' [] 'u' idep ...
         'id' 'icounts' 'h2o' zeros(nrecs,1)} varargin];

@@ -111,7 +111,9 @@ function [data,pz]=removesacpz(data,varargin)
 %        May  30, 2012 - pow2pad=0 by default
 %        June  1, 2012 - reduced computions (skip neg freq), found sac bug
 %        Mar. 10, 2014 - works with new sacpz format, error if no sacpz,
-%                        skip/delete records with bad responses, doc update
+%                        skip/delete records with bad responses, doc
+%                        update, fixed upper taper eps bug that could cause
+%                        flatlining
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated Mar. 10, 2014 at 20:30 GMT
@@ -247,7 +249,7 @@ try
         'icounts' 'icounts'};
     
     % default options
-    tlimbu=[-1*ones(nrecs,2) 2*nyq 2*nyq+eps]; tlim=tlimbu;
+    tlimbu=[-1*ones(nrecs,2) 2*nyq 2*nyq+10*eps(2*nyq)]; tlim=tlimbu;
     tlimstr={'-1' '-1' '2*NYQUIST' '2*NYQUIST'};
     varargin=[{'t' 'hann' 'o' [] 'u' 'dis' ...
         'id' 'idisp' 'h2o' zeros(nrecs,1)} varargin];
