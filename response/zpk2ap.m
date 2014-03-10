@@ -45,16 +45,18 @@ function [a,p]=zpk2ap(f,z,p,k,wpow)
 %     figure; loglog(f,a);
 %     figure; plot(f,p); set(gca,'xscale','log');
 %
-%    See also: ZPK2CMPLX, READSACPZ
+%    See also: ZPK2CMPLX, READSACPZ, READSACPZ_RDSEED, GETSACPZ,
+%              REMOVESACPZ, APPLYSACPZ
 
 %     Version History:
 %        Oct. 19, 2009 - initial version
 %        Oct. 22, 2009 - fixed NaN for 0Hz in vel/acc response
 %        Feb. 11, 2011 - mass nargchk fix
 %        Feb.  3, 2012 - doc update
+%        Mar. 10, 2014 - update See also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2012 at 15:05 GMT
+%     Last Updated Mar. 10, 2014 at 15:05 GMT
 
 % todo:
 

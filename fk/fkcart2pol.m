@@ -33,9 +33,10 @@ function [fk]=fkcart2pol(fk,ass,sss,method)
 %     Version History:
 %        July 14, 2010 - initial version
 %        Apr.  4, 2012 - minor doc update
+%        Mar.  5, 2014 - fix bugs for array fk input
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  4, 2012 at 16:05 GMT
+%     Last Updated Mar.  5, 2014 at 16:05 GMT
 
 % todo:
 % - significant information is lost
@@ -49,8 +50,8 @@ error(nargchk(1,4,nargin));
 error(chkfkstruct(fk));
 nfk=numel(fk);
 
-% error if polar
-if(any(fk.polar))
+% error if any polar
+if(any([fk.polar]))
     error('seizmo:fkcart2pol:badInput',...
         'FK struct is already polar!');
 end
@@ -64,15 +65,15 @@ if(nargin<3 || isempty(sss))
     end
 end
 if(nargin<4 || isempty(method)); method='linear'; end
-if(~isreal(ass) || ~isequalsizeorscalar(fk(:),ass(:)) || ass<=0)
+if(~isreal(ass) || ~isequalnumelorscalar(fk,ass) || any(ass(:)<=0))
     error('seizmo:fkcart2pol:badInput',...
         'AZISTEPSIZE must be a positive and in degrees!');
 end
-if(~isreal(sss) || ~isequalsizeorscalar(fk(:),sss(:)) || sss<=0)
+if(~isreal(sss) || ~isequalnumelorscalar(fk,sss) || any(sss(:)<=0))
     error('seizmo:fkcart2pol:badInput',...
         'SLOWSTEPSIZE must be a positive and in sec/deg!');
 end
-if(~ischar(method) || size(method,1)~=1 || ndims(method)>2)
+if(~isstring(method))
     error('seizmo:fkcart2pol:badInput',...
         'METHOD must be a string!');
 end

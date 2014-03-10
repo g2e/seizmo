@@ -20,9 +20,7 @@
 %                     -463.1 -                 430.5i
 %                          0                         
 %                          0                         
-%                          0  
-%    for sacpzdb.GE(idx) where idx is
-%    idx=[565:567 572:574 579:581 583:591 607:609 614:616 621:623 637:639];
+%                          0                         
 %
 % 2. Fixed 70 bad poles for PN network:
 %    Reason: Unpaired complex value turns out to be a typo based on
@@ -39,8 +37,6 @@
 %                    -0.1486 -                0.1486i
 %                    -414.69                         
 %                   -999.027                         
-%    for sacpzdb.PN(idx) where idx is
-%    idx=[1 5:71 78:79];
 %
 % 3. Fixed 1 bad pole for CZ network:
 %    Reason: Conjugate pair imaginary portion typo. Fixed based on
@@ -72,7 +68,6 @@
 %                   -45.4483                         
 %                    -8.7307 +               42.4144i
 %                    -8.7307 -               42.4144i
-%    for sacpzdb.CZ(56)
 %
 % 4. Fixed 6 bad poles for network AF:
 %    Reason: Conjugate pair sign error.
@@ -83,8 +78,6 @@
 %    to:
 %                    -0.9211 +                  0.94i
 %                    -0.9211 -                  0.94i
-%    for sacpzdb.AF(idx) where idx is
-%    idx=[118:123];
 %
 % 5. Fixed 6 bad poles for network AZ:
 %    Reason: Conjugate pair sign error.
@@ -99,8 +92,6 @@
 %                       -981 -                  1009i
 %                      -3290 +                  1263i
 %                      -3290 -                  1263i
-%    for sacpzdb.AZ(idx) where idx is
-%    idx=[2686:2691];
 %
 
 
@@ -115,14 +106,12 @@
 %                   -9512.74 -                 11470i
 %                   -454.526                         
 %                   -396.553                         
-%                   -105.139 -               390.123i
-%                   -105.139 +               392.217i
+%    !              -105.139 -               390.123i
+%    !              -105.139 +               392.217i
 %                   -15.4294                         
 %                    -0.0371 +                0.0368i
 %                    -0.0371 -                0.0368i
 %    to:
-%    for sacpzdb.BK(idx) where idx is
-%    idx=[4106        4115        4126        4146];
 %
 % 7. Fixed 4 bad poles for network BK:
 %    Reason: Typo in imaginary part of conjugate pair. Which is right?
@@ -134,14 +123,12 @@
 %                   -9512.74 -                 11470i
 %                   -454.526                         
 %                   -396.155                         
-%                   -105.023 -               389.432i
-%                   -105.023 +               392.573i
+%    !              -105.023 -               389.432i
+%    !              -105.023 +               392.573i
 %                   -15.4441                         
 %                    -0.0371 +                0.0368i
 %                    -0.0371 -                0.0368i
 %    to:
-%    for sacpzdb.BK(idx) where idx is
-%    idx=[4108        4117        4128        4148];
 %
 % 8. Fixed 4 bad poles for network BK:
 %    Reason: Typo in imaginary part of conjugate pair. Which is right?
@@ -153,14 +140,12 @@
 %                   -9512.74 -                 11470i
 %                   -454.526                         
 %                   -396.951                         
-%                   -105.254 -               390.814i
-%                   -105.254 +               391.861i
+%    !              -105.254 -               390.814i
+%    !              -105.254 +               391.861i
 %                   -15.4147                         
 %                    -0.0371 +                0.0368i
 %                    -0.0371 -                0.0368i
 %    to:
-%    for sacpzdb.BK(idx) where idx is
-%    idx=[4110        4119        4130        4150];
 %
 % 9. Fixed 2 bad poles for network BK:
 %    Reason: Typo in imaginary part of conjugate pair. The first is
@@ -176,8 +161,8 @@
 %                   -9512.74 -                 11470i
 %                   -454.526                         
 %                   -399.485                         
-%                   -103.798 -               391.065i
-%                   -103.798 +               397.349i
+%    !              -103.798 -               391.065i
+%    !              -103.798 +               397.349i
 %                   -15.5132                         
 %                    -0.0371 +                0.0367i
 %                    -0.0371 -                0.0367i
@@ -193,8 +178,6 @@
 %                   -15.5132                         
 %                    -0.0371 +                0.0367i
 %                    -0.0371 -                0.0367i
-%    for sacpzdb.BK(idx) where idx is
-%    idx=[4155        4161];
 %
 
 
@@ -213,7 +196,7 @@
 %   9 p(1)~=conj(p(2))
 %  10 p(5)~=conj(p(6))
 %  11 p(1)~=conj(p(2))
-% BK HUGE.....
+% BK is HUGE.....
 % FA p(1)~=conj(p(2))    (HN[ZEN])
 %                     -220.8 +                   265i
 %                     -220.8 -                   260i
@@ -270,6 +253,7 @@
 %        Feb.  4, 2010 - fixed some typos
 %        May  28, 2010 - AZ fix good, BK fixes pending, note fix_bad_sacpz
 %        Feb.  3, 2012 - doc update
+%        Mar.  6, 2014 - minor doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2012 at 02:25 GMT
+%     Last Updated Mar.  6, 2014 at 02:25 GMT

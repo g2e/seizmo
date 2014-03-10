@@ -19,8 +19,8 @@ cd ../..
 mkdir -p njtbx
 cd njtbx
 wget http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/njToolbox-2.0.zip
-wget http://es.sourceforge.jp/frs/g_redir.php?m=jaist&f=%2Fnjtbx%2FnjTBX-downloads%2FtoolsUI-4.0.49.jar
-wget http://es.sourceforge.jp/frs/g_redir.php?m=jaist&f=%2Fnjtbx%2FnjTBX-downloads%2FnjTools-2.0.12_jre1.6.jar
+wget http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/toolsUI-4.0.49.jar
+wget http://epsc.wustl.edu/~ggeuler/codes/m/seizmo/njTools-2.0.12_jre1.5.jar
 unzip njToolbox-2.0.zip
 cd ..
 

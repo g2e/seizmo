@@ -23,6 +23,7 @@ function []=writesacpz_rdseed(pz,filename,oflag)
 %     By default OVERWRITE is FALSE.
 %
 %    Notes:
+%     - WRITESACPZ_RDSEED replaced DB2SACPZ.
 %
 %    Examples:
 %     % Grab ANMO & CMB polezero info and write to a single file:
@@ -35,15 +36,15 @@ function []=writesacpz_rdseed(pz,filename,oflag)
 %     writesacpz_rdseed(pz,'SAC_PZs_IU.ANMO_BK.CMB');
 %
 %    See also: READSACPZ_RDSEED, WRITESACPZ, READSACPZ, REMOVESACPZ,
-%              APPLYSACPZ, MAKESACPZDB, DB2SACPZ, GENSACPZNAME,
-%              PARSE_SACPZ_FILENAME, GETSACPZ, ISSCAPZ_RDSEED,
-%              FIX_OLD_SACPZ, SSIDX, SSCAT
+%              APPLYSACPZ, MAKESACPZDB, GENSACPZNAME, PARSE_SACPZ_FILENAME,
+%              GETSACPZ, ISSCAPZ_RDSEED, FIX_OLD_SACPZ, SSIDX, SSCAT
 
 %     Version History:
 %        Feb. 25, 2014 - initial version
+%        Mar.  6, 2014 - update See also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 25, 2014 at 15:05 GMT
+%     Last Updated Mar.  6, 2014 at 15:05 GMT
 
 % todo:
 

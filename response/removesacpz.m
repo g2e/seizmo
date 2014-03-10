@@ -86,7 +86,7 @@ function [data,pz]=removesacpz(data,varargin)
 %     % from 200 to 150 seconds:
 %     data=removesacpz(data,'units','vel','taperlimits',[1/200 1/150]);
 %
-%    See also: APPLYSACPZ, GETSACPZ, DECONVOLVE
+%    See also: APPLYSACPZ, GETSACPZ, DECONVOLVE, ZPK2CMPLX, ZPK2AP
 
 %     Version History:
 %        Oct. 22, 2009 - initial version
@@ -110,9 +110,11 @@ function [data,pz]=removesacpz(data,varargin)
 %        Mar. 13, 2012 - use getheader improvements
 %        May  30, 2012 - pow2pad=0 by default
 %        June  1, 2012 - reduced computions (skip neg freq), found sac bug
+%        Mar. 10, 2014 - works with new sacpz format, error if no sacpz,
+%                        skip/delete records with bad responses, doc update
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  1, 2012 at 20:30 GMT
+%     Last Updated Mar. 10, 2014 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -175,6 +177,34 @@ try
     
     % number of records
     nrecs=numel(data);
+    
+    % handle no records with pz
+    if(nrecs==0)
+        error('seizmo:removesacpz:noPoleZeros',...
+            'No SAC PoleZeros are available for records in DATA!');
+    end
+    
+    % now remove those with a bad sacpz
+    pz=find(pz);
+    keep=true(nrecs,1);
+    for i=1:nrecs
+        if(isfield(data(i).misc.sacpz,'bad') && data(i).misc.sacpz.bad)
+            warning('seizmo:removesacpz:badSACPZ',...
+                'Record %d has a bad SAC PoleZero response! Deleting!',...
+                pz(i));
+            keep(i)=false;
+        end
+    end
+    data=data(keep);
+    
+    % number of records
+    nrecs=numel(data);
+    
+    % handle no records with pz
+    if(nrecs==0)
+        error('seizmo:removesacpz:noPoleZeros',...
+            'No Good SAC PoleZeros are available for records in DATA!');
+    end
     
     % get header info
     [npts,ncmp,delta,e,iftype]=getheader(data,...
@@ -371,8 +401,8 @@ try
         freq=linspace(0,nyq(i),nspts/2+1);
         
         % convert zpk to complex (this is several orders better than SAC)
-        h=zpk2cmplx(freq,data(i).misc.sacpz.z,data(i).misc.sacpz.p,...
-            data(i).misc.sacpz.k,wpow(i));
+        h=zpk2cmplx(freq,data(i).misc.sacpz.z{1},...
+            data(i).misc.sacpz.p{1},data(i).misc.sacpz.k,wpow(i));
         h=((abs(h)+h2o(i)).*exp(1i*angle(h))).'; % add waterlevel...
         
         % now apply taper
@@ -385,6 +415,7 @@ try
         tmpgood=[good false(1,nspts/2-1)];
         
         % apply transfer function
+        % - multiply by 1e9 to account for SAC PoleZero in meters
         tmp(tmpgood,:)=1e9*tmp(tmpgood,:).*h(good,ones(ncmp(i),1));
         tmp(~tmpgood,:)=0; % no response outside taper limits
         tmp(nspts/2+2:end,:)=conj(tmp(nspts/2:-1:2,:)); % neg frequencies
@@ -429,8 +460,8 @@ catch
         fprintf('REMOVESACPZ bombed out on record: %d\n',i);
         data(i)
         data(i).misc.sacpz
-        data(i).misc.sacpz.z
-        data(i).misc.sacpz.p
+        data(i).misc.sacpz.z{1}
+        data(i).misc.sacpz.p{1}
         data(i).misc.sacpz.k
     end
     

@@ -41,9 +41,10 @@ function [ok]=webinstall_njtbx(mypath)
 %        Feb. 20, 2014 - fixed warning id, update see also list
 %        Feb. 27, 2014 - install on dynamic & static (if possible)
 %        Mar.  2, 2014 - avoid warnings by search javaclasspath by filename
+%        Mar. 10, 2014 - use java 1.5 for compatibility
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  2, 2014 at 15:25 GMT
+%     Last Updated Mar. 10, 2014 at 15:25 GMT
 
 % todo:
 
@@ -76,7 +77,7 @@ try
     % current versions
     njtbx='njToolbox-2.0.zip';           % ~5mb
     toolsui='toolsUI-4.0.49.jar';        % ~20mb
-    njtools='njTools-2.0.12_jre1.6.jar'; % ~5mb
+    njtools='njTools-2.0.12_jre1.5.jar'; % ~5mb
     
     % grab files (either locally or remotely)
     % - remote location is from japan b/c sourceforge

@@ -5,13 +5,10 @@ function [varargout]=geofkslowslide(vol,frng,srng,delay,varargin)
 %              geofkslowslide(vol,frng)
 %              geofkslowslide(vol,frng,srng)
 %              geofkslowslide(vol,frng,srng,delay)
-%              geofkslowslide(vol,frng,srng,delay,projopt)
-%              geofkslowslide(vol,frng,srng,delay,projopt,dblim)
-%              geofkslowslide(vol,frng,srng,delay,projopt,dblim,zerodb)
-%              geofkslowslide(vol,frng,srng,delay,projopt,dblim,zerodb,...
-%                             fgcolor,bgcolor)
-%              geofkslowslide(vol,frng,srng,delay,projopt,dblim,zerodb,...
-%                             fgcolor,bgcolor,ax)
+%              geofkslowslide(vol,frng,srng,delay,dblim)
+%              geofkslowslide(vol,frng,srng,delay,dblim,zerodb)
+%              geofkslowslide(vol,frng,srng,delay,dblim,zerodb,...
+%                              'mmap_opt1',mmap_val1,...)
 %              mov=geofkslowslide(...);
 %
 %    Description:
@@ -33,31 +30,19 @@ function [varargout]=geofkslowslide(vol,frng,srng,delay,varargin)
 %     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY) specifies the delay between the
 %     plotting of each slowness in seconds.  The default DELAY is 0.33s.
 %
-%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT) allows passing options to
-%     M_PROJ.  See M_PROJ('SET') for possible projections and see
-%     M_PROJ('GET',PROJ) for a list of possible additional options specific
-%     to that projection.
-%
-%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM) sets the dB limits
+%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM) sets the dB limits
 %     for coloring the beam data.  The default is [-12 0] for the default
 %     ZERODB (see next Usage form).  If ZERODB IS 'min' or 'median', the
 %     default DBLIM is [0 12].  DBLIM must be a real-valued 2-element
 %     vector.
 %
-%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB) changes what
+%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM,ZERODB) changes what
 %     0dB corresponds to in the plot.  The allowed values are 'min', 'max',
 %     'median', & 'abs'.  The default is 'max'.
 %
-%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB,FGCOLOR,...
-%     BGCOLOR) specifies the foreground and background colors of the plot. 
-%     The default is 'w' for FGCOLOR and 'k' for BGCOLOR.  Note that if one
-%     is specified and the other is not, an opposing color is found using
-%     INVERTCOLOR.  The color scale is also changed so the noise clip is at
-%     BGCOLOR.
-%
-%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB,FGCOLOR,...
-%     BGCOLOR,AX) sets the axes that the map is drawn in.  This is useful
-%     for subplots, guis, etc.
+%     GEOFKSLOWSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM,ZERODB,...
+%                    'MMAP_OPT1',MMAP_VAL1,...) passes additional options
+%     on to MMAP to alter the map.
 %
 %     MOV=GEOFKSLOWSLIDE(...) creates a Matlab movie MOV.  This can played
 %     using the function MOVIE.  See MOVIE2AVI for exporting as an AVI
@@ -75,14 +60,15 @@ function [varargout]=geofkslowslide(vol,frng,srng,delay,varargin)
 %        July  6, 2010 - update for new struct
 %        July  8, 2010 - doc update
 %        Apr.  4, 2012 - minor doc update
+%        Mar.  5, 2014 - update doc for plotgeofkmap input changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  4, 2012 at 10:25 GMT
+%     Last Updated Mar.  5, 2014 at 10:25 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,10,nargin));
+error(nargchk(1,inf,nargin));
 
 % check geofk struct
 error(chkgeofkstruct(vol));
@@ -133,13 +119,13 @@ nslow=numel(slows);
 % make initial plot
 ax=plotgeofkmap(geofkvol2map(vol,[],[slows(1) slows(1)]),varargin{:});
 fh=get(ax,'parent');
-if(makemovie); varargout{1}=getframe(fh); end
+if(makemovie); varargout{1}=getframe(fh); else drawnow; end
 
 % loop over remaining frequencies
 for i=2:nslow
     pause(delay);
     updategeofkmap(geofkvol2map(vol,[],[slows(i) slows(i)]),ax);
-    if(makemovie); varargout{1}(i)=getframe(fh); end
+    if(makemovie); varargout{1}(i)=getframe(fh); else drawnow; end
 end
 
 end

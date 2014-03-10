@@ -33,9 +33,10 @@ function [ok]=uninstall_njtbx()
 %                        use, updated see also list
 %        Mar.  1, 2014 - savepath only called if needed, only remove
 %                        specific jars, java detection
+%        Mar. 10, 2014 - use java 1.5 for compatibility
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2014 at 15:25 GMT
+%     Last Updated Mar. 10, 2014 at 15:25 GMT
 
 % todo:
 
@@ -66,7 +67,7 @@ end
 % clear the dynamic java path
 jarpath=fileparts(path);
 jars{1}=[jarpath fs 'toolsUI-4.0.49.jar'];
-jars{2}=[jarpath fs 'njTools-2.0.12_jre1.6.jar'];
+jars{2}=[jarpath fs 'njTools-2.0.12_jre1.5.jar'];
 for i=1:numel(jars)
     if(java_in_octave && ismember(jars{i},javaclasspath))
         javarmpath(jars{i});

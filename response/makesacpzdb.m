@@ -5,43 +5,36 @@ function [db]=makesacpzdb(varargin)
 %              db=makesacpzdb(dir1,...,dirN)
 %
 %    Description:
-%     DB=MAKESACPZDB() creates a structure from all valid SAC Polezero
-%     files in the current directory.  See the Notes sections of
-%     PARSE_SACPZ_FILENAME and READSACPZ for file format info.
-%
-%     SACPZ data structure layout:
-%      path   - path to PoleZero file
-%      name   - PoleZero file name
-%      knetwk - network associated with PoleZero file
-%      kstnm  - station associated with PoleZero file
-%      kcmpnm - component associated with PoleZero file
-%      khole  - stream associated with PoleZero file
-%      b      - begin time for PoleZero validity
-%      e      - end time for PoleZero validity
-%      z      - zeros
-%      p      - poles
-%      k      - constant
+%     DB=MAKESACPZDB() creates a structure from RDSEED "annotated" SAC
+%     PoleZero files in the current directory.  See the Notes sections of
+%     READSACPZ for basic file format info and ISSACPZ_RDSEED &
+%     READSACPZ_RDSEED for info on the annotation and the returned
+%     struct.
 %
 %     DB=MAKESACPZDB(DIR1,...,DIRN) builds the structure using directories
 %     DIR1 thru DIRN.
 %
 %    Notes:
+%     - Non-annotated SAC PoleZero files are no longer allowed by
+%       MAKESACPZDB.  To annotate an old-style SAC PoleZero file when you
+%       cannot get one from IRIS or where ever else use these functions:
+%        READSACPZ + FIX_OLD_SACPZ + WRITESACPZ_RDSEED
 %
 %    Examples:
 %     % To add-in some SAC PoleZero files to the main SACPZ database:
 %      % load and flatten the main db
 %      sacpzdb_tmp=load('sacpzdb');
 %      sacpzdb_tmp=struct2cell(sacpzdb_tmp);
-%      sacpzdb_tmp=cat(1,sacpzdb_tmp{:});
+%      sacpzdb_tmp=sscat(sacpzdb_tmp{:});
 %      
 %      % create db from personal directory
 %      mysacpzdb=makesacpzdb('my/sacpz/dir');
 %
 %      % concatenate the dbs
-%      sacpzdb_tmp=cat(1,sacpzdb_tmp,mysacpzdb)
+%      sacpzdb_tmp=sscat(sacpzdb_tmp,mysacpzdb)
 %
 %      % break up db by network
-%      knetwk={sacpzdb_tmp.knetwk};
+%      knetwk=sacpzdb_tmp.knetwk;
 %      nets=unique(knetwk);
 %      for i=1:numel(nets)
 %          sacpzdb.(nets{i})=sacpzdb_tmp(strcmpi(knetwk,nets(i)));
@@ -51,7 +44,8 @@ function [db]=makesacpzdb(varargin)
 %      save seizmo/response/sacpzdb -struct sacpzdb
 %
 %    See also: GETSACPZ, READSACPZ, PARSE_SACPZ_FILENAME, WRITESACPZ,
-%              APPLYSACPZ, REMOVESACPZ, DB2SACPZ, GENSACPZNAME
+%              APPLYSACPZ, REMOVESACPZ, GENSACPZNAME, FIX_OLD_SACPZ,
+%              READSACPZ_RDSEED, WRITESACPZ_RDSEED, ISSACPZ_RDSEED
 
 %     Version History:
 %        Sep. 20, 2009 - initial version
@@ -59,15 +53,16 @@ function [db]=makesacpzdb(varargin)
 %        Nov.  2, 2009 - seizmoverbose support, fixed example
 %        May  22, 2010 - progress bar only if verbose
 %        Feb. 11, 2011 - mass nargchk fix
-%        Feb.  3, 2011 - doc update
+%        Feb.  3, 2012 - doc update
+%        Mar.  6, 2014 - update for new sacpz struct format
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2012 at 15:05 GMT
+%     Last Updated Mar.  6, 2014 at 15:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(0,1,nargin));
+error(nargchk(0,inf,nargin));
 nin=nargin;
 
 % default to current directory if none given
@@ -79,75 +74,51 @@ if(~iscellstr(varargin))
 end
 
 % verbosity
-verbose=seizmoverbose;
+verbose=seizmoverbose(false);
 
 % loop over directories
 db=cell(nin,1);
+good=true(nin,1);
 for i=1:nin
     % detail message
-    if(verbose)
-        disp(['SAC PoleZero Directory: ' varargin{i}])
-    end
+    if(verbose); disp(['SAC PoleZero Directory: ' varargin{i}]); end
     
     % get filelist for this directory
     files=xdir(varargin{i});
-    filenames={files.name}.';
+    files(strcmp({files.name},'.') | strcmp({files.name},'..'))=[];
+    files=strcat({files.path}',{files.name}');
     
     % detail message
     if(verbose)
-        disp(['  Found ' sprintf('%d',numel(files)) ' Files']);
+        disp(['  Found ' sprintf('%d',numel(files)) ' File(s)']);
     end
     
-    % filter out invalid and parse valid
-    [good,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filenames);
-    files=files(good);
-    
-    % handle empty case
-    if(isempty(files))
-        if(verbose)
-            disp('  Found 0 Properly Formatted Filenames');
-        end
-        db{i}([],1)=struct('path',[],'name',[],'knetwk',[],'kstnm',[],...
-            'kcmpnm',[],'khole',[],'b',[],'e',[],'z',[],'p',[],'k',[]);
+    % % now read in the PoleZero info
+    try
+        db{i}=readsacpz_rdseed(files{:});
+    catch
+        good(i)=false;
+        le=lasterror;
+        warning(le.identifier,le.message);
         continue;
     end
     
-    % allocate directory sacpzdb
-    n=sum(good);
-    db{i}=struct('path',{files.path}.','name',{files.name}.',...
-        'knetwk',knetwk,'kstnm',kstnm,'kcmpnm',kcmpnm,'khole',khole,...
-        'b',mat2cell(b,ones(n,1)),'e',mat2cell(e,ones(n,1)),'z',[],...
-        'p',[],'k',[]);
-    
     % detail message
     if(verbose)
-        disp(['  Found ' sprintf('%d',n) ' Properly Formatted Filenames']);
-        print_time_left(0,n);
-    end
-    
-    % now read in the PoleZero info
-    good=true(n,1);
-    for j=1:n
-        try
-            [db{i}(j).z,db{i}(j).p,db{i}(j).k]=...
-                readsacpz(fullfile(files(j).path,files(j).name));
-        catch
-            good(j)=false;
-        end
-        if(verbose); print_time_left(j,n); end
-    end
-    
-    % remove invalid
-    db{i}=db{i}(good,1);
-    
-    % detail message
-    if(verbose)
-        disp(...
-            ['  Read In ' sprintf('%d',sum(good)) ' SAC PoleZero Files!']);
+        disp(['  Read In ' sprintf('%d',numel(db{i}.k)) ...
+            ' SAC PoleZeros!']);
     end
 end
 
 % combine directory dbs
-db=cat(1,db{:});
+if(any(good))
+    db=sscat(db{good});
+else
+    error('seizmo:makesacpzdb:badPZFiles',...
+        'No Good PoleZero Files Found!');
+end
+
+% restore verbosity
+seizmoverbose(verbose);
 
 end

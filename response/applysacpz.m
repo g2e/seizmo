@@ -119,14 +119,18 @@ function [data,pz]=applysacpz(data,varargin)
 %        Feb.  3, 2012 - doc update
 %        Mar. 13, 2012 - use getheader improvements
 %        May  30, 2012 - pow2pad=0 by default
+%        Mar. 10, 2014 - works with new sacpz format, error if no sacpz,
+%                        reduced computations (skip neg freq), skip/delete
+%                        records with bad responses
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  30, 2012 at 20:30 GMT
+%     Last Updated Mar. 10, 2014 at 20:30 GMT
 
 % todo:
 % - standard responses
 % - maybe we should just have a wpow option rather than units
 % - meters/nanometers flag
+% - scale field should be ignored rather than changed
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -184,6 +188,34 @@ try
     % number of records
     nrecs=numel(data);
     
+    % handle no records with pz
+    if(nrecs==0)
+        error('seizmo:applysacpz:noPoleZeros',...
+            'No SAC PoleZeros are available for records in DATA!');
+    end
+    
+    % now remove those with a bad sacpz
+    pz=find(pz);
+    keep=true(nrecs,1);
+    for i=1:nrecs
+        if(isfield(data(i).misc.sacpz,'bad') && data(i).misc.sacpz.bad)
+            warning('seizmo:removesacpz:badSACPZ',...
+                'Record %d has a bad SAC PoleZero response! Deleting!',...
+                pz(i));
+            keep(i)=false;
+        end
+    end
+    data=data(keep);
+    
+    % number of records
+    nrecs=numel(data);
+    
+    % handle no records with pz
+    if(nrecs==0)
+        error('seizmo:removesacpz:noPoleZeros',...
+            'No Good SAC PoleZeros are available for records in DATA!');
+    end
+    
     % get header info
     [npts,ncmp,delta,e,iftype,idep]=getheader(data,...
         'npts','ncmp','delta','e','iftype id','idep id');
@@ -217,7 +249,7 @@ try
         6 6 6 -1 -1 -2 -2 -3 -3 -4 -4 -5 -5 -6 -6 -7 -7 0 0 0 0 0 0 0 0];
     
     % default options
-    tlimbu=[-1*ones(nrecs,2) 2*nyq(:,[1 1])]; tlim=tlimbu;
+    tlimbu=[-1*ones(nrecs,2) 2*nyq 2*nyq+eps]; tlim=tlimbu;
     tlimstr={'-1' '-1' '2*NYQUIST' '2*NYQUIST'};
     varargin=[{'t' 'hann' 'o' [] 'u' idep ...
         'id' 'icounts' 'h2o' zeros(nrecs,1)} varargin];
@@ -356,39 +388,40 @@ try
         % convert to complex spectra
         if(amph(i))
             nspts=npts(i);
-            sdelta=delta(i);
             tmp=data(i).dep(:,1:2:end).*exp(1i*data(i).dep(:,2:2:end));
         elseif(rlim(i))
             nspts=npts(i);
-            sdelta=delta(i);
             tmp=complex(data(i).dep(:,1:2:end),data(i).dep(:,2:2:end));
         else
             nspts=2^nextpow2(npts(i));
-            sdelta=2*nyq(i)./nspts;
-            tmp=fft(data(i).dep,nspts,1);
+            tmp=fft(data(i).dep,nspts,1); % no need to scale by delta
         end
         
-        % get limited frequency range
-        freq=[linspace(0,nyq(i),nspts/2+1) ...
-            linspace(-nyq(i)+sdelta,-sdelta,nspts/2-1)];
-        afreq=abs(freq);
-        good=afreq>=tlim(i,1) & afreq<=tlim(i,4);
+        % just the positive frequencies
+        freq=linspace(0,nyq(i),nspts/2+1);
         
-        % taper
-        taper1=taperfun(ttype{i},afreq,...
-            tlim(i,1:2),topt(i)).';
-        taper2=taperfun(ttype{i},nyq(i)-afreq,...
-            nyq(i)-tlim(i,[4 3]),topt(i)).';
-        tmp=tmp.*taper1(:,ones(ncmp(1),1)).*taper2(:,ones(ncmp(1),1));
+        % convert zpk to complex (this is several orders better than SAC)
+        h=zpk2cmplx(freq,data(i).misc.sacpz.z{1},...
+            data(i).misc.sacpz.p{1},data(i).misc.sacpz.k,wpow(i));
+        h=((abs(h)+h2o(i)).*exp(1i*angle(h))).'; % add waterlevel...
         
-        % convert zpk to fap
-        [a,p]=zpk2ap(freq,data(i).misc.sacpz.z,data(i).misc.sacpz.p,...
-            data(i).misc.sacpz.k,wpow(i));
-        h=((a+h2o(i)).*exp(1i*p)).';
+        % now apply taper
+        h=h.*taperfun(ttype{i},freq,tlim(i,1:2),topt(i)).'...
+            .*taperfun(ttype{i},freq,tlim(i,[4 3]),topt(i)).';
+        h(isinf(h) | isnan(h))=0; % care for trouble spots in response
         
-        % apply response (over limited freqrange)
+        % indexing to only work within the taper limits
+        good=freq>=tlim(i,1) & freq<=tlim(i,4);
+        tmpgood=[good false(1,nspts/2-1)];
+        
+        % apply transfer function
         % - divide by 1e9 to account for SAC PoleZero in meters
-        tmp(good,:)=1e-9*tmp(good,:).*h(good,ones(ncmp(i),1));
+        tmp(tmpgood,:)=1e-9*tmp(tmpgood,:).*h(good,ones(ncmp(i),1));
+        tmp(~tmpgood,:)=0; % no response outside taper limits
+        tmp(nspts/2+2:end,:)=conj(tmp(nspts/2:-1:2,:)); % neg frequencies
+        tmp(1)=0; % force 0Hz to 0
+        tmp(nspts/2+1)=abs(tmp(nspts/2+1)); % no constraint on NyqHz phase
+        %tmp(nspts)=abs(tmp(nspts)); % SAC transfer bug
         
         % convert back
         if(amph(i))
@@ -427,8 +460,8 @@ catch
         fprintf('APPLYSACPZ bombed out on record: %d\n',i);
         data(i)
         data(i).misc.sacpz
-        data(i).misc.sacpz.z
-        data(i).misc.sacpz.p
+        data(i).misc.sacpz.z{1}
+        data(i).misc.sacpz.p{1}
         data(i).misc.sacpz.k
     end
     

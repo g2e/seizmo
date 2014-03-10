@@ -27,13 +27,14 @@ function [pz]=fix_old_sacpz(pz,butc)
 %
 %    See also: ISSACPZ_RDSEED, READSACPZ_RDSEED, WRITESACPZ_RDSEED,
 %              READSACPZ, WRITESACPZ, REMOVESACPZ, APPLYSACPZ, MAKESACPZDB,
-%              DB2SACPZ, GENSACPZNAME, PARSE_SACPZ_FILENAME, GETSACPZ
+%              GENSACPZNAME, PARSE_SACPZ_FILENAME, GETSACPZ
 
 %     Version History:
 %        Feb. 25, 2014 - initial version
+%        Mar.  6, 2014 - update See also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 25, 2014 at 15:05 GMT
+%     Last Updated Mar. 6, 2014 at 15:05 GMT
 
 % todo:
 

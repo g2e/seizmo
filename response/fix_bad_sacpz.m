@@ -19,17 +19,18 @@ function [sacpzdb]=fix_bad_sacpz(sacpzdb)
 %
 %    Examples:
 %     % See if we reduce the bad count:
-%     numel(bad_sacpz_cplxpair(sacpzdb))
-%     numel(bad_sacpz_cplxpair(fix_bad_sacpz(sacpzdb)))
+%     numel(bad_sacpz(sacpzdb))
+%     numel(bad_sacpz(fix_bad_sacpz(sacpzdb)))
 %
-%    See also: BAD_SACPZ_CPLXPAIR, IRIS_SACPZDB_FIXES
+%    See also: BAD_SACPZ, IRIS_SACPZDB_FIXES, IRIS_SACPZDB_BUILD
 
 %     Version History:
 %        May  28, 2010 - initial version
 %        Feb.  3, 2012 - doc update
+%        Mar.  6, 2014 - update for new sacpz struct format
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2012 at 02:25 GMT
+%     Last Updated Mar.  6, 2014 at 02:25 GMT
 
 % todo:
 
@@ -59,13 +60,14 @@ goodvalue={
 
 % fix bad sac polezeros
 for a=1:numel(badnet)
+    if(~isfield(sacpzdb,badnet{a})); continue; end
     fprintf(badnet{a})
     cnt=0;
-    for b=1:numel(sacpzdb.(badnet{a}))
-        if(isequal(sacpzdb.(badnet{a})(b).(badfield{a}),badvalue{a}))
+    for b=1:numel(sacpzdb.(badnet{a}).k)
+        if(isequal(sacpzdb.(badnet{a}).(badfield{a})(b),badvalue(a)))
             % found one!
             cnt=cnt+1;
-            sacpzdb.(badnet{a})(b).(badfield{a})=goodvalue{a};
+            sacpzdb.(badnet{a}).(badfield{a})(b)=goodvalue(a);
         end
     end
     fprintf([' --> Fixed ' num2str(cnt) ' SAC PoleZero(s)!\n'])

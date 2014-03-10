@@ -49,7 +49,8 @@ function []=writesacpz(file,z,p,k,o)
 %     writesacpz('SAC_PZs_XB_CM32_BHZ_02',z,p,k);
 %
 %    See also: READSACPZ, GETSACPZ, APPLYSACPZ, REMOVESACPZ, MAKESACPZDB,
-%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME
+%              PARSE_SACPZ_FILENAME, GENSACPZNAME, FIX_OLD_SACPZ,
+%              WRITESACPZ_RDSEED, READSACPZ_RDSEED, ISSACPZ_RDSEED
 
 %     Version History:
 %        Apr.  7, 2009 - initial version
@@ -62,13 +63,12 @@ function []=writesacpz(file,z,p,k,o)
 %        Feb. 11, 2011 - mass nargchk fix, fprintf fix
 %        Feb.  3, 2012 - doc update
 %        Jan. 26, 2014 - abs path exist fix
+%        Mar. 10, 2014 - update See also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 15:05 GMT
+%     Last Updated mAR. 10, 2014 at 15:05 GMT
 
 % todo:
-% - does not write comments
-%   - write comment block of rdseed 5.2 ?
 
 % check nargin
 error(nargchk(4,5,nargin));

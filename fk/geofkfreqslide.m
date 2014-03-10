@@ -5,13 +5,10 @@ function [varargout]=geofkfreqslide(vol,frng,srng,delay,varargin)
 %              geofkfreqslide(vol,frng)
 %              geofkfreqslide(vol,frng,srng)
 %              geofkfreqslide(vol,frng,srng,delay)
-%              geofkfreqslide(vol,frng,srng,delay,projopt)
-%              geofkfreqslide(vol,frng,srng,delay,projopt,dblim)
-%              geofkfreqslide(vol,frng,srng,delay,projopt,dblim,zerodb)
-%              geofkfreqslide(vol,frng,srng,delay,projopt,dblim,zerodb,...
-%                             fgcolor,bgcolor)
-%              geofkfreqslide(vol,frng,srng,delay,projopt,dblim,zerodb,...
-%                             fgcolor,bgcolor,ax)
+%              geofkfreqslide(vol,frng,srng,delay,dblim)
+%              geofkfreqslide(vol,frng,srng,delay,dblim,zerodb)
+%              geofkfreqslide(vol,frng,srng,delay,dblim,zerodb,...
+%                             'mmap_opt1',mmap_val1,...)
 %              mov=geofkfreqslide(...);
 %
 %    Description:
@@ -33,31 +30,19 @@ function [varargout]=geofkfreqslide(vol,frng,srng,delay,varargin)
 %     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY) specifies the delay between the
 %     plotting of each frequency in seconds.  The default DELAY is 0.33s.
 %
-%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT) allows passing options to
-%     M_PROJ.  See M_PROJ('SET') for possible projections and see
-%     M_PROJ('GET',PROJ) for a list of possible additional options specific
-%     to that projection.
-%
-%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM) sets the dB limits
+%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM) sets the dB limits
 %     for coloring the beam data.  The default is [-12 0] for the default
 %     ZERODB (see next Usage form).  If ZERODB IS 'min' or 'median', the
 %     default DBLIM is [0 12].  DBLIM must be a real-valued 2-element
 %     vector.
 %
-%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB) changes what
+%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM,ZERODB) changes what
 %     0dB corresponds to in the plot.  The allowed values are 'min', 'max',
 %     'median', & 'abs'.  The default is 'max'.
 %
-%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB,FGCOLOR,...
-%     BGCOLOR) specifies the foreground and background colors of the plot. 
-%     The default is 'w' for FGCOLOR and 'k' for BGCOLOR.  Note that if one
-%     is specified and the other is not, an opposing color is found using
-%     INVERTCOLOR.  The color scale is also changed so the noise clip is at
-%     BGCOLOR.
-%
-%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,PROJOPT,DBLIM,ZERODB,FGCOLOR,...
-%     BGCOLOR,AX) sets the axes that the map is drawn in.  This is useful
-%     for subplots, guis, etc.
+%     GEOFKFREQSLIDE(VOL,FRNG,SRNG,DELAY,DBLIM,ZERODB,...
+%                    'MMAP_OPT1',MMAP_VAL1,...) passes additional options
+%     on to MMAP to alter the map.
 %
 %     MOV=GEOFKFREQSLIDE(...) creates a Matlab movie MOV.  This can played
 %     using the function MOVIE.  See MOVIE2AVI for exporting as an AVI
@@ -75,14 +60,15 @@ function [varargout]=geofkfreqslide(vol,frng,srng,delay,varargin)
 %        July  6, 2010 - update for new struct
 %        Apr.  4, 2012 - minor doc update
 %        Apr. 25, 2012 - allow non-volume in slowness domain
+%        Mar.  5, 2014 - update doc for plotgeofkmap input changes
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr. 25, 2012 at 19:05 GMT
+%     Last Updated Mar.  5, 2014 at 19:05 GMT
 
 % todo:
 
 % check nargin
-error(nargchk(1,10,nargin));
+error(nargchk(1,inf,nargin));
 
 % check geofk struct
 error(chkgeofkstruct(vol));
@@ -133,13 +119,13 @@ nfreq=numel(freqs);
 % make initial plot
 ax=plotgeofkmap(geofkvol2map(vol,[freqs(1) freqs(1)]),varargin{:});
 fh=get(ax,'parent');
-if(makemovie); varargout{1}=getframe(fh); end
+if(makemovie); varargout{1}=getframe(fh); else drawnow; end
 
 % loop over remaining frequencies
 for i=2:nfreq
     pause(delay);
     updategeofkmap(geofkvol2map(vol,[freqs(i) freqs(i)]),ax);
-    if(makemovie); varargout{1}(i)=getframe(fh); end
+    if(makemovie); varargout{1}(i)=getframe(fh); else drawnow; end
 end
 
 end

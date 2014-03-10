@@ -7,9 +7,9 @@ function [data]=getsacpz(data,varargin)
 %              data=getsacpz(data,'dir1',...,'dirN')
 %
 %    Description:
-%     DATA=GETSACPZ(DATA) finds, reads in and adds SAC PoleZero info
-%     related to each record in SEIZMO struct DATA.  All info is added
-%     under DATA.misc.sacpz and the format is described in MAKESACPZDB.
+%     DATA=GETSACPZ(DATA) finds and adds the SAC PoleZero info related to
+%     each record in SEIZMO struct DATA.  All info is added to the struct
+%     as DATA.misc.sacpz and the format is described in ISSACPZ_RDSEED.
 %     Records without SAC PoleZero info have the field DATA.misc.has_sacpz
 %     set to FALSE (otherwise it is set to TRUE).  This particular case
 %     uses the default SAC PoleZero database that comes with SEIZMO.  See
@@ -31,22 +31,23 @@ function [data]=getsacpz(data,varargin)
 %       for each record, the following fields must be set appropriately:
 %        KNETWK, KSTNM, KHOLE, KCMPNM
 %        NZYEAR, NZJDAY, NZHOUR, NZMIN, NZSEC, NZMSEC, B, E
-%     - you may mix the last three usage forms (note that structs are put
-%       in front, followed by sacpzs from dirs, and finally dbs on disk)
-%     - warns if no files are found or a record straddles a time boundary
+%     - You may mix the last three usage forms (note that structs are put
+%       in front, followed by sacpzs from dirs, and finally dbs on disk).
+%     - Warns if no files are found or a record straddles a time boundary.
 %     - If you have entered the necessary header fields and GETSACPZ does
-%       not find a match there are several possibilities:
+%       not find a match there are a few possibilities:
 %        1) the instrument response is not at IRIS
 %        2) the instrument response is not in a Poles & Zeros format
 %           (this is true for ~20% of the responses at IRIS)
 %        3) I haven't updated the sacpzdb recently enough to include your
-%           site's new response info.  I update generally every few months.
+%           site's new response info.  I generally update every few months.
+%           Pester me if I have not.
 %
 %    Header changes: see CHECKHEADER
 %
 %    Examples:
 %     % Working with the full IRIS database (default) is somewhat slow
-%     % (with >150000 PoleZeros what do you expect?).  If you can isolate
+%     % (with ~400000 PoleZeros what do you expect?).  If you can isolate
 %     % the relevant PoleZero files for your dataset(s) then this operation
 %     % will be significantly faster.  Run something similar to the
 %     % commands below to create your custom database, save it for later
@@ -55,8 +56,7 @@ function [data]=getsacpz(data,varargin)
 %     save mysacpzdb mysacpzdb
 %     data=getsacpz(data,mysacpzdb)
 %
-%    See also: APPLYSACPZ, REMOVESACPZ, READSACPZ, WRITESACPZ, MAKESACPZDB,
-%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME
+%    See also: APPLYSACPZ, REMOVESACPZ, MAKESACPZDB
 
 %     Version History:
 %        Sep. 20, 2009 - initial version
@@ -79,11 +79,17 @@ function [data]=getsacpz(data,varargin)
 %        Mar.  5, 2011 - fixed bug in when missing networks
 %        Jan. 28, 2012 - drop strnlen usage, catch blank knetwk, doc update
 %        Jan. 27, 2014 - fix abs path bug from isdir call
+%        Mar. 10, 2014 - works with new sacpzdb format, empty khole fixes,
+%                        warn for any bad responses, update See also
+%                        section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 12:45 GMT
+%     Last Updated Mar. 10, 2014 at 12:45 GMT
 
 % todo:
+% - web option
+% - try by input order
+%   - e.g., 'lanldb', 'sacpzdb', @get_iris_sacpz
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -111,7 +117,6 @@ try
     e=cell2mat(e);
     
     % require all fields to be defined
-    % - all name fields should not be undefined
     badname=strcmpi('NaN',knetwk) | strcmpi('NaN',kstnm) ...
         | strcmpi('NaN',kcmpnm) | strcmpi('NaN',khole);
     if(any(badname))
@@ -127,8 +132,8 @@ try
             '\nRecord(s):\n' sprintf('%d ',find(badtime))]);
     end
     
-    % handle khole goofiness
-    khole2=khole; badhole=strcmpi(khole,'__');
+    % handle the many ways people have come up with to fill an empty khole
+    khole2=khole; badhole=ismember(khole,{'__' '99' 'XX' '  ' '--'});
     if(any(badhole)); khole2(badhole)={''}; end
     
     % get sacpzdb
@@ -166,16 +171,6 @@ try
             nets=nets(ismember(nn,fieldnames(sacpzdb)));
             nn=nn(ismember(nn,fieldnames(sacpzdb)));
         end
-        
-        % get db info
-        for i=1:numel(nets)
-            db.(nn{i}).b=cell2mat({sacpzdb.(nn{i}).b}.');
-            db.(nn{i}).e=cell2mat({sacpzdb.(nn{i}).e}.');
-            db.(nn{i}).knetwk={sacpzdb.(nn{i}).knetwk}.';
-            db.(nn{i}).kstnm={sacpzdb.(nn{i}).kstnm}.';
-            db.(nn{i}).kcmpnm={sacpzdb.(nn{i}).kcmpnm}.';
-            db.(nn{i}).khole={sacpzdb.(nn{i}).khole}.';
-        end
     else
         % detail message
         if(verbose)
@@ -186,7 +181,7 @@ try
         valid=false;
         structs=cellfun('isclass',varargin,'struct');
         try
-            sacpzdb.CUSTOM=cat(1,varargin{structs});
+            sacpzdb.CUSTOM=sscat(varargin{structs});
         catch
             error('seizmo:getsacpz:badInputs',...
                 'Alternate SACPZdbs are not concatenateable!');
@@ -212,8 +207,8 @@ try
         end
         if(any(dirs))
             try
-                sacpzdb.CUSTOM=[sacpzdb.CUSTOM; ...
-                    makesacpzdb(varargin{dirs})];
+                sacpzdb.CUSTOM=sscat(sacpzdb.CUSTOM,...
+                    makesacpzdb(varargin{dirs}));
                 valid=true;
             catch
                 error('seizmo:getsacpz:badInputs',...
@@ -227,9 +222,13 @@ try
         if(ndb)
             for i=1:ndb
                 tmp=load(varargin{i});
-                tmp=struct2cell(tmp);
                 try
-                    sacpzdb.CUSTOM=cat(1,sacpzdb.CUSTOM,tmp{:});
+                    if(issacpz_rdseed(tmp))
+                        sacpzdb.CUSTOM=sscat(sacpzdb.CUSTOM,tmp);
+                    else
+                        tmp=struct2cell(tmp);
+                        sacpzdb.CUSTOM=sscat(sacpzdb.CUSTOM,tmp{:});
+                    end
                 catch
                     error('seizmo:getsacpz:badInputs',...
                         'Alternate SACPZdbs are not concatenateable!');
@@ -242,23 +241,13 @@ try
             if(verbose)
                 disp('Checking Custom SAC PoleZero Database');
             end
-            reqf={'knetwk' 'kstnm' 'kcmpnm' 'khole' 'b' 'e' 'z' 'p' 'k'};
-            for i=1:numel(reqf)
-                if(~isfield(sacpzdb.CUSTOM,reqf{i}))
-                    error('seizmo:getsacpz:badSACPZ',...
-                        ['SACPZDBs must contain fields:\n' ...
-                        sprintf('%s ',reqf{:})]);
-                end
+            if(~issacpz_rdseed(sacpzdb.CUSTOM))
+                error('seizmo:getsacpz:badSACPZ',...
+                    'SACPZDBs must be v5.1 (see ISSACPZ_RDSEED)!');
             end
         end
         
-        % get db info
-        db.CUSTOM.b=cell2mat({sacpzdb.CUSTOM.b}.');
-        db.CUSTOM.e=cell2mat({sacpzdb.CUSTOM.e}.');
-        db.CUSTOM.knetwk={sacpzdb.CUSTOM.knetwk}.';
-        db.CUSTOM.kstnm={sacpzdb.CUSTOM.kstnm}.';
-        db.CUSTOM.kcmpnm={sacpzdb.CUSTOM.kcmpnm}.';
-        db.CUSTOM.khole={sacpzdb.CUSTOM.khole}.';
+        % network workaround for custom db as it is flattened
         NET(1:nrecs,1)={'CUSTOM'};
         nets={'CUSTOM'};
     end
@@ -285,19 +274,19 @@ try
         if(ismember(NET{i},nets))
             % find sacpz file(s) for this record by name
             % - includes handling khole goofiness
-            ok=find(strcmpi(knetwk{i},db.(NN).knetwk) ...
-                & strcmpi(kstnm{i},db.(NN).kstnm) ...
-                & strcmpi(kcmpnm{i},db.(NN).kcmpnm) ...
-                & (strcmpi(khole{i},db.(NN).khole) ...
-                | strcmpi(khole2{i},db.(NN).khole)));
+            ok=find(strcmpi(knetwk{i},sacpzdb.(NN).knetwk) ...
+                & strcmpi(kstnm{i},sacpzdb.(NN).kstnm) ...
+                & strcmpi(kcmpnm{i},sacpzdb.(NN).kcmpnm) ...
+                & (strcmpi(khole{i},sacpzdb.(NN).khole) ...
+                | strcmpi(khole2{i},sacpzdb.(NN).khole)));
 
             % now find sacpz file(s) for this record by time
             % - find sacpz surrounding record's b & e
             % - warn if overlaps boundary
-            okb=timediff(db.(NN).b(ok,:),b(i,:))>0 ...
-                & timediff(db.(NN).e(ok,:),b(i,:))<0;
-            oke=timediff(db.(NN).b(ok,:),e(i,:))>0 ...
-                & timediff(db.(NN).e(ok,:),e(i,:))<0;
+            okb=timediff(sacpzdb.(NN).b(ok,:),b(i,:))>0 ...
+                & timediff(sacpzdb.(NN).e(ok,:),b(i,:))<0;
+            oke=timediff(sacpzdb.(NN).b(ok,:),e(i,:))>0 ...
+                & timediff(sacpzdb.(NN).e(ok,:),e(i,:))<0;
             halfbaked=(okb & ~oke) | (~okb & oke);
             if(any(halfbaked))
                 redraw=true;
@@ -327,11 +316,25 @@ try
                 e(i,1),e(i,2),e(i,3),e(i,4),e(i,5));
         else
             % get file with latest b
-            [idx,idx]=min(timediff(db.(NN).b(ok,:),b(i,:)));
+            [idx,idx]=min(timediff(sacpzdb.(NN).b(ok,:),b(i,:)));
             
             % assign to data.misc.sacpz
             data(i).misc.has_sacpz=true;
-            data(i).misc.sacpz=sacpzdb.(NN)(ok(idx));
+            data(i).misc.sacpz=ssidx(sacpzdb.(NN),ok(idx));
+            
+            % check for bad response
+            if(data(i).misc.sacpz.bad)
+                redraw=true;
+                warning('seizmo:getsacpz:badSACPZ',...
+                    ['SAC PoleZero response is known to be bad!' ...
+                    '\nRecord: %d' ...
+                    '\nKNAME : %s.%s.%s.%s' ...
+                    '\nB     : %04d.%03d.%02d.%02d.%06.3f' ...
+                    '\nE     : %04d.%03d.%02d.%02d.%06.3f'],...
+                    i,knetwk{i},kstnm{i},khole{i},kcmpnm{i},...
+                    b(i,1),b(i,2),b(i,3),b(i,4),b(i,5),...
+                    e(i,1),e(i,2),e(i,3),e(i,4),e(i,5));
+            end
         end
         
         % detail message

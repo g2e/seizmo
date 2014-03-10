@@ -44,8 +44,7 @@ function [gd,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filename)
 %     [good,knetwk,kstnm,kcmpnm,khole,b,e]=...
 %         parse_sacpz_filename(filenames)
 %
-%    See also: GETSACPZ, READSACPZ, WRITESACPZ, MAKESACPZDB, DB2SACPZ,
-%              APPLYSACPZ, REMOVESACPZ, GENSACPZNAME
+%    See also: READSACPZ, WRITESACPZ, GENSACPZNAME
 
 %     Version History:
 %        Sep. 20, 2009 - initial version
@@ -53,9 +52,10 @@ function [gd,knetwk,kstnm,kcmpnm,khole,b,e]=parse_sacpz_filename(filename)
 %        Feb. 11, 2011 - mass nargchk fix
 %        Mar.  5, 2011 - improved empty khole detection
 %        Feb.  3, 2012 - doc update
+%        Mar. 10, 2014 - update See also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  3, 2012 at 15:05 GMT
+%     Last Updated Mar. 10, 2014 at 15:05 GMT
 
 % todo:
 

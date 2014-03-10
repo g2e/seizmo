@@ -57,8 +57,9 @@ function [z,p,k]=readsacpz(varargin)
 %     fvtool(fs)
 %
 %    See also: WRITESACPZ, GETSACPZ, APPLYSACPZ, REMOVESACPZ, MAKESACPZDB,
-%              PARSE_SACPZ_FILENAME, DB2SACPZ, GENSACPZNAME,
-%              READSACPZ_RDSEED
+%              PARSE_SACPZ_FILENAME, GENSACPZNAME, FIX_OLD_SACPZ,
+%              READSACPZ_RDSEED, WRITESACPZ_RDSEED, ISSACPZ_RDSEED,
+%              ZPK2CMPLX, ZPK2AP
 
 %     Version History:
 %        Apr.  7, 2009 - initial version
@@ -71,9 +72,10 @@ function [z,p,k]=readsacpz(varargin)
 %        Feb.  3, 2012 - doc update
 %        Jan. 26, 2014 - abs path exist fix
 %        Feb.  8, 2014 - doc update for readsacpz_rdseed, use readtxt
+%        Mar. 10, 2014 - update See also section
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb.  8, 2014 at 15:05 GMT
+%     Last Updated Mar. 10, 2014 at 15:05 GMT
 
 % todo:
 
