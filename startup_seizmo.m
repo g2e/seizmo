@@ -119,7 +119,7 @@ end
 
 % jars (2 of them) for external program njtbx
 % - used by WW3 functions (analyze ocean waves & seismic noise)
-jars{1}='njTools-2.0.12_jre1.6.jar';
+jars{1}='njTools-2.0.12_jre1.5.jar';
 jars{2}='toolsUI-4.0.49.jar';
 pjars=strcat(path,fs,'njtbx',fs,jars);
 for i=1:numel(jars)

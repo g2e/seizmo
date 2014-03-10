@@ -116,7 +116,7 @@ end
 
 % jars (2 of them) for external program njtbx
 % - used by WW3 functions (analyze ocean waves & seismic noise)
-jars{1}=[path fs 'njtbx' fs 'njTools-2.0.12_jre1.6.jar'];
+jars{1}=[path fs 'njtbx' fs 'njTools-2.0.12_jre1.5.jar'];
 jars{2}=[path fs 'njtbx' fs 'toolsUI-4.0.49.jar'];
 for i=1:numel(jars)
     if(java_in_octave && ismember(jars{i},javaclasspath))
