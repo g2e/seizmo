@@ -10,22 +10,29 @@ function [in,set,cmp,rev]=horz_correlations_sets(xc)
 %     functions HORZPAIRS & FINDTRIPLETS which find the rotatible data for
 %     the functions ROTATE/ROTATE3.  XC is a SEIZMO struct of correlograms
 %     created by CORRELATE.  Sets are identified by having common master &
-%     slave stations, horizontal orientation, orthogonality, and lag times.
+%     slave stations, horizontal orientation, orthogonality, and lag times
+%     (lag times must be equal based on the B, E, NPTS & DELTA fields while
+%     for frequency domain data this is also based on SB, SDELTA, & NSPTS -
+%     therefore time domain and freqeuncy domain data are never grouped).
 %     Sets may be of size 3 (only for auto-correlation of a single stations
 %     components) or 4.  IN gives the indices of the correlograms in XC
-%     that are in a set.  SET gives the set indices (use max(SET) to get
-%     the number of sets). CMP gives the component indices (1, 2, 3, or 4).
-%     Component indices are as follows:
+%     that are in a set.  SET gives the corresponding set indices (use
+%     max(SET) to get the number of sets). CMP gives the corresponding
+%     component indices (1, 2, 3, or 4).  Component indices are as follows:
 %          (1) NN or RR
 %          (2) NE or RT
 %          (3) EN or TR
 %          (4) EE or TT
 %     Auto-correlation sets may potentially be missing component 2 or 3 due
-%     to the redundant information (2=reverse(3)).
+%     to the redundant information (2=reverse(3) or reverse(2)=3).
 %
 %     [IN,SET,CMP,REV]=HORZ_CORRELATIONS_SETS(XC) also indicates what
-%     correlograms need to be reversed.  This is useful when master & slave
-%     stations are switched for a set.
+%     correlograms that are in the horizontal sets need to be reversed.
+%     This is useful when master & slave stations are switched for a set.
+%     REV is a logical vector equal in size to IN where each value
+%     indicates whether the corresponding record given in IN needs to be
+%     reversed.  For example, if REV(3)=TRUE then XC(IN(3)) should be
+%     reversed using REVERSE_CORRELATIONS.
 %
 %    Notes:
 %     - Actually doesn't require E/N or R/T, just that the underlying
@@ -35,17 +42,20 @@ function [in,set,cmp,rev]=horz_correlations_sets(xc)
 %       orthogonal orientation.  In this case the sets will be ignored and
 %       not included in the output.  So don't throw a bunch of NE & RT sets
 %       for the same station pairs together and expect it all to be
-%       separated cleanly.  This also means you should not expect this to
-%       parse a full matri of horizontal correlations as that will have 8
-%       correlations per pair (4 of which are redundant).
-
+%       separated cleanly!  This also means you should not expect this to
+%       parse a full matrix of horizontal correlations as that will have 8
+%       correlations per pair (4 of which are redundant) - please use
+%       NO_REDUNDANT_CORRELATIONS beforehand!
 %
 %    Examples:
 %     % Remove vertical correlations and non-set horizontal correlations:
 %     xc=xc(horz_correlations_sets(xc));
 %
+%     % Perform reversal to make the sets match:
+%     [in,set,cmp,rev]=horz_correlations_sets(xc);
+%     xc(in(rev))=reverse_correlations(xc(in(rev)));
+%
 %     % Get sets and loop over them:
-%     [in,set,cmp]=horz_correlations_sets(xc);
 %     for i=1:max(set)
 %         % record indices for this pair
 %         ridx=in(set==i);
@@ -69,9 +79,11 @@ function [in,set,cmp,rev]=horz_correlations_sets(xc)
 %        Sep.  5, 2013 - first working version
 %        Sep. 20, 2013 - properly optimized checking, deg fudge factor
 %        Jan. 15, 2014 - fixed several typos of this functions name
+%        June  4, 2014 - doc update, position field checks
+%        June 12, 2014 - handle fd i/o
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 15:05 GMT
+%     Last Updated June 12, 2014 at 15:05 GMT
 
 % todo:
 
@@ -81,7 +93,7 @@ error(nargchk(1,1,nargin));
 % check structure & headers
 xc=checkheader(xc,...
     'MULCMP_DEP','ERROR',...
-    'NONTIME_IFTYPE','ERROR',...
+    'XYZ_IFTYPE','ERROR',...
     'FALSE_LEVEN','ERROR',...
     'UNSET_ST_LATLON','ERROR',...
     'UNSET_EV_LATLON','ERROR');
@@ -91,9 +103,12 @@ oldseizmocheckstate=seizmocheck_state(false);
 
 % safely get necessary header info
 try
-    [kuser,b,e,npts,delta,snm,mnm,scmp,mcmp]=getheader(xc,...
-        'kuser','b','e','npts','delta','kname','kt','cmp','user');
+    [kuser,b,e,npts,delta,snm,mnm,...
+        scmp,mcmp,st,ev,delaz,sb,sdelta,nspts]=getheader(xc,...
+        'kuser','b','e','npts','delta','kname','kt','cmp','user',...
+        'st','ev','delaz','sb','sdelta','nspts');
     mcmp=mcmp(:,3:4); % drop the record indices from correlate
+    se=sb+sdelta.*(nspts-1);
     
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
@@ -142,8 +157,10 @@ end
 % division into supersets based on naming & lags
 % - 2 superset names to handle master<=>slave ambiguity
 ssetname1=strcat(mnm,'_',snm,'_',...
+    num2str(sb),'_',num2str(nspts),'_',num2str(sdelta),'_',...
     num2str(b),'_',num2str(npts),'_',num2str(delta));
 ssetname2=strcat(snm,'_',mnm,'_',...
+    num2str(-se),'_',num2str(nspts),'_',num2str(sdelta),'_',...
     num2str(-e),'_',num2str(npts),'_',num2str(delta));
 [ssetname,r2ssidx,ss2ridx]=unique([ssetname1;ssetname2],'first');
 
@@ -183,6 +200,27 @@ for i=1:nrecs
     for j=1:sspop
         % skip if already in a set
         if(inaset(j)); continue; end
+        
+        % require equal position fields for sanity
+        ssst=st(inss,:);
+        ssev=ev(inss,:);
+        ssda=delaz(inss,:);
+        if(any(rev(inss)))
+            ssst(rev(inss),:)=ssev(rev(inss),:);
+            ssev(rev(inss),:)=ssst(rev(inss),:);
+            ssda(rev(inss),[3 2])=ssda(rev(inss),[2 3]);
+        end
+        if(size(unique(ssst,'rows'),1)~=1 ...
+                || size(unique(ssev,'rows'),1)~=1)
+            continue;
+        end
+        f=1e-8; % degrees fudge factor
+        if(any(abs(ssda(:,1)-ssda(1,1))>f ...
+                | abs(azdiff(ssda(:,2),ssda(1,2)))>f ...
+                | abs(azdiff(ssda(:,3),ssda(1,3)))>f ...
+                | abs(ssda(:,4)-ssda(1,4))>f))
+            continue;
+        end
         
         % grab azimuths (for ease)
         maz=mcmp(inss,2);

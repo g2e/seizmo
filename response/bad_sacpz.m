@@ -8,11 +8,12 @@ function [badpz,sacpzdb]=bad_sacpz(sacpzdb,issue)
 %     BADPZ=BAD_SACPZ(SACPZDB,ISSUE) will search the SAC PoleZero database
 %     SACPZDB (made via IRIS_SACPZDB_BUILD) for responses that have an
 %     issue as defined by ISSUE.  Allowed values for ISSUE:
-%      'CPLXPAIR' - find responses with 1+ unpaired complex poles/zeros
 %      'CONSTANT' - find responses with an Inf, NaN, or Zero constant
+%      'CPLXPAIR' - find responses with 1+ unpaired complex poles/zeros
 %      'FEWZEROS' - find seismometer responses with <3 zeros at the origin
+%      'FLAT'     - find perfect seismometer responses (no pz, constant=1)
 %      'ALL'      - find responses with any of the above problems
-%      'BAD'      - CPLXPAIR+CONSTANT (default)
+%      'BAD'      - CONSTANT+CPLXPAIR+FLAT (default)
 %     BADPZ is a scalar struct with the fields:
 %      .net   - Nx1 cellstr array of network associated to the bad polezero
 %      .idx   - Nx1 double array of the indices to the bad polezeros
@@ -24,7 +25,7 @@ function [badpz,sacpzdb]=bad_sacpz(sacpzdb,issue)
 %
 %    Notes:
 %     - Currently a staggering 24% of the SAC PoleZero files from IRIS have
-%       serious issues ('BAD' option)!
+%       issues ('BAD' option)!
 %     - All poles & zeros with an imaginary component are expected to have
 %       a corresponding complex conjugate to pair with.  If that complex
 %       conjugate is missing then the response is deemed bad.  Usually
@@ -34,10 +35,9 @@ function [badpz,sacpzdb]=bad_sacpz(sacpzdb,issue)
 %       poles/zeros that have no imaginary component.
 %
 %    Examples:
-%     % Checking your own db is simple:
-%     mysacpzdb=load('mysacpzdb');
-%     mydb.CUSTOM=mysacpzdb; % if you don't have a network layer...
-%     badpz=bad_sacpz(mydb);
+%     % How to check & clean your own set of annotated polezero files:
+%     [badpz,pz]=bad_sacpz(readsacpz_rdseed('my/pz/dir'));
+%     goodpz=ssidx(pz,~pz.bad);
 %
 %    See also: IRIS_SACPZDB_FIXES, IRIS_SACPZDB_BUILD, FIX_BAD_SACPZ
 
@@ -47,9 +47,12 @@ function [badpz,sacpzdb]=bad_sacpz(sacpzdb,issue)
 %        Mar.  6, 2014 - update for new sacpz struct format
 %        Mar.  7, 2014 - change name to bad_sacpz, 2nd input for issue
 %                        type, returned db has .bad rather than reduced
+%        May  28, 2014 - added FLAT type, added FLAT to BAD, check that
+%                        input is network database, update example, allow
+%                        unnetworked polezero db
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  7, 2014 at 01:25 GMT
+%     Last Updated May  28, 2014 at 01:25 GMT
 
 % todo:
 
@@ -62,8 +65,19 @@ if(~isstruct(sacpzdb) || ~isscalar(sacpzdb))
         'SACPZDB must be a scalar struct!');
 end
 
+% convert polezero db to network polezero db
+if(issacpz_rdseed(sacpzdb))
+    netdb=false;
+    tmp=sacpzdb;
+    clear sacpzdb;
+    sacpzdb.CUSTOM=tmp;
+    clear tmp;
+else
+    netdb=true;
+end
+
 % default/check issue
-valid.ISSUE={'CPLXPAIR' 'CONSTANT' 'FEWZEROS' 'ALL' 'BAD'};
+valid.ISSUE={'CPLXPAIR' 'CONSTANT' 'FEWZEROS' 'FLAT' 'ALL' 'BAD'};
 if(nargin==1 || isempty(issue)); issue='bad'; end
 if(~ismember(upper(issue),valid.ISSUE))
     error('seizmo:bad_sacpz:badInput',...
@@ -87,7 +101,11 @@ nets=fieldnames(sacpzdb);
 totnpz=0;
 cnt=0;
 for m=1:numel(nets)
-    fprintf(nets{m});
+    if(netdb); fprintf(nets{m}); end
+    if(~issacpz_rdseed(sacpzdb.(nets{m})))
+        error('seizmo:bad_sacpz:badInput',...
+            'Input is not a valid SACPZ network database!');
+    end
     npz=numel(sacpzdb.(nets{m}).k);
     totnpz=totnpz+npz;
     
@@ -113,9 +131,18 @@ for m=1:numel(nets)
                     bad(n)=true;
                 end
             end
+        case 'FLAT'
+            bad=ismember(sacpzdb.(nets{m}).kcmpnm,valid.SEISCODE) & ...
+                sacpzdb.(nets{m}).k==1 ...
+                & cellfun('isempty',sacpzdb.(nets{m}).z) ...
+                & cellfun('isempty',sacpzdb.(nets{m}).p);
         case 'ALL'
             bad=isnan(sacpzdb.(nets{m}).k) | isinf(sacpzdb.(nets{m}).k) ...
-                | sacpzdb.(nets{m}).k==0;
+                | sacpzdb.(nets{m}).k==0 ...
+                | (ismember(sacpzdb.(nets{m}).kcmpnm,valid.SEISCODE) ...
+                & sacpzdb.(nets{m}).k==1 ...
+                & cellfun('isempty',sacpzdb.(nets{m}).z) ...
+                & cellfun('isempty',sacpzdb.(nets{m}).p));
             for n=1:npz
                 if(ismember(sacpzdb.(nets{m}).kcmpnm(n),valid.SEISCODE) ...
                         && sum(sacpzdb.(nets{m}).z{n}==0)<3)
@@ -131,7 +158,11 @@ for m=1:numel(nets)
             end
         case 'BAD'
             bad=isnan(sacpzdb.(nets{m}).k) | isinf(sacpzdb.(nets{m}).k) ...
-                | sacpzdb.(nets{m}).k==0;
+                | sacpzdb.(nets{m}).k==0 ...
+                | (ismember(sacpzdb.(nets{m}).kcmpnm,valid.SEISCODE) ...
+                & sacpzdb.(nets{m}).k==1 ...
+                & cellfun('isempty',sacpzdb.(nets{m}).z) ...
+                & cellfun('isempty',sacpzdb.(nets{m}).p));
             for n=1:npz
                 try
                     cplxpair(sacpzdb.(nets{m}).p{n});
@@ -154,11 +185,17 @@ for m=1:numel(nets)
     end
     cnt=cnt+netcnt;
     sacpzdb.(nets{m}).bad=bad;
-    fprintf([' --> Found ' num2str(netcnt) ' out of ' ...
-        num2str(npz) ' are Bad SAC PoleZero(s)\n']);
+    if(netdb)
+        fprintf([' --> Found ' num2str(netcnt) ' out of ' ...
+            num2str(npz) ' are Bad SAC PoleZero(s)\n']);
+    end
 end
-fprintf(['TOTAL --> Found ' num2str(cnt) ' out of ' ...
+if(netdb); fprintf('TOTAL'); end
+fprintf([' --> Found ' num2str(cnt) ' out of ' ...
     num2str(totnpz) ' are Bad SAC PoleZero(s)\n']);
+
+% flatten unnetworked polezero db
+if(~netdb); sacpzdb=sacpzdb.CUSTOM; end
 
 % no bad sacpz?
 if(~exist('badpz','var'))

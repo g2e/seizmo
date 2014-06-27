@@ -80,7 +80,7 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %     % One way to perform horizontal fk analysis:
 %     data=rotate(data,'to',0,'kcmpnm1','N','kcmpnm2','E');
 %     xc=correlate(data,'mcxc');
-%     [axc,xc]=split_auto_correlations(xc,false);
+%     [axc,xc]=split_auto_correlations(xc);
 %     [b,e,delta]=getheader(xc,'b','e','delta');
 %     xc=interpolate(xc,delta(1),'spline',max(b),min(e));
 %     xc=rotate_correlations(xc);
@@ -107,9 +107,10 @@ function [varargout]=fkxchorzvolume(rr,rt,tr,tt,smax,spts,frng,polar,w)
 %        Jan. 29, 2013 - example update for new correlate functions
 %        Sep. 23, 2013 - example update for new correlate functions,
 %                        adjust for rotate_correlations change
+%        May  30, 2014 - adjusted example for split_auto_correlations fix
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 23, 2013 at 15:25 GMT
+%     Last Updated May  30, 2014 at 15:25 GMT
 
 % todo:
 

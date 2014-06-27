@@ -19,10 +19,10 @@ function [data]=idft(data,symflag)
 %     want.
 %
 %    Notes:
-%     - SAC (and thus SEIZMO's DFT for sanity) calculates spectral data 
-%       according to Parseval's theorem.  This is not equivalent to how
-%       Matlab's fft/ifft functions work so be careful when working with
-%       amplitudes!
+%     - SAC (and thus SEIZMO's DFT for sanity) multiplies spectral data by
+%       the time-domain sample interval.  I am uncertain of the reasoning
+%       behind this.  Regardless, this is not equivalent to how Matlab's
+%       fft/ifft functions work so be careful when working with amplitudes!
 %
 %    Header Changes: B, SB, E, DELTA, SDELTA, NPTS, NSPTS, IFTYPE
 %                    DEPMEN, DEPMIN, DEPMAX
@@ -66,9 +66,10 @@ function [data]=idft(data,symflag)
 %        Dec. 21, 2011 - doc update, better checkheader usage
 %        Feb.  5, 2012 - minor doc update, symflag option
 %        Mar. 13, 2012 - use getheader improvements
+%        June  9, 2014 - bugfix: noted incompatibility with Parseval's
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 15:05 GMT
+%     Last Updated June  9, 2014 at 15:05 GMT
 
 % todo:
 

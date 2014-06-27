@@ -26,14 +26,16 @@ function [R]=ifisher(Z)
 %        Sep.  9, 2009 - minor doc update
 %        Mar. 11, 2010 - fixed example
 %        Apr.  4, 2012 - minor doc update
+%        May  27, 2014 - simplify algorithm for speed/simplicity
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  4, 2012 at 10:35 GMT
+%     Last Updated May  27, 2014 at 10:35 GMT
 
 % todo:
 
 % INVERSE FISHER TRANSFORM -> Z STATISTIC SPACE TO CORRELATION SPACE
-R=(exp(2*Z)-1)./(exp(2*Z)+1);
-R(Z==inf)=1; % otherwise inf returns nan
+%R=(exp(2*Z)-1)./(exp(2*Z)+1);
+%R(Z==inf)=1; % otherwise inf returns nan
+R=tanh(Z);
 
 end

@@ -7,6 +7,8 @@ function [s]=geofss(data,ll,slow,frng,varargin)
 %              s=geofss(...,'weights',w,...)
 %              s=geofss(...,'damping',d,...)
 %              s=geofss(...,'ntiles',nt,...)
+%              s=geofss(...,'fhwidth',n,...)
+%              s=geofss(...,'prep',true|false,...)
 %              s=geofss(...,'avg',true|false,...)
 %
 %    Description:
@@ -91,12 +93,24 @@ function [s]=geofss(data,ll,slow,frng,varargin)
 %     is the number of records in DATA is recommended by Capon 1969.  The
 %     default is 1 which provides the best frequency resolution.
 %
+%     S=GEOFSS(...,'FHWIDTH',N,...) sets the sliding window halfwidth used to
+%     average neighboring frequencies of the cross spectral matrix.  This
+%     is mainly for stabilizing the inversion in the 'capon' method but has
+%     utility in smoothing spectra.  The window is size 2N+1 so for example
+%     N=2 averages each frequency with the closest 2 discrete frequencies
+%     above and below (a 5 point sliding average).  The default N=0 which
+%     does not average.
+%
+%     S=GEOFSS(...,'PREP',TRUE|FALSE,...) prepares the tiled data by
+%     detrending and tapering.  The default is FALSE.
+%
 %     S=GEOFSS(...,'AVG',TRUE|FALSE,...) indicates if the spectra is
 %     averaged across frequency & slowness during computation.  This can
 %     save a significant amount of memory.  The default is false.
 %
 %    Notes:
 %     - Records in DATA must have equal and regular sample spacing.
+%     - Attenuation correction is not included.
 %     - Latitudes are assumed to be geographic!
 %     - The slowness input may also be specified as a function that outputs
 %       travel time given the following style of input:
@@ -107,6 +121,11 @@ function [s]=geofss(data,ll,slow,frng,varargin)
 %     - References:
 %        Capon 1969, High-Resolution Frequency-Wavenumber Spectrum
 %         Analysis, Proc. IEEE, Vol. 57, No. 8, pp. 1408-1418
+%        Husebye & Ruud 1989, Array Seismology - Past, Present and Future
+%         Developments, in Observatory Seismology, edited by Litehiser, pp.
+%         123-153, Univ of Calif Press, Berkeley
+%        Rost & Thomas 2002, Array Seismology: Methods and Applications,
+%         Rev of Geoph, Vol. 40, No. 3, doi:10.1029/2000RG000100
 %
 %    Examples:
 %     % Compare resolution of a random source with a random array:
@@ -178,7 +197,6 @@ if(nrecs<2)
 end
 
 % check inputs
-sf=size(frng);
 if(~isreal(ll) || ndims(ll)~=2 || size(ll,2)<2 || size(ll,1)<1)
     error('seizmo:geofss:badInput',...
         'LATLON must be a Nx2 real matrix of [LAT LON]!');
@@ -186,7 +204,14 @@ elseif(~isa(slow,'function_handle') ...
         && (~isreal(slow) || any(slow<=0) || numel(slow)<1))
     error('seizmo:geofss:badInput',...
         'SLOW must be positive real vector in s/deg!');
-elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<=0))
+end
+sf=size(frng);
+if(~isreal(frng) || numel(sf)~=2 || any(frng(:)<0))
+    error('seizmo:geofss:badInput',...
+        'FRNG must be 1 or more positive real values in Hz!');
+end
+if(sf(2)==1); frng=frng(:,[1 1]); sf(2)=2; end
+if(sf(2)~=2 || any(frng(:,1)>frng(:,2)))
     error('seizmo:geofss:badInput',...
         'FRNG must be a Nx2 array of [FREQLOW FREQHIGH] in Hz!');
 end
@@ -303,13 +328,21 @@ end
 
 % get frequencies
 nspts=2^nextpow2(maxnpts); % half xcorr
-nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification
+%nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification
 f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
+nf=numel(f);
 
 % tiling
 if(pv.ntiles>1)
     data=[data; zeros(maxnpts*pv.ntiles-oldmax,nrecs)];
     data=permute(reshape(data.',[nrecs maxnpts pv.ntiles]),[2 1 3]);
+end
+
+% remove trend & taper
+if(pv.prep)
+    data(:,:)=detrend(data(:,:),'constant');
+    data(:,:)=detrend(data(:,:));
+    data(:,:)=repmat(hann(maxnpts),[1 size(data(:,:),2)]).*data(:,:);
 end
 
 % get fft
@@ -323,7 +356,7 @@ else
 end
 
 % whiten data if desired
-if(pv.whiten); data=data./abs(data); end
+if(pv.whiten); data=data./abs(data); data(isnan(data))=0; end
 
 % column vector slownesses
 if(sisafunc)
@@ -352,6 +385,9 @@ nll=size(ll,1);
 [s(1:nrng,1).center]=deal(clalo);
 [s(1:nrng,1).whiten]=deal(pv.whiten);
 [s(1:nrng,1).weights]=deal(pv.w);
+[s(1:nrng,1).ntiles]=deal(pv.ntiles);
+[s(1:nrng,1).fhwidth]=deal(pv.fhwidth);
+[s(1:nrng,1).damping]=deal(pv.damping);
 [s(1:nrng,1).spectra]=deal(zeros(0,'single'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -405,7 +441,12 @@ end
 % loop over frequency ranges
 for a=1:nrng
     % get frequencies
-    fidx=find(f>=frng(a,1) & f<=frng(a,2));
+    if(frng(a,1)==frng(a,2))
+        % nearest single frequency
+        [fidx,fidx]=min(abs(f-frng(a,1)));
+    else
+        fidx=find(f>=frng(a,1) & f<=frng(a,2));
+    end
     s(a).freq=f(fidx);
     nfreq=numel(fidx);
     
@@ -433,24 +474,17 @@ for a=1:nrng
         % position of interest to every station
         % tt is NLLxNPAIRS
         if((a==1 && b==1) || ttredo)
-            [tt,ctt,ttredo]=gettt(...
+            [tt,ctt,shift,cshift,ttredo]=gettt(...
                 ll,st,clalo,slow,f(fidx),b,nll,nrecs,sisafunc,pv);
             % get degree distance difference or traveltime difference
             switch pv.method
                 case {'coarray' 'full' 'capon'}
-                    tt=tt(:,slave)-tt(:,master);
+                    tt=-tt(:,slave)+tt(:,master)+dt(ones(nll,1),:);
+                    shift=shift(:,slave)-shift(:,master);
                 otherwise % {'center' 'user'}
-                    tt=tt-ctt(:,ones(1,nrecs));
+                    tt=-tt+ctt(:,ones(1,nrecs))+dt(ones(nll,1),:);
+                    shift=shift-cshift(:,ones(1,nrecs));
             end
-        end
-        
-        % invert cross power spectral density matrix for capon
-        switch pv.method
-            case 'capon'
-                cs=pinv((1-pv.damping)*reshape(...
-                    mean(data(slave,fidx(b),:)...
-                    .*conj(data(master,fidx(b),:)),3),...
-                    [nrecs nrecs])+pv.damping*eye(nrecs));
         end
         
         % loop over slowness
@@ -462,26 +496,76 @@ for a=1:nrng
             switch pv.method
                 case {'coarray' 'full'}
                     if(pv.avg)
-                        s(a).spectra=s(a).spectra+real(z.*exp(2*pi*1i*f(fidx(b))*(hs*tt-dt(ones(nll,1),:)))...
-                            *(mean(data(slave,fidx(b),:).*conj(data(master,fidx(b),:)),3).*pv.w));
+                        % get frequency range
+                        newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                        newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                        
+                        % compute average cross spectra for freq range & tiles
+                        % then weighted beam and add
+                        s(a).spectra=s(a).spectra+real((z.*exp(-2*pi*1i*f(fidx(b))*(hs*tt)-1i*shift))...
+                            *(mean(mean(data(slave,newfidx,:).*conj(data(master,newfidx,:)),2),3).*pv.w));
                     else
-                        s(a).spectra(:,c,b)=real(z.*exp(2*pi*1i*f(fidx(b))*(hs*tt-dt(ones(nll,1),:)))...
-                            *(mean(data(slave,fidx(b),:).*conj(data(master,fidx(b),:)),3).*pv.w));
+                        % get frequency range
+                        newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                        newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                        
+                        % compute average cross spectra for freq range & tiles
+                        % then weighted beam and insert
+                        s(a).spectra(:,c,b)=real((z.*exp(-2*pi*1i*f(fidx(b))*(hs*tt)-1i*shift))...
+                            *(mean(mean(data(slave,newfidx,:).*conj(data(master,newfidx,:)),2),3).*pv.w));
                     end
                 case 'capon'
                     if(pv.avg)
-                        s(a).spectra=s(a).spectra+1./real(z.*exp(2*pi*1i*f(fidx(b))*(hs*tt-dt(ones(nll,1),:)))*(cs(:).*pv.w));
+                        % get frequency range
+                        newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                        newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                        
+                        % get average cross spectral matrix
+                        cs=reshape(mean(mean(data(slave,newfidx,:).*conj(...
+                            data(master,newfidx,:)),2),3),[nrecs nrecs]);
+                        
+                        % damped inversion of cross spectral matrix
+                        cs=pinv((1-pv.damping)*cs+pv.damping*eye(nrecs));
+                        
+                        % weighted capon beam and add
+                        s(a).spectra=s(a).spectra+1./real((z.*exp(-2*pi*1i*f(fidx(b))*(hs*tt)-1i*shift))...
+                            *(cs(:).*pv.w));
                     else
-                        s(a).spectra(:,c,b)=1./real(z.*exp(2*pi*1i*f(fidx(b))*(hs*tt-dt(ones(nll,1),:)))*(cs(:).*pv.w));
+                        % get frequency range
+                        newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                        newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                        
+                        % get average cross spectral matrix
+                        cs=reshape(mean(mean(data(slave,newfidx,:).*conj(...
+                            data(master,newfidx,:)),2),3),[nrecs nrecs]);
+                        
+                        % damped inversion of cross spectral matrix
+                        cs=pinv((1-pv.damping)*cs+pv.damping*eye(nrecs));
+                        
+                        % weighted capon beam and insert
+                        s(a).spectra(:,c,b)=1./real((z.*exp(-2*pi*1i*f(fidx(b))*(hs*tt)-1i*shift))...
+                            *(cs(:).*pv.w));
                     end
                 otherwise  % {'center' 'user'}
                     if(pv.avg)
+                        % get frequency range
+                        newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                        newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                        newnf=numel(newfidx);
+                        
                         for d=1:pv.ntiles
-                            s(a).spectra=s(a).spectra+abs(z.*exp(2*pi*1i*f(fidx(b))*(hs*tt-dt(ones(nll,1),:)))*(data(:,fidx(b),d).*pv.w)).^2;
+                            s(a).spectra=s(a).spectra+mean(abs((z.*exp(-2*pi*1i*f(fidx(b))*(hs*tt)-1i*shift))...
+                                *(data(:,newfidx,d).*pv.w(:,ones(1,newnf)))).^2,2);
                         end
                     else
+                        % get frequency range
+                        newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                        newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                        newnf=numel(newfidx);
+                        
                         for d=1:pv.ntiles
-                            s(a).spectra(:,c,b)=s(a).spectra(:,c,b)+abs(z.*exp(2*pi*1i*f(fidx(b))*(hs*tt-dt(ones(nll,1),:)))*(data(:,fidx(b),d).*pv.w)).^2;
+                            s(a).spectra(:,c,b)=s(a).spectra(:,c,b)+mean(abs((z.*exp(-2*pi*1i*f(fidx(b))*(hs*tt)-1i*shift))...
+                                *(data(:,newfidx,d).*pv.w(:,ones(1,newnf)))).^2,2);
                         end
                     end
                     s(a).spectra=s(a).spectra/pv.ntiles;
@@ -494,10 +578,11 @@ end
 
 end
 
-function [tt,ctt,ttredo]=gettt(...
+function [tt,ctt,shift,cshift,ttredo]=gettt(...
     lalo,stlalo,clalo,slow,f0,a,nll,nrecs,sisafunc,pv)
 % super overcomplex distance/traveltime retriever
 ctt=[];
+cshift=[];
 ttredo=true;
 if(a==1)
     % function gives traveltime but numeric input gives slowness
@@ -506,39 +591,46 @@ if(a==1)
         if(isscalar(unique(f0)))
             % only one frequency so only need to get tt once
             tt=nan(nll,nrecs);
+            shift=nan(nll,nrecs);
             for i=1:nrecs
-                tt(:,i)=slow(lalo,stlalo(i*ones(nll,1),:),f0(1));
+                [tt(:,i),shift(:,i)]=slow(...
+                    lalo,stlalo(i*ones(nll,1),:),f0(1));
             end
             switch pv.method
                 case {'user' 'center'}
-                    ctt=slow(lalo,clalo,f0(1));
+                    [ctt,cshift]=slow(lalo,clalo,f0(1));
             end
             %ttredo=false;  % MIGHT NEED TO REDO FOR ANOTHER FREQ RANGE
+            ttredo=false;
         else % multiple frequencies
             try
                 % see if function depends on f
-                tt=slow(lalo(1,:),stlalo(1,:)); %#ok<NASGU>
+                [tt,shift]=slow(lalo(1,:),stlalo(1,:));
                 
                 % still here?
                 % guess that means frequency is ignored...
                 tt=nan(nll,nrecs);
+                shift=nan(nll,nrecs);
                 for i=1:nrecs
-                    tt(:,i)=slow(lalo,stlalo(i*ones(nll,1),:));
+                    [tt(:,i),shift(:,i)]=slow(...
+                        lalo,stlalo(i*ones(nll,1),:));
                 end
                 switch pv.method
                     case {'user' 'center'}
-                        ctt=slow(lalo,clalo);
+                        [ctt,cshift]=slow(lalo,clalo);
                 end
                 ttredo=false;
             catch
                 % slow is a function of frequency
                 tt=nan(nll,nrecs);
+                shift=nan(nll,nrecs);
                 for i=1:nrecs
-                    tt(:,i)=slow(lalo,stlalo(i*ones(nll,1),:),f0(a));
+                    [tt(:,i),shift(:,i)]=slow(...
+                        lalo,stlalo(i*ones(nll,1),:),f0(a));
                 end
                 switch pv.method
                     case {'user' 'center'}
-                        ctt=slow(lalo,clalo,f0(a));
+                        [ctt,cshift]=slow(lalo,clalo,f0(a));
                 end
             end
         end
@@ -547,18 +639,21 @@ if(a==1)
         tt=sphericalinv(...
             lalo(:,ones(nrecs,1)),lalo(:,2*ones(nrecs,1)),...
             stlalo(:,ones(nll,1))',stlalo(:,2*ones(nll,1))');
+        shift=zeros(size(tt));
         ctt=sphericalinv(lalo(:,1),lalo(:,2),clalo(1),clalo(2));
+        cshift=zeros(size(ctt));
         ttredo=false;
     end
 else
     % slow is a function of frequency
     tt=nan(nll,nrecs);
+    shift=nan(nll,nrecs);
     for i=1:nrecs
-        tt(:,i)=slow(lalo,stlalo(i*ones(nll,1),:),f0(a));
+        [tt(:,i),shift(:,i)]=slow(lalo,stlalo(i*ones(nll,1),:),f0(a));
     end
     switch pv.method
         case {'user' 'center'}
-            ctt=slow(lalo,clalo,f0(a));
+            [ctt,cshift]=slow(lalo,clalo,f0(a));
     end
 end
 
@@ -574,6 +669,8 @@ pv.whiten=true;
 pv.w=[];
 pv.damping=0.001; % only for capon
 pv.ntiles=1;
+pv.fhwidth=0;
+pv.prep=false;
 
 % require pv pairs
 if(mod(nargin,2))
@@ -598,8 +695,12 @@ for i=1:2:nargin
             pv.damping=varargin{i+1};
         case {'ntiles' 'ntile' 'tiles' 'tile' 'nt' 't'}
             pv.ntiles=varargin{i+1};
+        case {'fhwidth' 'fhwid' 'fh' 'fwid' 'f'}
+            pv.fhwidth=varargin{i+1};
         case {'average' 'av' 'avg' 'a'}
             pv.avg=varargin{i+1};
+        case {'prep'}
+            pv.prep=varargin{i+1};
         otherwise
             error('seizmo:geofss:badInput',...
                 'Unknown parameter: %s !',varargin{i});
@@ -622,7 +723,7 @@ elseif(~isscalar(pv.whiten) || ~islogical(pv.whiten))
         'WHITEN must be TRUE or FALSE!');
 elseif((~isnumeric(pv.w) && ~ischar(pv.w)) ...
         || (isnumeric(pv.w) && any(pv.w(:)<0)) ...
-        || (ischar(pv.w) && ~any(strcmpi(pv.method,valid.METHOD))))
+        || (ischar(pv.w) && ~any(strcmpi(pv.w,valid.W))))
     error('seizmo:geofss:badInput',...
         'WEIGHTS must be positive!');
 elseif(~isreal(pv.damping) || ~isscalar(pv.damping) || pv.damping<0)
@@ -632,9 +733,16 @@ elseif(~isreal(pv.ntiles) || ~isscalar(pv.ntiles) ...
         || pv.ntiles<=0 || pv.ntiles~=fix(pv.ntiles))
     error('seizmo:geofss:badInput',...
         'NTILES must be a positive integer!');
+elseif(~isreal(pv.fhwidth) || ~isscalar(pv.fhwidth) ...
+        || pv.fhwidth~=fix(pv.fhwidth))
+    error('seizmo:geofss:badInput',...
+        'FHWIDTH must be an integer!');
 elseif(~isscalar(pv.avg) || ~islogical(pv.avg))
     error('seizmo:geofss:badInput',...
         'AVG must be TRUE or FALSE!');
+elseif(~isscalar(pv.prep) || ~islogical(pv.prep))
+    error('seizmo:geofss:badInput',...
+        'PREP must be TRUE or FALSE!');
 end
 
 end

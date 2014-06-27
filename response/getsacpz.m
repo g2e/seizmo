@@ -83,9 +83,12 @@ function [data]=getsacpz(data,varargin)
 %                        warn for any bad responses, update See also
 %                        section
 %        Mar. 10, 2014 - also handle unset KHOLE
+%        Apr. 28, 2014 - bugfix: fix error for custom db w/o struct input
+%        May  28, 2014 - bugfix: now checks for bad custom polezeros to
+%                        avoid error
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 10, 2014 at 12:45 GMT
+%     Last Updated May  28, 2014 at 12:45 GMT
 
 % todo:
 % - web option
@@ -182,7 +185,11 @@ try
         valid=false;
         structs=cellfun('isclass',varargin,'struct');
         try
-            sacpzdb.CUSTOM=sscat(varargin{structs});
+            if(any(structs))
+                sacpzdb.CUSTOM=sscat(varargin{structs});
+            else
+                sacpzdb.CUSTOM=[];
+            end
         catch
             error('seizmo:getsacpz:badInputs',...
                 'Alternate SACPZdbs are not concatenateable!');
@@ -208,8 +215,12 @@ try
         end
         if(any(dirs))
             try
-                sacpzdb.CUSTOM=sscat(sacpzdb.CUSTOM,...
-                    makesacpzdb(varargin{dirs}));
+                if(isempty(sacpzdb.CUSTOM))
+                    sacpzdb.CUSTOM=makesacpzdb(varargin{dirs});
+                else
+                    sacpzdb.CUSTOM=sscat(sacpzdb.CUSTOM,...
+                        makesacpzdb(varargin{dirs}));
+                end
                 valid=true;
             catch
                 error('seizmo:getsacpz:badInputs',...
@@ -224,11 +235,20 @@ try
             for i=1:ndb
                 tmp=load(varargin{i});
                 try
-                    if(issacpz_rdseed(tmp))
-                        sacpzdb.CUSTOM=sscat(sacpzdb.CUSTOM,tmp);
+                    if(isempty(sacpzdb.CUSTOM))
+                        if(issacpz_rdseed(tmp))
+                            sacpzdb.CUSTOM=tmp;
+                        else
+                            tmp=struct2cell(tmp);
+                            sacpzdb.CUSTOM=sscat(tmp{:});
+                        end
                     else
-                        tmp=struct2cell(tmp);
-                        sacpzdb.CUSTOM=sscat(sacpzdb.CUSTOM,tmp{:});
+                        if(issacpz_rdseed(tmp))
+                            sacpzdb.CUSTOM=sscat(sacpzdb.CUSTOM,tmp);
+                        else
+                            tmp=struct2cell(tmp);
+                            sacpzdb.CUSTOM=sscat(sacpzdb.CUSTOM,tmp{:});
+                        end
                     end
                 catch
                     error('seizmo:getsacpz:badInputs',...
@@ -247,6 +267,7 @@ try
                     'SACPZDBs must be v5.1 (see ISSACPZ_RDSEED)!');
             end
         end
+        [badpz,sacpzdb]=bad_sacpz(sacpzdb);
         
         % network workaround for custom db as it is flattened
         NET(1:nrecs,1)={'CUSTOM'};

@@ -7,7 +7,7 @@ function []=stack2stack(stackdir,newspan,varargin)
 %    Description:
 %     STACK2STACK(STACKDIR,NEWSPAN) stacks noise correlation stacks within
 %     the directory STACKDIR and outputs the resulting stacks under at the
-%     same directory level with the name determined by STACKDIR & NEW SPAN.
+%     same directory level with the name determined by STACKDIR & NEWSPAN.
 %     The directory layout of OUTDIR (the directory above STACKDIR and
 %     created by NOISE_STACK) is as follows:
 %
@@ -18,7 +18,7 @@ function []=stack2stack(stackdir,newspan,varargin)
 %                                |
 %                                +-> TIME
 %
-%     where TIME has a format dependent on NEwSPAN:
+%     where TIME has a format dependent on NEWSPAN:
 %                  NEWSPAN |  TIME
 %                 ---------+--------------
 %                   'all'  |  yyyy.ddd.hh.mm.ss_yyyy.ddd.hh.mm.ss
@@ -54,6 +54,8 @@ function []=stack2stack(stackdir,newspan,varargin)
 %
 %     STACK2STACK(STACKDIR,NEWSPAN,'OPT1',VAL,...,'OPTN',VAL) gives access
 %     to several stacking and selection parameters:
+%      XCREVERSE  - create time-reversed correlations (false)
+%      ZTRANSFORM - use Fisher's transform for stacking (true)
 %      TIMESTART  - process time sections from this time on []
 %      TIMEEND    - process times sections before this time []
 %      LATRNG     - include stations in this latitude range []
@@ -64,29 +66,35 @@ function []=stack2stack(stackdir,newspan,varargin)
 %      COMPONENTS - include records with these component codes []
 %      FILENAMES  - limit processing to files matching this file pattern []
 %      QUIETWRITE - quietly overwrite OUTDIR (default is false)
-%      MATIO      - output mat files instead of sac files (true)
 %
 %    Notes:
-%     - NEWSPAN time span must exceed the OLDSPAN time span.  You cannot
-%       make 3hr stacks from day stacks.  Allowed NEWSPAN values:
-%     OLDSPAN | NEWSPAN
-%     --------+-------------------------------
-%         all |  
-%     2season | all
-%     4season | 2season, all
-%         mon | 4season, 2season, all
-%        3mon | 4season, 2season, all
-%        yrmo | mon, 3mon, 4season, 2season, all
-%          wk | yrmo, mon, 3mon, 4season, 2season, all
-%       wkday | all
-%         day | wkday, wk, yrmo, mon, 3mon, 4season, 2season, all
-%      tod3hr | all
-%      tod1hr | tod3hr, all
-%         3hr | tod3hr, day, wkday, wk, yrmo, mon, 3mon, 4season,
-%             |  2season, all
-%         1hr | tod1hr, tod3hr, 3hr, day, wkday, wk, yrmo, mon, 3mon,
-%             |  4season, 2season, all
-%          
+%     - While data i/o is .mat files by default, SAC files are okay too.
+%       Note that .mat files can be read into Matlab using the LOAD
+%       function and written out as SAC files using the function
+%       WRITESEIZMO.  You may also convert the inputs & outputs using
+%       NOISE_MAT2SAC & NOISE_SAC2MAT.  Be aware that SAC files are ignored
+%       when there is a .mat file present.  Output format is based on the
+%       format of the first data file read in.
+%     - NEWSPAN time span must exceed the OLDSPAN time span.  For example,
+%       you cannot make 3hr stacks from day stacks.  Allowed NEWSPAN values
+%       given the OLDSPAN value:
+%          OLDSPAN | NEWSPAN
+%          --------+-------------------------------
+%              all |  
+%          2season | all
+%          4season | 2season, all
+%              mon | 4season, 2season, all
+%             3mon | 4season, 2season, all
+%             yrmo | mon, 3mon, 4season, 2season, all
+%               wk | yrmo, mon, 3mon, 4season, 2season, all
+%            wkday | all
+%              day | wkday, wk, yrmo, mon, 3mon, 4season, 2season, all
+%           tod3hr | all
+%           tod1hr | tod3hr, all
+%              3hr | tod3hr, day, wkday, wk, yrmo, mon, 3mon, 4season,
+%                  |  2season, all
+%              1hr | tod1hr, tod3hr, 3hr, day, wkday, wk, yrmo, mon, 3mon,
+%                  |  4season, 2season, all
 %
 %    Header changes: SCALE (number of records in stack), DEP*
 %                    Z, A, F
@@ -100,9 +108,19 @@ function []=stack2stack(stackdir,newspan,varargin)
 %     Version History:
 %        Apr.  6, 2013 - initial version
 %        Jan. 26, 2014 - abs path exist fix
+%        May  28, 2014 - call NO_REDUNDANT_CORRELATIONS to avoid double
+%                        adding due to reversed and unreversed correlations
+%                        being present in a directory, remove MATIO option:
+%                        now autodetects sac/mat i/o, added ZTRANSFORM
+%                        option (defaults to true), added XCREVERSE option
+%                        (defaults to false), bugfix: allow multiple
+%                        filenames for FILENAMES option
+%        May  29, 2014 - bugfix: headers/filenames now updated, bugfix:
+%                        now catches error for global variable resetting
+%        June  4, 2014 - also set t0 & t1 header fields
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 11:15 GMT
+%     Last Updated June  4, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -485,6 +503,9 @@ end
 oldseizmocheckstate=seizmocheck_state(false);
 oldcheckheaderstate=checkheader_state(false);
 
+% for autodetecting if output is .mat or SAC files
+opt.MATIO=[];
+
 % loop over stack time spans
 %parfor s=1:size(spanbgn,1) % PARALLEL
 for s=1:size(spanbgn,1) % SERIAL
@@ -551,21 +572,25 @@ for s=1:size(spanbgn,1) % SERIAL
     for ts=1:nin
         % read in timesection data headers
         try
-            if(opt.MATIO)
-                data=load(strcat(stackdir,fs,tsdirs{in(ts)},fs,...
-                    'noise_records.mat'));
-                data=data.noise_records;
-                if(~isempty(opt.FILENAMES))
-                    warning('seizmo:stack2stack:unusedOption',...
-                        'FILENAMES option ignored for MAT input!');
-                end
-            else
+            data=load(strcat(stackdir,fs,tsdirs{in(ts)},fs,...
+                'noise_records.mat'));
+            data=data.noise_records;
+            if(~isempty(opt.FILENAMES))
+                warning('seizmo:stack2stack:unusedOption',...
+                    'FILENAMES option ignored for MAT input!');
+            end
+            opt.MATIO_THIS_TIME=true;
+            if(isempty(opt.MATIO)); opt.MATIO=true; end
+        catch
+            try
                 data=readheader(strcat(stackdir,fs,tsdirs{in(ts)},fs,...
                     opt.FILENAMES));
+                opt.MATIO_THIS_TIME=false;
+                if(isempty(opt.MATIO)); opt.MATIO=false; end
+            catch
+                % no data...
+                continue;
             end
-        catch
-            % no data...
-            continue;
         end
         if(isempty(data)); continue; end
         
@@ -618,6 +643,9 @@ for s=1:size(spanbgn,1) % SERIAL
             if(isempty(data)); continue; end
         end
         
+        % remove redundant (reversed) correlations
+        data=no_redundant_correlations(data);
+        
         % get some header info
         [knetwk,kstnm,khole,kcmpnm,...
             kt0,kt1,kt2,kt3,scale]=getheader(data,...
@@ -630,7 +658,10 @@ for s=1:size(spanbgn,1) % SERIAL
         knames=lower(knames); knamem=lower(knamem);
         
         % read in data (if not MATFILE input)
-        if(~opt.MATIO); data=readdata(data); end
+        if(~opt.MATIO_THIS_TIME); data=readdata(data); end
+        
+        % apply Fisher's transform
+        if(opt.ZTRANS); data=solofun(data,'@fisher'); end
         
         % multiply by scale
         % - this allows weighted stacks
@@ -657,10 +688,11 @@ for s=1:size(spanbgn,1) % SERIAL
         end
         
         % look up record knames reversed in stacks
-        % - don't allow adding unreversed & reversed
+        % - don't allow autoxc this time (to avoid double add)
         [tf2,loc]=ismember(strcat(knames,'.',knamem),...
             strcat(snamem,'.',snames));
-        tf2=tf2 & ~tf1;
+        autoxc=strcmp(knamem,knames);
+        tf2=tf2 & ~autoxc;
         loc=loc(tf2); % remove zeros
         if(any(tf2))
             % those to be stacked on
@@ -677,14 +709,67 @@ for s=1:size(spanbgn,1) % SERIAL
             snamem=[snamem; knamem(tf)];
             snames=[snames; knames(tf)];
         end
+        tf=~tf1 & ~tf2 & ~autoxc;
+        if(opt.XCREVERSE && any(tf))
+            % those to be appended on
+            sdata=[sdata; rdata(tf)];
+            sscale=[sscale; scale(tf)];
+            snamem=[snamem; knames(tf)];
+            snames=[snames; knamem(tf)];
+        end
         
         % detail message
         if(verbose); print_time_left(ts,nin); end
     end
     
+    % get span reference time
+    switch char(newspan)
+        case {'1hr' '3hr' 'all'}
+            spanref=sbgn;
+        case {'day' 'wk' 'yrmo' '3mon'}
+            spanref=[sbgn 0 0 0];
+        case {'tod1hr' 'tod3hr'}
+            % use 1st ts's info
+            sbgn(1:2)=tsbgn(in(1),1:2);
+            send(1:2)=tsbgn(in(1),1:2);
+            spanref=sbgn;
+        case 'wkday'
+            % use 1st ts's info
+            sbgn(1:2)=tsbgn(in(1),1:2);
+            send(1:2)=fixdates(sbgn+[0 1]);
+            spanref=[sbgn 0 0 0];
+        case 'mon'
+            % use 1st ts's info
+            sbgn(1)=tsbgn(in(1),1);
+            send=fixdates(sbgn+[0 1 0]);
+            spanref=[sbgn 0 0 0];
+        case '2season'
+            % use 1st ts's info
+            sbgn(1)=tsbgn(in(1),1);
+            send=fixdates(sbgn+[0 6 0]);
+            spanref=[sbgn 0 0 0];
+        case '4season'
+            % use 1st ts's info
+            sbgn(1)=tsbgn(in(1),1);
+            send=fixdates(sbgn+[0 3 0]);
+            spanref=[sbgn 0 0 0];
+    end
+    
     % divide by scale to get back to an average
     % - updates dep* stats skipped by addrecords hack
     sdata=divide(sdata,sscale);
+    
+    % unapply Fisher's transform
+    if(opt.ZTRANS); sdata=solofun(sdata,'@ifisher'); end
+    
+    % rename
+    sdata=changename(sdata,'name',strcat(snamem,'_-_',snames));
+    
+    % update headers
+    sdata=changeheader(sdata,'scale',sscale,...
+        'a',0,'f',timediff(sbgn,send,'utc'),...
+        't0',0,'t1',timediff(sbgn,send,'utc'),...
+        'z',spanref,'iztype','ia');
     
     % write out stack of stacks
     if(opt.MATIO)
@@ -714,8 +799,9 @@ function [opt]=stack2stack_parameters(varargin)
 % parses/checks stack2stack pv pairs
 
 % defaults
-varargin=[{'o' 50 'matio' true 'q' false 'ts' [] 'te' [] 'lat' [] ...
-    'lon' [] 'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' []} varargin];
+varargin=[{'o' 50 'ztrans' true 'q' false 'ts' [] 'te' [] 'lat' [] ...
+    'lon' [] 'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' [] 'xcr' false} ...
+    varargin];
 
 % require option/value pairs
 if(mod(nargin,2))
@@ -733,6 +819,9 @@ for i=1:2:numel(varargin)
             % support for this option does not exist yet!
             if(isempty(varargin{i+1})); continue; end
             opt.OVERLAP=varargin{i+1};
+        case {'xcreverse' 'xcrev' 'xcr'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.XCREVERSE=varargin{i+1};
         case {'ts' 'tstart' 'timestart' 'startt' 'stime' 'starttime'}
             opt.TIMESTART=varargin{i+1};
         case {'te' 'tend' 'timeend' 'et' 'endtime' 'etime' 'endt'}
@@ -746,7 +835,7 @@ for i=1:2:numel(varargin)
         case {'kstnm' 'st' 'sta' 'stn' 'stns' 'stations' 'station'}
             if(~isempty(varargin{i+1}) && isnumeric(varargin{i+1}))
                 % timestart/starttime catch
-                warning('seizmo:noise_setup:badInput',...
+                warning('seizmo:stack2stack:badInput',...
                     'TIMESTART/STATION mixup!  Assuming TIMESTART!');
                 opt.TIMESTART=varargin{i+1};
             else
@@ -761,9 +850,9 @@ for i=1:2:numel(varargin)
         case {'q' 'qw' 'quiet' 'qwrite' 'quietwrite'}
             if(isempty(varargin{i+1})); continue; end
             opt.QUIETWRITE=varargin{i+1};
-        case {'matio' 'mat' 'matout' 'matin'}
+        case {'z' 'ztran' 'ztrans' 'ztransform' 'fish' 'fisher'}
             if(isempty(varargin{i+1})); continue; end
-            opt.MATIO=varargin{i+1};
+            opt.ZTRANS=varargin{i+1};
         otherwise
             error('seizmo:stack2stack:badInput',...
                 'Unknown Option: %s !',varargin{i});
@@ -791,7 +880,10 @@ if(iscellstr(opt.FILENAMES)); opt.FILENAMES=unique(opt.FILENAMES(:)); end
 % check options
 szs=size(opt.TIMESTART);
 sze=size(opt.TIMEEND);
-if(~isscalar(opt.OVERLAP) || ~isnumeric(opt.OVERLAP) ...
+if(~isscalar(opt.XCREVERSE) || ~islogical(opt.XCREVERSE))
+    error('seizmo:stack2stack:badInput',...
+        'XCREVERSE must be TRUE or FALSE!');
+elseif(~isscalar(opt.OVERLAP) || ~isnumeric(opt.OVERLAP) ...
         || opt.OVERLAP>100 || opt.OVERLAP<0)
     error('seizmo:stack2stack:badInput',...
         'OVERLAP must be a scalar from 0-100%%!');
@@ -833,12 +925,9 @@ elseif(~isempty(opt.COMPONENTS) && (~iscellstr(opt.COMPONENTS)))
 elseif(~isempty(opt.FILENAMES) && (~iscellstr(opt.FILENAMES)))
     error('seizmo:stack2stack:badInput',...
         'FILENAMES must be a string list of allowed files!');
-elseif(numel(opt.FILENAMES)>1)
+elseif(~isscalar(opt.ZTRANS) || ~islogical(opt.ZTRANS))
     error('seizmo:stack2stack:badInput',...
-        'FILENAMES must be a single pattern in NOISE_STACK!');
-elseif(~isscalar(opt.MATIO) || ~islogical(opt.MATIO))
-    error('seizmo:stack2stack:badInput',...
-        'MATIO must be TRUE or FALSE!');
+        'ZTRANSFORM must be TRUE or FALSE!');
 end
 
 end

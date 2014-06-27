@@ -32,9 +32,10 @@ function [xc]=no_redundant_correlations(xc)
 %        Sep. 19, 2013 - drop relative timing constraint, optimized
 %                        checking, improved docs
 %        Jan. 15, 2014 - fixed warning id
+%        June 12, 2014 - handle fd i/o
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 15:05 GMT
+%     Last Updated June 12, 2014 at 15:05 GMT
 
 % todo:
 
@@ -52,7 +53,7 @@ try
     % check headers
     xc=checkheader(xc,...
         'MULCMP_DEP','ERROR',...
-        'NONTIME_IFTYPE','ERROR',...
+        'XYZ_IFTYPE','ERROR',...
         'FALSE_LEVEN','ERROR',...
         'UNSET_ST_LATLON','ERROR',...
         'UNSET_EV_LATLON','ERROR');

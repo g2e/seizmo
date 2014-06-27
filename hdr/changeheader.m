@@ -69,7 +69,7 @@ function [data]=changeheader(data,varargin)
 %     - Be careful with using row vectors as values!  Row vectors outside
 %       of group field usage fails if there are multiple filetypes in use.
 %       This isn't the usual case so you can get away with it most of the
-%       time... You have been warned!
+%       time.  You have been warned!
 %     - Passing nan, inf, -inf values will change a numeric field to its
 %       undefined value.  'nan', 'undef' or 'undefined' will do the same
 %       for a character field.  This is useful for not having to remember
@@ -77,6 +77,9 @@ function [data]=changeheader(data,varargin)
 %     - Enumerated/Logical fields do not need modifiers as they are auto
 %       detected in CHANGEHEADER, but Absolute Times do need 'utc' or 'tai'
 %       after the field as a separate word (eg. 'b utc').
+%     - Use SYNCHRONIZE or TIMESHIFT to update the reference time while
+%       preserving the absolute timing of all timing fields.  CHANGEHEADER
+%       will not do this!  You have been warned!
 %
 %    Header changes: Determined by input list.
 %
@@ -138,9 +141,15 @@ function [data]=changeheader(data,varargin)
 %                        abstimes input to be uncelled
 %        Mar.  1, 2012 - bugfix: forgot to define solo, drop bad cell2mat
 %        Aug. 30, 2012 - big doc update for clarity
+%        June 26, 2014 - bugfix: abstime correctly updates in case abstime
+%                        then reftime then abstime modified (note this is
+%                        probably not what you want to do as changing the
+%                        reftime with changeheader doesn't update the other
+%                        time fields, thus changing their abstime - so use
+%                        synchronize or timeshift to properly update times)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 30, 2012 at 12:00 GMT
+%     Last Updated June 26, 2014 at 12:00 GMT
 
 % todo:
 
@@ -230,9 +239,6 @@ end
 
 % pull entire header
 head=[data.head];
-
-% preallocate ref
-ref=[]; tai=[]; good=[];
 
 % loop over field/value pairs
 for i=1:2:(nargin-2)
@@ -357,7 +363,7 @@ for i=1:2:(nargin-2)
         end
         
         % assign values to field
-        [head,ref,tai,good]=a2h(head,h,f,varargin{i+1}(:,j),ref,tai,good);
+        head=a2h(head,h,f,varargin{i+1}(:,j));
     end
 end
 
@@ -368,7 +374,7 @@ head=mat2cell(head,h.size,ones(1,nrecs));
 end
 
 
-function [head,ref,tai,good]=a2h(head,h,f,v,ref,tai,good)
+function [head]=a2h(head,h,f,v)
 %A2H    Subfunction that assigns values to header field
 
 % virtual fields
@@ -524,10 +530,8 @@ for n=1:numel(h.ntype)
                 end
                 
                 % get reftimes
-                if(isempty(ref))
-                    [ref,good]=vf_gh_z(h,head); good=good';
-                    tai=ref; tai(good,:)=utc2tai(ref(good,:));
-                end
+                [tai,good]=vf_gh_ztai(h,head);
+                good=good';
                 
                 % set all to undef
                 head(h.real(m).pos.(f),:)=h.undef.ntype;

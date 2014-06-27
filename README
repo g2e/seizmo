@@ -35,6 +35,15 @@ seismology research.  See the project website for more details:
    may be issues during the uninstall phase with git-based updates so you
    might need to clean your path occasionally.
 
+3.1 If you can't download through Matlab and are on Linux/Unix/OSX, you may
+    run the bash script setup_seizmo.bash via a terminal to download and
+    unpackage external tools for seizmo.
+
+3.2 If you can't or don't want to save seizmo to your paths, you can use
+    startup_seizmo and shutdown_seizmo to dynamically use seizmo when you
+    want.  This is also useful when the functions in seizmo have the same
+    name as functions in another package that you are using.
+
 4. Getting Started
 ------------------
 4a In Matlab: Type 'help seizmo' in the Matlab command window.  Follow

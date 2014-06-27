@@ -16,12 +16,16 @@ function [s]=geoarf(stlalo,lalo,slow,lalo0,slow0,f0,varargin)
 %     LATLON (to see the aliasing to other positions) & horizontal
 %     slownesses SLOW (to see how slowness error affects the positional
 %     aliasing) at the given f0.  Latitudes & longitudes are expected in
-%     degrees and are expected to be input as [LAT LON] arrays.  Slownesses
-%     are the magnitude of the horizontal slowness in sec/deg.  The ARF is
-%     created using the 'center' method as this is faster (the method can
-%     be altered).  The output struct S has the same fields as GEOFSS
-%     output but also includes a S.source field which has the following
-%     layout:
+%     degrees and are expected to be input as [LAT LON] arrays.  Positions
+%     may also be given as [LAT LON ELEV DEPTH] where elevation and depth
+%     are given in meters.  Generally you will set ELEV to 0 for the
+%     beamforming positions in LATLON & lalo0.  Slownesses SLOW & slow0 are
+%     the magnitude of the horizontal slowness in sec/deg.  SLOW & slow0
+%     may also specify functions and this is described further in the Notes
+%     section below.  The ARF is created using the 'center' method by
+%     default as this is faster (the method can be altered -- see below).
+%     The output struct S has the same fields as GEOFSS output but also
+%     includes a S.source field which has the following layout:
 %      .source.nsrc   - number of sources
 %      .source.latlon - source positions as [LAT LON] (deg)
 %      .source.slow   - source horizontal slowness (sec/deg)
@@ -30,7 +34,7 @@ function [s]=geoarf(stlalo,lalo,slow,lalo0,slow0,f0,varargin)
 %     S=GEOARF(...,'METHOD',STRING,...) defines the beamforming method.
 %     STRING may be 'center', 'coarray', 'full', or [LAT LON].  Note that
 %     the 'capon' method is not available as the array response for that
-%     method is dependent on the data.
+%     method is dependent on the data.  The default is 'center'.
 %
 %     S=GEOARF(...,'WEIGHTS',W,...) specifies the relative weights for each
 %     station (must have the same number of rows as STLALO) or pairing (if
@@ -45,12 +49,14 @@ function [s]=geoarf(stlalo,lalo,slow,lalo0,slow0,f0,varargin)
 %    Notes:
 %     - Latitudes are assumed to be geographic!
 %     - Slowness inputs may also be specified as functions that output
-%       travel time given the following style of input:
-%        tt=func([evla evlo ...],[stla stlo ...],freq)
-%       where tt is the travel time between the locations.  The lat/lon
-%       inputs are Nx2+ arrays and so tt is expected to be a Nx1 array.
-%       This allows GEOARF to show the source resolution from beamforming
-%       of just about any simple wave.
+%       travel time and phase shift given the following style of input:
+%        [tt,shift]=func([evla evlo ...],[stla stlo ...],freq)
+%       where tt is the travel time in seconds between the locations and
+%       shift is the phase delay in radians (a Hilbert transform is -pi/2).
+%       The lat/lon inputs are Nx2+ arrays as [lat lon], [lat lon elev] or
+%       [lat lon elev depth].  The frequency input must be a scalar.  The
+%       outputs are therefore Nx1 arrays.  This allows GEOARF to show the
+%       source resolution from beamforming of just about any wave.
 %
 %    Examples:
 %     % Global geoARF for a random array:
@@ -89,11 +95,17 @@ function [s]=geoarf(stlalo,lalo,slow,lalo0,slow0,f0,varargin)
 %        Oct.  2, 2012 - minor doc update, minor bugfix for func handle,
 %                        variable collision bugfix
 %        Jan. 15, 2013 - history update
+%        Mar. 21, 2014 - minor doc update, phase shift now also expected to
+%                        be returned by function handles
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2013 at 17:00 GMT
+%     Last Updated Mar. 21, 2014 at 17:00 GMT
 
 % todo:
+% - make functions to test
+%   - teleseismic & regional P (travel time curve based)
+%   - surface waves
+% - better warnings from checking...
 
 % check nargin
 error(nargchk(6,inf,nargin));
@@ -268,27 +280,31 @@ for a=1:nsrc
     % position of interest to every station
     % tt is NLLxNPAIRS
     if(a==1 || ttredo)
-        [tt,ctt,ttredo]=gettt(...
+        [tt,ctt,shift,cshift,ttredo]=gettt(...
             lalo,stlalo,clalo,slow,f0,a,nll,nrecs,sisafunc,pv);
         % get degree distance difference or traveltime difference
         switch pv.method
             case {'coarray' 'full'}
                 tt=tt(:,slave)-tt(:,master);
+                shift=shift(:,slave)-shift(:,master);
             otherwise % {'center' 'user'}
                 tt=tt-ctt(:,ones(1,nrecs));
+                shift=shift-cshift(:,ones(1,nrecs));
         end
     end
     
     % Get traveltime from source to every station
     % tt0 is 1xNPAIRS
-    [tt0,ctt0]=gettt0(...
+    [tt0,ctt0,shift0,cshift0]=gettt0(...
         lalo0(a,:),stlalo,clalo,slow0,f0,a,nrecs,s0isafunc,pv);
     % get traveltime difference
     switch pv.method
         case {'coarray' 'full'}
             tt0=tt0(:,slave)-tt0(:,master);
+            shift0=shift0(:,slave)-shift0(:,master);
         otherwise % {'center' 'user'}
             tt0=tt0-ctt0;
+            shift0=shift0-cshift0;
     end
     
     % loop over slownesses
@@ -301,18 +317,22 @@ for a=1:nsrc
             case {'full' 'coarray'}
                 if(pv.avg)
                     s.spectra=s.spectra+real((z.*exp(-2*pi*1i*f0(a)...
-                        *(hs*tt-tt0(ones(nll,1),:))))*pv.w);
+                        *(hs*tt-tt0(ones(nll,1),:))...
+                        -1i*(shift-shift0(ones(nll,1),:))))*pv.w);
                 else
                     s.spectra(:,b,a)=real((z.*exp(-2*pi*1i*f0(a)...
-                        *(hs*tt-tt0(ones(nll,1),:))))*pv.w);
+                        *(hs*tt-tt0(ones(nll,1),:))...
+                        -1i*(shift-shift0(ones(nll,1),:))))*pv.w);
                 end
             otherwise % {'center' 'user'}
                 if(pv.avg)
                     s.spectra=s.spectra+abs((z.*exp(-2*pi*1i*f0(a)...
-                        *(hs*tt-tt0(ones(nll,1),:))))*pv.w).^2;
+                        *(hs*tt-tt0(ones(nll,1),:))...
+                        -1i*(shift-shift0(ones(nll,1),:))))*pv.w).^2;
                 else
                     s.spectra(:,b,a)=abs((z.*exp(-2*pi*1i*f0(a)...
-                        *(hs*tt-tt0(ones(nll,1),:))))*pv.w).^2;
+                        *(hs*tt-tt0(ones(nll,1),:))...
+                        -1i*(shift-shift0(ones(nll,1),:))))*pv.w).^2;
                 end
         end
     end
@@ -323,10 +343,11 @@ if(pv.avg); s.spectra=s.spectra/(nsrc*nslow); end
 end
 
 
-function [tt,ctt,ttredo]=gettt(...
+function [tt,ctt,shift,cshift,ttredo]=gettt(...
     lalo,stlalo,clalo,slow,f0,a,nll,nrecs,sisafunc,pv)
 % super overcomplex distance/traveltime retriever
 ctt=[];
+cshift=[];
 ttredo=true;
 if(a==1)
     % function gives traveltime but numeric input gives slowness
@@ -335,39 +356,45 @@ if(a==1)
         if(isscalar(unique(f0)))
             % only one frequency so only need to get tt once
             tt=nan(nll,nrecs);
+            shift=nan(nll,nrecs);
             for i=1:nrecs
-                tt(:,i)=slow(lalo,stlalo(i*ones(nll,1),:),f0(1));
+                [tt(:,i),shift(:,i)]=slow(...
+                    lalo,stlalo(i*ones(nll,1),:),f0(1));
             end
             switch pv.method
                 case {'user' 'center'}
-                    ctt=slow(lalo,clalo,f0(1));
+                    [ctt,cshift]=slow(lalo,clalo,f0(1));
             end
             ttredo=false;
         else % multiple frequencies
             try
                 % see if function depends on f
-                tt=slow(lalo(1,:),stlalo(1,:)); %#ok<NASGU>
+                [tt,shift]=slow(lalo(1,:),stlalo(1,:)); %#ok<NASGU>
                 
                 % still here?
                 % guess that means frequency is ignored...
                 tt=nan(nll,nrecs);
+                shift=nan(nll,nrecs);
                 for i=1:nrecs
-                    tt(:,i)=slow(lalo,stlalo(i*ones(nll,1),:));
+                    [tt(:,i),shift(:,i)]=slow(...
+                        lalo,stlalo(i*ones(nll,1),:));
                 end
                 switch pv.method
                     case {'user' 'center'}
-                        ctt=slow(lalo,clalo);
+                        [ctt,cshift]=slow(lalo,clalo);
                 end
                 ttredo=false;
             catch
                 % slow is a function of frequency
                 tt=nan(nll,nrecs);
+                shift=nan(nll,nrecs);
                 for i=1:nrecs
-                    tt(:,i)=slow(lalo,stlalo(i*ones(nll,1),:),f0(a));
+                    [tt(:,i),shift(:,i)]=slow(...
+                        lalo,stlalo(i*ones(nll,1),:),f0(a));
                 end
                 switch pv.method
                     case {'user' 'center'}
-                        ctt=slow(lalo,clalo,f0(a));
+                        [ctt,cshift]=slow(lalo,clalo,f0(a));
                 end
             end
         end
@@ -376,40 +403,47 @@ if(a==1)
         tt=sphericalinv(...
             lalo(:,ones(nrecs,1)),lalo(:,2*ones(nrecs,1)),...
             stlalo(:,ones(nll,1))',stlalo(:,2*ones(nll,1))');
+        shift=zeros(size(tt));
         ctt=sphericalinv(lalo(:,1),lalo(:,2),clalo(1),clalo(2));
+        cshift=zeros(size(ctt));
         ttredo=false;
     end
 else
     % slow is a function of frequency
     tt=nan(nll,nrecs);
+    shift=nan(nll,nrecs);
     for i=1:nrecs
-        tt(:,i)=slow(lalo,stlalo(i*ones(nll,1),:),f0(a));
+        [tt(:,i),shift(:,i)]=slow(lalo,stlalo(i*ones(nll,1),:),f0(a));
     end
     switch pv.method
         case {'user' 'center'}
-            ctt=slow(lalo,clalo,f0(a));
+            [ctt,cshift]=slow(lalo,clalo,f0(a));
     end
 end
 
 end
 
 
-function [tt0,ctt0]=gettt0(...
+function [tt0,ctt0,shift0,cshift0]=gettt0(...
     lalo0,stlalo,clalo,slow0,f0,a,nrecs,s0isafunc,pv)
 % super overcomplex distance/traveltime retriever
 % function gives traveltime but numeric input gives slowness
 ctt0=[];
+cshift0=[];
 if(s0isafunc)
-    tt0=slow0(lalo0(ones(nrecs,1),:),stlalo,f0(a))';
+    [tt0,shift0]=slow0(lalo0(ones(nrecs,1),:),stlalo,f0(a));
+    tt0=tt0'; shift0=shift0';
     switch pv.method
         case {'user' 'center'}
-            ctt0=slow0(lalo0,clalo,f0(a));
+            [ctt0,cshift0]=slow0(lalo0,clalo,f0(a));
     end
 else
     % degree distance (scaled by the slowness gives the traveltime)
     tt0=slow0(a)*sphericalinv(...
         lalo0(:,1),lalo0(:,2),stlalo(:,1),stlalo(:,2))';
+    shift0=zeros(size(tt0));
     ctt0=slow0(a)*sphericalinv(lalo0(:,1),lalo0(:,2),clalo(1),clalo(2));
+    cshift0=zeros(size(ctt0));
 end
 end
 

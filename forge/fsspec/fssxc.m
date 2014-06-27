@@ -2,28 +2,29 @@ function [s]=fssxc(xcdata,smax,spts,frng,varargin)
 %FSSXC    Estimate frequency-slowness spectrum with cross-correlations
 %
 %    Usage:    s=fssxc(xcdata,smax,spts,frng)
+%              s=fssxc(xcdata,smax,[nspts espts],frng)
+%              s=fssxc(xcdata,[nsmin nsmax nspts],[esmin esmax espts],frng)
 %              s=fssxc(...,'polar',true|false,...)
 %              s=fssxc(...,'method',string,...)
 %              s=fssxc(...,'whiten',true|false,...)
 %              s=fssxc(...,'weights',w,...)
 %              s=fssxc(...,'damping',d,...)
+%              s=fssxc(...,'fhwidth',n,...)
 %              s=fssxc(...,'avg',true|false,...)
 %
 %    Description:
-%     S=FSSXC(XCDATA,SMAX,SPTS,FRNG) computes an estimate of the frequency-
-%     slowness power spectra for an array by frequency-domain beamforming
-%     the correlation dataset XCDATA in a cartesian grid.  The dataset
-%     XCDATA is a SEIZMO struct containing array info and correlations.
-%     This function differs from GEOFSSXC in that the waves are defined as
-%     plane waves traveling on a planar surface rather than surface waves
-%     expanding and contracting on a sphere.  The range of the horizontal
-%     slowness grid is given by SMAX (sec/deg) and extends from -SMAX to
-%     SMAX for both East/West and North/South directions.  SPTS controls
-%     the number of slowness points for both directions (SPTSxSPTS grid).
-%     FRNG gives the frequency range as [FREQLOW FREQHIGH] in Hz (the
-%     individual frequencies are determined by the fft of the data).  The
-%     output S is a struct containing relevant info and the frequency-
-%     slowness spectra (with size SPTSxSPTSxNFREQ).  The struct layout is:
+%     S=FSSXC(XCDATA,SMAX,SPTS,FRNG) estimates the frequency-slowness
+%     power spectra for an array by frequency-domain beamforming the
+%     correlation dataset XCDATA in a cartesian grid of size SPTSxSPTS
+%     extending from -SMAX to SMAX (sec/deg) in both North & East
+%     horizontal slowness space.  The dataset XCDATA is a SEIZMO struct
+%     containing array info and correlations.  FRNG gives the frequency
+%     range as [FREQLOW FREQHIGH] in Hz (the individual frequencies are
+%     determined by the fft of the data).  FRNG may also be given as a
+%     single frequency in which case the nearest discrete frequency from
+%     the fft operation is returned.  The output S is a struct containing
+%     relevant info and the frequency-slowness spectra (with size
+%     SPTSxSPTSxNFREQ).  The struct layout is:
 %          .nsta     - number of stations (uses naming info to get this)
 %          .st       - station positions [lat lon elev depth]
 %          .butc     - UTC start time of data
@@ -39,7 +40,21 @@ function [s]=fssxc(xcdata,smax,spts,frng,varargin)
 %          .center   - array center as [LAT LON]
 %          .whiten   - is spectra whitened? true/false
 %          .weights  - weights used in beamforming
+%          .ntiles   - number of timesection tiles
+%          .fhwidth  - frequency smoothing halfwidth in samples
+%          .damping  - damping for cross spectral matrix inversion
 %          .spectra  - frequency-slowness spectra estimate
+%
+%     S=FSSXC(XCDATA,SMAX,[NSPTS ESPTS],FRNG) specifies the horizontal
+%     slowness sample size separately.  For example [200 100] would give
+%     twice the sampling in the North slowness space compared to that of
+%     the East slowness space.
+%
+%     S=FSSXC(XCDATA,[NSMIN NSMAX NSPTS],[ESMIN ESMAX ESPTS],FRNG) gives
+%     the range and sampling of the North & East slowness.  This allows
+%     targeted sampling of slowness space to save computation and memory.
+%     The 3rd element (the number of samples) may be omitted (will default
+%     to 101).
 %
 %     S=FSSXC(...,'POLAR',TRUE|FALSE,...) specifies if the spectra is
 %     sampled regularly in cartesian or polar coordinates.  Polar coords
@@ -48,17 +63,24 @@ function [s]=fssxc(xcdata,smax,spts,frng,varargin)
 %     regularly in the East/West & North/South directions and so exhibits
 %     less distortion in plots of the slowness space. If POLAR=TRUE, SPTS
 %     may be given as [SPTS BAZPTS] to control the azimuthal resolution
-%     (default is BAZPTS=181 points).
+%     (default is BAZPTS=181 points).  BAZPTS goes from 0 to 360 including
+%     both end points such that the true resolution in azimuthal space is
+%     BAZPTS-1.  Note that SPTS goes from 0 to SMAX in this case rather
+%     than from -SMAX to SMAX for cartesian (so reduce SMAX by 2 if you
+%     want to keep a similar spacing).  You may also use:
+%      [SMIN SMAX SPTS],[BAZMIN BAZMAX BAZPTS]
+%     to explicitly specify the sampled region in absolute slowness and
+%     back-azimuth.  The 3rd element (the number of samples) may be omitted
+%     (SPTS defaults to 101, BAZPTS defaults to 181).
 %
 %     S=FSSXC(...,'METHOD',STRING,...) specifies the beamforming method.
 %     STRING may be either 'xc' or 'caponxc'.  The default is 'xc' which
 %     uses the correlations as a substitute for the cross power spectral
 %     density matrix in a conventional frequency-slowness estimation (eg.
-%     'coarray' or 'full').  The 'caponxc' method requires that the
-%     correlation dataset can form the entire cross power spectral density
-%     matrix (ie. this requires all N^2 pairs).  If possible then this
-%     method can return a higher resolution estimate of the frequency-
-%     slowness spectra.
+%     the 'coarray' or 'full' methods of FSS).  The 'caponxc' method
+%     requires that the correlation dataset can form the entire cross power
+%     spectral density matrix.  This method can provide a higher resolution
+%     estimate of the frequency-slowness spectra.
 %
 %     S=FSSXC(...,'WHITEN',TRUE|FALSE,...) whitens the cross power spectral
 %     matrix elements before beamforming if WHITEN is TRUE.  The default is
@@ -69,9 +91,17 @@ function [s]=fssxc(xcdata,smax,spts,frng,varargin)
 %
 %     S=FSSXC(...,'DAMPING',D,...) alters the dampening parameter used in
 %     the inversion of the cross power spectral density matrix for the
-%     'capon' method.  This is done by diagonal loading which means the
+%     'caponxc' method.  This is done by diagonal loading which means the
 %     dampening value is added the elements along the diagonal.  The
-%     default value of 0.001 may need to be adjusted for better results.
+%     default value of 0.001 likely needs to be adjusted for best results.
+%
+%     S=FSSXC(...,'FHWIDTH',N,...) sets the sliding window halfwidth for
+%     averaging neighboring frequencies of the cross spectral matrix.  This
+%     is mainly for stabilizing the inversion in the 'caponxc' method but
+%     has utility in smoothing spectra.  The window is size 2N+1 so for
+%     example N=2 averages each frequency with the closest 2 discrete
+%     frequencies above and below (a 5 point sliding average).  The default
+%     N=0 which does not average.
 %
 %     S=FSSXC(...,'AVG',TRUE|FALSE,...) indicates if the spectra is
 %     averaged across frequency during computation.  This can save a
@@ -85,12 +115,12 @@ function [s]=fssxc(xcdata,smax,spts,frng,varargin)
 %       require adjustment.
 %
 %    Examples:
-%     % Show slowness spectra for an artificial dataset at 40-50s periods:
-%     plotfss(fssxc(correlate(capon1970),50,201,[1/50 1/40],'avg',true));
+%     % Show slowness spectra for an artificial dataset at 40s periods:
+%     plotfss(fssxc(correlate(capon1970,'mcxc'),50,201,1/40));
 %
 %     % A full set of correlations is required for a Capon Estimator:
-%     plotfss(fssxc(correlate(capon1970,capon1970),50,201,[1/50 1/40],...
-%         'avg',true,'m','caponxc'));
+%     plotfss(fssxc(correlate(capon1970,capon1970,'mcxc'),50,201,1/40,...
+%         'm','caponxc'));
 %
 %    See also: FSS, ARF, SNYQUIST, PLOTFSS, KXY2SLOWBAZ, SLOWBAZ2KXY,
 %              FSSAVG, FSSSUB, FSSHORZ, FSSHORZXC, ARFHORZ, FSSDBINFO,
@@ -129,18 +159,25 @@ function [s]=fssxc(xcdata,smax,spts,frng,varargin)
 %        Sep. 30, 2012 - avg option
 %        Jan.  9, 2013 - allow options to be any case, notes on amp issue
 %        Jan. 14, 2013 - update history
+%        Mar. 31, 2014 - fhwidth option, single frequency selection,
+%                        additional gridding flexibility
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 14, 2013 at 14:05 GMT
+%     Last Updated Mar. 31, 2014 at 14:05 GMT
 
 % todo:
+% - discrepancy for full & partial capon input
+%   - weights are part of the issue
+%   - something else is also a problem
+% - crazyiness for fhwidth>0
+%
 % - discrepancy between fss capon & fssxc caponxc
 %   - the absolute dBs are off from each other and from other methods
 %     - they vary as a function of frequency which means that addition is
 %       broken between the two b/c the contribution varies per frequency
 %   - relative dBs are very close but do vary sometimes off
-%     - plotfss(fssxc(correlate(capon1970,capon1970),50,201,[1/49 1/48],'avg',true,'m','caponxc'),[-48 0]);
-%     - plotfss(fss(capon1970,50,201,[1/49 1/48],'avg',true,'m','capon'),[-48 0]);
+%     - plotfss(fssxc(correlate(capon1970,capon1970,'mcxc'),50,201,1/40,'m','caponxc'),[-48 0]);
+%     - plotfss(fss(capon1970,50,201,1/40,'m','capon'),[-48 0]);
 
 % check nargin
 error(nargchk(4,inf,nargin));
@@ -158,15 +195,54 @@ end
 npairs=numel(xcdata);
 
 % check inputs
+if(isscalar(smax))
+    % (smax,spts) or (smax,[ypts xpts])
+    %       ep=np or (smax,[npts epts])
+    %      bp=181 or (smax,[spts bazpts])
+    if(~isnumeric(smax) || ~isreal(smax) || smax<=0)
+        error('seizmo:fssxc:badInput',...
+            'SMAX must be a positive real scalar in sec/deg!');
+    elseif(~isnumeric(spts) || ~isreal(spts) || ~isvector(spts) ...
+            || isempty(spts) || any(spts<2) || any(fix(spts)~=spts))
+        error('seizmo:fssxc:badInput',...
+            'SPTS must be positive integer(s) >1!');
+    elseif(numel(spts)>2)
+        error('seizmo:fssxc:badInput',...
+            'SPTS must contain 1 or 2 elements!');
+    end
+else
+    % ([ymin ymax],[xmin xmax]) or ([ymin ymax ypts],[xmin xmax xpts])
+    % ([nmin nmax],[emin emax]) with npts=101
+    % ([smin smax],[bazmin bazmax]) with spts=101, bazpts=181
+    if(~isnumeric(smax) || ~isreal(smax))
+        error('seizmo:fssxc:badInput',...
+            '[YMIN YMAX YPTS] input must be real-valued!');
+    elseif(~isnumeric(spts) || ~isreal(spts))
+        error('seizmo:fssxc:badInput',...
+            '[XMIN XMAX XPTS] input must be real-valued!');
+    end
+    if(isempty(smax) || numel(smax)>3)
+        error('seizmo:fssxc:badInput',...
+            '2nd argument must be [YMIN YMAX YPTS] or [YMIN YMAX]!');
+    elseif(isempty(smax) || numel(smax)>3)
+        error('seizmo:fssxc:badInput',...
+            '3rd argument must be [XMIN XMAX XPTS] or [XMIN XMAX]!');
+    end
+    if(numel(smax)==3 && (smax(3)<1 || smax(3)~=fix(smax(3))))
+        error('seizmo:fssxc:badInput',...
+            'YPTS must be a positive integer!');
+    elseif(numel(spts)==3 && (spts(3)<1 || spts(3)~=fix(spts(3))))
+        error('seizmo:fssxc:badInput',...
+            'XPTS must be a positive integer!');
+    end
+end
 sf=size(frng);
-if(~isreal(smax) || ~isscalar(smax) || smax<=0)
+if(~isreal(frng) || numel(sf)~=2 || any(frng(:)<0))
     error('seizmo:fssxc:badInput',...
-        'SMAX must be a positive real scalar in sec/deg!');
-elseif(~any(numel(spts)==[1 2]) || any(fix(spts)~=spts) || any(spts<=2))
-    error('seizmo:fssxc:badInput',...
-        'SPTS must be a positive scalar integer >2!');
-elseif(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<0) ...
-        || any(frng(1)>frng(2)))
+        'FRNG must be 1 or more positive real values in Hz!');
+end
+if(sf(2)==1); frng=frng(:,[1 1]); sf(2)=2; end
+if(sf(2)~=2 || any(frng(:,1)>frng(:,2)))
     error('seizmo:fssxc:badInput',...
         'FRNG must be a Nx2 array of [FREQLOW FREQHIGH] in Hz!');
 end
@@ -202,14 +278,37 @@ catch
     error(lasterror);
 end
 
+% expand matrix if caponxc
+if(strcmpi(pv.method,'caponxc'))
+    [lgc,rev]=is_full_matrix_of_correlations(xcdata);
+    if(~lgc)
+        error('seizmo:fssxc:badInput',...
+            'XCDATA does not have all pairs necessary for CAPONXC!');
+    end
+    
+    % add reversed xc if necessary
+    if(~isempty(rev))
+        xcdata=[xcdata(:); reverse_correlations(xcdata(rev))];
+        
+        % expand weights if necessary
+        if(numel(pv.w)==npairs)
+            %pv.w(rev)=pv.w(rev)/2;
+            pv.w=[pv.w(:); pv.w(rev)];
+        end
+        
+        % update npairs
+        npairs=npairs+numel(rev);
+    end
+end
+
 % extract header info & xcdata
 try
     % verbosity
     verbose=seizmoverbose;
     
     % grab necessary header info
-    [b,npts,delta,autc,futc,st,ev,stnm,evnm]=getheader(xcdata,...
-        'b','npts','delta','a utc','f utc','st','ev','kname','kt');
+    [b,npts,delta,autc,futc,st,ev,stnm,evnm,ntiles]=getheader(xcdata,...
+        'b','npts','delta','a utc','f utc','st','ev','kname','kt','scale');
     autc=cell2mat(autc); futc=cell2mat(futc);
     
     % extract xcdata (silently)
@@ -258,16 +357,18 @@ maxnpts=max(npts);
 % get frequencies
 nspts=2^nextpow2(maxnpts);
 f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
+nf=numel(f);
 
 % get fft
 xcdata=fft(xcdata,nspts,1);
-xcdata=xcdata(1+(0:nspts/2),:).'; % trim -freq
+
+% trim -freq and permute
+xcdata=xcdata(1+(0:nspts/2),:).';
 
 % whiten data if desired
-if(pv.whiten); xcdata=xcdata./abs(xcdata); end
+if(pv.whiten); xcdata=xcdata./abs(xcdata); xcdata(isnan(xcdata))=0; end
 
 % use unique stations names to get number of stations & locations
-evnm=evnm(:,1:4);
 stnm=strcat(stnm(:,1),'.',stnm(:,2),'.',stnm(:,3),'.',stnm(:,4));
 evnm=strcat(evnm(:,1),'.',evnm(:,2),'.',evnm(:,3),'.',evnm(:,4));
 [stnm,idx1,idx2]=unique([stnm;evnm]);
@@ -285,30 +386,36 @@ end
 idx2=reshape(idx2,[],2);
 slave=idx2(:,1);
 master=idx2(:,2);
-
-% check if full matrix for caponxc
-if(strcmpi(pv.method,'caponxc'))
-    tmp=false(nrecs);
-    csidx=sub2ind([nrecs nrecs],master,slave);
-    tmp(csidx)=true;
-    if(npairs~=nrecs^2 || ~all(tmp(:)))
-        error('seizmo:fssxc:badInput',...
-            'XCDATA does not have all pairs necessary for CAPONXC!');
-    end
-end
+csidx=sub2ind([nrecs nrecs],master,slave);
 
 % array center
 [clat,clon]=arraycenter(st(:,1),st(:,2));
 
 % setup slowness grid
 if(pv.polar)
-    if(numel(spts)==1); spts(2)=181; end % default # azimuthal points
-    sx=(0:spts(2)-1)/(spts(2)-1)*360; % baz (wedge decided x/y)
-    sy=(0:spts(1)-1).'/(spts(1)-1)*smax; % smag
+    if(numel(smax)==1)
+        if(numel(spts)==1); spts(2)=181; end % default # azimuthal points
+        sx=(0:spts(2)-1)/(spts(2)-1)*360; % baz (wedge decided x/y)
+        sy=(0:spts(1)-1).'/(spts(1)-1)*smax; % smag
+    else
+        if(numel(smax)==2); smax(3)=101; end % default # slow mag points
+        if(numel(spts)==2); spts(3)=181; end % default # azimuthal points
+        sx=linspace(spts(1),spts(2),spts(3)); % baz (wedge decided x/y)
+        sy=linspace(smax(1),smax(2),smax(3)).'; % smag
+        spts=[smax(3) spts(3)]; % save npts for later
+    end
 else
-    spts(2)=spts(1);
-    sx=-smax:2*smax/(spts(1)-1):smax; % east
-    sy=fliplr(sx).'; % north
+    if(numel(smax)==1)
+        if(numel(spts)==1); spts(2)=spts(1); end % default # east points
+        sx=-smax:2*smax/(spts(2)-1):smax; % east
+        sy=fliplr(-smax:2*smax/(spts(1)-1):smax).'; % north
+    else
+        if(numel(smax)==2); smax(3)=101; end % default # north points
+        if(numel(spts)==2); spts(3)=101; end % default # east points
+        sx=linspace(spts(1),spts(2),spts(3)); % east
+        sy=fliplr(linspace(smax(1),smax(2),smax(3))).'; % north
+        spts=[smax(3) spts(3)]; % save npts for later
+    end
 end
 
 % setup output
@@ -327,6 +434,9 @@ end
 [s(1:nrng,1).center]=deal([clat clon]);
 [s(1:nrng,1).whiten]=deal(pv.whiten);
 [s(1:nrng,1).weights]=deal(pv.w);
+[s(1:nrng,1).ntiles]=deal(ntiles); % NPAIRSx1
+[s(1:nrng,1).fhwidth]=deal(pv.fhwidth);
+[s(1:nrng,1).damping]=deal(pv.damping);
 [s(1:nrng,1).spectra]=deal(zeros(0,'single'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -342,7 +452,7 @@ nslow=prod(spts);
 
 % get static time shifts
 % - MUST shift to zero lag
-dt=b(:,ones(nslow,1)).';
+dt=b.';
 
 % normalize & expand weights
 pv.w=pv.w(:);
@@ -379,21 +489,27 @@ clear e n
 % p is NSLOWxNPAIRS
 if(pv.polar)
     sx=sx(ones(spts(1),1),:); % baz in degrees
-    sy=sy(:,ones(spts(2),1))/d2km; % smag in sec/km
-    [sx,sy]=deal(sy.*sind(sx),sy.*cosd(sx));
-    p=[sx(:) sy(:)]*r;
+    sy=sy/d2km; % smag in sec/km
+    sy=sy(:,ones(spts(2),1));
+    [sx,sy]=deal(sy.*sind(sx),sy.*cosd(sx)); % convert to cartesian
 else % cartesian
     sx=sx/d2km;
     sx=sx(ones(spts(1),1),:);
-    sy=fliplr(sx)';
-    p=[sx(:) sy(:)]*r;
+    sy=sy/d2km;
+    sy=sy(:,ones(spts(2),1));
 end
+p=[sx(:) sy(:)]*r+dt(ones(nslow,1),:);
 clear r sx sy
 
 % loop over frequency ranges
 for a=1:nrng
     % get frequencies
-    fidx=find(f>=frng(a,1) & f<=frng(a,2));
+    if(frng(a,1)==frng(a,2))
+        % nearest single frequency
+        [fidx,fidx]=min(abs(f-frng(a,1)));
+    else
+        fidx=find(f>=frng(a,1) & f<=frng(a,2));
+    end
     s(a).freq=f(fidx);
     nfreq=numel(fidx);
     
@@ -421,16 +537,28 @@ for a=1:nrng
         case 'xc'
             if(pv.avg)
                 for b=1:nfreq
+                    % get frequency range
+                    newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                    newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                    
+                    % compute average cross spectra for freq range
+                    % then weighted beam and add
                     s(a).spectra=s(a).spectra+reshape(real(...
-                        exp(-2*pi*1i*f(fidx(b))*(p+dt))...
-                        *(xcdata(:,fidx(b)).*pv.w)),spts);
+                        exp(-2*pi*1i*f(fidx(b))*p)...
+                        *(mean(xcdata(:,newfidx),2).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
                 end
             else
                 for b=1:nfreq
+                    % get frequency range
+                    newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                    newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                    
+                    % compute average cross spectra for freq range
+                    % then weighted beam and insert
                     s(a).spectra(:,:,b)=reshape(real(...
-                        exp(-2*pi*1i*f(fidx(b))*(p+dt))...
-                        *(xcdata(:,fidx(b)).*pv.w)),spts);
+                        exp(-2*pi*1i*f(fidx(b))*p)...
+                        *(mean(xcdata(:,newfidx),2).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
                 end
             end
@@ -438,20 +566,36 @@ for a=1:nrng
             cs=zeros(nrecs,nrecs);
             if(pv.avg)
                 for b=1:nfreq
-                    cs(csidx)=xcdata(:,fidx(b)); % populate matrix
+                    % get frequency range
+                    newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                    newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                    
+                    % get average cross spectral matrix
+                    cs(csidx)=mean(xcdata(:,newfidx),2);
+                    
+                    % damped inversion of cross spectral matrix
                     cs=pinv((1-pv.damping)*cs+pv.damping*eye(nrecs));
+                    
+                    % weighted capon beam and add
                     s(a).spectra=s(a).spectra+1./reshape(real(exp(...
-                        -2*pi*1i*f(fidx(b))*(p+dt))*(cs(csidx).*pv.w)),...
-                        spts);
+                        -2*pi*1i*f(fidx(b))*p)*(cs(csidx).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
                 end
             else
                 for b=1:nfreq
-                    cs(csidx)=xcdata(:,fidx(b)); % populate matrix
+                    % get frequency range
+                    newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                    newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                    
+                    % get average cross spectral matrix
+                    cs(csidx)=mean(xcdata(:,newfidx),2);
+                    
+                    % damped inversion of cross spectral matrix
                     cs=pinv((1-pv.damping)*cs+pv.damping*eye(nrecs));
+                    
+                    % weighted capon beam and insert
                     s(a).spectra(:,:,b)=1./reshape(real(exp(...
-                        -2*pi*1i*f(fidx(b))*(p+dt))*(cs(csidx).*pv.w)),...
-                        spts);
+                        -2*pi*1i*f(fidx(b))*p)*(cs(csidx).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
                 end
             end
@@ -471,6 +615,7 @@ pv.method='xc';
 pv.whiten=true;
 pv.w=[];
 pv.damping=0.001; % only for caponxc
+pv.fhwidth=0;
 
 % require pv pairs
 if(mod(nargin,2))
@@ -495,6 +640,8 @@ for i=1:2:nargin
             pv.w=varargin{i+1};
         case {'damping' 'damp' 'd'}
             pv.damping=varargin{i+1};
+        case {'fhwidth' 'fhwid' 'fh' 'fwid' 'f'}
+            pv.fhwidth=varargin{i+1};
         case {'average' 'av' 'avg' 'a'}
             pv.avg=varargin{i+1};
         otherwise
@@ -525,6 +672,10 @@ elseif(~isnumeric(pv.w) || any(pv.w(:)<0))
 elseif(~isreal(pv.damping) || ~isscalar(pv.damping) || pv.damping<0)
     error('seizmo:fssxc:badInput',...
         'DAMPING must be a positive scalar!');
+elseif(~isreal(pv.fhwidth) || ~isscalar(pv.fhwidth) ...
+        || pv.fhwidth~=fix(pv.fhwidth))
+    error('seizmo:fssxc:badInput',...
+        'FHWIDTH must be an integer!');
 elseif(~isscalar(pv.avg) || ~islogical(pv.avg))
     error('seizmo:fssxc:badInput',...
         'AVG must be TRUE or FALSE!');

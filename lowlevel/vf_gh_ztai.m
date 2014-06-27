@@ -1,4 +1,4 @@
-function [value]=vf_gh_ztai(def,head)
+function [value,good]=vf_gh_ztai(def,head)
 %VF_GH_ZTAI    Returns value for virtual field ZTAI
 
 % get reference time
@@ -25,7 +25,7 @@ if(any(good))
     value(good,:)=utc2tai(value(good,:));
 end
 
-% wrap in cell
-value=mat2cell(value,ones(nv,1));
+% normally wrap in cell
+if(nargout==1); value=mat2cell(value,ones(nv,1)); end
 
 end

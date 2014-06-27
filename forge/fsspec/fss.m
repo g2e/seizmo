@@ -11,22 +11,22 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %              s=fss(...,'damping',d,...)
 %              s=fss(...,'ntiles',nt,...)
 %              s=fss(...,'fhwidth',n,...)
+%              s=fss(...,'prep',true|false,...)
 %              s=fss(...,'avg',true|false,...)
 %
 %    Description:
-%     S=FSS(DATA,SMAX,SPTS,FRNG) computes an estimate of the frequency-
-%     slowness power spectra for an array by frequency-domain beamforming
-%     the time series dataset DATA in a cartesian grid of SPTSxSPTS in size
-%     extending from -SMAX to SMAX (sec/deg) in both North & East
-%     horizontal slowness space.  The dataset DATA is a SEIZMO struct
-%     containing array info and time series recordings.  This function
-%     differs from GEOFSS in that the waves are assumed to be plane waves
-%     traveling on a planar surface rather than waves expanding and
-%     contracting on a sphere.  FRNG gives the frequency range as
+%     S=FSS(DATA,SMAX,SPTS,FRNG) estimates the frequency-slowness
+%     power spectra for an array by frequency-domain beamforming the time
+%     series dataset DATA in a cartesian grid of size SPTSxSPTS extending
+%     from -SMAX to SMAX (sec/deg) in both North & East horizontal slowness
+%     space.  The dataset DATA is a SEIZMO struct containing array info and
+%     time series recordings.  FRNG gives the frequency range as
 %     [FREQLOW FREQHIGH] in Hz (the individual frequencies are determined
-%     by the fft of the data).  The output S is a struct containing
-%     relevant info and the frequency- slowness spectra (with size
-%     SPTSxSPTSxNFREQ).  The struct layout is:
+%     by a fft of the data).  FRNG may also be given as a single frequency
+%     in which case the nearest discrete frequency from the fft operation
+%     is returned.  The output S is a struct containing relevant info and
+%     the frequency-slowness spectra (with size SPTSxSPTSxNFREQ).  The
+%     struct layout is:
 %          .nsta     - number of stations
 %          .st       - station positions [lat lon elev depth]
 %          .butc     - UTC start time of data
@@ -44,27 +44,30 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %          .weights  - weights used in beamforming
 %          .ntiles   - number of timesection tiles
 %          .fhwidth  - frequency smoothing halfwidth in samples
+%          .damping  - damping for cross spectral matrix inversion
 %          .spectra  - frequency-slowness spectra estimate
 %
-%     S=FSS(DATA,SMAX,[NSPTS ESPTS],FRNG) allows specifying the horizontal
+%     S=FSS(DATA,SMAX,[NSPTS ESPTS],FRNG) specifies the horizontal
 %     slowness sample size separately.  For example [200 100] would give
 %     twice the sampling in the North slowness space compared to that of
 %     the East slowness space.
 %
-%     S=FSS(DATA,[NSMIN NSMAX NSPTS],[ESMIN ESMAX ESPTS],FRNG) specifies
+%     S=FSS(DATA,[NSMIN NSMAX NSPTS],[ESMIN ESMAX ESPTS],FRNG) gives
 %     the range and sampling of the North & East slowness.  This allows
 %     targeted sampling of slowness space to save computation and memory.
 %     The 3rd element (the number of samples) may be omitted (will default
 %     to 101).
 %
-%     S=FSS(...,'POLAR',TRUE|FALSE,...) specifies if the spectra is sampled
-%     regularly in cartesian or polar coordinates.  Polar coords are useful
-%     for slicing the spectra by azimuth (pie slice) or slowness (rings).
-%     Cartesian coords (the default) samples the slowness space regularly
-%     in the East/West & North/South directions and so exhibits less
-%     distortion in plots of the slowness space. If POLAR=TRUE, SPTS may be
-%     given as [SPTS BAZPTS] to control the azimuthal resolution (default
-%     is BAZPTS=181 points).  SPTS goes from 0 to SMAX in this case rather
+%     S=FSS(...,'POLAR',TRUE|FALSE,...) specifies if the spectra is
+%     sampled regularly in cartesian or polar coordinates.  Polar coords
+%     are useful for slicing the spectra by azimuth (pie slice) or slowness
+%     (rings).  Cartesian coords (the default) samples the slowness space
+%     regularly in the East/West & North/South directions and so exhibits
+%     less distortion in plots of the slowness space. If POLAR=TRUE, SPTS
+%     may be given as [SPTS BAZPTS] to control the azimuthal resolution
+%     (default is BAZPTS=181 points).  BAZPTS goes from 0 to 360 including
+%     both end points such that the true resolution in azimuthal space is
+%     BAZPTS-1.  Note that SPTS goes from 0 to SMAX in this case rather
 %     than from -SMAX to SMAX for cartesian (so reduce SMAX by 2 if you
 %     want to keep a similar spacing).  You may also use:
 %      [SMIN SMAX SPTS],[BAZMIN BAZMAX BAZPTS]
@@ -72,7 +75,7 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %     back-azimuth.  The 3rd element (the number of samples) may be omitted
 %     (SPTS defaults to 101, BAZPTS defaults to 181).
 %
-%     S=FSS(...,'METHOD',STRING,...) defines the beaming method.  STRING
+%     S=FSS(...,'METHOD',STRING,...) defines the beam method.  STRING
 %     may be 'center', 'coarray', 'capon', 'full', or [LAT LON].  The
 %     default is 'center' which is extremely fast for large arrays compared
 %     to the other methods as it phase delays the auto-correlation of each
@@ -93,44 +96,52 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %     'capon' method on the actual data, the signal to incoherent noise
 %     levels must be high otherwise the 'coarray' method is the best
 %     choice.  Using [LAT LON] as a method is algorithmically the same as
-%     the 'center' method but uses the defined coordinates as the center
-%     for the array.
+%     the 'center' method but uses the defined coordinates as the beam
+%     location for the array.
 %
 %     S=FSS(...,'WHITEN',TRUE|FALSE,...) whitens the spectras before
 %     beamforming if WHITEN is TRUE.  The default is TRUE.
 %
-%     S=FSS(...,'WEIGHTS',W,...) specifies the relative weights for each
-%     record in DATA (must match size of DATA) or pairing (if METHOD is
-%     'coarray', 'capon', or 'full').
+%     S=FSS(...,'WEIGHTS',W,...) gives the relative weights for each
+%     record in DATA (must match size of DATA) or pairing (only if METHOD
+%     is 'coarray', 'capon', or 'full').
 %
-%     S=FSS(...,'DAMPING',D,...) alters the dampening parameter used in the
-%     inversion of the cross power spectral density matrix for the 'capon'
-%     method.  This is done by "diagonal loading" which means the dampening
-%     value is added the elements along the diagonal.  The default value of
-%     0.001 may need to be adjusted for better results.
+%     S=FSS(...,'DAMPING',D,...) alters the dampening parameter used
+%     in the inversion of the cross power spectral density matrix for the
+%     'capon' method.  This is done by "diagonal loading" which means the
+%     dampening value is added the elements along the diagonal of the cross
+%     power spectral density matrix.  The default value of 0.001 likely
+%     needs to be adjusted for the best results.
 %
-%     S=FSS(...,'NTILES',NT,...) sets how many nonoverlapping timesections
-%     the data should be split into.  This is mainly for the 'capon' method
-%     as it needs time/frequency averaging of the cross power spectral
-%     density matrix for stability.  Setting NT>=N where N is the number of
-%     records in DATA is recommended by Capon 1969.  The default is 1 which
-%     provides the best frequency resolution.
+%     S=FSS(...,'NTILES',NT,...) sets how many nonoverlapping
+%     timesections the data should be split into.  This is mainly for the
+%     'capon' method as it needs time/frequency averaging of the cross
+%     power spectral density matrix for stability.  Setting NT>=N where N
+%     is the number of records in DATA is recommended by Capon 1969.  The
+%     default is 1 which provides the best frequency resolution.  Use this
+%     in combination with FHWIDTH option to balance between time,
+%     frequency, and slowness resolution.
 %
 %     S=FSS(...,'FHWIDTH',N,...) sets the sliding window halfwidth used to
-%     average neighboring frequencies.  This is mainly for stabilizing the
-%     inversion in the 'capon' method but has utility in smoothing spectra.
-%     The window is size 2N+1 so N=2 averages each frequency with the
-%     closest 2 discrete frequencies above and below.  The default N is 0
-%     which does no averaging.
+%     average neighboring frequencies of the cross spectral matrix.  This
+%     is mainly for stabilizing the inversion in the 'capon' method but has
+%     utility in smoothing spectra.  The window is size 2N+1 so for example
+%     N=2 averages each frequency with the closest 2 discrete frequencies
+%     above and below (a 5 point sliding average).  The default N=0 which
+%     does not average.
 %
-%     S=FSS(...,'AVG',TRUE|FALSE,...) indicates if the spectra is averaged
-%     across frequency during computation (thus collapsing the frequency
-%     dimension to size 1).  This is not related to the FHWIDTH option and
-%     can save a significant amount of memory.  The default is false.
+%     S=FSS(...,'PREP',TRUE|FALSE,...) prepares the tiled data by
+%     detrending and tapering.  The default is FALSE.
+%
+%     S=FSS(...,'AVG',TRUE|FALSE,...) indicates if the slowness spectra is
+%     averaged across frequency during computation (thus collapsing the
+%     frequency dimension to size 1).  This is not related to the FHWIDTH
+%     option (and therefore does not help to stabilize the 'capon' method)
+%     but does save a significant amount of memory.  The default is false.
 %
 %    Notes:
 %     - Records in DATA must have equal and regular sample spacing.
-%     - Attenuation is not included.
+%     - Attenuation across the array is not included.
 %     - dB values for unwhitened data are probably not scaled correctly but
 %       this does not have an impact on relative dB values.
 %     - References:
@@ -143,11 +154,11 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %         Rev of Geoph, Vol. 40, No. 3, doi:10.1029/2000RG000100
 %
 %    Examples:
-%     % Show slowness spectra for an artificial dataset at 40-50s periods:
-%     plotfss(fss(capon1970,50,201,[1/50 1/40],'avg',true));
+%     % Show slowness spectra for an artificial dataset at 40s periods:
+%     plotfss(fss(capon1970,50,201,1/40));
 %
 %     % Now compare that to the Capon Estimation:
-%     plotfss(fss(capon1970,50,201,[1/50 1/40],'avg',true,'m','capon'));
+%     plotfss(fss(capon1970,50,201,1/40,'m','capon'));
 %
 %    See also: FSSXC, ARF, SNYQUIST, PLOTFSS, KXY2SLOWBAZ, SLOWBAZ2KXY,
 %              FSSAVG, FSSSUB, FSSHORZ, FSSHORZXC, ARFHORZ, FSSDBINFO,
@@ -190,24 +201,15 @@ function [s]=fss(data,smax,spts,frng,varargin)
 %        Jan. 14, 2013 - update history
 %        Jan. 15, 2014 - allow far more flexible slowness space sampling,
 %                        fhwidth option, tiles are averaged
+%        Mar. 24, 2014 - added prep option, improved slowness space
+%                        sampling some more, fixed implementation of ntiles
+%                        and fhwidth options
+%        Mar. 25, 2014 - single frequency option
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 14:05 GMT
+%     Last Updated Mar. 25, 2014 at 14:05 GMT
 
 % todo:
-% - allow far more flexible slowness space sampling
-%   - checking done --> TEST
-%   - implemented --> TEST
-%   - make sure plotting et al can handle it
-%   - TEST: does fhwidth=0 give the same without fhwidth implemented?
-% - fixed unwhitened output (power)
-%   - what did i mean here???
-% - tiling/fhwidth: do i avg raw data or matrix output?
-%   - (1) avg spectral matrices across nt & f then invert
-%         - this is costly but the way to go
-%   - (2) just averages the raw data
-%   - (3) fhwidth on raw freq then averages nt sp mat
-% - detrend/hanning of tiled data
 
 % check nargin
 error(nargchk(4,inf,nargin));
@@ -273,8 +275,12 @@ else
     end
 end
 sf=size(frng);
-if(~isreal(frng) || numel(sf)~=2 || sf(2)~=2 || any(frng(:)<0) ...
-        || any(frng(1)>frng(2)))
+if(~isreal(frng) || numel(sf)~=2 || any(frng(:)<0))
+    error('seizmo:fss:badInput',...
+        'FRNG must be 1 or more positive real values in Hz!');
+end
+if(sf(2)==1); frng=frng(:,[1 1]); sf(2)=2; end
+if(sf(2)~=2 || any(frng(:,1)>frng(:,2)))
     error('seizmo:fss:badInput',...
         'FRNG must be a Nx2 array of [FREQLOW FREQHIGH] in Hz!');
 end
@@ -375,10 +381,10 @@ if(any(frng(:,1)>fnyq))
         ['FRNG exceeds nyquist frequency (' num2str(fnyq) ')!']);
 end
 
-% longest record
+% longest record gives record length for fft
 maxnpts=max(npts);
 
-% tiling
+% points in tiles based on longest record
 if(pv.ntiles>1)
     oldmax=maxnpts;
     maxnpts=ceil(maxnpts/pv.ntiles);
@@ -388,11 +394,19 @@ end
 nspts=2^nextpow2(maxnpts); % half xcorr
 %nspts=2^nextpow2(2*maxnpts-1); % full xcorr for verification purposes
 f=(0:nspts/2)/(delta(1)*nspts);  % only +freq
+nf=numel(f);
 
-% tiling
+% tiling records
 if(pv.ntiles>1)
     data=[data; zeros(maxnpts*pv.ntiles-oldmax,nrecs)];
     data=permute(reshape(data.',[nrecs maxnpts pv.ntiles]),[2 1 3]);
+end
+
+% remove trend & taper
+if(pv.prep)
+    data(:,:)=detrend(data(:,:),'constant');
+    data(:,:)=detrend(data(:,:));
+    data(:,:)=repmat(hann(maxnpts),[1 size(data(:,:),2)]).*data(:,:);
 end
 
 % get fft
@@ -453,6 +467,7 @@ end
 [s(1:nrng,1).weights]=deal(pv.w);
 [s(1:nrng,1).ntiles]=deal(pv.ntiles);
 [s(1:nrng,1).fhwidth]=deal(pv.fhwidth);
+[s(1:nrng,1).damping]=deal(pv.damping);
 [s(1:nrng,1).spectra]=deal(zeros(0,'single'));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -541,13 +556,18 @@ else % cartesian
     sy=sy/d2km;
     sy=sy(:,ones(spts(2),1));
 end
-p=[sx(:) sy(:)]*r;
+p=[sx(:) sy(:)]*r+dt(ones(nslow,1),:);
 clear r sx sy
 
 % loop over frequency ranges
 for a=1:nrng
     % get frequencies
-    fidx=find(f>=frng(a,1) & f<=frng(a,2));
+    if(frng(a,1)==frng(a,2))
+        % nearest single frequency
+        [fidx,fidx]=min(abs(f-frng(a,1)));
+    else
+        fidx=find(f>=frng(a,1) & f<=frng(a,2));
+    end
     s(a).freq=f(fidx);
     nfreq=numel(fidx);
     
@@ -575,62 +595,98 @@ for a=1:nrng
         case {'coarray' 'full'}
             if(pv.avg)
                 for b=1:nfreq
+                    % get frequency range
+                    newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                    newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                    
+                    % compute average cross spectra for freq range & tiles
+                    % then weighted beam and add
                     s(a).spectra=s(a).spectra+reshape(real(...
-                        exp(-2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
-                        *(mean(data(slave,fidx(b),:)...
-                        .*conj(data(master,fidx(b),:)),3).*pv.w)),spts);
+                        exp(-2*pi*1i*f(fidx(b))*p)...
+                        *(mean(mean(data(slave,newfidx,:)...
+                        .*conj(data(master,newfidx,:)),2),3).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
                 end
             else
                 for b=1:nfreq
+                    % get frequency range
+                    newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                    newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                    
+                    % compute average cross spectra for freq range & tiles
+                    % then weighted beam and insert
                     s(a).spectra(:,:,b)=reshape(real(...
-                        exp(-2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
-                        *(mean(data(slave,fidx(b),:)...
-                        .*conj(data(master,fidx(b),:)),3).*pv.w)),spts);
+                        exp(-2*pi*1i*f(fidx(b))*p)...
+                        *(mean(mean(data(slave,newfidx,:)...
+                        .*conj(data(master,newfidx,:)),2),3).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
                 end
             end
         case 'capon'
             if(pv.avg)
                 for b=1:nfreq
-                    cs=reshape(mean(data(slave,fidx(b),:)...
-                        .*conj(data(master,fidx(b),:)),3),[nrecs nrecs]);
-                    if(pv.whiten); cs=cs./abs(cs); end
+                    % get frequency range
+                    newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                    newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                    
+                    % get average cross spectral matrix
+                    cs=reshape(mean(mean(data(slave,newfidx,:).*conj(...
+                        data(master,newfidx,:)),2),3),[nrecs nrecs]);
+                    
+                    % damped inversion of cross spectral matrix
                     cs=pinv((1-pv.damping)*cs+pv.damping*eye(nrecs));
+                    
+                    % weighted capon beam and add
                     s(a).spectra=s(a).spectra+1./reshape(real(exp(...
-                        -2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
-                        *(cs(:).*pv.w)),spts);
+                        -2*pi*1i*f(fidx(b))*p)*(cs(:).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
                 end
             else
                 for b=1:nfreq
-                    cs=reshape(mean(data(slave,fidx(b),:)...
-                        .*conj(data(master,fidx(b),:)),3),[nrecs nrecs]);
-                    if(pv.whiten); cs=cs./abs(cs); end
+                    % get frequency range
+                    newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                    newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                    
+                    % get average cross spectral matrix
+                    cs=reshape(mean(mean(data(slave,newfidx,:).*conj(...
+                        data(master,newfidx,:)),2),3),[nrecs nrecs]);
+                    
+                    % damped inversion of cross spectral matrix
                     cs=pinv((1-pv.damping)*cs+pv.damping*eye(nrecs));
+                    
+                    % weighted capon beam and insert
                     s(a).spectra(:,:,b)=1./reshape(real(exp(...
-                        -2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
-                        *(cs(:).*pv.w)),spts);
+                        -2*pi*1i*f(fidx(b))*p)*(cs(:).*pv.w)),spts);
                     if(verbose); print_time_left(b,nfreq); end
                 end
             end
         otherwise % {'center' 'user'}
             if(pv.avg)
                 for b=1:nfreq
+                    % get frequency range
+                    newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                    newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                    newnf=numel(newfidx);
+                    
                     for c=1:pv.ntiles
-                        s(a).spectra=s(a).spectra+reshape(abs(exp(...
-                            -2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
-                            *(data(:,fidx(b),c).*pv.w)).^2,spts);
+                        s(a).spectra=s(a).spectra+reshape(mean(abs(exp(...
+                            -2*pi*1i*f(fidx(b))*p)*(data(:,newfidx,c)...
+                            .*pv.w(:,ones(1,newnf)))).^2,2),spts);
                     end
                     if(verbose); print_time_left(b,nfreq); end
                 end
             else
                 for b=1:nfreq
+                    % get frequency range
+                    newfidx=fidx(b)+(-2*pv.fhwidth:2*pv.fhwidth);
+                    newfidx=newfidx(newfidx>=1 & newfidx<=nf);
+                    newnf=numel(newfidx);
+                    
                     for c=1:pv.ntiles
-                        s(a).spectra(:,:,b)=s(a).spectra(:,:,b)...
-                            +reshape(abs(exp(...
-                            -2*pi*1i*f(fidx(b))*(p+dt(ones(nslow,1),:)))...
-                            *(data(:,fidx(b),c).*pv.w)).^2,spts);
+                        s(a).spectra(:,:,b)=s(a).spectra(:,:,b)+reshape(...
+                            mean(abs(exp(-2*pi*1i*f(fidx(b))*p)*(data(:,...
+                            newfidx,c).*pv.w(:,ones(1,newnf)))).^2,2),...
+                            spts);
                     end
                     if(verbose); print_time_left(b,nfreq); end
                 end
@@ -654,6 +710,7 @@ pv.w=[];
 pv.damping=0.001; % only for capon
 pv.ntiles=1;
 pv.fhwidth=0;
+pv.prep=false;
 
 % require pv pairs
 if(mod(nargin,2))
@@ -684,6 +741,8 @@ for i=1:2:nargin
             pv.fhwidth=varargin{i+1};
         case {'average' 'av' 'avg' 'a'}
             pv.avg=varargin{i+1};
+        case {'prep'}
+            pv.prep=varargin{i+1};
         otherwise
             error('seizmo:fss:badInput',...
                 'Unknown parameter: %s !',varargin{i});
@@ -723,6 +782,9 @@ elseif(~isreal(pv.fhwidth) || ~isscalar(pv.fhwidth) ...
 elseif(~isscalar(pv.avg) || ~islogical(pv.avg))
     error('seizmo:fss:badInput',...
         'AVG must be TRUE or FALSE!');
+elseif(~isscalar(pv.prep) || ~islogical(pv.prep))
+    error('seizmo:fss:badInput',...
+        'PREP must be TRUE or FALSE!');
 end
 
 end

@@ -144,9 +144,13 @@ function [varargout]=getheader(data,varargin)
 %                        id/desc/lgc support
 %        Mar. 15, 2012 - minor doc touch
 %        Aug. 30, 2012 - big doc update for clarity
+%        June 26, 2014 - bugfix: undefined/bad enum could cause abstime of
+%                        following fields to be returned as undefined,
+%                        bugfix: undefined abstime fields would cause
+%                        abstime of following fields to be undefined
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Aug. 30, 2012 at 12:00 GMT
+%     Last Updated June 26, 2014 at 12:00 GMT
 
 % todo:
 
@@ -338,7 +342,8 @@ else % multiword
                 if(isfield(h.real(m).pos,wf{1}))
                     % get reftimes
                     if(isempty(ref))
-                        [ref,good]=vf_gh_z(h,head); good=good';
+                        [ref,good]=vf_gh_z(h,head);
+                        good=good';
                         ref6=ref(:,[1:2 2:5]);
                         ref6(good,1:3)=doy2cal(ref6(good,1:2));
                     end
@@ -355,24 +360,24 @@ else % multiword
                     head=nan(size(value,1),z);
                     
                     % who's (un)defined
-                    good=good & value(:,z)~=h.undef.ntype ...
+                    vgood=good & value(:,z)~=h.undef.ntype ...
                         & ~isnan(value(:,z)) & ~isinf(value(:,z));
                     
                     % skip if empty
-                    if(any(good))
+                    if(any(vgood))
                         switch wf{2}
                             case 'utc'
-                                head(good,:)=fixtimes(ref(good,:)...
-                                    +value(good,:),'utc');
+                                head(vgood,:)=fixtimes(ref(vgood,:)...
+                                    +value(vgood,:),'utc');
                             case 'tai'
-                                head(good,:)=fixtimes(utc2tai(...
-                                    ref(good,:))+value(good,:));
+                                head(vgood,:)=fixtimes(utc2tai(...
+                                    ref(vgood,:))+value(vgood,:));
                             case 'utc6'
-                                head(good,:)=fixtimes(ref6(good,:)...
-                                    +value(good,:),'utc');
+                                head(vgood,:)=fixtimes(ref6(vgood,:)...
+                                    +value(vgood,:),'utc');
                             case 'tai6'
-                                head(good,:)=fixtimes(utc2tai(...
-                                    ref6(good,:))+value(good,:));
+                                head(vgood,:)=fixtimes(utc2tai(...
+                                    ref6(vgood,:))+value(vgood,:));
                         end
                     end
                     head=mat2cell(head,ones(nrecs,1)); type=1;
@@ -385,9 +390,9 @@ else % multiword
                     enum=head(h.enum(m).pos.(wf{1}),:).';
                     head=cell(size(enum));
                     head(:)={'NaN'};
-                    good=fix(enum)==enum ...
+                    idgood=fix(enum)==enum ...
                         & enum>=h.enum(1).minval & enum<=h.enum(1).maxval;
-                    head(good)=h.enum(1).(wf{2})(enum(good)+1);
+                    head(idgood)=h.enum(1).(wf{2})(enum(idgood)+1);
                     type=1; return;
                 end
             end

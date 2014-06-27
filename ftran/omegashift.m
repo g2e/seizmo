@@ -34,9 +34,11 @@ function [data]=omegashift(data,shift)
 %        May  31, 2012 - minor doc update
 %        Feb. 14, 2013 - use strcmpi for consistency
 %        Mar.  1, 2014 - maketime fix
+%        June 26, 2014 - bugfix: shift==0 no longer causes error, irlim
+%                        shift no longer errors due to line wrapping issues
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2014 at 15:05 GMT
+%     Last Updated June 26, 2014 at 15:05 GMT
 
 % todo:
 
@@ -97,14 +99,14 @@ try
         
         % time shift
         cols=size(data(i).dep,2)/2;
-        wt=shift(i)*2*pi*delta(i);
-        wt=(0:wt:wt*(npts(i)-1)).';
+        wt=2*pi*delta(i);
+        wt=shift(i)*(0:wt:wt*(npts(i)-1)).';
         if(strcmpi(iftype(i),'irlim'))
             data(i).dep(:,[1:2:end 2:2:end])=...
                 [data(i).dep(:,1:2:end).*cos(wt(:,ones(1,cols)))...
-                +data(i).dep(:,2:2:end).*sin(wt(:,ones(1,cols))) ...
+                + data(i).dep(:,2:2:end).*sin(wt(:,ones(1,cols))) ...
                 data(i).dep(:,2:2:end).*cos(wt(:,ones(1,cols)))...
-                -data(i).dep(:,1:2:end).*sin(wt(:,ones(1,cols)))];
+                - data(i).dep(:,1:2:end).*sin(wt(:,ones(1,cols)))];
         else % iamph
             data(i).dep(:,2:2:end)=...
                 data(i).dep(:,2:2:end)-mod(wt(:,ones(1,cols)),2*pi);

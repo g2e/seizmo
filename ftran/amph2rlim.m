@@ -7,9 +7,8 @@ function [data]=amph2rlim(data)
 %     AMPH2RLIM(DATA) converts SEIZMO amplitude-phase records to
 %     real-imaginary records.  This is particularly useful when performing
 %     basic operations on spectral records which would otherwise require
-%     treating the amplitude and phase components separately.  Records in
-%     DATA must be of the spectral variety.  Real-imaginary records are not
-%     altered.
+%     treating the amplitude and phase components separately.
+%     Real-imaginary and other record filetypes are not altered.
 %
 %    Notes:
 %
@@ -42,9 +41,11 @@ function [data]=amph2rlim(data)
 %        Aug. 16, 2010 - nargchk fix, better checkheader utilization
 %        Dec. 21, 2011 - doc update, changed example (it was bad)
 %        Mar. 13, 2012 - use getheader improvements
+%        June 12, 2014 - remove checkheader call, allow non-spectral file
+%                        passthrough, no verbose messages
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 13, 2012 at 12:45 GMT
+%     Last Updated June 12, 2014 at 12:45 GMT
 
 % todo:
 
@@ -57,63 +58,10 @@ error(seizmocheck(data,'dep'));
 % turn off struct checking
 oldseizmocheckstate=seizmocheck_state(false);
 
-% attempt conversion
+% retreive header info
 try
-    % check header
-    data=checkheader(data,...
-        'NONSPECTRAL_IFTYPE','ERROR');
-    
-    % verbosity
-    verbose=seizmoverbose;
-    
-    % number of records
-    nrecs=numel(data);
-    
-    % retreive header info
     iftype=getheader(data,'iftype id');
-
-    % find spectral
-    amph=strcmpi(iftype,'iamph');
     
-    % detail message
-    if(verbose)
-        disp('Converting AMPH Record(s) to RLIM');
-        print_time_left(0,nrecs);
-    end
-    
-    % loop through records
-    depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
-    for i=1:nrecs
-        % skip dataless
-        if(isempty(data(i).dep))
-            % detail message
-            if(verbose); print_time_left(i,nrecs); end
-            continue;
-        end
-
-        % convert amph
-        if(amph(i))
-            oclass=str2func(class(data(i).dep));
-            data(i).dep=double(data(i).dep);
-            temp=data(i).dep(:,1:2:end).*exp(1j*data(i).dep(:,2:2:end));
-            data(i).dep(:,1:2:end)=real(temp);
-            data(i).dep(:,2:2:end)=imag(temp);
-            data(i).dep=oclass(data(i).dep);
-        end
-
-        % dep*
-        depmen(i)=nanmean(data(i).dep(:));
-        depmin(i)=min(data(i).dep(:));
-        depmax(i)=max(data(i).dep(:));
-        
-        % detail message
-        if(verbose); print_time_left(i,nrecs); end
-    end
-
-    % update filetype
-    data=changeheader(data,'iftype','irlim',...
-        'depmax',depmax,'depmin',depmin,'depmen',depmen);
-
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
 catch
@@ -123,5 +71,41 @@ catch
     % rethrow error
     error(lasterror);
 end
+
+% number of records
+nrecs=numel(data);
+
+% find spectral
+amph=strcmpi(iftype,'iamph');
+
+% anything amph? if no, skip
+if(~any(amph)); return; end
+
+% loop through records
+depmen=nan(nrecs,1); depmin=depmen; depmax=depmen;
+for i=1:nrecs
+    % skip dataless
+    if(isempty(data(i).dep)); continue; end
+    
+    % only bother with amph
+    if(amph(i))
+        % convert amph
+        oclass=str2func(class(data(i).dep));
+        data(i).dep=double(data(i).dep);
+        temp=data(i).dep(:,1:2:end).*exp(1j*data(i).dep(:,2:2:end));
+        data(i).dep(:,1:2:end)=real(temp);
+        data(i).dep(:,2:2:end)=imag(temp);
+        data(i).dep=oclass(data(i).dep);
+        
+        % dep*
+        depmen(i)=nanmean(data(i).dep(:));
+        depmin(i)=min(data(i).dep(:));
+        depmax(i)=max(data(i).dep(:));
+    end
+end
+
+% update filetype
+data(amph)=changeheader(data(amph),'iftype','irlim',...
+    'depmax',depmax(amph),'depmin',depmin(amph),'depmen',depmen(amph));
 
 end

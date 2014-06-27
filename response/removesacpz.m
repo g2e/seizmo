@@ -114,9 +114,10 @@ function [data,pz]=removesacpz(data,varargin)
 %                        skip/delete records with bad responses, doc
 %                        update, fixed upper taper eps bug that could cause
 %                        flatlining
+%        Apr. 28, 2014 - renamed loop increment variable for debugging
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar. 10, 2014 at 20:30 GMT
+%     Last Updated Apr. 28, 2014 at 20:30 GMT
 
 % todo:
 % - standard responses
@@ -189,12 +190,12 @@ try
     % now remove those with a bad sacpz
     pz=find(pz);
     keep=true(nrecs,1);
-    for i=1:nrecs
-        if(isfield(data(i).misc.sacpz,'bad') && data(i).misc.sacpz.bad)
+    for j=1:nrecs
+        if(isfield(data(j).misc.sacpz,'bad') && data(j).misc.sacpz.bad)
             warning('seizmo:removesacpz:badSACPZ',...
                 'Record %d has a bad SAC PoleZero response! Deleting!',...
-                pz(i));
-            keep(i)=false;
+                pz(j));
+            keep(j)=false;
         end
     end
     data=data(keep);

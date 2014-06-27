@@ -67,8 +67,10 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %      XCCMP      - Controls which NCF component is output.  May be any of:
 %                    'twoway','symmetric','causal','acausal'
 %                   or a cell array combination.  The default is 'twoway'.
+%                   XCCMP IS IGNORED FOR FREQUENCY-DOMAIN I/O.
 %
 %      XCREVERSE  - create time-reversed correlations (false)
+%      ZTRANSFORM - use Fisher's transform for stacking (true)
 %      TIMESTART  - process time sections from this time on []
 %      TIMEEND    - process times sections before this time []
 %      LATRNG     - include stations in this latitude range []
@@ -79,16 +81,18 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %      COMPONENTS - include records with these component codes []
 %      FILENAMES  - limit processing to files matching this file pattern []
 %      QUIETWRITE - quietly overwrite OUTDIR (default is false)
-%      MATIO      - .mat file input/output instead of SAC (true)
 %
 %    Notes:
 %     - Stack time span must exceed the timesection time span.  You cannot
-%       make day or 3hr stacks from day correlations.
-%     - Correlation directories cannot contain both the correlations & the
-%       reversed correlations.  See NOISE_STACK_ARBITRARY.
-%     - Input and output data are .mat files by default -- these can be
-%       read into Matlab using the LOAD function and written out as SAC
-%       files using the function WRITESEIZMO.
+%       make day or 3hr stacks from day correlations.  NOISE_STACK will
+%       generate an error if you attempt to do this.
+%     - While data i/o is .mat files by default, SAC files are okay too.
+%       Note that .mat files can be read into Matlab using the LOAD
+%       function and written out as SAC files using the function
+%       WRITESEIZMO.  You may also convert the inputs & outputs using
+%       NOISE_MAT2SAC & NOISE_SAC2MAT.  Be aware that SAC files are ignored
+%       when there is a .mat file present.  Output format is based on the
+%       format of the first data file read in.
 %
 %    Header changes: SCALE (number of records in stack), DEP*
 %                    Z, A, F
@@ -133,9 +137,17 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %        Apr.  8, 2013 - xcreverse option is false by default (for space)
 %        Sep. 24, 2013 - minor doc update
 %        Jan. 26, 2014 - abs path exist fix
+%        May  27, 2014 - remove MATIO option: now autodetects sac/mat i/o,
+%                        added ZTRANSFORM option (defaults to true)
+%        May  28, 2014 - call NO_REDUNDANT_CORRELATIONS to avoid double
+%                        adding due to reversed and unreversed correlations
+%                        being present in a directory, bugfix: allow
+%                        multiple filenames for FILENAMES option
+%        June  4, 2014 - also set t0 & t1 header fields
+%        June 25, 2014 - edits for irlim fd i/o
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 11:15 GMT
+%     Last Updated June 25, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -267,6 +279,12 @@ if(verbose); disp('STACKING CORRELOGRAMS'); end
 % turn off checking
 oldseizmocheckstate=seizmocheck_state(false);
 oldcheckheaderstate=checkheader_state(false);
+
+% for autodetecting if output is .mat or SAC files
+opt.MATIO=[];
+
+% for filetype checking
+common_iftype=[];
 
 % attempt stacking
 try
@@ -484,31 +502,51 @@ try
             for ts=1:nin
                 % read in timesection data headers
                 try
-                    if(opt.MATIO)
-                        data=load(strcat(indir,fs,tsdirs{in(ts)}(1:4),...
-                            fs,tsdirs{in(ts)},fs,'noise_records.mat'));
-                        data=data.noise_records;
-                        if(~isempty(opt.FILENAMES))
-                            warning('seizmo:noise_stack:unusedOption',...
-                                'FILENAMES option ignored for MAT input!');
-                        end
-                    else
+                    data=load(strcat(indir,fs,tsdirs{in(ts)}(1:4),...
+                        fs,tsdirs{in(ts)},fs,'noise_records.mat'));
+                    data=data.noise_records;
+                    if(~isempty(opt.FILENAMES))
+                        warning('seizmo:noise_stack:unusedOption',...
+                            'FILENAMES option ignored for MAT input!');
+                    end
+                    opt.MATIO_THIS_TIME=true;
+                    if(isempty(opt.MATIO)); opt.MATIO=true; end
+                catch
+                    try
                         data=readheader(strcat(indir,fs,...
                             tsdirs{in(ts)}(1:4),fs,tsdirs{in(ts)},fs,...
                             opt.FILENAMES));
+                        opt.MATIO_THIS_TIME=false;
+                        if(isempty(opt.MATIO)); opt.MATIO=false; end
+                    catch
+                        % no data...
+                        continue;
                     end
-                catch
-                    % no data...
-                    continue;
                 end
                 if(isempty(data)); continue; end
                 
-                % require records are correlations
-                [kuser0,kuser1]=getheader(data,'kuser0','kuser1');
+                % require records are correlations & all the same filetype
+                [kuser0,kuser1,iftype]=getheader(data,...
+                    'kuser0','kuser1','iftype id');
                 xc=strcmp(kuser0,'MASTER') & strcmp(kuser1,'SLAVE');
                 if(~all(xc))
                     error('seizmo:noise_stack:badInput',...
-                        'INDIR does contains non-correlations!');
+                        'INDIR contains non-correlations!');
+                elseif(numel(unique(iftype))~=1)
+                    error('seizmo:noise_stack:badInput',...
+                        'INDIR contains mixed correlation filetypes!');
+                elseif(strcmpi(iftype(1),'iamph'))
+                    error('seizmo:noise_stack:badInput',...
+                        'INDIR contains correlations of IAMPH filetype!');
+                end
+                
+                % now check filetype is consistent across directories
+                iftype=iftype(1);
+                if(isempty(common_iftype))
+                    common_iftype=iftype;
+                elseif(~strcmpi(common_iftype,iftype))
+                    error('seizmo:noise_stack:badInput',...
+                        'Correlations must all share the same filetype!');
                 end
                 
                 % limit to the stations that the user allows
@@ -565,6 +603,9 @@ try
                 pidx2=ismember([kcmpnms kcmpnmm],pair);
                 data=data(pidx1 | pidx2);
                 
+                % remove redundant (reversed) correlations
+                data=no_redundant_correlations(data);
+                
                 % get some header info
                 [knetwk,kstnm,khole,kcmpnm,...
                     kt0,kt1,kt2,kt3,scale]=getheader(data,...
@@ -579,20 +620,23 @@ try
                 kcmpnmm=char(kt3); kcmpnmm=lower(kcmpnmm(:,3));
                 
                 % read in data (if not MATFILE input)
-                if(~opt.MATIO); data=readdata(data); end
+                if(~opt.MATIO_THIS_TIME); data=readdata(data); end
+                
+                % apply Fisher's transform
+                if(opt.ZTRANS); data=solofun(data,'@fisher'); end
                 
                 % multiply by scale
                 % - this allows weighted stacks
                 % - this is also useful for stack2stack
                 scale(isnan(scale))=1;
                 data=multiply(data,scale);
-                for i=1:numel(data)
-                    data(i).misc.stacknames={[data(i).path data(i).name]};
-                end
                 
                 % get reversed data
                 rdata=reverse_correlations(data);
-                for i=1:numel(rdata)
+                
+                % for debugging
+                for i=1:numel(data)
+                    data(i).misc.stacknames={[data(i).path data(i).name]};
                     rdata(i).misc.stacknames=...
                         {[rdata(i).path rdata(i).name]};
                 end
@@ -711,21 +755,31 @@ try
                     % - updates dep* stats skipped by addrecords hack
                     sdata{p}=divide(sdata{p},sscale{p});
                     
+                    % unapply Fisher's transform
+                    if(opt.ZTRANS)
+                        sdata{p}=solofun(sdata{p},'@ifisher');
+                    end
+                    
                     % rename
                     sdata{p}=changename(sdata{p},...
                         'name',strcat(snamem{p},'_-_',snames{p}));
                     
                     % update headers
                     sdata{p}=changeheader(sdata{p},'scale',sscale{p},...
-                        'a',0,'z',spanref,'iztype','ia',...
-                        'f',timediff(sbgn,send,'utc'));
+                        'a',0,'f',timediff(sbgn,send,'utc'),...
+                        't0',0,'t1',timediff(sbgn,send,'utc'),...
+                        'z',spanref,'iztype','ia');
                     
                     % for de-dup
                     pidx=p;
                 end
                 
+                % override xccmp for frequency-domain input
+                xclist=opt.XCCMP;
+                if(strcmpi(iftype,'irlim')); xclist={'twoway'}; end
+                
                 % xccmp
-                for xc=opt.XCCMP
+                for xc=xclist
                     path=char(strcat(outdir,fs,pair(p),'_',span,'_',xc,...
                         fs,spanstr(s,:)));
                     switch char(xc)
@@ -810,7 +864,7 @@ function [opt]=noise_stack_parameters(varargin)
 % parses/checks noise_stack pv pairs
 
 % defaults
-varargin=[{'span' 'all' 'xccmp' 'twoway' 'o' 50 'matio' true ...
+varargin=[{'span' 'all' 'xccmp' 'twoway' 'o' 50 'ztrans' true ...
     'q' false 'ts' [] 'te' [] 'lat' [] 'lon' [] 'xcr' false ...
     'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' []} varargin];
 
@@ -852,7 +906,7 @@ for i=1:2:numel(varargin)
         case {'kstnm' 'st' 'sta' 'stn' 'stns' 'stations' 'station'}
             if(~isempty(varargin{i+1}) && isnumeric(varargin{i+1}))
                 % timestart/starttime catch
-                warning('seizmo:noise_setup:badInput',...
+                warning('seizmo:noise_stack:badInput',...
                     'TIMESTART/STATION mixup!  Assuming TIMESTART!');
                 opt.TIMESTART=varargin{i+1};
             else
@@ -867,9 +921,9 @@ for i=1:2:numel(varargin)
         case {'q' 'qw' 'quiet' 'qwrite' 'quietwrite'}
             if(isempty(varargin{i+1})); continue; end
             opt.QUIETWRITE=varargin{i+1};
-        case {'matio' 'mat' 'matout' 'matin'}
+        case {'z' 'ztran' 'ztrans' 'ztransform' 'fish' 'fisher'}
             if(isempty(varargin{i+1})); continue; end
-            opt.MATIO=varargin{i+1};
+            opt.ZTRANS=varargin{i+1};
         otherwise
             error('seizmo:noise_stack:badInput',...
                 'Unknown Option: %s !',varargin{i});
@@ -955,12 +1009,9 @@ elseif(~isempty(opt.COMPONENTS) && (~iscellstr(opt.COMPONENTS)))
 elseif(~isempty(opt.FILENAMES) && (~iscellstr(opt.FILENAMES)))
     error('seizmo:noise_stack:badInput',...
         'FILENAMES must be a string list of allowed files!');
-elseif(numel(opt.FILENAMES)>1)
+elseif(~isscalar(opt.ZTRANS) || ~islogical(opt.ZTRANS))
     error('seizmo:noise_stack:badInput',...
-        'FILENAMES must be a single pattern in NOISE_STACK!');
-elseif(~isscalar(opt.MATIO) || ~islogical(opt.MATIO))
-    error('seizmo:noise_stack:badInput',...
-        'MATIO must be TRUE or FALSE!');
+        'ZTRANSFORM must be TRUE or FALSE!');
 end
 
 % look out for xccmp options in component

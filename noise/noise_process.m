@@ -9,25 +9,28 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     NOISE_PROCESS(INDIR,OUTDIR) processes the data under the directory
 %     INDIR using noise cross correlation methods.  The resulting data are
 %     written to OUTDIR.  The following techniques may be performed on the
-%     input dataset (see the next Usage form to set which):
-%      (*1) remove dead records (no change in recorded value)
-%      (*2) remove short records (spanning less than 70% of time section)
-%      (*3) remove mean & trend
-%      (*4) taper (first/last 1%)
-%      (*5) resample to 1 sample/sec
-%      (*6) remove polezero response (displacement, hp taper: [.004 .008])
-%      ( 7) reject records based on amplitudes (>Inf nm)
-%      ( 8) rotate horizontals to North/East (removes unpaired)
-%      ( 9) t-domain normalize (3-150s & 15-100s moving average)
-%      (10) f-domain normalize (2mHz moving average)
-%      (11) correlate (keep +/-4000s lagtime)
-%      (12) rotate correlations into <RR, RT, TR, TT>
-%     * -> Steps 1-6 are done in NOISE_SETUP and are skipped here.
-%     See below for details on how to alter or skip more of these steps.
+%     input dataset (only steps 7-12 are performed by default, see the
+%     following Usage forms to set an alternate processing step list and to
+%     alter how each step is performed):
+%      (* 1) remove dead records (no change in recorded value)
+%      (* 2) remove short records (spanning less than 70% of time section)
+%      (* 3) remove mean & trend
+%      (* 4) taper (first/last 1%)
+%      (* 5) resample to 1 sample/sec
+%      (* 6) remove polezero response (displacement, hp taper: [.004 .008])
+%      (  7) reject records based on amplitudes (>Inf nm)
+%      (  8) rotate horizontals to North/East (removes unpaired)
+%      (  9) t-domain normalize (3-150s & 15-100s moving average)
+%      ( 10) f-domain normalize (2mHz moving average)
+%      ( 11) correlate (keep +/-4000s lagtime)
+%      ( 12) rotate correlations into <RR, RT, TR, TT>
+%      ( 13) correlate the coda of correlations (can be repeated)
+%            (VERTICAL ONLY, HORIZONTALS CURRENTLY NOT IMPLEMENTED!)
+%       * -> Steps 1-6 are done in NOISE_SETUP and so should be skipped.
 %
 %     NOISE_PROCESS(INDIR,OUTDIR,STEPS) only does the processing steps
-%     indicated in STEPS.  STEPS is be a vector of numbers corresponding to
-%     valid steps given above.  The default is 7:12 (1:6 are done in
+%     indicated in STEPS.  STEPS is a vector of numbers corresponding to
+%     the valid steps given above.  The default is 7:12 (1:6 are done in
 %     NOISE_SETUP by default and so do not need to be added).
 %
 %     NOISE_PROCESS(INDIR,OUTDIR,STEPS,'OPT1',VAL,...,'OPTN',VAL) allows
@@ -46,10 +49,11 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      REJECTWIDTH   - include 2N neighboring timewindows (+current) when
 %                      calculating the rms value for data rejection [0]
 %      TDSTYLE       - time domain normalization style:
+%                       'flat' - single scaling for all in each timewindow
 %                       '1bit' - set amplitudes to +/-1
 %                       'clip' - clip values above some absolute value
 %                      ['ram'] - normalized using running-absolute mean
-%      TDRMS         - use TDCLIP x RMS for each record [true]
+%      TDRMS         - use TDCLIP x RMS when TDSTYLE='clip' [true]
 %      TDCLIP        - sets clip for TDSTYLE='clip' [1]
 %      TDWEIGHTBANDS - frequency bands for TDSTYLE='ram' weights
 %                     [1/150 1/3; 1/100 1/15]
@@ -60,6 +64,19 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      FDWIDTH       - frequency window width for FDSTYLE='ram' (Hz) [.002]
 %      XCMAXLAG      - maximum lag time of correlograms in sec [4000]
 %      NORMXC        - normalize the cross correlations [true]
+%      COHERENCY     - return coherency correlograms [false]
+%      FDOUT         - return correlograms in the frequency-domain [false]
+%      NOAUTO        - skip autocorrelations [false]
+%      C3VRAYL       - Rayleigh wave velocity for coda window. [2.6km/s]
+%      C3WINOFF      - coda window offset [0s]
+%      C3WINLEN      - coda window length [1200s]
+%      C3STNLIST     - coda station list []
+%                      Station list should be a cell array of strings as
+%                      {'NET.STN.HOLE.CMP' ...}
+%      C3XCCMP       - correlation coda component to analyze.
+%                      'causal', 'acausal', 'both', ['symmetric']
+%      C3ZTRANS      - stack coda xcorr w/ Fisher's transform? [true]
+%      C3MINCODA     - minimum coda stations for coda correlation [1]
 %      TIMESTART     - process time sections from this time on []
 %      TIMEEND       - process times sections before this time []
 %      LATRNG        - include stations in this latitude range []
@@ -70,7 +87,6 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      COMPONENTS    - include records with these component codes []
 %      FILENAMES     - limit processing to files with these filenames []
 %      QUIETWRITE    - quietly overwrite OUTDIR (default is false)
-%      MATIO         - input/output are .mat files instead of SAC (true)
 %
 %    Notes:
 %     - Good Noise Analysis References:
@@ -78,14 +94,20 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        Yang et al 2007, GJI, doi:10.1111/j.1365-246X.2006.03203.x
 %        Lin et al 2008, GJI, doi:10.1111/j.1365-246X.2008.03720.x
 %        Harmon et al 2008, GRL, doi:10.1029/2008GL035387
+%        Stehly et al 2008, JGR, doi:10.1029/2008JB005693
 %        Prieto et al 2009, JGR, doi:10.1029/2008JB006067
 %        Ekstrom et al 2009, GRL, doi:10.1029/2009GL039131
 %        Seats et al 2012, GJI, doi:10.1111/j.1365-246X.2011.05263.x
+%        Ma & Beroza 2012, GRL, doi:10.1029/2011g1050755
+%        Zhang & Yang 2013, JGR, doi:10.1002/jgrb.50186
 %     - Steps 9-11 for horizontals currently require running step 8 on
 %       the same run (but if you forget it is automatically done for you).
-%     - Input and output data are .mat files by default -- these can be
-%       read into Matlab using the LOAD function and written out as SAC
-%       files using the function WRITESEIZMO.
+%     - While data i/o is .mat files by default, SAC files are okay too.
+%       Note that .mat files can be read into Matlab using the LOAD
+%       function and written out as SAC files using the function
+%       WRITESEIZMO.  You may also convert the inputs & outputs using
+%       NOISE_MAT2SAC & NOISE_SAC2MAT.  Be aware that SAC files are ignored
+%       when there is a .mat file present.
 %
 %    Header changes: Varies with steps chosen...
 %
@@ -154,11 +176,21 @@ function []=noise_process(indir,outdir,steps,varargin)
 %                        adds several new reject* options too
 %        Sep. 23, 2013 - update for new rotate_correlations, 4=>3 fix
 %        Jan. 26, 2014 - abs path exist fix
+%        May  27, 2014 - remove MATIO option: now autodetects sac/mat i/o
+%        May  28, 2014 - minor warning fix
+%        June  4, 2014 - c3 processing step (step 13)
+%        June 13, 2014 - c3 & xc rotate steps switched, bugfix: xc rotate
+%                        shortcircuit was too high, added c3 shortcircuits
+%        June 25, 2014 - added coherency, fdout & noauto correlate options,
+%                        c3 options now passed to noise_c3, flat tdstyle
+%                        option (baded on Weaver et al 2011)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 26, 2014 at 11:15 GMT
+%     Last Updated June 25, 2014 at 11:15 GMT
 
 % todo:
+% - 3cmp support
+%   - requires rotate3_correlations
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -264,7 +296,7 @@ if(any(steps==7)) % simple amplitude based rejection
                     ['Cannot find noise_rms_info.mat!\n' ...
                     'Make sure to run NOISE_RMS_CALC on ' ...
                     'the input directory before running ' ...
-                    'NOISE_PROCESS!']);
+                    'NOISE_PROCESS step 7!']);
             end
             if(any(~ismember({'data' 'tsbgn' 'tsend'},...
                     fieldnames(rmsinfo))))
@@ -291,21 +323,23 @@ for i=1:numel(tsdirs) % SERIAL
     
     % read the header
     try
-        if(opt.MATIO)
-            data=load(strcat(indir,fs,tsdirs{i}(1:4),fs,...
-                tsdirs{i},fs,'noise_records.mat'));
-            data=data.noise_records;
-            if(~isempty(opt.FILENAMES))
-                warning('seizmo:noise_stack:unusedOption',...
-                    'FILENAMES option ignored for MAT input!');
-            end
-        else
-            data=readheader(strcat(indir,fs,tsdirs{i}(1:4),fs,tsdirs{i},...
-                fs,opt.FILENAMES));
+        opt.MATIO=true;
+        data=load(strcat(indir,fs,tsdirs{i}(1:4),fs,...
+            tsdirs{i},fs,'noise_records.mat'));
+        data=data.noise_records;
+        if(~isempty(opt.FILENAMES))
+            warning('seizmo:noise_stack:unusedOption',...
+                'FILENAMES option ignored for MAT input!');
         end
     catch
-        % no data...
-        continue;
+        opt.MATIO=false;
+        try
+            data=readheader(strcat(indir,fs,tsdirs{i}(1:4),fs,tsdirs{i},...
+                fs,opt.FILENAMES));
+        catch
+            % no data...
+            continue;
+        end
     end
     if(isempty(data)); continue; end
     
@@ -324,6 +358,9 @@ for i=1:numel(tsdirs) % SERIAL
     if(isxc && any(steps<12)) % CAREFUL
         error('seizmo:noise_process:invalidProcess4xcdata',...
             'Cannot run earlier processing steps on correlograms!');
+    elseif(~isxc && ~any(steps==11) && any(steps>11))
+        error('seizmo:noise_process:invalidProcess4data',...
+            'Cannot run later processing steps on non-correlograms!');
     end
     
     % proceed by data type
@@ -405,14 +442,19 @@ for i=1:numel(tsdirs) % SERIAL
         vdata=data(vertcmp(data));
         hdata=data(horzcmp(data));
         data=[]; % clearing data
+        
+        % shortcircuits
         if(any(steps==11) && numel(vdata)==1); vdata=[]; end
         if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-        if(any(steps==12) && numel(hdata)<3); hdata=[]; end
+        if(any(steps==12) && numel(vdata)<3); vdata=[]; end
+        if(any(steps==12) && numel(hdata)<6); hdata=[]; end
+        if(any(steps==13) && numel(hdata)==1); hdata=[]; end
         if(isempty(hdata) && isempty(vdata)); continue; end
+    else
+        % shortcircuits
+        if(any(steps==12) && numel(data)<3); continue; end
+        if(any(steps==13) && numel(data)<3); continue; end
     end
-    
-    % shortcircuit for too few correlations for correlogram rotation
-    if(isxc && any(steps==12) && numel(data)<3); continue; end
     
     % read in data
     if(~opt.MATIO)
@@ -442,7 +484,9 @@ for i=1:numel(tsdirs) % SERIAL
             if(~isempty(hdata)); hdata=removedeadrecords(hdata); end
             if(any(steps==11) && numel(vdata)==1); vdata=[]; end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
+            if(any(steps==12) && numel(vdata)<3); vdata=[]; end
+            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         if(any(steps==2)) % remove short
@@ -458,7 +502,9 @@ for i=1:numel(tsdirs) % SERIAL
             end
             if(any(steps==11) && numel(vdata)==1); vdata=[]; end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
+            if(any(steps==12) && numel(vdata)<3); vdata=[]; end
+            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         if(any(steps==3)) % remove trend
@@ -494,7 +540,9 @@ for i=1:numel(tsdirs) % SERIAL
             end
             if(any(steps==11) && numel(vdata)==1); vdata=[]; end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
+            if(any(steps==12) && numel(vdata)<3); vdata=[]; end
+            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         if(any(steps==7)) % simple amplitude based rejection
@@ -544,7 +592,9 @@ for i=1:numel(tsdirs) % SERIAL
             end
             if(any(steps==11) && numel(vdata)==1); vdata=[]; end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
+            if(any(steps==12) && numel(vdata)<3); vdata=[]; end
+            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         
@@ -554,7 +604,8 @@ for i=1:numel(tsdirs) % SERIAL
                 hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
             end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         if(any(steps==9)) % td norm
@@ -563,11 +614,19 @@ for i=1:numel(tsdirs) % SERIAL
                 hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
             end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
             
             % normalization style
             switch lower(opt.TDSTYLE)
+                case 'flat'
+                    % use robust rms (better for spikes & bad channels)
+                    rms=getvaluefun([vdata; hdata],@(x)median(x.^2));
+                    rms=sqrt(median(rms));
+                    if(rms==0); rms=1; end
+                    if(~isempty(vdata)); vdata=divide(vdata,rms); end
+                    if(~isempty(hdata)); hdata=divide(hdata,rms); end
                 case '1bit'
                     if(~isempty(vdata))
                         vdata=solofun(vdata,@sign);
@@ -662,7 +721,8 @@ for i=1:numel(tsdirs) % SERIAL
                 hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
             end
             if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
             
             % normalization style
@@ -735,39 +795,104 @@ for i=1:numel(tsdirs) % SERIAL
             if(~any(steps==8) && ~isempty(hdata))
                 hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
             end
-            if(any(steps==12) && numel(hdata)<3); hdata=[]; end
+            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
-            
             if(numel(vdata)<2 && numel(hdata)<2); continue; end
             if(numel(vdata)>1)
                 delta=getheader(vdata(1),'delta');
-                vdata=interpolate(correlate(...
-                    cut(vdata,'a','f','fill',true),opt.NORMXC{:},...
-                    'mcxc',(opt.XCMAXLAG+4*delta).*[-1 1]),...
-                    1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
+                if(isempty(opt.FDOUT))
+                    vdata=interpolate(correlate(...
+                        cut(vdata,'a','f','fill',true),...
+                        opt.NORMXC{:},opt.COHERENCY{:},'mcxc',...
+                        opt.NOAUTO{:},(opt.XCMAXLAG+4*delta).*[-1 1]),...
+                        1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
+                else
+                    vdata=correlate(cut(vdata,'a','f','fill',true),...
+                        opt.NORMXC{:},opt.COHERENCY{:},opt.FDOUT{:},...
+                        opt.NOAUTO{:},'mcxc');
+                end
                 [vdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
             else
                 vdata=vdata([]);
             end
             if(numel(hdata)>1)
                 delta=getheader(hdata(1),'delta');
-                hdata=interpolate(correlate(...
-                    cut(hdata,'a','f','fill',true),opt.NORMXC{:},...
-                    'mcxc',(opt.XCMAXLAG+4*delta).*[-1 1]),...
-                    1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
+                if(isempty(opt.FDOUT))
+                    hdata=interpolate(correlate(...
+                        cut(hdata,'a','f','fill',true),...
+                        opt.NORMXC{:},opt.COHERENCY{:},'mcxc',...
+                        opt.NOAUTO{:},(opt.XCMAXLAG+4*delta).*[-1 1]),...
+                        1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
+                else
+                    hdata=correlate(cut(hdata,'a','f','fill',true),...
+                        opt.NORMXC{:},opt.COHERENCY{:},opt.FDOUT{:},...
+                        opt.NOAUTO{:},'mcxc');
+                end
                 [hdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
             else
                 hdata=hdata([]);
             end
         end
-        if(any(steps==12)) % rotate xc
+        if(any(steps==12)) % correlate coda of correlations
             % correlation input or split data from before?
-            if(isxc) % correlations
+            if(isxc) % correlation input
+                for c3=1:sum(steps==12)
+                    data=noise_c3(data,'vrayl',opt.C3VRAYL,...
+                        'winoff',opt.C3WINOFF,'winlen',opt.C3WINLEN,...
+                        'xccmp',opt.C3XCCMP,'ztrans',opt.C3ZTRANS,...
+                        'mincoda',opt.C3MINCODA,'stnlist',opt.C3STNLIST,...
+                        'xcmaxlag',opt.XCMAXLAG,...
+                        'normxc',~isempty(opt.NORMXC),...
+                        'coherency',~isempty(opt.COHERENCY),...
+                        'fdout',~isempty(opt.FDOUT),...
+                        'noauto',~isempty(opt.NOAUTO));
+                    if(isempty(data)); break; end
+                end
+                if(isempty(data)); continue; end
+                [data.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
+            else % generated correlations
+                for c3=1:sum(steps==12)
+                    if(~isempty(vdata))
+                        vdata=noise_c3(vdata,'vrayl',opt.C3VRAYL,...
+                            'winoff',opt.C3WINOFF,'winlen',opt.C3WINLEN,...
+                            'xccmp',opt.C3XCCMP,'ztrans',opt.C3ZTRANS,...
+                            'mincoda',opt.C3MINCODA,...
+                            'stnlist',opt.C3STNLIST,...
+                            'xcmaxlag',opt.XCMAXLAG,...
+                            'normxc',~isempty(opt.NORMXC),...
+                            'coherency',~isempty(opt.COHERENCY),...
+                            'fdout',~isempty(opt.FDOUT),...
+                            'noauto',~isempty(opt.NOAUTO));
+                    end
+                    if(~isempty(hdata))
+                        hdata=noise_c3(hdata,'vrayl',opt.C3VRAYL,...
+                            'winoff',opt.C3WINOFF,'winlen',opt.C3WINLEN,...
+                            'xccmp',opt.C3XCCMP,'ztrans',opt.C3ZTRANS,...
+                            'mincoda',opt.C3MINCODA,...
+                            'stnlist',opt.C3STNLIST,...
+                            'xcmaxlag',opt.XCMAXLAG,...
+                            'normxc',~isempty(opt.NORMXC),...
+                            'coherency',~isempty(opt.COHERENCY),...
+                            'fdout',~isempty(opt.FDOUT),...
+                            'noauto',~isempty(opt.NOAUTO));
+                    end
+                end
+                if(isempty(hdata) && isempty(vdata)); continue; end
+                [vdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
+                [hdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
+            end
+        end
+        if(any(steps==13)) % rotate xc
+            % correlation input or split data from before?
+            if(isxc) % correlation input
                 % this removes ZZ correlations!
                 data=rotate_correlations(data,'rt');
-            else
+                if(isempty(data)); continue; end
+            else % generated correlations
                 if(~isempty(hdata))
                     hdata=rotate_correlations(hdata,'rt');
+                    if(isempty(hdata) && isempty(vdata)); continue; end
                 end
             end
         end
@@ -779,7 +904,7 @@ for i=1:numel(tsdirs) % SERIAL
                 noise_records=changepath(data,'path',...
                     [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
             else
-                if(numel(vdata)+numel(hdata)==0); continue; end
+                if(isempty(hdata) && isempty(vdata)); continue; end
                 noise_records=changepath([vdata; hdata],'path',...
                     [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
             end
@@ -795,7 +920,7 @@ for i=1:numel(tsdirs) % SERIAL
                 writeseizmo(data,'path',...
                     [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
             else
-                if(numel(vdata)+numel(hdata)==0); continue; end
+                if(isempty(hdata) && isempty(vdata)); continue; end
                 writeseizmo([vdata; hdata],'path',...
                         [outdir fs tsdirs{i}(1:4) fs tsdirs{i} fs]);
             end
@@ -832,8 +957,9 @@ function [opt]=noise_process_parameters(varargin)
 varargin=[{'minlen' 70 'tw' 1 'tt' [] 'topt' [] 'sr' 1 'rw' 0 ...
     'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] 'rc' Inf 'rm' 'abs' ...
     'tds' 'ram' 'tdrms' true 'tdclip' 1 'tdfb' [1/150 1/3; 1/100 1/15] ...
-    'fds' 'ram' 'fdw' .002 'lag' 4000 'normxc' true ...
-    'ts' [] 'te' [] 'lat' [] 'lon' [] 'matio' true ...
+    'fds' 'ram' 'fdw' .002 'lag' 4000 'nxc' true 'coh' false 'c3mc' 1 ...
+    'c3v' 2.6 'c3wo' 0 'c3wl' 4e3 'c3x' 'sym' 'c3z' true 'c3s' {} ...
+    'ts' [] 'te' [] 'lat' [] 'lon' [] 'fdout' false 'noauto' false ...
     'net' [] 'sta' [] 'str' [] 'cmp' [] 'file' [] 'q' false} varargin];
 
 % get user input
@@ -893,6 +1019,36 @@ for i=1:2:numel(varargin)
         case {'normxc' 'nxc'}
             if(isempty(varargin{i+1})); continue; end
             opt.NORMXC=varargin{i+1};
+        case {'coherency' 'cohere' 'co' 'coh'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.COHERENCY=varargin{i+1};
+        case {'fdout' 'fdo' 'fo'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.FDOUT=varargin{i+1};
+        case {'noauto' 'noa'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.NOAUTO=varargin{i+1};
+        case {'c3v' 'c3vr' 'c3vrayl'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.C3VRAYL=varargin{i+1};
+        case {'c3wo' 'c3wino' 'c3winoff'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.C3WINOFF=varargin{i+1};
+        case {'c3wl' 'c3winl' 'c3winlen'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.C3WINLEN=varargin{i+1};
+        case {'c3x' 'c3xc' 'c3xccmp'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.C3XCCMP=varargin{i+1};
+        case {'c3z' 'c3zt' 'c3ztrans' 'c3ztransform'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.C3ZTRANS=varargin{i+1};
+        case {'c3s' 'c3sl' 'c3stn' 'c3stnlist'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.C3STNLIST=varargin{i+1};
+        case {'c3m' 'c3mc' 'c3min' 'c3minc' 'c3mincoda'}
+            if(isempty(varargin{i+1})); continue; end
+            opt.C3MINCODA=varargin{i+1};
         case {'ts' 'tstart' 'timestart' 'startt' 'stime' 'starttime'}
             opt.TIMESTART=varargin{i+1};
         case {'te' 'tend' 'timeend' 'et' 'endtime' 'etime' 'endt'}
@@ -906,7 +1062,7 @@ for i=1:2:numel(varargin)
         case {'kstnm' 'st' 'sta' 'stn' 'stns' 'stations' 'station'}
             if(~isempty(varargin{i+1}) && isnumeric(varargin{i+1}))
                 % timestart/starttime catch
-                warning('seizmo:noise_setup:badInput',...
+                warning('seizmo:noise_process:badInput',...
                     'TIMESTART/STATION mixup!  Assuming TIMESTART!');
                 opt.TIMESTART=varargin{i+1};
             else
@@ -921,9 +1077,6 @@ for i=1:2:numel(varargin)
         case {'q' 'qw' 'quiet' 'qwrite' 'quietwrite'}
             if(isempty(varargin{i+1})); continue; end
             opt.QUIETWRITE=varargin{i+1};
-        case {'matio' 'mat' 'matout' 'matin'}
-            if(isempty(varargin{i+1})); continue; end
-            opt.MATIO=varargin{i+1};
         otherwise
             error('seizmo:noise_process:badInput',...
                 'Unknown Option: %s !',varargin{i});
@@ -931,22 +1084,30 @@ for i=1:2:numel(varargin)
 end
 
 % fix string options to be cellstr vectors
+if(ischar(opt.C3STNLIST)); opt.C3STNLIST=cellstr(opt.C3STNLIST); end
 if(ischar(opt.NETWORKS)); opt.NETWORKS=cellstr(opt.NETWORKS); end
 if(ischar(opt.STATIONS)); opt.STATIONS=cellstr(opt.STATIONS); end
 if(ischar(opt.STREAMS)); opt.STREAMS=cellstr(opt.STREAMS); end
 if(ischar(opt.COMPONENTS)); opt.COMPONENTS=cellstr(opt.COMPONENTS); end
 if(ischar(opt.FILENAMES)); opt.FILENAMES=cellstr(opt.FILENAMES); end
+if(iscellstr(opt.C3STNLIST))
+    opt.C3STNLIST=unique(lower(opt.C3STNLIST(:)));
+end
 if(iscellstr(opt.NETWORKS))
     opt.NETWORKS=unique(lower(opt.NETWORKS(:)));
 end
 if(iscellstr(opt.STATIONS))
     opt.STATIONS=unique(lower(opt.STATIONS(:)));
 end
-if(iscellstr(opt.STREAMS)); opt.STREAMS=unique(lower(opt.STREAMS(:))); end
+if(iscellstr(opt.STREAMS))
+    opt.STREAMS=unique(lower(opt.STREAMS(:)));
+end
 if(iscellstr(opt.COMPONENTS))
     opt.COMPONENTS=unique(lower(opt.COMPONENTS(:)));
 end
-if(iscellstr(opt.FILENAMES)); opt.FILENAMES=unique(opt.FILENAMES(:)); end
+if(iscellstr(opt.FILENAMES))
+    opt.FILENAMES=unique(opt.FILENAMES(:));
+end
 
 % check options
 szs=size(opt.TIMESTART);
@@ -963,27 +1124,27 @@ elseif(~isscalar(opt.TAPERWIDTH) || ~isreal(opt.TAPERWIDTH) ...
 elseif(~isempty(opt.TAPERTYPE) && (~ischar(opt.TAPERTYPE) ...
         || ~isvector(opt.TAPERTYPE) || size(opt.TAPERTYPE,1)~=1))
     error('seizmo:noise_process:badInput',...
-        'TAPERTYPE should be a string indicating a valid taper!');
+        'TAPERTYPE must be a string indicating a valid taper!');
 elseif(~isempty(opt.TAPEROPT) && (~isscalar(opt.TAPEROPT) ...
         || ~isreal(opt.TAPEROPT)))
     error('seizmo:noise_process:badInput',...
-        'TAPEROPT should be a real-valued scalar!');
+        'TAPEROPT must be a real-valued scalar!');
 elseif(~isscalar(opt.SAMPLERATE) || ~isreal(opt.SAMPLERATE) ...
         || opt.SAMPLERATE<=0)
     error('seizmo:noise_process:badInput',...
-        'SAMPLERATE should be a positive real-valued scalar!');
+        'SAMPLERATE must be a positive real-valued scalar!');
 elseif(~isempty(opt.PZDB) && ~isstruct(opt.PZDB) && (~ischar(opt.PZDB) ...
         || ~isvector(opt.PZDB) || size(opt.PZDB,1)~=1))
     error('seizmo:noise_process:badInput',...
-        'PZDB should be either a struct or a string!');
+        'PZDB must be either a struct or a string!');
 elseif(~ischar(opt.UNITS) || ~isvector(opt.UNITS) || size(opt.UNITS,1)~=1)
     error('seizmo:noise_process:badInput',...
-        'UNITS should be a string!');
+        'UNITS must be a string!');
 elseif(~isempty(opt.PZTAPERLIMITS) && (numel(szp)>2 || szp(1)~=1 ...
         || all(szp(2)~=[2 4]) || ~isnumeric(opt.PZTAPERLIMITS) ...
         || ~isreal(opt.PZTAPERLIMITS) || any(opt.PZTAPERLIMITS<0)))
     error('seizmo:noise_process:badInput',...
-        'PZTAPERLIMITS should be a [LOWSTOP LOWPASS] or [LS LP HP HS]!');
+        'PZTAPERLIMITS must be a [LOWSTOP LOWPASS] or [LS LP HP HS]!');
 elseif(~ischar(opt.REJECTMETHOD) || ~isvector(opt.REJECTMETHOD) ...
         || size(opt.REJECTMETHOD,1)~=1 ...
         || ~ismember(lower(opt.REJECTMETHOD),{'abs' 'rms'}))
@@ -1000,32 +1161,69 @@ elseif(~isscalar(opt.REJECTCUTOFF) || ~isreal(opt.REJECTCUTOFF) ...
 elseif(~ischar(opt.TDSTYLE) || ~isvector(opt.TDSTYLE) ...
         || size(opt.TDSTYLE,1)~=1)
     error('seizmo:noise_process:badInput',...
-        'TDSTYLE should be a string!');
+        'TDSTYLE must be a string!');
 elseif(~isscalar(opt.TDRMS) || ~islogical(opt.TDRMS))
     error('seizmo:noise_process:badInput',...
-        'TDRMS should be true or false!');
+        'TDRMS must be true or false!');
 elseif(~isscalar(opt.TDCLIP) || ~isreal(opt.TDCLIP))
     error('seizmo:noise_process:badInput',...
-        'TDCLIP should be a real-valued scalar!');
+        'TDCLIP must be a real-valued scalar!');
 elseif(~isnumeric(opt.TDWEIGHTBAND) || ~isreal(opt.TDWEIGHTBAND) ...
         || size(opt.TDWEIGHTBAND,2)~=2 ...
         || numel(size(opt.TDWEIGHTBAND))~=2 || any(opt.TDWEIGHTBAND(:)<0))
     error('seizmo:noise_process:badInput',...
-        'TDWEIGHTBAND should be [LOW HIGH] in Hz!');
+        'TDWEIGHTBAND must be [LOW HIGH] in Hz!');
 elseif(~ischar(opt.FDSTYLE) || ~isvector(opt.FDSTYLE) ...
         || size(opt.FDSTYLE,1)~=1)
     error('seizmo:noise_process:badInput',...
-        'FDSTYLE should be a string!');
+        'FDSTYLE must be a string!');
 elseif(~isscalar(opt.FDWIDTH) || ~isreal(opt.FDWIDTH) || opt.FDWIDTH<=0)
     error('seizmo:noise_process:badInput',...
-        'FDWIDTH should be a positive real-valued scalar!');
+        'FDWIDTH must be a positive real-valued scalar!');
 elseif(~isscalar(opt.XCMAXLAG) || ~isreal(opt.XCMAXLAG) ...
         || opt.XCMAXLAG<=0)
     error('seizmo:noise_process:badInput',...
-        'XCMAXLAG should be a positive real-valued scalar in seconds!');
+        'XCMAXLAG must be a positive real-valued scalar in seconds!');
 elseif(~isscalar(opt.NORMXC) || ~islogical(opt.NORMXC))
     error('seizmo:noise_process:badInput',...
-        'NORMXC should be true or false!');
+        'NORMXC must be true or false!');
+elseif(~isscalar(opt.COHERENCY) || ~islogical(opt.COHERENCY))
+    error('seizmo:noise_process:badInput',...
+        'COHERENCY must be true or false!');
+elseif(~isscalar(opt.FDOUT) || ~islogical(opt.FDOUT))
+    error('seizmo:noise_process:badInput',...
+        'FDOUT must be true or false!');
+elseif(~isscalar(opt.NOAUTO) || ~islogical(opt.NOAUTO))
+    error('seizmo:noise_process:badInput',...
+        'NOAUTO must be true or false!');
+elseif(~isnumeric(opt.C3VRAYL) || ~isscalar(opt.C3VRAYL) ...
+        || ~isreal(opt.C3VRAYL) || opt.C3VRAYL<=0)
+    error('seizmo:noise_process:badInput',...
+        'C3VRAYL must be a positive real scalar!');
+elseif(~isnumeric(opt.C3WINOFF) || ~isscalar(opt.C3WINOFF) ...
+        || ~isreal(opt.C3WINOFF))
+    error('seizmo:noise_process:badInput',...
+        'C3WINOFF must be a real-valued scalar!');
+elseif(~isnumeric(opt.C3WINLEN) || ~isscalar(opt.C3WINLEN) ...
+        || ~isreal(opt.C3WINLEN) || opt.C3WINLEN<=0)
+    error('seizmo:noise_process:badInput',...
+        'C3WINLEN must be a positive real scalar!');
+elseif(~ischar(opt.C3XCCMP) || ~isvector(opt.C3XCCMP) ...
+        || size(opt.C3XCCMP,1)~=1 || ~ismember(lower(opt.C3XCCMP),...
+        {'causal' 'acausal' 'both' 'sym'}))
+    error('seizmo:noise_process:badInput',...
+        'C3XCCMP must be ''CAUSAL'' ''ACAUSAL'' ''BOTH'' or ''SYM''!');
+elseif(~isscalar(opt.C3ZTRANS) || ~islogical(opt.C3ZTRANS))
+    error('seizmo:noise_process:badInput',...
+        'C3ZTRANS must be true or false!');
+elseif(~isempty(opt.C3STNLIST) && (~iscellstr(opt.C3STNLIST)))
+    error('seizmo:noise_process:badInput',...
+        'C3STNLIST must be a string list of KNAME codes!');
+elseif(~isnumeric(opt.C3MINCODA) || ~isscalar(opt.C3MINCODA) ...
+        || ~isreal(opt.C3MINCODA) || opt.C3MINCODA<=0 ...
+        || opt.C3MINCODA~=fix(opt.C3MINCODA))
+    error('seizmo:noise_process:badInput',...
+        'C3MINCODA must be a positive integer>0!');
 elseif(~isscalar(opt.QUIETWRITE) || ~islogical(opt.QUIETWRITE))
     error('seizmo:noise_process:badInput',...
         'QUIETWRITE flag must be a scalar logical!');
@@ -1064,17 +1262,17 @@ elseif(~isempty(opt.COMPONENTS) && (~iscellstr(opt.COMPONENTS)))
 elseif(~isempty(opt.FILENAMES) && (~iscellstr(opt.FILENAMES)))
     error('seizmo:noise_process:badInput',...
         'FILENAMES must be a string list of allowed files!');
-elseif(~isscalar(opt.MATIO) || ~islogical(opt.MATIO))
-    error('seizmo:noise_process:badInput',...
-        'MATIO must be TRUE or FALSE!');
 end
 
 % percent to fraction
 opt.MINIMUMLENGTH=opt.MINIMUMLENGTH/100;
 opt.TAPERWIDTH=opt.TAPERWIDTH/100;
 
-% normxc logical to option
+% xc logical to option
 if(opt.NORMXC); opt.NORMXC={'normxc'}; else opt.NORMXC={}; end
+if(opt.COHERENCY); opt.COHERENCY={'coherency'}; else opt.COHERENCY={}; end
+if(opt.FDOUT); opt.FDOUT={'fdout'}; else opt.FDOUT={}; end
+if(opt.NOAUTO); opt.NOAUTO={'noauto'}; else opt.NOAUTO={}; end
 
 end
 

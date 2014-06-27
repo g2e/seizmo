@@ -57,9 +57,10 @@ function [varargout]=plotgeofss(s,dblim,zerodb,varargin)
 %        June  4, 2012 - altered from plotgeofkmap, full mmap options
 %        June 10, 2012 - handle full method
 %        Sep. 29, 2012 - handle new struct changes
+%        Apr. 28, 2014 - handles slowness function handles
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 29, 2012 at 15:05 GMT
+%     Last Updated Apr. 28, 2014 at 15:05 GMT
 
 % todo:
 
@@ -136,30 +137,37 @@ nlat=numel(unique(s.latlon(:,1)));
 nlon=numel(unique(s.latlon(:,2)));
 s.latlon=reshape(s.latlon,[nlon nlat 2]); % this breaks if non-meshgrid
 s.spectra=reshape(s.spectra,[nlon nlat]); % this breaks if non-meshgrid
-latstep=s.latlon(1,2,1)-s.latlon(1,1,1);
-lonstep=s.latlon(2,1,2)-s.latlon(1,1,2);
-s.latlon(:,:,1)=s.latlon(:,:,1)-latstep/2;
-s.latlon(:,:,2)=s.latlon(:,:,2)-lonstep/2;
-s.latlon=s.latlon([1:end end],[1:end end],:);
-s.latlon(:,end,1)=s.latlon(:,end,1)+latstep;
-s.latlon(end,:,2)=s.latlon(end,:,2)+lonstep;
-s.spectra=s.spectra([1:end end],[1:end end]);
+%latstep=s.latlon(1,2,1)-s.latlon(1,1,1);
+%lonstep=s.latlon(2,1,2)-s.latlon(1,1,2);
+%s.latlon(:,:,1)=s.latlon(:,:,1)-latstep/2;
+%s.latlon(:,:,2)=s.latlon(:,:,2)-lonstep/2;
+%s.latlon=s.latlon([1:end end],[1:end end],:);
+%s.latlon(:,end,1)=s.latlon(:,end,1)+latstep;
+%s.latlon(end,:,2)=s.latlon(end,:,2)+lonstep;
+%s.spectra=s.spectra([1:end end],[1:end end]);
 
 % limits of map
-minlat=min([s.st(:,1); min(s.latlon(:,:,1))']);
-maxlat=max([s.st(:,1); max(s.latlon(:,:,1))']);
-minlon=min([s.st(:,2); min(s.latlon(:,:,2))']);
-maxlon=max([s.st(:,2); max(s.latlon(:,:,2))']);
+%minlat=min([s.st(:,1); min(s.latlon(:,:,1))']);
+%maxlat=max([s.st(:,1); max(s.latlon(:,:,1))']);
+%minlon=min([s.st(:,2); min(s.latlon(:,:,2))']);
+%maxlon=max([s.st(:,2); max(s.latlon(:,:,2))']);
+minlat=min(min(s.latlon(:,:,1)));
+maxlat=max(max(s.latlon(:,:,1)));
+minlon=min(min(s.latlon(:,:,2)));
+maxlon=max(max(s.latlon(:,:,2)));
+
 
 % plot map
-ax=mmap('po',{'lat',[minlat maxlat],'lon',[minlon maxlon]},...
-    'land',false,'sea',false,varargin{:});
+ax=mmap('im',{s.latlon(:,:,1) s.latlon(:,:,2) double(s.spectra)},...
+    'po',{'lat',[minlat maxlat],'lon',[minlon maxlon]},...
+    'land',false,'sea',false,'st',s.st(:,1:2),varargin{:});
 
 % access to m_map globals for map boundaries
-global MAP_VAR_LIST
+%global MAP_VAR_LIST
 
 % plot spectra (up to 3 times)
 hold(ax,'on');
+%{
 if(any(s.latlon(:,:,2)>=MAP_VAR_LIST.longs(1) ...
         & s.latlon(:,:,2)<=MAP_VAR_LIST.longs(2)))
     m_pcolor(s.latlon(:,:,2),s.latlon(:,:,1),double(s.spectra),...
@@ -191,8 +199,12 @@ end
 
 % modify
 shading(ax,'flat');
-bg=get(get(ax,'parent'),'color');               % these may not
-fg=get(findobj(ax,'tag','m_grid_box'),'color'); % be right ...
+%}
+bg=get(get(ax,'parent'),'color');                 % these may not
+fg=get(findobj(ax,'tag','m_grid_xgrid'),'color'); % be right ...
+%fg=get(findobj(ax,'tag','m_grid_box'),'color');   % be right ...
+if(isstring(bg)); bg=name2rgb(bg); end
+if(isstring(fg)); fg=name2rgb(fg); end
 if(strcmp(bg,'w') || isequal(bg,[1 1 1]))
     colormap(ax,flipud(fire));
 elseif(strcmp(bg,'k') || isequal(bg,[0 0 0]))
@@ -205,6 +217,7 @@ end
 set(ax,'clim',dblim);
 hold(ax,'off');
 
+%{
 % wrap station longitudes to within 180deg of plot center
 while(any(abs(s.st(:,2)-mean(MAP_VAR_LIST.longs))>180))
     s.stlo(s.st(:,2)<MAP_VAR_LIST.longs(1))=...
@@ -218,20 +231,26 @@ end
 hold(ax,'on');
 mmap('st',s.st(:,1:2),'parent',ax,varargin{:});
 hold(ax,'off');
+%}
 
 % colorbar & title
 c=colorbar('eastoutside','peer',ax,'xcolor',fg,'ycolor',fg);
 xlabel(c,'dB','color',fg);
 fmin=min(s.freq); fmax=max(s.freq);
-smin=min(s.slow); smax=max(s.slow);
+if(isa(s.slow,'function_handle'))
+    sstring=['Slowness: ' func2str(s.slow)];
+else
+    smin=min(s.slow); smax=max(s.slow);
+    sstring=['Slowness: ' num2str(smin) 's/^o to ' num2str(smax) 's/^o'];
+end
 s.butc=[s.butc(1:4) fix(s.butc(5)) fix(1000*mod(s.butc(5),1))];
 s.eutc=[s.eutc(1:4) fix(s.eutc(5)) fix(1000*mod(s.eutc(5),1))];
 title(ax,{[] ['Stations:  ' num2str(s.nsta)] ...
     ['Bgn Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.butc) ' UTC'] ...
     ['End Time: ' sprintf('%d.%03d %02d:%02d:%02d.%03d',s.eutc) ' UTC'] ...
     ['Period: ' num2str(1/fmax) 's to ' num2str(1/fmin) 's'] ...
-    ['Slowness: ' num2str(smin) 's/^o to ' num2str(smax) 's/^o'] ...
-    ['0dB = ' num2str(zdb) 'dB'] []},'color',fg);
+    sstring ...
+    ['0dB = ' num2str(zdb) 'dB'] []},'color',fg,'interpreter','none');
 
 % set zerodb in userdata
 % - this is for plotgeofssupdate

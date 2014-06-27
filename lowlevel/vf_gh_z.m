@@ -21,6 +21,7 @@ if(any(good))
     % get secs
     value(good,5)=(tmp(5,good)+tmp(6,good)/1000).';
 end
+
 % normally wrap in cell
 if(nargout==1); value=mat2cell(value,ones(nv,1)); end
 

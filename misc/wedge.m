@@ -25,7 +25,9 @@ function [varargout]=wedge(varargin)
 %     matrices of size NRxNAZ where NR is the number of radii & NAZ is the
 %     number of azimuths.  Sampling in azimuth and radius must be regular.
 %     IMAGE must be NRxNAZ in size.  Inputs are automatically adjusted so
-%     that pcolor plots the image at the correct positions.
+%     that pcolor plots the image at the correct positions.  Note that the
+%     pixels do not curve and so the image has inherent inaccuracy in pixel
+%     position that is exacerbated when pixels span a large azimuth range.
 %
 %     WEDGE(...,'PROP1',VAL1,'PROP2',VAL2,...) alters specific wedge &
 %     lineseries (or surface) properties.  Available wedge properties are:
@@ -141,15 +143,18 @@ function [varargout]=wedge(varargin)
 %        Sep. 12, 2012 - doc update: expect image, not pcolor input
 %        Jan. 27, 2014 - use axparse instead of axescheck for octave,
 %                        adjust newplot call only for octave
+%        Mar. 17, 2014 - clipping (hidden opt & image only) defaults to off
+%        Mar. 18, 2014 - image with <300 pixels now behind axes/grid
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 27, 2014 at 18:35 GMT
+%     Last Updated Mar. 18, 2014 at 18:35 GMT
 
 % todo
 % - drawing
 %   - improve clipping (need to figure this one out)
 %   - updating tick length/dir should update label position
 %   - labels should be a constant distance from ticks (callback)
+%   - low res image pixels don't curve making the plot inaccurate
 % - updating wedges
 %   - anything but a complete redraw right now
 %     - redraw requires some work
@@ -325,6 +330,12 @@ h=pcolor(ax,x,y,z);
 set(h,'clipping',w.plotbox,lpv{:});
 shading(ax,'flat');
 
+% <300 pcolor block fix
+if(prod(size(x)-1)<300)
+    movekids(h,'back');
+    movekids(findall(ax,'tag','wedge_bgpatch'),'back');
+end
+
 % cleanup
 wedge_cleanup(ax,held);
 
@@ -405,7 +416,7 @@ w.aztickvisible='on';
 w.azunits='degrees'; % degrees/radians
 w.backgroundcolor='w';
 w.box='on';
-w.clipping='on'; % only works (sorta) for image
+w.clipping='off'; % only works (sorta) for image
 w.fontangle=get(0,'defaulttextfontangle');
 w.fontname=get(0,'defaulttextfontname');
 w.fontsize=get(0,'defaulttextfontsize');

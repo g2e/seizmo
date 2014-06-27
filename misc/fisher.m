@@ -27,9 +27,10 @@ function [Z]=fisher(R)
 %        Sep.  9, 2009 - minor doc update
 %        Mar. 11, 2010 - fixed example
 %        Apr.  4, 2012 - minor doc update
+%        May  27, 2014 - simplify algorithm for speed/simplicity
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Apr.  4, 2012 at 10:35 GMT
+%     Last Updated May  27, 2014 at 10:35 GMT
 
 % todo:
 
@@ -37,6 +38,7 @@ function [Z]=fisher(R)
 R(abs(R)>1)=nan;
 
 % FISHER TRANSFORM -> CORRELATION SPACE TO Z STATISTIC SPACE
-Z=0.5*log((1+R)./(1-R));
+%Z=0.5*log((1+R)./(1-R)); % OLD WAY
+Z=atanh(R);
 
 end

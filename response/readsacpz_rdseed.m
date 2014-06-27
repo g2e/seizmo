@@ -20,14 +20,23 @@ function [pz]=readsacpz_rdseed(varargin)
 %     returning a single structure PZ.  If polezero files have differing
 %     RDSEED comment block fields then concatenation will fail, a warning
 %     is generated & the output is a cell array of structures that would be
-%     returned if READSACPZ_RDSEED was called on each file individually.
+%     returned as if READSACPZ_RDSEED was called on each file individually.
 %
 %     PZ=READSACPZ_RDSEED(STRING,TRUE) allows parsing a string as if it was
 %     the contents of a SAC polezero file.  This is useful for parsing info
 %     directly from the IRIS sacpz web service (see Examples section).
 %
 %    Notes:
-%     - An example of an RDSEED "annotated" PoleZero:
+%     - Each polezero MUST have a comment block to be parsed correctly.  If
+%       one does not exist an error will be generated or if the polezero
+%       comes after an annotated polezero in the same file the polezero
+%       info will overwrite that previous annotated polezero's zeros, poles
+%       and constant.
+%     - Multiple ZEROS, POLES or CONSTANT lines after a comment block are
+%       allowed but not encouraged as they overwrite the previous entry.
+%       For instance, when there is two CONSTANT lines the first one will
+%       be read and overwrote.
+%     - An example of a RDSEED "annotated" PoleZero:
 %        * **********************************
 %        * NETWORK   (KNETWK): BK
 %        * STATION    (KSTNM): ARC
@@ -78,9 +87,12 @@ function [pz]=readsacpz_rdseed(varargin)
 %        Feb. 25, 2014 - initial version
 %        Mar.  5, 2014 - minor doc update, input/output handles multi-word
 %        Mar.  6, 2014 - doc update, bugfix: allow CONSTANT to be NaN
+%        Apr. 28, 2014 - bugfix: preallocation fails no more if no ZEROS
+%        May  28, 2014 - bugfix: unconcatenatable output numeric fields are
+%                        now converted from strings, trim excess allocation
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  6, 2014 at 15:05 GMT
+%     Last Updated May  28, 2014 at 15:05 GMT
 
 % todo:
 
@@ -126,7 +138,7 @@ for f=1:nfiles
         varargin(f).path=['.' filesep];
         varargin(f).name='SAC_PZs_FILENAME_UNKNOWN';
     else
-        % read in text from file (gui selection if no input)
+        % read in text from file
         file=[varargin(f).path varargin(f).name];
         a=getwords(readtxt(file),sprintf('\n'));
     end
@@ -138,7 +150,7 @@ for f=1:nfiles
     end
     
     % estimate number of polezero entries in this file
-    npz_guess=sum(strncmp('ZEROS',a,5));
+    npz_guess=max(1,sum(strncmp('ZEROS',a,5)));
     pre(1:npz_guess,1)={''}; % preallocation
     
     % keep processing until through all lines
@@ -304,6 +316,10 @@ for f=1:nfiles
                             % Regardless, this is a noncomment.  So
                             % compensate for the line incrementing later
                             % on and break out of the comment block loop.
+                            warning(...
+                                'seizmo:readsacpz_rdseed:corruptSACPZ',...
+                                ['SAC PoleZero File: %s\n' ...
+                                'Found corrupted comment block!'],file);
                             line=line-1;
                             break;
                         end
@@ -431,6 +447,9 @@ for f=1:nfiles
         end
     end
     
+    % trim off excess preallocation
+    pz{f}=ssidx(pz{f},1:npz);
+    
     % detail message
     if(verbose); print_time_left(f,nfiles); end
 end
@@ -442,7 +461,6 @@ catch
     warning('seizmo:readsacpz_rdseed:multiheader',...
         ['The comment block table has changed between files.  Output ' ...
         'will be a cell-array of SAC polezero structs!']);
-    return;
 end
 
 % detail message

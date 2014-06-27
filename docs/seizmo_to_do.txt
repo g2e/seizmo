@@ -14,6 +14,8 @@ how about installing the latest octave stable branch instead
 taup Sn/Pn no refracted path bug
 taup strange extra P phases bug
 
+
+
 1. install_seizmo improvements
     - extras
         - iscfmdb
@@ -47,20 +49,34 @@ taup strange extra P phases bug
         - ww3struct
           - how to detect jar files are not in classpath?
 2. fss codes
- - fss & fss_capon?
- - compute spectra not centered on 0,0?
-   - complicates cart2pol & pol2cart
-   - input style: [nsmin nsmax nspts],[esmin esmax espts]
-                  [bazmin bazmax bazpts],[smin smax spts]
-                  smax,[espts nspts]
-                  smax,[spts bazpts]
-                  espts,nspts,spts default to 101
-                  bazpts default to 181
- - amplitudes of unwhitened, tdss & capon
-   - 1/(2*pi) factor?
-   - power spectral density is scaled by 2*delta/npts (td measures)
- - averaging across frequency (mainly for capon method)
- - test again!
+   fss fssxc fsshorz fsshorzxc
+    - nearest frequency option
+    - add in block extensions (fhwidth, ntiles)
+      - fhwidth broken due to slowness magnitude streaking
+        - caused by assuming f_center*s==k for all frequencies?
+    - add in range extensions
+    - test
+   tss tssxc tsshorz tsshorzxc
+    - match fss*
+   arf arfhorz
+    - add in range extensions
+    - test
+   isfss chkfss
+   fsssub fssidx fssgrids
+    - fsssub needs slowness ranging
+   fssavg fssbackproject fsscart2pol fsspol2cart
+    - pol/cart need range extensions, better defaults and use spline by default
+    - fssbackproject from fk/fs_whateveritiscalled
+   fsscorrcoef fssdbinfo
+   plotarf plotfss plotfssupdate
+    - plot option passthrough
+   fssframeslide fssfreqslide
+
+ - an arrays function (yellowknife/lasa)
+ - fssphasecorr should be arrayphasecorr
+ - horz capon formula
+   - invert component matrices and rotate
+   - invert each rotated matrix
 3. geofss codes (use mmap image option)
  - rewrites
    - geo(fssxc,tdssxc)
@@ -68,8 +84,7 @@ taup strange extra P phases bug
  - write
    - geo(fsshorz,fsshorzxc,tdsshorzxc,arfhorz)
      - much of this should come from non-geo versions
- - test!
-4. test & tutorials for fss codes
+4. test & tutorials for (geo)fss codes
 5. 2d inversion on a sphere
     - cubed sphere
         - book keeping for adjacent blocks

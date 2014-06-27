@@ -12,9 +12,9 @@ function [axc,xc]=split_auto_correlations(xc,cmpflag)
 %     [AXC,XC]=SPLIT_AUTO_CORRELATIONS(XC,CMPFLAG) ignores component codes
 %     when deciding autocorrelations when CMPFLAG=FALSE.  This is useful
 %     for detecting "auto" correlations between components of the same
-%     station (ie. between horizontals).  The default is CMPFLAG=TRUE and
-%     requires component codes to be exactly the same for autocorrelation
-%     detection.
+%     station (ie. between horizontals).  The default is CMPFLAG=FALSE.
+%     CMPFLAG=TRUE requires component codes to be exactly the same for
+%     autocorrelation detection.
 %
 %    Notes:
 %
@@ -32,9 +32,11 @@ function [axc,xc]=split_auto_correlations(xc,cmpflag)
 %        Oct. 21, 2012 - initial version
 %        Jan. 28, 2013 - doc update
 %        Sep. 20, 2013 - updated See also section, dropped time requirement
+%        May  30, 2014 - cmpflag default switched to false as this is more
+%                        generally useful
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 20, 2013 at 13:30 GMT
+%     Last Updated May  30, 2014 at 13:30 GMT
 
 % todo:
 
@@ -42,7 +44,7 @@ function [axc,xc]=split_auto_correlations(xc,cmpflag)
 error(nargchk(1,2,nargin));
 
 % default cmpflag
-if(nargin<2 || isempty(cmpflag)); cmpflag=true; end
+if(nargin<2 || isempty(cmpflag)); cmpflag=false; end
 if(~isscalar(cmpflag) || ~islogical(cmpflag))
     error('seizmo:split_auto_correlations:badInput',...
         'CMPFLAG must be TRUE or FALSE!');

@@ -20,7 +20,7 @@ function [xc]=rotate_correlations(xc,to)
 %         doi: 10.1111/j.1365-246X.2008.03720.x
 %     - Currently requires each set to have the same number of points,
 %       the same sample rate and the same starting lag time.
-%     - The .name fields are altered to match the header info.
+%     - The .name fields are altered to match the new header info.
 %
 %    Header changes:
 %     Master & Slave Fields may be switched (see REVERSE_CORRELATIONS).
@@ -49,9 +49,12 @@ function [xc]=rotate_correlations(xc,to)
 %        Sep. 20, 2013 - properly optimized checking, debugging
 %        Sep. 24, 2013 - to parameter is 'rt' by default and may be omitted
 %        Jan. 15, 2014 - fixed typo in See also list
+%        June  4, 2014 - use different renaming for stacks
+%        June 12, 2014 - handle fd i/o
+%        June 25, 2014 - bugfix: iftype id in getheader call
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 15:05 GMT
+%     Last Updated June 25, 2014 at 15:05 GMT
 
 % todo:
 
@@ -68,8 +71,8 @@ oldseizmocheckstate=seizmocheck_state(false);
 try
     xc=checkheader(xc,...
         'MULCMP_DEP','ERROR',...
-        'NONTIME_IFTYPE','ERROR',...
         'FALSE_LEVEN','ERROR',...
+        'XYZ_IFTYPE','ERROR',...
         'UNSET_ST_LATLON','ERROR',...
         'UNSET_EV_LATLON','ERROR');
     
@@ -89,6 +92,7 @@ try
     verbose=seizmoverbose(false);
     
     % retrieve horizontal sets
+    % - note: does all consistency checking
     [in,set,cmp,rev]=horz_correlations_sets(xc);
     nsets=max(set);
     
@@ -110,10 +114,14 @@ try
     if(any(rev)); xc(rev)=reverse_correlations(xc(rev)); end
     
     % needed header info
-    [maz,saz,mnm,snm,mi,si,az,gcp]=getheader(xc,'user3','cmpaz','kt',...
-        'kname','user0','user1','az','gcp');
+    [maz,saz,mnm,snm,mi,si,az,gcp,iftype]=getheader(xc,'user3','cmpaz',...
+        'kt','kname','user0','user1','az','gcp','iftype id');
     mnmc=char(mnm(:,4));
     snmc=char(snm(:,4));
+    
+    % amph filetype converted to rlim for rotation
+    amph=strcmpi(iftype,'iamph');
+    if(any(amph)); xc(amph)=amph2rlim(xc(amph)); end
     
     % component code check
     if(size(mnmc,2)~=3 || size(snmc,2)~=3)
@@ -131,7 +139,6 @@ try
     [depmin,depmax,depmen]=deal(nan(numel(xc),1));
     for i=1:nsets
         % rotation angles
-        % - note: no consistency check for ev/st/az/gcp header fields
         c1=set==i & cmp==1;
         switch lower(to)
             case {'ne' 'en'}
@@ -174,22 +181,22 @@ try
         
         % update dep*
         if(numel(xc(c1).dep)>0)
-            depmin(c1)=min(xc(c1).dep);
-            depmax(c1)=max(xc(c1).dep);
-            depmen(c1)=nanmean(xc(c1).dep);
+            depmin(c1)=min(xc(c1).dep(:));
+            depmax(c1)=max(xc(c1).dep(:));
+            depmen(c1)=nanmean(xc(c1).dep(:));
             if(any(c2))
-                depmin(c2)=min(xc(c2).dep);
-                depmax(c2)=max(xc(c2).dep);
-                depmen(c2)=nanmean(xc(c2).dep);
+                depmin(c2)=min(xc(c2).dep(:));
+                depmax(c2)=max(xc(c2).dep(:));
+                depmen(c2)=nanmean(xc(c2).dep(:));
             end
             if(any(c3))
-                depmin(c3)=min(xc(c3).dep);
-                depmax(c3)=max(xc(c3).dep);
-                depmen(c3)=nanmean(xc(c3).dep);
+                depmin(c3)=min(xc(c3).dep(:));
+                depmax(c3)=max(xc(c3).dep(:));
+                depmen(c3)=nanmean(xc(c3).dep(:));
             end
-            depmin(c4)=min(xc(c4).dep);
-            depmax(c4)=max(xc(c4).dep);
-            depmen(c4)=nanmean(xc(c4).dep);
+            depmin(c4)=min(xc(c4).dep(:));
+            depmax(c4)=max(xc(c4).dep(:));
+            depmen(c4)=nanmean(xc(c4).dep(:));
         end
         
         % detail message
@@ -233,6 +240,9 @@ try
     xc=changeheader(xc,'depmin',depmin,'depmax',depmax,'depmen',depmen,...
         'cmpaz',saz,'user3',maz,'kcmpnm',snmc,'kt3',mnmc);
     
+    % convert amph back
+    if(any(amph)); xc(amph)=rlim2amph(xc(amph)); end
+    
     % toggle verbosity back
     seizmoverbose(verbose);
     
@@ -252,11 +262,15 @@ catch
 end
 
 % update names
-d=['%0' num2str(fix(log10(max([mi;si])))+1) 'd'];
-name=strcat(...
-    'CORR_-_MASTER_-_REC',num2str(mi,d),'_-_',mnm(:,1),'.',mnm(:,2),'.',...
-    mnm(:,3),'.',mnmc,'_-_SLAVE_-_REC',num2str(si,d),'_-_',snm(:,1),'.',...
-    snm(:,2),'.',snm(:,3),'.',snmc);
+if(strncmp('CORR_',xc(1).name,5)) % renaming correlations
+    d=['%0' num2str(fix(log10(max([mi;si])))+1) 'd'];
+    name=strcat('CORR_-_MASTER_-_REC',num2str(mi,d),'_-_',mnm(:,1),'.',...
+        mnm(:,2),'.',mnm(:,3),'.',mnmc,'_-_SLAVE_-_REC',num2str(si,d),...
+        '_-_',snm(:,1),'.',snm(:,2),'.',snm(:,3),'.',snmc);
+else % renaming stacks
+    name=strcat(mnm(:,1),'.',mnm(:,2),'.',mnm(:,3),'.',mnmc,'_-_',...
+        snm(:,1),'.',snm(:,2),'.',snm(:,3),'.',snmc);
+end
 [xc.name]=deal(name{:});
 
 end

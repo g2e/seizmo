@@ -38,9 +38,10 @@ function [lgc,missing]=is_full_matrix_of_correlations(xc)
 %     Version History:
 %        Sep. 19, 2013 - initial version
 %        Jan. 15, 2014 - fixed warning id
+%        June 12, 2014 - handle fd i/o
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 15, 2014 at 15:05 GMT
+%     Last Updated June 12, 2014 at 15:05 GMT
 
 % todo:
 
@@ -58,7 +59,7 @@ try
     % check headers
     xc=checkheader(xc,...
         'MULCMP_DEP','ERROR',...
-        'NONTIME_IFTYPE','ERROR',...
+        'XYZ_IFTYPE','ERROR',...
         'FALSE_LEVEN','ERROR',...
         'UNSET_ST_LATLON','ERROR',...
         'UNSET_EV_LATLON','ERROR');

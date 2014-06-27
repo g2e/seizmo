@@ -66,11 +66,14 @@ function [varargout]=plotfss(s,varargin)
 %        Apr.  4, 2012 - minor doc update
 %        Sep. 12, 2012 - adapted from plotfkmap
 %        Sep. 27, 2012 - spectra to db simplified
+%        Mar. 25, 2014 - scale unwhitened spectra appropriately
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Sep. 27, 2012 at 10:50 GMT
+%     Last Updated Mar. 25, 2014 at 10:50 GMT
 
 % todo:
+% - pv passthrough
+% - remove redundant code
 
 % check nargin
 error(nargchk(1,6,nargin));
@@ -129,8 +132,7 @@ end
 dblim=sort([dblim(1) dblim(2)]);
 
 % scale factor if unwhitened
-% - this is probably not right
-if(~s.whiten); s.spectra=s.spectra/(2*pi); end
+if(~s.whiten); s.spectra=2*s.delta*s.spectra/s.npts; end
 
 % convert to dB
 s.spectra=10*log10(abs(s.spectra));
@@ -256,7 +258,7 @@ end
 dblim=sort([dblim(1) dblim(2)]);
 
 % scale factor if unwhitened
-if(~s.whiten); s.spectra=s.spectra/(2*pi); end
+if(~s.whiten); s.spectra=2*s.delta*s.spectra/s.npts; end
 
 % convert to dB
 s.spectra=10*log10(abs(s.spectra));
