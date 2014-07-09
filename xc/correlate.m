@@ -33,9 +33,13 @@ function [data]=correlate(master,varargin)
 %     function DFT for more info).  Note that the spectral amplitudes do
 %     NOT include the DELTA factor included by DFT so converting back to
 %     the time-domain using IDFT requires multiplication by the time-domain
-%     DELTA!  This option is ignored if the 'PEAKS' option is set!  This
-%     option causes the 'ABSXC' & [LAGMIN LAGMAX] options to be ignored
-%     (unless the 'PEAKS' option is set)!
+%     DELTA as well as a few other adjustments - see the example in the
+%     function DEPHASE_CORRELATIONS for details!  Please note that regular
+%     correlograms and coherency correlograms have a different number of
+%     spectral points as coherency correlograms need more resolution to
+%     avoid aliasing issues.  The 'FDOUT' option is ignored if the 'PEAKS'
+%     option is set!  This option also causes the 'ABSXC' & [LAGMIN LAGMAX]
+%     options to be ignored unless the 'PEAKS' option is set!
 %
 %     CORRELOGRAMS=CORRELATE(...,'NORMXC',...) outputs correlograms that
 %     are normalized by the zero lag value of the autocorrelations.  The
@@ -50,10 +54,10 @@ function [data]=correlate(master,varargin)
 %     the range from -1 to 1, with 1 being a perfectly coherent correlation
 %     between the two records and -1 a perfectly coherent anticorrelation.
 %     Please be aware that converting the coherency correlograms to the
-%     time-domain can affect the frequency values due to windowing.  This
-%     can be avoided by setting FDOUT to TRUE.  This option requires more
-%     computation time as autocorrelations must be computed.  The NORMXC
-%     option is ignored when this option is set.
+%     time-domain can affect the frequency values due to windowing of the
+%     data.  This can be avoided by setting FDOUT to TRUE.  The 'COHERENCY'
+%     option requires more computation time as autocorrelations must be
+%     computed.  The NORMXC option is ignored when this option is set.
 %
 %     CORRELOGRAMS=CORRELATE(...,'MCXC',...) cross correlates all possible
 %     pairings between the MASTER & SLAVE datasets (or if only the MASTER
@@ -114,7 +118,9 @@ function [data]=correlate(master,varargin)
 %       all your records have equal number of time domain points, this
 %       requires setting POW2PAD=1 or, if the number of points varies
 %       between records, setting POW2PAD=1i*2^NEXTPOW2(2*MAX(NPTS)-1) in
-%       DFT when making the frequency domain data will be enough.
+%       DFT when making the frequency domain data will be enough.  For
+%       coherency correlograms it is best to double or triple this
+%       requirement.
 %     - The correlograms are given filenames using the following format:
 %       CORR_-_MASTER_-_REC<idx>_-_<kname>_-_SLAVE_-_REC<idx>_-_<kname>
 %       where <idx> is the index of the record in MASTER/SLAVE and <kname>
@@ -233,12 +239,12 @@ function [data]=correlate(master,varargin)
 %        June 24, 2014 - fd output is now dephased by default
 %        June 25, 2014 - bugfix: t2 header field now set, t3/t4 are b/e
 %                        slave field relative times (from slave reftime)
+%        July  8, 2014 - turned on 2x length multiplier for coherency
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2014 at 15:05 GMT
+%     Last Updated July  8, 2014 at 15:05 GMT
 
 % todo:
-% - coherency length needs to be longer to be accurate in normal range
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -361,9 +367,9 @@ elseif(coherency && normxc)
 end
 
 % coherency needs to be LENMULxcorrelogram length in the
-% frequency-domain to recover the time-domain values accurately
+% time-domain to recover the time-domain values accurately
 % - testing found that LENMUL=2 avoided wrapping significant energy
-%if(coherency); lenmul=2; else lenmul=1; end
+if(coherency); lenmul=2; else lenmul=1; end
 
 % initial checks & adjustments
 if(twodata)

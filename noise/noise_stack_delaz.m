@@ -52,6 +52,9 @@ function [data]=noise_stack_delaz(data,dstep,azstep,ztrans)
 %     Last Updated June 23, 2014 at 11:15 GMT
 
 % todo:
+% - fd i/o
+% - t3/t4 fields
+% - anything else for c3?
 
 % check nargin
 error(nargchk(1,4,nargin));

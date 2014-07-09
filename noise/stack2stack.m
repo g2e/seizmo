@@ -6,10 +6,10 @@ function []=stack2stack(stackdir,newspan,varargin)
 %
 %    Description:
 %     STACK2STACK(STACKDIR,NEWSPAN) stacks noise correlation stacks within
-%     the directory STACKDIR and outputs the resulting stacks under at the
-%     same directory level with the name determined by STACKDIR & NEWSPAN.
-%     The directory layout of OUTDIR (the directory above STACKDIR and
-%     created by NOISE_STACK) is as follows:
+%     the directory STACKDIR and outputs the resulting stacks at the same
+%     directory level with the name determined by STACKDIR & NEWSPAN.  The
+%     directory layout of OUTDIR (the directory above STACKDIR and created
+%     by NOISE_STACK) is as follows:
 %
 %      OUTDIR
 %           |
@@ -104,6 +104,7 @@ function []=stack2stack(stackdir,newspan,varargin)
 %     stack2stack('outdir/zz_day_twoway','yrmo')
 %
 %    See also: NOISE_STACK, NOISE_SETUP, NOISE_PROCESS, NOISE_OVERVIEW
+%              NOISE_STACK_ARBITRARY, NOISE_STACK_DELAZ
 
 %     Version History:
 %        Apr.  6, 2013 - initial version
@@ -118,9 +119,10 @@ function []=stack2stack(stackdir,newspan,varargin)
 %        May  29, 2014 - bugfix: headers/filenames now updated, bugfix:
 %                        now catches error for global variable resetting
 %        June  4, 2014 - also set t0 & t1 header fields
+%        July  8, 2014 - edits for irlim fd i/o, set t3-4 header fields
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June  4, 2014 at 11:15 GMT
+%     Last Updated July  8, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -506,6 +508,9 @@ oldcheckheaderstate=checkheader_state(false);
 % for autodetecting if output is .mat or SAC files
 opt.MATIO=[];
 
+% for filetype checking
+common_iftype=[];
+
 % loop over stack time spans
 %parfor s=1:size(spanbgn,1) % PARALLEL
 for s=1:size(spanbgn,1) % SERIAL
@@ -551,7 +556,7 @@ for s=1:size(spanbgn,1) % SERIAL
                 & timediff(send,tsend)<=0);
     end
     
-    % skip in no timesections found
+    % skip if no timesections found
     if(isempty(in)); continue; end
     
     % detail message
@@ -594,12 +599,28 @@ for s=1:size(spanbgn,1) % SERIAL
         end
         if(isempty(data)); continue; end
         
-        % require records are correlations
-        [kuser0,kuser1]=getheader(data,'kuser0','kuser1');
+        % require records are correlations & all the same filetype
+        [kuser0,kuser1,iftype]=getheader(data,...
+            'kuser0','kuser1','iftype id');
         xc=strcmp(kuser0,'MASTER') & strcmp(kuser1,'SLAVE');
         if(~all(xc))
             error('seizmo:stack2stack:badInput',...
-                'INDIR contains non-correlations!');
+                'STACKDIR contains non-correlations!');
+        elseif(numel(unique(iftype))~=1)
+            error('seizmo:stack2stack:badInput',...
+                'STACKDIR contains mixed correlation filetypes!');
+        elseif(strcmpi(iftype(1),'iamph'))
+            error('seizmo:stack2stack:badInput',...
+                'STACKDIR contains correlations of IAMPH filetype!');
+        end
+        
+        % now check filetype is consistent across directories
+        iftype=iftype(1);
+        if(isempty(common_iftype))
+            common_iftype=iftype;
+        elseif(~strcmpi(common_iftype,iftype))
+            error('seizmo:stack2stack:badInput',...
+                'Correlations must all share the same filetype!');
         end
         
         % limit to the stations that the user allows
@@ -769,6 +790,7 @@ for s=1:size(spanbgn,1) % SERIAL
     sdata=changeheader(sdata,'scale',sscale,...
         'a',0,'f',timediff(sbgn,send,'utc'),...
         't0',0,'t1',timediff(sbgn,send,'utc'),...
+        't3',0,'t4',timediff(sbgn,send,'utc'),...
         'z',spanref,'iztype','ia');
     
     % write out stack of stacks

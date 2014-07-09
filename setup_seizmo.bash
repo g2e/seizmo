@@ -53,8 +53,8 @@ unzip seizmo_mapping_features.zip
 # get export_fig
 mkdir -p export_fig
 cd export_fig
-wget http://www.mathworks.com/matlabcentral/fileexchange/downloads/479869/download
-mv download export_fig.zip
+wget https://github.com/ojwoodford/export_fig/archive/master.zip
+mv master export_fig.zip
 unzip export_fig.zip
 mv export_fig.zip ..
 cd ..

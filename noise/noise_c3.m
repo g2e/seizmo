@@ -50,7 +50,7 @@ function [sdata]=noise_c3(data,varargin)
 %       this issue (but no guarantees!).
 %
 %    Header changes: SCALE, DEP*
-%     A, F, T0, T1, REFTIME may change (if they vary amongst records)
+%     A, F, T0-1, T3-4, REFTIME may change (if they vary amongst records)
 %     VRAYL  => RESP0
 %     WINOFF => RESP1
 %     WINLEN => RESP2

@@ -109,7 +109,8 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %     % Several people like to use the symmetric component:
 %     noise_stack('ncfs','stacks','zz','xccmp','sym')
 %
-%    See also: NOISE_SETUP, NOISE_PROCESS, NOISE_OVERVIEW
+%    See also: NOISE_SETUP, NOISE_PROCESS, NOISE_OVERVIEW, STACK2STACK,
+%              NOISE_STACK_ARBITRARY, NOISE_STACK_DELAZ
 
 %     Version History:
 %        June 20, 2010 - added to seizmo, fixed bug that would replace
@@ -145,9 +146,10 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %                        multiple filenames for FILENAMES option
 %        June  4, 2014 - also set t0 & t1 header fields
 %        June 25, 2014 - edits for irlim fd i/o
+%        July  8, 2014 - set t3-4 header fields
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2014 at 11:15 GMT
+%     Last Updated July  8, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -481,7 +483,7 @@ try
                         & timediff(send,tsend)<=0);
             end
             
-            % skip in no timesections found
+            % skip if no timesections found
             if(isempty(in)); continue; end
             
             % detail message
@@ -768,6 +770,7 @@ try
                     sdata{p}=changeheader(sdata{p},'scale',sscale{p},...
                         'a',0,'f',timediff(sbgn,send,'utc'),...
                         't0',0,'t1',timediff(sbgn,send,'utc'),...
+                        't3',0,'t4',timediff(sbgn,send,'utc'),...
                         'z',spanref,'iztype','ia');
                     
                     % for de-dup

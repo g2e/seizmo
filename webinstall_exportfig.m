@@ -37,9 +37,10 @@ function [ok]=webinstall_exportfig(mypath)
 %                        updated See also list
 %        Jan. 27, 2014 - added isabspath for abs path fix to path option
 %        Feb. 27, 2014 - updated See also list
+%        July  9, 2014 - update for export_fig being moved to github
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Feb. 27, 2014 at 15:25 GMT
+%     Last Updated July  9, 2014 at 15:25 GMT
 
 % todo:
 
@@ -72,8 +73,7 @@ try
     exportfig='export_fig.zip';
     
     % grab file
-    url=['http://www.mathworks.com/matlabcentral/fileexchange/' ...
-        '23629-exportfig?controller=file_infos&download=true'];
+    url='https://github.com/ojwoodford/export_fig/archive/master.zip';
     disp([' Getting ' exportfig]);
     if(exist(exportfig,'file'))
         if(~exist([mypath fs exportfig],'file'))

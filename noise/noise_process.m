@@ -183,7 +183,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %                        shortcircuit was too high, added c3 shortcircuits
 %        June 25, 2014 - added coherency, fdout & noauto correlate options,
 %                        c3 options now passed to noise_c3, flat tdstyle
-%                        option (baded on Weaver et al 2011)
+%                        option (based on Weaver et al 2011)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
 %     Last Updated June 25, 2014 at 11:15 GMT
