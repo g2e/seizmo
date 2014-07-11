@@ -12,7 +12,15 @@ if(any(good))
     value(good)=mod(value(good)+180,360);
 end
 
+% find baz header field position
+for i=1:numel(def.real)
+    if(isfield(def.real(i).pos,'baz'))
+        baz=def.real(i).pos.baz;
+        break;
+    end
+end
+
 % set header
-head(def.baz,:)=value.';
+head(baz,:)=value.';
 
 end

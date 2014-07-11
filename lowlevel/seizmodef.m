@@ -73,9 +73,10 @@ function [def]=seizmodef(filetype,version,usecache)
 %        Aug. 11, 2010 - added globalcmt project (+quick) to imagsrc and
 %                        several synthetic seismogram categories for isynth
 %        Jan. 30, 2012 - doc update, 6utc/6tai changed to utc6/tai6
+%        July 11, 2014 - drop baz hack for vh_*_gcp
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Jan. 30, 2012 at 21:00 GMT
+%     Last Updated July 11, 2014 at 21:00 GMT
 
 % todo:
 
@@ -256,9 +257,6 @@ if(strcmpi(filetype,'SEIZMO Binary') || strcmpi(filetype,'SAC Binary'))
     %   return any useful reference timing info from the header
     % - currently assumed to go year,jday,hour,min,sec,msec
     def.reftime=71:76;
-    
-    % another hack like the above
-    def.baz=53;
     
     % begin header section descriptions
     def.real.startbyte=0;
