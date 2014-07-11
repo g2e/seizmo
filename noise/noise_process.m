@@ -191,6 +191,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 % todo:
 % - 3cmp support
 %   - requires rotate3_correlations
+% - interpolate seismograms not correlograms
+%   - this is just an efficiency change
+%   - is it worth it? - probably but we have to change the steps
+% - cite weaver 2011
 
 % check nargin
 error(nargchk(2,inf,nargin));

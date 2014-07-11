@@ -52,14 +52,12 @@ function [sdata]=noise_stack_arbitrary(indirs,varargin)
 %                        false), added FILENAMES option
 %        May  29, 2014 - bugfix: headers/filenames now updated, bugfix:
 %                        now catches error for global variable resetting
+%        July 11, 2014 - fd i/o
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated May  29, 2014 at 11:15 GMT
+%     Last Updated July 11, 2014 at 11:15 GMT
 
 % todo:
-% - fd i/o
-% - t3/t4 fields
-% - anything else for c3?
 
 % check nargin
 error(nargchk(1,1,nargin));
@@ -95,6 +93,9 @@ verbose=seizmoverbose(false);
 % turn off checking
 oldseizmocheckstate=seizmocheck_state(false);
 oldcheckheaderstate=checkheader_state(false);
+
+% for filetype checking
+common_iftype=[];
 
 % attempt stacking
 try
@@ -133,12 +134,25 @@ try
         end
         if(isempty(data)); continue; end
         
-        % require records are correlations
-        [kuser0,kuser1]=getheader(data,'kuser0','kuser1');
+        % require records are correlations & all the same filetype
+        [kuser0,kuser1,iftype]=getheader(data,...
+            'kuser0','kuser1','iftype id');
         xc=strcmp(kuser0,'MASTER') & strcmp(kuser1,'SLAVE');
         if(~all(xc))
             error('seizmo:noise_stack_arbitrary:badInput',...
                 'INDIR contains non-correlations!');
+        elseif(numel(unique(iftype))~=1)
+            error('seizmo:noise_stack_arbitrary:badInput',...
+                'INDIR contains mixed correlation filetypes!');
+        end
+        
+        % now check filetype is consistent across directories
+        iftype=iftype(1);
+        if(isempty(common_iftype))
+            common_iftype=iftype;
+        elseif(~strcmpi(common_iftype,iftype))
+            error('seizmo:noise_stack_arbitrary:badInput',...
+                'Correlations must all share the same filetype!');
         end
         
         % limit to the stations that the user allows
@@ -199,16 +213,30 @@ try
         % read in data (if not MATFILE input)
         if(~opt.MATIO_THIS_TIME); data=readdata(data); end
         
+        % get reversed data
+        rdata=reverse_correlations(data);
+        
+        % convert fd to cplx
+        switch lower(common_iftype)
+            case 'irlim'
+                data=solofun(data,@(x)complex(x(:,1),x(:,2)));
+                rdata=solofun(rdata,@(x)complex(x(:,1),x(:,2)));
+            case 'iamph'
+                data=solofun(data,@(x)x(:,1).*exp(1j*x(:,2)));
+                rdata=solofun(rdata,@(x)x(:,1).*exp(1j*x(:,2)));
+        end
+        
         % apply Fisher's transform
-        if(opt.ZTRANS); data=solofun(data,'@fisher'); end
+        if(opt.ZTRANS)
+            data=solofun(data,'@fisher');
+            rdata=solofun(rdata,'@fisher');
+        end
         
         % multiply by scale
         % - this allows weighted stacks
         scale(isnan(scale))=1;
         data=multiply(data,scale);
-        
-        % get reversed data
-        rdata=reverse_correlations(data);
+        rdata=multiply(rdata,scale);
         
         % for debugging
         for i=1:numel(data)
@@ -267,6 +295,15 @@ try
     
     % unapply Fisher's transform
     if(opt.ZTRANS); sdata=solofun(sdata,'@ifisher'); end
+    
+    % convert cplx to fd
+    % - updates dep* to not be complex
+    switch lower(common_iftype)
+        case 'irlim'
+            sdata=solofun(sdata,@(x)[real(x),imag(x)]);
+        case 'iamph'
+            sdata=solofun(sdata,@(x)[abs(x),angle(x)]);
+    end
     
     % rename
     sdata=changename(sdata,'name',strcat(snamem,'_-_',snames));

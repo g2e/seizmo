@@ -120,9 +120,11 @@ function []=stack2stack(stackdir,newspan,varargin)
 %                        now catches error for global variable resetting
 %        June  4, 2014 - also set t0 & t1 header fields
 %        July  8, 2014 - edits for irlim fd i/o, set t3-4 header fields
+%        July 11, 2014 - fd is converted to complex so Fisher transform
+%                        works properly (FISHER was updated), iamph ok
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  8, 2014 at 11:15 GMT
+%     Last Updated July 11, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -609,9 +611,6 @@ for s=1:size(spanbgn,1) % SERIAL
         elseif(numel(unique(iftype))~=1)
             error('seizmo:stack2stack:badInput',...
                 'STACKDIR contains mixed correlation filetypes!');
-        elseif(strcmpi(iftype(1),'iamph'))
-            error('seizmo:stack2stack:badInput',...
-                'STACKDIR contains correlations of IAMPH filetype!');
         end
         
         % now check filetype is consistent across directories
@@ -681,16 +680,30 @@ for s=1:size(spanbgn,1) % SERIAL
         % read in data (if not MATFILE input)
         if(~opt.MATIO_THIS_TIME); data=readdata(data); end
         
+        % get reversed data
+        rdata=reverse_correlations(data);
+        
+        % convert fd to cplx
+        switch lower(common_iftype)
+            case 'irlim'
+                data=solofun(data,@(x)complex(x(:,1),x(:,2)));
+                rdata=solofun(rdata,@(x)complex(x(:,1),x(:,2)));
+            case 'iamph'
+                data=solofun(data,@(x)x(:,1).*exp(1j*x(:,2)));
+                rdata=solofun(rdata,@(x)x(:,1).*exp(1j*x(:,2)));
+        end
+        
         % apply Fisher's transform
-        if(opt.ZTRANS); data=solofun(data,'@fisher'); end
+        if(opt.ZTRANS)
+            data=solofun(data,'@fisher');
+            rdata=solofun(rdata,'@fisher');
+        end
         
         % multiply by scale
         % - this allows weighted stacks
         scale(isnan(scale))=1;
         data=multiply(data,scale);
-        
-        % get reversed data
-        rdata=reverse_correlations(data);
+        rdata=multiply(rdata,scale);
         
         % for debugging
         for i=1:numel(data)
@@ -782,6 +795,15 @@ for s=1:size(spanbgn,1) % SERIAL
     
     % unapply Fisher's transform
     if(opt.ZTRANS); sdata=solofun(sdata,'@ifisher'); end
+    
+    % convert cplx to fd
+    % - updates dep* to not be complex
+    switch lower(common_iftype)
+        case 'irlim'
+            sdata=solofun(sdata,@(x)[real(x),imag(x)]);
+        case 'iamph'
+            sdata=solofun(sdata,@(x)[abs(x),angle(x)]);
+    end
     
     % rename
     sdata=changename(sdata,'name',strcat(snamem,'_-_',snames));

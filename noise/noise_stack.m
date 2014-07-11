@@ -147,9 +147,11 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %        June  4, 2014 - also set t0 & t1 header fields
 %        June 25, 2014 - edits for irlim fd i/o
 %        July  8, 2014 - set t3-4 header fields
+%        July 10, 2014 - fd is converted to complex so Fisher transform
+%                        works properly (FISHER was updated), iamph ok
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  8, 2014 at 11:15 GMT
+%     Last Updated July 10, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -537,9 +539,6 @@ try
                 elseif(numel(unique(iftype))~=1)
                     error('seizmo:noise_stack:badInput',...
                         'INDIR contains mixed correlation filetypes!');
-                elseif(strcmpi(iftype(1),'iamph'))
-                    error('seizmo:noise_stack:badInput',...
-                        'INDIR contains correlations of IAMPH filetype!');
                 end
                 
                 % now check filetype is consistent across directories
@@ -624,17 +623,31 @@ try
                 % read in data (if not MATFILE input)
                 if(~opt.MATIO_THIS_TIME); data=readdata(data); end
                 
+                % get reversed data
+                rdata=reverse_correlations(data);
+                
+                % convert fd to cplx
+                switch lower(common_iftype)
+                    case 'irlim'
+                        data=solofun(data,@(x)complex(x(:,1),x(:,2)));
+                        rdata=solofun(rdata,@(x)complex(x(:,1),x(:,2)));
+                    case 'iamph'
+                        data=solofun(data,@(x)x(:,1).*exp(1j*x(:,2)));
+                        rdata=solofun(rdata,@(x)x(:,1).*exp(1j*x(:,2)));
+                end
+                
                 % apply Fisher's transform
-                if(opt.ZTRANS); data=solofun(data,'@fisher'); end
+                if(opt.ZTRANS)
+                    data=solofun(data,'@fisher');
+                    rdata=solofun(rdata,'@fisher');
+                end
                 
                 % multiply by scale
                 % - this allows weighted stacks
                 % - this is also useful for stack2stack
                 scale(isnan(scale))=1;
                 data=multiply(data,scale);
-                
-                % get reversed data
-                rdata=reverse_correlations(data);
+                rdata=multiply(rdata,scale);
                 
                 % for debugging
                 for i=1:numel(data)
@@ -762,6 +775,17 @@ try
                         sdata{p}=solofun(sdata{p},'@ifisher');
                     end
                     
+                    % convert cplx to fd
+                    % - updates dep* to not be complex
+                    switch lower(common_iftype)
+                        case 'irlim'
+                            sdata{p}=solofun(sdata{p},...
+                                @(x)[real(x),imag(x)]);
+                        case 'iamph'
+                            sdata{p}=solofun(sdata{p},...
+                                @(x)[abs(x),angle(x)]);
+                    end
+                    
                     % rename
                     sdata{p}=changename(sdata{p},...
                         'name',strcat(snamem{p},'_-_',snames{p}));
@@ -779,7 +803,9 @@ try
                 
                 % override xccmp for frequency-domain input
                 xclist=opt.XCCMP;
-                if(strcmpi(iftype,'irlim')); xclist={'twoway'}; end
+                if(strcmpi(iftype,{'irlim' 'iamph'}))
+                    xclist={'twoway'};
+                end
                 
                 % xccmp
                 for xc=xclist

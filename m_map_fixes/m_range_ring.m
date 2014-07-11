@@ -26,9 +26,10 @@ function h=m_range_ring(long,lat,range,varargin);
 % This software is provided "as is" without warranty of any kind. But
 % it's mine, so you can't sell it.
 
-% 6/Nov/00 - eliminate returned stuff if ';' neglected (thx to D Byrne)
 % 21/June/10 - use appropriate radius and redraw lines at several
 %              equivalent longitudes (gge)
+% 6/Nov/00 - eliminate returned stuff if ';' neglected (thx to D Byrne)
+% 7/Dec/11 - Octave 3.2.3 compatibility
 
 global MAP_VAR_LIST
 
@@ -41,7 +42,14 @@ if length(varargin)>0 & ~ischar(varargin{1}),
  n=varargin{1};varargin(1)=[];
 end;
 
-
+% Recognize Octave
+a=ver;
+if strcmp(a(1).Name,'Octave'),
+ IsOctave=logical(1);
+else
+ IsOctave=logical(0);
+end;
+ 
 
 c=range(:)'/earth_radius;
 
@@ -97,9 +105,15 @@ for k=1:length(long),
   if length(ed)<length(st), ed=[ed;length(fk)]; end;
   k=find((ed-st)==1);
   XX(st(k))=NaN;
-
-  h=[h;line(XX,YY,varargin{:},'tag','m_range_ring')];
-
+ 
+  if IsOctave,
+     for k=1:size(XX,2),
+         h=[h;line(XX(:,k),YY(:,k),varargin{:},'tag','m_range_ring')];
+     end;
+  else   
+     h=[h;line(XX,YY,varargin{:},'tag','m_range_ring')];
+  end;
+  
 end;
 
 if nargout==0,

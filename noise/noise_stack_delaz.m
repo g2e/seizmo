@@ -47,14 +47,12 @@ function [data]=noise_stack_delaz(data,dstep,azstep,ztrans)
 %        May  29, 2014 - initial version
 %        June  4, 2014 - minor doc update
 %        June 23, 2014 - minor doc update
+%        July 11, 2014 - fd i/o, bugfix: addrecords hack now correct
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 23, 2014 at 11:15 GMT
+%     Last Updated July 11, 2014 at 11:15 GMT
 
 % todo:
-% - fd i/o
-% - t3/t4 fields
-% - anything else for c3?
 
 % check nargin
 error(nargchk(1,4,nargin));
@@ -65,9 +63,15 @@ if(nargin<3 || isempty(azstep)); azstep=360; end
 if(nargin<4 || isempty(ztrans)); ztrans=true; end
 
 % require records are correlations
-if(~all(isxc(data)))
+[kuser0,kuser1,iftype]=getheader(data,...
+    'kuser0','kuser1','iftype id');
+xc=strcmp(kuser0,'MASTER') & strcmp(kuser1,'SLAVE');
+if(~all(xc))
     error('seizmo:noise_stack_delaz:badInput',...
         'NCFS does contains non-correlations!');
+elseif(numel(unique(iftype))~=1)
+    error('seizmo:noise_stack_delaz:badInput',...
+        'NCFS contains mixed correlation filetypes!');
 elseif(~isnumeric(dstep) || ~isscalar(dstep) || dstep<=0)
     error('seizmo:noise_stack_delaz:badInput',...
         'DSTEP must be a positive scalar!');
@@ -86,16 +90,25 @@ oldcheckheaderstate=checkheader_state(false);
 
 % attempt stacking
 try
-    % get some header info
-    [gc,az,scale]=getheader(data,'gcarc','az','scale');
-    
-    % fisher transform data
-    if(ztrans); data=solofun(data,'@fisher'); end
-    
     % for debugging
     for i=1:numel(data)
         data(i).misc.stacknames={[data(i).path data(i).name]};
     end
+    
+    % get some header info
+    [gc,az,scale]=getheader(data,'gcarc','az','scale');
+    
+    % convert fd to cplx
+    iftype=iftype(1);
+    switch lower(iftype)
+        case 'irlim'
+            data=solofun(data,@(x)complex(x(:,1),x(:,2)));
+        case 'iamph'
+            data=solofun(data,@(x)x(:,1).*exp(1j*x(:,2)));
+    end
+    
+    % fisher transform data
+    if(ztrans); data=solofun(data,'@fisher'); end
     
     % multiply by scale
     % - this allows weighted stacks
@@ -167,6 +180,15 @@ try
     % inverse fisher transform data
     if(ztrans); data=solofun(data,'@ifisher'); end
     
+    % convert cplx to fd
+    % - updates dep* to not be complex
+    switch lower(iftype)
+        case 'irlim'
+            data=solofun(data,@(x)[real(x),imag(x)]);
+        case 'iamph'
+            data=solofun(data,@(x)[abs(x),angle(x)]);
+    end
+    
     % rename
     data=changename(data,'name',strcat('DEL_',num2str(dmin),'-',...
         num2str(dmax),'_AZ_',num2str(amin),'-',num2str(amax)));
@@ -189,14 +211,13 @@ checkheader_state(oldcheckheaderstate);
 end
 
 
-function [d1]=addrecords(d1,d2,varargin)
+function [d1]=addrecords(d1,varargin)
 % simple hack for speed (no dep* update)
 try
-    for i=1:numel(d1)
-        d1(i).dep=d1(i).dep+d2(i).dep;
-        d1(i).misc.stacknames=...
-            [d1(i).misc.stacknames; d2(i).misc.stacknames];
-    end
+    d1(1).dep=mean(cat(3,d1.dep),3);
+    d1(1).misc.stacknames=getsubfield(d1,'misc','stacknames');
+    d1(2:end)=[];
+    d1.misc.stacknames=[d1.misc.stacknames{:}]';
 catch
     error('seizmo:noise_stack_arbitrary:badNCFs',...
         'NCFs differ in number of points! Cannot stack!');

@@ -119,8 +119,7 @@ function [data]=correlate(master,varargin)
 %       requires setting POW2PAD=1 or, if the number of points varies
 %       between records, setting POW2PAD=1i*2^NEXTPOW2(2*MAX(NPTS)-1) in
 %       DFT when making the frequency domain data will be enough.  For
-%       coherency correlograms it is best to double or triple this
-%       requirement.
+%       coherency correlograms it is best to triple this requirement.
 %     - The correlograms are given filenames using the following format:
 %       CORR_-_MASTER_-_REC<idx>_-_<kname>_-_SLAVE_-_REC<idx>_-_<kname>
 %       where <idx> is the index of the record in MASTER/SLAVE and <kname>
@@ -240,9 +239,10 @@ function [data]=correlate(master,varargin)
 %        June 25, 2014 - bugfix: t2 header field now set, t3/t4 are b/e
 %                        slave field relative times (from slave reftime)
 %        July  8, 2014 - turned on 2x length multiplier for coherency
+%        July 11, 2014 - changed 2x to 3x multiplier for coherency
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July  8, 2014 at 15:05 GMT
+%     Last Updated July 11, 2014 at 15:05 GMT
 
 % todo:
 
@@ -369,7 +369,8 @@ end
 % coherency needs to be LENMULxcorrelogram length in the
 % time-domain to recover the time-domain values accurately
 % - testing found that LENMUL=2 avoided wrapping significant energy
-if(coherency); lenmul=2; else lenmul=1; end
+%   but is still different from LENMUL=3+ so we use 3
+if(coherency); lenmul=3; else lenmul=1; end
 
 % initial checks & adjustments
 if(twodata)

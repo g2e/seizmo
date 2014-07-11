@@ -69,9 +69,11 @@ function [sdata]=noise_c3(data,varargin)
 
 %     Version History:
 %        June 25, 2014 - initial version
+%        July 11, 2014 - fd is converted to complex so Fisher transform
+%                        works properly (FISHER was updated)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2014 at 11:15 GMT
+%     Last Updated July 11, 2014 at 11:15 GMT
 
 % todo:
 
@@ -265,6 +267,9 @@ try
                     c3{cmp}=correlate(coda{cmp}(in1),...
                         coda{cmp}(in2),'reltime',opt.COHERENCY{:},...
                         opt.NORMXC{:},opt.FDOUT{:});
+                    
+                    % convert fd to cplx
+                    c3{cmp}=solofun(c3{cmp},@(x)complex(x(:,1),x(:,2)));
                 end
                 
                 % apply Fisher's transform
@@ -298,6 +303,10 @@ try
                         c3{4}=correlate(coda{2}(in1),coda{1}(in2),...
                             'reltime',opt.COHERENCY{:},...
                             opt.NORMXC{:},opt.FDOUT{:});
+                        
+                        % convert fd to cplx
+                        c3{3}=solofun(c3{3},@(x)complex(x(:,1),x(:,2)));
+                        c3{4}=solofun(c3{4},@(x)complex(x(:,1),x(:,2)));
                     end
                     
                     % apply Fisher's transform
@@ -353,6 +362,12 @@ try
     
     % unapply Fisher's transform
     if(opt.ZTRANS); sdata=solofun(sdata,'@ifisher'); end
+    
+    % convert cplx to fd
+    % - updates dep* to not be complex
+    if(~isempty(opt.FDOUT))
+        sdata=solofun(sdata,@(x)[real(x),imag(x)]);
+    end
     
     % update headers
     sdata=changeheader(sdata,'scale',sscale,'resp0',opt.VRAYL,...

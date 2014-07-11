@@ -54,6 +54,7 @@ function m_gshhs(resolution,varargin);
 %  reduce the hierarchy of M_GSHHS_* routines to a single routine with a
 %  variable resolution input:
 % 20/Jan/2008 - added borders and rivers from gshhs v1.10
+% 4/DEc/11 - isstr to ischar
 
 % Root of directories where gshhs_X.b files live
 % - I've put the files on the path so no need for this
@@ -65,7 +66,7 @@ typ_list=char('c','b','r');
 typ_names={'gshhs_','wdb_borders_','wdb_rivers_'};
 
 typ=1;
-if isstr(resolution),
+if ischar(resolution),
  if length(resolution)>=2,
    typ = strmatch(lower(resolution(2)),typ_list);
  end;  
