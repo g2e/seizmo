@@ -122,9 +122,11 @@ function []=stack2stack(stackdir,newspan,varargin)
 %        July  8, 2014 - edits for irlim fd i/o, set t3-4 header fields
 %        July 11, 2014 - fd is converted to complex so Fisher transform
 %                        works properly (FISHER was updated), iamph ok
+%        July 17, 2014 - bugfix: solofun needs func handles not strings,
+%                        bugfix: convert iftype to string
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 11, 2014 at 11:15 GMT
+%     Last Updated July 17, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -614,7 +616,7 @@ for s=1:size(spanbgn,1) % SERIAL
         end
         
         % now check filetype is consistent across directories
-        iftype=iftype(1);
+        iftype=iftype{1};
         if(isempty(common_iftype))
             common_iftype=iftype;
         elseif(~strcmpi(common_iftype,iftype))
@@ -695,8 +697,8 @@ for s=1:size(spanbgn,1) % SERIAL
         
         % apply Fisher's transform
         if(opt.ZTRANS)
-            data=solofun(data,'@fisher');
-            rdata=solofun(rdata,'@fisher');
+            data=solofun(data,@fisher);
+            rdata=solofun(rdata,@fisher);
         end
         
         % multiply by scale
@@ -794,7 +796,7 @@ for s=1:size(spanbgn,1) % SERIAL
     sdata=divide(sdata,sscale);
     
     % unapply Fisher's transform
-    if(opt.ZTRANS); sdata=solofun(sdata,'@ifisher'); end
+    if(opt.ZTRANS); sdata=solofun(sdata,@ifisher); end
     
     % convert cplx to fd
     % - updates dep* to not be complex

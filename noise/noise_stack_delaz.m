@@ -48,9 +48,11 @@ function [data]=noise_stack_delaz(data,dstep,azstep,ztrans)
 %        June  4, 2014 - minor doc update
 %        June 23, 2014 - minor doc update
 %        July 11, 2014 - fd i/o, bugfix: addrecords hack now correct
+%        July 17, 2014 - bugfix: solofun needs func handles not strings,
+%                        bugfix: convert iftype to string
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 11, 2014 at 11:15 GMT
+%     Last Updated July 17, 2014 at 11:15 GMT
 
 % todo:
 
@@ -99,7 +101,7 @@ try
     [gc,az,scale]=getheader(data,'gcarc','az','scale');
     
     % convert fd to cplx
-    iftype=iftype(1);
+    iftype=iftype{1};
     switch lower(iftype)
         case 'irlim'
             data=solofun(data,@(x)complex(x(:,1),x(:,2)));
@@ -108,7 +110,7 @@ try
     end
     
     % fisher transform data
-    if(ztrans); data=solofun(data,'@fisher'); end
+    if(ztrans); data=solofun(data,@fisher); end
     
     % multiply by scale
     % - this allows weighted stacks
@@ -178,7 +180,7 @@ try
     data=divide(data,sscale);
     
     % inverse fisher transform data
-    if(ztrans); data=solofun(data,'@ifisher'); end
+    if(ztrans); data=solofun(data,@ifisher); end
     
     % convert cplx to fd
     % - updates dep* to not be complex

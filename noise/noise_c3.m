@@ -71,11 +71,18 @@ function [sdata]=noise_c3(data,varargin)
 %        June 25, 2014 - initial version
 %        July 11, 2014 - fd is converted to complex so Fisher transform
 %                        works properly (FISHER was updated)
+%        July 17, 2014 - bugfix: solofun needs func handles not strings,
+%                        bugfix: fix option naming, bugfix: fix creation of
+%                        option defaults, output is column vector
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 11, 2014 at 11:15 GMT
+%     Last Updated July 17, 2014 at 11:15 GMT
 
 % todo:
+% - result does not look impressive so we need to do a step by step check
+%   - where is the coda window (make a nice plot)
+%   - all correlations for a pair
+%   - stacks of each xccmp type
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -168,6 +175,8 @@ try
     [gcarc,mnm,snm,scale,t0utc,t1utc,delta,b,e]=getheader(data,...
         'gcarc','kt','kname','scale','t0 utc','t1 utc','delta','b','e');
     scale(isnan(scale))=1;
+    t0utc=cell2mat(t0utc);
+    t1utc=cell2mat(t1utc);
     
     % delta values must match for all records
     if(numel(unique(delta))~=1)
@@ -177,20 +186,20 @@ try
     delta=delta(1);
     
     % extract coda
-    tRAYL=gcarc*6371*pi/180/opt.VRAYL;
-    ncodapts=ceil(opt.WINLEN/delta)+1;
-    switch opt.XCCMP
+    tRAYL=gcarc*6371*pi/180/opt.C3VRAYL;
+    ncodapts=ceil(opt.C3WINLEN/delta)+1;
+    switch opt.C3XCCMP
         case 'causal'
-            coda{1}=cut(data,tRAYL+opt.WINOFF,'n',ncodapts,'pad',true);
+            coda{1}=cut(data,tRAYL+opt.C3WINOFF,'n',ncodapts,'pad',true);
         case 'acausal'
             coda{1}=cut(changeheader(reverse(data),'b',-e,'e',-b),...
-                tRAYL+opt.WINOFF,'n',ncodapts,'pad',true);
+                tRAYL+opt.C3WINOFF,'n',ncodapts,'pad',true);
         case {'both' 'xboth'}
-            coda{1}=cut(data,tRAYL+opt.WINOFF,'n',ncodapts,'pad',true);
+            coda{1}=cut(data,tRAYL+opt.C3WINOFF,'n',ncodapts,'pad',true);
             coda{2}=cut(changeheader(reverse(data),'b',-e,'e',-b),...
-                tRAYL+opt.WINOFF,'n',ncodapts,'pad',true);
+                tRAYL+opt.C3WINOFF,'n',ncodapts,'pad',true);
         case 'sym'
-            coda{1}=cut(symmetric_correlations(data),tRAYL+opt.WINOFF,...
+            coda{1}=cut(symmetric_correlations(data),tRAYL+opt.C3WINOFF,...
                 'n',ncodapts,'pad',true);
     end
     nsets=numel(coda);
@@ -213,10 +222,10 @@ try
     idx2=reshape(idx2,nrecs,2);
     
     % master station list
-    if(isempty(opt.STNLIST))
+    if(isempty(opt.C3STNLIST))
         midx=(1:nstns).';
     else % subset
-        [midx,midx]=intersect(stns,opt.STNLIST);
+        [midx,midx]=intersect(stns,opt.C3STNLIST);
         if(isempty(midx))
             error('seizmo:noise_c3:noCodaStns',...
                 'No coda match station list in STNLIST!');
@@ -273,14 +282,14 @@ try
                 end
                 
                 % apply Fisher's transform
-                if(opt.ZTRANS); c3{cmp}=solofun(c3{cmp},'@fisher'); end
+                if(opt.C3ZTRANS); c3{cmp}=solofun(c3{cmp},@fisher); end
                 
                 % multiply by scale
                 c3{cmp}=multiply(c3{cmp},scale(in1).*scale(in2));
             end
             
             % cross acausal/causal coda correlation
-            switch opt.XCCMP
+            switch opt.C3XCCMP
                 case 'xboth'
                     % frequency- or time-domain?
                     if(isempty(opt.FDOUT)) % time
@@ -310,8 +319,8 @@ try
                     end
                     
                     % apply Fisher's transform
-                    if(opt.ZTRANS); c3{3}=solofun(c3{3},'@fisher'); end
-                    if(opt.ZTRANS); c3{4}=solofun(c3{4},'@fisher'); end
+                    if(opt.ZTRANS); c3{3}=solofun(c3{3},@fisher); end
+                    if(opt.ZTRANS); c3{4}=solofun(c3{4},@fisher); end
                     
                     % multiply by scale
                     c3{3}=multiply(c3{3},scale(in1).*scale(in2));
@@ -323,19 +332,19 @@ try
             
             % stack
             cnt=cnt+1; % increment c3 counter
-            sdata(cnt)=addrecords(c3{:});
+            sdata(cnt,1)=addrecords(c3{:});
             sscale(cnt)=sum(nsets*scale(in1).*scale(in2));
             ncoda(cnt)=nin;
             
             % time range of input data
-            [mint0,mint0]=min(timediff(t0utc(in1(1)),t0utc(in1),'utc'));
-            [maxt1,maxt1]=max(timediff(t1utc(in1(1)),t1utc(in1),'utc'));
-            sautc(cnt)=t0utc(in1(mint0));
-            sfutc(cnt)=t1utc(in1(maxt1));
-            [mint0,mint0]=min(timediff(t0utc(in2(1)),t0utc(in2),'utc'));
-            [maxt1,maxt1]=max(timediff(t1utc(in2(1)),t1utc(in2),'utc'));
-            st0utc(cnt)=t0utc(in2(mint0));
-            st1utc(cnt)=t1utc(in2(maxt1));
+            [mint0,mint0]=min(timediff(t0utc(in1(1),:),t0utc(in1,:),'utc'));
+            [maxt1,maxt1]=max(timediff(t1utc(in1(1),:),t1utc(in1,:),'utc'));
+            sautc{cnt}=t0utc(in1(mint0),:);
+            sfutc{cnt}=t1utc(in1(maxt1),:);
+            [mint0,mint0]=min(timediff(t0utc(in2(1),:),t0utc(in2,:),'utc'));
+            [maxt1,maxt1]=max(timediff(t1utc(in2(1),:),t1utc(in2,:),'utc'));
+            st0utc{cnt}=t0utc(in2(mint0),:);
+            st1utc{cnt}=t1utc(in2(maxt1),:);
             
             % for debugging
             sdata(cnt).misc.c3master=strcat({coda{1}(in1).path}',...
@@ -361,7 +370,7 @@ try
     sdata=divide(sdata,sscale);
     
     % unapply Fisher's transform
-    if(opt.ZTRANS); sdata=solofun(sdata,'@ifisher'); end
+    if(opt.C3ZTRANS); sdata=solofun(sdata,@ifisher); end
     
     % convert cplx to fd
     % - updates dep* to not be complex
@@ -370,10 +379,11 @@ try
     end
     
     % update headers
-    sdata=changeheader(sdata,'scale',sscale,'resp0',opt.VRAYL,...
-        'resp1',opt.WINOFF,'resp2',opt.WINLEN,'resp3',ncoda,...
-        'kuser2',opt.XCCMP,'a utc',sautc,'f utc',sfutc,'t0 utc',st0utc,...
-        't1 utc',st1utc,'t3 utc',sautc,'t4 utc',sfutc,'iztype','iunkn');
+    sdata=changeheader(sdata,'scale',sscale,'resp0',opt.C3VRAYL,...
+        'resp1',opt.C3WINOFF,'resp2',opt.C3WINLEN,'resp3',ncoda,...
+        'kuser2',opt.C3XCCMP,'a utc',sautc,'f utc',sfutc,...
+        't0 utc',st0utc,'t1 utc',st1utc,'t3 utc',sautc,'t4 utc',sfutc,...
+        'iztype','iunkn');
 
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
@@ -394,8 +404,8 @@ function [opt]=noise_c3_parameters(varargin)
 % parses/checks noise_c3 pv pairs
 
 % defaults
-varargin=[{'c3v' 2.6 'c3wo' 300 'c3wl' 1200 'c3x' 'symm' 'co' false ...
-    'c3z' true 'c3s' [] 'maxlag' 4000 'normxc' true 'fdo' false
+varargin=[{'c3v' 2.6 'c3wo' 300 'c3wl' 1200 'c3x' 'sym' 'co' false ...
+    'c3z' true 'c3s' [] 'maxlag' 4000 'normxc' true 'fdo' false ...
     'noa' false 'minc' 1} varargin];
 
 % get user input
@@ -419,7 +429,6 @@ for i=1:2:numel(varargin)
             opt.C3ZTRANS=varargin{i+1};
         case {'s' 'sl' 'stn' 'stnlist' ...
                 'c3s' 'c3sl' 'c3stn' 'c3stnlist'}
-            if(isempty(varargin{i+1})); continue; end
             opt.C3STNLIST=varargin{i+1};
         case {'xcmaxlag' 'xcmax' 'xclag' 'maxlag' 'lag'}
             if(isempty(varargin{i+1})); continue; end
@@ -512,16 +521,16 @@ end
 
 function [d1]=addrecords(varargin)
 % simple hack for speed (no dep* update)
-try
+%try
     for i=1:nargin
-        varargin{i}(1).dep=mean(cat(3,varargin{1}.dep),3);
+        varargin{i}(1).dep=mean(cat(3,varargin{i}.dep),3);
         varargin{i}(2:end)=[];
     end
     d1=varargin{1};
-    d1.dep=mean(cat(3,varargin.dep),3);
-catch
-    error('seizmo:noise_c3:badNCFs',...
-        'NCFs differ in number of points! Cannot stack!');
-end
+    d1.dep=mean(cat(3,varargin{:}.dep),3);
+%catch
+%    error('seizmo:noise_c3:badNCFs',...
+%        'NCFs differ in number of points! Cannot stack!');
+%end
 end
 

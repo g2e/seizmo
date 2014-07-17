@@ -149,9 +149,11 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %        July  8, 2014 - set t3-4 header fields
 %        July 10, 2014 - fd is converted to complex so Fisher transform
 %                        works properly (FISHER was updated), iamph ok
+%        July 16, 2014 - bugfix: solofun needs func handles not strings,
+%                        bugfix: convert iftype to string
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 10, 2014 at 11:15 GMT
+%     Last Updated July 16, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -542,7 +544,7 @@ try
                 end
                 
                 % now check filetype is consistent across directories
-                iftype=iftype(1);
+                iftype=iftype{1};
                 if(isempty(common_iftype))
                     common_iftype=iftype;
                 elseif(~strcmpi(common_iftype,iftype))
@@ -638,8 +640,8 @@ try
                 
                 % apply Fisher's transform
                 if(opt.ZTRANS)
-                    data=solofun(data,'@fisher');
-                    rdata=solofun(rdata,'@fisher');
+                    data=solofun(data,@fisher);
+                    rdata=solofun(rdata,@fisher);
                 end
                 
                 % multiply by scale
@@ -772,7 +774,7 @@ try
                     
                     % unapply Fisher's transform
                     if(opt.ZTRANS)
-                        sdata{p}=solofun(sdata{p},'@ifisher');
+                        sdata{p}=solofun(sdata{p},@ifisher);
                     end
                     
                     % convert cplx to fd

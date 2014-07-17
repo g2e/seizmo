@@ -9,9 +9,9 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     NOISE_PROCESS(INDIR,OUTDIR) processes the data under the directory
 %     INDIR using noise cross correlation methods.  The resulting data are
 %     written to OUTDIR.  The following techniques may be performed on the
-%     input dataset (only steps 7-12 are performed by default, see the
-%     following Usage forms to set an alternate processing step list and to
-%     alter how each step is performed):
+%     input dataset (only steps 7, 8, 9, 11, 12, and 14 are performed by
+%     default, see the following Usage forms to set an alternate processing
+%     step list and to alter how each step is performed):
 %      (* 1) remove dead records (no change in recorded value)
 %      (* 2) remove short records (spanning less than 70% of time section)
 %      (* 3) remove mean & trend
@@ -20,18 +20,19 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      (* 6) remove polezero response (displacement, hp taper: [.004 .008])
 %      (  7) reject records based on amplitudes (>Inf nm)
 %      (  8) rotate horizontals to North/East (removes unpaired)
-%      (  9) t-domain normalize (3-150s & 15-100s moving average)
+%      (  9) t-domain normalize (equal scaling for each time section)
 %      ( 10) f-domain normalize (2mHz moving average)
-%      ( 11) correlate (keep +/-4000s lagtime)
-%      ( 12) rotate correlations into <RR, RT, TR, TT>
+%      ( 11) interpolate/synchronize records to time section
+%      ( 12) correlate (keep +/-4000s lagtime)
 %      ( 13) correlate the coda of correlations (can be repeated)
-%            (VERTICAL ONLY, HORIZONTALS CURRENTLY NOT IMPLEMENTED!)
-%       * -> Steps 1-6 are done in NOISE_SETUP and so should be skipped.
+%      ( 14) rotate correlations into <RR, RT, TR, TT>
+%       * -> Steps 1-6 are done in NOISE_SETUP by default and should be
+%            skipped if that function was already run on the dataset.
 %
 %     NOISE_PROCESS(INDIR,OUTDIR,STEPS) only does the processing steps
 %     indicated in STEPS.  STEPS is a vector of numbers corresponding to
-%     the valid steps given above.  The default is 7:12 (1:6 are done in
-%     NOISE_SETUP by default and so do not need to be added).
+%     the valid steps given above.  The default is [7:9 11 12 14] (note
+%     that 1:6 are done in NOISE_SETUP by default and should be skipped).
 %
 %     NOISE_PROCESS(INDIR,OUTDIR,STEPS,'OPT1',VAL,...,'OPTN',VAL) allows
 %     changing some of the noise correlation parameters.  The following are
@@ -49,10 +50,10 @@ function []=noise_process(indir,outdir,steps,varargin)
 %      REJECTWIDTH   - include 2N neighboring timewindows (+current) when
 %                      calculating the rms value for data rejection [0]
 %      TDSTYLE       - time domain normalization style:
-%                       'flat' - single scaling for all in each timewindow
-%                       '1bit' - set amplitudes to +/-1
-%                       'clip' - clip values above some absolute value
-%                      ['ram'] - normalized using running-absolute mean
+%                      ['flat'] - single scaling for all in each timewindow
+%                       '1bit'  - set amplitudes to +/-1
+%                       'clip'  - clip values above some absolute value
+%                       'ram'   - normalized using running-absolute mean
 %      TDRMS         - use TDCLIP x RMS when TDSTYLE='clip' [true]
 %      TDCLIP        - sets clip for TDSTYLE='clip' [1]
 %      TDWEIGHTBANDS - frequency bands for TDSTYLE='ram' weights
@@ -97,11 +98,13 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        Stehly et al 2008, JGR, doi:10.1029/2008JB005693
 %        Prieto et al 2009, JGR, doi:10.1029/2008JB006067
 %        Ekstrom et al 2009, GRL, doi:10.1029/2009GL039131
+%        Weaver 2011, CRG, doi:10.1016/j.crte.2011.07.001
 %        Seats et al 2012, GJI, doi:10.1111/j.1365-246X.2011.05263.x
 %        Ma & Beroza 2012, GRL, doi:10.1029/2011g1050755
 %        Zhang & Yang 2013, JGR, doi:10.1002/jgrb.50186
-%     - Steps 9-11 for horizontals currently require running step 8 on
-%       the same run (but if you forget it is automatically done for you).
+%     - Some steps for horizontals currently require running seismogram
+%       rotation on the same run (but if you forget it is automatically
+%       done for you).
 %     - While data i/o is .mat files by default, SAC files are okay too.
 %       Note that .mat files can be read into Matlab using the LOAD
 %       function and written out as SAC files using the function
@@ -120,7 +123,7 @@ function []=noise_process(indir,outdir,steps,varargin)
 %     % This is great for prototyping and debugging!
 %
 %     % Skip the normalization steps:
-%     noise_process('setup','ncfs',[7:8 11:12])
+%     noise_process('setup','ncfs',[7 8 11 12 14])
 %
 %     % Use non-overlapping 15-minute timesections, sampled
 %     % at 5Hz to look at noise up to about 1.5Hz:
@@ -184,17 +187,17 @@ function []=noise_process(indir,outdir,steps,varargin)
 %        June 25, 2014 - added coherency, fdout & noauto correlate options,
 %                        c3 options now passed to noise_c3, flat tdstyle
 %                        option (based on Weaver et al 2011)
+%        July 14, 2014 - flat td normalization is default, shifted steps to
+%                        allow for interpolation of seismograms rather than
+%                        correlograms, made step order changing easier to
+%                        maintain
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2014 at 11:15 GMT
+%     Last Updated July 14, 2014 at 11:15 GMT
 
 % todo:
 % - 3cmp support
 %   - requires rotate3_correlations
-% - interpolate seismograms not correlograms
-%   - this is just an efficiency change
-%   - is it worth it? - probably but we have to change the steps
-% - cite weaver 2011
 
 % check nargin
 error(nargchk(2,inf,nargin));
@@ -206,8 +209,28 @@ end
 % directory separator
 fs=filesep;
 
-% default steps to all
-if(nargin<3 || isempty(steps)); steps=7:12; end
+% steps change occasionally so lets make this easier for maintenance
+STEP.AR=7;   % amplitude based rejection
+STEP.ROT=8;  % seismogram rotation
+STEP.TDN=9;  % time-domain normalization
+STEP.FDN=10; % frequency-domain normalization
+STEP.INT=11; % seismogram interpolation
+STEP.XC=12;  % cross correlation
+STEP.C3=13;  % correlation coda correlation
+STEP.XCR=14; % correlation rotation
+
+% default steps
+if(nargin<3 || isempty(steps)); steps=[7:9 11 12 14]; end
+
+% force pre-steps for some
+if(any(steps==STEP.TDN | steps==STEP.FDN | steps==STEP.XC))
+    % no skipping rotation to North & East
+    steps=[steps(:).' STEP.ROT];
+end
+if(any(steps==STEP.XC))
+    % no skipping interpolation & synchronization
+    steps=[steps(:).' STEP.INT];
+end
 
 % parse/check options
 opt=noise_process_parameters(varargin{:});
@@ -289,7 +312,7 @@ tsdirs=tsdirs(good); tsbgn=tsbgn(good,:); tsend=tsend(good,:);
 clear good;
 
 % rms based rejection setup
-if(any(steps==7)) % simple amplitude based rejection
+if(any(steps==STEP.AR)) % simple amplitude based rejection
     switch lower(opt.REJECTMETHOD)
         case 'rms'
             rmsname=[indir fs 'noise_rms_info.mat'];
@@ -300,7 +323,7 @@ if(any(steps==7)) % simple amplitude based rejection
                     ['Cannot find noise_rms_info.mat!\n' ...
                     'Make sure to run NOISE_RMS_CALC on ' ...
                     'the input directory before running ' ...
-                    'NOISE_PROCESS step 7!']);
+                    'NOISE_PROCESS step ' num2str(STEP.AR) '!']);
             end
             if(any(~ismember({'data' 'tsbgn' 'tsend'},...
                     fieldnames(rmsinfo))))
@@ -359,10 +382,10 @@ for i=1:numel(tsdirs) % SERIAL
             'correlograms! This is NOT allowed.\nYou might try ' ...
             'using the FILENAMES option to limit input to one type.']);
     end
-    if(isxc && any(steps<12)) % CAREFUL
+    if(isxc && any(steps<STEP.XC)) % CAREFUL
         error('seizmo:noise_process:invalidProcess4xcdata',...
             'Cannot run earlier processing steps on correlograms!');
-    elseif(~isxc && ~any(steps==11) && any(steps>11))
+    elseif(~isxc && ~any(steps==STEP.XC) && any(steps>STEP.XC))
         error('seizmo:noise_process:invalidProcess4data',...
             'Cannot run later processing steps on non-correlograms!');
     end
@@ -448,16 +471,16 @@ for i=1:numel(tsdirs) % SERIAL
         data=[]; % clearing data
         
         % shortcircuits
-        if(any(steps==11) && numel(vdata)==1); vdata=[]; end
-        if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-        if(any(steps==12) && numel(vdata)<3); vdata=[]; end
-        if(any(steps==12) && numel(hdata)<6); hdata=[]; end
-        if(any(steps==13) && numel(hdata)==1); hdata=[]; end
+        if(any(steps==STEP.XC) && numel(vdata)==1); vdata=[]; end
+        if(any(steps==STEP.XC) && numel(hdata)==1); hdata=[]; end
+        if(any(steps==STEP.C3) && numel(vdata)<3); vdata=[]; end
+        if(any(steps==STEP.C3) && numel(hdata)<6); hdata=[]; end
+        if(any(steps==STEP.XCR) && numel(hdata)==1); hdata=[]; end
         if(isempty(hdata) && isempty(vdata)); continue; end
     else
         % shortcircuits
-        if(any(steps==12) && numel(data)<3); continue; end
-        if(any(steps==13) && numel(data)<3); continue; end
+        if(any(steps==STEP.C3) && numel(data)<3); continue; end
+        if(any(steps==STEP.XCR) && numel(data)<3); continue; end
     end
     
     % read in data
@@ -486,11 +509,11 @@ for i=1:numel(tsdirs) % SERIAL
         if(any(steps==1)) % remove dead
             if(~isempty(vdata)); vdata=removedeadrecords(vdata); end
             if(~isempty(hdata)); hdata=removedeadrecords(hdata); end
-            if(any(steps==11) && numel(vdata)==1); vdata=[]; end
-            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(vdata)<3); vdata=[]; end
-            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
-            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==STEP.XC) && numel(vdata)==1); vdata=[]; end
+            if(any(steps==STEP.XC) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==STEP.C3) && numel(vdata)<3); vdata=[]; end
+            if(any(steps==STEP.C3) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==STEP.XCR) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         if(any(steps==2)) % remove short
@@ -504,11 +527,11 @@ for i=1:numel(tsdirs) % SERIAL
                 hdata=hdata(...
                     e-b>opt.MINIMUMLENGTH*timediff(tsbgn(i,:),tsend(i,:)));
             end
-            if(any(steps==11) && numel(vdata)==1); vdata=[]; end
-            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(vdata)<3); vdata=[]; end
-            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
-            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==STEP.XC) && numel(vdata)==1); vdata=[]; end
+            if(any(steps==STEP.XC) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==STEP.C3) && numel(vdata)<3); vdata=[]; end
+            if(any(steps==STEP.C3) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==STEP.XCR) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
         if(any(steps==3)) % remove trend
@@ -542,14 +565,14 @@ for i=1:numel(tsdirs) % SERIAL
                 hdata=removesacpz(hdata,...
                     'units',opt.UNITS,'tl',opt.PZTAPERLIMITS);
             end
-            if(any(steps==11) && numel(vdata)==1); vdata=[]; end
-            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(vdata)<3); vdata=[]; end
-            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
-            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==STEP.XC) && numel(vdata)==1); vdata=[]; end
+            if(any(steps==STEP.XC) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==STEP.C3) && numel(vdata)<3); vdata=[]; end
+            if(any(steps==STEP.C3) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==STEP.XCR) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
-        if(any(steps==7)) % simple amplitude based rejection
+        if(any(steps==STEP.AR)) % simple amplitude based rejection
             if(~isempty(vdata))
                 [depmin,depmax]=getheader(vdata,'depmin','depmax');
                 ampmax=max(abs(depmin),abs(depmax));
@@ -594,34 +617,23 @@ for i=1:numel(tsdirs) % SERIAL
                         hdata(ampmax>=opt.REJECTCUTOFF*rms)=[];
                 end
             end
-            if(any(steps==11) && numel(vdata)==1); vdata=[]; end
-            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(vdata)<3); vdata=[]; end
-            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
-            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==STEP.XC) && numel(vdata)==1); vdata=[]; end
+            if(any(steps==STEP.XC) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==STEP.C3) && numel(vdata)<3); vdata=[]; end
+            if(any(steps==STEP.C3) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==STEP.XCR) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
-        
-        % continue processing data for noise analysis
-        if(any(steps==8)) % rotate horz to NE
+        if(any(steps==STEP.ROT)) % rotate horz to NE
             if(~isempty(hdata))
                 hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
             end
-            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
-            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==STEP.XC) && numel(hdata)==1); hdata=[]; end
+            if(any(steps==STEP.C3) && numel(hdata)<6); hdata=[]; end
+            if(any(steps==STEP.XCR) && numel(hdata)==1); hdata=[]; end
             if(isempty(hdata) && isempty(vdata)); continue; end
         end
-        if(any(steps==9)) % td norm
-            % have to rotate to sort horizontals if not done before
-            if(~any(steps==8) && ~isempty(hdata))
-                hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
-            end
-            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
-            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
-            if(isempty(hdata) && isempty(vdata)); continue; end
-            
+        if(any(steps==STEP.TDN)) % td norm
             % normalization style
             switch lower(opt.TDSTYLE)
                 case 'flat'
@@ -719,16 +731,7 @@ for i=1:numel(tsdirs) % SERIAL
                         'Unknown TDSTYLE: %s',opt.TDSTYLE);
             end
         end
-        if(any(steps==10)) % fd norm
-            % have to rotate to sort horizontals if not done before
-            if(~any(steps==8) && ~isempty(hdata))
-                hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
-            end
-            if(any(steps==11) && numel(hdata)==1); hdata=[]; end
-            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
-            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
-            if(isempty(hdata) && isempty(vdata)); continue; end
-            
+        if(any(steps==STEP.FDN)) % fd norm
             % normalization style
             switch lower(opt.FDSTYLE)
                 case '1bit'
@@ -794,25 +797,25 @@ for i=1:numel(tsdirs) % SERIAL
                         'Unknown FDSTYLE: %s',opt.TDSTYLE);
             end
         end
-        if(any(steps==11)) % xc
-            % have to rotate to sort horizontals if not done before
-            if(~any(steps==8) && ~isempty(hdata))
-                hdata=rotate(hdata,'to',0,'kcmpnm1','N','kcmpnm2','E');
+        if(any(steps==STEP.INT)) % interpolation
+            if(~isempty(vdata))
+                [delta,f]=getheader(vdata(1),'delta','f');
+                vdata=interpolate(vdata,1/delta,[],0,f,0);
             end
-            if(any(steps==12) && numel(hdata)<6); hdata=[]; end
-            if(any(steps==13) && numel(hdata)==1); hdata=[]; end
-            if(isempty(hdata) && isempty(vdata)); continue; end
+            if(~isempty(hdata))
+                [delta,f]=getheader(hdata(1),'delta','f');
+                hdata=interpolate(hdata,1/delta,[],0,f,0);
+            end
+        end
+        if(any(steps==STEP.XC)) % xc
             if(numel(vdata)<2 && numel(hdata)<2); continue; end
             if(numel(vdata)>1)
-                delta=getheader(vdata(1),'delta');
                 if(isempty(opt.FDOUT))
-                    vdata=interpolate(correlate(...
-                        cut(vdata,'a','f','fill',true),...
+                    vdata=correlate(vdata,...
                         opt.NORMXC{:},opt.COHERENCY{:},'mcxc',...
-                        opt.NOAUTO{:},(opt.XCMAXLAG+4*delta).*[-1 1]),...
-                        1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
+                        opt.NOAUTO{:},opt.XCMAXLAG);
                 else
-                    vdata=correlate(cut(vdata,'a','f','fill',true),...
+                    vdata=correlate(vdata,...
                         opt.NORMXC{:},opt.COHERENCY{:},opt.FDOUT{:},...
                         opt.NOAUTO{:},'mcxc');
                 end
@@ -821,15 +824,12 @@ for i=1:numel(tsdirs) % SERIAL
                 vdata=vdata([]);
             end
             if(numel(hdata)>1)
-                delta=getheader(hdata(1),'delta');
                 if(isempty(opt.FDOUT))
-                    hdata=interpolate(correlate(...
-                        cut(hdata,'a','f','fill',true),...
+                    hdata=correlate(hdata,...
                         opt.NORMXC{:},opt.COHERENCY{:},'mcxc',...
-                        opt.NOAUTO{:},(opt.XCMAXLAG+4*delta).*[-1 1]),...
-                        1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
+                        opt.NOAUTO{:},opt.XCMAXLAG);
                 else
-                    hdata=correlate(cut(hdata,'a','f','fill',true),...
+                    hdata=correlate(hdata,...
                         opt.NORMXC{:},opt.COHERENCY{:},opt.FDOUT{:},...
                         opt.NOAUTO{:},'mcxc');
                 end
@@ -838,10 +838,10 @@ for i=1:numel(tsdirs) % SERIAL
                 hdata=hdata([]);
             end
         end
-        if(any(steps==12)) % correlate coda of correlations
+        if(any(steps==STEP.C3)) % correlate coda of correlations
             % correlation input or split data from before?
             if(isxc) % correlation input
-                for c3=1:sum(steps==12)
+                for c3=1:sum(steps==STEP.C3)
                     data=noise_c3(data,'vrayl',opt.C3VRAYL,...
                         'winoff',opt.C3WINOFF,'winlen',opt.C3WINLEN,...
                         'xccmp',opt.C3XCCMP,'ztrans',opt.C3ZTRANS,...
@@ -856,7 +856,7 @@ for i=1:numel(tsdirs) % SERIAL
                 if(isempty(data)); continue; end
                 [data.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
             else % generated correlations
-                for c3=1:sum(steps==12)
+                for c3=1:sum(steps==STEP.C3)
                     if(~isempty(vdata))
                         vdata=noise_c3(vdata,'vrayl',opt.C3VRAYL,...
                             'winoff',opt.C3WINOFF,'winlen',opt.C3WINLEN,...
@@ -887,7 +887,7 @@ for i=1:numel(tsdirs) % SERIAL
                 [hdata.path]=deal([indir fs tsdirs{i}(1:4) fs tsdirs{i}]);
             end
         end
-        if(any(steps==13)) % rotate xc
+        if(any(steps==STEP.XCR)) % rotate xc
             % correlation input or split data from before?
             if(isxc) % correlation input
                 % this removes ZZ correlations!
@@ -960,7 +960,7 @@ function [opt]=noise_process_parameters(varargin)
 % defaults
 varargin=[{'minlen' 70 'tw' 1 'tt' [] 'topt' [] 'sr' 1 'rw' 0 ...
     'pzdb' [] 'units' 'disp' 'pztl' [.004 .008] 'rc' Inf 'rm' 'abs' ...
-    'tds' 'ram' 'tdrms' true 'tdclip' 1 'tdfb' [1/150 1/3; 1/100 1/15] ...
+    'tds' 'flat' 'tdrms' true 'tdclip' 1 'tdfb' [1/150 1/3; 1/100 1/15] ...
     'fds' 'ram' 'fdw' .002 'lag' 4000 'nxc' true 'coh' false 'c3mc' 1 ...
     'c3v' 2.6 'c3wo' 0 'c3wl' 4e3 'c3x' 'sym' 'c3z' true 'c3s' {} ...
     'ts' [] 'te' [] 'lat' [] 'lon' [] 'fdout' false 'noauto' false ...
@@ -1048,7 +1048,6 @@ for i=1:2:numel(varargin)
             if(isempty(varargin{i+1})); continue; end
             opt.C3ZTRANS=varargin{i+1};
         case {'c3s' 'c3sl' 'c3stn' 'c3stnlist'}
-            if(isempty(varargin{i+1})); continue; end
             opt.C3STNLIST=varargin{i+1};
         case {'c3m' 'c3mc' 'c3min' 'c3minc' 'c3mincoda'}
             if(isempty(varargin{i+1})); continue; end

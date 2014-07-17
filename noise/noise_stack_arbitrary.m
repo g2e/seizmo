@@ -53,9 +53,11 @@ function [sdata]=noise_stack_arbitrary(indirs,varargin)
 %        May  29, 2014 - bugfix: headers/filenames now updated, bugfix:
 %                        now catches error for global variable resetting
 %        July 11, 2014 - fd i/o
+%        July 17, 2014 - bugfix: solofun needs func handles not strings,
+%                        bugfix: convert iftype to string
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 11, 2014 at 11:15 GMT
+%     Last Updated July 17, 2014 at 11:15 GMT
 
 % todo:
 
@@ -147,7 +149,7 @@ try
         end
         
         % now check filetype is consistent across directories
-        iftype=iftype(1);
+        iftype=iftype{1};
         if(isempty(common_iftype))
             common_iftype=iftype;
         elseif(~strcmpi(common_iftype,iftype))
@@ -228,8 +230,8 @@ try
         
         % apply Fisher's transform
         if(opt.ZTRANS)
-            data=solofun(data,'@fisher');
-            rdata=solofun(rdata,'@fisher');
+            data=solofun(data,@fisher);
+            rdata=solofun(rdata,@fisher);
         end
         
         % multiply by scale
@@ -294,7 +296,7 @@ try
     sdata=divide(sdata,sscale);
     
     % unapply Fisher's transform
-    if(opt.ZTRANS); sdata=solofun(sdata,'@ifisher'); end
+    if(opt.ZTRANS); sdata=solofun(sdata,@ifisher); end
     
     % convert cplx to fd
     % - updates dep* to not be complex
