@@ -46,6 +46,9 @@ function [varargout]=plot0(data,varargin)
 %     useful for more detailed plot manipulation.
 %
 %    Notes:
+%     - Using AMPSCALE='log' with negative data will find the absolute
+%       value on the data.  If you try to recover the data with
+%       EXTRACT_PLOT_DATA you will get all positive data.
 %
 %    Examples:
 %     % add station+component names to the yaxis
@@ -69,12 +72,12 @@ function [varargout]=plot0(data,varargin)
 %        Mar. 13, 2012 - make sure dep* is updated for extract_plot_data
 %        Aug. 30, 2012 - allow [] input for labeling
 %        Mar.  1, 2014 - maketime fix
+%        July 25, 2014 - bugfix: handling of empty records
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  1, 2014 at 23:00 GMT
+%     Last Updated July 25, 2014 at 23:00 GMT
 
 % todo:
-% - bug: markers only based on 1st cmp data values
 
 % check nargin
 error(nargchk(1,inf,nargin));
@@ -108,7 +111,7 @@ opt.LINESTYLE=cellstr(opt.LINESTYLE);
 opt.LINESTYLE=opt.LINESTYLE(:);
 opt.LINESTYLE=repmat(opt.LINESTYLE,ceil(nrecs/size(opt.LINESTYLE,1)),1);
 
-% check filetype (only timeseries or xy)
+% check filetype (only timeseries or spectral)
 iftype=getheader(data,'iftype id');
 time=strcmpi(iftype,'itime') | strcmpi(iftype,'ixy');
 spec=strcmpi(iftype,'irlim') | strcmpi(iftype,'iamph');
@@ -117,15 +120,15 @@ goodfiles=find(time | spec)';
 % convert spectral to timeseries
 if(sum(spec)); data(spec)=idft(data(spec)); end
 
-% fix dep*
+% fix dep* for extraction later          
 oldcheckheader_state=checkheader_state(true);
 data=checkheader(data,'all','ignore','old_dep_stats','fix');
 checkheader_state(oldcheckheader_state);
 
 % header info
-[b,npts,delta,z6,kname,leven]=getheader(data,...
-    'b','npts','delta','z6','kname','leven lgc');
-z6=datenum(cell2mat(z6));
+[b,npts,delta,z6,kname,leven,depmin,depmax]=getheader(data,...
+    'b','npts','delta','z6','kname','leven lgc','depmin','depmax');
+z6=datenum(cell2mat(z6));  % causes issues for record starts in leapsecond
 
 % names for legend
 displayname=strcat(kname(:,1),'.',kname(:,2),...
@@ -139,29 +142,45 @@ if(opt.ABSOLUTE)
     marktimes=marktimes/86400+z6(:,ones(1,size(marktimes,2)));
 end
 
-% get data limits
-depmin=nan(nrecs,1); depmax=nan(nrecs,1);
+% get normalizers based on data limits
 switch lower(opt.AMPSCALE)
     case 'linear'
-        for i=goodfiles
-            depmin(i)=abs(min(data(i).dep(:)));
-            depmax(i)=abs(max(data(i).dep(:)));
-        end
+        depmin=abs(depmin);
+        depmax=abs(depmax);
     case 'log'
-        for i=goodfiles
-            if(any(data(i).dep>0))
-                depmin(i)=min(log10(data(i).dep(data(i).dep(:)>0)));
-                depmax(i)=max(log10(data(i).dep(data(i).dep(:)>0)));
+        if(any(depmin<0))
+            warning('seizmo:plot0:logOfNonPositive',...
+                'Attempted logarithmic plotting of negative values!');
+            for i=goodfiles
+                if(depmin(i)<=0)
+                    if(~isempty(data(i).dep))
+                        depmin(i)=min(real(log10(...
+                            data(i).dep(data(i).dep~=0))));
+                        depmax(i)=max(real(log10(...
+                            data(i).dep(data(i).dep~=0))));
+                    end
+                else
+                    depmin(i)=log10(depmin(i));
+                    depmax(i)=log10(depmax(i));
+                end
             end
+        else
+            depmin=log10(depmin);
+            depmax=log10(depmax);
         end
 end
 
-% normalize
+% find the vertical range of each record on the plot
 if(opt.NORM2YAXIS)
     scale=nrecs*opt.NORMMAX/2;
 else
     scale=opt.NORMMAX;
 end
+yrng=[(1:nrecs)' (1:nrecs)'];
+yrng(:,1)=yrng(:,1)-scale;
+yrng(:,2)=yrng(:,2)+scale;
+
+% normalize
 switch opt.NORMSTYLE
     case {1 'i' 'single' 'individually' 'individual' 'one' 'separately'}
         switch lower(opt.AMPSCALE)
@@ -175,7 +194,7 @@ switch opt.NORMSTYLE
                 logrng=depmax-depmin;
                 logrng(logrng==0)=1; % avoid divide-by-zero below
                 for i=goodfiles
-                    data(i).dep=i+(2*((log10(data(i).dep)...
+                    data(i).dep=i+(2*((real(log10(data(i).dep))...
                         -depmin(i))/logrng(i))-1)*scale;
                 end
         end
@@ -193,8 +212,8 @@ switch opt.NORMSTYLE
                 logrng=logmax-logmin;
                 logrng(logrng==0)=1; % avoid divide-by-zero below
                 for i=goodfiles
-                    data(i).dep=i+...
-                        (2*((log10(data(i).dep)-logmin)/logrng)-1)*scale;
+                    data(i).dep=i+(2*((real(log10(data(i).dep))...
+                        -logmin)/logrng)-1)*scale;
                 end
         end
     otherwise
@@ -222,64 +241,78 @@ set(opt.AXIS,'ydir',opt.YDIR,'xdir',opt.XDIR,...
 % setup for markers
 userdata.markers.records=nan(nrecs,1);
 
+% for extraction
+[data.empty]=deal(false);
+
 % loop through every record
 hold(opt.AXIS,'on');
-for i=goodfiles
-    switch leven{i}
-        case 'false'
-            if(opt.ABSOLUTE)
-                rh=plot(opt.AXIS,z6(i)+data(i).ind/86400,data(i).dep,...
-                    'color',opt.CMAP(i,:),...
-                    'linestyle',opt.LINESTYLE{i},...
-                    'linewidth',opt.LINEWIDTH);
-            else
-                rh=plot(opt.AXIS,data(i).ind,data(i).dep,...
-                    'color',opt.CMAP(i,:),...
-                    'linestyle',opt.LINESTYLE{i},...
-                    'linewidth',opt.LINEWIDTH);
-            end
-        otherwise
-            if(opt.ABSOLUTE)
-                rh=plot(opt.AXIS,...
-                    z6(i)+b(i)/86400+...
-                    (0:delta(i)/86400:delta(i)/86400*(npts(i)-1)).',...
-                    data(i).dep,...
-                    'color',opt.CMAP(i,:),...
-                    'linestyle',opt.LINESTYLE{i},...
-                    'linewidth',opt.LINEWIDTH);
-            else
-                rh=plot(opt.AXIS,b(i)+...
-                    (0:delta(i):delta(i)*(npts(i)-1)).',...
-                    data(i).dep,...
-                    'color',opt.CMAP(i,:),...
-                    'linestyle',opt.LINESTYLE{i},...
-                    'linewidth',opt.LINEWIDTH);
-            end
+for i=1:nrecs
+    % handle empty and bad
+    if(isempty(data(i).dep) || ~goodfiles(i))
+        rh=plot(opt.AXIS,nan,i,...
+            'color',opt.CMAP(i,:),...
+            'linestyle',opt.LINESTYLE{i},...
+            'linewidth',opt.LINEWIDTH);
+    else
+        switch leven{i}
+            case 'false'
+                if(opt.ABSOLUTE)
+                    rh=plot(opt.AXIS,...
+                        z6(i)+data(i).ind/86400,data(i).dep,...
+                        'color',opt.CMAP(i,:),...
+                        'linestyle',opt.LINESTYLE{i},...
+                        'linewidth',opt.LINEWIDTH);
+                else
+                    rh=plot(opt.AXIS,data(i).ind,data(i).dep,...
+                        'color',opt.CMAP(i,:),...
+                        'linestyle',opt.LINESTYLE{i},...
+                        'linewidth',opt.LINEWIDTH);
+                end
+            otherwise
+                if(opt.ABSOLUTE)
+                    rh=plot(opt.AXIS,...
+                        z6(i)+b(i)/86400+...
+                        (0:delta(i)/86400:delta(i)/86400*(npts(i)-1)).',...
+                        data(i).dep,...
+                        'color',opt.CMAP(i,:),...
+                        'linestyle',opt.LINESTYLE{i},...
+                        'linewidth',opt.LINEWIDTH);
+                else
+                    rh=plot(opt.AXIS,...
+                        b(i)+(0:delta(i):delta(i)*(npts(i)-1)).',...
+                        data(i).dep,...
+                        'color',opt.CMAP(i,:),...
+                        'linestyle',opt.LINESTYLE{i},...
+                        'linewidth',opt.LINEWIDTH);
+                end
+        end
     end
     
     % add 1st handle to setup for markers
     userdata.markers.records(i)=rh(1);
     
-    % set userdata to everything but data (cleared)
-    data(i).dep=[];
-    data(i).ind=[];
+    % set userdata to everything but the data (cleared)
+    if(goodfiles(i))
+        if(isempty(data(i).dep)); data(i).empty=true; end
+        data(i).dep=[];
+        data(i).ind=[];
+    end
+    
+    % save info to handle
     nrh=numel(rh);
     for ridx=1:nrh
         if(nrh>1)
-            ncmpstr=[' (' num2str(ridx) ')'];
+            ncmpstr=[' (CMP#' num2str(ridx) ')'];
         else
             ncmpstr=[];
         end
         data(i).index=[i ridx];
-        set(rh(ridx),'userdata',data(i),...
+        data(i).yrng=yrng(i,:);
+        set(rh(ridx),'userdata',data(i),'tag','record',...
             'displayname',[displayname{i} ncmpstr]);
     end
 end
 hold(opt.AXIS,'off');
-
-% tag records
-rh=get(opt.AXIS,'children');
-set(rh,'tag','record');
 
 % extras
 box(opt.AXIS,'on');
@@ -322,6 +355,12 @@ if(~isempty(opt.NAMESONYAXIS) && any(opt.NAMESONYAXIS))
         otherwise
             set(opt.AXIS,'yticklabel',{data.name}.');
     end
+    
+    % make sure we can see all names
+    ylimits=ylim(opt.AXIS);
+    if(ylimits(1)>1); ylimits(1)=1; end
+    if(ylimits(2)<nrecs); ylimits(2)=nrecs; end
+    ylim(opt.AXIS,ylimits);
 end
 
 % axis zooming

@@ -27,9 +27,12 @@ function [data]=symmetric_correlations(data)
 %        June 16, 2014 - initial version
 %        June 23, 2014 - added checks & docs, bugfix: forgot to average
 %        June 25, 2014 - use addrecords simple replacement for speed
+%        July 21, 2014 - fast path for symmetrically sampled records (5x),
+%                        improved speed for asymmetric too (~2x) by using
+%                        solofun instead
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated June 25, 2014 at 11:15 GMT
+%     Last Updated July 21, 2014 at 11:15 GMT
 
 % todo:
 
@@ -82,14 +85,24 @@ try
     end
     
     % maximum lag time of symmetric component
-    e=max(abs(b),abs(e));
+    maxl=delta.*floor(max(abs(b),abs(e))./delta);
     
     % change class to double
     [data,oclass]=changeclass(data,'double');
     
-    % interpolate, fold, stack
-    data=divide(addrecords(interpolate(data,1./delta,[],0,e,0),...
-        reverse(interpolate(data,1./delta,[],-e,0,0))),2);
+    % who needs interpolation
+    slow=b~=-e | mod(b,delta);
+    
+    % interpolate
+    if(any(slow))
+        data(slow)=interpolate(data(slow),1./delta,[],-maxl,maxl,0);
+    end
+    
+    % fold & stack
+    data=solofun(data,@(x)(x((end+1)/2:-1:1)+x((end+1)/2:end))/2);
+    
+    % fix header
+    data=changeheader(data,'b',0,'e',maxl);
     
     % convert class back
     data=changeclass(data,oclass);
@@ -112,10 +125,4 @@ catch
     error(lasterror);
 end
 
-end
-
-
-function [d1]=addrecords(d1,d2)
-% simple hack for speed (no dep* update)
-for i=1:numel(d1); d1(i).dep=d1(i).dep+d2(i).dep; end
 end

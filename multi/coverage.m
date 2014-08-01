@@ -32,9 +32,12 @@ function [varargout]=coverage(data)
 
 %     Version History:
 %        Mar.  7, 2012 - initial version
+%        July 25, 2014 - fix no overlaps bug, fix spectral records
+%                        requiring data, bugfix: data/delta needed
+%                        reordering
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated Mar.  7, 2012 at 23:00 GMT
+%     Last Updated July 25, 2014 at 23:00 GMT
 
 % todo:
 
@@ -43,29 +46,36 @@ error(nargchk(1,1,nargin));
 
 % check struct
 error(seizmocheck(data));
-nrecs=numel(data);
 
-% convert spectral to timeseries
-% - this fails if no data for spectral records
+% detect spectral
 iftype=getheader(data,'iftype id');
 spec=strcmpi(iftype,'irlim') | strcmpi(iftype,'iamph');
-if(sum(spec)); data(spec)=idft(data(spec)); end
 
 % group by kname
 [idx,componentcode]=getcomponentidx(data);
 ncmp=max(idx);
 
 % get necessary header fields
-[butc,eutc,z,delta]=getheader(data,'b utc','e utc','z','delta');
-butc=cell2mat(butc); eutc=cell2mat(eutc); z=cell2mat(z);
+[butc,eutc,z,delta,sb,nspts,sdelta]=getheader(data,'b utc','e utc','z',...
+    'delta','sb utc','nspts','sdelta');
+butc=cell2mat(butc); eutc=cell2mat(eutc); z=cell2mat(z); sb=cell2mat(sb);
+
+% fix b/e for spectral
+if(any(spec))
+    delta(spec)=sdelta(spec);
+    butc(spec,:)=sb(spec,:);
+    se=sb;
+    se(:,end)=se(:,end)+(nspts-1).*sdelta;
+    eutc(spec,:)=fixtimes(se(spec,:),'utc');
+end
 
 % combine start/end times into one record
-keep=false(nrecs,1); npts=nan(ncmp,1);
+[keep,npts]=deal(nan(ncmp,1));
 for i=1:ncmp
     % keep/use first record
     cmp=idx==i;
     j=find(cmp,1);
-    keep(j)=true;
+    keep(i)=j;
     
     % create coverage record for this component
     data(j).ind=[timediff(z(j,:),butc(cmp,:)) ...
@@ -75,18 +85,18 @@ for i=1:ncmp
     data(j).dep=zeros(size(data(j).ind));
     npts(i)=numel(data(j).ind);
     
-    % delta check
+    % delta check (set delta to 0 for variable sample rate channels)
     if(~isscalar(unique(delta(cmp)))); delta(j)=0; end
 end
 
-% remove unneeded
-data(~keep)=[];
-delta(~keep)=[];
+% reorder & remove unneeded
+data=data(keep);
+delta=delta(keep);
 
 % adjust fields as needed
 [data.hasdata]=deal(true);
 [data.name]=deal(componentcode{:});
-data=changeheader(data,'npts',npts,'leven',false,'delta',delta);
+data=changeheader(data,'npts',npts,'leven',false,'delta',delta,'dep',0);
 if(nargout==1); varargout={data}; return; end
 
 % get gaps & overlaps
@@ -156,39 +166,43 @@ for i=1:ncmp
     end
     
     % reduce overlaps to minimum set
-    b=overlap(i).ind(:,1); e=overlap(i).ind(:,2);
-    j=1; nov=size(overlap(i).ind,1);
-    keep=true(nov,1);
-    while j<=nov
-        for k=j+1:nov
-            % skip deleted
-            if(~keep); continue; end
-            
-            % compare overlap timings
-            if(b(j)>=b(k) && e(j)<=e(k))
-                % within another so delete me and go to next overlap
-                keep(j)=false;
-                break;
-            elseif(b(j)<=b(k) && e(j)>=e(k))
-                % surrounds another so delete them
-                keep(k)=false;
-            elseif(b(j)>b(k) && b(j)<e(k))
-                % extend b, delete them, redo
-                overlap(i).ind(j,1)=overlap(i).ind(k,1);
-                keep(k)=false;
-                j=j-1; % balance increment below
-                break;
-            elseif(e(j)<e(k) && e(j)>b(k))
-                % extend e, delete them, redo
-                overlap(i).ind(j,2)=overlap(i).ind(k,2);
-                keep(k)=false;
-                j=j-1; % balance increment below
-                break;
+    nov=size(overlap(i).ind,1);
+    if(nov>1)
+        b=overlap(i).ind(:,1);
+        e=overlap(i).ind(:,2);
+        j=1;
+        keep=true(nov,1);
+        while j<=nov
+            for k=j+1:nov
+                % skip deleted
+                if(~keep); continue; end
+                
+                % compare overlap timings
+                if(b(j)>=b(k) && e(j)<=e(k))
+                    % within another so delete me and go to next overlap
+                    keep(j)=false;
+                    break;
+                elseif(b(j)<=b(k) && e(j)>=e(k))
+                    % surrounds another so delete them
+                    keep(k)=false;
+                elseif(b(j)>b(k) && b(j)<e(k))
+                    % extend b, delete them, redo
+                    overlap(i).ind(j,1)=overlap(i).ind(k,1);
+                    keep(k)=false;
+                    j=j-1; % balance increment below
+                    break;
+                elseif(e(j)<e(k) && e(j)>b(k))
+                    % extend e, delete them, redo
+                    overlap(i).ind(j,2)=overlap(i).ind(k,2);
+                    keep(k)=false;
+                    j=j-1; % balance increment below
+                    break;
+                end
             end
+            j=j+1;
         end
-        j=j+1;
+        overlap(i).ind(~keep,:)=[];
     end
-    overlap(i).ind(~keep,:)=[];
     
     % clean up
     overlap(i).ind=sortrows(overlap(i).ind).';

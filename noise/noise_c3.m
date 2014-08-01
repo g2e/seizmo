@@ -1,4 +1,4 @@
-function [sdata]=noise_c3(data,varargin)
+function [sdata,c3]=noise_c3(data,varargin)
 %NOISE_C3    Correlates the Coda of Correlations
 %
 %    Usage:    ncfs=noise_c3(ncfs)
@@ -74,13 +74,15 @@ function [sdata]=noise_c3(data,varargin)
 %        July 17, 2014 - bugfix: solofun needs func handles not strings,
 %                        bugfix: fix option naming, bugfix: fix creation of
 %                        option defaults, output is column vector
+%        July 21, 2014 - bugfix: verbosity restored to previous state
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 17, 2014 at 11:15 GMT
+%     Last Updated July 21, 2014 at 11:15 GMT
 
 % todo:
 % - result does not look impressive so we need to do a step by step check
 %   - where is the coda window (make a nice plot)
+%     - are symmetric correct?
 %   - all correlations for a pair
 %   - stacks of each xccmp type
 
@@ -250,13 +252,13 @@ try
             if(isempty(midx12)); continue; end
             
             % organize coda sets by master index
-            in1=find(idx2(:,2)==s1 & ismember(idx2(:,1),midx12));
-            in2=find(idx2(:,2)==s2 & ismember(idx2(:,1),midx12));
-            [cidx1,cidx1]=sort(idx2(in1,1));
-            [cidx2,cidx2]=sort(idx2(in2,1));
-            in1=in1(cidx1);
-            in2=in2(cidx2);
-            nin=numel(in1);
+            inb1=find(idx2(:,2)==s1 & ismember(idx2(:,1),midx12));
+            inb2=find(idx2(:,2)==s2 & ismember(idx2(:,1),midx12));
+            [cidx1,cidx1]=sort(idx2(inb1,1));
+            [cidx2,cidx2]=sort(idx2(inb2,1));
+            inb1=inb1(cidx1);
+            inb2=inb2(cidx2);
+            nin=numel(inb1);
             
             % enough coda
             if(nin<opt.MINCODA); continue; end
@@ -267,14 +269,14 @@ try
                 % frequency- or time-domain?
                 if(isempty(opt.FDOUT)) % time
                     % correlate & interpolate
-                    c3{cmp}=interpolate(correlate(coda{cmp}(in1),...
-                        coda{cmp}(in2),'reltime',opt.COHERENCY{:},...
+                    c3{cmp}=interpolate(correlate(coda{cmp}(inb1),...
+                        coda{cmp}(inb2),'reltime',opt.COHERENCY{:},...
                         opt.NORMXC{:},(opt.XCMAXLAG+4*delta).*[-1 1]),...
                         1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
                 else % frequency
                     % correlate
-                    c3{cmp}=correlate(coda{cmp}(in1),...
-                        coda{cmp}(in2),'reltime',opt.COHERENCY{:},...
+                    c3{cmp}=correlate(coda{cmp}(inb1),...
+                        coda{cmp}(inb2),'reltime',opt.COHERENCY{:},...
                         opt.NORMXC{:},opt.FDOUT{:});
                     
                     % convert fd to cplx
@@ -285,7 +287,7 @@ try
                 if(opt.C3ZTRANS); c3{cmp}=solofun(c3{cmp},@fisher); end
                 
                 % multiply by scale
-                c3{cmp}=multiply(c3{cmp},scale(in1).*scale(in2));
+                c3{cmp}=multiply(c3{cmp},scale(inb1).*scale(inb2));
             end
             
             % cross acausal/causal coda correlation
@@ -295,21 +297,21 @@ try
                     if(isempty(opt.FDOUT)) % time
                         % correlate between causal & acausal & interpolate
                         c3{3}=interpolate(correlate(...
-                            coda{1}(in1),coda{2}(in2),'reltime',...
+                            coda{1}(inb1),coda{2}(inb2),'reltime',...
                             opt.NORMXC{:},opt.COHERENCY{:},...
                             (opt.XCMAXLAG+4*delta).*[-1 1]),...
                             1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
                         c3{4}=interpolate(correlate(...
-                            coda{2}(in1),coda{1}(in2),'reltime',...
+                            coda{2}(inb1),coda{1}(inb2),'reltime',...
                             opt.NORMXC{:},opt.COHERENCY{:},...
                             (opt.XCMAXLAG+4*delta).*[-1 1]),...
                             1/delta,[],-opt.XCMAXLAG,opt.XCMAXLAG);
                     else % frequency
                         % correlate between causal & acausal
-                        c3{3}=correlate(coda{1}(in1),coda{2}(in2),...
+                        c3{3}=correlate(coda{1}(inb1),coda{2}(inb2),...
                             'reltime',opt.COHERENCY{:},...
                             opt.NORMXC{:},opt.FDOUT{:});
-                        c3{4}=correlate(coda{2}(in1),coda{1}(in2),...
+                        c3{4}=correlate(coda{2}(inb1),coda{1}(inb2),...
                             'reltime',opt.COHERENCY{:},...
                             opt.NORMXC{:},opt.FDOUT{:});
                         
@@ -323,8 +325,8 @@ try
                     if(opt.ZTRANS); c3{4}=solofun(c3{4},@fisher); end
                     
                     % multiply by scale
-                    c3{3}=multiply(c3{3},scale(in1).*scale(in2));
-                    c3{4}=multiply(c3{4},scale(in1).*scale(in2));
+                    c3{3}=multiply(c3{3},scale(inb1).*scale(inb2));
+                    c3{4}=multiply(c3{4},scale(inb1).*scale(inb2));
                     
                     % twice as many coda sets
                     nsets=4;
@@ -333,31 +335,33 @@ try
             % stack
             cnt=cnt+1; % increment c3 counter
             sdata(cnt,1)=addrecords(c3{:});
-            sscale(cnt)=sum(nsets*scale(in1).*scale(in2));
+            sscale(cnt)=sum(nsets*scale(inb1).*scale(inb2));
             ncoda(cnt)=nin;
             
             % time range of input data
-            [mint0,mint0]=min(timediff(t0utc(in1(1),:),t0utc(in1,:),'utc'));
-            [maxt1,maxt1]=max(timediff(t1utc(in1(1),:),t1utc(in1,:),'utc'));
-            sautc{cnt}=t0utc(in1(mint0),:);
-            sfutc{cnt}=t1utc(in1(maxt1),:);
-            [mint0,mint0]=min(timediff(t0utc(in2(1),:),t0utc(in2,:),'utc'));
-            [maxt1,maxt1]=max(timediff(t1utc(in2(1),:),t1utc(in2,:),'utc'));
-            st0utc{cnt}=t0utc(in2(mint0),:);
-            st1utc{cnt}=t1utc(in2(maxt1),:);
+            [mint0,mint0]=min(timediff(t0utc(inb1(1),:),t0utc(inb1,:),'utc'));
+            [maxt1,maxt1]=max(timediff(t1utc(inb1(1),:),t1utc(inb1,:),'utc'));
+            sautc{cnt}=t0utc(inb1(mint0),:);
+            sfutc{cnt}=t1utc(inb1(maxt1),:);
+            [mint0,mint0]=min(timediff(t0utc(inb2(1),:),t0utc(inb2,:),'utc'));
+            [maxt1,maxt1]=max(timediff(t1utc(inb2(1),:),t1utc(inb2,:),'utc'));
+            st0utc{cnt}=t0utc(inb2(mint0),:);
+            st1utc{cnt}=t1utc(inb2(maxt1),:);
             
             % for debugging
-            sdata(cnt).misc.c3master=strcat({coda{1}(in1).path}',...
-                {coda{1}(in1).name}');
-            sdata(cnt).misc.c3slave=strcat({coda{1}(in1).path}',...
-                {coda{1}(in1).name}');
+            sdata(cnt).misc.c3master=strcat({coda{1}(inb1).path}',...
+                {coda{1}(inb1).name}');
+            sdata(cnt).misc.c3slave=strcat({coda{1}(inb2).path}',...
+                {coda{1}(inb2).name}');
 
             % detail message
             if(verbose)
                 thispair=(s1-1)*nstns-sum(1:s1-1)+s2-s1*opt.NOAUTO;
                 print_time_left(thispair,npairs);
             end
+            %if(cnt==3); break; end
         end
+        %if(cnt==3); break; end
     end
     % detail message
     if(verbose && thispair~=npairs); print_time_left(npairs,npairs); end
@@ -388,10 +392,16 @@ try
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
     checkheader_state(oldcheckheaderstate);
+    
+    % toggle verbosity back
+    seizmoverbose(verbose);
 catch
     % toggle checking back
     seizmocheck_state(oldseizmocheckstate);
     checkheader_state(oldcheckheaderstate);
+    
+    % toggle verbosity back
+    seizmoverbose(verbose);
     
     % rethrow error
     error(lasterror);
@@ -521,16 +531,16 @@ end
 
 function [d1]=addrecords(varargin)
 % simple hack for speed (no dep* update)
-%try
+try
     for i=1:nargin
         varargin{i}(1).dep=mean(cat(3,varargin{i}.dep),3);
         varargin{i}(2:end)=[];
     end
     d1=varargin{1};
     d1.dep=mean(cat(3,varargin{:}.dep),3);
-%catch
-%    error('seizmo:noise_c3:badNCFs',...
-%        'NCFs differ in number of points! Cannot stack!');
-%end
+catch
+    error('seizmo:noise_c3:badNCFs',...
+        'NCFs differ in number of points! Cannot stack!');
+end
 end
 

@@ -151,9 +151,11 @@ function []=noise_stack(indir,outdir,pair,varargin)
 %                        works properly (FISHER was updated), iamph ok
 %        July 16, 2014 - bugfix: solofun needs func handles not strings,
 %                        bugfix: convert iftype to string
+%        July 21, 2014 - bugfix: use symmetric_correlations instead of
+%                        local symcmp function which forgot to divide by 2
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 16, 2014 at 11:15 GMT
+%     Last Updated July 21, 2014 at 11:15 GMT
 
 % todo:
 % - overlap option
@@ -828,7 +830,8 @@ try
                         case 'symmetric'
                             if(opt.MATIO)
                                 noise_records=changepath(...
-                                    symcmp(sdata{pidx}),'path',path);
+                                    symmetric_correlations(sdata{pidx}),...
+                                    'path',path);
                                 if(~exist(path,'dir')); mkdir(path); end
                                 save([path fs 'noise_records.mat'],...
                                     'noise_records');
@@ -1061,12 +1064,6 @@ if(~isempty(opt.COMPONENTS) && any(ismember(opt.COMPONENTS,...
     end
 end
 
-end
-
-
-function [data]=symcmp(data)
-data=solofun(changeheader(data,'b',0),@(x)[x(ceil(end/2),:); ...
-    x(floor(end/2):-1:1,:)+x(ceil(end/2)+1:end,:)]);
 end
 
 

@@ -240,9 +240,11 @@ function [data]=correlate(master,varargin)
 %                        slave field relative times (from slave reftime)
 %        July  8, 2014 - turned on 2x length multiplier for coherency
 %        July 11, 2014 - changed 2x to 3x multiplier for coherency
+%        July 21, 2014 - bugfix: lagrng improperly grabbed window offset by
+%                        -1 sample (timing was valid)
 %
 %     Written by Garrett Euler (ggeuler at wustl dot edu)
-%     Last Updated July 11, 2014 at 15:05 GMT
+%     Last Updated July 21, 2014 at 15:05 GMT
 
 % todo:
 
@@ -828,8 +830,10 @@ for i=1:npairs
     
     % lagrng
     if((peaks || ~fdout) && ~isempty(lagrng))
-        lidx=ceil(...
-            (lagrng(1)-b0(i))/delta(i)):floor((lagrng(2)-b0(i))/delta(i));
+        % ceil/floor keep points to within lag range
+        lidx(1)=ceil((lagrng(1)-b0(i))/delta(i))+1;
+        lidx(2)=floor((lagrng(2)-b0(i))/delta(i))+1;
+        lidx=lidx(1):lidx(2);
         tmp=[zeros(sum(lidx<=0),1); ...
             tmp(lidx(lidx>0 & lidx<=npts0(i))); ...
             zeros(sum(lidx>npts0(i)),1)];
